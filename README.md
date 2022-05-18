@@ -34,12 +34,16 @@ Example:
 •	ccBinary.pas (Cubic core library)  
 •	cvMemo.pas (Cubic visual component)  
 •	cGraphFX.pas (Cubic graphic library)  
-•	clVisLog.pas (Cubic log library)
-•	ciEmailSender.pas (Cubic internet library)
-•	cmPowerUtils.pas (Cubic common library)
+•	clVisLog.pas (Cubic log library)  
+•	ciEmailSender.pas (Cubic internet library)  
+•	cmPowerUtils.pas (Cubic common library)  
 
 **How to download LightSaber?**  
+There is no code in this repository.  
 As explaind above, Delphi LightSaber is split in 7 sub-libraries.   
-Go directly to my profile's root and you will see the (availalble at this point) repositories.   
+Go directly to my profile's root and there you will find the repositories (available at this point).   
+
 Each library depends on the previous one, in the order specified above.  
 LightSaber Core does not depend on any other library.   
+Therefore, if you want the LightSaber Log repository, you need to download also the LightSaber Core repository.
+Unzip all repositories in a single folder.
