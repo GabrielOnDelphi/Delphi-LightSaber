@@ -1,4 +1,4 @@
-# Deplhi-LightSaber
+# Delphi-LightSaber
 
 The LightSaber contains lots and lots of "goodie" functions - functions that make your life easier, and visual controls. 
 More than 15 years of development have been put in this library. 
