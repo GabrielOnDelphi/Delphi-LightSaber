@@ -16,7 +16,7 @@ _________________
 
 This repository contains the CoreLib and LogLib.
 
-![](Docs/Lightsaber logo.png)
+![](/Docs/Lightsaber logo.png)
 _________________
 
 Files in CoreLib:
