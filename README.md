@@ -14,6 +14,10 @@ No external dependencies.
 Click the 'Watch' button if you want to get notified about updates.  
 _________________
 
+This repository contains the CoreLib and LogLib.
+_________________
+
+Files in CoreLib:
 
 **ccCore.pas**  
   Over 200 functions for:  
