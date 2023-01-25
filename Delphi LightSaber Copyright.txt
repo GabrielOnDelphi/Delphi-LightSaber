@@ -1,0 +1,15 @@
+Copyright/Conditions
+
+Library provided by Gabriel Moraru 
+
+1. You can use this library for free in your personal/commercial applications as long as you don't modify it.
+   If you modify/update/extend/change/improve this library you MUST share your modifications with the rest of the world.
+   The only place where you can share the changes to the library, is here, on GitHub ( https://github.com/AdminUser0/Delphi-LightSaber/ ) 
+2. Keep this original copyright notice so people would know that the library is free.
+3. This library cannot be used in applications/platforms that promote illegal/immoral activities such as (but not limited to) hate/piracy/racism/pseudo-science (including anti-vaccine and flat earth).
+4. The owner of the library reserves the right to update/change these conditions at any time. 
+5. This library cannot be used in Russia. The ban applies 25 years after the Russia-Ukraine war ends.
+6. The library name cannot be changed.
+
+Note: 
+Most parts of this library were written by myself. Some other parts (small snippets) were inspired or simply copied from miscellaneous Internet sources (mostly StackOverflow). A link to the original source was provided in this case.
