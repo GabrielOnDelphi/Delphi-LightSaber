@@ -16,7 +16,7 @@ _________________
 
 This repository contains the CoreLib and LogLib.
 
-![](/Docs/Lightsaber logo.png)
+![](https://raw.githubusercontent.com/GodModeUser/Delphi-LightSaber/main/Docs/Library%20architecture.png)
 _________________
 
 Files in CoreLib:
