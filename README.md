@@ -6,7 +6,7 @@ Lightweight (only 10000 lines of code) alternative to Jedi library.
 
  
 **Description**   
-The LightSaber contains lots and lots of "goodie" functions - functions that make your life easier, and visual controls. 
+The CoreLib contains lots and lots of "goodie" functions - functions that make your life easier, and visual controls. 
 More than 15 years of development have been put in this library. 
 The library also wants to be a lightweight replacement for the mammoth Delphi Jedi library.  
 Simple, crystal clear, non-obfuscated, fully commented code.   
@@ -15,6 +15,8 @@ Click the 'Watch' button if you want to get notified about updates.
 _________________
 
 This repository contains the CoreLib and LogLib.
+
+![](Docs/Lightsaber logo.png)
 _________________
 
 Files in CoreLib:
