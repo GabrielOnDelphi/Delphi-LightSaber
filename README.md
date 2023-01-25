@@ -135,9 +135,9 @@ _____
 
 **Filename convention**  
 The following filename convention is used in LightSaber libraries:  
-- 'c' -> The first letter (c) stands for 'cubic' 
-- 'c' -> The second letter is as follows:
-- 'c' stands for 'core'.  All other libraries are based on the Core library
+- The first letter (c) stands for 'cubic' 
+- The second letter is as follows:
+- 'c' stands for 'core'.  (All other top libraries are based on the Core library)
 - 'v'-> visual component. 
 - 'Graph'-> graphic library.
 - 'l' -> Log library.
