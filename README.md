@@ -14,7 +14,7 @@ No external dependencies.
 Click the 'Watch' button if you want to get notified about updates.  
 _________________
 
-This repository contains the CoreLib and LogLib.
+This repository contains the CoreLib and LogLib. More libraries to be added soon. Your code could use directly the bottom library (Core) or higher libraries in the hierarchy, depending on your requirements. 
 
 ![](https://raw.githubusercontent.com/GodModeUser/Delphi-LightSaber/main/Docs/Library%20architecture.png)
 _________________
