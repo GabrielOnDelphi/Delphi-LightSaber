@@ -1,10 +1,9 @@
 UNIT ccAppData;
 
 {=============================================================================================================
-   CubicDesign
-   2022.12.04
+   2023.01
    See Copyright.txt
-  ============================================================================================================
+==============================================================================================================
 
    Via class object you can:
       - Get application's appdata folder (the folder where you save temporary, app-related and ini files)
@@ -68,11 +67,15 @@ TYPE
     procedure Restore;
     procedure Restart;
     procedure SelfDelete;
+
     function  RunSelfAtWinStartUp(Active: Boolean): Boolean;
     function  RunFileAtWinStartUp(FilePath: string; Active: Boolean): Boolean;
+
     class procedure CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean = TRUE);
     class procedure CreateFormModal(aClass: TFormClass; OUT Reference);
+
     procedure SetMaxPriority;
+    procedure HideFromTaskbar;
 
     property Font: TFont read FFont write setFont;
 
@@ -393,6 +396,21 @@ begin
   Application.Restore;
   SetForegroundWindow(Application.MainForm.Handle);
   Application.BringToFront;
+end;
+
+
+{ Hides Application's TaskBar Button
+  Source: http://stackoverflow.com/questions/14811935/how-to-hide-an-application-from-taskbar-in-windows-7
+  If Application.MainFormOnTaskbar is true, a taskbar button represents the application's main form and displays its caption.
+  All child forms will stay on top of the MainForm (bad)! If False, a taskbar button represents the application's (hidden) main window and bears the application's Title. Must be True to use Windows (Vista) Aero effects (ive taskbar thumbnails, Dynamic Windows, Windows Flip, Windows Flip 3D). https://stackoverflow.com/questions/66720721/ }     //Do this in DPR
+procedure TAppData.HideFromTaskbar;
+begin
+ ShowWindow(Application.Handle, SW_HIDE);
+ //ShowWindow(MainForm.Handle, SW_HIDE);     //this also hides the form from the screen
+
+{ Code below not working in Win7 !!!
+  ShowWindow(Application.Handle, SW_HIDE);
+  SetWindowLongPtr(Application.Handle, GWL_EXSTYLE, GetWindowLongPtr(Application.Handle, GWL_EXSTYLE) OR WS_EX_TOOLWINDOW);}      { getWindowLong_ was replaced with getWindowLongPtr for 64 bit compatibility. Details: http://docwiki.embarcadero.com/RADStudio/Seattle/en/Converting_32-bit_Delphi_Applications_to_64-bit_Windows }
 end;
 
 

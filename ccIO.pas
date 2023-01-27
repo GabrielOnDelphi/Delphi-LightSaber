@@ -69,7 +69,7 @@ INTERFACE
 {$WARN UNIT_PLATFORM OFF}   {Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
 
 USES
-  winapi.Windows, Winapi.ShellAPI, Winapi.ShlObj, System.Win.Registry, System.Masks, {System.Generics.Collections,} System.Types, Vcl.Consts,
+  winapi.Windows, Winapi.ShellAPI, Winapi.ShlObj, System.Win.Registry, System.Masks, System.Types, Vcl.Consts,
   System.StrUtils, System.IOUtils, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Dialogs, Vcl.Forms, Vcl.FileCtrl;
 
 CONST
@@ -601,8 +601,9 @@ end;
   It does this by shortening the filename.
   The caller must make sure that the resulted file name won't be too short (0 chars)!
   IMPORTANT! We cannot use TPath here because it cannot handle long file names. Details: http://stackoverflow.com/questions/31427260/how-to-handle-very-long-file-names?noredirect=1#comment50831709_31427260
+
   Also exists:
-       FileCtrl.MinimizeName                         if you require pixels.  http://docwiki.embarcadero.com/Libraries/Tokyo/en/Vcl.FileCtrl.MinimizeName
+       FileCtrl.MinimizeName (if you require pixels)
        cGraphics.DrawStringEllipsis
        ccCore.ShortenString
        ccIO.ShortenFileName

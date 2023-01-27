@@ -9,6 +9,9 @@
         <Projects Include="D10\LightLog.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="D10\LightCommon.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -35,28 +38,43 @@
     <Target Name="LightLog:Make">
         <MSBuild Projects="D10\LightLog.dproj" Targets="Make"/>
     </Target>
+    <Target Name="LightCommon">
+        <MSBuild Projects="D10\LightCommon.dproj"/>
+    </Target>
+    <Target Name="LightCommon:Clean">
+        <MSBuild Projects="D10\LightCommon.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightCommon:Make">
+        <MSBuild Projects="D10\LightCommon.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightLog"/>
+        <CallTarget Targets="LightCore;LightLog;LightCommon"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightLog:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightLog:Clean;LightCommon:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightLog:Make"/>
+        <CallTarget Targets="LightCore:Make;LightLog:Make;LightCommon:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='All'">
-        <BuildGroupProject Include="D10\LightLog.dproj">
-            <ProjectGuid>{BDDC4206-EF66-4FB1-8B35-A31088836E9E}</ProjectGuid>
-            <Configurations/>
-            <Platforms/>
-            <Enabled>False</Enabled>
+        <BuildGroupProject Include="D10\LightCommon.dproj">
+            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="D10\LightCore.dproj">
             <ProjectGuid>{866F2458-6034-4F28-8C27-F87E59F9090B}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="D10\LightLog.dproj">
+            <ProjectGuid>{26B5CEF7-82B0-4A8B-BB87-8DB3302800DF}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
         </BuildGroupProject>
     </ItemGroup>
 </Project>

@@ -1,0 +1,77 @@
+package LightCommon;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 2}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'LightSaber Commons D10'}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  xmlrtl,
+  vclimg,
+  vcl,
+  vclx,
+  LightCore,
+  LightLog,
+  vclWinx,
+  SoapRtl,
+  //ThirdPartyPackD11,
+  IndySystem;
+
+contains
+  cmCursorBusy in '..\cmCursorBusy.pas',
+  cmDebugger in '..\cmDebugger.pas',
+  cmEllipsisText in '..\cmEllipsisText.pas',
+  cmEncodeMime in '..\cmEncodeMime.pas',
+  cmEncodeXOR in '..\cmEncodeXOR.pas',
+  cmExecuteProc in '..\cmExecuteProc.pas',
+  cmExecuteShell in '..\cmExecuteShell.pas',
+  cmINIFileQuick in '..\cmINIFileQuick.pas',
+  cmMath in '..\cmMath.pas',
+  cmMemoInputBox in '..\cmMemoInputBox.pas',
+  cmMRU in '..\cmMRU.pas',
+  cmMutexSingleInstance in '..\cmMutexSingleInstance.pas',
+  cmPermissions in '..\cmPermissions.pas',
+  cmPopUpUp in '..\cmPopUpUp.pas',
+  cmPowerUtils in '..\cmPowerUtils.pas',
+  cmRegistry in '..\cmRegistry.pas',
+  cmRttiSetToString in '..\cmRttiSetToString.pas',
+  cmShell in '..\cmShell.pas',
+  cmKbShortcuts in '..\cmKbShortcuts.pas',
+  cmStrBuilder in '..\cmStrBuilder.pas',
+  cmStreamMem in '..\cmStreamMem.pas',
+  cmStringList in '..\cmStringList.pas',
+  cmSystem in '..\cmSystem.pas',
+  cmVclUtils in '..\cmVclUtils.pas',
+  cmWindow in '..\cmWindow.pas',
+  cmWindowMetrics in '..\cmWindowMetrics.pas',
+  cmWMIResolution in '..\cmWMIResolution.pas',
+  cmWrapString in '..\cmWrapString.pas',
+  cmKeyboard in '..\cmKeyboard.pas',
+  cmStringListA in '..\cmStringListA.pas',
+  cmEnvironmentVar in '..\cmEnvironmentVar.pas';
+end.
