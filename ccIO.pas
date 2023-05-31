@@ -65,6 +65,7 @@ UNIT ccIO;
      c:\MyProjects\Packages\CubicCommonControls\UNC Tester\
 ==================================================================================================}
 
+
 INTERFACE
 {$WARN UNIT_PLATFORM OFF}   {Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
 
@@ -240,7 +241,7 @@ CONST
  function  IncrementFileNameEx  (CONST FileName: string; StartAt, NumberLength: Integer): string;  { Same sa IncrementFileName but it automatically adds a number if the file doesn't already ends with a number }
  function  IncrementFileName    (CONST FileName: string): string;                                  { Receives a file name that ends in a number. returns the same filename plus the number incremented with one. }
  function  MakeUniqueFolderName (CONST RootPath, FolderName: string): string;                      { Returns a unique path ended with a number. Old name:  Getnewfoldername }
- function  ChangeFilePath       (CONST FullFileName, NewPath: string): string;                     { schimba calea fisierului la NewPath }
+ function  ChangeFilePath       (CONST FullFileName, NewPath: string): string;                     { change file path to NewPath }
  function  AppendNumber2Filename(CONST FileName: string; StartAt, NumberLength: Integer): string;  { Add the number at the end of the filename. Example: AppendNumber2Filename('Log.txt', 1) will output 'Log1.txt' }
  function  FileEndsInNumber     (CONST FileName: string): Boolean;                                 { Returns true is the filename ends with a number. Example: MyFile02.txt returns TRUE }
  // function GetUniqueFileName: string;      //replaced with      ccCore.GenerateUniqueString
@@ -249,9 +250,9 @@ CONST
 {--------------------------------------------------------------------------------------------------
    CHANGE FILENAME
 --------------------------------------------------------------------------------------------------}
- function  AppendToFileName    (CONST FileName, ApendedText: string): string;                      { adauga un sir intre nume si extensie. Exemplu: daca adaug sirul ' backup' la fisierul 'Shell32.DLL'   ->  'Shell32 backup.DLL' }
- function  AppendBeforeName    (CONST FullPath, ApendedText: string): string;                      { adauga un sir intre ultimul separator de director si inceputul numelui fisierului. Exemplu: daca adaug sirul ' backup' la fisierul 'c:\Shell32.DLL'   ->  'c:\backup Shell32.DLL' }
- function  ReplaceOnlyName     (CONST FileName, newName: string): string;                          { inlocuieste nUMAI numele unui fisier (fara extensie) intr-o cale completa. Exemplu: C:\Name.dll -> C:\NewName.dll }
+ function  AppendToFileName    (CONST FileName, ApendedText: string): string;                      { add a string between the name and the extension. Example: if I add the string ' backup' to the file 'Shell32.DLL' -> 'Shell32 backup.DLL' }
+ function  AppendBeforeName    (CONST FullPath, ApendedText: string): string;                      { add a string between the last directory separator and the beginning of the file name. Example: if I add the string ' backup' to the file 'c:\Shell32.DLL' -> 'c:\backup Shell32.DLL' -> 'c:\backup Shell32.DLL' -> 'c:\backup Shell32.DLL'. }
+ function  ReplaceOnlyName     (CONST FileName, newName: string): string;                          { replaces ONLY the name of a file (no extension) in a full path. Example: C:\Name.dll -> C:\NewName.dll }
 
 
 {--------------------------------------------------------------------------------------------------
@@ -260,7 +261,7 @@ CONST
  function  RemoveDrive         (CONST FullPath: string): string;                                   { C:\MyDocuments\1.doc  ->  MyDocuments\1.doc }
  function  ExtractDrive        (CONST FullPath: string): string;                                   { C:\MyDocuments\1.doc  ->  C }
  function  ExtractFilePath     (CONST FullPath: string; AcceptInvalidPaths: Boolean= TRUE): string;{ Same as the old ExtractFilePath but uses the new GetDirectoryName function instead  }
- function  ExtractOnlyName     (CONST FileName: string): string;                                   { Extrage numele unui fisier. Daca numele e de tipul nume+extensie+extensie, only the last extension will be eliminated. It uses the new IOUtils lib }
+ function  ExtractOnlyName     (CONST FileName: string): string;                                   { Extracts the name of a file. If the name is of type name+extension+extension, only the last extension will be removed. Use the new IOUtils library }
 
 
 {--------------------------------------------------------------------------------------------------
@@ -268,7 +269,7 @@ CONST
 --------------------------------------------------------------------------------------------------}
  function  RemoveLastExtension (CONST FileName: string): string;                                   { Extrage numele fisierului din nume+extensie. Daca numele este de tipul nume+extensie+extensie, doar ultima extensie este eliminata }
  function  ForceExtension      (CONST FileName, Ext: string): string;                              { makes sure that the 'FileName' file has the extension set to 'Ext'. The 'Ext' parameter should be like: '.txt' }
- function  ExtractFileExtUp   (CONST FileName: string): string;                                    { Case insensitive version }
+ function  ExtractFileExtUp    (CONST FileName: string): string;                                   { Case insensitive version }
 
 
 {--------------------------------------------------------------------------------------------------
@@ -304,10 +305,10 @@ CONST
  TYPE
    TWriteOperation= (woAppend, woOverwrite);
 
- function  StringFromFileTSL    (CONST FileName: string): TStringList;                             { Returns a TSL instead of a string. The caller has to free the result }
+ function  StringFromFileTSL    (CONST FileName: string; Enc: TEncoding= NIL): TStringList;        { Returns a TSL instead of a string. The caller has to free the result }
  function  StringFromFileExists (CONST FileName: string): String;                                  { Read file IF it exists. Otherwise, return '' }
  function  StringFromFileA      (CONST FileName: string): AnsiString;                              { Read a WHOLE file and return its content as String. Also see this: http://www.fredshack.com/docs/delphi.html }
- function  StringFromFile       (CONST FileName: string): string;
+ function  StringFromFile       (CONST FileName: string; Enc: TEncoding= Nil): string;
  procedure StringToFile         (CONST FileName: string; CONST aString: String;     CONST WriteOp: TWriteOperation= woOverwrite; WritePreamble: Boolean= FALSE);
  procedure StringToFileA        (CONST FileName: string; CONST aString: AnsiString; CONST WriteOp: TWriteOperation);  overload;
  procedure StringToFileA        (CONST FileName: string; CONST aString: String;     CONST WriteOp: TWriteOperation);      overload;
@@ -333,7 +334,7 @@ CONST
  function  CountLines          (CONST Filename: string; CONST BufferSize: Cardinal= 128000): Int64;                     { Opens a LARGE text file and counts how many lines it has. It does this by loading a small portion of the file in a RAM buffer }
  function  WriteBinFile        (CONST FileName: string; CONST Data: TBytes; CONST Overwrite: Boolean= TRUE): Boolean;
  procedure SetCompressionAtr   (CONST FileName: string; const CompressionFormat: USHORT= 1);    // http://stackoverflow.com/questions/7002575/how-can-i-set-a-files-compression-attribute-in-delphi
-
+{System.IOUtils.TFile.Encrypt https://docwiki.embarcadero.com/Libraries/Alexandria/en/System.IOUtils.TFile.Encrypt - Encrypt a given file using the operating system-provided facilities.}
 
 
 {--------------------------------------------------------------------------------------------------
@@ -533,14 +534,17 @@ begin
 end;
 
 
-{ Tells if FullPath is a folder or file.
-  THE FOLDER/FILE MUST EXISTS!!!
-  Works with UNC paths }
+{ Tells if FullPath is an EXISTING folder or file. If the FullPath  represents a folder that does not exist, the function will return False!
+  Works with UNC paths
+  https://stackoverflow.com/questions/63606215/how-to-check-if-given-path-is-file-or-folder }
 function IsFolder(CONST FullPath: string): boolean;
 begin
+ Result:= {NOT FileExists(FullPath) AND} DirectoryExists(FullPath);
+ {del
+ // We need both checks for the case where FullPath is not a valid file/folder. In other words, we cannot use only Result:= DirectoryExists(FullPath);
  if FileExists(FullPath)
  then Result:= FALSE
- else Result:= DirectoryExists(FullPath);
+ else Result:= DirectoryExists(FullPath);  }
 end;
 
 
@@ -1301,7 +1305,8 @@ begin
 end;
 
 
-{ Makes sure that the 'FileName' file has indicated extension.
+{ ReplaceExtension
+  Makes sure that the 'FileName' file has indicated extension.
   If file already has an extension, it is replaced by the indicated one.
   The 'Ext' parameter should be like: '.txt' }
 function ForceExtension(CONST FileName, Ext: string): string;
@@ -1333,7 +1338,7 @@ VAR
    s: string;
 begin
  s:= ExtractFileName(FileName);
- iPos:= LastPos('.', s);                                                                          { It may happen that the user provides a file name without extension (I personally use this alot) }
+ iPos:= LastPos('.', s);       { It may happen that the user provides a file name without extension (I personally use this alot) }
  if iPos < 1
  then Result:= s
  else Result:= CopyTo(s, 1, iPos-1);
@@ -1959,7 +1964,7 @@ end;
 
 function GetProgramFilesDir: string;
 
-    { This function is copied from cmRegistry, but we don't want to depend on that unit, so... }
+    { This function is copied from ccRegistry, but we don't want to depend on that unit, so... }
     function RegReadString (CONST Root: HKEY; CONST Key, ValueName: string; DefValData: String= ''): string;
     VAR Rg: TRegistry;
     begin
@@ -1998,8 +2003,7 @@ begin
   SysDir := StrAlloc(MAX_PATH);
   GetSystemDirectory(SysDir, MAX_PATH);
   Result := string(SysDir);
-  if Result[Length(Result)] <> '\'
-  then Result := Result + '\';
+  Result := Trail(Result);
   StrDispose(SysDir);
 end;
 
@@ -2009,31 +2013,31 @@ end;
 
 function GetMyDocuments: String;
 begin
- Result:= TPath.GetDocumentsPath;
+ Result:= Trail(TPath.GetDocumentsPath);
 end;
 
 
 function GetMyPictures: string;
 begin
- Result:= TPath.GetPicturesPath;
+ Result:= Trail(TPath.GetPicturesPath);
 end;
 
 
 function GetMusicPath: string;
 begin
- Result:= TPath.GetMusicPath;
+ Result:= Trail(TPath.GetMusicPath);
 end;
 
 
 function GetMoviesPath: string;
 begin
- Result:= TPath.GetMoviesPath;
+ Result:= Trail(TPath.GetMoviesPath);
 end;
 
 
 function GetDownloadsPath: string;
 begin
- Result:= TPath.GetDownloadsPath;
+ Result:= Trail(TPath.GetDownloadsPath);
 end;
 
 
@@ -2161,23 +2165,23 @@ function GetSpecialFolder (OS_SpecialFolder: string): string;
   The published API is the "right" way to access these data, because Microsoft has to support it for a long time.
   Writing application that use undocumented features expose them to compatibility issues.
   The folders retrieved should include:
-    cmShellAppData =    'AppData';
-    cmShellCache =      'Cache';
-    cmShellCookies =    'Cookies';
-    cmShellDesktop =    'Desktop';
-    cmShellFavorites =  'Favorites';
-    cmShellFonts =      'Fonts';
-    cmShellHistory =    'History';
-    cmShellLocalApp =   'Local AppData';
-    cmShellNetHood =    'NetHood';
-    cmShellPersonal =   'Personal';
-    cmShellPrintHood =  'PrintHood';
-    cmShellPrograms =   'Programs';
-    cmShellRecent =     'Recent';
-    cmShellSendTo =     'SendTo';
-    cmShellStartMenu =  'Start Menu';
-    cmShellStartUp =    'Startup';
-    cmShellTemplates =  'Templates';                                          }
+    csShellAppData =    'AppData';
+    csShellCache =      'Cache';
+    csShellCookies =    'Cookies';
+    csShellDesktop =    'Desktop';
+    csShellFavorites =  'Favorites';
+    csShellFonts =      'Fonts';
+    csShellHistory =    'History';
+    csShellLocalApp =   'Local AppData';
+    csShellNetHood =    'NetHood';
+    csShellPersonal =   'Personal';
+    csShellPrintHood =  'PrintHood';
+    csShellPrograms =   'Programs';
+    csShellRecent =     'Recent';
+    csShellSendTo =     'SendTo';
+    csShellStartMenu =  'Start Menu';
+    csShellStartUp =    'Startup';
+    csShellTemplates =  'Templates';                                          }
 VAR Reg: TRegistry;
 begin
   Result:= '';
@@ -2429,6 +2433,7 @@ end;                                                     { Could also be impleme
 --------------------------------------------------------------------------------------------------}
 
 { Write Unicode strings to a UTF8 file.
+  FileName must be a fulll path. If the path does not exist it is created.
   It can also write a preamble.
   Based on: http://stackoverflow.com/questions/35710087/how-to-save-classic-delphi-string-to-disk-and-read-them-back/36106740#36106740  }
 procedure StringToFile(CONST FileName: string; CONST aString: String; CONST WriteOp: TWriteOperation= woOverwrite; WritePreamble: Boolean= FALSE);
@@ -2464,10 +2469,16 @@ begin
 end;
 
 
-{ Tries to autodetermine the file type (ANSI, UTF8, UTF16, etc). Works with UNC paths }
-function StringFromFile(CONST FileName: string): String;
+{ Tries to autodetermine the file type (ANSI, UTF8, UTF16, etc). Works with UNC paths.
+  If it cannot detect the correct encoding automatically, we can force it to what we want by setting the second paramater.
+      Example: System.SysUtils.TEncoding.UTF8
+      However this is buggy! It will raise an exception if the file is ANSI but it contains high characters such as ½ (#189)
+      See: https://stackoverflow.com/questions/35708827/what-could-cause-no-mapping-for-the-unicode-character-exists-in-the-target-mult }
+function StringFromFile(CONST FileName: string; Enc: TEncoding= NIL): String;
 begin
- Result:= System.IOUtils.TFile.ReadAllText(FileName);
+  if Enc= NIL
+  then Result:= System.IOUtils.TFile.ReadAllText(FileName)
+  else Result:= System.IOUtils.TFile.ReadAllText(FileName, Enc);
 end;
 
 
@@ -2535,10 +2546,10 @@ begin
 end;
 
 
-function StringFromFileTSL(CONST FileName: string): TStringList;    // Works with UNC paths
+function StringFromFileTSL(CONST FileName: string; Enc: TEncoding= NIL): TStringList;    // Works with UNC paths
 begin
  Result:= TStringList.Create;
- Result.Text:= StringFromFile(FileName);
+ Result.Text:= StringFromFile(FileName, Enc);
 end;
 
 
