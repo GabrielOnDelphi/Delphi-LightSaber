@@ -9,8 +9,13 @@ UNIT FormLog;
    More details in clLogUtils.pas
 
    Usage:
-     Create AppData as early as possible in your app and
-     Free AppData as late as possible in your app. AppData will release the log also (old name ReleaseLogForm)
+     It is CRITICAL to create the AppDataEx object as soon as the application starts. Prefferably in the DPR file before creating the main form!
+       DPR:
+          AppData:= TAppDataEx.Create('MyCollApp');
+       OnLateInitialize:
+          AppData.Initilizing:= False;
+
+     AppDataEx is automatically destroyed by the Finalization section of this unit.
 
    Tester:
      c:\Myprojects\Packages\CubicCommonControls\Demo\LightLog\
@@ -19,7 +24,7 @@ UNIT FormLog;
 INTERFACE
 
 USES
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls, vcl.Dialogs,
+  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
   clRichLogTrack, clRichLog, ccAppData;
 
 TYPE
@@ -39,7 +44,7 @@ TYPE
 TYPE
   TAppDataEx= class(TAppData)
   public
-    constructor Create(CONST aAppName: string); override;
+    constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''); override;
     destructor Destroy; override;
   end;
 
@@ -86,6 +91,10 @@ end;
 
 
 
+
+
+
+
 {-------------------------------------------------------------------------------------------------------------
    FORM
 -------------------------------------------------------------------------------------------------------------}
@@ -126,9 +135,9 @@ end;
 
    Tester: c:\Myprojects\Packages\CubicCommonControls\Demo\CubicCore\GUI Autosave\DemoCore.dpr
 --------------------------------------------------------------------------------------------------}
-constructor TAppDataEx.Create(CONST aAppName: string);
+constructor TAppDataEx.Create(CONST aAppName: string; CONST WindowClassName: string= '');
 begin
-  inherited Create(aAppName);
+  inherited Create(aAppName, WindowClassName);
 
  { Call this as soon as possible so it can catch all Log messages generated during app start up. A good place might be in your DPR file before Application.CreateForm(TMainForm, frmMain) }
  Assert(frmLog = NIL, 'frmLog already created!');
@@ -243,12 +252,9 @@ end;
 
 
 
-initialization
+INITIALIZATION
 
-finalization
-  if frmLog <> nil
-  then ShowMessage('LogForm was not released!');
-
-
+FINALIZATION
+  FreeAndNil(AppData); // This will release also the frmLog.
 
 end.

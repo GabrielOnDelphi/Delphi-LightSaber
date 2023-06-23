@@ -9,9 +9,10 @@ UNIT ccINIFile;
      - Functions for easily accessing application's default INI file.
 
   Setup:
-     Before using it you must set the ccAppData.AppName global var.
+     Before using it you must set the AppData.AppName global var like this: AppData:= TAppData.Create('MyCollApp').
      The class will use that name to automatically determine the INI file name/path which is %AppData%\AppData.AppName.Ini.
      Example: If the AppData.AppName is set to "DelphiLightSaber" the ini file will be "c:\Users\UserName\AppData\Roaming\DelphiLightSaber\DelphiLightSaber.ini"
+     See ccAppData.pas for details.
 
   Reminder: TIniFile limitations:
      - Cannot put spaces at the beggining of a 'value'. The spaces will be trimmed. This behavior does not happen if you use a TMemInifile.      https://stackoverflow.com/questions/3702647/reading-inifile-to-stringlist-problem-spaces-problem

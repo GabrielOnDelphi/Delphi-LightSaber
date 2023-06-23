@@ -13,6 +13,7 @@ UNIT ccAppData;
       - Application self-delete
       - Set the font for all running forms
       - Create a new form and set its font to be the same as main forms' font.
+      - Force single instance (allow only one instance of your program to run). Second inst sends its command line to the first inst then shutsdown
       - etc
 
    The global AppData var will store the object (app wide).
@@ -30,21 +31,33 @@ UNIT ccAppData;
 INTERFACE
 
 USES
-  Winapi.Windows, Winapi.ShlObj, Winapi.ShellAPI, System.Win.Registry, System.IOUtils, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Forms;
+  Winapi.Windows, Winapi.Messages, Winapi.ShlObj, Winapi.ShellAPI,
+  System.Win.Registry, System.IOUtils, System.AnsiStrings, System.SysUtils, System.Classes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms;
 
 TYPE
   TAppData= class(TObject)
   private
+    FSingleInstClassName: string;                              { Used by the Single Instance mechanism. } {Old name: AppWinClassName }
     FLastFolder: string;
     FRunningFirstTime: Boolean;
     FFont: TFont;
     class VAR FCreated: Boolean;
     class VAR FAppName: string;
-    function getLastUsedFolder: string;
+    function  getLastUsedFolder: string;
     procedure setFont(aFont: TFont);
+   protected
+    CopyDataID: DWORD;          { For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA }
    public
-    class VAR Initializing: Boolean;                      { Set it to false once your app finished initializing (usually after you finished creating all forms). Used in cvIniFile.pas. }
-    constructor Create(CONST aAppName: string); virtual;
+    { Single Instance }
+    property  SingleInstClassName: string read FSingleInstClassName;
+    procedure ResurectInstance(CONST CommandLine: string);
+    function  InstanceRunning: Boolean;
+    procedure SetSingleInstanceName(var Params: TCreateParams);
+    function  ExtractData(VAR Msg: TWMCopyData; OUT s: string): Boolean;
+    {}
+    class VAR Initializing: Boolean;                           { Set it to false once your app finished initializing (usually after you finished creating all forms). Used in cvIniFile.pas. }
+    constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''); virtual;
 
    {--------------------------------------------------------------------------------------------------
       App path/name
@@ -58,7 +71,13 @@ TYPE
 
     function AppShortName: string;
     property LastUsedFolder: string read getLastUsedFolder write FLastFolder;
-    class property AppName: string read FAppName;
+    class property AppName: string  read FAppName;
+
+    procedure WriteAppDataFolder;
+    function  ReadAppDataFolder(CONST UninstalledApp: string): string;
+
+    procedure WriteInstalationFolder;
+    function  ReadInstalationFolder(CONST UninstalledApp: string): string;
 
    {--------------------------------------------------------------------------------------------------
       App Control
@@ -122,15 +141,32 @@ VAR
 IMPLEMENTATION
 
 USES
-  ccCore, ccIO;
+ ccRegistry, ccCore, ccIO;
 
 
-{ It must contain only I/O-safe characters (so no question marks). }
-constructor TAppData.Create(CONST aAppName: string);
+
+{ aAppName must contain only I/O-safe characters (so no question marks)
+  ctAppWinClassName parameter is needed ONLY if you use the Single Instance functionality.
+    ctAppWinClassName is a constant representing your application name/ID. This string must be unique in the whole computer. No other app is allowed to have this ID.
+    We use it in InstanceRunning to detect if the the application is already running, by looking to a form with this Class Name.
+ }
+constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= '');
 begin
   inherited Create;
   Initializing:= True;                            { Used in cvIniFile.pas. Set it to false once your app finished initializing. }
 
+  { SINGLE INSTANCE }
+  FSingleInstClassName:= aAppName;
+
+  { Register a unique message ID for this applications. Used when we send the command line to the first running instance via WM_COPYDATA.
+    We can do this only once per app so the best place is the Initialization section. However, since AppData is created only once, we can also do it here, in the constructor.
+    https://stackoverflow.com/questions/35516347/sendmessagewm-copydata-record-string }
+  CopyDataID := RegisterWindowMessage('CubicCopyDataID');
+
+  { We use the SingleInstClassName to identify the window/instance (when we check for an existing instance) }
+  FSingleInstClassName:= WindowClassName;
+
+  {}
   if FCreated
   then RAISE Exception.Create('Error! AppData aready constructed!')
   else FCreated:= TRUE;
@@ -143,13 +179,20 @@ begin
   FRunningFirstTime:= NOT FileExists(IniFile);
   ForceDirectories(AppDataFolder);
 
-  //ToDo: !!! CreateLogForm; But this will create dependencies on the Log!
+  //ToDo 1: !!! CreateLogForm; But this will create dependencies on the Log! Move the Log into the Core package.
 end;
 
 
-{ Returns the folder where the EXE file resides
-  The path ended with backslash. Works with UNC paths.
-  Example: c:\Program Files\MyCoolApp\ }
+
+
+
+
+{-------------------------------------------------------------------------------------------------------------
+   APP PATH
+-------------------------------------------------------------------------------------------------------------}
+
+{ Returns the folder where the EXE file resides.
+  The path ended with backslash. Works with UNC paths. Example: c:\Program Files\MyCoolApp\ }
 function TAppData.CurFolder: string;
 begin
  Result:= ExtractFilePath(Application.ExeName);
@@ -157,8 +200,7 @@ end;
 
 
 { Returns the folder where the EXE file resides plus one extra folder called 'System'
-  The path ended with backslash. Works with UNC paths.
-  Example: c:\Program Files\MyCoolApp\System\ }
+  The path ended with backslash. Works with UNC paths. Example: c:\Program Files\MyCoolApp\System\ }
 function TAppData.SysDir: string;
 begin
  Result:= CurFolder+ 'system\';
@@ -167,8 +209,7 @@ end;
 
 
 { Returns the name of the INI file (where we will write application's settings).
-  It is based on the name of the application.
-  Example: c:\Documents and Settings\Bere\Application Data\MyApp\MyApp.ini }
+  It is based on the name of the application. Example: c:\Documents and Settings\Bere\Application Data\MyApp\MyApp.ini }
 function TAppData.IniFile: string;
 begin
  Assert(AppName > '', 'AppName is empty!');
@@ -176,7 +217,6 @@ begin
 
  Result:= AppDataFolder+ AppName+ '.ini';
 end;
-
 
 
 { Returns ONLY the name of the app (exe name without extension) }
@@ -197,15 +237,9 @@ end;
 
 
 
-
-
-
-
-
 { Returns the path to current user's AppData folder on Windows, and to the current user's home directory on Mac OS X.
   Example: c:\Documents and Settings\UserName\Application Data\AppName\
-  if ForceDir then it creates the folder (full path) where the INI file will be written.
-}
+  if ForceDir then it creates the folder (full path) where the INI file will be written. }
 function TAppData.AppDataFolder(ForceDir: Boolean = FALSE): string;
 begin
  Assert(AppName > '', 'AppName is empty!');
@@ -233,6 +267,40 @@ end;
 
 
 
+
+{--------------------------------------------------------------------------------------------------
+   READ/WRITE folders to registry
+   This is used by the Uninstaller:
+         c:\MyProjects\Project support\Cubic Universal Uninstaller\Uninstaller.dpr
+--------------------------------------------------------------------------------------------------}
+CONST
+   RegKey: string= 'Software\CubicDesign\';
+
+procedure TAppData.WriteAppDataFolder;                                           { Called by the original app }
+begin
+ RegWriteString(HKEY_CURRENT_USER, RegKey+ AppName, 'App data path', AppDataFolder);                                                                                                                              {Old name: WriteAppGlobalData }
+end;
+
+
+function TAppData.ReadAppDataFolder(CONST UninstalledApp: string): string;       { Called by the uninstaller }
+begin
+ Result:= RegReadString(HKEY_CURRENT_USER, RegKey+ UninstalledApp, 'App data path');
+end;
+
+
+{------------------------
+   Instalation Folder
+------------------------}
+procedure TAppData.WriteInstalationFolder;                                     { Called by the original app }                                                                                                                                       {Old name: WriteAppGlobalData }
+begin
+ RegWriteString(HKEY_CURRENT_USER, RegKey+ AppName, 'Install path', CurFolder);
+end;
+
+
+function TAppData.ReadInstalationFolder(CONST UninstalledApp: string): string;  { Called by the uninstaller }
+begin
+ Result:= RegReadString(HKEY_CURRENT_USER, RegKey+ UninstalledApp, 'Install path');
+end;
 
 
 
@@ -391,9 +459,10 @@ begin
   Application.MainForm.Visible:= TRUE;
   if Application.MainForm.WindowState = wsMinimized
   then Application.MainForm.WindowState:= TWindowState.wsNormal;
+
   //Use Restore to restore the application to its previous size before it was minimized. When the user restores the application to normal size, Restore is automatically called.
   //Note: Don't confuse the Restore method, which restores the entire application, with restoring a form or window to its original size. To minimize, maximize, and restore a window or form, change the value of its WindowState property.
-  Application.Restore;
+  {if IsIconic(Application.Handle) then } Application.Restore;
   SetForegroundWindow(Application.MainForm.Handle);
   Application.BringToFront;
 end;
@@ -419,8 +488,6 @@ procedure TAppData.SetMaxPriority;
 begin
  SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS); //  https://stackoverflow.com/questions/13631644/setthreadpriority-and-setpriorityclass
 end;
-
-
 
 
 
@@ -478,12 +545,10 @@ begin
 end;
 
 
-
 { Returns version with/without build number.
   Example:
      1.0.0.999
      1.0.0
-
   See also: CheckWin32Version }
 class function TAppData.GetVersionInfo(ShowBuildNo: Boolean= False): string;
 VAR FixedInfo: TVSFixedFileInfo;
@@ -539,21 +604,167 @@ end;
 
 
 
+{-------------------------------------------------------------------------------------------------------------
+   APP FORM
+-------------------------------------------------------------------------------------------------------------}
+
+{ 1. Create the form ONLY it does not exist already
+  2. Set the font of the new form to be the same as the font of the MainForm
+  3. Show it }
+class procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean = TRUE);
+begin
+  Application.CreateForm(aClass, Reference);
+  if TForm(Reference) <> Application.MainForm
+  then TForm(Reference).Font:= Application.MainForm.Font;
+
+  if Show then TForm(Reference).Show;
+end;
+
+
+class procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference);
+begin
+  Application.CreateForm(aClass, Reference);
+  if TForm(Reference) <> Application.MainForm
+  then TForm(Reference).Font:= Application.MainForm.Font;
+  TForm(Reference).Visible:= FALSE;   //This happens with frmFloor in Cassa2.exe
+  TForm(Reference).ShowModal;
+end;
+
+
+// Question: Does FormCount also count invisible forms? Answer: Yes.
+// Question: Does FormCount also count forms created TFrom.Create(Nil). Answer: Yes.
+procedure TAppData.setFont(aFont: TFont);
+begin
+  FFont:= aFont;
+  for VAR i:= 0 to Screen.CustomFormCount - 1 DO    // FormCount => forms currently displayed on the screen. CustomFormCount = as FormCount but also includes the property pages
+    Screen.Forms[i].Font:= aFont;
+end;
+
+
+class procedure TAppData.RaiseIfStillInitializing;
+CONST
+   AppStillInitializingMsg = 'Application not properly initialized.'+#13#10#13#10+ 'PLEASE REPORT the steps necessary to reproduce this bug and restart the application.';
+begin
+ if AppData.Initializing
+ then RAISE Exception.Create(AppStillInitializingMsg);
+end;
 
 
 
 
-{----
+
+{-------------------------------------------------------------------------------------------------------------
+   SINGLE INSTANCE
+--------------------------------------------------------------------------------------------------------------
+   This allows us to detect if an instance of this program is already running.
+   If so, we can send the command line of this second instance to the first instance, and shutdown this second instance.
+   I would have loved to have all the code in a single procedure but unfortunately this is not possible. Three procedures are required.
+
+   Usage:
+    In DPR write:
+     AppData:= TAppDataEx.Create('MyCoolAppName', ctAppWinClassName);
+
+     if AppData.InstanceRunning
+     then TAppData.ResurectInstance(ParamStr(1))
+     else
+      begin
+       Application.Initialize;
+       Application.CreateForm(TMainForm, MainForm);
+       Application.Run;
+      end;
+
+    In MainForm:
+      procedure TMainFrom.CreateParams(var Params: TCreateParams);
+      begin
+        inherited;
+        AppData.SetSingleInstanceName(Params);
+      end;
+
+  ctAppWinClassName is a constant representing your application name/ID. This string must be unique.
+  We use it in InstanceRunning to detect if the the application is already running, by looking to a form with this Class Name.
+
+  Check BioniX/Baser for a full example.
+
+  Links:
+    https://stackoverflow.com/questions/35516347/sendmessagewm-copydata-record-string
+    https://stackoverflow.com/questions/8688078/preventing-multiple-instances-but-also-handle-the-command-line-parameters
+    https://stackoverflow.com/questions/23031208/delphi-passing-running-parameters-to-other-instance-via-wm-copydata-gives-wrong
+    https://github.com/delphidabbler/articles/blob/master/article-13-pt2.pdf
+
+  Alternative implementation:
+    cmMutexSingleInstance.pas
+-------------------------------------------------------------------------------------------------------------}
+
+{ Application's main form needs to implement WMCopyData.
+  Warning: We should never use PostMessage() with the WM_COPYDATA message because the data that is passed to the receiving application is only valid during the call. Finally, be aware that the call to SendMessage will not return untill the message is processed.
+
+  Recommendation:
+    1. The receiver procedure should also restore (bring to front) that instance.
+    2. We should close this second instance after we sent the message to the first instance.
+ }
+procedure TAppData.ResurectInstance(CONST CommandLine: string);
+VAR
+   Window: HWND;
+   DataToSend: TCopyDataStruct;
+begin
+  { Prepare the data you want to send }
+  DataToSend.dwData := CopyDataID;  // Registered unique ID for LighSaber apps
+  DataToSend.cbData := Length(CommandLine) * SizeOf(Char);
+  DataToSend.lpData := PChar(CommandLine);
+
+  Window:= WinApi.Windows.FindWindow(PWideChar(SingleInstClassName), NIL);    // This is a copy of csWindow.FindTopWindowByClass
+  SendMessage(Window, WM_COPYDATA, 0, LPARAM(@DataToSend));
+  {
+  Winapi.Windows.ShowWindow(Window, SW_SHOWNORMAL);
+  Winapi.Windows.SetForegroundWindow(Window);   }
+end;
+
+
+{ Returns True if an instance of this application was found already running }
+function TAppData.InstanceRunning: Boolean;
+begin
+  Result:= WinApi.Windows.FindWindow(PWideChar(SingleInstClassName), NIL) > 0;
+end;
+
+
+{ Give a unique name to our form.
+  We need to call this in TMainForm.CreateParams(var Params: TCreateParams)  }
+procedure TAppData.SetSingleInstanceName(VAR Params: TCreateParams);
+begin
+  System.SysUtils.StrCopy(Params.WinClassName, PChar(SingleInstClassName)); // Copies a null-terminated string. StrCopy is designed to copy up to 255 characters from the source buffer into the destination buffer. If the source buffer contains more than 255 characters, the procedure will copy only the first 255 characters.
+  //Hint: This would work if WindowClassName would be a constant: Params.WinClassName:= WindowClassName
+end;
+
+
+{ Extract the data (from them Msg) that was sent to us by the second instance.
+  Returns True if the message was indeed for us AND it is not empty.
+  Returns the extracted data in 's'.
+  It will also bring the first instance to foreground }
+function TAppData.ExtractData(VAR Msg: TWMCopyData; OUT s: string): Boolean;
+begin
+ s:= '';
+ Result:= FALSE;
+ if Msg.CopyDataStruct.dwData = CopyDataID then { Only react on this specific message }
+   begin
+    if Msg.CopyDataStruct.cbData > 0 then       { Do we receive an empty string? }
+      begin
+        SetString(s, PChar(Msg.CopyDataStruct.lpData), Msg.CopyDataStruct.cbData div SizeOf(Char)); { We need a true copy of the data before it disappear }
+        Msg.Result:= 2006;                      { Send something back as positive answer }
+        Result:= TRUE;
+      end;
+    Restore;
+   end;
+end;
 
 
 
 
 
 
-
-{-----------------------------------------------------------------------------------------------------------------------
+{-------------------------------------------------------------------------------------------------------------
    APP COMMAND LINE
------------------------------------------------------------------------------------------------------------------------}
+-------------------------------------------------------------------------------------------------------------}
+
 { Returns the path sent as command line param. Tested ok. }
 function CommandLinePath: string;
 begin
@@ -595,58 +806,6 @@ begin
   Result:= System.SysUtils.FindCmdLineSwitch(Switch, IgnoreCase);
 end;
 
-
-
-
-
-
-{ 1. Create the form ONLY it does not exist already
-  2. Set the font of the new form to be the same as the font of the MainForm
-  3. Show it }
-class procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean = TRUE);
-begin
-  Application.CreateForm(aClass, Reference);
-  if TForm(Reference) <> Application.MainForm
-  then TForm(Reference).Font:= Application.MainForm.Font;
-
-  if Show then TForm(Reference).Show;
-end;
-
-
-class procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference);
-begin
-  Application.CreateForm(aClass, Reference);
-  if TForm(Reference) <> Application.MainForm
-  then TForm(Reference).Font:= Application.MainForm.Font;
-  TForm(Reference).Visible:= FALSE;   //This happens with frmFloor in Cassa2.exe
-  TForm(Reference).ShowModal;
-end;
-
-
-
-// Question: Does FormCount also count invisible forms? Answer: Yes.
-// Question: Does FormCount also count forms created TFrom.Create(Nil). Answer: Yes.
-procedure TAppData.setFont(aFont: TFont);
-begin
-  FFont:= aFont;
-  for VAR i:= 0 to Screen.CustomFormCount - 1 DO    // FormCount => forms currently displayed on the screen. CustomFormCount = as FormCount but also includes the property pages
-    Screen.Forms[i].Font:= aFont;
-end;
-
-
-class procedure TAppData.RaiseIfStillInitializing;
-CONST
-   AppStillInitializingMsg = 'Application not properly initialized.'+#13#10#13#10+ 'PLEASE REPORT the steps necessary to reproduce this bug and restart the application.';
-begin
- if AppData.Initializing
- then RAISE Exception.Create(AppStillInitializingMsg);
-end;
-
-
- {
-initialization
-
-finalization  }
 
 end.
 

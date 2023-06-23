@@ -9,12 +9,14 @@ object frmLog: TfrmLog
   Color = clBtnFace
   DoubleBuffered = True
   ParentFont = True
+  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 3
   OnDestroy = FormDestroy
-  TextHeight = 15
+  PixelsPerInch = 96
+  TextHeight = 13
   object Container: TPanel
     Left = 0
     Top = 0
@@ -24,8 +26,6 @@ object frmLog: TfrmLog
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 0
-    ExplicitWidth = 718
-    ExplicitHeight = 514
     object Log: TRichLog
       AlignWithMargins = True
       Left = 3
@@ -48,9 +48,8 @@ object frmLog: TfrmLog
       ScrollBars = ssBoth
       TabOrder = 1
       WordWrap = False
+      Zoom = 100
       OnError = LogError
-      ExplicitWidth = 712
-      ExplicitHeight = 477
     end
     object pnlBottom: TPanel
       Left = 0
@@ -61,8 +60,6 @@ object frmLog: TfrmLog
       BevelOuter = bvNone
       ParentColor = True
       TabOrder = 0
-      ExplicitTop = 483
-      ExplicitWidth = 718
       DesignSize = (
         722
         31)
@@ -91,7 +88,6 @@ object frmLog: TfrmLog
         Caption = 'Clear'
         TabOrder = 1
         OnClick = btnClearClick
-        ExplicitLeft = 647
       end
       object trkLogVerb: TRichLogTrckbr
         AlignWithMargins = True
@@ -114,7 +110,6 @@ object frmLog: TfrmLog
         TrackBar.TabOrder = 0
         Verbosity = lvInfos
         Log = Log
-        ExplicitLeft = 381
       end
     end
   end

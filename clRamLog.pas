@@ -20,7 +20,7 @@ UNIT clRamLog;
 INTERFACE
 
 USES
-   System.SysUtils, System.Classes, clRichLog, clLogUtils;
+   System.SysUtils, System.Classes, ccStreamMem, clRichLog, clLogUtils;
 
 TYPE
   TRamLog = class(TObject)
@@ -43,7 +43,13 @@ TYPE
      procedure Clear(ClearVisualLog: Boolean);
      procedure Update;
      function  Count: Integer;
-     procedure ImportRawData(const RamLogRawLines: string);   { Access to the unformated lines of the log } { One ore more lines of data in TRamLog format (#1# text_text_text). Used by Baser to restore Log from disk }
+
+     { Export (old) }
+     procedure importRawData(const RamLogRawLines: string);   { Access to the unformated lines of the log } { One ore more lines of data in TRamLog format (#1# text_text_text). Used by Baser to restore Log from disk }
+
+     { Export (new) }
+     procedure LoadFromStream(Stream: TCubicMemStream);
+     procedure SaveToStream  (Stream: TCubicMemStream);
 
      { Add single-line message }
      procedure AddBold   (CONST Mesaj: string);
@@ -63,7 +69,7 @@ TYPE
      procedure ExportTo (aRichLog: TRichLog);
      procedure SaveAsTextFile(CONST FullPath: string);        { Save plain text to file }
      property  Verbosity: TLogVerb read FVerbosity write setVerbosity default lvVerbose;
-     property  Text: string read getText write setText;       { Extract plain text from raw data (RawLines) }
+     property  Text_: string read getText write setText;       { Extract plain text from raw data (RawLines) }
   end;
 
 
@@ -133,29 +139,23 @@ VAR
    s: string;
    TSL: TStringList;
 begin
- TSL:= TStringList.Create;
- TSL.Text:= Mesaj;
-
- for i:= 0 to tsl.Count-1 DO
-  begin
-   s:= TSL[i];
-   s:= StringOfChar (' ', Indent)+ s;
-   RawLines.Add(Level + s);          { Here I got: "EOutOfResources-RichEdit line insertion error" from two users }
-  end;
-
- FreeAndNil(TSL);
+ TSL:= String2TSL(Mesaj);
+ TRY
+   for i:= 0 to tsl.Count-1 DO
+    begin
+     s:= TSL[i];
+     s:= StringOfChar (' ', Indent)+ s;
+     RawLines.Add(Level + s);          { Here I got: "EOutOfResources-RichEdit line insertion error" from two users }
+    end;
+ FINALLY
+   FreeAndNil(TSL);
+ END;
 end;
 
 
 function TRamLog.Count: Integer;
 begin
  Result:= RawLines.Count;
-end;
-
-
-procedure TRamLog.SaveAsTextFile(CONST FullPath: string);    { Save plain text to file }
-begin
- StringToFile(FullPath, Text, woOverwrite);
 end;
 
 
@@ -166,16 +166,9 @@ begin
 end;
 
 
-
-
-
-
-
-{-------------------------------------------------
-   APPEND / EXPORT
--------------------------------------------------}
-function GetLevel(Line: string): TLogVerb;        { Extracts the verbosity level from the provided raw (formated) line }
+function GetLevel(CONST Line: string): TLogVerb;        { Extracts the verbosity level from the provided raw (formated) line }
 begin
+   Assert(Length(Line) > 1, 'Line is too short: '+ Line);
    case Line[2] of
     '1': Result:= lvVerbose;
     '2': Result:= lvHints;
@@ -188,23 +181,106 @@ begin
 end;
 
 
+
+
+
+
+{-------------------------------------------------
+   APPEND
+-------------------------------------------------}
+
 { Appends formated lines from the specified RamLog, based on LogInfos, LogHints, LogWarns, LogErrors settings }
 procedure TRamLog.Append(RamLog: TRamLog);   { UNUSED }
 begin
- for var i:= 0 to RamLog.RawLines.Count -1 DO
-   RawLines.Add(RamLog.RawLines[i]);
+ for var s in RamLog.RawLines DO
+   RawLines.Add(s);
 end;
 
 
+{ Import log raw lines in log. Used by Baser5.15 and below to restore Log from disk.
+  The format is: #1# text_text_text
 
-procedure TRamLog.ExportTo(aRichLog: trichlog);
-VAR i: integer;
+  DEPRECATED!
+    Don't use anymore to import the log from disk! Use SaveToStream/LoadFromStream instead.
+    It is here only for compatibility with Baser below v5.20! }
+procedure TRamLog.importRawData(CONST RamLogRawLines: string);
+VAR
+   s: string;
+   TSL: TStringList;
 begin
- for i:= 0 to RawLines.Count -1 DO
-   if Length(RawLines[i]) < 2      { This is for compatibility with old DNA Baser projects in which the log was saved to disk directly as TXT }
-   then AddMsg(RawLines[i])
-   else aRichLog.AddMsg(GetContent(RawLines[i]), GetLevel(RawLines[i]));
+ TSL:= String2TSL(RamLogRawLines);
+ TRY
+  for s in TSL DO
+   if (s= '')  OR (s= ' ') //fixes some issues I introduced in 2022(?)
+   then Continue
+   else
+     if RichLog <> NIL
+     then RichLog.AddMsg(GetContent(s), getlevel(s));
+  RawLines.Add(s);
+ FINALLY
+   FreeAndNil(TSL);
+ END;
 end;
+
+
+
+{-------------------------------------------------
+   EXPORT TEXT
+-------------------------------------------------}
+procedure TRamLog.ExportTo(aRichLog: TRichLog);
+begin
+ for VAR s in RawLines DO
+   if Length(s) < 2      { This is for compatibility with old DNA Baser projects in which the log was saved to disk directly as TXT }
+   then AddMsg(s)
+   else aRichLog.AddMsg(GetContent(s), GetLevel(s));
+end;
+
+
+procedure TRamLog.SaveAsTextFile(CONST FullPath: string);    { Save plain text to file }
+begin
+ StringToFile(FullPath, Text_, woOverwrite);
+end;
+
+
+
+{-------------------------------------------------
+   EXPORT STREAM
+-------------------------------------------------}
+CONST
+   LogHeader= CRLF+'#Log';
+
+procedure TRamLog.SaveToStream(Stream: TCubicMemStream);
+begin
+  Stream.WriteStringA(LogHeader);
+  Stream.WriteInteger(RawLines.Count);
+  Stream.WritePadding(16);
+
+  for VAR s in RawLines DO
+    Stream.WriteStringU(s);
+end;
+
+
+procedure TRamLog.LoadFromStream(Stream: TCubicMemStream);
+VAR s: string;
+begin
+  s:= string(Stream.ReadStringA);
+  if s <> LogHeader
+  then RAISE Exception.Create('Invalid log header!');
+  VAR iCount:= Stream.ReadInteger;
+  Stream.ReadPadding(16);
+
+  for VAR i:= 1 to iCount DO
+   begin
+    s:= Stream.ReadStringU;
+    RawLines.Add(s);
+   end;
+end;
+
+
+
+
+
+
 
 
 
@@ -229,54 +305,8 @@ begin
    DO Result:= Result+ GetContent(RawLines[i])+ CRLF;
 
  {Cut the last enter}
- Result:= system.COPY(Result, 1, Length(Result)-2);                                                       { Delete last enter }
+ Result:= system.COPY(Result, 1, Length(Result)-2);   { Delete last enter }
 end;
-
-
-
-
-
-{-----------------------------------------
-   ADD MULTIPLE LINES
------------------------------------------}
-(*procedure TRamLog.AddText(CONST MultiLine: string);   { Add multiple lines of text }
-VAR s: string;
-    TSL: TStringList;
-begin
- if RichLog<> NIL
- then RichLog.AddFormated(MultiLine)
- else
-  begin
-   TSL:= TStringList.Create;
-   TSL.Text:= MultiLine;
-   for s in TSL
-    DO RawLines.Add('#7#'+ s);
-   FreeAndNil(TSL);
-  end;
-end;  *)
-
-
-procedure TRamLog.ImportRawData(CONST RamLogRawLines: string);  { Import log raw lines (#1# text_text_text) in log. Used by Baser to restore Log from disk }
-VAR
-   s: string;
-   TSL: TStringList;
-begin
- //HasWarnings:= False;
- TSL:= TStringList.Create;
- TRY
-  TSL.Text:= RamLogRawLines;
-  for s in TSL DO
-   if s= ''
-   then continue
-   else
-     if RichLog <> NIL
-     then RichLog.AddMsg(GetContent(s), getlevel(s));
-  RawLines.Add(s);
- FINALLY
-  FreeAndNil(TSL);
- END;
-end;
-
 
 
 
@@ -317,6 +347,7 @@ begin
  then RichLog.AddBold(Mesaj);
  addNewMessage('#b#', Mesaj);
 end;
+
 
 
 

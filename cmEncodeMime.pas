@@ -35,7 +35,7 @@ IMPLEMENTATION
 
 
 USES
-   Soap.EncdDecd, cmStreamMem;
+   Soap.EncdDecd, ccStreamMem;
 
 
 

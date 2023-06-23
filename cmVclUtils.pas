@@ -8,7 +8,7 @@ UNIT cmVclUtils;
    Utility functions that we can apply to VCL components
 
    See also:
-      cmWindow.pas
+      csWindow.pas
       cmVclUtils.pas
 
    Tester:
@@ -263,7 +263,7 @@ end;
 --------------------------------------------------------------------------------------------------}
 
 { The CanFocus VCL function is totally flawed and unreliable. Use this instead.
-  https://stackoverflow.com/questions/41016976/avoid-that- ccCore.SetFocus-raises-an-exception }
+  https://stackoverflow.com/questions/41016976 }
 function CanFocus(Control: TWinControl): Boolean;
 begin
  Result:= Control.CanFocus AND Control.Enabled AND Control.Visible;
@@ -365,7 +365,7 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    ACTIONS / MENUS
-   See also: cmKbShortcuts.pas
+   See also: csKbShortcuts.pas
 --------------------------------------------------------------------------------------------------}
 
 { Returns true if this component (TMenuItem, TButton), etc has an action assigned to it. }

@@ -54,8 +54,8 @@ USES
  procedure WriteSystemReport(FileName: string);
  function  GenerateSystemRep:    string;
 
+ //function GenerateScreenRep:    string;    // Moved to 3rdParty MonitorHelper.pas
  function  GenerateAppRep:       string;
- function  GenerateScreenRep:    string;
  function  GenerateScreenRepEx:  string;
  function  GenerateWinSysRep:    string;
  function  GenerateWinPathRep:   string;
@@ -78,15 +78,12 @@ USES
  function FixEmbarcaderoAtomTableMemLeak: Boolean; Deprecated 'Use in-program leak fixing: 3rdPartyPkg.AtomGarbageCollector.pas.GarbageCollectAtoms(Log)'
 
 
-{.$DEFINE IncludeMonitorHelper}  { Undefine this if you don't have MonitorHelper.pas. It can be obtained from  https://github.com/r1me/delphi-monitorhelper }
-
 IMPLEMENTATION
 USES
-   cmSystem, ccCore, ccAppData, ccIO, ccWinVersion, cmExecuteProc, cmPermissions, System.DateUtils
-   {$IFDEF IncludeMonitorHelper}, MonitorHelper{$ENDIF};
+   csSystem, ccCore, ccAppData, ccIO, ccWinVersion, csExecuteProc, cmPermissions, System.DateUtils;
 
 
-   
+
 
 {--------------------------------------------------------------------------------------------------
    PROTECTION
@@ -438,8 +435,8 @@ begin
  Result:= Result+ GenerateAppRep      + CRLF+ CRLF;                                 { The AppDataPath parameter lets the user provide the data path in case the app is not using the Default data path }
  Result:= Result+ GenerateWinSysRep   + CRLF+ CRLF;
  Result:= Result+ GenerateHardwareRep + CRLF+ CRLF;                                 { Before calling this I need to enter a valid key into cmHardID:   cmHardID.HDIDValid:= TRUE;  }
- Result:= Result+ GenerateScreenRep   + CRLF+ CRLF;
  Result:= Result+ GenerateWinPathRep;
+ //Result:= Result+ GenerateScreenRep   + CRLF+ CRLF;    Moved to 3rdParty MonitorHelper.pas
 end;
 
 
@@ -479,47 +476,6 @@ begin
  Result:= Result+'  AppData.CurFolder: '   + Tab + AppData.CurFolder+ CRLF;
  Result:= Result+'  AppData.IniFile: '     + Tab + AppData.IniFile+ CRLF;
  Result:= Result+'  Version: '             + Tab + AppData.GetVersionInfo;
-end;
-
-
-
-function GenerateScreenRep: string;
-begin
- Result:= ' [SCREEN]'+ CRLF;
- Result:= Result+ CRLF;
- Result:= Result+ '  Total monitors: '     + Tab+ IntToStr(Screen.MonitorCount)+ CRLF;
- Result:= Result+ '  Desktop rect:'        + Tab+ Rectangle2Str(Screen.DesktopRect)+ CRLF;                         { Specifies the boundaries of the virtual desktop relative to the upper-left corner of the primary monitor. Use DesktopRect to determine the coordinates of the entire virtual desktop, which includes all monitors in the system. DesktopRect is expressed in coordinates where (0,0) is the upper-left corner of the primary monitor. The primary monitor is the monitor with its Primary property set to true. }
- Result:= Result+ '  Desktop size: '       + Tab+ IntToStr(Screen.DesktopWidth)+ 'x'+ IntToStr(Screen.DesktopHeight)+ CRLF;
- Result:= Result+ '  Screen size: '        + Tab+ IntToStr(Screen.Width)+ 'x'+ IntToStr(Screen.Height)+ CRLF;
- Result:= Result+ '  Screen.WorkArea: '    + Tab+ IntToStr(Screen.WorkAreaWidth)+ 'x'+ IntToStr(Screen.WorkAreaHeight)+ CRLF;  { Use Screen to obtain information about the current state of the screen in an application. }
- Result:= Result+ '  Screen.PixPerInch: '  + Tab+ IntToStr(Screen.PixelsPerInch)+ CRLF;
- Result:= Result+ '  WorkareaRect: '       + Tab+ Rectangle2Str(Screen.WorkAreaRect)+ CRLF;  { Use Screen to obtain information about the current state of the screen in an application. }
- Result:= Result+ CRLF;
- Result:= Result+ CRLF;
-
- Result:= Result+ ' [MONTORS]'+ CRLF;
- Result:= Result+ CRLF;
- for var i:= 0 to Screen.MonitorCount-1 DO     { Enumerate through all monitors }
-  begin
-   Result:= Result+ '  Monitor '+ IntToStr(i)+''+ CRLF;
-   Result:= Result+ '    Monitor no: '     + Tab+ IntToStr(Screen.Monitors[i].MonitorNum)+ CRLF;
-   {$IFDEF IncludeMonitorHelper}
-   Result:= Result+ '    DeviceID: '       + Tab+Tab+ Screen.Monitors[i].DeviceID+ CRLF;
-   Result:= Result+ '    FriendlyName: '   + Tab+ Screen.Monitors[i].FriendlyName+ CRLF;
-   {$ENDIF}
-   Result:= Result+ '    BoundsRect:'      + Tab+Tab+ Rectangle2Str(Screen.Monitors[i].BoundsRect)+ CRLF;       { Real monitor area. Indicates the dimensions of the monitor in pixels. Read BoundsRect to learn the dimensions of the monitor. BoundsRect gives the dimensions of the monitor in pixels, where (0,0) represents the top-left corner of the primary monitor. The top of BoundsRect is given by the Top property, the left edge by the Left property, and the height and width by the Height and Width properties respectively. Note:  The BoundsRect property does not take into account any task bars or tool bars docked on the monitor. To determine the area on the monitor that is free of such docked Winapi.Windows, use the WorkareaRect property. }
-   Result:= Result+ '    Workarea rect: '  + Tab+ Rectangle2Str(Screen.Monitors[i].WorkareaRect)+ CRLF;     { Monitor's usable area (without task bar). Gives the application useable area of the monitor. WorkareaRect returns a TRect value furnished with the coordinates and dimensions of the work area of the Monitor. On Winapi.Windows, for example, the application tabs at the screen mean that the Workarea is smaller than the monitor size. Note:  The TRect Right and Bottom values are one pixel beyond Workarea boundary. They are given these values to allow for easy calculation of Workarea width and height as (Right-Left) and (Bottom-Top) respectively.}
-   Result:= Result+ '    Is Primary: '     + Tab+ BoolToStrYesNo(Screen.Monitors[i].Primary)+ CRLF;
-   Result:= Result+ '    Top: '            + Tab+Tab+ IntToStr( Screen.Monitors[i].Top   )+ CRLF;
-   Result:= Result+ '    Left: '           + Tab+Tab+ IntToStr( Screen.Monitors[i].Left  )+ CRLF;
-   Result:= Result+ '    Width: '          + Tab+Tab+ IntToStr( Screen.Monitors[i].Width )+ CRLF;
-   Result:= Result+ '    Height: '         + Tab+Tab+ IntToStr( Screen.Monitors[i].Height)+ CRLF;
-   Result:= Result+ '    DPI: '            + Tab+Tab+ IntToStr( Screen.Monitors[i].PixelsPerInch)+ CRLF;
-   //Result:= Result+ '    MonitorFromRect(mdNearest): ' + IntToStr( (Screen.MonitorFromRect( TRect.Create(P,100,100), mdNearest)).MonitorNum);
-   Result:= Result+ CRLF;
-  end;
-
- Result:= RemoveLastEnter(Result);
 end;
 
 
@@ -601,7 +557,7 @@ begin
  AND FileExists(AppData.SysDir+ 'AtomGarbageCollector.exe')
  then
   begin
-   Result:= cmExecuteProc.ExecuteProc(AppData.SysDir+ 'AtomGarbageCollector.exe', SW_HIDE);
+   Result:= csExecuteProc.ExecuteProc(AppData.SysDir+ 'AtomGarbageCollector.exe', SW_HIDE);
    LastLeakFix:= now;
   end
  else Result:= TRUE;

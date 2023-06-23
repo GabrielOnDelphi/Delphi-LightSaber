@@ -1,4 +1,4 @@
-UNIT ccINIFileVcl; 
+UNIT ccINIFileVcl;
 
 {=============================================================================================================
   CubicDesign
@@ -39,29 +39,28 @@ UNIT ccINIFileVcl;
 
   ____________
 
-  Utils:
-     Use ccIniFile.AppData.IniFile to obtain the file name of the INI file (where to save the data).
-     Use ccIniFile.AppData.AppDataFolder to get the path where the INI file is stored.
+  The INI file path
+     AppData is used to obtain the file name of the INI file (where to save the data),
+     and AppData.AppDataFolder to get the path where the INI file is stored.
      The class will also automatically save the ccAppData.AppData.LastUsedFolder variable
 
   ____________
 
   Important:
-     SaveFrom will fail to save the controls of a form if they have been re-parented (moved to another form).
+     SaveFrom will fail to save the controls of a form if they have been re-parented (moved to another form). But no exception will rise.
      The new parent form will also fail to save them.
      To fix this, we need to move the controls back to their original parent (form) BEFORE we call SaveFrom!
 
-  Important:
-     DO NOT USE SELF as parameter in TCubicIniFileEx.Create if you call TCubicIniFileEx.Create in FormCreate because the Self is not yet ready!
-     But TCubicIniFileEx.Create(FrmMain) works.
+  Notices
+    * DO NOT USE SELF as parameter in TCubicIniFileEx.Create if you call TCubicIniFileEx.Create in FormCreate because the Self is not yet ready! But TCubicIniFileEx.Create(FrmMain) works.
+    * LoadForm is called after the components on the form are created but BEFORE their CreateWnd is called!
 
-  Important:
-     INI file does not support unicode chars. Unicode chars are replaced with '?'
-
-  //LoadForm is called after the components on the form are created but BEFORE thier CreateWnd is called!
+  UNICODE
+     INI file does not support unicode chars. Unicode chars are replaced with '?'. Sorry. This is not a limitation in my code but in Delphi's RTL.
 
   Tester:
      c:\Myprojects\Project Testers\IniFile tester\Tester.dpr
+     https://github.com/GabrielOnDelphi/Dephi-LightSaber-GUI_AutoSave
 =======================================================================================================================}
 
 {ToDo: add support for TCheckListBox}
@@ -650,7 +649,7 @@ end;
 
    Parameters:
          OnlyFormPos=False  ->  Save all supported controls on this form
-         OnlyFormPos=True   ->  Save only the position of the form (no width/height/WndState)
+         OnlyFormPos=True   ->  It will only save the position of the form (only Left/Top, no width/height/WndState)
 -----------------------------------------------------------------------------------------------------------------------}
 
 procedure SaveForm(Form: TForm; OnlyFormPos: Boolean= FALSE);

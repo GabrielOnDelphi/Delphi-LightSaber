@@ -10,7 +10,7 @@ UNIT cmMRU;
 
    Also see:
       \Third party packages\Mru.pas
-      AddFile2TaskbarMRU in cmShell.pas
+      AddFile2TaskbarMRU in csShell.pas
 
 =============================================================================================================}
 

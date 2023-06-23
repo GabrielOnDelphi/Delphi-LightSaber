@@ -79,8 +79,8 @@
         <DCCReference Include="..\cmEllipsisText.pas"/>
         <DCCReference Include="..\cmEncodeMime.pas"/>
         <DCCReference Include="..\cmEncodeXOR.pas"/>
-        <DCCReference Include="..\cmExecuteProc.pas"/>
-        <DCCReference Include="..\cmExecuteShell.pas"/>
+        <DCCReference Include="..\csExecuteProc.pas"/>
+        <DCCReference Include="..\csExecuteShell.pas"/>
         <DCCReference Include="..\cmINIFileQuick.pas"/>
         <DCCReference Include="..\cmMath.pas"/>
         <DCCReference Include="..\cmMemoInputBox.pas"/>
@@ -89,22 +89,22 @@
         <DCCReference Include="..\cmPermissions.pas"/>
         <DCCReference Include="..\cmPopUpUp.pas"/>
         <DCCReference Include="..\cmPowerUtils.pas"/>
-        <DCCReference Include="..\cmRegistry.pas"/>
         <DCCReference Include="..\cmRttiSetToString.pas"/>
-        <DCCReference Include="..\cmShell.pas"/>
-        <DCCReference Include="..\cmKbShortcuts.pas"/>
+        <DCCReference Include="..\csShell.pas"/>
+        <DCCReference Include="..\csKbShortcuts.pas"/>
         <DCCReference Include="..\cmStrBuilder.pas"/>
-        <DCCReference Include="..\cmStreamMem.pas"/>
         <DCCReference Include="..\cmStringList.pas"/>
-        <DCCReference Include="..\cmSystem.pas"/>
+        <DCCReference Include="..\csSystem.pas"/>
         <DCCReference Include="..\cmVclUtils.pas"/>
-        <DCCReference Include="..\cmWindow.pas"/>
-        <DCCReference Include="..\cmWindowMetrics.pas"/>
-        <DCCReference Include="..\cmWMIResolution.pas"/>
+        <DCCReference Include="..\csWindow.pas"/>
+        <DCCReference Include="..\csWindowMetrics.pas"/>
+        <DCCReference Include="..\csWMIResolution.pas"/>
         <DCCReference Include="..\cmWrapString.pas"/>
-        <DCCReference Include="..\cmKeyboard.pas"/>
+        <DCCReference Include="..\csKeyboard.pas"/>
         <DCCReference Include="..\cmStringListA.pas"/>
-        <DCCReference Include="..\cmEnvironmentVar.pas"/>
+        <DCCReference Include="..\csEnvironmentVar.pas"/>
+        <DCCReference Include="..\cmSearchResult.pas"/>
+        <DCCReference Include="..\cmPascal.pas"/>
         <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>

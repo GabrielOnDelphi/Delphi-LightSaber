@@ -101,6 +101,7 @@ CONST
 
 { Range limits on int type vars }          { int64 can hold up to 9223372036854775807 }
 CONST
+   UnInitialized= -7777777;
    MAXSMALLINT = high(smallint);
    MINSMALLINT = low(smallint);
    MINWORD     = low(word);
@@ -193,6 +194,7 @@ CONST
 
 TYPE
   TStringArray       = array of string;
+  TBytesArray        = array of Byte;    //see   System.SysUtils.TBytes
   EnterType          = (etUnknown, etWin, etNix, etMac);
   TConvertNotifyKind = (nkMax, nkProgress);
   TConvertNotify     = procedure(Kind: TConvertNotifyKind; Value: LongInt);
@@ -332,14 +334,14 @@ TYPE
  // ShortenString & GetEllipsisText moved to cmEllipsisText.pas
 
  // MAKE STRING
- function  MakeStringLongRight (CONST s: AnsiString; c: AnsiChar; CONST ForcedLength: integer): AnsiString;   overload;
- function  MakeStringLongRight (CONST s: string; c: Char; CONST ForcedLength: integer): string;               overload;
- function  MakeStringLongRight (CONST s, Pad: string; CONST ForcedLength: integer): string;                   overload;           { Make sure the string has ForcedLength. If not, add some extra characters at its end to make it that long  }
- function  MakeStringLongLeft  (CONST s, Pad: string; CONST ForcedLength: integer): string;                   { Make sure the string has ForcedLength. If not, add some extra characters at its front to make it that long  }
+ function  MakeStringLongRight (CONST s, c: AnsiChar; ForcedLength: integer): AnsiString;   overload;
+ function  MakeStringLongRight (CONST s, c: Char;     ForcedLength: integer): string;       overload;
+ function  MakeStringLongRight (CONST s, Pad: string; ForcedLength: integer): string;       overload;         { Make sure the string has ForcedLength. If not, add some extra characters at its end to make it that long  }
+ function  MakeStringLongLeft  (CONST s, Pad: string; ForcedLength: integer): string;                         { Make sure the string has ForcedLength. If not, add some extra characters at its front to make it that long  }
 
- function  LeadingZeros        (CONST s: string; CONST ForcedLength: integer): string;                        { insert (ForcedLength-1) zeros in front of the specified string. ForcedLength shows which is the desired lenght of the new string. Example: LeadingZeros('a', 4) will result in '000a'  }
- function  LeadingZeros2       (CONST s: string; CONST ForcedLength: integer): string; { Not tested }
- function  LeadingZerosAuto    (CONST s: string; CONST MaxValue: integer): string;                            { Same as above except_ that the user doesn't have to specify how many zeros to add. Instead the function will determine this automaticxally based on the number received as parameter. For example LeadingZeros('1', 50) will generate '01' but LeadingZeros('1', 500) will generate '001' }
+ function  LeadingZeros        (CONST s: string; ForcedLength: integer): string;                              { insert (ForcedLength-1) zeros in front of the specified string. ForcedLength shows which is the desired lenght of the new string. Example: LeadingZeros('a', 4) will result in '000a'  }
+ function  LeadingZeros2       (CONST s: string; ForcedLength: integer): string; { Not tested }
+ function  LeadingZerosAuto    (CONST s: string; MaxValue: integer): string;                                  { Same as above except_ that the user doesn't have to specify how many zeros to add. Instead the function will determine this automaticxally based on the number received as parameter. For example LeadingZeros('1', 50) will generate '01' but LeadingZeros('1', 500) will generate '001' }
 
  // WRAP
  //See cmWrapString.pas
@@ -368,7 +370,7 @@ TYPE
  function  CountAppearance     (CONST Niddle: AnsiChar; CONST Haystack: AnsiString): Integer;      overload;
 
  function  LastPos             (CONST Niddle, S: string): Integer;                                 overload;  { Return the position of the last occurence of a substring in String. Not tested. Also see 'EndsStr' }
- function  LastPos             (CONST Niddle: Char; CONST S: String): Integer;                          overload;
+ function  LastPos             (CONST Niddle: Char; CONST S: String): Integer;                     overload;
 
  function  PosAtLeast          (CONST Niddle, S: string; AtLeast: Integer): Boolean;                          { Returns true if the specified string appears at least x times }
  function  PosInsensitive      (CONST Niddle, Haystack: string): Integer;                          overload;
@@ -378,7 +380,7 @@ TYPE
  function  FirstChar           (CONST s: string): string;                                                     { Returns the first char in the string but checks first if the string is empty (so it won't crash). Returns '' if the string is empty }
  function  FirstCharIs         (CONST s: string; c: Char): Boolean;
  function  LastCharIs          (CONST s: string; c: Char): Boolean;
-
+ function  FirstNonSpace       (CONST s: string): Integer;                                                    { Returns the position of the first character that is no a space.  For example: '  Earth' returns 3. }
 
 {============================================================================================================
    STRINGS: CONVERSION TO NUMBERS
@@ -2745,7 +2747,7 @@ end;
 
 { Insert (ForcedLength-1) zeros in front of the specified string. ForcedLength shows which is the desired lenght of the new string. Example: LeadingZeros('a', 4) will result in '000a'
   Note: you can also do it like this:   To convert an integer to a string with minimum length, use the Str procedure:  Str(123:6, s); // s is set to '   123' }
-function LeadingZeros(CONST s: string; CONST ForcedLength: integer): string;
+function LeadingZeros(CONST s: string; ForcedLength: integer): string;
 begin
  Result:= s;
  WHILE Length(Result)< ForcedLength DO
@@ -2754,7 +2756,7 @@ end;
 
 
 {TEST IT !!!!!!!!!}
-function LeadingZeros2(CONST s: string; CONST ForcedLength: integer): string;
+function LeadingZeros2(CONST s: string; ForcedLength: integer): string;
 begin
  Result:= Format(s+'<%'+IntToStr(ForcedLength)+'d>', [s]);
 end;
@@ -2763,7 +2765,7 @@ end;
 
 { Same as above except_ that the user doesn't have to specify how many zeros to add.
   Instead the function will determine this automaticxally based on the number received as parameter. For example LeadingZeros('1', 50) will generate '01' but LeadingZeros('1', 500) will generate '001'.   Note: you can also do it like this:   To convert an integer to a string with minimum length, use the Str procedure:  Str(123:6, s); // s is set to '   123' }
-function LeadingZerosAuto(CONST s: string; CONST MaxValue: integer): string;
+function LeadingZerosAuto(CONST s: string; MaxValue: integer): string;
 VAR ForcedLength: Integer;
 begin
  ForcedLength:= Length(IntToStr(MaxValue));
@@ -2775,7 +2777,7 @@ end;
 { This is fast }
 { Note: you can also do it like this:   To convert an integer to a string with minimum length, use the Str procedure:  Str(123:6, s); // s is set to '   123' }
 { Make sure the string has ForcedLength. If not, add some extra characters at its end to make it that long  }
-function MakeStringLongRight(CONST s: string; c: Char; CONST ForcedLength: integer): string;
+function MakeStringLongRight(CONST s, c: Char; ForcedLength: integer): string;
 begin
  if Length(s) >= ForcedLength then EXIT(s);
 
@@ -2785,7 +2787,7 @@ end;
 
 
 { Make sure the string has ForcedLength. If not, add some extra characters at its end to make it that long  }
-function MakeStringLongRight(CONST s: AnsiString; c: AnsiChar; CONST ForcedLength: integer): AnsiString;
+function MakeStringLongRight(CONST s, c: AnsiChar; ForcedLength: integer): AnsiString;
 begin
  if Length(s) >= ForcedLength then EXIT(s);
 
@@ -2796,7 +2798,7 @@ end;
 
 { Make sure the string has ForcedLength. If not, add some extra characters at its end to make it that long  }
 {TODO: This is slow. Use DupeString. }
-function MakeStringLongRight(CONST s, Pad: string; CONST ForcedLength: integer): string;
+function MakeStringLongRight(CONST s, Pad: string; ForcedLength: integer): string;
 begin
  Assert(Pad > '');
  Result:= s;
@@ -2806,7 +2808,8 @@ begin
 end;
 
 
-function MakeStringLongLeft (CONST s: string; CONST Pad: string; CONST ForcedLength: integer): string; { Make sure the string has a total of ForcedLength chars. If not, add some extra characters at its front to make it that long  }
+{ Makes sure the string has a total of ForcedLength chars. If not, add some extra characters at its front to make it that long  }
+function MakeStringLongLeft (CONST s, Pad: string; ForcedLength: integer): string;
 begin
  Result:= s;
  WHILE Length(Result)< ForcedLength
@@ -3372,6 +3375,15 @@ begin
 end;
 
 
+{ Returns the position of the first character that is no a space.  For example: '  Earth' returns 3. }
+function FirstNonSpace(CONST s: string): Integer;
+begin
+ for VAR i:= 1 to Length(s) DO
+    if s[i] <> ' '
+    then EXIT(i);
+ Result:= -1;
+end;
+
 
 
 
@@ -3756,7 +3768,10 @@ end;
 { Returns a random name in a 100 unique names list }
 function GetRandomPersonName: string;
 CONST
-   Names: array[0..199] of string = ('Aaron','Abigail','Adam','Alan','Albert','Alexander','Alexis','Alice','Amanda','Amber','Amy','Andrea','Andrew','Angela','Ann','Anna','Anthony','Arthur','Ashley','Austin','Barbara','Benjamin','Betty','Beverly','Billy','Bobby','Brandon','Brenda','Brian','Brittany','Bruce','Bryan','Carl','Carol','Carolyn','Catherine','Charles','Charlotte','Cheryl','Christian','Christina','Christine','Christopher','Cynthia','Daniel','Danielle','David','Deborah','Debra','Denise','Dennis','Diana','Diane','Donald','Donna','Doris','Dorothy','Douglas','Dylan','Edward','Elijah','Elizabeth','Emily','Emma','Eric','Ethan','Eugene','Evelyn','Frances','Frank','Gabriel','Gary','George','Gerald','Gloria','Grace','Gregory','Hannah','Harold','Heather','Helen','Henry','Isabella','Jack','Jacob','Jacqueline','James','Janet','Janice','Jason','Jean','Jeffrey','Jennifer','Jeremy','Jerry','Jesse','Jessica','Joan','Joe','John','Jonathan','Jordan','Jose','Joseph','Joshua','Joyce','Juan','Judith','Judy','Julia','Julie','Justin','Karen','Katherine','Kathleen','Kathryn','Kayla','Keith','Kelly','Kenneth','Kevin','Kimberly','Kyle','Larry','Laura','Lauren','Lawrence','Linda','Lisa','Logan','Lori','Louis','Madison','Margaret','Maria','Marie','Marilyn','Mark','Martha','Mary','Mason','Matthew','Megan','Melissa','Michael','Michelle','Nancy','Natalie','Nathan','Nicholas','Nicole','Noah','Olivia','Pamela','Patricia','Patrick','Paul','Peter','Philip','Rachel','Ralph','Randy','Raymond','Rebecca','Richard','Robert','Roger','Ronald','Roy','Russell','Ruth','Ryan','Samantha','Samuel','Sandra','Sara','Sarah','Scott','Sean','Sharon','Shirley','Sophia','Stephanie','Stephen','Steven','Susan','Teresa','Terry','Theresa','Thomas','Timothy','Tyler','Victoria','Vincent','Virginia','Walter','Wayne','William','Willie','Zachary');
+   Names: array[0..199] of string = ('Aaron','Abigail','Adam','Alan','Albert','Alexander','Alexis','Alice','Amanda','Amber','Amy','Andrea','Andrew','Angela','Ann','Anna','Anthony','Arthur','Ashley','Austin','Barbara','Benjamin','Betty','Beverly','Billy','Bobby','Brandon','Brenda','Brian','Brittany','Bruce','Bryan','Carl','Carol','Carolyn','Catherine','Charles',
+                                     'Charlotte','Cheryl','Christian','Christina','Christine','Christopher','Cynthia','Daniel','Danielle','David','Deborah','Debra','Denise','Dennis','Diana','Diane','Donald','Donna','Doris','Dorothy','Douglas','Dylan','Edward','Elijah','Elizabeth','Emily','Emma','Eric','Ethan','Eugene','Evelyn','Frances','Frank','Gabriel','Gary','George','Gerald','Gloria','Grace','Gregory','Hannah','Harold','Heather','Helen','Henry',
+                                     'Isabella','Jack','Jacob','Jacqueline','James','Janet','Janice','Jason','Jean','Jeffrey','Jennifer','Jeremy','Jerry','Jesse','Jessica','Joan','Joe','John','Jonathan','Jordan','Jose','Joseph','Joshua','Joyce','Juan','Judith','Judy','Julia','Julie','Justin','Karen','Katherine','Kathleen','Kathryn','Kayla','Keith','Kelly','Kenneth','Kevin','Kimberly','Kyle','Larry','Laura',
+                                     'Lauren','Lawrence','Linda','Lisa','Logan','Lori','Louis','Madison','Margaret','Maria','Marie','Marilyn','Mark','Martha','Mary','Mason','Matthew','Megan','Melissa','Michael','Michelle','Nancy','Natalie','Nathan','Nicholas','Nicole','Noah','Olivia','Pamela','Patricia','Patrick','Paul','Peter','Philip','Rachel','Ralph','Randy','Raymond','Rebecca','Richard','Robert','Roger','Ronald','Roy','Russell','Ruth','Ryan','Samantha','Samuel','Sandra','Sara','Sarah','Scott','Sean','Sharon','Shirley','Sophia','Stephanie','Stephen','Steven','Susan','Teresa','Terry','Theresa','Thomas','Timothy','Tyler','Victoria','Vincent','Virginia','Walter','Wayne','William','Willie','Zachary');
 begin
   Result:= Names[Random(High(Names))];
 end;

@@ -3,7 +3,6 @@ prompt $
 cls
 
 del  /s *.map
-del  /s *.dsk
 del  /s *.dsm
 del  /s *.ddp
 del  /s *.bak

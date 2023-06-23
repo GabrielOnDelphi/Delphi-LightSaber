@@ -66,10 +66,10 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="VclSmp.dcp"/>
-        <DCCReference Include="vclimg.dcp"/>
-        <DCCReference Include="vclwinx.dcp"/>
-        <DCCReference Include="bindengine.dcp"/>
-        <DCCReference Include="vclie.dcp"/>
+        <DCCReference Include="Vclimg.dcp"/>
+        <DCCReference Include="VclWinx.dcp"/>
+        <DCCReference Include="VclIE.dcp"/>
+        <DCCReference Include="BindEngine.dcp"/>
         <DCCReference Include="..\ccIO.pas"/>
         <DCCReference Include="..\ccCore.pas"/>
         <DCCReference Include="..\ccBinary.pas"/>
@@ -79,15 +79,17 @@
         <DCCReference Include="..\ccINIFile.pas"/>
         <DCCReference Include="..\ccIniFileVcl.pas"/>
         <DCCReference Include="..\ccCompiler.pas"/>
+        <DCCReference Include="..\ccRegistry.pas"/>
+        <DCCReference Include="..\ccStreamMem.pas"/>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
         <BuildConfiguration Include="Release">
             <Key>Cfg_1</Key>
-            <CfgParent>Base</CfgParent>
-        </BuildConfiguration>
-        <BuildConfiguration Include="Debug">
-            <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>

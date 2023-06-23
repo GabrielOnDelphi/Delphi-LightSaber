@@ -24,7 +24,7 @@ package LightCore;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'LightSaber Core D11'}
+{$DESCRIPTION 'LightSaber - Core library D11'}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
 
@@ -32,8 +32,8 @@ requires
   VclSmp,
   vclimg,
   vclwinx,
-  bindengine,
-  vclie;
+  VclIE,
+  BindEngine;
 
 contains
   ccIO in '..\ccIO.pas',
@@ -44,7 +44,9 @@ contains
   ccStreamBuff in '..\ccStreamBuff.pas',
   ccINIFile in '..\ccINIFile.pas',
   ccIniFileVcl in '..\ccIniFileVcl.pas',
-  ccCompiler in '..\ccCompiler.pas';
+  ccCompiler in '..\ccCompiler.pas',
+  ccRegistry in '..\ccRegistry.pas',
+  ccStreamMem in '..\ccStreamMem.pas';
 
 end.
 

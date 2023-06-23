@@ -13,11 +13,11 @@ UNIT cmEncodeXOR;
 
 INTERFACE
 
-USES System.Classes, System.NetEncoding, IdGlobal, SysUtils;
+USES System.Classes, System.NetEncoding, ccCore, ccStreamMem, SysUtils;
 
- function CRC32_U(CONST s : string)     : Cardinal;                   { For UNICODE - does not output the same result as Total Commander! }
- function CRC32  (CONST s: AnsiString)  : Cardinal;  overload;        { Tested: ok }
- function CRC32  (CONST Bytes: TIdBytes): Cardinal;  overload;
+ function CRC32_U(CONST s : string)        : Cardinal;                   { For UNICODE - does not output the same result as Total Commander! }
+ function CRC32  (CONST s: AnsiString)     : Cardinal;  overload;     { Tested: ok }
+ function CRC32  (CONST Bytes: TBytesArray): Cardinal;  overload;
 
  { RUDIMENTARY ENCRYPTION }
  function  SimpleDecode      (CONST s: string): string;               { Simple encryption. Use your preffered encryptor here }
@@ -25,7 +25,7 @@ USES System.Classes, System.NetEncoding, IdGlobal, SysUtils;
 
  { XOR ENCRYPTION }
  function  EncodeDecode_XOR  (CONST s: string      ; Key: Byte= 27): string;     overload;     { Torry Encode/Decode}
- function  EncodeDecode_XOR  (CONST Bytes: TIDBytes; Key: Byte= 27): TIDBytes;   overload;
+ function  EncodeDecode_XOR  (CONST Bytes: TBytesArray; Key: Byte= 27): TBytesArray;   overload;
  function  EncodeDecode_XOR  (CONST s: AnsiString  ; Key: Byte= 27): AnsiString; overload
 
 
@@ -76,7 +76,7 @@ begin
 end;
 
 
-function CRC32(CONST Bytes: TIdBytes): Cardinal;
+function CRC32(CONST Bytes: TBytesArray): Cardinal;
 VAR
    i: Integer;
 begin
@@ -229,7 +229,7 @@ begin
 end;
 
 
-function EncodeDecode_XOR(CONST Bytes: TIDBytes; Key: Byte= 27): TIDBytes;  { Very rudimentary. Uses '27' as key. From Torry }
+function EncodeDecode_XOR(CONST Bytes: TBytesArray; Key: Byte= 27): TBytesArray;  { Very rudimentary. Uses '27' as key. From Torry }
 VAR i: Integer;
 begin
   Result:= Bytes;
