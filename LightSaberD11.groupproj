@@ -12,6 +12,9 @@
         <Projects Include="D11\LightCommon.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="D11\LightTranslator.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>

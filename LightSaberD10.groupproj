@@ -12,6 +12,9 @@
         <Projects Include="D10\LightCommon.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="D10\LightTranslator.dproj">
+            <Dependencies/>
+        </Projects>	
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -20,6 +23,7 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
+
     <Target Name="LightCore">
         <MSBuild Projects="D10\LightCore.dproj"/>
     </Target>
@@ -47,6 +51,7 @@
     <Target Name="LightCommon:Make">
         <MSBuild Projects="D10\LightCommon.dproj" Targets="Make"/>
     </Target>
+    
     <Target Name="Build">
         <CallTarget Targets="LightCore;LightLog;LightCommon"/>
     </Target>
