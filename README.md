@@ -1,25 +1,82 @@
-# Delphi-LightSaber
+# LightSaber
 
-**Short description**   
-Contains useful functions.   
-Lightweight (only 10000 lines of code) alternative to Jedi library.   
 
- 
 **Description**   
-The CoreLib contains lots and lots of "goodie" functions - functions that make your life easier, and visual controls. 
-More than 15 years of development have been put in this library. 
+This repository contains a group of general-purpose libraries, that make your life easier.
 The library also wants to be a lightweight replacement for the mammoth Delphi Jedi library.  
-Simple, crystal clear, non-obfuscated, fully commented code.   
+Simple, crystal clear, non-obfuscated, fully commented and curated code. 
 No external dependencies.
-Click the 'Watch' button if you want to get notified about updates.  
+
+More than 15 years of development have been put in this library. 
+Click the 'Watch' button if you want to get notified about updates.
+
 _________________
 
-This repository contains the CoreLib and LogLib. More libraries to be added soon. Your code could use directly the bottom library (Core) or higher libraries in the hierarchy, depending on your requirements. 
+**Structure** 
+
+This repository contains the following libraries: 
+ - Core
+ - Log
+ - Common
+ - Internet
+ - Translator 
+ 
+Each library depends on the previous one, in the order specified above.  
+LightSaber Core does not depend on any other library.   
+Therefore, if you want the Log library, you need to compile also the Core library.
+Unzip all repositories in a single folder.
+ 
+Your code could use directly the bottom library (Core) or higher libraries in the hierarchy, depending on your requirements:
 
 ![](https://raw.githubusercontent.com/GodModeUser/Delphi-LightSaber/main/Docs/Library%20architecture.png)
+
 _________________
 
-Files in CoreLib:
+**Filename convention**  
+
+The following filename convention is used in LightSaber libraries:  
+- The first letter (c) stands for 'cubic' (the orginal name of the library)
+- The second letter is as follows:
+- 'c' stands for 'core'.  (All other top libraries are based on the Core library)
+- 'v'-> visual component. 
+- 'Graph'-> graphic library.
+- 'l' -> Log library.
+- 'i' -> Internet library.
+- 'm' -> Common library.
+
+Example:   
+- ccBinary.pas  (Cubic core library)
+- cvMemo.pas    (Cubic visual component)
+- cGraphFX.pas  (Cubic graphic library) 
+- clVisLog.pas (Cubic log library)  
+- ciEmailSender.pas (Cubic internet library)  
+- cmPowerUtils.pas (Cubic common library)  
+- ciEmailSender.pas (Cubic internet library)  
+- cmPowerUtils.pas (Cubic common library)  
+
+_________________
+
+**Road Map**
+
+The LightSaber Graphics, LightSaber Visual Controls and Proteus libraries will be added as soon as my free time allows it. 
+
+**This library will be expanded if it gets enough Stars.** 
+Click the 'Star' button (top-right corner) if you like this library.  
+Over 100 files are waiting to be cured and added: graphichs, simple encryption, internet functions (including file download routines), HTML manipulation, image manipulation, registry, math and LOTS of visual components!
+
+
+This library is freeware (see included copyright notice). The library cannot be used in Russia!
+
+_________________
+
+**Installation**
+
+Double click the LightSaber.groupproj to load it in Delphi.
+In Project Manager, right click on the group (top) and select "Build all" in the popup menu.
+
+_________________
+
+**Files in CoreLib**
 
 **ccCore.pas**  
   Over 200 functions for:  
@@ -126,42 +183,3 @@ A full demo app that demonstrates how to save/load the GUI with just two lines o
 
 _____
 
-Not all sub-libraries listed above are yet available on GitHub.   
-
-**This library will be expanded if it gets enough Stars.** Click the 'Star' button (top-right corner) if you like this library.  
-Over 100 files are waiting to be cured and added: graphichs, simple encryption, internet functions (including file download routines), HTML manipulation, image manipulation, registry, math and LOTS of visual components!
-
-_____
-
-**Filename convention**  
-The following filename convention is used in LightSaber libraries:  
-- The first letter (c) stands for 'cubic' 
-- The second letter is as follows:
-- 'c' stands for 'core'.  (All other top libraries are based on the Core library)
-- 'v'-> visual component. 
-- 'Graph'-> graphic library.
-- 'l' -> Log library.
-- 'i' -> Internet library.
-- 'm' -> Common library.
-
-Example:   
-- ccBinary.pas  (Cubic core library)
-- cvMemo.pas    (Cubic visual component)
-- cGraphFX.pas  (Cubic graphic library) 
-- clVisLog.pas (Cubic log library)  
-- ciEmailSender.pas (Cubic internet library)  
-- cmPowerUtils.pas (Cubic common library)  
-- ciEmailSender.pas (Cubic internet library)  
-- cmPowerUtils.pas (Cubic common library)  
-_____
-
-Each library depends on the previous one, in the order specified above.  
-LightSaber Core does not depend on any other library.   
-Therefore, if you want the LightSaber Log repository, you need to download also the LightSaber Core repository.
-Unzip all repositories in a single folder.
-_____
-
-This library is freeware (see included copyright notice). 
-The library cannot be used in Russia!
-
-Enjoy and "Star" the library if it is useful to you.
