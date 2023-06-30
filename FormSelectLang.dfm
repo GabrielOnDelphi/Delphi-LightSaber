@@ -15,7 +15,6 @@ object frmLanguage: TfrmLanguage
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
-  OldCreateOrder = False
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
@@ -25,7 +24,6 @@ object frmLanguage: TfrmLanguage
   DesignSize = (
     415
     334)
-  PixelsPerInch = 96
   TextHeight = 13
   object grpChoose: TGroupBox
     Left = 6
@@ -44,6 +42,7 @@ object frmLanguage: TfrmLanguage
       Align = alBottom
       Caption = '@Authors'
       Visible = False
+      ExplicitWidth = 48
     end
     object lblHint: TLabel
       AlignWithMargins = True

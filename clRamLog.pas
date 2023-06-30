@@ -20,7 +20,7 @@ UNIT clRamLog;
 INTERFACE
 
 USES
-   System.SysUtils, System.Classes, ccStreamMem, clRichLog, clLogUtils;
+   System.SysUtils, System.Classes, ccStreamBuff, clRichLog, clLogUtils, ccStreamMem;
 
 TYPE
   TRamLog = class(TObject)
@@ -48,8 +48,10 @@ TYPE
      procedure importRawData(const RamLogRawLines: string);   { Access to the unformated lines of the log } { One ore more lines of data in TRamLog format (#1# text_text_text). Used by Baser to restore Log from disk }
 
      { Export (new) }
-     procedure LoadFromStream(Stream: TCubicMemStream);
-     procedure SaveToStream  (Stream: TCubicMemStream);
+     procedure LoadFromStream(Stream: TCubicBuffStream);   overload;
+     procedure LoadFromStream(Stream: TCubicMemStream);    overload;
+     procedure SaveToStream  (Stream: TCubicBuffStream);   overload;
+     procedure SaveToStream  (Stream: TCubicMemStream);    overload;
 
      { Add single-line message }
      procedure AddBold   (CONST Mesaj: string);
@@ -249,7 +251,17 @@ end;
 CONST
    LogHeader= CRLF+'#Log';
 
-procedure TRamLog.SaveToStream(Stream: TCubicMemStream);
+procedure TRamLog.SaveToStream(Stream: TCubicBuffStream);
+begin
+  Stream.WriteStringA(LogHeader);
+  Stream.WriteInteger(RawLines.Count);
+  Stream.WritePadding(16);
+
+  for VAR s in RawLines DO
+    Stream.WriteStringU(s);
+end;
+
+procedure TRamLog.SaveToStream(Stream: TCubicMemStream);  { For compatibility }
 begin
   Stream.WriteStringA(LogHeader);
   Stream.WriteInteger(RawLines.Count);
@@ -260,7 +272,10 @@ begin
 end;
 
 
-procedure TRamLog.LoadFromStream(Stream: TCubicMemStream);
+
+
+
+procedure TRamLog.LoadFromStream(Stream: TCubicBuffStream);
 VAR s: string;
 begin
   s:= string(Stream.ReadStringA);
@@ -276,6 +291,22 @@ begin
    end;
 end;
 
+
+procedure TRamLog.LoadFromStream(Stream: TCubicMemStream);   { For compatibility }
+VAR s: string;
+begin
+  s:= string(Stream.ReadStringA);
+  if s <> LogHeader
+  then RAISE Exception.Create('Invalid log header!');
+  VAR iCount:= Stream.ReadInteger;
+  Stream.ReadPadding(16);
+
+  for VAR i:= 1 to iCount DO
+   begin
+    s:= Stream.ReadStringU;
+    RawLines.Add(s);
+   end;
+end;
 
 
 

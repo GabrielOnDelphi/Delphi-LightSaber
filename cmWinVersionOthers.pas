@@ -30,7 +30,8 @@ function  GenerateReport: string; { For testing }
 
 {$WARN GARBAGE OFF}                               {Silence the: W1011 Text after final END warning }
 
-IMPLEMENTATION    
+IMPLEMENTATION
+USES ccCore;
 
 
 
@@ -69,18 +70,6 @@ var MajVersion, MinVersion: Cardinal;
 begin
  GetWinVersion(MajVersion, MinVersion);
  result:= IntToStr(MajVersion)+ '.'+ IntToStr(MinVersion);
-end;
-
-
-
-{ Extracts a number from a string. Works only if the number is at the beginning of the string. Example '123xxx' }
-function ExtractIntFromStr(const s: string): Integer;   move it to ccCore
-var
-  RetCode: Integer;
-begin
-  Val(s, Result, RetCode); // RetCode is the extracted no OR position where a failure (non-numeric character) occured
-  if RetCode > 0
-  then Val(Copy(s, 1, RetCode - 1), Result, RetCode);
 end;
 
 

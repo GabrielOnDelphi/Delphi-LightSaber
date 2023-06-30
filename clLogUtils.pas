@@ -1,8 +1,8 @@
 UNIT clLogUtils;
 
 {=============================================================================================================
-   CubicDesign
-   2022.03
+   Gabriel Moraru
+   2023.06
    See Copyright.txt
 
    A simple but effective visual log control/library.

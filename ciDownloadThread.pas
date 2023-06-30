@@ -31,7 +31,6 @@ TYPE
    procedure SetURL(CONST Value: string);
   protected
    procedure Execute; override;
-   procedure DownloadFile_old;   { UNUSED }
   public
    UserAgent: string;
    Header : string;                                                                                                     { Header to send to the server. Example: 'Accept-Charset: utf-8'#13#10; }

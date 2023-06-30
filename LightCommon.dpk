@@ -1,0 +1,81 @@
+package LightCommon;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 2}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'LightSaber Commons'}
+{$LIBSUFFIX AUTO}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  xmlrtl,
+  vclimg,
+  vcl,
+  vclx,
+  LightCore,
+  LightLog,
+  vclWinx,
+  SoapRtl;
+
+contains
+  cmCursorBusy in 'cmCursorBusy.pas',
+  cmDebugger in 'cmDebugger.pas',
+  cmEllipsisText in 'cmEllipsisText.pas',
+  cmEncodeMime in 'cmEncodeMime.pas',
+  cmEncodeXOR in 'cmEncodeXOR.pas',
+  cmINIFileQuick in 'cmINIFileQuick.pas',
+  cmMath in 'cmMath.pas',
+  cmMemoInputBox in 'cmMemoInputBox.pas',
+  cmMRU in 'cmMRU.pas',
+  cmMutexSingleInstance in 'cmMutexSingleInstance.pas',
+  cmPascal in 'cmPascal.pas',
+  cmPermissions in 'cmPermissions.pas',
+  cmPopUpUp in 'cmPopUpUp.pas',
+  cmPowerUtils in 'cmPowerUtils.pas',
+  cmRttiSetToString in 'cmRttiSetToString.pas',
+  cmSearchResult in 'cmSearchResult.pas',
+  cmStrBuilder in 'cmStrBuilder.pas',
+  cmStringList in 'cmStringList.pas',
+  cmStringListA in 'cmStringListA.pas',
+  cmVclUtils in 'cmVclUtils.pas',
+  cmWrapString in 'cmWrapString.pas',
+  csEnvironmentVar in 'csEnvironmentVar.pas',
+  csExecuteProc in 'csExecuteProc.pas',
+  csExecuteShell in 'csExecuteShell.pas',
+  csKbShortcuts in 'csKbShortcuts.pas',
+  csKeyboard in 'csKeyboard.pas',
+  csShell in 'csShell.pas',
+  csSystem in 'csSystem.pas',
+  csWindow in 'csWindow.pas',
+  csWindowMetrics in 'csWindowMetrics.pas',
+  csWMIResolution in 'csWMIResolution.pas',
+  cmWinVersionOthers in 'cmWinVersionOthers.pas';
+
+end.
+
+
+

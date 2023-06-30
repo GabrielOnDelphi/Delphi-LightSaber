@@ -1,0 +1,116 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{889D79DE-7E8C-4410-8E76-49C32EC57928}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="LightCore.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="LightLog.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="LightCommon.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="LightTranslator.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="LightInternet.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="LightCore">
+        <MSBuild Projects="LightCore.dproj"/>
+    </Target>
+    <Target Name="LightCore:Clean">
+        <MSBuild Projects="LightCore.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightCore:Make">
+        <MSBuild Projects="LightCore.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="LightLog">
+        <MSBuild Projects="LightLog.dproj"/>
+    </Target>
+    <Target Name="LightLog:Clean">
+        <MSBuild Projects="LightLog.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightLog:Make">
+        <MSBuild Projects="LightLog.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="LightCommon">
+        <MSBuild Projects="LightCommon.dproj"/>
+    </Target>
+    <Target Name="LightCommon:Clean">
+        <MSBuild Projects="LightCommon.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightCommon:Make">
+        <MSBuild Projects="LightCommon.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="LightTranslator">
+        <MSBuild Projects="LightTranslator.dproj"/>
+    </Target>
+    <Target Name="LightTranslator:Clean">
+        <MSBuild Projects="LightTranslator.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightTranslator:Make">
+        <MSBuild Projects="LightTranslator.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="LightInternet">
+        <MSBuild Projects="LightInternet.dproj"/>
+    </Target>
+    <Target Name="LightInternet:Clean">
+        <MSBuild Projects="LightInternet.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightInternet:Make">
+        <MSBuild Projects="LightInternet.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="LightCore;LightLog;LightCommon;LightTranslator;LightInternet"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="LightCore:Clean;LightLog:Clean;LightCommon:Clean;LightTranslator:Clean;LightInternet:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="LightCore:Make;LightLog:Make;LightCommon:Make;LightTranslator:Make;LightInternet:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+    <ItemGroup Condition="'$(BuildGroup)'=='All'">
+        <BuildGroupProject Include="LightTranslator.dproj">
+            <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCommon.dproj">
+            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightLog.dproj">
+            <ProjectGuid>{BDDC4206-EF66-4FB1-8B35-A31088836E9E}</ProjectGuid>
+            <Configurations/>
+            <Platforms/>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightInternet.dproj">
+            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{866F2458-6034-4F28-8C27-F87E59F9090B}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+</Project>

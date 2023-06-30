@@ -1,20 +1,20 @@
 # Delphi-LightSaber
 
 **Short description**   
-A collection of useful functions and visual controls.  
-More than 15 years of development have been put into this library. 
+Contains useful functions.   
+Lightweight (only 10000 lines of code) alternative to Jedi library.   
+
+ 
+**Description**   
+The CoreLib contains lots and lots of "goodie" functions - functions that make your life easier, and visual controls. 
+More than 15 years of development have been put in this library. 
 The library also wants to be a lightweight replacement for the mammoth Delphi Jedi library.  
 Simple, crystal clear, non-obfuscated, fully commented code.   
 No external dependencies.
 Click the 'Watch' button if you want to get notified about updates.  
 _________________
 
-This repository contains several packages: Core, Log, Common, Translator, Internet. 
-The Graphics and VisualControls libraries will be added soon. 
-
-**Architecture**
-
-Your code could use directly the bottom library (Core) or higher libraries in the hierarchy, depending on your requirements. 
+This repository contains the CoreLib and LogLib. More libraries to be added soon. Your code could use directly the bottom library (Core) or higher libraries in the hierarchy, depending on your requirements. 
 
 ![](https://raw.githubusercontent.com/GodModeUser/Delphi-LightSaber/main/Docs/Library%20architecture.png)
 _________________
@@ -85,7 +85,7 @@ It may be used as a drop-in replacement for TFileStream.
 
 **ccWinVersion.pas**  
 This library expands the TOSVersion.  
-Use it to get the Windows version.  
+Use it to get Windows version.  
 Example of functions:    
 - IsWindowsXP  
 - IsWindowsXPUp  
@@ -101,7 +101,7 @@ Example of functions:
 **ccINIFile**  
 Features:  
 - Extends the capabilities of TIniFile  
-- Functions for easily accessing the application's default INI file.  
+- Functions for easily accessing application's default INI file.  
 
 Setup:  
      Before using it you must set the ccAppData.AppName global var.  

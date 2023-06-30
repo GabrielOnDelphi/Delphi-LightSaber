@@ -453,6 +453,7 @@ CONST
 IMPLEMENTATION
 
 USES
+  ccRegistry,
   ccWinVersion,
   ccAppData,
   ccCore;
@@ -1963,7 +1964,7 @@ end;
 --------------------------------------------------------------------------------------------------}
 
 function GetProgramFilesDir: string;
-
+    (*
     { This function is copied from ccRegistry, but we don't want to depend on that unit, so... }
     function RegReadString (CONST Root: HKEY; CONST Key, ValueName: string; DefValData: String= ''): string;
     VAR Rg: TRegistry;
@@ -1980,7 +1981,7 @@ function GetProgramFilesDir: string;
      FINALLY
        FreeAndNil(Rg);
      END;
-    end;
+    end;    *)
 
 begin
  Result:= Trail(RegReadString(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion', 'ProgramFilesDir'));

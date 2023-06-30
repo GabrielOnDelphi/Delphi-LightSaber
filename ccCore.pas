@@ -1,7 +1,8 @@
 UNIT ccCore;
 
 {=============================================================================================================
-   2023.01
+   Gabriel Moraru
+   2023.06
    See Copyright.txt
 
    Over 200 functions for:
@@ -381,6 +382,7 @@ TYPE
  function  FirstCharIs         (CONST s: string; c: Char): Boolean;
  function  LastCharIs          (CONST s: string; c: Char): Boolean;
  function  FirstNonSpace       (CONST s: string): Integer;                                                    { Returns the position of the first character that is no a space.  For example: '  Earth' returns 3. }
+ function  LastLetterInString  (CONST s: string): Integer;                                                    { Returns the postion of the last non-number character in a string. For example 9d9ad8f7ax0000 returns 10 (the position of x) }
 
 {============================================================================================================
    STRINGS: CONVERSION TO NUMBERS
@@ -389,6 +391,7 @@ TYPE
  function  i2s                 (CONST Value, MaxValue: integer): string; overload;                            { Add the specified number of zeros before the string. See LeadingZerosAuto help for details }
  function  i2s                 (CONST Value: Int64)  :           string; overload;                            { int64 can hold up to 9223372036854775807 }
  function  i2sHuman            (CONST Value: Int64)  :           string;                                      { Retunrs something like: 1= 1st, 2= 2nd, 3= 3rd, 4= 4th }
+ function  ExtractIntFromStr   (const s: string): Integer;                                                       { Extracts a number from a string. Works only if the number is at the beginning of the string. Example '123xxx' }
  function  Real2Str            (CONST ExtValue: Extended; Decimals: Byte = 1; HideNulMantisa: Boolean= True): string;
  function  Str2Cardinal        (CONST S: string; Default: Integer): Cardinal;
  function  Rectangle2Str       (CONST Rect: TRect): string;
@@ -409,13 +412,8 @@ TYPE
  procedure SplitNumber_End     (CONST s: string; OUT Text, Number: string);                                   { Splits a string that ENDS     in a number into its parts. Example: Document12  ->  Document + 12                                    }
  function  IncrementStringNo   (CONST s: string): string;                                                     { Receive a number as string. return the same number but incremented with 1. automatically adjust the leading zeros }
  function  IncrementStringNoEx (CONST s: string): string;                                                     { Similar with IncrementStringNo but this version also accepts invalid numbers. If the input string doesn't end with a valid number, append 0 at its end. Then extracts the end number and increase it. Example: 0zzz will return 0zzz0, while xxx33 will retun xxx34 }
- function  LastLetterInString  (CONST s: string): Integer;                                                    { Returns the postion of the last non-number character in a string. For example 9d9ad8f7ax0000 returns 10 (the position of x) }
  function  StringSumm          (CONST s: AnsiString): Cardinal;   overload;
  function  StringSumm          (CONST s: String): Cardinal;       overload;                                   { Compute the summ of all characters in the string }
-
-
-
-
 
 
 {=============================================================================================================
@@ -1552,6 +1550,15 @@ begin
 end;
 
 
+{ Extracts a number from a string. Works only if the number is at the beginning of the string. Example '123xxx' }
+function ExtractIntFromStr(const s: string): Integer;
+var
+  RetCode: Integer;
+begin
+  Val(s, Result, RetCode); // RetCode is the extracted no OR position where a failure (non-numeric character) occured
+  if RetCode > 0
+  then Val(Copy(s, 1, RetCode - 1), Result, RetCode);
+end;
 
 
 

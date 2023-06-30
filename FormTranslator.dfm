@@ -14,7 +14,6 @@ object frmTranslator: TfrmTranslator
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
@@ -23,7 +22,6 @@ object frmTranslator: TfrmTranslator
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 13
   object lblInfo: TLabel
     AlignWithMargins = True
