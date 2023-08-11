@@ -1,10 +1,10 @@
 UNIT ccAppData;
 
 {=============================================================================================================
-   2023.01
+   Gabriel Moraru
+   2023.08.05
    See Copyright.txt
-==============================================================================================================
-
+--------------------------------------------------------------------------------------------------------------
    Via class object you can:
       - Get application's appdata folder (the folder where you save temporary, app-related and ini files)
       - Get application's command line parameters

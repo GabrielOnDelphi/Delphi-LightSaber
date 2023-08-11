@@ -18,6 +18,9 @@
         <Projects Include="LightInternet.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="LightGraphics.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -71,14 +74,23 @@
     <Target Name="LightInternet:Make">
         <MSBuild Projects="LightInternet.dproj" Targets="Make"/>
     </Target>
+    <Target Name="LightGraphics">
+        <MSBuild Projects="LightGraphics.dproj"/>
+    </Target>
+    <Target Name="LightGraphics:Clean">
+        <MSBuild Projects="LightGraphics.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightGraphics:Make">
+        <MSBuild Projects="LightGraphics.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightLog;LightCommon;LightTranslator;LightInternet"/>
+        <CallTarget Targets="LightCore;LightLog;LightCommon;LightTranslator;LightInternet;LightGraphics"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightLog:Clean;LightCommon:Clean;LightTranslator:Clean;LightInternet:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightLog:Clean;LightCommon:Clean;LightTranslator:Clean;LightInternet:Clean;LightGraphics:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightLog:Make;LightCommon:Make;LightTranslator:Make;LightInternet:Make"/>
+        <CallTarget Targets="LightCore:Make;LightLog:Make;LightCommon:Make;LightTranslator:Make;LightInternet:Make;LightGraphics:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='All'">
@@ -94,6 +106,18 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations/>
+            <Platforms/>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightGraphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="LightLog.dproj">
             <ProjectGuid>{BDDC4206-EF66-4FB1-8B35-A31088836E9E}</ProjectGuid>
             <Configurations/>
@@ -102,12 +126,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightInternet.dproj">
             <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCore.dproj">
-            <ProjectGuid>{866F2458-6034-4F28-8C27-F87E59F9090B}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>

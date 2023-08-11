@@ -13,7 +13,7 @@ UNIT cmPascal;
 INTERFACE
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes, System.Character, Vcl.Forms;
+  System.SysUtils, System.Classes;
 
 
 function ExtractObjectName(Line: string): string;
@@ -24,7 +24,7 @@ function FindSection      (PasBody: TStringList; bInterface: Boolean): Integer; 
 
 IMPLEMENTATION
 
-USES ccCore, ccINIFile, ccIO;
+USES ccCore;
 
 
 

@@ -130,6 +130,7 @@ TYPE
      procedure PushData(CONST Data: AnsiString);                                             { Put binary data (or text) into the stream }
      function  CountAppearance(C: AnsiChar): Int64;
 
+     {}
      constructor CreateRead (CONST FileName: string);
      constructor CreateWrite(CONST FileName: string);
   end;

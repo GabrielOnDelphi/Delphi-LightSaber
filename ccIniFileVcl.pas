@@ -3,7 +3,8 @@ UNIT ccINIFileVcl;
 {=============================================================================================================
   CubicDesign
   2022-04-03
-
+  Same as ccIniFile but add support for forms to save themselves to disk.
+--------------------------------------------------------------------------------------------------------------
   Do you have applications with forms with lots of controls (like checkboxes/radiobuttons) and you want to
   save its status to disk on shutdown and resume exaclty from where you left on application startup
   with just one function call?

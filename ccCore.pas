@@ -4,7 +4,7 @@ UNIT ccCore;
    Gabriel Moraru
    2023.06
    See Copyright.txt
-
+--------------------------------------------------------------------------------------------------------------
    Over 200 functions for:
      - String manipulation (string conversions, sub-string detection, word manipulation, cut, copy, split, wrap, etc)
      - Programmer's helper
@@ -382,7 +382,6 @@ TYPE
  function  FirstCharIs         (CONST s: string; c: Char): Boolean;
  function  LastCharIs          (CONST s: string; c: Char): Boolean;
  function  FirstNonSpace       (CONST s: string): Integer;                                                    { Returns the position of the first character that is no a space.  For example: '  Earth' returns 3. }
- function  LastLetterInString  (CONST s: string): Integer;                                                    { Returns the postion of the last non-number character in a string. For example 9d9ad8f7ax0000 returns 10 (the position of x) }
 
 {============================================================================================================
    STRINGS: CONVERSION TO NUMBERS
@@ -412,8 +411,13 @@ TYPE
  procedure SplitNumber_End     (CONST s: string; OUT Text, Number: string);                                   { Splits a string that ENDS     in a number into its parts. Example: Document12  ->  Document + 12                                    }
  function  IncrementStringNo   (CONST s: string): string;                                                     { Receive a number as string. return the same number but incremented with 1. automatically adjust the leading zeros }
  function  IncrementStringNoEx (CONST s: string): string;                                                     { Similar with IncrementStringNo but this version also accepts invalid numbers. If the input string doesn't end with a valid number, append 0 at its end. Then extracts the end number and increase it. Example: 0zzz will return 0zzz0, while xxx33 will retun xxx34 }
+ function  LastLetterInString  (CONST s: string): Integer;                                                    { Returns the postion of the last non-number character in a string. For example 9d9ad8f7ax0000 returns 10 (the position of x) }
  function  StringSumm          (CONST s: AnsiString): Cardinal;   overload;
  function  StringSumm          (CONST s: String): Cardinal;       overload;                                   { Compute the summ of all characters in the string }
+
+
+
+
 
 
 {=============================================================================================================

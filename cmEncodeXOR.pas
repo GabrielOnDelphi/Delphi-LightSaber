@@ -13,7 +13,7 @@ UNIT cmEncodeXOR;
 
 INTERFACE
 
-USES System.Classes, System.NetEncoding, ccCore, ccStreamMem, SysUtils;
+USES System.Classes, ccCore, SysUtils;
 
  function CRC32_U(CONST s : string)        : Cardinal;                   { For UNICODE - does not output the same result as Total Commander! }
  function CRC32  (CONST s: AnsiString)     : Cardinal;  overload;     { Tested: ok }

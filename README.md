@@ -2,13 +2,14 @@
 
 
 **Description**   
-This repository contains a group of general-purpose libraries, that make your life easier.
+
+This repository contains a group of general-purpose Delphi libraries, that make your life easier.
 The library also wants to be a lightweight replacement for the mammoth Delphi Jedi library.  
 Simple, crystal clear, non-obfuscated, fully commented and curated code. 
-No external dependencies.
+No external dependencies. 
 
-More than 15 years of development have been put in this library. 
-Click the 'Watch' button if you want to get notified about updates.
+More than 15 years of development have been put in this library.   
+Click the 'Watch' button if you want to get notified about updates.  
 
 _________________
 
@@ -24,12 +25,11 @@ This repository contains the following libraries:
 Each library depends on the previous one, in the order specified above.  
 LightSaber Core does not depend on any other library.   
 Therefore, if you want the Log library, you need to compile also the Core library.
-Unzip all repositories in a single folder.
- 
 Your code could use directly the bottom library (Core) or higher libraries in the hierarchy, depending on your requirements:
 
 ![](https://raw.githubusercontent.com/GodModeUser/Delphi-LightSaber/main/Docs/Library%20architecture.png)
 
+If you only need the only one library (for example, the Core library), you can of course delete the rest of the libraries.
 _________________
 
 **Filename convention**  
@@ -56,11 +56,11 @@ Example:
 
 _________________
 
-**Road Map**
+**Road Map**  
 
-The LightSaber Graphics, LightSaber Visual Controls and Proteus libraries will be added as soon as my free time allows it. 
+The LightSaber Graphics, LightSaber Visual Controls and Proteus libraries will be added as soon as my free time allows it.   
 
-**This library will be expanded if it gets enough Stars.** 
+**This library will be expanded if it gets enough Stars.**   
 Click the 'Star' button (top-right corner) if you like this library.  
 Over 100 files are waiting to be cured and added: graphichs, simple encryption, internet functions (including file download routines), HTML manipulation, image manipulation, registry, math and LOTS of visual components!
 
@@ -69,7 +69,7 @@ This library is freeware (see included copyright notice). The library cannot be 
 
 _________________
 
-**Installation**
+**Installation**  
 
 Double click the LightSaber.groupproj to load it in Delphi.
 In Project Manager, right click on the group (top) and select "Build all" in the popup menu.

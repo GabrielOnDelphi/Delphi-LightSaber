@@ -160,6 +160,8 @@ CONST
 
  function  SameFolder(Path1, Path2: string): Boolean;                                              { Receives two folders. Ex:  C:\Test1\ and C:\teSt1 will return true }
  function  SameFolderFromFile(Path1, Path2: string): Boolean;                                      { Receives two partial or complete file names and compare their folders. Ex:  C:\Test1 and C:\teSt1\me.txt will return true }
+ function  IsSubfolder(Path1: String; Path2: String): Boolean;
+
 
 
 
@@ -231,7 +233,7 @@ CONST
  function  FindFirstFile       (CONST aFolder, Ext: string): string;                               { Find first file in the specified folder }
  function  ListDirectoriesOf   (CONST aFolder: string; CONST ReturnFullPath, DigSubdirectories: Boolean): TStringList;   { if DigSubdirectories is false, it will return only the top level directories, else it will return also the subdirectories of subdirectories. Returned folders are FullPath. Works also with Hidden/System folders }
  function  ListFilesAndFolderOf(CONST aFolder: string; CONST ReturnFullPath: Boolean): TStringList;
- function  ListFilesOf         (CONST aFolder, FileType: string; CONST ReturnFullPath, DigSubdirectories: Boolean): TStringList;
+ function  ListFilesOf         (CONST aFolder, FileType: string; CONST ReturnFullPath, DigSubdirectories: Boolean; ExcludeFolders: TStringList= nil): TStringList;
  function  FolderIsEmpty       (CONST FolderName: string): Boolean;                               { Check if folder is empty }
 
 
@@ -270,7 +272,7 @@ CONST
  function  RemoveLastExtension (CONST FileName: string): string;                                   { Extrage numele fisierului din nume+extensie. Daca numele este de tipul nume+extensie+extensie, doar ultima extensie este eliminata }
  function  ForceExtension      (CONST FileName, Ext: string): string;                              { makes sure that the 'FileName' file has the extension set to 'Ext'. The 'Ext' parameter should be like: '.txt' }
  function  ExtractFileExtUp    (CONST FileName: string): string;                                   { Case insensitive version }
-
+ function  AppendFileExtension (CONST FileName, Ext: string): string;
 
 {--------------------------------------------------------------------------------------------------
    FILE - DETECT FILE TYPE
@@ -359,10 +361,10 @@ CONST
 {--------------------------------------------------------------------------------------------------
    BACKUP
 --------------------------------------------------------------------------------------------------}
- function BackupFileIncrement  (CONST FileName: string; DestFolder: string= ''): string;               { Creates a copy of this file in the new folder.  Automatically increments its name. Returns '' in case of copy failure }
+ function BackupFileIncrement  (CONST FileName: string; DestFolder: string= ''; const NewExtension: string= '.bak'): string; { Creates a copy of this file in the new folder.  Automatically increments its name. Returns '' in case of copy failure }
+ function BackupFileBak        (CONST FileName: string): Boolean;                                                            { Creates a copy of this file, and appends as file extension. Ex: File.txt -> File.txt.bak }
  function BackupFileDate       (CONST FileName: string;             TimeStamp: Boolean= TRUE; Overwrite: Boolean = TRUE): Boolean;  overload;     { Create a copy of the specified file in the same folder. The '_backup' string is attached at the end of the filename }
  function BackupFileDate       (CONST FileName, DestFolder: string; TimeStamp: Boolean= TRUE; Overwrite: Boolean = TRUE): Boolean;  overload;
- function BackupFileBak        (CONST FileName: string): Boolean; { Create a copy of this file, and appends as file extension. Ex: File.txt -> File.txt.bak }
 
 
 
@@ -599,6 +601,26 @@ begin
  Path2:= Trail(Path2);
 
  Result:= SameText(Path1, Path2);
+end;
+
+
+{ The order of the parameters does not matter: Path1 could be a subfolder or Path2 or the viceversa }
+function IsSubfolder(Path1: String; Path2: String): Boolean;
+var
+  Length1: Integer;
+  Length2: Integer;
+begin
+  Result := False;
+  Length1 := Length(Path1);
+  Length2 := Length(Path2);
+  If (Length1>0) and (Length2>0) then
+   begin
+     Path1 := UpperCase(ExcludeTrailingPathDelimiter(Path1));
+     Path2 := UpperCase(ExcludeTrailingPathDelimiter(Path2));
+     If Length1 > Length2
+     then Result := (Pos(Path2, Path1) = 1)
+     else Result := (Pos(Path1, Path2) = 1)
+   end;
 end;
 
 
@@ -1362,6 +1384,19 @@ begin
 end;
 
 
+{ Appends a new file extension to the FileName but only if the last extension is not already the same as Ext.
+  In other words, if it alreayd has the wanted extension, then don't add it again.
+  Example:  AppendFileExtension('MyFile.pas',     '.bak') returns 'MyFile.pas.bak'
+            AppendFileExtension('MyFile.pas.bak', '.bak') returns 'MyFile.pas.bak' }
+function AppendFileExtension (CONST FileName, Ext: string): string;
+begin
+  var CurExt:= ExtractFileExt(FileName);
+  if SameText(CurExt, Ext)
+  then Result:= FileName
+  else Result:= FileName+ Ext;
+end;
+
+
 { Returns truncated path, relative to 'RelativeTo'.
   deprecated 'Use System.SysUtils.ExtractRelativePath instead'
   Example:  ExtractRelativePath('c:\windows\system32\user32.dll', 'c:\windows') returns system32\user32.dll.
@@ -1467,7 +1502,7 @@ end;
 { Create a copy of the specified file in the same folder.
   It adds a number to the file name. If a file with the same name exists, it keeps incrementing until it finds the first empty slot.
   Returns '' in case of copy failure }
-function BackupFileIncrement (CONST FileName: string; DestFolder: string= ''): string;
+function BackupFileIncrement (CONST FileName: string; DestFolder: string= ''; const NewExtension: string= '.bak'): string;
 begin
  Assert(FileExistsMsg(FileName));
 
@@ -1482,7 +1517,9 @@ begin
    Result:= IncrementFileNameEx(Result, 1, 3);
  UNTIL NOT FileExists(Result);
 
- if NOT FileCopyTo(FileName, Result, TRUE)
+ var NewFileName:= AppendFileExtension(FileName, NewExtension);
+
+ if NOT FileCopyTo(NewFileName, Result, TRUE)
  then Result:= '';
 end;
 
@@ -1964,7 +2001,7 @@ end;
 --------------------------------------------------------------------------------------------------}
 
 function GetProgramFilesDir: string;
-    (*
+    (*del
     { This function is copied from ccRegistry, but we don't want to depend on that unit, so... }
     function RegReadString (CONST Root: HKEY; CONST Key, ValueName: string; DefValData: String= ''): string;
     VAR Rg: TRegistry;
@@ -3162,7 +3199,7 @@ end;
   Based on code from Marco Cantu Delphi 2010 HandBook.
 
   Works with UNC paths. }
-function ListFilesOf(CONST aFolder, FileType: string; CONST ReturnFullPath, DigSubdirectories: Boolean): TStringList;
+function ListFilesOf(CONST aFolder, FileType: string; CONST ReturnFullPath, DigSubdirectories: Boolean; ExcludeFolders: TStringList= nil): TStringList;
 VAR
   i: Integer;
   s: string;
@@ -3193,6 +3230,18 @@ VAR
      then Result.Add(strFile);
    end;
 
+   function IsExcluded(const CheckFor: string): Boolean;
+   begin
+     if ExcludeFolders = nil
+     then Exit(False);
+
+     for var sExcluded in ExcludeFolders do
+       if SameFolder(sExcluded, CheckFor)
+       or IsSubfolder(sExcluded, CheckFor)
+       then Exit(True);
+     Result:= False;
+   end;
+
 begin
  { We need this in order to prevent the EPathTooLongexception (reported by some users) }
  if aFolder.Length >= MAXPATH then
@@ -3217,14 +3266,17 @@ begin
   begin
    SubFolders:= TDirectory.GetDirectories(aFolder, TSearchOption.soAllDirectories, NIL);
    for s in SubFolders DO
-     if ccIO.DirectoryExists(s)  { This solves the problem caused by broken 'Symbolic Link' folders }
-     then ListFiles(s);
+     if IsExcluded(s)
+     then EmptyDummy
+     else
+       if ccIO.DirectoryExists(s)  { This solves the problem caused by broken 'Symbolic Link' folders }
+       then ListFiles(s);
   end;
 
  { Remove full path }
  if NOT ReturnFullPath then
-  for i:= 0 to Result.Count-1 DO
-   Result[i]:= TPath.GetFileName(Result[i]);
+   for i:= 0 to Result.Count-1 DO
+     Result[i]:= TPath.GetFileName(Result[i]);
 end;
 
 

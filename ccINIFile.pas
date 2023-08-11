@@ -85,7 +85,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   System.IOUtils, ccAppData, ccIO;
+   ccAppData, ccIO;
 
 
 
