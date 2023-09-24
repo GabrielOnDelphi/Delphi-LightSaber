@@ -1,0 +1,84 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{86A7DC54-2BCF-43C4-B6A1-11E9B4207D4B}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="LightCore\ccIO Tester\Tester_ccIO.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="LightCore\GUI Autosave\Tester_SaveGUI.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="LightTranslator\Tester_Translator.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="LightUpdater\Tester_Updater.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="LightCore\ccWinVersion.pas\Tester_WinVers.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Tester_ccIO">
+        <MSBuild Projects="LightCore\ccIO Tester\Tester_ccIO.dproj"/>
+    </Target>
+    <Target Name="Tester_ccIO:Clean">
+        <MSBuild Projects="LightCore\ccIO Tester\Tester_ccIO.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Tester_ccIO:Make">
+        <MSBuild Projects="LightCore\ccIO Tester\Tester_ccIO.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Tester_SaveGUI">
+        <MSBuild Projects="LightCore\GUI Autosave\Tester_SaveGUI.dproj"/>
+    </Target>
+    <Target Name="Tester_SaveGUI:Clean">
+        <MSBuild Projects="LightCore\GUI Autosave\Tester_SaveGUI.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Tester_SaveGUI:Make">
+        <MSBuild Projects="LightCore\GUI Autosave\Tester_SaveGUI.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Tester_Translator">
+        <MSBuild Projects="LightTranslator\Tester_Translator.dproj"/>
+    </Target>
+    <Target Name="Tester_Translator:Clean">
+        <MSBuild Projects="LightTranslator\Tester_Translator.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Tester_Translator:Make">
+        <MSBuild Projects="LightTranslator\Tester_Translator.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Tester_Updater">
+        <MSBuild Projects="LightUpdater\Tester_Updater.dproj"/>
+    </Target>
+    <Target Name="Tester_Updater:Clean">
+        <MSBuild Projects="LightUpdater\Tester_Updater.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Tester_Updater:Make">
+        <MSBuild Projects="LightUpdater\Tester_Updater.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Tester_WinVers">
+        <MSBuild Projects="LightCore\ccWinVersion.pas\Tester_WinVers.dproj"/>
+    </Target>
+    <Target Name="Tester_WinVers:Clean">
+        <MSBuild Projects="LightCore\ccWinVersion.pas\Tester_WinVers.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Tester_WinVers:Make">
+        <MSBuild Projects="LightCore\ccWinVersion.pas\Tester_WinVers.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Tester_ccIO;Tester_SaveGUI;Tester_Translator;Tester_Updater;Tester_WinVers"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Tester_ccIO:Clean;Tester_SaveGUI:Clean;Tester_Translator:Clean;Tester_Updater:Clean;Tester_WinVers:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Tester_ccIO:Make;Tester_SaveGUI:Make;Tester_Translator:Make;Tester_Updater:Make;Tester_WinVers:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
