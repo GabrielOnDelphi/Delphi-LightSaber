@@ -21,7 +21,7 @@ UNIT ccAppData;
 
    It is CRITICAL to create the AppData object as soon as the application starts. Prefferably in the DPR file before creating the main form!
      Example: AppData:= TAppData.Create('MyCollApp');
-   Even better you can created it in the Initialization/Finaliztion section.
+   Even better you can created it in the Initialization/Finalization section.
 
    Note: TAppDataEx class also creates the Log form. See: FormLog.pas
 
@@ -90,7 +90,7 @@ TYPE
     function  RunSelfAtWinStartUp(Active: Boolean): Boolean;
     function  RunFileAtWinStartUp(FilePath: string; Active: Boolean): Boolean;
 
-    class procedure CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean = TRUE);
+    class procedure CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean);
     class procedure CreateFormModal(aClass: TFormClass; OUT Reference);
 
     procedure SetMaxPriority;
@@ -611,7 +611,7 @@ end;
 { 1. Create the form ONLY it does not exist already
   2. Set the font of the new form to be the same as the font of the MainForm
   3. Show it }
-class procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean = TRUE);
+class procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean);
 begin
   Application.CreateForm(aClass, Reference);
   if TForm(Reference) <> Application.MainForm
@@ -808,4 +808,3 @@ end;
 
 
 end.
-

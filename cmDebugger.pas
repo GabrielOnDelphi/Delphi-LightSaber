@@ -389,7 +389,7 @@ procedure GenerateCrashNIL;
 VAR T: TObject;
 begin
  T:= NIL;
- T.ClassName;  // I could say "raise"
+ T.ClassName;  // We could also simply use "Raise"
 end;
 
 
@@ -434,7 +434,7 @@ begin
  Result:= Result+ CRLF;
  Result:= Result+ GenerateAppRep      + CRLF+ CRLF;                                 { The AppDataPath parameter lets the user provide the data path in case the app is not using the Default data path }
  Result:= Result+ GenerateWinSysRep   + CRLF+ CRLF;
- Result:= Result+ GenerateHardwareRep + CRLF+ CRLF;                                 { Before calling this I need to enter a valid key into cmHardID:   cmHardID.HDIDValid:= TRUE;  }
+ Result:= Result+ GenerateHardwareRep + CRLF+ CRLF;                                 { Before calling this I need to enter a valid key into chHardID:   chHardID.HDIDValid:= TRUE;  }
  Result:= Result+ GenerateWinPathRep;
  //Result:= Result+ GenerateScreenRep   + CRLF+ CRLF;    Moved to 3rdParty MonitorHelper.pas
 end;

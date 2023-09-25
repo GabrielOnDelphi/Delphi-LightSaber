@@ -13,18 +13,20 @@ UNIT cmPascal;
 INTERFACE
 
 USES
-  System.SysUtils, System.Classes;
+  Winapi.Windows, System.SysUtils, System.Classes, System.Character, Vcl.Forms;
 
 
 function ExtractObjectName(Line: string): string;
 function LineIsAComment   (Line: string): Boolean;
 function AddUnitToUses    (PasBody: TStringList; CONST UnitToAdd: string): Boolean;
-function CodeLineIs       (CodeLine, Instruction: string): Boolean;
+function RelaxedSearch    (CodeLine, Instruction: string): Boolean;
 function FindSection      (PasBody: TStringList; bInterface: Boolean): Integer;    { Find the INTERFACE/IMPLEMENTATION section }
+function IsMethod         (const CodeLine: string): Boolean;
+function SepparateComments(var CodeLine: string; out Comment: string): Boolean;
 
 IMPLEMENTATION
 
-USES ccCore;
+USES ccCore, ccINIFile, ccIO;
 
 
 
@@ -173,16 +175,42 @@ end;
 
 
 
-{ Checks a line of code if it is equal with instruction. For this we remove all spaces and we ignore cases.
+{ Checks a line of code if it is equal with instruction.
+  For this we ignore all spaces and we ignore cases.
   Example:
     For these parameters the function will return true:
       CodeLine:    B:= True;
       Instruction: b:=true;
     We need to make sure that the string in the second parameter (Instruction) is correctly formated. }
-function CodeLineIs(CodeLine, Instruction: string): boolean;
+function RelaxedSearch(CodeLine, Instruction: string): Boolean;     //old name:  CodeLineIs
 begin
   CodeLine:= StringReplace(CodeLine, ' ', '', [rfReplaceAll]);
   Result:= PosInsensitive(Instruction, CodeLine) = 1;
+end;
+
+
+{ Returns true if this line of code starts with "procedure" or "function" }
+function IsMethod(const CodeLine: string): Boolean;
+begin
+  Result:= (PosInsensitive('function' , CodeLine) > 0)
+        OR (PosInsensitive('procedure', CodeLine) > 0)
+        OR (PosInsensitive('constructor', CodeLine) > 0)    // constructor TMyClass.Create(x, y: integer);
+        OR (PosInsensitive('class', CodeLine) > 0)          // Examples: TMyAliasis = class;    TMyAliasis = class(Tobject)
+        OR (PosInsensitive('record', CodeLine) > 0)         // TMyRec = packed record
+        OR (PosInsensitive('^', CodeLine) > 10);            // PMyRec = ^TMyRec;
+end;
+
+
+{ extract comments (//) and process only the actual code. At the end put the comment back }
+function SepparateComments(var CodeLine: string; out Comment: string): Boolean;
+begin
+  var iPos:= Pos('//', CodeLine);
+  Result:= iPos > 0;
+  if Result then
+   begin
+    Comment := Copy(CodeLine, iPos, MaxInt);  // Get the comment BEFORE I modify the sLine
+    CodeLine:= Copy(CodeLine, 1, iPos-1);
+   end;
 end;
 
 

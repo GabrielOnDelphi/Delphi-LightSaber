@@ -81,8 +81,13 @@ CONST
 {-------------------------------------------------------------------------------------------------------------
    Imgage format utils
 -------------------------------------------------------------------------------------------------------------}
+{$IFNDEF CCRExif}
+I need to define CCRExif!
+{$ENDIF}
+
  {$IFDEF CCRExif}
- function  GetExif             (CONST FileName: string): TExifData;{$ENDIF}
+ function  GetExif             (CONST FileName: string): TExifData;
+ {$ENDIF}
  function  DetectGraphSignature(CONST FileName: string): Integer;
  function  CheckValidImage     (CONST FileName: string): Boolean;
 
@@ -250,7 +255,7 @@ begin
           Result:= FastJpegDecHelper.FastJpgDecode(FileName);
           if Result = NIL then { Not all jpegs are supported by JpegDecHelper. In this case we fall back to WIC or the standard LoadGraph loader (WIC). }
         {$ELSE}
-          LogAddVerb('FastJpg not available!');
+          LogAddWarn('FastJpg not available!');
         {$ENDIF}
         {ToDo 1: is JpegDecHelper indeed faster than WIC? }
           if UseWic

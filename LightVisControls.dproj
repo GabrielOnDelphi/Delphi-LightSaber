@@ -4,9 +4,9 @@
         <AppType>Package</AppType>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>VCL</FrameworkType>
-        <MainSource>LightGraphics.dpk</MainSource>
+        <MainSource>LightVisControls.dpk</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+        <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
         <ProjectVersion>19.5</ProjectVersion>
         <TargetedPlatforms>1</TargetedPlatforms>
     </PropertyGroup>
@@ -18,15 +18,14 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
-        <Cfg_1>true</Cfg_1>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+        <Base_Win64>true</Base_Win64>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
-        <Cfg_1_Win32>true</Cfg_1_Win32>
-        <CfgParent>Cfg_1</CfgParent>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
         <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
@@ -34,101 +33,101 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_2)'=='true') or '$(Cfg_2_Win32)'!=''">
-        <Cfg_2_Win32>true</Cfg_2_Win32>
-        <CfgParent>Cfg_2</CfgParent>
-        <Cfg_2>true</Cfg_2>
-        <Base>true</Base>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>LightGraphics</SanitizedProjectName>
+        <SanitizedProjectName>LightVisControls</SanitizedProjectName>
         <DCC_Alignment>2</DCC_Alignment>
         <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
         <DCC_DcuOutput>.\$(ProductVersion)\$(Platform)\$(Config)</DCC_DcuOutput>
-        <DCC_Description>LightSaber - Graphics lib</DCC_Description>
+        <DCC_Description>LightSaber - Visual Controls</DCC_Description>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
         <DCC_MapFile>3</DCC_MapFile>
-        <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;DUnitX.Loggers.GUI;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Winapi;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_Optimize>false</DCC_Optimize>
         <DCC_RangeChecking>true</DCC_RangeChecking>
         <DllSuffix>$(Auto)</DllSuffix>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
-        <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <DCC_Define>CCRExif,Jpg2000;FastJpg;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <BT_BuildType>Debug</BT_BuildType>
-        <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UsePackage>vclimg;vcl;rtl;vclwinx;bindengine;vclie;IndySystem;ThirdPartyPack;GR32_R;FFmpeg_DXT4;LightLog;LightCore;LightCommon;CCRExif;FFmpeg_DX11;ThirdPartyPackD11;CCRExif_D11;$(DCC_UsePackage)</DCC_UsePackage>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
+        <DCC_Namespace>System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_UsePackage>vclie;soaprtl;IndyProtocols;IndyCore;ThirdPartyPack_XE7;GR32_RSXE7;LightCore;LightCommon;GR32_R;ThirdPartyPack_Rio;ThirdPartyPack;LightLog;vclwinx;vcl;rtl;LightGraphics;CubicProteus;LightInternet;CCRExif;ThirdPartyPackD11;CCRExif_D11;vclimg;xmlrtl;vclactnband;CCRExif_D10;$(DCC_UsePackage)</DCC_UsePackage>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win64)'!=''">
+        <DCC_UsePackage>vclimg;xmlrtl;vclactnband;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_AssertionsAtRuntime>false</DCC_AssertionsAtRuntime>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
         <DCC_IntegerOverflowCheck>false</DCC_IntegerOverflowCheck>
+        <DCC_Optimize>true</DCC_Optimize>
         <DCC_RangeChecking>false</DCC_RangeChecking>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
-        <DCC_Optimize>false</DCC_Optimize>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="rtl.dcp"/>
-        <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="LightCore.dcp"/>
-        <DCCReference Include="LightCommon.dcp"/>
+        <DCCReference Include="IndyCore.dcp"/>
+        <DCCReference Include="IndyProtocols.dcp"/>
+        <DCCReference Include="VclIE.dcp"/>
         <DCCReference Include="LightLog.dcp"/>
-        <DCCReference Include="LightTranslator.dcp"/>
-        <DCCReference Include="vclimg.dcp"/>
-        <DCCReference Include="vclwinx.dcp"/>
-        <DCCReference Include="vclie.dcp"/>
-        <DCCReference Include="GR32_R.dcp"/>
+        <DCCReference Include="LightCommon.dcp"/>
+        <DCCReference Include="LightInternet.dcp"/>
+        <DCCReference Include="LightGraphics.dcp"/>
+        <DCCReference Include="VclWinX.dcp"/>
         <DCCReference Include="CCRExif_D10.dcp"/>
-        <DCCReference Include="ThirdPartyLibs.dcp"/>
-        <DCCReference Include="cGraphFX.RotateGr32.pas"/>
-        <DCCReference Include="cGraphResize.pas"/>
-        <DCCReference Include="cGraphResize32.pas"/>
-        <DCCReference Include="cGraphResizeParams.pas"/>
-        <DCCReference Include="cGraphAviFrame.pas"/>
-        <DCCReference Include="cGraphBitmap.pas"/>
-        <DCCReference Include="cGraphBkgColor.pas"/>
-        <DCCReference Include="cGraphBkgColorEditor.pas"/>
-        <DCCReference Include="cGraphCache.pas"/>
-        <DCCReference Include="cGraphFX.pas"/>
-        <DCCReference Include="cGraphFX.Gradient.pas"/>
-        <DCCReference Include="cGraphFX.Rotate.pas"/>
-        <DCCReference Include="cGraphGif.pas"/>
-        <DCCReference Include="cGraphLoader.pas"/>
-        <DCCReference Include="cGraphLoader.Resolution.pas"/>
-        <DCCReference Include="cGraphLoader.Thread.pas"/>
-        <DCCReference Include="cGraphLoader.WB1.pas"/>
-        <DCCReference Include="cGraphLoader.WBC.pas"/>
-        <DCCReference Include="cGraphText.pas"/>
-        <DCCReference Include="cGraphUtil.pas"/>
-        <DCCReference Include="cGraphResizeParamFrame.pas">
-            <Form>ResizeParameters</Form>
-            <DesignClass>TFrame</DesignClass>
-        </DCCReference>
-        <DCCReference Include="cGraphLoader.RainDrop.pas"/>
-        <DCCReference Include="cGraphBkgColorParams.pas"/>
-        <DCCReference Include="cGraphConvert.pas"/>
-        <DCCReference Include="cGraphAlpha.pas"/>
-        <DCCReference Include="cGraphLoader.RainEditor.pas"/>
+        <DCCReference Include="CubicProteus.dcp"/>
+        <DCCReference Include="cvCalendarCanvas.pas"/>
+        <DCCReference Include="cvAssociateExt.pas"/>
+        <DCCReference Include="cvCheckListBox.pas"/>
+        <DCCReference Include="cvComboBox.pas"/>
+        <DCCReference Include="cvCountDown.pas"/>
+        <DCCReference Include="cvCpuProgress.pas"/>
+        <DCCReference Include="cvDirectoryListBox.pas"/>
+        <DCCReference Include="cvEdit.pas"/>
+        <DCCReference Include="cvFileFilter.pas"/>
+        <DCCReference Include="cvFileListBox.pas"/>
+        <DCCReference Include="cvFreeDiskSpace.pas"/>
+        <DCCReference Include="cvGradientPanel.pas"/>
+        <DCCReference Include="cvGraphChart.pas"/>
+        <DCCReference Include="cvGroupbox.pas"/>
+        <DCCReference Include="cvListBox.pas"/>
+        <DCCReference Include="cvLstEditor.pas"/>
+        <DCCReference Include="cvMemo.pas"/>
+        <DCCReference Include="cvMinimalPathLabel.pas"/>
+        <DCCReference Include="cvPanel.pas"/>
+        <DCCReference Include="cvPathEdit.pas"/>
+        <DCCReference Include="cvProxyList.pas"/>
+        <DCCReference Include="cvRadioButton.pas"/>
+        <DCCReference Include="cvRichEdit.pas"/>
+        <DCCReference Include="cvScrollBox.pas"/>
+        <DCCReference Include="cvSplitter.pas"/>
+        <DCCReference Include="cvStatusBar.pas"/>
+        <DCCReference Include="cvThumbViewerM.pas"/>
+        <DCCReference Include="cvTimer.pas"/>
+        <DCCReference Include="cvToolBox.pas"/>
+        <DCCReference Include="cvTrayIcon.pas"/>
+        <DCCReference Include="cvTimeLine.pas"/>
+        <DCCReference Include="cvCaptionedThumb.pas"/>
+        <DCCReference Include="cvSpinEditDelayed.pas"/>
+        <DCCReference Include="cvCreationOrderTester.pas"/>
+        <DCCReference Include="cvActivityIndicator.pas"/>
+        <DCCReference Include="cvFloatSpinEdit.pas"/>
+        <DCCReference Include="cvMsgDispatcher.pas"/>
+        <DCCReference Include="cvSpinEdit.pas"/>
+        <DCCReference Include="cvCheckBox.pas"/>
+        <DCCReference Include="cvINIFile.pas"/>
+        <DCCReference Include="cvLabelEdit.pas"/>
+        <DCCReference Include="cvStringGrid.pas"/>
+        <DCCReference Include="cvStringGridBase.pas"/>
+        <DCCReference Include="cvStringGridScrollFix.pas"/>
         <BuildConfiguration Include="Debug">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
@@ -147,17 +146,12 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">LightGraphics.dpk</Source>
+                    <Source Name="MainSource">LightVisControls.dpk</Source>
                 </Source>
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\designide270.bpl">Embarcadero Designer IDE Package</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\LightLog270.bpl">LightLog</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\CubicProteus270.bpl">Proteus</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\LightVisControls270.bpl">LightSaber - Visual Controls</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\LightGraphics270.bpl">LightSaber - Graphics lib</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\BionixVCL270.bpl">BioniX VCL</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\LightTranslator270.bpl">Light Translator</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\BioControl270.bpl">BioControls</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\CPort_D104S.bpl">ComPort Library Delphi 10.4</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\ExternalComponentsD10.bpl">Cassa External Components D10</Excluded_Packages>
                     <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\dclDragDropDR104R.bpl">Drag and Drop Component Suite</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\designideresources270.bpl">File c:\delphi\sydney\bin\designideresources270.bpl not found</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k270.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
@@ -169,9 +163,9 @@
                 <Platform value="Win64">False</Platform>
             </Platforms>
             <Deployment Version="3">
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LightGraphics280.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\21.0\Bpl\LightVisControls270.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>LightGraphics.bpl</RemoteName>
+                        <RemoteName>LightVisControls.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
@@ -181,16 +175,6 @@
                     </Platform>
                     <Platform Name="Win32">
                         <Operation>0</Operation>
-                    </Platform>
-                </DeployClass>
-                <DeployClass Name="AndroidClasses">
-                    <Platform Name="Android">
-                        <RemoteDir>classes</RemoteDir>
-                        <Operation>64</Operation>
-                    </Platform>
-                    <Platform Name="Android64">
-                        <RemoteDir>classes</RemoteDir>
-                        <Operation>64</Operation>
                     </Platform>
                 </DeployClass>
                 <DeployClass Name="AndroidClassesDexFile">
@@ -868,10 +852,8 @@
                     </Platform>
                 </DeployClass>
                 <ProjectRoot Platform="iOSDevice64" Name="$(PROJECTNAME).app"/>
-                <ProjectRoot Platform="iOSSimARM64" Name="$(PROJECTNAME).app"/>
-                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Win64" Name="$(PROJECTNAME)"/>
-                <ProjectRoot Platform="OSXARM64" Name="$(PROJECTNAME)"/>
+                <ProjectRoot Platform="iOSDevice32" Name="$(PROJECTNAME).app"/>
                 <ProjectRoot Platform="Linux64" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
                 <ProjectRoot Platform="OSX32" Name="$(PROJECTNAME)"/>

@@ -55,7 +55,8 @@ TYPE
  end;
 
  {$IFDEF CCRExif}
- procedure RotateExif        (BMP: TBitmap; Exif: TExifData); {$ENDIF}
+ procedure RotateExif        (BMP: TBitmap; Exif: TExifData);
+ {$ENDIF}
  procedure RotateBitmap      (BMP: TBitmap; Degs: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone);
  {}
  procedure RotateBitmapGDI   (BMP: TBitmap; Degs: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone); { Uses GDI+. Doesn't work. It works now. }

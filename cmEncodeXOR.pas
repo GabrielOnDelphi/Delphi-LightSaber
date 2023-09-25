@@ -13,7 +13,8 @@ UNIT cmEncodeXOR;
 
 INTERFACE
 
-USES System.Classes, ccCore, SysUtils;
+USES
+   System.Classes, System.SysUtils, System.NetEncoding, Soap.EncdDecd, ccCore;
 
  function CRC32_U(CONST s : string)        : Cardinal;                   { For UNICODE - does not output the same result as Total Commander! }
  function CRC32  (CONST s: AnsiString)     : Cardinal;  overload;     { Tested: ok }
@@ -30,10 +31,6 @@ USES System.Classes, ccCore, SysUtils;
 
 
 IMPLEMENTATION
-
-USES
-   soap.EncdDecd;
-
 
 
 CONST

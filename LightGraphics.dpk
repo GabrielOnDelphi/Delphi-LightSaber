@@ -44,7 +44,7 @@ requires
   vclwinx,
   vclie,
   GR32_R,
-  CCRExif_D11,
+  CCRExif_D10,
   ThirdPartyLibs;
 
 contains

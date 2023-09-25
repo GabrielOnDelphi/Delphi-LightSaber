@@ -18,7 +18,7 @@ UNIT cmWinVersionOthers;
 INTERFACE
 
 USES
-   WinApi.Windows, System.SysUtils, System.Classes;
+   WinApi.Windows, System.SysUtils;
 
 
 procedure GetWinVersion (OUT MajVersion, MinVersion: Cardinal);  overload;

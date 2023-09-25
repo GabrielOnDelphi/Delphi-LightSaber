@@ -70,7 +70,7 @@ CONST
    VK_BBACKSLASH    = 220;
    VK_RIGHTBRACKET  = 221;
    VK_QUOTE         = 222;
-   //VK_ENTER       = VK_RETURN; { #13 }
+   //VK_ENTER       = Winapi.Windows.VK_RETURN; { #13 }
 
    Numbers        = ['0'..'9'];
    LettersLowCase = ['a'..'z'];    // LettersSmall
@@ -195,7 +195,7 @@ CONST
 
 TYPE
   TStringArray       = array of string;
-  TBytesArray        = array of Byte;    //see   System.SysUtils.TBytes
+  TBytesArray        = System.SysUtils.TBytes;
   EnterType          = (etUnknown, etWin, etNix, etMac);
   TConvertNotifyKind = (nkMax, nkProgress);
   TConvertNotify     = procedure(Kind: TConvertNotifyKind; Value: LongInt);
@@ -272,15 +272,12 @@ TYPE
 
  function  Retabulate          (CONST s, Delimiter: string; SpaceCount: Integer): string;                         { Converts multiple spaces to Tab or other similar separator. For example Retabulate('xx   xx  yy, 3, Tab') will convert the first 3 spaces to tab but not also the next 2 spaces }
 
- // COMPARE
- function  StringFuzzyCompare  (s1, s2: string): Integer;                                                         { The function checks if any identical characters is in the near of the actual compare position }
- function  FileNameNaturalSort (s1, s2: String): Integer;                                                         { Natural compare two filenames }
- function  StrCmpLogicalW      (psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll';                 { Natural compare two filenames. Digits in the strings are considered as numerical content rather than text. This test is not case-sensitive. Use it like this: StrCmpLogicalW(PChar(s1), PChar(s2));  see: http://stackoverflow.com/questions/1024515/delphi-is-it-necessary-to-convert-string-to-widestring.  }
-
  // WORDS
  function  IsWordSeparator     (CONST aChar: Char): Boolean;                                                      { Returns true if the specified char is a word separator .;?,! }
  function  CopyWords           (CONST s: string; MaxChars: Integer): string;                                      { Copy from s all complete words. The result will not have more than MaxChars characters. }
  procedure ReplaceShortWords   (var   s: string; MinLength: Integer; FilterIfNoWovels: Boolean);                  { This procedure will replace short words (length < MinLength) with spaces.   It also filters words that only contain consonants }
+ function  ReplaceWholeWords   (const InputStr, OldWord, NewWord: string; const Delimiters: array of Char): string; overload;
+ function  ReplaceWholeWords   (const InputStr, OldWord, NewWord: string): string;                                  overload;
  function  WordCountStrict     (CONST s: string): Integer;
  function  WordCount           (CONST s: string): Integer;
 
@@ -329,6 +326,11 @@ TYPE
  function  Reverse             (CONST s: String): string; deprecated 'ccCore.Reverse is deprecated. Use System.StrUtils.ReverseString';
  function  GetRandomPersonName: string;   { Returns a random name in a 100 unique name list }
  function  GetRandomStreetName: string;
+
+ // COMPARE
+ function  StringFuzzyCompare  (s1, s2: string): Integer;                                                         { The function checks if any identical characters is in the near of the actual compare position }
+ function  FileNameNaturalSort (s1, s2: String): Integer;                                                         { Natural compare two filenames }
+ function  StrCmpLogicalW      (psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll';                 { Natural compare two filenames. Digits in the strings are considered as numerical content rather than text. This test is not case-sensitive. Use it like this: StrCmpLogicalW(PChar(s1), PChar(s2));  see: http://stackoverflow.com/questions/1024515/delphi-is-it-necessary-to-convert-string-to-widestring.  }
 
 
  // Shorten text and put ellipsis in it
@@ -2566,15 +2568,15 @@ VAR
    OutStream: TCubicBuffStream;
 begin
  if NOT FileExists(InputFile)
- then raise exception.Create('Input file does not exist!');
+ then RAISE Exception.Create('Input file does not exist!');
 
- InpStream:= TCubicBuffStream.Create(InputFile, fmOpenRead);
- OutStream:= TCubicBuffStream.Create(OutputFile, fmOpenWrite OR fmCreate);
+ InpStream:= TCubicBuffStream.CreateRead(InputFile);
+ OutStream:= TCubicBuffStream.CreateWrite(OutputFile);
  TRY
-  WinToUnix(InpStream, OutStream, Notify);
+   WinToUnix(InpStream, OutStream, Notify);
  FINALLY
-  FreeAndNil(InpStream);
-  FreeAndNil(OutStream);
+   FreeAndNil(InpStream);
+   FreeAndNil(OutStream);
  END;
 end;
 
@@ -2608,12 +2610,12 @@ begin
  if NOT FileExists(InputFile)
  then raise exception.Create('Input file does not exist!');
 
- InpStream:= TCubicBuffStream.Create(InputFile, fmOpenRead);
+ InpStream:= TCubicBuffStream.CreateRead(InputFile);
  TRY
   Result:= IsMacFile(InpStream);
   if Result then
    begin
-    OutStream:= TCubicBuffStream.Create(OutputFile, fmOpenWrite OR fmCreate);
+    OutStream:= TCubicBuffStream.CreateWrite(OutputFile);
     TRY
      InpStream.Position:= 0;    { Needs reset because of IsMacFile }
      MacToWin(InpStream, OutStream);
@@ -3348,6 +3350,64 @@ begin
 end;
 
 
+function ReplaceWholeWords(const InputStr, OldWord, NewWord: string; const Delimiters: array of Char): string;
+var
+  DelimiterSet: TSysCharSet;
+  StartPos, OldWordLength, InputLength: Integer;
+begin
+  Result := InputStr;
+  OldWordLength := Length(OldWord);
+  InputLength := Length(Result);
+
+  DelimiterSet := [];
+  for var Ch in Delimiters do
+    Include(DelimiterSet, ansichar(Ch));
+
+  StartPos := 1;
+  while StartPos <= InputLength do
+  begin
+    StartPos := PosEx(OldWord, Result, StartPos);
+
+    if StartPos = 0 then
+      Break;
+
+    // Check if the matched word is surrounded by delimiter characters
+    if ((StartPos = 1) or CharInSet(Result[StartPos - 1], DelimiterSet)) and
+       (((StartPos + OldWordLength - 1) = InputLength)
+         or CharInSet(Result[StartPos + OldWordLength], DelimiterSet)) then
+    begin
+      // Replace the whole word
+      Delete(Result, StartPos, OldWordLength);
+      Insert(NewWord, Result, StartPos);
+      StartPos := StartPos + Length(NewWord);
+    end
+    else
+      // Move the start position after the current match
+      Inc(StartPos);
+  end;
+end;
+
+
+function ReplaceWholeWords(const InputStr, OldWord, NewWord: string): string;
+var
+  Delimiters: array of Char;
+  Index, i: Integer;
+begin
+  // Define custom delimiters
+  Index:= 0;
+  SetLength(Delimiters, 255);
+  for i := 0 to 255 do
+  begin
+    if not (Char(i).IsLetterOrDigit) then
+    begin
+      Delimiters[Index] := Char(i);
+      Inc(Index);
+    end;
+  end;
+  SetLength(Delimiters, Index); // Truncate unused memory
+
+  Result:= ReplaceWholeWords(InputStr, OldWord, NewWord, Delimiters);
+end;
 
 
 

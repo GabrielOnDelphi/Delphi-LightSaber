@@ -241,7 +241,7 @@ CONST
    FILE AUTO-NAME
 --------------------------------------------------------------------------------------------------}
  function  IncrementFileNameEx  (CONST FileName: string; StartAt, NumberLength: Integer): string;  { Same sa IncrementFileName but it automatically adds a number if the file doesn't already ends with a number }
- function  IncrementFileName    (CONST FileName: string): string;                                  { Receives a file name that ends in a number. returns the same filename plus the number incremented with one. }
+ function  IncrementFileName    (CONST FileName: string; AddDash: Boolean = false): string;        { Receives a file name that ends in a number. returns the same filename plus the number incremented with one. }
  function  MakeUniqueFolderName (CONST RootPath, FolderName: string): string;                      { Returns a unique path ended with a number. Old name:  Getnewfoldername }
  function  ChangeFilePath       (CONST FullFileName, NewPath: string): string;                     { change file path to NewPath }
  function  AppendNumber2Filename(CONST FileName: string; StartAt, NumberLength: Integer): string;  { Add the number at the end of the filename. Example: AppendNumber2Filename('Log.txt', 1) will output 'Log1.txt' }
@@ -1473,11 +1473,14 @@ end;
      Increments the number contained in the file name (at its end).
      If the file does not contain a number, a 1 is automatically added.
 --------------------------------------------------------------------------------------------------}
-function IncrementFileName (CONST FileName: string): string;                      // Works with UNC paths
+function IncrementFileName (CONST FileName: string; AddDash: Boolean = false): string;                      // Works with UNC paths
 VAR outFileName, outFileNumber: string;
 begin
  SplitNumber_End(ExtractOnlyName(FileName), outFileName, outFileNumber);
- Result:= ExtractFilePath(FileName)+ outFileName+ IncrementStringNoEx(outFileNumber)+ ExtractFileExt(FileName);
+ Result:= ExtractFilePath(FileName)+ outFileName+ IncrementStringNoEx(outFileNumber);
+ if AddDash
+ then Result:= Result+ '-'+ ExtractFileExt(FileName)
+ else Result:= Result+ ExtractFileExt(FileName);
 end;
 
 
@@ -2584,6 +2587,7 @@ begin
 end;
 
 
+{ Example for the 'Enc' parameter: TEncoding.UTF8 }
 function StringFromFileTSL(CONST FileName: string; Enc: TEncoding= NIL): TStringList;    // Works with UNC paths
 begin
  Result:= TStringList.Create;

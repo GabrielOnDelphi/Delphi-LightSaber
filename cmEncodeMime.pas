@@ -89,7 +89,7 @@ var
 begin
   InStr := TCubicMemStream.Create;
   try
-    InStr.WriteCharacters(Input);
+    InStr.WriteChars(Input);
     InStr.Position:= 0;
 
     OutStr := TCubicMemStream.Create;
@@ -113,7 +113,7 @@ var
 begin
   InStr := TCubicMemStream.Create;
   TRY
-    InStr.WriteCharacters(Input);
+    InStr.WriteChars(Input);
     InStr.Position:= 0;
 
     OutStr := TCubicMemStream.Create;
