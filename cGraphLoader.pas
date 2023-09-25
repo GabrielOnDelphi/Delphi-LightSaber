@@ -81,9 +81,6 @@ CONST
 {-------------------------------------------------------------------------------------------------------------
    Imgage format utils
 -------------------------------------------------------------------------------------------------------------}
-{$IFNDEF CCRExif}
-I need to define CCRExif!
-{$ENDIF}
 
  {$IFDEF CCRExif}
  function  GetExif             (CONST FileName: string): TExifData;
