@@ -182,12 +182,12 @@ _________________
 
 **External dependencies**
 
-Some parths (especially the graphic part) of LightSaber depend of external libraries. HOWEVER, those dependencies are disabled by default, so you don't need to install any extra libraries in order to use LightSaber. But in this case some functionality (Exif support for JPG images, Fast Jpeg decoder, and support for Jpeg2000) of LightSaber will not be available, but the impact will be really small. To enable the support for the above mentioned features, install the libraries (see links below) and then add these "defines" in your project's settings: CCRExif;FastJpg;jpg2000.  
-The "Conditional defines" field is in your project options: Right click your project, choose "Project options -> Delphi complier -> All configurations -> Conditional defines".   
-  
-https://github.com/esmondb/ccr-exif/  
-https://github.com/galfar/PasJpeg2000  
-http://www.marktg.com/jpegdec/  
-
+Some parts (especially the graphic part) of LightSaber depends on external libraries. HOWEVER, those dependencies are disabled by default, so you don't need to install any extra libraries in order to use LightSaber. But in this case, some functionality (Exif support for JPG images, Fast Jpeg decoder, and support for Jpeg2000) of LightSaber will not be available, but the impact will be minimal. To enable the support for the above-mentioned features, install the libraries (see links below) and then add these "defines" in your project's settings: CCRExif;FastJpg;jpg2000.     
+The "Conditional defines" field is in your project options: Right-click your project, and choose "Project options -> Delphi compiler -> All configurations -> Conditional defines".   
+     
+https://github.com/esmondb/ccr-exif/    
+https://github.com/galfar/PasJpeg2000    
+http://www.marktg.com/jpegdec/    
+    
 _________________
 
