@@ -1,6 +1,6 @@
 UNIT cvListBox;
 
-{--------------------------------------------------------------------------------------------------
+{-------------------------------------------------------------------------------------------------------------
   CubicDesign
   2020
 
@@ -15,7 +15,7 @@ UNIT cvListBox;
       Remove empty lines
       Add new line but limit total number of lines
 
---------------------------------------------------------------------------------------------------}
+-------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
 
@@ -29,7 +29,7 @@ TYPE
 
   TCubicListBox= class(TCustomListBox)                                                          // declarat in StdCtrls
    private
-    FOnChange  : TLBNotifyEvent;
+    FOnContentChange: TLBNotifyEvent;
     FDeleteKey : Boolean;
     FRClkSel   : Boolean;
     FHintPrefix: string;
@@ -47,6 +47,7 @@ TYPE
    public
     constructor Create(AOwner: TComponent); override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+    procedure SetHeightAuto(MaxHeight: Integer; aForm: TControl);
 
     { Item access }
     function  SelectedItemForce: string;                                                        { Same as SelectedItem but if no item is selected then force the first item selected }
@@ -87,8 +88,8 @@ TYPE
     procedure SaveToFile  (FileName: string);
 
     { Special }
-    procedure MoveItemsTo(ListBox: TCubicListBox; iCount: Integer);                              { Move the first x items from the curent listbox to the bottom of another  listbox }
-    procedure AddLimit(Msg: string);
+    procedure MoveItemsTo(ListBox: TCubicListBox; iCount: Integer);                             { Move the first x items from the curent listbox to the bottom of another  listbox }
+    procedure AddLimit   (Msg: string);
    published
     property HintItemAuto     : Boolean read FHintItemAu  Write FHintItemAu default TRUE;       { Show the item under cursor as hint }
     property HintPrefix       : string  read FHintPrefix Write FHintPrefix;                     { User defined text to be added in front of the auto-generated hint }
@@ -97,7 +98,7 @@ TYPE
     property Respond2DeleteKey: Boolean read FDeleteKey  Write FDeleteKey default TRUE;         { If FALSE then it will behave normal like the original TListBox control. If TRUE it will activate the enhancement: it will move the cursor to the next line after 'DeleteSelected' procedure was called. }
     property MultiSelect                                                  default TRUE;
     property RightClickSelects: Boolean read FRClkSel    Write FRClkSel   default TRUE;         { Pressing the Right Mouse Button will toggle the selection of the item under cursor }
-    property OnChange : TLBNotifyEvent  read FOnChange   write FOnChange;
+    property OnContentChange  : TLBNotifyEvent read FOnContentChange write FOnContentChange;    { Triggered when a new line is entered/removed }
 
     property Style;
     property AutoComplete;
@@ -177,7 +178,7 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
-USES cmVclUtils, ccCore, ccINIFile, cmMath, ccIO;
+USES cmVclUtils, ccCore, cmMath, ccIO;
 
 
 
@@ -199,6 +200,19 @@ begin
 end;
 
 
+
+{ Resize the height, based on the number of rows in it, but never make it bigger than the x% of the aForm.
+  Note: MaxHeight is relative to the form. In percents. }
+procedure TCubicListBox.SetHeightAuto(MaxHeight: Integer; aForm: TControl);
+begin
+  VAR MaxHeightPx:= (aForm.Height * MaxHeight) DIV 100;   // GetTextHeight(LText, LText.Width, LText.Text);
+  VAR iHeight:= Items.Count * {ItemHeight}   Canvas.TextHeight('abcdefghijklmnopq');
+  if iHeight > MaxHeightPx
+  then iHeight := MaxHeightPx;
+  if iHeight < 50 then iHeight:= 50;
+  iHeight:= round(iHeight*1.4);
+  Height := iHeight;
+end;
 
 
 
@@ -566,24 +580,24 @@ end;
 procedure TCubicListBox.LBADDSTRING(var M: TMessage);
 begin
  inherited;
- if Assigned(FOnChange)
- then FOnChange(Self, lbAdded);
+ if Assigned(FOnContentChange)
+ then FOnContentChange(Self, lbAdded);
 end;
 
 
 procedure TCubicListBox.LBINSERT(var M: TMessage);
 begin
  inherited;
- if Assigned(FOnChange)
- then FOnChange(Self, lbInserted);
+ if Assigned(FOnContentChange)
+ then FOnContentChange(Self, lbInserted);
 end;
 
 
 procedure TCubicListBox.LBDELETE(var M: TMessage);
 begin
  inherited;
- if Assigned(FOnChange)
- then FOnChange(Self, lbDeleted);
+ if Assigned(FOnContentChange)
+ then FOnContentChange(Self, lbDeleted);
 end;
 
 
@@ -664,7 +678,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('Cubic', [TCubicListBox]);
+  RegisterComponents('LightSaber', [TCubicListBox]);
 end;
 
 
