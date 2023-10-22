@@ -30,15 +30,10 @@ package LightVisControls;
 
 requires
   LightCore,
-  IndyCore,
-  IndyProtocols,
-  VclIE,
-  LightLog,
   LightCommon,
   LightInternet,
   LightGraphics,
-  VclWinX,
-  CCRExif_D10,
+  CCRExif,
   CubicProteus;
 
 contains
@@ -47,7 +42,6 @@ contains
   cvCheckListBox in 'cvCheckListBox.pas',
   cvComboBox in 'cvComboBox.pas',
   cvCountDown in 'cvCountDown.pas',
-  cvCpuProgress in 'cvCpuProgress.pas',
   cvDirectoryListBox in 'cvDirectoryListBox.pas',
   cvEdit in 'cvEdit.pas',
   cvFileFilter in 'cvFileFilter.pas',
@@ -85,7 +79,8 @@ contains
   cvLabelEdit in 'cvLabelEdit.pas',
   cvStringGrid in 'cvStringGrid.pas',
   cvStringGridBase in 'cvStringGridBase.pas',
-  cvStringGridScrollFix in 'cvStringGridScrollFix.pas';
+  cvStringGridScrollFix in 'cvStringGridScrollFix.pas',
+  cvDropDownSearch in 'cvDropDownSearch.pas';
 
 end.
 
