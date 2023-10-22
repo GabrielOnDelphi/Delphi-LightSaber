@@ -4,7 +4,7 @@ INTERFACE
 
 USES
   WinApi.Windows, Winapi.ShellAPI, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin,
-  Vcl.ComCtrls, ccCore, ccINIFile, Vcl.ExtCtrls, FormLog, clRichLog, Vcl.Mask;
+  Vcl.ComCtrls, ccCore, ccINIFile, Vcl.ExtCtrls, FormLog, ccRichLog, Vcl.Mask;
 
 const
  MSG_LateInitialize= WM_APP + 4711;
@@ -73,7 +73,7 @@ procedure TfrmTester.FormDestroy(Sender: TObject);
 begin
  FreeAndNil(Translator);
  SaveForm(Self);
- FreeAndNil(AppData);
+ FreeAndNil(AppData-);
 end;
 
 

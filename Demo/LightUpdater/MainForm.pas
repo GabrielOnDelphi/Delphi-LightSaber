@@ -51,7 +51,7 @@ end;
 procedure TfrmDemoStarter.FormDestroy(Sender: TObject);
 begin
  FreeAndNil(Updater);
- FreeAndNil(AppData);
+ FreeAndNil(AppData-);
 end;
 
 

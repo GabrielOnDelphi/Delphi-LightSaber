@@ -105,8 +105,8 @@ begin
  AppData.LogImpo('Application started ok.');
 end;
 
+//todo 1: the log's trackbar is not saved!
 
-//todo 1: the position log's trackbar is not saved!
 procedure TfrmTester.FormDestroy(Sender: TObject);
 begin
  AppData.LogWarn('Application shutting down...');
@@ -114,7 +114,7 @@ begin
  if actAutoSave.Checked
  then SaveForm(Self);
 
- //FreeAndNil(AppData); Don't release the AppData here. It is automatically released by ccAppData.Finalize
+ //FreeAndNil(AppData-); Release by Finalize
 end;
 
 

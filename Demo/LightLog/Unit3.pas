@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, clVisLogTrack, clVisLogRam, Vcl.Grids, clVisLog, Vcl.ExtCtrls,
-  clRichLogTrack, Vcl.StdCtrls, Vcl.ComCtrls, FormLog, clLogUtils, clRichLog;
+  ccRichLogTrack, Vcl.StdCtrls, Vcl.ComCtrls, FormLog, clLogUtils, ccRichLog;
 
 type
   TForm3 = class(TForm)

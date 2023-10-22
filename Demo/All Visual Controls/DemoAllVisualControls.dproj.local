@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899.12.30 00:00:00.000.676,=c:\MyProjects\Packages\CubicCommonControls\FormTranslator.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.055,=C:\MyProjects\Default projects\Unit18.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.306,C:\MyProjects\Default projects\Unit6.dfm=c:\MyProjects\Default projects\Unit6.dfm</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.106,=c:\MyProjects\Default projects\Unit6.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.306,C:\MyProjects\Default projects\Unit6.pas=c:\MyProjects\Default projects\Unit6.pas</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.664,C:\MyProjects\Default projects\Project3.dproj=C:\MyProjects\Default projects\Project3.dproj</Transaction>
+    <Transaction>1899.12.30 00:00:00.000.206,C:\MyProjects\Default projects\Project3.dproj=c:\MyProjects\Default projects\Project3.dproj</Transaction>
+    <Transaction>2022.09.20 12:29:54.000.921,=C:\MyProjects\Default projects\Unit3.pas</Transaction>
+    <Transaction>2022.09.20 12:30:05.000.435,C:\MyProjects\Default projects\Project3.dproj=C:\MyProjects\Default projects\Project3.dproj</Transaction>
+    <Transaction>2022.09.20 13:55:47.000.345,C:\MyProjects\Default projects\Unit3.dfm=C:\ProjektAppSmart\Meeting with Ilya\Unit3.dfm</Transaction>
+    <Transaction>2022.09.20 13:55:47.000.345,C:\MyProjects\Default projects\Unit3.pas=C:\ProjektAppSmart\Meeting with Ilya\Unit3.pas</Transaction>
+    <Transaction>2023.10.22 19:18:09.304,=C:\MyProjects\Default projects\Unit3.pas</Transaction>
+    <Transaction>2023.10.22 19:18:52.613,C:\MyProjects\Packages\CubicCommonControls\Demo\All Visual Controls\MainForm.pas=C:\MyProjects\Default projects\Unit3.pas</Transaction>
+    <Transaction>2023.10.22 19:18:52.613,C:\MyProjects\Packages\CubicCommonControls\Demo\All Visual Controls\MainForm.dfm=C:\MyProjects\Default projects\Unit3.dfm</Transaction>
+    <Transaction>2023.10.22 19:19:02.790,C:\MyProjects\Packages\CubicCommonControls\Demo\All Visual Controls\DemoAllVisualControls.dproj=C:\MyProjects\Default projects\Project3.dproj</Transaction>
+  </Transactions>
+</BorlandProject>

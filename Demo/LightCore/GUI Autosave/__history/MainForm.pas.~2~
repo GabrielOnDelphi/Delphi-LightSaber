@@ -102,19 +102,19 @@ begin
  then Button5Click(Self);}
 
  AppData.Initializing:= FALSE;
- AppData.LogImpo('Application started ok.');
+ LogImpo('Application started ok.');
 end;
 
+//todo 1: the log's trackbar is not saved!
 
-//todo 1: the position log's trackbar is not saved!
 procedure TfrmTester.FormDestroy(Sender: TObject);
 begin
- AppData.LogWarn('Application shutting down...');
+ LogWarn('Application shutting down...');
 
  if actAutoSave.Checked
  then SaveForm(Self);
 
- //FreeAndNil(AppData); Don't release the AppData here. It is automatically released by ccAppData.Finalize
+ FreeAndNil(AppData);
 end;
 
 
@@ -132,7 +132,7 @@ end;
 
 procedure TfrmTester.btnShowLogClick(Sender: TObject);
 begin
-  AppData.ShowLog;
+ ShowLog;
 end;
 
 
@@ -157,14 +157,14 @@ end;
 
 procedure TfrmTester.Button3Click(Sender: TObject);
 begin
-  AppData.LogVerb('Some less important information');
+  LogVerb('Some less important information');
   MesajInfo('You need to set log''s verbosity to "verbose" in order to see this message.');
 end;
 
 
 procedure TfrmTester.Button4Click(Sender: TObject);
 begin
-  AppData.LogError('Error encountered!');
+  LogError('Error encountered!');
 end;
 
 

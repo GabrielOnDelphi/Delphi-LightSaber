@@ -105,8 +105,8 @@ begin
  AppData.LogImpo('Application started ok.');
 end;
 
+//todo 1: the log's trackbar is not saved!
 
-//todo 1: the position log's trackbar is not saved!
 procedure TfrmTester.FormDestroy(Sender: TObject);
 begin
  AppData.LogWarn('Application shutting down...');
