@@ -1,0 +1,10 @@
+*.~*~
+Proteus/cpProteus.inc
+Proteus/cpProteus.pas
+Proteus/cpProteusCertificate.pas
+Proteus/cpProteusIO.pas
+Proteus/cpProteusUtils.pas
+Proteus/CubicProteus.dpk
+Proteus/CubicProteus.dproj
+Proteus/CubicProteus.dsk
+Proteus/CubicProteus.res
