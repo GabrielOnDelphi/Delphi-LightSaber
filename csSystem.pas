@@ -1,4 +1,4 @@
-UNIT csSystem;
+﻿UNIT csSystem;
 
 {=============================================================================================================
    SYSTEM
@@ -14,9 +14,11 @@ UNIT csSystem;
      System time
      Computer name
      Screen
+     Running processes
 
   See:
      cmEnvironmentVar.pas for environment variables
+     chHardID.pas
 
    In this group:
      * csShell.pas
@@ -30,8 +32,9 @@ UNIT csSystem;
 
 INTERFACE
 USES
-   Winapi.Windows, Winapi.Messages, Winapi.WinSock, Winapi.WinSvc, System.Classes,
-   System.SysUtils, System.Win.Registry, System.UITypes, Vcl.ClipBrd, Vcl.Dialogs;
+   Winapi.Windows, Winapi.Messages, Winapi.WinSock, Winapi.WinSvc,
+   System.Classes, System.SysUtils, System.Win.Registry, System.UITypes, TlHelp32,
+   Vcl.ClipBrd, Vcl.Dialogs;
 
 
 {==================================================================================================
@@ -42,8 +45,10 @@ USES
 
 
 {==================================================================================================
-   SERVICES
+   PROCESSES & SERVICES
 ==================================================================================================}
+ function ProcessRunning      (ExeFileName: string): Boolean;
+
  function ServiceStart        (aMachine, aServiceName: string): Boolean;
  function ServiceStop         (aMachine, aServiceName: string): Boolean;
  function ServiceGetStatus    (sMachine, sService    : string): DWord;
@@ -234,7 +239,7 @@ begin
    except
      //todo 1: trap only specific exceptions
      Sleep(WaitTime);    { Wait a bit before trying again }
-     WaitTime:=  WaitTime+ WaitTime;
+     WaitTime:= WaitTime+ WaitTime;
    END;
    TimeSpent:= GetTickCount - StartTime;
  UNTIL Success OR (TimeSpent > MaxWaitTime);
@@ -291,7 +296,7 @@ end;
    Also see GetComputerNameEx:
       http://stackoverflow.com/questions/30778736/how-to-get-the-full-computer-name-in-inno-setup/30779280#30779280 }
 function GetComputerName: string;
-var
+VAR
   buffer: array[0..MAX_COMPUTERNAME_LENGTH + 1] of Char; //ok
   Size: Cardinal;
 begin
@@ -626,7 +631,7 @@ end;
 function CurrentSysTimeValid(SecretKey: string): Boolean;
 VAR LastTime: TDateTime;
 begin
- LastTime:= RegReadDate(HKEY_CURRENT_USER, SecretKey, 'System', 0);
+ LastTime:= RegReadDate(HKEY_CURRENT_USER, SecretKey, 'System');
  Result:= (LastTime<= Now) AND NOT SystemTimeIsInvalid;
 end;
 
@@ -634,11 +639,37 @@ end;
 
 
 
+{--------------------------------------------------------------------------------------------------
+   PROCESSES
+--------------------------------------------------------------------------------------------------}
+{ Returns True if the specified process if found running
+  Drawnbacks: The process name does not contain the full path! }
+function ProcessRunning(ExeFileName: string): Boolean;
+var
+  FSnapshotHandle: THandle;
+  FProcessEntry32: TProcessEntry32;
+begin
+  ExeFileName:= LowerCase(ExeFileName);
+  FSnapshotHandle := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  TRY
+    FProcessEntry32.dwSize := SizeOf(FProcessEntry32);
+    Result := Process32First(FSnapshotHandle, FProcessEntry32);
+    if Result then
+      REPEAT
+        VAR LowProcName:= LowerCase(FProcessEntry32.szExeFile);
+        if (LowProcName = ExeFileName)
+        OR (LowProcName = ExtractFileName(ExeFileName))
+        then EXIT(True);
+      UNTIL NOT Process32Next(FSnapshotHandle, FProcessEntry32);
+  FINALLY
+    CloseHandle(FSnapshotHandle);
+  END;
+end;
 
 
 
 {--------------------------------------------------------------------------------------------------
-   Service Routines
+   SERVICES
    aMachine is UNC path or local machine if left empty
 --------------------------------------------------------------------------------------------------}
 function ServiceStart(aMachine,aServiceName : string) : boolean;  { From BlackBox.pas }
@@ -774,20 +805,15 @@ begin
   WinReg := nil;
   Cmd := '????????';
 
-  try
-    // Win 9x
-    SetString(Cmd,PChar(Ptr($FFFF5)),10);
-  EXCEPT
-    // Win 2000/NT
-    TRY
-      WinReg := TRegistry.Create;
-      WinReg.RootKey := HKEY_LOCAL_MACHINE;
-      if WinReg.OpenKeyReadOnly('\HARDWARE\DESCRIPTION\System') then
-         Cmd := WinReg.ReadString('SystemBiosDate');
-    FINALLY
-       FreeAndNil(WinReg);
-    end;
-  end;
+  // Win 2000/NT
+  WinReg := TRegistry.Create;
+  TRY
+    WinReg.RootKey := HKEY_LOCAL_MACHINE;
+    if WinReg.OpenKeyReadOnly('\HARDWARE\DESCRIPTION\System') then
+       Cmd := WinReg.ReadString('SystemBiosDate');
+  FINALLY
+     FreeAndNil(WinReg);
+  END;
 
   Result := Cmd;
 end;
@@ -800,25 +826,21 @@ var Cmd : string;
 begin
   WinReg := nil;
   Cmd := '????????';
+
+  // Win 2000/NT
   TRY
-    // Win 9x
-    SetString(Cmd,PChar(Ptr($F0000)),$2000);
-  EXCEPT
-    // Win 2000/NT
-    TRY
-      WinReg := TRegistry.Create;
-      WinReg.RootKey := HKEY_LOCAL_MACHINE;
-      if WinReg.OpenKeyReadOnly('\HARDWARE\DESCRIPTION\System') then
-      begin
-         GetMem(Buffer,$2000);
-         WinReg.ReadBinaryData('SystemBiosVersion',Buffer^,$2000);
-         Cmd := WinReg.ReadString('Identifier') + ' ' + Buffer;
-         FreeMem(Buffer);
-      end;
-    FINALLY
-       FreeAndNil(WinReg);
+    WinReg := TRegistry.Create;
+    WinReg.RootKey := HKEY_LOCAL_MACHINE;
+    if WinReg.OpenKeyReadOnly('\HARDWARE\DESCRIPTION\System') then
+    begin
+       GetMem(Buffer,$2000);
+       WinReg.ReadBinaryData('SystemBiosVersion',Buffer^,$2000);
+       Cmd := WinReg.ReadString('Identifier') + ' ' + Buffer;
+       FreeMem(Buffer);
     end;
-  end;
+  FINALLY
+     FreeAndNil(WinReg);
+  END;
 
   Result := Cmd;
 end;
