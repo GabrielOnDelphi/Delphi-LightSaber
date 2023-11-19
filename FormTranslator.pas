@@ -13,10 +13,11 @@ UNIT FormTranslator;
 //todo: put digger in the programs to help users translate the program
 
 INTERFACE
+{.$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, System.IOUtils,
-  ctTranslate, ccCore;
+  ctTranslate, ccCore, Vcl.Mask, ccAppData;
 
 TYPE
   TfrmTranslator = class(TForm)
@@ -67,7 +68,7 @@ TYPE
     procedure InternetLabel1Click(Sender: TObject);
   private
     function GetFileName: string;
-    procedure LateInitialize(var Message: TMessage); message MSG_LateInitialize;
+    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateAppInit; // Called after the main form was fully created
   public
   end;
 
@@ -81,8 +82,7 @@ USES
 
 procedure TfrmTranslator.FormCreate(Sender: TObject);
 begin
- { Send MSG_LateInitialize message to self }
- PostMessage(Self.Handle, MSG_LateInitialize, 0, 0);
+  //
 end;
 
 

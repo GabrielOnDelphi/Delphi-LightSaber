@@ -53,6 +53,7 @@ object frmLanguage: TfrmLanguage
       Margins.Top = 9
       Align = alBottom
       Caption = 'Hint: You can create your own translations. '
+      ExplicitWidth = 212
     end
     object ListBox: TListBox
       AlignWithMargins = True

@@ -18,10 +18,8 @@ object frmShowMsgAsync: TfrmShowMsgAsync
   Font.Name = 'Tahoma'
   Font.Style = []
   FormStyle = fsStayOnTop
-  OldCreateOrder = False
   Position = poOwnerFormCenter
   OnClose = FormClose
-  PixelsPerInch = 96
   TextHeight = 13
   object lblMessage: TLabel
     AlignWithMargins = True
@@ -38,6 +36,7 @@ object frmShowMsgAsync: TfrmShowMsgAsync
     ShowHint = True
     Layout = tlCenter
     WordWrap = True
+    ExplicitWidth = 19
   end
   object Panel1: TPanel
     Left = 0

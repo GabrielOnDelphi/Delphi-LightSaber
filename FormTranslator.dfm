@@ -14,6 +14,7 @@ object frmTranslator: TfrmTranslator
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
+  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
@@ -22,6 +23,7 @@ object frmTranslator: TfrmTranslator
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  PixelsPerInch = 96
   TextHeight = 13
   object lblInfo: TLabel
     AlignWithMargins = True
@@ -46,7 +48,7 @@ object frmTranslator: TfrmTranslator
       AlignWithMargins = True
       Left = 5
       Top = 316
-      Width = 229
+      Width = 49
       Height = 13
       Hint = 
         'Live forms that available for translation.'#13#10'Only life (running) ' +
@@ -59,7 +61,7 @@ object frmTranslator: TfrmTranslator
       AlignWithMargins = True
       Left = 5
       Top = 570
-      Width = 229
+      Width = 80
       Height = 13
       Cursor = crHandPoint
       Align = alBottom
@@ -78,7 +80,7 @@ object frmTranslator: TfrmTranslator
       AlignWithMargins = True
       Left = 5
       Top = 589
-      Width = 229
+      Width = 83
       Height = 13
       Cursor = crHandPoint
       Align = alBottom
