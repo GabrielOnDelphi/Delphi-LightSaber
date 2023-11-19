@@ -115,7 +115,7 @@ end;
 procedure TfrmSmtpSettings.UseInternalMailer(SMTP: TIdSMTP);
 begin
  SMTP.UseTLS  := utUseExplicitTLS;
- SMTP.Password:= 'PublicEmailPsw0503';
+ SMTP.Password:= '';
  SMTP.Username:= 'bionixwallpapermanager@gmail.com';
  SMTP.Port    := 587;
  SMTP.Host    := 'smtp.Gmail.com';

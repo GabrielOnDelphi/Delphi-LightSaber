@@ -92,7 +92,7 @@
        Make sure you make your GUI controls (labels, buttons, etc) large enough. Some languages require more space (more characters) than others.  
   
     TESTER  
-       c:\Myprojects\Packages\CubicCommonControls\Demo\Translation system\TranslatorTester.dpr  
+       c:\Myprojects\Packages\LightSaber\Demo\Translation system\TranslatorTester.dpr  
 --------------------------------------------------------------------------------------------------------------
 
 ToDo 1:

@@ -12,7 +12,7 @@ UNIT clVisLog;
    Hint: http://stackoverflow.com/questions/11719454/why-dont-child-controls-of-a-tstringgrid-work-properly
 
    Tester:
-     c:\Myprojects\Packages\CubicCommonControls\Demo\LightLog\
+     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 {TODO 3: Sort lines by criticality (all errors together, all warnings together, etc) }

@@ -338,6 +338,7 @@ object frmComposer: TfrmComposer
   end
   object SMTP: TIdSMTP
     IOHandler = SSLIOHandler
+    OnConnected = SMTPConnected
     Host = 'smtp.gmail.com'
     Port = 587
     SASLMechanisms = <>

@@ -18,7 +18,7 @@ UNIT cGraphFx.RotateGr32;
 
   Tester:
     c:\MyProjects\Projects GRAPHICS\Rotate, flip\RotateTester.dpr
-    c:\MyProjects\Packages\CubicCommonControls\cGraphRotate.pas conclusions.png
+    c:\MyProjects\Packages\LightSaber\cGraphRotate.pas conclusions.png
 ==================================================================================================}
 
 //  see: f:\Pas\MMedia Rotate Image Component\

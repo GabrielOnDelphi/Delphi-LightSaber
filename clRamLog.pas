@@ -14,7 +14,7 @@ UNIT clRamLog;
      The plan is to be replaced with VisLogRam.
 
    Tester:
-     c:\Myprojects\Packages\CubicCommonControls\Demo\LightLog\
+     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE

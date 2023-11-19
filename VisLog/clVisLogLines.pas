@@ -8,7 +8,7 @@ UNIT clVisLogLines;
    For the new log (the one based on TStringGrid)
 
    Tester:
-     c:\Myprojects\Packages\CubicCommonControls\Demo\LightLog\
+     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE

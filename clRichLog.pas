@@ -22,7 +22,7 @@ UNIT clRichLog;
      TRamLog even though fully functional, it is a bit outdated. The plan is to be replaced with VisLogRam.
 
    Tester:
-     c:\Myprojects\Packages\CubicCommonControls\Demo\LightLog\
+     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE

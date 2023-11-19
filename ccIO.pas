@@ -62,7 +62,7 @@
      http://www.malcolmgroves.com/blog/?p=865
 
   TESTER:
-     c:\MyProjects\Packages\CubicCommonControls\UNC Tester\
+     c:\MyProjects\Packages\LightSaber\UNC Tester\
 ==================================================================================================}
 
 

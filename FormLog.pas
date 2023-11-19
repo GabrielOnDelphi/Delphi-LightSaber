@@ -18,7 +18,7 @@ UNIT FormLog;
      AppDataEx is automatically destroyed by the Finalization section of this unit.
 
    Tester:
-     c:\Myprojects\Packages\CubicCommonControls\Demo\LightLog\
+     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE

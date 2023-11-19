@@ -15,7 +15,6 @@ object frmTester: TfrmTester
   Font.Name = 'Tahoma'
   Font.Style = []
   Menu = MainMenu
-  OldCreateOrder = False
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
@@ -23,7 +22,6 @@ object frmTester: TfrmTester
   OnClick = FormClick
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 16
   object GroupBox2: TGroupBox
     AlignWithMargins = True

@@ -16,7 +16,7 @@ UNIT clVisLogTrack;
      Max= ?       lvErrors
 
    Tester:
-     c:\Myprojects\Packages\CubicCommonControls\Demo\LightLog\
+     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE

@@ -15,7 +15,7 @@ UNIT clVisLogRam;
      TRamLog even though functional is a bit outdate. The plan is to be replaced with TVisRamLog
 
    Tester:
-     c:\Myprojects\Packages\CubicCommonControls\Demo\LightLog\
+     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE

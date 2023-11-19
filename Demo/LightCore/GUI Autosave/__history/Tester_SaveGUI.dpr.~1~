@@ -1,7 +1,8 @@
 program Tester_SaveGUI;
 
 uses
-  fastmm4,
+  FastMM4,
+  System.SysUtils,
   Forms,
   MainForm in 'MainForm.pas' {frmTester},
   SecondForm in 'SecondForm.pas' {frmContainer},
@@ -10,11 +11,24 @@ uses
 
 {$R *.res}
 
+procedure Main;
+ begin
+  AppData:= TAppData.Create('Cubic IniFileEx Tester');
+
+  { Properly installed? }
+  //if NOT AppData.CheckSysDir then EXIT;
+
+  if AppData.InstanceRunning
+  then
+    { Send command line to the already running instance and restore (bring to front) that instance }
+    AppData.ResurectInstance(Trim(ParamStr(1))) //ToDo: I need to send the URestore message because I need to call RestoreBioniX (to remove icon fromsystray) on that side (BX first instance)
+  else
+   begin
+     AppData.CreateMainForm(TfrmTester, frmTester, TRUE, TRUE);
+     Application.Run;
+   end;
+ end;
+
 begin
-  Application.Initialize;
-  Application.MainFormOnTaskbar := True;                 { If true, a taskbar button represents the application's main form and displays its caption. All child forms will stay on top of the MainForm (bad)! If False, a taskbar button represents the application's (hidden) main window and bears the application's Title. Must be True to use Windows (Vista) Aero effects (ive taskbar thumbnails, Dynamic Windows, Windows Flip, Windows Flip 3D). https://stackoverflow.com/questions/66720721/ }
-  AppData:= TAppDataEx.Create('Cubic IniFileEx Tester'); { Absolutelly critical if you use the SaveForm/LoadForm functionality. This string will be used as the name of the INI file. }
-  Application.CreateForm(TfrmTester, frmTester);
-  frmTester.Show;
-  Application.Run;
+  Main;
 end.

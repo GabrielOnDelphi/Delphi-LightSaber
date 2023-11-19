@@ -239,7 +239,7 @@ end;
 procedure TCreationOrderTest.WriteToString(s: string);
 begin
   if LogActive
-  then System.IOUtils.TFile.AppendAllText('c:\MyProjects\Packages\CubicCommonControls\CreationOrder.txt', s);
+  then System.IOUtils.TFile.AppendAllText('c:\MyProjects\Packages\LightSaber\CreationOrder.txt', s);
   { Without a full path, the output will be in Delphi\bin folder when the control is used inside the IDE (dropped on a form) and in app's folder when running inside the EXE file. }
 end;
 

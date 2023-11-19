@@ -20,7 +20,7 @@ UNIT clLogUtils;
    **I/O**
    The log can be save to disk to a binary file so it can be restored when the next app startup.
    Tester:
-     c:\Myprojects\Packages\CubicCommonControls\Demo\LightLog\
+     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE

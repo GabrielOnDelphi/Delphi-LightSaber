@@ -6,7 +6,7 @@ uses
   {$ENDIF }
   Forms,
   FormMain in 'FormMain.pas' {frmTester},
-  FormTranslator in '..\..\Packages\CubicCommonControls\FormTranslator.pas',
+  FormTranslator in '..\..\Packages\LightSaber\FormTranslator.pas',
   ccAppData in '..\..\ccAppData.pas';
 
 {$R *.res}

@@ -10,7 +10,7 @@ UNIT ccRichLogTrack;
      Max= 6       lvErrors
 
    Tester:
-     c:\Myprojects\Packages\CubicCommonControls\Demo\LightLog\
+     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE
