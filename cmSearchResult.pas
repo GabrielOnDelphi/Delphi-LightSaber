@@ -3,13 +3,17 @@ unit cmSearchResult;
 INTERFACE
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Forms;
+  System.SysUtils;
 
 TYPE
+  TIDEPosition = record
+    Line, Column: Integer;
+  end;
+
   TSearchResult= class(TObject)
      FileName: string;
-     Positions: TArray<integer>;
-     procedure AddNewPos(Pos: Integer);
+     Positions: TArray<TIDEPosition>;   // The line(s) where the text was found
+     procedure AddNewPos(Line, Column: Integer);
      function Found: Boolean;
      function PositionsAsString: string;
      function Count: Integer;
@@ -19,13 +23,17 @@ TYPE
 
 IMPLEMENTATION
 
-USES cmPascal, ccCore;
+USES ccCore;
 
 
-procedure TSearchResult.AddNewPos(Pos: Integer);
+procedure TSearchResult.AddNewPos(Line, Column: Integer);
+var IDEPosition: TIDEPosition;
 begin
+ IDEPosition.Line:= Line;
+ IDEPosition.Column:= Column;
+
  SetLength(Positions, Length(Positions)+1);
- Positions[High(Positions)]:= Pos;
+ Positions[High(Positions)]:= IDEPosition;
 end;
 
 
@@ -45,8 +53,11 @@ end;
 function TSearchResult.PositionsAsString: string;
 begin
  Result:= '';
- for var i in Positions
-   do Result:= Result+ IntToStr(i)+ ',';
+
+ for var IDEPosition in Positions
+   do Result:= Result+ IntToStr(IDEPosition.Line)+ ', ';
+
+ Result:= RemoveLastChar(Result);
  Result:= RemoveLastChar(Result);
 end;
 

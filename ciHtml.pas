@@ -1,4 +1,4 @@
-UNIT ciHtml;
+﻿UNIT ciHtml;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
@@ -19,7 +19,7 @@ USES
 {--------------------------------------------------------------------------------------------------
    HTML PARSING
 --------------------------------------------------------------------------------------------------}
- function  GetBodyFromHtml      (AHTML: string): string;                                             { Get the HTML code contained between the <Body> tags }
+ function  GetBodyFromHtml      (CONST AHTML: string): string;                                             { Get the HTML code contained between the <Body> tags }
  function  GenerateHTMLHeader   (CONST Title, MetaDescription, Keywords, CssFile: string): string;   { Old name: GenerateStandardHTMLHeader }
 
  { Tags }
@@ -29,20 +29,20 @@ USES
  { Tags - Extract }
  function  EctractLine          (CONST HtmlBody, LineStart: string): string;
  function  StripAllTags         (CONST S: string): string; // A Delphi function to remove all HTML / XML type tags from a string of text.
- function  ExtractTagsData      (HtmlBody, TagName: string): TStringList;                           {   Example: for '<div>xxx</div>' it returns xxx }
+ function  ExtractTagsData      (CONST HtmlBody: string; TagName: string): TStringList;                       {   Example: for '<div>xxx</div>' it returns xxx }
  {}
  function  ReplaceAttribValue   (HtmlTag, Attrib, NewValue: string): string;
  function  ExtractAttribValue   (CONST HtmlTag, Attrib: string): string;  //old name: ExtractTagValue?     { Extract the value of a user defined Attrib from a single HTML line (if you provide an entire HTML body then the function will only return the first Attrib found). }
  function  ExtractAttribValueIE (CONST HtmlTag, Attrib: string): string;                            { This fixes: IE nu pune quotes arround 'blank'. Example:  target=_blank }
 
  { URLs }
- function  ExtractAhrefTags     (HtmlBody: string): TStringList;                                           { Parse HTML file and extract <A HRef> tag. Return a list of TAGS }
- function  ExtractURLs          (HtmlBody: string): TStringList;                                           { Returns a list of links (that start with http://) }
+ function  ExtractAhrefTags     (CONST HtmlBody: string): TStringList;                                           { Parse HTML file and extract <A HRef> tag. Return a list of TAGS }
+ function  ExtractURLs          (CONST HtmlBody: string): TStringList;                                           { Returns a list of links (that start with http://) }
  function  ExtractURLsText      (Text    : string; AdreseExtrase: TStringlist): integer;            { Extracts URLs from a TEXT. It searches the 'www' and 'http' strings }
 
  {}
- function  LinkHasNoFollow      (Link: string): Boolean;
- function  LinkOpensInNewWind   (Link: string): Boolean;
+ function  LinkHasNoFollow      (CONST Link: string): Boolean;
+ function  LinkOpensInNewWind   (CONST Link: string): Boolean;
 
  { URL manipulation }
  function  MakeLinkRelativeToRoot  (CONST MasterPageUrl, Link: string): string;   { Rewrites an URLs located in the MasterPage (/x/master/index.html) that points to 'slave' to look like this... }
@@ -50,8 +50,8 @@ USES
  function  ColapseUrlDots          (sURL: string): string;
 
  { Also see ccCore.ExtractTex tBetween }
- function  LineIsMeta      (HtmlLine, MetaName: string): Boolean;                 { Returns true if this line is the specified 'meta'. For example: <meta name="Keywords" content="">  }
- function  LineIsTitle     (HtmlLine: string): Boolean;
+ function  LineIsMeta      (CONST HtmlLine, MetaName: string): Boolean;                 { Returns true if this line is the specified 'meta'. For example: <meta name="Keywords" content="">  }
+ function  LineIsTitle     (CONST HtmlLine: string): Boolean;
 
  {}
  function  SanitizeText    (CONST URL: string): UTF8String;                       { Encode a string into a URL query string parameter (as per web forms).  One would expect that Indy contains well-tested functions to handle this. Well, Indy contains some functions to help with this, but they may not work quite as you expect.  In fact, they may not be much use at all. }
@@ -63,7 +63,7 @@ USES
 
  { Formattings }
  function  FixHtmlFormatings(Body: TStringList): string; overload;
- procedure FixHtmlFormatings(FileName: string);  overload;
+ procedure FixHtmlFormatings(CONST FileName: string);  overload;
 
 
 
@@ -119,7 +119,7 @@ begin
 end;
 
 
-procedure FixHtmlFormatings(FileName: string);
+procedure FixHtmlFormatings(CONST FileName: string);
 VAR
    Text: TStringList;
    s: string;
@@ -237,7 +237,7 @@ end;
 
 
 
-function GetBodyFromHtml(AHTML: string): string;                                                   { Get the HTML code contained between the <Body> tags }
+function GetBodyFromHtml(CONST AHTML: string): string;                                                   { Get the HTML code contained between the <Body> tags }
 CONST
   BODY_OPEN_TAG  = '<body>';
   BODY_CLOSE_TAG = '</body>';
@@ -601,7 +601,7 @@ end;
 
  ALTERNATIVE: http://www.delphipages.com/forum/showthread.php?t=90262
 --------------------------------------------------------------------------------------------------}
-function ExtractTagsData(HtmlBody, TagName: string): TStringList;
+function ExtractTagsData(CONST HtmlBody: string; TagName: string): TStringList;
 VAR
    Tag, LowBody, OpenTag, CloseTag: string;
    Offset, TextLen, Tag2Start, Tag1Start, Tag1End: Integer;
@@ -658,7 +658,7 @@ end;
   ALTERNATIVE:
      http://www.delphipages.com/forum/showthread.php?t=90262
 --------------------------------------------------------------------------------------------------}
-function ExtractAhrefTags(HtmlBody: string): TStringList;
+function ExtractAhrefTags(CONST HtmlBody: string): TStringList;
 VAR
    Tag, LowBody: string;
    Offset, TextLen, iEnd, iStart1, iStart2: Integer;
@@ -698,7 +698,7 @@ end;
 
 
 
-function ExtractURLs(HtmlBody: string): TStringList;    { Returns a list of links (that start with http://) }
+function ExtractURLs(CONST HtmlBody: string): TStringList;    { Returns a list of links (that start with http://) }
 VAR
    i: Integer;
 begin
@@ -815,7 +815,7 @@ end;
 
 
 
-function LinkHasNoFollow(Link: string): Boolean;
+function LinkHasNoFollow(CONST Link: string): Boolean;
 VAR s: string;
 begin
  if Link= '' then EXIT(FALSE);
@@ -824,7 +824,7 @@ begin
 end;
 
 
-function LinkOpensInNewWind(Link: string): Boolean;
+function LinkOpensInNewWind(CONST Link: string): Boolean;
 VAR s: string;
 begin
  if Link= '' then EXIT(FALSE);
@@ -837,7 +837,7 @@ end;
 
 
 { META }
-function LineIsMeta(HtmlLine, MetaName: string): Boolean;  { Returns true if this line is the specified 'meta'. For example: <meta name="Keywords" content="">  }
+function LineIsMeta(CONST HtmlLine, MetaName: string): Boolean;  { Returns true if this line is the specified 'meta'. For example: <meta name="Keywords" content="">  }
 VAR s: string;
 begin
  s:= ExtractTextBetween(HtmlLine, '<', '>');        { Example of line:  <meta name="Keywords" content=""> }
@@ -850,7 +850,7 @@ end;
 
 
 
-function LineIsTitle(HtmlLine: string): Boolean;    {Example of line:   <title>Small Business-Bootstrap Template</title> }
+function LineIsTitle(CONST HtmlLine: string): Boolean;    {Example of line:   <title>Small Business-Bootstrap Template</title> }
 begin
  Result:= (PosInsensitive(HtmlLine, '<title>') > 0) AND (PosInsensitive(HtmlLine, '</title>') > 7);
 end;

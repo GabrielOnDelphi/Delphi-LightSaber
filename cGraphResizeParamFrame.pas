@@ -129,7 +129,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('Cubic', [TResizeParameters]); //register the frame in the desired component category
+  RegisterComponents('LightSaber', [TResizeParameters]); //register the frame in the desired component category
 end;
 
 

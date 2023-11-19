@@ -1,4 +1,4 @@
-package LightGraphics;
+﻿package LightGraphics;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -29,7 +29,7 @@ package LightGraphics;
 {$DEFINE FastJpg}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'LightSaber - Graphics lib'}
-{$LIBSUFFIX AUTO}
+{$LIBSUFFIX '270'}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
 
@@ -38,13 +38,12 @@ requires
   vcl,
   LightCore,
   LightCommon,
-  LightLog,
   LightTranslator,
   vclimg,
   vclwinx,
   vclie,
   GR32_R,
-  CCRExif_D10,
+  CCRExif,
   ThirdPartyLibs;
 
 contains
@@ -73,8 +72,7 @@ contains
   cGraphBkgColorParams in 'cGraphBkgColorParams.pas',
   cGraphConvert in 'cGraphConvert.pas',
   cGraphAlpha in 'cGraphAlpha.pas',
-  cGraphLoader.RainEditor in 'cGraphLoader.RainEditor.pas';
+  cGraphLoader.RainEditor in 'cGraphLoader.RainEditor.pas',
+  cGraphDesktop in 'cGraphDesktop.pas';
 
 end.
-
-

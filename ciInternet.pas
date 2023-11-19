@@ -1,4 +1,4 @@
-UNIT ciInternet;
+﻿UNIT ciInternet;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
@@ -79,12 +79,12 @@ CONST
  function  SameSubWebSite           (CONST URL1, URL2: string): Boolean;                          { Returns true if the URL1 belongs to URL2 or one of its subdomains }
  function  FileIsInFolder           (CONST MainURL, aFile: string): Boolean;                      { Returns true if the aFile is located of MainURL or one of its subfolders }
  {}
- function  ParseURL                 (const lpszUrl: string): TStringArray;                        { Breaks an URL in all its subcomponents. Example: ParseURL('http://login:password@somehost.somedomain.com/some_path/something_else.html?param1=val&param2=val')   }
- procedure ExpandURLs               (ShortUrls: TStringList; MainUrl: string);                    { Expand all urls in the list to a full http path. Example: If the MainURL is 'www.dnabaser.com/tools/' then 'download/' is expanded to 'www.dnabaser.com/tools/download/' }
- function  ExpandURL                (ShortUrl, MainUrl: string): string;
+ function  ParseURL                 (CONST lpszUrl: string): TStringArray;                        { Breaks an URL in all its subcomponents. Example: ParseURL('http://login:password@somehost.somedomain.com/some_path/something_else.html?param1=val&param2=val')   }
+ procedure ExpandURLs               (ShortUrls: TStringList; CONST MainUrl: string);                    { Expand all urls in the list to a full http path. Example: If the MainURL is 'www.dnabaser.com/tools/' then 'download/' is expanded to 'www.dnabaser.com/tools/download/' }
+ function  ExpandURL                (CONST ShortUrl, MainUrl: string): string;
  function  UrlToLocalPath           (CONST URL: string): string;                                  { Converts  http://www.Domain.com/download/setup.exe to Domain.com\download\setup.exe }
 
- function  URLMakeNonRelativeProtocol(URL: string): string;                                       { Convert from Protocol-Relative to http }
+ function  URLMakeNonRelativeProtocol(CONST URL: string): string;                                       { Convert from Protocol-Relative to http }
 
 
 
@@ -130,16 +130,16 @@ CONST
  function ValidateProxyAdr  (CONST Address: string): Boolean;
  function ValidatePort      (CONST Port: string): Boolean;
  function ExtractProxyFrom  (Line: string): string;    { Tries to extract a proxy address from a line of garbage text }
- function ExtractProxiesFrom(Text: string): string;    { Tries to extract multiple proxies from a string (more than one line) of garbage text. Returns a list of proxies separated by enter }
+ function ExtractProxiesFrom(CONST Text: string): string;    { Tries to extract multiple proxies from a string (more than one line) of garbage text. Returns a list of proxies separated by enter }
 
 
 {--------------------------------------------------------------------------------------------------
    IP ADDRESS OF
 --------------------------------------------------------------------------------------------------}
  function  GetLocalIP : string;                                                                  { Local IP (not external) }
- function  GetExternalIp  (CONST ScriptAddress: string= 'http://checkip.dyndns.org'; CONST Blocking: Boolean= TRUE): string;
- function  GetLocalIP2(OUT HostName, IPaddr, WSAErr: string): Boolean;
- function  ResolveAddress(HostName: String; out Address: DWORD): Boolean;
+ function  GetExternalIp  (CONST ScriptAddress: string= 'http://checkip.dyndns.org'): string;
+ function  GetLocalIP2    (OUT HostName, IPaddr, WSAErr: string): Boolean;
+ function  ResolveAddress (CONST HostName: String; out Address: DWORD): Boolean;
 
 
 {--------------------------------------------------------------------------------------------------
@@ -686,7 +686,7 @@ end;
 
 
  { Convert from Protocol-Relative to http }      { http://stackoverflow.com/questions/9646407/two-forward-slashes-in-a-url-src-href-attribute }
-function URLMakeNonRelativeProtocol(URL: string): string;
+function URLMakeNonRelativeProtocol(CONST URL: string): string;
 begin
  if Pos('//', url) = 1
  then Result:= 'http://'+ system.COPY(url, 3, MaxInt)
@@ -696,7 +696,7 @@ end;
 
 { Expand short urls to a full http path.
   Example: If the MainURL is 'www.dnabaser.com/tools/' then 'download/' is expanded to 'www.dnabaser.com/tools/download/' }
-function ExpandURL(ShortUrl, MainUrl: string): string;
+function ExpandURL(CONST ShortUrl, MainUrl: string): string;
 VAR
    Base: string;
 begin
@@ -715,7 +715,7 @@ begin
 end;
 
 
-procedure ExpandURLs(ShortUrls: TStringList; MainUrl: string);
+procedure ExpandURLs(ShortUrls: TStringList; CONST MainUrl: string);
 VAR
    i: Integer;
    CurURL: string;
@@ -806,7 +806,7 @@ begin
 end;
 
 
-
+//ToDo: W521 Return value of function 'ExtractProxyFrom' might be undefined
 function ExtractProxyFrom(Line: string): string;   { Tested ok! Extracts an IP from a garbage text. Example: xxxxx1.210.03.23:80xxxx returns: 1.210.03.23:80 }
 VAR
   IP, Port: string;
@@ -822,8 +822,8 @@ begin
  { Count the '.' three times to the left }
  for i:= Length(IP) downto 1 DO
   begin
-   if IP[i]= '.' then Inc(Total);
-   if Total = 3 then Break;
+    if IP[i]= '.' then Inc(Total);
+    if Total = 3 then Break;
   end;
 
  if Total< 3 then EXIT('');
@@ -832,7 +832,7 @@ begin
  i:= i-1;                                   { Jump on the left side of the '.' }
  if i >= 1 then                             { Here I must keep the = sign else it won't work correctly when the IP is like this:  1.2.3.4 }
    REPEAT
-    Dec(i);
+     Dec(i);
    UNTIL (i= 0) OR NOT CharIsNumber(IP[i]);
 
  IP:= ccCore.CopyTo(IP, i+1, High(Integer));
@@ -841,7 +841,7 @@ begin
  if Port = '' then EXIT;
  i:= 0;
  REPEAT
-  Inc(i);
+   Inc(i);
  UNTIL (i > Length(Port)) OR NOT CharIsNumber(Port[i]);
  Port:= ccCore.CopyTo(Port, 1, i-1);
 
@@ -851,7 +851,7 @@ begin
 end;
 
 
-function ExtractProxiesFrom(Text: string): string;    { Tries to extract multiple proxies from a string (more than one line) of garbage text. Returns a list of proxies separated by enter }
+function ExtractProxiesFrom(CONST Text: string): string;    { Tries to extract multiple proxies from a string (more than one line) of garbage text. Returns a list of proxies separated by enter }
 VAR
    i: Integer;
    Line: string;
@@ -1219,23 +1219,20 @@ end;
 
 
 
-function GetExternalIP;
+ function  GetExternalIp(CONST ScriptAddress: string= 'http://checkip.dyndns.org'): string;
 { Other IP providers= 'http://support.inmotionhosting.com/ipcheck.php' }
 VAR s: string;
 begin
   Result:= '<unknown>';
-  TRY
-    if NOT GetTextFile(ScriptAddress, '', s) then EXIT('');
-    s:= ExtractIpFrom (GetBodyFromHtml(s));
+  if NOT GetTextFile(ScriptAddress, '', s) then EXIT('');
+  s:= ExtractIpFrom (GetBodyFromHtml(s));
 
-    if Length(s) > 0
-    then Result:= s;
+  if Length(s) > 0
+  then Result:= s;
 
-    { Remove possible garbage }
-    Result:= ReplaceString(Result, CRLF, '');
-    Result:= System.SysUtils.Trim(Result);
-  FINALLY
-  END;
+  { Remove possible garbage }
+  Result:= ReplaceString(Result, CRLF, '');
+  Result:= System.SysUtils.Trim(Result);
 end;
 
 
@@ -1259,7 +1256,7 @@ begin
   Result := '';
   for i := 1 to Length(URL) DO
     if  (URL[i]> #32)
-    AND (URL[i]<= #128)       { � = char #128}
+    AND (URL[i]<= #128)       { € = char #128}
     AND (NOT CharInSet(URL[i], UnsafeChars))
     then Result := Result + URL[i]
     else Result := Result + '%' + IntToHex(Ord(URL[i]), 2);
@@ -1438,7 +1435,7 @@ end;
 
 
 
-procedure setProxy(ProxyIP: string);
+procedure setProxy(CONST ProxyIP: string);
 VAR
    IP: AnsiString;
    PIInfo: PInternetProxyInfo;
@@ -1509,7 +1506,7 @@ end;
  Here's something very simple with which you can check a port status(opened/closed) on remote host. Add WinSock to uses clause
  http://www.delphigeist.com/search?updated-min=2010-01-01T00%3A00%3A00%2B02%3A00&updated-max=2011-01-01T00%3A00%3A00%2B02%3A00&max-results=37
 }
-function ResolveAddress(HostName: String; out Address: DWORD): Boolean;
+function ResolveAddress(CONST HostName: String; out Address: DWORD): Boolean;
 VAR lpHost: PHostEnt;
     AnsiHostName: AnsiString;
 begin

@@ -1,4 +1,4 @@
-UNIT cvStringGridBase;
+﻿UNIT cvStringGridBase;
 
 {--------------------------------------------------------------------------------------------------
   CubicDesign
@@ -73,9 +73,9 @@ TYPE
     FLargeColumn: Integer;    
     function  SelectCell(ACol, ARow: Integer): Boolean; override;
     function  FixCursor: Integer;
-    procedure DrawCellText(aCol, aRow: Longint; aRect: TRect; s: string);    
+    procedure DrawCellText(aCol: Integer; aRect: TRect; s: string);
     procedure KeyDown  (var Key: Word; Shift: TShiftState); override;
-    procedure DrawChevron(x, y: integer);
+    procedure DrawChevron(x, y: Integer);
    public
     SortedCol : Integer;
     constructor Create (AOwner: TComponent);       override;
@@ -90,7 +90,6 @@ TYPE
     procedure MouseMove         (Shift: TShiftState; X, Y: Integer); override;
     { FIND }
     function  FindNext          (CONST Text: string; CaseSens: boolean): Boolean;                          { Search all cells. Highlight the cell where text was found. If the text could not be found anymore, start from the beginning. }
-    function  FindText          (StartPoint: TPoint; CONST Text: string; CaseSens: boolean): TPoint;       { Search all cells. Intoarce celula in care a gasit string-ul }
     function  FindOnRow         (ARow: Integer; CONST Text: string; CaseSens: boolean): Integer;           { intoarce coloana in care a gasit string-ul }
     function  FindOnCol         (CONST AColumn: Integer; CONST Text: string; CaseSens: boolean): integer;  { intoarce linia in care a gasit string-ul }
     function  FindUniqueEntries (CONST ByColumn: integer): Integer;                                        { retruns the number of unique entries on the specified column. For example if that colum 1 contains name of persons, it will return how many uqinue name appears in the table }
@@ -810,13 +809,11 @@ begin
   end;  *)
 end;
 
-
+(*
 function TBaseStrGrid.FindText(StartPoint: TPoint; CONST Text: string; CaseSens: Boolean): TPoint;     { Search all cells. Intoarce celula in care a gasit string-ul }
-//VAR Cl, Rw: Integer;
 begin
  Result.X:= -1;
  Result.Y:= -1;
-
  (*
  for Rw:= StartPoint.X to RowCount-1 DO
   for cl:= StartPoint.Y to ColCount-1 DO
@@ -830,9 +827,6 @@ begin
      if SameText(Cells[cl, ARow], Text)
      then EXIT(x:= 1);
 
-
-
-
  for Rw:= StartRow to RowCount-1 DO
   begin
    Cl:= FindOnRow(Rw);
@@ -843,8 +837,7 @@ begin
      EXIT;
     end;
   end;
-  *)
-end;
+end;   *)
 
 
 function TBaseStrGrid.FindOnRow(ARow: Integer; CONST Text: string; CaseSens: boolean): integer;     { intoarce coloana in care a gasit string-ul }
@@ -1189,7 +1182,7 @@ end;
 
 
 { Draw text taking into consideration the alignment }
-procedure TBaseStrGrid.DrawCellText(aCol, aRow: Longint; aRect: TRect; s: string);
+procedure TBaseStrGrid.DrawCellText(aCol: Longint; aRect: TRect; s: string);
 var
   x: Integer;
   sText: string;   // Local copy to improve speed

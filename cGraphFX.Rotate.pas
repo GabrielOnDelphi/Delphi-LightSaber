@@ -1,4 +1,4 @@
-UNIT cGraphFx.Rotate;
+ï»¿UNIT cGraphFx.Rotate;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -23,7 +23,7 @@ UNIT cGraphFx.Rotate;
   Also see:
      Fastest possible, but quality not so great: c:\MyProjects\Packages\Third party packages\Rotate Image VCL\RotImg.pas
      Fade image to white: https://stackoverflow.com/questions/13701685/fade-an-image-using-gdi-i-e-change-only-the-alpha-channel-of-a-tgpgraphic
-     Hier mal eine Alternative zu GDI+, die ich persönlich übersichtlicher finde: WIC: https://www.delphipraxis.net/199843-gdi-bilddrehung-mit-transparenz.html
+     Hier mal eine Alternative zu GDI+, die ich persÃ¶nlich Ã¼bersichtlicher finde: WIC: https://www.delphipraxis.net/199843-gdi-bilddrehung-mit-transparenz.html
 
   If AdjustSize is:
     True : then the size of BMP will adjusted to hold the entire rotated image.
@@ -253,17 +253,17 @@ end;
 
 
 
-{ This is slow even if I rotate the image at right angles (90, 180, 270) }
+{ This is slow even if we rotate the image at right angles (90, 180, 270) }
 procedure RotateBitmapJanFX(BMP: TBitmap; Degs: Single; BkColor: TColor = clNone);
 VAR BMPOut: TBitmap;
 begin
  BMPOut:= TBitmap.Create;
  TRY
-  BMP.PixelFormat   := pf24bit;                                                                    { Otherwise SmoothRotate won't work }
+  BMP.PixelFormat   := pf24bit;                    { Otherwise SmoothRotate won't work }
   BMPOut.PixelFormat:= pf24bit;
 
   SetLargeSize(BMPOut, BMP.Height, BMP.Width);
-  cGraphBitmap.FillBitmap(BMPOut, 0);                                                                 { Clear output image to black }
+  cGraphBitmap.FillBitmap(BMPOut, BkColor);
 
   {$IFDEF CCRExif}
   janFX.SmoothRotate(BMP, BMPOut, BMPOut.Width div 2, BMPOut.Height div 2, Degs);

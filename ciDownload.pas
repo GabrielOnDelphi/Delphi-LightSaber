@@ -17,6 +17,7 @@ UNIT ciDownload;
 
 
    ALSE SEE:
+       c:\Users\Public\Documents\Embarcadero\Studio\21.0\Samples\Object Pascal\RTL\HttpDownload\HttpDownloadDemo.dpr
        c:\MyProjects\Packages\BSalsa EmbeddedWB\Demos\IEDownload_Simple_Demo\
 
    Tester:

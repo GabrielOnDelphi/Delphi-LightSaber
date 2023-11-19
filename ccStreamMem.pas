@@ -1,4 +1,4 @@
-UNIT ccStreamMem;
+﻿UNIT ccStreamMem;
 
 {=============================================================================================================
    CubicDesign
@@ -123,8 +123,8 @@ TYPE
      procedure PushData(CONST Bytes: TBytes);  overload;
 
      { Disk }
-     procedure LoadFromFile(FileName: string);
-     procedure SaveToFile  (FileName: string);
+     procedure LoadFromFile(CONST FileName: string);
+     procedure SaveToFile  (CONST FileName: string);
   end;
 
 IMPLEMENTATION
@@ -711,7 +711,7 @@ end;
 
 
 { DISK }
-procedure TCubicMemStream.LoadFromFile(FileName: string);
+procedure TCubicMemStream.LoadFromFile(CONST FileName: string);
 begin
   VAR FileStream := TFileStream.Create(FileName, fmOpenRead);
   try
@@ -722,7 +722,7 @@ begin
 end;
 
 
-procedure TCubicMemStream.SaveToFile(FileName: string);
+procedure TCubicMemStream.SaveToFile(CONST FileName: string);
 begin
   VAR FileStream := TFileStream.Create(FileName, fmCreate);
   try

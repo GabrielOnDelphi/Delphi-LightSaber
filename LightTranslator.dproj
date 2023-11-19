@@ -23,12 +23,6 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
-        <Cfg_1_Win32>true</Cfg_1_Win32>
-        <CfgParent>Cfg_1</CfgParent>
-        <Cfg_1>true</Cfg_1>
-        <Base>true</Base>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
@@ -39,7 +33,7 @@
         <DCC_Alignment>2</DCC_Alignment>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
-        <DCC_DcuOutput>.\$(ProductVersion)\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_DcuOutput>.\$(ProductVersion)\$(Platform)_$(Config)</DCC_DcuOutput>
         <DCC_Description>LightSaber - Translator lib</DCC_Description>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
@@ -47,7 +41,7 @@
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_Optimize>false</DCC_Optimize>
         <DCC_RangeChecking>true</DCC_RangeChecking>
-        <DllSuffix>$(Auto)</DllSuffix>
+        <DllSuffix>270</DllSuffix>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
@@ -61,9 +55,6 @@
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <DCC_Description>Light Translator</DCC_Description>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
         <DCC_IntegerOverflowCheck>false</DCC_IntegerOverflowCheck>
@@ -74,15 +65,10 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="rtl.dcp"/>
-        <DCCReference Include="xmlrtl.dcp"/>
-        <DCCReference Include="vclimg.dcp"/>
-        <DCCReference Include="vcl.dcp"/>
-        <DCCReference Include="vclx.dcp"/>
+        <DCCReference Include="Rtl.dcp"/>
+        <DCCReference Include="VclImg.dcp"/>
+        <DCCReference Include="Vcl.dcp"/>
         <DCCReference Include="LightCore.dcp"/>
-        <DCCReference Include="LightLog.dcp"/>
-        <DCCReference Include="vclWinx.dcp"/>
-        <DCCReference Include="SoapRtl.dcp"/>
         <DCCReference Include="LightCommon.dcp"/>
         <DCCReference Include="ctTranslate.pas"/>
         <DCCReference Include="FormTranslator.pas"/>
@@ -107,13 +93,7 @@
                 <Source>
                     <Source Name="MainSource">LightTranslator.dpk</Source>
                 </Source>
-                <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\CubicProteus280.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\CubicProteus280.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LightLog280.bpl">LightLog</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LightVisControls280.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LightVisControls280.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp280.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                </Excluded_Packages>
+                <Excluded_Packages/>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>

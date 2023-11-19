@@ -1,4 +1,4 @@
-UNIT cvThumbViewerM;                                                                            {Multithreaded}
+﻿UNIT cvThumbViewerM;                                                                            {Multithreaded}
 
 {--------------------------------------------------------------------------------------------------
   CubicDesign
@@ -61,7 +61,6 @@ TYPE
     procedure CreateWnd;     override;
     function  getActiveItem: Integer;                                                              { Unused }{ Retuns the Index of the seleted thumb }
     procedure setActiveItem(CONST Index: Integer);                                                 { Unused }
-    procedure ComputeScrollBar;                                                                    { Call it AFTER ComputeCellCount }
   public
     ThumbList   : TThumbList;
     ThumbWidth  : Integer;
@@ -173,7 +172,7 @@ end;
 procedure TCubicThumbs.LoadFolder(CONST Dir: string);
 VAR  FolderContent: TStringList;                                                                   { Freed by: FBkgThread }
      FileName: string;
-     Thumb: ThumbPtr;
+     PThumb: ThumbPtr;
 begin
  { CHECKS }
  if NOT DirectoryExists(Dir)
@@ -188,10 +187,10 @@ begin
  { Add rec to list }
  for FileName in FolderContent DO
    begin
-    New(Thumb);
-    Thumb^.FileName:= FileName;
-    Thumb^.BMP:= NIL;                                                                              { The thumbs ARE NOT yet created/ They are created on demand. }
-    ThumbList.Add(Thumb);
+    New(PThumb);
+    PThumb^.FileName:= FileName;
+    PThumb^.BMP:= NIL;                                                                              { The thumbs ARE NOT yet created/ They are created on demand. }
+    ThumbList.Add(PThumb);
    end;
 
  { Recompute cells }
@@ -224,7 +223,7 @@ end;
 
 
 procedure TCubicThumbs.AddPicture(CONST FilePath: string);                                         { Append a single thumbnail at the end of an existing list of thumbnails. Not multithreaded }
-VAR Thumb: ThumbPtr;
+VAR PThumb: ThumbPtr;
 begin
  if (ThumbWidth <= 0) OR (ThumbHeight<= 0)
  then RAISE exception.Create('Invalid thumb size!');                                               { DEL }
@@ -235,12 +234,12 @@ begin
  else Result:= cGraphics.LoadGraphRsmplProp(FileName, ThumbWidth, ThumbHeight, ResamplerQual); }
 
  { Add rec to list }
- New(Thumb);
- Thumb^.FileName:= FilePath;
- ThumbList.Add(Thumb);
+ New(PThumb);
+ PThumb^.FileName:= FilePath;
+ ThumbList.Add(PThumb);
 
  { Generate thumbnail }
- Thumb^.BMP:= LoadAndStretch(FilePath, ThumbWidth, ThumbHeight);
+ PThumb^.BMP:= LoadAndStretch(FilePath, ThumbWidth, ThumbHeight);
 
  { Increment progress }
  Inc(ThreadProgress);
@@ -396,13 +395,14 @@ end;
 {--------------------------------------------------------------------------------------------------
    Metrics
 --------------------------------------------------------------------------------------------------}
+(* I GET NASTY 'A call to an OS function failed.' ERROR IF I UNCOMMENT THIS.
+Probalby I access the property too early, during the creation of the control!
 procedure TCubicThumbs.ComputeScrollBar;                                                           { Call it AFTER ComputeCellCount }
 begin
-(* I GET NASTY 'A call to an OS function failed.' ERROR IF I UNCOMMENT THIS
    if NecessaryRows - RowCount> 0                                                                  { Note: scrollbar is indexed in 0.  RowCount represents the last (unscrollable) rows }
    then ScrollBars:= ssVertical
-   else ScrollBars:= ssnone; *)
-end;
+   else ScrollBars:= ssnone;
+end; *)
 
 
 procedure TCubicThumbs.ComputeCellCount;
@@ -411,7 +411,7 @@ begin
 
  ColCount:= Trunc (ClientWidth / (DefaultColWidth + 1));                                           { Thumbs per line. 1 is the width of the line that separates the cells }
  RowCount:= NecessaryRows;
- ComputeScrollBar;                                                                                 { Call it AFTER ComputeCellCount }
+ //ComputeScrollBar;                                                                                 { Call it AFTER ComputeCellCount }
 end;
 
 
@@ -544,7 +544,8 @@ end;
 function TCubicThumbs.SelectedFile: string;
 begin
  if GetSelectedPhumb<> NIL
- then Result:= GetSelectedPhumb^.FileName;
+ then Result:= GetSelectedPhumb^.FileName
+ else Result:= '';
 end;
 
 

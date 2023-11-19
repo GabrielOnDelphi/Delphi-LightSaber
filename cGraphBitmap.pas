@@ -1,4 +1,4 @@
-UNIT cGraphBitmap;
+﻿UNIT cGraphBitmap;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -141,7 +141,7 @@ end;
 
 function CreateBlankBitmap(Width, Height: Integer; BkgClr: TColor= clBlack; PixelFormat: TPixelFormat= pf24bit): TBitmap;   // old name: GetBlankImage
 begin
- Result:= CreateBitmap(Width, Height);
+ Result:= CreateBitmap(Width, Height, PixelFormat);
  FillBitmap(Result, BkgClr);   { Make it black }
 end;
 

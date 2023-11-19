@@ -1,4 +1,4 @@
-UNIT ccRegistry;
+﻿UNIT ccRegistry;
 
 {=============================================================================================================
    2023.01
@@ -29,10 +29,10 @@ USES
  function RegWriteInteger       (CONST Root: HKEY; CONST Key, ValueName: string; ValueData: Integer; Lazy: Boolean= TRUE): Boolean;       { Writes a integer to the specified key in the registry }
  function RegWriteBool          (CONST Root: HKEY; CONST Key, ValueName: string; ValueData: Boolean; Lazy: Boolean= TRUE): Boolean;
  function RegWriteDate          (CONST Root: HKEY; CONST Key, ValueName: string; ValueData: TDate;   Lazy: Boolean= TRUE): Boolean;
- function RegReadDate           (CONST Root: HKEY; CONST Key, ValueName: string; DefValData: TDateTime= 0; CanCreate: Boolean= FALSE): TDateTime;
+ function RegReadDate           (CONST Root: HKEY; CONST Key, ValueName: string; CanCreate: Boolean= FALSE): TDateTime;
  function RegReadBool           (CONST Root: HKEY; CONST Key, ValueName: string; DefValData: Boolean= FALSE): Boolean;
  function RegReadInteger        (CONST Root: HKEY; CONST Key, ValueName: string; DefValData: Integer= 0): Integer;
- function RegReadString         (CONST Root: HKEY; CONST Key, ValueName: string; DefValData: string= ''): string;
+ function RegReadString         (CONST Root: HKEY; CONST Key, ValueName: string; CONST DefValData: string= ''): string;
 
  function RegEnumSubKeys        (CONST Root: HKEY; const Key: string): TStringList;   { ! }
 
@@ -285,7 +285,7 @@ begin
 end;
 
 
-function RegReadDate (CONST Root: HKEY; CONST Key, ValueName: string; DefValData: TDateTime= 0; CanCreate: Boolean= FALSE): TDateTime;
+function RegReadDate (CONST Root: HKEY; CONST Key, ValueName: string; CanCreate: Boolean= FALSE): TDateTime;
 VAR Rg: TRegistry;
 begin
  Result:= -1;
@@ -302,7 +302,7 @@ begin
 end;
 
 
-function RegReadString (CONST Root: HKEY; CONST Key, ValueName: string; DefValData: String= ''): string;
+function RegReadString (CONST Root: HKEY; CONST Key, ValueName: string; CONST DefValData: String= ''): string;
 VAR Rg: TRegistry;
 begin
  Result:= '';

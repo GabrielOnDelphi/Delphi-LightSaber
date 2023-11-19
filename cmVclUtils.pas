@@ -1,4 +1,4 @@
-UNIT cmVclUtils;
+﻿UNIT cmVclUtils;
 
 {=============================================================================================================
    2023.01
@@ -155,6 +155,7 @@ function ShowInheritanceTree(Control: TControl): string;
 var
   ClassRef: TClass;
 begin
+  Result:= '';
   ClassRef := Control.ClassType;
 
   WHILE ClassRef <> NIL do

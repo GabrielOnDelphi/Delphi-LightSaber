@@ -653,9 +653,10 @@ var
 begin
   Result := FALSE;
   ExeFileName:= LowerCase(ExeFileName);
+  Process.dwSize := SizeOf(Process);
+
   SnapshotHandle:= CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   TRY
-    Process.dwSize := SizeOf(Process);
     if Process32First(SnapshotHandle, Process) then
       REPEAT
         VAR LowProcName:= LowerCase(Process.szExeFile);

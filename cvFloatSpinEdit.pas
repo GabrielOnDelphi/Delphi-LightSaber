@@ -1,4 +1,4 @@
-UNIT cvFloatSpinEdit;
+﻿UNIT cvFloatSpinEdit;
 
 {-------------------------------------------------------------------------------------------------------------
   Copyright CubicDesign
@@ -370,6 +370,7 @@ begin
     if Value- Increment >= FMinValue         { Decrement number in EditBox }
     then Value := Value - Increment
     else Value := fMinValue;
+  updNone: ;//DoNothing
  end;
 end;
 

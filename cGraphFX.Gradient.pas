@@ -1,9 +1,8 @@
-UNIT cGraphFx.Gradient;
+﻿UNIT cGraphFx.Gradient;
 
 {=============================================================================================================
-   Gabriel Moraru
    2023.08.05
-   See Copyright.txt
+   Source: ?
 --------------------------------------------------------------------------------------------------------------
    Draws a gradient over a canvas
 
@@ -27,7 +26,7 @@ USES
   WinApi.Windows, System.SysUtils, Vcl.Graphics, Vcl.Controls, Vcl.GraphUtil, vcl.Forms, ccCore;
 
 
-procedure VistaGradient (BMP: TBitmap; const c1, c2: Byte; const c3, c4: TColor; const Center, Reverse: Boolean);    { http://rmklever.com/?tag=thumbnails }
+procedure VistaGradient (BMP: TBitmap; const c1: Byte; const c3, c4: TColor; const Center, Reverse: Boolean);    { http://rmklever.com/?tag=thumbnails }
 procedure GradientFill  (Control: TWinControl; Color1, Color2: TColor; Orientation: Integer= GRADIENT_FILL_RECT_V; Transparency: Word= 255); { Draws a gradient over a canvas }
 procedure GradientFillCanvas(ACanvas: TCanvas; const AStartColor, AEndColor: TColor; const ARect: TRect; const Direction: TGradientDirection); deprecated 'Call Vcl.GraphUtil.GradientFillCanvas directly!';
 
@@ -114,7 +113,7 @@ end;
 
 
 {$R-}
-procedure VistaGradient(BMP: TBitmap; const c1, c2: Byte; const c3, c4: TColor; const Center, Reverse: Boolean);    { http://rmklever.com/?tag=thumbnails }
+procedure VistaGradient(BMP: TBitmap; const c1: Byte; const c3, c4: TColor; const Center, Reverse: Boolean);    { http://rmklever.com/?tag=thumbnails }
 TYPE
   PRGB = ^TRGB;
   TRGB = record b, g, r : Byte; end;

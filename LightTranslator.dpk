@@ -26,20 +26,15 @@ package LightTranslator;
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'Light Translator'}
-{$LIBSUFFIX AUTO}
+{$LIBSUFFIX '270'}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
 
 requires
-  rtl,
-  xmlrtl,
-  vclimg,
-  vcl,
-  vclx,
+  Rtl,
+  VclImg,
+  Vcl,
   LightCore,
-  LightLog,
-  vclWinx,
-  SoapRtl,
   LightCommon;
 
 contains
@@ -48,6 +43,3 @@ contains
   FormSelectLang in 'FormSelectLang.pas';
 
 end.
-
-
-

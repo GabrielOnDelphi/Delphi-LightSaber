@@ -86,7 +86,7 @@ VAR
 begin
  Stream:= TCubicBuffStream.CreateRead(FileName);
  TRY
-   Result:= Stream.ReadHeader(RainMagicNo, 1);
+   Result:= Stream.ReadHeaderB(RainMagicNo, 1);
  FINALLY
   FreeAndNil(Stream);
  END;

@@ -65,7 +65,7 @@ function ExtractMiddleFrame(CONST FileName: string; OUT FrameCount: Cardinal): T
 IMPLEMENTATION
 
 USES
-  GifParser, ccCore, ccIO;
+  GifParser, ccCore, ccAppData, ccIO;
 
 
 constructor TGifLoader.Create;
@@ -96,7 +96,7 @@ begin
  EXCEPT
    on E: Exception do
     begin
-     LogAddError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+     AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
      EXIT(FALSE);    { Do not crash on failure }
     end;
  END;
@@ -105,7 +105,7 @@ begin
  FrameCount:= GIFImg.Images.Count;
  if FrameCount <= 1 then
   begin
-   LogAddError('This is not an animated GIF: '+ FileName);
+   AppData.LogError('This is not an animated GIF: '+ FileName);
    EXIT(FALSE);
   end;
 
@@ -166,7 +166,7 @@ begin
 
       { Check }
       if FrameCount < 1
-      then LogAddWarn('AVI frame count mismatch!');
+      then AppData.LogWarn('AVI frame count mismatch!');
    FINALLY
     FreeAndNil(BMP);
    END;

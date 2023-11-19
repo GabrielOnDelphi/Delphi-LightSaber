@@ -7,6 +7,9 @@ UNIT ciDownloadThread;
 
    Downloads a file [ via WinInet ]
 
+   Also see:
+       c:\Users\Public\Documents\Embarcadero\Studio\21.0\Samples\Object Pascal\RTL\HttpAsyncDownload\HttpAsyncDownloadDemo.dpr
+
    Tester:
        c:\MyProjects\Project Testers\Internet download tester\
 -------------------------------------------------------------------------------------------------------------}

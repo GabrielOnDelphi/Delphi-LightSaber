@@ -1,17 +1,26 @@
 UNIT cvDropDownSearch;
 
 {-------------------------------------------------------------------------------------------------------------
-  CubicDesign
-  2020
+  GabrielM
+  2023.10.31
 
-  A dropdown box in which displayes a list of items that is filtered as the user type in more characters.
-  Similar to the Help Insight in Delphi IDE.
+  Searchbox with auto-suggest
+  A dropdown box similar to the Help Insight in Delphi IDE.
+  Displays a list of items. The list is filtered (gets smaller) as the user types in more characters into the searchbox.
+
+  Also see:
+    https://blog.dummzeuch.de/2019/04/28/autocompletion-for-tedits-revisited/
+    https://stackoverflow.com/questions/2012208/google-like-edit-combo-control-for-delphi
 
 -------------------------------------------------------------------------------------------------------------}
 
+//ToDo: Issue: the drop down does not respond to scroll
+//ToDo: Issue: the drop down needs two clicks instead of one in order to be closed
+//ToDo: When the drop down is focused, let user close the drop down with Enter
+
 INTERFACE
 USES
-   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, System.Types, Vcl.Forms, Vcl.FileCtrl, Vcl.WinXCtrls,
+   System.Classes, Vcl.Controls, System.Types, Vcl.WinXCtrls,
    cvListBox;
 
 TYPE
@@ -20,19 +29,24 @@ TYPE
   TDropDownSearchBox= class(TSearchBox)
    private
     FOnEndSearch: TSelectNotifyEvent;
-    procedure ShowDrowDown(Sender: TObject);
-    procedure EndSearch(Sender: TObject);
+    procedure showDropDown;
+    procedure endSearch(Sender: TObject);
    protected
     procedure KeyPress(var Key: Char); override;
     procedure Click; override;
     procedure Change; override;
    protected
-   public
      lbxSearch: TCubicListBox;
+   public
      constructor Create(AOwner: TComponent); override;
+     procedure  CreateWindowHandle(const Params: TCreateParams); override;
+     procedure  SetParent(AParent: TWinControl); override;                               { SetParent is called during construction AND also during deconstruction with aParent=nil }
      destructor Destroy; override;
-     property OnEndSearch: TSelectNotifyEvent read FOnEndSearch write FOnEndSearch;    { Triggered when the user selected an item from the list }
+     procedure  Populate(Objects: TStringList);
+     procedure  SetHostParent(aParent: TWinControl);
+     function   SelectedObject: TObject;
    published
+     property   OnEndSearch: TSelectNotifyEvent read FOnEndSearch write FOnEndSearch;    { Triggered when the user selected an item from the list }
   end;
 
 procedure Register;
@@ -41,7 +55,9 @@ procedure Register;
 
 IMPLEMENTATION
 USES
-   ccCore, ccIO;
+   ccCore;
+
+
 
 
 
@@ -52,24 +68,39 @@ begin
   AlignWithMargins := True;
   TextHint         := 'Search...';
   OnInvokeSearch   := EndSearch;
+  Text             := '';
 
   lbxSearch := TCubicListBox.Create(Self);
-  //lbxSearch.Name := 'lbxSearch';
-  lbxSearch.Parent := Self;
-  lbxSearch.Width  := Width;
-  lbxSearch.Height := 81;
+  lbxSearch.Visible := FALSE;
+  lbxSearch.OnClick := EndSearch;
+  lbxSearch.Parent  := Self;
+end;
+
+
+procedure TDropDownSearchBox.CreateWindowHandle(const Params: TCreateParams);
+begin
+  inherited;
+  lbxSearch.Name      := 'lbxSearch';
+  lbxSearch.Width       := Width;
+  lbxSearch.Height      := 81;
   lbxSearch.MultiSelect := False;
   lbxSearch.ItemHeight  := 13;
-  lbxSearch.ScrollWidth := 6;
-  lbxSearch.Sorted  := True;
-  lbxSearch.Visible := False;
-  lbxSearch.OnClick := EndSearch;
+  lbxSearch.Sorted      := TRUE;
+  lbxSearch.Visible     := FALSE;
+
+  Text:= '';
+end;
+
+
+procedure TDropDownSearchBox.SetParent(AParent: TWinControl);
+begin
+  inherited;
 end;
 
 
 destructor TDropDownSearchBox.Destroy;
 begin
-  FreeAndNil(lbxSearch);
+  ///FreeAndNil(lbxSearch);  Destroyed by the Parent
   inherited;
 end;
 
@@ -81,28 +112,31 @@ end;
 procedure TDropDownSearchBox.Change;
 begin
   inherited;
-  ShowDrowDown(Self);
+  showDropDown;
 end;
 
 
 procedure TDropDownSearchBox.Click;
 begin
   inherited;
-  ShowDrowDown(Self);
+  showDropDown;
 end;
 
 
-procedure TDropDownSearchBox.ShowDrowDown(Sender: TObject);
+procedure TDropDownSearchBox.showDropDown;
 begin
-  //VAR X:= edtSearchReagent.ClientToParent(Point(edtSearchReagent.Left, edtSearchReagent.Top), Parent.Parent).X;
-
-  lbxSearch.Parent := Self.Parent;
-  lbxSearch.Top    := Self.Top + Self.Height;
-  lbxSearch.Left   := Left + Self.Left;
-  lbxSearch.Width  := Width;
   lbxSearch.Visible:= TRUE;
+end;
 
-  //Populate(Self.Text);
+
+procedure TDropDownSearchBox.SetHostParent(aParent: TWinControl);
+begin
+  VAR Pos:= ClientToParent(Point(0, 0), aParent);
+
+  lbxSearch.Parent := aParent;
+  lbxSearch.Top    := Pos.Y+ Self.Height+ 2;
+  lbxSearch.Left   := Pos.X;
+  lbxSearch.Width  := Width;
 end;
 
 
@@ -118,11 +152,6 @@ begin
   if Assigned(FOnEndSearch) then FOnEndSearch(Self, lbxSearch.SelectedObject);
 end;
 
-{
-procedure TDropDownSearchBox.FillItems;
-begin
-
-end;    }
 
 // Cancel search on Escape
 procedure TDropDownSearchBox.KeyPress(var Key: Char);
@@ -134,6 +163,22 @@ end;
 
 
 
+procedure TDropDownSearchBox.Populate(Objects: TStringList);
+begin
+  lbxSearch.Clear;
+  for VAR i:= 0 to Objects.Count-1 DO
+    if (Text = '') OR (PosInsensitive(Text, Objects[i]) > 0)
+    then lbxSearch.Items.AddObject(Objects[i], Objects.Objects[i]);
+  lbxSearch.SelectFirstItem;
+
+  lbxSearch.SetHeightAuto(300, Parent); //Resize it based on the number of rows in it, but never make it bigger than the 1/2 form
+end;
+
+
+function TDropDownSearchBox.SelectedObject: TObject;
+begin
+  Result:= lbxSearch.SelectedObject;
+end;
 
 
 
@@ -143,6 +188,6 @@ begin
 end;
 
 
-
-
 end.
+
+

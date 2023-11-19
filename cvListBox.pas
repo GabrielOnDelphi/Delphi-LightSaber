@@ -209,7 +209,7 @@ begin
   VAR iHeight:= Items.Count * {ItemHeight}   Canvas.TextHeight('abcdefghijklmnopq');
   if iHeight > MaxHeightPx
   then iHeight := MaxHeightPx;
-  if iHeight < 50 then iHeight:= 50;
+  if iHeight < 350 then iHeight:= 350;
   iHeight:= round(iHeight*1.4);
   Height := iHeight;
 end;

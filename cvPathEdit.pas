@@ -192,14 +192,7 @@ begin
  edtPath.Name                := 'PathEdit';
  edtPath.Text                := '';              // This must be AFTER edtPath.Name because setting edtPath.Name will also set the edtPath.Text
  edtPath.Parent              := Self;            // Here I can set the parent
- edtPath.Align               := alClient;
- edtPath.Margins.Left        := 3;
- edtPath.Margins.Top         := 2;
- edtPath.Margins.Right       := 1;
- edtPath.Margins.Bottom      := 1;
- edtPath.AlignWithMargins    := TRUE;
  edtPath.Images              := imgList;
- edtPath.TabOrder            := 0 ;
  edtPath.OnRightButtonClick  := btnBrowseClick;
  edtPath.OnKeyPress          := edtKeyPress;
  edtPath.OnClick             := edtPatchOnClick; { Recompute color (red/gree) on mouse click. This is useful for when the file/folder did not existed (clRed) but meanwhile the user created it (now it has to be clGree) }
@@ -279,7 +272,17 @@ begin
 
  if NOT Initialized then      { Make sure we don't call this code twice }
   begin
-   Initialized:= TRUE;
+   Initialized             := TRUE;
+
+   edtPath.TabOrder        := 0;
+   edtPath.ParentFont      := TRUE;
+   edtPath.Align           := alClient;
+   edtPath.Margins.Left    := 3;
+   edtPath.Margins.Top     := 2;
+   edtPath.Margins.Right   := 1;
+   edtPath.Margins.Bottom  := 1;
+   edtPath.AlignWithMargins:= TRUE;
+
    InputTypeChanged;          { We set the green/red color }
   end;
 end;

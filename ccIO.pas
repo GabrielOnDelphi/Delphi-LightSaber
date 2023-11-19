@@ -1,4 +1,4 @@
-UNIT ccIO;
+ï»¿UNIT ccIO;
 
 {=============================================================================================================
    CubicDesign
@@ -118,8 +118,8 @@ CONST
  function  TrimLastLinuxSeparator   (CONST Path: string): string;
 
  { CONVERSION }
- function  Convert2LinuxPath        (DosPath  : string): string;
- function  Convert2DosPath          (LinuxPath: string): string;
+ function  Convert2LinuxPath        (CONST DosPath  : string): string;
+ function  Convert2DosPath          (CONST LinuxPath: string): string;
 
 
 
@@ -145,8 +145,8 @@ CONST
    PROCESS PATH
 --------------------------------------------------------------------------------------------------}
  function  ExtractLastFolder    (FullPath: string): string;                                        { exemplu pentru c:\windows\system intoarce doar 'system' }
- function  ExtractParentFolder  (Folder: string): string;
- function  ExtractFirstFolder   (Folder: string): string;                                          { For c:\1\2\3\ returns 1\.  From c:\1 it returns ''  }
+ function  ExtractParentFolder  (CONST Folder: string): string;
+ function  ExtractFirstFolder   (CONST Folder: string): string;                                          { For c:\1\2\3\ returns 1\.  From c:\1 it returns ''  }
 
  function  TrimLastFolder       (CONST DirPath: string): string;                                   { exemplu pentru c:\windows\system intoarce doar 'c:\windows\' }
  function  ExtractRelativePath_ (CONST FullPath, RelativeTo: string): string; deprecated 'Use System.SysUtils.ExtractRelativePath instead'                     { Returns truncated path, relative to 'RelativeTo'. Example:  ExtractRelativePath('c:\windows\system32\user32.dll', 'c:\windows') returns system32\user32.dll }
@@ -168,7 +168,8 @@ CONST
 {--------------------------------------------------------------------------------------------------
    CREATE FOLDERS
 --------------------------------------------------------------------------------------------------}
- function  ForceDirectoriesB    (FullPath: string): Boolean;                                       { inlocuitor pt System.SysUtils.ForceDirectories - elimina problema: " { Do not call ForceDirectories with an empty string. Doing so causes ForceDirectories to raise an exception" }
+ procedure ForceDirectoriesE    (CONST FullPath: string);
+ function  ForceDirectoriesB    (CONST FullPath: string): Boolean;                                       { inlocuitor pt System.SysUtils.ForceDirectories - elimina problema: " { Do not call ForceDirectories with an empty string. Doing so causes ForceDirectories to raise an exception" }
  function  ForceDirectories     (CONST FullPath: string): Integer;
  function  ForceDirectoriesMsg  (CONST FullPath: string): Boolean;                                 { RETURNS:  -1 = Error creating the directory.   0 = Directory already exists.  +1 = Directory created succesfully }
 
@@ -206,7 +207,7 @@ CONST
  function  GetMyDocumentsAPI     : string; deprecated 'Use GetMyDocuments instead';
  function  GetMyPicturesAPI      : string; deprecated 'Use GetMyPictures  instead';
 
- function  GetSpecialFolder    (OS_SpecialFolder: string): string;                       overload;          { SHELL FOLDERS.  Retrieving the entire list of default shell folders from registry }
+ function  GetSpecialFolder    (CONST OS_SpecialFolder: string): string;                       overload;          { SHELL FOLDERS.  Retrieving the entire list of default shell folders from registry }
  function  GetSpecialFolder    (CSIDL: Integer; ForceFolder: Boolean = FALSE): string;   overload;          { uses SHFolder }
  function  GetSpecialFolders: TStringList;                                                         { Get a list of ALL special folders. }
  function  FolderIsSpecial     (const Path: string): Boolean;                                      { Returns True if the parameter is a special folder such us 'c:\My Documents' }
@@ -217,13 +218,14 @@ CONST
 --------------------------------------------------------------------------------------------------}
  function SelectAFolder    (VAR Folder: string; CONST Title: string = ''; CONST Options: TFileDialogOptions= [fdoPickFolders, fdoForceFileSystem, fdoPathMustExist, fdoDefaultNoMiniMode]): Boolean; overload;
 
- function PromptToSaveFile (VAR FileName: string; Filter: string = ''; DefaultExt: string= ''; Title: string= ''): Boolean;
- function PromptToLoadFile (VAR FileName: string; Filter: string = '';                         Title: string= ''): Boolean;
+ function PromptToSaveFile (VAR FileName: string; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''): Boolean;
+ function PromptToLoadFile (VAR FileName: string; CONST Filter: string = '';                               CONST Title: string= ''): Boolean;
 
- function PromptForFileName(VAR FileName: string; SaveDialog: Boolean; Filter: string = ''; DefaultExt: string= ''; Title: string= ''; InitialDir: string = ''): Boolean;
+ function PromptForFileName(VAR FileName: string; SaveDialog: Boolean; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''; CONST InitialDir: string = ''): Boolean;
 
- function GetSaveDialog    (FileName, Filter, DefaultExt: string; Caption: string= ''): TSaveDialog;
- function GetOpenDialog    (FileName, Filter, DefaultExt: string; Caption: string= ''): TOpenDialog;
+ function GetSaveDialog    (CONST FileName, Filter, DefaultExt: string; CONST Caption: string= ''): TSaveDialog;
+ function GetOpenDialog    (CONST FileName, Filter, DefaultExt: string; CONST Caption: string= ''): TOpenDialog;
+
 
 
 {--------------------------------------------------------------------------------------------------
@@ -326,7 +328,7 @@ CONST
 {--------------------------------------------------------------------------------------------------
    FILE MERGE
 --------------------------------------------------------------------------------------------------}
- procedure CopyFilePortion     (CONST SourceName, DestName: string; CONST CopyBytes: int64);         { copy only CopyBytes bytes from the begining of the file }
+ procedure CopyFilePortion     (CONST SourceName, DestName: string);         { copy only CopyBytes bytes from the begining of the file }
  procedure AppendTo            (CONST MasterFile, SegmentFile, Separator: string; SeparatorFirst: Boolean= TRUE);                           { Append Segment to Master. Master must exists. }
  procedure MergeFiles          (CONST Input1, Input2, Output, Separator: string; SeparatorFirst: Boolean= TRUE);        { Merge file 'Input1' and file 'Input2' in a new file 'Output'. So, the difference between this procedure and AppendTo is that this proc does not modify the original input file(s) }
  function  MergeAllFiles       (CONST Folder, FileType, OutputFile, Separator: string; DigSubdirectories: Boolean= FALSE; SeparatorFirst: Boolean= TRUE): Integer;       { Merge all files in the specified folder.   FileType can be something like '*.*' or '*.exe;*.bin' }
@@ -351,7 +353,7 @@ CONST
  function  FileMoveToDir       (CONST From_FullPath, To_DestFolder: string; Overwrite: Boolean): Boolean;
 
  {FOLDERS}
- function  CopyFolder          (CONST FromFolder, ToFolder   : String; Overwrite: Boolean= True; FileType: string= '*.*'): integer;          { copy a folder and all its files and subfolders }
+ function  CopyFolder          (CONST FromFolder, ToFolder   : String; Overwrite: Boolean= True; CONST FileType: string= '*.*'): integer;          { copy a folder and all its files and subfolders }
  function  MoveFolderRel       (CONST FromFolder, ToRelFolder: string; Overwrite: Boolean= True): string;
  procedure MoveFolder          (CONST FromFolder, ToFolder   : String; SilentOverwrite: Boolean= True);
  function  MoveFolderSlow      (CONST FromFolder, ToFolder   : String; Overwrite: boolean): Integer; deprecated 'Use TDirectory.Move() instead.';
@@ -361,7 +363,7 @@ CONST
 {--------------------------------------------------------------------------------------------------
    BACKUP
 --------------------------------------------------------------------------------------------------}
- function BackupFileIncrement  (CONST FileName: string; DestFolder: string= ''; const NewExtension: string= '.bak'): string; { Creates a copy of this file in the new folder.  Automatically increments its name. Returns '' in case of copy failure }
+ function BackupFileIncrement  (CONST FileName: string; CONST DestFolder: string= ''; const NewExtension: string= '.bak'): string; { Creates a copy of this file in the new folder.  Automatically increments its name. Returns '' in case of copy failure }
  function BackupFileBak        (CONST FileName: string): Boolean;                                                            { Creates a copy of this file, and appends as file extension. Ex: File.txt -> File.txt.bak }
  function BackupFileDate       (CONST FileName: string;             TimeStamp: Boolean= TRUE; Overwrite: Boolean = TRUE): Boolean;  overload;     { Create a copy of the specified file in the same folder. The '_backup' string is attached at the end of the filename }
  function BackupFileDate       (CONST FileName, DestFolder: string; TimeStamp: Boolean= TRUE; Overwrite: Boolean = TRUE): Boolean;  overload;
@@ -389,19 +391,19 @@ CONST
 {--------------------------------------------------------------------------------------------------
    FILE ACCESS
 --------------------------------------------------------------------------------------------------}
- function  FileIsLockedR   (FileName: string): Boolean;
- function  FileIsLockedRW  (FileName: string): Boolean;                                            { Returns true if the file cannot be open for reading and writing } { old name: FileInUse }
- function  TestWriteAccess (FileOrFolder: string): Boolean;                                        { Returns true if it can write that file to disk. ATTENTION it will overwrite the file if it already exists ! }
- function  TestWriteAccessMsg(CONST FileOrFolder: string): Boolean;                                { USER HAS WRITE ACCESS? Returns an error message instead of boolean}
- function  IsDirectoryWriteable(CONST Dir: string): Boolean;    { Source: https://stackoverflow.com/questions/3599256/how-can-i-use-delphi-to-test-if-a-directory-is-writeable }
- function  CanCreateFile   (AString:String): Boolean;
+ function  FileIsLockedR        (CONST FileName: string): Boolean;
+ function  FileIsLockedRW       (CONST FileName: string): Boolean;                                            { Returns true if the file cannot be open for reading and writing } { old name: FileInUse }
+ function  TestWriteAccess      (      FileOrFolder: string): Boolean;                                        { Returns true if it can write that file to disk. ATTENTION it will overwrite the file if it already exists ! }
+ function  TestWriteAccessMsg   (CONST FileOrFolder: string): Boolean;                                { USER HAS WRITE ACCESS? Returns an error message instead of boolean}
+ function  IsDirectoryWriteable (CONST Dir: string): Boolean;    { Source: https://stackoverflow.com/questions/3599256/how-can-i-use-delphi-to-test-if-a-directory-is-writeable }
+ function  CanCreateFile        (CONST AString:String): Boolean;
  function  ShowMsg_CannotWriteTo(CONST sPath: string): string;                                       { Also see  IsDiskWriteProtected }
 
 
 {--------------------------------------------------------------------------------------------------
    FILE SIZE
 --------------------------------------------------------------------------------------------------}
- function  GetFolderSize    (aFolder: string; FileType: string= '*.*'; DigSubdirectories: Boolean= TRUE): Int64;
+ function  GetFolderSize    (CONST aFolder: string; CONST FileType: string= '*.*'; DigSubdirectories: Boolean= TRUE): Int64;
 
  function  GetFileSizeEx    (hFile: THandle; VAR FileSize: Int64): BOOL; stdcall; external kernel32;
  function  GetFileSize      (CONST aFilename: string): Int64;
@@ -413,13 +415,13 @@ CONST
 {--------------------------------------------------------------------------------------------------
    FILE TIME
 --------------------------------------------------------------------------------------------------}
- function  FileTimeToDateTimeStr(FTime: TFileTime; DFormat: string; TFormat: string): string;
- function  FileAge(CONST FileName: string): TDateTime;
- function  ExtractTimeFromFileName(FileName: string): TTime;                                       { The time must be at the end of the file name. Example: 'MyPicture 20-00.jpg'. Returns -1 if the time could not be extracted. }
- function  DateToStr_IO(CONST DateTime: TDateTime): string;                                        { Original name: StrTimeToSeconds_unsafe }
- function  TimeToStr_IO(CONST DateTime: TDateTime): string;
- function  DateTimeToStr_IO(CONST DateTime: TDateTime): string;    overload;                       { Used to conver Date/Time to a string that is safe to use in a path. For example, instead of '2013/01/01' 15:32 it will return '2013-01-01 15,32' }
- function  DateTimeToStr_IO: string;                               overload;
+ function  FileTimeToDateTimeStr   (FTime: TFileTime; CONST DFormat, TFormat: string): string;
+ function  FileAge                 (CONST FileName: string): TDateTime;
+ function  ExtractTimeFromFileName (CONST FileName: string): TTime;                                { The time must be at the end of the file name. Example: 'MyPicture 20-00.jpg'. Returns -1 if the time could not be extracted. }
+ function  DateToStr_IO            (CONST DateTime: TDateTime): string;                            { Original name: StrTimeToSeconds_unsafe }
+ function  TimeToStr_IO            (CONST DateTime: TDateTime): string;
+ function  DateTimeToStr_IO        (CONST DateTime: TDateTime): string;  overload;                 { Used to conver Date/Time to a string that is safe to use in a path. For example, instead of '2013/01/01' 15:32 it will return '2013-01-01 15,32' }
+ function  DateTimeToStr_IO: string;                                     overload;
 
 
 
@@ -431,7 +433,7 @@ CONST
  function GetDriveTypeS(CONST Path: string): string;    { Returns drive type as string }
 
  { Validity }
- function  DiskInDrive        (CONST Path: string): Boolean; overload;                              { From www.gnomehome.demon.nl/uddf/pages/disk.htm#disk0 . Also see http://community.borland.com/article/0,1410,15921,00.html }
+ function  DiskInDrive        (CONST Path: string): Boolean; overload;                             { From www.gnomehome.demon.nl/uddf/pages/disk.htm#disk0 . Also see http://community.borland.com/article/0,1410,15921,00.html }
  function  DiskInDrive        (CONST DriveNo: Byte): Boolean; overload;                            { THIS IS VERY SLOW IF THE DISK IS NOT IN DRIVE! The GUI will freeze until the drive responds. }
  function  ValidDrive         (CONST Drive: Char): Boolean;                                        { Peter Below (TeamB). http://www.codinggroups.com/borland-public-delphi-rtl-win32/7618-windows-no-disk-error.html }
  function  ValidDriveLetter   (CONST Drive: Char): Boolean;                                        { Returns false if the drive letter is not in ['A'..'Z'] }
@@ -506,14 +508,14 @@ end;
 
 
 { Converts DOS path to Linux path. Does not handle C: but only the \ separators }
-function Convert2LinuxPath(DosPath: string): string;     // old name: MakeLinuxPath
+function Convert2LinuxPath(CONST DosPath: string): string;     // old name: MakeLinuxPath
 begin
  Result:= ReplaceCharF(DosPath, '\', '/');;
 end;
 
 
 
-function Convert2DosPath(LinuxPath: string): string;
+function Convert2DosPath(CONST LinuxPath: string): string;
 begin
  Result:= ReplaceCharF(LinuxPath, '/', '\');
 end;
@@ -762,7 +764,7 @@ end;
 
    DefaultExt. Only for TSaveDialog. Extensions longer than three characters are not supported! Do not include the period (.) that divides the file name and its extension.
 -------------------------------------------------------------------------------------------------------------}
-function PromptToSaveFile(VAR FileName: string; Filter: string = ''; DefaultExt: string= ''; Title: string= ''): Boolean;
+function PromptToSaveFile(VAR FileName: string; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''): Boolean;
 VAR InitialDir: string;
 begin
  if FileName > '' then
@@ -776,7 +778,7 @@ end;
 
 { AllowMultiSelect cannot be true, because I return a single file name (cannot return a Tstringlist)  }
 //ToDo 1: Implement two variables: AppLastFile and AppLastFolder
-Function PromptToLoadFile(VAR FileName: string; Filter: string = ''; Title: string= ''): Boolean;
+Function PromptToLoadFile(VAR FileName: string; CONST Filter: string = ''; CONST Title: string= ''): Boolean;
 VAR InitialDir: string;
 begin
  if FileName > '' then
@@ -789,7 +791,7 @@ end;
 
 
 { Based on Vcl.Dialogs.PromptForFileName }
-Function PromptForFileName(VAR FileName: string; SaveDialog: Boolean; Filter: string = ''; DefaultExt: string= ''; Title: string= ''; InitialDir: string = ''): Boolean;
+Function PromptForFileName(VAR FileName: string; SaveDialog: Boolean; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''; CONST InitialDir: string = ''): Boolean;
 VAR
   Dialog: TOpenDialog;
 begin
@@ -839,7 +841,7 @@ end;
    Example: PromptToSaveFile(s, ccCore.FilterTxt, 'txt')
    Note: You might want to use PromptForFileName instead
 -------------------------------------------------------------------------------------------------------------}
-Function GetOpenDialog(FileName, Filter, DefaultExt: string; Caption: string= ''): TOpenDialog;
+Function GetOpenDialog(CONST FileName, Filter, DefaultExt: string; CONST Caption: string= ''): TOpenDialog;
 begin
  Result:= TOpenDialog.Create(NIL);
  Result.Filter:= Filter;
@@ -856,7 +858,7 @@ end;
 
 
 { Example: SaveDialog(ccCore.FilterTxt, 'csv');  }
-Function GetSaveDialog(FileName, Filter, DefaultExt: string; Caption: string= ''): TSaveDialog;
+Function GetSaveDialog(CONST FileName, Filter, DefaultExt: string; CONST Caption: string= ''): TSaveDialog;
 begin
  Result:= TSaveDialog.Create(NIL);
  Result.Filter:= Filter;
@@ -1027,10 +1029,17 @@ end;
      Raises exception if parameter is empty
      Raises exception if drive is invalid
 --------------------------------------------------------------------------------------------------}
-function ForceDirectoriesB(FullPath: string): Boolean;
+function ForceDirectoriesB(CONST FullPath: string): Boolean;
 begin
   TDirectory.CreateDirectory(FullPath);
   Result:= DirectoryExists(FullPath);
+end;
+
+
+procedure ForceDirectoriesE(CONST FullPath: string);
+begin
+  if NOT ForceDirectoriesB(FullPath)
+  then RAISE Exception.Create('Error: '+ FullPath);
 end;
 
 
@@ -1505,7 +1514,7 @@ end;
 { Create a copy of the specified file in the same folder.
   It adds a number to the file name. If a file with the same name exists, it keeps incrementing until it finds the first empty slot.
   Returns '' in case of copy failure }
-function BackupFileIncrement (CONST FileName: string; DestFolder: string= ''; const NewExtension: string= '.bak'): string;
+function BackupFileIncrement (CONST FileName: string; CONST DestFolder: string= ''; const NewExtension: string= '.bak'): string;
 begin
  Assert(FileExistsMsg(FileName));
 
@@ -1652,7 +1661,7 @@ end;
 {--------------------------------------------------------------------------------------------------
    FILE TIME
 --------------------------------------------------------------------------------------------------}
-function FileTimeToDateTimeStr(FTime: TFileTime; DFormat, TFormat: string): string;
+function FileTimeToDateTimeStr(FTime: TFileTime; CONST DFormat, TFormat: string): string;
 var
   SysTime       : TSystemTime;
   DateTime      : TDateTime;
@@ -1697,7 +1706,7 @@ end;
 { The time must be at the end of the file name.
   Example: 'MyPicture 20-00.jpg'.
   Returns 0 if the time could not be extracted. }
-function ExtractTimeFromFileName(FileName: string): TTime;
+function ExtractTimeFromFileName(CONST FileName: string): TTime;
 VAR s: string;
 begin
  s:= ExtractOnlyName(FileName);
@@ -1746,7 +1755,7 @@ end;
    GET FILE SIZE
 --------------------------------------------------------------------------------------------------}
 { Returns the size of all files in a folder }
-function GetFolderSize(aFolder: string; FileType: string= '*.*'; DigSubdirectories: Boolean= TRUE): Int64;
+function GetFolderSize(CONST aFolder: string; CONST FileType: string= '*.*'; DigSubdirectories: Boolean= TRUE): Int64;
 VAR
    i: Integer;
    TSL: TStringList;
@@ -1888,7 +1897,7 @@ end;
 
 
 { Returns true if the file cannot be open for reading and writing }                                           { old name: FileInUse }
-function FileIsLockedRW(FileName: string): Boolean;
+function FileIsLockedRW(CONST FileName: string): Boolean;
 VAR hFileRes: HFILE;
 begin
  if NOT FileExists(FileName) then EXIT(FALSE);                       { If files doesn't exist it cannot be locked! }
@@ -1899,7 +1908,7 @@ begin
 end;
 
 
-function FileIsLockedR(FileName: string): Boolean;                   { Returns true if the file cannot be open for reading }
+function FileIsLockedR(CONST FileName: string): Boolean;                   { Returns true if the file cannot be open for reading }
 VAR hFileRes: HFILE;
 begin
  if NOT FileExists(FileName)
@@ -1987,7 +1996,7 @@ begin
 end;
 
 
-function CanCreateFile(AString:String): Boolean;
+function CanCreateFile(CONST AString:String): Boolean;
 VAR h : integer;
 begin
    h := CreateFile(Pchar(AString), GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
@@ -2099,8 +2108,8 @@ end;
 
   You should use GetHomePath to store settings per user. For example: TFile.WriteAllText(TPath.GetHomePath() + TPath.DirectorySeparatorChar + 'sample.txt', s);
 
-  On Windows        points to the user’s application data folder.
-  On Linux & OS X   points to the user’s home folder, as defined by the $(HOME) environment variable.
+  On Windows        points to the userâ€™s application data folder.
+  On Linux & OS X   points to the userâ€™s home folder, as defined by the $(HOME) environment variable.
   On iOS & Android  points to the device-specific location of the sandbox for the application; the iOS home location is individually defined for each application instance and for each iOS device.
 
   Windows XP       C:\Documents and Settings\<username>\Application Data  CSIDL_APPDATA
@@ -2199,7 +2208,7 @@ end;
 
 
 { Retrievwa the shell folders from registry }
-function GetSpecialFolder (OS_SpecialFolder: string): string;
+function GetSpecialFolder (CONST OS_SpecialFolder: string): string;
 { DOCS:
   Calling the API function is safer, because the registry structure may change. It has not changed in W2k, but it may happen.
   SHGetFolderSpecialLocation uses the registry now, but may read its data from any other structure in a future version of Windows.
@@ -2412,7 +2421,7 @@ end;
 
 { For c:\1\2\3\ returns c:\1\2
   http://stackoverflow.com/questions/22640879/how-to-get-path-to-the-parent-folder-of-a-certain-directory }
-function ExtractParentFolder(Folder: string): string;
+function ExtractParentFolder(CONST Folder: string): string;
 begin
  Result:= TDirectory.GetParent(ExcludeTrailingPathDelimiter(Folder))
 end;
@@ -2422,7 +2431,7 @@ end;
   For 'c:\1' it returns ''.
   For '\1\' returns the same.
   http://stackoverflow.com/questions/22640879/how-to-get-path-to-the-parent-folder-of-a-certain-directory }
-function ExtractFirstFolder(Folder: string): string;
+function ExtractFirstFolder(CONST Folder: string): string;
 VAR iPos: Integer;
 begin
  iPos:= Pos(':\', Folder);
@@ -2513,7 +2522,7 @@ end;
 { Tries to autodetermine the file type (ANSI, UTF8, UTF16, etc). Works with UNC paths.
   If it cannot detect the correct encoding automatically, we can force it to what we want by setting the second paramater.
       Example: System.SysUtils.TEncoding.UTF8
-      However this is buggy! It will raise an exception if the file is ANSI but it contains high characters such as ½ (#189)
+      However this is buggy! It will raise an exception if the file is ANSI but it contains high characters such as Â½ (#189)
       See: https://stackoverflow.com/questions/35708827/what-could-cause-no-mapping-for-the-unicode-character-exists-in-the-target-mult }
 function StringFromFile(CONST FileName: string; Enc: TEncoding= NIL): String;
 begin
@@ -2772,7 +2781,7 @@ end;
 
 { Copy its CONTENT, all its files and subfolders.
   Returns how many files were not copied. So it returns 0 for 'ok'. }
-function CopyFolder(CONST FromFolder, ToFolder : String; Overwrite: Boolean= True; FileType: string= '*.*'): integer;
+function CopyFolder(CONST FromFolder, ToFolder : String; Overwrite: Boolean= True; CONST FileType: string= '*.*'): integer;
 VAR
   s, Dst : string;
   TSL: TStringList;
@@ -2843,7 +2852,7 @@ end;
 
    We could use also Indy WinApi.CopyFile: https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-copyfile?redirectedfrom=MSDN
    }
-procedure CopyFilePortion(CONST SourceName, DestName: string; CONST CopyBytes: int64);
+procedure CopyFilePortion(CONST SourceName, DestName: string);
 VAR FDst, FSrc: File;    {TODO 2: Use TFileStream instead of File }
     Buf: array[1..10*MB] of Byte;
     NumRead, NumWritten: Integer;

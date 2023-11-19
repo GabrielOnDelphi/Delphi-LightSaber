@@ -1,4 +1,4 @@
-UNIT cGraphText;
+﻿UNIT cGraphText;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -43,7 +43,6 @@ USES
 CONST
    clTextShadow= TColor($303035);
 
- procedure DrawTextShadowBox     (BMP: TBitmap;     CONST Text: string; AlignTop: Boolean;                                    ShadowOpacity: Byte= 20; Blur: Byte= 2); overload;
  procedure DrawTextShadowBox     (BMP: TBitmap;     CONST Text: string; AlignTop: Boolean; ShadowColor: TColor= clTextShadow; ShadowOpacity: Byte= 20; Blur: Byte= 2); overload;
  procedure DrawTextShadowBox     (aCanvas: TCanvas; CONST Text: string; X, Y: Integer;     ShadowColor: TColor= clTextShadow; ShadowOpacity: Byte= 20; Blur: Byte= 2); overload;
  procedure DrawTextShadow3DSoft  (aCanvas: TCanvas; CONST Text: string; X, Y: Integer;     ShadowColor: TColor= clTextShadow);                                   { Faster. No transparency }
@@ -290,15 +289,15 @@ end;
 
 
 
-{TODO: Create a functions with bkg color autodetext: when the background is light use dark text else use light text }
+{TODO: Create a functions with bkg color autodetext: when the background is light use dark text else use light text } {
 procedure DrawTextShadowBox(BMP: TBitmap; CONST Text: string; AlignTop: Boolean; ShadowOpacity: Byte= 20; Blur: Byte= 2);
 begin
   {var Clr: TColor;
    if JanFX.ColorIsLight(BMP)
    then Clr:= clBlack
    else Clr:= White;
-   DrawTextShadowBox(BMP, Text, AlignTop, Clr, ShadowOpacity, Blur); }
-end;
+   DrawTextShadowBox(BMP, Text, AlignTop, Clr, ShadowOpacity, Blur);
+end;  }
 
 
 

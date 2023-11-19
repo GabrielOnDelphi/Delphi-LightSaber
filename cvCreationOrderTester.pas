@@ -195,7 +195,7 @@ end;
     2. CreateWnd can be called more than once:
        http://docs.embarcadero.com/products/rad_studio/delphiAndcpp2009/HelpUpdate2/EN/html/delphivclwin32/Controls_TWinControl_CreateWnd.html
 
-       It is called when I set:
+       It is called when we set:
            MyControl.Parent:= Form1;
 }
 procedure TCreationOrderTest.CreateWnd;

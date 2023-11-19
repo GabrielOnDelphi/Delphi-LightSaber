@@ -1,4 +1,4 @@
-unit ctTranslate;
+﻿unit ctTranslate;
 {========================================================================================  
    Gabriel Moraru / Heracle BioSoft SRL  
    2022-09  
@@ -177,7 +177,7 @@ TYPE
 
     procedure LoadDefaultTranslation;
     procedure LoadLastTranslation;
-    procedure LoadTranlationForm      (Form: TForm; ForceLoad: Boolean= FALSE);
+    procedure LoadFormTranlation      (Form: TForm; ForceLoad: Boolean= FALSE);
     procedure LoadTranslationAllForms (CONST FileName: string; ForceLoad: Boolean= FALSE);
     procedure SaveTranslation         (CONST FileName: string; Overwrite: Boolean= TRUE);
  end;
@@ -252,7 +252,7 @@ begin
    // FormCount       = forms currently displayed on the screen
    // CustomFormCount = forms or property pages currently displayed on the screen
    for VAR i:= 0 to Screen.CustomFormCount - 1 DO
-      LoadTranlationForm(Screen.Forms[I], ForceLoad);
+      LoadFormTranlation(Screen.Forms[I], ForceLoad);
 
    LastLanguage:= CurLanguage;
  FINALLY
@@ -264,7 +264,7 @@ end;
 
 { Load translation for specified form.
    Call this for forms that were not alive when the translation was applied (during the initialization of the app) }
-procedure TTranslator.LoadTranlationForm(Form: TForm; ForceLoad: Boolean= FALSE);
+procedure TTranslator.LoadFormTranlation(Form: TForm; ForceLoad: Boolean= FALSE);
 VAR
    i: Integer;
    Section: string;

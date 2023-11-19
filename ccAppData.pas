@@ -1,31 +1,82 @@
-UNIT ccAppData;
+﻿UNIT ccAppData;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2023.11
    See Copyright.txt
---------------------------------------------------------------------------------------------------------------
-   Via class object you can:
+ ____________________________________________________________________________________________________________
+   Via class you can:
       - Get application's appdata folder (the folder where you save temporary, app-related and ini files)
       - Get application's command line parameters
+      - Get application's version
+
+      - Force single instance (allow only one instance of your program to run). Second inst sends its command line to the first inst then shutsdown
       - Detect if the application is running for the firs this in a computer
+
       - Application self-restart
       - Application self-delete
-      - Set the font for all running forms
-      - Create a new form and set its font to be the same as main forms' font.
-      - Force single instance (allow only one instance of your program to run). Second inst sends its command line to the first inst then shutsdown
+
+      - Easily create new forms and set its font to be the same as main forms' font.
+      - Change the font for all running forms
+
+      - Log error messages to a special window that is automatically created
+      - Basic support for Uninstaller (The Uninstaller can find out there the app was installed)
+      - Basic support for licensing (trial period) system. See Proteus for details.
+
       - etc
 
    The global AppData var will store the object (app wide).
-   The AppName variable is the central part of this class. It is used by App/Ini file/MesageBox/etc. You set in in the constructor.
+   The AppName variable is the central part of this class. It is used by App/Ini file/MesageBox/etc.
 
    It is CRITICAL to create the AppData object as soon as the application starts. Prefferably in the DPR file before creating the main form!
-     Example: AppData:= TAppData.Create('MyCollApp');
-   Even better you can created it in the Initialization/Finalization section.
+   Probalby it can even be created in the Initialization section.
 
-   Note: TAppDataEx class also creates the Log form. See: FormLog.pas
+ ____________________________________________________________________________________________________________
 
-   Tester app: c:\Myprojects\Packages\CubicCommonControls\Demo\CubicCore\GUI Autosave\DemoCore.dpr
+   LOG
+     TAppData class also creates the Log form. See: FormLog.pas
+
+ ____________________________________________________________________________________________________________
+
+   Usage
+     In the DPR file do:
+       Application.Initialize;
+       AppData:= TAppData.Create('MyCollApp');
+       AppData.CreateMainForm(TMainForm, MainForm);    // Main form
+       AppData.CreateForm(TSecondFrom, frmSecond);     // Secondary form(s)
+
+       Not necessary anymore:
+         Application.Title := AppData.AppName;
+         Application.ShowMainForm:= True;
+         MainForm.Show;
+
+     Once the program is fully initialized set Initializing to False.
+
+ ____________________________________________________________________________________________________________
+
+   MainFormOnTaskbar info:
+
+      [IF TRUE]
+          A taskbar button represents the application's main form and displays its caption.
+
+      [IF FALSE]
+          A taskbar button represents the application's (hidden) main window and bears the application's Title.
+
+      [Modality]
+          If true, all child forms will stay on top of the MainForm. Bad since we don't really want "modal" forms all over in our app.
+          When we do want a child form to stay on top, then we make it modal or use fsStayOnTop.
+
+      [AERO]
+          Must be True to use Windows (Vista) Aero effects (ive taskbar thumbnails, Dynamic Windows, Windows Flip, Windows Flip 3D).
+
+      Details
+          https://stackoverflow.com/questions/66720721/
+
+      BX: This must be FALSE in order to make 'Start minimized' option work
+
+ ____________________________________________________________________________________________________________
+   Demo app:
+      c:\MyProjects\Project support\Template - Empty app\StarterProject.dpr
 =============================================================================================================}
 
 INTERFACE
@@ -33,7 +84,10 @@ INTERFACE
 USES
   Winapi.Windows, Winapi.Messages, Winapi.ShlObj, Winapi.ShellAPI,
   System.Win.Registry, System.IOUtils, System.AnsiStrings, System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms;
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, FormLog, ccWinVersion;
+
+CONST
+  MSG_LateAppInit = WM_APP + 4711;
 
 TYPE
   TAppData= class(TObject)
@@ -47,7 +101,8 @@ TYPE
     function  getLastUsedFolder: string;
     procedure setFont(aFont: TFont);
    protected
-    CopyDataID: DWORD;          { For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA }
+    frmLog: TfrmLog;
+    CopyDataID: DWORD;                                         { For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA }
    public
     { Single Instance }
     property  SingleInstClassName: string read FSingleInstClassName;
@@ -56,22 +111,24 @@ TYPE
     procedure SetSingleInstanceName(var Params: TCreateParams);
     function  ExtractData(VAR Msg: TWMCopyData; OUT s: string): Boolean;
     {}
-    class VAR Initializing: Boolean;                           { Set it to false once your app finished initializing (usually after you finished creating all forms). Used in cvIniFile.pas. }
+    class VAR Initializing: Boolean;                           { Set it to false once your app finished initializing (usually after you finished creating all forms). Used by SaveForm in cvIniFile.pas (and few other places) - we don't save the form if the application is still in initialization phase. }
     constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''); virtual;
+    destructor Destroy; override;                              { This is called automatically by "Finalization" in order to call it as late as possible }
 
    {--------------------------------------------------------------------------------------------------
       App path/name
    --------------------------------------------------------------------------------------------------}
     function CurFolder: string; //Old name: AppDir
-    function SysDir: string;
     function IniFile: string;
+    function SysDir: string;
+    function CheckSysDir: Boolean;
 
     function AppDataFolder(ForceDir: Boolean= FALSE): string;
     function AppDataFolderAllUsers: string;
 
-    function AppShortName: string;
+    function AppShortName:  string;
     property LastUsedFolder: string read getLastUsedFolder write FLastFolder;
-    class property AppName: string  read FAppName;
+    class property AppName:  string read FAppName;
 
     procedure WriteAppDataFolder;
     function  ReadAppDataFolder(CONST UninstalledApp: string): string;
@@ -88,15 +145,17 @@ TYPE
     procedure SelfDelete;
 
     function  RunSelfAtWinStartUp(Active: Boolean): Boolean;
-    function  RunFileAtWinStartUp(FilePath: string; Active: Boolean): Boolean;
+    function  RunFileAtWinStartUp(CONST FilePath: string; Active: Boolean): Boolean;
 
-    class procedure CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean);
-    class procedure CreateFormModal(aClass: TFormClass; OUT Reference);
+    procedure CreateMainForm (aClass: TFormClass; OUT Reference; Show: Boolean; MainFormOnTaskbar: Boolean= TRUE);
+    procedure CreateForm     (aClass: TFormClass; OUT Reference; Show: Boolean);
+    procedure CreateFormModal(aClass: TFormClass; OUT Reference);    overload;   // Do I need this?
+    procedure CreateFormModal(aClass: TFormClass);                   overload;
 
     procedure SetMaxPriority;
     procedure HideFromTaskbar;
 
-    property Font: TFont read FFont write setFont;
+    property  Font: TFont read FFont write setFont;
 
     {-------------------------------------------------------------------------------------------------
       APPLICATION Version
@@ -115,6 +174,22 @@ TYPE
     function  IsHardCodedExp(Year, Month, Day: word): Boolean;
 
     class procedure RaiseIfStillInitializing;
+
+   {--------------------------------------------------------------------------------------------------
+      Log
+   --------------------------------------------------------------------------------------------------}
+    procedure LogEmptyRow;
+    procedure LogBold  (CONST Msg: string);
+    procedure LogError (CONST Msg: string);
+    procedure LogHint  (CONST Msg: string);
+    procedure LogImpo  (CONST Msg: string);
+    procedure LogInfo  (CONST Msg: string);
+    procedure LogMsg   (CONST Msg: string);
+    procedure LogVerb  (CONST Msg: string);
+    procedure LogWarn  (CONST Msg: string);
+    procedure LogClear;
+    procedure ShowLog(Center: Boolean= FALSE);
+    procedure LogSaveAsRtf(const FileName: string);
   end;
 
 
@@ -128,58 +203,135 @@ procedure ExtractPathFromCmdLine(MixedInput: string; OUT Path, Parameters: strin
 function  FindCmdLineSwitch(const Switch: string; IgnoreCase: Boolean): Boolean; deprecated 'Use System.SysUtils.FindCmdLineSwitch';
 
 
-{-------------------------------------------------------------------------------------------------
-   STUFF
---------------------------------------------------------------------------------------------------}
-function  GetVersionFixedInfo(CONST FileName: string; VAR FixedInfo: TVSFixedFileInfo): Boolean;
-
-
 VAR
-   AppData: TAppData;   //ToDo: make sure it is unique (make Singleton)
-
+   //ToDo: make sure AppData is unique (make it Singleton)
+   AppData: TAppData;   // This is automatically freed on app shutdown
 
 IMPLEMENTATION
 
 USES
-  ccRegistry, ccCore, ccIO;
+  ccRegistry, ccIniFileVCL, ccCore, ccIO;
 
 
-
-{ aAppName must contain only I/O-safe characters (so no question marks)
-  ctAppWinClassName parameter is needed ONLY if you use the Single Instance functionality.
-    ctAppWinClassName is a constant representing your application name/ID. This string must be unique in the whole computer. No other app is allowed to have this ID.
-    We use it in InstanceRunning to detect if the the application is already running, by looking to a form with this Class Name.
- }
+{-------------------------------------------------------------------------------------------------------------
+ Parameters
+    AppName
+       Should contain only I/O-safe characters (so no ? <> * % /).
+       It is used to generate the INI file that will store the form position/size.
+    WindowClassName - [Optional]
+       Used in InstanceRunning to detect if the the application is already running, by looking to a form with this Class Name.
+       Needed ONLY if you use the Single Instance functionality.
+       This string must be unique in the whole computer! No other app is allowed to have this ID.
+       If you leave it empty, the aAppName is used. But AppName might not be that unique, or you might want to change it during the time.
+-------------------------------------------------------------------------------------------------------------}
 constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= '');
 begin
+  Application.Initialize;                         { Note: Emba: Although Initialize is the first method called in the main project source code, it is not the first code that is executed in a GUI application. For example, in Delphi, the application first executes the initialization section of all the units used by the Application.}
+
   inherited Create;
   Initializing:= True;                            { Used in cvIniFile.pas. Set it to false once your app finished initializing. }
 
-  { SINGLE INSTANCE }
-  FSingleInstClassName:= aAppName;
-
+  {* App single instance *}
+  if WindowClassName = ''
+  then FSingleInstClassName:= aAppName
+  else FSingleInstClassName:= WindowClassName;    { We use FSingleInstClassName to identify the window/instance (when we check for an existing instance) }
   { Register a unique message ID for this applications. Used when we send the command line to the first running instance via WM_COPYDATA.
     We can do this only once per app so the best place is the Initialization section. However, since AppData is created only once, we can also do it here, in the constructor.
     https://stackoverflow.com/questions/35516347/sendmessagewm-copydata-record-string }
   CopyDataID := RegisterWindowMessage('CubicCopyDataID');
 
-  { We use the SingleInstClassName to identify the window/instance (when we check for an existing instance) }
-  FSingleInstClassName:= WindowClassName;
-
-  {}
+  { Sanity check }
   if FCreated
   then RAISE Exception.Create('Error! AppData aready constructed!')
   else FCreated:= TRUE;
 
+  {* App name *}
   Assert(System.IOUtils.TPath.HasValidPathChars(aAppName, FALSE), 'Invalid characters in AppName'+ aAppName);
   Assert(aAppName > '', 'AppName is empty!');
   FAppName:= aAppName;
   Application.Title:= aAppName;
 
+  {* First run *}
   FRunningFirstTime:= NOT FileExists(IniFile);
   ForceDirectories(AppDataFolder);
 
-  //ToDo 1: !!! CreateLogForm; But this will create dependencies on the Log! Move the Log into the Core package.
+  {* The Log Form *}
+  Assert(frmLog = NIL, 'Log already created!');  { Call this as soon as possible so it can catch all Log messages generated during app start up. A good place might be in your DPR file before Application.CreateForm(TMainForm, frmMain) }
+  frmLog:= TfrmLog.Create(NIL); // Warning: I cannot use Application.CreateForm here because this will make the Log the main form!
+  Assert(Application.MainForm <> frmLog, 'The Log should not be the MainForm'); { Just in case: Make sure this is not the first form created }
+  LoadForm(frmLog);
+end;
+
+
+{ Destroy is called automatically by "Finalization", because we need to destroy the LogForm as late as possible }
+destructor TAppData.Destroy;
+begin
+  FreeAndNil(frmLog); { Call this as late as possible }
+  inherited;
+end;
+
+
+
+{-------------------------------------------------------------------------------------------------------------
+   FORMS
+-------------------------------------------------------------------------------------------------------------}
+
+procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; Show: Boolean; MainFormOnTaskbar: Boolean= TRUE);
+begin
+  Assert(Application.MainForm = NIL, 'MainForm already exists!');
+  Assert(Font = NIL,                 'AppData.Font already assigned!');
+
+  Application.MainFormOnTaskbar := FALSE;
+  Application.ShowMainForm      := Show;      // Must be false if we want to prevent form flicker during skin loading at startup
+
+  Application.CreateForm(aClass, Reference);
+  if Show
+  then TForm(Reference).Show;
+
+  // We get the font from the main form. Then we apply this font to any future window.
+  Font:= TForm(Reference).Font;
+
+  // Fix issues with snap to edge of the screen
+  if ccWinVersion.IsWindows8Up
+  then TForm(Reference).SnapBuffer:= 4
+  else TForm(Reference).SnapBuffer:= 10;
+
+  // This will send a message to the mainform. The user must implement in the main form a procedure to captures this message.
+  // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory") for details.
+  PostMessage(TForm(Reference).Handle, MSG_LateAppInit, 0, 0);
+
+  Initializing:= FALSE;
+end;
+
+
+{ 1. Create the form
+  2. Set the font of the new form to be the same as the font of the MainForm
+  3. Show it }
+procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean);
+begin
+  Assert(Application.MainForm <> NIL, 'Probably you forgot to create the main form with AppData.CreateMainForm!');
+
+  Application.CreateForm(aClass, Reference);
+
+  if TForm(Reference) <> Application.MainForm
+  then TForm(Reference).Font:= Font;
+
+  if Show then TForm(Reference).Show;
+end;
+
+
+procedure TAppData.CreateFormModal(aClass: TFormClass);
+VAR Reference: TForm;
+begin
+  CreateForm(aClass, Reference, FALSE);
+  Reference.ShowModal;
+end;
+
+
+//ToDo: Do I need this. Since the form is modal, I should never need the Reference? To be deleted
+procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference);
+begin
+  CreateFormModal(aClass, Reference);
 end;
 
 
@@ -195,7 +347,7 @@ end;
   The path ended with backslash. Works with UNC paths. Example: c:\Program Files\MyCoolApp\ }
 function TAppData.CurFolder: string;
 begin
- Result:= ExtractFilePath(Application.ExeName);
+  Result:= ExtractFilePath(Application.ExeName);
 end;
 
 
@@ -203,19 +355,17 @@ end;
   The path ended with backslash. Works with UNC paths. Example: c:\Program Files\MyCoolApp\System\ }
 function TAppData.SysDir: string;
 begin
- Result:= CurFolder+ 'system\';
+  Result:= CurFolder+ Trail('system');
 end;
 
 
-
-{ Returns the name of the INI file (where we will write application's settings).
-  It is based on the name of the application. Example: c:\Documents and Settings\Bere\Application Data\MyApp\MyApp.ini }
-function TAppData.IniFile: string;
+{ Check if the System folder exists. If not, we should kill the program! }
+function TAppData.CheckSysDir: Boolean;
 begin
- Assert(AppName > '', 'AppName is empty!');
- Assert(TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
+  Result:= DirectoryExists(AppData.SysDir);
 
- Result:= AppDataFolder+ AppName+ '.ini';
+  if NOT Result
+  then MesajError('The program was not properly installed! The "System" folder is missing.');
 end;
 
 
@@ -234,7 +384,6 @@ begin
  then Result:= GetMyDocuments
  else Result:= FLastFolder;
 end;
-
 
 
 { Returns the path to current user's AppData folder on Windows, and to the current user's home directory on Mac OS X.
@@ -265,44 +414,15 @@ begin
 end;
 
 
-
-
-
-{--------------------------------------------------------------------------------------------------
-   READ/WRITE folders to registry
-   This is used by the Uninstaller:
-         c:\MyProjects\Project support\Cubic Universal Uninstaller\Uninstaller.dpr
---------------------------------------------------------------------------------------------------}
-CONST
-   RegKey: string= 'Software\CubicDesign\';
-
-procedure TAppData.WriteAppDataFolder;                                           { Called by the original app }
+{ Returns the name of the INI file (where we will write application's settings).
+  It is based on the name of the application. Example: c:\Documents and Settings\Bere\Application Data\MyApp\MyApp.ini }
+function TAppData.IniFile: string;
 begin
- RegWriteString(HKEY_CURRENT_USER, RegKey+ AppName, 'App data path', AppDataFolder);                                                                                                                              {Old name: WriteAppGlobalData }
+ Assert(AppName > '', 'AppName is empty!');
+ Assert(TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
+
+ Result:= AppDataFolder+ AppName+ '.ini';
 end;
-
-
-function TAppData.ReadAppDataFolder(CONST UninstalledApp: string): string;       { Called by the uninstaller }
-begin
- Result:= RegReadString(HKEY_CURRENT_USER, RegKey+ UninstalledApp, 'App data path');
-end;
-
-
-{------------------------
-   Instalation Folder
-------------------------}
-procedure TAppData.WriteInstalationFolder;                                     { Called by the original app }                                                                                                                                       {Old name: WriteAppGlobalData }
-begin
- RegWriteString(HKEY_CURRENT_USER, RegKey+ AppName, 'Install path', CurFolder);
-end;
-
-
-function TAppData.ReadInstalationFolder(CONST UninstalledApp: string): string;  { Called by the uninstaller }
-begin
- Result:= RegReadString(HKEY_CURRENT_USER, RegKey+ UninstalledApp, 'Install path');
-end;
-
-
 
 
 
@@ -337,22 +457,17 @@ VAR
 begin
  if FileExists(CurFolder+ 'dvolume.bin')         { If file exists, ignore the date passed as parameter and use the date written in file }
  then
-  begin
-   s:= StringFromFile(CurFolder+ 'dvolume.bin');
-   HardCodedDate:= StrToInt64Def(s, 0);
-   Result:= round(HardCodedDate- Date) <= 0;     { For example: 2016.07.18 is 3678001053146ms. One day more is: 3678087627949 }
-   //todayInMilliseconds := round((Now+1) * SecsPerDay * 1000);
-  end
+   begin
+     s:= StringFromFile(CurFolder+ 'dvolume.bin');
+     HardCodedDate:= StrToInt64Def(s, 0);
+     Result:= round(HardCodedDate- Date) <= 0;     { For example: 2016.07.18 is 3678001053146ms. One day more is: 3678087627949 }
+   end
  else
-  begin
-   HardCodedDate:= EncodeDate(Year, Month, Day);
-   Result:= round(HardCodedDate- Date) <= 0;
-  end;
+   begin
+     HardCodedDate:= EncodeDate(Year, Month, Day);
+     Result:= round(HardCodedDate- Date) <= 0;
+   end;
 end;
-
-
-
-
 
 
 
@@ -367,7 +482,7 @@ end;
 --------------------------------------------------------------------------------------------------}
 
 { Run the specified application at Windows startup }
-function TAppData.RunFileAtWinStartUp(FilePath: string; Active: Boolean): Boolean;                             { Porneste anApp odata cu windows-ul }
+function TAppData.RunFileAtWinStartUp(CONST FilePath: string; Active: Boolean): Boolean;                             { Porneste anApp odata cu windows-ul }
 VAR Reg: TRegistry;
 begin
  Result:= FALSE;
@@ -409,50 +524,52 @@ end;
 {--------------------------------------------------------------------------------------------------
    APPLICATION Control
 --------------------------------------------------------------------------------------------------}
-procedure TAppData.Restart;                                                                              { Source: About.com }
-VAR PAppName : PChar;
+procedure TAppData.Restart;
 begin
-  PAppName:= PChar(Application.ExeName);
-  Winapi.ShellAPI.ShellExecute( {Handle}0, 'open', PAppName, nil, nil, SW_SHOWNORMAL);   { Handle does not work. Replaced with 0. }
+  VAR PAppName:= PChar(Application.ExeName);
+  Winapi.ShellAPI.ShellExecute({Handle} 0, 'open', PAppName, nil, nil, SW_SHOWNORMAL);   { Handle does not work. Replaced with 0. }
   Application.Terminate;
 end;
 
 
-{ Very dirty! It creates a BAT that deletes the EXE. An nativirus might block this behavior. }
+{ This is a bit dirty! It creates a BAT that deletes the EXE. Some antiviruses might block this behavior? }
 procedure TAppData.SelfDelete;
 CONST
-   cBatCode = ':delete_exe' + CRLF +'del "%s"' + CRLF +'if exist "%s" goto delete_exe' + CRLF +'del "%s"';
+   BatCode = ':delete_exe' + CRLF +'del "%s"' + CRLF +'if exist "%s" goto delete_exe' + CRLF +'del "%s"';
 VAR
- List : TStringList;
+ List    : TStringList;
+ PI      : TProcessInformation;
+ SI      : TStartupInfo;
  BatPath : string;
- S : string;
- PI : TProcessInformation;
- SI : TStartupInfo;
 begin
- BatPath:= GetTempFolder+ ChangeFileExt(AppShortName, '.BAT');   // make it in temp
- List := TStringList.Create;
- TRY
-  S := Format(cBatCode, [Application.ExeName, Application.ExeName, BatPath]);
-  List.Text := S;
-  List.SaveToFile(BatPath);
- FINALLY
-  FreeAndNil(List);
- END;
+  BatPath:= GetTempFolder+ ChangeFileExt(AppShortName, '.BAT');   // make it in temp
+  List := TStringList.Create;
+  TRY
+    VAR S := Format(BatCode, [Application.ExeName, Application.ExeName, BatPath]);
+    List.Text := S;
+    List.SaveToFile(BatPath);
+  FINALLY
+    FreeAndNil(List);
+  END;
 
- FillChar(SI, SizeOf(SI), 0);
- SI.dwFlags := STARTF_USESHOWWINDOW;
- SI.wShowWindow := SW_HIDE;
+  FillChar(SI, SizeOf(SI), 0);
+  SI.dwFlags := STARTF_USESHOWWINDOW;
+  SI.wShowWindow := SW_HIDE;
 
- if CreateProcess( NIL, PChar(BatPath), nil, nil, False, IDLE_PRIORITY_CLASS, nil, nil, SI, PI) then
-  begin
-   CloseHandle(PI.hThread);
-   CloseHandle(PI.hProcess);
-  end;
+  if CreateProcess( NIL, PChar(BatPath), NIL, NIL, False, IDLE_PRIORITY_CLASS, NIL, NIL, SI, PI) then
+   begin
+     CloseHandle(PI.hThread);
+     CloseHandle(PI.hProcess);
+   end;
 
- Application.Terminate;                                                                            { This is mandatory }
+  Application.Terminate;                                                                            { This is mandatory }
 end;
 
 
+
+{--------------------------------------------------------------------------------------------------
+   SCREEN
+--------------------------------------------------------------------------------------------------}
 { Bring the application back to screen (if minimized, in background, hidden) }
 procedure TAppData.Restore;
 begin
@@ -481,15 +598,6 @@ begin
   ShowWindow(Application.Handle, SW_HIDE);
   SetWindowLongPtr(Application.Handle, GWL_EXSTYLE, GetWindowLongPtr(Application.Handle, GWL_EXSTYLE) OR WS_EX_TOOLWINDOW);}      { getWindowLong_ was replaced with getWindowLongPtr for 64 bit compatibility. Details: http://docwiki.embarcadero.com/RADStudio/Seattle/en/Converting_32-bit_Delphi_Applications_to_64-bit_Windows }
 end;
-
-
-{ Set this process to maximum priority. Usefull when measuring time }
-procedure TAppData.SetMaxPriority;
-begin
- SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS); //  https://stackoverflow.com/questions/13631644/setthreadpriority-and-setpriorityclass
-end;
-
-
 
 
 
@@ -605,39 +713,20 @@ end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   APP FORM
+   OTHERS
 -------------------------------------------------------------------------------------------------------------}
-
-{ 1. Create the form ONLY it does not exist already
-  2. Set the font of the new form to be the same as the font of the MainForm
-  3. Show it }
-class procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean);
-begin
-  Application.CreateForm(aClass, Reference);
-  if TForm(Reference) <> Application.MainForm
-  then TForm(Reference).Font:= Application.MainForm.Font;
-
-  if Show then TForm(Reference).Show;
-end;
-
-
-class procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference);
-begin
-  Application.CreateForm(aClass, Reference);
-  if TForm(Reference) <> Application.MainForm
-  then TForm(Reference).Font:= Application.MainForm.Font;
-  TForm(Reference).Visible:= FALSE;   //This happens with frmFloor in Cassa2.exe
-  TForm(Reference).ShowModal;
-end;
-
-
 // Question: Does FormCount also count invisible forms? Answer: Yes.
 // Question: Does FormCount also count forms created TFrom.Create(Nil). Answer: Yes.
 procedure TAppData.setFont(aFont: TFont);
 begin
-  FFont:= aFont;
-  for VAR i:= 0 to Screen.CustomFormCount - 1 DO    // FormCount => forms currently displayed on the screen. CustomFormCount = as FormCount but also includes the property pages
-    Screen.Forms[i].Font:= aFont;
+  if FFont = NIL
+  then FFont:= aFont   // We set the font for the first time.
+  else
+    begin
+      FFont:= aFont;
+      for VAR i:= 0 to Screen.CustomFormCount - 1 DO    // FormCount => forms currently displayed on the screen. CustomFormCount = as FormCount but also includes the property pages
+        Screen.Forms[i].Font:= aFont;
+    end;
 end;
 
 
@@ -648,6 +737,15 @@ begin
  if AppData.Initializing
  then RAISE Exception.Create(AppStillInitializingMsg);
 end;
+
+
+{ Set this process to maximum priority. Usefull when measuring time }
+procedure TAppData.SetMaxPriority;
+begin
+ SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS); //  https://stackoverflow.com/questions/13631644/setthreadpriority-and-setpriorityclass
+end;
+
+
 
 
 
@@ -662,7 +760,7 @@ end;
 
    Usage:
     In DPR write:
-     AppData:= TAppDataEx.Create('MyCoolAppName', ctAppWinClassName);
+     AppData:= TAppData.Create('MyCoolAppName', ctAppWinClassName);
 
      if AppData.InstanceRunning
      then TAppData.ResurectInstance(ParamStr(1))
@@ -731,7 +829,8 @@ end;
   We need to call this in TMainForm.CreateParams(var Params: TCreateParams)  }
 procedure TAppData.SetSingleInstanceName(VAR Params: TCreateParams);
 begin
-  System.SysUtils.StrCopy(Params.WinClassName, PChar(SingleInstClassName)); // Copies a null-terminated string. StrCopy is designed to copy up to 255 characters from the source buffer into the destination buffer. If the source buffer contains more than 255 characters, the procedure will copy only the first 255 characters.
+  // Copies a null-terminated string. StrCopy is designed to copy up to 255 characters from the source buffer into the destination buffer. If the source buffer contains more than 255 characters, the procedure will copy only the first 255 characters.
+  System.SysUtils.StrCopy(Params.WinClassName, PChar(SingleInstClassName));
   //Hint: This would work if WindowClassName would be a constant: Params.WinClassName:= WindowClassName
 end;
 
@@ -761,7 +860,50 @@ end;
 
 
 
+{--------------------------------------------------------------------------------------------------
+   UNINSTALLER
+---------------------------------------------------------------------------------------------------
+   READ/WRITE folders to registry
+   This is used by the Uninstaller.
+   See c:\MyProjects\Project support\Cubic Universal Uninstaller\Uninstaller.dpr
+--------------------------------------------------------------------------------------------------}
+CONST
+   RegKey: string= 'Software\CubicDesign\';
+
+procedure TAppData.WriteAppDataFolder;                                           { Called by the original app }
+begin
+ RegWriteString(HKEY_CURRENT_USER, RegKey+ AppName, 'App data path', AppDataFolder);                                                                                                                              {Old name: WriteAppGlobalData }
+end;
+
+
+function TAppData.ReadAppDataFolder(CONST UninstalledApp: string): string;       { Called by the uninstaller }
+begin
+ Result:= RegReadString(HKEY_CURRENT_USER, RegKey+ UninstalledApp, 'App data path');
+end;
+
+
+{------------------------
+   Instalation Folder
+------------------------}
+procedure TAppData.WriteInstalationFolder;                                     { Called by the original app }                                                                                                                                       {Old name: WriteAppGlobalData }
+begin
+ RegWriteString(HKEY_CURRENT_USER, RegKey+ AppName, 'Install path', CurFolder);
+end;
+
+
+function TAppData.ReadInstalationFolder(CONST UninstalledApp: string): string;  { Called by the uninstaller }
+begin
+ Result:= RegReadString(HKEY_CURRENT_USER, RegKey+ UninstalledApp, 'Install path');
+end;
+
+
+
+
+
+
+
 {-------------------------------------------------------------------------------------------------------------
+   TOOLS
    APP COMMAND LINE
 -------------------------------------------------------------------------------------------------------------}
 
@@ -784,18 +926,17 @@ begin
  Parameters:= '';
  MixedInput:= Trim(MixedInput);
 
- { I don't have paramters }
+  // Check if the first character is a double quote
  if MixedInput[1]<> '"'
- then
-    Path:= MixedInput
+ then Path:= MixedInput
  else
    { Copy all between ""}
-   for i:= 2 to Length(MixedInput) DO                                                                { This supposes that " is on the first position }
-    if MixedInput[i]= '"' then                                                                       { Find next " character }
+   for i:= 2 to Length(MixedInput) DO                                                   { This supposes that " is on the first position }
+    if MixedInput[i]= '"' then                                                          { Find next " character }
      begin
       // ToDo: use ccCore.ExtractTextBetween
-      Path:= CopyTo(MixedInput, 1+1, i-1);                                                           { +1 si -1 because we want to exclude "" }
-      Parameters:= System.COPY(MixedInput, i+1, Length(MixedInput));
+      Path:= CopyTo(MixedInput, 1+1, i-1);   // Exclude the double quotes               { +1 si -1 because we want to exclude "" }
+      Parameters:= Trim(System.COPY(MixedInput, i+1, MaxInt));
       Break;
      end;
 end;   { See also: http://delphi.about.com/od/delphitips2007/qt/parse_cmd_line.htm }
@@ -805,6 +946,111 @@ function FindCmdLineSwitch(const Switch: string; IgnoreCase: Boolean): Boolean;
 begin
   Result:= System.SysUtils.FindCmdLineSwitch(Switch, IgnoreCase);
 end;
+
+
+
+
+
+
+{-------------------------------------------------------------------------------------------------------------
+   LOG
+   ---
+   SEND MESSAGES DIRECTLY TO LOG WND
+-------------------------------------------------------------------------------------------------------------}
+procedure TAppData.ShowLog(Center: Boolean= FALSE);
+begin
+ frmLog.Show;
+ if Center
+ then CenterForm(frmLog{, Application.MainForm});
+end;
+
+
+procedure TAppData.LogVerb(CONST Msg: string);
+begin
+ Assert(frmLog <> NIL, 'The log window is not ready yet!');
+ frmLog.Log.AddVerb(Msg);
+end;
+
+
+procedure TAppData.LogHint(CONST Msg: string);
+begin
+ Assert(frmLog <> NIL, 'The log window is not ready yet!');
+ frmLog.Log.AddHint(Msg);
+end;
+
+
+procedure TAppData.LogInfo(CONST Msg: string);
+begin
+ Assert(frmLog <> NIL, 'The log window is not ready yet!');
+ frmLog.Log.AddInfo(Msg);
+end;
+
+
+procedure TAppData.LogImpo(CONST Msg: string);
+begin
+ Assert(frmLog <> NIL, 'The log window is not ready yet!');
+ frmLog.Log.AddImpo(Msg);
+end;
+
+
+procedure TAppData.LogWarn(CONST Msg: string);
+begin
+ Assert(frmLog <> NIL, 'The log window is not ready yet!');
+ frmLog.Log.AddWarn(Msg);
+end;
+
+
+procedure TAppData.LogError(CONST Msg: string);
+begin
+ Assert(frmLog <> NIL, 'The log window is not ready yet!');
+ frmLog.Log.AddError(Msg);
+
+ if frmLog.chkAutoOpen.Checked
+ then AppData.ShowLog;
+end;
+
+
+procedure TAppData.LogMsg(CONST Msg: string);  { Always show this message, no matter the verbosity of the log. Equivalent to Log.AddError but the msg won't be shown in red. }
+begin
+ Assert(frmLog <> NIL, 'The log window is not ready yet!');
+ frmLog.Log.AddMsg(Msg);
+end;
+
+
+procedure TAppData.LogBold(CONST Msg: string);
+begin
+ Assert(frmLog <> NIL, 'The log window is not ready yet!');
+ frmLog.Log.AddBold(Msg);
+end;
+
+
+procedure TAppData.LogClear;
+begin
+ Assert(frmLog <> NIL, 'The log window is not ready yet!');
+ frmLog.Log.AddEmptyRow;
+end;
+
+
+procedure TAppData.LogEmptyRow;
+begin
+ Assert(frmLog <> NIL, 'The log window is not ready yet!');
+ frmLog.Log.AddEmptyRow;
+end;
+
+
+procedure TAppData.LogSaveAsRtf(CONST FileName: string);
+begin
+ Assert(frmLog <> NIL, 'The log window is not ready yet!');
+ frmLog.Log.SaveAsRtf(FileName);
+end;
+
+
+
+
+INITIALIZATION
+
+FINALIZATION
+  FreeAndNil(AppData);  // This will release also the frmLog.
 
 
 end.

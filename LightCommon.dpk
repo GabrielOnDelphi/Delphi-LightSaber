@@ -26,7 +26,7 @@ package LightCommon;
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'LightSaber Commons'}
-{$LIBSUFFIX AUTO}
+{$LIBSUFFIX '270'}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
 
@@ -37,7 +37,6 @@ requires
   vcl,
   vclx,
   LightCore,
-  LightLog,
   vclWinx,
   SoapRtl;
 
@@ -73,9 +72,7 @@ contains
   csWindow in 'csWindow.pas',
   csWindowMetrics in 'csWindowMetrics.pas',
   csWMIResolution in 'csWMIResolution.pas',
-  cmWinVersionOthers in 'cmWinVersionOthers.pas';
+  cmWinVersionOthers in 'cmWinVersionOthers.pas',
+  FormAsyncMessage in 'FormAsyncMessage.pas';
 
 end.
-
-
-

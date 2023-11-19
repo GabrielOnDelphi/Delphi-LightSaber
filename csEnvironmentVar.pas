@@ -20,8 +20,8 @@ UNIT csEnvironmentVar;
 
 INTERFACE
 USES
-   Winapi.Windows, Winapi.Messages, Winapi.WinSock, Winapi.WinSvc, System.Classes,
-   System.SysUtils, System.Win.Registry, System.UITypes, Vcl.ClipBrd, Vcl.Dialogs;
+   Winapi.Windows, Winapi.Messages, System.Classes,
+   System.SysUtils, System.Win.Registry;
 
 
  function ExpandEnvironmentStrings(CONST Vars: string): string;
@@ -35,7 +35,7 @@ USES
 IMPLEMENTATION
 
 USES
-   ccCore, csKeyboard, ccIO, ccWinVersion, ccRegistry;
+   ccCore;
 
 
 function GetEnvironmentVars(TSL: TStrings): Boolean;

@@ -33,7 +33,7 @@
         <DCC_Alignment>2</DCC_Alignment>
         <DCC_CBuilderOutput>All</DCC_CBuilderOutput>
         <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
-        <DCC_DcuOutput>.\$(ProductVersion)\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_DcuOutput>.\$(ProductVersion)\$(Platform)_$(Config)</DCC_DcuOutput>
         <DCC_Description>LightSaber - Common lib</DCC_Description>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
@@ -41,7 +41,7 @@
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_Optimize>false</DCC_Optimize>
         <DCC_RangeChecking>true</DCC_RangeChecking>
-        <DllSuffix>$(Auto)</DllSuffix>
+        <DllSuffix>270</DllSuffix>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
         <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
@@ -54,7 +54,6 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
-        <DCC_Description>LightSaber Commons</DCC_Description>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -72,7 +71,6 @@
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="vclx.dcp"/>
         <DCCReference Include="LightCore.dcp"/>
-        <DCCReference Include="LightLog.dcp"/>
         <DCCReference Include="vclWinx.dcp"/>
         <DCCReference Include="SoapRtl.dcp"/>
         <DCCReference Include="cmCursorBusy.pas"/>
@@ -107,6 +105,7 @@
         <DCCReference Include="csWindowMetrics.pas"/>
         <DCCReference Include="csWMIResolution.pas"/>
         <DCCReference Include="cmWinVersionOthers.pas"/>
+        <DCCReference Include="FormAsyncMessage.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -127,15 +126,7 @@
                 <Source>
                     <Source Name="MainSource">LightCommon.dpk</Source>
                 </Source>
-                <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\CubicProteus280.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\CubicProteus280.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LightLog280.bpl">LightLog</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LightVisControls280.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LightVisControls280.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\BioControl_D11280.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\BioControl_D11280.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\BionixVCL280.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\BionixVCL280.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp280.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                </Excluded_Packages>
+                <Excluded_Packages/>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>

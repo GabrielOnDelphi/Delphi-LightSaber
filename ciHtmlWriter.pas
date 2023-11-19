@@ -1,4 +1,4 @@
-UNIT ciHtmlWriter;
+﻿UNIT ciHtmlWriter;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
@@ -33,15 +33,15 @@ TYPE
    FExtraHeaders : string;
   protected
    function  GetContent: string;
-   procedure AddContent(s: string);                                                                { append 's' to the current content without inserting a ENTER }
-   procedure AddContentNewLine(s: string);   
+   procedure AddContent(CONST s: string);                                                                { append 's' to the current content without inserting a ENTER }
+   procedure AddContentNewLine(CONST s: string);
   public
    constructor Create(AOwner: TComponent); override;
-   procedure SaveToFile(FileName: string);
+   procedure SaveToFile(CONST FileName: string);
    procedure GenerateContent;
    procedure Reset;
-   procedure AddBodyLine(s: string);                                                               { add 's' in a new line to the current Body }
-   procedure AddBodyLineB(s: string);                                                              { add 's' in a new line to the current Body. Also add a <BR> tag }
+   procedure AddBodyLine(CONST s: string);                                                               { add 's' in a new line to the current Body }
+   procedure AddBodyLineB(CONST s: string);                                                              { add 's' in a new line to the current Body. Also add a <BR> tag }
   published
    property SiteRoot:       string    read FSiteRoot        Write FSiteRoot;
    property hTitle:         string    read FTitle           Write FTitle;
@@ -90,21 +90,21 @@ end;
                                WHOLE HTML CONTENT
 --------------------------------------------------------------------------------------------------}
 
-procedure THtmlWriter.AddContent(s: string);                                                       { append 's' to the current content without inserting a ENTER }
+procedure THtmlWriter.AddContent(CONST s: string);                                                       { append 's' to the current content without inserting a ENTER }
 begin
  FContent:= FContent+ ' '+ s;
 end;
-procedure THtmlWriter.AddContentNewLine(s: string);
+procedure THtmlWriter.AddContentNewLine(CONST s: string);
 begin
  FContent:= FContent+ CRLF+ s;
 end;
 
 
-procedure THtmlWriter.AddBodyLine(s: string);                                                      { add 's' in a new line to the current Body }
+procedure THtmlWriter.AddBodyLine(CONST s: string);                                                      { add 's' in a new line to the current Body }
 begin
  FBody:= FBody+ CRLF+ s;
 end;
-procedure THtmlWriter.AddBodyLineB(s: string);                                                     { add 's' in a new line to the current Body. Also add a <BR> tag }
+procedure THtmlWriter.AddBodyLineB(CONST s: string);                                                     { add 's' in a new line to the current Body. Also add a <BR> tag }
 begin
  FBody:= FBody+ CRLF+ s+ '<BR>';
 end;
@@ -141,7 +141,7 @@ begin
 end;
 
 
-procedure THtmlWriter.SaveToFile(FileName: string);
+procedure THtmlWriter.SaveToFile(CONST FileName: string);
 VAR Folder: string;
 begin
  Folder:= ExtractFilePath(FileName);
@@ -160,7 +160,7 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure Register;
 begin
-  RegisterComponents('Cubic', [THtmlWriter]);
+  RegisterComponents('LightSaber', [THtmlWriter]);
 end;
 
 

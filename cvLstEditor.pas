@@ -1,4 +1,4 @@
-UNIT cvLstEditor;
+﻿UNIT cvLstEditor;
 
 interface
 uses
@@ -46,25 +46,25 @@ end;
 
 
 procedure TCubicValueListEditor.LoadFromFile(FileName: string);
-VAR rw, cl, Randuri, adres: Integer;
+VAR rw, cl, Rows, adres: Integer;
     TS: TStringList; OldOptions: TKeyOptions;
 begin
  ClearAllRows; { CLEAR }
 
  TS      := StringFromFileTSL(FileName);
- Randuri := StrToInt(TS.strings[0]);
+ Rows := StrToInt(TS.strings[0]);
  ColCount:= StrToInt(TS.strings[1]);                                                               { CREATE COLUMNS }
 
  { CREATE EMPTY ROWS }
- OldOptions:= KeyOptions;    
+ OldOptions:= KeyOptions;
  KeyOptions:= [];                                                                                  { daca keyUnique e prezent, atunci nu pot sa incar doua chei identice, asa ca trebuie sa disable asta temporar }
- for rw:= 1 TO Randuri
-  DO InsertRow(' ', ' ', TRUE);                                                                    { 1 pentru ca exista un rand gol creat 'by default' }
+ for rw:= 1 to Rows
+   DO InsertRow(' ', ' ', TRUE);                                                                    { 1 pentru ca exista un rand gol creat 'by default' }
  KeyOptions:= OldOptions;                                                                          { restore original options }
- 
+
  { FILL CELLS WITH TEXT }
  Adres:= 2;
- for rw:= 1 TO Randuri DO
+ for rw:= 1 TO Rows DO
    for cl:= 0 TO ColCount-1 DO
     begin
      Cells[cl, rw]:= TS.Strings[adres];

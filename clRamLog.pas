@@ -7,7 +7,7 @@ UNIT clRamLog;
 
    A simple but effective log (non-visual).
    Its data can be displayed by TRichLog, but it can also work alone without being connected to a TRichLog.
-   More details in clLogUtils.pas
+   More details in ccLogUtils.pas
 
    Future plans:
      TRamLog even though fully functional, it is a bit awkwardly written (uses text to keep track of verbosity level of the messages).
@@ -20,7 +20,7 @@ UNIT clRamLog;
 INTERFACE
 
 USES
-   System.SysUtils, System.Classes, ccStreamBuff, clRichLog, clLogUtils, ccStreamMem;
+   System.SysUtils, System.Classes, ccStreamBuff, ccRichLog, ccLogUtils, ccStreamMem;
 
 TYPE
   TRamLog = class(TObject)
@@ -191,7 +191,7 @@ end;
    APPEND
 -------------------------------------------------}
 
-{ Appends formated lines from the specified RamLog, based on LogInfos, LogHints, LogWarns, LogErrors settings }
+{ Appends formated lines from the specified RamLog, based on AppData.LogInfos, AppData.LogHints, AppData.LogWarns, AppData.LogErrors settings }
 procedure TRamLog.Append(RamLog: TRamLog);   { UNUSED }
 begin
  for var s in RamLog.RawLines DO

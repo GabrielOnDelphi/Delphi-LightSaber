@@ -1,4 +1,4 @@
-UNIT csKbShortcuts;
+﻿UNIT csKbShortcuts;
 
 {=============================================================================================================
    SYSTEM - Keyboard Shortcuts
@@ -45,6 +45,7 @@ USES
 
 
 IMPLEMENTATION
+USES ccAppData;
 
 
 
@@ -119,7 +120,7 @@ VAR
   Menu: TMenuItem;
   Action: TAction;
 begin
- LogAddMsg('Form: '+ Form.Name);
+ AppData.LogMsg('Form: '+ Form.Name);
  for i:= 0 to Form.ComponentCount-1 DO   {Note: Iterating over Components[]: that just yields the components that are OWNED by the form. You will miss any components that are added dynamically, and not owned by the form, or components that are owned by frames }
    begin
     { List actions }
@@ -128,7 +129,7 @@ begin
     then
      begin
       Action:= TAction(Component);
-      LogAddInfo(' '+ Component.Name+ Tab
+      AppData.LogInfo(' '+ Component.Name+ Tab
                     + IntToStr(Action.ShortCut)+ Tab
                     + Vcl.Menus.ShortCutToText(Action.ShortCut)+ Tab
                     + Form.Name+ Tab
@@ -142,20 +143,21 @@ begin
         Action:= Menu.Action as TAction;
 
         { We only list menu items that have no action assigned to them }
-        if (Action = NIL)
+        if Action = NIL
         then
+          begin
             if Menu.ShortCut <> 0
-            then LogAddInfo(' '+ Menu.Name+ Tab+ IntToStr(Menu.ShortCut))
-            else
+            then AppData.LogInfo(' '+ Menu.Name+ Tab+ IntToStr(Menu.ShortCut));
+          end
         else
           { We only list menus that have a different shortcut than their associated action }
           if Menu.ShortCut <> Action.ShortCut
-          then LogAddWarn(' Shortcut for menu '+ Menu.Name+ ' is different than shortcut for its associated action! '+ IntToStr(Action.ShortCut))
+          then AppData.LogWarn(' Shortcut for menu '+ Menu.Name+ ' is different than shortcut for its associated action! '+ IntToStr(Action.ShortCut))
        end;
    end;
 
- LogAddEmptyRow;
- LogAddEmptyRow;
+ AppData.LogEmptyRow;
+ AppData.LogEmptyRow;
 end;
 
 

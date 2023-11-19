@@ -1,4 +1,4 @@
-UNIT cmStringList;
+﻿UNIT cmStringList;
 
 {=============================================================================================================
    2023.01
@@ -25,8 +25,8 @@ TYPE
 
   TTSL= class helper for TStringList
     public
-     procedure RemoveDuplicateString(s: string);                   { Removes the specified item from the list if it exists there }
-     procedure RemoveDuplicateFile(FileName: string);              { Similar as above but it uses a faster algorithm specialized in comparing file names }
+     procedure RemoveDuplicateString(CONST s: string);                   { Removes the specified item from the list if it exists there }
+     procedure RemoveDuplicateFile(CONST FileName: string);              { Similar as above but it uses a faster algorithm specialized in comparing file names }
      procedure RemoveDuplicates;                                   { THIS WILL SORT THE LIST !!! }
      procedure RemoveEmptyLines;
      procedure RemoveTopLines(const aCount: Integer);
@@ -139,7 +139,7 @@ begin
 end;
 
 
-procedure TTSL.RemoveDuplicateString(s: string);
+procedure TTSL.RemoveDuplicateString(CONST s: string);
 VAR
    i: Integer;
 begin
@@ -152,7 +152,7 @@ begin
 end;
 
 
-procedure TTSL.RemoveDuplicateFile(FileName: string);
+procedure TTSL.RemoveDuplicateFile(CONST FileName: string);
 VAR
    i: Integer;
 begin

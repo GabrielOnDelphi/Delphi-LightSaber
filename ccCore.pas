@@ -1,4 +1,4 @@
-UNIT ccCore;
+ï»¿UNIT ccCore;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -37,8 +37,8 @@ CONST
    ESC              = #27;
    Space            = #32;         { $20 }
    Quote            = #39;
-   CopyrightSymbol  = '©';
-   GradCelsius      = '°';
+   CopyrightSymbol  = 'Â©';
+   GradCelsius      = 'Â°';
    Euro             = #8364;       { Euro Sign: Alt+0128.  Unicode Number: 8364 }
 
 { Indexes }
@@ -57,8 +57,8 @@ CONST
    VK_NEXT          = $22;       { PAGE DOWN }
    VK_pgUp          = $21;       { PAGE UP }
    VK_pgDwn         = $22;       { PAGE DOWN }
-   VK_COPYRIGHT     = 169;       { Type ALT 0169 to get © }
-   VK_REGISTERED    = 174;       { Type ALT 0174 to get ® }
+   VK_COPYRIGHT     = 169;       { Type ALT 0169 to get Â© }
+   VK_REGISTERED    = 174;       { Type ALT 0174 to get Â® }
    VK_SEMICOLON     = 186;
    VK_EQUAL         = 187;
    VK_COMMA         = 188;
@@ -115,7 +115,6 @@ CONST
 
    RegStartUpKey= 'Software\Microsoft\Windows\CurrentVersion\Run';
    UM_ENSURERESTORED = WM_USER+ 65;                                        { For 'Run Single Instance' }
-   MSG_LateInitialize= WM_APP + 4711;
 
 { COLORS (in BGR format) }
 CONST
@@ -227,15 +226,15 @@ TYPE
 
  function  IsMacFile           (InStream: TStream): Boolean;                                                      { Returns true if the Enter is format from a single CR character }
  function  GetEnterType        (InStream: TStream): EnterType;
- function  GetEnterTypeS       (InputFile: string): string;
+ function  GetEnterTypeS       (CONST InputFile: string): string;
 
  procedure WinToUnix           (InStream: TStream; OutStream: TStream; Notify: TConvertNotify);   overload;
  procedure UnixToWin           (InStream: TStream; OutStream: TStream; Notify: TConvertNotify);   overload;
  procedure MacToWin            (InStream: TStream; OutStream: TStream);                           overload;
 
- procedure WinToUnix           (InputFile, OutputFile: String; Notify: TConvertNotify);           overload;
- procedure UnixToWin           (InputFile, OutputFile: String; Notify: TConvertNotify);           overload;
- function  MacToWin            (InputFile, OutputFile: string): Boolean;                          overload;       { CR to CRLF }
+ procedure WinToUnix           (CONST InputFile, OutputFile: String; Notify: TConvertNotify);           overload;
+ procedure UnixToWin           (CONST InputFile, OutputFile: String; Notify: TConvertNotify);           overload;
+ function  MacToWin            (CONST InputFile, OutputFile: string): Boolean;                          overload;       { CR to CRLF }
 
 {=============================================================================================================
    STRINGS
@@ -244,7 +243,7 @@ TYPE
  // REPLACE
  function  ReplaceUnicodeChars (CONST s: string; ReplaceWith: char): String;                                      { Replace all Unicode characters withsomething else }
  function  ReplaceCharF        (CONST s: string; CONST SearchFor, ReplaceWith: char): string;
- procedure ReplaceChar         (var   s: string;  CONST SearchFor, ReplaceWith: Char);         overload;
+ procedure ReplaceChar         (var   s: string; CONST SearchFor, ReplaceWith: Char);         overload;
  procedure ReplaceChar         (var   s: AnsiString; CONST SearchFor, ReplaceWith: AnsiChar);  overload;
  function  ReplaceStringAnsi   (CONST s, SearchFor, ReplaceWith: AnsiString): AnsiString;
  function  ReplaceString       (CONST s, SearchFor, ReplaceWith: string): string;
@@ -284,8 +283,8 @@ TYPE
  // COPY from/to a marker
  function  ExtractTextBetween  (CONST s, TagStart, TagEnd: string): string;                                       { Extract the text between the tags. For example '<H>Title</H>' will return 'Title' is iFrom= '<H>' and iTo= '</H>' }
 
- function  CopyTo              (CONST s: String; iFrom: Integer; sTo: string; IncludeMarker: Boolean= TRUE; CopyAllMarkerNotFound: Boolean= FALSE; MarkerOffset: Integer= 1): string; overload;
- function  CopyFromTo          (CONST s: string; sFrom, sTo: string;          IncludeMarkers: Boolean= FALSE; Offset: Integer= 1): string;       overload;
+ function  CopyTo              (CONST s: String; iFrom: Integer; CONST sTo: string; IncludeMarker: Boolean= TRUE; CopyAllMarkerNotFound: Boolean= FALSE; MarkerOffset: Integer= 1): string; overload;
+ function  CopyFromTo          (CONST s, sFrom, sTo: string;          IncludeMarkers: Boolean= FALSE): string;       overload;
 
  function  CopyFrom            (CONST s, sFrom: string;     Count: Integer; IncludeMarker: Boolean= TRUE; SearchOffset: Integer= 1): string;     overload;  { Find sFrom in s. Returns the string from the postion where the text was found, to the end. }
  function  CopyFrom            (CONST s, sFrom: AnsiString; Count: Integer; IncludeMarker: Boolean= TRUE; SearchOffset: Integer= 1): AnsiString; overload;
@@ -350,7 +349,7 @@ TYPE
  //See cmWrapString.pas
 
  // TStringList
- function  String2TSL          (s: string): TStringList;                                                      { Converts a string to a TStringList. In other words it breaks the text to multiple lines. I need to call Free after this! }
+ function  String2TSL          (CONST s: string): TStringList;                                                      { Converts a string to a TStringList. In other words it breaks the text to multiple lines. I need to call Free after this! }
 
  // PCHAR
  function  UnicodeToAnsi       (CONST str: UnicodeString; codePage: Integer): RawByteString;                  { netestat }
@@ -388,13 +387,12 @@ TYPE
 {============================================================================================================
    STRINGS: CONVERSION TO NUMBERS
 ============================================================================================================}
- function  i2s                 (CONST Value: Integer):           string; overload;  inline;
- function  i2s                 (CONST Value, MaxValue: integer): string; overload;                            { Add the specified number of zeros before the string. See LeadingZerosAuto help for details }
- function  i2s                 (CONST Value: Int64)  :           string; overload;                            { int64 can hold up to 9223372036854775807 }
- function  i2sHuman            (CONST Value: Int64)  :           string;                                      { Retunrs something like: 1= 1st, 2= 2nd, 3= 3rd, 4= 4th }
+ function  i2s                 (Value: Integer):           string; overload;  inline;
+ function  i2s                 (Value, MaxValueExpected: integer): string; overload;                            { Add the specified number of zeros before the string. See LeadingZerosAuto help for details }
+ function  i2s                 (Value: Int64)  :           string; overload;                            { int64 can hold up to 9223372036854775807 }
+ function  i2sHuman            (Value: Int64)  :           string;                                      { Retunrs something like: 1= 1st, 2= 2nd, 3= 3rd, 4= 4th }
  function  ExtractIntFromStr   (const s: string): Integer;                                                       { Extracts a number from a string. Works only if the number is at the beginning of the string. Example '123xxx' }
  function  Real2Str            (CONST ExtValue: Extended; Decimals: Byte = 1; HideNulMantisa: Boolean= True): string;
- function  Str2Cardinal        (CONST S: string; Default: Integer): Cardinal;
  function  Rectangle2Str       (CONST Rect: TRect): string;
  function  FormatBytes         (CONST Size: Int64; CONST Decimals: Integer= 1): string;                       { Format bytes to KB, MB, GB, TB }
  function  FormatBytesMB       (CONST Size: Int64; CONST Decimals: Integer= 1): string;                       { Same as above but the function will never return values formated in GB range. More exactly instead of 10GB it will return 10240MB }
@@ -456,25 +454,27 @@ TYPE
  procedure MesajError     (CONST MessageText: string);
  procedure MesajErrDetail (CONST MessageText, Where: string);
  function  MesajYesNo     (CONST MessageText: string; CONST Title: string= ''): Boolean;    { Returns True if the user presses the YES btn }
-
  procedure MesajTaskDLG   (CONST MessageText, Title: string);
-
-
 
  
 {=============================================================================================================
    FORM POSITION
 =============================================================================================================}
- Procedure CorrectFormPositionScreen (Form: TForm);                                                { Make sure that the child window is not outside the Screen }
  Procedure CorrectMDIFormPosition    (ParentForm: TForm);
+ Procedure CorrectFormPositionScreen (Form: TForm);                                                { Make sure that the child window is not outside the Screen }
  Procedure CorrectFormPositionMonitor(Form: TForm; Monitor: TMonitor);  deprecated 'Use Form.MakeFullyVisible(Monitor)';
+ procedure CenterForm                (Form: TForm);                  overload;                               { You can also use Form.Position:= poMainFormCenter or poScreenCenter' }
+ procedure CenterForm                (Form, Parent: TForm);       overload;
 
- Procedure CorrectCtrlPosition       (aChild, aParent: TControl);                                     overload;
- Procedure CorrectCtrlPosition       (aChild: TControl; CONST aParentWidth, aParentHeight: Integer);  overload;
- procedure CenterInvalidChild        (aChild, Parent: TControl);                                   { Center Chiald in Parent window but only if Child has 'bad' coordinates }
- procedure CenterChild               (aChild, Parent: TControl);                                   { Center Chiald in Parent window }
- procedure CenterChildX              (aChild, Parent: TControl);
- procedure CenterForm                (Form: TForm);                                                { You can also use Form.Position:= poMainFormCenter or poScreenCenter' }
+
+{=============================================================================================================
+   CTRL POSITION
+=============================================================================================================}
+ Procedure CorrectCtrlPosition       (Ctrl, Parent: TControl);                                      overload;
+ Procedure CorrectCtrlPosition       (Ctrl: TControl; CONST aParentWidth, aParentHeight: Integer);  overload;
+ procedure CenterInvalidChild        (Ctrl, Parent: TControl);                                   { Center Chiald in Parent window but only if Child has 'bad' coordinates }
+ procedure CenterChild               (Ctrl, Parent: TControl);                                   { Center Chiald in Parent window }
+ procedure CenterChildX              (Ctrl, Parent: TControl);
 
 
 
@@ -508,7 +508,7 @@ CONST
 
  // Current time
  function TodayIs: string;                                         { Returns today as date based on Locale. Example: Montag }
- function CurrentDateToString(ShowSeconds: Boolean): string;       { Returns today as date & time. Example: 31.12.2021 - 16:50 }
+ function CurrentDateToString{(ShowSeconds: Boolean)}: string;       { Returns today as date & time. Example: 31.12.2021 - 16:50 }
  function CurrentTimeToString(ShowSeconds: Boolean): string;       { Returns time in short format (no seconds). Example: 16:50 }
  function TimeToString(CONST T: TDateTime; ShowSeconds: Boolean): string;
 
@@ -557,9 +557,9 @@ CONST
 {============================================================================================================
    SOUNDS
 ============================================================================================================}
- procedure PlayWinSound (SystemSoundName: string);
- procedure PlaySoundFile(FileName: string);
- procedure PlayResSound (RESName: String; uFlags: Integer);
+ procedure PlayWinSound (CONST SystemSoundName: string);
+ procedure PlaySoundFile(CONST FileName: string);
+ procedure PlayResSound (CONST ResName: String; uFlags: Integer);
  procedure Bip(Frecv, Timp: integer);
  procedure BipConfirmation;
  procedure BipConfirmationShort;
@@ -659,7 +659,7 @@ end;
 
 
 {=============================================================================================================
-   FIX FORM POSITION
+   FORM POSITION
 =============================================================================================================}
 
 { Brings the form back into the screen, IF it was outside the screen.
@@ -693,79 +693,20 @@ Begin
 End;
 
 
-
-
-{ Centers the child into the parent, IF the child was outside the screen.
-
-  Note! The Top is relative to parent's client area.
-  In other words, if the Parent has a toolbar/panel (height = 200) aligned to its top and the Child form is
-  imediatelly under that panel, Child's top will be 0, not 500!
-  Usage: CorrectFormScreenPosition(Self, ParentForm)  }
-Procedure CorrectCtrlPosition(aChild, aParent: TControl);
-begin
- CorrectCtrlPosition(aChild, aParent.ClientWidth, aParent.ClientHeight);
-end;
-
-
-Procedure CorrectCtrlPosition(aChild: TControl; CONST aParentWidth, aParentHeight: Integer);  {TODO 2: this won't be aligned correctly when it is under the parent bottom and the parent height is big (over 1000 pixels) }
-begin
- if aChild.Top < 0
- then aChild.Top := 0;               { It was too high, show it imediatelly under the top }
- if aChild.Top  > aParentHeight-10
- then aChild.Top := aParentHeight- (aChild.Height DIV 2);  { It was too low, put_its top in the middle of the parent (to be clear, we don't center the whole child into the parent; we only put child's top in the midle of the parent) }
-
- if aChild.Left < 0
- then aChild.Left:= 0;
- if aChild.Left > aParentWidth-10
- then aChild.Left:= aParentWidth- (aChild.Width DIV 2);
-
- if aChild.Height > aParentHeight
- then aChild.Height:= aParentHeight;
- if aChild.Width  > aParentWidth
- then aChild.Width:= aParentWidth;
-end;
-
-
-{ Center Chiald in Parent window but only if Child has 'bad' coordinates }
-procedure CenterInvalidChild(aChild, Parent: TControl);
-VAR iTop: Integer;
-begin
- if (aChild.Top < -10)
- OR (aChild.Left< -10)
- OR (aChild.Left> Parent.Width) then   { But only if goes out of screen so the user can't find it }
-  begin
-   aChild.Left:= (Parent.ClientWidth - aChild.Width)  div 2;
-   iTop:= Parent.ClientHeight- aChild.Height;
-   //if Parent.ToolBar.Visible then iTop:= iTop- Parent.ToolBar.Height;
-   aChild.Top:= iTop div 2;
-  end;
-end;
-
-
-{ Center Child in Parent window }
-{ToDo: We should take into consideration the controls that are aligned (alleft, alright) }
-procedure CenterChild(aChild, Parent: TControl);
+procedure CenterForm(Form, Parent: TForm);
 VAR Left, Top: Integer;
 begin
- Left:= (Parent.ClientWidth - aChild.Width) div 2;
+ Left:= Parent.Left+ (Parent.ClientWidth - Form.Width) div 2;
 
  if Left < 0                                { Happens when the child is bigger than the parent }
  then Left:= Parent.Left - Left;
- aChild.Left:= Left;
+ Form.Left:= Left;
 
-
- Top:= (Parent.ClientHeight- aChild.Height) div 2;
+ Top:= Parent.Top+ (Parent.ClientHeight- Form.Height) div 2;
 
  if Top < 0                                 { Happens when the child is bigger than the parent }
  then Top:= Parent.Top - Top;
- aChild.Top:= Top;
-end;
-
-
-{ Center Child in Parent window, bot only on the X axis }
-procedure CenterChildX(aChild, Parent: TControl);
-begin
- aChild.Left:= (Parent.ClientWidth - aChild.Width) div 2;  {todo: We should take into consideration the controls that are aligned (alleft, alright) }
+ Form.Top:= Top;
 end;
 
 
@@ -788,6 +729,94 @@ begin
      then ParentForm.MDIChildren[I].Width := ParentForm.ClientWidth;
     end;
 end;
+
+
+
+
+
+
+
+
+
+
+
+{=============================================================================================================
+   CENTER CTRL
+=============================================================================================================}
+
+
+{ Centers the child into the parent, IF the child was outside the screen.
+
+  Note! The Top is relative to parent's client area.
+  In other words, if the Parent has a toolbar/panel (height = 200) aligned to its top and the Child form is
+  imediatelly under that panel, Child's top will be 0, not 500!
+  Usage: CorrectFormScreenPosition(Self, ParentForm)  }
+Procedure CorrectCtrlPosition(Ctrl, Parent: TControl);
+begin
+ CorrectCtrlPosition(Ctrl, Parent.ClientWidth, Parent.ClientHeight);
+end;
+
+
+Procedure CorrectCtrlPosition(Ctrl: TControl; CONST aParentWidth, aParentHeight: Integer);  {TODO 2: this won't be aligned correctly when it is under the parent bottom and the parent height is big (over 1000 pixels) }
+begin
+ if Ctrl.Top < 0
+ then Ctrl.Top := 0;               { It was too high, show it imediatelly under the top }
+ if Ctrl.Top  > aParentHeight-10
+ then Ctrl.Top := aParentHeight- (Ctrl.Height DIV 2);  { It was too low, put_its top in the middle of the parent (to be clear, we don't center the whole child into the parent; we only put child's top in the midle of the parent) }
+
+ if Ctrl.Left < 0
+ then Ctrl.Left:= 0;
+ if Ctrl.Left > aParentWidth-10
+ then Ctrl.Left:= aParentWidth- (Ctrl.Width DIV 2);
+
+ if Ctrl.Height > aParentHeight
+ then Ctrl.Height:= aParentHeight;
+ if Ctrl.Width  > aParentWidth
+ then Ctrl.Width:= aParentWidth;
+end;
+
+
+{ Center Chiald in Parent window but only if Child has 'bad' coordinates }
+procedure CenterInvalidChild(Ctrl, Parent: TControl);
+VAR iTop: Integer;
+begin
+ if (Ctrl.Top < -10)
+ OR (Ctrl.Left< -10)
+ OR (Ctrl.Left> Parent.Width) then   { But only if goes out of screen so the user can't find it }
+  begin
+   Ctrl.Left:= (Parent.ClientWidth - Ctrl.Width)  div 2;
+   iTop:= Parent.ClientHeight- Ctrl.Height;
+   //if Parent.ToolBar.Visible then iTop:= iTop- Parent.ToolBar.Height;
+   Ctrl.Top:= iTop div 2;
+  end;
+end;
+
+
+{ Center Child ctrl in Parent window }
+{ToDo: We should take into consideration the controls that are aligned (alleft, alright) }
+procedure CenterChild(Ctrl, Parent: TControl);
+VAR Left, Top: Integer;
+begin
+ Left:= (Parent.ClientWidth - Ctrl.Width) div 2;
+
+ if Left < 0                                { Happens when the child is bigger than the parent }
+ then Left:= Parent.Left - Left;
+ Ctrl.Left:= Left;
+
+ Top:= (Parent.ClientHeight- Ctrl.Height) div 2;
+
+ if Top < 0                                 { Happens when the child is bigger than the parent }
+ then Top:= Parent.Top - Top;
+ Ctrl.Top:= Top;
+end;
+
+
+{ Center Child ctrl in Parent window, bot only on the X axis }
+procedure CenterChildX(Ctrl, Parent: TControl);
+begin
+ Ctrl.Left:= (Parent.ClientWidth - Ctrl.Width) div 2;  {todo: We should take into consideration the controls that are aligned (alleft, alright) }
+end;
+
 
 
 
@@ -965,7 +994,7 @@ end;
 function DateToStrUS(CONST Time: TDateTime): string; { converts date to string, using the US (YYY.MM.DD) format }
 VAR aYear, aMonth, aDay : Word;
 begin
-  DecodeDate(Now, aYear, aMonth, aDay);
+  DecodeDate(Time, aYear, aMonth, aDay);
 
   Result:= IntToStr(aYear)+ '.';
   if aMonth < 10
@@ -1113,7 +1142,7 @@ end;
 
 
 { Returns today as date AND time. Example: 31.12.2021 - 16:50 }
-function CurrentDateToString(ShowSeconds: Boolean): string;
+function CurrentDateToString{(ShowSeconds: Boolean)}: string;
 VAR
   Present: TDateTime;
   Year, Month, Day, Hour, Min, Sec, MSec: Word;
@@ -1556,7 +1585,7 @@ begin
 end;
 
 
-{ Extracts a number from a string. Works only if the number is at the beginning of the string. Example '123xxx' }
+{ Extracts a number from a mixed string. Works only if the number is at the beginning of the string. Example '123xxx' }
 function ExtractIntFromStr(const s: string): Integer;
 var
   RetCode: Integer;
@@ -1573,27 +1602,30 @@ end;
    STRING CONVERSIONS
 ============================================================================================================}
 
-function i2s(CONST Value: integer): string;
+function i2s(Value: integer): string;
 begin
  Result:= IntToStr(Value);
 end;
 
 
-{ As above, but additionally it adds the specified number of zeros before the string. See LeadingZerosAuto for details }
-function i2s(CONST Value, MaxValue: integer): string;
+{ As above, but additionally it adds the specified number of zeros before the string.
+  It will determine this automaticxally based on the MaxValueExpected.
+  For example i2s('1', 50) will generate '01' but i2s('1', 500) will generate '001'.  }
+
+function i2s(Value, MaxValueExpected: integer): string;
 begin
  Result:= IntToStr(Value);
- Result:= LeadingZerosAuto(Result, 99);
+ Result:= LeadingZerosAuto(Result, MaxValueExpected);
 end;
 
 
-function i2s(CONST Value: Int64): string;
+function i2s(Value: Int64): string;
 begin
  Result:= IntToStr(Value);
 end;
 
 
-function i2sHuman(CONST Value: Int64): string;       { 1= 1st, 2= 2nd, 3= 3rd, 4= 4th }
+function i2sHuman(Value: Int64): string;       { 1= 1st, 2= 2nd, 3= 3rd, 4= 4th }
 begin
  case Value of
     1 : Result:= '1st';
@@ -1603,12 +1635,12 @@ begin
  end;
 end;
 
-
+{
 function Str2Cardinal(CONST S: string; Default: Integer): Cardinal;
 begin
  Result:= 0;
- mesajinfo('Str2Cardinal-Not implemented yet!');    { Should be easy to implement.Convert each char in a number, multiply with 10, 100, 1000, etc, and add it to Result }
-end;
+ MesajWarning('Str2Cardinal-Not implemented yet!');    { Should be easy to implement.Convert each char in a number, multiply with 10, 100, 1000, etc, and add it to Result
+end;  }
 
 
 function Rectangle2Str(CONST Rect: TRect): string;
@@ -1685,7 +1717,8 @@ begin
  then Result:= Real2Str(Size / GB, Decimals)+ ' GB' else
 
  if (Size>= TB)
- then Result:= Real2Str(Size / TB, Decimals)+ ' TB'; //del else Result:= ' Huge size!';
+ then Result:= Real2Str(Size / TB, Decimals)+ ' TB'
+ else raise Exception.Create('Negative file size!');
 end;
 
 
@@ -1724,7 +1757,8 @@ begin
  then Result:= Real2Str(Size / 1000000000, Decimals)+ ' G' else
 
  if (Size>= 1000000000000)
- then Result:= Real2Str(Size / 1000000000000, Decimals)+ ' T';
+ then Result:= Real2Str(Size / 1000000000000, Decimals)+ ' T'
+ else raise Exception.Create('Negative file size!');
 end;
 
 
@@ -2412,7 +2446,7 @@ begin
 end;
 
 
-function GetEnterTypeS(InputFile: string): string;
+function GetEnterTypeS(CONST InputFile: string): string;
 VAR
    InpStream: TCubicBuffStream;
 begin
@@ -2562,7 +2596,7 @@ end;
 
 
 
-procedure WinToUnix(InputFile, OutputFile: String; Notify: TConvertNotify);
+procedure WinToUnix(CONST InputFile, OutputFile: String; Notify: TConvertNotify);
 VAR
    InpStream: TCubicBuffStream;
    OutStream: TCubicBuffStream;
@@ -2582,7 +2616,7 @@ end;
 
 
 
-procedure UnixToWin(InputFile, OutputFile: String; Notify: TConvertNotify);
+procedure UnixToWin(CONST InputFile, OutputFile: String; Notify: TConvertNotify);
 VAR
    InpStream: TCubicBuffStream;
    OutStream: TCubicBuffStream;
@@ -2602,7 +2636,7 @@ end;
 
 
 
-function MacToWin(InputFile, OutputFile: string): Boolean;                                         { CR to CRLF. Not tested! }
+function MacToWin(CONST InputFile, OutputFile: string): Boolean;                                         { CR to CRLF. Not tested! }
 VAR
    InpStream: TCubicBuffStream;
    OutStream: TCubicBuffStream;
@@ -2718,7 +2752,7 @@ begin
 end;
 
 
-function String2TSL(s: string): TStringList;                                                       { Converts a string to a TStringList. Need to call Free after this! }
+function String2TSL(CONST s: string): TStringList;                                                       { Converts a string to a TStringList. Need to call Free after this! }
 begin
  Result:= TStringList.Create;
  Result.Text:= s;
@@ -2776,8 +2810,8 @@ end;
 
 
 
-{ Same as above except_ that the user doesn't have to specify how many zeros to add.
-  Instead the function will determine this automaticxally based on the number received as parameter. For example LeadingZeros('1', 50) will generate '01' but LeadingZeros('1', 500) will generate '001'.   Note: you can also do it like this:   To convert an integer to a string with minimum length, use the Str procedure:  Str(123:6, s); // s is set to '   123' }
+{ Same as above except that the user doesn't have to specify how many zeros to add.
+  Instead the function will determine this automaticxally based on the MaxValue. For example LeadingZeros('1', 50) will generate '01' but LeadingZeros('1', 500) will generate '001'.   Note: you can also do it like this:   To convert an integer to a string with minimum length, use the Str procedure:  Str(123:6, s); // s is set to '   123' }
 function LeadingZerosAuto(CONST s: string; MaxValue: integer): string;
 VAR ForcedLength: Integer;
 begin
@@ -2884,14 +2918,15 @@ end;
 { Creates a file that contains random strings. NoOfLines=10000000 creates a files of about 140MB }
 procedure GenerateRandomTextFile(CONST aFilename: string; NoOfLines: Integer);
 VAR
-   t: Textfile;
+   T: Textfile;
    i: integer;
 begin
-  Assignfile(t, aFilename); Rewrite(t);
+  Assignfile(T, aFilename);
+  Rewrite(T);
 
   for i := 1 to NoOfLines
-   DO Writeln(t, GenerateRandString(5, 20));
-  Closefile(t);
+    DO Writeln(T, GenerateRandString(5, 20));
+  CloseFile(T);
 end;
 
 
@@ -3226,7 +3261,7 @@ end;
 
   Example:
      CopyFromTo('abcdX1234Ydcba', 'X', 'Y') will return '12345' }
-function CopyFromTo(CONST s: string; sFrom, sTo: string; IncludeMarkers: Boolean= FALSE; Offset: Integer= 1): string;
+function CopyFromTo(CONST s, sFrom, sTo: string; IncludeMarkers: Boolean= FALSE): string;
 VAR iFrom, iTo: Integer;
 begin
  iFrom:= System.Pos(sFrom, s);
@@ -3254,7 +3289,7 @@ end;
   For example '<H>Title</H>' will return 'Title' is iFrom= '<H>' and iTo= '</H>' }
 function ExtractTextBetween(CONST s, TagStart, TagEnd: string): string;
 begin
- Result:= CopyFromTo(s, TagStart, TagEnd, False, 1);
+ Result:= CopyFromTo(s, TagStart, TagEnd, False);
 end;
 
 
@@ -3263,7 +3298,7 @@ end;
  { Copy the text between iFrom and sTo string was found.
    IncludeMarker toggles the inclusion/exclusion of sTo in the final result.
    if the sTo string is not found, the function will return an empty string unless CopyAllMarkerNotFound is true }
-function CopyTo(CONST s: String; iFrom: Integer; sTo: string; IncludeMarker: Boolean= TRUE; CopyAllMarkerNotFound: Boolean= FALSE; MarkerOffset: Integer= 1): String;
+function CopyTo(CONST s: String; iFrom: Integer; CONST sTo: string; IncludeMarker: Boolean= TRUE; CopyAllMarkerNotFound: Boolean= FALSE; MarkerOffset: Integer= 1): String;
 VAR iTo: Integer;
 begin
  if MarkerOffset< iFrom
@@ -3913,7 +3948,7 @@ end; *)
 {============================================================================================================
                                     AUDIO
 ============================================================================================================}
-procedure PlayWinSound(SystemSoundName: string);
+procedure PlayWinSound(CONST SystemSoundName: string);
 begin
  Winapi.MMSystem.PlaySound(PChar(SystemSoundName), 0, SND_ASYNC);
 end;
@@ -3962,7 +3997,7 @@ end;
     SND_SYNC  =0 = Start playing, and wait for the sound to finish
     SND_ASYNC =1 = Start playing, and don't wait to return
     SND_LOOP  =8 = Keep looping the sound until another sound is played  }
-procedure PlaySoundFile(FileName: string);
+procedure PlaySoundFile(CONST FileName: string);
 begin
  if FileExists(FileName)
  then PlaySound(pchar(FileName), 0, SND_ASYNC or SND_FILENAME);    { Also exists sndPlaySound but it is obsolete! } { Why 0 for the second parameter: hmod:  Handle to the Executeble file that contains the resource to be loaded. This parameter must be NULL unless SND_RESOURCE is specified in fdwSound. }
@@ -3975,7 +4010,7 @@ end;
    Body    : #define WAVE WAVEFILE
              SOUND1 WAVE "updating.wav"
    Compiler: BRCC32.EXE -foSOUND32.RES SOUNDS.RC    }
-procedure PlayResSound(RESName: String; uFlags: Integer);
+procedure PlayResSound(CONST ResName: String; uFlags: Integer);
 VAR hResInfo,hRes: Thandle;
     lpGlob: Pchar;
 Begin

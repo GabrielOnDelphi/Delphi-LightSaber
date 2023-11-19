@@ -1,4 +1,5 @@
 package LightCore;
+
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 2}
@@ -25,8 +26,7 @@ package LightCore;
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'LightSaber - Core library'}
-{$LIBSUFFIX AUTO}
-{$RUNONLY}
+{$LIBSUFFIX '270'}
 {$IMPLICITBUILD ON}
 
 requires
@@ -47,7 +47,10 @@ contains
   ccIniFileVcl in 'ccIniFileVcl.pas',
   ccCompiler in 'ccCompiler.pas',
   ccRegistry in 'ccRegistry.pas',
-  ccStreamMem in 'ccStreamMem.pas';
+  ccStreamMem in 'ccStreamMem.pas',
+  ccLogUtils in 'ccLogUtils.pas',
+  ccRichLog in 'ccRichLog.pas',
+  ccRichLogTrack in 'ccRichLogTrack.pas',
+  FormLog in 'FormLog.pas';
 
 end.
-

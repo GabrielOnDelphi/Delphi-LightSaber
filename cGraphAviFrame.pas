@@ -1,4 +1,4 @@
-UNIT cGraphAviFrame;
+﻿UNIT cGraphAviFrame;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -58,7 +58,7 @@ CONST
   VideoFilesFtl  = 'Video Files|' + VideoFiles;
 
 
-function ExtractMiddleFrame(FileName: string; OUT FrameCount: Cardinal): TBitmap;
+function GetVideoPlayerLogo: TBitmap;
 
 
 IMPLEMENTATION
@@ -69,7 +69,7 @@ USES
 
 { The free FFVCL library does not support frame capture so we fake it.
   Instead of a real video frame we show in icon/logo representing a video camera. }
-function ExtractMiddleFrame(FileName: string; OUT FrameCount: Cardinal): TBitmap;
+function GetVideoPlayerLogo: TBitmap;   // Old name: ExtractMiddleFrame
 begin
  Result:= cGraphBitmap.CreateBlankBitmap(192, 128, clBlack);   // 234x174 is the size of the Preview window in BX
  VAR AviLogo:= cGraphLoader.LoadGraph(AppData.SysDir+ 'video_player_icon.png', FALSE, TRUE);
@@ -89,7 +89,7 @@ begin
  Result.Canvas.Font.Color:= clLime;
  Result.Canvas.TextOut((Result.Width- Result.Canvas.TextWidth(Text)) DIV 2, 4, Text);
 
- FrameCount:= 2; { Fake it }
+ //FrameCount:= 2; { Fake it }
 end;
 
 
@@ -119,7 +119,7 @@ TYPE
  end;
 
 
-function ExtractMiddleFrame(FileName: string; OUT FrameCount: Cardinal): TBitmap;
+function GetVideoPlayerLogo(FileName: string; OUT FrameCount: Cardinal): TBitmap;
 
 
 IMPLEMENTATION
@@ -202,7 +202,7 @@ begin
  // try to open and play media file, render on the custom window specified by handle
  Result:= FFPlayer.Open(FileName, FDrawingForm.Handle);
  if NOT Result
- then LogAddError(FFPlayer.LastErrMsg);
+ then AppData.LogError(FFPlayer.LastErrMsg);
 end;
 
 
@@ -264,7 +264,7 @@ begin
 
  if VideoOpened
  then Timer.Enabled:= TRUE
- else LogAddError(FFPlayer.LastErrMsg);
+ else AppData.LogError(FFPlayer.LastErrMsg);
 end;
 
 *)

@@ -1,4 +1,4 @@
-UNIT cmEllipsisText;
+﻿UNIT cmEllipsisText;
 
 {=============================================================================================================
    2023.01
@@ -102,6 +102,7 @@ end;
 
 
 
+//ToDo: Return value of function 'GetEllipsisText' might be undefined
 { Takes a long string and truncates it in the middle. Example: '123...789' }
 function GetEllipsisText(CONST s: string; Canvas: TCanvas; MaxWidth: Integer): string;
 var
@@ -109,23 +110,23 @@ var
   TextSize: TSize;
   EllipsisSize: Integer;
 begin
-    NewStr := '...';
-    EllipsisSize:= Canvas.TextWidth(NewStr);
+  NewStr := '...';
+  EllipsisSize:= Canvas.TextWidth(NewStr);
 
-    GetTextExtentPoint32(Canvas.Handle, s, Length(s), TextSize);
-    if TextSize.cX > MaxWidth
-    then
-       //Start with the smallest possible truncated-and-ellipsis-modified string, and expand until we have the biggest one that can fit
-       for VAR i:= 1 to Length(s) div 2 do
-        begin
-           LastStr := NewStr;
-           NewStr := Copy(s, 1, I) + '...' + Copy(s, Length(s) - I + 1, I);   // Get the first I chars, then the ellipsis, then the last I chars
-           GetTextExtentPoint32(Canvas.Handle, NewStr, Length(NewStr), TextSize);
-           if TextSize.cx > (MaxWidth - EllipsisSize)
-           then Exit(LastStr);
-        end
-    else
-       Result:= s;   //The string will fit in the width of the given rect, don't mess with it
+  GetTextExtentPoint32(Canvas.Handle, s, Length(s), TextSize);
+  if TextSize.cX > MaxWidth
+  then
+     //Start with the smallest possible truncated-and-ellipsis-modified string, and expand until we have the biggest one that can fit
+     for VAR i:= 1 to Length(s) div 2 do
+      begin
+         LastStr := NewStr;
+         NewStr := Copy(s, 1, I) + '...' + Copy(s, Length(s) - I + 1, I);   // Get the first I chars, then the ellipsis, then the last I chars
+         GetTextExtentPoint32(Canvas.Handle, NewStr, Length(NewStr), TextSize);
+         if TextSize.cx > (MaxWidth - EllipsisSize)
+         then Exit(LastStr);
+      end
+  else
+     Result:= s;   //The string will fit in the width of the given rect, don't mess with it
 end;
 
 

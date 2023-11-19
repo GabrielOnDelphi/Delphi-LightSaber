@@ -77,7 +77,7 @@ TYPE
 IMPLEMENTATION
 
 uses
-   ccINIFile, cGraphLoader, ccCore, ccIO, FormLog;
+   ccINIFile, cGraphLoader, ccCore, ccAppData, ccIO, FormLog;
 
 
 
@@ -177,7 +177,7 @@ begin
        EXCEPT
          on E: Exception do
           begin
-           LogAddError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+           AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
            Exit(False);
           end;
        end;

@@ -1,4 +1,4 @@
-UNIT ciEmail;
+ï»¿UNIT ciEmail;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
@@ -47,7 +47,7 @@ CONST
  function  CorrectEmailAddress  (      Email : String; OUT Suggestion: String; MaxCorrections : Integer = 5) : Boolean;
  function  EmailHasManyNumbers  (CONST Email : string; CONST Ratio: integer): Boolean;
  function  FailCode2Str         (Code  : Integer) : string;                                                { convert the integer fail codes to understandeble message strings }
- function  CheckIfThunderbirdFile(HugeText: String): Boolean;
+ function  CheckIfThunderbirdFile(CONST HugeText: String): Boolean;
 
  { UTILS }
  procedure SplitEmailAddress    (CONST EmailAddress: string; out user, domain: string);                    { Returns the 'user' and 'domain' part of an email address - the @ charecter is not included }
@@ -250,27 +250,26 @@ end;
 
  The CorrectEmailAddress function:
  The function takes three parameters:
- Email – The e-mail address to check and correct
- Suggestion – This string passed by reference contains the functions result
- MaxCorrections – The maximum amount of corrections to attempt before stopping (defaults to 5)
+ Email â€“ The e-mail address to check and correct
+ Suggestion â€“ This string passed by reference contains the functions result
+ MaxCorrections â€“ The maximum amount of corrections to attempt before stopping (defaults to 5)
 
- This function simply loops up to MaxCorrection times, validating the e-mail address then using the FailCode to decide what kind of correction to make, and repeating this until it find a match, determines the address can’t be fixed, or has looped more than MaxCorrection times.
+ This function simply loops up to MaxCorrection times, validating the e-mail address then using the FailCode to decide what kind of correction to make, and repeating this until it find a match, determines the address canâ€™t be fixed, or has looped more than MaxCorrection times.
  The following corrections are performed, based on the FailCode (see description above):
-   flUnknown                – Simply stops corrections, as there is no generic way to correct this problem.
-   flNoSeperator            – When this error is encountered the system performs a simple but powerful function, it will navigate the e-mail address until it finds the last 2, and then convert it to an @ symbol. This will correct most genuine transposition errors. If it converts a 2 that was not really an @ chances are it has completely invalidated the e-mail address.
+   flUnknown                â€“ Simply stops corrections, as there is no generic way to correct this problem.
+   flNoSeperator            â€“ When this error is encountered the system performs a simple but powerful function, it will navigate the e-mail address until it finds the last 2, and then convert it to an @ symbol. This will correct most genuine transposition errors. If it converts a 2 that was not really an @ chances are it has completely invalidated the e-mail address.
    flToSmall                - Simply stops corrections, as there is no generic way to correct this problem.
-   flUserNameToLong         – Simply stops corrections, as there is no generic way to correct this problem.
-   flDomainNameToLong       – Simply stops corrections, as there is no generic way to correct this problem.
-   flInvalidChar            – In this case the offending character is simply deleted.
-   flMissingUser            – Simply stops corrections, as there is no generic way to correct this problem.
-   flMissingDomain          – Simply stops corrections, as there is no generic way to correct this problem.
-   flMissingDomainSeperator – Simply stops corrections, as there is no generic way to correct this problem.
-   flMissingGeneralDomain   – Simply stops corrections, as there is no generic way to correct this problem.
-   flToManyAtSymbols        – Simply stops corrections, as there is no generic way to correct this problem.
+   flUserNameToLong         â€“ Simply stops corrections, as there is no generic way to correct this problem.
+   flDomainNameToLong       â€“ Simply stops corrections, as there is no generic way to correct this problem.
+   flInvalidChar            â€“ In this case the offending character is simply deleted.
+   flMissingUser            â€“ Simply stops corrections, as there is no generic way to correct this problem.
+   flMissingDomain          â€“ Simply stops corrections, as there is no generic way to correct this problem.
+   flMissingDomainSeperator â€“ Simply stops corrections, as there is no generic way to correct this problem.
+   flMissingGeneralDomain   â€“ Simply stops corrections, as there is no generic way to correct this problem.
+   flToManyAtSymbols        â€“ Simply stops corrections, as there is no generic way to correct this problem.
 
  While only a small portion of errors can be corrected the function can correct the most common errors encountered when working with list of e-mail addresses, specifically when the data is entered by the actual e-mail address account holder.
- -David Lederman
- dlederman@InterentToolsCorp.com }
+ -David Lederman InterentToolsCorp.com }
 
 CONST
   flUnknown               = 0;     // These constants represent the various errors validation errors (known) that can occur.
@@ -285,34 +284,31 @@ CONST
   flMissingGeneralDomain  = 9;
   flToManyAtSymbols       = 10;
 
-function CorrectEmailAddress (Email : String; OUT Suggestion: String; MaxCorrections : Integer = 5) : Boolean;  { MaxCorrections – The maximum amount of corrections to attempt before stopping (defaults to 5) }
+function CorrectEmailAddress (Email : String; OUT Suggestion: String; MaxCorrections : Integer = 5) : Boolean;  { MaxCorrections â€“ The maximum amount of corrections to attempt before stopping (defaults to 5) }
 VAR
-   CurITT, RevITT, ITT, FailCode, FailPosition, LastAt : Integer;
+   Itteration, RevITT, i, FailCode, FailPosition, LastAt : Integer;
 begin
  Email:= Trim(Email);
  Result := False;
  try
   Suggestion := Email;                                                          // Reset the suggestion
-  CurITT := 1;
+  Itteration := 1;
   // Now loop through to the max depth
-  for ITT := CurITT to MaxCorrections do                                        // Iterate
+  for i := Itteration to MaxCorrections do                                        // Iterate
    begin
-     if ValidateEmailAddress(Suggestion, FailCode, FailPosition) then           // Now try to validate the address
-      begin
-       result := True;                                                          // The email worked so exit
-       exit;
-      end;
+     if ValidateEmailAddress(Suggestion, FailCode, FailPosition)            // Now try to validate the address
+     then Exit(true);
+
      // Otherwise, try to correct it
      case FailCode of
        flUnknown: exit;
        flNoSeperator:
         begin
           LastAt := 0;                                                           // This error can possibly be fixed by finding the last 2 (which was most likely transposed for an @)
-          for RevITT := 1 to Length(Suggestion)
-           DO
+          for RevITT := 1 to Length(Suggestion) DO
             if Suggestion[RevITT] = '2'
             then LastAt := RevITT;                                               // Look for the 2
-          if LastAt = 0 then  exit;                                              // Now see if we found an 2
+          if LastAt = 0 then exit;                                              // Now see if we found an 2
           Suggestion[LastAt] := '@';                                             // Now convert the 2 to an @ and continue
         end;
        flToSmall: Exit;
@@ -344,7 +340,7 @@ CONST                                                                           
    'User name to long!', 'Domain name to long!',   'Invalid character!',
    'Missing user name!', 'Missing domain name!',   'Missing domain portion (.com,.net,etc)',
    'Invalid general domain!',   'To many @ symbols!');
-  AllowedEmailChars  =  ['A'..'Z','a'..'z','0','1','2','3','4','5','6','7','8','9','@','-','.','_', '''', '+', '$', '/', '%', 'ä', 'ö', 'ü', 'ß'];
+  AllowedEmailChars  =  ['A'..'Z','a'..'z','0','1','2','3','4','5','6','7','8','9','@','-','.','_', '''', '+', '$', '/', '%', 'Ã¤', 'Ã¶', 'Ã¼', 'ÃŸ'];
   MaxUsernamePortion = 64;                                                      // Per RFC 821
   MaxDomainPortion   = 256;                                                     // Per RFC 821
 
@@ -739,7 +735,7 @@ begin
 end;
 
 
-function CheckIfThunderbirdFile(HugeText: String): Boolean;
+function CheckIfThunderbirdFile(CONST HugeText: String): Boolean;
 CONST ThunderbirdFile= 'X-Mozilla-Status';                                                         { Search string to know if is a Thunderbird file. Which is found on the 4th line of each mail }
 begin
  Result:= Pos(ThunderbirdFile, HugeText)> 1;
@@ -787,7 +783,7 @@ begin
  Registry := TRegistry.Create;
  TRY
   TRY
-    Registry.RootKey := HKEY_CURRENT_USER;                                                         { False because we do not want to create it if it doesn’t exist}
+    Registry.RootKey := HKEY_CURRENT_USER;                                                         { False because we do not want to create it if it doesnâ€™t exist}
     Registry.OpenKey('Software\Microsoft\Internet Account Manager\Accounts\00000001', FALSE);
     Result := registry.ReadString('SMTP Email Address');
    FINALLY
@@ -820,7 +816,7 @@ end;
     Answer:
 
     Article Updated 9/20/2000
-    Please note: I have made a correction to the e-mail validation function to correct a bug with handling small e-mail addresses like a@a.com (not a very common address). If you would like to be notified of any future enhancements or bug fixes, please e-mail me. – Thanks to Simon for catching this bug!
+    Please note: I have made a correction to the e-mail validation function to correct a bug with handling small e-mail addresses like a@a.com (not a very common address). If you would like to be notified of any future enhancements or bug fixes, please e-mail me. â€“ Thanks to Simon for catching this bug!
     Thanks, enjoy!!!
 
 
@@ -829,7 +825,7 @@ end;
     Have you ever needed to verify that an e-mail address is correct, or have you had to work with a list of e-mail addresses and realized that some had simple problems that you could easily correct by hand? Well the functions I present here are designed to do just that. In this article I present two functions, one to check that an e-mail address is valid, and another to try to correct an incorrect e-mail address.
 
     Just what is a correct e-mail address?
-    The majority of articles I’ve seen on e-mail address verification use an over-simplified approach. For example, the most common approach I’ve seen is to ensure that an ‘@’ symbol is present, or that it’s a minimum size (ex. 7 characters), or a combination of both.  And a better, but less used method is to verify that only allowed characters (based on the SMTP standard) are in the address.
+    The majority of articles Iâ€™ve seen on e-mail address verification use an over-simplified approach. For example, the most common approach Iâ€™ve seen is to ensure that an â€˜@â€™ symbol is present, or that itâ€™s a minimum size (ex. 7 characters), or a combination of both.  And a better, but less used method is to verify that only allowed characters (based on the SMTP standard) are in the address.
 
     The problem with these approaches is that they only can tell you at the highest level that an address is POSSIBLY correct, for example:
 
@@ -857,34 +853,34 @@ end;
 
     The VerifyEmailAddress function:
     This function takes 3 parameters:
-    Email – The e-mail address to check
-    FailCode – The error code reported by the function if it can’t validate an address
-    FailPosition – The position of the character (if available) where the validation failure occurred
+    Email â€“ The e-mail address to check
+    FailCode â€“ The error code reported by the function if it canâ€™t validate an address
+    FailPosition â€“ The position of the character (if available) where the validation failure occurred
 
     The function returns a Boolean value that returns True if the address is valid, and False if it is invalid. If a failure does occur the FailCode can be used to determine the exact error that caused the problem:
 
-      flUnknown – An unknown error occurred, and was trapped by the exception handler.
-      flNoSeperator – No @ symbol was found.
-      flToSmall – The email address was blank.
-      flUserNameToLong – The user name was longer than the SMTP standard allows.
-      flDomainNameToLong – The domain name was longer than the SMTP standard allows.
-      flInvalidChar – An invalid character was found. (FailPosition returns the location of the character)
-      flMissingUser – The username section is not present.
-      flMissingDomain – The domain name section is not present
-      flMissingDomainSeperator – No domain segments where found
-      flMissingGeneralDomain – No top-level domain was found
-      flToManyAtSymbols – More than one @ symbol was found
+      flUnknown â€“ An unknown error occurred, and was trapped by the exception handler.
+      flNoSeperator â€“ No @ symbol was found.
+      flToSmall â€“ The email address was blank.
+      flUserNameToLong â€“ The user name was longer than the SMTP standard allows.
+      flDomainNameToLong â€“ The domain name was longer than the SMTP standard allows.
+      flInvalidChar â€“ An invalid character was found. (FailPosition returns the location of the character)
+      flMissingUser â€“ The username section is not present.
+      flMissingDomain â€“ The domain name section is not present
+      flMissingDomainSeperator â€“ No domain segments where found
+      flMissingGeneralDomain â€“ No top-level domain was found
+      flToManyAtSymbols â€“ More than one @ symbol was found
 
     For simple validation there is no use for FailCode and FailPosition, but can be used to display an error using the ValidationErrorString which takes the FailCode as a parameter and returns a text version of the error which can then be displayed.
 
     E-mail Address Correction
     Since the e-mail validation routine returns detailed error information an automated system to correct common e-mail address mistakes can be easily created.  The following common mistakes can all be corrected automatically:
 
-    example2.aol.com – The most common error (at least in my experience) is when entering an e-mail address a user doesn’t hold shift properly and instead enters a 2.
+    example2.aol.com â€“ The most common error (at least in my experience) is when entering an e-mail address a user doesnâ€™t hold shift properly and instead enters a 2.
     example@.aol.com - This error is just an extra character entered by the user, of course example@aol.com was the intended e-mail address.
 
-    example8080 @ aol .com – In this case another common error, spaces.
-    A Cool Screen name@AOL.com – In this case the user entered what they thought was their e-mail address, except_ while AOL allows screen names to contain spaces, the Internet does not.
+    example8080 @ aol .com â€“ In this case another common error, spaces.
+    A Cool Screen name@AOL.com â€“ In this case the user entered what they thought was their e-mail address, except_ while AOL allows screen names to contain spaces, the Internet does not.
     myaddress@ispcom - In this case the period was not entered between ISP and Com.
 
 

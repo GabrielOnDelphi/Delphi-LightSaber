@@ -1,4 +1,4 @@
-UNIT cGraphResize32;
+﻿UNIT cGraphResize32;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -28,7 +28,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, Vcl.Graphics,
-  GR32, GR32_Transforms, GR32_Resamplers, ccCore;
+  GR32, GR32_Transforms, GR32_Resamplers, GR32_Backends, ccCore;
 
 
 CONST
@@ -113,7 +113,7 @@ end;
 procedure TGr32Stretch.StretchImage(Image: string; ExifRotate: Boolean);
 VAR Loader: TBitmap;
 begin
- Loader:= LoadGraph(Image, True);
+ Loader:= LoadGraph(Image, ExifRotate, True);
  TRY
   StretchImage(Loader);
  FINALLY

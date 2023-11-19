@@ -1,4 +1,4 @@
-UNIT cvStringGrid;
+﻿UNIT cvStringGrid;
 
 {--------------------------------------------------------------------------------------------------
   CubicDesign
@@ -67,8 +67,8 @@ TYPE
     procedure DrawCell(ACol, ARow: Longint; ARect: TRect; AState: TGridDrawState); override;
     { SORT }
     function  MouseOnSortPos     (MouseX, MouseColumn: Integer): Boolean;                                  { This is a helper function for Sort. It checks if the mouse has the right coordinates. If the mouse is between two cells it means the user wants to resize the cell not to sort it }
-    procedure NaturalSort        (iFrom, SortCol: Integer);                                                { In this procedure the algorithm expects numbers on that colum and not text }
-    procedure FastSort           (iFrom, SortCol: Integer; CaseSensitive: Boolean);
+    procedure NaturalSort        (SortCol: Integer);                                                { In this procedure the algorithm expects numbers on that colum and not text }
+    procedure FastSort           (SortCol: Integer; CaseSensitive: Boolean);
    public
     Delimiter: Char;                                                                                       { Delimiter between fields. Used when saving the file to disk }
     Tag1,Tag2,Tag3,Tag4,Tag5: string;                                                                      { User defined data to be stored when the grid is saved to disk }
@@ -608,20 +608,20 @@ end;
 
 function TEnhStrGrid.GetContent (Rectangle: TRect; Delimiter: Char= ','): string;                  { Returns the content of all cells. The cells are separated by 'Delimiter' }
 VAR
-   cl, lin: Integer;
+   cl, rw: Integer;
 
   function GetCellSafe: string;
   begin
-   Result:= Cells[cl, lin];
-   { If the chousen Delimiter already exists in our text it will fuck up the CSV format so we need to replace it with semi column (;) }
-   if Delimiter= ';'                                  { Make sure we won't replace semicol  }
-   then ReplaceChar(Result, Delimiter, ',')
-   else ReplaceChar(Result, Delimiter, ';');
+    Result:= Cells[cl, rw];
+    { If the chousen Delimiter already exists in our text it will fuck up the CSV format so we need to replace it with semi column (;) }
+    if Delimiter= ';'                                  { Make sure we won't replace semicol  }
+    then ReplaceChar(Result, Delimiter, ',')
+    else ReplaceChar(Result, Delimiter, ';');
   end;
 
 begin
   Result := '';
-  for lin := Rectangle.Top to Rectangle.Bottom DO
+  for rw := Rectangle.Top to Rectangle.Bottom DO
     for cl:= Rectangle.Left to Rectangle.Right DO
       if cl = Rectangle.Right
       then Result:= Result + GetCellSafe + CRLF               { Don't put a comma after the last column. Put an ENTER instead }
@@ -852,7 +852,7 @@ Begin
   BeginUpdate;
 
   { Sort }
-  NaturalSort(FixedRows, SortedCol);
+  NaturalSort(SortedCol);
 
   { Reverse sort }
   Ascending:= NOT Ascending;
@@ -867,7 +867,7 @@ end;
 
 
 { This works only for text. It doesn't sort numbers corectly. For example it sorts like this: 15, 150, 16 }
-procedure TEnhStrGrid.FastSort(iFrom, SortCol: Integer; CaseSensitive: Boolean);                        //////// http://www.delphiforfun.org/Programs/Delphi_Techniques/GridSort.htm
+procedure TEnhStrGrid.FastSort(SortCol: Integer; CaseSensitive: Boolean);                        //////// http://www.delphiforfun.org/Programs/Delphi_Techniques/GridSort.htm
 CONST
    ctHeaderLine = 1;                                                                               { because we dont want to sort the header}
 VAR
@@ -889,7 +889,7 @@ begin
 end;
 
 
-procedure TEnhStrGrid.NaturalSort(iFrom, SortCol: Integer);
+procedure TEnhStrGrid.NaturalSort(SortCol: Integer);
 CONST
    ctHeaderLine = 1;                                                                               { because we dont want to sort the header}
 VAR
@@ -1110,7 +1110,7 @@ begin
       0..2:
         begin
           // Code to be executed...
-          // Programmcode der ausgef�hrt werden soll
+          // Programmcode der ausgeführt werden soll
           ShowMessage('Column ' + IntToStr(acol));
           zelle := stringgrid1.CellRect(1, 1);
         end;

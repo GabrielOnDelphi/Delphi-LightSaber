@@ -1,4 +1,4 @@
-UNIT csShell;
+﻿UNIT csShell;
 
 {=============================================================================================================
    SYSTEM - Shell
@@ -42,9 +42,9 @@ USES
 {--------------------------------------------------------------------------------------------------
    CONTEXT MENU
 -------------------------------------------------------------------------------------------------}
- procedure AddContextMenu   (CONST CommandName, Extensions: string);                                overload;
+ function  AddContextMenu   (CONST CommandName, Extensions: string): Boolean;                       overload;
  procedure AddContextMenu   (CONST GUID: TGUID; CONST ShellExtDll, FileExt, UtilityName: string);   overload;
- procedure RemoveContextMenu(CONST GUID: TGUID; CONST ShellExtDll, FileExt, UtilityName: string);
+ procedure RemoveContextMenu(CONST GUID: TGUID; CONST FileExt, UtilityName: string);
  procedure InvokePropertiesDialog(CONST FileName: string);                                          { Shows the standard file properties dialog like in Windows Explorer }
 
 
@@ -322,7 +322,7 @@ begin
 end;
 
 
-procedure AddContextMenu(CONST CommandName, Extensions: string);                                 { Add current application in the 'properties' menu of this filetype. Example: AddContextMenu2('Open with '+ ctApp-Name2, '.nfo') }
+function AddContextMenu(CONST CommandName, Extensions: string): Boolean;                                 { Add current application in the 'properties' menu of this filetype. Example: AddContextMenu2('Open with '+ ctApp-Name2, '.nfo') }
 VAR
   extns: TStringList;
   reg: TRegistry;
@@ -330,6 +330,7 @@ VAR
   name: string;
   command: string;
 begin
+  Result:= False;
   reg := TRegistry.Create;
   reg.RootKey := HKEY_CLASSES_ROOT;
   extns := TStringList.Create;
@@ -355,12 +356,16 @@ begin
           // So now open the command key, creating it if required
           reg.Access := KEY_READ or KEY_WRITE;
           if reg.OpenKey ('command', TRUE)
-          then reg.WriteString ('', command);                                   // and write the command string as the default value
+          then
+           begin
+             reg.WriteString ('', command);                                   // and write the command string as the default value
+             Result:= true;
+           end;
          end;
        end;
       end;
     except
-     //todo: trap only specific exceptions
+      Result:= False; //todo: trap only specific exceptions
     END;
   FreeAndNil(extns);
   FreeAndNil(reg);
@@ -459,7 +464,7 @@ end;
 
 
 { Remove shell extension from the context menu }
-procedure RemoveContextMenu(CONST GUID: TGUID; CONST ShellExtDll, FileExt, UtilityName: string);
+procedure RemoveContextMenu(CONST GUID: TGUID; CONST FileExt, UtilityName: string);
 VAR Key: string;
     BufGUID: array [0..255] of WideChar;
     FileType: string;

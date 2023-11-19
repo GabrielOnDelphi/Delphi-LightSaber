@@ -1,4 +1,4 @@
-UNIT cGraphUtil;
+﻿UNIT cGraphUtil;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -217,10 +217,10 @@ end;
 
 procedure DrawBorder(Control: TWinControl);
 VAR
-   ParentControl: TWinControl;
-   canvas: TCanvas;
    r: TRect;
    i: Integer;
+   canvas: TCanvas;
+   ParentControl: TWinControl;
 begin
  ParentControl:= Control.Parent;
  Canvas:= TCanvas.Create; {!! This could be done also without creating a canvas. Just pass the canvas of a control (if you are "inside" the control }
@@ -951,12 +951,14 @@ VAR
   LStyle: TCustomStyleServices;
   LDetails: TThemedElementDetails;
 begin
+  Result:= clPink; // What should I return if not LStyle.Enabled
   LStyle := StyleServices;
-  if LStyle.Enabled then
-   begin
-    LDetails := LStyle.GetElementDetails(tpPanelBackground);        //Example tpPanelBevel  tpPanelBackground
-    LStyle.GetElementColor(LDetails, Elem, Result)                  //Example: ecFillColor ecBorderColor ecEdgeDkShadowColor
-   end;
+  if LStyle.Enabled
+  then
+    begin
+      LDetails := LStyle.GetElementDetails(tpPanelBackground);        //Example tpPanelBevel  tpPanelBackground
+      LStyle.GetElementColor(LDetails, Elem, Result)                  //Example: ecFillColor ecBorderColor ecEdgeDkShadowColor
+    end
 end;
 
 

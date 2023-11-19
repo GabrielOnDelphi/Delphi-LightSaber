@@ -55,6 +55,7 @@ USES
 
 TYPE
   TCubicBuffStream= class(System.Classes.TBufferedFileStream)
+  private
     public
      MagicNo: AnsiString; // Obsolete!
 
@@ -65,8 +66,8 @@ TYPE
      function  ReadDate    : TDateTime;
      function  ReadDouble  : Double;
      function  ReadEnter   : Boolean;
-     function  ReadInt64   : Int64;
      function  ReadInteger : Longint;
+     function  ReadInt64   : Int64;
      function  ReadShortInt: ShortInt;
      function  ReadSingle  : Single;
      function  ReadSmallInt: Smallint;
@@ -74,12 +75,13 @@ TYPE
      function  ReadStringU : string;
      function  ReadUInt64  : UInt64;
      function  ReadWord    : Word;
-     function  ReadChars    (Count: integer): string;
+     function  ReadCharsU   (Count: integer): string;
      function  ReadCharsA   (Count: Integer): AnsiString;
      function  ReadStringAR (CONST Len: integer): AnsiString;            { This is the relaxed version. It won't raise an error if there is not enough data (Len) to read }
      function  ReadStringA  (CONST Len: integer): AnsiString; overload;  { It will raise an error if there is not enough data (Len) to read }
      function  ReadStringUNoLen (CONST Len: Integer): string;
-     procedure ReadStrings   (TSL: TStrings);
+     procedure ReadStrings  (TSL: TStrings);  overload;
+     function  ReadStrings  : TStringList;    overload;
 
      procedure WriteBoolean  (b: Boolean);
      procedure WriteByte     (b: Byte);
@@ -117,7 +119,8 @@ TYPE
 
      { Header NEW }
      function  ReadHeader (CONST Signature: AnsiString): Word;                   overload;
-     function  ReadHeader (CONST Signature: AnsiString; Version: Word): Boolean; overload;
+     procedure ReadHeaderE(CONST Signature: AnsiString; Version: Word);          overload;
+     function  ReadHeaderB(CONST Signature: AnsiString; Version: Word): Boolean;
      procedure WriteHeader(CONST Signature: AnsiString; Version: Word);
 
      function  ReadCheckPoint: Boolean;
@@ -280,14 +283,13 @@ end;
   Read the first x chars in a file and compares it with MagicNo.
   If matches then reads another reads the FileVersion word.
   Returns the FileVersion. If magicno fails, it returns zero }
-function TCubicBuffStream.ReadHeader(CONST Signature: AnsiString; Version: Word): Boolean;
-VAR s: AnsiString;
+function TCubicBuffStream.ReadHeaderB(CONST Signature: AnsiString; Version: Word): Boolean;
 begin
  Assert(Signature > '', 'Signature is empty!');
  Assert(Version   > 0 , 'Version must be > 0');
 
- s:= ReadStringA;
- Result:= s = Signature;
+ VAR Sgn:= ReadStringA;
+ Result:= Sgn = Signature;
  if Result
  then Result:= ReadWord = Version;
 end;
@@ -297,15 +299,34 @@ end;
   Returns version number or 0 on fail.
   Useful when we have multiple file versions }
 function TCubicBuffStream.ReadHeader(CONST Signature: AnsiString): Word;
-VAR s: AnsiString;
 begin
  Assert(Signature > '', 'Signature is empty!');
 
- s:= ReadStringA;
- if s = Signature
+ VAR Sgn:= ReadStringA;
+ if Sgn = Signature
  then Result:= ReadWord
  else Result:= 0;
 end;
+
+
+{ Same as above but does the check internally and raises and exception if header sign/ver does not match }
+procedure TCubicBuffStream.ReadHeaderE(CONST Signature: AnsiString; Version: Word);
+begin
+ Assert(Signature > '', 'Signature is empty!');
+
+ VAR Sgn:= ReadStringA;
+ if Sgn = Signature
+ then
+   begin
+     VAR v:= ReadWord;
+     if v <> Version
+     then RAISE Exception.Create('Invalid file version in '+ FileName+ CRLF+ IntToStr(Version)+ ' expected. '+ IntToStr(v)+ ' found.');
+   end
+ else
+   RAISE Exception.Create('Invalid file signature in '+ FileName+ CRLF+ string(Signature)+ ' expected. '+ string(Sgn)+ ' found.');
+end;
+
+
 
 
 procedure TCubicBuffStream.WriteHeader(CONST Signature: AnsiString; Version: Word);
@@ -383,7 +404,7 @@ end;
 
 
 
-function TCubicBuffStream.ReadChars(Count: Integer): string;        { Works for both Delphi7 and Delphi UNICODE }
+function TCubicBuffStream.ReadCharsU(Count: Integer): string;        { Works for both Delphi7 and Delphi UNICODE }
 VAR UTF: UTF8String;
 begin
  if Count < 1 then EXIT('');
@@ -419,6 +440,13 @@ end;
 procedure TCubicBuffStream.ReadStrings(TSL: TStrings);
 begin
  TSL.Text:= ReadStringU;
+end;
+
+
+function TCubicBuffStream.ReadStrings: TStringList;
+begin
+ Result:= TStringList.Create;
+ Result.Text:= ReadStringU;
 end;
 
 

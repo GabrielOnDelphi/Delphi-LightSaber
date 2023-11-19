@@ -68,7 +68,7 @@ begin
  WITH frmEditor DO
  begin
    LoadForm(frmEditor, TRUE);            { Position form }
-   Translator.LoadTranlationForm(frmEditor);
+   Translator.LoadFormTranlation(frmEditor);
    Font:= Application.MainForm.Font;     { Themes }
    Params:= aParams;
    GuiFromObject;

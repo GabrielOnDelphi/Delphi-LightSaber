@@ -1,4 +1,4 @@
-UNIT cmDebugger;
+﻿UNIT cmDebugger;
 
 {=============================================================================================================
    2023.01
@@ -294,6 +294,7 @@ begin
       else
         if NanoSec < 1000000000000
         then Result := Real2Str(NanoSec / 1000000000, 3)+ 's'
+        else Result := Real2Str(NanoSec / 60*1000000000, 3)+ 'm'
 end;
 
 

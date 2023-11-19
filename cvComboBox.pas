@@ -30,13 +30,16 @@ TYPE
    public
     constructor Create(AOwner : TComponent); override;
 
+    { Set selection }
     function  SelectedItem: string;            { Returns the selected item }
     function  SelectedItemSafe: string;        { Returns the selected item. No exception if no item selected! }
     function  SelectedItemForce: string;       { Returns the selected item. If no item is selected the it selects the first item first. }
     function  SelectedObject: TObject;
 
+    { Get selection }
     function  SelectItem(CONST ItemText: string): Integer;
     function  SelectFirstItem: Boolean;
+    function  SelectObject(AObject: TObject): Boolean;
 
     { Dual items }
     procedure DrawItem (Index: Integer; Rect: TRect; State: TOwnerDrawState);  override;
@@ -87,49 +90,81 @@ end;
 
 
 
-
+{-----------------------------------------------------------------------------------------------------------------------
+   SET SELECTION
+-----------------------------------------------------------------------------------------------------------------------}
 
 function TCubicComboBox.SelectItem(CONST ItemText: string): Integer;  { Selects the item containing the specified text. The search is case Insensitive. If IsDualItem mode is active, it returns the 'internal command' associated with this item }
 VAR
    i: Integer;
 begin
- if ItemCount = 0 then EXIT(-1);
  Result:= -1;
+ if ItemCount = 0 then EXIT;
 
- if NOT IsDualItem
- then Result:= Items.IndexOf(ItemText)
+ if IsDualItem
+ then
+   begin
+    for i:= 0 to Items.Count-1 DO
+     if SameText(Items.Names[i], ItemText) then        //Hint: Use Items.ValueFromIndex[ItemIndex] to get the string at ItemIndex
+      begin
+        Result:= i;
+        Break;
+      end;
+   end
  else
-   for i:= 0 to Items.Count-1 DO
-    if SameText(Items.Names[i], ItemText) then        // use Items.ValueFromIndex[ItemIndex] to get the first string
-     begin
-      Result:= i;
-      Break;
-     end;
+   Result:= Items.IndexOf(ItemText);
 
- ItemIndex:= Result;  { If no item with this name is found, the -1 item (no item) is selected }
+ ItemIndex:= Result;  { If no item found, deselect all }
 end;
 
 
-function TCubicComboBox.SelectedItem: string;   { Returns the selected item. If IsDualItem mode is active, it returns the 'internal command' associated with this item }
+function TCubicComboBox.SelectObject(aObject: TObject): Boolean;
+begin
+  VAR Index:= Items.IndexOfObject(aObject);
+  Result:= Index >= 0;
+  if Result
+  then ItemIndex := Index;
+end;
+
+
+function TCubicComboBox.SelectFirstItem: Boolean;
+begin
+ Result:= Items.Count > 0;
+ if Result
+ then ItemIndex:= 0;
+end;
+
+
+
+
+
+
+{-----------------------------------------------------------------------------------------------------------------------
+   GET SELECTION
+-----------------------------------------------------------------------------------------------------------------------}
+
+{ Returns the selected item.
+  If IsDualItem mode is active, it returns the 'internal command' associated with this item. }
+function TCubicComboBox.SelectedItem: string;
 begin
  if IsDualItem
- then Result:= Items.Names[ItemIndex]        // use Items.ValueFromIndex[ItemIndex] to get the second string
+ then Result:= Items.Names[ItemIndex]
  else Result:= Items[ItemIndex];
 end;
 
 
-function TCubicComboBox.SelectedItemSafe: string;   { Returns the selected item. If IsDualItem mode is active, it returns the 'internal command' associated with this item }
+function TCubicComboBox.SelectedItemSafe: string;
 begin
  if (ItemCount <= 0) OR (ItemIndex < 0)
  then Result:= ''
  else
    if IsDualItem
-   then Result:= Items.Names[ItemIndex]        // use Items.ValueFromIndex[ItemIndex] to get the second string
+   then Result:= Items.Names[ItemIndex]
    else Result:= Items[ItemIndex];
 end;
 
 
-function TCubicComboBox.SelectedItemForce: string;   { Returns the selected item. If no item is selected the it selects the first item first. }
+function TCubicComboBox.SelectedItemForce: string;
 begin
  if ItemCount = 0 then EXIT('');
  if ItemIndex < 0
@@ -140,22 +175,10 @@ end;
 
 function TCubicComboBox.SelectedObject: TObject;
 begin
- Result:= Items.Objects[ItemIndex];
+ if ItemIndex >= 0
+ then Result:= Items.Objects[ItemIndex]
+ else Result:= NIL;
 end;
-
-
-
-
-
-
-
-
-function TCubicComboBox.SelectFirstItem: Boolean;
-begin
- Result:= Items.Count > 0;
- if Result then ItemIndex:= 0;
-end;
-
 
 
 

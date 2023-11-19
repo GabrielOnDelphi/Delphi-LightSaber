@@ -1,4 +1,4 @@
-UNIT ciCommonWebDown;
+﻿UNIT ciCommonWebDown;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
@@ -7,7 +7,6 @@ UNIT ciCommonWebDown;
 
   Common WebSite Downloader
   This tool will locate the high resolution images on webpages of popular websites like: Unsplash.com, Pexels, pixabay.com, wallpaperscraft.com (work in progress)
-
   Unsplash.com
     The user provides the URL of a web page that holds an image.
     The program will try to automatically locate the high res image from that page.
@@ -18,7 +17,7 @@ INTERFACE
 USES
   System.SysUtils, ccCore;
 
-function GetUnsplashImage(URL, LocalFile: string): Boolean;
+function GetUnsplashImage(CONST URL, LocalFile: string): Boolean;
 
 IMPLEMENTATION
 
@@ -34,7 +33,7 @@ USES ciDownload, ciHTML;
 --------------------------------------------------------------------------------------------------}
 { Receive the URL of a Unsplash.com webpage and extracts the main image from it.
   Returns the file name of the file downloaded to disk }
-function GetUnsplashImage(URL, LocalFile: string): Boolean;
+function GetUnsplashImage(CONST URL, LocalFile: string): Boolean;
 VAR
    HighResImg, Tag, HTML: string;
 begin

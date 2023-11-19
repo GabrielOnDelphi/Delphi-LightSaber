@@ -1,4 +1,4 @@
-UNIT cvMemo;
+﻿UNIT cvMemo;
 
 {--------------------------------------------------------------------------------------------------
   CubicDesign
@@ -205,7 +205,7 @@ end;
 
 function TCubicMemo.CharToLine(CONST CharNo: Integer): Integer;                                    { Gets the index of the line that contains the specified character index in a multiline edit control.  }
 begin
- Result:= Perform(EM_LINEFROMCHAR, CharNo, 0)                                                      { CharNo = The character index of the character contained in the line whose number is to be retrieved. If this parameter is �1, EM_LINEFROMCHAR retrieves either the line number of the current line (the line containing the caret) or, if there is a selection, the line number of the line containing the beginning of the selection.  }
+ Result:= Perform(EM_LINEFROMCHAR, CharNo, 0)                                                      { CharNo = The character index of the character contained in the line whose number is to be retrieved. If this parameter is –1, EM_LINEFROMCHAR retrieves either the line number of the current line (the line containing the caret) or, if there is a selection, the line number of the line containing the beginning of the selection.  }
 end;
 
 function TCubicMemo.CursorToChar(CONST MousePosition: TPoint): Integer;                            { Returns the index of the character closest to the [mouse pointer] }
@@ -385,12 +385,12 @@ end;
 
 procedure TCubicMemo.AddEntry(CONST aText: string; Number: Integer);
 begin
- Lines.Add(Text+ IntToStr(Number));
+ Lines.Add(aText+ IntToStr(Number));
 end;
 
 procedure TCubicMemo.AddSeparator;
 begin
- Lines.Add(crlf+ '____________________'+ CRLF);
+ Lines.Add(CRLF+ '____________________'+ CRLF);
 end;
 
 
@@ -776,16 +776,16 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TCubicMemo.CenterInView(LineNum: Integer);                                               { Center the specified line in the middle of the view } { Source: http://stackoverflow.com/questions/2822471/delphi-center-specific-line-in-trichedit-by-scrolling }
 var
-  VisibleLines: Integer;
+  VisibLines: Integer;
   TopLine: Integer;
   FirstLine: Integer;
 begin
   FirstLine := Perform(EM_GETFIRSTVISIBLELINE, 0, 0);
-  VisibleLines := Round(ClientHeight / Abs(Font.Height));
+  VisibLines := Round(ClientHeight / Abs(Font.Height));
 
-  if VisibleLines <= 1
+  if VisibLines <= 1
   then TopLine := LineNum
-  else TopLine := Max(LineNum - Round((VisibleLines/2)) + 1, 0);
+  else TopLine := Max(LineNum - Round((VisibLines/2)) + 1, 0);
 
   if FirstLine <> TopLine
   then Perform(EM_LINESCROLL, 0, TopLine - FirstLine);

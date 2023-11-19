@@ -6,12 +6,12 @@ UNIT FormLog;
    See Copyright.txt
 
    Visual log (window).
-   More details in clLogUtils.pas
+   More details in ccLogUtils.pas
 
    Usage:
      It is CRITICAL to create the AppDataEx object as soon as the application starts. Prefferably in the DPR file before creating the main form!
        DPR:
-          AppData:= TAppDataEx.Create('MyCollApp');
+          AppData:= TAppData.Create('MyCollApp');
        OnLateInitialize:
           AppData.Initilizing:= False;
 
@@ -22,10 +22,11 @@ UNIT FormLog;
 =============================================================================================================}
 
 INTERFACE
+{.$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
-  clRichLogTrack, clRichLog, ccAppData;
+  System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
+  ccRichLogTrack, ccRichLog;
 
 TYPE
   TfrmLog = class(TForm)
@@ -37,60 +38,16 @@ TYPE
     trkLogVerb : TRichLogTrckbr;
     procedure btnClearClick(Sender: TObject);
     procedure LogError     (Sender: TObject);
-    procedure FormDestroy  (Sender: TObject);
     procedure FormCreate   (Sender: TObject);
+    procedure FormDestroy  (Sender: TObject);  // Would be nice to make this protected but we can't. All event handlers must be accesible/visible
   end;
-
-TYPE
-  TAppDataEx= class(TAppData)
-  public
-    constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''); override;
-    destructor Destroy; override;
-  end;
-
-
-{ Quick Utils }
-procedure LogAddVerb (Mesaj: string);
-procedure LogAddHint (Mesaj: string);
-procedure LogAddInfo (Mesaj: string);
-procedure LogAddImpo (Mesaj: string);
-procedure LogAddWarn (Mesaj: string);
-procedure LogAddError(Mesaj: string);
-procedure LogAddMsg  (Mesaj: string);
-procedure LogAddBold (Mesaj: string);
-
-procedure LogAddEmptyRow;
-procedure LogClear;
-procedure LogSaveAsRtf(CONST FileName: string);
-
-procedure ShowLog(Center: Boolean= FALSE);
-
 
 
 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   ccCore, ccIniFileVCL;
-
-VAR
-   frmLog: TfrmLog = NIL; // Keep this private
-
-
-
-{-------------------------------------------------------------------------------------------------------------
-   MAIN FUNCTIONS
--------------------------------------------------------------------------------------------------------------}
-procedure ShowLog(Center: Boolean= FALSE);
-begin
- frmLog.Show;
- if Center
- then CenterForm(frmLog{, Application.MainForm});
-end;
-
-
-
-
+   ccIniFileVCL, ccAppData;
 
 
 
@@ -105,6 +62,7 @@ begin
 end;
 
 
+// This is called automatically by "Finalization"
 procedure TfrmLog.FormDestroy(Sender: TObject);
 begin
  Container.Parent:= Self;
@@ -126,135 +84,5 @@ begin
 end;
 
 
-
-
-
-
-{--------------------------------------------------------------------------------------------------
-   TAppDataEx
-
-   Tester: c:\Myprojects\Packages\CubicCommonControls\Demo\CubicCore\GUI Autosave\DemoCore.dpr
---------------------------------------------------------------------------------------------------}
-constructor TAppDataEx.Create(CONST aAppName: string; CONST WindowClassName: string= '');
-begin
-  inherited Create(aAppName, WindowClassName);
-
- { Call this as soon as possible so it can catch all Log messages generated during app start up. A good place might be in your DPR file before Application.CreateForm(TMainForm, frmMain) }
- Assert(frmLog = NIL, 'frmLog already created!');
- frmLog:= TfrmLog.Create(NIL);
- LoadForm(frmLog);
- Assert(Application.MainForm <> frmLog, 'The Log should not be the MainForm'); { Just in case: Make sure this is not the first form created }
-end;
-
-
-
-
-
-destructor TAppDataEx.Destroy;
-begin
-  FreeAndNil(frmLog); { Call this as late as possible, on application shutdown }
-  inherited;
-end;
-
-
-
-
-
-
-
-
-
-{--------------------------------------------------------------------------------------------------
-   UTILS
-   SEND MESSAGES DIRECTLY TO LOG WND
---------------------------------------------------------------------------------------------------}
-procedure LogAddVerb(Mesaj: string);
-begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddVerb(Mesaj);
-end;
-
-
-procedure LogAddHint(Mesaj: string);
-begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddHint(Mesaj);
-end;
-
-
-procedure LogAddInfo(Mesaj: string);
-begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddInfo(Mesaj);
-end;
-
-
-procedure LogAddImpo(Mesaj: string);
-begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddImpo(Mesaj);
-end;
-
-
-procedure LogAddWarn(Mesaj: string);
-begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddWarn(Mesaj);
-end;
-
-
-procedure LogAddError(Mesaj: string);
-begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddError(Mesaj);
-
- if frmLog.chkAutoOpen.Checked
- then ShowLog;
-end;
-
-
-procedure LogAddMsg(Mesaj: string);  { Always show this message, no matter the verbosity of the log. Equivalent to Log.AddError but the msg won't be shown in red. }
-begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddMsg(Mesaj);
-end;
-
-
-procedure LogAddBold(Mesaj: string);
-begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddBold(Mesaj);
-end;
-
-
-
-
-
-
-procedure LogClear;
-begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddEmptyRow;
-end;
-
-
-procedure LogAddEmptyRow;
-begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddEmptyRow;
-end;
-
-procedure LogSaveAsRtf(CONST FileName: string);
-begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.SaveAsRtf(FileName);
-end;
-
-
-
-INITIALIZATION
-
-FINALIZATION
-  FreeAndNil(AppData); // This will release also the frmLog.
 
 end.

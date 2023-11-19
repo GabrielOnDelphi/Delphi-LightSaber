@@ -1,4 +1,4 @@
-UNIT ciHtmlImg;
+﻿UNIT ciHtmlImg;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
@@ -23,12 +23,12 @@ USES
 
 
 { <IMG> TAGS }
-function ExtractIMGTags        (HTMLBody: string): TStringList;            { Extract <IMG> tags images from HTML body }      { Old name: ExtractImage_Img }
+function ExtractIMGTags        (CONST HTMLBody: string): TStringList;            { Extract <IMG> tags images from HTML body }      { Old name: ExtractImage_Img }
 
 { URLs }
-function ExtractImagesFromIMG  (HTMLBody: string): TStringList;            { Extract images from <IMG src> tags }            { Oldname: ExtractImage_Img }
-function ExtractImagesFromAHREF(HtmlBody: string): TStringList;            { Extract images from '<a href>' tags }           { Oldname: ExtractImage_Href }
-function ExtractImages         (HtmlBody: string): TStringList;            { Extract images from '<a href>' and <img>'. }    { Oldname: ExtractImages }
+function ExtractImagesFromIMG  (CONST HTMLBody: string): TStringList;            { Extract images from <IMG src> tags }            { Oldname: ExtractImage_Img }
+function ExtractImagesFromAHREF(CONST HtmlBody: string): TStringList;            { Extract images from '<a href>' tags }           { Oldname: ExtractImage_Href }
+function ExtractImages         (CONST HtmlBody: string): TStringList;            { Extract images from '<a href>' and <img>'. }    { Oldname: ExtractImages }
 
 { RELATIVE PATH }
 function MakeImgRelativePaths(CONST HtmlBody, RelativeTo: string): string; { Locates all IMG tags in a HTML document and converts their SRC (paths) from full path to relative path }
@@ -76,7 +76,7 @@ end;   }
 
 { Extracts all <IMG> tags from a HTML
   Works if the tag is split on two lines. }
-function ExtractIMGTags(HTMLBody: string): TStringList;
+function ExtractIMGTags(CONST HTMLBody: string): TStringList;
 VAR
    LowBody: string;
    Offset, TextLen, iEnd, iStart1: Integer;
@@ -114,7 +114,7 @@ end;
 
 
 { Extracts URL of images from <IMG scr="xxx"> tags }
-function ExtractImagesFromIMG(HTMLBody: string): TStringList;   { Used by: StormyWebSite Builder 2017.08 / AID 2017.10 }
+function ExtractImagesFromIMG(CONST HTMLBody: string): TStringList;   { Used by: StormyWebSite Builder 2017.08 / AID 2017.10 }
 VAR
    i: Integer;
    CurTag, ImgURL: string;
@@ -139,7 +139,7 @@ end;
 { Extract URLs of images from all <a href> tags in a HTML file.
   Return a list URLs.
   Example:  <a href="www.tst.com/1.jpg"> returns 'www.tst.com/1.jpg' }
-function ExtractImagesFromAHREF(HtmlBody: string): TStringList;
+function ExtractImagesFromAHREF(CONST HtmlBody: string): TStringList;
 VAR
    CurTag, ImgURL: string;
    AHRefTags: TStringList;
@@ -168,7 +168,7 @@ end;
 { Extract images from '<a href>' and <img src="">'.
   Returns the URL of the image(s).
   ParentPageURL is the URL of the page from where the link was extracted. }
-function ExtractImages(HtmlBody: string): TStringList;   { use a separate procedure to add ParentPageURL to all urls WHEN necessary }
+function ExtractImages(CONST HtmlBody: string): TStringList;   { use a separate procedure to add ParentPageURL to all urls WHEN necessary }
 VAR
    Temp: TStringList;
 begin

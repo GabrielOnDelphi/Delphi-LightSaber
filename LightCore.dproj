@@ -32,23 +32,22 @@
         <SanitizedProjectName>LightCore</SanitizedProjectName>
         <DCC_Alignment>2</DCC_Alignment>
         <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
-        <DCC_DcuOutput>.\$(ProductVersion)\$(Platform)\$(Config)</DCC_DcuOutput>
+        <DCC_DcuOutput>.\$(ProductVersion)\$(Platform)_$(Config)</DCC_DcuOutput>
         <DCC_Description>LightSaber - Core library</DCC_Description>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
         <DCC_MapFile>3</DCC_MapFile>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_RangeChecking>true</DCC_RangeChecking>
-        <DllSuffix>$(Auto)</DllSuffix>
+        <DllSuffix>270</DllSuffix>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
-        <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
         <VerInfo_Keys>CompanyName=Gabriel Moraru;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UsePackage>IndyProtocols;IndyCore;vclimg;vcl;rtl;xmlrtl;vclwinx;vclactnband;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>IndyProtocols;IndyCore;vclimg;vcl;rtl;xmlrtl;vclwinx;vclactnband;bindengine;vclie;VclSmp;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -82,6 +81,12 @@
         <DCCReference Include="ccCompiler.pas"/>
         <DCCReference Include="ccRegistry.pas"/>
         <DCCReference Include="ccStreamMem.pas"/>
+        <DCCReference Include="ccLogUtils.pas"/>
+        <DCCReference Include="ccRichLog.pas"/>
+        <DCCReference Include="ccRichLogTrack.pas"/>
+        <DCCReference Include="FormLog.pas">
+            <FormType>dfm</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -102,13 +107,7 @@
                 <Source>
                     <Source Name="MainSource">LightCore.dpk</Source>
                 </Source>
-                <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LightVisControls280.bpl">LightSaber - Visual Controls</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\BioControl280.bpl">BioControls</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\BionixVCL280.bpl">BioniX VCL</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp280.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                </Excluded_Packages>
+                <Excluded_Packages/>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>
@@ -119,4 +118,5 @@
     </ProjectExtensions>
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+    <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
 </Project>

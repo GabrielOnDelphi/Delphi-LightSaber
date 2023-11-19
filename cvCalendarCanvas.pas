@@ -1,4 +1,4 @@
-UNIT cvCalendarCanvas;
+ï»¿UNIT cvCalendarCanvas;
 {-------------------------------------------------------------------------------------------------------------
   Freeware
   Calendar descended from TComponent
@@ -46,7 +46,7 @@ UNIT cvCalendarCanvas;
 INTERFACE
 
 USES
-  System.SysUtils, System.Types, WinApi.Windows, System.Classes, Graphics;
+  System.SysUtils, System.Types, WinApi.Windows, System.Classes, Vcl.Graphics;
 
 CONST
   BORDER = 2;
@@ -1045,7 +1045,7 @@ begin
   if FGermanDate then
   begin
    if rDayOfWeek(JDate) in [5,6,7]  //1.1. ist Fr, Sa, So
-   then JDate:=JDate+(8-rDayOfWeek(JDate))       //Dann gehört diese Woche noch zum letzten Jahr JDate auf nächsten Montag erhöhen
+   then JDate:=JDate+(8-rDayOfWeek(JDate))       //Dann gehÃ¶rt diese Woche noch zum letzten Jahr JDate auf nÃ¤chsten Montag erhÃ¶hen
    else
      if rDayOfWeek(JDate)>1
      then JDate:=JDate-(rDayOfWeek(JDate)-1);      //Sonst JDate auf Montag erniedrigen
@@ -1056,8 +1056,8 @@ begin
    then           //1.1. ist Fr, Sa, So
      begin
       if rDayOfWeek(JDate)>1
-      then JDate:=JDate+(8-rDayOfWeek(JDate));    //Dann gehört diese Woche      //noch zum letzten Jahr
-     end                                            //JDate auf nächsten Montag erhöhen
+      then JDate:=JDate+(8-rDayOfWeek(JDate));    //Dann gehÃ¶rt diese Woche      //noch zum letzten Jahr
+     end                                            //JDate auf nÃ¤chsten Montag erhÃ¶hen
    else
      JDate:=JDate-(rDayOfWeek(JDate)-1);           //Sonst JDate auf Montag erniedrigen
   end;
@@ -1083,18 +1083,18 @@ begin
 
   if yy< 9999 then
   begin
-   d3:=EncodeDate(yy+1, 1, 1);     // nächstes Jahr
+   d3:=EncodeDate(yy+1, 1, 1);     // nÃ¤chstes Jahr
    W3:=JulDate1stWeek(d3);
   end;
 
-  if W3<=JDate then              //Woche gehört schon zum nächsten Jahr
+  if W3<=JDate then              //Woche gehÃ¶rt schon zum nÃ¤chsten Jahr
   begin
    d1:=JDate-W3;
    Result := (trunc(d1)div 7)+1;
    Exit;
   end;
 
-  if W1>JDate then              //Woche gehört noch zum vorigem Jahr
+  if W1>JDate then              //Woche gehÃ¶rt noch zum vorigem Jahr
   begin
    d1:=JDate-W2;
    Result := (trunc(d1)div 7)+1;
@@ -1233,7 +1233,7 @@ end;
 
 procedure TCalendarCanvas.SetFont(const Value: TFont);
 begin
-  FCanvas.Font:= Font;
+  FCanvas.Font:= Value;
 end;
 
 

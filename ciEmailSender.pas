@@ -20,7 +20,7 @@ function SendEmail(SMTP: TIdSMTP; CONST AdrTo, AdrFrom, Subject, Body, HtmlImage
 IMPLEMENTATION
 
 USES
-  IdAttachmentFile, IdMessageBuilder, ccCore;
+  IdAttachmentFile, IdMessageBuilder, ccAppData, ccCore;
 
 
 
@@ -66,8 +66,8 @@ begin
   EXCEPT
     on E: Exception DO
      begin
-      LogAddError('Cannot connect to the email server.');
-      LogAddError(E.Message);
+      AppData.LogError('Cannot connect to the email server.');
+      AppData.LogError(E.Message);
      end;
   END;
 
@@ -79,8 +79,8 @@ begin
    EXCEPT
      on E:Exception DO
       begin
-       LogAddError('Connected to server but could not send email!');
-       LogAddError(E.Message);
+       AppData.LogError('Connected to server but could not send email!');
+       AppData.LogError(E.Message);
       end;
    END;
 

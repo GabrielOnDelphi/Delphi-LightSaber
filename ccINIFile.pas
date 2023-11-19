@@ -1,4 +1,4 @@
-UNIT ccINIFile;
+﻿UNIT ccINIFile;
 
 {=======================================================================================================================
   CubicDesign
@@ -36,7 +36,6 @@ TYPE
   
 TYPE
  TCubicIniFile = class(TIniFile)
-  private
   protected
     FSection: string;
   public
@@ -174,6 +173,7 @@ begin
 end;
 
 
+//ToDo: Return value of function 'TCubicIniFile.Read' might be undefined
 function TCubicIniFile.Read(CONST Ident: string): FontStruct;
 begin
  if ValueExists(FSection, Ident+ 'Name') then
@@ -300,8 +300,6 @@ class function TCubicIniFile.AsString: string;
 begin
  Result:= StringFromFile(AppData.IniFile);
 end;
-
-
 
 
 

@@ -1,4 +1,4 @@
-UNIT csWMIResolution;
+﻿UNIT csWMIResolution;
 
 {=============================================================================================================
    SYSTEM - WMI
@@ -114,6 +114,7 @@ begin
 end;
 
 
+//ToDo: Return value of function 'GetMonitorInfoWMI' might be undefined
 function GetMonitorInfoWMI: TMonitorInfo;
 var
   objWMIService: OleVariant;

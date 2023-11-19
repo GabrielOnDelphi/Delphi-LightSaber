@@ -1,4 +1,4 @@
-UNIT ccBinary;
+﻿UNIT ccBinary;
  
 {=============================================================================================================
    CubicDesign
@@ -763,22 +763,21 @@ end;
 
 
 function ReadMotorolaWord(Stream: TStream): Word;
-TYPE
-  TMotorolaWord = record
-    case Byte of
-      0: (Value: Word);
-      1: (Byte1, Byte2: Byte);
-  end;
+ TYPE
+   TMotorolaWord = record
+     case Byte of
+       0: (Value: Word);
+       1: (Byte1, Byte2: Byte);
+   end;
 
-VAR
-   MW: TMotorolaWord;
+ VAR
+    MW: TMotorolaWord;
 begin
   { It would probably be better to just read these two bytes in normally and then do a small ASM routine to swap them.  But we aren't talking about reading entire files, so I doubt the performance gain would be worth the trouble. }
   Stream.Read(MW.Byte2, SizeOf(Byte));
   Stream.Read(MW.Byte1, SizeOf(Byte));
   Result:= MW.Value;
 end;
-
 
 (*
 SEE THIS:
@@ -810,7 +809,10 @@ end;
 
 *)
 
- end.
+end.
+
+
+
 
 
 

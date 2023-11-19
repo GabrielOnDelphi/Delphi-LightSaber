@@ -1,4 +1,5 @@
 *.~*~
+*.dsk
 Proteus/cpProteus.inc
 Proteus/cpProteus.pas
 Proteus/cpProteusCertificate.pas

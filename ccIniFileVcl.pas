@@ -1,4 +1,4 @@
-UNIT ccINIFileVcl;
+﻿UNIT ccINIFileVcl;
 
 {=============================================================================================================
   CubicDesign
@@ -577,8 +577,8 @@ procedure TCubicIniFileVcl.WriteGroup(WinCtrl: TWinControl);  { Save/load all  i
 VAR i: Integer;
 begin
  for i:= 0 to WinCtrl.ControlCount-1 DO
-   if IsSupported(WinCtrl)
-   then WriteComp(WinCtrl)
+   if IsSupported(WinCtrl.Controls[i])
+   then WriteComp(WinCtrl.Controls[i])
 end;
 
 
@@ -587,8 +587,8 @@ procedure TCubicIniFileVcl.ReadGroup(WinCtrl: TWinControl);
 VAR i: Integer;
 begin
  for i:= 0 to WinCtrl.ControlCount-1 DO
-   if IsSupported(WinCtrl)
-   then ReadComp(WinCtrl);
+   if IsSupported(WinCtrl.Controls[i])
+   then ReadComp(WinCtrl.Controls[i]);
 end;
 
 
