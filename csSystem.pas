@@ -643,26 +643,28 @@ end;
    PROCESSES
 --------------------------------------------------------------------------------------------------}
 { Returns True if the specified process if found running
-  Drawnbacks: The process name does not contain the full path! }
+  Drawnbacks:
+     The Process.szExeFile name does not contain the full path so in case there are multiple processes with
+     the same file name, but running from different paths we won't be able to differentiate between them! }
 function ProcessRunning(ExeFileName: string): Boolean;
 var
-  FSnapshotHandle: THandle;
-  FProcessEntry32: TProcessEntry32;
+  SnapshotHandle: THandle;
+  Process: TProcessEntry32;
 begin
+  Result := FALSE;
   ExeFileName:= LowerCase(ExeFileName);
-  FSnapshotHandle := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  SnapshotHandle:= CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   TRY
-    FProcessEntry32.dwSize := SizeOf(FProcessEntry32);
-    Result := Process32First(FSnapshotHandle, FProcessEntry32);
-    if Result then
+    Process.dwSize := SizeOf(Process);
+    if Process32First(SnapshotHandle, Process) then
       REPEAT
-        VAR LowProcName:= LowerCase(FProcessEntry32.szExeFile);
+        VAR LowProcName:= LowerCase(Process.szExeFile);
         if (LowProcName = ExeFileName)
         OR (LowProcName = ExtractFileName(ExeFileName))
         then EXIT(True);
-      UNTIL NOT Process32Next(FSnapshotHandle, FProcessEntry32);
+      UNTIL NOT Process32Next(SnapshotHandle, Process);
   FINALLY
-    CloseHandle(FSnapshotHandle);
+    CloseHandle(SnapshotHandle);
   END;
 end;
 
