@@ -18,13 +18,7 @@
         <Projects Include="LightInternet.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Demo\LightUpdater\Tester_Updater.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="LightGraphics.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="CubicProteus.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="LightVisControls.dproj">
@@ -43,9 +37,6 @@
             <Dependencies/>
         </Projects>
         <Projects Include="..\..\Biology\Baser\!DnaBaser src\DnaBaser5.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="..\..\Projects System\Easy Tune delayed startup\KeepItAlive.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -101,15 +92,6 @@
     <Target Name="LightInternet:Make">
         <MSBuild Projects="LightInternet.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Tester_Updater">
-        <MSBuild Projects="Demo\LightUpdater\Tester_Updater.dproj"/>
-    </Target>
-    <Target Name="Tester_Updater:Clean">
-        <MSBuild Projects="Demo\LightUpdater\Tester_Updater.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="Tester_Updater:Make">
-        <MSBuild Projects="Demo\LightUpdater\Tester_Updater.dproj" Targets="Make"/>
-    </Target>
     <Target Name="LightGraphics">
         <MSBuild Projects="LightGraphics.dproj"/>
     </Target>
@@ -118,15 +100,6 @@
     </Target>
     <Target Name="LightGraphics:Make">
         <MSBuild Projects="LightGraphics.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="CubicProteus">
-        <MSBuild Projects="CubicProteus.dproj"/>
-    </Target>
-    <Target Name="CubicProteus:Clean">
-        <MSBuild Projects="CubicProteus.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="CubicProteus:Make">
-        <MSBuild Projects="CubicProteus.dproj" Targets="Make"/>
     </Target>
     <Target Name="LightVisControls">
         <MSBuild Projects="LightVisControls.dproj"/>
@@ -182,32 +155,17 @@
     <Target Name="DnaBaser5:Make">
         <MSBuild Projects="..\..\Biology\Baser\!DnaBaser src\DnaBaser5.dproj" Targets="Make"/>
     </Target>
-    <Target Name="KeepItAlive">
-        <MSBuild Projects="..\..\Projects System\Easy Tune delayed startup\KeepItAlive.dproj"/>
-    </Target>
-    <Target Name="KeepItAlive:Clean">
-        <MSBuild Projects="..\..\Projects System\Easy Tune delayed startup\KeepItAlive.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="KeepItAlive:Make">
-        <MSBuild Projects="..\..\Projects System\Easy Tune delayed startup\KeepItAlive.dproj" Targets="Make"/>
-    </Target>
     <Target Name="Build">
-        <CallTarget Targets="ThirdPartyLibs;LightCore;LightCommon;LightTranslator;LightInternet;Tester_Updater;LightGraphics;CubicProteus;LightVisControls;BionixVCL;BionixWallpaper;BioControl;DemoAllVisualControls;DnaBaser5;KeepItAlive"/>
+        <CallTarget Targets="ThirdPartyLibs;LightCore;LightCommon;LightTranslator;LightInternet;LightGraphics;LightVisControls;BionixVCL;BionixWallpaper;BioControl;DemoAllVisualControls;DnaBaser5"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="ThirdPartyLibs:Clean;LightCore:Clean;LightCommon:Clean;LightTranslator:Clean;LightInternet:Clean;Tester_Updater:Clean;LightGraphics:Clean;CubicProteus:Clean;LightVisControls:Clean;BionixVCL:Clean;BionixWallpaper:Clean;BioControl:Clean;DemoAllVisualControls:Clean;DnaBaser5:Clean;KeepItAlive:Clean"/>
+        <CallTarget Targets="ThirdPartyLibs:Clean;LightCore:Clean;LightCommon:Clean;LightTranslator:Clean;LightInternet:Clean;LightGraphics:Clean;LightVisControls:Clean;BionixVCL:Clean;BionixWallpaper:Clean;BioControl:Clean;DemoAllVisualControls:Clean;DnaBaser5:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="ThirdPartyLibs:Make;LightCore:Make;LightCommon:Make;LightTranslator:Make;LightInternet:Make;Tester_Updater:Make;LightGraphics:Make;CubicProteus:Make;LightVisControls:Make;BionixVCL:Make;BionixWallpaper:Make;BioControl:Make;DemoAllVisualControls:Make;DnaBaser5:Make;KeepItAlive:Make"/>
+        <CallTarget Targets="ThirdPartyLibs:Make;LightCore:Make;LightCommon:Make;LightTranslator:Make;LightInternet:Make;LightGraphics:Make;LightVisControls:Make;BionixVCL:Make;BionixWallpaper:Make;BioControl:Make;DemoAllVisualControls:Make;DnaBaser5:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='All'">
-        <BuildGroupProject Include="..\..\Projects System\Easy Tune delayed startup\KeepItAlive.dproj">
-            <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="LightCommon.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -250,12 +208,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\LightUpdater\Tester_Updater.dproj">
-            <ProjectGuid>{97D0EFDD-F52B-4F87-9832-87BC1600BEB4}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="LightGraphics.dproj">
             <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -285,12 +237,6 @@
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="CubicProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
         </BuildGroupProject>
     </ItemGroup>
 </Project>

@@ -1,5 +1,10 @@
 *.~*~
 *.dsk
+*.dcu
+*.local
+*.identcache
+*.dproj.local
+
 Proteus/cpProteus.inc
 Proteus/cpProteus.pas
 Proteus/cpProteusCertificate.pas
