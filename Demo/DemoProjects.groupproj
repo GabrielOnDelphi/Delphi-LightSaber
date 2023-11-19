@@ -18,6 +18,9 @@
         <Projects Include="LightCore\ccWinVersion.pas\Tester_WinVers.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="All Visual Controls\DemoAllVisualControls.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -71,14 +74,23 @@
     <Target Name="Tester_WinVers:Make">
         <MSBuild Projects="LightCore\ccWinVersion.pas\Tester_WinVers.dproj" Targets="Make"/>
     </Target>
+    <Target Name="DemoAllVisualControls">
+        <MSBuild Projects="All Visual Controls\DemoAllVisualControls.dproj"/>
+    </Target>
+    <Target Name="DemoAllVisualControls:Clean">
+        <MSBuild Projects="All Visual Controls\DemoAllVisualControls.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DemoAllVisualControls:Make">
+        <MSBuild Projects="All Visual Controls\DemoAllVisualControls.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="Tester_ccIO;Tester_SaveGUI;Tester_Translator;Tester_Updater;Tester_WinVers"/>
+        <CallTarget Targets="Tester_ccIO;Tester_SaveGUI;Tester_Translator;Tester_Updater;Tester_WinVers;DemoAllVisualControls"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Tester_ccIO:Clean;Tester_SaveGUI:Clean;Tester_Translator:Clean;Tester_Updater:Clean;Tester_WinVers:Clean"/>
+        <CallTarget Targets="Tester_ccIO:Clean;Tester_SaveGUI:Clean;Tester_Translator:Clean;Tester_Updater:Clean;Tester_WinVers:Clean;DemoAllVisualControls:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Tester_ccIO:Make;Tester_SaveGUI:Make;Tester_Translator:Make;Tester_Updater:Make;Tester_WinVers:Make"/>
+        <CallTarget Targets="Tester_ccIO:Make;Tester_SaveGUI:Make;Tester_Translator:Make;Tester_Updater:Make;Tester_WinVers:Make;DemoAllVisualControls:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

@@ -15,9 +15,11 @@ UNIT cmMutexSingleInstance;
        AppData.AppName:= 'MyApp';
        if NOT IsSingleInstance(AppData.AppName) then EXIT;
        Application.Initialize;
-       Application.CreateForm(TfrmStarter, frmStarter);
+       AppData.CreateMainForm(TfrmStarter, frmStarter);
        Application.Run;
      end.
+
+    This unit is not deprecated, but it was replaced by AppData.InstanceRunning which is easier to use.
 
 =============================================================================================================}
 
@@ -29,7 +31,6 @@ USES
 procedure FreeMutex;
 function  IsSingleInstance(MutexName : string):Boolean;
 procedure CreateMutexOrDie(MutexName: string);  // Utils
-
 
 
 IMPLEMENTATION

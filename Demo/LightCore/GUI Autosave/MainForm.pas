@@ -23,7 +23,7 @@ INTERFACE
 USES
   WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin,
   cvRichEdit, Vcl.ComCtrls, ccCore, ccINIFile, FormLog, Vcl.Dialogs, cvCheckBox, Vcl.ExtCtrls, ccRichLogTrack,
-  System.Actions, Vcl.ActnList, Vcl.Menus, cvRadioButton;
+  System.Actions, Vcl.ActnList, Vcl.Menus, cvRadioButton, ccAppData;
 
 TYPE
  TfrmTester = class(TForm)
@@ -68,7 +68,7 @@ VAR
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-   ccAppData, cvIniFile, ccIO, cmDebugger, SecondForm;
+   cvIniFile, ccIO, cmDebugger, SecondForm;
 
 
 

@@ -104,7 +104,9 @@ TYPE
     frmLog: TfrmLog;
     CopyDataID: DWORD;                                         { For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA }
    public
-    { Single Instance }
+   {--------------------------------------------------------------------------------------------------
+      Single Instance
+   --------------------------------------------------------------------------------------------------}
     property  SingleInstClassName: string read FSingleInstClassName;
     procedure ResurectInstance(CONST CommandLine: string);
     function  InstanceRunning: Boolean;

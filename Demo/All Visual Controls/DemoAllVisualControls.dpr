@@ -1,7 +1,8 @@
 ﻿program DemoAllVisualControls;
 
 uses
-  fastmm4,
+  FastMM4,
+  ccAppData,
   Vcl.Forms,
   MainForm in 'MainForm.pas' {frmMain};
 
@@ -9,7 +10,7 @@ uses
 
 begin
   Application.Initialize;
-  Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TfrmMain, frmMain);
+  AppData:= TAppData.Create('Cubic Tester WinVer');
+  AppData.CreateMainForm(TfrmMain, frmMain, TRUE);
   Application.Run;
 end.

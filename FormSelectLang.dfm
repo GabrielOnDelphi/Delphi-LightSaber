@@ -15,6 +15,7 @@ object frmLanguage: TfrmLanguage
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
+  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
@@ -24,6 +25,7 @@ object frmLanguage: TfrmLanguage
   DesignSize = (
     415
     334)
+  PixelsPerInch = 96
   TextHeight = 13
   object grpChoose: TGroupBox
     Left = 6
@@ -42,7 +44,6 @@ object frmLanguage: TfrmLanguage
       Align = alBottom
       Caption = '@Authors'
       Visible = False
-      ExplicitWidth = 48
     end
     object lblHint: TLabel
       AlignWithMargins = True
@@ -53,7 +54,6 @@ object frmLanguage: TfrmLanguage
       Margins.Top = 9
       Align = alBottom
       Caption = 'Hint: You can create your own translations. '
-      ExplicitWidth = 212
     end
     object ListBox: TListBox
       AlignWithMargins = True
@@ -90,9 +90,9 @@ object frmLanguage: TfrmLanguage
         OnClick = btnApplyLangClick
       end
       object btnRefresh: TButton
-        Left = 69
+        Left = 86
         Top = 0
-        Width = 61
+        Width = 78
         Height = 26
         Hint = 'Reload the list of available languages'
         Margins.Top = 4
@@ -105,7 +105,7 @@ object frmLanguage: TfrmLanguage
       object btnTranslate: TButton
         Left = 0
         Top = 0
-        Width = 69
+        Width = 86
         Height = 26
         Hint = 'Create your own translation'
         Margins.Top = 4

@@ -17,7 +17,7 @@ uses
 
 begin
   Application.Initialize;
-  Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TForm6, Form6);
+  AppData:= TAppData.Create('Cubic Tester IO');
+  AppData.CreateMainForm(TForm6, Form6, TRUE);
   Application.Run;
 end.

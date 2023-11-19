@@ -1,9 +1,10 @@
-*.~*~
+*.~*
 *.dsk
 *.dcu
 *.local
 *.identcache
 *.dproj.local
+desktop.ini
 
 Proteus/cpProteus.inc
 Proteus/cpProteus.pas
@@ -15,3 +16,5 @@ Proteus/CubicProteus.dproj
 Proteus/CubicProteus.dsk
 Proteus/CubicProteus.res
 uLinks.pas
+*.map
+*.~dsk
