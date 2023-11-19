@@ -1,6 +1,7 @@
-program DemoAllVisualControls;
+﻿program DemoAllVisualControls;
 
 uses
+  fastmm4,
   Vcl.Forms,
   MainForm in 'MainForm.pas' {frmMain};
 

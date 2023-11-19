@@ -11,13 +11,13 @@ USES
   Vcl.ComCtrls, cvStatusBar, cvSplitter, cvScrollBox, cvRichEdit, cvRadioButton, cvProxyList, cvPanel,
   cvMinimalPathLabel, cvMemo, Vcl.ValEdit, cvLstEditor, cvGroupBox, cvGraphChart, cvFreeDiskSpace,
   cvFileFilter, cvEdit, cvDirectoryListBox, cvCountDown, cvComboBox, Vcl.CheckLst,
-  cvCheckListBox, cvAssociateExt;
+  cvCheckListBox, cvAssociateExt, cvDropDownSearch;
 
 TYPE
   TfrmMain = class(TForm)
     AssociateFileExt1     : TAssociateFileExt;
     BaseStrGrid1          : TBaseStrGrid;
-    CationedThumbnail: TCationedThumbnail;
+    CationedThumbnail     : TCationedThumbnail;
     CMinimalLabel         : TMinimalPathLabel;
     CountDown1            : TCountDown;
     CubicCheckBox1        : TCubicCheckBox;
@@ -32,7 +32,7 @@ TYPE
     ListBox               : TCubicListBox;
     Memo                  : TCubicMemo;
     Panel                 : TCubicPanel;
-    PathEdit: TCubicPathEdit;
+    PathEdit              : TCubicPathEdit;
     CubicRadioButton1     : TCubicRadioButton;
     ScrollBox             : TCubicScrollBox;
     SpinEdit              : TCubicSpinEdit;
@@ -41,14 +41,14 @@ TYPE
     cubicStatusBar1       : TcubicStatusBar;
     CubicTimer1           : TCubicTimer;
     CubicTrayIcon1        : TCubicTrayIcon;
-    ValueListEditor: TCubicValueListEditor;
+    ValueListEditor       : TCubicValueListEditor;
     EnhStrGrid1           : TEnhStrGrid;
-    FastQChart: TFastQChart;
+    FastQChart            : TFastQChart;
     FloatSpinEdit         : TFloatSpinEdit;
     FreeDiskSpace1        : TFreeDiskSpace;
     GradPanel1            : TGradPanel;
-    MsgDispatcher: TMsgDispatcher;
-    PageControl1          : TPageControl;
+    MsgDispatcher         : TMsgDispatcher;
+    PageControl: TPageControl;
     ProxyList1            : TProxyList;
     TabSheet1             : TTabSheet;
     TabSheet3             : TTabSheet;
@@ -59,15 +59,18 @@ TYPE
     TabSheet8             : TTabSheet;
     TabSheet9             : TTabSheet;
     TimeLine              : TTimeLine;
-    ToolBox: TToolBox;
-    CreationOrder_Test: TCreationOrderTest;
+    ToolBox               : TToolBox;
+    CreationOrder_Test    : TCreationOrderTest;
     CubicSplitter1        : TCubicSplitter;
     RichEdit              : TCubicRichEdit;
     CMinimalLabel1        : TMinimalPathLabel;
-    Label1: TLabel;
-    Label2: TLabel;
-    Label3: TLabel;
-    TabSheet2: TTabSheet;
+    Label1                : TLabel;
+    Label2                : TLabel;
+    Label3                : TLabel;
+    TabSheet2             : TTabSheet;
+    Panel1: TPanel;
+    DropDownSearchBox1: TDropDownSearchBox;
+    procedure FormShow(Sender: TObject);
   private
   public
   end;
@@ -76,5 +79,13 @@ VAR
   frmMain: TfrmMain;
 
 IMPLEMENTATION  {$R *.dfm}
+
+
+procedure TfrmMain.FormShow(Sender: TObject);
+begin
+  VAR x:= TDropDownSearchBox.Create(TabSheet5);
+  x.Parent:= TabSheet5;
+  DropDownSearchBox1.SetHostParent(Self);
+end;
 
 end.

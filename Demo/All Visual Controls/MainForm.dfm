@@ -11,15 +11,16 @@ object frmMain: TfrmMain
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
-  object PageControl1: TPageControl
+  object PageControl: TPageControl
     AlignWithMargins = True
     Left = 3
     Top = 3
     Width = 893
     Height = 531
-    ActivePage = TabSheet1
+    ActivePage = TabSheet2
     Align = alClient
     TabOrder = 0
     object TabSheet1: TTabSheet
@@ -139,12 +140,13 @@ object frmMain: TfrmMain
         end
         object SpinEditSplit: TCubicSpinEditSplit
           AlignWithMargins = True
-          Left = 29
+          Left = 31
           Top = 158
           Width = 129
           Height = 22
           BevelOuter = bvNone
           Caption = 'SpinEditSplit'
+          ParentBackground = False
           ShowCaption = False
           TabOrder = 1
           Spin.AlignWithMargins = True
@@ -363,7 +365,7 @@ object frmMain: TfrmMain
         Left = 99
         Top = 271
         Width = 687
-        Height = 128
+        Height = 116
         Margins.Left = 99
         Margins.Top = 9
         Margins.Right = 99
@@ -561,8 +563,25 @@ object frmMain: TfrmMain
       end
     end
     object TabSheet2: TTabSheet
-      Caption = 'TabSheet2'
+      Caption = 'Search Box'
       ImageIndex = 8
+      object Panel1: TPanel
+        Left = 242
+        Top = 140
+        Width = 320
+        Height = 27
+        Caption = 'Panel1'
+        TabOrder = 0
+        object DropDownSearchBox1: TDropDownSearchBox
+          AlignWithMargins = True
+          Left = 4
+          Top = 2
+          Width = 235
+          Height = 21
+          TabOrder = 0
+          TextHint = 'Search...'
+        end
+      end
     end
   end
   object CountDown1: TCountDown

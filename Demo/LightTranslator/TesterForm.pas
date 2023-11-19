@@ -24,7 +24,7 @@ TYPE
     procedure btnHelperClick(Sender: TObject);
   protected
   private
-    procedure LateInitialize(VAR message: TMessage);  message MSG_LateInitialize;
+    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateAppInit; // Called after the main form was fully created
   public
  end;
 
@@ -49,7 +49,7 @@ procedure TfrmTester.FormCreate(Sender: TObject);
 begin
  //AppLog:= Log;
  Winapi.ShellAPI.DragAcceptFiles(Self.Handle, True);                                             { Accept the dropped files from Windows Explorer }
- PostMessage(Self.Handle, MSG_LateInitialize, 0, 0);                        { This will call LateInitialize }
+ PostMessage(Self.Handle, MSG_LateInitialize, 0, 0); Not needed anymore. Moved to ccAppData                       { This will call LateInitialize }
 end;
 
 
@@ -65,7 +65,7 @@ begin
  {frmTranslator:= TfrmTranslator.Create(Application);
  frmTranslator.Show;  }
 
- AppData.Initializing:= FALSE;
+ AppData.Initializing:= FALSE; moved to ccAppData
 end;
 
 

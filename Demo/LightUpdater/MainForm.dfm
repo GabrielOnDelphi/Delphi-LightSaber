@@ -13,6 +13,7 @@ object frmDemoStarter: TfrmDemoStarter
   Font.Height = -12
   Font.Name = 'Tahoma'
   Font.Style = []
+  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
@@ -20,5 +21,6 @@ object frmDemoStarter: TfrmDemoStarter
   Visible = True
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  PixelsPerInch = 96
   TextHeight = 14
 end

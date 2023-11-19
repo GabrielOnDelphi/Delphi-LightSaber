@@ -1,5 +1,8 @@
-# LightSaber
+# Delphi-LightSaber
 
+**Short description**   
+Contains useful functions.   
+Lightweight (only 10000 lines of code) alternative to Jedi library.   
 
 **Description**   
 
@@ -20,6 +23,7 @@ This repository contains the following libraries:
  - Common
  - Internet
  - Translator 
+ - Graphics
  
 Each library depends on the previous one, in the order specified above.  
 LightSaber Core does not depend on any other library.   
@@ -29,29 +33,6 @@ Your code could use directly the bottom library (Core) or higher libraries in th
 ![](https://raw.githubusercontent.com/GodModeUser/Delphi-LightSaber/main/Docs/Library%20architecture.png)
 
 If you only need the only one library (for example, the Core library), you can of course delete the rest of the libraries.
-_________________
-
-**Filename convention**  
-
-The following filename convention is used in LightSaber libraries:  
-- The first letter (c) stands for 'cubic' (the orginal name of the library)
-- The second letter is as follows:
-- 'c' stands for 'core'.  (All other top libraries are based on the Core library)
-- 'v'-> visual component. 
-- 'Graph'-> graphic library.
-- 'l' -> Log library.
-- 'i' -> Internet library.
-- 'm' -> Common library.
-
-Example:   
-- ccBinary.pas  (Cubic core library)
-- cvMemo.pas    (Cubic visual component)
-- cGraphFX.pas  (Cubic graphic library) 
-- clVisLog.pas (Cubic log library)  
-- ciEmailSender.pas (Cubic internet library)  
-- cmPowerUtils.pas (Cubic common library)  
-- ciEmailSender.pas (Cubic internet library)  
-- cmPowerUtils.pas (Cubic common library)  
 
 _________________
 
@@ -189,5 +170,27 @@ https://github.com/esmondb/ccr-exif/
 https://github.com/galfar/PasJpeg2000    
 http://www.marktg.com/jpegdec/    
     
+
 _________________
 
+**Filename convention**  
+
+The following filename convention is used in LightSaber libraries:  
+- The first letter (c) stands for 'cubic' (the orginal name of the library)
+- The second letter is as follows:
+   - 'c' stands for 'core'.  (All other top libraries are based on the Core library)
+   - 'v'-> visual component. 
+   - 'Graph'-> graphic library.
+   - 'l' -> Log library.
+   - 'i' -> Internet library.
+   - 'm' -> Common library.
+
+Example:   
+- ccBinary.pas  (Cubic core library)
+- cvMemo.pas    (Cubic visual component)
+- cGraphFX.pas  (Cubic graphic library) 
+- clVisLog.pas (Cubic log library)  
+- ciEmailSender.pas (Cubic internet library)  
+- cmPowerUtils.pas (Cubic common library)  
+- ciEmailSender.pas (Cubic internet library)  
+- cmPowerUtils.pas (Cubic common library)  

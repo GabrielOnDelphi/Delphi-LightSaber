@@ -4,14 +4,14 @@ INTERFACE
 
 USES
    Winapi.Windows, WinApi.Messages, System.SysUtils, System.Classes, VCL.Forms, Vcl.Controls,
-   ccCore, ciUpdater;
+   ccCore, ccAppData, ciUpdater;
 
 TYPE
  TfrmDemoStarter = class(TForm)
     procedure FormCreate            (Sender: TObject);
     procedure FormDestroy           (Sender: TObject);
   private
-    procedure LateInitialize(VAR message: TMessage);  message MSG_LateInitialize;
+    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateAppInit; // Called after the main form was fully created
   public
  end;
 
@@ -22,7 +22,7 @@ VAR
 
 IMPLEMENTATION  {$R *.dfm}
 USES
-   ccAppData, FormUpdaterNotifier, BxConstants;
+   FormUpdaterNotifier, BxConstants;
 
 CONST
    wwwUpdaterBinTest = wwwUpdaterBin;
@@ -31,8 +31,7 @@ CONST
 
 procedure TfrmDemoStarter.FormCreate(Sender: TObject);
 begin
- AppData.Initializing:= FALSE;
- PostMessage(Self.Handle, MSG_LateInitialize, 0, 0);         { This will call LateInitialize }
+  //
 end;
 
 
@@ -51,7 +50,6 @@ end;
 procedure TfrmDemoStarter.FormDestroy(Sender: TObject);
 begin
  FreeAndNil(Updater);
- FreeAndNil(AppData-);
 end;
 
 

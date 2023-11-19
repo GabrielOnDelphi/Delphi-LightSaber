@@ -58,7 +58,7 @@ TYPE
     procedure FormCreate         (Sender: TObject);
     procedure FormDestroy        (Sender: TObject);
   private
-    procedure LateInitialize(VAR message: TMessage);  message MSG_LateInitialize;
+    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateAppInit; // Called after the main form was fully created
   public
  end;
 
@@ -77,7 +77,7 @@ USES
 --------------------------------------------------------------------------------------------------}
 procedure TfrmTester.FormCreate(Sender: TObject);
 begin
- PostMessage(Self.Handle, MSG_LateInitialize, 0, 0);   { This will call LateInitialize }
+  //
 end;
 
 
@@ -101,7 +101,6 @@ begin
  {if radShow.Checked
  then Button5Click(Self);}
 
- AppData.Initializing:= FALSE;
  AppData.LogImpo('Application started ok.');
 end;
 
@@ -113,8 +112,6 @@ begin
 
  if actAutoSave.Checked
  then SaveForm(Self);
-
- //FreeAndNil(AppData); Don't release the AppData here. It is automatically released by ccAppData.Finalize
 end;
 
 
