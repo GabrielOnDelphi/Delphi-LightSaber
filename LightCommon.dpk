@@ -25,10 +25,9 @@ package LightCommon;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'LightSaber Commons'}
-{$LIBSUFFIX '270'}
-{$RUNONLY}
-{$IMPLICITBUILD ON}
+{$DESCRIPTION 'LightSaber - Common lib'}
+{$LIBSUFFIX AUTO}
+{$IMPLICITBUILD OFF}
 
 requires
   rtl,

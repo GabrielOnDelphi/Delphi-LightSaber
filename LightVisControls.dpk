@@ -30,6 +30,8 @@
 {$IMPLICITBUILD ON}
 
 requires
+  Rtl,
+  Vcl,
   LightCore,
   LightCommon,
   LightInternet,

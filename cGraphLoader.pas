@@ -205,7 +205,10 @@ begin
      AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
     end;
  END;
-end; {$ENDIF}
+end;
+{$ELSE}
+  CCR Exif NOT AVAILABLE
+{$ENDIF}
 
 
 function LoadGraph(CONST FileName: string; ExifRotate: Boolean = True; UseWic: Boolean = TRUE): TBitmap;

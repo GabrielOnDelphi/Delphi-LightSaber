@@ -50,8 +50,12 @@
          Application.ShowMainForm:= True;
          MainForm.Show;
 
+     The "AppData.Initializing" Flag
      Once the program is fully initialized set Initializing to False.
-
+     Details: Set it to false once your app finished initializing (usually after you finished creating all forms).
+     Used by SaveForm in cvIniFile.pas (and few other places) to signal not to save the form if the application
+     has crashed whill still in the initialization phase.
+     If you don't set it to false earlyer, AppData will set it to false at the end of CreateMainForm
  ____________________________________________________________________________________________________________
 
    MainFormOnTaskbar info:
@@ -113,7 +117,7 @@ TYPE
     procedure SetSingleInstanceName(var Params: TCreateParams);
     function  ExtractData(VAR Msg: TWMCopyData; OUT s: string): Boolean;
     {}
-    class VAR Initializing: Boolean;                           { Set it to false once your app finished initializing (usually after you finished creating all forms). Used by SaveForm in cvIniFile.pas (and few other places) - we don't save the form if the application is still in initialization phase. }
+    class VAR Initializing: Boolean;
     constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''); virtual;
     destructor Destroy; override;                              { This is called automatically by "Finalization" in order to call it as late as possible }
 

@@ -2,7 +2,7 @@ package LightLog;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
-{$ALIGN 8}
+{$ALIGN 2}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
 {$DEBUGINFO OFF}

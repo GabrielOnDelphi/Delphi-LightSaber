@@ -25,10 +25,10 @@ package LightTranslator;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'Light Translator'}
-{$LIBSUFFIX '270'}
+{$DESCRIPTION 'LightSaber - Translator lib'}
+{$LIBSUFFIX AUTO}
 {$RUNONLY}
-{$IMPLICITBUILD ON}
+{$IMPLICITBUILD OFF}
 
 requires
   Rtl,

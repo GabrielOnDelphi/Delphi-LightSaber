@@ -7,6 +7,19 @@ UNIT cmWrapString;
 
    Wrap and truncate strings
 
+
+
+
+
+
+   !!!!!!!!!!!!!!
+   see also: https://stackoverflow.com/questions/28603463/how-can-i-do-autosize-item-height-in-listview-for-variable-multirow-long-text-wi
+
+
+
+
+
+
 =============================================================================================================}
 
 INTERFACE

@@ -25,22 +25,17 @@ package LightInternet;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'LightSaber - Internet lib'}
-{$LIBSUFFIX '270'}
+{$DESCRIPTION 'LightSaber - Internet'}
+{$LIBSUFFIX AUTO}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
 
 requires
   Rtl,
   Vcl,
-  IndyCore,
   LightCore,
   LightCommon,
-  VclIe,
-  IndySystem,
-  VclWinx,
-  IndyProtocols,
-  ThirdPartyLibs;
+  IndyProtocols;
 
 contains
   Vcl.IdAntiFreeze,

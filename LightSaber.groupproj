@@ -3,6 +3,9 @@
         <ProjectGuid>{889D79DE-7E8C-4410-8E76-49C32EC57928}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
+        <Projects Include="..\Exif\CCRExif.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="..\Third party packages\ThirdPartyLibs.dproj">
             <Dependencies/>
         </Projects>
@@ -22,6 +25,9 @@
             <Dependencies/>
         </Projects>
         <Projects Include="LightVisControls.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Proteus\CubicProteus.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="..\..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj">
@@ -47,6 +53,15 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
+    <Target Name="CCRExif">
+        <MSBuild Projects="..\Exif\CCRExif.dproj"/>
+    </Target>
+    <Target Name="CCRExif:Clean">
+        <MSBuild Projects="..\Exif\CCRExif.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CCRExif:Make">
+        <MSBuild Projects="..\Exif\CCRExif.dproj" Targets="Make"/>
+    </Target>
     <Target Name="ThirdPartyLibs">
         <MSBuild Projects="..\Third party packages\ThirdPartyLibs.dproj"/>
     </Target>
@@ -110,6 +125,15 @@
     <Target Name="LightVisControls:Make">
         <MSBuild Projects="LightVisControls.dproj" Targets="Make"/>
     </Target>
+    <Target Name="CubicProteus">
+        <MSBuild Projects="Proteus\CubicProteus.dproj"/>
+    </Target>
+    <Target Name="CubicProteus:Clean">
+        <MSBuild Projects="Proteus\CubicProteus.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="CubicProteus:Make">
+        <MSBuild Projects="Proteus\CubicProteus.dproj" Targets="Make"/>
+    </Target>
     <Target Name="BionixVCL">
         <MSBuild Projects="..\..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj"/>
     </Target>
@@ -156,16 +180,22 @@
         <MSBuild Projects="..\..\Biology\Baser\!DnaBaser src\DnaBaser5.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="ThirdPartyLibs;LightCore;LightCommon;LightTranslator;LightInternet;LightGraphics;LightVisControls;BionixVCL;BionixWallpaper;BioControl;DemoAllVisualControls;DnaBaser5"/>
+        <CallTarget Targets="CCRExif;ThirdPartyLibs;LightCore;LightCommon;LightTranslator;LightInternet;LightGraphics;LightVisControls;CubicProteus;BionixVCL;BionixWallpaper;BioControl;DemoAllVisualControls;DnaBaser5"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="ThirdPartyLibs:Clean;LightCore:Clean;LightCommon:Clean;LightTranslator:Clean;LightInternet:Clean;LightGraphics:Clean;LightVisControls:Clean;BionixVCL:Clean;BionixWallpaper:Clean;BioControl:Clean;DemoAllVisualControls:Clean;DnaBaser5:Clean"/>
+        <CallTarget Targets="CCRExif:Clean;ThirdPartyLibs:Clean;LightCore:Clean;LightCommon:Clean;LightTranslator:Clean;LightInternet:Clean;LightGraphics:Clean;LightVisControls:Clean;CubicProteus:Clean;BionixVCL:Clean;BionixWallpaper:Clean;BioControl:Clean;DemoAllVisualControls:Clean;DnaBaser5:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="ThirdPartyLibs:Make;LightCore:Make;LightCommon:Make;LightTranslator:Make;LightInternet:Make;LightGraphics:Make;LightVisControls:Make;BionixVCL:Make;BionixWallpaper:Make;BioControl:Make;DemoAllVisualControls:Make;DnaBaser5:Make"/>
+        <CallTarget Targets="CCRExif:Make;ThirdPartyLibs:Make;LightCore:Make;LightCommon:Make;LightTranslator:Make;LightInternet:Make;LightGraphics:Make;LightVisControls:Make;CubicProteus:Make;BionixVCL:Make;BionixWallpaper:Make;BioControl:Make;DemoAllVisualControls:Make;DnaBaser5:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='All'">
+        <BuildGroupProject Include="..\Exif\CCRExif.dproj">
+            <ProjectGuid>{0E3CBE29-4ACE-4BC1-92A5-7487A217D813}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="LightCommon.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -234,6 +264,12 @@
         </BuildGroupProject>
         <BuildGroupProject Include="Demo\All Visual Controls\DemoAllVisualControls.dproj">
             <ProjectGuid>{DD580D63-779B-4D0D-821E-E5CFFCCDBB27}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Proteus\CubicProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>

@@ -26,8 +26,8 @@ package LightCore;
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'LightSaber - Core library'}
-{$LIBSUFFIX '270'}
-{$IMPLICITBUILD ON}
+{$LIBSUFFIX AUTO}
+{$IMPLICITBUILD OFF}
 
 requires
   VclSmp,
