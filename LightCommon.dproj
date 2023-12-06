@@ -107,6 +107,7 @@
         <DCCReference Include="csWMIResolution.pas"/>
         <DCCReference Include="cmWinVersionOthers.pas"/>
         <DCCReference Include="FormAsyncMessage.pas"/>
+        <DCCReference Include="cmUTF8.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -525,7 +525,6 @@ begin
       if Comp.InheritsFrom(TShape)
       then TShape (Comp).Brush.Color:= ReadColor(Comp.Name, 0)
       else
-
          Result:= FALSE; //RAISE Exception.Create('Unsupported control: '+ Comp.ClassName+ ', '+ Comp.Name);
    end;
 end;

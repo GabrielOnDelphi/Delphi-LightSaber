@@ -7,7 +7,7 @@ object frmLanguage: TfrmLanguage
   BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'Language/Sprache/Langue/Limba/Idioma/'#35821#35328'/'#1071#1079#1099#1082
   ClientHeight = 334
-  ClientWidth = 415
+  ClientWidth = 317
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -22,24 +22,22 @@ object frmLanguage: TfrmLanguage
   SnapBuffer = 3
   OnDestroy = FormDestroy
   OnKeyPress = FormKeyPress
-  DesignSize = (
-    415
-    334)
   PixelsPerInch = 96
   TextHeight = 13
   object grpChoose: TGroupBox
-    Left = 6
-    Top = 7
-    Width = 403
-    Height = 320
-    Anchors = []
+    AlignWithMargins = True
+    Left = 3
+    Top = 3
+    Width = 311
+    Height = 328
+    Align = alClient
     Caption = 'Choose language'
     TabOrder = 0
     object lblAuthors: TLabel
       AlignWithMargins = True
       Left = 5
-      Top = 245
-      Width = 393
+      Top = 253
+      Width = 301
       Height = 13
       Align = alBottom
       Caption = '@Authors'
@@ -48,8 +46,8 @@ object frmLanguage: TfrmLanguage
     object lblHint: TLabel
       AlignWithMargins = True
       Left = 5
-      Top = 270
-      Width = 393
+      Top = 278
+      Width = 301
       Height = 13
       Margins.Top = 9
       Align = alBottom
@@ -59,8 +57,8 @@ object frmLanguage: TfrmLanguage
       AlignWithMargins = True
       Left = 5
       Top = 23
-      Width = 393
-      Height = 216
+      Width = 301
+      Height = 224
       Hint = 'Click to load it'
       Margins.Top = 8
       Align = alClient
@@ -73,14 +71,14 @@ object frmLanguage: TfrmLanguage
     object Panel2: TPanel
       AlignWithMargins = True
       Left = 5
-      Top = 289
-      Width = 393
+      Top = 297
+      Width = 301
       Height = 26
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 1
       object btnApplyLang: TButton
-        Left = 301
+        Left = 209
         Top = 0
         Width = 92
         Height = 26

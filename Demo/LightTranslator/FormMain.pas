@@ -7,7 +7,7 @@ USES
   Vcl.ComCtrls, ccCore, ccINIFile, Vcl.ExtCtrls, FormLog, ccRichLog, Vcl.Mask, ccAppData;
 
 const
- MSG_LateInitialize= WM_APP + 4711;
+ MSG_LateAppInit= WM_APP + 4711;
 
 TYPE
  TfrmTester = class(TForm)

@@ -118,6 +118,8 @@ TYPE
     function  ExtractData(VAR Msg: TWMCopyData; OUT s: string): Boolean;
     {}
     class VAR Initializing: Boolean;
+    class VAR NoAutoInit: Boolean;   // If set to True, AppData will not set the Initializing automatically to false once the main form was loaded. This is useful in apps with more than one form.
+
     constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''); virtual;
     destructor Destroy; override;                              { This is called automatically by "Finalization" in order to call it as late as possible }
 
@@ -306,7 +308,8 @@ begin
   // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory") for details.
   PostMessage(TForm(Reference).Handle, MSG_LateAppInit, 0, 0);
 
-  Initializing:= FALSE;
+  if NOT NoAutoInit
+  then Initializing:= FALSE;
 end;
 
 

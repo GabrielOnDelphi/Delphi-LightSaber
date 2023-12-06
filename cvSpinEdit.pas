@@ -24,7 +24,7 @@ UNIT cvSpinEdit;
 INTERFACE
 
 USES
-  System.SysUtils, System.Classes, Vcl.Samples.Spin, Vcl.Controls, Vcl.StdCtrls, vcl.Graphics, Vcl.ExtCtrls;
+  Winapi.Messages, System.SysUtils, System.Classes, Vcl.Samples.Spin, Vcl.Controls, Vcl.StdCtrls, vcl.Graphics, Vcl.ExtCtrls;
 
 
 TYPE
@@ -33,7 +33,6 @@ TYPE
   public
    procedure Change; override;
  end;
-
 
  TCubicSpinEditSplit = class(TPanel)
   private
@@ -49,6 +48,7 @@ TYPE
     function  getCaption2: string;
     procedure SetWidth;
   protected
+    procedure CMFontChanged(var Message: TMessage); message CM_FONTCHANGED;
     procedure CreateWnd; override;
     procedure CreateWindowHandle(const Params: TCreateParams); override;
     procedure SetParent(aParent: TWinControl); override;     { SetParent is called during construction AND also during destruction with aParent=nil }
@@ -81,7 +81,9 @@ begin
  AutoSize    := FALSE;
  BevelOuter  := bvNone;
  ShowCaption := FALSE;
- ParentBackground:= TRUE;
+ ParentFont  := TRUE;
+ ParentColor := TRUE;
+ ParentBackground:= TRUE; // Mandatory
 
  FLabelFront:= TLabel.Create(Self);
  FLabelFront.Name:= 'LabelFront';
@@ -196,13 +198,13 @@ end;
 
 
 
-
 procedure TCubicSpinEditSplit.SetWidth;
 begin
- VAR NewWidth:= FLabelEnd.Left+ FLabelEnd.Width+2;
+ VAR NewWidth:= FLabelEnd.Left+ FLabelEnd.Width+ 2;
  if Width <> NewWidth then
   begin
    Width:= NewWidth;
+   Canvas.Font:= Font; //?
 
    { Make sure the controls are shown in the correct order }
    FLabelFront.Left:= 0;
@@ -211,6 +213,12 @@ begin
   end;
 end;
 
+
+// Recalculate width when the font was changed!
+procedure TCubicSpinEditSplit.CMFontChanged(var Message: TMessage);
+begin
+  SetWidth;
+end;
 
 
 procedure TCubicSpinEditSplit.SetParent(aParent: TWinControl);  { SetParent is called during construction AND also during destruction with aParent=nil }

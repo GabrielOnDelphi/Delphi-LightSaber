@@ -72,6 +72,7 @@ contains
   csWindowMetrics in 'csWindowMetrics.pas',
   csWMIResolution in 'csWMIResolution.pas',
   cmWinVersionOthers in 'cmWinVersionOthers.pas',
-  FormAsyncMessage in 'FormAsyncMessage.pas';
+  FormAsyncMessage in 'FormAsyncMessage.pas',
+  cmUTF8 in 'cmUTF8.pas';
 
 end.

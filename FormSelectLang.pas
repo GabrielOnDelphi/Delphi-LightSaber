@@ -121,7 +121,7 @@ begin
        Translator.CurLanguage:= GetSelectedFileName;
        Translator.LoadTranslationAllForms(GetSelectedFilePath, TRUE);
 
-       Caption := 'Loaded: '+ GetSelectedFilePath;
+       //Caption := 'Loaded: '+ GetSelectedFilePath;
        lblAuthors.Caption:= 'Translated by: '+ Translator.Authors;
        lblAuthors.Visible:= TRUE;
      end

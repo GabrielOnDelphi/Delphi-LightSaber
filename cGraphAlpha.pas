@@ -3,7 +3,6 @@ UNIT cGraphAlpha;
 {=============================================================================================================
    Gabriel Moraru
    2023.08.05
-   See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Alpha Blend
    For more Alpha tools see c:\MyProjects\Packages\Third party packages\GraphAlpha.pas
@@ -83,7 +82,7 @@ TYPE
   Note: you can shift the x coordinate for R and G pixels to obtain stereoscopic images }
 procedure AlphaBlendBitmaps(MainBitmap, SmallBitmap: TBitmap; CONST Transparency, x, y: Integer);  { Transparency for SmallBitmap is between 0% and 100%. The SmallBitmap image MUST be smaller than MainBitmap. XY are the coordinates where the small imge will be blend in the main imge }
 VAR
-   Col{, MaxWidth, MaxHeight}: integer;
+   Col: integer;
    BlendRatio, BlendRatioMin, Row : integer;
    ScanLine1, ScanLine2: pRGBArray;
    ScanlinesOut : array of pRGBArray;
@@ -115,7 +114,7 @@ begin
      if Col>= SmallBitmap.Width
      then Continue;
 
-     { EU: cool: shift the x coordinate for R and G pixels to obtain stereoscopic images }
+     { Cool trick: shift the x coordinate for R and G pixels to obtain stereoscopic images }
      ScanlinesOut[Row][Col+ x].R := (BlendRatio * Scanline1[Col+ x].R + BlendRatioMin * Scanline2[Col].R) SHR 8;
      ScanlinesOut[Row][Col+ x].G := (BlendRatio * Scanline1[Col+ x].G + BlendRatioMin * Scanline2[Col].G) SHR 8;
      ScanlinesOut[Row][Col+ x].B := (BlendRatio * Scanline1[Col+ x].B + BlendRatioMin * Scanline2[Col].B) SHR 8;
@@ -178,25 +177,25 @@ end;
 
 { TImageList.GetBitmap fails to preserve the transparency, so we need our own utility }
 procedure GetTransparentBitmapFromImagelist(ImageList: TImageList; Index:integer; Bitmap: TBitmap);
-var i: integer;
 var
-    P: Pointer;
+  i: Integer;
+  P: Pointer;
 begin
-    Bitmap.SetSize(ImageList.Width, ImageList.Height);
-    Bitmap.PixelFormat := pf32bit;
-    if ImageList.ColorDepth = cd32Bit then
-        begin
-          Bitmap.Transparent := False;
-          Bitmap.AlphaFormat := afDefined;
-        end
-    else
-        Bitmap.Transparent := TRUE;
+  Bitmap.SetSize(ImageList.Width, ImageList.Height);
+  Bitmap.PixelFormat := pf32bit;
+  if ImageList.ColorDepth = cd32Bit then
+      begin
+        Bitmap.Transparent := False;
+        Bitmap.AlphaFormat := afDefined;
+      end
+  else
+      Bitmap.Transparent := TRUE;
 
-    P := Bitmap.ScanLine[Bitmap.Height - 1];   // Don't use 0 (first line) because the actual raw image data it is bottom up
-    for i := 0 to Bitmap.Height-1 do
-        FillChar(P^, Vcl.Graphics.BytesPerScanLine(Bitmap.Width, 32, 32) * Bitmap.Height, 0);
+  P := Bitmap.ScanLine[Bitmap.Height - 1];   // Don't use 0 (first line) because the actual raw image data it is bottom up
+  for i := 0 to Bitmap.Height-1 do
+      FillChar(P^, Vcl.Graphics.BytesPerScanLine(Bitmap.Width, 32, 32) * Bitmap.Height, 0);
 
-    ImageList_Draw(ImageList.Handle, Index, Bitmap.Canvas.Handle, 0, 0, ILD_TRANSPARENT);
+  ImageList_Draw(ImageList.Handle, Index, Bitmap.Canvas.Handle, 0, 0, ILD_TRANSPARENT);
 end;
 
 

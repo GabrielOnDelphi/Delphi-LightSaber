@@ -70,7 +70,9 @@ begin
 end;
 
 
-
+// Warning: Cannot run a program if it requires admin rights!
+// See this: https://stackoverflow.com/questions/14130282/launch-an-exe-with-elevated-privileges-from-a-normal-non-elevated-one
+//     and https://stackoverflow.com/questions/74552937/delphi-createprocess-as-administrator
 function ExecuteProc(ExeFile: string; WindowState: Integer= SW_SHOWNORMAL): Boolean;
 VAR
   SI: TStartupInfo;
@@ -83,7 +85,7 @@ begin
   SI.dwFlags := STARTF_USESHOWWINDOW;
   SI.wShowWindow := WindowState;
 
-  Result:= CreateProcess(nil, PChar(ExeFile), nil, nil, FALSE, NORMAL_PRIORITY_CLASS, nil, NIL{WorkingFolder}, SI, PI);
+  Result:= CreateProcess(nil, PChar(ExeFile), nil, nil, FALSE, CREATE_NEW_CONSOLE or NORMAL_PRIORITY_CLASS, NIL, NIL{WorkingFolder}, SI, PI);
   if Result then
    begin
     CloseHandle(PI.hThread);
