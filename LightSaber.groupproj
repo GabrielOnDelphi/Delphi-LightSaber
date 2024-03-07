@@ -45,10 +45,10 @@
         <Projects Include="..\..\Biology\Baser\!DnaBaser src\DnaBaser5.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="..\..\Project support\Tool - DUT - My Delphi utilities\DUT2.dproj">
+        <Projects Include="..\..\Projects System\Keep It Alive\KeepItAlive.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="..\..\Projects System\Keep It Alive\KeepItAlive.dproj">
+        <Projects Include="..\..\Project Commercial\Project LabBook\Server Technologies\WebSockets\Lib StasPiter Github websocket server\1-QuickStart\WebSocketDemo.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -185,15 +185,6 @@
     <Target Name="DnaBaser5:Make">
         <MSBuild Projects="..\..\Biology\Baser\!DnaBaser src\DnaBaser5.dproj" Targets="Make"/>
     </Target>
-    <Target Name="DUT2">
-        <MSBuild Projects="..\..\Project support\Tool - DUT - My Delphi utilities\DUT2.dproj"/>
-    </Target>
-    <Target Name="DUT2:Clean">
-        <MSBuild Projects="..\..\Project support\Tool - DUT - My Delphi utilities\DUT2.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="DUT2:Make">
-        <MSBuild Projects="..\..\Project support\Tool - DUT - My Delphi utilities\DUT2.dproj" Targets="Make"/>
-    </Target>
     <Target Name="KeepItAlive">
         <MSBuild Projects="..\..\Projects System\Keep It Alive\KeepItAlive.dproj"/>
     </Target>
@@ -203,25 +194,34 @@
     <Target Name="KeepItAlive:Make">
         <MSBuild Projects="..\..\Projects System\Keep It Alive\KeepItAlive.dproj" Targets="Make"/>
     </Target>
+    <Target Name="WebSocketDemo">
+        <MSBuild Projects="..\..\Project Commercial\Project LabBook\Server Technologies\WebSockets\Lib StasPiter Github websocket server\1-QuickStart\WebSocketDemo.dproj"/>
+    </Target>
+    <Target Name="WebSocketDemo:Clean">
+        <MSBuild Projects="..\..\Project Commercial\Project LabBook\Server Technologies\WebSockets\Lib StasPiter Github websocket server\1-QuickStart\WebSocketDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="WebSocketDemo:Make">
+        <MSBuild Projects="..\..\Project Commercial\Project LabBook\Server Technologies\WebSockets\Lib StasPiter Github websocket server\1-QuickStart\WebSocketDemo.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="CCRExif;ThirdPartyLibs;LightCore;LightCommon;LightTranslator;LightInternet;LightGraphics;LightVisControls;CubicProteus;BionixVCL;BionixWallpaper;BioControl;DemoAllVisualControls;DnaBaser5;DUT2;KeepItAlive"/>
+        <CallTarget Targets="CCRExif;ThirdPartyLibs;LightCore;LightCommon;LightTranslator;LightInternet;LightGraphics;LightVisControls;CubicProteus;BionixVCL;BionixWallpaper;BioControl;DemoAllVisualControls;DnaBaser5;KeepItAlive;WebSocketDemo"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="CCRExif:Clean;ThirdPartyLibs:Clean;LightCore:Clean;LightCommon:Clean;LightTranslator:Clean;LightInternet:Clean;LightGraphics:Clean;LightVisControls:Clean;CubicProteus:Clean;BionixVCL:Clean;BionixWallpaper:Clean;BioControl:Clean;DemoAllVisualControls:Clean;DnaBaser5:Clean;DUT2:Clean;KeepItAlive:Clean"/>
+        <CallTarget Targets="CCRExif:Clean;ThirdPartyLibs:Clean;LightCore:Clean;LightCommon:Clean;LightTranslator:Clean;LightInternet:Clean;LightGraphics:Clean;LightVisControls:Clean;CubicProteus:Clean;BionixVCL:Clean;BionixWallpaper:Clean;BioControl:Clean;DemoAllVisualControls:Clean;DnaBaser5:Clean;KeepItAlive:Clean;WebSocketDemo:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="CCRExif:Make;ThirdPartyLibs:Make;LightCore:Make;LightCommon:Make;LightTranslator:Make;LightInternet:Make;LightGraphics:Make;LightVisControls:Make;CubicProteus:Make;BionixVCL:Make;BionixWallpaper:Make;BioControl:Make;DemoAllVisualControls:Make;DnaBaser5:Make;DUT2:Make;KeepItAlive:Make"/>
+        <CallTarget Targets="CCRExif:Make;ThirdPartyLibs:Make;LightCore:Make;LightCommon:Make;LightTranslator:Make;LightInternet:Make;LightGraphics:Make;LightVisControls:Make;CubicProteus:Make;BionixVCL:Make;BionixWallpaper:Make;BioControl:Make;DemoAllVisualControls:Make;DnaBaser5:Make;KeepItAlive:Make;WebSocketDemo:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='All'">
-        <BuildGroupProject Include="Proteus\CubicProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+        <BuildGroupProject Include="..\..\Projects System\Keep It Alive\KeepItAlive.dproj">
+            <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\..\Projects System\Keep It Alive\KeepItAlive.dproj">
-            <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
+        <BuildGroupProject Include="Proteus\CubicProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -231,6 +231,12 @@
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\..\Project Commercial\Project LabBook\Server Technologies\WebSockets\Lib StasPiter Github websocket server\1-QuickStart\WebSocketDemo.dproj">
+            <ProjectGuid>{7D4F65D7-27B0-4837-9F04-80C85B785122}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
@@ -268,12 +274,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\..\Project support\Tool - DUT - My Delphi utilities\DUT2.dproj">
-            <ProjectGuid>{C794F3BD-61DB-43F6-8C1F-8F7AEB531E4C}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="LightGraphics.dproj">
             <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -298,15 +298,15 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\Exif\CCRExif.dproj">
-            <ProjectGuid>{0E3CBE29-4ACE-4BC1-92A5-7487A217D813}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="Demo\All Visual Controls\DemoAllVisualControls.dproj">
             <ProjectGuid>{DD580D63-779B-4D0D-821E-E5CFFCCDBB27}</ProjectGuid>
             <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\Exif\CCRExif.dproj">
+            <ProjectGuid>{0E3CBE29-4ACE-4BC1-92A5-7487A217D813}</ProjectGuid>
+            <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>

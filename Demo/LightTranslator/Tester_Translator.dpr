@@ -12,7 +12,7 @@ uses
 {$R *.res}
 
 begin
-  Application.Initialize;
+  Application.Initialize_;
   AppData:= TAppData.Create('Cubic Translator Tester');
   AppData.CreateMainForm(TfrmTester, frmTester, TRUE);
   Application.Run;

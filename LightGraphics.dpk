@@ -31,7 +31,7 @@
 {$DESCRIPTION 'LightSaber - Graphics lib'}
 {$LIBSUFFIX AUTO}
 {$RUNONLY}
-{$IMPLICITBUILD OFF}
+{$IMPLICITBUILD ON}
 
 requires
   rtl,

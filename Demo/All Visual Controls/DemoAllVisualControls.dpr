@@ -9,7 +9,6 @@ uses
 {$R *.res}
 
 begin
-  Application.Initialize;
   AppData:= TAppData.Create('Cubic Tester WinVer');
   AppData.CreateMainForm(TfrmMain, frmMain, TRUE);
   Application.Run;

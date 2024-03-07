@@ -22,21 +22,21 @@ USES
    System.SysUtils, System.Classes, System.Types, System.AnsiStrings, Generics.Collections;
 
 TYPE
-
   TTSL= class helper for TStringList
     public
-     procedure RemoveDuplicateString(CONST s: string);                   { Removes the specified item from the list if it exists there }
-     procedure RemoveDuplicateFile(CONST FileName: string);              { Similar as above but it uses a faster algorithm specialized in comparing file names }
-     procedure RemoveDuplicates;                                   { THIS WILL SORT THE LIST !!! }
+     procedure RemoveDuplicateString(CONST s: string);            { Removes the specified item from the list if it exists there }
+     procedure RemoveDuplicateFile(CONST FileName: string);       { Similar as above but it uses a faster algorithm specialized in comparing file names }
+     procedure RemoveDuplicates;                                  { THIS WILL SORT THE LIST !!! }
      procedure RemoveEmptyLines;
      procedure RemoveTopLines(const aCount: Integer);
      function  RemoveLines   (const BadWord: string): Integer;
      function  KeepLines     (const KeepText: string): Integer;
-     procedure Trim;                                               { Trim empty spaces, tab, enters, etc on each line }
+     procedure Trim;                                              { Trim empty spaces, tab, enters, etc on each line }
      procedure Shuffle;
-     function  FindLine(const Needle: string): Integer;            { Find line that contains the specified text }
+     function  FindLine(const Needle: string): Integer;           { Find line that contains the specified text }
      procedure SortReverse;
      function  HighestString: string;
+     function  Concatenate(const Separator: string): String;
    end;
 
 
@@ -45,6 +45,16 @@ IMPLEMENTATION
 
 USES ccCore;
 
+
+
+{ Returns all lines concatenated in one single line.
+Good to convert a list of items into a single string, where items are separated by semicolumn }
+function TTSL.Concatenate(const Separator: string): String;
+begin
+  Result:= '';
+  for var s in Self do
+    Result:= Result+ s+ ';';
+end;
 
 
 function TTSL.FindLine(CONST Needle: string): Integer;    { Find line that contains the specified text }
@@ -71,7 +81,6 @@ begin
 end;
 
 
-
 function TTSL.KeepLines(CONST KeepText: string): Integer;    { Remove all lines that does not contain this text }
 VAR i: Integer;
 begin
@@ -83,7 +92,6 @@ begin
     Inc(Result);
    end;
 end;
-
 
 
 procedure TTSL.RemoveTopLines(CONST aCount: Integer);    { Remove the firs x lines }
@@ -117,6 +125,16 @@ begin
     Self[i]:= System.SysUtils.Trim(Self[i]);
 end;
 
+
+{ Returns the 'highest' string. For example, if the list contains ABC and ABCD it will return the ABCD string. If the list contains ABCD and B it will return B }
+function TTSL.HighestString: string;
+VAR i: Integer;
+begin
+ Result:= '';
+ for i:= 0 to Self.Count-1 DO
+   if Self[i] > Result
+   then Result:= Self[i];
+end;
 
 
 function StringListSortCompare(List: TStringList; Index1, Index2: Integer): Integer;
@@ -185,17 +203,6 @@ begin
  END;
 
  Sorted:= FALSE;    { We need to cancel Sorted now, otherwise I get "EStringListError: Operation not allowed on sorted list" when I try to edit the lines }
-end;
-
-
-{ Returns the 'highest' string. For example, if the list contains ABC and ABCD it will return the ABCD string. If the list contains ABCD and B it will return B }
-function TTSL.HighestString: string;
-VAR i: Integer;
-begin
- Result:= '';
- for i:= 0 to Self.Count-1 DO
-   if Self[i] > Result
-   then Result:= Self[i];
 end;
 
 

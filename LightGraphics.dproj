@@ -40,7 +40,6 @@
         <DCC_MapFile>3</DCC_MapFile>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_Optimize>false</DCC_Optimize>
-        <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
         <DCC_RangeChecking>true</DCC_RangeChecking>
         <DllSuffix>$(Auto)</DllSuffix>
         <GenDll>true</GenDll>

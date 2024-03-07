@@ -28,7 +28,7 @@ package LightTranslator;
 {$DESCRIPTION 'LightSaber - Translator lib'}
 {$LIBSUFFIX AUTO}
 {$RUNONLY}
-{$IMPLICITBUILD OFF}
+{$IMPLICITBUILD ON}
 
 requires
   Rtl,

@@ -18,7 +18,7 @@ uses
 {$R *.res}
 
 begin
-  Application.Initialize;
+  Application.Initialize_;
   AppData:= TAppData.Create('Cubic Updater Demo');
   AppData.CreateMainForm(TfrmDemoStarter, frmDemoStarter, TRUE);
   Application.Run;

@@ -11,7 +11,7 @@ uses
 {$R *.res}
 
 begin
-  Application.Initialize;
+  Application.Initialize_;
 
   AppData:= TAppData.Create('Cubic Tester WinVer');
   AppData.CreateMainForm(TfrmTester, frmTester, TRUE);

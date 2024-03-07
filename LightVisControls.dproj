@@ -33,6 +33,7 @@
         <DCC_Alignment>2</DCC_Alignment>
         <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
         <DCC_DcuOutput>.\$(ProductVersion)_$(Platform)_$(Config)</DCC_DcuOutput>
+        <DCC_Define>CCRExif,Jpg2000;FastJpg;$(DCC_Define)</DCC_Define>
         <DCC_Description>LightSaber - Visual Controls</DCC_Description>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
@@ -50,7 +51,7 @@
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UsePackage>LightCore;CubicProteus;LightCommon;CCRExif;LightGraphics;LightInternet;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>LightCore;CubicProteus;LightCommon;CCRExif;LightGraphics;LightInternet;vcl;rtl;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_AssertionsAtRuntime>false</DCC_AssertionsAtRuntime>
@@ -73,7 +74,6 @@
         <DCCReference Include="LightInternet.dcp"/>
         <DCCReference Include="LightGraphics.dcp"/>
         <DCCReference Include="CCRExif.dcp"/>
-        <DCCReference Include="CubicProteus.dcp"/>
         <DCCReference Include="cvCalendarCanvas.pas"/>
         <DCCReference Include="cvAssociateExt.pas"/>
         <DCCReference Include="cvCheckListBox.pas"/>

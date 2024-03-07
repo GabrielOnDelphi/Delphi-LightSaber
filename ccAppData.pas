@@ -2,7 +2,7 @@
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.11
+   2024.01
    See Copyright.txt
  ____________________________________________________________________________________________________________
    Via class you can:
@@ -91,7 +91,7 @@ USES
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, FormLog, ccWinVersion;
 
 CONST
-  MSG_LateAppInit = WM_APP + 4711;
+  MSG_LateAppInit = WM_APP + 4711;   // old name: MSG_LateInitialize
 
 TYPE
   TAppData= class(TObject)
@@ -118,9 +118,9 @@ TYPE
     function  ExtractData(VAR Msg: TWMCopyData; OUT s: string): Boolean;
     {}
     class VAR Initializing: Boolean;
-    class VAR NoAutoInit: Boolean;   // If set to True, AppData will not set the Initializing automatically to false once the main form was loaded. This is useful in apps with more than one form.
+    class VAR SignalInitEnd: Boolean;   // If true, AppData will set the 'Initializing' field automatically to false once the main form was loaded. Set it to False in apps with more than one form or apps that require a bit more sophisticated initialization procedure
 
-    constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''); virtual;
+    constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; aSignalInitEnd: Boolean= TRUE); virtual;
     destructor Destroy; override;                              { This is called automatically by "Finalization" in order to call it as late as possible }
 
    {--------------------------------------------------------------------------------------------------
@@ -155,8 +155,8 @@ TYPE
     function  RunSelfAtWinStartUp(Active: Boolean): Boolean;
     function  RunFileAtWinStartUp(CONST FilePath: string; Active: Boolean): Boolean;
 
-    procedure CreateMainForm (aClass: TFormClass; OUT Reference; Show: Boolean; MainFormOnTaskbar: Boolean= TRUE);
-    procedure CreateForm     (aClass: TFormClass; OUT Reference; Show: Boolean);
+    procedure CreateMainForm (aClass: TFormClass; OUT Reference; aShow: Boolean; MainFormOnTaskbar: Boolean= TRUE);
+    procedure CreateForm     (aClass: TFormClass; OUT Reference; aShow: Boolean);
     procedure CreateFormModal(aClass: TFormClass; OUT Reference);    overload;   // Do I need this?
     procedure CreateFormModal(aClass: TFormClass);                   overload;
 
@@ -232,11 +232,12 @@ USES
        This string must be unique in the whole computer! No other app is allowed to have this ID.
        If you leave it empty, the aAppName is used. But AppName might not be that unique, or you might want to change it during the time.
 -------------------------------------------------------------------------------------------------------------}
-constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= '');
+constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= ''; aSignalInitEnd: Boolean= TRUE);
 begin
   Application.Initialize;                         { Note: Emba: Although Initialize is the first method called in the main project source code, it is not the first code that is executed in a GUI application. For example, in Delphi, the application first executes the initialization section of all the units used by the Application.}
 
   inherited Create;
+  SignalInitEnd:= aSignalInitEnd;
   Initializing:= True;                            { Used in cvIniFile.pas. Set it to false once your app finished initializing. }
 
   {* App single instance *}
@@ -284,20 +285,20 @@ end;
    FORMS
 -------------------------------------------------------------------------------------------------------------}
 
-procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; Show: Boolean; MainFormOnTaskbar: Boolean= TRUE);
+procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; aShow: Boolean; MainFormOnTaskbar: Boolean= TRUE);
 begin
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
   Assert(Font = NIL,                 'AppData.Font already assigned!');
 
   Application.MainFormOnTaskbar := FALSE;
-  Application.ShowMainForm      := Show;      // Must be false if we want to prevent form flicker during skin loading at startup
+  Application.ShowMainForm      := aShow;      // Must be false if we want to prevent form flicker during skin loading at startup
 
   Application.CreateForm(aClass, Reference);
-  if Show
+  if aShow
   then TForm(Reference).Show;
 
   // We get the font from the main form. Then we apply this font to any future window.
-  Font:= TForm(Reference).Font;
+  Self.Font:= TForm(Reference).Font;     // We get the AppData.Font from the main form. Then we apply the AppData.Font to any future window.
 
   // Fix issues with snap to edge of the screen
   if ccWinVersion.IsWindows8Up
@@ -308,7 +309,7 @@ begin
   // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory") for details.
   PostMessage(TForm(Reference).Handle, MSG_LateAppInit, 0, 0);
 
-  if NOT NoAutoInit
+  if SignalInitEnd
   then Initializing:= FALSE;
 end;
 
@@ -316,16 +317,16 @@ end;
 { 1. Create the form
   2. Set the font of the new form to be the same as the font of the MainForm
   3. Show it }
-procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean);
+procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; aShow: Boolean);
 begin
   Assert(Application.MainForm <> NIL, 'Probably you forgot to create the main form with AppData.CreateMainForm!');
 
   Application.CreateForm(aClass, Reference);
 
   if TForm(Reference) <> Application.MainForm
-  then TForm(Reference).Font:= Font;
+  then TForm(Reference).Font:= Self.Font;
 
-  if Show then TForm(Reference).Show;
+  if aShow then TForm(Reference).Show;
 end;
 
 

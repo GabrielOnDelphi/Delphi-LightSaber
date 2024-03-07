@@ -61,6 +61,8 @@ USES
 
  procedure BlinkControl      (Control: TControl);                                { Makes the specified control to blink 5 times, to attract user's attention }
 
+ function CreateControl(ControlClass: TControlClass; const ControlName: string; Parent: TControl; X, Y, W, H: Integer): TControl;
+
 
 IMPLEMENTATION
 Uses ccCore;
@@ -133,11 +135,6 @@ begin
       then Result := C;
     end;
 end;
-
-
-
-
-
 
 
 
@@ -448,7 +445,7 @@ begin
      Result.OnClick    := Event;
      Result.Caption    := Caption;
      ParentMenu.Add(Result);
-   except
+   EXCEPT
      FreeAndNil( Result );
      RAISE;
    END;
@@ -462,13 +459,30 @@ VAR
 begin
  for i:= ParentMenu.Count-1 downto 0 DO
   begin
-   SubItem:= ParentMenu.Items[i];
-   ParentMenu.Remove(SubItem);
-   FreeAndNil(SubItem);
+    SubItem:= ParentMenu.Items[i];
+    ParentMenu.Remove(SubItem);
+    FreeAndNil(SubItem);
   end;
 end;
 
 
+
+
+{-------------------------------------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------------------------------------}
+ // Example: CreateControl(TEdit, 'Edit1', 10, 10, 100, 20);
+ function CreateControl(ControlClass: TControlClass; const ControlName: string; Parent: TControl; X, Y, W, H: Integer): TControl;
+ begin
+   Result := ControlClass.Create(Parent);
+   with Result do
+     begin
+       Parent := Parent;
+       Name   := ControlName;
+       SetBounds(X, Y, W, H);
+       Visible:= True;
+     end;
+ end;
 
 
 end.

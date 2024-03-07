@@ -24,9 +24,12 @@
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
+{$DEFINE CCRExif}
+{$DEFINE Jpg2000}
+{$DEFINE FastJpg}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'LightSaber - Visual Controls'}
-{$LIBSUFFIX '270'}
+{$LIBSUFFIX AUTO}
 {$IMPLICITBUILD ON}
 
 requires
@@ -36,8 +39,7 @@ requires
   LightCommon,
   LightInternet,
   LightGraphics,
-  CCRExif,
-  CubicProteus;
+  CCRExif;
 
 contains
   cvCalendarCanvas in 'cvCalendarCanvas.pas',

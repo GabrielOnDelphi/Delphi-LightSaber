@@ -33,13 +33,12 @@
         <DCC_Alignment>2</DCC_Alignment>
         <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
         <DCC_DcuOutput>.\$(ProductVersion)_$(Platform)_$(Config)</DCC_DcuOutput>
-        <DCC_Description>LightSaber - Common lib</DCC_Description>
+        <DCC_Description>LightSaber - Common tools</DCC_Description>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
         <DCC_MapFile>3</DCC_MapFile>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_Optimize>false</DCC_Optimize>
-        <DCC_OutputNeverBuildDcps>true</DCC_OutputNeverBuildDcps>
         <DCC_RangeChecking>true</DCC_RangeChecking>
         <DllSuffix>$(Auto)</DllSuffix>
         <GenDll>true</GenDll>

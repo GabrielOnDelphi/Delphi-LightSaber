@@ -16,7 +16,7 @@ uses
 {$R *.res}
 
 begin
-  Application.Initialize;
+  Application.Initialize_;
   AppData:= TAppData.Create('Cubic Tester IO');
   AppData.CreateMainForm(TForm6, Form6, TRUE);
   Application.Run;
