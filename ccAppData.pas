@@ -39,11 +39,11 @@
  ____________________________________________________________________________________________________________
 
    Usage
-     In the DPR file do:
-       Application.Initialize;
+     In the DPR file replace the code with:
        AppData:= TAppData.Create('MyCollApp');
-       AppData.CreateMainForm(TMainForm, MainForm);    // Main form
-       AppData.CreateForm(TSecondFrom, frmSecond);     // Secondary form(s)
+       AppData.CreateMainForm(TMainForm, MainForm, True, True);    // Main form
+       AppData.CreateForm(TSecondFrom, frmSecond);                 // Secondary form(s)
+       Application.Run;
 
        Not necessary anymore:
          Application.Title := AppData.AppName;

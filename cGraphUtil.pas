@@ -104,7 +104,10 @@ TYPE
  function  DarkenColor         (aColor: TColor; Percent: Byte): TColor;                           {  make a color more dark or light. Percent arata la cat la suta din luminozitate sa pun noua valoare. O= totally dark, 100= unchanged }
  function  LightenColor        (aColor: TColor; Percent: Byte): TColor;
 
- function  SimilarColor        (Color1, Color2: TColor; Tolerance: Integer): Boolean; { Checks is two colors are similar }
+ function  ChangeBrightness    (aSource: TColor; Change: Integer): TColor;
+ function  ChangeColor         (aSourceColor, aDestClr: TColor; Change: Integer): TColor;         { Change Source color towards Destination. Change is in 'percents'. }
+
+ function  SimilarColor        (Color1, Color2: TColor; Tolerance: Integer): Boolean;             { Checks is two colors are similar }
  function  ComplementaryColor  (aColor: TColor): TColor;
 
  { Color conversion }
@@ -118,9 +121,9 @@ TYPE
  function  Integer2Color       (i: Integer): TColor;                                              { Tries to make a color from an integer. The color are 'lighted' in this order: BGR.   }
 
  { Color blend }
- function  BlendColors         (Color1, Color2: TColor; A: Byte): TColor;                   { Mixing two colors.     Usage  NewColor:= Blend(Color1, Color2, blending level 0 to 100);    Source: http://rmklever.com/?cat=6 }
+ function  BlendColors         (Color1, Color2: TColor; A: Byte): TColor;                         { Mixing two colors.     Usage  NewColor:= Blend(Color1, Color2, blending level 0 to 100);    Source: http://rmklever.com/?cat=6 }
  {$IF Defined(CPUX86)}
- function  CombinePixels       (Pixels: PByte; Weights: PInteger; Size: Cardinal): Integer; { NOT TESTED UNDER WIN64. IT MIGHT WORK! }
+ function  CombinePixels       (Pixels: PByte; Weights: PInteger; Size: Cardinal): Integer;       { NOT TESTED UNDER WIN64. IT MIGHT WORK! }
  function  MixColors           (FG, BG: TColor; BlendPower: Byte): TColor;
  {$ELSE}
  function  MixColors           (FG, BG: TColor; BlendPower: Byte): TColor; {$ENDIF}
@@ -428,6 +431,54 @@ begin
   B := Round(B*Percent/100) + Round(255 - Percent/100*255);
   Result := RGB(R, G, B);
 end;
+
+
+
+
+TYPE
+  TRGBColor = packed record
+      case Boolean of
+        TRUE:  (Color: LongInt);
+        FALSE: (r: Byte;
+                g: Byte;
+                b: Byte;
+                a: Byte;);
+  end;
+
+{ Change brightness. Change is in 'value' not in 'percents'. }
+function ChangeBrightness(aSource: TColor; Change: Integer): TColor;
+VAR
+   Source: TRGBColor;
+begin
+  Source.Color := ColorToRGB(aSource);
+
+  Source.r := Min(Max(Source.r + Change, 0), 255);
+  Source.g := Min(Max(Source.g + Change, 0), 255);
+  Source.b := Min(Max(Source.b + Change, 0), 255);  // We use Min/Max to ensure RGB remains in the 0-255 range.
+
+  Result   := Source.Color;
+end;
+
+
+
+{ Change Source color towards Destination. Change is in 'percents'. }
+function ChangeColor(aSourceColor, aDestClr: TColor; Change: Integer): TColor;
+VAR
+    Source, Dest: TRGBColor;
+begin
+  Source.Color := ColorToRGB(aSourceColor);
+  Dest.Color   := ColorToRGB(aDestClr);
+
+  Source.b := Min(Max (Source.b - Round(Change * (Source.b - Dest.b) / 100), 0), 255);
+  Source.g := Min(Max (Source.g - Round(Change * (Source.g - Dest.g) / 100), 0), 255);
+  Source.r := Min(Max (Source.r - Round(Change * (Source.r - Dest.r) / 100), 0), 255);
+
+  Result := Source.Color;
+end;
+
+
+
+
 
 
 
