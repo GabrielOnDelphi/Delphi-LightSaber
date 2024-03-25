@@ -1,9 +1,7 @@
 # Delphi-LightSaber
 
 **Short description**   
-Contains useful functions.   
-Lightweight (only 10000 lines of code) alternative to Jedi library.  
-[Home]([url](https://gabrielmoraru.com/my-delphi-code/delphi-light-saber/)) 
+Contains useful Delphi functions. Lightweight (only 10000 lines of code) alternative to Jedi library. 
 
 **Description**   
 
@@ -13,6 +11,8 @@ Simple, crystal clear, non-obfuscated, fully commented and curated code.
 No (direct) external dependencies. 
 More than 15 years of development have been put in this library.   
 Click the 'Watch' button if you want to get notified about updates.  
+
+[Details](https://gabrielmoraru.com/my-delphi-code/delphi-light-saber/) 
 
 _________________
 
