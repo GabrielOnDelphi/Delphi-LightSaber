@@ -1,6 +1,7 @@
 # Delphi-LightSaber
 
 **Short description**   
+
 Contains useful Delphi functions. Lightweight (only 10000 lines of code) alternative to Jedi library. 
 
 **Description**   
@@ -12,7 +13,7 @@ No (direct) external dependencies.
 More than 15 years of development have been put in this library.   
 Click the 'Watch' button if you want to get notified about updates.  
 
-[Details](https://gabrielmoraru.com/my-delphi-code/delphi-light-saber/) 
+[More like this](https://gabrielmoraru.com/my-delphi-code) 
 
 _________________
 
@@ -195,3 +196,8 @@ Example:
 - cmPowerUtils.pas (Cubic common library)  
 - ciEmailSender.pas (Cubic internet library)  
 - cmPowerUtils.pas (Cubic common library)  
+
+
+
+
+[More like this](https://gabrielmoraru.com/my-delphi-code) 
