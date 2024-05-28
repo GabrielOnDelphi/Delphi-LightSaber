@@ -116,7 +116,7 @@ TYPE
 
  { Color split }
  function  RGB2Color           (R,G,B: Integer): Cardinal; deprecated 'Use WinApi.Windows.RGB instead.'  { !!!!! uses WinApi.Windows.RGB(R,G,B) }
- function  RGB2Gray            (aColor: TColor) : TColor;                                         { If you want to convert a colored image into same gray scaled, then you must convert the color of the each pixel by the next schema }
+ //function  RGB2Gray          (aColor: TColor) : TColor;  see RGB2Gray.pas            { If you want to convert a colored image into same gray scaled, then you must convert the color of the each pixel by the next schema }
  procedure SplitColor2RGB      (aColor: TColor; OUT R,G,B: Byte);
  function  Integer2Color       (i: Integer): TColor;                                              { Tries to make a color from an integer. The color are 'lighted' in this order: BGR.   }
 
@@ -551,20 +551,6 @@ function RGB2Color(R,G,B: Integer): Cardinal;                                   
 begin
  Result:= WinApi.Windows.RGB(R,G,B);
 end;
-
-
-
-function RGB2Gray(aColor: TColor): TColor;
-var Target: Byte;
-begin
-  aColor:= ColorToRGB(aColor);                                                                     {  GetRValue which accepts cardinals. However, TColor is integer. So I need a conversion else I get e RangeCheckError one line below.       See this: http://stackoverflow.com/questions/9809687/windows-getrvalue-accepts-cardinals-but-tcolor-is-integer}
-  Target := Round(
-          (0.30 * GetRValue(aColor)) +
-          (0.59 * GetGValue(aColor)) +
-          (0.11 * GetBValue(aColor)));
-  Result:= RGB(Target, Target, Target);
-end;
-
 
 
 function Integer2Color(i: Integer): TColor;     { Tries to make a color from an integer. The color are 'lighted' in this order: BGR.   }

@@ -325,6 +325,7 @@ TYPE
  function  Reverse             (CONST s: String): string; deprecated 'ccCore.Reverse is deprecated. Use System.StrUtils.ReverseString';
  function  GetRandomPersonName: string;   { Returns a random name in a 100 unique name list }
  function  GetRandomStreetName: string;
+ function  CharIsLetter(CONST c: char): Boolean;
 
  // COMPARE
  function  StringFuzzyCompare  (s1, s2: string): Integer;                                                         { The function checks if any identical characters is in the near of the actual compare position }
@@ -577,8 +578,7 @@ CONST
 
 IMPLEMENTATION
 
-USES
-  ccStreamBuff;
+{ Don't add any dependecies to LightSaber here if possible in order to keep ccCore as single-file library }
 
 
 
@@ -1471,7 +1471,7 @@ end;
 
 
 {$Hints Off}       {Needed to silence  "Value assigned to 'iTemp' never used" }
-function  StringIsInteger2(CONST s: string): Boolean;
+function StringIsInteger2(CONST s: string): Boolean;
 VAR iTemp, E: integer;
 begin
  Val(s, iTemp, E);
@@ -1484,6 +1484,14 @@ function CharIsNumber(CONST c: char): Boolean;
 begin
  Result:= CharInSet(c, Numbers);
 end;
+
+
+function CharIsLetter(CONST c: char): Boolean;
+begin
+ Result:= CharInSet(c, Alphabet);
+end;
+
+
 
 
 
@@ -2448,12 +2456,12 @@ end;
 
 function GetEnterTypeS(CONST InputFile: string): string;
 VAR
-   InpStream: TCubicBuffStream;
+   InpStream: System.Classes.TBufferedFileStream;
 begin
  if NOT FileExists(InputFile)
  then raise exception.Create('Input file does not exist!');
 
- InpStream:= TCubicBuffStream.Create(InputFile, fmOpenRead);
+ InpStream:= TBufferedFileStream.Create(InputFile, fmOpenRead);
  TRY
   case GetEnterType(InpStream) of
     etWin: result:= 'Win';
@@ -2598,14 +2606,14 @@ end;
 
 procedure WinToUnix(CONST InputFile, OutputFile: String; Notify: TConvertNotify);
 VAR
-   InpStream: TCubicBuffStream;
-   OutStream: TCubicBuffStream;
+   InpStream: System.Classes.TBufferedFileStream;
+   OutStream: System.Classes.TBufferedFileStream;
 begin
  if NOT FileExists(InputFile)
  then RAISE Exception.Create('Input file does not exist!');
 
- InpStream:= TCubicBuffStream.CreateRead(InputFile);
- OutStream:= TCubicBuffStream.CreateWrite(OutputFile);
+ InpStream:= TBufferedFileStream.Create(InputFile,  fmOpenRead, 1*mb);
+ OutStream:= TBufferedFileStream.Create(OutputFile, fmOpenWrite OR fmCreate);
  TRY
    WinToUnix(InpStream, OutStream, Notify);
  FINALLY
@@ -2618,14 +2626,14 @@ end;
 
 procedure UnixToWin(CONST InputFile, OutputFile: String; Notify: TConvertNotify);
 VAR
-   InpStream: TCubicBuffStream;
-   OutStream: TCubicBuffStream;
+   InpStream: System.Classes.TBufferedFileStream;
+   OutStream: System.Classes.TBufferedFileStream;
 begin
  if NOT FileExists(InputFile)
  then raise exception.Create('Input file does not exist!');
 
- InpStream:= TCubicBuffStream.Create(InputFile, fmOpenRead);
- OutStream:= TCubicBuffStream.Create(OutputFile, fmOpenWrite OR fmCreate);
+ InpStream:= TBufferedFileStream.Create(InputFile,  fmOpenRead);
+ OutStream:= TBufferedFileStream.Create(OutputFile, fmOpenWrite OR fmCreate);
  TRY
   UnixToWin(InpStream, OutStream, Notify);
  FINALLY
@@ -2638,18 +2646,18 @@ end;
 
 function MacToWin(CONST InputFile, OutputFile: string): Boolean;                                         { CR to CRLF. Not tested! }
 VAR
-   InpStream: TCubicBuffStream;
-   OutStream: TCubicBuffStream;
+   InpStream: System.Classes.TBufferedFileStream;
+   OutStream: System.Classes.TBufferedFileStream;
 begin
  if NOT FileExists(InputFile)
  then raise exception.Create('Input file does not exist!');
 
- InpStream:= TCubicBuffStream.CreateRead(InputFile);
+ InpStream:= TBufferedFileStream.Create(InputFile, fmOpenRead, 1*mb);
  TRY
   Result:= IsMacFile(InpStream);
   if Result then
    begin
-    OutStream:= TCubicBuffStream.CreateWrite(OutputFile);
+    OutStream:= TBufferedFileStream.Create(OutputFile, fmOpenWrite OR fmCreate);
     TRY
      InpStream.Position:= 0;    { Needs reset because of IsMacFile }
      MacToWin(InpStream, OutStream);
@@ -3534,7 +3542,7 @@ end;
 
 
 { Looks for Needle (partial search) into the Haystack.
-  When needle it found then it returns the whole line that contained the Needle.
+  If found, returns the whole line that contained the Needle.
   Haystack is a string what contains multiple lines of text separated by enter. } // Old name: ExtractLine
 function FindLine(CONST Needle, Haystack: string): string;
 VAR
@@ -3551,18 +3559,6 @@ begin
   FreeAndNil(TSL);
  END;
 end;
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

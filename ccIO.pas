@@ -158,6 +158,7 @@ CONST
  function  ForcePathDelimiters  (CONST Path, Delimiter: string; SetAtBegining, SetAtEnd: Boolean): string;  { Old name: UniversalPathDelimiters }
  function  Trail                (CONST Path: string): string;                                      { inlocuitor pt includeTrailingPathDelimiter }
 
+ //See also: SysUtil.SameFileName
  function  SameFolder(Path1, Path2: string): Boolean;                                              { Receives two folders. Ex:  C:\Test1\ and C:\teSt1 will return true }
  function  SameFolderFromFile(Path1, Path2: string): Boolean;                                      { Receives two partial or complete file names and compare their folders. Ex:  C:\Test1 and C:\teSt1\me.txt will return true }
  function  IsSubfolder(Path1: String; Path2: String): Boolean;
@@ -235,7 +236,7 @@ CONST
  function  FindFirstFile       (CONST aFolder, Ext: string): string;                               { Find first file in the specified folder }
  function  ListDirectoriesOf   (CONST aFolder: string; CONST ReturnFullPath, DigSubdirectories: Boolean): TStringList;   { if DigSubdirectories is false, it will return only the top level directories, else it will return also the subdirectories of subdirectories. Returned folders are FullPath. Works also with Hidden/System folders }
  function  ListFilesAndFolderOf(CONST aFolder: string; CONST ReturnFullPath: Boolean): TStringList;
- function  ListFilesOf         (CONST aFolder, FileType: string; CONST ReturnFullPath, DigSubdirectories: Boolean; ExcludeFolders: TStringList= nil): TStringList;
+ function  ListFilesOf         (CONST aFolder, FileType: string; CONST ReturnFullPath, DigSubdirectories: Boolean; ExcludeFolders: TStrings= nil): TStringList;
  function  FolderIsEmpty       (CONST FolderName: string): Boolean;                               { Check if folder is empty }
 
 
@@ -279,8 +280,10 @@ CONST
 {--------------------------------------------------------------------------------------------------
    FILE - DETECT FILE TYPE
 --------------------------------------------------------------------------------------------------}
- function IsVideo       (CONST AGraphFile: string): Boolean;            { Video files supported by FFVCL (cFrameServerAVI) }
- function IsVideoGeneric(CONST AGraphFile: string) : Boolean;           { Generic video file detection. It doesn't mean I have support for all those files in my app }
+ function IsThisType    (CONST AFile, FileType: string) : Boolean;                                 { Returns true if the specified file is of the 'FileType' type }
+
+ function IsVideo       (CONST AGraphFile: string) : Boolean;                                      { Video files supported by FFVCL (cFrameServerAVI) }
+ function IsVideoGeneric(CONST AGraphFile: string) : Boolean;                                      { Generic video file detection. It doesn't mean I have support for all those files in my app }
  function IsGIF         (CONST AGraphFile: string) : Boolean;
 
  function IsJpg   (CONST AGraphFile: string) : Boolean;
@@ -292,7 +295,7 @@ CONST
  function IsICO   (CONST AGraphFile: string) : Boolean;
  function IsEMF   (CONST AGraphFile: string) : Boolean;
  function IsWMF   (CONST AGraphFile: string) : Boolean;
- function IsImage (CONST AGraphFile: string) : Boolean;          { returns TRUE if the file has a good/known extension and it can be converted to BMP }
+ function IsImage (CONST AGraphFile: string) : Boolean;                                            { returns TRUE if the file has a good/known extension and it can be converted to BMP }
  function IsImage2Bmp(CONST AGraphFile: string) : Boolean;
 
  function IsDfm   (CONST FileName  : string) : Boolean;
@@ -1076,6 +1079,17 @@ end;
 {--------------------------------------------------------------------------------------------------
    FILE - DETECT FILE TYPE
 --------------------------------------------------------------------------------------------------}
+
+{ Returns true if the specified file is of the 'FileType' type.
+  Example: Check if a file is BMP:
+           IsThisType('c:\Test.bMP', BmP) will return true }
+function IsThisType(CONST AFile, FileType: string) : Boolean;
+VAR sExtension: string;
+begin
+ sExtension:= ExtractFileExt(AFile);
+ Result:= SameText(sExtension, '.'+FileType)
+end;
+
 
 { Video files supported by FFVCL (cFrameServerAVI) }
 function IsVideo(CONST AGraphFile: string): Boolean;
@@ -3212,7 +3226,7 @@ end;
   Based on code from Marco Cantu Delphi 2010 HandBook.
 
   Works with UNC paths. }
-function ListFilesOf(CONST aFolder, FileType: string; CONST ReturnFullPath, DigSubdirectories: Boolean; ExcludeFolders: TStringList= nil): TStringList;
+function ListFilesOf(CONST aFolder, FileType: string; CONST ReturnFullPath, DigSubdirectories: Boolean; ExcludeFolders: TStrings= nil): TStringList;
 VAR
   i: Integer;
   s: string;
@@ -3498,7 +3512,7 @@ begin
  Result:= #0;
  s:= ExtractFileDrive(Path);                                                                       { If the given path contains neither style of path prefix, the result is an empty string. }
  if s<> '' then
-   if CharInSet(s[1], FullAlfabet)                                                                 { We don't accept network paths (\\) }
+   if CharIsLetter(s[1])                                                                           { We don't accept network paths (\\) }
    then Result:= UpCase(s[1]);
 end;
 

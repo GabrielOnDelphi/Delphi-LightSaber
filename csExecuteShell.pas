@@ -58,7 +58,7 @@ USES
  function  ExecuteShell    (CONST ExeFile: string; Params: string= ''; ShowErrorMsg: Boolean= TRUE; WindowState: Integer= SW_SHOWNORMAL): Boolean;  { WindowState can be  as defined in WinApi.Windows.pas: SW_HIDE, SW_SHOWNORMAL, SW_NORMAL, SW_SHOWMINIMIZED, SW_SHOWMAXIMIZED, SW_MAXIMIZE, SW_SHOWNOACTIVATE, SW_SHOW, SW_MINIMIZE, SW_SHOWMINNOACTIVE, SW_SHOWNA, SW_RESTORE, SW_SHOWDEFAULT, SW_MAX }
  function  ExecuteShellEx  (CONST ExeFile: string; Params: string= ''; ShowErrorMsg: Boolean= TRUE; WindowState: Integer= SW_SHOWNORMAL): Boolean;
  function  ExecuteAndWait  (CONST ExeFile: string; Params: string= ''; Hide: Boolean= FALSE; WaitTime: Cardinal= INFINITE): Boolean;
- function  ExecuteAsAdmin  (hWnd: HWND; aFile: String; Params: String): Boolean;
+ function  ExecuteAsAdmin  (CONST ExeFile: string; Params: string= ''; hWnd: HWND= 0): Boolean;
 
  { ShellExecute Utils }
  procedure ExecuteURL      (URL: string);
@@ -173,7 +173,7 @@ begin
  else
   begin
    if ShowErrorMsg
-   then Mesaj(SysErrorMessage(GetLastError));
+   then MesajError(SysErrorMessage(GetLastError));
    EXIT(FALSE);
   end;
 
@@ -183,21 +183,20 @@ end;
 
 
 
-function ExecuteAsAdmin(hWnd: HWND; aFile: String; Params: String): Boolean; { Source: Delphi Handbook / Marco Cantu - Works fine }
+// learn.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-shellexecuteinfow
+function ExecuteAsAdmin(CONST ExeFile: string; Params: string= ''; hWnd: HWND= 0): Boolean; { Source: Delphi Handbook / Marco Cantu - Works fine }
 VAR ShellInfo: TShellExecuteInfo;
 begin
  FillChar(ShellInfo, SizeOf(ShellInfo), 0);
  ShellInfo.cbSize:= SizeOf(ShellInfo);
  ShellInfo.fMask:= SEE_MASK_FLAG_DDEWAIT OR SEE_MASK_FLAG_NO_UI;
- ShellInfo.Wnd:= hWnd;
+ ShellInfo.Wnd:= hWnd;                           // Optional. A handle to the owner window, used to display and position any UI that the system might produce while executing this function.
  ShellInfo.lpVerb:= 'runas';
- ShellInfo.lpFile:= PChar(aFile);
+ ShellInfo.lpFile:= PChar(ExeFile);
  ShellInfo.lpParameters:= PChar(Params);
  ShellInfo.nShow:= SW_SHOWNORMAL;
 
  Result:= ShellExecuteEx(@ShellInfo);
- if NOT Result
- then RaiseLastOSError;
 end;
 
 

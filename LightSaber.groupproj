@@ -42,15 +42,6 @@
         <Projects Include="Demo\All Visual Controls\DemoAllVisualControls.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="..\..\Biology\Baser\!DnaBaser src\DnaBaser5.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="..\..\Projects System\Keep It Alive\KeepItAlive.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="..\..\Project Commercial\Project LabBook\Server Technologies\WebSockets\Lib StasPiter Github websocket server\1-QuickStart\WebSocketDemo.dproj">
-            <Dependencies/>
-        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -176,53 +167,100 @@
     <Target Name="DemoAllVisualControls:Make">
         <MSBuild Projects="Demo\All Visual Controls\DemoAllVisualControls.dproj" Targets="Make"/>
     </Target>
-    <Target Name="DnaBaser5">
-        <MSBuild Projects="..\..\Biology\Baser\!DnaBaser src\DnaBaser5.dproj"/>
-    </Target>
-    <Target Name="DnaBaser5:Clean">
-        <MSBuild Projects="..\..\Biology\Baser\!DnaBaser src\DnaBaser5.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="DnaBaser5:Make">
-        <MSBuild Projects="..\..\Biology\Baser\!DnaBaser src\DnaBaser5.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="KeepItAlive">
-        <MSBuild Projects="..\..\Projects System\Keep It Alive\KeepItAlive.dproj"/>
-    </Target>
-    <Target Name="KeepItAlive:Clean">
-        <MSBuild Projects="..\..\Projects System\Keep It Alive\KeepItAlive.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="KeepItAlive:Make">
-        <MSBuild Projects="..\..\Projects System\Keep It Alive\KeepItAlive.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="WebSocketDemo">
-        <MSBuild Projects="..\..\Project Commercial\Project LabBook\Server Technologies\WebSockets\Lib StasPiter Github websocket server\1-QuickStart\WebSocketDemo.dproj"/>
-    </Target>
-    <Target Name="WebSocketDemo:Clean">
-        <MSBuild Projects="..\..\Project Commercial\Project LabBook\Server Technologies\WebSockets\Lib StasPiter Github websocket server\1-QuickStart\WebSocketDemo.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="WebSocketDemo:Make">
-        <MSBuild Projects="..\..\Project Commercial\Project LabBook\Server Technologies\WebSockets\Lib StasPiter Github websocket server\1-QuickStart\WebSocketDemo.dproj" Targets="Make"/>
-    </Target>
     <Target Name="Build">
-        <CallTarget Targets="CCRExif;ThirdPartyLibs;LightCore;LightCommon;LightTranslator;LightInternet;LightGraphics;LightVisControls;CubicProteus;BionixVCL;BionixWallpaper;BioControl;DemoAllVisualControls;DnaBaser5;KeepItAlive;WebSocketDemo"/>
+        <CallTarget Targets="CCRExif;ThirdPartyLibs;LightCore;LightCommon;LightTranslator;LightInternet;LightGraphics;LightVisControls;CubicProteus;BionixVCL;BionixWallpaper;BioControl;DemoAllVisualControls"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="CCRExif:Clean;ThirdPartyLibs:Clean;LightCore:Clean;LightCommon:Clean;LightTranslator:Clean;LightInternet:Clean;LightGraphics:Clean;LightVisControls:Clean;CubicProteus:Clean;BionixVCL:Clean;BionixWallpaper:Clean;BioControl:Clean;DemoAllVisualControls:Clean;DnaBaser5:Clean;KeepItAlive:Clean;WebSocketDemo:Clean"/>
+        <CallTarget Targets="CCRExif:Clean;ThirdPartyLibs:Clean;LightCore:Clean;LightCommon:Clean;LightTranslator:Clean;LightInternet:Clean;LightGraphics:Clean;LightVisControls:Clean;CubicProteus:Clean;BionixVCL:Clean;BionixWallpaper:Clean;BioControl:Clean;DemoAllVisualControls:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="CCRExif:Make;ThirdPartyLibs:Make;LightCore:Make;LightCommon:Make;LightTranslator:Make;LightInternet:Make;LightGraphics:Make;LightVisControls:Make;CubicProteus:Make;BionixVCL:Make;BionixWallpaper:Make;BioControl:Make;DemoAllVisualControls:Make;DnaBaser5:Make;KeepItAlive:Make;WebSocketDemo:Make"/>
+        <CallTarget Targets="CCRExif:Make;ThirdPartyLibs:Make;LightCore:Make;LightCommon:Make;LightTranslator:Make;LightInternet:Make;LightGraphics:Make;LightVisControls:Make;CubicProteus:Make;BionixVCL:Make;BionixWallpaper:Make;BioControl:Make;DemoAllVisualControls:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
-    <ItemGroup Condition="'$(BuildGroup)'=='All'">
-        <BuildGroupProject Include="..\..\Projects System\Keep It Alive\KeepItAlive.dproj">
-            <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
-            <Configurations>Debug</Configurations>
+    <ItemGroup Condition="'$(BuildGroup)'=='Release'">
+        <BuildGroupProject Include="Proteus\CubicProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCommon.dproj">
+            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj">
+            <ProjectGuid>{0A1AA5C0-4064-4F84-9485-EC81B8B74BEA}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightVisControls.dproj">
+            <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightTranslator.dproj">
+            <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\..\Biology\!BioControl Lib\BioControl.dproj">
+            <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightGraphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\Third party packages\ThirdPartyLibs.dproj">
+            <ProjectGuid>{A6E3A953-404B-490C-8F1A-AEB23216C925}</ProjectGuid>
+            <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Proteus\CubicProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
-            <Configurations>Debug</Configurations>
+        <BuildGroupProject Include="LightInternet.dproj">
+            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\..\BioniX\SourceCode\BionixWallpaper.dproj">
+            <ProjectGuid>{7DEDC191-0E7D-40EA-A977-92CEEC3AEF0C}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\Exif\CCRExif.dproj">
+            <ProjectGuid>{0E3CBE29-4ACE-4BC1-92A5-7487A217D813}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\All Visual Controls\DemoAllVisualControls.dproj">
+            <ProjectGuid>{DD580D63-779B-4D0D-821E-E5CFFCCDBB27}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+    <ItemGroup Condition="'$(BuildGroup)'=='All'">
+        <BuildGroupProject Include="..\Exif\CCRExif.dproj">
+            <ProjectGuid>{0E3CBE29-4ACE-4BC1-92A5-7487A217D813}</ProjectGuid>
+            <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
@@ -232,17 +270,11 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\..\Project Commercial\Project LabBook\Server Technologies\WebSockets\Lib StasPiter Github websocket server\1-QuickStart\WebSocketDemo.dproj">
-            <ProjectGuid>{7D4F65D7-27B0-4837-9F04-80C85B785122}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
-            <Configurations/>
-            <Platforms/>
-            <Enabled>False</Enabled>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj">
             <ProjectGuid>{0A1AA5C0-4064-4F84-9485-EC81B8B74BEA}</ProjectGuid>
@@ -256,17 +288,11 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\..\Biology\Baser\!DnaBaser src\DnaBaser5.dproj">
-            <ProjectGuid>{534CF5F7-A6A2-4970-8149-856E64D3CF74}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="LightTranslator.dproj">
             <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
+            <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\..\Biology\!BioControl Lib\BioControl.dproj">
             <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
@@ -282,8 +308,8 @@
         </BuildGroupProject>
         <BuildGroupProject Include="..\Third party packages\ThirdPartyLibs.dproj">
             <ProjectGuid>{A6E3A953-404B-490C-8F1A-AEB23216C925}</ProjectGuid>
-            <Configurations/>
-            <Platforms/>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="LightInternet.dproj">
@@ -302,13 +328,13 @@
             <ProjectGuid>{DD580D63-779B-4D0D-821E-E5CFFCCDBB27}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
+            <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\Exif\CCRExif.dproj">
-            <ProjectGuid>{0E3CBE29-4ACE-4BC1-92A5-7487A217D813}</ProjectGuid>
-            <Configurations>Release</Configurations>
+        <BuildGroupProject Include="Proteus\CubicProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+            <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
+            <Enabled>True</Enabled>
         </BuildGroupProject>
     </ItemGroup>
 </Project>
