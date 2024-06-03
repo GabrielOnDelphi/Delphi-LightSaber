@@ -1,7 +1,10 @@
 UNIT FormProxy;
-{--------------------------------------------------------------------------------------------------
-  CubicDesign
-  2019.07
+
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
   Let user specify if he wants to connect the program directly to Internet, via a gateway or via a proxy list.
   For the third option, a proxy list can be loaded/saved to/from disk
@@ -10,7 +13,7 @@ UNIT FormProxy;
 
   How to use it:
     Initialize like this: frameProxy.LoadProxyFile(AppData.AppDataFolder+ 'ProxyList.txt');
---------------------------------------------------------------------------------------------------}
+=============================================================================================================}
 
 INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }

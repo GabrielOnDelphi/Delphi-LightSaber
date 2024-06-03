@@ -2,9 +2,10 @@
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2024.05
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
+
    Image resizers
    Based on GR32.Transform
 
@@ -28,7 +29,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, Vcl.Graphics,
-  GR32, GR32_Transforms, GR32_Resamplers, GR32_Backends, ccCore;
+  GR32, GR32_Transforms, GR32_Resamplers, ccCore;
 
 
 CONST

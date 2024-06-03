@@ -45,7 +45,7 @@ procedure ShowSplashScreen(ImgFileSize: integer);
 
 
 IMPLEMENTATION  {$R *.dfm}
-USES ccIO, ccAppdata;
+USES ccIO, cGraphUtil, cmSound, cmVclUtils, ccCenterControl, ccAppdata;
 
 CONST
   StepUp    = 30;  { The higher the number the faster the speed (less time on screen) }

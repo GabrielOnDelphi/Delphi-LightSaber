@@ -227,7 +227,7 @@ end;
   Source:
       http://stackoverflow.com/questions/25723807/execute-dos-program-and-get-output-dynamically
 --------------------------------------------------------------------------------------------------}
-{$WARN SYMBOL_PLATFORM OFF}
+{.$WARN SYMBOL_PLATFORM OFF}
 {$IFDEF msWindows}
 procedure ExecuteAndGetOutDyn(CONST CmdLine: string; CONST Output: TProc<string>; AntiFreeze: Boolean; Hide: Boolean= TRUE; Timeout: Cardinal= 100);  { Run a DOS program and retrieve its output dynamically while it is running. As TimeOut use 100 (ms) }
 CONST

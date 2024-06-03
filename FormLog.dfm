@@ -9,14 +9,12 @@ object frmLog: TfrmLog
   Color = clBtnFace
   DoubleBuffered = True
   ParentFont = True
-  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 3
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
-  TextHeight = 13
+  TextHeight = 15
   object Container: TPanel
     Left = 0
     Top = 0
@@ -48,7 +46,6 @@ object frmLog: TfrmLog
       ScrollBars = ssBoth
       TabOrder = 1
       WordWrap = False
-      Zoom = 100
       OnError = LogError
     end
     object pnlBottom: TPanel

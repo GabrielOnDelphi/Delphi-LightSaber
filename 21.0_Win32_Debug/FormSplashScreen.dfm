@@ -1,0 +1,52 @@
+object frmSplash: TfrmSplash
+  Left = 562
+  Top = 500
+  AlphaBlend = True
+  AlphaBlendValue = 11
+  AutoSize = True
+  BorderIcons = []
+  BorderStyle = bsNone
+  Caption = 'Welcome...'
+  ClientHeight = 186
+  ClientWidth = 810
+  Color = 3092271
+  TransparentColor = True
+  TransparentColorValue = 3092271
+  DoubleBuffered = True
+  Font.Charset = ANSI_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Arial'
+  Font.Style = []
+  FormStyle = fsStayOnTop
+  OldCreateOrder = False
+  Position = poScreenCenter
+  ScreenSnap = True
+  ShowHint = True
+  SnapBuffer = 3
+  Visible = True
+  StyleElements = [seFont, seBorder]
+  OnClose = FormClose
+  OnDestroy = FormDestroy
+  PixelsPerInch = 96
+  TextHeight = 14
+  object imgSplash: TImage
+    Left = 0
+    Top = 0
+    Width = 810
+    Height = 186
+    AutoSize = True
+    Center = True
+    ParentShowHint = False
+    Proportional = True
+    ShowHint = True
+    OnClick = imgSplashClick
+  end
+  object Timer: TTimer
+    Enabled = False
+    Interval = 50
+    OnTimer = TimerTimer
+    Left = 320
+    Top = 38
+  end
+end

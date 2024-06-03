@@ -1,8 +1,12 @@
-
 UNIT cvFileListBox;
 
-{
-  IMBUNATATIRI:
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
+
+  Improvements:
      DelDeletesFile  - Delete item on "Del" key press (also see DelDeletesFile)
      DelShowConfirm  - Shows confirmation box before deleting a file
      DeselectAll
@@ -17,12 +21,12 @@ UNIT cvFileListBox;
                         Also returns as OUT variable the currently selected item and the previously selected item
 }
 
-{$WARN UNIT_PLATFORM OFF}   {Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
+{.$WARN UNIT_PLATFORM OFF}   {Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
 
 INTERFACE
+
 USES
    Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.FileCtrl;
-
 
 TYPE
   TOnSelChanged = procedure (Sender: TObject; OUT CurrentItem, PreviousItem: Integer) of object;
@@ -75,11 +79,6 @@ procedure Register;
 IMPLEMENTATION                                                                 {$WARN GARBAGE OFF}  {Silence the: 'W1011 Text after final END' warning }
 USES
    system.Types, ccCore, ccIO, Vcl.Forms;
-
-
-
-
-
 
 
 
@@ -337,7 +336,7 @@ begin
 
     { Delete to recycle }
     if NOT RecycleItem(FileName, TRUE, DelShowConfirm)
-    then MesajWarning('File not deleted.'+ CRLF+ FileName);
+    then MesajWarning('File not deleted.'+ CRLFw+ FileName);
 
     DeleteSelected;                                                                              { Delete list box item }
 

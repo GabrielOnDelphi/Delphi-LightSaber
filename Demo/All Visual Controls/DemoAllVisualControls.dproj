@@ -44,8 +44,12 @@
         <SanitizedProjectName>DemoAllVisualControls</SanitizedProjectName>
         <DCC_DcuOutput>.\$(ProductVersion)\$(Platform)_$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(ProductVersion)\$(Platform)_$(Config)</DCC_ExeOutput>
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_MapFile>3</DCC_MapFile>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
+        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
+        <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
@@ -57,22 +61,18 @@
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
-        <DCC_DebugDCUs>true</DCC_DebugDCUs>
-        <DCC_DebugInfoInExe>true</DCC_DebugInfoInExe>
+        <DCC_Alignment>2</DCC_Alignment>
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
-        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
         <DCC_Optimize>false</DCC_Optimize>
-        <DCC_RemoteDebug>true</DCC_RemoteDebug>
+        <DCC_RangeChecking>true</DCC_RangeChecking>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
         <DCC_RemoteDebug>false</DCC_RemoteDebug>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
-        <DCC_DebugInformation>0</DCC_DebugInformation>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
-        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
-        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
@@ -104,6 +104,7 @@
                 <Source>
                     <Source Name="MainSource">DemoAllVisualControls.dpr</Source>
                 </Source>
+                <Excluded_Packages/>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>

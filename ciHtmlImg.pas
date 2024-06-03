@@ -2,7 +2,7 @@
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2023.06
+   2024.05
    See Copyright.txt
 
    Simple HTML Parsing. Specialized in extracting images from a webpage.
@@ -38,40 +38,11 @@ function ExpandRelativePaths (CONST HtmlBody, Base: string): string;
 
 
 
-
 IMPLEMENTATION                                                                                                                                   {$WARN GARBAGE OFF}   {Silence the: 'W1011 Text after final END' warning }
 
 USES
-   ccIO, ciInternet, ccCore, ccINIFile, ciHtml;
+   ccIO, ciInternet, ccCore, ciHtml;
 
-
-
-
-
-{ Extracts all <IMG> tags from a HTML
-  ISSUE: Does not work if the tag is split on two lines! }
-{
-function ExtractIMGTags(HTMLBody: TStringList): TStringList;
-VAR
-   Tag, s, CurLine: string;
-   iEnd, iStart: Integer;
-begin
- Result:= TStringList.Create;
- for CurLine in HTMLBody DO
-  begin
-   iStart:= PosInsensitive('<img', CurLine);
-   if iStart> 0 then
-    begin
-     s:= Copy(CurLine, iStart, High(integer));
-     iEnd:= Pos('>', s);
-     if iEnd> 0 then
-      begin
-       Tag:= CopyTo(s, 1, iEnd);
-       Result.Add(Tag);
-      end;
-    end;
-  end;
-end;   }
 
 
 { Extracts all <IMG> tags from a HTML
@@ -176,7 +147,7 @@ begin
 
  { Extract images from '<href>' }
  Temp:= ExtractImagesFromAHREF(HtmlBody);
- Result.Add(Temp.Text+ crlf);
+ Result.Add(Temp.Text+ CRLF);
  FreeAndNil(Temp);
 
  { Extract URLs to images from <img src="URL"> }
@@ -384,6 +355,32 @@ end.(*==========================================================================
 
 
 
+{ Extracts all <IMG> tags from a HTML
+  ISSUE: Does not work if the tag is split on two lines! }
+{
+function ExtractIMGTags(HTMLBody: TStringList): TStringList;
+VAR
+   Tag, s, CurLine: string;
+   iEnd, iStart: Integer;
+begin
+ Result:= TStringList.Create;
+ for CurLine in HTMLBody DO
+  begin
+   iStart:= PosInsensitive('<img', CurLine);
+   if iStart> 0 then
+    begin
+     s:= Copy(CurLine, iStart, High(integer));
+     iEnd:= Pos('>', s);
+     if iEnd> 0 then
+      begin
+       Tag:= CopyTo(s, 1, iEnd);
+       Result.Add(Tag);
+      end;
+    end;
+  end;
+end;   }
+
+
 
 
 
@@ -536,62 +533,6 @@ begin
 end;
 
 *)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-{ del
-
-
-function ExtractImgURLs(HtmlBody: TStringList; GetLinkedImages, GetImages: Boolean): TStringList;
-VAR LnkImg, DirImg, Tags: TStringList;
-begin
- if NOT (GetImages OR GetLinkedImages)
- then raise exception.Create('Invalid input selected for download type');
-
- Result:= TStringList.Create;
-
- if GetLinkedImages then
-  ExtractLinkedImgURLs()
-
- if GetImages then
-  ExtractImgImgURLs()
-
- { Merge the results
- if GetLinkedImages
- then Result.AddStrings(LnkImg);
-
- if GetImages
- then Result.AddStrings(DirImg);
-
- if GetLinkedImages
- then FreeAndNil(LnkImg);
-
- if GetImages
- then FreeAndNil(DirImg);
-end;  }
 
 
 

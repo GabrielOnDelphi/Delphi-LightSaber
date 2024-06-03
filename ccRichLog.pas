@@ -1,9 +1,10 @@
 ﻿UNIT ccRichLog;
 
 {=============================================================================================================
-   CubicDesign
-   2022-04-10
+   Gabriel Moraru
+   2024.05
    See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
    A simple but effective visual log.
      The programmer can send messages to the log that will be shown or not, depending on the chousen verbosity level of the log (see Verbosity property).

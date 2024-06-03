@@ -15,7 +15,6 @@ object frmSkinDisk: TfrmSkinDisk
   DoubleBuffered = True
   ParentFont = True
   KeyPreview = True
-  OldCreateOrder = False
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
@@ -24,8 +23,7 @@ object frmSkinDisk: TfrmSkinDisk
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyPress = FormKeyPress
-  PixelsPerInch = 96
-  TextHeight = 13
+  TextHeight = 15
   object lblTop: TLabel
     AlignWithMargins = True
     Left = 3
@@ -46,38 +44,43 @@ object frmSkinDisk: TfrmSkinDisk
     ShowHint = True
     Layout = tlBottom
     OnClick = lblTopClick
+    ExplicitWidth = 87
   end
   object lblMoreSkinsTrial: TLabel
     AlignWithMargins = True
     Left = 3
-    Top = 415
+    Top = 402
     Width = 326
-    Height = 13
+    Height = 30
     Align = alBottom
     Alignment = taCenter
     Caption = 'Hint: Registered users can download more skins from our web site'
     Layout = tlCenter
     WordWrap = True
+    ExplicitTop = 415
+    ExplicitWidth = 305
   end
   object lBox: TListBox
     AlignWithMargins = True
     Left = 3
     Top = 23
     Width = 326
-    Height = 386
+    Height = 369
     Align = alClient
-    ItemHeight = 13
+    ItemHeight = 15
     ScrollWidth = 6
     TabOrder = 1
     OnClick = lBoxClick
+    ExplicitHeight = 386
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 431
+    Top = 395
     Width = 332
     Height = 4
     Align = alBottom
     TabOrder = 0
+    ExplicitTop = 431
   end
   object pnlBtm: TPanel
     Left = 0

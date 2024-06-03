@@ -1,9 +1,10 @@
 UNIT cvIniFile;
 
 {=============================================================================================================
-   CubicDesign
-   2022-04-03
+   Gabriel Moraru
+   2024.05
    See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
   Extension of TCubicIniFileVcl.
   Same functionality as TCubicIniFileVcl but it adds support for own VCL controls (like cvPathEdit)
@@ -16,11 +17,8 @@ UNIT cvIniFile;
 INTERFACE
 
 USES
-   System.Classes, System.SysUtils, Vcl.Forms,
-   Vcl.ComCtrls,
-   Vcl.Controls,
-   {$IFDEF MSWINDOWS}{$WARN UNIT_PLATFORM OFF} {$WARN UNIT_PLATFORM ON}{$ENDIF}
-   system.IniFiles, ccCore, ccIniFileVCL;
+   System.Classes, System.SysUtils, System.IniFiles, Vcl.Forms, Vcl.ComCtrls, Vcl.Controls,
+   ccCore, ccIniFileVCL;
 
 {$WARN DUPLICATE_CTOR_DTOR OFF}                                                                               {Silence the: W1029 Duplicate constructor  with identical parameters will be inacessible from C++ }
 
@@ -41,7 +39,8 @@ procedure LoadForm (Form: TForm; OnlyFormPos: Boolean= FALSE);
 IMPLEMENTATION
 
 USES
-   FormLog, cvFloatSpinEdit, cvFileListBox, cvSpinEdit, cvSpinEditDelayed, cvPathEdit, ccRichLogTrack, ccAppData;
+   FormLog, cvFloatSpinEdit, cvFileListBox, cvSpinEdit, cvSpinEditDelayed, cvPathEdit, ccRichLogTrack,
+   ccCenterControl, ccAppData;
 
 
 

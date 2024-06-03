@@ -1,9 +1,10 @@
 UNIT ccStreamFile;
 
-{--------------------------------------------------------------------------------------------------
-  CubicDesign
-  2021.10.15
-  See Copyright.txt
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
   Direct read/write bytes, cardinals, words, integers, strings to a (binary) file.
   It loads the entire contents of a file into the memory so don't use it with huge (hundreds MB) files.
   If the file is large or you want to read only a portion of the file, consider ccStreamBuff.pas
@@ -22,7 +23,7 @@ UNIT ccStreamFile;
   Also see TBinaryReader / TBinaryWriter
      http://docwiki.embarcadero.com/CodeExamples/Tokyo/en/TBinaryReader_and_TBinaryWriter_(Delphi)
      Disadvantage: the class can only read or write from a file (not both at the same time).
---------------------------------------------------------------------------------------------------}
+=============================================================================================================}
 
 INTERFACE
 USES

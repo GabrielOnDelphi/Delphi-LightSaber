@@ -1,8 +1,10 @@
 UNIT cvRadioButton;
 
-{--------------------------------------------------------------------------------------------------
-  CubicDesign
-  2019-07-10
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
   A radio button that autoresizes exactly like TLabel
   It incercepts CMTextChanged where it recomputes the new Width
 
@@ -17,27 +19,18 @@ UNIT cvRadioButton;
 
   Tester: c:\Myprojects\Project Testers\Cubic VCL tester GLOBAL\
   
-  
-  
-  
-  
+
   
   
   Issue: 
   https://stackoverflow.com/questions/47476603/major-flaw-radio-buttons-are-randomly-checked-when-showing-their-parent-form
   
---------------------------------------------------------------------------------------------------}
-
-
-
+=============================================================================================================}
 
 
 
 
 // issue: Set a huge font: it will not not resize its height to match the font height
-
-
-
 
 
 

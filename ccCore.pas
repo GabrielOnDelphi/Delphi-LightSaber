@@ -2,213 +2,128 @@
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.06
+   2024.05
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Over 200 functions for:
      - String manipulation (string conversions, sub-string detection, word manipulation, cut, copy, split, wrap, etc)
      - Programmer's helper
-     - Form manipulation
      - Advanced message boxes
      - Easy message boxes
      - DateTime utilities
      - etc
-
 =============================================================================================================}
 
 INTERFACE
 
 USES
-   Winapi.Windows, Winapi.Messages, Winapi.MMSystem, System.AnsiStrings, System.Character, System.SysUtils, System.Math,
-   System.IOUtils, System.StrUtils, System.Classes, System.Types, System.TimeSpan, System.DateUtils, Generics.Collections,
-   Vcl.Themes, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Graphics;
+   Winapi.Windows, Winapi.Messages, System.AnsiStrings, System.Character, System.SysUtils, System.Math,
+   System.IOUtils, System.StrUtils, System.Classes, System.Types, System.TimeSpan, System.DateUtils,
+   Generics.Collections, Vcl.Controls, Vcl.Forms;
 
 { Enters }
 CONST
-   {Note: For crossplatform use System.sLineBreak }
-   CR               = #13;         { $0D. Used on Mac OS, Apple II family, ZX Spectrum }
-   LF               = #10;         { $0A  Used on Unix (Linux, OS X, FreeBSD, AIX, Xenix, etc.), BeOS, Amiga, RISC OS }
-   CRLF             = #13#10;      { Used on Windows, OS/2, Symbian OS, Palm OS }
-   LBRK             = CRLF+CRLF;
+   CR                = #13;         { $0D. Used on Mac OS, Apple II family, ZX Spectrum }
+   LF                = #10;         { $0A  Used on Unix (Linux, OS X, FreeBSD, AIX, Xenix, etc.), BeOS, Amiga, RISC OS }
+   CRLFw             = #13#10;      { Used on Windows, OS/2, Symbian OS, Palm OS }
+   CRLF              = sLineBreak;  { Cross platform }
+   LBRK              = CRLF+CRLF;
 
 { Special characters }
 CONST
-   TAB              = #9;
-   ESC              = #27;
-   Space            = #32;         { $20 }
-   Quote            = #39;
-   CopyrightSymbol  = '©';
-   GradCelsius      = '°';
-   Euro             = #8364;       { Euro Sign: Alt+0128.  Unicode Number: 8364 }
-
-{ Indexes }
-CONST
-   IndexedIn1       = 1;
-   IndexedIn0       = 0;
-   IndexDiff        = 1;
-   HeaderOverhead   = 1;
-   HeaderRow0       = 0;
+   TAB               = #9;
+   ESC               = #27;
+   Space             = #32;         { $20 }
+   Quote             = #39;
+   CopyrightSymbol   = '©';
+   GradCelsius       = '°';
+   Euro              = #8364;       { Euro Sign: Alt+0128.  Unicode Number: 8364 }
 
 { Extra VK constants that are missing from Delphi's Win dows API interface (Windows.pas unit)
   More virtual keys here: http://delphi.about.com/od/objectpascalide/l/blvkc.htm }
 CONST
-   VK_NULL          = 0;
-   VK_PRIOR         = $21;       { PAGE UP }
-   VK_NEXT          = $22;       { PAGE DOWN }
-   VK_pgUp          = $21;       { PAGE UP }
-   VK_pgDwn         = $22;       { PAGE DOWN }
-   VK_COPYRIGHT     = 169;       { Type ALT 0169 to get © }
-   VK_REGISTERED    = 174;       { Type ALT 0174 to get ® }
-   VK_SEMICOLON     = 186;
-   VK_EQUAL         = 187;
-   VK_COMMA         = 188;
-   VK_MINUS         = 189;
-   VK_PERIOD        = 190;
-   VK_SLASH         = 191;
-   VK_BACKQUOTE     = 192;
-   VK_LEFTBRACKET   = 219;
-   VK_BBACKSLASH    = 220;
-   VK_RIGHTBRACKET  = 221;
-   VK_QUOTE         = 222;
-   //VK_ENTER       = Winapi.Windows.VK_RETURN; { #13 }
+   VK_NULL           = 0;
+   VK_PRIOR          = $21;       { PAGE UP }
+   VK_NEXT           = $22;       { PAGE DOWN }
+   VK_pgUp           = $21;       { PAGE UP }
+   VK_pgDwn          = $22;       { PAGE DOWN }
+   VK_COPYRIGHT      = 169;       { Type ALT 0169 to get © }
+   VK_REGISTERED     = 174;       { Type ALT 0174 to get ® }
+   VK_SEMICOLON      = 186;
+   VK_EQUAL          = 187;
+   VK_COMMA          = 188;
+   VK_MINUS          = 189;
+   VK_PERIOD         = 190;
+   VK_SLASH          = 191;
+   VK_BACKQUOTE      = 192;
+   VK_LEFTBRACKET    = 219;
+   VK_BBACKSLASH     = 220;
+   VK_RIGHTBRACKET   = 221;
+   VK_QUOTE          = 222;
+   //VK_ENTER        = Winapi.Windows.VK_RETURN; { #13 }
 
-   Numbers        = ['0'..'9'];
-   LettersLowCase = ['a'..'z'];    // LettersSmall
-   LettersUpCase  = ['A'..'Z'];    // LettersCapital
-   LettersSigns   = [' ', '~', '`', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '+', '=', '[', ']', '{', '}', ';', ':', '''', '"', '<', '>', ',', '.', '/', '?', '\', '|'];
-   FullAlfabet    = ['a'..'z', 'A'..'Z'];
-   FullAlfabNmbr  = ['a'..'z', 'A'..'Z', '0'..'9'];
-   Vowels         = ['a', 'e', 'i','o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', 'Y'];
-   LettersSpecial = [#10, #13, #9]; { CR, LF, TAB }
+CONST
+   Numbers           = ['0'..'9'];
+   LettersLowCase    = ['a'..'z'];
+   LettersUpCase     = ['A'..'Z'];
+   LettersSigns      = [' ', '~', '`', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '-', '_', '+', '=', '[', ']', '{', '}', ';', ':', '''', '"', '<', '>', ',', '.', '/', '?', '\', '|'];
+   Alphabet          = ['a'..'z', 'A'..'Z'];
+   AlphabetNo        = ['a'..'z', 'A'..'Z', '0'..'9'];
+   Vowels            = ['a', 'e', 'i','o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', 'Y'];
+   LettersSpecial    = [#10, #13, #9]; { CR, LF, TAB }
+
+
+{ Indexes }
+CONST
+   IndexedIn1        = 1;
+   IndexedIn0        = 0;
+   IndexDiff         = 1;
+   HeaderOverhead    = 1;
+   HeaderRow0        = 0;
 
 { Mine }
 CONST
-   LazyWrite    = TRUE;
-   InstantWrite = FALSE;
-   ctCanCreate  = TRUE;
-   ctCantCreate = FALSE;
-   SHOW         = TRUE;
-   HIDE         = FALSE;
-   MinINT       = Low(Integer);               { -2147483648 }
-   OFF          = FALSE;
-   ON_          = TRUE;
+   //CanCreate       = TRUE;
+   //CantCreate      = FALSE;
+   SHOW              = TRUE;
+   HIDE              = FALSE;
+   OFF               = FALSE;
+   &ON               = TRUE;
 
 { Units }
 CONST
-   KB        = 1024;
-   MB        = 1048576;
-   GB        = 1073741824;
-   TB: Int64 = 1099511627776;
+   KB                = 1024;
+   MB                = 1048576;
+   GB                = 1073741824;
+   TB: Int64         = 1099511627776;
 
-{ Range limits on int type vars }          { int64 can hold up to 9223372036854775807 }
+{ Range limits on integer type vars }
+{ Int64 max value is 9223372036854775807 = 9.2 quintillion }
 CONST
-   UnInitialized= -7777777;
-   MAXSMALLINT = high(smallint);
-   MINSMALLINT = low(smallint);
-   MINWORD     = low(word);
-   MAXSHORTINT = high(shortint);
-   MINSHORTINT = low(shortint);
-   MINBYTE     = low(byte);
-   MAXLONGWORD = high(longword);
-   MINLONGWORD = low(longword);
-   MAXSTRING   = MaxInt;
+   UnInitialized     = -7777777;
+   MinINT            = Low(Integer);                  { -2147483648 }
+   MAXSMALLINT       = high(smallint);
+   MINSMALLINT       = low(smallint);
+   MINWORD           = low(word);
+   MAXSHORTINT       = high(shortint);
+   MINSHORTINT       = low(shortint);
+   MINBYTE           = low(byte);
+   MAXLONGWORD       = high(longword);
+   MINLONGWORD       = low(longword);
+   MAXSTRING         = MaxInt;
 
-   RegStartUpKey= 'Software\Microsoft\Windows\CurrentVersion\Run';
-   UM_ENSURERESTORED = WM_USER+ 65;                                        { For 'Run Single Instance' }
-
-{ COLORS (in BGR format) }
-CONST
-   clBlueBkg     = TColor($15100F);           { To be used as backgound when I display images }
-   clBlueAlmost  = Tcolor($F03030);
-   clBlueBleo    = Tcolor($FEF800);
-   clBlueNight   = Tcolor($3F0000);
-   clBlueDark    = TColor($770000);
-   clBlueGreen   = TColor($CCCC00);
-   clBlueLight   = Tcolor($F6B0B0);
-   clBlueLt      = TColor($FFCC99);
-   clBlueNaval   = TColor($CC9933);
-   clBlueSky     = TColor($F0CAA6);
-   clBluePale    = TColor($FFFFCC);
-   clBlueSlab    = TColor($B3B67E);           { Faded blue }
-   clBlueSea     = TColor($B90F0B);
-   clBlueSeaGreen= TColor($CCFF00);           { Bleo but a bit more green in it }
-   clPlum        = TColor($B16778);           { Plum blue }
-   clPlumLt      = TColor($BD85C7);
-
-   clLimeDark    = TColor($00CF00);
-   clGreenOk     = TColor($BBEEBB);           { To be used as background for controls to singnal that data (a path in a teditbox) is ok }
-   clGreenDark   = Tcolor($005F00);
-   clGreenFade   = TColor($79FF91);
-   clKhaki       = TColor($669999);
-   clMustard     = TColor($00DDDD);           { Dark yellow }
-   clGreenWashed = TColor($CCFFCC);           { A very very fade green }
-   clOliveGreen  = TColor($009966);
-
-   clOrange      = TColor($0078FF);
-   clOrangeDark  = TColor($0058DF);
-   clOrangeDk    = TColor($0099CC);
-   clOrangeGray  = TColor($80A8F0);
-   clOrangeLt    = TColor($99CCFF);
-
-   clPink        = TColor($F255FF);           { A bit lighter than clPurpleLight }
-   clPinkLight   = TColor($F793FF);
-   clPurpleDk    = TColor($5E005E);
-   clPurpleLight = TColor($AA22CC);           { A bit lighter than Purple }
-   clPurpleFaded = TColor($CA62FC);           { This is almost pink }
-   clPurpleWashed= TColor($cAa2eC);           { This is almost pink }
-   clPumpkin     = TColor($0099FF);
-   clButterfly   = TColor($EF10B8);           { Purple with some extra red in it }
-
-   clRedBrick    = TColor($003399);
-   clRedBaron    = TColor($0033FF);
-   clRedBright   = Tcolor($4040FF);           { A bit brighter than the classic clRed }
-   clRedDark     = Tcolor($00003F);
-   clRedFade     = Tcolor($D0D0FF);           { Frez }
-   clRose        = TColor($5E24F4);           { Intense }
-   clRoseLt      = TColor($9966FF);           { Frez frez }
-   clBrown       = TColor($6058A0);
-   clBrownLt     = TColor($688FB0);
-   clBurntSienna = TColor($000088);           { Almost coagulated blood }
-
-   clTealDk      = TColor($999933);
-   clViolet      = TColor($FF33FF);
-   clVioletDk    = TColor($993399);
-   clVioletLt    = TColor($FFCCFF);
-   clCyanLt      = TColor($FFFF99);
-
-   clYellowGreen = TColor($00FFCC);
-   clYellowLight = TColor($99ffff);
-   clYellowPale  = TColor($CCFFFF);
-   clHoney       = TColor($1CAEE6);           { Dark yellow with some red in it }
-
-   clCream       = TColor($F0FBFF);
-   clPeach       = TColor($647EF9);
-   clSilverDark  = TColor($a0a0a0);
-   clSilverLight = TColor($F3F2F2);           { Very light silver }
-   clGrayMedium  = TColor($A4A0A0);
-
-{ Bitwise constants for TControl.Tag }
-CONST
-   DontTranslate= 128; { 128 = binary 1000 0000 } {Note: in Delphi11 we can write it directly as a binary literal: %10000000 }
-
+   RegStartUpKey     = 'Software\Microsoft\Windows\CurrentVersion\Run';
+   UM_ENSURERESTORED = WM_USER+ 65;           { For 'Run Single Instance' }
 
 TYPE
   TStringArray       = array of string;
   TBytesArray        = System.SysUtils.TBytes;
-  EnterType          = (etUnknown, etWin, etNix, etMac);
-  TConvertNotifyKind = (nkMax, nkProgress);
-  TConvertNotify     = procedure(Kind: TConvertNotifyKind; Value: LongInt);
   TNotifyMsgEvent    = procedure(Self: TObject; Msg: string) of object;    { For general use }
-
-TYPE
-  TCustomControlEx= class(TCustomControl)    { Interposer: Control that exposes the Canvas property. It can be used to access TPanel's canvas property for example }
-   public
-      property Canvas;
-   end;
 
 
 {=============================================================================================================
    STRINGS / ENTER
+   Also see cmPlatformFile.pas
  ============================================================================================================}
  function  CRLFToEnter         (CONST s: string): string;     // old name: FixCRLF
  function  EnterToCRLF         (CONST s: string): string;     // Replaces #13#10 with CRLF
@@ -223,18 +138,6 @@ TYPE
  function  ReplaceEnters       (CONST s, ReplaceWith: string): string;
  function  RemoveLastEnter     (CONST s: string): string;         overload;                                       { Cuts the last Enter from a string }
  function  RemoveLastEnter     (CONST s: AnsiString): AnsiString; overload;
-
- function  IsMacFile           (InStream: TStream): Boolean;                                                      { Returns true if the Enter is format from a single CR character }
- function  GetEnterType        (InStream: TStream): EnterType;
- function  GetEnterTypeS       (CONST InputFile: string): string;
-
- procedure WinToUnix           (InStream: TStream; OutStream: TStream; Notify: TConvertNotify);   overload;
- procedure UnixToWin           (InStream: TStream; OutStream: TStream; Notify: TConvertNotify);   overload;
- procedure MacToWin            (InStream: TStream; OutStream: TStream);                           overload;
-
- procedure WinToUnix           (CONST InputFile, OutputFile: String; Notify: TConvertNotify);           overload;
- procedure UnixToWin           (CONST InputFile, OutputFile: String; Notify: TConvertNotify);           overload;
- function  MacToWin            (CONST InputFile, OutputFile: string): Boolean;                          overload;       { CR to CRLF }
 
 {=============================================================================================================
    STRINGS
@@ -284,7 +187,7 @@ TYPE
  function  ExtractTextBetween  (CONST s, TagStart, TagEnd: string): string;                                       { Extract the text between the tags. For example '<H>Title</H>' will return 'Title' is iFrom= '<H>' and iTo= '</H>' }
 
  function  CopyTo              (CONST s: String; iFrom: Integer; CONST sTo: string; IncludeMarker: Boolean= TRUE; CopyAllMarkerNotFound: Boolean= FALSE; MarkerOffset: Integer= 1): string; overload;
- function  CopyFromTo          (CONST s, sFrom, sTo: string;          IncludeMarkers: Boolean= FALSE): string;       overload;
+ function  CopyFromTo          (CONST s, sFrom, sTo: string;          IncludeMarkers: Boolean= FALSE): string;
 
  function  CopyFrom            (CONST s, sFrom: string;     Count: Integer; IncludeMarker: Boolean= TRUE; SearchOffset: Integer= 1): string;     overload;  { Find sFrom in s. Returns the string from the postion where the text was found, to the end. }
  function  CopyFrom            (CONST s, sFrom: AnsiString; Count: Integer; IncludeMarker: Boolean= TRUE; SearchOffset: Integer= 1): AnsiString; overload;
@@ -305,36 +208,24 @@ TYPE
  function  SplitText           (CONST Text, Delimiter: string): TStringList;                                      { Splits a text in lines and puts the lines in a TStringList } {Note: Exista System.StrUtils.SplitString } { Old name: SplitStrings }
  procedure SplitString         (CONST Text, Delimiter: string; OUT sField, sValue: string);    overload;          { Split a string in its components. For example 'ClientName=Bubu' will return in 'ClientName' and 'Bubu' }
  procedure SplitString         (CONST Text: string; TSL: TStringList);                         overload;          { Split a string in multiple rows every time the #13#10 char is found (I took this code from Embarcadero's TStringList.Text:= s ) }
- procedure SplitStringList     (StringList: TStrings; OUT OutList1, OutList2: TStringArray);                      { Split each row of the provided StringList into two parts. The two resulted strings are placed in an ArrayOfStrings }
- procedure SplitStringListI    (StringList: TStrings; OUT OutList1: TStringArray; OUT OutList2: System.Types.TIntegerDynArray);   { Split each row of the provided StringList into two parts. The two resulted strings are placed in an ArrayOfStrings }
  procedure SplitStringAtPos    (CONST Text: string; CONST Pos: Integer; OUT s1, s2: string);   overload;          { Split a string in two substrings at the specified position. The char at Pos will be included in the first string. }
  procedure SplitStringAtPos    (CONST Text: AnsiString; CONST Pos: Integer; OUT s1, s2: AnsiString);     overload;
+ procedure SplitStringList     (StringList: TStrings; OUT OutList1, OutList2: TStringArray);                      { Split each row of the provided StringList into two parts. The two resulted strings are placed in an ArrayOfStrings }
+ procedure SplitStringListI    (StringList: TStrings; OUT OutList1: TStringArray; OUT OutList2: System.Types.TIntegerDynArray);   { Split each row of the provided StringList into two parts. The two resulted strings are placed in an ArrayOfStrings }
 
  // GENERATE RAND STRING
- function  GenerateString      (CONST RepeatTimes: Integer; C: char): string; deprecated 'Use System.StringOfChar instead';    { Exista System.StrUtils.DupeString and StuffString                                       Returns the concatenation of a string with itself a specified number of repeats. }
- function  GenerateUniqueString(CONST Len: Integer=32): string;
+ function  GenerateString        (RepeatTimes: Integer; C: char): string; deprecated 'Use System.StringOfChar instead';    { Exista System.StrUtils.DupeString and StuffString                                       Returns the concatenation of a string with itself a specified number of repeats. }
+ function  GenerateUniqueString  (Len: Integer=32): string;
 
- function  GenerateRandomWord  (CONST Len: Integer=16; StartWithVowel: Boolean= FALSE): string;
- function  GenerateRandString  (minLen, maxLen: Integer): string;                                                 { This will return all printable craracters (from 65 to 125) }
- function  GenerateRandStringLet (CONST Len: Integer): string;                                                    { This will return ONLY letters and numbers } { YOU MUST call randomize before calling this function! }
- procedure GenerateRandomTextFile(CONST aFilename: string; NoOfLines: Integer);                                   { Creates a file that contains random strings. NoOfLines=10000000 creates a files of about 140MB }
-
- // OTHERS
- function  InsertCharEvery     (CONST c: char; CONST Target: string; Every: Integer): string;                   { Insert a char into TargetStr every x characters }
- function  DoubleQuoteStr      (CONST s: string): string;
- function  Reverse             (CONST s: String): string; deprecated 'ccCore.Reverse is deprecated. Use System.StrUtils.ReverseString';
- function  GetRandomPersonName: string;   { Returns a random name in a 100 unique name list }
- function  GetRandomStreetName: string;
- function  CharIsLetter(CONST c: char): Boolean;
+ function  GenerateRandomWord    (Len: Integer=16; StartWithVowel: Boolean= FALSE): string;
+ function  GenerateRandString    (minLen, maxLen: Integer): string;                                                 { This will return all printable craracters (from 65 to 125) }
+ function  GenerateRandStringLet (Len: Integer): string;                                                    { This will return ONLY letters and numbers } { YOU MUST call randomize before calling this function! }
+ procedure GenerateRandomTextFile(CONST Filename: string; NoOfLines: Integer);                                   { Creates a file that contains random strings. NoOfLines=10000000 creates a files of about 140MB }
 
  // COMPARE
  function  StringFuzzyCompare  (s1, s2: string): Integer;                                                         { The function checks if any identical characters is in the near of the actual compare position }
  function  FileNameNaturalSort (s1, s2: String): Integer;                                                         { Natural compare two filenames }
  function  StrCmpLogicalW      (psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll';                 { Natural compare two filenames. Digits in the strings are considered as numerical content rather than text. This test is not case-sensitive. Use it like this: StrCmpLogicalW(PChar(s1), PChar(s2));  see: http://stackoverflow.com/questions/1024515/delphi-is-it-necessary-to-convert-string-to-widestring.  }
-
-
- // Shorten text and put ellipsis in it
- // ShortenString & GetEllipsisText moved to cmEllipsisText.pas
 
  // MAKE STRING
  function  MakeStringLongRight (CONST s, c: AnsiChar; ForcedLength: integer): AnsiString;   overload;
@@ -346,9 +237,6 @@ TYPE
  function  LeadingZeros2       (CONST s: string; ForcedLength: integer): string; { Not tested }
  function  LeadingZerosAuto    (CONST s: string; MaxValue: integer): string;                                  { Same as above except_ that the user doesn't have to specify how many zeros to add. Instead the function will determine this automaticxally based on the number received as parameter. For example LeadingZeros('1', 50) will generate '01' but LeadingZeros('1', 500) will generate '001' }
 
- // WRAP
- //See cmWrapString.pas
-
  // TStringList
  function  String2TSL          (CONST s: string): TStringList;                                                      { Converts a string to a TStringList. In other words it breaks the text to multiple lines. I need to call Free after this! }
 
@@ -356,11 +244,21 @@ TYPE
  function  UnicodeToAnsi       (CONST str: UnicodeString; codePage: Integer): RawByteString;                  { netestat }
  function  AddNullToStr        (CONST Path: string): string;
 
- // RAM
+ // OTHERS
+ function  InsertCharEvery     (CONST c: char; CONST Target: string; Every: Integer): string;                   { Insert a char into TargetStr every x characters }
+ function  DoubleQuoteStr      (CONST s: string): string;
+ function  Reverse             (CONST s: String): string; deprecated 'ccCore.Reverse is deprecated. Use System.StrUtils.ReverseString';
+ function  GetRandomPersonName: string;   { Returns a random name in a 100 unique name list }
+ function  GetRandomStreetName: string;
+ function  CharIsLetter        (CONST c: char): Boolean;
+
+ // STRING RAM SIZE
  function  GetStringSize       (CONST s: string): Integer;                                                    { Returns the length of a given string in bytes }
  function  GetStringRAMSize    (CONST s: string): Integer;          overload;
  function  GetStringRAMSize    (CONST s: AnsiString): Integer;      overload;
 
+ // WRAP: See cmWrapString.pas
+ // Shorten text and put ellipsis in it: ShortenString & GetEllipsisText -> moved to cmEllipsisText.pas
 
 {============================================================================================================
    STRINGS: POS
@@ -384,6 +282,7 @@ TYPE
  function  FirstCharIs         (CONST s: string; c: Char): Boolean;
  function  LastCharIs          (CONST s: string; c: Char): Boolean;
  function  FirstNonSpace       (CONST s: string): Integer;                                                    { Returns the position of the first character that is no a space.  For example: '  Earth' returns 3. }
+
 
 {============================================================================================================
    STRINGS: CONVERSION TO NUMBERS
@@ -417,32 +316,23 @@ TYPE
  function  StringSumm          (CONST s: String): Cardinal;       overload;                                   { Compute the summ of all characters in the string }
 
 
-
-
-
-
 {=============================================================================================================
   DEVELOP UTILS
 =============================================================================================================}
-
  procedure EmptyDummy;             overload;
  procedure EmptyDummy(i: Integer); overload;
  procedure NotImplemented;
+ procedure DelayEx(CONST ms : cardinal);
 
  { SysUtils }
  procedure DisposeAndNil(VAR P: Pointer);
  procedure FillZeros(VAR IntArray: TIntegerDynArray);
 
- procedure DelayEx(CONST ms : cardinal);
  procedure CursorBusy;
  procedure CursorNotBusy;
 
  function  GetResourceAsString(CONST ResName: string): AnsiString;    { Extract a resource from self (exe) }
  procedure RefreshNow(Ctrl: TControl);
-
-
-
-
 
 
 {=============================================================================================================
@@ -455,35 +345,9 @@ TYPE
  procedure MesajError     (CONST MessageText: string);
  procedure MesajErrDetail (CONST MessageText, Where: string);
  function  MesajYesNo     (CONST MessageText: string; CONST Title: string= ''): Boolean;    { Returns True if the user presses the YES btn }
- procedure MesajTaskDLG   (CONST MessageText, Title: string);
-
- 
-{=============================================================================================================
-   FORM POSITION
-=============================================================================================================}
- Procedure CorrectMDIFormPosition    (ParentForm: TForm);
- Procedure CorrectFormPositionScreen (Form: TForm);                                                { Make sure that the child window is not outside the Screen }
- Procedure CorrectFormPositionMonitor(Form: TForm; Monitor: TMonitor);  deprecated 'Use Form.MakeFullyVisible(Monitor)';
- procedure CenterForm                (Form: TForm);                  overload;                               { You can also use Form.Position:= poMainFormCenter or poScreenCenter' }
- procedure CenterForm                (Form, Parent: TForm);       overload;
 
 
-{=============================================================================================================
-   CTRL POSITION
-=============================================================================================================}
- Procedure CorrectCtrlPosition       (Ctrl, Parent: TControl);                                      overload;
- Procedure CorrectCtrlPosition       (Ctrl: TControl; CONST aParentWidth, aParentHeight: Integer);  overload;
- procedure CenterInvalidChild        (Ctrl, Parent: TControl);                                   { Center Chiald in Parent window but only if Child has 'bad' coordinates }
- procedure CenterChild               (Ctrl, Parent: TControl);                                   { Center Chiald in Parent window }
- procedure CenterChildX              (Ctrl, Parent: TControl);
-
-
-
-{=============================================================================================================
-   VCL Controls, Menus & Actions
-   Moved to: cmVclUtils.pas
-=============================================================================================================}
-
+ // VCL Controls, Menus & Actions. Moved to: cmVclUtils.pas
 
 
 {=============================================================================================================
@@ -555,32 +419,11 @@ CONST
 
 
 
-{============================================================================================================
-   SOUNDS
-============================================================================================================}
- procedure PlayWinSound (CONST SystemSoundName: string);
- procedure PlaySoundFile(CONST FileName: string);
- procedure PlayResSound (CONST ResName: String; uFlags: Integer);
- procedure Bip(Frecv, Timp: integer);
- procedure BipConfirmation;
- procedure BipConfirmationShort;
- procedure BipError;
- procedure BipErrorShort;
- procedure Bip30;
- procedure Bip50;
- procedure Bip100;
- procedure Bip300;
- procedure BipCoconuts;
- procedure MakeSound(Frequency, Duration: Integer; Volume: Byte);   { writes tone to memory and plays it}
-
-
 
 
 IMPLEMENTATION
 
 { Don't add any dependecies to LightSaber here if possible in order to keep ccCore as single-file library }
-
-
 
 
 
@@ -606,19 +449,24 @@ begin
 end;
 
 
+{ Force repainting of this control }
 procedure RefreshNow(Ctrl: TControl);
 begin
   Ctrl.Refresh;
 end;
 
 
-procedure DelayEx(CONST ms : Cardinal);                                                            { Non-blocking sleep/delay.  Applica tion.ProcessMessages could create a lot of problems!!! }
+{ Non-blocking sleep/delay.
+  Warning:
+    Use it with care: Application.ProcessMessages will create a lot of problems!
+    https://blog.dummzeuch.de/2018/09/29/calling-application-processmessages-in-a-delphi-program/ }
+procedure DelayEx(CONST ms : Cardinal);
 VAR Count: Cardinal;
 begin
- Count:= GetTickCount;  // GetTickCount accuracy is > 15ms. Use cDebug TimerStart instead.     https://blogs.msdn.microsoft.com/oldnewthing/20050902-00/?p=34333
+ Count:= GetTickCount;                    //ToDo: GetTickCount accuracy is > 15ms. Use cDebug TimerStart instead.     https://blogs.msdn.microsoft.com/oldnewthing/20050902-00/?p=34333
  REPEAT
-  Sleep(5); { without this I have 100% CPU utilization because the loop is too tight }
-  Application.ProcessMessages;     // https://blog.dummzeuch.de/2018/09/29/calling-application-processmessages-in-a-delphi-program/
+  Sleep(1);                               // without this we get 100% CPU utilization because the loop is too tight
+  Application.ProcessMessages;
  UNTIL (GetTickCount-Count)>= ms;
 end;
 
@@ -631,7 +479,7 @@ end;
 
 procedure EmptyDummy(i: Integer);
 begin
- mesaj(IntToStr(i));
+ MesajInfo(IntToStr(i));
 end;
 
 
@@ -639,190 +487,6 @@ procedure NotImplemented;
 begin
  RAISE Exception.Create('Not implemented yet.');
 end;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-{=============================================================================================================
-   FORM POSITION
-=============================================================================================================}
-
-{ Brings the form back into the screen, IF it was outside the screen.
-  Usage:  CorrectFormScreenPosition(Self).
-  It is automaticalled by cvIniFile.LoadForm.
-
-  Screen.WorkArea -> Specifies the work area on the Primary monitor.
-  DesktopWidth    -> Determines the width of the desktop. The desktop is defined as the entire virtual desktop, which includes all monitors in the system. On a single-monitor system, DesktopWidth corresponds to Width. }
-Procedure CorrectFormPositionScreen(Form: TForm);                                                             { Old name: RepairPositionOnScreen }
-begin
- CorrectCtrlPosition(Form, Screen.DesktopWidth, Screen.DesktopHeight);
-end;
-
-
-{ Make sure that the specified form fits into the specified monitor. }
-Procedure CorrectFormPositionMonitor(Form: TForm; Monitor: TMonitor);
-begin
- Form.MakeFullyVisible(Monitor);
-end;
-
-
-{ Center form in screen }
-procedure CenterForm(Form: TForm);
-VAR
-   XPos, YPos : Integer;
-Begin
-  Xpos := (Screen.Width - Form.Width)  DIV 2;
-  YPos := (Screen.Height- Form.Height) DIV 2;
-  Form.Left:= Xpos;
-  Form.Top := YPos;
-End;
-
-
-procedure CenterForm(Form, Parent: TForm);
-VAR Left, Top: Integer;
-begin
- Left:= Parent.Left+ (Parent.ClientWidth - Form.Width) div 2;
-
- if Left < 0                                { Happens when the child is bigger than the parent }
- then Left:= Parent.Left - Left;
- Form.Left:= Left;
-
- Top:= Parent.Top+ (Parent.ClientHeight- Form.Height) div 2;
-
- if Top < 0                                 { Happens when the child is bigger than the parent }
- then Top:= Parent.Top - Top;
- Form.Top:= Top;
-end;
-
-
-{ Enumerate through all children form of ParentFrom and ensure their position/size }
-Procedure CorrectMDIFormPosition(ParentForm: TForm);
-VAR i: Integer;
-begin
-  for I := ParentForm.MDIChildCount-1 downto 0 do
-    begin
-     { Vertical }
-     if ParentForm.MDIChildren[I].Top < 0
-     then ParentForm.MDIChildren[I].Top := 0;
-     if ParentForm.MDIChildren[I].Height > ParentForm.ClientHeight
-     then ParentForm.MDIChildren[I].Height:= ParentForm.ClientHeight-10;
-
-     { Horizontal }
-     if ParentForm.MDIChildren[I].Left < 0
-     then ParentForm.MDIChildren[I].Left:= 0;
-     if ParentForm.MDIChildren[I].Width > ParentForm.ClientWidth
-     then ParentForm.MDIChildren[I].Width := ParentForm.ClientWidth;
-    end;
-end;
-
-
-
-
-
-
-
-
-
-
-
-{=============================================================================================================
-   CENTER CTRL
-=============================================================================================================}
-
-
-{ Centers the child into the parent, IF the child was outside the screen.
-
-  Note! The Top is relative to parent's client area.
-  In other words, if the Parent has a toolbar/panel (height = 200) aligned to its top and the Child form is
-  imediatelly under that panel, Child's top will be 0, not 500!
-  Usage: CorrectFormScreenPosition(Self, ParentForm)  }
-Procedure CorrectCtrlPosition(Ctrl, Parent: TControl);
-begin
- CorrectCtrlPosition(Ctrl, Parent.ClientWidth, Parent.ClientHeight);
-end;
-
-
-Procedure CorrectCtrlPosition(Ctrl: TControl; CONST aParentWidth, aParentHeight: Integer);  {TODO 2: this won't be aligned correctly when it is under the parent bottom and the parent height is big (over 1000 pixels) }
-begin
- if Ctrl.Top < 0
- then Ctrl.Top := 0;               { It was too high, show it imediatelly under the top }
- if Ctrl.Top  > aParentHeight-10
- then Ctrl.Top := aParentHeight- (Ctrl.Height DIV 2);  { It was too low, put_its top in the middle of the parent (to be clear, we don't center the whole child into the parent; we only put child's top in the midle of the parent) }
-
- if Ctrl.Left < 0
- then Ctrl.Left:= 0;
- if Ctrl.Left > aParentWidth-10
- then Ctrl.Left:= aParentWidth- (Ctrl.Width DIV 2);
-
- if Ctrl.Height > aParentHeight
- then Ctrl.Height:= aParentHeight;
- if Ctrl.Width  > aParentWidth
- then Ctrl.Width:= aParentWidth;
-end;
-
-
-{ Center Chiald in Parent window but only if Child has 'bad' coordinates }
-procedure CenterInvalidChild(Ctrl, Parent: TControl);
-VAR iTop: Integer;
-begin
- if (Ctrl.Top < -10)
- OR (Ctrl.Left< -10)
- OR (Ctrl.Left> Parent.Width) then   { But only if goes out of screen so the user can't find it }
-  begin
-   Ctrl.Left:= (Parent.ClientWidth - Ctrl.Width)  div 2;
-   iTop:= Parent.ClientHeight- Ctrl.Height;
-   //if Parent.ToolBar.Visible then iTop:= iTop- Parent.ToolBar.Height;
-   Ctrl.Top:= iTop div 2;
-  end;
-end;
-
-
-{ Center Child ctrl in Parent window }
-{ToDo: We should take into consideration the controls that are aligned (alleft, alright) }
-procedure CenterChild(Ctrl, Parent: TControl);
-VAR Left, Top: Integer;
-begin
- Left:= (Parent.ClientWidth - Ctrl.Width) div 2;
-
- if Left < 0                                { Happens when the child is bigger than the parent }
- then Left:= Parent.Left - Left;
- Ctrl.Left:= Left;
-
- Top:= (Parent.ClientHeight- Ctrl.Height) div 2;
-
- if Top < 0                                 { Happens when the child is bigger than the parent }
- then Top:= Parent.Top - Top;
- Ctrl.Top:= Top;
-end;
-
-
-{ Center Child ctrl in Parent window, bot only on the X axis }
-procedure CenterChildX(Ctrl, Parent: TControl);
-begin
- Ctrl.Left:= (Parent.ClientWidth - Ctrl.Width) div 2;  {todo: We should take into consideration the controls that are aligned (alleft, alright) }
-end;
-
-
-
-
-
-
-
 
 
 
@@ -1384,63 +1048,6 @@ begin
  then RAISE Exception.Create('No message provided for MesajYesNo() !');
  Result:= MesajGeneric(MessageText, Title, MB_ICONQUESTION or MB_YESNO) = mrYes;      { FUCKING IMPORTANT! Always check for mrYes, never for mrNo. This is why: http://capnbry.net/blog/?p=46 }
 end;
-
-
-
-{============================================================================================================
-  There is a problem with TTaskDialog. It doesn't break long strings! So it is not good for showing long strings/debugging.
-
-  When you have to display longer strings, MessageBox is much better than TTaskDialog because TTaskDialog will wrap your strings too soon (its width tends to be much smaller than MessageBox's width).     So, don't use TTaskDialog for 'normal' messages!
-  But you can use TTaskDialog.cxWidth to customize the size of the dialog -> https://stackoverflow.com/questions/33302622/how-can-i-make-the-showmessage-dialog-wider-so-it-fits-the-text
-
-  Documentation about TTaskDialog: http://stackoverflow.com/questions/4979556/how-to-use-the-ttaskdialog
-============================================================================================================}
-procedure MesajTaskDLG(CONST MessageText, Title: string);
-{$WARN SYMBOL_PLATFORM OFF}
-VAR
-   s: string;
-   Dlg: TTaskDialog;
-begin
- if MessageText= '' then EXIT;
-
- if (Win32MajorVersion >= 6)
- AND UseLatestCommonDialogs
- AND StyleServices.Enabled
- then
-  begin
-   Dlg:= TTaskDialog.Create(Application);
-   TRY
-     if Title= ''
-     then s := Application.Title
-     else s := Title;
-     Dlg.Caption:= s;
-     Dlg.Title  := s;
-     Dlg.Text   := CRLFToEnter(MessageText);
-     Dlg.CommonButtons := [tcbOk];
-     Dlg.Execute;
-   FINALLY
-     FreeAndNil(Dlg);
-   END
-  end
- else
-   MesajInfo(MessageText, Title);
-end;
-{$WARN SYMBOL_PLATFORM ON}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2230,7 +1837,7 @@ VAR i: Integer;
 begin
  Result:= '';
  for i:= 1 to Length(s) DO
-   if CharInSet(s[i], FullAlfabNmbr)
+   if CharInSet(s[i], AlphabetNo)
    then Result:= Result+ s[i];
 end;
 
@@ -2399,12 +2006,12 @@ begin
  { Check all chars except_ the last }
  for i:= 2 to Length(s)-1 DO
   if  (s[i]= #10) AND (s[i+1]<> #13) AND (s[i-1]<> #13)
-  then Result:= Result+ CRLF   {CRLF = $D$A}
+  then Result:= Result+ CRLFw   {CRLF = $D$A}
   else Result:= Result+ s[i];
 
  { Cheack also the last char }
  if s[Length(s)]= #10
-  then Result:= Result+ CRLF
+  then Result:= Result+ CRLFw
   else Result:= Result+ s[Length(s)];
 end;
 
@@ -2413,7 +2020,7 @@ end;
   Warning: we don't replace individual CR, LF groups, because there is a high chance we will find that in our text. Example: CRysis }
 function CRLFToEnter(CONST s: string): string;
 begin
- Result:= StringReplace(s  , 'CRLF ' , 'CRLF', [rfReplaceAll]);
+ Result:= StringReplace(s     , 'CRLF ' , 'CRLF', [rfReplaceAll]);
  Result:= StringReplace(Result, ' CRLF' , 'CRLF', [rfReplaceAll]);
  Result:= StringReplace(Result, 'CRLF'  ,  CRLF , [rfReplaceAll]);
 end;
@@ -2422,253 +2029,11 @@ end;
 { Replaces #13 with the text 'CR' and #10 with the text 'LF' }
 function EnterToCRLF (CONST s: string): string;
 begin
- Result:= StringReplace(s  , CRLF, ' CRLF ', [rfReplaceAll]);
+ Result:= StringReplace(s  , CRLFw, ' CRLF ', [rfReplaceAll]);
  //I need spaces arround CRLF because of the cTranslator.pas
  //The user/DeepL will see better the text to be translated if there are spaces arround CRLF
 end;
 
-
-{ Detects if the specified stream contains Windows or Linux enters }
-function GetEnterType(InStream: TStream): EnterType;
-VAR
-   B1, B2: Byte;
-begin
- if NOT Assigned(InStream)
- then raise exception.Create('Input stream not assigned!');
-
- Result:= etUnknown;
- WHILE InStream.Position < InStream.Size-1 DO
-  begin
-   InStream.Read(B1, 1);
-   case B1 of
-    $0D:                           { Look for Mac }
-     begin
-      InStream.Read(B2, 1);        { Check next char }
-      if B2= $0A
-      then EXIT(etWin)             { Win: 0D0A }
-      else EXIT(etMac);            { Mac: 0D }
-     end;
-    $0A: EXIT(etNix);              { Linux: 0A }
-   end;
-  end;
-end;
-
-
-function GetEnterTypeS(CONST InputFile: string): string;
-VAR
-   InpStream: System.Classes.TBufferedFileStream;
-begin
- if NOT FileExists(InputFile)
- then raise exception.Create('Input file does not exist!');
-
- InpStream:= TBufferedFileStream.Create(InputFile, fmOpenRead);
- TRY
-  case GetEnterType(InpStream) of
-    etWin: result:= 'Win';
-    etNix: result:= 'Nix';
-    etMac: result:= 'Mac';
-   else
-     result:= 'unknown';
-  end;
- FINALLY
-  FreeAndNil(InpStream);
- END;
-end;
-
-
-{ Returns true if the Enter is format from a single CR character }
-function IsMacFile(InStream: TStream): Boolean;
-VAR
-   B: Byte;
-begin
- if NOT Assigned(InStream) then raise exception.Create('Input stream not assigned!');
-
- Result:= FALSE;
- WHILE InStream.Position < InStream.Size-1 DO
-  begin
-   InStream.Read(B, 1);
-   if B= $0D then
-     begin
-      InStream.Read(B, 1);
-      if (B <> $0A) then EXIT(TRUE);        { Make sure the next char is NOT a LF char }
-     end;
-  end;
-end;
-
-
-
-{ Convert all ENTERs in this file from Linux (LF) to Windows (CRLF) format.
-  Gives feedback (so you can update a progress bar) as the file is processed.
-  EXISTS: System.SysUtils.AdjustLineBreaks() }
-procedure UnixToWin(InStream: TStream; OutStream: TStream; Notify: TConvertNotify);
-VAR
-   B, NewB: Byte; Value: LongInt;
-begin
- if NOT Assigned(InStream)  then raise exception.Create('Input stream not assigned!');
- if NOT Assigned(OutStream) then raise exception.Create('Output stream not assigned!');
-
- if Assigned(Notify)
- then Notify(nkMax, InStream.Size);
-
- Value := 0;
- WHILE InStream.Position < InStream.Size DO
-  begin
-   InStream.Read(B, 1);
-   case B of
-    $0A: begin
-          NewB := $0D;
-          OutStream.Write(NewB, 1);
-          NewB := $0A;
-          OutStream.Write(NewB, 1);
-         end;
-   else
-     OutStream.Write(B, 1);
-  end;
-
-  if Assigned(Notify) then
-   begin
-    Inc(Value);
-    Notify(nkProgress, Value);
-   end;
- end;
-
- if (Value = InStream.Size)
- AND Assigned(Notify)
- then Notify(nkProgress, 0);
-end;
-
-
-
-procedure WinToUnix(InStream: TStream; OutStream: TStream; Notify: TConvertNotify);
-VAR
-   B: Byte; Value: LongInt;
-begin
- if NOT Assigned(InStream)  then raise exception.Create('Input stream not assigned!');
- if NOT Assigned(OutStream) then raise exception.Create('Output stream not assigned!');
-
- if Assigned(Notify)
- then Notify(nkMax, InStream.Size);
-
- Value := 0;
- while InStream.Position < InStream.Size DO
-  begin
-   InStream.Read(B, 1);
-   if B <> $0A
-   then OutStream.Write(B, 1);
-
-   if Assigned(Notify) then
-    begin
-     Inc(Value);
-     Notify(nkProgress, Value);
-    end;
-  end;
-
- OutStream.Seek(1, soFromEnd);
- OutStream.Read(B, 1);
-
- if B <> $0D then
-  begin
-   B := $0D;
-   OutStream.Write(B, 1);
-  end;
-
- if (Value = InStream.Size)
- AND Assigned(Notify)
- then Notify(nkProgress, 0);
-end;
-
-
-
-procedure MacToWin(InStream: TStream; OutStream: TStream);
-VAR
-   B, NewB: Byte;
-begin
- if NOT Assigned(InStream)  then raise exception.Create('Input stream not assigned!');
- if NOT Assigned(OutStream) then raise exception.Create('Output stream not assigned!');
-
- WHILE InStream.Position < InStream.Size DO
-  begin
-   InStream.Read(B, 1);
-   case B of
-    $0D: begin
-          NewB := $0D;
-          OutStream.Write(NewB, 1);
-          NewB := $0A;
-          OutStream.Write(NewB, 1);
-         end;
-   else
-     OutStream.Write(B, 1);
-  end;
- end;
-end;
-
-
-
-procedure WinToUnix(CONST InputFile, OutputFile: String; Notify: TConvertNotify);
-VAR
-   InpStream: System.Classes.TBufferedFileStream;
-   OutStream: System.Classes.TBufferedFileStream;
-begin
- if NOT FileExists(InputFile)
- then RAISE Exception.Create('Input file does not exist!');
-
- InpStream:= TBufferedFileStream.Create(InputFile,  fmOpenRead, 1*mb);
- OutStream:= TBufferedFileStream.Create(OutputFile, fmOpenWrite OR fmCreate);
- TRY
-   WinToUnix(InpStream, OutStream, Notify);
- FINALLY
-   FreeAndNil(InpStream);
-   FreeAndNil(OutStream);
- END;
-end;
-
-
-
-procedure UnixToWin(CONST InputFile, OutputFile: String; Notify: TConvertNotify);
-VAR
-   InpStream: System.Classes.TBufferedFileStream;
-   OutStream: System.Classes.TBufferedFileStream;
-begin
- if NOT FileExists(InputFile)
- then raise exception.Create('Input file does not exist!');
-
- InpStream:= TBufferedFileStream.Create(InputFile,  fmOpenRead);
- OutStream:= TBufferedFileStream.Create(OutputFile, fmOpenWrite OR fmCreate);
- TRY
-  UnixToWin(InpStream, OutStream, Notify);
- FINALLY
-  FreeAndNil(InpStream);
-  FreeAndNil(OutStream);
- END;
-end;
-
-
-
-function MacToWin(CONST InputFile, OutputFile: string): Boolean;                                         { CR to CRLF. Not tested! }
-VAR
-   InpStream: System.Classes.TBufferedFileStream;
-   OutStream: System.Classes.TBufferedFileStream;
-begin
- if NOT FileExists(InputFile)
- then raise exception.Create('Input file does not exist!');
-
- InpStream:= TBufferedFileStream.Create(InputFile, fmOpenRead, 1*mb);
- TRY
-  Result:= IsMacFile(InpStream);
-  if Result then
-   begin
-    OutStream:= TBufferedFileStream.Create(OutputFile, fmOpenWrite OR fmCreate);
-    TRY
-     InpStream.Position:= 0;    { Needs reset because of IsMacFile }
-     MacToWin(InpStream, OutStream);
-    FINALLY
-     FreeAndNil(OutStream);
-    END;
-   end;
- FINALLY
-  FreeAndNil(InpStream);
- END;
-end;
 
 
 
@@ -2874,7 +2239,7 @@ end;
 
 
 { Exists: System.StrUtils.DupeString and StuffString }
-function GenerateString(CONST RepeatTimes: Integer; C: char): string;
+function GenerateString(RepeatTimes: Integer; C: char): string;
 begin
  Result:= System.StringOfChar(C, RepeatTimes);
 end;
@@ -2913,23 +2278,22 @@ end;
     http://delphi.about.com/od/delphitips2009/qt/delphi-unique-random-number-generator-challenge.htm
     http://stackoverflow.com/questions/15312704/gettempfilename-creates-an-empty-file
  }
-function GenerateUniqueString(CONST Len: Integer=32): string;
+function GenerateUniqueString(Len: Integer=32): string;
 begin
- Result:= System.IOUtils.TPath.GetGUIDFileName;
+ if Len > 32 then Len:= 32;
 
- if Len > 32
- then RAISE Exception.Create('Maximum supported length is 64!')
- else Result:= system.COPY(Result, 1, Len);
+ Result:= System.IOUtils.TPath.GetGUIDFileName;
+ Result:= system.COPY(Result, 1, Len);
 end;
 
 
 { Creates a file that contains random strings. NoOfLines=10000000 creates a files of about 140MB }
-procedure GenerateRandomTextFile(CONST aFilename: string; NoOfLines: Integer);
+procedure GenerateRandomTextFile(CONST Filename: string; NoOfLines: Integer);
 VAR
    T: Textfile;
    i: integer;
 begin
-  Assignfile(T, aFilename);
+  Assignfile(T, Filename);
   Rewrite(T);
 
   for i := 1 to NoOfLines
@@ -2940,7 +2304,7 @@ end;
 
 { This will return ONLY literary strings (letters and numbers).
   YOU MUST call randomize before calling this function! }                                                     { Old name: GenerateRandomString }
-function GenerateRandStringLet(CONST Len: Integer): string;
+function GenerateRandStringLet(Len: Integer): string;
 VAR str: string;
     i: Integer;
 begin
@@ -2954,7 +2318,7 @@ end;
 
 { Returns a string that is composed from an alternation of consonants and vowels:
   Example: 'AMERUTIS' }
-function GenerateRandomWord(CONST Len: Integer=16; StartWithVowel: Boolean= FALSE): string;
+function GenerateRandomWord(Len: Integer=16; StartWithVowel: Boolean= FALSE): string;
 CONST
    sVowels: string= 'AEIOUAEIOUY';
    sConson: string= 'BCDFGHJKLMNPRSTVBCDFGHJKLMNPQRSTVWXZ';    { Some characters are more preffered so we put them twice in the string. WXZ are not so likable so I put them once. }
@@ -3530,13 +2894,13 @@ begin
     OR NOT IgnoreEmptyLines then
      begin
        Inc(Total);
-       Result:= Result+ s+ crlf;
+       Result:= Result+ s+ CRLF;
        if Total = Count then Break;
      end;
 
   Result:= RemoveLastEnter(Result);
  FINALLY
-  FreeAndNil(TSL);
+   FreeAndNil(TSL);
  END;
 end;
 
@@ -3913,254 +3277,6 @@ begin
    end;
   LastPos:= Found;
 end; *)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-{============================================================================================================
-                                    AUDIO
-============================================================================================================}
-procedure PlayWinSound(CONST SystemSoundName: string);
-begin
- Winapi.MMSystem.PlaySound(PChar(SystemSoundName), 0, SND_ASYNC);
-end;
-
-
-{ All available constants are defined in the registry under the path HKEY_CURRENT_USER -> AppEvents -> Schemes -> Apps -> .Default. Here, depending on the installed applications and your Windows version, you can surely find the one or another sound file and the associated constant.
-  System sounds:
-    SystemEXCLAMATION        - Note
-    SystemHAND               - Critical Stop
-    SystemQUESTION           - Question
-    SystemSTART              - Windows-Start
-    SystemEXIT               - Windows-Shutdown
-    SystemASTERIX            - played when a popup alert is displayed, like a warning message.
-    RESTOREUP                - Enlarge
-    RESTOREDOWN              - Shrink
-    MENUCOMMAND              - Menu
-    MENUPOPUP                - Pop-Up)
-    MAXIMIZE                 - Maximize)
-    MINIMIZE                 - Minimize)
-    MAILBEEP                 - New Mail)
-    OPEN                     - Open Application)
-    CLOSE                    - Close Application)
-    AppGPFAULT               - Program Error
-    Notification             - played when a default notification from a program or app is displayed.
-    -----
-    Calendar Reminder        - played when a Calendar event is taking place.
-    Critical Battery Alarm   - played when your battery reaches its critical level.
-    Critical Stop            - played when a fatal error occurs.
-    Default Beep             - played for multiple reasons, depending on what you do. For example, it will play if you try to select a parent window before closing the active one.
-    Desktop Mail Notif       - played when you receive a message in your desktop email client.
-    Device Connect           - played when you connect a device to your computer. For example, when you insert a memory stick.
-    Device Disconnect        - played when you disconnect a device from your computer.
-    Device Connect Failed    - played when something happened with the device that you were trying to connect.
-    Exclamation              - played when you try to do something that is not supported by Windows.
-    Instant Message Notif    - played when you receive an instant message.
-    Low Battery Alarm        - played when the battery is running low.
-    Message Nudge            - played when you receive a BUZZ in an instant message.
-    New Fax Notification     - played when you receive a fax via your fax-modem.
-    New Mail Notification    - played when you receive an email message.
-    New Text Message Notif   - played when you receive a text message.
-    NFP Completion           - played when the transfer of data via NFC between your Windows device and another device is completed.
-    NFP Connection           - played when your Windows device is connecting to another device via NFC.
-    System Notification      - played when a system notification is displayed.
-
- Flags are:
-    SND_SYNC  =0 = Start playing, and wait for the sound to finish
-    SND_ASYNC =1 = Start playing, and don't wait to return
-    SND_LOOP  =8 = Keep looping the sound until another sound is played  }
-procedure PlaySoundFile(CONST FileName: string);
-begin
- if FileExists(FileName)
- then PlaySound(pchar(FileName), 0, SND_ASYNC or SND_FILENAME);    { Also exists sndPlaySound but it is obsolete! } { Why 0 for the second parameter: hmod:  Handle to the Executeble file that contains the resource to be loaded. This parameter must be NULL unless SND_RESOURCE is specified in fdwSound. }
-end;
-
-
-
-{How to load a PlaySoundFile in a resource:
-   FileName: 'SOUNDS.RC'
-   Body    : #define WAVE WAVEFILE
-             SOUND1 WAVE "updating.wav"
-   Compiler: BRCC32.EXE -foSOUND32.RES SOUNDS.RC    }
-procedure PlayResSound(CONST ResName: String; uFlags: Integer);
-VAR hResInfo,hRes: Thandle;
-    lpGlob: Pchar;
-Begin
- hResInfo:= FindResource(HInstance,PChar(RESName),MAKEINTRESOURCE('WAVEFILE'));
- if hResInfo = 0 then
-  begin
-    MesajError('Could not find resource'+ CRLF+ RESName);
-    EXIT;
-  end;
-
- hRes:=LoadResource(HInstance,hResinfo);
- if hRes = 0 then
-  begin
-    MesajError('Could not load resource'+ CRLF+ RESName);
-    EXIT;
-  end;
-
- lpGlob:=LockResource(hRes);
- if lpGlob=Nil then
-  begin
-    MesajError('Bad resource'+ CRLF+ RESName);
-    EXIT;
-  end;
-
- uFlags:= snd_Memory or uFlags;
- SndPlaySound(lpGlob,uFlags);
- UnlockResource(hRes);
- FreeResource(hRes);
-End;
-
-
-// Note! The sound is not heard if the time is too short (like 35 ms)
-procedure Bip(Frecv, Timp: integer);
-begin
- WinApi.Windows.Beep(Frecv, Timp);
-end;
-
-procedure BipError;
-begin
-  WinApi.Windows.Beep(700, 70);
-  Sleep(50);
-  WinApi.Windows.Beep(300, 300);
-end;
-
-procedure BipConfirmation;
-begin
-  WinApi.Windows.Beep(1100, 120);
-  Sleep(10);
-  WinApi.Windows.Beep(1900, 170);
-end;
-
-procedure BipConfirmationShort;
-begin
-  WinApi.Windows.Beep(1000, 55);
-  Sleep(3);
-  WinApi.Windows.Beep(1900, 135);
-end;
-
-procedure BipErrorShort;
-begin
-  WinApi.Windows.Beep(700, 50);
-  Sleep(5);
-  WinApi.Windows.Beep(400, 110);
-end;
-
-procedure Bip30;
-begin
- WinApi.Windows.Beep(800, 30);
-end;
-
-procedure Bip50;
-begin
- WinApi.Windows.Beep(800, 50);
-end;
-
-procedure Bip100;
-begin
- WinApi.Windows.Beep(800, 100);
-end;
-
-procedure Bip300;
-begin
- WinApi.Windows.Beep(800, 300);
-end;
-
-procedure BipCoconuts;
-begin
- bip(1000, 30); bip(1200, 40);
- bip(890 , 25); bip(760 , 40);
- bip(1000, 30); bip(1200, 40);
- bip(890 , 25); bip(760 , 40);
-end;
-
-
-{ Writes tone to memory and plays it.   Hz/mSec }
-procedure MakeSound(Frequency, Duration: Integer; Volume: Byte);
-VAR
-  WaveFormatEx: TWaveFormatEx;
-  MS: TMemoryStream;
-  i, TempInt, DataCount, RiffCount: integer;
-  SoundValue: byte;
-  w: double;   // omega ( 2 * pi * frequency)
-CONST
-  Mono: Word = $0001;
-  SampleRate: Integer = 11025; // 8000, 11025, 22050, or 44100
-  RiffId: string = 'RIFF';
-  WaveId: string = 'WAVE';
-  FmtId: string = 'fmt ';
-  DataId: string = 'data';
-begin
-  if Volume> 127 then Volume:= 127;
-  if Frequency > (0.6 * SampleRate) then
-  begin
-    Mesaj(Format('Sample rate of %d is too low to play a tone of %dHz', [SampleRate, Frequency]));
-    EXIT;
-  end;
-  with WaveFormatEx do
-  begin
-    wFormatTag     := WAVE_FORMAT_PCM;
-    nChannels      := Mono;
-    nSamplesPerSec := SampleRate;
-    wBitsPerSample := $0008;
-    nBlockAlign    := (nChannels * wBitsPerSample) div 8;
-    nAvgBytesPerSec:= nSamplesPerSec * nBlockAlign;
-    cbSize         := 0;
-  end;
-  MS:= TMemoryStream.Create;
-  with MS do
-  begin
-    {Calculate length of sound data and of file data}
-    DataCount := (Duration * SampleRate) div 1000;                              // sound data
-    RiffCount := Length(WaveId)+ Length(FmtId) + SizeOf(DWORD)+
-          SizeOf(TWaveFormatEx)+ Length(DataId)+ SizeOf(DWORD)+ DataCount;      // file data
-    {write out the wave header}
-    Write(RiffId[1], 4);                                                        // 'RIFF'
-    Write(RiffCount, SizeOf(DWORD));                                            // file data size
-    Write(WaveId[1], Length(WaveId));                                           // 'WAVE'
-    Write(FmtId [1], Length(FmtId));                                            // 'fmt '
-    TempInt := SizeOf(TWaveFormatEx);
-    Write(TempInt, SizeOf(DWORD));                                              // TWaveFormat data size
-    Write(WaveFormatEx, SizeOf(TWaveFormatEx));                                 // WaveFormatEx record
-    Write(DataId[1], Length(DataId));                                           // 'data'
-    Write(DataCount, SizeOf(DWORD));                                            // sound data size
-    {calculate and write out the tone signal} // now the data values
-    w := 2 * Pi * Frequency;                                                    // omega
-    for i := 0 to DataCount - 1 do
-     begin
-       SoundValue := 127 + trunc(Volume * sin(i * w / SampleRate));              // wt = w * i / SampleRate
-       Write(SoundValue, 1);
-     end;
-    sndPlaySound(MS.Memory, SND_MEMORY or SND_SYNC); {now play the sound}
-    FreeAndNil(MS);
-  end;
-end;
 
 
 end.

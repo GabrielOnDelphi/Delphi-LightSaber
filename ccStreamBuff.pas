@@ -1,10 +1,10 @@
 UNIT ccStreamBuff;
 
 {=============================================================================================================
-   CubicDesign
-   2022-04-03
-==============================================================================================================
-
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
    Description
    Extends TBufferedFileStream.
    This class adds new functionality that does not exist in Delphi's original stream classes:
@@ -17,7 +17,7 @@ UNIT ccStreamBuff;
    - etc
    It may be used as a drop-in replacement for TFileStream.
 
-=============================================================================================================
+==============================================================================================================
    TBufferedFileStream:
       TBufferedFileStream provides VERY fast reading/writing access to a file.
       It is optimized for multiple consecutive small reads or writes.
@@ -320,10 +320,10 @@ begin
    begin
      VAR v:= ReadWord;
      if v <> Version
-     then RAISE Exception.Create('Invalid file version in '+ FileName+ CRLF+ IntToStr(Version)+ ' expected. '+ IntToStr(v)+ ' found.');
+     then RAISE Exception.Create('Invalid file version in '+ FileName+ CRLFw+ IntToStr(Version)+ ' expected. '+ IntToStr(v)+ ' found.');
    end
  else
-   RAISE Exception.Create('Invalid file signature in '+ FileName+ CRLF+ string(Signature)+ ' expected. '+ string(Sgn)+ ' found.');
+   RAISE Exception.Create('Invalid file signature in '+ FileName+ CRLFw+ string(Signature)+ ' expected. '+ string(Sgn)+ ' found.');
 end;
 
 

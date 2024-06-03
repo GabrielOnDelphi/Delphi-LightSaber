@@ -91,12 +91,14 @@ USES
 --------------------------------------------------------------------------------------------------}
 
 { Is the process running as part of Delphi? }
+{$IFDEF msWindows}
+ {$WARN SYMBOL_PLATFORM OFF} // prevent W1002 Symbol 'DebugHook' is specific to a platform
 function IsRunningUnderDelphiDebugger: Boolean;
 begin
- {$WARN SYMBOL_PLATFORM OFF} // prevent W1002 Symbol 'DebugHook' is specific to a platform
   Result := (DebugHook <> 0);
- {$WARN SYMBOL_PLATFORM OFF}
 end;
+ {$WARN SYMBOL_PLATFORM ON}
+{$ENDIF}
 
 
 { Relies on the IsDebuggerPresent API function in kernel32. But first it tests if the function is available. }

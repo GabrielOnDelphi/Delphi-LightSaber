@@ -1,20 +1,19 @@
-
 UNIT cvMsgDispatcher;
 
-{--------------------------------------------------------------------------------------------------
-  CubicDesign
-  Baser v4.0
-  12 Oct 2010
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
   See: What's the difference between CreateWnd and CreateWindowHandle? https://stackoverflow.com/questions/582903/whats-the-difference-between-createwnd-and-createwindowhandle
---------------------------------------------------------------------------------------------------}
+=============================================================================================================}
 
 INTERFACE
 
 USES
    System.SysUtils, System.Classes, Vcl.Controls, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Graphics,
-   cvGradientPanel,
-   AniImg;
+   cvGradientPanel, AniImg;
 
 TYPE
  TOnClose = procedure(Sender: TObject) of object;
@@ -63,7 +62,7 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
-USES ccCore;
+USES cmSound, ccCore;
 {$WARN GARBAGE OFF}                                                                                {Silence the: 'W1011 Text after final END' warning }
 {.$D-}
 
@@ -189,7 +188,7 @@ begin
      Width      := 18;
      Height     := 18;
      Caption    := 'M';
-     Hint       := 'Mute'+CRLF+ 'Toggle sound on/off';
+     Hint       := 'Mute'+CRLFw+ 'Toggle sound on/off';
      ShowHint   := TRUE;
      ParentFont := FALSE;
      OnClick    := MuteExecute;

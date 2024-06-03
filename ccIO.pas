@@ -1,9 +1,10 @@
 ﻿UNIT ccIO;
 
 {=============================================================================================================
-   CubicDesign
-   2022-04-03
+   Gabriel Moraru
+   2024.05
    See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
    Super useful functions for file/folder/disk manipulation:
      - Copy files
@@ -67,11 +68,12 @@
 
 
 INTERFACE
-{$WARN UNIT_PLATFORM OFF}   {Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
+{.$WARN UNIT_PLATFORM OFF}   {Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
 
 USES
-  winapi.Windows, Winapi.ShellAPI, Winapi.ShlObj, System.Win.Registry, System.Masks, System.Types, Vcl.Consts,
-  System.StrUtils, System.IOUtils, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Dialogs, Vcl.Forms, Vcl.FileCtrl;
+  Winapi.Windows, Winapi.ShellAPI, Winapi.ShlObj,
+  System.Win.Registry, System.Masks, System.Types, System.StrUtils, System.IOUtils, System.SysUtils, System.Classes,
+  Vcl.CONSTs, Vcl.Controls, Vcl.Dialogs, Vcl.Forms, Vcl.FileCtrl;
 
 CONST
   DigSubdirectories = TRUE;
@@ -122,7 +124,6 @@ CONST
  function  Convert2DosPath          (CONST LinuxPath: string): string;
 
 
-
 {--------------------------------------------------------------------------------------------------
    EXISTS
 --------------------------------------------------------------------------------------------------}
@@ -164,8 +165,6 @@ CONST
  function  IsSubfolder(Path1: String; Path2: String): Boolean;
 
 
-
-
 {--------------------------------------------------------------------------------------------------
    CREATE FOLDERS
 --------------------------------------------------------------------------------------------------}
@@ -175,10 +174,9 @@ CONST
  function  ForceDirectoriesMsg  (CONST FullPath: string): Boolean;                                 { RETURNS:  -1 = Error creating the directory.   0 = Directory already exists.  +1 = Directory created succesfully }
 
 
-
 {--------------------------------------------------------------------------------------------------
    FIX PATH
---------------------------------------------------------------------------------------------------}//del function  CorrectPath          (CONST FullPath: string; ReplaceWith: char): string;               { Old name:  RemoveInvalidPathChars  }
+--------------------------------------------------------------------------------------------------}{ Old name:  RemoveInvalidPathChars  }
  function  CorrectFolder        (CONST Folder  : string; ReplaceWith: char= ' '): string;          { Folder is single folder. Example '\test\' }
  function  CorrectFilename      (CONST FileName: string; ReplaceWith: char= ' '): string;          { Correct invalid characters in a filename. FileName = File name without path }
  function  ShortenText          (CONST LongPath: String; MaxChars: Integer): String;               { Also exists: FileCtrl.MinimizeName, DrawStringEllipsis }
@@ -188,11 +186,11 @@ CONST
    SPECIAL FOLDERS
 --------------------------------------------------------------------------------------------------}
  function  GetTempFolder         : string;
- function  GetWinDir             : string;                                                         { Intoarce calea directorului Windows }
+ function  GetWinDir             : string;                                                         { Returns the Windows folder }
  function  GetProgramFilesDir    : string;
- function  GetWinSysDir          : string;                                                         { Intoarce calea directorului System/System32 }
+ function  GetWinSysDir          : string;                                                         { Returns the System/System32 folder}
  function  GetTaskManager        : String;
- function  GetMyDocuments        : string;  {See this for macosx: http://www.malcolmgroves.com/blog/?p=865 }
+ function  GetMyDocuments        : string;                                                         { See this for macosx: http://www.malcolmgroves.com/blog/?p=865 }
  function  GetMyPictures         : string;
  function  GetDesktopFolder      : string;
  function  GetStartMenuFolder    : string;
@@ -205,13 +203,13 @@ CONST
  function  GetMoviesPath: string;
  function  GetDownloadsPath: string;
 
- function  GetMyDocumentsAPI     : string; deprecated 'Use GetMyDocuments instead';
- function  GetMyPicturesAPI      : string; deprecated 'Use GetMyPictures  instead';
+ function  GetMyDocumentsAPI: string; deprecated 'Use GetMyDocuments instead';
+ function  GetMyPicturesAPI : string; deprecated 'Use GetMyPictures  instead';
 
- function  GetSpecialFolder    (CONST OS_SpecialFolder: string): string;                       overload;          { SHELL FOLDERS.  Retrieving the entire list of default shell folders from registry }
- function  GetSpecialFolder    (CSIDL: Integer; ForceFolder: Boolean = FALSE): string;   overload;          { uses SHFolder }
- function  GetSpecialFolders: TStringList;                                                         { Get a list of ALL special folders. }
- function  FolderIsSpecial     (const Path: string): Boolean;                                      { Returns True if the parameter is a special folder such us 'c:\My Documents' }
+ function  GetSpecialFolder (CONST OS_SpecialFolder: string): string;                 overload;          { SHELL FOLDERS.  Retrieving the entire list of default shell folders from registry }
+ function  GetSpecialFolder (CSIDL: Integer; ForceFolder: Boolean = FALSE): string;   overload;          { uses SHFolder }
+ function  GetSpecialFolders: TStringList;                                                               { Get a list of ALL special folders. }
+ function  FolderIsSpecial  (const Path: string): Boolean;                                               { Returns True if the parameter is a special folder such us 'c:\My Documents' }
 
 
 {--------------------------------------------------------------------------------------------------
@@ -228,16 +226,15 @@ CONST
  function GetOpenDialog    (CONST FileName, Filter, DefaultExt: string; CONST Caption: string= ''): TOpenDialog;
 
 
-
 {--------------------------------------------------------------------------------------------------
    LIST FOLDER CONTENT
 --------------------------------------------------------------------------------------------------}
- function  CountFilesInFolder  (CONST Path: string; CONST SearchSubFolders, CountHidden: Boolean): Cardinal;
- function  FindFirstFile       (CONST aFolder, Ext: string): string;                               { Find first file in the specified folder }
  function  ListDirectoriesOf   (CONST aFolder: string; CONST ReturnFullPath, DigSubdirectories: Boolean): TStringList;   { if DigSubdirectories is false, it will return only the top level directories, else it will return also the subdirectories of subdirectories. Returned folders are FullPath. Works also with Hidden/System folders }
  function  ListFilesAndFolderOf(CONST aFolder: string; CONST ReturnFullPath: Boolean): TStringList;
  function  ListFilesOf         (CONST aFolder, FileType: string; CONST ReturnFullPath, DigSubdirectories: Boolean; ExcludeFolders: TStrings= nil): TStringList;
  function  FolderIsEmpty       (CONST FolderName: string): Boolean;                               { Check if folder is empty }
+ {$IFDEF MSWINDOWS}
+ function  CountFilesInFolder  (CONST Path: string; CONST SearchSubFolders, CountHidden: Boolean): Cardinal;   {$ENDIF}
 
 
 {--------------------------------------------------------------------------------------------------
@@ -249,7 +246,7 @@ CONST
  function  ChangeFilePath       (CONST FullFileName, NewPath: string): string;                     { change file path to NewPath }
  function  AppendNumber2Filename(CONST FileName: string; StartAt, NumberLength: Integer): string;  { Add the number at the end of the filename. Example: AppendNumber2Filename('Log.txt', 1) will output 'Log1.txt' }
  function  FileEndsInNumber     (CONST FileName: string): Boolean;                                 { Returns true is the filename ends with a number. Example: MyFile02.txt returns TRUE }
- // function GetUniqueFileName: string;      //replaced with      ccCore.GenerateUniqueString
+ // function GetUniqueFileName: string;      //replaced by ccCore.GenerateUniqueString
 
 
 {--------------------------------------------------------------------------------------------------
@@ -362,7 +359,6 @@ CONST
  function  MoveFolderSlow      (CONST FromFolder, ToFolder   : String; Overwrite: boolean): Integer; deprecated 'Use TDirectory.Move() instead.';
 
 
-
 {--------------------------------------------------------------------------------------------------
    BACKUP
 --------------------------------------------------------------------------------------------------}
@@ -370,7 +366,6 @@ CONST
  function BackupFileBak        (CONST FileName: string): Boolean;                                                            { Creates a copy of this file, and appends as file extension. Ex: File.txt -> File.txt.bak }
  function BackupFileDate       (CONST FileName: string;             TimeStamp: Boolean= TRUE; Overwrite: Boolean = TRUE): Boolean;  overload;     { Create a copy of the specified file in the same folder. The '_backup' string is attached at the end of the filename }
  function BackupFileDate       (CONST FileName, DestFolder: string; TimeStamp: Boolean= TRUE; Overwrite: Boolean = TRUE): Boolean;  overload;
-
 
 
 {--------------------------------------------------------------------------------------------------
@@ -388,7 +383,6 @@ CONST
 
  {API OPERATIONS}
  function FileOperation        (CONST Source, Dest: string; Op, Flags: Integer): Boolean;                     { Performs: Copy, Move, Delete, Rename on files + folders via WinAPI}
-
 
 
 {--------------------------------------------------------------------------------------------------
@@ -419,14 +413,13 @@ CONST
    FILE TIME
 --------------------------------------------------------------------------------------------------}
  function  FileTimeToDateTimeStr   (FTime: TFileTime; CONST DFormat, TFormat: string): string;
- function  FileAge                 (CONST FileName: string): TDateTime;
  function  ExtractTimeFromFileName (CONST FileName: string): TTime;                                { The time must be at the end of the file name. Example: 'MyPicture 20-00.jpg'. Returns -1 if the time could not be extracted. }
  function  DateToStr_IO            (CONST DateTime: TDateTime): string;                            { Original name: StrTimeToSeconds_unsafe }
  function  TimeToStr_IO            (CONST DateTime: TDateTime): string;
  function  DateTimeToStr_IO        (CONST DateTime: TDateTime): string;  overload;                 { Used to conver Date/Time to a string that is safe to use in a path. For example, instead of '2013/01/01' 15:32 it will return '2013-01-01 15,32' }
  function  DateTimeToStr_IO: string;                                     overload;
-
-
+ {$IFDEF MSWINDOWS}
+ function  FileAge                 (CONST FileName: string): TDateTime; {$ENDIF}
 
 
 {--------------------------------------------------------------------------------------------------
@@ -457,16 +450,11 @@ CONST
  function  GetLogicalDrives: TStringDynArray;  inline;
 
 
+
+
 IMPLEMENTATION
-
 USES
-  ccRegistry,
-  ccWinVersion,
-  ccAppData,
-  ccCore;
-
-
-
+  ccRegistry, ccWinVersion, ccAppData, ccCore;
 
 
 
@@ -715,7 +703,7 @@ TFileDialogOption
    fdoNoChangeDir        = Unused.
 _______________________________________________________________________________________________________________________}
 
-{$WARN SYMBOL_PLATFORM OFF}
+{.$WARN SYMBOL_PLATFORM OFF}
 {$IFDEF MSWindows}
 { Keywords: FolderDialog, BrowseForFolder
   stackoverflow.com/questions/19501772
@@ -1011,8 +999,8 @@ begin
  then MesajError('DirectoryExistMsg: No folder specified!')
  else
   if Pos(':', Path)< 1                                                                             { check if the user has given a full path as c:\xxx }
-  then MesajError('A relative path was provided instead of a full path!'+ CRLF+ Path)
-  else MesajError('Folder does not exist:'+ CRLF+ Path);
+  then MesajError('A relative path was provided instead of a full path!'+ CRLFw+ Path)
+  else MesajError('Folder does not exist:'+ CRLFw+ Path);
 end;
 
 
@@ -1068,7 +1056,7 @@ function ForceDirectoriesMsg(CONST FullPath: string): boolean;
 begin
  Result:= ForceDirectories(FullPath) >= 0;
  if NOT Result
- then MesajError('Cannot create folder: '+ FullPath+ CRLF+ 'Probably you are trying to write to a folder to which you don''t have write permissions, or, the folder you want to create is invalid.');
+ then MesajError('Cannot create folder: '+ FullPath+ CRLFw+ 'Probably you are trying to write to a folder to which you don''t have write permissions, or, the folder you want to create is invalid.');
 end;
 
 
@@ -1372,7 +1360,7 @@ begin
  else
    if AcceptInvalidPaths
    then Result:= ''
-   else RAISE Exception.Create('The path is invalid!' + CRLF+ FullPath);    { GetDirectoryName shows an error message if the path is empty but the debuger won't stop. So I force the stop. }
+   else RAISE Exception.Create('The path is invalid!' + CRLFw+ FullPath);    { GetDirectoryName shows an error message if the path is empty but the debuger won't stop. So I force the stop. }
 end;
 
 
@@ -1634,25 +1622,6 @@ begin
 end;
 
 
-{$WARN SYMBOL_PLATFORM OFF}
-{ Find first file in the specified folder }  // Works with UNC paths
-function FindFirstFile(CONST aFolder, Ext: string): string;
-const
- //faCompressed         = $0800;
-   faNotContentIndexed  = $2000;
-VAR
-   SR: TSearchRec;
-   Permission: Integer;
-begin
- Result:= '';
- Permission:= faAnyFile- faDirectory+ faCompressed+ faNotContentIndexed;
- if (FindFirst(Trail(aFolder)+ ext, Permission, SR)= 0)
- then Result:= SR.Name;
- FindClose(sr);
-end;
-{$WARN SYMBOL_PLATFORM ON}
-
-
  { File Exists }
 function FileExistsMsg(CONST FileName: string): Boolean;
 begin
@@ -1660,7 +1629,7 @@ begin
  if NOT Result then
  if FileName= ''
  then MesajError('No file specified!')
- else MesajError('File does not exist!'+ CRLF+ FileName);
+ else MesajError('File does not exist!'+ CRLFw+ FileName);
 end;
 
 
@@ -1688,16 +1657,18 @@ begin
 end;
 
 
+{$IFDEF MSWINDOWS}
 {$WARN SYMBOL_PLATFORM OFF}
-{ REPLACEMENT
-    for System.SysUtils.FileAge which is not working with 'c:\pagefile.sys'.
-    For details dee: http://stackoverflow.com/questions/3825077/fileage-is-not-working-with-c-pagefile-sys
+{ Used by GetSysFileTime in csSystem.pas
+  REPLACEMENT
+    For System.SysUtils.FileAge which is not working with 'c:\pagefile.sys'.
+    Details dee: http://stackoverflow.com/questions/3825077/fileage-is-not-working-with-c-pagefile-sys
 }
 function FileAge(CONST FileName: string): TDateTime;
 VAR
-  LocalFileTime     : TFileTime;
-  SystemTime        : TSystemTime;
-  SRec              : TSearchRec;
+  LocalFileTime: TFileTime;
+  SystemTime   : TSystemTime;
+  SRec         : TSearchRec;
 begin
  FindFirst(FileName, faAnyFile, SRec);
  TRY
@@ -1714,6 +1685,7 @@ begin
  END;
 end;
 {$WARN SYMBOL_PLATFORM On}
+{$ENDIF}
 
 
 
@@ -1926,7 +1898,7 @@ function FileIsLockedR(CONST FileName: string): Boolean;                   { Ret
 VAR hFileRes: HFILE;
 begin
  if NOT FileExists(FileName)
- then RAISE exception.Create('File does not exist!'+ crlf+ FileName);
+ then RAISE exception.Create('File does not exist!'+ CRLFw+ FileName);
 
  hFileRes := CreateFile(PChar(FileName), GENERIC_READ, 0, NIL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
  Result := (hFileRes = INVALID_HANDLE_VALUE);
@@ -1999,7 +1971,7 @@ begin
   FileName := IncludeTrailingPathDelimiter(Dir) + 'IsDirectoryWriteable_Check.tmp';
   if FileExists(FileName)
   AND NOT DeleteFile(FileName)
-  then Raise Exception.Create('File is locked!'+ CRLF+ FileName);
+  then RAISE Exception.Create('File is locked!'+ CRLFw+ FileName);
 
   H := CreateFile(PChar(FileName), GENERIC_READ or GENERIC_WRITE, 0, NIL, CREATE_NEW, FILE_ATTRIBUTE_TEMPORARY or FILE_FLAG_DELETE_ON_CLOSE, 0);
   Result:= H <> INVALID_HANDLE_VALUE;
@@ -2560,7 +2532,7 @@ begin
  TRY
    if Stream.Size>= High(Longint) then
     begin
-     MesajError('File is larger than 2GB! Only files below 2GB are supported.'+ CRLF+ FileName);
+     MesajError('File is larger than 2GB! Only files below 2GB are supported.'+ CRLFw+ FileName);
      EXIT;
     end;
 
@@ -2780,7 +2752,7 @@ function DeleteFileWithMsg(const FileName: string): Boolean;
 begin
  Result:= DeleteFile(FileName);
  if NOT Result
- then MesajError('Cannot delete file '+CRLF+ FileName);
+ then MesajError('Cannot delete file '+CRLFw+ FileName);
 end;
 
 
@@ -2827,7 +2799,7 @@ begin
     end
    else
      { Move raises an exception if the destination folder already exists, so we have to delete the Destination folder first. But for this we need to ask the user. }
-     if MesajYesNo('Cannot move '+ FromFolder +'. Destination folder already exists:'+ ToFolder+ CRLF+ 'Press Yes to delete Destination folder. Press No to cancel the opperation.')
+     if MesajYesNo('Cannot move '+ FromFolder +'. Destination folder already exists:'+ ToFolder+ CRLFw+ 'Press Yes to delete Destination folder. Press No to cancel the opperation.')
      then
       begin
        Deletefolder(ToFolder);
@@ -2842,7 +2814,7 @@ end;
 function MoveFolderRel(CONST FromFolder, ToRelFolder: string; Overwrite: Boolean): string;
 begin
  if Pos(':', ToRelFolder) > 0
- then Raise Exception.Create('The input folder cannot be a full path!'+ CRLF+ ToRelFolder);
+ then Raise Exception.Create('The input folder cannot be a full path!'+ CRLFw+ ToRelFolder);
 
  Result:= TrimLastFolder(FromFolder) + ToRelFolder;
  MoveFolder(FromFolder, Result, Overwrite);
@@ -3173,7 +3145,7 @@ VAR
   pathList: system.Types.TStringDynArray;
 begin
  if NOT System.IOUtils.TDirectory.Exists (aFolder)
- then RAISE exception.Create('Folder does not exist! '+ crlf+ aFolder);
+ then RAISE Exception.Create('Folder does not exist! '+ CRLFw+ aFolder);
 
  Result:= TStringList.Create;
 
@@ -3197,7 +3169,7 @@ VAR
    List: system.Types.TStringDynArray;
 begin
  if NOT System.IOUtils.TDirectory.Exists (aFolder)
- then RAISE Exception.Create('Folder does not exist! '+ CRLF+ aFolder);
+ then RAISE Exception.Create('Folder does not exist! '+ CRLFw+ aFolder);
 
  Result:= TStringList.Create;
 
@@ -3278,7 +3250,7 @@ begin
   end;
 
  if NOT System.IOUtils.TDirectory.Exists (aFolder)
- then RAISE exception.Create('Folder does not exist! '+ CRLF+ aFolder);
+ then RAISE exception.Create('Folder does not exist! '+ CRLFw+ aFolder);
 
  Result:= TStringList.Create;
 

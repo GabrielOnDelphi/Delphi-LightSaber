@@ -1,16 +1,17 @@
-
 UNIT cvScrollBox;
 
-{--------------------------------------------------------------------------------------------------
-  CubicDesign
-  v4.0
-  2013.7.30
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
   Features:
       + OnVerticalScroll event      (when the user clicks the scrollbar and starts scrolling )
       + OnHorizontalScroll event
---------------------------------------------------------------------------------------------------}
+=============================================================================================================}
 {See: What's the difference between CreateWnd and CreateWindowHandle? https://stackoverflow.com/questions/582903/whats-the-difference-between-createwnd-and-createwindowhandle .   //CreateWnd can be called more than once:  http://docs.embarcadero.com/products/rad_studio/delphiAndcpp2009/HelpUpdate2/EN/html/delphivclwin32/Controls_TWinControl_CreateWnd.html }
+
 INTERFACE
 
 USES

@@ -1,16 +1,16 @@
-
 UNIT cvProxyList;
 
-{--------------------------------------------------------------------------------------------------
-  CubicDesign
-  v4.0
-  2013.7.30
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
   Features:
 
   How to use it:
     Initialize like this: frameProxy.LoadProxyFile(AppData.AppDataFolder+ 'ProxyList.txt');
---------------------------------------------------------------------------------------------------}
+=============================================================================================================}
 
 INTERFACE
 
@@ -185,7 +185,7 @@ begin
      mmoProxyList.Align         := alClient;
      mmoProxyList.Anchors       := [akLeft, akTop, akRight, akBottom];
      mmoProxyList.Top           := 24;
-     mmoProxyList.Hint          := 'The format accepted by this proxy list is: xxx.xxx.xxx.xxx:port'+CRLF+ 'Example: 66.122.234.1:80';
+     mmoProxyList.Hint          := 'The format accepted by this proxy list is: xxx.xxx.xxx.xxx:port'+CRLFw+ 'Example: 66.122.234.1:80';
      mmoProxyList.ShowHint      := TRUE;
      mmoProxyList.Color         := 14730932;
      mmoProxyList.DoubleBuffered:= True;

@@ -1,7 +1,10 @@
 UNIT cvPathEdit;
-{-------------------------------------------------------------------------------------------------------------
-  CubicDesign
-  2020-06-19
+
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
   An edit box that allows user to choose/enter a file or folder.
 
@@ -24,8 +27,7 @@ UNIT cvPathEdit;
 INTERFACE
 
 USES
-  System.SysUtils, Winapi.Windows, System.Classes, Vcl.StdCtrls, Vcl.Controls, Vcl.Graphics, vcl.imglist,
-  {$IFDEF MSWINDOWS}{$WARN UNIT_PLATFORM OFF} Vcl.FileCtrl, {$WARN UNIT_PLATFORM ON}{$ENDIF}
+  System.SysUtils, Winapi.Windows, System.Classes, Vcl.StdCtrls, Vcl.Controls, Vcl.Graphics, vcl.imglist, Vcl.CONSTs, Vcl.FileCtrl,
   Vcl.ExtCtrls, ccCore;
 
 TYPE
@@ -161,7 +163,7 @@ procedure Register;
 IMPLEMENTATION {$R cvPathEdit.res}
 
 USES
-   Vcl.CONSTs, System.IOUtils, csExecuteShell, ccIO;
+   cGraphUtil, System.IOUtils, csExecuteShell, ccIO;
 
 
 
@@ -454,7 +456,7 @@ begin
  then EXIT('The path is empty!');
 
  if Length(Trail(edtPath.Text)) > MAXPATH
- then EXIT('Path is too long: '+ CRLF+ edtPath.Text);
+ then EXIT('Path is too long: '+ CRLFw+ edtPath.Text);
 
  { Valid colon }
  if (InputType= itFolder)

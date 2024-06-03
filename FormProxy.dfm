@@ -11,9 +11,7 @@ object frmProxyList: TfrmProxyList
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = True
   ShowHint = True
-  PixelsPerInch = 96
   TextHeight = 13
   object grpInternetType: TGroupBox
     Left = 13

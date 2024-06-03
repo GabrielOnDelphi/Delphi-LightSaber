@@ -212,8 +212,8 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    POWER STATUS
 -------------------------------------------------------------------------------------------------------------}
-{$WARN SYMBOL_PLATFORM OFF}
 {$IFDEF msWindows}
+{$WARN SYMBOL_PLATFORM OFF}
 function PowerStatus: TPowerType;
 VAR SysPowerStatus: TSystemPowerStatus;                                                          { Details: http://msdn.microsoft.com/en-us/library/aa373232(VS.85).aspx }
 begin
@@ -246,8 +246,8 @@ begin
   pwUnknown: Result:= 'Power supply status unavailable.';
  end;
 end;
-{$ENDIF}
 {$WARN SYMBOL_PLATFORM on}
+{$ENDIF}
 
 
 

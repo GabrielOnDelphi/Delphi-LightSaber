@@ -2,7 +2,7 @@
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2023.06
+   2024.05
    See Copyright.txt
 
    Basic objects that allow you to enter miscellaneous HTML parts such as
@@ -10,7 +10,6 @@
 
    Also see: c:\MyProjects\Packages\Third party packages\uHTMLBuilder.pas
 -------------------------------------------------------------------------------------------------------------}
-
 
 INTERFACE
 
@@ -21,7 +20,7 @@ USES System.SysUtils, System.Classes;
 TYPE
  THtmlWriter = class(TComponent)
   private
-   FSiteRoot     : string;                                                                         { site root }
+   FSiteRoot     : string;                                                       { site root }
    FTitle        : string;
    FKeywords     : string;
    FDescription  : string;
@@ -33,15 +32,15 @@ TYPE
    FExtraHeaders : string;
   protected
    function  GetContent: string;
-   procedure AddContent(CONST s: string);                                                                { append 's' to the current content without inserting a ENTER }
+   procedure AddContent(CONST s: string);                                        { append 's' to the current content without inserting a ENTER }
    procedure AddContentNewLine(CONST s: string);
   public
    constructor Create(AOwner: TComponent); override;
    procedure SaveToFile(CONST FileName: string);
    procedure GenerateContent;
    procedure Reset;
-   procedure AddBodyLine(CONST s: string);                                                               { add 's' in a new line to the current Body }
-   procedure AddBodyLineB(CONST s: string);                                                              { add 's' in a new line to the current Body. Also add a <BR> tag }
+   procedure AddBodyLine(CONST s: string);                                       { add 's' in a new line to the current Body }
+   procedure AddBodyLineB(CONST s: string);                                      { add 's' in a new line to the current Body. Also add a <BR> tag }
   published
    property SiteRoot:       string    read FSiteRoot        Write FSiteRoot;
    property hTitle:         string    read FTitle           Write FTitle;
@@ -51,8 +50,8 @@ TYPE
    property hStylesLink:    string    read FStyles          Write FStyles;
    property hHavIconLink:   string    read FHavIcon         Write FHavIcon;
    property hExtraHeaders:  string    read FExtraHeaders    Write FExtraHeaders;
-   property hBody:          string    read FBody            write FBody;                           { this is the content only between the <BODY> tag }
-   property Content:        string    read GetContent;                                             { this is the content of the WHOLE html page - obligatoriu trebuie sa apelez 'GenerateContent' inainte de a apela 'Content' }
+   property hBody:          string    read FBody            write FBody;         { this is the content only between the <BODY> tag }
+   property Content:        string    read GetContent;                           { this is the content of the WHOLE html page - obligatoriu trebuie sa apelez 'GenerateContent' inainte de a apela 'Content' }
  end;
 
 procedure Register;
@@ -60,7 +59,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   ccCore, ccINIFile, ccIO;
+   ccCore, ccIO;
 
 
 constructor THtmlWriter.Create(AOwner: TComponent);
@@ -79,9 +78,6 @@ begin
  FSiteRoot:= 'http://www.dnabaser.com/';
  hExtraHeaders:= ''; 
 end;
-
-
-
 
 
 
@@ -153,8 +149,6 @@ end;
 
 
 
-
-
 {--------------------------------------------------------------------------------------------------
 
 --------------------------------------------------------------------------------------------------}
@@ -162,7 +156,6 @@ procedure Register;
 begin
   RegisterComponents('LightSaber', [THtmlWriter]);
 end;
-
 
 
 end.

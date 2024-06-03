@@ -12,7 +12,7 @@ UNIT cmPascal;
 INTERFACE
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes, System.RegularExpressions, System.StrUtils, System.Character, Vcl.Forms;
+  System.SysUtils, System.Classes, System.RegularExpressions, System.StrUtils;
 
 
 // CLASSES & OBJECTS
@@ -38,7 +38,7 @@ function FindLine         (CONST Needle: string; Haystack: TStringList; StartAt:
 IMPLEMENTATION
 
 USES
-  ccCore, ccIO;
+  ccCore;
 
 {-------------------------------------------------------------------------------------------------------------
     COMMENTS

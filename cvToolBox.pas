@@ -1,15 +1,16 @@
 UNIT cvToolBox;
 
-{--------------------------------------------------------------------------------------------------
-   CubicDesign
-   2013.7.30
-
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
    A panel that acts as a toolbox. You can drag it arround the screen with the mouse and close it from the X button.
    Useful for non-window tools such as Search boxes.
 
    Also see:
       c:\Myprojects\Packages\Third party packages\FloatingWindow.pas
---------------------------------------------------------------------------------------------------}
+=============================================================================================================}
 
 INTERFACE
 
@@ -112,7 +113,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES ccCore;
+USES ccCenterControl, ccCore;
 
 
 
@@ -186,14 +187,6 @@ end;
 
 
 
-
-
-
-
-
-
-
-
 {--------------------------------------------------------------------------------------------------
    STUFF
 --------------------------------------------------------------------------------------------------}
@@ -207,7 +200,7 @@ procedure TToolBox.ShowIt(Parent: TControl);
 begin
  Visible:= TRUE;
  BringToFront;
- ccCore.CorrectCtrlPosition(Self, Parent);
+ CorrectCtrlPosition(Self, Parent);
 end;
 
 

@@ -1,8 +1,10 @@
 ﻿UNIT chHardID_C;
 
 {=============================================================================================================
-   CubicDesign
-   2022-04-03
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 {
 ULTIMATE GUIDE:
 http://rvelthuis.de/articles/articles-dlls.html
@@ -43,14 +45,13 @@ But even in older versions of Delphi, you can tell the compiler to create C++ he
     Call ReleaseMemory after you call a function that returns dynamic data (strings).
     Else you will leak memory.
 
-
-===============================================================================}
+=============================================================================================================}
 
 
 INTERFACE
 
 USES
-  { System.SysUtils,} chHardID;
+  chHardID;
 
   { CPU }
   function CPUFamily           : PAnsiChar;                           stdcall;

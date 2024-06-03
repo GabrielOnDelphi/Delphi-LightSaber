@@ -2,7 +2,7 @@ UNIT cGraphGif;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2024.05
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
@@ -32,7 +32,7 @@ UNIT cGraphGif;
 INTERFACE
 
 USES
-  System.SysUtils, Vcl.Graphics, Vcl.Imaging.GIFImg, FormLog;
+  System.SysUtils, Vcl.Graphics, Vcl.Imaging.GIFImg;
 
 TYPE
   TGifLoader = class(TObject)

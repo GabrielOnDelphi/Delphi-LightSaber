@@ -11,12 +11,14 @@ object frmBorderEditor: TfrmBorderEditor
   Constraints.MinWidth = 480
   DoubleBuffered = True
   ParentFont = True
+  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  TextHeight = 15
+  PixelsPerInch = 96
+  TextHeight = 13
   object Container: TPanel
     AlignWithMargins = True
     Left = 3
@@ -28,7 +30,6 @@ object frmBorderEditor: TfrmBorderEditor
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 0
-    ExplicitHeight = 388
     DesignSize = (
       544
       376)
@@ -37,7 +38,7 @@ object frmBorderEditor: TfrmBorderEditor
       Left = 3
       Top = 3
       Width = 538
-      Height = 30
+      Height = 26
       Hint = #39'Fade to color'#39' is CPU hungry'
       Align = alTop
       Alignment = taCenter
@@ -49,7 +50,6 @@ object frmBorderEditor: TfrmBorderEditor
       Transparent = True
       Visible = False
       WordWrap = True
-      ExplicitWidth = 326
     end
     object btnReset: TButton
       Left = 502
@@ -70,7 +70,6 @@ object frmBorderEditor: TfrmBorderEditor
       Anchors = []
       Caption = 'Fill/Fade'
       TabOrder = 2
-      ExplicitTop = 45
       DesignSize = (
         237
         298)
@@ -108,32 +107,32 @@ object frmBorderEditor: TfrmBorderEditor
         object lblFadeSpeed: TLabel
           Left = 92
           Top = 50
-          Width = 59
-          Height = 15
+          Width = 56
+          Height = 13
           Caption = 'Fade speed'
           Transparent = True
         end
         object lblEdgeSmear: TLabel
           Left = 92
           Top = 78
-          Width = 61
-          Height = 15
+          Width = 56
+          Height = 13
           Caption = 'Edge smear'
           Transparent = True
         end
         object lblNeighborWeight: TLabel
           Left = 92
           Top = 107
-          Width = 96
-          Height = 15
+          Width = 84
+          Height = 13
           Caption = 'Neighbour weight'
           Transparent = True
         end
         object lblFuzzy: TLabel
           Left = 92
           Top = 136
-          Width = 52
-          Height = 15
+          Width = 50
+          Height = 13
           Caption = 'Fuzzyness'
           Transparent = True
         end
@@ -214,7 +213,6 @@ object frmBorderEditor: TfrmBorderEditor
       Anchors = []
       Caption = 'Background shape'
       TabOrder = 1
-      ExplicitTop = 220
       object radShapeSolid: TRadioButton
         Left = 35
         Top = 41
@@ -259,12 +257,11 @@ object frmBorderEditor: TfrmBorderEditor
       Anchors = []
       Caption = 'Fill background with:'
       TabOrder = 0
-      ExplicitTop = 44
       object lblPixTolerance: TLabel
         Left = 60
         Top = 118
-        Width = 84
-        Height = 15
+        Width = 77
+        Height = 13
         Caption = 'Color tolerance:'
         Transparent = True
       end
@@ -347,13 +344,12 @@ object frmBorderEditor: TfrmBorderEditor
       BevelKind = bkSoft
       TabOrder = 3
       Visible = False
-      ExplicitTop = 155
       object lblExplain: TLabel
         AlignWithMargins = True
         Left = 5
         Top = 19
-        Width = 499
-        Height = 115
+        Width = 492
+        Height = 39
         Cursor = crHandPoint
         Margins.Top = 0
         Align = alClient
@@ -370,14 +366,12 @@ object frmBorderEditor: TfrmBorderEditor
         Layout = tlCenter
         WordWrap = True
         OnClick = lblExplainClick
-        ExplicitWidth = 497
-        ExplicitHeight = 45
       end
       object lblHint: TLabel
         AlignWithMargins = True
         Left = 5
         Top = 5
-        Width = 499
+        Width = 31
         Height = 14
         Cursor = crHandPoint
         Margins.Bottom = 0
@@ -395,7 +389,6 @@ object frmBorderEditor: TfrmBorderEditor
         Layout = tlCenter
         WordWrap = True
         OnClick = lblExplainClick
-        ExplicitWidth = 31
       end
     end
   end
@@ -417,7 +410,6 @@ object frmBorderEditor: TfrmBorderEditor
       Caption = 'Apply'
       TabOrder = 2
       OnClick = btnApplyClick
-      ExplicitHeight = 23
     end
     object btnOk: TButton
       Left = 328
@@ -429,7 +421,6 @@ object frmBorderEditor: TfrmBorderEditor
       Default = True
       TabOrder = 0
       OnClick = btnOkClick
-      ExplicitHeight = 23
     end
     object btnCancel: TButton
       Left = 400
@@ -440,7 +431,6 @@ object frmBorderEditor: TfrmBorderEditor
       Caption = 'Cancel'
       TabOrder = 1
       OnClick = btnCancelClick
-      ExplicitHeight = 23
     end
   end
   object ColorDialog: TColorDialog

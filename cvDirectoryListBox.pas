@@ -1,25 +1,25 @@
-
 unit cvDirectoryListBox;
 
 {$R-,T-,H+,X+}
-{$WARN UNIT_PLATFORM OFF}   {Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
+{.$WARN UNIT_PLATFORM OFF}   {Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
 
 {--------------------------------------------------------------------------------------------------
-  CubicDesign
-  v4.0
-  2013.7.30
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
 
   Features:
-   * property ShowHidden;                                                                           ->  luat de aici:  http://www.experts-exchange.com/Programming/Languages/Pascal/Delphi/Q_22962861.html
+   * property ShowHidden;
    * property ShowSystem;
 
- Note: Don't set 'Parent:= Owner' in constructor. See this for details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
+ Note: Don't set 'Parent:= Owner' in constructor.
+       See this for details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
 --------------------------------------------------------------------------------------------------}
 
 INTERFACE
 
 USES
-   Winapi.Windows, System.SysUtils, Vcl.Controls, System.AnsiStrings, System.Classes, Vcl.FileCtrl;
+   Winapi.Windows, System.SysUtils, System.AnsiStrings, System.Classes, Vcl.Controls, Vcl.FileCtrl;
 
 TYPE
  TCubicDirListBox= class(TDirectoryListBox)
@@ -85,8 +85,8 @@ begin
 end;
 
 
-{$WARN SYMBOL_PLATFORM OFF}
 {$IFDEF msWindows}
+ {$WARN SYMBOL_PLATFORM OFF}
 { Reads all directories in ParentDirectory, adds their paths to DirectoryList, and returns the number added }
 function TCubicDirListBox.ReadDirectoryNames(const ParentDirectory: string; DirectoryList: TStringList): Integer;
 var
@@ -123,8 +123,8 @@ begin
     FindClose(SearchRec);
   end;
 end;
+ {$WARN SYMBOL_PLATFORM On}
 {$ENDIF}
-{$WARN SYMBOL_PLATFORM On}
 
 
 
@@ -202,14 +202,6 @@ function TCubicDirListBox.getDirectory: string;
 begin
  Result:= Trail(Directory);
 end;
-
-
-
-
-
-
-
-
 
 
 

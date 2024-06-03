@@ -1,15 +1,16 @@
 UNIT cvLabelEdit;
 
-{--------------------------------------------------------------------------------------------------
-  CubicDesign
-  v4.0
-  2015.7.1
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
   Features:
      Added OnPressEnter event - Event is triggered when the user pressed Enter
      If CheckFileExistence=true then the control gets red if the text entered is not an existent file
 
---------------------------------------------------------------------------------------------------}
+=============================================================================================================}
 
 INTERFACE
 
@@ -110,6 +111,7 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
+USES cGraphUtil;
 
 
 

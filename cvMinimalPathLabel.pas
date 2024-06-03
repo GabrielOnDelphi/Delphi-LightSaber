@@ -1,8 +1,10 @@
 UNIT cvMinimalPathLabel;
 
-{--------------------------------------------------------------------------------------------------
-  CubicDesign
-  2013.09
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
   When displaying a path, truncates the middle of the text if the entire path cannot fit into the visible area of the control.
   It ONLY works wot filenames and paths because of MinimizeName!
@@ -12,7 +14,7 @@ UNIT cvMinimalPathLabel;
 
 INTERFACE
 {.$D-}    { 'NoDebugInfo' switch  }
-{$WARN UNIT_PLATFORM OFF}   {Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
+{.$WARN UNIT_PLATFORM OFF}   {Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
 
 USES
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.FileCtrl;

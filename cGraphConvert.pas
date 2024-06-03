@@ -169,7 +169,7 @@ begin
 
   if ForceDirectoriesB(OutFolder)
   then JPG.SaveToFile(OutputFile)
-  else RAISE Exception.Create('Cannot create output folder!'+ CRLF+ OutFolder);
+  else RAISE Exception.Create('Cannot create output folder!'+ CRLFw+ OutFolder);
  FINALLY
   FreeAndNil(JPG);
  END;

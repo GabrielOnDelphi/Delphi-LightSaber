@@ -57,7 +57,6 @@ object frmSkinRes: TfrmSkinRes
     Caption = 'Hint: Registered users can download more skins from our web site'
     Layout = tlCenter
     WordWrap = True
-    ExplicitTop = 415
     ExplicitWidth = 305
   end
   object lBox: TListBox

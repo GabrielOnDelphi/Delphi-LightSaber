@@ -1,8 +1,11 @@
 ﻿UNIT ccINIFileVcl;
 
 {=============================================================================================================
-  CubicDesign
-  2022-04-03
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
+
   Same as ccIniFile but add support for forms to save themselves to disk.
 --------------------------------------------------------------------------------------------------------------
   Do you have applications with forms with lots of controls (like checkboxes/radiobuttons) and you want to
@@ -73,11 +76,11 @@
 INTERFACE
 
 USES
-   WinApi.Windows, System.Classes, Vcl.ActnList, Vcl.Dialogs, System.SysUtils, System.UITypes, Vcl.Graphics, Vcl.Forms, Vcl.FileCtrl,
-   Vcl.Menus, Vcl.ExtCtrls, Vcl.NumberBox, Vcl.ComCtrls, Vcl.WinXCtrls, Vcl.Samples.Spin,
-   Vcl.Controls, Vcl.StdCtrls, System.IniFiles, ccCore, ccINIFile;
+   WinApi.Windows, System.Classes, System.IniFiles, System.SysUtils, System.UITypes,
+   Vcl.Graphics, Vcl.Forms, Vcl.FileCtrl, Vcl.Menus, Vcl.ExtCtrls, Vcl.NumberBox, Vcl.ComCtrls, Vcl.WinXCtrls, Vcl.Samples.Spin, Vcl.ActnList, Vcl.Dialogs, Vcl.Controls, Vcl.StdCtrls,
+   ccINIFile;
 
-{$WARN UNIT_PLATFORM OFF}
+{.$WARN UNIT_PLATFORM OFF}
 {$WARN GARBAGE OFF}              {Silence the: 'W1011 Text after final END' warning }
 
 TYPE
@@ -112,7 +115,7 @@ procedure LoadForm (Form: TForm; OnlyFormPos: Boolean= FALSE);
 IMPLEMENTATION
 
 USES
-   ccIO, ccAppData;
+   ccCore, ccIO, ccCenterControl, ccAppData;
 
 
 {-----------------------------------------------------------------------------------------------------------------------
@@ -387,7 +390,7 @@ begin
    begin
      if  (TForm(Comp).Menu <> NIL)
      AND (TForm(Comp).BorderStyle = bsDialog)    { Just a check up: The main menu is not shown if form is set to bsDialog. Note! The menu will still appear if skins are applyed to this form }
-     then MesajWarning(Comp.Name+ CRLF+ 'The main menu will not appear because the form is set to bsDialog!');
+     then MesajWarning(Comp.Name+ CRLFw+ 'The main menu will not appear because the form is set to bsDialog!');
 
      ReadCtrlPos(TControl(Comp));
      inherited Read('FormFont', TForm(Comp).Font);

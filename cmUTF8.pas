@@ -10,6 +10,8 @@
    The UTF-8 representation of the BOM is the (hexadecimal) byte sequence EF BB BF .
    The Unicode Standard permits the BOM in UTF-8, but does not require or recommend its use.
 
+   Also see: cmPlatformFile.pas
+
    Tester app:
       c:\My projects\Project support\DUT2\DUT2.dpr
 =============================================================================================================}
@@ -17,7 +19,7 @@
 interface
 
 uses
-  Winapi.Windows, System.SysUtils, System.Classes;
+  System.SysUtils, System.Classes;
 
 
 function  IsUTF8        (CONST FileName: string): Boolean;
@@ -30,6 +32,7 @@ function  ForceRemoveBOM(CONST FileName: string): Boolean;
 
 
 IMPLEMENTATION
+
 USES
    ccIO;
 
@@ -77,7 +80,6 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    CONVERT
 -------------------------------------------------------------------------------------------------------------}
-
 
 { Works }
 procedure ConvertToUTF(CONST FileName: string);
@@ -132,13 +134,9 @@ end;
 
 
 
-
-
-
 {-------------------------------------------------------------------------------------------------------------
    BRUTE FORCE
 -------------------------------------------------------------------------------------------------------------}
-
 
 { Adds the BOM onyl if the file is not empty and does not have BOM already.
   Warning. Does this with brute force (no text conversion).

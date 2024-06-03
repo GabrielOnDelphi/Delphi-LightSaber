@@ -1,10 +1,10 @@
 UNIT clVisLog;
 
 {=============================================================================================================
-  Visual Log
-   CubicDesign
-   2021.10.23
+   Gabriel Moraru
+   2024.05
    See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
    The new log (based on TStringGrid)
    Drop a TVisLog on your form. Pass its RamLog property as reference to all TCube objects when I need to log stuff.

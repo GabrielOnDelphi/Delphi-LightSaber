@@ -15,7 +15,8 @@ UNIT cvGraphChart;
 INTERFACE
 
 USES
-  System.Types, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.ExtCtrls, System.UITypes, Generics.Collections, ccCore;
+  System.Types, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.ExtCtrls, System.UITypes, Generics.Collections,
+  cGraphUtil;
 
 TYPE
   TPlotType= set of (plDotValues,                                { Show a label next to each data point to display its value }
@@ -125,9 +126,7 @@ function FindMax         (DataPoints: TDataPoints): Integer;                    
 IMPLEMENTATION
 {$WARN GARBAGE OFF}                                                                                {Silence the: 'W1011 Text after final END' warning }
 
-USES cmMath, cGraphUtil;
-
-
+USES cmMath, ccCore;
 
 
 

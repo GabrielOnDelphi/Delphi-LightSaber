@@ -259,7 +259,7 @@ function GenerateHTMLHeader(CONST Title, MetaDescription, Keywords, CssFile: str
 begin
  Result:=
   '<HTML><HEAD>'+ CRLF
- +'<title>'+ Title+'</title>'+ CRLF
+ +'<title>'+ Title+'</title>'+ CRLF+CRLF
  +'<meta name="description" content="'+ MetaDescription+'" />'+ CRLF
  +'<meta name="Keywords"    content="'+ Keywords+'" />'+ CRLF
 

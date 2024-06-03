@@ -1,8 +1,10 @@
 UNIT ccCompiler;
 
 {=============================================================================================================
-   CubicDesign
-   2022.11
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
    Compiler version definitions
    https://docwiki.embarcadero.com/RADStudio/Sydney/en/Compiler_Versions
@@ -48,12 +50,15 @@ IMPLEMENTATION
   {$ENDIF}
 
 
+  Alternative example of usage:
 
-   {$IFDEF VER340}
+   {$IFDEF VER350}    // Alex
+   {$IFDEF VER340}    // Sydney
    {$IFDEF VER330}
    {$IFDEF VER320}
    {$IFDEF VER310}
    {$IFDEF VER300}
+   {$ENDIF}
 
 *)
 end.

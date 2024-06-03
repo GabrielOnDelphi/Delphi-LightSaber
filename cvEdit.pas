@@ -1,9 +1,10 @@
-
 UNIT cvEdit;
 
-{--------------------------------------------------------------------------------------------------
-  CubicDesign
-  2017.03.03
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
   Features:
      Added OnPressEnter event - Event is triggered when the user pressed Enter
@@ -13,7 +14,7 @@ UNIT cvEdit;
   Known bug:
     Why does TEdit.OnChange trigger when Ctrl+A is pressed?            http://stackoverflow.com/questions/42230077/why-does-tedit-onchange-trigger-when-ctrla-is-pressed
 
---------------------------------------------------------------------------------------------------}
+=============================================================================================================}
 
 INTERFACE
 
@@ -40,11 +41,10 @@ TYPE
      property CheckDirExistence : Boolean read FCheckDirEx  write FCheckDirEx  default FALSE;
   end;
 
-
-
 procedure Register;
 
 IMPLEMENTATION
+USES cGraphUtil;
 
 
 

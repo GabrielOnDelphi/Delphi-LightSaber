@@ -66,7 +66,7 @@ function ExecuteProcMsg(ExeFile: string): Boolean;
 begin
  Result:= ExecuteProc(ExeFile);                                                                     { If the function succeeds, the return value is the instance handle of the application that was run, or the handle of a dynamic data exchange (DDE) server application. If the function fails, the return value is an error value that is less than or equal to 32. The following table lists these error Value: }
  if NOT Result
- then MesajError('Cannot execute file '+ crlf+ ExeFile);
+ then MesajError('Cannot execute file '+ CRLFw+ ExeFile);
 end;
 
 
@@ -234,8 +234,8 @@ end;
   Source:
       http://stackoverflow.com/questions/25723807/execute-dos-program-and-get-output-dynamically
 --------------------------------------------------------------------------------------------------}
-{$WARN SYMBOL_PLATFORM OFF}
 {$IFDEF msWindows}
+{$WARN SYMBOL_PLATFORM OFF}
 procedure ExecuteAndGetOutDyn(CONST CmdLine: string; CONST Output: TProc<string>; AntiFreeze: Boolean; Hide: Boolean= TRUE; Timeout: Cardinal= 100);  { Run a DOS program and retrieve its output dynamically while it is running. As TimeOut use 100 (ms) }
 CONST
   InheritHandleSecurityAttributes: TSecurityAttributes = (nLength: SizeOf(TSecurityAttributes); bInheritHandle: True);
@@ -290,8 +290,8 @@ begin
    CloseHandle(hWriteStdout);
  END;
 end;
-{$ENDIF}
 {$WARN SYMBOL_PLATFORM On}
+{$ENDIF}
 
 
 

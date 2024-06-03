@@ -1,8 +1,10 @@
 ﻿UNIT cvMemo;
 
-{--------------------------------------------------------------------------------------------------
-  CubicDesign
-  2017.03.20
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
   Tester:
      c:\MyProjects\Packages\CubicCommonControls-Testers\cubicMemo\
@@ -28,7 +30,7 @@
      http://delphi.xcjc.net/viewthread.php?tid=44882
 
 See: What's the difference between CreateWnd and CreateWindowHandle? https://stackoverflow.com/questions/582903/whats-the-difference-between-createwnd-and-createwindowhandle
---------------------------------------------------------------------------------------------------}
+=============================================================================================================}
 
 INTERFACE
 {$WARN GARBAGE OFF}   {Silence the: 'W1011 Text after final END' warning }
@@ -390,7 +392,7 @@ end;
 
 procedure TCubicMemo.AddSeparator;
 begin
- Lines.Add(CRLF+ '____________________'+ CRLF);
+ Lines.Add(CRLFw+ '____________________'+ CRLFw);
 end;
 
 

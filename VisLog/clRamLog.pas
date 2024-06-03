@@ -1,9 +1,10 @@
 UNIT clRamLog;
 
 {=============================================================================================================
-   CubicDesign
-   2022.03
+   Gabriel Moraru
+   2024.05
    See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
    A simple but effective log (non-visual).
    Its data can be displayed by TRichLog, but it can also work alone without being connected to a TRichLog.

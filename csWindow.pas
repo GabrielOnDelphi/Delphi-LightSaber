@@ -61,7 +61,7 @@ USES
  procedure MinAllWnd_ByHandle(ApplicationWindow: HWnd);                              { Merge prost}
  procedure MinAllWnd_ByWinMKey;                                                      { Simulate Win + M }
 
- function  RestoreWindowByName    (CONST ClassName: string): Boolean;
+ function  RestoreWindowByName   (CONST ClassName: string): Boolean;
  procedure RestoreWindow         (WndHandle: HWND);
 
  { Hacks }
@@ -69,13 +69,8 @@ USES
 
 
 
-
 IMPLEMENTATION
 USES ccCore;
-
-
-
-
 
 
 

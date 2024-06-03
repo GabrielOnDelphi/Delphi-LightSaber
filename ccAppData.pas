@@ -2,9 +2,9 @@
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.01
+   2024.05
    See Copyright.txt
- ____________________________________________________________________________________________________________
+--------------------------------------------------------------------------------------------------------------
    Via class you can:
       - Get application's appdata folder (the folder where you save temporary, app-related and ini files)
       - Get application's command line parameters
@@ -213,12 +213,12 @@ function  FindCmdLineSwitch(const Switch: string; IgnoreCase: Boolean): Boolean;
 
 VAR
    //ToDo: make sure AppData is unique (make it Singleton)
-   AppData: TAppData;   // This is automatically freed on app shutdown
+   AppData: TAppData;   // This is automatically freed on app shutdown (via FINALIZATION)
 
 IMPLEMENTATION
 
 USES
-  ccRegistry, ccIniFileVCL, ccCore, ccIO;
+  ccRegistry, ccCenterControl, ccIniFileVCL, ccCore, ccIO;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -545,7 +545,7 @@ end;
 { This is a bit dirty! It creates a BAT that deletes the EXE. Some antiviruses might block this behavior? }
 procedure TAppData.SelfDelete;
 CONST
-   BatCode = ':delete_exe' + CRLF +'del "%s"' + CRLF +'if exist "%s" goto delete_exe' + CRLF +'del "%s"';
+   BatCode = ':delete_exe' + CRLFw +'del "%s"' + CRLFw +'if exist "%s" goto delete_exe' + CRLFw +'del "%s"';
 VAR
  List    : TStringList;
  PI      : TProcessInformation;

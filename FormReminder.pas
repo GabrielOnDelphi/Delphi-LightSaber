@@ -79,7 +79,7 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   cmVclUtils, cGraphDesktop, cvIniFile, ccCore, ccINIFile, cmPowerUtils, csExecuteShell;
+   cmVclUtils, cGraphUtil, cmSound, cGraphDesktop, cvIniFile, ccCore, ccINIFile, cmPowerUtils, csExecuteShell;
 
 
 

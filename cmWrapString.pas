@@ -149,7 +149,7 @@ end;
 function UnWrapString(CONST s: string): string;
 Begin
  Result:= StringReplace(s     , CRLF, '' , [rfReplaceAll, rfIgnoreCase]);
- Result:= StringReplace(Result, Tab , ' ', [rfReplaceAll, rfIgnoreCase]);
+ Result:= StringReplace(Result, Tab  , ' ', [rfReplaceAll, rfIgnoreCase]);
 End;
 
 
@@ -291,9 +291,10 @@ begin
             i:= WrapWidth+u;
            end;
 
-         Result:= Result+ BStrg + crlf;
+         Result:= Result+ BStrg + CRLF;
        end;
    end;
 end;
+
 
 end.

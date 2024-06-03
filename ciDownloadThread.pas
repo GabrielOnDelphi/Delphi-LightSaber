@@ -19,11 +19,7 @@ UNIT ciDownloadThread;
 INTERFACE
 
 USES
-   Winapi.Windows,
-   System.SysUtils,
-   System.Classes,
-   WinApi.WinInet,
-   ciDownload;   {.$M+}     { There is seldom, if ever, any need for an application to directly use the $M compiler switch. }
+   System.SysUtils, System.Classes;
 
 TYPE
  TWinInetObj = class(TThread)
@@ -48,7 +44,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   ccCore;
+   ciDownload, ccCore;
 
 
 procedure TWinInetObj.Execute;

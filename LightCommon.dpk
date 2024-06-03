@@ -57,7 +57,7 @@ contains
   cmRttiSetToString in 'cmRttiSetToString.pas',
   cmSearchResult in 'cmSearchResult.pas',
   cmStrBuilder in 'cmStrBuilder.pas',
-  cmStringList in 'cmStringList.pas',
+  cmstringlist in 'cmstringlist.pas',
   cmStringListA in 'cmStringListA.pas',
   cmVclUtils in 'cmVclUtils.pas',
   cmWrapString in 'cmWrapString.pas',
@@ -73,6 +73,9 @@ contains
   csWMIResolution in 'csWMIResolution.pas',
   cmWinVersionOthers in 'cmWinVersionOthers.pas',
   FormAsyncMessage in 'FormAsyncMessage.pas',
-  cmUTF8 in 'cmUTF8.pas';
+  cmUTF8 in 'cmUTF8.pas',
+  cmPlatformFile in 'cmPlatformFile.pas',
+  cmSound in 'cmSound.pas',
+  cmWinPlatform in 'cmWinPlatform.pas';
 
 end.

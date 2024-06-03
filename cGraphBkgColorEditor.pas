@@ -96,7 +96,8 @@ TYPE
 
 IMPLEMENTATION  {$R *.dfm}
 
-USES cGraphUtil, cmVclUtils, cmINIFileQuick, ccCore;
+USES
+  cGraphUtil, cmVclUtils, cmINIFileQuick, ccCenterControl, ccCore;
 { Don't use cvIniFile because it belongs to LightVisControls pkg which is after this (LightGraphics) package }
 
 

@@ -1,9 +1,10 @@
 UNIT cvSpinEditDelayed;
 
-{--------------------------------------------------------------------------------------------------
-  CubicDesign
-  2017.04.27
-
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
   TCubicSpinEditD Features:
       Fixes the OnChange MinValue/MaxValue issue.
       Details here: http://stackoverflow.com/questions/17655854/how-do-i-prevent-users-from-entering-values-that-exceed-tspinedit-maxvalue
@@ -17,7 +18,7 @@ UNIT cvSpinEditDelayed;
 
   Tester
      c:\Myprojects\Project Testers\Cubic VCL SpinEdits\Tester.dpr
---------------------------------------------------------------------------------------------------}
+-------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
 

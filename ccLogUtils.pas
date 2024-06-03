@@ -26,7 +26,7 @@ UNIT ccLogUtils;
 INTERFACE
 
 USES
-   System.SysUtils, Vcl.Graphics, ccCore;
+   System.SysUtils, Vcl.Graphics;
 
 TYPE
   TLogVerb= (lvVerbose, lvHints, lvInfos, lvImportant, lvWarnings, lvErrors);
@@ -35,8 +35,8 @@ CONST
   ctLogVerb  = clGray;
   ctLogHint  = clDkGray;
   ctLogInfo  = clBlack;
-  ctLogImprt = clPurpleDk;
-  ctLogWarn  = clOrangeDark;
+  ctLogImprt = TColor($5E005E); // Purple Dark
+  ctLogWarn  = TColor($0058DF); // Orange Dark
   ctLogError = clRed;
 
 CONST

@@ -1,8 +1,10 @@
 UNIT cvListBox;
 
-{-------------------------------------------------------------------------------------------------------------
-  CubicDesign
-  2020
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
   Features:
       OnChange event
@@ -15,7 +17,7 @@ UNIT cvListBox;
       Remove empty lines
       Add new line but limit total number of lines
 
--------------------------------------------------------------------------------------------------------------}
+=============================================================================================================}
 
 INTERFACE
 
@@ -172,13 +174,12 @@ TYPE
     property OnStartDrag;
  end;
 
-
-
-
 procedure Register;
 
 IMPLEMENTATION
-USES cmVclUtils, ccCore, cmMath, ccIO;
+
+USES
+  cmVclUtils, cmSound, ccCore, cmMath, ccIO;
 
 
 
@@ -498,7 +499,7 @@ begin
  if Items.Count> 0 then
  for I:= 0 TO Items.Count-1 DO
    if Selected[i]
-   then Result:= Result+ Items[i]+ CRLF;
+   then Result:= Result+ Items[i]+ CRLFw;
 end;
 
 

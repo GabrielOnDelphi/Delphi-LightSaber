@@ -14,7 +14,6 @@ object frmTranslator: TfrmTranslator
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
@@ -23,7 +22,6 @@ object frmTranslator: TfrmTranslator
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 13
   object lblInfo: TLabel
     AlignWithMargins = True
@@ -35,6 +33,7 @@ object frmTranslator: TfrmTranslator
     Alignment = taCenter
     Caption = '@Info'
     Visible = False
+    ExplicitWidth = 30
   end
   object CubicGroupBox3: TGroupBox
     AlignWithMargins = True
@@ -48,7 +47,7 @@ object frmTranslator: TfrmTranslator
       AlignWithMargins = True
       Left = 5
       Top = 316
-      Width = 49
+      Width = 229
       Height = 13
       Hint = 
         'Live forms that available for translation.'#13#10'Only life (running) ' +
@@ -56,12 +55,13 @@ object frmTranslator: TfrmTranslator
       Align = alBottom
       Caption = 'Live forms'
       OnClick = lblLiveFormsClick
+      ExplicitWidth = 49
     end
     object inetDeepL: TLabel
       AlignWithMargins = True
       Left = 5
       Top = 570
-      Width = 80
+      Width = 229
       Height = 13
       Cursor = crHandPoint
       Align = alBottom
@@ -75,12 +75,13 @@ object frmTranslator: TfrmTranslator
       ParentFont = False
       Transparent = True
       OnClick = inetDeepLClick
+      ExplicitWidth = 80
     end
     object InternetLabel1: TLabel
       AlignWithMargins = True
       Left = 5
       Top = 589
-      Width = 83
+      Width = 229
       Height = 13
       Cursor = crHandPoint
       Align = alBottom
@@ -94,6 +95,7 @@ object frmTranslator: TfrmTranslator
       ParentFont = False
       Transparent = True
       OnClick = InternetLabel1Click
+      ExplicitWidth = 83
     end
     object btnCreateTransl: TButton
       Left = 9
@@ -363,6 +365,7 @@ object frmTranslator: TfrmTranslator
       EditLabel.Height = 13
       EditLabel.Caption = 'Author name'
       TabOrder = 1
+      Text = ''
       TextHint = 'CubicDesign'
     end
     object btnOK: TButton

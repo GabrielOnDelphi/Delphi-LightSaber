@@ -1,14 +1,14 @@
 UNIT cvTrayIcon;
 
 {=============================================================================================================
-  2013.8.30
-  CubicDesign
-  CubicDesign
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
   Features:
        PutIconInTaskbar
        PutIconInSystray
-
 
   How to use it:
 
@@ -49,13 +49,6 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
-{$WARN GARBAGE OFF}                                  { Silence the: 'W1011 Text after final END' warning }
-
-
-
-
-
-
 
 
 procedure TCubicTrayIcon.PutIconInTaskbar;

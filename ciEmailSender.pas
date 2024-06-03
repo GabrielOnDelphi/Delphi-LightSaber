@@ -2,7 +2,7 @@ UNIT ciEmailSender;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2023.06
+   2024.05
    See Copyright.txt
 
    Universal 'SendMail' function
@@ -12,15 +12,14 @@ UNIT ciEmailSender;
 INTERFACE
 
 USES
-  SysUtils, IdTCPConnection, IdSMTP, IdMessage, Vcl.IdAntiFreeze, IdIOHandler,
-  IdIOHandlerStack, IdSSL, IdSSLOpenSSL, FormLog;
+  SysUtils, IdTCPConnection, IdSMTP, IdMessage;
 
 function SendEmail(SMTP: TIdSMTP; CONST AdrTo, AdrFrom, Subject, Body, HtmlImage, DownloadableAttachment: string; SendAsHtml: Boolean= FALSE): Boolean;
 
 IMPLEMENTATION
 
 USES
-  IdAttachmentFile, IdMessageBuilder, ccAppData, ccCore;
+  IdMessageBuilder, ccAppData;
 
 
 

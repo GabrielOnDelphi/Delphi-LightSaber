@@ -2,7 +2,7 @@ UNIT ciDownload;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2023.06
+   2024.05
    See Copyright.txt
 
    DOWNLOAD A FILE FROM THE INTERNET
@@ -45,14 +45,11 @@ UNIT ciDownload;
 INTERFACE
 
 USES
-   Winapi.Windows, System.Classes, System.SysUtils,
-   System.Net.HttpClient,
-   WinApi.WinInet;      {.$M+}     { There is seldom, if ever, any need for an application to directly use the $M compiler switch. }
+   Winapi.Windows, WinApi.WinInet, System.Classes, System.SysUtils, System.Net.HttpClient;
 
 
-
- { GetBinFile / GetBinFileW  <- Replaced with DownloadFile }
-function GetTextFile  (CONST URL: string; Referer: string= ''): string;                                      overload;
+{ GetBinFile / GetBinFileW  <- Replaced with DownloadFile }
+function GetTextFile  (CONST URL: string; Referer: string= ''): string;                                   overload;
 function GetTextFile  (CONST URL, Referer, DestinationFile: String; ForceFolder: Boolean= TRUE): Boolean; overload;
 
 function DownloadFile (CONST URL, Referer: String; OUT Data: TBytes; PostData: String= ''; SSL: Boolean = FALSE): Boolean;  overload;    { It can be used with text or binary files }
@@ -66,7 +63,7 @@ function DDownloadFile (CONST URL, SaveTo: string): Boolean; overload;
 IMPLEMENTATION
 
 USES
-   ccCore, ccINIFile, ccIO, ciInternet;
+   ccCore, ccIO, ciInternet;
 
 
 
@@ -199,7 +196,7 @@ begin
      on EFCreateError DO    { I got this error from one user: EFCreateError. Cannot create file. Access denied. Probably it was the antivirus blockin the program. C:\Users\x\AppData\Roaming\BX\Downloaded wallpapers\tegeler-segel-club.de_webcam_tsc_webcam_98D624.jpg }
       begin
        Result:= FALSE;
-       MesajError('Cannot write to '+ CRLF+ DestinationFile+ LBRK+ 'Please make sure your antivirus is not blocking the program. Please contact us if you think this is unrelated to your antivirus.');
+       MesajError('Cannot write to '+ CRLFw+ DestinationFile+ LBRK+ 'Please make sure your antivirus is not blocking the program. Please contact us if you think this is unrelated to your antivirus.');
       end;
     END;
   end;

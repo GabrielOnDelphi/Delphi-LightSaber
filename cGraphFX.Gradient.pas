@@ -13,18 +13,16 @@
       TForm with gradient colors:
       http://www.festra.com/wwwboard/messages/13144.html
 
-      c:\MyProjects\Packages\Third party packages\GradientFill.pas
+      See also: Embarcadero's GraphUtil.pas
+                c:\MyProjects\Packages\Third party packages\GradientFill.pas
 
       Tester: c:\Myprojects\Project Testers\gr cGraphicsTester\Tester.dpr
 ==================================================================================================}
 
- {Check: GraphUtil.pas }
-
 INTERFACE
 
 USES
-  WinApi.Windows, System.SysUtils, Vcl.Graphics, Vcl.Controls, Vcl.GraphUtil, vcl.Forms, ccCore;
-
+  WinApi.Windows, System.SysUtils, Vcl.Graphics, Vcl.Controls, Vcl.GraphUtil, Vcl.Forms;
 
 procedure VistaGradient (BMP: TBitmap; const c1: Byte; const c3, c4: TColor; const Center, Reverse: Boolean);    { http://rmklever.com/?tag=thumbnails }
 procedure GradientFill  (Control: TWinControl; Color1, Color2: TColor; Orientation: Integer= GRADIENT_FILL_RECT_V; Transparency: Word= 255); { Draws a gradient over a canvas }
@@ -37,8 +35,7 @@ procedure DrawRedPattern(BMP: TBitmap);     { Draws a nice rectangle patern }
 
 IMPLEMENTATION
 USES
-   cGraphUtil, cGraphBitmap;
-
+   cmVclUtils, cGraphUtil, cGraphBitmap;
 
 
 

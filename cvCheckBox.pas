@@ -1,8 +1,10 @@
 UNIT cvCheckBox;
 
-{-------------------------------------------------------------------------------------------------------------
-  CubicDesign
-  2019.11.29
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
   A checkbox that autoresizes exactly like TLabel
   It incercepts CMTextChanged where it recomputes the new Width
 
@@ -16,7 +18,7 @@ UNIT cvCheckBox;
   Similar: https://stackoverflow.com/questions/9678029/automatically-resize-a-delphi-button
 
   Tester: c:\Myprojects\Project Testers\cubic VCL controls tester\
--------------------------------------------------------------------------------------------------------------}
+=============================================================================================================}
 
 INTERFACE
 

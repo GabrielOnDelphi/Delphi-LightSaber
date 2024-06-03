@@ -2,9 +2,10 @@ UNIT cGraphCache;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2024.05
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
+
   Thumbnail caching system.
   Creates thumbnails for specified images.
   The thumbs are stored in 'CacheFolder'.
@@ -77,7 +78,7 @@ TYPE
 IMPLEMENTATION
 
 uses
-   ccINIFile, cGraphLoader, ccCore, ccAppData, ccIO, FormLog;
+   ccINIFile, cGraphLoader, ccCore, ccAppData, ccIO;
 
 
 
@@ -304,7 +305,7 @@ begin
    FCacheFolder:= Trail(Value);
    ForceDirectoriesMsg(Value);
   end
- else MesajError('You don''t have write permissions for this folder.'+ CRLF+ Value);
+ else MesajError('You don''t have write permissions for this folder.'+ CRLFw+ Value);
 end;
 
 

@@ -1,8 +1,10 @@
 ﻿UNIT cvStringGrid;
 
-{--------------------------------------------------------------------------------------------------
-  CubicDesign
-  2019-07-11
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
   See this: http://www.delphiforfun.org/Programs/Delphi_Techniques/GridSort.htm
 
@@ -29,7 +31,7 @@
       Copy content as CSV
       Copy content to/from clipboard
 
---------------------------------------------------------------------------------------------------}
+=============================================================================================================}
 
 INTERFACE
 
@@ -41,38 +43,38 @@ USES Winapi.Windows, System.SysUtils,Messages, Vcl.Grids, System.Classes, Vcl.Gr
 TYPE
   //TSortDirection = (sdUp, sdDown);
   TMouseSortType= (msNoSort, msSortClick, msSortShiftClick);
-  TCellEvent = procedure (Sender: TObject; ACol, ARow: Longint) of object;                                 { are legatura cu OnEndEdit }
+  TCellEvent = procedure (Sender: TObject; ACol, ARow: Longint) of object;
 
 TYPE
   TEnhStrGrid= class(TBaseStrGrid)
    private
-    Ascending          : Boolean;                                                                          { Sorting order }
+    Ascending          : Boolean;                                                                       { Sorting order }
     FMouseSrtShift     : Boolean;
     FMouseSort         : TMouseSortType;
     FMouseSwitch       : Boolean;
     FForceKeepHdr      : Boolean;
-    EditorPrevMode     : Boolean;                                                                          { are legatura cu OnEndEdit }
-    EditorPrevRow      : LongInt;                                                                          { are legatura cu OnEndEdit }
+    EditorPrevMode     : Boolean;
+    EditorPrevRow      : LongInt;
     EditorPrevCol      : LongInt;
-    FHighlight         : string;                                                                           { Highlight in Bleo all cell that contains the specified string }
+    FHighlight         : string;                                                                        { Highlight in Bleo all cell that contains the specified string }
     FCenterCols        : Boolean;
     {EVENTS}
     FOnSort            : TCellEvent;
-    FEndEdit           : TCellEvent;                                                                       { are legatura cu OnEndEdit }
+    FEndEdit           : TCellEvent;
     FOnUserChangedCell : TSetEditEvent;
     FOnLinkClick       : TCellEvent;
     procedure setHighlight       (CONST Value: string);
    protected
-    procedure WndProc(VAR Message: TMessage); override;                                                    { are legatura cu OnEndEdit }
+    procedure WndProc(VAR Message: TMessage); override;
     procedure DrawCell(ACol, ARow: Longint; ARect: TRect; AState: TGridDrawState); override;
     { SORT }
-    function  MouseOnSortPos     (MouseX, MouseColumn: Integer): Boolean;                                  { This is a helper function for Sort. It checks if the mouse has the right coordinates. If the mouse is between two cells it means the user wants to resize the cell not to sort it }
-    procedure NaturalSort        (SortCol: Integer);                                                { In this procedure the algorithm expects numbers on that colum and not text }
+    function  MouseOnSortPos     (MouseX, MouseColumn: Integer): Boolean;                               { This is a helper function for Sort. It checks if the mouse has the right coordinates. If the mouse is between two cells it means the user wants to resize the cell not to sort it }
+    procedure NaturalSort        (SortCol: Integer);                                                    { In this procedure the algorithm expects numbers on that colum and not text }
     procedure FastSort           (SortCol: Integer; CaseSensitive: Boolean);
    public
-    Delimiter: Char;                                                                                       { Delimiter between fields. Used when saving the file to disk }
-    Tag1,Tag2,Tag3,Tag4,Tag5: string;                                                                      { User defined data to be stored when the grid is saved to disk }
-    CenteredColumns: array of Boolean;                                                                     { There are 2 options to center the text: set CenterAllColumns to true to center ALL cells or use the CenteredColumns matrix to define specific cells that will be centered } { Indexed in 0. Set its length to 0 to disable this feature. If enabled, the length of this matrix MUST be identical with the number of columns. Set an element to true, to center the text in the coresponding column. Has no effect if CenterAllColumns is true. }
+    Delimiter: Char;                                                                                    { Delimiter between fields. Used when saving the file to disk }
+    Tag1,Tag2,Tag3,Tag4,Tag5: string;                                                                   { User defined data to be stored when the grid is saved to disk }
+    CenteredColumns: array of Boolean;                                                                  { There are 2 options to center the text: set CenterAllColumns to true to center ALL cells or use the CenteredColumns matrix to define specific cells that will be centered } { Indexed in 0. Set its length to 0 to disable this feature. If enabled, the length of this matrix MUST be identical with the number of columns. Set an element to true, to center the text in the coresponding column. Has no effect if CenterAllColumns is true. }
 
     constructor Create (AOwner: TComponent);     override;
     procedure   CreateWnd;                       override;
@@ -80,11 +82,11 @@ TYPE
     { SORT }
     procedure SortColumn   (CONST ColumnToSort: Integer);
     procedure SwapRowText(i, j: Integer);
-    procedure ReverseOrder;                                                                                { Swap ROWS (and data/objects associated with those rows) }
+    procedure ReverseOrder;                                                                             { Swap ROWS (and data/objects associated with those rows) }
 
     { LOAD/SAVE }
     procedure Save;
-    procedure SaveAsCsv          (CONST aFileName: string; CONST Delimiter: Char= ',');                    { Save the entire content to disk (including headers). The difference between this and SaveToFile is that SaveToFile also save the size of }
+    procedure SaveAsCsv          (CONST aFileName: string; CONST Delimiter: Char= ',');                 { Save the entire content to disk (including headers). The difference between this and SaveToFile is that SaveToFile also save the size of }
     procedure SaveToFile         (CONST aFileName: string);
     function  LoadFromFile       (CONST aFileName: string): Boolean;
     function  LoadHeaderWidths   (CONST aFileName: string): Boolean;
@@ -95,18 +97,18 @@ TYPE
     function  GetContentAsHTML   (Rectangle: TRect; SplitEvery: Integer) : string;  overload;
     function  GetContent         (Rectangle: TRect; Delimiter: Char= ','): string;
     function  GetAllContent      (Delimiter: Char= ','): string;
-    function  GetSelectionContent(Delimiter: Char= ','): string;                                           { Returns the content of cell in the specified rectangle. The cells are separated by 'Delimiter' }
+    function  GetSelectionContent(Delimiter: Char= ','): string;                                        { Returns the content of cell in the specified rectangle. The cells are separated by 'Delimiter' }
     procedure CopySel2Clipboard  (Delimiter: Char= Tab);
     procedure CopyColumn;
-    procedure PasteFromClipboard;                                                                          { netestata }
-    procedure ImportColumnFromClpbrd;                                                                      { Put the clipboard content into the grid, at the current Column, starting at the current Row. }
+    procedure PasteFromClipboard;                                                                       { untested }
+    procedure ImportColumnFromClpbrd;                                                                   { Put the clipboard content into the grid, at the current Column, starting at the current Row. }
     {$IFDEF AllowCSV}
     procedure ImportCSV(CsvBody: AnsiString; Separator: Char= ',');  {$ENDIF AllowCSV}
 
     { STUFF }
     function  WholeGridRect: TRect;
-    procedure ToggleHeader;                                                                                { Make the top horizontal header visible/invisible }
-    procedure Help;                                                                                        { how to use this grid }
+    procedure ToggleHeader;                                                                             { Make the top horizontal header visible/invisible }
+    procedure Help;                                                                                     { how to use this grid }
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure ExpandCenteredColumns;
    published
@@ -130,7 +132,7 @@ procedure Register;
 
 IMPLEMENTATION {$R *.res}
 
-USES ccIO, cmMath, csSystem; //, CSV_Parser;
+USES ccIO, cGraphUtil, cmMath, csSystem;
 
 
 
@@ -323,7 +325,7 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TEnhStrGrid.EndEdit(ACol, ARow: Integer);                                                { NOTA: Nu merge daca AlwaysShowEditror= True }
 begin
- Cells[ACol, ARow]:= StringReplace(Cells[ACol, ARow], CRLF, ' ', [rfReplaceAll]);                  { Replace ENTERs with space - This Grid cannot draw a text on multiple rows so enter character will he rndered as 2 squares. }
+ Cells[ACol, ARow]:= StringReplace(Cells[ACol, ARow], CRLFw, ' ', [rfReplaceAll]);                  { Replace ENTERs with space - This Grid cannot draw a text on multiple rows so enter character will he rndered as 2 squares. }
  if Assigned(FEndEdit)
  then FEndEdit(Self, EditorPrevCol, EditorPrevRow);
 end;
@@ -531,12 +533,12 @@ procedure TEnhStrGrid.SaveHeaderWidths(CONST aFileName: string);         { Save 
 VAR cl: Integer;
     Body: string;
 begin
- Body:= 'Column widths'+ CRLF;
- Body:= Body+ IntToStr(ColCount)+ CRLF;    { Write ColCount }
+ Body:= 'Column widths'+ CRLFw;
+ Body:= Body+ IntToStr(ColCount)+ CRLFw;    { Write ColCount }
 
  { Write column width }
  for cl:= 0 TO ColCount-1
-  DO Body:= Body+ IntToStr(ColWidths[cl])+ CRLF;
+  DO Body:= Body+ IntToStr(ColWidths[cl])+ CRLFw;
  StringToFile(aFileName, Body, woOverwrite, FALSE);
 end;
 
@@ -624,7 +626,7 @@ begin
   for rw := Rectangle.Top to Rectangle.Bottom DO
     for cl:= Rectangle.Left to Rectangle.Right DO
       if cl = Rectangle.Right
-      then Result:= Result + GetCellSafe + CRLF               { Don't put a comma after the last column. Put an ENTER instead }
+      then Result:= Result + GetCellSafe + CRLFw               { Don't put a comma after the last column. Put an ENTER instead }
       else Result:= Result + GetCellSafe + Delimiter;
 end;
 
@@ -730,7 +732,7 @@ VAR s: string;
 begin
  s:= '';
  for rw:= 0 to RowCount-1
-  DO s:= s+ Cells[Col, rw]+ crlf;
+  DO s:= s+ Cells[Col, rw]+ CRLFw;
 
  ClipBoard.AsText := s;
 end;
@@ -782,11 +784,11 @@ VAR
    s: string;
    cl, lin: Integer;
 begin
-  Result := '<table width="'+IntToStr(Width)+'" border="1" align="center">' + CRLF;
+  Result := '<table width="'+IntToStr(Width)+'" border="1" align="center">' + CRLFw;
 
   for lin := Rectangle.Top to Rectangle.Bottom DO
    begin
-    Result:= Result+ '<tr>'+crlf;
+    Result:= Result+ '<tr>'+CRLFw;
     for cl:= Rectangle.Left to Rectangle.Right DO
      begin
       s:= Cells[cl, lin];
@@ -794,10 +796,10 @@ begin
       then InsertCharEvery(' ', s, SplitEvery);                                                  { Truncate the string if it is too long }
 
       if lin = 0
-      then Result:= Result + '  <th width="'+IntToStr(ColWidths[cl])+'" scope="col">'+ s + '</th>' + CRLF
-      else Result:= Result + '  <td>'                                                + s + '</td>' + CRLF;
+      then Result:= Result + '  <th width="'+IntToStr(ColWidths[cl])+'" scope="col">'+ s + '</th>' + CRLFw
+      else Result:= Result + '  <td>'                                                + s + '</td>' + CRLFw;
      end;
-    Result:= Result+ '</tr>' + CRLF;
+    Result:= Result+ '</tr>' + CRLFw;
    end;
   Result:= Result+ '</table>';
 end;

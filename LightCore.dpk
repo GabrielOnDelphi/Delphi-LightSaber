@@ -44,13 +44,14 @@ contains
   ccWinVersion in 'ccWinVersion.pas',
   ccStreamBuff in 'ccStreamBuff.pas',
   ccINIFile in 'ccINIFile.pas',
-  ccIniFileVcl in 'ccIniFileVcl.pas',
+  ccIniFileVCL in 'ccIniFileVCL.pas',
   ccCompiler in 'ccCompiler.pas',
   ccRegistry in 'ccRegistry.pas',
   ccStreamMem in 'ccStreamMem.pas',
   ccLogUtils in 'ccLogUtils.pas',
   ccRichLog in 'ccRichLog.pas',
   ccRichLogTrack in 'ccRichLogTrack.pas',
-  FormLog in 'FormLog.pas';
+  FormLog in 'FormLog.pas',
+  ccCenterControl in 'ccCenterControl.pas';
 
 end.

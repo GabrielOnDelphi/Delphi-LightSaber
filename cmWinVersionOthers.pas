@@ -1,8 +1,10 @@
 ﻿UNIT cmWinVersionOthers;
 
 {=============================================================================================================
-   CubicDesign
-   2022-04-03
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
    Other functions (based on GetWinVersion)
    Better use ccWinVersion.pas instead of this because it relies on TOSVersion.
@@ -13,7 +15,7 @@
       Using NetServerGetInfo
 
    A 4th alternative proposed by u_dzOsUtils.pas (dummzeuch) is GetKernel32Version which uses GetFileVersionInfo on kernel32.dll
-=======================================================================================================================}
+=============================================================================================================}
 
 INTERFACE
 

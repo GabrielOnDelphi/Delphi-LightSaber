@@ -20,7 +20,7 @@ UNIT cGraphBkgColor;
 INTERFACE
 
 USES
-   WinApi.Windows, System.Types, System.SysUtils, Vcl.Graphics, cGraphBkgColorParams;
+   System.Types, System.SysUtils, System.Math, Vcl.Graphics, cGraphBkgColorParams;
 
 
 { Fade border }
@@ -43,7 +43,7 @@ function  GetBorderDominantColor(BMP: TBitmap; Border: TBorderType; Tolerance: I
 IMPLEMENTATION
 
 USES
-   System.Math, cGraphUtil, ccBinary, ccCore, cGraphFX, cGraphBitmap;
+   cGraphUtil, ccBinary, ccCore, cGraphFX, cGraphBitmap;
 
 
 

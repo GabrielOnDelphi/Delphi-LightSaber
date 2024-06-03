@@ -652,7 +652,7 @@ begin
      BMP.SaveToFile(SaveAs);                { LOTS of errors in v9.113 on this line.          Cannot create file "C:\Users\UserName\AppData\Local\Temp\BlankDesktop.BMP". The process cannot access the file because it is being used by another process.        Possible causes:       * File locked by antivirus       * File locked by SystemParametersInfo API (called in DrawOnDesktop) }
     EXCEPT
       //todo 1: trap only specific exceptions
-      on E: Exception DO MesajError(E.Message+ ' (in BlankDesktop)'+ crlf+ PleaseReportIssue);
+      on E: Exception DO MesajError(E.Message+ ' (in BlankDesktop)'+ CRLFw+ PleaseReportIssue);
     END;
     SetWallpaper(SaveAs);
  FINALLY

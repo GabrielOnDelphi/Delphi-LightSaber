@@ -1,9 +1,11 @@
 ﻿UNIT cvThumbViewerM;                                                                            {Multithreaded}
 
-{--------------------------------------------------------------------------------------------------
-  CubicDesign
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
   v4 MultiThreaded
-  2014.2.12
 
   Features:
     Create thumbnails in a separate thread
@@ -16,7 +18,7 @@
     The user needs to assign a progressbar to it.
     Use LoadFolders to load all images in a folder. This will Clear the content first.
     Use AddFile to load additional images.
---------------------------------------------------------------------------------------------------}
+=============================================================================================================}
 
 INTERFACE
 
@@ -614,14 +616,14 @@ end;
 function TCubicThumbs.Statistics: string;
 begin
  Result:=
-   'Necessary rows: ' + IntToStr(NecessaryRows)                         + CRLF+                         { Number of rows necessary to display all images }
-   'ColCount: '       + IntToStr(ColCount)                              + CRLF+
-   'RowCount: '       + IntToStr(RowCount)                              + CRLF+
-   'Current RAM: '    + FormatBytes(ThumbList.GetTotalRamSize, 2)    + CRLF+
-   'ThumbWidth: '     + IntToStr(ThumbWidth)      + CRLF+
-   'ThumbHeight: '    + IntToStr(ThumbHeight)     + CRLF+
-   'CellSpacing: '    + IntToStr(CellSpacing)     + CRLF+
-   'TextHeight: '     + IntToStr(Canvas.TextHeight('Tp'))      + CRLF;
+   'Necessary rows: ' + IntToStr(NecessaryRows)                         + CRLFw+                         { Number of rows necessary to display all images }
+   'ColCount: '       + IntToStr(ColCount)                              + CRLFw+
+   'RowCount: '       + IntToStr(RowCount)                              + CRLFw+
+   'Current RAM: '    + FormatBytes(ThumbList.GetTotalRamSize, 2)    + CRLFw+
+   'ThumbWidth: '     + IntToStr(ThumbWidth)      + CRLFw+
+   'ThumbHeight: '    + IntToStr(ThumbHeight)     + CRLFw+
+   'CellSpacing: '    + IntToStr(CellSpacing)     + CRLFw+
+   'TextHeight: '     + IntToStr(Canvas.TextHeight('Tp'))      + CRLFw;
 end;
 
 

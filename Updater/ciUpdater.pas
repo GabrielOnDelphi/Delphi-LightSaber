@@ -36,7 +36,7 @@
 INTERFACE
 
 USES
-  System.SysUtils, System.DateUtils, System.Classes, Vcl.ExtCtrls, ccCore, ccINIFile, ciUpdaterRec;
+  System.SysUtils, System.DateUtils, System.Classes, Vcl.ExtCtrls, ciUpdaterRec;
 
 TYPE
   TCheckWhen = (cwNever,
@@ -100,7 +100,7 @@ VAR
 IMPLEMENTATION
 
 USES
-  FormAsyncMessage, ciDownload, cmDebugger, ccAppdata; //, FormUpdaterNotifier;
+  FormAsyncMessage, ciDownload, ccINIFile, cmDebugger, ccAppdata;
 
 Const
   TooLongNoSeeInterval = 180;    { Force to checked for updates every 180 days even if the updater is disabled }

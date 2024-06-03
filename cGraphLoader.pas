@@ -2,7 +2,7 @@
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2024.06
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
   Helps you load common file formats (GIF, JPG, Bmp, Png, Wb1, RainDrop, Jpg2K) from disk.
@@ -15,22 +15,26 @@
     (for example for JPG, WIC is at least 8x faster than Delphi's JPG decoding function).
 
   External dependencies:
-     * CCR Exif
-     * Jpeg2000
+     * CCR Exif lib -> Github.com/exilon/ccr-exif
+     * Jpeg2000 lib
+     * FastJpg
+
+     Undefine CCRExif, FastJpg, and Jpg2000 if you don't want to download and compile those libraries. In this case, some functionality will not be available.
 
   TESTER:
      c:\Myprojects\Project Testers\gr LoadGraph\
      c:\MyProjects\Projects GRAPHICS Resamplers\GLOBAL Tester\TEST IMAGES\
-----------------------------------------------------------------------------------}
+-------------------------------------------------------------------------------------------------------------}
+
 {PNG: see this: http://talkdelphi.blogspot.com/2009_03_01_archive.html }
-{todo: is it possible to extract the EXIF information from a jpeg file without loading the file? }
+{todo: is it possible to extract the EXIF information from a jpeg file without loading the file in memory? }
 
 INTERFACE
 
 USES
    Winapi.Wincodec, System.SysUtils, System.Math, System.Types, System.Classes,
-   Vcl.Graphics, Vcl.Imaging.Jpeg, Vcl.Imaging.PngImage, Vcl.ExtCtrls, Vcl.Imaging.GIFImg, FormLog
-   {$IFDEF CCRExif},CCR.Exif{$ENDIF};   { CCR Exif library can be found here: Github.com/exilon/ccr-exif }
+   Vcl.Graphics, Vcl.Imaging.Jpeg, Vcl.Imaging.PngImage, Vcl.ExtCtrls, Vcl.Imaging.GIFImg
+   {$IFDEF CCRExif},CCR.Exif{$ENDIF};
 
 CONST
    DelphiJpgQuality = 70; { Average image quality. Seems that 70 is indeed the best value }
@@ -76,17 +80,16 @@ CONST
  function  ExtractThumbnail   (CONST FileName: string; ThumbWidth: integer; OUT ResolutionX, ResolutionY: Integer; OUT FrameCount: Cardinal): TBitmap; overload; { Extracts the thumbnail from a gif, avi, jpg, png, etc file }
  function  ExtractThumbnail   (CONST FileName: string; ThumbWidth: Integer): TBitmap;   overload;
 
- function  loadGraphWic       (CONST FileName: string): TBitmap;      { Supports: GIF, PNG, JPG. Use LoadGraph instead }
+ function  loadGraphWic       (CONST FileName: string): TBitmap;                            { Supports: GIF, PNG, JPG. Use LoadGraph instead }
+
 
 {-------------------------------------------------------------------------------------------------------------
    Imgage format utils
 -------------------------------------------------------------------------------------------------------------}
-
- {$IFDEF CCRExif}
- function  GetExif             (CONST FileName: string): TExifData;
- {$ENDIF}
  function  DetectGraphSignature(CONST FileName: string): Integer;
  function  CheckValidImage     (CONST FileName: string): Boolean;
+ {$IFDEF CCRExif}
+ function  GetExif             (CONST FileName: string): TExifData; {$ENDIF}
 
 
 IMPLEMENTATION
@@ -100,8 +103,6 @@ USES
 
 
 
-
-
 {-------------------------------------------------------------------------------------------------------------
   IMAGE LOADERS
 
@@ -109,9 +110,6 @@ USES
   Supported formats: GIF, JPG (+Exif), BMP, PNG, J2K, WB1
   Guarantees not to crash if the image is bad.
 -------------------------------------------------------------------------------------------------------------}
-
-
-
 
 
 

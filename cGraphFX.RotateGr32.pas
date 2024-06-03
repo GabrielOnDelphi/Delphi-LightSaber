@@ -117,11 +117,8 @@ begin
     Transformation.Rotate(0, 0, -Angle);
 
     if AdjustSize
-    then
-      with Transformation.GetTransformedBounds
-       DO Dst.SetSize(Round(Right - Left), Round(Bottom - Top))
-    else
-      Dst.SetSize(Bmp.Width, Bmp.Height);
+    then Dst.SetSize(Round(Transformation.GetTransformedBounds.Right - Transformation.GetTransformedBounds.Left), Round(Transformation.GetTransformedBounds.Bottom - Transformation.GetTransformedBounds.Top))
+    else Dst.SetSize(Bmp.Width, Bmp.Height);
 
     Transformation.Translate(0.5 * Dst.Width, 0.5 * Dst.Height);
     Transformation.EndUpdate;

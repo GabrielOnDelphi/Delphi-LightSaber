@@ -21,32 +21,19 @@ USES
    Winapi.Windows, System.TypInfo, System.Classes, System.SysUtils,
    Vcl.StdCtrls, Vcl.Menus, Vcl.ActnList, Vcl.ComCtrls, Vcl.Controls, Vcl.Forms;
 
- {}
- function FindControlAtPos   (ScreenPos: TPoint): TControl;
- function FindSubcontrolAtPos(Control: TControl; ScreenPos, AClientPos: TPoint): TControl;
 
- { For design-time debugging }
- function ShowComponentState (Component: TComponent): string;
- function ShowControlState   (Control: TControl): string;
- function ShowInheritanceTree(Control: TControl): string;
+TYPE
+  { Interposer: Control that exposes the Canvas property.
+    It can be used to access TPanel's canvas property for example }
+  TCustomControlEx= class(TCustomControl)
+   public
+      property Canvas;
+   end;
 
- { Focus }
- function  CanFocus          (Control: TWinControl): Boolean;
- procedure SetFocus          (Control: TWinControl);
 
- {}
- function  SetActivePage     (PageControl: TPageControl; CONST PageName: string): TTabSheet;
- procedure EnableDisable     (Control: TWinControl; Enable: Boolean);            { Enable/disable all controls in the specified control }
- procedure ToggleCheckbox    (CheckBox: TCheckBox; BasedOn: TButtonControl);     { Disable and uncheck CheckBox if BasedOn is checked }
- procedure DoubleBuffer      (Control: TComponent; Enable: Boolean);             { Activate/deactivate double buffering for all controls owned by the specified control. aControl can be a form, panel, box, etc }
-
- procedure PushControlDown   (BottomCtrl, TopControl: TControl);                 { Makes sure that BottomCtrl is under the TopControl control. Useful to set splitters under their conected controls }    { old name: SetCtrlUnder }
-
- { Actions }
- function  HasAction         (Component: TComponent): Boolean;                   { Returns true if this component (TMenuItem, TButton), etc has an action assigned to it. }
- procedure ActionVisibility  (Item: TAction; Show: Boolean);
-
- { Menus }
+{=============================================================================================================
+   MENUS & ACTIONS
+=============================================================================================================}
  procedure MenuVisibility    (Item: TMenuItem;       Enabled, Visible: Boolean);
  procedure SetChildVisibility(ParentMenu: TMenuItem; Enabled, Visible: Boolean); overload; { Change the visibility for all children of ParentMenu }
  procedure SetChildVisibility(ParentMenu: TMenuItem; Visible: Boolean);          overload;
@@ -54,18 +41,50 @@ USES
  function  AddSubMenu        (ParentMenu: TMenuItem; Caption: string; Event: TNotifyEvent): TMenuItem;  { Add a sub-menu item to a menu item. Also returns a pointer to that menu. I don't have to free it. The owner will free it. }
  procedure RemoveSubmenus    (ParentMenu: TMenuItem);
 
- { Caption / Effects }
+ { Actions }
+ function  HasAction         (Component: TComponent): Boolean;                   { Returns true if this component (TMenuItem, TButton), etc has an action assigned to it. }
+ procedure ActionVisibility  (Item: TAction; Show: Boolean);
+
+
+{=============================================================================================================
+   FORM
+=============================================================================================================}
  procedure AlignCaptionToLeft(Handle: HWND);                                     { Align caption of the specified control to left. Example of usage: AlignCaptionToLeft(Button1.Handle)) }
  procedure ScrollAppTitle    (DirectionLeft: Boolean);                           { use it in a timer set it at 250ms }
  procedure ScrollFormCaption (Form: TForm);                                      { use it in a timer set it at 250ms }
 
- procedure BlinkControl      (Control: TControl);                                { Makes the specified control to blink 5 times, to attract user's attention }
 
- function CreateControl(ControlClass: TControlClass; const ControlName: string; Parent: TControl; X, Y, W, H: Integer): TControl;
+{=============================================================================================================
+   TControl
+=============================================================================================================}
+ procedure BlinkControl      (Control: TControl);                                { Makes the specified control to blink 5 times, to attract user's attention }
+ function  CreateControl     (ControlClass: TControlClass; const ControlName: string; Parent: TControl; X, Y, W, H: Integer): TControl;
+ procedure DoubleBuffer      (Control: TComponent; Enable: Boolean);             { Activate/deactivate double buffering for all controls owned by the specified control. aControl can be a form, panel, box, etc }
+ procedure EnableDisable     (Control: TWinControl; Enable: Boolean);            { Enable/disable all controls in the specified control }
+ {}
+ function  FindControlAtPos  (ScreenPos: TPoint): TControl;
+ function  FindSubcontrolAtPos(Control: TControl; ScreenPos, AClientPos: TPoint): TControl;
+ procedure PushControlDown   (BottomCtrl, TopControl: TControl);                 { Makes sure that BottomCtrl is under the TopControl control. Useful to set splitters under their conected controls }    { old name: SetCtrlUnder }
+ { Focus }
+ function  CanFocus          (Control: TWinControl): Boolean;
+ procedure SetFocus          (Control: TWinControl);
+
+
+{=============================================================================================================
+   DESIGN TIME DEBUGGING
+=============================================================================================================}
+ function ShowComponentState (Component: TComponent): string;
+ function ShowControlState   (Control: TControl): string;
+ function ShowInheritanceTree(Control: TControl): string;
+
+ {}
+ function  SetActivePage     (PageControl: TPageControl; CONST PageName: string): TTabSheet;   { Set the active tab for the specified PageControl, but instead of using an index we use a string }
+ procedure ToggleCheckbox    (CheckBox: TCheckBox; BasedOn: TButtonControl);     { Disable and uncheck CheckBox if BasedOn is checked }
 
 
 IMPLEMENTATION
-Uses ccCore;
+USES
+   ccCore;
 
 
 
@@ -483,6 +502,7 @@ end;
        Visible:= True;
      end;
  end;
+
 
 
 end.

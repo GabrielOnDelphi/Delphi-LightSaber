@@ -1,7 +1,10 @@
 UNIT FormSkinsDisk;
-{-----------------------------------------------------------------------------------------------------------------------
-   CubicDesign
-   2022.03
+
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
    Universal skin loader. Loads skins from disk (vsf file)
 
    DON'T ADD IT TO ANY DPK!
@@ -47,7 +50,7 @@ UNIT FormSkinsDisk;
 
      Solution:
        https://stackoverflow.com/questions/70840792/how-to-patch-vcl-forms-pas
--------------------------------------------------------------------------------------------------------------}
+=============================================================================================================}
 
 INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
@@ -91,7 +94,7 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
    ctTranslate, cmINIFileQuick, uLinks, Vcl.Themes, ccAppdata, csExecuteShell,
-   cvIniFile, IOUtils, ccIO, ccCore;   { VCL.Styles is mandatory here}
+   cGraphUtil, cmSound, cmVclUtils, ccCenterControl, cvIniFile, IOUtils, ccIO, ccCore;   { VCL.Styles is mandatory here}
 
 CONST
   DefWinTheme= 'Windows default theme';

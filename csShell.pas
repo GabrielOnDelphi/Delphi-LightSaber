@@ -237,7 +237,7 @@ end;
 { Let Windows Explorer know we added our file type }
 procedure AssociationChanged;
 begin
- SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nil, nil);
+  SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nil, nil);
 end;
 
 
@@ -248,7 +248,7 @@ function AssociateWith;
 VAR
    FName: string;
    RootKey: HKEY;
-const
+CONST
    Path= '\Software\Classes\';
 begin
  Result:= FALSE;
@@ -264,20 +264,22 @@ begin
  FName:= System.Copy(FileExtension+ '_file', 2, MaxInt);
 
  TRY
-  Result:=
+   Result:=
      RegWriteString(RootKey, Path+ FileExtension, '', FName, TRUE) AND
      RegWriteString(RootKey, Path+ FName, '', AsociationName,  TRUE) AND
      RegWriteString(RootKey, Path+ FName+'\shell', '', 'open', TRUE) AND
      RegWriteString(RootKey, Path+ FName+'\shell\open\command', '', Application.ExeName+ ' "%L"', TRUE) AND  { daca pun %L in loc de %1 imi ia calea in format lung in loc de calea in format 8.3/DOS }
      RegWriteString(RootKey, Path+ FName+'\DefaultIcon'       , '', Application.ExeName+ ',0',    TRUE);
 
-  if NOT Result AND ShowError
-  then mesajWarning('Cannot associate application with '+FileExtension);
-
- except
-  //todo: trap only specific exceptions
-  if ShowError
-  then MesajWarning('Cannot associate application with '+FileExtension);
+   if NOT Result AND ShowError
+   then mesajWarning('Cannot associate application with '+FileExtension);
+ EXCEPT
+   on E: ERegistryException DO
+     begin
+       if ShowError    //todo: trap only specific exceptions
+       then MesajWarning('Cannot associate application with '+FileExtension);
+     end;
+   else RAISE;
  END;
 
  if Result AND Notify
@@ -302,73 +304,79 @@ end;
 
 { Add current application in the 'Open with' section of the 'File Properties' popup menu that appears when we right click a file in Explorer }
 procedure AssociateSelf_ShellMenu(CONST ShowError: Boolean);
-VAR Reg: TRegistry;
 begin
  TRY
-  Reg:= TRegistry.Create;
+  VAR Reg:= TRegistry.Create;
   TRY
-   Reg.RootKey:= HKEY_CLASSES_ROOT;
-   Reg.OpenKey('*\Shell\Open with '+AppData.AppName +'\Command', TRUE);
-   Reg.WriteString('', Lowercase(ParamStr(0)) + ' %1');
-   Reg.CloseKey;
+    Reg.RootKey:= HKEY_CLASSES_ROOT;
+    Reg.OpenKey('*\Shell\Open with '+AppData.AppName +'\Command', TRUE);
+    Reg.WriteString('', Lowercase(ParamStr(0)) + ' %1');
+    Reg.CloseKey;
   FINALLY
     FreeAndNil(Reg);
   end;
- except
-  //todo: trap only specific exceptions
-  if ShowError
-  then mesajError('Cannot associate application');
+ EXCEPT
+   on E: ERegistryException DO
+     begin
+       if ShowError    //todo: trap only specific exceptions
+       then MesajError('Cannot associate application!');
+     end;
+   else RAISE;
  END;
 end;
 
 
-function AddContextMenu(CONST CommandName, Extensions: string): Boolean;                                 { Add current application in the 'properties' menu of this filetype. Example: AddContextMenu2('Open with '+ ctApp-Name2, '.nfo') }
+{ Add current application in the 'properties' menu of this filetype.
+  Example: AddContextMenu2('Open with '+ AppName, '.nfo') }
+function AddContextMenu(CONST CommandName, Extensions: string): Boolean;
 VAR
   extns: TStringList;
-  reg: TRegistry;
-  idx: integer;
+  Reg: TRegistry;
   name: string;
   command: string;
 begin
-  Result:= False;
-  reg := TRegistry.Create;
-  reg.RootKey := HKEY_CLASSES_ROOT;
+  Result:= FALSE;
+  Reg   := TRegistry.Create;
   extns := TStringList.Create;
-  extns.CommaText := extensions;
-  command := '"' + Application.ExeName + '" "%1"';                                                 { Build the command string we want to store }
+  TRY
+    Reg.RootKey := HKEY_CLASSES_ROOT;
+    extns.CommaText := Extensions;
+    command := '"' + Application.ExeName + '" "%1"';                                   { Build the command string we want to store }
 
-  { Loop over extensions we can handle }
-  for idx := 0 to extns.Count - 1 do
     TRY
-    // See if this extension is already known in HKCR
-    if reg.OpenKeyReadOnly ('\' + extns.Strings [idx]) then
-      begin
-      name := reg.ReadString ('');   // Get the name of this type
-      if name <> '' then
-       begin
-        // If not blank, open this type's shell key, but don't create it
-        if reg.OpenKey ('\' + name + '\shell', False)
-        then reg.Access := KEY_READ or KEY_WRITE;                                                  { Try to create a new key called command_name. Note that for Delphi5 we need to set the access explicitly }
+      // Loop over extensions we can handle
+      for var Extension in extns do
+        // See if this extension is already known in HKCR
+        if Reg.OpenKeyReadOnly ('\' + Extension) then
+          begin
+            name := Reg.ReadString ('');   // Get the name of this type
+            if name <> '' then
+              begin
+                // If not blank, open this type's shell key, but don't create it
+                if Reg.OpenKey ('\' + name + '\shell', False)
+                then Reg.Access := KEY_READ or KEY_WRITE;                              { Try to create a new key called command_name }
 
-        if reg.OpenKey (CommandName, TRUE) then
-         begin
-          reg.WriteString ('', '&' + CommandName);                                                 { The default value will be displayed in the context menu }
-          // So now open the command key, creating it if required
-          reg.Access := KEY_READ or KEY_WRITE;
-          if reg.OpenKey ('command', TRUE)
-          then
-           begin
-             reg.WriteString ('', command);                                   // and write the command string as the default value
-             Result:= true;
-           end;
-         end;
-       end;
-      end;
-    except
-      Result:= False; //todo: trap only specific exceptions
-    END;
-  FreeAndNil(extns);
-  FreeAndNil(reg);
+                if Reg.OpenKey (CommandName, TRUE) then
+                 begin
+                   Reg.WriteString ('', '&' + CommandName);                            { The default value will be displayed in the context menu }
+                   Reg.Access := KEY_READ or KEY_WRITE;
+                   if Reg.OpenKey ('command', TRUE) then
+                    begin
+                      Reg.WriteString ('', command);                                   { Write the command string as the default value }
+                      Result:= TRUE;
+                    end;
+                 end;
+              end;
+          end;
+
+      EXCEPT
+        on E: ERegistryException DO Result:= FALSE;
+        else RAISE;
+      END;
+  FINALLY
+    FreeAndNil(extns);
+    FreeAndNil(Reg);
+  END;
 end;
 
 
@@ -384,35 +392,37 @@ begin
  Result:= '';
  Reg:= TRegistry.Create(KEY_READ);
  TRY
-     Reg.RootKey := HKEY_CLASSES_ROOT;
-     if Reg.OpenKey('.' + FileExtension + '\shell\open\command',  False) 
-	 then
-       begin                                                                                           {The open command has been found}
-        s := Reg.ReadString('');
-        Reg.CloseKey;
-       end
-     else
-       if Reg.OpenKey('.' + FileExtension, False) then
-        begin                                                                                          {perhaps thier is a system file pointer}
-         s:= Reg.ReadString('');
-         Reg.CloseKey;
-         if s <> '' then
-          begin                                                                                        {A system file pointer was found}
-           if Reg.OpenKey(s + '\shell\open\command', False) 
-           then s := Reg.ReadString('');                                                               {The open command has been found}
-           Reg.CloseKey;
-          end;
-    end;
+   Reg.RootKey := HKEY_CLASSES_ROOT;
+   if Reg.OpenKey('.' + FileExtension + '\shell\open\command',  False)
+   then
+     begin                                                                                           {The open command has been found}
+       s:= Reg.ReadString('');
+       Reg.CloseKey;
+     end
+   else
+     if Reg.OpenKey('.' + FileExtension, False) then
+      begin                                                                                          {perhaps thier is a system file pointer}
+       s:= Reg.ReadString('');
+       Reg.CloseKey;
+       if s <> '' then
+        begin                                                                                        {A system file pointer was found}
+          if Reg.OpenKey(s + '\shell\open\command', False)
+          then s := Reg.ReadString('');                                                               {The open command has been found}
+          Reg.CloseKey;
+        end;
+      end;
  FINALLY
-  FreeAndNil(Reg);
+   FreeAndNil(Reg);
  END;
 
  {Delete any command line, quotes and spaces}
  if Pos('%', s) > 0                            then Delete(s, Pos('%', s), length(s));
- if ((length(s) > 0) and (s[1] = '"'))         then Delete(s, 1, 1);
- if ((length(s) > 0) and (s[length(s)] = '"')) then Delete(s, Length(s), 1);
- WHILE ((length(s) > 0) AND ((s[length(s)] = #32) OR (s[length(s)] = '"')))
-  DO Delete(s, Length(s), 1);
+ if ((length(s) > 0) AND (s[1] = '"'))         then Delete(s, 1, 1);
+ if ((length(s) > 0) AND (s[length(s)] = '"')) then Delete(s, Length(s), 1);
+
+ WHILE ((length(s) > 0)
+   AND ((s[length(s)] = #32) OR (s[length(s)] = '"')))
+   DO Delete(s, Length(s), 1);
  Result := s;
 end;
 
@@ -618,10 +628,10 @@ VAR
    ShowDesktopFilePath: string;
 CONST
    ShowDesktopContent=
-       '[Shell]'                + CRLF+
-       'Command=2'              + CRLF+
-       'IconFile=explorer.exe,3'+ CRLF+
-       '[Taskbar]'              + CRLF+
+       '[Shell]'                + CRLFw+
+       'Command=2'              + CRLFw+
+       'IconFile=explorer.exe,3'+ CRLFw+
+       '[Taskbar]'              + CRLFw+
        'Command=ToggleDesktop';
 begin
  ShowDesktopFilePath:= GetSpecialFolder(CSIDL_APPDATA)+'Microsoft\Internet Explorer\Quick Launch\Show Desktop.scf';

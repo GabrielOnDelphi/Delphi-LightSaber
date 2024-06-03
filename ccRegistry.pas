@@ -14,6 +14,10 @@ INTERFACE
 USES
    Winapi.Windows, System.SysUtils, System.Classes, System.Win.Registry;
 
+CONST
+   LazyWrite       = TRUE;
+   InstantWrite    = FALSE;
+
  function Convert_HKey2Str      (CONST Key: HKEY): string;
  function Convert_Str2HKey      (CONST Key: string): HKEY;
 
@@ -457,7 +461,7 @@ begin
        begin
         SetLength(Result, vSize);
         regKey.ReadBinaryData(KeyName, Result[1], vSize);
-        ReplaceString(Result, #0, CRLF);
+        ReplaceString(Result, #0, CRLFw);
        end;
    end;
  FINALLY
@@ -470,7 +474,7 @@ end;
 function RegReadMultiSzStringSp(CONST Root: HKEY; CONST Key, KeyName: string; CanCreate: Boolean= FALSE): string;
 begin
  Result:= RegReadMultiSzString(Root, Key, KeyName, CanCreate);
- Result:= StringReplace(Result, CRLF, ' ', [rfReplaceAll]);
+ Result:= StringReplace(Result, CRLFw, ' ', [rfReplaceAll]);
 end;
 
 

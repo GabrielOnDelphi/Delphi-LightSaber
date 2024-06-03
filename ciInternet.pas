@@ -19,11 +19,11 @@
 INTERFACE
 
 USES
-   Winapi.Windows, System.SysUtils, System.StrUtils, System.Classes,
-   System.IniFiles, System.Win.Registry,
+   Winapi.Windows, Winapi.UrlMon,
    Winapi.WinSock,  { Required by GetLocalIP }
    Winapi.WinInet,  { Required by IE_ApplySettings }
-   System.Math, Winapi.UrlMon, ccCore;
+   System.SysUtils, System.StrUtils, System.Classes, System.IniFiles, System.Win.Registry,
+   ccCore;
 
 
 CONST
@@ -40,8 +40,6 @@ CONST
   How to get ALL local IPs?
   http://stackoverflow.com/questions/576538/delphi-how-to-get-all-local-ips - see the last answer (Remko)
 }
-
-
 
 
 {--------------------------------------------------------------------------------------------------
@@ -247,7 +245,7 @@ begin
  Result:= CheckURLStart(URL);
 
  if NOT Result
- then MesajWarning('Invalid URL:'+ CRLF+ URL);
+ then MesajWarning('Invalid URL:'+ CRLFw+ URL);
 end;
 
 
@@ -1231,7 +1229,8 @@ begin
   then Result:= s;
 
   { Remove possible garbage }
-  Result:= ReplaceString(Result, CRLF, '');
+  Result:= ReplaceString(Result, CR, '');   // We don't know the type of enter so we need to remove them both
+  Result:= ReplaceString(Result, LF, '');
   Result:= System.SysUtils.Trim(Result);
 end;
 

@@ -1,9 +1,11 @@
 ﻿unit ctTranslate;
-{========================================================================================  
-   Gabriel Moraru / Heracle BioSoft SRL  
-   2022-09  
-   See Copyright.txt  
-   RTTI-based automatic language translator engine.  
+
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
+   RTTI-based automatic language translator engine.
   
 -----------------------------------------------------------------------------------------  
 
@@ -154,6 +156,10 @@ BUG:
 INTERFACE
 USES
   System.Classes, System.SysUtils, System.IniFiles, System.TypInfo, Vcl.Forms, Vcl.Menus, Vcl.ExtCtrls;
+
+{ Bitwise constants for TControl.Tag }
+CONST
+   DontTranslate= 128; { 128 = binary 1000 0000 } {Note: in Delphi11 we can write it directly as a binary literal: %10000000 }
 
 TYPE
  TTranslator = class(TObject)
