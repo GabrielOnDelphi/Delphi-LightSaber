@@ -3,24 +3,6 @@
         <ProjectGuid>{889D79DE-7E8C-4410-8E76-49C32EC57928}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="..\Graphics32\Source\Packages\GR32_R.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="..\Graphics32\Source\Packages\GR32_D.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="..\DragDrop\DragDropR.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="..\DragDrop\DragDropD.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="..\Exif\CCRExif.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="..\Third party packages\ThirdPartyLibs.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="LightCore.dproj">
             <Dependencies/>
         </Projects>
@@ -62,60 +44,6 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
-    <Target Name="GR32_R">
-        <MSBuild Projects="..\Graphics32\Source\Packages\GR32_R.dproj"/>
-    </Target>
-    <Target Name="GR32_R:Clean">
-        <MSBuild Projects="..\Graphics32\Source\Packages\GR32_R.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="GR32_R:Make">
-        <MSBuild Projects="..\Graphics32\Source\Packages\GR32_R.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="GR32_D">
-        <MSBuild Projects="..\Graphics32\Source\Packages\GR32_D.dproj"/>
-    </Target>
-    <Target Name="GR32_D:Clean">
-        <MSBuild Projects="..\Graphics32\Source\Packages\GR32_D.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="GR32_D:Make">
-        <MSBuild Projects="..\Graphics32\Source\Packages\GR32_D.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="DragDropR">
-        <MSBuild Projects="..\DragDrop\DragDropR.dproj"/>
-    </Target>
-    <Target Name="DragDropR:Clean">
-        <MSBuild Projects="..\DragDrop\DragDropR.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="DragDropR:Make">
-        <MSBuild Projects="..\DragDrop\DragDropR.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="DragDropD">
-        <MSBuild Projects="..\DragDrop\DragDropD.dproj"/>
-    </Target>
-    <Target Name="DragDropD:Clean">
-        <MSBuild Projects="..\DragDrop\DragDropD.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="DragDropD:Make">
-        <MSBuild Projects="..\DragDrop\DragDropD.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="CCRExif">
-        <MSBuild Projects="..\Exif\CCRExif.dproj"/>
-    </Target>
-    <Target Name="CCRExif:Clean">
-        <MSBuild Projects="..\Exif\CCRExif.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="CCRExif:Make">
-        <MSBuild Projects="..\Exif\CCRExif.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="ThirdPartyLibs">
-        <MSBuild Projects="..\Third party packages\ThirdPartyLibs.dproj"/>
-    </Target>
-    <Target Name="ThirdPartyLibs:Clean">
-        <MSBuild Projects="..\Third party packages\ThirdPartyLibs.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="ThirdPartyLibs:Make">
-        <MSBuild Projects="..\Third party packages\ThirdPartyLibs.dproj" Targets="Make"/>
-    </Target>
     <Target Name="LightCore">
         <MSBuild Projects="LightCore.dproj"/>
     </Target>
@@ -216,13 +144,13 @@
         <MSBuild Projects="Demo\All Visual Controls\DemoAllVisualControls.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="GR32_R;GR32_D;DragDropR;DragDropD;CCRExif;ThirdPartyLibs;LightCore;LightCommon;LightTranslator;LightInternet;LightGraphics;LightVisControls;CubicProteus;BionixVCL;BionixWallpaper;BioControl;DemoAllVisualControls"/>
+        <CallTarget Targets="LightCore;LightCommon;LightTranslator;LightInternet;LightGraphics;LightVisControls;CubicProteus;BionixVCL;BionixWallpaper;BioControl;DemoAllVisualControls"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="GR32_R:Clean;GR32_D:Clean;DragDropR:Clean;DragDropD:Clean;CCRExif:Clean;ThirdPartyLibs:Clean;LightCore:Clean;LightCommon:Clean;LightTranslator:Clean;LightInternet:Clean;LightGraphics:Clean;LightVisControls:Clean;CubicProteus:Clean;BionixVCL:Clean;BionixWallpaper:Clean;BioControl:Clean;DemoAllVisualControls:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightCommon:Clean;LightTranslator:Clean;LightInternet:Clean;LightGraphics:Clean;LightVisControls:Clean;CubicProteus:Clean;BionixVCL:Clean;BionixWallpaper:Clean;BioControl:Clean;DemoAllVisualControls:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="GR32_R:Make;GR32_D:Make;DragDropR:Make;DragDropD:Make;CCRExif:Make;ThirdPartyLibs:Make;LightCore:Make;LightCommon:Make;LightTranslator:Make;LightInternet:Make;LightGraphics:Make;LightVisControls:Make;CubicProteus:Make;BionixVCL:Make;BionixWallpaper:Make;BioControl:Make;DemoAllVisualControls:Make"/>
+        <CallTarget Targets="LightCore:Make;LightCommon:Make;LightTranslator:Make;LightInternet:Make;LightGraphics:Make;LightVisControls:Make;CubicProteus:Make;BionixVCL:Make;BionixWallpaper:Make;BioControl:Make;DemoAllVisualControls:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
@@ -238,20 +166,8 @@
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\DragDrop\DragDropR.dproj">
-            <ProjectGuid>{B1622FF7-F3B0-4E7F-8E22-BAFF8F703AC3}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Graphics32\Source\Packages\GR32_R.dproj">
-            <ProjectGuid>{39B75641-A3D4-415B-A7C6-79B23429B21A}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCore.dproj">
-            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+        <BuildGroupProject Include="LightTranslator.dproj">
+            <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
@@ -262,8 +178,8 @@
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightTranslator.dproj">
-            <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
@@ -274,21 +190,9 @@
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\Third party packages\ThirdPartyLibs.dproj">
-            <ProjectGuid>{A6E3A953-404B-490C-8F1A-AEB23216C925}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="LightGraphics.dproj">
             <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Debug</Configurations>
-            <Platforms>Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Exif\CCRExif.dproj">
-            <ProjectGuid>{0E3CBE29-4ACE-4BC1-92A5-7487A217D813}</ProjectGuid>
-            <Configurations>Release</Configurations>
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
@@ -304,18 +208,6 @@
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\DragDrop\DragDropD.dproj">
-            <ProjectGuid>{DBBB69B5-4F35-4DB6-910E-A83A40778368}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Graphics32\Source\Packages\GR32_D.dproj">
-            <ProjectGuid>{72992597-08A7-4AF4-888E-1524F0BFFC3F}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="LightVisControls.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -326,110 +218,6 @@
             <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-    </ItemGroup>
-    <ItemGroup Condition="'$(BuildGroup)'=='Win32_Release'">
-        <BuildGroupProject Include="..\..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj">
-            <ProjectGuid>{0A1AA5C0-4064-4F84-9485-EC81B8B74BEA}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\All Visual Controls\DemoAllVisualControls.dproj">
-            <ProjectGuid>{DD580D63-779B-4D0D-821E-E5CFFCCDBB27}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\DragDrop\DragDropR.dproj">
-            <ProjectGuid>{B1622FF7-F3B0-4E7F-8E22-BAFF8F703AC3}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Graphics32\Source\Packages\GR32_R.dproj">
-            <ProjectGuid>{39B75641-A3D4-415B-A7C6-79B23429B21A}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCore.dproj">
-            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCommon.dproj">
-            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightTranslator.dproj">
-            <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\..\BioniX\SourceCode\BionixWallpaper.dproj">
-            <ProjectGuid>{7DEDC191-0E7D-40EA-A977-92CEEC3AEF0C}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Third party packages\ThirdPartyLibs.dproj">
-            <ProjectGuid>{A6E3A953-404B-490C-8F1A-AEB23216C925}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightGraphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Exif\CCRExif.dproj">
-            <ProjectGuid>{0E3CBE29-4ACE-4BC1-92A5-7487A217D813}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightInternet.dproj">
-            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\..\Biology\!BioControl Lib\BioControl.dproj">
-            <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\DragDrop\DragDropD.dproj">
-            <ProjectGuid>{DBBB69B5-4F35-4DB6-910E-A83A40778368}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Graphics32\Source\Packages\GR32_D.dproj">
-            <ProjectGuid>{72992597-08A7-4AF4-888E-1524F0BFFC3F}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightVisControls.dproj">
-            <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Proteus\CubicProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
     </ItemGroup>
@@ -446,20 +234,8 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\DragDrop\DragDropR.dproj">
-            <ProjectGuid>{B1622FF7-F3B0-4E7F-8E22-BAFF8F703AC3}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Graphics32\Source\Packages\GR32_R.dproj">
-            <ProjectGuid>{39B75641-A3D4-415B-A7C6-79B23429B21A}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCore.dproj">
-            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+        <BuildGroupProject Include="LightTranslator.dproj">
+            <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
@@ -470,8 +246,8 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightTranslator.dproj">
-            <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
@@ -482,21 +258,9 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\Third party packages\ThirdPartyLibs.dproj">
-            <ProjectGuid>{A6E3A953-404B-490C-8F1A-AEB23216C925}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="LightGraphics.dproj">
             <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Exif\CCRExif.dproj">
-            <ProjectGuid>{0E3CBE29-4ACE-4BC1-92A5-7487A217D813}</ProjectGuid>
-            <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
@@ -512,18 +276,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\DragDrop\DragDropD.dproj">
-            <ProjectGuid>{DBBB69B5-4F35-4DB6-910E-A83A40778368}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Graphics32\Source\Packages\GR32_D.dproj">
-            <ProjectGuid>{72992597-08A7-4AF4-888E-1524F0BFFC3F}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="LightVisControls.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -533,6 +285,74 @@
         <BuildGroupProject Include="Proteus\CubicProteus.dproj">
             <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
             <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+    <ItemGroup Condition="'$(BuildGroup)'=='Win32_Release'">
+        <BuildGroupProject Include="..\..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj">
+            <ProjectGuid>{0A1AA5C0-4064-4F84-9485-EC81B8B74BEA}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\All Visual Controls\DemoAllVisualControls.dproj">
+            <ProjectGuid>{DD580D63-779B-4D0D-821E-E5CFFCCDBB27}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightTranslator.dproj">
+            <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCommon.dproj">
+            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\..\BioniX\SourceCode\BionixWallpaper.dproj">
+            <ProjectGuid>{7DEDC191-0E7D-40EA-A977-92CEEC3AEF0C}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightGraphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightInternet.dproj">
+            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\..\Biology\!BioControl Lib\BioControl.dproj">
+            <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightVisControls.dproj">
+            <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Proteus\CubicProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+            <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
@@ -556,9 +376,9 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\DragDrop\DragDropR.dproj">
-            <ProjectGuid>{B1622FF7-F3B0-4E7F-8E22-BAFF8F703AC3}</ProjectGuid>
-            <Configurations>Release</Configurations>
+        <BuildGroupProject Include="LightCommon.dproj">
+            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
@@ -568,39 +388,15 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightCommon.dproj">
-            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="..\..\BioniX\SourceCode\BionixWallpaper.dproj">
             <ProjectGuid>{7DEDC191-0E7D-40EA-A977-92CEEC3AEF0C}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\Graphics32\Source\Packages\GR32_R.dproj">
-            <ProjectGuid>{39B75641-A3D4-415B-A7C6-79B23429B21A}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Third party packages\ThirdPartyLibs.dproj">
-            <ProjectGuid>{A6E3A953-404B-490C-8F1A-AEB23216C925}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="LightGraphics.dproj">
             <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Exif\CCRExif.dproj">
-            <ProjectGuid>{0E3CBE29-4ACE-4BC1-92A5-7487A217D813}</ProjectGuid>
-            <Configurations>Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
@@ -619,18 +415,6 @@
         <BuildGroupProject Include="LightVisControls.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\DragDrop\DragDropD.dproj">
-            <ProjectGuid>{DBBB69B5-4F35-4DB6-910E-A83A40778368}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Graphics32\Source\Packages\GR32_D.dproj">
-            <ProjectGuid>{72992597-08A7-4AF4-888E-1524F0BFFC3F}</ProjectGuid>
-            <Configurations>Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
