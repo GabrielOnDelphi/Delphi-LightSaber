@@ -40,7 +40,8 @@ _________________
 
 **Road Map**  
 
-The LightSaber Graphics, LightSaber Visual Controls and Proteus libraries will be added as soon as my free time allows it.   
+The LightSaber Graphics, LightSaber Visual Controls was added in 2023.
+The Proteus library will be added as soon as my free time allows it.   
 
 **This library will be expanded if it gets enough Stars.**   
 Click the 'Star' button (top-right corner) if you like this library.  
