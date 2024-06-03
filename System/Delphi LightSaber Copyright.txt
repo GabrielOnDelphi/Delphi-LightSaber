@@ -9,6 +9,7 @@ Library provided by Gabriel Moraru
 3. This library cannot be used in applications/platforms that promote illegal/immoral activities such as (but not limited to) hate/piracy/racism/pseudo-science (including anti-vaccine and flat earth).
 4. The owner of the library reserves the right to update/change these conditions at any time. 
 5. This library cannot be used in Russia. The ban applies 25 years after the Russia-Ukraine war ends.
+6. The library name cannot be changed.
 
 Note: 
-Most parts of this library were written by myself. Some other parts were inspired or simply copied from miscellaneous Internet sources (mostly StackOverflow). A link to the original source was provided in this case.
+Most parts of this library were written by myself. Some other parts (small snippets) were inspired or simply copied from miscellaneous Internet sources (mostly StackOverflow). A link to the original source was provided in this case.
