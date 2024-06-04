@@ -10,16 +10,8 @@
 *.tvsconfig
 
 desktop.ini
-Proteus/cpProteus.inc
-Proteus/cpProteus.pas
-Proteus/cpProteusCertificate.pas
-Proteus/cpProteusIO.pas
-Proteus/cpProteusUtils.pas
-Proteus/CubicProteus.dpk
-Proteus/CubicProteus.dproj
-Proteus/CubicProteus.dsk
-Proteus/CubicProteus.res
 uLinks.pas
+/22.0_Win32_Debug/
 
 
 System/Credits.lnk

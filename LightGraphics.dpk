@@ -72,7 +72,6 @@ contains
   cGraphBkgColorParams in 'cGraphBkgColorParams.pas',
   cGraphConvert in 'cGraphConvert.pas',
   cGraphAlpha in 'cGraphAlpha.pas',
-  cGraphLoader.RainEditor in 'cGraphLoader.RainEditor.pas',
   cGraphDesktop in 'cGraphDesktop.pas',
   cGraphUtilGray in 'cGraphUtilGray.pas';
 

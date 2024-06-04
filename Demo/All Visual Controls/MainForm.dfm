@@ -10,9 +10,7 @@ object frmMain: TfrmMain
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 13
   object PageControl: TPageControl
     AlignWithMargins = True
@@ -20,7 +18,7 @@ object frmMain: TfrmMain
     Top = 3
     Width = 893
     Height = 531
-    ActivePage = TabSheet2
+    ActivePage = TabSheet1
     Align = alClient
     TabOrder = 0
     object TabSheet1: TTabSheet
@@ -142,18 +140,19 @@ object frmMain: TfrmMain
           AlignWithMargins = True
           Left = 31
           Top = 158
-          Width = 129
+          Width = 133
           Height = 22
           BevelOuter = bvNone
           Caption = 'SpinEditSplit'
           ParentBackground = False
+          ParentColor = True
           ShowCaption = False
           TabOrder = 1
           Spin.AlignWithMargins = True
-          Spin.Left = 60
+          Spin.Left = 65
           Spin.Top = 0
           Spin.Width = 50
-          Spin.Height = 22
+          Spin.Height = 24
           Spin.Margins.Top = 0
           Spin.Margins.Bottom = 0
           Spin.Align = alLeft
@@ -195,6 +194,7 @@ object frmMain: TfrmMain
         EditLabel.Height = 13
         EditLabel.Caption = 'LabelEdit'
         TabOrder = 6
+        Text = ''
       end
       object CubicEdit: TCubicEdit
         Left = 33
@@ -262,7 +262,6 @@ object frmMain: TfrmMain
             'Cubic RichEdit')
           ParentFont = False
           TabOrder = 0
-          Zoom = 100
         end
       end
     end
@@ -356,6 +355,7 @@ object frmMain: TfrmMain
         ParentColor = True
         ShowCaption = False
         TabOrder = 0
+        ExplicitWidth = 300
         DesignSize = (
           683
           116)
@@ -392,6 +392,7 @@ object frmMain: TfrmMain
         Caption = 'MsgDispatcher'
         ShowCaption = False
         TabOrder = 2
+        ExplicitWidth = 544
       end
       object PathEdit: TCubicPathEdit
         AlignWithMargins = True
@@ -584,16 +585,16 @@ object frmMain: TfrmMain
       end
     end
   end
-  object CountDown1: TCountDown
+  object CountDown: TCountDown
     Left = 636
     Top = 408
   end
-  object CubicTimer1: TCubicTimer
+  object CubicTimer: TCubicTimer
     Left = 802
-    Top = 407
+    Top = 408
   end
-  object CubicTrayIcon1: TCubicTrayIcon
+  object CubicTrayIcon: TCubicTrayIcon
     Left = 719
-    Top = 407
+    Top = 408
   end
 end

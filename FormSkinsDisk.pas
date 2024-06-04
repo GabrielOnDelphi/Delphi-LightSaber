@@ -93,7 +93,7 @@ procedure LoadLastSkin(CONST DefaultSkin: string= '');  { On first run, set the 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   ctTranslate, cmINIFileQuick, uLinks, Vcl.Themes, ccAppdata, csExecuteShell,
+   cTranslate, cmINIFileQuick, uLinks, Vcl.Themes, ccAppdata, csExecuteShell,
    cGraphUtil, cmSound, cmVclUtils, ccCenterControl, cvIniFile, IOUtils, ccIO, ccCore;   { VCL.Styles is mandatory here}
 
 CONST

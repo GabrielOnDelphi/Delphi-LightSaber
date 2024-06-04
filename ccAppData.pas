@@ -109,7 +109,7 @@ TYPE
     CopyDataID: DWORD;                                         { For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA }
    public
    {--------------------------------------------------------------------------------------------------
-      Single Instance
+      App Single Instance
    --------------------------------------------------------------------------------------------------}
     property  SingleInstClassName: string read FSingleInstClassName;
     procedure ResurectInstance(CONST CommandLine: string);
@@ -166,7 +166,7 @@ TYPE
     property  Font: TFont read FFont write setFont;
 
     {-------------------------------------------------------------------------------------------------
-      APPLICATION Version
+      App Version
    --------------------------------------------------------------------------------------------------}
     class function GetVersionInfo(ShowBuildNo: Boolean= False): string;
     function  GetVersionInfoV      : string;                            { MAIN. Returns version without Build number. Example: v1.0.0 }
@@ -184,7 +184,7 @@ TYPE
     class procedure RaiseIfStillInitializing;
 
    {--------------------------------------------------------------------------------------------------
-      Log
+      App Log
    --------------------------------------------------------------------------------------------------}
     procedure LogEmptyRow;
     procedure LogBold  (CONST Msg: string);
@@ -218,7 +218,9 @@ VAR
 IMPLEMENTATION
 
 USES
-  ccRegistry, ccCenterControl, ccIniFileVCL, ccCore, ccIO;
+  ccRegistry, ccCenterControl, ccCore,
+  ccIniFileVCL,
+  ccIO;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -266,7 +268,7 @@ begin
 
   {* The Log Form *}
   Assert(frmLog = NIL, 'Log already created!');  { Call this as soon as possible so it can catch all Log messages generated during app start up. A good place might be in your DPR file before Application.CreateForm(TMainForm, frmMain) }
-  frmLog:= TfrmLog.Create(NIL); // Warning: I cannot use Application.CreateForm here because this will make the Log the main form!
+  frmLog:= TfrmLog.Create(NIL);                  { Warning: I cannot use Application.CreateForm here because this will make the Log the main form! }
   Assert(Application.MainForm <> frmLog, 'The Log should not be the MainForm'); { Just in case: Make sure this is not the first form created }
   LoadForm(frmLog);
 end;
@@ -284,7 +286,6 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    FORMS
 -------------------------------------------------------------------------------------------------------------}
-
 procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; aShow: Boolean; MainFormOnTaskbar: Boolean= TRUE);
 begin
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
@@ -1064,3 +1065,4 @@ FINALIZATION
 
 
 end.
+

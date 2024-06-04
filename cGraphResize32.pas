@@ -28,7 +28,7 @@ INTERFACE
 { $I GR32.Inc}
 
 USES
-  System.SysUtils, System.Classes, Vcl.Graphics,
+  System.SysUtils, System.Classes, Vcl.Graphics, System.Types,
   GR32, GR32_Transforms, GR32_Resamplers, ccCore;
 
 

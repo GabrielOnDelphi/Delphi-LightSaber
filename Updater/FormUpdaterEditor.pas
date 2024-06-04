@@ -53,7 +53,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   ccCore, ccAppData, ciInternet, ctTranslate, ccINIFileVCL;
+   ccCore, ccAppData, ciInternet, cTranslate, ccINIFileVCL;
 
 
 

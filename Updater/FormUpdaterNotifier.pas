@@ -82,7 +82,7 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   ccLogUtils, ctTranslate, cGraphUtil, FormUpdaterRecEditor, ccAppdata, ccINIFileVCL, ciInternet;
+   ccLogUtils, cTranslate, cGraphUtil, FormUpdaterRecEditor, ccAppdata, ccINIFileVCL, ciInternet;
 
 VAR
    FrmUpdater: TFrmUpdater= NIL; { Only one instance allowed! }

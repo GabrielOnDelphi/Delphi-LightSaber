@@ -11,7 +11,7 @@ USES
   Vcl.ComCtrls, cvStatusBar, cvSplitter, cvScrollBox, cvRichEdit, cvRadioButton, cvProxyList, cvPanel,
   cvMinimalPathLabel, cvMemo, Vcl.ValEdit, cvLstEditor, cvGroupBox, cvGraphChart, cvFreeDiskSpace,
   cvFileFilter, cvEdit, cvDirectoryListBox, cvCountDown, cvComboBox, Vcl.CheckLst,
-  cvCheckListBox, cvAssociateExt, cvDropDownSearch;
+  cvCheckListBox, cvAssociateExt, cvDropDownSearch, Vcl.Mask;
 
 TYPE
   TfrmMain = class(TForm)
@@ -19,7 +19,7 @@ TYPE
     BaseStrGrid1          : TBaseStrGrid;
     CationedThumbnail     : TCationedThumbnail;
     CMinimalLabel         : TMinimalPathLabel;
-    CountDown1            : TCountDown;
+    CountDown: TCountDown;
     CubicCheckBox1        : TCubicCheckBox;
     CheckListBox          : TCubicCheckListBox;
     ComboBox              : TCubicComboBox;
@@ -39,8 +39,8 @@ TYPE
     SpinEditD             : TCubicSpinEditD;
     SpinEditSplit         : TCubicSpinEditSplit;
     cubicStatusBar1       : TcubicStatusBar;
-    CubicTimer1           : TCubicTimer;
-    CubicTrayIcon1        : TCubicTrayIcon;
+    CubicTimer: TCubicTimer;
+    CubicTrayIcon: TCubicTrayIcon;
     ValueListEditor       : TCubicValueListEditor;
     EnhStrGrid1           : TEnhStrGrid;
     FastQChart            : TFastQChart;

@@ -26,7 +26,7 @@
 INTERFACE
 
 USES
-   System.SysUtils, Vcl.Graphics, System.UITypes, System.IniFiles, ccCore;
+   System.SysUtils, Vcl.Graphics, System.UITypes, System.IniFiles, ccAppData;
 
 TYPE
   FontStruct = record
@@ -86,7 +86,8 @@ TYPE
 IMPLEMENTATION
 
 USES
-   ccAppData, ccIO;
+   ccCore,
+   ccIO;
 
 
 

@@ -115,7 +115,7 @@ procedure LoadForm (Form: TForm; OnlyFormPos: Boolean= FALSE);
 IMPLEMENTATION
 
 USES
-   ccCore, ccIO, ccCenterControl, ccAppData;
+   ccCore, ccAppData, ccIO, ccCenterControl;
 
 
 {-----------------------------------------------------------------------------------------------------------------------

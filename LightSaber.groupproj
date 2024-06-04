@@ -9,9 +9,6 @@
         <Projects Include="LightCommon.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="LightTranslator.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="LightInternet.dproj">
             <Dependencies/>
         </Projects>
@@ -21,13 +18,7 @@
         <Projects Include="LightVisControls.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Proteus\CubicProteus.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="..\..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="..\..\BioniX\SourceCode\BionixWallpaper.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="..\..\Biology\!BioControl Lib\BioControl.dproj">
@@ -62,15 +53,6 @@
     <Target Name="LightCommon:Make">
         <MSBuild Projects="LightCommon.dproj" Targets="Make"/>
     </Target>
-    <Target Name="LightTranslator">
-        <MSBuild Projects="LightTranslator.dproj"/>
-    </Target>
-    <Target Name="LightTranslator:Clean">
-        <MSBuild Projects="LightTranslator.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="LightTranslator:Make">
-        <MSBuild Projects="LightTranslator.dproj" Targets="Make"/>
-    </Target>
     <Target Name="LightInternet">
         <MSBuild Projects="LightInternet.dproj"/>
     </Target>
@@ -98,15 +80,6 @@
     <Target Name="LightVisControls:Make">
         <MSBuild Projects="LightVisControls.dproj" Targets="Make"/>
     </Target>
-    <Target Name="CubicProteus">
-        <MSBuild Projects="Proteus\CubicProteus.dproj"/>
-    </Target>
-    <Target Name="CubicProteus:Clean">
-        <MSBuild Projects="Proteus\CubicProteus.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="CubicProteus:Make">
-        <MSBuild Projects="Proteus\CubicProteus.dproj" Targets="Make"/>
-    </Target>
     <Target Name="BionixVCL">
         <MSBuild Projects="..\..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj"/>
     </Target>
@@ -115,15 +88,6 @@
     </Target>
     <Target Name="BionixVCL:Make">
         <MSBuild Projects="..\..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="BionixWallpaper">
-        <MSBuild Projects="..\..\BioniX\SourceCode\BionixWallpaper.dproj"/>
-    </Target>
-    <Target Name="BionixWallpaper:Clean">
-        <MSBuild Projects="..\..\BioniX\SourceCode\BionixWallpaper.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="BionixWallpaper:Make">
-        <MSBuild Projects="..\..\BioniX\SourceCode\BionixWallpaper.dproj" Targets="Make"/>
     </Target>
     <Target Name="BioControl">
         <MSBuild Projects="..\..\Biology\!BioControl Lib\BioControl.dproj"/>
@@ -144,13 +108,13 @@
         <MSBuild Projects="Demo\All Visual Controls\DemoAllVisualControls.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightCommon;LightTranslator;LightInternet;LightGraphics;LightVisControls;CubicProteus;BionixVCL;BionixWallpaper;BioControl;DemoAllVisualControls"/>
+        <CallTarget Targets="LightCore;LightCommon;LightInternet;LightGraphics;LightVisControls;BionixVCL;BioControl;DemoAllVisualControls"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightCommon:Clean;LightTranslator:Clean;LightInternet:Clean;LightGraphics:Clean;LightVisControls:Clean;CubicProteus:Clean;BionixVCL:Clean;BionixWallpaper:Clean;BioControl:Clean;DemoAllVisualControls:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightCommon:Clean;LightInternet:Clean;LightGraphics:Clean;LightVisControls:Clean;BionixVCL:Clean;BioControl:Clean;DemoAllVisualControls:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightCommon:Make;LightTranslator:Make;LightInternet:Make;LightGraphics:Make;LightVisControls:Make;CubicProteus:Make;BionixVCL:Make;BionixWallpaper:Make;BioControl:Make;DemoAllVisualControls:Make"/>
+        <CallTarget Targets="LightCore:Make;LightCommon:Make;LightInternet:Make;LightGraphics:Make;LightVisControls:Make;BionixVCL:Make;BioControl:Make;DemoAllVisualControls:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
@@ -166,8 +130,8 @@
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightTranslator.dproj">
-            <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
+        <BuildGroupProject Include="LightGraphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
@@ -180,18 +144,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\..\BioniX\SourceCode\BionixWallpaper.dproj">
-            <ProjectGuid>{7DEDC191-0E7D-40EA-A977-92CEEC3AEF0C}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightGraphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
@@ -210,12 +162,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightVisControls.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Proteus\CubicProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
@@ -234,8 +180,8 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightTranslator.dproj">
-            <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
+        <BuildGroupProject Include="LightGraphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
@@ -248,18 +194,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\..\BioniX\SourceCode\BionixWallpaper.dproj">
-            <ProjectGuid>{7DEDC191-0E7D-40EA-A977-92CEEC3AEF0C}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightGraphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
@@ -278,12 +212,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightVisControls.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Proteus\CubicProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
@@ -302,8 +230,8 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightTranslator.dproj">
-            <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
+        <BuildGroupProject Include="LightGraphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
@@ -316,18 +244,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\..\BioniX\SourceCode\BionixWallpaper.dproj">
-            <ProjectGuid>{7DEDC191-0E7D-40EA-A977-92CEEC3AEF0C}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightGraphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
@@ -346,12 +262,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightVisControls.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Proteus\CubicProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
             <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
@@ -370,8 +280,8 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightTranslator.dproj">
-            <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
+        <BuildGroupProject Include="LightGraphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
@@ -385,18 +295,6 @@
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
             <Configurations>Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\..\BioniX\SourceCode\BionixWallpaper.dproj">
-            <ProjectGuid>{7DEDC191-0E7D-40EA-A977-92CEEC3AEF0C}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightGraphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
@@ -414,12 +312,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightVisControls.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Proteus\CubicProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
