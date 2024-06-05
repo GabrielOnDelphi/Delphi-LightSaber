@@ -40,10 +40,17 @@
 
    Usage
      In the DPR file replace the code with:
-       AppData:= TAppData.Create('MyCollApp');
-       AppData.CreateMainForm(TMainForm, MainForm, True, True);    // Main form
-       AppData.CreateForm(TSecondFrom, frmSecond);                 // Secondary form(s)
-       Application.Run;
+
+       uses
+         Vcl.Forms,
+         MainForm in 'MainForm.pas' {frmMain),
+         ccAppData;             <--- Do not use PAS file here!
+       begin
+         AppData:= TAppData.Create('MyCollApp');
+         AppData.CreateMainForm(TMainForm, MainForm, True, True);    // Main form
+         AppData.CreateForm(TSecondFrom, frmSecond);                 // Secondary form(s)
+         Application.Run;
+       end;
 
        Not necessary anymore:
          Application.Title := AppData.AppName;

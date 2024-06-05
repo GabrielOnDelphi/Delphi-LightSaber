@@ -1015,22 +1015,28 @@ end;
    Returns:
      False if the path is invalid.
      False if the drive is readonly.
-
-     Raises exception if parameter is invalid
-     Raises exception if parameter is empty
-     Raises exception if drive is invalid
 --------------------------------------------------------------------------------------------------}
 function ForceDirectoriesB(CONST FullPath: string): Boolean;
 begin
-  TDirectory.CreateDirectory(FullPath);
+  TRY
+   TDirectory.CreateDirectory(FullPath);
+  EXCEPT
+    on EInOutArgumentException  // exception class EInOutArgumentException with message 'Invalid characters in path': C:\?
+      DO EXIT(FALSE)
+    else RAISE;
+  END;
   Result:= DirectoryExists(FullPath);
 end;
 
 
+{--------------------------------------------------------------------------------------------------
+   Raises exception if parameter is invalid
+   Raises exception if parameter is empty
+   Raises exception if drive is invalid
+--------------------------------------------------------------------------------------------------}
 procedure ForceDirectoriesE(CONST FullPath: string);
 begin
-  if NOT ForceDirectoriesB(FullPath)
-  then RAISE Exception.Create('Error: '+ FullPath);
+  TDirectory.CreateDirectory(FullPath);     i
 end;
 
 

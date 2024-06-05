@@ -1,29 +1,29 @@
 ﻿UNIT chHardID;
 
-//ToDo: move this to proteus
-
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+
+   License:
+     Cannot be used in commercial applications.
+     Please purchase a license for this.
+     GabrielMoraru.com/my-delphi-code/delphi-libraries/hardware-id-extractor/
 --------------------------------------------------------------------------------------------------------------
 
-   CubicDesign 2013
    Closed source. Do not distribute
-   www.Soft.Tahionic.com
 
- Programming languages supported:
-   Delphi XE-Delphi11.2
+   Programming languages supported:
+     Delphi XE - Delphi11
 
 
- Also see
-    * csSystem.pas
+   Also see
+      * csSystem.pas
 
- Get the harddisk serial number 2006
-      http://www.delphitricks.com/source-code/systeminfo/get_the_harddisk_serial_number.html
+   Get the harddisk serial number 2006
+        http://www.delphitricks.com/source-code/systeminfo/get_the_harddisk_serial_number.html
 
- Retrieve CPU information 2006
-      http://www.delphitricks.com/source-code/systeminfo/retrieve_cpu_information.html
+   Retrieve CPU information 2006
+        http://www.delphitricks.com/source-code/systeminfo/retrieve_cpu_information.html
 
 =============================================================================================================}
 
@@ -31,12 +31,9 @@
 {
 Suggestion: a couple of the calls generate messages if the input is unacceptable (such as GetCPUID(BYTE)). It would be great if the messages could be suppressed, so that an error could be flagged without requiring user interaction to "OK" the message.
 For example: GetCPUCount() returns the logical number of cores. However, on my machine there are two logical to one physical. So using this count to iterate through GetCPUID() generates a message on the fifth call: which would be nice to suppress.
-}
 
 
-
-{ToDO:
-GetMemoryManagerState and GetMemoryMap
+ToDO: GetMemoryManagerState and GetMemoryMap
 
 for I := Low(AMemoryMap) to High(AMemoryMap) do
 begin
@@ -95,8 +92,8 @@ CONST
  function GetCpuTheoreticSpeed: Integer;                                                           { Get cpu speed (in MHz) }
 
  function GetCPUCount         : Integer;                                                           { The number of LOGICAL processors in the current group }
- function GetCoreCount        : Integer;   { Specifies the number of CPU cores in the system }
- function IsSingleProcessor   : Boolean;   { Specifies whether the system has a single processor or not }
+ function GetCoreCount        : Integer;                                                           { Specifies the number of CPU cores in the system }
+ function IsSingleProcessor   : Boolean;                                                           { Specifies whether the system has a single processor or not }
 
  { SYSTEM RAM }
  function SystemMemStatus    (CONST OSMemType: Byte): NativeUInt;                                  { Obsolete! in Bytes. Limited by the capacity of the OS (32bits OSs will report max 2GB) }
@@ -176,8 +173,8 @@ USES
    Math;
 
 CONST
-  Desc1 = 22121989;                                                                                { v1.5 key }
-  Desc2 = 221219892;                                                                               { v2.0 key }
+  Desc1 = 22121989;    { v1.5 key }
+  Desc2 = 221219892;   { v2.0 key }
   Tab   = #9;
   CRLF  = #13#10;
   LBRK  = CRLF+CRLF;
@@ -204,7 +201,7 @@ begin
 end;
 
 
-procedure Mes(CONST sMessage: string);                                                                   { Lightweight replacement for Dialogs.Pas }
+procedure Mes(CONST sMessage: string);   { Lightweight replacement for Dialogs.Pas }
 begin
  {$IFDEF UNICODE}
  Application.MessageBox(PWideChar(sMessage), 'Info:', MB_OK);
@@ -278,8 +275,9 @@ begin
 end;
 
 
-{This is duplicate of ccCore.FormatBytes}
-function FormatBytes(CONST Size: Int64; CONST Decimals: Integer): string;                          { Formats the size of a file from bytes to KB, MB, GB, TB } { Old name was: FormatFileSize }
+{ This is duplicate of ccCore.FormatBytes}
+{ Formats the size of a file from bytes to KB, MB, GB, TB } { Old name was: FormatFileSize }
+function FormatBytes(CONST Size: Int64; CONST Decimals: Integer): string;
 begin
  if Size = 0
  then Result:= '0 Bytes' else
@@ -316,7 +314,7 @@ begin
    if i= CoreNo
    then sBinary:= sBinary+ '1'
    else sBinary:= sBinary+ '0';
- Result:= BinToInt(PChar(sBinary));                                                                { Under D7 this should be PAnsiChar }
+ Result:= BinToInt(PChar(sBinary));   { Under D7 this should be PAnsiChar }
 end;
 
 
