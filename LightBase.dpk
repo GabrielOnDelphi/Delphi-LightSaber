@@ -1,0 +1,55 @@
+package LightBase;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 2}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'LightSaber - Base library'}
+{$LIBSUFFIX AUTO}
+{$IMPLICITBUILD ON}
+
+requires
+  BindEngine,
+  vclimg,
+  vcl,
+  vclwinx,
+  vclx,
+  VclSmp,
+  LightCore;
+
+contains
+  llLogUtils in 'llLogUtils.pas',
+  llRichLog in 'llRichLog.pas',
+  llRichLogTrack in 'llRichLogTrack.pas',
+  FormLog in 'FormLog.pas',
+  cbAppData in 'cbAppData.pas',
+  cbIniFile in 'cbIniFile.pas',
+  cbCenterControl in 'cbCenterControl.pas',
+  cbRegistry in 'cbRegistry.pas',
+  cbDialogs in 'cbDialogs.pas',
+  cbWinVersion in 'cbWinVersion.pas';
+
+end.
+
+
