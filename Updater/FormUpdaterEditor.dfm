@@ -16,13 +16,11 @@ object frmUpdaterEditor: TfrmUpdaterEditor
   Font.Name = 'Tahoma'
   Font.Style = []
   KeyPreview = True
-  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 4
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 13
   object Container: TPanel
     AlignWithMargins = True

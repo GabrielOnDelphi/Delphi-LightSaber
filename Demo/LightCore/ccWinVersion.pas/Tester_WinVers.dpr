@@ -11,7 +11,7 @@ uses
 {$R *.res}
 
 begin
-  Application.Initialize_;
+  Application.Initialize;
 
   AppData:= TAppData.Create('Light Tester WinVer');
   AppData.CreateMainForm(TfrmTester, frmTester, TRUE);

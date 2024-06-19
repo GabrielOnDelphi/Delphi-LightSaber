@@ -6,19 +6,20 @@ uses
   MainForm in 'MainForm.pas' {frmDemoStarter},
   Vcl.Themes,
   Vcl.Styles,
-  BxConstants in '..\..\..\..\BioniX\SourceCode\BioniX VCL\BxConstants.pas',
-  cbAppData in '..\..\cbAppData.pas',
-  FormLog in '..\..\FormLog.pas',
+  cbAppData,
   ciUpdater in '..\..\Updater\ciUpdater.pas',
   ciUpdaterRec in '..\..\Updater\ciUpdaterRec.pas',
   FormUpdaterEditor in '..\..\Updater\FormUpdaterEditor.pas',
   FormUpdaterNotifier in '..\..\Updater\FormUpdaterNotifier.pas',
-  FormUpdaterRecEditor in '..\..\Updater\FormUpdaterRecEditor.pas';
+  FormUpdaterRecEditor in '..\..\Updater\FormUpdaterRecEditor.pas',
+  cTranslate in '..\..\..\LightAutoTranslator\cTranslate.pas',
+  FormSelectLang in '..\..\..\LightAutoTranslator\FormSelectLang.pas',
+  FormTranslator in '..\..\..\LightAutoTranslator\FormTranslator.pas';
 
 {$R *.res}
 
 begin
-  Application.Initialize_;
+  Application.Initialize;
   AppData:= TAppData.Create('Light Updater Demo');
   AppData.CreateMainForm(TfrmDemoStarter, frmDemoStarter, TRUE);
   Application.Run;

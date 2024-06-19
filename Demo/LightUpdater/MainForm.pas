@@ -22,10 +22,11 @@ VAR
 
 IMPLEMENTATION  {$R *.dfm}
 USES
-   FormUpdaterNotifier, BxConstants;
+   FormUpdaterNotifier;
 
 CONST
-   wwwUpdaterBinTest = wwwUpdaterBin;
+   wwwBioniXWall     = 'http://www.BionixWallpaper.com';
+   wwwUpdaterBinTest = wwwBioniXWall+ '/downloads/Bionix%20Desktop%20Wallpaper%20Changer/OnlineNews.bin'; // wwwUpdaterBin;
 
 
 
@@ -38,8 +39,8 @@ end;
 procedure TfrmDemoStarter.LateInitialize;
 begin
  Updater:= TUpdater.Create(wwwUpdaterBinTest);
- Updater.URLDownload    := wwwDwnldPage;
- Updater.URLRelHistory  := wwwReleaseHistory;
+ Updater.URLDownload    := wwwBioniXWall+ '/downloads/index.html#soft'; // wwwDwnldPage;
+ Updater.URLRelHistory  := wwwBioniXWall+ '/downloads/Bionix%20Desktop%20Wallpaper%20Changer/release-history.html#soft'; // wwwReleaseHistory;
 
  { Create updater form }
  TFrmUpdater.ShowUpdater(TRUE);

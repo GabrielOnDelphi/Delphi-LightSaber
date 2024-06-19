@@ -8,43 +8,40 @@
   resources were bound to the produced executable.
 */
 
-#define System_NetConsts_SNetHttpCertNotFoundError 64896
-#define System_NetConsts_SMimeDuplicateType 64897
-#define System_NetConsts_SMimeTypeEmpty 64898
-#define System_NetConsts_SMimeValueEmpty 64899
-#define System_NetConsts_SMimeWeightOutOfRange 64900
-#define System_NetConsts_SNetHttpServerCertificateNotAccepted 64912
-#define System_NetConsts_SNetHttpEmptyCertificateList 64913
-#define System_NetConsts_SNetHttpUnspecifiedCertificate 64914
-#define System_NetConsts_SNetHttpRejectedCertificate 64915
-#define System_NetConsts_SNetHttpClientUnknownError 64916
-#define System_NetConsts_SNetHttpHeadersError 64917
-#define System_NetConsts_SNetHttpClientHandleError 64918
-#define System_NetConsts_SNetHttpClientSendError 64919
-#define System_NetConsts_SNetHttpClientReceiveError 64920
-#define System_NetConsts_SNetHttpRequestConnectError 64921
-#define System_NetConsts_SNetHttpRequestOpenError 64922
-#define System_NetConsts_SNetHttpRequestAddHeaderError 64923
-#define System_NetConsts_SNetHttpRequestRemoveHeaderError 64924
-#define System_NetConsts_SNetHttpRequestReadDataError 64925
-#define System_NetConsts_SNetHttpRequestSetTimeoutError 64926
-#define System_NetConsts_SNetHttpCertFileOpenError 64927
-#define Vcl_OleConst_SNotLicensed 64928
-#define Vcl_OleConst_sNoRunningObject 64929
-#define System_NetConsts_SSchemeAlreadyRegistered 64930
-#define System_NetConsts_SSchemeNotRegistered 64931
-#define System_NetConsts_SCredentialInvalidUserPassword 64932
-#define System_NetConsts_SNetPlatformFunctionNotImplemented 64933
-#define System_NetConsts_SNetSchemeFunctionNotImplemented 64934
-#define System_NetConsts_SNetUriMethodAlreadyAssigned 64935
-#define System_NetConsts_SNetUriURLAlreadyAssigned 64936
-#define System_NetConsts_SNetUriIndexOutOfRange 64937
-#define System_NetConsts_SNetUriInvalid 64938
-#define System_NetConsts_SNetUriParamNotFound 64939
-#define System_NetConsts_SNetUriInvalidRelPath 64940
-#define System_NetConsts_SNetHttpMaxRedirections 64941
-#define System_NetConsts_SNetHttpGetServerCertificate 64942
-#define System_NetConsts_SNetHttpInvalidServerCertificate 64943
+#define System_NetConsts_SMimeValueEmpty 64896
+#define System_NetConsts_SMimeWeightOutOfRange 64897
+#define System_NetConsts_SNetHttpRejectedCertificate 64912
+#define System_NetConsts_SNetHttpClientUnknownError 64913
+#define System_NetConsts_SNetHttpHeadersError 64914
+#define System_NetConsts_SNetHttpClientHandleError 64915
+#define System_NetConsts_SNetHttpClientSendError 64916
+#define System_NetConsts_SNetHttpClientReceiveError 64917
+#define System_NetConsts_SNetHttpRequestConnectError 64918
+#define System_NetConsts_SNetHttpRequestOpenError 64919
+#define System_NetConsts_SNetHttpRequestAddHeaderError 64920
+#define System_NetConsts_SNetHttpRequestRemoveHeaderError 64921
+#define System_NetConsts_SNetHttpRequestReadDataError 64922
+#define System_NetConsts_SNetHttpRequestSetTimeoutError 64923
+#define System_NetConsts_SNetHttpCertFileOpenError 64924
+#define System_NetConsts_SNetHttpCertNotFoundError 64925
+#define System_NetConsts_SMimeDuplicateType 64926
+#define System_NetConsts_SMimeTypeEmpty 64927
+#define System_NetConsts_SSchemeNotRegistered 64928
+#define System_NetConsts_SCredentialInvalidUserPassword 64929
+#define System_NetConsts_SNetPlatformFunctionNotImplemented 64930
+#define System_NetConsts_SNetSchemeFunctionNotImplemented 64931
+#define System_NetConsts_SNetUriMethodAlreadyAssigned 64932
+#define System_NetConsts_SNetUriURLAlreadyAssigned 64933
+#define System_NetConsts_SNetUriIndexOutOfRange 64934
+#define System_NetConsts_SNetUriInvalid 64935
+#define System_NetConsts_SNetUriParamNotFound 64936
+#define System_NetConsts_SNetUriInvalidRelPath 64937
+#define System_NetConsts_SNetHttpMaxRedirections 64938
+#define System_NetConsts_SNetHttpGetServerCertificate 64939
+#define System_NetConsts_SNetHttpInvalidServerCertificate 64940
+#define System_NetConsts_SNetHttpServerCertificateNotAccepted 64941
+#define System_NetConsts_SNetHttpEmptyCertificateList 64942
+#define System_NetConsts_SNetHttpUnspecifiedCertificate 64943
 #define Vcl_Imaging_pnglang_EPNGCannotAddChunkText 64944
 #define Vcl_Imaging_pnglang_EPNGCannotAddInvalidImageText 64945
 #define Vcl_Imaging_pnglang_EPNGCouldNotLoadResourceText 64946
@@ -54,13 +51,13 @@
 #define Vcl_Imaging_pnglang_EInvalidNewSize 64950
 #define Vcl_Imaging_pnglang_EInvalidSpec 64951
 #define Vcl_Imaging_pnglang_EPNGInvalidBitDepthText 64952
-#define Vcl_Imaging_JConsts_sChangeJPGSize 64953
-#define Vcl_Imaging_JConsts_sJPEGError 64954
-#define Vcl_Imaging_JConsts_sJPEGImageFile 64955
-#define Vcl_OleConst_SBadPropValue 64956
-#define Vcl_OleConst_SCannotActivate 64957
-#define Vcl_OleConst_SNoWindowHandle 64958
-#define Vcl_OleConst_SInvalidLicense 64959
+#define Vcl_OleConst_SBadPropValue 64953
+#define Vcl_OleConst_SCannotActivate 64954
+#define Vcl_OleConst_SNoWindowHandle 64955
+#define Vcl_OleConst_SInvalidLicense 64956
+#define Vcl_OleConst_SNotLicensed 64957
+#define Vcl_OleConst_sNoRunningObject 64958
+#define System_NetConsts_SSchemeAlreadyRegistered 64959
 #define Vcl_Imaging_pnglang_EPngInvalidCRCText 64960
 #define Vcl_Imaging_pnglang_EPNGInvalidIHDRText 64961
 #define Vcl_Imaging_pnglang_EPNGMissingMultipleIDATText 64962
@@ -639,14 +636,8 @@
 #define System_SysConst_SInvalidUnknownFilename 65535
 STRINGTABLE
 BEGIN
-	System_NetConsts_SNetHttpCertNotFoundError,	L"Certificate is not found in file: (%d) %s"
-	System_NetConsts_SMimeDuplicateType,	L"Pair of extension and mime type already exists"
-	System_NetConsts_SMimeTypeEmpty,	L"Mime type cannot be empty"
 	System_NetConsts_SMimeValueEmpty,	L"Value name cannot be empty"
 	System_NetConsts_SMimeWeightOutOfRange,	L"Quality weight is out of range"
-	System_NetConsts_SNetHttpServerCertificateNotAccepted,	L"Server Certificate not accepted"
-	System_NetConsts_SNetHttpEmptyCertificateList,	L"Empty certificate list"
-	System_NetConsts_SNetHttpUnspecifiedCertificate,	L"Unspecified certificate from client"
 	System_NetConsts_SNetHttpRejectedCertificate,	L"Client rejected the certificate"
 	System_NetConsts_SNetHttpClientUnknownError,	L"Execution of request terminated with unknown error"
 	System_NetConsts_SNetHttpHeadersError,	L"Error querying headers: (%d) %s"
@@ -660,9 +651,9 @@ BEGIN
 	System_NetConsts_SNetHttpRequestReadDataError,	L"Error reading data: (%d) %s"
 	System_NetConsts_SNetHttpRequestSetTimeoutError,	L"Error setting timeout for the request: (%d) %s"
 	System_NetConsts_SNetHttpCertFileOpenError,	L"Error opening certificate file: (%d) %s"
-	Vcl_OleConst_SNotLicensed,	L"License information for %s not found. You cannot use this control in design mode"
-	Vcl_OleConst_sNoRunningObject,	L"Unable to retrieve a pointer to a running object registered with OLE for %s/%s"
-	System_NetConsts_SSchemeAlreadyRegistered,	L"Scheme \"%s\" already registered for %s"
+	System_NetConsts_SNetHttpCertNotFoundError,	L"Certificate is not found in file: (%d) %s"
+	System_NetConsts_SMimeDuplicateType,	L"Pair of extension and mime type already exists"
+	System_NetConsts_SMimeTypeEmpty,	L"Mime type cannot be empty"
 	System_NetConsts_SSchemeNotRegistered,	L"Scheme \"%s\" is not registered"
 	System_NetConsts_SCredentialInvalidUserPassword,	L"Credential without user and password"
 	System_NetConsts_SNetPlatformFunctionNotImplemented,	L"Platform-dependant function not implemented"
@@ -676,6 +667,9 @@ BEGIN
 	System_NetConsts_SNetHttpMaxRedirections,	L"Maximum number of redirections (%d) exceeded"
 	System_NetConsts_SNetHttpGetServerCertificate,	L"Error getting Server Certificate"
 	System_NetConsts_SNetHttpInvalidServerCertificate,	L"Server Certificate Invalid or not present"
+	System_NetConsts_SNetHttpServerCertificateNotAccepted,	L"Server Certificate not accepted"
+	System_NetConsts_SNetHttpEmptyCertificateList,	L"Empty certificate list"
+	System_NetConsts_SNetHttpUnspecifiedCertificate,	L"Unspecified certificate from client"
 	Vcl_Imaging_pnglang_EPNGCannotAddChunkText,	L"The program tried to add a existent critical chunk to the current image which is not allowed."
 	Vcl_Imaging_pnglang_EPNGCannotAddInvalidImageText,	L"It's not allowed to add a new chunk because the current image is invalid."
 	Vcl_Imaging_pnglang_EPNGCouldNotLoadResourceText,	L"The png image could not be loaded from the resource ID."
@@ -685,13 +679,13 @@ BEGIN
 	Vcl_Imaging_pnglang_EInvalidNewSize,	L"The new size provided for image resizing is invalid."
 	Vcl_Imaging_pnglang_EInvalidSpec,	L"The \"Portable Network Graphics\" could not be created because invalid image type parameters have being provided."
 	Vcl_Imaging_pnglang_EPNGInvalidBitDepthText,	L"The \"Portable Network Graphics\" image could not be loaded because it uses an invalid image bit depth."
-	Vcl_Imaging_JConsts_sChangeJPGSize,	L"Cannot change the size of a JPEG image"
-	Vcl_Imaging_JConsts_sJPEGError,	L"JPEG error #%d"
-	Vcl_Imaging_JConsts_sJPEGImageFile,	L"JPEG Image File"
 	Vcl_OleConst_SBadPropValue,	L"'%s' is not a valid property value"
 	Vcl_OleConst_SCannotActivate,	L"OLE control activation failed"
 	Vcl_OleConst_SNoWindowHandle,	L"Could not obtain OLE control window handle"
 	Vcl_OleConst_SInvalidLicense,	L"License information for %s is invalid"
+	Vcl_OleConst_SNotLicensed,	L"License information for %s not found. You cannot use this control in design mode"
+	Vcl_OleConst_sNoRunningObject,	L"Unable to retrieve a pointer to a running object registered with OLE for %s/%s"
+	System_NetConsts_SSchemeAlreadyRegistered,	L"Scheme \"%s\" already registered for %s"
 	Vcl_Imaging_pnglang_EPngInvalidCRCText,	L"This \"Portable Network Graphics\" image is not valid because it contains invalid pieces of data (crc error)"
 	Vcl_Imaging_pnglang_EPNGInvalidIHDRText,	L"The \"Portable Network Graphics\" image could not be loaded because one of its main piece of data (ihdr) might be corrupted"
 	Vcl_Imaging_pnglang_EPNGMissingMultipleIDATText,	L"This \"Portable Network Graphics\" image is invalid because it has missing image parts."
@@ -1282,6 +1276,6 @@ END
 /* c:\Myprojects\Packages\LightSaber\22.0_Win32_Debug\cvFloatSpinEdit.dcr */
 /* c:\Myprojects\Packages\LightSaber\22.0_Win32_Debug\cvSplitter.res */
 /* c:\Myprojects\Packages\LightSaber\22.0_Win32_Debug\cvFreeDiskSpace.res */
-/* C:\MyProjects\Packages\LightSaber\Demo\All Visual Controls\MainForm.dfm */
-/* C:\MyProjects\Packages\LightSaber\Demo\All Visual Controls\DemoAllVisualControls.res */
-/* C:\MyProjects\Packages\LightSaber\Demo\All Visual Controls\DemoAllVisualControls.drf */
+/* C:\Myprojects\Packages\LightSaber\Demo\All Visual Controls\MainForm.dfm */
+/* C:\Myprojects\Packages\LightSaber\Demo\All Visual Controls\DemoAllVisualControls.res */
+/* C:\Myprojects\Packages\LightSaber\Demo\All Visual Controls\DemoAllVisualControls.drf */

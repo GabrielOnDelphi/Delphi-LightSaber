@@ -6,12 +6,6 @@
         <Projects Include="LightCore\ccIO Tester\Tester_ccIO.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="LightCore\GUI Autosave\Tester_SaveGUI.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="LightTranslator\Tester_Translator.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="LightUpdater\Tester_Updater.dproj">
             <Dependencies/>
         </Projects>
@@ -19,6 +13,12 @@
             <Dependencies/>
         </Projects>
         <Projects Include="All Visual Controls\DemoAllVisualControls.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="LightCore\GUI Autosave\SaveGUI_Demo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="LightLog\DemoLog.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -37,24 +37,6 @@
     </Target>
     <Target Name="Tester_ccIO:Make">
         <MSBuild Projects="LightCore\ccIO Tester\Tester_ccIO.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="Tester_SaveGUI">
-        <MSBuild Projects="LightCore\GUI Autosave\Tester_SaveGUI.dproj"/>
-    </Target>
-    <Target Name="Tester_SaveGUI:Clean">
-        <MSBuild Projects="LightCore\GUI Autosave\Tester_SaveGUI.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="Tester_SaveGUI:Make">
-        <MSBuild Projects="LightCore\GUI Autosave\Tester_SaveGUI.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="Tester_Translator">
-        <MSBuild Projects="LightTranslator\Tester_Translator.dproj"/>
-    </Target>
-    <Target Name="Tester_Translator:Clean">
-        <MSBuild Projects="LightTranslator\Tester_Translator.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="Tester_Translator:Make">
-        <MSBuild Projects="LightTranslator\Tester_Translator.dproj" Targets="Make"/>
     </Target>
     <Target Name="Tester_Updater">
         <MSBuild Projects="LightUpdater\Tester_Updater.dproj"/>
@@ -83,14 +65,32 @@
     <Target Name="DemoAllVisualControls:Make">
         <MSBuild Projects="All Visual Controls\DemoAllVisualControls.dproj" Targets="Make"/>
     </Target>
+    <Target Name="SaveGUI_Demo">
+        <MSBuild Projects="LightCore\GUI Autosave\SaveGUI_Demo.dproj"/>
+    </Target>
+    <Target Name="SaveGUI_Demo:Clean">
+        <MSBuild Projects="LightCore\GUI Autosave\SaveGUI_Demo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SaveGUI_Demo:Make">
+        <MSBuild Projects="LightCore\GUI Autosave\SaveGUI_Demo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DemoLog">
+        <MSBuild Projects="LightLog\DemoLog.dproj"/>
+    </Target>
+    <Target Name="DemoLog:Clean">
+        <MSBuild Projects="LightLog\DemoLog.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DemoLog:Make">
+        <MSBuild Projects="LightLog\DemoLog.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="Tester_ccIO;Tester_SaveGUI;Tester_Translator;Tester_Updater;Tester_WinVers;DemoAllVisualControls"/>
+        <CallTarget Targets="Tester_ccIO;Tester_Updater;Tester_WinVers;DemoAllVisualControls;SaveGUI_Demo;DemoLog"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Tester_ccIO:Clean;Tester_SaveGUI:Clean;Tester_Translator:Clean;Tester_Updater:Clean;Tester_WinVers:Clean;DemoAllVisualControls:Clean"/>
+        <CallTarget Targets="Tester_ccIO:Clean;Tester_Updater:Clean;Tester_WinVers:Clean;DemoAllVisualControls:Clean;SaveGUI_Demo:Clean;DemoLog:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Tester_ccIO:Make;Tester_SaveGUI:Make;Tester_Translator:Make;Tester_Updater:Make;Tester_WinVers:Make;DemoAllVisualControls:Make"/>
+        <CallTarget Targets="Tester_ccIO:Make;Tester_Updater:Make;Tester_WinVers:Make;DemoAllVisualControls:Make;SaveGUI_Demo:Make;DemoLog:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
