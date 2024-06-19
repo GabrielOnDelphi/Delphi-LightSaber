@@ -1,0 +1,78 @@
+﻿package LightGraphics;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 2}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$DEFINE CCRExif}
+{$DEFINE Jpg2000}
+{$DEFINE FastJpg}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'LightSaber - Graphics lib'}
+{$LIBSUFFIX AUTO}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  vcl,
+  LightCore,
+  LightCommon,
+  LightTranslator,
+  vclimg,
+  vclwinx,
+  vclie,
+  GR32_R,
+  CCRExif,
+  ThirdPartyLibs;
+
+contains
+  cGraphFX.RotateGr32 in 'cGraphFX.RotateGr32.pas',
+  cGraphResize in 'cGraphResize.pas',
+  cGraphResize32 in 'cGraphResize32.pas',
+  cGraphResizeParams in 'cGraphResizeParams.pas',
+  cGraphAviFrame in 'cGraphAviFrame.pas',
+  cGraphBitmap in 'cGraphBitmap.pas',
+  cGraphBkgColor in 'cGraphBkgColor.pas',
+  cGraphBkgColorEditor in 'cGraphBkgColorEditor.pas',
+  cGraphCache in 'cGraphCache.pas',
+  cGraphFX in 'cGraphFX.pas',
+  cGraphFX.Gradient in 'cGraphFX.Gradient.pas',
+  cGraphFX.Rotate in 'cGraphFX.Rotate.pas',
+  cGraphGif in 'cGraphGif.pas',
+  cGraphLoader in 'cGraphLoader.pas',
+  cGraphLoader.Resolution in 'cGraphLoader.Resolution.pas',
+  cGraphLoader.Thread in 'cGraphLoader.Thread.pas',
+  cGraphLoader.WB1 in 'cGraphLoader.WB1.pas',
+  cGraphLoader.WBC in 'cGraphLoader.WBC.pas',
+  cGraphText in 'cGraphText.pas',
+  cGraphUtil in 'cGraphUtil.pas',
+  cGraphResizeParamFrame in 'cGraphResizeParamFrame.pas' {ResizeParameters: TFrame},
+  cGraphLoader.RainDrop in 'cGraphLoader.RainDrop.pas',
+  cGraphBkgColorParams in 'cGraphBkgColorParams.pas',
+  cGraphConvert in 'cGraphConvert.pas',
+  cGraphAlpha in 'cGraphAlpha.pas',
+  cGraphDesktop in 'cGraphDesktop.pas',
+  cGraphUtilGray in 'cGraphUtilGray.pas';
+
+end.
