@@ -5,7 +5,7 @@ interface
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, clVisLogTrack, clVisLogRam, Vcl.Grids, clVisLog, Vcl.ExtCtrls,
-  ccRichLogTrack, Vcl.StdCtrls, Vcl.ComCtrls, FormLog, ccLogUtils, ccRichLog;
+  llRichLogTrack, Vcl.StdCtrls, Vcl.ComCtrls, FormLog, llLogUtils, llRichLog;
 
 type
   TForm3 = class(TForm)
@@ -40,13 +40,13 @@ var
   Form3: TForm3;
 
 implementation {$R *.dfm}
-Uses ccAppData, ccIO, ccCore;
+Uses cbAppData, ccIO, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
 
 
 procedure TForm3.FormCreate(Sender: TObject);
 begin
  RichLog.Clear;
- AppData.Initializing:= FALSE; moved to ccAppData
+ AppData.Initializing:= FALSE; moved to cbAppData
  //Button5Click(Sender);
 end;
 

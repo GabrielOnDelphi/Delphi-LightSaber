@@ -4,7 +4,7 @@ INTERFACE
 
 USES
    Winapi.Windows, WinApi.Messages, System.SysUtils, System.Classes, VCL.Forms, Vcl.Controls,
-   ccCore, ccAppData, ciUpdater;
+   ccCore, csSystem, cbDialogs, cbAppData, ciUpdater;
 
 TYPE
  TfrmDemoStarter = class(TForm)

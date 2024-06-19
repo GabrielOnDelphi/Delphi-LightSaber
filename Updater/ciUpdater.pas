@@ -1,26 +1,29 @@
 ﻿UNIT ciUpdater;
 
-{-------------------------------------------------------------------------------------------------------------
+{=============================================================================================================
    Gabriel Moraru
-   2023.06
+   2024.05
    See Copyright.txt
-
+--------------------------------------------------------------------------------------------------------------
 
    Automatic program Updater & News announcer
-   Checks if a new version is available online.
+   This updater checks if a new version (or news) is available online.
 
-   You can target (show the news) only to a group of people (Paying customers/Trial users/Demo users/All).
-   The library can check for news at start up, after a predefined seconds delay. This is useful because the program might freeze for some miliseconds (depending on how bussy is the server) while downloading the News file from the Internet.
-   No personal user data is sent to the server.
+   Features:
+      You can target (show the news) only a group of customers or all (Paying customers/Trial users/Demo users/All).
+      The library can check for news at start up, after a predefined seconds delay.
+      This is useful because the program might freeze for some miliseconds
+      (depending on how bussy is the server) while downloading the News file from the Internet.
+      No personal user data is sent to the server.
 
 ==============================================================================================================
 
    The Updater
-     Checks the website every x days to see if updates of the product (app) are available.
+      Checks the website every x days to see if updates of the product (app) are available.
 
    The Announcer
-     The online files keep information not only about the updates but also it keeps news (like "Discount available if you purchase by the end of the day").
-     The program can retrieve and display the news to the user (only once).
+      The online files keep information not only about the updates but also it keeps news (like "Discount available if you purchase by the end of the day").
+      The program can retrieve and display the news to the user (only once).
 
 ==============================================================================================================
 
@@ -28,9 +31,8 @@
       The data is kept in a binary file. A graphic editor is available for this. The file is extensible (it can be easily expanded to accept new features).
       See the RNews recrod.
 
-
    Example of usage:
-      CubicCommonControls\Demo\CubicUpdater\UpdaterTester.dpr
+      \LightSaber\Demo\CubicUpdater\UpdaterTester.dpr
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
@@ -100,7 +102,7 @@ VAR
 IMPLEMENTATION
 
 USES
-  FormAsyncMessage, ciDownload, ccINIFile, cmDebugger, ccAppdata;
+  FormAsyncMessage, ciDownload, ccINIFile, cmDebugger, cbAppData;
 
 Const
   TooLongNoSeeInterval = 180;    { Force to checked for updates every 180 days even if the updater is disabled }
@@ -316,17 +318,17 @@ end;
 
 procedure TUpdater.SaveTo(CONST FileName: string);
 begin
- VAR IniFile:= TCubicIniFile.Create('Updater');
+ VAR IniFile:= TIniFileEx.Create('Updater', FileName);
  try
    { Internal state }
    IniFile.WriteDateEx('LastUpdate_',   LastUpdate);
-   IniFile.Write    ('LocalCounter',    LocalNewsID);
+   IniFile.Write      ('LocalCounter',    LocalNewsID);
 
    { User settings }
-   IniFile.Write    ('When',            Ord(When));
-   IniFile.Write    ('CheckEvery',      CheckEvery);
-   IniFile.Write    ('ForceNewsFound',  ForceNewsFound);
-   IniFile.Write    ('ShowConnectFail', ShowConnectFail);
+   IniFile.Write      ('When',            Ord(When));
+   IniFile.Write      ('CheckEvery',      CheckEvery);
+   IniFile.Write      ('ForceNewsFound',  ForceNewsFound);
+   IniFile.Write      ('ShowConnectFail', ShowConnectFail);
  finally
    FreeAndNil(IniFile);
  end;
@@ -335,7 +337,7 @@ end;
 
 procedure TUpdater.LoadFrom(CONST FileName: string);
 begin
- VAR IniFile := TCubicIniFile.Create('Updater');
+ VAR IniFile := TIniFileEx.Create('Updater', FileName);
  try
    { Internal state}
    LastUpdate      := Now;

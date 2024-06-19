@@ -2,14 +2,14 @@
 
 uses
   FastMM4,
-  ccAppData,
+  cbAppData,
   Vcl.Forms,
   MainForm in 'MainForm.pas' {frmMain};
 
 {$R *.res}
 
 begin
-  AppData:= TAppData.Create('Cubic Tester WinVer');
+  AppData:= TAppData.Create('Light Tester WinVer');
   AppData.CreateMainForm(TfrmMain, frmMain, TRUE);
   Application.Run;
 end.

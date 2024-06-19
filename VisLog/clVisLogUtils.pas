@@ -13,7 +13,7 @@ UNIT clVisLogUtils;
 INTERFACE
 
 USES
-   System.SysUtils, Vcl.Graphics, ccCore;
+   System.SysUtils, Vcl.Graphics, ccCore, csSystem, cbDialogs;
 
 TYPE
   TLogVerbLvl= (lvDebug, lvVerbose, lvHints {Default}, lvInfos, lvImportant, lvWarnings, lvErrors);  { Exist also 7 which is of type 'Msg' and it is always shown in log }

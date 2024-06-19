@@ -25,7 +25,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, Vcl.Forms, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls,
   InternetLabel,
-  ccCore, ciUpdater, ccRichLog, ccRichLogTrack, FormUpdaterEditor;
+  ccCore, csSystem, cbDialogs, ciUpdater, llRichLog, llRichLogTrack, FormUpdaterEditor;
 
 TYPE
   TFrmUpdater = class(TForm)
@@ -82,7 +82,7 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   ccLogUtils, cTranslate, cGraphUtil, FormUpdaterRecEditor, ccAppdata, ccINIFileVCL, ciInternet;
+   llLogUtils, cTranslate, cGraphUtil, FormUpdaterRecEditor, cbAppData, cbIniFile, ciInternet;
 
 VAR
    FrmUpdater: TFrmUpdater= NIL; { Only one instance allowed! }

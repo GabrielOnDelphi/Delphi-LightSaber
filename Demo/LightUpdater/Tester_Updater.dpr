@@ -7,7 +7,7 @@ uses
   Vcl.Themes,
   Vcl.Styles,
   BxConstants in '..\..\..\..\BioniX\SourceCode\BioniX VCL\BxConstants.pas',
-  ccAppData in '..\..\ccAppData.pas',
+  cbAppData in '..\..\cbAppData.pas',
   FormLog in '..\..\FormLog.pas',
   ciUpdater in '..\..\Updater\ciUpdater.pas',
   ciUpdaterRec in '..\..\Updater\ciUpdaterRec.pas',
@@ -19,7 +19,7 @@ uses
 
 begin
   Application.Initialize_;
-  AppData:= TAppData.Create('Cubic Updater Demo');
+  AppData:= TAppData.Create('Light Updater Demo');
   AppData.CreateMainForm(TfrmDemoStarter, frmDemoStarter, TRUE);
   Application.Run;
 end.

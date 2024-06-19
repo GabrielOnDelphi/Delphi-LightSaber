@@ -8,7 +8,7 @@ UNIT clVisLogTrack;
 
    WARNING!
    THIS UNIT IS STILL UNDER CONSTRUCTION.
-   For the moment the library uses the old ccRichLog unit.
+   For the moment the library uses the old llRichLog unit.
 
 
 ==============================================================================================================
@@ -55,7 +55,7 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
-Uses ccCore;
+Uses ccCore, csSystem, cbDialogs;
 
 
 

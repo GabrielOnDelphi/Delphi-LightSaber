@@ -86,7 +86,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES ccCore;
+USES ccCore, csSystem, cbDialogs;
 
 
 constructor TVisLog.Create(AOwner: TComponent);

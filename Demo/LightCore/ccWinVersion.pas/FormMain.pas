@@ -4,7 +4,7 @@ INTERFACE
 
 USES
   WinApi.Windows, Winapi.ShellAPI, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin,
-  Vcl.ComCtrls, Vcl.ExtCtrls, ccAppData;
+  Vcl.ComCtrls, Vcl.ExtCtrls, cbAppData;
 
 const
    CRLF = #13#10;
@@ -28,7 +28,7 @@ VAR
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-   ccWinVersion, cmWinVersionOthers;
+   cbWinVersion, cmWinVersionOthers;
 
 
 procedure TfrmTester.FormCreate(Sender: TObject);
@@ -47,8 +47,8 @@ procedure TfrmTester.btnStartClick(Sender: TObject);
 begin
  Memo.Text:= '';
  Memo.Lines.Add('');
- Memo.Lines.Add('ccWinVersion');
- Memo.Lines.Add(ccWinVersion.GenerateReport);
+ Memo.Lines.Add('cbWinVersion');
+ Memo.Lines.Add(cbWinVersion.GenerateReport);
  Memo.Lines.Add('');
  Memo.Lines.Add('cmWinVersionOthers');
  Memo.Lines.Add(cmWinVersionOthers.GenerateReport);

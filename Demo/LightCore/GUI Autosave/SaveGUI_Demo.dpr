@@ -7,13 +7,13 @@ uses
   MainForm in 'MainForm.pas' {frmTester},
   SecondForm in 'SecondForm.pas' {frmContainer},
   FormLog in '..\..\FormLog.pas',
-  ccAppData in '..\..\ccAppData.pas';
+  cbAppData in '..\..\cbAppData.pas';
 
 {$R *.res}
 
 procedure Main;
  begin
-  AppData:= TAppData.Create('Cubic IniFileEx Tester');
+  AppData:= TAppData.Create('Light IniFileEx Tester');
 
   { Properly installed? }
   //if NOT AppData.CheckSysDir then EXIT;

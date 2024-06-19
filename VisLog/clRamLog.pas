@@ -8,7 +8,7 @@ UNIT clRamLog;
 
    A simple but effective log (non-visual).
    Its data can be displayed by TRichLog, but it can also work alone without being connected to a TRichLog.
-   More details in ccLogUtils.pas
+   More details in llLogUtils.pas
 
    Future plans:
      TRamLog even though fully functional, it is a bit awkwardly written (uses text to keep track of verbosity level of the messages).
@@ -21,7 +21,7 @@ UNIT clRamLog;
 INTERFACE
 
 USES
-   System.SysUtils, System.Classes, ccStreamBuff, ccRichLog, ccLogUtils, ccStreamMem;
+   System.SysUtils, System.Classes, ccStreamBuff, llRichLog, llLogUtils, ccStreamMem;
 
 TYPE
   TRamLog = class(TObject)
@@ -79,7 +79,7 @@ TYPE
 IMPLEMENTATION
 
 Uses
-   ccIO, ccCore;
+   ccIO, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
 
 
 

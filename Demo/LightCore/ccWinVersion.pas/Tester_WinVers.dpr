@@ -4,7 +4,7 @@ uses
   {$IFDEF DEBUG}
   FastMM4,
   {$ENDIF }
-  ccAppData,
+  cbAppData,
   Forms,
   FormMain in 'FormMain.pas' {frmTester};
 
@@ -13,7 +13,7 @@ uses
 begin
   Application.Initialize_;
 
-  AppData:= TAppData.Create('Cubic Tester WinVer');
+  AppData:= TAppData.Create('Light Tester WinVer');
   AppData.CreateMainForm(TfrmTester, frmTester, TRUE);
   Application.Run;
 end.
