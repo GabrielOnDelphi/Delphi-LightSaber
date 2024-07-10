@@ -459,7 +459,7 @@ begin
  Result:= Result+'  Computer name: '  + Tab+ GetComputerName+ CRLF;                 { Also see GetComputerNameEx:   http://stackoverflow.com/questions/30778736/how-to-get-the-full-computer-name-in-inno-setup/30779280#30779280 }
  Result:= Result+'  User name: '      + Tab+ Tab+ GetLogonName+ CRLF;
  Result:= Result+'  Total monitors: ' + Tab+ IntToStr(Screen.MonitorCount)+ '. Screen res: ' + IntToStr(Screen.Width)+ 'x'+ IntToStr(Screen.Height)+ CRLF;
- Result:= Result+'  Free space: '     + Tab+ Tab+ ccIO.DriveFreeSpaceS ('C') + CRLF;
+ Result:= Result+'  Free space: '     + Tab+ Tab+ DriveFreeSpaceS ('C') + CRLF;
  //Result:= Result+'  Local IP: '     + Tab+ Tab+ ciInternet.GetLocalIP+ CRLF;
 end;
 

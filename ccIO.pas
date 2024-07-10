@@ -39,6 +39,7 @@
     for a maximum total path length of 32,767 characters.
     In order to name a path with a long name you need to use the magic \\?\ prefix, and use the Unicode version of the API.
     For example, "\\?\D:\very long path".
+    WinApi.Windows.MAX_PATH is declared as MAX_PATH = 260;
 
   Relative paths
     Relative paths are always limited to a total of MAX_PATH characters.
@@ -70,20 +71,19 @@ INTERFACE
 {$WARN UNIT_PLATFORM ON}   { OFF: Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
 
 USES
-  {$IFDEF MSWINDOWS}
-    Winapi.Windows,
-  {$ENDIF}
-  System.Masks, System.Types, System.StrUtils, System.IOUtils, System.SysUtils, System.Classes;
+  System.Diagnostics, System.Math, System.Masks, System.Types, System.StrUtils,
+  System.IOUtils, System.SysUtils, System.Classes;
 
 CONST
   DigSubdirectories = TRUE;
   UseFullPath       = TRUE;
   InvalidFileCharWin= ['/','*','?','<','>','|', '"', ':', '\'];     { Characters that are invalid for file names OR for folder (just single folders) }
   InvalidPathChar   = ['/','*','?','<','>','|', '"'];               { Characters that are invalid for a FULL path }
+
   {$IFDEF MSWINDOWS}
-    MAXPATH= MAX_PATH- 12;                                          { Check like this:  if Path < MAXPATH then... }
+   MAXPATH= 260-12;
   {$ELSE}
-    MAXPATH= MAX_PATH;
+   MAXPATH= 260;
   {$ENDIF}
 
    { FILTERS }
@@ -107,7 +107,6 @@ CONST
    {}
    FilterApps    = 'Applications|*.exe';
    Executables   = '*.exe;*.cmd;*.bat;*.dll;*.ocx';
-
 
 
 
@@ -282,7 +281,7 @@ CONST
  function  StringFromFile       (CONST FileName: string; IgnoreExists: Boolean= FALSE; Enc: TEncoding= Nil): string;
  procedure StringToFile         (CONST FileName: string; CONST aString: String;     CONST WriteOp: TWriteOperation= woOverwrite; WritePreamble: Boolean= FALSE);
  procedure StringToFileA        (CONST FileName: string; CONST aString: AnsiString; CONST WriteOp: TWriteOperation);  overload;
- procedure StringToFileA        (CONST FileName: string; CONST aString: String;     CONST WriteOp: TWriteOperation);      overload;
+ procedure StringToFileA        (CONST FileName: string; CONST aString: String;     CONST WriteOp: TWriteOperation);  overload;
 
 
 {--------------------------------------------------------------------------------------------------
@@ -295,16 +294,15 @@ CONST
 {--------------------------------------------------------------------------------------------------
    FILE MERGE
 --------------------------------------------------------------------------------------------------}
- procedure CopyFilePortion     (CONST SourceName, DestName: string);         { copy only CopyBytes bytes from the begining of the file }
- procedure AppendTo            (CONST MasterFile, SegmentFile, Separator: string; SeparatorFirst: Boolean= TRUE);                           { Append Segment to Master. Master must exists. }
- procedure MergeFiles          (CONST Input1, Input2, Output, Separator: string; SeparatorFirst: Boolean= TRUE);        { Merge file 'Input1' and file 'Input2' in a new file 'Output'. So, the difference between this procedure and AppendTo is that this proc does not modify the original input file(s) }
+ procedure CopyFileTop         (CONST SourceName, DestName: string; CopyBytes: Int64);                             { Copy only CopyBytes bytes from the begining of the file }
+ procedure AppendTo            (CONST MasterFile, SegmentFile, Separator: string; SeparatorFirst: Boolean= TRUE);  { Append Segment to Master. Master must exists. }
+ procedure MergeFiles          (CONST Input1, Input2, Output,  Separator: string; SeparatorFirst: Boolean= TRUE);  { Merge file 'Input1' and file 'Input2' in a new file 'Output'. So, the difference between this procedure and AppendTo is that this proc does not modify the original input file(s) }
  function  MergeAllFiles       (CONST Folder, FileType, OutputFile, Separator: string; DigSubdirectories: Boolean= FALSE; SeparatorFirst: Boolean= TRUE): Integer;       { Merge all files in the specified folder.   FileType can be something like '*.*' or '*.exe;*.bin' }
 
 
  { OTHERS }
  function  CountLines          (CONST Filename: string; CONST BufferSize: Cardinal= 128000): Int64;                     { Opens a LARGE text file and counts how many lines it has. It does this by loading a small portion of the file in a RAM buffer }
  function  WriteBinFile        (CONST FileName: string; CONST Data: TBytes; CONST Overwrite: Boolean= TRUE): Boolean;
- procedure SetCompressionAtr   (CONST FileName: string; const CompressionFormat: byte= 1);    // http://stackoverflow.com/questions/7002575/how-can-i-set-a-files-compression-attribute-in-delphi
 {System.IOUtils.TFile.Encrypt https://docwiki.embarcadero.com/Libraries/Alexandria/en/System.IOUtils.TFile.Encrypt - Encrypt a given file using the operating system-provided facilities.}
 
 
@@ -312,12 +310,12 @@ CONST
    COPY/MOVE
 --------------------------------------------------------------------------------------------------}
  {COPY FILES}
- function  FileCopyTo          (CONST sFrom, sTo: string; Overwrite: boolean): boolean;
- function  FileCopyQuick       (CONST From_FullPath, To_DestFolder: string; Overwrite: boolean): boolean;     { in this function you don't have to provide the full path for the second parameter but only the destination folder }
+ function  CopyFile            (CONST SourceName, DestName: string): Boolean;
+ function  FileCopyQuick       (CONST From_FullPath, To_DestFolder: string): boolean;     { in this function you don't have to provide the full path for the second parameter but only the destination folder }
 
  {MOVE FILES}
- function  FileMoveTo          (CONST From_FullPath, To_FullPath  : string): boolean;
- function  FileMoveToDir       (CONST From_FullPath, To_DestFolder: string; Overwrite: Boolean): Boolean;
+ function  FileMoveTo          (CONST From_FullPath, To_FullPath  : string): Boolean;
+ function  FileMoveToDir       (CONST From_FullPath, To_DestFolder: string): Boolean;
 
  {FOLDERS}
  function  CopyFolder          (CONST FromFolder, ToFolder   : String; Overwrite: Boolean= True; CONST FileType: string= '*.*'): integer;          { copy a folder and all its files and subfolders }
@@ -338,38 +336,22 @@ CONST
 {--------------------------------------------------------------------------------------------------
    DELETE
 --------------------------------------------------------------------------------------------------}
-
- {DELETE FOLDERS}
  procedure EmptyDirectory      (CONST Path: string);                                                          { Delete all files in the specified folder, but don't delete the folder itself. It will search also in subfolders }
  procedure DeleteFolder        (CONST Path: string);
  procedure RemoveEmptyFolders  (CONST RootFolder: string);                                                    { NETESTATA! Delete all empty folders / sub-folders (any sub level) under the provided "rootFolder" }
 
 
 {--------------------------------------------------------------------------------------------------
-   FILE ACCESS
---------------------------------------------------------------------------------------------------}
- function  FileIsLockedR        (CONST FileName: string): Boolean;
- function  FileIsLockedRW       (CONST FileName: string): Boolean;                                            { Returns true if the file cannot be open for reading and writing } { old name: FileInUse }
- function  TestWriteAccess      (      FileOrFolder: string): Boolean;                                        { Returns true if it can write that file to disk. ATTENTION it will overwrite the file if it already exists ! }
- function  IsDirectoryWriteable (CONST Dir: string): Boolean;    { Source: https://stackoverflow.com/questions/3599256/how-can-i-use-delphi-to-test-if-a-directory-is-writeable }
- function  CanCreateFile        (CONST AString:String): Boolean;
- function  ShowMsg_CannotWriteTo(CONST sPath: string): string;                                       { Also see  IsDiskWriteProtected }
-
-
-{--------------------------------------------------------------------------------------------------
    FILE SIZE
 --------------------------------------------------------------------------------------------------}
- function  GetFolderSize    (CONST aFolder: string; CONST FileType: string= '*.*'; DigSubdirectories: Boolean= TRUE): Int64;
- function  GetFileSize      (CONST aFilename: string): Int64;
- function  GetFileSize_     (CONST aFilename: string): Int64;
-
- function  GetFileSizeFormat(CONST sFilename: string): string;                                     { Same as GetFileSize but returns the size in b/kb/mb/etc }
+ function  GetFileSize      (CONST FileName: string): Int64;
+ function  GetFileSizeFormat(CONST FileName: string): string;                                     { Same as GetFileSize but returns the size in b/kb/mb/etc }
+ function  GetFolderSize    (CONST Folder: string; CONST FileType: string= '*.*'; DigSubdirectories: Boolean= TRUE): Int64;
 
 
 {--------------------------------------------------------------------------------------------------
    FILE TIME
 --------------------------------------------------------------------------------------------------}
- function  FileTimeToDateTimeStr   (FTime: TFileTime; CONST DFormat, TFormat: string): string;
  function  ExtractTimeFromFileName (CONST FileName: string): TTime;                                { The time must be at the end of the file name. Example: 'MyPicture 20-00.jpg'. Returns -1 if the time could not be extracted. }
  function  DateToStr_IO            (CONST DateTime: TDateTime): string;                            { Original name: StrTimeToSeconds_unsafe }
  function  TimeToStr_IO            (CONST DateTime: TDateTime): string;
@@ -380,25 +362,10 @@ CONST
 {--------------------------------------------------------------------------------------------------
    DRIVES
 --------------------------------------------------------------------------------------------------}
- function GetDriveType (CONST Path: string): Integer;   { Returns drive type. Path can be something like 'C:\' or '\\netdrive\' }
- function GetDriveTypeS(CONST Path: string): string;    { Returns drive type as string }
-
- { Validity }
- function  DiskInDrive        (CONST Path: string): Boolean; overload;                             { From www.gnomehome.demon.nl/uddf/pages/disk.htm#disk0 . Also see http://community.borland.com/article/0,1410,15921,00.html }
- function  DiskInDrive        (CONST DriveNo: Byte): Boolean; overload;                            { THIS IS VERY SLOW IF THE DISK IS NOT IN DRIVE! The GUI will freeze until the drive responds. }
- function  ValidDrive         (CONST Drive: Char): Boolean;                                        { Peter Below (TeamB). http://www.codinggroups.com/borland-public-delphi-rtl-win32/7618-windows-no-disk-error.html }
- function  ValidDriveLetter   (CONST Drive: Char): Boolean;                                        { Returns false if the drive letter is not in ['A'..'Z'] }
- function  DriveProtected     (CONST Drive: Char): BOOLEAN;                                        { Attempt to create temporary file on specified drive. If created, the temporary file is deleted. } {old name: IsDiskWriteProtected }
-
- {}
- function  GetVolumeLabel     (CONST Drive: Char): string;                                         { function returns volume label of a disk }
  function  ExtractDriveLetter (CONST Path: string): char; deprecated  'Use IOUtils.TDirectory.GetDirectoryRoot instead.'   { Returns #0 for invalid or network paths. GetDirectoryRoot returns something like:  'C:\' }
-
- {}
- function  DriveFreeSpace     (CONST Drive: Char): Int64;
- function  DriveFreeSpaceS    (CONST Drive: Char): string;
- function  DriveFreeSpaceF    (CONST FullPath: string): Int64;                                     { Same as DriveFreeSpace but this accepts a full filename/directory path. It will automatically extract the drive }
-
+ { Validity }
+ function  ValidDriveLetter   (CONST Drive: Char): Boolean;                                        { Returns false if the drive letter is not in ['A'..'Z'] }
+ function  DriveProtected     (CONST Drive: Char): Boolean;                                        { Attempt to create temporary file on specified drive. If created, the temporary file is deleted. } {old name: IsDiskWriteProtected }
  { Convert }
  function  Drive2Byte         (CONST Drive: Char): Byte;                                           { Converts the drive letter to the number of that drive. Example drive "A:" is 1 and drive "C:" is 3 }
  function  Drive2Char         (CONST DriveNumber: Byte): Char;                                     { Converts the drive number to the letter of that drive. Example drive 1 is "A:" floppy }
@@ -406,12 +373,10 @@ CONST
 
 
 
-
 IMPLEMENTATION
 
 USES
   ccCore;
-
 
 
 
@@ -1229,8 +1194,7 @@ begin
 
  var NewFileName:= AppendFileExtension(FileName, NewExtension);
 
- if NOT FileCopyTo(NewFileName, Result, TRUE)
- then Result:= '';
+ TFile.Copy(NewFileName, Result, TRUE);
 end;
 
 
@@ -1253,14 +1217,16 @@ begin
  then BackupName:= BackupName+ '  '+ DateTimeToStr_IO(Now)+ ExtractFileExt(FileName)
  else BackupName:= BackupName+ ' - backup'+ ExtractFileExt(FileName);
 
- Result:= FileCopyTo(FileName, BackupName, Overwrite);
+ TFile.Copy(FileName, BackupName, Overwrite);
+ result:= TRUE;
 end;
 
 
 { Create a copy of this file, and appends as file extension. Ex: File.txt -> File.txt.bak }
 function BackupFileBak(CONST FileName: string): Boolean;
 begin
- Result:= FileCopyTo(FileName, FileName+'.bak', TRUE);
+ Result:= TRUE;
+ TFile.Copy(FileName, FileName+'.bak', TRUE);
 end;
 
 
@@ -1330,19 +1296,6 @@ end;
 {--------------------------------------------------------------------------------------------------
    FILE TIME
 --------------------------------------------------------------------------------------------------}
-function FileTimeToDateTimeStr(FTime: TFileTime; CONST DFormat, TFormat: string): string;
-var
-  SysTime       : TSystemTime;
-  DateTime      : TDateTime;
-  LocalFileTime : TFileTime;
-begin
-  FileTimeToLocalFileTime(Ftime, LocalFileTime);
-  FileTimeToSystemTime(LocalFileTime, SysTime);
-  DateTime := SystemTimeToDateTime(SysTime);
-  Result   := FormatDateTime(DFormat + ' ' + TFormat, DateTime);
-end;
-
-
 
 { The time must be at the end of the file name.
   Example: 'MyPicture 20-00.jpg'.
@@ -1396,13 +1349,13 @@ end;
    GET FILE SIZE
 --------------------------------------------------------------------------------------------------}
 { Returns the size of all files in a folder }
-function GetFolderSize(CONST aFolder: string; CONST FileType: string= '*.*'; DigSubdirectories: Boolean= TRUE): Int64;
+function GetFolderSize(CONST Folder: string; CONST FileType: string= '*.*'; DigSubdirectories: Boolean= TRUE): Int64;
 VAR
    i: Integer;
    TSL: TStringList;
 begin
  Result:= 0;
- TSL:= ListFilesOf(aFolder, FileType, TRUE, DigSubdirectories);
+ TSL:= ListFilesOf(Folder, FileType, TRUE, DigSubdirectories);
  TRY
   for i:= 0 to TSL.Count-1 DO
    Result:= Result+ GetFileSize(TSL[i]);
@@ -1412,47 +1365,24 @@ begin
 end;
 
 
-{ Works with >4GB files
-  Best
-  Source: http://stackoverflow.com/questions/1642220/getting-size-of-a-file-in-delphi-2010-or-later }
-function GetFileSize(const aFilename: String): Int64;
-VAR
-   info: TWin32FileAttributeData;
-begin
- if GetFileAttributesEx(PWideChar(aFileName), GetFileExInfoStandard, @info)
- then Result:= Int64(info.nFileSizeLow) or Int64(info.nFileSizeHigh shl 32)
- else Result:= -1;
-end;
-
-
-{ Works with >4GB files ?
-  NOT TESTED.
-  Uses Win API.
-  Source: ? }
-function GetFileSize_(CONST aFilename: string): Int64;
-VAR aHandle: THandle;
-begin
- aHandle:= CreateFile(PChar(aFilename), GENERIC_READ, FILE_SHARE_READ, NIL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-
- if aHandle = INVALID_HANDLE_VALUE
- then Result:= -1
- else
-  begin
-   GetFileSizeEx(aHandle, Result);
-   FileClose(aHandle);
-  end;
-end;
-
-
 { Same as GetFileSize but returns the size in b/kb/mb/etc }
-function GetFileSizeFormat(CONST sFilename: string): string;
+function GetFileSizeFormat(CONST FileName: string): string;
 begin
- if FileExists(sFilename)
- then Result:= ccCore.FormatBytes(GetFileSize(sFilename), 2)
+ if FileExists(FileName)
+ then Result:= ccCore.FormatBytes(GetFileSize(FileName), 2)
  else Result:= '0 (file does not exist)';
 end;
 
 
+{ Looks like it works with >4GB files }
+function GetFileSize(CONST FileName: String): Int64;
+begin
+  try
+    Result:= TFile.GetSize(FileName);
+  except
+      Result:= -1; // Return -1 if there is an error
+  end;
+end;
 
 
 
@@ -1461,7 +1391,6 @@ end;
 {--------------------------------------------------------------------------------------------------
    COMPARE
 --------------------------------------------------------------------------------------------------}
-
 { Compare two files }
 function CompareStreams(A, B: TStream; BufferSize: Integer = 4096): Boolean;  // Source: jcl
 var
@@ -1511,130 +1440,6 @@ end;
   Source: http://stackoverflow.com/questions/7002575/how-can-i-set-a-files-compression-attribute-in-delphi }
 
 
-
-
-
-
-{--------------------------------------------------------------------------------------------------
-  FILE ACCESS
-  Also see: IsDiskWriteProtected
---------------------------------------------------------------------------------------------------}
-
-{ Formats a error message complaining that we cannot write to a file. }
-function ShowMsg_CannotWriteTo(CONST sPath: string): string;                                                  { old name: ReturnCannotWriteTo }
-begin
- Result:= 'Cannot write to "'+ sPath+ '"'
-           +LBRK+ 'Possilbe cause:'
-           +CRLF+ ' * the file/folder is read-only'
-           +CRLF+ ' * the file/folder is locked by other program'
-           +CRLF+ ' * you don''t have necessary privileges to write there'
-           +CRLF+ ' * the drive is not ready'
-
-           +LBRK+ 'You can try to:'
-           +CRLF+ ' * use a different folder'
-           +CRLF+ ' * change the privileges (or contact the admin to do it)'
-           +CRLF+ ' * run the program with elevated rights (as administrator)'
-end;
-
-
-{ Returns true if the file cannot be open for reading and writing }                                           { old name: FileInUse }
-function FileIsLockedRW(CONST FileName: string): Boolean;
-VAR hFileRes: HFILE;
-begin
- if NOT FileExists(FileName) then EXIT(FALSE);                       { If files doesn't exist it cannot be locked! }
-
- hFileRes := CreateFile(PChar(FileName), GENERIC_READ OR GENERIC_WRITE, 0, NIL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
- Result := (hFileRes = INVALID_HANDLE_VALUE);
- if NOT Result then CloseHandle(hFileRes);
-end;
-
-
-function FileIsLockedR(CONST FileName: string): Boolean;                   { Returns true if the file cannot be open for reading }
-VAR hFileRes: HFILE;
-begin
- if NOT FileExists(FileName)
- then RAISE exception.Create('File does not exist!'+ CRLFw+ FileName);
-
- hFileRes := CreateFile(PChar(FileName), GENERIC_READ, 0, NIL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
- Result := (hFileRes = INVALID_HANDLE_VALUE);
- if NOT Result then CloseHandle(hFileRes);
-end;
-
-
-{ Returns true if it can write that file to disk. ATTENTION it will overwrite the file if it already exists ! }
-function TestWriteAccess(FileOrFolder: string): Boolean;
-VAR myFile: FILE;
-    wOldErrorMode: Word;                                                 { Stop Windows from Displaying Critical Error Messages:   http://delphi.about.com/cs/adptips2002/a/bltip0302_3.htm }
-    CreateNew: Boolean;
-begin
- Result:= DirectoryExists( ExtractFilePath(FileOrFolder) );
- {       AICI AR TREBUIE SA FORTEZ DIRECTORUL DACA DRIVE-UL E READY }
- if NOT Result then Exit;
-
- wOldErrorMode:= SetErrorMode( SEM_FAILCRITICALERRORS );                 { tell windows to ignore critical errors and save current error mode }
- TRY
-  if IsFolder(FileOrFolder)
-  then FileOrFolder:= Trail(FileOrFolder)+ 'WriteAccessTest.DeleteMe';
-
-  Assign(myFile, FileOrFolder);
-  FileMode:= fmOpenReadWrite;                                            { Read/Write access }
-  CreateNew:= NOT FileExists(FileOrFolder);
-
-  if CreateNew                                                           { The file does not exist, I need to create one }
-  then
-    begin
-     {$I-}
-     Rewrite(myFile);                                                    { Creates a new file and opens it. If an external file with the same name already exists, it is deleted and a new empty file is created in its place. }
-     {$I+}
-    end
-  else
-    begin
-     {$I-}
-     Reset(myFile);                                                      { Opens an existing file. Just open it and close it. I don't write nothing to it. }
-     {$I+}
-    end;
-
-  Result:= (IOResult = 0);
-  if Result then
-   begin
-    Close(myFile);
-    if CreateNew
-    then System.SysUtils.DeleteFile(FileOrFolder);                       { I created, so I delete it. }
-   end;
- FINALLY
-   SetErrorMode( wOldErrorMode );                                        { go back to previous error mode }
- END;
-end;
-
-
-{ Same as TestWriteAccess
-  Source: https://stackoverflow.com/questions/3599256/how-can-i-use-delphi-to-test-if-a-directory-is-writeable }
-function IsDirectoryWriteable(const Dir: string): Boolean;
-var
-  FileName: String;
-  H: THandle;
-begin
-  FileName := IncludeTrailingPathDelimiter(Dir) + 'IsDirectoryWriteable_Check.tmp';
-  if FileExists(FileName)
-  AND NOT DeleteFile(FileName)
-  then RAISE Exception.Create('File is locked!'+ CRLFw+ FileName);
-
-  H := CreateFile(PChar(FileName), GENERIC_READ or GENERIC_WRITE, 0, NIL, CREATE_NEW, FILE_ATTRIBUTE_TEMPORARY or FILE_FLAG_DELETE_ON_CLOSE, 0);
-  Result:= H <> INVALID_HANDLE_VALUE;
-  if Result
-  then CloseHandle(H);
-
-  DeleteFile(FileName);
-end;
-
-
-function CanCreateFile(CONST AString:String): Boolean;
-VAR h : integer;
-begin
-   h := CreateFile(Pchar(AString), GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
-   Result:= h>= 0;
-   if Result then FileClose(h);
-end;
 
 
 
@@ -1861,7 +1666,7 @@ begin
 
  Result:= Trail(CopyTo(Result, 1, i));
 {$ELSE}
- Not available on Mac!
+  raise Exception.Create('Not available on Mac!');
 {$ENDIF}
 end;                                                     { Could also be implemented as: Copy(RootFull, 1, LastPos('\', RootFull)- 1) }
 
@@ -2123,42 +1928,38 @@ end;
 {--------------------------------------------------------------------------------------------------
    FILE COPY/MOVE
 --------------------------------------------------------------------------------------------------}
-
-{ In this function you don't have to provide the full path for the second parameter but only the destination folder }
-function FileCopyQuick(CONST From_FullPath, To_DestFolder: string; Overwrite: boolean): boolean;
+function CopyFile(const SourceName, DestName: string): Boolean;
 begin
- Overwrite:= NOT Overwrite;
- Result:= CopyFile(PChar(From_FullPath), PChar(To_DestFolder+ ExtractFileName(From_FullPath)), Overwrite)
+  try
+    TFile.Copy(SourceName, DestName, True); // Copy file, overwrite if destination exists
+    Result:= TFile.Exists(DestName);       // Check if file exists at destination
+  except
+    Result:= FALSE;
+  end;
 end;
 
 
-function FileCopyTo(CONST sFrom, sTo: string; Overwrite: Boolean): boolean;
+{ In this function you don't have to provide the full path for the second parameter but only the destination folder }
+function FileCopyQuick(CONST From_FullPath, To_DestFolder: string): boolean;
 begin
- Overwrite:= NOT Overwrite;  { Bug: this crapy M$ function has the Owervrite parameter backwards, so we have to flip it. }
- Result:= CopyFile(PChar(sFrom), PChar(sTo), Overwrite);
+  Result:= CopyFile(From_FullPath, To_DestFolder+ ExtractFileName(From_FullPath));
 end;
 
 
 function FileMoveTo(CONST From_FullPath, To_FullPath: string): boolean;
 begin
- {if Overwrite
- then Flag:= MOVEFILE_REPLACE_EXISTING
- else Flag:= xxxx }
- Result:= MoveFileEx(PChar(From_FullPath), PChar(To_FullPath), MOVEFILE_REPLACE_EXISTING);
+  Result:= TRUE;
+  TFile.Move(From_FullPath, To_FullPath);
 end;
 
 
 { Same as FileMoveTo but the user will provide a folder for the second parameter instead of a full path (folder = file name) } { Old name: FileMoveQuick }
 { If destination folder does not exists it is created }
-function FileMoveToDir(CONST From_FullPath, To_DestFolder: string; Overwrite: Boolean): boolean;
-VAR Op: Cardinal;
+function FileMoveToDir(CONST From_FullPath, To_DestFolder: string): boolean;
 begin
- if Overwrite
- then Op:= MOVEFILE_REPLACE_EXISTING
- else Op:= 0;
-
- ForceDirectories(To_DestFolder);       { If destination folder does not exists it won't be created bu also no error will be raised. So, I create it here }
- Result:= MoveFileEx(PChar(From_FullPath), PChar(Trail(To_DestFolder)+ ExtractFileName(From_FullPath)), Op);
+ Result:= TRUE;
+ ForceDirectories(To_DestFolder);
+ TFile.Move(From_FullPath, Trail(To_DestFolder+ ExtractFileName(From_FullPath)));
 end;
 
 
@@ -2187,8 +1988,7 @@ begin
   TSL:= ListFilesOf(FromFolder, FileType, TRUE, DigSubdirectories);
   TRY
     for s in TSL do
-      if NOT FileCopyTo(s, Dst+ ExtractFileName(s), Overwrite)
-      then inc(Result);
+      TFile.Copy(s, Dst+ ExtractFileName(s), Overwrite);
    FINALLY
      FreeAndNil(TSL);
    end;
@@ -2198,7 +1998,7 @@ end;
 
 { Example: MoveFolder('c:\Documents', 'C:\Backups').
   It will overwrite all files in 'ToFolder' without asking.
-  If you want feedback from user use cmIO.MoveFolderMsg }
+  If you want feedback from user use cmIO, cmIO.Win.MoveFolderMsg }
 procedure MoveFolder(CONST FromFolder, ToFolder: String; SilentOverwrite: Boolean);      { Also see: http://www.swissdelphicenter.ch/en/showcode.php?id=152 }
 begin
   if NOT DirectoryExists(ToFolder) then EXIT;
@@ -2231,39 +2031,38 @@ end;
 
 {  Copy only CopyBytes bytes from the begining of the file.
    If destination exists it is overwriten.
-
-   Extended version of JclFileUtils.BuildFileList:
-   function parameter Path can include multiple FileMasks as: c:\aaa\*.pas; pro*.dpr; *.d??
-   FileMask Seperator = ';'
-
-   We could use also Indy WinApi.CopyFile: https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-copyfile?redirectedfrom=MSDN
-   }
-procedure CopyFilePortion(CONST SourceName, DestName: string);
-VAR FDst, FSrc: File;    {TODO 2: Use TFileStream instead of File }
-    Buf: array[1..10*MB] of Byte;
-    NumRead, NumWritten: Integer;
+   We could use also Indy WinApi.CopyFile: https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-copyfile?redirectedfrom=MSDN }
+procedure CopyFileTop(const SourceName, DestName: string; CopyBytes: Int64);    //NOT TESTED YET!
+const
+  BufferSize = 10 * 1024 * 1024;  // 10 MB buffer
+var
+  SrcStream, DestStream: TFileStream;
+  Buffer: TBytes;
+  NumToCopy, TotalCopied: Int64;
 begin
- NumWritten:= 0;
- TRY
-   { SOURCE FILE }
-   AssignFile(FSrc, SourceName);
-   FileMode:= fmOpenRead;                           { Access mode on files opened by the Reset procedure. Be sure to reset FileMode before calling Reset with a read-only file. }
-   Reset     (FSrc, 1);                             { In Delphi code, Reset opens the existing external file with the name assigned to F using the mode specified by the global FileMode variable. An error results if no existing external file of the given name exists or if the file cannot be opened with the current file mode. If F is already open, it is first closed and then reopened. The current file position is set to the beginning of the file.  }
+  SetLength(Buffer, BufferSize);  // Initialize buffer with the specified size
 
-   { DESTINATION FILE }
-   AssignFile(FDst, DestName);
-   Rewrite(FDst, 1);                                { In Delphi code, Rewrite creates a new external file with the name assigned to F. F is a variable of any file type associated with an external file using AssignFile. RecSize is an optional expression that can be specified only if F is an untyped file. If F is an untyped file, RecSize specifies the record size to be used in data transfers. If RecSize is omitted, a default record size of 128 bytes is assumed. If an external file with the same name already exists, it is deleted and a new empty file is created in its place. }
-
-   REPEAT
-    BlockRead (FSrc, Buf, sizeof(Buf), NumRead);
-    BlockWrite(FDst, Buf, NumRead, NumWritten);
-   UNTIL (NumRead = 0) OR (NumWritten <> NumRead);
-
- FINALLY
-   CloseFile(FDst);
-   CloseFile(FSrc);
- END;
+  SrcStream := TFileStream.Create(SourceName, fmOpenRead or fmShareDenyWrite);
+  try
+    DestStream := TFileStream.Create(DestName, fmCreate);
+    try
+      TotalCopied := 0;
+      while TotalCopied < CopyBytes do
+      begin
+        NumToCopy := Min(BufferSize, CopyBytes - TotalCopied);
+        SrcStream.ReadBuffer(Buffer[0], NumToCopy);
+        DestStream.WriteBuffer(Buffer[0], NumToCopy);
+        Inc(TotalCopied, NumToCopy);
+      end;
+    finally
+      DestStream.Free;
+    end;
+  finally
+    SrcStream.Free;
+  end;
 end;
+
+
 
 
 { Append Segment to Master.
@@ -2313,7 +2112,7 @@ end;
   So, the difference between this procedure and AppendTo is that this proc does not modify the original input file(s) }
 procedure MergeFiles(CONST Input1, Input2, Output, Separator: string; SeparatorFirst: Boolean= TRUE);
 begin
- FileCopyTo(Input1, Output, TRUE);
+ TFile.Copy(Input1, Output, TRUE);
  AppendTo(Output, Input2, Separator, SeparatorFirst);
 end;
 
@@ -2349,15 +2148,30 @@ end;
    DELETE FOLDER
 --------------------------------------------------------------------------------------------------}
 { Deletes all files (only files!) in the specified folder and subfolders, but don't delete the folder itself or the subfolders.
-  Works with UNC paths }
-procedure EmptyDirectory(CONST Path: string);
+  Works with UNC paths.
+
+  We need a delay here because the TDirectory.Delete is asynchron.
+  The function seems to return before it finished deleting the folder:
+    Details: http://stackoverflow.com/questions/42809389/tdirectory-delete-seems-to-be-asynchronous?noredirect=1#comment72732153_42809389
+    Answer: Perhaps the Remarks section on the msdn page about RemoveDirectory gives us a clue? (msdn.microsoft.com/en-us/library/windows/desktop/…) The RemoveDirectory function marks a directory for deletion on close. Therefore, the directory is not removed until the last handle to the directory is closed. This indicates that the call may return before the directory has actually been deleted }
+procedure EmptyDirectory(const Path: string);
+CONST
+  MaxWaitTime = 6000; // Maximum time to wait for directory deletion (in milliseconds)
+VAR
+  Stopwatch: TStopwatch;
 begin
- if System.SysUtils.DirectoryExists(Path) then
+  if System.SysUtils.DirectoryExists(Path) then
   begin
-   TDirectory.Delete(Path, TRUE);
-   Sleep(80);        { We need a delay here because the TDirectory.Delete is asynchron. The function seems to return before it finished deleting the folder. Details: http://stackoverflow.com/questions/42809389/tdirectory-delete-seems-to-be-asynchronous?noredirect=1#comment72732153_42809389 }
-   if ForceDirectories(Path) < 0
-   then raise exception.Create('EmptyDirectory - Cannot reconstruct directory!');
+    TDirectory.Delete(Path, True);
+    Stopwatch := TStopwatch.StartNew;
+    while System.SysUtils.DirectoryExists(Path) do
+    begin
+      Sleep(10);   // Time to wait between checks (in milliseconds)
+      if Stopwatch.ElapsedMilliseconds >= MaxWaitTime then
+        RAISE Exception.Create('EmptyDirectory - Directory deletion timed out!'+ IntToStr(MaxWaitTime)+ ' sec');
+    end;
+    if NOT ForceDirectories(Path) < 0
+    then RAISE Exception.Create('EmptyDirectory - Cannot reconstruct directory!');
   end;
 end;
 
@@ -2644,88 +2458,6 @@ end;
 {--------------------------------------------------------------------------------------------------
    DRIVE
 --------------------------------------------------------------------------------------------------}
-function GetVolumeLabel(CONST Drive: Char): string;
-var
-  OldErrorMode: Integer;
-  NotUsed, VolFlags: DWORD;
-  Buf: array [0..MAX_PATH] of Char;    //ok
-begin
-  Result:= '';
-  OldErrorMode := SetErrorMode(SEM_FAILCRITICALERRORS);
-  TRY
-    Buf[0] := #$00;
-    if GetVolumeInformation(PChar(Drive + ':\'), Buf, DWORD(sizeof(Buf)), nil, NotUsed, VolFlags, nil, 0)
-    then SetString(Result, Buf, StrLen(Buf))
-    else Result := '';
-
-    if Drive < 'a'
-    then Result := AnsiUpperCase(Result)                                                           { Converts a string to uppercase. }
-    else Result := AnsiLowerCase(Result);
-
-    Result := Format('[%s]', [Result]);
-  FINALLY
-    SetErrorMode(OldErrorMode);
-  end;
-end;
-
-
-function GetDriveType(CONST Path: string): Integer;   { Path can be something like 'C:\' or '\\netdrive\'. The folder MUST be trailed!!!! }
-begin
- Result:= winapi.windows.GetDriveType(PChar(Trail(Path)));                                   { Help page: https://msdn.microsoft.com/en-us/library/windows/desktop/aa364939%28v=vs.85%29.aspx }
-end;
-
-
-function GetDriveTypeS(CONST Path: string): string;
-begin
- case GetDriveType(path) of
-   DRIVE_UNKNOWN     : Result:= 'The drive type cannot be determined.';
-   DRIVE_NO_ROOT_DIR : Result:= 'The root path is invalid'; // for example, there is no volume mounted at the specified path.
-   DRIVE_REMOVABLE   : Result:= 'Drive Removable';
-   DRIVE_FIXED       : Result:= 'Drive fixed';
-   DRIVE_REMOTE      : Result:= 'Remote Drive';
-   DRIVE_CDROM       : Result:= 'CD ROM Drive';
-   DRIVE_RAMDISK     : Result:= 'RAM Drive';
- end;
-end;
-
-
-{ Not tested with network drives!
-  Source www.gnomehome.demon.nl/uddf/pages/disk.htm#disk0 .
-  Also see community.borland.com/article/0,1410,15921,00.html }
-function DiskInDrive(CONST Path: string): Boolean;
-VAR
-   DriveNumber: Byte;
-   DriveType: Integer;
-begin
-  DriveType:= GetDriveType(Path);
-
-  if DriveType < DRIVE_REMOVABLE
-  then Result:= FALSE                                                                               { This happens when a network drive is offline }
-  else
-    if DriveType = DRIVE_REMOTE
-    then Result:= TRUE                                                                              {TODO 2: I need a function that checks if the network drive is connected }
-    else
-     begin
-      DriveNumber:= Drive2Byte(Path[1]);
-      RESULT:= DiskInDrive(DriveNumber);
-     end;
-end;
-
-
-function DiskInDrive(CONST DriveNo: Byte): BOOLEAN;                                                 { THIS IS VERY SLOW IF THE DISK IS NOT IN DRIVE! The GUI will freeze until the drive responds.    Solution: http://stackoverflow.com/questions/1438923/faster-directoryexists-function }
-VAR ErrorMode  : Word;
-begin
-  RESULT:= FALSE;
-  ErrorMode := SetErrorMode(SEM_FAILCRITICALERRORS);
-  TRY
-    if DiskSize(DriveNo) <> -1
-    THEN RESULT:= TRUE;
-  FINALLY
-    SetErrorMode(ErrorMode);
-  END;
-END;
-
-
 function DriveProtected(CONST Drive: Char):  Boolean;                                               { Attempt to create temporary file on specified drive. If created, the temporary file is deleted. see: http://stackoverflow.com/questions/15312704/gettempfilename-creates-an-empty-file }
 VAR
    Directory: string;
@@ -2743,49 +2475,6 @@ begin
  Result:= CharInSet(Upcase(Drive), ['A'..'Z']);
 end;
 
-
-{ Source: TeamB }
-function ValidDrive(CONST Drive: Char): Boolean;
-VAR mask: String;
-    sRec: TSearchRec;
-    oldMode: Cardinal;
-    retCode: Integer;
-begin
- oldMode:= SetErrorMode( SEM_FAILCRITICALERRORS );
- mask:= Drive+ ':\*.*';
- {$I-}                                                      { don't raise exceptions if we fail }
- retCode:= FindFirst( mask, faAnyfile, SRec );              { %%%% THIS IS VERY SLOW IF THE DISK IS NOT IN DRIVE !!!!!! }
- if retcode= 0
- then FindClose( SRec );
- {$I+}
- Result := Abs(retcode) in [ERROR_SUCCESS,ERROR_FILE_NOT_FOUND,ERROR_NO_MORE_FILES];
- SetErrorMode( oldMode );
-end;
-
-
-function DriveFreeSpace(CONST Drive: CHAR): Int64;
-VAR DriveNo: Byte;
-begin
- DriveNo:= Drive2Byte(drive);
-
- if  ValidDrive(drive)
- AND DiskInDrive(DriveNo)
- then Result:= DiskFree(DriveNo)
- else Result:= 0;
-end;
-
-
-function DriveFreeSpaceS(CONST Drive: CHAR): string;
-begin
- Result:= FormatBytes(DriveFreeSpace(Drive), 1);
-end;
-
-
-{ Same as DriveFreeSpace but this accepts a full filename/directory path. It will automatically extract the drive }
-function DriveFreeSpaceF(CONST FullPath: string): Int64;
-begin
- Result:= DriveFreeSpace(System.IOUtils.TDirectory.GetDirectoryRoot(FullPath)[1]);                  { GetDirectoryRoot returns something like: 'C:\' }
-end;
 
 
 
@@ -2844,39 +2533,6 @@ end;
 
 
 
-
-
-procedure SetCompressionAtr(const FileName: string; const CompressionFormat: byte= 1);
-CONST
-  FSCTL_SET_COMPRESSION = $9C040;
-  {
-  COMPRESSION_FORMAT_NONE = 0;
-  COMPRESSION_FORMAT_DEFAULT = 1;
-  COMPRESSION_FORMAT_LZNT1 = 2; }
-VAR
-   Handle: THandle;
-   Flags: DWORD;
-   BytesReturned: DWORD;
-begin
-  if DirectoryExists(FileName)
-  then Flags := FILE_FLAG_BACKUP_SEMANTICS
-  else
-    if FileExists(FileName)
-    then Flags := 0
-    else raise exception.CreateFmt('%s does not exist', [FileName]);
-
-  Handle := CreateFile(PChar(FileName), GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, Flags, 0);
-  if Handle=0
-  then RaiseLastOSError;
-
-  if not DeviceIoControl(Handle, FSCTL_SET_COMPRESSION, @CompressionFormat, SizeOf(Comp), nil, 0, BytesReturned, nil) then
-   begin
-    CloseHandle(Handle);
-    RaiseLastOSError;
-   end;
-
-  CloseHandle(Handle);
-end;
 
 
  

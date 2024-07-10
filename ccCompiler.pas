@@ -8,6 +8,7 @@ UNIT ccCompiler;
 
    Compiler version definitions
    https://docwiki.embarcadero.com/RADStudio/Sydney/en/Compiler_Versions
+   https://docwiki.embarcadero.com/RADStudio/Athens/en/Conditional_compilation_(Delphi)
 =============================================================================================================}
 
 INTERFACE
@@ -34,7 +35,6 @@ CONST
   CompilerVers_2005    = 17.0;
   CompilerVers_8Net    = 16.0;
   CompilerVers_7       = 15.0;
-
 
 
 IMPLEMENTATION

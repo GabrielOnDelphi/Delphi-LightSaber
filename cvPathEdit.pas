@@ -163,7 +163,7 @@ procedure Register;
 IMPLEMENTATION {$R cvPathEdit.res}
 
 USES
-   cGraphUtil, System.IOUtils, csExecuteShell, ccIO, cmIO, cmIO.win;
+   cGraphUtil, System.IOUtils, csExecuteShell, ccIO, cmIO, cmIO.Win;
 
 
 

@@ -40,7 +40,7 @@ IMPLEMENTATION
 {$R cvFreeDiskSpace.res}
 {$WARN GARBAGE OFF}                                                                                                     {Silence the: 'W1011 Text after final END' warning }
 
-USES Vcl.Controls, ccCore, ccIO;
+USES Vcl.Controls, ccCore, ccIO, cmIO.Win;
 
 
 

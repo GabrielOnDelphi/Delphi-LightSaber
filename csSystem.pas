@@ -33,7 +33,7 @@
 INTERFACE
 USES
    Winapi.Windows, Winapi.Messages, Winapi.WinSock, Winapi.WinSvc,
-   System.Classes, System.SysUtils, System.Win.Registry, System.UITypes, TlHelp32,
+   System.Classes, System.SysUtils, System.Win.Registry, System.UITypes, TlHelp32, IOUtils,
    Vcl.Controls, Vcl.Forms, Vcl.ClipBrd, Vcl.Dialogs;
 
 
@@ -425,7 +425,7 @@ begin
   begin
 
    { COPY FONT TO WINDOWS }
-   FileCopyTo(FontFileName, CopyToWin, FALSE);
+   TFile.Copy(FontFileName, CopyToWin, FALSE);
 
    { WRITE TO REGISTRY }
    RegData := TRegistry.Create;

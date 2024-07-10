@@ -11,6 +11,8 @@
 
 desktop.ini
 uLinks.pas
+/22.0_Linux64_Debug/
+/22.0_Linux_Debug/
 /22.0_Win32_Debug/
 
 
@@ -18,6 +20,5 @@ System/Credits.lnk
 System/Eula.txt
 desktop.ini
 *.exe
-*.exe
-*.exe
 HardwareID/chHardID.pas
+Demo/All Visual Controls/22.0/Win32_Debug/DemoAllVisualControls.exe

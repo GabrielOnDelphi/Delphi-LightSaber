@@ -47,7 +47,7 @@
       FINALLY
         CoUninitialize;
       END;
-    except_
+    except
     END;
 
    In this group:

@@ -21,7 +21,7 @@ UNIT csEnvironmentVar;
 INTERFACE
 USES
    Winapi.Windows, Winapi.Messages, System.Classes,
-   System.SysUtils, System.Win.Registry;
+   System.SysUtils, System.Win.Registry, System.UITypes;
 
 
  function ExpandEnvironmentStrings(CONST Vars: string): string;

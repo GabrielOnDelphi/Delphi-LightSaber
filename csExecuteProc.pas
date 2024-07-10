@@ -49,7 +49,7 @@ USES
 IMPLEMENTATION
 
 USES
-   cmIO.Win, ccCore, cbDialogs;
+   cmIO, cmIO.Win, ccCore, cbDialogs;
 
 
 {--------------------------------------------------------------------------------------------------

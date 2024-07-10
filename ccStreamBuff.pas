@@ -67,7 +67,7 @@ TYPE
      function  ReadDate    : TDateTime;
      function  ReadDouble  : Double;
      function  ReadEnter   : Boolean;
-     function  ReadInteger : Longint;
+     function  ReadInteger : Integer;
      function  ReadInt64   : Int64;
      function  ReadShortInt: ShortInt;
      function  ReadSingle  : Single;
@@ -90,7 +90,7 @@ TYPE
      procedure WriteDate     (d: TDateTime);
      procedure WriteDouble   (d: Double);
      procedure WriteInt64    (i: Int64);
-     procedure WriteInteger  (i: Longint);
+     procedure WriteInteger  (i: Integer);
      procedure WriteShortInt (s: ShortInt);
      procedure WriteSingle   (s: Single);
      procedure WriteSmallInt (s: SmallInt);
@@ -108,10 +108,9 @@ TYPE
      procedure WriteEnter;
 
      { Reverse read }
-     function  RevReadLongword: Cardinal;                                  { REVERSE READ - read 4 bytes and swap their position. For Motorola format. }
-     function  RevReadLongInt : Longint;
+     function  RevReadCardinal: Cardinal;                                  { REVERSE READ - read 4 bytes and swap their position. For Motorola format. }
+     function  RevReadInteger: Integer;
      function  RevReadWord    : Word;                                      { REVERSE READ - read 2 bytes and swap their position. For Motorola format. }
-     function  RevReadInt     : Cardinal;                                  { REVERSE READ - read 4 bytes and swap their position - reads a UInt4 }
      { Header OLD }
      function  ReadMagicVer: Word;
      function  ReadMagicNo  (const MagicNo: AnsiString): Boolean;
@@ -364,17 +363,17 @@ begin
 end;
 
 
-function TCubicBuffStream.ReadStringU: string;
+function TCubicBuffStream.ReadStringU: string;     { Works for both Delphi7 and Delphi UNICODE }
 VAR
    Len: Cardinal;
    UTF: UTF8String;
 begin
- ReadBuffer(Len, 4);                                                                         { Read length }
- 
+ ReadBuffer(Len, 4);                                                        { Read length }
+
  if Len > 0
  then
   begin
-   SetLength(UTF, Len);                                                                      { Read string }
+   SetLength(UTF, Len);                                                     { Read string }
    ReadBuffer(UTF[1], Len);
    Result:= string(UTF);
   end
@@ -428,8 +427,12 @@ end;
 
 
 
+
+
+
+
 {--------------------------------------------------------------------------------------------------
-   SPECIAL STRINGS
+   STRING LIST
 --------------------------------------------------------------------------------------------------}
 
 procedure TCubicBuffStream.WriteStrings(TSL: TStrings);
@@ -490,7 +493,6 @@ end;
 
 
 { BOOLEAN }
-
 procedure TCubicBuffStream.WriteBoolean(b: Boolean);
 begin
  WriteBuffer(b, 1);
@@ -508,7 +510,6 @@ end;
 
 
 { BYTE }
-
 procedure TCubicBuffStream.WriteByte(b: Byte);
 begin
  WriteBuffer(b, 1);
@@ -522,7 +523,6 @@ end;
 
 
 { SIGNED }
-
 procedure TCubicBuffStream.WriteShortInt(s: ShortInt);     //Signed 8bit: -128..127
 begin
  Write(s, 1);
@@ -535,6 +535,7 @@ end;
 
 
 
+{}
 procedure TCubicBuffStream.WriteSmallInt(s: SmallInt);     //Signed 16bit: -32768..32767
 begin
  Write(s, 2);
@@ -550,7 +551,6 @@ end;
 
 
 { WORD }
-
 procedure TCubicBuffStream.WriteWord(w: Word);
 begin
  WriteBuffer(w, 2);
@@ -562,7 +562,7 @@ begin
 end;
 
 
-
+{ CARDINAL }
 procedure TCubicBuffStream.WriteCardinal(c: Cardinal);
 begin
  WriteBuffer(c, 4);
@@ -574,10 +574,10 @@ begin
 end;
 
 
-
+{ INTEGER }
 procedure TCubicBuffStream.WriteInteger(i: Integer);
 begin
- WriteBuffer(i, 4);                                                                          { Longint = Fundamental integer type. Its size will not change! }
+ WriteBuffer(i, 4);
 end;
 
 function TCubicBuffStream.ReadInteger: Integer;
@@ -587,6 +587,7 @@ end;
 
 
 
+{ INT64 }
 procedure TCubicBuffStream.WriteInt64(i: Int64);
 begin
  WriteBuffer(i, 8);
@@ -598,10 +599,11 @@ begin
 end;
 
 
-
+{ UINT64 }
+{ UInt64 Defines a 64-bit unsigned integer type. UInt64 represents a subset of the natural numbers. The range for the UInt64 type is from 0 through 2^64-1. The size of UInt64 is 64 bits across all 64-bit and 32-bit platforms. }
 procedure TCubicBuffStream.WriteUInt64(i: UInt64);
 begin
- WriteBuffer(i, 8);                                                                          { Longint = Fundamental integer type. Its size will not change! }
+ WriteBuffer(i, 8);
 end;
 
 function TCubicBuffStream.ReadUInt64: UInt64;
@@ -658,14 +660,10 @@ begin
  ReadBuffer(Result, 8);
 end;
 
-
 procedure TCubicBuffStream.WriteDate(d: TDateTime);
 begin
- WriteBuffer(d, 8);  { The size of Double is 8 bytes }
+ WriteBuffer(d, 8);             { The size of Double is 8 bytes }
 end;
-
-
-
 
 
 
@@ -678,16 +676,18 @@ end;
 {--------------------------------------------------------------------------------------------------
    READ MACINTOSH
 --------------------------------------------------------------------------------------------------}
-function TCubicBuffStream.RevReadLongword: Cardinal;                                         { REVERSE READ - read 4 bytes and swap their position }
+{ REVERSE READ - read 4 bytes and swap their position
+  LongWord = Cardinal }
+function TCubicBuffStream.RevReadCardinal: Cardinal;    // Old name: RevReadLongWord
 begin
-  ReadBuffer( Result, 4);
-  SwapCardinal(Result);
+  ReadBuffer(Result, 4);
+  SwapCardinal(Result);        { SwapCardinal will correctly swap the byte order of the 32-bit value regardless whether the number is signed or unsigned }
 end;
 
 
-function TCubicBuffStream.RevReadLongInt: Longint;
+function TCubicBuffStream.RevReadInteger: Integer;     // old name: RevReadLongInt
 begin
-  ReadBuffer(Result, 4);
+  ReadBuffer(Result, 4);    // Warning! LongInt is 8 byte on Linux, but I read 4!
   SwapInt(Result);
 end;
 
@@ -695,17 +695,19 @@ end;
 function TCubicBuffStream.RevReadWord: Word;                                                 { REVERSE READ - read 2 bytes and swap their position }   // old name ReadWordSwap
 begin
   ReadBuffer(Result, 2);
-  Result:= Swap(Result);                                                                     { Exchanges high order byte with the low order byte of an integer or word. In Delphi code, Swap exchanges the high-order bytes with the low-order bytes of the argument. X is an expression of type SmallInt, as a 16-bit value, or Word. This is provided for backward compatibility only. }
+  Result:= Swap(Result);                             { Exchanges high order byte with the low order byte of an integer or word. In Delphi code, Swap exchanges the high-order bytes with the low-order bytes of the argument. X is an expression of type SmallInt, as a 16-bit value, or Word. This is provided for backward compatibility only. }
   //Also see: ccBinary.SwapWord
 end;
 
 
-function TCubicBuffStream.RevReadInt: Cardinal;                                              { REVERSE READ - read 4 bytes and swap their position - reads a UInt4. Used in 'UNIT ReadSCF' }
+(*
+// BAD NAME!
+{ Read 4 bytes (UInt4) and swap their position }        // Old name RevReadInt. Use RevReadCardinal instead!                      // Used in 'UNIT ReadSCF'
+function TCubicBuffStream.RevReadInt: Cardinal;                                           
 begin
  ReadBuffer(Result, 4);
  SwapCardinal(Result);
-end;
-
+end;   *)
 
 
 
@@ -724,7 +726,6 @@ end;
       ReadBuffer(s[1], Length(Buffer));
 --------------------------------------------------------------------------------------------------}
 
-
 { Write raw data to file }
 procedure TCubicBuffStream.PushData(CONST s: AnsiString);   //ToDo: this should have an overload that saves an array of bytes instead of AnsiString
 begin
@@ -738,6 +739,10 @@ begin
  //Clear;                                                           { Sets the Memory property to nil (Delphi). Sets the Position property to 0. Sets the Size property to 0. }
  WriteBuffer(Bytes[0], Length(Bytes));
 end;
+
+
+
+
 {--------------------------------------------------------------------------------------------------
    RAW
 --------------------------------------------------------------------------------------------------}
@@ -755,11 +760,12 @@ begin
 end;
 
 
+{ Returns the content of the ENTIRE stream }
 function TCubicBuffStream.AsBytes: TBytes;          { Put the content of the stream into a string }
 begin
- Position:=0;    // Reset stream position
- SetLength(Result, Size);    // Allocate size
- Read(Result[0], Size);    // Read content of stream
+ Position:= 0;            // Reset stream position
+ SetLength(Result, Size); // Allocate size
+ Read(Result[0], Size);   // Read content of stream
 end;
 
 
@@ -770,6 +776,7 @@ begin
  WriteBuffer(Buffer[0], High(Buffer));
 end;
 
+{ Reads a chunk of data from the current pos of the stream. The amount of data to read is also retrieved from the stream. }
 function TCubicBuffStream.ReadByteChunk: TBytes;
 VAR Cnt: Cardinal;
 begin
@@ -777,10 +784,6 @@ begin
  SetLength(Result, Cnt);
  ReadBuffer(Result[0], Cnt);
 end;
-
-
-
-
 
 
 
@@ -818,7 +821,7 @@ VAR Len: Cardinal;
 begin
  ReadBuffer(Len, SizeOf(Len));                                                                         { First, find out how many characters to read }
  Assert(Len<= Size- Position, 'TReadCachedStream: String lenght > string size!');
- Result:= ReadStringA(Len);
+ Result:= ReadStringA(Len);        { Do the actual strign reading }
 end;
 
 
@@ -827,14 +830,13 @@ VAR Len: Cardinal;
 begin
  Len:= Length(s);
  WriteBuffer(Len, SizeOf(Len));
- if Len > 0                                                                                  { This makes sure 's' is not empty (nothing to read). Else we will get a RangeCheckError at runtime }
+ if Len > 0                                                                 { This makes sure 's' is not empty. Else I will get a RangeCheckError at runtime }
  then WriteBuffer(s[1], Len);
 end;
 
- {  STRING WITHOUT LENGTH
+{  STRING WITHOUT LENGTH
    Read a string when its size is unknown (not written in the stream).
-   We need to specify the string size from outside. }   
-
+   We need to specify the string size from outside. }
 function TCubicBuffStream.ReadStringAR(CONST Len: integer): AnsiString;                      { This is the relaxed/safe version. It won't raise an error if there is not enough data (Len) to read }
 VAR ReadBytes: Integer;
 begin

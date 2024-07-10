@@ -31,12 +31,7 @@ package LightCore;
 {$IMPLICITBUILD ON}
 
 requires
-  BindEngine,
-  vclimg,
-  vcl,
-  vclwinx,
-  vclx,
-  VclSmp;
+  BindEngine;
 
 contains
   ccIO in 'ccIO.pas',

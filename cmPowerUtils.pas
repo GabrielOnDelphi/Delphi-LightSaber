@@ -49,6 +49,7 @@ USES
 
  function InitSystemShutdown(CONST ComputerName: WideString; Reboot, Force: Boolean; const Msg: string; TimeOut: Cardinal=0): Boolean;    // Shut down, restart a machine with showing an optional warning message.
 
+ //todo: use the SetThreadExecutionState WinApi function to keep the screen on. It is the function that video players use to keep the screen on while you are watching a film.
 {==================================================================================================
    POWER STATUS / BATTERY
 ==================================================================================================}

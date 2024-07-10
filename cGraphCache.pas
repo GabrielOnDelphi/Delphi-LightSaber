@@ -78,7 +78,7 @@ TYPE
 IMPLEMENTATION
 
 uses
-   ccINIFile, cGraphLoader, ccCore, cbDialogs, cbAppData, ccIO, cmIO;
+   ccINIFile, cGraphLoader, ccCore, cbDialogs, cbAppData, ccIO, cmIO, cmIO.Win;
 
 
 

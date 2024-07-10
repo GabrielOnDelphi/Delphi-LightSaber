@@ -11,39 +11,31 @@
 ==================================================================================================}
 
 INTERFACE
-{$WARN UNIT_PLATFORM ON}   {Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
+{$WARN UNIT_PLATFORM   OFF}   {OFF: Silences the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
+{$WARN SYMBOL_PLATFORM OFF}
 
 USES
   Winapi.Windows, Winapi.ShellAPI, Winapi.ShlObj,
-  System.Win.Registry, System.SysUtils, System.Classes,
+  System.Win.Registry, System.SysUtils, System.Classes, System.IOUtils,
   Vcl.Consts, Vcl.Controls, Vcl.Dialogs, Vcl.Forms, Vcl.FileCtrl;
 
-(*
-CONST
-  {$IFDEF MSWINDOWS}
-    MAXPATH= MAX_PATH- 12;                                          { Check like this:  if Path < MAXPATH then... }
-  {$ELSE}
-    MAXPATH= MAX_PATH;
-  {$ENDIF}   *)
-
-
 {--------------------------------------------------------------------------------------------------
+ 
    SPECIAL FOLDERS
 --------------------------------------------------------------------------------------------------}
  function  GetProgramFilesDir    : string; 
  function  GetDesktopFolder      : string;
  function  GetStartMenuFolder    : string;
- function  GetMyDocumentsAPI: string; deprecated 'Use GetMyDocuments instead';
- function  GetMyPicturesAPI : string; deprecated 'Use GetMyPictures  instead';
- function  GetWinSysDir: string;
- function  GetWinDir: string; { Returns Windows folder }
+ function  GetMyDocumentsAPI     : string; deprecated 'Use GetMyDocuments instead';
+ function  GetMyPicturesAPI      : string; deprecated 'Use GetMyPictures  instead';
+ function  GetWinSysDir          : string;
+ function  GetWinDir             : string; { Returns Windows folder }
 
  function  GetSpecialFolder (CONST OS_SpecialFolder: string): string;                 overload;          { SHELL FOLDERS.  Retrieving the entire list of default shell folders from registry }
  function  GetSpecialFolder (CSIDL: Integer; ForceFolder: Boolean = FALSE): string;   overload;          { uses SHFolder }
  function  GetSpecialFolders: TStringList;                                                               { Get a list of ALL special folders. }
 
- function  FolderIsSpecial  (const Path: string): Boolean;                                               { Returns True if the parameter is a special folder such us 'c:\My Documents' }
-
+ function  FolderIsSpecial  (CONST Path: string): Boolean;                                               { Returns True if the parameter is a special folder such us 'c:\My Documents' }
 
 
 {--------------------------------------------------------------------------------------------------
@@ -60,21 +52,59 @@ CONST
  function GetOpenDialog    (CONST FileName, Filter, DefaultExt: string; CONST Caption: string= ''): TOpenDialog;
 
 
-
 {--------------------------------------------------------------------------------------------------
    API OPERATIONS
 --------------------------------------------------------------------------------------------------}
  function RecycleItem      (CONST ItemName: string; CONST DeleteToRecycle: Boolean= TRUE; CONST ShowConfirm: Boolean= TRUE; CONST TotalSilence: Boolean= FALSE): Boolean;
  function FileOperation    (CONST Source, Dest: string; Op, Flags: Integer): Boolean;                     { Performs: Copy, Move, Delete, Rename on files + folders via WinAPI}
- function GetFileSizeEx    (hFile: THandle; VAR FileSize: Int64): BOOL; stdcall; external kernel32;
+
  function FileAge          (CONST FileName: string): TDateTime;
+ function FileTimeToDateTimeStr   (FTime: TFileTime; CONST DFormat, TFormat: string): string;
+
+ procedure SetCompressionAtr(const FileName: string; const CompressionFormat: byte= 1);
+
+{--------------------------------------------------------------------------------------------------
+   FILE SIZE
+--------------------------------------------------------------------------------------------------}
+ function  GetFileSizeEx    (hFile: THandle; VAR FileSize: Int64): BOOL; stdcall; external kernel32;
+
+{--------------------------------------------------------------------------------------------------
+   FILE ACCESS
+--------------------------------------------------------------------------------------------------}
+ function  FileIsLockedR        (CONST FileName: string): Boolean;
+ function  FileIsLockedRW       (CONST FileName: string): Boolean;                    { Returns true if the file cannot be open for reading and writing } { old name: FileInUse }
+ function  TestWriteAccess      (      FileOrFolder: string): Boolean;                { Returns true if it can write that file to disk. ATTENTION it will overwrite the file if it already exists ! }
+ function  TestWriteAccessMsg   (CONST FileOrFolder: string): Boolean;
+
+
+ function  IsDirectoryWriteable (CONST Dir: string): Boolean;
+ function  CanCreateFile        (CONST AString:String): Boolean;
+ function  ShowMsg_CannotWriteTo(CONST sPath: string): string;                        { Also see  IsDiskWriteProtected }
+
+{--------------------------------------------------------------------------------------------------
+   DRIVES
+--------------------------------------------------------------------------------------------------}
+ function  GetDriveType       (CONST Path: string): Integer;
+ function  GetDriveTypeS      (CONST Path: string): string;                           { Returns drive type asstring }
+ function  GetVolumeLabel     (CONST Drive: Char): string;                            { Returns volume label of a disk }
+
+ { Validity }
+ function  DiskInDrive        (CONST Path: string): Boolean; overload;                { From www.gnomehome.demon.nl/uddf/pages/disk.htm#disk0 . Also see http://community.borland.com/article/0,1410,15921,00.html }
+ function  DiskInDrive        (CONST DriveNo: Byte): Boolean; overload;               { THIS IS VERY SLOW IF THE DISK IS NOT IN DRIVE! The GUI will freeze until the drive responds. }
+ function  ValidDrive         (CONST Drive: Char): Boolean;                           { Peter Below (TeamB). http://www.codinggroups.com/borland-public-delphi-rtl-win32/7618-windows-no-disk-error.html }
+
+
+ {}
+ function  DriveFreeSpace     (CONST Drive: Char): Int64;
+ function  DriveFreeSpaceS    (CONST Drive: Char): string;
+ function  DriveFreeSpaceF    (CONST FullPath: string): Int64;                        { Same as DriveFreeSpace but this accepts a full filename/directory path. It will automatically extract the drive }
+
 
 
 IMPLEMENTATION
+
 USES
-  cbRegistry,
-  cbWinVersion,
-  ccIO;
+  ccCore, cbDialogs, cbRegistry, cbWinVersion, ccIO;
   //DONT CREATE CIRCULAR REFFERENCE TO cbAppData HERE!
 
 
@@ -118,7 +148,6 @@ TFileDialogOption
    fdoNoChangeDir        = Unused.
 _______________________________________________________________________________________________________________________}
 
-{.$WARN SYMBOL_PLATFORM OFF}
 {$IFDEF MSWindows}
 { Keywords: FolderDialog, BrowseForFolder
   stackoverflow.com/questions/19501772
@@ -157,11 +186,6 @@ begin
  then Folder:= Trail(Folder);
 end;
 {$ENDIF}
-{.$WARN SYMBOL_PLATFORM On}
-
-
-
-
 
 
 
@@ -171,13 +195,6 @@ end;
 {--------------------------------------------------------------------------------------------------
    SPECIAL FOLDERS
 --------------------------------------------------------------------------------------------------}
-
-function GetProgramFilesDir: string;
-begin
-  Result:= Trail(RegReadString(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion', 'ProgramFilesDir'));
-end;
-
-
 function GetWinDir: string; { Returns Windows folder }
 VAR  Windir: PChar;
 begin
@@ -199,8 +216,10 @@ begin
 end;
 
 
-
-
+function GetProgramFilesDir: string;
+begin
+  Result:= Trail(RegReadString(HKEY_LOCAL_MACHINE, 'SOFTWARE\Microsoft\Windows\CurrentVersion', 'ProgramFilesDir'));
+end;
 
 
 function GetDesktopFolder: string;
@@ -269,16 +288,6 @@ begin
    FreeAndNil(reg);
   END;
 end;
-
-{
-function GetSpecialFolder_old (CSIDL: Integer): WideString;                                        { DEL
-CONST SHGFP_TYPE_CURRENT = 0;
-VAR path: array [0..Max_Path] of char;
-begin
- if ShGetFolderPath(0, CSIDL, 0, SHGFP_TYPE_CURRENT, @path[0])= S_ok
- then Result:= Trail (Path)
- else Result:= '';
-end;     }
 
 
 {--------------------------------------------------------------------------------------------------
@@ -481,8 +490,46 @@ end;
 
 
 
+procedure SetCompressionAtr(const FileName: string; const CompressionFormat: byte= 1);
+CONST
+  FSCTL_SET_COMPRESSION = $9C040;
+  {
+  COMPRESSION_FORMAT_NONE = 0;
+  COMPRESSION_FORMAT_DEFAULT = 1;
+  COMPRESSION_FORMAT_LZNT1 = 2; }
+VAR
+   Handle: THandle;
+   Flags: DWORD;
+   BytesReturned: DWORD;
+begin
+  if DirectoryExists(FileName)
+  then Flags := FILE_FLAG_BACKUP_SEMANTICS
+  else
+    if FileExists(FileName)
+    then Flags := 0
+    else raise exception.CreateFmt('%s does not exist', [FileName]);
 
-{$WARN SYMBOL_PLATFORM OFF}
+  Handle := CreateFile(PChar(FileName), GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, Flags, 0);
+  if Handle=0
+  then RaiseLastOSError;
+
+  if not DeviceIoControl(Handle, FSCTL_SET_COMPRESSION, @CompressionFormat, SizeOf(Comp), nil, 0, BytesReturned, nil) then
+   begin
+    CloseHandle(Handle);
+    RaiseLastOSError;
+   end;
+
+  CloseHandle(Handle);
+end;
+
+
+
+
+
+
+{--------------------------------------------------------------------------------------------------
+   GET FILE SIZE
+--------------------------------------------------------------------------------------------------}
 { Used by GetSysFileTime in csSystem.pas
   REPLACEMENT
     For System.SysUtils.FileAge which is not working with 'c:\pagefile.sys'.
@@ -507,8 +554,19 @@ begin
    FindClose(SRec);
  END;
 end;
-{$WARN SYMBOL_PLATFORM On}
 
+
+function FileTimeToDateTimeStr(FTime: TFileTime; CONST DFormat, TFormat: string): string;
+var
+  SysTime       : TSystemTime;
+  DateTime      : TDateTime;
+  LocalFileTime : TFileTime;
+begin
+  FileTimeToLocalFileTime(Ftime, LocalFileTime);
+  FileTimeToSystemTime(LocalFileTime, SysTime);
+  DateTime := SystemTimeToDateTime(SysTime);
+  Result   := FormatDateTime(DFormat + ' ' + TFormat, DateTime);
+end;
 
 
 
@@ -638,6 +696,310 @@ end;
 
 
 
+
+
+{--------------------------------------------------------------------------------------------------
+  FILE ACCESS
+  Also see: IsDiskWriteProtected
+--------------------------------------------------------------------------------------------------}
+
+{ Formats a error message complaining that we cannot write to a file. }
+function ShowMsg_CannotWriteTo(CONST sPath: string): string;                                                  { old name: ReturnCannotWriteTo }
+begin
+ Result:= 'Cannot write to "'+ sPath+ '"'
+           +LBRK+ 'Possilbe cause:'
+           +CRLF+ ' * the file/folder is read-only'
+           +CRLF+ ' * the file/folder is locked by other program'
+           +CRLF+ ' * you don''t have necessary privileges to write there'
+           +CRLF+ ' * the drive is not ready'
+
+           +LBRK+ 'You can try to:'
+           +CRLF+ ' * use a different folder'
+           +CRLF+ ' * change the privileges (or contact the admin to do it)'
+           +CRLF+ ' * run the program with elevated rights (as administrator)'
+end;
+
+
+{ Returns true if the file cannot be open for reading and writing }                                           { old name: FileInUse }
+function FileIsLockedRW(CONST FileName: string): Boolean;
+VAR hFileRes: HFILE;
+begin
+ if NOT FileExists(FileName) then EXIT(FALSE);                       { If files doesn't exist it cannot be locked! }
+
+ hFileRes := CreateFile(PChar(FileName), GENERIC_READ OR GENERIC_WRITE, 0, NIL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+ Result := (hFileRes = INVALID_HANDLE_VALUE);
+ if NOT Result then CloseHandle(hFileRes);
+end;
+
+
+function FileIsLockedR(CONST FileName: string): Boolean;                   { Returns true if the file cannot be open for reading }
+VAR hFileRes: HFILE;
+begin
+ if NOT FileExists(FileName)
+ then RAISE exception.Create('File does not exist!'+ CRLFw+ FileName);
+
+ hFileRes := CreateFile(PChar(FileName), GENERIC_READ, 0, NIL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+ Result := (hFileRes = INVALID_HANDLE_VALUE);
+ if NOT Result then CloseHandle(hFileRes);
+end;
+
+
+{ Returns true if it can write that file to disk. ATTENTION it will overwrite the file if it already exists ! }
+function TestWriteAccess(FileOrFolder: string): Boolean;
+VAR myFile: FILE;
+    wOldErrorMode: Word;                                                 { Stop Windows from Displaying Critical Error Messages:   http://delphi.about.com/cs/adptips2002/a/bltip0302_3.htm }
+    CreateNew: Boolean;
+begin
+ Result:= DirectoryExists( ExtractFilePath(FileOrFolder) );
+ {       AICI AR TREBUIE SA FORTEZ DIRECTORUL DACA DRIVE-UL E READY }
+ if NOT Result then Exit;
+
+ wOldErrorMode:= SetErrorMode( SEM_FAILCRITICALERRORS );                 { tell windows to ignore critical errors and save current error mode }
+ TRY
+  if IsFolder(FileOrFolder)
+  then FileOrFolder:= Trail(FileOrFolder)+ 'WriteAccessTest.DeleteMe';
+
+  Assign(myFile, FileOrFolder);
+  FileMode:= fmOpenReadWrite;                                            { Read/Write access }
+  CreateNew:= NOT FileExists(FileOrFolder);
+
+  if CreateNew                                                           { The file does not exist, I need to create one }
+  then
+    begin
+     {$I-}
+     Rewrite(myFile);                                                    { Creates a new file and opens it. If an external file with the same name already exists, it is deleted and a new empty file is created in its place. }
+     {$I+}
+    end
+  else
+    begin
+     {$I-}
+     Reset(myFile);                                                      { Opens an existing file. Just open it and close it. I don't write nothing to it. }
+     {$I+}
+    end;
+
+  Result:= (IOResult = 0);
+  if Result then
+   begin
+    Close(myFile);
+    if CreateNew
+    then System.SysUtils.DeleteFile(FileOrFolder);                       { I created, so I delete it. }
+   end;
+ FINALLY
+   SetErrorMode( wOldErrorMode );                                        { go back to previous error mode }
+ END;
+end;
+
+
+{ Do we have write access to this file/folder? }
+function TestWriteAccessMsg(CONST FileOrFolder: string): Boolean;
+begin
+ Result:= TestWriteAccess(FileOrFolder);
+ if NOT Result
+ then MesajWarning(ShowMsg_CannotWriteTo(FileOrFolder));
+end;
+
+
+
+{ Same as TestWriteAccess
+  Source: https://stackoverflow.com/questions/3599256/how-can-i-use-delphi-to-test-if-a-directory-is-writeable }
+function IsDirectoryWriteable(const Dir: string): Boolean;
+var
+  FileName: String;
+  H: THandle;
+begin
+  FileName := IncludeTrailingPathDelimiter(Dir) + 'IsDirectoryWriteable_Check.tmp';
+  if FileExists(FileName)
+  AND NOT DeleteFile(FileName)
+  then RAISE Exception.Create('File is locked!'+ CRLFw+ FileName);
+
+  H := CreateFile(PChar(FileName), GENERIC_READ or GENERIC_WRITE, 0, NIL, CREATE_NEW, FILE_ATTRIBUTE_TEMPORARY or FILE_FLAG_DELETE_ON_CLOSE, 0);
+  Result:= H <> INVALID_HANDLE_VALUE;
+  if Result
+  then CloseHandle(H);
+
+  DeleteFile(FileName);
+end;
+
+
+function CanCreateFile(CONST AString:String): Boolean;
+VAR h : integer;
+begin
+   h := CreateFile(Pchar(AString), GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
+   Result:= h>= 0;
+   if Result then FileClose(h);
+end;
+
+
+
+
+
+
+{--------------------------------------------------------------------------------------------------
+   FILE COPY/MOVE
+--------------------------------------------------------------------------------------------------}
+function FileMoveTo(CONST From_FullPath, To_FullPath: string): boolean;
+begin
+ {if Overwrite
+ then Flag:= MOVEFILE_REPLACE_EXISTING
+ else Flag:= xxxx }
+ Result:= MoveFileEx(PChar(From_FullPath), PChar(To_FullPath), MOVEFILE_REPLACE_EXISTING);
+end;
+
+
+{ Same as FileMoveTo but the user will provide a folder for the second parameter instead of a full path (folder = file name) } { Old name: FileMoveQuick }
+{ If destination folder does not exists it is created }
+function FileMoveToDir(CONST From_FullPath, To_DestFolder: string; Overwrite: Boolean): boolean;
+VAR Op: Cardinal;
+begin
+ if Overwrite
+ then Op:= MOVEFILE_REPLACE_EXISTING
+ else Op:= 0;
+
+ ForceDirectories(To_DestFolder);       { If destination folder does not exists it won't be created bu also no error will be raised. So, I create it here }
+ Result:= MoveFileEx(PChar(From_FullPath), PChar(Trail(To_DestFolder)+ ExtractFileName(From_FullPath)), Op);
+end;
+
+
+
+
+
+{--------------------------------------------------------------------------------------------------
+   DRIVE
+--------------------------------------------------------------------------------------------------}
+{ Returns drive type. Path can be something like 'C:\' or '\\netdrive\' }
+function GetDriveType(CONST Path: string): Integer;
+begin
+ Result:= winapi.Windows.GetDriveType(PChar(Trail(Path)));    { Help page: https://msdn.microsoft.com/en-us/library/windows/desktop/aa364939%28v=vs.85%29.aspx }
+end;
+
+
+function GetDriveTypeS(CONST Path: string): string;
+begin
+ case GetDriveType(Path) of
+   DRIVE_UNKNOWN     : Result:= 'The drive type cannot be determined.';
+   DRIVE_NO_ROOT_DIR : Result:= 'The root path is invalid'; // for example, there is no volume mounted at the specified path.
+   DRIVE_REMOVABLE   : Result:= 'Drive Removable';
+   DRIVE_FIXED       : Result:= 'Drive fixed';
+   DRIVE_REMOTE      : Result:= 'Remote Drive';
+   DRIVE_CDROM       : Result:= 'CD ROM Drive';
+   DRIVE_RAMDISK     : Result:= 'RAM Drive';
+ end;
+end;
+
+
+{ Source: TeamB }
+function ValidDrive(CONST Drive: Char): Boolean;
+VAR mask: String;
+    sRec: TSearchRec;
+    oldMode: Cardinal;
+    retCode: Integer;
+begin
+ oldMode:= SetErrorMode( SEM_FAILCRITICALERRORS );
+ mask:= Drive+ ':\*.*';
+ {$I-}                                                      { don't raise exceptions if we fail }
+ retCode:= FindFirst( mask, faAnyfile, SRec );              { %%%% THIS IS VERY SLOW IF THE DISK IS NOT IN DRIVE !!!!!! }
+ if retcode= 0
+ then FindClose( SRec );
+ {$I+}
+ Result := Abs(retcode) in [ERROR_SUCCESS,ERROR_FILE_NOT_FOUND,ERROR_NO_MORE_FILES];
+ SetErrorMode( oldMode );
+end;
+
+
+
+
+
+
+function GetVolumeLabel(CONST Drive: Char): string;
+var
+  OldErrorMode: Integer;
+  NotUsed, VolFlags: DWORD;
+  Buf: array [0..MAX_PATH] of Char;    //ok
+begin
+  Result:= '';
+  OldErrorMode := SetErrorMode(SEM_FAILCRITICALERRORS);
+  TRY
+    Buf[0] := #$00;
+    if GetVolumeInformation(PChar(Drive + ':\'), Buf, DWORD(sizeof(Buf)), nil, NotUsed, VolFlags, nil, 0)
+    then SetString(Result, Buf, StrLen(Buf))
+    else Result := '';
+
+    if Drive < 'a'
+    then Result := AnsiUpperCase(Result)                                                           { Converts a string to uppercase. }
+    else Result := AnsiLowerCase(Result);
+
+    Result := Format('[%s]', [Result]);
+  FINALLY
+    SetErrorMode(OldErrorMode);
+  end;
+end;
+
+
+
+
+{ Not tested with network drives!
+  Source www.gnomehome.demon.nl/uddf/pages/disk.htm#disk0 .
+  Also see community.borland.com/article/0,1410,15921,00.html }
+function DiskInDrive(CONST Path: string): Boolean;
+VAR
+   DriveNumber: Byte;
+   DriveType: Integer;
+begin
+  DriveType:= GetDriveType(Path);
+
+  if DriveType < DRIVE_REMOVABLE
+  then Result:= FALSE                                                                               { This happens when a network drive is offline }
+  else
+    if DriveType = DRIVE_REMOTE
+    then Result:= TRUE                                                                              {TODO 2: I need a function that checks if the network drive is connected }
+    else
+     begin
+      DriveNumber:= Drive2Byte(Path[1]);
+      RESULT:= DiskInDrive(DriveNumber);
+     end;
+end;
+
+
+function DiskInDrive(CONST DriveNo: Byte): BOOLEAN;                                                 { THIS IS VERY SLOW IF THE DISK IS NOT IN DRIVE! The GUI will freeze until the drive responds.    Solution: http://stackoverflow.com/questions/1438923/faster-directoryexists-function }
+VAR ErrorMode  : Word;
+begin
+  RESULT:= FALSE;
+  ErrorMode := SetErrorMode(SEM_FAILCRITICALERRORS);
+  TRY
+    if DiskSize(DriveNo) <> -1
+    THEN RESULT:= TRUE;
+  FINALLY
+    SetErrorMode(ErrorMode);
+  END;
+END;
+
+
+
+
+
+function DriveFreeSpace(CONST Drive: CHAR): Int64;
+VAR DriveNo: Byte;
+begin
+ DriveNo:= Drive2Byte(drive);
+
+ if  ValidDrive(drive)
+ AND DiskInDrive(DriveNo)
+ then Result:= DiskFree(DriveNo)
+ else Result:= 0;
+end;
+
+
+function DriveFreeSpaceS(CONST Drive: CHAR): string;
+begin
+ Result:= FormatBytes(DriveFreeSpace(Drive), 1);
+end;
+
+
+{ Same as DriveFreeSpace but this accepts a full filename/directory path. It will automatically extract the drive }
+function DriveFreeSpaceF(CONST FullPath: string): Int64;
+begin
+ Result:= DriveFreeSpace(System.IOUtils.TDirectory.GetDirectoryRoot(FullPath)[1]);                  { GetDirectoryRoot returns something like: 'C:\' }
+end;
 
 
 end.

@@ -59,11 +59,22 @@
          MainForm.Show;
 
      The "AppData.Initializing" Flag
-     Once the program is fully initialized set Initializing to False.
-     Details: Set it to false once your app finished initializing (usually after you finished creating all forms).
-     Used by SaveForm in cvIniFile.pas (and few other places) to signal not to save the form if the application
-     has crashed whill still in the initialization phase.
-     If you don't set it to false earlyer, AppData will set it to false at the end of CreateMainForm
+        Once the program is fully initialized set Initializing to False.
+        Details: Set it to false once your app finished initializing (usually after you finished creating all forms).
+        Used by SaveForm in cvIniFile.pas (and few other places) to signal not to save the form if the application
+        has crashed whill still in the initialization phase.
+        If you don't set it to false earlyer, AppData will set it to false at the end of CreateMainForm
+
+     OnFormCreate
+        OnFormCreate and OnFormShow is the worst place to initialize your code.
+        Instead, your form can implement the LateInitialize message handler.
+        This will be called after the form was fully created and the application finished initializing.
+        Example:
+            TfrmMain = class(TForm)
+             private
+               procedure LateInitialize(VAR Msg: TMessage); message MSG_LateAppInit; // Called after the main form was fully initilized
+            end;
+
  ____________________________________________________________________________________________________________
 
    MainFormOnTaskbar info:
@@ -435,7 +446,7 @@ end;
 { Example: 'C:\Documents and Settings\All Users\Application Data\AppName' }
 function TAppData.AppDataFolderAllUsers: string;
 
-   function GetSpecialFolder: string;  // This was copied here from cmIO.Win.pas because we don't a circular reference to that file.
+   function GetSpecialFolder: string;  // This was copied here from cmIO, cmIO.Win.pas because we don't a circular reference to that file.
    begin
     SetLength(Result, MAX_PATH);
     ShGetFolderPath(0, CSIDL_COMMON_APPDATA, 0, 0, PChar(Result));
@@ -943,7 +954,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    Prompt To Save/Load File
 
-   These functions are also duplicated in cmIO.Win.
+   These functions are also duplicated in cmIO, cmIO.Win.
    The difference is that there, those functions cannot read/write the LastUsedFolder var so the app cannot remmeber last use folder.
 
    Example: PromptToSaveFile(s, cGraphUtil.JPGFtl, 'txt');

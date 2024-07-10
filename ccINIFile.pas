@@ -22,8 +22,7 @@
 INTERFACE
 
 USES
-   System.SysUtils, System.UITypes, System.IniFiles, System.IOUtils,
-   Vcl.Graphics;
+   System.SysUtils, System.UITypes, System.IniFiles, System.IOUtils;
 
 TYPE
   FontStruct = record
@@ -55,16 +54,12 @@ TYPE
     procedure Write      (const Ident, Value: String);                           overload;
 
     { Integer }
-    function  Read       (const Ident: string; Default: Longint= 0): Longint;    overload;
-    procedure Write      (const Ident: string; Value: Longint);                  overload;
+    function  Read       (const Ident: string; Default: Integer= 0): Integer;    overload;
+    procedure Write      (const Ident: string; Value: Integer);                  overload;
 
     { Bool }
     function  Read       (CONST Ident: string; Default: Boolean= TRUE): Boolean; overload;
     procedure Write      (const Ident: string; Value: Boolean);                  overload;
-
-    { Font }
-    function  Read       (CONST Ident: string; Font: TFont): Boolean;            overload;
-    procedure Write      (CONST Ident: string; Font: TFont);                     overload;
 
     function  Read       (CONST Ident: string): FontStruct;                      overload;
     procedure Write      (CONST Ident: string; Font: FontStruct);                overload;
@@ -72,10 +67,6 @@ TYPE
     { Float }
     function  Read       (const Ident: string; Default: Double): Double;         overload;
     procedure Write      (const Ident: string; Value: Double);                   overload;
-
-    { Color }
-    function  ReadColor  (CONST Ident: string; Default: TColor): TColor;
-    procedure WriteColor (CONST Ident: string; Value: TColor);
   end;
 
 
@@ -109,62 +100,8 @@ end;
 
 
 {---------------
-   COLORS
-----------------}
-function TIniFileEx.ReadColor(CONST Ident: string; Default: Tcolor): TColor;
-begin
- Result:= StringToColor(ReadString(FSection, Ident, ColorToString(Default)));
-end;
-
-
-procedure TIniFileEx.WriteColor(CONST Ident: string; Value: Tcolor);
-begin
- WriteString(FSection, Ident, ColorToString(Value));
-end;
-
-
-
-
-{---------------
    FONT
 ----------------}
-procedure TIniFileEx.Write(CONST Ident: string; Font: TFont);
-begin
-  WriteString (FSection, Ident,  '');      // I need this here so I can find the font by its identifier (name). Otherwise it will be filtered out by TIniFileCubic.Read: if ValueExists(FSection, Comp.Name) then
-  WriteString (FSection, Ident + 'Name',    Font.Name);
-  WriteInteger(FSection, Ident + 'CharSet', Font.CharSet);
-  WriteInteger(FSection, Ident + 'Color',   Font.Color);
-  WriteInteger(FSection, Ident + 'Size',    Font.Size);
-  WriteInteger(FSection, Ident + 'Style',   Byte(Font.Style));
-end;
-
-procedure TIniFileEx.Write(CONST Ident: string; Font: FontStruct);
-begin
-  WriteString (FSection, Ident,  '');      // I need this here so I can find the font by its identifier (name). Otherwise it will be filtered out by TIniFileCubic.Read: if ValueExists(FSection, Comp.Name) then
-  WriteString (FSection, Ident + 'Name',    Font.Name);
-  WriteInteger(FSection, Ident + 'Color',   Font.Color);
-  WriteInteger(FSection, Ident + 'Size',    Font.Size);
-  WriteInteger(FSection, Ident + 'Style',   Byte(Font.Style));
-end;
-
-
-{ Result:
-    If the INI file does not contains informations about font then this function will return FALSE
-    and no modification will be done to the 'Font' object passed as parameter. }
-function TIniFileEx.Read(CONST Ident: string; Font: TFont): Boolean;
-begin
- Result:= ValueExists(FSection, Ident+ 'Name');
- if Result then
-   begin
-    Font.Name   := ReadString   (FSection,              Ident+ 'Name',    'Arial');
-    Font.CharSet:= TFontCharSet (ReadInteger (FSection, Ident+ 'CharSet', 0));
-    Font.Color  := TColor       (ReadInteger (FSection, Ident+ 'Color',   0));
-    Font.Size   := ReadInteger  (FSection,              Ident+ 'Size',    8);
-    Font.Style  := TFontStyles (BYTE
-                                (ReadInteger (FSection, Ident+ 'Style',   0)) );
-   end;
-end;
-
 
 //ToDo: Return value of function 'TIniFileEx.Read' might be undefined
 function TIniFileEx.Read(CONST Ident: string): FontStruct;
@@ -178,6 +115,14 @@ begin
    end;
 end;
 
+procedure TIniFileEx.Write(CONST Ident: string; Font: FontStruct);
+begin
+  WriteString (FSection, Ident,  '');      // I need this here so I can find the font by its identifier (name). Otherwise it will be filtered out by TIniFileCubic.Read: if ValueExists(FSection, Comp.Name) then
+  WriteString (FSection, Ident + 'Name',    Font.Name);
+  WriteInteger(FSection, Ident + 'Color',   Font.Color);
+  WriteInteger(FSection, Ident + 'Size',    Font.Size);
+  WriteInteger(FSection, Ident + 'Style',   Byte(Font.Style));
+end;
 
 
 
@@ -250,7 +195,7 @@ end;
 
 
 
-function TIniFileEx.Read(CONST Ident: string; Default: Integer= 0): Longint;
+function TIniFileEx.Read(CONST Ident: string; Default: Integer= 0): Integer;
 begin
  Result:= inherited ReadInteger(FSection, Ident, Default);
 end;

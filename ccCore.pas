@@ -407,13 +407,9 @@ CONST
 
 
 
-
-
-
 IMPLEMENTATION
 
 { Don't add any dependecies to LightSaber here if possible in order to keep ccCore as single-file library }
-
 
 
 

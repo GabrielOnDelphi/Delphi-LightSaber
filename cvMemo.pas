@@ -36,7 +36,9 @@ INTERFACE
 {$WARN GARBAGE OFF}   {Silence the: 'W1011 Text after final END' warning }
 
 USES
-  System.SysUtils, Winapi.Windows, Winapi.Messages, System.Classes, Vcl.StdCtrls, Vcl.Controls, VCL.graphics, Vcl.Themes;
+  Winapi.Windows, Winapi.Messages,
+  System.SysUtils, System.Classes, System.Math, System.Character, System.StrUtils,
+  Vcl.Clipbrd, Vcl.StdCtrls, Vcl.Controls, VCL.graphics, Vcl.Themes;
 
 TYPE
   TTypeMode= (tmInsert, tmOverwrite);
@@ -135,7 +137,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   ccIO, Vcl.Clipbrd, System.Math, Character, System.StrUtils, ccCore;
+   ccIO, cmIO.Win, ccCore;
 
    {
 How to know when the USER changed the text in a TMemo/TEdit?

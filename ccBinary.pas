@@ -53,19 +53,20 @@ CONST
    BINARY
 --------------------------------------------------------------------------------------------------}
  {$IFDEF CPUx86}                                                                                    { Contitional compilation: http://docwiki.embarcadero.com/RADStudio/XE8/en/Conditional_compilation_%28Delphi%29 }
- procedure SwapWord     (VAR TwoBytes: word);                  assembler;
+ procedure SwapWord     (VAR TwoBytes : Word);                 assembler;
  Procedure SwapCardinal (VAR aCardinal: Cardinal);             assembler;                           { Swap32bits unsigned integer}
- Procedure SwapInt      (VAR LongVAR : Longint);               assembler;                           { Swap32bits signed integer} {INTEL= Little ENDIAN}
+ Procedure SwapInt      (VAR aInteger : Longint);              assembler;                           { Swap32bits signed integer} {INTEL= Little ENDIAN}
  {$ELSE}
  procedure SwapWord     (VAR TwoBytes: word);                  inline;
  Procedure SwapCardinal (VAR aCardinal: Cardinal);             inline;                              { Swap32bits unsigned integer}
- Procedure SwapInt      (VAR LongVAR : Longint);               inline;                              { Swap32bits signed integer} {INTEL= Little ENDIAN}
+ Procedure SwapInt      (VAR LongVAR : integer);               inline;                              { Swap32bits signed integer} {INTEL= Little ENDIAN}
  {$ENDIF}
- function  SwapInt64    (Value: Int64 ): Int64;                assembler;
  function  SwapUInt64   (Value: UInt64): UInt64;               inline;  { Not tested }
+ {$IFDEF MSWINDOWS}
+ function  SwapInt64    (Value: Int64 ): Int64;                assembler;
  function  SwapCardinalF(aCardinal: Cardinal): Cardinal;       assembler;                           { reverse the order of bytes in eax }
  function  SwapWordF    (twoBytes: Word): Word;                assembler;
-
+ {$ENDIF}
  function  ReverseByte  (      b: Byte): Byte;                 inline;                              { "Inverts" a binary nunber, so, if the number is "1101", I need to end with "1011".  }
  function  ReverseByte2 (CONST b: Byte): Byte;                 { DO NOT INLINE! }                   { This should be the fastest since it uses a LUT - http://stackoverflow.com/questions/14400845/how-can-i-bit-reflect-a-byte-in-delphi }
  function  ReverseByte3 (CONST b: Byte): Byte;                 inline;
@@ -255,6 +256,7 @@ end;
   READ HERE:: http://codeverge.com/embarcadero.delphi.basm/fastest-best-way-to-reverse-byte-orde/1096017
 -----------------------------------------------------------------------------------------------------------------------}
 
+{$IFDEF MSWINDOWS}
 { WORD }
 function SwapWordF(TwoBytes: word): Word; assembler;    { NOT TESTED! }
 asm
@@ -262,7 +264,8 @@ asm
   mov rax, rcx
   {$ENDIF}
   xchg   al, ah
-end;
+end;  {$ENDIF}
+
 
 {$IFDEF CPUx86}
 { See:
@@ -289,6 +292,7 @@ end;
 
 
 { CARDINAL }
+{$IFDEF MSWINDOWS}
 function SwapCardinalF(aCardinal: Cardinal): Cardinal; assembler;   { NOT TESTED! }
 asm
   {$IFDEF CPUX64}
@@ -296,53 +300,73 @@ asm
   {$ENDIF}
   bswap eax
 end;
+{$ENDIF}
 
 
-{$IFDEF CPUx86}
 { Swap32bits unsigned integer. $AABBCCDD becomes $DDCCBBAA
   See this for details: http://docwiki.embarcadero.com/RADStudio/XE8/en/Conditional_compilation_%28Delphi%29 }
+{ It will correctly swap the byte order of the 32-bit value regardless whether the number is signed or unsigned }
+{$IFDEF CPUx86}
 procedure SwapCardinal(VAR aCardinal: Cardinal); assembler;
 asm
-  mov ecx, [eax]      { This code does NOT work on Win64! }
+  mov ecx, [eax]
   bswap ecx
   mov [eax], ecx
 end;
 {$ELSE}
 procedure SwapCardinal(VAR aCardinal: Cardinal);
 begin
- aCardinal := Swap(aCardinal SHR 16) OR (Swap(aCardinal) SHL 16);     { This code works ok on Win64 }
+ aCardinal := Swap(aCardinal SHR 16) OR (Swap(aCardinal) SHL 16);    { This code works ok on Win64 }
 end;
 {$ENDIF}
 
 
 
-
-function SwapInt64(Value: Int64): Int64;
-{$IF Defined(CPUX86)}
+{ It will correctly swap the byte order of the 32-bit value regardless whether the number is signed or unsigned }
+{$IFDEF CPUx86}   // code cloned also in cmStreamMem
+procedure SwapInt(VAR aInteger: integer);
 asm
- MOV     EDX,[DWORD PTR EBP + 12]
- MOV     EAX,[DWORD PTR EBP + 8]
- BSWAP   EAX
- XCHG    EAX,EDX
- BSWAP   EAX
-end;
-{$ELSEIF Defined(CPUX64)}
-asm
-  MOV    RAX,RCX
-  BSWAP  RAX
+  mov ecx, [eax]
+  bswap ecx
+  mov [eax], ecx
 end;
 {$ELSE}
-  {$Message Fatal 'Unsupported architecture'}  {TODO 2: do this in all functions that are platform conditionated }        { Contitional compilation: http://docwiki.embarcadero.com/RADStudio/XE8/en/Conditional_compilation_%28Delphi%29 }
-  { NOT TESTED! }
-  function SwapInt64 (Value: Int64): Int64;   { Not tested }    { Source: http://www.progtown.com/topic1912234-swap-int64-without-asm-insertions.html }
-  var P: PInteger;
-  begin
-    Result:= (Value shl 32) or (Value shr 32);
-    P:= @Result;
-    P ^:= (Swap (P ^) shl 16) or (Swap (P ^ shr 16));
-    Inc (P);
-    P ^:= (Swap (P ^) shl 16) or (Swap (P ^ shr 16));
-  end;
+procedure SwapInt(VAR LongVar: integer);
+begin
+  LongVar := Swap(LongVar SHR 16) OR (Swap(LongVar) SHL 16);         { This code was tested ok on Win64 }  // https://www.safaribooksonline.com/library/view/delphi-in-a/1565926595/re314.html
+end;
+{$ENDIF}
+
+
+
+{$IFDEF MSWINDOWS}
+function SwapInt64(Value: Int64): Int64;
+ {$IF Defined(CPUX86)}
+ asm
+  MOV     EDX,[DWORD PTR EBP + 12]
+  MOV     EAX,[DWORD PTR EBP + 8]
+  BSWAP   EAX
+  XCHG    EAX,EDX
+  BSWAP   EAX
+ end;
+ {$ELSEIF Defined(CPUX64)}
+ asm
+   MOV    RAX,RCX
+   BSWAP  RAX
+ end;
+ {$ELSE}
+   {$Message Fatal 'Unsupported architecture'}  {TODO 2: do this in all functions that are platform conditionated }        { Contitional compilation: http://docwiki.embarcadero.com/RADStudio/XE8/en/Conditional_compilation_%28Delphi%29 }
+   { NOT TESTED! }
+   function SwapInt64 (Value: Int64): Int64;   { Not tested }    { Source: http://www.progtown.com/topic1912234-swap-int64-without-asm-insertions.html }
+   var P: PInteger;
+   begin
+     Result:= (Value shl 32) or (Value shr 32);
+     P:= @Result;
+     P ^:= (Swap (P ^) shl 16) or (Swap (P ^ shr 16));
+     Inc (P);
+     P ^:= (Swap (P ^) shl 16) or (Swap (P ^ shr 16));
+   end;
+ {$ENDIF}
 {$ENDIF}
 
 
@@ -352,21 +376,6 @@ begin
  { Source: http://stackoverflow.com/questions/2882434/how-to-convert-big-endian-and-how-to-flip-the-highest-bit/2882606#2882606 }
  raise exception.Create('SwapUInt64-Not implemented!');
 end;
-
-
-{$IFDEF CPUx86}   // code cloned also in cmStreamMem
-procedure SwapInt(VAR LongVar: Longint);                                        { It will not work with negative numbers becuase the sign will be swapped also.  Longint = signed 32 integer (classic integer).      Ex: $AABBCCDD becomes $DDCCBBAA }
-asm
-  mov ecx, [eax]                                                                { This code does not work on Win64 }
-  bswap ecx
-  mov [eax], ecx
-end;
-{$ELSE}
-procedure SwapInt(VAR LongVar: Longint);
-begin
-  LongVar := Swap(LongVar SHR 16) OR (Swap(LongVar) SHL 16);                    { This code was tested ok on Win64 }  // https://www.safaribooksonline.com/library/view/delphi-in-a/1565926595/re314.html
-end;
-{$ENDIF}
 
 
 {

@@ -7,7 +7,7 @@ UNIT csKeyboard;
 ==============================================================================================================
 
   System function to access the keyboard
-  Also see csKbShortcuts
+  Also see cmKbShortcuts
 
    In this group:
      * csShell.pas

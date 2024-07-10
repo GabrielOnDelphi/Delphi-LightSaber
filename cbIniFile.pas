@@ -84,8 +84,10 @@ INTERFACE
 
 USES
    System.Classes, System.IniFiles, System.SysUtils, System.UITypes,
-   Vcl.Graphics, Vcl.Forms, Vcl.FileCtrl, Vcl.Menus, Vcl.ExtCtrls, Vcl.NumberBox, Vcl.ComCtrls, Vcl.WinXCtrls, Vcl.Samples.Spin, Vcl.ActnList, Vcl.Dialogs, Vcl.Controls, Vcl.StdCtrls,
+   Vcl.Graphics, Vcl.Forms, Vcl.FileCtrl, Vcl.Menus, Vcl.ExtCtrls, Vcl.NumberBox, Vcl.ComCtrls,
+   Vcl.WinXCtrls, Vcl.Samples.Spin, Vcl.ActnList, Vcl.Dialogs, Vcl.Controls, Vcl.StdCtrls,
    ccINIFile;
+
 
 {.$WARN UNIT_PLATFORM OFF}
 {$WARN GARBAGE OFF}              {Silence the: 'W1011 Text after final END' warning }
@@ -107,9 +109,17 @@ TYPE
     procedure SaveForm (Form: TForm; PosOnly:Boolean= FALSE);       { Save ALL supported controls on this form }
     procedure LoadForm (Form: TForm; PosOnly:Boolean= FALSE);
 
+    { Font - this requires VCL framework so it cannot be moved to ccIniFile! }
+    function  Read       (CONST Ident: string; Font: TFont): Boolean;            overload;
+    procedure Write      (CONST Ident: string; Font: TFont);                     overload;
+
+    { Color - this requires VCL framework so it cannot be moved to ccIniFile! }
+    function  ReadColor  (CONST Ident: string; Default: TColor): TColor;
+    procedure WriteColor (CONST Ident: string; Value: TColor);
+
     { Read/write controls directly }
-    function WriteComp  (Comp: TComponent): Boolean; virtual;
-    function ReadComp   (Comp: TComponent): Boolean; virtual;
+    function  WriteComp  (Comp: TComponent): Boolean; virtual;
+    function  ReadComp   (Comp: TComponent): Boolean; virtual;
     procedure ReadGroup  (WinCtrl: TWinControl);
     procedure WriteGroup (WinCtrl: TWinControl);
   end;
@@ -296,7 +306,7 @@ begin
  then
   begin
    WriteCtrlPos (TControl(Comp));
-   inherited Write('FormFont', TForm(Comp).Font);
+   Write('FormFont', TForm(Comp).Font);
 
    if Comp = Application.MainForm
    then WriteString(Comp.Name, 'LastUsedFolder', AppData.LastUsedFolder); //todo: make it a parameter for TIniFileVcl
@@ -382,7 +392,7 @@ begin
    end else
 
   if Comp.InheritsFrom(TFontDialog)
-  then inherited Write (Comp.Name, TFontDialog(Comp).Font) else
+  then Write (Comp.Name, TFontDialog(Comp).Font) else
 
   if Comp.InheritsFrom(TDirectoryListBox)
   then WriteString(Comp.Owner.Name, Comp.Name, TDirectoryListBox(Comp).Directory)
@@ -410,7 +420,7 @@ begin
      then ShowMessage(Comp.Name+ CRLFw+ 'The main menu will not appear because the form is set to bsDialog!');
 
      ReadCtrlPos(TControl(Comp));
-     inherited Read('FormFont', TForm(Comp).Font);
+     Read('FormFont', TForm(Comp).Font);
 
      if Comp = Application.MainForm
      then AppData.LastUsedFolder:= ReadString(Comp.Name, 'LastUsedFolder', '');
@@ -539,7 +549,7 @@ begin
       else
 
       if Comp.InheritsFrom(TFontDialog)
-      then inherited Read(Comp.Name, TFontDialog(Comp).Font)
+      then Read(Comp.Name, TFontDialog(Comp).Font)
       else
 
       if Comp.InheritsFrom(TShape)
@@ -738,6 +748,60 @@ begin
  END;
 end;
 
+
+
+
+
+
+
+
+
+
+
+
+{ Result:
+    If the INI file does not contains informations about font then this function will return FALSE
+    and no modification will be done to the 'Font' object passed as parameter. }
+function TIniFileVcl.Read(CONST Ident: string; Font: TFont): Boolean;
+begin
+ Result:= ValueExists(FSection, Ident+ 'Name');
+ if Result then
+   begin
+    Font.Name   := ReadString   (FSection,              Ident+ 'Name',    'Arial');
+    Font.CharSet:= TFontCharSet (ReadInteger (FSection, Ident+ 'CharSet', 0));
+    Font.Color  := TColor       (ReadInteger (FSection, Ident+ 'Color',   0));
+    Font.Size   := ReadInteger  (FSection,              Ident+ 'Size',    8);
+    Font.Style  := TFontStyles (BYTE
+                                (ReadInteger (FSection, Ident+ 'Style',   0)) );
+   end;
+end;
+
+procedure TIniFileVcl.Write(CONST Ident: string; Font: TFont);
+begin
+  WriteString (FSection, Ident,  '');      // I need this here so I can find the font by its identifier (name). Otherwise it will be filtered out by TIniFileCubic.Read: if ValueExists(FSection, Comp.Name) then
+  WriteString (FSection, Ident + 'Name',    Font.Name);
+  WriteInteger(FSection, Ident + 'CharSet', Font.CharSet);
+  WriteInteger(FSection, Ident + 'Color',   Font.Color);
+  WriteInteger(FSection, Ident + 'Size',    Font.Size);
+  WriteInteger(FSection, Ident + 'Style',   Byte(Font.Style));
+end;
+
+
+
+
+{---------------
+   COLORS
+----------------}
+function TIniFileVcl.ReadColor(CONST Ident: string; Default: TColor): TColor;
+begin
+ Result:= StringToColor(ReadString(FSection, Ident, ColorToString(Default)));
+end;
+
+
+procedure TIniFileVcl.WriteColor(CONST Ident: string; Value: TColor);
+begin
+ WriteString(FSection, Ident, ColorToString(Value));
+end;
 
 
 

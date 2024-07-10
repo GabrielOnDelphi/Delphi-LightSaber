@@ -13,21 +13,18 @@ INTERFACE
 {$WARN UNIT_PLATFORM ON}   { OFF: Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
 
 USES
-  {$IFDEF MSWINDOWS}
-
-  {$ENDIF}
   System.StrUtils, System.IOUtils, System.SysUtils;
-
 
 
  function  DirectoryExistMsg    (CONST Path: string): Boolean;
  function  FileExistsMsg        (CONST FileName: string): Boolean;
- function  PathHasValidColon    (const Path: string): Boolean;
  function  ForceDirectoriesMsg  (CONST FullPath: string): Boolean;                                 { RETURNS:  -1 = Error creating the directory.   0 = Directory already exists.  +1 = Directory created succesfully }
  procedure MoveFolderMsg        (CONST FromFolder, ToFolder: String; SilentOverwrite: Boolean);
  function  DeleteFileWithMsg    (CONST FileName: string): Boolean;
- function  TestWriteAccessMsg   (CONST FileOrFolder: string): Boolean;                                { USER HAS WRITE ACCESS? Returns an error message instead of boolean}
+ {$IFDEF MSWINDOWS}
  function  GetPosAfterExtendedPrefix(CONST Path: string): Integer;
+ function  PathHasValidColon    (const Path: string): Boolean;
+ {$ENDIF}
 
 
 IMPLEMENTATION
@@ -143,14 +140,6 @@ begin
 end;
 
 
-
-{ Do we have write access to this file/folder? }
-function TestWriteAccessMsg(CONST FileOrFolder: string): Boolean;
-begin
- Result:= TestWriteAccess(FileOrFolder);
- if NOT Result
- then MesajWarning(ShowMsg_CannotWriteTo(FileOrFolder));
-end;
 
 
 end.
