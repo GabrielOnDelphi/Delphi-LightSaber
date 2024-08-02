@@ -24,7 +24,7 @@ INTERFACE
 
 USES
   Winapi.Windows, System.SysUtils, Winapi.Messages, System.Classes, Vcl.Graphics, Vcl.Grids, Vcl.ComCtrls, Vcl.Controls,
-  cGraphLoader.Thread, cGraphBitmap, cGraphResize, cGraphResizeParams;
+  cGraphLoader.Thread, ccColors, cGraphBitmap, cGraphResize, cGraphResizeParams;
 
 
 TYPE

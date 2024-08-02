@@ -39,16 +39,16 @@ requires
   LightCore;
 
 contains
-  llLogUtils in 'llLogUtils.pas',
-  llRichLog in 'llRichLog.pas',
-  llRichLogTrack in 'llRichLogTrack.pas',
   FormLog in 'FormLog.pas',
   cbAppData in 'cbAppData.pas',
   cbIniFile in 'cbIniFile.pas',
   cbCenterControl in 'cbCenterControl.pas',
   cbRegistry in 'cbRegistry.pas',
   cbDialogs in 'cbDialogs.pas',
-  cbWinVersion in 'cbWinVersion.pas';
+  cbWinVersion in 'cbWinVersion.pas',
+  llLogUtils in 'llLogUtils.pas',
+  llRichLog in 'llRichLog.pas',
+  llRichLogTrack in 'llRichLogTrack.pas';
 
 end.
 

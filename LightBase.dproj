@@ -117,9 +117,6 @@
         <DCCReference Include="vclx.dcp"/>
         <DCCReference Include="VclSmp.dcp"/>
         <DCCReference Include="LightCore.dcp"/>
-        <DCCReference Include="llLogUtils.pas"/>
-        <DCCReference Include="llRichLog.pas"/>
-        <DCCReference Include="llRichLogTrack.pas"/>
         <DCCReference Include="FormLog.pas"/>
         <DCCReference Include="cbAppData.pas"/>
         <DCCReference Include="cbIniFile.pas"/>
@@ -127,6 +124,9 @@
         <DCCReference Include="cbRegistry.pas"/>
         <DCCReference Include="cbDialogs.pas"/>
         <DCCReference Include="cbWinVersion.pas"/>
+        <DCCReference Include="llLogUtils.pas"/>
+        <DCCReference Include="llRichLog.pas"/>
+        <DCCReference Include="llRichLogTrack.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

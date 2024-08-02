@@ -26,7 +26,7 @@ UNIT clLogUtils;
 INTERFACE
 
 USES
-   System.SysUtils, Vcl.Graphics, ccCore, csSystem, cbDialogs;
+   System.SysUtils, Vcl.Graphics, ccCore, csSystem, cbDialogs, ccColors;
 
 TYPE
   TLogVerb= (lvVerbose, lvHints, lvInfos, lvImportant, lvWarnings, lvErrors);

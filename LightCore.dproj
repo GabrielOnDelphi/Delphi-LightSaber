@@ -119,6 +119,7 @@
         <DCCReference Include="ccINIFile.pas"/>
         <DCCReference Include="ccCompiler.pas"/>
         <DCCReference Include="ccStreamMem.pas"/>
+        <DCCReference Include="ccColors.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

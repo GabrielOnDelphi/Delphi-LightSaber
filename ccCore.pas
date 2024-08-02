@@ -72,7 +72,6 @@ CONST
    Vowels            = ['a', 'e', 'i','o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', 'Y'];
    LettersSpecial    = [#10, #13, #9]; { CR, LF, TAB }
 
-
 { Indexes }
 CONST
    IndexedIn1        = 1;
@@ -118,6 +117,9 @@ TYPE
   TStringArray       = array of string;
   TBytesArray        = System.SysUtils.TBytes;
   TNotifyMsgEvent    = procedure(Self: TObject; Msg: string) of object;    { For general use }
+
+
+
 
 
 {=============================================================================================================
@@ -2145,6 +2147,12 @@ end;
 
 
 
+
+
+
+
+
+
 { RANDOM/UNIQUE STRINGS }
 function GenerateRandString(minLen, maxLen: Integer): string;      { This will return all printable craracters (from 65 to 125) }      { YOU MUST call randomize before calling this function! }
 var
@@ -2174,7 +2182,7 @@ end;
  }
 function GenerateUniqueString(Len: Integer=32): string;
 begin
- if Len > 32 then Len:= 32;
+ Assert(Len <= 32, 'Max 32 chars allowed in unique strings!');
 
  Result:= System.IOUtils.TPath.GetGUIDFileName;
  Result:= system.COPY(Result, 1, Len);

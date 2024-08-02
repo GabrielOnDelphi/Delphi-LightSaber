@@ -44,7 +44,7 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
-USES cGraphUtil;
+USES ccColors, cGraphUtil;
 
 
 

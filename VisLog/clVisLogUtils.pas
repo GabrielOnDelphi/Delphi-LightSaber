@@ -26,6 +26,7 @@ function Verbosity2Color (Verbosity: TLogVerbLvl): TColor;
 
 
 IMPLEMENTATION
+USES cccolors;
 
 
 

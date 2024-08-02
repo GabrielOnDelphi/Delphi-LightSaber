@@ -297,7 +297,7 @@ VAR
 begin
  Stream:= TCubicBuffStream.CreateRead(FullPath);
  TRY
-   Result:= Stream.ReadHeader(MagicNo, MagicVer);
+   Result:= Stream.ReadHeaderTry(MagicNo, MagicVer);
    if NOT Result then EXIT;
 
    Lines.ReadFromStream(Stream);

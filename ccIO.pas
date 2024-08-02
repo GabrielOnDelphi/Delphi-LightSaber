@@ -1686,7 +1686,7 @@ end;                                                     { Could also be impleme
 --------------------------------------------------------------------------------------------------}
 
 { Write Unicode strings to a UTF8 file.
-  FileName must be a fulll path. If the path does not exist it is created.
+  FileName must be a full path. If the path does not exist it is created.
   It can also write a preamble.
   Based on: http://stackoverflow.com/questions/35710087/how-to-save-classic-delphi-string-to-disk-and-read-them-back/36106740#36106740  }
 procedure StringToFile(CONST FileName: string; CONST aString: String; CONST WriteOp: TWriteOperation= woOverwrite; WritePreamble: Boolean= FALSE);
@@ -1723,7 +1723,7 @@ end;
 
 
 { Tries to autodetermine the file type (ANSI, UTF8, UTF16, etc). Works with UNC paths.
-  If the file does not exists it raises an error unless, IgnoreExists is True.
+  If the file does not exist, it raises an error unless, IgnoreExists is True.
 
   If it cannot detect the correct encoding automatically, we can force it to what we want by setting the second paramater.
       Example: System.SysUtils.TEncoding.UTF8
@@ -2041,7 +2041,6 @@ var
   NumToCopy, TotalCopied: Int64;
 begin
   SetLength(Buffer, BufferSize);  // Initialize buffer with the specified size
-
   SrcStream := TFileStream.Create(SourceName, fmOpenRead or fmShareDenyWrite);
   try
     DestStream := TFileStream.Create(DestName, fmCreate);
@@ -2061,7 +2060,6 @@ begin
     SrcStream.Free;
   end;
 end;
-
 
 
 

@@ -40,7 +40,8 @@ contains
   ccStreamBuff in 'ccStreamBuff.pas',
   ccINIFile in 'ccINIFile.pas',
   ccCompiler in 'ccCompiler.pas',
-  ccStreamMem in 'ccStreamMem.pas';
+  ccStreamMem in 'ccStreamMem.pas',
+  ccColors in 'ccColors.pas';
 
 end.
 

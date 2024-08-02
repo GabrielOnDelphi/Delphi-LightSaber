@@ -186,9 +186,10 @@ TYPE
     function  RunFileAtWinStartUp(CONST FilePath: string; Active: Boolean): Boolean;
 
     procedure CreateMainForm (aClass: TFormClass; OUT Reference; aShow: Boolean; MainFormOnTaskbar: Boolean= TRUE);
-    procedure CreateForm     (aClass: TFormClass; OUT Reference; aShow: Boolean);
-    procedure CreateFormModal(aClass: TFormClass; OUT Reference);    overload;   // Do I need this?
-    procedure CreateFormModal(aClass: TFormClass);                   overload;
+    procedure CreateForm     (aClass: TFormClass; OUT Reference; aShow: Boolean); overload;
+    function  CreateForm     (aClass: TFormClass; aShow: Boolean): TForm;         overload;
+    procedure CreateFormModal(aClass: TFormClass; OUT Reference);                 overload;   // Do I need this?
+    procedure CreateFormModal(aClass: TFormClass);                                overload;
 
     procedure SetMaxPriority;
     procedure HideFromTaskbar;
@@ -356,6 +357,19 @@ begin
   then TForm(Reference).Font:= Self.Font;
 
   if aShow then TForm(Reference).Show;
+end;
+
+
+function TAppData.CreateForm(aClass: TFormClass; aShow: Boolean): TForm;
+begin
+  Assert(Application.MainForm <> NIL, 'Probably you forgot to create the main form with AppData.CreateMainForm!');
+
+  Application.CreateForm(aClass, Result);
+
+  if TForm(Result) <> Application.MainForm
+  then TForm(Result).Font:= Self.Font;
+
+  if aShow then TForm(Result).Show;
 end;
 
 

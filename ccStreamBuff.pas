@@ -118,10 +118,10 @@ TYPE
      procedure WriteMagicVer(const MVersion: Word);
 
      { Header NEW }
-     function  ReadHeader (CONST Signature: AnsiString): Word;               overload;
-     procedure ReadHeaderE(CONST Signature: AnsiString; Version: Word);      overload;
-     function  ReadHeaderB(CONST Signature: AnsiString; Version: Word): Boolean;
-     procedure WriteHeader(CONST Signature: AnsiString; Version: Word);
+     function  ReadHeader   (CONST Signature: AnsiString): Word;               overload;
+     procedure ReadHeader   (CONST Signature: AnsiString; Version: Word);      overload;
+     function  ReadHeaderTry(CONST Signature: AnsiString; Version: Word): Boolean;
+     procedure WriteHeader  (CONST Signature: AnsiString; Version: Word);
 
      function  ReadCheckPoint: Boolean;
      procedure WriteCheckPoint;
@@ -283,7 +283,7 @@ end;
   Read the first x chars in a file and compares it with MagicNo.
   If matches then reads another reads the FileVersion word.
   Returns the FileVersion. If magicno fails, it returns zero }
-function TCubicBuffStream.ReadHeaderB(CONST Signature: AnsiString; Version: Word): Boolean;
+function TCubicBuffStream.ReadHeaderTry(CONST Signature: AnsiString; Version: Word): Boolean; // old name: ReadHeaderB
 begin
  Assert(Signature > '', 'Signature is empty!');
  Assert(Version   > 0 , 'Version must be > 0');
@@ -310,8 +310,9 @@ end;
 
 
 { Same as above but does the check internally and raises and exception if header sign/ver does not match }
-procedure TCubicBuffStream.ReadHeaderE(CONST Signature: AnsiString; Version: Word);
+procedure TCubicBuffStream.ReadHeader(CONST Signature: AnsiString; Version: Word); // Old name: ReadHeaderE
 begin
+ Assert(Size > 0, 'File is empty!');
  Assert(Signature > '', 'Signature is empty!');
 
  VAR Sgn:= ReadStringA;
@@ -320,10 +321,10 @@ begin
    begin
      VAR v:= ReadWord;
      if v <> Version
-     then RAISE Exception.Create('Invalid file version in '+ FileName+ CRLFw+ IntToStr(Version)+ ' expected. '+ IntToStr(v)+ ' found.');
+     then RAISE Exception.Create('Invalid file version in '+ FileName+ CRLF+ IntToStr(Version)+ ' expected. '+ IntToStr(v)+ ' found.');
    end
  else
-   RAISE Exception.Create('Invalid file signature in '+ FileName+ CRLFw+ string(Signature)+ ' expected. '+ string(Sgn)+ ' found.');
+   RAISE Exception.Create('Invalid file signature in '+ FileName+ CRLF+ string(Signature)+ ' expected. '+ string(Sgn)+ ' found.');
 end;
 
 

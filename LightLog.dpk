@@ -25,26 +25,26 @@ package LightLog;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'LightLog'}
+{$DESCRIPTION 'LightSaber - Log'}
 {$LIBSUFFIX AUTO}
 {$IMPLICITBUILD ON}
 
 requires
   rtl,
   vcl,
-  LightCore;
+  LightCore,
+  vclx,
+  LightBase,
+  LightCommon;
 
 contains
-  clRichLogTrack in 'clRichLogTrack.pas',
-  clRichLog in 'clRichLog.pas',
-  clRamLog in 'clRamLog.pas',
-  clLogUtils in 'clLogUtils.pas',
-  clVisLog in 'clVisLog.pas',
-  clVisLogLines in 'clVisLogLines.pas',
-  clVisLogRam in 'clVisLogRam.pas',
-  clVisLogTrack in 'clVisLogTrack.pas',
-  clVisLogUtils in 'clVisLogUtils.pas',
-  FormLog in 'FormLog.pas';
+  clRamLog in 'VisLog\clRamLog.pas',
+  clLogUtils in 'VisLog\clLogUtils.pas',
+  clVisLog in 'VisLog\clVisLog.pas',
+  clVisLogLines in 'VisLog\clVisLogLines.pas',
+  clVisLogRam in 'VisLog\clVisLogRam.pas',
+  clVisLogTrack in 'VisLog\clVisLogTrack.pas',
+  clVisLogUtils in 'VisLog\clVisLogUtils.pas';
 
 end.
 

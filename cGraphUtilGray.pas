@@ -8,6 +8,8 @@
    Functions for converting color images to gray-scale
 -------------------------------------------------------------------------------------------------------------}
 
+//see: https://stackoverflow.com/questions/78343032/convert-color-bitmap-to-pf8bit-grayscale/78344683?noredirect=1#comment138123752_78344683
+
 INTERFACE
 
 USES

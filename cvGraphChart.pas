@@ -15,8 +15,9 @@ UNIT cvGraphChart;
 INTERFACE
 
 USES
-  System.Types, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.ExtCtrls, System.UITypes, Generics.Collections,
-  cGraphUtil;
+  System.Types, System.SysUtils, System.Classes, System.UITypes, Generics.Collections,
+  Vcl.Graphics, Vcl.Controls, Vcl.ExtCtrls,
+  ccColors, cGraphUtil;
 
 TYPE
   TPlotType= set of (plDotValues,                                { Show a label next to each data point to display its value }

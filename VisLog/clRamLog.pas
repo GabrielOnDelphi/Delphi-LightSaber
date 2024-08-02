@@ -18,6 +18,8 @@ UNIT clRamLog;
      c:\Myprojects\Packages\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
+//Note: use clVisLogRam is you want support for timestamp
+
 INTERFACE
 
 USES
