@@ -44,7 +44,7 @@ UNIT ccStreamBuff;
       When reading character by character, the new System.Classes.TBufferedFileStream seems to be 210% faster than ccStreamBuffHefferman
 
    Tester:
-      CubicCommonControls\Demo\cc StreamBuff\
+      c:\MyProjects\packages old\LightSaber  - keeeep\Demo\_ccStreamBuff.pas\BigSearch.dpr
 =============================================================================================================}
 
 {$WARN DUPLICATE_CTOR_DTOR OFF}
@@ -52,21 +52,19 @@ UNIT ccStreamBuff;
 INTERFACE
 
 USES
-   System.Types, System.SysUtils, System.Classes;
+   System.Types, System.SysUtils, System.Math, System.Classes;
 
 TYPE
   TCubicBuffStream= class(System.Classes.TBufferedFileStream)
-  private
+    private
     public
      MagicNo: AnsiString; // Obsolete!
 
      function  ReadBoolean : Boolean;
      function  ReadByte    : Byte;
-     function  ReadByteChunk: TBytes;
      function  ReadCardinal: Cardinal;
      function  ReadDate    : TDateTime;
      function  ReadDouble  : Double;
-     function  ReadEnter   : Boolean;
      function  ReadInteger : Integer;
      function  ReadInt64   : Int64;
      function  ReadShortInt: ShortInt;
@@ -83,6 +81,8 @@ TYPE
      function  ReadStrings : TStringList;     overload;
      procedure ReadStrings  (TSL: TStrings);  overload;
      function  ReadStringUNoLen (CONST Len: Integer): string;
+     function  ReadEnter   : Boolean;
+     function  ReadByteChunk: TBytes;
 
      procedure WriteBoolean  (b: Boolean);
      procedure WriteByte     (b: Byte);
@@ -101,17 +101,17 @@ TYPE
      procedure WriteStringU     (CONST s: string);
      procedure WriteStringANoLen(CONST s: AnsiString);                     { Write the string but don't write its length }
      procedure WriteStringUNoLen(CONST s: string);
-     procedure WriteByteChunk   (CONST Buffer: TByteDynArray);
      procedure WriteChars       (CONST s: AnsiString);   overload;
      procedure WriteChars       (CONST s: string);       overload;
-
      procedure WriteEnter;
+     procedure WriteByteChunk   (CONST Buffer: TByteDynArray);
 
      { Reverse read }
      function  RevReadCardinal: Cardinal;                                  { REVERSE READ - read 4 bytes and swap their position. For Motorola format. }
      function  RevReadInteger: Integer;
      function  RevReadWord    : Word;                                      { REVERSE READ - read 2 bytes and swap their position. For Motorola format. }
-     { Header OLD }
+
+     { Old Header. Obsolete! }
      function  ReadMagicVer: Word;
      function  ReadMagicNo  (const MagicNo: AnsiString): Boolean;
      procedure WriteMagicNo (const MagicNo: AnsiString);
@@ -123,11 +123,18 @@ TYPE
      function  ReadHeaderTry(CONST Signature: AnsiString; Version: Word): Boolean;
      procedure WriteHeader  (CONST Signature: AnsiString; Version: Word);
 
-     function  ReadCheckPoint: Boolean;
-     procedure WriteCheckPoint;
+     { Check point }
+     procedure ReadCheckPointE(CONST s: AnsiString= '');     // Raises an exception
+     function  ReadCheckPoint (CONST s: AnsiString= ''): Boolean;
+     procedure WriteCheckPoint(CONST s: AnsiString= '');
 
+     { Padding }
+     procedure ReadPaddingE (CONST Bytes: Integer);          //Raises an exception if the buffer does not contain the signature
      procedure ReadPadding  (CONST Bytes: Integer);
-     procedure WritePadding (CONST Bytes: Integer{= 1024});
+     procedure WritePadding (CONST Bytes: Integer);
+     procedure WritePadding0(CONST Bytes: Integer);
+     procedure ReadPaddingDef;
+     procedure WritePaddingDef;
 
      { BT }
      function  AsBytes: TBytes;
@@ -234,14 +241,20 @@ CONST
 
 
 { For debugging. Write a scheckpoint entry (just a string) from time to time to your file so if you screwup, you check from time to time to see if you are still reading the correct data. }
-function TCubicBuffStream.ReadCheckPoint: Boolean;
+procedure TCubicBuffStream.ReadCheckPointE(CONST s: AnsiString= '');
 begin
- Result:= ReadStringA = ctCheckPoint;
+  if NOT ReadCheckPoint(s)
+  then raise Exception.Create('Checkpoint failure! '+ crlf+ string(s));
 end;
 
-procedure TCubicBuffStream.WriteCheckPoint;
+function TCubicBuffStream.ReadCheckPoint(CONST s: AnsiString= ''): Boolean;
 begin
- WriteStringA(ctCheckPoint);
+  Result:= ReadStringA = ctCheckPoint+ s;
+end;
+
+procedure TCubicBuffStream.WriteCheckPoint(CONST s: AnsiString= '');
+begin
+  WriteStringA(ctCheckPoint+ s);
 end;
 
 
@@ -252,18 +265,21 @@ end;
    It is important to read/write some padding bytes.
    If you later (as your program evolves) need to save extra data into your file, you use the padding bytes. This way you don't need to change your file format.
 --------------------------------------------------------------------------------------------------}
-procedure TCubicBuffStream.WritePadding(CONST Bytes: Integer);
+
+// Writes zeroes as padding bytes.
+procedure TCubicBuffStream.WritePadding0(CONST Bytes: Integer);
 VAR b: TBytes;
 begin
  if Bytes> 0 then
   begin
    SetLength(b, Bytes);
    FillChar (b[0], Bytes, #0);
+
    WriteBuffer(b[0], Bytes);
   end;
 end;
 
-
+// Reads the padding bytes back and does not check them for validity
 procedure TCubicBuffStream.ReadPadding(CONST Bytes: Integer);
 VAR b: TBytes;
 begin
@@ -274,6 +290,68 @@ begin
   end;
 end;
 
+
+CONST
+   CheckpointStr: AnsiString= '<LightSaber - Buffer of 100 bytes. Pattern check -> Raises exception if the pattern not found!! ###>'; //This string is 100 chars long
+
+// Write a string as padding bytes.
+procedure TCubicBuffStream.WritePadding(CONST Bytes: Integer);
+VAR
+  b: TBytes;
+  CheckPointSize: Integer;
+  i: Integer;
+begin
+  SetLength(b, Bytes);
+  CheckPointSize:= Length(CheckpointStr);
+  // Copy the string to the byte array (up to the available bytes or string length)
+  for i := 0 to Min(Bytes, CheckPointSize) - 1
+    do b[i] := Byte(CheckpointStr[i + 1]);
+
+  // Fill the rest of the buffer with zeros
+  if Bytes > CheckPointSize
+  then FillChar(b[CheckPointSize], Bytes - CheckPointSize, #0);
+  // Write the buffer to the stream
+  WriteBuffer(b[0], Bytes);
+end;
+
+
+ //Raises an exception if the buffer does not contain the signature string (CheckpointStr)
+procedure TCubicBuffStream.ReadPaddingE(CONST Bytes: Integer);
+VAR
+  b: TBytes;
+  CheckPointSize: Integer;
+  i: Integer;
+begin
+  if Bytes > 0 then
+  begin
+    SetLength(b, Bytes);
+    ReadBuffer(b[0], Bytes);
+    CheckPointSize := Length(CheckpointStr);
+    // Check if the beginning of the buffer matches the string
+    if CheckPointSize <= Bytes then
+      for i := 0 to CheckPointSize - 1 do
+        if b[i] <> Byte(CheckpointStr[i + 1]) then
+        begin
+          RAISE Exception.Create('Invalid checkpoint!!');
+          Break;
+        end;
+  end;
+end;
+
+
+CONST
+   PaddingSize = 100; // 100 bytes. Enough for 18 Int64 variables. NEVER-EVER MODIFY THIS CONSTANT! All files saved with this constant will not work anymore.
+
+
+procedure TCubicBuffStream.ReadPaddingDef;
+begin
+  ReadPaddingE(PaddingSize);
+end;
+
+procedure TCubicBuffStream.WritePaddingDef;
+begin
+  WritePadding(PaddingSize);
+end;
 
 
 
@@ -461,7 +539,7 @@ end;
    ENTER
 --------------------------------------------------------------------------------------------------}
 
-function TCubicBuffStream.ReadEnter: Boolean;   { Returns TRUE if the byte read is LF }
+function TCubicBuffStream.ReadEnter: Boolean;   { Returns TRUE if the byte read is CR LF }
 VAR Byte1, Byte2: Byte;
 begin
  ReadBuffer(Byte1, 1);
@@ -471,12 +549,14 @@ end;
 
 
 procedure TCubicBuffStream.WriteEnter;
-VAR W: Word;
+VAR
+  Byte1, Byte2: Byte;
 begin
- W:= $0D0A;
- WriteBuffer(w, 2);
+  Byte1 := Byte(#13);  // CR
+  Byte2 := Byte(#10);  // LF
+  WriteBuffer(Byte1, 1);
+  WriteBuffer(Byte2, 1);
 end;
-
 
 
 
@@ -837,8 +917,9 @@ end;
 
 {  STRING WITHOUT LENGTH
    Read a string when its size is unknown (not written in the stream).
-   We need to specify the string size from outside. }
-function TCubicBuffStream.ReadStringAR(CONST Len: integer): AnsiString;                      { This is the relaxed/safe version. It won't raise an error if there is not enough data (Len) to read }
+   We need to specify the string size from outside.
+   This is the relaxed/safe version. It won't raise an error if there is not enough data (Len) to read }
+function TCubicBuffStream.ReadStringAR(CONST Len: integer): AnsiString;
 VAR ReadBytes: Integer;
 begin
  Assert(Len> -1, 'TCubicBuffStream-String size is: '+ IntToStr(Len));

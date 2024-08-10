@@ -3,22 +3,25 @@
         <ProjectGuid>{86A7DC54-2BCF-43C4-B6A1-11E9B4207D4B}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="LightCore\ccIO Tester\Tester_ccIO.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="LightUpdater\Tester_Updater.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="LightCore\ccWinVersion.pas\Tester_WinVers.dproj">
+        <Projects Include="All Visual Controls\Demo_VisualControls.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="All Visual Controls\DemoAllVisualControls.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="LightCore\GUI Autosave\SaveGUI_Demo.dproj">
+        <Projects Include="LightCore\GUI Autosave\Demo_SaveGUI.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="LightLog\DemoLog.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="LightCore\Tester ccIO.pas\Tester_ccIO.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="LightCore\Tester ccStreamBuff.pas\Tester_FileStream.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="LightCore\Tester ccWinVersion.pas\Tester_WinVers.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -29,15 +32,6 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
-    <Target Name="Tester_ccIO">
-        <MSBuild Projects="LightCore\ccIO Tester\Tester_ccIO.dproj"/>
-    </Target>
-    <Target Name="Tester_ccIO:Clean">
-        <MSBuild Projects="LightCore\ccIO Tester\Tester_ccIO.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="Tester_ccIO:Make">
-        <MSBuild Projects="LightCore\ccIO Tester\Tester_ccIO.dproj" Targets="Make"/>
-    </Target>
     <Target Name="Tester_Updater">
         <MSBuild Projects="LightUpdater\Tester_Updater.dproj"/>
     </Target>
@@ -47,32 +41,23 @@
     <Target Name="Tester_Updater:Make">
         <MSBuild Projects="LightUpdater\Tester_Updater.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Tester_WinVers">
-        <MSBuild Projects="LightCore\ccWinVersion.pas\Tester_WinVers.dproj"/>
+    <Target Name="Demo_VisualControls">
+        <MSBuild Projects="All Visual Controls\Demo_VisualControls.dproj"/>
     </Target>
-    <Target Name="Tester_WinVers:Clean">
-        <MSBuild Projects="LightCore\ccWinVersion.pas\Tester_WinVers.dproj" Targets="Clean"/>
+    <Target Name="Demo_VisualControls:Clean">
+        <MSBuild Projects="All Visual Controls\Demo_VisualControls.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="Tester_WinVers:Make">
-        <MSBuild Projects="LightCore\ccWinVersion.pas\Tester_WinVers.dproj" Targets="Make"/>
+    <Target Name="Demo_VisualControls:Make">
+        <MSBuild Projects="All Visual Controls\Demo_VisualControls.dproj" Targets="Make"/>
     </Target>
-    <Target Name="DemoAllVisualControls">
-        <MSBuild Projects="All Visual Controls\DemoAllVisualControls.dproj"/>
+    <Target Name="Demo_SaveGUI">
+        <MSBuild Projects="LightCore\GUI Autosave\Demo_SaveGUI.dproj"/>
     </Target>
-    <Target Name="DemoAllVisualControls:Clean">
-        <MSBuild Projects="All Visual Controls\DemoAllVisualControls.dproj" Targets="Clean"/>
+    <Target Name="Demo_SaveGUI:Clean">
+        <MSBuild Projects="LightCore\GUI Autosave\Demo_SaveGUI.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="DemoAllVisualControls:Make">
-        <MSBuild Projects="All Visual Controls\DemoAllVisualControls.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="SaveGUI_Demo">
-        <MSBuild Projects="LightCore\GUI Autosave\SaveGUI_Demo.dproj"/>
-    </Target>
-    <Target Name="SaveGUI_Demo:Clean">
-        <MSBuild Projects="LightCore\GUI Autosave\SaveGUI_Demo.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="SaveGUI_Demo:Make">
-        <MSBuild Projects="LightCore\GUI Autosave\SaveGUI_Demo.dproj" Targets="Make"/>
+    <Target Name="Demo_SaveGUI:Make">
+        <MSBuild Projects="LightCore\GUI Autosave\Demo_SaveGUI.dproj" Targets="Make"/>
     </Target>
     <Target Name="DemoLog">
         <MSBuild Projects="LightLog\DemoLog.dproj"/>
@@ -83,14 +68,41 @@
     <Target Name="DemoLog:Make">
         <MSBuild Projects="LightLog\DemoLog.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Tester_ccIO">
+        <MSBuild Projects="LightCore\Tester ccIO.pas\Tester_ccIO.dproj"/>
+    </Target>
+    <Target Name="Tester_ccIO:Clean">
+        <MSBuild Projects="LightCore\Tester ccIO.pas\Tester_ccIO.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Tester_ccIO:Make">
+        <MSBuild Projects="LightCore\Tester ccIO.pas\Tester_ccIO.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Tester_FileStream">
+        <MSBuild Projects="LightCore\Tester ccStreamBuff.pas\Tester_FileStream.dproj"/>
+    </Target>
+    <Target Name="Tester_FileStream:Clean">
+        <MSBuild Projects="LightCore\Tester ccStreamBuff.pas\Tester_FileStream.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Tester_FileStream:Make">
+        <MSBuild Projects="LightCore\Tester ccStreamBuff.pas\Tester_FileStream.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Tester_WinVers">
+        <MSBuild Projects="LightCore\Tester ccWinVersion.pas\Tester_WinVers.dproj"/>
+    </Target>
+    <Target Name="Tester_WinVers:Clean">
+        <MSBuild Projects="LightCore\Tester ccWinVersion.pas\Tester_WinVers.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Tester_WinVers:Make">
+        <MSBuild Projects="LightCore\Tester ccWinVersion.pas\Tester_WinVers.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="Tester_ccIO;Tester_Updater;Tester_WinVers;DemoAllVisualControls;SaveGUI_Demo;DemoLog"/>
+        <CallTarget Targets="Tester_Updater;Demo_VisualControls;Demo_SaveGUI;DemoLog;Tester_ccIO;Tester_FileStream;Tester_WinVers"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Tester_ccIO:Clean;Tester_Updater:Clean;Tester_WinVers:Clean;DemoAllVisualControls:Clean;SaveGUI_Demo:Clean;DemoLog:Clean"/>
+        <CallTarget Targets="Tester_Updater:Clean;Demo_VisualControls:Clean;Demo_SaveGUI:Clean;DemoLog:Clean;Tester_ccIO:Clean;Tester_FileStream:Clean;Tester_WinVers:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Tester_ccIO:Make;Tester_Updater:Make;Tester_WinVers:Make;DemoAllVisualControls:Make;SaveGUI_Demo:Make;DemoLog:Make"/>
+        <CallTarget Targets="Tester_Updater:Make;Demo_VisualControls:Make;Demo_SaveGUI:Make;DemoLog:Make;Tester_ccIO:Make;Tester_FileStream:Make;Tester_WinVers:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
