@@ -25,9 +25,9 @@ TYPE
     Panel1: TPanel;
     lblExpire: TLabel;
     Label2: TLabel;
-    lblCopyRight1: TLabel;
     inetEULA: TInternetLabel;
     lblAppName: TLabel;
+    lblCopyRight: TLabel;
     procedure FormShow(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
@@ -36,31 +36,33 @@ TYPE
   private
   public
     Proteus: TProteus;
+    class procedure ShowFormModal; static;
+    class procedure ShowParented (Parent: TWinControl); static;
   end;
 
 VAR
   frmAbout: TfrmAboutApp;
 
-procedure ShowAbout        (CONST ProductHomePage: string);
-procedure ShowAboutParented(CONST ProductHomePage: string; Parent: TWinControl);
+
 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   uLinks, cbAppData, ccCore, csSystem, cbDialogs;
+   //uLinks,
+   cbCenterControl, cbAppData, ccCore, csSystem, cbDialogs;
 
 
 
-procedure ShowAbout(CONST ProductHomePage: string);
+class procedure TfrmAboutApp.ShowFormModal;
 begin
  frmAbout:= TfrmAboutApp.Create(Application);
- frmAbout.inetHomePage.Link:= ProductHomePage;
- frmAbout.Show;
+ frmAbout.inetHomePage.Link:= AppData.ProductHomePage;
+ frmAbout.ShowModal;
 end;
 
 
 { This won't to parent the form directly. See: https://stackoverflow.com/questions/42065369/how-to-parent-a-form-controls-wont-accept-focus }
-procedure ShowAboutParented(CONST ProductHomePage: string; Parent: TWinControl);
+class procedure TfrmAboutApp.ShowParented(Parent: TWinControl);
 begin
  frmAbout:= TfrmAboutApp.Create(Application);
  frmAbout.Container.Align:= alNone;
@@ -68,7 +70,7 @@ begin
  frmAbout.Container.BevelOuter:= bvLowered;
 
  frmAbout.Container.Parent:= Parent;
- frmAbout.inetHomePage.Link:= ProductHomePage;
+ frmAbout.inetHomePage.Link:= AppData.ProductHomePage;
  CenterChild(frmAbout.Container, Parent);
 end;
 
@@ -86,9 +88,9 @@ begin
    else lblExpire.Caption:= 'Registered';
   end;
 
- lblCopyRight1.Caption:= 'Copyright '+ ctCompanyNameCubic;
- lblVersion.Caption := 'Version '+ AppData.GetVersionInfo;
- lblAppName.Caption:= AppData.AppName;
+ lblCopyRight.Caption := 'Copyright '+ AppData.CompanyName;
+ lblVersion.Caption   := 'Version '  + AppData.GetVersionInfo;
+ lblAppName.Caption   := AppData.AppName;
 end;
 
 

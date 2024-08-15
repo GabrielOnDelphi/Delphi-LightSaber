@@ -86,6 +86,9 @@ TYPE
  end;
 
 
+CONST
+   wwwSkinDesinger = 'https://www.bionixwallpaper.com/downloads/Skin_Designer/index.html';
+
 procedure LoadLastSkin(CONST DefaultSkin: string= '');  { On first run, set the DefaultSkin to an existing file (no path) like: 'Graphite Green.vsf'. Leave it empty if you want the default Windows theme to load }
 
 
@@ -93,7 +96,7 @@ procedure LoadLastSkin(CONST DefaultSkin: string= '');  { On first run, set the 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   ccColors, cTranslate, cmINIFileQuick, uLinks, Vcl.Themes, cbAppData, csExecuteShell,
+   ccColors, cTranslate, cmINIFileQuick, {uLinks,} Vcl.Themes, cbAppData, csExecuteShell,
    cGraphUtil, cmSound, cmVclUtils, cbCenterControl, cvIniFile, IOUtils, ccIO, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;   { VCL.Styles is mandatory here}
 
 CONST

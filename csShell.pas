@@ -20,6 +20,7 @@
      * csWindowMetrics.pas
      * csExecuteProc.pas
      * csExecuteShell.pas
+     * csProcess.pas
 
 =============================================================================================================}
 

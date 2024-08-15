@@ -18,7 +18,6 @@ object FrmUpdater: TFrmUpdater
   Font.Style = []
   Font.Quality = fqProof
   FormStyle = fsStayOnTop
-  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
@@ -26,7 +25,6 @@ object FrmUpdater: TFrmUpdater
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 15
   object lblConnectError: TLabel
     AlignWithMargins = True
@@ -219,7 +217,6 @@ object FrmUpdater: TFrmUpdater
         ScrollBars = ssBoth
         TabOrder = 1
         WordWrap = False
-        Zoom = 100
       end
       object LogVerb: TRichLogTrckbr
         AlignWithMargins = True

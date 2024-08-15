@@ -25,8 +25,9 @@ USES
    FormUpdaterNotifier;
 
 CONST
-   wwwBioniXWall     = 'http://www.BionixWallpaper.com';
-   wwwUpdaterBinTest = wwwBioniXWall+ '/downloads/Bionix%20Desktop%20Wallpaper%20Changer/OnlineNews.bin'; // wwwUpdaterBin;
+   // For testing purposes
+   wwwBioniXWall     = 'http://www.BionixWallpaper.com/';
+   wwwUpdaterBinTest = 'downloads/Bionix%20Desktop%20Wallpaper%20Changer/OnlineNews.bin';
 
 
 

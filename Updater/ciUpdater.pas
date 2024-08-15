@@ -32,7 +32,7 @@
       See the RNews recrod.
 
    Example of usage:
-      \LightSaber\Demo\CubicUpdater\UpdaterTester.dpr
+      LightSaber\Demo\LightUpdater\Tester_Updater.dpr
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE

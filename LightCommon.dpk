@@ -82,7 +82,9 @@ contains
   csSystem in 'csSystem.pas',
   csWindowMetrics in 'csWindowMetrics.pas',
   csWMIResolution in 'csWMIResolution.pas',
-  FormAsyncMessage in 'FormAsyncMessage.pas';
+  FormAsyncMessage in 'FormAsyncMessage.pas',
+  cmGuiSettings in 'cmGuiSettings.pas',
+  csProcess in 'csProcess.pas';
 
 end.
 

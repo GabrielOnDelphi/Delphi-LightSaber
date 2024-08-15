@@ -23,6 +23,7 @@ UNIT csExecuteProc;
      * csWindowMetrics.pas
      * csExecuteProc.pas
      * csExecuteShell.pas
+     * csProcess.pas
 
    Tester
       c:\MyProjects\Project Testers\Tester Execute program (ShellExecute, CreateProcess)\
@@ -42,7 +43,6 @@ USES
  procedure ExecuteAndGetOutDyn(CONST CmdLine: string; CONST Output: TProc<string>; AntiFreeze: Boolean; Hide: Boolean= TRUE; Timeout: Cardinal= 100);  { Run a DOS program and retrieve its output dynamically while it is running. } {$ENDIF}
  function  ExecuteAndGetOut   (CONST CmdLine: string; Work: string = 'C:\'): string;
 
- function  KillTask(ExeFileName: string): integer;
 
 
 
@@ -236,6 +236,7 @@ end;
 --------------------------------------------------------------------------------------------------}
 {$IFDEF msWindows}
 {$WARN SYMBOL_PLATFORM OFF}
+//also see: https://gist.github.com/mmmunk/cbe059f06c42f60724ccdcf58f60a2b9
 procedure ExecuteAndGetOutDyn(CONST CmdLine: string; CONST Output: TProc<string>; AntiFreeze: Boolean; Hide: Boolean= TRUE; Timeout: Cardinal= 100);  { Run a DOS program and retrieve its output dynamically while it is running. As TimeOut use 100 (ms) }
 CONST
   InheritHandleSecurityAttributes: TSecurityAttributes = (nLength: SizeOf(TSecurityAttributes); bInheritHandle: True);
@@ -294,31 +295,6 @@ end;
 {$ENDIF}
 
 
-
-{ See this also: Find Out if a Program is Running - http://www.delphifaq.net/how-to-find-out-if-a-program-is-running/ }
-function KillTask(ExeFileName: string): integer;
-const
-  PROCESS_TERMINATE=$0001;
-var
-  ContinueLoop: BOOL;
-  FSnapshotHandle: THandle;
-  FProcessEntry32: WinApi.TlHelp32.TProcessEntry32;
-begin
-  Result:= 0;
-
-  FSnapshotHandle        := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-  FProcessEntry32.dwSize := Sizeof(FProcessEntry32);
-  ContinueLoop           := Process32First(FSnapshotHandle, FProcessEntry32);
-
-  WHILE integer(ContinueLoop) <> 0 do
-   begin
-     if ((UpperCase(ExtractFileName(FProcessEntry32.szExeFile)) = UpperCase(ExeFileName)) OR (UpperCase(FProcessEntry32.szExeFile) = UpperCase(ExeFileName)))
-     then Result := Integer(TerminateProcess(OpenProcess(PROCESS_TERMINATE, BOOL(0), FProcessEntry32.th32ProcessID), 0));
-     ContinueLoop := Process32Next(FSnapshotHandle, FProcessEntry32);
-   end;
-
-  CloseHandle(FSnapshotHandle);
-end;
 
 
 

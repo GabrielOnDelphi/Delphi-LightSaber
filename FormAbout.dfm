@@ -26,7 +26,6 @@ object frmAboutApp: TfrmAboutApp
   GlassFrame.Bottom = 5
   GlassFrame.SheetOfGlass = True
   KeyPreview = True
-  OldCreateOrder = True
   Position = poScreenCenter
   ScreenSnap = True
   ShowHint = True
@@ -35,7 +34,6 @@ object frmAboutApp: TfrmAboutApp
   OnCreate = FormCreate
   OnKeyPress = FormKeyPress
   OnShow = FormShow
-  PixelsPerInch = 96
   TextHeight = 13
   object Container: TPanel
     AlignWithMargins = True
@@ -205,19 +203,20 @@ object frmAboutApp: TfrmAboutApp
     end
     object Panel1: TPanel
       Left = 357
-      Top = 145
+      Top = 136
       Width = 267
-      Height = 188
+      Height = 209
       Anchors = [akTop, akRight, akBottom]
+      BevelOuter = bvNone
       TabOrder = 1
       DesignSize = (
         267
-        188)
+        209)
       object lblExpire: TLabel
         AlignWithMargins = True
-        Left = 4
-        Top = 32
-        Width = 259
+        Left = 3
+        Top = 31
+        Width = 261
         Height = 13
         Margins.Top = 12
         Align = alTop
@@ -238,9 +237,9 @@ object frmAboutApp: TfrmAboutApp
       end
       object Label2: TLabel
         AlignWithMargins = True
-        Left = 4
-        Top = 54
-        Width = 259
+        Left = 3
+        Top = 53
+        Width = 261
         Height = 13
         Margins.Top = 6
         Align = alTop
@@ -254,19 +253,6 @@ object frmAboutApp: TfrmAboutApp
         Font.Style = [fsBold]
         Font.Quality = fqClearTypeNatural
         ParentFont = False
-        Transparent = True
-      end
-      object lblCopyRight1: TLabel
-        AlignWithMargins = True
-        Left = 4
-        Top = 4
-        Width = 259
-        Height = 13
-        Align = alTop
-        Alignment = taCenter
-        Caption = 'ctCopyright'
-        ParentShowHint = False
-        ShowHint = True
         Transparent = True
       end
       object inetEULA: TInternetLabel
@@ -292,6 +278,19 @@ object frmAboutApp: TfrmAboutApp
         VisitedColor = clPurple
         NotVisitedColor = clBlue
         OverColor = clRed
+      end
+      object lblCopyRight: TLabel
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 261
+        Height = 13
+        Align = alTop
+        Alignment = taCenter
+        Caption = 'ctCopyright'
+        ParentShowHint = False
+        ShowHint = True
+        Transparent = True
       end
     end
   end

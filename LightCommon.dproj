@@ -134,6 +134,8 @@
         <DCCReference Include="csWindowMetrics.pas"/>
         <DCCReference Include="csWMIResolution.pas"/>
         <DCCReference Include="FormAsyncMessage.pas"/>
+        <DCCReference Include="cmGuiSettings.pas"/>
+        <DCCReference Include="csProcess.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

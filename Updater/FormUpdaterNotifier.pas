@@ -82,7 +82,7 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   llLogUtils, cTranslate, cGraphUtil, FormUpdaterRecEditor, cbAppData, cbIniFile, ciInternet;
+   llLogUtils, cTranslate, cGraphUtil, ccColors, FormUpdaterRecEditor, cbAppData, cbIniFile, ciInternet;
 
 VAR
    FrmUpdater: TFrmUpdater= NIL; { Only one instance allowed! }
@@ -118,10 +118,8 @@ begin
    FrmUpdater.tabDemo.TabVisible:= Demo;
    FrmUpdater.tabRecEditor.TabVisible:= Demo;
    FrmUpdater.LogVerb.Visible:= Demo;
-   if Demo then
-    begin
-     FrmUpdater.LogVerb.Verbosity:= lvVerbose;
-    end;
+   if Demo
+   then FrmUpdater.LogVerb.Verbosity:= lvVerbose;
 
    { GUI }
    FrmUpdater.lblDownload .Link := Updater.URLDownload;

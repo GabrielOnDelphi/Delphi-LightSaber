@@ -118,16 +118,24 @@ TYPE
   private
     FFont: TFont;
     FLastFolder: string;
-    FSingleInstClassName: string;                              { Used by the Single Instance mechanism. } {Old name: AppWinClassName }
+    FSingleInstClassName: string;                             { Used by the Single Instance mechanism. } {Old name: AppWinClassName }
     FRunningFirstTime: Boolean;
     class VAR FCreated: Boolean;
     class VAR FAppName: string;
     function  getLastUsedFolder: string;
     procedure setFont(aFont: TFont);
+    procedure HintSetup;
   protected
     frmLog: TfrmLog;
-    CopyDataID: DWORD;                                         { For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA }
+    CopyDataID: DWORD;                                        { For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA }
   public
+    CompanyName: string;                                      { Optional. Used by the 'About' form }
+
+    // Internet
+    ProductHomePage: string;     // URL
+    SupportPage: string;         // URL
+    UninstReason: string;        // URL
+
    {--------------------------------------------------------------------------------------------------
       App Single Instance
    --------------------------------------------------------------------------------------------------}
@@ -157,6 +165,7 @@ TYPE
 
     function AppShortName:  string;
     property LastUsedFolder: string read getLastUsedFolder write FLastFolder;
+
     class property AppName:  string read FAppName;
 
     procedure WriteAppDataFolder;
@@ -182,6 +191,7 @@ TYPE
     procedure Restart;
     procedure SelfDelete;
 
+    procedure RegisterUninstaller;
     function  RunSelfAtWinStartUp(Active: Boolean): Boolean;
     function  RunFileAtWinStartUp(CONST FilePath: string; Active: Boolean): Boolean;
 
@@ -205,6 +215,8 @@ TYPE
     function  GetVersionInfoMajor: Word;
     function  GetVersionInfoMinor: Word;
     function  GetVersionInfo_: string;
+
+    procedure MainFormCaption(const Caption: string);
 
 
    {--------------------------------------------------------------------------------------------------
@@ -299,6 +311,8 @@ begin
   Assert(frmLog = NIL, 'Log already created!');  { Call this as soon as possible so it can catch all Log messages generated during app start up. A good place might be in your DPR file before Application.CreateForm(TMainForm, frmMain) }
   frmLog:= TfrmLog.Create(NIL);                  { Warning: I cannot use Application.CreateForm here because this will make the Log the main form! }
   Assert(Application.MainForm <> frmLog, 'The Log should not be the MainForm!'); { Just in case: Make sure this is not the first form created }
+
+  HintSetup;
 end;
 
 
@@ -781,14 +795,14 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    OTHERS
 -------------------------------------------------------------------------------------------------------------}
-// Question: Does FormCount also count invisible forms? Answer: Yes.
-// Question: Does FormCount also count forms created TFrom.Create(Nil). Answer: Yes.
+// Apply this font to all existing forms.
 procedure TAppData.setFont(aFont: TFont);
 begin
   if FFont = NIL
   then FFont:= aFont   // We set the font for the first time.
   else
     begin
+      // Note: FormCount also counts invisible forms and forms created TFrom.Create(Nil).
       FFont:= aFont;
       for VAR i:= 0 to Screen.CustomFormCount - 1 DO    // FormCount => forms currently displayed on the screen. CustomFormCount = as FormCount but also includes the property pages
         Screen.Forms[i].Font:= aFont;
@@ -1186,6 +1200,53 @@ begin
  Assert(frmLog <> NIL, 'The log window is not ready yet!');
  frmLog.Log.SaveAsRtf(FileName);
 end;
+
+
+procedure TAppData.MainFormCaption(CONST Caption: string);
+begin
+ if Caption= ''
+ then Application.MainForm.Caption:= AppName+ ' '+ GetVersionInfoV
+ else Application.MainForm.Caption:= AppName+ ' '+ GetVersionInfoV+ ' - ' + Caption;
+end;
+
+
+{ To be called from the MainForm.Initialize }
+procedure TAppData.HintSetup;
+begin
+ Application.HintColor     := $c0c090;
+ Application.HintPause     := 350;                { Specifies the time interval that passes before the control's Help Hint appears when the user places the mouse pointer on a control or menu item. Windows' default is 500 ms }
+ Application.HintShortPause:= 40;                 { Specifies the time period to wait before bringing up a hint if another hint has already been shown. Windows' default is 50 ms }
+ Application.UpdateFormatSettings:= FALSE;        { more http://www.delphi3000.com/articles/article_4462.asp?SK= }
+end;
+
+
+
+
+{--------------------------------------------------------------------------------------------------
+   UNINSTALLER
+
+   Utility functions for c:\MyProjects\Project support\Universal Uninstaller\Uninstaller.dpr
+--------------------------------------------------------------------------------------------------}
+(*del
+
+procedure TAppData.AddUninstallerToCtrlPanel(CONST UninstallerExePath: string);          { UninstallerExePath= Full path to the EXE file that represents the uninstaller; ProductName= the uninstaller will be listed with this name. Keep it simple without special chars like '\'. Example: 'BioniX Wallpaper' }
+begin
+ RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'DisplayName', AppName);
+ RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'UninstallString', UninstallerExePath);
+end; *)
+
+
+procedure TAppData.RegisterUninstaller;
+begin
+ //del AddUninstallerToCtrlPanel(AppData.SysDir+ 'Uninstall.exe');                 { Puts uninstaller in 'Add/remove programs' in Control Panel }
+
+ RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'DisplayName', AppName);
+ RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'UninstallString', AppData.SysDir+ 'Uninstall.exe');
+
+ AppData.WriteAppDataFolder;
+ AppData.WriteInstalationFolder;
+end;
+
 
 
 
