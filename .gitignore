@@ -22,3 +22,4 @@ desktop.ini
 *.exe
 HardwareID/chHardID.pas
 Demo/All Visual Controls/22.0/Win32_Debug/DemoAllVisualControls.exe
+*.vsf
