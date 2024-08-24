@@ -58,7 +58,7 @@ TYPE
     procedure FormCreate         (Sender: TObject);
     procedure FormDestroy        (Sender: TObject);
   private
-    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateAppInit; // Called after the main form was fully created
+    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully created
   public
  end;
 

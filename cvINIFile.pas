@@ -48,6 +48,8 @@ USES
 
 {-----------------------------------------------------------------------------------------------------------------------
    READ/WRITE INDIVIDUAL CTRLS
+   We handle here components of LightSaber libbbrary.
+   Classic VCL compoents are handled by "inherided"
 -----------------------------------------------------------------------------------------------------------------------}
 function TIniFileCubic.WriteComp(Comp: TComponent): Boolean;                                                             { Write 'any' control to INI file }
 begin

@@ -80,7 +80,7 @@ TYPE
     procedure PopulateSkins;
   public
     class procedure CreateFormModal; static;
-    class procedure ShowEditorNonModal(Nottify: TNotifyEvent); static;
+    class procedure CreateForm(Nottify: TNotifyEvent); static;
   published
     property OnDefaultSkin: TNotifyEvent read FOnDefaultSkin write FOnDefaultSkin;
  end;
@@ -178,7 +178,7 @@ end;
 { Show non modal, for testing against bug: Crash when closing the "Skins" form.
   Fixed by keeping the form open!
   Remember to call FreeAndNil(frmEditor) }
-class procedure TfrmSkinDisk.ShowEditorNonModal(Nottify: TNotifyEvent);
+class procedure TfrmSkinDisk.CreateForm(Nottify: TNotifyEvent);
 VAR frmEditor: TfrmSkinDisk;
 begin
  frmEditor:= AppData.CreateForm(TfrmSkinDisk, TRUE, TRUE) as TfrmSkinDisk;

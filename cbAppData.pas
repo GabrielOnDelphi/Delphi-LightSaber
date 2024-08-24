@@ -111,30 +111,41 @@ USES
   FormLog, ccCore;
 
 CONST
-  MSG_LateAppInit = WM_APP + 4711;                            { Old name: MSG_LateInitialize  }
+  MSG_LateFormInit = WM_APP + 4711;         { Old name: MSG_LateInitialize/MSG_LateAppInit  }
+
+TYPE
+  THintType = (htOff,                      // Turn off the embeded help system
+               htTooltips,                 // Show help as tool-tips
+               htStatBar);                 // Show help in status bar
 
 TYPE
   TAppData= class(TObject)
   private
     FFont: TFont;
     FLastFolder: string;
-    FSingleInstClassName: string;                             { Used by the Single Instance mechanism. } {Old name: AppWinClassName }
+    FSingleInstClassName: string;          { Used by the Single Instance mechanism. } {Old name: AppWinClassName }
     FRunningFirstTime: Boolean;
+    function SettingsFile: string;
+    procedure SetGuiProperties(Form: TForm);
+    CONST Signature: AnsiString= 'AppDataSettings';{ Do not change it! }
     class VAR FCreated: Boolean;
     class VAR FAppName: string;
     function  getLastUsedFolder: string;
     procedure setFont(aFont: TFont);
     procedure HintSetup;
+    procedure LoadSettings;
+    procedure SaveSettings;
+    procedure RegisterUninstaller;
+    function  RunSelfAtWinStartUp(Active: Boolean): Boolean;
   protected
     frmLog: TfrmLog;
-    CopyDataID: DWORD;                                        { For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA }
+    CopyDataID: DWORD;                     { For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA }
   public
-    CompanyName: string;                                      { Optional. Used by the 'About' form }
-
-    // Internet
-    ProductHomePage: string;     // URL
-    SupportPage: string;         // URL
-    UninstReason: string;        // URL
+    { Product details }
+    CompanyName: string;                   { Optional. Used by the 'About' form }
+    ProductHomePage: string;               // URL
+    SupportPage: string;                   // URL
+    UninstReason: string;                  // URL
 
    {--------------------------------------------------------------------------------------------------
       App Single Instance
@@ -149,13 +160,24 @@ TYPE
     class VAR SignalInitEnd: Boolean;   // If true, AppData will set the 'Initializing' field automatically to false once the main form was loaded. Set it to False in apps with more than one form or apps that require a bit more sophisticated initialization procedure
 
     constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; aSignalInitEnd: Boolean= TRUE); virtual;
-    destructor Destroy; override;                              { This is called automatically by "Finalization" in order to call it as late as possible }
+    destructor Destroy; override;        { This is called automatically by "Finalization" in order to call it as late as possible }
 
+   {--------------------------------------------------------------------------------------------------
+      User settings
+   --------------------------------------------------------------------------------------------------}
+    var
+      UserPath     : string;        // User defined path where to save (large) files. Useful when the program needs to save large amounts of data that we don't want to put on a SSD drive.
+      AutoStartUp  : Boolean;       // Start app at Windows startup
+      StartMinim   : Boolean;       // Start minimized
+      Minimize2Tray: Boolean;       // Minimize to tray
+      HintType     : THintType;     // Turn off the embeded help system
+      HideHint     : Integer;       // Hide hint after x ms.
+      Opacity      : Integer;       // Form opacity
 
    {--------------------------------------------------------------------------------------------------
       App path/name
    --------------------------------------------------------------------------------------------------}
-    function CurFolder: string; //Old name: AppDir
+    function CurFolder: string;     // The folder where the exe file is located. Old name: AppDir
     function IniFile: string;
     function SysDir: string;
     function CheckSysDir: Boolean;
@@ -191,14 +213,12 @@ TYPE
     procedure Restart;
     procedure SelfDelete;
 
-    procedure RegisterUninstaller;
-    function  RunSelfAtWinStartUp(Active: Boolean): Boolean;
     function  RunFileAtWinStartUp(CONST FilePath: string; Active: Boolean): Boolean;
 
-    procedure CreateMainForm    (aClass: TFormClass; OUT Reference; Show: Boolean; MainFormOnTaskbar: Boolean= TRUE);
+    procedure CreateMainForm    (aClass: TFormClass; OUT Reference; Show: Boolean; MainFormOnTaskbar: Boolean= TRUE; Load: Boolean= TRUE; OnlyFormPos: Boolean= FALSE);
 
-    procedure CreateForm        (aClass: TFormClass; OUT Reference; Show: Boolean); overload;
-    function  CreateForm        (aClass: TFormClass; Show: Boolean= TRUE; Load: Boolean= TRUE): TForm;     overload;
+    procedure CreateFormRef     (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Load: Boolean= TRUE; OnlyFormPos: Boolean= FALSE);
+    function  CreateForm        (aClass: TFormClass;                Show: Boolean= TRUE; Load: Boolean= TRUE; OnlyFormPos: Boolean= FALSE): TForm;
 
     procedure CreateFormModal   (aClass: TFormClass; OUT Reference);                 overload;   // Do I need this?
     procedure CreateFormModal   (aClass: TFormClass);                                overload;
@@ -264,7 +284,7 @@ VAR                      //ToDo: make sure AppData is unique (make it Singleton)
 IMPLEMENTATION
 
 USES
-  cbWinVersion, cbIniFile, ccIO, cbRegistry, cbDialogs, cbCenterControl;
+  cbWinVersion, ccStreamBuff, cbIniFile, ccIO, cbRegistry, cbDialogs, cbCenterControl;
 
 {-------------------------------------------------------------------------------------------------------------
  Parameters
@@ -307,11 +327,27 @@ begin
 
   { First run }
   FRunningFirstTime:= NOT FileExists(IniFile);
-  ForceDirectories(AppDataFolder);
+  ForceDirectories(AppDataFolder);            // Force the creation of AppData folder.
+
+  { App settings }
+  if FileExists(SettingsFile)
+  then LoadSettings
+  else
+    begin
+      { Default settings }
+      AutoStartUp  := TRUE;
+      StartMinim   := FALSE;
+      Minimize2Tray:= TRUE;              // Minimize to tray
+      HintType     := htTooltips;        // Turn off the embeded help system
+      HideHint     := 4000;              // Hide hint after x ms.
+      Opacity      := 250;
+      UserPath     := AppDataFolder;
+    end;
 
   { The Log Form }
+  { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }
   Assert(frmLog = NIL, 'Log already created!');  { Call this as soon as possible so it can catch all Log messages generated during app start up. A good place might be in your DPR file before Application.CreateForm(TMainForm, frmMain) }
-  frmLog:= TfrmLog.Create(NIL);                  { Warning: I cannot use Application.CreateForm here because this will make the Log the main form! }
+  frmLog:= TfrmLog.Create(NIL);
   Assert(Application.MainForm <> frmLog, 'The Log should not be the MainForm!'); { Just in case: Make sure this is not the first form created }
 
   HintSetup;
@@ -323,6 +359,7 @@ end;
   So we need to destroy the Log form before this! }
 destructor TAppData.Destroy;
 begin
+  SaveSettings;
   inherited;
 end;
 
@@ -331,7 +368,10 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    FORMS
 -------------------------------------------------------------------------------------------------------------}
-procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; Show: Boolean; MainFormOnTaskbar: Boolean= TRUE);
+{ 1. Create the form
+  2. Set the font of the new form to be the same as the font of the MainForm
+  3. Show it }
+procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; Show: Boolean; MainFormOnTaskbar: Boolean= TRUE; Load: Boolean= TRUE; OnlyFormPos: Boolean= FALSE);
 begin
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
   Assert(Font = NIL,                 'AppData.Font already assigned!');
@@ -340,89 +380,96 @@ begin
   Application.ShowMainForm      := Show;      // Must be false if we want to prevent form flicker during skin loading at startup
 
   Application.CreateForm(aClass, Reference);
-  if Show
-  then TForm(Reference).Show;
 
-  // We get the font from the main form. Then we apply this font to any future window.
-  Self.Font:= TForm(Reference).Font;     // We get the AppData.Font from the main form. Then we apply the AppData.Font to any future window.
+  MainFormCaption('Initializing...');
 
-  // Fix issues with snap to edge of the screen
-  if cbWinVersion.IsWindows8Up
-  then TForm(Reference).SnapBuffer:= 4
-  else TForm(Reference).SnapBuffer:= 10;
+  SetGuiProperties(TForm(Reference));
+
+  if Load then
+   begin
+     // Load form
+     cbIniFile.LoadForm(TForm(Reference), OnlyFormPos);
+
+     { Write path to app in registry }
+     if RunningFirstTime
+     then RegisterUninstaller;
+   end;
+
+  // if the program is off-screen, bring it on-screen
+  CorrectFormPositionScreen(TForm(Reference));
+
+  // Ignore the "Show" parameter if "StartMinimized" is active
+  if StartMinim
+  then Application.Minimize
+  else
+     if Show
+     then TForm(Reference).Show;
 
   // This will send a message to the mainform. The user must implement in the main form a procedure to captures this message.
   // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory") for details.
-  PostMessage(TForm(Reference).Handle, MSG_LateAppInit, 0, 0);
+  PostMessage(TForm(Reference).Handle, MSG_LateFormInit, 0, 0);
 
   if SignalInitEnd
   then Initializing:= FALSE;
 end;
 
 
-{ 1. Create the form
-  2. Set the font of the new form to be the same as the font of the MainForm
-  3. Show it }
-procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean);
+{ Load indicates if the GUI settings are remembered or not }
+procedure TAppData.CreateFormRef(aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Load: Boolean= TRUE; OnlyFormPos: Boolean= FALSE);
 begin
-  Assert(Application.MainForm <> NIL, 'Probably you forgot to create the main form with AppData.CreateMainForm!');
-
-  Application.CreateForm(aClass, Reference);
-
-  if TForm(Reference) <> Application.MainForm
-  then TForm(Reference).Font:= Self.Font;
-
-  if Show then TForm(Reference).Show;
+  TForm(Reference):= CreateForm(aClass, Show, Load);
 end;
 
 
-function TAppData.CreateForm(aClass: TFormClass; Show: Boolean= TRUE; Load: Boolean= TRUE): TForm;
+function TAppData.CreateForm(aClass: TFormClass; Show: Boolean= TRUE; Load: Boolean= TRUE; OnlyFormPos: Boolean= FALSE): TForm;
 begin
   Assert(Application.MainForm <> NIL, 'Probably you forgot to create the main form with AppData.CreateMainForm!');
-
   Application.CreateForm(aClass, Result);
+
+  SetGuiProperties(TForm(Result));
 
   // Load form position
-  if Load then cbIniFile.LoadForm(Result, TRUE);
+  if Load
+  then cbIniFile.LoadForm(Result, OnlyFormPos);
 
-  // Font
-  if TForm(Result) <> Application.MainForm
-  then TForm(Result).Font:= Self.Font;
+  if Show
+  then TForm(Result).Show;
 
-  if Show then TForm(Result).Show;
+  PostMessage(TForm(Result).Handle, MSG_LateFormInit, 0, 0);
 end;
-
-{del
-function TAppData.CreateFormCentered(aClass: TFormClass; CenterIn: TForm; aShow: Boolean= TRUE): TForm;
-begin
-  Assert(Application.MainForm <> NIL, 'Probably you forgot to create the main form with AppData.CreateMainForm!');
-
-  Application.CreateForm(aClass, Result);
-
-  if TForm(Result) <> Application.MainForm
-  then TForm(Result).Font:= Self.Font;
-
-  CenterForm(Result, CenterIn);
-
-  if aShow then TForm(Result).Show;
-end; }
 
 
 procedure TAppData.CreateFormModal(aClass: TFormClass);
 VAR Reference: TForm;
 begin
-  CreateForm(aClass, Reference, FALSE);
+  CreateFormRef(aClass, Reference, TRUE, FALSE);
   Reference.ShowModal;
 end;
 
 
-//ToDo: Do I need this. Since the form is modal, I should never need the Reference? To be deleted
+//ToDo: Do I need this? Since the form is modal, I should never need the Reference? To be deleted
 procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference);
 begin
   CreateFormModal(aClass, Reference);
 end;
 
 
+procedure TAppData.SetGuiProperties(Form: TForm);
+begin
+  // Font
+  if Form = Application.MainForm
+  then Self.Font:= Form.Font   // We TAKE the font from the main form. Then we apply it to all existing and all future windows.
+  else Form.Font:= Self.Font;  // We set the same font for secondary forms
+
+  // Fix issues with snap to edge of the screen
+  if cbWinVersion.IsWindows8Up
+  then Form.SnapBuffer:= 4
+  else Form.SnapBuffer:= 10;
+
+  // Form transparency
+  Form.AlphaBlendValue := Opacity;
+  Form.AlphaBlend:= Opacity< 255;
+end;
 
 
 
@@ -612,7 +659,7 @@ end;
 { Run THIS application at Windows startup }
 function TAppData.RunSelfAtWinStartUp(Active: Boolean): Boolean;
 begin
- Result:= RunFileAtWinStartUp(ParamStr(0), Active);
+  Result:= RunFileAtWinStartUp(ParamStr(0), Active);
 end;
 
 
@@ -1270,6 +1317,58 @@ end;
 
 
 
+
+
+{--------------------------------------------------------------------------------------------------
+   LOAD/SAVE Settings
+--------------------------------------------------------------------------------------------------}
+function TAppData.SettingsFile: string;
+CONST
+  ctSettingsFile = 'AppDataSettings.bin';
+begin
+  Result:= AppData.AppDataFolder(TRUE)+ ctSettingsFile;
+end;
+
+
+procedure TAppData.SaveSettings;
+begin
+  VAR Stream:= TCubicBuffStream.CreateWrite(SettingsFile);    { This will give an AV if the file cannot be saved (folder readonly) }
+  TRY
+    Stream.WriteHeader(Signature, 1);
+    Stream.WriteBoolean(AutoStartUp);
+    Stream.WriteBoolean(StartMinim);
+    Stream.WriteBoolean(Minimize2Tray);
+    Stream.WriteInteger(Ord(HintType));
+    Stream.WriteInteger(HideHint);
+    Stream.WriteInteger(Opacity);
+
+    Stream.WritePaddingDef;
+  FINALLY
+    FreeAndNil(Stream);
+  END;
+end;
+
+
+procedure TAppData.LoadSettings;
+begin
+  VAR Stream:= TCubicBuffStream.CreateRead(SettingsFile);
+  TRY
+    Stream.ReadHeader(Signature, 1);
+
+    AutoStartUp  := Stream.ReadBoolean;
+    StartMinim   := Stream.ReadBoolean;
+    Minimize2Tray:= Stream.ReadBoolean;             // Minimize to tray
+    HintType     := THintType(Stream.ReadInteger);  // Turn off the embeded help system
+    HideHint     := Stream.ReadInteger;             // Hide hint after x ms.
+    Opacity      := Stream.ReadInteger;
+
+    Stream.ReadPaddingDef;
+  FINALLY
+    FreeAndNil(Stream);
+  END;
+
+  RunSelfAtWinStartUp(AutoStartUp);
+end;
 
 
 INITIALIZATION

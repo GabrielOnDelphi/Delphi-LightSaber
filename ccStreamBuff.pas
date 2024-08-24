@@ -25,7 +25,7 @@ UNIT ccStreamBuff;
        constructor CreateRead (FileName);                             -> to read
        constructor CreateWrite(FileName);                             -> to write to existing or create new file if none exists
 
-==============================================================================================================
+--------------------------------------------------------------------------------------------------------------
    TBufferedFileStream info:
       TBufferedFileStream provides VERY fast reading/writing access to a file.
       It is optimized for multiple consecutive small reads or writes.

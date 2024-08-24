@@ -55,6 +55,7 @@
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_MajorVer>0</VerInfo_MajorVer>
         <VerInfo_MinorVer>1</VerInfo_MinorVer>
+        <DCC_UnitSearchPath>c:\Myprojects\Packages\LightSaber\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
@@ -100,7 +101,6 @@
         <DCCReference Include="..\..\Updater\FormUpdaterNotifier.pas"/>
         <DCCReference Include="..\..\Updater\ciUpdater.pas"/>
         <DCCReference Include="..\..\Updater\ciUpdaterRec.pas"/>
-        <DCCReference Include="..\..\Updater\FormUpdaterEditor.pas"/>
         <DCCReference Include="..\..\Updater\FormUpdaterRecEditor.pas"/>
         <DCCReference Include="..\..\FormAbout.pas">
             <FormType>dfm</FormType>
@@ -109,6 +109,19 @@
         <DCCReference Include="..\..\FormSkinsRes.pas"/>
         <DCCReference Include="..\..\cvINIFile.pas"/>
         <DCCReference Include="..\..\cbDialogs.pas"/>
+        <DCCReference Include="..\..\cbIniFile.pas"/>
+        <DCCReference Include="..\..\FormLog.pas"/>
+        <DCCReference Include="..\..\csShell.pas"/>
+        <DCCReference Include="..\..\cmGuiSettings.pas"/>
+        <DCCReference Include="..\..\..\LightProteus\cpProteusCertificate.pas"/>
+        <DCCReference Include="..\..\..\LightAutoTranslator\cTranslate.pas"/>
+        <DCCReference Include="..\..\..\LightAutoTranslator\FormSelectLang.pas"/>
+        <DCCReference Include="..\..\..\LightAutoTranslator\FormTranslator.pas"/>
+        <DCCReference Include="..\..\..\LightProteus\cpProteus.pas"/>
+        <DCCReference Include="..\..\..\LightProteus\cpProteusIO.pas"/>
+        <DCCReference Include="..\..\..\LightProteus\cpProteusUtils.pas"/>
+        <DCCReference Include="..\..\Updater\FormUpdaterSettings.pas"/>
+        <None Include="..\..\..\LightProteus\cpProteus.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -132,8 +145,9 @@
                 <Excluded_Packages>
                     <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LightCore280.bpl">LightSaber - Core library</Excluded_Packages>
                     <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LightCommon280.bpl">LightSaber - Common tools</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclsoapmidas280.bpl">Embarcadero SOAP Midas Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclsoapserver280.bpl">Embarcadero SOAP Server Components</Excluded_Packages>
                     <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LabJournalLib270.bpl">LabBook Lib</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\CubicProteus280.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\CubicProteus280.bpl not found</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp280.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
@@ -143,6 +157,12 @@
                 <Platform value="Win64">False</Platform>
             </Platforms>
             <Deployment Version="4">
+                <DeployFile LocalName="..\..\..\LightProteus\cpProteus.inc" Configuration="Debug" Class="ProjectFile">
+                    <Platform Name="Win32">
+                        <RemoteDir>.\</RemoteDir>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="TemplateApp.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>TemplateApp.exe</RemoteName>

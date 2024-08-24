@@ -40,18 +40,18 @@ object frmSettings: TfrmSettings
         482)
       object grpSystem: TGroupBox
         Left = 196
-        Top = 103
+        Top = 100
         Width = 381
-        Height = 204
+        Height = 207
         Anchors = []
         Caption = 'System'
         TabOrder = 0
         DesignSize = (
           381
-          204)
+          207)
         object btnDesktopShortcut: TButton
           Left = 122
-          Top = 158
+          Top = 161
           Width = 145
           Height = 33
           Hint = 'Creates a desktop shortcut'
@@ -91,12 +91,16 @@ object frmSettings: TfrmSettings
         end
       end
       object Path: TCubicPathEdit
-        Left = 196
+        Left = 82
         Top = 330
-        Width = 381
+        Width = 611
         Height = 48
-        Anchors = []
-        Caption = 'Folder'
+        Hint = 
+          'User defined path where to save (large) files. Useful when the p' +
+          'rogram needs to save large amounts of data that we don'#39't want to' +
+          ' put on a SSD drive.'
+        Anchors = [akLeft, akRight]
+        Caption = 'Data folder'
         TabOrder = 1
       end
       object btnCrash: TButton
@@ -194,18 +198,25 @@ object frmSettings: TfrmSettings
         482)
       object GroupBox1: TGroupBox
         Left = 242
-        Top = 144
+        Top = 112
         Width = 290
-        Height = 194
+        Height = 226
         Anchors = []
         Caption = 'Interface'
         TabOrder = 0
         DesignSize = (
           290
-          194)
+          226)
+        object lblOpacity: TLabel
+          Left = 84
+          Top = 51
+          Width = 93
+          Height = 17
+          Caption = 'Window opacity'
+        end
         object btnSkins: TButton
           Left = 86
-          Top = 83
+          Top = 117
           Width = 124
           Height = 33
           Anchors = []
@@ -215,7 +226,7 @@ object frmSettings: TfrmSettings
         end
         object btnFont: TButton
           Left = 86
-          Top = 126
+          Top = 156
           Width = 124
           Height = 33
           Anchors = []
@@ -223,14 +234,75 @@ object frmSettings: TfrmSettings
           TabOrder = 1
           OnClick = btnFontClick
         end
+        object spnOpacity: TSpinEdit
+          Left = 165
+          Top = 74
+          Width = 50
+          Height = 27
+          Hint = 'miliseconds'
+          Increment = 10
+          MaxValue = 255
+          MinValue = 50
+          ParentColor = True
+          TabOrder = 2
+          Value = 250
+          OnChange = spnOpacityChange
+        end
+      end
+    end
+    object tabUserDefined: TTabSheet
+      Caption = 'User defined'
+      ImageIndex = 3
+      DesignSize = (
+        774
+        482)
+      object grpUser: TGroupBox
+        Left = 216
+        Top = 132
+        Width = 345
+        Height = 221
+        Anchors = []
+        Caption = 'User defined'
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 0
+        object Label1: TLabel
+          Left = 36
+          Top = 137
+          Width = 75
+          Height = 17
+          Caption = 'User defined'
+        end
+        object spnUser: TSpinEdit
+          Left = 126
+          Top = 134
+          Width = 50
+          Height = 27
+          Hint = 'miliseconds'
+          Increment = 10
+          MaxValue = 0
+          MinValue = 0
+          ParentColor = True
+          TabOrder = 0
+          Value = 100
+          OnChange = spnHideHintChange
+        end
+        object chkUser: TCheckBox
+          Left = 36
+          Top = 84
+          Width = 97
+          Height = 17
+          Caption = 'User defined'
+          TabOrder = 1
+        end
       end
     end
   end
   object FontDialog: TFontDialog
-    Font.Charset = DEFAULT_CHARSET
+    Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'Tahoma'
+    Font.Height = -13
+    Font.Name = 'Segoe UI'
     Font.Style = []
     Options = [fdEffects, fdApplyButton]
     OnApply = FontDialogApply

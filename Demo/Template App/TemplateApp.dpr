@@ -17,13 +17,24 @@ uses
   FormUpdaterNotifier in '..\..\Updater\FormUpdaterNotifier.pas',
   ciUpdater in '..\..\Updater\ciUpdater.pas',
   ciUpdaterRec in '..\..\Updater\ciUpdaterRec.pas',
-  FormUpdaterEditor in '..\..\Updater\FormUpdaterEditor.pas',
   FormUpdaterRecEditor in '..\..\Updater\FormUpdaterRecEditor.pas',
   FormAbout in '..\..\FormAbout.pas',
   FormSkinsDisk in '..\..\FormSkinsDisk.pas',
   FormSkinsRes in '..\..\FormSkinsRes.pas',
   cvINIFile in '..\..\cvINIFile.pas',
-  cbDialogs in '..\..\cbDialogs.pas';
+  cbDialogs in '..\..\cbDialogs.pas',
+  cbIniFile in '..\..\cbIniFile.pas',
+  FormLog in '..\..\FormLog.pas',
+  csShell in '..\..\csShell.pas',
+  cmGuiSettings in '..\..\cmGuiSettings.pas',
+  cpProteusCertificate in '..\..\..\LightProteus\cpProteusCertificate.pas',
+  cTranslate in '..\..\..\LightAutoTranslator\cTranslate.pas',
+  FormSelectLang in '..\..\..\LightAutoTranslator\FormSelectLang.pas',
+  FormTranslator in '..\..\..\LightAutoTranslator\FormTranslator.pas',
+  cpProteus in '..\..\..\LightProteus\cpProteus.pas',
+  cpProteusIO in '..\..\..\LightProteus\cpProteusIO.pas',
+  cpProteusUtils in '..\..\..\LightProteus\cpProteusUtils.pas',
+  FormUpdaterSettings in '..\..\Updater\FormUpdaterSettings.pas';
 
 {$R *.res}
 

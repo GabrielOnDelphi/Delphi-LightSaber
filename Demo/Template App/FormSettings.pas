@@ -1,12 +1,26 @@
 UNIT FormSettings;
 
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
+   A template form that allows the user to change the behavior/settings of an application:
+     Skins
+     Tooltips & Hints
+     Language
+     Autostartup
+     Font size
+     User-defined application storage folder
+=============================================================================================================}
+
+
 INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
   WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs,
-  cvIniFile, cvPathEdit, cmDebugger,
-  cvRadioButton, cvCheckBox, cbAppData, cmGuiSettings;
+  cvIniFile, cvPathEdit, cmDebugger, cvRadioButton, cvCheckBox, cbAppData, cmGuiSettings;
 
 TYPE
   TfrmSettings = class(TForm)
@@ -31,6 +45,13 @@ TYPE
     btnCrash           : TButton;
     chkTrayIcon        : TCubicCheckBox;
     chkStartMinim      : TCubicCheckBox;
+    tabUserDefined: TTabSheet;
+    grpUser: TGroupBox;
+    Label1: TLabel;
+    spnUser: TSpinEdit;
+    chkUser: TCheckBox;
+    spnOpacity: TSpinEdit;
+    lblOpacity: TLabel;
     procedure btnCrashClick           (Sender: TObject);
     procedure btnDesktopShortcutClick (Sender: TObject);
     procedure btnFontClick            (Sender: TObject);
@@ -42,13 +63,14 @@ TYPE
     procedure FormCreate              (Sender: TObject);
     procedure FormDestroy             (Sender: TObject);
     procedure spnHideHintChange       (Sender: TObject);
+    procedure spnOpacityChange(Sender: TObject);
   protected
     procedure GuiFromObject;
     procedure ObjectFromGUI; // Called after the main form was fully created
   private
     Saved: Boolean;
     procedure WMEndSession  (VAR Msg: TWMEndSession); message WM_ENDSESSION;
-    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateAppInit; // Called after the main form was fully created
+    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully created
     procedure SaveBeforeExit;
   public
     class procedure CreateModal; static;
@@ -70,7 +92,7 @@ USES
 class procedure TfrmSettings.CreateModal;
 begin
  TAppData.RaiseIfStillInitializing;
- Assert(GuiSettings <> NIL);
+ //Assert(GuiSettings <> NIL);
 
  VAR frmSettings:= TfrmSettings.Create(NIL);
  frmSettings.GuiFromObject;
@@ -147,29 +169,42 @@ end;
 
 procedure TfrmSettings.GuiFromObject;
 begin
- chkAutoStartUp  .Checked  := GuiSettings.autoStartUp;
- chkStartMinim   .Checked  := GuiSettings.StartMinim;
- chkTrayIcon     .Checked  := GuiSettings.Minimize2Tray;
- Path            .Path     := GuiSettings.UserPath;
- radHintsOff     .Checked  := GuiSettings.HintType = htOff;
- radHintsTooltips.Checked  := GuiSettings.HintType = htTooltips;
- radHintsStatBar .Checked  := GuiSettings.HintType = htStatBar;
- spnHideHint     .Value    := GuiSettings.HideHint;
+ { Get settings from AppData }
+ Path            .Path    := AppData.UserPath;
+ chkAutoStartUp  .Checked := AppData.autoStartUp;
+ chkStartMinim   .Checked := AppData.StartMinim;
+ chkTrayIcon     .Checked := AppData.Minimize2Tray;
+ radHintsOff     .Checked := AppData.HintType = htOff;
+ radHintsTooltips.Checked := AppData.HintType = htTooltips;
+ radHintsStatBar .Checked := AppData.HintType = htStatBar;
+ spnHideHint     .Value   := AppData.HideHint;
+ spnOpacity      .Value   := AppData.Opacity;
+
+ { Demo/template settings }
+ chkUser         .Checked := GuiSettings.bUser;   // Replace this with your own code
+ spnUser         .Value   := GuiSettings.iUser;   // Replace this with your own code
 end;
 
 
 procedure TfrmSettings.ObjectFromGUI;
 begin
- GuiSettings.autoStartUp  := chkAutoStartUp.Checked;
- GuiSettings.StartMinim   := chkStartMinim .Checked;
- GuiSettings.Minimize2Tray:= chkTrayIcon   .Checked;
- GuiSettings.UserPath     := Path          .Path   ;
- GuiSettings.HideHint     := spnHideHint   .Value  ;
- if radHintsOff     .Checked then GuiSettings.HintType := htOff else
- if radHintsTooltips.Checked then GuiSettings.HintType := htTooltips else
- if radHintsStatBar .Checked then GuiSettings.HintType := htStatBar else RAISE Exception.Create('Undefined HintType!');
-end;
+ { Save settings to AppData }
+ AppData.UserPath     := Path.Path;
+ AppData.autoStartUp  := chkAutoStartUp.Checked;
+ AppData.StartMinim   := chkStartMinim .Checked;
+ AppData.Minimize2Tray:= chkTrayIcon   .Checked;
+ AppData.HideHint     := spnHideHint   .Value;
+ AppData.Opacity      := spnOpacity    .Value;
 
+ if radHintsOff     .Checked then AppData.HintType := htOff else
+ if radHintsTooltips.Checked then AppData.HintType := htTooltips else
+ if radHintsStatBar .Checked then AppData.HintType := htStatBar
+   else RAISE Exception.Create('Undefined HintType!');
+
+ { Demo/template settings }
+ GuiSettings.bUser:= chkUser.Checked;   // Replace this with your own code
+ GuiSettings.iUser:= spnUser.Value;     // Replace this with your own code
+end;
 
 
 
@@ -184,7 +219,7 @@ end;
 
 procedure TfrmSettings.chkAutoStartUpClick(Sender: TObject);
 begin
-  AppData.RunSelfAtWinStartUp(chkAutoStartUp.Checked);
+  //AppData.RunSelfAtWinStartUp(chkAutoStartUp.Checked);
 end;
 
 
@@ -196,9 +231,15 @@ end;
 
 procedure TfrmSettings.btnSkinsClick(Sender: TObject);
 begin
-  TfrmSkinDisk.ShowEditor;
+  TfrmSkinDisk.CreateFormModal;
 end;
 
+
+procedure TfrmSettings.spnOpacityChange(Sender: TObject);
+begin
+ AlphaBlend:= spnOpacity.Value< 255;
+ AlphaBlendValue:= spnOpacity.Value;
+end;
 
 
 

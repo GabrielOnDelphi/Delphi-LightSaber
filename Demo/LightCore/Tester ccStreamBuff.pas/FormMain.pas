@@ -18,7 +18,7 @@ USES
   llRichLogTrack, cvCheckBox, llRichLog, cbAppData, chHardID;
 
 CONST
-  MSG_LateAppInit = WM_APP + 4711;
+  MSG_LateFormInit = WM_APP + 4711;
 
 TYPE
   TMainForm = class(TForm)
@@ -64,7 +64,7 @@ TYPE
     procedure btnStreamWriteClick     (Sender: TObject);
     procedure btnStreamReadClick      (Sender: TObject);
   private
-    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateAppInit; // Called after the main form was fully created
+    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully created
   public
     procedure SetCaption(const CaptionText: string);
  end;

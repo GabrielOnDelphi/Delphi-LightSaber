@@ -16,7 +16,7 @@
       (depending on how bussy is the server) while downloading the News file from the Internet.
       No personal user data is sent to the server.
 
-==============================================================================================================
+--------------------------------------------------------------------------------------------------------------
 
    The Updater
       Checks the website every x hours to see if updates of the product (app) are available.
@@ -25,7 +25,7 @@
       The online files keep information not only about the updates but also it keeps news (like "Discount available if you purchase by the end of the day").
       The program can retrieve and display the news to the user (only once).
 
-==============================================================================================================
+--------------------------------------------------------------------------------------------------------------
 
    The online file
       The data is kept in a binary file. A graphic editor is available for this. The file is extensible (it can be easily expanded to accept new features).
@@ -38,7 +38,7 @@
       Updater.CheckForNews;
 
       LightSaber\Demo\LightUpdater\Tester_Updater.dpr
--------------------------------------------------------------------------------------------------------------}
+==============================================================================================================}
 
 INTERFACE
 

@@ -28,9 +28,7 @@ begin
  AppData.CompanyName:= 'SciVance';
  AppData.ProductHomePage:= 'http://www.Laboratories.tech';
  AppData.SupportPage:= HomePage;
- AppData.UninstReason:= HomePage; 
- AppData.AppDataFolder(True); 
- AppData.MainFormCaption('Initializing...'); 
+ AppData.UninstReason:= HomePage;
 
  { Settings }
  GuiSettings:= TGuiSettings.Create;
@@ -38,10 +36,6 @@ begin
 
  Winapi.ShellApi.DragAcceptFiles(MainForm.Handle, True); // Accept the dropped files from Windows Explorer
  Application.OnHint:= MainForm.CanShowHint;
-
- { Main form }
- LoadForm(MainForm, TRUE);
- CorrectFormPositionScreen(MainForm); // if the program is off-screen, bring it on-screen
 
  { Skins }
  if AppData.RunningFirstTime
@@ -74,7 +68,7 @@ begin
 
 
  { SHOW MAIN WINDOW }                     // Comes after LoadForm()
- if GuiSettings.StartMinim
+ if AppData.StartMinim
  then                                     // IF THE APPLICATION WAS MINIMIZED ON CLOSE THEN I MINIMIZE IT ON OPEN or IF IT IS SET IN USER PREFERENCES TO LEAVE MINIMIZED
   begin
     { SYS TRAY ICON }
@@ -95,15 +89,10 @@ begin
  { FIRST RUN }
  if AppData.RunningFirstTime then
   begin
-   GuiSettings.UserPath:= AppData.AppDataFolder;
-
    { Preparation of the main form }
    AppData.MainFormCaption('Welcome...');
    CenterForm(MainForm);
    MainForm.pgCtrl.ActivePage:= MainForm.tabMain;       { Default page to show }
-
-   { Uninstaller }
-   Appdata.RegisterUninstaller;                         { Write path to app in registry }
 
    { Desktop shortcuts/Association }
    csShell.CreateShortcut(AppData.AppName, TRUE);       { OnDesktop }
@@ -120,10 +109,7 @@ begin
   end;
 
  { Initialization end }
- //AppData.Initializing:= FALSE; moved to cbAppData
- Randomize;
  Assert(Vcl.Dialogs.UseLatestCommonDialogs= TRUE);      { This is true anyway by defaul, but I check it to remember myself about it. Details: http://stackoverflow.com/questions/7944416/tfileopendialog-requires-windows-vista-or-later }
-
 
  { Auto updater }
     // For testing purposes
@@ -138,7 +124,7 @@ begin
  { Let user choose skin }
  if AppData.RunningFirstTime
  AND NOT AppData.RunningHome
- then TfrmSkinDisk.ShowEditor;  // There is a bug: Form losses modal attribute after applying skin. So, I can call this ONLY at the end of initialization procedure. Even though I can click the main form, the Skins form is still marked as modal.
+ then TfrmSkinDisk.CreateFormModal;  // There is a bug: Form losses modal attribute after applying skin. So, I can call this ONLY at the end of initialization procedure. Even though I can click the main form, the Skins form is still marked as modal.
 
  MainForm.FontSizeChanged;
  AppData.MainFormCaption('');

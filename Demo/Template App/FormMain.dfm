@@ -11,8 +11,8 @@ object MainForm: TMainForm
   DoubleBuffered = True
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
-  Font.Height = -12
-  Font.Name = 'Arial'
+  Font.Height = -13
+  Font.Name = 'Segoe UI'
   Font.Style = []
   GlassFrame.Enabled = True
   Menu = MainMenu
@@ -24,13 +24,13 @@ object MainForm: TMainForm
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  TextHeight = 15
+  TextHeight = 17
   object pgCtrl: TPageControl
     Left = 0
     Top = 0
     Width = 700
     Height = 517
-    ActivePage = tabProgress
+    ActivePage = tabLog
     Align = alClient
     TabOrder = 0
     object tabMain: TTabSheet
@@ -54,10 +54,6 @@ object MainForm: TMainForm
           'RichEdit1')
         TabOrder = 1
       end
-    end
-    object tabLog: TTabSheet
-      Caption = 'Log'
-      ImageIndex = 4
     end
     object tabMemo: TTabSheet
       Caption = 'Memo'
@@ -90,7 +86,7 @@ object MainForm: TMainForm
       end
     end
     object tabProgress: TTabSheet
-      Caption = 'tabProgress'
+      Caption = 'Progress'
       ImageIndex = 3
       object btnProgress: TButton
         Left = 266
@@ -101,6 +97,10 @@ object MainForm: TMainForm
         TabOrder = 0
         OnClick = btnProgressClick
       end
+    end
+    object tabLog: TTabSheet
+      Caption = 'Log'
+      ImageIndex = 4
     end
   end
   object StatBar: TcubicStatusBar
@@ -117,13 +117,13 @@ object MainForm: TMainForm
   object MainMenu: TMainMenu
     Left = 53
     Top = 51
-    object File1: TMenuItem
+    object mnuFile: TMenuItem
       Caption = '&File'
       object mnuSettings: TMenuItem
         Action = actSettings
       end
     end
-    object Info1: TMenuItem
+    object mnuInfo: TMenuItem
       Caption = '&Info'
       object mnuUpdates: TMenuItem
         Action = actUpdater

@@ -168,7 +168,7 @@ procedure TIniFileVcl.SaveForm(Form: TForm; PosOnly:Boolean= FALSE);
   begin
     for i:= 0 to Component.ComponentCount-1 DO
      if IsSupported(Component.Components[i]) then
-      if Component.Components[i].InheritsFrom(TFrame)
+      if Component.Components[i].InheritsFrom(TFrame) //Frames
       then WriteComponentsOf(Component.Components[i])
       else WriteComp(Component.Components[i]);
   end;

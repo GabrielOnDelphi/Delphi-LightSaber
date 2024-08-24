@@ -1395,21 +1395,21 @@ END
 /* c:\delphi\delphi11\lib\Win32\release\FileCtrl.res */
 /* c:\delphi\delphi11\lib\Win32\release\WinXCtrls.res */
 /* c:\delphi\delphi11\lib\Win32\release\SPIN.RES */
-/* c:\Myprojects\Packages\LightSaber\22.0_Win32_Debug\FormLog.dfm */
-/* c:\Myprojects\Packages\LightSaber\22.0_Win32_Debug\cvFloatSpinEdit.dcr */
-/* c:\Myprojects\Packages\LightSaber\22.0_Win32_Debug\cvPathEdit.res */
-/* c:\Myprojects\Packages\LightAutoTranslator\22.0_Win32_Debug\FormTranslator.dfm */
-/* c:\Myprojects\Packages\LightAutoTranslator\22.0_Win32_Debug\FormSelectLang.dfm */
-/* c:\Myprojects\Packages\LightSaber\22.0_Win32_Debug\FormAsyncMessage.dfm */
-/* C:\MyProjects\Packages\LightSaber\FormAbout.dfm */
-/* C:\MyProjects\Packages\LightSaber\FormSkinsDisk.dfm */
-/* C:\MyProjects\Packages\LightSaber\Demo\Template App\FormSettings.dfm */
-/* C:\MyProjects\Packages\LightSaber\Updater\FormUpdaterEditor.dfm */
-/* C:\MyProjects\Packages\LightSaber\Updater\FormUpdaterRecEditor.DFM */
-/* C:\MyProjects\Packages\LightSaber\Updater\FormUpdaterNotifier.DFM */
-/* C:\MyProjects\Packages\LightSaber\Demo\Template App\FormMain.dfm */
-/* C:\MyProjects\Packages\LightSaber\FormUniversalEula.dfm */
-/* C:\MyProjects\Packages\LightSaber\FormSplashScreen.dfm */
-/* C:\MyProjects\Packages\LightSaber\FormSkinsRes.dfm */
-/* C:\MyProjects\Packages\LightSaber\Demo\Template App\TemplateApp.res */
-/* C:\MyProjects\Packages\LightSaber\Demo\Template App\TemplateApp.drf */
+/* C:\Myprojects\Packages\LightSaber\FormLog.dfm */
+/* c:\Myprojects\Packages\LightSaber\cvFloatSpinEdit.dcr */
+/* c:\Myprojects\Packages\LightSaber\cvPathEdit.res */
+/* C:\Myprojects\Packages\LightAutoTranslator\FormTranslator.dfm */
+/* C:\Myprojects\Packages\LightAutoTranslator\FormSelectLang.dfm */
+/* c:\Myprojects\Packages\LightSaber\FormAsyncMessage.dfm */
+/* C:\Myprojects\Packages\LightSaber\FormAbout.dfm */
+/* C:\Myprojects\Packages\LightSaber\FormSkinsDisk.dfm */
+/* C:\Myprojects\Packages\LightSaber\Demo\Template App\FormSettings.dfm */
+/* C:\Myprojects\Packages\LightSaber\Updater\FormUpdaterSettings.dfm */
+/* C:\Myprojects\Packages\LightSaber\Updater\FormUpdaterRecEditor.DFM */
+/* C:\Myprojects\Packages\LightSaber\Updater\FormUpdaterNotifier.DFM */
+/* C:\Myprojects\Packages\LightSaber\Demo\Template App\FormMain.dfm */
+/* C:\Myprojects\Packages\LightSaber\FormUniversalEula.dfm */
+/* C:\Myprojects\Packages\LightSaber\FormSplashScreen.dfm */
+/* C:\Myprojects\Packages\LightSaber\FormSkinsRes.dfm */
+/* C:\Myprojects\Packages\LightSaber\Demo\Template App\TemplateApp.res */
+/* C:\Myprojects\Packages\LightSaber\Demo\Template App\TemplateApp.drf */
