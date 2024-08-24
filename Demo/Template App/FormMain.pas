@@ -257,7 +257,7 @@ end;
 
 procedure TMainForm.actSettingsExecute(Sender: TObject);
 begin
-  TfrmSettings.CreateModal;
+  TfrmSettings.CreateFormModal;
   TrayIcon.MinimizeToTray:= AppData.Minimize2Tray;
 end;
 

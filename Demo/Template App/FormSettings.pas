@@ -14,13 +14,16 @@ UNIT FormSettings;
      User-defined application storage folder
 =============================================================================================================}
 
+{ToDo: fix issue with Skins. SkinForm loses modality after I apply skins. Maybe I close the form after I apply skins? }
 
 INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
   WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs,
-  cvIniFile, cvPathEdit, cmDebugger, cvRadioButton, cvCheckBox, cbAppData, cmGuiSettings;
+  cvIniFile, cvPathEdit, cmDebugger, cvRadioButton, 
+  cvCheckBox, cbAppData, 
+  cmGuiSettings;
 
 TYPE
   TfrmSettings = class(TForm)
@@ -63,22 +66,22 @@ TYPE
     procedure FormCreate              (Sender: TObject);
     procedure FormDestroy             (Sender: TObject);
     procedure spnHideHintChange       (Sender: TObject);
-    procedure spnOpacityChange(Sender: TObject);
+    procedure FormKeyPress            (Sender: TObject; var Key: Char);
+    procedure spnOpacityChange        (Sender: TObject);
   protected
-    procedure GuiFromObject;
-    procedure ObjectFromGUI; // Called after the main form was fully created
+    procedure GuiFromObject;  // Called after the main form was fully created
+    procedure ObjectFromGUI;
   private
     Saved: Boolean;
     procedure WMEndSession  (VAR Msg: TWMEndSession); message WM_ENDSESSION;
     procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully created
     procedure SaveBeforeExit;
   public
-    class procedure CreateModal; static;
+    class procedure CreateFormModal; static;
  end;
 
 VAR
    GuiSettings: TGuiSettings;
-
 
 IMPLEMENTATION {$R *.dfm}
 
@@ -89,22 +92,19 @@ USES
 {--------------------------------------------------------------------------------------------------
    CONSTRUCTOR
 --------------------------------------------------------------------------------------------------}
-class procedure TfrmSettings.CreateModal;
+class procedure TfrmSettings.CreateFormModal;
+VAR frmSettings: TfrmSettings;
 begin
  TAppData.RaiseIfStillInitializing;
- //Assert(GuiSettings <> NIL);
+ Assert(GuiSettings <> NIL);
+ frmSettings:= AppData.CreateForm(TfrmSettings, FALSE, TRUE) as TfrmSettings;
 
- VAR frmSettings:= TfrmSettings.Create(NIL);
+ if Translator <> NIL
+ then Translator.LoadFormTranlation(frmSettings);
+
  frmSettings.GuiFromObject;
- frmSettings.Font:= Application.MainForm.Font;     { Themes }
- frmSettings.FontDialog.Font.Assign(frmSettings.Font);
- Translator.LoadFormTranlation(frmSettings);
- frmSettings.ShowModal;      { Closed by mrOk/mrCancel }
- frmSettings.ObjectFromGUI;
- FreeAndNil(frmSettings);    { We need to free the form because the Close will only hide the form! }
+ frmSettings.ShowModal;    { Closed by mrOk/mrCancel. Set to caFree. }
 end;
-
-
 
 
 
@@ -114,6 +114,7 @@ end;
 procedure TfrmSettings.FormCreate(Sender: TObject);
 begin
  Saved:= FALSE;
+ FontDialog.Font.Assign(Font);
 end;
 
 
@@ -150,6 +151,14 @@ end;
 procedure TfrmSettings.FormDestroy(Sender: TObject);
 begin
  SaveBeforeExit;
+end;
+
+
+procedure TfrmSettings.FormKeyPress(Sender: TObject; var Key: Char);
+begin
+  {KeyDown event is less safer. If the form has a drop down controls with event assigned then form will close before the actual control finishes his drop-down behavior (like lookup combobox for example). Also if the form has caFree set on Close and combobox has OnCloseUp event you could get an AV because the form is closed before the combobox closeup event is called!
+  https://stackoverflow.com/questions/41940049/onkeypress-for-escape-closes-form-by-default }
+  if Ord(key) = vk_Escape then Close;
 end;
 
 
