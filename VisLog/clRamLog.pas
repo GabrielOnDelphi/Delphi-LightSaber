@@ -81,7 +81,7 @@ TYPE
 IMPLEMENTATION
 
 Uses
-   ccIO, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
+   ccIO, ccCore;
 
 
 

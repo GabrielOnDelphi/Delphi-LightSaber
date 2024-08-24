@@ -100,18 +100,13 @@
         </DCCReference>
         <DCCReference Include="..\..\Updater\ciUpdater.pas"/>
         <DCCReference Include="..\..\Updater\ciUpdaterRec.pas"/>
-        <DCCReference Include="..\..\Updater\FormUpdaterEditor.pas">
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="..\..\Updater\FormUpdaterNotifier.pas">
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="..\..\Updater\FormUpdaterRecEditor.pas">
-            <FormType>dfm</FormType>
-        </DCCReference>
         <DCCReference Include="..\..\..\LightAutoTranslator\cTranslate.pas"/>
         <DCCReference Include="..\..\..\LightAutoTranslator\FormSelectLang.pas"/>
         <DCCReference Include="..\..\..\LightAutoTranslator\FormTranslator.pas"/>
+        <DCCReference Include="..\..\Updater\FormUpdaterNotifier.pas"/>
+        <DCCReference Include="..\..\Updater\FormUpdaterRecEditor.pas"/>
+        <DCCReference Include="..\..\Updater\FormUpdaterSettings.pas"/>
+        <DCCReference Include="..\..\ciDownload.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

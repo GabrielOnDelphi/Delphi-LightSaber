@@ -18,7 +18,6 @@ object frmDemoStarter: TfrmDemoStarter
   ShowHint = True
   SnapBuffer = 4
   Visible = True
-  OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 14
 end

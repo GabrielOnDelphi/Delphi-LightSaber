@@ -11,10 +11,10 @@ object FrmUpdater: TFrmUpdater
   Constraints.MinHeight = 335
   Constraints.MinWidth = 434
   DoubleBuffered = True
-  Font.Charset = DEFAULT_CHARSET
+  Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
-  Font.Height = -12
-  Font.Name = 'Arial'
+  Font.Height = -13
+  Font.Name = 'Segoe UI'
   Font.Style = []
   Font.Quality = fqProof
   FormStyle = fsStayOnTop
@@ -25,7 +25,7 @@ object FrmUpdater: TFrmUpdater
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  TextHeight = 15
+  TextHeight = 17
   object lblConnectError: TLabel
     AlignWithMargins = True
     Left = 3
@@ -67,7 +67,7 @@ object FrmUpdater: TFrmUpdater
         Left = 3
         Top = 3
         Width = 668
-        Height = 15
+        Height = 17
         Align = alTop
         Alignment = taCenter
         Caption = '@Status'
@@ -79,7 +79,7 @@ object FrmUpdater: TFrmUpdater
       object pnlBottom: TPanel
         AlignWithMargins = True
         Left = 3
-        Top = 274
+        Top = 272
         Width = 668
         Height = 45
         Align = alBottom
@@ -200,9 +200,9 @@ object FrmUpdater: TFrmUpdater
       object Log: TRichLog
         AlignWithMargins = True
         Left = 3
-        Top = 24
+        Top = 26
         Width = 668
-        Height = 211
+        Height = 207
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
@@ -221,7 +221,7 @@ object FrmUpdater: TFrmUpdater
       object LogVerb: TRichLogTrckbr
         AlignWithMargins = True
         Left = 3
-        Top = 241
+        Top = 239
         Width = 668
         Height = 27
         Align = alBottom
@@ -251,11 +251,11 @@ object FrmUpdater: TFrmUpdater
       ImageIndex = 1
       DesignSize = (
         674
-        322)
+        320)
       object Panel3: TPanel
         AlignWithMargins = True
         Left = 232
-        Top = 72
+        Top = 71
         Width = 205
         Height = 142
         Anchors = []
@@ -312,11 +312,11 @@ object FrmUpdater: TFrmUpdater
       ImageIndex = 2
       DesignSize = (
         674
-        322)
+        320)
       object Panel2: TPanel
         AlignWithMargins = True
         Left = 212
-        Top = 125
+        Top = 124
         Width = 246
         Height = 72
         Anchors = []

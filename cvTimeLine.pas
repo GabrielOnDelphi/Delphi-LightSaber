@@ -1,6 +1,11 @@
 UNIT cvTimeLine;
 
-{
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
+
  A control that tries to simulate the timeline bar in VLC or BSPlayer.
  Additionally the user can place a "maker" at a certain timestamp, with MarkerPos.
 

@@ -3,30 +3,34 @@ UNIT uInitialization;
 INTERFACE
 
 USES
-   Winapi.ShellApi, Vcl.Forms, Vcl.Dialogs, Vcl.Controls, System.SysUtils;
+   Winapi.ShellApi, Vcl.Forms, Vcl.Dialogs, Vcl.Controls;
 
 CONST
-   Mutex        = 'Tester.SingleInstanceMutex';         { Do not change it. Must be the same as the one in Uninstaller }
-   HomePage     = 'http://www.GabrielMoraru.com';
-   wwwUpdaterURL= 'http://www.GabrielMoraru.com/updater.bin';
+   //Mutex        = 'Tester.SingleInstanceMutex';         { Do not change it. Must be the same as the one in Uninstaller }
+   HomePage     = 'https://www.GabrielMoraru.com';
+   UpdaterURL   = 'https://www.GabrielMoraru.com/updaterTest.bin';
 
 
 procedure LateInitialization;
 
 IMPLEMENTATION
 
-USES
-  ccCore, csSystem, cbDialogs, chHardID, SharedUninstaller,
-  cvIniFile, csShell, csExecuteShell, cmGuiSettings, cpProteusCertificate, cbAppData, cbCenterControl, cTranslate, ciUpdater,
-  FormMain, FormUpdaterNotifier, FormUniversalEula, FormLog, FormSkinsDisk, FormSettings, FormSplashScreen;
+USES 
+  chHardID, cvIniFile, csShell, csExecuteShell, cmGuiSettings,
+  cpProteusCertificate, cbAppData, cbCenterControl, cTranslate, ciUpdater,
+  FormMain, FormUniversalEula, FormSkinsDisk, FormSettings, FormSplashScreen;
 
 
 procedure LateInitialization;
 begin
- AppData.MainFormCaption('Initializing...');
- AppData.AppDataFolder(True);
- AppData.CompanyName:= 'Laboratories';
- AppData.ProductHomePage:= 'www.Laboratories.tech';
+ Randomize;
+
+ AppData.CompanyName:= 'SciVance';
+ AppData.ProductHomePage:= 'http://www.Laboratories.tech';
+ AppData.SupportPage:= HomePage;
+ AppData.UninstReason:= HomePage; 
+ AppData.AppDataFolder(True); 
+ AppData.MainFormCaption('Initializing...'); 
 
  { Settings }
  GuiSettings:= TGuiSettings.Create;
@@ -47,7 +51,8 @@ begin
 
  { Translator }
  Translator:= TTranslator.Create;  // Initialize the translator
- Translator.LoadLastTranslation;   // Load last language and apply it to all existing forms
+ if NOT AppData.RunningHome
+ then Translator.LoadLastTranslation;   // Load last language and apply it to all existing forms
 
  { Splash screen }
  if NOT AppData.RunningFirstTime
@@ -112,7 +117,6 @@ begin
    //FormAbout.ShowAboutParented(HomePage, MainForm.tabAbout);
    if NOT AppData.RunningHome
    then FormUniversalEula.ShowEulaModal;
-
   end;
 
  { Initialization end }
@@ -120,13 +124,14 @@ begin
  Randomize;
  Assert(Vcl.Dialogs.UseLatestCommonDialogs= TRUE);      { This is true anyway by defaul, but I check it to remember myself about it. Details: http://stackoverflow.com/questions/7944416/tfileopendialog-requires-windows-vista-or-later }
 
- CONST
-    // For testing purposes
-    wwwBioniXWall     = 'http://www.BionixWallpaper.com/';
- CONST wwwUpdaterBinTest = 'downloads/Bionix%20Desktop%20Wallpaper%20Changer/OnlineNews.bin';
 
  { Auto updater }
- Updater:= TUpdater.Create(wwwUpdaterBinTest);
+    // For testing purposes
+ CONST wwwBioniXWall     = 'http://www.BionixWallpaper.com/';
+ CONST wwwUpdaterBinTest = 'downloads/Bionix%20Desktop%20Wallpaper%20Changer/OnlineNews.bin';
+
+ 
+ Updater:= TUpdater.Create(wwwUpdaterBinTest); //wwwUpdaterURL
  Updater.URLDownload    := wwwBioniXWall+ '/downloads/index.html#soft'; // wwwDwnldPage;
  Updater.URLRelHistory  := wwwBioniXWall+ '/downloads/Bionix%20Desktop%20Wallpaper%20Changer/release-history.html#soft'; // wwwReleaseHistory;
 

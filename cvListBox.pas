@@ -52,36 +52,36 @@ TYPE
     procedure SetHeightAuto(MaxHeight: Integer; aForm: TControl);
 
     { Item access }
-    function  SelectedItemForce: string;                                                        { Same as SelectedItem but if no item is selected then force the first item selected }
-    function  SelectedItem: string;                                                             { returns the item the cursor is on }
-    function  SelectedItems: string;                                                            { return all selected text }
+    function  SelectedItemForce: string;                                 { Same as SelectedItem but if no item is selected then force the first item selected }
+    function  SelectedItem: string;                                      { returns the item the cursor is on }
+    function  SelectedItems: string;                                     { return all selected text }
     function  SelectedObject: TObject;
 
     { Selection }
-    function  SelCountEx: Integer;                                                              { does the same thing as 'SelCount' but also works when MultiSelect=False. SelCount does not work if MultiSelect=False }
+    function  SelCountEx: Integer;                                       { does the same thing as 'SelCount' but also works when MultiSelect=False. SelCount does not work if MultiSelect=False }
     procedure DeSelectAll;
     procedure SelectNext;
     procedure SelectFirstItem;
     procedure SelectLastItem;
-    procedure SelectItemSafe(Index: Integer);                                                   { Try to select the specified item. If the index is invalid no error is thrown and the closes item is selected }
+    procedure SelectItemSafe(Index: Integer);                            { Try to select the specified item. If the index is invalid no error is thrown and the closes item is selected }
 
     { Items }
     procedure SwapItems(x, y: Integer);
-    procedure MoveUp;                                                                           { Move current item up }
+    procedure MoveUp;                                                    { Move current item up }
     procedure MoveDown;
 
     function  FindItem(const aText: string): Integer;
 
     { Delete items }
-    procedure DeleteFirst(iCount: Integer);                                                     { Delete first x items }
+    procedure DeleteFirst(iCount: Integer);                              { Delete first x items }
     procedure DeleteSelected; override;
     function  RemoveDuplicates: Integer;
     function  RemoveEmptyLines: Integer;
-    function  RemoveLongLines(CONST iLength: integer): Integer;                                 { Remove all lines that are longer than iLength }
+    function  RemoveLongLines(CONST iLength: integer): Integer;          { Remove all lines that are longer than iLength }
     procedure Trim;
 
     { Visibility }
-    procedure NeedScrollBar;                                                                    { Calculate whether the ScrollBar is needed or not.  Must call 'OnResize' 'OnAddItems' 'OnAssignItems 'OnChanged' }
+    procedure NeedScrollBar;                                             { Calculate whether the ScrollBar is needed or not.  Must call 'OnResize' 'OnAddItems' 'OnAssignItems 'OnChanged' }
     procedure ScrollAtTheEnd;
     function  VisibleItems: Integer;
 
@@ -90,7 +90,7 @@ TYPE
     procedure SaveToFile  (FileName: string);
 
     { Special }
-    procedure MoveItemsTo(ListBox: TCubicListBox; iCount: Integer);                             { Move the first x items from the curent listbox to the bottom of another  listbox }
+    procedure MoveItemsTo(ListBox: TCubicListBox; iCount: Integer);      { Move the first x items from the curent listbox to the bottom of another  listbox }
     procedure AddLimit   (Msg: string);
    published
     property HintItemAuto     : Boolean read FHintItemAu  Write FHintItemAu default TRUE;       { Show the item under cursor as hint }

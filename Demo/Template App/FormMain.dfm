@@ -30,7 +30,7 @@ object MainForm: TMainForm
     Top = 0
     Width = 700
     Height = 517
-    ActivePage = tabMemo
+    ActivePage = tabProgress
     Align = alClient
     TabOrder = 0
     object tabMain: TTabSheet
@@ -60,7 +60,7 @@ object MainForm: TMainForm
       ImageIndex = 4
     end
     object tabMemo: TTabSheet
-      Caption = 'tabMemo'
+      Caption = 'Memo'
       ImageIndex = 2
       object Path: TCubicPathEdit
         Left = 0
@@ -87,6 +87,19 @@ object MainForm: TMainForm
         Height = 438
         Align = alRight
         TabOrder = 2
+      end
+    end
+    object tabProgress: TTabSheet
+      Caption = 'tabProgress'
+      ImageIndex = 3
+      object btnProgress: TButton
+        Left = 266
+        Top = 200
+        Width = 143
+        Height = 49
+        Caption = 'Progress'
+        TabOrder = 0
+        OnClick = btnProgressClick
       end
     end
   end

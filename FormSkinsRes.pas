@@ -50,7 +50,7 @@ INTERFACE
 
 USES
   Winapi.Windows, System.SysUtils, System.Classes,
-  Vcl.Styles, Vcl.Themes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls;
+  Vcl.Themes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls;
 
 TYPE
   TfrmSkinRes = class(TForm)
@@ -87,7 +87,7 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
    {uLinks,} csExecuteShell, cbAppData, cTranslate,
-   cmINIFileQuick, ccINIFile, cvIniFile;   {VCL.Styles is mandatory}
+   cmINIFileQuick, cvIniFile;   {VCL.Styles is mandatory}
 
 CONST
   DefWinTheme= 'Windows default theme';

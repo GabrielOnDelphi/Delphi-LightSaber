@@ -25,7 +25,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, Vcl.Forms, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls,
   InternetLabel,
-  ccCore, csSystem, cbDialogs, ciUpdater, llRichLog, llRichLogTrack, FormUpdaterEditor;
+  ccCore, csSystem, ciUpdater, llRichLog, llRichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
 
 TYPE
   TFrmUpdater = class(TForm)
@@ -59,7 +59,6 @@ TYPE
     procedure btnCheckTodayClick    (Sender: TObject);
     procedure btnIsTimeToCheckClick (Sender: TObject);
     procedure btnNewVersFoundClick  (Sender: TObject);
-    procedure btnOKClick            (Sender: TObject);
     procedure btnSettingsClick      (Sender: TObject);
     procedure btnTestInternetClick  (Sender: TObject);
     procedure OnConnectError        (Sender: TObject);
@@ -72,7 +71,7 @@ TYPE
     procedure FormClose             (Sender: TObject; var Action: TCloseAction);
   private
     Demo: Boolean;
-    frmEditor: TfrmUpdaterEditor;
+    frmSettings: TfrmUpdaterSettings;
     procedure PopulateNews;
   public
     class procedure ShowUpdater(Demo: Boolean = FALSE); static;
@@ -82,7 +81,7 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   llLogUtils, cTranslate, cGraphUtil, ccColors, FormUpdaterRecEditor, cbAppData, cbIniFile, ciInternet;
+   llLogUtils, cTranslate, ccColors, cbAppData, cbIniFile, ciInternet;
 
 VAR
    FrmUpdater: TFrmUpdater= NIL; { Only one instance allowed! }
@@ -117,7 +116,7 @@ begin
    FrmUpdater.Demo:= Demo;
    FrmUpdater.tabDemo.TabVisible:= Demo;
    FrmUpdater.tabRecEditor.TabVisible:= Demo;
-   FrmUpdater.LogVerb.Visible:= Demo;
+   FrmUpdater.LogVerb.Visible:= Demo OR AppData.BetaTesterMode;
    if Demo
    then FrmUpdater.LogVerb.Verbosity:= lvVerbose;
 
@@ -127,21 +126,14 @@ begin
    FrmUpdater.lblConnectError.Visible:= Updater.ConnectionError;
    FrmUpdater.PopulateNews;
 
-   { Nest the "Settings" form }
-   FrmUpdater.frmEditor:= TfrmUpdaterEditor.GetEditor;
-   FrmUpdater.frmEditor.Container.Parent:= FrmUpdater.tabSettings;
-   FrmUpdater.frmEditor.btnOK.Visible:= FALSE;
-   FrmUpdater.frmEditor.btnCancel.Visible:= FALSE;
+   { Nest the Settings form }
+   FrmUpdater.frmSettings:= TfrmUpdaterSettings.CreateParented(FrmUpdater.tabSettings);
   end;
 
  { Closed by mrOk/mrCancel }
  if FrmUpdater.Visible
  then FrmUpdater.Show     { Cannot make a visible window modal! }
- else
-   begin
-     FrmUpdater.ShowModal;
-     FreeAndNil(FrmUpdater);    { We need to free the form because the Close will only hide the form! }
-   end;
+ else FrmUpdater.ShowModal;
 end;
 
 
@@ -173,13 +165,13 @@ begin
  Updater.OnUpdateEnd   := NIL;
 
  SaveForm(Self);
- FreeAndNil(frmEditor);
 end;
 
 
 procedure TFrmUpdater.FormClose(Sender: TObject; VAR Action: TCloseAction);
 begin
- Action:= caFree;
+  Action:= caFree;
+  frmSettings.Container.Parent:= frmSettings;   { We need to move the container back on its original form, in order to let that form to correctly save its children }
 end;
 
 
@@ -248,7 +240,7 @@ begin
  Log.AddVerb('CheckForNews Today');
 
  Updater.Delay:= 1; { 1 seconds delay }
- Updater.When:= cwPerDay;
+ Updater.When:= cwHours;
 
  if NOT Updater.IsTimeToCheckAgain
  then Log.AddInfo('Already checked for news today.');
@@ -286,7 +278,7 @@ begin
  PageCtrl.ActivePage:= tabNews;
 
  Updater.Delay:= 1; { 1 seconds delay }
- Updater.When:= cwNow;
+ Updater.When:= cwStartUp;
  Updater.CheckForNews;
 end;
 
@@ -379,7 +371,7 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TFrmUpdater.btnSettingsClick(Sender: TObject);
 begin
- TfrmUpdaterEditor.ShowEditor(TRUE);
+ TfrmUpdaterSettings.ShowEditor(TRUE);
 end;
 
 
@@ -393,14 +385,6 @@ procedure TFrmUpdater.btnBinFileClick(Sender: TObject);
 begin
  TfrmRecEditor.ShowEditor;   { Generate the BIN file that we upload on FTP }
 end;
-
-
-procedure TFrmUpdater.btnOKClick(Sender: TObject);
-begin
- frmEditor.Apply;
-end;
-
-
 
 
 end.

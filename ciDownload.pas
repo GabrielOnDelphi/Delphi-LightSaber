@@ -65,8 +65,6 @@ IMPLEMENTATION
 USES
    ccCore, cbDialogs, ccIO, ciInternet;
 
-
-
 {-----------------------------------------------------------------------------------------------------------------------
    Allows you to set referers, user agents, and other stuff.
    Source:
@@ -84,6 +82,7 @@ USES
          https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept
 -----------------------------------------------------------------------------------------------------------------------}
 
+//Hint: use TIdURI.URLEncode() in IdURI.pas to encode an URL.
 function DownloadFile(CONST Url, Referer: String; OUT Data: TBytes; PostData: String= ''; SSL: Boolean = FALSE): Boolean;   { TESTED OK }
 VAR
   Buffer     : array[0..High(Word)*4] of Byte; { Buffer of 260KB }
@@ -118,13 +117,14 @@ begin
 
     if Assigned(pConnection) then
     TRY
-      if (PostData = '')
+      if PostData = ''
       then sMethod := 'GET'
       else sMethod := 'POST';
 
+      //  original, works
       if SSL
       then flags := INTERNET_FLAG_SECURE  OR INTERNET_FLAG_KEEP_CONNECTION
-      else flags := INTERNET_SERVICE_HTTP OR INTERNET_FLAG_RELOAD; // INTERNET_FLAG_RELOAD= Forces a download of the requested file, object, or directory listing from the origin server, not from the cache.;
+      else flags := INTERNET_SERVICE_HTTP OR INTERNET_FLAG_RELOAD; // INTERNET_FLAG_RELOAD= Forces a download of the requested file, object, or directory listing from the origin server, not from the cache.; *)
 
       Resource := UrlExtractResourceParams(Url);  { I also need to keep the server parameters (stuff after '?') because in this case it specifies the image resolution: http://cams.sr-online.de/cgi-bin/getImage.php?w=1200 . Without 1200 I will retrieve file at 320x240 resolution }
       pRequest := HTTPOpenRequest(pConnection, PWideChar(sMethod), PWideChar(Resource), nil, nil, nil, flags, 0);  { The third parameter of HttpOpenRequest is the file name (URL) of the script }
@@ -141,11 +141,11 @@ begin
            Header:= Header+ 'Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7'+ SLineBreak;
            Header:= Header+ 'Keep-Alive: 70'+ SLineBreak; { In windows, default is 60 sec }
            Header:= Header+ 'Connection: keep-alive'+ SlineBreak+ SLineBreak;
-
            HttpAddRequestHeaders(pRequest, PWideChar(Header), Length(Header), HTTP_ADDREQ_FLAG_ADD);
 
            Result:= HTTPSendRequest(pRequest, NIL, 0, Pointer(PostData), Length(PostData));     { The actual POST data is the forth parameter }
-           if Result then
+           if Result
+           then
              REPEAT
               ZeroMemory(@Buffer, SizeOf(Buffer));   // Fills the buffer with 0
 
@@ -161,7 +161,13 @@ begin
 
               { Merge arrays }
               Data:= Data+ TempBytes;
-             UNTIL BytesRead= 0;
+             UNTIL BytesRead= 0
+          else
+           begin
+             //Mesaj('HTTPSendRequest failed with error: ' + IntToStr(GetLastError));  returns 12007 which might be a DNS problem.
+             //Exit(False);
+           end;
+
         FINALLY
           InternetCloseHandle(pRequest);
         END

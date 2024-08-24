@@ -4,9 +4,9 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.AppEvnts, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs, Vcl.ExtCtrls,
-  cvIniFile, csSystem, cbDialogs, coolTrayIcon, cvPathEdit, cpProteus, cmDebugger,
-  cvRadioButton, cvCheckBox, cbAppData, cpProteusIO, cvTrayIcon, FoldPanel, cmGuiSettings;
+  WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs,
+  cvIniFile, cvPathEdit, cmDebugger,
+  cvRadioButton, cvCheckBox, cbAppData, cmGuiSettings;
 
 TYPE
   TfrmSettings = class(TForm)
@@ -54,15 +54,14 @@ TYPE
     class procedure CreateModal; static;
  end;
 
-
-VAR GuiSettings: TGuiSettings;
+VAR
+   GuiSettings: TGuiSettings;
 
 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   ccCore, cTranslate, FormSkinsDisk, csShell, FormMain;
-
+   cTranslate, FormSkinsDisk, csShell, FormMain;
 
 
 {--------------------------------------------------------------------------------------------------

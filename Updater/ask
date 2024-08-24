@@ -1,4 +1,7 @@
-﻿UNIT ciUpdater;
+change the code below so it can check for updates: never, now, every x hours.
+The first two are already implemented. For the last one, change the enumeration from cwPerDay to cwHours:
+
+UNIT ciUpdater;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -19,7 +22,7 @@
 ==============================================================================================================
 
    The Updater
-      Checks the website every x hours to see if updates of the product (app) are available.
+      Checks the website every x days to see if updates of the product (app) are available.
 
    The Announcer
       The online files keep information not only about the updates but also it keeps news (like "Discount available if you purchase by the end of the day").
@@ -32,11 +35,6 @@
       See the RNews recrod.
 
    Example of usage:
-
-      Updater:= TUpdater.Create(URL1);
-      Updater.URLDownload:= URL2;
-      Updater.CheckForNews;
-
       LightSaber\Demo\LightUpdater\Tester_Updater.dpr
 -------------------------------------------------------------------------------------------------------------}
 
@@ -47,13 +45,13 @@ USES
 
 TYPE
   TCheckWhen = (cwNever,
-                cwStartUp,         // Force to check for news now (the value of Delay is taken into consideration)
-                cwHours);          // Check for news but ONLY if the specified number of hours has passed
+                cwNow,         // Force to check for news now (the value of Delay is taken into considetation)
+                cwPerDay);      // Check for news but ONLY if we hasn't done it yet today
 
   TUpdater = class(TObject)
   private
     Timer          : TTimer;
-    LocalNewsID    : Integer;                 { The online counter is saved to disk after we successfully read it from the online file }
+    LocalNewsID    : Integer;                 { The online conter is saved to disk after we succesfully read it from onlien file }
     FUpdaterStart  : TNotifyEvent;
     FUpdaterEnd    : TNotifyEvent;
     FConnectError  : TNotifyEvent;
@@ -64,20 +62,20 @@ TYPE
     procedure Clear;
     function  TooLongNoSee: Boolean;
   protected
-    URLNewsFile    : string;                  { The URL from where we read the bin file containing the RNews record. Mandatory }
+    URLNewsFile    : string;                  { The URL from where we read the bin file containig the RNews record. mandatory }
   public
     { Input parameters }
     Delay          : Integer;                 { In seconds. Set it to zero to get the news right away. }
     When           : TCheckWhen;
     CheckEvery     : Integer;                 { In hours. How often to check for news. Set it to zero to check every time the program starts. }
-    ShowConnectFail: Boolean;                 { If true, the user doesn't want to see an error msg in case the program fails to connect to the internet. }
+    ShowConnectFail: Boolean;                 { If true, the user doesn't want to see an error msg in case the program fails to connect to internet. }
     ForceNewsFound : Boolean;                 { For DEBUGGING. If true, the object will always say that it has found news }
     { URLs }
     URLDownload    : string;                  { URL from where the user can download the new update. Not mandatory }
     URLRelHistory  : string;                  { URL where the user can see the Release History. Not mandatory }
     { Outputs }
     NewsRec        : RNews;                   { Temporary record }
-    HasNews        : Boolean;                 { Returns true if news were found }
+    HasNews        : Boolean;                 { Returns true is news were found }
     LastUpdate     : TDateTime;               { We signal with -1 that we don't know yet the value. We need to read it from disk, in this case (only once) }
     ConnectionError: Boolean;
 
@@ -106,13 +104,14 @@ TYPE
 VAR
    Updater: TUpdater; { Only one instance per app! }
 
+
 IMPLEMENTATION
 
 USES
   FormAsyncMessage, ciDownload, ccINIFile, cmDebugger, cbAppData;
 
 Const
-  TooLongNoSeeInterval = 180;    { Force to check for updates every 180 days even if the updater is disabled }
+  TooLongNoSeeInterval = 180;    { Force to checked for updates every 180 days even if the updater is disabled }
 
 
 {--------------------------------------------------------------------------------------------------
@@ -128,15 +127,12 @@ begin
   Timer.Enabled:= FALSE;
   Timer.OnTimer:= TimerTimer;
 
-  Clear;    { Default settings }
+  NewsRec.Clear;
 
-  if AppData.RunningFirstTime
-  then Delay      := 300          { Don't bother the user on first startup. Probably he has the latest version anyway. }
-  else Delay      := 30;
-
-  { Load user settings }
+  { Settings }
   if FileExists(AppData.IniFile)
-  then Load;
+  then LoadFrom(AppData.IniFile)       { Load user settings }
+  else Clear;                          { Default settings }
 end;
 
 
@@ -145,15 +141,18 @@ procedure TUpdater.Clear;
 begin
   NewsRec.Clear;
 
-  When        := cwHours;
+  When        := cwPerDay;
   HasNews     := FALSE;
   LocalNewsID := 0;
   LastUpdate  := 0;               { We signal with -1 that we don't know yet the value. We need to read it from disk, in this case (only once) }
 
   { Parameters }
-  CheckEvery      := 12;          { Hours. Default interval for checking updates. }
+  if AppData.RunningFirstTime
+  then Delay      := 300          { Don't bother the user on first startup. Probalby he has the latest version anyway. }
+  else Delay      := 30;
+  CheckEvery      := 12;          { Hours. Gives the "size" of a day }
   ForceNewsFound  := FALSE;
-  ShowConnectFail := TRUE;        { If true, the user doesn't want to see an error msg in case the program fails to connect to the internet. }
+  ShowConnectFail := TRUE;        { If true, the user doesn't want to see an error msg in case the program fails to connect to internet. }
 end;
 
 
@@ -162,7 +161,7 @@ begin
   FreeAndNil(Timer);
 
   TRY
-    Save;
+    SaveTo(AppData.IniFile);
   EXCEPT
     on E: Exception DO cmDebugger.OutputDebugStr(E.Message);
   END;
@@ -183,10 +182,10 @@ end;
 procedure TUpdater.CheckForNews;
 begin
   case When of
-    cwNever  : if TooLongNoSee then GetNewsDelay;  { Still check if we haven't done it in 6 months }
-    cwStartUp: GetNewsDelay;
-    cwHours  : if IsTimeToCheckAgain               { This will check for news ONLY if the specified number of hours has passed }
-               then GetNewsDelay;
+    cwNever : if TooLongNoSee then GetNewsDelay;  { Still check if we haven'tdone it in 6 months }
+    cwNow   : GetNewsDelay;
+    cwPerDay: if IsTimeToCheckAgain                    { This will check for news ONLY if it hasn't done it yet today }
+              then GetNewsDelay;
     else
        Raise Exception.Create('Unknown type in TCheckWhen');
   end;
@@ -216,7 +215,7 @@ end;
 { Where we store the News file locally }
 function UpdaterFileLocation: string;
 begin
- Result:= AppData.AppDataFolder+ 'Online.News';
+ Result:= AppData.AppDataFolder+ 'OnlineNews.bin';
 end;
 
 
@@ -302,14 +301,14 @@ end;
 { Returns true if we haven't checked for updates in the last 180 days }
 function TUpdater.TooLongNoSee: Boolean;
 begin
-  Result:= System.DateUtils.DaysBetween(Now, LastUpdate) >= TooLongNoSeeInterval;
+ Result:= System.DateUtils.DaysBetween(Now, LastUpdate) >= TooLongNoSeeInterval;
 end;
 
 
 { Returns true when the online version is higher than the local version }
 function TUpdater.NewVersionFound: boolean;
 begin
-  Result:= (NewsRec.AppVersion <> '?') AND (NewsRec.AppVersion > AppData.GetVersionInfo);
+ Result:= (NewsRec.AppVersion <> '?') AND (NewsRec.AppVersion > AppData.GetVersionInfo);
 end;
 
 
@@ -364,7 +363,7 @@ begin
    LocalNewsID     := IniFile.Read('LocalCounter', 0);
 
    { User settings }
-   When            := TCheckWhen(IniFile.Read('When', Ord(cwHours)));
+   When            := TCheckWhen(IniFile.Read('When', Ord(cwPerDay)));
    CheckEvery      := IniFile.Read('CheckEvery', 12);
    ForceNewsFound  := IniFile.Read('ForceNewsFound',  FALSE);
    ShowConnectFail := IniFile.Read('ShowConnectFail', TRUE);
@@ -375,3 +374,5 @@ end;
 
 
 end.
+
+

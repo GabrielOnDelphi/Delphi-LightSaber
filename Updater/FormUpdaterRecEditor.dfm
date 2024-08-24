@@ -17,13 +17,11 @@ object frmRecEditor: TfrmRecEditor
   Font.Style = []
   Font.Quality = fqProof
   FormStyle = fsStayOnTop
-  OldCreateOrder = False
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 3
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 15
   object pnlBtm: TPanel
     Left = 0
@@ -106,7 +104,7 @@ object frmRecEditor: TfrmRecEditor
       Left = 4
       Top = 4
       Width = 44
-      Height = 15
+      Height = 26
       Align = alLeft
       Caption = 'NewsID'
       Layout = tlCenter
@@ -116,7 +114,7 @@ object frmRecEditor: TfrmRecEditor
       Left = 138
       Top = 4
       Width = 34
-      Height = 15
+      Height = 26
       Align = alLeft
       Caption = 'Target'
       Layout = tlCenter
@@ -126,7 +124,7 @@ object frmRecEditor: TfrmRecEditor
       Left = 297
       Top = 4
       Width = 34
-      Height = 15
+      Height = 26
       Align = alLeft
       Caption = 'Show '
       Layout = tlCenter
@@ -136,7 +134,7 @@ object frmRecEditor: TfrmRecEditor
       Left = 384
       Top = 4
       Width = 39
-      Height = 15
+      Height = 26
       Align = alLeft
       Caption = 'time(s)'
       Layout = tlCenter
@@ -216,7 +214,7 @@ object frmRecEditor: TfrmRecEditor
       Left = 4
       Top = 4
       Width = 44
-      Height = 15
+      Height = 26
       Align = alLeft
       Caption = 'Version:'
       Layout = tlCenter

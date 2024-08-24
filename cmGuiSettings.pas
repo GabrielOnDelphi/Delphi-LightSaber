@@ -31,6 +31,7 @@ TYPE
     HintType     : THintType;     // Turn off the embeded help system
     HideHint     : Integer;       // Hide hint after x ms.
     UserPath     : string;        // User defined path where to save files
+    AutoDashboard: Boolean;       // Will the dashboard appear automatically when we click a project/exp?
 
     constructor Create;
     destructor Destroy; override;
@@ -54,6 +55,7 @@ begin
   HintType     := htTooltips;        // Turn off the embeded help system
   HideHint     := 4000;              // Hide hint after x ms.
   UserPath     := '';                // User defined path where to save files
+  AutoDashboard:= TRUE;
 end;
 
 
@@ -76,6 +78,7 @@ begin
     Stream.WriteInteger(Ord(HintType));
     Stream.WriteInteger(HideHint);
     Stream.WriteStringU(UserPath);
+    Stream.WriteBoolean(AutoDashboard);
 
     Stream.WritePaddingDef;
   FINALLY
@@ -100,6 +103,7 @@ begin
     HintType     := THintType(Stream.ReadInteger);  // Turn off the embeded help system
     HideHint     := Stream.ReadInteger;             // Hide hint after x ms.
     UserPath     := Stream.ReadStringU;             // User defined path where to save files
+    AutoDashboard:= Stream.ReadBoolean;
 
     Stream.ReadPaddingDef;
   FINALLY

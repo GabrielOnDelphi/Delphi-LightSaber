@@ -8,7 +8,6 @@ USES
 
 TYPE
  TfrmDemoStarter = class(TForm)
-    procedure FormCreate            (Sender: TObject);
     procedure FormDestroy           (Sender: TObject);
   private
     procedure LateInitialize(VAR Msg: TMessage); message MSG_LateAppInit; // Called after the main form was fully created
@@ -22,26 +21,21 @@ VAR
 
 IMPLEMENTATION  {$R *.dfm}
 USES
-   FormUpdaterNotifier;
+   IdURI, FormUpdaterNotifier;
 
 CONST
    // For testing purposes
-   wwwBioniXWall     = 'http://www.BionixWallpaper.com/';
-   wwwUpdaterBinTest = 'downloads/Bionix%20Desktop%20Wallpaper%20Changer/OnlineNews.bin';
+   wwwBioniXWall     = 'http://www.BionixWallpaper.com';
+   wwwUpdaterBinTest = '/downloads/Bionix%20Desktop%20Wallpaper%20Changer/OnlineNews.bin';
 
-
-
-procedure TfrmDemoStarter.FormCreate(Sender: TObject);
-begin
-  //
-end;
 
 
 procedure TfrmDemoStarter.LateInitialize;
 begin
- Updater:= TUpdater.Create(wwwUpdaterBinTest);
- Updater.URLDownload    := wwwBioniXWall+ '/downloads/index.html#soft'; // wwwDwnldPage;
- Updater.URLRelHistory  := wwwBioniXWall+ '/downloads/Bionix%20Desktop%20Wallpaper%20Changer/release-history.html#soft'; // wwwReleaseHistory;
+ Updater:= TUpdater.Create(wwwBioniXWall+ wwwUpdaterBinTest);
+ Updater.URLDownload   := wwwBioniXWall+ '/downloads/index.html#soft'; // wwwDwnldPage;
+ Updater.URLRelHistory := wwwBioniXWall+ '/downloads/Bionix%20Desktop%20Wallpaper%20Changer/release-history.html#soft'; // wwwReleaseHistory;
+ Updater.CheckForNews;
 
  { Create updater form }
  TFrmUpdater.ShowUpdater(TRUE);
@@ -53,13 +47,6 @@ procedure TfrmDemoStarter.FormDestroy(Sender: TObject);
 begin
  FreeAndNil(Updater);
 end;
-
-
-
-
-
-
-
 
 
 

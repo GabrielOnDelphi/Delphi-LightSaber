@@ -18,13 +18,11 @@ object frmEULA: TfrmEULA
   Font.Style = []
   FormStyle = fsStayOnTop
   KeyPreview = True
-  OldCreateOrder = True
   Position = poScreenCenter
   ScreenSnap = True
   ShowHint = True
   OnClose = FormClose
   OnKeyDown = FormKeyDown
-  PixelsPerInch = 96
   TextHeight = 13
   object btnOK: TButton
     AlignWithMargins = True

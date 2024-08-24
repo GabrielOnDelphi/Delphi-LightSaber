@@ -714,8 +714,8 @@ begin
     IniFile.SaveForm(Form, OnlyFormPos);
   EXCEPT
     ON EIniFileexception DO
-      if appdata <> NIL
-      then appdata.LogWarn('Cannot save INI file: '+ IniFile.FileName);
+      if AppData <> NIL
+      then AppData.LogWarn('Cannot save INI file: '+ IniFile.FileName);
   END;
  FINALLY
    FreeAndNil(IniFile);

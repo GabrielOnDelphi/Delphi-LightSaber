@@ -107,7 +107,8 @@
         </DCCReference>
         <DCCReference Include="..\..\FormSkinsDisk.pas"/>
         <DCCReference Include="..\..\FormSkinsRes.pas"/>
-        <DCCReference Include="..\..\..\..\Project support\Template - Universal Uninstaller\SharedUninstaller.pas"/>
+        <DCCReference Include="..\..\cvINIFile.pas"/>
+        <DCCReference Include="..\..\cbDialogs.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

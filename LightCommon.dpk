@@ -65,7 +65,6 @@ contains
   cmSound in 'cmSound.pas',
   cmStrBuilder in 'cmStrBuilder.pas',
   cmStreamMem in 'cmStreamMem.pas',
-  cmstringlist in 'cmstringlist.pas',
   cmStringListA in 'cmStringListA.pas',
   cmUTF8 in 'cmUTF8.pas',
   cmVclUtils in 'cmVclUtils.pas',
@@ -84,7 +83,8 @@ contains
   csWMIResolution in 'csWMIResolution.pas',
   FormAsyncMessage in 'FormAsyncMessage.pas',
   cmGuiSettings in 'cmGuiSettings.pas',
-  csProcess in 'csProcess.pas';
+  csProcess in 'csProcess.pas',
+  cmStringList in 'cmStringList.pas';
 
 end.
 

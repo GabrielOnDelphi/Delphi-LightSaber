@@ -79,7 +79,7 @@ TYPE
     FOnDefaultSkin: TNotifyEvent;
     procedure PopulateSkins;
   public
-    class procedure ShowEditor; static;
+    class procedure CreateFormModal; static;
     class procedure ShowEditorNonModal(Nottify: TNotifyEvent); static;
   published
     property OnDefaultSkin: TNotifyEvent read FOnDefaultSkin write FOnDefaultSkin;
@@ -97,7 +97,7 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
    ccColors, cTranslate, cmINIFileQuick, {uLinks,} Vcl.Themes, cbAppData, csExecuteShell,
-   cGraphUtil, cmSound, cmVclUtils, cbCenterControl, cvIniFile, IOUtils, ccIO, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;   { VCL.Styles is mandatory here}
+   cvIniFile, IOUtils, ccIO, ccCore, cbDialogs;   { VCL.Styles is mandatory here}
 
 CONST
   DefWinTheme= 'Windows default theme';
@@ -162,39 +162,36 @@ end;
 -----------------------------------------------------------------------------------------------------------------------}
 
 { THERE IS A BUG THAT CRASHES THE PROGRAM WHEN I CLOSE THIS WINDOW (after applying a skin) }
-class procedure TfrmSkinDisk.ShowEditor;
+class procedure TfrmSkinDisk.CreateFormModal;
+VAR frmEditor: TfrmSkinDisk;
 begin
- VAR frmEditor:= TfrmSkinDisk.Create(NIL);
+ frmEditor:= AppData.CreateForm(TfrmSkinDisk, FALSE, TRUE) as TfrmSkinDisk;
 
- WITH frmEditor DO
- begin
-   LoadForm(frmEditor, TRUE);            { Position form }
-   if Translator <> NIL then Translator.LoadFormTranlation(frmEditor);
-   Font:= Application.MainForm.Font;     { Themes }
- end;
+ if Translator <> NIL
+ then Translator.LoadFormTranlation(frmEditor);
 
- { Closed by mrOk/mrCancel }
+ { Closed by mrOk/mrCancel. Set to caFree. }
  frmEditor.ShowModal;      { Bug: IF I use ShowModal, after applying a new skin, the window will loose its 'modal' attribute! }
- FreeAndNil(frmEditor);    { We need to free the form because the Close will only hide the form! }
 end;
 
 
-{ Show non modal, for testing against bug: Crash when closing the "Skins" form. Fixed by keeping the form open
+{ Show non modal, for testing against bug: Crash when closing the "Skins" form.
+  Fixed by keeping the form open!
   Remember to call FreeAndNil(frmEditor) }
 class procedure TfrmSkinDisk.ShowEditorNonModal(Nottify: TNotifyEvent);
+VAR frmEditor: TfrmSkinDisk;
 begin
- var frmEditor:= TfrmSkinDisk.Create(Application);
+ frmEditor:= AppData.CreateForm(TfrmSkinDisk, TRUE, TRUE) as TfrmSkinDisk;
 
- WITH frmEditor DO
- begin
-   OnDefaultSkin:= Nottify;
-   LoadForm(frmEditor, TRUE);            { Position form }
-   if Translator <> NIL then Translator.LoadFormTranlation(frmEditor);
-   Font:= Application.MainForm.Font;     { Themes }
- end;
+ frmEditor.OnDefaultSkin:= Nottify;
+ if Translator <> NIL
+ then Translator.LoadFormTranlation(frmEditor);
 
- frmEditor.Show;      { Bug: IF I use ShowModal, after applying a new skin, the window will loose its 'modal' attribute! }
+ frmEditor.Show;      { Bug: IF I use ShowModal, after applying a new skin, the window will lose its 'modal' attribute! }
 end;
+
+
+
 
 
 

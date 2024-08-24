@@ -25,7 +25,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls, ccCore, csSystem, cbDialogs;
+  Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls, ccCore, cbDialogs;
 
 TYPE
   TfrmSplash = class(TForm)
@@ -45,7 +45,7 @@ procedure ShowSplashScreen(ImgFileSize: integer);
 
 
 IMPLEMENTATION  {$R *.dfm}
-USES ccIO, cmIO, cmIO.Win, cGraphUtil, cmSound, cmVclUtils, cbCenterControl, cbAppData;
+USES ccIO, cbCenterControl, cbAppData;
 
 CONST
   StepUp    = 30;  { The higher the number the faster the speed (less time on screen) }

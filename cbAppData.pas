@@ -195,11 +195,13 @@ TYPE
     function  RunSelfAtWinStartUp(Active: Boolean): Boolean;
     function  RunFileAtWinStartUp(CONST FilePath: string; Active: Boolean): Boolean;
 
-    procedure CreateMainForm (aClass: TFormClass; OUT Reference; aShow: Boolean; MainFormOnTaskbar: Boolean= TRUE);
-    procedure CreateForm     (aClass: TFormClass; OUT Reference; aShow: Boolean); overload;
-    function  CreateForm     (aClass: TFormClass; aShow: Boolean): TForm;         overload;
-    procedure CreateFormModal(aClass: TFormClass; OUT Reference);                 overload;   // Do I need this?
-    procedure CreateFormModal(aClass: TFormClass);                                overload;
+    procedure CreateMainForm    (aClass: TFormClass; OUT Reference; Show: Boolean; MainFormOnTaskbar: Boolean= TRUE);
+
+    procedure CreateForm        (aClass: TFormClass; OUT Reference; Show: Boolean); overload;
+    function  CreateForm        (aClass: TFormClass; Show: Boolean= TRUE; Load: Boolean= TRUE): TForm;     overload;
+
+    procedure CreateFormModal   (aClass: TFormClass; OUT Reference);                 overload;   // Do I need this?
+    procedure CreateFormModal   (aClass: TFormClass);                                overload;
 
     procedure SetMaxPriority;
     procedure HideFromTaskbar;
@@ -262,7 +264,7 @@ VAR                      //ToDo: make sure AppData is unique (make it Singleton)
 IMPLEMENTATION
 
 USES
-  cbWinVersion, ccIO, cbRegistry, cbDialogs, cbCenterControl;
+  cbWinVersion, cbIniFile, ccIO, cbRegistry, cbDialogs, cbCenterControl;
 
 {-------------------------------------------------------------------------------------------------------------
  Parameters
@@ -329,16 +331,16 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    FORMS
 -------------------------------------------------------------------------------------------------------------}
-procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; aShow: Boolean; MainFormOnTaskbar: Boolean= TRUE);
+procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; Show: Boolean; MainFormOnTaskbar: Boolean= TRUE);
 begin
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
   Assert(Font = NIL,                 'AppData.Font already assigned!');
 
   Application.MainFormOnTaskbar := FALSE;
-  Application.ShowMainForm      := aShow;      // Must be false if we want to prevent form flicker during skin loading at startup
+  Application.ShowMainForm      := Show;      // Must be false if we want to prevent form flicker during skin loading at startup
 
   Application.CreateForm(aClass, Reference);
-  if aShow
+  if Show
   then TForm(Reference).Show;
 
   // We get the font from the main form. Then we apply this font to any future window.
@@ -361,7 +363,7 @@ end;
 { 1. Create the form
   2. Set the font of the new form to be the same as the font of the MainForm
   3. Show it }
-procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; aShow: Boolean);
+procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean);
 begin
   Assert(Application.MainForm <> NIL, 'Probably you forgot to create the main form with AppData.CreateMainForm!');
 
@@ -370,11 +372,28 @@ begin
   if TForm(Reference) <> Application.MainForm
   then TForm(Reference).Font:= Self.Font;
 
-  if aShow then TForm(Reference).Show;
+  if Show then TForm(Reference).Show;
 end;
 
 
-function TAppData.CreateForm(aClass: TFormClass; aShow: Boolean): TForm;
+function TAppData.CreateForm(aClass: TFormClass; Show: Boolean= TRUE; Load: Boolean= TRUE): TForm;
+begin
+  Assert(Application.MainForm <> NIL, 'Probably you forgot to create the main form with AppData.CreateMainForm!');
+
+  Application.CreateForm(aClass, Result);
+
+  // Load form position
+  if Load then cbIniFile.LoadForm(Result, TRUE);
+
+  // Font
+  if TForm(Result) <> Application.MainForm
+  then TForm(Result).Font:= Self.Font;
+
+  if Show then TForm(Result).Show;
+end;
+
+{del
+function TAppData.CreateFormCentered(aClass: TFormClass; CenterIn: TForm; aShow: Boolean= TRUE): TForm;
 begin
   Assert(Application.MainForm <> NIL, 'Probably you forgot to create the main form with AppData.CreateMainForm!');
 
@@ -383,8 +402,10 @@ begin
   if TForm(Result) <> Application.MainForm
   then TForm(Result).Font:= Self.Font;
 
+  CenterForm(Result, CenterIn);
+
   if aShow then TForm(Result).Show;
-end;
+end; }
 
 
 procedure TAppData.CreateFormModal(aClass: TFormClass);

@@ -36,12 +36,12 @@ TYPE
   private
   public
     Proteus: TProteus;
-    class procedure ShowFormModal; static;
-    class procedure ShowParented (Parent: TWinControl); static;
+    class procedure CreateFormModal; static;
+    class function CreateFormParented(Parent: TWinControl): TfrmAboutApp; static;
   end;
-
+{
 VAR
-  frmAbout: TfrmAboutApp;
+  frmAbout: TfrmAboutApp;  }
 
 
 
@@ -49,29 +49,28 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
    //uLinks,
-   cbCenterControl, cbAppData, ccCore, csSystem, cbDialogs;
+   cbCenterControl, cbAppData, cbDialogs;
 
 
 
-class procedure TfrmAboutApp.ShowFormModal;
+
+class procedure TfrmAboutApp.CreateFormModal;
 begin
- frmAbout:= TfrmAboutApp.Create(Application);
- frmAbout.inetHomePage.Link:= AppData.ProductHomePage;
- frmAbout.ShowModal;
+  VAR Form:= AppData.CreateForm(TfrmAboutApp, FALSE, TRUE) as TfrmAboutApp;
+  Form.ShowModal;
 end;
 
 
-{ This won't to parent the form directly. See: https://stackoverflow.com/questions/42065369/how-to-parent-a-form-controls-wont-accept-focus }
-class procedure TfrmAboutApp.ShowParented(Parent: TWinControl);
-begin
- frmAbout:= TfrmAboutApp.Create(Application);
- frmAbout.Container.Align:= alNone;
- frmAbout.Container.BevelInner:= bvRaised;
- frmAbout.Container.BevelOuter:= bvLowered;
 
- frmAbout.Container.Parent:= Parent;
- frmAbout.inetHomePage.Link:= AppData.ProductHomePage;
- CenterChild(frmAbout.Container, Parent);
+{ This won't to parent the form directly. See: https://stackoverflow.com/questions/42065369/how-to-parent-a-form-controls-wont-accept-focus }
+class function TfrmAboutApp.CreateFormParented(Parent: TWinControl): TfrmAboutApp;
+begin
+ Result:= AppData.CreateForm(TfrmAboutApp, FALSE, TRUE) as TfrmAboutApp;
+ Result.Container.Align:= alNone;
+ Result.Container.BevelInner:= bvRaised;
+ Result.Container.BevelOuter:= bvLowered;
+ Result.Container.Parent := Parent;
+ CenterChild(Result.Container, Parent);
 end;
 
 
@@ -90,7 +89,9 @@ begin
 
  lblCopyRight.Caption := 'Copyright '+ AppData.CompanyName;
  lblVersion.Caption   := 'Version '  + AppData.GetVersionInfo;
+
  lblAppName.Caption   := AppData.AppName;
+ inetHomePage.Link    := AppData.ProductHomePage;
 end;
 
 

@@ -189,8 +189,10 @@ procedure LoadForm(Form: TForm; OnlyFormPos: Boolean= FALSE);
 VAR
    IniFile: TIniFileCubic;
 begin
- if Application.MainForm <> NIL
- then Form.Font:= Application.MainForm.Font;
+ if AppData = NIL then                { If AppData exists, let it deal with the font }
+   if (Application.MainForm <> NIL)     { Set font only for secondary forms }
+   AND (Form <> Application.MainForm)
+   then Form.Font:= Application.MainForm.Font;
 
  IniFile:= TIniFileCubic.Create(Form.Name);
  TRY

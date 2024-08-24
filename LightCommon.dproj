@@ -116,7 +116,6 @@
         <DCCReference Include="cmSound.pas"/>
         <DCCReference Include="cmStrBuilder.pas"/>
         <DCCReference Include="cmStreamMem.pas"/>
-        <DCCReference Include="cmstringlist.pas"/>
         <DCCReference Include="cmStringListA.pas"/>
         <DCCReference Include="cmUTF8.pas"/>
         <DCCReference Include="cmVclUtils.pas"/>
@@ -136,6 +135,7 @@
         <DCCReference Include="FormAsyncMessage.pas"/>
         <DCCReference Include="cmGuiSettings.pas"/>
         <DCCReference Include="csProcess.pas"/>
+        <DCCReference Include="cmStringList.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

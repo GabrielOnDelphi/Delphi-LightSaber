@@ -58,7 +58,7 @@ TYPE
   TCubicBuffStream= class(System.Classes.TBufferedFileStream)
     private
     public
-     MagicNo: AnsiString; // Obsolete!
+     MagicNo: AnsiString; // Legacy!
 
      function  ReadBoolean : Boolean;
      function  ReadByte    : Byte;
@@ -111,7 +111,7 @@ TYPE
      function  RevReadInteger: Integer;
      function  RevReadWord    : Word;                                      { REVERSE READ - read 2 bytes and swap their position. For Motorola format. }
 
-     { Old Header. Obsolete! }
+     { Old Header. Legacy! }
      function  ReadMagicVer: Word;
      function  ReadMagicNo  (const MagicNo: AnsiString): Boolean;
      procedure WriteMagicNo (const MagicNo: AnsiString);
@@ -121,6 +121,7 @@ TYPE
      function  ReadHeader   (CONST Signature: AnsiString): Word;               overload;
      procedure ReadHeader   (CONST Signature: AnsiString; Version: Word);      overload;
      function  ReadHeaderTry(CONST Signature: AnsiString; Version: Word): Boolean;
+     function  ReadHeaderVersion(const Signature: AnsiString): Word;
      procedure WriteHeader  (CONST Signature: AnsiString; Version: Word);
 
      { Check point }
@@ -357,19 +358,29 @@ end;
 
 
 
-{ Reads file signature and version number. Returns True if found correct data.
-  Read the first x chars in a file and compares it with MagicNo.
-  If matches then reads another reads the FileVersion word.
-  Returns the FileVersion. If magicno fails, it returns zero }
+{ Reads file signature and version number. Returns True if found correct data. }
 function TCubicBuffStream.ReadHeaderTry(CONST Signature: AnsiString; Version: Word): Boolean; // old name: ReadHeaderB
 begin
  Assert(Signature > '', 'Signature is empty!');
  Assert(Version   > 0 , 'Version must be > 0');
 
- VAR Sgn:= ReadStringA;
- Result:= Sgn = Signature;
+ VAR s:= ReadStringA;
+ Result:= s = Signature;
  if Result
  then Result:= ReadWord = Version;
+end;
+
+
+{ Reads and compares the Signature. If signature matches, then it returns the version number.
+  This is useful when we want to read multiple versions from disk. }
+function TCubicBuffStream.ReadHeaderVersion(CONST Signature: AnsiString): Word;
+begin
+ Assert(Signature > '', 'Signature is empty!');
+
+ VAR s:= ReadStringA;
+ if s <> Signature
+ then RAISE Exception.Create('The file signature does not match!'+ CRLF+ string(s)+ '/'+ string(Signature));
+ Result:= ReadWord;
 end;
 
 
@@ -380,8 +391,8 @@ function TCubicBuffStream.ReadHeader(CONST Signature: AnsiString): Word;
 begin
  Assert(Signature > '', 'Signature is empty!');
 
- VAR Sgn:= ReadStringA;
- if Sgn = Signature
+ VAR s:= ReadStringA;
+ if s = Signature
  then Result:= ReadWord
  else Result:= 0;
 end;
@@ -881,17 +892,17 @@ VAR TotalBytes: Integer;
 begin
  if Len> 0
  then
-  begin
-   SetLength(Result, Len);                                              { Initialize the result }
-   //FillChar(Result[1], Len, '?'); DEBUG ONLY!
-   TotalBytes:= Read(Result[1], Len);                                   { Read is used in cases where the number of bytes to read from the stream is not necessarily fixed. It attempts to read up to Count bytes into buffer and returns the number of bytes actually read.  }
+   begin
+    SetLength(Result, Len);                                              { Initialize the result }
+    //FillChar(Result[1], Len, '?'); DEBUG ONLY!
+    TotalBytes:= Read(Result[1], Len);                                   { Read is used in cases where the number of bytes to read from the stream is not necessarily fixed. It attempts to read up to Count bytes into buffer and returns the number of bytes actually read.  }
 
-   if TotalBytes= 0
-   then Result:= ''
-   else
-     if TotalBytes < Len                                                { If there is not enough data to read... }
-     then SetLength(Result, TotalBytes);                                { ...set the buffer to whater I was able to read }
-  end
+    if TotalBytes= 0
+    then Result:= ''
+    else
+      if TotalBytes < Len                                                { If there is not enough data to read... }
+      then SetLength(Result, TotalBytes);                                { ...set the buffer to whater I was able to read }
+   end
  else Result:= '';
 end;
 

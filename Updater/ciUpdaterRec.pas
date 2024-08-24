@@ -20,6 +20,11 @@ TYPE
   TTargetUser = (tuAll, tuRegistered, tuTrial, tuDemo); { For which user category is this annoucement } { Discern between paid/trial/demo license so it can display messages based on the license state (for example, only show PURCHASE NOW to the Demo/expired_trial users)}
 
   RNews = record
+  private
+    const
+      Signature = 'LightUpdater';
+      CurrentVersion = 2;
+  public
     Comment     : string;
     { News }
     NewsHeadline: string;
@@ -44,8 +49,6 @@ IMPLEMENTATION
 USES
   ccStreamBuff;
 
-CONST
-  CurrentVersion = 1;
 
 
 
@@ -68,11 +71,16 @@ VAR
    IOStream: TCubicBuffStream;
 begin
  Clear;
- IOStream:= TCubicBuffStream.Create(FileName, fmOpenRead);
+ IOStream:= TCubicBuffStream.CreateRead(FileName);
  TRY
-   IOStream.Position:= 0;
+   { First try to read the old format (until 2024.08) }
    IOStream.MagicNo:= 'CubicUpdater';
-   Result:= IOStream.ReadMagicVer = CurrentVersion;      { Read MagicNo & version }
+   Result:= IOStream.ReadMagicVer = 1;
+   if NOT Result then
+     begin
+       IOStream.Position:= 0;
+       Result:= IOStream.ReadHeaderTry(Signature, CurrentVersion);
+     end;
 
    if Result then
     begin
@@ -88,6 +96,7 @@ begin
 
       IOStream.ReadPadding(128);
     end;
+
  FINALLY
    FreeAndNil(IOStream);
  END;
@@ -98,10 +107,9 @@ procedure RNews.SaveTo(FileName: string);
 VAR
    IOStream: TCubicBuffStream;
 begin
- IOStream:= TCubicBuffStream.Create(FileName, fmOpenWrite OR fmCreate);
+ IOStream:= TCubicBuffStream.CreateWrite(FileName);
  TRY
-   IOStream.MagicNo:= 'CubicUpdater';
-   IOStream.WriteMagicVer(CurrentVersion);      { MagicNo & version }
+   IOStream.WriteHeader(Signature, CurrentVersion);
    IOStream.WriteStringU (Comment);
    IOStream.WriteStringU (AppVersion);
    IOStream.WriteInteger (NewsID);

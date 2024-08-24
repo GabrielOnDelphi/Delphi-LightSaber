@@ -19,7 +19,6 @@ object frmSplash: TfrmSplash
   Font.Name = 'Arial'
   Font.Style = []
   FormStyle = fsStayOnTop
-  OldCreateOrder = False
   Position = poScreenCenter
   ScreenSnap = True
   ShowHint = True
@@ -28,7 +27,6 @@ object frmSplash: TfrmSplash
   StyleElements = [seFont, seBorder]
   OnClose = FormClose
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 14
   object imgSplash: TImage
     Left = 0

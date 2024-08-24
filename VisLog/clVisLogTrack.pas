@@ -55,7 +55,7 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
-Uses ccCore, csSystem, cbDialogs;
+Uses cbDialogs;
 
 
 

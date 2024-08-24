@@ -22,7 +22,8 @@ uses
   FormAbout in '..\..\FormAbout.pas',
   FormSkinsDisk in '..\..\FormSkinsDisk.pas',
   FormSkinsRes in '..\..\FormSkinsRes.pas',
-  SharedUninstaller in '..\..\..\..\Project support\Template - Universal Uninstaller\SharedUninstaller.pas';
+  cvINIFile in '..\..\cvINIFile.pas',
+  cbDialogs in '..\..\cbDialogs.pas';
 
 {$R *.res}
 

@@ -1,4 +1,4 @@
-object frmUpdaterEditor: TfrmUpdaterEditor
+object frmUpdaterSettings: TfrmUpdaterSettings
   Left = 0
   Top = 0
   AlphaBlend = True
@@ -7,60 +7,62 @@ object frmUpdaterEditor: TfrmUpdaterEditor
   BorderStyle = bsToolWindow
   Caption = 'Updater settings'
   ClientHeight = 412
-  ClientWidth = 600
+  ClientWidth = 520
   Color = clBtnFace
   DoubleBuffered = True
-  Font.Charset = DEFAULT_CHARSET
+  Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
+  Font.Height = -13
+  Font.Name = 'Segoe UI'
   Font.Style = []
   KeyPreview = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 4
+  OnClose = FormClose
+  OnCreate = FormCreate
   OnDestroy = FormDestroy
-  TextHeight = 13
+  TextHeight = 17
   object Container: TPanel
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 594
+    Width = 514
     Height = 406
     Align = alClient
     ShowCaption = False
     TabOrder = 0
     DesignSize = (
-      594
+      514
       406)
     object lblPrivacy: TLabel
       Left = 1
-      Top = 1
-      Width = 592
-      Height = 13
-      Align = alTop
+      Top = 325
+      Width = 512
+      Height = 34
+      Align = alBottom
       Alignment = taCenter
       Caption = 
-        'Privacy notice: The program only downloads data from our server.' +
-        ' No data at all is sent to the server!'
+        'Privacy notice: The program only downloads data from our website' +
+        '.'#13#10'No personal data is sent to our server!'
       Visible = False
     end
     object GroupBox1: TGroupBox
-      Left = 101
-      Top = 214
-      Width = 376
+      Left = 43
+      Top = 188
+      Width = 428
       Height = 121
       Anchors = []
       Caption = 'Internet connection'
       TabOrder = 0
       DesignSize = (
-        376
+        428
         121)
       object chkConnectFail: TCubicCheckBox
-        Left = 51
+        Left = 63
         Top = 37
-        Width = 275
+        Width = 324
         Height = 20
         Hint = 
           'Show message if the program encounters problems while trying to ' +
@@ -76,7 +78,7 @@ object frmUpdaterEditor: TfrmUpdaterEditor
         AutoSize = True
       end
       object btnTestInternet: TButton
-        Left = 105
+        Left = 131
         Top = 71
         Width = 165
         Height = 34
@@ -94,34 +96,34 @@ object frmUpdaterEditor: TfrmUpdaterEditor
       end
     end
     object grpInterval: TGroupBox
-      Left = 101
-      Top = 49
-      Width = 376
-      Height = 152
+      Left = 43
+      Top = 16
+      Width = 428
+      Height = 161
       Anchors = []
       Caption = 'Updates'
       TabOrder = 1
-      object lblDayHours: TLabel
-        Left = 89
-        Top = 94
-        Width = 149
-        Height = 13
+      object lblHours: TLabel
+        Left = 221
+        Top = 96
+        Width = 33
+        Height = 17
         Alignment = taRightJustify
-        Caption = 'The day has                     hours'
+        Caption = 'hours'
       end
       object chkEveryStart: TLabel
-        Left = 89
-        Top = 35
-        Width = 74
-        Height = 13
+        Left = 75
+        Top = 34
+        Width = 88
+        Height = 17
         Alignment = taRightJustify
         Caption = 'Check for news'
       end
-      object spnInterval: TCubicSpinEdit
-        Left = 156
-        Top = 91
+      object spnHours: TCubicSpinEdit
+        Left = 168
+        Top = 92
         Width = 45
-        Height = 22
+        Height = 27
         Hint = 
           'How often to check the web site for news and updates.'#13#10'If you wa' +
           'nt to check every 3 days, enter 72h here.'
@@ -132,9 +134,9 @@ object frmUpdaterEditor: TfrmUpdaterEditor
         Value = 24
       end
       object chkForceNewsFound: TCubicCheckBox
-        Left = 89
-        Top = 124
-        Width = 156
+        Left = 76
+        Top = 132
+        Width = 183
         Height = 18
         Caption = 'Force ThereAreNewsOnline'
         TabOrder = 1
@@ -145,33 +147,32 @@ object frmUpdaterEditor: TfrmUpdaterEditor
         Left = 108
         Top = 56
         Width = 178
-        Height = 21
+        Height = 25
         Style = csDropDownList
-        ItemIndex = 2
         TabOrder = 2
-        Text = 'Once per day'
         OnChange = cmbWhenChange
         Items.Strings = (
           'Never'
-          'Every time the program starts'
-          'Once per day')
+          'When the program starts'
+          'Every...')
       end
     end
     object pnlBtm: TPanel
       AlignWithMargins = True
       Left = 4
-      Top = 366
-      Width = 586
-      Height = 36
+      Top = 362
+      Width = 506
+      Height = 40
       Align = alBottom
+      BevelOuter = bvNone
       ParentColor = True
       TabOrder = 2
       object btnOK: TButton
         AlignWithMargins = True
-        Left = 396
-        Top = 4
-        Width = 90
-        Height = 28
+        Left = 390
+        Top = 3
+        Width = 113
+        Height = 34
         Hint = 
           'Save settings & close the window.'#13#10'Hint: You can also close the ' +
           'window with <Enter>'
@@ -179,35 +180,19 @@ object frmUpdaterEditor: TfrmUpdaterEditor
         Caption = 'OK'
         ModalResult = 1
         TabOrder = 0
-        OnClick = btnOKClick
-      end
-      object btnCancel: TButton
-        AlignWithMargins = True
-        Left = 492
-        Top = 4
-        Width = 90
-        Height = 28
-        Hint = 
-          'Close the window without saving.'#13#10'Hint: You can also close with ' +
-          'Escape.'
-        Align = alRight
-        Caption = 'Cancel'
-        ModalResult = 2
-        TabOrder = 1
-        OnClick = btnCancelClick
       end
       object btnApply: TButton
         AlignWithMargins = True
-        Left = 300
-        Top = 4
-        Width = 90
-        Height = 28
+        Left = 271
+        Top = 3
+        Width = 113
+        Height = 34
         Hint = 
           'Save settings & close the window.'#13#10'Hint: You can also close the ' +
           'window with <Enter>'
         Align = alRight
         Caption = 'Apply'
-        TabOrder = 2
+        TabOrder = 1
         OnClick = btnApplyClick
       end
     end

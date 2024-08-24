@@ -2,12 +2,12 @@ UNIT FormMain;
 
 INTERFACE
 
-USES
+USES 
   WinApi.Windows, WinApi.Messages, Winapi.ShellApi,
-  System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Dialogs, Vcl.Graphics,
-  ccCore, csSystem, cbDialogs, CoolTrayIcon, cvPathEdit, VCL.Menus,
-  cvStatusBar, cpProteus, FormLog, cvRadioButton, cvCheckBox, System.Actions, cpProteusIO,
-  Vcl.AppEvnts, cbAppData;
+  System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
+  csSystem, CoolTrayIcon, cvPathEdit, VCL.Menus,
+  cvStatusBar, cpProteus,
+  Vcl.AppEvnts, cbAppData, cpProteusIO, System.Actions;
 
   // c:\MyProjects\Packages\Third party packages\MenuPopupHints.pas
 
@@ -39,6 +39,8 @@ TYPE
     mnuAbout: TMenuItem;
     actLanguage: TAction;
     mnuLanguage: TMenuItem;
+    tabProgress: TTabSheet;
+    btnProgress: TButton;
     procedure actSettingsExecute (Sender: TObject);
     procedure AppEventsMinimize(Sender: TObject);    
     procedure btnSTARTClick      (Sender: TObject);
@@ -52,12 +54,13 @@ TYPE
     procedure actUpdaterExecute(Sender: TObject);
     procedure mnuAboutClick(Sender: TObject);
     procedure actLanguageExecute(Sender: TObject);
+    procedure btnProgressClick(Sender: TObject);
   protected
     procedure WMDROPFILES (VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Accept the dropped files from Windows Explorer }
   private
     Saved: Boolean;
     procedure WMEndSession(VAR Msg: TWMEndSession); message WM_ENDSESSION;
-    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateAppInit;
+    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateAppInit; // Called after the main form was fully created
   public
     procedure SaveBeforeExit;
     procedure FontSizeChanged;
@@ -68,10 +71,16 @@ VAR
 
 IMPLEMENTATION {$R *.dfm}
 
-USES cTranslate, cmGuiSettings, FormAbout, cbWinVersion, cvIniFile, ccIO, cmIO, cmIO.Win,
-     ciUpdater, FormSelectLang, FormUpdaterNotifier, FormSettings, cmDebugger, uInitialization;
-
-
+USES
+   ciUpdater,
+   cmGuiSettings,
+   cTranslate,
+   cvIniFile,
+   FormAbout,
+   FormSelectLang,   
+   FormSettings,
+   FormUpdaterNotifier,
+   uInitialization;
 
 
 
@@ -80,7 +89,7 @@ USES cTranslate, cmGuiSettings, FormAbout, cbWinVersion, cvIniFile, ccIO, cmIO, 
 --------------------------------------------------------------------------------------------------}
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
- Saved:= FALSE;
+  Saved:= FALSE;
 end;
 
 
@@ -133,12 +142,7 @@ begin
 end;
 
 
-procedure TMainForm.CanShowHint(Sender: TObject);
-begin
-  Application.ShowHint:= GuiSettings.HintType <> htOff;
-  if GuiSettings.HintType = htStatBar
-  then StatBar.SimpleText := GetLongHint(Application.Hint);
-end;
+
 
 
 { Calculates the size of GUI after the user applies new font. Needs to be called manually. }
@@ -147,13 +151,10 @@ procedure TMainForm.FontSizeChanged;
 begin
   StatBar.Height:= Canvas.TextHeight('pT|')+ 8;
 end;
- 
 
-procedure TMainForm.AppEventsMinimize(Sender: TObject);
-begin
- if GuiSettings.Minimize2Tray
- then TrayIcon.PutIconOnlyInTray;
-end;
+
+
+
 
 
 
@@ -169,6 +170,20 @@ begin
  FINALLY
   CursorNotBusy;
  END;
+end;
+
+
+procedure TMainForm.btnProgressClick(Sender: TObject);
+begin
+ {
+ USES Vcl.TaskBar
+ Taskbar.ProgressState:= TTaskBarProgressState(2);
+ for i:= 1 to 100 DO
+  begin
+   Taskbar.ProgressValue:=  Taskbar.ProgressValue+ 1;
+   DelayEx(40);
+  end;
+ Taskbar.ProgressState:= TTaskBarProgressState(0);  }
 end;
 
 
@@ -204,7 +219,7 @@ end;
 
 procedure TMainForm.mnuAboutClick(Sender: TObject);
 begin
-  TfrmAboutApp.ShowFormModal;
+  TfrmAboutApp.CreateFormModal;
 end;
 
 procedure TMainForm.actEnterKeyExecute(Sender: TObject);
@@ -237,26 +252,24 @@ begin
 end;
 
 
-
+procedure TMainForm.AppEventsMinimize(Sender: TObject);
+begin
+ if GuiSettings.Minimize2Tray
+ then TrayIcon.PutIconOnlyInTray;
+end;
 
  
+procedure TMainForm.CanShowHint(Sender: TObject);
+begin
+  Application.ShowHint:= GuiSettings.HintType <> htOff;
+  if GuiSettings.HintType = htStatBar
+  then StatBar.SimpleText := GetLongHint(Application.Hint);
+end; 
 
 
 
 end.{
 
-
-procedure TMainForm.btnProgressClick(Sender: TObject);
-VAR i: Integer;
-begin
- Taskbar.ProgressState:= TTaskBarProgressState(2);
- for i:= 1 to 100 DO
-  begin
-   Taskbar.ProgressValue:=  Taskbar.ProgressValue+ 1;
-   DelayEx(40);
-  end;
- Taskbar.ProgressState:= TTaskBarProgressState(0);
-end;
 
 
 
