@@ -52,8 +52,7 @@ procedure TDutUtils.ConvertToUtf(AddBOM: Boolean);
 begin
  if NOT cmUTF8.FileHasBOM(SearchResults.Last.FileName) then
    begin
-     VAR s:= StringFromFile(SearchResults.Last.FileName);
-     StringToFile(SearchResults.Last.FileName, s, woOverwrite, AddBOM);
+     cmUTF8.ConvertToUTF(SearchResults.Last.FileName);
      SearchResults.Last.AddNewPos('Converted to UTF8');
    end;
 end;

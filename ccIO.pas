@@ -1188,13 +1188,12 @@ begin
    if NOT ForceDirectoriesB(DestFolder)
    then EXIT('');
 
- REPEAT    { Increment file name until a file with same name does not exist anymore }
+ Result:= AppendFileExtension(Result, NewExtension);
+
+ WHILE FileExists(Result) DO { Increment file name until a file with same name does not exist anymore }
    Result:= IncrementFileNameEx(Result, 1, 3);
- UNTIL NOT FileExists(Result);
 
- var NewFileName:= AppendFileExtension(FileName, NewExtension);
-
- TFile.Copy(NewFileName, Result, TRUE);
+ TFile.Copy(FileName, Result, TRUE);
 end;
 
 
@@ -1731,12 +1730,14 @@ end;
       See: https://stackoverflow.com/questions/35708827/what-could-cause-no-mapping-for-the-unicode-character-exists-in-the-target-mult }
 function StringFromFile(CONST FileName: string; IgnoreExists: Boolean= FALSE; Enc: TEncoding= NIL): String;
 begin
-  if IgnoreExists AND NOT FileExists(FileName)
+  if IgnoreExists
+  AND NOT FileExists(FileName)
   then EXIT('');
 
   if Enc= NIL
   then Result:= System.IOUtils.TFile.ReadAllText(FileName)
-  else Result:= System.IOUtils.TFile.ReadAllText(FileName, Enc);
+  else
+                         Result:= System.IOUtils.TFile.ReadAllText(FileName, Enc);
 end;
 
 

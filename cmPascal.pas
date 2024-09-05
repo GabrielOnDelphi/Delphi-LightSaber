@@ -31,7 +31,7 @@ function CountComments    (CONST FileName: string): Integer;
 // Search
 function RelaxedSearch    (      CodeLine, Instruction: string): Boolean;
 function RelaxedSearchI   (CONST CodeLine, Instruction: string): Integer;
-function IsKeyword        (CONST CodeLine, Instruction: string): Boolean;
+function IsKeyword        ( CodeLine, Instruction: string): Boolean;
 function IsReservedKeyword(CONST CodeLine: string): Boolean;
 function FindLine         (CONST Needle: string; Haystack: TStringList; StartAt: integer): Integer;
 function WordPos          (CONST Needle, HayStack: string): Integer;
@@ -251,16 +251,13 @@ end;
       CodeLine:    B:= True;
       Instruction: b:=true;
     We need to make sure that the string in the second parameter (Instruction) is correctly formated. }
-    {
-function RelaxedSearch(const CodeLine, Instruction: string): Boolean;     //old name:  CodeLineIs
-begin
-  var CodeLine2:= StringReplace(CodeLine, ' ', '', [rfReplaceAll]);
-  Result:= PosInsensitive(Instruction, CodeLine2) = 1;
-end;}
 
+
+//out
 function RelaxedSearch(CodeLine, Instruction: string): Boolean;
 begin
   // Strip comments from the line
+  CodeLine:= Trim(CodeLine);
   CodeLine := StripComments(CodeLine);
 
   // Remove all spaces and make strings lowercase for case-insensitive comparison
@@ -272,9 +269,23 @@ end;
 
 
 { Find delphi keywords (that don't require a semicolon) like: begin, try, except. }
-function IsKeyword(const CodeLine, Instruction: string): Boolean;
+function IsKeyword(CodeLine, Instruction: string): Boolean;
+var
+  Regex: string;
 begin
-  Result:= RelaxedSearch(Instruction, Trim(CodeLine));
+  // Strip comments from the line
+  CodeLine := Trim(StripComments(CodeLine));
+
+  // Convert to lowercase for case-insensitive comparison
+  CodeLine := LowerCase(CodeLine);
+  Instruction := LowerCase(Instruction);
+
+  // Create a regular expression to match the instruction as a word
+  // \b indicates a word boundary, so it will match "except" but not "ExceptObject"
+  Regex := '\b' + Instruction + '\b';
+
+  // Use regular expression to check if the instruction appears in the code line
+  Result := TRegEx.IsMatch(CodeLine, Regex);
 end;
 
 

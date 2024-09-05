@@ -1,7 +1,7 @@
 ﻿UNIT dutUpgradeCode;
 
 { Upgrade code to higher standards:
-    * Find Try/Except abusive usage
+    * Find abusive usage of Try/Except (places where we swallow exceptions)
     * Fix the Embarcadero SetFocus problem.  }
 
 INTERFACE
@@ -26,7 +26,6 @@ USES
    cmPascal, ccCore, ccIO;
 
 
-{ Returns the line(s) where the text was found }
 procedure TDutUpgrade.FindTryExcept(Replace: Boolean);
 var
    TextBody: TStringList;
@@ -54,13 +53,17 @@ begin
  try
    for iLine:= 1 to TextBody.Count-2 do
      begin
-       sPrev    := TextBody[iLine-1];
-       sCurrLine:= TextBody[iLine];
-       NextLine := TextBody[iLine+1];
+       sPrev    := trim(TextBody[iLine-1]);
+       sCurrLine:= trim(TextBody[iLine]);
+       NextLine := trim(TextBody[iLine+1]);
 
        if LineIsAComment(sCurrLine) then Continue;     // Ignore comments
 
        Found:= IsKeyword(sCurrLine, 'except');
+
+       if Found
+       then Found:= RelaxedSearch(NextLine, 'end;');
+
        if Found then
         begin
           SearchResults.Last.AddNewPos(iLine, 1, sCurrLine);       // Returns the line(s) where the text was found
@@ -81,7 +84,7 @@ begin
              then sWarnings:= sWarnings+ CRLF+ 'Use of b:=true @line'+ IntToStr(iLine);
 
              //Case 2. the tool always inserts the logging code if there is nothing between Except/end
-             if PosInsensitive('end;', trim(NextLine)) = 1
+             if RelaxedSearch(NextLine, 'end;')  // needed?
              then sCurrLine:= sCurrLine+ AddLog
              else
                //Case 1: the tool will not insert the logging code if there is a "result:= something" line after Except

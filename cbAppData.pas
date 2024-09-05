@@ -57,6 +57,8 @@
          Application.Title := AppData.AppName;
          Application.ShowMainForm:= True;
          MainForm.Show;
+         Not necessary to free AppData. It frees itself.
+
 
      The "AppData.Initializing" Flag
         Once the program is fully initialized set Initializing to False.
@@ -72,7 +74,7 @@
         Example:
             TfrmMain = class(TForm)
              private
-               procedure LateInitialize(VAR Msg: TMessage); message MSG_LateAppInit; // Called after the main form was fully initilized
+               procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully initilized
             end;
 
  ____________________________________________________________________________________________________________
@@ -111,7 +113,7 @@ USES
   FormLog, ccCore, cbIniFile;
 
 CONST
-  MSG_LateFormInit = WM_APP + 4711;         { Old name: MSG_LateInitialize/MSG_LateAppInit  }
+  MSG_LateFormInit = WM_APP + 4711;         { Old name: MSG_LateFormInit/MSG_LateAppInit  }
 
 TYPE
   THintType = (htOff,                      // Turn off the embeded help system
@@ -431,6 +433,8 @@ begin
 
   if SignalInitEnd
   then Initializing:= FALSE;
+
+  MainFormCaption('');
 end;
 
 
@@ -1410,8 +1414,8 @@ INITIALIZATION
 
 FINALIZATION
 begin
-  if AppData <> NIL                // AppData will not be created when we load this package into the IDE
-  then FreeAndNil(AppData.frmLog); // Call this as late as possible
+  if (AppData <> NIL)                // AppData will not be created when we load this package into the IDE
+  then FreeAndNil(AppData.frmLog);   // Call this as late as possible
   FreeAndNil(AppData);
 end;
 

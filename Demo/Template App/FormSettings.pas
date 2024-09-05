@@ -154,6 +154,8 @@ end;
 
 procedure TfrmSettings.FormKeyPress(Sender: TObject; var Key: Char);
 begin
+  Assert(KeyPreview, 'In order to close with Esc we need to activate KeyPreview!');
+  
   {KeyDown event is less safer. If the form has a drop down controls with event assigned then form will close before the actual control finishes his drop-down behavior (like lookup combobox for example). Also if the form has caFree set on Close and combobox has OnCloseUp event you could get an AV because the form is closed before the combobox closeup event is called!
   https://stackoverflow.com/questions/41940049/onkeypress-for-escape-closes-form-by-default }
   if Ord(key) = vk_Escape then Close;

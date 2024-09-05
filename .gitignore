@@ -27,3 +27,5 @@ Demo/All Visual Controls/22.0/Win32_Debug/DemoAllVisualControls.exe
 Demo/Template Universal Uninstaller/BUG REPORTS.LNK
 Demo/Template App/TemplateApp.delphilsp.json
 *.ficfg
+/22.0_Win32_Release
+/__recovery
