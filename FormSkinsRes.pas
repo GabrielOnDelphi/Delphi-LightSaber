@@ -72,8 +72,7 @@ TYPE
   private
     procedure PopulateSkins;
   public
-    class procedure ShowEditor; static;
-    class procedure ShowEditorNonModal; static;
+    class procedure CreateForm(Modal: Boolean); static;
  end;
 
 CONST
@@ -86,7 +85,7 @@ procedure LoadLastSkin(CONST DefaultSkin: string= '');  { On first run, set the 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   {uLinks,} csExecuteShell, cbAppData, cTranslate,
+   {uLinks,} csExecuteShell, cbAppData, cbINIFile, cTranslate,
    cmINIFileQuick, cvIniFile;   {VCL.Styles is mandatory}
 
 CONST
@@ -128,52 +127,19 @@ end;
 -----------------------------------------------------------------------------------------------------------------------}
 
 { THERE IS A BUG THAT CRASHES THE PROGRAM WHEN I CLOSE THIS WINDOW (after applying a skin) }
-class procedure TfrmSkinRes.ShowEditor;
+class procedure TfrmSkinRes.CreateForm(Modal: Boolean);
+VAR Form: TfrmSkinRes;
 begin
- VAR frmEditor:= TfrmSkinRes.Create(NIL);
-
- WITH frmEditor DO
- begin
-   LoadForm(frmEditor, TRUE);            { Position form }
-   if Translator <> NIL
-   then Translator.LoadFormTranlation(frmEditor);
-   Font:= Application.MainForm.Font;     { Themes }
- end;
+ AppData.CreateFormHidden(TfrmSkinRes, Form);
+ if Translator <> NIL
+ then Translator.LoadFormTranlation(Form);
 
  { Closed by mrOk/mrCancel }
- frmEditor.ShowModal;      { Bug: IF I use ShowModal, after applying a new skin, the window will loose its 'modal' attribute! }
- FreeAndNil(frmEditor);    { We need to free the form because the Close will only hide the form! }
+ { Bug: IF I use ShowModal, after applying a new skin, the window will loose its 'modal' attribute! }
+ if Modal
+ then Form.ShowModal
+ else Form.Show;     { Show non modal, for testing against bug. Remember to call FreeAndNil(frmEditor) }
 end;
-
-
-{ Show non modal, for testing against bug.
-  Remember to call FreeAndNil(frmEditor) }
-class procedure TfrmSkinRes.ShowEditorNonModal;
-begin
- var frmEditor:= TfrmSkinRes.Create(Application);
-
- WITH frmEditor DO
- begin
-   LoadForm(frmEditor, TRUE);            { Position form }
-   if Translator <> NIL
-   then Translator.LoadFormTranlation(frmEditor);
-   Font:= Application.MainForm.Font;     { Themes }
- end;
-
- frmEditor.Show;      { Bug: IF I use ShowModal, after applying a new skin, the window will loose its 'modal' attribute! }
-end;
-
-
-{
-procedure ShowSkinForm;
-VAR
-   frmSkins: TfrmSkinRes;
-begin
- frmSkins:= TfrmSkinRes.Create(NIL);
- frmSkins.ShowModal;
- FreeAndNil(frmSkins);
-end;  }
-
 
 
 {-----------------------------------------------------------------------------------------------------------------------

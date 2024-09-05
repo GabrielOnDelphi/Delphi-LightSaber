@@ -86,7 +86,7 @@ VAR
 begin
  Stream:= TCubicBuffStream.CreateRead(FileName);
  TRY
-   Result:= Stream.ReadHeadertry(RainMagicNo, 1);
+   Result:= Stream.ReadHeaderTry(RainMagicNo, 1);
  FINALLY
   FreeAndNil(Stream);
  END;
@@ -182,7 +182,7 @@ begin
    Stream.WriteCardinal(w);
    Stream.WriteCardinal(h);
    Params.Save(Stream);
-   Stream.WritePadding(940);
+   Stream.WritePadding0(940);
 
    { Write original image to the output stream }
    VAR JpgStream:= cGraphConvert.Bmp2JpgStream(OrigImage);
@@ -240,7 +240,7 @@ begin
         w:= Stream.ReadCardinal;
         h:= Stream.ReadCardinal;
         Params.Load(Stream);
-        Stream.ReadPadding(940);
+        Stream.ReadPadding0(940);
         Count:= Stream.ReadInteger;
 
         OrigImage:= TBitmap.Create;
@@ -310,7 +310,7 @@ begin
   Stream.WriteInteger(WaveAplitude);
   Stream.WriteInteger(WaveTravelDist);
   Stream.WriteInteger(DropInterval);
-  Stream.WritePadding(64);
+  Stream.WritePadding0(64);
 end;
 
 
@@ -321,7 +321,7 @@ begin
   WaveAplitude  := Stream.ReadInteger;
   WaveTravelDist:= Stream.ReadInteger;
   DropInterval  := Stream.ReadInteger;
-  Stream.ReadPadding(64);
+  Stream.ReadPadding0(64);
 end;
 
 

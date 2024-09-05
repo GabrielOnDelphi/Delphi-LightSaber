@@ -93,6 +93,10 @@ USES
 {$WARN GARBAGE OFF}              {Silence the: 'W1011 Text after final END' warning }
 
 TYPE
+  TFormLoading = (flNoLoad,         // Don't restore form position and GUI elements when the form is created
+                  flPositionOnly,   // Restore form position
+                  flLoad);          // Restore form position and GUI elements
+TYPE
  TIniFileVcl = class(TIniFileEx)
   private
   protected
@@ -106,8 +110,8 @@ TYPE
     function  IsSupported(WinCtrl: TComponent): Boolean; virtual;
     class function AsString: string;
 
-    procedure SaveForm (Form: TForm; PosOnly:Boolean= FALSE);       { Save ALL supported controls on this form }
-    procedure LoadForm (Form: TForm; PosOnly:Boolean= FALSE);
+    procedure SaveForm (Form: TForm; Loading: TFormLoading= flPositionOnly);      { Save ALL supported controls on this form }
+    procedure LoadForm (Form: TForm; Loading: TFormLoading= flPositionOnly);
 
     { Font - this requires VCL framework so it cannot be moved to ccIniFile! }
     function  Read       (CONST Ident: string; Font: TFont): Boolean;            overload;
@@ -126,8 +130,8 @@ TYPE
 
 
 { These only support standard VCL controls. If you want to save also the custom (Cubic) controls see cvIniFile }
-procedure SaveForm (Form: TForm; OnlyFormPos: Boolean= FALSE);
-procedure LoadForm (Form: TForm; OnlyFormPos: Boolean= FALSE);
+procedure SaveForm (Form: TForm; Loading: TFormLoading= flPositionOnly);
+procedure LoadForm (Form: TForm; Loading: TFormLoading= flPositionOnly);
 
 
 IMPLEMENTATION
@@ -161,7 +165,7 @@ end;
      Components[] just yields the components that are OWNED by the form.
      So, if we are iterating over it will miss any components that are added dynamically, and not owned by the form, or components that are owned by frames.
      Update 2021: Now frames are supported. All sub-components of a frame are stored to the INI file  }
-procedure TIniFileVcl.SaveForm(Form: TForm; PosOnly:Boolean= FALSE);
+procedure TIniFileVcl.SaveForm(Form: TForm; Loading: TFormLoading= flPositionOnly);
 
   procedure WriteComponentsOf(Component: TComponent);
   VAR i: Integer;
@@ -176,12 +180,12 @@ procedure TIniFileVcl.SaveForm(Form: TForm; PosOnly:Boolean= FALSE);
 begin
  Assert(Form <> NIL);
  WriteComp(Form);
- if NOT PosOnly
+ if Loading= flLoad
  then WriteComponentsOf(Form);
 end;
 
 
-procedure TIniFileVcl.LoadForm(Form: TForm; PosOnly: Boolean= FALSE);
+procedure TIniFileVcl.LoadForm(Form: TForm; Loading: TFormLoading= flPositionOnly);
 
    procedure ReadComponentsOf(Component: TComponent);
    VAR i: Integer;
@@ -196,7 +200,7 @@ procedure TIniFileVcl.LoadForm(Form: TForm; PosOnly: Boolean= FALSE);
 begin
  Assert(Form <> NIL);
  ReadComp(Form);         { Read form itself }
- if NOT PosOnly          { Read form's sub-components }
+ if Loading= flLoad        { Read form's sub-components }
  then ReadComponentsOf(Form);
 end;
 
@@ -696,7 +700,7 @@ end;
          OnlyFormPos=True   ->  It will only save the position of the form (only Left/Top, no width/height/WndState)
 -----------------------------------------------------------------------------------------------------------------------}
 
-procedure SaveForm(Form: TForm; OnlyFormPos: Boolean= FALSE);
+procedure SaveForm(Form: TForm; Loading: TFormLoading= flPositionOnly);
 VAR
    IniFile: TIniFileVcl;
 begin
@@ -711,7 +715,7 @@ begin
  IniFile:= TIniFileVcl.Create(Form.Name);
  TRY
   TRY
-    IniFile.SaveForm(Form, OnlyFormPos);
+    IniFile.SaveForm(Form, Loading);
   EXCEPT
     ON EIniFileexception DO
       if AppData <> NIL
@@ -726,7 +730,7 @@ end;
 { Extra:
     * LoadForm will also set the font for all forms to be the same as the font of the MainForm.
     * If the form is out of screen, LoadForm will also bring the form back to screen. }
-procedure LoadForm(Form: TForm; OnlyFormPos: Boolean= FALSE);
+procedure LoadForm(Form: TForm; Loading: TFormLoading= flPositionOnly);
 VAR
    IniFile: TIniFileVcl;
 begin
@@ -736,7 +740,7 @@ begin
  IniFile:= TIniFileVcl.Create(Form.Name);
  TRY
   TRY
-    IniFile.LoadForm(Form, OnlyFormPos);
+    IniFile.LoadForm(Form, Loading);
     CorrectFormPositionScreen(Form);
   EXCEPT
     ON EIniFileException DO

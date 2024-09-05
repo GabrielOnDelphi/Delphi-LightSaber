@@ -140,14 +140,12 @@ begin
  Result:= '';
 
  for var IDEPosition in Positions
-   do Result:= Result+ 'Line: '+ IntToStr(IDEPosition.LinePos)
-                + CRLF + IDEPosition.Offender+ ' ' + IDEPosition.WarningMsg
-                + CRLF + Trim(IDEPosition.CodeLine)+ CRLF;
+   do Result:= Result+ '   Line '+ IntToStr(IDEPosition.LinePos)+':'
+              + CRLF + '   '+Trim(IDEPosition.CodeLine)
+              + CRLF + '   '+IDEPosition.Offender+ ' ' + IDEPosition.WarningMsg+ CRLF;
 
  Result:= RemoveLastEnter(Result);
 end;
-
-
 
 
 
@@ -158,7 +156,7 @@ end;
 
 function TSearchResults.Last: TSearchResult;
 begin
-  Assert(Count > 0);
+  Assert(Count > 0, 'TSearchResults - Count is 0!');
   Result:= Self[Count-1];
 end;
 

@@ -2003,7 +2003,7 @@ procedure MoveFolder(CONST FromFolder, ToFolder: String; SilentOverwrite: Boolea
 begin
   if NOT DirectoryExists(ToFolder) then EXIT;
 
-  CopyFolder(FromFolder, ToFolder, True);
+  CopyFolder(FromFolder, ToFolder, SilentOverwrite);
   DeleteFolder(ToFolder);  { This is slow. Do a direct file move for each file. }
 end;
 

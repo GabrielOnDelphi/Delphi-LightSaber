@@ -6,13 +6,13 @@
         <Projects Include="LightCore.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="LightLog.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="LightBase.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="LightCommon.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="LightLog.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="..\LightProteus\LightProteus.dproj">
@@ -21,22 +21,19 @@
         <Projects Include="LightInternet.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="..\LightAutoTranslator\LightTranslator.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="LightGraphics.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="LightVisControls.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="..\LightAutoTranslator\LightTranslator.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="..\..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="..\..\Biology\!BioControl Lib\BioControl.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="Demo\LightUpdater\Tester_Updater.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="..\LightAutoTranslator\Demo\AutoTranslatorDemo.dproj">
@@ -46,6 +43,21 @@
             <Dependencies/>
         </Projects>
         <Projects Include="Demo\Template Universal Uninstaller\Uninstaller.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo\Tester All Visual Controls\Demo_VisualControls.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo\Tester GUI Autosave\Demo_SaveGUI.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo\Tester LightCore ccWinVersion.pas\Tester_WinVers.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo\Tester LightLog\DemoLog.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -65,15 +77,6 @@
     <Target Name="LightCore:Make">
         <MSBuild Projects="LightCore.dproj" Targets="Make"/>
     </Target>
-    <Target Name="LightLog">
-        <MSBuild Projects="LightLog.dproj"/>
-    </Target>
-    <Target Name="LightLog:Clean">
-        <MSBuild Projects="LightLog.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="LightLog:Make">
-        <MSBuild Projects="LightLog.dproj" Targets="Make"/>
-    </Target>
     <Target Name="LightBase">
         <MSBuild Projects="LightBase.dproj"/>
     </Target>
@@ -91,6 +94,15 @@
     </Target>
     <Target Name="LightCommon:Make">
         <MSBuild Projects="LightCommon.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="LightLog">
+        <MSBuild Projects="LightLog.dproj"/>
+    </Target>
+    <Target Name="LightLog:Clean">
+        <MSBuild Projects="LightLog.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightLog:Make">
+        <MSBuild Projects="LightLog.dproj" Targets="Make"/>
     </Target>
     <Target Name="LightProteus">
         <MSBuild Projects="..\LightProteus\LightProteus.dproj"/>
@@ -110,6 +122,15 @@
     <Target Name="LightInternet:Make">
         <MSBuild Projects="LightInternet.dproj" Targets="Make"/>
     </Target>
+    <Target Name="LightTranslator">
+        <MSBuild Projects="..\LightAutoTranslator\LightTranslator.dproj"/>
+    </Target>
+    <Target Name="LightTranslator:Clean">
+        <MSBuild Projects="..\LightAutoTranslator\LightTranslator.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightTranslator:Make">
+        <MSBuild Projects="..\LightAutoTranslator\LightTranslator.dproj" Targets="Make"/>
+    </Target>
     <Target Name="LightGraphics">
         <MSBuild Projects="LightGraphics.dproj"/>
     </Target>
@@ -128,15 +149,6 @@
     <Target Name="LightVisControls:Make">
         <MSBuild Projects="LightVisControls.dproj" Targets="Make"/>
     </Target>
-    <Target Name="LightTranslator">
-        <MSBuild Projects="..\LightAutoTranslator\LightTranslator.dproj"/>
-    </Target>
-    <Target Name="LightTranslator:Clean">
-        <MSBuild Projects="..\LightAutoTranslator\LightTranslator.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="LightTranslator:Make">
-        <MSBuild Projects="..\LightAutoTranslator\LightTranslator.dproj" Targets="Make"/>
-    </Target>
     <Target Name="BionixVCL">
         <MSBuild Projects="..\..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj"/>
     </Target>
@@ -154,15 +166,6 @@
     </Target>
     <Target Name="BioControl:Make">
         <MSBuild Projects="..\..\Biology\!BioControl Lib\BioControl.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="Tester_Updater">
-        <MSBuild Projects="Demo\LightUpdater\Tester_Updater.dproj"/>
-    </Target>
-    <Target Name="Tester_Updater:Clean">
-        <MSBuild Projects="Demo\LightUpdater\Tester_Updater.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="Tester_Updater:Make">
-        <MSBuild Projects="Demo\LightUpdater\Tester_Updater.dproj" Targets="Make"/>
     </Target>
     <Target Name="AutoTranslatorDemo">
         <MSBuild Projects="..\LightAutoTranslator\Demo\AutoTranslatorDemo.dproj"/>
@@ -191,14 +194,59 @@
     <Target Name="Uninstaller:Make">
         <MSBuild Projects="Demo\Template Universal Uninstaller\Uninstaller.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Demo_VisualControls">
+        <MSBuild Projects="Demo\Tester All Visual Controls\Demo_VisualControls.dproj"/>
+    </Target>
+    <Target Name="Demo_VisualControls:Clean">
+        <MSBuild Projects="Demo\Tester All Visual Controls\Demo_VisualControls.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Demo_VisualControls:Make">
+        <MSBuild Projects="Demo\Tester All Visual Controls\Demo_VisualControls.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Demo_SaveGUI">
+        <MSBuild Projects="Demo\Tester GUI Autosave\Demo_SaveGUI.dproj"/>
+    </Target>
+    <Target Name="Demo_SaveGUI:Clean">
+        <MSBuild Projects="Demo\Tester GUI Autosave\Demo_SaveGUI.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Demo_SaveGUI:Make">
+        <MSBuild Projects="Demo\Tester GUI Autosave\Demo_SaveGUI.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Tester_FileStream">
+        <MSBuild Projects="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj"/>
+    </Target>
+    <Target Name="Tester_FileStream:Clean">
+        <MSBuild Projects="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Tester_FileStream:Make">
+        <MSBuild Projects="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Tester_WinVers">
+        <MSBuild Projects="Demo\Tester LightCore ccWinVersion.pas\Tester_WinVers.dproj"/>
+    </Target>
+    <Target Name="Tester_WinVers:Clean">
+        <MSBuild Projects="Demo\Tester LightCore ccWinVersion.pas\Tester_WinVers.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Tester_WinVers:Make">
+        <MSBuild Projects="Demo\Tester LightCore ccWinVersion.pas\Tester_WinVers.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DemoLog">
+        <MSBuild Projects="Demo\Tester LightLog\DemoLog.dproj"/>
+    </Target>
+    <Target Name="DemoLog:Clean">
+        <MSBuild Projects="Demo\Tester LightLog\DemoLog.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DemoLog:Make">
+        <MSBuild Projects="Demo\Tester LightLog\DemoLog.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightLog;LightBase;LightCommon;LightProteus;LightInternet;LightGraphics;LightVisControls;LightTranslator;BionixVCL;BioControl;Tester_Updater;AutoTranslatorDemo;TemplateApp;Uninstaller"/>
+        <CallTarget Targets="LightCore;LightBase;LightCommon;LightLog;LightProteus;LightInternet;LightTranslator;LightGraphics;LightVisControls;BionixVCL;BioControl;AutoTranslatorDemo;TemplateApp;Uninstaller;Demo_VisualControls;Demo_SaveGUI;Tester_FileStream;Tester_WinVers;DemoLog"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightLog:Clean;LightBase:Clean;LightCommon:Clean;LightProteus:Clean;LightInternet:Clean;LightGraphics:Clean;LightVisControls:Clean;LightTranslator:Clean;BionixVCL:Clean;BioControl:Clean;Tester_Updater:Clean;AutoTranslatorDemo:Clean;TemplateApp:Clean;Uninstaller:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightBase:Clean;LightCommon:Clean;LightLog:Clean;LightProteus:Clean;LightInternet:Clean;LightTranslator:Clean;LightGraphics:Clean;LightVisControls:Clean;BionixVCL:Clean;BioControl:Clean;AutoTranslatorDemo:Clean;TemplateApp:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;Demo_SaveGUI:Clean;Tester_FileStream:Clean;Tester_WinVers:Clean;DemoLog:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightLog:Make;LightBase:Make;LightCommon:Make;LightProteus:Make;LightInternet:Make;LightGraphics:Make;LightVisControls:Make;LightTranslator:Make;BionixVCL:Make;BioControl:Make;Tester_Updater:Make;AutoTranslatorDemo:Make;TemplateApp:Make;Uninstaller:Make"/>
+        <CallTarget Targets="LightCore:Make;LightBase:Make;LightCommon:Make;LightLog:Make;LightProteus:Make;LightInternet:Make;LightTranslator:Make;LightGraphics:Make;LightVisControls:Make;BionixVCL:Make;BioControl:Make;AutoTranslatorDemo:Make;TemplateApp:Make;Uninstaller:Make;Demo_VisualControls:Make;Demo_SaveGUI:Make;Tester_FileStream:Make;Tester_WinVers:Make;DemoLog:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
@@ -214,8 +262,26 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+        <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
+            <ProjectGuid>{232A281C-4B1A-482D-B029-85C54610247F}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester All Visual Controls\Demo_VisualControls.dproj">
+            <ProjectGuid>{DD580D63-779B-4D0D-821E-E5CFFCCDBB27}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester GUI Autosave\Demo_SaveGUI.dproj">
+            <ProjectGuid>{F34D7568-B180-4088-A728-74B945E4932F}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
+            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -237,6 +303,12 @@
             <Configurations>Debug</Configurations>
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester LightLog\DemoLog.dproj">
+            <ProjectGuid>{7FB29DC7-5854-4A00-AB0C-20FE70A6D532}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\LightAutoTranslator\Demo\AutoTranslatorDemo.dproj">
             <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
@@ -280,106 +352,14 @@
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\LightUpdater\Tester_Updater.dproj">
-            <ProjectGuid>{97D0EFDD-F52B-4F87-9832-87BC1600BEB4}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
-            <ProjectGuid>{232A281C-4B1A-482D-B029-85C54610247F}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-    </ItemGroup>
-    <ItemGroup Condition="'$(BuildGroup)'=='Win32_Debug'">
-        <BuildGroupProject Include="..\..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj">
-            <ProjectGuid>{0A1AA5C0-4064-4F84-9485-EC81B8B74BEA}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightBase.dproj">
-            <ProjectGuid>{5EBF048A-F527-4583-BE0A-C834930EA04C}</ProjectGuid>
+        <BuildGroupProject Include="Demo\Tester LightCore ccWinVersion.pas\Tester_WinVers.dproj">
+            <ProjectGuid>{BB5AE51D-B893-4937-AE30-E6E46D2AEDD4}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
             <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\LightAutoTranslator\LightTranslator.dproj">
-            <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCommon.dproj">
-            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCore.dproj">
-            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\LightAutoTranslator\Demo\AutoTranslatorDemo.dproj">
-            <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightGraphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Template Universal Uninstaller\Uninstaller.dproj">
-            <ProjectGuid>{C873B6DC-0A47-4166-98C5-2F48479EE241}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightInternet.dproj">
-            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\..\Biology\!BioControl Lib\BioControl.dproj">
-            <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightLog.dproj">
-            <ProjectGuid>{BDDC4206-EF66-4FB1-8B35-A31088836E9E}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightVisControls.dproj">
-            <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\LightUpdater\Tester_Updater.dproj">
-            <ProjectGuid>{97D0EFDD-F52B-4F87-9832-87BC1600BEB4}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
-            <ProjectGuid>{232A281C-4B1A-482D-B029-85C54610247F}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -398,8 +378,26 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+        <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
+            <ProjectGuid>{232A281C-4B1A-482D-B029-85C54610247F}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester All Visual Controls\Demo_VisualControls.dproj">
+            <ProjectGuid>{DD580D63-779B-4D0D-821E-E5CFFCCDBB27}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester GUI Autosave\Demo_SaveGUI.dproj">
+            <ProjectGuid>{F34D7568-B180-4088-A728-74B945E4932F}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
+            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -421,6 +419,12 @@
             <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester LightLog\DemoLog.dproj">
+            <ProjectGuid>{7FB29DC7-5854-4A00-AB0C-20FE70A6D532}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\LightAutoTranslator\Demo\AutoTranslatorDemo.dproj">
             <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
@@ -464,14 +468,130 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\LightUpdater\Tester_Updater.dproj">
-            <ProjectGuid>{97D0EFDD-F52B-4F87-9832-87BC1600BEB4}</ProjectGuid>
+        <BuildGroupProject Include="Demo\Tester LightCore ccWinVersion.pas\Tester_WinVers.dproj">
+            <ProjectGuid>{BB5AE51D-B893-4937-AE30-E6E46D2AEDD4}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+    <ItemGroup Condition="'$(BuildGroup)'=='Win32_Debug'">
+        <BuildGroupProject Include="..\..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj">
+            <ProjectGuid>{0A1AA5C0-4064-4F84-9485-EC81B8B74BEA}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightBase.dproj">
+            <ProjectGuid>{5EBF048A-F527-4583-BE0A-C834930EA04C}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
             <ProjectGuid>{232A281C-4B1A-482D-B029-85C54610247F}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester All Visual Controls\Demo_VisualControls.dproj">
+            <ProjectGuid>{DD580D63-779B-4D0D-821E-E5CFFCCDBB27}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester GUI Autosave\Demo_SaveGUI.dproj">
+            <ProjectGuid>{F34D7568-B180-4088-A728-74B945E4932F}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
+            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\LightAutoTranslator\LightTranslator.dproj">
+            <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCommon.dproj">
+            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester LightLog\DemoLog.dproj">
+            <ProjectGuid>{7FB29DC7-5854-4A00-AB0C-20FE70A6D532}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\LightAutoTranslator\Demo\AutoTranslatorDemo.dproj">
+            <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightGraphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Template Universal Uninstaller\Uninstaller.dproj">
+            <ProjectGuid>{C873B6DC-0A47-4166-98C5-2F48479EE241}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightInternet.dproj">
+            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\..\Biology\!BioControl Lib\BioControl.dproj">
+            <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightLog.dproj">
+            <ProjectGuid>{BDDC4206-EF66-4FB1-8B35-A31088836E9E}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightVisControls.dproj">
+            <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester LightCore ccWinVersion.pas\Tester_WinVers.dproj">
+            <ProjectGuid>{BB5AE51D-B893-4937-AE30-E6E46D2AEDD4}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -490,8 +610,26 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+        <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
+            <ProjectGuid>{232A281C-4B1A-482D-B029-85C54610247F}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester All Visual Controls\Demo_VisualControls.dproj">
+            <ProjectGuid>{DD580D63-779B-4D0D-821E-E5CFFCCDBB27}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester GUI Autosave\Demo_SaveGUI.dproj">
+            <ProjectGuid>{F34D7568-B180-4088-A728-74B945E4932F}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
+            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -513,6 +651,12 @@
             <Configurations>Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester LightLog\DemoLog.dproj">
+            <ProjectGuid>{7FB29DC7-5854-4A00-AB0C-20FE70A6D532}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\LightAutoTranslator\Demo\AutoTranslatorDemo.dproj">
             <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
@@ -556,14 +700,14 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\LightUpdater\Tester_Updater.dproj">
-            <ProjectGuid>{97D0EFDD-F52B-4F87-9832-87BC1600BEB4}</ProjectGuid>
+        <BuildGroupProject Include="Demo\Tester LightCore ccWinVersion.pas\Tester_WinVers.dproj">
+            <ProjectGuid>{BB5AE51D-B893-4937-AE30-E6E46D2AEDD4}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
-            <ProjectGuid>{232A281C-4B1A-482D-B029-85C54610247F}</ProjectGuid>
+        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>

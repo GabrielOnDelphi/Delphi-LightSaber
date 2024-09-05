@@ -22,32 +22,27 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  Winapi.Windows, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls,
-  InternetLabel, cpProteus, Vcl.Imaging.pngimage;
+  Winapi.Windows, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Imaging.pngimage,
+  InternetLabel, cpProteus, cbIniFile;
 
 TYPE
   TfrmAboutApp = class(TForm)
-    btnEnterKey  : TButton;
-    btnOrderNow  : TButton;
     Container    : TPanel;
     imgLogo      : TImage;
-    inetEULA     : TInternetLabel;
-    inetHomePage : TInternetLabel;
-    Label1       : TLabel;
-    Label2       : TLabel;
+    lblCompany   : TInternetLabel;
     lblAppName   : TLabel;
     lblChildren  : TLabel;
-    lblCopyRight : TLabel;
-    lblExpire    : TLabel;
     lblVersion   : TLabel;
-    Panel1       : TPanel;
-    pnlEnterKey  : TPanel;
+    lblExpire    : TLabel;
+    inetEULA     : TInternetLabel;
+    btnEnterKey  : TButton;
+    btnOrderNow  : TButton;
     procedure FormShow         (Sender: TObject);
     procedure FormCreate       (Sender: TObject);
     procedure FormKeyPress     (Sender: TObject; var Key: Char);
     procedure btnEnterKeyClick (Sender: TObject);
     procedure FormCloseQuery   (Sender: TObject; var CanClose: Boolean);
-    procedure btnOrderNowClick(Sender: TObject);
+    procedure btnOrderNowClick (Sender: TObject);
   private
   public
     Proteus: TProteus;
@@ -66,16 +61,11 @@ USES
 
 
 
-procedure TfrmAboutApp.btnOrderNowClick(Sender: TObject);
-begin
-  //ToDo:
-end;
 
 class procedure TfrmAboutApp.CreateFormModal;
+VAR Form: TfrmAboutApp;
 begin
-  VAR Form:= AppData.CreateForm(TfrmAboutApp, FALSE, TRUE) as TfrmAboutApp;
-  Form.ShowModal;
-  Assert(Form.ClassName <> 'TfrmAbout', 'This form cannot be named TfrmAbout because of DFM resource conflict'); // https://stackoverflow.com/questions/71518287/h2161-warning-duplicate-resource-type-10-rcdata-id-tfrmabout
+  AppData.CreateFormModal(TfrmAboutApp, Form);
 end;
 
 
@@ -83,7 +73,7 @@ end;
 { This won't to parent the form directly. See: https://stackoverflow.com/questions/42065369/how-to-parent-a-form-controls-wont-accept-focus }
 class function TfrmAboutApp.CreateFormParented(Parent: TWinControl): TfrmAboutApp;
 begin
- Result:= AppData.CreateForm(TfrmAboutApp, FALSE, TRUE) as TfrmAboutApp;
+ AppData.CreateFormHidden(TfrmAboutApp, Result);
  Result.Container.Align:= alNone;
  Result.Container.BevelInner:= bvRaised;
  Result.Container.BevelOuter:= bvLowered;
@@ -92,24 +82,22 @@ begin
 end;
 
 
-
-
-
 procedure TfrmAboutApp.FormCreate(Sender: TObject);
 begin
+ Assert(ClassName <> 'TfrmAbout', 'This form cannot be named TfrmAbout because of DFM resource conflict'); // https://stackoverflow.com/questions/71518287/h2161-warning-duplicate-resource-type-10-rcdata-id-tfrmabout
+
  if Proteus<> NIL then
   begin
-   btnOrderNow.Visible:= NOT Proteus.CurCertif.Platit;
-   if Proteus.CurCertif.Trial
-   then lblExpire.Caption:= 'Lite edition'
-   else lblExpire.Caption:= 'Registered';
+    btnOrderNow.Visible:= NOT Proteus.CurCertif.Platit;
+    if Proteus.CurCertif.Trial
+    then lblExpire.Caption:= 'Lite edition'
+    else lblExpire.Caption:= 'Registered';
   end;
 
- lblCopyRight.Caption := 'Copyright '+ AppData.CompanyName;
- lblVersion.Caption   := 'Version '  + AppData.GetVersionInfo;
-
- lblAppName.Caption   := AppData.AppName;
- inetHomePage.Link    := AppData.ProductHomePage;
+ lblCompany.Caption := AppData.CompanyName;
+ lblCompany.Link    := AppData.ProductHome;
+ lblAppName.Caption := AppData.AppName;
+ lblVersion.Caption := AppData.GetVersionInfoV;
 end;
 
 
@@ -137,6 +125,12 @@ begin
  if Proteus.ShowEnterKeyBox
  then MesajInfo ('Key accepted. Please restart the program.')
  else MesajError('Key not accepted!');
+end;
+
+
+procedure TfrmAboutApp.btnOrderNowClick(Sender: TObject);
+begin
+  ///executeurl();
 end;
 
 

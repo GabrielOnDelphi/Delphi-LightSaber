@@ -56,7 +56,7 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  Winapi.Windows, System.SysUtils, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Classes, Vcl.Forms;
+  Winapi.Windows, System.SysUtils, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Classes, Vcl.Forms, cbIniFile;
 
 TYPE
   TfrmSkinDisk = class(TForm)
@@ -80,7 +80,7 @@ TYPE
     procedure PopulateSkins;
   public
     class procedure CreateFormModal; static;
-    class procedure CreateForm(Nottify: TNotifyEvent); static;
+    class procedure CreateForm(Nottify: TNotifyEvent= NIL); static;
   published
     property OnDefaultSkin: TNotifyEvent read FOnDefaultSkin write FOnDefaultSkin;
  end;
@@ -165,7 +165,7 @@ end;
 class procedure TfrmSkinDisk.CreateFormModal;
 VAR frmEditor: TfrmSkinDisk;
 begin
- frmEditor:= AppData.CreateForm(TfrmSkinDisk, FALSE, TRUE) as TfrmSkinDisk;
+ AppData.CreateFormHidden(TfrmSkinDisk, frmEditor);
 
  if Translator <> NIL
  then Translator.LoadFormTranlation(frmEditor);
@@ -178,10 +178,10 @@ end;
 { Show non modal, for testing against bug: Crash when closing the "Skins" form.
   Fixed by keeping the form open!
   Remember to call FreeAndNil(frmEditor) }
-class procedure TfrmSkinDisk.CreateForm(Nottify: TNotifyEvent);
+class procedure TfrmSkinDisk.CreateForm(Nottify: TNotifyEvent= NIL);
 VAR frmEditor: TfrmSkinDisk;
 begin
- frmEditor:= AppData.CreateForm(TfrmSkinDisk, TRUE, TRUE) as TfrmSkinDisk;
+ AppData.CreateFormHidden(TfrmSkinDisk, frmEditor);
 
  frmEditor.OnDefaultSkin:= Nottify;
  if Translator <> NIL

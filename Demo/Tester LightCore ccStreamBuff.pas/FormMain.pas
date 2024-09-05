@@ -15,7 +15,7 @@ INTERFACE
 USES
   WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.ExtCtrls,
   cvIniFile, InternetLabel, cvPathEdit, cvSpinEdit,
-  llRichLogTrack, cvCheckBox, llRichLog, cbAppData, chHardID;
+  llRichLogTrack, cvCheckBox, llRichLog, cbAppData, cbINIFile, chHardID;
 
 CONST
   MSG_LateFormInit = WM_APP + 4711;

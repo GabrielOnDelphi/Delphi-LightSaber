@@ -44,20 +44,6 @@ object MainForm: TMainForm
         TabOrder = 0
         OnClick = btnSTARTClick
       end
-      object RichEdit1: TRichEdit
-        Left = 0
-        Top = 0
-        Width = 692
-        Height = 412
-        Align = alTop
-        Lines.Strings = (
-          'RichEdit1')
-        TabOrder = 1
-      end
-    end
-    object tabMemo: TTabSheet
-      Caption = 'Memo'
-      ImageIndex = 2
       object Path: TCubicPathEdit
         Left = 0
         Top = 0
@@ -65,37 +51,77 @@ object MainForm: TMainForm
         Height = 49
         Align = alTop
         Caption = 'Path'
-        TabOrder = 0
+        TabOrder = 1
       end
       object mmo: TMemo
         AlignWithMargins = True
         Left = 3
         Top = 52
         Width = 501
-        Height = 432
+        Height = 430
         Align = alClient
-        TabOrder = 1
+        TabOrder = 2
       end
       object pnlRight: TPanel
         Left = 507
         Top = 49
         Width = 185
-        Height = 438
+        Height = 436
         Align = alRight
-        TabOrder = 2
+        TabOrder = 3
       end
     end
     object tabProgress: TTabSheet
-      Caption = 'Progress'
+      Caption = 'Testers'
       ImageIndex = 3
+      DesignSize = (
+        692
+        485)
       object btnProgress: TButton
-        Left = 266
-        Top = 200
+        Left = 272
+        Top = 360
         Width = 143
         Height = 49
+        Anchors = [akTop]
         Caption = 'Progress'
         TabOrder = 0
         OnClick = btnProgressClick
+      end
+      object Button1: TButton
+        Left = 272
+        Top = 104
+        Width = 143
+        Height = 49
+        Action = actUpdater
+        Anchors = [akTop]
+        TabOrder = 1
+      end
+      object Button2: TButton
+        Left = 272
+        Top = 158
+        Width = 143
+        Height = 49
+        Action = actEnterKey
+        Anchors = [akTop]
+        TabOrder = 2
+      end
+      object Button3: TButton
+        Left = 272
+        Top = 211
+        Width = 143
+        Height = 49
+        Action = actLanguage
+        Anchors = [akTop]
+        TabOrder = 3
+      end
+      object Button4: TButton
+        Left = 272
+        Top = 265
+        Width = 143
+        Height = 49
+        Action = actSettings
+        Anchors = [akTop]
+        TabOrder = 4
       end
     end
     object tabLog: TTabSheet
@@ -131,12 +157,14 @@ object MainForm: TMainForm
       object mnuEnterKey: TMenuItem
         Action = actEnterKey
       end
-      object mnuAbout: TMenuItem
-        Caption = '&About'
-        OnClick = mnuAboutClick
-      end
       object mnuLanguage: TMenuItem
         Action = actLanguage
+      end
+      object N1: TMenuItem
+        Caption = '-'
+      end
+      object mnuAbout: TMenuItem
+        Action = actAbout
       end
     end
   end
@@ -145,6 +173,7 @@ object MainForm: TMainForm
     Top = 51
     object actEnterKey: TAction
       Caption = '&Enter key'
+      ShortCut = 24626
       OnExecute = actEnterKeyExecute
     end
     object actSettings: TAction
@@ -154,11 +183,18 @@ object MainForm: TMainForm
     end
     object actUpdater: TAction
       Caption = 'Check for &updates'
+      ShortCut = 24625
       OnExecute = actUpdaterExecute
     end
     object actLanguage: TAction
       Caption = 'Select &language'
+      ShortCut = 24627
       OnExecute = actLanguageExecute
+    end
+    object actAbout: TAction
+      Caption = '&About'
+      ShortCut = 24629
+      OnExecute = actAboutExecute
     end
   end
   object TrayIcon: TCoolTrayIcon

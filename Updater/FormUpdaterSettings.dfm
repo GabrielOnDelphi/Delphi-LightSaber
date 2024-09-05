@@ -6,8 +6,8 @@ object frmUpdaterSettings: TfrmUpdaterSettings
   Anchors = []
   BorderStyle = bsToolWindow
   Caption = 'Updater settings'
-  ClientHeight = 412
-  ClientWidth = 520
+  ClientHeight = 400
+  ClientWidth = 512
   Color = clBtnFace
   DoubleBuffered = True
   Font.Charset = ANSI_CHARSET
@@ -28,18 +28,18 @@ object frmUpdaterSettings: TfrmUpdaterSettings
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 514
-    Height = 406
+    Width = 506
+    Height = 394
     Align = alClient
     ShowCaption = False
     TabOrder = 0
     DesignSize = (
-      514
-      406)
+      506
+      394)
     object lblPrivacy: TLabel
       Left = 1
-      Top = 325
-      Width = 512
+      Top = 313
+      Width = 504
       Height = 34
       Align = alBottom
       Alignment = taCenter
@@ -49,8 +49,8 @@ object frmUpdaterSettings: TfrmUpdaterSettings
       Visible = False
     end
     object GroupBox1: TGroupBox
-      Left = 43
-      Top = 188
+      Left = 31
+      Top = 181
       Width = 428
       Height = 121
       Anchors = []
@@ -96,8 +96,8 @@ object frmUpdaterSettings: TfrmUpdaterSettings
       end
     end
     object grpInterval: TGroupBox
-      Left = 43
-      Top = 16
+      Left = 31
+      Top = 13
       Width = 428
       Height = 161
       Anchors = []
@@ -160,8 +160,8 @@ object frmUpdaterSettings: TfrmUpdaterSettings
     object pnlBtm: TPanel
       AlignWithMargins = True
       Left = 4
-      Top = 362
-      Width = 506
+      Top = 350
+      Width = 498
       Height = 40
       Align = alBottom
       BevelOuter = bvNone
@@ -169,7 +169,7 @@ object frmUpdaterSettings: TfrmUpdaterSettings
       TabOrder = 2
       object btnOK: TButton
         AlignWithMargins = True
-        Left = 390
+        Left = 382
         Top = 3
         Width = 113
         Height = 34
@@ -183,7 +183,7 @@ object frmUpdaterSettings: TfrmUpdaterSettings
       end
       object btnApply: TButton
         AlignWithMargins = True
-        Left = 271
+        Left = 263
         Top = 3
         Width = 113
         Height = 34

@@ -67,7 +67,7 @@ IMPLEMENTATION
 {$WARN GARBAGE OFF}   {Silence the: 'W1011 Text after final END' warning }
 
 USES
-  ccCore, ccIO, ccStreamBuff, clVisLog;
+  ccCore, ccStreamBuff2, ccIO, ccStreamBuff, clVisLog;
 
 
 
@@ -293,15 +293,15 @@ CONST
 
 function TVisRamLog.LoadFromFile(const FullPath: string): Boolean;
 VAR
-   Stream: TCubicBuffStream;
+   Stream: TCubicBuffStream2;
 begin
- Stream:= TCubicBuffStream.CreateRead(FullPath);
+ Stream:= TCubicBuffStream2.CreateRead(FullPath);
  TRY
-   Result:= Stream.ReadHeaderTry(MagicNo, MagicVer);
+   Result:= Stream.ReadHeader(MagicNo, MagicVer);
    if NOT Result then EXIT;
 
    Lines.ReadFromStream(Stream);
-   Stream.ReadPadding(1024);
+   Stream.ReadPaddingDef;
 
    if FVisLog <> Nil
    then UpdateVisLog;
@@ -313,13 +313,13 @@ end;
 
 procedure TVisRamLog.SaveToFile(const FullPath: string);
 VAR
-   Stream: TCubicBuffStream;
+   Stream: TCubicBuffStream2;
 begin
- Stream:= TCubicBuffStream.CreateWrite(FullPath);
+ Stream:= TCubicBuffStream2.CreateWrite(FullPath);
  TRY
    Stream.WriteHeader(MagicNo, MagicVer);
    Lines.WriteToStream(Stream);
-   Stream.WritePadding(1024);
+   Stream.WritePaddingdef;
  FINALLY
    FreeAndNil(Stream);
  END;

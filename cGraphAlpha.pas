@@ -176,6 +176,7 @@ end;
 
 
 { TImageList.GetBitmap fails to preserve the transparency, so we need our own utility }
+(* OLD
 procedure GetTransparentBitmapFromImagelist(ImageList: TImageList; Index:integer; Bitmap: TBitmap);
 var
   i: Integer;
@@ -195,6 +196,40 @@ begin
   for i := 0 to Bitmap.Height-1 do
       FillChar(P^, Vcl.Graphics.BytesPerScanLine(Bitmap.Width, 32, 32) * Bitmap.Height, 0);
 
+  ImageList_Draw(ImageList.Handle, Index, Bitmap.Canvas.Handle, 0, 0, ILD_TRANSPARENT);
+end;   *)
+
+
+{Clearing with Transparency: I fixed the clearing logic by using the correct scanline for each row and filling the memory with zeros (for full transparency in 32-bit RGBA mode). The fill size is calculated as Bitmap.Width * 4, as each pixel is represented by 4 bytes in 32-bit mode (RGBA).
+Memory Safety: The memory of each scanline is cleared separately to avoid overwriting unintended parts of the bitmap.
+AlphaChannel Handling: The AlphaFormat := afDefined ensures that the bitmap is treated as having a defined alpha channel when the ImageList has 32-bit color depth.
+Use of ImageList_Draw: The function ImageList_Draw is used to draw the image into the canvas, respecting the transparency if the ILD_TRANSPARENT flag is passed.}
+procedure GetTransparentBitmapFromImagelist(ImageList: TImageList; Index: Integer; Bitmap: TBitmap);
+var
+  i: Integer;
+  ScanLinePtr: PByteArray;
+begin
+  // Set bitmap size and format
+  Bitmap.SetSize(ImageList.Width, ImageList.Height);
+  Bitmap.PixelFormat := pf32bit;  // Ensure 32-bit format
+
+  if ImageList.ColorDepth = cd32Bit
+  then
+    begin
+      Bitmap.Transparent := False;
+      Bitmap.AlphaFormat := afDefined;  // Define alpha format
+    end
+  else
+    Bitmap.Transparent := True;
+
+  // Clear the bitmap to fully transparent (0 alpha)
+  for i := 0 to Bitmap.Height - 1 do
+  begin
+    ScanLinePtr := Bitmap.ScanLine[i];
+    FillChar(ScanLinePtr^, Bitmap.Width * 4, 0);  // 4 bytes per pixel (RGBA)
+  end;
+
+  // Draw the image from ImageList onto the bitmap's canvas
   ImageList_Draw(ImageList.Handle, Index, Bitmap.Canvas.Handle, 0, 0, ILD_TRANSPARENT);
 end;
 

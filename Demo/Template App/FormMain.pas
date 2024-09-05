@@ -5,17 +5,25 @@ UNIT FormMain;
    2024.05
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
-   Application that features:
-     About box,
+   Application that implements the following features:
+     About box
+     EULA box
      News and Updates box
      Settings box
-     User-selectable skins
+      * User-selectable skins
+      * User-selectable font
+      * User-defined data folder (where the app saves its files)
+      * User-defined Window opacity (alpha transparency)
      GUI self-translation services
      GUI saves/loads its state from disk
+     GUI minimizable to taskbar or to system tray
+     Splash screen
      Trial protection (via Proteus)
      Event log
-     Only one instance
-     Drag and drop.
+     Only one instance - prevents the user to start more than one instance of this app
+     Accepts Drag and Drop.
+     Create startmenu/desktop shortcut (on first run)
+     Associates itself with its own file extension (app starts when the user double clicks a '.LightSaber' file in Explorer
 
    Can be used as template for future applications.
 --------------------------------------------------------------------------------------------------------------
@@ -28,7 +36,7 @@ USES
   WinApi.Windows, WinApi.Messages, Winapi.ShellApi,
   System.SysUtils, System.Classes, System.Actions,
   VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
-  csSystem, CoolTrayIcon, cvPathEdit, cvStatusBar, cpProteus, cbAppData, cpProteusIO;
+  csSystem, CoolTrayIcon, cvPathEdit, cvStatusBar, cpProteus, cbAppData, cbINIFile, cpProteusIO;
 
   // c:\MyProjects\Packages\Third party packages\MenuPopupHints.pas
 
@@ -45,23 +53,27 @@ TYPE
     mnuFile     : TMenuItem;
     mnuInfo     : TMenuItem;
     MainMenu    : TMainMenu;
-    mmo         : TMemo;
     mnuAbout    : TMenuItem;
     mnuEnterKey : TMenuItem;
     mnuLanguage : TMenuItem;
     mnuSettings : TMenuItem;
     mnuUpdates  : TMenuItem;
-    Path        : TCubicPathEdit;
     pgCtrl      : TPageControl;
-    pnlRight    : TPanel;
     Proteus     : TProteus;
-    RichEdit1   : TRichEdit;
     StatBar     : TcubicStatusBar;
     tabLog      : TTabSheet;
     tabMain     : TTabSheet;
-    tabMemo     : TTabSheet;
     tabProgress : TTabSheet;
     TrayIcon    : TCoolTrayIcon;
+    Button1: TButton;
+    actAbout: TAction;
+    N1: TMenuItem;
+    Button2: TButton;
+    Button3: TButton;
+    Button4: TButton;
+    Path: TCubicPathEdit;
+    mmo: TMemo;
+    pnlRight: TPanel;
     procedure actSettingsExecute (Sender: TObject);
     procedure AppEventsMinimize  (Sender: TObject);
     procedure btnSTARTClick      (Sender: TObject);
@@ -73,9 +85,9 @@ TYPE
     procedure TrayIconClick      (Sender: TObject);
     procedure actEnterKeyExecute (Sender: TObject);
     procedure actUpdaterExecute  (Sender: TObject);
-    procedure mnuAboutClick      (Sender: TObject);
     procedure actLanguageExecute (Sender: TObject);
     procedure btnProgressClick   (Sender: TObject);
+    procedure actAboutExecute(Sender: TObject);
   protected
     procedure WMDROPFILES (VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Accept the dropped files from Windows Explorer }
   private
@@ -237,7 +249,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    MENUS
 -------------------------------------------------------------------------------------------------------------}
-procedure TMainForm.mnuAboutClick(Sender: TObject);
+procedure TMainForm.actAboutExecute(Sender: TObject);
 begin
   TfrmAboutApp.CreateFormModal;
 end;
@@ -264,7 +276,7 @@ end;
 
 procedure TMainForm.actUpdaterExecute(Sender: TObject);
 begin
-  TFrmUpdater.ShowUpdater(TRUE);
+  TFrmUpdater.CreateForm(TRUE);
 end;
 
 

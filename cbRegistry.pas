@@ -17,7 +17,7 @@ USES
 
 CONST
    LazyWrite       = TRUE;
-   InstantWrite    = FALSE;
+  // InstantWrite    = FALSE;
 
  function Convert_HKey2Str      (CONST Key: HKEY): string;
  function Convert_Str2HKey      (CONST Key: string): HKEY;

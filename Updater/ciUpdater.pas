@@ -134,6 +134,9 @@ begin
   then Delay      := 300          { Don't bother the user on first startup. Probably he has the latest version anyway. }
   else Delay      := 30;
 
+  URLDownload    := '';
+  URLRelHistory  := '';
+
   { Load user settings }
   if FileExists(AppData.IniFile)
   then Load;
@@ -216,7 +219,7 @@ end;
 { Where we store the News file locally }
 function UpdaterFileLocation: string;
 begin
- Result:= AppData.AppDataFolder+ 'Online.News';
+ Result:= AppData.AppDataFolder+ 'Online_v2.News';
 end;
 
 

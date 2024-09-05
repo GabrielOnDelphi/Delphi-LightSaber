@@ -51,7 +51,7 @@ VAR
 
 IMPLEMENTATION {$R *.dfm}
 USES
-   CpuUsageTotal, cbAppData, cvIniFile, cmPowerUtils, ccCore, csSystem, cbDialogs, ccINIFile, FormLog;
+   CpuUsageTotal, cbAppData, cbINIFile, cvIniFile, cmPowerUtils, ccCore, csSystem, cbDialogs, ccINIFile, FormLog;
 
 
 

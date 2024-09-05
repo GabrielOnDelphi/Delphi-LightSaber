@@ -7,8 +7,8 @@ object frmSkinDisk: TfrmSkinDisk
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'Skin selector'
-  ClientHeight = 471
-  ClientWidth = 332
+  ClientHeight = 470
+  ClientWidth = 328
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 200
@@ -28,7 +28,7 @@ object frmSkinDisk: TfrmSkinDisk
     AlignWithMargins = True
     Left = 3
     Top = 6
-    Width = 326
+    Width = 322
     Height = 13
     Margins.Top = 6
     Margins.Bottom = 1
@@ -48,8 +48,8 @@ object frmSkinDisk: TfrmSkinDisk
   object lblMoreSkinsTrial: TLabel
     AlignWithMargins = True
     Left = 3
-    Top = 402
-    Width = 326
+    Top = 401
+    Width = 322
     Height = 30
     Align = alBottom
     Alignment = taCenter
@@ -61,8 +61,8 @@ object frmSkinDisk: TfrmSkinDisk
     AlignWithMargins = True
     Left = 3
     Top = 23
-    Width = 326
-    Height = 369
+    Width = 322
+    Height = 368
     Align = alClient
     ItemHeight = 15
     ScrollWidth = 6
@@ -71,16 +71,16 @@ object frmSkinDisk: TfrmSkinDisk
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 395
-    Width = 332
+    Top = 394
+    Width = 328
     Height = 4
     Align = alBottom
     TabOrder = 0
   end
   object pnlBtm: TPanel
     Left = 0
-    Top = 435
-    Width = 332
+    Top = 434
+    Width = 328
     Height = 36
     Align = alBottom
     TabOrder = 2

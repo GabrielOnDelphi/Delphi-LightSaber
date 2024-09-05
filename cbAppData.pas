@@ -108,7 +108,7 @@ USES
   Winapi.Windows, Winapi.Messages, Winapi.ShlObj, Winapi.ShellAPI,
   System.Win.Registry, System.IOUtils, System.AnsiStrings, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Consts,
-  FormLog, ccCore;
+  FormLog, ccCore, cbIniFile;
 
 CONST
   MSG_LateFormInit = WM_APP + 4711;         { Old name: MSG_LateInitialize/MSG_LateAppInit  }
@@ -125,27 +125,32 @@ TYPE
     FLastFolder: string;
     FSingleInstClassName: string;          { Used by the Single Instance mechanism. } {Old name: AppWinClassName }
     FRunningFirstTime: Boolean;
+    FHideHint: Integer;
     function SettingsFile: string;
     procedure SetGuiProperties(Form: TForm);
+    procedure setHideHint(const Value: Integer);
     CONST Signature: AnsiString= 'AppDataSettings';{ Do not change it! }
-    class VAR FCreated: Boolean;
+    CONST DefaultHomePage= 'https://www.GabrielMoraru.com';
+    class VAR FCreated: Boolean;     { Sanity check }
     class VAR FAppName: string;
     function  getLastUsedFolder: string;
     procedure setFont(aFont: TFont);
-    procedure HintSetup;
     procedure LoadSettings;
     procedure SaveSettings;
     procedure RegisterUninstaller;
     function  RunSelfAtWinStartUp(Active: Boolean): Boolean;
   protected
     frmLog: TfrmLog;
-    CopyDataID: DWORD;                     { For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA }
+    CopyDataID: DWORD;          { For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA }
   public
     { Product details }
-    CompanyName: string;                   { Optional. Used by the 'About' form }
-    ProductHomePage: string;               // URL
-    SupportPage: string;                   // URL
-    UninstReason: string;                  // URL
+    CompanyName    : string;    // Optional. Used by the 'About' form
+    CompanyHome    : WebURL;    // Company's home page
+    ProductHome    : WebURL;    // Product's home page
+    ProductOrder   : WebURL;    // Product's order page
+    ProductSupport : WebURL;    // Product's user manual
+    ProductWelcome : WebURL;    // Product's welcome page (gives a short introduction on how the product works).
+    ProductUninstal: WebURL;    // Ask user why he uninstalled the product (feedback)
 
    {--------------------------------------------------------------------------------------------------
       App Single Instance
@@ -171,8 +176,8 @@ TYPE
       StartMinim   : Boolean;       // Start minimized
       Minimize2Tray: Boolean;       // Minimize to tray
       HintType     : THintType;     // Turn off the embeded help system
-      HideHint     : Integer;       // Hide hint after x ms.
       Opacity      : Integer;       // Form opacity
+    property HideHint: Integer read FHideHint write setHideHint;       // Hide hint after x ms.
 
    {--------------------------------------------------------------------------------------------------
       App path/name
@@ -215,13 +220,14 @@ TYPE
 
     function  RunFileAtWinStartUp(CONST FilePath: string; Active: Boolean): Boolean;
 
-    procedure CreateMainForm    (aClass: TFormClass; OUT Reference; Show: Boolean; MainFormOnTaskbar: Boolean= TRUE; Load: Boolean= TRUE; OnlyFormPos: Boolean= FALSE);
+    procedure CreateMainForm  (aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= TRUE; Show: Boolean= TRUE; Loading: TFormLoading= flPositionOnly);
 
-    procedure CreateFormRef     (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Load: Boolean= TRUE; OnlyFormPos: Boolean= FALSE);
-    function  CreateForm        (aClass: TFormClass;                Show: Boolean= TRUE; Load: Boolean= TRUE; OnlyFormPos: Boolean= FALSE): TForm;
+//    procedure CreateForm      (aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPositionOnly);                                                    overload;
+    procedure CreateForm      (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL);  overload;
+    procedure CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL);
 
-    procedure CreateFormModal   (aClass: TFormClass; OUT Reference);                 overload;   // Do I need this?
-    procedure CreateFormModal   (aClass: TFormClass);                                overload;
+    procedure CreateFormModal (aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL); overload;   // Do I need this?
+    procedure CreateFormModal (aClass: TFormClass;                Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL); overload;
 
     procedure SetMaxPriority;
     procedure HideFromTaskbar;
@@ -284,7 +290,7 @@ VAR                      //ToDo: make sure AppData is unique (make it Singleton)
 IMPLEMENTATION
 
 USES
-  cbWinVersion, ccStreamBuff, cbIniFile, ccIO, cbRegistry, cbDialogs, cbCenterControl;
+  cbWinVersion, ccStreamBuff2, ccIO, cbRegistry, cbDialogs, cbCenterControl;
 
 {-------------------------------------------------------------------------------------------------------------
  Parameters
@@ -305,6 +311,11 @@ begin
   SignalInitEnd:= aSignalInitEnd;
   Initializing:= True;                            { Used in cvIniFile.pas. Set it to false once your app finished initializing. }
 
+  { Sanity check }
+  if FCreated
+  then RAISE Exception.Create('Error! AppData aready constructed!')
+  else FCreated:= TRUE;
+
   { App single instance }
   if WindowClassName = ''
   then FSingleInstClassName:= aAppName
@@ -312,22 +323,31 @@ begin
   { Register a unique message ID for this applications. Used when we send the command line to the first running instance via WM_COPYDATA.
     We can do this only once per app so the best place is the Initialization section. However, since AppData is created only once, we can also do it here, in the constructor.
     https://stackoverflow.com/questions/35516347/sendmessagewm-copydata-record-string }
-  CopyDataID := RegisterWindowMessage('CubicCopyDataID');
-
-  { Sanity check }
-  if FCreated
-  then RAISE Exception.Create('Error! AppData aready constructed!')
-  else FCreated:= TRUE;
+  CopyDataID:= RegisterWindowMessage('CubicCopyDataID');
 
   { App name }
   Assert(System.IOUtils.TPath.HasValidPathChars(aAppName, FALSE), 'Invalid characters in AppName'+ aAppName);
   Assert(aAppName > '', 'AppName is empty!');
   FAppName:= aAppName;
   Application.Title:= aAppName;
-
-  { First run }
-  FRunningFirstTime:= NOT FileExists(IniFile);
   ForceDirectories(AppDataFolder);            // Force the creation of AppData folder.
+
+  { App first run }
+  FRunningFirstTime:= NOT FileExists(IniFile);
+
+  { Log }
+  { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }
+  Assert(frmLog = NIL, 'Log already created!');  { Call this as soon as possible so it can catch all Log messages generated during app start up. A good place might be in your DPR file before Application.CreateForm(TMainForm, frmMain) }
+  frmLog:= TfrmLog.Create(NIL);
+  Assert(Application.MainForm <> frmLog, 'The Log should not be the MainForm!'); { Just in case: Make sure this is not the first form created }
+  LogInfo(' ');
+  LogInfo(' '+ AppName+ GetVersionInfoV);
+  LogInfo(' ');
+
+  { App hint }
+  Application.HintColor     := $c0c090;
+  Application.HintShortPause:= 40;                 { Specifies the time period to wait before bringing up a hint if another hint has already been shown. Windows' default is 50 ms }
+  Application.UpdateFormatSettings:= FALSE;        { more http://www.delphi3000.com/articles/article_4462.asp?SK= }
 
   { App settings }
   if FileExists(SettingsFile)
@@ -344,13 +364,14 @@ begin
       UserPath     := AppDataFolder;
     end;
 
-  { The Log Form }
-  { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }
-  Assert(frmLog = NIL, 'Log already created!');  { Call this as soon as possible so it can catch all Log messages generated during app start up. A good place might be in your DPR file before Application.CreateForm(TMainForm, frmMain) }
-  frmLog:= TfrmLog.Create(NIL);
-  Assert(Application.MainForm <> frmLog, 'The Log should not be the MainForm!'); { Just in case: Make sure this is not the first form created }
-
-  HintSetup;
+  { Product details }
+  CompanyName    := 'SciVance';
+  CompanyHome    := DefaultHomePage;
+  ProductHome    := DefaultHomePage;
+  ProductOrder   := DefaultHomePage;
+  ProductSupport := DefaultHomePage;
+  ProductWelcome := DefaultHomePage;
+  ProductUninstal:= DefaultHomePage;
 end;
 
 
@@ -364,19 +385,18 @@ begin
 end;
 
 
-
 {-------------------------------------------------------------------------------------------------------------
    FORMS
 -------------------------------------------------------------------------------------------------------------}
 { 1. Create the form
   2. Set the font of the new form to be the same as the font of the MainForm
   3. Show it }
-procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; Show: Boolean; MainFormOnTaskbar: Boolean= TRUE; Load: Boolean= TRUE; OnlyFormPos: Boolean= FALSE);
+procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= TRUE; Show: Boolean= TRUE; Loading: TFormLoading= flPositionOnly);
 begin
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
   Assert(Font = NIL,                 'AppData.Font already assigned!');
 
-  Application.MainFormOnTaskbar := FALSE;
+  Application.MainFormOnTaskbar := MainFormOnTaskbar;
   Application.ShowMainForm      := Show;      // Must be false if we want to prevent form flicker during skin loading at startup
 
   Application.CreateForm(aClass, Reference);
@@ -385,10 +405,10 @@ begin
 
   SetGuiProperties(TForm(Reference));
 
-  if Load then
+  if (Loading = flLoad) OR (Loading = flPositionOnly) then
    begin
      // Load form
-     cbIniFile.LoadForm(TForm(Reference), OnlyFormPos);
+     cbIniFile.LoadForm(TForm(Reference), Loading);
 
      { Write path to app in registry }
      if RunningFirstTime
@@ -414,43 +434,60 @@ begin
 end;
 
 
+{ Create secondary form }
 { Load indicates if the GUI settings are remembered or not }
-procedure TAppData.CreateFormRef(aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Load: Boolean= TRUE; OnlyFormPos: Boolean= FALSE);
-begin
-  TForm(Reference):= CreateForm(aClass, Show, Load);
-end;
-
-
-function TAppData.CreateForm(aClass: TFormClass; Show: Boolean= TRUE; Load: Boolean= TRUE; OnlyFormPos: Boolean= FALSE): TForm;
+procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL);
 begin
   Assert(Application.MainForm <> NIL, 'Probably you forgot to create the main form with AppData.CreateMainForm!');
-  Application.CreateForm(aClass, Result);
 
-  SetGuiProperties(TForm(Result));
+  Application.CreateForm(aClass, Reference);
+  SetGuiProperties(TForm(Reference));
 
-  // Load form position
-  if Load
-  then cbIniFile.LoadForm(Result, OnlyFormPos);
+  // Load previous form settings/position
+  cbIniFile.LoadForm(TForm(Reference), Loading);
+
+  // Center form in the "ParentForm"
+  if (ParentWnd <> NIL)
+  then
+    if (Loading = flNoLoad)
+    then CenterChild(TForm(Reference), ParentWnd)
+    else TForm(Reference).Parent:= ParentWnd;
 
   if Show
-  then TForm(Result).Show;
+  then TForm(Reference).Show;
 
-  PostMessage(TForm(Result).Handle, MSG_LateFormInit, 0, 0);
+  PostMessage(TForm(Reference).Handle, MSG_LateFormInit, 0, 0);
 end;
 
 
-procedure TAppData.CreateFormModal(aClass: TFormClass);
+{ Create secondary form }  {
+procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPositionOnly);
+begin
+  CreateFormSec(aClass, Reference, TRUE, Loading, NIL);
+end; }
+
+
+{ Create secondary form }
+procedure TAppData.CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL);
+begin
+  CreateForm(aClass, Reference, FALSE, Loading, ParentWnd);
+end;
+
+
+{ Create secondary form }
+procedure TAppData.CreateFormModal(aClass: TFormClass; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL);
 VAR Reference: TForm;
 begin
-  CreateFormRef(aClass, Reference, TRUE, FALSE);
+  CreateForm(aClass, Reference, FALSE, Loading, ParentWnd);
   Reference.ShowModal;
 end;
 
 
+{ Create secondary form }
 //ToDo: Do I need this? Since the form is modal, I should never need the Reference? To be deleted
-procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference);
+procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL);
 begin
-  CreateFormModal(aClass, Reference);
+  CreateFormModal(aClass, Loading, ParentWnd);
 end;
 
 
@@ -1278,14 +1315,12 @@ begin
 end;
 
 
-{ To be called from the MainForm.Initialize }
-procedure TAppData.HintSetup;
+procedure TAppData.setHideHint(const Value: Integer);
 begin
- Application.HintColor     := $c0c090;
- Application.HintPause     := 350;                { Specifies the time interval that passes before the control's Help Hint appears when the user places the mouse pointer on a control or menu item. Windows' default is 500 ms }
- Application.HintShortPause:= 40;                 { Specifies the time period to wait before bringing up a hint if another hint has already been shown. Windows' default is 50 ms }
- Application.UpdateFormatSettings:= FALSE;        { more http://www.delphi3000.com/articles/article_4462.asp?SK= }
+  FHideHint := Value;
+  Application.HintHidePause:= Value;       // Specifies the time interval to wait before hiding the Help Hint if the mouse has not moved from the control or menu item. Windows' default is 2500 ms
 end;
+
 
 
 
@@ -1332,7 +1367,7 @@ end;
 
 procedure TAppData.SaveSettings;
 begin
-  VAR Stream:= TCubicBuffStream.CreateWrite(SettingsFile);    { This will give an AV if the file cannot be saved (folder readonly) }
+  VAR Stream:= TCubicBuffStream2.CreateWrite(SettingsFile);    { This will give an AV if the file cannot be saved (folder readonly) }
   TRY
     Stream.WriteHeader(Signature, 1);
     Stream.WriteBoolean(AutoStartUp);
@@ -1351,7 +1386,7 @@ end;
 
 procedure TAppData.LoadSettings;
 begin
-  VAR Stream:= TCubicBuffStream.CreateRead(SettingsFile);
+  VAR Stream:= TCubicBuffStream2.CreateRead(SettingsFile);
   TRY
     Stream.ReadHeader(Signature, 1);
 

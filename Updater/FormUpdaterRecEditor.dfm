@@ -4,8 +4,8 @@ object frmRecEditor: TfrmRecEditor
   AlphaBlendValue = 245
   Anchors = []
   Caption = 'News & Updates Editor'
-  ClientHeight = 328
-  ClientWidth = 653
+  ClientHeight = 326
+  ClientWidth = 655
   Color = clBtnFace
   Constraints.MinHeight = 335
   Constraints.MinWidth = 434
@@ -21,12 +21,13 @@ object frmRecEditor: TfrmRecEditor
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 3
+  OnClose = FormClose
   OnDestroy = FormDestroy
   TextHeight = 15
   object pnlBtm: TPanel
     Left = 0
-    Top = 292
-    Width = 653
+    Top = 290
+    Width = 655
     Height = 36
     Align = alBottom
     TabOrder = 0
@@ -74,7 +75,7 @@ object frmRecEditor: TfrmRecEditor
     end
     object btnClose: TButton
       AlignWithMargins = True
-      Left = 559
+      Left = 565
       Top = 4
       Width = 90
       Height = 28
@@ -91,7 +92,7 @@ object frmRecEditor: TfrmRecEditor
     AlignWithMargins = True
     Left = 4
     Top = 4
-    Width = 645
+    Width = 647
     Height = 34
     Margins.Left = 4
     Margins.Top = 4
@@ -104,7 +105,7 @@ object frmRecEditor: TfrmRecEditor
       Left = 4
       Top = 4
       Width = 44
-      Height = 26
+      Height = 15
       Align = alLeft
       Caption = 'NewsID'
       Layout = tlCenter
@@ -114,7 +115,7 @@ object frmRecEditor: TfrmRecEditor
       Left = 138
       Top = 4
       Width = 34
-      Height = 26
+      Height = 15
       Align = alLeft
       Caption = 'Target'
       Layout = tlCenter
@@ -124,7 +125,7 @@ object frmRecEditor: TfrmRecEditor
       Left = 297
       Top = 4
       Width = 34
-      Height = 26
+      Height = 15
       Align = alLeft
       Caption = 'Show '
       Layout = tlCenter
@@ -134,7 +135,7 @@ object frmRecEditor: TfrmRecEditor
       Left = 384
       Top = 4
       Width = 39
-      Height = 26
+      Height = 15
       Align = alLeft
       Caption = 'time(s)'
       Layout = tlCenter
@@ -201,7 +202,7 @@ object frmRecEditor: TfrmRecEditor
     AlignWithMargins = True
     Left = 4
     Top = 46
-    Width = 645
+    Width = 647
     Height = 34
     Margins.Left = 4
     Margins.Top = 4
@@ -214,14 +215,14 @@ object frmRecEditor: TfrmRecEditor
       Left = 4
       Top = 4
       Width = 44
-      Height = 26
+      Height = 15
       Align = alLeft
       Caption = 'Version:'
       Layout = tlCenter
     end
     object Panel6: TPanel
       AlignWithMargins = True
-      Left = 418
+      Left = 458
       Top = 4
       Width = 3
       Height = 26
@@ -239,7 +240,7 @@ object frmRecEditor: TfrmRecEditor
     end
     object Panel8: TPanel
       AlignWithMargins = True
-      Left = 306
+      Left = 329
       Top = 4
       Width = 3
       Height = 26
@@ -261,9 +262,9 @@ object frmRecEditor: TfrmRecEditor
     end
     object chkCriticalUpd: TCheckBox
       AlignWithMargins = True
-      Left = 315
+      Left = 338
       Top = 4
-      Width = 97
+      Width = 114
       Height = 26
       Align = alLeft
       Caption = 'Critical update'
@@ -273,7 +274,7 @@ object frmRecEditor: TfrmRecEditor
       AlignWithMargins = True
       Left = 203
       Top = 4
-      Width = 97
+      Width = 120
       Height = 26
       Align = alLeft
       Caption = 'Is beta version'
@@ -281,9 +282,9 @@ object frmRecEditor: TfrmRecEditor
     end
     object edtComment: TEdit
       AlignWithMargins = True
-      Left = 427
+      Left = 467
       Top = 6
-      Width = 214
+      Width = 180
       Height = 23
       Hint = 'News headline'
       Margins.Top = 5
@@ -297,8 +298,8 @@ object frmRecEditor: TfrmRecEditor
     AlignWithMargins = True
     Left = 4
     Top = 88
-    Width = 645
-    Height = 200
+    Width = 647
+    Height = 198
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -310,7 +311,7 @@ object frmRecEditor: TfrmRecEditor
       AlignWithMargins = True
       Left = 5
       Top = 20
-      Width = 635
+      Width = 641
       Height = 23
       Hint = 'News headline'
       Align = alTop
@@ -321,8 +322,8 @@ object frmRecEditor: TfrmRecEditor
       AlignWithMargins = True
       Left = 8
       Top = 52
-      Width = 629
-      Height = 140
+      Width = 635
+      Height = 139
       Margins.Left = 6
       Margins.Top = 6
       Margins.Right = 6

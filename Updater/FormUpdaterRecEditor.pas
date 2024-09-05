@@ -8,7 +8,8 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  System.SysUtils, System.Classes, Vcl.Forms, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.Samples.Spin;
+  System.SysUtils, System.Classes, Vcl.Forms, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.Samples.Spin,
+  cbINIFile;
 
 TYPE
   TfrmRecEditor = class(TForm)
@@ -43,48 +44,53 @@ TYPE
     procedure Button1Click(Sender: TObject);
     procedure btnSaveClick(Sender: TObject);
     procedure btnCopyClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
   public
-    class procedure ShowEditor; static;
+    class procedure CreateFormModal(ParentForm: TForm= NIL); static;
  end;
 
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   cbAppData, csSystem, cTranslate, ciUpdaterRec, cbIniFile;
+   cbAppData, csSystem, cTranslate, ciUpdaterRec, cbDialogs;
 
 
 
 function GetBinFileName: string;
 begin
-  Result:= AppData.CurFolder+ 'OnlineNews.bin';
+  Result:= AppData.CurFolder+ 'OnlineNews_v2'+ AppData.AppName+'.bin';
 end;
 
 
-class procedure TfrmRecEditor.ShowEditor;
+class procedure TfrmRecEditor.CreateFormModal(ParentForm: TForm= NIL);
+VAR Form: TfrmRecEditor;
 begin
  TAppData.RaiseIfStillInitializing;
 
- VAR frmEditor:= TfrmRecEditor.Create(NIL);  { Freed by ShowModal }
- WITH frmEditor DO
+ AppData.CreateFormHidden(TfrmRecEditor, Form, flPositionOnly, ParentForm);      { Freed by ShowModal }
+ WITH Form DO
  begin
-   LoadForm(frmEditor, TRUE);            { Position form }
-   if Translator <> NIL then Translator.LoadFormTranlation(frmEditor);
-   Font:= Application.MainForm.Font;     { Themes }
+   if Translator <> NIL
+   then Translator.LoadFormTranlation(Form);
    PopulateUsers(cmbTarget);
    if FileExists(GetBinFileName)
    then Button1Click(NIL);
  end;
 
- { Closed by mrOk/mrCancel }
- frmEditor.ShowModal;
- FreeAndNil(frmEditor);    { We need to free the form because the Close will only hide the form! }
+ Form.ShowModal;  { Closed by mrOk/mrCancel }
+end;
+
+
+procedure TfrmRecEditor.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Action:= caFree;
 end;
 
 
 procedure TfrmRecEditor.FormDestroy(Sender: TObject);
 begin
-  SaveForm(Self, TRUE);
+  SaveForm(Self, flPositionOnly);
 end;
 
 
@@ -108,6 +114,7 @@ begin
   News.IsBetaVers  := chkBetaVer.Checked;
 
   News.SaveTo(GetBinFileName);
+  MesajInfo('FileSearch saved as '+ GetBinFileName);
 end;
 
 

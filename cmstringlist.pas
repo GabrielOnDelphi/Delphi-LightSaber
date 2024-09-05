@@ -53,7 +53,7 @@ function TTSL.Concatenate(const Separator: string): String;
 begin
   Result:= '';
   for var s in Self do
-    Result:= Result+ s+ ';';
+    Result:= Result+ s+ Separator;
 end;
 
 

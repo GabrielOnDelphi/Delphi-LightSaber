@@ -630,7 +630,7 @@ end;
 procedure TCubicListBox.MoveItemsTo(ListBox: TCubicListBox; iCount: Integer);
 VAR I: Integer;
 begin
- for I := 0 to iCount- 1 DO
+ for I := 0 to iCount- 1 DO //ToDo: do it in reverse. For large lists it will be muuuch faster.
   begin
    ListBox.Items.Add(Items[0]);
    Items.Delete(0);

@@ -13,7 +13,7 @@ UNIT cmGuiSettings;
 INTERFACE
 
 USES
-  System.SysUtils, ccStreamBuff;
+  System.SysUtils, ccStreamBuff2;
 
 TYPE
 
@@ -39,7 +39,7 @@ procedure TGuiSettings.Save;
 begin
   VAR SettingsFile:= AppData.AppDataFolder(TRUE)+ 'Gui_Settings.bin';
 
-  VAR Stream:= TCubicBuffStream.CreateWrite(SettingsFile);    { This will give an AV if the file cannot be saved (folder readonly) }
+  VAR Stream:= TCubicBuffStream2.CreateWrite(SettingsFile);    { This will give an AV if the file cannot be saved (folder readonly) }
   TRY
     Stream.WriteHeader(Signature, 1);
     Stream.WriteBoolean(bUser);
@@ -57,7 +57,7 @@ begin
   VAR SettingsFile:= AppData.AppDataFolder(TRUE)+ 'Gui_Settings.bin';
   if NOT FileExists(SettingsFile) then EXIT;
 
-  VAR Stream:= TCubicBuffStream.CreateRead(SettingsFile);
+  VAR Stream:= TCubicBuffStream2.CreateRead(SettingsFile);
   TRY
     Stream.ReadHeader(Signature, 1);
  

@@ -4,8 +4,8 @@ object frmSettings: TfrmSettings
   AlphaBlendValue = 249
   BorderIcons = [biSystemMenu]
   Caption = 'Settings'
-  ClientHeight = 514
-  ClientWidth = 782
+  ClientHeight = 512
+  ClientWidth = 774
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 350
@@ -28,18 +28,18 @@ object frmSettings: TfrmSettings
   object pgCtrl: TPageControl
     Left = 0
     Top = 0
-    Width = 782
-    Height = 514
-    ActivePage = TabSheet3
+    Width = 774
+    Height = 512
+    ActivePage = tabHelp
     Align = alClient
     TabOrder = 0
     object tabSystem: TTabSheet
       Caption = 'System'
       DesignSize = (
-        774
-        482)
+        766
+        480)
       object grpSystem: TGroupBox
-        Left = 196
+        Left = 188
         Top = 100
         Width = 381
         Height = 207
@@ -68,7 +68,6 @@ object frmSettings: TfrmSettings
           Height = 17
           Caption = 'Start at Windows startup '
           TabOrder = 0
-          OnClick = chkAutoStartUpClick
           AutoSize = True
         end
         object chkTrayIcon: TCubicCheckBox
@@ -92,8 +91,8 @@ object frmSettings: TfrmSettings
       end
       object Path: TCubicPathEdit
         Left = 82
-        Top = 330
-        Width = 611
+        Top = 328
+        Width = 595
         Height = 48
         Hint = 
           'User defined path where to save (large) files. Useful when the p' +
@@ -104,7 +103,7 @@ object frmSettings: TfrmSettings
         TabOrder = 1
       end
       object btnCrash: TButton
-        Left = 656
+        Left = 640
         Top = 12
         Width = 101
         Height = 25
@@ -115,14 +114,14 @@ object frmSettings: TfrmSettings
         OnClick = btnCrashClick
       end
     end
-    object TabSheet2: TTabSheet
+    object tabHelp: TTabSheet
       Caption = 'Help'
       ImageIndex = 1
       DesignSize = (
-        774
-        482)
+        766
+        480)
       object GroupHelp: TGroupBox
-        Left = 214
+        Left = 206
         Top = 130
         Width = 345
         Height = 221
@@ -190,14 +189,14 @@ object frmSettings: TfrmSettings
         end
       end
     end
-    object TabSheet3: TTabSheet
+    object tabInterface: TTabSheet
       Caption = 'Interface'
       ImageIndex = 2
       DesignSize = (
-        774
-        482)
+        766
+        480)
       object GroupBox1: TGroupBox
-        Left = 242
+        Left = 234
         Top = 112
         Width = 290
         Height = 226
@@ -254,11 +253,11 @@ object frmSettings: TfrmSettings
       Caption = 'User defined'
       ImageIndex = 3
       DesignSize = (
-        774
-        482)
+        766
+        480)
       object grpUser: TGroupBox
-        Left = 216
-        Top = 132
+        Left = 208
+        Top = 130
         Width = 345
         Height = 221
         Anchors = []

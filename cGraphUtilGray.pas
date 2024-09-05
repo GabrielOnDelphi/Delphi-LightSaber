@@ -83,7 +83,7 @@ begin
       // All 3 color channels must have the same value, so it is enough to use only one of them.
       Summ := Summ + Blue;
 
-      Inc(Pixel);
+      Inc(Pixel);  //Pointer math
     end;
   end;
 

@@ -12,7 +12,7 @@ UNIT cmPascal;
 INTERFACE
 
 USES
-  System.SysUtils, System.Classes, System.RegularExpressions, System.StrUtils;
+  Winapi.Windows, System.SysUtils, System.Classes, System.RegularExpressions, System.StrUtils, System.Character, Vcl.Forms;
 
 
 // CLASSES & OBJECTS
@@ -26,6 +26,7 @@ function FindSection      (PasBody: TStringList; bInterface: Boolean): Integer; 
 // COMMENTS
 function SepparateComments(var CodeLine: string; out Comment: string): Boolean;
 function LineIsAComment   (Line: string): Boolean;
+function CountComments    (CONST FileName: string): Integer;
 
 // Search
 function RelaxedSearch    (      CodeLine, Instruction: string): Boolean;
@@ -33,12 +34,13 @@ function RelaxedSearchI   (CONST CodeLine, Instruction: string): Integer;
 function IsKeyword        (CONST CodeLine, Instruction: string): Boolean;
 function IsReservedKeyword(CONST CodeLine: string): Boolean;
 function FindLine         (CONST Needle: string; Haystack: TStringList; StartAt: integer): Integer;
+function WordPos          (CONST Needle, HayStack: string): Integer;
 
 
 IMPLEMENTATION
 
 USES
-  ccCore;
+  ccCore, ccIO;
 
 {-------------------------------------------------------------------------------------------------------------
     COMMENTS
@@ -82,6 +84,21 @@ begin
   Result := s;
 end;
 
+
+{ Returns the approximate number of comment lines }
+function CountComments(const FileName: string): Integer;
+begin
+  Result:= 0;
+  var TSL:= TStringList.Create;
+  Try
+    TSL.LoadFromFile(FileName);
+    for var Line in TSL do
+      if LineIsAComment(Line)
+      then Inc(Result);
+  Finally
+    FreeAndNil(TSL);
+  end;
+end;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -311,6 +328,21 @@ begin
     // Move to the next character
     Inc(i);
   end;
+end;
+
+
+{ Returns the position where Needle was found in the haystack.
+  BUT does so only if the character in front of the Needle is a non-alphabetic character (a-z, A-Z) }
+function WordPos(const Needle, HayStack: string): Integer;
+begin
+  var Pos:= PosInsensitive(Needle, HayStack);
+  if (Pos < 1) then Exit(Pos);     // Not found
+  if (Pos = 1) then Exit(Pos);     // The Needle is at the beginning og the haystack. There is nothing more to check.
+
+  // Check if the previous character is a letter or a space (or other signs like .,_+-!; etc)
+  if CharInSet(HayStack[Pos-1], Alphabet)
+  then Result:= 0                // Not a whole word!
+  else Result:= Pos;             // Still valid
 end;
 
 

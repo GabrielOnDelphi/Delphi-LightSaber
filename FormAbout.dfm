@@ -7,8 +7,8 @@ object frmAboutApp: TfrmAboutApp
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'About'
-  ClientHeight = 427
-  ClientWidth = 660
+  ClientHeight = 447
+  ClientWidth = 543
   Color = clBtnFace
   CustomTitleBar.Height = 5
   DoubleBuffered = True
@@ -39,8 +39,8 @@ object frmAboutApp: TfrmAboutApp
     AlignWithMargins = True
     Left = 15
     Top = 15
-    Width = 630
-    Height = 397
+    Width = 513
+    Height = 417
     Margins.Left = 15
     Margins.Top = 15
     Margins.Right = 15
@@ -48,13 +48,13 @@ object frmAboutApp: TfrmAboutApp
     Align = alClient
     TabOrder = 0
     DesignSize = (
-      630
-      397)
+      513
+      417)
     object lblChildren: TLabel
       AlignWithMargins = True
       Left = 4
-      Top = 361
-      Width = 622
+      Top = 400
+      Width = 505
       Height = 13
       Align = alBottom
       Alignment = taCenter
@@ -76,7 +76,7 @@ object frmAboutApp: TfrmAboutApp
       AlignWithMargins = True
       Left = 4
       Top = 43
-      Width = 622
+      Width = 505
       Height = 13
       Align = alTop
       Alignment = taCenter
@@ -90,9 +90,10 @@ object frmAboutApp: TfrmAboutApp
     object imgLogo: TImage
       AlignWithMargins = True
       Left = 4
-      Top = 122
-      Width = 350
-      Height = 233
+      Top = 81
+      Width = 505
+      Height = 293
+      Align = alClient
       Center = True
       Picture.Data = {
         0954506E67496D61676589504E470D0A1A0A0000000D49484452000002180000
@@ -2836,19 +2837,17 @@ object frmAboutApp: TfrmAboutApp
         0E1863FC2F504E3D60F06F3C6DEAD504180930E6940418E3CA6F342F0146EFF1
         9302185D6D6D03045C834A29BD5D6A5D9200637E69DB8A3A14341030FE1F1B50
         11767085E5D20000000049454E44AE426082}
-      Proportional = True
       Stretch = True
     end
-    object inetHomePage: TInternetLabel
+    object lblCompany: TInternetLabel
       AlignWithMargins = True
       Left = 4
       Top = 62
-      Width = 622
+      Width = 505
       Height = 13
       Cursor = crHandPoint
       Align = alTop
       Alignment = taCenter
-      AutoSize = False
       Caption = 'Home page'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clBlue
@@ -2865,21 +2864,11 @@ object frmAboutApp: TfrmAboutApp
       NotVisitedColor = clBlue
       OverColor = clRed
     end
-    object Label1: TLabel
-      AlignWithMargins = True
-      Left = 4
-      Top = 380
-      Width = 622
-      Height = 13
-      Align = alBottom
-      Alignment = taCenter
-      Caption = 'By using this software you agree with our EULA'
-    end
     object lblAppName: TLabel
       AlignWithMargins = True
       Left = 4
       Top = 13
-      Width = 622
+      Width = 505
       Height = 24
       Margins.Top = 12
       Align = alTop
@@ -2895,145 +2884,91 @@ object frmAboutApp: TfrmAboutApp
       ParentFont = False
       Transparent = True
     end
-    object pnlEnterKey: TPanel
+    object lblExpire: TLabel
+      AlignWithMargins = True
+      Left = 82
+      Top = 359
+      Width = 371
+      Height = 13
+      Margins.Top = 12
+      Alignment = taCenter
+      Anchors = [akLeft, akRight, akBottom]
+      AutoSize = False
+      Caption = 'Registration info'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clBlack
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = [fsBold]
+      Font.Quality = fqClearTypeNatural
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
+      Transparent = True
+      Visible = False
+    end
+    object inetEULA: TInternetLabel
       AlignWithMargins = True
       Left = 4
-      Top = 81
-      Width = 622
-      Height = 35
-      Align = alTop
-      BevelOuter = bvNone
-      TabOrder = 0
-      object btnEnterKey: TButton
-        AlignWithMargins = True
-        Left = 536
-        Top = 3
-        Width = 83
-        Height = 29
-        Align = alRight
-        Caption = 'Enter key'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        Font.Quality = fqProof
-        ImageIndex = 81
-        ParentFont = False
-        TabOrder = 0
-        OnClick = btnEnterKeyClick
-      end
-      object btnOrderNow: TButton
-        AlignWithMargins = True
-        Left = 444
-        Top = 3
-        Width = 86
-        Height = 29
-        Align = alRight
-        Caption = 'Order now'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        Font.Quality = fqProof
-        ImageIndex = 82
-        ParentFont = False
-        TabOrder = 1
-        OnClick = btnOrderNowClick
-      end
+      Top = 380
+      Width = 505
+      Height = 14
+      Cursor = crHandPoint
+      Align = alBottom
+      Alignment = taCenter
+      Caption = 'Online License Agreement'
+      Font.Charset = ANSI_CHARSET
+      Font.Color = clBlue
+      Font.Height = -11
+      Font.Name = 'Arial'
+      Font.Style = []
+      ParentFont = False
+      Transparent = True
+      Visible = False
+      Link = 'http://www.BionixWallpaper.com/contact/LicenseAgreement.txt'
+      LinkHint = False
+      Visited = False
+      VisitedColor = clPurple
+      NotVisitedColor = clBlue
+      OverColor = clRed
     end
-    object Panel1: TPanel
-      Left = 357
-      Top = 136
-      Width = 267
-      Height = 209
-      Anchors = [akTop, akRight, akBottom]
-      BevelOuter = bvNone
+    object btnEnterKey: TButton
+      AlignWithMargins = True
+      Left = 411
+      Top = 325
+      Width = 83
+      Height = 29
+      Anchors = [akRight, akBottom]
+      Caption = 'Enter key'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      Font.Quality = fqProof
+      ImageIndex = 81
+      ParentFont = False
+      TabOrder = 0
+      OnClick = btnEnterKeyClick
+    end
+    object btnOrderNow: TButton
+      AlignWithMargins = True
+      Left = 411
+      Top = 93
+      Width = 86
+      Height = 29
+      Anchors = [akTop, akRight]
+      Caption = 'Order now'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'MS Sans Serif'
+      Font.Style = []
+      Font.Quality = fqProof
+      ImageIndex = 82
+      ParentFont = False
       TabOrder = 1
-      DesignSize = (
-        267
-        209)
-      object lblExpire: TLabel
-        AlignWithMargins = True
-        Left = 3
-        Top = 31
-        Width = 261
-        Height = 13
-        Margins.Top = 12
-        Align = alTop
-        Alignment = taCenter
-        AutoSize = False
-        Caption = 'Registration info'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = [fsBold]
-        Font.Quality = fqClearTypeNatural
-        ParentFont = False
-        ParentShowHint = False
-        ShowHint = True
-        Transparent = True
-        Visible = False
-      end
-      object Label2: TLabel
-        AlignWithMargins = True
-        Left = 3
-        Top = 53
-        Width = 261
-        Height = 13
-        Margins.Top = 6
-        Align = alTop
-        Alignment = taCenter
-        AutoSize = False
-        Caption = 'Freeware'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clBlack
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = [fsBold]
-        Font.Quality = fqClearTypeNatural
-        ParentFont = False
-        Transparent = True
-      end
-      object inetEULA: TInternetLabel
-        Left = 75
-        Top = 178
-        Width = 126
-        Height = 14
-        Cursor = crHandPoint
-        Alignment = taCenter
-        Anchors = [akTop]
-        Caption = 'Online License Agreement'
-        Font.Charset = ANSI_CHARSET
-        Font.Color = clBlue
-        Font.Height = -11
-        Font.Name = 'Arial'
-        Font.Style = []
-        ParentFont = False
-        Transparent = True
-        Visible = False
-        Link = 'http://www.BionixWallpaper.com/contact/LicenseAgreement.txt'
-        LinkHint = False
-        Visited = False
-        VisitedColor = clPurple
-        NotVisitedColor = clBlue
-        OverColor = clRed
-      end
-      object lblCopyRight: TLabel
-        AlignWithMargins = True
-        Left = 3
-        Top = 3
-        Width = 261
-        Height = 13
-        Align = alTop
-        Alignment = taCenter
-        Caption = 'ctCopyright'
-        ParentShowHint = False
-        ShowHint = True
-        Transparent = True
-      end
+      OnClick = btnOrderNowClick
     end
   end
 end

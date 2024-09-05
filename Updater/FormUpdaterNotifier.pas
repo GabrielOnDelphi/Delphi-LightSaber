@@ -27,6 +27,9 @@ USES
   InternetLabel,
   ccCore, csSystem, ciUpdater, llRichLog, llRichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
 
+CONST
+  UpdaterURL = 'https://www.GabrielMoraru.com/uploads/OnlineNews_v2_TemplateApp.bin'; { For demo purposes }
+
 TYPE
   TFrmUpdater = class(TForm)
     Log              : TRichLog;
@@ -51,7 +54,6 @@ TYPE
     tabDemo          : TTabSheet;
     tabNews          : TTabSheet;
     tabRecEditor     : TTabSheet;
-    tabSettings      : TTabSheet;
     LogVerb: TRichLogTrckbr;
     procedure btnBinFileClick       (Sender: TObject);
     procedure btnCheckDelayClick    (Sender: TObject);
@@ -71,10 +73,10 @@ TYPE
     procedure FormClose             (Sender: TObject; var Action: TCloseAction);
   private
     Demo: Boolean;
-    frmSettings: TfrmUpdaterSettings;
+
     procedure PopulateNews;
   public
-    class procedure ShowUpdater(Demo: Boolean = FALSE); static;
+    class procedure CreateForm(Demo: Boolean = FALSE); static;
  end;
 
 
@@ -83,57 +85,54 @@ IMPLEMENTATION  {$R *.DFM}
 USES
    llLogUtils, cTranslate, ccColors, cbAppData, cbIniFile, ciInternet;
 
-VAR
-   FrmUpdater: TFrmUpdater= NIL; { Only one instance allowed! }
+
+
 
 
 
 
 
 { Show updater form (modal) }
-class procedure TFrmUpdater.ShowUpdater(Demo: Boolean = FALSE);
+class procedure TFrmUpdater.CreateForm(Demo: Boolean = FALSE);
+VAR
+   Form: TFrmUpdater;
 begin
- TAppData.RaiseIfStillInitializing;
- Assert(Updater <> NIL);
+  TAppData.RaiseIfStillInitializing;
+  Assert(Updater <> NIL);
 
- if FrmUpdater = NIL
- then
-  begin
-   FrmUpdater:= TFrmUpdater.Create(NIL);        { Freed by ShowModal }
-   LoadForm(FrmUpdater, TRUE);                  { Position form }
+  AppData.CreateFormHidden(TFrmUpdater, Form);   { Freed by ShowModal }
 
-   if Translator <> NIL
-   then Translator.LoadFormTranlation(FrmUpdater);
+  if Translator <> NIL
+  then Translator.LoadFormTranlation(Form);
 
-   { Setup updater }
-   Updater.OnUpdateStart := FrmUpdater.OnUpdateStart;
-   Updater.OnNoNews      := FrmUpdater.OnNoNews;
-   Updater.OnHasNews     := FrmUpdater.OnHasNews;
-   Updater.OnConnectError:= FrmUpdater.OnConnectError;
-   Updater.OnUpdateEnd   := FrmUpdater.OnUpdateEnd;
+  { Setup updater }
+  Updater.OnUpdateStart := Form.OnUpdateStart;
+  Updater.OnNoNews      := Form.OnNoNews;
+  Updater.OnHasNews     := Form.OnHasNews;
+  Updater.OnConnectError:= Form.OnConnectError;
+  Updater.OnUpdateEnd   := Form.OnUpdateEnd;
 
-   { Demo }
-   FrmUpdater.Demo:= Demo;
-   FrmUpdater.tabDemo.TabVisible:= Demo;
-   FrmUpdater.tabRecEditor.TabVisible:= Demo;
-   FrmUpdater.LogVerb.Visible:= Demo OR AppData.BetaTesterMode;
-   if Demo
-   then FrmUpdater.LogVerb.Verbosity:= lvVerbose;
+  { Demo }
+  Form.Demo:= Demo;
+  Form.tabDemo.TabVisible:= Demo;
+  Form.tabRecEditor.TabVisible:= Demo;
+  Form.LogVerb.Visible:= Demo OR AppData.BetaTesterMode;
+  if Demo
+  then Form.LogVerb.Verbosity:= lvVerbose;
 
-   { GUI }
-   FrmUpdater.lblDownload .Link := Updater.URLDownload;
-   FrmUpdater.inetWhatsNew.Link := Updater.URLRelHistory;
-   FrmUpdater.lblConnectError.Visible:= Updater.ConnectionError;
-   FrmUpdater.PopulateNews;
+  { GUI }
+  Form.lblDownload .Link := Updater.URLDownload;
+  Form.inetWhatsNew.Link := Updater.URLRelHistory;
+  Form.lblConnectError.Visible:= Updater.ConnectionError;
+  Form.PopulateNews;
 
-   { Nest the Settings form }
-   FrmUpdater.frmSettings:= TfrmUpdaterSettings.CreateParented(FrmUpdater.tabSettings);
-  end;
+  { Nest the Settings form }
+  //Form.frmSettings:= TfrmUpdaterSettings.Create;
 
- { Closed by mrOk/mrCancel }
- if FrmUpdater.Visible
- then FrmUpdater.Show     { Cannot make a visible window modal! }
- else FrmUpdater.ShowModal;
+  { Closed by mrOk/mrCancel }
+  if Form.Visible
+  then Form.Show     { Cannot make a visible window modal! }
+  else Form.ShowModal;
 end;
 
 
@@ -171,7 +170,7 @@ end;
 procedure TFrmUpdater.FormClose(Sender: TObject; VAR Action: TCloseAction);
 begin
   Action:= caFree;
-  frmSettings.Container.Parent:= frmSettings;   { We need to move the container back on its original form, in order to let that form to correctly save its children }
+  //frmSettings.Container.Parent:= frmSettings;   { We need to move the container back on its original form, in order to let that form to correctly save its children }
 end;
 
 
@@ -207,7 +206,7 @@ end;
 --------------------------------------------------------------------------------------------------}
 
 procedure TFrmUpdater.PopulateNews;
-begin
+begin     //clr
  { Show version }
  lblVersion.Caption:= 'You are running version '+ AppData.GetVersionInfo
                 +CRLF+'Online version is '+ Updater.NewsRec.AppVersion;
@@ -314,7 +313,7 @@ begin
  lblStatus.Color:= clLimeDark;                     { Change font color, not bkg color to keep it compatible with 'Skins' }
  lblStatus.Font.Color:= clBlueNight;
  lblStatus.Caption:= 'We have news for you!';
- Log.AddImpo(lblStatus.Caption);
+ Log.AddImpo('We have news for you!');
 
  { Always show "new version available" if the user has an old version! }
  PopulateNews;
@@ -337,7 +336,6 @@ begin
  lblStatus.Visible:= TRUE;
  lblStatus.Transparent:= TRUE;
  lblStatus.Caption:= 'No news today.';
- Log.AddInfo(lblStatus.Caption);
 end;
 
 
@@ -371,19 +369,19 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TFrmUpdater.btnSettingsClick(Sender: TObject);
 begin
- TfrmUpdaterSettings.ShowEditor(TRUE);
+  TfrmUpdaterSettings.CreateModal;
 end;
 
 
 procedure TFrmUpdater.btnTestInternetClick(Sender: TObject);
 begin
- lblConnectError.Visible:= ciInternet.TestProgramConnection(TRUE) <= 0;
+  lblConnectError.Visible:= ciInternet.TestProgramConnection(TRUE) <= 0;
 end;
 
 
 procedure TFrmUpdater.btnBinFileClick(Sender: TObject);
 begin
- TfrmRecEditor.ShowEditor;   { Generate the BIN file that we upload on FTP }
+  TfrmRecEditor.CreateFormModal;   { Generate the BIN file that we upload on FTP }
 end;
 
 

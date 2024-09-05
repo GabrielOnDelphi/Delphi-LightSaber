@@ -47,7 +47,7 @@ procedure PopulateUsers(Combo: TComboBox);
 IMPLEMENTATION
 
 USES
-  ccStreamBuff;
+  ccStreamBuff2;
 
 
 
@@ -68,61 +68,53 @@ end;
 
 function RNews.LoadFrom(FileName: string): Boolean;
 VAR
-   IOStream: TCubicBuffStream;
+   Stream: TCubicBuffStream2;
 begin
  Clear;
- IOStream:= TCubicBuffStream.CreateRead(FileName);
+ Stream:= TCubicBuffStream2.CreateRead(FileName);
  TRY
-   { First try to read the old format (until 2024.08) }
-   IOStream.MagicNo:= 'CubicUpdater';
-   Result:= IOStream.ReadMagicVer = 1;
-   if NOT Result then
-     begin
-       IOStream.Position:= 0;
-       Result:= IOStream.ReadHeaderTry(Signature, CurrentVersion);
-     end;
-
+   Result:= Stream.ReadHeader(Signature, CurrentVersion);
    if Result then
     begin
-      Comment     := IOStream.ReadStringU;
-      AppVersion  := IOStream.ReadStringU;
-      NewsID      := IOStream.ReadInteger;
-      NewsHeadline:= IOStream.ReadStringU;
-      NewsBody    := IOStream.ReadStringU;
-      TargetUser  := TTargetUser(IOStream.ReadByte);
-      CriticalUpd := IOStream.ReadBoolean;
-      ShowCounter := IOStream.ReadInteger;
-      IsBetaVers  := IOStream.ReadBoolean;
+      Comment     := Stream.ReadStringU;
+      AppVersion  := Stream.ReadStringU;
+      NewsID      := Stream.ReadInteger;
+      NewsHeadline:= Stream.ReadStringU;
+      NewsBody    := Stream.ReadStringU;
+      TargetUser  := TTargetUser(Stream.ReadByte);
+      CriticalUpd := Stream.ReadBoolean;
+      ShowCounter := Stream.ReadInteger;
+      IsBetaVers  := Stream.ReadBoolean;
 
-      IOStream.ReadPadding(128);
+      Stream.ReadPaddingDef;
     end;
 
  FINALLY
-   FreeAndNil(IOStream);
+   FreeAndNil(Stream);
  END;
 end;
 
 
 procedure RNews.SaveTo(FileName: string);
 VAR
-   IOStream: TCubicBuffStream;
+   Stream: TCubicBuffStream2;
 begin
- IOStream:= TCubicBuffStream.CreateWrite(FileName);
+ Stream:= TCubicBuffStream2.CreateWrite(FileName);
  TRY
-   IOStream.WriteHeader(Signature, CurrentVersion);
-   IOStream.WriteStringU (Comment);
-   IOStream.WriteStringU (AppVersion);
-   IOStream.WriteInteger (NewsID);
-   IOStream.WriteStringU (NewsHeadline);
-   IOStream.WriteStringU (NewsBody);
-   IOStream.WriteByte(Ord(TargetUser));
-   IOStream.WriteBoolean (CriticalUpd);
-   IOStream.WriteInteger (ShowCounter);
-   IOStream.WriteBoolean (IsBetaVers);
+   Stream.WriteHeader(Signature, CurrentVersion);
+   Stream.WriteStringU (Comment);
+   Stream.WriteStringU (AppVersion);
+   Stream.WriteInteger (NewsID);
+   Stream.WriteStringU (NewsHeadline);
+   Stream.WriteStringU (NewsBody);
+   Stream.WriteByte(Ord(TargetUser));
+   Stream.WriteBoolean (CriticalUpd);
+   Stream.WriteInteger (ShowCounter);
+   Stream.WriteBoolean (IsBetaVers);
 
-   IOStream.WritePadding(128);
+   Stream.WritePaddingDef;
  FINALLY
-   FreeAndNil(IOStream);
+   FreeAndNil(Stream);
  END;
 end;
 

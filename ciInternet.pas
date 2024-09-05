@@ -185,7 +185,7 @@ CONST
 IMPLEMENTATION
 
 USES
-   cbAppData, ciHtml, ccIO, ciDownload;
+   cbAppData, cbINIFile, ciHtml, ccIO, ciDownload;
 
 
  function  PathIsURLA; external 'shlwapi' name 'PathIsURLA';
@@ -810,6 +810,7 @@ VAR
   IP, Port: string;
   i, Total, ColumnPos: Integer;
 begin
+
  ColumnPos:= Pos(':', Line);
  if ColumnPos < 1 then EXIT('');
  Line:= RemoveFormatings(Line);
@@ -845,7 +846,8 @@ begin
 
 
  if (IP > '') AND (Port > '')
- then Result:= IP+ ':'+ Port;   //ValidateIpAddress(IP) + ':'+ ValidatePort(Port);
+ then Result:= IP+ ':'+ Port   //ValidateIpAddress(IP) + ':'+ ValidatePort(Port);
+ else Result:= '';   // ????????????????
 end;
 
 

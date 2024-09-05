@@ -28,20 +28,20 @@ USES
    System.SysUtils, Vcl.Graphics, System.IniFiles;
 
 
-procedure WriteInteger (Identifier: string; i: Integer);
-function  ReadInteger  (Identifier: string; DefaultVal: Integer= 0): Integer;
+procedure WriteInteger (CONST Identifier: string; i: Integer);
+function  ReadInteger  (CONST Identifier: string; DefaultVal: Integer= 0): Integer;
 
-procedure WriteString  (Identifier, s: string);
-function  ReadString   (Identifier: string; DefaultVal: string= ''): string;
+procedure WriteString  (CONST Identifier, s: string);
+function  ReadString   (CONST Identifier: string; DefaultVal: string= ''): string;
 
-procedure WriteBool    (Identifier: string; b: Boolean);
-function  ReadBoolean  (Identifier: string; DefaultVal: Boolean= FALSE): Boolean;
+procedure WriteBool    (CONST Identifier: string; b: Boolean);
+function  ReadBoolean  (CONST Identifier: string; DefaultVal: Boolean= FALSE): Boolean;
 
-procedure WriteDbl     (Identifier: string; d: Double);
-function  ReadDbl      (Identifier: string; DefaultVal: Double= 0.0): Double;
+procedure WriteDbl     (CONST Identifier: string; d: Double);
+function  ReadDbl      (CONST Identifier: string; DefaultVal: Double= 0.0): Double;
 
-procedure WriteDateEx  (Identifier: string; d: TDateTime);
-function  ReadDateEx   (Identifier: string; DefaultVal: TDateTime): Double;
+procedure WriteDateEx  (CONST Identifier: string; d: TDateTime);
+function  ReadDateEx   (CONST Identifier: string; DefaultVal: TDateTime): Double;
 
 function  ReadFont     (CONST Identifier: string; Font: TFont): Boolean;          { Result: If the INI file does not contains informations about font then this function will  return FALSE and no modification will be done to the 'Font' object passed as parameter. }
 procedure WriteFont    (CONST Identifier: string; Font: TFont);
@@ -51,13 +51,13 @@ procedure WriteFont    (CONST Identifier: string; Font: TFont);
 IMPLEMENTATION
 
 USES
-   cbAppData, cbIniFile; //, ccINIFile;
+   cbAppData, cbINIFile; //, ccINIFile;
 
 
 
 
 
-procedure WriteInteger(Identifier: string; i: Integer);
+procedure WriteInteger(CONST Identifier: string; i: Integer);
 VAR IniFile: TIniFileVcl;
 begin
  IniFile:= TIniFileVcl.Create(AppData.AppName, AppData.IniFile);
@@ -68,7 +68,7 @@ begin
  END;
 end;
 
-function ReadInteger(Identifier: string; DefaultVal: Integer): Integer;
+function ReadInteger(CONST Identifier: string; DefaultVal: Integer): Integer;
 VAR IniFile: TIniFileVcl;
 begin
  IniFile:= TIniFileVcl.Create(AppData.AppName, AppData.IniFile);
@@ -83,7 +83,7 @@ end;
 
 
 { TIniFile bug: Cannot put spaces at the beggining of a 'value'. The spaces will be trimmed }
-procedure WriteString(Identifier, s: string);
+procedure WriteString(CONST Identifier, s: string);
 VAR IniFile: TIniFileVcl;
 begin
  IniFile:= TIniFileVcl.Create(AppData.AppName, AppData.IniFile);
@@ -94,7 +94,7 @@ begin
  END;
 end;
 
-function ReadString(Identifier: string; DefaultVal: string): string;
+function ReadString(CONST Identifier: string; DefaultVal: string): string;
 VAR IniFile: TIniFileVcl;
 begin
  IniFile:= TIniFileVcl.Create(AppData.AppName, AppData.IniFile);
@@ -109,7 +109,7 @@ end;
 
 
 
-procedure WriteBool(Identifier: string; b: Boolean);
+procedure WriteBool(CONST Identifier: string; b: Boolean);
 VAR IniFile: TIniFileVcl;
 begin
  IniFile:= TIniFileVcl.Create(AppData.AppName, AppData.IniFile);
@@ -120,7 +120,7 @@ begin
  END;
 end;
 
-function ReadBoolean(Identifier: string; DefaultVal: Boolean= FALSE): Boolean;
+function ReadBoolean(CONST Identifier: string; DefaultVal: Boolean= FALSE): Boolean;
 VAR IniFile: TIniFileVcl;
 begin
  IniFile:= TIniFileVcl.Create(AppData.AppName, AppData.IniFile);
@@ -134,7 +134,7 @@ end;
 
 
 
-procedure WriteDbl (Identifier: string; d: Double);
+procedure WriteDbl (CONST Identifier: string; d: Double);
 VAR IniFile: TIniFileVcl;
 begin
  IniFile:= TIniFileVcl.Create(AppData.AppName, AppData.IniFile);
@@ -145,7 +145,7 @@ begin
  END;
 end;
 
-function  ReadDbl (Identifier: string; DefaultVal: Double= 0.0): Double;
+function  ReadDbl (CONST Identifier: string; DefaultVal: Double= 0.0): Double;
 VAR IniFile: TIniFileVcl;
 begin
  IniFile:= TIniFileVcl.Create(AppData.AppName, AppData.IniFile);
@@ -160,7 +160,7 @@ end;
 
 
 
-procedure WriteDateEx (Identifier: string; d: TDateTime);
+procedure WriteDateEx (CONST Identifier: string; d: TDateTime);
 VAR IniFile: TIniFileVcl;
 begin
  IniFile:= TIniFileVcl.Create(AppData.AppName, AppData.IniFile);
@@ -171,7 +171,7 @@ begin
  END;
 end;
 
-function  ReadDateEx (Identifier: string; DefaultVal: TDateTime): Double;
+function  ReadDateEx (CONST Identifier: string; DefaultVal: TDateTime): Double;
 VAR IniFile: TIniFileVcl;
 begin
  IniFile:= TIniFileVcl.Create(AppData.AppName, AppData.IniFile);

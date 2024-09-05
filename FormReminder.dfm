@@ -10,15 +10,13 @@ object frmReminder: TfrmReminder
   Color = clBtnFace
   DoubleBuffered = True
   ParentFont = True
-  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 3
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
-  TextHeight = 13
+  TextHeight = 15
   object pnlReminder: TCubicGroupBox
     AlignWithMargins = True
     Left = 3
@@ -35,15 +33,15 @@ object frmReminder: TfrmReminder
     object Label1: TLabel
       Left = 16
       Top = 126
-      Width = 34
-      Height = 13
+      Width = 38
+      Height = 15
       Caption = 'Action:'
       Transparent = True
     end
     object chkMakeNoise: TCubicCheckBox
       Left = 268
       Top = 149
-      Width = 77
+      Width = 83
       Height = 14
       Hint = 'Beep when the time is up'
       Caption = 'Make beep'
@@ -103,8 +101,8 @@ object frmReminder: TfrmReminder
       object lblInterval: TLabel
         Left = 43
         Top = 29
-        Width = 168
-        Height = 13
+        Width = 182
+        Height = 15
         Caption = 'Reminder in                         minutes'
         Transparent = True
       end
@@ -158,7 +156,7 @@ object frmReminder: TfrmReminder
     object radRunFile: TCubicRadioButton
       Left = 36
       Top = 197
-      Width = 276
+      Width = 298
       Height = 14
       Hint = 
         'When the time is up, run a file. '#13#10'This file can be: application' +
@@ -175,7 +173,7 @@ object frmReminder: TfrmReminder
     object radSleep: TCubicRadioButton
       Left = 36
       Top = 148
-      Width = 129
+      Width = 141
       Height = 15
       Caption = 'Put computer to sleep'
       Checked = True
@@ -187,7 +185,7 @@ object frmReminder: TfrmReminder
     object radShutDown: TCubicRadioButton
       Left = 36
       Top = 172
-      Width = 120
+      Width = 133
       Height = 15
       Caption = 'Shutdown computer'
       TabOrder = 2
@@ -197,7 +195,7 @@ object frmReminder: TfrmReminder
     object chkRunOnce: TCubicCheckBox
       Left = 21
       Top = 357
-      Width = 93
+      Width = 101
       Height = 14
       Hint = 
         'When the time is up run the selected file and'#13#10#13#10'if this check b' +

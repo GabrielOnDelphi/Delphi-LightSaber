@@ -5,8 +5,8 @@ object FrmUpdater: TFrmUpdater
   Anchors = []
   BorderIcons = [biSystemMenu]
   Caption = 'News & Updates'
-  ClientHeight = 377
-  ClientWidth = 682
+  ClientHeight = 376
+  ClientWidth = 678
   Color = clBtnFace
   Constraints.MinHeight = 335
   Constraints.MinWidth = 434
@@ -30,7 +30,7 @@ object FrmUpdater: TFrmUpdater
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 676
+    Width = 672
     Height = 19
     Align = alTop
     Alignment = taCenter
@@ -55,8 +55,8 @@ object FrmUpdater: TFrmUpdater
   object PageCtrl: TPageControl
     Left = 0
     Top = 25
-    Width = 682
-    Height = 352
+    Width = 678
+    Height = 351
     ActivePage = tabNews
     Align = alClient
     TabOrder = 0
@@ -66,7 +66,7 @@ object FrmUpdater: TFrmUpdater
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 668
+        Width = 664
         Height = 17
         Align = alTop
         Alignment = taCenter
@@ -79,8 +79,8 @@ object FrmUpdater: TFrmUpdater
       object pnlBottom: TPanel
         AlignWithMargins = True
         Left = 3
-        Top = 272
-        Width = 668
+        Top = 271
+        Width = 664
         Height = 45
         Align = alBottom
         BevelOuter = bvNone
@@ -90,7 +90,7 @@ object FrmUpdater: TFrmUpdater
           AlignWithMargins = True
           Left = 129
           Top = 3
-          Width = 302
+          Width = 298
           Height = 39
           Align = alClient
           Alignment = taCenter
@@ -105,7 +105,7 @@ object FrmUpdater: TFrmUpdater
         end
         object btnSettings: TButton
           AlignWithMargins = True
-          Left = 589
+          Left = 585
           Top = 6
           Width = 74
           Height = 33
@@ -116,7 +116,6 @@ object FrmUpdater: TFrmUpdater
           Align = alRight
           Caption = 'Settings'
           TabOrder = 1
-          Visible = False
           OnClick = btnSettingsClick
         end
         object btnCheckManually: TButton
@@ -131,7 +130,7 @@ object FrmUpdater: TFrmUpdater
           OnClick = btnCheckManuallyClick
         end
         object Panel1: TPanel
-          Left = 434
+          Left = 430
           Top = 0
           Width = 150
           Height = 45
@@ -201,8 +200,8 @@ object FrmUpdater: TFrmUpdater
         AlignWithMargins = True
         Left = 3
         Top = 26
-        Width = 668
-        Height = 207
+        Width = 664
+        Height = 206
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
@@ -221,8 +220,8 @@ object FrmUpdater: TFrmUpdater
       object LogVerb: TRichLogTrckbr
         AlignWithMargins = True
         Left = 3
-        Top = 239
-        Width = 668
+        Top = 238
+        Width = 664
         Height = 27
         Align = alBottom
         BevelOuter = bvNone
@@ -230,7 +229,7 @@ object FrmUpdater: TFrmUpdater
         ShowCaption = False
         TabOrder = 2
         Visible = False
-        TrackBar.Left = 518
+        TrackBar.Left = 514
         TrackBar.Top = 0
         TrackBar.Width = 150
         TrackBar.Height = 27
@@ -243,18 +242,15 @@ object FrmUpdater: TFrmUpdater
         Log = Log
       end
     end
-    object tabSettings: TTabSheet
-      Caption = 'Settings'
-    end
     object tabDemo: TTabSheet
       Caption = 'Demo'
       ImageIndex = 1
       DesignSize = (
-        674
-        320)
+        670
+        319)
       object Panel3: TPanel
         AlignWithMargins = True
-        Left = 232
+        Left = 226
         Top = 71
         Width = 205
         Height = 142
@@ -311,11 +307,11 @@ object FrmUpdater: TFrmUpdater
       Caption = 'Record editor'
       ImageIndex = 2
       DesignSize = (
-        674
-        320)
+        670
+        319)
       object Panel2: TPanel
         AlignWithMargins = True
-        Left = 212
+        Left = 206
         Top = 124
         Width = 246
         Height = 72

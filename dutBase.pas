@@ -39,6 +39,7 @@ begin
 end;
 
 
+{ Add this file to the Search Results so we can add info about it }
 procedure TDUTBase.NewFile(const aFileName: String);
 begin
   SearchResults.Add(TSearchResult.Create(aFileName));

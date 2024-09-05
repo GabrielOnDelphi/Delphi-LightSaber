@@ -19,10 +19,10 @@
 interface
 
 uses
-  System.SysUtils, System.Classes;
+  Winapi.Windows, System.SysUtils, System.Classes;
 
 
-function  IsUTF8        (CONST FileName: string): Boolean;
+function  FileHasBOM        (CONST FileName: string): Boolean;
 
 function  ConvertToAnsi (CONST FileName: string): boolean;
 procedure ConvertToUTF  (CONST FileName: string);
@@ -32,7 +32,6 @@ function  ForceRemoveBOM(CONST FileName: string): Boolean;
 
 
 IMPLEMENTATION
-
 USES
    ccIO;
 
@@ -62,7 +61,7 @@ end;
 { Removed the BOM from a file.
   Returns a TSearchResult that indicates if the file was found without BOM.
   Works. }
-function IsUTF8(const FileName: string): Boolean;
+function FileHasBOM(const FileName: string): Boolean;
 begin
   var InpStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
   try
@@ -98,7 +97,7 @@ var
   UTF8String: TStringStream;
   AnsiStr: AnsiString;
 begin
-  Result:= IsUTF8(FileName);
+  Result:= FileHasBOM(FileName);
   if result then
     begin
       InputFile := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);

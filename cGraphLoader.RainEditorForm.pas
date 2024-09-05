@@ -38,6 +38,7 @@ TYPE
     procedure FormDestroy     (Sender: TObject);
     procedure FormKeyPress    (Sender: TObject; var Key: Char);
     procedure btnAdvancedClick(Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     Params: PRaindropParams;
     procedure ObjectFromGUI;
@@ -60,30 +61,33 @@ USES
 
 { Show the editor }
 class procedure TfrmRainEditor.ShowEditor(aParams: PRaindropParams);
+VAR Form: TfrmRainEditor;
 begin
  TAppData.RaiseIfStillInitializing;
  Assert(aParams <> NIL);
 
- VAR frmEditor:= TfrmRainEditor.Create(NIL);  { Freed by ShowModal }
- WITH frmEditor DO
+ AppData.CreateFormHidden(TfrmRainEditor, Form);  { Freed by ShowModal }
+ WITH Form DO
  begin
-   LoadForm(frmEditor, TRUE);            { Position form }
-   Translator.LoadFormTranlation(frmEditor);
-   Font:= Application.MainForm.Font;     { Themes }
+   if Translator <> NIL
+   then Translator.LoadFormTranlation(Form);
    Params:= aParams;
    GuiFromObject;
  end;
 
- { Closed by mrOk/mrCancel }
- frmEditor.ShowModal;
- FreeAndNil(frmEditor);    { We need to free the form because the Close will only hide the form! }
+ Form.ShowModal;    { Closed by mrOk/mrCancel }
 end;
 
+
+procedure TfrmRainEditor.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Action:= caFree;
+end;
 
 procedure TfrmRainEditor.FormDestroy(Sender: TObject);
 begin
   Container.Parent:= Self;    { We need to move the container back on its original form, in order to let that form to correctly save its children }
-  SaveForm(Self, TRUE);
+  SaveForm(Self);
 end;
 
 

@@ -41,7 +41,8 @@ contains
   ccINIFile in 'ccINIFile.pas',
   ccCompiler in 'ccCompiler.pas',
   ccStreamMem in 'ccStreamMem.pas',
-  ccColors in 'ccColors.pas';
+  ccColors in 'ccColors.pas',
+  ccStreamBuff2 in 'ccStreamBuff2.pas';
 
 end.
 

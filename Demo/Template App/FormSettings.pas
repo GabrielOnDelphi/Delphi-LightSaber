@@ -22,7 +22,7 @@ INTERFACE
 USES
   WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs,
   cvIniFile, cvPathEdit, cmDebugger, cvRadioButton, 
-  cvCheckBox, cbAppData, 
+  cvCheckBox, cbAppData, cbINIFile, 
   cmGuiSettings;
 
 TYPE
@@ -30,36 +30,35 @@ TYPE
     FontDialog         : TFontDialog;
     pgCtrl             : TPageControl;
     tabSystem          : TTabSheet;
-    TabSheet2          : TTabSheet;
-    grpSystem          : TGroupBox;
-    btnDesktopShortcut : TButton;
-    chkAutoStartUp     : TCubicCheckBox;
-    GroupHelp          : TGroupBox;
-    lblHintHide        : TLabel;
-    radHintsOff        : TCubicRadioButton;
-    radHintsTooltips   : TCubicRadioButton;
-    radHintsStatBar    : TCubicRadioButton;
-    spnHideHint        : TSpinEdit;
-    TabSheet3          : TTabSheet;
-    GroupBox1          : TGroupBox;
-    btnSkins           : TButton;
-    btnFont            : TButton;
-    Path               : TCubicPathEdit;
+    tabHelp            : TTabSheet;
     btnCrash           : TButton;
-    chkTrayIcon        : TCubicCheckBox;
+    btnDesktopShortcut : TButton;
+    btnFont            : TButton;
+    btnSkins           : TButton;
+    chkAutoStartUp     : TCubicCheckBox;
     chkStartMinim      : TCubicCheckBox;
-    tabUserDefined: TTabSheet;
-    grpUser: TGroupBox;
-    Label1: TLabel;
-    spnUser: TSpinEdit;
-    chkUser: TCheckBox;
-    spnOpacity: TSpinEdit;
-    lblOpacity: TLabel;
+    chkTrayIcon        : TCubicCheckBox;
+    chkUser            : TCheckBox;
+    GroupBox1          : TGroupBox;
+    GroupHelp          : TGroupBox;
+    grpSystem          : TGroupBox;
+    grpUser            : TGroupBox;
+    Label1             : TLabel;
+    lblHintHide        : TLabel;
+    lblOpacity         : TLabel;
+    Path               : TCubicPathEdit;
+    radHintsOff        : TCubicRadioButton;
+    radHintsStatBar    : TCubicRadioButton;
+    radHintsTooltips   : TCubicRadioButton;
+    spnHideHint        : TSpinEdit;
+    spnOpacity         : TSpinEdit;
+    spnUser            : TSpinEdit;
+    tabInterface       : TTabSheet;
+    tabUserDefined     : TTabSheet;
     procedure btnCrashClick           (Sender: TObject);
     procedure btnDesktopShortcutClick (Sender: TObject);
     procedure btnFontClick            (Sender: TObject);
     procedure btnSkinsClick           (Sender: TObject);
-    procedure chkAutoStartUpClick     (Sender: TObject);
     procedure FontDialogApply         (Sender: TObject; Wnd: HWND);
     procedure FormClose               (Sender: TObject; var Action: TCloseAction);
     procedure FormCloseQuery          (Sender: TObject; var CanClose: Boolean);
@@ -74,7 +73,7 @@ TYPE
   private
     Saved: Boolean;
     procedure WMEndSession  (VAR Msg: TWMEndSession); message WM_ENDSESSION;
-    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully created
+    procedure LateInitialize(VAR Msg: TMessage);      message MSG_LateFormInit; // Called after the main form was fully created
     procedure SaveBeforeExit;
   public
     class procedure CreateFormModal; static;
@@ -97,12 +96,11 @@ VAR frmSettings: TfrmSettings;
 begin
  TAppData.RaiseIfStillInitializing;
  Assert(GuiSettings <> NIL);
- frmSettings:= AppData.CreateForm(TfrmSettings, FALSE, TRUE) as TfrmSettings;
+ AppData.CreateFormHidden(TfrmSettings, frmSettings);
 
  if Translator <> NIL
  then Translator.LoadFormTranlation(frmSettings);
 
- frmSettings.GuiFromObject;
  frmSettings.ShowModal;    { Closed by mrOk/mrCancel. Set to caFree. }
 end;
 
@@ -113,6 +111,7 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TfrmSettings.FormCreate(Sender: TObject);
 begin
+ GuiFromObject;
  Saved:= FALSE;
  FontDialog.Font.Assign(Font);
 end;
@@ -121,7 +120,6 @@ end;
 procedure TfrmSettings.LateInitialize;
 begin
  btnCrash.Visible:= AppData.BetaTesterMode;
- LoadForm(Self, TRUE);
 end;
 
 
@@ -131,7 +129,7 @@ begin
  AND NOT Saved then
   begin
    Saved:= TRUE;
-   SaveForm(Self, TRUE);
+   SaveForm(Self);
    ObjectFromGUI;
   end;
 end;
@@ -180,6 +178,7 @@ procedure TfrmSettings.GuiFromObject;
 begin
  { Get settings from AppData }
  Path            .Path    := AppData.UserPath;
+ spnOpacity      .Value   := AppData.Opacity;
  chkAutoStartUp  .Checked := AppData.autoStartUp;
  chkStartMinim   .Checked := AppData.StartMinim;
  chkTrayIcon     .Checked := AppData.Minimize2Tray;
@@ -187,7 +186,6 @@ begin
  radHintsTooltips.Checked := AppData.HintType = htTooltips;
  radHintsStatBar .Checked := AppData.HintType = htStatBar;
  spnHideHint     .Value   := AppData.HideHint;
- spnOpacity      .Value   := AppData.Opacity;
 
  { Demo/template settings }
  chkUser         .Checked := GuiSettings.bUser;   // Replace this with your own code
@@ -199,11 +197,11 @@ procedure TfrmSettings.ObjectFromGUI;
 begin
  { Save settings to AppData }
  AppData.UserPath     := Path.Path;
+ AppData.Opacity      := spnOpacity    .Value;
  AppData.autoStartUp  := chkAutoStartUp.Checked;
  AppData.StartMinim   := chkStartMinim .Checked;
  AppData.Minimize2Tray:= chkTrayIcon   .Checked;
  AppData.HideHint     := spnHideHint   .Value;
- AppData.Opacity      := spnOpacity    .Value;
 
  if radHintsOff     .Checked then AppData.HintType := htOff else
  if radHintsTooltips.Checked then AppData.HintType := htTooltips else
@@ -223,12 +221,6 @@ end;
 procedure TfrmSettings.spnHideHintChange(Sender: TObject);
 begin
   Application.HintHidePause:= spnHideHint.Value;                                 // Specifies the time interval to wait before hiding the Help Hint if the mouse has not moved from the control or menu item. Windows' default is 2500 ms
-end;
-
-
-procedure TfrmSettings.chkAutoStartUpClick(Sender: TObject);
-begin
-  //AppData.RunSelfAtWinStartUp(chkAutoStartUp.Checked);
 end;
 
 
@@ -272,8 +264,6 @@ end;
 
 
 
-
-
 {-------------------------------------------------------------------------------------------------------------
    STUFF
 -------------------------------------------------------------------------------------------------------------}
@@ -282,8 +272,6 @@ procedure TfrmSettings.btnCrashClick(Sender: TObject);
 begin
   cmDebugger.GenerateCrashNIL;
 end;
-
-
 
 
 

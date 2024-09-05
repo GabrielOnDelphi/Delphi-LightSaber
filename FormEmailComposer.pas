@@ -70,7 +70,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  cvIniFile, ccCore, csSystem, cbDialogs, ccINIFile, cmSound, cbAppData, ccIO, cmIO, cmIO.Win, ciEmailSender;
+  cvIniFile, ccCore, csSystem, cbDialogs, ccINIFile, cmSound, cbAppData, cbINIFile, ccIO, cmIO, cmIO.Win, ciEmailSender;
 
 
 procedure TfrmComposer.Initialize; { This will create also the frmSmtpSettings }

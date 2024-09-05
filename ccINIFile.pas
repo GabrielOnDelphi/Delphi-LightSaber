@@ -108,11 +108,18 @@ function TIniFileEx.Read(CONST Ident: string): FontStruct;
 begin
  if ValueExists(FSection, Ident+ 'Name') then
    begin
-    Result.Name   := ReadString  (FSection,              Ident+ 'Name',    'Arial');
-    Result.Color  := TColor      (ReadInteger (FSection, Ident+ 'Color',   0));
-    Result.Size   := ReadInteger (FSection,              Ident+ 'Size',    8);
-    Result.Style  := TFontStyle  (BYTE(ReadInteger (FSection, Ident+ 'Style',   0)) );
-   end;
+     Result.Name  := ReadString (FSection,              Ident+ 'Name',    'Arial');
+     Result.Color := TColor     (ReadInteger (FSection, Ident+ 'Color',   0));
+     Result.Size  := ReadInteger(FSection,              Ident+ 'Size',    8);
+     Result.Style := TFontStyle (Byte(ReadInteger (FSection, Ident+ 'Style',   0)) );
+   end
+  else
+    begin
+      Result.Name  := 'Arial';
+      Result.Color := 255;
+      Result.Size  := 77;
+      //Result.Style := fsBold;
+    end;
 end;
 
 procedure TIniFileEx.Write(CONST Ident: string; Font: FontStruct);

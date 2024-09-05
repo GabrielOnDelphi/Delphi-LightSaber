@@ -268,7 +268,7 @@ begin
   {$IFDEF CCRExif}
   janFX.SmoothRotate(BMP, BMPOut, BMPOut.Width div 2, BMPOut.Height div 2, Degs);
   {$ELSE}
-  raise Exception.Create('JanFX not available!');
+    CCR Exif NOT AVAILABLE
   {$ENDIF}
 
   SetLargeSize(BMP, BMPOut.Width, BMPOut.Height);
@@ -577,7 +577,7 @@ begin
  Stream.WriteBoolean (Flip);
  Stream.WriteBoolean (Mirror);
  Stream.WriteByte    (Ord(Rotation));
- Stream.WritePadding(32);
+ Stream.WritePadding0(32);
 end;
 
 
@@ -586,7 +586,7 @@ begin
  Flip    := Stream.ReadBoolean;
  Mirror  := Stream.ReadBoolean;
  Rotation:= TRotateSense(Stream.ReadByte);
- Stream.ReadPadding(32);
+ Stream.ReadPadding0(32);
 end;
 
 

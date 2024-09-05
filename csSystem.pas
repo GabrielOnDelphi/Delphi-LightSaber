@@ -228,7 +228,7 @@ begin
    except
      //todo 1: trap only specific exceptions
      Sleep(WaitTime);    { Wait a bit before trying again }
-     WaitTime:= WaitTime+ WaitTime;
+     Inc(WaitTime, WaitTime);
    END;
    TimeSpent:= GetTickCount - StartTime;
  UNTIL Success OR (TimeSpent > MaxWaitTime);

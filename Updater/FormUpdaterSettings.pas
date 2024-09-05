@@ -47,7 +47,7 @@ TYPE
   public
     procedure Apply;
     class function CreateParented(Container: TWinControl): TfrmUpdaterSettings; static;
-    class procedure ShowEditor(Modal: Boolean); static;
+    class procedure CreateModal; static;
   end;
 
 IMPLEMENTATION {$R *.dfm}
@@ -65,7 +65,7 @@ USES
 class function TfrmUpdaterSettings.CreateParented(Container: TWinControl): TfrmUpdaterSettings;
 begin
   TAppData.RaiseIfStillInitializing;
-  Result:= AppData.CreateForm(TfrmUpdaterSettings, FALSE, TRUE) as TfrmUpdaterSettings;
+  AppData.CreateFormHidden(TfrmUpdaterSettings, Result);
   Result.Container.Parent:= Container;
   Result.btnApply.Visible:= TRUE;
   Result.btnOK.Visible:= FALSE;
@@ -75,14 +75,10 @@ end;
 
 
 // Show as form
-class procedure TfrmUpdaterSettings.ShowEditor(Modal: Boolean);
+class procedure TfrmUpdaterSettings.CreateModal;
 begin
   TAppData.RaiseIfStillInitializing;
-  VAR frmEditor:= AppData.CreateForm(TfrmUpdaterSettings, FALSE, TRUE) as TfrmUpdaterSettings;
-
-  if Modal
-  then frmEditor.ShowModal   { Closed by mrOk/mrCancel }
-  else frmEditor.Show;
+  AppData.CreateFormModal(TfrmUpdaterSettings);
 end;
 
 
@@ -109,7 +105,7 @@ procedure TfrmUpdaterSettings.FormDestroy(Sender: TObject);
 begin
   Assert(Container.Parent = Self);    { We need to move the container back on its original form, in order to let that form to correctly save its children }
   Apply;                              { Reparenting MUST be before Apply }
-  SaveForm(Self, TRUE);
+  SaveForm(Self, flPositionOnly);
 end;
 
 
@@ -120,11 +116,11 @@ end;
 
 procedure TfrmUpdaterSettings.GuiFromObject;
 begin
- //Caption:= IntToStr(length(TCheckWhen));
- cmbWhen.ItemIndex         := Ord(Updater.When);
- spnHours.Value            := Updater.CheckEvery;
- chkForceNewsFound.Checked := Updater.ForceNewsFound;
- chkConnectFail.Checked    := Updater.ShowConnectFail;
+  //Caption:= IntToStr(length(TCheckWhen));
+  cmbWhen.ItemIndex         := Ord(Updater.When);
+  spnHours.Value            := Updater.CheckEvery;
+  chkForceNewsFound.Checked := Updater.ForceNewsFound;
+  chkConnectFail.Checked    := Updater.ShowConnectFail;
 
   UpdateVisibility;
 end;
@@ -151,6 +147,9 @@ end;
 
 procedure TfrmUpdaterSettings.btnTestInternetClick(Sender: TObject);
 begin
+ Caption:= 'Checking.......';
+ Update;
+ Refresh;
  Caption:= ProgramConnect2InternetS;
  mesaj(Caption);
 end;

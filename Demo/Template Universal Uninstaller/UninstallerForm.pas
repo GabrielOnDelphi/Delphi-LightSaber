@@ -323,7 +323,7 @@ begin
  if NOT FeedbackSent then
   begin
    MesajInfo('Please tell us why you uninstalled the program so we can make it better. CRLF CRLF CONSTRUCTIVE feedback is always appreciated. CRLF CRLF Thank you.');
-   ExecuteShell(AppData.UninstReason);
+   ExecuteShell(AppData.ProductUninstal);
   end;
 
  edtPath.Path:= '';
@@ -348,8 +348,8 @@ end;
 
 procedure TfrmMain.btnFeedbackClick(Sender: TObject);
 begin
- ExecuteShell('mailto:'+ AppData.SupportPage);
- ExecuteShell(AppData.UninstReason);
+ ExecuteShell('mailto:'+ AppData.ProductSupport);
+ ExecuteShell(AppData.ProductUninstal);
  FeedbackSent:= TRUE;
 end;
 
@@ -368,7 +368,7 @@ end;
 
 procedure TfrmMain.imgLogoClick(Sender: TObject);
 begin
- ExecuteShell(AppData.UninstReason);
+ ExecuteShell(AppData.ProductUninstal);
 end;
 
 

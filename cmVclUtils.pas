@@ -58,7 +58,7 @@ TYPE
    TControl
 =============================================================================================================}
  procedure BlinkControl      (Control: TControl);                                { Makes the specified control to blink 5 times, to attract user's attention }
- function  CreateControl     (ControlClass: TControlClass; const ControlName: string; Parent: TControl; X, Y, W, H: Integer): TControl;
+ function  CreateControl     (ControlClass: TControlClass; const ControlName: string; Parent: TWinControl; X, Y, W, H: Integer): TControl;
  procedure DoubleBuffer      (Control: TComponent; Enable: Boolean);             { Activate/deactivate double buffering for all controls owned by the specified control. aControl can be a form, panel, box, etc }
  procedure EnableDisable     (Control: TWinControl; Enable: Boolean);            { Enable/disable all controls in the specified control }
  {}
@@ -498,16 +498,13 @@ end;
 
 -------------------------------------------------------------------------------------------------------------}
  // Example: CreateControl(TEdit, 'Edit1', 10, 10, 100, 20);
- function CreateControl(ControlClass: TControlClass; const ControlName: string; Parent: TControl; X, Y, W, H: Integer): TControl;
+ function CreateControl(ControlClass: TControlClass; const ControlName: string; Parent: TWinControl; X, Y, W, H: Integer): TControl;
  begin
    Result := ControlClass.Create(Parent);
-   with Result do
-     begin
-       Parent := Parent;
-       Name   := ControlName;
-       SetBounds(X, Y, W, H);
-       Visible:= True;
-     end;
+   Result.Parent := Parent;
+   Result.Name   := ControlName;
+   Result.SetBounds(X, Y, W, H);
+   Result.Visible:= True;
  end;
 
 

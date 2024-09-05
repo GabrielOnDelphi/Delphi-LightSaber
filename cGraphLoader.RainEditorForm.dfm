@@ -2,14 +2,15 @@ object frmRainEditor: TfrmRainEditor
   Left = 0
   Top = 0
   Caption = 'Parameters'
-  ClientHeight = 444
-  ClientWidth = 602
+  ClientHeight = 442
+  ClientWidth = 594
   Color = clBtnFace
   ParentFont = True
   KeyPreview = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
+  OnClose = FormClose
   OnDestroy = FormDestroy
   OnKeyPress = FormKeyPress
   TextHeight = 15
@@ -17,17 +18,17 @@ object frmRainEditor: TfrmRainEditor
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 596
-    Height = 438
+    Width = 588
+    Height = 436
     Align = alClient
     BevelOuter = bvNone
     ShowCaption = False
     TabOrder = 0
     DesignSize = (
-      596
-      438)
+      588
+      436)
     object grpAdvanced: TGroupBox
-      Left = 99
+      Left = 91
       Top = 126
       Width = 398
       Height = 256
@@ -49,12 +50,11 @@ object frmRainEditor: TfrmRainEditor
           Left = 3
           Top = 3
           Width = 49
-          Height = 34
+          Height = 15
           Hint = 'Density of the liquid. How fast the waves are stopped.'
           Align = alLeft
           Caption = 'Damping'
           Layout = tlCenter
-          ExplicitHeight = 15
         end
         object trkDamping: TTrackBar
           AlignWithMargins = True
@@ -86,15 +86,14 @@ object frmRainEditor: TfrmRainEditor
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 59
-          Height = 32
+          Width = 57
+          Height = 15
           Hint = 
             'Desiered FPS. You might not reach this FPS number if your deskto' +
             'p resolution is high and your CPU is slow!'#13#10'Default: 18'
           Align = alLeft
           Caption = 'Target FPS:'
           Layout = tlCenter
-          ExplicitHeight = 15
         end
         object spnTargetFPS: TSpinEdit
           Left = 80
@@ -126,11 +125,10 @@ object frmRainEditor: TfrmRainEditor
           Left = 3
           Top = 3
           Width = 75
-          Height = 34
+          Height = 15
           Align = alLeft
           Caption = 'Wave aplitude'
           Layout = tlCenter
-          ExplicitHeight = 15
         end
         object trkWaveAmp: TTrackBar
           AlignWithMargins = True
@@ -163,11 +161,10 @@ object frmRainEditor: TfrmRainEditor
           Left = 3
           Top = 3
           Width = 83
-          Height = 34
+          Height = 15
           Align = alLeft
           Caption = 'Wave travel dist'
           Layout = tlCenter
-          ExplicitHeight = 15
         end
         object trkTravelDist: TTrackBar
           AlignWithMargins = True
@@ -200,7 +197,7 @@ object frmRainEditor: TfrmRainEditor
           Left = 3
           Top = 3
           Width = 86
-          Height = 34
+          Height = 15
           Hint = 
             '[in miliseconds]'#13#10'Unlike the others, this does not take effect w' +
             'hen you press Apply.'#13#10'You need to restart the animation in order' +
@@ -208,7 +205,6 @@ object frmRainEditor: TfrmRainEditor
           Align = alLeft
           Caption = 'Droplet interval*'
           Layout = tlCenter
-          ExplicitHeight = 15
         end
         object trkDropInterv: TTrackBar
           AlignWithMargins = True
@@ -230,7 +226,7 @@ object frmRainEditor: TfrmRainEditor
       end
     end
     object GroupBox2: TGroupBox
-      Left = 131
+      Left = 123
       Top = 26
       Width = 334
       Height = 81
@@ -266,8 +262,8 @@ object frmRainEditor: TfrmRainEditor
     end
     object pnlBtm: TPanel
       Left = 0
-      Top = 402
-      Width = 596
+      Top = 400
+      Width = 588
       Height = 36
       Align = alBottom
       TabOrder = 2

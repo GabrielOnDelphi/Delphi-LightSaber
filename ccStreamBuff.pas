@@ -56,8 +56,9 @@ USES
 
 TYPE
   TCubicBuffStream= class(System.Classes.TBufferedFileStream)
-    private
-    public
+   private
+
+   public
      MagicNo: AnsiString; // Legacy!
 
      function  ReadBoolean : Boolean;
@@ -112,10 +113,10 @@ TYPE
      function  RevReadWord    : Word;                                      { REVERSE READ - read 2 bytes and swap their position. For Motorola format. }
 
      { Old Header. Legacy! }
-     function  ReadMagicVer: Word;
-     function  ReadMagicNo  (const MagicNo: AnsiString): Boolean;
-     procedure WriteMagicNo (const MagicNo: AnsiString);
-     procedure WriteMagicVer(const MVersion: Word);
+     function  ReadMagicVer: Word;                                deprecated;
+     function  ReadMagicNo  (const MagicNo: AnsiString): Boolean; deprecated;
+     procedure WriteMagicNo (const MagicNo: AnsiString);          deprecated;
+     procedure WriteMagicVer(const MVersion: Word);               deprecated;
 
      { Header NEW }
      function  ReadHeader   (CONST Signature: AnsiString): Word;               overload;
@@ -129,13 +130,8 @@ TYPE
      function  ReadCheckPoint (CONST s: AnsiString= ''): Boolean;
      procedure WriteCheckPoint(CONST s: AnsiString= '');
 
-     { Padding }
-     procedure ReadPaddingE (CONST Bytes: Integer);          //Raises an exception if the buffer does not contain the signature
-     procedure ReadPadding  (CONST Bytes: Integer);
-     procedure WritePadding (CONST Bytes: Integer);
-     procedure WritePadding0(CONST Bytes: Integer);
-     procedure ReadPaddingDef;
-     procedure WritePaddingDef;
+     procedure ReadPadding0(const Bytes: Integer);
+     procedure WritePadding0(const Bytes: Integer);
 
      { BT }
      function  AsBytes: TBytes;
@@ -161,6 +157,22 @@ USES
    ccCore, ccBinary;
 
 
+
+{--------------------------------------------------------------------------------------------------
+   CTOR
+--------------------------------------------------------------------------------------------------}
+constructor TCubicBuffStream.CreateRead(CONST FileName: string);
+begin
+ inherited Create(FileName, fmOpenRead, 1*mb);
+end;
+
+
+constructor TCubicBuffStream.CreateWrite(CONST FileName: string);
+begin
+ inherited Create(FileName, fmOpenWrite OR fmCreate);
+end;
+
+
 {--------------------------------------------------------------------------------------------------
    MAGIC NO
    Obsolete. Still used in Bionix. Use ReadMagicVer instead.
@@ -183,26 +195,6 @@ begin
 end;
 
 
-
-{--------------------------------------------------------------------------------------------------
-   CTOR
---------------------------------------------------------------------------------------------------}
-constructor TCubicBuffStream.CreateRead(CONST FileName: string);
-begin
- inherited Create(FileName, fmOpenRead, 1*mb);
-end;
-
-
-constructor TCubicBuffStream.CreateWrite(CONST FileName: string);
-begin
- inherited Create(FileName, fmOpenWrite OR fmCreate);
-end;
-
-
-
-{--------------------------------------------------------------------------------------------------
-   MAGIC NO
----------------------------------------------------------------------------------------------------
 
 { Read the first x chars in a file and compares it with MagicNo.
   If matches then reads another reads the FileVersion word.
@@ -281,7 +273,7 @@ begin
 end;
 
 // Reads the padding bytes back and does not check them for validity
-procedure TCubicBuffStream.ReadPadding(CONST Bytes: Integer);
+procedure TCubicBuffStream.ReadPadding0(CONST Bytes: Integer);
 VAR b: TBytes;
 begin
  if Bytes> 0 then
@@ -292,71 +284,14 @@ begin
 end;
 
 
-CONST
-   CheckpointStr: AnsiString= '<LightSaber - Buffer of 100 bytes. Pattern check -> Raises exception if the pattern not found!! ###>'; //This string is 100 chars long
-
-// Write a string as padding bytes.
-procedure TCubicBuffStream.WritePadding(CONST Bytes: Integer);
-VAR
-  b: TBytes;
-  CheckPointSize: Integer;
-  i: Integer;
-begin
-  SetLength(b, Bytes);
-  CheckPointSize:= Length(CheckpointStr);
-  // Copy the string to the byte array (up to the available bytes or string length)
-  for i := 0 to Min(Bytes, CheckPointSize) - 1
-    do b[i] := Byte(CheckpointStr[i + 1]);
-
-  // Fill the rest of the buffer with zeros
-  if Bytes > CheckPointSize
-  then FillChar(b[CheckPointSize], Bytes - CheckPointSize, #0);
-  // Write the buffer to the stream
-  WriteBuffer(b[0], Bytes);
-end;
-
-
- //Raises an exception if the buffer does not contain the signature string (CheckpointStr)
-procedure TCubicBuffStream.ReadPaddingE(CONST Bytes: Integer);
-VAR
-  b: TBytes;
-  CheckPointSize: Integer;
-  i: Integer;
-begin
-  if Bytes > 0 then
-  begin
-    SetLength(b, Bytes);
-    ReadBuffer(b[0], Bytes);
-    CheckPointSize := Length(CheckpointStr);
-    // Check if the beginning of the buffer matches the string
-    if CheckPointSize <= Bytes then
-      for i := 0 to CheckPointSize - 1 do
-        if b[i] <> Byte(CheckpointStr[i + 1]) then
-        begin
-          RAISE Exception.Create('Invalid checkpoint!!');
-          Break;
-        end;
-  end;
-end;
-
-
-CONST
-   PaddingSize = 100; // 100 bytes. Enough for 18 Int64 variables. NEVER-EVER MODIFY THIS CONSTANT! All files saved with this constant will not work anymore.
-
-
-procedure TCubicBuffStream.ReadPaddingDef;
-begin
-  ReadPaddingE(PaddingSize);
-end;
-
-procedure TCubicBuffStream.WritePaddingDef;
-begin
-  WritePadding(PaddingSize);
-end;
 
 
 
 
+
+{--------------------------------------------------------------------------------------------------
+   HEADER
+--------------------------------------------------------------------------------------------------}
 
 { Reads file signature and version number. Returns True if found correct data. }
 function TCubicBuffStream.ReadHeaderTry(CONST Signature: AnsiString; Version: Word): Boolean; // old name: ReadHeaderB
@@ -415,7 +350,6 @@ begin
  else
    RAISE Exception.Create('Invalid file signature in '+ FileName+ CRLF+ string(Signature)+ ' expected. '+ string(Sgn)+ ' found.');
 end;
-
 
 
 

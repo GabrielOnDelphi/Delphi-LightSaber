@@ -110,6 +110,7 @@ var
   TextSize: TSize;
   EllipsisSize: Integer;
 begin
+  Result:= '';
   NewStr := '...';
   EllipsisSize:= Canvas.TextWidth(NewStr);
 

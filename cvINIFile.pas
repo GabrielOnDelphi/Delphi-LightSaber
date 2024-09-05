@@ -32,8 +32,8 @@ TYPE
 
 
 { These add support for custom (cubic) VCL controls }
-procedure SaveForm (Form: TForm; OnlyFormPos: Boolean= FALSE);
-procedure LoadForm (Form: TForm; OnlyFormPos: Boolean= FALSE);
+procedure SaveForm (Form: TForm; Loading: TFormLoading= flPositionOnly);
+procedure LoadForm (Form: TForm; Loading: TFormLoading= flPositionOnly);
 
 
 IMPLEMENTATION
@@ -159,7 +159,7 @@ end;
          OnlyFormPos=True   ->  Save only the position of the form (no width/height/WndState)
 -----------------------------------------------------------------------------------------------------------------------}
 
-procedure SaveForm(Form: TForm; OnlyFormPos: Boolean= FALSE);
+procedure SaveForm(Form: TForm; Loading: TFormLoading= flPositionOnly);
 VAR
    IniFile: TIniFileCubic;
 begin
@@ -174,7 +174,7 @@ begin
  IniFile:= TIniFileCubic.Create(Form.Name);
  TRY
   TRY
-   IniFile.SaveForm(Form, OnlyFormPos);
+   IniFile.SaveForm(Form, Loading);
   EXCEPT
    ON EIniFileexception DO AppData.LogError('Cannot save INI file: '+ IniFile.FileName);
   END;
@@ -187,7 +187,7 @@ end;
 { It also does:
     * LoadForm will also set the font for all forms to be the same as the font of the MainForm.
     * If the form is out of screen, LoadForm will also bring the form back to screen. }
-procedure LoadForm(Form: TForm; OnlyFormPos: Boolean= FALSE);
+procedure LoadForm(Form: TForm; Loading: TFormLoading= flPositionOnly);
 VAR
    IniFile: TIniFileCubic;
 begin
@@ -199,7 +199,7 @@ begin
  IniFile:= TIniFileCubic.Create(Form.Name);
  TRY
   TRY
-    IniFile.LoadForm(Form, OnlyFormPos);
+    IniFile.LoadForm(Form, Loading);
     CorrectFormPositionScreen(Form);
   EXCEPT
     ON EIniFileException DO AppData.LogError('Cannot load INI file: '+ IniFile.FileName);
