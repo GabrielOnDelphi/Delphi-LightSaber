@@ -66,7 +66,6 @@ contains
   cmStrBuilder in 'cmStrBuilder.pas',
   cmStreamMem in 'cmStreamMem.pas',
   cmStringListA in 'cmStringListA.pas',
-  cmUTF8 in 'cmUTF8.pas',
   cmVclUtils in 'cmVclUtils.pas',
   cmWindow in 'cmWindow.pas',
   cmWinPlatform in 'cmWinPlatform.pas',

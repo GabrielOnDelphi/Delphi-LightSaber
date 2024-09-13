@@ -1,4 +1,6 @@
-UNIT clVisLogTrack;
+UNIT cvLogTrack;
+
+// NEW LOG based on TStringGrid
 
 {=============================================================================================================
    Gabriel Moraru
@@ -17,19 +19,19 @@ UNIT clVisLogTrack;
      Max= ?       lvErrors
 
    Tester:
-     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
+     c:\Myprojects\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE
 
 USES
    System.SysUtils, System.Classes, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.StdCtrls,
-   clVisLog, clVisLogUtils;
+   cvLog, cbLogUtils;
 
 TYPE
   TLogVisTrckbr = class(TPanel)
    private
-     FLog: TVisLog;
+     FLog: TLogGrid;
      VerboLabel: TLabel;
      FTrackBar: TTrackBar;
      Initialized : Boolean;
@@ -37,19 +39,19 @@ TYPE
      FVerbChanged: TNotifyEvent;
      function  getVerbosity: TLogVerbLvl;
      procedure setVerbosity(Value: TLogVerbLvl);
-     procedure setLog(const Value: TVisLog);
+     procedure setLog(const Value: TLogGrid);
      procedure setShowDebugMsg(const Value: Boolean);
    protected
      procedure CreateWnd; override;
-     procedure TrackBarChange(Sender: TObject);
    public
      constructor Create(AOwner: TComponent); override;
+     procedure TrackBarChange(Sender: TObject);
   published
      property ShowDebugMsg  : Boolean       read FShowDebugMsg  write setShowDebugMsg default FALSE; { Allow the user to access the lowest (Debug) level }
      property TrackBar      : TTrackBar     read FTrackBar      write FTrackBar;
      property OnVerbChanged : TNotifyEvent  read FVerbChanged   write FVerbChanged;   { Triggered before deleting the content of a cell }
-     property Verbosity     : TLogVerbLvl      read getVerbosity   write setVerbosity;
-     property Log           : TVisLog       read FLog           write setLog;
+     property Verbosity     : TLogVerbLvl   read getVerbosity   write setVerbosity;
+     property Log           : TLogGrid      read FLog           write setLog;
   end;
 
 procedure Register;
@@ -111,18 +113,22 @@ end;
 procedure TLogVisTrckbr.TrackBarChange(Sender: TObject);
 begin
  if NOT (csLoading in ComponentState) then { This is MANDATORY because when the project loads, the value of the trackbar may change BEFORE the DFM loader assigns the Log to this trackbar. In other words, crash when I load a DFM file that contains this control }
-  begin
-   if Log = NIL
-   then MesajError('No log assigned!')
-   else Log.Verbosity:= Verbosity;
+   begin
+     if Log = NIL then
+       begin
+         MesajError('No log assigned!');
+         EXIT;
+       end;
 
-   VerboLabel.Caption:= 'Log verbosity: '+ Verbosity2String(Verbosity);
+     Log.Verbosity:= Verbosity;
 
-   if Assigned(FVerbChanged)
-   then FVerbChanged(Self);                                                                  { Let GUI know that the user changed the verbosity }
-  end;
+     VerboLabel.Caption:= 'Log verbosity: '+ Verbosity2String(Verbosity);
 
- //Log.InvalidateGrid;  put it back
+     if Assigned(FVerbChanged)
+     then FVerbChanged(Self);                                                                  { Let GUI know that the user changed the verbosity }
+   end;
+
+ Log.Populate;
 end;
 
 
@@ -142,11 +148,10 @@ begin
 end;
 
 
-
-procedure TLogVisTrckbr.setLog(CONST Value: TVisLog);
+procedure TLogVisTrckbr.setLog(CONST Value: TLogGrid);
 begin
  FLog:= Value;
- FLog.Verbosity:= Verbosity;
+ Verbosity:= FLog.Verbosity;
 end;
 
 

@@ -137,7 +137,7 @@ procedure LoadForm (Form: TForm; Loading: TFormLoading= flPositionOnly);
 IMPLEMENTATION
 
 USES
-   ccIO, ccCore, cbAppData, cbCenterControl;
+   ccIO, ccTextFile, ccCore, cbAppData, cbCenterControl;
 
 
 {-----------------------------------------------------------------------------------------------------------------------
@@ -147,7 +147,7 @@ constructor TIniFileVcl.Create(SectionName: string; ForcedName: string= '');    
 VAR Path: string;
 begin
  if ForcedName= ''
- then Path:= AppData.IniFile
+ then Path:= TAppData.IniFile
  else Path:= ForcedName;
 
  inherited Create(SectionName, Path);
@@ -336,13 +336,13 @@ begin
   then WriteString  (Comp.Owner.Name, Comp.Name, TCustomLabeledEdit(Comp).Text) else
 
   if Comp.InheritsFrom(TLabeledEdit)
-  then WriteString  (Comp.Owner.Name, Comp.Name, TLabeledEdit(Comp).Text) else      { Do not go down to TCustomEdit because I will accidentaly read the RichLog which is derived from there! }
+  then WriteString  (Comp.Owner.Name, Comp.Name, TLabeledEdit(Comp).Text) else   { Do not go down to TCustomEdit because I will accidentaly read the RichLog which is derived from there! }
 
   if Comp.InheritsFrom(TEdit)
-  then WriteString  (Comp.Owner.Name, Comp.Name, TEdit(Comp).Text) else      { Do not go down to TCustomEdit because I will accidentaly read the RichLog which is derived from there! }
+  then WriteString  (Comp.Owner.Name, Comp.Name, TEdit(Comp).Text) else          { Do not go down to TCustomEdit because I will accidentaly read the RichLog which is derived from there! }
 
   if Comp.InheritsFrom(TSpinEdit)
-  then WriteInteger (Comp.Owner.Name, Comp.Name, TSpinEdit(Comp).Value) else    { Details about InheritsFrom: http://stackoverflow.com/questions/5255341/how-can-i-determine-whether-a-delphi-object-is-of-a-specific-class-and-not-any-d }
+  then WriteInteger (Comp.Owner.Name, Comp.Name, TSpinEdit(Comp).Value) else     { Details about InheritsFrom: http://stackoverflow.com/questions/5255341/how-can-i-determine-whether-a-delphi-object-is-of-a-specific-class-and-not-any-d }
 
   if Comp.InheritsFrom(TPageControl)
   then WriteInteger (Comp.Owner.Name, Comp.Name, TPageControl(Comp).ActivePageIndex) else
@@ -712,6 +712,7 @@ begin
    Exit; // We don't save anything if the start up was improper!
   end;
 
+ Assert(AppData <> NIL, '!!!');
  IniFile:= TIniFileVcl.Create(Form.Name);
  TRY
   TRY

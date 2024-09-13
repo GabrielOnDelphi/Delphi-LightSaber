@@ -30,7 +30,7 @@ object frmSettings: TfrmSettings
     Top = 0
     Width = 774
     Height = 512
-    ActivePage = tabHelp
+    ActivePage = tabSystem
     Align = alClient
     TabOrder = 0
     object tabSystem: TTabSheet
@@ -39,19 +39,19 @@ object frmSettings: TfrmSettings
         766
         480)
       object grpSystem: TGroupBox
-        Left = 188
+        Left = 186
         Top = 100
         Width = 381
-        Height = 207
+        Height = 246
         Anchors = []
         Caption = 'System'
         TabOrder = 0
         DesignSize = (
           381
-          207)
+          246)
         object btnDesktopShortcut: TButton
           Left = 122
-          Top = 161
+          Top = 200
           Width = 145
           Height = 33
           Hint = 'Creates a desktop shortcut'
@@ -88,12 +88,24 @@ object frmSettings: TfrmSettings
           TabOrder = 3
           AutoSize = True
         end
+        object chkLogOnError: TCheckBox
+          AlignWithMargins = True
+          Left = 60
+          Top = 140
+          Width = 177
+          Height = 17
+          Hint = 'Show the Log window when it receives error or warning messages.'
+          Caption = 'Show the log on error'
+          Checked = True
+          State = cbChecked
+          TabOrder = 4
+        end
       end
       object Path: TCubicPathEdit
         Left = 82
-        Top = 328
-        Width = 595
-        Height = 48
+        Top = 365
+        Width = 591
+        Height = 49
         Hint = 
           'User defined path where to save (large) files. Useful when the p' +
           'rogram needs to save large amounts of data that we don'#39't want to' +
@@ -103,7 +115,7 @@ object frmSettings: TfrmSettings
         TabOrder = 1
       end
       object btnCrash: TButton
-        Left = 640
+        Left = 636
         Top = 12
         Width = 101
         Height = 25
@@ -121,8 +133,8 @@ object frmSettings: TfrmSettings
         766
         480)
       object GroupHelp: TGroupBox
-        Left = 206
-        Top = 130
+        Left = 204
+        Top = 131
         Width = 345
         Height = 221
         Anchors = []
@@ -141,7 +153,7 @@ object frmSettings: TfrmSettings
           Left = 36
           Top = 63
           Width = 225
-          Height = 13
+          Height = 15
           Hint = 
             'Don'#39't use the embeded help system. No pop-up will appear and no ' +
             'info will be displayed in status bar.'
@@ -153,7 +165,7 @@ object frmSettings: TfrmSettings
           Left = 36
           Top = 92
           Width = 154
-          Height = 13
+          Height = 15
           Hint = 
             'Show a hint when you hold the mouse cursor over an item (button,' +
             ' checkbox, etc)'
@@ -165,7 +177,7 @@ object frmSettings: TfrmSettings
           Left = 36
           Top = 120
           Width = 188
-          Height = 13
+          Height = 15
           Hint = 'Show information about an item in status bar.'
           Caption = 'Show help in status bar also'
           Checked = True
@@ -196,7 +208,7 @@ object frmSettings: TfrmSettings
         766
         480)
       object GroupBox1: TGroupBox
-        Left = 234
+        Left = 232
         Top = 112
         Width = 290
         Height = 226
@@ -256,8 +268,8 @@ object frmSettings: TfrmSettings
         766
         480)
       object grpUser: TGroupBox
-        Left = 208
-        Top = 130
+        Left = 206
+        Top = 131
         Width = 345
         Height = 221
         Anchors = []

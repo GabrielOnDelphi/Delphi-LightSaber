@@ -39,17 +39,19 @@
 
  ____________________________________________________________________________________________________________
 
-   Usage
-     In the DPR file replace the code with:
+   USAGE
 
+     In the DPR file replace the code with:
        uses
          Vcl.Forms,
          MainForm in 'MainForm.pas' {frmMain),
+         FormRamLog,
          cbAppData;             <--- Do not use PAS file here!
        begin
          AppData:= TAppData.Create('MyCollApp');
          AppData.CreateMainForm(TMainForm, MainForm, True, True);    // Main form
          AppData.CreateForm(TSecondFrom, frmSecond);                 // Secondary form(s)
+         TfrmRamLog.CreateFormAppData;                               // Special form (optional)
          Application.Run;
        end;
 
@@ -110,7 +112,7 @@ USES
   Winapi.Windows, Winapi.Messages, Winapi.ShlObj, Winapi.ShellAPI,
   System.Win.Registry, System.IOUtils, System.AnsiStrings, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Consts,
-  FormLog, ccCore, cbIniFile;
+  ccCore, cbIniFile, cbLogRam;
 
 CONST
   MSG_LateFormInit = WM_APP + 4711;         { Old name: MSG_LateFormInit/MSG_LateAppInit  }
@@ -120,9 +122,9 @@ TYPE
                htTooltips,                 // Show help as tool-tips
                htStatBar);                 // Show help in status bar
 
-TYPE
   TAppData= class(TObject)
   private
+    FShowOnError: Boolean;    // Automatically show the visual log form when warnings/errors are added to the log. This way the user is informed about the problems.
     FFont: TFont;
     FLastFolder: string;
     FSingleInstClassName: string;          { Used by the Single Instance mechanism. } {Old name: AppWinClassName }
@@ -131,8 +133,10 @@ TYPE
     function SettingsFile: string;
     procedure SetGuiProperties(Form: TForm);
     procedure setHideHint(const Value: Integer);
-    CONST Signature: AnsiString= 'AppDataSettings';{ Do not change it! }
-    CONST DefaultHomePage= 'https://www.GabrielMoraru.com';
+    procedure setShowOnError(const Value: Boolean);
+    CONST
+      Signature: AnsiString= 'AppDataSettings';{ Do not change it! }
+      DefaultHomePage= 'https://www.GabrielMoraru.com';
     class VAR FCreated: Boolean;     { Sanity check }
     class VAR FAppName: string;
     function  getLastUsedFolder: string;
@@ -142,9 +146,10 @@ TYPE
     procedure RegisterUninstaller;
     function  RunSelfAtWinStartUp(Active: Boolean): Boolean;
   protected
-    frmLog: TfrmLog;
-    CopyDataID: DWORD;          { For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA }
+    CopyDataID: DWORD;          // For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA
   public
+    RamLog: TRamLog;
+
     { Product details }
     CompanyName    : string;    // Optional. Used by the 'About' form
     CompanyHome    : WebURL;    // Company's home page
@@ -185,11 +190,11 @@ TYPE
       App path/name
    --------------------------------------------------------------------------------------------------}
     function CurFolder: string;     // The folder where the exe file is located. Old name: AppDir
-    function IniFile: string;
+    class function IniFile: string;
     function SysDir: string;
     function CheckSysDir: Boolean;
 
-    function AppDataFolder(ForceDir: Boolean= FALSE): string;
+    class function AppDataFolder(ForceDir: Boolean= FALSE): string;
     function AppDataFolderAllUsers: string;
 
     function AppShortName:  string;
@@ -224,12 +229,13 @@ TYPE
 
     procedure CreateMainForm  (aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= TRUE; Show: Boolean= TRUE; Loading: TFormLoading= flPositionOnly);
 
-//    procedure CreateForm      (aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPositionOnly);                                                    overload;
     procedure CreateForm      (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL);  overload;
     procedure CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL);
 
     procedure CreateFormModal (aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL); overload;   // Do I need this?
     procedure CreateFormModal (aClass: TFormClass;                Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL); overload;
+
+//    procedure CreateFormLog   (aClass: TFormClass; Show: Boolean= FALSE; Loading: TFormLoading= flPositionOnly);
 
     procedure SetMaxPriority;
     procedure HideFromTaskbar;
@@ -271,8 +277,10 @@ TYPE
     procedure LogVerb  (CONST Msg: string);
     procedure LogWarn  (CONST Msg: string);
     procedure LogClear;
-    procedure ShowLog(Center: Boolean= FALSE);
-    procedure LogSaveAsRtf(const FileName: string);
+
+    procedure PopUpLogWindow;
+
+    property ShowLogOnError: Boolean read FShowOnError write setShowOnError;       // Automatically show the visual log form when warnings/errors are added to the log. This way the user is informed about the problems.
   end;
 
 
@@ -292,7 +300,9 @@ VAR                      //ToDo: make sure AppData is unique (make it Singleton)
 IMPLEMENTATION
 
 USES
-  cbWinVersion, ccStreamBuff2, ccIO, cbRegistry, cbDialogs, cbCenterControl;
+  cbWinVersion, ccINIFile, {ccStreamBuff2,} ccIO, ccTextFile, cbRegistry, cbDialogs, cbCenterControl;
+
+//ToDo: Don't create the log window. Store data in TRamLog.
 
 {-------------------------------------------------------------------------------------------------------------
  Parameters
@@ -339,12 +349,10 @@ begin
 
   { Log }
   { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }
-  Assert(frmLog = NIL, 'Log already created!');  { Call this as soon as possible so it can catch all Log messages generated during app start up. A good place might be in your DPR file before Application.CreateForm(TMainForm, frmMain) }
-  frmLog:= TfrmLog.Create(NIL);
-  Assert(Application.MainForm <> frmLog, 'The Log should not be the MainForm!'); { Just in case: Make sure this is not the first form created }
-  LogInfo(' ');
+  Assert(RamLog = NIL, 'Log already created!');  { Call this as soon as possible so it can catch all Log messages generated during app start up. A good place might be in your DPR file before Application.CreateForm(TMainForm, frmMain) }
+  RamLog:= TRamLog.Create(ShowLogOnError, NIL);
+
   LogInfo(' '+ AppName+ GetVersionInfoV);
-  LogInfo(' ');
 
   { App hint }
   Application.HintColor     := $c0c090;
@@ -383,6 +391,7 @@ end;
 destructor TAppData.Destroy;
 begin
   SaveSettings;
+  FreeAndNil(RamLog); // Call this as late as possible
   inherited;
 end;
 
@@ -462,13 +471,6 @@ begin
 
   PostMessage(TForm(Reference).Handle, MSG_LateFormInit, 0, 0);
 end;
-
-
-{ Create secondary form }  {
-procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPositionOnly);
-begin
-  CreateFormSec(aClass, Reference, TRUE, Loading, NIL);
-end; }
 
 
 { Create secondary form }
@@ -567,7 +569,7 @@ end;
      Win XP: c:\Documents and Settings\UserName\Application Data\AppName\
      Vista+: c:\Documents and Settings\UserName\AppData\Roaming\
   if ForceDir then it creates the folder (full path) where the INI file will be written. }
-function TAppData.AppDataFolder(ForceDir: Boolean = FALSE): string;
+class function TAppData.AppDataFolder(ForceDir: Boolean = FALSE): string;
 begin
  Assert(AppName > '', 'AppName is empty!');
  Assert(System.IOUtils.TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
@@ -605,8 +607,10 @@ end;
 
 { Returns the name of the INI file (where we will write application's settings).
   It is based on the name of the application. Example: c:\Documents and Settings\Bere\Application Data\MyApp\MyApp.ini }
-function TAppData.IniFile: string;
+class function TAppData.IniFile: string;
 begin
+ //Assert(AppData <> NIL, 'AppData is already gone!'); // This happens when I close the form.
+
  Assert(AppName > '', 'AppName is empty!');
  Assert(TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
 
@@ -938,8 +942,6 @@ end;
 
 
 
-
-
 {-------------------------------------------------------------------------------------------------------------
    SINGLE INSTANCE
 --------------------------------------------------------------------------------------------------------------
@@ -1223,92 +1225,85 @@ end;
    ---
    SEND MESSAGES DIRECTLY TO LOG WND
 -------------------------------------------------------------------------------------------------------------}
-procedure TAppData.ShowLog(Center: Boolean= FALSE);
-begin
- frmLog.Show;
- if Center
- then CenterForm(frmLog{, Application.MainForm});
-end;
-
-
 procedure TAppData.LogVerb(CONST Msg: string);
 begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddVerb(Msg);
+ RamLog.AddVerb(Msg);   // This will call NotifyLogObserver
 end;
 
 
 procedure TAppData.LogHint(CONST Msg: string);
 begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddHint(Msg);
+ RamLog.AddHint(Msg);    // This will call NotifyLogObserver
 end;
 
 
 procedure TAppData.LogInfo(CONST Msg: string);
 begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddInfo(Msg);
+ RamLog.AddInfo(Msg);    // This will call NotifyLogObserver
 end;
 
 
 procedure TAppData.LogImpo(CONST Msg: string);
 begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddImpo(Msg);
+ RamLog.AddImpo(Msg);    // This will call NotifyLogObserver
 end;
 
 
 procedure TAppData.LogWarn(CONST Msg: string);
 begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddWarn(Msg);
+ RamLog.AddWarn(Msg);    // This will call NotifyLogObserver
 end;
 
 
 procedure TAppData.LogError(CONST Msg: string);
 begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddError(Msg);
-
- if frmLog.chkAutoOpen.Checked
- then AppData.ShowLog;
+ RamLog.AddError(Msg);   // This will call NotifyLogObserver
 end;
 
 
 procedure TAppData.LogMsg(CONST Msg: string);  { Always show this message, no matter the verbosity of the log. Equivalent to Log.AddError but the msg won't be shown in red. }
 begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddMsg(Msg);
+ RamLog.AddMsg(Msg);     // This will call NotifyLogObserver
 end;
 
 
 procedure TAppData.LogBold(CONST Msg: string);
 begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddBold(Msg);
+ RamLog.AddBold(Msg);    // This will call NotifyLogObserver
 end;
 
 
 procedure TAppData.LogClear;
 begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddEmptyRow;
+ RamLog.clear;
 end;
 
 
 procedure TAppData.LogEmptyRow;
 begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.AddEmptyRow;
+ RamLog.AddEmptyRow;
 end;
 
 
-procedure TAppData.LogSaveAsRtf(CONST FileName: string);
+procedure TAppData.setShowOnError(const Value: Boolean);
 begin
- Assert(frmLog <> NIL, 'The log window is not ready yet!');
- frmLog.Log.SaveAsRtf(FileName);
+  FShowOnError:= Value;
+  RamLog.ShowonError:= Value;
 end;
+
+
+procedure TAppData.PopUpLogWindow;
+begin
+  RamLog.PopUpWindow;
+end;
+
+
+
+
+
+
+
+
 
 
 procedure TAppData.MainFormCaption(CONST Caption: string);
@@ -1343,6 +1338,8 @@ begin
 end; *)
 
 
+
+
 procedure TAppData.RegisterUninstaller;
 begin
  //del AddUninstallerToCtrlPanel(AppData.SysDir+ 'Uninstall.exe');                 { Puts uninstaller in 'Add/remove programs' in Control Panel }
@@ -1363,61 +1360,57 @@ end;
 --------------------------------------------------------------------------------------------------}
 function TAppData.SettingsFile: string;
 CONST
-  ctSettingsFile = 'AppDataSettings.bin';
+  ctSettingsFile = 'AppSettings.Ini';
 begin
-  Result:= AppData.AppDataFolder(TRUE)+ ctSettingsFile;
+  Result:= AppDataFolder+ ctSettingsFile;
 end;
 
 
 procedure TAppData.SaveSettings;
 begin
-  VAR Stream:= TCubicBuffStream2.CreateWrite(SettingsFile);    { This will give an AV if the file cannot be saved (folder readonly) }
-  TRY
-    Stream.WriteHeader(Signature, 1);
-    Stream.WriteBoolean(AutoStartUp);
-    Stream.WriteBoolean(StartMinim);
-    Stream.WriteBoolean(Minimize2Tray);
-    Stream.WriteInteger(Ord(HintType));
-    Stream.WriteInteger(HideHint);
-    Stream.WriteInteger(Opacity);
-
-    Stream.WritePaddingDef;
-  FINALLY
-    FreeAndNil(Stream);
-  END;
+  VAR IniFile := TIniFileEx.Create('Global App Settings', SettingsFile);
+  try
+    IniFile.Write('AutoStartUp', AutoStartUp);
+    IniFile.Write('StartMinim', StartMinim);
+    IniFile.Write('Minimize2Tray', Minimize2Tray);
+    IniFile.Write('HideHint', HideHint);
+    IniFile.Write('Opacity', Opacity);
+    IniFile.Write('ShowOnError', ShowLogOnError);
+    IniFile.Write('HintType', Ord(HintType));
+  finally
+    IniFile.Free;
+  end;
 end;
 
 
 procedure TAppData.LoadSettings;
 begin
-  VAR Stream:= TCubicBuffStream2.CreateRead(SettingsFile);
-  TRY
-    Stream.ReadHeader(Signature, 1);
-
-    AutoStartUp  := Stream.ReadBoolean;
-    StartMinim   := Stream.ReadBoolean;
-    Minimize2Tray:= Stream.ReadBoolean;             // Minimize to tray
-    HintType     := THintType(Stream.ReadInteger);  // Turn off the embeded help system
-    HideHint     := Stream.ReadInteger;             // Hide hint after x ms.
-    Opacity      := Stream.ReadInteger;
-
-    Stream.ReadPaddingDef;
-  FINALLY
-    FreeAndNil(Stream);
-  END;
+  VAR IniFile := TIniFileEx.Create('Global App Settings', SettingsFile);
+  try
+    AutoStartUp   := IniFile.Read('AutoStartUp', False);
+    StartMinim    := IniFile.Read('StartMinim', False);
+    Minimize2Tray := IniFile.Read('Minimize2Tray', False);
+    HideHint      := IniFile.Read('HideHint', 2500);
+    Opacity       := IniFile.Read('Opacity', 250);
+    ShowLogOnError:= IniFile.Read('ShowOnError', True);
+    HintType      := THintType(IniFile.Read('HintType', 0));
+  finally
+    IniFile.Free;
+  end;
 
   RunSelfAtWinStartUp(AutoStartUp);
 end;
 
 
-INITIALIZATION
+
+initialization
 
 FINALIZATION
 begin
-  if (AppData <> NIL)                // AppData will not be created when we load this package into the IDE
-  then FreeAndNil(AppData.frmLog);   // Call this as late as possible
   FreeAndNil(AppData);
 end;
 
 
 end.
+
+

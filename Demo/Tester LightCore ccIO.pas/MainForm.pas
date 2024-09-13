@@ -17,7 +17,7 @@ VAR
   Form6: TForm6;
 
 IMPLEMENTATION {$R *.dfm}
-USES ccIO, cmIO, cmIO.Win;
+USES ccIO, ccTextFile, cmIO, cmIO.Win;
 
 
 procedure TForm6.FormCreate(Sender: TObject);

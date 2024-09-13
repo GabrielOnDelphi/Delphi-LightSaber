@@ -35,7 +35,7 @@ function Is32bitTypecast(const Line: string; StartPos: Integer): Boolean;
 IMPLEMENTATION
 
 USES
-   cmPascal, ccCore, ccIO;
+   cmPascal, ccCore, ccIO, ccTextFile;
 
 {=============================================================================================================
    EXTENDED

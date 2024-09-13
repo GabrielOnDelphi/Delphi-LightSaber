@@ -27,6 +27,7 @@ package LightBase;
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'LightSaber - Base library'}
 {$LIBSUFFIX AUTO}
+{$RUNONLY}
 {$IMPLICITBUILD ON}
 
 requires
@@ -39,17 +40,17 @@ requires
   LightCore;
 
 contains
-  FormLog in 'FormLog.pas',
   cbAppData in 'cbAppData.pas',
   cbIniFile in 'cbIniFile.pas',
   cbCenterControl in 'cbCenterControl.pas',
   cbRegistry in 'cbRegistry.pas',
   cbDialogs in 'cbDialogs.pas',
-  cbWinVersion in 'cbWinVersion.pas',
-  llLogUtils in 'llLogUtils.pas',
-  llRichLog in 'llRichLog.pas',
-  llRichLogTrack in 'llRichLogTrack.pas';
+  cbLogLines in 'cbLogLines.pas',
+  cbLogRam in 'cbLogRam.pas',
+  cbLogUtils in 'cbLogUtils.pas',
+  cbWinVersion in 'cbWinVersion.pas';
 
 end.
+
 
 

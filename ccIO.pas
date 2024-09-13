@@ -64,7 +64,7 @@
      http://www.malcolmgroves.com/blog/?p=865
 
   TESTER:
-     c:\MyProjects\Packages\LightSaber\UNC Tester\
+     c:\MyProjects\LightSaber\UNC Tester\
 ==================================================================================================}
 
 INTERFACE
@@ -270,21 +270,6 @@ CONST
 
 
 {--------------------------------------------------------------------------------------------------
-   FILE TEXT
---------------------------------------------------------------------------------------------------}
- TYPE
-   TWriteOperation= (woAppend, woOverwrite);
-
- function  StringFromFileTSL    (CONST FileName: string; IgnoreExists: Boolean= FALSE; Enc: TEncoding= NIL): TStringList;        { Returns a TSL instead of a string. The caller has to free the result }
- function  StringFromFileExists (CONST FileName: string): String;                                  { Read file IF it exists. Otherwise, return '' }
- function  StringFromFileA      (CONST FileName: string): AnsiString;                              { Read a WHOLE file and return its content as String. Also see this: http://www.fredshack.com/docs/delphi.html }
- function  StringFromFile       (CONST FileName: string; IgnoreExists: Boolean= FALSE; Enc: TEncoding= Nil): string;
- procedure StringToFile         (CONST FileName: string; CONST aString: String;     CONST WriteOp: TWriteOperation= woOverwrite; WritePreamble: Boolean= FALSE);
- procedure StringToFileA        (CONST FileName: string; CONST aString: AnsiString; CONST WriteOp: TWriteOperation);  overload;
- procedure StringToFileA        (CONST FileName: string; CONST aString: String;     CONST WriteOp: TWriteOperation);  overload;
-
-
-{--------------------------------------------------------------------------------------------------
    FILE BINARY COMPARE
 --------------------------------------------------------------------------------------------------}
  function  CompareStreams      (A, B: TStream; BufferSize: Integer = 4096): Boolean;
@@ -297,11 +282,10 @@ CONST
  procedure CopyFileTop         (CONST SourceName, DestName: string; CopyBytes: Int64);                             { Copy only CopyBytes bytes from the begining of the file }
  procedure AppendTo            (CONST MasterFile, SegmentFile, Separator: string; SeparatorFirst: Boolean= TRUE);  { Append Segment to Master. Master must exists. }
  procedure MergeFiles          (CONST Input1, Input2, Output,  Separator: string; SeparatorFirst: Boolean= TRUE);  { Merge file 'Input1' and file 'Input2' in a new file 'Output'. So, the difference between this procedure and AppendTo is that this proc does not modify the original input file(s) }
- function  MergeAllFiles       (CONST Folder, FileType, OutputFile, Separator: string; DigSubdirectories: Boolean= FALSE; SeparatorFirst: Boolean= TRUE): Integer;       { Merge all files in the specified folder.   FileType can be something like '*.*' or '*.exe;*.bin' }
+ function  MergeAllTextFiles       (CONST Folder, FileType, OutputFile, Separator: string; DigSubdirectories: Boolean= FALSE; SeparatorFirst: Boolean= TRUE): Integer;       { Merge all files in the specified folder.   FileType can be something like '*.*' or '*.exe;*.bin' }
 
 
  { OTHERS }
- function  CountLines          (CONST Filename: string; CONST BufferSize: Cardinal= 128000): Int64;                     { Opens a LARGE text file and counts how many lines it has. It does this by loading a small portion of the file in a RAM buffer }
  function  WriteBinFile        (CONST FileName: string; CONST Data: TBytes; CONST Overwrite: Boolean= TRUE): Boolean;
 {System.IOUtils.TFile.Encrypt https://docwiki.embarcadero.com/Libraries/Alexandria/en/System.IOUtils.TFile.Encrypt - Encrypt a given file using the operating system-provided facilities.}
 
@@ -663,7 +647,7 @@ begin
 end;
 
 
- 
+
 
 
 
@@ -718,7 +702,7 @@ begin
     else Result:= -1;
 end;
 
- 
+
 
 
 
@@ -1282,7 +1266,7 @@ begin
  Result:= Trim(Result);
 end;
 
- 
+
 
 
 
@@ -1675,224 +1659,6 @@ end;                                                     { Could also be impleme
 
 
 
-
-
-
-
-{--------------------------------------------------------------------------------------------------
-   READ/WRITE TEXT
-   Also see: ccStreamFile.pas.StringFromFileStart
---------------------------------------------------------------------------------------------------}
-
-{ Write Unicode strings to a UTF8 file.
-  FileName must be a full path. If the path does not exist it is created.
-  It can also write a preamble.
-  Based on: http://stackoverflow.com/questions/35710087/how-to-save-classic-delphi-string-to-disk-and-read-them-back/36106740#36106740  }
-procedure StringToFile(CONST FileName: string; CONST aString: String; CONST WriteOp: TWriteOperation= woOverwrite; WritePreamble: Boolean= FALSE);
-VAR
-   Stream: TFileStream;
-   Preamble: TBytes;
-   sUTF8: RawByteString;
-   aMode: Integer;
-begin
- ForceDirectories(ExtractFilePath(FileName));
-
- if (WriteOp= woAppend) AND FileExists(FileName)
- then aMode := fmOpenReadWrite
- else aMode := fmCreate;
-
- Stream := TFileStream.Create(filename, aMode, fmShareDenyWrite);   { Allow others to read while we write }
- TRY
-  sUTF8 := Utf8Encode(aString);                                     { UTF16 to UTF8 encoding conversion. It will convert UnicodeString to WideString }
-
-  if (aMode = fmCreate) AND WritePreamble then
-   begin
-    preamble := TEncoding.UTF8.GetPreamble;
-    Stream.WriteBuffer( PAnsiChar(preamble)^, Length(preamble));
-   end;
-
-  if aMode = fmOpenReadWrite
-  then Stream.Position:= Stream.Size;                               { Go to the end }
-
-  Stream.WriteBuffer( PAnsiChar(sUTF8)^, Length(sUTF8) );
- FINALLY
-   FreeAndNil(Stream);
- END;
-end;
-
-
-{ Tries to autodetermine the file type (ANSI, UTF8, UTF16, etc). Works with UNC paths.
-  If the file does not exist, it raises an error unless, IgnoreExists is True.
-
-  If it cannot detect the correct encoding automatically, we can force it to what we want by setting the second paramater.
-      Example: System.SysUtils.TEncoding.UTF8
-      However this is buggy! It will raise an exception if the file is ANSI but it contains high characters such as ½ (#189)
-      See: https://stackoverflow.com/questions/35708827/what-could-cause-no-mapping-for-the-unicode-character-exists-in-the-target-mult }
-function StringFromFile(CONST FileName: string; IgnoreExists: Boolean= FALSE; Enc: TEncoding= NIL): String;
-begin
-  if IgnoreExists
-  AND NOT FileExists(FileName)
-  then EXIT('');
-
-  if Enc= NIL
-  then Result:= System.IOUtils.TFile.ReadAllText(FileName)
-  else
-                         Result:= System.IOUtils.TFile.ReadAllText(FileName, Enc);
-end;
-
-
-{ Read a WHOLE file and return its content as AnsiString.
-  The function will not try to autodetermine file's type.
-  It will simply read the file as ANSI.
-
-  Also see this: http://www.fredshack.com/docs/delphi.html }
-function StringFromFileA(CONST FileName: string): AnsiString;
-VAR Stream: TFileStream;
-begin
- Result:= '';
-
- Stream:= TFileStream.Create(FileName, fmOpenRead OR fmShareDenyNone);
- TRY
-   if Stream.Size>= High(Longint)
-   then RAISE Exception.Create('File is larger than 2GB! Only files below 2GB are supported.'+ CRLFw+ FileName);
-
-   SetString(Result, NIL, Stream.Size);
-   Stream.ReadBuffer(Pointer(Result)^, Stream.Size);
- FINALLY
-   FreeAndNil(Stream);
- END;
-end;
-
-
-procedure StringToFileA (CONST FileName: string; CONST aString: AnsiString; CONST WriteOp: TWriteOperation);
-VAR
-   Stream: TFileStream;
-   aMode: Integer;
-begin
- ForceDirectories(ExtractFilePath(FileName));
-
- if (WriteOp= woAppend) AND FileExists(FileName)
- then aMode := fmOpenReadWrite
- else aMode := fmCreate;
-
- Stream := TFileStream.Create(filename, aMode, fmShareDenyWrite);   { Allow read during our writes }
- TRY
-  if aMode = fmOpenReadWrite
-  then Stream.Position:= Stream.Size; { Go to the end }
-
-  Stream.WriteBuffer( PAnsiChar(aString)^, Length(aString) );
- FINALLY
-   FreeAndNil(Stream);
- END;
-end;
-
-
-procedure StringToFileA (CONST FileName: string; CONST aString: String; CONST WriteOp: TWriteOperation);
-begin
- StringToFileA(FileName, AnsiString(aString), WriteOp);
-end;
-
-
-{ Read file IF it exists. Otherwise, return '' }
-function StringFromFileExists(CONST FileName: string): String;          // Works with UNC paths
-begin
- if FileExists(FileName)
- then Result:= StringFromFile(FileName)
- else Result:= '';
-end;
-
-
-{ Example for the 'Enc' parameter: TEncoding.UTF8 }
-function StringFromFileTSL(CONST FileName: string; IgnoreExists: Boolean= FALSE; Enc: TEncoding= NIL): TStringList;    // Works with UNC paths
-begin
- Result:= TStringList.Create;
- Result.Text:= StringFromFile(FileName, IgnoreExists, Enc);
-end;
-
-
-
-
-{-----------------------------------------------------------------------------------------------------------------------
-   TEXT LINES
------------------------------------------------------------------------------------------------------------------------}
-
-{ Opens a LARGE text file and counts how many lines it has.
-  It does this by loading a small portion of the file in a RAM buffer.
-  Does not handle well Mac/Linux files!!!
-
-  Speed test on 150MB file:
-     TFileStream (this): 15ms
-     TCubicBuffStream: 78ms
-     Delphi's ReadLn: 8518ms
-  Speed tester here: c:\MyProjects\Packages\CubicCommonControls-Testers\CountLines tester\Tester.exe
-
-  Buffer speed:
-     1KB   = 31ms
-     32KB  = 14.7ms
-     64KB  = 14.5ms   <-- BEST
-     256KB = 15ms
-     512KB = 15ms
-     2MB   = 16ms
-   Same speed for SSD and HDD.
-
-  See also: http://www.delphipages.com/forum/showthread.php?t=201629 }
-{TODO 2: use buffered file }
-
-function CountLines(CONST Filename: string; CONST BufferSize: Cardinal= 128000): Int64;            { Source: http://www.delphipages.com/forum/showthread.php?t=201629 }
-VAR
-   FS: TFileStream;
-   bytes: array of Byte;
-   i, iRead: Integer;
-begin
- Result := 0;
- Assert(FileExists(FileName));
- SetLength(Bytes, BufferSize);
- FS := TFileStream.Create(Filename, fmOpenRead or fmShareDenyNone);
- TRY
-  iRead := FS.Read(bytes[0], BufferSize);
-  while iRead > 0 do
-   begin
-    for i := 0 to iRead - 1 do
-     if (bytes[i] = 10)
-     then Inc(Result);
-
-    iRead := FS.Read(bytes[0], BufferSize);
-   end;
-
-  if FS.Size > 0 then
-   begin
-    { see if last line ends with a linefeed character }
-    if FS.Size >= BufferSize
-    then FS.Position :=  FS.Size-BufferSize         // Update to XE7. It was: FS.Seek(-BufferSize, soFromEnd)
-    else FS.Position := 0;
-
-    iRead := FS.Read(bytes[0], BufferSize);
-    i := iRead - 1;
-
-    { skip bytes < 9 or equal to Ctrl+Z (26) }
-    WHILE (i > -1) AND ((bytes[i] < 9) OR (bytes[i] = 26))
-     DO Dec(i);
-
-    if (i > -1) AND (bytes[i] <> 10)
-    then Inc(Result);
-   end;
-
- FINALLY
-  FreeAndNil(FS);
- END;
-end;
-
-
-
-
-
-
-
-
-
-
-
-
 {-----------------------------------------------------------------------------------------------------------------------
    READ/WRITE TO A BINARY FILE
 -----------------------------------------------------------------------------------------------------------------------}
@@ -1918,7 +1684,6 @@ begin
    FreeAndNil(StreamFile);
  END;
 end;
-
 
 
 
@@ -1964,10 +1729,6 @@ begin
 end;
 
 
- 
-
-
-
 
 
 
@@ -1994,7 +1755,6 @@ begin
      FreeAndNil(TSL);
    end;
 end;
-
 
 
 { Example: MoveFolder('c:\Documents', 'C:\Backups').
@@ -2116,16 +1876,23 @@ begin
 end;
 
 
-function MergeAllFiles(CONST Folder, FileType, OutputFile, Separator: string; DigSubdirectories: Boolean= FALSE; SeparatorFirst: Boolean= TRUE): Integer;       { Merge all files in the specified folder. FileType can be something like '*.*' or '*.exe;*.bin'. Returns the number of files merged }    { Separator is a text (ex CRLF) that will be added AFTER each Segment file }
+function MergeAllTextFiles(CONST Folder, FileType, OutputFile, Separator: string; DigSubdirectories: Boolean= FALSE; SeparatorFirst: Boolean= TRUE): Integer;       { Merge all files in the specified folder. FileType can be something like '*.*' or '*.exe;*.bin'. Returns the number of files merged }    { Separator is a text (ex CRLF) that will be added AFTER each Segment file }
 VAR TSL: TStringList;
     CurFile: String;
+    OutputStream: TFileStream;
 begin
  TSL:= ListFilesOf(Folder, FileType, TRUE, DigSubdirectories);
  TRY
    Result:= TSL.Count;
 
-   if NOT FileExists(OutputFile)                           { The masterfile must exist otherwise 'AppendTo' will fail }
-   then StringToFile(OutputFile, '', woOverwrite, FALSE);
+   // The masterfile must exist otherwise 'AppendTo' will fail.
+   // So, if it doesn't exists, we create it.
+   if NOT FileExists(OutputFile) then
+     TRY
+       OutputStream:= TFileStream.Create(OutputFile, fmOpenWrite or fmShareExclusive);
+     FINALLY
+       FreeAndNil(OutputStream);
+     END;
 
    for CurFile in TSL
     DO AppendTo(OutputFile, CurFile, Separator, SeparatorFirst);

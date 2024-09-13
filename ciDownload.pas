@@ -63,7 +63,7 @@ function DDownloadFile (CONST URL, SaveTo: string): Boolean; overload;
 IMPLEMENTATION
 
 USES
-   ccCore, cbDialogs, ccIO, ciInternet;
+   ccCore, cbDialogs, ccIO, ccTextFile, ciInternet;
 
 {-----------------------------------------------------------------------------------------------------------------------
    Allows you to set referers, user agents, and other stuff.
@@ -226,8 +226,12 @@ VAR TextBody: string;
 begin
  TextBody:= GetTextFile(URL, Referer);
  Result:= TextBody > '';
- if Result
- then StringToFile(DestinationFile, TextBody, woOverwrite, ForceFolder);
+ if Result then
+   begin
+     if ForceFolder
+     then ForceDirectoriesE(ExtractFilePath(DestinationFile));
+     StringToFile(DestinationFile, TextBody, woOverwrite, wpAuto);
+   end;
 end;
 
 

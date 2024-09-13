@@ -98,7 +98,7 @@ USES
    {$IFDEF Jpg2000}OpenJpeg2000Bitmap,{$ENDIF} // Download OpenJpeg Pas library from: www.github.com/galfar/PasJpeg2000
    {$IFDEF FastJpg}FastJpegDecHelper,{$ENDIF}
    cGraphResize, cGraphLoader.Resolution,
-   cGraphLoader.WB1, cGraphLoader.RainDrop, ccIO, cmIO, cmIO.Win, cGraphFx.Rotate, cbAppData, cbINIFile, ccCore, cGraphAviFrame, cGraphGIF;
+   cGraphLoader.WB1, cGraphLoader.RainDrop, ccIO, ccTextFile, cmIO, cmIO.Win, cGraphFx.Rotate, cbAppData, cbINIFile, ccCore, cGraphAviFrame, cGraphGIF;
 
 
 
@@ -205,7 +205,7 @@ begin
  END;
 end;
 {$ELSE}
-  CCR Exif NOT AVAILABLE
+  //RAISE Exception.Create('CCREXIF NOT AVAILABLE');
 {$ENDIF}
 
 

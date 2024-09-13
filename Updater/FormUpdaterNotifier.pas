@@ -83,7 +83,7 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   llLogUtils, cTranslate, ccColors, cbAppData, cbIniFile, ciInternet;
+   llRichLogUtils, cTranslate, ccColors, cbAppData, cbIniFile, ciInternet;
 
 
 
@@ -294,8 +294,10 @@ begin
  Log.AddVerb('End updater');
 end;
 
+
 procedure TFrmUpdater.OnUpdateStart(Sender: TObject);
 begin
+ lblConnectError.Visible:= FALSE;
  lblStatus.Visible:= TRUE;
  lblStatus.Transparent:= FALSE;
  lblStatus.Color:= clOrange;                 { Change font color, not bkg color to keep it compatible with 'Skins' }

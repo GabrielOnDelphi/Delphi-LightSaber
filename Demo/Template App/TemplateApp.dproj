@@ -82,20 +82,17 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
-        <VerInfo_MajorVer>1</VerInfo_MajorVer>
-        <VerInfo_MinorVer>0</VerInfo_MinorVer>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="uInitialization.pas"/>
+        <DCCReference Include="FormMain.pas"/>
         <DCCReference Include="FormSettings.pas">
             <Form>frmSettings</Form>
         </DCCReference>
         <DCCReference Include="..\..\cbAppData.pas"/>
-        <DCCReference Include="FormMain.pas"/>
         <DCCReference Include="..\..\FormSplashScreen.pas"/>
         <DCCReference Include="..\..\FormUniversalEula.pas"/>
         <DCCReference Include="..\..\Updater\FormUpdaterNotifier.pas"/>
@@ -107,11 +104,8 @@
         </DCCReference>
         <DCCReference Include="..\..\FormSkinsDisk.pas"/>
         <DCCReference Include="..\..\FormSkinsRes.pas"/>
-        <DCCReference Include="..\..\cvINIFile.pas"/>
         <DCCReference Include="..\..\cbDialogs.pas"/>
         <DCCReference Include="..\..\cbIniFile.pas"/>
-        <DCCReference Include="..\..\FormLog.pas"/>
-        <DCCReference Include="..\..\csShell.pas"/>
         <DCCReference Include="..\..\cmGuiSettings.pas"/>
         <DCCReference Include="..\..\..\LightProteus\cpProteusCertificate.pas"/>
         <DCCReference Include="..\..\..\LightAutoTranslator\cTranslate.pas"/>
@@ -121,6 +115,12 @@
         <DCCReference Include="..\..\..\LightProteus\cpProteusIO.pas"/>
         <DCCReference Include="..\..\..\LightProteus\cpProteusUtils.pas"/>
         <DCCReference Include="..\..\Updater\FormUpdaterSettings.pas"/>
+        <DCCReference Include="..\..\FormRamLog.pas">
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\cbLogLines.pas"/>
+        <DCCReference Include="..\..\cbLogRam.pas"/>
+        <DCCReference Include="..\..\cvLog.pas"/>
         <None Include="..\..\..\LightProteus\cpProteus.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

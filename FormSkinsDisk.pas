@@ -97,7 +97,7 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
    ccColors, cTranslate, cmINIFileQuick, {uLinks,} Vcl.Themes, cbAppData, csExecuteShell,
-   cvIniFile, IOUtils, ccIO, ccCore, cbDialogs;   { VCL.Styles is mandatory here}
+   cvIniFile, IOUtils, ccIO, ccTextFile, ccCore, cbDialogs;   { VCL.Styles is mandatory here}
 
 CONST
   DefWinTheme= 'Windows default theme';

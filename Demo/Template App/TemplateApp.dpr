@@ -9,9 +9,9 @@ uses
   Vcl.Themes,
   Vcl.Styles,
   uInitialization in 'uInitialization.pas',
+  FormMain in 'FormMain.pas',
   FormSettings in 'FormSettings.pas' {frmSettings},
   cbAppData in '..\..\cbAppData.pas',
-  FormMain in 'FormMain.pas',
   FormSplashScreen in '..\..\FormSplashScreen.pas',
   FormUniversalEula in '..\..\FormUniversalEula.pas',
   FormUpdaterNotifier in '..\..\Updater\FormUpdaterNotifier.pas',
@@ -21,11 +21,8 @@ uses
   FormAbout in '..\..\FormAbout.pas',
   FormSkinsDisk in '..\..\FormSkinsDisk.pas',
   FormSkinsRes in '..\..\FormSkinsRes.pas',
-  cvINIFile in '..\..\cvINIFile.pas',
   cbDialogs in '..\..\cbDialogs.pas',
   cbIniFile in '..\..\cbIniFile.pas',
-  FormLog in '..\..\FormLog.pas',
-  csShell in '..\..\csShell.pas',
   cmGuiSettings in '..\..\cmGuiSettings.pas',
   cpProteusCertificate in '..\..\..\LightProteus\cpProteusCertificate.pas',
   cTranslate in '..\..\..\LightAutoTranslator\cTranslate.pas',
@@ -34,12 +31,17 @@ uses
   cpProteus in '..\..\..\LightProteus\cpProteus.pas',
   cpProteusIO in '..\..\..\LightProteus\cpProteusIO.pas',
   cpProteusUtils in '..\..\..\LightProteus\cpProteusUtils.pas',
-  FormUpdaterSettings in '..\..\Updater\FormUpdaterSettings.pas';
+  FormUpdaterSettings in '..\..\Updater\FormUpdaterSettings.pas',
+  FormRamLog in '..\..\FormRamLog.pas',
+  cbLogLines in '..\..\cbLogLines.pas',
+  cbLogRam in '..\..\cbLogRam.pas',
+  cvLog in '..\..\cvLog.pas';
 
 {$R *.res}
 
 begin
   AppData:= TAppData.Create('Light Commercial Template');     { Start with cubic for templates }  { Absolutelly critical if you use the SaveForm/LoadForm functionality. This string will be used as the name of the INI file. }
   AppData.CreateMainForm(TMainForm, MainForm, TRUE);
+  TfrmRamLog.CreateFormAppData;
   Application.Run;
 end.

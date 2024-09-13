@@ -30,7 +30,7 @@ INTERFACE
 USES
   Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Controls,
   Vcl.ExtCtrls, System.Classes, SysUtils, Vcl.Forms, System.IOUtils,
-  ccCore, csSystem, cbDialogs, ccIO, cmIO, cmIO.Win, cvPathEdit, cvCountDown,
+  ccCore, csSystem, cbDialogs, ccIO, ccTextFile, cmIO, cmIO.Win, cvPathEdit, cvCountDown,
   InternetLabel, llRichLog, Vcl.Imaging.pngimage;
 
 TYPE

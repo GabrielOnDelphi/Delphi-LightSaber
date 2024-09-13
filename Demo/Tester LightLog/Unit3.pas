@@ -4,11 +4,11 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, clVisLogTrack, clVisLogRam, Vcl.Grids, clVisLog, Vcl.ExtCtrls,
-  llRichLogTrack, Vcl.StdCtrls, Vcl.ComCtrls, FormLog, llLogUtils, llRichLog;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, clVisLogTrack, cbLogRam, Vcl.Grids, clVisLog, Vcl.ExtCtrls,
+  llRichLogTrack, Vcl.StdCtrls, Vcl.ComCtrls, FormLog, llRichLogUtils, llRichLog;
 
 type
-  TForm3 = class(TForm)
+  TMainForm = class(TForm)
     Panel1: TPanel;
     Panel2: TPanel;
     RichLog: TRichLog;
@@ -23,7 +23,7 @@ type
     Panel5: TPanel;
     CheckBox1: TCheckBox;
     CheckBox2: TCheckBox;
-    VisLog: TVisLog;
+    VisLog: TLogGrid;
     procedure FormCreate(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
@@ -37,21 +37,21 @@ type
   end;
 
 var
-  Form3: TForm3;
+  MainForm: TMainForm;
 
 implementation {$R *.dfm}
-Uses cbAppData, cbINIFile, ccIO, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
+Uses cbAppData, cbINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
 
 
-procedure TForm3.FormCreate(Sender: TObject);
+procedure TMainForm.FormCreate(Sender: TObject);
 begin
  RichLog.Clear;
- AppData.Initializing:= FALSE; moved to cbAppData
+ //AppData.Initializing:= FALSE; moved to cbAppData
  //Button5Click(Sender);
 end;
 
 
-procedure TForm3.Button1Click(Sender: TObject);
+procedure TMainForm.Button1Click(Sender: TObject);
 begin
  RichLog.Clear;
 
@@ -76,7 +76,7 @@ end;
 
 
 
-procedure TForm3.Button2Click(Sender: TObject);
+procedure TMainForm.Button2Click(Sender: TObject);
 begin
 // VisLog.Clear;
  VisLog.RamLog.AddDebug('AddDebug');
@@ -99,34 +99,34 @@ begin
 end;
 
 
-procedure TForm3.Button4Click(Sender: TObject);
+procedure TMainForm.Button4Click(Sender: TObject);
 begin
  VisLog.RamLog.LoadFromFile(AppData.CurFolder+ 'LogFile.log');
 end;
 
 
-procedure TForm3.CheckBox1Click(Sender: TObject);
+procedure TMainForm.CheckBox1Click(Sender: TObject);
 begin
  VisLog.ShowDate:= CheckBox1.Checked;
 end;
 
 
-procedure TForm3.CheckBox2Click(Sender: TObject);
+procedure TMainForm.CheckBox2Click(Sender: TObject);
 begin
  VisLog.ShowTime:= CheckBox2.Checked;
 end;
 
 
-procedure TForm3.Button3Click(Sender: TObject);
+procedure TMainForm.Button3Click(Sender: TObject);
 begin
  VisLog.RamLog.SaveToFile(AppData.CurFolder+ 'LogFile.log');
 end;
 
 
 
-procedure TForm3.Button5Click(Sender: TObject);
+procedure TMainForm.Button5Click(Sender: TObject);
 begin
- VAR VisLog2:= TVisLog.Create(Self);
+ VAR VisLog2:= TLogGrid.Create(Self);
  VisLog2.Parent:= Self;
  //VisLog2.ScrollBars      := ssNone;   // Exception Notification - Project raised exception class EOSError with message 'A call to an OS function failed'.
 end;

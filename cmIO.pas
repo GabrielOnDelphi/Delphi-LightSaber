@@ -30,7 +30,7 @@ USES
 IMPLEMENTATION
 
 USES
-  ccCore, cbDialogs, ccIO;
+  ccCore, cbDialogs, ccIO, ccTextFile;
 
 
 

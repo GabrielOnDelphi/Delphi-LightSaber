@@ -10,6 +10,7 @@ object frmMain: TfrmMain
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
+  Position = poDesigned
   OnShow = FormShow
   TextHeight = 13
   object PageControl: TPageControl
@@ -18,7 +19,7 @@ object frmMain: TfrmMain
     Top = 3
     Width = 893
     Height = 531
-    ActivePage = TabSheet1
+    ActivePage = TabSheet2
     Align = alClient
     TabOrder = 0
     object TabSheet1: TTabSheet
@@ -46,7 +47,7 @@ object frmMain: TfrmMain
         Top = 214
         Width = 185
         Height = 95
-        ItemHeight = 13
+        ItemHeight = 17
         Items.Strings = (
           'ListBox:'
           ' Item1'
@@ -152,7 +153,7 @@ object frmMain: TfrmMain
           Spin.Left = 65
           Spin.Top = 0
           Spin.Width = 50
-          Spin.Height = 24
+          Spin.Height = 22
           Spin.Margins.Top = 0
           Spin.Margins.Bottom = 0
           Spin.Align = alLeft
@@ -355,7 +356,6 @@ object frmMain: TfrmMain
         ParentColor = True
         ShowCaption = False
         TabOrder = 0
-        ExplicitWidth = 300
         DesignSize = (
           683
           116)
@@ -392,7 +392,6 @@ object frmMain: TfrmMain
         Caption = 'MsgDispatcher'
         ShowCaption = False
         TabOrder = 2
-        ExplicitWidth = 544
       end
       object PathEdit: TCubicPathEdit
         AlignWithMargins = True
@@ -569,11 +568,10 @@ object frmMain: TfrmMain
       object Panel1: TPanel
         Left = 242
         Top = 140
-        Width = 320
-        Height = 27
-        Caption = 'Panel1'
+        Width = 255
+        Height = 35
         TabOrder = 0
-        object DropDownSearchBox1: TDropDownSearchBox
+        object DropDownSearchBox: TDropDownSearchBox
           AlignWithMargins = True
           Left = 4
           Top = 2
@@ -581,6 +579,7 @@ object frmMain: TfrmMain
           Height = 21
           TabOrder = 0
           TextHint = 'Search...'
+          OnEndSearch = DropDownSearchBoxEndSearch
         end
       end
     end

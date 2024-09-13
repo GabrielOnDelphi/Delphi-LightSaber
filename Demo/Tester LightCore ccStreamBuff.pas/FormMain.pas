@@ -17,9 +17,6 @@ USES
   cvIniFile, InternetLabel, cvPathEdit, cvSpinEdit,
   llRichLogTrack, cvCheckBox, llRichLog, cbAppData, cbINIFile, chHardID;
 
-CONST
-  MSG_LateFormInit = WM_APP + 4711;
-
 TYPE
   TMainForm = class(TForm)
     Log                : TRichLog;
@@ -88,23 +85,10 @@ USES
 --------------------------------------------------------------------------------------------------}
 procedure TMainForm.LateInitialize;
 begin
- Randomize;
- LoadForm(Self);
- AppData.Initializing:= FALSE;
-
- { Hints }
- Application.HintColor     := $c0c090;
- Application.HintPause     := 350;                                                                 { Specifies the time interval that passes before the control's Help Hint appears when the user places the mouse pointer on a control or menu item. Windows' default is 500 ms }
- Application.HintShortPause:= 40;                                                                  { Specifies the time period to wait before bringing up a hint if another hint has already been shown. Windows' default is 50 ms }
- Application.UpdateFormatSettings:= FALSE;                                                         { more http://www.delphi3000.com/articles/article_4462.asp?SK= }
-
- { About }
  SetCaption('');
  lblVers.Caption:= 'Version: '+ AppData.GetVersionInfoV;
-
  Show;
 end;
-
 
 
 procedure TMainForm.actExitExecute(Sender: TObject);
@@ -129,14 +113,6 @@ end;
 {--------------------------------------------------------------------------------------------------
    UTIL
 --------------------------------------------------------------------------------------------------}
-procedure TMainForm.SetCaption(CONST CaptionText: string);
-begin
- if CaptionText= ''
- then Caption:= AppData.AppName+ ' '+ AppData.GetVersionInfoV
- else Caption:= AppData.AppName+ ' '+ AppData.GetVersionInfoV+ ' - ' + CaptionText;
-end;
-
-
 procedure TMainForm.btnSaveIniClick(Sender: TObject);
 begin
  SaveForm(Self);

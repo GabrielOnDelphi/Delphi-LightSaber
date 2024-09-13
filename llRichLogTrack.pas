@@ -1,5 +1,7 @@
 UNIT llRichLogTrack;
 
+// OLD LOG based on RichEdit
+
 {=============================================================================================================
    Gabriel Moraru
    2024.05
@@ -10,14 +12,14 @@ UNIT llRichLogTrack;
      Max= 6       lvErrors
 
    Tester:
-     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
+     c:\Myprojects\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE
 
 USES
    System.SysUtils, System.Classes, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.StdCtrls,
-   llRichLog, llLogUtils;
+   llRichLog, llRichLogUtils;
 
 TYPE
   TRichLogTrckbr = class(TPanel)

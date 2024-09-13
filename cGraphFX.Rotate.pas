@@ -268,7 +268,7 @@ begin
   {$IFDEF CCRExif}
   janFX.SmoothRotate(BMP, BMPOut, BMPOut.Width div 2, BMPOut.Height div 2, Degs);
   {$ELSE}
-    CCR Exif NOT AVAILABLE
+    RAISE Exception.Create('CCREXIF NOT AVAILABLE');
   {$ENDIF}
 
   SetLargeSize(BMP, BMPOut.Width, BMPOut.Height);

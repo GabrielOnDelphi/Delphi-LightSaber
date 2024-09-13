@@ -19,7 +19,7 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
-USES ccIO;
+USES ccIO, ccTextFile;
 
 
 
@@ -39,7 +39,7 @@ begin
   for cl:= 0 TO ColCount-1 DO
    TS.Add(Cells[cl, rw]);
 
- StringToFile(FileName, TS.Text, woOverwrite, FALSE);
+ StringToFile(FileName, TS.Text, woOverwrite, wpAuto);
  FreeAndNil(TS);
 end;
 

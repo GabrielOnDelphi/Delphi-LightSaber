@@ -185,7 +185,7 @@ CONST
 IMPLEMENTATION
 
 USES
-   cbAppData, cbINIFile, ciHtml, ccIO, ciDownload;
+   cbAppData, cbINIFile, ciHtml, ccIO, ccTextFile, ciDownload;
 
 
  function  PathIsURLA; external 'shlwapi' name 'PathIsURLA';

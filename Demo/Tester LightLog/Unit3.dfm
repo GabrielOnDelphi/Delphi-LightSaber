@@ -1,7 +1,7 @@
-object Form3: TForm3
+object MainForm: TMainForm
   Left = 0
   Top = 0
-  Caption = 'Form3'
+  Caption = 'LightSaber Log Demo'
   ClientHeight = 439
   ClientWidth = 801
   Color = clBtnFace
@@ -10,23 +10,24 @@ object Form3: TForm3
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
+  Position = poDesigned
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
-    Left = 0
-    Top = 0
+    AlignWithMargins = True
+    Left = 3
+    Top = 3
     Width = 381
-    Height = 439
+    Height = 433
     Align = alLeft
+    BevelOuter = bvNone
     Caption = 'Panel1'
     TabOrder = 0
     object RichLog: TRichLog
-      Left = 1
-      Top = 1
-      Width = 379
-      Height = 404
+      Left = 0
+      Top = 0
+      Width = 381
+      Height = 400
       Align = alClient
       Font.Charset = ANSI_CHARSET
       Font.Color = clWindowText
@@ -34,27 +35,27 @@ object Form3: TForm3
       Font.Name = 'Tahoma'
       Font.Style = []
       Lines.Strings = (
-        'RichLog1')
+        'RichLog')
       MaxLength = 2147483632
       ParentFont = False
       ScrollBars = ssBoth
       TabOrder = 0
       WordWrap = False
-      Zoom = 100
     end
     object Panel3: TPanel
-      Left = 1
-      Top = 405
-      Width = 379
+      Left = 0
+      Top = 400
+      Width = 381
       Height = 33
       Align = alBottom
+      BevelOuter = bvNone
       TabOrder = 1
       object Button1: TButton
         AlignWithMargins = True
-        Left = 4
-        Top = 4
+        Left = 3
+        Top = 3
         Width = 69
-        Height = 25
+        Height = 27
         Align = alLeft
         Caption = 'Test'
         TabOrder = 0
@@ -62,19 +63,19 @@ object Form3: TForm3
       end
       object RichLogTrckbr1: TRichLogTrckbr
         AlignWithMargins = True
-        Left = 79
-        Top = 4
-        Width = 296
-        Height = 25
+        Left = 78
+        Top = 3
+        Width = 300
+        Height = 27
         Align = alClient
         BevelOuter = bvNone
         Caption = 'RichLogTrckbr1'
         ShowCaption = False
         TabOrder = 1
-        TrackBar.Left = 146
+        TrackBar.Left = 150
         TrackBar.Top = 0
         TrackBar.Width = 150
-        TrackBar.Height = 25
+        TrackBar.Height = 27
         TrackBar.Hint = 'Hide all messages below this level'
         TrackBar.Align = alRight
         TrackBar.Max = 5
@@ -86,17 +87,19 @@ object Form3: TForm3
     end
   end
   object Panel2: TPanel
-    Left = 406
-    Top = 0
+    AlignWithMargins = True
+    Left = 403
+    Top = 3
     Width = 395
-    Height = 439
+    Height = 433
     Align = alRight
+    BevelOuter = bvNone
     ShowCaption = False
     TabOrder = 1
     object Panel4: TPanel
-      Left = 1
-      Top = 405
-      Width = 393
+      Left = 0
+      Top = 400
+      Width = 395
       Height = 33
       Align = alBottom
       TabOrder = 0
@@ -117,7 +120,7 @@ object Form3: TForm3
         AlignWithMargins = True
         Left = 160
         Top = 4
-        Width = 229
+        Width = 231
         Height = 25
         Align = alClient
         BevelOuter = bvNone
@@ -125,7 +128,7 @@ object Form3: TForm3
         TabOrder = 1
         TrackBar.Left = 175
         TrackBar.Top = 0
-        TrackBar.Width = 54
+        TrackBar.Width = 56
         TrackBar.Height = 25
         TrackBar.Hint = 'Hide all messages below this level'
         TrackBar.Align = alRight
@@ -164,18 +167,19 @@ object Form3: TForm3
       end
     end
     object Panel5: TPanel
-      Left = 1
-      Top = 372
-      Width = 393
+      Left = 0
+      Top = 367
+      Width = 395
       Height = 33
       Align = alBottom
+      BevelOuter = bvNone
       TabOrder = 1
       object CheckBox1: TCheckBox
         AlignWithMargins = True
-        Left = 4
-        Top = 4
+        Left = 3
+        Top = 3
         Width = 73
-        Height = 25
+        Height = 27
         Align = alLeft
         Caption = 'Show date'
         TabOrder = 0
@@ -183,21 +187,21 @@ object Form3: TForm3
       end
       object CheckBox2: TCheckBox
         AlignWithMargins = True
-        Left = 83
-        Top = 4
+        Left = 82
+        Top = 3
         Width = 73
-        Height = 25
+        Height = 27
         Align = alLeft
         Caption = 'Show time'
         TabOrder = 1
         OnClick = CheckBox2Click
       end
     end
-    object VisLog: TVisLog
-      Left = 1
-      Top = 1
-      Width = 393
-      Height = 371
+    object VisLog: TLogGrid
+      Left = 0
+      Top = 0
+      Width = 395
+      Height = 367
       Align = alClient
       BevelOuter = bvNone
       Caption = 'VisLog'

@@ -1,4 +1,4 @@
-UNIT FormLog;
+UNIT FormRichLog;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -7,7 +7,7 @@ UNIT FormLog;
 --------------------------------------------------------------------------------------------------------------
 
    Visual log (window).
-   More details in llLogUtils.pas
+   More details in llRichLogUtils.pas
 
    Usage:
      It is CRITICAL to create the AppData object as soon as the application starts.
@@ -20,7 +20,7 @@ UNIT FormLog;
      AppDataEx is automatically destroyed by the Finalization section of this unit.
 
    Tester:
-     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
+     c:\Myprojects\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE
@@ -32,7 +32,7 @@ USES
   llRichLogTrack, llRichLog;
 
 TYPE
-  TfrmLog = class(TForm)
+  TfrmRichLog = class(TForm)
     Log        : TRichLog;
     Container  : TPanel;    { We use a container for all controls on this form so we can reparent them easily to another form }
     pnlBottom  : TPanel;
@@ -61,7 +61,7 @@ USES
 {-------------------------------------------------------------------------------------------------------------
    FORM
 -------------------------------------------------------------------------------------------------------------}
-procedure TfrmLog.FormCreate(Sender: TObject);
+procedure TfrmRichLog.FormCreate(Sender: TObject);
 begin
  Log.Onwarn := LogError;               // Auto show form if we send an error msg to the log
  Log.OnError:= LogError;
@@ -69,7 +69,7 @@ begin
 end;
 
 
-procedure TfrmLog.LateInitialize;
+procedure TfrmRichLog.LateInitialize;
 begin
  LoadForm(Self);
 end;
@@ -77,21 +77,22 @@ end;
 
 
 // This is called automatically by "Finalization"
-procedure TfrmLog.FormDestroy(Sender: TObject);
+procedure TfrmRichLog.FormDestroy(Sender: TObject);
 begin
+ Assert(AppData <> NIL, 'AppData is gone already!');
  Container.Parent:= Self;
  if NOT cbAppData.AppData.Initializing
  then SaveForm(Self); // We don't save anything if the start up was improper!
 end;
 
 
-procedure TfrmLog.btnClearClick(Sender: TObject);
+procedure TfrmRichLog.btnClearClick(Sender: TObject);
 begin
  Log.Clear;
 end;
 
 
-procedure TfrmLog.LogError(Sender: TObject);
+procedure TfrmRichLog.LogError(Sender: TObject);
 begin
  if chkAutoOpen.Checked
  then Show;

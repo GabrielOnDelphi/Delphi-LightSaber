@@ -19,7 +19,7 @@ TYPE
     BaseStrGrid1          : TBaseStrGrid;
     CationedThumbnail     : TCationedThumbnail;
     CMinimalLabel         : TMinimalPathLabel;
-    CountDown: TCountDown;
+    CountDown             : TCountDown;
     CubicCheckBox1        : TCubicCheckBox;
     CheckListBox          : TCubicCheckListBox;
     ComboBox              : TCubicComboBox;
@@ -39,8 +39,8 @@ TYPE
     SpinEditD             : TCubicSpinEditD;
     SpinEditSplit         : TCubicSpinEditSplit;
     cubicStatusBar1       : TcubicStatusBar;
-    CubicTimer: TCubicTimer;
-    CubicTrayIcon: TCubicTrayIcon;
+    CubicTimer            : TCubicTimer;
+    CubicTrayIcon         : TCubicTrayIcon;
     ValueListEditor       : TCubicValueListEditor;
     EnhStrGrid1           : TEnhStrGrid;
     FastQChart            : TFastQChart;
@@ -48,7 +48,7 @@ TYPE
     FreeDiskSpace1        : TFreeDiskSpace;
     GradPanel1            : TGradPanel;
     MsgDispatcher         : TMsgDispatcher;
-    PageControl: TPageControl;
+    PageControl           : TPageControl;
     ProxyList1            : TProxyList;
     TabSheet1             : TTabSheet;
     TabSheet3             : TTabSheet;
@@ -68,10 +68,12 @@ TYPE
     Label2                : TLabel;
     Label3                : TLabel;
     TabSheet2             : TTabSheet;
-    Panel1: TPanel;
-    DropDownSearchBox1: TDropDownSearchBox;
+    Panel1                : TPanel;
+    DropDownSearchBox     : TDropDownSearchBox;
     procedure FormShow(Sender: TObject);
+    procedure DropDownSearchBoxEndSearch(Sender, SelectedItem: TObject);
   private
+    SearchBox: TDropDownSearchBox;
   public
   end;
 
@@ -81,11 +83,28 @@ VAR
 IMPLEMENTATION  {$R *.dfm}
 
 
+
 procedure TfrmMain.FormShow(Sender: TObject);
 begin
-  VAR x:= TDropDownSearchBox.Create(TabSheet5);
-  x.Parent:= TabSheet5;
-  DropDownSearchBox1.SetHostParent(Self);
+  VAR TSL:= TStringList.Create;
+  TSL.Add('Pink Floyd');
+  TSL.Add('Deep Purple');
+  TSL.Add('Fleetwood Mac');
+
+  SearchBox:= TDropDownSearchBox.Create(TabSheet5);
+  SearchBox.Parent:= TabSheet5;
+  SearchBox.OnEndSearch:= DropDownSearchBoxEndSearch;
+ // SearchBox.SetHostParent(Self); del
+  SearchBox.Populate(TSL);
+
+  FreeAndNil(TSL);
 end;
+
+
+procedure TfrmMain.DropDownSearchBoxEndSearch(Sender, SelectedItem: TObject);
+begin
+  Caption:= DropDownSearchBox.SelectedString;
+end;
+
 
 end.

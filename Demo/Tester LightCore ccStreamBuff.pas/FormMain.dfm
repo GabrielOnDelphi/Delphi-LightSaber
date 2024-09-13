@@ -3,8 +3,8 @@ object MainForm: TMainForm
   Top = 275
   AlphaBlendValue = 249
   Caption = 'Enviroment'
-  ClientHeight = 596
-  ClientWidth = 725
+  ClientHeight = 595
+  ClientWidth = 721
   Color = clBtnFace
   Constraints.MinHeight = 500
   Constraints.MinWidth = 600
@@ -45,8 +45,8 @@ object MainForm: TMainForm
   object pgCtrl: TPageControl
     Left = 0
     Top = 0
-    Width = 725
-    Height = 577
+    Width = 721
+    Height = 576
     ActivePage = tabMain
     Align = alClient
     ParentShowHint = False
@@ -55,10 +55,10 @@ object MainForm: TMainForm
     object tabMain: TTabSheet
       Caption = 'Main'
       DesignSize = (
-        717
-        549)
+        713
+        548)
       object Label1: TLabel
-        Left = 158
+        Left = 154
         Top = 143
         Width = 139
         Height = 13
@@ -82,7 +82,7 @@ object MainForm: TMainForm
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 711
+        Width = 707
         Height = 20
         Align = alTop
         Alignment = taCenter
@@ -96,7 +96,7 @@ object MainForm: TMainForm
         Layout = tlCenter
       end
       object edtFile2: TCubicPathEdit
-        Left = 132
+        Left = 126
         Top = 98
         Width = 449
         Height = 41
@@ -107,7 +107,7 @@ object MainForm: TMainForm
         TabOrder = 0
       end
       object edtOutput: TCubicPathEdit
-        Left = 132
+        Left = 126
         Top = 187
         Width = 449
         Height = 41
@@ -116,7 +116,7 @@ object MainForm: TMainForm
         TabOrder = 1
       end
       object btnSaveIni: TButton
-        Left = 639
+        Left = 627
         Top = 51
         Width = 75
         Height = 25
@@ -127,7 +127,7 @@ object MainForm: TMainForm
         OnClick = btnSaveIniClick
       end
       object Panel1: TPanel
-        Left = 160
+        Left = 154
         Top = 269
         Width = 392
         Height = 212
@@ -212,13 +212,13 @@ object MainForm: TMainForm
       Caption = 'ccStreamBuff'
       ImageIndex = 3
       DesignSize = (
-        717
-        549)
+        713
+        548)
       object lblReadWrite: TLabel
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 711
+        Width = 707
         Height = 20
         Align = alTop
         Alignment = taCenter
@@ -232,8 +232,8 @@ object MainForm: TMainForm
         Layout = tlCenter
       end
       object btnStreamRead: TButton
-        Left = 272
-        Top = 282
+        Left = 266
+        Top = 281
         Width = 173
         Height = 63
         Anchors = []
@@ -242,7 +242,7 @@ object MainForm: TMainForm
         OnClick = btnStreamReadClick
       end
       object btnStreamWrite: TButton
-        Left = 272
+        Left = 266
         Top = 204
         Width = 173
         Height = 63
@@ -257,13 +257,13 @@ object MainForm: TMainForm
       ImageIndex = 4
       object pnlBottom: TPanel
         Left = 0
-        Top = 504
-        Width = 717
+        Top = 503
+        Width = 713
         Height = 45
         Align = alBottom
         TabOrder = 0
         DesignSize = (
-          717
+          713
           45)
         object chkAutoOpen: TCubicCheckBox
           Left = 334
@@ -331,8 +331,8 @@ object MainForm: TMainForm
       object Log: TRichLog
         Left = 0
         Top = 0
-        Width = 717
-        Height = 504
+        Width = 713
+        Height = 503
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
@@ -367,8 +367,8 @@ object MainForm: TMainForm
   end
   object StatBar: TStatusBar
     Left = 0
-    Top = 577
-    Width = 725
+    Top = 576
+    Width = 721
     Height = 19
     Panels = <>
     ParentShowHint = False

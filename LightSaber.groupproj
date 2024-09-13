@@ -268,8 +268,8 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
-            <ProjectGuid>{232A281C-4B1A-482D-B029-85C54610247F}</ProjectGuid>
+        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -304,8 +304,8 @@
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
+            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -358,124 +358,8 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
-            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-    </ItemGroup>
-    <ItemGroup Condition="'$(BuildGroup)'=='Win32_Debug'">
-        <BuildGroupProject Include="..\..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj">
-            <ProjectGuid>{0A1AA5C0-4064-4F84-9485-EC81B8B74BEA}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightBase.dproj">
-            <ProjectGuid>{5EBF048A-F527-4583-BE0A-C834930EA04C}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Tester All Visual Controls\Demo_VisualControls.dproj">
-            <ProjectGuid>{DD580D63-779B-4D0D-821E-E5CFFCCDBB27}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
             <ProjectGuid>{232A281C-4B1A-482D-B029-85C54610247F}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Tester GUI Autosave\Demo_SaveGUI.dproj">
-            <ProjectGuid>{F34D7568-B180-4088-A728-74B945E4932F}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Tester LightLog\DemoLog.dproj">
-            <ProjectGuid>{7FB29DC7-5854-4A00-AB0C-20FE70A6D532}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\LightAutoTranslator\LightTranslator.dproj">
-            <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCommon.dproj">
-            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCore.dproj">
-            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\LightAutoTranslator\Demo\AutoTranslatorDemo.dproj">
-            <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightGraphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Template Universal Uninstaller\Uninstaller.dproj">
-            <ProjectGuid>{C873B6DC-0A47-4166-98C5-2F48479EE241}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightInternet.dproj">
-            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\..\Biology\!BioControl Lib\BioControl.dproj">
-            <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightLog.dproj">
-            <ProjectGuid>{BDDC4206-EF66-4FB1-8B35-A31088836E9E}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightVisControls.dproj">
-            <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Tester LightCore ccWinVersion.pas\Tester_WinVers.dproj">
-            <ProjectGuid>{BB5AE51D-B893-4937-AE30-E6E46D2AEDD4}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
-            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -500,11 +384,11 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
-            <ProjectGuid>{232A281C-4B1A-482D-B029-85C54610247F}</ProjectGuid>
+        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
             <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
+            <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="Demo\Tester GUI Autosave\Demo_SaveGUI.dproj">
             <ProjectGuid>{F34D7568-B180-4088-A728-74B945E4932F}</ProjectGuid>
@@ -536,11 +420,11 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
+            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
             <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
+            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\LightAutoTranslator\Demo\AutoTranslatorDemo.dproj">
             <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
@@ -590,9 +474,125 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
+            <ProjectGuid>{232A281C-4B1A-482D-B029-85C54610247F}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+    <ItemGroup Condition="'$(BuildGroup)'=='Win32_Debug'">
+        <BuildGroupProject Include="..\..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj">
+            <ProjectGuid>{0A1AA5C0-4064-4F84-9485-EC81B8B74BEA}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightBase.dproj">
+            <ProjectGuid>{5EBF048A-F527-4583-BE0A-C834930EA04C}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester All Visual Controls\Demo_VisualControls.dproj">
+            <ProjectGuid>{DD580D63-779B-4D0D-821E-E5CFFCCDBB27}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester GUI Autosave\Demo_SaveGUI.dproj">
+            <ProjectGuid>{F34D7568-B180-4088-A728-74B945E4932F}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester LightLog\DemoLog.dproj">
+            <ProjectGuid>{7FB29DC7-5854-4A00-AB0C-20FE70A6D532}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\LightAutoTranslator\LightTranslator.dproj">
+            <ProjectGuid>{B45FF087-DB86-4C49-9B38-E354A5B0E784}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCommon.dproj">
+            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
             <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
-            <Configurations>Release</Configurations>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\LightAutoTranslator\Demo\AutoTranslatorDemo.dproj">
+            <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightGraphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Template Universal Uninstaller\Uninstaller.dproj">
+            <ProjectGuid>{C873B6DC-0A47-4166-98C5-2F48479EE241}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightInternet.dproj">
+            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\..\Biology\!BioControl Lib\BioControl.dproj">
+            <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightLog.dproj">
+            <ProjectGuid>{BDDC4206-EF66-4FB1-8B35-A31088836E9E}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightVisControls.dproj">
+            <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester LightCore ccWinVersion.pas\Tester_WinVers.dproj">
+            <ProjectGuid>{BB5AE51D-B893-4937-AE30-E6E46D2AEDD4}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
+            <ProjectGuid>{232A281C-4B1A-482D-B029-85C54610247F}</ProjectGuid>
+            <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
@@ -616,8 +616,8 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
-            <ProjectGuid>{232A281C-4B1A-482D-B029-85C54610247F}</ProjectGuid>
+        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -652,8 +652,8 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
+            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -706,8 +706,8 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
-            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
+        <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
+            <ProjectGuid>{232A281C-4B1A-482D-B029-85C54610247F}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>

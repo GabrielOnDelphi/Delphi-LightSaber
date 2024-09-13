@@ -86,6 +86,11 @@ contains
   cvStringGridBase in 'cvStringGridBase.pas',
   cvStringGridScrollFix in 'cvStringGridScrollFix.pas',
   cvDropDownSearch in 'cvDropDownSearch.pas',
-  cvStrongPasswordEdit in 'cvStrongPasswordEdit.pas';
+  cvStrongPasswordEdit in 'cvStrongPasswordEdit.pas',
+  cvLog in 'cvLog.pas',
+  cvLogTrack in 'cvLogTrack.pas',
+  llRichLogTrack in 'llRichLogTrack.pas',
+  llRichLogUtils in 'llRichLogUtils.pas',
+  llRichLog in 'llRichLog.pas';
 
 end.

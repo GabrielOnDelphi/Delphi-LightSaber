@@ -1,4 +1,4 @@
-package LightLog;
+package LightTranslator;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -25,27 +25,21 @@ package LightLog;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'LightSaber - Log'}
+{$DESCRIPTION 'LightSaber - Translator lib'}
 {$LIBSUFFIX AUTO}
+{$RUNONLY}
 {$IMPLICITBUILD ON}
 
 requires
-  rtl,
-  vcl,
+  Rtl,
+  VclImg,
+  Vcl,
   LightCore,
-  vclx,
-  LightBase,
   LightCommon;
 
 contains
-  clRamLog in 'VisLog\clRamLog.pas',
-  clLogUtils in 'VisLog\clLogUtils.pas',
-  clVisLog in 'VisLog\clVisLog.pas',
-  clVisLogLines in 'VisLog\clVisLogLines.pas',
-  clVisLogRam in 'VisLog\clVisLogRam.pas',
-  clVisLogTrack in 'VisLog\clVisLogTrack.pas',
-  clVisLogUtils in 'VisLog\clVisLogUtils.pas';
+  cTranslate in 'cTranslate.pas',
+  FormTranslator in 'FormTranslator.pas',
+  FormSelectLang in 'FormSelectLang.pas';
 
 end.
-
-

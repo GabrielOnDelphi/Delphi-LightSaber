@@ -22,7 +22,8 @@ UNIT cvListBox;
 INTERFACE
 
 USES
-   Winapi.Windows, Winapi.Messages, System.SysUtils, System.AnsiStrings, System.Classes, System.Types,
+   Winapi.Windows, Winapi.Messages,
+   System.SysUtils, System.AnsiStrings, System.Classes, System.Types, System.math,
    Vcl.Controls, Vcl.Graphics, Vcl.StdCtrls, Vcl.Forms;
 
 TYPE
@@ -179,7 +180,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-  cmVclUtils, cmSound, ccCore, cmMath, ccIO;
+  cmVclUtils, cmSound, ccCore, cmMath, ccIO, ccTextFile;
 
 
 
@@ -206,15 +207,18 @@ end;
   Note: MaxHeight is relative to the form. In percents. }
 procedure TCubicListBox.SetHeightAuto(MaxHeight: Integer; aForm: TControl);
 begin
-  VAR MaxHeightPx:= (aForm.Height * MaxHeight) DIV 100;   // GetTextHeight(LText, LText.Width, LText.Text);
-  VAR iHeight:= Items.Count * {ItemHeight}   Canvas.TextHeight('abcdefghijklmnopq');
-  if iHeight > MaxHeightPx
-  then iHeight := MaxHeightPx;
-  if iHeight < 350 then iHeight:= 350;
-  iHeight:= round(iHeight*1.4);
+  VAR MaxHeightPx := (aForm.Height * MaxHeight) DIV 100;
+  VAR ItemCount := Min(Items.Count, 10); // Limit to 10 items for height calculation
+  VAR iHeight := ItemCount * ItemHeight;
+
+  // Add some padding for the border and potential scrollbar
+  iHeight := iHeight + 6;
+
+  // Ensure the height is within reasonable bounds
+  iHeight := Max(Min(iHeight, MaxHeightPx), 100);
+
   Height := iHeight;
 end;
-
 
 
 {--------------------------------------------------------------------------------------------------

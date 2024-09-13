@@ -65,7 +65,7 @@ function ExtractMiddleFrame(CONST FileName: string; OUT FrameCount: Cardinal): T
 IMPLEMENTATION
 
 USES
-  GifParser, ccCore, cbDialogs, cbAppData, cbINIFile, ccIO;
+  GifParser, ccCore, cbDialogs, cbAppData, cbINIFile, ccIO, ccTextFile;
 
 
 constructor TGifLoader.Create;

@@ -131,7 +131,9 @@ TYPE
     procedure ResizeColHeaders;                                                                            { Resize all columns to match the length of the header text }
     procedure ResizeToFitAll;                                                                              { Resize column to match the longes string found in any of its cells }  { Hasn't been tested }  { A resize is also done in HeaderCell }
     {}
-    procedure SetBottomRow(aRow: Integer);
+    procedure ScrollToBottom;
+    procedure ScrollTo(aRow: Integer);
+
     procedure FixFixedRow;
     procedure InvalidateCurRow;
     procedure InvalidateRow(ARow: Longint);
@@ -338,20 +340,15 @@ begin
 end;
 
 
-
 procedure TBaseStrGrid.FixFixedRow;
 begin
- if (csCreating in ControlState) then EXIT;
+  if (csCreating in ControlState) then Exit;
 
- { Add fixed row }
- if (FixedRows< 1)
- AND (RowCount> 1)
- then FixedRows:= 1;
-
- { Remove fixed row }
- if (FixedRows> 0)
- AND (RowCount< 2)
- then FixedRows:= 0;
+  if RowCount > 1
+  then
+    FixedRows := 1
+  else
+    FixedRows := 0;
 end;
 
 
@@ -524,16 +521,22 @@ begin
 end;
 
 
-{  Scroll the rows in the grid so that the pecified row is at the top (the first row after the fixed rows) }
-procedure TBaseStrGrid.SetBottomRow(aRow: Integer);    { Similar to TopRow }
-VAR Rw: Integer;
+{  Scroll the rows in the grid so that the specified row is at the top (the first row after the fixed rows) }
+procedure TBaseStrGrid.ScrollTo(aRow: Integer);
+VAR NewTopRow: Integer;
 begin
- Rw:= aRow- VisibleRowCount+1;
- if rw < 0
- then TopRow:= FixedRows+1
- else
-   if Rw < rowCount
-   then TopRow:= Rw;
+  NewTopRow:= aRow- VisibleRowCount -HeaderOverhead;
+  if NewTopRow < VisibleRowCount
+  then NewTopRow := VisibleRowCount;
+
+  TopRow:= NewTopRow;
+end;
+
+
+procedure TBaseStrGrid.ScrollToBottom;
+begin
+  if RowCount > VisibleRowCount
+  then TopRow := RowCount - VisibleRowCount;
 end;
 
 

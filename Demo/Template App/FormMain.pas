@@ -42,52 +42,70 @@ USES
 
 TYPE 
   TMainForm = class(TForm)
+    actAbout    : TAction;
     actEnterKey : TAction;
     Actions     : TActionList;
     actLanguage : TAction;
     actSettings : TAction;
+    actShowLog  : TAction;
     actUpdater  : TAction;
     AppEvents   : TApplicationEvents;
     btnProgress : TButton;
+    btnShowLog  : TButton;
     btnStart    : TButton;
-    mnuFile     : TMenuItem;
-    mnuInfo     : TMenuItem;
+    Button1     : TButton;
+    Button2     : TButton;
+    Button3     : TButton;
+    Button4     : TButton;
+    Button5     : TButton;
+    Button6     : TButton;
+    Button7     : TButton;
+    Button8     : TButton;
+    Button9     : TButton;
+    Button10    : TButton;
+    Button11    : TButton;
+    Button12    : TButton;
     MainMenu    : TMainMenu;
+    mmo         : TMemo;
     mnuAbout    : TMenuItem;
     mnuEnterKey : TMenuItem;
+    mnuFile     : TMenuItem;
+    mnuInfo     : TMenuItem;
     mnuLanguage : TMenuItem;
     mnuSettings : TMenuItem;
     mnuUpdates  : TMenuItem;
+    N1          : TMenuItem;
+    Path        : TCubicPathEdit;
     pgCtrl      : TPageControl;
+    pnlRight    : TPanel;
     Proteus     : TProteus;
     StatBar     : TcubicStatusBar;
     tabLog      : TTabSheet;
     tabMain     : TTabSheet;
     tabProgress : TTabSheet;
     TrayIcon    : TCoolTrayIcon;
-    Button1: TButton;
-    actAbout: TAction;
-    N1: TMenuItem;
-    Button2: TButton;
-    Button3: TButton;
-    Button4: TButton;
-    Path: TCubicPathEdit;
-    mmo: TMemo;
-    pnlRight: TPanel;
+    procedure actAboutExecute    (Sender: TObject);
+    procedure actEnterKeyExecute (Sender: TObject);
+    procedure actLanguageExecute (Sender: TObject);
     procedure actSettingsExecute (Sender: TObject);
+    procedure actUpdaterExecute  (Sender: TObject);
     procedure AppEventsMinimize  (Sender: TObject);
+    procedure btnProgressClick   (Sender: TObject);
     procedure btnSTARTClick      (Sender: TObject);
+    procedure Button5Click       (Sender: TObject);
+    procedure Button6Click       (Sender: TObject);
+    procedure Button7Click       (Sender: TObject);
+    procedure Button8Click       (Sender: TObject);
+    procedure Button9Click       (Sender: TObject);
+    procedure Button10Click      (Sender: TObject);
+    procedure Button11Click      (Sender: TObject);
+    procedure Button12Click      (Sender: TObject);
     procedure CanShowHint        (Sender: TObject);
     procedure FormClose          (Sender: TObject; var Action: TCloseAction);
     procedure FormCloseQuery     (Sender: TObject; var CanClose: Boolean);
-    procedure FormCreate         (Sender: TObject);
     procedure FormDestroy        (Sender: TObject);
     procedure TrayIconClick      (Sender: TObject);
-    procedure actEnterKeyExecute (Sender: TObject);
-    procedure actUpdaterExecute  (Sender: TObject);
-    procedure actLanguageExecute (Sender: TObject);
-    procedure btnProgressClick   (Sender: TObject);
-    procedure actAboutExecute(Sender: TObject);
+    procedure actShowLogExecute(Sender: TObject);
   protected
     procedure WMDROPFILES (VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Accept the dropped files from Windows Explorer }
   private
@@ -120,16 +138,11 @@ USES
 {--------------------------------------------------------------------------------------------------
    APP START/CLOSE
 --------------------------------------------------------------------------------------------------}
-procedure TMainForm.FormCreate(Sender: TObject);
-begin
-  Saved:= FALSE;
-end;
-
-
 procedure TMainForm.LateInitialize;
 begin
- uInitialization.LateInitialization;
- btnStartClick(self);
+  Saved:= FALSE;
+  uInitialization.LateInitialization;
+  btnStartClick(self);
 end;
 
 
@@ -161,7 +174,9 @@ begin
 end;
 
 
-procedure TMainForm.SaveBeforeExit;                   { I need to put SaveBeforeExit in only two places: OnCloseQueryand OnDestroy. Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
+{ It is enough to put SaveBeforeExit in thse two places only: OnCloseQueryand & OnDestroy.
+  Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
+procedure TMainForm.SaveBeforeExit;
 begin
  if NOT Saved then
   begin
@@ -180,32 +195,17 @@ end;
 {--------------------------------------------------------------------------------------------------
    MAIN
 --------------------------------------------------------------------------------------------------}
-
 procedure TMainForm.btnSTARTClick(Sender: TObject);
 begin
  CursorBusy;
  TRY
    Caption:= 'Started...';
+   //actShowLogExecute(Sender);
  FINALLY
-  CursorNotBusy;
+   CursorNotBusy;
  END;
 end;
 
-
-procedure TMainForm.btnProgressClick(Sender: TObject);
-begin
- {
- USES Vcl.TaskBar
- Taskbar.ProgressState:= TTaskBarProgressState(2);
- for i:= 1 to 100 DO
-  begin
-   Taskbar.ProgressValue:=  Taskbar.ProgressValue+ 1;
-   DelayEx(40);
-  end;
- Taskbar.ProgressState:= TTaskBarProgressState(0);
-
- fastmm4.RegisterExpectedMemoryLeak(Taskbar); }
-end;
 
 
 
@@ -299,6 +299,79 @@ begin
   if AppData.HintType = htStatBar
   then StatBar.SimpleText := GetLongHint(Application.Hint);
 end; 
+
+
+
+{-------------------------------------------------------------------------------------------------------------
+   LOG
+-------------------------------------------------------------------------------------------------------------}
+procedure TMainForm.actShowLogExecute(Sender: TObject);
+begin
+  AppData.PopUpLogWindow;
+end;
+
+
+
+procedure TMainForm.Button5Click(Sender: TObject);
+begin
+  AppData.LogHint ('LogHint');
+end;
+
+procedure TMainForm.Button6Click(Sender: TObject);
+begin
+  AppData.LogInfo ('LogInfo');
+end;
+
+procedure TMainForm.Button7Click(Sender: TObject);
+begin
+  AppData.LogVerb ('LogVerb');
+end;
+
+procedure TMainForm.Button8Click(Sender: TObject);
+begin
+  AppData.LogImpo ('LogImpo');
+end;
+
+procedure TMainForm.Button9Click(Sender: TObject);
+begin
+  AppData.LogWarn ('LogWarn');
+end;
+
+procedure TMainForm.Button11Click(Sender: TObject);
+begin
+  AppData.LogError('LogError');
+end;
+
+procedure TMainForm.Button12Click(Sender: TObject);
+begin
+  AppData.LogBold ('LogBold');   ///nu merge
+end;
+
+procedure TMainForm.Button10Click(Sender: TObject);
+begin
+  AppData.LogEmptyRow;
+end;
+
+
+
+
+
+
+procedure TMainForm.btnProgressClick(Sender: TObject);
+begin
+ {
+ USES Vcl.TaskBar
+ Taskbar.ProgressState:= TTaskBarProgressState(2);
+ for i:= 1 to 100 DO
+  begin
+   Taskbar.ProgressValue:=  Taskbar.ProgressValue+ 1;
+   DelayEx(40);
+  end;
+ Taskbar.ProgressState:= TTaskBarProgressState(0);
+
+ fastmm4.RegisterExpectedMemoryLeak(Taskbar); }
+end;
+
 
 
 

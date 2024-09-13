@@ -6,9 +6,9 @@ uses
   UninstallerForm in 'UninstallerForm.pas' {frmMain},
   Vcl.Themes,
   Vcl.Styles,
-  cbAppData in '..\..\Packages\LightSaber\cbAppData.pas',
-  cvCountDown in '..\..\Packages\LightSaber\cvCountDown.pas',
-  csShell in '..\..\Packages\LightSaber\csShell.pas';
+  cbAppData in '..\..\LightSaber\cbAppData.pas',
+  cvCountDown in '..\..\LightSaber\cvCountDown.pas',
+  csShell in '..\..\LightSaber\csShell.pas';
 
 {$R *.res}
 

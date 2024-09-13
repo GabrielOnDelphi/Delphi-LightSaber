@@ -163,7 +163,7 @@ procedure Register;
 IMPLEMENTATION {$R cvPathEdit.res}
 
 USES
-   ccColors, cGraphUtil, System.IOUtils, csExecuteShell, ccIO, cmIO, cmIO.Win;
+   ccColors, cGraphUtil, System.IOUtils, csExecuteShell, ccIO, ccTextFile, cmIO, cmIO.Win;
 
 
 
@@ -585,7 +585,7 @@ begin
 
  if (InputType= itFolder)
  then ForceDirectoriesMsg(Path)
- else ccIO.StringToFile(Path, '', woAppend);
+ else StringToFile(Path, '', woAppend);
 
  PathChanged;
 

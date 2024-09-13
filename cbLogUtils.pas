@@ -1,8 +1,8 @@
-UNIT clLogUtils;
+UNIT cbLogUtils;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.06
+   2024.05
    See Copyright.txt
 
    A simple but effective visual log control/library.
@@ -20,7 +20,7 @@ UNIT clLogUtils;
    **I/O**
    The log can be save to disk to a binary file so it can be restored when the next app startup.
    Tester:
-     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
+     c:\Myprojects\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE
@@ -29,30 +29,23 @@ USES
    System.SysUtils, Vcl.Graphics, ccColors;
 
 TYPE
-  TLogVerb= (lvVerbose, lvHints, lvInfos, lvImportant, lvWarnings, lvErrors);
+  TLogVerbLvl= (lvDebug, lvVerbose, lvHints {Default}, lvInfos, lvImportant, lvWarnings, lvErrors);  { Exist also 7 which is of type 'Msg' and it is always shown in log }
+
 
 CONST
-  ctLogVerb  = clGray;
-  ctLogHint  = clDkGray;
-  ctLogInfo  = clBlack;
-  ctLogImprt = clPurpleDk;
-  ctLogWarn  = clOrangeDark;
-  ctLogError = clRed;
+   DefaultVerbosity= lvInfos;
 
-CONST
-  DefaultVerbosity= lvInfos;
-
-function Verbosity2String(Verbosity: TLogVerb): string;
-
+function Verbosity2String(Verbosity: TLogVerbLvl): string;
+function Verbosity2Color (Verbosity: TLogVerbLvl): TColor;
 
 
 IMPLEMENTATION
 
 
-
-function Verbosity2String(Verbosity: TLogVerb): string;
+function Verbosity2String(Verbosity: TLogVerbLvl): string;
 begin
  case Verbosity of
+   lvDebug     : Result:= 'Debug';
    lvVerbose   : Result := 'Verbose';
    lvHints     : Result := 'Hints';
    lvInfos     : Result := 'Info';      { This is the default level of verbosity }
@@ -63,6 +56,26 @@ begin
    Raise Exception.Create('Invalid verbosity');
  end;
 end;
+
+
+function Verbosity2Color(Verbosity: TLogVerbLvl): TColor;
+begin
+ CASE Verbosity of
+  lvDebug    : Result:= clSilverLight;
+  lvVerbose  : Result:= clSilverDark;
+  lvHints    : Result:= clGray;
+  lvInfos    : Result:= clBlack;
+  lvImportant: Result:= clOrangeDk;
+  lvWarnings : Result:= clOrange;
+  lvErrors   : Result:= clRed;
+ else
+   RAISE exception.Create('Invalid log verbosity!');
+ end;
+end;
+
+
+
+
 
 
 end.

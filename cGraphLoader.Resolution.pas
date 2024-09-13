@@ -59,7 +59,7 @@ TYPE
 
  IMPLEMENTATION
 
- USES ccBinary, cGraphUtil, ccIO;
+ USES ccBinary, cGraphUtil, ccIO, ccTextFile;
 
  
 

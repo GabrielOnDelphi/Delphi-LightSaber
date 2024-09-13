@@ -1,9 +1,11 @@
 ﻿UNIT llRichLog;
 
+// OLD LOG based on RichEdit
+
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   See Copyright.txt 
 --------------------------------------------------------------------------------------------------------------
 
    A simple but effective visual log.
@@ -23,14 +25,14 @@
      TRamLog even though fully functional, it is a bit outdated. The plan is to be replaced with VisLogRam.
 
    Tester:
-     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
+     c:\Myprojects\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE
 
 USES
    Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.StdCtrls, Vcl.ComCtrls,
-   llLogUtils;
+   llRichLogUtils;
 
 TYPE
   TRichLog = class(TRichEdit)
@@ -91,7 +93,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES ccIO, ccCore;
+USES ccIO, ccTextFile, ccCore;
 
 const
   LogDefaultColor = clBlack;

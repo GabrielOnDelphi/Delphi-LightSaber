@@ -15,7 +15,7 @@ UNIT FormAbout;
 
    DON'T ADD IT TO ANY DPK!
 
-   Tester: c:\Myprojects\Packages\LightSaber\Demo\Template App\
+   Tester: c:\Myprojects\LightSaber\Demo\Template App\
 =============================================================================================================}
 
 INTERFACE

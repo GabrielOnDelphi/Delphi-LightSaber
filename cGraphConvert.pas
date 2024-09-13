@@ -39,7 +39,7 @@ CONST
  IMPLEMENTATION
 
 USES
-   ccIO, ccCore;
+   ccIO, ccTextFile, ccCore;
 
 
 

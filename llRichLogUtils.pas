@@ -1,4 +1,6 @@
-UNIT llLogUtils;
+UNIT llRichLogUtils;
+
+// OLD LOG based on RichEdit
 
 {=============================================================================================================
    Gabriel Moraru
@@ -20,26 +22,27 @@ UNIT llLogUtils;
    **I/O**
    The log can be save to disk to a binary file so it can be restored when the next app startup.
    Tester:
-     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
+     c:\Myprojects\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE
 
 USES
-   System.SysUtils, Vcl.Graphics;
+   System.SysUtils, Vcl.Graphics, ccColors;
 
 TYPE
   TLogVerb= (lvVerbose, lvHints, lvInfos, lvImportant, lvWarnings, lvErrors);
 
 CONST
-  DefaultVerbosity= lvInfos;
-
   ctLogVerb  = clGray;
   ctLogHint  = clDkGray;
   ctLogInfo  = clBlack;
-  ctLogImprt = TColor($5E005E); // Purple Dark
-  ctLogWarn  = TColor($0058DF); // Orange Dark
+  ctLogImprt = clPurpleDk;    // TColor($5E005E); 
+  ctLogWarn  = clOrangeDark;  // TColor($0058DF);
   ctLogError = clRed;
+
+CONST
+  DefaultVerbosity= lvInfos;
 
 function Verbosity2String(Verbosity: TLogVerb): string;
 
@@ -61,6 +64,26 @@ begin
    Raise Exception.Create('Invalid verbosity');
  end;
 end;
+
+
+function Verbosity2Color(Verbosity: TLogVerb): TColor;
+begin
+ CASE Verbosity of
+  //lvDebug    : Result:= clSilverLight;
+  lvVerbose  : Result:= clSilverDark;
+  lvHints    : Result:= clGray;
+  lvInfos    : Result:= clBlack;
+  lvImportant: Result:= clOrangeDk;
+  lvWarnings : Result:= clOrange;
+  lvErrors   : Result:= clRed;
+ else
+   RAISE exception.Create('Invalid log verbosity!');
+ end;
+end;
+
+
+
+
 
 
 end.

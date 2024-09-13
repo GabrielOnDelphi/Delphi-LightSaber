@@ -59,7 +59,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   ccCore, ccIO;
+   ccCore, ccIO, ccTextFile;
 
 
 constructor THtmlWriter.Create(AOwner: TComponent);
@@ -144,7 +144,7 @@ begin
  if (Folder<>'') AND NOT DirectoryExists(Folder)
  then ForceDirectories(Folder);
  GenerateContent;
- StringToFile(FileName, Content, woOverwrite, false);
+ StringToFile(FileName, Content, woOverwrite, wpOff);
 end;
 
 

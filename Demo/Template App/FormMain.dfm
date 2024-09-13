@@ -3,8 +3,8 @@ object MainForm: TMainForm
   Top = 327
   AlphaBlendValue = 249
   Caption = 'Enviroment'
-  ClientHeight = 536
-  ClientWidth = 700
+  ClientHeight = 535
+  ClientWidth = 696
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 350
@@ -22,14 +22,13 @@ object MainForm: TMainForm
   SnapBuffer = 5
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
-  OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 17
   object pgCtrl: TPageControl
     Left = 0
     Top = 0
-    Width = 700
-    Height = 517
+    Width = 696
+    Height = 516
     ActivePage = tabLog
     Align = alClient
     TabOrder = 0
@@ -45,9 +44,10 @@ object MainForm: TMainForm
         OnClick = btnSTARTClick
       end
       object Path: TCubicPathEdit
-        Left = 0
-        Top = 0
-        Width = 692
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 682
         Height = 49
         Align = alTop
         Caption = 'Path'
@@ -56,39 +56,41 @@ object MainForm: TMainForm
       object mmo: TMemo
         AlignWithMargins = True
         Left = 3
-        Top = 52
-        Width = 501
-        Height = 430
+        Top = 58
+        Width = 491
+        Height = 423
         Align = alClient
         TabOrder = 2
       end
       object pnlRight: TPanel
-        Left = 507
-        Top = 49
+        AlignWithMargins = True
+        Left = 500
+        Top = 58
         Width = 185
-        Height = 436
+        Height = 423
         Align = alRight
         TabOrder = 3
       end
     end
     object tabProgress: TTabSheet
-      Caption = 'Testers'
+      Caption = 'Demos'
       ImageIndex = 3
       DesignSize = (
-        692
-        485)
+        688
+        484)
       object btnProgress: TButton
-        Left = 272
-        Top = 360
+        Left = 262
+        Top = 394
         Width = 143
         Height = 49
         Anchors = [akTop]
         Caption = 'Progress'
         TabOrder = 0
+        Visible = False
         OnClick = btnProgressClick
       end
       object Button1: TButton
-        Left = 272
+        Left = 262
         Top = 104
         Width = 143
         Height = 49
@@ -97,7 +99,7 @@ object MainForm: TMainForm
         TabOrder = 1
       end
       object Button2: TButton
-        Left = 272
+        Left = 262
         Top = 158
         Width = 143
         Height = 49
@@ -106,7 +108,7 @@ object MainForm: TMainForm
         TabOrder = 2
       end
       object Button3: TButton
-        Left = 272
+        Left = 262
         Top = 211
         Width = 143
         Height = 49
@@ -115,7 +117,7 @@ object MainForm: TMainForm
         TabOrder = 3
       end
       object Button4: TButton
-        Left = 272
+        Left = 262
         Top = 265
         Width = 143
         Height = 49
@@ -127,12 +129,105 @@ object MainForm: TMainForm
     object tabLog: TTabSheet
       Caption = 'Log'
       ImageIndex = 4
+      DesignSize = (
+        688
+        484)
+      object btnShowLog: TButton
+        Left = 248
+        Top = 61
+        Width = 191
+        Height = 45
+        Action = actShowLog
+        Anchors = []
+        Caption = 'Show the log window'
+        TabOrder = 0
+      end
+      object Button5: TButton
+        Left = 248
+        Top = 112
+        Width = 191
+        Height = 34
+        Anchors = []
+        Caption = 'Send msg to log (hint)'
+        TabOrder = 1
+        OnClick = Button5Click
+      end
+      object Button6: TButton
+        Left = 248
+        Top = 156
+        Width = 191
+        Height = 34
+        Anchors = []
+        Caption = 'Send msg to log (Info)'
+        TabOrder = 2
+        OnClick = Button6Click
+      end
+      object Button7: TButton
+        Left = 248
+        Top = 200
+        Width = 191
+        Height = 34
+        Anchors = []
+        Caption = 'Send msg to log (Verbose)'
+        TabOrder = 3
+        OnClick = Button7Click
+      end
+      object Button8: TButton
+        Left = 248
+        Top = 243
+        Width = 191
+        Height = 34
+        Anchors = []
+        Caption = 'Send msg to log (Important)'
+        TabOrder = 4
+        OnClick = Button8Click
+      end
+      object Button9: TButton
+        Left = 248
+        Top = 287
+        Width = 191
+        Height = 34
+        Anchors = []
+        Caption = 'Send msg to log (Warning)'
+        TabOrder = 5
+        OnClick = Button9Click
+      end
+      object Button11: TButton
+        Left = 248
+        Top = 331
+        Width = 191
+        Height = 34
+        Anchors = []
+        Caption = 'Send msg to log (Error)'
+        TabOrder = 6
+        OnClick = Button11Click
+      end
+      object Button10: TButton
+        Left = 248
+        Top = 373
+        Width = 191
+        Height = 34
+        Anchors = []
+        Caption = 'Send empty line'
+        TabOrder = 7
+        OnClick = Button10Click
+      end
+      object Button12: TButton
+        Left = 248
+        Top = 414
+        Width = 191
+        Height = 34
+        Anchors = []
+        Caption = 'Send bold text'
+        TabOrder = 8
+        OnClick = Button12Click
+      end
     end
   end
   object StatBar: TcubicStatusBar
     Left = 0
-    Top = 517
-    Width = 700
+    Top = 516
+    Width = 696
     Height = 19
     Panels = <>
     ParentColor = True
@@ -195,6 +290,10 @@ object MainForm: TMainForm
       Caption = '&About'
       ShortCut = 24629
       OnExecute = actAboutExecute
+    end
+    object actShowLog: TAction
+      Caption = 'Send error to log'
+      OnExecute = actShowLogExecute
     end
   end
   object TrayIcon: TCoolTrayIcon

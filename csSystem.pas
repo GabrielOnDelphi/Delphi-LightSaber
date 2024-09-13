@@ -134,7 +134,7 @@ USES
 IMPLEMENTATION
 
 USES
-   csKeyboard, ccIO, cmIO, cmIO.Win, cbWinVersion, cbRegistry;
+   csKeyboard, ccIO, ccTextFile, cmIO, cmIO.Win, cbWinVersion, cbRegistry;
 
 
 

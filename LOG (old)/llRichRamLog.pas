@@ -1,4 +1,4 @@
-UNIT clRamLog;
+UNIT llRichRamLog;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -8,22 +8,25 @@ UNIT clRamLog;
 
    A simple but effective log (non-visual).
    Its data can be displayed by TRichLog, but it can also work alone without being connected to a TRichLog.
-   More details in llLogUtils.pas
+   More details in llRichLogUtils.pas
+   
+   Verbosity:
+     Supports several verbosity levels (verbose, info, warnings, errors, etc)
 
    Future plans:
      TRamLog even though fully functional, it is a bit awkwardly written (uses text to keep track of verbosity level of the messages).
      The plan is to be replaced with VisLogRam.
 
    Tester:
-     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
+     c:\Myprojects\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
-//Note: use clVisLogRam is you want support for timestamp
+//Note: use cbLogRam is you want support for timestamp
 
 INTERFACE
 
 USES
-   System.SysUtils, System.Classes, ccStreamBuff, llRichLog, llLogUtils, ccStreamMem;
+   System.SysUtils, System.Classes, ccStreamBuff, llRichLog, llRichLogUtils, ccStreamMem;
 
 TYPE
   TRamLog = class(TObject)
@@ -56,8 +59,13 @@ TYPE
      procedure SaveToStream  (Stream: TCubicBuffStream);   overload;
      procedure SaveToStream  (Stream: TCubicMemStream);    overload;
 
+     {}
+     procedure AddBold   (CONST Mesaj: string);	 
+     procedure AddMsgInt (CONST Mesaj: string; i: Integer);
+     procedure AddMsgLvl (CONST Mesaj: string; MsgType: TLogVerb);
+     procedure AddEmptyRow;
      { Add single-line message }
-     procedure AddBold   (CONST Mesaj: string);
+
      procedure AddMsg    (CONST Mesaj: string);
      procedure AddVerb   (CONST Mesaj: string);
      procedure AddHint   (CONST Mesaj: string);
@@ -65,10 +73,6 @@ TYPE
      procedure AddImpo   (CONST Mesaj: string);
      procedure AddWarn   (CONST Mesaj: string);
      procedure AddError  (CONST Mesaj: string);
-     {}
-     procedure AddMsgInt (CONST Mesaj: string; i: Integer);
-     procedure AddMsgLvl (CONST Mesaj: string; MsgType: TLogVerb);
-     procedure AddEmptyRow;
      {}
      procedure Append   (RamLog: TRamLog);
      procedure ExportTo (aRichLog: TRichLog);
@@ -81,7 +85,7 @@ TYPE
 IMPLEMENTATION
 
 Uses
-   ccIO, ccCore;
+   ccIO, ccTextFile, ccCore;
 
 
 
@@ -90,9 +94,9 @@ Uses
 
 
 
-{--------------------------------------------------------------------------------------------------
-   RAM LOG
---------------------------------------------------------------------------------------------------}
+{-----------------------------------------------------------------------
+   CTOR
+------------------------------------------------------------------------}
 
 constructor TRamLog.Create;
 begin

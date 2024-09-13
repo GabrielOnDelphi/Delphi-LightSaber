@@ -44,7 +44,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES ccIO;
+USES ccIO, ccTextFile;
 
 
 

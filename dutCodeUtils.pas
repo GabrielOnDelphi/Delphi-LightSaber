@@ -27,7 +27,7 @@ type
 
 IMPLEMENTATION
 USES
-   cmUTF8, ccIO, cmPascal, ccCore;
+   ccTextFile, ccIO, ccTextFile, cmPascal, ccCore;
 
 
 
@@ -42,7 +42,7 @@ USES
 
 procedure TDutUtils.HasBOM;
 begin
-  if NOT cmUTF8.FileHasBOM(SearchResults.Last.FileName)
+  if NOT ccTextFile.FileHasBOM(SearchResults.Last.FileName)
   then SearchResults.Last.AddNewPos('File without BOM.');         // We indicate that this file was found without BOM
 end;
 
@@ -50,9 +50,9 @@ end;
 { CONVERT }
 procedure TDutUtils.ConvertToUtf(AddBOM: Boolean);
 begin
- if NOT cmUTF8.FileHasBOM(SearchResults.Last.FileName) then
+ if NOT ccTextFile.FileHasBOM(SearchResults.Last.FileName) then
    begin
-     cmUTF8.ConvertToUTF(SearchResults.Last.FileName);
+     ccTextFile.ConvertToUTF(SearchResults.Last.FileName);
      SearchResults.Last.AddNewPos('Converted to UTF8');
    end;
 end;
@@ -60,7 +60,7 @@ end;
 
 procedure TDutUtils.ConvertToAnsi;
 begin
-  if cmUTF8.ConvertToAnsi(SearchResults.Last.FileName)
+  if ccTextFile.ConvertToAnsi(SearchResults.Last.FileName)
   then SearchResults.Last.AddNewPos('Converted to ANSI');
 end;
 

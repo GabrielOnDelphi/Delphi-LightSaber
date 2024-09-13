@@ -1,4 +1,4 @@
-UNIT clVisLogLines;
+UNIT cbLogLines;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -9,44 +9,46 @@ UNIT clVisLogLines;
    For the new log (the one based on TStringGrid)
 
    Tester:
-     c:\Myprojects\Packages\LightSaber\Demo\LightLog\
+     c:\Myprojects\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE
 
 USES
-   System.SysUtils, System.Classes, Vcl.Graphics,
-   clVisLogUtils, ccStreamBuff;
+   System.SysUtils, System.Classes, Vcl.Graphics,// Vcl.Grids,
+   cbLogUtils, ccStreamBuff;
 
 type
   PLogLine=^RLogLine;
 
   RLogLine= record
-   Msg   : string;
-   Level : TLogVerbLvl;
-   Indent: Integer;          { How many spaces are used to indent the message }
-   Bold  : Boolean;
-   Color : TColor;           { If -1 the use color specified in 'Level'. If > -1 then it overrides the color specified by 'Level' }
-   Time  : TDateTime;
-   procedure ReadFromStream(Stream: TCubicBuffStream);
-   procedure WriteToStream (Stream: TCubicBuffStream);
+    Msg   : string;
+    Level : TLogVerbLvl;
+    Indent: Integer;          { How many spaces are used to indent the message }
+    Bold  : Boolean;
+    Color : TColor;           { If -1 the use color specified in 'Level'. If > -1 then it overrides the color specified by 'Level' }
+    Time  : TDateTime;
+  private
+    procedure ReadFromStream(Stream: TCubicBuffStream);
+    procedure WriteToStream (Stream: TCubicBuffStream);
   end;
 
   TLogLines=class(TList)
   private
-    function Get(Index: Integer): PLogLine;
+    function getItem(Index: Integer): PLogLine;
   public
     procedure Clear; override;
     destructor Destroy; override;
 
-    procedure ReadFromStream(Stream: TCubicBuffStream);
-    procedure WriteToStream (Stream: TCubicBuffStream);
-
-    function GetFilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer;        { Converts the 'on scree' row to its corresponding visible line. When AppData.LogVerbosity is set to max (Verbose) then the correspondence is 1:1 }
+    function Row2FilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer;        { Converts the 'on scree' row to its corresponding visible line. When AppData.LogVerbosity is set to max (Verbose) then the correspondence is 1:1 }
 
     function AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean= FALSE; Color: TColor= -1): PLogLine;
     function Add(Value: PLogLine): Integer;
-    property Items[Index: Integer]: PLogLine read Get; default;
+
+    property Items[Index: Integer]: PLogLine read getItem; default;
+
+    procedure ReadFromStream(Stream: TCubicBuffStream);
+    procedure WriteToStream (Stream: TCubicBuffStream);
   end;
 
 
@@ -55,6 +57,9 @@ type
 IMPLEMENTATION
 
 
+{-------------------------------------------------------------------------------------------------------------
+   CONSTRUCTOR
+-------------------------------------------------------------------------------------------------------------}
 destructor TLogLines.Destroy;
 begin
  Clear;             { Free the allocated memory for lines }
@@ -73,18 +78,13 @@ end;
 
 
 
-
-
-
-
-
-
-
+{-------------------------------------------------------------------------------------------------------------
+   ADD
+-------------------------------------------------------------------------------------------------------------}
 function TLogLines.Add(Value: PLogLine): Integer;
 begin
   Result:= inherited Add(Value);
 end;
-
 
 
 function TLogLines.AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean= FALSE; Color: TColor= -1): PLogLine;
@@ -103,18 +103,18 @@ end;
 
 
 
-
-
-
-
-function TLogLines.Get(Index: Integer): PLogLine;
+{-------------------------------------------------------------------------------------------------------------
+   ACCESS
+-------------------------------------------------------------------------------------------------------------}
+function TLogLines.getItem(Index: Integer): PLogLine;
 begin
   Result:= PLogLine(inherited Get(Index));
 end;
 
 
-
-function TLogLines.GetFilteredRow;
+{ Convert a row number in the filtered view (which only shows rows meeting the verbosity criteria) to the corresponding index in the full list of log lines.
+  For example, if you have 10 log lines but only 5 meet the verbosity criteria, this function allows you to find the actual index of the 3rd visible row in the full list of log lines. }
+function TLogLines.Row2FilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer;
 var
   i, Total: Integer;
 begin
@@ -122,12 +122,12 @@ begin
  Total := -1;
  for i:= 0 to Count-1 DO
   begin
-   if PLogLine(Items[i]).Level >= Verbosity then
-    begin
-     Inc(Total);
-     Result:= i;
-    end;
-   if Total = Row then EXIT;
+    if PLogLine(Items[i]).Level >= Verbosity then
+     begin
+       Inc(Total);
+       Result:= i;
+     end;
+    if Total = Row then EXIT;
   end;
  if total < row then Result:= -1;
 end;
@@ -135,10 +135,9 @@ end;
 
 
 
-
-
-
-
+{-------------------------------------------------------------------------------------------------------------
+   I/O
+-------------------------------------------------------------------------------------------------------------}
 procedure TLogLines.ReadFromStream(Stream: TCubicBuffStream);
 VAR
    Line: PLogLine;
@@ -174,8 +173,9 @@ end;
 
 
 
-
-
+{-------------------------------------------------------------------------------------------------------------
+   RLogLine
+-------------------------------------------------------------------------------------------------------------}
 procedure RLogLine.ReadFromStream;
 begin
  Msg   := Stream.ReadStringU;

@@ -1,11 +1,11 @@
-object frmLog: TfrmLog
+object frmRichLog: TfrmRichLog
   Left = 549
   Top = 450
   AlphaBlend = True
   BorderIcons = [biSystemMenu, biMaximize]
   Caption = 'Log'
-  ClientHeight = 515
-  ClientWidth = 722
+  ClientHeight = 514
+  ClientWidth = 718
   Color = clBtnFace
   DoubleBuffered = True
   ParentFont = True
@@ -18,8 +18,8 @@ object frmLog: TfrmLog
   object Container: TPanel
     Left = 0
     Top = 0
-    Width = 722
-    Height = 515
+    Width = 718
+    Height = 514
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
@@ -28,8 +28,8 @@ object frmLog: TfrmLog
       AlignWithMargins = True
       Left = 3
       Top = 3
-      Width = 716
-      Height = 478
+      Width = 712
+      Height = 474
       Align = alClient
       Font.Charset = ANSI_CHARSET
       Font.Color = clWindowText
@@ -50,23 +50,21 @@ object frmLog: TfrmLog
     end
     object pnlBottom: TPanel
       Left = 0
-      Top = 484
-      Width = 722
-      Height = 31
+      Top = 480
+      Width = 718
+      Height = 34
       Align = alBottom
       BevelOuter = bvNone
       ParentColor = True
       TabOrder = 0
-      DesignSize = (
-        722
-        31)
       object chkAutoOpen: TCheckBox
-        Left = 7
-        Top = 9
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
         Width = 156
-        Height = 14
+        Height = 28
         Hint = 'Show this Log window when it displays error or warning messages.'
-        Anchors = [akLeft]
+        Align = alLeft
         Caption = 'Show the log on error'
         Checked = True
         State = cbChecked
@@ -74,10 +72,10 @@ object frmLog: TfrmLog
       end
       object btnClear: TButton
         AlignWithMargins = True
-        Left = 651
+        Left = 647
         Top = 1
         Width = 68
-        Height = 29
+        Height = 32
         Hint = 'Clear log'
         Margins.Top = 1
         Margins.Bottom = 1
@@ -88,10 +86,10 @@ object frmLog: TfrmLog
       end
       object trkLogVerb: TRichLogTrckbr
         AlignWithMargins = True
-        Left = 385
+        Left = 381
         Top = 3
         Width = 260
-        Height = 25
+        Height = 28
         Align = alRight
         BevelOuter = bvNone
         ShowCaption = False
@@ -99,7 +97,7 @@ object frmLog: TfrmLog
         TrackBar.Left = 110
         TrackBar.Top = 0
         TrackBar.Width = 150
-        TrackBar.Height = 25
+        TrackBar.Height = 28
         TrackBar.Hint = 'Hide all messages below this level'
         TrackBar.Align = alRight
         TrackBar.Max = 5

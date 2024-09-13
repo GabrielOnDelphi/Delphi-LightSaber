@@ -40,7 +40,7 @@ function WordPos          (CONST Needle, HayStack: string): Integer;
 IMPLEMENTATION
 
 USES
-  ccCore, ccIO;
+  ccCore, ccIO, ccTextFile;
 
 {-------------------------------------------------------------------------------------------------------------
     COMMENTS

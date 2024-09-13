@@ -23,7 +23,7 @@ type
 IMPLEMENTATION
 
 USES
-   cmPascal, ccCore, ccIO;
+   cmPascal, ccCore, ccIO, ccTextFile;
 
 
 procedure TDutUpgrade.FindTryExcept(Replace: Boolean);

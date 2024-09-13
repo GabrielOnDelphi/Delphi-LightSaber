@@ -46,7 +46,7 @@ CONST
 
 procedure TCubicBuffStream2.WriteHeader(CONST Signature: AnsiString; Version: Word);
 begin
-  WriteCardinal(ctMagicNumber);  // Write magic no
+  WriteCardinal(ctMagicNumber);  // Write fixed magic no
   WriteStringA(Signature);       // Write signature
   WriteWord(Version);            // Write the file version number
 end;
@@ -78,7 +78,7 @@ end;
 
 
 { Returns True if signature & version number matches.
-  An exception can be raised if the file smaller than what we want to read }
+  An exception may be raised if the file smaller than what we want to read }
 function TCubicBuffStream2.ReadHeader(CONST Signature: AnsiString; Version: Word): Boolean;
 VAR lVersion: Word;
 begin

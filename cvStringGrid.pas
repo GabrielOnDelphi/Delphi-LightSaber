@@ -132,7 +132,7 @@ procedure Register;
 
 IMPLEMENTATION {$R *.res}
 
-USES ccColors, ccIO, cGraphUtil, cmMath, csSystem;
+USES ccColors, ccIO, ccTextFile, cGraphUtil, cmMath, csSystem;
 
 
 
@@ -398,7 +398,7 @@ begin
   for Cl:= 0 TO ColCount-1 DO
     Body:= Body+ ReplaceCharF(Cells[Cl, CurRow], Delimiter, ' ')+ Delimiter;                       { Make sure the user didn't used the Delimiter in the text he entered into the grid }
 
- StringToFile(aFileName, Body, woOverwrite, FALSE);
+ StringToFile(aFileName, Body, woOverwrite, wpAuto);
 end;
 
 
@@ -503,7 +503,7 @@ VAR
    CsvContent: string;
 begin
  CsvContent:= GetAllContent(Delimiter);
- StringToFile(aFileName, CsvContent, woOverwrite, FALSE);
+ StringToFile(aFileName, CsvContent, woOverwrite, wpAuto);
 end;
 
 
@@ -539,7 +539,7 @@ begin
  { Write column width }
  for cl:= 0 TO ColCount-1
   DO Body:= Body+ IntToStr(ColWidths[cl])+ CRLFw;
- StringToFile(aFileName, Body, woOverwrite, FALSE);
+ StringToFile(aFileName, Body, woOverwrite, wpOff);
 end;
 
 

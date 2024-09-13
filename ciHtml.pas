@@ -70,7 +70,7 @@ USES
 
 IMPLEMENTATION
 
-USES ciInternet, ccIO;
+USES ciInternet, ccIO, ccTextFile;
 
 
 
@@ -124,7 +124,7 @@ VAR
    Text: TStringList;
    s: string;
 begin
- Text:= ccIO.StringFromFileTSL(FileName);
+ Text:= StringFromFileTSL(FileName);
 
  TRY
   s:= FixHtmlFormatings(Text);

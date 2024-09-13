@@ -71,7 +71,7 @@ USES
 IMPLEMENTATION
 
 USES
-   ccIO, cmIO, cmIO.Win, cbDialogs;
+   ccIO, ccTextFile, cmIO, cmIO.Win, cbDialogs;
 
 
 

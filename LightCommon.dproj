@@ -108,7 +108,6 @@
         <DCCReference Include="cmStrBuilder.pas"/>
         <DCCReference Include="cmStreamMem.pas"/>
         <DCCReference Include="cmStringListA.pas"/>
-        <DCCReference Include="cmUTF8.pas"/>
         <DCCReference Include="cmVclUtils.pas"/>
         <DCCReference Include="cmWindow.pas"/>
         <DCCReference Include="cmWinPlatform.pas"/>

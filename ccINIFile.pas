@@ -74,7 +74,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   ccIO;
+   ccIO, ccTextFile;
 
 
 

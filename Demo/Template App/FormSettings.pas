@@ -55,6 +55,7 @@ TYPE
     spnUser            : TSpinEdit;
     tabInterface       : TTabSheet;
     tabUserDefined     : TTabSheet;
+    chkLogOnError: TCheckBox;
     procedure btnCrashClick           (Sender: TObject);
     procedure btnDesktopShortcutClick (Sender: TObject);
     procedure btnFontClick            (Sender: TObject);
@@ -188,6 +189,7 @@ begin
  radHintsTooltips.Checked := AppData.HintType = htTooltips;
  radHintsStatBar .Checked := AppData.HintType = htStatBar;
  spnHideHint     .Value   := AppData.HideHint;
+ chkLogOnError   .Checked := AppData.ShowLogOnError;
 
  { Demo/template settings }
  chkUser         .Checked := GuiSettings.bUser;   // Replace this with your own code
@@ -198,12 +200,13 @@ end;
 procedure TfrmSettings.ObjectFromGUI;
 begin
  { Save settings to AppData }
- AppData.UserPath     := Path.Path;
- AppData.Opacity      := spnOpacity    .Value;
- AppData.autoStartUp  := chkAutoStartUp.Checked;
- AppData.StartMinim   := chkStartMinim .Checked;
- AppData.Minimize2Tray:= chkTrayIcon   .Checked;
- AppData.HideHint     := spnHideHint   .Value;
+ AppData.UserPath      := Path.Path;
+ AppData.Opacity       := spnOpacity    .Value;
+ AppData.autoStartUp   := chkAutoStartUp.Checked;
+ AppData.StartMinim    := chkStartMinim .Checked;
+ AppData.Minimize2Tray := chkTrayIcon   .Checked;
+ AppData.HideHint      := spnHideHint   .Value;
+ AppData.ShowLogOnError:= chkLogOnError .Checked;
 
  if radHintsOff     .Checked then AppData.HintType := htOff else
  if radHintsTooltips.Checked then AppData.HintType := htTooltips else
