@@ -272,21 +272,21 @@ CONST
 {--------------------------------------------------------------------------------------------------
    FILE BINARY COMPARE
 --------------------------------------------------------------------------------------------------}
- function  CompareStreams      (A, B: TStream; BufferSize: Integer = 4096): Boolean;
- function  CompareFiles        (CONST FileA, FileB: TFileName; BufferSize: Integer = 4096): Boolean;
+ function  CompareStreams     (A, B: TStream; BufferSize: Integer = 4096): Boolean;
+ function  CompareFiles       (CONST FileA, FileB: TFileName; BufferSize: Integer = 4096): Boolean;
 
 
 {--------------------------------------------------------------------------------------------------
    FILE MERGE
 --------------------------------------------------------------------------------------------------}
- procedure CopyFileTop         (CONST SourceName, DestName: string; CopyBytes: Int64);                             { Copy only CopyBytes bytes from the begining of the file }
- procedure AppendTo            (CONST MasterFile, SegmentFile, Separator: string; SeparatorFirst: Boolean= TRUE);  { Append Segment to Master. Master must exists. }
- procedure MergeFiles          (CONST Input1, Input2, Output,  Separator: string; SeparatorFirst: Boolean= TRUE);  { Merge file 'Input1' and file 'Input2' in a new file 'Output'. So, the difference between this procedure and AppendTo is that this proc does not modify the original input file(s) }
- function  MergeAllTextFiles       (CONST Folder, FileType, OutputFile, Separator: string; DigSubdirectories: Boolean= FALSE; SeparatorFirst: Boolean= TRUE): Integer;       { Merge all files in the specified folder.   FileType can be something like '*.*' or '*.exe;*.bin' }
+ procedure CopyFileTop        (CONST SourceName, DestName: string; CopyBytes: Int64);                             { Copy only CopyBytes bytes from the begining of the file }
+ procedure AppendTo           (CONST MasterFile, SegmentFile, Separator: string; SeparatorFirst: Boolean= TRUE);  { Append Segment to Master. Master must exists. }
+ procedure MergeFiles         (CONST InpFile1, InpFile2, OutputFile, Separator: string;                                    SeparatorFirst: Boolean= TRUE);          overload;
+ function  MergeFiles         (CONST Folder, FileType,   OutputFile, Separator: string; DigSubdirectories: Boolean= FALSE; SeparatorFirst: Boolean= TRUE): Integer; overload;
 
 
  { OTHERS }
- function  WriteBinFile        (CONST FileName: string; CONST Data: TBytes; CONST Overwrite: Boolean= TRUE): Boolean;
+ function  WriteBinFile       (CONST FileName: string; CONST Data: TBytes; CONST Overwrite: Boolean= TRUE): Boolean;
 {System.IOUtils.TFile.Encrypt https://docwiki.embarcadero.com/Libraries/Alexandria/en/System.IOUtils.TFile.Encrypt - Encrypt a given file using the operating system-provided facilities.}
 
 
@@ -294,35 +294,35 @@ CONST
    COPY/MOVE
 --------------------------------------------------------------------------------------------------}
  {COPY FILES}
- function  CopyFile            (CONST SourceName, DestName: string): Boolean;
- function  FileCopyQuick       (CONST From_FullPath, To_DestFolder: string): boolean;     { in this function you don't have to provide the full path for the second parameter but only the destination folder }
+ function  CopyFile           (CONST SourceName, DestName: string): Boolean;
+ function  FileCopyQuick      (CONST From_FullPath, To_DestFolder: string): boolean;     { in this function you don't have to provide the full path for the second parameter but only the destination folder }
 
  {MOVE FILES}
- function  FileMoveTo          (CONST From_FullPath, To_FullPath  : string): Boolean;
- function  FileMoveToDir       (CONST From_FullPath, To_DestFolder: string): Boolean;
+ function  FileMoveTo         (CONST From_FullPath, To_FullPath  : string): Boolean;
+ function  FileMoveToDir      (CONST From_FullPath, To_DestFolder: string): Boolean;
 
  {FOLDERS}
- function  CopyFolder          (CONST FromFolder, ToFolder   : String; Overwrite: Boolean= True; CONST FileType: string= '*.*'): integer;          { copy a folder and all its files and subfolders }
- function  MoveFolderRel       (CONST FromFolder, ToRelFolder: string; Overwrite: Boolean= True): string;
- procedure MoveFolder          (CONST FromFolder, ToFolder   : String; SilentOverwrite: Boolean= True);
- function  MoveFolderSlow      (CONST FromFolder, ToFolder   : String; Overwrite: boolean): Integer; deprecated 'Use TDirectory.Move() instead.';
+ function  CopyFolder         (CONST FromFolder, ToFolder   : String; Overwrite: Boolean= True; CONST FileType: string= '*.*'): integer;          { copy a folder and all its files and subfolders }
+ function  MoveFolderRel      (CONST FromFolder, ToRelFolder: string; Overwrite: Boolean= True): string;
+ procedure MoveFolder         (CONST FromFolder, ToFolder   : String; SilentOverwrite: Boolean= True);
+ function  MoveFolderSlow     (CONST FromFolder, ToFolder   : String; Overwrite: boolean): Integer; deprecated 'Use TDirectory.Move() instead.';
 
 
 {--------------------------------------------------------------------------------------------------
    BACKUP
 --------------------------------------------------------------------------------------------------}
- function BackupFileIncrement  (CONST FileName: string; CONST DestFolder: string= ''; const NewExtension: string= '.bak'): string; { Creates a copy of this file in the new folder.  Automatically increments its name. Returns '' in case of copy failure }
- function BackupFileBak        (CONST FileName: string): Boolean;                                                            { Creates a copy of this file, and appends as file extension. Ex: File.txt -> File.txt.bak }
- function BackupFileDate       (CONST FileName: string;             TimeStamp: Boolean= TRUE; Overwrite: Boolean = TRUE): Boolean;  overload;     { Create a copy of the specified file in the same folder. The '_backup' string is attached at the end of the filename }
- function BackupFileDate       (CONST FileName, DestFolder: string; TimeStamp: Boolean= TRUE; Overwrite: Boolean = TRUE): Boolean;  overload;
+ function BackupFileIncrement (CONST FileName: string; CONST DestFolder: string= ''; const NewExtension: string= '.bak'): string; { Creates a copy of this file in the new folder.  Automatically increments its name. Returns '' in case of copy failure }
+ function BackupFileBak       (CONST FileName: string): Boolean;                                                            { Creates a copy of this file, and appends as file extension. Ex: File.txt -> File.txt.bak }
+ function BackupFileDate      (CONST FileName: string;             TimeStamp: Boolean= TRUE; Overwrite: Boolean = TRUE): Boolean;  overload;     { Create a copy of the specified file in the same folder. The '_backup' string is attached at the end of the filename }
+ function BackupFileDate      (CONST FileName, DestFolder: string; TimeStamp: Boolean= TRUE; Overwrite: Boolean = TRUE): Boolean;  overload;
 
 
 {--------------------------------------------------------------------------------------------------
    DELETE
 --------------------------------------------------------------------------------------------------}
- procedure EmptyDirectory      (CONST Path: string);                                                          { Delete all files in the specified folder, but don't delete the folder itself. It will search also in subfolders }
- procedure DeleteFolder        (CONST Path: string);
- procedure RemoveEmptyFolders  (CONST RootFolder: string);                                                    { NETESTATA! Delete all empty folders / sub-folders (any sub level) under the provided "rootFolder" }
+ procedure EmptyDirectory     (CONST Path: string);                                                          { Delete all files in the specified folder, but don't delete the folder itself. It will search also in subfolders }
+ procedure DeleteFolder       (CONST Path: string);
+ procedure RemoveEmptyFolders (CONST RootFolder: string);                                                    { NETESTATA! Delete all empty folders / sub-folders (any sub level) under the provided "rootFolder" }
 
 
 {--------------------------------------------------------------------------------------------------
@@ -1867,16 +1867,18 @@ begin
 end;
 
 
-{ Merge file 'Input1' and file 'Input2' in a new file 'Output'.
-  So, the difference between this procedure and AppendTo is that this proc does not modify the original input file(s) }
-procedure MergeFiles(CONST Input1, Input2, Output, Separator: string; SeparatorFirst: Boolean= TRUE);
+{ Merge only 2 files and output a third file.
+  This procedure does not change the two input files, while the 'AppendTo' procedure does. }
+procedure MergeFiles(CONST InpFile1, InpFile2, OutputFile, Separator: string; SeparatorFirst: Boolean= TRUE);
 begin
- TFile.Copy(Input1, Output, TRUE);
- AppendTo(Output, Input2, Separator, SeparatorFirst);
+ TFile.Copy(InpFile1, OutputFile, TRUE);
+ AppendTo(OutputFile, InpFile2, Separator, SeparatorFirst);
 end;
 
 
-function MergeAllTextFiles(CONST Folder, FileType, OutputFile, Separator: string; DigSubdirectories: Boolean= FALSE; SeparatorFirst: Boolean= TRUE): Integer;       { Merge all files in the specified folder. FileType can be something like '*.*' or '*.exe;*.bin'. Returns the number of files merged }    { Separator is a text (ex CRLF) that will be added AFTER each Segment file }
+{ Merge all files in the specified folder.
+  FileType can be something like '*.*' or '*.exe;*.bin' }
+function MergeFiles(CONST Folder, FileType, OutputFile, Separator: string; DigSubdirectories: Boolean= FALSE; SeparatorFirst: Boolean= TRUE): Integer;       { Merge all files in the specified folder. FileType can be something like '*.*' or '*.exe;*.bin'. Returns the number of files merged }    { Separator is a text (ex CRLF) that will be added AFTER each Segment file }
 VAR TSL: TStringList;
     CurFile: String;
     OutputStream: TFileStream;

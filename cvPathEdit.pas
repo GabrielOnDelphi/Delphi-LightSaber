@@ -265,7 +265,7 @@ end;
 
 
 
-{ CreateWnd is called AFTER TIniFileCubic.LoadForm
+{ CreateWnd is called AFTER TIniFileVCL.LoadForm
   CreateWnd can be called more than once:
   http://docs.embarcadero.com/products/rad_studio/delphiAndcpp2009/HelpUpdate2/EN/html/delphivclwin32/Controls_TWinControl_CreateWnd.html }
 procedure TCubicPathEdit.CreateWnd;

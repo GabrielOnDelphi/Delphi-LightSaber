@@ -106,17 +106,6 @@
                 </Source>
                 <Excluded_Packages/>
             </Delphi.Personality>
-            <Platforms>
-                <Platform value="Win32">True</Platform>
-                <Platform value="Win64">False</Platform>
-                <Platform value="OSX64">False</Platform>
-                <Platform value="Android64">False</Platform>
-                <Platform value="Android">False</Platform>
-                <Platform value="OSXARM64">False</Platform>
-                <Platform value="Linux64">False</Platform>
-                <Platform value="iOSDevice64">False</Platform>
-                <Platform value="iOSSimARM64">False</Platform>
-            </Platforms>
             <Deployment Version="4">
                 <DeployFile LocalName="22.0\Win32_Debug\Demo_VisualControls.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
@@ -180,6 +169,17 @@
                 </DeployClass>
                 <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
             </Deployment>
+            <Platforms>
+                <Platform value="Android">False</Platform>
+                <Platform value="Android64">False</Platform>
+                <Platform value="Linux64">False</Platform>
+                <Platform value="OSX64">False</Platform>
+                <Platform value="OSXARM64">False</Platform>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">False</Platform>
+                <Platform value="iOSDevice64">False</Platform>
+                <Platform value="iOSSimARM64">False</Platform>
+            </Platforms>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>

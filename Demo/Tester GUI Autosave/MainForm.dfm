@@ -3,8 +3,8 @@ object frmTester: TfrmTester
   Top = 327
   Anchors = []
   Caption = 'Cubic Core Functions'
-  ClientHeight = 489
-  ClientWidth = 347
+  ClientHeight = 488
+  ClientWidth = 343
   Color = clBtnFace
   Constraints.MinHeight = 100
   Constraints.MinWidth = 90
@@ -15,7 +15,6 @@ object frmTester: TfrmTester
   Font.Name = 'Tahoma'
   Font.Style = []
   Menu = MainMenu
-  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
@@ -23,13 +22,12 @@ object frmTester: TfrmTester
   OnClick = FormClick
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 16
   object GroupBox2: TGroupBox
     AlignWithMargins = True
     Left = 3
-    Top = 232
-    Width = 341
+    Top = 231
+    Width = 337
     Height = 118
     Margins.Bottom = 9
     Align = alBottom
@@ -58,7 +56,7 @@ object frmTester: TfrmTester
       AlignWithMargins = True
       Left = 24
       Top = 82
-      Width = 293
+      Width = 289
       Height = 31
       Margins.Left = 22
       Margins.Top = 9
@@ -71,8 +69,8 @@ object frmTester: TfrmTester
   end
   object GroupBox3: TGroupBox
     Left = 0
-    Top = 359
-    Width = 347
+    Top = 358
+    Width = 343
     Height = 130
     Align = alBottom
     Caption = 'INI file'
@@ -81,7 +79,7 @@ object frmTester: TfrmTester
       AlignWithMargins = True
       Left = 5
       Top = 63
-      Width = 337
+      Width = 333
       Height = 29
       Margins.Bottom = 2
       Action = actSaveGUI
@@ -92,7 +90,7 @@ object frmTester: TfrmTester
       AlignWithMargins = True
       Left = 5
       Top = 96
-      Width = 337
+      Width = 333
       Height = 29
       Margins.Top = 2
       Action = actLoadGUI
@@ -113,12 +111,12 @@ object frmTester: TfrmTester
   object Panel1: TPanel
     Left = 0
     Top = 0
-    Width = 347
+    Width = 343
     Height = 41
     Align = alTop
     TabOrder = 2
     DesignSize = (
-      347
+      343
       41)
     object Button5: TButton
       Left = 41
@@ -132,7 +130,7 @@ object frmTester: TfrmTester
     end
     object Button2: TButton
       AlignWithMargins = True
-      Left = 221
+      Left = 213
       Top = 4
       Width = 104
       Height = 35

@@ -66,7 +66,7 @@ TYPE
      {}
      procedure WriteUInt64         (const i: UInt64);
      procedure WriteInteger        (CONST i: Longint);
-     procedure WriteBoolean        (CONST b: bool);
+     procedure WriteBoolean        (CONST b: Boolean);
      procedure WriteCardinal       (CONST c: Cardinal);
      procedure WritePadding        (CONST Bytes: Integer);
      procedure WriteDate           (CONST aDate: TDateTime);
@@ -325,7 +325,7 @@ end;
 
 
 
-procedure TCubicFileStream.WriteBoolean(CONST b: bool);
+procedure TCubicFileStream.WriteBoolean(CONST b: Boolean);
 begin
  WriteBuffer(b, 1);
 end;

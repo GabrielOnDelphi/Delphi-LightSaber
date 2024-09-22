@@ -4,8 +4,8 @@ object frmRamLog: TfrmRamLog
   AlphaBlend = True
   BorderIcons = [biSystemMenu, biMaximize]
   Caption = 'Log'
-  ClientHeight = 514
-  ClientWidth = 718
+  ClientHeight = 513
+  ClientWidth = 714
   Color = clBtnFace
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
@@ -24,16 +24,16 @@ object frmRamLog: TfrmRamLog
   object Container: TPanel
     Left = 0
     Top = 0
-    Width = 718
-    Height = 514
+    Width = 714
+    Height = 513
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 0
     object pnlBottom: TPanel
       Left = 0
-      Top = 483
-      Width = 718
+      Top = 482
+      Width = 714
       Height = 31
       Align = alBottom
       BevelOuter = bvNone
@@ -47,7 +47,7 @@ object frmRamLog: TfrmRamLog
         Height = 25
         Hint = 'Show this Log window when it displays error or warning messages.'
         Align = alLeft
-        Caption = 'Show the log on error'
+        Caption = 'Show log on error'
         Checked = True
         State = cbChecked
         TabOrder = 0
@@ -55,7 +55,7 @@ object frmRamLog: TfrmRamLog
       end
       object btnClear: TButton
         AlignWithMargins = True
-        Left = 647
+        Left = 643
         Top = 1
         Width = 68
         Height = 29
@@ -67,17 +67,17 @@ object frmRamLog: TfrmRamLog
         TabOrder = 1
         OnClick = btnClearClick
       end
-      object trkLogVerb: TLogVisTrckbr
+      object trkLogVerb: TLogVerbFilter
         AlignWithMargins = True
         Left = 291
         Top = 3
-        Width = 350
+        Width = 346
         Height = 25
         Align = alClient
         BevelOuter = bvNone
         ShowCaption = False
         TabOrder = 2
-        TrackBar.Left = 200
+        TrackBar.Left = 196
         TrackBar.Top = 0
         TrackBar.Width = 150
         TrackBar.Height = 25
@@ -88,7 +88,6 @@ object frmRamLog: TfrmRamLog
         TrackBar.Position = 3
         TrackBar.TabOrder = 0
         Verbosity = lvInfos
-        Log = Log
       end
       object chkShowTime: TCheckBox
         AlignWithMargins = True
@@ -106,11 +105,11 @@ object frmRamLog: TfrmRamLog
       AlignWithMargins = True
       Left = 3
       Top = 3
-      Width = 712
-      Height = 477
+      Width = 708
+      Height = 476
       Align = alClient
       BevelOuter = bvNone
-      ColCount = 3
+      ColCount = 1
       DefaultRowHeight = 22
       FixedCols = 0
       RowCount = 1
@@ -124,11 +123,9 @@ object frmRamLog: TfrmRamLog
       ParentColor = True
       ParentFont = False
       TabOrder = 1
-      Verbosity = lvInfos
+      Verbosity = lvErrors
       ColWidths = (
-        691
-        190
-        64)
+        687)
     end
   end
 end

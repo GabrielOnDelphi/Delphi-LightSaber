@@ -226,7 +226,6 @@ TYPE
  function  GenerateRandomWord    (Len: Integer=16; StartWithVowel: Boolean= FALSE): string;
  function  GenerateRandString    (minLen, maxLen: Integer): string;                                           { This will return all printable craracters (from 65 to 125) }
  function  GenerateRandStringLet (Len: Integer): string;                                                      { This will return ONLY letters and numbers } { YOU MUST call randomize before calling this function! }
- procedure GenerateRandomTextFile(CONST Filename: string; NoOfLines: Integer);                                { Creates a file that contains random strings. NoOfLines=10000000 creates a files of about 140MB }
 
  // COMPARE
  function  StringFuzzyCompare  (s1, s2: string): Integer;                                                     { The function checks if any identical characters is in the near of the actual compare position }
@@ -2187,21 +2186,6 @@ begin
 
  Result:= System.IOUtils.TPath.GetGUIDFileName;
  Result:= system.COPY(Result, 1, Len);
-end;
-
-
-{ Creates a file that contains random strings. NoOfLines=10000000 creates a files of about 140MB }
-procedure GenerateRandomTextFile(CONST Filename: string; NoOfLines: Integer);
-VAR
-   T: Textfile;
-   i: integer;
-begin
-  Assignfile(T, Filename);
-  Rewrite(T);
-
-  for i := 1 to NoOfLines
-    DO Writeln(T, GenerateRandString(5, 20));
-  CloseFile(T);
 end;
 
 

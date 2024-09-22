@@ -51,6 +51,10 @@ TYPE
   TCubicMemStream= class(TMemoryStream)
    private
    public
+     //constructor Create;
+     constructor CreateFromStream   (Stream: TMemoryStream);
+     constructor CreateFromStreamPos(Stream: TMemoryStream);
+
      { Header }
      function  ReadMagicNo  (CONST MagicNo: AnsiString): Boolean;
      procedure WriteMagicNo (CONST MagicNo: AnsiString);
@@ -129,10 +133,51 @@ TYPE
      procedure SaveToFile  (CONST FileName: string);
   end;
 
+
+function StringFromStream(MemStream: TMemoryStream; Count: Integer= 0; Pos: Integer= 0): string;
+
+
 IMPLEMENTATION
 
 USES
    ccBinary;
+
+
+constructor TCubicMemStream.CreateFromStream(Stream: TMemoryStream);
+begin
+  inherited Create;
+  Assert(Stream <> NIL);
+  CopyFrom(Stream, Stream.Size);
+  Position := 0;
+end;
+
+
+{ Creates the object and copy the data from the specified stream, from its current pos }
+constructor TCubicMemStream.CreateFromStreamPos(Stream: TMemoryStream);
+var
+  CurrentPos: Int64;
+  BytesToCopy: Int64;
+begin
+  inherited Create;
+
+  Assert(Stream <> NIL);
+
+  CurrentPos := Stream.Position;
+
+  // Calculate how much data remains in the stream from the current position
+  BytesToCopy := Stream.Size - CurrentPos;
+  Assert(BytesToCopy > 0, 'TCubicMemStream - Nothing to copy!');
+
+  CopyFrom(Stream, BytesToCopy);
+
+  // Restore the stream's position
+  Stream.Position := CurrentPos;
+
+  Position := 0;
+end;
+
+
+
 
 
 {--------------------------------------------------------------------------------------------------
@@ -723,6 +768,24 @@ end;
 
 
 
+function StringFromStream(MemStream: TMemoryStream; Count: Integer = 0; Pos: Integer = 0): string;
+var
+  StringBytes: TBytes;
+begin
+  Assert(Count+Pos <= MemStream.Size, 'StringFromStream - Count higher than stream size!');
+  if (Count = 0)
+  OR (Count > MemStream.Size - Pos)
+  then Count:= MemStream.Size - Pos;  // Ensure Count is within bounds of the stream
+  SetLength(StringBytes, Count);
+  MemStream.Position := Pos;  // Ensure we're at the correct position in the stream
+  MemStream.ReadBuffer(StringBytes[0], Count);
+  Result := TEncoding.ASCII.GetString(StringBytes);
+end;
+
+
+
+
+
 
 { DISK }
 procedure TCubicMemStream.LoadFromFile(CONST FileName: string);
@@ -745,7 +808,6 @@ begin
     FileStream.Free;
   end;
 end;
-
 
 
 

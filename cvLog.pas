@@ -8,6 +8,7 @@ UNIT cvLog;
 
    The new log (based on TStringGrid)
    Drop a TLogGrid on your form. Pass its RamLog property as reference to all TCube objects when I need to log stuff.
+   This component is present in LightBase but it is installed by LightVisControls.
 
    Hint: http://stackoverflow.com/questions/11719454/why-dont-child-controls-of-a-tstringgrid-work-properly
 
@@ -22,19 +23,21 @@ INTERFACE
 
 USES
    Winapi.Messages, System.SysUtils, Winapi.Windows, System.Classes,
-   Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls, vcl.Forms, Vcl.Grids, Vcl.ExtCtrls, VCL.ComCtrls,
+   Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls, Vcl.Forms, Vcl.Grids, Vcl.ExtCtrls, VCL.ComCtrls,
    cbLogLines, cbLogRam, cbLogUtils;
 
 TYPE
   TLogGrid = class(TStringGrid, ILogObserver)
    private
-     FVerbFilter: TLogVerbLvl;
+     FVerbChanged: TNotifyEvent;
+     FVerbosity: TLogVerbLvl;
      FFilteredRowCount: Integer;  // Cached value
      FAutoScroll: Boolean;        // Autoscroll to bottom
      FShowTime  : Boolean;
      FShowDate  : Boolean;
      FRamLog    : TRamLog;
      FOwnRamLog : Boolean;
+     FVerbTrackBar: TPanel; // TLogVerbFilter
      procedure setShowDate(const Value: Boolean);
      procedure setShowTime(const Value: Boolean);
      procedure FixFixedRow;
@@ -51,6 +54,7 @@ TYPE
      destructor Destroy; override;
      procedure Clear;
 
+     procedure RegisterVerbFilter(TrackBar: TPanel{TLogVerbFilter});
      procedure Populate;
      procedure PopUpWindow;
      procedure SaveAsRtf(const FullPath: string);
@@ -58,18 +62,21 @@ TYPE
      procedure setUpRows;
      function  Count: Integer;
    published
-     property ShowTime   : Boolean      read FShowTime   write setShowTime default FALSE;
-     property ShowDate   : Boolean      read FShowDate   write setShowDate default FALSE;
-     property AutoScroll : Boolean      read FAutoScroll write FAutoScroll default TRUE;
-     property Verbosity  : TLogVerbLvl  read FVerbFilter write setVerbFilter;
-     property RamLog     : TRamLog      read FRamLog;
+     property ShowTime     : Boolean      read FShowTime    write setShowTime default FALSE;
+     property ShowDate     : Boolean      read FShowDate    write setShowDate default FALSE;
+     property AutoScroll   : Boolean      read FAutoScroll  write FAutoScroll default TRUE;
+
+     property RamLog       : TRamLog      read FRamLog;
+
+     property Verbosity    : TLogVerbLvl  read FVerbosity  write setVerbFilter;
+     property OnVerbChanged: TNotifyEvent read FVerbChanged write FVerbChanged;   { Triggered before deleting the content of a cell }
   end;
 
 procedure Register;
 
 IMPLEMENTATION
 
-USES ccCore;
+USES ccCore, cvLogFilter;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -84,7 +91,7 @@ begin
 
  ShowTime    := FALSE;
  ShowDate    := FALSE;
- FVerbFilter := lvVerbose;
+ FVerbosity := lvVerbose;
  FAutoScroll := TRUE;
 
  // TStringGrid initializations
@@ -128,7 +135,7 @@ VAR
 begin
   Assert(FRamLog <> NIL, 'RamLog not assigned!!');
 
-  FFilteredRowCount:= RamLog.Count(FVerbFilter > lvDebug, FVerbFilter);   //ToDo: cache this value to increase speed!
+  FFilteredRowCount:= RamLog.Count(FVerbosity > lvDebug, FVerbosity);   //ToDo: cache this value to increase speed!
 
   if LessRam then
     begin
@@ -163,12 +170,19 @@ begin
 end;
 
 
-
 procedure TLogGrid.setVerbFilter(const Value: TLogVerbLvl);
 begin
- // if FVerbFilter = Value then EXIT;
-  FVerbFilter:= Value;
-  FFilteredRowCount:= RamLog.Count(FVerbFilter > lvDebug, FVerbFilter);   //ToDo: cache this value to increase speed!
+  //todo: put this back: if FVerbFilter = Value then EXIT;
+
+  FVerbosity:= Value;
+  FFilteredRowCount:= RamLog.Count(FVerbosity > lvDebug, FVerbosity);   //ToDo: cache this value to increase speed!
+
+  if (FVerbTrackBar <> NIL)
+  AND ((FVerbTrackBar as TLogVerbFilter).Verbosity <> Self.Verbosity)
+  then (FVerbTrackBar as TLogVerbFilter).Verbosity:= Self.Verbosity;
+
+  if Assigned(FVerbChanged)
+  then FVerbChanged(Self);                                                                  { Let GUI know that the user changed the verbosity }
 end;
 
 
@@ -220,7 +234,7 @@ begin
     EXIT;
    end;
 
-  FilteredRow:= RamLog.Lines.Row2FilteredRow(aRow- HeaderOverhead, FVerbFilter);
+  FilteredRow:= RamLog.Lines.Row2FilteredRow(aRow- HeaderOverhead, FVerbosity);
   if FilteredRow < 0 then
    begin
     inherited;
@@ -258,7 +272,7 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 function TLogGrid.Count: Integer;
 begin
-  Result:= RamLog.Count(FVerbFilter > lvDebug, FVerbFilter);
+  Result:= RamLog.Count(FVerbosity > lvDebug, FVerbosity);
 end;
 
 
@@ -405,6 +419,14 @@ begin
     FreeAndNil(RichEdit);
   end;
 end;
+
+
+procedure TLogGrid.RegisterVerbFilter(TrackBar: TPanel);
+begin
+ // mesaj('Trackbar registered for log');
+  FVerbTrackBar:= TrackBar;  // Let the Log know that its verbosity is controlled by this TrackBar
+end;
+
 
 
 procedure Register;

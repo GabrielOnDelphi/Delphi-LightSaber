@@ -7,7 +7,7 @@ UNIT cvMinimalPathLabel;
 --------------------------------------------------------------------------------------------------------------
 
   When displaying a path, truncates the middle of the text if the entire path cannot fit into the visible area of the control.
-  It ONLY works wot filenames and paths because of MinimizeName!
+  It ONLY works with filenames and paths because of MinimizeName!
   If ShowFullTextAsHint is true then the entire text will be shown into the Hint.
 
 --------------------------------------------------------------------------------------------------}

@@ -15,7 +15,7 @@ INTERFACE
 USES
   WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.ExtCtrls,
   cvIniFile, InternetLabel, cvPathEdit, cvSpinEdit,
-  llRichLogTrack, cvCheckBox, llRichLog, cbAppData, cbINIFile, chHardID;
+  llRichLogTrack, cvCheckBox, llRichLog, cbAppData, cvINIFile, chHardID;
 
 TYPE
   TMainForm = class(TForm)

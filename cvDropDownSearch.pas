@@ -1,12 +1,16 @@
 UNIT cvDropDownSearch;
 
-{-------------------------------------------------------------------------------------------------------------
-  GabrielM
-  2023.10.31
+{=============================================================================================================
+   Gabriel Moraru
+   2024.09
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
 
-  Searchbox with auto-suggest
+  Searchbox with auto-suggest.
   A dropdown box similar to the Help Insight in Delphi IDE.
   Displays a list of items. The list is filtered (gets smaller) as the user types in more characters into the searchbox.
+
+  Can be closed with click, doubleclick, esc and enter.
 
   Tester:
     C:\Projects\LightSaber\Demo\Tester All Visual Controls
@@ -15,15 +19,12 @@ UNIT cvDropDownSearch;
     https://blog.dummzeuch.de/2019/04/28/autocompletion-for-tedits-revisited/
     https://stackoverflow.com/questions/2012208/google-like-edit-combo-control-for-delphi
 
--------------------------------------------------------------------------------------------------------------}
+  Tester:
+    C:\Projects\LightSaber\Demo\Tester All Visual Controls
 
-//ToDo: The list is filtered (gets smaller) as the user types-in more characters into the searchbox.
+=============================================================================================================}
+
 //ToDo: Issue: the drop down does not respond to scroll
-//ToDo: Issue: the drop down needs two clicks instead of one in order to be closed
-//ToDo: When the drop down is focused, let user close the drop down with Enter
-//ToDo: We need to end the search (trigger the OnEndSearch property) if the user clicked an item in the list. 
-
-
 
 INTERFACE
 USES
@@ -86,7 +87,7 @@ begin
   inherited Create(AOwner);
 
   AlignWithMargins := True;
-  TextHint         := 'Search...';
+  TextHint         := 'Search...';    //ToDo: bug: this is not shown
   FFullItemList    := TStringList.Create;  // Initialize FFullItemList
   FCurrentIndex := -1;
   FIsNavigating := False;
@@ -237,7 +238,6 @@ var
 begin
   OriginalKey := Key;  // Store the original key value before inherited is called
   inherited KeyPress(Key);  // This will change the Key to #0
-
   case OriginalKey of
     ESC:
       begin
@@ -247,20 +247,17 @@ begin
         Key := #0;  // Consume the key
         Exit;
       end;
-
     #13:  // 'Enter' key
       if lbxSearch.Visible and (lbxSearch.ItemIndex >= 0) then
       begin
         EndSearch(Self);
         Key := #0;
       end;
-
     #9:  // 'Tab' key
       begin
         lbxSearch.Visible := False;
         FCurrentFilter := Text;
       end;
-
     else
       FIsNavigating := False;
   end;
@@ -273,8 +270,8 @@ begin
 
   FIsNavigating := True;
   try
-    if FCurrentIndex = -1 then
-      FCurrentIndex := 0;
+    if FCurrentIndex = -1
+    then FCurrentIndex := 0;
 
     case Key of
       VK_UP:   FCurrentIndex := (FCurrentIndex - 1 + FFullItemList.Count) mod FFullItemList.Count;
@@ -284,8 +281,8 @@ begin
     Text := FFullItemList[FCurrentIndex];
     SelectAll;
     
-    if not lbxSearch.Visible then
-      showDropDown;
+    if not lbxSearch.Visible
+    then showDropDown;
 
     // Update listbox selection
     lbxSearch.ItemIndex := lbxSearch.Items.IndexOf(Text);
@@ -313,6 +310,8 @@ var
   i: Integer;
   FilterText: string;
 begin
+  if (lbxSearch = NIL) OR (csDesigning in ComponentState) then EXIT;
+
   FilterText := LowerCase(FCurrentFilter);
   lbxSearch.Items.BeginUpdate;
   try

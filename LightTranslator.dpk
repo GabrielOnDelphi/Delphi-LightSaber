@@ -35,6 +35,7 @@ requires
   VclImg,
   Vcl,
   LightCore,
+  LightBase,
   LightCommon;
 
 contains

@@ -32,11 +32,11 @@ UNIT FormMain;
 
 INTERFACE
 
-USES 
+USES
   WinApi.Windows, WinApi.Messages, Winapi.ShellApi,
-  System.SysUtils, System.Classes, System.Actions,
+  System.SysUtils, System.Classes,
   VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
-  csSystem, CoolTrayIcon, cvPathEdit, cvStatusBar, cpProteus, cbAppData, cbINIFile, cpProteusIO;
+  csSystem, CoolTrayIcon, cvPathEdit, cvStatusBar, cpProteus, cbAppData, cpProteusIO, System.Actions;
 
   // c:\MyProjects\Packages\Third party packages\MenuPopupHints.pas
 

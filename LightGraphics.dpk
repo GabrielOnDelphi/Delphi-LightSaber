@@ -37,6 +37,7 @@ requires
   rtl,
   vcl,
   LightCore,
+  LightBase,
   LightCommon,
   LightTranslator,
   vclimg,

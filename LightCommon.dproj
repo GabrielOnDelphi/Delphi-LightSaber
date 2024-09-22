@@ -106,7 +106,6 @@
         <DCCReference Include="cmSearchResult.pas"/>
         <DCCReference Include="cmSound.pas"/>
         <DCCReference Include="cmStrBuilder.pas"/>
-        <DCCReference Include="cmStreamMem.pas"/>
         <DCCReference Include="cmStringListA.pas"/>
         <DCCReference Include="cmVclUtils.pas"/>
         <DCCReference Include="cmWindow.pas"/>

@@ -4,8 +4,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, clVisLogTrack, cbLogRam, Vcl.Grids, clVisLog, Vcl.ExtCtrls,
-  llRichLogTrack, Vcl.StdCtrls, Vcl.ComCtrls, FormLog, llRichLogUtils, llRichLog;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cbLogRam, Vcl.Grids, Vcl.ExtCtrls,
+  llRichLogTrack, Vcl.StdCtrls, Vcl.ComCtrls,  llRichLogUtils, llRichLog, cvLog, cvLogFilter;
 
 type
   TMainForm = class(TForm)
@@ -17,7 +17,7 @@ type
     RichLogTrckbr1: TRichLogTrckbr;
     Panel4: TPanel;
     Button2: TButton;
-    LogVisTrckbr1: TLogVisTrckbr;
+    LogVisTrckbr1: TLogVerbFilter;
     Button3: TButton;
     Button4: TButton;
     Panel5: TPanel;
@@ -40,7 +40,7 @@ var
   MainForm: TMainForm;
 
 implementation {$R *.dfm}
-Uses cbAppData, cbINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
+Uses cbAppData, cvINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
 
 
 procedure TMainForm.FormCreate(Sender: TObject);

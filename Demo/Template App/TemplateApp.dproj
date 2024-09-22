@@ -6,7 +6,7 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>TemplateApp.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <ProjectGuid>{232A281C-4B1A-482D-B029-85C54610247F}</ProjectGuid>
+        <ProjectGuid>{D824CECA-A966-4534-A38A-61D312FAE2DF}</ProjectGuid>
         <ProjectVersion>19.5</ProjectVersion>
         <TargetedPlatforms>1</TargetedPlatforms>
     </PropertyGroup>
@@ -87,40 +87,23 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="uInitialization.pas"/>
-        <DCCReference Include="FormMain.pas"/>
-        <DCCReference Include="FormSettings.pas">
-            <Form>frmSettings</Form>
-        </DCCReference>
         <DCCReference Include="..\..\cbAppData.pas"/>
-        <DCCReference Include="..\..\FormSplashScreen.pas"/>
-        <DCCReference Include="..\..\FormUniversalEula.pas"/>
-        <DCCReference Include="..\..\Updater\FormUpdaterNotifier.pas"/>
-        <DCCReference Include="..\..\Updater\ciUpdater.pas"/>
-        <DCCReference Include="..\..\Updater\ciUpdaterRec.pas"/>
-        <DCCReference Include="..\..\Updater\FormUpdaterRecEditor.pas"/>
-        <DCCReference Include="..\..\FormAbout.pas">
-            <FormType>dfm</FormType>
+        <DCCReference Include="FormMain.pas">
+            <Form>MainForm</Form>
         </DCCReference>
+        <DCCReference Include="..\..\FormRamLog.pas"/>
+        <DCCReference Include="FormSettings.pas"/>
+        <DCCReference Include="..\..\FormAbout.pas"/>
+        <DCCReference Include="..\..\..\LightAutoTranslator\FormSelectLang.pas"/>
         <DCCReference Include="..\..\FormSkinsDisk.pas"/>
         <DCCReference Include="..\..\FormSkinsRes.pas"/>
-        <DCCReference Include="..\..\cbDialogs.pas"/>
-        <DCCReference Include="..\..\cbIniFile.pas"/>
-        <DCCReference Include="..\..\cmGuiSettings.pas"/>
-        <DCCReference Include="..\..\..\LightProteus\cpProteusCertificate.pas"/>
-        <DCCReference Include="..\..\..\LightAutoTranslator\cTranslate.pas"/>
-        <DCCReference Include="..\..\..\LightAutoTranslator\FormSelectLang.pas"/>
+        <DCCReference Include="..\..\FormSplashScreen.pas"/>
         <DCCReference Include="..\..\..\LightAutoTranslator\FormTranslator.pas"/>
-        <DCCReference Include="..\..\..\LightProteus\cpProteus.pas"/>
-        <DCCReference Include="..\..\..\LightProteus\cpProteusIO.pas"/>
-        <DCCReference Include="..\..\..\LightProteus\cpProteusUtils.pas"/>
+        <DCCReference Include="..\..\FormUniversalEula.pas"/>
+        <DCCReference Include="..\..\Updater\FormUpdaterNotifier.pas"/>
+        <DCCReference Include="..\..\Updater\FormUpdaterRecEditor.pas"/>
         <DCCReference Include="..\..\Updater\FormUpdaterSettings.pas"/>
-        <DCCReference Include="..\..\FormRamLog.pas">
-            <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="..\..\cbLogLines.pas"/>
-        <DCCReference Include="..\..\cbLogRam.pas"/>
-        <DCCReference Include="..\..\cvLog.pas"/>
+        <DCCReference Include="uInitialization.pas"/>
         <None Include="..\..\..\LightProteus\cpProteus.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

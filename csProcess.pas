@@ -23,9 +23,8 @@
 
 INTERFACE
 USES
-   Winapi.Windows, Winapi.Messages, Winapi.WinSock, Winapi.WinSvc,
-   System.Classes, System.SysUtils, System.Win.Registry, System.UITypes, TlHelp32, IOUtils,
-   Vcl.Controls, Vcl.Forms, Vcl.ClipBrd, Vcl.Dialogs;
+   Winapi.Windows,
+   System.SysUtils, System.UITypes, TlHelp32;
 
 
  function ProcessRunning         (ExeFileName: string): Boolean;
@@ -38,8 +37,7 @@ USES
 
 IMPLEMENTATION
 
-USES
-   csKeyboard, ccIO, ccTextFile, cmIO, cmIO.Win, cbWinVersion, cbRegistry;
+
 
 
 { Returns True if the specified process if found running

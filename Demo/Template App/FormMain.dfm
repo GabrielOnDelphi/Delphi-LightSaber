@@ -3,8 +3,8 @@ object MainForm: TMainForm
   Top = 327
   AlphaBlendValue = 249
   Caption = 'Enviroment'
-  ClientHeight = 535
-  ClientWidth = 696
+  ClientHeight = 534
+  ClientWidth = 692
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 350
@@ -27,8 +27,8 @@ object MainForm: TMainForm
   object pgCtrl: TPageControl
     Left = 0
     Top = 0
-    Width = 696
-    Height = 516
+    Width = 692
+    Height = 515
     ActivePage = tabLog
     Align = alClient
     TabOrder = 0
@@ -76,10 +76,10 @@ object MainForm: TMainForm
       Caption = 'Demos'
       ImageIndex = 3
       DesignSize = (
-        688
-        484)
+        684
+        483)
       object btnProgress: TButton
-        Left = 262
+        Left = 254
         Top = 394
         Width = 143
         Height = 49
@@ -90,7 +90,7 @@ object MainForm: TMainForm
         OnClick = btnProgressClick
       end
       object Button1: TButton
-        Left = 262
+        Left = 254
         Top = 104
         Width = 143
         Height = 49
@@ -99,7 +99,7 @@ object MainForm: TMainForm
         TabOrder = 1
       end
       object Button2: TButton
-        Left = 262
+        Left = 254
         Top = 158
         Width = 143
         Height = 49
@@ -108,7 +108,7 @@ object MainForm: TMainForm
         TabOrder = 2
       end
       object Button3: TButton
-        Left = 262
+        Left = 254
         Top = 211
         Width = 143
         Height = 49
@@ -117,7 +117,7 @@ object MainForm: TMainForm
         TabOrder = 3
       end
       object Button4: TButton
-        Left = 262
+        Left = 254
         Top = 265
         Width = 143
         Height = 49
@@ -130,10 +130,10 @@ object MainForm: TMainForm
       Caption = 'Log'
       ImageIndex = 4
       DesignSize = (
-        688
-        484)
+        684
+        483)
       object btnShowLog: TButton
-        Left = 248
+        Left = 240
         Top = 61
         Width = 191
         Height = 45
@@ -143,7 +143,7 @@ object MainForm: TMainForm
         TabOrder = 0
       end
       object Button5: TButton
-        Left = 248
+        Left = 240
         Top = 112
         Width = 191
         Height = 34
@@ -153,7 +153,7 @@ object MainForm: TMainForm
         OnClick = Button5Click
       end
       object Button6: TButton
-        Left = 248
+        Left = 240
         Top = 156
         Width = 191
         Height = 34
@@ -163,7 +163,7 @@ object MainForm: TMainForm
         OnClick = Button6Click
       end
       object Button7: TButton
-        Left = 248
+        Left = 240
         Top = 200
         Width = 191
         Height = 34
@@ -173,8 +173,8 @@ object MainForm: TMainForm
         OnClick = Button7Click
       end
       object Button8: TButton
-        Left = 248
-        Top = 243
+        Left = 240
+        Top = 242
         Width = 191
         Height = 34
         Anchors = []
@@ -183,8 +183,8 @@ object MainForm: TMainForm
         OnClick = Button8Click
       end
       object Button9: TButton
-        Left = 248
-        Top = 287
+        Left = 240
+        Top = 286
         Width = 191
         Height = 34
         Anchors = []
@@ -193,8 +193,8 @@ object MainForm: TMainForm
         OnClick = Button9Click
       end
       object Button11: TButton
-        Left = 248
-        Top = 331
+        Left = 240
+        Top = 330
         Width = 191
         Height = 34
         Anchors = []
@@ -203,8 +203,8 @@ object MainForm: TMainForm
         OnClick = Button11Click
       end
       object Button10: TButton
-        Left = 248
-        Top = 373
+        Left = 240
+        Top = 372
         Width = 191
         Height = 34
         Anchors = []
@@ -213,8 +213,8 @@ object MainForm: TMainForm
         OnClick = Button10Click
       end
       object Button12: TButton
-        Left = 248
-        Top = 414
+        Left = 240
+        Top = 413
         Width = 191
         Height = 34
         Anchors = []
@@ -226,8 +226,8 @@ object MainForm: TMainForm
   end
   object StatBar: TcubicStatusBar
     Left = 0
-    Top = 516
-    Width = 696
+    Top = 515
+    Width = 692
     Height = 19
     Panels = <>
     ParentColor = True

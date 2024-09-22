@@ -93,7 +93,7 @@ end;
 procedure TfrmTranslator.LateInitialize;
 begin
  Assert(Translator <> NIL);
- LoadForm(Self);                              //Note: Don't add dependencies to CubicVisualControls here!
+ LoadFormBase(Self);                              //Note: Don't add dependencies to CubicVisualControls here!
  lblLiveFormsClick(Self);
 end;
 
@@ -106,7 +106,7 @@ end;
 
 procedure TfrmTranslator.FormDestroy(Sender: TObject);
 begin
- SaveForm(Self);  //Don't add dependencies to CubicVisualControls here!
+ SaveFormBase(Self);  //Don't add dependencies to CubicVisualControls here!
 end;
 
 
@@ -142,10 +142,10 @@ begin
  btnApplyEdits.Enabled:= TRUE;
  edtFileName.Enabled:= FALSE;
  btnCreateTransl.Caption:= 'Update >>';
-
+ {
  if frmLanguage<> NIL
  then frmLanguage.PopulateLanguageFiles;  // Announce the other form that a new translation file is available
-
+ }
  { Show text in editor }
  s:= StringFromFile(GetFileName);
  s:= ReplaceString(s, CRLF+'[', CRLF+CRLF+'['); { Help user to see the sections better }

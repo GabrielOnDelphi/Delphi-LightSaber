@@ -8,8 +8,7 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  System.SysUtils, System.Classes, Vcl.Forms, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.Samples.Spin,
-  cbINIFile;
+  System.SysUtils, System.Classes, Vcl.Forms, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.Samples.Spin;
 
 TYPE
   TfrmRecEditor = class(TForm)
@@ -53,7 +52,7 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   cbAppData, csSystem, cTranslate, ciUpdaterRec, cbDialogs;
+   cbAppData, csSystem, cTranslate, ciUpdaterRec, cbDialogs, ccINIFile, cvINIFile;
 
 
 

@@ -1,10 +1,28 @@
 UNIT cvRichEdit;
 
+{=============================================================================================================
+   Gabriel Moraru
+   2024.09
+   See Copyright.txt
+--------------------------------------------------------------------------------------------------------------
+  Features:
+    Adds a 'OnVScroll' property.
+    CurrentLine         (the one containing the cursor).
+    GetFirstVisibleLine (index of the top visible line).
+    Allows us to scroll at the end of the text
+
+  Tester:
+    C:\Projects\LightSaber\Demo\Tester All Visual Controls
+
+  Also see:
+    cvRichEditResize.pas
+=============================================================================================================}
+
 INTERFACE
 
 USES
   Winapi.Windows, Winapi.Messages, Winapi.RichEdit,
-  System.Classes, Vcl.ComCtrls, Vcl.Controls;// Vcl.ControlList;
+  System.Classes, Vcl.ComCtrls, Vcl.Controls;
 
 TYPE
   TCubicRichEdit = class(TRichEdit)
@@ -13,14 +31,14 @@ TYPE
    protected
      procedure WMVScroll(var Msg: TWMVScroll); message WM_VSCROLL;
    public
-     procedure AddFormated(s: string);                                   { Accepts string that contain enters }
+     procedure AddFormated(s: string);           { Accepts string that contain enters }
      procedure CopyAll;
-     procedure Add(s: string);                                           { Use it instead of Self.Lines.Add() }
+     procedure Add(s: string);                   { Use it instead of Self.Lines.Add() }
 
-     procedure ScrollToBottom;                                           { Scroll at the end of the text }
+     procedure ScrollToBottom;                   { Scroll at the end of the text }
      procedure ScrollTo(Line: Integer);
 
-     function  GetCurrentLine: Integer;                                  { The line containing the caret }
+     function  GetCurrentLine: Integer;          { The line containing the caret }
      function  GetFirstVisibleLine: Integer;
    published
      property OnClick;
@@ -99,7 +117,8 @@ end;
 procedure TCubicRichEdit.WMVScroll(var Msg: TWMVScroll);
 begin
   inherited;
-  if Assigned(FOnVScroll) then FOnVScroll(Self);
+  if Assigned(FOnVScroll)
+  then FOnVScroll(Self);
 end;
 
 

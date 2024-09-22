@@ -19,7 +19,7 @@ object frmMain: TfrmMain
     Top = 3
     Width = 893
     Height = 531
-    ActivePage = TabSheet2
+    ActivePage = tabEnhanced
     Align = alClient
     TabOrder = 0
     object TabSheet1: TTabSheet
@@ -220,40 +220,38 @@ object frmMain: TfrmMain
         TabOrder = 8
       end
     end
-    object TabSheet3: TTabSheet
+    object tabEnhanced: TTabSheet
       Caption = 'Enhanced controls'
       ImageIndex = 2
+      object CMinimalLabel1: TMinimalPathLabel
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 186
+        Height = 13
+        Hint = 
+          'c:\Projects\LightSaber\Demo\Tester All Visual Controls\dropdown.' +
+          'PNG'
+        Caption = 'c:\...\dropdown.PNG'
+        ParentShowHint = False
+        ShowHint = True
+        CaptionMin = 
+          'c:\Projects\LightSaber\Demo\Tester All Visual Controls\dropdown.' +
+          'PNG'
+      end
       object ScrollBox: TCubicScrollBox
-        Left = 282
-        Top = 94
+        Left = 22
+        Top = 33
         Width = 341
         Height = 247
         TabOrder = 0
-        object CMinimalLabel1: TMinimalPathLabel
-          Left = 7
-          Top = 3
-          Width = 455
-          Height = 13
-          Hint = 
-            'ScrollBox                                                       ' +
-            '                                                                ' +
-            '              .   '
-          Caption = 
-            'ScrollBox                                                       ' +
-            '                                                                ' +
-            '              .   '
-          ParentShowHint = False
-          ShowHint = True
-          CaptionMin = 
-            'ScrollBox                                                       ' +
-            '                                                                ' +
-            '              .   '
-        end
         object RichEdit: TCubicRichEdit
+          AlignWithMargins = True
           Left = 3
-          Top = 30
+          Top = 3
           Width = 331
-          Height = 193
+          Height = 237
+          Align = alClient
           Font.Charset = ANSI_CHARSET
           Font.Color = clWindowText
           Font.Height = -11
@@ -263,6 +261,54 @@ object frmMain: TfrmMain
             'Cubic RichEdit')
           ParentFont = False
           TabOrder = 0
+        end
+      end
+      object Panel1: TPanel
+        Left = 27
+        Top = 340
+        Width = 341
+        Height = 89
+        TabOrder = 1
+        object DropDownSearchBox: TDropDownSearchBox
+          AlignWithMargins = True
+          Left = 4
+          Top = 4
+          Width = 333
+          Height = 21
+          Align = alTop
+          TabOrder = 0
+          TextHint = 'Search...'
+          OnEndSearch = DropDownSearchBoxEndSearch
+        end
+      end
+      object pnlRichEditResize: TPanel
+        Left = 459
+        Top = 33
+        Width = 193
+        Height = 97
+        AutoSize = True
+        BevelOuter = bvNone
+        Caption = 'Autoresizable rich edit'
+        ParentBackground = False
+        ParentColor = True
+        TabOrder = 2
+        object RichEditResize1: TRichEditResize
+          AlignWithMargins = True
+          Left = 3
+          Top = 3
+          Width = 187
+          Height = 91
+          Font.Charset = ANSI_CHARSET
+          Font.Color = clWindowText
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          Font.Style = []
+          Lines.Strings = (
+            'TRichEditResize'
+            'Expnads as you add lines to it')
+          ParentFont = False
+          TabOrder = 0
+          MinHeight = 50
         end
       end
     end
@@ -565,23 +611,6 @@ object frmMain: TfrmMain
     object TabSheet2: TTabSheet
       Caption = 'Search Box'
       ImageIndex = 8
-      object Panel1: TPanel
-        Left = 242
-        Top = 140
-        Width = 255
-        Height = 35
-        TabOrder = 0
-        object DropDownSearchBox: TDropDownSearchBox
-          AlignWithMargins = True
-          Left = 4
-          Top = 2
-          Width = 235
-          Height = 21
-          TabOrder = 0
-          TextHint = 'Search...'
-          OnEndSearch = DropDownSearchBoxEndSearch
-        end
-      end
     end
   end
   object CountDown: TCountDown

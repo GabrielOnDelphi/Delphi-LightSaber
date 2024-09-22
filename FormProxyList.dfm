@@ -50,7 +50,7 @@ object frmProxyList: TfrmProxyList
     object radDirect: TCubicRadioButton
       Left = 18
       Top = 56
-      Width = 107
+      Width = 120
       Height = 17
       Hint = 'Direct Internet connection'
       Caption = 'Direct connection'
@@ -69,7 +69,7 @@ object frmProxyList: TfrmProxyList
     object radProxyList: TCubicRadioButton
       Left = 18
       Top = 115
-      Width = 109
+      Width = 125
       Height = 17
       Hint = 'Use the provided list of proxies.'
       Caption = 'Use list of proxies'
@@ -122,9 +122,9 @@ object frmProxyList: TfrmProxyList
   end
   object grpProxyList: TGroupBox
     AlignWithMargins = True
-    Left = 223
+    Left = 227
     Top = 3
-    Width = 398
+    Width = 394
     Height = 458
     Align = alRight
     Anchors = [akLeft, akTop, akRight, akBottom]
@@ -142,7 +142,7 @@ object frmProxyList: TfrmProxyList
     object mmoProxyList: TMemo
       Left = 2
       Top = -11
-      Width = 394
+      Width = 390
       Height = 431
       Hint = 
         'The format accepted by this proxy list is:'#13#10' xxx.xxx.xxx.xxx:yy'#13 +
@@ -166,7 +166,7 @@ object frmProxyList: TfrmProxyList
     object pnlBottom: TPanel
       Left = 2
       Top = 420
-      Width = 394
+      Width = 390
       Height = 36
       Align = alBottom
       BevelInner = bvLowered
@@ -174,7 +174,7 @@ object frmProxyList: TfrmProxyList
       ShowHint = True
       TabOrder = 1
       DesignSize = (
-        394
+        390
         36)
       object btnSaveProxy: TButton
         Left = 11
@@ -198,7 +198,7 @@ object frmProxyList: TfrmProxyList
         OnClick = btnSaveProxyClick
       end
       object btnLocate: TButton
-        Left = 307
+        Left = 303
         Top = 6
         Width = 80
         Height = 25
@@ -217,7 +217,7 @@ object frmProxyList: TfrmProxyList
         OnClick = btnLocateClick
       end
       object btnClean: TButton
-        Left = 227
+        Left = 223
         Top = 6
         Width = 75
         Height = 25

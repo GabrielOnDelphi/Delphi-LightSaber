@@ -1,8 +1,8 @@
-﻿UNIT cbIniFile;
+﻿UNIT cbINIFile;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2024.09
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
@@ -22,7 +22,7 @@
   Storing only individual controls:
      You can also save individual controls.
      Example:
-        To store the status of a checkbox to a INI file use TIniFileVcl.Write(MyCheckBox).
+        To store the status of a checkbox to a INI file use TIniFileApp.Write(MyCheckBox).
 
      Default value:
         The user doesn't have to provide a default value.
@@ -46,13 +46,13 @@
   Setup:
      AppData global var is used to obtain the file name of the INI file.
 
-     Therefore, before using TIniFileVcl you must set the AppData.AppName var like this: AppData:= TAppData.Create('DelphiLightSaber').
-     The TIniFileVcl class will use AppName to automatically determine the INI file name/path which is %AppData%\AppName.Ini.
+     Therefore, before using TIniFileApp you must set the AppData.AppName var like this: AppData:= TAppData.Create('DelphiLightSaber').
+     The TIniFileApp class will use AppName to automatically determine the INI file name/path which is %AppData%\AppName.Ini.
      Example: If the AppData.AppName is set to "DelphiLightSaber",
      the ini file will be "c:\Users\UserName\AppData\Roaming\DelphiLightSaber\DelphiLightSaber.ini"
      See cbAppData.pas for details.
 
-     The TIniFileVcl class will also automatically save the cbAppData.AppData.LastUsedFolder variable to the INI file.
+     The TIniFileApp class will also automatically save the cbAppData.AppData.LastUsedFolder variable to the INI file.
   ____________
 
   Important:
@@ -61,7 +61,7 @@
      To fix this, we need to move the controls back to their original parent (form) BEFORE we call SaveFrom!
 
   Notices
-    * DO NOT USE SELF as parameter in TIniFileCubic.Create if you call TIniFileCubic.Create in FormCreate because the Self is not yet ready! But TIniFileCubic.Create(FrmMain) works.
+    * DO NOT USE SELF as parameter in TIniFileVCL.Create if you call TIniFileVCL.Create in FormCreate because the Self is not yet ready! But TIniFileVCL.Create(FrmMain) works.
     * LoadForm is called after the components on the form are created but BEFORE their CreateWnd is called!
 
   UNICODE
@@ -93,11 +93,7 @@ USES
 {$WARN GARBAGE OFF}              {Silence the: 'W1011 Text after final END' warning }
 
 TYPE
-  TFormLoading = (flNoLoad,         // Don't restore form position and GUI elements when the form is created
-                  flPositionOnly,   // Restore form position
-                  flLoad);          // Restore form position and GUI elements
-TYPE
- TIniFileVcl = class(TIniFileEx)
+ TIniFileApp = class(TIniFileEx)
   private
   protected
     procedure readCtrlPos  (Ctrl: TControl);
@@ -107,7 +103,7 @@ TYPE
   public
     ShowPositionWarn: Boolean;
     constructor Create (SectionName: string; ForcedName: string= ''); reintroduce; overload;
-    function  IsSupported(WinCtrl: TComponent): Boolean; virtual;
+    function IsSupported(WinCtrl: TComponent): Boolean; virtual;
     class function AsString: string;
 
     procedure SaveForm (Form: TForm; Loading: TFormLoading= flPositionOnly);      { Save ALL supported controls on this form }
@@ -124,26 +120,27 @@ TYPE
     { Read/write controls directly }
     function  WriteComp  (Comp: TComponent): Boolean; virtual;
     function  ReadComp   (Comp: TComponent): Boolean; virtual;
+	
     procedure ReadGroup  (WinCtrl: TWinControl);
     procedure WriteGroup (WinCtrl: TWinControl);
   end;
 
 
-{ These only support standard VCL controls. If you want to save also the custom (Cubic) controls see cvIniFile }
-procedure SaveForm (Form: TForm; Loading: TFormLoading= flPositionOnly);
-procedure LoadForm (Form: TForm; Loading: TFormLoading= flPositionOnly);
+{ These only support standard VCL controls. If you want to save also the custom (Cubic) controls see cv_IniFile }
+procedure SaveFormBase (Form: TForm; Loading: TFormLoading= flPositionOnly);
+procedure LoadFormBase (Form: TForm; Loading: TFormLoading= flPositionOnly);
 
 
 IMPLEMENTATION
 
 USES
-   ccIO, ccTextFile, ccCore, cbAppData, cbCenterControl;
+   cbDialogs, ccIO, ccTextFile, ccCore, cbAppData, cbCenterControl, cbLogUtils;
 
 
 {-----------------------------------------------------------------------------------------------------------------------
    MAIN
 -----------------------------------------------------------------------------------------------------------------------}
-constructor TIniFileVcl.Create(SectionName: string; ForcedName: string= '');                             { Open INI file for writing }
+constructor TIniFileApp.Create(SectionName: string; ForcedName: string= '');                             { Open INI file for writing }
 VAR Path: string;
 begin
  if ForcedName= ''
@@ -165,7 +162,7 @@ end;
      Components[] just yields the components that are OWNED by the form.
      So, if we are iterating over it will miss any components that are added dynamically, and not owned by the form, or components that are owned by frames.
      Update 2021: Now frames are supported. All sub-components of a frame are stored to the INI file  }
-procedure TIniFileVcl.SaveForm(Form: TForm; Loading: TFormLoading= flPositionOnly);
+procedure TIniFileApp.SaveForm(Form: TForm; Loading: TFormLoading= flPositionOnly);
 
   procedure WriteComponentsOf(Component: TComponent);
   VAR i: Integer;
@@ -180,12 +177,12 @@ procedure TIniFileVcl.SaveForm(Form: TForm; Loading: TFormLoading= flPositionOnl
 begin
  Assert(Form <> NIL);
  WriteComp(Form);
- if Loading= flLoad
+ if Loading= flFull
  then WriteComponentsOf(Form);
 end;
 
 
-procedure TIniFileVcl.LoadForm(Form: TForm; Loading: TFormLoading= flPositionOnly);
+procedure TIniFileApp.LoadForm(Form: TForm; Loading: TFormLoading= flPositionOnly);
 
    procedure ReadComponentsOf(Component: TComponent);
    VAR i: Integer;
@@ -199,14 +196,14 @@ procedure TIniFileVcl.LoadForm(Form: TForm; Loading: TFormLoading= flPositionOnl
 
 begin
  Assert(Form <> NIL);
- ReadComp(Form);         { Read form itself }
- if Loading= flLoad        { Read form's sub-components }
+ ReadComp(Form);           { Read form itself }
+ if Loading= flFull        { Read form's sub-components }
  then ReadComponentsOf(Form);
 end;
 
 
 
-procedure TIniFileVcl.WriteCtrlPos(Ctrl: TControl);
+procedure TIniFileApp.WriteCtrlPos(Ctrl: TControl);
 begin
  if Ctrl.InheritsFrom(TForm)
  then
@@ -234,7 +231,7 @@ end;
 
 
 { For strange reasons, for forms, I cannot read/write the ClientWidth. I need to use Width. }
-procedure TIniFileVcl.ReadCtrlPos(Ctrl: TControl);
+procedure TIniFileApp.ReadCtrlPos(Ctrl: TControl);
 begin
  if Ctrl.InheritsFrom(TForm)
  then
@@ -290,14 +287,14 @@ end;
    READ/WRITE INDIVIDUAL CTRLS
 -----------------------------------------------------------------------------------------------------------------------}
 //ToDo: here make an array of supported controls (class references?) then go with InheritsFrom through the list
-function TIniFileVcl.WriteComp(Comp: TComponent): Boolean;                                                             { Write 'any' control to INI file }
+function TIniFileApp.WriteComp(Comp: TComponent): Boolean;                                                             { Write 'any' control to INI file }
 VAR s: String;
 begin
  Assert(AppData <> NIL);
 
  if Comp.Name = '' then
   begin
-   s:= 'TIniFileCubic. The control has no name! Class: '+ Comp.ClassName;
+   s:= 'TIniFileVCL. The control has no name! Class: '+ Comp.ClassName;
    if (Comp.InheritsFrom(TControl))
    AND ((Comp as TControl).Parent <> NIL)
    then s:= s+ '. Parent: '+ (Comp as TControl).Parent.Name;
@@ -313,7 +310,7 @@ begin
    Write('FormFont', TForm(Comp).Font);
 
    if Comp = Application.MainForm
-   then WriteString(Comp.Name, 'LastUsedFolder', AppData.LastUsedFolder); //todo: make it a parameter for TIniFileVcl
+   then WriteString(Comp.Name, 'LastUsedFolder', AppData.LastUsedFolder); //todo: make it a parameter for TIniFileApp
   end
  else
 
@@ -408,11 +405,10 @@ end;
 
 {Important:
     The cvRadioButton/cvRadioButton will NOT be automatically resized if you call LoadForm(self) in FormCreate (canvas not ready). You need to call LoadForm(self) in LateInitialize. }
-function TIniFileVcl.ReadComp(Comp: TComponent): Boolean;
+function TIniFileApp.ReadComp(Comp: TComponent): Boolean;
 VAR s: string;
 begin
- Assert(Comp.Name > '', 'TIniFileCubic-The control has no name! Class: '+ Comp.ClassName);
-
+  Assert(Comp.Name > '', 'TIniFileVCL-The control has no name! Class: '+ Comp.ClassName);
  Result:= TRUE;
 
  { Read form }
@@ -558,6 +554,7 @@ begin
 
       if Comp.InheritsFrom(TShape)
       then TShape (Comp).Brush.Color:= ReadColor(Comp.Name, 0)
+
       else
          Result:= FALSE; //RAISE Exception.Create('Unsupported control: '+ Comp.ClassName+ ', '+ Comp.Name);
    end;
@@ -565,7 +562,7 @@ end;
 
 
 { Optimization trick: the most common/used controls are on top of the list. This way we have a higher chance to exit faster the list, without going through all lines }
-function TIniFileVcl.IsSupported(WinCtrl: TComponent): Boolean;
+function TIniFileApp.IsSupported(WinCtrl: TComponent): Boolean;
 begin
  Result:= WinCtrl.InheritsFrom (TRadioButton)
        OR WinCtrl.InheritsFrom (TCheckBox)
@@ -606,7 +603,7 @@ end;
    CHILDREN
 ----------------}
 { Read/write all supported items (checkboxes, radioboxes, etc) found in a panel/groupbox/etc }
-procedure TIniFileVcl.WriteGroup(WinCtrl: TWinControl);  { Save/load all  in a groupbox/panel }
+procedure TIniFileApp.WriteGroup(WinCtrl: TWinControl);  { Save/load all  in a groupbox/panel }
 VAR i: Integer;
 begin
  for i:= 0 to WinCtrl.ControlCount-1 DO
@@ -616,7 +613,7 @@ end;
 
 
 { The section name is automatically retrieved from WinCtrl.Name }
-procedure TIniFileVcl.ReadGroup(WinCtrl: TWinControl);
+procedure TIniFileApp.ReadGroup(WinCtrl: TWinControl);
 VAR i: Integer;
 begin
  for i:= 0 to WinCtrl.ControlCount-1 DO
@@ -640,7 +637,7 @@ end;
 
 
 
-procedure TIniFileVcl.writeSplitter(Comp: TComponent);
+procedure TIniFileApp.writeSplitter(Comp: TComponent);
 begin
  if (TWinControl(Comp).Align = alLeft)
  OR (TWinControl(Comp).Align = alRight)
@@ -653,7 +650,7 @@ end;
 
 
 
-procedure TIniFileVcl.readSplitter(Comp: TComponent);
+procedure TIniFileApp.readSplitter(Comp: TComponent);
 begin
  if (TWinControl(Comp).Align= alLeft)
  OR (TWinControl(Comp).Align= alRight)
@@ -668,24 +665,58 @@ end;
 
 
 
-
-
-
-
-
 { Returns the entire content of the default INI file, as string.
   Don't forget to force the app to save its INI file to disk before loading the file. }             { Old name: IniFileToString }
-class function TIniFileVcl.AsString: string;
+class function TIniFileApp.AsString: string;
 begin
   Result:= StringFromFile(AppData.IniFile);
 end;
 
 
 
+{ Result:
+    If the INI file does not contains informations about font then this function will return FALSE
+    and no modification will be done to the 'Font' object passed as parameter. }
+function TIniFileApp.Read(CONST Ident: string; Font: TFont): Boolean;
+begin
+ Result:= ValueExists(FSection, Ident+ 'Name');
+ if Result then
+   begin
+    Font.Name   := ReadString   (FSection,              Ident+ 'Name',    'Arial');
+    Font.CharSet:= TFontCharSet (ReadInteger (FSection, Ident+ 'CharSet', 0));
+    Font.Color  := TColor       (ReadInteger (FSection, Ident+ 'Color',   0));
+    Font.Size   := ReadInteger  (FSection,              Ident+ 'Size',    8);
+    Font.Style  := TFontStyles (BYTE
+                                (ReadInteger (FSection, Ident+ 'Style',   0)) );
+   end;
+end;
+
+procedure TIniFileApp.Write(CONST Ident: string; Font: TFont);
+begin
+  WriteString (FSection, Ident,  '');      // I need this here so I can find the font by its identifier (name). Otherwise it will be filtered out by TIniFileVCL.Read: if ValueExists(FSection, Comp.Name) then
+  WriteString (FSection, Ident + 'Name',    Font.Name);
+  WriteInteger(FSection, Ident + 'CharSet', Font.CharSet);
+  WriteInteger(FSection, Ident + 'Color',   Font.Color);
+  WriteInteger(FSection, Ident + 'Size',    Font.Size);
+  WriteInteger(FSection, Ident + 'Style',   Byte(Font.Style));
+end;
 
 
 
 
+{---------------
+   COLORS
+----------------}
+function TIniFileApp.ReadColor(CONST Ident: string; Default: TColor): TColor;
+begin
+ Result:= StringToColor(ReadString(FSection, Ident, ColorToString(Default)));
+end;
+
+
+procedure TIniFileApp.WriteColor(CONST Ident: string; Value: TColor);
+begin
+ WriteString(FSection, Ident, ColorToString(Value));
+end;
 
 
 
@@ -700,20 +731,20 @@ end;
          OnlyFormPos=True   ->  It will only save the position of the form (only Left/Top, no width/height/WndState)
 -----------------------------------------------------------------------------------------------------------------------}
 
-procedure SaveForm(Form: TForm; Loading: TFormLoading= flPositionOnly);
+procedure SaveFormBase(Form: TForm; Loading: TFormLoading= flPositionOnly);
 VAR
-   IniFile: TIniFileVcl;
+   IniFile: TIniFileApp;
 begin
  if TAppData.Initializing
  AND (Form = Application.MainForm) then
   begin
    if TAppData.RunningHome
-   then ShowMessage('Closing application while still initializing!');
+   then MesajError('Closing application while still initializing!');
    Exit; // We don't save anything if the start up was improper!
   end;
 
  Assert(AppData <> NIL, '!!!');
- IniFile:= TIniFileVcl.Create(Form.Name);
+ IniFile:= TIniFileApp.Create(Form.Name);
  TRY
   TRY
     IniFile.SaveForm(Form, Loading);
@@ -728,17 +759,19 @@ begin
 end;
 
 
-{ Extra:
+{ It also does:
     * LoadForm will also set the font for all forms to be the same as the font of the MainForm.
     * If the form is out of screen, LoadForm will also bring the form back to screen. }
-procedure LoadForm(Form: TForm; Loading: TFormLoading= flPositionOnly);
+procedure LoadFormBase(Form: TForm; Loading: TFormLoading= flPositionOnly);
 VAR
-   IniFile: TIniFileVcl;
+   IniFile: TIniFileApp;
 begin
- if Application.MainForm <> NIL
- then Form.Font:= Application.MainForm.Font;
+ if AppData = NIL then                { If AppData exists, let it deal with the font }
+   if (Application.MainForm <> NIL)     { Set font only for secondary forms }
+   AND (Form <> Application.MainForm)
+   then Form.Font:= Application.MainForm.Font;
 
- IniFile:= TIniFileVcl.Create(Form.Name);
+ IniFile:= TIniFileApp.Create(Form.Name);
  TRY
   TRY
     IniFile.LoadForm(Form, Loading);
@@ -759,66 +792,13 @@ end;
 
 
 
-
-
-
-
-
-{ Result:
-    If the INI file does not contains informations about font then this function will return FALSE
-    and no modification will be done to the 'Font' object passed as parameter. }
-function TIniFileVcl.Read(CONST Ident: string; Font: TFont): Boolean;
-begin
- Result:= ValueExists(FSection, Ident+ 'Name');
- if Result then
-   begin
-    Font.Name   := ReadString   (FSection,              Ident+ 'Name',    'Arial');
-    Font.CharSet:= TFontCharSet (ReadInteger (FSection, Ident+ 'CharSet', 0));
-    Font.Color  := TColor       (ReadInteger (FSection, Ident+ 'Color',   0));
-    Font.Size   := ReadInteger  (FSection,              Ident+ 'Size',    8);
-    Font.Style  := TFontStyles (BYTE
-                                (ReadInteger (FSection, Ident+ 'Style',   0)) );
-   end;
-end;
-
-procedure TIniFileVcl.Write(CONST Ident: string; Font: TFont);
-begin
-  WriteString (FSection, Ident,  '');      // I need this here so I can find the font by its identifier (name). Otherwise it will be filtered out by TIniFileCubic.Read: if ValueExists(FSection, Comp.Name) then
-  WriteString (FSection, Ident + 'Name',    Font.Name);
-  WriteInteger(FSection, Ident + 'CharSet', Font.CharSet);
-  WriteInteger(FSection, Ident + 'Color',   Font.Color);
-  WriteInteger(FSection, Ident + 'Size',    Font.Size);
-  WriteInteger(FSection, Ident + 'Style',   Byte(Font.Style));
-end;
-
-
-
-
-{---------------
-   COLORS
-----------------}
-function TIniFileVcl.ReadColor(CONST Ident: string; Default: TColor): TColor;
-begin
- Result:= StringToColor(ReadString(FSection, Ident, ColorToString(Default)));
-end;
-
-
-procedure TIniFileVcl.WriteColor(CONST Ident: string; Value: TColor);
-begin
- WriteString(FSection, Ident, ColorToString(Value));
-end;
-
-
-
-
-
 end.
 
 (*==========================================================================
 
 
 {
-procedure TIniFileCubic.WriteCheckbox(CONST FSection, Ident: string; State: TCheckBoxState);
+procedure TIniFileVCL.WriteCheckbox(CONST FSection, Ident: string; State: TCheckBoxState);
 begin
  case State of
   cbUnchecked: WriteInteger(FSection, Ident, 0);                                                    { The numbers (0,1,2) corespond to the order of the elements in the TCheckBoxState enumeration and it cannot be changed.
@@ -827,7 +807,7 @@ begin
  end;
 end;
 
-function TIniFileCubic.ReadCheckbox(CONST FSection, Ident: string; DefaultState: TCheckBoxState): TCheckBoxState;
+function TIniFileVCL.ReadCheckbox(CONST FSection, Ident: string; DefaultState: TCheckBoxState): TCheckBoxState;
 VAR i: Integer;
 begin
  i:= ReadInteger(FSection, Ident, Ord(DefaultState));

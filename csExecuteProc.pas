@@ -32,7 +32,7 @@ UNIT csExecuteProc;
 
 INTERFACE
 USES
-    WinApi.Windows, WinApi.TlHelp32, System.SysUtils, Vcl.Forms;
+    WinApi.Windows, System.SysUtils, Vcl.Forms;
 
 
  function  ExecuteProcMsg     (ExeFile: string): Boolean;
@@ -49,7 +49,7 @@ USES
 IMPLEMENTATION
 
 USES
-   cmIO, cmIO.Win, ccCore, cbDialogs;
+   cmIO.Win, ccCore, cbDialogs;
 
 
 {--------------------------------------------------------------------------------------------------

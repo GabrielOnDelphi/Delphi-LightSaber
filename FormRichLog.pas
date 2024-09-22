@@ -53,7 +53,7 @@ IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   cbIniFile, cbAppData;
+   cvINIFile, cbAppData;
 
 
 

@@ -51,7 +51,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  cTranslate, cbAppData, cbIniFile {Don't add dependencies to cvIniFile because that package is not available yet};
+  cTranslate, cbAppData, cvIniFile {Don't add dependencies to cvIniFile because that package is not available yet};
 
 
 

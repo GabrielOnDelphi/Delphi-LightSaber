@@ -6,14 +6,14 @@ uses
   {$ENDIF }
   cbAppData,
   Forms,
-  FormMain in 'FormMain.pas' {frmTester};
+  FormMain in 'FormMain.pas' {frmTester},
+  FormRamLog in '..\..\FormRamLog.pas';
 
 {$R *.res}
 
 begin
-  Application.Initialize;
-
   AppData:= TAppData.Create('Light Tester WinVer');
   AppData.CreateMainForm(TfrmTester, frmTester, TRUE);
+  TfrmRamLog.CreateFormAppData;
   Application.Run;
 end.

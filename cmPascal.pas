@@ -12,7 +12,7 @@ UNIT cmPascal;
 INTERFACE
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes, System.RegularExpressions, System.StrUtils, System.Character, Vcl.Forms;
+  System.SysUtils, System.Classes, System.RegularExpressions, System.StrUtils, Vcl.Forms;
 
 
 // CLASSES & OBJECTS
@@ -40,7 +40,7 @@ function WordPos          (CONST Needle, HayStack: string): Integer;
 IMPLEMENTATION
 
 USES
-  ccCore, ccIO, ccTextFile;
+  ccCore;
 
 {-------------------------------------------------------------------------------------------------------------
     COMMENTS

@@ -22,7 +22,7 @@ INTERFACE
 USES
   WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs,
   cvIniFile, cvPathEdit, cmDebugger, cvRadioButton, 
-  cvCheckBox, cbAppData, cbINIFile, 
+  cvCheckBox, cbAppData,
   cmGuiSettings;
 
 TYPE
@@ -189,7 +189,7 @@ begin
  radHintsTooltips.Checked := AppData.HintType = htTooltips;
  radHintsStatBar .Checked := AppData.HintType = htStatBar;
  spnHideHint     .Value   := AppData.HideHint;
- chkLogOnError   .Checked := AppData.ShowLogOnError;
+ chkLogOnError   .Checked := AppData.RamLog.ShowonError;
 
  { Demo/template settings }
  chkUser         .Checked := GuiSettings.bUser;   // Replace this with your own code
@@ -206,7 +206,7 @@ begin
  AppData.StartMinim    := chkStartMinim .Checked;
  AppData.Minimize2Tray := chkTrayIcon   .Checked;
  AppData.HideHint      := spnHideHint   .Value;
- AppData.ShowLogOnError:= chkLogOnError .Checked;
+ AppData.RamLog.ShowonError   := chkLogOnError .Checked;
 
  if radHintsOff     .Checked then AppData.HintType := htOff else
  if radHintsTooltips.Checked then AppData.HintType := htTooltips else

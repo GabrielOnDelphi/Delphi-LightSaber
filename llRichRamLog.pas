@@ -4,6 +4,8 @@ UNIT llRichRamLog;
    Gabriel Moraru
    2024.05
    See Copyright.txt
+
+   FOR RICHLOG (RTF)
 --------------------------------------------------------------------------------------------------------------
 
    A simple but effective log (non-visual).

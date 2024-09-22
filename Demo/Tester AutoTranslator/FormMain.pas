@@ -4,7 +4,7 @@ INTERFACE
 
 USES
   WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, VCL.Forms, Vcl.Controls, Vcl.ExtCtrls,
-  cbAppData, cbINIFile, Vcl.Mask;
+  cbAppData, cvINIFile, Vcl.Mask;
 
 TYPE
  TfrmTester = class(TForm)

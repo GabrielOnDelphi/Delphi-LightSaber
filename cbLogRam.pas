@@ -23,7 +23,7 @@ INTERFACE
 
 USES
    System.SysUtils, System.Classes, Vcl.Graphics, Vcl.ExtCtrls, Vcl.Grids,
-   cbLogLines, cbLogUtils;
+   cbLogLines, cbLogUtils, ccStreamBuff2;
 
 TYPE
   ILogObserver = interface
@@ -69,6 +69,9 @@ TYPE
      function  GetAsText: string;
      procedure SaveAsText  (CONST FullPath: string);
      {}
+     function  LoadFromStream(Stream: TCubicBuffStream2): Boolean;
+     procedure SaveToStream  (Stream: TCubicBuffStream2);
+
      procedure SaveToFile  (CONST FullPath: string);
      function  LoadFromFile(CONST FullPath: string): Boolean;
 
@@ -85,7 +88,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-  ccCore, ccStreamBuff2, ccIO, ccTextFile, ccStreamBuff;
+  ccCore, ccIO, ccTextFile, ccStreamBuff;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -129,9 +132,10 @@ begin
   if Filtered
   then
     for VAR i := 0 to Lines.Count - 1 do
-      if Lines[i].Level >= Filter
-      then Inc(Result)
-      else
+      begin
+       if Lines[i].Level >= Filter
+       then Inc(Result);
+      end
   else
     Result:= Lines.Count;
 end;
@@ -141,7 +145,7 @@ end;
 
 procedure TRamLog.RegisterLogObserver(Observer: ILogObserver);
 begin
-  //ToDo: question: do I need to free the previous observer? FLogObserver = nil?
+  FLogObserver := NIL; // explicitly set to nil before assigning a new observer to prevent memory leaks or undefined behavior with multiple observers. Ensure proper lifecycle management of observers.
   FLogObserver := Observer;
 end;
 
@@ -316,31 +320,41 @@ end;
 
 
 
+function TRamLog.LoadFromStream(Stream: TCubicBuffStream2): Boolean;
+begin
+  Result:= Stream.ReadHeader(StreamSign, StreamVer);
+  if NOT Result then EXIT;
+  Lines.ReadFromStream(Stream);
+  Stream.ReadPaddingDef;
+end;
+
+procedure TRamLog.SaveToStream(Stream: TCubicBuffStream2);
+begin
+  Stream.WriteHeader(StreamSign, StreamVer);
+  Lines.WriteToStream(Stream);
+  Stream.WritePaddingdef;
+end;
+
+
+
 
 function TRamLog.LoadFromFile(const FullPath: string): Boolean;
 begin
  VAR Stream:= TCubicBuffStream2.CreateRead(FullPath);
  TRY
-   Result:= Stream.ReadHeader(StreamSign, StreamVer);
-   if NOT Result then EXIT;
-
-   Lines.ReadFromStream(Stream);
-   Stream.ReadPaddingDef;
-
-   NotifyLogObserver;
+   Result:= LoadFromStream(Stream);
  FINALLY
    FreeAndNil(Stream);
  END;
-end;
 
+ if Result then NotifyLogObserver;
+end;
 
 procedure TRamLog.SaveToFile(const FullPath: string);
 begin
  VAR Stream:= TCubicBuffStream2.CreateWrite(FullPath);
  TRY
-   Stream.WriteHeader(StreamSign, StreamVer);
-   Lines.WriteToStream(Stream);
-   Stream.WritePaddingdef;
+   SaveToStream(Stream);
  FINALLY
    FreeAndNil(Stream);
  END;

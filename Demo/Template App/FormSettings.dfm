@@ -4,8 +4,8 @@ object frmSettings: TfrmSettings
   AlphaBlendValue = 249
   BorderIcons = [biSystemMenu]
   Caption = 'Settings'
-  ClientHeight = 512
-  ClientWidth = 774
+  ClientHeight = 511
+  ClientWidth = 770
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 350
@@ -28,19 +28,19 @@ object frmSettings: TfrmSettings
   object pgCtrl: TPageControl
     Left = 0
     Top = 0
-    Width = 774
-    Height = 512
-    ActivePage = tabSystem
+    Width = 770
+    Height = 511
+    ActivePage = tabHelp
     Align = alClient
     TabOrder = 0
     object tabSystem: TTabSheet
       Caption = 'System'
       DesignSize = (
-        766
-        480)
+        762
+        479)
       object grpSystem: TGroupBox
-        Left = 186
-        Top = 100
+        Left = 182
+        Top = 99
         Width = 381
         Height = 246
         Anchors = []
@@ -64,7 +64,7 @@ object frmSettings: TfrmSettings
         object chkAutoStartUp: TCubicCheckBox
           Left = 60
           Top = 39
-          Width = 173
+          Width = 197
           Height = 17
           Caption = 'Start at Windows startup '
           TabOrder = 0
@@ -73,7 +73,7 @@ object frmSettings: TfrmSettings
         object chkTrayIcon: TCubicCheckBox
           Left = 60
           Top = 107
-          Width = 119
+          Width = 155
           Height = 17
           Caption = 'Minimize to tray'
           TabOrder = 2
@@ -82,7 +82,7 @@ object frmSettings: TfrmSettings
         object chkStartMinim: TCubicCheckBox
           Left = 60
           Top = 73
-          Width = 115
+          Width = 151
           Height = 17
           Caption = 'Start minimized'
           TabOrder = 3
@@ -92,10 +92,10 @@ object frmSettings: TfrmSettings
           AlignWithMargins = True
           Left = 60
           Top = 140
-          Width = 177
+          Width = 145
           Height = 17
           Hint = 'Show the Log window when it receives error or warning messages.'
-          Caption = 'Show the log on error'
+          Caption = 'Show log on error'
           Checked = True
           State = cbChecked
           TabOrder = 4
@@ -103,8 +103,8 @@ object frmSettings: TfrmSettings
       end
       object Path: TCubicPathEdit
         Left = 82
-        Top = 365
-        Width = 591
+        Top = 364
+        Width = 583
         Height = 49
         Hint = 
           'User defined path where to save (large) files. Useful when the p' +
@@ -115,7 +115,7 @@ object frmSettings: TfrmSettings
         TabOrder = 1
       end
       object btnCrash: TButton
-        Left = 636
+        Left = 628
         Top = 12
         Width = 101
         Height = 25
@@ -130,11 +130,11 @@ object frmSettings: TfrmSettings
       Caption = 'Help'
       ImageIndex = 1
       DesignSize = (
-        766
-        480)
+        762
+        479)
       object GroupHelp: TGroupBox
-        Left = 204
-        Top = 131
+        Left = 200
+        Top = 130
         Width = 345
         Height = 221
         Anchors = []
@@ -205,10 +205,10 @@ object frmSettings: TfrmSettings
       Caption = 'Interface'
       ImageIndex = 2
       DesignSize = (
-        766
-        480)
+        762
+        479)
       object GroupBox1: TGroupBox
-        Left = 232
+        Left = 228
         Top = 112
         Width = 290
         Height = 226
@@ -265,11 +265,11 @@ object frmSettings: TfrmSettings
       Caption = 'User defined'
       ImageIndex = 3
       DesignSize = (
-        766
-        480)
+        762
+        479)
       object grpUser: TGroupBox
-        Left = 206
-        Top = 131
+        Left = 202
+        Top = 130
         Width = 345
         Height = 221
         Anchors = []

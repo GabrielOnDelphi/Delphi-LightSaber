@@ -97,11 +97,11 @@
         <DCCReference Include="ccIO.pas"/>
         <DCCReference Include="ccCore.pas"/>
         <DCCReference Include="ccBinary.pas"/>
-        <DCCReference Include="ccStreamBuff.pas"/>
         <DCCReference Include="ccINIFile.pas"/>
         <DCCReference Include="ccCompiler.pas"/>
         <DCCReference Include="ccStreamMem.pas"/>
         <DCCReference Include="ccColors.pas"/>
+        <DCCReference Include="ccStreamBuff.pas"/>
         <DCCReference Include="ccStreamBuff2.pas"/>
         <DCCReference Include="ccTextFile.pas"/>
         <BuildConfiguration Include="Base">

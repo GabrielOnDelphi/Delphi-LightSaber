@@ -40,6 +40,7 @@ TYPE
     procedure btnRefreshClick  (Sender: TObject);
     procedure btnTranslateClick(Sender: TObject);
     procedure FormKeyPress     (Sender: TObject; var Key: Char);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     function GetSelectedFileName: string;
     function GetSelectedFilePath: string;
@@ -48,10 +49,10 @@ TYPE
     function IsEnglish: Boolean;  //unused
     function PopulateLanguageFiles: Boolean;
   end;
-
+ {
 VAR
    frmLanguage: TfrmLanguage;
-
+    }
 
 procedure ShowSelectLanguage;
 
@@ -63,16 +64,15 @@ USES
 
 
 procedure ShowSelectLanguage;
+VAR frmLanguage: TfrmLanguage;
 begin
  Assert(Translator <> NIL);
  ForceDirectories(Translator.GetLangFolder);   { Make sure that the folders exists }
 
- VAR frmLanguage:= TfrmLanguage.Create(Application);
+ Appdata.CreateFormHidden(TfrmLanguage, frmLanguage);
  TRY
-   frmLanguage.Font:= Application.MainForm.Font;
    frmLanguage.btnTranslate.Visible:= NOT Appdata.RunningFirstTime;
    frmLanguage.btnRefresh.Visible:= frmLanguage.btnTranslate.Visible;
-   LoadForm(frmLanguage);
    frmLanguage.PopulateLanguageFiles;    { Populate the ListBox with languages we found in 'Lang' folder }
    frmLanguage.ShowModal;
  FINALLY
@@ -81,9 +81,14 @@ begin
 end;
 
 
+procedure TfrmLanguage.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Action:= TCloseAction.caFree;
+end;
+
 procedure TfrmLanguage.FormDestroy(Sender: TObject);
 begin
-  SaveForm(Self);  //Localization warning: Don't add dependencies to CubicVisualControls here!
+  SaveFormBase(Self);  //Localization warning: Don't add dependencies to CubicVisualControls here!
 end;
 
 

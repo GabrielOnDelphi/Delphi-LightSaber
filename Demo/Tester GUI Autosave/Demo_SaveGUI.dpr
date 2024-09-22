@@ -6,8 +6,8 @@ uses
   Forms,
   MainForm in 'MainForm.pas' {frmTester},
   SecondForm in 'SecondForm.pas' {frmContainer},
-  FormLog in '..\..\FormLog.pas',
-  cbAppData in '..\..\cbAppData.pas';
+  cbAppData in '..\..\cbAppData.pas',
+  FormRamLog in '..\..\FormRamLog.pas';
 
 {$R *.res}
 
@@ -25,6 +25,7 @@ procedure Main;
   else
    begin
      AppData.CreateMainForm(TfrmTester, frmTester, TRUE, TRUE);
+     TfrmRamLog.CreateFormAppData;
      Application.Run;
    end;
  end;

@@ -1,4 +1,4 @@
-UNIT FormProxy;
+UNIT FormProxyList;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -13,6 +13,9 @@ UNIT FormProxy;
 
   How to use it:
     Initialize like this: frameProxy.LoadProxyFile(AppData.AppDataFolder+ 'ProxyList.txt');
+
+
+  Note: This is also available as vis component: cvProxyList.pas
 =============================================================================================================}
 
 INTERFACE

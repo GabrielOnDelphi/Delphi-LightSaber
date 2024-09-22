@@ -53,7 +53,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   cbDialogs, cbAppData, ciInternet, cTranslate, cbIniFile;
+   cbDialogs, cbAppData, ciInternet, cTranslate, ccINIFile, cvINIFile; //, cvINIFile;
 
 
 
@@ -105,7 +105,7 @@ procedure TfrmUpdaterSettings.FormDestroy(Sender: TObject);
 begin
   Assert(Container.Parent = Self);    { We need to move the container back on its original form, in order to let that form to correctly save its children }
   Apply;                              { Reparenting MUST be before Apply }
-  SaveForm(Self, flPositionOnly);
+  cvinifile.SaveForm(Self, flPositionOnly);
 end;
 
 

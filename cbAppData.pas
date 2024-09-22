@@ -43,31 +43,19 @@
 
      In the DPR file replace the code with:
        uses
+         FastMM4,
          Vcl.Forms,
-         MainForm in 'MainForm.pas' {frmMain),
          FormRamLog,
-         cbAppData;             <--- Do not use PAS file here!
+         cbINIFile,
+         cbAppData,
+         MainForm in 'MainForm.pas' {frmMain _;
        begin
          AppData:= TAppData.Create('MyCollApp');
          AppData.CreateMainForm(TMainForm, MainForm, True, True);    // Main form
          AppData.CreateForm(TSecondFrom, frmSecond);                 // Secondary form(s)
          TfrmRamLog.CreateFormAppData;                               // Special form (optional)
          Application.Run;
-       end;
-
-       Not necessary anymore:
-         Application.Title := AppData.AppName;
-         Application.ShowMainForm:= True;
-         MainForm.Show;
-         Not necessary to free AppData. It frees itself.
-
-
-     The "AppData.Initializing" Flag
-        Once the program is fully initialized set Initializing to False.
-        Details: Set it to false once your app finished initializing (usually after you finished creating all forms).
-        Used by SaveForm in cvIniFile.pas (and few other places) to signal not to save the form if the application
-        has crashed whill still in the initialization phase.
-        If you don't set it to false earlyer, AppData will set it to false at the end of CreateMainForm
+       end.
 
      OnFormCreate
         OnFormCreate and OnFormShow is the worst place to initialize your code.
@@ -78,6 +66,21 @@
              private
                procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully initilized
             end;
+
+     Not necessary anymore:
+         Application.Title := AppData.AppName;
+         Application.ShowMainForm:= True;
+         MainForm.Show;
+         Not necessary to free AppData. It frees itself.
+
+
+     The "AppData.Initializing" Flag
+        Once the program is fully initialized set Initializing to False.
+        Details: Set it to false once your app finished initializing (usually after you finished creating all forms).
+        Used by SaveForm in cbINIFile.pas (and few other places) to signal not to save the form if the application
+        has crashed whill still in the initialization phase.
+        If you don't set it to false earlyer, AppData will set it to false at the end of CreateMainForm
+
 
  ____________________________________________________________________________________________________________
 
@@ -112,7 +115,7 @@ USES
   Winapi.Windows, Winapi.Messages, Winapi.ShlObj, Winapi.ShellAPI,
   System.Win.Registry, System.IOUtils, System.AnsiStrings, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Consts,
-  ccCore, cbIniFile, cbLogRam;
+  ccCore, ccIniFile, cbINIFile, cbLogRam;
 
 CONST
   MSG_LateFormInit = WM_APP + 4711;         { Old name: MSG_LateFormInit/MSG_LateAppInit  }
@@ -235,8 +238,6 @@ TYPE
     procedure CreateFormModal (aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL); overload;   // Do I need this?
     procedure CreateFormModal (aClass: TFormClass;                Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL); overload;
 
-//    procedure CreateFormLog   (aClass: TFormClass; Show: Boolean= FALSE; Loading: TFormLoading= flPositionOnly);
-
     procedure SetMaxPriority;
     procedure HideFromTaskbar;
 
@@ -300,7 +301,7 @@ VAR                      //ToDo: make sure AppData is unique (make it Singleton)
 IMPLEMENTATION
 
 USES
-  cbWinVersion, ccINIFile, {ccStreamBuff2,} ccIO, ccTextFile, cbRegistry, cbDialogs, cbCenterControl;
+  cbWinVersion, ccIO, ccTextFile, cbRegistry, cbDialogs, cbCenterControl;
 
 //ToDo: Don't create the log window. Store data in TRamLog.
 
@@ -321,7 +322,7 @@ begin
 
   inherited Create;
   SignalInitEnd:= aSignalInitEnd;
-  Initializing:= True;                            { Used in cvIniFile.pas. Set it to false once your app finished initializing. }
+  Initializing:= True;                            { Used in cv_IniFile.pas. Set it to false once your app finished initializing. }
 
   { Sanity check }
   if FCreated
@@ -416,10 +417,16 @@ begin
 
   SetGuiProperties(TForm(Reference));
 
-  if (Loading = flLoad) OR (Loading = flPositionOnly) then
+  if (Loading = flFull) OR (Loading = flPositionOnly) then
    begin
      // Load form
-     cbIniFile.LoadForm(TForm(Reference), Loading);
+
+     // ISSUE HERE!
+     // At this point we can only load "standard" Delphi components.
+     // Loading of our Light components can only be done in cv_IniFile.pas -> TIniFileVCL
+     //
+     // For the moment the work around is to manually call cv_IniFile.LoadForm(Self, flFull) in TfrmMain.LateInitialize
+     cbINIFile.LoadFormBase(TForm(Reference), Loading);
 
      { Write path to app in registry }
      if RunningFirstTime
@@ -457,12 +464,12 @@ begin
   SetGuiProperties(TForm(Reference));
 
   // Load previous form settings/position
-  cbIniFile.LoadForm(TForm(Reference), Loading);
+  cbINIFile.LoadFormBase(TForm(Reference), Loading);
 
   // Center form in the "ParentForm"
   if (ParentWnd <> NIL)
   then
-    if (Loading = flNoLoad)
+    if (Loading = flNone)
     then CenterChild(TForm(Reference), ParentWnd)
     else TForm(Reference).Parent:= ParentWnd;
 

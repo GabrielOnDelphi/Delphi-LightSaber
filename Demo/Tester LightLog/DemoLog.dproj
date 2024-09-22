@@ -92,11 +92,9 @@
             <Form>MainForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\FormLog.pas"/>
         <DCCReference Include="..\..\cvINIFile.pas"/>
         <DCCReference Include="..\..\cbDialogs.pas"/>
         <DCCReference Include="..\..\cbIniFile.pas"/>
-        <DCCReference Include="..\..\VisLog\Log.pas"/>
         <DCCReference Include="..\..\ccINIFile.pas"/>
         <DCCReference Include="..\..\ccIO.pas"/>
         <DCCReference Include="..\..\ccBinary.pas"/>

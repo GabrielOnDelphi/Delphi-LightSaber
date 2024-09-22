@@ -112,7 +112,7 @@
         <DCCReference Include="cbAppData.pas"/>
         <DCCReference Include="cbIniFile.pas"/>
         <DCCReference Include="cbCenterControl.pas"/>
-        <DCCReference Include="cbRegistry.pas"/>
+        <DCCReference Include="cbregistry.pas"/>
         <DCCReference Include="cbDialogs.pas"/>
         <DCCReference Include="cbLogLines.pas"/>
         <DCCReference Include="cbLogRam.pas"/>

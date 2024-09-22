@@ -19,7 +19,7 @@
 interface
 
 uses
-  Winapi.Windows, System.IOUtils, System.SysUtils, System.Classes;
+  WinApi.Windows, System.IOUtils, System.SysUtils, System.Classes;
 
 
 
@@ -42,7 +42,12 @@ uses
  procedure StringToFileA        (CONST FileName: string; CONST aString: AnsiString; CONST WriteOp: TWriteOperation);  overload;
  procedure StringToFileA        (CONST FileName: string; CONST aString: String;     CONST WriteOp: TWriteOperation);  overload;
 
- function  CountLines           (CONST Filename: string; CONST BufferSize: Cardinal= 128000): Int64;                     { Opens a LARGE text file and counts how many lines it has. It does this by loading a small portion of the file in a RAM buffer }
+
+{--------------------------------------------------------------------------------------------------
+   UTILS
+--------------------------------------------------------------------------------------------------}
+ function  CountLines            (CONST Filename: string; CONST BufferSize: Cardinal= 128000): Int64;                     { Opens a LARGE text file and counts how many lines it has. It does this by loading a small portion of the file in a RAM buffer }
+ procedure GenerateRandomTextFile(CONST Filename: string; NoOfLines: Integer);
 
 
 {--------------------------------------------------------------------------------------------------
@@ -561,6 +566,21 @@ begin
   Result := False;
 end;
 
+
+
+
+
+{ Creates a file that contains random strings. NoOfLines=10000000 creates a files of about 140MB }
+procedure GenerateRandomTextFile(CONST Filename: string; NoOfLines: Integer);
+VAR
+   s: string;
+   i: integer;
+begin
+  s:= '';
+  for i := 1 to NoOfLines
+    DO s:= s+ GenerateRandString(5, 20)+ CRLFw;
+  stringtofile(FileName, s);
+end;
 
 
 end.

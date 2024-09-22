@@ -10,6 +10,8 @@ UNIT cvProxyList;
 
   How to use it:
     Initialize like this: frameProxy.LoadProxyFile(AppData.AppDataFolder+ 'ProxyList.txt');
+
+  This is also available as form: FormProxy.pas
 =============================================================================================================}
 
 INTERFACE
@@ -138,14 +140,14 @@ begin
    grpInternetType.Height        := 190;
    grpInternetType.DoubleBuffered:= TRUE;
 
-     radGateway.SetBounds(18, 86, 64, 17);
+     radGateway.SetBounds(18, 86, 150, 17);
      radGateway.Caption         := 'Gateway';
      radGateway.Hint            := 'Gateway';
      radGateway.ShowHint        := TRUE;
      radGateway.OnClick         := ConectionTypeChanged;
 
      radDirect.Caption          := 'Direct connection';
-     radDirect.SetBounds(18, 56, 110, 17);
+     radDirect.SetBounds(18, 56, 150, 17);
      radDirect.Hint             := 'Direct Internet connection';
      radDirect.Font.Charset     := DEFAULT_CHARSET;
      radDirect.ShowHint         := TRUE;
@@ -153,13 +155,13 @@ begin
      radDirect.OnClick          := ConectionTypeChanged;
 
      radProxyList.Caption       := 'Use list of proxies';
-     radProxyList.SetBounds(18, 115, 108, 17);
+     radProxyList.SetBounds(18, 115, 150, 17);
      radProxyList.Hint          := 'Use the provided list of proxies.';
      radProxyList.ShowHint      := TRUE;
      radProxyList.TabOrder      := 2;
      radProxyList.OnClick       := ConectionTypeChanged;
 
-     edtGateway.SetBounds(87, 85, 99, 21);
+     edtGateway.SetBounds(87, 85, 150, 21);
      edtGateway.TabOrder        := 3;
      edtGateway.Text            := '192.168.0.1:80';
 

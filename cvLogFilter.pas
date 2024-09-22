@@ -1,4 +1,4 @@
-UNIT cvLogTrack;
+UNIT cvLogFilter;
 
 // NEW LOG based on TStringGrid
 
@@ -29,18 +29,18 @@ USES
    cvLog, cbLogUtils;
 
 TYPE
-  TLogVisTrckbr = class(TPanel)
+  TLogVerbFilter = class(TPanel)
    private
-     FLog: TLogGrid;
-     VerboLabel: TLabel;
-     FTrackBar: TTrackBar;
-     Initialized : Boolean;
-     FShowDebugMsg: Boolean;
-     FVerbChanged: TNotifyEvent;
-     function  getVerbosity: TLogVerbLvl;
-     procedure setVerbosity(Value: TLogVerbLvl);
-     procedure setLog(const Value: TLogGrid);
-     procedure setShowDebugMsg(const Value: Boolean);
+     FLog          : TLogGrid;
+     VerboLabel    : TLabel;
+     FTrackBar     : TTrackBar;
+     Initialized   : Boolean;
+     FShowDebugMsg : Boolean;
+
+     function  getVerbosity: TLogVerbLvl;            //Note: The "master" of the verbosity events is the Grid not the trackbar
+     procedure setVerbosity   (Value: TLogVerbLvl);
+     procedure setLog         (Value: TLogGrid);
+     procedure setShowDebugMsg(Value: Boolean);
    protected
      procedure CreateWnd; override;
    public
@@ -49,8 +49,7 @@ TYPE
   published
      property ShowDebugMsg  : Boolean       read FShowDebugMsg  write setShowDebugMsg default FALSE; { Allow the user to access the lowest (Debug) level }
      property TrackBar      : TTrackBar     read FTrackBar      write FTrackBar;
-     property OnVerbChanged : TNotifyEvent  read FVerbChanged   write FVerbChanged;   { Triggered before deleting the content of a cell }
-     property Verbosity     : TLogVerbLvl   read getVerbosity   write setVerbosity;
+     property Verbosity     : TLogVerbLvl   read getVerbosity   write setVerbosity;      //Note: The "master" of the verbosity events is the Grid not the trackbar
      property Log           : TLogGrid      read FLog           write setLog;
   end;
 
@@ -62,7 +61,7 @@ Uses cbDialogs;
 
 
 
-constructor TLogVisTrckbr.Create(AOwner: TComponent);
+constructor TLogVerbFilter.Create(AOwner: TComponent);
 begin
  inherited Create(AOwner);             { Note: Don't set 'Parent:= Owner' in constructor. Details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create }
  FShowDebugMsg:= False;
@@ -77,7 +76,7 @@ end;
 
 
 //CreateWnd can be called more than once: http://docs.embarcadero.com/products/rad_studio/delphiAndcpp2009/HelpUpdate2/EN/html/delphivclwin32/Controls_TWinControl_CreateWnd.html
-procedure TLogVisTrckbr.CreateWnd;
+procedure TLogVerbFilter.CreateWnd;
 begin
  inherited CreateWnd;
  ShowCaption := FALSE;                 { https://stackoverflow.com/questions/56859524/how-to-initialize-a-custom-control/64974040?noredirect=1#comment114931111_64974040 }
@@ -110,7 +109,7 @@ end;
 
 
 
-procedure TLogVisTrckbr.TrackBarChange(Sender: TObject);
+procedure TLogVerbFilter.TrackBarChange(Sender: TObject);
 begin
  if NOT (csLoading in ComponentState) then { This is MANDATORY because when the project loads, the value of the trackbar may change BEFORE the DFM loader assigns the Log to this trackbar. In other words, crash when I load a DFM file that contains this control }
    begin
@@ -123,9 +122,6 @@ begin
      Log.Verbosity:= Verbosity;
 
      VerboLabel.Caption:= 'Log verbosity: '+ Verbosity2String(Verbosity);
-
-     if Assigned(FVerbChanged)
-     then FVerbChanged(Self);                                                                  { Let GUI know that the user changed the verbosity }
    end;
 
  Log.Populate;
@@ -136,32 +132,33 @@ end;
 
 
 { Returns the position of the trackbar as TLogVerbLvl (instead of integer) }
-function TLogVisTrckbr.getVerbosity: TLogVerbLvl;
+function TLogVerbFilter.getVerbosity: TLogVerbLvl;
 begin
- Result:= TLogVerbLvl(TrackBar.Position);
+  Result:= TLogVerbLvl(TrackBar.Position);
 end;
 
 
-procedure TLogVisTrckbr.setVerbosity(Value: TLogVerbLvl);
+procedure TLogVerbFilter.setVerbosity(Value: TLogVerbLvl);
 begin
- TrackBar.Position:= Ord(Value);
+  TrackBar.Position:= Ord(Value);
 end;
 
 
-procedure TLogVisTrckbr.setLog(CONST Value: TLogGrid);
+procedure TLogVerbFilter.setLog(Value: TLogGrid);
 begin
- FLog:= Value;
- Verbosity:= FLog.Verbosity;
+  FLog:= Value;
+  Verbosity:= FLog.Verbosity;
+  FLog.RegisterVerbFilter(Self); // Let the Log know that its verbosity is controlled by this TrackBar
 end;
 
 
-procedure TLogVisTrckbr.setShowDebugMsg(const Value: Boolean);
+procedure TLogVerbFilter.setShowDebugMsg(Value: Boolean);
 begin
- FShowDebugMsg := Value;
+  FShowDebugMsg := Value;
 
- if FShowDebugMsg
- then TrackBar.Min:= 0
- else TrackBar.Min:= 1;
+  if FShowDebugMsg
+  then TrackBar.Min:= 0
+  else TrackBar.Min:= 1;
 end;
 
 
@@ -174,7 +171,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TLogVisTrckbr]);
+  RegisterComponents('LightSaber', [TLogVerbFilter]);
 end;
 
 

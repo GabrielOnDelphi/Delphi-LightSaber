@@ -16,9 +16,9 @@ procedure LateInitialization;
 
 IMPLEMENTATION
 
-USES 
-  chHardID, cvIniFile, csShell, csExecuteShell, cmGuiSettings,
-  cpProteusCertificate, cbAppData, cbINIFile, cbCenterControl, cTranslate, ciUpdater,
+USES
+  chHardID, csShell, csExecuteShell, cmGuiSettings,
+  cpProteusCertificate, cbAppData, cbCenterControl, cTranslate, ciUpdater,
   FormMain, FormUniversalEula, FormSkinsDisk, FormSettings, FormSplashScreen, FormUpdaterNotifier;
 
 

@@ -1,15 +1,15 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
-        <MainSource>Tester_FileStream.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Debug</Config>
         <AppType>Application</AppType>
-        <FrameworkType>VCL</FrameworkType>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+        <FrameworkType>VCL</FrameworkType>
+        <MainSource>Tester_FileStream.dpr</MainSource>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
         <ProjectVersion>19.5</ProjectVersion>
         <TargetedPlatforms>1</TargetedPlatforms>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -42,60 +42,55 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <SanitizedProjectName>Tester_FileStream</SanitizedProjectName>
-        <VerInfo_Keys>CompanyName=Visual BioInformatics;FileDescription=;FileVersion=1.0.0.2;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=;Last Compile=2013-07-30 15:11</VerInfo_Keys>
-        <VerInfo_Locale>1033</VerInfo_Locale>
-        <DCC_ExeOutput>.\</DCC_ExeOutput>
-        <VerInfo_Build>2</VerInfo_Build>
         <DCC_DcuOutput>.\$(Platform)_$(Config)</DCC_DcuOutput>
-        <DCC_UnitSearchPath>c:\MyProjects\Packages\LightSaber\;c:\MyProjects\Biology\Avalanche\Merge 8GB file\Lib-mORMot\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
-        <Icon_MainIcon>Template_local_Icon.ico</Icon_MainIcon>
-        <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
-        <DCC_F>false</DCC_F>
+        <DCC_ExeOutput>.\</DCC_ExeOutput>
         <DCC_GARBAGE>false</DCC_GARBAGE>
+        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <DCC_ImageBase>00400000</DCC_ImageBase>
+        <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
         <DCC_MapFile>3</DCC_MapFile>
-        <DCC_K>false</DCC_K>
+        <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_Optimize>false</DCC_Optimize>
+        <DCC_RangeChecking>true</DCC_RangeChecking>
+        <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
+        <DCC_UNIT_PLATFORM>false</DCC_UNIT_PLATFORM>
+        <DCC_UnitSearchPath>c:\MyProjects\Packages\LightSaber\;c:\MyProjects\Biology\Avalanche\Merge 8GB file\Lib-mORMot\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_UsePackage>vcl;rtl;vclx;VclSmp;vclactnband;vclshlctrls;dclOfficeXP;PngComponentsD7;PNG_D7;GR32_D7;CommonPackages;CubicCluster_Package;CubicDNA_Package;$(DCC_UsePackage)</DCC_UsePackage>
         <DebugSourcePath>c:\Program Files\Borland\Delphi7\Lib\Debug\;$(DebugSourcePath)</DebugSourcePath>
-        <DCC_Optimize>false</DCC_Optimize>
-        <DCC_E>false</DCC_E>
-        <DCC_N>true</DCC_N>
-        <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
-        <DCC_S>false</DCC_S>
-        <DCC_ImageBase>00400000</DCC_ImageBase>
-        <DCC_RangeChecking>true</DCC_RangeChecking>
-        <DCC_UNIT_PLATFORM>false</DCC_UNIT_PLATFORM>
-        <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
+        <Icon_MainIcon>Template_local_Icon.ico</Icon_MainIcon>
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
+        <VerInfo_Build>2</VerInfo_Build>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
+        <VerInfo_Keys>CompanyName=Visual BioInformatics;FileDescription=;FileVersion=1.0.0.2;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=;Last Compile=2013-07-30 15:11</VerInfo_Keys>
+        <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
+        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
+        <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
+        <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
+        <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
         <VerInfo_Build>0</VerInfo_Build>
         <VerInfo_Keys>CompanyName=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
-        <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
-        <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
-        <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
-        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
-        <DCC_Optimize>true</DCC_Optimize>
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+        <DCC_Optimize>true</DCC_Optimize>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <VerInfo_Build>0</VerInfo_Build>
-        <VerInfo_Keys>CompanyName=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
         <BT_BuildType>Debug</BT_BuildType>
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
+        <VerInfo_Build>0</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <VerInfo_Keys>CompanyName=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
-        <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <BT_BuildType>Debug</BT_BuildType>
+        <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
+        <VerInfo_Keys>CompanyName=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
@@ -104,6 +99,7 @@
         <DCCReference Include="FormMain.pas">
             <Form>MainForm</Form>
         </DCCReference>
+        <DCCReference Include="..\..\FormRamLog.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -126,6 +122,7 @@
                 <Source>
                     <Source Name="MainSource">Tester_FileStream.dpr</Source>
                 </Source>
+                <Excluded_Packages/>
                 <VersionInfo>
                     <VersionInfo Name="IncludeVerInfo">True</VersionInfo>
                     <VersionInfo Name="AutoIncBuild">True</VersionInfo>
@@ -154,19 +151,7 @@
                     <VersionInfoKeys Name="Comments"/>
                     <VersionInfoKeys Name="Last Compile">2013-07-30 15:11</VersionInfoKeys>
                 </VersionInfoKeys>
-                <Excluded_Packages/>
             </Delphi.Personality>
-            <Platforms>
-                <Platform value="Win32">True</Platform>
-                <Platform value="Win64">False</Platform>
-                <Platform value="OSX64">False</Platform>
-                <Platform value="Android64">False</Platform>
-                <Platform value="Android">False</Platform>
-                <Platform value="OSXARM64">False</Platform>
-                <Platform value="Linux64">False</Platform>
-                <Platform value="iOSDevice64">False</Platform>
-                <Platform value="iOSSimARM64">False</Platform>
-            </Platforms>
             <Deployment Version="4">
                 <DeployFile LocalName="Tester_FileStream.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
@@ -230,6 +215,17 @@
                 </DeployClass>
                 <ProjectRoot Platform="Win32" Name="$(PROJECTNAME)"/>
             </Deployment>
+            <Platforms>
+                <Platform value="Android">False</Platform>
+                <Platform value="Android64">False</Platform>
+                <Platform value="Linux64">False</Platform>
+                <Platform value="OSX64">False</Platform>
+                <Platform value="OSXARM64">False</Platform>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">False</Platform>
+                <Platform value="iOSDevice64">False</Platform>
+                <Platform value="iOSSimARM64">False</Platform>
+            </Platforms>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
     </ProjectExtensions>

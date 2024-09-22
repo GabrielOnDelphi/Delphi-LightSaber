@@ -19,6 +19,7 @@ object frmLanguage: TfrmLanguage
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 3
+  OnClose = FormClose
   OnDestroy = FormDestroy
   OnKeyPress = FormKeyPress
   TextHeight = 13

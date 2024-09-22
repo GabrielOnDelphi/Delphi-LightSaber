@@ -34,7 +34,7 @@
 INTERFACE
 USES
    Winapi.Windows, Winapi.Messages, Winapi.WinSock, Winapi.WinSvc,
-   System.Classes, System.SysUtils, System.Win.Registry, System.UITypes, TlHelp32, IOUtils,
+   System.Classes, System.SysUtils, System.Win.Registry, System.UITypes, IOUtils,
    Vcl.Controls, Vcl.Forms, Vcl.ClipBrd, Vcl.Dialogs;
 
 
@@ -134,7 +134,7 @@ USES
 IMPLEMENTATION
 
 USES
-   csKeyboard, ccIO, ccTextFile, cmIO, cmIO.Win, cbWinVersion, cbRegistry;
+   csKeyboard, ccIO, cmIO, cmIO.Win, cbWinVersion, cbRegistry;
 
 
 

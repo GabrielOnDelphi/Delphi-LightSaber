@@ -87,10 +87,11 @@ contains
   cvStringGridScrollFix in 'cvStringGridScrollFix.pas',
   cvDropDownSearch in 'cvDropDownSearch.pas',
   cvStrongPasswordEdit in 'cvStrongPasswordEdit.pas',
-  cvLog in 'cvLog.pas',
-  cvLogTrack in 'cvLogTrack.pas',
   llRichLogTrack in 'llRichLogTrack.pas',
   llRichLogUtils in 'llRichLogUtils.pas',
-  llRichLog in 'llRichLog.pas';
+  llRichLog in 'llRichLog.pas',
+  cvRichEditResize in 'cvRichEditResize.pas',
+  cvLog in 'cvLog.pas',
+  cvLogFilter in 'cvLogFilter.pas';
 
 end.

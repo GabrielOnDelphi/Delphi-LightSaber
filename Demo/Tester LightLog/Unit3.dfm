@@ -116,7 +116,7 @@ object MainForm: TMainForm
         TabOrder = 0
         OnClick = Button2Click
       end
-      object LogVisTrckbr1: TLogVisTrckbr
+      object LogVisTrckbr1: TLogVerbFilter
         AlignWithMargins = True
         Left = 160
         Top = 4
@@ -204,10 +204,16 @@ object MainForm: TMainForm
       Height = 367
       Align = alClient
       BevelOuter = bvNone
-      Caption = 'VisLog'
-      ShowCaption = False
+      ColCount = 1
+      DefaultRowHeight = 22
+      FixedCols = 0
+      RowCount = 1
+      FixedRows = 0
+      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goRowSelect, goFixedRowDefAlign]
       TabOrder = 2
       Verbosity = lvVerbose
+      ColWidths = (
+        374)
     end
   end
 end

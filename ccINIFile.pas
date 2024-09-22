@@ -9,7 +9,7 @@
   Features:
      * Extends the capabilities of TIniFile.
      * We don't need to provide a section name (except for the constructor). All values are written to that single section.
-     * Provides a lots of overloads where we don't need to provide a section name, in preparation for TIniFileVcl
+     * Provides a lots of overloads where we don't need to provide a section name, in preparation for TIniFileApp
 
 
   Reminder: TIniFile limitations:
@@ -31,7 +31,12 @@ TYPE
     Style : TFontStyle;
     Color : TColor;
   end;
-  
+
+TYPE
+  TFormLoading = (flNone,           // Don't restore form position and GUI elements when the form is created
+                  flPositionOnly,   // Restore form position
+                  flFull);          // Restore form position and GUI elements
+
 TYPE
  TIniFileEx = class(TIniFile)        // Old name: TCubicIniFile
   protected
@@ -41,13 +46,13 @@ TYPE
 
     function  ValueExists(CONST Ident: string): Boolean;                         reintroduce; overload;
 
+    { OLD & BROKEN - Depends on user's FormatSettings }
+    function  ReadDate_   (CONST Ident: string; Default: TDateTime): TDateTime;  deprecated 'Use ReadDateEx instead';  // http://docwiki.embarcadero.com/RADStudio/Sydney/en/Methods_(Delphi)
+    procedure WriteDate_  (CONST Ident: string;   Value: TDateTime);             deprecated 'Use ReadDateEx instead';
+
     { Data/Time }
     function  ReadDateEx (CONST Ident: string; Default: TDateTime): TDateTime;
     procedure WriteDateEx(CONST Ident: string;   Value: TDateTime);
-
-    { OLD. BROKEN - Depends on user's FormatSettings }
-    function  ReadDate_   (CONST Ident: string; Default: TDateTime): TDateTime;  deprecated 'Use ReadDateEx instead';  // http://docwiki.embarcadero.com/RADStudio/Sydney/en/Methods_(Delphi)
-    procedure WriteDate_  (CONST Ident: string;   Value: TDateTime);             deprecated 'Use ReadDateEx instead';
 
     { String }
     function  Read       (CONST Ident: string; Default: string): string;         overload;
@@ -55,18 +60,18 @@ TYPE
 
     { Integer }
     function  Read       (const Ident: string; Default: Integer= 0): Integer;    overload;
-    procedure Write      (const Ident: string; Value: Integer);                  overload;
+    procedure Write      (const Ident: string;   Value: Integer);                overload;
 
     { Bool }
     function  Read       (CONST Ident: string; Default: Boolean= TRUE): Boolean; overload;
-    procedure Write      (const Ident: string; Value: Boolean);                  overload;
+    procedure Write      (const Ident: string;   Value: Boolean);                overload;
 
     function  Read       (CONST Ident: string): FontStruct;                      overload;
     procedure Write      (CONST Ident: string; Font: FontStruct);                overload;
 
     { Float }
     function  Read       (const Ident: string; Default: Double): Double;         overload;
-    procedure Write      (const Ident: string; Value: Double);                   overload;
+    procedure Write      (const Ident: string;   Value: Double);                 overload;
   end;
 
 
@@ -74,7 +79,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   ccIO, ccTextFile;
+   ccIO;
 
 
 
@@ -124,7 +129,7 @@ end;
 
 procedure TIniFileEx.Write(CONST Ident: string; Font: FontStruct);
 begin
-  WriteString (FSection, Ident,  '');      // I need this here so I can find the font by its identifier (name). Otherwise it will be filtered out by TIniFileCubic.Read: if ValueExists(FSection, Comp.Name) then
+  WriteString (FSection, Ident,  '');      // I need this here so I can find the font by its identifier (name). Otherwise it will be filtered out by TIniFileVCL.Read: if ValueExists(FSection, Comp.Name) then
   WriteString (FSection, Ident + 'Name',    Font.Name);
   WriteInteger(FSection, Ident + 'Color',   Font.Color);
   WriteInteger(FSection, Ident + 'Size',    Font.Size);

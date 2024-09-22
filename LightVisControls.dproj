@@ -118,11 +118,12 @@
         <DCCReference Include="cvStringGridScrollFix.pas"/>
         <DCCReference Include="cvDropDownSearch.pas"/>
         <DCCReference Include="cvStrongPasswordEdit.pas"/>
-        <DCCReference Include="cvLog.pas"/>
-        <DCCReference Include="cvLogTrack.pas"/>
         <DCCReference Include="llRichLogTrack.pas"/>
         <DCCReference Include="llRichLogUtils.pas"/>
         <DCCReference Include="llRichLog.pas"/>
+        <DCCReference Include="cvRichEditResize.pas"/>
+        <DCCReference Include="cvLog.pas"/>
+        <DCCReference Include="cvLogFilter.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

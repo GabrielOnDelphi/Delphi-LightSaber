@@ -14,6 +14,7 @@ object frmBorderEditor: TfrmBorderEditor
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
+  OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
@@ -62,7 +63,7 @@ object frmBorderEditor: TfrmBorderEditor
     end
     object grpFillFade: TGroupBox
       Left = 277
-      Top = 39
+      Top = 40
       Width = 237
       Height = 298
       Anchors = []

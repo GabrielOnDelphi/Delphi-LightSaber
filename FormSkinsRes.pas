@@ -85,8 +85,7 @@ procedure LoadLastSkin(CONST DefaultSkin: string= '');  { On first run, set the 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   {uLinks,} csExecuteShell, cbAppData, cbINIFile, cTranslate,
-   cmINIFileQuick, cvIniFile;   {VCL.Styles is mandatory}
+   csExecuteShell, cbAppData, cvINIFile, cTranslate, cmINIFileQuick;
 
 CONST
   DefWinTheme= 'Windows default theme';

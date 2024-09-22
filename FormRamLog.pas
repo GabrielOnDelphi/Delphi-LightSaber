@@ -27,9 +27,9 @@ INTERFACE
 {.$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  Winapi.Windows, Winapi.Messages, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
-  llRichLogTrack, llRichLog, cbLogRam, cvLog, cbAppData, Vcl.Grids, cvLogTrack;
+  Winapi.Messages, System.Classes,
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls,
+  cbLogRam, cvLog, cbAppData, cvLogFilter, Vcl.Grids;
 
 TYPE
   TfrmRamLog = class(TForm)
@@ -38,7 +38,7 @@ TYPE
     btnClear   : TButton;
     chkLogOnError: TCheckBox;
     Log: TLogGrid;
-    trkLogVerb: TLogVisTrckbr;
+    trkLogVerb: TLogVerbFilter;
     chkShowTime: TCheckBox;
     procedure btnClearClick(Sender: TObject);
 //    procedure LogError     (Sender: TObject);
@@ -51,7 +51,6 @@ TYPE
   public
     class procedure CreateFormAppData; static; // Would be nice to make this protected but we can't. All event handlers must be accesible/visible
     procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully initilized
-    destructor Destroy; override; // Called after the main form was fully initilized
   end;
 
 
@@ -60,46 +59,39 @@ IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   cbIniFile;
+   cvINIFile, ccINIFile;
 
 
 
 {-------------------------------------------------------------------------------------------------------------
    FORM
 -------------------------------------------------------------------------------------------------------------}
-VAR FormLog: TfrmRamLog= NIL;
+VAR FormLog: TfrmRamLog= NIL;  // Accessible via AppData only
 
 
 //ToDo: find a way to create it automatically from AppData, when I have to show an error.
 class procedure TfrmRamLog.CreateFormAppData;
 begin
   Assert(FormLog = NIL, 'Form log already created!!!');
-  AppData.CreateForm(TfrmRamLog, FormLog, FALSE);
+
+  AppData.CreateForm(TfrmRamLog,  FormLog, FALSE, flPositionOnly);
   FormLog.Log.AssignExternalRamLog(AppData.RamLog);
+  cvINIFile.LoadForm(FormLog, flFull);
+
   Assert(Application.MainForm <> FormLog, 'The Log should not be the MainForm!'); { Just in case: Make sure this is not the first form created }
 end;
 
 
 procedure TfrmRamLog.FormCreate(Sender: TObject);
 begin
-//  Log.Onwarn := LogError;               // Auto show form if we send an error msg to the log
-//  Log.OnError:= LogError;
-  chkLogOnError.Checked:= AppData.ShowLogOnError;
-  //trkLogVerb.TrackBarChange(NIL);  del
-  //Log.Populate;                    del
+  chkLogOnError.Checked:= AppData.RamLog.ShowOnError;
 end;
+
+
 
 
 procedure TfrmRamLog.LateInitialize;
 begin
-  //ToDo: Load Log verbosity
-end;
-
-
-destructor TfrmRamLog.Destroy;
-begin
-  FormLog.Log.RamLog.UnregisterLogObserver;  //ToDo: do I need this?
-  inherited;
 end;
 
 
@@ -109,13 +101,16 @@ begin
 end;
 
 
-// This is called automatically by "Finalization"
+// Triggered by application shutdown
 procedure TfrmRamLog.FormDestroy(Sender: TObject);
 begin
+  Log.RamLog.UnregisterLogObserver;  //ToDo: do I need this?
+
   Assert(AppData <> NIL, 'AppData is gone already!');
   Container.Parent:= Self;
   if NOT cbAppData.AppData.Initializing
-  then SaveForm(Self); // We don't save anything if the start up was improper!
+  then cvINIFile.SaveForm(Self); // We don't save anything if the start up was improper!
+
   //ToDo: Save Log verbosity
 end;
 
@@ -138,14 +133,14 @@ end;
 // Log errors AND also warnings
 procedure TfrmRamLog.LogError(Sender: TObject);
 begin
-  if AppData.ShowLogOnError
+  if AppData.PopUpLogWindowOnError
   then Show;
 end; }
 
 
 procedure TfrmRamLog.chkLogOnErrorClick(Sender: TObject);
 begin
-  AppData.ShowLogOnError:= chkLogOnError.Checked;
+  AppData.RamLog.ShowOnError:= chkLogOnError.Checked;
 end;
 
 

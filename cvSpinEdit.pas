@@ -68,7 +68,8 @@ procedure Register;
 
 
 IMPLEMENTATION
-USES cGraphUtil;
+
+USES cGraphUtil, ccColors;
 
 
 
@@ -107,7 +108,7 @@ begin
  FSpin.Margins.Top:= 0;
  FSpin.Margins.Bottom:= 0;
  FSpin.MinValue:= 0;            { Cannot be moved to CreateWnd because if it is there, (when skins are loading) we will override the value set at design time }
- FSpin.MaxValue:= 10;
+ FSpin.MaxValue:= 0;
  FSpin.Align:= alLeft;
  FSpin.SetSubComponent(TRUE);
 
@@ -237,27 +238,16 @@ end;
 {------------------------------------------------------------------------------------------------------------}
 procedure TCubicSpinEdit.Change;
 begin
- {
- DEL - This is not really what I want, because the user won't be able to enter ANY value. He should be able to do that - for example enter 3 digits and later remove the last digit.
- If the value entered by the user is not in the Min/Max range, it is forced to the correct (min/max) value.
-
- if (Value > MaxValue) then Value:= MaxValue;
- if (Value < MinValue) then Value:= MinValue; }
-
- if (Value > MaxValue) OR (Value < MinValue) then
+ if ((MaxValue <> 0) AND (MinValue <> 0))     // We don't use min/max
+ AND (Value > MaxValue) OR (Value < MinValue) then
   begin
-    Color:= clRed;
+    Color:= clorange; // Red indicates an out-of-range value
     EXIT;
   end;
 
  Color:= clWindow;
  inherited;
 end;
-
-
-
-
-
 
 
 procedure Register;

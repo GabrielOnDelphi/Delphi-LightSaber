@@ -41,7 +41,7 @@ IMPLEMENTATION
 
 { Brings the form back into the screen, IF it was outside the screen.
   Usage:  CorrectFormScreenPosition(Self).
-  It is automaticalled by cvIniFile.LoadForm.
+  It is automaticalled by cv_IniFile.LoadForm.
 
   Screen.WorkArea -> Specifies the work area on the Primary monitor.
   DesktopWidth    -> Determines the width of the desktop. The desktop is defined as the entire virtual desktop, which includes all monitors in the system. On a single-monitor system, DesktopWidth corresponds to Width. }

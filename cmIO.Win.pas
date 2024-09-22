@@ -104,7 +104,7 @@ USES
 IMPLEMENTATION
 
 USES
-  ccCore, cbDialogs, cbRegistry, cbWinVersion, ccIO, ccTextFile;
+  ccCore, cbDialogs, cbRegistry, cbWinVersion, ccIO;
   //DONT CREATE CIRCULAR REFFERENCE TO cbAppData HERE!
 
 

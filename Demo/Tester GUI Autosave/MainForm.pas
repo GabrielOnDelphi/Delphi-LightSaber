@@ -22,7 +22,7 @@ INTERFACE
 
 USES
   WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin,
-  cvRichEdit, Vcl.ComCtrls, ccCore, csSystem, cbDialogs, ccINIFile, FormLog, Vcl.Dialogs, cvCheckBox, Vcl.ExtCtrls, llRichLogTrack,
+  cvRichEdit, Vcl.ComCtrls, ccCore, csSystem, cbDialogs, ccINIFile,  Vcl.Dialogs, cvCheckBox, Vcl.ExtCtrls, llRichLogTrack,
   System.Actions, Vcl.ActnList, Vcl.Menus, cvRadioButton, cbAppData;
 
 TYPE
@@ -129,7 +129,7 @@ end;
 
 procedure TfrmTester.btnShowLogClick(Sender: TObject);
 begin
-  AppData.ShowLog;
+  AppData.PopUpLogWindow;
 end;
 
 

@@ -76,6 +76,7 @@ TYPE
     procedure btnOkClick            (Sender: TObject);
     procedure btnCancelClick        (Sender: TObject);
     procedure btnAdvancedClick      (Sender: TObject);
+    procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     BkgClrParams: PBkgColorParams;
     FApplySettings: TNotifyEvent;
@@ -97,7 +98,7 @@ TYPE
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-  cGraphUtil, cmVclUtils, cmINIFileQuick, cbCenterControl, cbDialogs;
+  cGraphUtil, cmVclUtils, cmINIFileQuick, cbCenterControl, cbDialogs, ccINIFile, cbAppData;
 { Don't use cvIniFile because it belongs to LightVisControls pkg which is after this (LightGraphics) package }
 
 
@@ -105,7 +106,7 @@ USES
 class function TfrmBorderEditor.CreateParented(Parent: TWinControl; aBkgClrParams: PBkgColorParams): TfrmBorderEditor;
 begin
  Assert(aBkgClrParams <> NIL, 'aBkgClrParams is nil!!');
- Result:= TfrmBorderEditor.Create(Parent);  { Freed by Parent }
+ AppData.CreateForm(TfrmBorderEditor, Result, FALSE, flPositionOnly, NIL);  { Freed by Parent }
  Result.Container.Align:= alNone;
  Result.Container.Parent:= Parent;
  CenterChild(Result.Container, Parent);
@@ -128,11 +129,18 @@ begin
 end;
 
 
+procedure TfrmBorderEditor.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Action:= TCloseAction.caFree;
+end;
+
+
 procedure TfrmBorderEditor.FormDestroy(Sender: TObject);
 begin
   WriteBool('AutoBkg.ShowInfo', pnlExplain.Visible);
   //SaveForm(Self, TRUE);  { Don't use cvIniFile because it belongs to LightVisControls pkg which is after this (LightGraphics) package }
 end;
+
 
 
 

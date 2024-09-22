@@ -15,7 +15,7 @@ USES
   Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, Buttons, ActnList, Menus, ComCtrls, ExtCtrls, Spin,  ExtDlgs, System.Actions,
   IdSSL, IdComponent, IdSMTP, IdAntiFreeze,
   IdSSLOpenSSL, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack,
-  FormLog, cvCheckBox, cvSplitter, IdBaseComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase,
+   cvCheckBox, cvSplitter, IdBaseComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase,
   IdMessageClient, IdSMTPBase, cvPathEdit, FormEmailServer;
 
 TYPE
@@ -70,7 +70,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  cvIniFile, ccCore, csSystem, cbDialogs, ccINIFile, cmSound, cbAppData, cbINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ciEmailSender;
+  cvIniFile, ccCore, csSystem, cbDialogs, ccINIFile, cmSound, cbAppData, cvINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ciEmailSender;
 
 
 procedure TfrmComposer.Initialize; { This will create also the frmSmtpSettings }

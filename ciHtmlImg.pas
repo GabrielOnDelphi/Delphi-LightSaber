@@ -41,7 +41,7 @@ function ExpandRelativePaths (CONST HtmlBody, Base: string): string;
 IMPLEMENTATION                                                                                                                                   {$WARN GARBAGE OFF}   {Silence the: 'W1011 Text after final END' warning }
 
 USES
-   ccIO, ccTextFile, ciInternet, ccCore, ciHtml;
+   ccIO, ciInternet, ccCore, ciHtml;
 
 
 
