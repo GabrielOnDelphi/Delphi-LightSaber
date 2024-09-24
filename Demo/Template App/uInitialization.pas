@@ -62,9 +62,8 @@ begin
  
  { Splash screen }
  if NOT AppData.RunningFirstTime
- AND NOT AppData.BetaTesterMode  { It is confusing for the user to see this splash screen when the program starts for the first time AND the "setup" wizard is presented. }
+ AND NOT AppData.BetaTesterMode           // It is confusing for the user to see this splash screen when the program starts for the first time AND the "setup" wizard is presented.
  then ShowSplashScreen(15292);
-
 
 
  { SHOW MAIN WINDOW }                     // Comes after LoadForm()
@@ -73,14 +72,15 @@ begin
   begin
     { SYS TRAY ICON }
     Application.Minimize;
-    MainForm.TrayIcon.PutIconOnlyInTray;  { Put the correct icon in systray }
+    MainForm.TrayIcon.PutIconOnlyInTray;  // Put the correct icon in systray }
   end
  else
   begin
     MainForm.Show;
-    MainForm.Update;                       { Let form refresh. Else I get nasty black stripes in playlist }
-    MainForm.TrayIcon.PutIconOnlyInTask;   { Restore the app, but don't automatically show its taskbar icon }
+    MainForm.Update;                       // Let form refresh. Else I get nasty black stripes in playlist
+    MainForm.TrayIcon.PutIconOnlyInTask;   // Restore the app, but don't automatically show its taskbar icon
   end;
+
 
  { FIRST RUN }
  if AppData.RunningFirstTime then
@@ -88,26 +88,26 @@ begin
    { Preparation of the main form }
    AppData.MainFormCaption('Welcome...');
    CenterForm(MainForm);
-   MainForm.pgCtrl.ActivePage:= MainForm.tabMain;         { Default page to show }
+   MainForm.pgCtrl.ActivePage:= MainForm.tabMain;            // Default page to show
 
    if NOT AppData.RunningHome then
      begin
        { Desktop shortcuts/Association }
-       csShell.CreateShortcut(AppData.AppName, TRUE);     { OnDesktop }
-       csShell.CreateShortcut(AppData.AppName, FALSE);    { OnStartMenu }
+       csShell.CreateShortcut(AppData.AppName, TRUE);        // OnDesktop
+       csShell.CreateShortcut(AppData.AppName, FALSE);       // OnStartMenu
 
        AssociateWith('.LightSaber', AppData.AppName, FALSE, FALSE, TRUE);
 
       if NOT AppData.BetaTesterMode
-      then csExecuteShell.ExecuteURL(AppData.ProductWelcome); { Welcome page }
-       FormUniversalEula.ShowEulaModal;                   { EULA }
-       TfrmSkinDisk.CreateFormModal;       { Choose skin } // There is a bug: Form losses modal attribute after applying skin. So, I can call this ONLY at the end of initialization procedure. Even though I can click the main form, the Skins form is still marked as modal.
+      then csExecuteShell.ExecuteURL(AppData.ProductWelcome);// Welcome page
+       FormUniversalEula.ShowEulaModal;                      // EULA
+       TfrmSkinDisk.CreateFormModal;                         // Choose skin. There is a bug: Form losses modal attribute after applying skin. So, I can call this ONLY at the end of initialization procedure. Even though I can click the main form, the Skins form is still marked as modal.
      end;
   end;
 
  { Initialization end }
- Assert(Vcl.Dialogs.UseLatestCommonDialogs= TRUE);      { This is true anyway by defaul, but I check it to remember myself about it. Details: http://stackoverflow.com/questions/7944416/tfileopendialog-requires-windows-vista-or-later }
- 
+ Assert(Vcl.Dialogs.UseLatestCommonDialogs= TRUE);           // This is true anyway by defaul, but I check it to remember myself about it. Details: http://stackoverflow.com/questions/7944416/tfileopendialog-requires-windows-vista-or-later
+
  { Auto updater }
  AppData.MainFormCaption('Starting autoupdater...');
  Updater:= TUpdater.Create(UpdaterURL);
@@ -116,7 +116,7 @@ begin
  Updater.CheckForNews;
 
  MainForm.FontSizeChanged;
- Winapi.ShellApi.DragAcceptFiles(MainForm.Handle, True); // Accept the dropped files from Windows Explorer
+ Winapi.ShellApi.DragAcceptFiles(MainForm.Handle, True);     // Accept the dropped files from Windows Explorer
  Application.OnHint:= MainForm.CanShowHint;
  AppData.MainFormCaption('');
 end;

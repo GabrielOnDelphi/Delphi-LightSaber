@@ -104,7 +104,7 @@ USES
 IMPLEMENTATION
 
 USES
-  ccCore, cbDialogs, cbRegistry, cbWinVersion, ccIO;
+  ccCore, cbDialogs, cbRegistry, cbVersion, ccIO;
   //DONT CREATE CIRCULAR REFFERENCE TO cbAppData HERE!
 
 
@@ -163,7 +163,7 @@ function SelectAFolder(VAR Folder: string; CONST Title: string = ''; CONST Optio
 VAR Dlg: TFileOpenDialog;
 begin
  { Win Vista and up }
- if cbWinVersion.IsWindowsVistaUp then
+ if cbVersion.IsWindowsVistaUp then
   begin
    Dlg:= TFileOpenDialog.Create(NIL);   { Class for Vista and newer Windows operating systems style file open dialogs }
     TRY

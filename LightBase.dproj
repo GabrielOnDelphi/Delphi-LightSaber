@@ -112,12 +112,12 @@
         <DCCReference Include="cbAppData.pas"/>
         <DCCReference Include="cbIniFile.pas"/>
         <DCCReference Include="cbCenterControl.pas"/>
-        <DCCReference Include="cbregistry.pas"/>
+        <DCCReference Include="cbRegistry.pas"/>
         <DCCReference Include="cbDialogs.pas"/>
         <DCCReference Include="cbLogLines.pas"/>
         <DCCReference Include="cbLogRam.pas"/>
         <DCCReference Include="cbLogUtils.pas"/>
-        <DCCReference Include="cbWinVersion.pas"/>
+        <DCCReference Include="cbVersion.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

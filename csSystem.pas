@@ -134,7 +134,7 @@ USES
 IMPLEMENTATION
 
 USES
-   csKeyboard, ccIO, cmIO, cmIO.Win, cbWinVersion, cbRegistry;
+   csKeyboard, ccIO, cmIO, cmIO.Win, cbVersion, cbRegistry;
 
 
 
@@ -581,7 +581,7 @@ begin
  strWinDir:= GetWinDir;
  Assert(DirectoryExistMsg(strWinDir));
 
- if cbWinVersion.IsNTKernel
+ if cbVersion.IsNTKernel
  then
     begin
      strF:= strWinDir+ 'system32\config\software';                                                 { fisierul asta exista in Windowsul meu (XP) si arata data can a fost oprit Windows-ul ultima data. NU EXISTA IN WIN7!!! }

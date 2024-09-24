@@ -28,7 +28,7 @@ VAR
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-   cbWinVersion, cmWinVersionOthers;
+   cbVersion, cmWinVersionOthers;
 
 
 procedure TfrmTester.FormCreate(Sender: TObject);
@@ -47,8 +47,8 @@ procedure TfrmTester.btnStartClick(Sender: TObject);
 begin
  Memo.Text:= '';
  Memo.Lines.Add('');
- Memo.Lines.Add('cbWinVersion');
- Memo.Lines.Add(cbWinVersion.GenerateReport);
+ Memo.Lines.Add('cbVersion');
+ Memo.Lines.Add(cbVersion.GenerateReport);
  Memo.Lines.Add('');
  Memo.Lines.Add('cmWinVersionOthers');
  Memo.Lines.Add(cmWinVersionOthers.GenerateReport);

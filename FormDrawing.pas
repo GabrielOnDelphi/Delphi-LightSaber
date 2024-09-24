@@ -89,7 +89,7 @@ function GetHiddenWindow(Color: TColor; ExpandOnAllMon, Hidden: Boolean): TDrawi
 
 IMPLEMENTATION {$R *.dfm}
 USES
-    cbWinVersion, cbAppData, cvINIFile, cGraphDesktop;
+    cbVersion, cbAppData, cvINIFile, cGraphDesktop;
 
 
 

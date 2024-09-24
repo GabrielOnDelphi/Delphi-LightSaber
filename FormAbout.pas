@@ -23,7 +23,7 @@ INTERFACE
 
 USES
   Winapi.Windows, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Imaging.pngimage,
-  InternetLabel, cpProteus, cvINIFile;
+  InternetLabel, cpProteus;
 
 TYPE
   TfrmAboutApp = class(TForm)

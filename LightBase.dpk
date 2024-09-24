@@ -48,7 +48,7 @@ contains
   cbLogLines in 'cbLogLines.pas',
   cbLogRam in 'cbLogRam.pas',
   cbLogUtils in 'cbLogUtils.pas',
-  cbWinVersion in 'cbWinVersion.pas';
+  cbVersion in 'cbVersion.pas';
 
 end.
 

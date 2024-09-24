@@ -143,6 +143,7 @@ begin
   Saved:= FALSE;
   uInitialization.LateInitialization;
   btnStartClick(self);
+  actShowLogExecute(Self);    //temp
 end;
 
 

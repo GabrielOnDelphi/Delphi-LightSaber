@@ -7,8 +7,8 @@ object frmAboutApp: TfrmAboutApp
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'About'
-  ClientHeight = 447
-  ClientWidth = 543
+  ClientHeight = 446
+  ClientWidth = 539
   Color = clBtnFace
   CustomTitleBar.Height = 5
   DoubleBuffered = True
@@ -39,8 +39,8 @@ object frmAboutApp: TfrmAboutApp
     AlignWithMargins = True
     Left = 15
     Top = 15
-    Width = 513
-    Height = 417
+    Width = 509
+    Height = 416
     Margins.Left = 15
     Margins.Top = 15
     Margins.Right = 15
@@ -48,13 +48,13 @@ object frmAboutApp: TfrmAboutApp
     Align = alClient
     TabOrder = 0
     DesignSize = (
-      513
-      417)
+      509
+      416)
     object lblChildren: TLabel
       AlignWithMargins = True
       Left = 4
-      Top = 400
-      Width = 505
+      Top = 399
+      Width = 501
       Height = 13
       Align = alBottom
       Alignment = taCenter
@@ -76,7 +76,7 @@ object frmAboutApp: TfrmAboutApp
       AlignWithMargins = True
       Left = 4
       Top = 43
-      Width = 505
+      Width = 501
       Height = 13
       Align = alTop
       Alignment = taCenter
@@ -91,8 +91,8 @@ object frmAboutApp: TfrmAboutApp
       AlignWithMargins = True
       Left = 4
       Top = 81
-      Width = 505
-      Height = 293
+      Width = 501
+      Height = 292
       Align = alClient
       Center = True
       Picture.Data = {
@@ -2843,7 +2843,7 @@ object frmAboutApp: TfrmAboutApp
       AlignWithMargins = True
       Left = 4
       Top = 62
-      Width = 505
+      Width = 501
       Height = 13
       Cursor = crHandPoint
       Align = alTop
@@ -2868,13 +2868,13 @@ object frmAboutApp: TfrmAboutApp
       AlignWithMargins = True
       Left = 4
       Top = 13
-      Width = 505
+      Width = 501
       Height = 24
       Margins.Top = 12
       Align = alTop
       Alignment = taCenter
       AutoSize = False
-      Caption = 'Application name'
+      Caption = '@Application name'
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clNavy
       Font.Height = -24
@@ -2887,8 +2887,8 @@ object frmAboutApp: TfrmAboutApp
     object lblExpire: TLabel
       AlignWithMargins = True
       Left = 82
-      Top = 359
-      Width = 371
+      Top = 358
+      Width = 367
       Height = 13
       Margins.Top = 12
       Alignment = taCenter
@@ -2910,8 +2910,8 @@ object frmAboutApp: TfrmAboutApp
     object inetEULA: TInternetLabel
       AlignWithMargins = True
       Left = 4
-      Top = 380
-      Width = 505
+      Top = 379
+      Width = 501
       Height = 14
       Cursor = crHandPoint
       Align = alBottom
@@ -2934,8 +2934,8 @@ object frmAboutApp: TfrmAboutApp
     end
     object btnEnterKey: TButton
       AlignWithMargins = True
-      Left = 411
-      Top = 325
+      Left = 407
+      Top = 324
       Width = 83
       Height = 29
       Anchors = [akRight, akBottom]
@@ -2953,7 +2953,7 @@ object frmAboutApp: TfrmAboutApp
     end
     object btnOrderNow: TButton
       AlignWithMargins = True
-      Left = 411
+      Left = 407
       Top = 93
       Width = 86
       Height = 29

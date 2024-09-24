@@ -91,18 +91,19 @@ begin
    AlignWithMargins:= True;
 
    VerboLabel.Layout   := tlCenter;
-   VerboLabel.Align    := alClient;
+   VerboLabel.Align    := alLeft;
    VerboLabel.Alignment:= taCenter;
    VerboLabel.Hint     := 'Log verbosity' +#13#10+ 'Hide all messages below this level.';
    VerboLabel.Caption  := 'Log verbosity: '+ Verbosity2String(DefaultVerbosity);
 
    TrackBar.Min        := 1;
-   TrackBar.Max        := Integer(High(TLogVerbLvl));                  { About enumerations: http://www.delphipages.com/forum/showthread.php?t=58129 }
+   TrackBar.Max        := Integer(High(TLogVerbLvl));           { About enumerations: http://www.delphipages.com/forum/showthread.php?t=58129 }
    TrackBar.Position   := Ord(DefaultVerbosity);                { I need this to synchroniz Log's and track's verbosity. Cannot be moved to CreateWnd if I use LoadForm() }
    TrackBar.Hint       := 'Hide all messages below this level';
    TrackBar.Align      := alRight;
    TrackBar.Name       := 'VerbosityTrackbar';                  { This control MUST have a name so I can save it to INI file }
    TrackBar.OnChange   := TrackBarChange;
+   TrackBar.Width      := 120;
   end;
 end;
 

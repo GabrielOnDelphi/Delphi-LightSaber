@@ -29,15 +29,15 @@ USES
 TYPE
   TLogGrid = class(TStringGrid, ILogObserver)
    private
-     FVerbChanged: TNotifyEvent;
-     FVerbosity: TLogVerbLvl;
-     FFilteredRowCount: Integer;  // Cached value
-     FAutoScroll: Boolean;        // Autoscroll to bottom
-     FShowTime  : Boolean;
-     FShowDate  : Boolean;
-     FRamLog    : TRamLog;
-     FOwnRamLog : Boolean;
+     FVerbChanged : TNotifyEvent;
+     FVerbosity   : TLogVerbLvl;
+     FAutoScroll  : Boolean;        // Autoscroll to bottom
+     FShowTime    : Boolean;
+     FShowDate    : Boolean;
+     FRamLog      : TRamLog;
+     FOwnRamLog   : Boolean;
      FVerbTrackBar: TPanel; // TLogVerbFilter
+     FFilteredRowCount: Integer;  // Cached value
      procedure setShowDate(const Value: Boolean);
      procedure setShowTime(const Value: Boolean);
      procedure FixFixedRow;

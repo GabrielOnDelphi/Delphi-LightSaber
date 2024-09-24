@@ -53,7 +53,7 @@
          AppData:= TAppData.Create('MyCollApp');
          AppData.CreateMainForm(TMainForm, MainForm, True, True);    // Main form
          AppData.CreateForm(TSecondFrom, frmSecond);                 // Secondary form(s)
-         TfrmRamLog.CreateFormAppData;                               // Special form (optional)
+         TfrmRamLog.CreateGlobalLog;                               // Special form (optional)
          Application.Run;
        end.
 
@@ -133,7 +133,6 @@ TYPE
     FSingleInstClassName: string;          { Used by the Single Instance mechanism. } {Old name: AppWinClassName }
     FRunningFirstTime: Boolean;
     FHideHint: Integer;
-    function SettingsFile: string;
     procedure SetGuiProperties(Form: TForm);
     procedure setHideHint(const Value: Integer);
     procedure setShowOnError(const Value: Boolean);
@@ -172,27 +171,27 @@ TYPE
     function  ExtractData(VAR Msg: TWMCopyData; OUT s: string): Boolean;
     {}
     class VAR Initializing: Boolean;
-    class VAR SignalInitEnd: Boolean;   // If true, AppData will set the 'Initializing' field automatically to false once the main form was loaded. Set it to False in apps with more than one form or apps that require a bit more sophisticated initialization procedure
+    class VAR SignalInitEnd: Boolean;  // If true, AppData will set the 'Initializing' field automatically to false once the main form was loaded. Set it to False in apps with more than one form or apps that require a bit more sophisticated initialization procedure
 
     constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; aSignalInitEnd: Boolean= TRUE); virtual;
-    destructor Destroy; override;        { This is called automatically by "Finalization" in order to call it as late as possible }
+    destructor Destroy; override;      // This is called automatically by "Finalization" in order to call it as late as possible }
 
    {--------------------------------------------------------------------------------------------------
       User settings
    --------------------------------------------------------------------------------------------------}
     var
-      UserPath     : string;        // User defined path where to save (large) files. Useful when the program needs to save large amounts of data that we don't want to put on a SSD drive.
-      AutoStartUp  : Boolean;       // Start app at Windows startup
-      StartMinim   : Boolean;       // Start minimized
-      Minimize2Tray: Boolean;       // Minimize to tray
-      HintType     : THintType;     // Turn off the embeded help system
-      Opacity      : Integer;       // Form opacity
+      UserPath     : string;           // User defined path where to save (large) files. Useful when the program needs to save large amounts of data that we don't want to put on a SSD drive.
+      AutoStartUp  : Boolean;          // Start app at Windows startup
+      StartMinim   : Boolean;          // Start minimized
+      Minimize2Tray: Boolean;          // Minimize to tray
+      HintType     : THintType;        // Turn off the embeded help system
+      Opacity      : Integer;          // Form opacity
     property HideHint: Integer read FHideHint write setHideHint;       // Hide hint after x ms.
 
    {--------------------------------------------------------------------------------------------------
       App path/name
    --------------------------------------------------------------------------------------------------}
-    function CurFolder: string;     // The folder where the exe file is located. Old name: AppDir
+    function CurFolder: string;        // The folder where the exe file is located. Old name: AppDir
     class function IniFile: string;
     function SysDir: string;
     function CheckSysDir: Boolean;
@@ -223,20 +222,20 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       App Control
    --------------------------------------------------------------------------------------------------}
-    property  RunningFirstTime: Boolean read FRunningFirstTime;        { Returns true if the application is running for the first time in this computer }
+    property  RunningFirstTime: Boolean read FRunningFirstTime;    // Returns true if the application is running for the first time in this computer.
     procedure Restore;
     procedure Restart;
     procedure SelfDelete;
 
     function  RunFileAtWinStartUp(CONST FilePath: string; Active: Boolean): Boolean;
 
-    procedure CreateMainForm  (aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= TRUE; Show: Boolean= TRUE; Loading: TFormLoading= flPositionOnly);
+    procedure CreateMainForm  (aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= TRUE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
 
-    procedure CreateForm      (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL);  overload;
-    procedure CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL);
+    procedure CreateForm      (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);  overload;
+    procedure CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
 
-    procedure CreateFormModal (aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL); overload;   // Do I need this?
-    procedure CreateFormModal (aClass: TFormClass;                Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL); overload;
+    procedure CreateFormModal (aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL); overload;   // Do I need this?
+    procedure CreateFormModal (aClass: TFormClass;                Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL); overload;
 
     procedure SetMaxPriority;
     procedure HideFromTaskbar;
@@ -248,10 +247,9 @@ TYPE
       App Version
    --------------------------------------------------------------------------------------------------}
     class function GetVersionInfo(ShowBuildNo: Boolean= False): string;
-    function  GetVersionInfoV      : string;                            { MAIN. Returns version without Build number. Example: v1.0.0 }
+    function  GetVersionInfoV      : string;               // Returns version without Build number. Example: v1.0.0
     function  GetVersionInfoMajor: Word;
     function  GetVersionInfoMinor: Word;
-    function  GetVersionInfo_: string;
 
     procedure MainFormCaption(const Caption: string);
 
@@ -286,7 +284,6 @@ TYPE
 
 
 
-
 {-------------------------------------------------------------------------------------------------
    Command line
 --------------------------------------------------------------------------------------------------}
@@ -301,7 +298,7 @@ VAR                      //ToDo: make sure AppData is unique (make it Singleton)
 IMPLEMENTATION
 
 USES
-  cbWinVersion, ccIO, ccTextFile, cbRegistry, cbDialogs, cbCenterControl;
+  cbVersion, ccIO, ccTextFile, cbRegistry, cbDialogs, cbCenterControl;
 
 //ToDo: Don't create the log window. Store data in TRamLog.
 
@@ -318,11 +315,11 @@ USES
 -------------------------------------------------------------------------------------------------------------}
 constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= ''; aSignalInitEnd: Boolean= TRUE);
 begin
-  Application.Initialize;                         { Note: Emba: Although Initialize is the first method called in the main project source code, it is not the first code that is executed in a GUI application. For example, in Delphi, the application first executes the initialization section of all the units used by the Application.}
+  Application.Initialize;                         // Note: Emba: Although Initialize is the first method called in the main project source code, it is not the first code that is executed in a GUI application. For example, in Delphi, the application first executes the initialization section of all the units used by the Application.
 
   inherited Create;
   SignalInitEnd:= aSignalInitEnd;
-  Initializing:= True;                            { Used in cv_IniFile.pas. Set it to false once your app finished initializing. }
+  Initializing:= True;                            // Used in cv_IniFile.pas. Set it to false once your app finished initializing.
 
   { Sanity check }
   if FCreated
@@ -332,7 +329,7 @@ begin
   { App single instance }
   if WindowClassName = ''
   then FSingleInstClassName:= aAppName
-  else FSingleInstClassName:= WindowClassName;    { We use FSingleInstClassName to identify the window/instance (when we check for an existing instance) }
+  else FSingleInstClassName:= WindowClassName;    // We use FSingleInstClassName to identify the window/instance (when we check for an existing instance)
   { Register a unique message ID for this applications. Used when we send the command line to the first running instance via WM_COPYDATA.
     We can do this only once per app so the best place is the Initialization section. However, since AppData is created only once, we can also do it here, in the constructor.
     https://stackoverflow.com/questions/35516347/sendmessagewm-copydata-record-string }
@@ -343,34 +340,34 @@ begin
   Assert(aAppName > '', 'AppName is empty!');
   FAppName:= aAppName;
   Application.Title:= aAppName;
-  ForceDirectories(AppDataFolder);            // Force the creation of AppData folder.
+  ForceDirectories(AppDataFolder);               // Force the creation of AppData folder.
 
   { App first run }
   FRunningFirstTime:= NOT FileExists(IniFile);
 
   { Log }
-  { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }
-  Assert(RamLog = NIL, 'Log already created!');  { Call this as soon as possible so it can catch all Log messages generated during app start up. A good place might be in your DPR file before Application.CreateForm(TMainForm, frmMain) }
-  RamLog:= TRamLog.Create(ShowLogOnError, NIL);
+  { Warning: We cannot use Application.CreateForm here because this will make the Log the main form!
+  Assert(RamLog = NIL, 'Log already created!');  // Call this as soon as possible so it can catch all Log messages generated during app start up. A good place might be in your DPR file before Application.CreateForm(TMainForm, frmMain)
+  RamLog:= TRamLog.Create(ShowLogOnError, NIL); }
 
-  LogInfo(' '+ AppName+ GetVersionInfoV);
+  LogVerb(AppName+ GetVersionInfoV+ ' started.');
 
   { App hint }
   Application.HintColor     := $c0c090;
-  Application.HintShortPause:= 40;                 { Specifies the time period to wait before bringing up a hint if another hint has already been shown. Windows' default is 50 ms }
-  Application.UpdateFormatSettings:= FALSE;        { more http://www.delphi3000.com/articles/article_4462.asp?SK= }
+  Application.HintShortPause:= 40;               // Specifies the time period to wait before bringing up a hint if another hint has already been shown. Windows' default is 50 ms
+  Application.UpdateFormatSettings:= FALSE;      // more http://www.delphi3000.com/articles/article_4462.asp?SK=
 
   { App settings }
-  if FileExists(SettingsFile)
+  if FileExists(IniFile)
   then LoadSettings
   else
     begin
       { Default settings }
       AutoStartUp  := TRUE;
       StartMinim   := FALSE;
-      Minimize2Tray:= TRUE;              // Minimize to tray
-      HintType     := htTooltips;        // Turn off the embeded help system
-      HideHint     := 4000;              // Hide hint after x ms.
+      Minimize2Tray:= TRUE;                      // Minimize to tray
+      HintType     := htTooltips;                // Turn off the embeded help system
+      HideHint     := 4000;                      // Hide hint after x ms.
       Opacity      := 250;
       UserPath     := AppDataFolder;
     end;
@@ -403,7 +400,7 @@ end;
 { 1. Create the form
   2. Set the font of the new form to be the same as the font of the MainForm
   3. Show it }
-procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= TRUE; Show: Boolean= TRUE; Loading: TFormLoading= flPositionOnly);
+procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= TRUE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
 begin
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
   Assert(Font = NIL,                 'AppData.Font already assigned!');
@@ -417,7 +414,7 @@ begin
 
   SetGuiProperties(TForm(Reference));
 
-  if (Loading = flFull) OR (Loading = flPositionOnly) then
+  if (Loading = flFull) OR (Loading = flPosOnly) then
    begin
      // Load form
 
@@ -456,7 +453,7 @@ end;
 
 { Create secondary form }
 { Load indicates if the GUI settings are remembered or not }
-procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
 begin
   Assert(Application.MainForm <> NIL, 'Probably you forgot to create the main form with AppData.CreateMainForm!');
 
@@ -467,28 +464,29 @@ begin
   cbINIFile.LoadFormBase(TForm(Reference), Loading);
 
   // Center form in the "ParentForm"
-  if (ParentWnd <> NIL)
-  then
-    if (Loading = flNone)
-    then CenterChild(TForm(Reference), ParentWnd)
-    else TForm(Reference).Parent:= ParentWnd;
+  if ParentWnd <> NIL then
+    begin
+      TForm(Reference).Parent:= ParentWnd;
+      CenterChild(TForm(Reference), ParentWnd);
+    end;
 
   if Show
   then TForm(Reference).Show;
 
+  // Window fully constructed. Now we can let user start its own initialization process.
   PostMessage(TForm(Reference).Handle, MSG_LateFormInit, 0, 0);
 end;
 
 
 { Create secondary form }
-procedure TAppData.CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
 begin
   CreateForm(aClass, Reference, FALSE, Loading, ParentWnd);
 end;
 
 
 { Create secondary form }
-procedure TAppData.CreateFormModal(aClass: TFormClass; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateFormModal(aClass: TFormClass; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
 VAR Reference: TForm;
 begin
   CreateForm(aClass, Reference, FALSE, Loading, ParentWnd);
@@ -498,7 +496,7 @@ end;
 
 { Create secondary form }
 //ToDo: Do I need this? Since the form is modal, I should never need the Reference? To be deleted
-procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPositionOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
 begin
   CreateFormModal(aClass, Loading, ParentWnd);
 end;
@@ -512,7 +510,7 @@ begin
   else Form.Font:= Self.Font;  // We set the same font for secondary forms
 
   // Fix issues with snap to edge of the screen
-  if cbWinVersion.IsWindows8Up
+  if cbVersion.IsWindows8Up
   then Form.SnapBuffer:= 4
   else Form.SnapBuffer:= 10;
 
@@ -807,38 +805,11 @@ end;
    VERSION INFO
 --------------------------------------------------------------------------------------------------}
 
-{ TVSFixedFileInfo returns all kind of more or less info about an executable file.
-   Source: JCL }
-function getVersionFixedInfo(CONST FileName: string; VAR FixedInfo: TVSFixedFileInfo): Boolean;
-var
-  InfoSize, FixInfoLen: DWORD;
-  DummyHandle: DWORD;
-  Buffer: string;
-  FixInfoBuf: PVSFixedFileInfo;
-begin
-  Result := False;
-  InfoSize := GetFileVersionInfoSize(PChar(FileName), DummyHandle);
-  if InfoSize > 0 then
-   begin
-    FixInfoLen := 0;
-    FixInfoBuf := Nil;
-
-    SetLength(Buffer, InfoSize);
-    if  GetFileVersionInfo(PChar(FileName), DummyHandle, InfoSize, Pointer(Buffer))    { The DummyHandle parameter is ignored by GetFileVersionInfo }
-    AND VerQueryValue(Pointer(Buffer), '\', Pointer(FixInfoBuf), FixInfoLen)
-    AND (FixInfoLen = SizeOf(TVSFixedFileInfo)) then
-     begin
-      Result := True;
-      FixedInfo := FixInfoBuf^;
-     end;
-  end;
-end;
-
 
 function TAppData.GetVersionInfoMajor: Word;
 VAR FixedInfo: TVSFixedFileInfo;
 begin
- if GetVersionFixedInfo(Application.ExeName, FixedInfo)
+ if GetVersionInfoFile(Application.ExeName, FixedInfo)
  then Result:= HiWord(FixedInfo.dwFileVersionMS)
  else Result:= 0;
 end;
@@ -847,10 +818,11 @@ end;
 function TAppData.GetVersionInfoMinor: Word;
 VAR FixedInfo: TVSFixedFileInfo;
 begin
- if GetVersionFixedInfo(Application.ExeName, FixedInfo)
+ if GetVersionInfoFile(Application.ExeName, FixedInfo)
  then Result:= LoWord(FixedInfo.dwFileVersionMS)
  else Result:= 0;
 end;
+
 
 
 { Returns version with/without build number.
@@ -862,7 +834,7 @@ class function TAppData.GetVersionInfo(ShowBuildNo: Boolean= False): string;
 VAR FixedInfo: TVSFixedFileInfo;
 begin
   FixedInfo.dwSignature:= 0;
-  if GetVersionFixedInfo(Application.ExeName, FixedInfo)
+  if cbVersion.GetVersionInfoFile(Application.ExeName, FixedInfo)
   then
      begin
       Result:= IntToStr(HiWord(FixedInfo.dwFileVersionMS))+'.'+ IntToStr(LoWord(FixedInfo.dwFileVersionMS))+'.'+ IntToStr(HiWord(FixedInfo.dwFileVersionLS));
@@ -878,33 +850,6 @@ end;
 function TAppData.GetVersionInfoV: string;
 begin
  Result:= ' v'+ GetVersionInfo(False);
-end;
-
-
-{ Yet another alternative.
-  Seems to have issues on Vista }
-function TAppData.GetVersionInfo_: string;
-const
-  InfoStr: array[1..2] of string = ('FileVersion', 'InternalName');
-var
-  S: string;
-  InfoSize, Len, VZero: DWORD;
-  Buf: PChar;      //ok
-  FixInfoBuf: PChar;
-begin
-  Result := '';
-  S:= Application.ExeName;
-  InfoSize:= GetFileVersionInfoSize(PChar(S), VZero);    // https://docs.microsoft.com/en-us/windows/win32/api/winver/nf-winver-getfileversioninfosizea
-  if InfoSize > 0 then
-  begin
-    Buf:= AllocMem(InfoSize);
-    GetFileVersionInfo(PChar(S), 0, InfoSize, Buf);
-
-     if VerQueryValue(Buf, PChar('StringFileInfo\040904E4\' + InfoStr[1]), Pointer(FixInfoBuf), Len)
-     then Result:= FixInfoBuf;    {  <---- AV here, on Vista 64bit }
-
-    FreeMem(Buf, InfoSize);
-  end
 end;
 
 
@@ -1365,17 +1310,10 @@ end;
 {--------------------------------------------------------------------------------------------------
    LOAD/SAVE Settings
 --------------------------------------------------------------------------------------------------}
-function TAppData.SettingsFile: string;
-CONST
-  ctSettingsFile = 'AppSettings.Ini';
-begin
-  Result:= AppDataFolder+ ctSettingsFile;
-end;
-
 
 procedure TAppData.SaveSettings;
 begin
-  VAR IniFile := TIniFileEx.Create('Global App Settings', SettingsFile);
+  VAR IniFile := TIniFileEx.Create('AppData Settings', IniFile);
   try
     IniFile.Write('AutoStartUp', AutoStartUp);
     IniFile.Write('StartMinim', StartMinim);
@@ -1385,14 +1323,14 @@ begin
     IniFile.Write('ShowOnError', ShowLogOnError);
     IniFile.Write('HintType', Ord(HintType));
   finally
-    IniFile.Free;
+    FreeAndNil(IniFile);
   end;
 end;
 
 
 procedure TAppData.LoadSettings;
 begin
-  VAR IniFile := TIniFileEx.Create('Global App Settings', SettingsFile);
+  VAR IniFile := TIniFileEx.Create('AppData Settings', IniFile);
   try
     AutoStartUp   := IniFile.Read('AutoStartUp', False);
     StartMinim    := IniFile.Read('StartMinim', False);
@@ -1402,7 +1340,7 @@ begin
     ShowLogOnError:= IniFile.Read('ShowOnError', True);
     HintType      := THintType(IniFile.Read('HintType', 0));
   finally
-    IniFile.Free;
+    FreeAndNil(IniFile);
   end;
 
   RunSelfAtWinStartUp(AutoStartUp);

@@ -1,13 +1,14 @@
-UNIT cbWinVersion;
+UNIT cbVersion;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2024.09
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
-   This library expands the TOSVersion.
-   Use it to get Windows version.
+   Features:
+     * Expands the TOSVersion. Use it to get Windows OS version.
+     * GetVersionInfoFile(FileName) which returns info about an exe file.
 
 ==============================================================================================================
    Microsoft Window releases:
@@ -52,12 +53,11 @@ UNIT cbWinVersion;
         https://docs.microsoft.com/en-us/windows/desktop/sysinfo/getting-the-system-version
 
 
-   For support for Win11 see:
-      https://stackoverflow.com/questions/68510685/how-to-detect-windows-11-using-delphi-10-3-3
+     For support for Win11 see:
+        https://stackoverflow.com/questions/68510685/how-to-detect-windows-11-using-delphi-10-3-3
 
-
-   Tester:
-      c:\MyProjects\Project Testers\cbWinVersion.pas\
+     Tester:
+        c:\MyProjects\Project Testers\cbVersion.pas\
 =============================================================================================================}
 
 INTERFACE
@@ -67,8 +67,12 @@ USES
 
 
 {-------------------------------------------------------------------------------------------------------------
-   Check for specific version
-   This is the recommended way!
+   EXE file version
+-------------------------------------------------------------------------------------------------------------}
+function GetVersionInfoFile(CONST FileName: string; VAR FixedInfo: TVSFixedFileInfo): Boolean;
+
+{-------------------------------------------------------------------------------------------------------------
+   Check for specific OS version
 -------------------------------------------------------------------------------------------------------------}
 function  IsWindowsXP     : Boolean;
 function  IsWindowsXPUp   : Boolean;
@@ -84,7 +88,7 @@ function  IsWindows11     : Boolean;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   Utils
+   OS utils
 -------------------------------------------------------------------------------------------------------------}
 function GetOSName: string;
 function GetOSDetails: string;
@@ -102,6 +106,40 @@ const
    CRLF = #13#10;
    Win10FirstRel = 10240;  //July 29, 2015
    Win11FirstRel = 22000;  //October 4, 2021
+
+
+
+
+
+{ Returns information (including version no) about an EXE file.
+  Source: JCL }
+function GetVersionInfoFile(CONST FileName: string; VAR FixedInfo: TVSFixedFileInfo): Boolean;
+VAR
+  Buffer: string;
+  DummyHandle: DWORD;    { The DummyHandle parameter is ignored by GetFileVersionInfo }
+  InfoSize, FixInfoLen: DWORD;
+  FixInfoBuf: PVSFixedFileInfo;
+begin
+  Result := False;
+  InfoSize := GetFileVersionInfoSize(PChar(FileName), DummyHandle);
+  if InfoSize > 0 then
+   begin
+    FixInfoLen := 0;
+    FixInfoBuf := Nil;
+
+    SetLength(Buffer, InfoSize);
+    if  GetFileVersionInfo(PChar(FileName), DummyHandle, InfoSize, Pointer(Buffer))
+    AND VerQueryValue(Pointer(Buffer), '\', Pointer(FixInfoBuf), FixInfoLen)
+    AND (FixInfoLen = SizeOf(TVSFixedFileInfo)) then
+      begin
+        Result := True;
+        FixedInfo := FixInfoBuf^;
+      end;
+  end;
+end;
+
+
+
 
 
 

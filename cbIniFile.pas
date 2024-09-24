@@ -106,8 +106,8 @@ TYPE
     function IsSupported(WinCtrl: TComponent): Boolean; virtual;
     class function AsString: string;
 
-    procedure SaveForm (Form: TForm; Loading: TFormLoading= flPositionOnly);      { Save ALL supported controls on this form }
-    procedure LoadForm (Form: TForm; Loading: TFormLoading= flPositionOnly);
+    procedure SaveForm (Form: TForm; Loading: TFormLoading= flPosOnly);      { Save ALL supported controls on this form }
+    procedure LoadForm (Form: TForm; Loading: TFormLoading= flPosOnly);
 
     { Font - this requires VCL framework so it cannot be moved to ccIniFile! }
     function  Read       (CONST Ident: string; Font: TFont): Boolean;            overload;
@@ -127,8 +127,8 @@ TYPE
 
 
 { These only support standard VCL controls. If you want to save also the custom (Cubic) controls see cv_IniFile }
-procedure SaveFormBase (Form: TForm; Loading: TFormLoading= flPositionOnly);
-procedure LoadFormBase (Form: TForm; Loading: TFormLoading= flPositionOnly);
+procedure SaveFormBase (Form: TForm; Loading: TFormLoading= flPosOnly);
+procedure LoadFormBase (Form: TForm; Loading: TFormLoading= flPosOnly);
 
 
 IMPLEMENTATION
@@ -162,7 +162,7 @@ end;
      Components[] just yields the components that are OWNED by the form.
      So, if we are iterating over it will miss any components that are added dynamically, and not owned by the form, or components that are owned by frames.
      Update 2021: Now frames are supported. All sub-components of a frame are stored to the INI file  }
-procedure TIniFileApp.SaveForm(Form: TForm; Loading: TFormLoading= flPositionOnly);
+procedure TIniFileApp.SaveForm(Form: TForm; Loading: TFormLoading= flPosOnly);
 
   procedure WriteComponentsOf(Component: TComponent);
   VAR i: Integer;
@@ -182,7 +182,7 @@ begin
 end;
 
 
-procedure TIniFileApp.LoadForm(Form: TForm; Loading: TFormLoading= flPositionOnly);
+procedure TIniFileApp.LoadForm(Form: TForm; Loading: TFormLoading= flPosOnly);
 
    procedure ReadComponentsOf(Component: TComponent);
    VAR i: Integer;
@@ -731,7 +731,7 @@ end;
          OnlyFormPos=True   ->  It will only save the position of the form (only Left/Top, no width/height/WndState)
 -----------------------------------------------------------------------------------------------------------------------}
 
-procedure SaveFormBase(Form: TForm; Loading: TFormLoading= flPositionOnly);
+procedure SaveFormBase(Form: TForm; Loading: TFormLoading= flPosOnly);
 VAR
    IniFile: TIniFileApp;
 begin
@@ -762,7 +762,7 @@ end;
 { It also does:
     * LoadForm will also set the font for all forms to be the same as the font of the MainForm.
     * If the form is out of screen, LoadForm will also bring the form back to screen. }
-procedure LoadFormBase(Form: TForm; Loading: TFormLoading= flPositionOnly);
+procedure LoadFormBase(Form: TForm; Loading: TFormLoading= flPosOnly);
 VAR
    IniFile: TIniFileApp;
 begin

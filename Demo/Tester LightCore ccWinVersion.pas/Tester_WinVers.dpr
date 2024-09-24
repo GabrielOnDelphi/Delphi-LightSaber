@@ -14,6 +14,6 @@ uses
 begin
   AppData:= TAppData.Create('Light Tester WinVer');
   AppData.CreateMainForm(TfrmTester, frmTester, TRUE);
-  TfrmRamLog.CreateFormAppData;
+  TfrmRamLog.CreateGlobalLog;
   Application.Run;
 end.

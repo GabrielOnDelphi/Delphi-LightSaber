@@ -7,7 +7,7 @@
 --------------------------------------------------------------------------------------------------------------
 
    Other functions (based on GetWinVersion)
-   Better use cbWinVersion.pas instead of this because it relies on TOSVersion.
+   Better use cbVersion.pas instead of this because it relies on TOSVersion.
 
    This library provides 3 ways to get Windows version:
       Using RtlGetVersion in NtDLL.dll

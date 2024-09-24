@@ -47,7 +47,7 @@ object MainForm: TMainForm
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 682
+        Width = 678
         Height = 49
         Align = alTop
         Caption = 'Path'
@@ -57,17 +57,17 @@ object MainForm: TMainForm
         AlignWithMargins = True
         Left = 3
         Top = 58
-        Width = 491
-        Height = 423
+        Width = 487
+        Height = 422
         Align = alClient
         TabOrder = 2
       end
       object pnlRight: TPanel
         AlignWithMargins = True
-        Left = 500
+        Left = 496
         Top = 58
         Width = 185
-        Height = 423
+        Height = 422
         Align = alRight
         TabOrder = 3
       end
@@ -79,7 +79,7 @@ object MainForm: TMainForm
         684
         483)
       object btnProgress: TButton
-        Left = 254
+        Left = 252
         Top = 394
         Width = 143
         Height = 49
@@ -90,7 +90,7 @@ object MainForm: TMainForm
         OnClick = btnProgressClick
       end
       object Button1: TButton
-        Left = 254
+        Left = 252
         Top = 104
         Width = 143
         Height = 49
@@ -99,7 +99,7 @@ object MainForm: TMainForm
         TabOrder = 1
       end
       object Button2: TButton
-        Left = 254
+        Left = 252
         Top = 158
         Width = 143
         Height = 49
@@ -108,7 +108,7 @@ object MainForm: TMainForm
         TabOrder = 2
       end
       object Button3: TButton
-        Left = 254
+        Left = 252
         Top = 211
         Width = 143
         Height = 49
@@ -117,7 +117,7 @@ object MainForm: TMainForm
         TabOrder = 3
       end
       object Button4: TButton
-        Left = 254
+        Left = 252
         Top = 265
         Width = 143
         Height = 49
@@ -133,7 +133,7 @@ object MainForm: TMainForm
         684
         483)
       object btnShowLog: TButton
-        Left = 240
+        Left = 238
         Top = 61
         Width = 191
         Height = 45
@@ -143,7 +143,7 @@ object MainForm: TMainForm
         TabOrder = 0
       end
       object Button5: TButton
-        Left = 240
+        Left = 238
         Top = 112
         Width = 191
         Height = 34
@@ -153,7 +153,7 @@ object MainForm: TMainForm
         OnClick = Button5Click
       end
       object Button6: TButton
-        Left = 240
+        Left = 238
         Top = 156
         Width = 191
         Height = 34
@@ -163,7 +163,7 @@ object MainForm: TMainForm
         OnClick = Button6Click
       end
       object Button7: TButton
-        Left = 240
+        Left = 238
         Top = 200
         Width = 191
         Height = 34
@@ -173,7 +173,7 @@ object MainForm: TMainForm
         OnClick = Button7Click
       end
       object Button8: TButton
-        Left = 240
+        Left = 238
         Top = 242
         Width = 191
         Height = 34
@@ -183,7 +183,7 @@ object MainForm: TMainForm
         OnClick = Button8Click
       end
       object Button9: TButton
-        Left = 240
+        Left = 238
         Top = 286
         Width = 191
         Height = 34
@@ -193,7 +193,7 @@ object MainForm: TMainForm
         OnClick = Button9Click
       end
       object Button11: TButton
-        Left = 240
+        Left = 238
         Top = 330
         Width = 191
         Height = 34
@@ -203,7 +203,7 @@ object MainForm: TMainForm
         OnClick = Button11Click
       end
       object Button10: TButton
-        Left = 240
+        Left = 238
         Top = 372
         Width = 191
         Height = 34
@@ -213,7 +213,7 @@ object MainForm: TMainForm
         OnClick = Button10Click
       end
       object Button12: TButton
-        Left = 240
+        Left = 238
         Top = 413
         Width = 191
         Height = 34

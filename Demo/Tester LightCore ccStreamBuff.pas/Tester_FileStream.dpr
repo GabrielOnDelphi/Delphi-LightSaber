@@ -12,7 +12,7 @@ uses
 begin
   AppData:= TAppData.Create('BigSearch');
   AppData.CreateMainForm(TMainForm, MainForm, True, True);    // Main form
-  TfrmRamLog.CreateFormAppData;
+  TfrmRamLog.CreateGlobalLog;
   Application.Run;
 end.
 

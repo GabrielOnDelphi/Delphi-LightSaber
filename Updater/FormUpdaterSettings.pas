@@ -105,7 +105,7 @@ procedure TfrmUpdaterSettings.FormDestroy(Sender: TObject);
 begin
   Assert(Container.Parent = Self);    { We need to move the container back on its original form, in order to let that form to correctly save its children }
   Apply;                              { Reparenting MUST be before Apply }
-  cvinifile.SaveForm(Self, flPositionOnly);
+  cvinifile.SaveForm(Self, flPosOnly);
 end;
 
 

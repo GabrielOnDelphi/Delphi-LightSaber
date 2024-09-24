@@ -11,11 +11,9 @@ uses
   FormRamLog in '..\..\FormRamLog.pas',
   FormSettings in 'FormSettings.pas',
   FormAbout in '..\..\FormAbout.pas',
-  FormSelectLang in '..\..\..\LightAutoTranslator\FormSelectLang.pas',
   FormSkinsDisk in '..\..\FormSkinsDisk.pas',
   FormSkinsRes in '..\..\FormSkinsRes.pas',
   FormSplashScreen in '..\..\FormSplashScreen.pas',
-  FormTranslator in '..\..\..\LightAutoTranslator\FormTranslator.pas',
   FormUniversalEula in '..\..\FormUniversalEula.pas',
   FormUpdaterNotifier in '..\..\Updater\FormUpdaterNotifier.pas',
   FormUpdaterRecEditor in '..\..\Updater\FormUpdaterRecEditor.pas',
@@ -27,6 +25,6 @@ uses
 begin
   AppData:= TAppData.Create('Light Commercial Template'); { Absolutelly critical if you use the SaveForm/LoadForm functionality. This string will be used as the name of the INI file. }
   AppData.CreateMainForm(TMainForm, MainForm, TRUE);
-  TfrmRamLog.CreateFormAppData;
+  TfrmRamLog.CreateGlobalLog;
   Application.Run;
 end.

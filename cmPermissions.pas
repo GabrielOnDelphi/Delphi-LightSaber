@@ -29,7 +29,7 @@ USES
 IMPLEMENTATION
 
 USES
-   System.Win.Registry, cbWinVersion;
+   System.Win.Registry, cbVersion;
 
 
 

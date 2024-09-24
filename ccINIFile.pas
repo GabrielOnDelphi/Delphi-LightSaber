@@ -33,9 +33,8 @@ TYPE
   end;
 
 TYPE
-  TFormLoading = (flNone,           // Don't restore form position and GUI elements when the form is created
-                  flPositionOnly,   // Restore form position
-                  flFull);          // Restore form position and GUI elements
+  TFormLoading = (flPosOnly,    // Restore form position
+                  flFull);      // Restore form position and GUI elements
 
 TYPE
  TIniFileEx = class(TIniFile)        // Old name: TCubicIniFile

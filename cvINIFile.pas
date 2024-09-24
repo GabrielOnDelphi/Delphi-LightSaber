@@ -32,8 +32,8 @@ TYPE
   end;
 
 { These add support for custom (cubic) VCL controls }
-procedure SaveForm (Form: TForm; Loading: TFormLoading= flPositionOnly);
-procedure LoadForm (Form: TForm; Loading: TFormLoading= flPositionOnly);
+procedure SaveForm (Form: TForm; Loading: TFormLoading= flPosOnly);
+procedure LoadForm (Form: TForm; Loading: TFormLoading= flPosOnly);
 
 
 IMPLEMENTATION
@@ -158,7 +158,7 @@ end;
          OnlyFormPos=True   ->  It will only save the position of the form (only Left/Top, no width/height/WndState)
 -----------------------------------------------------------------------------------------------------------------------}
 
-procedure SaveForm(Form: TForm; Loading: TFormLoading= flPositionOnly);
+procedure SaveForm(Form: TForm; Loading: TFormLoading= flPosOnly);
 VAR
    IniFile: TIniFileVCL;
 begin
@@ -189,7 +189,7 @@ end;
 { It also does:
     * LoadForm will also set the font for all forms to be the same as the font of the MainForm.
     * If the form is out of screen, LoadForm will also bring the form back to screen. }
-procedure LoadForm(Form: TForm; Loading: TFormLoading= flPositionOnly);
+procedure LoadForm(Form: TForm; Loading: TFormLoading= flPosOnly);
 VAR
    IniFile: TIniFileVCL;
 begin

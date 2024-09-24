@@ -18,7 +18,6 @@ object frmRamLog: TfrmRamLog
   ShowHint = True
   SnapBuffer = 3
   OnClose = FormClose
-  OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 17
   object Container: TPanel
@@ -77,17 +76,18 @@ object frmRamLog: TfrmRamLog
         BevelOuter = bvNone
         ShowCaption = False
         TabOrder = 2
-        TrackBar.Left = 196
+        TrackBar.Left = 226
         TrackBar.Top = 0
-        TrackBar.Width = 150
+        TrackBar.Width = 120
         TrackBar.Height = 25
         TrackBar.Hint = 'Hide all messages below this level'
         TrackBar.Align = alRight
         TrackBar.Max = 6
         TrackBar.Min = 1
-        TrackBar.Position = 3
+        TrackBar.Position = 6
         TrackBar.TabOrder = 0
-        Verbosity = lvInfos
+        Verbosity = lvErrors
+        Log = Log
       end
       object chkShowTime: TCheckBox
         AlignWithMargins = True

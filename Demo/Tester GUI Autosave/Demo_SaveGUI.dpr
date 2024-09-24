@@ -25,7 +25,7 @@ procedure Main;
   else
    begin
      AppData.CreateMainForm(TfrmTester, frmTester, TRUE, TRUE);
-     TfrmRamLog.CreateFormAppData;
+     TfrmRamLog.CreateGlobalLog;
      Application.Run;
    end;
  end;

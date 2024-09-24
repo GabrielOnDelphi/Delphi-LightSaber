@@ -83,7 +83,7 @@ USES
 
 IMPLEMENTATION
 USES
-   csSystem, ccCore, cbDialogs, cbAppData, {cbINIFile,} ccIO, ccTextFile, cmIO, cmIO.Win, cbWinVersion, csExecuteProc, cmPermissions, System.DateUtils;
+   csSystem, ccCore, cbDialogs, cbAppData, {cbINIFile,} ccIO, ccTextFile, cmIO, cmIO.Win, cbVersion, csExecuteProc, cmPermissions, System.DateUtils;
 
 
 
@@ -501,8 +501,8 @@ end;
 function GenerateWinSysRep: string;
 begin
  Result:= ' [SYSTEM]'+ CRLF;
- Result:= Result+'  OS platform: '          + Tab+ Tab+ cbWinVersion.GetOSName+ CRLF;
- Result:= Result+'  OS architecture: '      + Tab     + cbWinVersion.Architecture+ CRLF;
+ Result:= Result+'  OS platform: '          + Tab+ Tab+ cbVersion.GetOSName+ CRLF;
+ Result:= Result+'  OS architecture: '      + Tab     + cbVersion.Architecture+ CRLF;
  Result:= Result+'  App has admin rights: ' + BoolToStr(AppHasAdminRights, TRUE)+ CRLF;
  Result:= Result+'  Invalid system time: '  + Tab+ BoolToStr(SystemTimeIsInvalid , TRUE)+ CRLF;
  Result:= Result+'  Windows up time: '      + Tab+ Date2FormatAuto(WindowsUpTime);

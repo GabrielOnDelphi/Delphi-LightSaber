@@ -94,17 +94,14 @@
         <DCCReference Include="..\..\FormRamLog.pas"/>
         <DCCReference Include="FormSettings.pas"/>
         <DCCReference Include="..\..\FormAbout.pas"/>
-        <DCCReference Include="..\..\..\LightAutoTranslator\FormSelectLang.pas"/>
         <DCCReference Include="..\..\FormSkinsDisk.pas"/>
         <DCCReference Include="..\..\FormSkinsRes.pas"/>
         <DCCReference Include="..\..\FormSplashScreen.pas"/>
-        <DCCReference Include="..\..\..\LightAutoTranslator\FormTranslator.pas"/>
         <DCCReference Include="..\..\FormUniversalEula.pas"/>
         <DCCReference Include="..\..\Updater\FormUpdaterNotifier.pas"/>
         <DCCReference Include="..\..\Updater\FormUpdaterRecEditor.pas"/>
         <DCCReference Include="..\..\Updater\FormUpdaterSettings.pas"/>
         <DCCReference Include="uInitialization.pas"/>
-        <None Include="..\..\..\LightProteus\cpProteus.inc"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -136,12 +133,6 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="4">
-                <DeployFile LocalName="..\..\..\LightProteus\cpProteus.inc" Configuration="Debug" Class="ProjectFile">
-                    <Platform Name="Win32">
-                        <RemoteDir>.\</RemoteDir>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="TemplateApp.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>TemplateApp.exe</RemoteName>
