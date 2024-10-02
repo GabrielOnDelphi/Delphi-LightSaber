@@ -135,16 +135,16 @@
 #define System_Bindings_Consts_sBoolOpFail 65117
 #define System_Bindings_Consts_sBoolNegateOpFail 65118
 #define System_Bindings_Consts_sParserUnexpected 65119
-#define Vcl_ComStrs_sTabFailRetrieve 65120
-#define Vcl_ComStrs_sTabFailGetObject 65121
-#define Vcl_ComStrs_sTabFailSet 65122
-#define Vcl_ComStrs_sTabFailSetObject 65123
-#define Vcl_ComStrs_sTabMustBeMultiLine 65124
-#define Vcl_ComStrs_sRichEditInsertError 65125
-#define Vcl_ComStrs_sRichEditLoadFail 65126
-#define Vcl_ComStrs_sRichEditSaveFail 65127
-#define Vcl_ComStrs_sUDAssociated 65128
-#define Vcl_ComStrs_sPageIndexError 65129
+#define Vcl_ComStrs_sTabMustBeMultiLine 65120
+#define Vcl_ComStrs_sRichEditInsertError 65121
+#define Vcl_ComStrs_sRichEditLoadFail 65122
+#define Vcl_ComStrs_sRichEditSaveFail 65123
+#define Vcl_ComStrs_sUDAssociated 65124
+#define Vcl_ComStrs_sPageIndexError 65125
+#define System_Win_ComConst_SOleError 65126
+#define System_Win_ComConst_SNoMethod 65127
+#define System_Win_ComConst_SVarNotObject 65128
+#define System_Win_ComConst_STooManyParams 65129
 #define System_Bindings_Consts_sOwnerNotFound 65130
 #define System_Bindings_Consts_sScopeObjNull 65131
 #define System_Bindings_Consts_sUncompiledExpression 65132
@@ -161,12 +161,12 @@
 #define Vcl_Consts_sBeginInvokeNoHandle 65143
 #define Vcl_Consts_SToggleSwitchCaptionOn 65144
 #define Vcl_Consts_SToggleSwitchCaptionOff 65145
-#define System_Win_ComConst_SOleError 65146
-#define System_Win_ComConst_SNoMethod 65147
-#define System_Win_ComConst_SVarNotObject 65148
-#define System_Win_ComConst_STooManyParams 65149
-#define Vcl_ComStrs_sTabFailClear 65150
-#define Vcl_ComStrs_sTabFailDelete 65151
+#define Vcl_ComStrs_sTabFailClear 65146
+#define Vcl_ComStrs_sTabFailDelete 65147
+#define Vcl_ComStrs_sTabFailRetrieve 65148
+#define Vcl_ComStrs_sTabFailGetObject 65149
+#define Vcl_ComStrs_sTabFailSet 65150
+#define Vcl_ComStrs_sTabFailSetObject 65151
 #define Vcl_Consts_SListBoxMustBeVirtual 65152
 #define Vcl_Consts_SInvalidPath 65153
 #define Vcl_Consts_STrayIconRemoveError 65154
@@ -680,16 +680,16 @@ BEGIN
 	System_Bindings_Consts_sBoolOpFail,	L"Don't know how to perform boolean operation on \"%s\" and \"%s\""
 	System_Bindings_Consts_sBoolNegateOpFail,	L"Don't know how to perform boolean negation of \"%s\""
 	System_Bindings_Consts_sParserUnexpected,	L"Expected %s but got %s"
-	Vcl_ComStrs_sTabFailRetrieve,	L"Failed to retrieve tab at index %d"
-	Vcl_ComStrs_sTabFailGetObject,	L"Failed to get object at index %d"
-	Vcl_ComStrs_sTabFailSet,	L"Failed to set tab \"%s\" at index %d"
-	Vcl_ComStrs_sTabFailSetObject,	L"Failed to set object at index %d"
 	Vcl_ComStrs_sTabMustBeMultiLine,	L"MultiLine must be True when TabPosition is tpLeft or tpRight"
 	Vcl_ComStrs_sRichEditInsertError,	L"RichEdit line insertion error"
 	Vcl_ComStrs_sRichEditLoadFail,	L"Failed to Load Stream"
 	Vcl_ComStrs_sRichEditSaveFail,	L"Failed to Save Stream"
 	Vcl_ComStrs_sUDAssociated,	L"%s is already associated with %s"
 	Vcl_ComStrs_sPageIndexError,	L"%d is an invalid PageIndex value.  PageIndex must be between 0 and %d"
+	System_Win_ComConst_SOleError,	L"OLE error %.8x"
+	System_Win_ComConst_SNoMethod,	L"Method '%s' not supported by automation object"
+	System_Win_ComConst_SVarNotObject,	L"Variant does not reference an automation object"
+	System_Win_ComConst_STooManyParams,	L"Dispatch methods do not support more than 64 parameters"
 	System_Bindings_Consts_sOwnerNotFound,	L"Owner cannot be Nil."
 	System_Bindings_Consts_sScopeObjNull,	L"Scope obj cannot be Nil."
 	System_Bindings_Consts_sUncompiledExpression,	L"The expression has not been compiled yet."
@@ -706,12 +706,12 @@ BEGIN
 	Vcl_Consts_sBeginInvokeNoHandle,	L"Cannot call BeginInvoke on a control with no parent or window handle"
 	Vcl_Consts_SToggleSwitchCaptionOn,	L"On"
 	Vcl_Consts_SToggleSwitchCaptionOff,	L"Off"
-	System_Win_ComConst_SOleError,	L"OLE error %.8x"
-	System_Win_ComConst_SNoMethod,	L"Method '%s' not supported by automation object"
-	System_Win_ComConst_SVarNotObject,	L"Variant does not reference an automation object"
-	System_Win_ComConst_STooManyParams,	L"Dispatch methods do not support more than 64 parameters"
 	Vcl_ComStrs_sTabFailClear,	L"Failed to clear tab control"
 	Vcl_ComStrs_sTabFailDelete,	L"Failed to delete tab at index %d"
+	Vcl_ComStrs_sTabFailRetrieve,	L"Failed to retrieve tab at index %d"
+	Vcl_ComStrs_sTabFailGetObject,	L"Failed to get object at index %d"
+	Vcl_ComStrs_sTabFailSet,	L"Failed to set tab \"%s\" at index %d"
+	Vcl_ComStrs_sTabFailSetObject,	L"Failed to set object at index %d"
 	Vcl_Consts_SListBoxMustBeVirtual,	L"Listbox (%s) style must be virtual in order to set Count"
 	Vcl_Consts_SInvalidPath,	L"\"%s\" is an invalid path"
 	Vcl_Consts_STrayIconRemoveError,	L"Cannot remove shell notification icon"
@@ -1098,16 +1098,15 @@ BEGIN
 	System_SysConst_STooManyOpenFiles,	L"Too many open files"
 END
 
-/* c:\delphi\sydney\lib\Win32\release\Controls.res */
 /* c:\delphi\sydney\lib\Win32\release\Dialogs.res */
+/* c:\delphi\sydney\lib\Win32\release\Controls.res */
 /* c:\delphi\sydney\lib\Win32\release\Buttons.res */
-/* c:\delphi\sydney\lib\Win32\release\SPIN.RES */
 /* c:\delphi\sydney\lib\Win32\release\FileCtrl.res */
 /* c:\delphi\sydney\lib\Win32\release\WinXCtrls.res */
+/* c:\delphi\sydney\lib\Win32\release\SPIN.RES */
+/* C:\Projects\LightSaber\Demo\Tester LightCore ccWinVersion.pas\FormMain.dfm */
 /* c:\Projects\LightSaber\21.0_Win32_Debug\cvFloatSpinEdit.dcr */
 /* c:\Projects\LightSaber\21.0_Win32_Debug\cvPathEdit.res */
-/* C:\Projects\LightSaber\Demo\Tester GUI Autosave\SecondForm.dfm */
-/* C:\Projects\LightSaber\Demo\Tester GUI Autosave\MainForm.dfm */
 /* C:\Projects\LightSaber\FormRamLog.dfm */
-/* C:\Projects\LightSaber\Demo\Tester GUI Autosave\Demo_SaveGUI.res */
-/* C:\Projects\LightSaber\Demo\Tester GUI Autosave\Demo_SaveGUI.drf */
+/* C:\Projects\LightSaber\Demo\Tester LightCore ccWinVersion.pas\Tester_WinVers.res */
+/* C:\Projects\LightSaber\Demo\Tester LightCore ccWinVersion.pas\Tester_WinVers.drf */

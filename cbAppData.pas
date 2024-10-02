@@ -300,8 +300,6 @@ IMPLEMENTATION
 USES
   cbVersion, ccIO, ccTextFile, cbRegistry, cbDialogs, cbCenterControl;
 
-//ToDo: Don't create the log window. Store data in TRamLog.
-
 {-------------------------------------------------------------------------------------------------------------
  Parameters
     AppName
@@ -346,9 +344,9 @@ begin
   FRunningFirstTime:= NOT FileExists(IniFile);
 
   { Log }
-  { Warning: We cannot use Application.CreateForm here because this will make the Log the main form!
+  { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }
   Assert(RamLog = NIL, 'Log already created!');  // Call this as soon as possible so it can catch all Log messages generated during app start up. A good place might be in your DPR file before Application.CreateForm(TMainForm, frmMain)
-  RamLog:= TRamLog.Create(ShowLogOnError, NIL); }
+  RamLog:= TRamLog.Create(ShowLogOnError, NIL);
 
   LogVerb(AppName+ GetVersionInfoV+ ' started.');
 

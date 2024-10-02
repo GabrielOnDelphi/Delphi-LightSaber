@@ -2,6 +2,11 @@ program Uninstaller;
 
 uses
   FastMM4,
+  madExcept,
+  madLinkDisAsm,
+  madListHardware,
+  madListProcesses,
+  madListModules,
   Forms,
   UninstallerForm in 'UninstallerForm.pas' {frmMain},
   Vcl.Themes,

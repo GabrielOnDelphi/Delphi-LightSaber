@@ -39,7 +39,7 @@ object frmSettings: TfrmSettings
         762
         479)
       object grpSystem: TGroupBox
-        Left = 182
+        Left = 180
         Top = 99
         Width = 381
         Height = 246
@@ -64,7 +64,7 @@ object frmSettings: TfrmSettings
         object chkAutoStartUp: TCubicCheckBox
           Left = 60
           Top = 39
-          Width = 197
+          Width = 173
           Height = 17
           Caption = 'Start at Windows startup '
           TabOrder = 0
@@ -73,7 +73,7 @@ object frmSettings: TfrmSettings
         object chkTrayIcon: TCubicCheckBox
           Left = 60
           Top = 107
-          Width = 155
+          Width = 119
           Height = 17
           Caption = 'Minimize to tray'
           TabOrder = 2
@@ -82,7 +82,7 @@ object frmSettings: TfrmSettings
         object chkStartMinim: TCubicCheckBox
           Left = 60
           Top = 73
-          Width = 151
+          Width = 115
           Height = 17
           Caption = 'Start minimized'
           TabOrder = 3
@@ -104,7 +104,7 @@ object frmSettings: TfrmSettings
       object Path: TCubicPathEdit
         Left = 82
         Top = 364
-        Width = 583
+        Width = 579
         Height = 49
         Hint = 
           'User defined path where to save (large) files. Useful when the p' +
@@ -115,7 +115,7 @@ object frmSettings: TfrmSettings
         TabOrder = 1
       end
       object btnCrash: TButton
-        Left = 628
+        Left = 624
         Top = 12
         Width = 101
         Height = 25
@@ -133,7 +133,7 @@ object frmSettings: TfrmSettings
         762
         479)
       object GroupHelp: TGroupBox
-        Left = 200
+        Left = 198
         Top = 130
         Width = 345
         Height = 221
@@ -208,7 +208,7 @@ object frmSettings: TfrmSettings
         762
         479)
       object GroupBox1: TGroupBox
-        Left = 228
+        Left = 226
         Top = 112
         Width = 290
         Height = 226
@@ -268,7 +268,7 @@ object frmSettings: TfrmSettings
         762
         479)
       object grpUser: TGroupBox
-        Left = 202
+        Left = 200
         Top = 130
         Width = 345
         Height = 221

@@ -30,6 +30,7 @@ TYPE
      FOnVScroll: TNotifyEvent;
    protected
      procedure WMVScroll(var Msg: TWMVScroll); message WM_VSCROLL;
+     // procedure CreateWindowHandle(const Params: TCreateParams); override;
    public
      procedure AddFormated(s: string);           { Accepts string that contain enters }
      procedure CopyAll;
@@ -56,6 +57,21 @@ IMPLEMENTATION
 
 USES
    ccCore;
+
+
+{
+procedure TCubicRichEdit.CreateWindowHandle(const Params: TCreateParams);
+var
+  NewParams: TCreateParams;
+begin
+  NewParams := Params;
+  // Set to use RichEdit50W for Rich Edit 4.1 (which supports images)
+  NewParams.WinClassName := 'RichEdit50W';
+  inherited CreateWindowHandle(NewParams);
+end; }
+
+
+
 
 
 function TCubicRichEdit.GetCurrentLine: Integer;

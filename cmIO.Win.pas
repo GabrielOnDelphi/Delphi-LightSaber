@@ -55,18 +55,18 @@ USES
 {--------------------------------------------------------------------------------------------------
    API OPERATIONS
 --------------------------------------------------------------------------------------------------}
- function RecycleItem      (CONST ItemName: string; CONST DeleteToRecycle: Boolean= TRUE; CONST ShowConfirm: Boolean= TRUE; CONST TotalSilence: Boolean= FALSE): Boolean;
- function FileOperation    (CONST Source, Dest: string; Op, Flags: Integer): Boolean;                     { Performs: Copy, Move, Delete, Rename on files + folders via WinAPI}
+ function RecycleItem           (CONST ItemName: string; CONST DeleteToRecycle: Boolean= TRUE; CONST ShowConfirm: Boolean= TRUE; CONST TotalSilence: Boolean= FALSE): Boolean;
+ function FileOperation         (CONST Source, Dest: string; Op, Flags: Integer): Boolean;                     { Performs: Copy, Move, Delete, Rename on files + folders via WinAPI}
 
- function FileAge          (CONST FileName: string): TDateTime;
- function FileTimeToDateTimeStr   (FTime: TFileTime; CONST DFormat, TFormat: string): string;
+ function FileAge               (CONST FileName: string): TDateTime;
+ function FileTimeToDateTimeStr (FTime: TFileTime; CONST DFormat, TFormat: string): string;
 
- procedure SetCompressionAtr(const FileName: string; const CompressionFormat: byte= 1);
+ procedure SetCompressionAtr    (CONST FileName: string; const CompressionFormat: byte= 1);
 
 {--------------------------------------------------------------------------------------------------
    FILE SIZE
 --------------------------------------------------------------------------------------------------}
- function  GetFileSizeEx    (hFile: THandle; VAR FileSize: Int64): BOOL; stdcall; external kernel32;
+ function  GetFileSizeEx       (hFile: THandle; VAR FileSize: Int64): BOOL; stdcall; external kernel32;
 
 {--------------------------------------------------------------------------------------------------
    FILE ACCESS

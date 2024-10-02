@@ -71,15 +71,22 @@ INTERFACE
 {$WARN UNIT_PLATFORM ON}   { OFF: Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
 
 USES
-  System.Diagnostics, System.Math, System.Masks, System.Types, System.StrUtils,
-  System.IOUtils, System.SysUtils, System.Classes;
+  {$IFDEF MSWINDOWS}
+  Winapi.Windows, {$ENDIF}
+  System.Diagnostics,
+  System.Math,
+  System.Masks,
+  System.Types,
+  System.StrUtils,
+  System.IOUtils,
+  System.SysUtils,
+  System.Classes;
 
 CONST
   DigSubdirectories = TRUE;
   UseFullPath       = TRUE;
   InvalidFileCharWin= ['/','*','?','<','>','|', '"', ':', '\'];     { Characters that are invalid for file names OR for folder (just single folders) }
   InvalidPathChar   = ['/','*','?','<','>','|', '"'];               { Characters that are invalid for a FULL path }
-
   {$IFDEF MSWINDOWS}
    MAXPATH= 260-12;
   {$ELSE}
@@ -667,7 +674,7 @@ begin
   TRY
     TDirectory.CreateDirectory(FullPath);
   EXCEPT
-    on EInOutArgumentException  // exception class EInOutArgumentException with message 'Invalid characters in path': C:\?
+    on System.SysUtils.EArgumentException  // exception class EInOutArgumentException with message 'Invalid characters in path': C:\?
       do EXIT(FALSE)
     else RAISE;
   END;
@@ -1357,15 +1364,37 @@ begin
 end;
 
 
-{ Looks like it works with >4GB files }
+{ It works with >4GB files.
+  On error, return -1 instead of raising an exception }
 function GetFileSize(CONST FileName: String): Int64;
-begin
-  try
-    Result:= TFile.GetSize(FileName);
-  except
-      Result:= -1; // Return -1 if there is an error
+{$IFDEF VER350} // Athenes
+  begin
+    try
+      Result:= TFile.GetSize(FileName);
+    except
+      Result:= -1;
+    end;
   end;
-end;
+{$ELSE}
+   {$IFDEF MSWINDOWS}
+     var
+       Info: TWin32FileAttributeData;
+     begin
+       if GetFileAttributesEx(PChar(FileName), GetFileExInfoStandard, @Info)
+       then Result := Int64(info.nFileSizeLow) or Int64(info.nFileSizeHigh shl 32)
+       else Result := -1;
+     end;
+   {$ELSE}
+     var
+       StatBuf: _stat;
+     begin
+       if stat(PAnsiChar(UTF8Encode(Path)), StatBuf) = 0
+       then Result := StatBuf.st_size
+       else Result := -1;
+     end;
+   {$ENDIF MSWINDOWS}
+{$ENDIF VER350}
+
 
 
 

@@ -15,7 +15,7 @@ INTERFACE
 USES
   WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.ExtCtrls,
   cvIniFile, InternetLabel, cvPathEdit, cvSpinEdit,
-  llRichLogTrack, cvCheckBox, llRichLog, cbAppData, cvINIFile, chHardID;
+  llRichLogTrack, cvCheckBox, llRichLog, cbAppData, chHardID;
 
 TYPE
   TMainForm = class(TForm)
@@ -63,7 +63,6 @@ TYPE
   private
     procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully created
   public
-    procedure SetCaption(const CaptionText: string);
  end;
 
 VAR
@@ -74,7 +73,7 @@ IMPLEMENTATION {$R *.dfm}
 {.$I SynDprUses.inc} // use FastMM4 on older Delphi, or set FPC threads
 
 USES
-   system.Math, ccStreamBuff, ccCore, cmDebugger;
+   system.Math, ccCore, ccStreamBuff2, cmDebugger;
 
 
 
@@ -85,7 +84,7 @@ USES
 --------------------------------------------------------------------------------------------------}
 procedure TMainForm.LateInitialize;
 begin
- SetCaption('');
+ //SetCaption('');
  lblVers.Caption:= 'Version: '+ AppData.GetVersionInfoV;
  Show;
 end;
@@ -226,14 +225,14 @@ var dDate: TDate;
 procedure TMainForm.btnStreamWriteClick(Sender: TObject);
 VAR
    TSL: TStringList;
-   Stream: TCubicBuffStream;
+   Stream: TCubicBuffStream2;
 begin
   dDate:= EncodeDate(2024, 08, 10);
   TSL:= TStringList.Create;
   TSL.Add('List0');
   TSL.Add('List1');
 
-  Stream:= TCubicBuffStream.CreateWrite('Test_TCubicBuffStream');
+  Stream:= TCubicBuffStream2.CreateWrite('Test_TCubicBuffStream');
   TRY
    Stream.WriteHeader   ('MagicNo', 1);
    Stream.WriteBoolean  (TRUE);
@@ -274,11 +273,11 @@ end;
 procedure TMainForm.btnStreamReadClick(Sender: TObject);
 VAR
    TSL: TStringList;
-   Stream: TCubicBuffStream;
+   Stream: TCubicBuffStream2;
 begin
   dDate:= EncodeDate(2024, 08, 10);
 
-  Stream:= TCubicBuffStream.CreateRead('Test_TCubicBuffStream');
+  Stream:= TCubicBuffStream2.CreateRead('Test_TCubicBuffStream');
   TRY
    Stream.ReadHeader('MagicNo', 1);
 
@@ -310,7 +309,7 @@ begin
    if NOT SameValue(Stream.ReadDouble, 3.14, 0.01) then RAISE Exception.Create('ReadDouble failure!');
    if NOT SameValue(Stream.ReadSingle, 3.14, 0.01) then RAISE Exception.Create('ReadSingle failure!');
 
-   Stream.ReadPadding(30);
+   Stream.ReadPadding0(30);
    Stream.ReadPaddingDef;
    Stream.ReadPaddingE(128);
    Stream.ReadCheckPointE('!');

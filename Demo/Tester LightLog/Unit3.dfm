@@ -126,9 +126,9 @@ object MainForm: TMainForm
         BevelOuter = bvNone
         ShowCaption = False
         TabOrder = 1
-        TrackBar.Left = 175
+        TrackBar.Left = 111
         TrackBar.Top = 0
-        TrackBar.Width = 56
+        TrackBar.Width = 120
         TrackBar.Height = 25
         TrackBar.Hint = 'Hide all messages below this level'
         TrackBar.Align = alRight
