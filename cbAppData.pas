@@ -51,9 +51,9 @@
          MainForm in 'MainForm.pas' {frmMain _;
        begin
          AppData:= TAppData.Create('MyCollApp');
-         AppData.CreateMainForm(TMainForm, MainForm, True, True);    // Main form
+         AppData.CreateMainForm(TMainForm, MainForm, False, True);   // Main form
          AppData.CreateForm(TSecondFrom, frmSecond);                 // Secondary form(s)
-         TfrmRamLog.CreateGlobalLog;                               // Special form (optional)
+         TfrmRamLog.CreateGlobalLog;                                 // Special form (optional)
          Application.Run;
        end.
 
@@ -84,23 +84,25 @@
 
  ____________________________________________________________________________________________________________
 
-   MainFormOnTaskbar info:
+   MainFormOnTaskbar:
 
-      [IF TRUE]
-          A taskbar button represents the application's main form and displays its caption.
-
-      [IF FALSE]
-          A taskbar button represents the application's (hidden) main window and bears the application's Title.
+      [TASKBAR]
+         if TRUE = A taskbar button represents the application's main form & displays its caption.
+         if FALSE= A taskbar button represents the application's (hidden) main window & displays the application's Title.
 
       [Modality]
-          If true, all child forms will stay on top of the MainForm. Bad since we don't really want "modal" forms all over in our app.
-          When we do want a child form to stay on top, then we make it modal or use fsStayOnTop.
+          if TRUE = All child forms will stay on top of the MainForm.
+                    Bad since we don't really want "modal" forms all over in our app.
+                    When we do want a child form to stay on top, then we make it modal or use fsStayOnTop.
 
       [AERO]
-          Must be True to use Windows (Vista) Aero effects (ive taskbar thumbnails, Dynamic Windows, Windows Flip, Windows Flip 3D).
+          Windows Aero effects (Live taskbar thumbnails, Dynamic Windows, Windows Flip, Windows Flip 3D)
+          if False = Aero effects work
+          if False = Aero effects do not work
 
       Details
           https://stackoverflow.com/questions/66720721/
+          https://stackoverflow.com/questions/14587456/how-can-i-stop-my-application-showing-on-the-taskbar
 
       BX: This must be FALSE in order to make 'Start minimized' option work
 
@@ -229,7 +231,7 @@ TYPE
 
     function  RunFileAtWinStartUp(CONST FilePath: string; Active: Boolean): Boolean;
 
-    procedure CreateMainForm  (aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= TRUE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
+    procedure CreateMainForm  (aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
 
     procedure CreateForm      (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);  overload;
     procedure CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
@@ -398,7 +400,7 @@ end;
 { 1. Create the form
   2. Set the font of the new form to be the same as the font of the MainForm
   3. Show it }
-procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= TRUE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
+procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
 begin
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
   Assert(Font = NIL,                 'AppData.Font already assigned!');

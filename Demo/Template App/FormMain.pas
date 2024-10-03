@@ -52,7 +52,6 @@ TYPE
     AppEvents   : TApplicationEvents;
     btnProgress : TButton;
     btnShowLog  : TButton;
-    btnStart    : TButton;
     Button1     : TButton;
     Button2     : TButton;
     Button3     : TButton;
@@ -84,6 +83,7 @@ TYPE
     tabMain     : TTabSheet;
     tabProgress : TTabSheet;
     TrayIcon    : TCoolTrayIcon;
+    btnStart: TButton;
     procedure actAboutExecute    (Sender: TObject);
     procedure actEnterKeyExecute (Sender: TObject);
     procedure actLanguageExecute (Sender: TObject);

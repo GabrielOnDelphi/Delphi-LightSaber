@@ -18,13 +18,14 @@ uses
   FormUpdaterNotifier in '..\..\Updater\FormUpdaterNotifier.pas',
   FormUpdaterRecEditor in '..\..\Updater\FormUpdaterRecEditor.pas',
   FormUpdaterSettings in '..\..\Updater\FormUpdaterSettings.pas',
-  uInitialization in 'uInitialization.pas';
+  uInitialization in 'uInitialization.pas',
+  ciUpdater in '..\..\Updater\ciUpdater.pas';
 
 {$R *.res}
 
 begin
   AppData:= TAppData.Create('Light Commercial Template'); { Absolutelly critical if you use the SaveForm/LoadForm functionality. This string will be used as the name of the INI file. }
-  AppData.CreateMainForm(TMainForm, MainForm, TRUE);
+  AppData.CreateMainForm(TMainForm, MainForm, FALSE);
   TfrmRamLog.CreateGlobalLog;
   Application.Run;
 end.

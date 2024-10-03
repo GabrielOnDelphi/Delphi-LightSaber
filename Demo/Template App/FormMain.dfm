@@ -16,6 +16,7 @@ object MainForm: TMainForm
   Font.Style = []
   GlassFrame.Enabled = True
   Menu = MainMenu
+  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
@@ -23,26 +24,18 @@ object MainForm: TMainForm
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnDestroy = FormDestroy
+  PixelsPerInch = 96
   TextHeight = 17
   object pgCtrl: TPageControl
     Left = 0
     Top = 0
     Width = 692
     Height = 515
-    ActivePage = tabLog
+    ActivePage = tabMain
     Align = alClient
     TabOrder = 0
     object tabMain: TTabSheet
       Caption = 'Main'
-      object btnStart: TButton
-        Left = 544
-        Top = 425
-        Width = 134
-        Height = 53
-        Caption = 'START'
-        TabOrder = 0
-        OnClick = btnSTARTClick
-      end
       object Path: TCubicPathEdit
         AlignWithMargins = True
         Left = 3
@@ -51,7 +44,7 @@ object MainForm: TMainForm
         Height = 49
         Align = alTop
         Caption = 'Path'
-        TabOrder = 1
+        TabOrder = 0
       end
       object mmo: TMemo
         AlignWithMargins = True
@@ -60,7 +53,7 @@ object MainForm: TMainForm
         Width = 487
         Height = 422
         Align = alClient
-        TabOrder = 2
+        TabOrder = 1
       end
       object pnlRight: TPanel
         AlignWithMargins = True
@@ -69,7 +62,16 @@ object MainForm: TMainForm
         Width = 185
         Height = 422
         Align = alRight
-        TabOrder = 3
+        TabOrder = 2
+        object btnStart: TButton
+          Left = 21
+          Top = 357
+          Width = 134
+          Height = 53
+          Caption = 'START'
+          TabOrder = 0
+          OnClick = btnSTARTClick
+        end
       end
     end
     object tabProgress: TTabSheet
