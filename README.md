@@ -4,7 +4,7 @@
 
 Contains useful Delphi functions. Lightweight (only 10000 lines of code) alternative to Jedi library. 
 
-![Logo](https://raw.githubusercontent.com/GodModeUser/Delphi-LightSaber/main/Docs/Lightsaber%20logo.png)
+![Delphi Library](https://raw.githubusercontent.com/GodModeUser/Delphi-LightSaber/main/Docs/Lightsaber%20logo.png)
 
 **Description**   
 
