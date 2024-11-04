@@ -4,7 +4,7 @@
 
 Contains useful Delphi functions. Lightweight (only 10000 lines of code) alternative to Jedi library. 
 
-![](https://raw.githubusercontent.com/GodModeUser/Delphi-LightSaber/main/Docs/Lightsaber%20logo.png)
+![Logo](https://raw.githubusercontent.com/GodModeUser/Delphi-LightSaber/main/Docs/Lightsaber%20logo.png)
 
 **Description**   
 
@@ -37,6 +37,7 @@ Your code could use directly the bottom library (Core) or higher libraries in th
 ![](https://raw.githubusercontent.com/GodModeUser/Delphi-LightSaber/main/Docs/Library%20architecture.png)
 
 If you only need the only one library (for example, the Core library), you can of course delete the rest of the libraries.
+More about my libraries [here](https://gabrielmoraru.com/publications-citations/).
 
 _________________
 
