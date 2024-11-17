@@ -34,9 +34,9 @@ INTERFACE
 
 USES
   WinApi.Windows, WinApi.Messages, Winapi.ShellApi,
-  System.SysUtils, System.Classes,
+  System.SysUtils, System.Classes, System.Actions,
   VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
-  csSystem, CoolTrayIcon, cvPathEdit, cvStatusBar, cpProteus, cbAppData, cpProteusIO, System.Actions;
+  CoolTrayIcon, csSystem, cvPathEdit, cvStatusBar, cpProteus, cbAppData, cpProteusIO, cmGuiSettings;
 
   // c:\MyProjects\Packages\Third party packages\MenuPopupHints.pas
 
@@ -83,7 +83,7 @@ TYPE
     tabMain     : TTabSheet;
     tabProgress : TTabSheet;
     TrayIcon    : TCoolTrayIcon;
-    btnStart: TButton;
+    btnStart    : TButton;
     procedure actAboutExecute    (Sender: TObject);
     procedure actEnterKeyExecute (Sender: TObject);
     procedure actLanguageExecute (Sender: TObject);
@@ -105,7 +105,7 @@ TYPE
     procedure FormCloseQuery     (Sender: TObject; var CanClose: Boolean);
     procedure FormDestroy        (Sender: TObject);
     procedure TrayIconClick      (Sender: TObject);
-    procedure actShowLogExecute(Sender: TObject);
+    procedure actShowLogExecute  (Sender: TObject);
   protected
     procedure WMDROPFILES (VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Accept the dropped files from Windows Explorer }
   private
@@ -119,12 +119,12 @@ TYPE
 
 VAR
    MainForm: TMainForm;
+   GuiSettings: TGuiSettings;
 
 IMPLEMENTATION {$R *.dfm}
 
 USES
    ciUpdater,
-   cmGuiSettings,
    cTranslate,
    cvIniFile,
    FormAbout,
@@ -145,7 +145,6 @@ begin
   btnStartClick(self);
   actShowLogExecute(Self);    //temp
 end;
-
 
 
 
@@ -183,8 +182,8 @@ begin
   begin
     Saved:= TRUE;
     GuiSettings.Save;
-    FreeAndNil(GuiSettings);
     SaveForm(Self);
+    FreeAndNil(GuiSettings);
     FreeAndNil(Updater);
     FreeAndNil(Translator);
   end;
@@ -270,7 +269,7 @@ end;
 
 procedure TMainForm.actSettingsExecute(Sender: TObject);
 begin
-  TfrmSettings.CreateFormModal;
+  TfrmSettings.CreateFormModal(GuiSettings);
   TrayIcon.MinimizeToTray:= AppData.Minimize2Tray;
 end;
 

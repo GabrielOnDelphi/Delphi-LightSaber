@@ -45,7 +45,7 @@ IMPLEMENTATION
 function Verbosity2String(Verbosity: TLogVerbLvl): string;
 begin
  case Verbosity of
-   lvDebug     : Result:= 'Debug';
+   lvDebug     : Result := 'Debug';
    lvVerbose   : Result := 'Verbose';
    lvHints     : Result := 'Hints';
    lvInfos     : Result := 'Info';      { This is the default level of verbosity }

@@ -47,6 +47,7 @@ uses
    UTILS
 --------------------------------------------------------------------------------------------------}
  function  CountLines            (CONST Filename: string; CONST BufferSize: Cardinal= 128000): Int64;                     { Opens a LARGE text file and counts how many lines it has. It does this by loading a small portion of the file in a RAM buffer }
+ function  CountCharAppearance   (CONST FileName: string; C: AnsiChar): Int64;
  procedure GenerateRandomTextFile(CONST Filename: string; NoOfLines: Integer);
 
 
@@ -67,7 +68,7 @@ uses
 
 IMPLEMENTATION
 USES
-   ccCore, ccIO;
+   ccCore, ccStreamBuff, ccIO;
 
 
 
@@ -304,6 +305,27 @@ begin
  END;
 end;
 
+
+
+function CountCharAppearance(CONST FileName: string; C: AnsiChar): Int64;    { Used by TFasParser.CountSequences }
+VAR
+   s: AnsiString;
+   BuffPo: Int64;
+begin
+ Result:= 0;
+ BuffPo:= 0;
+ VAR Stream:= TCubicBuffStream.CreateWrite(FileName);
+ TRY
+   WHILE BuffPo < Stream.Size DO
+    begin
+     s:= Stream.ReadStringA(1024*KB);
+     Inc(BuffPo, 1024*KB);
+     Result:= Result+ Cardinal(ccCore.CountAppearance(c, s));
+    end;
+ FINALLY
+   FreeAndNil(Stream);
+ END;
+end;
 
 
 

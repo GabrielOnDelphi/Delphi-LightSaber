@@ -10,8 +10,11 @@ object MainForm: TMainForm
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
+  OldCreateOrder = True
   Position = poDesigned
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
+  PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
     AlignWithMargins = True
@@ -41,6 +44,7 @@ object MainForm: TMainForm
       ScrollBars = ssBoth
       TabOrder = 0
       WordWrap = False
+      Zoom = 100
     end
     object Panel3: TPanel
       Left = 0
@@ -81,7 +85,7 @@ object MainForm: TMainForm
         TrackBar.Max = 5
         TrackBar.Position = 2
         TrackBar.TabOrder = 0
-        Verbosity = lvInfos
+        Verbosity = lvrInfos
         Log = RichLog
       end
     end
@@ -138,6 +142,7 @@ object MainForm: TMainForm
         TrackBar.Position = 3
         TrackBar.TabOrder = 0
         Verbosity = lvInfos
+        Log = VisLog
       end
       object Button3: TButton
         AlignWithMargins = True
@@ -174,27 +179,27 @@ object MainForm: TMainForm
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 1
-      object CheckBox1: TCheckBox
+      object chkShowDate: TCheckBox
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 73
+        Width = 81
         Height = 27
         Align = alLeft
         Caption = 'Show date'
         TabOrder = 0
-        OnClick = CheckBox1Click
+        OnClick = chkShowDateClick
       end
-      object CheckBox2: TCheckBox
+      object chkShowTime: TCheckBox
         AlignWithMargins = True
-        Left = 82
+        Left = 90
         Top = 3
-        Width = 73
+        Width = 87
         Height = 27
         Align = alLeft
         Caption = 'Show time'
         TabOrder = 1
-        OnClick = CheckBox2Click
+        OnClick = chkShowTimeClick
       end
     end
     object VisLog: TLogGrid
@@ -213,7 +218,7 @@ object MainForm: TMainForm
       TabOrder = 2
       Verbosity = lvVerbose
       ColWidths = (
-        374)
+        391)
     end
   end
 end

@@ -264,10 +264,10 @@ procedure TRamLog.SaveToStream(Stream: TCubicBuffStream);
 begin
   Stream.WriteStringA(LogHeader);
   Stream.WriteInteger(RawLines.Count);
-  Stream.WritePadding0(16);
+  Stream.WritePadding(16);
 
   for VAR s in RawLines DO
-    Stream.WriteStringU(s);
+    Stream.WriteString(s);
 end;
 
 procedure TRamLog.SaveToStream(Stream: TCubicMemStream);  { For compatibility }
@@ -277,7 +277,7 @@ begin
   Stream.WritePadding(16);
 
   for VAR s in RawLines DO
-    Stream.WriteStringU(s);
+    Stream.WriteString(s);
 end;
 
 
@@ -291,11 +291,11 @@ begin
   if s <> LogHeader
   then RAISE Exception.Create('Invalid log header!');
   VAR iCount:= Stream.ReadInteger;
-  Stream.ReadPadding0(16);
+  Stream.ReadPadding(16);
 
   for VAR i:= 1 to iCount DO
    begin
-    s:= Stream.ReadStringU;
+    s:= Stream.ReadString;
     RawLines.Add(s);
    end;
 end;
@@ -312,7 +312,7 @@ begin
 
   for VAR i:= 1 to iCount DO
    begin
-    s:= Stream.ReadStringU;
+    s:= Stream.ReadString;
     RawLines.Add(s);
    end;
 end;

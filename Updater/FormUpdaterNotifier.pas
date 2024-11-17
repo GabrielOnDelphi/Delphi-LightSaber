@@ -116,7 +116,7 @@ begin
   Form.tabRecEditor.TabVisible:= Demo;
   Form.LogVerb.Visible:= Demo OR AppData.BetaTesterMode;
   if Demo
-  then Form.LogVerb.Verbosity:= lvVerbose;
+  then Form.LogVerb.Verbosity:= lvrVerbose;
 
   { GUI }
   Form.lblDownload .Link := Updater.URLDownload;

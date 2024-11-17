@@ -31,7 +31,7 @@ USES
    System.SysUtils, Vcl.Graphics, ccColors;
 
 TYPE
-  TLogVerb= (lvVerbose, lvHints, lvInfos, lvImportant, lvWarnings, lvErrors);
+  TLogVerb= (lvrVerbose, lvrHints, lvrInfos, lvrImportant, lvrWarnings, lvrErrors);
 
 CONST
   ctLogVerb  = clGray;
@@ -42,7 +42,7 @@ CONST
   ctLogError = clRed;
 
 CONST
-  DefaultVerbosity= lvInfos;
+  DefaultVerbosity= lvrInfos;
 
 function Verbosity2String(Verbosity: TLogVerb): string;
 
@@ -54,12 +54,12 @@ IMPLEMENTATION
 function Verbosity2String(Verbosity: TLogVerb): string;
 begin
  case Verbosity of
-   lvVerbose   : Result := 'Verbose';
-   lvHints     : Result := 'Hints';
-   lvInfos     : Result := 'Info';      { This is the default level of verbosity }
-   lvImportant : Result := 'Important';
-   lvWarnings  : Result := 'Warnings';
-   lvErrors    : Result := 'Errors';
+   lvrVerbose   : Result := 'Verbose';
+   lvrHints     : Result := 'Hints';
+   lvrInfos     : Result := 'Info';      { This is the default level of verbosity }
+   lvrImportant : Result := 'Important';
+   lvrWarnings  : Result := 'Warnings';
+   lvrErrors    : Result := 'Errors';
  else
    Raise Exception.Create('Invalid verbosity');
  end;
@@ -70,12 +70,12 @@ function Verbosity2Color(Verbosity: TLogVerb): TColor;
 begin
  CASE Verbosity of
   //lvDebug    : Result:= clSilverLight;
-  lvVerbose  : Result:= clSilverDark;
-  lvHints    : Result:= clGray;
-  lvInfos    : Result:= clBlack;
-  lvImportant: Result:= clOrangeDk;
-  lvWarnings : Result:= clOrange;
-  lvErrors   : Result:= clRed;
+  lvrVerbose  : Result:= clSilverDark;
+  lvrHints    : Result:= clGray;
+  lvrInfos    : Result:= clBlack;
+  lvrImportant: Result:= clOrangeDk;
+  lvrWarnings : Result:= clOrange;
+  lvrErrors   : Result:= clRed;
  else
    RAISE exception.Create('Invalid log verbosity!');
  end;

@@ -577,7 +577,7 @@ begin
  Stream.WriteBoolean (Flip);
  Stream.WriteBoolean (Mirror);
  Stream.WriteByte    (Ord(Rotation));
- Stream.WritePadding0(32);
+ Stream.WritePadding(32);
 end;
 
 
@@ -586,7 +586,7 @@ begin
  Flip    := Stream.ReadBoolean;
  Mirror  := Stream.ReadBoolean;
  Rotation:= TRotateSense(Stream.ReadByte);
- Stream.ReadPadding0(32);
+ Stream.ReadPadding(32);
 end;
 
 

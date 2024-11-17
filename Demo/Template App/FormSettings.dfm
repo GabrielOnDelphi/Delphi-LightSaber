@@ -16,6 +16,7 @@ object frmSettings: TfrmSettings
   Font.Name = 'Segoe UI'
   Font.Style = []
   GlassFrame.Enabled = True
+  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
@@ -24,13 +25,14 @@ object frmSettings: TfrmSettings
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  PixelsPerInch = 96
   TextHeight = 17
   object pgCtrl: TPageControl
     Left = 0
     Top = 0
     Width = 770
     Height = 511
-    ActivePage = tabHelp
+    ActivePage = tabSystem
     Align = alClient
     TabOrder = 0
     object tabSystem: TTabSheet

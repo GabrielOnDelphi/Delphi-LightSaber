@@ -105,9 +105,6 @@ begin
      end;
   end;
 
- { Initialization end }
- Assert(Vcl.Dialogs.UseLatestCommonDialogs= TRUE);           // This is true anyway by defaul, but I check it to remember myself about it. Details: http://stackoverflow.com/questions/7944416/tfileopendialog-requires-windows-vista-or-later
-
  { Auto updater }
  AppData.MainFormCaption('Starting autoupdater...');
  Updater:= TUpdater.Create(UpdaterURL);

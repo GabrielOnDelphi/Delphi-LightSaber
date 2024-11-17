@@ -247,7 +247,7 @@ begin
    Stream.WriteWord     (65535);
    Stream.WriteStringA  ('abba');
    Stream.WriteStringANoLen('no len');
-   Stream.WriteStringU  ('abba');
+   Stream.WriteString  ('abba');
    Stream.WriteChars    ('x');
    Stream.WriteChars    ('x');
    Stream.WriteEnter;
@@ -257,7 +257,7 @@ begin
    Stream.WriteDouble   (3.14);
    Stream.WriteSingle   (3.14);
 
-   Stream.WritePadding0(30);
+   Stream.WritePadding(30);
    Stream.WritePaddingDef;
    Stream.WritePadding(128);
 
@@ -293,8 +293,8 @@ begin
    if Stream.ReadWord       <> 65535          then RAISE Exception.Create('ReadWord failure!');
    if Stream.ReadStringA    <> 'abba'         then RAISE Exception.Create('ReadStringA failure!');
    if Stream.ReadStringA(6) <> 'no len'       then RAISE Exception.Create('ReadStringANLen failure!');
-   if Stream.ReadStringU    <> 'abba'         then RAISE Exception.Create('ReadStringU failure!');
-   if Stream.ReadCharsU(1)  <> 'x'            then RAISE Exception.Create('ReadCharsU failure!');
+   if Stream.ReadString     <> 'abba'         then RAISE Exception.Create('ReadString failure!');
+   if Stream.ReadChars(1)   <> 'x'            then RAISE Exception.Create('ReadCharsU failure!');
    if Stream.ReadCharsA(1)  <> 'x'            then RAISE Exception.Create('ReadCharsA failure!');
    if NOT Stream.ReadEnter                    then RAISE Exception.Create('ReadEnter failure!');
    TSL:= Stream.ReadStrings;
@@ -309,7 +309,7 @@ begin
    if NOT SameValue(Stream.ReadDouble, 3.14, 0.01) then RAISE Exception.Create('ReadDouble failure!');
    if NOT SameValue(Stream.ReadSingle, 3.14, 0.01) then RAISE Exception.Create('ReadSingle failure!');
 
-   Stream.ReadPadding0(30);
+   Stream.ReadPadding(30);
    Stream.ReadPaddingDef;
    Stream.ReadPaddingE(128);
    Stream.ReadCheckPointE('!');
@@ -317,7 +317,7 @@ begin
    {ToDo: test also these:
      ReadByteChunk: TBytes;
      ReadStringAR (CONST Len: integer): AnsiString;
-     ReadStringUNoLen (CONST Len: Integer): string; }
+     ReadStringNoLen (CONST Len: Integer): string; }
   FINALLY
     FreeAndNil(Stream);
   END;

@@ -2,7 +2,7 @@ UNIT cbLogRam;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2024.10
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
@@ -19,11 +19,23 @@ UNIT cbLogRam;
      c:\Myprojects\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
+//ToDo: TRamLog must save its data to disk every x seconds. For this we don't start a timer (resource intensive), but each time we receive a message, we check when we saved the log last time. If more than x seconds have passed, we save it now.
+//ToDo: I need a routine to also manually save the data to disk, on demand, in case I want to do it more often that each x seconds.
+//ToDo: TRamLog must cope with multi-threading environment, for example, multiple threads could send data to the log.
+//ToDo: TRamLog must be able to receive data (AddMsg) even when it is busy to write to disk.
+
+
+//Proposal:
+// When the user sends a message to TRamLog, the message is posted (thread safely) in a queue. When the TRamLog has time, it collects the messages from the queus, combines them in the chronologic order (maybe with the thread ID), and saves them to disk.
+// In the constructor, there should be a switch to indicate if the log needs to operate in threaded or non-threaded mode.
+// It would be much more efficient probably, not to create the queue if we are not in multithreaded mode.
+
 INTERFACE
 
 USES
-   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.ExtCtrls, Vcl.Grids,
-   cbLogLines, cbLogUtils, ccStreamBuff2;
+   System.SysUtils, System.DateUtils, System.Classes, System.Generics.Collections, System.SyncObjs,
+   Vcl.Graphics, Vcl.ExtCtrls, Vcl.Grids,
+   cbLogLines, cbLogUtils, ccStreamBuff2, cbLogLinesAbstract;
 
 TYPE
   ILogObserver = interface
@@ -37,16 +49,19 @@ TYPE
   TRamLog = class(TObject)
    private
      FLogObserver: ILogObserver;
+     FLastSaveTime: TDateTime;
+     FSaveInterval: Integer; // Interval in seconds for auto-save
      const
       StreamSign  = 'TRamLog';
       StreamVer   = 3;
+      MaxEntries = 1000000; // Maximum number of entries before saving and clearing
    protected
      function prepareString(CONST Msg: string): string;
+     procedure CheckAndSaveToDisk;
    public
-     Lines: TLogLines;
+     Lines: TAbstractLogLines;
      ShowOnError: Boolean; // Automatically show the visual log form when warnings/errors are added to the log. This way the user is informed about the problems.
-
-     constructor Create(aShowOnError: Boolean; Observer: ILogObserver);
+     constructor Create(aShowOnError: Boolean; Observer: ILogObserver; MultiThreaded: Boolean= FALSE);
      destructor Destroy;  override;
      procedure Clear;
 
@@ -88,34 +103,40 @@ TYPE
 IMPLEMENTATION
 
 USES
-  ccCore, ccIO, ccTextFile, ccStreamBuff;
+  ccCore, ccIO, ccTextFile, {ccStreamBuff,} cbLogLinesThreaded;
 
 
 {-------------------------------------------------------------------------------------------------------------
    CTOR
 -------------------------------------------------------------------------------------------------------------}
-constructor TRamLog.Create(aShowOnError: Boolean; Observer: ILogObserver);
+constructor TRamLog.Create(aShowOnError: Boolean; Observer: ILogObserver; MultiThreaded: Boolean= FALSE);
 begin
- inherited Create;
- Lines:= TLogLines.Create;
+  inherited Create;
 
- ShowOnError:= aShowOnError;
- if Observer <> NIL
- then RegisterLogObserver(Observer);
+  ShowOnError := aShowOnError;
+  FSaveInterval := 60;  // Save every 60 seconds
+  FLastSaveTime := Now;
+
+  if MultiThreaded
+  then Lines:= TLogLinesMultiThreaded.Create
+  else Lines:= TLogLinesSingleThreaded.Create;
+
+  if Observer <> NIL
+  then RegisterLogObserver(Observer);
 end;
 
 
 destructor TRamLog.Destroy;
 begin
- FreeAndNil(Lines);
- inherited;
+  FreeAndNil(Lines);
+  inherited;
 end;
 
 
 procedure TRamLog.Clear;
 begin
- Lines.Clear;   { Call Clear to empty the Items array and set the Count to 0. Clear also frees the memory used to store the Items array and sets the Capacity to 0. }
- NotifyLogObserver;
+  Lines.Clear;   { Call Clear to empty the Items array and set the Count to 0. Clear also frees the memory used to store the Items array and sets the Capacity to 0. }
+  NotifyLogObserver;
 end;
 
 
@@ -141,8 +162,9 @@ begin
 end;
 
 
-
-
+{-------------------------------------------------------------------------------------------------------------
+   OBSERVER METHODS
+-------------------------------------------------------------------------------------------------------------}
 procedure TRamLog.RegisterLogObserver(Observer: ILogObserver);
 begin
   FLogObserver := NIL; // explicitly set to nil before assigning a new observer to prevent memory leaks or undefined behavior with multiple observers. Ensure proper lifecycle management of observers.
@@ -189,35 +211,39 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 procedure TRamLog.AddBold (CONST Msg: string);
 begin
- Lines.AddNewLine( prepareString(Msg), lvInfos, TRUE );
- NotifyLogObserver;
+  Lines.AddNewLine(PrepareString(Msg), lvInfos, TRUE);
+  CheckAndSaveToDisk;
+  NotifyLogObserver;
 end;
 
 
 procedure TRamLog.AddMsg(CONST Msg: string);
 begin
- Lines.AddNewLine( prepareString(Msg), lvInfos, FALSE );
- NotifyLogObserver;
+  Lines.AddNewLine(PrepareString(Msg), lvInfos, FALSE);
+  CheckAndSaveToDisk;
+  NotifyLogObserver;
 end;
 
 
 procedure TRamLog.AddMsg(CONST Msg: string; Color: TColor);
 begin
- Lines.AddNewLine( prepareString(Msg), lvInfos, FALSE, Color);
- NotifyLogObserver;
+  Lines.AddNewLine(PrepareString(Msg), lvInfos, FALSE, Color);
+  CheckAndSaveToDisk;
+  NotifyLogObserver;
 end;
 
 
 procedure TRamLog.AddMsgInt(const Msg: string; i: Integer);   { Adds a message text followed by an integer }
 begin
- Lines.AddNewLine( prepareString(Msg)+ IntToStr(i), lvInfos, FALSE );
- NotifyLogObserver;
+  Lines.AddNewLine(PrepareString(Msg) + IntToStr(i), lvInfos, FALSE);
+  CheckAndSaveToDisk;
+  NotifyLogObserver;
 end;
 
 
 procedure TRamLog.AddEmptyRow;
 begin
- AddMsg('');
+  AddMsg('');
 end;
 
 
@@ -227,62 +253,81 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 procedure TRamLog.AddDebug(CONST Msg: string);                             { Relevance 0 }
 begin
- Lines.AddNewLine(prepareString(Msg), lvDebug, FALSE );
- NotifyLogObserver;
+  Lines.AddNewLine(PrepareString(Msg), lvDebug, FALSE);
+  CheckAndSaveToDisk;
+  NotifyLogObserver;
 end;
 
 
 procedure TRamLog.AddVerb(CONST Msg: string);                               { Relevance 1 }
 begin
- Lines.AddNewLine(prepareString(Msg), lvVerbose, FALSE );
- NotifyLogObserver;
+  Lines.AddNewLine(PrepareString(Msg), lvVerbose, FALSE);
+  CheckAndSaveToDisk;
+  NotifyLogObserver;
 end;
 
 
 procedure TRamLog.AddHint(CONST Msg: string);                               { Relevance 2 }
 begin
- Lines.AddNewLine( prepareString(Msg), lvHints, FALSE );
- NotifyLogObserver;
+  Lines.AddNewLine(PrepareString(Msg), lvHints, FALSE);
+  CheckAndSaveToDisk;
+  NotifyLogObserver;
 end;
 
 
 procedure TRamLog.AddInfo(CONST Msg: string);                               { Relevance 3 }
 begin
- Lines.AddNewLine( prepareString(Msg), lvInfos, FALSE );
- NotifyLogObserver;
+  Lines.AddNewLine(PrepareString(Msg), lvInfos, FALSE);
+  CheckAndSaveToDisk;
+  NotifyLogObserver;
 end;
 
 
 procedure TRamLog.AddImpo(CONST Msg: string);                               { Relevance 4 }
 begin
- Lines.AddNewLine( prepareString(Msg), lvImportant, FALSE );
- NotifyLogObserver;
+  Lines.AddNewLine(PrepareString(Msg), lvImportant, FALSE);
+  CheckAndSaveToDisk;
+  NotifyLogObserver;
 end;
 
 
 procedure TRamLog.AddWarn(CONST Msg: string);                               { Relevance 5 }
 begin
- Lines.AddNewLine( prepareString(Msg), lvWarnings, FALSE );
- NotifyLogObserverAndShow;
+  Lines.AddNewLine(PrepareString(Msg), lvWarnings, FALSE);
+  CheckAndSaveToDisk;
+  NotifyLogObserverAndShow;
 end;
 
 
 procedure TRamLog.AddError(CONST Msg: string);                              { Relevance 6 }
 begin
- Lines.AddNewLine( prepareString(Msg), lvErrors, FALSE );
- NotifyLogObserverAndShow;
+  Lines.AddNewLine(PrepareString(Msg), lvErrors, FALSE);
+  CheckAndSaveToDisk;
+  NotifyLogObserverAndShow;
 end;
 
+{-------------------------------------------------------------------------------------------------------------
+   CHECK AND SAVE TO DISK
+-------------------------------------------------------------------------------------------------------------}
+procedure TRamLog.CheckAndSaveToDisk;
+begin
+  if Lines.Count > MaxEntries then
+  begin
+    SaveToFile('LargeLogSave.txt');
+    Lines.Clear;
+  end;
 
-
-
-
-
-
+  if SecondsBetween(Now, FLastSaveTime) >= FSaveInterval then
+  begin
+    SaveToFile('PeriodicLogSave.txt');
+    FLastSaveTime := Now;
+  end;
+end;
 
 {-------------------------------------------------------------------------------------------------------------
    TEXT
 -------------------------------------------------------------------------------------------------------------}
+{ Returns all lines, even if a filter is applied }
 function TRamLog.GetAsText: string;
 VAR i: Integer;
 begin

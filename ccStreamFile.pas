@@ -34,14 +34,14 @@ TYPE
   TCubicFileStream= class(TFileStream)
     public
      { Strings }
-     procedure WriteString         (CONST s: string);                                        { Old name: WriteStringU }
-     procedure WriteStringUNoLen   (CONST s: string);
+     procedure WriteString         (CONST s: string);                                        { Old name: WriteString }
+     procedure WriteStringNoLen   (CONST s: string);
      procedure WriteStringList     (CONST TSL: TStringList);
      procedure WriteStringANoLen   (CONST s: AnsiString);                                    { Write the string but don't write its length }
      procedure WriteStringA        (CONST s: AnsiString);
      procedure WriteEnter;
 
-     function  ReadString: string;                                                           { Old name: ReadStringU }
+     function  ReadString: string;                                                           { Old name: ReadString }
      function  ReadStringA  (CONST Len: integer): AnsiString; overload;                      { It will raise an error if there is not enough data (Len) to read }
      function  ReadStringAR (CONST Len: integer): AnsiString;                                { This is the relaxed version. It won't raise an error if there is not enough data (Len) to read }
      function  ReadStringA: AnsiString;                       overload;                      { It automatically detects the length of the string }
@@ -62,7 +62,7 @@ TYPE
      function  ReadWord        : Word;
      function  ReadDate        : TDateTime;
      procedure ReadPadding         (CONST Bytes: Integer);
-     function  ReadStringUNoLen    (CONST Len: Integer): string;
+     function  ReadStringNoLen    (CONST Len: Integer): string;
      {}
      procedure WriteUInt64         (const i: UInt64);
      procedure WriteInteger        (CONST i: Longint);
@@ -522,8 +522,8 @@ end;
 
 
 { Writes the string to file but does not write its length.
-  In most cases you will want to use WriteString instead of WriteStringUNoLen }
-procedure TCubicFileStream.WriteStringUNoLen(CONST s: string);
+  In most cases you will want to use WriteString instead of WriteStringNoLen }
+procedure TCubicFileStream.WriteStringNoLen(CONST s: string);
 VAR UTF: UTF8String;
 begin
  UTF := UTF8String(s);
@@ -533,7 +533,7 @@ end;
 
 
 { Read a string from file. The length of the string will be provided from outside. }
-function TCubicFileStream.ReadStringUNoLen(CONST Len: Integer): string;
+function TCubicFileStream.ReadStringNoLen(CONST Len: Integer): string;
 VAR UTF: UTF8String;
 begin
  if Len > 0

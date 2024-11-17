@@ -29,8 +29,7 @@ package LightCore;
 {$LIBSUFFIX AUTO}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
-
-{$WARN DUPLICATE_CTOR_DTOR OFF}                                                                               {Silence the: W1029 Duplicate constructor  with identical parameters will be inacessible from C++ }
+{$WARN DUPLICATE_CTOR_DTOR OFF}
 
 requires
   BindEngine;
@@ -45,9 +44,8 @@ contains
   ccColors in 'ccColors.pas',
   ccStreamBuff in 'ccStreamBuff.pas',
   ccStreamBuff2 in 'ccStreamBuff2.pas',
-  ccTextFile in 'ccTextFile.pas';
+  ccTextFile in 'ccTextFile.pas',
+  ccStreamMem2 in 'ccStreamMem2.pas';
 
+{$WARN DUPLICATE_CTOR_DTOR OFF}
 end.
-
-
-

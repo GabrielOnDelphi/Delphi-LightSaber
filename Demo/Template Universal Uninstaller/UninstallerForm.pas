@@ -1,7 +1,7 @@
 UNIT UninstallerForm;
 
 {--------------------------------------------------------------------------------------------------
-  Heracle BioSoft SRL
+  GabrielMoraru.com
   2023.02.14
   Universal Uninstaller
 

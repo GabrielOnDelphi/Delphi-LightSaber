@@ -1,4 +1,4 @@
-UNIT ccStreamBuff2;
+UNIT ccStreamMem2;
 
 {-------------------------------------------------------------------------------------------------------------
    Extension for TCubicBuffStream
@@ -12,7 +12,7 @@ UNIT ccStreamBuff2;
      2 bytes (Word): File version number.
 
      This new file header is more reliable because we check
-       the magic number  - this is fixed for all TCubicBuffStream2 files
+       the magic number  - this is fixed for all TCubicFileStream2 files
        the signature
        the file version
 -------------------------------------------------------------------------------------------------------------}
@@ -20,11 +20,11 @@ UNIT ccStreamBuff2;
 INTERFACE
 
 USES
-  System.SysUtils, math, System.Classes, ccStreamBuff;
+  System.SysUtils, System.Math, System.Classes,
+  ccStreamMem;
 
 TYPE
-  TCubicBuffStream2 = class(TCubicBuffStream)
-  private
+  TMemStreamEx = class(TCubicMemStream)
   public
     { Padding }
     procedure ReadPaddingE (CONST Bytes: Integer);          //Raises an exception if the buffer does not contain the signature
@@ -44,7 +44,7 @@ CONST
   ctMagicNumber: Cardinal= $4C695361; // The LiSa string for "Light Saber'
 
 
-procedure TCubicBuffStream2.WriteHeader(CONST Signature: AnsiString; Version: Word);
+procedure TMemStreamEx.WriteHeader(CONST Signature: AnsiString; Version: Word);
 begin
   WriteCardinal(ctMagicNumber);  // Write fixed magic no
   WriteStringA(Signature);       // Write signature
@@ -55,7 +55,7 @@ end;
 { Returns True if it can read all 3 fields.
   Returns the version number.
   Does not check the version number. }
-function TCubicBuffStream2.ReadHeaderVersion(CONST Signature: AnsiString; OUT Version: Word): Boolean;
+function TMemStreamEx.ReadHeaderVersion(CONST Signature: AnsiString; OUT Version: Word): Boolean;
 VAR
   MagicNumber: Cardinal;
   FileSignature: AnsiString;
@@ -79,7 +79,7 @@ end;
 
 { Returns True if signature & version number matches.
   An exception may be raised if the file smaller than what we want to read }
-function TCubicBuffStream2.ReadHeader(CONST Signature: AnsiString; Version: Word): Boolean;
+function TMemStreamEx.ReadHeader(CONST Signature: AnsiString; Version: Word): Boolean;
 VAR lVersion: Word;
 begin
  Assert(Signature > '', 'Signature is empty!');
@@ -95,17 +95,17 @@ end;
 
 
 
-{-------------------------------------------------------------------------------------------------------------
+{--------------------------------------------------------------------------------------------------
    PADDING
    It is important to read/write some padding bytes.
    If you later (as your program evolves) need to save extra data into your file, you use the padding bytes. This way you don't need to change your file format.
--------------------------------------------------------------------------------------------------------------}
+--------------------------------------------------------------------------------------------------}
 
 CONST
    CheckpointStr: AnsiString= '<LightSaber - Buffer of 100 bytes. Pattern check -> Raises exception if the pattern not found!! ###>'; //This string is 100 chars long
 
 // Write a string as padding bytes.
-procedure TCubicBuffStream2.WritePadding(CONST Bytes: Integer);
+procedure TMemStreamEx.WritePadding(CONST Bytes: Integer);
 VAR
   b: TBytes;
   CheckPointSize: Integer;
@@ -120,13 +120,13 @@ begin
   // Fill the rest of the buffer with zeros
   if Bytes > CheckPointSize
   then FillChar(b[CheckPointSize], Bytes - CheckPointSize, #0);
-  // Write the buffer to the stream
+
   WriteBuffer(b[0], Bytes);
 end;
 
 
  //Raises an exception if the buffer does not contain the signature string (CheckpointStr)
-procedure TCubicBuffStream2.ReadPaddingE(CONST Bytes: Integer);
+procedure TMemStreamEx.ReadPaddingE(CONST Bytes: Integer);
 VAR
   b: TBytes;
   CheckPointSize: Integer;
@@ -150,12 +150,12 @@ CONST
    PaddingSize = 100; // 100 bytes. Enough for 18 Int64 variables. NEVER-EVER MODIFY THIS CONSTANT! All files saved with this constant will not work anymore.
 
 
-procedure TCubicBuffStream2.ReadPaddingDef;
+procedure TMemStreamEx.ReadPaddingDef;
 begin
   ReadPaddingE(PaddingSize);
 end;
 
-procedure TCubicBuffStream2.WritePaddingDef;
+procedure TMemStreamEx.WritePaddingDef;
 begin
   WritePadding(PaddingSize);
 end;
@@ -164,5 +164,3 @@ end;
 
 
 end.
-
-

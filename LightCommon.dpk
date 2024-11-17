@@ -39,7 +39,7 @@ requires
   LightCore,
   vclWinx,
   SoapRtl,
-  LightBase,
+  LightAppData,
   IndySystem;
 
 contains

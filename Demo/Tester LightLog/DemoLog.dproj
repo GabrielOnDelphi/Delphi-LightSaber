@@ -83,7 +83,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="..\..\cbAppData.pas"/>
-        <DCCReference Include="Unit3.pas">
+        <DCCReference Include="FormMain.pas">
             <Form>MainForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
@@ -100,6 +100,7 @@
         <DCCReference Include="..\..\ccStreamBuff2.pas"/>
         <DCCReference Include="..\..\ccStreamFile.pas"/>
         <DCCReference Include="..\..\ccStreamMem.pas"/>
+        <DCCReference Include="..\..\cvLog.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

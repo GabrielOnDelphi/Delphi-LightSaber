@@ -2,21 +2,24 @@ UNIT ccStreamBuff;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2024.10
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Description
       Extends TBufferedFileStream.
       It may be used as a drop-in replacement for TFileStream.
 
+      TBufferedFileStream optimizes multiple consecutive small reads or writes.
+      It will not give performance gain for random or large reads/writes.
+
       This class adds new functionality that does not exist in Delphi's original stream classes:
-      - Read/WriteBoolean
-      - Read/WriteString (Ansi/Unicode)
-      - Read/WriteInteger
-      - Read/WriteCardinal
-      - Read/WriteDate
-      - Read/Write mac files (inverted byte endianness)
-      - etc
+       - Read/WriteBoolean
+       - Read/WriteString (Ansi/Unicode)
+       - Read/WriteInteger
+       - Read/WriteCardinal
+       - Read/WriteDate
+       - Read/Write mac files (inverted byte endianness)
+       - etc
 
    Constructor:
        TCubicBuffStream.Create(FileName, fmOpenRead)                  -> to read
@@ -57,33 +60,34 @@ USES
 TYPE
   TCubicBuffStream= class(System.Classes.TBufferedFileStream)
    private
-
    public
      MagicNo: AnsiString; // Legacy!
 
+     { Check point }
+     procedure ReadCheckPointE(CONST s: AnsiString= '');     // Raises an exception
+     function  ReadCheckPoint (CONST s: AnsiString= ''): Boolean;
+     procedure WriteCheckPoint(CONST s: AnsiString= '');
+	 	 
+     function  ReadEnter   : Boolean;
+     procedure WriteEnter;
+
+     { Padding }
+     procedure ReadPadding (const Bytes: Integer= 1024);
+     procedure WritePadding(const Bytes: Integer= 1024);
+
+     { Numeric }
      function  ReadBoolean : Boolean;
      function  ReadByte    : Byte;
      function  ReadCardinal: Cardinal;
-     function  ReadDate    : TDateTime;
+     function  ReadDate    : TDateTime;      { This is a DOUBLE }
      function  ReadDouble  : Double;
      function  ReadInteger : Integer;
      function  ReadInt64   : Int64;
      function  ReadShortInt: ShortInt;
      function  ReadSingle  : Single;
      function  ReadSmallInt: Smallint;
-     function  ReadStringU : string;
      function  ReadUInt64  : UInt64;
      function  ReadWord    : Word;
-     function  ReadCharsU   (Count: integer): string;
-     function  ReadCharsA   (Count: Integer): AnsiString;
-     function  ReadStringAR (CONST Len: integer): AnsiString;               { This is the relaxed version. It won't raise an error if there is not enough data (Len) to read }
-     function  ReadStringA  (CONST Len: integer): AnsiString;  overload;    { It will raise an error if there is not enough data (Len) to read }
-     function  ReadStringA : AnsiString;                       overload;    { It automatically detects the length of the string }
-     function  ReadStrings : TStringList;     overload;
-     procedure ReadStrings  (TSL: TStrings);  overload;
-     function  ReadStringUNoLen (CONST Len: Integer): string;
-     function  ReadEnter   : Boolean;
-     function  ReadByteChunk: TBytes;
 
      procedure WriteBoolean  (b: Boolean);
      procedure WriteByte     (b: Byte);
@@ -97,49 +101,61 @@ TYPE
      procedure WriteSmallInt (s: SmallInt);
      procedure WriteUInt64   (i: UInt64);
      procedure WriteWord     (w: Word);
-     procedure WriteStrings     (TSL: TStrings);
-     procedure WriteStringA     (CONST s: AnsiString);
-     procedure WriteStringU     (CONST s: string);
-     procedure WriteStringANoLen(CONST s: AnsiString);                     { Write the string but don't write its length }
-     procedure WriteStringUNoLen(CONST s: string);
-     procedure WriteChars       (CONST s: AnsiString);   overload;
-     procedure WriteChars       (CONST s: string);       overload;
-     procedure WriteEnter;
-     procedure WriteByteChunk   (CONST Buffer: TByteDynArray);
 
      { Reverse read }
      function  RevReadCardinal: Cardinal;                                  { REVERSE READ - read 4 bytes and swap their position. For Motorola format. }
      function  RevReadInteger: Integer;
      function  RevReadWord    : Word;                                      { REVERSE READ - read 2 bytes and swap their position. For Motorola format. }
 
+     { Unicode }
+     procedure WriteString   (CONST s: string);
+     function  ReadString: string;  overload;
+
+	 { ANSI }
+     function  ReadStringAR (CONST Len: integer): AnsiString;               { This is the relaxed version. It won't raise an error if there is not enough data (Len) to read }
+     procedure WriteStringA (CONST s: AnsiString);
+     function  ReadStringA  (CONST Len: integer): AnsiString;  overload;    { It will raise an error if there is not enough data (Len) to read }
+     function  ReadStringA: AnsiString;                        overload;    { It automatically detects the length of the string }
+
+	 { TSL }
+     function  ReadStrings: TStringList;                       overload;
+     procedure ReadStrings  (TSL: TStrings);                   overload;
+     procedure WriteStrings (TSL: TStrings);
+
+	 { Chars }
+     procedure WriteChars   (CONST s: AnsiString);             overload;
+     procedure WriteChars   (CONST s: string);                 overload;
+     function  ReadCharsA   (Count: Integer): AnsiString;
+     function  ReadChars    (Count: integer): string;
+
+     { Strings without length }
+     procedure WriteStringANoLen(CONST s: AnsiString);                   deprecated;    { Write the string but don't write its length }
+     procedure WriteStringNoLen (CONST s: string);                       deprecated;
+     function  ReadString       (CONST Len: Integer): string;  overload; deprecated;    { Read 'Len' characters }
+
      { Old Header. Legacy! }
-     function  ReadMagicVer: Word;                                deprecated;
-     function  ReadMagicNo  (const MagicNo: AnsiString): Boolean; deprecated;
-     procedure WriteMagicNo (const MagicNo: AnsiString);          deprecated;
-     procedure WriteMagicVer(const MVersion: Word);               deprecated;
+     function  ReadMagicVer: Word;                                       deprecated;
+     function  ReadMagicNo  (const MagicNo: AnsiString): Boolean;        deprecated;
+     procedure WriteMagicNo (const MagicNo: AnsiString);                 deprecated;
+     procedure WriteMagicVer(const MVersion: Word);                      deprecated;
 
      { Header NEW }
-     function  ReadHeader   (CONST Signature: AnsiString): Word;               overload;
-     procedure ReadHeader   (CONST Signature: AnsiString; Version: Word);      overload;
+     function  ReadHeader   (CONST Signature: AnsiString): Word;         overload;
+     procedure ReadHeader   (CONST Signature: AnsiString; Version: Word);overload;
      function  ReadHeaderTry(CONST Signature: AnsiString; Version: Word): Boolean;
      function  ReadHeaderVersion(const Signature: AnsiString): Word;
      procedure WriteHeader  (CONST Signature: AnsiString; Version: Word);
 
-     { Check point }
-     procedure ReadCheckPointE(CONST s: AnsiString= '');     // Raises an exception
-     function  ReadCheckPoint (CONST s: AnsiString= ''): Boolean;
-     procedure WriteCheckPoint(CONST s: AnsiString= '');
-
-     procedure ReadPadding0(const Bytes: Integer);
-     procedure WritePadding0(const Bytes: Integer);
-
-     { BT }
+     { Raw }
      function  AsBytes: TBytes;
-     function  AsStringU: string;
+     function  AsStringU: String;                                          { Returns the content of the stream as a string }
      function  AsString: AnsiString;
+
+     procedure WriteByteChunk   (CONST Buffer: TBytes);
+     function  ReadByteChunk: TBytes;
+
      procedure PushData(CONST s: AnsiString);     overload;
      procedure PushData(CONST Bytes: TBytes);     overload;
-     function  CountAppearance(C: AnsiChar): Int64;
 
      {}
      constructor CreateRead (CONST FileName: string);
@@ -148,13 +164,11 @@ TYPE
 
 
 
-{ Read the first Count characters from a file }
-function StringFromFileStart (CONST FileName: string; Count: Cardinal): AnsiString;
 
 
 IMPLEMENTATION
 USES
-   ccCore, ccBinary;
+   ccCore, ccBinary; 
 
 
 
@@ -175,7 +189,8 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    MAGIC NO
-   Obsolete. Still used in Bionix. Use ReadMagicVer instead.
+   Obsolete. Still used in Bionix. 
+   Use ReadMagicVer instead.
 --------------------------------------------------------------------------------------------------}
 
 { Read a string from file and compare it with MagicNo.
@@ -260,20 +275,19 @@ end;
 --------------------------------------------------------------------------------------------------}
 
 // Writes zeroes as padding bytes.
-procedure TCubicBuffStream.WritePadding0(CONST Bytes: Integer);
+procedure TCubicBuffStream.WritePadding(CONST Bytes: Integer);
 VAR b: TBytes;
 begin
  if Bytes> 0 then
   begin
    SetLength(b, Bytes);
    FillChar (b[0], Bytes, #0);
-
    WriteBuffer(b[0], Bytes);
   end;
 end;
 
 // Reads the padding bytes back and does not check them for validity
-procedure TCubicBuffStream.ReadPadding0(CONST Bytes: Integer);
+procedure TCubicBuffStream.ReadPadding(CONST Bytes: Integer);
 VAR b: TBytes;
 begin
  if Bytes> 0 then
@@ -370,7 +384,7 @@ end;
 {--------------------------------------------------------------------------------------------------
    UNICODE STRINGS
 --------------------------------------------------------------------------------------------------}
-procedure TCubicBuffStream.WriteStringU(CONST s: string);
+procedure TCubicBuffStream.WriteString(CONST s: string);
 VAR
   Len: cardinal;
   UTF: UTF8String;
@@ -387,7 +401,7 @@ begin
 end;
 
 
-function TCubicBuffStream.ReadStringU: string;     { Works for both Delphi7 and Delphi UNICODE }
+function TCubicBuffStream.ReadString: string;     { Works for both Delphi7 and Delphi UNICODE }
 VAR
    Len: Cardinal;
    UTF: UTF8String;
@@ -396,12 +410,13 @@ begin
 
  if Len > 0
  then
-  begin
-   SetLength(UTF, Len);                                                     { Read string }
-   ReadBuffer(UTF[1], Len);
-   Result:= string(UTF);
-  end
- else Result:= '';
+   begin
+     SetLength(UTF, Len);                                                     { Read string }
+     ReadBuffer(UTF[1], Len);
+     Result:= string(UTF);
+   end
+ else
+   Result:= '';
 end;
 
 
@@ -414,9 +429,10 @@ end;
 { Writes a bunch of chars from the file. Why 'chars' and not 'string'? This function writes C++ strings (the length of the string was not written to disk also) and not real Delphi strings. }
 procedure TCubicBuffStream.WriteChars(CONST s: AnsiString);
 begin
- Assert(s<> '', 'TCubicBuffStream.WriteCharacters - The string is empty');       { This makes sure 's' is not empty. Else I will get a RangeCheckError at runtime }
+ Assert(s<> '', 'TCubicBuffStream.WriteChars - The string is empty');       { This makes sure 's' is not empty. Else I will get a RangeCheckError at runtime }
  WriteBuffer(s[1], Length(s));
 end;
+
 
 procedure TCubicBuffStream.WriteChars(CONST s: string);                     { Works for both Delphi7 and Delphi UNICODE }    // old name: WriteStringANoLen
 VAR UTF: UTF8String;
@@ -427,8 +443,7 @@ begin
 end;
 
 
-
-function TCubicBuffStream.ReadCharsU(Count: Integer): string;        { Works for both Delphi7 and Delphi UNICODE }
+function TCubicBuffStream.ReadChars(Count: Integer): string;        { Works for both Delphi7 and Delphi UNICODE }
 VAR UTF: UTF8String;
 begin
  if Count < 1 then EXIT('');
@@ -461,20 +476,20 @@ end;
 
 procedure TCubicBuffStream.WriteStrings(TSL: TStrings);
 begin
- WriteStringU(TSL.Text);
+  WriteString(TSL.Text);
 end;
 
 
 procedure TCubicBuffStream.ReadStrings(TSL: TStrings);
 begin
- TSL.Text:= ReadStringU;
+  TSL.Text:= ReadString;
 end;
 
 
 function TCubicBuffStream.ReadStrings: TStringList;
 begin
  Result:= TStringList.Create;
- Result.Text:= ReadStringU;
+ Result.Text:= ReadString;
 end;
 
 
@@ -483,7 +498,6 @@ end;
 {--------------------------------------------------------------------------------------------------
    ENTER
 --------------------------------------------------------------------------------------------------}
-
 function TCubicBuffStream.ReadEnter: Boolean;   { Returns TRUE if the byte read is CR LF }
 VAR Byte1, Byte2: Byte;
 begin
@@ -511,12 +525,10 @@ end;
 
 
 
+
 {--------------------------------------------------------------------------------------------------
-   INTEGERS
+   NUMBERS
 --------------------------------------------------------------------------------------------------}
-
-
-
 
 { BOOLEAN }
 procedure TCubicBuffStream.WriteBoolean(b: Boolean);
@@ -656,12 +668,12 @@ end;
 
 function TCubicBuffStream.ReadSingle: Single;
 begin
- Read(Result, 4);
+  Read(Result, 4);     
 end;
 
 procedure TCubicBuffStream.WriteSingle(s: Single);
 begin
- Write(s, 4);
+  Write(s, 4);                                                             
 end;
 
 
@@ -819,7 +831,7 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-   ASCII STRINGS
+   ANSI STRINGS
 --------------------------------------------------------------------------------------------------}
 function TCubicBuffStream.ReadStringA(CONST Len: integer): AnsiString; { You need to specify the length of the string }
 VAR TotalBytes: Integer;
@@ -841,7 +853,7 @@ begin
 end;
 
 
-{ It automatically detects the length of the string }                   { Old name: ReadStringU }
+{ It automatically detects the length of the string }
 function TCubicBuffStream.ReadStringA: AnsiString;
 VAR Len: Cardinal;
 begin
@@ -876,9 +888,9 @@ begin
  then Result:= ''
  else
   begin
-   SetLength(Result, Len);                                                                   { Initialize the result }
+   SetLength(Result, Len);                                                  { Initialize the result }
    ReadBytes:= Read(Result[1], Len);
-   if ReadBytes<> Len                                                                        { Not enough data to read? }
+   if ReadBytes<> Len                                                       { Not enough data to read? }
    then SetLength(Result, ReadBytes);
   end;
 end;
@@ -893,8 +905,8 @@ end;
 
 
 { Writes the string to file but does not write its length.
-  In most cases you will want to use WriteString instead of WriteStringUNoLen. }             { Used in cmEncodeMime.pas }
-procedure TCubicBuffStream.WriteStringUNoLen(CONST s: string);
+  In most cases you will want to use WriteString instead of WriteStringNoLen. }             { Used in cmEncodeMime.pas }
+procedure TCubicBuffStream.WriteStringNoLen(CONST s: string);
 VAR UTF: UTF8String;
 begin
  UTF := UTF8String(s);
@@ -904,96 +916,43 @@ end;
 
 
 { Read a string from file. The length of the string will be provided from outside. }
-function TCubicBuffStream.ReadStringUNoLen(CONST Len: Integer): string;
+function TCubicBuffStream.ReadString(CONST Len: Integer): string;
 VAR UTF: UTF8String;
 begin
  if Len > 0
  then
-  begin
-   SetLength(UTF, Len);
-   ReadBuffer(UTF[1], Len);
-   Result:= string(UTF);
-  end
- else Result:= '';
+   begin
+     SetLength(UTF, Len);
+     ReadBuffer(UTF[1], Len);
+     Result:= string(UTF);
+   end
+ else
+   Result:= '';
 end;
 
 
 
-function TCubicBuffStream.CountAppearance(C: AnsiChar): Int64;    { Used by TFasParser.CountSequences }
-var
-   s: AnsiString;    { When I open the file I don't know how many sequences I have inside. CountSequences reads all sequences to find out how many I have }
-   BuffPo: Int64;
-begin
- Result:= 0;
- BuffPo:= 0;
- Position:= 0;
-
- WHILE BuffPo< Size DO
-  begin
-   s:= ReadStringA(1024*KB);
-   Inc(BuffPo, 1024*KB);
-   Result:= Result+ Cardinal(ccCore.CountAppearance(c, s));
-  end;
-end;
 
 
+
+{--------------------------------------------------------------------------------------------------
+   UTILS / CONVERSIONS
+--------------------------------------------------------------------------------------------------}
 
 { Read the first Count characters from a file.
-  Returns ANSI string. }
+  Returns ANSI string. 
 function StringFromFileStart (CONST FileName: string; Count: Cardinal): AnsiString;
 VAR StreamFile: TCubicBuffStream;
 begin
  SetLength(Result, Count);
 
- StreamFile:= TCubicBuffStream.Create(FileName, fmOpenRead);                                          { <--------- EFCreateError:   Cannot create file "blablabla". Access is denied. }
+ StreamFile:= TCubicBuffStream.Create(FileName, fmOpenRead);          { <--------- EFCreateError:   Cannot create file "blablabla". Access is denied.
  TRY
    Result:= StreamFile.ReadStringAR(Count);
  FINALLY
    FreeAndNil(StreamFile);
  END;
-end;
-
-
-(* put it back
-
-function TCubicBuffStream.CountLines: Int64;{ NOTE!!! ccCore.CountLines is 5.2 times faster than this, but that function does not handle well Mac/Linux files!!! }
-  procedure ReadLn;
-  VAR
-     ValidChar, i: Integer;                 { ValidChar = the position of the caracter BEFORE the enter }
-  begin
-   ValidChar:= Length(Buff);                { I set it to the end of the buffer because I need it this way when I read the last line in the FastQ file and there is no ENTER at the end (the file doesn't end with an enter) }
-
-   { Find the first enter }
-   for i:= BuffPos to Length(Buff) DO
-    if Buff[i] in [CR, LF] then
-     begin
-      ValidChar:= i;
-      Break;
-     end;
-   BuffPos:= ValidChar;                     { Skip over the ENTER character }
-
-   { Find additional enter characters }
-   WHILE (BuffPos+1 <= Length(Buff) )       { there is more data to read? }
-   AND (Buff[BuffPos+1] in [CR, LF])
-    DO inc(BuffPos);
-
-   inc(BuffPos);   //Now BuffPos points to the first char in the next row
-  end;
-
-begin
- Result:= 0;
-
- FirstLine;
- fillBuffer;
-
- WHILE BuffPos < Length(Buff) DO  {This checks for EOF }
-  begin
-   ReadLn;       {TODO 1: speed improvement: modify the ReadLine function to a procedure. I don't need to actually dead the text. I only need to find the enters }
-   Inc(Result);
-  end;
-end; *)
-
-
-
+end;}
+ 
 
 end.

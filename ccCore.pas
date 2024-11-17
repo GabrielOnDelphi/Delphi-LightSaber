@@ -3020,6 +3020,8 @@ end;
 
 
 
+
+
 function PosInsensitive(CONST Niddle, Haystack: string): Integer;    {TODO: Probably it is slow! Need better alternative}
 begin
  Result:= Pos(UpperCase(Niddle), UpperCase(Haystack));

@@ -2,7 +2,7 @@ UNIT FormSettings;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2024.10
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    A template form that allows the user to change the behavior/settings of an application:
@@ -21,8 +21,7 @@ INTERFACE
 
 USES
   WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs,
-  cvIniFile, cvPathEdit, cmDebugger, cvRadioButton, 
-  cvCheckBox, cbAppData,
+  cvIniFile, cvPathEdit, cmDebugger, cvRadioButton, cvCheckBox, cbAppData, 
   cmGuiSettings;
 
 TYPE
@@ -53,7 +52,7 @@ TYPE
     spnHideHint        : TSpinEdit;
     spnOpacity         : TSpinEdit;
     spnUser            : TSpinEdit;
-    tabInterface       : TTabSheet;
+    tabInterface       : TTabSheet;	
     tabUserDefined     : TTabSheet;
     chkLogOnError: TCheckBox;
     procedure btnCrashClick           (Sender: TObject);
@@ -69,39 +68,44 @@ TYPE
     procedure FormKeyPress            (Sender: TObject; var Key: Char);
     procedure spnOpacityChange        (Sender: TObject);
   protected
+  private
+    Saved      : Boolean;
+    GuiSettings: TGuiSettings;
+
     procedure GuiFromObject;  // Called after the main form was fully created
     procedure ObjectFromGUI;
-  private
-    Saved: Boolean;
+
     procedure WMEndSession  (VAR Msg: TWMEndSession); message WM_ENDSESSION;
     procedure LateInitialize(VAR Msg: TMessage);      message MSG_LateFormInit; // Called after the main form was fully created
     procedure SaveBeforeExit;
   public
-    class procedure CreateFormModal; static;
+    class procedure CreateFormModal(aGuiSettings: TGuiSettings); static;
  end;
 
-VAR
-   GuiSettings: TGuiSettings;
 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   cTranslate, FormSkinsDisk, csShell, FormMain;
+   ccINIFile, cTranslate, FormSkinsDisk, csShell, FormMain;
+
 
 
 {--------------------------------------------------------------------------------------------------
    CONSTRUCTOR
 --------------------------------------------------------------------------------------------------}
-class procedure TfrmSettings.CreateFormModal;
+class procedure TfrmSettings.CreateFormModal(aGuiSettings: TGuiSettings);
 VAR frmSettings: TfrmSettings;
 begin
  TAppData.RaiseIfStillInitializing;
- Assert(GuiSettings <> NIL);
+
+ Assert(aGuiSettings <> NIL);
+
  AppData.CreateFormHidden(TfrmSettings, frmSettings);
 
  if Translator <> NIL
  then Translator.LoadFormTranlation(frmSettings);
 
+ frmSettings.GuiSettings:= aGuiSettings;
  frmSettings.ShowModal;    { Closed by mrOk/mrCancel. Set to caFree. }
 end;
 
@@ -112,27 +116,28 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TfrmSettings.FormCreate(Sender: TObject);
 begin
- GuiFromObject;
- Saved:= FALSE;
- FontDialog.Font.Assign(Font);
+  GuiFromObject;
+  Saved:= FALSE;
+  FontDialog.Font.Assign(Font);
 end;
 
 
 procedure TfrmSettings.LateInitialize;
 begin
- btnCrash.Visible:= AppData.BetaTesterMode;
+  btnCrash.Visible:= AppData.BetaTesterMode;
 end;
 
 
 procedure TfrmSettings.SaveBeforeExit;  { I need to put SaveBeforeExit in only two places: OnCloseQueryand OnDestroy. Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
 begin
- if NOT AppData.Initializing            { We don't save anything if the start up was improper! }
- AND NOT Saved then
-  begin
-   Saved:= TRUE;
-   SaveForm(Self);
-   ObjectFromGUI;
-  end;
+  if NOT AppData.Initializing            { We don't save anything if the start up was improper! }
+  AND NOT Saved then
+   begin
+     Saved:= TRUE;
+     SaveForm(Self, flPosOnly);
+     //del FreeAndNil(frmServer);  freed by its parent
+     ObjectFromGUI;
+   end;
 end;
 
 
@@ -255,7 +260,7 @@ end;
 procedure TfrmSettings.FontDialogApply(Sender: TObject; Wnd: HWND);
 begin
  AppData.Font:= FontDialog.Font; // Apply this font to all existing forms.
- //Application.MainForm.FontSizeChanged;
+ //ToDo: Application.MainForm.FontSizeChanged; Let the form recalculate its GUI stuff when font size changes
  MainForm.FontSizeChanged;
 end;
 
@@ -277,8 +282,6 @@ procedure TfrmSettings.btnCrashClick(Sender: TObject);
 begin
   cmDebugger.GenerateCrashNIL;
 end;
-
-
 
 
 

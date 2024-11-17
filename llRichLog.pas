@@ -126,31 +126,31 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 procedure TRichLog.AddVerb;
 begin
- if (Verbosity<= lvVerbose) AND (Mesaj> '')
+ if (Verbosity<= lvrVerbose) AND (Mesaj> '')
  then addColorMsg(Mesaj, ctLogVerb);
 end;
 
 procedure TRichLog.AddInfo;
 begin
- if (Verbosity<= lvInfos) AND (Mesaj> '')
+ if (Verbosity<= lvrInfos) AND (Mesaj> '')
  then addColorMsg(Mesaj, ctLoginfo);
 end;
 
 procedure TRichLog.AddHint;
 begin
- if (Verbosity<= lvhints) AND (Mesaj> '')
+ if (Verbosity<= lvrHints) AND (Mesaj> '')
  then addColorMsg(Mesaj, ctLogHint);
 end;
 
 procedure TRichLog.AddImpo;
 begin
- if (Verbosity<= lvImportant) AND (Mesaj> '')
+ if (Verbosity<= lvrImportant) AND (Mesaj> '')
  then addColorMsg(Mesaj, ctLogImprt);
 end;
 
 procedure TRichLog.AddWarn;
 begin
- if (Verbosity<= lvWarnings) AND (Mesaj> '')
+ if (Verbosity<= lvrWarnings) AND (Mesaj> '')
  then addColorMsg(Mesaj, ctLogWarn);
 
  if Assigned(FLogWarn)
@@ -159,7 +159,7 @@ end;
 
 procedure TRichLog.AddError;
 begin
- if (Verbosity<= lvErrors) AND (Mesaj> '')
+ if (Verbosity<= lvrErrors) AND (Mesaj> '')
  then addColorMsg(Mesaj, ctLogError);
 
  if Assigned(FLogError)
@@ -242,12 +242,12 @@ end;
 procedure TRichLog.AddMsg(CONST Mesaj: string; MsgType: TLogVerb);
 begin
  case MsgType of
-   lvVerbose  : AddVerb(Mesaj);
-   lvHints    : AddHint(Mesaj);
-   lvInfos    : AddInfo(Mesaj);
-   lvImportant: AddImpo(Mesaj);
-   lvWarnings : AddWarn(Mesaj);
-   lvErrors   : AddError(Mesaj);
+   lvrVerbose  : AddVerb(Mesaj);
+   lvrHints    : AddHint(Mesaj);
+   lvrInfos    : AddInfo(Mesaj);
+   lvrImportant: AddImpo(Mesaj);
+   lvrWarnings : AddWarn(Mesaj);
+   lvrErrors   : AddError(Mesaj);
  end;
 end;
 

@@ -145,7 +145,7 @@ begin
 
 
  TrackBar.Min        := 0;
- TrackBar.Max        := Ord(lvErrors);                        { About enumerations: http://www.delphipages.com/forum/showthread.php?t=58129 }
+ TrackBar.Max        := Ord(lvrErrors);                        { About enumerations: http://www.delphipages.com/forum/showthread.php?t=58129 }
  TrackBar.Hint       := 'Hide all messages below this level';
  TrackBar.Align      := alRight;
  TrackBar.Name       := 'VerbosityTrackbar';                  { This control MUST have a name so I can save it to INI file }

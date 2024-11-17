@@ -24,7 +24,7 @@ INTERFACE
 USES
    Winapi.Messages, System.SysUtils, Winapi.Windows, System.Classes,
    Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls, Vcl.Forms, Vcl.Grids, Vcl.ExtCtrls, VCL.ComCtrls,
-   cbLogLines, cbLogRam, cbLogUtils;
+   cbLogLines, cbLogRam, cbLogUtils, cbLogLinesAbstract;
 
 TYPE
   TLogGrid = class(TStringGrid, ILogObserver)
@@ -44,6 +44,8 @@ TYPE
      procedure ResizeColumns;
      procedure ScrollToBottom;
      procedure setVerbFilter(const Value: TLogVerbLvl);
+     function FilteredRow(aRow: Integer): integer;
+     function GetLineFiltered(Row: Integer): PLogLine;
    protected
      procedure Resize; override;
      procedure WMCommand(var AMessage: TWMCommand); message WM_COMMAND;
@@ -61,6 +63,8 @@ TYPE
 
      procedure setUpRows;
      function  Count: Integer;
+     procedure CopyAll;
+     procedure CopyCurLine;
    published
      property ShowTime     : Boolean      read FShowTime    write setShowTime default FALSE;
      property ShowDate     : Boolean      read FShowDate    write setShowDate default FALSE;
@@ -76,7 +80,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES ccCore, cvLogFilter;
+USES ccCore, csSystem, cvLogFilter;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -89,10 +93,10 @@ begin
  FOwnRamLog:= TRUE;
  FRamLog:= TRamLog.Create(TRUE, Self as ILogObserver);
 
- ShowTime    := FALSE;
- ShowDate    := FALSE;
- FVerbosity := lvVerbose;
- FAutoScroll := TRUE;
+ ShowTime        := FALSE;
+ ShowDate        := FALSE;
+ FVerbosity      := lvVerbose;
+ FAutoScroll     := TRUE;
 
  // TStringGrid initializations
  AutoScroll      := TRUE;
@@ -159,12 +163,10 @@ begin
   else NewColCount := 1;
 
   // Update only if changed
-  if ColCount <> NewColCount then
-  begin
-    ColCount := NewColCount;
-    ResizeColumns;
-  end;
+  if ColCount <> NewColCount
+  then ColCount := NewColCount;
 
+  ResizeColumns;
   FixFixedRow;
   InvalidateGrid; // Mandatory because this will force the grid to paint itself and this is where we read the new information from RAMLog
 end;
@@ -210,12 +212,23 @@ begin
 end;
 
 
+{ Converts aRow to the real row number (visible on screen) after the filtering has been applied }
+function TLogGrid.FilteredRow(aRow: Integer): integer;
+begin
+  Result:= RamLog.Lines.Row2FilteredRow(aRow- HeaderOverhead, FVerbosity);
+end;
+
+{ Returns the content of the specified line, after the grid has been filtered }
+function TLogGrid.GetLineFiltered(Row: Integer): PLogLine;
+begin
+  Result:= RamLog.Lines[FilteredRow(Row)];
+end;
+
 
 procedure TLogGrid.DrawCell(ACol, ARow: Integer; ARect: TRect; AState: TGridDrawState);
 VAR
    s: string;
-   LogLine: PLogLine;
-   FilteredRow: integer;
+   CurLine: PLogLine;
 begin
   if (csDesigning in ComponentState)
   OR (csCreating in ControlState)
@@ -234,33 +247,32 @@ begin
     EXIT;
    end;
 
-  FilteredRow:= RamLog.Lines.Row2FilteredRow(aRow- HeaderOverhead, FVerbosity);
-  if FilteredRow < 0 then
+  if FilteredRow(aRow) < 0 then
    begin
     inherited;
     EXIT;
    end;
 
-  LogLine:= RamLog.Lines[FilteredRow];
+  CurLine:= GetLineFiltered(aRow);
 
   if ColCount = 2
   then
     case ACol of
      0: begin
           s:= '';
-          if ShowDate then s:= DateToStr(LogLine.Time);
-          if ShowTime then s:= s+ ' '+  FormatDateTime('hh:nn', LogLine.Time);
+          if ShowDate then s:= DateToStr(CurLine.Time);
+          if ShowTime then s:= s+ ' '+  FormatDateTime('hh:nn', CurLine.Time);
         end;
-     1: s:= LogLine.Msg;
+     1: s:= CurLine.Msg;
     else
        raise Exception.Create('Invalid ColCount!');
     end
    else
-      s:= LogLine.Msg;
+      s:= CurLine.Msg;
 
-  if LogLine.Color = -1
-  then Canvas.Font.Color:= Verbosity2Color(LogLine.Level)  // Default color
-  else Canvas.Font.Color:= LogLine.Color;                  // Special color as defined in the RamLog
+  if CurLine.Color = -1
+  then Canvas.Font.Color:= Verbosity2Color(CurLine.Level)  // Default color
+  else Canvas.Font.Color:= CurLine.Color;                  // Special color as defined in the RamLog
 
   Canvas.TextRect(ARect, ARect.Left+5, ARect.Top+2, s);
 end;
@@ -313,7 +325,17 @@ begin
 end;
 
 
+{ Returns all lines, even if a filter is applied }
+procedure TLogGrid.CopyAll;
+begin
+  csSystem.StringToClipboard(RamLog.GetAsText);
+end;
 
+
+procedure TLogGrid.CopyCurLine;
+begin
+  csSystem.StringToClipboard(GetLineFiltered(Row).Msg);
+end;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -352,6 +374,7 @@ end;
 { Resize column width when the form is resized }
 procedure TLogGrid.ResizeColumns;
 var
+  sTime: string;
   ScrollBarWidth: Integer;
 begin
   if ScrollBars in [ssVertical, ssBoth]
@@ -360,17 +383,28 @@ begin
 
   // Adjust column widths here if necessary
   if ColCount = 2 then
-  begin
-    Cells[0, 0] := 'Time';
-    Cells[1, 0] := 'Message';
-    ColWidths[0]:= 110; // Adjust as needed for date/time column
-    ColWidths[1]:= ClientWidth -ColWidths[0] -ScrollBarWidth;
-  end
+   begin
+     Cells[0, 0] := 'Time';
+     Cells[1, 0] := 'Message';
+
+     // Adjust as needed for date/time column
+     sTime:= '';
+     if ShowDate then sTime:= DateToStr(Now);
+     if ShowTime then sTime:= sTime+ ' '+  FormatDateTime('hh:nn', Now);
+
+     {del
+     ColWdth:= 0;
+     if ShowDate then ColWdth:= ColWdth+ 75;
+     if ShowTime then ColWdth:= ColWdth+ 45; }
+     ColWidths[0]:= CalcColWidth(Length(sTime), sTime, NIL);
+
+     ColWidths[1]:= ClientWidth -ColWidths[0] -ScrollBarWidth;
+   end
   else
-  begin
-    Cells[0, 0] := 'Message';
-    ColWidths[0]:= ClientWidth -ScrollBarWidth; // Full width for single column
-  end;
+   begin
+     Cells[0, 0] := 'Message';
+     ColWidths[0]:= ClientWidth -ScrollBarWidth; // Full width for single column
+   end;
 end;
 
 

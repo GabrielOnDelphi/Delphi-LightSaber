@@ -326,7 +326,7 @@ object MainForm: TMainForm
           TrackBar.Max = 5
           TrackBar.Position = 2
           TrackBar.TabOrder = 0
-          Verbosity = lvInfos
+          Verbosity = lvrInfos
           Log = Log
         end
       end

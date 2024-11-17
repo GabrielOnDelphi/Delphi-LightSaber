@@ -24,7 +24,9 @@ uses
 {$R *.res}
 
 begin
-  AppData:= TAppData.Create('Light Commercial Template'); { Absolutelly critical if you use the SaveForm/LoadForm functionality. This string will be used as the name of the INI file. }
+  CONST MultiThreaded= TRUE; // True => Only if we need to use multithreading in the Log.
+
+  AppData:= TAppData.Create('Light Commercial Template', '', TRUE, MultiThreaded); { Absolutelly critical if you use the SaveForm/LoadForm functionality. This string will be used as the name of the INI file. }
   AppData.CreateMainForm(TMainForm, MainForm, FALSE);
   TfrmRamLog.CreateGlobalLog;
   Application.Run;

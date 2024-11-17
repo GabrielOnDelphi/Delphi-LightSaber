@@ -308,7 +308,7 @@ begin
  Stream.WriteBoolean (TileType.OneRow);
  Stream.WriteBoolean (TileType.Vertical);
  Stream.WriteInteger (TileThreshold);
- Stream.WritePadding0(32);
+ Stream.WritePadding(32);
 end;
 
 
@@ -319,7 +319,7 @@ begin
  TileType.OneRow  := Stream.ReadBoolean;
  TileType.Vertical:= Stream.ReadBoolean;
  TileThreshold    := Stream.ReadInteger;
-                     Stream.ReadPadding0(32);
+                     Stream.ReadPadding(32);
 end;
 
 
@@ -349,7 +349,7 @@ begin
  Stream.WriteSmallInt (Saturation);
  Stream.WriteShortInt (Darkness);
  Stream.WriteBoolean  (Smooth);
- Stream.WritePadding0(32);
+ Stream.WritePadding(32);
 end;
 
 
@@ -360,7 +360,7 @@ begin
  Saturation := Stream.ReadSmallInt;
  Darkness   := Stream.ReadShortInt;
  Smooth     := Stream.ReadBoolean;
- Stream.ReadPadding0(32);
+ Stream.ReadPadding(32);
 end;
 
 

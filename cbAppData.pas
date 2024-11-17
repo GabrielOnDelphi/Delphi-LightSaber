@@ -53,7 +53,7 @@
          AppData:= TAppData.Create('MyCollApp');
          AppData.CreateMainForm(TMainForm, MainForm, False, True);   // Main form
          AppData.CreateForm(TSecondFrom, frmSecond);                 // Secondary form(s)
-         TfrmRamLog.CreateGlobalLog;                                 // Special form (optional)
+         TfrmRamLog.CreateGlobalLog;                                 // Log (optional)
          Application.Run;
        end.
 
@@ -175,7 +175,7 @@ TYPE
     class VAR Initializing: Boolean;
     class VAR SignalInitEnd: Boolean;  // If true, AppData will set the 'Initializing' field automatically to false once the main form was loaded. Set it to False in apps with more than one form or apps that require a bit more sophisticated initialization procedure
 
-    constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; aSignalInitEnd: Boolean= TRUE); virtual;
+    constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; aSignalInitEnd: Boolean= TRUE; MultiThreaded: Boolean= FALSE); virtual;
     destructor Destroy; override;      // This is called automatically by "Finalization" in order to call it as late as possible }
 
    {--------------------------------------------------------------------------------------------------
@@ -188,16 +188,16 @@ TYPE
       Minimize2Tray: Boolean;          // Minimize to tray
       HintType     : THintType;        // Turn off the embeded help system
       Opacity      : Integer;          // Form opacity
+      //MultiThreaded: Boolean;          // Necessary for the RamLog
     property HideHint: Integer read FHideHint write setHideHint;       // Hide hint after x ms.
 
    {--------------------------------------------------------------------------------------------------
       App path/name
    --------------------------------------------------------------------------------------------------}
     function CurFolder: string;        // The folder where the exe file is located. Old name: AppDir
-    class function IniFile: string;
     function SysDir: string;
     function CheckSysDir: Boolean;
-
+    class function IniFile: string;
     class function AppDataFolder(ForceDir: Boolean= FALSE): string;
     function AppDataFolderAllUsers: string;
 
@@ -233,7 +233,7 @@ TYPE
 
     procedure CreateMainForm  (aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
 
-    procedure CreateForm      (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);  overload;
+    procedure CreateForm      (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; Owner: TWinControl= NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);  overload;
     procedure CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
 
     procedure CreateFormModal (aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL); overload;   // Do I need this?
@@ -300,7 +300,7 @@ VAR                      //ToDo: make sure AppData is unique (make it Singleton)
 IMPLEMENTATION
 
 USES
-  cbVersion, ccIO, ccTextFile, cbRegistry, cbDialogs, cbCenterControl;
+  cbVersion, ccIO, ccTextFile, cbRegistry, cbDialogs, cbCenterControl; // FormRamLog;
 
 {-------------------------------------------------------------------------------------------------------------
  Parameters
@@ -313,7 +313,7 @@ USES
        This string must be unique in the whole computer! No other app is allowed to have this ID.
        If you leave it empty, the aAppName is used. But AppName might not be that unique, or you might want to change it during the time.
 -------------------------------------------------------------------------------------------------------------}
-constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= ''; aSignalInitEnd: Boolean= TRUE);
+constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= ''; aSignalInitEnd: Boolean= TRUE; MultiThreaded: Boolean= FALSE);
 begin
   Application.Initialize;                         // Note: Emba: Although Initialize is the first method called in the main project source code, it is not the first code that is executed in a GUI application. For example, in Delphi, the application first executes the initialization section of all the units used by the Application.
 
@@ -348,7 +348,7 @@ begin
   { Log }
   { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }
   Assert(RamLog = NIL, 'Log already created!');  // Call this as soon as possible so it can catch all Log messages generated during app start up. A good place might be in your DPR file before Application.CreateForm(TMainForm, frmMain)
-  RamLog:= TRamLog.Create(ShowLogOnError, NIL);
+  RamLog:= TRamLog.Create(ShowLogOnError, NIL, MultiThreaded);
 
   LogVerb(AppName+ GetVersionInfoV+ ' started.');
 
@@ -402,6 +402,7 @@ end;
   3. Show it }
 procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
 begin
+  Assert(Vcl.Dialogs.UseLatestCommonDialogs= TRUE);      { This is true anyway by default, but I check it to remember myself about it. Details: http://stackoverflow.com/questions/7944416/tfileopendialog-requires-windows-vista-or-later }
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
   Assert(Font = NIL,                 'AppData.Font already assigned!');
 
@@ -453,22 +454,41 @@ end;
 
 { Create secondary form }
 { Load indicates if the GUI settings are remembered or not }
-procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; Owner: TWinControl= NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
 begin
-  Assert(Application.MainForm <> NIL, 'Probably you forgot to create the main form with AppData.CreateMainForm!');
+  if CreateBeforeMainForm
+  then
+    begin
+      // We allow the Log form to be created before the main form.
+      if Owner = NIL
+      then TComponent(Reference):= aClass.Create(Application)  // Owned by Application. But we cannot use Application.CreateForm here because then, this form will be the main form!
+      else TComponent(Reference):= aClass.Create(Owner);       // Owned by Owner
 
-  Application.CreateForm(aClass, Reference);
+      //ToDo 4: For the case where the frmLog is created before the MainForm: copy the frmLog.Font from the MainForm AFTER the main MainForm created.
+    end
+  else
+    begin
+      if Application.MainForm = NIL
+      then RAISE Exception.Create('Probably you forgot to create the main form with AppData.CreateMainForm!');
+
+      if Owner = NIL
+      then Application.CreateForm(aClass, Reference)        // Owned by Application
+      else TComponent(Reference):= aClass.Create(Owner);    // Owned by Owner
+    end;
+
+  // Center form in the Owner
+  if (Owner <> NIL)
+  AND Parented then
+    begin
+      TForm(Reference).Parent:= Owner;
+      CenterChild(TForm(Reference), Owner);
+    end;
+
+  // Font, snap, alpha
   SetGuiProperties(TForm(Reference));
 
   // Load previous form settings/position
   cbINIFile.LoadFormBase(TForm(Reference), Loading);
-
-  // Center form in the "ParentForm"
-  if ParentWnd <> NIL then
-    begin
-      TForm(Reference).Parent:= ParentWnd;
-      CenterChild(TForm(Reference), ParentWnd);
-    end;
 
   if Show
   then TForm(Reference).Show;
@@ -507,7 +527,9 @@ begin
   // Font
   if Form = Application.MainForm
   then Self.Font:= Form.Font   // We TAKE the font from the main form. Then we apply it to all existing and all future windows.
-  else Form.Font:= Self.Font;  // We set the same font for secondary forms
+  else
+    if Self.Font <> nil
+    then Form.Font:= Self.Font;  // We set the same font for secondary forms
 
   // Fix issues with snap to edge of the screen
   if cbVersion.IsWindows8Up
@@ -570,6 +592,7 @@ end;
 
 
 { Returns the path to current user's AppData folder on Windows, and to the current user's home directory on Mac OS X.
+  Cannot be used at design-time because AppName is not set!
   Example
      Win XP: c:\Documents and Settings\UserName\Application Data\AppName\
      Vista+: c:\Documents and Settings\UserName\AppData\Roaming\

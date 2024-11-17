@@ -1,4 +1,4 @@
-unit Unit3;
+unit FormMain;
 
 interface
 
@@ -21,18 +21,21 @@ type
     Button3: TButton;
     Button4: TButton;
     Panel5: TPanel;
-    CheckBox1: TCheckBox;
-    CheckBox2: TCheckBox;
+    chkShowDate: TCheckBox;
+    chkShowTime: TCheckBox;
     VisLog: TLogGrid;
     procedure FormCreate(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button4Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
-    procedure CheckBox1Click(Sender: TObject);
-    procedure CheckBox2Click(Sender: TObject);
+    procedure chkShowDateClick(Sender: TObject);
+    procedure chkShowTimeClick(Sender: TObject);
     procedure Button5Click(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   private
+    procedure LoadSettings;
+    procedure SaveSettings;
   public
   end;
 
@@ -40,15 +43,26 @@ var
   MainForm: TMainForm;
 
 implementation {$R *.dfm}
-Uses cbAppData, cvINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
+Uses cbAppData, cbLogUtils, ccINIFile, cvINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
 
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
  RichLog.Clear;
+ LoadSettings;
  //AppData.Initializing:= FALSE; moved to cbAppData
  //Button5Click(Sender);
 end;
+
+
+procedure TMainForm.FormDestroy(Sender: TObject);
+begin
+  SaveSettings;
+end;
+
+
+
+
 
 
 procedure TMainForm.Button1Click(Sender: TObject);
@@ -71,7 +85,7 @@ begin
  RichLog.AddEmptyRow;
 
  RichLog.AddInteger(42);
- RichLog.AddFromFile(AppData.CurFolder+ 'Test file.txt', lvImportant);
+ RichLog.AddFromFile(AppData.CurFolder+ 'Test file.txt', lvrImportant);
 end;
 
 
@@ -105,15 +119,15 @@ begin
 end;
 
 
-procedure TMainForm.CheckBox1Click(Sender: TObject);
+procedure TMainForm.chkShowDateClick(Sender: TObject);
 begin
- VisLog.ShowDate:= CheckBox1.Checked;
+ VisLog.ShowDate:= chkShowDate.Checked;
 end;
 
 
-procedure TMainForm.CheckBox2Click(Sender: TObject);
+procedure TMainForm.chkShowTimeClick(Sender: TObject);
 begin
- VisLog.ShowTime:= CheckBox2.Checked;
+ VisLog.ShowTime:= chkShowTime.Checked;
 end;
 
 
@@ -131,5 +145,47 @@ begin
  //VisLog2.ScrollBars      := ssNone;   // Exception Notification - Project raised exception class EOSError with message 'A call to an OS function failed'.
 end;
 
+
+
+
+
+procedure TMainForm.SaveSettings;
+begin
+  Assert(AppData <> NIL, 'AppData is gone already!');
+
+  // Save form position
+  if NOT cbAppData.AppData.Initializing
+  then cvINIFile.SaveForm(Self, flPosOnly); // We don't save anything if the start up was improper!
+
+  // Save Log verbosity
+  VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);
+  try
+    IniFile.Write('ShowOnError', AppData.RamLog.ShowOnError);
+    IniFile.Write('ShowTime'   , VisLog.ShowTime);
+    IniFile.Write('ShowDate'   , VisLog.ShowDate);
+    IniFile.Write('Verbosity'  , Ord(VisLog.Verbosity));
+  finally
+    FreeAndNil(IniFile);
+  end;
+end;
+
+
+procedure TMainForm.LoadSettings;
+begin
+  cvINIFile.LoadForm(Self, flPosOnly);
+
+  VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);
+  try
+    AppData.RamLog.ShowOnError := IniFile.Read('ShowOnError', TRUE);
+    VisLog.ShowDate            := IniFile.Read('ShowDate', TRUE);
+    VisLog.ShowTime            := IniFile.Read('ShowTime', TRUE);
+    VisLog.Verbosity           := TLogVerbLvl(IniFile.Read('Verbosity', Ord(lvHints)));
+
+    chkShowDate.Checked:= VisLog.ShowDate;
+    chkShowTime.Checked:= VisLog.ShowTime;
+  finally
+    FreeAndNil(IniFile);
+  end;
+end;
 
 end.

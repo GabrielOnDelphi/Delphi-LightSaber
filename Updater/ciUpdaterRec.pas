@@ -76,11 +76,11 @@ begin
    Result:= Stream.ReadHeader(Signature, CurrentVersion);
    if Result then
     begin
-      Comment     := Stream.ReadStringU;
-      AppVersion  := Stream.ReadStringU;
+      Comment     := Stream.ReadString;
+      AppVersion  := Stream.ReadString;
       NewsID      := Stream.ReadInteger;
-      NewsHeadline:= Stream.ReadStringU;
-      NewsBody    := Stream.ReadStringU;
+      NewsHeadline:= Stream.ReadString;
+      NewsBody    := Stream.ReadString;
       TargetUser  := TTargetUser(Stream.ReadByte);
       CriticalUpd := Stream.ReadBoolean;
       ShowCounter := Stream.ReadInteger;
@@ -102,11 +102,11 @@ begin
  Stream:= TCubicBuffStream2.CreateWrite(FileName);
  TRY
    Stream.WriteHeader(Signature, CurrentVersion);
-   Stream.WriteStringU (Comment);
-   Stream.WriteStringU (AppVersion);
+   Stream.WriteString (Comment);
+   Stream.WriteString (AppVersion);
    Stream.WriteInteger (NewsID);
-   Stream.WriteStringU (NewsHeadline);
-   Stream.WriteStringU (NewsBody);
+   Stream.WriteString (NewsHeadline);
+   Stream.WriteString (NewsBody);
    Stream.WriteByte(Ord(TargetUser));
    Stream.WriteBoolean (CriticalUpd);
    Stream.WriteInteger (ShowCounter);

@@ -182,7 +182,7 @@ begin
    Stream.WriteCardinal(w);
    Stream.WriteCardinal(h);
    Params.Save(Stream);
-   Stream.WritePadding0(940);
+   Stream.WritePadding(940);
 
    { Write original image to the output stream }
    VAR JpgStream:= cGraphConvert.Bmp2JpgStream(OrigImage);
@@ -240,7 +240,7 @@ begin
         w:= Stream.ReadCardinal;
         h:= Stream.ReadCardinal;
         Params.Load(Stream);
-        Stream.ReadPadding0(940);
+        Stream.ReadPadding(940);
         Count:= Stream.ReadInteger;
 
         OrigImage:= TBitmap.Create;
@@ -310,7 +310,7 @@ begin
   Stream.WriteInteger(WaveAplitude);
   Stream.WriteInteger(WaveTravelDist);
   Stream.WriteInteger(DropInterval);
-  Stream.WritePadding0(64);
+  Stream.WritePadding(64);
 end;
 
 
@@ -321,7 +321,7 @@ begin
   WaveAplitude  := Stream.ReadInteger;
   WaveTravelDist:= Stream.ReadInteger;
   DropInterval  := Stream.ReadInteger;
-  Stream.ReadPadding0(64);
+  Stream.ReadPadding(64);
 end;
 
 

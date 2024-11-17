@@ -28,8 +28,8 @@ INTERFACE
 
 USES
   Winapi.Messages, System.Classes, System.SysUtils,
-  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Grids,
-  cbAppData, cbLogRam, cvLog, cvLogFilter;
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls,
+  cbAppData, cbLogRam, cvLog, cvLogFilter, Vcl.Menus, Vcl.Grids;
 
 TYPE
   TfrmRamLog = class(TForm)
@@ -40,11 +40,19 @@ TYPE
     chkShowTime   : TCheckBox;
     pnlBottom     : TPanel;
     trkLogVerb    : TLogVerbFilter;
+    chkShowDate   : TCheckBox;
+    PopupMenu: TPopupMenu;
+    mnuCopy: TMenuItem;
+    mnuCopyAll: TMenuItem;
+    mnuCopyFiltered: TMenuItem;
     procedure btnClearClick      (Sender: TObject);
     procedure FormDestroy        (Sender: TObject);
     procedure chkLogOnErrorClick (Sender: TObject);
     procedure FormClose          (Sender: TObject; var Action: TCloseAction);
     procedure chkShowTimeClick   (Sender: TObject);
+    procedure chkShowDateClick   (Sender: TObject);
+    procedure mnuCopyClick(Sender: TObject);
+    procedure mnuCopyAllClick(Sender: TObject);
   private
     procedure LoadSettings;
     procedure SaveSettings;
@@ -52,6 +60,10 @@ TYPE
     class procedure CreateGlobalLog; static; // Would be nice to make this protected but we can't. All event handlers must be accesible/visible
     procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully initilized
   end;
+
+
+
+
 
 
 
@@ -68,13 +80,20 @@ USES
 -------------------------------------------------------------------------------------------------------------}
 VAR FormLog: TfrmRamLog= NIL;  // Accessible via AppData only
 
+{ Create the Log form globally (to be used by the entire application) }
 
-//ToDo: find a way to create it automatically from AppData (interfaces?). We cannot do it from AppData itself because this form depends on my LightVisControls.dpk which is not available at this compilation point.
+{ToDo 5: Find a way to create it automatically from AppData (interfaces?). We cannot do it from AppData itself because this form depends on my LightVisControls.dpk which is not available at this compilation point.
+  We could use something like:
+  TAppData = class
+    class procedure RegisterFormCreator(AFormCreator: TFunc<TForm>); static;  // This class procedure would be called when we initialize the high-level package that contains the FormLog.
+  end;
+  But this method seems to brittle. }
 class procedure TfrmRamLog.CreateGlobalLog;
 begin
-  Assert(FormLog = NIL, 'Form log already created!!!');
+  Assert(FormLog = NIL, 'Form log already created!');
 
-  AppData.CreateForm(TfrmRamLog, FormLog, FALSE, flPosOnly);
+  VAR CreateBeforeMainForm:= Application.MainForm = NIL;
+  AppData.CreateForm(TfrmRamLog, FormLog, FALSE, flPosOnly, NIL, FALSE, CreateBeforeMainForm);
   FormLog.Log.AssignExternalRamLog(AppData.RamLog);   // We will read data from AppData's log
 
   Assert(Application.MainForm <> FormLog, 'The Log should not be the MainForm!'); { Just in case: Make sure this is not the first form created }
@@ -118,8 +137,10 @@ begin
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);
   try
     IniFile.Write('ShowOnError', AppData.RamLog.ShowOnError);
-    IniFile.Write('ShowTime', Log.ShowTime);
-    IniFile.Write('Verbosity', Ord(Log.Verbosity));
+
+    IniFile.Write('ShowTime'   , Log.ShowTime);
+    IniFile.Write('ShowDate'   , Log.ShowDate);
+    IniFile.Write('Verbosity'  , Ord(Log.Verbosity));
   finally
     FreeAndNil(IniFile);
   end;
@@ -128,13 +149,18 @@ end;
 
 procedure TfrmRamLog.LoadSettings;
 begin
-  cvINIFile.LoadForm(FormLog, flPosOnly);
+  cvINIFile.LoadForm(Self, flPosOnly);
 
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);
   try
-    AppData.RamLog.ShowOnError:= IniFile.Read('ShowOnError', True);
+    AppData.RamLog.ShowOnError:= IniFile.Read('ShowOnError', TRUE);
+
     Log.ShowTime              := IniFile.Read('ShowTime', TRUE);
+    Log.ShowDate              := IniFile.Read('ShowDate', TRUE);
     Log.Verbosity             := TLogVerbLvl(IniFile.Read('Verbosity', Ord(lvHints)));
+
+    chkShowDate.Checked:= Log.ShowDate;
+    chkShowTime.Checked:= Log.ShowTime;
   finally
     FreeAndNil(IniFile);
   end;
@@ -158,14 +184,33 @@ begin
 end;
 
 
+procedure TfrmRamLog.chkShowDateClick(Sender: TObject);
+begin
+  Log.ShowDate:= chkShowDate.Checked;
+end;
+
+
 procedure TfrmRamLog.chkShowTimeClick(Sender: TObject);
 begin
   Log.ShowTime:= chkShowTime.Checked;
 end;
 
 
+procedure TfrmRamLog.mnuCopyAllClick(Sender: TObject);
+begin
+  Log.CopyAll;
+end;
+
+procedure TfrmRamLog.mnuCopyClick(Sender: TObject);
+begin
+  Log.CopyCurLine;
+end;
+
+
 
 end.
+
+
 
 
 

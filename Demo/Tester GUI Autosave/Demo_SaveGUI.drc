@@ -1104,8 +1104,8 @@ END
 /* c:\delphi\sydney\lib\Win32\release\SPIN.RES */
 /* c:\delphi\sydney\lib\Win32\release\FileCtrl.res */
 /* c:\delphi\sydney\lib\Win32\release\WinXCtrls.res */
-/* c:\Projects\LightSaber\21.0_Win32_Debug\cvFloatSpinEdit.dcr */
-/* c:\Projects\LightSaber\21.0_Win32_Debug\cvPathEdit.res */
+/* c:\Projects\LightSaber\cvFloatSpinEdit.dcr */
+/* c:\Projects\LightSaber\cvPathEdit.res */
 /* C:\Projects\LightSaber\Demo\Tester GUI Autosave\SecondForm.dfm */
 /* C:\Projects\LightSaber\Demo\Tester GUI Autosave\MainForm.dfm */
 /* C:\Projects\LightSaber\FormRamLog.dfm */

@@ -83,7 +83,7 @@
         <DCCReference Include="LightCore.dcp"/>
         <DCCReference Include="vclWinx.dcp"/>
         <DCCReference Include="SoapRtl.dcp"/>
-        <DCCReference Include="LightBase.dcp"/>
+        <DCCReference Include="LightAppData.dcp"/>
         <DCCReference Include="IndySystem.dcp"/>
         <DCCReference Include="cmCursorGuard.pas"/>
         <DCCReference Include="cmDebugger.pas"/>

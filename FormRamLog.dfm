@@ -5,7 +5,7 @@ object frmRamLog: TfrmRamLog
   BorderIcons = [biSystemMenu, biMaximize]
   Caption = 'Log'
   ClientHeight = 513
-  ClientWidth = 714
+  ClientWidth = 604
   Color = clBtnFace
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
@@ -13,17 +13,19 @@ object frmRamLog: TfrmRamLog
   Font.Height = -13
   Font.Name = 'Segoe UI'
   Font.Style = []
+  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 3
   OnClose = FormClose
   OnDestroy = FormDestroy
+  PixelsPerInch = 96
   TextHeight = 17
   object Container: TPanel
     Left = 0
     Top = 0
-    Width = 714
+    Width = 604
     Height = 513
     Align = alClient
     BevelOuter = bvNone
@@ -32,7 +34,7 @@ object frmRamLog: TfrmRamLog
     object pnlBottom: TPanel
       Left = 0
       Top = 482
-      Width = 714
+      Width = 604
       Height = 31
       Align = alBottom
       BevelOuter = bvNone
@@ -40,9 +42,9 @@ object frmRamLog: TfrmRamLog
       TabOrder = 0
       object chkLogOnError: TCheckBox
         AlignWithMargins = True
-        Left = 113
+        Left = 204
         Top = 3
-        Width = 172
+        Width = 138
         Height = 25
         Hint = 'Show this Log window when it displays error or warning messages.'
         Align = alLeft
@@ -54,7 +56,7 @@ object frmRamLog: TfrmRamLog
       end
       object btnClear: TButton
         AlignWithMargins = True
-        Left = 643
+        Left = 533
         Top = 1
         Width = 68
         Height = 29
@@ -68,15 +70,15 @@ object frmRamLog: TfrmRamLog
       end
       object trkLogVerb: TLogVerbFilter
         AlignWithMargins = True
-        Left = 291
+        Left = 348
         Top = 3
-        Width = 346
+        Width = 179
         Height = 25
         Align = alClient
         BevelOuter = bvNone
         ShowCaption = False
         TabOrder = 2
-        TrackBar.Left = 226
+        TrackBar.Left = 59
         TrackBar.Top = 0
         TrackBar.Width = 120
         TrackBar.Height = 25
@@ -84,28 +86,39 @@ object frmRamLog: TfrmRamLog
         TrackBar.Align = alRight
         TrackBar.Max = 6
         TrackBar.Min = 1
-        TrackBar.Position = 6
+        TrackBar.Position = 3
         TrackBar.TabOrder = 0
-        Verbosity = lvErrors
+        Verbosity = lvInfos
         Log = Log
       end
       object chkShowTime: TCheckBox
         AlignWithMargins = True
-        Left = 3
+        Left = 103
         Top = 3
-        Width = 104
+        Width = 95
         Height = 25
         Align = alLeft
         Caption = 'Show time'
         TabOrder = 3
         OnClick = chkShowTimeClick
       end
+      object chkShowDate: TCheckBox
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 94
+        Height = 25
+        Align = alLeft
+        Caption = 'Show date'
+        TabOrder = 4
+        OnClick = chkShowDateClick
+      end
     end
     object Log: TLogGrid
       AlignWithMargins = True
       Left = 3
       Top = 3
-      Width = 708
+      Width = 598
       Height = 476
       Align = alClient
       BevelOuter = bvNone
@@ -122,10 +135,28 @@ object frmRamLog: TfrmRamLog
       Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goRowSelect, goFixedRowDefAlign]
       ParentColor = True
       ParentFont = False
+      PopupMenu = PopupMenu
       TabOrder = 1
       Verbosity = lvErrors
       ColWidths = (
-        687)
+        594)
+    end
+  end
+  object PopupMenu: TPopupMenu
+    Left = 460
+    Top = 196
+    object mnuCopy: TMenuItem
+      Caption = 'Copy line'
+      OnClick = mnuCopyClick
+    end
+    object mnuCopyFiltered: TMenuItem
+      Caption = 'Copy all (filtered)'
+      Enabled = False
+    end
+    object mnuCopyAll: TMenuItem
+      Caption = 'Copy all (unfiltered)'
+      Hint = 'Returns all lines, even if a filter is applied.'
+      OnClick = mnuCopyAllClick
     end
   end
 end
