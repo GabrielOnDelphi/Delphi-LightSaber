@@ -89,7 +89,7 @@ end;
 
 
 { Shows an error message if the folder cannot be created. }
-function ForceDirectoriesMsg(CONST FullPath: string): boolean;
+function ForceDirectoriesMsg(CONST FullPath: string): Boolean;
 begin
   Result:= ccIO.ForceDirectories(FullPath) >= 0;
   if NOT Result

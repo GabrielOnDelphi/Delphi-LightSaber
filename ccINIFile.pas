@@ -37,6 +37,21 @@ TYPE
                   flFull);      // Restore form position and GUI elements
 
 TYPE
+{
+  BUG: stackoverflow.com/questions/20419347/delphi-inifiles-readdatetime
+  The date format will not depend anymore on user's regional settings
+  This method cannot be simply named Write because it will conflict with Write(Real).
+  I had a case where it wrote Write(2.0) to the ini file as a date (1900-01-01)
+  The Default MUST be in the 0.0 format otherwise the wrong function will be called (the one for integer) }
+ TIniFileDt = class(TIniFile)
+  protected
+    FSection: string;
+  public
+    function  ReadDate (CONST Section, Ident: string; Default: TDateTime): TDateTime; reintroduce;
+    procedure WriteDate(CONST Section, Ident: string; Value  : TDateTime);            reintroduce;
+  end;
+
+
  TIniFileEx = class(TIniFile)        // Old name: TCubicIniFile
   protected
     FSection: string;
@@ -45,13 +60,9 @@ TYPE
 
     function  ValueExists(CONST Ident: string): Boolean;                         reintroduce; overload;
 
-    { OLD & BROKEN - Depends on user's FormatSettings }
-    function  ReadDate_   (CONST Ident: string; Default: TDateTime): TDateTime;  deprecated 'Use ReadDateEx instead';  // http://docwiki.embarcadero.com/RADStudio/Sydney/en/Methods_(Delphi)
-    procedure WriteDate_  (CONST Ident: string;   Value: TDateTime);             deprecated 'Use ReadDateEx instead';
-
     { Data/Time }
-    function  ReadDateEx (CONST Ident: string; Default: TDateTime): TDateTime;
-    procedure WriteDateEx(CONST Ident: string;   Value: TDateTime);
+    function  ReadDate   (CONST Ident: string; Default: TDateTime): TDateTime;   reintroduce; overload;
+    procedure WriteDate  (CONST Ident: string;   Value: TDateTime);              reintroduce; overload;
 
     { String }
     function  Read       (CONST Ident: string; Default: string): string;         overload;
@@ -90,14 +101,6 @@ begin
  TDirectory.CreateDirectory(ExtractFilePath(FileName));  // Make sure the path exists otherwise we get an error.
  inherited Create(FileName);
  FSection:= SectionName;
-
- (*DEL
- TRY
-   ForceDirectories(ExtractFilePath(Path));
- EXCEPT
-   //todo 1: trap only specific exceptions
-   Mesa jErrDetail ('Cannot create folder: '+ Path, 'TIniFileEx.Create');
- END; *)
 end;
 
 
@@ -105,7 +108,7 @@ end;
 
 {---------------
    FONT
-----------------}
+---------------}
 
 //ToDo: Return value of function 'TIniFileEx.Read' might be undefined
 function TIniFileEx.Read(CONST Ident: string): FontStruct;
@@ -139,44 +142,17 @@ end;
 
 {---------------
    DATE
-----------------}
-function GetUniversalDateFormat: TFormatSettings;
+---------------}
+function TIniFileEx.ReadDate(const Ident: string; Default: TDateTime): TDateTime;
 begin
-  Result:= TFormatSettings.Create;
-  Result.DateSeparator:= '-';
-  Result.TimeSeparator:= ':';
-  Result.ShortDateFormat:= 'YYYY-MM-DD';          // The date is saved in the ShortDateFormat. We don't care about LongDateFormat here
+  Result:= inherited ReadDate(FSection, Ident, Default);
 end;
 
-
-{ Deprecated!
-
-  BUG: stackoverflow.com/questions/20419347/delphi-inifiles-readdatetime
-  The date format will not depend anymore on user's regional settings
-  This method cannot be simply named Write because it will conflict with Write(Real).
-  I had a case where it wrote Write(2.0) to the ini file as a date (1900-01-01)
-  The Default MUST be in the 0.0 format otherwise the wrong function will be called (the one for integer) }
-procedure TIniFileEx.WriteDate_(CONST Ident: string; Value: TDateTime);
+procedure TIniFileEx.WriteDate(const Ident: string; Value: TDateTime);
 begin
-  inherited WriteDate(FSection, Ident, Value);
+  inherited writedate(FSection, Ident, Value);
 end;
 
-function TIniFileEx.ReadDate_(CONST Ident: string; Default: TDateTime): TDateTime;   { The Default MUST be in the 0.0 format otherwise the wrong function will be called (the one for integer) }
-begin
-  Result:= inherited ReadDate(FSection, Ident, default);
-end;
-
-
-
-procedure TIniFileEx.WriteDateEx(CONST Ident: string; Value: TDateTime);
-begin
-  WriteFloat(FSection, Ident, Value);
-end;
-
-function TIniFileEx.ReadDateEx(CONST Ident: string; Default: TDateTime): TDateTime;
-begin
-  Result:= TDateTime(ReadFloat(FSection, Ident, default));
-end;
 
 
 
@@ -185,7 +161,7 @@ end;
 
 {----------------------
    DEFAULT OVERLOADS
------------------------}
+----------------------}
 
 function TIniFileEx.ValueExists(const Ident: string): Boolean;
 begin
@@ -236,11 +212,31 @@ begin
  Result:= inherited ReadFloat(FSection, Ident, Default);
 end;
 
+
 procedure TIniFileEx.Write(const Ident: string; Value: Double);
 begin
  inherited WriteFloat(FSection, Ident, Value);
 end;
 
+
+
+
+
+
+
+{-------------------------------------------------------------------------------------------------------------
+   TIniFileDt
+-------------------------------------------------------------------------------------------------------------}
+function TIniFileDt.ReadDate(const Section, Ident: string; Default: TDateTime): TDateTime;
+begin
+  Result:= TDateTime(ReadFloat(FSection, Ident, default));
+end;
+
+
+procedure TIniFileDt.WriteDate(const Section, Ident: string; Value: TDateTime);
+begin
+  WriteFloat(FSection, Ident, Value);
+end;
 
 
 

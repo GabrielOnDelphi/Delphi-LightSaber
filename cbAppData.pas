@@ -77,7 +77,7 @@
      The "AppData.Initializing" Flag
         Once the program is fully initialized set Initializing to False.
         Details: Set it to false once your app finished initializing (usually after you finished creating all forms).
-        Used by SaveForm in cbINIFile.pas (and few other places) to signal not to save the form if the application
+        Used by SaveForm in cbINIFile.pas/cvINIFile.pas (and few other places) to signal not to save the form if the application
         has crashed whill still in the initialization phase.
         If you don't set it to false earlyer, AppData will set it to false at the end of CreateMainForm
 

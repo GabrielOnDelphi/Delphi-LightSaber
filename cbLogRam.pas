@@ -103,7 +103,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-  ccCore, ccIO, ccTextFile, {ccStreamBuff,} cbLogLinesThreaded;
+  ccCore, ccIO, ccTextFile, cbAppData, cbLogLinesThreaded;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -313,13 +313,13 @@ procedure TRamLog.CheckAndSaveToDisk;
 begin
   if Lines.Count > MaxEntries then
   begin
-    SaveToFile('LargeLogSave.txt');
+    SaveToFile(TAppData.AppDataFolder+ 'LargeLogSave.txt');
     Lines.Clear;
   end;
 
   if SecondsBetween(Now, FLastSaveTime) >= FSaveInterval then
   begin
-    SaveToFile('PeriodicLogSave.txt');
+    SaveToFile(TAppData.AppDataFolder+ 'PeriodicLogSave.txt');
     FLastSaveTime := Now;
   end;
 end;

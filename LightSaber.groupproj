@@ -27,12 +27,6 @@
         <Projects Include="LightVisControls.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="..\Project LabBook\LibBase\LabBookBase.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="..\Project LabBook\LibVCL\LabBookVCL.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="..\LightNgc\LightNGC.dproj">
             <Dependencies/>
         </Projects>
@@ -140,24 +134,6 @@
     <Target Name="LightVisControls:Make">
         <MSBuild Projects="LightVisControls.dproj" Targets="Make"/>
     </Target>
-    <Target Name="LabBookBase">
-        <MSBuild Projects="..\Project LabBook\LibBase\LabBookBase.dproj"/>
-    </Target>
-    <Target Name="LabBookBase:Clean">
-        <MSBuild Projects="..\Project LabBook\LibBase\LabBookBase.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="LabBookBase:Make">
-        <MSBuild Projects="..\Project LabBook\LibBase\LabBookBase.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="LabBookVCL">
-        <MSBuild Projects="..\Project LabBook\LibVCL\LabBookVCL.dproj"/>
-    </Target>
-    <Target Name="LabBookVCL:Clean">
-        <MSBuild Projects="..\Project LabBook\LibVCL\LabBookVCL.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="LabBookVCL:Make">
-        <MSBuild Projects="..\Project LabBook\LibVCL\LabBookVCL.dproj" Targets="Make"/>
-    </Target>
     <Target Name="LightNGC">
         <MSBuild Projects="..\LightNgc\LightNGC.dproj"/>
     </Target>
@@ -240,27 +216,27 @@
         <MSBuild Projects="Demo\Tester LightLog\DemoLog.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightAppData;LightCommon;LightProteus;LightInternet;LightTranslator;LightGraphics;LightVisControls;LabBookBase;LabBookVCL;LightNGC;BioControl;BionixVCL;TemplateApp;BionixWallpaper;Demo_VisualControls;Demo_SaveGUI;Tester_FileStream;DemoLog"/>
+        <CallTarget Targets="LightCore;LightAppData;LightCommon;LightProteus;LightInternet;LightTranslator;LightGraphics;LightVisControls;LightNGC;BioControl;BionixVCL;TemplateApp;BionixWallpaper;Demo_VisualControls;Demo_SaveGUI;Tester_FileStream;DemoLog"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightAppData:Clean;LightCommon:Clean;LightProteus:Clean;LightInternet:Clean;LightTranslator:Clean;LightGraphics:Clean;LightVisControls:Clean;LabBookBase:Clean;LabBookVCL:Clean;LightNGC:Clean;BioControl:Clean;BionixVCL:Clean;TemplateApp:Clean;BionixWallpaper:Clean;Demo_VisualControls:Clean;Demo_SaveGUI:Clean;Tester_FileStream:Clean;DemoLog:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightAppData:Clean;LightCommon:Clean;LightProteus:Clean;LightInternet:Clean;LightTranslator:Clean;LightGraphics:Clean;LightVisControls:Clean;LightNGC:Clean;BioControl:Clean;BionixVCL:Clean;TemplateApp:Clean;BionixWallpaper:Clean;Demo_VisualControls:Clean;Demo_SaveGUI:Clean;Tester_FileStream:Clean;DemoLog:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightAppData:Make;LightCommon:Make;LightProteus:Make;LightInternet:Make;LightTranslator:Make;LightGraphics:Make;LightVisControls:Make;LabBookBase:Make;LabBookVCL:Make;LightNGC:Make;BioControl:Make;BionixVCL:Make;TemplateApp:Make;BionixWallpaper:Make;Demo_VisualControls:Make;Demo_SaveGUI:Make;Tester_FileStream:Make;DemoLog:Make"/>
+        <CallTarget Targets="LightCore:Make;LightAppData:Make;LightCommon:Make;LightProteus:Make;LightInternet:Make;LightTranslator:Make;LightGraphics:Make;LightVisControls:Make;LightNGC:Make;BioControl:Make;BionixVCL:Make;TemplateApp:Make;BionixWallpaper:Make;Demo_VisualControls:Make;Demo_SaveGUI:Make;Tester_FileStream:Make;DemoLog:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
-    <ItemGroup Condition="'$(BuildGroup)'=='All'">
-        <BuildGroupProject Include="LightCommon.dproj">
-            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
+    <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
         <BuildGroupProject Include="Demo\Tester LightLog\DemoLog.dproj">
             <ProjectGuid>{7FB29DC7-5854-4A00-AB0C-20FE70A6D532}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCommon.dproj">
+            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win64</Platforms>
+            <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
             <ProjectGuid>{D824CECA-A966-4534-A38A-61D312FAE2DF}</ProjectGuid>
@@ -270,8 +246,8 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj">
@@ -288,8 +264,8 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightVisControls.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="LightTranslator.dproj">
@@ -298,20 +274,8 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\Project LabBook\LibVCL\LabBookVCL.dproj">
-            <ProjectGuid>{C6386C7B-5661-4811-A04D-22D8C0B521BC}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="..\Biology\!BioControl Lib\BioControl.dproj">
             <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Project LabBook\LibBase\LabBookBase.dproj">
-            <ProjectGuid>{41F03EF8-C21D-4C21-B102-6056D20E97A3}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -324,8 +288,8 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightGraphics.dproj">
             <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="LightAppData.dproj">
@@ -336,8 +300,8 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightInternet.dproj">
             <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\BioniX\SourceCode\BionixWallpaper.dproj">
@@ -366,17 +330,17 @@
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Debug'">
-        <BuildGroupProject Include="LightCommon.dproj">
-            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="Demo\Tester LightLog\DemoLog.dproj">
             <ProjectGuid>{7FB29DC7-5854-4A00-AB0C-20FE70A6D532}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCommon.dproj">
+            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
             <ProjectGuid>{D824CECA-A966-4534-A38A-61D312FAE2DF}</ProjectGuid>
@@ -414,20 +378,8 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\Project LabBook\LibVCL\LabBookVCL.dproj">
-            <ProjectGuid>{C6386C7B-5661-4811-A04D-22D8C0B521BC}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="..\Biology\!BioControl Lib\BioControl.dproj">
             <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Project LabBook\LibBase\LabBookBase.dproj">
-            <ProjectGuid>{41F03EF8-C21D-4C21-B102-6056D20E97A3}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -482,17 +434,17 @@
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Release'">
-        <BuildGroupProject Include="LightCommon.dproj">
-            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="Demo\Tester LightLog\DemoLog.dproj">
             <ProjectGuid>{7FB29DC7-5854-4A00-AB0C-20FE70A6D532}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCommon.dproj">
+            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
             <ProjectGuid>{D824CECA-A966-4534-A38A-61D312FAE2DF}</ProjectGuid>
@@ -530,20 +482,8 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\Project LabBook\LibVCL\LabBookVCL.dproj">
-            <ProjectGuid>{C6386C7B-5661-4811-A04D-22D8C0B521BC}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="..\Biology\!BioControl Lib\BioControl.dproj">
             <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Project LabBook\LibBase\LabBookBase.dproj">
-            <ProjectGuid>{41F03EF8-C21D-4C21-B102-6056D20E97A3}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -597,18 +537,18 @@
             <Enabled>True</Enabled>
         </BuildGroupProject>
     </ItemGroup>
-    <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
-        <BuildGroupProject Include="LightCommon.dproj">
-            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
+    <ItemGroup Condition="'$(BuildGroup)'=='All'">
         <BuildGroupProject Include="Demo\Tester LightLog\DemoLog.dproj">
             <ProjectGuid>{7FB29DC7-5854-4A00-AB0C-20FE70A6D532}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCommon.dproj">
+            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
             <ProjectGuid>{D824CECA-A966-4534-A38A-61D312FAE2DF}</ProjectGuid>
@@ -618,8 +558,8 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win64</Platforms>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj">
@@ -636,8 +576,8 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightVisControls.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win64</Platforms>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="LightTranslator.dproj">
@@ -646,20 +586,8 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\Project LabBook\LibVCL\LabBookVCL.dproj">
-            <ProjectGuid>{C6386C7B-5661-4811-A04D-22D8C0B521BC}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="..\Biology\!BioControl Lib\BioControl.dproj">
             <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Project LabBook\LibBase\LabBookBase.dproj">
-            <ProjectGuid>{41F03EF8-C21D-4C21-B102-6056D20E97A3}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -672,8 +600,8 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightGraphics.dproj">
             <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win64</Platforms>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="LightAppData.dproj">
@@ -684,8 +612,8 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightInternet.dproj">
             <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win64</Platforms>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\BioniX\SourceCode\BionixWallpaper.dproj">

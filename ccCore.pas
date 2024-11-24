@@ -362,7 +362,7 @@ CONST
    MinutesPerDay= 24*60;
 
 
- // Current time
+ // CURRENT DATE-TIME
  function TodayIs: string;                                         { Returns today as date based on Locale. Example: Montag }
  function CurrentDateToString{(ShowSeconds: Boolean)}: string;     { Returns today as date & time. Example: 31.12.2021 - 16:50 }
  function CurrentTimeToString(ShowSeconds: Boolean): string;       { Returns time in short format (no seconds). Example: 16:50 }
@@ -377,6 +377,9 @@ CONST
  function DecodeHour             (Time: TTime): Word;
  function DecodeMinute           (Time: TTime): Word;
  function DecodeSecond           (Time: TTime): Word;
+
+ // FORMAT
+ function GetUniversalDateFormat: TFormatSettings;
 
  // COMPARISON
  function SameDateEx             (Time1, Time2: TDateTime): boolean;  deprecated 'Use System.DateUtils.SameDate instead';
@@ -648,6 +651,19 @@ end;
 
 
 
+
+{ Was used to save our data in INI files. Now we save it as floats. }
+function GetUniversalDateFormat: TFormatSettings;  //Unused
+begin
+  Result:= TFormatSettings.Create;
+  Result.DateSeparator:= '-';
+  Result.TimeSeparator:= ':';
+  Result.ShortDateFormat:= 'YYYY-MM-DD';
+end;
+
+
+
+
 { Converts a string formatted like 'hh:mm:ss' or 'mm:ss' to seconds.
   Returns -1 is the string does not contain a valid time.
 
@@ -789,8 +805,6 @@ begin
     then Result:= Result+ ':'+ '0'+IntToStr(Sec)
     else Result:= Result+ ':'+ IntToStr(Sec);
 end;
-
-
 
 
 function DateIsToday(Year, Month, Day: word): Boolean;   { Returns true if the specified date is today }

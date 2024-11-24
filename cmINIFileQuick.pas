@@ -40,8 +40,8 @@ function  ReadBoolean  (CONST Identifier: string; DefaultVal: Boolean= FALSE): B
 procedure WriteDbl     (CONST Identifier: string; d: Double);
 function  ReadDbl      (CONST Identifier: string; DefaultVal: Double= 0.0): Double;
 
-procedure WriteDateEx  (CONST Identifier: string; d: TDateTime);
-function  ReadDateEx   (CONST Identifier: string; DefaultVal: TDateTime): Double;
+procedure WriteDate    (CONST Identifier: string; d: TDateTime);
+function  ReadDate     (CONST Identifier: string; DefaultVal: TDateTime): Double;
 
 function  ReadFont     (CONST Identifier: string; Font: TFont): Boolean;          { Result: If the INI file does not contains informations about font then this function will  return FALSE and no modification will be done to the 'Font' object passed as parameter. }
 procedure WriteFont    (CONST Identifier: string; Font: TFont);
@@ -160,23 +160,23 @@ end;
 
 
 
-procedure WriteDateEx (CONST Identifier: string; d: TDateTime);
+procedure WriteDate (CONST Identifier: string; d: TDateTime);
 VAR IniFile: TIniFileApp;
 begin
  IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
  TRY
-   IniFile.WriteDateEx(Identifier, d)
+   IniFile.WriteDate(Identifier, d)
  FINALLY
    FreeAndNil(IniFile);
  END;
 end;
 
-function  ReadDateEx (CONST Identifier: string; DefaultVal: TDateTime): Double;
+function  ReadDate (CONST Identifier: string; DefaultVal: TDateTime): Double;
 VAR IniFile: TIniFileApp;
 begin
  IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
  TRY
-   Result:= IniFile.ReadDateEx(Identifier, DefaultVal);
+   Result:= IniFile.ReadDate(Identifier, DefaultVal);
  FINALLY
    FreeAndNil(IniFile);
  END;

@@ -343,7 +343,7 @@ begin
  VAR IniFile:= TIniFileEx.Create('Updater', FileName);
  try
    { Internal state }
-   IniFile.WriteDateEx('LastUpdate_',   LastUpdate);
+   IniFile.WriteDate  ('LastUpdate__',    LastUpdate);
    IniFile.Write      ('LocalCounter',    LocalNewsID);
 
    { User settings }
@@ -363,7 +363,7 @@ begin
  try
    { Internal state}
    LastUpdate      := Now;
-   LastUpdate      := IniFile.ReadDateEx('LastUpdate_', 0);
+   LastUpdate      := IniFile.ReadDate('LastUpdate__', 0);
    LocalNewsID     := IniFile.Read('LocalCounter', 0);
 
    { User settings }
