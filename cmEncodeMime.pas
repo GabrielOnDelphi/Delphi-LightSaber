@@ -83,7 +83,7 @@ end;
 
 
 
-function MimeStringA(const Input: AnsiString): AnsiString;                                       { Used by cpProteusCertificate.pas }
+function MimeStringA(const Input: AnsiString): AnsiString;                                       { Used by cpCertificate.pas }
 var
   InStr, OutStr: TCubicMemStream;
 begin

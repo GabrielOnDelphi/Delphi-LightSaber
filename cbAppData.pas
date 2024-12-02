@@ -2,44 +2,40 @@
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2024.11
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
-   Via class you can:
-      - Get application's appdata folder (the folder where you save temporary, app-related and ini files)
-      - Get application's command line parameters
-      - Get application's version
 
-      - Force single instance (allow only one instance of your program to run). Second inst sends its command line to the first inst then shutsdown
-      - Detect if the application is running for the firs this in a computer
+   FEATURES
 
-      - Application self-restart
-      - Application self-delete
+    Via class you can:
+       - Get application's appdata folder (the folder where you save temporary, app-related and ini files)
+       - Get application's command line parameters
+       - Get application's version
 
-      - Easily create new forms and set its font to be the same as main forms' font.
-      - Change the font for all running forms
+       - Force single instance (allow only one instance of your program to run). Second inst sends its command line to the first inst then shutsdown
+       - Detect if the application is running for the firs this in a computer
 
-      - Log error messages to a special window that is automatically created
-      - Basic support for Uninstaller (The Uninstaller can find out there the app was installed)
-      - Basic support for licensing (trial period) system. See Proteus for details.
+       - Application self-restart
+       - Application self-delete
 
-      - etc
+       - Easily create new forms and set its font to be the same as main forms' font.
+       - Change the font for all running forms
 
-   The global AppData var will store the object (app wide).
-   The AppName variable is the central part of this class. It is used by App/Ini file/MesageBox/etc.
+       - Log error messages to a special window that is automatically created
+       - Basic support for Uninstaller (The Uninstaller can find out there the app was installed)
+       - Basic support for licensing (trial period) system. See Proteus for details.
 
-   It is CRITICAL to create the AppData object as soon as the application starts.
-   Prefferably in the DPR file before creating the main form!
-   Probalby it can even be created in the Initialization section.
+       - LOG
+         TAppData class also creates a global Log form.
+         This forms automatically pop-ups when you send warings and errors to it.
+         For details see: FormLog.pas
 
- ____________________________________________________________________________________________________________
-
-   LOG
-     TAppData class also creates the Log form. See: FormLog.pas
+       - etc
 
  ____________________________________________________________________________________________________________
 
-   USAGE
+   HOW TO USE IT
 
      In the DPR file replace the code with:
        uses
@@ -57,56 +53,71 @@
          Application.Run;
        end.
 
+ ____________________________________________________________________________________________________________
+
+   DOCUMENTATION
+
+     APPDATA global var
+
+        It is important to create the AppData object as soon as the application starts.
+        Not necessary to free AppData. It frees itself.
+
+
      OnFormCreate
+
         OnFormCreate and OnFormShow is the worst place to initialize your code.
         Instead, your form can implement the LateInitialize message handler.
         This will be called after the form was fully created and the application finished initializing.
         Example:
-            TfrmMain = class(TForm)
-             private
-               procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully initilized
-            end;
-
-     Not necessary anymore:
-         Application.Title := AppData.AppName;
-         Application.ShowMainForm:= True;
-         MainForm.Show;
-         Not necessary to free AppData. It frees itself.
+           TfrmMain = class(TForm)
+            private
+              procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully initilized
+           end;
 
 
-     The "AppData.Initializing" Flag
-        Once the program is fully initialized set Initializing to False.
-        Details: Set it to false once your app finished initializing (usually after you finished creating all forms).
-        Used by SaveForm in cbINIFile.pas/cvINIFile.pas (and few other places) to signal not to save the form if the application
-        has crashed whill still in the initialization phase.
-        If you don't set it to false earlyer, AppData will set it to false at the end of CreateMainForm
+     DPR FILE
+        In the DPR file these lines of code are not necessary anymore and you MUST remove them.
+           Application.Title := 'x';
+           Application.ShowMainForm:= True;
+           MainForm.Show;
 
+
+     AppData.Initializing
+
+        When the application starts, this flag is set to True.
+        Then it is automatically set to False once the main form was fully loaded.
+        If you don't want this to happen, set the AutoSignalInitializationEnd variable to False.
+        In this case, you will have to set the Initializing manually, once the program is fully initialized (usually in the LateInitialize of the main form, or in the LateInitialize of the last created form (if you have multiple forms)).
+        If you forget, the AppData will not save the forms to the INI file and you will have an warnign on shutdown.
+        Usage:
+          Used by SaveForm in cbINIFile.pas/cvINIFile.pas (and few other places) to signal not to save the form if the application has crashed whill still in the initialization phase.
+          You can use it also personally, to avoid executing some of your code during the initialization stages.
+
+
+     MainFormOnTaskbar
+
+        [TASKBAR]
+           if TRUE = A taskbar button represents the application's main form & displays its caption.
+           if FALSE= A taskbar button represents the application's (hidden) main window & displays the application's Title.
+
+        [Modality]
+            if TRUE = All child forms will stay on top of the MainForm.
+                      Bad since we don't really want "modal" forms all over in our app.
+                      When we do want a child form to stay on top, then we make it modal or use fsStayOnTop.
+
+        [AERO]
+            Windows Aero effects (Live taskbar thumbnails, Dynamic Windows, Windows Flip, Windows Flip 3D)
+            if False = Aero effects work
+            if False = Aero effects do not work
+
+        Details
+            https://stackoverflow.com/questions/66720721/
+            https://stackoverflow.com/questions/14587456/how-can-i-stop-my-application-showing-on-the-taskbar
+
+        BX: This must be FALSE in order to make 'Start minimized' option work
 
  ____________________________________________________________________________________________________________
 
-   MainFormOnTaskbar:
-
-      [TASKBAR]
-         if TRUE = A taskbar button represents the application's main form & displays its caption.
-         if FALSE= A taskbar button represents the application's (hidden) main window & displays the application's Title.
-
-      [Modality]
-          if TRUE = All child forms will stay on top of the MainForm.
-                    Bad since we don't really want "modal" forms all over in our app.
-                    When we do want a child form to stay on top, then we make it modal or use fsStayOnTop.
-
-      [AERO]
-          Windows Aero effects (Live taskbar thumbnails, Dynamic Windows, Windows Flip, Windows Flip 3D)
-          if False = Aero effects work
-          if False = Aero effects do not work
-
-      Details
-          https://stackoverflow.com/questions/66720721/
-          https://stackoverflow.com/questions/14587456/how-can-i-stop-my-application-showing-on-the-taskbar
-
-      BX: This must be FALSE in order to make 'Start minimized' option work
-
- ____________________________________________________________________________________________________________
    Demo app:
       c:\MyProjects\Project support\Template - Empty app\StarterProject.dpr
 =============================================================================================================}
@@ -172,11 +183,11 @@ TYPE
     procedure SetSingleInstanceName(var Params: TCreateParams);
     function  ExtractData(VAR Msg: TWMCopyData; OUT s: string): Boolean;
     {}
-    class VAR Initializing: Boolean;
-    class VAR SignalInitEnd: Boolean;  // If true, AppData will set the 'Initializing' field automatically to false once the main form was loaded. Set it to False in apps with more than one form or apps that require a bit more sophisticated initialization procedure
+    class VAR Initializing: Boolean;                 // See documentation at the top of the file
+    class VAR AutoSignalInitializationEnd: Boolean;  // See documentation at the top of the file
 
-    constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; aSignalInitEnd: Boolean= TRUE; MultiThreaded: Boolean= FALSE); virtual;
-    destructor Destroy; override;      // This is called automatically by "Finalization" in order to call it as late as possible }
+    constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; SignalInitEnd: Boolean= TRUE; MultiThreaded: Boolean= FALSE); virtual;
+    destructor Destroy; override;                    // This is called automatically by "Finalization" in order to call it as late as possible }
 
    {--------------------------------------------------------------------------------------------------
       User settings
@@ -188,7 +199,6 @@ TYPE
       Minimize2Tray: Boolean;          // Minimize to tray
       HintType     : THintType;        // Turn off the embeded help system
       Opacity      : Integer;          // Form opacity
-      //MultiThreaded: Boolean;          // Necessary for the RamLog
     property HideHint: Integer read FHideHint write setHideHint;       // Hide hint after x ms.
 
    {--------------------------------------------------------------------------------------------------
@@ -302,23 +312,27 @@ IMPLEMENTATION
 USES
   cbVersion, ccIO, ccTextFile, cbRegistry, cbDialogs, cbCenterControl; // FormRamLog;
 
+
 {-------------------------------------------------------------------------------------------------------------
  Parameters
+
     AppName
+       The AppName is the central part of this class. It is used by IniFile/MesageBox/etc.
        Should contain only I/O-safe characters (so no ? <> * % /).
        It is used to generate the INI file that will store the form position/size.
+
     WindowClassName - [Optional]
        Used in InstanceRunning to detect if the the application is already running, by looking to a form with this Class Name.
        Needed ONLY if you use the Single Instance functionality.
        This string must be unique in the whole computer! No other app is allowed to have this ID.
        If you leave it empty, the aAppName is used. But AppName might not be that unique, or you might want to change it during the time.
 -------------------------------------------------------------------------------------------------------------}
-constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= ''; aSignalInitEnd: Boolean= TRUE; MultiThreaded: Boolean= FALSE);
+constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= ''; SignalInitEnd: Boolean= TRUE; MultiThreaded: Boolean= FALSE);
 begin
   Application.Initialize;                         // Note: Emba: Although Initialize is the first method called in the main project source code, it is not the first code that is executed in a GUI application. For example, in Delphi, the application first executes the initialization section of all the units used by the Application.
 
   inherited Create;
-  SignalInitEnd:= aSignalInitEnd;
+  AutoSignalInitializationEnd:= SignalInitEnd;    // See documentation at the top of the file
   Initializing:= True;                            // Used in cv_IniFile.pas. Set it to false once your app finished initializing.
 
   { Sanity check }
@@ -383,9 +397,11 @@ begin
 end;
 
 
-{ Destroy is called automatically by "Finalization".
-  Here at this point the AppData var is already nil! I don't know why.
-  So we need to destroy the Log form before this! }
+{ This destructor is called automatically from the "Finalization" section.
+
+  Warning:
+    At this point the AppData var is already nil because FreeAndNil (called in the initialization section), first puts the var to Nil, then calls the .Free.
+    So we need to destroy the Log form here, and not in the Finalization section! }
 destructor TAppData.Destroy;
 begin
   SaveSettings;
@@ -445,7 +461,7 @@ begin
   // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory") for details.
   PostMessage(TForm(Reference).Handle, MSG_LateFormInit, 0, 0);
 
-  if SignalInitEnd
+  if AutoSignalInitializationEnd
   then Initializing:= FALSE;
 
   MainFormCaption('');

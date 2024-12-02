@@ -16,18 +16,23 @@ INTERFACE
 USES
    System.Classes, System.SysUtils, System.NetEncoding, Soap.EncdDecd, ccCore;
 
- function CRC32_U(CONST s : string)        : Cardinal;                   { For UNICODE - does not output the same result as Total Commander! }
- function CRC32  (CONST s: AnsiString)     : Cardinal;  overload;     { Tested: ok }
+ { CRC }
+ function CRC32_U(CONST s : string)        : Cardinal;               { For UNICODE - does not output the same result as Total Commander! }
+ function CRC32  (CONST s: AnsiString)     : Cardinal;  overload;    { Tested: ok }
  function CRC32  (CONST Bytes: TBytesArray): Cardinal;  overload;
 
- { RUDIMENTARY ENCRYPTION }
- function  SimpleDecode      (CONST s: string): string;               { Simple encryption. Use your preffered encryptor here }
+ { RUDIMENTARY MIME "ENCRYPTION" }
+ function MimeString(const Input: string): string;
+ function DeMimeString(const Input: string): string;
+
+ { RUDIMENTARY CHAR_SHIFT ENCRYPTION }
+ function  SimpleDecode      (CONST s: string): string;              { Simple encryption. Use your preffered encryptor here }
  function  SimpleEncode      (CONST s: string): string;
 
- { XOR ENCRYPTION }
- function  EncodeDecode_XOR  (CONST s: string      ; Key: Byte= 27): string;     overload;     { Torry Encode/Decode}
- function  EncodeDecode_XOR  (CONST Bytes: TBytesArray; Key: Byte= 27): TBytesArray;   overload;
- function  EncodeDecode_XOR  (CONST s: AnsiString  ; Key: Byte= 27): AnsiString; overload
+ { RUDIMENTARY XOR ENCRYPTION }
+ function  EncodeDecode_XOR  (CONST s: string         ; Key: Byte): string;      overload;     { Torry Encode/Decode}
+ function  EncodeDecode_XOR  (CONST Bytes: TBytesArray; Key: Byte): TBytesArray; overload;
+ function  EncodeDecode_XOR  (CONST s: AnsiString     ; Key: Byte): AnsiString;  overload
 
 
 IMPLEMENTATION
@@ -216,31 +221,31 @@ end;
    STRINGS ENCRYPTION
 --------------------------------------------------------------------------------------------------}
 { MUST BE TESTED WITH UNICODE TEXT! }
-{ Very rudimentary. Uses '27' as key. From Torry }
-function EncodeDecode_XOR(CONST s: string; Key: Byte= 27): string;
+{ Very rudimentary. Use any number as key. }
+function EncodeDecode_XOR(CONST s: string; Key: Byte): string;
 VAR i: Integer;
 begin
   Result:= s;
   for i:= 1 to Length(s)     { indexed in 1 }
-   DO Result[i]:= Char(Key XOR Ord(s[i]));
+    DO Result[i]:= Char(Key XOR Ord(s[i]));
 end;
 
 
-function EncodeDecode_XOR(CONST Bytes: TBytesArray; Key: Byte= 27): TBytesArray;  { Very rudimentary. Uses '27' as key. From Torry }
+function EncodeDecode_XOR(CONST Bytes: TBytesArray; Key: Byte): TBytesArray;
 VAR i: Integer;
 begin
   Result:= Bytes;
   for i:= 0 to high(Bytes)    { indexed in 0 }
-   DO Result[i]:= Key XOR Bytes[i];
+    DO Result[i]:= Key XOR Bytes[i];
 end;
 
 
-function EncodeDecode_XOR(CONST s: AnsiString; Key: Byte= 27): AnsiString;  { Very rudimentary. Uses '27' as key. From Torry }
+function EncodeDecode_XOR(CONST s: AnsiString; Key: Byte): AnsiString;
 VAR i: Integer;
 begin
   Result:= s;
   for i:= 1 to Length(s)
-   DO Result[i]:= AnsiChar(Key XOR Ord(s[i]));
+    DO Result[i]:= AnsiChar(Key XOR Ord(s[i]));
 end;
 
 

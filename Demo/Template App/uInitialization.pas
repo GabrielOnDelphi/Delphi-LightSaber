@@ -18,7 +18,7 @@ IMPLEMENTATION
 
 USES
   chHardID, csShell, csExecuteShell, cmGuiSettings,
-  cpProteusCertificate, cbAppData, cbCenterControl, cTranslate, ciUpdater,
+  cpCertificate, cbAppData, cbCenterControl, cTranslate, ciUpdater,
   FormMain, FormUniversalEula, FormSkinsDisk, FormSettings, FormSplashScreen, FormUpdaterNotifier;
 
 
@@ -50,7 +50,7 @@ begin
  { Load the log early othewise it will overwrite the existing text }
  MainForm.Proteus.VerboseLogActive:= FileExists(AppData.SysDir+ 'ProteusVerboseLog');
  MainForm.Proteus.ProductName:= AppData.AppName;
- MainForm.Proteus.DefaultKey := cpProteusCertificate.GenerateTrialCertificate(AppData.AppName, 1, 365).GenerateKeyString;
+ MainForm.Proteus.DefaultKey := cpCertificate.GenerateTrialCertificate(AppData.AppName, 1, 365).GenerateKeyString;
  MainForm.Proteus.Initialize;
 
  if MainForm.Proteus.CurCertif.Demo  then
