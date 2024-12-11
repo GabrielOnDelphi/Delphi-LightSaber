@@ -137,7 +137,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   ccIO, ccTextFile, cmIO.Win, ccCore;
+   ccTextFile, cmIO.Win, ccCore;
 
    {
 How to know when the USER changed the text in a TMemo/TEdit?

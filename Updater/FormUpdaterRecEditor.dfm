@@ -4,8 +4,8 @@ object frmRecEditor: TfrmRecEditor
   AlphaBlendValue = 245
   Anchors = []
   Caption = 'News & Updates Editor'
-  ClientHeight = 326
-  ClientWidth = 655
+  ClientHeight = 325
+  ClientWidth = 651
   Color = clBtnFace
   Constraints.MinHeight = 335
   Constraints.MinWidth = 434
@@ -26,8 +26,8 @@ object frmRecEditor: TfrmRecEditor
   TextHeight = 15
   object pnlBtm: TPanel
     Left = 0
-    Top = 290
-    Width = 655
+    Top = 289
+    Width = 651
     Height = 36
     Align = alBottom
     TabOrder = 0
@@ -92,7 +92,7 @@ object frmRecEditor: TfrmRecEditor
     AlignWithMargins = True
     Left = 4
     Top = 4
-    Width = 647
+    Width = 643
     Height = 34
     Margins.Left = 4
     Margins.Top = 4
@@ -202,7 +202,7 @@ object frmRecEditor: TfrmRecEditor
     AlignWithMargins = True
     Left = 4
     Top = 46
-    Width = 647
+    Width = 643
     Height = 34
     Margins.Left = 4
     Margins.Top = 4
@@ -298,8 +298,8 @@ object frmRecEditor: TfrmRecEditor
     AlignWithMargins = True
     Left = 4
     Top = 88
-    Width = 647
-    Height = 198
+    Width = 643
+    Height = 197
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4

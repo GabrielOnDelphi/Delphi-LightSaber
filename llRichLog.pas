@@ -93,7 +93,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES ccIO, ccTextFile, ccCore;
+USES ccTextFile, ccCore;
 
 const
   LogDefaultColor = clBlack;

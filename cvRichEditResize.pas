@@ -18,7 +18,7 @@ UNIT cvRichEditResize;
 INTERFACE
 
 USES
-  Winapi.Windows, Winapi.Messages, Winapi.RichEdit,
+  Winapi.Windows, Winapi.Messages,
   System.Classes, System.UITypes,
   Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Forms, Vcl.ComCtrls, Vcl.Controls, Vcl.Dialogs;
 

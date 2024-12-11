@@ -15,7 +15,7 @@ UNIT cbLogLinesThreaded;
 INTERFACE
 
 USES
-   System.SysUtils, System.Classes, Vcl.Graphics, SyncObjs, // Added SyncObjs for locking mechanisms
+   System.SysUtils, System.Classes, Vcl.Graphics, // Added SyncObjs for locking mechanisms
    cbLogUtils, ccStreamBuff, cbLogLinesAbstract;
 
 TYPE

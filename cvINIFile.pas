@@ -17,7 +17,7 @@ UNIT cvIniFile;
 INTERFACE
 
 USES
-   System.Classes, System.SysUtils, System.IniFiles, Vcl.Forms, Vcl.ComCtrls, Vcl.Controls,
+   System.Classes, System.SysUtils, System.IniFiles, Vcl.Forms, Vcl.Controls,
    cbDialogs, cbINIFile, ccINIFile;
 
 {$WARN DUPLICATE_CTOR_DTOR OFF}                                                                               {Silence the: W1029 Duplicate constructor  with identical parameters will be inacessible from C++ }
@@ -39,7 +39,7 @@ procedure LoadForm (Form: TForm; Loading: TFormLoading= flPosOnly);
 IMPLEMENTATION
 
 USES
-   cvFloatSpinEdit, cvFileListBox, cvSpinEdit, cvSpinEditDelayed, cvPathEdit, llRichLogTrack,
+   cvFloatSpinEdit, cvFileListBox, cvSpinEdit, cvSpinEditDelayed, cvPathEdit,
    cbCenterControl, cbAppData, cvLog, cbLogUtils;
 
 

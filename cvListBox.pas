@@ -180,7 +180,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-  cmVclUtils, cmSound, ccCore, cmMath, ccIO, ccTextFile;
+  cmVclUtils, cmSound, ccCore, cmMath, ccTextFile;
 
 
 

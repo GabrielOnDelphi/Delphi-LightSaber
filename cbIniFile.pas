@@ -14,7 +14,6 @@
   Self saving forms:
      Using SaveForm/LoadForm, a form with lots of controls (like checkboxes/radiobuttons) can save its status
      to disk on shutdown and resume exaclty from where it left on application startup.
-
      Example:
        - Call SaveForm(MySettingsForm) in TMySettingsForm.OnDestroy
        - Call LoadForm(MySettingsForm) after the creation of TMySettingsForm
@@ -28,7 +27,7 @@
         The user doesn't have to provide a default value.
         If value does not exist in INI file, the value from GUI (MyCheckBox.Checked) will be used.
 
-  Compleateness:
+  Compleatness:
      Most common VCL controls are supported.
      Check IsSupported() to see a list of supported controls.
      Support for more controls can be easily added with just an 'if/then'.
@@ -41,9 +40,7 @@
 
      The TAction.OnExecute is NEVER executed.
 
-  ____________
-
-  Setup:
+  Dependencies on AppData:
      AppData global var is used to obtain the file name of the INI file.
 
      Therefore, before using TIniFileApp you must set the AppData.AppName var like this: AppData:= TAppData.Create('DelphiLightSaber').
@@ -51,9 +48,8 @@
      Example: If the AppData.AppName is set to "DelphiLightSaber",
      the ini file will be "c:\Users\UserName\AppData\Roaming\DelphiLightSaber\DelphiLightSaber.ini"
      See cbAppData.pas for details.
-
      The TIniFileApp class will also automatically save the cbAppData.AppData.LastUsedFolder variable to the INI file.
-  ____________
+
 
   Important:
      SaveFrom will fail to save the controls of a form if they have been re-parented (moved to another form). But no exception will rise.
@@ -67,10 +63,26 @@
   UNICODE
      INI file does not support unicode chars. Unicode chars are replaced with '?'. Sorry. This is not a limitation in my code but in Delphi's RTL.
 
+
+  ____________
+
+  Demo code:
+     procedure TCoreSv.saveBuildID;
+     begin
+       var INI := cbINIFile.TIniFileApp.Create('SectionName');
+       TRY
+         INI.Write('LastID', 0);
+       FINALLY
+         FreeAndNil(INI);
+       END;
+     end;
+  ____________
+
   Tester:
      c:\Myprojects\Project Testers\IniFile tester\Tester.dpr
      https://github.com/GabrielOnDelphi/Dephi-LightSaber-GUI_AutoSave
-=======================================================================================================================}
+
+=============================================================================================================}
 
 {ToDo: add support for TCheckListBox}
 {ToDo: add support for TPageCtrl (active tab)}
@@ -87,7 +99,6 @@ USES
    Vcl.Graphics, Vcl.Forms, Vcl.FileCtrl, Vcl.Menus, Vcl.ExtCtrls, Vcl.NumberBox, Vcl.ComCtrls,
    Vcl.WinXCtrls, Vcl.Samples.Spin, Vcl.ActnList, Vcl.Dialogs, Vcl.Controls, Vcl.StdCtrls,
    ccINIFile;
-
 
 {.$WARN UNIT_PLATFORM OFF}
 {$WARN GARBAGE OFF}              {Silence the: 'W1011 Text after final END' warning }
@@ -134,7 +145,7 @@ procedure LoadFormBase (Form: TForm; Loading: TFormLoading= flPosOnly);
 IMPLEMENTATION
 
 USES
-   cbDialogs, ccIO, ccTextFile, ccCore, cbAppData, cbCenterControl, cbLogUtils;
+   cbDialogs, ccIO, ccTextFile, ccCore, cbAppData, cbCenterControl;
 
 
 {-----------------------------------------------------------------------------------------------------------------------

@@ -19,7 +19,7 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
-USES ccIO, ccTextFile;
+USES ccTextFile;
 
 
 

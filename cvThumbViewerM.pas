@@ -110,7 +110,7 @@ procedure Register;
 IMPLEMENTATION
 {$WARN GARBAGE OFF}                                                                                {Silence the: 'W1011 Text after final END' warning }
 
-USES cGraphUtil, ccCore, csSystem, cmMath, ccIO, ccTextFile;
+USES cGraphUtil, ccCore, csSystem, cmMath, ccIO;
 
 
 

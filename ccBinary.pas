@@ -31,13 +31,11 @@ CONST
 {--------------------------------------------------------------------------------------------------
    STR 2 NUMBER CONVERSIONS
 --------------------------------------------------------------------------------------------------}
- function  HexToInt         (      HexStr: String): Cardinal;                                       { function  IntToHex  {by Delphi in System.SysUtils}
- function  HextoInt2        (CONST HexStr: string): Integer;
- function  HexToInt3        (CONST HexStr: string): Longint;
+ function  HexToInt         (CONST HexStr: string): Longint;
  function  BinToInt         (CONST Value: String): Integer;
  function  IntToByte        (CONST i: Integer): Byte;
 
- function StringIsHexNumber(CONST s: string): boolean;                                              { Returns TRUE if the input parameter is a valid hex number (has the '$0123ABCDEF' or '0123ABCDEF' format) }
+ function StringIsHexNumber (CONST s: string): boolean;                                              { Returns TRUE if the input parameter is a valid hex number (has the '$0123ABCDEF' or '0123ABCDEF' format) }
 
  
 {--------------------------------------------------------------------------------------------------
@@ -118,54 +116,51 @@ IMPLEMENTATION
     CONVERSIONS
 -------------------------------------------------------------------------------------------------------------}
 
-function HexToInt(HexStr: String): Cardinal;                                                        { It isn't strinctly necessary for the input parmater to be correctly formated. The program will add the $ sign automatically to bring the number to '$xx' format. }
-begin
- if Length(HexStr)= 0
- then Raise Exception.Create('HexToInt - Empty hex string!');
-
- { If it is a decimal number, make it a hex number }
- if HexStr[1]<> '$'
- then HexStr:= '$'+ HexStr;
-
- Assert(CharInSet(HexStr[2], HexNumbers));                                                          { The string can only contains characters that represent numbers (0..9) }
-
- Result:= StrToInt(HexStr);
-end;
-
-
-function HextoInt2(CONST HexStr: string): Integer;
-CONST Hex : array['A'..'F'] of integer = (10,11,12,13,14,15);
-VAR     i : integer;
-begin
-  Result:= 0;
-  for i := 1 to Length(HexStr) do
-    if HexStr[i] < 'A'
-    then Result := Result * 16 + Ord(HexStr[i]) - 48
-    else Result := Result * 16 + Hex[HexStr[i]];
-end;
-
-
-function HexToInt3(CONST HexStr: string): longint;
+{ Also see IntToHex (by Delphi) }
+function HexToInt(CONST HexStr: string): LongInt;
 var
-  iNdx: integer;
+  i: integer;
   cTmp: Char;
 begin
-  Result := 0;
-  for iNdx := 1 to Length(HexStr) do begin
-    cTmp := HexStr[iNdx];
+  if HexStr = '' then RAISE EConvertError.Create('HexToInt3 - Empty hex string!');
+
+  Result:= 0;
+  for i:= 1 to Length(HexStr) do begin
+    cTmp := HexStr[i];
     case cTmp of
       '0'..'9': Result := 16 * Result + (Ord(cTmp) - $30);
       'A'..'F': Result := 16 * Result + (Ord(cTmp) - $37);
       'a'..'f': Result := 16 * Result + (Ord(cTmp) - $57);
     else
-      raise EConvertError.Create('Illegal character in hex string');
+      RAISE EConvertError.Create('Illegal character in hex string');
     end;
   end;
-end;    { IntToHex (by Delphi)}
+end;
+
+
+function StringIsHexNumber(CONST s: string): boolean;  { Returns TRUE if the input parameter is a valid hex number (has the '$0123ABCDEF' or '0123ABCDEF' format) }
+VAR Start, i: Integer;
+begin
+ if s= '' then RAISE exception.Create('The hex string is empty!');
+ Result:= TRUE;
+
+ if s[1]= '$'
+ then Start:= 2
+ else Start:= 1;
+
+ for i:= Start to Length(s) DO
+  if NOT CharInSet(s[i], HexNumbers)
+  then EXIT(FALSE);
+end;
+
+
+
+
+
 
 
 function ByteToBin(Value:Byte):string;
-const
+CONST
   Bits : array[1..8] of byte = (128,64,32,16,8,4,2,1);
   var i: integer;
 begin
@@ -178,7 +173,7 @@ end;
 
 
 function WordToBin(Value:Word):string;
-const
+CONST
   Bits : array[1..16] of Word = (32768,16384,8192,4096,2048,1024,512,256,128,64,32,16,8,4,2,1);
   var i: integer;
 begin
@@ -223,25 +218,6 @@ begin
     if Value[i]='1'
     then Result:= Result+(1 shl (Size-i));
 end;
-
-
-function StringIsHexNumber(CONST s: string): boolean;                                              { Returns TRUE if the input parameter is a valid hex number (has the '$0123ABCDEF' or '0123ABCDEF' format) }
-VAR Start, i: Integer;
-begin
- if s= '' then raise exception.Create('The hex string is empty!');
- Result:= TRUE;
-
- if s[1]= '$'
- then Start:= 2
- else Start:= 1;
-
- for i:= Start to Length(s) DO
-  if NOT CharInSet(s[i], HexNumbers)
-  then EXIT(FALSE);
-end;
-
-
-
 
 
 

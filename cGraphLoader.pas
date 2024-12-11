@@ -2,7 +2,7 @@
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.06
+   2024.12
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
   Helps you load common file formats (GIF, JPG, Bmp, Png, Wb1, RainDrop, Jpg2K) from disk.
@@ -52,9 +52,8 @@ CONST
  procedure LoadGraphToImg(CONST FileName: string; Image: TImage; ExifRotate: Boolean = True; UseWic: Boolean = TRUE);
 
 {-------------------------------------------------------------------------------------------------------------
-   OTHER LOADERS
+   VCL LOADERS
 -------------------------------------------------------------------------------------------------------------}
- { VCL Loaders }
  function  LoadFromResource    (CONST RsrcName: string): TJPEGImage;                                   { Load an image from a resource file }
  function  LoadTPicture        (CONST FileName: string): TPicture;                                     { Based on TPicture. Better than LoadGraph. }
  procedure LoadToTImage        (CONST FileName: string; ExifRotate: Boolean; Image: TImage);           { Loads a file directly into a TImage component }
@@ -82,6 +81,12 @@ CONST
 
  function  loadGraphWic       (CONST FileName: string): TBitmap;                            { Supports: GIF, PNG, JPG. Use LoadGraph instead }
 
+{-------------------------------------------------------------------------------------------------------------
+   GRAY LOADERS
+-------------------------------------------------------------------------------------------------------------}
+ function  LoadGraphAsGrayScale(FileName: string): TBitmap;       overload;
+ procedure LoadGraphAsGrayScale(FileName: string; BMP: TBitmap);  overload;
+
 
 {-------------------------------------------------------------------------------------------------------------
    Imgage format utils
@@ -97,8 +102,8 @@ IMPLEMENTATION
 USES
    {$IFDEF Jpg2000}OpenJpeg2000Bitmap,{$ENDIF} // Download OpenJpeg Pas library from: www.github.com/galfar/PasJpeg2000
    {$IFDEF FastJpg}FastJpegDecHelper,{$ENDIF}
-   cGraphResize, cGraphLoader.Resolution,
-   cGraphLoader.WB1, cGraphLoader.RainDrop, ccIO, ccTextFile, cmIO, cmIO.Win, cGraphFx.Rotate, cbAppData, cbINIFile, ccCore, cGraphAviFrame, cGraphGIF;
+   cGraphResize, cGraphLoader.Resolution, cGraphUtilGray,
+   cGraphLoader.WB1, cGraphLoader.RainDrop, ccIO, cmIO, cGraphFx.Rotate, cbAppData, ccCore, cGraphAviFrame, cGraphGIF;
 
 
 
@@ -316,6 +321,32 @@ begin
     FINALLY
       FreeAndNil(BMP);
     END;
+end;
+
+
+function LoadGraphAsGrayScale(FileName: string): TBitmap;
+begin
+  Result:= LoadGraph(FileName, FALSE, TRUE);
+  TRY
+    if NOT HasGrayscalePalette(Result)
+    then cGraphUtilGray.ConvertToGrayscale(Result);
+  EXCEPT
+    FreeAndNil(Result);
+  END;
+end;
+
+
+procedure LoadGraphAsGrayScale(FileName: string; BMP: TBitmap);
+begin
+  Assert(BMP <> NIL);
+  VAR Temp:= LoadGraph(FileName, FALSE, TRUE);
+  TRY
+    if NOT HasGrayscalePalette(Temp)
+    then cGraphUtilGray.ConvertToGrayscale(Temp);
+    BMP.Assign(Temp);
+  FINALLY
+    FreeAndNil(Temp);
+  END;
 end;
 
 

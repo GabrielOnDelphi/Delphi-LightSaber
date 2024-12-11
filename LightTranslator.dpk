@@ -1,6 +1,6 @@
 package LightTranslator;
 
-{.$R *.res}
+{$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 2}
 {$ASSERTIONS ON}

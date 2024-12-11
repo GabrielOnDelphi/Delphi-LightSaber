@@ -16,10 +16,10 @@
       c:\My projects\Project support\DUT2\DUT2.dpr
 =============================================================================================================}
 
-interface
+INTERFACE
 
-uses
-  WinApi.Windows, System.IOUtils, System.SysUtils, System.Classes;
+USES
+  Winapi.Windows, System.IOUtils, System.SysUtils, System.Classes;
 
 
 

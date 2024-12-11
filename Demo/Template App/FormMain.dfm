@@ -16,7 +16,6 @@ object MainForm: TMainForm
   Font.Style = []
   GlassFrame.Enabled = True
   Menu = MainMenu
-  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
@@ -24,7 +23,6 @@ object MainForm: TMainForm
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 17
   object pgCtrl: TPageControl
     Left = 0

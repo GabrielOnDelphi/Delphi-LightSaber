@@ -72,7 +72,7 @@ INTERFACE
 
 USES
   {$IFDEF MSWINDOWS}
-  Winapi.Windows, {$ENDIF}
+  {$ENDIF}
   System.Diagnostics,
   System.Math,
   System.Masks,

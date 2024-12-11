@@ -6,8 +6,8 @@ object frmUpdaterSettings: TfrmUpdaterSettings
   Anchors = []
   BorderStyle = bsToolWindow
   Caption = 'Updater settings'
-  ClientHeight = 400
-  ClientWidth = 512
+  ClientHeight = 388
+  ClientWidth = 504
   Color = clBtnFace
   DoubleBuffered = True
   Font.Charset = ANSI_CHARSET
@@ -28,18 +28,18 @@ object frmUpdaterSettings: TfrmUpdaterSettings
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 506
-    Height = 394
+    Width = 498
+    Height = 382
     Align = alClient
     ShowCaption = False
     TabOrder = 0
     DesignSize = (
-      506
-      394)
+      498
+      382)
     object lblPrivacy: TLabel
       Left = 1
-      Top = 313
-      Width = 504
+      Top = 301
+      Width = 496
       Height = 34
       Align = alBottom
       Alignment = taCenter
@@ -49,8 +49,8 @@ object frmUpdaterSettings: TfrmUpdaterSettings
       Visible = False
     end
     object GroupBox1: TGroupBox
-      Left = 31
-      Top = 181
+      Left = 23
+      Top = 174
       Width = 428
       Height = 121
       Anchors = []
@@ -96,8 +96,8 @@ object frmUpdaterSettings: TfrmUpdaterSettings
       end
     end
     object grpInterval: TGroupBox
-      Left = 31
-      Top = 13
+      Left = 23
+      Top = 10
       Width = 428
       Height = 161
       Anchors = []
@@ -160,8 +160,8 @@ object frmUpdaterSettings: TfrmUpdaterSettings
     object pnlBtm: TPanel
       AlignWithMargins = True
       Left = 4
-      Top = 350
-      Width = 498
+      Top = 338
+      Width = 490
       Height = 40
       Align = alBottom
       BevelOuter = bvNone

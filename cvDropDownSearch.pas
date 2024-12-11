@@ -28,7 +28,7 @@ UNIT cvDropDownSearch;
 
 INTERFACE
 USES
-   Winapi.Windows, Winapi.Messages, system.Math, System.Classes, System.Types, System.SysUtils, Vcl.WinXCtrls, Vcl.Controls,
+   Winapi.Windows, Winapi.Messages, System.Classes, System.Types, System.SysUtils, Vcl.WinXCtrls, Vcl.Controls,
    vcl.dialogs,
    cvListBox;
 

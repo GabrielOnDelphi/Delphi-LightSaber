@@ -6,8 +6,8 @@ object frmComposer: TfrmComposer
   BorderIcons = [biSystemMenu, biMinimize]
   BorderStyle = bsSizeToolWin
   Caption = 'Email composer'
-  ClientHeight = 384
-  ClientWidth = 676
+  ClientHeight = 372
+  ClientWidth = 668
   Color = clBtnFace
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
@@ -15,36 +15,37 @@ object frmComposer: TfrmComposer
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 3
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 13
   object splitComposer: TCubicSplitter
     Left = 176
     Top = 0
-    Height = 341
+    Height = 329
     ResizeStyle = rsUpdate
+    ExplicitHeight = 341
   end
   object pnlBottom: TPanel
     AlignWithMargins = True
     Left = 182
     Top = 3
-    Width = 491
-    Height = 335
+    Width = 483
+    Height = 323
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
+    ExplicitWidth = 491
+    ExplicitHeight = 335
     DesignSize = (
-      491
-      335)
+      483
+      323)
     object lblWarn: TLabel
       Left = 0
       Top = 0
-      Width = 491
+      Width = 483
       Height = 16
       Hint = 
         'Things to check:'#13#10'  * personal antivirus/firewall'#13#10'  * MS Window' +
@@ -62,25 +63,28 @@ object frmComposer: TfrmComposer
       ParentFont = False
       Visible = False
       StyleElements = [seClient, seBorder]
+      ExplicitWidth = 411
     end
     object lblInfoAttachment: TLabel
       AlignWithMargins = True
       Left = 3
-      Top = 272
-      Width = 485
+      Top = 263
+      Width = 477
       Height = 13
       Align = alBottom
       Caption = 
         'Note: The program will automatically attach the wallpaper to the' +
         ' email.'
       Visible = False
+      ExplicitTop = 275
+      ExplicitWidth = 339
     end
     object mmoEmailBody: TMemo
       AlignWithMargins = True
       Left = 9
       Top = 72
-      Width = 473
-      Height = 194
+      Width = 465
+      Height = 185
       Hint = 'Email body'
       Margins.Left = 9
       Margins.Top = 9
@@ -97,7 +101,7 @@ object frmComposer: TfrmComposer
       TabOrder = 1
     end
     object btnAttachment: TBitBtn
-      Left = 447
+      Left = 431
       Top = 73
       Width = 32
       Height = 22
@@ -109,24 +113,26 @@ object frmComposer: TfrmComposer
       ShowHint = True
       TabOrder = 0
       Visible = False
+      ExplicitLeft = 447
     end
     object Panel1: TPanel
       AlignWithMargins = True
       Left = 3
       Top = 19
-      Width = 485
+      Width = 477
       Height = 41
       Align = alTop
       BevelOuter = bvNone
       ShowCaption = False
       TabOrder = 2
+      ExplicitWidth = 485
       DesignSize = (
-        485
+        477
         41)
       object edtSubject: TLabeledEdit
         Left = 6
         Top = 16
-        Width = 473
+        Width = 457
         Height = 21
         Anchors = [akLeft, akTop, akRight]
         Color = 15988211
@@ -138,13 +144,15 @@ object frmComposer: TfrmComposer
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
+        Text = ''
+        ExplicitWidth = 473
       end
     end
     object edtAttachment: TCubicPathEdit
       AlignWithMargins = True
       Left = 9
-      Top = 291
-      Width = 473
+      Top = 279
+      Width = 465
       Height = 41
       Margins.Left = 9
       Margins.Right = 9
@@ -153,13 +161,15 @@ object frmComposer: TfrmComposer
       Align = alBottom
       Caption = 'File'
       TabOrder = 3
+      ExplicitTop = 291
+      ExplicitWidth = 473
     end
   end
   object pnlBottomToolBar: TPanel
     AlignWithMargins = True
     Left = 2
-    Top = 343
-    Width = 672
+    Top = 331
+    Width = 664
     Height = 39
     Margins.Left = 2
     Margins.Top = 2
@@ -169,6 +179,8 @@ object frmComposer: TfrmComposer
     BevelKind = bkSoft
     BevelOuter = bvNone
     TabOrder = 1
+    ExplicitTop = 343
+    ExplicitWidth = 672
     object btnServSett: TButton
       AlignWithMargins = True
       Left = 560
@@ -239,13 +251,14 @@ object frmComposer: TfrmComposer
     Left = 3
     Top = 3
     Width = 170
-    Height = 335
+    Height = 323
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitHeight = 335
     DesignSize = (
       170
-      335)
+      323)
     object ledFrom: TLabeledEdit
       Left = 10
       Top = 28
@@ -262,6 +275,7 @@ object frmComposer: TfrmComposer
       ParentShowHint = False
       ShowHint = True
       TabOrder = 0
+      Text = ''
     end
     object edtTo: TLabeledEdit
       Left = 10
@@ -281,6 +295,7 @@ object frmComposer: TfrmComposer
       ParentShowHint = False
       ShowHint = True
       TabOrder = 1
+      Text = ''
     end
     object edtBcc: TLabeledEdit
       Left = 10
@@ -298,12 +313,13 @@ object frmComposer: TfrmComposer
       ParentShowHint = False
       ShowHint = True
       TabOrder = 2
+      Text = ''
       Visible = False
     end
     object chkSendAsHtml: TCubicCheckBox
       AlignWithMargins = True
       Left = 9
-      Top = 315
+      Top = 303
       Width = 158
       Height = 17
       Hint = 
@@ -314,11 +330,12 @@ object frmComposer: TfrmComposer
       Caption = 'Send as HTML'
       TabOrder = 3
       AutoSize = True
+      ExplicitTop = 315
     end
     object chkInternalSMTP: TCubicCheckBox
       AlignWithMargins = True
       Left = 9
-      Top = 292
+      Top = 280
       Width = 158
       Height = 17
       Hint = 
@@ -334,6 +351,7 @@ object frmComposer: TfrmComposer
       TabOrder = 4
       OnClick = chkInternalSMTPClick
       AutoSize = True
+      ExplicitTop = 292
     end
   end
   object SMTP: TIdSMTP

@@ -24,7 +24,7 @@ INTERFACE
 USES
    Winapi.Messages, System.SysUtils, Winapi.Windows, System.Classes,
    Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls, Vcl.Forms, Vcl.Grids, Vcl.ExtCtrls, VCL.ComCtrls,
-   cbLogLines, cbLogRam, cbLogUtils, cbLogLinesAbstract;
+   cbLogRam, cbLogUtils, cbLogLinesAbstract;
 
 TYPE
   TLogGrid = class(TStringGrid, ILogObserver)

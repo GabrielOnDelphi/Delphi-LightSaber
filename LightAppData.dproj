@@ -101,7 +101,7 @@
         <DCCReference Include="VclSmp.dcp"/>
         <DCCReference Include="LightCore.dcp"/>
         <DCCReference Include="cbAppData.pas"/>
-        <DCCReference Include="cbIniFile.pas"/>
+        <DCCReference Include="cbINIFile.pas"/>
         <DCCReference Include="cbCenterControl.pas"/>
         <DCCReference Include="cbRegistry.pas"/>
         <DCCReference Include="cbDialogs.pas"/>

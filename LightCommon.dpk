@@ -82,7 +82,8 @@ contains
   FormAsyncMessage in 'FormAsyncMessage.pas',
   cmGuiSettings in 'cmGuiSettings.pas',
   csProcess in 'csProcess.pas',
-  cmStringList in 'cmStringList.pas';
+  cmStringList in 'cmStringList.pas',
+  cmEncodeCRC in 'cmEncodeCRC.pas';
 
 end.
 

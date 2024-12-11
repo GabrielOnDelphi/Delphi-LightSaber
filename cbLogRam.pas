@@ -33,7 +33,7 @@ UNIT cbLogRam;
 INTERFACE
 
 USES
-   System.SysUtils, System.DateUtils, System.Classes, System.Generics.Collections, System.SyncObjs,
+   System.SysUtils, System.DateUtils,
    Vcl.Graphics, Vcl.ExtCtrls, Vcl.Grids,
    cbLogLines, cbLogUtils, ccStreamBuff2, cbLogLinesAbstract;
 
@@ -103,7 +103,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-  ccCore, ccIO, ccTextFile, cbAppData, cbLogLinesThreaded;
+  ccCore, ccTextFile, cbAppData, cbLogLinesThreaded;
 
 
 {-------------------------------------------------------------------------------------------------------------

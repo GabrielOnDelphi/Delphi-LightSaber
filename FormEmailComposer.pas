@@ -16,7 +16,7 @@ USES
   IdSSL, IdComponent, IdSMTP, IdAntiFreeze,
   IdSSLOpenSSL, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack,
    cvCheckBox, cvSplitter, IdBaseComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase,
-  IdMessageClient, IdSMTPBase, cvPathEdit, FormEmailServer;
+  IdMessageClient, IdSMTPBase, cvPathEdit, FormEmailServer, Vcl.Mask;
 
 TYPE
   TfrmComposer = class(TForm)
@@ -70,7 +70,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  cvIniFile, ccCore, csSystem, cbDialogs, ccINIFile, cmSound, cbAppData, cvINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ciEmailSender;
+  cvIniFile, ccCore, csSystem, cbDialogs, ccINIFile, cmSound, cbAppData, ccIO, ccTextFile, cmIO, cmIO.Win, ciEmailSender;
 
 
 procedure TfrmComposer.Initialize; { This will create also the frmSmtpSettings }
