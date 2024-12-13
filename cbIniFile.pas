@@ -720,13 +720,13 @@ end;
 ----------------}
 function TIniFileApp.ReadColor(CONST Ident: string; Default: TColor): TColor;
 begin
- Result:= StringToColor(ReadString(FSection, Ident, ColorToString(Default)));
+  Result:= StringToColor(ReadString(FSection, Ident, ColorToString(Default)));
 end;
 
 
 procedure TIniFileApp.WriteColor(CONST Ident: string; Value: TColor);
 begin
- WriteString(FSection, Ident, ColorToString(Value));
+  WriteString(FSection, Ident, ColorToString(Value));
 end;
 
 
@@ -740,6 +740,9 @@ end;
    Parameters:
          OnlyFormPos=False  ->  Save all supported controls on this form
          OnlyFormPos=True   ->  It will only save the position of the form (only Left/Top, no width/height/WndState)
+
+
+   Also see LoadForm/SaveForm in cvINIFile.pas
 -----------------------------------------------------------------------------------------------------------------------}
 
 procedure SaveFormBase(Form: TForm; Loading: TFormLoading= flPosOnly);

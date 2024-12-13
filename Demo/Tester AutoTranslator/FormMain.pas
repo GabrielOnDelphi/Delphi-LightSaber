@@ -30,7 +30,6 @@ VAR
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-  cvIniFile,
   cTranslate,
   FormTranslator,
   FormSelectLang;

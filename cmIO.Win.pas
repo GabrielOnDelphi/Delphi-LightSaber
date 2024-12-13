@@ -30,13 +30,13 @@ USES
  function  GetMyPicturesAPI      : string; deprecated 'Use GetMyPictures  instead';
  function  GetWinSysDir          : string;
  function  GetWinDir             : string; { Returns Windows folder }
+ function  GetTaskManager        : string;
 
  function  GetSpecialFolder (CONST OS_SpecialFolder: string): string;                 overload;          { SHELL FOLDERS.  Retrieving the entire list of default shell folders from registry }
  function  GetSpecialFolder (CSIDL: Integer; ForceFolder: Boolean = FALSE): string;   overload;          { uses SHFolder }
  function  GetSpecialFolders: TStringList;                                                               { Get a list of ALL special folders. }
 
  function  FolderIsSpecial  (CONST Path: string): Boolean;                                               { Returns True if the parameter is a special folder such us 'c:\My Documents' }
-
 
 {--------------------------------------------------------------------------------------------------
    OPEN/SAVE dialogs
@@ -63,10 +63,12 @@ USES
 
  procedure SetCompressionAtr    (CONST FileName: string; const CompressionFormat: byte= 1);
 
+
 {--------------------------------------------------------------------------------------------------
    FILE SIZE
 --------------------------------------------------------------------------------------------------}
  function  GetFileSizeEx       (hFile: THandle; VAR FileSize: Int64): BOOL; stdcall; external kernel32;
+
 
 {--------------------------------------------------------------------------------------------------
    FILE ACCESS
@@ -81,6 +83,7 @@ USES
  function  CanCreateFile        (CONST AString:String): Boolean;
  function  ShowMsg_CannotWriteTo(CONST sPath: string): string;                        { Also see  IsDiskWriteProtected }
 
+
 {--------------------------------------------------------------------------------------------------
    DRIVES
 --------------------------------------------------------------------------------------------------}
@@ -92,7 +95,6 @@ USES
  function  DiskInDrive        (CONST Path: string): Boolean; overload;                { From www.gnomehome.demon.nl/uddf/pages/disk.htm#disk0 . Also see http://community.borland.com/article/0,1410,15921,00.html }
  function  DiskInDrive        (CONST DriveNo: Byte): Boolean; overload;               { THIS IS VERY SLOW IF THE DISK IS NOT IN DRIVE! The GUI will freeze until the drive responds. }
  function  ValidDrive         (CONST Drive: Char): Boolean;                           { Peter Below (TeamB). http://www.codinggroups.com/borland-public-delphi-rtl-win32/7618-windows-no-disk-error.html }
-
 
  {}
  function  DriveFreeSpace     (CONST Drive: Char): Int64;
@@ -401,6 +403,7 @@ begin
 end;
 
 
+{ Returns the taskmgr.exe file }
 function GetTaskManager: String;
 begin
  Result:= GetWinSysDir+ 'taskmgr.exe';

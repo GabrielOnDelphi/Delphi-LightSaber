@@ -5,7 +5,7 @@
    2024.12
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
-  Helps you load common file formats (GIF, JPG, Bmp, Png, Wb1, RainDrop, Jpg2K) from disk.
+  Helps you load common file formats (GIF, JPG, BMP, PNG, WB1, RainDrop, JPG2K) from disk.
   LoadGraph is the main function.
   The functions will not fail if the input image is corrupted. Instead it will simply output the error to the log.
   This is useful if we want to process thousands of images at batch because we don't want to stop everytime we encounter a broken image.
