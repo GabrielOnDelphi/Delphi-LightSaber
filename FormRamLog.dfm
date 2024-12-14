@@ -13,14 +13,12 @@ object frmRamLog: TfrmRamLog
   Font.Height = -13
   Font.Name = 'Segoe UI'
   Font.Style = []
-  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 3
   OnClose = FormClose
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 17
   object Container: TPanel
     Left = 0
@@ -139,7 +137,7 @@ object frmRamLog: TfrmRamLog
       TabOrder = 1
       Verbosity = lvErrors
       ColWidths = (
-        594)
+        577)
     end
   end
   object PopupMenu: TPopupMenu

@@ -144,6 +144,7 @@ begin
   uInitialization.LateInitialization;
   btnStartClick(self);
   actShowLogExecute(Self);    //temp
+  show;
 end;
 
 

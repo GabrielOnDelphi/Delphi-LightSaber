@@ -136,7 +136,7 @@
                     <VersionInfo Name="CodePage">1252</VersionInfo>
                 </VersionInfo>
                 <VersionInfoKeys>
-                    <VersionInfoKeys Name="CompanyName">CubicDesign</VersionInfoKeys>
+                    <VersionInfoKeys Name="CompanyName">Gabriel Moraru</VersionInfoKeys>
                     <VersionInfoKeys Name="FileDescription"/>
                     <VersionInfoKeys Name="FileVersion">0.0.0.2</VersionInfoKeys>
                     <VersionInfoKeys Name="InternalName"/>

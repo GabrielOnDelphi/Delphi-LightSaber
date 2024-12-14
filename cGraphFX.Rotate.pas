@@ -124,7 +124,7 @@ begin
   Tmp := TGPBitmap.Create(Bmp.Handle, Bmp.Palette);
   Matrix := TGPMatrix.Create;
   TRY
-    Matrix.RotateAt(Degs, MakePoint(0.5 * Bmp.Width, 0.5 * Bmp.Height));
+    Matrix.RotateAt(Degs, MakePoint(0.5* Bmp.Width, 0.5* Bmp.Height));
     if AdjustSize then
     begin
       C := Cos(DegToRad(Degs));
@@ -245,9 +245,6 @@ end;
  There are several overloaded version of DrawImage(), one of which will
  allow you to scale and/or skew the image
 *)
-
-
-
 
 
 

@@ -1,4 +1,4 @@
-﻿UNIT cGraphResize32;
+﻿UNIT cGraphResizeGr32;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -8,11 +8,12 @@
 
    Image resizers
    Based on GR32.Transform
+   The input must be pf24bit.
 
    SPEED:
       Resize down:
         GR32.Transform needs 0.23sec.
-        JanFX.Stretch needs 1.45 sec for same image.    (GR32 6 times faster than JanFX.Stretch)
+        JanFX.Stretch needs 1.45 sec for same image.   (GR32 6 times faster than JanFX.Stretch)
 
       Resize up:
         However, when resizing up, GR32 is 5.5 times slower (and also too sharp).   (Both tested with best resamplers)
@@ -30,7 +31,6 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, Vcl.Graphics, System.Types,
   GR32, GR32_Transforms, GR32_Resamplers, ccCore;
-
 
 CONST
   { Resamplers }
@@ -65,14 +65,14 @@ TYPE
     AffineTransformation: TAffineTransformation;
     Transformation: TTransformation;
   public
-    ScaleX, ScaleY: Extended;                                                                      { sScale multiplier. 1: no magnification. 2: the image is zoomed twice, etc }
+    ScaleX, ScaleY: Extended;           { Scale multiplier: 1.0 -> No magnification. 1.5 -> The image is enlarged with 50%, etc }
     constructor Create(Resampler, Kernel: Integer);
     destructor Destroy; override;
     procedure StretchImage(Image: string; ExifRotate: Boolean);     overload;
     procedure StretchImage(BMP : TBitmap);     overload;
   end;
 
-procedure StretchGr32(BMP: TBitmap; CONST ScaleX: Double= 0.5; CONST ScaleY: Double= 0.5);
+procedure StretchGr32(BMP: TBitmap; ScaleX, ScaleY: Double; aKernelResampler: Byte = KernelResampler; aSplineKernel: Byte = SplineKernel);
 
 
 IMPLEMENTATION
@@ -96,7 +96,7 @@ begin
 
  { Transformations }
  AffineTransformation := TAffineTransformation.Create;
- Transformation := AffineTransformation;
+ Transformation       := AffineTransformation;
 end;
 
 
@@ -116,9 +116,9 @@ VAR Loader: TBitmap;
 begin
  Loader:= LoadGraph(Image, ExifRotate, True);
  TRY
-  StretchImage(Loader);
+   StretchImage(Loader);
  FINALLY
-  FreeAndNil(Loader);
+   FreeAndNil(Loader);
  END;
 end;
 
@@ -127,48 +127,48 @@ end;
 procedure TGr32Stretch.StretchImage(BMP: TBitmap);
 VAR H, W: Integer;
 begin
- if (ScaleX <= 0) then raise exception.Create('Invalid scaling factor X! '+ Real2Str(ScaleX));
- if (ScaleY <= 0) then raise exception.Create('Invalid scaling factor Y! '+ Real2Str(ScaleY));
+  if BMP.PixelFormat <> pf24bit then RAISE Exception.Create('StretchGr32 requires pf24bit');
+  if (ScaleX <= 0) then RAISE Exception.Create('Invalid scaling factor X! '+ Real2Str(ScaleX));
+  if (ScaleY <= 0) then RAISE Exception.Create('Invalid scaling factor Y! '+ Real2Str(ScaleY));
 
- Src.Assign(BMP);
- Dst.SetSize(RoundEx(BMP.Width* ScaleX), RoundEx(BMP.Height* ScaleY));
+  Src.Assign(BMP);
+  Dst.SetSize(RoundEx(BMP.Width* ScaleX), RoundEx(BMP.Height* ScaleY));
 
- AffineTransformation.Clear;
- AffineTransformation.SrcRect:= FloatRect(0, 0, Src.Width - 1, Src.Height - 1);
+  AffineTransformation.Clear;
+  AffineTransformation.SrcRect:= FloatRect(0, 0, Src.Width - 1, Src.Height - 1);
 
- { I need to recompute the rotation center if I resize the image }
- if (ScaleX <> 1) OR (ScaleY <> 1)
- then AffineTransformation.Scale (ScaleX, ScaleY);
+  { I need to recompute the rotation center if I resize the image }
+  if (ScaleX <> 1) OR (ScaleY <> 1)
+  then AffineTransformation.Scale (ScaleX, ScaleY);
 
- Dst.BeginUpdate;
- Dst.Clear(clRed32);
- Transform(Dst, Src, Transformation);
- Dst.EndUpdate;
+  Dst.BeginUpdate;
+  Dst.Clear(clRed32);
+  Transform(Dst, Src, Transformation);
+  Dst.EndUpdate;
 
- W:= RoundEx(AffineTransformation.GetTransformedBounds.Right);
- H:= RoundEx(AffineTransformation.GetTransformedBounds.Bottom);
+  W:= RoundEx(AffineTransformation.GetTransformedBounds.Right);
+  H:= RoundEx(AffineTransformation.GetTransformedBounds.Bottom);
 
- BMP.SetSize(w, h);    // BMP.Assign(Dst) del
- BMP.Canvas.CopyMode:= cmSrcCopy;                                                                  { default }
- BMP.Canvas.CopyRect(rect(0, 0, W, H), Dst.Canvas, rect(0, 0, W, H));
+  BMP.SetSize(w, h);    // BMP.Assign(Dst) del
+  BMP.Canvas.CopyMode:= cmSrcCopy;         { default }
+  BMP.Canvas.CopyRect(rect(0, 0, W, H), Dst.Canvas, rect(0, 0, W, H));
 end;
 
 
 
 
 { QUICK }
-procedure StretchGr32(BMP: TBitmap; CONST ScaleX:Double= 0.5; CONST ScaleY:Double= 0.5);
+procedure StretchGr32(BMP: TBitmap; ScaleX, ScaleY:Double; aKernelResampler: Byte = KernelResampler; aSplineKernel: Byte = SplineKernel);
 VAR Gr32: TGr32Stretch;
 begin
- Gr32:= TGr32Stretch.Create(KernelResampler, SplineKernel);
- TRY
-   Gr32.ScaleX:= ScaleX;
-   Gr32.ScaleY:= ScaleY;
-   Gr32.StretchImage(BMP);
- FINALLY
-  FreeAndNil(Gr32);
- END;
-
+  Gr32:= TGr32Stretch.Create(aKernelResampler, aSplineKernel);
+  TRY
+    Gr32.ScaleX:= ScaleX;
+    Gr32.ScaleY:= ScaleY;
+    Gr32.StretchImage(BMP);
+  FINALLY
+   FreeAndNil(Gr32);
+  END;
 end;
 
 

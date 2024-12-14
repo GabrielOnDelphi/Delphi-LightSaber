@@ -2,11 +2,12 @@ UNIT cGraphResize;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2024.12
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
-
    Image resizers
+   They all use Windows StretchBlt in cGraphResizeWin.pas
+
    Parameters of the resize operation are stored in a cGraphResizeParams.RResizeParams record.
    The record is filled with data from GUI in cGraphResizeParamEdt.pas.
 
@@ -49,14 +50,11 @@ UNIT cGraphResize;
 INTERFACE
 
 USES
-   Winapi.Windows, System.Classes, System.SysUtils, VCL.GraphUtil, Vcl.Dialogs, Vcl.Graphics,
-   cGraphBitmap, cGraphResizeParams;
+   Winapi.Windows, System.SysUtils, Vcl.Dialogs, Vcl.Graphics,
+   cGraphBitmap, cGraphResizeParams, cGraphResizeWin;
 
-{-------------------------------------------------------------------------------------------------------------
-   MS Windows StretchBlt
--------------------------------------------------------------------------------------------------------------}
  { Proportional }
- procedure SmartStretch     (BMP: TBitmap; ResizeOpp: RResizeParams);              overload;                  { Uses MS Windows StretchBlt }
+ procedure SmartStretch     (BMP: TBitmap; ResizeOpp: RResizeParams);              overload;
  procedure SmartStretch     (BMP: TBitmap; CONST MaxWidth, MaxHeight: Integer);    overload;
  procedure SmartStretch     (BMP: TBitmap; CONST MaxWidth, MaxHeight, FitTolerance:Integer);  overload;
  procedure SmartStretch     (BMP: TBitmap; CONST MaxWidth, MaxHeight: Integer; ResizeOp: TResizeOp); overload;
@@ -72,18 +70,6 @@ USES
  function  LoadAndStretch   (CONST FileName: string; ResizeOpp: RResizeParams; UseWic: Boolean= TRUE): TBitmap;           overload; { Loads image and also stretch the output image to the required dimensions }
  function  LoadAndStretch   (CONST FileName: string; CONST MaxWidth, MaxHeight: Integer; UseWic: Boolean= TRUE): TBitmap; overload;
 
- { Not proportional }
- function  StretchF         (BMP: TBitmap; OutWidth, OutHeight: Integer): TBitmap;                            { Best of all algorithms. 2019.08 }
- procedure Stretch          (BMP: TBitmap; OutWidth, OutHeight: Integer);
-
-{-------------------------------------------------------------------------------------------------------------
-   VCL
--------------------------------------------------------------------------------------------------------------}
- procedure CanvasStretch     (InpBMP, OutBMP: TBitmap);                              overload;                   { Not proportional. Canvas.StretchDraw }
- procedure CanvasStretch     (BMP: TBitmap; CONST OutWidth, OutHeight: Integer);  overload;                   { Not proportional }
- procedure CanvasStretchProp (BMP: TBitmap; CONST OutWidth: Integer);                                         { Proportional }
- procedure ScaleImage        (CONST SourceBitmap, ResizedBitmap: TBitmap; const ScaleAmount: Double);         {Source: VCL.GraphUtil.ScaleImage }
-
 
 IMPLEMENTATION
 
@@ -92,11 +78,8 @@ USES
 
 
 
-
-
 {--------------------------------------------------------------------------------------------------
    MAIN FUNCTION
-   Uses StretchBlt
 --------------------------------------------------------------------------------------------------}
 procedure SmartStretch(BMP: TBitmap; ResizeOpp: RResizeParams);
 begin
@@ -286,121 +269,6 @@ begin
  VAR TimesToPercent:= RoundEx(ResizeTimes * 100);
  StretchPercent(BMP, TimesToPercent);
 end;
-
-
-
-
-
-{-------------------------------------------------------------------------------------------------------------
-   Uses MS Windows StretchBlt
-   BEST (see tester)
-
-   Zoom: In/Out
-   Keep aspect ration: No
-   Stretch provided in: pixels
-
-   Resize down: VERY smooth. Better than JanFX.SmoothResize.
-   Resize up: better (sharper) than JanFX.SmoothResize
-   Time: similar to JanFx
-
-   BitBlt only does copy. NO STRETCH
-
-   https://msdn.microsoft.com/en-us/library/windows/desktop/dd162950(v=vs.85).aspx
--------------------------------------------------------------------------------------------------------------}
-function StretchF(BMP: TBitmap; OutWidth, OutHeight: Integer): TBitmap;
-begin
- if (BMP.Width < 12) OR (BMP.Height< 12) then
-  begin
-   ShowMessage('Cannot stretch images under 12 pixels!');   { 'WinStretchBltF' will crash if the image size is too small (below 10 pixels)}
-   EXIT(NIL);
-  end;
-
- Result:= TBitmap.Create;
- TRY
-  Result.PixelFormat:= BMP.PixelFormat; { Make sure we use the same pixel format as the original image }
-  SetLargeSize(Result, OutWidth, OutHeight);
-  SetStretchBltMode(Result.Canvas.Handle, HALFTONE);
-  SetBrushOrgEx    (Result.Canvas.Handle, 0,0, NIL);
-  StretchBlt(Result.Canvas.Handle, 0, 0, Result.Width, Result.Height, BMP.Canvas.Handle, 0, 0, BMP.Width, BMP.Height, SRCCOPY);
- EXCEPT
-  FreeAndNil(Result); { Free the bitmap if something goes wrong }
-  RAISE;
- END;
-end;
-
-
-{ Uses MS Windows StretchBlt }
-procedure Stretch(BMP: TBitmap; OutWidth, OutHeight: Integer);
-VAR Temp: TBitmap;
-begin
-  Temp:= StretchF(BMP, OutWidth, OutHeight);
-  TRY
-    BMP.Assign(Temp);
-  FINALLY
-    FreeAndNil(Temp);
-  END;
-end;
-
-
-
-
-
-
-
-
-
-
-{-------------------------------------------------------------------------------------------------------------
-   VCL
--------------------------------------------------------------------------------------------------------------}
-procedure ScaleImage;
-begin
-  { ScaleAmount = use 1.2 to increase size with 20% }
-  VCL.GraphUtil.ScaleImage(SourceBitmap, ResizedBitmap, ScaleAmount);
-end;
-
-
-{-------------------------------------------------------------------------------------------------------------
-  Uses Delphi's canvas StretchDraw
-  The operation is WAY MUCH faster than JanFX but the image quality is not as great.
-     Stretch down: The results are quite good
-     Stretch up: The results are pixelated but NOT horrible!
--------------------------------------------------------------------------------------------------------------}
-procedure CanvasStretch (InpBMP, OutBMP: TBitmap);                          { Not proportional }
-begin
- OutBMP.Canvas.StretchDraw(Rect(0, 0, OutBMP.Width, OutBMP.Height), InpBMP);
-end;
-
-
-procedure CanvasStretch (BMP: TBitmap; CONST OutWidth, OutHeight: Integer);  { Not proportional }
-VAR TempBMP: TBitmap;
-begin
- Assert((BMP.Width> 0) AND (BMP.Height> 0), 'Invalid image size in cGraphStretch.Stretch');
-
- TempBMP:= TBitmap.Create;
- TRY
-  TempBMP.SetSize(OutWidth, OutHeight);                                        { OutWidth  = dimensiunea imaginii de iesire }
-  TempBMP.Canvas.StretchDraw(Rect(0, 0, TempBMP.Width, TempBMP.Height), BMP);
-  BMP.Assign(TempBMP);
- FINALLY
-  FreeAndNil(TempBMP);
- END;
-end;
-
-
-procedure CanvasStretchProp (BMP: TBitmap; CONST OutWidth: Integer);   { Proportional }
-VAR
-   Ratio: double;
-   OutHeight: Integer;
-begin
- Ratio:= BMP.Width / BMP.Height;
- OutHeight:= round(OutWidth / Ratio);
- CanvasStretch(BMP, OutWidth, OutHeight);
-end;
-
-
-
-
 
 
 end.

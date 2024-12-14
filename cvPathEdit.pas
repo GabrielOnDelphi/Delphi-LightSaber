@@ -616,6 +616,7 @@ end;
 procedure TCubicPathEdit.setShowApply(const Value: Boolean);
 begin
  FShowApply := Value;
+ btnApply.Visible:= FShowApply;
 end;
 
 

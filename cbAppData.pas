@@ -131,7 +131,7 @@ USES
   ccCore, ccIniFile, cbINIFile, cbLogRam;
 
 CONST
-  MSG_LateFormInit = WM_APP + 4711;         { Old name: MSG_LateFormInit/MSG_LateAppInit  }
+  MSG_LateFormInit = WM_APP + 4711;         { Old name: MSG_LateAppInit  }
 
 TYPE
   THintType = (htOff,                      // Turn off the embeded help system
@@ -140,7 +140,7 @@ TYPE
 
   TAppData= class(TObject)
   private
-    FShowOnError: Boolean;    // Automatically show the visual log form when warnings/errors are added to the log. This way the user is informed about the problems.
+    FShowOnError: Boolean;                 // Automatically show the visual log form when warnings/errors are added to the log. This way the user is informed about the problems.
     FFont: TFont;
     FLastFolder: string;
     FSingleInstClassName: string;          { Used by the Single Instance mechanism. } {Old name: AppWinClassName }
@@ -438,8 +438,7 @@ begin
      // ISSUE HERE!
      // At this point we can only load "standard" Delphi components.
      // Loading of our Light components can only be done in cv_IniFile.pas -> TIniFileVCL
-     //
-     // For the moment the work around is to manually call cv_IniFile.LoadForm(Self, flFull) in TfrmMain.LateInitialize
+     // For the moment the work around is load only the stadard components.
      cbINIFile.LoadFormBase(TForm(Reference), Loading);
 
      { Write path to app in registry }
@@ -457,8 +456,11 @@ begin
      if Show
      then TForm(Reference).Show;
 
-  // This will send a message to the mainform. The user must implement in the main form a procedure to captures this message.
-  // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory") for details.
+  // SEND LateInit MESSAGE
+  // This will send a message to the main form. The user must implement in the main form a procedure to capture this message.
+  // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory [Part 2]" book) for details.
+
+  // Warning: If you use TrySetStyle, don't do it until the main form is visible. TrySetStyle modifies the application styles, which makes the MSG_LateFormInit message to be lost.
   PostMessage(TForm(Reference).Handle, MSG_LateFormInit, 0, 0);
 
   if AutoSignalInitializationEnd
@@ -1354,13 +1356,13 @@ procedure TAppData.SaveSettings;
 begin
   VAR IniFile := TIniFileEx.Create('AppData Settings', IniFile);
   try
-    IniFile.Write('AutoStartUp', AutoStartUp);
-    IniFile.Write('StartMinim', StartMinim);
-    IniFile.Write('Minimize2Tray', Minimize2Tray);
-    IniFile.Write('HideHint', HideHint);
-    IniFile.Write('Opacity', Opacity);
-    IniFile.Write('ShowOnError', ShowLogOnError);
-    IniFile.Write('HintType', Ord(HintType));
+    IniFile.Write('AutoStartUp'   , AutoStartUp);
+    IniFile.Write('StartMinim'    , StartMinim);
+    IniFile.Write('Minimize2Tray' , Minimize2Tray);
+    IniFile.Write('HideHint'      , HideHint);
+    IniFile.Write('Opacity'       , Opacity);
+    IniFile.Write('ShowOnError'   , ShowLogOnError);
+    IniFile.Write('HintType'      , Ord(HintType));
   finally
     FreeAndNil(IniFile);
   end;
@@ -1371,13 +1373,13 @@ procedure TAppData.LoadSettings;
 begin
   VAR IniFile := TIniFileEx.Create('AppData Settings', IniFile);
   try
-    AutoStartUp   := IniFile.Read('AutoStartUp', False);
-    StartMinim    := IniFile.Read('StartMinim', False);
-    Minimize2Tray := IniFile.Read('Minimize2Tray', False);
-    HideHint      := IniFile.Read('HideHint', 2500);
-    Opacity       := IniFile.Read('Opacity', 250);
-    ShowLogOnError:= IniFile.Read('ShowOnError', True);
-    HintType      := THintType(IniFile.Read('HintType', 0));
+    AutoStartUp   := IniFile.Read('AutoStartUp'        , False);
+    StartMinim    := IniFile.Read('StartMinim'         , False);
+    Minimize2Tray := IniFile.Read('Minimize2Tray'      , False);
+    HideHint      := IniFile.Read('HideHint'           , 2500);
+    Opacity       := IniFile.Read('Opacity'            , 255);
+    ShowLogOnError:= IniFile.Read('ShowOnError'        , True);
+    HintType      := THintType(IniFile.Read('HintType' , 0));
   finally
     FreeAndNil(IniFile);
   end;

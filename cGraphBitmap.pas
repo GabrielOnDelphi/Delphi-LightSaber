@@ -141,8 +141,8 @@ end;
 
 function CreateBlankBitmap(Width, Height: Integer; BkgClr: TColor= clBlack; PixelFormat: TPixelFormat= pf24bit): TBitmap;   // old name: GetBlankImage
 begin
- Result:= CreateBitmap(Width, Height, PixelFormat);
- FillBitmap(Result, BkgClr);   { Make it black }
+  Result:= CreateBitmap(Width, Height, PixelFormat);
+  FillBitmap(Result, BkgClr);   { Make it black }
 end;
 
 
@@ -151,7 +151,7 @@ end;
 
 procedure ClearImage(Img: TImage);
 begin
- Img.Picture := NIL;
+  Img.Picture := NIL;
 end;
 
 procedure ClearBitmap(BMP: TBitmap);
@@ -164,9 +164,9 @@ end;
 { Fill bitmap with the specified color }
 procedure FillBitmap(BMP: TBitmap; Color: TColor);
 begin
- BMP.Canvas.Brush.Color:= Color;
- BMP.Canvas.Brush.Style:= bsSolid;
- BMP.Canvas.FillRect(BMP.Canvas.ClipRect);
+  BMP.Canvas.Brush.Color:= Color;
+  BMP.Canvas.Brush.Style:= bsSolid;
+  BMP.Canvas.FillRect(BMP.Canvas.ClipRect);
 end;
 
 
