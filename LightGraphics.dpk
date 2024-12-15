@@ -49,8 +49,6 @@ requires
 
 contains
   cGraphFX.RotateGr32 in 'cGraphFX.RotateGr32.pas',
-  cGraphResize in 'cGraphResize.pas',
-  cGraphResize32 in 'cGraphResize32.pas',
   cGraphResizeParams in 'cGraphResizeParams.pas',
   cGraphAviFrame in 'cGraphAviFrame.pas',
   cGraphBitmap in 'cGraphBitmap.pas',
@@ -74,6 +72,11 @@ contains
   cGraphConvert in 'cGraphConvert.pas',
   cGraphAlpha in 'cGraphAlpha.pas',
   cGraphDesktop in 'cGraphDesktop.pas',
-  cGraphUtilGray in 'cGraphUtilGray.pas';
+  cGraphResizeGr32 in 'cGraphResizeGr32.pas',
+  cGraphResizeMsThumb in 'cGraphResizeMsThumb.pas',
+  cGraphResizeVCL in 'cGraphResizeVCL.pas',
+  cGraphResizeWin in 'cGraphResizeWin.pas',
+  cGraphUtilGray in 'cGraphUtilGray.pas',
+  cGraphResize in 'cGraphResize.pas';
 
 end.

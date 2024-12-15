@@ -71,7 +71,7 @@ TYPE
 
 
 IMPLEMENTATION
-USES cGraphResize;
+USES cGraphResize, cGraphResizeVCL;
 
 
 

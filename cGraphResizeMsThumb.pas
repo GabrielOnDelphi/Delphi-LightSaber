@@ -27,14 +27,14 @@ TYPE
   TFileThumb = class
   private
     FhImageList48: Cardinal;
-    FSize: Integer;
+    FWidth: Integer;
     FIconSize: Integer;
     FBmp: TBitmap;
     FFilePath: String;
     procedure SetFile(const Value: String);
     procedure SetSize(Value: Integer);
   public
-    property Size: Integer read FSize write SetSize;
+    property Width: Integer read FWidth write SetSize;
     property ThumbBmp: TBitmap read FBmp;
     property FilePath: String read FFilePath write SetFile;
 
@@ -62,7 +62,7 @@ var
 begin
   inherited;
 
-  FSize := 100;
+  FWidth := 100;
   FFilePath := '';
   FBmp := TBitmap.Create;
   FBmp.PixelFormat := pf24Bit;
@@ -88,9 +88,9 @@ begin
       FIconSize := 32;
   end;
 
-  FBmp.SetSize(FSize, FSize);
+  FBmp.SetSize(FWidth, FWidth);
   FBmp.Canvas.Brush.Color := GetSysColor(COLOR_WINDOW);
-  FBmp.Canvas.FillRect(Rect(0, 0, FSize, FSize));
+  FBmp.Canvas.FillRect(Rect(0, 0, FWidth, FWidth));
 end;
 
 destructor TFileThumb.Destroy;
@@ -107,9 +107,9 @@ end;
 
 procedure TFileThumb.SetSize(Value: Integer);
 begin
-  if Value = FSize then Exit;
-  FSize := EnsureRange(Value, MinSize, MaxSize);
-  FBmp.SetSize(FSize, FSize);
+  if Value = FWidth then Exit;
+  FWidth := EnsureRange(Value, MinSize, MaxSize);
+  FBmp.SetSize(FWidth, FWidth);
 end;
 
 
@@ -122,16 +122,16 @@ var
   Size1: TSize;
 begin
   // Initialize the bitmap canvas
-  FBmp.SetSize(FSize, FSize);
+  FBmp.SetSize(FWidth, FWidth);
   FBmp.Canvas.Brush.Color := GetSysColor(COLOR_WINDOW);
-  FBmp.Canvas.FillRect(Rect(0, 0, FSize, FSize));
+  FBmp.Canvas.FillRect(Rect(0, 0, FWidth, FWidth));
   if (FFilePath = '') or not FileExists(FFilePath) then Exit;
   // Use IShellItemImageFactory for thumbnails
   if SHCreateItemFromParsingName(PChar(FFilePath), nil, IShellItem, ShellItem) <> S_OK then Exit;
   if ShellItem.QueryInterface(IShellItemImageFactory, ImageFactory) <> S_OK then Exit;
   // Request a thumbnail with the desired size
-  Size1.cx := FSize;
-  Size1.cy := FSize;
+  Size1.cx := FWidth;
+  Size1.cy := FWidth;
   if ImageFactory.GetImage(Size1, SIIGBF_RESIZETOFIT, hBmp) = S_OK
   then FBmp.Handle := hBmp; // Assign HBITMAP to TBitmap
 end;
@@ -157,15 +157,15 @@ var
   ShInfo: TShFileInfo;
 begin
   // Reset bitmap size and clear content
-  FBmp.SetSize(FSize, FSize);
+  FBmp.SetSize(FWidth, FWidth);
   FBmp.Canvas.Brush.Color := GetSysColor(COLOR_WINDOW);
-  FBmp.Canvas.FillRect(Rect(0, 0, FSize, FSize));
+  FBmp.Canvas.FillRect(Rect(0, 0, FWidth, FWidth));
 
   if (FFilePath = '') or not FileExists(FFilePath) then Exit;
 
   Path := ExtractFilePath(FFilePath);
   Name := ExtractFileName(FFilePath);
-  Mid := (FSize - FIconSize) div 2;
+  Mid := (FWidth - FIconSize) div 2;
 
   SHGetFileInfo(PChar(FFilePath), FILE_ATTRIBUTE_NORMAL, ShInfo, SizeOf(ShInfo), SHGFI_LARGEICON or SHGFI_SYSICONINDEX);
   ImageList_Draw(FhImageList48, ShInfo.iIcon, FBmp.Canvas.Handle, Mid, Mid, ILD_TRANSPARENT);
@@ -186,8 +186,8 @@ begin
 
   if not Assigned(IExtractImg) then Exit;
 
-  Size1.cx := FSize;
-  Size1.cy := FSize;
+  Size1.cx := FWidth;
+  Size1.cy := FWidth;
   Flags := IEIFLAG_SCREEN or IEIFLAG_OFFLINE;
   Priority := 0;
 
