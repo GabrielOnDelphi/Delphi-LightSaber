@@ -11,7 +11,7 @@ UNIT cGraphResizeFMX;
 --------------------------------------------------------------------------------------------------------------
 
  TESTER:
-      c:\Projects\Projects GRAPH Resamplers\GLOBAL Tester\
+      c:\Projects\LightSaber ImageResampler Test\ResamplerTester.dpr
 
 -------------------------------------------------------------------------------------------------------------}
 INTERFACE
@@ -39,15 +39,18 @@ begin
     // Assign VCL bitmap to FMX bitmap
     BMP.PixelFormat := pf32bit;
     BMP.SaveToStream(MS);
-    BMP.PixelFormat := pf24bit;
+    //del BMP.PixelFormat := pf24bit;
     MS.Position := 0;
     fBMP.LoadFromStream(MS);
+
     // Resize FMX bitmap using CreateThumbnail
     fBMP := fBMP.CreateThumbnail(NewWidth, NewHeight);
+
     // Ensure VCL Bitmap (BMP) has the same size and format
     BMP.PixelFormat := pf32bit;
     BMP.SetSize(fBMP.Width, fBMP.Height);
-    // Copy FMX bitmap data to VCL bitmap
+
+    // Output FMX bitmap data back to the VCL bitmap
     if NOT fBMP.Map(TMapAccess.Read, FMXBitmapData) then
       RAISE Exception.Create('Failed to map FMX bitmap data');
     TRY

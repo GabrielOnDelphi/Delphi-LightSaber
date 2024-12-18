@@ -106,11 +106,12 @@
         <DCCReference Include="cGraphAlpha.pas"/>
         <DCCReference Include="cGraphDesktop.pas"/>
         <DCCReference Include="cGraphResizeGr32.pas"/>
-        <DCCReference Include="cGraphResizeMsThumb.pas"/>
         <DCCReference Include="cGraphResizeVCL.pas"/>
-        <DCCReference Include="cGraphResizeWin.pas"/>
         <DCCReference Include="cGraphUtilGray.pas"/>
         <DCCReference Include="cGraphResize.pas"/>
+        <DCCReference Include="cGraphResizeWinBlt.pas"/>
+        <DCCReference Include="cGraphResizeWinThumb.pas"/>
+        <DCCReference Include="cGraphResizeWinWIC.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

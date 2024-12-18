@@ -16,7 +16,7 @@ UNIT cGraphResize;
 --------------------------------------------------------------------------------------------------------------
 
  TESTER:
-      c:\MyProjects\Projects GRAPH Resamplers\GLOBAL Tester\
+      c:\Projects\LightSaber ImageResampler Test\ResamplerTester.dpr
       c:\MyProjects\Projects GRAPH Resamplers\Tester for cGraphResizeParam\
 
  TEST RESULTS
@@ -51,7 +51,7 @@ INTERFACE
 
 USES
    Winapi.Windows, System.SysUtils, Vcl.Dialogs, Vcl.Graphics,
-   cGraphBitmap, cGraphResizeParams, cGraphResizeWin;
+   cGraphBitmap, cGraphResizeParams, cGraphResizeWinBlt;
 
  { Proportional }
  procedure SmartStretch     (BMP: TBitmap; ResizeOpp: RResizeParams);              overload;

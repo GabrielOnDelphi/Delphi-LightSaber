@@ -12,7 +12,7 @@ UNIT cGraphResizeParamFrame;
    !!! Don't add dependencies to LightVisControls.dpk because that package is compiled after this one !!!
 
    TESTER:
-      c:\MyProjects\Projects GRAPH Resamplers\GLOBAL Tester\
+      c:\Projects\LightSaber ImageResampler Test\ResamplerTester.dpr
       c:\MyProjects\Projects GRAPH Resamplers\Tester for cGraphResizeParam\
 
 

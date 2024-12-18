@@ -51,7 +51,8 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  cTranslate, cbAppData, cvIniFile {Don't add dependencies to cvIniFile because that package is not available yet};
+  cTranslate, cbINIFile, cbAppData;
+   {Don't add dependencies to cvIniFile because that package is not available yet}
 
 
 
@@ -87,7 +88,7 @@ end;
 procedure TfrmRainEditor.FormDestroy(Sender: TObject);
 begin
   Container.Parent:= Self;    { We need to move the container back on its original form, in order to let that form to correctly save its children }
-  SaveForm(Self);
+  SaveFormBase(Self);         { Don't add dependencies to cvIniFile because that package is not available yet! }
 end;
 
 

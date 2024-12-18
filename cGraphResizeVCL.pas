@@ -10,7 +10,7 @@ UNIT cGraphResizeVCL;
 --------------------------------------------------------------------------------------------------------------
 
  TESTER:
-      c:\MyProjects\Projects GRAPH Resamplers\GLOBAL Tester\
+      c:\Projects\LightSaber ImageResampler Test\ResamplerTester.dpr
 -------------------------------------------------------------------------------------------------------------}
 INTERFACE
 

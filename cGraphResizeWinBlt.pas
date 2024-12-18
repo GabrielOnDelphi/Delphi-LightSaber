@@ -1,4 +1,4 @@
-UNIT cGraphResizeWin;
+UNIT cGraphResizeWinBlt;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -9,7 +9,7 @@ UNIT cGraphResizeWin;
    Image resizer using Windows StretchBlt API
 
    TESTER:
-      c:\Projects\Projects GRAPH Resamplers\GLOBAL Tester\
+      c:\Projects\LightSaber ImageResampler Test\ResamplerTester.dpr
 
 -------------------------------------------------------------------------------------------------------------}
 INTERFACE

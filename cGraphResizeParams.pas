@@ -13,7 +13,7 @@ UNIT cGraphResizeParams;
    External dependencies: None
 
    TESTER:
-       c:\MyProjects\Projects GRAPH Resamplers\GLOBAL Tester\
+       c:\Projects\LightSaber ImageResampler Test\ResamplerTester.dpr
        c:\MyProjects\Projects GRAPH Resamplers\Tester for cGraphResizeParam\
 -------------------------------------------------------------------------------------------------------------}
 
