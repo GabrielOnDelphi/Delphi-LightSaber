@@ -112,7 +112,7 @@ begin
        AddUnitToUses(TextBody, LogUnit);
        if BackupFile
        then BackupFileBak(SearchResults.Last.FileName);
-       StringToFile(SearchResults.Last.FileName, TextBody.Text, woOverwrite, TRUE);
+       StringToFile(SearchResults.Last.FileName, TextBody.Text, woOverwrite, wpAuto);
        StringToFile(ForceExtension(SearchResults.Last.FileName, '.txt'), sWarnings, woOverwrite);
      end;
 
@@ -170,7 +170,7 @@ begin
        AddUnitToUses(TextBody, 'uUtilsFocus, ');
        if BackupFile
        then BackupFileBak(SearchResults.Last.FileName);
-       StringToFile(SearchResults.Last.FileName, TextBody.Text, woOverwrite, TRUE);
+       StringToFile(SearchResults.Last.FileName, TextBody.Text, woOverwrite, wpAuto);
      end;
 
  finally

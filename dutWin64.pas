@@ -244,7 +244,7 @@ begin
       begin
         if BackupFile
         then BackupFileBak(SearchResults.Last.FileName);
-        StringToFile(SearchResults.Last.FileName, TextBody.Text, woOverwrite, TRUE);
+        StringToFile(SearchResults.Last.FileName, TextBody.Text, woOverwrite, wpAuto);
       end;
 
   finally

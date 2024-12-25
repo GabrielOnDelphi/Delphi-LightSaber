@@ -27,7 +27,7 @@ type
 
 IMPLEMENTATION
 USES
-   ccTextFile, ccIO, ccTextFile, cmPascal, ccCore;
+   ccTextFile, ccIO, cmPascal, ccCore;
 
 
 
@@ -147,7 +147,7 @@ var
 begin
  Front := '';
 
- TextBody:= StringFromFileTSL(SearchResults.Last.FileName, FALSE, TEncoding.UTF8);
+ TextBody:= StringFromFileTSL(SearchResults.Last.FileName, TEncoding.UTF8);
  try
    for i:= 0 to TextBody.Count-1 do
      begin
@@ -218,7 +218,7 @@ begin
      end;
 
    var NewName:= IncrementFileName(SearchResults.Last.FileName, True);
-   StringToFile(NewName, TextBody.Text, woOverwrite, TRUE);
+   StringToFile(NewName, TextBody.Text, woOverwrite, wpAuto);
  finally
    FreeAndNil(TextBody);
  end;

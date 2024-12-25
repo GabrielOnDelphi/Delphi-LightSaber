@@ -219,20 +219,18 @@ end;
 {--------------------------------------------------------------------------------------------------
    READ/WRITE TEST
 --------------------------------------------------------------------------------------------------}
-
-var dDate: TDate;
-
 procedure TMainForm.btnStreamWriteClick(Sender: TObject);
 VAR
    TSL: TStringList;
    Stream: TCubicBuffStream2;
+   dDate: TDate;
 begin
   dDate:= EncodeDate(2024, 08, 10);
   TSL:= TStringList.Create;
   TSL.Add('List0');
   TSL.Add('List1');
 
-  Stream:= TCubicBuffStream2.CreateWrite('Test_TCubicBuffStream');
+  Stream:= TCubicBuffStream2.CreateWrite('TCubicBuffStream.bin');
   TRY
    Stream.WriteHeader   ('MagicNo', 1);
    Stream.WriteBoolean  (TRUE);
@@ -246,9 +244,8 @@ begin
    Stream.WriteUInt64   (High(UInt64));
    Stream.WriteWord     (65535);
    Stream.WriteStringA  ('abba');
-   Stream.WriteStringANoLen('no len');
-   Stream.WriteString  ('abba');
-   Stream.WriteChars    ('x');
+   Stream.WriteString   ('abba');
+   Stream.WriteChars    (AnsiString('x'));
    Stream.WriteChars    ('x');
    Stream.WriteEnter;
    Stream.WriteStrings(TSL);
@@ -266,6 +263,8 @@ begin
     FreeAndNil(Stream);
     FreeAndNil(TSL);
   END;
+
+  Caption:= 'Write successful';
 end;
 
 
@@ -274,12 +273,14 @@ procedure TMainForm.btnStreamReadClick(Sender: TObject);
 VAR
    TSL: TStringList;
    Stream: TCubicBuffStream2;
+   dDate: TDate;
 begin
   dDate:= EncodeDate(2024, 08, 10);
 
-  Stream:= TCubicBuffStream2.CreateRead('Test_TCubicBuffStream');
+  Stream:= TCubicBuffStream2.CreateRead('TCubicBuffStream.bin');
   TRY
-   Stream.ReadHeader('MagicNo', 1);
+   if NOT Stream.ReadHeader('MagicNo', 1)
+   then RAISE Exception.Create('Cannot read header!');
 
    if NOT Stream.ReadBoolean                  then RAISE Exception.Create('Bool failure!');
    if Stream.ReadDate       <> dDate          then RAISE Exception.Create('Date failure!');
@@ -292,10 +293,9 @@ begin
    if Stream.ReadUInt64     <> High(UInt64)   then RAISE Exception.Create('ReadUInt64 failure!');
    if Stream.ReadWord       <> 65535          then RAISE Exception.Create('ReadWord failure!');
    if Stream.ReadStringA    <> 'abba'         then RAISE Exception.Create('ReadStringA failure!');
-   if Stream.ReadStringA(6) <> 'no len'       then RAISE Exception.Create('ReadStringANLen failure!');
    if Stream.ReadString     <> 'abba'         then RAISE Exception.Create('ReadString failure!');
-   if Stream.ReadChars(1)   <> 'x'            then RAISE Exception.Create('ReadCharsU failure!');
-   if Stream.ReadCharsA(1)  <> 'x'            then RAISE Exception.Create('ReadCharsA failure!');
+   if Stream.ReadCharsA(1)  <> 'x'            then RAISE Exception.Create('ReadCharsU failure!');
+   if Stream.ReadChars(1)   <> 'x'            then RAISE Exception.Create('ReadCharsA failure!');
    if NOT Stream.ReadEnter                    then RAISE Exception.Create('ReadEnter failure!');
    TSL:= Stream.ReadStrings;
    if TSL[0] <> 'List0'                       then RAISE Exception.Create('ReadStrings failure!');
@@ -321,6 +321,8 @@ begin
   FINALLY
     FreeAndNil(Stream);
   END;
+
+  Caption:= 'Read successful';
 end;
 
 

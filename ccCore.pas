@@ -116,7 +116,7 @@ CONST
 TYPE
   TStringArray       = array of string;
   TBytesArray        = System.SysUtils.TBytes;
-  TNotifyMsgEvent    = procedure(Self: TObject; Msg: string) of object;    { For general use }
+  TNotifyMsgEvent    = procedure(Sender: TObject; Msg: string) of object;    { For general use }
   WebURL             = string;
 
 

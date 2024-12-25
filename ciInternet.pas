@@ -2,7 +2,7 @@
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2023.06
+   2024.12
    See Copyright.txt
 
    URL utils / URL parsing and validation
@@ -105,9 +105,6 @@ CONST
 
  function  IsURL                    (CONST   s: string): Boolean;  deprecated 'Use CheckURLStart inst4ead';                              { Returns True if text starts wit http/www/ftp }
  function  IsWebPage                (CONST URL: string): Boolean;                                 { Returns true for /1/2/3.html but not for /1/2/ or for /1/2 }
-
-
-
 
 
 

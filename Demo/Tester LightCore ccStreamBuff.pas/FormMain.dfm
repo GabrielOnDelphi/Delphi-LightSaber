@@ -14,13 +14,11 @@ object MainForm: TMainForm
   Font.Height = -11
   Font.Name = 'MS Sans Serif'
   Font.Style = []
-  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   SnapBuffer = 5
   Visible = True
   OnClose = FormClose
-  PixelsPerInch = 96
   TextHeight = 13
   object InternetLabel: TInternetLabel
     Left = 610
@@ -49,7 +47,7 @@ object MainForm: TMainForm
     Top = 0
     Width = 721
     Height = 576
-    ActivePage = tabMain
+    ActivePage = tabStreamBuff
     Align = alClient
     ParentShowHint = False
     ShowHint = True
@@ -350,7 +348,6 @@ object MainForm: TMainForm
         ShowHint = True
         TabOrder = 1
         WordWrap = False
-        Zoom = 100
         OnError = SwitchToLog
         OnWarn = SwitchToLog
       end
