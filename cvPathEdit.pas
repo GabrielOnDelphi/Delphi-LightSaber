@@ -630,7 +630,7 @@ end;
 
 procedure TCubicPathEdit.btnExploreClick(Sender: TObject);
 begin
- if path = ''
+ if Path = ''
  then MesajError('No file/folder selected!')
  else
    case InputType of

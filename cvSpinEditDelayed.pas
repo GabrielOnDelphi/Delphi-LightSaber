@@ -5,16 +5,24 @@ UNIT cvSpinEditDelayed;
    2024.05
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
-  TCubicSpinEditD Features:
-      Fixes the OnChange MinValue/MaxValue issue.
-      Details here: http://stackoverflow.com/questions/17655854/how-do-i-prevent-users-from-entering-values-that-exceed-tspinedit-maxvalue
+  TCubicSpinEditD - Fixes the MinValue/MaxValue issue.
+
+  Problem:
+      If we set the TSpinEdit.MaxValue to 100, when the program runs, it still lets the user enter values
+      over 100 by manually entering the number (instead of using the spins).
+      When the user enters a wrong value, this can result in a RageCheckError or something similar.
+      So, the programmer needs to write code to check the value in OnChange event.
+  Fix:
+      This control offers an extra event called OnChanged which is called 1200ms after the user entered the value.
 
   How to use it:
-      Set 'Delay' property
-      Put your code in OnChanged event instead of OnChange
+      Set 'Delay' property.
+      Put your code in OnChanged event instead of OnChange.
 
   Warning!
-      If the OnChanged event fires while the program is stuck during startup in a messagebox (like Proteus showing "trial expired"), that event might access an object that was not yet created (because the initialization was stuck in that message box).
+      OnChanged event fires after a delay.
+      If it fires while the program is stuck during startup in a messagebox, OnChanged might access an object
+      that was not yet created (because the initialization was halted by that message box). So, use it with care.
 
   Tester
      c:\Myprojects\Project Testers\Cubic VCL SpinEdits\Tester.dpr

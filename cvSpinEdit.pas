@@ -2,25 +2,21 @@ UNIT cvSpinEdit;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2024.12
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
-  TCubicSpinEdit
-    Features:
-      Checks the value entered by the user. If the value is not in the Min/Max range, then the OnChange is NOT called.
-    ToDo:
-      If the user deleted the value (not the editor is empty), OnLoseFocus, put the value back in the editor.
+  TCubicSpinEdit – A SpinEdit with two extra labels
+      Sometimes we need to have some text in front or after the SpinEdit (number). For example: Maximum zoom: 20 %. For this we need to manually create three controls: a label, a SpinEdit and then another label and align them all in a TPanel. TCubicSpinEdit does it for you. Also, the control will automatically resize to fit the text in it.
+      ToDo: If the user deleted the value (not the editor is empty), OnLoseFocus, put the value back in the editor.
 
 
   TCubicSpinEditSplit
-     Allows us to have a SpinEdit with two lables, one to the left, one to the right.
-     Example:  Maximum zoom: 20%
-     With this control you don't need to manually create 3 controls: a label, a spinedit and then another label.
-     Also, this control will automatically resize to fit the text in it, when the text in the first label is getting longer or the font is getting smaller/bigger/
+      Input validation:
+      Checks the value entered by the user. If the value is not in the Min/Max range, then the OnChange is NOT called. In the original control, this was called leaning to errors (since the input was invalid/not in range).
 
   Tester
-     c:\Myprojects\Project Testers\Cubic VCL SpinEdits\Tester.dpr
+      c:\Myprojects\Project Testers\Cubic VCL SpinEdits\Tester.dpr
 =============================================================================================================}
 
 INTERFACE

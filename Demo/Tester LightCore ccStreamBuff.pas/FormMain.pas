@@ -225,6 +225,7 @@ VAR
    Stream: TCubicBuffStream2;
    dDate: TDate;
 begin
+  Caption:= 'Writing...';
   dDate:= EncodeDate(2024, 08, 10);
   TSL:= TStringList.Create;
   TSL.Add('List0');
@@ -275,6 +276,7 @@ VAR
    Stream: TCubicBuffStream2;
    dDate: TDate;
 begin
+  Caption:= 'Reading...';
   dDate:= EncodeDate(2024, 08, 10);
 
   Stream:= TCubicBuffStream2.CreateRead('TCubicBuffStream.bin');

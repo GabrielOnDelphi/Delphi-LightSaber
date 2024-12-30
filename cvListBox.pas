@@ -52,19 +52,21 @@ TYPE
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
     procedure SetHeightAuto(MaxHeight: Integer; aForm: TControl);
 
-    { Item access }
+    { Get selected }
     function  SelectedItemForce: string;                                 { Same as SelectedItem but if no item is selected then force the first item selected }
     function  SelectedItem: string;                                      { returns the item the cursor is on }
     function  SelectedItems: string;                                     { return all selected text }
     function  SelectedObject: TObject;
-
-    { Selection }
     function  SelCountEx: Integer;                                       { does the same thing as 'SelCount' but also works when MultiSelect=False. SelCount does not work if MultiSelect=False }
+
+    { Set selected }
+
     procedure DeSelectAll;
     procedure SelectNext;
     procedure SelectFirstItem;
     procedure SelectLastItem;
     procedure SelectItemSafe(Index: Integer);                            { Try to select the specified item. If the index is invalid no error is thrown and the closes item is selected }
+    procedure SelectItem(Obj: TObject);
 
     { Items }
     procedure SwapItems(x, y: Integer);
@@ -75,7 +77,7 @@ TYPE
 
     { Delete items }
     procedure DeleteFirst(iCount: Integer);                              { Delete first x items }
-    procedure DeleteSelected; override;
+    procedure DeleteSelected(FreeObject: Boolean= FALSE); reintroduce;
     function  RemoveDuplicates: Integer;
     function  RemoveEmptyLines: Integer;
     function  RemoveLongLines(CONST iLength: integer): Integer;          { Remove all lines that are longer than iLength }
@@ -374,28 +376,37 @@ begin
 end;
 
 
-procedure TCubicListBox.DeleteSelected;             { Improvements: after clearing the selection, move the cursor down one position }
-VAR i, first: Integer;
+{ Improvements:
+   * After deleting the selected item(s), move the cursor down one position.
+   * Supports multiple selection! }
+procedure TCubicListBox.DeleteSelected(FreeObject: Boolean= FALSE);
+VAR i, Current: Integer;
 begin
  if SelCountEx> 0
  then
-  begin
-    first:= -1;
-    for I:= Items.Count-1 downto 0 DO
-      if Selected[i] then first:= i;                { tin minte care a fost ultimul selectat }
-     inherited DeleteSelected;                      { apelez procedura originala }
+   begin
+     Current:= -1;
+     for i:= Items.Count-1 downto 0 DO
+       if Selected[i] then
+         begin
+           Current:= i;                      { Remember the last item selected }
+           VAR Obj:= Items.Objects[i];
+           if FreeObject and (Obj <> nil) then Obj.Free;
+           Items.Delete(i);
+         end;
 
-    { MOVE THE CURSOR }
-    if first >= 0 then
-     begin
-       if (first <= Items.Count-1)                  { daca am unde: }
-       then Selected[first]:= TRUE                  { mut cursorul pe urmatorul rand }
-       else
-        if Items.Count> 0                           { daca nu: }
-        then Selected[Items.Count-1]:= TRUE;        { selectez pe ultimul, fortat }
-     end
-    else BipErrorShort;                             { ZERO elemente in lista }
-  end
+     if Items.Count = 0 then EXIT;
+
+     { MOVE THE CURSOR DOWN }
+     if Current < 0                          { If nothing was selected, I select the first item }
+     then Current:= 0
+     else
+       if Current >= Items.Count             { If I can go down, move cursor to the next row... }
+       then Current:= Items.Count-1;         { ...if not, select the last item. }
+
+     Selected[Current]:= TRUE;
+     ItemIndex:= Current;
+   end
  else BipErrorShort;
 end;
 
@@ -433,6 +444,18 @@ begin
     else ItemIndex:= Index;
 
  Selected[ItemIndex]:= TRUE;
+end;
+
+
+procedure TCubicListBox.SelectItem(Obj: TObject);
+begin
+  for var i:= 0 to Count - 1 DO
+   if Items.Objects[i] = Obj then
+     begin
+       ItemIndex:= i;
+       Selected[i]:= TRUE;
+       EXIT;
+     end;
 end;
 
 
