@@ -31,8 +31,8 @@ object frmRamLog: TfrmRamLog
     TabOrder = 0
     object pnlBottom: TPanel
       Left = 0
-      Top = 482
-      Width = 604
+      Top = 481
+      Width = 600
       Height = 31
       Align = alBottom
       BevelOuter = bvNone
@@ -54,7 +54,7 @@ object frmRamLog: TfrmRamLog
       end
       object btnClear: TButton
         AlignWithMargins = True
-        Left = 533
+        Left = 529
         Top = 1
         Width = 68
         Height = 29
@@ -70,13 +70,13 @@ object frmRamLog: TfrmRamLog
         AlignWithMargins = True
         Left = 348
         Top = 3
-        Width = 179
+        Width = 175
         Height = 25
         Align = alClient
         BevelOuter = bvNone
         ShowCaption = False
         TabOrder = 2
-        TrackBar.Left = 59
+        TrackBar.Left = 55
         TrackBar.Top = 0
         TrackBar.Width = 120
         TrackBar.Height = 25
@@ -84,9 +84,9 @@ object frmRamLog: TfrmRamLog
         TrackBar.Align = alRight
         TrackBar.Max = 6
         TrackBar.Min = 1
-        TrackBar.Position = 6
+        TrackBar.Position = 3
         TrackBar.TabOrder = 0
-        Verbosity = lvErrors
+        Verbosity = lvInfos
         Log = Log
       end
       object chkShowTime: TCheckBox
@@ -116,8 +116,8 @@ object frmRamLog: TfrmRamLog
       AlignWithMargins = True
       Left = 3
       Top = 3
-      Width = 598
-      Height = 476
+      Width = 594
+      Height = 475
       Align = alClient
       BevelOuter = bvNone
       ColCount = 1
@@ -137,7 +137,7 @@ object frmRamLog: TfrmRamLog
       TabOrder = 1
       Verbosity = lvErrors
       ColWidths = (
-        577)
+        573)
     end
   end
   object PopupMenu: TPopupMenu

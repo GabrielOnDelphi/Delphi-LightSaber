@@ -2,7 +2,7 @@
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.06
+   2024.12
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
@@ -33,13 +33,13 @@ USES
  procedure ExitIfUnderDebugger (ProjectFileName: string);
  procedure HaltApplication(UserMessage : string);
 
- function  IsRunningUnderDelphiDebugger: Boolean;          // new (to test)
+ function  IsRunningUnderDelphiDebugger: Boolean;
  function  IsDebuggerPresent: Boolean;
 
  { COMPILER INFO }
  function CompilerOptimization : Boolean;
  function CompilerOptimizationS: String;
- function PlatformBitness: string;                         { Shows if the program is compiled as 32 or 64bit app }  // old name: AppPlatform
+ function AppBitness: string;                             { Shows if the program is compiled as 32 or 64bit app }  // old name: AppPlatform
 
  { CRASH ME }
  procedure GenerateCrashNIL;
@@ -59,7 +59,7 @@ USES
 
  //function GenerateScreenRep:    string;    // Moved to 3rdParty MonitorHelper.pas
  function  GenerateAppRep:       string;
- function  GenerateScreenRepEx:  string;
+ function  ScreenResApi:  string;
  function  GenerateWinSysRep:    string;
  function  GenerateWinPathRep:   string;
  function  GenerateWinPathRepEx: string;
@@ -224,7 +224,7 @@ end;
 
 
 { Shows if the program is compiled as 32 or 64bit app }
-function PlatformBitness: String;
+function AppBitness: String;
 begin
  {$IF Defined(CPUX86)}
    Result:= '32bit';
@@ -236,7 +236,7 @@ begin
 end;
 
 
-   
+
 
 
 
@@ -441,7 +441,8 @@ begin
  Result:= Result+ GenerateAppRep      + CRLF+ CRLF;                                 { The AppDataPath parameter lets the user provide the data path in case the app is not using the Default data path }
  Result:= Result+ GenerateWinSysRep   + CRLF+ CRLF;
  Result:= Result+ GenerateHardwareRep + CRLF+ CRLF;                                 { Before calling this I need to enter a valid key into chHardID:   chHardID.HDIDValid:= TRUE;  }
- Result:= Result+ GenerateWinPathRep;
+ Result:= Result+ GenerateWinPathRep  + CRLF+ CRLF;
+ Result:= Result+ GenerateWinPathRepEx+ CRLF+ CRLF;
  //Result:= Result+ GenerateScreenRep   + CRLF+ CRLF;    Moved to 3rdParty MonitorHelper.pas
 end;
 
@@ -456,13 +457,31 @@ end;
 function GenerateHardwareRep: string;
 begin
  Result:= ' [HARDWARE]'+ CRLF;
+ Result:= Result+'  User name: '      + Tab+ Tab+ GetUserName+ CRLF;
+ Result:= Result+'  UserName Ex: '    + Tab+ Tab+ GetUserNameEx(2)+ CRLF;
  Result:= Result+'  Computer name: '  + Tab+ GetComputerName+ CRLF;                 { Also see GetComputerNameEx:   http://stackoverflow.com/questions/30778736/how-to-get-the-full-computer-name-in-inno-setup/30779280#30779280 }
- Result:= Result+'  User name: '      + Tab+ Tab+ GetLogonName+ CRLF;
- Result:= Result+'  Total monitors: ' + Tab+ IntToStr(Screen.MonitorCount)+ '. Screen res: ' + IntToStr(Screen.Width)+ 'x'+ IntToStr(Screen.Height)+ CRLF;
+ Result:= Result+'  Domain name: '    + Tab+ Tab+ GetDomainName+ CRLF;
+ Result:= Result+'  Host name: '      + Tab+ Tab+ GetHostName+ CRLF;
+ Result:= Result+'  Total monitors: ' + Tab+ IntToStr(Screen.MonitorCount)+ CRLF;
+ Result:= Result+'  Screen res:     ' + Tab+ IntToStr(Screen.Width)+ 'x'+ IntToStr(Screen.Height)+ CRLF;
+ Result:= Result+'  '+ ScreenResApi+ CRLF;
  Result:= Result+'  Free space: '     + Tab+ Tab+ DriveFreeSpaceS ('C') + CRLF;
  //Result:= Result+'  Local IP: '     + Tab+ Tab+ ciInternet.GetLocalIP+ CRLF;
 end;
 
+
+
+{ THIS WILL RETURN THE VIRTUALISED RESOLUTION (when high DPI is set).
+  It is useles if we want to get the real resolution.
+   http://stackoverflow.com/questions/7077572/get-current-native-screen-resolution-of-all-monitors-in-delphi-directx }
+function ScreenResApi: string;
+VAR MonInfo: TMonitorInfo;
+begin
+ MonInfo.cbSize := SizeOf(MonInfo);
+ Assert(Application.MainForm <> NIL, 'MainForm is nil. This happens usually when code is initialized in OnFormCreate.');
+ GetMonitorInfo(MonitorFromWindow(Application.MainForm.Handle, MONITOR_DEFAULTTONEAREST), @MonInfo);
+ Result:= Format('Monitor resolution (API): %dx%d', [MonInfo.rcMonitor.Right - MonInfo.rcMonitor.Left, MonInfo.rcMonitor.Bottom - MonInfo.rcMonitor.Top]);
+end;
 
 
 function GenerateHardwareRepTSL: TStringList;
@@ -477,30 +496,21 @@ function GenerateAppRep: string;
 begin
  AppData.AppDataFolder(True);
  Result:= ' [APPLICATION]'+ CRLF;
- Result:= Result+'  Exe name: '            + Tab + Application.ExeName+ CRLF;
- Result:= Result+'  AppDataFolder: '       +       AppData.AppDataFolder+ CRLF;
- Result:= Result+'  AppData.CurFolder: '   + Tab + AppData.CurFolder+ CRLF;
+ Result:= Result+'  AppDataFolder: '       + Tab + AppData.AppDataFolder+ CRLF;
  Result:= Result+'  AppData.IniFile: '     + Tab + AppData.IniFile+ CRLF;
- Result:= Result+'  Version: '             + Tab + AppData.GetVersionInfo;
+ Result:= Result+'  AppData.CurFolder: '   + Tab + AppData.CurFolder+ CRLF;
+ Result:= Result+'  Exe name: '            + Tab + Tab + Application.ExeName+ CRLF;
+ Result:= Result+'  Version: '             + Tab + Tab + AppData.GetVersionInfo+ CRLF;
+ Result:= Result+'  RunningUnderDelphi: '  + Tab + BoolToStrYesNo(IsRunningUnderDelphiDebugger)+ CRLF;
+ Result:= Result+'  IsDebuggerPresent: '   + Tab + BoolToStrYesNo(IsDebuggerPresent)+ CRLF;
+ Result:= Result+'  AppBitness: '          + Tab + AppBitness;
+ Result:= Result+'  CompilerOptimiz: '     + Tab + CompilerOptimizationS+ CRLF;
 end;
-
-
-
-{ THIS WILL RETURN THE VIRTUALISED RESOLUTION (when high DPI is set) SO IT IS USELESS
-   http://stackoverflow.com/questions/7077572/get-current-native-screen-resolution-of-all-monitors-in-delphi-directx }
-function GenerateScreenRepEx: string;
-VAR MonInfo: TMonitorInfo;
-begin
- MonInfo.cbSize := SizeOf(MonInfo);
- GetMonitorInfo(MonitorFromWindow(Application.MainForm.Handle, MONITOR_DEFAULTTONEAREST), @MonInfo);
- Result:= Format('    Monitor resolution (API): %dx%d', [MonInfo.rcMonitor.Right - MonInfo.rcMonitor.Left, MonInfo.rcMonitor.Bottom - MonInfo.rcMonitor.Top]);
-end;
-
 
 
 function GenerateWinSysRep: string;
 begin
- Result:= ' [SYSTEM]'+ CRLF;
+ Result:= ' [SYSTEM/OS]'+ CRLF;
  Result:= Result+'  OS platform: '          + Tab+ Tab+ cbVersion.GetOSName+ CRLF;
  Result:= Result+'  OS architecture: '      + Tab     + cbVersion.Architecture+ CRLF;
  Result:= Result+'  App has admin rights: ' + BoolToStr(AppHasAdminRights, TRUE)+ CRLF;
@@ -509,38 +519,35 @@ begin
 end;
 
 
-
+{ Useful paths }
 function GenerateWinPathRep: string;
 begin
  Result:= ' [PATHS]'+ CRLF;
  Result:= Result+'  Windows: '              + Tab+Tab + GetSpecialFolder(CSIDL_WINDOWS)+ CRLF;
  Result:= Result+'  System: '               + Tab+Tab + GetSpecialFolder(CSIDL_SYSTEM)+ CRLF;
+ Result:= Result+'  COMMON APPDATA: '       + Tab     + GetSpecialFolder(CSIDL_COMMON_APPDATA)+ CRLF;
  Result:= Result+'  Program Files: '        + Tab     + GetSpecialFolder(CSIDL_PROGRAM_FILES)+ CRLF;          { C:\Program Files }
  Result:= Result+'  Program Files cmn: '    + Tab     + GetSpecialFolder(CSIDL_PROGRAM_FILES_COMMON)+ CRLF;   { C:\Program Files\Common }
  Result:= Result+'  APPDATA: '              + Tab+Tab + GetSpecialFolder(CSIDL_APPDATA)+ CRLF;
  Result:= Result+'  LOCAL APPDATA: '        + Tab+      GetSpecialFolder(CSIDL_LOCAL_APPDATA)+ CRLF;
- Result:= Result+'  COMMON APPDATA: '       + Tab     + GetSpecialFolder(CSIDL_COMMON_APPDATA)+ CRLF;
  Result:= Result+'  COMMON DOCUMENTS: '     + Tab     + GetSpecialFolder(CSIDL_COMMON_DOCUMENTS)+ CRLF;       { All Users\Documents }
  Result:= Result+'  PERSONAL: '             + Tab+Tab + GetSpecialFolder(CSIDL_PERSONAL);
 end;
 
 
-
+{ Some other less useful paths }
 function GenerateWinPathRepEx: string;
 begin
- Result:= ' [PATHS2]'+ CRLF;
- Result:= Result+'  DESKTOP: '              + Tab+Tab + GetSpecialFolder(CSIDL_DESKTOP)+ CRLF;
- Result:= Result+'  DESKTOP DIRECTORY: '    + Tab     + GetSpecialFolder(CSIDL_DESKTOPDIRECTORY)+ CRLF;
- Result:= Result+'  COMMON DESKTOP DIR: '   + Tab     + GetSpecialFolder(CSIDL_COMMON_DESKTOPDIRECTORY)+ CRLF;
- Result:= Result+'  PROGRAMS: '             + Tab+Tab + GetSpecialFolder(CSIDL_PROGRAMS)+ CRLF;
- Result:= Result+'  COMMON PROGRAMS: '      + Tab     + GetSpecialFolder(CSIDL_COMMON_PROGRAMS)+ CRLF;
- Result:= Result+'  FONTS:      '           + Tab+Tab + GetSpecialFolder(CSIDL_FONTS)+ CRLF;
- Result:= Result+'  STARTUP: '              + Tab+Tab + GetSpecialFolder(CSIDL_STARTUP)+ CRLF;
- Result:= Result+'  ALTSTARTUP: '           + Tab+Tab + GetSpecialFolder(CSIDL_ALTSTARTUP)+ CRLF;
- Result:= Result+'  COMMON STARTMENU: '     + Tab     + GetSpecialFolder(CSIDL_COMMON_STARTMENU)+ CRLF;
- Result:= Result+'  COMMON STARTUP: '       + Tab     + GetSpecialFolder(CSIDL_COMMON_STARTUP)+ CRLF;
- Result:= Result+'  STARTMENU: '            + Tab+Tab + GetSpecialFolder(CSIDL_STARTMENU)+ CRLF;
- Result:= Result+'  NETWORK: '              + Tab+Tab + GetSpecialFolder(CSIDL_NETWORK);
+ Result:= ' [PATHS 2]'+ CRLF;
+ Result:= Result+'  COMMON DESKTOP DIR: ' + Tab     + GetSpecialFolder(CSIDL_COMMON_DESKTOPDIRECTORY)+ CRLF;
+ Result:= Result+'  DESKTOP DIR: '        + Tab+Tab + GetSpecialFolder(CSIDL_DESKTOPDIRECTORY)+ CRLF; // // <user name>\Desktop
+ Result:= Result+'  PROGRAMS: '           + Tab+Tab + GetSpecialFolder(CSIDL_PROGRAMS)+ CRLF;
+ Result:= Result+'  STARTUP: '            + Tab+Tab + GetSpecialFolder(CSIDL_STARTUP)+ CRLF;
+ Result:= Result+'  STARTMENU: '          + Tab+Tab + GetSpecialFolder(CSIDL_STARTMENU)+ CRLF;
+ Result:= Result+'  COMMON STARTMENU: '   + Tab     + GetSpecialFolder(CSIDL_COMMON_STARTMENU)+ CRLF;
+ Result:= Result+'  COMMON STARTUP: '     + Tab     + GetSpecialFolder(CSIDL_COMMON_STARTUP)+ CRLF;
+ Result:= Result+'  COMMON PROGRAMS: '    + Tab     + GetSpecialFolder(CSIDL_COMMON_PROGRAMS)+ CRLF;
+ Result:= Result+'  FONTS:      '         + Tab+Tab + GetSpecialFolder(CSIDL_FONTS);
 end;
 
 
@@ -568,10 +575,6 @@ begin
   end
  else Result:= TRUE;
 end;
-
-
-
-
 
 
 

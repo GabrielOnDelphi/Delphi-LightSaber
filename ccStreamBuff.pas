@@ -426,7 +426,8 @@ end;
    CHARS
 --------------------------------------------------------------------------------------------------}
 
-{ Writes a bunch of chars from the file. Why 'chars' and not 'string'? This function writes C++ strings (the length of the string was not written to disk also) and not real Delphi strings. }
+{ Writes a bunch of chars from the file.
+  Why 'chars' and not 'string'? This function writes C++ strings (the length of the string was not written to disk also) and not real Delphi strings. }
 procedure TCubicBuffStream.WriteChars(CONST s: AnsiString);
 begin
  Assert(s<> '', 'TCubicBuffStream.WriteChars - The string is empty');       { This makes sure 's' is not empty. Else I will get a RangeCheckError at runtime }
@@ -457,7 +458,8 @@ end;
 { Reads a bunch of chars from the file. Why 'ReadChars' and not 'ReadString'? This function reads C++ strings (the length of the string was not written to disk also) and not real Delphi strings. So, i have to give the number of chars to read as parameter. IMPORTANT: The function will reserve memory for s.}
 function TCubicBuffStream.ReadCharsA(Count: Integer): AnsiString;
 begin
- if Count= 0 then RAISE Exception.Create('Count is zero!');                     { It gives a range check error if we try s[1] on an empty string so we added 'Count = 0' as protection. }
+ if Count= 0
+ then RAISE Exception.Create('Count is zero!');                     { It gives a range check error if we try s[1] on an empty string so we added 'Count = 0' as protection. }
 
  SetLength(Result, Count);
  ReadBuffer(Result[1], Count);

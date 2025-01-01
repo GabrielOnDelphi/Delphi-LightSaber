@@ -106,7 +106,7 @@ USES
 IMPLEMENTATION
 
 USES
-  ccCore, cbDialogs, cbRegistry, cbVersion, ccIO;
+  ActiveX, ccCore, cbDialogs, cbRegistry, cbVersion, ccIO;
   //DONT CREATE CIRCULAR REFFERENCE TO cbAppData HERE!
 
 
@@ -301,6 +301,8 @@ end;
    Full list of 'Special folder constants' are available here:  http://msdn.microsoft.com/en-us/library/bb762494(VS.85).aspx
    'Special folder constants' are declared in ShlObj and SHFolder (as duplicates). SHFolder.pas is the interface for Shfolder.dll.
 --------------------------------------------------------------------------------------------------}
+{
+del
 function GetSpecialFolder (CSIDL: Integer; ForceFolder: Boolean = FALSE): string;
 VAR i: Integer;
 begin
@@ -308,11 +310,43 @@ begin
  if ForceFolder
  then ShGetFolderPath(0, CSIDL OR CSIDL_FLAG_CREATE, 0, 0, PChar(Result))
  else ShGetFolderPath(0, CSIDL, 0, 0, PChar(Result));
+
  i:= Pos(#0, Result);
  if i> 0
  then SetLength(Result, pred(i));
 
  Result:= Trail (Result);
+end;  }
+
+
+function GetSpecialFolder(CSIDL: Integer; ForceFolder: Boolean = False): string;
+var
+  Buffer: array[0..MAX_PATH - 1] of Char; // Use a fixed-size buffer.
+begin
+  case CSIDL of
+   { Some IDs like CSIDL_NETWORK represents special folder differs from standard filesystem folders and lacks a physical path.
+     ShGetFolderPath is designed to return file system paths and cannot handle virtual folders like CSIDL_NETWORK. It will fail for CSIDL_NETWORK. For such folders, you need to use APIs that interact with the Shell namespace rather than file paths. For example: SHGetSpecialFolderLocation / SHGetFolderLocation }
+    CSIDL_NETWORK         : EXIT('');  // "Network Neighborhood" or "Network" virtual folder.
+    CSIDL_PRINTERS        : EXIT('');  // "Printers" virtual folder, showing installed printers.
+    CSIDL_BITBUCKET       : EXIT('');  // "Recycle Bin," which is not a single physical location.
+    CSIDL_CONTROLS        : EXIT('');  // "Control Panel," which is a purely virtual location.
+    CSIDL_DRIVES          : EXIT('');  // "My Computer" or "This PC," listing drives and devices.
+    CSIDL_COMPUTERSNEARME : EXIT('');  // "Computers Near Me," showing nearby network computers.
+    CSIDL_INTERNET        : EXIT('');  // "Internet" virtual folder (usually unused in modern Windows).
+    CSIDL_CONNECTIONS     : EXIT('');  // Network and Dial-up Connections
+    CSIDL_COMMON_OEM_LINKS: EXIT('');  // Links to All Users OEM specific apps
+  end;
+
+  if ForceFolder
+  then ShGetFolderPath(0, CSIDL or CSIDL_FLAG_CREATE, 0, 0, Buffer)
+  else ShGetFolderPath(0, CSIDL, 0, 0, Buffer);
+
+  // Convert null-terminated buffer to string.
+  Result := StrPas(Buffer);
+
+  // Ensure the result ends with a trailing path delimiter if necessary.
+  if ForceFolder
+  then Result:= Trail(Result);
 end;
 
 
@@ -321,23 +355,17 @@ function GetSpecialFolders: TStringList;
 begin
  Result:= TStringList.Create;                                                          //  FROM ShlObj.pas
  Result.Add(GetSpecialFolder(CSIDL_DESKTOP                 , FALSE));                  // <desktop>
- Result.Add(GetSpecialFolder(CSIDL_INTERNET                , FALSE));                  // Internet Explorer (icon on desktop)
  Result.Add(GetSpecialFolder(CSIDL_PROGRAMS                , FALSE));                  // Start Menu\Programs
- Result.Add(GetSpecialFolder(CSIDL_CONTROLS                , FALSE));                  // My Computer\Control Panel
- Result.Add(GetSpecialFolder(CSIDL_PRINTERS                , FALSE));                  // My Computer\Printers
  Result.Add(GetSpecialFolder(CSIDL_PERSONAL                , FALSE));                  // My Documents
  Result.Add(GetSpecialFolder(CSIDL_FAVORITES               , FALSE));                  // <user name>\Favorites
  Result.Add(GetSpecialFolder(CSIDL_STARTUP                 , FALSE));                  // Start Menu\Programs\Startup
  Result.Add(GetSpecialFolder(CSIDL_RECENT                  , FALSE));                  // <user name>\Recent
  Result.Add(GetSpecialFolder(CSIDL_SENDTO                  , FALSE));                  // <user name>\SendTo
- Result.Add(GetSpecialFolder(CSIDL_BITBUCKET               , FALSE));                  // <desktop>\Recycle Bin
  Result.Add(GetSpecialFolder(CSIDL_STARTMENU               , FALSE));                  // <user name>\Start Menu
  Result.Add(GetSpecialFolder(CSIDL_MYDOCUMENTS             , FALSE));                  // Personal was just a silly name for My Documents
  Result.Add(GetSpecialFolder(CSIDL_MYMUSIC                 , FALSE));                  // "My Music" folder
  Result.Add(GetSpecialFolder(CSIDL_MYVIDEO                 , FALSE));                  // "My Videos" folder
  Result.Add(GetSpecialFolder(CSIDL_DESKTOPDIRECTORY        , FALSE));                  // <user name>\Desktop
- Result.Add(GetSpecialFolder(CSIDL_DRIVES                  , FALSE));                  // My Computer
- Result.Add(GetSpecialFolder(CSIDL_NETWORK                 , FALSE));                  // Network Neighborhood (My Network Places)
  Result.Add(GetSpecialFolder(CSIDL_NETHOOD                 , FALSE));                  // <user name>\nethood
  Result.Add(GetSpecialFolder(CSIDL_FONTS                   , FALSE));                  // windows\fonts
  Result.Add(GetSpecialFolder(CSIDL_TEMPLATES               , FALSE));
@@ -368,21 +396,12 @@ begin
  Result.Add(GetSpecialFolder(CSIDL_COMMON_DOCUMENTS        , FALSE));                  // All Users\Documents
  Result.Add(GetSpecialFolder(CSIDL_COMMON_ADMINTOOLS       , FALSE));                  // All Users\Start Menu\Programs\Administrative Tools
  Result.Add(GetSpecialFolder(CSIDL_ADMINTOOLS              , FALSE));                  // <user name>\Start Menu\Programs\Administrative Tools
- Result.Add(GetSpecialFolder(CSIDL_CONNECTIONS             , FALSE));                  // Network and Dial-up Connections
  Result.Add(GetSpecialFolder(CSIDL_COMMON_MUSIC            , FALSE));                  // All Users\My Music
  Result.Add(GetSpecialFolder(CSIDL_COMMON_PICTURES         , FALSE));                  // All Users\My Pictures
  Result.Add(GetSpecialFolder(CSIDL_COMMON_VIDEO            , FALSE));                  // All Users\My Video
  Result.Add(GetSpecialFolder(CSIDL_RESOURCES               , FALSE));                  // Resource Direcotry
  Result.Add(GetSpecialFolder(CSIDL_RESOURCES_LOCALIZED     , FALSE));                  // Localized Resource Direcotry
- Result.Add(GetSpecialFolder(CSIDL_COMMON_OEM_LINKS        , FALSE));                  // Links to All Users OEM specific apps
  Result.Add(GetSpecialFolder(CSIDL_CDBURN_AREA             , FALSE));                  // USERPROFILE\Local Settings\Application Data\Microsoft\CD Burning
- Result.Add(GetSpecialFolder(CSIDL_COMPUTERSNEARME         , FALSE));                  // Computers Near Me (computered from Workgroup membership)
- Result.Add(GetSpecialFolder(CSIDL_FLAG_CREATE             , FALSE));                  // combine with CSIDL_ value to force folder creation in SHGetFolderPath
- Result.Add(GetSpecialFolder(CSIDL_FLAG_DONT_VERIFY        , FALSE));                  // combine with CSIDL_ value to return an unverified folder path
- Result.Add(GetSpecialFolder(CSIDL_FLAG_DONT_UNEXPAND      , FALSE));                  // combine with CSIDL_ value to avoid unexpanding environment variables
- Result.Add(GetSpecialFolder(CSIDL_FLAG_NO_ALIAS           , FALSE));                  // combine with CSIDL_ value to insure non-alias versions of the pidl
- Result.Add(GetSpecialFolder(CSIDL_FLAG_PER_USER_INIT      , FALSE));                  // combine with CSIDL_ value to indicate per-user init (eg. upgrade)
- Result.Add(GetSpecialFolder(CSIDL_FLAG_MASK               , FALSE));                  // mask for all possible flag values
 end;
 
 

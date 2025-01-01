@@ -2,7 +2,7 @@
 
 {=============================================================================================================
    SYSTEM
-   2024.06
+   2025.01
    See Copyright.txt
 ==============================================================================================================
 
@@ -105,7 +105,7 @@ USES
  function  GetLogonName   : string;
  function  GetDomainName  : String;                                                                { for home users it shows the computer name (Qosmio) }
  function  GetUserName (AllowExceptions: Boolean = False): string; // NOT TESTED
- function  GetUserNameExString (ANameFormat: Cardinal): string;                                    { source http://stackoverflow.com/questions/8446940/how-to-get-fully-qualified-domain-name-on-windows-in-delphi }
+ function  GetUserNameEx (ANameFormat: Cardinal): string;                                    { source http://stackoverflow.com/questions/8446940/how-to-get-fully-qualified-domain-name-on-windows-in-delphi }
 
 
 {==================================================================================================
@@ -311,7 +311,8 @@ begin
 end;
 
 
-{ there is another function with the same name in WinSock }
+{ For home users it shows the computer name (Qosmio).
+  There is another function with the same name in WinSock }
 function GetHostName: string;    { It returns the name of my laptop: 'Qosmio' }
 var
   HName: array[0..100] of AnsiChar;     //HEnt: pHostEnt;
@@ -325,47 +326,18 @@ begin
 end;
 
 
-{ for home users it shows the computer name (Qosmio) }
+{ For home users it shows the computer name (Qosmio) }
 function GetDomainName: String;
 VAR
-  vlDomainName : array[0..30] of WideChar;
-  vlSize : ^DWORD;
+  vlDomainName: array[0..30] of WideChar;
+  vlSize: ^DWORD;
 begin
  New(vlSize);
  vlSize^ := 30;
  WinApi.Windows.ExpandEnvironmentStrings(PChar('%USERDOMAIN%'), vlDomainName, vlSize^);
  system.Dispose(vlSize);
- Result := vlDomainName;
+ Result:= vlDomainName;
 end;
-
-
-{ source http://stackoverflow.com/questions/8446940/how-to-get-fully-qualified-domain-name-on-windows-in-delphi }
-function GetUserNameExString(ANameFormat: Cardinal): string;
-{CONST
-  NameUnknown            = 0;
-  NameFullyQualifiedDN   = 1;
-  NameSamCompatible      = 2;
-  NameDisplay            = 3;
-  NameUniqueId           = 6;
-  NameCanonical          = 7;
-  NameUserPrincipal      = 8;
-  NameCanonicalEx        = 9;
-  NameServicePrincipal   = 10;
-  NameDnsDomain          = 12;}
-var
-  Buf: array[0..256] of AnsiChar;
-  BufSize: Cardinal;
-  GetUserNameEx: function (NameFormat: Cardinal; lpNameBuffer: LPSTR; var nSize: ULONG): BOOL; stdcall;
-begin
-  Result := '';
-  BufSize := SizeOf(Buf) div SizeOf(Buf[0]);
-  GetUserNameEx := GetProcAddress(GetModuleHandle('secur32.dll'), 'GetUserNameExA');
-  if Assigned(GetUserNameEx)
-  then
-    if GetUserNameEx(ANameFormat, Buf, BufSize)
-    then Result := string(Buf);
-end;
-
 
 
 //See https://msdn.microsoft.com/en-us/library/cc761107.aspx
@@ -386,6 +358,44 @@ begin
       then RaiseLastOSError;
       Result := '';
     end;
+end;
+
+
+{ For 2, returns computer name + user name.
+  Ex: GODZILLA\John Lennon }
+function GetUserNameEx(ANameFormat: Cardinal): string;
+{See the constants defined in WinApi.Windows.pas EXTENDED_NAME_FORMAT enum.
+  NameUnknown            = 0;
+  NameFullyQualifiedDN   = 1;
+  NameSamCompatible      = 2;
+  NameDisplay            = 3;
+  NameUniqueId           = 6;
+  NameCanonical          = 7;
+  NameUserPrincipal      = 8;
+  NameCanonicalEx        = 9;
+  NameServicePrincipal   = 10;
+  NameDnsDomain          = 12;}
+var
+  Buf: array[0..511] of WideChar; // Use WideChar for Unicode support.
+  BufSize: ULONG;                 // ULONG matches the parameter type.
+  Secur32: HMODULE;
+  GetUserNameEx: function(NameFormat: Cardinal; lpNameBuffer: LPWSTR; var nSize: ULONG): BOOL; stdcall;
+begin
+  Result := '';
+  Secur32 := LoadLibrary('secur32.dll'); // Explicitly load the library.
+  if Secur32 = 0
+  then RAISE Exception.Create('Unable to load secur32.dll.');
+  try
+    @GetUserNameEx := GetProcAddress(Secur32, 'GetUserNameExW'); // Use Unicode version.
+    if not Assigned(GetUserNameEx) then
+      raise Exception.Create('GetUserNameExW function not found in secur32.dll.');
+    BufSize := Length(Buf);
+    if GetUserNameEx(ANameFormat, Buf, BufSize)
+    then Result := WideCharToString(Buf)
+    else RaiseLastOSError; // Raise an error if the function call fails.
+  finally
+    FreeLibrary(Secur32); // Ensure the library is freed.
+  end;
 end;
 
 

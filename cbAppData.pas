@@ -890,7 +890,7 @@ begin
       if ShowBuildNo
       then Result:= Result+ '.'+ IntToStr(LoWord(FixedInfo.dwFileVersionLS));
      end
-  else Result:= '0';
+  else Result:= 'N/A';
 end;
 
 
