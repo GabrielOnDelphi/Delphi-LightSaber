@@ -1,0 +1,59 @@
+package LightAppData;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 2}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'LightSaber - Core library'}
+{$LIBSUFFIX AUTO}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  BindEngine,
+  vclimg,
+  vcl,
+  vclwinx,
+  vclx,
+  VclSmp,
+  LightCore;
+
+contains
+  cbAppData in 'cbAppData.pas',
+  cbIniFile in 'cbIniFile.pas',
+  cbCenterControl in 'cbCenterControl.pas',
+  cbRegistry in 'cbRegistry.pas',
+  cbDialogs in 'cbDialogs.pas',
+  cbLogLines in 'cbLogLines.pas',
+  cbLogRam in 'cbLogRam.pas',
+  cbLogUtils in 'cbLogUtils.pas',
+  cbVersion in 'cbVersion.pas',
+  cbLogLinesAbstract in 'cbLogLinesAbstract.pas',
+  cbLogLinesThreaded in 'cbLogLinesThreaded.pas';
+
+end.
+
+
+
+
