@@ -232,7 +232,7 @@ end;
   READ HERE:: http://codeverge.com/embarcadero.delphi.basm/fastest-best-way-to-reverse-byte-orde/1096017
 -----------------------------------------------------------------------------------------------------------------------}
 
-{$IFDEF MSWINDOWS}
+{$IFDEF MSWINDOWS} //ASM instrauctions not available on Android
 { WORD }
 function SwapWordF(TwoBytes: word): Word; assembler;    { NOT TESTED! }
 asm
@@ -268,7 +268,7 @@ end;
 
 
 { CARDINAL }
-{$IFDEF MSWINDOWS}
+{$IFDEF MSWINDOWS}   //ASM instrauctions not available on Android
 function SwapCardinalF(aCardinal: Cardinal): Cardinal; assembler;   { NOT TESTED! }
 asm
   {$IFDEF CPUX64}
@@ -315,7 +315,7 @@ end;
 
 
 
-{$IFDEF MSWINDOWS}
+{$IFDEF MSWINDOWS}   //ASM instrauctions not available on Android
 function SwapInt64(Value: Int64): Int64;
  {$IF Defined(CPUX86)}
  asm

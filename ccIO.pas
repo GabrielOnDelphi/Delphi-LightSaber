@@ -68,11 +68,9 @@
 ==================================================================================================}
 
 INTERFACE
-{$WARN UNIT_PLATFORM ON}   { OFF: Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
+//del {.$WARN UNIT_PLATFORM ON}   { OFF: Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
 
 USES
-  {$IFDEF MSWINDOWS}
-  {$ENDIF}
   System.Diagnostics,
   System.Math,
   System.Masks,
@@ -473,7 +471,7 @@ end;
 function Trail(CONST Path: string): string;
 begin
  if Path= '' then EXIT('');      { I may encounter this when I do this:  ExtractLastFolder('c:\'). ExtractLastFolder will return '' }
- Result:= IncludeTrailingPathDelimiter(Path)
+ Result:= IncludeTrailingPathDelimiter(Path);
 end;
 
 
@@ -1659,28 +1657,29 @@ end;
 
 
 { Does the same as the function above but it accepts a file as input.
-  Works with UNC paths
+  Works with UNC paths.
+  Crossplatform.
 
   Also exists:
      IOUtils.TDirectory.GetParent.
      But is simply sucks. See http://stackoverflow.com/questions/35429699/system-ioutils-tdirectory-getparent-odd-behavior
      Also GetParent raises an exception if the given path is invalid or the directory DOES NOT exist
      So stick with TrimLastFolder.
- }
-function TrimLastFolder(CONST DirPath: string): string;  { Example: for 'c:\windows\system' returns only 'c:\windows\'. It also works with incomplete paths like 'windows\system' }
-VAR i: Integer;
-begin
-{$IFDEF MSWINDOWS}
- Result:= ExcludeTrailingPathDelimiter(DirPath);
- i:= Length(Result);
- WHILE (i> 0) AND (Result[i]<> '\')                      { Search from tail to head until you find the first delimiter }
-  DO Dec(i);
 
- Result:= Trail(CopyTo(Result, 1, i));
-{$ELSE}
-  raise Exception.Create('Not available on Mac!');
-{$ENDIF}
-end;                                                     { Could also be implemented as: Copy(RootFull, 1, LastPos('\', RootFull)- 1) }
+  Example: for 'c:\windows\system' returns only 'c:\windows\'. It also works with incomplete paths like 'windows\system'
+ }
+function TrimLastFolder(const DirPath: string): string;
+var
+  TempPath: string;
+  SeparatorPos: Integer;
+begin
+  TempPath := ExcludeTrailingPathDelimiter(DirPath); // Remove trailing delimiter if present
+  SeparatorPos := LastDelimiter(TPath.DirectorySeparatorChar, TempPath); // Find the last directory separator
+  if SeparatorPos > 0 then
+    Result := IncludeTrailingPathDelimiter(Copy(TempPath, 1, SeparatorPos - 1)) // Get the path up to the last folder
+  else
+    Result := ''; // If no separator is found, return an empty string
+end;
 
 
 

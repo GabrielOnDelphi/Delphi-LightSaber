@@ -29,7 +29,6 @@ package LightCore;
 {$LIBSUFFIX AUTO}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
-{$WARN DUPLICATE_CTOR_DTOR OFF}
 
 requires
   BindEngine;

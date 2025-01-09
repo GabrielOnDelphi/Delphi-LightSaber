@@ -19,7 +19,8 @@
 INTERFACE
 
 USES
-  Winapi.Windows, System.IOUtils, System.SysUtils, System.Classes;
+  //Winapi.Windows,
+  System.IOUtils, System.SysUtils, System.Classes;
 
 
 

@@ -5,7 +5,7 @@ UNIT cmEncodeXOR;
    See Copyright.txt
 ==============================================================================================================
 
-   RUDIMENTARY XOR STRINGS ENCRYPTION
+   RUDIMENTARY XOR STRING ENCRYPTION
    Don't use it to protect sensitive data!
 
 =============================================================================================================}
@@ -32,6 +32,11 @@ USES
  function  EncodeXorText     (CONST PlainText: string; Key: Byte): string;
  function  DecodeXorText     (CONST EncodedArr: array of Byte; Key: Byte): string;
 
+ { SEE ALSO
+ System.IOUtils.TFile.Encrypt
+ https://docwiki.embarcadero.com/Libraries/Alexandria/en/System.IOUtils.TFile.Encrypt
+ Encrypt a given file using the operating system-provided facilities.}
+
 IMPLEMENTATION
 
 
@@ -51,6 +56,7 @@ begin
    else Result:= Result+ char(curchar-1);
   end;
 end;
+
 
 function SimpleEncode(CONST s: string): string;
 VAR i: Integer;
@@ -78,58 +84,6 @@ begin
   for CharIndex:= 1 to Length(s) DO
     Result[CharIndex]:= chr(NOT (ord(s[CharIndex])));
 end;
-
-
-
-
-{--------------------------------------------------------------------------------------------------
-   Advantages: The result is always alphanumeric. Example: 12345 -> 364944BC8C
-   Disadvantage: The resulted encodded string is twice as long as the input string
---------------------------------------------------------------------------------------------------}
-{$R-}
-{$Q-}
-CONST
-   FixedEncodeConstant= 75845;    { If you change this constant, any previous encoded string will decode properly anymore }
-
-
-function BetterEncode (CONST s: string; CONST StartKey: WORD): string;                             { Encrypt }
-VAR b  : BYTE;
-    i  : INTEGER;
-    key: WORD;
-BEGIN
- key := StartKey;
- RESULT := '';
- FOR i := 1 TO LENGTH(s) DO
-  Begin
-   b := BYTE(s[i]) XOR (key SHR 8);
-   key := (b + key) * FixedEncodeConstant;
-   RESULT := RESULT + IntToHex(b, 2)
-  End
-END;
-
-
-function BetterDecode (CONST s: string; CONST StartKey: WORD): string;                             { Decrypt }
-VAR b  : BYTE;
-    i  : INTEGER;
-    key: WORD;
-BEGIN
- Result:= '';
-
- if Length(s) MOD 2 <> 0
- then RAISE exception.Create('The length of the input string to decrypt must be divisible by 2');
-
- key:= StartKey;
- RESULT:= '';
- for i:= 1 TO LENGTH(s) DIV 2 DO
-  BEGIN
-   b:= StrToIntDef('$' + system.COPY(s, 2*i-1, 2), 0);
-   Result:= Result + CHAR( b XOR (key SHR 8) );
-   key:= (b + key) * FixedEncodeConstant
-  END
-END;
-
-{$R+}
-{$Q+}
 
 
 
@@ -212,6 +166,55 @@ begin
     Result[I + 1] := Char(EncodedArr[I] XOR Key); // XOR with the same key
 end;
 
+
+
+
+{--------------------------------------------------------------------------------------------------
+   Advantages: The result is always alphanumeric. Example: 12345 -> 364944BC8C
+   Disadvantage: The resulted encodded string is twice as long as the input string
+--------------------------------------------------------------------------------------------------}
+{$R-}{$Q-}
+CONST
+   FixedEncodeConstant= 75845;    { If you change this constant, any previous encoded string will not be properly decode anymore }
+
+function BetterEncode (CONST s: string; CONST StartKey: WORD): string; { Encrypt }
+VAR b  : BYTE;
+    i  : INTEGER;
+    key: WORD;
+BEGIN
+ key := StartKey;
+ RESULT := '';
+ FOR i := 1 TO LENGTH(s) DO
+  Begin
+   b := BYTE(s[i]) XOR (key SHR 8);
+   key := (b + key) * FixedEncodeConstant;
+   RESULT := RESULT + IntToHex(b, 2)
+  End
+END;
+
+
+function BetterDecode (CONST s: string; CONST StartKey: WORD): string; { Decrypt }
+VAR b  : BYTE;
+    i  : INTEGER;
+    key: WORD;
+BEGIN
+ Result:= '';
+
+ if Length(s) MOD 2 <> 0
+ then RAISE exception.Create('The length of the input string to decrypt must be divisible by 2');
+
+ key:= StartKey;
+ RESULT:= '';
+ for i:= 1 TO LENGTH(s) DIV 2 DO
+  BEGIN
+   b:= StrToIntDef('$' + system.COPY(s, 2*i-1, 2), 0);
+   Result:= Result + CHAR( b XOR (key SHR 8) );
+   key:= (b + key) * FixedEncodeConstant
+  END
+END;
+
+{$R+}
+{$Q+}
 
 
 end.

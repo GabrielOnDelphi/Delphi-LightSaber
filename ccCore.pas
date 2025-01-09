@@ -18,8 +18,7 @@ INTERFACE
 
 USES
    System.AnsiStrings, System.Character, System.SysUtils, System.Math, System.IOUtils, System.StrUtils,
-   System.Classes, System.Types, {System.UITypes,} System.TimeSpan, System.DateUtils;
-   //, Generics.Collections;
+   System.Classes, System.Types, System.TimeSpan, System.DateUtils;
 
 { Enters }
 CONST
@@ -215,7 +214,7 @@ TYPE
  procedure SplitString         (CONST Text, Delimiter: string; OUT sField, sValue: string);    overload;          { Split a string in its components. For example 'ClientName=Bubu' will return in 'ClientName' and 'Bubu' }
  procedure SplitString         (CONST Text: string; TSL: TStringList);                         overload;          { Split a string in multiple rows every time the #13#10 char is found (I took this code from Embarcadero's TStringList.Text:= s ) }
  procedure SplitStringAtPos    (CONST Text: string; CONST Pos: Integer; OUT s1, s2: string);   overload;          { Split a string in two substrings at the specified position. The char at Pos will be included in the first string. }
- procedure SplitStringAtPos    (CONST Text: AnsiString; CONST Pos: Integer; OUT s1, s2: AnsiString);     overload;
+ procedure SplitStringAtPos    (CONST Text: AnsiString; CONST Pos: Integer; OUT s1, s2: AnsiString); overload;
  procedure SplitStringList     (StringList: TStrings; OUT OutList1, OutList2: TStringArray);                      { Split each row of the provided StringList into two parts. The two resulted strings are placed in an ArrayOfStrings }
  procedure SplitStringListI    (StringList: TStrings; OUT OutList1: TStringArray; OUT OutList2: System.Types.TIntegerDynArray);   { Split each row of the provided StringList into two parts. The two resulted strings are placed in an ArrayOfStrings }
 
@@ -230,7 +229,9 @@ TYPE
  // COMPARE
  function  StringFuzzyCompare  (s1, s2: string): Integer;                                                     { The function checks if any identical characters is in the near of the actual compare position }
  function  FileNameNaturalSort (s1, s2: String): Integer;                                                     { Natural compare two filenames }
- function  StrCmpLogicalW      (psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll';             { Natural compare two filenames. Digits in the strings are considered as numerical content rather than text. This test is not case-sensitive. Use it like this: StrCmpLogicalW(PChar(s1), PChar(s2));  see: http://stackoverflow.com/questions/1024515/delphi-is-it-necessary-to-convert-string-to-widestring.  }
+ {$IFDEF MSWINDOWS}
+ function  StrCmpLogicalW      (psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll'; {$ENDIF}     { Natural compare two filenames. Digits in the strings are considered as numerical content rather than text. This test is not case-sensitive. Use it like this: StrCmpLogicalW(PChar(s1), PChar(s2));  see: http://stackoverflow.com/questions/1024515/delphi-is-it-necessary-to-convert-string-to-widestring.  }
+
 
  // MAKE STRING
  function  MakeStringLongRight (CONST s, c: AnsiChar; ForcedLength: integer): AnsiString;   overload;
@@ -293,7 +294,7 @@ TYPE
    STRINGS: CONVERSION TO NUMBERS
 ============================================================================================================}
  function  i2s                 (Value: Integer):           string; overload;  inline;
- function  i2s                 (Value, MaxValueExpected: integer): string; overload;                          { Add the specified number of zeros before the string. See LeadingZerosAuto help for details }
+ function  i2s                 (Value, MaxVal: integer):   string; overload;                                  { Add the specified number of zeros before the string. See LeadingZerosAuto help for details }
  function  i2s                 (Value: Int64)  :           string; overload;                                  { int64 can hold up to 9223372036854775807 }
  function  i2sHuman            (Value: Int64)  :           string;                                            { Retunrs something like: 1= 1st, 2= 2nd, 3= 3rd, 4= 4th }
  function  ExtractIntFromStr   (const s: string): Integer;                                                    { Extracts a number from a string. Works only if the number is at the beginning of the string. Example '123xxx' }
@@ -308,7 +309,7 @@ TYPE
 {============================================================================================================
    STRINGS: NUMBERS
 ============================================================================================================}
- function  FixNumber           (      s: string): Integer;                                                    { Converts a text that contains an invalid number to a valid number. For example  '!2345' will return '2345' }
+ function  FixNumber           (CONST s: string): Integer;                                                    { Converts a text that contains an invalid number to a valid number. For example  '!2345' will return '2345' }
  function  StringIsInteger     (CONST s: string): Boolean;                                                    { Varianta 2 }
  function  StringIsInteger2    (CONST s: string): Boolean;                                                    { Varianta 3 }
  function  CharIsNumber        (CONST c: char)  : Boolean;
@@ -742,20 +743,6 @@ end;
 
 
 { Returns today as date (string) based on Locale. Example: Montag }
-
-(* OLD CODE. Not cross platform. Delete
-{$IFDEF msWindows}
-function TodayIs: string;
-VAR
- pFormatModel, pResult: PChar;
-begin
- Getmem(pResult, 20);
- pFormatModel:= 'dddddddddd';   { ddd => only the day is shown }
- GetDateFormat(LOCALE_SYSTEM_DEFAULT, 0, NIL, pFormatModel, pResult, 20);
- result:= pResult;
- FreeMemory(pResult);
-end;  {$ENDIF} *)
-
 function TodayIs: string; // This is cross-platform
 var
   FormatSettings: TFormatSettings;
@@ -1073,14 +1060,16 @@ begin
 end;
 
 
-{ As above, but additionally it adds the specified number of zeros before the string.
-  It will determine this automaticxally based on the MaxValueExpected.
-  For example i2s('1', 50) will generate '01' but i2s('1', 500) will generate '001'.  }
-
-function i2s(Value, MaxValueExpected: integer): string;
+{ As above, but additionally it adds a number of zeros as prefix.
+  The number of zeros is determine this automaticxally based on the MaxVal.
+  Example:
+     i2s('1', 5)    -> '1'
+     i2s('1', 500)  -> '001'
+}
+function i2s(Value, MaxVal: integer): string;
 begin
  Result:= IntToStr(Value);
- Result:= LeadingZerosAuto(Result, MaxValueExpected);
+ Result:= LeadingZerosAuto(Result, MaxVal);
 end;
 
 
@@ -1677,18 +1666,21 @@ end;
 
 
 { Converts a text that contains an invalid number to a valid number. For example  '!2345' will return '2345' }
-function FixNumber(s: string): Integer;
-VAR I: Integer;
+function FixNumber(CONST s: string): Integer;
+VAR
+  I: Integer;
+  LocalS: string;
 begin
  I := 1;
+ LocalS:= S;
 
- WHILE I <= Length(S) DO
-   if NOT CharIsNumber(S[I])
-   AND (S[I] <> '-')
-   then Delete(S, I, 1)
+ WHILE I <= Length(LocalS) DO
+   if NOT CharIsNumber(LocalS[I])
+   AND (LocalS[I] <> '-')
+   then Delete(LocalS, I, 1)
    else Inc(I);
 
- Result:= StrToIntDef(S, 0);
+ Result:= StrToIntDef(LocalS, 0);
 end;
 
 

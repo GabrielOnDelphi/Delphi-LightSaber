@@ -55,7 +55,7 @@ UNIT ccStreamBuff;
 INTERFACE
 
 USES
-   System.Types, System.SysUtils, System.Classes;
+   System.SysUtils, System.Classes;
 
 TYPE
   TCubicBuffStream= class(System.Classes.TBufferedFileStream)
