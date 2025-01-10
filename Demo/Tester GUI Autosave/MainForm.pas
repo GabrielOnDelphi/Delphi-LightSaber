@@ -22,7 +22,7 @@ INTERFACE
 
 USES
   WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin,
-  cvRichEdit, Vcl.ComCtrls, ccCore, csSystem, cbDialogs, ccINIFile,  Vcl.Dialogs, cvCheckBox, Vcl.ExtCtrls, llRichLogTrack,
+  cvRichEdit, Vcl.ComCtrls, ccCore, csSystem, cbDialogs, ccINIFile, cbAppDataForm,  Vcl.Dialogs, cvCheckBox, Vcl.ExtCtrls, llRichLogTrack,
   System.Actions, Vcl.ActnList, Vcl.Menus, cvRadioButton, cbAppData;
 
 TYPE
@@ -58,7 +58,7 @@ TYPE
     procedure FormCreate         (Sender: TObject);
     procedure FormDestroy        (Sender: TObject);
   private
-    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully created
+    procedure LateInitialize; override_; // Called after the main form was fully created
   public
  end;
 

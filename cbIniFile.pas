@@ -6,7 +6,7 @@
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
-  Same as ccIniFile but adds support for forms to save themselves to disk.
+  Same as ccINIFile but adds support for forms to save themselves to disk.
   Ini file name/file path is automatically calculated.
 
 --------------------------------------------------------------------------------------------------------------
@@ -120,11 +120,11 @@ TYPE
     procedure SaveForm (Form: TForm; Loading: TFormLoading= flPosOnly);      { Save ALL supported controls on this form }
     procedure LoadForm (Form: TForm; Loading: TFormLoading= flPosOnly);
 
-    { Font - this requires VCL framework so it cannot be moved to ccIniFile! }
+    { Font - this requires VCL framework so it cannot be moved to ccINIFile }
     function  Read       (CONST Ident: string; Font: TFont): Boolean;            overload;
     procedure Write      (CONST Ident: string; Font: TFont);                     overload;
 
-    { Color - this requires VCL framework so it cannot be moved to ccIniFile! }
+    { Color - this requires VCL framework so it cannot be moved to ccINIFile }
     function  ReadColor  (CONST Ident: string; Default: TColor): TColor;
     procedure WriteColor (CONST Ident: string; Value: TColor);
 

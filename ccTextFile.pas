@@ -498,7 +498,7 @@ begin
 
   // Replace the original file with the one containing BOM
   DeleteFile(FileName);
-  RenameFile(OutputFileName, FileName);
+  System.SysUtils.RenameFile(OutputFileName, FileName);
 end;
 
 
@@ -546,7 +546,7 @@ begin
 
   // Replace the original file with the one containing BOM
   DeleteFile(FileName);
-  RenameFile(OutFileName, FileName);
+  System.SysUtils.RenameFile(OutFileName, FileName);
 end;
 
 
@@ -578,7 +578,7 @@ begin
 
   // Replace the original file with the one containing BOM
   DeleteFile(FileName);
-  RenameFile(OutFileName, FileName);
+  System.SysUtils.RenameFile(OutFileName, FileName);
 end;
 
 

@@ -25,7 +25,7 @@ package LightAppData;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'LightSaber - Core library'}
+{$DESCRIPTION 'LightSaber - AppData VCL library'}
 {$LIBSUFFIX AUTO}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
@@ -50,7 +50,8 @@ contains
   cbLogUtils in 'cbLogUtils.pas',
   cbVersion in 'cbVersion.pas',
   cbLogLinesAbstract in 'cbLogLinesAbstract.pas',
-  cbLogLinesThreaded in 'cbLogLinesThreaded.pas';
+  cbLogLinesThreaded in 'cbLogLinesThreaded.pas',
+  cbAppDataForm in 'cbAppDataForm.pas';
 
 end.
 

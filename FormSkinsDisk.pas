@@ -56,10 +56,11 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  Winapi.Windows, System.SysUtils, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Classes, Vcl.Forms;
+  Winapi.Windows, System.SysUtils, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Classes, Vcl.Forms,
+  cbAppDataForm;
 
 TYPE
-  TfrmSkinDisk = class(TForm)
+  TfrmSkinDisk = class(TLightForm)
     lBox: TListBox;
     lblTop: TLabel;
     pnlBottom: TPanel;

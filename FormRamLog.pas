@@ -58,7 +58,7 @@ TYPE
     procedure SaveSettings;
   public
     class procedure CreateGlobalLog; static; // Would be nice to make this protected but we can't. All event handlers must be accesible/visible
-    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully initilized
+    procedure LateInitialize(Sender: TObject); //(VAR Msg: TMessage); override_; // Called after the main form was fully initilized
   end;
 
 
@@ -71,7 +71,7 @@ IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   cbLogUtils, cvINIFile, ccINIFile;
+   cbLogUtils, cvINIFile, ccINIFile, cbAppDataForm;
 
 
 
@@ -100,7 +100,7 @@ begin
 end;
 
 
-procedure TfrmRamLog.LateInitialize;
+procedure TfrmRamLog.LateInitialize(Sender: TObject);
 begin
   LoadSettings;
   chkLogOnError.Checked:= AppData.RamLog.ShowOnError;
@@ -209,8 +209,5 @@ end;
 
 
 end.
-
-
-
 
 

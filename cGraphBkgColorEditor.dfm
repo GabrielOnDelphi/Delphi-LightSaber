@@ -4,8 +4,8 @@ object frmBorderEditor: TfrmBorderEditor
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'Automatic background color settings'
-  ClientHeight = 423
-  ClientWidth = 550
+  ClientHeight = 422
+  ClientWidth = 546
   Color = clBtnFace
   Constraints.MinHeight = 380
   Constraints.MinWidth = 480
@@ -22,21 +22,21 @@ object frmBorderEditor: TfrmBorderEditor
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 544
-    Height = 376
+    Width = 540
+    Height = 375
     Align = alClient
     Anchors = []
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 0
     DesignSize = (
-      544
-      376)
+      540
+      375)
     object lblWarning: TLabel
       AlignWithMargins = True
       Left = 3
       Top = 3
-      Width = 538
+      Width = 534
       Height = 30
       Hint = #39'Fade to color'#39' is CPU hungry'
       Align = alTop
@@ -51,7 +51,7 @@ object frmBorderEditor: TfrmBorderEditor
       WordWrap = True
     end
     object btnReset: TButton
-      Left = 502
+      Left = 494
       Top = 4
       Width = 40
       Height = 19
@@ -62,8 +62,8 @@ object frmBorderEditor: TfrmBorderEditor
       OnClick = btnResetClick
     end
     object grpFillFade: TGroupBox
-      Left = 277
-      Top = 40
+      Left = 271
+      Top = 39
       Width = 237
       Height = 298
       Anchors = []
@@ -205,8 +205,8 @@ object frmBorderEditor: TfrmBorderEditor
       end
     end
     object grpShape: TGroupBox
-      Left = 29
-      Top = 211
+      Left = 27
+      Top = 210
       Width = 213
       Height = 124
       Anchors = []
@@ -246,7 +246,7 @@ object frmBorderEditor: TfrmBorderEditor
       end
     end
     object grpBkgFill: TGroupBox
-      Left = 29
+      Left = 27
       Top = 40
       Width = 213
       Height = 161
@@ -333,8 +333,8 @@ object frmBorderEditor: TfrmBorderEditor
       end
     end
     object pnlExplain: TPanel
-      Left = 451
-      Top = 148
+      Left = 441
+      Top = 147
       Width = 513
       Height = 143
       Hint = 'Click to close.'#13#10'(This message will only be shown once)'
@@ -347,8 +347,8 @@ object frmBorderEditor: TfrmBorderEditor
         AlignWithMargins = True
         Left = 5
         Top = 19
-        Width = 499
-        Height = 115
+        Width = 496
+        Height = 45
         Cursor = crHandPoint
         Margins.Top = 0
         Align = alClient
@@ -370,10 +370,9 @@ object frmBorderEditor: TfrmBorderEditor
         AlignWithMargins = True
         Left = 5
         Top = 5
-        Width = 499
+        Width = 31
         Height = 14
         Cursor = crHandPoint
-        Margins.Bottom = 0
         Align = alTop
         Caption = 'Hint!'
         Color = 60652
@@ -394,8 +393,8 @@ object frmBorderEditor: TfrmBorderEditor
   object pnlBottom: TPanel
     AlignWithMargins = True
     Left = 3
-    Top = 385
-    Width = 544
+    Top = 384
+    Width = 540
     Height = 35
     Align = alBottom
     BevelOuter = bvNone

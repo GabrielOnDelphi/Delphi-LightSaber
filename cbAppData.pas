@@ -65,13 +65,13 @@
 
      OnFormCreate
 
-        OnFormCreate and OnFormShow is the worst place to initialize your code.
+        OnFormCreate and OnFormShow is the worst place to initialize your code. FormCreate is too early and OnShow may never be called (or called too late) or called multiple times.
         Instead, your form can implement the LateInitialize message handler.
         This will be called after the form was fully created and the application finished initializing.
         Example:
            TfrmMain = class(TForm)
-            private
-              procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully initilized
+            protected
+              procedure LateInitialize; override; // Called after the main form was fully initilized
            end;
 
 
@@ -128,10 +128,7 @@ USES
   Winapi.Windows, Winapi.Messages, Winapi.ShlObj, Winapi.ShellAPI,
   System.Win.Registry, System.IOUtils, System.AnsiStrings, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Consts,
-  ccCore, ccIniFile, cbINIFile, cbLogRam;
-
-CONST
-  MSG_LateFormInit = WM_APP + 4711;         { Old name: MSG_LateAppInit  }
+  ccCore, ccINIFile, cbINIFile, cbLogRam, cbAppDataForm;
 
 TYPE
   THintType = (htOff,                      // Turn off the embeded help system
@@ -149,8 +146,6 @@ TYPE
     procedure SetGuiProperties(Form: TForm);
     procedure setHideHint(const Value: Integer);
     procedure setShowOnError(const Value: Boolean);
-    procedure SubscribeToMessages(Form: TForm);
-    procedure UnsubscribeFromMessages(Form: TForm);
     CONST
       Signature: AnsiString= 'AppDataSettings';{ Do not change it! }
       DefaultHomePage= 'https://www.GabrielMoraru.com';
@@ -423,18 +418,6 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    FORMS
 -------------------------------------------------------------------------------------------------------------}
-
-procedure TAppData.SubscribeToMessages(Form: TForm);
-begin
-  TMessageManager.DefaultManager.SubscribeToMessage(TCustomMessage, Form.LateInitialize);
-end;
-
-procedure TAppData.UnsubscribeFromMessages(Form: TForm);
-begin
-  TMessageManager.DefaultManager.Unsubscribe(TCustomMessage, Form.LateInitialize);
-end;
-
-
 { 1. Create the form
   2. Set the font of the new form to be the same as the font of the MainForm
   3. Show it }
@@ -487,12 +470,11 @@ begin
      if Show
      then TForm(Reference).Show;
 
-  // SEND LateInit MESSAGE
-  // This will send a message to the main form. The user must implement in the main form a procedure to capture this message.
+  // Window fully constructed.
+  // Now we can let user run its own initialization process.
   // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory [Part 2]" book) for details.
-
-  // Warning: If you use TrySetStyle, don't do it until the main form is visible. TrySetStyle modifies the application styles, which makes the MSG_LateFormInit message to be lost.
-  PostMessage(TForm(Reference).Handle, MSG_LateFormInit, 0, 0);
+  if TObject(Reference) is TLightForm
+  then TLightForm(Reference).LateInitialize;
 
   if AutoSignalInitializationEnd
   then Initializing:= FALSE;
@@ -538,13 +520,22 @@ begin
 
   // Load previous form settings/position
   cbINIFile.LoadFormBase(TForm(Reference), Loading);
+  if TForm(Reference) is TLightForm
+  then TLightForm(Reference).Loading:= Loading;
+
 
   if Show
   then TForm(Reference).Show;
 
-  // Window fully constructed. Now we can let user start its own initialization process.
-  PostMessage(TForm(Reference).Handle, MSG_LateFormInit, 0, 0);
+  // Window fully constructed.
+  // Now we can let user run its own initialization process.
+  if TObject(Reference) is TLightForm
+  then TLightForm(Reference).LateInitialize;
+
+  if AutoSignalInitializationEnd
+  then Initializing:= FALSE;
 end;
+
 
 
 { Create secondary form }

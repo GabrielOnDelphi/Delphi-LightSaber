@@ -16,7 +16,6 @@ object frmSettings: TfrmSettings
   Font.Name = 'Segoe UI'
   Font.Style = []
   GlassFrame.Enabled = True
-  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
@@ -25,7 +24,6 @@ object frmSettings: TfrmSettings
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 17
   object pgCtrl: TPageControl
     Left = 0
@@ -41,8 +39,8 @@ object frmSettings: TfrmSettings
         762
         479)
       object grpSystem: TGroupBox
-        Left = 180
-        Top = 99
+        Left = 178
+        Top = 98
         Width = 381
         Height = 246
         Anchors = []
@@ -106,7 +104,7 @@ object frmSettings: TfrmSettings
       object Path: TCubicPathEdit
         Left = 82
         Top = 364
-        Width = 579
+        Width = 575
         Height = 49
         Hint = 
           'User defined path where to save (large) files. Useful when the p' +
@@ -117,7 +115,7 @@ object frmSettings: TfrmSettings
         TabOrder = 1
       end
       object btnCrash: TButton
-        Left = 624
+        Left = 620
         Top = 12
         Width = 101
         Height = 25
@@ -135,7 +133,7 @@ object frmSettings: TfrmSettings
         762
         479)
       object GroupHelp: TGroupBox
-        Left = 198
+        Left = 196
         Top = 130
         Width = 345
         Height = 221
@@ -210,7 +208,7 @@ object frmSettings: TfrmSettings
         762
         479)
       object GroupBox1: TGroupBox
-        Left = 226
+        Left = 224
         Top = 112
         Width = 290
         Height = 226
@@ -270,7 +268,7 @@ object frmSettings: TfrmSettings
         762
         479)
       object grpUser: TGroupBox
-        Left = 200
+        Left = 198
         Top = 130
         Width = 345
         Height = 221

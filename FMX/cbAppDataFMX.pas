@@ -71,7 +71,7 @@
         Example:
            TfrmMain = class(TForm)
             private
-              procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully initilized
+              procedure LateInitialize; override_; // Called after the main form was fully initilized
            end;
 
 
@@ -127,7 +127,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, System.IOUtils, System.UITypes, System.Types, System.Messaging,
   FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Types, FMX.Controls, FMX.Controls.Presentation,
-  ccCore, ccIniFile, cbINIFile, cbLogRam;
+  ccCore, ccINIFile, cbAppDataForm, cbINIFile, cbLogRam;
 {
 const
   MSG_LateFormInit = 4711;  // Custom message ID for FMX
@@ -166,7 +166,7 @@ type
     procedure RegisterUninstaller;
     function  RunSelfAtWinStartUp(Active: Boolean): Boolean;
   protected
-    CopyDataID: DWORD;          // For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA
+    //CopyDataID: DWORD;          // For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA
   public
     RamLog: TRamLog;
 
@@ -185,7 +185,6 @@ type
     property  SingleInstClassName: string read FSingleInstClassName;
     procedure ResurectInstance(CONST CommandLine: string);
     function  InstanceRunning: Boolean;
-    procedure SetSingleInstanceName(var Params: TCreateParams);
     function ExtractData(var Msg: TMessage; out s: string): Boolean;
     {}
     class VAR Initializing: Boolean;                 // See documentation at the top of the file
@@ -246,14 +245,14 @@ type
 
     function  RunFileAtWinStartUp(CONST FilePath: string; Active: Boolean): Boolean;
 
-    procedure CreateMainForm  (aClass: TFormClass;                MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly); overload;
-    procedure CreateMainForm  (aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly); overload;
+    procedure CreateMainForm  (aClass: TComponentClass;                MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly); overload;
+    procedure CreateMainForm  (aClass: TComponentClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly); overload;
 
-    procedure CreateForm      (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; Owner: TComponent = NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);  
-    procedure CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TComponent = NIL);
+    procedure CreateForm      (aClass: TComponentClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; Owner: TComponent = NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
+    procedure CreateFormHidden(aClass: TComponentClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TComponent = NIL);
 
-    procedure CreateFormModal (aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TComponent= NIL); overload;   // Do I need this?
-    procedure CreateFormModal (aClass: TFormClass;                Loading: TFormLoading= flPosOnly; ParentWnd: TComponent= NIL); overload;
+    procedure CreateFormModal (aClass: TComponentClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TComponent= NIL); overload;   // Do I need this?
+    procedure CreateFormModal (aClass: TComponentClass;                Loading: TFormLoading= flPosOnly; ParentWnd: TComponent= NIL); overload;
 
     procedure SetMaxPriority;
     procedure HideFromTaskbar;
@@ -360,7 +359,7 @@ begin
   { Register a unique message ID for this applications. Used when we send the command line to the first running instance via WM_COPYDATA.
     We can do this only once per app so the best place is the Initialization section. However, since AppData is created only once, we can also do it here, in the constructor.
     https://stackoverflow.com/questions/35516347/sendmessagewm-copydata-record-string }
-  CopyDataID:= RegisterWindowMessage('CubicCopyDataID');
+  //CopyDataID:= RegisterWindowMessage('CubicCopyDataID'); //not on FMX
 
   { App name }
   Assert(System.IOUtils.TPath.HasValidPathChars(aAppName, FALSE), 'Invalid characters in AppName'+ aAppName);
@@ -380,9 +379,11 @@ begin
   LogVerb(AppName+ GetVersionInfoV+ ' started.');
 
   { App hint }
+  {$IFDEF FMX}
   Application.HintColor     := $c0c090;
   Application.HintShortPause:= 40;               // Specifies the time period to wait before bringing up a hint if another hint has already been shown. Windows' default is 50 ms
   Application.UpdateFormatSettings:= FALSE;      // more http://www.delphi3000.com/articles/article_4462.asp?SK=
+  {$ENDIF}
 
   { App settings }
   if FileExists(IniFile)
@@ -441,14 +442,14 @@ end;
 { 1. Create the form
   2. Set the font of the new form to be the same as the font of the MainForm
   3. Show it }
-procedure TAppData.CreateMainForm(aClass: TFormClass; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
+procedure TAppData.CreateMainForm(aClass: TComponentClass; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
 begin
   VAR Reference: TForm;
   CreateMainForm(aClass, Reference, MainFormOnTaskbar, Show, Loading);
 end;
 
 
-procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
+procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
 begin
   {$IFDEF MsWindows}
   Assert(Vcl.Dialogs.UseLatestCommonDialogs= TRUE);      { This is true anyway by default, but I check it to remember myself about it. Details: http://stackoverflow.com/questions/7944416/tfileopendialog-requires-windows-vista-or-later }
@@ -506,7 +507,7 @@ end;
 
 { Create secondary form }
 { Load indicates if the GUI settings are remembered or not }
-procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; Owner: TComponent= NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
+procedure TAppData.CreateForm(aClass: TComponentClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; Owner: TComponent= NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
 begin
   if CreateBeforeMainForm
   then
@@ -551,14 +552,14 @@ end;
 
 
 { Create secondary form }
-procedure TAppData.CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateFormHidden(aClass: TComponentClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
 begin
   CreateForm(aClass, Reference, FALSE, Loading, ParentWnd);
 end;
 
 
 { Create secondary form }
-procedure TAppData.CreateFormModal(aClass: TFormClass; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateFormModal(aClass: TComponentClass; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
 VAR Reference: TForm;
 begin
   CreateForm(aClass, Reference, FALSE, Loading, ParentWnd);
@@ -568,7 +569,7 @@ end;
 
 { Create secondary form }
 //ToDo: Do I need this? Since the form is modal, I should never need the Reference? To be deleted
-procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateFormModal(aClass: TComponentClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
 begin
   CreateFormModal(aClass, Loading, ParentWnd);
 end;
@@ -1179,13 +1180,13 @@ end;
 
 
 { Give a unique name to our form.
-  We need to call this in TMainForm.CreateParams(var Params: TCreateParams)  }
+  We need to call this in TMainForm.CreateParams(var Params: TCreateParams)  }  {
 procedure TAppData.SetSingleInstanceName(VAR Params: TCreateParams);
 begin
   // Copies a null-terminated string. StrCopy is designed to copy up to 255 characters from the source buffer into the destination buffer. If the source buffer contains more than 255 characters, the procedure will copy only the first 255 characters.
   System.SysUtils.StrCopy(Params.WinClassName, PChar(SingleInstClassName));
   //Hint: This would work if WindowClassName would be a constant: Params.WinClassName:= WindowClassName
-end;
+end; }
 
 
 { Extract the data (from them Msg) that was sent to us by the second instance.

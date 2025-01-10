@@ -34,7 +34,7 @@ INTERFACE
 
 USES
    System.SysUtils, System.DateUtils,
-   Vcl.Graphics, Vcl.ExtCtrls, Vcl.Grids,
+   Vcl.Graphics,
    cbLogLines, cbLogUtils, ccStreamBuff2, cbLogLinesAbstract;
 
 TYPE
@@ -408,3 +408,6 @@ end;
 
 
 end.
+
+
+

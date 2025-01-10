@@ -109,7 +109,7 @@ VAR
 IMPLEMENTATION
 
 USES
-  FormAsyncMessage, ciDownload, ccINIFile, cmDebugger, cbAppData;
+  FormAsyncMessage, ciDownload, ccINIFile, cbAppDataForm, cmDebugger, cbAppData;
 
 Const
   TooLongNoSeeInterval = 180;    { Force to check for updates every 180 days even if the updater is disabled }

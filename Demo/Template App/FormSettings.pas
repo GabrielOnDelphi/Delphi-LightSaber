@@ -21,11 +21,11 @@ INTERFACE
 
 USES
   WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs,
-  cvIniFile, cvPathEdit, cmDebugger, cvRadioButton, cvCheckBox, cbAppData, 
+  cvIniFile, cvPathEdit, cmDebugger, cvRadioButton, cvCheckBox, cbAppData, cbAppDataForm,
   cmGuiSettings;
 
 TYPE
-  TfrmSettings = class(TForm)
+  TfrmSettings = class(TLightForm)
     FontDialog         : TFontDialog;
     pgCtrl             : TPageControl;
     tabSystem          : TTabSheet;
@@ -76,9 +76,9 @@ TYPE
     procedure ObjectFromGUI;
 
     procedure WMEndSession  (VAR Msg: TWMEndSession); message WM_ENDSESSION;
-    procedure LateInitialize(VAR Msg: TMessage);      message MSG_LateFormInit; // Called after the main form was fully created
     procedure SaveBeforeExit;
   public
+    procedure LateInitialize; override; // Called after the main form was fully created
     class procedure CreateFormModal(aGuiSettings: TGuiSettings); static;
  end;
 

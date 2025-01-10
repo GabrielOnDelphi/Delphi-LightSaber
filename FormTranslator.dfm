@@ -6,8 +6,8 @@ object frmTranslator: TfrmTranslator
   AlphaBlendValue = 250
   BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'Translator'
-  ClientHeight = 663
-  ClientWidth = 832
+  ClientHeight = 662
+  ClientWidth = 828
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -25,8 +25,8 @@ object frmTranslator: TfrmTranslator
   object lblInfo: TLabel
     AlignWithMargins = True
     Left = 3
-    Top = 647
-    Width = 826
+    Top = 649
+    Width = 822
     Height = 13
     Align = alBottom
     Alignment = taCenter
@@ -38,7 +38,7 @@ object frmTranslator: TfrmTranslator
     Left = 3
     Top = 3
     Width = 239
-    Height = 638
+    Height = 640
     Align = alLeft
     TabOrder = 0
     object lblLiveForms: TLabel
@@ -131,7 +131,7 @@ object frmTranslator: TfrmTranslator
     object GroupBox2: TGroupBox
       AlignWithMargins = True
       Left = 5
-      Top = 177
+      Top = 187
       Width = 229
       Height = 133
       Align = alBottom
@@ -191,8 +191,8 @@ object frmTranslator: TfrmTranslator
     AlignWithMargins = True
     Left = 248
     Top = 3
-    Width = 581
-    Height = 638
+    Width = 577
+    Height = 640
     Align = alClient
     Caption = 'Language editor'
     TabOrder = 1

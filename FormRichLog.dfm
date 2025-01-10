@@ -4,8 +4,8 @@ object frmRichLog: TfrmRichLog
   AlphaBlend = True
   BorderIcons = [biSystemMenu, biMaximize]
   Caption = 'Log'
-  ClientHeight = 514
-  ClientWidth = 718
+  ClientHeight = 513
+  ClientWidth = 714
   Color = clBtnFace
   DoubleBuffered = True
   ParentFont = True
@@ -18,8 +18,8 @@ object frmRichLog: TfrmRichLog
   object Container: TPanel
     Left = 0
     Top = 0
-    Width = 718
-    Height = 514
+    Width = 714
+    Height = 513
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
@@ -50,8 +50,8 @@ object frmRichLog: TfrmRichLog
     end
     object pnlBottom: TPanel
       Left = 0
-      Top = 480
-      Width = 718
+      Top = 479
+      Width = 714
       Height = 34
       Align = alBottom
       BevelOuter = bvNone
@@ -103,7 +103,7 @@ object frmRichLog: TfrmRichLog
         TrackBar.Max = 5
         TrackBar.Position = 2
         TrackBar.TabOrder = 0
-        Verbosity = lvInfos
+        Verbosity = lvrInfos
         Log = Log
       end
     end

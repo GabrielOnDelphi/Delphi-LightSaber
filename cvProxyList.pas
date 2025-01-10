@@ -17,7 +17,7 @@ UNIT cvProxyList;
 INTERFACE
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, ccINIFile, cvRadioButton, ccCore;
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, ccINIFile, cbAppDataForm, cvRadioButton, ccCore;
 
 TYPE
   TConType= (ctDirect, ctGateway, ctProxyList);

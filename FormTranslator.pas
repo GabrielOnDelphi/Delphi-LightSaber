@@ -17,10 +17,10 @@ INTERFACE
 
 USES
   Winapi.Messages, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, System.IOUtils, Vcl.Mask,
-  cTranslate, ccCore, cbDialogs, cbAppData;
+  cTranslate, ccCore, cbDialogs, cbAppData, cbAppDataForm;
 
 TYPE
-  TfrmTranslator = class(TForm)
+  TfrmTranslator = class(TLightForm)
     btnApplyEdits        : TButton;
     btnCopy              : TButton;
     btnCopyRight         : TButton;
@@ -67,8 +67,8 @@ TYPE
     procedure InternetLabel1Click(Sender: TObject);
   private
     function GetFileName: string;
-    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit; // Called after the main form was fully created
   public
+    procedure LateInitialize; override; // Called after the main form was fully created
   end;
 
 

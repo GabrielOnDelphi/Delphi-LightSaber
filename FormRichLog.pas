@@ -29,10 +29,10 @@ INTERFACE
 USES
   Winapi.Windows, Winapi.Messages, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
-  llRichLogTrack, llRichLog;
+  llRichLogTrack, llRichLog, cbAppDataForm;
 
 TYPE
-  TfrmRichLog = class(TForm)
+  TfrmRichLog = class(TLightForm)
     Log        : TRichLog;
     Container  : TPanel;    { We use a container for all controls on this form so we can reparent them easily to another form }
     pnlBottom  : TPanel;
@@ -44,7 +44,7 @@ TYPE
     procedure FormCreate   (Sender: TObject);
     procedure FormDestroy  (Sender: TObject);  // Would be nice to make this protected but we can't. All event handlers must be accesible/visible
   public
-    procedure LateInitialize(VAR Msg: TMessage); message WM_APP + 4712; // Called after the main form was fully initilized
+    procedure LateInitialize; override; // Called after the main form was fully initilized
   end;
 
 

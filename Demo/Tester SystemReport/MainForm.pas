@@ -10,7 +10,7 @@ type
   TfrmMain = class(TForm)
     Memo: TMemo;
   private
-    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit;
+    procedure LateInitialize; override_;
   public
   end;
 

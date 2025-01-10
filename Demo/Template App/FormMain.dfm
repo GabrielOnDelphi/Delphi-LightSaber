@@ -3,8 +3,8 @@ object MainForm: TMainForm
   Top = 327
   AlphaBlendValue = 249
   Caption = 'Enviroment'
-  ClientHeight = 534
-  ClientWidth = 692
+  ClientHeight = 532
+  ClientWidth = 684
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 350
@@ -22,45 +22,36 @@ object MainForm: TMainForm
   SnapBuffer = 5
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
+  OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 17
   object pgCtrl: TPageControl
     Left = 0
     Top = 0
-    Width = 692
-    Height = 515
+    Width = 684
+    Height = 513
     ActivePage = tabMain
     Align = alClient
     TabOrder = 0
     object tabMain: TTabSheet
       Caption = 'Main'
-      object Path: TCubicPathEdit
-        AlignWithMargins = True
-        Left = 3
-        Top = 3
-        Width = 678
-        Height = 49
-        Align = alTop
-        Caption = 'Path'
-        TabOrder = 0
-      end
       object mmo: TMemo
         AlignWithMargins = True
         Left = 3
-        Top = 58
-        Width = 487
-        Height = 422
+        Top = 3
+        Width = 483
+        Height = 476
         Align = alClient
         TabOrder = 1
       end
       object pnlRight: TPanel
         AlignWithMargins = True
-        Left = 496
-        Top = 58
+        Left = 492
+        Top = 3
         Width = 185
-        Height = 422
+        Height = 476
         Align = alRight
-        TabOrder = 2
+        TabOrder = 0
         object btnStart: TButton
           Left = 21
           Top = 357
@@ -76,10 +67,10 @@ object MainForm: TMainForm
       Caption = 'Demos'
       ImageIndex = 3
       DesignSize = (
-        684
-        483)
+        676
+        481)
       object btnProgress: TButton
-        Left = 252
+        Left = 230
         Top = 394
         Width = 143
         Height = 49
@@ -90,7 +81,7 @@ object MainForm: TMainForm
         OnClick = btnProgressClick
       end
       object Button1: TButton
-        Left = 252
+        Left = 230
         Top = 104
         Width = 143
         Height = 49
@@ -99,7 +90,7 @@ object MainForm: TMainForm
         TabOrder = 1
       end
       object Button2: TButton
-        Left = 252
+        Left = 230
         Top = 158
         Width = 143
         Height = 49
@@ -108,7 +99,7 @@ object MainForm: TMainForm
         TabOrder = 2
       end
       object Button3: TButton
-        Left = 252
+        Left = 230
         Top = 211
         Width = 143
         Height = 49
@@ -117,7 +108,7 @@ object MainForm: TMainForm
         TabOrder = 3
       end
       object Button4: TButton
-        Left = 252
+        Left = 230
         Top = 265
         Width = 143
         Height = 49
@@ -130,11 +121,11 @@ object MainForm: TMainForm
       Caption = 'Log'
       ImageIndex = 4
       DesignSize = (
-        684
-        483)
+        676
+        481)
       object btnShowLog: TButton
-        Left = 238
-        Top = 61
+        Left = 216
+        Top = 58
         Width = 191
         Height = 45
         Action = actShowLog
@@ -143,8 +134,8 @@ object MainForm: TMainForm
         TabOrder = 0
       end
       object Button5: TButton
-        Left = 238
-        Top = 112
+        Left = 216
+        Top = 107
         Width = 191
         Height = 34
         Anchors = []
@@ -153,8 +144,8 @@ object MainForm: TMainForm
         OnClick = Button5Click
       end
       object Button6: TButton
-        Left = 238
-        Top = 156
+        Left = 216
+        Top = 149
         Width = 191
         Height = 34
         Anchors = []
@@ -163,8 +154,8 @@ object MainForm: TMainForm
         OnClick = Button6Click
       end
       object Button7: TButton
-        Left = 238
-        Top = 200
+        Left = 216
+        Top = 192
         Width = 191
         Height = 34
         Anchors = []
@@ -173,8 +164,8 @@ object MainForm: TMainForm
         OnClick = Button7Click
       end
       object Button8: TButton
-        Left = 238
-        Top = 242
+        Left = 216
+        Top = 230
         Width = 191
         Height = 34
         Anchors = []
@@ -183,8 +174,8 @@ object MainForm: TMainForm
         OnClick = Button8Click
       end
       object Button9: TButton
-        Left = 238
-        Top = 286
+        Left = 216
+        Top = 273
         Width = 191
         Height = 34
         Anchors = []
@@ -193,8 +184,8 @@ object MainForm: TMainForm
         OnClick = Button9Click
       end
       object Button11: TButton
-        Left = 238
-        Top = 330
+        Left = 216
+        Top = 315
         Width = 191
         Height = 34
         Anchors = []
@@ -203,8 +194,8 @@ object MainForm: TMainForm
         OnClick = Button11Click
       end
       object Button10: TButton
-        Left = 238
-        Top = 372
+        Left = 216
+        Top = 355
         Width = 191
         Height = 34
         Anchors = []
@@ -213,8 +204,8 @@ object MainForm: TMainForm
         OnClick = Button10Click
       end
       object Button12: TButton
-        Left = 238
-        Top = 413
+        Left = 216
+        Top = 395
         Width = 191
         Height = 34
         Anchors = []
@@ -224,19 +215,15 @@ object MainForm: TMainForm
       end
     end
   end
-  object StatBar: TcubicStatusBar
+  object StatBar: TStatusBar
     Left = 0
-    Top = 515
-    Width = 692
+    Top = 513
+    Width = 684
     Height = 19
     Panels = <>
-    ParentColor = True
-    ParentFont = True
-    SimplePanel = True
-    UseSystemFont = False
   end
   object MainMenu: TMainMenu
-    Left = 53
+    Left = 63
     Top = 51
     object mnuFile: TMenuItem
       Caption = '&File'

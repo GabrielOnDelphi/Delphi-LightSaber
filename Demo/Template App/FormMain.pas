@@ -36,12 +36,10 @@ USES
   WinApi.Windows, WinApi.Messages, Winapi.ShellApi,
   System.SysUtils, System.Classes, System.Actions,
   VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
-  CoolTrayIcon, csSystem, cvPathEdit, cvStatusBar, cpProteus, cbAppData, cpProteusIO, cmGuiSettings;
+  CoolTrayIcon, csSystem, cvPathEdit, cvStatusBar, cpProteus, cbAppData, cpProteusIO, cmGuiSettings, cbAppDataForm, ccCore;
 
-  // c:\MyProjects\Packages\Third party packages\MenuPopupHints.pas
-
-TYPE 
-  TMainForm = class(TForm)
+TYPE
+  TMainForm = class(TLightForm)
     actAbout    : TAction;
     actEnterKey : TAction;
     Actions     : TActionList;
@@ -74,16 +72,15 @@ TYPE
     mnuSettings : TMenuItem;
     mnuUpdates  : TMenuItem;
     N1          : TMenuItem;
-    Path        : TCubicPathEdit;
     pgCtrl      : TPageControl;
     pnlRight    : TPanel;
     Proteus     : TProteus;
-    StatBar     : TcubicStatusBar;
     tabLog      : TTabSheet;
     tabMain     : TTabSheet;
     tabProgress : TTabSheet;
     TrayIcon    : TCoolTrayIcon;
     btnStart    : TButton;
+    StatBar: TStatusBar;
     procedure actAboutExecute    (Sender: TObject);
     procedure actEnterKeyExecute (Sender: TObject);
     procedure actLanguageExecute (Sender: TObject);
@@ -106,13 +103,13 @@ TYPE
     procedure FormDestroy        (Sender: TObject);
     procedure TrayIconClick      (Sender: TObject);
     procedure actShowLogExecute  (Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   protected
     procedure WMDROPFILES (VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Accept the dropped files from Windows Explorer }
   private
-    Saved: Boolean;
     procedure WMEndSession(VAR Msg: TWMEndSession); message WM_ENDSESSION;
-    procedure LateInitialize(VAR Msg: TMessage); message MSG_LateFormInit;  { Called after the main form was fully created }
   public
+    procedure LateInitialize; override; //(VAR Msg: TMessage); override_;  { Called after the main form was fully created }
     procedure SaveBeforeExit;
     procedure FontSizeChanged;
  end;
@@ -138,9 +135,16 @@ USES
 {--------------------------------------------------------------------------------------------------
    APP START/CLOSE
 --------------------------------------------------------------------------------------------------}
+procedure TMainForm.FormCreate(Sender: TObject);
+begin
+  EmptyDummy;
+  // Too early to do initialization here!
+  // Initialization code is better done in LateInitialize which takes place AFTER the form was properly constructed!
+end;
+
+
 procedure TMainForm.LateInitialize;
 begin
-  Saved:= FALSE;
   uInitialization.LateInitialization;
   btnStartClick(self);
   actShowLogExecute(Self);    //temp
@@ -154,24 +158,24 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TMainForm.WMEndSession(var Msg: TWMEndSession);
 begin
- SaveBeforeExit;
+  SaveBeforeExit;
 end;
 
 procedure TMainForm.FormDestroy(Sender: TObject);
 begin
- SaveBeforeExit;
+  SaveBeforeExit;
 end;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
- Action := caFree;
- SaveBeforeExit;
+  Action := caFree;
+  SaveBeforeExit;
 end;
 
 procedure TMainForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
- CanClose := TRUE;
- SaveBeforeExit;
+  CanClose := TRUE;
+  SaveBeforeExit;
 end;
 
 
@@ -179,15 +183,14 @@ end;
   Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
 procedure TMainForm.SaveBeforeExit;
 begin
- if NOT Saved then
-  begin
-    Saved:= TRUE;
-    GuiSettings.Save;
-    SaveForm(Self);
-    FreeAndNil(GuiSettings);
-    FreeAndNil(Updater);
-    FreeAndNil(Translator);
-  end;
+  if NOT Saved then
+   begin
+     GuiSettings.Save;
+     //SaveForm(Self);
+     FreeAndNil(GuiSettings);
+     FreeAndNil(Updater);
+     FreeAndNil(Translator);
+   end;
 end;
 
 
@@ -198,13 +201,13 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TMainForm.btnSTARTClick(Sender: TObject);
 begin
- CursorBusy;
- TRY
-   Caption:= 'Started...';
-   //actShowLogExecute(Sender);
- FINALLY
-   CursorNotBusy;
- END;
+  CursorBusy;
+  TRY
+    Caption:= 'Started...';
+    //actShowLogExecute(Sender);
+  FINALLY
+    CursorNotBusy;
+  END;
 end;
 
 

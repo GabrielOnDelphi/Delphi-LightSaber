@@ -18,7 +18,7 @@ INTERFACE
 
 USES
    System.Classes, System.SysUtils, System.IniFiles, Vcl.Forms, Vcl.Controls,
-   cbDialogs, cbINIFile, ccINIFile;
+   cbDialogs, cbINIFile, ccINIFile, cbAppDataForm;
 
 {$WARN DUPLICATE_CTOR_DTOR OFF}                                                                               {Silence the: W1029 Duplicate constructor  with identical parameters will be inacessible from C++ }
 

@@ -43,7 +43,7 @@ var
   MainForm: TMainForm;
 
 implementation {$R *.dfm}
-Uses cbAppData, cbLogUtils, ccINIFile, cvINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
+Uses cbAppData, cbLogUtils, ccINIFile, cbAppDataForm, cvINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
 
 
 procedure TMainForm.FormCreate(Sender: TObject);
