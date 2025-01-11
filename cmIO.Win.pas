@@ -106,7 +106,7 @@ USES
 IMPLEMENTATION
 
 USES
-  ActiveX, ccCore, cbDialogs, cbRegistry, cbVersion, ccIO;
+  ccCore, cbDialogs, cbRegistry, cbVersion, ccIO;
   //DONT CREATE CIRCULAR REFFERENCE TO cbAppData HERE!
 
 

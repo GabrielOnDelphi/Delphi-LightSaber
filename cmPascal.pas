@@ -12,7 +12,7 @@ UNIT cmPascal;
 INTERFACE
 
 USES
-  System.SysUtils, System.Classes, System.RegularExpressions, System.StrUtils, Vcl.Forms;
+  System.SysUtils, System.Classes, System.RegularExpressions, System.StrUtils;
 
 
 // CLASSES & OBJECTS

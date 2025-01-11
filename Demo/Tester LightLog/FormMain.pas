@@ -3,9 +3,9 @@ unit FormMain;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cbLogRam, Vcl.Grids, Vcl.ExtCtrls,
-  llRichLogTrack, Vcl.StdCtrls, Vcl.ComCtrls,  llRichLogUtils, llRichLog, cvLog, cvLogFilter;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cbLogRam, Vcl.Grids, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.ComCtrls,
+  llRichLogTrack, llRichLogUtils, llRichLog, cvLog, cvLogFilter, cbAppDataForm;
 
 type
   TMainForm = class(TLightForm)
@@ -43,7 +43,7 @@ var
   MainForm: TMainForm;
 
 implementation {$R *.dfm}
-Uses cbAppData, cbLogUtils, ccINIFile, cbAppDataForm, cvINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
+Uses cbAppData, cbLogUtils, ccINIFile, cvINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
 
 
 procedure TMainForm.FormCreate(Sender: TObject);

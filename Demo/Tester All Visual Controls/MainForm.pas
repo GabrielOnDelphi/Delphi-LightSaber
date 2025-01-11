@@ -12,7 +12,7 @@ USES
   cvMinimalPathLabel, cvMemo, cvLstEditor, cvGroupBox, cvGraphChart, cvFreeDiskSpace,
   cvFileFilter, cvEdit, cvDirectoryListBox, cvCountDown, cvComboBox,
   cvCheckListBox, cvAssociateExt, cvDropDownSearch, Vcl.WinXCtrls, Vcl.FileCtrl, Vcl.ValEdit, Vcl.Grids,
-  Vcl.Mask, Vcl.Samples.Spin, Vcl.CheckLst;
+  Vcl.Mask, Vcl.Samples.Spin, Vcl.CheckLst, cbAppDataForm;
 
 TYPE
   TfrmMain = class(TLightForm)

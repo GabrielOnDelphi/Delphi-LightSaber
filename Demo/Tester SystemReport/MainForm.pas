@@ -22,9 +22,9 @@ USES cmDebugger;
 
 
 
-procedure TfrmMain.LateInitialize(var Msg: TMessage);
+procedure TfrmMain.LateInitialize;
 begin
-  inherited latei;
+  inherited LateInitialize;
   Memo.Text:= cmDebugger.GenerateSystemRep;
 end;
 

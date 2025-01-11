@@ -13,7 +13,7 @@ UNIT cmEncodeXOR;
 INTERFACE
 
 USES
-   System.Classes, System.SysUtils, {System.NetEncoding, Soap.EncdDecd, }ccCore;
+   System.SysUtils, {System.NetEncoding, Soap.EncdDecd, }ccCore;
 
  { CHAR_SHIFT ENCRYPTION }
  function  SimpleDecode      (CONST s: string): string;

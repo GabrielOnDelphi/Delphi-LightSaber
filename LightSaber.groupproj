@@ -66,6 +66,9 @@
         <Projects Include="Demo\Tester SystemReport\Demo_SystemReport.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="..\LightSaber ImageResampler Test\ResamplerTester.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -263,14 +266,23 @@
     <Target Name="Demo_SystemReport:Make">
         <MSBuild Projects="Demo\Tester SystemReport\Demo_SystemReport.dproj" Targets="Make"/>
     </Target>
+    <Target Name="ResamplerTester">
+        <MSBuild Projects="..\LightSaber ImageResampler Test\ResamplerTester.dproj"/>
+    </Target>
+    <Target Name="ResamplerTester:Clean">
+        <MSBuild Projects="..\LightSaber ImageResampler Test\ResamplerTester.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ResamplerTester:Make">
+        <MSBuild Projects="..\LightSaber ImageResampler Test\ResamplerTester.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightAppData;LightCommon;LightProteus;LightInternet;LightTranslator;LightGraphics;LightVisControls;LightNGC;BioControl;BionixVCL;TemplateApp;Uninstaller;Demo_VisualControls;AutoTranslatorDemo;Demo_SaveGUI;Tester_ccIO;Tester_FileStream;Tester_WinVers;DemoLog;Demo_SystemReport"/>
+        <CallTarget Targets="LightCore;LightAppData;LightCommon;LightProteus;LightInternet;LightTranslator;LightGraphics;LightVisControls;LightNGC;BioControl;BionixVCL;TemplateApp;Uninstaller;Demo_VisualControls;AutoTranslatorDemo;Demo_SaveGUI;Tester_ccIO;Tester_FileStream;Tester_WinVers;DemoLog;Demo_SystemReport;ResamplerTester"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightAppData:Clean;LightCommon:Clean;LightProteus:Clean;LightInternet:Clean;LightTranslator:Clean;LightGraphics:Clean;LightVisControls:Clean;LightNGC:Clean;BioControl:Clean;BionixVCL:Clean;TemplateApp:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;AutoTranslatorDemo:Clean;Demo_SaveGUI:Clean;Tester_ccIO:Clean;Tester_FileStream:Clean;Tester_WinVers:Clean;DemoLog:Clean;Demo_SystemReport:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightAppData:Clean;LightCommon:Clean;LightProteus:Clean;LightInternet:Clean;LightTranslator:Clean;LightGraphics:Clean;LightVisControls:Clean;LightNGC:Clean;BioControl:Clean;BionixVCL:Clean;TemplateApp:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;AutoTranslatorDemo:Clean;Demo_SaveGUI:Clean;Tester_ccIO:Clean;Tester_FileStream:Clean;Tester_WinVers:Clean;DemoLog:Clean;Demo_SystemReport:Clean;ResamplerTester:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightAppData:Make;LightCommon:Make;LightProteus:Make;LightInternet:Make;LightTranslator:Make;LightGraphics:Make;LightVisControls:Make;LightNGC:Make;BioControl:Make;BionixVCL:Make;TemplateApp:Make;Uninstaller:Make;Demo_VisualControls:Make;AutoTranslatorDemo:Make;Demo_SaveGUI:Make;Tester_ccIO:Make;Tester_FileStream:Make;Tester_WinVers:Make;DemoLog:Make;Demo_SystemReport:Make"/>
+        <CallTarget Targets="LightCore:Make;LightAppData:Make;LightCommon:Make;LightProteus:Make;LightInternet:Make;LightTranslator:Make;LightGraphics:Make;LightVisControls:Make;LightNGC:Make;BioControl:Make;BionixVCL:Make;TemplateApp:Make;Uninstaller:Make;Demo_VisualControls:Make;AutoTranslatorDemo:Make;Demo_SaveGUI:Make;Tester_ccIO:Make;Tester_FileStream:Make;Tester_WinVers:Make;DemoLog:Make;Demo_SystemReport:Make;ResamplerTester:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
@@ -348,6 +360,12 @@
         </BuildGroupProject>
         <BuildGroupProject Include="Demo\Tester SystemReport\Demo_SystemReport.dproj">
             <ProjectGuid>{084A16C0-253C-4068-AFDA-4BD23996C34A}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\LightSaber ImageResampler Test\ResamplerTester.dproj">
+            <ProjectGuid>{B698DB9F-C2C6-4FA3-A1D1-4A42D023AD4F}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -480,6 +498,12 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="..\LightSaber ImageResampler Test\ResamplerTester.dproj">
+            <ProjectGuid>{B698DB9F-C2C6-4FA3-A1D1-4A42D023AD4F}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="LightGraphics.dproj">
             <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Release</Configurations>
@@ -608,6 +632,12 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="..\LightSaber ImageResampler Test\ResamplerTester.dproj">
+            <ProjectGuid>{B698DB9F-C2C6-4FA3-A1D1-4A42D023AD4F}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="LightGraphics.dproj">
             <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -732,6 +762,12 @@
         </BuildGroupProject>
         <BuildGroupProject Include="Demo\Tester SystemReport\Demo_SystemReport.dproj">
             <ProjectGuid>{084A16C0-253C-4068-AFDA-4BD23996C34A}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\LightSaber ImageResampler Test\ResamplerTester.dproj">
+            <ProjectGuid>{B698DB9F-C2C6-4FA3-A1D1-4A42D023AD4F}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>

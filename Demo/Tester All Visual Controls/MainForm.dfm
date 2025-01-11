@@ -19,7 +19,7 @@ object frmMain: TfrmMain
     Top = 3
     Width = 893
     Height = 531
-    ActivePage = tabEnhanced
+    ActivePage = TabSheet5
     Align = alClient
     TabOrder = 0
     object TabSheet1: TTabSheet
@@ -141,7 +141,7 @@ object frmMain: TfrmMain
           AlignWithMargins = True
           Left = 31
           Top = 158
-          Width = 133
+          Width = 120
           Height = 22
           BevelOuter = bvNone
           Caption = 'SpinEditSplit'
@@ -150,7 +150,7 @@ object frmMain: TfrmMain
           ShowCaption = False
           TabOrder = 1
           Spin.AlignWithMargins = True
-          Spin.Left = 65
+          Spin.Left = 57
           Spin.Top = 0
           Spin.Width = 50
           Spin.Height = 22
@@ -227,7 +227,7 @@ object frmMain: TfrmMain
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 186
+        Width = 101
         Height = 13
         Hint = 
           'c:\Projects\LightSaber\Demo\Tester All Visual Controls\dropdown.' +
@@ -409,7 +409,7 @@ object frmMain: TfrmMain
       object ValueListEditor: TCubicValueListEditor
         AlignWithMargins = True
         Left = 99
-        Top = 271
+        Top = 272
         Width = 687
         Height = 116
         Margins.Left = 99
@@ -427,7 +427,7 @@ object frmMain: TfrmMain
         Left = 99
         Top = 207
         Width = 687
-        Height = 46
+        Height = 47
         Margins.Left = 99
         Margins.Top = 9
         Margins.Right = 99

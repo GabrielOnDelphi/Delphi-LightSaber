@@ -119,7 +119,7 @@
 INTERFACE
 
 USES
-  Winapi.Windows, Winapi.Messages, Winapi.ShlObj, Winapi.ShellAPI,
+  Winapi.Windows, Winapi.Messages, Winapi.ShellAPI,
   System.Win.Registry, System.IOUtils, System.AnsiStrings, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Consts,
   ccCore, ccINIFile, cbINIFile, cbLogRam, cbAppDataForm;
