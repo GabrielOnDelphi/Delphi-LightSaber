@@ -5,21 +5,21 @@ object frmMain: TfrmMain
   ClientHeight = 537
   ClientWidth = 899
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
+  Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
+  Font.Height = -13
+  Font.Name = 'Calibri'
   Font.Style = []
   Position = poDesigned
   OnShow = FormShow
-  TextHeight = 13
+  TextHeight = 15
   object PageControl: TPageControl
     AlignWithMargins = True
     Left = 3
     Top = 3
     Width = 893
     Height = 531
-    ActivePage = TabSheet5
+    ActivePage = TabSheet1
     Align = alClient
     TabOrder = 0
     object TabSheet1: TTabSheet
@@ -39,7 +39,7 @@ object frmMain: TfrmMain
       object CubicSplitter1: TCubicSplitter
         Left = 0
         Top = 0
-        Height = 484
+        Height = 482
         ResizeStyle = rsUpdate
       end
       object CheckListBox: TCubicCheckListBox
@@ -92,7 +92,7 @@ object frmMain: TfrmMain
         object CubicRadioButton1: TCubicRadioButton
           Left = 20
           Top = 30
-          Width = 115
+          Width = 130
           Height = 17
           Caption = 'CubicRadioButton1'
           TabOrder = 0
@@ -101,7 +101,7 @@ object frmMain: TfrmMain
         object CubicCheckBox1: TCubicCheckBox
           Left = 20
           Top = 58
-          Width = 104
+          Width = 115
           Height = 17
           Caption = 'CubicCheckBox1'
           TabOrder = 1
@@ -110,7 +110,7 @@ object frmMain: TfrmMain
       end
       object cubicStatusBar1: TcubicStatusBar
         Left = 0
-        Top = 484
+        Top = 482
         Width = 885
         Height = 19
         Panels = <>
@@ -141,7 +141,7 @@ object frmMain: TfrmMain
           AlignWithMargins = True
           Left = 31
           Top = 158
-          Width = 120
+          Width = 133
           Height = 22
           BevelOuter = bvNone
           Caption = 'SpinEditSplit'
@@ -150,10 +150,10 @@ object frmMain: TfrmMain
           ShowCaption = False
           TabOrder = 1
           Spin.AlignWithMargins = True
-          Spin.Left = 57
+          Spin.Left = 65
           Spin.Top = 0
           Spin.Width = 50
-          Spin.Height = 22
+          Spin.Height = 24
           Spin.Margins.Top = 0
           Spin.Margins.Bottom = 0
           Spin.Align = alLeft
@@ -169,7 +169,7 @@ object frmMain: TfrmMain
           Left = 29
           Top = 77
           Width = 78
-          Height = 22
+          Height = 24
           MaxValue = 0
           MinValue = 0
           TabOrder = 2
@@ -179,7 +179,7 @@ object frmMain: TfrmMain
           Left = 29
           Top = 115
           Width = 78
-          Height = 22
+          Height = 24
           MaxValue = 0
           MinValue = 0
           TabOrder = 3
@@ -190,9 +190,9 @@ object frmMain: TfrmMain
         Left = 33
         Top = 187
         Width = 121
-        Height = 21
-        EditLabel.Width = 43
-        EditLabel.Height = 13
+        Height = 23
+        EditLabel.Width = 50
+        EditLabel.Height = 15
         EditLabel.Caption = 'LabelEdit'
         TabOrder = 6
         Text = ''
@@ -201,7 +201,7 @@ object frmMain: TfrmMain
         Left = 33
         Top = 133
         Width = 121
-        Height = 21
+        Height = 23
         TabOrder = 7
         Text = 'CubicEdit'
       end
@@ -210,7 +210,7 @@ object frmMain: TfrmMain
         Top = 94
         Width = 185
         Height = 97
-        ItemHeight = 13
+        ItemHeight = 15
         Items.Strings = (
           'ListBox:'
           ' Item1'
@@ -227,8 +227,8 @@ object frmMain: TfrmMain
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 101
-        Height = 13
+        Width = 110
+        Height = 15
         Hint = 
           'c:\Projects\LightSaber\Demo\Tester All Visual Controls\dropdown.' +
           'PNG'
@@ -263,24 +263,6 @@ object frmMain: TfrmMain
           TabOrder = 0
         end
       end
-      object Panel1: TPanel
-        Left = 27
-        Top = 340
-        Width = 341
-        Height = 89
-        TabOrder = 1
-        object DropDownSearchBox: TDropDownSearchBox
-          AlignWithMargins = True
-          Left = 4
-          Top = 4
-          Width = 333
-          Height = 21
-          Align = alTop
-          TabOrder = 0
-          TextHint = 'Search...'
-          OnEndSearch = DropDownSearchBoxEndSearch
-        end
-      end
       object pnlRichEditResize: TPanel
         Left = 459
         Top = 33
@@ -291,7 +273,7 @@ object frmMain: TfrmMain
         Caption = 'Autoresizable rich edit'
         ParentBackground = False
         ParentColor = True
-        TabOrder = 2
+        TabOrder = 1
         object RichEditResize1: TRichEditResize
           AlignWithMargins = True
           Left = 3
@@ -409,7 +391,7 @@ object frmMain: TfrmMain
       object ValueListEditor: TCubicValueListEditor
         AlignWithMargins = True
         Left = 99
-        Top = 272
+        Top = 270
         Width = 687
         Height = 116
         Margins.Left = 99
@@ -427,7 +409,7 @@ object frmMain: TfrmMain
         Left = 99
         Top = 207
         Width = 687
-        Height = 47
+        Height = 45
         Margins.Left = 99
         Margins.Top = 9
         Margins.Right = 99
@@ -487,7 +469,7 @@ object frmMain: TfrmMain
         Left = 14
         Top = 204
         Width = 300
-        Height = 21
+        Height = 23
         TabOrder = 0
       end
       object FreeDiskSpace1: TFreeDiskSpace
@@ -510,7 +492,7 @@ object frmMain: TfrmMain
         Width = 300
         Height = 109
         Hint = 'Press the "Delete" key to delete the selected file from disk.'
-        ItemHeight = 13
+        ItemHeight = 15
         TabOrder = 3
       end
     end
@@ -526,15 +508,15 @@ object frmMain: TfrmMain
       object Label1: TLabel
         Left = 28
         Top = 10
-        Width = 94
-        Height = 13
+        Width = 110
+        Height = 15
         Caption = 'Cationed Thumbnail'
       end
       object Label3: TLabel
         Left = 28
         Top = 265
-        Width = 56
-        Height = 13
+        Width = 62
+        Height = 15
         Caption = 'FastQChart'
       end
       object CationedThumbnail: TCationedThumbnail
@@ -556,8 +538,8 @@ object frmMain: TfrmMain
         object Label2: TLabel
           Left = 64
           Top = 44
-          Width = 70
-          Height = 13
+          Width = 82
+          Height = 15
           Caption = 'Gradient Panel'
         end
       end
@@ -581,6 +563,7 @@ object frmMain: TfrmMain
         Progress.Height = 17
         Progress.Align = alTop
         Progress.Max = 120
+        Progress.Position = 22
         Progress.Smooth = True
         Progress.MarqueeInterval = 100
         Progress.TabOrder = 0
@@ -589,14 +572,14 @@ object frmMain: TfrmMain
         Left = 256
         Top = 204
         Width = 379
-        Height = 41
-        Caption = 'SOMETHING'
+        Height = 45
+        Caption = 'Create'
         ShowCaption = False
         TabOrder = 1
         Button.Left = 1
         Button.Top = 1
         Button.Width = 75
-        Button.Height = 39
+        Button.Height = 43
         Button.Align = alLeft
         Button.Caption = 'SOMETHING'
         Button.Font.Charset = DEFAULT_CHARSET
@@ -611,6 +594,24 @@ object frmMain: TfrmMain
     object TabSheet2: TTabSheet
       Caption = 'Search Box'
       ImageIndex = 8
+      object Panel1: TPanel
+        Left = 291
+        Top = 156
+        Width = 341
+        Height = 89
+        TabOrder = 0
+        object DropDownSearchBox: TDropDownSearchBox
+          AlignWithMargins = True
+          Left = 4
+          Top = 4
+          Width = 333
+          Height = 23
+          Align = alTop
+          TabOrder = 0
+          TextHint = 'Search...'
+          OnEndSearch = DropDownSearchBoxEndSearch
+        end
+      end
     end
   end
   object CountDown: TCountDown

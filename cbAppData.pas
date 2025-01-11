@@ -13,8 +13,8 @@
        - Get application's command line parameters
        - Get application's version
 
-       - Force single instance (allow only one instance of your program to run). Second inst sends its command line to the first inst then shutsdown
-       - Detect if the application is running for the firs this in a computer
+       - Force single instance (allow only one instance of your program to run). Second inst sends its command line to the first inst then shuts down
+       - Detect if the application is running for the first time on this computer
 
        - Application self-restart
        - Application self-delete
@@ -23,12 +23,12 @@
        - Change the font for all running forms
 
        - Log error messages to a special window that is automatically created
-       - Basic support for Uninstaller (The Uninstaller can find out there the app was installed)
+       - Basic support for Uninstaller (The Uninstaller can find out where the app was installed)
        - Basic support for licensing (trial period) system. See Proteus for details.
 
        - LOG
          TAppData class also creates a global Log form.
-         This forms automatically pop-ups when you send warings and errors to it.
+         This form automatically pops up when you send warnings and errors to it.
          For details see: FormLog.pas
 
        - etc
@@ -66,7 +66,7 @@
 
      OnFormCreate
 
-        See explantaion in cbAppDataForm.pas
+        See explanation in cbAppDataForm.pas
 
 
      DPR FILE
@@ -79,12 +79,12 @@
      AppData.Initializing
 
         When the application starts, this flag is set to True.
-        Then it is automatically set to False once the main form was fully loaded.
+        Then it is automatically set to False once the main form is fully loaded.
         If you don't want this to happen, set the AutoSignalInitializationEnd variable to False.
-        In this case, you will have to set the Initializing manually, once the program is fully initialized (usually in the LateInitialize of the main form, or in the LateInitialize of the last created form (if you have multiple forms)).
-        If you forget, the AppData will not save the forms to the INI file and you will have an warnign on shutdown.
+        In this case, you will have to set the Initializing manually, once the program is fully initialized (usually in the LateInitialize of the main form, or in the LateInitialize of the last created form).
+        If you forget, the AppData will not save the forms to the INI file and you will have a warning on shutdown.
         Usage:
-          Used by SaveForm in cbINIFile.pas/cvINIFile.pas (and few other places) to signal not to save the form if the application has crashed whill still in the initialization phase.
+          Used by SaveForm in cbINIFile.pas/cvINIFile.pas (and a few other places) to signal not to save the form if the application has crashed while still in the initialization phase.
           You can use it also personally, to avoid executing some of your code during the initialization stages.
 
 
@@ -125,7 +125,7 @@ USES
   ccCore, ccINIFile, cbINIFile, cbLogRam, cbAppDataForm;
 
 TYPE
-  THintType = (htOff,                      // Turn off the embeded help system
+  THintType = (htOff,                      // Turn off the embedded help system
                htTooltips,                 // Show help as tool-tips
                htStatBar);                 // Show help in status bar
 
@@ -163,13 +163,13 @@ TYPE
     ProductOrder   : WebURL;    // Product's order page
     ProductSupport : WebURL;    // Product's user manual
     ProductWelcome : WebURL;    // Product's welcome page (gives a short introduction on how the product works).
-    ProductUninstal: WebURL;    // Ask user why he uninstalled the product (feedback)
+    ProductUninstal: WebURL;    // Ask user why they uninstalled the product (feedback)
 
    {--------------------------------------------------------------------------------------------------
       App Single Instance
    --------------------------------------------------------------------------------------------------}
     property  SingleInstClassName: string read FSingleInstClassName;
-    procedure ResurectInstance(CONST CommandLine: string);
+    procedure ResurrectInstance(CONST CommandLine: string);
     function  InstanceRunning: Boolean;
     procedure SetSingleInstanceName(var Params: TCreateParams);
     function  ExtractData(VAR Msg: TWMCopyData; OUT s: string): Boolean;
@@ -188,7 +188,7 @@ TYPE
       AutoStartUp  : Boolean;          // Start app at Windows startup
       StartMinim   : Boolean;          // Start minimized
       Minimize2Tray: Boolean;          // Minimize to tray
-      HintType     : THintType;        // Turn off the embeded help system
+      HintType     : THintType;        // Turn off the embedded help system
       Opacity      : Integer;          // Form opacity
     property HideHint: Integer read FHideHint write setHideHint;       // Hide hint after x ms.
 
@@ -210,8 +210,8 @@ TYPE
     procedure WriteAppDataFolder;
     function  ReadAppDataFolder(CONST UninstalledApp: string): string;
 
-    procedure WriteInstalationFolder;
-    function  ReadInstalationFolder(CONST UninstalledApp: string): string;
+    procedure WriteInstallationFolder;
+    function  ReadInstallationFolder(CONST UninstalledApp: string): string;
 
 
    {--------------------------------------------------------------------------------------------------
@@ -225,7 +225,7 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       App Control
    --------------------------------------------------------------------------------------------------}
-    property  RunningFirstTime: Boolean read FRunningFirstTime;    // Returns true if the application is running for the first time in this computer.
+    property  RunningFirstTime: Boolean read FRunningFirstTime;    // Returns true if the application is running for the first time on this computer.
     procedure Restore;
     procedure Restart;
     procedure SelfDelete;
@@ -307,7 +307,7 @@ USES
 
 function ExeName: string;
 begin
-  Result:= ParamStr(0);   //  Application.ExeName is avialble only on VCL
+  Result:= ParamStr(0);   //  Application.ExeName is available only on VCL
 end;
 
 
@@ -315,15 +315,15 @@ end;
  Parameters
 
     AppName
-       The AppName is the central part of this class. It is used by IniFile/MesageBox/etc.
+       The AppName is the central part of this class. It is used by IniFile/MessageBox/etc.
        Should contain only I/O-safe characters (so no ? <> * % /).
        It is used to generate the INI file that will store the form position/size.
 
     WindowClassName - [Optional]
-       Used in InstanceRunning to detect if the the application is already running, by looking to a form with this Class Name.
+       Used in InstanceRunning to detect if the application is already running, by looking to a form with this Class Name.
        Needed ONLY if you use the Single Instance functionality.
        This string must be unique in the whole computer! No other app is allowed to have this ID.
-       If you leave it empty, the aAppName is used. But AppName might not be that unique, or you might want to change it during the time.
+       If you leave it empty, the aAppName is used. But AppName might not be that unique, or you might want to change it over time.
 -------------------------------------------------------------------------------------------------------------}
 constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= ''; SignalInitEnd: Boolean= TRUE; MultiThreaded: Boolean= FALSE);
 begin
@@ -335,7 +335,7 @@ begin
 
   { Sanity check }
   if FCreated
-  then RAISE Exception.Create('Error! AppData aready constructed!')
+  then RAISE Exception.Create('Error! AppData already constructed!')
   else FCreated:= TRUE;
 
   { App single instance }
@@ -1017,7 +1017,7 @@ end;
     1. The receiver procedure should also restore (bring to front) that instance.
     2. We should close this second instance after we sent the message to the first instance.
  }
-procedure TAppData.ResurectInstance(CONST CommandLine: string);
+procedure TAppData.ResurrectInstance(CONST CommandLine: string);
 VAR
    Window: HWND;
    DataToSend: TCopyDataStruct;
@@ -1102,13 +1102,13 @@ end;
 {------------------------
    Instalation Folder
 ------------------------}
-procedure TAppData.WriteInstalationFolder;                                     { Called by the original app }                                                                                                                                       {Old name: WriteAppGlobalData }
+procedure TAppData.WriteInstallationFolder;                                     { Called by the original app }                                                                                                                                       {Old name: WriteAppGlobalData }
 begin
  RegWriteString(HKEY_CURRENT_USER, RegKey+ AppName, 'Install path', CurFolder);
 end;
 
 
-function TAppData.ReadInstalationFolder(CONST UninstalledApp: string): string;  { Called by the uninstaller }
+function TAppData.ReadInstallationFolder(CONST UninstalledApp: string): string;  { Called by the uninstaller }
 begin
  Result:= RegReadString(HKEY_CURRENT_USER, RegKey+ UninstalledApp, 'Install path');
 end;
@@ -1374,7 +1374,7 @@ begin
  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'UninstallString', AppData.SysDir+ 'Uninstall.exe');
 
  AppData.WriteAppDataFolder;
- AppData.WriteInstalationFolder;
+ AppData.WriteInstallationFolder;
 end;
 
 

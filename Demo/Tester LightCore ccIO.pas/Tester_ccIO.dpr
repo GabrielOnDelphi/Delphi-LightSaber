@@ -2,7 +2,7 @@ program Tester_ccIO;
 
 uses
   Vcl.Forms,
-  MainForm in 'MainForm.pas' {Form6},
+  MainForm in 'MainForm.pas' {frmTestIO},
   cbAppData;
 
 {$R *.res}
@@ -10,6 +10,6 @@ uses
 begin
   Application.Initialize;
   AppData:= TAppData.Create('Light Tester IO');
-  AppData.CreateMainForm(TForm6, Form6, TRUE);
+  AppData.CreateMainForm(TfrmTestIO, frmTestIO, TRUE);
   Application.Run;
 end.

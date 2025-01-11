@@ -659,9 +659,9 @@ end;
 {--------------------------------------------------------------------------------------------------
    CREATE FOLDER
 
-   Tries to create the specified folder
+   Tries to create the specified folder. Does not crashes if
    Works with UNC paths.
-   Writing on a readonly folder: ignores the ReadOnly attribute (same for H and S attributes)
+   Writing on a readonly folder: It ignores the ReadOnly attribute (same for H and S attributes)
 
    Returns:
      False if the path is invalid.
@@ -672,13 +672,19 @@ begin
   TRY
     TDirectory.CreateDirectory(FullPath);
   EXCEPT
-    on System.SysUtils.EArgumentException  // exception class EInOutArgumentException with message 'Invalid characters in path': C:\?
-      do EXIT(FALSE)
+    on EInOutError DO EXIT(FALSE);   // Handle I/O errors (e.g., no write permission)
     else RAISE;
+    {
+    For any other exceptions, raise.
+    Example:
+      on EArgumentException DO RAISE;  // Re-raise exception for invalid characters in path
+      on EInOutArgumentException DO RAISE;  //   'Path is empty'.    }
   END;
   Result:= DirectoryExists(FullPath);
 end;
 
+//
+//Project Tester_ccIO.exe raised exception class  with message
 
 {--------------------------------------------------------------------------------------------------
    Raises exception if parameter is invalid

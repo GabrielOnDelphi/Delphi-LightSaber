@@ -81,6 +81,11 @@ USES cbAppData;
 constructor TLightForm.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  Position:= poDesigned;
+  showhint:= TRUE;
+  screensnap:= TRUE;
+  snapbuffer:= 4;
+
   Saved:= FALSE;
   Loading:= flPosOnly; // Default value. Can be overriden by AppData.CreateForm
 end;

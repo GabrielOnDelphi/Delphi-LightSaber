@@ -68,11 +68,11 @@ TYPE
     Label2                : TLabel;
     Label3                : TLabel;
     TabSheet2             : TTabSheet;
-    Panel1                : TPanel;
-    DropDownSearchBox     : TDropDownSearchBox;
     CMinimalLabel1: TMinimalPathLabel;
     pnlRichEditResize: TPanel;
     RichEditResize1: TRichEditResize;
+    Panel1: TPanel;
+    DropDownSearchBox: TDropDownSearchBox;
     procedure FormShow(Sender: TObject);
     procedure DropDownSearchBoxEndSearch(Sender, SelectedItem: TObject);
   private
