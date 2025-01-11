@@ -4,10 +4,10 @@ INTERFACE
 
 USES
   WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, VCL.Forms, Vcl.Controls, Vcl.ExtCtrls,
-  cbAppData, cvINIFile, Vcl.Mask;
+  cbAppData, cvINIFile, Vcl.Mask, cbAppDataForm;
 
 TYPE
- TfrmTester = class(TForm)
+ TfrmTester = class(TLightForm)
     pnlRight: TPanel;
     btnShowTranslator: TButton;
     CheckBox1: TCheckBox;
@@ -20,7 +20,7 @@ TYPE
     procedure btnHelperClick(Sender: TObject);
   protected
   private
-    procedure LateInitialize; override_; // Called after the main form was fully created
+    procedure LateInitialize; override; // Called after the main form was fully created
   public
  end;
 
@@ -48,7 +48,8 @@ end;
 
 procedure TfrmTester.LateInitialize;
 begin
- LoadForm(Self);
+ inherited LateInitialize;
+ //LoadForm(Self);
 
  Translator:= TTranslator.Create;  // Initialize the translator
  Translator.LoadLastTranslation;   // Load last language

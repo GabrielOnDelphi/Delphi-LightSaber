@@ -24,17 +24,14 @@ uses
 {$R *.res}
 
 begin
-  CONST MultiThreaded= TRUE; // True => Only if we need to use multithreading in the Log.
+  CONST
+     MultiThreaded= FALSE;                  // True => Only if we need to use multithreading in the Log.
+  CONST
+     AppName= 'Light Commercial Template';  // Absolutelly critical if you use the SaveForm/LoadForm functionality. This string will be used as the name of the INI file.
 
-  AppData:= TAppData.Create('Light Commercial Template', '', TRUE, MultiThreaded); { Absolutelly critical if you use the SaveForm/LoadForm functionality. This string will be used as the name of the INI file. }
+  AppData:= TAppData.Create(AppName, '', True, MultiThreaded);
   AppData.CreateMainForm(TMainForm, MainForm, True, True);
   TfrmRamLog.CreateGlobalLog;
-  
-  // Warning: if the main form is set not to auto show so we can manually show it later, this will break the MSG_LateFormInit system
-  // This is because TrySetStyle modifies the application styles, which can internally recreate the form or affect its messaging loop.
-  // This interruption likely results in the MSG_LateFormInit message being lost or not dispatched as expected.
-  // Call TrySetStyle late, or make the main form visible before you call TrySetStyle!
-  //TStyleManager.TrySetStyle('Amakrits');
   
   Application.Run;
 end.

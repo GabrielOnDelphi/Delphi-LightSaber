@@ -99,18 +99,15 @@ TYPE
     procedure Button12Click      (Sender: TObject);
     procedure CanShowHint        (Sender: TObject);
     procedure FormClose          (Sender: TObject; var Action: TCloseAction);
-    procedure FormCloseQuery     (Sender: TObject; var CanClose: Boolean);
-    procedure FormDestroy        (Sender: TObject);
     procedure TrayIconClick      (Sender: TObject);
     procedure actShowLogExecute  (Sender: TObject);
     procedure FormCreate(Sender: TObject);
   protected
     procedure WMDROPFILES (VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Accept the dropped files from Windows Explorer }
+    procedure BeforeRelease; override;
   private
-    procedure WMEndSession(VAR Msg: TWMEndSession); message WM_ENDSESSION;
   public
     procedure LateInitialize; override; //(VAR Msg: TMessage); override_;  { Called after the main form was fully created }
-    procedure SaveBeforeExit;
     procedure FontSizeChanged;
  end;
 
@@ -156,37 +153,21 @@ end;
 {--------------------------------------------------------------------------------------------------
  CLOSE
 --------------------------------------------------------------------------------------------------}
-procedure TMainForm.WMEndSession(var Msg: TWMEndSession);
-begin
-  SaveBeforeExit;
-end;
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  SaveBeforeExit;
-end;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action := caFree;
-  SaveBeforeExit;
-end;
-
-procedure TMainForm.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
-begin
-  CanClose := TRUE;
-  SaveBeforeExit;
 end;
 
 
 { It is enough to put SaveBeforeExit in thse two places only: OnCloseQueryand & OnDestroy.
   Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
-procedure TMainForm.SaveBeforeExit;
+procedure TMainForm.BeforeRelease;
 begin
   if NOT Saved then
    begin
+     inherited BeforeRelease;
      GuiSettings.Save;
-     //SaveForm(Self);
      FreeAndNil(GuiSettings);
      FreeAndNil(Updater);
      FreeAndNil(Translator);
@@ -240,7 +221,7 @@ end;
 
 
 { Calculates the size of GUI after the user applies new font. Needs to be called manually. }
-{ToDo: intercept this msg }
+{ToDo: intercept the FontSizeChange msg }
 procedure TMainForm.FontSizeChanged;
 begin
   StatBar.Height:= Canvas.TextHeight('pT|')+ 8;

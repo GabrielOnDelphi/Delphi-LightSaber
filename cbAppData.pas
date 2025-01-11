@@ -2,7 +2,7 @@
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.11
+   2025.01.11
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
@@ -42,17 +42,18 @@
          FastMM4,
          Vcl.Forms,
          FormRamLog,
-         cbINIFile,
+         //cbINIFile,
          cbAppData,
-         MainForm in 'MainForm.pas' {frmMain _;
+         MainForm in 'MainForm.pas' {frmMain);
        begin
          AppData:= TAppData.Create('MyCollApp');
          AppData.CreateMainForm(TMainForm, MainForm, False, True);   // Main form
-         AppData.CreateForm(TSecondFrom, frmSecond);                 // Secondary form(s)
+         AppData.CreateForm(TSecondFrom, frmSecond);                 // Secondary form (optional)
          TfrmRamLog.CreateGlobalLog;                                 // Log (optional)
          Application.Run;
        end.
 
+     Full demo code in LightSaber\Demo\Template App\TemplateApp.dpr
  ____________________________________________________________________________________________________________
 
    DOCUMENTATION
@@ -65,14 +66,7 @@
 
      OnFormCreate
 
-        OnFormCreate and OnFormShow is the worst place to initialize your code. FormCreate is too early and OnShow may never be called (or called too late) or called multiple times.
-        Instead, your form can implement the LateInitialize message handler.
-        This will be called after the form was fully created and the application finished initializing.
-        Example:
-           TfrmMain = class(TForm)
-            protected
-              procedure LateInitialize; override; // Called after the main form was fully initilized
-           end;
+        See explantaion in cbAppDataForm.pas
 
 
      DPR FILE
@@ -206,7 +200,7 @@ TYPE
     function CheckSysDir: Boolean;
     class function IniFile: string;
     class function AppDataFolder(ForceDir: Boolean= FALSE): string;
-    function AppDataFolderAllUsers: string;
+    class function AppDataFolderAllUsers(ForceDir: Boolean = FALSE): string;
 
     function AppShortName:  string;
     property LastUsedFolder: string read getLastUsedFolder write FLastFolder;
@@ -359,7 +353,7 @@ begin
   Assert(aAppName > '', 'AppName is empty!');
   FAppName:= aAppName;
   Application.Title:= aAppName;
-  ForceDirectories(AppDataFolder);               // Force the creation of AppData folder.
+  AppDataFolder(TRUE);               // Force the creation of AppData folder.
 
   { App first run }
   FRunningFirstTime:= NOT FileExists(IniFile);
@@ -618,7 +612,7 @@ end;
 { Returns ONLY the name of the app (exe name without extension) }
 function TAppData.AppShortName: string;
 begin
- Result:= ExtractOnlyName(ExeName);
+  Result:= ExtractOnlyName(ExeName);
 end;
 
 
@@ -626,48 +620,54 @@ end;
 //ToDo: save this to a INI file
 function TAppData.getLastUsedFolder: string;
 begin
- if FLastFolder = ''
- then Result:= GetMyDocuments
- else Result:= FLastFolder;
+  if FLastFolder = ''
+  then Result:= GetMyDocuments
+  else Result:= FLastFolder;
 end;
 
 
 { Returns the path to current user's AppData folder on Windows, and to the current user's home directory on Mac OS X.
   Cannot be used at design-time because AppName is not set!
-  Example
-     Win XP: c:\Documents and Settings\UserName\Application Data\AppName\
-     Vista+: c:\Documents and Settings\UserName\AppData\Roaming\
-  if ForceDir then it creates the folder (full path) where the INI file will be written. }
+
+  Windows XP       C:\Documents and Settings\UserName\Application Data
+  Windows Vista+   C:\Users\UserName\AppData\Roaming
+  OS X             /Users/UserName
+  iOS Device       /private/var/mobile/Containers/Data/Application/Application_ID
+  iOS Simulator    /Users/UserName/Library/Developer/CoreSimulator/Devices/Device_ID/data/Containers/Data/Application/Application_ID
+  Android          /data/data/Application_ID/files
+  Linux            /home/UserName
+
+  If ForceDir, then it creates the folder (full path) where the INI file will be written. }
 class function TAppData.AppDataFolder(ForceDir: Boolean = FALSE): string;
 begin
- Assert(AppName > '', 'AppName is empty!');
- Assert(System.IOUtils.TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
+  Assert(AppName > '', 'AppName is empty!');
+  Assert(System.IOUtils.TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
 
   Result := Trail(TPath.Combine(TPath.GetHomePath, AppName));
 
- if ForceDir
- then ForceDirectories(Result);
+  if ForceDir
+  then ForceDirectories(Result);
 end;
 
 
 
-{ Example: 'C:\ProgramData\AppName' on Windows or 
-            '/Library/Application Support/AppName' on Mac OS X }
-function TAppData.AppDataFolderAllUsers: string;
+{ Example:
+   Windows XP      C:\Documents and Settings\All Users\Application Data
+   Windows Vista+  C:\ProgramData
+   OS X            /Users/<username>/Public
+   iOS Device      N/A
+   iOS Simulator   /Users/<username>/Library/Developer/CoreSimulator/Devices/<Device ID>/data/Containers/Data/Application/<application ID>/Public
+   Android         /storage/emulated/0/Android/data/<application ID>/files
+}
+class function TAppData.AppDataFolderAllUsers(ForceDir: Boolean = FALSE): string;
 begin
- Assert(AppName > '', 'AppName is empty!');
- Assert(TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
+  Assert(AppName > '', 'AppName is empty!');
+  Assert(TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
 
-  {$IFDEF MSWINDOWS}
   Result := Trail(TPath.Combine(TPath.GetPublicPath, AppName));
-  {$ELSEIF DEFINED(MACOS)}
-  Result := Trail(TPath.Combine(TPath.GetLibraryPath, 'Application Support') + PathDelim + AppName);
-  {$ELSE}
-  Result := Trail(TPath.Combine(TPath.GetSharedDocumentsPath, AppName));
-  {$ENDIF}
-  
- if NOT DirectoryExists(Result)
- then ForceDirectories(Result);
+
+  if ForceDir
+  then ForceDirectories(Result);
 end;
 
 
@@ -675,10 +675,8 @@ end;
   It is based on the name of the application. Example: c:\Documents and Settings\MyName\Application Data\MyApp\MyApp.ini }
 class function TAppData.IniFile: string;
 begin
- //Assert(AppData <> NIL, 'AppData is already gone!'); // This happens when I close the form.
-
- Assert(AppName > '', 'AppName is empty!');
- Assert(TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
+  Assert(AppName > '', 'AppName is empty!');
+  Assert(TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
 
   Result := TPath.Combine(AppDataFolder, AppName + '.ini');
 end;

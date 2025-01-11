@@ -23,7 +23,6 @@ object frmSettings: TfrmSettings
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
-  OnDestroy = FormDestroy
   TextHeight = 17
   object pgCtrl: TPageControl
     Left = 0
@@ -40,7 +39,7 @@ object frmSettings: TfrmSettings
         479)
       object grpSystem: TGroupBox
         Left = 178
-        Top = 98
+        Top = 97
         Width = 381
         Height = 246
         Anchors = []

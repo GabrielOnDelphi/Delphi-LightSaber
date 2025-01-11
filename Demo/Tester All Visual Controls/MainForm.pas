@@ -15,7 +15,7 @@ USES
   Vcl.Mask, Vcl.Samples.Spin, Vcl.CheckLst;
 
 TYPE
-  TfrmMain = class(TForm)
+  TfrmMain = class(TLightForm)
     AssociateFileExt1     : TAssociateFileExt;
     BaseStrGrid1          : TBaseStrGrid;
     CationedThumbnail     : TCationedThumbnail;

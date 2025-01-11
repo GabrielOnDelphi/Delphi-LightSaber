@@ -2,8 +2,8 @@ object frmContainer: TfrmContainer
   Left = 0
   Top = 0
   Caption = 'Container'
-  ClientHeight = 310
-  ClientWidth = 385
+  ClientHeight = 309
+  ClientWidth = 381
   Color = clBtnFace
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
@@ -11,11 +11,9 @@ object frmContainer: TfrmContainer
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poDesigned
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 13
   object grpContainer: TGroupBox
     Left = 60
@@ -57,8 +55,8 @@ object frmContainer: TfrmContainer
   object GroupBox1: TGroupBox
     AlignWithMargins = True
     Left = 3
-    Top = 193
-    Width = 379
+    Top = 192
+    Width = 375
     Height = 110
     Margins.Bottom = 7
     Align = alBottom

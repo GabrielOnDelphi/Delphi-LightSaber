@@ -6,7 +6,7 @@ USES
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls;
 
 TYPE
-  TForm6 = class(TForm)
+  TForm6 = class(TLightForm)
     Memo: TMemo;
     procedure FormCreate(Sender: TObject);
   private

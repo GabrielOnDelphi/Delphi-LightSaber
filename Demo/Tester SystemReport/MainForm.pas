@@ -4,13 +4,13 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, cbAppData;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, cbAppData, cbAppDataForm;
 
 type
-  TfrmMain = class(TForm)
+  TfrmMain = class(TLightForm)
     Memo: TMemo;
   private
-    procedure LateInitialize; override_;
+    procedure LateInitialize; override;
   public
   end;
 
@@ -24,6 +24,7 @@ USES cmDebugger;
 
 procedure TfrmMain.LateInitialize(var Msg: TMessage);
 begin
+  inherited latei;
   Memo.Text:= cmDebugger.GenerateSystemRep;
 end;
 

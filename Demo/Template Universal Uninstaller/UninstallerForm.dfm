@@ -5,8 +5,8 @@ object frmMain: TfrmMain
   AlphaBlendValue = 245
   Anchors = [akLeft, akBottom]
   BorderStyle = bsToolWindow
-  ClientHeight = 323
-  ClientWidth = 682
+  ClientHeight = 311
+  ClientWidth = 674
   Color = clBtnFace
   DoubleBuffered = True
   Font.Charset = ANSI_CHARSET
@@ -20,15 +20,15 @@ object frmMain: TfrmMain
   Visible = True
   OnCreate = FormCreate
   DesignSize = (
-    682
-    323)
+    674
+    311)
   TextHeight = 14
   object imgLogo: TImage
     AlignWithMargins = True
     Left = 3
     Top = 3
     Width = 196
-    Height = 317
+    Height = 305
     Align = alLeft
     Center = True
     Picture.Data = {
@@ -2772,8 +2772,8 @@ object frmMain: TfrmMain
     OnClick = imgLogoClick
   end
   object lblVersion: TLabel
-    Left = 33
-    Top = 0
+    Left = 31
+    Top = -12
     Width = 122
     Height = 13
     Anchors = [akBottom]
@@ -2788,19 +2788,19 @@ object frmMain: TfrmMain
   object Panel1: TPanel
     Left = 202
     Top = 0
-    Width = 480
-    Height = 323
+    Width = 472
+    Height = 311
     Align = alClient
     Caption = 'Panel1'
     TabOrder = 0
     DesignSize = (
-      480
-      323)
+      472
+      311)
     object lblDiscount: TLabel
       AlignWithMargins = True
       Left = 4
       Top = 4
-      Width = 472
+      Width = 464
       Height = 24
       Align = alTop
       Alignment = taCenter
@@ -2819,8 +2819,8 @@ object frmMain: TfrmMain
     object inetDiscount: TInternetLabel
       AlignWithMargins = True
       Left = 4
-      Top = 34
-      Width = 472
+      Top = 31
+      Width = 464
       Height = 13
       Cursor = crHandPoint
       Align = alTop
@@ -2842,8 +2842,8 @@ object frmMain: TfrmMain
     object mmoLog: TRichLog
       AlignWithMargins = True
       Left = 4
-      Top = 53
-      Width = 472
+      Top = 50
+      Width = 464
       Height = 180
       Align = alTop
       Lines.Strings = (
@@ -2872,8 +2872,8 @@ object frmMain: TfrmMain
     object edtPath: TCubicPathEdit
       AlignWithMargins = True
       Left = 4
-      Top = 239
-      Width = 472
+      Top = 236
+      Width = 464
       Height = 41
       ShowCreateBtn = False
       OnPathChanged = edtPathPathChanged
@@ -2883,7 +2883,7 @@ object frmMain: TfrmMain
     end
     object btnUninstall: TButton
       Left = 4
-      Top = 289
+      Top = 277
       Width = 68
       Height = 25
       Hint = 'When possible the application will send the files to RecycleBin'
@@ -2895,7 +2895,7 @@ object frmMain: TfrmMain
     end
     object btnResetIni: TButton
       Left = 80
-      Top = 289
+      Top = 277
       Width = 214
       Height = 25
       Hint = 
@@ -2908,8 +2908,8 @@ object frmMain: TfrmMain
       OnClick = btnResetIniClick
     end
     object btnFeedback: TButton
-      Left = 380
-      Top = 281
+      Left = 364
+      Top = 269
       Width = 94
       Height = 37
       Hint = 

@@ -5,24 +5,43 @@
    2025.01.10
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
-   How to use it:
 
-   Change the declaration of your form to TLightForm and override the LateInitialize.
+   Motivation
 
-   uses cbAppDataForm;
+      OnFormCreate and OnFormShow is the worst place to initialize your code. FormCreate is too early and OnShow may never be called (or called too late) or called multiple times.
+      Instead, your form can implement the LateInitialize message handler.
+      This will be called after the form was fully created and the application finished initializing.
+      Example:
+         TfrmMain = class(TForm)
+          protected
+            procedure LateInitialize; override; // Called after the main form was fully initilized
+         end;
 
-   Type
-     TYourForm = class(TLightForm)
-     public
-       procedure LateInitialize; override;
-     end;
 
-    procedure TYourForm.LateInitialize;
-    begin
-      inherited LateInitialize;
-      // You code here
-    end;
+   How to use it
 
+      Change the declaration of your form to TLightForm and override the LateInitialize.
+
+      uses cbAppDataForm;
+      Type
+        TYourForm = class(TLightForm)
+        protected
+          procedure BeforeRelease;  override;    // Optional
+        public
+          procedure LateInitialize; override;    // Optional
+        end;
+
+       procedure TYourForm.LateInitialize;
+       begin
+         inherited LateInitialize;
+         // Intialize your code here
+       end;
+
+       procedure TYourForm.BeforeRelease;
+       begin
+         // Release your resources here
+         inherited BeforeRelease;
+       end;
 
 =============================================================================================================}
 
@@ -35,16 +54,19 @@ USES
 type
   TLightForm = class(TForm)
   private
+    procedure SaveBeforeExit;
   protected
     Saved: Boolean;
     procedure DoDestroy; override;
     procedure DoClose(var Action: TCloseAction); override;
     procedure WMEndSession(var Msg: TWMEndSession);
+    procedure BeforeRelease; virtual;
   public
     Loading: TFormLoading;
+
     procedure LateInitialize; virtual;
-    procedure SaveBeforeExit;
-    function  CloseQuery: boolean; override;
+
+    function CloseQuery: boolean; override;
     constructor Create(AOwner: TComponent); override;
   published
     //property OnLateInitialize: TNotifyEvent read FOnLateInitialize write FOnLateInitialize;
@@ -53,12 +75,14 @@ type
 
 IMPLEMENTATION
 
+USES cbAppData;
+
 
 constructor TLightForm.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   Saved:= FALSE;
-  Loading:= flPosOnly;
+  Loading:= flPosOnly; // Default value. Can be overriden by AppData.CreateForm
 end;
 
 
@@ -98,12 +122,25 @@ end;
   Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
 procedure TLightForm.SaveBeforeExit;
 begin
-  if NOT Saved then
+  if NOT Saved
+  AND NOT AppData.Initializing then
   begin
-    Saved := TRUE;
-    cbIniFile.SaveFormBase(Self);
+    try
+      BeforeRelease;
+    finally
+      Saved:= TRUE;  // Make sure it is put to true even on accidents, otherwise we might call it multiple times.
+    end;
   end;
 end;
+
+
+{ Called ONLY once, when Saved = False }
+procedure TLightForm.BeforeRelease;
+begin
+  Assert(NOT Saved);
+  cbIniFile.SaveFormBase(Self);
+end;
+
 
 
 end.

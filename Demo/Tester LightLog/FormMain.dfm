@@ -2,26 +2,24 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'LightSaber Log Demo'
-  ClientHeight = 439
-  ClientWidth = 801
+  ClientHeight = 438
+  ClientWidth = 797
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = True
   Position = poDesigned
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
   TextHeight = 13
   object Panel1: TPanel
     AlignWithMargins = True
     Left = 3
     Top = 3
     Width = 381
-    Height = 433
+    Height = 432
     Align = alLeft
     BevelOuter = bvNone
     Caption = 'Panel1'
@@ -44,11 +42,10 @@ object MainForm: TMainForm
       ScrollBars = ssBoth
       TabOrder = 0
       WordWrap = False
-      Zoom = 100
     end
     object Panel3: TPanel
       Left = 0
-      Top = 400
+      Top = 399
       Width = 381
       Height = 33
       Align = alBottom
@@ -92,10 +89,10 @@ object MainForm: TMainForm
   end
   object Panel2: TPanel
     AlignWithMargins = True
-    Left = 403
+    Left = 399
     Top = 3
     Width = 395
-    Height = 433
+    Height = 432
     Align = alRight
     BevelOuter = bvNone
     ShowCaption = False
@@ -139,9 +136,9 @@ object MainForm: TMainForm
         TrackBar.Anchors = [akLeft, akTop, akRight, akBottom]
         TrackBar.Max = 6
         TrackBar.Min = 1
-        TrackBar.Position = 3
+        TrackBar.Position = 1
         TrackBar.TabOrder = 0
-        Verbosity = lvInfos
+        Verbosity = lvVerbose
         Log = VisLog
       end
       object Button3: TButton

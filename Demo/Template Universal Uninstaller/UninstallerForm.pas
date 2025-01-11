@@ -31,10 +31,10 @@ USES
   Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Controls,
   Vcl.ExtCtrls, System.Classes, SysUtils, Vcl.Forms, System.IOUtils,
   ccCore, csSystem, cbDialogs, ccIO, ccTextFile, cmIO, cmIO.Win, cvPathEdit, cvCountDown,
-  InternetLabel, llRichLog, Vcl.Imaging.pngimage;
+  InternetLabel, llRichLog, Vcl.Imaging.pngimage, cbAppDataForm;
 
 TYPE
-  TfrmMain = class(TForm)
+  TfrmMain = class(TLightForm)
     imgLogo      : TImage;
     lblVersion   : TLabel;
     Panel1       : TPanel;

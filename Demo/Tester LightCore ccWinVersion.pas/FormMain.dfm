@@ -17,13 +17,11 @@ object frmTester: TfrmTester
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = True
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 4
   OnCreate = FormCreate
-  PixelsPerInch = 96
   TextHeight = 13
   object pnlRight: TPanel
     Left = 432

@@ -79,21 +79,12 @@ USES
 
 
 
-procedure TfrmTranslator.lblLiveFormsClick(Sender: TObject);
-begin
- lbxForms.Clear;
- for VAR i:= 0 to Screen.FormCount - 1 DO
-   begin
-     VAR CurForm:= Screen.Forms[I];
-     lbxForms.Items.Add(CurForm.Name + ' - ' + CurForm.Caption);
-   end;
-end;
-
 
 procedure TfrmTranslator.LateInitialize;
 begin
+ inherited LateInitialize;
  Assert(Translator <> NIL);
- LoadFormBase(Self);                              //Note: Don't add dependencies to CubicVisualControls here!
+ // LoadFormBase(Self);                              //Note: Don't add dependencies to CubicVisualControls here!
  lblLiveFormsClick(Self);
 end;
 
@@ -106,7 +97,6 @@ end;
 
 procedure TfrmTranslator.FormDestroy(Sender: TObject);
 begin
- SaveFormBase(Self);  //Don't add dependencies to CubicVisualControls here!
 end;
 
 
@@ -218,6 +208,18 @@ begin
 end;
 
 
+
+
+
+procedure TfrmTranslator.lblLiveFormsClick(Sender: TObject);
+begin
+ lbxForms.Clear;
+ for VAR i:= 0 to Screen.FormCount - 1 DO
+   begin
+     VAR CurForm:= Screen.Forms[I];
+     lbxForms.Items.Add(CurForm.Name + ' - ' + CurForm.Caption);
+   end;
+end;
 
 
 

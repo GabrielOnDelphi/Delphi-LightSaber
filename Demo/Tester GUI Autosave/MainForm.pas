@@ -26,7 +26,7 @@ USES
   System.Actions, Vcl.ActnList, Vcl.Menus, cvRadioButton, cbAppData;
 
 TYPE
- TfrmTester = class(TForm)
+ TfrmTester = class(TLightForm)
     actAutoSave: TAction;
     ActionList : TActionList;
     actLoadGUI : TAction;
@@ -58,8 +58,8 @@ TYPE
     procedure FormCreate         (Sender: TObject);
     procedure FormDestroy        (Sender: TObject);
   private
-    procedure LateInitialize; override_; // Called after the main form was fully created
   public
+    procedure LateInitialize; override; // Called after the main form was fully created
  end;
 
 VAR
@@ -83,6 +83,7 @@ end;
 
 procedure TfrmTester.LateInitialize;
 begin
+ inherited LateInitialize;
  LoadForm(frmTester);
 
  if AppData.RunningFirstTime

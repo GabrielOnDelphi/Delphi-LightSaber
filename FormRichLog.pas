@@ -71,7 +71,8 @@ end;
 
 procedure TfrmRichLog.LateInitialize;
 begin
- LoadForm(Self);
+ inherited LateInitialize;
+  LoadForm(Self);
 end;
 
 

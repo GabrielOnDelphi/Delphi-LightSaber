@@ -7,7 +7,7 @@ USES
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cvCheckBox, Vcl.StdCtrls, cvRadioButton;
 
 TYPE
-  TfrmContainer = class(TForm)
+  TfrmContainer = class(TLightForm)
     Label1         : TLabel;
     CheckBox1      : TCheckBox;
     grpContainer   : TGroupBox;

@@ -65,13 +65,13 @@
 
      OnFormCreate
 
-        OnFormCreate and OnFormShow is the worst place to initialize your code.
+        OnFormCreate and OnFormShow is the worst place to initialize your code. FormCreate is too early and OnShow may never be called (or called too late) or called multiple times.
         Instead, your form can implement the LateInitialize message handler.
         This will be called after the form was fully created and the application finished initializing.
         Example:
            TfrmMain = class(TForm)
-            private
-              procedure LateInitialize; override_; // Called after the main form was fully initilized
+            protected
+              procedure LateInitialize; override; // Called after the main form was fully initilized
            end;
 
 
@@ -137,10 +137,6 @@ TYPE
                htTooltips,                 // Show help as tool-tips
                htStatBar);                 // Show help in status bar
 
-type
-  TCustomMessage = class(TMessage)
-  end;
-  
   TAppData= class(TObject)
   private
     FShowOnError: Boolean;                 // Automatically show the visual log form when warnings/errors are added to the log. This way the user is informed about the problems.
@@ -152,8 +148,6 @@ type
     procedure SetGuiProperties(Form: TForm);
     procedure setHideHint(const Value: Integer);
     procedure setShowOnError(const Value: Boolean);
-    procedure SubscribeToMessages(Form: TForm);
-    procedure UnsubscribeFromMessages(Form: TForm);
     CONST
       Signature: AnsiString= 'AppDataSettings';{ Do not change it! }
       DefaultHomePage= 'https://www.GabrielMoraru.com';
@@ -213,7 +207,7 @@ type
     function CheckSysDir: Boolean;
     class function IniFile: string;
     class function AppDataFolder(ForceDir: Boolean= FALSE): string;
-    function AppDataFolderAllUsers: string;
+    class function AppDataFolderAllUsers(ForceDir: Boolean = FALSE): string;
 
     function AppShortName:  string;
     property LastUsedFolder: string read getLastUsedFolder write FLastFolder;
@@ -366,7 +360,7 @@ begin
   Assert(aAppName > '', 'AppName is empty!');
   FAppName:= aAppName;
   Application.Title:= aAppName;
-  ForceDirectories(AppDataFolder);               // Force the creation of AppData folder.
+  AppDataFolder(TRUE);               // Force the creation of AppData folder.
 
   { App first run }
   FRunningFirstTime:= NOT FileExists(IniFile);
@@ -427,18 +421,6 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    FORMS
 -------------------------------------------------------------------------------------------------------------}
-
-procedure TAppData.SubscribeToMessages(Form: TForm);
-begin
-  TMessageManager.DefaultManager.SubscribeToMessage(TCustomMessage, Form.LateInitialize);
-end;
-
-procedure TAppData.UnsubscribeFromMessages(Form: TForm);
-begin
-  TMessageManager.DefaultManager.Unsubscribe(TCustomMessage, Form.LateInitialize);
-end;
-
-
 { 1. Create the form
   2. Set the font of the new form to be the same as the font of the MainForm
   3. Show it }
@@ -491,12 +473,11 @@ begin
      if Show
      then TForm(Reference).Show;
 
-  // SEND LateInit MESSAGE
-  // This will send a message to the main form. The user must implement in the main form a procedure to capture this message.
+  // Window fully constructed.
+  // Now we can let user run its own initialization process.
   // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory [Part 2]" book) for details.
-  SubscribeToMessages(Reference);
-  // Warning: If you use TrySetStyle, don't do it until the main form is visible. TrySetStyle modifies the application styles, which makes the MSG_LateFormInit message to be lost.
-  TMessageManager.DefaultManager.SendMessage(TForm(Reference), TCustomMessage.Create);
+  if TObject(Reference) is TLightForm
+  then TLightForm(Reference).LateInitialize;  
 
   if AutoSignalInitializationEnd
   then Initializing:= FALSE;
@@ -542,13 +523,22 @@ begin
 
   // Load previous form settings/position
   cbINIFile.LoadFormBase(TForm(Reference), Loading);
+  if TForm(Reference) is TLightForm
+  then TLightForm(Reference).Loading:= Loading;
+
 
   if Show
   then TForm(Reference).Show;
 
-  // Window fully constructed. Now we can let user start its own initialization process.
-  TMessageManager.DefaultManager.SendMessage(TForm(Reference), TCustomMessage.Create);
+  // Window fully constructed.
+  // Now we can let user run its own initialization process.
+  if TObject(Reference) is TLightForm
+  then TLightForm(Reference).LateInitialize;
+
+  if AutoSignalInitializationEnd
+  then Initializing:= FALSE;
 end;
+
 
 
 { Create secondary form }
@@ -630,7 +620,7 @@ end;
 { Returns ONLY the name of the app (exe name without extension) }
 function TAppData.AppShortName: string;
 begin
- Result:= ExtractOnlyName(ExeName);
+  Result:= ExtractOnlyName(ExeName);
 end;
 
 
@@ -638,48 +628,54 @@ end;
 //ToDo: save this to a INI file
 function TAppData.getLastUsedFolder: string;
 begin
- if FLastFolder = ''
- then Result:= GetMyDocuments
- else Result:= FLastFolder;
+  if FLastFolder = ''
+  then Result:= GetMyDocuments
+  else Result:= FLastFolder;
 end;
 
 
 { Returns the path to current user's AppData folder on Windows, and to the current user's home directory on Mac OS X.
   Cannot be used at design-time because AppName is not set!
-  Example
-     Win XP: c:\Documents and Settings\UserName\Application Data\AppName\
-     Vista+: c:\Documents and Settings\UserName\AppData\Roaming\
-  if ForceDir then it creates the folder (full path) where the INI file will be written. }
+
+  Windows XP       C:\Documents and Settings\UserName\Application Data
+  Windows Vista+   C:\Users\UserName\AppData\Roaming
+  OS X             /Users/UserName
+  iOS Device       /private/var/mobile/Containers/Data/Application/Application_ID
+  iOS Simulator    /Users/UserName/Library/Developer/CoreSimulator/Devices/Device_ID/data/Containers/Data/Application/Application_ID
+  Android          /data/data/Application_ID/files
+  Linux            /home/UserName
+
+  If ForceDir, then it creates the folder (full path) where the INI file will be written. }
 class function TAppData.AppDataFolder(ForceDir: Boolean = FALSE): string;
 begin
- Assert(AppName > '', 'AppName is empty!');
- Assert(System.IOUtils.TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
+  Assert(AppName > '', 'AppName is empty!');
+  Assert(System.IOUtils.TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
 
   Result := Trail(TPath.Combine(TPath.GetHomePath, AppName));
 
- if ForceDir
- then ForceDirectories(Result);
+  if ForceDir
+  then ForceDirectories(Result);
 end;
 
 
 
-{ Example: 'C:\ProgramData\AppName' on Windows or 
-            '/Library/Application Support/AppName' on Mac OS X }
-function TAppData.AppDataFolderAllUsers: string;
+{ Example:
+   Windows XP      C:\Documents and Settings\All Users\Application Data
+   Windows Vista+  C:\ProgramData
+   OS X            /Users/<username>/Public
+   iOS Device      N/A
+   iOS Simulator   /Users/<username>/Library/Developer/CoreSimulator/Devices/<Device ID>/data/Containers/Data/Application/<application ID>/Public
+   Android         /storage/emulated/0/Android/data/<application ID>/files
+}
+class function TAppData.AppDataFolderAllUsers(ForceDir: Boolean = FALSE): string;
 begin
- Assert(AppName > '', 'AppName is empty!');
- Assert(TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
+  Assert(AppName > '', 'AppName is empty!');
+  Assert(TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
 
-  {$IFDEF MSWINDOWS}
   Result := Trail(TPath.Combine(TPath.GetPublicPath, AppName));
-  {$ELSEIF DEFINED(MACOS)}
-  Result := Trail(TPath.Combine(TPath.GetLibraryPath, 'Application Support') + PathDelim + AppName);
-  {$ELSE}
-  Result := Trail(TPath.Combine(TPath.GetSharedDocumentsPath, AppName));
-  {$ENDIF}
-  
- if NOT DirectoryExists(Result)
- then ForceDirectories(Result);
+
+  if ForceDir
+  then ForceDirectories(Result);
 end;
 
 
@@ -687,10 +683,8 @@ end;
   It is based on the name of the application. Example: c:\Documents and Settings\MyName\Application Data\MyApp\MyApp.ini }
 class function TAppData.IniFile: string;
 begin
- //Assert(AppData <> NIL, 'AppData is already gone!'); // This happens when I close the form.
-
- Assert(AppName > '', 'AppName is empty!');
- Assert(TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
+  Assert(AppName > '', 'AppName is empty!');
+  Assert(TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
 
   Result := TPath.Combine(AppDataFolder, AppName + '.ini');
 end;

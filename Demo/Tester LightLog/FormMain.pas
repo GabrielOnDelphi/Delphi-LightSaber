@@ -8,7 +8,7 @@ uses
   llRichLogTrack, Vcl.StdCtrls, Vcl.ComCtrls,  llRichLogUtils, llRichLog, cvLog, cvLogFilter;
 
 type
-  TMainForm = class(TForm)
+  TMainForm = class(TLightForm)
     Panel1: TPanel;
     Panel2: TPanel;
     RichLog: TRichLog;

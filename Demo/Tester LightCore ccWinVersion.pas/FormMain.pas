@@ -4,13 +4,13 @@ INTERFACE
 
 USES
   WinApi.Windows, Winapi.ShellAPI, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin,
-  Vcl.ComCtrls, Vcl.ExtCtrls, cbAppData;
+  Vcl.ComCtrls, Vcl.ExtCtrls, cbAppData, cbAppDataForm;
 
 const
    CRLF = #13#10;
 
 TYPE
- TfrmTester = class(TForm)
+ TfrmTester = class(TLightForm)
     pnlRight: TPanel;
     btnStart: TButton;
     Memo: TMemo;
@@ -18,7 +18,7 @@ TYPE
     procedure FormCreate(Sender: TObject);
   protected
   private
-    procedure LateInitialize; override_; // Called after the main form was fully created
+    procedure LateInitialize; override; // Called after the main form was fully created
   public
  end;
 
@@ -39,6 +39,7 @@ end;
 
 procedure TfrmTester.LateInitialize;
 begin
+ inherited LateInitialize;
  btnStartClick(Self);
 end;
 

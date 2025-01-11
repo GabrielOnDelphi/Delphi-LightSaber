@@ -63,20 +63,17 @@ TYPE
     procedure FormClose               (Sender: TObject; var Action: TCloseAction);
     procedure FormCloseQuery          (Sender: TObject; var CanClose: Boolean);
     procedure FormCreate              (Sender: TObject);
-    procedure FormDestroy             (Sender: TObject);
     procedure spnHideHintChange       (Sender: TObject);
     procedure FormKeyPress            (Sender: TObject; var Key: Char);
     procedure spnOpacityChange        (Sender: TObject);
   protected
+    procedure BeforeRelease; override;
   private
-    Saved      : Boolean;
     GuiSettings: TGuiSettings;
 
     procedure GuiFromObject;  // Called after the main form was fully created
     procedure ObjectFromGUI;
 
-    procedure WMEndSession  (VAR Msg: TWMEndSession); message WM_ENDSESSION;
-    procedure SaveBeforeExit;
   public
     procedure LateInitialize; override; // Called after the main form was fully created
     class procedure CreateFormModal(aGuiSettings: TGuiSettings); static;
@@ -117,27 +114,21 @@ end;
 procedure TfrmSettings.FormCreate(Sender: TObject);
 begin
   GuiFromObject;
-  Saved:= FALSE;
   FontDialog.Font.Assign(Font);
 end;
 
 
 procedure TfrmSettings.LateInitialize;
 begin
+  inherited LateInitialize;
   btnCrash.Visible:= AppData.BetaTesterMode;
 end;
 
 
-procedure TfrmSettings.SaveBeforeExit;  { I need to put SaveBeforeExit in only two places: OnCloseQueryand OnDestroy. Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
+procedure TfrmSettings.BeforeRelease;
 begin
-  if NOT AppData.Initializing            { We don't save anything if the start up was improper! }
-  AND NOT Saved then
-   begin
-     Saved:= TRUE;
-     SaveForm(Self, flPosOnly);
-     //del FreeAndNil(frmServer);  freed by its parent
-     ObjectFromGUI;
-   end;
+  inherited BeforeRelease;
+  ObjectFromGUI;
 end;
 
 
@@ -146,18 +137,6 @@ end;
 {--------------------------------------------------------------------------------------------------
  CLOSE
 --------------------------------------------------------------------------------------------------}
-procedure TfrmSettings.WMEndSession(var Msg: TWMEndSession);
-begin
- SaveBeforeExit;
-end;
-
-
-procedure TfrmSettings.FormDestroy(Sender: TObject);
-begin
- SaveBeforeExit;
-end;
-
-
 procedure TfrmSettings.FormKeyPress(Sender: TObject; var Key: Char);
 begin
   Assert(KeyPreview, 'In order to close with Esc we need to activate KeyPreview!');
@@ -171,14 +150,12 @@ end;
 procedure TfrmSettings.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
  Action := caFree;
- SaveBeforeExit;
 end;
 
 
 procedure TfrmSettings.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
  CanClose := TRUE;
- SaveBeforeExit;
 end;
 
 

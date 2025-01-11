@@ -21,9 +21,7 @@ object MainForm: TMainForm
   ShowHint = True
   SnapBuffer = 5
   OnClose = FormClose
-  OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
-  OnDestroy = FormDestroy
   TextHeight = 17
   object pgCtrl: TPageControl
     Left = 0
@@ -39,17 +37,17 @@ object MainForm: TMainForm
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 483
-        Height = 476
+        Width = 479
+        Height = 475
         Align = alClient
         TabOrder = 1
       end
       object pnlRight: TPanel
         AlignWithMargins = True
-        Left = 492
+        Left = 488
         Top = 3
         Width = 185
-        Height = 476
+        Height = 475
         Align = alRight
         TabOrder = 0
         object btnStart: TButton
@@ -70,7 +68,7 @@ object MainForm: TMainForm
         676
         481)
       object btnProgress: TButton
-        Left = 230
+        Left = 226
         Top = 394
         Width = 143
         Height = 49
@@ -81,7 +79,7 @@ object MainForm: TMainForm
         OnClick = btnProgressClick
       end
       object Button1: TButton
-        Left = 230
+        Left = 226
         Top = 104
         Width = 143
         Height = 49
@@ -90,7 +88,7 @@ object MainForm: TMainForm
         TabOrder = 1
       end
       object Button2: TButton
-        Left = 230
+        Left = 226
         Top = 158
         Width = 143
         Height = 49
@@ -99,7 +97,7 @@ object MainForm: TMainForm
         TabOrder = 2
       end
       object Button3: TButton
-        Left = 230
+        Left = 226
         Top = 211
         Width = 143
         Height = 49
@@ -108,7 +106,7 @@ object MainForm: TMainForm
         TabOrder = 3
       end
       object Button4: TButton
-        Left = 230
+        Left = 226
         Top = 265
         Width = 143
         Height = 49
@@ -124,7 +122,7 @@ object MainForm: TMainForm
         676
         481)
       object btnShowLog: TButton
-        Left = 216
+        Left = 212
         Top = 58
         Width = 191
         Height = 45
@@ -134,7 +132,7 @@ object MainForm: TMainForm
         TabOrder = 0
       end
       object Button5: TButton
-        Left = 216
+        Left = 212
         Top = 107
         Width = 191
         Height = 34
@@ -144,7 +142,7 @@ object MainForm: TMainForm
         OnClick = Button5Click
       end
       object Button6: TButton
-        Left = 216
+        Left = 212
         Top = 149
         Width = 191
         Height = 34
@@ -154,7 +152,7 @@ object MainForm: TMainForm
         OnClick = Button6Click
       end
       object Button7: TButton
-        Left = 216
+        Left = 212
         Top = 192
         Width = 191
         Height = 34
@@ -164,7 +162,7 @@ object MainForm: TMainForm
         OnClick = Button7Click
       end
       object Button8: TButton
-        Left = 216
+        Left = 212
         Top = 230
         Width = 191
         Height = 34
@@ -174,7 +172,7 @@ object MainForm: TMainForm
         OnClick = Button8Click
       end
       object Button9: TButton
-        Left = 216
+        Left = 212
         Top = 273
         Width = 191
         Height = 34
@@ -184,7 +182,7 @@ object MainForm: TMainForm
         OnClick = Button9Click
       end
       object Button11: TButton
-        Left = 216
+        Left = 212
         Top = 315
         Width = 191
         Height = 34
@@ -194,7 +192,7 @@ object MainForm: TMainForm
         OnClick = Button11Click
       end
       object Button10: TButton
-        Left = 216
+        Left = 212
         Top = 355
         Width = 191
         Height = 34
@@ -204,7 +202,7 @@ object MainForm: TMainForm
         OnClick = Button10Click
       end
       object Button12: TButton
-        Left = 216
+        Left = 212
         Top = 395
         Width = 191
         Height = 34

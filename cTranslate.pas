@@ -55,8 +55,10 @@
   
     1. To load a language into all LIVE forms in your app:  
   
-       procedure TMainForm.LateInitialize;  
-       begin  
+       procedure TMainForm.LateInitialize;
+       begin
+        inherited LateInitialize;
+
         LoadForm(Self);  
         Translator:= TTranslator.Create;  
   
