@@ -140,7 +140,7 @@ begin
  else Caption:= AppData.AppName+ ' uninstaller - This program is provided "as is"';
  mmoLog.AddEmptyRow;
 
- DetectedFolder:= AppData.ReadInstalationFolder(AppData.AppName);
+ DetectedFolder:= AppData.ReadInstallationFolder(AppData.AppName);
 
  if DetectedFolder= ''
  then

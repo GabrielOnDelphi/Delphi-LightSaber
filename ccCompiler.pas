@@ -12,6 +12,8 @@ UNIT ccCompiler;
 
 INTERFACE
 
+{$I Frameworks.inc}
+
 CONST
   Delphi_Athenes = 36.0;  // Product Version: 29    Delphi 12
   Delphi_Alexa   = 35.0;  // Product Version: 28    Delphi 11

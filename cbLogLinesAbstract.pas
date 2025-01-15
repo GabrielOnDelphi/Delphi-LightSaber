@@ -14,8 +14,13 @@ UNIT cbLogLinesAbstract;
 
 INTERFACE
 
+{$I Frameworks.inc}
+
 USES
-   System.SysUtils, System.Classes, Vcl.Graphics, // Added SyncObjs for locking mechanisms
+   System.SysUtils, System.Classes,
+   {$IFDEF FRAMEWORK_VCL}
+   Vcl.Graphics,
+   {$Endif}
    cbLogUtils, ccStreamBuff;
 
 type
@@ -41,7 +46,7 @@ type
     function getItem(Index: Integer): PLogLine; virtual; abstract;
   public
     procedure Clear; virtual; abstract;
-    function  AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Color: TColor = -1): PLogLine; virtual; abstract;
+    function  AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Color: TColor = 0): PLogLine; virtual; abstract;
     function  Add(Value: PLogLine): Integer; virtual; abstract;
 
     function  Row2FilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer; virtual; abstract;

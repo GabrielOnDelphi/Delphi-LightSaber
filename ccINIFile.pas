@@ -21,6 +21,8 @@
 
 INTERFACE
 
+{$I Frameworks.inc}
+
 USES
    System.SysUtils, System.UITypes, System.IniFiles, System.IOUtils;
 

@@ -94,10 +94,16 @@
 
 INTERFACE
 
+{$I Frameworks.inc}
+
 USES
    System.Classes, System.IniFiles, System.SysUtils, System.UITypes,
+   {$IFDEF FRAMEWORK_FMX}
+   FMX.Graphics, FMX.Forms, FMX.Controls, FMX.StdCtrls,
+   {$ELSE}
    Vcl.Graphics, Vcl.Forms, Vcl.FileCtrl, Vcl.Menus, Vcl.ExtCtrls, Vcl.NumberBox, Vcl.ComCtrls,
    Vcl.WinXCtrls, Vcl.Samples.Spin, Vcl.ActnList, Vcl.Dialogs, Vcl.Controls, Vcl.StdCtrls,
+   {$ENDIF}
    ccINIFile;
 
 {.$WARN UNIT_PLATFORM OFF}

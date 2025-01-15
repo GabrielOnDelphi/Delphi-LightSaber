@@ -14,8 +14,13 @@ UNIT cbLogLines;
 
 INTERFACE
 
+{$I Frameworks.inc}
+
 USES
-   System.SysUtils, System.Classes, Vcl.Graphics, //SyncObjs,
+   System.SysUtils, System.Classes,
+   {$IFDEF FRAMEWORK_VCL}
+   Vcl.Graphics,
+   {$Endif}
    cbLogUtils, cbLogLinesAbstract;
 
 TYPE
@@ -29,7 +34,7 @@ TYPE
 
     procedure Clear; override;
     function Count: Integer; override;
-    function AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Color: TColor = -1): PLogLine; override;
+    function AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Color: TColor = 0): PLogLine; override;
     function Add(Value: PLogLine): Integer; override;
 
     function Row2FilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer; override;
@@ -90,7 +95,7 @@ begin
 end;
 
 
-function TLogLinesSingleThreaded.AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Color: TColor = -1): PLogLine;
+function TLogLinesSingleThreaded.AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Color: TColor = 0): PLogLine;
 begin
   New(Result);
   Result.Msg   := Msg;

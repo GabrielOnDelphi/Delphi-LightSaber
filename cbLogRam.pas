@@ -32,9 +32,13 @@ UNIT cbLogRam;
 
 INTERFACE
 
+{$I Frameworks.inc}
+
 USES
    System.SysUtils, System.DateUtils,
+   {$IFDEF Framework_VCL}
    Vcl.Graphics,
+   {$Endif}
    cbLogLines, cbLogUtils, ccStreamBuff2, cbLogLinesAbstract;
 
 TYPE
@@ -54,7 +58,7 @@ TYPE
      const
       StreamSign  = 'TRamLog';
       StreamVer   = 3;
-      MaxEntries = 1000000; // Maximum number of entries before saving and clearing
+      MaxEntries  = 1000000; // Maximum number of entries before saving and clearing
    protected
      function prepareString(CONST Msg: string): string;
      procedure CheckAndSaveToDisk;
@@ -103,7 +107,12 @@ TYPE
 IMPLEMENTATION
 
 USES
-  ccCore, ccTextFile, cbAppData, cbLogLinesThreaded;
+  ccCore, ccTextFile, cbLogLinesThreaded,
+  {$IFDEF FRAMEWORK_VCL}
+  cbAppData;
+  {$ELSE FRAMEWORK_FMX}
+  cbAppData;
+  {$ENDIF}
 
 
 {-------------------------------------------------------------------------------------------------------------

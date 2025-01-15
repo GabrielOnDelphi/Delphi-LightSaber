@@ -20,6 +20,8 @@
 
 INTERFACE
 
+{$I Frameworks.inc}
+
 USES
    {$IFDEF MSWINDOWS}Winapi.Windows,{$ENDIF}
    System.SysUtils, System.Classes, System.Types;
@@ -57,7 +59,7 @@ CONST
  {$ELSE}
  procedure SwapWord     (VAR TwoBytes: word);                  inline;
  Procedure SwapCardinal (VAR aCardinal: Cardinal);             inline;                              { Swap32bits unsigned integer}
- Procedure SwapInt      (VAR LongVAR : integer);               inline;                              { Swap32bits signed integer} {INTEL= Little ENDIAN}
+ Procedure SwapInt      (VAR aInteger : integer);               inline;                              { Swap32bits signed integer} {INTEL= Little ENDIAN}
  {$ENDIF}
  function  SwapUInt64   (Value: UInt64): UInt64;               inline;  { Not tested }
  {$IFDEF MSWINDOWS}
@@ -307,9 +309,9 @@ asm
   mov [eax], ecx
 end;
 {$ELSE}
-procedure SwapInt(VAR LongVar: integer);
+procedure SwapInt(VAR aInteger: integer);
 begin
-  LongVar := Swap(LongVar SHR 16) OR (Swap(LongVar) SHL 16);         { This code was tested ok on Win64 }  // https://www.safaribooksonline.com/library/view/delphi-in-a/1565926595/re314.html
+  aInteger := Swap(aInteger SHR 16) OR (Swap(aInteger) SHL 16);         { This code was tested ok on Win64 }  // https://www.safaribooksonline.com/library/view/delphi-in-a/1565926595/re314.html
 end;
 {$ENDIF}
 

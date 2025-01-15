@@ -15,7 +15,10 @@ UNIT cbLogLinesThreaded;
 INTERFACE
 
 USES
-   System.SysUtils, System.Classes, Vcl.Graphics, // Added SyncObjs for locking mechanisms
+   System.SysUtils, System.Classes,
+   {$IFDEF FRAMEWORK_VCL}
+   Vcl.Graphics,
+   {$Endif}
    cbLogUtils, ccStreamBuff, cbLogLinesAbstract;
 
 TYPE
@@ -32,7 +35,7 @@ TYPE
     function Count: Integer; override;
     function Row2FilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer; override;
 
-    function AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Color: TColor = -1): PLogLine; override;
+    function AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Color: TColor = 0): PLogLine; override;
     function Add(Value: PLogLine): Integer; override;
 
     procedure ReadFromStream(Stream: TCubicBuffStream); override;
@@ -109,7 +112,7 @@ begin
   end;
 end;
 
-function TLogLinesMultiThreaded.AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Color: TColor = -1): PLogLine;
+function TLogLinesMultiThreaded.AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Color: TColor = 0): PLogLine;
 begin
   New(Result);
   Result.Msg   := Msg;

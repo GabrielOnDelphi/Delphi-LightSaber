@@ -5,7 +5,7 @@
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>FMX</FrameworkType>
         <MainSource>LightAppDataFmx.dpk</MainSource>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <Platform Condition="'$(Platform)'==''">Android64</Platform>
         <ProjectGuid>{CAF97569-AAC0-450D-ADA1-274D7C3DD1C9}</ProjectGuid>
         <ProjectVersion>19.5</ProjectVersion>
         <TargetedPlatforms>163841</TargetedPlatforms>
@@ -52,6 +52,7 @@
         <DllSuffix>$(Auto)</DllSuffix>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
+        <RuntimeOnlyPackage>true</RuntimeOnlyPackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android64)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
@@ -90,8 +91,16 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="rtl.dcp"/>
-        <DCCReference Include="cbAppDataFMX.pas"/>
+        <DCCReference Include="RTL.dcp"/>
+        <DCCReference Include="FMX.dcp"/>
+        <DCCReference Include="LightCore.dcp"/>
+        <DCCReference Include="..\cbLogRam.pas"/>
+        <DCCReference Include="..\cbLogLines.pas"/>
+        <DCCReference Include="..\cbLogUtils.pas"/>
+        <DCCReference Include="..\cbLogLinesAbstract.pas"/>
+        <DCCReference Include="..\cbLogLinesThreaded.pas"/>
+        <DCCReference Include="..\cbAppData.pas"/>
+        <DCCReference Include="..\cbAppDataForm.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -115,6 +124,10 @@
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp280.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\BioControl280.bpl">BioControls</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\BionixVCL280.bpl">BioniX VCL</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LightProteus280.bpl">Proteus</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LightVisControls280.bpl">LightSaber - Visual Controls</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Platforms>

@@ -48,8 +48,17 @@
 INTERFACE
 
 USES
-  Winapi.Messages, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
-  ccINIFile, cbIniFile; // Do not add dependencies higher than "cb" level
+  System.SysUtils, System.Classes,
+  {$IFDEF FRAMEWORK_VCL}
+  // Winapi.Windows,
+  Winapi.Messages,
+  Vcl.Controls,
+  Vcl.Forms,
+  cbIniFile,
+  {$ELSE FRAMEWORK_FMX}
+  FMX.Controls, FMX.Forms,
+  {$Endif}
+  ccINIFile; // Do not add dependencies higher than "cb" level
 
 type
   TLightForm = class(TForm)
@@ -57,10 +66,12 @@ type
     procedure SaveBeforeExit;
   protected
     Saved: Boolean;
+    procedure BeforeRelease; virtual;
+    {$IFDEF Framework_VCL}
     procedure DoDestroy; override;
     procedure DoClose(var Action: TCloseAction); override;
     procedure WMEndSession(var Msg: TWMEndSession);
-    procedure BeforeRelease; virtual;
+    {$ENDIF}	
   public
     Loading: TFormLoading;
 
@@ -81,10 +92,16 @@ USES cbAppData;
 constructor TLightForm.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+
+  {$IFDEF Framework_VCL}
+  Screensnap:= TRUE;
+  Snapbuffer:= 4;
   Position:= poDesigned;
-  showhint:= TRUE;
-  screensnap:= TRUE;
-  snapbuffer:= 4;
+  // TFormPosition = (Designed, Default, DefaultPosOnly, DefaultSizeOnly, ScreenCenter, DesktopCenter, MainFormCenter, OwnerFormCenter);
+  {$ELSE}
+  Position:= TFormPosition.Designed;
+  {$ENDIF}
+  Showhint:= TRUE;
 
   Saved:= FALSE;
   Loading:= flPosOnly; // Default value. Can be overriden by AppData.CreateForm
@@ -97,7 +114,7 @@ begin
 end;
 
 
-
+{$IFDEF Framework_VCL}
 procedure TLightForm.WMEndSession(var Msg: TWMEndSession);
 begin
   SaveBeforeExit;
@@ -114,7 +131,9 @@ procedure TLightForm.DoClose(var Action: TCloseAction);
 begin
   SaveBeforeExit;
   inherited DoClose(Action);
-end;
+end; 
+{$ENDIF}
+
 
 function TLightForm.CloseQuery: Boolean;  // Correct method name
 begin
@@ -143,7 +162,8 @@ end;
 procedure TLightForm.BeforeRelease;
 begin
   Assert(NOT Saved);
-  cbIniFile.SaveFormBase(Self);
+  {$IFDEF Framework_VCL}
+  cbIniFile.SaveFormBase(Self);  {$ENDIF}
 end;
 
 

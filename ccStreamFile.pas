@@ -26,6 +26,9 @@ UNIT ccStreamFile;
 =============================================================================================================}
 
 INTERFACE
+
+{$I Frameworks.inc}
+
 USES
    //Winapi.Windows,
    System.SysUtils, System.Classes;
@@ -49,7 +52,7 @@ TYPE
      function  ReadEnter: Boolean;
      {}
      function  RevReadLongword : Cardinal;                                                   { REVERSE READ - read 4 bytes and swap their position. For Motorola format. }
-     function  RevReadLongInt  : Longint;
+     function  RevReadInt      : Integer;
      function  RevReadWord     : Word;                                                       { REVERSE READ - read 2 bytes and swap their position. For Motorola format. }
      {}
      function  ReadInteger     : Longint;
@@ -406,7 +409,7 @@ begin
 end;
 
 
-function TCubicFileStream.RevReadLongInt: Longint;
+function TCubicFileStream.RevReadInt: Integer;  // old name: RevReadLongInt
 begin
   ReadBuffer(Result, 4);
   SwapInt(Result);

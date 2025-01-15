@@ -25,8 +25,21 @@ UNIT cbLogUtils;
 
 INTERFACE
 
+{$I Frameworks.inc}
+
 USES
-   System.SysUtils, Vcl.Graphics, ccColors;
+   System.SysUtils,
+   system.UITypes,
+   {$IFDEF FRAMEWORK_VCL}
+   Vcl.Graphics,
+   {$ELSE FRAMEWORK_FMX}
+   FMX.Graphics,
+   {$Endif}
+   ccColors;
+
+{$IFDEF FRAMEWORK_FMX}
+TYPE TColor= TAlphaColor;
+{$ENDIF}
 
 TYPE
   TLogVerbLvl= (lvDebug, lvVerbose, lvHints {Default}, lvInfos, lvImportant, lvWarnings, lvErrors);  { Exist also 7 which is of type 'Msg' and it is always shown in log }
@@ -53,7 +66,7 @@ begin
    lvWarnings  : Result := 'Warnings';
    lvErrors    : Result := 'Errors';
  else
-   Raise Exception.Create('Invalid verbosity');
+   RAISE Exception.Create('Invalid verbosity');
  end;
 end;
 

@@ -21,7 +21,7 @@ procedure Main;
   if AppData.InstanceRunning
   then
     { Send command line to the already running instance and restore (bring to front) that instance }
-    AppData.ResurectInstance(Trim(ParamStr(1))) //ToDo: I need to send the URestore message because I need to call RestoreBioniX (to remove icon fromsystray) on that side (BX first instance)
+    AppData.ResurrectInstance(Trim(ParamStr(1))) //ToDo: I need to send the URestore message because I need to call RestoreBioniX (to remove icon fromsystray) on that side (BX first instance)
   else
    begin
      AppData.CreateMainForm(TfrmTester, frmTester, TRUE, TRUE);

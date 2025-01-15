@@ -16,6 +16,8 @@
 
 INTERFACE
 
+{$I Frameworks.inc}
+
 USES
    System.AnsiStrings, System.Character, System.SysUtils, System.Math, System.IOUtils, System.StrUtils,
    System.Classes, System.Types, System.TimeSpan, System.DateUtils;

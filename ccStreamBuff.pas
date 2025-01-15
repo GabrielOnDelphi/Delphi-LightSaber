@@ -50,9 +50,9 @@ UNIT ccStreamBuff;
       c:\MyProjects\packages old\LightSaber  - keeeep\Demo\_ccStreamBuff.pas\BigSearch.dpr
 =============================================================================================================}
 
-{$WARN DUPLICATE_CTOR_DTOR OFF}                                                                               {Silence the: W1029 Duplicate constructor  with identical parameters will be inacessible from C++ }
-
 INTERFACE
+
+{$I Frameworks.inc}
 
 USES
    System.SysUtils, System.Classes;

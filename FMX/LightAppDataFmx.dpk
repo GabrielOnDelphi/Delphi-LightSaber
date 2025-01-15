@@ -27,12 +27,21 @@ package LightAppDataFmx;
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'LightSaber - AppData FMX library'}
 {$LIBSUFFIX AUTO}
+{$RUNONLY}
 {$IMPLICITBUILD ON}
 
 requires
-  rtl;
+  RTL,
+  FMX,
+  LightCore;
 
 contains
-  cbAppDataFMX in 'cbAppDataFMX.pas';
+  cbLogRam in '..\cbLogRam.pas',
+  cbLogLines in '..\cbLogLines.pas',
+  cbLogUtils in '..\cbLogUtils.pas',
+  cbLogLinesAbstract in '..\cbLogLinesAbstract.pas',
+  cbLogLinesThreaded in '..\cbLogLinesThreaded.pas',
+  cbAppData in '..\cbAppData.pas',
+  cbAppDataForm in '..\cbAppDataForm.pas';
 
 end.

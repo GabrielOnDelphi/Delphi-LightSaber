@@ -41,3 +41,4 @@ Demo/Template App/TemplateApp.delphilsp.json
 /Demo/Tester SystemReport/__recovery
 *.cbk
 Demo/Tester LightCore ccStreamBuff.pas/TCubicBuffStream.bin
+/FMX/22.0_Android64_Debug

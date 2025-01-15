@@ -10,6 +10,8 @@
 
 INTERFACE
 
+{$I Frameworks.inc}
+
 USES System.UiTypes;
 
 { COLORS (in BGR format) }
@@ -82,6 +84,13 @@ CONST
    clSilverDark  = TColor($a0a0a0);
    clSilverLight = TColor($F3F2F2);           { Very light silver }
    clGrayMedium  = TColor($A4A0A0);
+
+   {$IFDEF FRAMEWORK_VCL}
+   {$ELSE FRAMEWORK_FMX}
+   clBlack         = TAlphaColors.Black;
+   clGray          = TAlphaColors.Gray;
+   clRed           = TAlphaColors.Red;
+   {$Endif}
 
 IMPLEMENTATION
 

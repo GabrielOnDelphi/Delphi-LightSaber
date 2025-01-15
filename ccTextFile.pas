@@ -18,6 +18,8 @@
 
 INTERFACE
 
+{$I Frameworks.inc}
+
 USES
   //Winapi.Windows,
   System.IOUtils, System.SysUtils, System.Classes;
