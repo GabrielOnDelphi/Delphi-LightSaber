@@ -17,11 +17,8 @@ INTERFACE
 {$I Frameworks.inc}
 
 USES
-   System.SysUtils, System.Classes,
-   {$IFDEF FRAMEWORK_VCL}
-   Vcl.Graphics,
-   {$Endif}
-   cbLogUtils, ccStreamBuff;
+   System.SysUtils, System.Classes, System.UITypes,
+   cbLogTypes, ccStreamBuff;
 
 type
   PLogLine=^RLogLine;
@@ -31,7 +28,7 @@ type
     Level : TLogVerbLvl;
     Indent: Integer;          { How many spaces are used to indent the message }
     Bold  : Boolean;
-    Color : TColor;           { If -1 the use color specified in 'Level'. If > -1 then it overrides the color specified by 'Level' }
+    Color : TColors;  //Use TColors         { If -1 the use color specified in 'Level'. If > -1 then it overrides the color specified by 'Level' }
     Time  : TDateTime;
   private
     procedure ReadFromStream(Stream: TCubicBuffStream);
@@ -98,12 +95,12 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 procedure RLogLine.ReadFromStream(Stream: TCubicBuffStream);
 begin
-  Msg := Stream.ReadString;
-  Level := TLogVerbLvl(Stream.ReadInteger);
+  Msg    := Stream.ReadString;
+  Level  := TLogVerbLvl(Stream.ReadInteger);
   Indent := Stream.ReadInteger;
-  Bold := Stream.ReadBoolean;
-  Color := Stream.ReadInteger;
-  Time := Stream.ReadDate;
+  Bold   := Stream.ReadBoolean;
+  Color  := Stream.ReadInteger;
+  Time   := Stream.ReadDate;
   { Padding }
   Stream.ReadInteger;
   Stream.ReadInteger;
