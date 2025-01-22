@@ -1,8 +1,8 @@
-﻿UNIT cbAppData;
+﻿UNIT cbAppDataFMX;
 
 {=============================================================================================================
    Gabriel Moraru
-   2025.01.19
+   2025.01.11
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
@@ -40,7 +40,7 @@
      In the DPR file replace the code with:
        uses
          FastMM4,
-         Vcl.Forms,
+         Vcl.Forms / FMX.Forms,
          FormRamLog,
          //cbINIFile,
          cbAppData,
@@ -109,7 +109,6 @@
             https://stackoverflow.com/questions/14587456/how-can-i-stop-my-application-showing-on-the-taskbar
 
         BX: This must be FALSE in order to make 'Start minimized' option work
-
  ____________________________________________________________________________________________________________
 
    Demo app:
@@ -118,11 +117,39 @@
 
 INTERFACE
 
+{$I Frameworks.inc}
+
 USES
-  Winapi.Windows, Winapi.Messages, Winapi.ShellAPI,
-  System.Win.Registry, System.IOUtils, System.AnsiStrings, System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Consts,
-  ccCore, ccINIFile, cbINIFile, cbLogRam, cbAppDataForm;
+  System.SysUtils, System.Classes, System.IOUtils, System.UITypes, System.Types, System.Messaging,
+  {$IFDEF FRAMEWORK_FMX}
+   {$IFDEF mswindows}
+    Winapi.Windows,
+    Winapi.Messages,
+    Winapi.ShellAPI,
+    System.Win.Registry,
+  {$ENDIF}
+    FMX.Forms,
+    FMX.Graphics,
+    FMX.Dialogs, FMX.Types, FMX.Controls, FMX.Controls.Presentation,
+    FMX.Platform,
+  {$ENDIF}
+
+  {$IFDEF ANDROID}
+   Androidapi.Helpers, Androidapi.JNI.App, Androidapi.JNI.JavaTypes,
+   Androidapi.JNI.GraphicsContentViewText,
+  {$ENDIF}
+  ccCore,
+  ccINIFile,
+  cbLogRam,
+  cbAppDataForm;
+
+
+  {$IFDEF FRAMEWORK_FMX}
+TYPE
+   TFormClass = TComponentClass;
+   TWinControl = TFmxObject;
+  {$ENDIF}
+
 
 TYPE
   THintType = (htOff,                      // Turn off the embedded help system
@@ -132,25 +159,37 @@ TYPE
   TAppData= class(TObject)
   private
     FShowOnError: Boolean;                 // Automatically show the visual log form when warnings/errors are added to the log. This way the user is informed about the problems.
-    FFont: TFont;
     FLastFolder: string;
     FSingleInstClassName: string;          { Used by the Single Instance mechanism. } {Old name: AppWinClassName }
     FRunningFirstTime: Boolean;
-    FHideHint: Integer;
     procedure SetGuiProperties(Form: TForm);
-    procedure setHideHint(const Value: Integer);
     procedure setShowOnError(const Value: Boolean);
+
+    {$IFDEF MSWINDOWS}
+    function  RunFileAtStartUp(CONST FilePath: string; Active: Boolean): Boolean; {$ENDIF}
+    {$IFDEF ANDROID}
+    function RunFileAtStartup(const FilePath: string; Active: Boolean): Boolean; {$ENDIF}
+    {$IFDEF LINUX}
+    function RunFileAtStartup(const FilePath: string; Active: Boolean): Boolean; {$ENDIF}
     CONST
       Signature: AnsiString= 'AppDataSettings';{ Do not change it! }
       DefaultHomePage= 'https://www.GabrielMoraru.com';
     class VAR FCreated: Boolean;     { Sanity check }
     class VAR FAppName: string;
     function  getLastUsedFolder: string;
+
+    {$IFDEF Framework_VCL}
+    VAR
+      FFont: TFont;
+      FHideHint: Integer;
     procedure setFont(aFont: TFont);
+    procedure setHideHint(const Value: Integer);
+    procedure RegisterUninstaller;
+    {$ENDIF}
+    function  RunSelfAtStartUp(Active: Boolean): Boolean;
+	
     procedure LoadSettings;
     procedure SaveSettings;
-    procedure RegisterUninstaller;
-    function  RunSelfAtWinStartUp(Active: Boolean): Boolean;
   protected
     CopyDataID: DWORD;          // For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA
   public
@@ -168,14 +207,18 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       App Single Instance
    --------------------------------------------------------------------------------------------------}
-    property  SingleInstClassName: string read FSingleInstClassName;
+    {$IFDEF Framework_VCL}
     procedure ResurrectInstance(CONST CommandLine: string);
     function  InstanceRunning: Boolean;
     procedure SetSingleInstanceName(var Params: TCreateParams);
     function  ExtractData(VAR Msg: TWMCopyData; OUT s: string): Boolean;
-    {}
+    property  SingleInstClassName: string read FSingleInstClassName;	
+    {$ENDIF}
+
+    {}	 
     class VAR Initializing: Boolean;                 // See documentation at the top of the file
     class VAR AutoSignalInitializationEnd: Boolean;  // See documentation at the top of the file
+    procedure Minimize;
 
     constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; SignalInitEnd: Boolean= TRUE; MultiThreaded: Boolean= FALSE); virtual;
     destructor Destroy; override;                    // This is called automatically by "Finalization" in order to call it as late as possible }
@@ -190,7 +233,6 @@ TYPE
       Minimize2Tray: Boolean;          // Minimize to tray
       HintType     : THintType;        // Turn off the embedded help system
       Opacity      : Integer;          // Form opacity
-    property HideHint: Integer read FHideHint write setHideHint;       // Hide hint after x ms.
 
    {--------------------------------------------------------------------------------------------------
       App path/name
@@ -207,6 +249,10 @@ TYPE
 
     class property AppName:  string read FAppName;
 
+    {$IFDEF Framework_VCL}
+   {--------------------------------------------------------------------------------------------------
+      Installer
+   --------------------------------------------------------------------------------------------------}
     procedure WriteAppDataFolder;
     function  ReadAppDataFolder(CONST UninstalledApp: string): string;
 
@@ -225,12 +271,13 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       App Control
    --------------------------------------------------------------------------------------------------}
-    property  RunningFirstTime: Boolean read FRunningFirstTime;    // Returns true if the application is running for the first time on this computer.
     procedure Restore;
     procedure Restart;
     procedure SelfDelete;
+    {$ENDIF}
 
-    function  RunFileAtWinStartUp(CONST FilePath: string; Active: Boolean): Boolean;
+    property  RunningFirstTime: Boolean read FRunningFirstTime;    // Returns true if the application is running for the first time on this computer.
+
 
    {--------------------------------------------------------------------------------------------------
       FORM
@@ -244,9 +291,10 @@ TYPE
     procedure CreateFormModal (aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL); overload;   // Do I need this?
     procedure CreateFormModal (aClass: TFormClass;                Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL); overload;
 
-    procedure SetMaxPriority;
     procedure HideFromTaskbar;
-
+    {$IFDEF Framework_VCL}
+    procedure SetMaxPriority;
+    property  HideHint: Integer read FHideHint write setHideHint;       // Hide hint after x ms.
     property  Font: TFont read FFont write setFont;
 
 
@@ -254,9 +302,11 @@ TYPE
       App Version
    --------------------------------------------------------------------------------------------------}
     class function GetVersionInfo(ShowBuildNo: Boolean= False): string;
-    function  GetVersionInfoV      : string;               // Returns version without Build number. Example: v1.0.0
     function  GetVersionInfoMajor: Word;
     function  GetVersionInfoMinor: Word;
+    {$ENDIF}
+
+    function  GetVersionInfoV      : string;               // Returns version without Build number. Example: v1.0.0
 
     procedure MainFormCaption(const Caption: string);
 
@@ -305,7 +355,16 @@ VAR                      //ToDo: make sure AppData is unique (make it Singleton)
 IMPLEMENTATION
 
 USES
-  cbVersion, ccIO, ccTextFile, cbRegistry, cbDialogs, cbCenterControl; // FormRamLog;
+  {$IFDEF FRAMEWORK_VCL}
+    cbVersion,
+    cbRegistry,
+    cbDialogs,
+    cbCenterControl,
+    cbINIFile,
+    //FormRamLog,
+  {$ENDIF}
+  ccIO, ccTextFile;
+
 
 
 function ExeName: string;
@@ -345,11 +404,13 @@ begin
   if WindowClassName = ''
   then FSingleInstClassName:= aAppName
   else FSingleInstClassName:= WindowClassName;    // We use FSingleInstClassName to identify the window/instance (when we check for an existing instance)
-  
+
+  {$IFDEF Framework_VCL}
   { Register a unique message ID for this applications. Used when we send the command line to the first running instance via WM_COPYDATA.
     We can do this only once per app so the best place is the Initialization section. However, since AppData is created only once, we can also do it here, in the constructor.
     https://stackoverflow.com/questions/35516347/sendmessagewm-copydata-record-string }
    CopyDataID:= RegisterWindowMessage('CubicCopyDataID'); //not on FMX
+  {$ENDIF}
 
   { App name }
   Assert(System.IOUtils.TPath.HasValidPathChars(aAppName, FALSE), 'Invalid characters in AppName'+ aAppName);
@@ -369,9 +430,11 @@ begin
   LogVerb(AppName+ GetVersionInfoV+ ' started.');
 
   { App hint }
-  Application.HintColor     := $c0c090;
-  Application.HintShortPause:= 40;               // Specifies the time period to wait before bringing up a hint if another hint has already been shown. Windows' default is 50 ms
-  Application.UpdateFormatSettings:= FALSE;      // more http://www.delphi3000.com/articles/article_4462.asp?SK=
+  {$IFDEF Framework_VCL}
+   Application.HintColor     := $c0c090;
+   Application.HintShortPause:= 40;               // Specifies the time period to wait before bringing up a hint if another hint has already been shown. Windows' default is 50 ms
+   Application.UpdateFormatSettings:= FALSE;      // more http://www.delphi3000.com/articles/article_4462.asp?SK=
+  {$ENDIF}
 
   { App settings }
   if FileExists(IniFile)
@@ -383,9 +446,14 @@ begin
       StartMinim   := FALSE;
       Minimize2Tray:= TRUE;                      // Minimize to tray
       HintType     := htTooltips;                // Turn off the embeded help system
-      HideHint     := 4000;                      // Hide hint after x ms.
+
       Opacity      := 250;
       UserPath     := AppDataFolder;
+
+      {$IFDEF Framework_VCL}
+       HideHint    := 4000;                      // Hide hint after x ms.
+      {$ENDIF}
+
     end;
 
   { Product details }
@@ -427,43 +495,48 @@ end;
 
 procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
 begin
-  Assert(Vcl.Dialogs.UseLatestCommonDialogs= TRUE);      { This is true anyway by default, but I check it to remember myself about it. Details: http://stackoverflow.com/questions/7944416/tfileopendialog-requires-windows-vista-or-later }
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
-  Assert(Font = NIL,                 'AppData.Font already assigned!');
 
-  Application.MainFormOnTaskbar := MainFormOnTaskbar;
-  Application.ShowMainForm      := Show;      // Must be false if we want to prevent form flicker during skin loading at startup
+  {$IFDEF Framework_VCL}
+   Assert(Font = NIL, 'AppData.Font already assigned!');
+   Assert(Vcl.Dialogs.UseLatestCommonDialogs= TRUE);      { This is true anyway by default, but I check it to remember myself about it. Details: http://stackoverflow.com/questions/7944416/tfileopendialog-requires-windows-vista-or-later }
+   Application.MainFormOnTaskbar := MainFormOnTaskbar;
+   Application.ShowMainForm      := Show;      // Must be false if we want to prevent form flicker during skin loading at startup
+  {$ENDIF}
 
+  // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
   Application.CreateForm(aClass, Reference);
 
   MainFormCaption('Initializing...');
 
   SetGuiProperties(TForm(Reference));
 
-  if (Loading = flFull) OR (Loading = flPosOnly) then
-   begin
-     // Load form
+  {$IFDEF Framework_VCL}
+   if (Loading = flFull) OR (Loading = flPosOnly) then
+    begin
+      // Load form
 
-     // ISSUE HERE!
-     // At this point we can only load "standard" Delphi components.
-     // Loading of our Light components can only be done in cv_IniFile.pas -> TIniFileVCL
-     // For the moment the work around is load only the stadard components.
-     cbINIFile.LoadFormBase(TForm(Reference), Loading);
+      // ISSUE HERE!
+      // At this point we can only load "standard" Delphi components.
+      // Loading of our Light components can only be done in cv_IniFile.pas -> TIniFileVCL
+      // For the moment the work around is load only the stadard components.
+      cbINIFile.LoadFormBase(TForm(Reference), Loading);
 
-     { Write path to app in registry }
-     if RunningFirstTime
-     then RegisterUninstaller;
-   end;
+      { Write path to app in registry }
+      if RunningFirstTime then RegisterUninstaller;
+    end;
 
-  // if the program is off-screen, bring it on-screen
-  CorrectFormPositionScreen(TForm(Reference));
+   // if the program is off-screen, bring it on-screen
+   CorrectFormPositionScreen(TForm(Reference));
 
   // Ignore the "Show" parameter if "StartMinimized" is active
+  // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
   if StartMinim
-  then Application.Minimize
+  then Minimize
   else
      if Show
      then TForm(Reference).Show;
+  {$ENDIF}
 
   // Window fully constructed.
   // Now we can let user run its own initialization process.
@@ -507,17 +580,20 @@ begin
   AND Parented then
     begin
       TForm(Reference).Parent:= Owner;
-      CenterChild(TForm(Reference), Owner);
+      {$IFDEF FRAMEWORK_VCL}
+       CenterChild(TForm(Reference), Owner);
+      {$ENDIF}
     end;
 
   // Font, snap, alpha
   SetGuiProperties(TForm(Reference));
 
   // Load previous form settings/position
-  cbINIFile.LoadFormBase(TForm(Reference), Loading);
+  {$IFDEF FRAMEWORK_VCL}
+   cbINIFile.LoadFormBase(TForm(Reference), Loading);
+  {$ENDIF}
   if TForm(Reference) is TLightForm
   then TLightForm(Reference).Loading:= Loading;
-
 
   if Show
   then TForm(Reference).Show;
@@ -559,21 +635,25 @@ end;
 
 procedure TAppData.SetGuiProperties(Form: TForm);
 begin
-  // Font
-  if Form = Application.MainForm
-  then Self.Font:= Form.Font   // We TAKE the font from the main form. Then we apply it to all existing and all future windows.
-  else
-    if Self.Font <> nil
-    then Form.Font:= Self.Font;  // We set the same font for secondary forms
+  {$IFDEF Framework_VCL}
+   // Font
+   if Form = Application.MainForm
+   then Self.Font:= Form.Font   // We TAKE the font from the main form. Then we apply it to all existing and all future windows.
+   else
+     if Self.Font <> nil
+     then Form.Font:= Self.Font;  // We set the same font for secondary forms
 
-  // Fix issues with snap to edge of the screen
-  if cbVersion.IsWindows8Up
-  then Form.SnapBuffer:= 4
-  else Form.SnapBuffer:= 10;
+   // Fix issues with snap to edge of the screen
+   if cbVersion.IsWindows8Up
+   then Form.SnapBuffer:= 4
+   else Form.SnapBuffer:= 10;
 
-  // Form transparency
-  Form.AlphaBlendValue := Opacity;
-  Form.AlphaBlend:= Opacity< 255;
+   // Form transparency
+   Form.AlphaBlendValue := Opacity;
+   Form.AlphaBlend:= Opacity< 255;
+  {$ELSE}
+   //Form.Opacity := Opacity / 255;
+  {$ENDIF}
 end;
 
 
@@ -605,8 +685,10 @@ begin
   Assert(AppData <> NIL, 'AppData var might not be available at this point!');
   Result:= DirectoryExists(AppData.SysDir);
 
-  if NOT Result
-  then MesajError('The program was not properly installed! The "System" folder is missing.');
+  {$IFDEF Framework_VCL}
+   if NOT Result
+   then MesajError('The program was not properly installed! The "System" folder is missing.');
+  {$ENDIF}
 end;
 
 
@@ -694,14 +776,14 @@ end;
 { Returns true if the application is "home" (in the computer where it was created). This is based on the presence of a DPR file that has the same name as the exe file. }
 class function TAppData.RunningHome: Boolean;
 begin
- Result:= FileExists(ChangeFileExt(ExeName, '.dpr'));
+  Result:= FileExists(ChangeFileExt(ExeName, '.dpr'));
 end;
 
 
 { Returns true if a file called 'betatester' exists in application's folder or in application's system folder. }
 function TAppData.BetaTesterMode: Boolean;
 begin
- Result:= FileExists(SysDir+ 'betatester') OR FileExists(CurFolder+ 'betatester');
+  Result:= FileExists(SysDir+ 'betatester') OR FileExists(CurFolder+ 'betatester');
 end;
 
 
@@ -734,7 +816,6 @@ end;
 
 
 
-
 {--------------------------------------------------------------------------------------------------
    APPLICATION / WIN START UP
 --------------------------------------------------------------------------------------------------}
@@ -749,8 +830,14 @@ Summary
 //ToDo: Ensure that you handle permissions and platform-specific requirements properly. For example, on Android, you need to declare the appropriate permissions in the manifest file, and on Linux, ensure the .desktop file has the correct permissions.
 
 { Run the specified application at Windows startup }
+{ Run THIS application at Windows startup }
+function TAppData.RunSelfAtStartUp(Active: Boolean): Boolean;
+begin
+  Result:= RunFileAtStartUp(ParamStr(0), Active);
+end;
+
 {$IFDEF MSWINDOWS}
-function TAppData.RunFileAtWinStartUp(CONST FilePath: string; Active: Boolean): Boolean;                 
+function TAppData.RunFileAtStartUp(CONST FilePath: string; Active: Boolean): Boolean;
 VAR Reg: TRegistry;
 begin
  Result:= FALSE;
@@ -774,13 +861,126 @@ begin
    Result:= FALSE;                                                                                 { To catch possible issues caused by antivirus programs that won't let the program write to 'autorun' section }
  END;
 end;
+
 {$ENDIF}
 
-{ Run THIS application at Windows startup }
-function TAppData.RunSelfAtWinStartUp(Active: Boolean): Boolean;
+
+{$IFDEF MACOS}
+uses
+  Posix.Stdlib, Posix.Unistd;
+
+function TAppData.RunFileAtStartup(const FilePath: string; Active: Boolean): Boolean;
+var
+  LaunchAgentPath: string;
+  LaunchAgentContent: TStringList;
 begin
-  Result:= RunFileAtWinStartUp(ParamStr(0), Active);
+  Result := False;
+  LaunchAgentPath := TPath.Combine(TPath.GetHomePath, 'Library/LaunchAgents/com.myapp.startup.plist');
+
+  if Active then
+  begin
+    LaunchAgentContent := TStringList.Create;
+    try
+      LaunchAgentContent.Add('<?xml version="1.0" encoding="UTF-8"?>');
+      LaunchAgentContent.Add('<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">');
+      LaunchAgentContent.Add('<plist version="1.0">');
+      LaunchAgentContent.Add('<dict>');
+      LaunchAgentContent.Add('  <key>Label</key>');
+      LaunchAgentContent.Add('  <string>com.myapp.startup</string>');
+      LaunchAgentContent.Add('  <key>ProgramArguments</key>');
+      LaunchAgentContent.Add('  <array>');
+      LaunchAgentContent.Add('    <string>' + FilePath + '</string>');
+      LaunchAgentContent.Add('  </array>');
+      LaunchAgentContent.Add('  <key>RunAtLoad</key>');
+      LaunchAgentContent.Add('  <true/>');
+      LaunchAgentContent.Add('</dict>');
+      LaunchAgentContent.Add('</plist>');
+      LaunchAgentContent.SaveToFile(LaunchAgentPath);
+      _system(PAnsiChar('launchctl load ' + LaunchAgentPath));
+      Result := True;
+    finally
+      LaunchAgentContent.Free;
+    end;
+  end
+  else
+  begin
+    if TFile.Exists(LaunchAgentPath) then
+    begin
+      _system(PAnsiChar('launchctl unload ' + LaunchAgentPath));
+      TFile.Delete(LaunchAgentPath);
+      Result := True;
+    end;
+  end;
 end;
+{$ENDIF}
+
+
+{$IFDEF ANDROID}
+function TAppData.RunFileAtStartup(const FilePath: string; Active: Boolean): Boolean;
+var
+  Intent: JIntent;
+  Receiver: JComponentName;
+begin
+  Intent := TJIntent.Create;
+  Receiver := TJComponentName.JavaClass.init(TAndroidHelper.Context.getPackageName, StringToJString('com.myapp.BootReceiver'));
+
+  if Active then
+  begin
+    Intent.setComponent(Receiver);
+    Intent.setAction(TJIntent.JavaClass.ACTION_BOOT_COMPLETED);
+    TAndroidHelper.Context.sendBroadcast(Intent);
+    Result := True;
+  end
+  else
+  begin
+    // Unregister the receiver (implementation depends on how you registered it)
+    // This is just a placeholder for the actual implementation
+    Result := True;
+  end;
+end;
+{$ENDIF}
+
+
+{$IFDEF LINUX}
+uses
+  System.IOUtils;
+
+function TAppData.RunFileAtStartup(const FilePath: string; Active: Boolean): Boolean;
+var
+  AutostartPath: string;
+  DesktopEntry: TStringList;
+begin
+  Result := False;
+  AutostartPath := TPath.Combine(TPath.GetHomePath, '.config/autostart/com.myapp.desktop');
+
+  if Active then
+  begin
+    DesktopEntry := TStringList.Create;
+    try
+      DesktopEntry.Add('[Desktop Entry]');
+      DesktopEntry.Add('Type=Application');
+      DesktopEntry.Add('Exec=' + FilePath);
+      DesktopEntry.Add('Hidden=false');
+      DesktopEntry.Add('NoDisplay=false');
+      DesktopEntry.Add('X-GNOME-Autostart-enabled=true');
+      DesktopEntry.Add('Name=MyApp');
+      DesktopEntry.Add('Comment=Start MyApp at login');
+      DesktopEntry.SaveToFile(AutostartPath);
+      Result := True;
+    finally
+      DesktopEntry.Free;
+    end;
+  end
+  else
+  begin
+    if TFile.Exists(AutostartPath) then
+    begin
+      TFile.Delete(AutostartPath);
+      Result := True;
+    end;
+  end;
+end;
+{$ENDIF}
 
 
 
@@ -792,14 +992,11 @@ end;
 {--------------------------------------------------------------------------------------------------
    APPLICATION Control
 --------------------------------------------------------------------------------------------------}
+{$IFDEF Framework_VCL}
 procedure TAppData.Restart;
 begin
-  {$IFDEF MSWINDOWS}
   VAR PAppName:= PChar(ExeName);
   Winapi.ShellAPI.ShellExecute({Handle} 0, 'open', PAppName, nil, nil, SW_SHOWNORMAL);   { Handle does not work. Replaced with 0. }
-  {$ELSE}
-  _system(PChar('open "' + ExeName + '"'));
-  {$ENDIF}
   Application.Terminate;
 end;
 
@@ -854,6 +1051,7 @@ begin
   SetForegroundWindow(Application.MainForm.Handle);
   Application.BringToFront;
 end;
+{$ENDIF}
 
 
 { Hides Application's TaskBar Button
@@ -862,12 +1060,21 @@ end;
   All child forms will stay on top of the MainForm (bad)! If False, a taskbar button represents the application's (hidden) main window and bears the application's Title. Must be True to use Windows (Vista) Aero effects (ive taskbar thumbnails, Dynamic Windows, Windows Flip, Windows Flip 3D). https://stackoverflow.com/questions/66720721/ }     //Do this in DPR
 procedure TAppData.HideFromTaskbar;
 begin
- ShowWindow(Application.Handle, SW_HIDE);
- //ShowWindow(MainForm.Handle, SW_HIDE);     //this also hides the form from the screen
+{$IFDEF Framework_VCL}
+  ShowWindow(Application.Handle, SW_HIDE);  //this also hides the form from the screen
+{$ENDIF}
+end;
 
-{ Code below not working in Win7 !!!
-  ShowWindow(Application.Handle, SW_HIDE);
-  SetWindowLongPtr(Application.Handle, GWL_EXSTYLE, GetWindowLongPtr(Application.Handle, GWL_EXSTYLE) OR WS_EX_TOOLWINDOW);}      { getWindowLong_ was replaced with getWindowLongPtr for 64 bit compatibility. Details: http://docwiki.embarcadero.com/RADStudio/Seattle/en/Converting_32-bit_Delphi_Applications_to_64-bit_Windows }
+
+procedure TAppData.Minimize;
+begin
+{$IFDEF Framework_VCL}
+  Application.Minimize;
+{$ELSE}
+  var WindowService: IFMXWindowService;
+  if TPlatformServices.Current.SupportsPlatformService(IFMXWindowService, IInterface(WindowService)) then
+    WindowService.SetWindowState(Application.MainForm, TWindowState.wsMinimized);
+{$ENDIF}
 end;
 
 
@@ -877,8 +1084,7 @@ end;
 {--------------------------------------------------------------------------------------------------
    VERSION INFO
 --------------------------------------------------------------------------------------------------}
-
-
+{$IFDEF Framework_VCL}
 function TAppData.GetVersionInfoMajor: Word;
 VAR FixedInfo: TVSFixedFileInfo;
 begin
@@ -924,6 +1130,13 @@ function TAppData.GetVersionInfoV: string;
 begin
   Result:= ' v'+ GetVersionInfo(False);
 end;
+{$ELSE}
+function TAppData.GetVersionInfoV: string;
+begin
+  Result:= '';
+end;
+{$ENDIF}
+
 
 
 
@@ -933,6 +1146,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    OTHERS
 -------------------------------------------------------------------------------------------------------------}
+{$IFDEF Framework_VCL}
 { Apply this font to all existing forms. }
 procedure TAppData.setFont(aFont: TFont);
 begin
@@ -948,6 +1162,14 @@ begin
 end;
 
 
+{ Set this process to maximum priority. Usefull when measuring time }
+procedure TAppData.SetMaxPriority;
+begin
+  SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS); //  https://stackoverflow.com/questions/13631644/setthreadpriority-and-setpriorityclass
+end;
+{$ENDIF}
+
+
 class procedure TAppData.RaiseIfStillInitializing;
 CONST
    AppStillInitializingMsg = 'Application not properly initialized.'+sLineBreak + sLineBreak+ 'PLEASE REPORT the steps necessary to reproduce this bug and restart the application.';
@@ -955,16 +1177,6 @@ begin
  if AppData.Initializing
  then RAISE Exception.Create(AppStillInitializingMsg);
 end;
-
-
-{ Set this process to maximum priority. Usefull when measuring time }
-procedure TAppData.SetMaxPriority;
-begin
-  {$IFDEF MSWINDOWS}
-  SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS); //  https://stackoverflow.com/questions/13631644/setthreadpriority-and-setpriorityclass
-  {$ENDIF}
-end;
-
 
 
 
@@ -1018,6 +1230,7 @@ end;
     1. The receiver procedure should also restore (bring to front) that instance.
     2. We should close this second instance after we sent the message to the first instance.
  }
+{$IFDEF Framework_VCL}
 procedure TAppData.ResurrectInstance(CONST CommandLine: string);
 VAR
    Window: HWND;
@@ -1072,7 +1285,7 @@ begin
     Restore;
    end;
 end;
-
+{$ENDIF}
 
 
 
@@ -1085,6 +1298,7 @@ end;
    This is used by the Uninstaller.
    See c:\MyProjects\Project support\Cubic Universal Uninstaller\Uninstaller.dpr
 --------------------------------------------------------------------------------------------------}
+{$IFDEF Framework_VCL}
 CONST
    RegKey: string= 'Software\CubicDesign\';
 
@@ -1193,6 +1407,7 @@ begin
     FreeAndNil(Dialog);
   END;
 end;
+{$ENDIF}
 
 
 
@@ -1204,7 +1419,7 @@ end;
    APP COMMAND LINE
 -------------------------------------------------------------------------------------------------------------}
 
-{ Returns the path sent as command line param. Tested ok. }
+{ Returns the path sent as command line param. }
 function CommandLinePath: string;
 begin
  if ParamCount > 0
@@ -1335,12 +1550,17 @@ end;
 
 procedure TAppData.MainFormCaption(CONST Caption: string);
 begin
+ {$IFDEF Framework_FMX}
+  // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
+  if Application.MainForm = NIL then EXIT;
+ {$ENDIF}
  if Caption= ''
  then Application.MainForm.Caption:= AppName+ ' '+ GetVersionInfoV
  else Application.MainForm.Caption:= AppName+ ' '+ GetVersionInfoV+ ' - ' + Caption;
 end;
 
 
+{$IFDEF Framework_VCL}
 procedure TAppData.setHideHint(const Value: Integer);
 begin
   FHideHint := Value;
@@ -1357,6 +1577,7 @@ end;
    Utility functions for c:\MyProjects\Project support\Universal Uninstaller\Uninstaller.dpr
 --------------------------------------------------------------------------------------------------}
 (*del
+
 procedure TAppData.AddUninstallerToCtrlPanel(CONST UninstallerExePath: string);          { UninstallerExePath= Full path to the EXE file that represents the uninstaller; ProductName= the uninstaller will be listed with this name. Keep it simple without special chars like '\'. Example: 'BioniX Wallpaper' }
 begin
  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'DisplayName', AppName);
@@ -1366,12 +1587,15 @@ end; *)
 
 procedure TAppData.RegisterUninstaller;
 begin
+ //del AddUninstallerToCtrlPanel(AppData.SysDir+ 'Uninstall.exe');                 { Puts uninstaller in 'Add/remove programs' in Control Panel }
+
  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'DisplayName', AppName);
  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'UninstallString', AppData.SysDir+ 'Uninstall.exe');
 
  AppData.WriteAppDataFolder;
  AppData.WriteInstallationFolder;
 end;
+{$ENDIF}
 
 
 
@@ -1388,7 +1612,7 @@ begin
     IniFile.Write('AutoStartUp'   , AutoStartUp);
     IniFile.Write('StartMinim'    , StartMinim);
     IniFile.Write('Minimize2Tray' , Minimize2Tray);
-    IniFile.Write('HideHint'      , HideHint);
+    ///IniFile.Write('HideHint'      , HideHint);
     IniFile.Write('Opacity'       , Opacity);
     IniFile.Write('ShowOnError'   , ShowLogOnError);
     IniFile.Write('HintType'      , Ord(HintType));
@@ -1405,7 +1629,7 @@ begin
     AutoStartUp   := IniFile.Read('AutoStartUp'        , False);
     StartMinim    := IniFile.Read('StartMinim'         , False);
     Minimize2Tray := IniFile.Read('Minimize2Tray'      , False);
-    HideHint      := IniFile.Read('HideHint'           , 2500);
+    ///HideHint      := IniFile.Read('HideHint'           , 2500);
     Opacity       := IniFile.Read('Opacity'            , 255);
     ShowLogOnError:= IniFile.Read('ShowOnError'        , True);
     HintType      := THintType(IniFile.Read('HintType' , 0));
@@ -1413,7 +1637,7 @@ begin
     FreeAndNil(IniFile);
   end;
 
-  RunSelfAtWinStartUp(AutoStartUp);
+  RunSelfAtStartUp(AutoStartUp);
 end;
 
 
