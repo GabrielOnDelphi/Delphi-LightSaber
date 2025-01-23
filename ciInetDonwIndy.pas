@@ -33,7 +33,7 @@ INTERFACE
 
 USES
    Winapi.Windows, System.SysUtils, System.AnsiStrings, System.StrUtils, Vcl.Forms, System.Classes,
-   IdBaseComponent, IdComponent, IdTCPClient, IdHTTP; //, IdAntiFreeze;
+   IdBaseComponent, IdComponent, IdTCPClient, IdHTTP, IdAntiFreeze;
 
 TYPE
   TSendThread = class(TThread)

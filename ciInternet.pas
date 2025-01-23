@@ -2,7 +2,7 @@
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2024.12
+   2025
    See Copyright.txt
 
    URL utils / URL parsing and validation
@@ -10,16 +10,17 @@
    This unit adds 87 kbytes to EXE size
 
    Related:
-      Internet Status Detector     c:\MyProjects\Packages\CommonPackages\InternetStatusDetector.pas
-      ExternalIP.pas
+      Internet Status Detector: c:\Projects-3rd_Packages\Third party packages\InternetStatusDetector.pas
 
-   See: c:\MyProjects\Projects INTERNET\Test Internet is connected\ciInternet-is_connected.dpr
+   Tester:
+      LightSaber\Demo\Tester Internet\
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
 
 USES
-   Winapi.Windows, Winapi.UrlMon,
+   Winapi.Windows,
+   Winapi.UrlMon,
    Winapi.WinSock,  { Required by GetLocalIP }
    Winapi.WinInet,  { Required by IE_ApplySettings }
    System.SysUtils, System.StrUtils, System.Classes, System.IniFiles, System.Win.Registry,
@@ -29,17 +30,12 @@ USES
 CONST
   SeparatorsHTTP = [' ', '~', '`', '!', '$', '^', '&', '*', '(', ')', '[', ']', '{', '}', ';', ':', '''', '"', '<', '>', ',', '\', '|', #10, #13, #9];
 
-  InvalidUrlChars= [#0..#32, #127, '"', '<',  '>', '^', '`', '{', '}', '|', '\',             '[', ']'];   { details: https://stackoverflow.com/a/36667242/46207 }
-  ReservedCharacters= [';', '/', '?', ':', '@', '=', '&', '#', '%'];                   { https://perishablepress.com/stop-using-unsafe-characters-in-urls/  }
+  InvalidUrlChars= [#0..#32, #127, '"', '<',  '>', '^', '`', '{', '}', '|', '\',     '[', ']'];   { details: https://stackoverflow.com/a/36667242/46207 }
+  ReservedCharacters= [';', '/', '?', ':', '@', '=', '&', '#', '%'];                              { https://perishablepress.com/stop-using-unsafe-characters-in-urls/  }
 
   ConnectedToInternet     = 'The program CAN access the Internet.';
-  CheckYourFirewallMsg    = 'The program  cannot access the Internet. Please check your antivirus/firewall.';
+  CheckYourFirewallMsg    = 'The program cannot access the Internet.  Please check your antivirus/firewall.';
   ComputerCannotAccessInet= 'The computer cannot access the Internet. Please check your Internet connection.';
-
-{
-  How to get ALL local IPs?
-  http://stackoverflow.com/questions/576538/delphi-how-to-get-all-local-ips - see the last answer (Remko)
-}
 
 
 {--------------------------------------------------------------------------------------------------
@@ -85,7 +81,6 @@ CONST
  function  URLMakeNonRelativeProtocol(CONST URL: string): string;                                       { Convert from Protocol-Relative to http }
 
 
-
 {--------------------------------------------------------------------------------------------------
    URL VALIDATION
 --------------------------------------------------------------------------------------------------}
@@ -103,7 +98,7 @@ CONST
  function  CheckURLStart            (CONST URL: string): Boolean;                                 { Check if the URL starts with HTTP or with www }
  function  CheckURLStartMsg         (CONST URL: string): Boolean;                                 { Check if the URL starts with HTTP or with www }
 
- function  IsURL                    (CONST   s: string): Boolean;  deprecated 'Use CheckURLStart inst4ead';                              { Returns True if text starts wit http/www/ftp }
+ function  IsURL                    (CONST   s: string): Boolean; deprecated 'Use CheckURLStart instead';    { Returns True if text starts wit http/www/ftp }
  function  IsWebPage                (CONST URL: string): Boolean;                                 { Returns true for /1/2/3.html but not for /1/2/ or for /1/2 }
 
 
@@ -123,38 +118,27 @@ CONST
 --------------------------------------------------------------------------------------------------}
  function ValidateIpAddress (CONST Address: string): Boolean;
  function ValidateProxyAdr  (CONST Address: string): Boolean;
- function ValidatePort      (CONST Port: string): Boolean;
+ function ValidatePort      (CONST Port: string)   : Boolean;
  function ExtractProxyFrom  (Line: string): string;    { Tries to extract a proxy address from a line of garbage text }
  function ExtractProxiesFrom(CONST Text: string): string;    { Tries to extract multiple proxies from a string (more than one line) of garbage text. Returns a list of proxies separated by enter }
 
 
 {--------------------------------------------------------------------------------------------------
-   IP ADDRESS OF
+   IP ADDRESS
 --------------------------------------------------------------------------------------------------}
- function  GetLocalIP : string;                                                                  { Local IP (not external) }
+ function  GetLocalIP: string;                                              overload;
+ function  GetLocalIP(OUT HostName, IpAddress, ErrorMsg: string): Boolean;  overload;
+
  function  GetExternalIp  (CONST ScriptAddress: string= 'http://checkip.dyndns.org'): string;
- function  GetLocalIP2    (OUT HostName, IPaddr, WSAErr: string): Boolean;
  function  ResolveAddress (CONST HostName: String; out Address: DWORD): Boolean;
 
+ function GenerateInternetRep: string;  // Generate report
 
 {--------------------------------------------------------------------------------------------------
-   IS CONNECTED
---------------------------------------------------------------------------------------------------}
- function  PCConnected2Internet: Boolean;                                       { From here: http://www.delphipages.com/forum/showthread.php?t=198159 }
-
- function  ProgramConnect2InternetI: Integer;                                   { Function returns: -1 if computer is not connected to internet, 0 if local system is connected to internet but application is blocked by firewall, 1 if application can connect to internet}
- function  ProgramConnect2InternetS: string;
- function  TestProgramConnection(ShowMsgOnSuccess: Boolean= FALSE): Integer;
- function  IsPortOpened(const Host: string; Port: Integer): Boolean;            { Here's something very simple with which you can check a port status(opened/closed) on remote host. Add WinSock to uses clause}
- //see: c:\MyProjects\Projects INTERNET\Test Internet is connected\ciInternet-is_connected.dpr
-
-
-{--------------------------------------------------------------------------------------------------
-   MAC
+   MAC ADDRESS
 --------------------------------------------------------------------------------------------------}
  function CoCreateGuid(var guid: TGUID): HResult; stdcall; far external 'ole32.dll';
  function GetMacAddress: string;
-
 
 
 {--------------------------------------------------------------------------------------------------
@@ -169,12 +153,23 @@ CONST
  //How to abort TWeBrowser navigation progress?    http://stackoverflow.com/questions/8976933/how-to-abort-twebrowser-navigation-progress
 
 
+ {--------------------------------------------------------------------------------------------------
+   IS CONNECTED
+--------------------------------------------------------------------------------------------------}
+ function  PCConnected2Internet: Boolean;                                       { From here: http://www.delphipages.com/forum/showthread.php?t=198159 }
 
- { CREATE .URL FILES }
- Procedure CreateUrl                (CONST FullFileName, sFullURL: string);                       { create a URL file }
- Procedure CreateUrlOnDesktop       (CONST ShortFileName, sFullURL: string);                      { create a URL file }
+ function  ProgramConnect2Internet: Integer;                                   { Function returns: -1 if computer is not connected to internet, 0 if local system is connected to internet but application is blocked by firewall, 1 if application can connect to internet}
+ function  ProgramConnect2InternetS: string;
+ function  TestProgramConnection(ShowMsgOnSuccess: Boolean= FALSE): Integer;
+ function  IsPortOpened(const Host: string; Port: Integer): Boolean;            { Here's something very simple with which you can check a port status(opened/closed) on remote host. Add WinSock to uses clause}
+ //see: c:\MyProjects\Projects INTERNET\Test Internet is connected\ciInternet-is_connected.dpr
 
 
+{--------------------------------------------------------------------------------------------------
+   CREATE .URL FILES
+--------------------------------------------------------------------------------------------------}
+ Procedure CreateUrl          (CONST FullFileName, sFullURL: string);                       { Creates an .URL file }
+ Procedure CreateUrlOnDesktop (CONST ShortFileName, sFullURL: string);
 
 
 
@@ -185,11 +180,8 @@ USES
    cbAppData, ciHtml, ccIO, ciDownload;
 
 
- function  PathIsURLA; external 'shlwapi' name 'PathIsURLA';
- function  PathIsURLW; external 'shlwapi' name 'PathIsURLW';
-
-
-
+ function  PathIsUrlA; external 'shlwapi' name 'PathIsURLA';
+ function  PathIsUrlW; external 'shlwapi' name 'PathIsURLW';
 
 
 
@@ -1036,11 +1028,11 @@ end;
 
 
 
-function PCConnected2Internet: Boolean;                                                            { From here: http://www.delphipages.com/forum/showthread.php?t=198159 }
+function PCConnected2Internet: Boolean;
 VAR dwConnectionTypes: DWORD;
 begin
  dwConnectionTypes := INTERNET_CONNECTION_MODEM + INTERNET_CONNECTION_LAN + INTERNET_CONNECTION_PROXY;
- Result := InternetGetConnectedState(@dwConnectionTypes, 0);                                       { Function summary from MS: Retrieves the connected state of the local system. Minimum supported client: Windows 2000 Professional [desktop apps only] }   { API Function documentation: http://msdn.microsoft.com/en-us/library/windows/desktop/aa384702%28v=vs.85%29.aspx }
+ Result := InternetGetConnectedState(@dwConnectionTypes, 0);         { Function summary from MS: Retrieves the connected state of the local system. Minimum supported client: Windows 2000 Professional [desktop apps only] }   { API Function documentation: http://msdn.microsoft.com/en-us/library/windows/desktop/aa384702%28v=vs.85%29.aspx }
 end;
 
 
@@ -1065,7 +1057,7 @@ end;
            -1 if computer is not connected to internet,
             0 if local system is connected to internet but application is blocked by firewall,
             1 if application can connect to internet}
-function ProgramConnect2InternetI: Integer;
+function ProgramConnect2Internet: Integer;
 begin
  if PCConnected2Internet
  then
@@ -1092,7 +1084,7 @@ end; }
 { if ShowMsgOnSuccess = fasle then show message ONLY if it cannot connect to Internet }
 function TestProgramConnection(ShowMsgOnSuccess: Boolean= FALSE): Integer;                                        { Old name: ProgramConnectMsg }
 begin
- Result:= ProgramConnect2InternetI;
+ Result:= ProgramConnect2Internet;
  case Result of
   -1: MesajWarning(ComputerCannotAccessInet);
    0: MesajError(CheckYourFirewallMsg);
@@ -1107,8 +1099,152 @@ end;
 
 
 
+{==================================================================================================
+   GET IP ADDRESS
+==================================================================================================}
+
+{
+IsConnectedToInternet Example 2
+
+USES WinInet   <-   This will generate error if WinInet library is not installed in the computer. Dont added to the uses clauses if not needed
+function IsConnectedToInternet2: Boolean;
+CONST
+  INTERNET_CONNECTION_MODEM      = 1; // local system uses a modem to connect to the Internet.
+  INTERNET_CONNECTION_LAN        = 2; // local system uses a local area network to connect to the Internet.
+  INTERNET_CONNECTION_PROXY      = 4; // local system uses a proxy server to connect to the Internet.
+  INTERNET_CONNECTION_MODEM_BUSY = 8; // local system's modem is busy with a non-Internet connection.
+VAR
+  dwConnectionTypes : DWORD;
+BEGIN
+  dwConnectionTypes :=
+   INTERNET_CONNECTION_MODEM +
+   INTERNET_CONNECTION_LAN +
+   INTERNET_CONNECTION_PROXY;
+  Result := InternetGetConnectedState(@dwConnectionTypes,0);
+END;
+Note: this solution only works if IE is installed, so it would fail on 'older' machines, like most Windows NT 4 computers. You app would then display an error during program startup if you referred to Wininet. Since today, there are many ways to connect to the Internet (via LAN, Dialup/RAS, ADSL, ..) propably the best way would be to test for certain IPs. Here is a link to more information on the topic, including a list of ways to find out whether an Internet connection seems to be active or not. }
 
 
+{
+  Get ALL local IPs?
+  http://stackoverflow.com/questions/576538/delphi-how-to-get-all-local-ips - see the last answer (Remko)
+}
+
+Function GetLocalIP: string;
+VAR
+  HostName, IpAddress, Error: string;
+begin
+  if GetLocalIP(HostName, IpAddress, Error)
+  then Result:= IpAddress
+  else Result:= Error;
+end;
+
+
+function GetLocalIP(OUT HostName, IpAddress, ErrorMsg: string): Boolean;
+VAR
+  Addr: PAnsiChar;
+  WSAData: TWSAData;
+  RemoteHost: pHostEnt;
+  HostNameArr: array[0..255] of AnsiChar;
+begin
+  Result   := False;
+  HostName := '';
+  IpAddress:= '';
+  ErrorMsg := '';
+
+  // Initialize WinSock
+  if WSAStartup($0202, WSAData) <> 0 then
+  begin
+    ErrorMsg := 'WinSock initialization failed!';
+    Exit;
+  end;
+
+  try
+    // Retrieve the local host name
+    if gethostname(HostNameArr, SizeOf(HostNameArr)) = SOCKET_ERROR then
+    begin
+      case WSAGetLastError of
+        WSANOTINITIALISED: ErrorMsg := 'WSA Not Initialized';
+        WSAENETDOWN      : ErrorMsg := 'Network subsystem is down';
+        WSAEINPROGRESS   : ErrorMsg := 'A blocking operation is in progress';
+      else
+        ErrorMsg:= 'Unknown error retrieving host name';
+      end;
+
+      Exit;
+    end;
+
+    HostName := string(HostNameArr);
+
+    // Get host details by name
+    RemoteHost := gethostbyname(HostNameArr);
+    if RemoteHost = nil then
+    begin
+      ErrorMsg := 'Unable to resolve host details.';
+      Exit;
+    end;
+
+    // Extract the IP address
+    Addr := RemoteHost^.h_addr_list^;
+    while Addr <> nil do
+    begin
+      for VAR I := 0 to RemoteHost^.h_length - 1 do
+        IpAddress := IpAddress + IntToStr(Byte(Addr[I])) + '.';
+
+      SetLength(IpAddress, Length(IpAddress) - 1); // Remove trailing dot
+      Break; // Only take the first IP address
+    end;
+
+    Result:= True;
+  finally
+    WSACleanup; // Ensure cleanup happens
+  end;
+end;
+
+
+
+{ Other IP providers= 'http://support.inmotionhosting.com/ipcheck.php' }
+function GetExternalIp(CONST ScriptAddress: string= 'http://checkip.dyndns.org'): string;
+begin
+  Result:= GetTextFile(ScriptAddress);
+  if Length(Result) = 0 then EXIT;
+
+  Result:= ExtractIpFrom(GetBodyFromHtml(Result));
+  if Length(Result) = 0 then EXIT;
+
+  { Remove possible garbage }
+  Result:= ReplaceString(Result, CR, '');   // We don't know the type of enter so we need to remove them both
+  Result:= ReplaceString(Result, LF, '');
+  Result:= System.SysUtils.Trim(Result);
+end;
+
+
+
+
+function GenerateInternetRep: string;
+var HostName, IPaddr, Error: string;
+begin
+ Result:= ' [INTERNET]'+ CRLF;
+
+ Result:= Result+'  GetExternalIp: '  + Tab + GetExternalIp+ CRLF;
+ Result:= Result+'  GetLocalIP: '+ CRLF;
+ if GetLocalIP(HostName, IPaddr, Error)
+ then
+   begin
+     Result:= Result+'     Host: '  + Tab + HostName + CRLF;
+     Result:= Result+'     IP'      + Tab + IPaddr   + CRLF;
+   end
+ else
+   Result:= Result+ '     FAIL! ' + Error + CRLF;
+end;
+
+
+
+
+
+{==================================================================================================
+   .URL
+==================================================================================================}
 Procedure CreateUrl(CONST FullFileName, sFullURL: string);                                            { create a URL file - The filename should end in .URL }
 begin
   with TIniFile.Create(FullFileName) DO
@@ -1134,116 +1270,12 @@ begin
 end;
 
 
-{
-IsConnectedToInternet Example 2
-
-USES WinInet   <-   This will generate error if WinInet library is not installed in the computer. Dont added to the uses clauses if not needed
-function IsConnectedToInternet2: Boolean;
-CONST
-  INTERNET_CONNECTION_MODEM      = 1; // local system uses a modem to connect to the Internet.
-  INTERNET_CONNECTION_LAN        = 2; // local system uses a local area network to connect to the Internet.
-  INTERNET_CONNECTION_PROXY      = 4; // local system uses a proxy server to connect to the Internet.
-  INTERNET_CONNECTION_MODEM_BUSY = 8; // local system's modem is busy with a non-Internet connection.
-VAR
-  dwConnectionTypes : DWORD;
-BEGIN
-  dwConnectionTypes :=
-   INTERNET_CONNECTION_MODEM +
-   INTERNET_CONNECTION_LAN +
-   INTERNET_CONNECTION_PROXY;
-  Result := InternetGetConnectedState(@dwConnectionTypes,0);
-END;
-Note: this solution only works if IE is installed, so it would fail on 'older' machines, like most Windows NT 4 computers. You app would then display an error during program startup if you referred to Wininet. Since today, there are many ways to connect to the Internet (via LAN, Dialup/RAS, ADSL, ..) propably the best way would be to test for certain IPs. Here is a link to more information on the topic, including a list of ways to find out whether an Internet connection seems to be active or not. }
-
-
-
-Function GetLocalIP: String;   { Local IP (not external). Old name: GetIPAddress }
-TYPE
-  pu_long = ^u_long;
-VAR
-  varTWSAData : TWSAData;
-  RemoteHost : PHostEnt;
-  varTInAddr : TInAddr;
-  NameBuf : array[0..255] of AnsiChar;
-begin
- If WSAStartup($101, varTWSAData) <> 0
- then Result := 'No IP Address'
- else
-  Begin
-   Winapi.Winsock.GetHostName(NameBuf, SizeOf(NameBuf));
-   RemoteHost := Winapi.Winsock.GetHostByName(NameBuf);
-   varTInAddr.S_addr := u_long(pu_long(RemoteHost^.h_addr_list^)^);
-   Result := string(inet_ntoa(varTInAddr));
-  End;
- WSACleanup;
-end;
-
-
-function GetLocalIP2(OUT HostName, IPaddr, WSAErr: string): Boolean;    { Source: http://delphi.about.com/od/networking/l/aa103100a.htm }
-VAR
-  HEnt: pHostEnt;
-  HName: array[0..100] of AnsiChar;
-  WSAData: TWSAData;
-  i: Integer;
-begin
- Result := False;
- if WSAStartup($0101, WSAData) <> 0 then
-  begin
-   WSAErr := 'Winsock is not responding."';
-   Exit;
-  end;
-
- IPaddr := '';
- if Winapi.WinSock.GetHostName(HName, SizeOf(HName)) = 0
- then
-  begin
-   HostName := string(HName);
-   HEnt := GetHostByName(HName);
-   for i := 0 to HEnt^.h_length - 1 DO
-    IPaddr := Concat(IPaddr, IntToStr(Ord(HEnt^.h_addr_list^[i])) + '.');
-   SetLength(IPaddr, Length(IPaddr) - 1);
-   Result:= TRUE;
-  end
- else
-  case WSAGetLastError of
-   WSANOTINITIALISED:WSAErr:='WSANotInitialised';
-   WSAENETDOWN      :WSAErr:='WSAENetDown';
-   WSAEINPROGRESS   :WSAErr:='WSAEInProgress';
-  end;
-
- WSACleanup;
-end;
-
-
-
- function  GetExternalIp(CONST ScriptAddress: string= 'http://checkip.dyndns.org'): string;
-{ Other IP providers= 'http://support.inmotionhosting.com/ipcheck.php' }
-VAR s: string;
-begin
-  Result:= '<unknown>';
-  if NOT GetTextFile(ScriptAddress, '', s) then EXIT('');
-  s:= ExtractIpFrom (GetBodyFromHtml(s));
-
-  if Length(s) > 0
-  then Result:= s;
-
-  { Remove possible garbage }
-  Result:= ReplaceString(Result, CR, '');   // We don't know the type of enter so we need to remove them both
-  Result:= ReplaceString(Result, LF, '');
-  Result:= System.SysUtils.Trim(Result);
-end;
-
-
-
-
-
 
 
 
 {==================================================================================================
    URL
 ==================================================================================================}
-
 
 function UrlEncode(CONST URL: string): string;         { It also fixes the Indy encoding issue.   http://stackoverflow.com/questions/5708863/indy-is-altering-the-binary-data-in-my-url }
 VAR
@@ -1501,37 +1533,35 @@ end;
 
 
 {
- Here's something very simple with which you can check a port status(opened/closed) on remote host. Add WinSock to uses clause
+ Check a port status(opened/closed) on remote host. Uses WinSock.
  http://www.delphigeist.com/search?updated-min=2010-01-01T00%3A00%3A00%2B02%3A00&updated-max=2011-01-01T00%3A00%3A00%2B02%3A00&max-results=37
 }
 function ResolveAddress(CONST HostName: String; out Address: DWORD): Boolean;
-VAR lpHost: PHostEnt;
-    AnsiHostName: AnsiString;
+VAR
+   lpHost: PHostEnt;
+   AnsiHostName: AnsiString;
 begin
   AnsiHostName:= AnsiString(HostName);
-  Address := DWORD(INADDR_NONE);                                                // Set default address
+  Address:= DWORD(INADDR_NONE);                                     // Set default address
   TRY
-    if (Length(AnsiHostName) > 0) then                                          // Check host name length
+    if Length(AnsiHostName) > 0 then                                // Check host name length
      begin
-      Address:= inet_addr(PAnsiChar(AnsiHostName));                             // Try converting the hostname  // In D7 aici a fost PChar
-      if (DWORD(Address) = DWORD(INADDR_NONE)) then                             // Check address
+      Address:= inet_addr(PAnsiChar(AnsiHostName));                  // Try converting the hostname  // In D7 aici a fost PChar
+      if (DWORD(Address) = DWORD(INADDR_NONE)) then                  // Check address
        begin
-        lpHost := gethostbyname(PAnsiChar(AnsiHostName));                       // Attempt to get host by name
+        lpHost := gethostbyname(PAnsiChar(AnsiHostName));            // Attempt to get host by name
+
         // Check host ent structure for valid ip address
-        if Assigned(lpHost) and Assigned(lpHost^.h_addr_list^) then
-          // Get the address from the list
-          Address := u_long(PLongInt(lpHost^.h_addr_list^)^);
-      end;// if (DWORD(Address) = DWORD(INADDR_NONE)) then begin
-    end;// if (Length(HostName) > 0) then begin
-  finally
+        if Assigned(lpHost) and Assigned(lpHost^.h_addr_list^)
+        then Address := u_long(PLongInt(lpHost^.h_addr_list^)^);     // Get the address from the list
+      end;
+    end;
+  FINALLY
     // Check result address
-    if (DWORD(Address) = DWORD(INADDR_NONE)) then
-      // Invalid host specified
-      Result:= False
-    else
-      // Converted correctly
-      Result := True;
-  end;// try ... finally
+    if (DWORD(Address) = DWORD(INADDR_NONE))
+    then Result:= False    // Invalid host specified
+    else Result:= True;   // Converted correctly
+  END;
 end;
 
 

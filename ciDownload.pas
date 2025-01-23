@@ -53,7 +53,7 @@ function GetTextFile  (CONST URL: string; Referer: string= ''): string;         
 function GetTextFile  (CONST URL, Referer, DestinationFile: String; ForceFolder: Boolean= TRUE): Boolean; overload;
 
 function DownloadFile (CONST URL, Referer: String; OUT Data: TBytes; PostData: String= ''; SSL: Boolean = FALSE): Boolean;  overload;    { It can be used with text or binary files }
-function DownloadFile (CONST URL, Referer, DestinationFile: string; ForceFolder: Boolean= TRUE): Boolean;                            overload;    { It can be used with text or binary files }
+function DownloadFile (CONST URL, Referer, DestinationFile: string; ForceFolder: Boolean= TRUE): Boolean; overload;    { It can be used with text or binary files }
 
 
 function DDownloadFile (CONST URL: string; OUT HttpRetCode: Integer): TMemoryStream; overload;
@@ -210,8 +210,8 @@ end;
 
 
 
-
-function GetTextFile(CONST URL: string; Referer: string= ''): string;     { TESTED OK }
+{ Returns the downloaded file as string. Use it for HTML files }  { TESTED OK }
+function GetTextFile(CONST URL: string; Referer: string= ''): string;
 VAR BinData: TBytes;
 begin
  if DownloadFile(URL, Referer, BinData)
@@ -220,8 +220,8 @@ begin
 end;
 
 
-
-function GetTextFile(CONST URL, Referer, DestinationFile: String; ForceFolder: Boolean= TRUE): Boolean;     { TESTED OK }
+{ Downloads the specified Interent file to disk. Use it for binary files }   { TESTED OK }
+function GetTextFile(CONST URL, Referer, DestinationFile: String; ForceFolder: Boolean= TRUE): Boolean;
 VAR TextBody: string;
 begin
  TextBody:= GetTextFile(URL, Referer);
