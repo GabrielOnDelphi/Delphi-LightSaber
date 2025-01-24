@@ -1371,35 +1371,13 @@ end;
 { It works with >4GB files.
   On error, return -1 instead of raising an exception }
 function GetFileSize(CONST FileName: String): Int64;
-{$IFDEF VER350} // Athenes
-  begin
-    try
-      Result:= TFile.GetSize(FileName);
-    except
-      Result:= -1;
-    end;
+begin
+  try
+    Result:= TFile.GetSize(FileName);
+  except
+    Result:= -1;
   end;
-{$ELSE}
-   {$IFDEF MSWINDOWS}
-     var
-       Info: TWin32FileAttributeData;
-     begin
-       if GetFileAttributesEx(PChar(FileName), GetFileExInfoStandard, @Info)
-       then Result := Int64(info.nFileSizeLow) or Int64(info.nFileSizeHigh shl 32)
-       else Result := -1;
-     end;
-   {$ELSE}
-     var
-       StatBuf: _stat;
-     begin
-       if stat(PAnsiChar(UTF8Encode(Path)), StatBuf) = 0
-       then Result := StatBuf.st_size
-       else Result := -1;
-     end;
-   {$ENDIF MSWINDOWS}
-{$ENDIF VER350}
-
-
+end;
 
 
 
