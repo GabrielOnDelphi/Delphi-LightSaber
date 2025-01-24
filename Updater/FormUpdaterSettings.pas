@@ -53,7 +53,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   cbDialogs, cbAppData, ciInternet, cTranslate, ccINIFile, cbAppDataForm, cvINIFile; //, cvINIFile;
+   cbDialogs, cbAppData, ciInternet, cTranslate, ccINIFile, cvINIFile; //, cvINIFile;
 
 
 

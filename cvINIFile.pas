@@ -40,7 +40,7 @@ IMPLEMENTATION
 
 USES
    cvFloatSpinEdit, cvFileListBox, cvSpinEdit, cvSpinEditDelayed, cvPathEdit,
-   cbCenterControl, cbAppData, cvLog, cbLogUtils;
+   cbCenterControl, cbAppData, cvLog, cbLogUtils, cbLogTypes;
 
 
 

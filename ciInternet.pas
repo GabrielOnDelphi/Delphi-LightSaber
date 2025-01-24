@@ -1231,11 +1231,11 @@ begin
  if GetLocalIP(HostName, IPaddr, Error)
  then
    begin
-     Result:= Result+'     Host: '  + Tab + HostName + CRLF;
-     Result:= Result+'     IP'      + Tab + IPaddr   + CRLF;
+     Result:= Result+'     Host: '+ Tab + HostName + CRLF;
+     Result:= Result+'     IP'    + Tab + IPaddr   + CRLF;
    end
  else
-   Result:= Result+ '     FAIL! ' + Error + CRLF;
+   Result:= Result+ '     FAIL! '+ Error + CRLF;
 end;
 
 

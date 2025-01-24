@@ -37,7 +37,7 @@ USES
 
 procedure TGuiSettings.Save;
 begin
-  VAR SettingsFile:= AppData.AppDataFolder(TRUE)+ 'Gui_Settings.bin';
+  VAR SettingsFile:= AppData.AppDataFolder(TRUE)+ 'GUISettings.bin';
 
   VAR Stream:= TCubicBuffStream2.CreateWrite(SettingsFile);    { This will give an AV if the file cannot be saved (folder readonly) }
   TRY
@@ -54,7 +54,7 @@ end;
 
 procedure TGuiSettings.Load;
 begin
-  VAR SettingsFile:= AppData.AppDataFolder(TRUE)+ 'Gui_Settings.bin';
+  VAR SettingsFile:= AppData.AppDataFolder(TRUE)+ 'GUISettings.bin';
   if NOT FileExists(SettingsFile) then EXIT;
 
   VAR Stream:= TCubicBuffStream2.CreateRead(SettingsFile);
