@@ -1,4 +1,4 @@
-package LightAppData;
+package LightAppDataFMX;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -31,6 +31,7 @@ package LightAppData;
 {$IMPLICITBUILD ON}
 
 requires
+  BindEngine,
   vclimg,
   vcl,
   vclwinx,
@@ -40,18 +41,17 @@ requires
 
 contains
   cbAppData in 'cbAppData.pas',
-  cbAppDataForm in 'cbAppDataForm.pas',
-  cbCenterControl in 'cbCenterControl.pas',
-  cbDialogs in 'cbDialogs.pas',
   cbIniFile in 'cbIniFile.pas',
-  cbLogLinesAbstract in 'cbLogLinesAbstract.pas',
-  cbLogLinesM in 'cbLogLinesM.pas',
-  cbLogLinesS in 'cbLogLinesS.pas',
-  cbLogRam in 'cbLogRam.pas',
-  cbLogTypes in 'cbLogTypes.pas',
-  cbLogUtils in 'cbLogUtils.pas',
+  cbCenterControl in 'cbCenterControl.pas',
   cbRegistry in 'cbRegistry.pas',
-  cbVersion in 'cbVersion.pas';
+  cbDialogs in 'cbDialogs.pas',
+  cbLogLines in 'cbLogLines.pas',
+  cbLogRam in 'cbLogRam.pas',
+  cbLogUtils in 'cbLogUtils.pas',
+  cbVersion in 'cbVersion.pas',
+  cbLogLinesAbstract in 'cbLogLinesAbstract.pas',
+  cbLogLinesThreaded in 'cbLogLinesThreaded.pas',
+  cbAppDataForm in 'cbAppDataForm.pas';
 
 end.
 

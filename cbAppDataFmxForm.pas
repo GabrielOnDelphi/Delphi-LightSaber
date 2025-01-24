@@ -1,4 +1,4 @@
-﻿UNIT cbAppDataForm;
+﻿UNIT cbAppDataFmxForm;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -51,10 +51,10 @@ USES
   System.SysUtils, System.Classes,
   {$IFDEF FRAMEWORK_VCL}
   // Winapi.Windows,
-  Winapi.Messages,
-  Vcl.Controls,
-  Vcl.Forms,
-  cbIniFile,
+  //Winapi.Messages,
+  //Vcl.Controls,
+  //Vcl.Forms,
+  //cbIniFile,
   {$ELSE FRAMEWORK_FMX}
   FMX.Controls, FMX.Forms,
   {$ENDIF}

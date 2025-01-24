@@ -40,7 +40,7 @@
      In the DPR file replace the code with:
        uses
          FastMM4,
-         Vcl.Forms / FMX.Forms,
+         FMX.Forms,
          FormRamLog,
          //cbINIFile,
          cbAppData,
@@ -141,15 +141,7 @@ USES
   ccCore,
   ccINIFile,
   cbLogRam,
-  cbAppDataForm;
-
-
-  {$IFDEF FRAMEWORK_FMX}
-TYPE
-   TFormClass = TComponentClass;
-   TWinControl = TFmxObject;
-  {$ENDIF}
-
+  cbAppDataFmxForm;
 
 TYPE
   THintType = (htOff,                      // Turn off the embedded help system
@@ -178,14 +170,6 @@ TYPE
     class VAR FAppName: string;
     function  getLastUsedFolder: string;
 
-    {$IFDEF Framework_VCL}
-    VAR
-      FFont: TFont;
-      FHideHint: Integer;
-    procedure setFont(aFont: TFont);
-    procedure setHideHint(const Value: Integer);
-    procedure RegisterUninstaller;
-    {$ENDIF}
     function  RunSelfAtStartUp(Active: Boolean): Boolean;
 	
     procedure LoadSettings;
@@ -207,15 +191,6 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       App Single Instance
    --------------------------------------------------------------------------------------------------}
-    {$IFDEF Framework_VCL}
-    procedure ResurrectInstance(CONST CommandLine: string);
-    function  InstanceRunning: Boolean;
-    procedure SetSingleInstanceName(var Params: TCreateParams);
-    function  ExtractData(VAR Msg: TWMCopyData; OUT s: string): Boolean;
-    property  SingleInstClassName: string read FSingleInstClassName;	
-    {$ENDIF}
-
-    {}	 
     class VAR Initializing: Boolean;                 // See documentation at the top of the file
     class VAR AutoSignalInitializationEnd: Boolean;  // See documentation at the top of the file
     procedure Minimize;
@@ -249,15 +224,18 @@ TYPE
 
     class property AppName:  string read FAppName;
 
-    {$IFDEF Framework_VCL}
    {--------------------------------------------------------------------------------------------------
       Installer
    --------------------------------------------------------------------------------------------------}
+    {$IFDEF MsWindows}
+    {$IFDEF FullAppData}
+    procedure RegisterUninstaller;
     procedure WriteAppDataFolder;
     function  ReadAppDataFolder(CONST UninstalledApp: string): string;
 
     procedure WriteInstallationFolder;
     function  ReadInstallationFolder(CONST UninstalledApp: string): string;
+
 
 
    {--------------------------------------------------------------------------------------------------
@@ -275,6 +253,7 @@ TYPE
     procedure Restart;
     procedure SelfDelete;
     {$ENDIF}
+    {$ENDIF}
 
     property  RunningFirstTime: Boolean read FRunningFirstTime;    // Returns true if the application is running for the first time on this computer.
 
@@ -282,25 +261,19 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       FORM
    --------------------------------------------------------------------------------------------------}
-    procedure CreateMainForm  (aClass: TFormClass;                MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly); overload;
-    procedure CreateMainForm  (aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly); overload;
+    procedure CreateMainForm  (aClass: TComponentClass;                MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly); overload;
+    procedure CreateMainForm  (aClass: TComponentClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly); overload;
 
-    procedure CreateForm      (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; Owner: TWinControl = NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
-    procedure CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl = NIL);
+    procedure CreateForm      (aClass: TComponentClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; Owner: TFmxObject = NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
+    procedure CreateFormHidden(aClass: TComponentClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TFmxObject = NIL);
 
-    procedure CreateFormModal (aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL); overload;   // Do I need this?
-    procedure CreateFormModal (aClass: TFormClass;                Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL); overload;
-
-    procedure HideFromTaskbar;
-    {$IFDEF Framework_VCL}
-    procedure SetMaxPriority;
-    property  HideHint: Integer read FHideHint write setHideHint;       // Hide hint after x ms.
-    property  Font: TFont read FFont write setFont;
-
+    procedure CreateFormModal (aClass: TComponentClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TFmxObject= NIL); overload;   // Do I need this?
+    procedure CreateFormModal (aClass: TComponentClass;                Loading: TFormLoading= flPosOnly; ParentWnd: TFmxObject= NIL); overload;
 
     {-------------------------------------------------------------------------------------------------
       App Version
    --------------------------------------------------------------------------------------------------}
+    {$IFDEF FullAppData}
     class function GetVersionInfo(ShowBuildNo: Boolean= False): string;
     function  GetVersionInfoMajor: Word;
     function  GetVersionInfoMinor: Word;
@@ -405,13 +378,6 @@ begin
   then FSingleInstClassName:= aAppName
   else FSingleInstClassName:= WindowClassName;    // We use FSingleInstClassName to identify the window/instance (when we check for an existing instance)
 
-  {$IFDEF Framework_VCL}
-  { Register a unique message ID for this applications. Used when we send the command line to the first running instance via WM_COPYDATA.
-    We can do this only once per app so the best place is the Initialization section. However, since AppData is created only once, we can also do it here, in the constructor.
-    https://stackoverflow.com/questions/35516347/sendmessagewm-copydata-record-string }
-   CopyDataID:= RegisterWindowMessage('CubicCopyDataID'); //not on FMX
-  {$ENDIF}
-
   { App name }
   Assert(System.IOUtils.TPath.HasValidPathChars(aAppName, FALSE), 'Invalid characters in AppName'+ aAppName);
   Assert(aAppName > '', 'AppName is empty!');
@@ -429,13 +395,6 @@ begin
 
   LogVerb(AppName+ GetVersionInfoV+ ' started.');
 
-  { App hint }
-  {$IFDEF Framework_VCL}
-   Application.HintColor     := $c0c090;
-   Application.HintShortPause:= 40;               // Specifies the time period to wait before bringing up a hint if another hint has already been shown. Windows' default is 50 ms
-   Application.UpdateFormatSettings:= FALSE;      // more http://www.delphi3000.com/articles/article_4462.asp?SK=
-  {$ENDIF}
-
   { App settings }
   if FileExists(IniFile)
   then LoadSettings
@@ -449,11 +408,6 @@ begin
 
       Opacity      := 250;
       UserPath     := AppDataFolder;
-
-      {$IFDEF Framework_VCL}
-       HideHint    := 4000;                      // Hide hint after x ms.
-      {$ENDIF}
-
     end;
 
   { Product details }
@@ -486,23 +440,16 @@ end;
 { 1. Create the form
   2. Set the font of the new form to be the same as the font of the MainForm
   3. Show it }
-procedure TAppData.CreateMainForm(aClass: TFormClass; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
+procedure TAppData.CreateMainForm(aClass: TComponentClass; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
 begin
   VAR Reference: TForm;
   CreateMainForm(aClass, Reference, MainFormOnTaskbar, Show, Loading);
 end;
 
 
-procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
+procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
 begin
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
-
-  {$IFDEF Framework_VCL}
-   Assert(Font = NIL, 'AppData.Font already assigned!');
-   Assert(Vcl.Dialogs.UseLatestCommonDialogs= TRUE);      { This is true anyway by default, but I check it to remember myself about it. Details: http://stackoverflow.com/questions/7944416/tfileopendialog-requires-windows-vista-or-later }
-   Application.MainFormOnTaskbar := MainFormOnTaskbar;
-   Application.ShowMainForm      := Show;      // Must be false if we want to prevent form flicker during skin loading at startup
-  {$ENDIF}
 
   // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
   Application.CreateForm(aClass, Reference);
@@ -511,7 +458,7 @@ begin
 
   SetGuiProperties(TForm(Reference));
 
-  {$IFDEF Framework_VCL}
+  {$IFDEF MsWindows}
    if (Loading = flFull) OR (Loading = flPosOnly) then
     begin
       // Load form
@@ -520,14 +467,18 @@ begin
       // At this point we can only load "standard" Delphi components.
       // Loading of our Light components can only be done in cv_IniFile.pas -> TIniFileVCL
       // For the moment the work around is load only the stadard components.
+      {$IFDEF FullAppData}
       cbINIFile.LoadFormBase(TForm(Reference), Loading);
 
       { Write path to app in registry }
       if RunningFirstTime then RegisterUninstaller;
+      {$ENDIF}
     end;
 
    // if the program is off-screen, bring it on-screen
+   {$IFDEF FullAppData}
    CorrectFormPositionScreen(TForm(Reference));
+   {$ENDIF}
 
   // Ignore the "Show" parameter if "StartMinimized" is active
   // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
@@ -553,7 +504,7 @@ end;
 
 { Create secondary form }
 { Load indicates if the GUI settings are remembered or not }
-procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; Owner: TWinControl= NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
+procedure TAppData.CreateForm(aClass: TComponentClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; Owner: TFmxObject= NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
 begin
   if CreateBeforeMainForm
   then
@@ -580,7 +531,7 @@ begin
   AND Parented then
     begin
       TForm(Reference).Parent:= Owner;
-      {$IFDEF FRAMEWORK_VCL}
+      {$IFDEF FullAppData}
        CenterChild(TForm(Reference), Owner);
       {$ENDIF}
     end;
@@ -589,7 +540,7 @@ begin
   SetGuiProperties(TForm(Reference));
 
   // Load previous form settings/position
-  {$IFDEF FRAMEWORK_VCL}
+  {$IFDEF FullAppData}
    cbINIFile.LoadFormBase(TForm(Reference), Loading);
   {$ENDIF}
   if TForm(Reference) is TLightForm
@@ -610,14 +561,14 @@ end;
 
 
 { Create secondary form }
-procedure TAppData.CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateFormHidden(aClass: TComponentClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TFmxObject= NIL);
 begin
   CreateForm(aClass, Reference, FALSE, Loading, ParentWnd);
 end;
 
 
 { Create secondary form }
-procedure TAppData.CreateFormModal(aClass: TFormClass; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateFormModal(aClass: TComponentClass; Loading: TFormLoading= flPosOnly; ParentWnd: TFmxObject= NIL);
 VAR Reference: TForm;
 begin
   CreateForm(aClass, Reference, FALSE, Loading, ParentWnd);
@@ -627,7 +578,7 @@ end;
 
 { Create secondary form }
 //ToDo: Do I need this? Since the form is modal, I should never need the Reference? To be deleted
-procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateFormModal(aClass: TComponentClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TFmxObject= NIL);
 begin
   CreateFormModal(aClass, Loading, ParentWnd);
 end;
@@ -635,7 +586,7 @@ end;
 
 procedure TAppData.SetGuiProperties(Form: TForm);
 begin
-  {$IFDEF Framework_VCL}
+  {$IFDEF FullAppData}
    // Font
    if Form = Application.MainForm
    then Self.Font:= Form.Font   // We TAKE the font from the main form. Then we apply it to all existing and all future windows.
@@ -651,8 +602,6 @@ begin
    // Form transparency
    Form.AlphaBlendValue := Opacity;
    Form.AlphaBlend:= Opacity< 255;
-  {$ELSE}
-   //Form.Opacity := Opacity / 255;
   {$ENDIF}
 end;
 
@@ -685,7 +634,7 @@ begin
   Assert(AppData <> NIL, 'AppData var might not be available at this point!');
   Result:= DirectoryExists(AppData.SysDir);
 
-  {$IFDEF Framework_VCL}
+  {$IFDEF FullAppData}
    if NOT Result
    then MesajError('The program was not properly installed! The "System" folder is missing.');
   {$ENDIF}
@@ -1054,27 +1003,13 @@ end;
 {$ENDIF}
 
 
-{ Hides Application's TaskBar Button
-  Source: http://stackoverflow.com/questions/14811935/how-to-hide-an-application-from-taskbar-in-windows-7
-  If Application.MainFormOnTaskbar is true, a taskbar button represents the application's main form and displays its caption.
-  All child forms will stay on top of the MainForm (bad)! If False, a taskbar button represents the application's (hidden) main window and bears the application's Title. Must be True to use Windows (Vista) Aero effects (ive taskbar thumbnails, Dynamic Windows, Windows Flip, Windows Flip 3D). https://stackoverflow.com/questions/66720721/ }     //Do this in DPR
-procedure TAppData.HideFromTaskbar;
-begin
-{$IFDEF Framework_VCL}
-  ShowWindow(Application.Handle, SW_HIDE);  //this also hides the form from the screen
-{$ENDIF}
-end;
 
 
 procedure TAppData.Minimize;
 begin
-{$IFDEF Framework_VCL}
-  Application.Minimize;
-{$ELSE}
   var WindowService: IFMXWindowService;
   if TPlatformServices.Current.SupportsPlatformService(IFMXWindowService, IInterface(WindowService)) then
     WindowService.SetWindowState(Application.MainForm, TWindowState.wsMinimized);
-{$ENDIF}
 end;
 
 
@@ -1084,22 +1019,22 @@ end;
 {--------------------------------------------------------------------------------------------------
    VERSION INFO
 --------------------------------------------------------------------------------------------------}
-{$IFDEF Framework_VCL}
+{$IFDEF FullAppData}
 function TAppData.GetVersionInfoMajor: Word;
 VAR FixedInfo: TVSFixedFileInfo;
 begin
- if GetVersionInfoFile(ExeName, FixedInfo)
+ {if GetVersionInfoFile(ExeName, FixedInfo)
  then Result:= HiWord(FixedInfo.dwFileVersionMS)
- else Result:= 0;
+ else Result:= 0; }
 end;
 
 
 function TAppData.GetVersionInfoMinor: Word;
 VAR FixedInfo: TVSFixedFileInfo;
 begin
- if GetVersionInfoFile(ExeName, FixedInfo)
+ {if GetVersionInfoFile(ExeName, FixedInfo)
  then Result:= LoWord(FixedInfo.dwFileVersionMS)
- else Result:= 0;
+ else Result:= 0;}
 end;
 
 
@@ -1651,5 +1586,3 @@ end;
 
 
 end.
-
-

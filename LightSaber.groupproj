@@ -42,9 +42,6 @@
         <Projects Include="Demo\Template App\TemplateApp.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Demo\Template App FMX\TemplateAppFMX.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="Demo\Template Universal Uninstaller\Uninstaller.dproj">
             <Dependencies/>
         </Projects>
@@ -200,15 +197,6 @@
     <Target Name="TemplateApp:Make">
         <MSBuild Projects="Demo\Template App\TemplateApp.dproj" Targets="Make"/>
     </Target>
-    <Target Name="TemplateAppFMX">
-        <MSBuild Projects="Demo\Template App FMX\TemplateAppFMX.dproj"/>
-    </Target>
-    <Target Name="TemplateAppFMX:Clean">
-        <MSBuild Projects="Demo\Template App FMX\TemplateAppFMX.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="TemplateAppFMX:Make">
-        <MSBuild Projects="Demo\Template App FMX\TemplateAppFMX.dproj" Targets="Make"/>
-    </Target>
     <Target Name="Uninstaller">
         <MSBuild Projects="Demo\Template Universal Uninstaller\Uninstaller.dproj"/>
     </Target>
@@ -300,13 +288,13 @@
         <MSBuild Projects="..\LightSaber ImageResampler Test\ResamplerTester.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightAppData;LightAppDataFmx;LightCommon;LightProteus;LightInternet;LightTranslator;LightGraphics;LightVisControls;LightNGC;BioControl;BionixVCL;TemplateApp;TemplateAppFMX;Uninstaller;Demo_VisualControls;AutoTranslatorDemo;Demo_SaveGUI;Tester_ccIO;Tester_FileStream;Tester_WinVers;DemoLog;Demo_SystemReport;ResamplerTester"/>
+        <CallTarget Targets="LightCore;LightAppData;LightAppDataFmx;LightCommon;LightProteus;LightInternet;LightTranslator;LightGraphics;LightVisControls;LightNGC;BioControl;BionixVCL;TemplateApp;Uninstaller;Demo_VisualControls;AutoTranslatorDemo;Demo_SaveGUI;Tester_ccIO;Tester_FileStream;Tester_WinVers;DemoLog;Demo_SystemReport;ResamplerTester"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightAppData:Clean;LightAppDataFmx:Clean;LightCommon:Clean;LightProteus:Clean;LightInternet:Clean;LightTranslator:Clean;LightGraphics:Clean;LightVisControls:Clean;LightNGC:Clean;BioControl:Clean;BionixVCL:Clean;TemplateApp:Clean;TemplateAppFMX:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;AutoTranslatorDemo:Clean;Demo_SaveGUI:Clean;Tester_ccIO:Clean;Tester_FileStream:Clean;Tester_WinVers:Clean;DemoLog:Clean;Demo_SystemReport:Clean;ResamplerTester:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightAppData:Clean;LightAppDataFmx:Clean;LightCommon:Clean;LightProteus:Clean;LightInternet:Clean;LightTranslator:Clean;LightGraphics:Clean;LightVisControls:Clean;LightNGC:Clean;BioControl:Clean;BionixVCL:Clean;TemplateApp:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;AutoTranslatorDemo:Clean;Demo_SaveGUI:Clean;Tester_ccIO:Clean;Tester_FileStream:Clean;Tester_WinVers:Clean;DemoLog:Clean;Demo_SystemReport:Clean;ResamplerTester:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightAppData:Make;LightAppDataFmx:Make;LightCommon:Make;LightProteus:Make;LightInternet:Make;LightTranslator:Make;LightGraphics:Make;LightVisControls:Make;LightNGC:Make;BioControl:Make;BionixVCL:Make;TemplateApp:Make;TemplateAppFMX:Make;Uninstaller:Make;Demo_VisualControls:Make;AutoTranslatorDemo:Make;Demo_SaveGUI:Make;Tester_ccIO:Make;Tester_FileStream:Make;Tester_WinVers:Make;DemoLog:Make;Demo_SystemReport:Make;ResamplerTester:Make"/>
+        <CallTarget Targets="LightCore:Make;LightAppData:Make;LightAppDataFmx:Make;LightCommon:Make;LightProteus:Make;LightInternet:Make;LightTranslator:Make;LightGraphics:Make;LightVisControls:Make;LightNGC:Make;BioControl:Make;BionixVCL:Make;TemplateApp:Make;Uninstaller:Make;Demo_VisualControls:Make;AutoTranslatorDemo:Make;Demo_SaveGUI:Make;Tester_ccIO:Make;Tester_FileStream:Make;Tester_WinVers:Make;DemoLog:Make;Demo_SystemReport:Make;ResamplerTester:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
@@ -382,14 +370,14 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Tester GUI Autosave\Demo_SaveGUI.dproj">
-            <ProjectGuid>{F34D7568-B180-4088-A728-74B945E4932F}</ProjectGuid>
+        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
-            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
+        <BuildGroupProject Include="Demo\Tester GUI Autosave\Demo_SaveGUI.dproj">
+            <ProjectGuid>{F34D7568-B180-4088-A728-74B945E4932F}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -430,12 +418,6 @@
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Template App FMX\TemplateAppFMX.dproj">
-            <ProjectGuid>{D824CECA-A966-4534-A38A-61D312FAE2DF}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="LightVisControls.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -448,8 +430,8 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
+            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -528,16 +510,22 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="Demo\Tester GUI Autosave\Demo_SaveGUI.dproj">
             <ProjectGuid>{F34D7568-B180-4088-A728-74B945E4932F}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
-            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
+        <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
+            <ProjectGuid>{5176FADE-1D31-4EFC-B9D1-148C216BA56F}</ProjectGuid>
+            <Configurations/>
+            <Platforms/>
             <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\LightSaber ImageResampler Test\ResamplerTester.dproj">
@@ -570,12 +558,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Template App FMX\TemplateAppFMX.dproj">
-            <ProjectGuid>{D824CECA-A966-4534-A38A-61D312FAE2DF}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="LightVisControls.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -588,11 +570,11 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
+            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
+            <Enabled>False</Enabled>
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Release'">
@@ -668,16 +650,22 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="Demo\Tester GUI Autosave\Demo_SaveGUI.dproj">
             <ProjectGuid>{F34D7568-B180-4088-A728-74B945E4932F}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
-            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
+        <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
+            <ProjectGuid>{5176FADE-1D31-4EFC-B9D1-148C216BA56F}</ProjectGuid>
+            <Configurations/>
+            <Platforms/>
             <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\LightSaber ImageResampler Test\ResamplerTester.dproj">
@@ -710,12 +698,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Template App FMX\TemplateAppFMX.dproj">
-            <ProjectGuid>{D824CECA-A966-4534-A38A-61D312FAE2DF}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="LightVisControls.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
             <Configurations>Release</Configurations>
@@ -728,11 +710,11 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
-            <Configurations>Release</Configurations>
+        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
+            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
+            <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
+            <Enabled>False</Enabled>
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='All'">
@@ -808,16 +790,22 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="Demo\Tester GUI Autosave\Demo_SaveGUI.dproj">
             <ProjectGuid>{F34D7568-B180-4088-A728-74B945E4932F}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
-            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
+        <BuildGroupProject Include="Demo\Template App\TemplateApp.dproj">
+            <ProjectGuid>{5176FADE-1D31-4EFC-B9D1-148C216BA56F}</ProjectGuid>
+            <Configurations/>
+            <Platforms/>
             <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\LightSaber ImageResampler Test\ResamplerTester.dproj">
@@ -850,12 +838,6 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Template App FMX\TemplateAppFMX.dproj">
-            <ProjectGuid>{D824CECA-A966-4534-A38A-61D312FAE2DF}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="LightVisControls.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
@@ -868,8 +850,8 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+        <BuildGroupProject Include="Demo\Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
+            <ProjectGuid>{B5572A46-E30C-4F04-B0C3-90EF83D204D6}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
