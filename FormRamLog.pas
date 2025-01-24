@@ -27,7 +27,7 @@ INTERFACE
 {.$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  Winapi.Messages, System.Classes, System.SysUtils,
+  System.Classes, System.SysUtils,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls,
   cbAppData, cbLogRam, cvLog, cvLogFilter, Vcl.Menus, Vcl.Grids;
 
@@ -71,7 +71,7 @@ IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   cbLogUtils, cvINIFile, ccINIFile, cbAppDataForm;
+   cbLogTypes, cvINIFile, ccINIFile;
 
 
 

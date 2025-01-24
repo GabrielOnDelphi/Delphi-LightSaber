@@ -1,4 +1,4 @@
-UNIT cbLogLinesThreaded;
+UNIT cbLogLinesM;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -9,17 +9,16 @@ UNIT cbLogLinesThreaded;
    For the new log (the one based on TStringGrid)
 
    Tester:
-     c:\Myprojects\LightSaber\Demo\LightLog\
+     LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE
 
+{$I Frameworks.inc}
+
 USES
    System.SysUtils, System.Classes,
-   {$IFDEF FRAMEWORK_VCL}
-   Vcl.Graphics,
-   {$Endif}
-   cbLogUtils, ccStreamBuff, cbLogLinesAbstract;
+   cbLogTypes, ccStreamBuff2, cbLogLinesAbstract;
 
 TYPE
   TLogLinesMultiThreaded = class(TAbstractLogLines)
@@ -35,16 +34,17 @@ TYPE
     function Count: Integer; override;
     function Row2FilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer; override;
 
-    function AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Color: TColor = 0): PLogLine; override;
+    function AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE): PLogLine; override;
     function Add(Value: PLogLine): Integer; override;
 
-    procedure ReadFromStream(Stream: TCubicBuffStream); override;
-    procedure WriteToStream (Stream: TCubicBuffStream); override;
+    procedure ReadFromStream(Stream: TCubicBuffStream2); override;
+    procedure WriteToStream (Stream: TCubicBuffStream2); override;
   end;
 
 
-
 IMPLEMENTATION
+
+
 
 {-------------------------------------------------------------------------------------------------------------
   CTOR
@@ -56,13 +56,15 @@ begin
   FLock := TMultiReadExclusiveWriteSynchronizer.Create;
 end;
 
+
 destructor TLogLinesMultiThreaded.Destroy;
 begin
-  Clear;
+  Clear;             { Free the allocated memory for lines }
   FreeAndNil(FList);
   FreeAndNil(FLock);
   inherited;
 end;
+
 
 function TLogLinesMultiThreaded.getItem(Index: Integer): PLogLine;
 begin
@@ -99,9 +101,9 @@ begin
 end;
 
 
-
-
-
+{-------------------------------------------------------------------------------------------------------------
+   ADD
+-------------------------------------------------------------------------------------------------------------}
 function TLogLinesMultiThreaded.Add(Value: PLogLine): Integer;
 begin
   FLock.BeginWrite;
@@ -112,14 +114,13 @@ begin
   end;
 end;
 
-function TLogLinesMultiThreaded.AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Color: TColor = 0): PLogLine;
+function TLogLinesMultiThreaded.AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE): PLogLine;
 begin
   New(Result);
   Result.Msg   := Msg;
   Result.Level := Level;
   Result.Bold  := Bold;
   Result.Time  := Now;
-  Result.Color := Color;
   Result.Indent:= 0;
 
   FLock.BeginWrite;
@@ -130,6 +131,11 @@ begin
   end;
 end;
 
+{-------------------------------------------------------------------------------------------------------------
+   ACCESS
+-------------------------------------------------------------------------------------------------------------}
+{ Convert a row number in the filtered view (which only shows rows meeting the verbosity criteria) to the corresponding index in the full list of log lines.
+  For example, if you have 10 log lines but only 5 meet the verbosity criteria, this function allows you to find the actual index of the 3rd visible row in the full list of log lines. }
 function TLogLinesMultiThreaded.Row2FilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer;
 var
   i, Total: Integer;
@@ -162,7 +168,7 @@ end;
 
 
 
-procedure TLogLinesMultiThreaded.ReadFromStream(Stream: TCubicBuffStream);
+procedure TLogLinesMultiThreaded.ReadFromStream(Stream: TCubicBuffStream2);
 begin
   FLock.BeginWrite;
   try
@@ -172,7 +178,7 @@ begin
   end;
 end;
 
-procedure TLogLinesMultiThreaded.WriteToStream(Stream: TCubicBuffStream);
+procedure TLogLinesMultiThreaded.WriteToStream(Stream: TCubicBuffStream2);
 begin
   FLock.BeginRead;
   try

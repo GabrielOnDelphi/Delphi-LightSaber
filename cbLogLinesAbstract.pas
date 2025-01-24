@@ -9,7 +9,7 @@ UNIT cbLogLinesAbstract;
    For the new log (the one based on TStringGrid)
 
    Tester:
-     c:\Myprojects\LightSaber\Demo\LightLog\
+     LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE
@@ -18,7 +18,7 @@ INTERFACE
 
 USES
    System.SysUtils, System.Classes, System.UITypes,
-   cbLogTypes, ccStreamBuff;
+   cbLogTypes, ccStreamBuff2;
 
 type
   PLogLine=^RLogLine;
@@ -28,30 +28,35 @@ type
     Level : TLogVerbLvl;
     Indent: Integer;          { How many spaces are used to indent the message }
     Bold  : Boolean;
-    Color : TColors;  //Use TColors         { If -1 the use color specified in 'Level'. If > -1 then it overrides the color specified by 'Level' }
     Time  : TDateTime;
   private
-    procedure ReadFromStream(Stream: TCubicBuffStream);
-    procedure WriteToStream (Stream: TCubicBuffStream);
+    procedure ReadFromStream_v1(Stream: TCubicBuffStream2);  { Current reader }
+    procedure WriteToStream    (Stream: TCubicBuffStream2);  { Current writer }
   end;
 
 
-  { Abstract Base Class }
+  { Abstract case class }
   TAbstractLogLines = class
+  private
+    procedure readFromStream_v1(Stream: TCubicBuffStream2);
   protected
     FList: TList;
-    function getItem(Index: Integer): PLogLine; virtual; abstract;
+    const
+      StreamSign  = 'TLogLines';
+      CurVer      = 2;
+    function getItem(Index: Integer): PLogLine;                                             virtual; abstract;
   public
-    procedure Clear; virtual; abstract;
-    function  AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Color: TColor = 0): PLogLine; virtual; abstract;
-    function  Add(Value: PLogLine): Integer; virtual; abstract;
+    procedure Clear;                                                                        virtual; abstract;
+    function  Count: Integer;                                                               virtual; abstract;
 
-    function  Row2FilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer; virtual; abstract;
-    property  Items[Index: Integer]: PLogLine read getItem; default;
-    function  Count: Integer; virtual; abstract;
+    function  Row2FilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer;               virtual; abstract;
+    property  Items[Index: Integer]: PLogLine read getItem;                   default;
 
-    procedure ReadFromStream(Stream: TCubicBuffStream); virtual;
-    procedure WriteToStream (Stream: TCubicBuffStream); virtual;
+    function  Add       (Value: PLogLine): Integer;                                         virtual; abstract;
+    function  AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = False): PLogLine; virtual; abstract;
+
+    procedure ReadFromStream(Stream: TCubicBuffStream2); virtual;
+    procedure WriteToStream (Stream: TCubicBuffStream2); virtual;
   end;
 
 
@@ -59,12 +64,27 @@ type
 IMPLEMENTATION
 
 
-
-
 {-------------------------------------------------------------------------------------------------------------
    ABSTRACT CLASS
 -------------------------------------------------------------------------------------------------------------}
-procedure TAbstractLogLines.ReadFromStream(Stream: TCubicBuffStream);
+procedure TAbstractLogLines.ReadFromStream(Stream: TCubicBuffStream2);
+VAR
+   StreamVer: Word;
+begin
+  if NOT Stream.ReadHeaderVersion(StreamSign, StreamVer)
+  then RAISE Exception.Create('Unknown stream signature.');
+
+  case StreamVer of
+     CurVer: readFromStream_v1(Stream);
+   else
+     RAISE Exception.Create('Usupported stream version.');
+  end;
+
+  Stream.ReadPaddingDef;
+end;
+
+
+procedure TAbstractLogLines.readFromStream_v1(Stream: TCubicBuffStream2);
 VAR
    Line: PLogLine;
    iCount, i: Integer;
@@ -74,13 +94,13 @@ begin
   for i := 0 to iCount - 1 do
   begin
     New(Line);
-    Line.ReadFromStream(Stream);
+    Line.ReadFromStream_v1(Stream);
     Add(Line);
   end;
 end;
 
 
-procedure TAbstractLogLines.WriteToStream(Stream: TCubicBuffStream);
+procedure TAbstractLogLines.WriteToStream(Stream: TCubicBuffStream2);
 VAR i: Integer;
 begin
   Stream.WriteInteger(FList.Count);
@@ -92,36 +112,32 @@ end;
 
 {-------------------------------------------------------------------------------------------------------------
    RLogLine
+
+   We don't write a header and version no for each line because we would waste too much space.
+   Instead, the parent (TRamLog) is responsible to do this.
 -------------------------------------------------------------------------------------------------------------}
-procedure RLogLine.ReadFromStream(Stream: TCubicBuffStream);
+procedure RLogLine.ReadFromStream_v1(Stream: TCubicBuffStream2);
 begin
   Msg    := Stream.ReadString;
   Level  := TLogVerbLvl(Stream.ReadInteger);
   Indent := Stream.ReadInteger;
   Bold   := Stream.ReadBoolean;
-  Color  := Stream.ReadInteger;
   Time   := Stream.ReadDate;
-  { Padding }
-  Stream.ReadInteger;
-  Stream.ReadInteger;
-  Stream.ReadBoolean;
+  Stream.ReadPadding(8);  { Padding }
 end;
 
 
-procedure RLogLine.WriteToStream(Stream: TCubicBuffStream);
+procedure RLogLine.WriteToStream(Stream: TCubicBuffStream2);
 begin
   Stream.WriteString (Msg);
   Stream.WriteInteger(Ord(Level));
   Stream.WriteInteger(Indent);
   Stream.WriteBoolean(Bold);
-  Stream.WriteInteger(Color);
   Stream.WriteDate(Time);
-  { Padding }
-  Stream.WriteInteger(0);
-  Stream.WriteInteger(0);
-  Stream.WriteBoolean(FALSE);
+  Stream.WritePadding(8);    { Padding }
 end;
 
 
 
 end.
+

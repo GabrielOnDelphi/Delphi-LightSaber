@@ -1,4 +1,4 @@
-UNIT cbLogLines;
+UNIT cbLogLinesS;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -9,7 +9,7 @@ UNIT cbLogLines;
    For the new log (the one based on TStringGrid)
 
    Tester:
-     c:\Myprojects\LightSaber\Demo\LightLog\
+     LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE
@@ -18,10 +18,7 @@ INTERFACE
 
 USES
    System.SysUtils, System.Classes,
-   {$IFDEF FRAMEWORK_VCL}
-   Vcl.Graphics,
-   {$Endif}
-   cbLogUtils, cbLogLinesAbstract;
+   cbLogTypes, ccStreamBuff2, cbLogLinesAbstract;
 
 TYPE
   TLogLinesSingleThreaded = class(TAbstractLogLines)
@@ -34,10 +31,10 @@ TYPE
 
     procedure Clear; override;
     function Count: Integer; override;
-    function AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Color: TColor = 0): PLogLine; override;
-    function Add(Value: PLogLine): Integer; override;
-
     function Row2FilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer; override;
+
+    function AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE): PLogLine; override;
+    function Add       (Value: PLogLine): Integer; override;
   end;
 
 
@@ -46,7 +43,7 @@ IMPLEMENTATION
 
 
 {-------------------------------------------------------------------------------------------------------------
-   SINGLE THREADED
+  CTOR
 -------------------------------------------------------------------------------------------------------------}
 constructor TLogLinesSingleThreaded.Create;
 begin
@@ -95,14 +92,13 @@ begin
 end;
 
 
-function TLogLinesSingleThreaded.AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Color: TColor = 0): PLogLine;
+function TLogLinesSingleThreaded.AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE): PLogLine;
 begin
   New(Result);
   Result.Msg   := Msg;
   Result.Level := Level;
   Result.Bold  := Bold;
   Result.Time  := Now;
-  Result.Color := Color;         { If -1 the use color specified in 'Level'. If > -1 then it overrides the color specified by 'Level' }
   Result.Indent:= 0;
 
   Add(Result);

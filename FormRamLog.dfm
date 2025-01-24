@@ -4,8 +4,8 @@ object frmRamLog: TfrmRamLog
   AlphaBlend = True
   BorderIcons = [biSystemMenu, biMaximize]
   Caption = 'Log'
-  ClientHeight = 511
-  ClientWidth = 596
+  ClientHeight = 509
+  ClientWidth = 588
   Color = clBtnFace
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
@@ -23,16 +23,16 @@ object frmRamLog: TfrmRamLog
   object Container: TPanel
     Left = 0
     Top = 0
-    Width = 596
-    Height = 511
+    Width = 588
+    Height = 509
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 0
     object pnlBottom: TPanel
       Left = 0
-      Top = 481
-      Width = 600
+      Top = 479
+      Width = 592
       Height = 31
       Align = alBottom
       BevelOuter = bvNone
@@ -54,7 +54,7 @@ object frmRamLog: TfrmRamLog
       end
       object btnClear: TButton
         AlignWithMargins = True
-        Left = 529
+        Left = 521
         Top = 1
         Width = 68
         Height = 29
@@ -70,13 +70,13 @@ object frmRamLog: TfrmRamLog
         AlignWithMargins = True
         Left = 348
         Top = 3
-        Width = 175
+        Width = 167
         Height = 25
         Align = alClient
         BevelOuter = bvNone
         ShowCaption = False
         TabOrder = 2
-        TrackBar.Left = 55
+        TrackBar.Left = 47
         TrackBar.Top = 0
         TrackBar.Width = 120
         TrackBar.Height = 25
@@ -84,9 +84,9 @@ object frmRamLog: TfrmRamLog
         TrackBar.Align = alRight
         TrackBar.Max = 6
         TrackBar.Min = 1
-        TrackBar.Position = 6
+        TrackBar.Position = 3
         TrackBar.TabOrder = 0
-        Verbosity = lvErrors
+        Verbosity = lvInfos
         Log = Log
       end
       object chkShowTime: TCheckBox
@@ -116,8 +116,8 @@ object frmRamLog: TfrmRamLog
       AlignWithMargins = True
       Left = 3
       Top = 3
-      Width = 594
-      Height = 475
+      Width = 586
+      Height = 473
       Align = alClient
       BevelOuter = bvNone
       ColCount = 1
@@ -137,7 +137,7 @@ object frmRamLog: TfrmRamLog
       TabOrder = 1
       Verbosity = lvErrors
       ColWidths = (
-        573)
+        565)
     end
   end
   object PopupMenu: TPopupMenu

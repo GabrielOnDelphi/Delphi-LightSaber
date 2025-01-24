@@ -16,7 +16,7 @@ UNIT cbLogRam;
      Replaces the TRamLog.
 
    Tester:
-     c:\Myprojects\LightSaber\Demo\LightLog\
+     LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 //ToDo: TRamLog must save its data to disk every x seconds. For this we don't start a timer (resource intensive), but each time we receive a message, we check when we saved the log last time. If more than x seconds have passed, we save it now.
@@ -39,7 +39,7 @@ USES
    {$IFDEF Framework_VCL}
    Vcl.Graphics,
    {$Endif}
-   cbLogLines, cbLogUtils, ccStreamBuff2, cbLogLinesAbstract;
+   cbLogLinesAbstract, cbLogLinesS, cbLogLinesM, cbLogTypes, ccStreamBuff2;
 
 TYPE
   ILogObserver = interface
@@ -57,7 +57,7 @@ TYPE
      FSaveInterval: Integer; // Interval in seconds for auto-save
      const
       StreamSign  = 'TRamLog';
-      StreamVer   = 3;
+      CurVer      = 4;
       MaxEntries  = 1000000; // Maximum number of entries before saving and clearing
    protected
      function prepareString(CONST Msg: string): string;
@@ -72,8 +72,7 @@ TYPE
      function Count(Filtered: Boolean; Filter: TLogVerbLvl): Integer;
 
      procedure AddBold    (const Msg: string);
-     procedure AddMsg     (CONST Msg: string);                  overload;
-     procedure AddMsg     (CONST Msg: string; Color: TColor);   overload;
+     procedure AddMsg     (CONST Msg: string);
      procedure AddMsgInt  (CONST Msg: string; i: Integer);
      procedure AddEmptyRow;
 
@@ -107,11 +106,11 @@ TYPE
 IMPLEMENTATION
 
 USES
-  ccCore, ccTextFile, cbLogLinesThreaded,
+  ccCore, ccTextFile,
   {$IFDEF FRAMEWORK_VCL}
   cbAppData;
   {$ELSE FRAMEWORK_FMX}
-  cbAppData;
+  cbAppDataFmx;
   {$ENDIF}
 
 
@@ -229,14 +228,6 @@ end;
 procedure TRamLog.AddMsg(CONST Msg: string);
 begin
   Lines.AddNewLine(PrepareString(Msg), lvInfos, FALSE);
-  CheckAndSaveToDisk;
-  NotifyLogObserver;
-end;
-
-
-procedure TRamLog.AddMsg(CONST Msg: string; Color: TColor);
-begin
-  Lines.AddNewLine(PrepareString(Msg), lvInfos, FALSE, Color);
   CheckAndSaveToDisk;
   NotifyLogObserver;
 end;
@@ -375,16 +366,19 @@ end;
 
 
 function TRamLog.LoadFromStream(Stream: TCubicBuffStream2): Boolean;
+VAR StreamVer: Word;
 begin
-  Result:= Stream.ReadHeader(StreamSign, StreamVer);
+  Result:= Stream.ReadHeaderVersion(StreamSign, StreamVer);
   if NOT Result then EXIT;
+  if StreamVer = 3 then EXIT;    // Old/unsupported version
+
   Lines.ReadFromStream(Stream);
   Stream.ReadPaddingDef;
 end;
 
 procedure TRamLog.SaveToStream(Stream: TCubicBuffStream2);
 begin
-  Stream.WriteHeader(StreamSign, StreamVer);
+  Stream.WriteHeader(StreamSign, CurVer);
   Lines.WriteToStream(Stream);
   Stream.WritePaddingdef;
 end;

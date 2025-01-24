@@ -24,7 +24,7 @@ INTERFACE
 USES
    Winapi.Messages, System.SysUtils, Winapi.Windows, System.Classes,
    Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls, Vcl.Forms, Vcl.Grids, Vcl.ExtCtrls, VCL.ComCtrls,
-   cbLogRam, cbLogUtils, cbLogLinesAbstract;
+   cbLogRam, cbLogUtils, cbLogTypes, cbLogLinesAbstract;
 
 TYPE
   TLogGrid = class(TStringGrid, ILogObserver)
@@ -270,10 +270,7 @@ begin
    else
       s:= CurLine.Msg;
 
-  if CurLine.Color = -1
-  then Canvas.Font.Color:= Verbosity2Color(CurLine.Level)  // Default color
-  else Canvas.Font.Color:= CurLine.Color;                  // Special color as defined in the RamLog
-
+  Canvas.Font.Color:= Verbosity2Color(CurLine.Level);
   Canvas.TextRect(ARect, ARect.Left+5, ARect.Top+2, s);
 end;
 
