@@ -5,7 +5,7 @@
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>FMX</FrameworkType>
         <MainSource>LightAppDataFmx.dpk</MainSource>
-        <Platform Condition="'$(Platform)'==''">Android64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{CAF97569-AAC0-450D-ADA1-274D7C3DD1C9}</ProjectGuid>
         <ProjectVersion>19.5</ProjectVersion>
         <TargetedPlatforms>163841</TargetedPlatforms>
@@ -95,12 +95,12 @@
         <DCCReference Include="FMX.dcp"/>
         <DCCReference Include="LightCore.dcp"/>
         <DCCReference Include="..\cbLogRam.pas"/>
-        <DCCReference Include="..\cbLogLines.pas"/>
-        <DCCReference Include="..\cbLogUtils.pas"/>
+        <DCCReference Include="..\cbLogLinesS.pas"/>
         <DCCReference Include="..\cbLogLinesAbstract.pas"/>
-        <DCCReference Include="..\cbLogLinesThreaded.pas"/>
-        <DCCReference Include="..\cbAppData.pas"/>
-        <DCCReference Include="..\cbAppDataForm.pas"/>
+        <DCCReference Include="..\cbLogLinesM.pas"/>
+        <DCCReference Include="..\cbAppDataFmx.pas"/>
+        <DCCReference Include="..\cbLogTypes.pas"/>
+        <DCCReference Include="..\cbAppDataFmxForm.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

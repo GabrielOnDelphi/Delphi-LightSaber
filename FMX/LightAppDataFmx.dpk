@@ -37,11 +37,11 @@ requires
 
 contains
   cbLogRam in '..\cbLogRam.pas',
-  cbLogLines in '..\cbLogLines.pas',
-  cbLogUtils in '..\cbLogUtils.pas',
+  cbLogLinesS in '..\cbLogLinesS.pas',
   cbLogLinesAbstract in '..\cbLogLinesAbstract.pas',
-  cbLogLinesThreaded in '..\cbLogLinesThreaded.pas',
-  cbAppData in '..\cbAppData.pas',
-  cbAppDataForm in '..\cbAppDataForm.pas';
+  cbLogLinesM in '..\cbLogLinesM.pas',
+  cbAppDataFmx in '..\cbAppDataFmx.pas',
+  cbLogTypes in '..\cbLogTypes.pas',
+  cbAppDataFmxForm in '..\cbAppDataFmxForm.pas';
 
 end.
