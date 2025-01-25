@@ -207,6 +207,9 @@ TYPE
 
     class property AppName:  string read FAppName;
 
+   {--------------------------------------------------------------------------------------------------
+      Installer
+   --------------------------------------------------------------------------------------------------}
     procedure WriteAppDataFolder;
     function  ReadAppDataFolder(CONST UninstalledApp: string): string;
 
@@ -694,14 +697,14 @@ end;
 { Returns true if the application is "home" (in the computer where it was created). This is based on the presence of a DPR file that has the same name as the exe file. }
 class function TAppData.RunningHome: Boolean;
 begin
- Result:= FileExists(ChangeFileExt(ExeName, '.dpr'));
+  Result:= FileExists(ChangeFileExt(ExeName, '.dpr'));
 end;
 
 
 { Returns true if a file called 'betatester' exists in application's folder or in application's system folder. }
 function TAppData.BetaTesterMode: Boolean;
 begin
- Result:= FileExists(SysDir+ 'betatester') OR FileExists(CurFolder+ 'betatester');
+  Result:= FileExists(SysDir+ 'betatester') OR FileExists(CurFolder+ 'betatester');
 end;
 
 
@@ -794,12 +797,8 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TAppData.Restart;
 begin
-  {$IFDEF MSWINDOWS}
   VAR PAppName:= PChar(ExeName);
   Winapi.ShellAPI.ShellExecute({Handle} 0, 'open', PAppName, nil, nil, SW_SHOWNORMAL);   { Handle does not work. Replaced with 0. }
-  {$ELSE}
-  _system(PChar('open "' + ExeName + '"'));
-  {$ENDIF}
   Application.Terminate;
 end;
 
@@ -882,18 +881,18 @@ end;
 function TAppData.GetVersionInfoMajor: Word;
 VAR FixedInfo: TVSFixedFileInfo;
 begin
- if GetVersionInfoFile(ExeName, FixedInfo)
- then Result:= HiWord(FixedInfo.dwFileVersionMS)
- else Result:= 0;
+  if GetVersionInfoFile(ExeName, FixedInfo)
+  then Result:= HiWord(FixedInfo.dwFileVersionMS)
+  else Result:= 0; 
 end;
 
 
 function TAppData.GetVersionInfoMinor: Word;
 VAR FixedInfo: TVSFixedFileInfo;
 begin
- if GetVersionInfoFile(ExeName, FixedInfo)
- then Result:= LoWord(FixedInfo.dwFileVersionMS)
- else Result:= 0;
+  if GetVersionInfoFile(ExeName, FixedInfo)
+  then Result:= LoWord(FixedInfo.dwFileVersionMS)
+  else Result:= 0;
 end;
 
 
@@ -924,6 +923,7 @@ function TAppData.GetVersionInfoV: string;
 begin
   Result:= ' v'+ GetVersionInfo(False);
 end;
+
 
 
 
@@ -1204,7 +1204,7 @@ end;
    APP COMMAND LINE
 -------------------------------------------------------------------------------------------------------------}
 
-{ Returns the path sent as command line param. Tested ok. }
+{ Returns the path sent as command line param. }
 function CommandLinePath: string;
 begin
  if ParamCount > 0
@@ -1427,5 +1427,3 @@ end;
 
 
 end.
-
-

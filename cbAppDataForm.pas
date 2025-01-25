@@ -50,14 +50,10 @@ INTERFACE
 USES
   System.SysUtils, System.Classes,
   {$IFDEF FRAMEWORK_VCL}
-  // Winapi.Windows,
   Winapi.Messages,
   Vcl.Controls,
   Vcl.Forms,
   cbIniFile,
-  {$ELSE FRAMEWORK_FMX}
-  FMX.Controls, FMX.Forms,
-  {$ENDIF}
   ccINIFile; // Do not add dependencies higher than "cb" level
 
 type
@@ -86,11 +82,8 @@ type
 
 IMPLEMENTATION
 USES
-  {$IFDEF FRAMEWORK_VCL}
   cbAppData;
-  {$ELSE FRAMEWORK_FMX}
-  cbAppDataFmx;
-  {$ENDIF}
+
 
 
 
@@ -98,14 +91,10 @@ constructor TLightForm.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
-  {$IFDEF Framework_VCL}
   Screensnap:= TRUE;
   Snapbuffer:= 4;
   Position:= poDesigned;
   // TFormPosition = (Designed, Default, DefaultPosOnly, DefaultSizeOnly, ScreenCenter, DesktopCenter, MainFormCenter, OwnerFormCenter);
-  {$ELSE}
-  Position:= TFormPosition.Designed;
-  {$ENDIF}
   Showhint:= TRUE;
 
   Saved:= FALSE;
@@ -119,7 +108,6 @@ begin
 end;
 
 
-{$IFDEF Framework_VCL}
 procedure TLightForm.WMEndSession(var Msg: TWMEndSession);
 begin
   SaveBeforeExit;
@@ -137,7 +125,6 @@ begin
   SaveBeforeExit;
   inherited DoClose(Action);
 end; 
-{$ENDIF}
 
 
 function TLightForm.CloseQuery: Boolean;  // Correct method name
@@ -167,8 +154,7 @@ end;
 procedure TLightForm.BeforeRelease;
 begin
   Assert(NOT Saved);
-  {$IFDEF Framework_VCL}
-  cbIniFile.SaveFormBase(Self);  {$ENDIF}
+  cbIniFile.SaveFormBase(Self); 
 end;
 
 

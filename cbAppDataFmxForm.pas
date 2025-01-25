@@ -49,15 +49,10 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes,
-  {$IFDEF FRAMEWORK_VCL}
-  // Winapi.Windows,
+  { $IFDEF FRAMEWORK_VCL}
   //Winapi.Messages,
-  //Vcl.Controls,
-  //Vcl.Forms,
   //cbIniFile,
-  {$ELSE FRAMEWORK_FMX}
   FMX.Controls, FMX.Forms,
-  {$ENDIF}
   ccINIFile; // Do not add dependencies higher than "cb" level
 
 type
@@ -86,11 +81,8 @@ type
 
 IMPLEMENTATION
 USES
-  {$IFDEF FRAMEWORK_VCL}
-  cbAppData;
-  {$ELSE FRAMEWORK_FMX}
   cbAppDataFmx;
-  {$ENDIF}
+
 
 
 

@@ -2,7 +2,7 @@
 
 {=============================================================================================================
    Gabriel Moraru
-   2025.01.11
+   2025.01.19
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
@@ -121,7 +121,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, System.IOUtils, System.UITypes, System.Types, System.Messaging,
-  {$IFDEF FRAMEWORK_FMX}
+
    {$IFDEF mswindows}
     Winapi.Windows,
     Winapi.Messages,
@@ -132,7 +132,6 @@ USES
     FMX.Graphics,
     FMX.Dialogs, FMX.Types, FMX.Controls, FMX.Controls.Presentation,
     FMX.Platform,
-  {$ENDIF}
 
   {$IFDEF ANDROID}
    Androidapi.Helpers, Androidapi.JNI.App, Androidapi.JNI.JavaTypes,
@@ -228,23 +227,21 @@ TYPE
       Installer
    --------------------------------------------------------------------------------------------------}
     {$IFDEF MsWindows}
-    {$IFDEF FullAppData}
     procedure RegisterUninstaller;
     procedure WriteAppDataFolder;
     function  ReadAppDataFolder(CONST UninstalledApp: string): string;
 
     procedure WriteInstallationFolder;
     function  ReadInstallationFolder(CONST UninstalledApp: string): string;
+    {$ENDIF}
 
-
-
+    {$IFDEF FullAppData}
    {--------------------------------------------------------------------------------------------------
       Dialog boxes
    --------------------------------------------------------------------------------------------------}
    function PromptToSaveFile (VAR FileName: string; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''): Boolean;
    function PromptToLoadFile (VAR FileName: string; CONST Filter: string = '';                               CONST Title: string= ''): Boolean;
    function PromptForFileName(VAR FileName: string; SaveDialog: Boolean; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''; CONST InitialDir: string = ''): Boolean;
-
 
    {--------------------------------------------------------------------------------------------------
       App Control
@@ -253,7 +250,7 @@ TYPE
     procedure Restart;
     procedure SelfDelete;
     {$ENDIF}
-    {$ENDIF}
+
 
     property  RunningFirstTime: Boolean read FRunningFirstTime;    // Returns true if the application is running for the first time on this computer.
 
@@ -328,12 +325,12 @@ VAR                      //ToDo: make sure AppData is unique (make it Singleton)
 IMPLEMENTATION
 
 USES
-  {$IFDEF FRAMEWORK_VCL}
+  {$IFDEF MsWindows}
     cbVersion,
     cbRegistry,
-    cbDialogs,
-    cbCenterControl,
-    cbINIFile,
+    //cbDialogs,
+    //cbCenterControl,
+    //cbINIFile,
     //FormRamLog,
   {$ENDIF}
   ccIO, ccTextFile;
@@ -458,7 +455,7 @@ begin
 
   SetGuiProperties(TForm(Reference));
 
-  {$IFDEF MsWindows}
+  {$IFDEF FullAppData}
    if (Loading = flFull) OR (Loading = flPosOnly) then
     begin
       // Load form
@@ -467,18 +464,14 @@ begin
       // At this point we can only load "standard" Delphi components.
       // Loading of our Light components can only be done in cv_IniFile.pas -> TIniFileVCL
       // For the moment the work around is load only the stadard components.
-      {$IFDEF FullAppData}
       cbINIFile.LoadFormBase(TForm(Reference), Loading);
 
       { Write path to app in registry }
       if RunningFirstTime then RegisterUninstaller;
-      {$ENDIF}
     end;
 
    // if the program is off-screen, bring it on-screen
-   {$IFDEF FullAppData}
    CorrectFormPositionScreen(TForm(Reference));
-   {$ENDIF}
 
   // Ignore the "Show" parameter if "StartMinimized" is active
   // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
@@ -810,7 +803,6 @@ begin
    Result:= FALSE;                                                                                 { To catch possible issues caused by antivirus programs that won't let the program write to 'autorun' section }
  END;
 end;
-
 {$ENDIF}
 
 
@@ -950,40 +942,6 @@ begin
 end;
 
 
-{ This is a bit dirty! It creates a BAT that deletes the EXE. Some antiviruses might block this behavior? }
-procedure TAppData.SelfDelete;
-CONST
-  BatCode = ':delete_exe' + sLineBreak + 'del "%s"' + sLineBreak + 'if exist "%s" goto delete_exe' + sLineBreak + 'del "%s"';
-VAR
- List    : TStringList;
- PI      : TProcessInformation;
- SI      : TStartupInfo;
- BatPath : string;
-begin
-  BatPath := TPath.Combine(TPath.GetTempPath, ChangeFileExt(AppShortName, '.BAT'));
-  List := TStringList.Create;
-  TRY
-    List.Text := Format(BatCode, [ExeName, ExeName, BatPath]);
-    List.SaveToFile(BatPath);
-  FINALLY
-    FreeAndNil(List);
-  END;
-
-  FillChar(SI, SizeOf(SI), 0);
-  SI.dwFlags := STARTF_USESHOWWINDOW;
-  SI.wShowWindow := SW_HIDE;
-
-  if CreateProcess( NIL, PChar(BatPath), NIL, NIL, False, IDLE_PRIORITY_CLASS, NIL, NIL, SI, PI) then
-   begin
-     CloseHandle(PI.hThread);
-     CloseHandle(PI.hProcess);
-   end;
-
-  Application.Terminate;                                                                            { This is mandatory }
-end;
-
-
-
 {--------------------------------------------------------------------------------------------------
    SCREEN
 --------------------------------------------------------------------------------------------------}
@@ -1023,18 +981,18 @@ end;
 function TAppData.GetVersionInfoMajor: Word;
 VAR FixedInfo: TVSFixedFileInfo;
 begin
- {if GetVersionInfoFile(ExeName, FixedInfo)
- then Result:= HiWord(FixedInfo.dwFileVersionMS)
- else Result:= 0; }
+  if GetVersionInfoFile(ExeName, FixedInfo)
+  then Result:= HiWord(FixedInfo.dwFileVersionMS)
+  else Result:= 0; 
 end;
 
 
 function TAppData.GetVersionInfoMinor: Word;
 VAR FixedInfo: TVSFixedFileInfo;
 begin
- {if GetVersionInfoFile(ExeName, FixedInfo)
- then Result:= LoWord(FixedInfo.dwFileVersionMS)
- else Result:= 0;}
+  if GetVersionInfoFile(ExeName, FixedInfo)
+  then Result:= LoWord(FixedInfo.dwFileVersionMS)
+  else Result:= 0;
 end;
 
 
@@ -1116,116 +1074,6 @@ end;
 
 
 
-{-------------------------------------------------------------------------------------------------------------
-   SINGLE INSTANCE
---------------------------------------------------------------------------------------------------------------
-   This allows us to detect if an instance of this program is already running.
-   If so, we can send the command line of this second instance to the first instance, and shutdown this second instance.
-   I would have loved to have all the code in a single procedure but unfortunately this is not possible. Three procedures are required.
-
-   Usage:
-    In DPR write:
-     AppData:= TAppData.Create('MyCoolAppName', ctAppWinClassName);
-
-     if AppData.InstanceRunning
-     then TAppData.ResurectInstance(ParamStr(1))
-     else
-      begin
-       Application.Initialize;
-       Application.CreateForm(TMainForm, MainForm);
-       Application.Run;
-      end;
-
-    In MainForm:
-      procedure TMainFrom.CreateParams(var Params: TCreateParams);
-      begin
-        inherited;
-        AppData.SetSingleInstanceName(Params);
-      end;
-
-  ctAppWinClassName is a constant representing your application name/ID. This string must be unique.
-  We use it in InstanceRunning to detect if the the application is already running, by looking to a form with this Class Name.
-
-  Check BioniX/Baser for a full example.
-
-  Links:
-    https://stackoverflow.com/questions/35516347/sendmessagewm-copydata-record-string
-    https://stackoverflow.com/questions/8688078/preventing-multiple-instances-but-also-handle-the-command-line-parameters
-    https://stackoverflow.com/questions/23031208/delphi-passing-running-parameters-to-other-instance-via-wm-copydata-gives-wrong
-    https://github.com/delphidabbler/articles/blob/master/article-13-pt2.pdf
-
-  Alternative implementation:
-    cmMutexSingleInstance.pas
--------------------------------------------------------------------------------------------------------------}
-
-{ Application's main form needs to implement WMCopyData.
-  Warning: We should never use PostMessage() with the WM_COPYDATA message because the data that is passed to the receiving application is only valid during the call. Finally, be aware that the call to SendMessage will not return untill the message is processed.
-
-  Recommendation:
-    1. The receiver procedure should also restore (bring to front) that instance.
-    2. We should close this second instance after we sent the message to the first instance.
- }
-{$IFDEF Framework_VCL}
-procedure TAppData.ResurrectInstance(CONST CommandLine: string);
-VAR
-   Window: HWND;
-   DataToSend: TCopyDataStruct;
-begin
-  { Prepare the data you want to send }
-  DataToSend.dwData := CopyDataID;  // Registered unique ID for LighSaber apps
-  DataToSend.cbData := Length(CommandLine) * SizeOf(Char);
-  DataToSend.lpData := PChar(CommandLine);
-
-  Window:= WinApi.Windows.FindWindow(PWideChar(SingleInstClassName), NIL);    // This is a copy of csWindow.FindTopWindowByClass
-  SendMessage(Window, WM_COPYDATA, 0, LPARAM(@DataToSend));
-  {
-  Winapi.Windows.ShowWindow(Window, SW_SHOWNORMAL);
-  Winapi.Windows.SetForegroundWindow(Window);   }
-end;
-
-
-{ Returns True if an instance of this application was found already running }
-function TAppData.InstanceRunning: Boolean;
-begin
-  Result:= WinApi.Windows.FindWindow(PWideChar(SingleInstClassName), NIL) > 0;
-end;
-
-
-{ Give a unique name to our form.
-  We need to call this in TMainForm.CreateParams(var Params: TCreateParams)  }
-procedure TAppData.SetSingleInstanceName(VAR Params: TCreateParams);
-begin
-  // Copies a null-terminated string. StrCopy is designed to copy up to 255 characters from the source buffer into the destination buffer. If the source buffer contains more than 255 characters, the procedure will copy only the first 255 characters.
-  System.SysUtils.StrCopy(Params.WinClassName, PChar(SingleInstClassName));
-  //Hint: This would work if WindowClassName would be a constant: Params.WinClassName:= WindowClassName
-end;
-
-
-{ Extract the data (from them Msg) that was sent to us by the second instance.
-  Returns True if the message was indeed for us AND it is not empty.
-  Returns the extracted data in 's'.
-  It will also bring the first instance to foreground }
-function TAppData.ExtractData(VAR Msg: TWMCopyData; OUT s: string): Boolean;
-begin
- s:= '';
- Result:= FALSE;
- if Msg.CopyDataStruct.dwData = CopyDataID then { Only react on this specific message }
-   begin
-    if Msg.CopyDataStruct.cbData > 0 then       { Do we receive an empty string? }
-      begin
-        SetString(s, PChar(Msg.CopyDataStruct.lpData), Msg.CopyDataStruct.cbData div SizeOf(Char)); { We need a true copy of the data before it disappear }
-        Msg.Result:= 2006;                      { Send something back as positive answer }
-        Result:= TRUE;
-      end;
-    Restore;
-   end;
-end;
-{$ENDIF}
-
-
-
-
-
 {--------------------------------------------------------------------------------------------------
    UNINSTALLER
 ---------------------------------------------------------------------------------------------------
@@ -1233,7 +1081,7 @@ end;
    This is used by the Uninstaller.
    See c:\MyProjects\Project support\Cubic Universal Uninstaller\Uninstaller.dpr
 --------------------------------------------------------------------------------------------------}
-{$IFDEF Framework_VCL}
+{$IFDEF MsWindows}
 CONST
    RegKey: string= 'Software\CubicDesign\';
 
@@ -1262,6 +1110,7 @@ function TAppData.ReadInstallationFolder(CONST UninstalledApp: string): string; 
 begin
  Result:= RegReadString(HKEY_CURRENT_USER, RegKey+ UninstalledApp, 'Install path');
 end;
+{$ENDIF}
 
 
 
@@ -1278,6 +1127,7 @@ end;
      Extensions longer than three characters are not supported!
      Do not include the dot (.)
 -------------------------------------------------------------------------------------------------------------}
+{$IFDEF FullAppData}
 function TAppData.PromptToSaveFile(VAR FileName: string; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''): Boolean;
 VAR InitialDir: string;
 begin
@@ -1495,24 +1345,13 @@ begin
 end;
 
 
-{$IFDEF Framework_VCL}
-procedure TAppData.setHideHint(const Value: Integer);
-begin
-  FHideHint := Value;
-  Application.HintHidePause:= Value;       // Specifies the time interval to wait before hiding the Help Hint if the mouse has not moved from the control or menu item. Windows' default is 2500 ms
-end;
-
-
-
-
-
+{$IFDEF MsWindows}
 {--------------------------------------------------------------------------------------------------
    UNINSTALLER
 
    Utility functions for c:\MyProjects\Project support\Universal Uninstaller\Uninstaller.dpr
 --------------------------------------------------------------------------------------------------}
 (*del
-
 procedure TAppData.AddUninstallerToCtrlPanel(CONST UninstallerExePath: string);          { UninstallerExePath= Full path to the EXE file that represents the uninstaller; ProductName= the uninstaller will be listed with this name. Keep it simple without special chars like '\'. Example: 'BioniX Wallpaper' }
 begin
  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'DisplayName', AppName);
@@ -1522,8 +1361,6 @@ end; *)
 
 procedure TAppData.RegisterUninstaller;
 begin
- //del AddUninstallerToCtrlPanel(AppData.SysDir+ 'Uninstall.exe');                 { Puts uninstaller in 'Add/remove programs' in Control Panel }
-
  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'DisplayName', AppName);
  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'UninstallString', AppData.SysDir+ 'Uninstall.exe');
 
@@ -1547,7 +1384,6 @@ begin
     IniFile.Write('AutoStartUp'   , AutoStartUp);
     IniFile.Write('StartMinim'    , StartMinim);
     IniFile.Write('Minimize2Tray' , Minimize2Tray);
-    ///IniFile.Write('HideHint'      , HideHint);
     IniFile.Write('Opacity'       , Opacity);
     IniFile.Write('ShowOnError'   , ShowLogOnError);
     IniFile.Write('HintType'      , Ord(HintType));
@@ -1564,7 +1400,6 @@ begin
     AutoStartUp   := IniFile.Read('AutoStartUp'        , False);
     StartMinim    := IniFile.Read('StartMinim'         , False);
     Minimize2Tray := IniFile.Read('Minimize2Tray'      , False);
-    ///HideHint      := IniFile.Read('HideHint'           , 2500);
     Opacity       := IniFile.Read('Opacity'            , 255);
     ShowLogOnError:= IniFile.Read('ShowOnError'        , True);
     HintType      := THintType(IniFile.Read('HintType' , 0));
