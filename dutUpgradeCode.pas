@@ -2,7 +2,8 @@
 
 { Upgrade code to higher standards:
     * Find abusive usage of Try/Except (places where we swallow exceptions)
-    * Fix the Embarcadero SetFocus problem.  }
+    * Fix the Embarcadero SetFocus problem. 
+    * Replace .Free with FreeAndNil(Object) }
 
 INTERFACE
 
@@ -17,6 +18,7 @@ type
    public
     procedure FindSetFocus(Replace: Boolean);
     procedure FindTryExcept(Replace: Boolean);
+    procedure ReplaceFree(aReplace: Boolean);
   end;
 
 
@@ -24,6 +26,59 @@ IMPLEMENTATION
 
 USES
    cmPascal, ccCore, ccIO, ccTextFile;
+
+
+procedure TDutUpgrade.ReplaceFree(aReplace: Boolean);
+var
+  iPos, i: Integer;
+  sLine: string;
+  Found: Boolean;
+  ObjName: string;
+  TextBody: TStringList;
+begin
+  Found := FALSE;
+
+  TextBody := StringFromFileTSL(SearchResults.Last.FileName);
+  try
+    for i := 0 to TextBody.Count - 1 do
+    begin
+      sLine := TextBody[i];
+
+      // Look for lines that contain .Free
+      iPos := Pos('.Free', sLine);
+      if iPos > 0 then
+      begin
+        // Ignore lines that start with a comment symbol: // { (*
+        if LineIsAComment(sLine) then Continue;
+
+        SearchResults.Last.AddNewPos(i, iPos, sLine); // Report the line
+
+        if aReplace then
+        begin
+          // Extract object name
+          ObjName := Copy(sLine, 1, iPos - 1);
+          ObjName := Trim(ObjName);
+
+          // Replace .Free with FreeAndNil(Object)
+          sLine := StringReplace(sLine, ObjName + '.Free', 'FreeAndNil(' + ObjName + ')', [rfReplaceAll]);
+
+          TextBody[i] := sLine;
+          Found := TRUE;
+        end;
+      end;
+    end;
+
+    if Found and aReplace then
+    begin
+      AddUnitToUses(TextBody, 'System.SysUtils'); // Ensure FreeAndNil is available
+      if BackupFile then
+        BackupFileBak(SearchResults.Last.FileName);
+      StringToFile(SearchResults.Last.FileName, TextBody.Text, woOverwrite, wpAuto);
+    end;
+  finally
+    FreeAndNil(TextBody);
+  end;
+end;
 
 
 procedure TDutUpgrade.FindTryExcept(Replace: Boolean);
