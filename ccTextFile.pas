@@ -49,6 +49,8 @@ USES
 {--------------------------------------------------------------------------------------------------
    UTILS
 --------------------------------------------------------------------------------------------------}
+ function  FirstLineFromFile(FileName: string): string;
+
  function  CountLines            (CONST Filename: string; CONST BufferSize: Cardinal= 128000): Int64;                     { Opens a LARGE text file and counts how many lines it has. It does this by loading a small portion of the file in a RAM buffer }
  function  CountCharAppearance   (CONST FileName: string; C: AnsiChar): Int64;
  procedure GenerateRandomTextFile(CONST Filename: string; NoOfLines: Integer);
@@ -182,7 +184,6 @@ VAR Stream: TFileStream;
 begin
  Result:= '';
 
-
  Stream:= TFileStream.Create(FileName, fmOpenRead OR fmShareDenyNone);
  TRY
    if Stream.Size = 0 then Exit;  // Return empty string for empty files
@@ -234,6 +235,14 @@ end;
 {-----------------------------------------------------------------------------------------------------------------------
    LINES
 -----------------------------------------------------------------------------------------------------------------------}
+// Returns the first line from a text file
+function FirstLineFromFile(FileName: string): string;
+begin
+  VAR TSL:= StringFromFileTSL(FileName);
+  Result:= TSL[0];
+  FreeAndNil(TSL);
+end;
+
 
 { Opens a LARGE text file and counts how many lines it has.
   It does this by loading a small portion of the file in a RAM buffer.
