@@ -367,7 +367,7 @@ begin
  Result:= FALSE;
  for s in Pairs DO
   begin
-   ccCore.SplitString(s, Delimiter, ValueName, ValueData);
+   ccCore.SplitLine(s, Delimiter, ValueName, ValueData);
    Result:= RegWriteString(Root, Key, ValueName, ValueData, Lazy);
   end;
 end;

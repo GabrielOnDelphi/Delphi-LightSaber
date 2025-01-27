@@ -49,7 +49,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes,
-  {$IFDEF FRAMEWORK_VCL}
+  { $IFDEF FRAMEWORK_VCL}
   Winapi.Messages,
   Vcl.Controls,
   Vcl.Forms,

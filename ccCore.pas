@@ -213,8 +213,8 @@ TYPE
 
  // SPLIT
  function  SplitText           (CONST Text, Delimiter: string): TStringList;                                      { Splits a text in lines and puts the lines in a TStringList } {Note: Exista System.StrUtils.SplitString } { Old name: SplitStrings }
- procedure SplitString         (CONST Text, Delimiter: string; OUT sField, sValue: string);    overload;          { Split a string in its components. For example 'ClientName=Bubu' will return in 'ClientName' and 'Bubu' }
- procedure SplitString         (CONST Text: string; TSL: TStringList);                         overload;          { Split a string in multiple rows every time the #13#10 char is found (I took this code from Embarcadero's TStringList.Text:= s ) }
+ procedure SplitLine           (CONST Text, Delimiter: string; OUT sField, sValue: string);    overload;          { Split a string in its components. For example 'ClientName=Bubu' will return in 'ClientName' and 'Bubu' }
+ procedure SplitStrings        (CONST Text: string; TSL: TStringList);                         overload;          { Split a string in multiple rows every time the #13#10 char is found (I took this code from Embarcadero's TStringList.Text:= s ) }
  procedure SplitStringAtPos    (CONST Text: string; CONST Pos: Integer; OUT s1, s2: string);   overload;          { Split a string in two substrings at the specified position. The char at Pos will be included in the first string. }
  procedure SplitStringAtPos    (CONST Text: AnsiString; CONST Pos: Integer; OUT s1, s2: AnsiString); overload;
  procedure SplitStringList     (StringList: TStrings; OUT OutList1, OutList2: TStringArray);                      { Split each row of the provided StringList into two parts. The two resulted strings are placed in an ArrayOfStrings }
@@ -1956,16 +1956,19 @@ begin
 end;
 
 
-procedure SplitString(CONST Text, Delimiter: string; OUT sField, sValue: string);                  { Split a string in its components. For example 'ClientName=Bubu' will return in 'ClientName' and 'Bubu' }
+{ Split a line of text in its components.
+  For example 'ClientName=RogerWaters' will return 'ClientName' and 'RogerWaters' }
+procedure SplitLine(CONST Text, Delimiter: string; OUT sField, sValue: string);   // Old name: SplitString
 VAR FoundAt: Integer;
 begin
  FoundAt:= Pos(Delimiter, Text);
- sField:= trim( CopyTo(Text, 1, FoundAt-1));
- sValue:= trim( system.COPY (Text, FoundAt+ Length(Delimiter), MaxInt));
+ sField := Trim( CopyTo(Text, 1, FoundAt-1) );
+ sValue := Trim( system.COPY (Text, FoundAt+ Length(Delimiter), MaxInt) );
 end;
 
 
-procedure SplitString(CONST Text: string; TSL: TStringList);                                       { Split a string in multiple rows every time the #13#10 char is found (I took this code from Embarcadero's TStringList.Text:= s ) }
+{ Split a string in multiple rows every time the #13#10 char is found (I took this code from Embarcadero's TStringList.Text:= s ) }
+procedure SplitStrings(CONST Text: string; TSL: TStringList);                  // Old name: SplitString
 VAR
    P, Start: PChar;
    S: string;
@@ -1995,7 +1998,7 @@ begin
  SetLength(OutList2, StringList.Count);
 
  for i:= 0 to StringList.Count-1
-  DO SplitString(StringList[i], ',', OutList1[i], OutList2[i]);
+  DO SplitLine(StringList[i], ',', OutList1[i], OutList2[i]);
 end;
 
 
@@ -2009,7 +2012,7 @@ begin
 
  for i:= 0 to StringList.Count-1 DO
   begin
-   SplitString(StringList[i], ',', OutList1[i], s);
+   SplitLine(StringList[i], ',', OutList1[i], s);
    OutList2[i]:= StrToInt(s);
   end;
 end;
