@@ -2,25 +2,28 @@
 
 {=============================================================================================================
    Gabriel Moraru
-   2025.01.10
+   2025.01.26
    See Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
-   Motivation
+   Motivation - Where to initialize own code?
 
-      OnFormCreate and OnFormShow is the worst place to initialize your code. FormCreate is too early and OnShow may never be called (or called too late) or called multiple times.
-      Instead, your form can implement the LateInitialize message handler.
-      This will be called after the form was fully created and the application finished initializing.
-      Example:
-         TfrmMain = class(TLightForm)
+      VCL forms offer no good place where to execute your initialization/finalization code.
+      OnCreate is too early, and OnShow may never be called (or called too late) or called multiple times.
+
+      The TLightForm provides two places that (in conjunction with TAppData) offer you two methods that are guaranteed to be executed:
+      TMyForm = class(TLightForm)
           protected
-            procedure LateInitialize; override; // Called after the main form was fully initilized. Don't forget to call "Inherited LateInitialize"
+            procedure LateInitialize; override; // Called after the main form was fully initialized.
+            property OnBeforeRelease;
          end;
+
 
 
    How to use it
 
-      Change the declaration of your form to TLightForm and override the LateInitialize.
+      Change the declaration of your form from TForm to TLightForm.
+      Optionally, if you want to execute your own initialization code, override the LateInitialize (don't forget to call inherited).
 
       uses cbAppDataForm;
       Type
@@ -33,11 +36,29 @@
        procedure TYourForm.LateInitialize;
        begin
          inherited LateInitialize;
-         // Intialize your code here
+
+         // Initialize your own code here
        end;
 
-       Optionally set the BeforeRelease event hanlder
+--------------------------------------------------------------------------------------------------------------
 
+  Extra features
+
+      OnBeforeRelease
+
+         Optionally you can use the OnBeforeRelease event to execute your code on application shutdown.
+         Unlike other events, OnBeforeRelease is always called, and it is guaranteed to be called once and only once!
+
+
+      Self saving forms
+
+         Using SaveForm/LoadForm, a form can save its status (including checkboxes/radio buttons/etc on it))
+         to disk on shutdown and resume exaclty from where it left on application startup.
+
+         LoadForm is automatically called by TAppData.CreateForm(). Therefore, you must create all your forms with this method.
+         The TLightForm.SaveForm is called automatically when the form closes.
+
+         Override SaveForm/LoadForm if you want to do your own loading/saving (in this case, don't call inherited)!
 
 =============================================================================================================}
 
@@ -55,7 +76,7 @@ USES
 type
   TLightForm = class(TForm)
   private
-    FAutoSaveForm: TFormLoading;  // We can use this later in the destructor to know how to save the form: flPosOnly/flFull
+    FAutoSaveForm: TAutoState;  // We can use this later in the destructor to know how to save the form: flPosOnly/flFull
     FBeforeRelease: TNotifyEvent;
   protected
     Saved: Boolean;
@@ -68,12 +89,12 @@ type
     procedure LateInitialize; virtual;
 
     function CloseQuery: boolean; override;
-    constructor Create(AOwner: TComponent; AutoSaveForm: TFormLoading); reintroduce; overload; virtual;
+    constructor Create(AOwner: TComponent; AutoSaveForm: TAutoState); reintroduce; overload; virtual;
 
-    procedure LoadForm;
-    procedure SaveForm;
+    procedure LoadForm; virtual;
+    procedure SaveForm; virtual;
   published
-    property AutoSaveForm: TFormLoading    read FAutoSaveForm  write FAutoSaveForm;
+    property AutoSaveForm   : TAutoState   read FAutoSaveForm  write FAutoSaveForm;
     // Events
     property OnBeforeRelease: TNotifyEvent read FBeforeRelease write FBeforeRelease;
   end;
@@ -84,7 +105,7 @@ USES
   cbAppData;
 
 
-constructor TLightForm.Create(AOwner: TComponent; AutoSaveForm: TFormLoading);
+constructor TLightForm.Create(AOwner: TComponent; AutoSaveForm: TAutoState);
 begin
   inherited Create(AOwner);
 
@@ -138,9 +159,9 @@ begin
   begin
     try
       if Assigned(FBeforeRelease)
-      then FBeforeRelease(Self); { Called ONLY once! }
+      then FBeforeRelease(Self); // Called ONLY once!
 
-      if AutoSaveForm <> flNone
+      if AutoSaveForm <> asNone // Give the user the option not to save the form
       then SaveForm;
     finally
       Saved:= TRUE;  // Make sure it is put to true even on accidents, otherwise we might call it multiple times.
@@ -197,8 +218,10 @@ begin
 end;
 
 
-{ It also does:
-    * LoadForm will also set the font for all forms to be the same as the font of the MainForm.
+{ Override this method if you want to do your own loading from INI file. In this case, don't call inherited!
+
+  LoadForm also does:
+    * Set the font for all forms to be the same as the font of the MainForm.
     * If the form is out of screen, LoadForm will also bring the form back to screen. }
 procedure TLightForm.LoadForm;
 VAR
@@ -216,8 +239,8 @@ begin
     CorrectFormPositionScreen(Self);
   EXCEPT
     ON EIniFileException DO
-      if appdata <> NIL
-      then appdata.LogWarn('Cannot load INI file: '+ IniFile.FileName);
+      if AppData <> NIL
+      then AppData.LogWarn('Cannot load INI file: '+ IniFile.FileName);
   END;
  FINALLY
    FreeAndNil(IniFile);

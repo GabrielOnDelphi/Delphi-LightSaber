@@ -32,11 +32,10 @@ type
     procedure chkShowDateClick(Sender: TObject);
     procedure chkShowTimeClick(Sender: TObject);
     procedure Button5Click(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
   private
-    procedure LoadSettings;
-    procedure SaveSettings;
   public
+    procedure LoadForm; override;
+    procedure SaveForm; override;
   end;
 
 var
@@ -49,20 +48,7 @@ Uses cbAppData, cbLogUtils, cbLogTypes, ccINIFile, cvINIFile, ccIO, ccTextFile, 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
  RichLog.Clear;
- LoadSettings;
- //AppData.Initializing:= FALSE; moved to cbAppData
- //Button5Click(Sender);
 end;
-
-
-procedure TMainForm.FormDestroy(Sender: TObject);
-begin
-  SaveSettings;
-end;
-
-
-
-
 
 
 procedure TMainForm.Button1Click(Sender: TObject);
@@ -113,17 +99,11 @@ begin
 end;
 
 
-procedure TMainForm.Button4Click(Sender: TObject);
-begin
- VisLog.RamLog.LoadFromFile(AppData.CurFolder+ 'LogFile.log');
-end;
-
 
 procedure TMainForm.chkShowDateClick(Sender: TObject);
 begin
  VisLog.ShowDate:= chkShowDate.Checked;
 end;
-
 
 procedure TMainForm.chkShowTimeClick(Sender: TObject);
 begin
@@ -131,10 +111,18 @@ begin
 end;
 
 
+
+
 procedure TMainForm.Button3Click(Sender: TObject);
 begin
  VisLog.RamLog.SaveToFile(AppData.CurFolder+ 'LogFile.log');
 end;
+
+procedure TMainForm.Button4Click(Sender: TObject);
+begin
+ VisLog.RamLog.LoadFromFile(AppData.CurFolder+ 'LogFile.log');
+end;
+
 
 
 
@@ -149,9 +137,10 @@ end;
 
 
 
-procedure TMainForm.SaveSettings;
+procedure TMainForm.SaveForm;
 begin
   Assert(AppData <> NIL, 'AppData is gone already!');
+  inherited SaveForm;
 
   // Save form position
   if NOT cbAppData.AppData.Initializing
@@ -170,9 +159,9 @@ begin
 end;
 
 
-procedure TMainForm.LoadSettings;
+procedure TMainForm.LoadForm;
 begin
-  cvINIFile.LoadForm(Self, flPosOnly);
+  inherited LoadForm;
 
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);
   try

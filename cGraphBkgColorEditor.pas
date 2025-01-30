@@ -106,7 +106,7 @@ USES
 class function TfrmBorderEditor.CreateParented(Parent: TWinControl; aBkgClrParams: PBkgColorParams): TfrmBorderEditor;
 begin
  Assert(aBkgClrParams <> NIL, 'aBkgClrParams is nil!!');
- AppData.CreateForm(TfrmBorderEditor, Result, FALSE, flPosOnly, NIL);  { Freed by Parent }
+ AppData.CreateFormHidden(TfrmBorderEditor, Result);  { Freed by Parent }
  Result.Container.Align:= alNone;
  Result.Container.Parent:= Parent;
  CenterChild(Result.Container, Parent);

@@ -68,7 +68,7 @@ type
     procedure WMEndSession(var Msg: TWMEndSession);
     {$ENDIF}	
   public
-    Loading: TFormLoading;
+    Loading: TAutoState;
 
     procedure LateInitialize; {don't forget inherited LateInitialize!} virtual;
 
@@ -101,7 +101,7 @@ begin
   Showhint:= TRUE;
 
   Saved:= FALSE;
-  Loading:= flPosOnly; // Default value. Can be overriden by AppData.CreateForm
+  Loading:= asPosOnly; // Default value. Can be overriden by AppData.CreateForm
 end;
 
 

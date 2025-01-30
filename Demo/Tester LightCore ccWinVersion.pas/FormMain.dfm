@@ -6,28 +6,28 @@ object frmTester: TfrmTester
   Anchors = []
   BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'Show Windows version'
-  ClientHeight = 544
-  ClientWidth = 550
+  ClientHeight = 543
+  ClientWidth = 546
   Color = clBtnFace
   Constraints.MinHeight = 400
   Constraints.MinWidth = 490
   DoubleBuffered = True
-  Font.Charset = DEFAULT_CHARSET
+  Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
+  Font.Height = -13
+  Font.Name = 'Calibri'
   Font.Style = []
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 4
   OnCreate = FormCreate
-  TextHeight = 13
+  TextHeight = 15
   object pnlRight: TPanel
-    Left = 432
+    Left = 428
     Top = 0
     Width = 118
-    Height = 544
+    Height = 543
     Align = alRight
     TabOrder = 0
     object btnStart: TButton
@@ -45,8 +45,8 @@ object frmTester: TfrmTester
   object Memo: TMemo
     Left = 0
     Top = 0
-    Width = 432
-    Height = 544
+    Width = 428
+    Height = 543
     Align = alClient
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText

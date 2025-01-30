@@ -58,7 +58,6 @@ end;
 procedure TfrmTester.FormDestroy(Sender: TObject);
 begin
  FreeAndNil(Translator);
- SaveForm(Self);
 end;
 
 

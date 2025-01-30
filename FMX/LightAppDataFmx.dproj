@@ -101,6 +101,8 @@
         <DCCReference Include="..\cbAppDataFmx.pas"/>
         <DCCReference Include="..\cbLogTypes.pas"/>
         <DCCReference Include="..\cbAppDataFmxForm.pas"/>
+        <DCCReference Include="..\cbRegistry.pas"/>
+        <DCCReference Include="..\cbVersion.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

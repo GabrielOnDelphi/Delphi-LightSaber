@@ -24,7 +24,6 @@ TYPE
     pgCtrl             : TPageControl;
 
     btnClear           : TButton;
-    btnSaveIni         : TButton;
     btnStreamRead      : TButton;
     btnStreamWrite     : TButton;
     chkAutoOpen        : TCubicCheckBox;
@@ -52,6 +51,7 @@ TYPE
     btnNewDelphiStream: TButton;
     lblReadWrite: TLabel;
     lblTestSpeed: TLabel;
+    btnSaveIni: TButton;
     procedure FormClose               (Sender: TObject; var Action: TCloseAction);
     procedure actExitExecute          (Sender: TObject);
     procedure btnClearClick           (Sender: TObject);
@@ -100,7 +100,6 @@ end;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
- SaveForm(Self);
 end;
 
 
@@ -108,16 +107,6 @@ end;
 
 
 
-
-
-
-{--------------------------------------------------------------------------------------------------
-   UTIL
---------------------------------------------------------------------------------------------------}
-procedure TMainForm.btnSaveIniClick(Sender: TObject);
-begin
- SaveForm(Self);
-end;
 
 
 
@@ -329,6 +318,11 @@ begin
   Caption:= 'Read successful';
 end;
 
+
+procedure TMainForm.btnSaveIniClick(Sender: TObject);
+begin
+  SaveForm;
+end;
 
 end.
 

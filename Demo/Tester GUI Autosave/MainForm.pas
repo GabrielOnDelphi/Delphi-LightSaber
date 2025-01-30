@@ -84,7 +84,6 @@ end;
 procedure TfrmTester.LateInitialize;
 begin
  inherited LateInitialize;
- LoadForm(frmTester);
 
  if AppData.RunningFirstTime
  then MesajInfo(
@@ -99,9 +98,6 @@ begin
                 CRLF+
            '2. How to send messages to the AppLog');
 
- {if radShow.Checked
- then Button5Click(Self);}
-
  AppData.LogImpo('Application started ok.');
 end;
 
@@ -110,9 +106,6 @@ end;
 procedure TfrmTester.FormDestroy(Sender: TObject);
 begin
  AppData.LogWarn('Application shutting down...');
-
- if actAutoSave.Checked
- then SaveForm(Self);
 end;
 
 
@@ -120,12 +113,12 @@ end;
 
 procedure TfrmTester.actLoadGUIExecute(Sender: TObject);
 begin
- LoadForm(Self);
+  LoadForm;
 end;
 
 procedure TfrmTester.actSaveGUIExecute(Sender: TObject);
 begin
- SaveForm(Self);
+  SaveForm;
 end;
 
 procedure TfrmTester.btnShowLogClick(Sender: TObject);
@@ -142,7 +135,10 @@ end;
 
 procedure TfrmTester.actAutoSaveExecute(Sender: TObject);
 begin
- //The status of this action (autocheck) will be stored to the ini file also
+ //The status of this action (autocheck) will be stored to the INI file also BUT not when it is unchecked (obviously) because then we don't save the GUI to INI file
+ if actAutoSave.Checked
+ then AutoSaveForm:= asFull
+ else AutoSaveForm:= asNone;
 end;
 
 

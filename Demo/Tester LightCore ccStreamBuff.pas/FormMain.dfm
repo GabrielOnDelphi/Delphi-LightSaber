@@ -3,23 +3,23 @@ object MainForm: TMainForm
   Top = 275
   AlphaBlendValue = 249
   Caption = 'Enviroment'
-  ClientHeight = 595
-  ClientWidth = 721
+  ClientHeight = 594
+  ClientWidth = 717
   Color = clBtnFace
   Constraints.MinHeight = 500
   Constraints.MinWidth = 600
   DoubleBuffered = True
-  Font.Charset = DEFAULT_CHARSET
+  Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'MS Sans Serif'
+  Font.Height = -13
+  Font.Name = 'Calibri'
   Font.Style = []
   Position = poDesigned
   ScreenSnap = True
   SnapBuffer = 5
   Visible = True
   OnClose = FormClose
-  TextHeight = 13
+  TextHeight = 15
   object InternetLabel: TInternetLabel
     Left = 610
     Top = 310
@@ -45,9 +45,9 @@ object MainForm: TMainForm
   object pgCtrl: TPageControl
     Left = 0
     Top = 0
-    Width = 721
-    Height = 576
-    ActivePage = tabStreamBuff
+    Width = 717
+    Height = 575
+    ActivePage = tabMain
     Align = alClient
     ParentShowHint = False
     ShowHint = True
@@ -55,13 +55,13 @@ object MainForm: TMainForm
     object tabMain: TTabSheet
       Caption = 'Main'
       DesignSize = (
-        713
-        548)
+        709
+        545)
       object Label1: TLabel
-        Left = 154
-        Top = 143
-        Width = 139
-        Height = 13
+        Left = 575
+        Top = 150
+        Width = 163
+        Height = 15
         Anchors = [akTop]
         Caption = 'Max line length in File2: 2KB !'
         Color = 16744703
@@ -70,9 +70,9 @@ object MainForm: TMainForm
       end
       object Label2: TLabel
         Left = 18
-        Top = 43
-        Width = 118
-        Height = 52
+        Top = 35
+        Width = 108
+        Height = 75
         Caption = 
           'TODO:'#13#10'FastMM: Off'#13#10'Compiler optimization: On'#13#10'Compile for: 64 b' +
           'its'
@@ -82,7 +82,7 @@ object MainForm: TMainForm
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 707
+        Width = 703
         Height = 20
         Align = alTop
         Alignment = taCenter
@@ -96,8 +96,8 @@ object MainForm: TMainForm
         Layout = tlCenter
       end
       object edtFile2: TCubicPathEdit
-        Left = 126
-        Top = 98
+        Left = 120
+        Top = 124
         Width = 449
         Height = 41
         Path = 'c:\TestFile'
@@ -107,7 +107,7 @@ object MainForm: TMainForm
         TabOrder = 0
       end
       object edtOutput: TCubicPathEdit
-        Left = 126
+        Left = 120
         Top = 187
         Width = 449
         Height = 41
@@ -115,30 +115,19 @@ object MainForm: TMainForm
         Caption = 'Folder'
         TabOrder = 1
       end
-      object btnSaveIni: TButton
-        Left = 627
-        Top = 51
-        Width = 75
-        Height = 25
-        Hint = 'Save settings'
-        Anchors = [akTop, akRight]
-        Caption = 'Save settings'
-        TabOrder = 2
-        OnClick = btnSaveIniClick
-      end
       object Panel1: TPanel
-        Left = 154
+        Left = 148
         Top = 269
         Width = 392
         Height = 212
         Anchors = [akTop]
         BevelInner = bvLowered
-        TabOrder = 3
+        TabOrder = 2
         object spnCacheSize: TCubicSpinEdit
           Left = 324
           Top = 48
           Width = 53
-          Height = 22
+          Height = 24
           MaxValue = 1000
           MinValue = 0
           TabOrder = 0
@@ -207,18 +196,29 @@ object MainForm: TMainForm
           end
         end
       end
+      object btnSaveIni: TButton
+        Left = 615
+        Top = 51
+        Width = 75
+        Height = 25
+        Hint = 'Save settings'
+        Anchors = [akTop, akRight]
+        Caption = 'Save settings'
+        TabOrder = 3
+        OnClick = btnSaveIniClick
+      end
     end
     object tabStreamBuff: TTabSheet
       Caption = 'ccStreamBuff'
       ImageIndex = 3
       DesignSize = (
-        713
-        548)
+        709
+        545)
       object lblReadWrite: TLabel
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 707
+        Width = 703
         Height = 20
         Align = alTop
         Alignment = taCenter
@@ -232,8 +232,8 @@ object MainForm: TMainForm
         Layout = tlCenter
       end
       object btnStreamRead: TButton
-        Left = 266
-        Top = 281
+        Left = 260
+        Top = 278
         Width = 173
         Height = 63
         Anchors = []
@@ -242,7 +242,7 @@ object MainForm: TMainForm
         OnClick = btnStreamReadClick
       end
       object btnStreamWrite: TButton
-        Left = 266
+        Left = 260
         Top = 204
         Width = 173
         Height = 63
@@ -257,13 +257,13 @@ object MainForm: TMainForm
       ImageIndex = 4
       object pnlBottom: TPanel
         Left = 0
-        Top = 503
-        Width = 713
+        Top = 500
+        Width = 709
         Height = 45
         Align = alBottom
         TabOrder = 0
         DesignSize = (
-          713
+          709
           45)
         object chkAutoOpen: TCubicCheckBox
           Left = 334
@@ -331,8 +331,8 @@ object MainForm: TMainForm
       object Log: TRichLog
         Left = 0
         Top = 0
-        Width = 713
-        Height = 503
+        Width = 709
+        Height = 500
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
@@ -358,8 +358,8 @@ object MainForm: TMainForm
       object lblVers: TLabel
         Left = 376
         Top = 268
-        Width = 105
-        Height = 13
+        Width = 117
+        Height = 15
         Alignment = taCenter
         Caption = 'Search key in 8GB file'
       end
@@ -367,8 +367,8 @@ object MainForm: TMainForm
   end
   object StatBar: TStatusBar
     Left = 0
-    Top = 576
-    Width = 721
+    Top = 575
+    Width = 717
     Height = 19
     Panels = <>
     ParentShowHint = False

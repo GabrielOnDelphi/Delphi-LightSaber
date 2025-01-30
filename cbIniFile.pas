@@ -15,8 +15,7 @@
      Using SaveForm/LoadForm, a form with lots of controls (like checkboxes/radiobuttons) can save its status
      to disk on shutdown and resume exaclty from where it left on application startup.
      Example:
-       - Call SaveForm(MySettingsForm) in TMySettingsForm.OnDestroy
-       - Call LoadForm(MySettingsForm) after the creation of TMySettingsForm
+       - Call TLightForm.SaveForm. LoadForm is automatically called by AppData.
 
   Storing only individual controls:
      You can also save individual controls.
@@ -123,8 +122,8 @@ TYPE
     function IsSupported(WinCtrl: TComponent): Boolean; virtual;
     class function AsString: string;
 
-    procedure SaveForm (Form: TForm; Loading: TFormLoading= flPosOnly);      { Save ALL supported controls on this form }
-    procedure LoadForm (Form: TForm; Loading: TFormLoading= flPosOnly);
+    procedure SaveForm (Form: TForm; Loading: TAutoState= asPosOnly);      { Save ALL supported controls on this form }
+    procedure LoadForm (Form: TForm; Loading: TAutoState= asPosOnly);
 
     { Font - this requires VCL framework so it cannot be moved to ccINIFile }
     function  Read       (CONST Ident: string; Font: TFont): Boolean;            overload;
@@ -143,7 +142,7 @@ TYPE
   end;
 
 
-{ These only support standard VCL controls. If you want to save also the custom (Cubic) controls see cv_IniFile }
+{ These only support standard VCL controls. If you want to save also the custom (LightSaber) controls see cvIniFile }
 //procedure SaveFormBase (Form: TForm); moved to TLightForm.SaveForm
 //procedure LoadFormBase (Form: TForm); moved to TLightForm.SaveForm
 
@@ -179,7 +178,7 @@ end;
      Components[] just yields the components that are OWNED by the form.
      So, if we are iterating over it will miss any components that are added dynamically, and not owned by the form, or components that are owned by frames.
      Update 2021: Now frames are supported. All sub-components of a frame are stored to the INI file  }
-procedure TIniFileApp.SaveForm(Form: TForm; Loading: TFormLoading= flPosOnly);
+procedure TIniFileApp.SaveForm(Form: TForm; Loading: TAutoState= asPosOnly);
 
   procedure WriteComponentsOf(Component: TComponent);
   VAR i: Integer;
@@ -193,13 +192,15 @@ procedure TIniFileApp.SaveForm(Form: TForm; Loading: TFormLoading= flPosOnly);
 
 begin
  Assert(Form <> NIL);
+ Assert(Loading <> asNone, 'AutoState = asNone detected in SaveFrom');
+
  WriteComp(Form);
- if Loading= flFull
+ if Loading= asFull
  then WriteComponentsOf(Form);
 end;
 
 
-procedure TIniFileApp.LoadForm(Form: TForm; Loading: TFormLoading= flPosOnly);
+procedure TIniFileApp.LoadForm(Form: TForm; Loading: TAutoState= asPosOnly);
 
    procedure ReadComponentsOf(Component: TComponent);
    VAR i: Integer;
@@ -213,8 +214,10 @@ procedure TIniFileApp.LoadForm(Form: TForm; Loading: TFormLoading= flPosOnly);
 
 begin
  Assert(Form <> NIL);
+ Assert(Loading <> asNone, 'AutoState = asNone detected in SaveFrom');
+
  ReadComp(Form);           { Read form itself }
- if Loading= flFull        { Read form's sub-components }
+ if Loading= asFull        { Read form's sub-components }
  then ReadComponentsOf(Form);
 end;
 

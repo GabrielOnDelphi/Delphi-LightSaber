@@ -42,6 +42,8 @@ contains
   cbLogLinesM in '..\cbLogLinesM.pas',
   cbAppDataFmx in '..\cbAppDataFmx.pas',
   cbLogTypes in '..\cbLogTypes.pas',
-  cbAppDataFmxForm in '..\cbAppDataFmxForm.pas';
+  cbAppDataFmxForm in '..\cbAppDataFmxForm.pas',
+  cbRegistry in '..\cbRegistry.pas',
+  cbVersion in '..\cbVersion.pas';
 
 end.

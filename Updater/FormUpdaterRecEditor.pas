@@ -67,7 +67,7 @@ VAR Form: TfrmRecEditor;
 begin
  TAppData.RaiseIfStillInitializing;
 
- AppData.CreateFormHidden(TfrmRecEditor, Form, flPosOnly, ParentForm);      { Freed by ShowModal }
+ AppData.CreateFormHidden(TfrmRecEditor, Form, asPosOnly, ParentForm);      { Freed by ShowModal }
  WITH Form DO
  begin
    if Translator <> NIL

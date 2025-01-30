@@ -2,8 +2,8 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'LightSaber Log Demo'
-  ClientHeight = 438
-  ClientWidth = 797
+  ClientHeight = 437
+  ClientWidth = 793
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -12,14 +12,13 @@ object MainForm: TMainForm
   Font.Style = []
   Position = poDesigned
   OnCreate = FormCreate
-  OnDestroy = FormDestroy
   TextHeight = 13
   object Panel1: TPanel
     AlignWithMargins = True
     Left = 3
     Top = 3
     Width = 381
-    Height = 432
+    Height = 431
     Align = alLeft
     BevelOuter = bvNone
     Caption = 'Panel1'
@@ -28,7 +27,7 @@ object MainForm: TMainForm
       Left = 0
       Top = 0
       Width = 381
-      Height = 400
+      Height = 398
       Align = alClient
       Font.Charset = ANSI_CHARSET
       Font.Color = clWindowText
@@ -45,7 +44,7 @@ object MainForm: TMainForm
     end
     object Panel3: TPanel
       Left = 0
-      Top = 399
+      Top = 398
       Width = 381
       Height = 33
       Align = alBottom
@@ -89,24 +88,24 @@ object MainForm: TMainForm
   end
   object Panel2: TPanel
     AlignWithMargins = True
-    Left = 399
+    Left = 395
     Top = 3
     Width = 395
-    Height = 432
+    Height = 431
     Align = alRight
     BevelOuter = bvNone
     ShowCaption = False
     TabOrder = 1
     object Panel4: TPanel
       Left = 0
-      Top = 400
+      Top = 398
       Width = 395
       Height = 33
       Align = alBottom
       TabOrder = 0
       object Button2: TButton
         AlignWithMargins = True
-        Left = 98
+        Left = 2
         Top = 4
         Width = 58
         Height = 25
@@ -136,14 +135,14 @@ object MainForm: TMainForm
         TrackBar.Anchors = [akLeft, akTop, akRight, akBottom]
         TrackBar.Max = 6
         TrackBar.Min = 1
-        TrackBar.Position = 1
+        TrackBar.Position = 3
         TrackBar.TabOrder = 0
-        Verbosity = lvVerbose
+        Verbosity = lvInfos
         Log = VisLog
       end
       object Button3: TButton
         AlignWithMargins = True
-        Left = 50
+        Left = 62
         Top = 4
         Width = 46
         Height = 25
@@ -156,7 +155,7 @@ object MainForm: TMainForm
       end
       object Button4: TButton
         AlignWithMargins = True
-        Left = 2
+        Left = 110
         Top = 4
         Width = 46
         Height = 25
@@ -170,7 +169,7 @@ object MainForm: TMainForm
     end
     object Panel5: TPanel
       Left = 0
-      Top = 367
+      Top = 365
       Width = 395
       Height = 33
       Align = alBottom
@@ -203,7 +202,7 @@ object MainForm: TMainForm
       Left = 0
       Top = 0
       Width = 395
-      Height = 367
+      Height = 365
       Align = alClient
       BevelOuter = bvNone
       ColCount = 1
@@ -215,7 +214,7 @@ object MainForm: TMainForm
       TabOrder = 2
       Verbosity = lvVerbose
       ColWidths = (
-        391)
+        374)
     end
   end
 end

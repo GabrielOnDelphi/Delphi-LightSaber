@@ -57,7 +57,7 @@ TYPE
      FSaveInterval: Integer; // Interval in seconds for auto-save
      const
       StreamSign  = 'TRamLog';
-      CurVer      = 4;
+      //CurVer      = 4;
       MaxEntries  = 1000000; // Maximum number of entries before saving and clearing
    protected
      function prepareString(CONST Msg: string): string;
@@ -370,7 +370,7 @@ VAR StreamVer: Word;
 begin
   Result:= Stream.ReadHeaderVersion(StreamSign, StreamVer);
   if NOT Result then EXIT;
-  if StreamVer = 3 then EXIT;    // Old/unsupported version
+  if StreamVer <= 3 then EXIT;    // Old/unsupported version
 
   Lines.ReadFromStream(Stream);
   Stream.ReadPaddingDef;
@@ -378,7 +378,7 @@ end;
 
 procedure TRamLog.SaveToStream(Stream: TCubicBuffStream2);
 begin
-  Stream.WriteHeader(StreamSign, CurVer);
+  Stream.WriteHeader(StreamSign, TAbstractLogLines.CurVer);
   Lines.WriteToStream(Stream);
   Stream.WritePaddingdef;
 end;
@@ -411,6 +411,7 @@ end;
 
 
 end.
+
 
 
 

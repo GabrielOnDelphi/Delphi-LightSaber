@@ -9,7 +9,7 @@
    FEATURES
 
     Via class you can:
-       - Get application's appdata folder (the folder where you save temporary, app-related and ini files)
+       - Get application's %appdata% folder (the folder where you save temporary, app-related and ini files)
        - Get application's command line parameters
        - Get application's version
 
@@ -42,7 +42,7 @@
          FastMM4,
          Vcl.Forms,
          FormRamLog,
-         //cbINIFile,
+         cbINIFile,
          cbAppData,
          MainForm in 'MainForm.pas' {frmMain);
        begin
@@ -238,14 +238,14 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       FORM
    --------------------------------------------------------------------------------------------------}
-    procedure CreateMainForm  (aClass: TFormClass;                MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly); overload;
-    procedure CreateMainForm  (aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly); overload;
+    procedure CreateMainForm  (aClass: TFormClass;                MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly); overload;
+    procedure CreateMainForm  (aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly); overload;
 
-    procedure CreateForm      (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; Owner: TWinControl = NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
-    procedure CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl = NIL);
+    procedure CreateForm      (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly; Owner: TWinControl = NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
+    procedure CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TAutoState= asPosOnly; ParentWnd: TWinControl = NIL);
 
-    procedure CreateFormModal (aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL); overload;   // Do I need this?
-    procedure CreateFormModal (aClass: TFormClass;                Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL); overload;
+    procedure CreateFormModal (aClass: TFormClass; OUT Reference; Loading: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL); overload;   // Do I need this?
+    procedure CreateFormModal (aClass: TFormClass;                Loading: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL); overload;
 
     procedure SetMaxPriority;
     procedure HideFromTaskbar;
@@ -418,59 +418,52 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    FORMS
 -------------------------------------------------------------------------------------------------------------}
-{ 1. Create the form
+{ 1. Creates a form
   2. Set the font of the new form to be the same as the font of the MainForm
   3. Show it }
-procedure TAppData.CreateMainForm(aClass: TFormClass; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
+procedure TAppData.CreateMainForm(aClass: TFormClass; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly);
 begin
-  VAR Reference: TLightForm;
+  VAR Reference: TForm;
   CreateMainForm(aClass, Reference, MainFormOnTaskbar, Show, Loading);
 end;
 
 
-procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
+procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly);
 begin
   Assert(Vcl.Dialogs.UseLatestCommonDialogs= TRUE);      { This is true anyway by default, but I check it to remember myself about it. Details: http://stackoverflow.com/questions/7944416/tfileopendialog-requires-windows-vista-or-later }
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
   Assert(Font = NIL,                 'AppData.Font already assigned!');
 
+  // Create form
   Application.MainFormOnTaskbar := MainFormOnTaskbar;
   Application.ShowMainForm      := Show;      // Must be false if we want to prevent form flicker during skin loading at startup
-
   Application.CreateForm(aClass, Reference);
-
   MainFormCaption('Initializing...');
 
+  // Font
   SetGuiProperties(TForm(Reference));
 
-  TLightForm(Reference).AutoSaveForm:= Loading;
-  if (Loading = flFull) OR (Loading = flPosOnly) then
-   begin
-     // Load form
+  // Load form
+  // Limitation: At this point we can only load "standard" Delphi components. Loading of our Light components can only be done in cvIniFile.pas -> TIniFileVCL
+  // Work around: The user can override the LateInitialize and use the OnBeforeRelease event to insert his own code
+  if TForm(Reference) is TLightForm then
+    begin
+      TLightForm(Reference).AutoSaveForm:= Loading;
+      if Loading <> asNone
+      then TLightForm(Reference).LoadForm;
+    end;
 
-     // ISSUE HERE!
-     // At this point we can only load "standard" Delphi components.
-     // Loading of our Light components can only be done in cv_IniFile.pas -> TIniFileVCL
-     // For the moment the work around is load only the stadard components.
-     TLightForm(Reference).LoadForm;
-
-     { Write path to app in registry }
-     if RunningFirstTime
-     then RegisterUninstaller;
-   end;
-
-  // if the program is off-screen, bring it on-screen
+  // Off-screen?
   CorrectFormPositionScreen(TForm(Reference));
 
   // Ignore the "Show" parameter if "StartMinimized" is active
   if StartMinim
   then Application.Minimize
   else
-     if Show
-     then TForm(Reference).Show;
+    if Show
+    then TForm(Reference).Show;
 
-  // Window fully constructed.
-  // Now we can let user run its own initialization process.
+  // Window fully constructed. Now we can let user run its own initialization process.
   // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory [Part 2]" book) for details.
   if TObject(Reference) is TLightForm
   then TLightForm(Reference).LateInitialize;
@@ -478,13 +471,18 @@ begin
   if AutoSignalInitializationEnd
   then Initializing:= FALSE;
 
+  // Uninstaller
+  if RunningFirstTime
+  AND NOT RunningHome
+  then RegisterUninstaller;
+
   MainFormCaption('');
 end;
 
 
-{ Create secondary form }
-{ Load indicates if the GUI settings are remembered or not }
-procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; Owner: TWinControl= NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
+{ Create secondary form
+  "Loading" indicates if the GUI settings are remembered or not }
+procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly; Owner: TWinControl= NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
 begin
   if CreateBeforeMainForm
   then
@@ -517,17 +515,19 @@ begin
   // Font, snap, alpha
   SetGuiProperties(TForm(Reference));
 
-  // Load previous form settings/position
-  if TForm(Reference) is TLightForm
-  then TLightForm(Reference).AutoSaveForm:= Loading;
-  TLightForm(Reference).LoadForm;
+  // Load previous form settings
+  if TForm(Reference) is TLightForm then
+    begin
+     TLightForm(Reference).AutoSaveForm:= Loading;
+     TLightForm(Reference).LoadForm;
+    end;
 
   if Show
   then TForm(Reference).Show;
 
   // Window fully constructed.
   // Now we can let user run its own initialization process.
-  if TObject(Reference) is TLightForm
+  if TForm(Reference) is TLightForm
   then TLightForm(Reference).LateInitialize;
 
   if AutoSignalInitializationEnd
@@ -537,14 +537,14 @@ end;
 
 
 { Create secondary form }
-procedure TAppData.CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL);
 begin
   CreateForm(aClass, Reference, FALSE, Loading, ParentWnd);
 end;
 
 
 { Create secondary form }
-procedure TAppData.CreateFormModal(aClass: TFormClass; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateFormModal(aClass: TFormClass; Loading: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL);
 VAR Reference: TForm;
 begin
   CreateForm(aClass, Reference, FALSE, Loading, ParentWnd);
@@ -554,7 +554,7 @@ end;
 
 { Create secondary form }
 //ToDo: Do I need this? Since the form is modal, I should never need the Reference? To be deleted
-procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference; Loading: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL);
 begin
   CreateFormModal(aClass, Loading, ParentWnd);
 end;

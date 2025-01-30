@@ -77,23 +77,24 @@ USES
 
 {-------------------------------------------------------------------------------------------------------------
    FORM
--------------------------------------------------------------------------------------------------------------}
-VAR FormLog: TfrmRamLog= NIL;  // Accessible via AppData only
 
-{ Create the Log form globally (to be used by the entire application) }
+   Create the Log form globally (to be used by the entire application)
+-------------------------------------------------------------------------------------------------------------}
+VAR
+  FormLog: TfrmRamLog= NIL;  // Accessible via AppData only
+
 
 {ToDo 5: Find a way to create it automatically from AppData (interfaces?). We cannot do it from AppData itself because this form depends on my LightVisControls.dpk which is not available at this compilation point.
   We could use something like:
   TAppData = class
     class procedure RegisterFormCreator(AFormCreator: TFunc<TForm>); static;  // This class procedure would be called when we initialize the high-level package that contains the FormLog.
-  end;
   But this method seems to brittle. }
 class procedure TfrmRamLog.CreateGlobalLog;
 begin
   Assert(FormLog = NIL, 'Form log already created!');
 
   VAR CreateBeforeMainForm:= Application.MainForm = NIL;
-  AppData.CreateForm(TfrmRamLog, FormLog, FALSE, flPosOnly, NIL, FALSE, CreateBeforeMainForm);
+  AppData.CreateForm(TfrmRamLog, FormLog, FALSE, asPosOnly, NIL, FALSE, CreateBeforeMainForm);
   FormLog.Log.AssignExternalRamLog(AppData.RamLog);   // We will read data from AppData's log
 
   Assert(Application.MainForm <> FormLog, 'The Log should not be the MainForm!'); { Just in case: Make sure this is not the first form created }

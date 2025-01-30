@@ -30,7 +30,7 @@ type
     Bold  : Boolean;
     Time  : TDateTime;
   private
-    procedure ReadFromStream_v1(Stream: TCubicBuffStream2);  { Current reader }
+    procedure ReadFromStream_v4(Stream: TCubicBuffStream2);  { Current reader }
     procedure WriteToStream    (Stream: TCubicBuffStream2);  { Current writer }
   end;
 
@@ -41,16 +41,15 @@ type
     procedure readFromStream_v1(Stream: TCubicBuffStream2);
   protected
     FList: TList;
-    const
-      StreamSign  = 'TLogLines';
-      CurVer      = 2;
+    CONST StreamSign  = 'TLogLines';
     function getItem(Index: Integer): PLogLine;                                             virtual; abstract;
   public
+    CONST CurVer= 4;
     procedure Clear;                                                                        virtual; abstract;
     function  Count: Integer;                                                               virtual; abstract;
 
     function  Row2FilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer;               virtual; abstract;
-    property  Items[Index: Integer]: PLogLine read getItem;                   default;
+    property  Items[Index: Integer]: PLogLine read getItem; default;
 
     function  Add       (Value: PLogLine): Integer;                                         virtual; abstract;
     function  AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = False): PLogLine; virtual; abstract;
@@ -75,7 +74,7 @@ begin
   then RAISE Exception.Create('Unknown stream signature.');
 
   case StreamVer of
-     CurVer: readFromStream_v1(Stream);
+     CurVer: readFromStream_v4(Stream);
    else
      RAISE Exception.Create('Usupported stream version.');
   end;
@@ -84,7 +83,8 @@ begin
 end;
 
 
-procedure TAbstractLogLines.readFromStream_v1(Stream: TCubicBuffStream2);
+{ Write specific version }
+procedure TAbstractLogLines.readFromStream_v4(Stream: TCubicBuffStream2);
 VAR
    Line: PLogLine;
    iCount, i: Integer;
@@ -94,7 +94,7 @@ begin
   for i := 0 to iCount - 1 do
   begin
     New(Line);
-    Line.ReadFromStream_v1(Stream);
+    Line.ReadFromStream_v4(Stream);
     Add(Line);
   end;
 end;
@@ -103,6 +103,7 @@ end;
 procedure TAbstractLogLines.WriteToStream(Stream: TCubicBuffStream2);
 VAR i: Integer;
 begin
+  Stream.WriteHeader(StreamSign, CurVer);
   Stream.WriteInteger(FList.Count);
   for i := 0 to FList.Count - 1 do
     PLogLine(FList[i]).WriteToStream(Stream);
@@ -116,7 +117,7 @@ end;
    We don't write a header and version no for each line because we would waste too much space.
    Instead, the parent (TRamLog) is responsible to do this.
 -------------------------------------------------------------------------------------------------------------}
-procedure RLogLine.ReadFromStream_v1(Stream: TCubicBuffStream2);
+procedure RLogLine.ReadFromStream_v4(Stream: TCubicBuffStream2);
 begin
   Msg    := Stream.ReadString;
   Level  := TLogVerbLvl(Stream.ReadInteger);

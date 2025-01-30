@@ -270,14 +270,14 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       FORM
    --------------------------------------------------------------------------------------------------}
-    procedure CreateMainForm  (aClass: TComponentClass;                MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly); overload;
-    procedure CreateMainForm  (aClass: TComponentClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly); overload;
+    procedure CreateMainForm  (aClass: TComponentClass;                MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly); overload;
+    procedure CreateMainForm  (aClass: TComponentClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly); overload;
 
-    procedure CreateForm      (aClass: TComponentClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; Owner: TFmxObject = NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
-    procedure CreateFormHidden(aClass: TComponentClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TFmxObject = NIL);
+    procedure CreateForm      (aClass: TComponentClass; OUT Reference; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly; Owner: TFmxObject = NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
+    procedure CreateFormHidden(aClass: TComponentClass; OUT Reference; Loading: TAutoState= asPosOnly; ParentWnd: TFmxObject = NIL);
 
-    procedure CreateFormModal (aClass: TComponentClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TFmxObject= NIL); overload;   // Do I need this?
-    procedure CreateFormModal (aClass: TComponentClass;                Loading: TFormLoading= flPosOnly; ParentWnd: TFmxObject= NIL); overload;
+    procedure CreateFormModal (aClass: TComponentClass; OUT Reference; Loading: TAutoState= asPosOnly; ParentWnd: TFmxObject= NIL); overload;   // Do I need this?
+    procedure CreateFormModal (aClass: TComponentClass;                Loading: TAutoState= asPosOnly; ParentWnd: TFmxObject= NIL); overload;
 
     {-------------------------------------------------------------------------------------------------
       App Version
@@ -449,14 +449,14 @@ end;
 { 1. Create the form
   2. Set the font of the new form to be the same as the font of the MainForm
   3. Show it }
-procedure TAppData.CreateMainForm(aClass: TComponentClass; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
+procedure TAppData.CreateMainForm(aClass: TComponentClass; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly);
 begin
   VAR Reference: TForm;
   CreateMainForm(aClass, Reference, MainFormOnTaskbar, Show, Loading);
 end;
 
 
-procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
+procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly);
 begin
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
 
@@ -468,7 +468,7 @@ begin
   SetGuiProperties(TForm(Reference));
 
   {$IFDEF FullAppData}
-   if (Loading = flFull) OR (Loading = flPosOnly) then
+   if (Loading = flFull) OR (Loading = asPosOnly) then
     begin
       // Load form
 
@@ -509,7 +509,7 @@ end;
 
 { Create secondary form }
 { Load indicates if the GUI settings are remembered or not }
-procedure TAppData.CreateForm(aClass: TComponentClass; OUT Reference; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly; Owner: TFmxObject= NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
+procedure TAppData.CreateForm(aClass: TComponentClass; OUT Reference; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly; Owner: TFmxObject= NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
 begin
   if CreateBeforeMainForm
   then
@@ -566,14 +566,14 @@ end;
 
 
 { Create secondary form }
-procedure TAppData.CreateFormHidden(aClass: TComponentClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TFmxObject= NIL);
+procedure TAppData.CreateFormHidden(aClass: TComponentClass; OUT Reference; Loading: TAutoState= asPosOnly; ParentWnd: TFmxObject= NIL);
 begin
   CreateForm(aClass, Reference, FALSE, Loading, ParentWnd);
 end;
 
 
 { Create secondary form }
-procedure TAppData.CreateFormModal(aClass: TComponentClass; Loading: TFormLoading= flPosOnly; ParentWnd: TFmxObject= NIL);
+procedure TAppData.CreateFormModal(aClass: TComponentClass; Loading: TAutoState= asPosOnly; ParentWnd: TFmxObject= NIL);
 VAR Reference: TForm;
 begin
   CreateForm(aClass, Reference, FALSE, Loading, ParentWnd);
@@ -583,7 +583,7 @@ end;
 
 { Create secondary form }
 //ToDo: Do I need this? Since the form is modal, I should never need the Reference? To be deleted
-procedure TAppData.CreateFormModal(aClass: TComponentClass; OUT Reference; Loading: TFormLoading= flPosOnly; ParentWnd: TFmxObject= NIL);
+procedure TAppData.CreateFormModal(aClass: TComponentClass; OUT Reference; Loading: TAutoState= asPosOnly; ParentWnd: TFmxObject= NIL);
 begin
   CreateFormModal(aClass, Loading, ParentWnd);
 end;
