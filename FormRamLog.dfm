@@ -4,8 +4,8 @@ object frmRamLog: TfrmRamLog
   AlphaBlend = True
   BorderIcons = [biSystemMenu, biMaximize]
   Caption = 'Log'
-  ClientHeight = 509
-  ClientWidth = 588
+  ClientHeight = 508
+  ClientWidth = 584
   Color = clBtnFace
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
@@ -23,8 +23,8 @@ object frmRamLog: TfrmRamLog
   object Container: TPanel
     Left = 0
     Top = 0
-    Width = 588
-    Height = 509
+    Width = 584
+    Height = 508
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
@@ -84,9 +84,9 @@ object frmRamLog: TfrmRamLog
         TrackBar.Align = alRight
         TrackBar.Max = 6
         TrackBar.Min = 1
-        TrackBar.Position = 3
+        TrackBar.Position = 6
         TrackBar.TabOrder = 0
-        Verbosity = lvInfos
+        Verbosity = lvErrors
         Log = Log
       end
       object chkShowTime: TCheckBox

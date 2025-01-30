@@ -35,7 +35,7 @@ INTERFACE
 USES
    Winapi.Windows, Winapi.Messages, Winapi.WinSock, Winapi.WinSvc,
    System.Classes, System.SysUtils, System.Win.Registry, System.UITypes, IOUtils,
-   Vcl.Controls, Vcl.Forms, Vcl.ClipBrd, Vcl.Dialogs;
+   Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.ClipBrd, Vcl.Dialogs;
 
 
 {==================================================================================================

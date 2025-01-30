@@ -23,7 +23,7 @@ INTERFACE
 
 USES
    Winapi.Messages, System.SysUtils, Winapi.Windows, System.Classes,
-   Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls, Vcl.Forms, Vcl.Grids, Vcl.ExtCtrls, VCL.ComCtrls,
+   Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls, Vcl.Forms, cbAppDataForm,Vcl.Grids, Vcl.ExtCtrls, VCL.ComCtrls,
    cbLogRam, cbLogUtils, cbLogTypes, cbLogLinesAbstract;
 
 TYPE

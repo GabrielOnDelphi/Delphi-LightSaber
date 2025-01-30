@@ -22,7 +22,7 @@ INTERFACE                                                                       
 
 USES
    Winapi.Windows, Winapi.MAPI, Winapi.ShellAPI{ Required by OpenDefaultEmail },
-   System.SysUtils, System.StrUtils, System.Classes, Vcl.Forms, System.Win.Registry,
+   System.SysUtils, System.StrUtils, System.Classes, Vcl.Forms, cbAppDataForm,System.Win.Registry,
    ccCore, cbDialogs;
 
 CONST

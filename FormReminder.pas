@@ -25,11 +25,11 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls,
+  System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls,
   Vcl.Samples.Spin, cvPathEdit, cvTimer, cvRadioButton, cvCheckBox, cvGroupBox, cvSpinEdit;
 
 TYPE
-  TfrmReminder = class(TForm)
+  TfrmReminder = class(TLightForm)
     btnReset     : TButton;
     btnRun       : TButton;
     btnStart     : TButton;

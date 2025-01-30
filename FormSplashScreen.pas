@@ -25,10 +25,10 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls, ccCore, cbDialogs;
+  Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.ExtCtrls, ccCore, cbDialogs;
 
 TYPE
-  TfrmSplash = class(TForm)
+  TfrmSplash = class(TLightForm)
     imgSplash: TImage;
     Timer: TTimer;
     procedure TimerTimer(Sender: TObject);

@@ -65,10 +65,10 @@ ________________________________________________________________________________
 INTERFACE
 
 USES
-   Winapi.Windows, System.Classes, System.SysUtils, System.Types, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls;
+   Winapi.Windows, System.Classes, System.SysUtils, System.Types, Vcl.Graphics, Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.ExtCtrls;
 
 TYPE
-  TDrawingForm = class(TForm)
+  TDrawingForm = class(TLightForm)
     pnlVideoDisplay: TPanel;
   private
     function initPaintingBkgWnd(Hidden: Boolean): Boolean;

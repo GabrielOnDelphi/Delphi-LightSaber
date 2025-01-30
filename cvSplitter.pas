@@ -9,7 +9,7 @@ UNIT cvSplitter;
 
 INTERFACE
 USES
-  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Themes, Vcl.Forms, Vcl.Graphics, System.Types;
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Themes, Vcl.Forms, cbAppDataForm,Vcl.Graphics, System.Types;
 
 
 TYPE

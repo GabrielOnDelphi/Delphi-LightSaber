@@ -2,8 +2,8 @@ object frmMain: TfrmMain
   Left = 0
   Top = 0
   Caption = 'Light Saber - Visual Controls'
-  ClientHeight = 537
-  ClientWidth = 899
+  ClientHeight = 536
+  ClientWidth = 895
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
@@ -17,9 +17,9 @@ object frmMain: TfrmMain
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 893
-    Height = 531
-    ActivePage = TabSheet1
+    Width = 889
+    Height = 530
+    ActivePage = TabSheet5
     Align = alClient
     TabOrder = 0
     object TabSheet1: TTabSheet
@@ -31,7 +31,7 @@ object frmMain: TfrmMain
         Height = 13
         Hint = 'c:\Users\trei\Downloads\'
         AutoSize = False
-        Caption = 'c:\...\trei\Downloads\'
+        Caption = 'c:\...\Downloads\'
         ParentShowHint = False
         ShowHint = True
         CaptionMin = 'c:\Users\trei\Downloads\'
@@ -110,8 +110,8 @@ object frmMain: TfrmMain
       end
       object cubicStatusBar1: TcubicStatusBar
         Left = 0
-        Top = 482
-        Width = 885
+        Top = 501
+        Width = 881
         Height = 19
         Panels = <>
         SimplePanel = True
@@ -141,7 +141,7 @@ object frmMain: TfrmMain
           AlignWithMargins = True
           Left = 31
           Top = 158
-          Width = 133
+          Width = 120
           Height = 22
           BevelOuter = bvNone
           Caption = 'SpinEditSplit'
@@ -150,7 +150,7 @@ object frmMain: TfrmMain
           ShowCaption = False
           TabOrder = 1
           Spin.AlignWithMargins = True
-          Spin.Left = 65
+          Spin.Left = 57
           Spin.Top = 0
           Spin.Width = 50
           Spin.Height = 24
@@ -385,14 +385,14 @@ object frmMain: TfrmMain
         ShowCaption = False
         TabOrder = 0
         DesignSize = (
-          683
+          679
           116)
       end
       object ValueListEditor: TCubicValueListEditor
         AlignWithMargins = True
         Left = 99
-        Top = 270
-        Width = 687
+        Top = 289
+        Width = 683
         Height = 116
         Margins.Left = 99
         Margins.Top = 9
@@ -408,8 +408,8 @@ object frmMain: TfrmMain
         AlignWithMargins = True
         Left = 99
         Top = 207
-        Width = 687
-        Height = 45
+        Width = 683
+        Height = 64
         Margins.Left = 99
         Margins.Top = 9
         Margins.Right = 99
@@ -425,7 +425,7 @@ object frmMain: TfrmMain
         AlignWithMargins = True
         Left = 99
         Top = 147
-        Width = 687
+        Width = 683
         Height = 42
         Margins.Left = 99
         Margins.Top = 9

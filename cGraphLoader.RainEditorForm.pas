@@ -4,11 +4,11 @@ INTERFACE
 
 USES
   Winapi.Windows, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ComCtrls,
+  Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ComCtrls,
   cGraphLoader.RainDrop;
 
 TYPE
-  TfrmRainEditor = class(TForm)
+  TfrmRainEditor = class(TLightForm)
     btnAdvanced: TButton;
     Container     : TPanel;
     GroupBox2     : TGroupBox;

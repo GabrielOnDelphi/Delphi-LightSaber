@@ -13,7 +13,8 @@ UNIT FormMain;
 INTERFACE
 
 USES
-  WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.ExtCtrls,
+  //WinApi.Messages,
+  System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.ExtCtrls,
   cvIniFile, InternetLabel, cvPathEdit, cvSpinEdit,
   llRichLogTrack, cvCheckBox, llRichLog, cbAppData, chHardID, cbAppDataForm;
 
@@ -61,7 +62,7 @@ TYPE
     procedure btnStreamWriteClick     (Sender: TObject);
     procedure btnStreamReadClick      (Sender: TObject);
   private
-    procedure LateInitialize; override; // Called after the main form was fully created
+    procedure LateInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
   public
  end;
 

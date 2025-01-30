@@ -20,7 +20,7 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs,
+  WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs,
   cvIniFile, cvPathEdit, cmDebugger, cvRadioButton, cvCheckBox, cbAppData, cbAppDataForm,
   cmGuiSettings;
 
@@ -67,7 +67,7 @@ TYPE
     procedure FormKeyPress            (Sender: TObject; var Key: Char);
     procedure spnOpacityChange        (Sender: TObject);
   protected
-    procedure BeforeRelease; override;
+    procedure BeforeRelease(Sender: TObject);
   private
     GuiSettings: TGuiSettings;
 
@@ -75,7 +75,7 @@ TYPE
     procedure ObjectFromGUI;
 
   public
-    procedure LateInitialize; override; // Called after the main form was fully created
+    procedure LateInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
     class procedure CreateFormModal(aGuiSettings: TGuiSettings); static;
  end;
 
@@ -114,6 +114,7 @@ end;
 procedure TfrmSettings.FormCreate(Sender: TObject);
 begin
   GuiFromObject;
+  OnBeforeRelease:= BeforeRelease;
   FontDialog.Font.Assign(Font);
 end;
 
@@ -127,7 +128,7 @@ end;
 
 procedure TfrmSettings.BeforeRelease;
 begin
-  inherited BeforeRelease;
+  //inherited BeforeRelease;
   ObjectFromGUI;
 end;
 

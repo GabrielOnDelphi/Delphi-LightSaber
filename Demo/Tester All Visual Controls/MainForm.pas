@@ -86,7 +86,6 @@ VAR
 IMPLEMENTATION  {$R *.dfm}
 
 
-
 procedure TfrmMain.FormShow(Sender: TObject);
 begin
   VAR TSL:= TStringList.Create;

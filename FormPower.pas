@@ -21,7 +21,7 @@ USES
   Vcl.ComCtrls;
 
 TYPE
-  TfrmPower = class(TForm)
+  TfrmPower = class(TLightForm)
     chkBatteries  : TCubicCheckBox;
     chkOutOfJuice : TCubicCheckBox;
     grpPowerInfo  : TCubicGroupBox;

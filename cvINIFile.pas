@@ -32,8 +32,8 @@ TYPE
   end;
 
 { These add support for custom (cubic) VCL controls }
-procedure SaveForm (Form: TForm; Loading: TFormLoading= flPosOnly);
-procedure LoadForm (Form: TForm; Loading: TFormLoading= flPosOnly);
+procedure SaveForm (Form: TLightForm);
+procedure LoadForm (Form: TLightForm);
 
 
 IMPLEMENTATION
@@ -156,7 +156,7 @@ end;
          OnlyFormPos=True   ->  It will only save the position of the form (only Left/Top, no width/height/WndState)
 -----------------------------------------------------------------------------------------------------------------------}
 
-procedure SaveForm(Form: TForm; Loading: TFormLoading= flPosOnly);
+procedure SaveForm(Form: TLightForm);
 VAR
    IniFile: TIniFileVCL;
 begin
@@ -172,7 +172,7 @@ begin
  IniFile:= TIniFileVCL.Create(Form.Name);
  TRY
   TRY
-    IniFile.SaveForm(Form, Loading);
+    IniFile.SaveForm(Form, Form.AutoSaveForm);
   EXCEPT
     ON EIniFileexception DO
       if AppData <> NIL
@@ -187,7 +187,7 @@ end;
 { It also does:
     * LoadForm will also set the font for all forms to be the same as the font of the MainForm.
     * If the form is out of screen, LoadForm will also bring the form back to screen. }
-procedure LoadForm(Form: TForm; Loading: TFormLoading= flPosOnly);
+procedure LoadForm(Form: TLightForm);
 VAR
    IniFile: TIniFileVCL;
 begin
@@ -199,7 +199,7 @@ begin
  IniFile:= TIniFileVCL.Create(Form.Name);
  TRY
   TRY
-    IniFile.LoadForm(Form, Loading);
+    IniFile.LoadForm(Form, Form.AutoSaveForm);
     CorrectFormPositionScreen(Form);
   EXCEPT
     ON EIniFileException DO

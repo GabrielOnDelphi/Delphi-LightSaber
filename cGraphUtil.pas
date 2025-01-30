@@ -39,8 +39,9 @@
 INTERFACE
 
 USES
-   Winapi.Windows, System.SysUtils, System.Types, System.Math,
-   Vcl.Graphics, System.Classes, Vcl.Controls, Vcl.Imaging.PngImage, Vcl.Themes, Vcl.GraphUtil;
+   Winapi.Windows,
+   System.SysUtils, System.Classes, System.Types, System.Math,
+   Vcl.Graphics, Vcl.Controls, Vcl.Imaging.PngImage, Vcl.Themes, Vcl.GraphUtil;
 
 CONST
   JPG             = '*.jpg;*.jpeg;*.jpe;*.jp;*.jfif';

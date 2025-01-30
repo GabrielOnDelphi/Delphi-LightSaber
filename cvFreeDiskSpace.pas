@@ -15,7 +15,7 @@ UNIT cvFreeDiskSpace;
 INTERFACE
 
 USES
-   System.Classes, System.SysUtils, Vcl.Forms, Vcl.StdCtrls, Vcl.Graphics, Vcl.ComCtrls;                                { CURATATE: Winapi.ShellAPI, System.win.Registry, Vcl.ExtCtrls, System.Win.ComObj,}
+   System.Classes, System.SysUtils, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.Graphics, Vcl.ComCtrls;                                { CURATATE: Winapi.ShellAPI, System.win.Registry, Vcl.ExtCtrls, System.Win.ComObj,}
 
 TYPE
  TFreeDiskSpace= class(TScrollBox)

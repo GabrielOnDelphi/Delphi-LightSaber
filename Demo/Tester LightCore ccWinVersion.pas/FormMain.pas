@@ -3,7 +3,7 @@ UNIT FormMain;
 INTERFACE
 
 USES
-  WinApi.Windows, Winapi.ShellAPI, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin,
+  WinApi.Windows, Winapi.ShellAPI, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin,
   Vcl.ComCtrls, Vcl.ExtCtrls, cbAppData, cbAppDataForm;
 
 const
@@ -18,7 +18,7 @@ TYPE
     procedure FormCreate(Sender: TObject);
   protected
   private
-    procedure LateInitialize; override; // Called after the main form was fully created
+    procedure LateInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
   public
  end;
 

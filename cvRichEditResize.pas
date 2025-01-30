@@ -20,7 +20,7 @@ INTERFACE
 USES
   Winapi.Windows, Winapi.Messages,
   System.Classes, System.UITypes,
-  Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Forms, Vcl.ComCtrls, Vcl.Controls, Vcl.Dialogs;
+  Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Forms, cbAppDataForm,Vcl.ComCtrls, Vcl.Controls, Vcl.Dialogs;
 
 
 TYPE

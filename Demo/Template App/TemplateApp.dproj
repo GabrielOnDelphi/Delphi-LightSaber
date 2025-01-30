@@ -105,6 +105,7 @@
         <DCCReference Include="..\..\Updater\FormUpdaterSettings.pas"/>
         <DCCReference Include="uInitialization.pas"/>
         <DCCReference Include="..\..\Updater\ciUpdater.pas"/>
+        <DCCReference Include="..\..\cbAppDataForm.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

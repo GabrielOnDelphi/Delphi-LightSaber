@@ -28,11 +28,11 @@ INTERFACE
 
 USES
   System.Classes, System.SysUtils,
-  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls,
+  Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls,
   cbAppData, cbLogRam, cvLog, cvLogFilter, Vcl.Menus, Vcl.Grids;
 
 TYPE
-  TfrmRamLog = class(TForm)
+  TfrmRamLog = class(TLightForm)
     Log           : TLogGrid;
     Container     : TPanel;    { We use a container for all controls on this form so we can reparent them easily to another form }
     btnClear      : TButton;
@@ -58,7 +58,7 @@ TYPE
     procedure SaveSettings;
   public
     class procedure CreateGlobalLog; static; // Would be nice to make this protected but we can't. All event handlers must be accesible/visible
-    procedure LateInitialize(Sender: TObject); //(VAR Msg: TMessage); override_; // Called after the main form was fully initilized
+    procedure LateInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully initilized
   end;
 
 
@@ -100,8 +100,10 @@ begin
 end;
 
 
-procedure TfrmRamLog.LateInitialize(Sender: TObject);
+procedure TfrmRamLog.LateInitialize;
 begin
+  inherited LateInitialize;
+
   LoadSettings;
   chkLogOnError.Checked:= AppData.RamLog.ShowOnError;
   chkShowTime.Checked  := Log.ShowTime;
@@ -131,7 +133,7 @@ begin
 
   // Save form position
   if NOT cbAppData.AppData.Initializing
-  then cvINIFile.SaveForm(Self, flPosOnly); // We don't save anything if the start up was improper!
+  then cvINIFile.SaveForm(Self); // We don't save anything if the start up was improper!
 
   // Save Log verbosity
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);
@@ -149,7 +151,7 @@ end;
 
 procedure TfrmRamLog.LoadSettings;
 begin
-  cvINIFile.LoadForm(Self, flPosOnly);
+  cvINIFile.LoadForm(Self);
 
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);
   try

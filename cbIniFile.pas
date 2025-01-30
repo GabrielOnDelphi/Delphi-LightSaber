@@ -144,14 +144,14 @@ TYPE
 
 
 { These only support standard VCL controls. If you want to save also the custom (Cubic) controls see cv_IniFile }
-procedure SaveFormBase (Form: TForm; Loading: TFormLoading= flPosOnly);
-procedure LoadFormBase (Form: TForm; Loading: TFormLoading= flPosOnly);
+//procedure SaveFormBase (Form: TForm); moved to TLightForm.SaveForm
+//procedure LoadFormBase (Form: TForm); moved to TLightForm.SaveForm
 
 
 IMPLEMENTATION
 
 USES
-   cbDialogs, ccIO, ccTextFile, ccCore, cbAppData, cbCenterControl;
+   cbAppDataForm, cbDialogs, ccIO, ccTextFile, ccCore, cbAppData, cbCenterControl;
 
 
 {-----------------------------------------------------------------------------------------------------------------------
@@ -247,7 +247,7 @@ end;
 
 
 
-{ For strange reasons, for forms, I cannot read/write the ClientWidth. I need to use Width. }
+{ For strange reasons, for Vcl.Forms, cbAppDataForm, I cannot read/write the ClientWidth. I need to use Width. }
 procedure TIniFileApp.ReadCtrlPos(Ctrl: TControl);
 begin
  if Ctrl.InheritsFrom(TForm)
@@ -273,7 +273,7 @@ begin
     then Ctrl.Width := ReadInteger (Ctrl.Name, 'Width' , 0);
     //todo: !!!!!!!!!!!!!!!! use Ctrl.width instead of 0 and get rid of ValueExists
 
-    {Note: For strange reasons, for forms, I cannot read/write the ClientWidth (maybe because I call this routine from FormCreate?). I need to use Width. }
+    {Note: For strange reasons, for Vcl.Forms, cbAppDataForm, I cannot read/write the ClientWidth (maybe because I call this routine from FormCreate?). I need to use Width. }
     {Note: If the form was maximized when it was closed, the Ctrl.Width will be different than W }
 
     if (NOT IsNonResizable) AND ValueExists(Ctrl.Name, 'Height')
@@ -734,81 +734,6 @@ procedure TIniFileApp.WriteColor(CONST Ident: string; Value: TColor);
 begin
   WriteString(FSection, Ident, ColorToString(Value));
 end;
-
-
-
-
-{-----------------------------------------------------------------------------------------------------------------------
-   MAIN
-
-   Load/Save all controls on this form to their initial state.
-
-   Parameters:
-         OnlyFormPos=False  ->  Save all supported controls on this form
-         OnlyFormPos=True   ->  It will only save the position of the form (only Left/Top, no width/height/WndState)
-
-
-   Also see LoadForm/SaveForm in cvINIFile.pas
------------------------------------------------------------------------------------------------------------------------}
-
-procedure SaveFormBase(Form: TForm; Loading: TFormLoading= flPosOnly);
-VAR
-   IniFile: TIniFileApp;
-begin
- if TAppData.Initializing
- AND (Form = Application.MainForm) then
-  begin
-   if TAppData.RunningHome
-   then MesajError('Closing application while still initializing!');
-   Exit; // We don't save anything if the start up was improper!
-  end;
-
- Assert(AppData <> NIL, '!!!');
- IniFile:= TIniFileApp.Create(Form.Name);
- TRY
-  TRY
-    IniFile.SaveForm(Form, Loading);
-  EXCEPT
-    ON EIniFileexception DO
-      if AppData <> NIL
-      then AppData.LogWarn('Cannot save INI file: '+ IniFile.FileName);
-  END;
- FINALLY
-   FreeAndNil(IniFile);
- END;
-end;
-
-
-{ It also does:
-    * LoadForm will also set the font for all forms to be the same as the font of the MainForm.
-    * If the form is out of screen, LoadForm will also bring the form back to screen. }
-procedure LoadFormBase(Form: TForm; Loading: TFormLoading= flPosOnly);
-VAR
-   IniFile: TIniFileApp;
-begin
- if AppData = NIL then                { If AppData exists, let it deal with the font }
-   if (Application.MainForm <> NIL)     { Set font only for secondary forms }
-   AND (Form <> Application.MainForm)
-   then Form.Font:= Application.MainForm.Font;
-
- IniFile:= TIniFileApp.Create(Form.Name);
- TRY
-  TRY
-    IniFile.LoadForm(Form, Loading);
-    CorrectFormPositionScreen(Form);
-  EXCEPT
-    ON EIniFileException DO
-      if appdata <> NIL
-      then appdata.LogWarn('Cannot load INI file: '+ IniFile.FileName);
-  END;
- FINALLY
-   FreeAndNil(IniFile);
- END;
-end;
-
-
-
-
 
 
 

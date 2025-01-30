@@ -22,13 +22,13 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, ccINIFile, cbAppDataForm, cvIniFile, ccCore, csSystem, cbDialogs, ccINIFile, cbAppDataForm,
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls, ccINIFile, cbAppDataForm, cvIniFile, ccCore, csSystem, cbDialogs, ccINIFile, cbAppDataForm,
   cvRadioButton;
 
 TYPE
   TConType= (ctDirect, ctGateway, ctProxyList);
 
-  TfrmProxyList = class(TForm)
+  TfrmProxyList = class(TLightForm)
     grpInternetType   : TGroupBox;
     radGateway        : TCubicRadioButton;
     radDirect         : TCubicRadioButton;

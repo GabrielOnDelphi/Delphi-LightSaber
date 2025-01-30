@@ -1,5 +1,17 @@
 ﻿UNIT cbAppDataFMX;
 
+
+
+
+{ WARNING! While it works for me, the FMX part of LightSaber is still in Beta stage! }
+
+
+
+
+
+
+
+
 {=============================================================================================================
    Gabriel Moraru
    2025.01.19

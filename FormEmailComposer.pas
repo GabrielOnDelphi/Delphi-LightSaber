@@ -12,14 +12,14 @@ UNIT FormEmailComposer;
 INTERFACE
 
 USES
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Forms, Dialogs, StdCtrls, Buttons, ActnList, Menus, ComCtrls, ExtCtrls, Spin,  ExtDlgs, System.Actions,
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Vcl.Forms, cbAppDataForm, Dialogs, StdCtrls, Buttons, ActnList, Menus, ComCtrls, ExtCtrls, Spin,  ExtDlgs, System.Actions,
   IdSSL, IdComponent, IdSMTP, IdAntiFreeze,
   IdSSLOpenSSL, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack,
    cvCheckBox, cvSplitter, IdBaseComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase,
   IdMessageClient, IdSMTPBase, cvPathEdit, FormEmailServer, Vcl.Mask;
 
 TYPE
-  TfrmComposer = class(TForm)
+  TfrmComposer = class(TLightForm)
     btnAttachment    : TBitBtn;
     btnSaveIni       : TButton;
     btnServSett      : TButton;

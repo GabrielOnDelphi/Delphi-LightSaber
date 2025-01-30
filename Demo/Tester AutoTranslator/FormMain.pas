@@ -3,7 +3,7 @@ UNIT FormMain;
 INTERFACE
 
 USES
-  WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, VCL.Forms, Vcl.Controls, Vcl.ExtCtrls,
+  WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls,
   cbAppData, cvINIFile, Vcl.Mask, cbAppDataForm;
 
 TYPE
@@ -20,7 +20,7 @@ TYPE
     procedure btnHelperClick(Sender: TObject);
   protected
   private
-    procedure LateInitialize; override; // Called after the main form was fully created
+    procedure LateInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
   public
  end;
 
@@ -49,7 +49,6 @@ end;
 procedure TfrmTester.LateInitialize;
 begin
  inherited LateInitialize;
- //LoadForm(Self);
 
  Translator:= TTranslator.Create;  // Initialize the translator
  Translator.LoadLastTranslation;   // Load last language

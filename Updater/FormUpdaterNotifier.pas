@@ -23,7 +23,7 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  System.SysUtils, System.Classes, Vcl.Forms, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls,
+  System.SysUtils, System.Classes, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls,
   InternetLabel,
   ccCore, csSystem, ciUpdater, llRichLog, llRichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
 
@@ -31,7 +31,7 @@ CONST
   UpdaterURL = 'https://www.GabrielMoraru.com/uploads/OnlineNews_v2_TemplateApp.bin'; { For demo purposes }
 
 TYPE
-  TFrmUpdater = class(TForm)
+  TFrmUpdater = class(TLightForm)
     Log              : TRichLog;
     PageCtrl         : TPageControl;
     btnBinFile       : TButton;
@@ -161,7 +161,7 @@ begin
  Updater.OnUpdateStart := NIL;
  Updater.OnUpdateEnd   := NIL;
 
- SaveForm(Self);
+ SaveForm;
 end;
 
 

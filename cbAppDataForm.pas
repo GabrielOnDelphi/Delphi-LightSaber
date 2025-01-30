@@ -12,9 +12,9 @@
       Instead, your form can implement the LateInitialize message handler.
       This will be called after the form was fully created and the application finished initializing.
       Example:
-         TfrmMain = class(TForm)
+         TfrmMain = class(TLightForm)
           protected
-            procedure LateInitialize; override; // Called after the main form was fully initilized
+            procedure LateInitialize; override; // Called after the main form was fully initilized. Don't forget to call "Inherited LateInitialize"
          end;
 
 
@@ -26,9 +26,8 @@
       Type
         TYourForm = class(TLightForm)
         protected
-          procedure BeforeRelease;  override;    // Optional
         public
-          procedure LateInitialize; override;    // Optional
+          procedure LateInitialize;  override;    // Optional
         end;
 
        procedure TYourForm.LateInitialize;
@@ -37,46 +36,46 @@
          // Intialize your code here
        end;
 
-       procedure TYourForm.BeforeRelease;
-       begin
-         // Release your resources here
-         inherited BeforeRelease;
-       end;
+       Optionally set the BeforeRelease event hanlder
+
 
 =============================================================================================================}
 
 INTERFACE
 
 USES
-  System.SysUtils, System.Classes,
-  { $IFDEF FRAMEWORK_VCL}
   Winapi.Messages,
-  Vcl.Controls,
-  Vcl.Forms,
+  System.SysUtils, System.Classes, System.IniFiles,
+  Vcl.Controls, Vcl.Forms,
+  cbDialogs,
+  cbCenterControl,
   cbIniFile,
   ccINIFile; // Do not add dependencies higher than "cb" level
 
 type
   TLightForm = class(TForm)
   private
-    procedure SaveBeforeExit;
+    FAutoSaveForm: TFormLoading;  // We can use this later in the destructor to know how to save the form: flPosOnly/flFull
+    FBeforeRelease: TNotifyEvent;
   protected
     Saved: Boolean;
-    procedure BeforeRelease; virtual;
-    {$IFDEF Framework_VCL}
+    procedure SaveBeforeExit;
+
     procedure DoDestroy; override;
     procedure DoClose(var Action: TCloseAction); override;
     procedure WMEndSession(var Msg: TWMEndSession);
-    {$ENDIF}	
   public
-    Loading: TFormLoading;
-
     procedure LateInitialize; virtual;
 
     function CloseQuery: boolean; override;
-    constructor Create(AOwner: TComponent); override;
+    constructor Create(AOwner: TComponent; AutoSaveForm: TFormLoading); reintroduce; overload; virtual;
+
+    procedure LoadForm;
+    procedure SaveForm;
   published
-    //property OnLateInitialize: TNotifyEvent read FOnLateInitialize write FOnLateInitialize;
+    property AutoSaveForm: TFormLoading    read FAutoSaveForm  write FAutoSaveForm;
+    // Events
+    property OnBeforeRelease: TNotifyEvent read FBeforeRelease write FBeforeRelease;
   end;
 
 
@@ -85,20 +84,16 @@ USES
   cbAppData;
 
 
-
-
-constructor TLightForm.Create(AOwner: TComponent);
+constructor TLightForm.Create(AOwner: TComponent; AutoSaveForm: TFormLoading);
 begin
   inherited Create(AOwner);
 
-  Screensnap:= TRUE;
-  Snapbuffer:= 4;
-  Position:= poDesigned;
-  // TFormPosition = (Designed, Default, DefaultPosOnly, DefaultSizeOnly, ScreenCenter, DesktopCenter, MainFormCenter, OwnerFormCenter);
-  Showhint:= TRUE;
+  ScreenSnap:= TRUE;
+  Position  := poDesigned;
+  Showhint  := TRUE;
+  Saved     := FALSE;
 
-  Saved:= FALSE;
-  Loading:= flPosOnly; // Default value. Can be overriden by AppData.CreateForm
+  FAutoSaveForm := AutoSaveForm; // Default value. Can be overriden by AppData.CreateForm
 end;
 
 
@@ -142,7 +137,11 @@ begin
   AND NOT AppData.Initializing then
   begin
     try
-      BeforeRelease;
+      if Assigned(FBeforeRelease)
+      then FBeforeRelease(Self); { Called ONLY once! }
+
+      if AutoSaveForm <> flNone
+      then SaveForm;
     finally
       Saved:= TRUE;  // Make sure it is put to true even on accidents, otherwise we might call it multiple times.
     end;
@@ -150,12 +149,84 @@ begin
 end;
 
 
-{ Called ONLY once, when Saved = False }
-procedure TLightForm.BeforeRelease;
+
+
+
+
+
+
+
+{-----------------------------------------------------------------------------------------------------------------------
+   MAIN
+
+   Load/Save all controls on this form to their initial state.
+
+   Parameters:
+         OnlyFormPos=False  ->  Save all supported controls on this form
+         OnlyFormPos=True   ->  It will only save the position of the form (only Left/Top, no width/height/WndState)
+
+
+   Also see LoadForm/SaveForm in cvINIFile.pas
+-----------------------------------------------------------------------------------------------------------------------}
+
+procedure TLightForm.SaveForm;
+VAR
+   IniFile: TIniFileApp;
 begin
-  Assert(NOT Saved);
-  cbIniFile.SaveFormBase(Self); 
+ if TAppData.Initializing
+ AND (Self= Application.MainForm) then
+  begin
+   if TAppData.RunningHome
+   then MesajError('Closing application while still initializing!');
+   Exit; // We don't save anything if the start up was improper!
+  end;
+
+ Assert(AppData <> NIL, '!!!');
+ IniFile:= TIniFileApp.Create(Self.Name);
+ TRY
+  TRY
+    IniFile.SaveForm(Self);
+  EXCEPT
+    ON EIniFileException DO
+      if AppData <> NIL
+      then AppData.LogWarn('Cannot save INI file: '+ IniFile.FileName);
+  END;
+ FINALLY
+   FreeAndNil(IniFile);
+ END;
 end;
+
+
+{ It also does:
+    * LoadForm will also set the font for all forms to be the same as the font of the MainForm.
+    * If the form is out of screen, LoadForm will also bring the form back to screen. }
+procedure TLightForm.LoadForm;
+VAR
+   IniFile: TIniFileApp;
+begin
+ if AppData = NIL then                { If AppData exists, let it deal with the font }
+   if (Application.MainForm <> NIL)     { Set font only for secondary forms }
+   AND (Self <> Application.MainForm)
+   then Self.Font:= Application.MainForm.Font;
+
+ IniFile:= TIniFileApp.Create(Self.Name);
+ TRY
+  TRY
+    IniFile.LoadForm(Self);
+    CorrectFormPositionScreen(Self);
+  EXCEPT
+    ON EIniFileException DO
+      if appdata <> NIL
+      then appdata.LogWarn('Cannot load INI file: '+ IniFile.FileName);
+  END;
+ FINALLY
+   FreeAndNil(IniFile);
+ END;
+end;
+
+
+
+
 
 
 

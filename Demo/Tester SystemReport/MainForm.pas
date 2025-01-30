@@ -4,13 +4,13 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, cbAppData, cbAppDataForm;
+  Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.Dialogs, Vcl.StdCtrls, cbAppData, cbAppDataForm;
 
 type
   TfrmMain = class(TLightForm)
     Memo: TMemo;
   private
-    procedure LateInitialize; override;
+    procedure LateInitialize; {don't forget inherited LateInitialize!} override;
   public
   end;
 

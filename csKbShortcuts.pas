@@ -29,7 +29,7 @@
 INTERFACE
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes, VCL.Forms, vcl.StdCtrls, vcl.Menus, Vcl.ActnList,
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Forms, cbAppDataForm,vcl.StdCtrls, vcl.Menus, Vcl.ActnList,
   ccCore;
 
  procedure ShowConflicts;

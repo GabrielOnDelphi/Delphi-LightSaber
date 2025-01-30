@@ -50,10 +50,10 @@ INTERFACE
 
 USES
   Winapi.Windows, System.SysUtils, System.Classes,
-  Vcl.Themes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls;
+  Vcl.Themes, Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls;
 
 TYPE
-  TfrmSkinRes = class(TForm)
+  TfrmSkinRes = class(TLightForm)
     lBox: TListBox;
     lblTop: TLabel;
     pnlBottom: TPanel;
@@ -146,7 +146,7 @@ end;
 -----------------------------------------------------------------------------------------------------------------------}
 procedure TfrmSkinRes.FormCreate(Sender: TObject);
 begin
- LoadForm(Self);
+ LoadForm;
  PopulateSkins;    
 end;
 
@@ -160,7 +160,7 @@ end;
 
 procedure TfrmSkinRes.FormDestroy(Sender: TObject);
 begin
- SaveForm(Self);
+ SaveForm;
  if NOT AppData.Initializing
  then cmINIFileQuick.WriteString ('LastSkin', LastSkin);   { We don't save anything if the start up was improper! }
 end;

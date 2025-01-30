@@ -28,7 +28,7 @@ INTERFACE
 
 USES
   Winapi.Windows, Winapi.Messages, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
+  Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
   llRichLogTrack, llRichLog, cbAppDataForm;
 
 TYPE
@@ -44,7 +44,7 @@ TYPE
     procedure FormCreate   (Sender: TObject);
     procedure FormDestroy  (Sender: TObject);  // Would be nice to make this protected but we can't. All event handlers must be accesible/visible
   public
-    procedure LateInitialize; override; // Called after the main form was fully initilized
+    procedure LateInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully initilized
   end;
 
 

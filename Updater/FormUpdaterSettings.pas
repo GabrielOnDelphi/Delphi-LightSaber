@@ -13,11 +13,11 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  Winapi.Windows, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Samples.Spin, cvSpinEdit, cvCheckBox, Vcl.ExtCtrls,
+  Winapi.Windows, System.Classes, Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.Samples.Spin, cvSpinEdit, cvCheckBox, Vcl.ExtCtrls,
   ciUpdater;
 
 TYPE
-  TfrmUpdaterSettings = class(TForm)
+  TfrmUpdaterSettings = class(TLightForm)
     btnTestInternet    : TButton;
     chkForceNewsFound  : TCubicCheckBox;
     chkConnectFail     : TCubicCheckBox;
@@ -105,7 +105,7 @@ procedure TfrmUpdaterSettings.FormDestroy(Sender: TObject);
 begin
   Assert(Container.Parent = Self);    { We need to move the container back on its original form, in order to let that form to correctly save its children }
   Apply;                              { Reparenting MUST be before Apply }
-  cvinifile.SaveForm(Self, flPosOnly);
+  cvINIFile.SaveForm(Self);
 end;
 
 

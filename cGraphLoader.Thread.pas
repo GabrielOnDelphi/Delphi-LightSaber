@@ -39,7 +39,7 @@ UNIT cGraphLoader.Thread;
 INTERFACE
 
 USES
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Forms, Vcl.Graphics, Generics.Collections, SyncObjs;
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Forms, cbAppDataForm,Vcl.Graphics, Generics.Collections, SyncObjs;
 
 CONST
    WM_THUMBNAIL_NOTIFY = WM_APP + 1;

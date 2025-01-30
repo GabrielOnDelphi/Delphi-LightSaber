@@ -19,7 +19,8 @@ uses
   FormUpdaterRecEditor in '..\..\Updater\FormUpdaterRecEditor.pas',
   FormUpdaterSettings in '..\..\Updater\FormUpdaterSettings.pas',
   uInitialization in 'uInitialization.pas',
-  ciUpdater in '..\..\Updater\ciUpdater.pas';
+  ciUpdater in '..\..\Updater\ciUpdater.pas',
+  cbAppDataForm in '..\..\cbAppDataForm.pas';
 
 {$R *.res}
 

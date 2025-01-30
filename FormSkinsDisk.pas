@@ -201,7 +201,7 @@ end;
 -----------------------------------------------------------------------------------------------------------------------}
 procedure TfrmSkinDisk.FormCreate(Sender: TObject);
 begin
- LoadForm(Self);
+ LoadForm;
  PopulateSkins;    
  lblTop.Hint:= 'Skin files are located in '+ GetSkinDir;
 end;
@@ -216,7 +216,7 @@ end;
 
 procedure TfrmSkinDisk.FormDestroy(Sender: TObject);
 begin
- SaveForm(Self);
+ SaveForm;
  if NOT AppData.Initializing
  then cmINIFileQuick.WriteString ('LastSkin', LastSkin);   { We don't save anything if the start up was improper! }
 end;

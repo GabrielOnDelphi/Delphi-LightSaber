@@ -21,7 +21,7 @@ UNIT MainForm;
 INTERFACE
 
 USES
-  WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, VCL.Forms, Vcl.Controls, Vcl.Samples.Spin,
+  WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin,
   cvRichEdit, Vcl.ComCtrls, ccCore, csSystem, cbDialogs, ccINIFile, cbAppDataForm,  Vcl.Dialogs, cvCheckBox, Vcl.ExtCtrls, llRichLogTrack,
   System.Actions, Vcl.ActnList, Vcl.Menus, cvRadioButton, cbAppData;
 
@@ -59,7 +59,7 @@ TYPE
     procedure FormDestroy        (Sender: TObject);
   private
   public
-    procedure LateInitialize; override; // Called after the main form was fully created
+    procedure LateInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
  end;
 
 VAR

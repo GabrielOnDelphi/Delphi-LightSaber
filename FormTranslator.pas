@@ -68,7 +68,7 @@ TYPE
   private
     function GetFileName: string;
   public
-    procedure LateInitialize; override; // Called after the main form was fully created
+    procedure LateInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
   end;
 
 

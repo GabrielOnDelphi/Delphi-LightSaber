@@ -22,10 +22,10 @@ INTERFACE
 {.$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Controls, cTranslate;
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Controls, cTranslate;
 
 TYPE
-  TfrmLanguage = class(TForm)
+  TfrmLanguage = class(TLightForm)
     btnApplyLang: TButton;
     btnRefresh  : TButton;
     btnTranslate: TButton;
@@ -88,7 +88,7 @@ end;
 
 procedure TfrmLanguage.FormDestroy(Sender: TObject);
 begin
-  SaveFormBase(Self);  //Localization warning: Don't add dependencies to CubicVisualControls here!
+  SaveForm;  //Localization warning: Don't add dependencies to CubicVisualControls here!
 end;
 
 

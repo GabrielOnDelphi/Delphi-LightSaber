@@ -35,7 +35,8 @@ TYPE
   end;
 
 TYPE
-  TFormLoading = (flPosOnly,    // Restore form position
+  TFormLoading = (flNone,
+                  flPosOnly,    // Restore form position
                   flFull);      // Restore form position and GUI elements
 
 TYPE

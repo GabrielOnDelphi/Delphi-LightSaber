@@ -17,7 +17,7 @@ INTERFACE
 USES
   Winapi.Windows, Winapi.ShellAPI, Winapi.ShlObj,
   System.Win.Registry, System.SysUtils, System.Classes, System.IOUtils,
-  Vcl.Consts, Vcl.Controls, Vcl.Dialogs, Vcl.Forms, Vcl.FileCtrl;
+  Vcl.Consts, Vcl.Controls, Vcl.Dialogs, Vcl.Forms, cbAppDataForm,Vcl.FileCtrl;
 
 {--------------------------------------------------------------------------------------------------
  

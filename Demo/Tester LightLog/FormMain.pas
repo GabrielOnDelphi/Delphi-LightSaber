@@ -43,7 +43,7 @@ var
   MainForm: TMainForm;
 
 implementation {$R *.dfm}
-Uses cbAppData, cbLogUtils, cbLogTypes, cbLogTypes, ccINIFile, cvINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
+Uses cbAppData, cbLogUtils, cbLogTypes, ccINIFile, cvINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
 
 
 procedure TMainForm.FormCreate(Sender: TObject);
@@ -155,7 +155,7 @@ begin
 
   // Save form position
   if NOT cbAppData.AppData.Initializing
-  then cvINIFile.SaveForm(Self, flPosOnly); // We don't save anything if the start up was improper!
+  then cvINIFile.SaveForm(Self); // We don't save anything if the start up was improper!
 
   // Save Log verbosity
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);

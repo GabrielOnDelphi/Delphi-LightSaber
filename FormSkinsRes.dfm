@@ -7,8 +7,8 @@ object frmSkinRes: TfrmSkinRes
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
   Caption = 'Skin selector'
-  ClientHeight = 469
-  ClientWidth = 324
+  ClientHeight = 468
+  ClientWidth = 320
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 200
@@ -28,7 +28,7 @@ object frmSkinRes: TfrmSkinRes
     AlignWithMargins = True
     Left = 3
     Top = 6
-    Width = 318
+    Width = 314
     Height = 13
     Margins.Top = 6
     Margins.Bottom = 1
@@ -48,8 +48,8 @@ object frmSkinRes: TfrmSkinRes
   object lblMoreSkinsTrial: TLabel
     AlignWithMargins = True
     Left = 3
-    Top = 400
-    Width = 318
+    Top = 402
+    Width = 314
     Height = 30
     Align = alBottom
     Alignment = taCenter
@@ -61,8 +61,8 @@ object frmSkinRes: TfrmSkinRes
     AlignWithMargins = True
     Left = 3
     Top = 23
-    Width = 318
-    Height = 367
+    Width = 314
+    Height = 369
     Align = alClient
     ItemHeight = 15
     ScrollWidth = 6
@@ -71,16 +71,16 @@ object frmSkinRes: TfrmSkinRes
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 393
-    Width = 324
+    Top = 395
+    Width = 320
     Height = 4
     Align = alBottom
     TabOrder = 0
   end
   object pnlBtm: TPanel
     Left = 0
-    Top = 433
-    Width = 324
+    Top = 432
+    Width = 320
     Height = 36
     Align = alBottom
     TabOrder = 2

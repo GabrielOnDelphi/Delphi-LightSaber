@@ -7,7 +7,7 @@ uses
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs;
 
 type
-  TForm3 = class(TForm)
+  TForm3 = class(TLightForm)
   private
   public
   end;

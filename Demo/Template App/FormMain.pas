@@ -35,7 +35,7 @@ INTERFACE
 USES
   WinApi.Windows, WinApi.Messages, Winapi.ShellApi,
   System.SysUtils, System.Classes, System.Actions,
-  VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
+  VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
   CoolTrayIcon, csSystem, cvPathEdit, cvStatusBar, cpProteus, cbAppData, cpProteusIO, cmGuiSettings, cbAppDataForm, ccCore;
 
 TYPE
@@ -80,7 +80,7 @@ TYPE
     tabProgress : TTabSheet;
     TrayIcon    : TCoolTrayIcon;
     btnStart    : TButton;
-    StatBar: TStatusBar;
+    StatBar     : TStatusBar;
     procedure actAboutExecute    (Sender: TObject);
     procedure actEnterKeyExecute (Sender: TObject);
     procedure actLanguageExecute (Sender: TObject);
@@ -101,13 +101,13 @@ TYPE
     procedure FormClose          (Sender: TObject; var Action: TCloseAction);
     procedure TrayIconClick      (Sender: TObject);
     procedure actShowLogExecute  (Sender: TObject);
-    procedure FormCreate(Sender: TObject);
+    procedure FormCreate         (Sender: TObject);
   protected
     procedure WMDROPFILES (VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Accept the dropped files from Windows Explorer }
-    procedure BeforeRelease; override;
+    procedure BeforeRelease(Sender: TObject);
   private
   public
-    procedure LateInitialize; override; //(VAR Msg: TMessage); override_;  { Called after the main form was fully created }
+    procedure LateInitialize; override;  { Called after the main form was fully created }
     procedure FontSizeChanged;
  end;
 
@@ -135,6 +135,7 @@ USES
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   EmptyDummy;
+  OnBeforeRelease:= BeforeRelease;
   // Too early to do initialization here!
   // Initialization code is better done in LateInitialize which takes place AFTER the form was properly constructed!
 end;
@@ -142,6 +143,8 @@ end;
 
 procedure TMainForm.LateInitialize;
 begin
+  inherited LateInitialize;
+
   uInitialization.LateInitialization;
   btnStartClick(self);
   actShowLogExecute(Self);    //temp
@@ -162,11 +165,10 @@ end;
 
 { It is enough to put SaveBeforeExit in thse two places only: OnCloseQueryand & OnDestroy.
   Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
-procedure TMainForm.BeforeRelease;
+procedure TMainForm.BeforeRelease(Sender: TObject);
 begin
   if NOT Saved then
    begin
-     inherited BeforeRelease;
      GuiSettings.Save;
      FreeAndNil(GuiSettings);
      FreeAndNil(Updater);

@@ -12,7 +12,7 @@
       Instead, your form can implement the LateInitialize message handler.
       This will be called after the form was fully created and the application finished initializing.
       Example:
-         TfrmMain = class(TForm)
+         TfrmMain = class(TLightForm)
           protected
             procedure LateInitialize; override; // Called after the main form was fully initilized
          end;
@@ -70,7 +70,7 @@ type
   public
     Loading: TFormLoading;
 
-    procedure LateInitialize; virtual;
+    procedure LateInitialize; {don't forget inherited LateInitialize!} virtual;
 
     function CloseQuery: boolean; override;
     constructor Create(AOwner: TComponent); override;

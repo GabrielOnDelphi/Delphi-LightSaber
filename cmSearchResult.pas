@@ -13,7 +13,7 @@ TYPE
     CodeLine: string;                      // The line of code where the problem was found.
     WarningMsg: string;                    // The warning message to show to the user. It usually explained what was wrong at that line and how to fix it.
     Offender: string;                      // The piece of code that caused the problem.
-    //FileName: string;                      // Which file is being processed
+    //FileName: string;                    // Which file is being processed
   end;
 
   TSearchResult= class(TObject)

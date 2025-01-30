@@ -14,7 +14,7 @@ UNIT cvAssociateExt;
 INTERFACE
 
 USES
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, cvCheckBox, cbDialogs;
+  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, cvCheckBox, cbDialogs;
 
 TYPE
   TAssociateFileExt = class(TGroupBox)

@@ -10,11 +10,11 @@ INTERFACE
 {Hostinger: the max PHP emails per minute is 60 and your limit for emails per day is 3000 ? = 1 email at 24 sec  }
 
 USES
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
+  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
   IdSMTP, IdExplicitTLSClientServerBase, Vcl.ComCtrls, cvRadioButton, InternetLabel;
 
 type
-  TfrmSmtpSettings = class(TForm)
+  TfrmSmtpSettings = class(TLightForm)
     btnGMailDef   : TButton;
     Button1       : TButton;
     edtPsw        : TLabeledEdit;

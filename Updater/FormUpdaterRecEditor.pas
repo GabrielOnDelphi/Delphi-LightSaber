@@ -8,10 +8,10 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  System.SysUtils, System.Classes, Vcl.Forms, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.Samples.Spin;
+  System.SysUtils, System.Classes, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.Samples.Spin;
 
 TYPE
-  TfrmRecEditor = class(TForm)
+  TfrmRecEditor = class(TLightForm)
     btnClose       : TButton;
     btnCopy        : TButton;
     btnSave        : TButton;
@@ -89,7 +89,7 @@ end;
 
 procedure TfrmRecEditor.FormDestroy(Sender: TObject);
 begin
-  SaveForm(Self, flPosOnly);
+  SaveForm;
 end;
 
 

@@ -3,8 +3,9 @@ UNIT SecondForm;
 INTERFACE
 
 USES
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cvCheckBox, Vcl.StdCtrls, cvRadioButton, cbAppDataForm;
+  //Winapi.Windows, Winapi.Messages,
+  System.SysUtils, System.Variants, System.Classes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cvCheckBox, Vcl.StdCtrls, cvRadioButton, cbAppDataForm;
 
 TYPE
   TfrmContainer = class(TLightForm)

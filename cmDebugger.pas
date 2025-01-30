@@ -25,7 +25,7 @@ INTERFACE
 USES
    Winapi.Windows, Winapi.MultiMon, Winapi.ShlObj, Winapi.SHFolder,
    System.Diagnostics, System.Classes, System.SysUtils,
-   Vcl.Forms, Vcl.Dialogs;
+   Vcl.Forms, cbAppDataForm,Vcl.Dialogs;
 
  { ANTI-DEBUGGER PROTECTION }
  procedure AntiDebug; assembler;

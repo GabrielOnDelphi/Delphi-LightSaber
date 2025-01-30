@@ -7,7 +7,7 @@ UNIT uInitialization;
 INTERFACE
 
 USES
-   Winapi.ShellApi, System.SysUtils, Vcl.Forms, Vcl.Dialogs, Vcl.Controls;
+   Winapi.ShellApi, System.SysUtils, Vcl.Forms, cbAppDataForm,Vcl.Dialogs, Vcl.Controls;
 
    //Mutex        = 'LabBook.SingleInstanceMutex';         { Do not change it. Must be the same as the one in Uninstaller }
    //UpdaterURL= HomePage+ '/LabBook.updater.bin';

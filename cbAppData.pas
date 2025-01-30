@@ -423,7 +423,7 @@ end;
   3. Show it }
 procedure TAppData.CreateMainForm(aClass: TFormClass; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TFormLoading= flPosOnly);
 begin
-  VAR Reference: TForm;
+  VAR Reference: TLightForm;
   CreateMainForm(aClass, Reference, MainFormOnTaskbar, Show, Loading);
 end;
 
@@ -443,6 +443,7 @@ begin
 
   SetGuiProperties(TForm(Reference));
 
+  TLightForm(Reference).AutoSaveForm:= Loading;
   if (Loading = flFull) OR (Loading = flPosOnly) then
    begin
      // Load form
@@ -451,7 +452,7 @@ begin
      // At this point we can only load "standard" Delphi components.
      // Loading of our Light components can only be done in cv_IniFile.pas -> TIniFileVCL
      // For the moment the work around is load only the stadard components.
-     cbINIFile.LoadFormBase(TForm(Reference), Loading);
+     TLightForm(Reference).LoadForm;
 
      { Write path to app in registry }
      if RunningFirstTime
@@ -517,10 +518,9 @@ begin
   SetGuiProperties(TForm(Reference));
 
   // Load previous form settings/position
-  cbINIFile.LoadFormBase(TForm(Reference), Loading);
   if TForm(Reference) is TLightForm
-  then TLightForm(Reference).Loading:= Loading;
-
+  then TLightForm(Reference).AutoSaveForm:= Loading;
+  TLightForm(Reference).LoadForm;
 
   if Show
   then TForm(Reference).Show;
@@ -571,8 +571,7 @@ begin
 
   // Fix issues with snap to edge of the screen
   if cbVersion.IsWindows8Up
-  then Form.SnapBuffer:= 4
-  else Form.SnapBuffer:= 10;
+  then Form.SnapBuffer:= 4;
 
   // Form transparency
   Form.AlphaBlendValue := Opacity;

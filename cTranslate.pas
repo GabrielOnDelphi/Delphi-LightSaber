@@ -55,7 +55,7 @@
   
     1. To load a language into all LIVE forms in your app:  
   
-       procedure TMainForm.LateInitialize;
+       procedure TMainForm.LateInitialize; inherited LateInitialize;
        begin
         inherited LateInitialize;
 
@@ -71,7 +71,7 @@
   
        procedure TDynamicForm.Initialize;  
        begin  
-        // Call LoadFormTranlation() for DYNAMICALLY created forms, when they are created  
+        // Call LoadFormTranlation() for DYNAMICALLY created Vcl.Forms, cbAppDataForm, when they are created  
         Translator.LoadFormTranlation(DynamicForm);  
        end;  
   
@@ -160,7 +160,7 @@ BUG:
 
 INTERFACE
 USES
-  System.Classes, System.SysUtils, System.IniFiles, System.TypInfo, Vcl.Forms, Vcl.Menus, Vcl.ExtCtrls;
+  System.Classes, System.SysUtils, System.IniFiles, System.TypInfo, Vcl.Forms, cbAppDataForm,Vcl.Menus, Vcl.ExtCtrls;
 
 { Bitwise constants for TControl.Tag }
 CONST

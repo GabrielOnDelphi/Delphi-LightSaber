@@ -14,7 +14,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, System.Actions,
-  VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, VCL.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList,
+  VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, cbAppDataForm,Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList,
   csSystem, cbAppDataForm;
 
 TYPE
@@ -35,7 +35,7 @@ TYPE
     procedure BeforeRelease; override;
   private
   public
-    procedure LateInitialize; override;
+    procedure LateInitialize; {don't forget inherited LateInitialize!} override;
  end;
 
 VAR
@@ -58,7 +58,7 @@ begin
 end;
 
 
-procedure TMainForm.LateInitialize;
+procedure TMainForm.LateInitialize; inherited LateInitialize;
 begin
   { Application }
   AppData.CompanyName:= 'SciVance Technologies';
