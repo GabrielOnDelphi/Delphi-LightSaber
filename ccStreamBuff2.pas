@@ -136,6 +136,8 @@ VAR
 begin
   if Bytes > 0 then
   begin
+    Assert(Bytes + Position <= Size, 'Read beyond stream!');
+
     SetLength(b, Bytes);
     ReadBuffer(b[0], Bytes);
     CheckPointSize := Length(CheckpointStr);

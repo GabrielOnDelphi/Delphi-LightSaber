@@ -116,7 +116,7 @@ object MainForm: TMainForm
         TabOrder = 0
         OnClick = Button2Click
       end
-      object LogVisTrckbr1: TLogVerbFilter
+      object LogVis: TLogVerbFilter
         AlignWithMargins = True
         Left = 160
         Top = 4

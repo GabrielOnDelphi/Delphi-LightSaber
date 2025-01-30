@@ -35,10 +35,11 @@ type
   end;
 
 
-  { Abstract case class }
+  { List of lines }
   TAbstractLogLines = class
   private
-    procedure readFromStream_v1(Stream: TCubicBuffStream2);
+    procedure readFromStream_v3(Stream: TCubicBuffStream2);
+    procedure readFromStream_v4(Stream: TCubicBuffStream2);
   protected
     FList: TList;
     CONST StreamSign  = 'TLogLines';
@@ -66,24 +67,13 @@ IMPLEMENTATION
 {-------------------------------------------------------------------------------------------------------------
    ABSTRACT CLASS
 -------------------------------------------------------------------------------------------------------------}
-procedure TAbstractLogLines.ReadFromStream(Stream: TCubicBuffStream2);
-VAR
-   StreamVer: Word;
+
+{ Read specific version }
+procedure TAbstractLogLines.readFromStream_v3(Stream: TCubicBuffStream2);
 begin
-  if NOT Stream.ReadHeaderVersion(StreamSign, StreamVer)
-  then RAISE Exception.Create('Unknown stream signature.');
-
-  case StreamVer of
-     CurVer: readFromStream_v4(Stream);
-   else
-     RAISE Exception.Create('Usupported stream version.');
-  end;
-
-  Stream.ReadPaddingDef;
+  RAISE Exception.Create('Obsolete log version!');
 end;
 
-
-{ Write specific version }
 procedure TAbstractLogLines.readFromStream_v4(Stream: TCubicBuffStream2);
 VAR
    Line: PLogLine;
@@ -100,13 +90,36 @@ begin
 end;
 
 
+{ Read }
+procedure TAbstractLogLines.ReadFromStream(Stream: TCubicBuffStream2);
+VAR
+   StreamVer: Word;
+begin
+  if NOT Stream.ReadHeaderVersion(StreamSign, StreamVer)
+  then RAISE Exception.Create('Unknown stream signature.');
+
+  case StreamVer of
+          3: readFromStream_v3(Stream);
+     CurVer: readFromStream_v4(Stream);
+   else
+     RAISE Exception.Create('Usupported stream version.');
+  end;
+
+  Stream.ReadPaddingDef;
+end;
+
+
+{ Write }
 procedure TAbstractLogLines.WriteToStream(Stream: TCubicBuffStream2);
 VAR i: Integer;
 begin
   Stream.WriteHeader(StreamSign, CurVer);
+
   Stream.WriteInteger(FList.Count);
   for i := 0 to FList.Count - 1 do
     PLogLine(FList[i]).WriteToStream(Stream);
+
+  Stream.WritePaddingDef;
 end;
 
 
@@ -124,7 +137,7 @@ begin
   Indent := Stream.ReadInteger;
   Bold   := Stream.ReadBoolean;
   Time   := Stream.ReadDate;
-  Stream.ReadPadding(8);  { Padding }
+  Stream.ReadPaddingE(8);  { Padding }
 end;
 
 

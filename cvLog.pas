@@ -44,8 +44,8 @@ TYPE
      procedure ResizeColumns;
      procedure ScrollToBottom;
      procedure setVerbFilter(const Value: TLogVerbLvl);
-     function FilteredRow(aRow: Integer): integer;
-     function GetLineFiltered(Row: Integer): PLogLine;
+     function  FilteredRow(aRow: Integer): integer;
+     function  GetLineFiltered(Row: Integer): PLogLine;
    protected
      procedure Resize; override;
      procedure WMCommand(var AMessage: TWMCommand); message WM_COMMAND;
@@ -72,7 +72,7 @@ TYPE
 
      property RamLog       : TRamLog      read FRamLog;
 
-     property Verbosity    : TLogVerbLvl  read FVerbosity  write setVerbFilter;
+     property Verbosity    : TLogVerbLvl  read FVerbosity   write setVerbFilter;
      property OnVerbChanged: TNotifyEvent read FVerbChanged write FVerbChanged;   { Triggered before deleting the content of a cell }
   end;
 

@@ -388,6 +388,8 @@ end;
 
 function TRamLog.LoadFromFile(const FullPath: string): Boolean;
 begin
+ Clear;
+
  VAR Stream:= TCubicBuffStream2.CreateRead(FullPath);
  TRY
    Result:= LoadFromStream(Stream);

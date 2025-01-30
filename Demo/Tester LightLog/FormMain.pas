@@ -17,7 +17,7 @@ type
     RichLogTrckbr1: TRichLogTrckbr;
     Panel4: TPanel;
     Button2: TButton;
-    LogVisTrckbr1: TLogVerbFilter;
+    LogVis: TLogVerbFilter;
     Button3: TButton;
     Button4: TButton;
     Panel5: TPanel;
@@ -36,6 +36,7 @@ type
   public
     procedure LoadForm; override;
     procedure SaveForm; override;
+    procedure LateInitialize; override;
   end;
 
 var
@@ -48,6 +49,15 @@ Uses cbAppData, cbLogUtils, cbLogTypes, ccINIFile, cvINIFile, ccIO, ccTextFile, 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
  RichLog.Clear;
+end;
+
+
+procedure TMainForm.LateInitialize;
+begin
+  inherited;
+  if AppData.RunningHome
+  then LogVis.TrackBar.Min:= 0    // We allow us to see the "Debug" lines
+  else LogVis.TrackBar.Min:= 1;   // We don't let uset see the "Debug" lines;
 end;
 
 
@@ -78,7 +88,9 @@ end;
 
 procedure TMainForm.Button2Click(Sender: TObject);
 begin
-// VisLog.Clear;
+ LogVis.TrackBar.Position:= 0;
+
+ VisLog.Clear;
  VisLog.RamLog.AddDebug('AddDebug');
  VisLog.RamLog.AddVerb ('AddVerb');
  VisLog.RamLog.AddHint ('AddHint');
@@ -176,5 +188,7 @@ begin
     FreeAndNil(IniFile);
   end;
 end;
+
+
 
 end.
