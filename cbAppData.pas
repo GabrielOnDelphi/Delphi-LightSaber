@@ -466,7 +466,7 @@ begin
   // Window fully constructed. Now we can let user run its own initialization process.
   // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory [Part 2]" book) for details.
   if TObject(Reference) is TLightForm
-  then TLightForm(Reference).LateInitialize;
+  then TLightForm(Reference).FormInitialize;
 
   if AutoSignalInitializationEnd
   then Initializing:= FALSE;
@@ -528,7 +528,7 @@ begin
   // Window fully constructed.
   // Now we can let user run its own initialization process.
   if TForm(Reference) is TLightForm
-  then TLightForm(Reference).LateInitialize;
+  then TLightForm(Reference).FormInitialize;
 
   if AutoSignalInitializationEnd
   then Initializing:= FALSE;

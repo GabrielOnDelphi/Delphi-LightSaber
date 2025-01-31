@@ -82,6 +82,8 @@ TYPE
      function  PathHasValidChars: string;   { Returns '' when the input string (path) is valid and and error msg when it is not valid }
      function  PathIsValid: string;         { Returns '' when the input string (path) is valid and and error msg when it is not valid }
      function  PathIsValidMsg: boolean;     { Returns true when the input string (path) is valid and and error msg when it is not valid }
+
+     function  GetFiles(CONST FileType: string; CONST ReturnFullPath, DigSubdirectories: Boolean; ExcludeFolders: TStrings= nil): TStringList;
    published
      property FileListBox   : TFileListBox read FFileList     write FFileList;
      property Directory     : TDirectoryListBox  read FDirListBox   write FDirListBox;
@@ -650,5 +652,10 @@ begin
 end;
 
 
+
+function TCubicPathEdit.GetFiles(const FileType: string; const ReturnFullPath, DigSubdirectories: Boolean; ExcludeFolders: TStrings): TStringList;
+begin
+ Result:= ListFilesOf(Path, FileType, ReturnFullPath, DigSubdirectories, ExcludeFolders);
+end;
 
 end.

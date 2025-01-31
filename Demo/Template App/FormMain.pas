@@ -107,7 +107,7 @@ TYPE
     procedure BeforeRelease(Sender: TObject);
   private
   public
-    procedure LateInitialize; override;  { Called after the main form was fully created }
+    procedure FormInitialize; override;  { Called after the main form was fully created }
     procedure FontSizeChanged;
  end;
 
@@ -141,9 +141,9 @@ begin
 end;
 
 
-procedure TMainForm.LateInitialize;
+procedure TMainForm.FormInitialize;
 begin
-  inherited LateInitialize;
+  inherited FormInitialize;
 
   uInitialization.LateInitialization;
   btnStartClick(self);

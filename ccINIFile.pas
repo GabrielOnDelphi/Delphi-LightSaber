@@ -35,9 +35,11 @@ TYPE
   end;
 
 TYPE
-  TAutoState = (asNone,
+  TAutoState = (asNone,       // Don't save the form automatically.
+                //asUser,       // Don't save the form automatically. The user will override that.
                 asPosOnly,    // Restore form position
                 asFull);      // Restore form position and GUI elements
+
 
 TYPE
 {

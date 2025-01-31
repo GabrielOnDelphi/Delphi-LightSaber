@@ -68,7 +68,7 @@ TYPE
   private
     function GetFileName: string;
   public
-    procedure LateInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
+    procedure FormInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
   end;
 
 
@@ -80,9 +80,9 @@ USES
 
 
 
-procedure TfrmTranslator.LateInitialize;
+procedure TfrmTranslator.FormInitialize;
 begin
- inherited LateInitialize;
+ inherited FormInitialize;
  Assert(Translator <> NIL);
  // LoadFormBase(Self);                              //Note: Don't add dependencies to CubicVisualControls here!
  lblLiveFormsClick(Self);

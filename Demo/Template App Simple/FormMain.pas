@@ -35,7 +35,7 @@ TYPE
     procedure BeforeRelease; override;
   private
   public
-    procedure LateInitialize; {don't forget inherited LateInitialize!} override;
+    procedure FormInitialize; {don't forget inherited LateInitialize!} override;
  end;
 
 VAR
@@ -58,7 +58,7 @@ begin
 end;
 
 
-procedure TMainForm.LateInitialize; inherited LateInitialize;
+procedure TMainForm.FormInitialize; inherited FormInitialize;
 begin
   { Application }
   AppData.CompanyName:= 'SciVance Technologies';

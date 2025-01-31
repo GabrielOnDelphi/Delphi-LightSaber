@@ -18,7 +18,7 @@ TYPE
     procedure FormCreate(Sender: TObject);
   protected
   private
-    procedure LateInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
+    procedure FormInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
   public
  end;
 
@@ -37,9 +37,9 @@ begin
 end;
 
 
-procedure TfrmTester.LateInitialize;
+procedure TfrmTester.FormInitialize;
 begin
- inherited LateInitialize;
+ inherited FormInitialize;
  btnStartClick(Self);
 end;
 

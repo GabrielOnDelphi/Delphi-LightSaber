@@ -10,7 +10,7 @@ type
   TfrmMain = class(TLightForm)
     Memo: TMemo;
   private
-    procedure LateInitialize; {don't forget inherited LateInitialize!} override;
+    procedure FormInitialize; {don't forget inherited LateInitialize!} override;
   public
   end;
 
@@ -22,9 +22,9 @@ USES cmDebugger;
 
 
 
-procedure TfrmMain.LateInitialize;
+procedure TfrmMain.FormInitialize;
 begin
-  inherited LateInitialize;
+  inherited FormInitialize;
   Memo.Text:= cmDebugger.GenerateSystemRep;
 end;
 

@@ -62,7 +62,7 @@ TYPE
     procedure btnStreamWriteClick     (Sender: TObject);
     procedure btnStreamReadClick      (Sender: TObject);
   private
-    procedure LateInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
+    procedure FormInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
   public
  end;
 
@@ -83,9 +83,9 @@ USES
 {--------------------------------------------------------------------------------------------------
    APP START/CLOSE
 --------------------------------------------------------------------------------------------------}
-procedure TMainForm.LateInitialize;
+procedure TMainForm.FormInitialize;
 begin
- inherited LateInitialize;
+ inherited FormInitialize;
  //SetCaption('');
  lblVers.Caption:= 'Version: '+ AppData.GetVersionInfoV;
  Show;

@@ -24,18 +24,20 @@ function AddUnitToUses    (PasBody: TStringList; CONST UnitToAdd: string): Boole
 function FindSection      (PasBody: TStringList; bInterface: Boolean): Integer;    { Find the INTERFACE/IMPLEMENTATION section }
 
 // COMMENTS
-function SepparateComments(var CodeLine: string; out Comment: string): Boolean;
+function SeparateComments (var CodeLine: string; out Comment: string): Boolean;
 function LineIsAComment   (Line: string): Boolean;
 function CountComments    (CONST FileName: string): Integer;
 
 // Search
 function RelaxedSearch    (      CodeLine, Instruction: string): Boolean;
 function RelaxedSearchI   (CONST CodeLine, Instruction: string): Integer;
-function IsKeyword        ( CodeLine, Instruction: string): Boolean;
+function IsKeyword        (      CodeLine, Instruction: string): Boolean;   // Find delphi keywords (that don't require a semicolon) like: begin, try, except.
 function IsReservedKeyword(CONST CodeLine: string): Boolean;
-function FindLine         (CONST Needle: string; Haystack: TStringList; StartAt: integer): Integer;
-function WordPos          (CONST Needle, HayStack: string): Integer;
+function FindLine         (CONST Needle: string; Haystack: TStringList; StartAt: integer): Integer;   // Returns the first line where the 'Needle' was found
+function WordPos          (CONST Needle, HayStack: string): Integer;        // Returns the position where Needle was found in the haystack. BUT does so only if the character in front of the Needle is a non-alphabetic character (a-z, A-Z)
 
+// New functions
+function RelaxedSearchEx  (Query: string; Haystack: TStringList; StartAt: Integer = 0): Integer;
 
 IMPLEMENTATION
 
@@ -63,7 +65,7 @@ end;
 
 
 { Extract comments (//) and process only the actual code. At the end put the comment back }
-function SepparateComments(var CodeLine: string; out Comment: string): Boolean;
+function SeparateComments(var CodeLine: string; out Comment: string): Boolean;
 begin
   var iPos:= Pos('//', CodeLine);
   Result:= iPos > 0;
@@ -150,7 +152,7 @@ begin
     if PosInsensitive(Section, sLine) = 1
     then EXIT(i);
    end;
- Result:= -1
+ Result:= -1;
 end;
 
 
@@ -234,7 +236,7 @@ end;
     PARSE LINES OF CODE
 -------------------------------------------------------------------------------------------------------------}
 
-{ Returns the first line where the 'Instruction' was found }
+{ Returns the first line where the 'Needle' was found }
 function FindLine(CONST Needle: string; Haystack: TStringList; StartAt: integer): Integer;
 begin
  for var i:= StartAt to Haystack.Count-1 do
@@ -305,6 +307,7 @@ end;
   The advantage of this is that it returns the exact position where the text was found.
   Example. Both work: SetFocus( and SetFocus (
 }
+//ToDo: The function assumes LineLower and SubstringLower are always lowercase. Instead of LowerCase calls inside the loop, preprocess once.
 function RelaxedSearchI(const CodeLine, Instruction: string): Integer;
 var
   SubstringLower,
@@ -316,34 +319,34 @@ begin
   LineLower := LowerCase(CodeLine);
   i := 1;
   while i <= Length(LineLower) do
-  begin
+   begin
+     // Skip non-alphanumeric characters
+     while (i <= Length(LineLower)) AND NOT CharInSet(LineLower[i], ['a'..'z', '0'..'9'])
+       do Inc(i);
 
-    // Skip non-alphanumeric characters
-    while (i <= Length(LineLower)) AND NOT CharInSet(LineLower[i], ['a'..'z', '0'..'9'])
-      do Inc(i);
+     // Check if Substring matches
+     j := 1;
+     while (j <= Length(SubstringLower))
+     AND (i <= Length(LineLower))
+     AND (LineLower[i] = SubstringLower[j]) do
+      begin
+        Inc(i);
+        Inc(j);
+      end;
 
-    // Check if Substring matches
-    j := 1;
-    while (j <= Length(SubstringLower))
-    AND (i <= Length(LineLower))
-    AND (LineLower[i] = SubstringLower[j]) do
-     begin
-       Inc(i);
-       Inc(j);
-     end;
+     // If we have matched the entire Substring, then return the position
+     if j > Length(SubstringLower)
+     then Exit(i - Length(SubstringLower));
 
-    // If we have matched the entire Substring, then return the position
-    if j > Length(SubstringLower)
-    then Exit(i - Length(SubstringLower));
-
-    // Move to the next character
-    Inc(i);
-  end;
+     // Move to the next character
+     Inc(i);
+   end;
 end;
 
 
 { Returns the position where Needle was found in the haystack.
   BUT does so only if the character in front of the Needle is a non-alphabetic character (a-z, A-Z) }
+//ToDo: Pos = 1 is valid only if it's a standalone word. The function should check if HayStack[Pos + Length(Needle)] is also a separator.
 function WordPos(const Needle, HayStack: string): Integer;
 begin
   var Pos:= PosInsensitive(Needle, HayStack);
@@ -358,4 +361,77 @@ end;
 
 
 
-end.
+
+
+
+{ Search multiple strings sepparated by special instructions like [OR] and [AND] and [NOT].
+  For example if I look for a line of code that must contain both the keywords 'if' and 'then' than I will write my query as:
+  usage:
+     FindLine(InputText, 'if[AND]then'): Integer;  }
+
+// !!!!!!!!!!!! NOT TESTED YET !!!!!!!!!!!!
+// ChatGPT    (better)
+function RelaxedSearchEx(Query: string; Haystack: TStringList; StartAt: Integer = 0): Integer;
+var
+  Terms: TArray<string>;
+  IncludeList, ExcludeList: TArray<string>;
+  Line, Term: string;
+  Found, MatchAND, MatchOR: Boolean;
+  i: Integer;
+begin
+  Result := -1;
+  Terms := Query.Split(['[AND]', '[OR]', '[NOT]'], TStringSplitOptions.ExcludeEmpty);
+
+  // Process Terms into Include and Exclude lists
+  for Term in Terms do
+  begin
+    if Pos('[NOT]', Query) > 0
+    then ExcludeList := ExcludeList + [Trim(Term)]
+    else
+      if Pos('[AND]', Query) > 0
+      then IncludeList := IncludeList + [Trim(Term)]
+      else IncludeList := IncludeList + [Trim(Term)];
+  end;
+
+  // Search
+  for i := StartAt to Haystack.Count - 1 do
+  begin
+    Line := LowerCase(Trim(Haystack[i]));
+    MatchAND := True;
+    MatchOR := False;
+
+    // Check Include terms (AND condition)
+    for Term in IncludeList do
+      if Pos(LowerCase(Term), Line) = 0 then
+      begin
+        MatchAND := False;
+        Break;
+      end;
+
+    // Check Exclude terms (NOT condition)
+    for Term in ExcludeList do
+      if Pos(LowerCase(Term), Line) > 0 then
+      begin
+        MatchAND := False;
+        Break;
+      end;
+
+    // If we have `[OR]` conditions, allow at least one match
+    for Term in IncludeList do
+      if Pos(LowerCase(Term), Line) > 0 then
+      begin
+        MatchOR := True;
+        Break;
+      end;
+
+    // Result
+    Found := (MatchAND and (Pos('[AND]', Query) > 0)) or
+             (MatchOR  and (Pos('[OR]', Query) > 0)) or
+             (MatchAND and NOT MatchOR);
+
+    if Found then Exit(i);
+  end;
+end;
+
+
+END.

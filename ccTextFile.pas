@@ -479,7 +479,7 @@ end;
 { Converts UTF8 to ANSI }
 function ConvertToAnsi(CONST FileName: string): boolean;
 var
-  OutputFileName: string;
+  OutFileName: string;
   InputFile, OutputFile: TFileStream;
   UTF8String: TStringStream;
   AnsiStr: AnsiString;
@@ -494,8 +494,8 @@ begin
 
         AnsiStr := AnsiString(UTF8String.DataString);
 
-        OutputFileName := ChangeFileExt(FileName, '._temp_ansi_');
-        OutputFile := TFileStream.Create(OutputFileName, fmCreate);
+        OutFileName := ChangeFileExt(FileName, '._temp_ansi_');
+        OutputFile := TFileStream.Create(OutFileName, fmCreate);
         try
           OutputFile.WriteBuffer(AnsiStr[1], Length(AnsiStr));
         finally
@@ -509,7 +509,8 @@ begin
 
   // Replace the original file with the one containing BOM
   DeleteFile(FileName);
-  System.SysUtils.RenameFile(OutputFileName, FileName);
+  //System.SysUtils.RenameFile(OutFileName, FileName);
+  TFile.Move(OutFileName, FileName);
 end;
 
 
@@ -557,7 +558,8 @@ begin
 
   // Replace the original file with the one containing BOM
   DeleteFile(FileName);
-  System.SysUtils.RenameFile(OutFileName, FileName);
+  //System.SysUtils.RenameFile(OutFileName, FileName);
+  TFile.Move(OutFileName, FileName);
 end;
 
 
@@ -589,7 +591,8 @@ begin
 
   // Replace the original file with the one containing BOM
   DeleteFile(FileName);
-  System.SysUtils.RenameFile(OutFileName, FileName);
+  //System.SysUtils.RenameFile(OutFileName, FileName);
+  TFile.Move(OutFileName, FileName);
 end;
 
 

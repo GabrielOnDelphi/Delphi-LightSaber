@@ -20,7 +20,7 @@ TYPE
     procedure btnHelperClick(Sender: TObject);
   protected
   private
-    procedure LateInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
+    procedure FormInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
   public
  end;
 
@@ -46,9 +46,9 @@ begin
 end;
 
 
-procedure TfrmTester.LateInitialize;
+procedure TfrmTester.FormInitialize;
 begin
- inherited LateInitialize;
+ inherited FormInitialize;
 
  Translator:= TTranslator.Create;  // Initialize the translator
  Translator.LoadLastTranslation;   // Load last language

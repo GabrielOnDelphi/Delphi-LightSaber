@@ -75,7 +75,7 @@ TYPE
     procedure ObjectFromGUI;
 
   public
-    procedure LateInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
+    procedure FormInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
     class procedure CreateFormModal(aGuiSettings: TGuiSettings); static;
  end;
 
@@ -119,9 +119,9 @@ begin
 end;
 
 
-procedure TfrmSettings.LateInitialize;
+procedure TfrmSettings.FormInitialize;
 begin
-  inherited LateInitialize;
+  inherited FormInitialize;
   btnCrash.Visible:= AppData.BetaTesterMode;
 end;
 

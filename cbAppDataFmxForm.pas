@@ -14,7 +14,7 @@
       Example:
          TfrmMain = class(TLightForm)
           protected
-            procedure LateInitialize; override; // Called after the main form was fully initilized
+            procedure FormInitialize; override; // Called after the main form was fully initilized
          end;
 
 
@@ -28,12 +28,12 @@
         protected
           procedure BeforeRelease;  override;    // Optional
         public
-          procedure LateInitialize; override;    // Optional
+          procedure FormInitialize; override;    // Optional
         end;
 
-       procedure TYourForm.LateInitialize;
+       procedure TYourForm.FormInitialize;
        begin
-         inherited LateInitialize;
+         inherited FormInitialize;
          // Intialize your code here
        end;
 
@@ -70,12 +70,12 @@ type
   public
     Loading: TAutoState;
 
-    procedure LateInitialize; {don't forget inherited LateInitialize!} virtual;
+    procedure FormInitialize; {don't forget inherited LateInitialize!} virtual;
 
     function CloseQuery: boolean; override;
     constructor Create(AOwner: TComponent); override;
   published
-    //property OnLateInitialize: TNotifyEvent read FOnLateInitialize write FOnLateInitialize;
+    //property OnLateInitialize: TNotifyEvent read FOnLateInitialize write FOnFormInitialize;
   end;
 
 
@@ -105,7 +105,7 @@ begin
 end;
 
 
-procedure TLightForm.LateInitialize;
+procedure TLightForm.FormInitialize;
 begin
   // This can be overridden by the user to implement initialization after the form is ready
 end;

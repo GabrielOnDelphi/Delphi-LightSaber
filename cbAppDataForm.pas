@@ -14,7 +14,7 @@
       The TLightForm provides two places that (in conjunction with TAppData) offer you two methods that are guaranteed to be executed:
       TMyForm = class(TLightForm)
           protected
-            procedure LateInitialize; override; // Called after the main form was fully initialized.
+            procedure FormInitialize; override; // Called after the main form was fully initialized.
             property OnBeforeRelease;
          end;
 
@@ -30,12 +30,12 @@
         TYourForm = class(TLightForm)
         protected
         public
-          procedure LateInitialize;  override;    // Optional
+          procedure FormInitialize;  override;    // Optional
         end;
 
-       procedure TYourForm.LateInitialize;
+       procedure TYourForm.FormInitialize;
        begin
-         inherited LateInitialize;
+         inherited FormInitialize;
 
          // Initialize your own code here
        end;
@@ -77,26 +77,27 @@ type
   TLightForm = class(TForm)
   private
     FAutoSaveForm: TAutoState;  // We can use this later in the destructor to know how to save the form: flPosOnly/flFull
-    FBeforeRelease: TNotifyEvent;
+    //FOnRelease: TNotifyEvent;
   protected
     Saved: Boolean;
-    procedure SaveBeforeExit;
+    procedure saveBeforeExit;
 
     procedure DoDestroy; override;
     procedure DoClose(var Action: TCloseAction); override;
     procedure WMEndSession(var Msg: TWMEndSession);
   public
-    procedure LateInitialize; virtual;
-
-    function CloseQuery: boolean; override;
     constructor Create(AOwner: TComponent; AutoSaveForm: TAutoState); reintroduce; overload; virtual;
+    function CloseQuery: boolean; override;
+
+    procedure FormInitialize; virtual;
+    procedure FormRelease; virtual;
 
     procedure LoadForm; virtual;
     procedure SaveForm; virtual;
   published
     property AutoSaveForm   : TAutoState   read FAutoSaveForm  write FAutoSaveForm;
     // Events
-    property OnBeforeRelease: TNotifyEvent read FBeforeRelease write FBeforeRelease;
+    //del property OnRelease: TNotifyEvent read FOnRelease write FOnRelease;
   end;
 
 
@@ -118,7 +119,7 @@ begin
 end;
 
 
-procedure TLightForm.LateInitialize;
+procedure TLightForm.FormInitialize;
 begin
   // This can be overridden by the user to implement initialization after the form is ready
 end;
@@ -126,47 +127,54 @@ end;
 
 procedure TLightForm.WMEndSession(var Msg: TWMEndSession);
 begin
-  SaveBeforeExit;
+  saveBeforeExit;
   inherited;
 end;
 
 procedure TLightForm.DoDestroy;
 begin
-  SaveBeforeExit;
+  saveBeforeExit;
   inherited;
 end;
 
 procedure TLightForm.DoClose(var Action: TCloseAction);
 begin
-  SaveBeforeExit;
   inherited DoClose(Action);
-end; 
+  if Action = TCloseAction.caFree then saveBeforeExit;
+end;
 
 
 function TLightForm.CloseQuery: Boolean;  // Correct method name
 begin
-  SaveBeforeExit;
+  saveBeforeExit;
   Result:= inherited CloseQuery;
 end;
 
 
-{ It is enough to put SaveBeforeExit in thse two places only: OnCloseQueryand & OnDestroy.
+{ This code is guaranteed to be called ONLY once.
+
+  Tech details: It is enough to put SaveBeforeExit in these two places only: OnCloseQueryand & OnDestroy.
   Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
-procedure TLightForm.SaveBeforeExit;
+procedure TLightForm.saveBeforeExit;
 begin
   if NOT Saved
   AND NOT AppData.Initializing then
   begin
     try
-      if Assigned(FBeforeRelease)
-      then FBeforeRelease(Self); // Called ONLY once!
+      FormRelease;
 
-      if AutoSaveForm <> asNone // Give the user the option not to save the form
+      if AutoSaveForm > asNone  // Give the user the option not to save the form
       then SaveForm;
     finally
-      Saved:= TRUE;  // Make sure it is put to true even on accidents, otherwise we might call it multiple times.
+      Saved:= TRUE;             // Make sure it is put to true even on accidents, otherwise we might call it multiple times.
     end;
   end;
+end;
+
+
+procedure TLightForm.FormRelease;
+begin
+  // Give user a chance to call its own finalization code (guaranteed once)
 end;
 
 
@@ -216,6 +224,7 @@ begin
    FreeAndNil(IniFile);
  END;
 end;
+
 
 
 { Override this method if you want to do your own loading from INI file. In this case, don't call inherited!
