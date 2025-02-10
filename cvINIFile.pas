@@ -172,7 +172,7 @@ begin
  IniFile:= TIniFileVCL.Create(Form.Name);
  TRY
   TRY
-    IniFile.SaveForm(Form, Form.AutoSaveForm);
+    IniFile.SaveForm(Form, Form.AutoState);
   EXCEPT
     ON EIniFileexception DO
       if AppData <> NIL
@@ -199,7 +199,7 @@ begin
  IniFile:= TIniFileVCL.Create(Form.Name);
  TRY
   TRY
-    IniFile.LoadForm(Form, Form.AutoSaveForm);
+    IniFile.LoadForm(Form, Form.AutoState);
     CorrectFormPositionScreen(Form);
   EXCEPT
     ON EIniFileException DO

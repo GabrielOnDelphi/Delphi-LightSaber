@@ -1,13 +1,12 @@
 UNIT cmPascal;
 
 {=============================================================================================================
-   2023.03
+   Gabriel Moraru
+   2021
    See Copyright.txt
-==============================================================================================================
-
+--------------------------------------------------------------------------------------------------------------
    Very crude routines for processing PAS files.
-
-=============================================================================================================}
+-------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
 
@@ -381,7 +380,6 @@ var
 begin
   Result := -1;
   Terms := Query.Split(['[AND]', '[OR]', '[NOT]'], TStringSplitOptions.ExcludeEmpty);
-
   // Process Terms into Include and Exclude lists
   for Term in Terms do
   begin
@@ -392,14 +390,12 @@ begin
       then IncludeList := IncludeList + [Trim(Term)]
       else IncludeList := IncludeList + [Trim(Term)];
   end;
-
   // Search
   for i := StartAt to Haystack.Count - 1 do
   begin
     Line := LowerCase(Trim(Haystack[i]));
     MatchAND := True;
     MatchOR := False;
-
     // Check Include terms (AND condition)
     for Term in IncludeList do
       if Pos(LowerCase(Term), Line) = 0 then
@@ -407,7 +403,6 @@ begin
         MatchAND := False;
         Break;
       end;
-
     // Check Exclude terms (NOT condition)
     for Term in ExcludeList do
       if Pos(LowerCase(Term), Line) > 0 then
@@ -415,7 +410,6 @@ begin
         MatchAND := False;
         Break;
       end;
-
     // If we have `[OR]` conditions, allow at least one match
     for Term in IncludeList do
       if Pos(LowerCase(Term), Line) > 0 then
@@ -423,12 +417,10 @@ begin
         MatchOR := True;
         Break;
       end;
-
     // Result
     Found := (MatchAND and (Pos('[AND]', Query) > 0)) or
              (MatchOR  and (Pos('[OR]', Query) > 0)) or
              (MatchAND and NOT MatchOR);
-
     if Found then Exit(i);
   end;
 end;

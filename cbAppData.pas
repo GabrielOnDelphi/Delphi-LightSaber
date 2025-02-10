@@ -238,14 +238,14 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       FORM
    --------------------------------------------------------------------------------------------------}
-    procedure CreateMainForm  (aClass: TFormClass;                MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly); overload;
-    procedure CreateMainForm  (aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly); overload;
+    procedure CreateMainForm  (aClass: TFormClass;                MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly); overload;
+    procedure CreateMainForm  (aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly); overload;
 
-    procedure CreateForm      (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly; Owner: TWinControl = NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
-    procedure CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TAutoState= asPosOnly; ParentWnd: TWinControl = NIL);
+    procedure CreateForm      (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly; Owner: TWinControl = NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
+    procedure CreateFormHidden(aClass: TFormClass; OUT Reference;                      AutoState: TAutoState= asPosOnly; ParentWnd: TWinControl = NIL);
 
-    procedure CreateFormModal (aClass: TFormClass; OUT Reference; Loading: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL); overload;   // Do I need this?
-    procedure CreateFormModal (aClass: TFormClass;                Loading: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL); overload;
+    procedure CreateFormModal (aClass: TFormClass; OUT Reference;                      AutoState: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL); overload;   // Do I need this?
+    procedure CreateFormModal (aClass: TFormClass;                                     AutoState: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL); overload;
 
     procedure SetMaxPriority;
     procedure HideFromTaskbar;
@@ -421,14 +421,14 @@ end;
 { 1. Creates a form
   2. Set the font of the new form to be the same as the font of the MainForm
   3. Show it }
-procedure TAppData.CreateMainForm(aClass: TFormClass; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly);
+procedure TAppData.CreateMainForm(aClass: TFormClass; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly);
 begin
   VAR Reference: TForm;
-  CreateMainForm(aClass, Reference, MainFormOnTaskbar, Show, Loading);
+  CreateMainForm(aClass, Reference, MainFormOnTaskbar, Show, AutoState);
 end;
 
 
-procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly);
+procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly);
 begin
   Assert(Vcl.Dialogs.UseLatestCommonDialogs= TRUE);      { This is true anyway by default, but I check it to remember myself about it. Details: http://stackoverflow.com/questions/7944416/tfileopendialog-requires-windows-vista-or-later }
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
@@ -448,8 +448,8 @@ begin
   // Work around: The user can override the LateInitialize and use the OnBeforeRelease event to insert his own code
   if TForm(Reference) is TLightForm then
     begin
-      TLightForm(Reference).AutoSaveForm:= Loading;
-      if Loading <> asNone
+      TLightForm(Reference).AutoState:= AutoState;
+      if AutoState <> asNone
       then TLightForm(Reference).LoadForm;
     end;
 
@@ -482,7 +482,7 @@ end;
 
 { Create secondary form
   "Loading" indicates if the GUI settings are remembered or not }
-procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; Loading: TAutoState= asPosOnly; Owner: TWinControl= NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
+procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly; Owner: TWinControl= NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
 begin
   if CreateBeforeMainForm
   then
@@ -518,7 +518,7 @@ begin
   // Load previous form settings
   if TForm(Reference) is TLightForm then
     begin
-     TLightForm(Reference).AutoSaveForm:= Loading;
+     TLightForm(Reference).AutoState:= AutoState;
      TLightForm(Reference).LoadForm;
     end;
 
@@ -537,26 +537,26 @@ end;
 
 
 { Create secondary form }
-procedure TAppData.CreateFormHidden(aClass: TFormClass; OUT Reference; Loading: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateFormHidden(aClass: TFormClass; OUT Reference; AutoState: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL);
 begin
-  CreateForm(aClass, Reference, FALSE, Loading, ParentWnd);
+  CreateForm(aClass, Reference, FALSE, AutoState, ParentWnd);
 end;
 
 
 { Create secondary form }
-procedure TAppData.CreateFormModal(aClass: TFormClass; Loading: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateFormModal(aClass: TFormClass; AutoState: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL);
 VAR Reference: TForm;
 begin
-  CreateForm(aClass, Reference, FALSE, Loading, ParentWnd);
+  CreateForm(aClass, Reference, FALSE, AutoState, ParentWnd);
   Reference.ShowModal;
 end;
 
 
 { Create secondary form }
 //ToDo: Do I need this? Since the form is modal, I should never need the Reference? To be deleted
-procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference; Loading: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL);
+procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference; AutoState: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL);
 begin
-  CreateFormModal(aClass, Loading, ParentWnd);
+  CreateFormModal(aClass, AutoState, ParentWnd);
 end;
 
 

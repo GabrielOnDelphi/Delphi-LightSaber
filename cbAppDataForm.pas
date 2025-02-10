@@ -15,7 +15,7 @@
       TMyForm = class(TLightForm)
           protected
             procedure FormInitialize; override; // Called after the main form was fully initialized.
-            property OnBeforeRelease;
+            procedure FormRelease;
          end;
 
 
@@ -44,11 +44,12 @@
 
   Extra features
 
-      OnBeforeRelease
+      FormRelease
 
-         Optionally you can use the OnBeforeRelease event to execute your code on application shutdown.
-         Unlike other events, OnBeforeRelease is always called, and it is guaranteed to be called once and only once!
+         Optionally you can use the FormRelease event to execute your code on application shutdown.
+         Unlike other events, FormRelease is always called, and it is guaranteed to be called once and only once!
 
+         Execution order: FormRelease -> FormClose -> FormDestroy
 
       Self saving forms
 
@@ -95,7 +96,7 @@ type
     procedure LoadForm; virtual;
     procedure SaveForm; virtual;
   published
-    property AutoSaveForm   : TAutoState   read FAutoSaveForm  write FAutoSaveForm;
+    property AutoState: TAutoState   read FAutoSaveForm  write FAutoSaveForm;
     // Events
     //del property OnRelease: TNotifyEvent read FOnRelease write FOnRelease;
   end;
@@ -163,7 +164,7 @@ begin
     try
       FormRelease;
 
-      if AutoSaveForm > asNone  // Give the user the option not to save the form
+      if AutoState > asNone  // Give the user the option not to save the form
       then SaveForm;
     finally
       Saved:= TRUE;             // Make sure it is put to true even on accidents, otherwise we might call it multiple times.
@@ -214,7 +215,7 @@ begin
  IniFile:= TIniFileApp.Create(Self.Name);
  TRY
   TRY
-    IniFile.SaveForm(Self);
+    IniFile.SaveForm(Self, AutoState);
   EXCEPT
     ON EIniFileException DO
       if AppData <> NIL
@@ -244,7 +245,7 @@ begin
  IniFile:= TIniFileApp.Create(Self.Name);
  TRY
   TRY
-    IniFile.LoadForm(Self);
+    IniFile.LoadForm(Self, AutoState);
     CorrectFormPositionScreen(Self);
   EXCEPT
     ON EIniFileException DO

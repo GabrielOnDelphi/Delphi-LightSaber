@@ -468,9 +468,9 @@ var
   FileContent: string;
   DetectedEncoding: TEncoding;
 begin
-  DetectedEncoding := DetectEncoding(FileName);       // Detect the file's encoding (UTF-8 with BOM, UTF-8 without BOM, or ANSI)
-  FileContent      := TFile.ReadAllText(FileName, DetectedEncoding);       // Read the file content using the detected encoding
-  StringToFile(FileName, FileContent, woOverwrite, wpOn);     // Write the file back in UTF-8 encoding with BOM
+  DetectedEncoding := DetectEncoding(FileName);                      // Detect the file's encoding (UTF-8 with BOM, UTF-8 without BOM, or ANSI)
+  FileContent      := TFile.ReadAllText(FileName, DetectedEncoding); // Read the file content using the detected encoding
+  StringToFile(FileName, FileContent, woOverwrite, wpOn);            // Write the file back in UTF-8 encoding with BOM
 end;
 
 
@@ -485,16 +485,15 @@ var
   AnsiStr: AnsiString;
 begin
   Result:= FileHasBOM(FileName);
-  if result then
+  if Result then
     begin
-      InputFile := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
+      OutFileName:= FileName+ '.temp';
+      InputFile  := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
       UTF8String := TStringStream.Create('', TEncoding.UTF8);
       try
         UTF8String.CopyFrom(InputFile, InputFile.Size);
 
-        AnsiStr := AnsiString(UTF8String.DataString);
-
-        OutFileName := ChangeFileExt(FileName, '._temp_ansi_');
+        AnsiStr    := AnsiString(UTF8String.DataString);
         OutputFile := TFileStream.Create(OutFileName, fmCreate);
         try
           OutputFile.WriteBuffer(AnsiStr[1], Length(AnsiStr));
@@ -502,17 +501,16 @@ begin
           OutputFile.Free;
         end;
       finally
-        InputFile.Free;
-        UTF8String.Free;
+        FreeAndNil(InputFile);
+        FreeAndNil(UTF8String);
       end;
+
+      // Replace the original file with the one
+      BackupFileBak(FileName);
+      TFile.Delete(FileName);
+      TFile.Move(OutFileName, FileName);
     end;
-
-  // Replace the original file with the one containing BOM
-  DeleteFile(FileName);
-  //System.SysUtils.RenameFile(OutFileName, FileName);
-  TFile.Move(OutFileName, FileName);
 end;
-
 
 
 
@@ -535,11 +533,11 @@ var
   OutFileName: string;
   Buffer: TBomBuffer;
 begin
+  OutFileName:= FileName+ '.temp';
   InpStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
   try
     if StreamHasBOM(InpStream) then Exit(False);
 
-    OutFileName := ChangeFileExt(FileName, '._WithBOM_');
     OutStream := TFileStream.Create(OutFileName, fmCreate);
     try
       Buffer[1]:= $EF;
@@ -550,16 +548,16 @@ begin
     finally
       FreeAndNil(OutStream);
     end;
-
-    Result:= True;  // We indicate that we added BOM
   finally
-    FreeAndNil(InpStream);
+    FreeAndNil(InpStream); // Close file so we can
   end;
 
-  // Replace the original file with the one containing BOM
-  DeleteFile(FileName);
-  //System.SysUtils.RenameFile(OutFileName, FileName);
+  // Replace the original file with the one
+  BackupFileBak(FileName);
+  TFile.Delete(FileName);
   TFile.Move(OutFileName, FileName);
+
+  Result:= True;  // We indicate that we added BOM
 end;
 
 
@@ -568,7 +566,7 @@ function ForceRemoveBOM(CONST FileName: string): Boolean;
 var
   OutStream, InpStream: TFileStream;
 begin
-  var OutFileName := ChangeFileExt(FileName, '._WithoutBOM_');
+  VAR OutFileName:= FileName+ '.temp';
 
   InpStream := TFileStream.Create(FileName, fmOpenRead or fmShareDenyWrite);
   try
@@ -583,16 +581,16 @@ begin
     finally
       FreeAndNil(OutStream);
     end;
-
-    Result:= True;  // We indicate that we removed BOM
   finally
     FreeAndNil(InpStream);
   end;
 
-  // Replace the original file with the one containing BOM
-  DeleteFile(FileName);
-  //System.SysUtils.RenameFile(OutFileName, FileName);
+  // Replace the original file with the one
+  BackupFileBak(FileName);
+  TFile.Delete(FileName);
   TFile.Move(OutFileName, FileName);
+
+  Result:= True;                     // We indicate that we removed BOM
 end;
 
 
