@@ -502,6 +502,8 @@ begin
       if Owner = NIL
       then Application.CreateForm(aClass, Reference)        // Owned by Application
       else TComponent(Reference):= aClass.Create(Owner);    // Owned by Owner
+
+      //TForm(Reference).Name:= 'abc';
     end;
 
   // Center form in the Owner

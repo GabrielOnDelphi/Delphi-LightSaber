@@ -1,4 +1,4 @@
-UNIT FormMain; 
+UNIT FormMain;
 
 INTERFACE
 
@@ -20,8 +20,8 @@ TYPE
     procedure btnHelperClick(Sender: TObject);
   protected
   private
-    procedure FormInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
   public
+    procedure FormInitialize; override; // Called after the main form was fully created
  end;
 
 VAR

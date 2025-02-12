@@ -67,7 +67,6 @@ TYPE
     procedure FormKeyPress            (Sender: TObject; var Key: Char);
     procedure spnOpacityChange        (Sender: TObject);
   protected
-    procedure BeforeRelease(Sender: TObject);
   private
     GuiSettings: TGuiSettings;
 
@@ -75,7 +74,8 @@ TYPE
     procedure ObjectFromGUI;
 
   public
-    procedure FormInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
+    procedure FormInitialize; override; // Called after the main form was fully created
+    procedure FormRelease; override;
     class procedure CreateFormModal(aGuiSettings: TGuiSettings); static;
  end;
 
@@ -114,7 +114,6 @@ end;
 procedure TfrmSettings.FormCreate(Sender: TObject);
 begin
   GuiFromObject;
-  OnBeforeRelease:= BeforeRelease;
   FontDialog.Font.Assign(Font);
 end;
 
@@ -126,11 +125,12 @@ begin
 end;
 
 
-procedure TfrmSettings.BeforeRelease;
+procedure TfrmSettings.FormRelease;
 begin
-  //inherited BeforeRelease;
+  inherited;
   ObjectFromGUI;
 end;
+
 
 
 
@@ -260,6 +260,7 @@ procedure TfrmSettings.btnCrashClick(Sender: TObject);
 begin
   cmDebugger.GenerateCrashNIL;
 end;
+
 
 
 

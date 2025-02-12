@@ -58,7 +58,7 @@ TYPE
     procedure SaveSettings;
   public
     class procedure CreateGlobalLog; static; // Would be nice to make this protected but we can't. All event handlers must be accesible/visible
-    procedure FormInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully initilized
+    procedure FormInitialize; override; // Called after the main form was fully initilized
   end;
 
 

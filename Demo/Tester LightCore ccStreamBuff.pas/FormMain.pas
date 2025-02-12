@@ -62,8 +62,8 @@ TYPE
     procedure btnStreamWriteClick     (Sender: TObject);
     procedure btnStreamReadClick      (Sender: TObject);
   private
-    procedure FormInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
   public
+    procedure FormInitialize; override; // Called after the main form was fully created
  end;
 
 VAR

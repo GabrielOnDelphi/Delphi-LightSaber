@@ -104,10 +104,10 @@ TYPE
     procedure FormCreate         (Sender: TObject);
   protected
     procedure WMDROPFILES (VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Accept the dropped files from Windows Explorer }
-    procedure BeforeRelease(Sender: TObject);
   private
   public
     procedure FormInitialize; override;  { Called after the main form was fully created }
+    procedure FormRelease; override;
     procedure FontSizeChanged;
  end;
 
@@ -135,7 +135,6 @@ USES
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   EmptyDummy;
-  OnBeforeRelease:= BeforeRelease;
   // Too early to do initialization here!
   // Initialization code is better done in LateInitialize which takes place AFTER the form was properly constructed!
 end;
@@ -165,8 +164,9 @@ end;
 
 { It is enough to put SaveBeforeExit in thse two places only: OnCloseQueryand & OnDestroy.
   Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
-procedure TMainForm.BeforeRelease(Sender: TObject);
+procedure TMainForm.FormRelease;
 begin
+  inherited;
   if NOT Saved then
    begin
      GuiSettings.Save;
@@ -358,6 +358,7 @@ begin
 
  fastmm4.RegisterExpectedMemoryLeak(Taskbar); }
 end;
+
 
 
 

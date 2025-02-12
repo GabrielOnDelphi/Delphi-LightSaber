@@ -59,7 +59,7 @@ TYPE
     procedure FormDestroy        (Sender: TObject);
   private
   public
-    procedure FormInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully created
+    procedure FormInitialize; override; // Called after the main form was fully created
  end;
 
 VAR
@@ -137,8 +137,8 @@ procedure TfrmTester.actAutoSaveExecute(Sender: TObject);
 begin
  //The status of this action (autocheck) will be stored to the INI file also BUT not when it is unchecked (obviously) because then we don't save the GUI to INI file
  if actAutoSave.Checked
- then AutoSaveForm:= asFull
- else AutoSaveForm:= asNone;
+ then AutoState:= asFull
+ else AutoState:= asNone;
 end;
 
 
