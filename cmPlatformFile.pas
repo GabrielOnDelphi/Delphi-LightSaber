@@ -4,9 +4,12 @@ UNIT cmPlatformFile;
    Gabriel Moraru
    2024.05
 --------------------------------------------------------------------------------------------------------------
-   Converts the 'enter' between Mac, Linux and Win.
+   Converts the 'Enter' between Mac, Linux and Win.
 
    Also see: ccTextFile.pas
+--------------------------------------------------------------------------------------------------------------
+   Tester app:
+      c:\Projects\Project Support\Tool - Light Delphi utilities (DUT)\LDU.dpr
 =============================================================================================================}
 
 INTERFACE
@@ -19,17 +22,17 @@ TYPE
   TConvertNotifyKind = (nkMax, nkProgress);
   TConvertNotify     = procedure(Kind: TConvertNotifyKind; Value: LongInt);
 
- function  IsMacFile           (InStream: TStream): Boolean;                                                      { Returns true if the Enter is format from a single CR character }
- function  GetEnterType        (InStream: TStream): EnterType;
- function  GetEnterTypeS       (CONST InputFile: string): string;
+ function  IsMacFile     (InStream: TStream): Boolean;                                                { Returns true if the Enter is format from a single CR character }
+ function  GetEnterType  (InStream: TStream): EnterType;
+ function  GetEnterTypeS (CONST InputFile: string): string;
 
- procedure WinToUnix           (InStream: TStream; OutStream: TStream; Notify: TConvertNotify);   overload;
- procedure UnixToWin           (InStream: TStream; OutStream: TStream; Notify: TConvertNotify);   overload;
- procedure MacToWin            (InStream: TStream; OutStream: TStream);                           overload;
+ procedure WinToUnix     (InStream: TStream; OutStream: TStream; Notify: TConvertNotify);   overload;
+ procedure UnixToWin     (InStream: TStream; OutStream: TStream; Notify: TConvertNotify);   overload;
+ procedure MacToWin      (InStream: TStream; OutStream: TStream);                           overload;
 
- procedure WinToUnix           (CONST InputFile, OutputFile: String; Notify: TConvertNotify);     overload;
- procedure UnixToWin           (CONST InputFile, OutputFile: String; Notify: TConvertNotify);     overload;
- function  MacToWin            (CONST InputFile, OutputFile: string): Boolean;                    overload;       { CR to CRLF }
+ procedure WinToUnix     (CONST InputFile, OutputFile: String; Notify: TConvertNotify);     overload;
+ procedure UnixToWin     (CONST InputFile, OutputFile: String; Notify: TConvertNotify);     overload;
+ function  MacToWin      (CONST InputFile, OutputFile: string): Boolean;                    overload; { CR to CRLF }
 
 
 IMPLEMENTATION

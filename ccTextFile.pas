@@ -4,16 +4,26 @@
    Gabriel Moraru
    2022
 --------------------------------------------------------------------------------------------------------------
-   Convert between ANSI and UTF8
+   Features:
 
-   Wikipedia:
-   The UTF-8 representation of the BOM is the (hexadecimal) byte sequence EF BB BF .
-   The Unicode Standard permits the BOM in UTF-8, but does not require or recommend its use.
+     * Write string to file
+     * UTF
+       ~ Convert between ANSI and UTF8
+       ~ BOM
+       ~ Encoding detection
 
-   Also see: cmPlatformFile.pas
+       Wikipedia:
+       The UTF-8 representation of the BOM is the (hexadecimal) byte sequence EF BB BF .
+       The Unicode Standard permits the BOM in UTF-8, but does not require or recommend its use.
 
+--------------------------------------------------------------------------------------------------------------
+   Also see cmPlatformFile.pas:
+       IsMacFile
+       GetEnterType
+       WinToUnix, UnixToWin, MacToWin
+--------------------------------------------------------------------------------------------------------------
    Tester app:
-      c:\My projects\Project support\DUT2\DUT2.dpr
+      c:\Projects\Project Support\Tool - Light Delphi utilities (DUT)\LDU.dpr
 =============================================================================================================}
 
 INTERFACE
@@ -21,7 +31,6 @@ INTERFACE
 {$I Frameworks.inc}
 
 USES
-  //Winapi.Windows,
   System.IOUtils, System.SysUtils, System.Classes;
 
 
@@ -239,10 +248,12 @@ end;
 function FirstLineFromFile(FileName: string): string;
 begin
   VAR TSL:= StringFromFileTSL(FileName);
-  Result:= TSL[0];
-  FreeAndNil(TSL);
+  TRY
+    Result:= TSL[0];
+  FINALLY
+    FreeAndNil(TSL);
+  END;
 end;
-
 
 { Opens a LARGE text file and counts how many lines it has.
   It does this by loading a small portion of the file in a RAM buffer.
@@ -418,7 +429,21 @@ begin
 end;
 
 
+function DetectEncoding(const FileName: string): TEncoding;
+begin
+  if FileHasBOM(FileName)
+  then Result:= TEncoding.UTF8
+  else
+    if IsValidUTF8(FileName)       // If no BOM, check if the content is valid UTF-8
+    then Result:= TEncoding.UTF8   // file is valid UTF-8 without BOM
+    else Result := TEncoding.ANSI; // assume ANSI
+end;
 
+
+
+{-------------------------------------------------------------------------------------------------------------
+   BOM
+-------------------------------------------------------------------------------------------------------------}
 
 function StreamHasBOM(InpStream: TFileStream): Boolean;
 var Buffer: TBomBuffer;
@@ -445,16 +470,6 @@ begin
 end;
 
 
-function DetectEncoding(const FileName: string): TEncoding;
-begin
-  if FileHasBOM(FileName)
-  then Result:= TEncoding.UTF8
-  else
-    if IsValidUTF8(FileName)       // If no BOM, check if the content is valid UTF-8
-    then Result:= TEncoding.UTF8   // file is valid UTF-8 without BOM
-    else Result := TEncoding.ANSI; // assume ANSI
-end;
-
 
 
 
@@ -475,16 +490,15 @@ end;
 
 
 
-{ Not working }
 { Converts UTF8 to ANSI }
 function ConvertToAnsi(CONST FileName: string): boolean;
 var
   OutFileName: string;
-  InputFile, OutputFile: TFileStream;
-  UTF8String: TStringStream;
   AnsiStr: AnsiString;
+  UTF8String: TStringStream;
+  InputFile, OutputFile: TFileStream;
 begin
-  Result:= FileHasBOM(FileName);
+  Result:= DetectEncoding(FileName)= TEncoding.UTF8;
   if Result then
     begin
       OutFileName:= FileName+ '.temp';
@@ -498,7 +512,7 @@ begin
         try
           OutputFile.WriteBuffer(AnsiStr[1], Length(AnsiStr));
         finally
-          OutputFile.Free;
+          FreeAndNil(OutputFile);
         end;
       finally
         FreeAndNil(InputFile);
