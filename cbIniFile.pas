@@ -429,7 +429,7 @@ function TIniFileApp.ReadComp(Comp: TComponent): Boolean;
 VAR s: string;
 begin
   Assert(Comp.Name > '', 'TIniFileVCL-The control has no name! Class: '+ Comp.ClassName);
- Result:= TRUE;
+  Result:= TRUE;
 
  { Read form }
  if Comp.InheritsFrom(TForm)
