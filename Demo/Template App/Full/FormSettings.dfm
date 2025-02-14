@@ -38,7 +38,7 @@ object frmSettings: TfrmSettings
         758
         478)
       object grpSystem: TGroupBox
-        Left = 174
+        Left = 170
         Top = 97
         Width = 381
         Height = 246
@@ -103,7 +103,7 @@ object frmSettings: TfrmSettings
       object Path: TCubicPathEdit
         Left = 82
         Top = 363
-        Width = 567
+        Width = 559
         Height = 49
         Hint = 
           'User defined path where to save (large) files. Useful when the p' +
@@ -114,7 +114,7 @@ object frmSettings: TfrmSettings
         TabOrder = 1
       end
       object btnCrash: TButton
-        Left = 612
+        Left = 604
         Top = 12
         Width = 101
         Height = 25
@@ -132,7 +132,7 @@ object frmSettings: TfrmSettings
         758
         478)
       object GroupHelp: TGroupBox
-        Left = 192
+        Left = 188
         Top = 129
         Width = 345
         Height = 221
@@ -207,7 +207,7 @@ object frmSettings: TfrmSettings
         758
         478)
       object GroupBox1: TGroupBox
-        Left = 220
+        Left = 216
         Top = 112
         Width = 290
         Height = 226
@@ -267,7 +267,7 @@ object frmSettings: TfrmSettings
         758
         478)
       object grpUser: TGroupBox
-        Left = 194
+        Left = 190
         Top = 129
         Width = 345
         Height = 221

@@ -85,7 +85,7 @@ begin
         AssociateWith('.LightSaber', AppData.AppName, FALSE, FALSE, TRUE);
 
         // Welcome page
-        if NOT AppData.BetaTesterMode
+        if NOT AppData.BetaTesterMode  // The program is in BetaTester mode if a file called "betatester" is found in the "System" folder.
         then csExecuteShell.ExecuteURL(AppData.ProductWelcome);
       end;
    end

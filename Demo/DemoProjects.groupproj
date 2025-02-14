@@ -3,7 +3,13 @@
         <ProjectGuid>{86A7DC54-2BCF-43C4-B6A1-11E9B4207D4B}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="Template App\TemplateApp.dproj">
+        <Projects Include="Template App\Minimal\TemplateMicro.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Template App\Simple\TemplateSimple.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Template App\Full\TemplateFull.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="Template Universal Uninstaller\Uninstaller.dproj">
@@ -38,14 +44,32 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
-    <Target Name="TemplateApp">
-        <MSBuild Projects="Template App\TemplateApp.dproj"/>
+    <Target Name="TemplateMicro">
+        <MSBuild Projects="Template App\Minimal\TemplateMicro.dproj"/>
     </Target>
-    <Target Name="TemplateApp:Clean">
-        <MSBuild Projects="Template App\TemplateApp.dproj" Targets="Clean"/>
+    <Target Name="TemplateMicro:Clean">
+        <MSBuild Projects="Template App\Minimal\TemplateMicro.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="TemplateApp:Make">
-        <MSBuild Projects="Template App\TemplateApp.dproj" Targets="Make"/>
+    <Target Name="TemplateMicro:Make">
+        <MSBuild Projects="Template App\Minimal\TemplateMicro.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="TemplateSimple">
+        <MSBuild Projects="Template App\Simple\TemplateSimple.dproj"/>
+    </Target>
+    <Target Name="TemplateSimple:Clean">
+        <MSBuild Projects="Template App\Simple\TemplateSimple.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TemplateSimple:Make">
+        <MSBuild Projects="Template App\Simple\TemplateSimple.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="TemplateFull">
+        <MSBuild Projects="Template App\Full\TemplateFull.dproj"/>
+    </Target>
+    <Target Name="TemplateFull:Clean">
+        <MSBuild Projects="Template App\Full\TemplateFull.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TemplateFull:Make">
+        <MSBuild Projects="Template App\Full\TemplateFull.dproj" Targets="Make"/>
     </Target>
     <Target Name="Uninstaller">
         <MSBuild Projects="Template Universal Uninstaller\Uninstaller.dproj"/>
@@ -120,13 +144,13 @@
         <MSBuild Projects="Tester LightLog\DemoLog.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="TemplateApp;Uninstaller;Demo_VisualControls;AutoTranslatorDemo;Demo_SaveGUI;Tester_ccIO;Tester_FileStream;Tester_WinVers;DemoLog"/>
+        <CallTarget Targets="TemplateMicro;TemplateSimple;TemplateFull;Uninstaller;Demo_VisualControls;AutoTranslatorDemo;Demo_SaveGUI;Tester_ccIO;Tester_FileStream;Tester_WinVers;DemoLog"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="TemplateApp:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;AutoTranslatorDemo:Clean;Demo_SaveGUI:Clean;Tester_ccIO:Clean;Tester_FileStream:Clean;Tester_WinVers:Clean;DemoLog:Clean"/>
+        <CallTarget Targets="TemplateMicro:Clean;TemplateSimple:Clean;TemplateFull:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;AutoTranslatorDemo:Clean;Demo_SaveGUI:Clean;Tester_ccIO:Clean;Tester_FileStream:Clean;Tester_WinVers:Clean;DemoLog:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="TemplateApp:Make;Uninstaller:Make;Demo_VisualControls:Make;AutoTranslatorDemo:Make;Demo_SaveGUI:Make;Tester_ccIO:Make;Tester_FileStream:Make;Tester_WinVers:Make;DemoLog:Make"/>
+        <CallTarget Targets="TemplateMicro:Make;TemplateSimple:Make;TemplateFull:Make;Uninstaller:Make;Demo_VisualControls:Make;AutoTranslatorDemo:Make;Demo_SaveGUI:Make;Tester_ccIO:Make;Tester_FileStream:Make;Tester_WinVers:Make;DemoLog:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

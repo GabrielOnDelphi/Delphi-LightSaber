@@ -69,7 +69,7 @@ TYPE
     procedure spnOpacityChange        (Sender: TObject);
   protected
   private
-    GuiSettings: TGuiSettings;
+    GuiSettings: TGuiSettings;    // GUI Settings are created separatedly from the form because we want to access them even if the form is not running.
 
     procedure GuiFromObject;  // Called after the main form was fully created
     procedure ObjectFromGUI;
@@ -99,11 +99,12 @@ begin
  Assert(aGuiSettings <> NIL);
 
  AppData.CreateFormHidden(TfrmSettings, frmSettings);
+ frmSettings.GuiSettings:= aGuiSettings;
+ frmSettings.GuiFromObject;
 
  if Translator <> NIL
  then Translator.LoadFormTranlation(frmSettings);
 
- frmSettings.GuiSettings:= aGuiSettings;
  frmSettings.ShowModal;    { Closed by mrOk/mrCancel. Set to caFree. }
 end;
 
@@ -114,14 +115,14 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TfrmSettings.FormCreate(Sender: TObject);
 begin
-  GuiFromObject;
-  FontDialog.Font.Assign(Font);
+// nope!
 end;
 
 
 procedure TfrmSettings.FormInitialize;
 begin
   inherited FormInitialize;
+  FontDialog.Font.Assign(Font);
   btnCrash.Visible:= AppData.BetaTesterMode;
 end;
 
@@ -176,6 +177,7 @@ begin
  chkLogOnError   .Checked := AppData.RamLog.ShowonError;
 
  { Demo/template settings }
+ Assert(GuiSettings <> NIL);
  chkUser         .Checked := GuiSettings.bUser;   // Replace this with your own code
  spnUser         .Value   := GuiSettings.iUser;   // Replace this with your own code
 end;

@@ -46,3 +46,5 @@ Demo/Tester LightCore ccStreamBuff.pas/TCubicBuffStream.bin
 2.pas
 cbAppData mixed fmx vcl.pas
 1 copilot.pas
+Demo/Tester LightCore ccWinVersion.pas/Tester_WinVers.drc
+*.drc

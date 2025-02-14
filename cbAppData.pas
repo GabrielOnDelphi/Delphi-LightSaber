@@ -145,17 +145,18 @@ TYPE
     procedure SetGuiProperties(Form: TForm);
     procedure setHideHint(const Value: Integer);
     procedure setShowOnError(const Value: Boolean);
+    procedure defaultSettings;
     CONST
       Signature: AnsiString= 'AppDataSettings';{ Do not change it! }
       DefaultHomePage= 'https://www.GabrielMoraru.com';
-    class VAR FCreated: Boolean;     { Sanity check }
+    class VAR FCreated: Boolean;            { Sanity check. Make sure the user did not created this obj twice }
     class VAR FAppName: string;
     function  getLastUsedFolder: string;
     procedure setFont(aFont: TFont);
-    procedure LoadSettings;
-    procedure SaveSettings;
-    procedure RegisterUninstaller;
-    function  RunSelfAtWinStartUp(Active: Boolean): Boolean;
+    procedure loadSettings;
+    procedure saveSettings;
+    procedure registerUninstaller;
+    function  runSelfAtWinStartUp(Active: Boolean): Boolean;
   protected
     CopyDataID: DWORD;          // For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA
   public
@@ -385,17 +386,7 @@ begin
   { App settings }
   if FileExists(IniFile)
   then LoadSettings
-  else
-    begin
-      { Default settings }
-      AutoStartUp  := TRUE;
-      StartMinim   := FALSE;
-      Minimize2Tray:= TRUE;                      // Minimize to tray
-      HintType     := htTooltips;                // Turn off the embeded help system
-      HideHint     := 4000;                      // Hide hint after x ms.
-      Opacity      := 250;
-      UserPath     := AppDataFolder;
-    end;
+  else defaultSettings; // Hint: Use LightSaber\Demo\Template App\Full\FormSettings.pas to give user access to these settings }
 
   { Product details }
   CompanyName    := 'SciVance';
@@ -1430,8 +1421,22 @@ begin
 end;
 
 
+{ Default program settings
+  Hint: Use LightSaber\Demo\Template App\Full\FormSettings.pas to give user access to these settings }
+procedure TAppData.DefaultSettings;
+begin
+  AutoStartUp  := FALSE;
+  StartMinim   := FALSE;
+  Minimize2Tray:= TRUE;                      // Minimize to tray
+  HintType     := htTooltips;                // Turn off the embeded help system
+  HideHint     := 4000;                      // Hide hint after x ms.
+  Opacity      := 250;
+  UserPath     := AppDataFolder;
+end;
 
-initialization
+
+INITIALIZATION
+// Hint We could create AppData here
 
 FINALIZATION
 begin

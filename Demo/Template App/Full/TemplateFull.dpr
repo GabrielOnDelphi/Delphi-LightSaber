@@ -1,4 +1,4 @@
-program TemplateApp;
+program TemplateFull;
 
 uses
   {$IFDEF DEBUG}

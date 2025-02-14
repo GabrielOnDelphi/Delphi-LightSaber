@@ -4,9 +4,9 @@
         <AppType>Application</AppType>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>VCL</FrameworkType>
-        <MainSource>TemplateApp.dpr</MainSource>
+        <MainSource>TemplateFull.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <ProjectGuid>{5176FADE-1D31-4EFC-B9D1-148C216BA56F}</ProjectGuid>
+        <ProjectGuid>{19D67F4E-49C5-4F47-B479-ABDFD305599E}</ProjectGuid>
         <ProjectVersion>19.5</ProjectVersion>
         <TargetedPlatforms>1</TargetedPlatforms>
     </PropertyGroup>
@@ -41,7 +41,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>TemplateApp</SanitizedProjectName>
+        <SanitizedProjectName>TemplateFull</SanitizedProjectName>
         <DCC_Alignment>2</DCC_Alignment>
         <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
         <DCC_DcuOutput>$(ProductVersion)_$(Platform)_$(Config)</DCC_DcuOutput>
@@ -89,7 +89,6 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="..\..\cbAppData.pas"/>
         <DCCReference Include="FormMain.pas">
             <Form>MainForm</Form>
         </DCCReference>
@@ -105,7 +104,6 @@
         <DCCReference Include="..\..\Updater\FormUpdaterSettings.pas"/>
         <DCCReference Include="uInitialization.pas"/>
         <DCCReference Include="..\..\Updater\ciUpdater.pas"/>
-        <DCCReference Include="..\..\cbAppDataForm.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -124,7 +122,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">TemplateApp.dpr</Source>
+                    <Source Name="MainSource">TemplateFull.dpr</Source>
                 </Source>
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>

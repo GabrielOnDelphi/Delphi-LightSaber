@@ -30,11 +30,12 @@ USES
 
 procedure LateInitialization;
 begin
-  // Application
-  AppData.CompanyName    := 'SciVance Technologies';
-  ///AppData.ProductHome    := HomePage;
-  ///AppData.ProductSupport := HomePage;
-  ///AppData.ProductUninstal:= HomePage;
+  { Brand }
+  { Add your brand here
+  AppData.CompanyName    := 'BuyTime Ltd';
+  AppData.ProductHome    := 'https://YourWebsiteHere.com';
+  AppData.ProductSupport := 'https://YourWebsiteHere.com';
+  AppData.ProductUninstal:= 'https://YourWebsiteHere.com'; }
 
   { Settings }
   GuiSettings:= TGuiSettings.Create;
