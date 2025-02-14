@@ -3,8 +3,8 @@ I use it as a template for all my applications.
 
 [Minimal]
 The Minimal example shows you what you can achieve with the minimal amount of code:
- * automatically save GUI's state on program shutdown (form position on screen, checkbox state, etc)
- * automatically restore GUI's state on program startup.
+ * Automatically save GUI's state on program shutdown (form position on screen, checkbox state, etc)
+ * Automatically restore GUI's state on program startup.
 
 [Simple]
 Additional to the above example, this example has only a few lines of extra code:
