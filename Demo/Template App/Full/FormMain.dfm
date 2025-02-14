@@ -3,8 +3,8 @@ object MainForm: TMainForm
   Top = 327
   AlphaBlendValue = 249
   Caption = 'Enviroment'
-  ClientHeight = 532
-  ClientWidth = 684
+  ClientHeight = 531
+  ClientWidth = 680
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 350
@@ -26,8 +26,8 @@ object MainForm: TMainForm
   object pgCtrl: TPageControl
     Left = 0
     Top = 0
-    Width = 684
-    Height = 513
+    Width = 680
+    Height = 512
     ActivePage = tabMain
     Align = alClient
     TabOrder = 0
@@ -37,17 +37,17 @@ object MainForm: TMainForm
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 479
-        Height = 475
+        Width = 475
+        Height = 474
         Align = alClient
         TabOrder = 1
       end
       object pnlRight: TPanel
         AlignWithMargins = True
-        Left = 488
+        Left = 484
         Top = 3
         Width = 185
-        Height = 475
+        Height = 474
         Align = alRight
         TabOrder = 0
         object btnStart: TButton
@@ -65,10 +65,10 @@ object MainForm: TMainForm
       Caption = 'Demos'
       ImageIndex = 3
       DesignSize = (
-        676
-        481)
+        672
+        480)
       object btnProgress: TButton
-        Left = 226
+        Left = 221
         Top = 394
         Width = 143
         Height = 49
@@ -79,7 +79,7 @@ object MainForm: TMainForm
         OnClick = btnProgressClick
       end
       object Button1: TButton
-        Left = 226
+        Left = 221
         Top = 104
         Width = 143
         Height = 49
@@ -88,7 +88,7 @@ object MainForm: TMainForm
         TabOrder = 1
       end
       object Button2: TButton
-        Left = 226
+        Left = 221
         Top = 158
         Width = 143
         Height = 49
@@ -97,7 +97,7 @@ object MainForm: TMainForm
         TabOrder = 2
       end
       object Button3: TButton
-        Left = 226
+        Left = 221
         Top = 211
         Width = 143
         Height = 49
@@ -106,7 +106,7 @@ object MainForm: TMainForm
         TabOrder = 3
       end
       object Button4: TButton
-        Left = 226
+        Left = 221
         Top = 265
         Width = 143
         Height = 49
@@ -119,10 +119,10 @@ object MainForm: TMainForm
       Caption = 'Log'
       ImageIndex = 4
       DesignSize = (
-        676
-        481)
+        672
+        480)
       object btnShowLog: TButton
-        Left = 212
+        Left = 206
         Top = 58
         Width = 191
         Height = 45
@@ -132,7 +132,7 @@ object MainForm: TMainForm
         TabOrder = 0
       end
       object Button5: TButton
-        Left = 212
+        Left = 206
         Top = 107
         Width = 191
         Height = 34
@@ -142,7 +142,7 @@ object MainForm: TMainForm
         OnClick = Button5Click
       end
       object Button6: TButton
-        Left = 212
+        Left = 206
         Top = 149
         Width = 191
         Height = 34
@@ -152,7 +152,7 @@ object MainForm: TMainForm
         OnClick = Button6Click
       end
       object Button7: TButton
-        Left = 212
+        Left = 206
         Top = 192
         Width = 191
         Height = 34
@@ -162,8 +162,8 @@ object MainForm: TMainForm
         OnClick = Button7Click
       end
       object Button8: TButton
-        Left = 212
-        Top = 230
+        Left = 206
+        Top = 229
         Width = 191
         Height = 34
         Anchors = []
@@ -172,8 +172,8 @@ object MainForm: TMainForm
         OnClick = Button8Click
       end
       object Button9: TButton
-        Left = 212
-        Top = 273
+        Left = 206
+        Top = 272
         Width = 191
         Height = 34
         Anchors = []
@@ -182,8 +182,8 @@ object MainForm: TMainForm
         OnClick = Button9Click
       end
       object Button11: TButton
-        Left = 212
-        Top = 315
+        Left = 206
+        Top = 314
         Width = 191
         Height = 34
         Anchors = []
@@ -192,8 +192,8 @@ object MainForm: TMainForm
         OnClick = Button11Click
       end
       object Button10: TButton
-        Left = 212
-        Top = 355
+        Left = 206
+        Top = 354
         Width = 191
         Height = 34
         Anchors = []
@@ -202,8 +202,8 @@ object MainForm: TMainForm
         OnClick = Button10Click
       end
       object Button12: TButton
-        Left = 212
-        Top = 395
+        Left = 206
+        Top = 394
         Width = 191
         Height = 34
         Anchors = []
@@ -215,8 +215,8 @@ object MainForm: TMainForm
   end
   object StatBar: TStatusBar
     Left = 0
-    Top = 513
-    Width = 684
+    Top = 512
+    Width = 680
     Height = 19
     Panels = <>
   end

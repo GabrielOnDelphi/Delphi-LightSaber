@@ -3,7 +3,8 @@
 {=============================================================================================================
    Gabriel Moraru
    2024.06
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
    Allows us to work with registry more easily (without manuall creating and destroying a TRegistry object)

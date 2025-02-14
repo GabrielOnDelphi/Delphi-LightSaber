@@ -7,7 +7,8 @@ UNIT FormTranslator;
    List of Delphi controls on a form - Tree hierarchy and flat list (VCL)
    https://scotthollows.com/2016/10/12/list-of-delphi-controls-on-a-form-hierarchical-and-flat-list-vcl/
 
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 -------------------------------------------------------------------------------------------------------------}
 
 //todo: put digger in the programs to help users translate the program

@@ -3,7 +3,8 @@ UNIT ciInetDonwIndy;
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
    2023.06
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 
    DOWNLOAD A FILE FROM INTERNET Indy
    If you add it to your project, it will drag in the whole Indy and the compilation will be slower.

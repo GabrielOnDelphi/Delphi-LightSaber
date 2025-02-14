@@ -3,7 +3,8 @@
 {=============================================================================================================
    Gabriel Moraru
    2024.09
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
   Same as ccINIFile but adds support for forms to save themselves to disk.

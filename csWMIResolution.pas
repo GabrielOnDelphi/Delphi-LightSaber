@@ -3,7 +3,8 @@
 {=============================================================================================================
    SYSTEM - WMI
    2023.01
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 ==============================================================================================================
 
  If the program is not DPI aware, Windows will lie about the real screen resolution.

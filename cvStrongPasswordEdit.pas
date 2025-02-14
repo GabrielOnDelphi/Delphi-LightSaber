@@ -3,7 +3,8 @@ UNIT cvStrongPasswordEdit;
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 
    An edit box where you can enter a password.
    The strength of the password is color coded (green for strong password, red for poor password)

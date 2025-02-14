@@ -1,9 +1,9 @@
 ﻿UNIT cbAppData;
 
 {=============================================================================================================
-   Gabriel Moraru
+   www.GabrielMoraru.com
    2025.01.19
-   See Copyright.txt
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
    FEATURES
@@ -110,6 +110,11 @@
 
         BX: This must be FALSE in order to make 'Start minimized' option work
 
+
+
+     Known issues
+
+        If you are creating copies of the same form, the second, third, etc will get a dynamic name. This means that they will not be stored/loaded properly from the INI file (because of the dynamic name).
  ____________________________________________________________________________________________________________
 
    Demo app:
@@ -179,6 +184,7 @@ TYPE
 
     constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; SignalInitEnd: Boolean= TRUE; MultiThreaded: Boolean= FALSE); virtual;
     destructor Destroy; override;                    // This is called automatically by "Finalization" in order to call it as late as possible }
+    procedure Run;
 
    {--------------------------------------------------------------------------------------------------
       User settings
@@ -415,6 +421,13 @@ begin
 end;
 
 
+procedure TAppData.Run;
+begin
+  Application.Run;
+end;
+
+
+
 {-------------------------------------------------------------------------------------------------------------
    FORMS
 -------------------------------------------------------------------------------------------------------------}
@@ -463,6 +476,9 @@ begin
     if Show
     then TForm(Reference).Show;
 
+  // Show app name
+  MainFormCaption('');      // Must be before FormInitialize because the user could put his own caption there.
+
   // Window fully constructed. Now we can let user run its own initialization process.
   // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory [Part 2]" book) for details.
   if TObject(Reference) is TLightForm
@@ -475,8 +491,6 @@ begin
   if RunningFirstTime
   AND NOT RunningHome
   then RegisterUninstaller;
-
-  MainFormCaption('');
 end;
 
 
@@ -502,8 +516,6 @@ begin
       if Owner = NIL
       then Application.CreateForm(aClass, Reference)        // Owned by Application
       else TComponent(Reference):= aClass.Create(Owner);    // Owned by Owner
-
-      //TForm(Reference).Name:= 'abc';
     end;
 
   // Center form in the Owner

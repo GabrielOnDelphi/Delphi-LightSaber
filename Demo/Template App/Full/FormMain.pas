@@ -3,7 +3,8 @@ UNIT FormMain;
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
    Application that implements the following features:
      About box
@@ -134,7 +135,6 @@ USES
 --------------------------------------------------------------------------------------------------}
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
-  EmptyDummy;
   // Too early to do initialization here!
   // Initialization code is better done in LateInitialize which takes place AFTER the form was properly constructed!
 end;
@@ -166,7 +166,7 @@ end;
   Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
 procedure TMainForm.FormRelease;
 begin
-  inherited;
+  inherited FormRelease;
   if NOT Saved then
    begin
      GuiSettings.Save;

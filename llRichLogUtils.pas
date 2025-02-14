@@ -5,7 +5,8 @@ UNIT llRichLogUtils;
 {=============================================================================================================
    Gabriel Moraru
    2023.06
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 
    A simple but effective visual log control/library.
    The programmer can send messages to the log that will be shown or not, depending on the chousen verbosity level of the log (see Verbosity property).

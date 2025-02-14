@@ -3,7 +3,8 @@ UNIT cvMinimalPathLabel;
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
   When displaying a path, truncates the middle of the text if the entire path cannot fit into the visible area of the control.

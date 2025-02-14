@@ -3,7 +3,8 @@ UNIT FormAsyncMessage;
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
   A non-blocking message box.
   No dependences.

@@ -3,7 +3,8 @@ UNIT cvPathEdit;
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
   An edit box that allows user to choose/enter a file or folder.

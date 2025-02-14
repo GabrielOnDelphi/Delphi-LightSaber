@@ -2,7 +2,8 @@ UNIT cmRttiSetToString;
 
 {=============================================================================================================
    2023.01
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 ==============================================================================================================
 
    Converts a set to its string representation (and vice-versa)

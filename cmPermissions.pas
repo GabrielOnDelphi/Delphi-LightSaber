@@ -2,7 +2,8 @@ UNIT cmPermissions;
 
 {=============================================================================================================
    2023.01
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 ==============================================================================================================
 
    Functions to set/test user permissions and priviledges

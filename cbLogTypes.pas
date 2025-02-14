@@ -3,7 +3,8 @@ UNIT cbLogTypes;
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 
    A simple but effective visual log control/library.
    The programmer can send messages to the log that will be shown or not, depending on the chousen verbosity level of the log (see Verbosity property).

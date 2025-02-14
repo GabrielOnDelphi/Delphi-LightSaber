@@ -3,7 +3,8 @@
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
    Over 200 functions for:
      - String manipulation (string conversions, sub-string detection, word manipulation, cut, copy, split, wrap, etc)

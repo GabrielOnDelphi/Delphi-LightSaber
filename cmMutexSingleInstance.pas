@@ -2,7 +2,8 @@ UNIT cmMutexSingleInstance;
 
 {=============================================================================================================
    2023.01
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 ==============================================================================================================
 
    Only allow one instance of the program to run at a time.

@@ -3,7 +3,8 @@ UNIT cmCursorGuard;
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
    Allows you to sets the cursor to crHourglass and then back to crDefault without the need of the classic try-finally block.
    When the procedure where you use TCursorGuard exits, the cursor is put back automatically.

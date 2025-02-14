@@ -2,7 +2,8 @@ UNIT cmPopUpUp;
 
 {=============================================================================================================
    2023.01
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 ==============================================================================================================
 
   Display the popup menu at coordinates above the cursor instead of the classical way (under the cursor).

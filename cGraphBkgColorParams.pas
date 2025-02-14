@@ -3,7 +3,8 @@ UNIT cGraphBkgColorParams;
 {=============================================================================================================
    Gabriel Moraru
    2023.08.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
   Used by cGraphBkgColor.pas

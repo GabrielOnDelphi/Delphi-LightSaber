@@ -3,7 +3,8 @@ UNIT FormSelectLang;
 {-------------------------------------------------------------------------------------------------------------
    2021.03.18
    Let user choose a language file
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 -------------------------------------------------------------------------------------------------------------
    How to use it:
       Instantiate the TTranslator class

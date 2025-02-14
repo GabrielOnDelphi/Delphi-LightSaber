@@ -3,7 +3,8 @@ UNIT cGraphResizeWinWIC;
 {=============================================================================================================
    Gabriel Moraru
    2024.12
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
    Based on MS Windows WIC which is implemented in Delphi since 2010.
 

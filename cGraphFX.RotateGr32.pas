@@ -3,7 +3,8 @@ UNIT cGraphFx.RotateGr32;
 {=============================================================================================================
    Gabriel Moraru
    2023.08.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
   The best function I have found is RotateBitmapGR32 (antialising, fastest).
   However, it seems that RotateBitmapGDIP is even better but it doesn't work.

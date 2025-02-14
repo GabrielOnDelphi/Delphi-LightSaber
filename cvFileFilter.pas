@@ -3,7 +3,8 @@ UNIT cvFileFilter;
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
   Allows access to Change method which I need to call after I load the controls from IniFile

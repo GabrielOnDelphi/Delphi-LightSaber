@@ -3,7 +3,8 @@
 {=============================================================================================================
    Gabriel Moraru
    2023.08.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
    Obtains a frame from the middle of a video file.
    Requires the FFVCL 3rd party library.

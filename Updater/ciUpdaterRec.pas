@@ -3,7 +3,8 @@ UNIT ciUpdaterRec;
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
    2023.06
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 
    Online data holder for TUpdater.
    Holds: Version info, News Text

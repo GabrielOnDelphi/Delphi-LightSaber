@@ -4,9 +4,9 @@
         <AppType>Application</AppType>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>VCL</FrameworkType>
-        <MainSource>TemplateSimple.dpr</MainSource>
+        <MainSource>TemplateMicro.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <ProjectGuid>{5176FADE-1D31-4EFC-B9D1-148C216BA56F}</ProjectGuid>
+        <ProjectGuid>{633278C7-2373-4839-BFC0-92DFCA64B0BA}</ProjectGuid>
         <ProjectVersion>19.5</ProjectVersion>
         <TargetedPlatforms>1</TargetedPlatforms>
     </PropertyGroup>
@@ -18,7 +18,7 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
         <Cfg_1>true</Cfg_1>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
@@ -29,7 +29,7 @@
         <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
@@ -41,77 +41,66 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>TemplateSimple</SanitizedProjectName>
+        <SanitizedProjectName>TemplateMicro</SanitizedProjectName>
         <DCC_Alignment>2</DCC_Alignment>
         <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
-        <DCC_DcuOutput>$(ProductVersion)_$(Platform)_$(Config)</DCC_DcuOutput>
-        <DCC_ExeOutput>.\</DCC_ExeOutput>
+        <DCC_DcuOutput>.\$(Platform)_$(Config)</DCC_DcuOutput>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
-        <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
-        <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;DUnitX.MemoryLeakMonitor;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_Optimize>false</DCC_Optimize>
-        <DCC_RangeChecking>true</DCC_RangeChecking>
-        <DCC_UnitSearchPath>c:\Projects\LightSaber\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
-        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_Keys>CompanyName=GM;FileDescription=;FileVersion=0.1.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
+        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
+        <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <VerInfo_Locale>1033</VerInfo_Locale>
-        <VerInfo_MajorVer>0</VerInfo_MajorVer>
-        <VerInfo_MinorVer>1</VerInfo_MinorVer>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <AppEnableRuntimeThemes>true</AppEnableRuntimeThemes>
+        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
         <BT_BuildType>Debug</BT_BuildType>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UsePackage>vcl;rtl;vclie;$(DCC_UsePackage)</DCC_UsePackage>
-        <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
+        <DCC_UsePackage>vclwinx;DataSnapServer;fmx;emshosting;vclie;DbxCommonDriver;bindengine;IndyIPCommon;VCLRESTComponents;DBXMSSQLDriver;FireDACCommonODBC;emsclient;FireDACCommonDriver;BioControl;appanalytics;IndyProtocols;vclx;LightTranslator;IndyIPClient;dbxcds;vcledge;bindcompvclwinx;FmxTeeUI;emsedge;bindcompfmx;DBXFirebirdDriver;inetdb;LightInternet;ibmonitor;FireDACSqliteDriver;DbxClientDriver;GR32_R;LightGraphics;BionixVCL;FireDACASADriver;Tee;soapmidas;vclactnband;TeeUI;DragDropR;fmxFireDAC;dbexpress;FireDACInfxDriver;DBXMySQLDriver;FFmpeg_DX11;VclSmp;inet;DataSnapCommon;vcltouch;fmxase;DBXOdbcDriver;LightCore;dbrtl;FireDACDBXDriver;FireDACOracleDriver;fmxdae;TeeDB;LightCommon;FireDACMSAccDriver;CustomIPTransport;FireDACMSSQLDriver;LightProteus;DataSnapIndy10ServerTransport;CCRExif;DataSnapConnectors;vcldsnap;DBXInterBaseDriver;FireDACMongoDBDriver;IndySystem;FireDACTDataDriver;vcldb;ibxbindings;vclFireDAC;ThirdPartyLibs;bindcomp;FireDACCommon;DataSnapServerMidas;FireDACODBCDriver;emsserverresource;IndyCore;RESTBackendComponents;DOSCommandDR;bindcompdbx;rtl;FireDACMySQLDriver;FireDACADSDriver;RESTComponents;DBXSqliteDriver;vcl;IndyIPServer;dsnapxml;dsnapcon;DataSnapClient;DataSnapProviderClient;adortl;LightAppData;DBXSybaseASEDriver;DBXDb2Driver;vclimg;DataSnapFireDAC;emsclientfiredac;FireDACPgDriver;FireDAC;FireDACDSDriver;inetdbxpress;xmlrtl;tethering;ibxpress;bindcompvcl;dsnap;sgcWebSocketsR;CloudService;DBXSybaseASADriver;DBXOracleDriver;FireDACDb2Driver;DBXInformixDriver;vclib;fmxobj;bindcompvclsmp;DataSnapNativeClient;FMXTee;DatasnapConnectorsFreePascal;soaprtl;LightVisControls;soapserver;FireDACIBDriver;$(DCC_UsePackage)</DCC_UsePackage>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
-        <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName)</VerInfo_Keys>
-        <VerInfo_MajorVer>1</VerInfo_MajorVer>
-        <VerInfo_MinorVer>0</VerInfo_MinorVer>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
-        <DCC_DebugInformation>0</DCC_DebugInformation>
-        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
-        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
-        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
+        <DCC_Optimize>false</DCC_Optimize>
+        <DCC_RangeChecking>true</DCC_RangeChecking>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
         <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
-        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_DebugInformation>0</DCC_DebugInformation>
+        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
-        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
+        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="FormMain.pas">
-            <Form>MainForm</Form>
+        <DCCReference Include="MainForm.pas">
+            <Form>frmMain</Form>
         </DCCReference>
-        <DCCReference Include="..\..\cbAppData.pas"/>
-        <DCCReference Include="..\..\FormRamLog.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
-        <BuildConfiguration Include="Release">
+        <BuildConfiguration Include="Debug">
             <Key>Cfg_1</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
-        <BuildConfiguration Include="Debug">
+        <BuildConfiguration Include="Release">
             <Key>Cfg_2</Key>
             <CfgParent>Base</CfgParent>
         </BuildConfiguration>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Delphi.Personality.12</Borland.Personality>
-        <Borland.ProjectType/>
+        <Borland.ProjectType>Application</Borland.ProjectType>
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">TemplateSimple.dpr</Source>
+                    <Source Name="MainSource">TemplateMicro.dpr</Source>
                 </Source>
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>

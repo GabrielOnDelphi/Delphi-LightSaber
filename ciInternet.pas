@@ -3,7 +3,8 @@
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
    2025
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 
    URL utils / URL parsing and validation
 

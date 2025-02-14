@@ -3,7 +3,8 @@ UNIT cGraphResizeParams;
 {=============================================================================================================
    Gabriel Moraru
    2023.08.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
    Parameters for resamplers in cGraphResize.pas
    The record is filled with data from GUI (provoded by cGraphResizeParamEdt.pas).

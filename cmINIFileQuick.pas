@@ -3,7 +3,8 @@ UNIT cmINIFileQuick;
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
    Stand-alone functions to QUICKLY save/load data to INI file.

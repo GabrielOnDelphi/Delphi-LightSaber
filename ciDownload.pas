@@ -3,7 +3,8 @@ UNIT ciDownload;
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 
    DOWNLOAD A FILE FROM THE INTERNET
    Alternative: ciInetDonwIndy.pas

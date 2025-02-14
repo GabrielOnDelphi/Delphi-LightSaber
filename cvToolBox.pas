@@ -3,7 +3,8 @@ UNIT cvToolBox;
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
    A panel that acts as a toolbox. You can drag it arround the screen with the mouse and close it from the X button.
    Useful for non-window tools such as Search boxes.

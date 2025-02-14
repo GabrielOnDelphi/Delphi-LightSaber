@@ -3,7 +3,8 @@ UNIT cvRichEditResize;
 {=============================================================================================================
    Gabriel Moraru
    2024.09
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
   This component resizes itself as we add lines to it (instead of showing the vert scrollbars)

@@ -3,7 +3,8 @@ UNIT cGraphLoader.Resolution;
 {=============================================================================================================
    Gabriel Moraru
    2023.08.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
   Retrieve image resolution without decoding the entire image.
   This is done by opening the binary file and reading the file header.

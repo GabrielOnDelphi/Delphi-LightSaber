@@ -3,7 +3,8 @@ UNIT cvCaptionedThumb;
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
    A panel that shows the thumbnail of an image and draws a caption over it

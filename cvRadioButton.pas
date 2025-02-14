@@ -3,7 +3,8 @@ UNIT cvRadioButton;
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
   A radio button that autoresizes exactly like TLabel
   It incercepts CMTextChanged where it recomputes the new Width

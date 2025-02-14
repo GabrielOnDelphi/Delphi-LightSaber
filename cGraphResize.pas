@@ -3,7 +3,8 @@ UNIT cGraphResize;
 {=============================================================================================================
    Gabriel Moraru
    2024.12
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
    Image resizers
    They all use Windows StretchBlt in cGraphResizeWin.pas

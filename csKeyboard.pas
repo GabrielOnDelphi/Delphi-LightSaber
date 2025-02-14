@@ -3,7 +3,8 @@ UNIT csKeyboard;
 {=============================================================================================================
    SYSTEM - Keyboard
    2023.01
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 ==============================================================================================================
 
   System function to access the keyboard

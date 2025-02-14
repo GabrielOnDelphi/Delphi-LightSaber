@@ -3,7 +3,8 @@
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
    2023.06
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 
   Common WebSite Downloader
   This tool will locate the high resolution images on webpages of popular websites like: Unsplash.com, Pexels, pixabay.com, wallpaperscraft.com (work in progress)

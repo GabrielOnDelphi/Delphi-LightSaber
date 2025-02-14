@@ -3,7 +3,8 @@ UNIT cvSpinEdit;
 {=============================================================================================================
    Gabriel Moraru
    2024.12
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
   TCubicSpinEdit – A SpinEdit with two extra labels

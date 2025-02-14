@@ -3,7 +3,8 @@
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
    2023.06
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 
    Functions for working with email addresses (email validation, etc)
 

@@ -3,7 +3,8 @@
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 
    Basic objects that allow you to enter miscellaneous HTML parts such as
    keywords, title, and body text and write this data to disk as an HTML file.

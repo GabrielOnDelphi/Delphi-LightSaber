@@ -2,7 +2,8 @@ UNIT cmStrBuilder;
 
 {=============================================================================================================
    2023.01
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 ==============================================================================================================
 
   Replacement for TStringBuilder which can be slow.

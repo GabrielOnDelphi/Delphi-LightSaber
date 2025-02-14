@@ -3,7 +3,8 @@ UNIT cGraphResizeParamFrame;
 {=============================================================================================================
    Gabriel Moraru
    2023.08.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
    GUI where the user can edit the paramaters of the resizing algorithm (cGraphResize.pas).

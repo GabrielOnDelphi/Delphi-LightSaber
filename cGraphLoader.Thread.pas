@@ -3,7 +3,8 @@ UNIT cGraphLoader.Thread;
 {=============================================================================================================
    Gabriel Moraru
    2023.08.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
   Loads multiple images in separate threads.
   Images are automatically resized to Width, Height.

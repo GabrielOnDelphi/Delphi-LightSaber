@@ -3,7 +3,8 @@ UNIT FormMain;
 {=============================================================================================================
    Gabriel Moraru
    2025.01
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
    Can be used as template for future applications.
 --------------------------------------------------------------------------------------------------------------
@@ -14,13 +15,12 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, System.Actions,
-  VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, cbAppDataForm,Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList,
+  VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList,
   csSystem, cbAppDataForm;
 
 TYPE
   TMainForm = class(TLightForm)
     Actions     : TActionList;
-    AppEvents   : TApplicationEvents;
     MainMenu    : TMainMenu;
     mmo         : TMemo;
     pgCtrl      : TPageControl;
@@ -28,14 +28,15 @@ TYPE
     tabMain     : TTabSheet;
     btnStart    : TButton;
     tabSecondary: TTabSheet;
+    CheckBox1: TCheckBox;
     procedure btnSTARTClick (Sender: TObject);
     procedure FormClose     (Sender: TObject; var Action: TCloseAction);
     procedure FormCreate    (Sender: TObject);
   protected
-    procedure BeforeRelease; override;
   private
   public
-    procedure FormInitialize; {don't forget inherited LateInitialize!} override;
+    procedure FormInitialize; override;
+    procedure FormRelease; override;
  end;
 
 VAR
@@ -58,33 +59,38 @@ begin
 end;
 
 
-procedure TMainForm.FormInitialize; inherited FormInitialize;
+procedure TMainForm.FormInitialize;
 begin
-  { Application }
+  inherited FormInitialize;
+
+  // Application
   AppData.CompanyName:= 'SciVance Technologies';
 
-  { FIRST RUN }
-  if AppData.RunningFirstTime then
+  // First run
+  if AppData.RunningFirstTime
+  then
    begin
-    { Preparation of the main form }
+    // Preparation of the main form
     AppData.MainFormCaption('Welcome...');
     CenterForm(MainForm);
     MainForm.pgCtrl.ActivePage:= MainForm.tabMain;            // Default page to show
 
     if NOT AppData.RunningHome then
       begin
-        { Desktop shortcuts/Association }
+        // Desktop shortcuts
         csShell.CreateShortcut(AppData.AppName, TRUE);        // OnDesktop
         csShell.CreateShortcut(AppData.AppName, FALSE);       // OnStartMenu
 
+        // File association
         AssociateWith('.LightSaber', AppData.AppName, FALSE, FALSE, TRUE);
 
-       if NOT AppData.BetaTesterMode
-       then csExecuteShell.ExecuteURL(AppData.ProductWelcome);// Welcome page
+        // Welcome page
+        if NOT AppData.BetaTesterMode
+        then csExecuteShell.ExecuteURL(AppData.ProductWelcome);
       end;
-   end;
-
-  AppData.MainFormCaption('');
+   end
+  else
+    AppData.MainFormCaption('');
 
   btnStartClick(self);
   Show;
@@ -92,8 +98,9 @@ end;
 
 
 
+
 {--------------------------------------------------------------------------------------------------
- CLOSE
+   CLOSE
 --------------------------------------------------------------------------------------------------}
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
@@ -101,21 +108,18 @@ begin
 end;
 
 
-{ It is enough to put SaveBeforeExit in thse two places only: OnCloseQueryand & OnDestroy.
-  Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
-procedure TMainForm.BeforeRelease;
+procedure TMainForm.FormRelease;
 begin
-  if NOT Saved then
-   begin
-     inherited BeforeRelease;
-   end;
+  inherited;
+
 end;
 
 
 
 
+
 {--------------------------------------------------------------------------------------------------
-   MAIN
+   MAIN CODE
 --------------------------------------------------------------------------------------------------}
 procedure TMainForm.btnSTARTClick(Sender: TObject);
 begin
@@ -126,6 +130,7 @@ begin
     CursorNotBusy;
   END;
 end;
+
 
 
 end.

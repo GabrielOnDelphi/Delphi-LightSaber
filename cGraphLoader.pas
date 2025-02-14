@@ -3,7 +3,8 @@
 {=============================================================================================================
    Gabriel Moraru
    2024.12
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
   Helps you load common file formats (GIF, JPG, BMP, PNG, WB1, RainDrop, JPG2K) from disk.
   LoadGraph is the main function.

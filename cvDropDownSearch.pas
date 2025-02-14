@@ -3,7 +3,8 @@ UNIT cvDropDownSearch;
 {=============================================================================================================
    Gabriel Moraru
    2024.09
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
   Searchbox with auto-suggest.

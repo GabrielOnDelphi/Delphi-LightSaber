@@ -3,7 +3,8 @@
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 
    Simple HTML Parsing. Specialized in extracting images from a webpage.
 

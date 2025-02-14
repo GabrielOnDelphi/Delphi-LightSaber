@@ -3,7 +3,8 @@
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
   FLOAT SPIN EDIT - v1.8
   Allows user to enter a float number and increase/decrease its value (via spin buttons) or manually edit it.

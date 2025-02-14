@@ -3,7 +3,8 @@ UNIT FormSettings;
 {=============================================================================================================
    Gabriel Moraru
    2024.10
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
    A template form that allows the user to change the behavior/settings of an application:
      Skins

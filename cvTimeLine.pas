@@ -3,7 +3,8 @@ UNIT cvTimeLine;
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
  A control that tries to simulate the timeline bar in VLC or BSPlayer.

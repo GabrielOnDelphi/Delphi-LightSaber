@@ -3,8 +3,8 @@ object MainForm: TMainForm
   Top = 327
   AlphaBlendValue = 249
   Caption = 'Enviroment'
-  ClientHeight = 371
-  ClientWidth = 684
+  ClientHeight = 370
+  ClientWidth = 680
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 350
@@ -26,35 +26,35 @@ object MainForm: TMainForm
   object pgCtrl: TPageControl
     Left = 0
     Top = 0
-    Width = 684
-    Height = 371
+    Width = 680
+    Height = 370
     ActivePage = tabMain
     Align = alClient
     TabOrder = 0
     object tabMain: TTabSheet
-      Caption = 'Main'
+      Caption = 'Main tab'
       object mmo: TMemo
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 479
-        Height = 333
+        Width = 475
+        Height = 332
         Align = alClient
         TabOrder = 1
       end
       object pnlRight: TPanel
         AlignWithMargins = True
-        Left = 488
+        Left = 484
         Top = 3
         Width = 185
-        Height = 333
+        Height = 332
         Align = alRight
         BevelOuter = bvNone
         TabOrder = 0
         object btnStart: TButton
           AlignWithMargins = True
           Left = 3
-          Top = 277
+          Top = 276
           Width = 179
           Height = 53
           Align = alBottom
@@ -62,10 +62,18 @@ object MainForm: TMainForm
           TabOrder = 0
           OnClick = btnSTARTClick
         end
+        object CheckBox1: TCheckBox
+          Left = 8
+          Top = 4
+          Width = 97
+          Height = 17
+          Caption = 'Checkbox'
+          TabOrder = 1
+        end
       end
     end
     object tabSecondary: TTabSheet
-      Caption = 'Tab2'
+      Caption = 'Another tab'
       ImageIndex = 1
     end
   end
@@ -74,11 +82,7 @@ object MainForm: TMainForm
     Top = 51
   end
   object Actions: TActionList
-    Left = 122
-    Top = 51
-  end
-  object AppEvents: TApplicationEvents
-    Left = 180
+    Left = 130
     Top = 51
   end
 end

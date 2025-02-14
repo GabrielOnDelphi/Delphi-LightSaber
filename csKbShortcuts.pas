@@ -3,7 +3,8 @@
 {=============================================================================================================
    SYSTEM - Keyboard Shortcuts
    2023.01
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 ==============================================================================================================
 
    A tool that lists all keyboard shortcuts assigned to all actions/menus in an application.

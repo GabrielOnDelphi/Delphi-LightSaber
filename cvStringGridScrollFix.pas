@@ -3,7 +3,8 @@ UNIT cvStringGridScrollFix;
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
   Problem:
       Stop scroll on mousedown on bottom row of grid when bottom row is a partial cell:

@@ -3,7 +3,8 @@ UNIT FormProxyList;
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
   Let user specify if he wants to connect the program directly to Internet, via a gateway or via a proxy list.

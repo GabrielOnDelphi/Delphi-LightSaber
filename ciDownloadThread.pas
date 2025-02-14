@@ -3,7 +3,8 @@ UNIT ciDownloadThread;
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
    2023.06
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 
    Downloads a file [ via WinInet ]
 

@@ -3,7 +3,8 @@ UNIT cbLogLinesM;
 {=============================================================================================================
    Gabriel Moraru
    2024.10
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
    Multi-Threaded Version of LogLines
    For the new log (the one based on TStringGrid)

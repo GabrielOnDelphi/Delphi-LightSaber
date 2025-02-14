@@ -3,7 +3,8 @@ UNIT cGraphResizeFMX;
 {=============================================================================================================
    Gabriel Moraru
    2024.12
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
    Image resizers based on Embarcadero's code (FMX)
    Terribly slow.

@@ -3,7 +3,8 @@ UNIT csExecuteShell;
 {=============================================================================================================
    SYSTEM - Execute Process
    2023.01
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 ==============================================================================================================
 
    Execute a process, using the ShellExecute API

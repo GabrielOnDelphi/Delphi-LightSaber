@@ -3,7 +3,8 @@
 {=============================================================================================================
    Gabriel Moraru
    2024.06
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
    Extension for ccIO. 
    Shows error messages (dialog boxes) when the I/O peeration failed.

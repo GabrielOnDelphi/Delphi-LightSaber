@@ -6,7 +6,8 @@ unit cvDirectoryListBox;
 {--------------------------------------------------------------------------------------------------
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 
   Features:
    * property ShowHidden;

@@ -3,7 +3,8 @@ UNIT ciEmailSender;
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 
    Universal 'SendMail' function
    Used in: Power Email Extractor, PingMail, BX

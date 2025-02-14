@@ -3,7 +3,8 @@ UNIT ccStreamFile;
 {=============================================================================================================
    Gabriel Moraru
    2024.05
-   See Copyright.txt
+   www.GabrielMoraru.com
+   See Copyright file
 --------------------------------------------------------------------------------------------------------------
   Direct read/write bytes, cardinals, words, integers, strings to a (binary) file.
   It loads the entire contents of a file into the memory so don't use it with huge (hundreds MB) files.
