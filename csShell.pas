@@ -114,9 +114,9 @@ var
  WFileName : WideString;
 begin
  { if not (CoInitialize (nil) = S_OK) then Mesaj('Failed to initialize the COM layer!')
- E NECESAR DOAR CAND APELEZ ACEASTA FUNCTIE INAINTE DE  Application.Initialize
- Pentru ca Application.Initialize cheama automat pe CoInitialize.   http://coding.derkeiler.com/Archive/Delphi/borland.public.delphi.database.ado/2005-03/0064.html
- Vezi si http://www.google.ro/search?num=100&hl=ro&newwindow=1&q=delphi+%22CoInitialize+has+not+been+called%22&btnG=Caut%C4%83&meta=lr%3Dlang_en%7Clang_de%7Clang_ro }
+ IT IS NECESSARY ONLY WHEN I PRESS THIS FUNCTION BEFORE Application.Initialize
+ Because Application.Initialize automatically calls CoInitialize.   http://coding.derkeiler.com/Archive/Delphi/borland.public.delphi.database.ado/2005-03/0064.html
+ Also see: http://www.google.ro/search?num=100&q=delphi+%22CoInitialize+has+not+been+called }
  MyObject := CreateComObject(CLSID_ShellLink);
  MySLink  := MyObject as IShellLink;
  MyPFile  := MyObject as IPersistFile;

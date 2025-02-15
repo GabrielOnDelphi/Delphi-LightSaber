@@ -31,7 +31,7 @@ begin
      AppName= 'Light Template Full';       // Absolutelly critical if you use the SaveForm/LoadForm functionality. This string will be used as the name of the INI file.
 
   AppData:= TAppData.Create(AppName, '', TRUE, MultiThreaded);
-  AppData.CreateMainForm(TMainForm, MainForm, TRUE, TRUE, asFull);
+  AppData.CreateMainForm(TMainForm, MainForm, FALSE, TRUE, asFull);
   TfrmRamLog.CreateGlobalLog;
   
   AppData.Run;

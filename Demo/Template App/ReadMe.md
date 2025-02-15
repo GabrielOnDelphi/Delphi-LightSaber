@@ -25,6 +25,8 @@ Additional to the above example, this example has only a few lines of extra code
  * Settings form 
  * Convert the program to paid Trial/Shareware (via Proteus Library) 
  * Minimize to system tray (via external library) 
+ * Single instance
+ * Home page/Branding
 
 Automatically restoring the GUI
 A word of warning about this. In a well written program, the business logic should not be kept in the GUI. Any settings should not be read from the checkboxes of the GUI/form but from INI files or (much, much) better, binary objects. TfrmSettings.CreateFormModal is a good example of how to do this.

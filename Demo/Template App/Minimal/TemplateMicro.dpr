@@ -4,7 +4,6 @@ uses
   Vcl.Forms,
   MainForm in 'MainForm.pas' {frmMain},
   cbAppData,
-  cbIniFile,
   ccINIFile;
 
 {$R *.res}

@@ -9,8 +9,10 @@ USES
 
 type
   TfrmMain = class(TLightForm)
-    CheckBox1: TCheckBox;
+    CheckBox: TCheckBox;
     RadioButton1: TRadioButton;
+    RadioButton2: TRadioButton;
+    CheckBox1: TCheckBox;
   private
   public
   end;
