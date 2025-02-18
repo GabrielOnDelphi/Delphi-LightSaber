@@ -99,7 +99,7 @@ TYPE
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-  cGraphUtil, cmVclUtils, cmINIFileQuick, cbCenterControl, cbDialogs, ccINIFile, cbAppData;
+  cGraphUtil, cbVclUtils, cbINIFileQuick, cbCenterControl, cbDialogs, ccINIFile, cbAppData;
 { Don't use cvIniFile because it belongs to LightVisControls pkg which is after this (LightGraphics) package }
 
 

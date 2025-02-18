@@ -53,7 +53,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   cbDialogs, cbAppData, ciInternet, cTranslate, ccINIFile, cvINIFile; //, cvINIFile;
+   cbDialogs, cbAppData, ciInternet, cbTranslate, ccINIFile, cvINIFile; //, cvINIFile;
 
 
 
@@ -90,7 +90,7 @@ begin
   then chkForceNewsFound.Checked:= FALSE;       { Uncheck it if we are not in HomeMode }
   Assert(cmbWhen.Items.Count = Ord(High(TCheckWhen))+1, 'cmbWhen.Count <> TCheckWhen');
   if Translator <> NIL
-  then Translator.LoadFormTranlation(Self);
+  then Translator.LoadTranslation(Self);
   GuiFromObject;
 end;
 

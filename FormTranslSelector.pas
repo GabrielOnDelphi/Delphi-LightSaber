@@ -1,10 +1,10 @@
-UNIT FormSelectLang;
+UNIT FormTranslSelector;
 
 {-------------------------------------------------------------------------------------------------------------
-   2021.03.18
-   Let user choose a language file
    www.GabrielMoraru.com
-   See Copyright file
+   2021.03.18
+
+   Let user choose a language file.
 -------------------------------------------------------------------------------------------------------------
    How to use it:
       Instantiate the TTranslator class
@@ -12,8 +12,8 @@ UNIT FormSelectLang;
       Call PopulateLanguageFiles to populate a listbox with all discovered language files
 
    Default language
-      The English.ini file can be empty! BioniX will load the default (design time) values.
-      If the language is English this message will appear because if the En file is empty the current GUI strings will not be overwritten: 'A program restart may be necessary to apply this language...'
+      The English.ini file can be empty! In this cases the program will use the default (design time) strings.
+      //del - If the language is English the following message will appear because if the En file is empty the current GUI strings will not be overwritten: 'A program restart may be necessary to apply this language...'
 
    Coupling warning:
       Don't add dependencies to CubicVisualControls here!
@@ -23,25 +23,25 @@ INTERFACE
 {.$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Controls, cTranslate;
+  System.SysUtils, System.Classes,
+  Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Controls,
+  cbAppDataForm, cbTranslate;
 
 TYPE
-  TfrmLanguage = class(TLightForm)
+  TfrmTranslSelector = class(TLightForm)
     btnApplyLang: TButton;
     btnRefresh  : TButton;
     btnTranslate: TButton;
     grpChoose   : TGroupBox;
     lblAuthors  : TLabel;
-    lblHint     : TLabel;
     ListBox     : TListBox;
     Panel2      : TPanel;
-    procedure FormDestroy      (Sender: TObject);
     procedure ListBoxDblClick  (Sender: TObject);
     procedure btnApplyLangClick(Sender: TObject);
     procedure btnRefreshClick  (Sender: TObject);
     procedure btnTranslateClick(Sender: TObject);
-    procedure FormKeyPress     (Sender: TObject; var Key: Char);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormActivate(Sender: TObject);
   private
     function GetSelectedFileName: string;
     function GetSelectedFilePath: string;
@@ -49,54 +49,42 @@ TYPE
   public
     function IsEnglish: Boolean;  //unused
     function PopulateLanguageFiles: Boolean;
+    class procedure ShowSelector; static;
   end;
- {
-VAR
-   frmLanguage: TfrmLanguage;
-    }
 
-procedure ShowSelectLanguage;
+
 
 
 IMPLEMENTATION {$R *.dfm}
 USES
-  cbAppData, cbINIFile, cbDialogs, ccIO, ccTextFile, cmIO, FormTranslator;
+  cbAppData, cbDialogs, ccIO, cmIO, FormTranslEditor;
 
 
 
-procedure ShowSelectLanguage;
-VAR frmLanguage: TfrmLanguage;
+class procedure TfrmTranslSelector.ShowSelector;
+VAR
+   frmSelector: TfrmTranslSelector;
 begin
- Assert(Translator <> NIL);
- ForceDirectories(Translator.GetLangFolder);   { Make sure that the folders exists }
+  Assert(Translator <> NIL);
 
- Appdata.CreateFormHidden(TfrmLanguage, frmLanguage);
- TRY
-   frmLanguage.btnTranslate.Visible:= NOT Appdata.RunningFirstTime;
-   frmLanguage.btnRefresh.Visible:= frmLanguage.btnTranslate.Visible;
-   frmLanguage.PopulateLanguageFiles;    { Populate the ListBox with languages we found in 'Lang' folder }
-   frmLanguage.ShowModal;
- FINALLY
-   FreeAndNil(frmLanguage);
- END;
+  Appdata.CreateFormHidden(TfrmTranslSelector, frmSelector);
+  TRY
+    frmSelector.btnTranslate.Visible:= NOT Appdata.RunningFirstTime;
+    frmSelector.btnRefresh.Visible:= frmSelector.btnTranslate.Visible;
+    frmSelector.PopulateLanguageFiles;    { Populate the ListBox with languages we found in 'Lang' folder }
+    frmSelector.ShowModal;
+  FINALLY
+    FreeAndNil(frmSelector);
+  END;
 end;
 
 
-procedure TfrmLanguage.FormClose(Sender: TObject; var Action: TCloseAction);
+procedure TfrmTranslSelector.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action:= TCloseAction.caFree;
 end;
 
-procedure TfrmLanguage.FormDestroy(Sender: TObject);
-begin
-  SaveForm;  //Localization warning: Don't add dependencies to CubicVisualControls here!
-end;
 
-
-procedure TfrmLanguage.FormKeyPress(Sender: TObject; var Key: Char);
-begin
- if Ord(Key) = VK_ESCAPE then Close;
-end;
 
 
 
@@ -110,35 +98,33 @@ end;
 {---------------------------------------------------------------------------
    LOAD EXISTING LANGUAGE FILE
 ---------------------------------------------------------------------------}
-procedure TfrmLanguage.ListBoxDblClick(Sender: TObject);
+procedure TfrmTranslSelector.ListBoxDblClick(Sender: TObject);
 begin
- ApplyLanguage;
+  ApplyLanguage;
 end;
 
 
-procedure TfrmLanguage.ApplyLanguage;
+procedure TfrmTranslSelector.ApplyLanguage;
 begin
-  if ListBox.ItemIndex = 0 then EXIT;
+  if ListBox.ItemIndex < 0 then EXIT;
 
   if GetSelectedFileName = ''
   then MesajInfo('Please select a language!')
   else
     if FileExistsMsg(GetSelectedFilePath)
     then
-     begin
-       Translator.CurLanguage:= GetSelectedFileName;
-       Translator.LoadTranslationAllForms(GetSelectedFilePath, TRUE);
+      begin
+        Translator.CurLanguage:= Translator.GetLangFolder+ GetSelectedFileName;
 
-       //Caption := 'Loaded: '+ GetSelectedFilePath;
-       lblAuthors.Caption:= 'Translated by: '+ Translator.Authors;
-       lblAuthors.Visible:= TRUE;
-     end
+        lblAuthors.Caption:= 'Translated by: '+ Translator.Authors;
+        lblAuthors.Visible:= TRUE;
+      end
     else
       MesajWarning('Cannot load language file!');
 end;
 
 
-procedure TfrmLanguage.btnApplyLangClick(Sender: TObject);
+procedure TfrmTranslSelector.btnApplyLangClick(Sender: TObject);
 begin
   ApplyLanguage;
   Close;
@@ -153,7 +139,7 @@ end;
 {---------------------------------------------------------------------------
    UTILS
 ---------------------------------------------------------------------------}
-function TfrmLanguage.GetSelectedFilePath: string;
+function TfrmTranslSelector.GetSelectedFilePath: string;
 begin
   if ListBox.ItemIndex < 0
   then Result:= ''
@@ -161,7 +147,7 @@ begin
 end;
 
 
-function TfrmLanguage.GetSelectedFileName: string;
+function TfrmTranslSelector.GetSelectedFileName: string;
 begin
   if ListBox.ItemIndex < 0
   then Result:= ''
@@ -170,7 +156,7 @@ end;
 
 
 { Reurns True if the selected language is English }
-function TfrmLanguage.IsEnglish: Boolean;
+function TfrmTranslSelector.IsEnglish: Boolean;
 begin
   if ListBox.ItemIndex < 0
   then Result:= TRUE
@@ -179,7 +165,7 @@ end;
 
 
 { Returns false if no language file was found }
-function TfrmLanguage.PopulateLanguageFiles: Boolean;
+function TfrmTranslSelector.PopulateLanguageFiles: Boolean;
 VAR
    iLastLang: Integer;
    Files: TStringList;
@@ -194,7 +180,7 @@ begin
 
    { Remove path & ext, then populate the list box }
    for var s in Files DO
-     ListBox.Items.Add(ExtractOnlyName(ExtractFileName(s)));
+     ListBox.Items.Add(ExtractOnlyName(s));
   FINALLY
     FreeAndNil(Files);
   END;
@@ -202,7 +188,7 @@ begin
   { Select lang }
   if ListBox.Items.Count > 0 then
    begin
-     iLastLang:= ListBox.Items.IndexOf(ExtractOnlyName(Translator.CurLanguage));
+     iLastLang:= ListBox.Items.IndexOf(ExtractOnlyName(Translator.CurLanguageName));
      if iLastLang < 0
      then
       begin
@@ -223,17 +209,23 @@ end;
 
 
 
-procedure TfrmLanguage.btnRefreshClick(Sender: TObject);
+procedure TfrmTranslSelector.btnRefreshClick(Sender: TObject);
 begin
- PopulateLanguageFiles;
+  PopulateLanguageFiles;
 end;
 
 
-procedure TfrmLanguage.btnTranslateClick(Sender: TObject);
+procedure TfrmTranslSelector.FormActivate(Sender: TObject);
 begin
- VAR frmTranslator:= TfrmTranslator.Create(Application);
- frmTranslator.Show;
+  PopulateLanguageFiles;
 end;
+
+
+procedure TfrmTranslSelector.btnTranslateClick(Sender: TObject);
+begin
+  TfrmTranslEditor.ShowEditor;
+end;
+
 
 
 

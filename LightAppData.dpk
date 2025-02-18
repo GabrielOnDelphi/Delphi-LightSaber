@@ -51,7 +51,10 @@ contains
   cbLogTypes in 'cbLogTypes.pas',
   cbLogUtils in 'cbLogUtils.pas',
   cbRegistry in 'cbRegistry.pas',
-  cbVersion in 'cbVersion.pas';
+  cbVersion in 'cbVersion.pas',
+  cbVclUtils in 'cbVclUtils.pas',
+  cbTranslate in 'cbTranslate.pas',
+  cbINIFileQuick in 'cbINIFileQuick.pas';
 
 end.
 

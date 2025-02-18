@@ -117,7 +117,7 @@ begin
  DoubleBuffered:= TRUE;
  Caption       := 'frmBxDraw';
  Name          := 'frmBxDraw';
- Tag           := 128; {128 = DontTranslate in cTranslate.pas }
+ Tag           := 128; {128 = DontTranslate in cbTranslate.pas }
  StyleElements := [];    { The form will be painted to the skin color if skins are enabled. My color will be ignored. Therefore we need to disable skins for this form! }
 
  {del

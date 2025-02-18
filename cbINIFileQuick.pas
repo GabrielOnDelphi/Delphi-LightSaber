@@ -1,4 +1,4 @@
-UNIT cmINIFileQuick;
+UNIT cbINIFileQuick;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -61,23 +61,23 @@ USES
 procedure WriteInteger(CONST Identifier: string; i: Integer);
 VAR IniFile: TIniFileApp;
 begin
- IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
- TRY
-   IniFile.WriteInteger(AppData.AppName, Identifier, i)
- FINALLY
-   FreeAndNil(IniFile);
- END;
+  IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
+  TRY
+    IniFile.WriteInteger(AppData.AppName, Identifier, i)
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
 end;
 
 function ReadInteger(CONST Identifier: string; DefaultVal: Integer): Integer;
 VAR IniFile: TIniFileApp;
 begin
- IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
- TRY
-   Result:= IniFile.ReadInteger(AppData.AppName, Identifier, DefaultVal);
- FINALLY
-   FreeAndNil(IniFile);
- END;
+  IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
+  TRY
+    Result:= IniFile.ReadInteger(AppData.AppName, Identifier, DefaultVal);
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
 end;
 
 
@@ -87,23 +87,23 @@ end;
 procedure WriteString(CONST Identifier, s: string);
 VAR IniFile: TIniFileApp;
 begin
- IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
- TRY
-   IniFile.WriteString(AppData.AppName, Identifier, s)
- FINALLY
-   FreeAndNil(IniFile);
- END;
+  IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
+  TRY
+    IniFile.WriteString(AppData.AppName, Identifier, s)
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
 end;
 
 function ReadString(CONST Identifier: string; DefaultVal: string): string;
 VAR IniFile: TIniFileApp;
 begin
- IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
- TRY
-   Result:= IniFile.ReadString(AppData.AppName, Identifier, DefaultVal);
- FINALLY
-   FreeAndNil(IniFile);
- END;
+  IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
+  TRY
+    Result:= IniFile.ReadString(AppData.AppName, Identifier, DefaultVal);
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
 end;
 
 
@@ -113,23 +113,23 @@ end;
 procedure WriteBool(CONST Identifier: string; b: Boolean);
 VAR IniFile: TIniFileApp;
 begin
- IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
- TRY
-   IniFile.WriteBool(AppData.AppName, Identifier, b)
- FINALLY
-   FreeAndNil(IniFile);
- END;
+  IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
+  TRY
+    IniFile.WriteBool(AppData.AppName, Identifier, b)
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
 end;
 
 function ReadBoolean(CONST Identifier: string; DefaultVal: Boolean= FALSE): Boolean;
 VAR IniFile: TIniFileApp;
 begin
- IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
- TRY
-   Result:= IniFile.ReadBool(AppData.AppName, Identifier, DefaultVal);
- FINALLY
-   FreeAndNil(IniFile);
- END;
+  IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
+  TRY
+    Result:= IniFile.ReadBool(AppData.AppName, Identifier, DefaultVal);
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
 end;
 
 
@@ -138,23 +138,23 @@ end;
 procedure WriteDbl (CONST Identifier: string; d: Double);
 VAR IniFile: TIniFileApp;
 begin
- IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
- TRY
-   IniFile.Write(Identifier, d)
- FINALLY
-   FreeAndNil(IniFile);
- END;
+  IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
+  TRY
+    IniFile.Write(Identifier, d)
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
 end;
 
 function  ReadDbl (CONST Identifier: string; DefaultVal: Double= 0.0): Double;
 VAR IniFile: TIniFileApp;
 begin
- IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
- TRY
-   Result:= IniFile.Read(Identifier, DefaultVal);
- FINALLY
-   FreeAndNil(IniFile);
- END;
+  IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
+  TRY
+    Result:= IniFile.Read(Identifier, DefaultVal);
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
 end;
 
 
@@ -164,23 +164,23 @@ end;
 procedure WriteDate (CONST Identifier: string; d: TDateTime);
 VAR IniFile: TIniFileApp;
 begin
- IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
- TRY
-   IniFile.WriteDate(Identifier, d)
- FINALLY
-   FreeAndNil(IniFile);
- END;
+  IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
+  TRY
+    IniFile.WriteDate(Identifier, d)
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
 end;
 
 function  ReadDate (CONST Identifier: string; DefaultVal: TDateTime): Double;
 VAR IniFile: TIniFileApp;
 begin
- IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
- TRY
-   Result:= IniFile.ReadDate(Identifier, DefaultVal);
- FINALLY
-   FreeAndNil(IniFile);
- END;
+  IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
+  TRY
+    Result:= IniFile.ReadDate(Identifier, DefaultVal);
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
 end;
 
 
@@ -189,23 +189,23 @@ end;
 function ReadFont(CONST Identifier: string; Font: TFont): Boolean;
 VAR IniFile: TIniFileApp;
 begin
- IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
- TRY
-   Result:= IniFile.Read(Identifier, Font);
- FINALLY
-   FreeAndNil(IniFile);
- END;
+  IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
+  TRY
+    Result:= IniFile.Read(Identifier, Font);
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
 end;
 
 procedure WriteFont(CONST Identifier: string; Font: TFont);
 VAR IniFile: TIniFileApp;
 begin
- IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
- TRY
-   IniFile.Write(Identifier, Font)
- FINALLY
-   FreeAndNil(IniFile);
- END;
+  IniFile:= TIniFileApp.Create(AppData.AppName, AppData.IniFile);
+  TRY
+    IniFile.Write(Identifier, Font)
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
 end;
 
 

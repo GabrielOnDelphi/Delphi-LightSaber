@@ -52,7 +52,7 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   cbAppData, csSystem, cTranslate, ciUpdaterRec, cbDialogs, ccINIFile, cvINIFile;
+   cbAppData, csSystem, cbTranslate, ciUpdaterRec, cbDialogs, ccINIFile, cvINIFile;
 
 
 
@@ -71,7 +71,7 @@ begin
  WITH Form DO
  begin
    if Translator <> NIL
-   then Translator.LoadFormTranlation(Form);
+   then Translator.LoadTranslation(Form);
    PopulateUsers(cmbTarget);
    if FileExists(GetBinFileName)
    then Button1Click(NIL);

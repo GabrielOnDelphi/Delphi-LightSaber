@@ -39,7 +39,6 @@ requires
   LightCore,
   LightAppData,
   LightCommon,
-  LightTranslator,
   vclimg,
   vclwinx,
   vclie,

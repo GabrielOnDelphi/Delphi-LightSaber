@@ -16,7 +16,7 @@ UNIT cmWindow;
 
    See also:
      cmWindowMetrics.pas
-     cmVclUtils.pas
+     cbVclUtils.pas
 
    In this group:
      * csShell.pas

@@ -76,21 +76,24 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
-        <VerInfo_Keys>CompanyName=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductVersion=1.0.0.0;Comments=;ProgramID=com.embarcadero.$(MSBuildProjectName);FileDescription=$(MSBuildProjectName);ProductName=$(MSBuildProjectName)</VerInfo_Keys>
-        <VerInfo_MajorVer>1</VerInfo_MajorVer>
-        <VerInfo_MinorVer>0</VerInfo_MinorVer>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="FormMain.pas">
-            <Form>frmTester</Form>
+            <Form>MainForm</Form>
         </DCCReference>
-        <DCCReference Include="..\..\LightSaber\cbAppData.pas"/>
-        <DCCReference Include="..\cTranslate.pas"/>
-        <DCCReference Include="..\FormSelectLang.pas"/>
-        <DCCReference Include="..\FormTranslator.pas"/>
+        <DCCReference Include="..\..\FormTranslEditor.pas">
+            <Form>frmTranslEditor</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\FormTranslSelector.pas">
+            <Form>frmTranslSelector</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
+        <DCCReference Include="..\..\cbAppData.pas"/>
+        <DCCReference Include="..\..\cbTranslate.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

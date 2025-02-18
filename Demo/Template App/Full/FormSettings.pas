@@ -84,7 +84,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   ccINIFile, cTranslate, FormSkinsDisk, csShell, FormMain;
+   ccINIFile, cbTranslate, FormSkinsDisk, csShell, FormMain;
 
 
 
@@ -103,7 +103,7 @@ begin
  frmSettings.GuiFromObject;
 
  if Translator <> NIL
- then Translator.LoadFormTranlation(frmSettings);
+ then Translator.LoadTranslation(frmSettings);
 
  frmSettings.ShowModal;    { Closed by mrOk/mrCancel. Set to caFree. }
 end;

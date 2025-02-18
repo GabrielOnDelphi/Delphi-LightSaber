@@ -18,7 +18,7 @@ UNIT cmPopUpUp;
 
   See also:
      csKbShortcuts.pas
-     cmVclUtils.pas (the Menu section)
+     cbVclUtils.pas (the Menu section)
 
 =============================================================================================================}
 

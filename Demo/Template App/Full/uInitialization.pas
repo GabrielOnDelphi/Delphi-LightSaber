@@ -21,7 +21,7 @@ IMPLEMENTATION
 
 USES
   chHardID, csShell, csExecuteShell, cmGuiSettings,
-  cpCertificate, cbAppData, cbCenterControl, cTranslate, ciUpdater,
+  cpCertificate, cbAppData, cbCenterControl, cbTranslate, ciUpdater,
   FormMain, FormUniversalEula, FormSkinsDisk, FormSettings, FormSplashScreen, FormUpdaterNotifier;
 
 

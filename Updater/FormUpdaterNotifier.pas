@@ -83,7 +83,7 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   llRichLogUtils, cTranslate, ccColors, cbAppData, cvINIFile, ciInternet;
+   llRichLogUtils, cbTranslate, ccColors, cbAppData, cvINIFile, ciInternet;
 
 
 
@@ -101,7 +101,7 @@ begin
   AppData.CreateFormHidden(TFrmUpdater, Form);   { Freed by ShowModal }
 
   if Translator <> NIL
-  then Translator.LoadFormTranlation(Form);
+  then Translator.LoadTranslation(Form);
 
   { Setup updater }
   Updater.OnUpdateStart := Form.OnUpdateStart;

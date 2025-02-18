@@ -51,7 +51,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  cTranslate, cbINIFile, cbAppData;
+  cbTranslate, cbINIFile, cbAppData;
    {Don't add dependencies to cvIniFile because that package is not available yet}
 
 
@@ -71,7 +71,7 @@ begin
  WITH Form DO
  begin
    if Translator <> NIL
-   then Translator.LoadFormTranlation(Form);
+   then Translator.LoadTranslation(Form);
    Params:= aParams;
    GuiFromObject;
  end;

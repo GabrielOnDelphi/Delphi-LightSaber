@@ -1,4 +1,4 @@
-object frmLanguage: TfrmLanguage
+object frmTranslSelector: TfrmTranslSelector
   AlignWithMargins = True
   Left = 549
   Top = 225
@@ -6,8 +6,8 @@ object frmLanguage: TfrmLanguage
   AlphaBlendValue = 250
   BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'Language/Sprache/Langue/Limba/Idioma/'#35821#35328'/'#1071#1079#1099#1082
-  ClientHeight = 334
-  ClientWidth = 317
+  ClientHeight = 336
+  ClientWidth = 351
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,45 +19,34 @@ object frmLanguage: TfrmLanguage
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 3
+  OnActivate = FormActivate
   OnClose = FormClose
-  OnDestroy = FormDestroy
-  OnKeyPress = FormKeyPress
   TextHeight = 13
   object grpChoose: TGroupBox
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 311
-    Height = 328
+    Width = 345
+    Height = 330
     Align = alClient
     Caption = 'Choose language'
     TabOrder = 0
     object lblAuthors: TLabel
       AlignWithMargins = True
       Left = 5
-      Top = 253
-      Width = 301
+      Top = 273
+      Width = 335
       Height = 13
       Align = alBottom
       Caption = '@Authors'
       Visible = False
     end
-    object lblHint: TLabel
-      AlignWithMargins = True
-      Left = 5
-      Top = 278
-      Width = 301
-      Height = 13
-      Margins.Top = 9
-      Align = alBottom
-      Caption = 'Hint: You can create your own translations. '
-    end
     object ListBox: TListBox
       AlignWithMargins = True
       Left = 5
       Top = 23
-      Width = 301
-      Height = 224
+      Width = 335
+      Height = 244
       Hint = 'Click to load it'
       Margins.Top = 8
       Align = alClient
@@ -70,45 +59,50 @@ object frmLanguage: TfrmLanguage
     object Panel2: TPanel
       AlignWithMargins = True
       Left = 5
-      Top = 297
-      Width = 301
-      Height = 26
+      Top = 289
+      Width = 335
+      Height = 36
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 1
       object btnApplyLang: TButton
-        Left = 209
-        Top = 0
-        Width = 92
-        Height = 26
+        AlignWithMargins = True
+        Left = 246
+        Top = 3
+        Width = 86
+        Height = 30
         Align = alRight
         Caption = 'OK'
         TabOrder = 0
         OnClick = btnApplyLangClick
       end
       object btnRefresh: TButton
-        Left = 86
-        Top = 0
-        Width = 78
-        Height = 26
+        AlignWithMargins = True
+        Left = 159
+        Top = 4
+        Width = 81
+        Height = 28
         Hint = 'Reload the list of available languages'
         Margins.Top = 4
         Margins.Bottom = 4
-        Align = alLeft
+        Align = alRight
         Caption = 'Refresh'
         TabOrder = 1
         OnClick = btnRefreshClick
       end
       object btnTranslate: TButton
-        Left = 0
-        Top = 0
-        Width = 86
-        Height = 26
-        Hint = 'Create your own translation'
+        AlignWithMargins = True
+        Left = 3
+        Top = 4
+        Width = 117
+        Height = 28
+        Hint = 
+          'Create your own translation or edit an existing translation file' +
+          '.'
         Margins.Top = 4
         Margins.Bottom = 4
         Align = alLeft
-        Caption = 'Translate'
+        Caption = 'New translation...'
         TabOrder = 2
         OnClick = btnTranslateClick
       end

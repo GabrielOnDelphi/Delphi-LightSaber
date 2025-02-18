@@ -3,36 +3,37 @@ UNIT FormMain;
 INTERFACE
 
 USES
-  WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls,
-  cbAppData, cvINIFile, Vcl.Mask, cbAppDataForm;
+
+  System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls,
+  cbAppDataForm;
 
 TYPE
- TfrmTester = class(TLightForm)
-    pnlRight: TPanel;
-    btnShowTranslator: TButton;
-    CheckBox1: TCheckBox;
-    Memo1: TMemo;
-    LabeledEdit: TLabeledEdit;
-    btnHelper: TButton;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure btnShowTranslatorClick(Sender: TObject);
-    procedure btnHelperClick(Sender: TObject);
+ TMainForm = class(TLightForm)
+    btnEditor   : TButton;
+    btnSelector : TButton;
+    CheckBox1   : TCheckBox;
+    LabeledEdit : TLabeledEdit;
+    lblCurLang  : TLabel;
+    Memo        : TMemo;
+    pnlRight    : TPanel;
+    procedure btnSelectorClick(Sender: TObject);
+    procedure btnEditorClick(Sender: TObject);
   protected
   private
+    procedure TranslationLoaded(Sender: TObject);
   public
     procedure FormInitialize; override; // Called after the main form was fully created
  end;
 
 VAR
-   frmTester: TfrmTester;
+   MainForm: TMainForm;
 
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-  cTranslate,
-  FormTranslator,
-  FormSelectLang;
+  cbTranslate,
+  FormTranslEditor,
+  FormTranslSelector;
 
 
 
@@ -40,41 +41,37 @@ USES
 {--------------------------------------------------------------------------------------------------
    APP START/CLOSE
 --------------------------------------------------------------------------------------------------}
-procedure TfrmTester.FormCreate(Sender: TObject);
+procedure TMainForm.FormInitialize;
 begin
-  //
-end;
+  inherited FormInitialize;
 
-
-procedure TfrmTester.FormInitialize;
-begin
- inherited FormInitialize;
-
- Translator:= TTranslator.Create;  // Initialize the translator
- Translator.LoadLastTranslation;   // Load last language
-end;
-
-
-procedure TfrmTester.FormDestroy(Sender: TObject);
-begin
- FreeAndNil(Translator);
-end;
-
-
-procedure TfrmTester.btnHelperClick(Sender: TObject);
-begin
- VAR frmTranslator:= TfrmTranslator.Create(Application);
- frmTranslator.Show;
-end;
-
-
-procedure TfrmTester.btnShowTranslatorClick(Sender: TObject);
-begin
- ShowSelectLanguage;
+  Translator.OnTranslationLoaded:= TranslationLoaded;  // Event handler
+  TranslationLoaded(Self);                             // Show current loaded translation
 end;
 
 
 
+
+{--------------------------------------------------------------------------------------------------
+   STUFF
+--------------------------------------------------------------------------------------------------}
+procedure TMainForm.btnEditorClick(Sender: TObject);
+begin
+  TfrmTranslEditor.ShowEditor;
+end;
+
+
+procedure TMainForm.btnSelectorClick(Sender: TObject);
+begin
+  TfrmTranslSelector.ShowSelector;
+end;
+
+
+// Show current loaded translation
+procedure TMainForm.TranslationLoaded(Sender: TObject);
+begin
+  lblCurLang.Caption:= 'Current translation file: '+ Translator.CurLanguageName;
+end;
 
 
 end.

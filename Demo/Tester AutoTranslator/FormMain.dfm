@@ -1,65 +1,74 @@
-object frmTester: TfrmTester
+object MainForm: TMainForm
   Left = 450
   Top = 311
   Anchors = []
-  Caption = 'Tester'
-  ClientHeight = 284
-  ClientWidth = 464
+  Caption = 'Translator Demo - www.GabrielMoraru.com'
+  ClientHeight = 283
+  ClientWidth = 460
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 390
   DoubleBuffered = True
-  Font.Charset = DEFAULT_CHARSET
+  Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
+  Font.Height = -13
+  Font.Name = 'Calibri'
   Font.Style = []
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 4
-  OnCreate = FormCreate
-  OnDestroy = FormDestroy
-  TextHeight = 13
+  TextHeight = 15
   object CheckBox1: TCheckBox
     Left = 12
-    Top = 26
-    Width = 97
+    Top = 37
+    Width = 123
     Height = 17
-    Caption = 'CheckBox'
+    Caption = 'Demo checkbox'
     TabOrder = 3
   end
   object pnlRight: TPanel
-    Left = 279
+    Left = 256
     Top = 0
-    Width = 185
-    Height = 284
+    Width = 204
+    Height = 283
     Align = alRight
     TabOrder = 0
-    object btnShowTranslator: TButton
-      Left = 1
-      Top = 187
-      Width = 183
+    object lblCurLang: TLabel
+      AlignWithMargins = True
+      Left = 4
+      Top = 4
+      Width = 196
+      Height = 15
+      Align = alTop
+      Caption = 'Current language'
+    end
+    object btnSelector: TButton
+      AlignWithMargins = True
+      Left = 4
+      Top = 177
+      Width = 196
       Height = 48
       Align = alBottom
       Caption = 'Select language'
       TabOrder = 0
-      OnClick = btnShowTranslatorClick
+      OnClick = btnSelectorClick
     end
-    object btnHelper: TButton
-      Left = 1
-      Top = 235
-      Width = 183
+    object btnEditor: TButton
+      AlignWithMargins = True
+      Left = 4
+      Top = 231
+      Width = 196
       Height = 48
       Align = alBottom
-      Caption = 'Translator helper'
+      Caption = 'Edit current translation'
       TabOrder = 1
-      OnClick = btnHelperClick
+      OnClick = btnEditorClick
     end
   end
-  object Memo1: TMemo
+  object Memo: TMemo
     Left = 12
-    Top = 124
+    Top = 148
     Width = 185
     Height = 89
     Lines.Strings = (
@@ -69,11 +78,11 @@ object frmTester: TfrmTester
   object LabeledEdit: TLabeledEdit
     Left = 12
     Top = 88
-    Width = 121
-    Height = 21
-    EditLabel.Width = 33
-    EditLabel.Height = 13
-    EditLabel.Caption = 'English'
+    Width = 185
+    Height = 23
+    EditLabel.Width = 73
+    EditLabel.Height = 15
+    EditLabel.Caption = 'Some editbox'
     TabOrder = 2
     Text = ''
   end

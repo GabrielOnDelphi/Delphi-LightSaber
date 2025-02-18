@@ -1,4 +1,4 @@
-﻿UNIT cmVclUtils;
+﻿UNIT cbVclUtils;
 
 {=============================================================================================================
    2023.01
@@ -10,7 +10,7 @@
 
    See also:
       csWindow.pas
-      cmVclUtils.pas
+      cbVclUtils.pas
 
    Tester:
       c:\MyProjects\My books\Building cross-platform applications\Demo projects\Show VCL inheritance tree\

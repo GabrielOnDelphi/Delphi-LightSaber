@@ -98,7 +98,7 @@ procedure LoadLastSkin(CONST DefaultSkin: string= '');  { On first run, set the 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   ccColors, cTranslate, cmINIFileQuick, {uLinks,} Vcl.Themes, cbAppData, csExecuteShell,
+   ccColors, cbTranslate, cbINIFileQuick, {uLinks,} Vcl.Themes, cbAppData, csExecuteShell,
    cvIniFile, IOUtils, ccIO, ccCore, cbDialogs;   { VCL.Styles is mandatory here}
 
 CONST
@@ -140,7 +140,7 @@ end;
 
 procedure LoadLastSkin(CONST DefaultSkin: string= '');
 begin
- LastSkin:= cmINIFileQuick.ReadString('LastSkin', DefaultSkin);   { This is a relative path so the skin can still be loaded when the application is moved to a different folder }
+ LastSkin:= cbINIFileQuick.ReadString('LastSkin', DefaultSkin);   { This is a relative path so the skin can still be loaded when the application is moved to a different folder }
 
  if LastSkin = ''
  then LastSkin:= DefaultSkin;
@@ -165,12 +165,10 @@ end;
 
 { THERE IS A BUG THAT CRASHES THE PROGRAM WHEN I CLOSE THIS WINDOW (after applying a skin) }
 class procedure TfrmSkinDisk.CreateFormModal;
-VAR frmEditor: TfrmSkinDisk;
+VAR
+  frmEditor: TfrmSkinDisk;
 begin
  AppData.CreateFormHidden(TfrmSkinDisk, frmEditor);
-
- if Translator <> NIL
- then Translator.LoadFormTranlation(frmEditor);
 
  { Closed by mrOk/mrCancel. Set to caFree. }
  frmEditor.ShowModal;      { Bug: IF I use ShowModal, after applying a new skin, the window will loose its 'modal' attribute! }
@@ -187,7 +185,7 @@ begin
 
  frmEditor.OnDefaultSkin:= Nottify;
  if Translator <> NIL
- then Translator.LoadFormTranlation(frmEditor);
+ then Translator.LoadTranslation(frmEditor);
 
  frmEditor.Show;      { Bug: IF I use ShowModal, after applying a new skin, the window will lose its 'modal' attribute! }
 end;
@@ -219,7 +217,7 @@ procedure TfrmSkinDisk.FormDestroy(Sender: TObject);
 begin
  SaveForm;
  if NOT AppData.Initializing
- then cmINIFileQuick.WriteString ('LastSkin', LastSkin);   { We don't save anything if the start up was improper! }
+ then cbINIFileQuick.WriteString ('LastSkin', LastSkin);   { We don't save anything if the start up was improper! }
 end;
 
 

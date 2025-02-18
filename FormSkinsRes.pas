@@ -86,7 +86,7 @@ procedure LoadLastSkin(CONST DefaultSkin: string= '');  { On first run, set the 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   csExecuteShell, cbAppData, cvINIFile, cTranslate, cmINIFileQuick;
+   csExecuteShell, cbAppData, cvINIFile, cbTranslate, cbINIFileQuick;
 
 CONST
   DefWinTheme= 'Windows default theme';
@@ -103,7 +103,7 @@ VAR
 
 procedure LoadLastSkin(CONST DefaultSkin: string= '');
 begin
- LastSkin:= cmINIFileQuick.ReadString('LastSkin', DefaultSkin);   { This is a relative path so the skin can still be loaded when the application is moved to a different folder }
+ LastSkin:= cbINIFileQuick.ReadString('LastSkin', DefaultSkin);   { This is a relative path so the skin can still be loaded when the application is moved to a different folder }
 
  if LastSkin = ''
  then LastSkin:= DefaultSkin;
@@ -132,7 +132,7 @@ VAR Form: TfrmSkinRes;
 begin
  AppData.CreateFormHidden(TfrmSkinRes, Form);
  if Translator <> NIL
- then Translator.LoadFormTranlation(Form);
+ then Translator.LoadTranslation(Form);
 
  { Closed by mrOk/mrCancel }
  { Bug: IF I use ShowModal, after applying a new skin, the window will loose its 'modal' attribute! }
@@ -163,7 +163,7 @@ procedure TfrmSkinRes.FormDestroy(Sender: TObject);
 begin
  SaveForm;
  if NOT AppData.Initializing
- then cmINIFileQuick.WriteString ('LastSkin', LastSkin);   { We don't save anything if the start up was improper! }
+ then cbINIFileQuick.WriteString ('LastSkin', LastSkin);   { We don't save anything if the start up was improper! }
 end;
 
 

@@ -5,17 +5,16 @@ uses
   FastMM4,
   {$ENDIF }
   Forms,
-  FormMain in 'FormMain.pas' {frmTester},
-  cbAppData in '..\..\LightSaber\cbAppData.pas',
-  cTranslate in '..\cTranslate.pas',
-  FormSelectLang in '..\FormSelectLang.pas',
-  FormTranslator in '..\FormTranslator.pas';
+  FormMain in 'FormMain.pas' {MainForm},
+  FormTranslEditor in '..\..\FormTranslEditor.pas' {frmTranslEditor},
+  FormTranslSelector in '..\..\FormTranslSelector.pas' {frmTranslSelector},
+  cbAppData in '..\..\cbAppData.pas',
+  cbTranslate in '..\..\cbTranslate.pas';
 
 {$R *.res}
 
 begin
-  Application.Initialize;
-  AppData:= TAppData.Create('Light Automatic Translator');
-  AppData.CreateMainForm(TfrmTester, frmTester, TRUE);
-  Application.Run;
+  AppData:= TAppData.Create('Light Translator Demo');
+  AppData.CreateMainForm(TMainForm, MainForm, TRUE);
+  AppData.Run;
 end.

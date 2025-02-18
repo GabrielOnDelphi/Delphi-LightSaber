@@ -120,11 +120,11 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
    ciUpdater,
-   cTranslate,
+   cbTranslate,
    cvIniFile,
    FormAbout,
-   FormSelectLang,   
    FormSettings,
+   FormTranslSelector,
    FormUpdaterNotifier,
    uInitialization;
 
@@ -250,7 +250,7 @@ end;
 
 procedure TMainForm.actLanguageExecute(Sender: TObject);
 begin
-  FormSelectLang.ShowSelectLanguage;
+  FormTranslSelector.Show_SelectLanguageForm;
 end;
 
 

@@ -1,4 +1,4 @@
-﻿unit cTranslate;
+﻿unit cbTranslate;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -22,7 +22,7 @@
   
    **Advantages**
 
-     Changing language is life without the need to restart the app  
+     Changing language is live without the need to restart the app  
      The text translated can be seen live, as we translate it  
      The user can create his own translations easily (with the included utility)  
      Full Unicode support  
@@ -72,21 +72,21 @@
   
        procedure TDynamicForm.Initialize;  
        begin  
-        // Call LoadFormTranlation() for DYNAMICALLY created Vcl.Forms, cbAppDataForm, when they are created  
-        Translator.LoadFormTranlation(DynamicForm);  
+        // Call LoadTranslation() for DYNAMICALLY created Vcl.Forms, cbAppDataForm, when they are created  
+        Translator.LoadTranslation(DynamicForm);  
        end;  
   
   
     3. Save all live forms to the INI file to be translated:  
   
        a. Call Translator.SaveTranslation;  //Note: Only currently existing/live forms will be saved to disk.  
-       b. Manually translate the text (or use www.DeepL.com). There is a helper tool in FormTranslator.pas.  
-       c. Place the newly translated file in the 'Lang' folder. The program will discover the new file when the ShowSelectLanguage procedure is called (no need to restart).  
+       b. Manually translate the text (or use www.DeepL.com). There is a helper tool in FormTranslEditor.pas.  
+       c. Place the newly translated file in the 'Lang' folder. The program will discover the new file when the Show_SelectLanguageForm procedure is called (no need to restart).  
   
   
     4. Let the user choose/switch a language:  
   
-       a. Call FormSelectLang.pas ShowSelectLanguage  
+       a. Call FormTranslSelector.pas Show_SelectLanguageForm  
        b. Languages are switched 'Live'. No need to restart the program.  
   
 --------------------------------------------------------------------------------------------------------------  
@@ -161,7 +161,8 @@ BUG:
 
 INTERFACE
 USES
-  System.Classes, System.SysUtils, System.IniFiles, System.TypInfo, Vcl.Forms, cbAppDataForm,Vcl.Menus, Vcl.ExtCtrls;
+  System.Classes, System.SysUtils, System.IniFiles, System.TypInfo, Vcl.Forms, Vcl.Menus, Vcl.ExtCtrls,
+  cbAppData; //, cbAppDataForm;
 
 { Bitwise constants for TControl.Tag }
 CONST
@@ -170,29 +171,44 @@ CONST
 TYPE
  TTranslator = class(TObject)
   private
-    LastLanguage: string;  // Used to skip translating a form when it is already in the chousen language.
+    FCurLanguage: string;           // The language currently used for translation. Example: FileName.ini (only filename, no folder/path)
+    LastLanguage: string;           // Used to skip translating a form when it is already in the chosen language.  THIS IS A SHORT NAME
+    FOnTranslationLoaded: TNotifyEvent;
+    FAppData: TAppData;
     procedure WriteComponent(Component: TComponent; Section: string; Ini: TMemIniFile);
     procedure ReadComponent (Component: TComponent; Section: string; Ini: TMemIniFile);
     procedure WriteProperty (Component: TComponent; ParentName, PropertyType, Section: string; Ini: TMemIniFile);
     procedure ReadProperty  (Component: TComponent; ParentName, PropertyType, Section: string; Ini: TMemIniFile);
-  protected
-    procedure _saveFormTranlation (Form: TForm; Ini: TMemIniFile);
-  public
-    Authors: string;               // Credits the author of the current translation file
-    CurLanguage: string;           // The language currently used for translation. Example: FileName.ini (only filename, no folder/path)
-    DontSaveEmpty: Boolean;        // Don't save text properties that are empty
-    ParseCtrlsWithAction: boolean; // If true, save to ini all controls even if they have an assigned action. If false, we let the associated action to set control's cation/hint
 
-    constructor Create;
+    procedure setCurLanguage(const Value: string);
+    function  getCurLanguage: string;
+    procedure saveFormTranlation (Form: TForm; Ini: TMemIniFile);
+    function ReadString(const Identifier: string; DefaultVal: string): string;
+    procedure WriteString(const Identifier, s: string);
+  protected
+    function  DefaultLang: string;
+  public
+    Authors: string;                // Credits the author of the current translation file
+    DontSaveEmpty: Boolean;         // Don't save text properties that are empty
+    ParseCtrlsWithAction: boolean;  // If true, save to ini all controls even if they have an assigned action. If false, we let the associated action to set control's cation/hint
+
+    constructor Create(aAppData: TAppData);
     destructor Destroy; override;
-    function GetLangFolder: string;
+
 
     procedure LoadDefaultTranslation;
     procedure LoadLastTranslation;
-    procedure LoadFormTranlation      (Form: TForm; ForceLoad: Boolean= FALSE);
-    procedure LoadTranslationAllForms (CONST FileName: string; ForceLoad: Boolean= FALSE);
-    procedure SaveTranslation         (CONST FileName: string; Overwrite: Boolean= TRUE);
+    procedure LoadTranslation (Form: TForm; ForceLoad: Boolean= FALSE);            overload;
+    procedure LoadTranslation (ForceLoad: Boolean= FALSE);                         overload;
+    procedure SaveTranslation (CONST FileName: string; Overwrite: Boolean= TRUE);
+
+    function  GetLangFolder  : string;
+    property  CurLanguageName: string read getCurLanguage;                        // Only name. Example: FileName.ini
+    property  CurLanguage    : string read FCurLanguage write setCurLanguage;     // The language currently used for translation. Example: c:\AppName\Lang\FileName.ini (full path)
+
+    property  OnTranslationLoaded: TNotifyEvent read FOnTranslationLoaded write FOnTranslationLoaded;
  end;
+
 
 function trs(CONST s: string): string;
 
@@ -203,29 +219,30 @@ VAR
 IMPLEMENTATION
 
 USES
-   FormSelectLang, cmVclUtils, ccCore, ccIO, ccTextFile, cmIO, cmINIFileQuick, cbAppData;
-
+   cbINIFile, cbVclUtils, ccCore, ccIO;
 
 CONST
-   DefaultLang= 'English.ini';
    NoLanguage = 'No_Language';
 
 
 
-constructor TTranslator.Create;
+constructor TTranslator.Create(aAppData: TAppData);
 begin
   inherited Create;
+  FAppData:= aAppData;
+  Assert(aAppData <> NIL);
   DontSaveEmpty:= TRUE;
-  ForceDirectories(GetLangFolder);                        // Make sure that the folders exists
-  CurLanguage:= ReadString('Last_Language', DefaultLang); // English is the default
+  ForceDirectories(GetLangFolder);                                         // Ensure the folder exists
+  FCurLanguage:= GetLangFolder + ReadString('Last_Language', DefaultLang); // Set the last used language. If none, default to English
 end;
 
 
 destructor TTranslator.Destroy;
 begin
-  WriteString('Last_Language', CurLanguage);
+  WriteString('Last_Language', CurLanguageName);
   inherited Destroy;
 end;
+
 
 
 
@@ -233,77 +250,94 @@ end;
 {--------------------------------------------------------------------------------
   Main functions
 --------------------------------------------------------------------------------}
+procedure TTranslator.setCurLanguage(const Value: string);
+begin
+  Assert(Pos(PathDelim, Value) > 0, 'CurLanguage var must contain the full path!');
+
+  FCurLanguage:= Value;
+  LoadTranslation;
+end;
+
+
+function TTranslator.getCurLanguage: string;
+begin
+  Result:= ExtractFileName(FCurLanguage);
+end;
+
+
+function TTranslator.DefaultLang: string;
+begin
+  Result:= GetLangFolder + 'English.ini';
+end;
+
+
 procedure TTranslator.LoadDefaultTranslation;
 begin
- CurLanguage:= DefaultLang;
- LoadLastTranslation;
+  CurLanguage:= DefaultLang;
 end;
 
 
 { This will show the 'Choose language' dlg if this is the first time when the application starts. }
 procedure TTranslator.LoadLastTranslation;
 begin
- if CurLanguage = NoLanguage
- then FormSelectLang.ShowSelectLanguage
+ if CurLanguageName = NoLanguage
+ then //FormTranslSelector.Show_SelectLanguageForm
  else
-   if FileExistsMsg(GetLangFolder+ CurLanguage)
-   then LoadTranslationAllForms(GetLangFolder+ CurLanguage)
-   else CurLanguage:= DefaultLang;   { Could not load the last language file. We go back to default (En) }
-
- //MesajInfo(TTranslator.UnitName);
+   if FileExists(CurLanguage)
+   then LoadTranslation
+   else LoadDefaultTranslation;   { Could not load the last language file. We go back to default (En) }
 end;
 
 
 { Load translation for ALL live forms }
-procedure TTranslator.LoadTranslationAllForms(CONST FileName: string; ForceLoad: Boolean= FALSE);
+procedure TTranslator.LoadTranslation(ForceLoad: Boolean= FALSE);
 begin
- VAR IniContainer:= TMemIniFile.Create(FileName);
+ VAR IniContainer:= TMemIniFile.Create(CurLanguage);
  TRY
    Authors:= IniContainer.ReadString('Authors', 'Name', 'CubicDesign');
 
    // FormCount       = forms currently displayed on the screen
    // CustomFormCount = forms or property pages currently displayed on the screen
    for VAR i:= 0 to Screen.CustomFormCount - 1 DO
-      LoadFormTranlation(Screen.Forms[I], ForceLoad);
+      LoadTranslation(Screen.Forms[I], ForceLoad);
 
-   LastLanguage:= CurLanguage;
+   LastLanguage:= CurLanguageName;
  FINALLY
    FreeAndNil(IniContainer);
  END;
+
+ if Assigned(FOnTranslationLoaded)
+ then FOnTranslationLoaded(Self);
 end;
 
 
 
 { Load translation for specified form.
    Call this for forms that were not alive when the translation was applied (during the initialization of the app) }
-procedure TTranslator.LoadFormTranlation(Form: TForm; ForceLoad: Boolean= FALSE);
+procedure TTranslator.LoadTranslation(Form: TForm; ForceLoad: Boolean= FALSE);
 VAR
    i: Integer;
    Section: string;
-   FileName: string;
 begin
- if FileExistsMsg(GetLangFolder+ CurLanguage)
- then FileName:=  GetLangFolder+ CurLanguage
- else EXIT;
+  if NOT FileExists(CurLanguage)
+  then EXIT;
 
- if ForceLoad
- then
- else
-    if LastLanguage = CurLanguage
-    then EXIT;   { We remain to english }
+  if (LastLanguage = CurLanguageName)
+  AND NOT ForceLoad
+  then EXIT;
 
- VAR IniContainer:= TMemIniFile.Create(FileName);
- TRY
-   Section:= Form.Name;   // Name of the form that hosts all the contols
-   if Form.Tag = DontTranslate then EXIT;
-   ReadComponent(Form, Section, IniContainer);   // Read form
+  VAR IniContainer:= TMemIniFile.Create(CurLanguage);
+  TRY
+    Section:= Form.Name;   // Name of the form that hosts all the contols
+    if Form.Tag = DontTranslate then EXIT;
+    ReadComponent(Form, Section, IniContainer);   // Read form
 
-   // Enumerate children of container
-   for i:= 0 to Form.ComponentCount-1 do
-      ReadComponent(Form.Components[i], Section, IniContainer);
- FINALLY
-   FreeAndNil(IniContainer);
- END;
+    // Enumerate children of container
+    for i:= 0 to Form.ComponentCount-1 do
+       ReadComponent(Form.Components[i], Section, IniContainer);
+  FINALLY
+    FreeAndNil(IniContainer);
+  END;
 end;
 
 
@@ -316,16 +350,15 @@ begin
  if Overwrite
  then DeleteFile(FileName);
 
- VAR IniContainer:= TMemIniFile.Create(FileName);
+ VAR IniContainer:= TMemIniFile.Create(FileName, TEncoding.UTF8);
  TRY
   IniContainer.WriteString('Authors', 'Name', Authors);
 
-  //
   // QUESTION: What is the condition for a form to appear in this list? Do the forms created with TForm.Create(Nil) appear here? Test it
   for i:= 0 to Screen.FormCount - 1 DO
    begin
      CurForm:= Screen.Forms[I];
-     _saveFormTranlation(CurForm, IniContainer);
+     saveFormTranlation(CurForm, IniContainer);
    end;
 
    IniContainer.UpdateFile;
@@ -335,13 +368,14 @@ begin
 end;
 
 
-procedure TTranslator._saveFormTranlation(Form: TForm; Ini: TMemIniFile);
+procedure TTranslator.saveFormTranlation(Form: TForm; Ini: TMemIniFile);
 var
    i: Integer;
    Section: string;
 begin
   Section:= Form.Name;    // Name of the form that hosts all the contols
   if Form.Tag = DontTranslate then EXIT;
+
   WriteComponent(Form, Section, Ini);    // Set caption to self (form)
 
   // Enumerate children of container
@@ -368,7 +402,7 @@ begin
   if Component.Tag = DontTranslate then EXIT;
 
   // If an action is assigned, then we don't read this control. We let the action to set its caption/hint.
-  HasAct:= cmVclUtils.HasAction(Component);
+  HasAct:= cbVclUtils.HasAction(Component);
 
   if NOT HasAct
   OR (HasAct AND ParseCtrlsWithAction) then
@@ -390,14 +424,14 @@ begin
  if Component.Tag = DontTranslate then EXIT;
 
   // If an action is assigned, then we don't read this control. We let the action to set its caption/hint.
-  HasAct:= cmVclUtils.HasAction(Component);
+  HasAct:= cbVclUtils.HasAction(Component);
 
   if NOT HasAct
   OR (HasAct AND ParseCtrlsWithAction) then
    begin
     {Note: We don't write here TEdit.Text. Maybe we should? The idea is that in most cases, this text will be filled by the program at run time }
 
-    WriteProperty(Component, '', 'Hint'    , Section, Ini);
+    WriteProperty(Component, '', 'Hint'    , Section, Ini); 
     WriteProperty(Component, '', 'Caption' , Section, Ini);
     WriteProperty(Component, '', 'TextHint', Section, Ini);
 
@@ -500,8 +534,33 @@ end;
 
 function trs(CONST s: string): string;
 begin
- Result:= s;
+  Result:= s;  //ToDo: translate this string from a DB or something
 end;
+
+
+
+// Remember the last used language
+function TTranslator.ReadString(CONST Identifier: string; DefaultVal: string): string;
+begin
+  VAR IniFile:= TIniFileApp.Create(FAppData.AppName, FAppData.IniFile);
+  TRY
+    Result:= IniFile.ReadString('Transaltor', Identifier, DefaultVal);
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
+end;
+
+procedure TTranslator.WriteString(CONST Identifier, s: string);
+begin
+  VAR IniFile:= TIniFileApp.Create(FAppData.AppName, FAppData.IniFile);
+  TRY
+    IniFile.WriteString('Transaltor', Identifier, s)
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
+end;
+
+
 
 
 end.

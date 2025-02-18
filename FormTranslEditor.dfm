@@ -1,4 +1,4 @@
-object frmTranslator: TfrmTranslator
+object frmTranslEditor: TfrmTranslEditor
   Tag = 128
   Left = 549
   Top = 225
@@ -6,8 +6,8 @@ object frmTranslator: TfrmTranslator
   AlphaBlendValue = 250
   BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'Translator'
-  ClientHeight = 662
-  ClientWidth = 828
+  ClientHeight = 661
+  ClientWidth = 824
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,15 +18,13 @@ object frmTranslator: TfrmTranslator
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 3
-  Visible = True
   OnClose = FormClose
-  OnDestroy = FormDestroy
   TextHeight = 13
   object lblInfo: TLabel
     AlignWithMargins = True
     Left = 3
-    Top = 649
-    Width = 822
+    Top = 648
+    Width = 818
     Height = 13
     Align = alBottom
     Alignment = taCenter
@@ -38,14 +36,14 @@ object frmTranslator: TfrmTranslator
     Left = 3
     Top = 3
     Width = 239
-    Height = 640
+    Height = 639
     Align = alLeft
     TabOrder = 0
     object lblLiveForms: TLabel
       AlignWithMargins = True
       Left = 5
-      Top = 316
-      Width = 49
+      Top = 325
+      Width = 229
       Height = 13
       Hint = 
         'Live forms that available for translation.'#13#10'Only life (running) ' +
@@ -57,8 +55,8 @@ object frmTranslator: TfrmTranslator
     object inetDeepL: TLabel
       AlignWithMargins = True
       Left = 5
-      Top = 570
-      Width = 80
+      Top = 576
+      Width = 229
       Height = 13
       Cursor = crHandPoint
       Align = alBottom
@@ -76,8 +74,8 @@ object frmTranslator: TfrmTranslator
     object InternetLabel1: TLabel
       AlignWithMargins = True
       Left = 5
-      Top = 589
-      Width = 83
+      Top = 592
+      Width = 229
       Height = 13
       Cursor = crHandPoint
       Align = alBottom
@@ -93,6 +91,7 @@ object frmTranslator: TfrmTranslator
       OnClick = InternetLabel1Click
     end
     object btnCreateTransl: TButton
+      AlignWithMargins = True
       Left = 9
       Top = 16
       Width = 114
@@ -119,10 +118,10 @@ object frmTranslator: TfrmTranslator
     object lbxForms: TListBox
       AlignWithMargins = True
       Left = 5
-      Top = 335
+      Top = 341
       Width = 229
       Height = 229
-      Hint = 'Live forms that available for translation'
+      Hint = 'Live forms that available for translation.'
       Align = alBottom
       Anchors = [akLeft, akTop, akRight, akBottom]
       ItemHeight = 13
@@ -131,13 +130,14 @@ object frmTranslator: TfrmTranslator
     object GroupBox2: TGroupBox
       AlignWithMargins = True
       Left = 5
-      Top = 187
+      Top = 186
       Width = 229
       Height = 133
       Align = alBottom
       Caption = 'Save options'
       TabOrder = 3
       object chkParseCtrlsAction: TCheckBox
+        AlignWithMargins = True
         Left = 27
         Top = 34
         Width = 179
@@ -150,6 +150,7 @@ object frmTranslator: TfrmTranslator
         TabOrder = 0
       end
       object chkDontSaveEmpty: TCheckBox
+        AlignWithMargins = True
         Left = 27
         Top = 61
         Width = 179
@@ -163,6 +164,7 @@ object frmTranslator: TfrmTranslator
         TabOrder = 1
       end
       object chkOverwrite: TCheckBox
+        AlignWithMargins = True
         Left = 27
         Top = 88
         Width = 179
@@ -177,6 +179,7 @@ object frmTranslator: TfrmTranslator
       end
     end
     object btnLoad: TButton
+      AlignWithMargins = True
       Left = 9
       Top = 53
       Width = 114
@@ -191,19 +194,19 @@ object frmTranslator: TfrmTranslator
     AlignWithMargins = True
     Left = 248
     Top = 3
-    Width = 577
-    Height = 640
+    Width = 573
+    Height = 639
     Align = alClient
     Caption = 'Language editor'
     TabOrder = 1
     object Splitter1: TSplitter
-      Left = 343
+      Left = 331
       Top = 15
       Height = 622
       Align = alRight
     end
     object pnlRight: TPanel
-      Left = 346
+      Left = 334
       Top = 15
       Width = 237
       Height = 622
@@ -216,7 +219,7 @@ object frmTranslator: TfrmTranslator
         Left = 4
         Top = 4
         Width = 229
-        Height = 588
+        Height = 580
         Hint = 'Content of the currently loaded language file'
         Align = alClient
         ScrollBars = ssBoth
@@ -224,17 +227,18 @@ object frmTranslator: TfrmTranslator
       end
       object Panel3: TPanel
         Left = 1
-        Top = 595
+        Top = 587
         Width = 235
-        Height = 26
+        Height = 34
         Align = alBottom
         BevelOuter = bvNone
         TabOrder = 1
         object btnCopyRight: TButton
-          Left = 171
-          Top = 0
+          AlignWithMargins = True
+          Left = 168
+          Top = 3
           Width = 64
-          Height = 26
+          Height = 28
           Hint = 
             'Copy right side (the one that needs to be translated) to the cli' +
             'pboard'
@@ -248,7 +252,7 @@ object frmTranslator: TfrmTranslator
     object Panel4: TPanel
       Left = 2
       Top = 15
-      Width = 341
+      Width = 329
       Height = 622
       Align = alClient
       Caption = 'Panel4'
@@ -257,7 +261,7 @@ object frmTranslator: TfrmTranslator
         AlignWithMargins = True
         Left = 4
         Top = 4
-        Width = 333
+        Width = 321
         Height = 580
         Hint = 'Content of the currently loaded language file'
         Align = alClient
@@ -267,29 +271,32 @@ object frmTranslator: TfrmTranslator
       object Panel1: TPanel
         Left = 1
         Top = 587
-        Width = 339
+        Width = 327
         Height = 34
         Align = alBottom
         BevelOuter = bvNone
         TabOrder = 1
         object btnSaveEditor: TButton
-          Left = 0
-          Top = 0
+          AlignWithMargins = True
+          Left = 3
+          Top = 3
           Width = 76
-          Height = 34
+          Height = 28
           Hint = 
             'Save translation to disk.'#13#10'Current selected filename will be use' +
             'd.'
           Align = alLeft
           Caption = 'Save'
+          Enabled = False
           TabOrder = 0
           OnClick = btnSaveEditorClick
         end
         object btnApplyEdits: TButton
-          Left = 76
-          Top = 0
+          AlignWithMargins = True
+          Left = 85
+          Top = 3
           Width = 76
-          Height = 34
+          Height = 28
           Hint = 'Save translation to file and apply translation'
           Align = alLeft
           Caption = 'Apply'
@@ -298,10 +305,11 @@ object frmTranslator: TfrmTranslator
           OnClick = btnApplyEditsClick
         end
         object btnCopy: TButton
-          Left = 206
-          Top = 0
-          Width = 58
-          Height = 34
+          AlignWithMargins = True
+          Left = 182
+          Top = 3
+          Width = 61
+          Height = 28
           Hint = 'Copy all text to clipboard'
           Align = alRight
           Caption = 'Copy'
@@ -309,10 +317,11 @@ object frmTranslator: TfrmTranslator
           OnClick = btnCopyClick
         end
         object btnValues: TButton
-          Left = 264
-          Top = 0
+          AlignWithMargins = True
+          Left = 249
+          Top = 3
           Width = 75
-          Height = 34
+          Height = 28
           Hint = 'Show only the values (text that needs to be translated)'
           Align = alRight
           Caption = 'Values >>'
@@ -323,8 +332,9 @@ object frmTranslator: TfrmTranslator
     end
   end
   object grpNewTransl: TGroupBox
-    Left = 254
-    Top = 96
+    AlignWithMargins = True
+    Left = 294
+    Top = 208
     Width = 303
     Height = 162
     Caption = 'New translation'
@@ -332,7 +342,7 @@ object frmTranslator: TfrmTranslator
     Visible = False
     object edtFileName: TLabeledEdit
       Left = 37
-      Top = 48
+      Top = 47
       Width = 184
       Height = 21
       Hint = 
@@ -340,15 +350,15 @@ object frmTranslator: TfrmTranslator
         '? < > $ % : * '#13#10'If you want, you can rename this file manually, ' +
         'outside of the program.'#13#10#13#10'File extension must be .ini (added by' +
         ' the program automatically, if you forget).'
-      EditLabel.Width = 46
+      EditLabel.Width = 45
       EditLabel.Height = 13
-      EditLabel.Caption = 'File Name'
+      EditLabel.Caption = 'File name'
       TabOrder = 0
       Text = 'NewLanguage'
     end
     object edtAuthor: TLabeledEdit
       Left = 37
-      Top = 97
+      Top = 95
       Width = 184
       Height = 21
       Hint = 
@@ -364,9 +374,10 @@ object frmTranslator: TfrmTranslator
       TextHint = 'CubicDesign'
     end
     object btnOK: TButton
-      Left = 233
+      AlignWithMargins = True
+      Left = 216
       Top = 128
-      Width = 60
+      Width = 77
       Height = 27
       Caption = 'OK'
       TabOrder = 2

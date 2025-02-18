@@ -95,6 +95,9 @@
         <DCCReference Include="cbLogUtils.pas"/>
         <DCCReference Include="cbRegistry.pas"/>
         <DCCReference Include="cbVersion.pas"/>
+        <DCCReference Include="cbVclUtils.pas"/>
+        <DCCReference Include="cbTranslate.pas"/>
+        <DCCReference Include="cbINIFileQuick.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

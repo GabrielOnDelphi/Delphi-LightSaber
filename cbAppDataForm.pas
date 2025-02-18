@@ -67,19 +67,15 @@
 INTERFACE
 
 USES
-  Winapi.Messages,
-  System.SysUtils, System.Classes, System.IniFiles,
-  Vcl.Controls, Vcl.Forms,
-  cbDialogs,
-  cbCenterControl,
-  cbIniFile,
-  ccINIFile; // Do not add dependencies higher than "cb" level
+  Winapi.Windows, Winapi.Messages,
+  System.SysUtils, System.Classes, System.IniFiles, Vcl.Controls, Vcl.Forms,
+  cbDialogs, cbCenterControl, cbIniFile, ccINIFile; // Do not add dependencies higher than "cb" level
 
-type
+TYPE
   TLightForm = class(TForm)
   private
-    FAutoSaveForm: TAutoState;  // We can use this later in the destructor to know how to save the form: flPosOnly/flFull
-    //FOnRelease: TNotifyEvent;
+    FCloseOnEscape: Boolean;
+    FAutoSaveForm: TAutoState;
   protected
     Saved: Boolean;
     procedure saveBeforeExit;
@@ -87,6 +83,7 @@ type
     procedure DoDestroy; override;
     procedure DoClose(var Action: TCloseAction); override;
     procedure WMEndSession(var Msg: TWMEndSession);
+    procedure FormKeyPress(Sender: TObject; var Key: Char);  // We can use this later in the destructor to know how to save the form: flPosOnly/flFull
   public
     constructor Create(AOwner: TComponent; AutoSaveForm: TAutoState); reintroduce; overload; virtual;
     function CloseQuery: boolean; override;
@@ -97,9 +94,8 @@ type
     procedure LoadForm; virtual;
     procedure SaveForm; virtual;
   published
-    property AutoState: TAutoState   read FAutoSaveForm  write FAutoSaveForm;
-    // Events
-    //del property OnRelease: TNotifyEvent read FOnRelease write FOnRelease;
+    property AutoState: TAutoState   read FAutoSaveForm   write FAutoSaveForm;
+    property CloseOnEscape: Boolean  read FCloseOnEscape  write FCloseOnEscape;    // Close this form when the Esc key is pressed
   end;
 
 
@@ -177,6 +173,14 @@ end;
 procedure TLightForm.FormRelease;
 begin
   // Give user a chance to call its own finalization code (guaranteed once)
+end;
+
+
+procedure TLightForm.FormKeyPress(Sender: TObject; var Key: Char);
+begin
+  if CloseOnEscape
+  AND (Ord(Key) = VK_ESCAPE)
+  then Close;
 end;
 
 

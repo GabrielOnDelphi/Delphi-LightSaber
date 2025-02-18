@@ -31,6 +31,9 @@
          This form automatically pops up when you send warnings and errors to it.
          For details see: FormLog.pas
 
+       - Translation
+         (Multi-language GUI)
+
        - etc
 
  ____________________________________________________________________________________________________________
@@ -127,7 +130,7 @@ USES
   Winapi.Windows, Winapi.Messages, Winapi.ShellAPI,
   System.Win.Registry, System.IOUtils, System.AnsiStrings, System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Consts,
-  ccCore, ccINIFile, cbINIFile, cbLogRam, cbAppDataForm;
+  ccCore, ccINIFile, cbLogRam, cbAppDataForm;
 
 TYPE
   THintType = (htOff,                      // Turn off the embedded help system
@@ -184,6 +187,7 @@ TYPE
     class VAR AutoSignalInitializationEnd: Boolean;  // See documentation at the top of the file
 
     constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; SignalInitEnd: Boolean= TRUE; MultiThreaded: Boolean= FALSE); virtual;
+    procedure AfterConstruction; override;
     destructor Destroy; override;                    // This is called automatically by "Finalization" in order to call it as late as possible }
     procedure Run;
 
@@ -315,7 +319,7 @@ VAR                      //ToDo: make sure AppData is unique (make it Singleton)
 IMPLEMENTATION
 
 USES
-  cbVersion, ccIO, ccTextFile, cbRegistry, cbDialogs, cbCenterControl; // FormRamLog;
+  cbVersion, cbTranslate, ccIO, ccTextFile, cbRegistry, cbDialogs, cbCenterControl; // FormRamLog;
 
 
 function ExeName: string;
@@ -376,8 +380,6 @@ begin
   Assert(RamLog = NIL, 'Log already created!');  // Call this as soon as possible so it can catch all Log messages generated during app start up. A good place might be in your DPR file before Application.CreateForm(TMainForm, frmMain)
   RamLog:= TRamLog.Create(ShowLogOnError, NIL, MultiThreaded);
 
-  LogVerb(AppName+ GetVersionInfoV+ ' started.');
-
   { App hint }
   Application.HintColor     := $c0c090;
   Application.HintShortPause:= 40;               // Specifies the time period to wait before bringing up a hint if another hint has already been shown. Windows' default is 50 ms
@@ -396,8 +398,18 @@ begin
   ProductSupport := DefaultHomePage;
   ProductWelcome := DefaultHomePage;
   ProductUninstal:= DefaultHomePage;
+
+  { All done }
+  LogVerb(AppName+ GetVersionInfoV+ ' started.');
 end;
 
+procedure TAppData.AfterConstruction;
+begin
+  inherited AfterConstruction;
+
+  { Translator }
+  Translator:= TTranslator.Create(Self);                     // Initialize the translator
+end;
 
 { This destructor is called automatically from the "Finalization" section.
 
@@ -407,6 +419,7 @@ end;
 destructor TAppData.Destroy;
 begin
   SaveSettings;
+  FreeAndNil(Translator);
   FreeAndNil(RamLog); // Call this as late as possible
   inherited;
 end;
@@ -482,6 +495,10 @@ begin
   if RunningFirstTime
   AND NOT RunningHome
   then RegisterUninstaller;
+
+  // Translator
+  if Translator <> NIL
+  then Translator.LoadTranslation(TForm(Reference));
 end;
 
 
@@ -537,6 +554,10 @@ begin
 
   if AutoSignalInitializationEnd
   then Initializing:= FALSE;
+
+  // Translator
+  if Translator <> NIL
+  then Translator.LoadTranslation(TForm(Reference));
 end;
 
 
