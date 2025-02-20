@@ -8,44 +8,39 @@
 *.~dsk
 *.~1~
 *.tvsconfig
+*.vsf
+*.mes
+*.cbk
+*.drc
+*.ficfg
 
 desktop.ini
 uLinks.pas
+/__history
+/__recovery
+
+/21.0_Win32_Debug
+/22.0_Android64_Debug
+/22.0_Android_Debug
 /22.0_Linux64_Debug/
 /22.0_Linux_Debug/
 /22.0_Win32_Debug/
-
-
-System/Credits.lnk
-System/Eula.txt
-desktop.ini
-*.exe
-HardwareID/chHardID.pas
-Demo/All Visual Controls/22.0/Win32_Debug/DemoAllVisualControls.exe
-*.vsf
-*.mes
-Demo/Template Universal Uninstaller/BUG REPORTS.LNK
-Demo/Template App/TemplateApp.delphilsp.json
-*.ficfg
 /22.0_Win32_Release
-/__recovery
-/21.0_Win32_Debug
 /Demo/Tester All Visual Controls/21.0
-          Question
-/22.0_Android64_Debug
-/22.0_Android_Debug
-/__history
 /Demo/Tester All Visual Controls/__recovery
 /Demo/Tester GUI Autosave/__recovery
 /Demo/Tester LightCore ccIO.pas/__recovery
 /Demo/Tester SystemReport/__recovery
-*.cbk
-Demo/Tester LightCore ccStreamBuff.pas/TCubicBuffStream.bin
 /FMX/22.0_Android64_Debug
 1.pas
 2.pas
-cbAppData mixed fmx vcl.pas
-1 copilot.pas
-Demo/Tester LightCore ccWinVersion.pas/Tester_WinVers.drc
-*.drc
+Demo/All Visual Controls/22.0/Win32_Debug/DemoAllVisualControls.exe
+Demo/Template App/TemplateApp.delphilsp.json
+Demo/Template Universal Uninstaller/BUG REPORTS.LNK
 Demo/Tester AutoTranslator/competition.url
+Demo/Tester LightCore ccStreamBuff.pas/TCubicBuffStream.bin
+Demo/Tester LightCore ccWinVersion.pas/Tester_WinVers.drc
+HardwareID/chHardID.pas
+System/Credits.lnk
+System/Eula.txt
+cbAppData mixed fmx vcl.pas
