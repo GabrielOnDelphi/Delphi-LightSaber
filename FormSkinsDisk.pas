@@ -184,9 +184,6 @@ begin
  AppData.CreateFormHidden(TfrmSkinDisk, frmEditor);
 
  frmEditor.OnDefaultSkin:= Nottify;
- if Translator <> NIL
- then Translator.LoadTranslation(frmEditor);
-
  frmEditor.Show;      { Bug: IF I use ShowModal, after applying a new skin, the window will lose its 'modal' attribute! }
 end;
 

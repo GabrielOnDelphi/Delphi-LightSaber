@@ -89,8 +89,6 @@ begin
   if NOT chkForceNewsFound.Visible
   then chkForceNewsFound.Checked:= FALSE;       { Uncheck it if we are not in HomeMode }
   Assert(cmbWhen.Items.Count = Ord(High(TCheckWhen))+1, 'cmbWhen.Count <> TCheckWhen');
-  if Translator <> NIL
-  then Translator.LoadTranslation(Self);
   GuiFromObject;
 end;
 

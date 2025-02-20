@@ -52,6 +52,7 @@ TYPE
     Splitter1            : TSplitter;
     inetDeepL            : TLabel;
     InternetLabel1       : TLabel;
+    btnCancel: TButton;
     procedure btnApplyEditsClick  (Sender: TObject);
     procedure btnCopyClick        (Sender: TObject);
     procedure btnCopyRightClick   (Sender: TObject);
@@ -65,6 +66,7 @@ TYPE
     procedure lblLiveFormsClick   (Sender: TObject);
     procedure inetDeepLClick      (Sender: TObject);
     procedure InternetLabel1Click (Sender: TObject);
+    procedure btnCancelClick(Sender: TObject);
   private
     CurLangFile: string;
     function GetNewFileName: string;
@@ -165,6 +167,12 @@ begin
   StringToFile(CurLangFile, s, woOverwrite, wpOn);
   mmoLangEditor.Text:= s;
 
+  grpNewTransl.Visible:= FALSE;
+end;
+
+
+procedure TfrmTranslEditor.btnCancelClick(Sender: TObject);
+begin
   grpNewTransl.Visible:= FALSE;
 end;
 
@@ -319,6 +327,7 @@ procedure TfrmTranslEditor.btnHelpClick(Sender: TObject);
 begin
   csExecuteShell.ExecuteShell(Translator.GetLangFolder+'How to translate.rtf');
 end;
+
 
 
 

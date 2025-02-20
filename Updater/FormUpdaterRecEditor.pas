@@ -70,8 +70,6 @@ begin
  AppData.CreateFormHidden(TfrmRecEditor, Form, asPosOnly, ParentForm);      { Freed by ShowModal }
  WITH Form DO
  begin
-   if Translator <> NIL
-   then Translator.LoadTranslation(Form);
    PopulateUsers(cmbTarget);
    if FileExists(GetBinFileName)
    then Button1Click(NIL);

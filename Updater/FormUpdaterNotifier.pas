@@ -100,9 +100,6 @@ begin
 
   AppData.CreateFormHidden(TFrmUpdater, Form);   { Freed by ShowModal }
 
-  if Translator <> NIL
-  then Translator.LoadTranslation(Form);
-
   { Setup updater }
   Updater.OnUpdateStart := Form.OnUpdateStart;
   Updater.OnNoNews      := Form.OnNoNews;

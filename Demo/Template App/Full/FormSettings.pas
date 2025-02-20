@@ -101,10 +101,6 @@ begin
  AppData.CreateFormHidden(TfrmSettings, frmSettings);
  frmSettings.GuiSettings:= aGuiSettings;
  frmSettings.GuiFromObject;
-
- if Translator <> NIL
- then Translator.LoadTranslation(frmSettings);
-
  frmSettings.ShowModal;    { Closed by mrOk/mrCancel. Set to caFree. }
 end;
 

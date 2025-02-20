@@ -46,12 +46,6 @@ begin
   then LoadLastSkin('Light AmethystKamri.vsf') // 'Light AmethystKamri.vsf' has too much blue
   else LoadLastSkin();
 
-  { Translator }
-  AppData.MainFormCaption('Loading translations...');
-  Translator:= TTranslator.Create;
-  if NOT AppData.RunningHome
-  then Translator.LoadLastTranslation;    // Load last language and apply it to all existing forms
-
   { Trial/License }
   { Load the log early othewise it will overwrite the existing text }
   chHardID.HDIDValid:= TRUE;

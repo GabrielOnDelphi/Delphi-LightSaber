@@ -172,7 +172,6 @@ begin
      GuiSettings.Save;
      FreeAndNil(GuiSettings);
      FreeAndNil(Updater);
-     FreeAndNil(Translator);
    end;
 end;
 
@@ -250,7 +249,7 @@ end;
 
 procedure TMainForm.actLanguageExecute(Sender: TObject);
 begin
-  FormTranslSelector.Show_SelectLanguageForm;
+  TfrmTranslSelector.ShowSelector;
 end;
 
 

@@ -43,7 +43,7 @@ object frmTranslEditor: TfrmTranslEditor
       AlignWithMargins = True
       Left = 5
       Top = 325
-      Width = 229
+      Width = 49
       Height = 13
       Hint = 
         'Live forms that available for translation.'#13#10'Only life (running) ' +
@@ -56,7 +56,7 @@ object frmTranslEditor: TfrmTranslEditor
       AlignWithMargins = True
       Left = 5
       Top = 576
-      Width = 229
+      Width = 80
       Height = 13
       Cursor = crHandPoint
       Align = alBottom
@@ -75,7 +75,7 @@ object frmTranslEditor: TfrmTranslEditor
       AlignWithMargins = True
       Left = 5
       Top = 592
-      Width = 229
+      Width = 83
       Height = 13
       Cursor = crHandPoint
       Align = alBottom
@@ -94,7 +94,7 @@ object frmTranslEditor: TfrmTranslEditor
       AlignWithMargins = True
       Left = 9
       Top = 16
-      Width = 114
+      Width = 117
       Height = 31
       Hint = 
         'Start a new translatio file and save all GUI strings to that fil' +
@@ -182,7 +182,7 @@ object frmTranslEditor: TfrmTranslEditor
       AlignWithMargins = True
       Left = 9
       Top = 53
-      Width = 114
+      Width = 117
       Height = 31
       Hint = 'Load an existing translation file'
       Caption = 'Load translation...'
@@ -382,6 +382,16 @@ object frmTranslEditor: TfrmTranslEditor
       Caption = 'OK'
       TabOrder = 2
       OnClick = btnOKClick
+    end
+    object btnCancel: TButton
+      AlignWithMargins = True
+      Left = 133
+      Top = 128
+      Width = 77
+      Height = 27
+      Caption = 'Cancel'
+      TabOrder = 3
+      OnClick = btnCancelClick
     end
   end
 end

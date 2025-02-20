@@ -131,8 +131,6 @@ class procedure TfrmSkinRes.CreateForm(Modal: Boolean);
 VAR Form: TfrmSkinRes;
 begin
  AppData.CreateFormHidden(TfrmSkinRes, Form);
- if Translator <> NIL
- then Translator.LoadTranslation(Form);
 
  { Closed by mrOk/mrCancel }
  { Bug: IF I use ShowModal, after applying a new skin, the window will loose its 'modal' attribute! }

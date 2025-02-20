@@ -399,6 +399,11 @@ begin
   ProductWelcome := DefaultHomePage;
   ProductUninstal:= DefaultHomePage;
 
+  { Translator }
+  Translator:= TTranslator.Create(Self);                     // Initialize the translator
+  if NOT RunningHome
+  then Translator.LoadLastTranslation;    // Load last language and apply it to all existing forms
+
   { All done }
   LogVerb(AppName+ GetVersionInfoV+ ' started.');
 end;
@@ -406,9 +411,6 @@ end;
 procedure TAppData.AfterConstruction;
 begin
   inherited AfterConstruction;
-
-  { Translator }
-  Translator:= TTranslator.Create(Self);                     // Initialize the translator
 end;
 
 { This destructor is called automatically from the "Finalization" section.
