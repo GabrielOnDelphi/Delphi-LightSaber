@@ -227,6 +227,7 @@ function trs(CONST s: string): string;
 VAR
    Translator: TTranslator;
 
+
 IMPLEMENTATION
 
 USES

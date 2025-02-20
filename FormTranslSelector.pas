@@ -2,10 +2,11 @@ UNIT FormTranslSelector;
 
 {-------------------------------------------------------------------------------------------------------------
    www.GabrielMoraru.com
-   2021.03.18
+   2025.01
 
    Let user choose a language file.
--------------------------------------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------------------------------------
    How to use it:
       Instantiate the TTranslator class
       The path where the translation files are stored is returned by GetLangFolder
@@ -13,7 +14,7 @@ UNIT FormTranslSelector;
 
    Default language
       The English.ini file can be empty! In this cases the program will use the default (design time) strings.
-      //del - If the language is English the following message will appear because if the En file is empty the current GUI strings will not be overwritten: 'A program restart may be necessary to apply this language...'
+      But in this case, a program restart will be necessary to apply that language.
 
    Coupling warning:
       Don't add dependencies to CubicVisualControls here!
@@ -83,11 +84,6 @@ procedure TfrmTranslSelector.FormClose(Sender: TObject; var Action: TCloseAction
 begin
   Action:= TCloseAction.caFree;
 end;
-
-
-
-
-
 
 
 
