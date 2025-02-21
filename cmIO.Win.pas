@@ -39,6 +39,7 @@ USES
 
  function  FolderIsSpecial  (CONST Path: string): Boolean;                                               { Returns True if the parameter is a special folder such us 'c:\My Documents' }
 
+
 {--------------------------------------------------------------------------------------------------
    OPEN/SAVE dialogs
 --------------------------------------------------------------------------------------------------}
@@ -78,7 +79,7 @@ USES
  function  FileIsLockedRW       (CONST FileName: string): Boolean;                    { Returns true if the file cannot be open for reading and writing } { old name: FileInUse }
  function  CanCreateFile        (CONST FileName: string): Boolean;
 
- function  CanWriteToFolder     (CONST Folder: string; const FileName: String = 'TemporaryFile.deleteme'): Boolean;    { Returns true if it can write that file to disk. ATTENTION it will overwrite the file if it already exists ! }
+ function  CanWriteToFolder     (CONST Folder: string; const FileName: String = 'TempFile.Delete.Me'): Boolean;    { Returns true if it can write that file to disk. ATTENTION it will overwrite the file if it already exists ! }
  function  CanWriteToFolderMsg  (CONST Folder: string): Boolean;
 
 
@@ -784,7 +785,7 @@ end;
 
 
 { Returns true if it can write to that folder }
-function CanWriteToFolder(CONST Folder: string; const FileName: String = 'TemporaryFile.deleteme'): Boolean;  // Old name: TestWriteAccess
+function CanWriteToFolder(CONST Folder: string; const FileName: String = 'TempFile.Delete.Me'): Boolean;  // Old name: TestWriteAccess
 VAR Handle: THandle;
 begin
   Handle:= Winapi.Windows.CreateFile(PChar(trail(Folder)+FileName),
