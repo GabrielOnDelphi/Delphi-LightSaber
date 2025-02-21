@@ -76,13 +76,10 @@ USES
 --------------------------------------------------------------------------------------------------}
  function  FileIsLockedR        (CONST FileName: string): Boolean;
  function  FileIsLockedRW       (CONST FileName: string): Boolean;                    { Returns true if the file cannot be open for reading and writing } { old name: FileInUse }
- function  TestWriteAccess      (      FileOrFolder: string): Boolean;                { Returns true if it can write that file to disk. ATTENTION it will overwrite the file if it already exists ! }
- function  TestWriteAccessMsg   (CONST FileOrFolder: string): Boolean;
+ function  CanCreateFile        (CONST FileName: string): Boolean;
 
-
- function  IsDirectoryWriteable (CONST Dir: string): Boolean;
- function  CanCreateFile        (CONST AString:String): Boolean;
- function  ShowMsg_CannotWriteTo(CONST sPath: string): string;                        { Also see  IsDiskWriteProtected }
+ function  CanWriteToFolder     (CONST Folder: string; const FileName: String = 'TemporaryFile.deleteme'): Boolean;    { Returns true if it can write that file to disk. ATTENTION it will overwrite the file if it already exists ! }
+ function  CanWriteToFolderMsg  (CONST Folder: string): Boolean;
 
 
 {--------------------------------------------------------------------------------------------------
@@ -722,25 +719,8 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-  FILE ACCESS
-  Also see: IsDiskWriteProtected
+   FILE LOCKED?
 --------------------------------------------------------------------------------------------------}
-
-{ Formats a error message complaining that we cannot write to a file. }
-function ShowMsg_CannotWriteTo(CONST sPath: string): string;                                                  { old name: ReturnCannotWriteTo }
-begin
- Result:= 'Cannot write to "'+ sPath+ '"'
-           +LBRK+ 'Possilbe cause:'
-           +CRLF+ ' * the file/folder is read-only'
-           +CRLF+ ' * the file/folder is locked by other program'
-           +CRLF+ ' * you don''t have necessary privileges to write there'
-           +CRLF+ ' * the drive is not ready'
-
-           +LBRK+ 'You can try to:'
-           +CRLF+ ' * use a different folder'
-           +CRLF+ ' * change the privileges (or contact the admin to do it)'
-           +CRLF+ ' * run the program with elevated rights (as administrator)'
-end;
 
 
 { Returns true if the file cannot be open for reading and writing }                                           { old name: FileInUse }
@@ -767,90 +747,58 @@ begin
 end;
 
 
-{ Returns true if it can write that file to disk. ATTENTION it will overwrite the file if it already exists ! }
-function TestWriteAccess(FileOrFolder: string): Boolean;
-VAR myFile: FILE;
-    wOldErrorMode: Word;                                                 { Stop Windows from Displaying Critical Error Messages:   http://delphi.about.com/cs/adptips2002/a/bltip0302_3.htm }
-    CreateNew: Boolean;
+function CanCreateFile(const FileName: String): Boolean;
 begin
- Result:= DirectoryExists( ExtractFilePath(FileOrFolder) );
- {       AICI AR TREBUIE SA FORTEZ DIRECTORUL DACA DRIVE-UL E READY }
- if NOT Result then Exit;
-
- wOldErrorMode:= SetErrorMode( SEM_FAILCRITICALERRORS );                 { tell windows to ignore critical errors and save current error mode }
- TRY
-  if IsFolder(FileOrFolder)
-  then FileOrFolder:= Trail(FileOrFolder)+ 'WriteAccessTest.DeleteMe';
-
-  Assign(myFile, FileOrFolder);
-  FileMode:= fmOpenReadWrite;                                            { Read/Write access }
-  CreateNew:= NOT FileExists(FileOrFolder);
-
-  if CreateNew                                                           { The file does not exist, I need to create one }
-  then
-    begin
-     {$I-}
-     Rewrite(myFile);                                                    { Creates a new file and opens it. If an external file with the same name already exists, it is deleted and a new empty file is created in its place. }
-     {$I+}
-    end
-  else
-    begin
-     {$I-}
-     Reset(myFile);                                                      { Opens an existing file. Just open it and close it. I don't write nothing to it. }
-     {$I+}
-    end;
-
-  Result:= (IOResult = 0);
-  if Result then
-   begin
-    Close(myFile);
-    if CreateNew
-    then System.SysUtils.DeleteFile(FileOrFolder);                       { I created, so I delete it. }
-   end;
- FINALLY
-   SetErrorMode( wOldErrorMode );                                        { go back to previous error mode }
- END;
+  Result := CanWriteToFolder(ExtractFilePath(FileName), ExtractFileName(FileName));
 end;
 
 
-{ Do we have write access to this file/folder? }
-function TestWriteAccessMsg(CONST FileOrFolder: string): Boolean;
+
+{--------------------------------------------------------------------------------------------------
+   FOLDER LOCKED?
+--------------------------------------------------------------------------------------------------}
+
+{ Formats a error message complaining that we cannot write to a file. }
+function ShowMsg_CannotWriteTo(CONST sPath: string): string;                                                  { old name: ReturnCannotWriteTo }
 begin
- Result:= TestWriteAccess(FileOrFolder);
+ Result:= 'Cannot write to "'+ sPath+ '"'
+           +LBRK+ 'Possilbe cause:'
+           +CRLF+ ' * the file/folder is read-only'
+           +CRLF+ ' * the file/folder is locked by other program'
+           +CRLF+ ' * you don''t have necessary privileges to write there'
+           +CRLF+ ' * the drive is not ready'
+
+           +LBRK+ 'You can try to:'
+           +CRLF+ ' * use a different folder'
+           +CRLF+ ' * change the privileges (or contact the admin to do it)'
+           +CRLF+ ' * run the program with elevated rights (as administrator)'
+end;
+
+
+function CanWriteToFolderMsg(CONST Folder: string): Boolean;
+begin
+ Result:= CanWriteToFolder(Folder);
  if NOT Result
- then MesajWarning(ShowMsg_CannotWriteTo(FileOrFolder));
+ then MesajWarning(ShowMsg_CannotWriteTo(Folder));
 end;
 
 
-
-{ Same as TestWriteAccess
-  Source: https://stackoverflow.com/questions/3599256/how-can-i-use-delphi-to-test-if-a-directory-is-writeable }
-function IsDirectoryWriteable(const Dir: string): Boolean;
-var
-  FileName: String;
-  H: THandle;
+{ Returns true if it can write to that folder }
+function CanWriteToFolder(CONST Folder: string; const FileName: String = 'TemporaryFile.deleteme'): Boolean;  // Old name: TestWriteAccess
+VAR Handle: THandle;
 begin
-  FileName := IncludeTrailingPathDelimiter(Dir) + 'IsDirectoryWriteable_Check.tmp';
-  if FileExists(FileName)
-  AND NOT DeleteFile(FileName)
-  then RAISE Exception.Create('File is locked!'+ CRLFw+ FileName);
+  Handle:= Winapi.Windows.CreateFile(PChar(trail(Folder)+FileName),
+             GENERIC_READ or GENERIC_WRITE,                             // GENERIC_READ or GENERIC_WRITE = tests full write permissions, including the ability to create, open, and modify files. Using GENERIC_WRITE alone might be more accurate if we are only testing write permissions, but using both ensures that the file can be fully accessed.
+             0,
+             nil,
+             CREATE_ALWAYS,                                             // CREATE_ALWAYS: Creates a new file or overwrites an existing one if it already exists. CREATE_NEW: Fails if the file already exists, requiring an additional check or error handling.
+             FILE_ATTRIBUTE_TEMPORARY or FILE_FLAG_DELETE_ON_CLOSE,
+             0);
 
-  H := CreateFile(PChar(FileName), GENERIC_READ or GENERIC_WRITE, 0, NIL, CREATE_NEW, FILE_ATTRIBUTE_TEMPORARY or FILE_FLAG_DELETE_ON_CLOSE, 0);
-  Result:= H <> INVALID_HANDLE_VALUE;
-  if Result
-  then CloseHandle(H);
-
-  DeleteFile(FileName);
+  Result:= Handle <> INVALID_HANDLE_VALUE;
+  if Result then Winapi.Windows.CloseHandle(Handle);
 end;
 
-
-function CanCreateFile(CONST AString:String): Boolean;
-VAR h : integer;
-begin
-   h := CreateFile(Pchar(AString), GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0);
-   Result:= h>= 0;
-   if Result then FileClose(h);
-end;
 
 
 

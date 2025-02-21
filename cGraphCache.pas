@@ -301,7 +301,7 @@ end;
 procedure TCacheObj.setCacheFolder(Value: string);
 begin
  ForceDirectories(Value);
- if TestWriteAccess(Value) then                                                                    { Check if this folder has write permitions }
+ if CanWriteToFolder(Value) then                                                                    { Check if this folder has write permitions }
   begin
    FCacheFolder:= Trail(Value);
    ForceDirectoriesMsg(Value);
