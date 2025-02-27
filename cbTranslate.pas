@@ -171,9 +171,11 @@ BUG:
 
 
 INTERFACE
+{$I Frameworks.inc}
+
 USES
   System.Classes, System.SysUtils, System.IniFiles, System.TypInfo, Vcl.Forms, Vcl.Menus, Vcl.ExtCtrls,
-  cbAppData; //, cbAppDataForm;
+  cbAppData;
 
 { Bitwise constants for TControl.Tag }
 CONST
@@ -194,7 +196,7 @@ TYPE
     procedure setCurLanguage(const Value: string);
     function  getCurLanguage: string;
     procedure saveFormTranlation (Form: TForm; Ini: TMemIniFile);
-    function ReadString(const Identifier: string; DefaultVal: string): string;
+    function  ReadString(const Identifier: string; DefaultVal: string): string;
     procedure WriteString(const Identifier, s: string);
   protected
     function  DefaultLang: string;
@@ -244,7 +246,6 @@ begin
   FAppData:= aAppData;
   Assert(aAppData <> NIL);
   DontSaveEmpty:= TRUE;
-  ForceDirectories(GetLangFolder);                                         // Ensure the folder exists
   FCurLanguage:= GetLangFolder + ReadString('Last_Language', DefaultLang); // Set the last used language. If none, default to English
 end;
 
@@ -359,24 +360,26 @@ VAR
    i: Integer;
    CurForm: TForm;
 begin
- if Overwrite
- then DeleteFile(FileName);
+  ForceDirectories(GetLangFolder); // Ensure the folder exists. But don't do it sooner than necessary.
 
- VAR IniContainer:= TMemIniFile.Create(FileName, TEncoding.UTF8);
- TRY
-  IniContainer.WriteString('Authors', 'Name', Authors);
+  if Overwrite
+  then DeleteFile(FileName);
 
-  // QUESTION: What is the condition for a form to appear in this list? Do the forms created with TForm.Create(Nil) appear here? Test it
-  for i:= 0 to Screen.FormCount - 1 DO
-   begin
-     CurForm:= Screen.Forms[I];
-     saveFormTranlation(CurForm, IniContainer);
-   end;
+  VAR IniContainer:= TMemIniFile.Create(FileName, TEncoding.UTF8);
+  TRY
+   IniContainer.WriteString('Authors', 'Name', Authors);
 
-   IniContainer.UpdateFile;
- FINALLY
-   FreeAndNil(IniContainer);
- END;
+   // QUESTION: What is the condition for a form to appear in this list? Do the forms created with TForm.Create(Nil) appear here? Test it
+   for i:= 0 to Screen.FormCount - 1 DO
+    begin
+      CurForm:= Screen.Forms[I];
+      saveFormTranlation(CurForm, IniContainer);
+    end;
+
+    IniContainer.UpdateFile;
+  FINALLY
+    FreeAndNil(IniContainer);
+  END;
 end;
 
 
@@ -394,7 +397,7 @@ begin
   for i:= 0 to Form.ComponentCount-1 do
      WriteComponent(Form.Components[i], Section, Ini);
 
-   Ini.UpdateFile;
+  Ini.UpdateFile;
 end;
 
 

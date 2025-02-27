@@ -1,9 +1,8 @@
 ﻿UNIT cbAppDataForm;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2025.01.26
    www.GabrielMoraru.com
+   2025.01.19
    See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
@@ -83,7 +82,7 @@ TYPE
     procedure DoDestroy; override;
     procedure DoClose(var Action: TCloseAction); override;
     procedure WMEndSession(var Msg: TWMEndSession);
-    procedure FormKeyPress(Sender: TObject; var Key: Char);  // We can use this later in the destructor to know how to save the form: flPosOnly/flFull
+    procedure FormKeyPress(Sender: TObject; var Key: Char);  // We can use this later in the destructor to know how to save the form: asPosOnly/asFull
   public
     constructor Create(AOwner: TComponent; AutoSaveForm: TAutoState); reintroduce; overload; virtual;
     function CloseQuery: boolean; override;
@@ -170,6 +169,7 @@ begin
 end;
 
 
+{ Called ONLY once, when Saved = False }
 procedure TLightForm.FormRelease;
 begin
   // Give user a chance to call its own finalization code (guaranteed once)
@@ -264,11 +264,4 @@ end;
 
 
 
-
-
-
-
 end.
-
-
-

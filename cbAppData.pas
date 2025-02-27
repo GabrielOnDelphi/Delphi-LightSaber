@@ -1,4 +1,4 @@
-﻿UNIT cbAppData;
+﻿UNIT cbAppData; 
 
 {=============================================================================================================
    www.GabrielMoraru.com
@@ -32,7 +32,7 @@
          For details see: FormLog.pas
 
        - Translation
-         (Multi-language GUI)
+         (Multi-language GUI) 
 
        - etc
 
@@ -400,7 +400,7 @@ begin
   ProductUninstal:= DefaultHomePage;
 
   { Translator }
-  Translator:= TTranslator.Create(Self);                     // Initialize the translator
+  Translator:= TTranslator.Create(Self);  //ToDo: create it only if necessary - If this app uses translations; we could look for the 'Lang' folder. If it exists and it is not empty then we create the object.
   if NOT RunningHome
   then Translator.LoadLastTranslation;    // Load last language and apply it to all existing forms
 
@@ -437,7 +437,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    FORMS
 -------------------------------------------------------------------------------------------------------------}
-{ 1. Creates a form
+{ 1. Create the form
   2. Set the font of the new form to be the same as the font of the MainForm
   3. Show it }
 procedure TAppData.CreateMainForm(aClass: TFormClass; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly);
@@ -539,7 +539,7 @@ begin
   // Font, snap, alpha
   SetGuiProperties(TForm(Reference));
 
-  // Load previous form settings
+  // Load previous form settings/position
   if TForm(Reference) is TLightForm then
     begin
      TLightForm(Reference).AutoState:= AutoState;
@@ -551,7 +551,7 @@ begin
 
   // Window fully constructed.
   // Now we can let user run its own initialization process.
-  if TForm(Reference) is TLightForm
+  if TObject(Reference) is TLightForm
   then TLightForm(Reference).FormInitialize;
 
   if AutoSignalInitializationEnd

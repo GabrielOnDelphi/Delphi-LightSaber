@@ -32,13 +32,12 @@ UNIT cbLogRam;
 // It would be much more efficient probably, not to create the queue if we are not in multithreaded mode.
 
 INTERFACE
-
 {$I Frameworks.inc}
 
 USES
    System.SysUtils, System.DateUtils,
    {$IFDEF Framework_VCL}
-   Vcl.Graphics,
+
    {$Endif}
    cbLogLinesAbstract, cbLogLinesS, cbLogLinesM, cbLogTypes, ccStreamBuff2;
 
@@ -414,8 +413,3 @@ end;
 
 
 end.
-
-
-
-
-

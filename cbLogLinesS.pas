@@ -14,12 +14,11 @@ UNIT cbLogLinesS;
 =============================================================================================================}
 
 INTERFACE
-
 {$I Frameworks.inc}
 
 USES
    System.SysUtils, System.Classes,
-   cbLogTypes, ccStreamBuff2, cbLogLinesAbstract;
+   cbLogTypes, cbLogLinesAbstract;
 
 TYPE
   TLogLinesSingleThreaded = class(TAbstractLogLines)

@@ -1,4 +1,4 @@
-package LightAppDataFmx;
+package LightAppDataFMX;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -25,25 +25,17 @@ package LightAppDataFmx;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'LightSaber - AppData FMX library'}
+{$DESCRIPTION 'LightSaber - AppData VCL library'}
 {$LIBSUFFIX AUTO}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
 
 requires
-  RTL,
-  FMX,
-  LightCore;
+  LightCore,
+  fmx;
 
 contains
-  cbLogRam in '..\cbLogRam.pas',
-  cbLogLinesS in '..\cbLogLinesS.pas',
-  cbLogLinesAbstract in '..\cbLogLinesAbstract.pas',
-  cbLogLinesM in '..\cbLogLinesM.pas',
-  cbAppDataFmx in '..\cbAppDataFmx.pas',
-  cbLogTypes in '..\cbLogTypes.pas',
-  cbAppDataFmxForm in '..\cbAppDataFmxForm.pas',
-  cbRegistry in '..\cbRegistry.pas',
-  cbVersion in '..\cbVersion.pas';
+  cbAppDataFMX in 'cbAppDataFMX.pas',
+  cbAppDataFmxForm in 'cbAppDataFmxForm.pas';
 
 end.

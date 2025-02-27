@@ -10,7 +10,7 @@ type
   TfrmMain = class(TLightForm)
     Memo: TMemo;
   private
-    procedure FormInitialize; {don't forget inherited LateInitialize!} override;
+    procedure FormInitialize; {don't forget inherited in FormInitialize!} override;
   public
   end;
 

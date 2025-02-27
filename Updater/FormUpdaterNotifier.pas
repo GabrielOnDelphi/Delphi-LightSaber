@@ -158,7 +158,7 @@ begin
  Updater.OnUpdateStart := NIL;
  Updater.OnUpdateEnd   := NIL;
 
- SaveForm;
+ ///SaveForm;
 end;
 
 

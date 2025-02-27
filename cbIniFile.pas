@@ -93,7 +93,6 @@
        http://www.scalabium.com/faq/dct0012.htm }
 
 INTERFACE
-
 {$I Frameworks.inc}
 
 USES
@@ -119,7 +118,7 @@ TYPE
     procedure readSplitter (Comp: TComponent);
   public
     ShowPositionWarn: Boolean;
-    constructor Create (SectionName: string; ForcedName: string= ''); reintroduce; overload;
+    constructor Create(SectionName: string; ForcedName: string= ''); reintroduce; overload;
     function IsSupported(WinCtrl: TComponent): Boolean; virtual;
     class function AsString: string;
 
@@ -151,7 +150,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   cbAppDataForm, cbDialogs, ccIO, ccTextFile, ccCore, cbAppData, cbCenterControl;
+   ccIO, ccTextFile, ccCore, cbAppData;
 
 
 {-----------------------------------------------------------------------------------------------------------------------
@@ -769,4 +768,5 @@ begin
  end;
 end;
  }
+
 

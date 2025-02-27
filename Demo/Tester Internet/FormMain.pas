@@ -34,10 +34,10 @@ TYPE
     procedure FormClose     (Sender: TObject; var Action: TCloseAction);
     procedure btnGetExtIpClick(Sender: TObject);
   protected
-    procedure BeforeRelease; override;
+    procedure FormRelease; override;
   private
   public
-    procedure FormInitialize; {don't forget inherited LateInitialize!} override;
+    procedure FormInitialize; {don't forget inherited in FormInitialize!} override;
  end;
 
 VAR
@@ -98,7 +98,7 @@ end;
 
 { It is enough to put SaveBeforeExit in thse two places only: OnCloseQueryand & OnDestroy.
   Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
-procedure TMainForm.BeforeRelease;
+procedure TMainForm.FormRelease;
 begin
   if NOT Saved then
    begin

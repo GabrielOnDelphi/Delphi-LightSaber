@@ -45,7 +45,7 @@ TYPE
     procedure FormCreate   (Sender: TObject);
     procedure FormDestroy  (Sender: TObject);  // Would be nice to make this protected but we can't. All event handlers must be accesible/visible
   public
-    procedure FormInitialize; {don't forget inherited LateInitialize!} override; // Called after the main form was fully initilized
+    procedure FormInitialize; {don't forget inherited in FormInitialize!} override; // Called after the main form was fully initilized
   end;
 
 

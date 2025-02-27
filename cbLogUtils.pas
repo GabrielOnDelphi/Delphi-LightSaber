@@ -8,7 +8,6 @@ UNIT cbLogUtils;
 =============================================================================================================}
 
 INTERFACE
-
 {$I Frameworks.inc}
 
 USES
@@ -16,8 +15,8 @@ USES
    system.UITypes,
    {$IFDEF MsWindows}
    Vcl.Graphics,
-   //{$ELSE FRAMEWORK_FMX}
-   //FMX.Graphics,
+   {$ELSE FRAMEWORK_FMX}
+   FMX.Graphics,
    {$Endif}
    cbLogTypes,
    ccColors;
@@ -61,7 +60,7 @@ begin
   lvWarnings : Result:= clOrange;
   lvErrors   : Result:= clRed;
  else
-   RAISE exception.Create('Invalid log verbosity!');
+   RAISE Exception.Create('Invalid log verbosity!');
  end;
 end;
 

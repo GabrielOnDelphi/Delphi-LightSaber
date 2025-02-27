@@ -25,13 +25,10 @@ UNIT cbLogTypes;
 =============================================================================================================}
 
 INTERFACE
-
 {$I Frameworks.inc}
 
 USES
-   System.SysUtils,
-   system.UITypes,
-   ccColors;
+   System.UITypes;
 
 TYPE
   TLogVerbLvl= (lvDebug, lvVerbose, lvHints {Default}, lvInfos, lvImportant, lvWarnings, lvErrors);  { Exist also 7 which is of type 'Msg' and it is always shown in log }

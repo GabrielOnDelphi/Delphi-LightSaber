@@ -38,6 +38,7 @@ TYPE
     inetEULA     : TInternetLabel;
     btnEnterKey  : TButton;
     btnOrderNow  : TButton;
+    lblCredits: TInternetLabel;
     procedure FormShow         (Sender: TObject);
     procedure FormCreate       (Sender: TObject);
     procedure FormKeyPress     (Sender: TObject; var Key: Char);
@@ -47,7 +48,7 @@ TYPE
   private
   public
     Proteus: TProteus;
-    class procedure CreateFormModal; static;
+    class procedure CreateFormModal(ShowOrderNow, ShowEnterKey: Boolean); static;
     class function CreateFormParented(Parent: TWinControl): TfrmAboutApp; static;
   end;
 
@@ -57,29 +58,31 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   cbCenterControl, cbAppData, cbDialogs;
+   cbCenterControl, cbAppData, cbDialogs, ccINIFile;
 
 
 
 
 
-class procedure TfrmAboutApp.CreateFormModal;
+class procedure TfrmAboutApp.CreateFormModal(ShowOrderNow, ShowEnterKey: Boolean);
 VAR Form: TfrmAboutApp;
 begin
-  AppData.CreateFormModal(TfrmAboutApp, Form);
+  AppData.CreateForm(TfrmAboutApp, Form, FALSE, asFull);
+  Form.btnOrderNow.Visible:= ShowOrderNow;
+  Form.btnEnterKey.Visible:= ShowEnterKey;
+  Form.ShowModal;
 end;
-
 
 
 { This won't to parent the form directly. See: https://stackoverflow.com/questions/42065369/how-to-parent-a-form-controls-wont-accept-focus }
 class function TfrmAboutApp.CreateFormParented(Parent: TWinControl): TfrmAboutApp;
 begin
- AppData.CreateFormHidden(TfrmAboutApp, Result);
- Result.Container.Align:= alNone;
- Result.Container.BevelInner:= bvRaised;
- Result.Container.BevelOuter:= bvLowered;
- Result.Container.Parent := Parent;
- CenterChild(Result.Container, Parent);
+  AppData.CreateFormHidden(TfrmAboutApp, Result);
+  Result.Container.Align:= alNone;
+  Result.Container.BevelInner:= bvRaised;
+  Result.Container.BevelOuter:= bvLowered;
+  Result.Container.Parent := Parent;
+  CenterChild(Result.Container, Parent);
 end;
 
 

@@ -57,7 +57,3 @@ contains
   cbINIFileQuick in 'cbINIFileQuick.pas';
 
 end.
-
-
-
-
