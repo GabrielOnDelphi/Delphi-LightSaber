@@ -13,8 +13,11 @@ INTERFACE
 
 USES
    System.SysUtils,
-   System.UITypes, Generics.Collections;
-
+   System.UITypes,
+   FMX.Dialogs, 
+   FMX.Forms,
+   FMX.DialogService,
+   Generics.Collections;
 
  function  MesajGeneric   (CONST MessageText: string; Title: string= ''; Icon: Integer= -1): integer;         { 'Title' will appear in window's caption }
  procedure Mesaj          (CONST MessageText: string);
@@ -35,13 +38,13 @@ USES
    MESSAGES
 ============================================================================================================}
 
-{ Displays a message box with an approriate icon (info, warning, error, ask).
+{ Displays a message box with an appropriate icon (info, warning, error, ask).
   Cross-platform.
 
   IMPORTANT:
     Application.MessageBox uses the handle of the current active window.
-    This can of course create problems if the current window (is not the main form and) is closed.
-    The message box will also be closed. So, don't use it in a from created by a thread.
+    This can, of course, create problems if the current window (is not the main form and) is closed.
+    The message box will also be closed. So, don't use it in a form created by a thread.
 
   Blocking
     The MessageBox function is not blocking per se, it merely creates a dialog box with its own message loop.
@@ -55,7 +58,8 @@ USES
     https://stackoverflow.com/questions/1256963/if-messagebox-related-are-synchronous-why-doesnt-my-message-loop-freeze
     http://www.delphigroups.info/2/11/544013.html
     https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-messagebox?redirectedfrom=MSDN
- }
+}
+{
 CONST
    MB_OK              = $00000000;  // Defined originally in Windows.pas but we don't want to include that platform unit here.
    MB_YESNO           = $00000004;
@@ -63,24 +67,22 @@ CONST
    MB_ICONQUESTION    = $00000020;
    MB_ICONWARNING     = $00000030;
    MB_ICONINFORMATION = $00000040;
-
+     }
 function MesajGeneric(const MessageText: string; Title: string = ''; Icon: Integer = -1): Integer;
 begin
-  {$IFDEF FRAMEWORK_FMX}
   // FMX (Cross-platform)
-  if MessageText = '' then
-    Exit(0);
+  if MessageText = '' then Exit(0);
+
   if Title = ''
   then Title := Application.Title
   else Title := Application.Title+ ' - ' + Title;
   TDialogService.MessageDialog(MessageText,
-    TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0,
-    procedure(const AResult: TModalResult)
-    begin
-      // Handle the result of the dialog if necessary
-    end);
+                               TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0,
+                               procedure(const AResult: TModalResult)
+                               begin
+                                 // Handle the result of the dialog if necessary
+                               end);
   Result := 0; // FMX dialogs are asynchronous, so we return 0
-  {$ENDIF}
 
   {$IFDEF LINUX}
   Result := 0; // No specific result handling for console
@@ -126,11 +128,10 @@ end;
 procedure MesajErrDetail(CONST MessageText, Where: string);                                                    { afiseaza un mesaj cu icon de eroare pe ecran }
 VAR sMsg: string;
 begin
- sMsg:= MessageText+
-         LBRK+ 'Please report this error to us and the exact steps to reproduce it and we will fix it.'+
-         CRLF+ 'Hint: press Control+C to copy this message to clipboard.';
-
- MesajGeneric(sMsg, 'Error in '+  Where, MB_ICONERROR or MB_OK);
+  sMsg:= MessageText+
+         sLineBreak+ 'Please report this error to us and the exact steps to reproduce it and we will fix it.'+
+         sLineBreak+ 'Hint: press Control+C to copy this message to clipboard.';
+  MesajGeneric(sMsg, 'Error in '+  Where, MB_ICONERROR or MB_OK);
 end;
 
 
