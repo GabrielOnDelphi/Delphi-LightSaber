@@ -216,7 +216,7 @@ begin
  Assert(Form <> NIL);
  Assert(AutoState <> asNone, 'AutoState = asNone detected in SaveFrom');
 
- ReadComp(Form);           { Read form itself }
+ ReadComp(Form);             { Read form itself }
  if AutoState= asFull        { Read form's sub-components }
  then ReadComponentsOf(Form);
 end;
@@ -314,10 +314,10 @@ begin
 
  if Comp.Name = '' then
   begin
-   s:= 'TIniFileVCL. The control has no name! Class: '+ Comp.ClassName;
+    s := '[TIniFileApp.WriteComp] The control has no name! Class: ' + Comp.ClassName;
    if (Comp.InheritsFrom(TControl))
-   AND ((Comp as TControl).Parent <> NIL)
-   then s:= s+ '. Parent: '+ (Comp as TControl).Parent.Name;
+   and (TControl(Comp).Parent <> nil)
+   then s := s + '. Parent: ' + TControl(Comp).Parent.Name;
    RAISE Exception.Create(s);
   end;
 
@@ -427,7 +427,7 @@ end;
 function TIniFileApp.ReadComp(Comp: TComponent): Boolean;
 VAR s: string;
 begin
-  Assert(Comp.Name > '', 'TIniFileVCL-The control has no name! Class: '+ Comp.ClassName);
+  Assert(Comp.Name <> '', '[TIniFileApp.ReadComp] The control has no name! Class: ' + Comp.ClassName);
   Result:= TRUE;
 
  { Read form }

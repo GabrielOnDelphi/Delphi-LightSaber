@@ -82,7 +82,6 @@ USES
 TYPE
   TLightForm = class(TForm)
   private
-    //FShow: Boolean;   // Show form when the program is ready.
     FCloseOnEscape: Boolean;
     FAutoState: TAutoState;
     procedure SetGuiProperties(Form: TForm);
@@ -90,14 +89,9 @@ TYPE
     Saved: Boolean;
     procedure saveBeforeExit;
 
-    {$IFDEF Framework_VCL}
-    procedure DoDestroy; override;
-    procedure DoClose(var Action: TCloseAction); override;
-    procedure WMEndSession(var Msg: TWMEndSession);
-    {$ENDIF}
-   // procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure FormKeyPress(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState); // We can use this later in the destructor to know how to save the form: asPosOnly/asFull
     procedure Loaded; override;
+    procedure DoClose(var Action: TCloseAction); override;
   public
     constructor Create(AOwner: TComponent; aShow: Boolean= TRUE); reintroduce; overload; virtual;
     function CloseQuery: boolean; override;
@@ -197,19 +191,14 @@ begin
   saveBeforeExit;
   inherited;
 end;
+{$ENDIF}
 
-procedure TLightForm.DoDestroy;
-begin
-  saveBeforeExit;
-  inherited;
-end;
 
 procedure TLightForm.DoClose(var Action: TCloseAction);
 begin
   inherited DoClose(Action);
   if Action = TCloseAction.caFree then saveBeforeExit;
 end;
-{$ENDIF}
 
 
 function TLightForm.CloseQuery: Boolean;  // Correct method name

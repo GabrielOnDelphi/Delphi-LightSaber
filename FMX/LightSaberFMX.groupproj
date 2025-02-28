@@ -9,7 +9,7 @@
         <Projects Include="LightAppDataFMX.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="..\Demo\Template App\FMX Minimal\FMXTemplateMicro.dproj">
+        <Projects Include="..\Demo\Template App\FMX Minimal\FmxDemo.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -38,23 +38,23 @@
     <Target Name="LightAppDataFMX:Make">
         <MSBuild Projects="LightAppDataFMX.dproj" Targets="Make"/>
     </Target>
-    <Target Name="FMXTemplateMicro">
-        <MSBuild Projects="..\Demo\Template App\FMX Minimal\FMXTemplateMicro.dproj"/>
+    <Target Name="FmxDemo">
+        <MSBuild Projects="..\Demo\Template App\FMX Minimal\FmxDemo.dproj"/>
     </Target>
-    <Target Name="FMXTemplateMicro:Clean">
-        <MSBuild Projects="..\Demo\Template App\FMX Minimal\FMXTemplateMicro.dproj" Targets="Clean"/>
+    <Target Name="FmxDemo:Clean">
+        <MSBuild Projects="..\Demo\Template App\FMX Minimal\FmxDemo.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="FMXTemplateMicro:Make">
-        <MSBuild Projects="..\Demo\Template App\FMX Minimal\FMXTemplateMicro.dproj" Targets="Make"/>
+    <Target Name="FmxDemo:Make">
+        <MSBuild Projects="..\Demo\Template App\FMX Minimal\FmxDemo.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightAppDataFMX;FMXTemplateMicro"/>
+        <CallTarget Targets="LightCore;LightAppDataFMX;FmxDemo"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightAppDataFMX:Clean;FMXTemplateMicro:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightAppDataFMX:Clean;FmxDemo:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightAppDataFMX:Make;FMXTemplateMicro:Make"/>
+        <CallTarget Targets="LightCore:Make;LightAppDataFMX:Make;FmxDemo:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
@@ -64,34 +64,14 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightAppDataFMX.dproj">
-            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Demo\Template App\FMX Minimal\FMXTemplateMicro.dproj">
-            <ProjectGuid>{633278C7-2373-4839-BFC0-92DFCA64B0BA}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-    </ItemGroup>
-    <ItemGroup Condition="'$(BuildGroup)'=='Win32_Release'">
-        <BuildGroupProject Include="..\LightCore.dproj">
-            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+        <BuildGroupProject Include="..\Demo\Template App\FMX Minimal\FmxDemo.dproj">
+            <ProjectGuid>{4096D27E-D330-45E3-8D4E-5F87E822E139}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="LightAppDataFMX.dproj">
             <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Demo\Template App\FMX Minimal\FMXTemplateMicro.dproj">
-            <ProjectGuid>{633278C7-2373-4839-BFC0-92DFCA64B0BA}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -104,14 +84,34 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="..\Demo\Template App\FMX Minimal\FmxDemo.dproj">
+            <ProjectGuid>{4096D27E-D330-45E3-8D4E-5F87E822E139}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="LightAppDataFMX.dproj">
             <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\Demo\Template App\FMX Minimal\FMXTemplateMicro.dproj">
-            <ProjectGuid>{633278C7-2373-4839-BFC0-92DFCA64B0BA}</ProjectGuid>
+    </ItemGroup>
+    <ItemGroup Condition="'$(BuildGroup)'=='Win32_Release'">
+        <BuildGroupProject Include="..\LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\Demo\Template App\FMX Minimal\FmxDemo.dproj">
+            <ProjectGuid>{4096D27E-D330-45E3-8D4E-5F87E822E139}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightAppDataFMX.dproj">
+            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -124,14 +124,14 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightAppDataFMX.dproj">
-            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
+        <BuildGroupProject Include="..\Demo\Template App\FMX Minimal\FmxDemo.dproj">
+            <ProjectGuid>{4096D27E-D330-45E3-8D4E-5F87E822E139}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\Demo\Template App\FMX Minimal\FMXTemplateMicro.dproj">
-            <ProjectGuid>{633278C7-2373-4839-BFC0-92DFCA64B0BA}</ProjectGuid>
+        <BuildGroupProject Include="LightAppDataFMX.dproj">
+            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>

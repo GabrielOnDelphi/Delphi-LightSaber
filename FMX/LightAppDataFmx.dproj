@@ -120,6 +120,7 @@
         <DCCReference Include="fmx.dcp"/>
         <DCCReference Include="cbAppDataFMX.pas"/>
         <DCCReference Include="cbAppDataFmxForm.pas"/>
+        <DCCReference Include="cbIniFileFMX.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
