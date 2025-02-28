@@ -1,4 +1,4 @@
-﻿UNIT cbAppData; 
+﻿NIT cbAppData;
 
 {=============================================================================================================
    www.GabrielMoraru.com
@@ -184,7 +184,7 @@ TYPE
     function  ExtractData(VAR Msg: TWMCopyData; OUT s: string): Boolean;
     {}
     class VAR Initializing: Boolean;                 // See documentation at the top of the file
-    class VAR AutoSignalInitializationEnd: Boolean;  // See documentation at the top of the file
+  del  class VAR AutoSignalInitializationEnd: Boolean;  // See documentation at the top of the file
 
     constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; SignalInitEnd: Boolean= TRUE; MultiThreaded: Boolean= FALSE); virtual;
     procedure AfterConstruction; override;
@@ -429,6 +429,8 @@ end;
 
 procedure TAppData.Run;
 begin
+  if AutoSignalInitializationEnd
+  then Initializing:= FALSE;
   Application.Run;
 end;
 
@@ -490,9 +492,6 @@ begin
   if TObject(Reference) is TLightForm
   then TLightForm(Reference).FormInitialize;
 
-  if AutoSignalInitializationEnd
-  then Initializing:= FALSE;
-
   // Uninstaller
   if RunningFirstTime
   AND NOT RunningHome
@@ -553,9 +552,6 @@ begin
   // Now we can let user run its own initialization process.
   if TObject(Reference) is TLightForm
   then TLightForm(Reference).FormInitialize;
-
-  if AutoSignalInitializationEnd
-  then Initializing:= FALSE;
 
   // Translator
   if Translator <> NIL

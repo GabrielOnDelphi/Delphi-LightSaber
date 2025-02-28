@@ -216,19 +216,19 @@ begin
    Exit; // We don't save anything if the start up was improper!
   end;
 
- Assert(AppData <> NIL, '!!!');
- IniFile:= TIniFileApp.Create(Self.Name);
- TRY
+  Assert(AppData <> NIL, '!!!');
+  IniFile:= TIniFileApp.Create(Self.Name);
   TRY
-    IniFile.SaveForm(Self, AutoState);
-  EXCEPT
-    ON EIniFileException DO
-      if AppData <> NIL
-      then AppData.LogWarn('Cannot save INI file: '+ IniFile.FileName);
+   TRY
+     IniFile.SaveForm(Self, AutoState);
+   EXCEPT
+     ON EIniFileException DO
+       if AppData <> NIL
+       then AppData.LogWarn('Cannot save INI file: '+ IniFile.FileName);
+   END;
+  FINALLY
+    FreeAndNil(IniFile);
   END;
- FINALLY
-   FreeAndNil(IniFile);
- END;
 end;
 
 
@@ -247,19 +247,19 @@ begin
    AND (Self <> Application.MainForm)
    then Self.Font:= Application.MainForm.Font;
 
- IniFile:= TIniFileApp.Create(Self.Name);
- TRY
+  IniFile:= TIniFileApp.Create(Self.Name);
   TRY
-    IniFile.LoadForm(Self, AutoState);
-    CorrectFormPositionScreen(Self);
-  EXCEPT
-    ON EIniFileException DO
-      if AppData <> NIL
-      then AppData.LogWarn('Cannot load INI file: '+ IniFile.FileName);
+   TRY
+     IniFile.LoadForm(Self, AutoState);
+     CorrectFormPositionScreen(Self);
+   EXCEPT
+     ON EIniFileException DO
+       if AppData <> NIL
+       then AppData.LogWarn('Cannot load INI file: '+ IniFile.FileName);
+   END;
+  FINALLY
+    FreeAndNil(IniFile);
   END;
- FINALLY
-   FreeAndNil(IniFile);
- END;
 end;
 
 

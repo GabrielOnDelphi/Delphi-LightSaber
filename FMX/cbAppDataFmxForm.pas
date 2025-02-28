@@ -51,7 +51,15 @@
 
          Execution order: FormRelease -> FormClose -> FormDestroy
 
-       end;
+      Self saving forms
+
+         Using SaveForm/LoadForm, a form can save its status (including checkboxes/radio buttons/etc on it))
+         to disk on shutdown and resume exaclty from where it left on application startup.
+
+         LoadForm is automatically called by TAppData.CreateForm(). Therefore, you must create all your forms with this method.
+         The TLightForm.SaveForm is called automatically when the form closes.
+
+         Override SaveForm/LoadForm if you want to do your own loading/saving (in this case, don't call inherited)!
 
 =============================================================================================================}
 
@@ -61,22 +69,23 @@ USES
   System.SysUtils,
   System.Classes,
   System.UITypes,
-  { $IFDEF FRAMEWORK_VCL}
-  //Winapi.Messages,
-  //cbIniFile,
+  System.IniFiles,
   FMX.Controls,
   FMX.Forms,
   FMX.Types,
   FMX.Graphics,
   FMX.Dialogs,
-  //  (FMX.Consts, Vcl.Consts
-  ccINIFile; // Do not add dependencies higher than "cb" level
+
+  cbIniFileFMX,
+  ccINIFile;
 
 TYPE
   TLightForm = class(TForm)
   private
+    //FShow: Boolean;   // Show form when the program is ready.
     FCloseOnEscape: Boolean;
-    FAutoSaveForm: TAutoState;
+    FAutoState: TAutoState;
+    procedure SetGuiProperties(Form: TForm);
   protected
     Saved: Boolean;
     procedure saveBeforeExit;
@@ -88,17 +97,18 @@ TYPE
     {$ENDIF}
    // procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure FormKeyPress(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState); // We can use this later in the destructor to know how to save the form: asPosOnly/asFull
+    procedure Loaded; override;
   public
-    constructor Create(AOwner: TComponent; AutoSaveForm: TAutoState); reintroduce; overload; virtual;
+    constructor Create(AOwner: TComponent; aShow: Boolean= TRUE); reintroduce; overload; virtual;
     function CloseQuery: boolean; override;
 
-    procedure FormInitialize; virtual;
+    procedure FormInitialize; virtual;   // Users should initialize their code here.
     procedure FormRelease; virtual;
 
     procedure LoadForm; virtual;
     procedure SaveForm; virtual;
   published
-    property AutoState: TAutoState   read FAutoSaveForm   write FAutoSaveForm;
+    property AutoState: TAutoState   read FAutoState      write FAutoState;        // The user needs to set this property if they want to auto save/load the form.
     property CloseOnEscape: Boolean  read FCloseOnEscape  write FCloseOnEscape;    // Close this form when the Esc key is pressed
   end;
 
@@ -108,28 +118,76 @@ USES
   cbAppDataFmx;
 
 
-constructor TLightForm.Create(AOwner: TComponent; AutoSaveForm: TAutoState);
+constructor TLightForm.Create(AOwner: TComponent; aShow: Boolean= TRUE{UNUSED});
 begin
   inherited Create(AOwner);
 
-  {$IFDEF Framework_VCL}
-  ScreenSnap:= TRUE;
-  Snapbuffer:= 4;
-  Position  := poDesigned;
-  // TFormPosition = (Designed, Default, DefaultPosOnly, DefaultSizeOnly, ScreenCenter, DesktopCenter, MainFormCenter, OwnerFormCenter);
-  {$ELSE}
-  Position:= TFormPosition.Designed;
-  {$ENDIF}
   Showhint  := TRUE;
   Saved     := FALSE;
 
-  FAutoSaveForm := AutoSaveForm; // Default value. Can be overriden by AppData.CreateForm
+  FAutoState := asUndefined; // Default value. Can be overriden by AppData.CreateForm
+end;
+
+
+
+procedure TLightForm.Loaded;
+begin
+  Position:= TFormPosition.Designed;
+  AppData.MainFormCaption('Initializing...');
+
+  inherited Loaded;
+
+  // Font, snap, alpha
+  SetGuiProperties(Self);
+
+  // Off-screen?
+  ///CorrectFormPositionScreen(TForm(Reference));
+
+  // Show app name
+  AppData.MainFormCaption('');      // Must be before FormInitialize because the user could put his own caption there.
+
+  FormInitialize;
+
+  // Load form
+  // Limitation: At this point we can only load "standard" Delphi components. Loading of our Light components can only be done in cvIniFile.pas -> TIniFileVCL
+  Assert(AutoState <> asUndefined, 'The user must set the AutoState property in code!');
+  if AutoState <> asNone
+  then LoadForm;
+
+  // Ignore the "Show" parameter if "StartMinimized" is active
+  // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
+  if NOT AppData.StartMinim
+  AND Visible
+  then Show;
 end;
 
 
 procedure TLightForm.FormInitialize;
 begin
   // This can be overridden by the user to implement initialization after the form is ready
+end;
+
+
+// Font, snap, alpha
+procedure TLightForm.SetGuiProperties(Form: TForm);
+begin
+  {$IFDEF FullAppData}
+   // Font
+   if Form = Application.MainForm
+   then Self.Font:= Form.Font   // We TAKE the font from the main form. Then we apply it to all existing and all future windows.
+   else
+     if Self.Font <> nil
+     then Form.Font:= Self.Font;  // We set the same font for secondary forms
+
+   // Fix issues with snap to edge of the screen
+   if cbVersion.IsWindows8Up
+   then Form.SnapBuffer:= 4
+   else Form.SnapBuffer:= 10;
+
+   // Form transparency
+   Form.AlphaBlendValue := Opacity;
+   Form.AlphaBlend:= Opacity< 255;
+  {$ENDIF}
 end;
 
 
@@ -150,7 +208,7 @@ procedure TLightForm.DoClose(var Action: TCloseAction);
 begin
   inherited DoClose(Action);
   if Action = TCloseAction.caFree then saveBeforeExit;
-end; 
+end;
 {$ENDIF}
 
 
@@ -162,7 +220,6 @@ end;
 
 
 { This code is guaranteed to be called ONLY once.
-
   Tech details: It is enough to put SaveBeforeExit in these two places only: OnCloseQueryand & OnDestroy.
   Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
 procedure TLightForm.saveBeforeExit;
@@ -191,8 +248,11 @@ end;
 
 procedure TLightForm.FormKeyPress(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
 begin
-  if CloseOnEscape and (Key = vkEscape) then Close;
+  if CloseOnEscape
+  and (Key = vkEscape) 
+  then Close;
 end;
+
 
 
 
@@ -215,7 +275,30 @@ end;
 -----------------------------------------------------------------------------------------------------------------------}
 
 procedure TLightForm.SaveForm;
+VAR
+   IniFile: TIniFileApp;
 begin
+  if TAppData.Initializing
+  AND (Self= Application.MainForm) then
+   begin
+    //if TAppData.RunningHome
+    //then MesajError('Closing application while still initializing!');
+    Exit; // We don't save anything if the start up was improper!
+   end;
+
+  Assert(AppData <> NIL, '!!!');
+  IniFile:= TIniFileApp.Create(Self.Name);
+  TRY
+   TRY
+     IniFile.SaveForm(Self, AutoState);
+   EXCEPT
+     ON EIniFileException DO
+       if AppData <> NIL
+       then AppData.LogWarn('Cannot save INI file: '+ IniFile.FileName);
+   END;
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
 end;
 
 
@@ -226,7 +309,27 @@ end;
     * Set the font for all forms to be the same as the font of the MainForm.
     * If the form is out of screen, LoadForm will also bring the form back to screen. }
 procedure TLightForm.LoadForm;
+VAR
+   IniFile: TIniFileApp;
 begin
+  (*if AppData = NIL then                { If AppData exists, let it deal with the font }
+    if (Application.MainForm <> NIL)     { Set font only for secondary forms }
+    AND (Self <> Application.MainForm)
+    then Self.Font:= Application.MainForm.Font; *)
+
+  IniFile:= TIniFileApp.Create(Self.Name);
+  TRY
+   TRY
+     IniFile.LoadForm(Self, AutoState);
+     //CorrectFormPositionScreen(Self);
+   EXCEPT
+     ON EIniFileException DO
+       if AppData <> NIL
+       then AppData.LogWarn('Cannot load INI file: '+ IniFile.FileName);
+   END;
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
 end;
 
 

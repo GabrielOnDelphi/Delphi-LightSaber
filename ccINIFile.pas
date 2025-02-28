@@ -36,8 +36,8 @@ TYPE
   end;
 
 TYPE
-  TAutoState = (asNone,       // Don't save the form automatically.
-                //asUser,       // Don't save the form automatically. The user will override that.
+  TAutoState = (asUndefined,
+                asNone,       // Don't save the form automatically.
                 asPosOnly,    // Restore form position
                 asFull);      // Restore form position and GUI elements
 
@@ -222,6 +222,8 @@ procedure TIniFileEx.Write(const Ident: string; Value: Double);
 begin
  inherited WriteFloat(FSection, Ident, Value);
 end;
+
+
 
 
 

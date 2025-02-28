@@ -81,10 +81,10 @@
      AppData.Initializing
 
         When the application starts, this flag is set to True.
-        Then it is automatically set to False once the main form is fully loaded.
+        Then it is automatically set to False once all the forms are is fully loaded.
         If you don't want this to happen, set the AutoSignalInitializationEnd variable to False.
         In this case, you will have to set the Initializing manually, once the program is fully initialized (usually in the LateInitialize of the main form, or in the LateInitialize of the last created form).
-        If you forget, the AppData will not save the forms to the INI file and you will have a warning on shutdown.
+        If you forget it, the AppData will not save the forms to the INI file and you will have a warning on shutdown.
         Usage:
           Used by SaveForm in cbINIFile.pas/cvINIFile.pas (and a few other places) to signal not to save the form if the application has crashed while still in the initialization phase.
           You can use it also personally, to avoid executing some of your code during the initialization stages.
@@ -158,7 +158,6 @@ TYPE
     FLastFolder: string;
     FSingleInstClassName: string;          { Used by the Single Instance mechanism. } {Old name: AppWinClassName }
     FRunningFirstTime: Boolean;
-    procedure SetGuiProperties(Form: TForm);
     procedure setShowOnError(const Value: Boolean);
 
     {$IFDEF MSWINDOWS}
@@ -196,10 +195,9 @@ TYPE
       App Single Instance
    --------------------------------------------------------------------------------------------------}
     class VAR Initializing: Boolean;                 // See documentation at the top of the file
-    class VAR AutoSignalInitializationEnd: Boolean;  // See documentation at the top of the file
     procedure Minimize;
 
-    constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; SignalInitEnd: Boolean= TRUE; MultiThreaded: Boolean= FALSE); virtual;
+    constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE); virtual;
     destructor Destroy; override;                    // This is called automatically by "Finalization" in order to call it as late as possible }
     procedure Run;
 
@@ -264,14 +262,14 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       FORM
    --------------------------------------------------------------------------------------------------}
-    procedure CreateMainForm  (aClass: TComponentClass;                MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly); overload;
-    procedure CreateMainForm  (aClass: TComponentClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly); overload;
+    procedure CreateMainForm  (aClass: TComponentClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE;                         AutoState: TAutoState= asPosOnly); overload;
+    procedure CreateMainForm  (aClass: TComponentClass;                MainFormOnTaskbar: Boolean= FALSE; Visible: Boolean= TRUE; AutoState: TAutoState= asPosOnly); overload;
 
-    procedure CreateForm      (aClass: TComponentClass; OUT Reference; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly; Owner: TFmxObject = NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
-    procedure CreateFormHidden(aClass: TComponentClass; OUT Reference; AutoState: TAutoState= asPosOnly; ParentWnd: TFmxObject = NIL);
+    procedure CreateForm      (aClass: TComponentClass; OUT Reference;                                    Visible: Boolean= TRUE; Owner: TFmxObject = NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
+    procedure CreateFormHidden(aClass: TComponentClass; OUT Reference;                                                            ParentWnd: TFmxObject = NIL);
 
-    procedure CreateFormModal (aClass: TComponentClass; OUT Reference; AutoState: TAutoState= asPosOnly; ParentWnd: TFmxObject= NIL); overload;   // Do I need this?
-    procedure CreateFormModal (aClass: TComponentClass;                AutoState: TAutoState= asPosOnly; ParentWnd: TFmxObject= NIL); overload;
+    procedure CreateFormModal (aClass: TComponentClass; OUT Reference;                                                            ParentWnd: TFmxObject= NIL); overload;   // Do I need this?
+    procedure CreateFormModal (aClass: TComponentClass;                                                                           ParentWnd: TFmxObject= NIL); overload;
 
     {-------------------------------------------------------------------------------------------------
       App Version
@@ -336,9 +334,9 @@ USES
     //cbRegistry,
     //cbDialogs,
     //cbCenterControl,
-    //cbINIFile,
     //FormRamLog,
   {$ENDIF}
+  cbIniFileFMX,
   ccIO, ccTextFile;
 
 
@@ -363,12 +361,11 @@ end;
        This string must be unique in the whole computer! No other app is allowed to have this ID.
        If you leave it empty, the aAppName is used. But AppName might not be that unique, or you might want to change it over time.
 -------------------------------------------------------------------------------------------------------------}
-constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= ''; SignalInitEnd: Boolean= TRUE; MultiThreaded: Boolean= FALSE);
+constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE);
 begin
   Application.Initialize;                         // Note: Emba: Although Initialize is the first method called in the main project source code, it is not the first code that is executed in a GUI application. For example, in Delphi, the application first executes the initialization section of all the units used by the Application.
 
   inherited Create;
-  AutoSignalInitializationEnd:= SignalInitEnd;    // See documentation at the top of the file
   Initializing:= True;                            // Used in cv_IniFile.pas. Set it to false once your app finished initializing.
 
   { Sanity check }
@@ -439,79 +436,46 @@ end;
 
 procedure TAppData.Run;
 begin
+  Initializing:= FALSE;
+
+  // Ignore the "Show" parameter if "StartMinimized" is active
+  // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
+  if StartMinim
+  then Minimize;
+
   Application.Run;
 end;
 
 
 
 {-------------------------------------------------------------------------------------------------------------
-   FORMS
+   CREATE FORMS
+
+   Note:
+     On FMX, CreateForm does not create the given form immediately.
+     It just adds a request to the pending list. RealCreateForms creates the real forms.
 -------------------------------------------------------------------------------------------------------------}
-{ 1. Create the form
-  2. Set the font of the new form to be the same as the font of the MainForm
-  3. Show it }
-procedure TAppData.CreateMainForm(aClass: TComponentClass; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly);
+procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; AutoState: TAutoState= asPosOnly);
 begin
-  VAR Reference: TForm;
-  CreateMainForm(aClass, Reference, MainFormOnTaskbar, Show, AutoState);
+  Assert(Application.MainForm = NIL, 'MainForm already exists!');  //ToDo: test if this works under FMX because of RealCreateForms
+  Application.CreateForm(aClass, Reference);                       // Reference is NIL here because of RealCreateForms
+
+  //Assert(TForm(Reference) <> NIL, ' Reference is NIL here because of RealCreateForms!');
+  //TLightForm(Reference).AutoState:= AutoState;
 end;
 
 
-procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly);
+procedure TAppData.CreateMainForm(aClass: TComponentClass; MainFormOnTaskbar: Boolean= FALSE; Visible: Boolean= TRUE; AutoState: TAutoState= asPosOnly);
 begin
-  Assert(Application.MainForm = NIL, 'MainForm already exists!');
-
-  // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
-  // Create form
-  Application.CreateForm(aClass, Reference);
-  MainFormCaption('Initializing...');
-
-  // Font
-  SetGuiProperties(TForm(Reference));
-
-  {$IFDEF FullAppData}
-   if (AutoState = asFull) OR (AutoState = asPosOnly) then
-    begin
-      // Load form
-
-      // ISSUE HERE!
-      // At this point we can only load "standard" Delphi components.
-      // Loading of our Light components can only be done in cv_IniFile.pas -> TIniFileVCL
-      // For the moment the work around is load only the stadard components.
-      cbINIFile.LoadFormBase(TForm(Reference), AutoState);
-
-      { Write path to app in registry }
-      if RunningFirstTime then RegisterUninstaller;
-    end;
-
-   // if the program is off-screen, bring it on-screen
-   CorrectFormPositionScreen(TForm(Reference));
-
-  // Ignore the "Show" parameter if "StartMinimized" is active
-  // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
-  if StartMinim
-  then Minimize
-  else
-     if Show
-     then TForm(Reference).Show;
-  {$ENDIF}
-
-  // Window fully constructed.
-  // Now we can let user run its own initialization process.
-  // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory [Part 2]" book) for details.
-  if TObject(Reference) is TLightForm
-  then TLightForm(Reference).FormInitialize;
-
-  if AutoSignalInitializationEnd
-  then Initializing:= FALSE;
-
-  MainFormCaption('');
+  VAR Reference: TForm;
+  CreateMainForm(aClass, Reference, MainFormOnTaskbar, AutoState);
+  Reference.Visible:= Visible;
 end;
 
 
 { Create secondary form
   "Loading" indicates if the GUI settings are remembered or not }
-procedure TAppData.CreateForm(aClass: TComponentClass; OUT Reference; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly; Owner: TFmxObject= NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
+procedure TAppData.CreateForm(aClass: TComponentClass; OUT Reference; Visible: Boolean= TRUE; Owner: TFmxObject= NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
 begin
   if CreateBeforeMainForm
   then
@@ -537,81 +501,41 @@ begin
   if (Owner <> NIL)
   AND Parented then
     begin
+      Assert(TForm(Reference) <> NIL, ' Reference is NIL here because of RealCreateForms!');
       TForm(Reference).Parent:= Owner;
       {$IFDEF FullAppData}
       CenterChild(TForm(Reference), Owner);
       {$ENDIF}
     end;
 
-  // Font, snap, alpha
-  SetGuiProperties(TForm(Reference));
-
-  // Load previous form settings/position
-  if TForm(Reference) is TLightForm then
-    begin
-     TLightForm(Reference).AutoState:= AutoState;
-     TLightForm(Reference).LoadForm;
-    end;
-
   if Show
   then TForm(Reference).Show;
-
-  // Window fully constructed.
-  // Now we can let user run its own initialization process.
-  if TObject(Reference) is TLightForm
-  then TLightForm(Reference).FormInitialize;
-
-  if AutoSignalInitializationEnd
-  then Initializing:= FALSE;
 end;
 
 
 
 { Create secondary form }
-procedure TAppData.CreateFormHidden(aClass: TComponentClass; OUT Reference; AutoState: TAutoState= asPosOnly; ParentWnd: TFmxObject= NIL);
+procedure TAppData.CreateFormHidden(aClass: TComponentClass; OUT Reference; ParentWnd: TFmxObject= NIL);
 begin
-  CreateForm(aClass, Reference, FALSE, AutoState, ParentWnd);
+  CreateForm(aClass, Reference, FALSE, ParentWnd);
 end;
 
 
 { Create secondary form }
-procedure TAppData.CreateFormModal(aClass: TComponentClass; AutoState: TAutoState= asPosOnly; ParentWnd: TFmxObject= NIL);
+procedure TAppData.CreateFormModal(aClass: TComponentClass; ParentWnd: TFmxObject= NIL);
 VAR Reference: TForm;
 begin
-  CreateForm(aClass, Reference, FALSE, AutoState, ParentWnd);
+  CreateForm(aClass, Reference, FALSE, ParentWnd);
   Reference.ShowModal;
 end;
 
 
 { Create secondary form }
 //ToDo: Do I need this? Since the form is modal, I should never need the Reference? To be deleted
-procedure TAppData.CreateFormModal(aClass: TComponentClass; OUT Reference; AutoState: TAutoState= asPosOnly; ParentWnd: TFmxObject= NIL);
+procedure TAppData.CreateFormModal(aClass: TComponentClass; OUT Reference; ParentWnd: TFmxObject= NIL);
 begin
-  CreateFormModal(aClass, AutoState, ParentWnd);
+  CreateFormModal(aClass, ParentWnd);
 end;
-
-
-procedure TAppData.SetGuiProperties(Form: TForm);
-begin
-  {$IFDEF FullAppData}
-   // Font
-   if Form = Application.MainForm
-   then Self.Font:= Form.Font   // We TAKE the font from the main form. Then we apply it to all existing and all future windows.
-   else
-     if Self.Font <> nil
-     then Form.Font:= Self.Font;  // We set the same font for secondary forms
-
-   // Fix issues with snap to edge of the screen
-   if cbVersion.IsWindows8Up
-   then Form.SnapBuffer:= 4
-   else Form.SnapBuffer:= 10;
-
-   // Form transparency
-   Form.AlphaBlendValue := Opacity;
-   Form.AlphaBlend:= Opacity< 255;
-  {$ENDIF}
-end;
-
 
 
 

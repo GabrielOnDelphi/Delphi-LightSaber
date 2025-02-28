@@ -150,7 +150,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   ccIO, ccTextFile, ccCore, cbAppData;
+   ccIO, ccTextFile, ccCore, {$IFDEF FRAMEWORK_FMX}cbAppDataFMX{$ELSE}cbAppData{$ENDIF};
 
 
 {-----------------------------------------------------------------------------------------------------------------------
@@ -174,7 +174,7 @@ end;
 -----------------------------------------------------------------------------------------------------------------------}
 { Save ALL supported controls on this form
 
-  Note:
+  Note: 
      Components[] just yields the components that are OWNED by the form.
      So, if we are iterating over it will miss any components that are added dynamically, and not owned by the form, or components that are owned by frames.
      Update 2021: Now frames are supported. All sub-components of a frame are stored to the INI file  }
@@ -323,8 +323,7 @@ begin
 
  Result:= TRUE;
 
- if Comp.InheritsFrom(TForm)
- then
+ if Comp.InheritsFrom(TForm) then
   begin
    WriteCtrlPos (TControl(Comp));
    Write('FormFont', TForm(Comp).Font);
@@ -472,7 +471,7 @@ begin
        end
        else
 
-      if Comp.InheritsFrom(TSpinEdit)
+      if Comp is TSpinEdit
       then TSpinEdit (Comp).Value := ReadInteger (Comp.Owner.Name, Comp.Name, 0)
       else
 
@@ -628,7 +627,7 @@ VAR i: Integer;
 begin
  for i:= 0 to WinCtrl.ControlCount-1 DO
    if IsSupported(WinCtrl.Controls[i])
-   then WriteComp(WinCtrl.Controls[i])
+   then WriteComp(WinCtrl.Controls[i]);
 end;
 
 
