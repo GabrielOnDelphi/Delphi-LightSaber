@@ -37,7 +37,8 @@ requires
 contains
   cbAppDataFMX in 'cbAppDataFMX.pas',
   cbAppDataFmxForm in 'cbAppDataFmxForm.pas',
-  cbIniFileFMX in 'cbIniFileFMX.pas';
+  cbIniFileFMX in 'cbIniFileFMX.pas',
+  cbDialogsFMX in 'cbDialogsFMX.pas';
 
 end.
 

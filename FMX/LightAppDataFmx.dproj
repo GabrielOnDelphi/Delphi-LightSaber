@@ -121,6 +121,7 @@
         <DCCReference Include="cbAppDataFMX.pas"/>
         <DCCReference Include="cbAppDataFmxForm.pas"/>
         <DCCReference Include="cbIniFileFMX.pas"/>
+        <DCCReference Include="cbDialogsFMX.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

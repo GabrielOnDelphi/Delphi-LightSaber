@@ -1,4 +1,4 @@
-﻿UNIT cbDialogs;
+﻿UNIT cbDialogsFMX;
 
 {=============================================================================================================
    www.GabrielMoraru.com
@@ -9,10 +9,11 @@
 =============================================================================================================}
 
 INTERFACE
+{$I Frameworks.inc}
 
 USES
-   System.SysUtils, System.UITypes, Generics.Collections,
-   Vcl.Forms;
+   System.SysUtils,
+   System.UITypes, Generics.Collections;
 
 
  function  MesajGeneric   (CONST MessageText: string; Title: string= ''; Icon: Integer= -1): integer;         { 'Title' will appear in window's caption }
@@ -65,12 +66,31 @@ CONST
 
 function MesajGeneric(const MessageText: string; Title: string = ''; Icon: Integer = -1): Integer;
 begin
-  if Icon < 0 then Icon:= MB_ICONINFORMATION or MB_OK;
-  if MessageText = '' then Exit(0);
+  {$IFDEF FRAMEWORK_FMX}
+  // FMX (Cross-platform)
+  if MessageText = '' then
+    Exit(0);
   if Title = ''
   then Title := Application.Title
   else Title := Application.Title+ ' - ' + Title;
-  Result:= Application.MessageBox(PCHAR(CRLFToEnter(MessageText)), PChar(Title), Icon); //icon =  MB_ICONINFORMATION or MB_OK
+  TDialogService.MessageDialog(MessageText,
+    TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, 0,
+    procedure(const AResult: TModalResult)
+    begin
+      // Handle the result of the dialog if necessary
+    end);
+  Result := 0; // FMX dialogs are asynchronous, so we return 0
+  {$ENDIF}
+
+  {$IFDEF LINUX}
+  Result := 0; // No specific result handling for console
+
+  // Linux console application
+  if MessageText = '' then EXIT;
+  if Title = ''
+  then WriteLn(                MessageText)
+  else WriteLn(Title + ' - ' + MessageText);
+  {$ENDIF}
 end;
 
 

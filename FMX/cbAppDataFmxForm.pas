@@ -173,25 +173,11 @@ begin
      if Self.Font <> nil
      then Form.Font:= Self.Font;  // We set the same font for secondary forms
 
-   // Fix issues with snap to edge of the screen
-   if cbVersion.IsWindows8Up
-   then Form.SnapBuffer:= 4
-   else Form.SnapBuffer:= 10;
-
    // Form transparency
    Form.AlphaBlendValue := Opacity;
    Form.AlphaBlend:= Opacity< 255;
   {$ENDIF}
 end;
-
-
-{$IFDEF Framework_VCL}
-procedure TLightForm.WMEndSession(var Msg: TWMEndSession);
-begin
-  saveBeforeExit;
-  inherited;
-end;
-{$ENDIF}
 
 
 procedure TLightForm.DoClose(var Action: TCloseAction);
