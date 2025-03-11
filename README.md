@@ -23,11 +23,12 @@ _________________
 
 This repository contains the following libraries: 
  - Core
- - Log
+ - AppData + Log + FormTranslator
  - Common
  - Internet
  - Translator 
  - Graphics
+ - Visual Controls 
  
 Each library depends on the previous one, in the order specified above.  
 LightSaber Core does not depend on any other library.   
