@@ -19,7 +19,7 @@ UNIT ccStreamBuff2;
 
 INTERFACE
 
-{$I Frameworks.inc}
+{ $I Frameworks.inc}
 
 USES
   System.SysUtils, math, System.Classes, ccStreamBuff;
@@ -168,5 +168,6 @@ end;
 
 
 end.
+
 
 

@@ -11,7 +11,7 @@
 =============================================================================================================}
 
 INTERFACE
-{$I Frameworks.inc}
+{ $I Frameworks.inc}
 
 USES
    Vcl.Controls, Vcl.Forms;

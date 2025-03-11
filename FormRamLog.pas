@@ -72,7 +72,7 @@ IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   cbLogTypes, cvINIFile, ccINIFile;
+   cbLogTypes, ccINIFile;
 
 
 
@@ -134,7 +134,7 @@ begin
   Assert(AppData <> NIL, 'AppData is gone already!');
 
   // Save form position
-  //del if NOT cbAppData.AppData.Initializing then cvINIFile.SaveForm(Self); // We don't save anything if the start up was improper!
+  //del if NOT cbAppData.AppData.Initializing then cvINIFile.//SaveForm(Self); called by AppData // We don't save anything if the start up was improper!
 
   // Save Log verbosity
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);

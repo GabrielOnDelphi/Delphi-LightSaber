@@ -1,17 +1,13 @@
 ﻿UNIT ccColors;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.06
    www.GabrielMoraru.com
-   See Copyright file
---------------------------------------------------------------------------------------------------------------
-
+   2025.03
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
 
-{$I Frameworks.inc}
+{ $I Frameworks.inc}
 
 USES System.UiTypes;
 
@@ -85,13 +81,13 @@ CONST
    clSilverDark  = TColor($a0a0a0);
    clSilverLight = TColor($F3F2F2);           { Very light silver }
    clGrayMedium  = TColor($A4A0A0);
-
+   (*
    {$IFDEF FRAMEWORK_VCL}
    {$ELSE FRAMEWORK_FMX}
    clBlack         = TAlphaColors.Black;
    clGray          = TAlphaColors.Gray;
    clRed           = TAlphaColors.Red;
-   {$Endif}
+   {$Endif}  *)
 
 IMPLEMENTATION
 

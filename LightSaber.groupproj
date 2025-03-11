@@ -9,9 +9,6 @@
         <Projects Include="LightAppData.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="FMX\LightAppDataFMX.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="LightCommon.dproj">
             <Dependencies/>
         </Projects>
@@ -64,15 +61,6 @@
     </Target>
     <Target Name="LightAppData:Make">
         <MSBuild Projects="LightAppData.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="LightAppDataFMX">
-        <MSBuild Projects="FMX\LightAppDataFMX.dproj"/>
-    </Target>
-    <Target Name="LightAppDataFMX:Clean">
-        <MSBuild Projects="FMX\LightAppDataFMX.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="LightAppDataFMX:Make">
-        <MSBuild Projects="FMX\LightAppDataFMX.dproj" Targets="Make"/>
     </Target>
     <Target Name="LightCommon">
         <MSBuild Projects="LightCommon.dproj"/>
@@ -156,13 +144,13 @@
         <MSBuild Projects="Demo\Tester AutoTranslator\AutoTranslatorDemo.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightAppData;LightAppDataFMX;LightCommon;LightProteus;LightInternet;LightGraphics;LightVisControls;LightNGC;BioControl;BionixVCL;AutoTranslatorDemo"/>
+        <CallTarget Targets="LightCore;LightAppData;LightCommon;LightProteus;LightInternet;LightGraphics;LightVisControls;LightNGC;BioControl;BionixVCL;AutoTranslatorDemo"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightAppData:Clean;LightAppDataFMX:Clean;LightCommon:Clean;LightProteus:Clean;LightInternet:Clean;LightGraphics:Clean;LightVisControls:Clean;LightNGC:Clean;BioControl:Clean;BionixVCL:Clean;AutoTranslatorDemo:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightAppData:Clean;LightCommon:Clean;LightProteus:Clean;LightInternet:Clean;LightGraphics:Clean;LightVisControls:Clean;LightNGC:Clean;BioControl:Clean;BionixVCL:Clean;AutoTranslatorDemo:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightAppData:Make;LightAppDataFMX:Make;LightCommon:Make;LightProteus:Make;LightInternet:Make;LightGraphics:Make;LightVisControls:Make;LightNGC:Make;BioControl:Make;BionixVCL:Make;AutoTranslatorDemo:Make"/>
+        <CallTarget Targets="LightCore:Make;LightAppData:Make;LightCommon:Make;LightProteus:Make;LightInternet:Make;LightGraphics:Make;LightVisControls:Make;LightNGC:Make;BioControl:Make;BionixVCL:Make;AutoTranslatorDemo:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
@@ -184,6 +172,12 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="LightGraphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="LightCommon.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -195,24 +189,6 @@
             <Configurations>Debug</Configurations>
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Tester AutoTranslator\AutoTranslatorDemo.dproj">
-            <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightGraphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="FMX\LightAppDataFMX.dproj">
-            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
-            <Configurations/>
-            <Platforms/>
-            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\Biology\!BioControl Lib\BioControl.dproj">
             <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
@@ -226,6 +202,12 @@
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester AutoTranslator\AutoTranslatorDemo.dproj">
+            <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="LightVisControls.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -237,80 +219,6 @@
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
-        </BuildGroupProject>
-    </ItemGroup>
-    <ItemGroup Condition="'$(BuildGroup)'=='Win32_Debug'">
-        <BuildGroupProject Include="..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj">
-            <ProjectGuid>{0A1AA5C0-4064-4F84-9485-EC81B8B74BEA}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightAppData.dproj">
-            <ProjectGuid>{5EBF048A-F527-4583-BE0A-C834930EA04C}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\LightNgc\LightNGC.dproj">
-            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC3232F7D}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCommon.dproj">
-            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCore.dproj">
-            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Tester AutoTranslator\AutoTranslatorDemo.dproj">
-            <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightGraphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="FMX\LightAppDataFMX.dproj">
-            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
-            <Configurations/>
-            <Platforms/>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Biology\!BioControl Lib\BioControl.dproj">
-            <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightInternet.dproj">
-            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightVisControls.dproj">
-            <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
-            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Release'">
@@ -332,6 +240,12 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="LightGraphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="LightCommon.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Release</Configurations>
@@ -343,24 +257,6 @@
             <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Tester AutoTranslator\AutoTranslatorDemo.dproj">
-            <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightGraphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="FMX\LightAppDataFMX.dproj">
-            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
-            <Configurations/>
-            <Platforms/>
-            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\Biology\!BioControl Lib\BioControl.dproj">
             <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
@@ -374,6 +270,12 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester AutoTranslator\AutoTranslatorDemo.dproj">
+            <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="LightVisControls.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
             <Configurations>Release</Configurations>
@@ -383,6 +285,74 @@
         <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
             <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
             <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+    <ItemGroup Condition="'$(BuildGroup)'=='Win32_Debug'">
+        <BuildGroupProject Include="..\BioniX\SourceCode\BioniX VCL\BionixVCL.dproj">
+            <ProjectGuid>{0A1AA5C0-4064-4F84-9485-EC81B8B74BEA}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightAppData.dproj">
+            <ProjectGuid>{5EBF048A-F527-4583-BE0A-C834930EA04C}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\LightNgc\LightNGC.dproj">
+            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC3232F7D}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightGraphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCommon.dproj">
+            <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\Biology\!BioControl Lib\BioControl.dproj">
+            <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightInternet.dproj">
+            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester AutoTranslator\AutoTranslatorDemo.dproj">
+            <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightVisControls.dproj">
+            <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+            <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
@@ -406,6 +376,12 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="LightGraphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="LightCommon.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
@@ -418,24 +394,6 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Tester AutoTranslator\AutoTranslatorDemo.dproj">
-            <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightGraphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="FMX\LightAppDataFMX.dproj">
-            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
-            <Configurations/>
-            <Platforms/>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="..\Biology\!BioControl Lib\BioControl.dproj">
             <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -447,6 +405,12 @@
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Demo\Tester AutoTranslator\AutoTranslatorDemo.dproj">
+            <ProjectGuid>{90C23B41-53D1-47AF-8CE6-36E8DCD50444}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="LightVisControls.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>

@@ -14,7 +14,7 @@ UNIT cbLogLinesAbstract;
 =============================================================================================================}
 
 INTERFACE
-{$I Frameworks.inc}
+{ $I Frameworks.inc}
 
 USES
    System.SysUtils, System.Classes, System.UITypes,

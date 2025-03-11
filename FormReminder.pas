@@ -106,7 +106,7 @@ end;
 procedure TfrmReminder.FormDestroy(Sender: TObject);
 begin
  Timer.Enabled:= FALSE;
- SaveForm(Self);
+ //SaveForm(Self); called by AppData
 end;
 
 

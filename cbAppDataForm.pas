@@ -208,13 +208,13 @@ procedure TLightForm.SaveForm;
 VAR
    IniFile: TIniFileApp;
 begin
- if TAppData.Initializing
- AND (Self= Application.MainForm) then
-  begin
-   if TAppData.RunningHome
-   then MesajError('Closing application while still initializing!');
-   Exit; // We don't save anything if the start up was improper!
-  end;
+  if TAppData.Initializing
+  AND (Self= Application.MainForm) then
+   begin
+    if TAppData.RunningHome
+    then MesajError('Closing application while still initializing!');
+    Exit; // We don't save anything if the start up was improper!
+   end;
 
   Assert(AppData <> NIL, '!!!');
   IniFile:= TIniFileApp.Create(Self.Name);

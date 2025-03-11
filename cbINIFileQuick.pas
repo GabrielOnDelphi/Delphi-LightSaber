@@ -24,7 +24,7 @@ UNIT cbINIFileQuick;
 =============================================================================================================}
 
 INTERFACE
-{$I Frameworks.inc}
+{ $I Frameworks.inc}
 
 USES
    System.SysUtils, Vcl.Graphics, System.IniFiles;

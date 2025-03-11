@@ -5,7 +5,7 @@
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>None</FrameworkType>
         <MainSource>LightCore.dpk</MainSource>
-        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <Platform Condition="'$(Platform)'==''">Android64</Platform>
         <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
         <ProjectVersion>19.5</ProjectVersion>
         <TargetedPlatforms>168067</TargetedPlatforms>

@@ -21,7 +21,7 @@
 
 INTERFACE
 
-{$I Frameworks.inc}
+{ $I Frameworks.inc}
 
 USES
    {$IFDEF MSWINDOWS}Winapi.Windows,{$ENDIF}

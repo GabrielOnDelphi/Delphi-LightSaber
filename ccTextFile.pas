@@ -28,7 +28,7 @@
 
 INTERFACE
 
-{$I Frameworks.inc}
+{ $I Frameworks.inc}
 
 USES
   System.IOUtils, System.SysUtils, System.Classes;

@@ -17,7 +17,7 @@
 
 INTERFACE
 
-{$I Frameworks.inc}
+{ $I Frameworks.inc}
 
 USES
    System.AnsiStrings, System.Character, System.SysUtils, System.Math, System.IOUtils, System.StrUtils,
@@ -233,7 +233,7 @@ TYPE
  function  StringFuzzyCompare  (s1, s2: string): Integer;                                                     { The function checks if any identical characters is in the near of the actual compare position }
  function  FileNameNaturalSort (s1, s2: String): Integer;                                                     { Natural compare two filenames }
  {$IFDEF MSWINDOWS}
- function  StrCmpLogicalW      (psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll'; {$ENDIF}     { Natural compare two filenames. Digits in the strings are considered as numerical content rather than text. This test is not case-sensitive. Use it like this: StrCmpLogicalW(PChar(s1), PChar(s2));  see: http://stackoverflow.com/questions/1024515/delphi-is-it-necessary-to-convert-string-to-widestring.  }
+ function  StrCmpLogicalW      (psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll'; {$ENDIF}    { Natural compare two strings. Digits in the strings are considered as numerical content rather than text. This test is not case-sensitive. Use it like this: StrCmpLogicalW(PChar(s1), PChar(s2));  see: http://stackoverflow.com/questions/1024515/delphi-is-it-necessary-to-convert-string-to-widestring.  }
 
 
  // MAKE STRING
@@ -2263,7 +2263,7 @@ end;
   Example: We have 3 files: pic1, pic2, pic10
      Delphi sort: pic1 pic10 pic2.
      Natural compare sort: pic1 pic2 pic10
-  Source: http://www.delphi3000.com/articles/article_5295.asp?SK=                                                                                       // old name: StrNaturalCompare
+  Source: http://www.delphi3000.com/articles/article_5295.asp?SK=                                                 // old name: StrNaturalCompare
 
   Also see: StrCmpLogicalW }
 function FileNameNaturalSort(s1, s2: String): Integer;

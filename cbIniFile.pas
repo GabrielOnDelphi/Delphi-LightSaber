@@ -93,7 +93,7 @@
        http://www.scalabium.com/faq/dct0012.htm }
 
 INTERFACE
-{$I Frameworks.inc}
+{$I \fmx\Frameworks.inc}
 
 USES
    System.Classes, System.IniFiles, System.SysUtils, System.UITypes,

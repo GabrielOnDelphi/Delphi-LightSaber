@@ -1,39 +1,37 @@
 ﻿UNIT cbAppDataFMX;
 
-{ WARNING! While it works for me, the FMX part of LightSaber is still in Beta stage! }
-
 {=============================================================================================================
    www.GabrielMoraru.com
    2025.01.19
-   See Copyright file
 --------------------------------------------------------------------------------------------------------------
+   WARNING
+     While it works for me, the FMX part of LightSaber is still in Beta stage!
 
    FEATURES
+     Via class you can:
+        - Get application's %appdata% folder (the folder where you save temporary, app-related and ini files)
+        - Get application's command line parameters
+        - Get application's version
 
-    Via class you can:
-       - Get application's %appdata% folder (the folder where you save temporary, app-related and ini files)
-       - Get application's command line parameters
-       - Get application's version
+        - Force single instance (allow only one instance of your program to run). Second inst sends its command line to the first inst then shuts down
+        - Detect if the application is running for the first time on this computer
 
-       - Force single instance (allow only one instance of your program to run). Second inst sends its command line to the first inst then shuts down
-       - Detect if the application is running for the first time on this computer
+        - Application self-restart
+        - Application self-delete
 
-       - Application self-restart
-       - Application self-delete
+        - Easily create new forms and set its font to be the same as main forms' font.
+        - Change the font for all running forms
 
-       - Easily create new forms and set its font to be the same as main forms' font.
-       - Change the font for all running forms
+        - Log error messages to a special window that is automatically created
+        - Basic support for Uninstaller (The Uninstaller can find out where the app was installed)
+        - Basic support for licensing (trial period) system. See Proteus for details.
 
-       - Log error messages to a special window that is automatically created
-       - Basic support for Uninstaller (The Uninstaller can find out where the app was installed)
-       - Basic support for licensing (trial period) system. See Proteus for details.
+        - LOG
+          TAppData class also creates a global Log form.
+          This form automatically pops up when you send warnings and errors to it.
+          For details see: FormLog.pas
 
-       - LOG
-         TAppData class also creates a global Log form.
-         This form automatically pops up when you send warnings and errors to it.
-         For details see: FormLog.pas
-
-       - etc
+        - etc
 
  ____________________________________________________________________________________________________________
 
@@ -129,7 +127,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, System.IOUtils, System.UITypes, System.Types, System.Messaging,
 
-   {$IFDEF msWindows}
+  {$IFDEF msWindows}
     Winapi.Windows,
     Winapi.Messages,
     Winapi.ShellAPI,
@@ -140,11 +138,15 @@ USES
    Androidapi.Helpers, Androidapi.JNI.App, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText,
   {$ENDIF}
 
+  {$IFDEF MacOS}
+   Posix.Stdlib, Posix.Unistd,
+  {$ENDIF}
+
   FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Types, FMX.Controls, FMX.Controls.Presentation, FMX.Platform,
 
   ccCore,
   ccINIFile,
-  //cbLogRam,
+  cbDialogsFMX,
   cbAppDataFmxForm;
 
 TYPE
@@ -162,6 +164,8 @@ TYPE
 
     {$IFDEF MSWINDOWS}
     function  RunFileAtStartUp(CONST FilePath: string; Active: Boolean): Boolean; {$ENDIF}
+    {$IFDEF MacOS}
+    function RunFileAtStartup(const FilePath: string; Active: Boolean): Boolean; {$ENDIF}
     {$IFDEF ANDROID}
     function RunFileAtStartup(const FilePath: string; Active: Boolean): Boolean; {$ENDIF}
     {$IFDEF LINUX}
@@ -169,7 +173,7 @@ TYPE
     CONST
       Signature: AnsiString= 'AppDataSettings';{ Do not change it! }
       DefaultHomePage= 'https://www.GabrielMoraru.com';
-    class VAR FCreated: Boolean;     { Sanity check }
+    class VAR FCreated: Boolean;               { Sanity check }
     class VAR FAppName: string;
     function  getLastUsedFolder: string;
 
@@ -363,7 +367,7 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE);
 begin
-  Application.Initialize;                         // Note: Emba: Although Initialize is the first method called in the main project source code, it is not the first code that is executed in a GUI application. For example, in Delphi, the application first executes the initialization section of all the units used by the Application.
+  Application.Initialize;                         // Note: Emba: Although Initialize is the first method called in the main project source code, it is not the first code that is executed in a GUI application. For example, in Delphi, the application first executes the initialization section of all the units used by the Application. in modern Delphi (non-.NET), you can remove Application.Initialize without breaking your program. The method is almost empty and no longer plays a critical role in setting up the VCL or application environment. Its historical purpose was to initialize COM and CORBA, but since those are no longer used, the method is effectively redundant.
 
   inherited Create;
   Initializing:= True;                            // Used in cv_IniFile.pas. Set it to false once your app finished initializing.
@@ -565,10 +569,8 @@ begin
   Assert(AppData <> NIL, 'AppData var might not be available at this point!');
   Result:= DirectoryExists(AppData.SysDir);
 
-  {$IFDEF FullAppData}
   if NOT Result
   then MesajError('The program was not properly installed! The "System" folder is missing.');
-  {$ENDIF}
 end;
 
 
@@ -710,13 +712,6 @@ Summary
 
 //ToDo: Ensure that you handle permissions and platform-specific requirements properly. For example, on Android, you need to declare the appropriate permissions in the manifest file, and on Linux, ensure the .desktop file has the correct permissions.
 
-{ Run the specified application at Windows startup }
-{ Run THIS application at Windows startup }
-function TAppData.RunSelfAtStartUp(Active: Boolean): Boolean;
-begin
-  Result:= RunFileAtStartUp(ParamStr(0), Active);
-end;
-
 {$IFDEF MSWINDOWS}
 function TAppData.RunFileAtStartUp(CONST FilePath: string; Active: Boolean): Boolean;
 VAR Reg: TRegistry;
@@ -746,9 +741,6 @@ end;
 
 
 {$IFDEF MACOS}
-uses
-  Posix.Stdlib, Posix.Unistd;
-
 function TAppData.RunFileAtStartup(const FilePath: string; Active: Boolean): Boolean;
 var
   LaunchAgentPath: string;
@@ -863,6 +855,13 @@ end;
 {$ENDIF}
 
 
+{ Run the specified application at Windows startup }
+{ Run THIS application at Windows startup }
+function TAppData.RunSelfAtStartUp(Active: Boolean): Boolean;
+begin
+  Result:= RunFileAtStartUp(ParamStr(0), Active);
+end;
+
 
 
 
@@ -872,36 +871,6 @@ end;
 {--------------------------------------------------------------------------------------------------
    APPLICATION Control
 --------------------------------------------------------------------------------------------------}
-{$IFDEF Framework_VCL}
-procedure TAppData.Restart;
-begin
-  VAR PAppName:= PChar(ExeName);
-  Winapi.ShellAPI.ShellExecute({Handle} 0, 'open', PAppName, nil, nil, SW_SHOWNORMAL);   { Handle does not work. Replaced with 0. }
-  Application.Terminate;
-end;
-
-
-{--------------------------------------------------------------------------------------------------
-   SCREEN
---------------------------------------------------------------------------------------------------}
-{ Bring the application back to screen (if minimized, in background, hidden) }
-procedure TAppData.Restore;
-begin
-  Application.MainForm.Visible:= TRUE;
-  if Application.MainForm.WindowState = wsMinimized
-  then Application.MainForm.WindowState:= TWindowState.wsNormal;
-
-  //Use Restore to restore the application to its previous size before it was minimized. When the user restores the application to normal size, Restore is automatically called.
-  //Note: Don't confuse the Restore method, which restores the entire application, with restoring a form or window to its original size. To minimize, maximize, and restore a window or form, change the value of its WindowState property.
-  Application.Restore;
-  SetForegroundWindow(Application.MainForm.Handle);
-  Application.BringToFront;
-end;
-{$ENDIF}
-
-
-
-
 procedure TAppData.Minimize;
 begin
   var WindowService: IFMXWindowService;

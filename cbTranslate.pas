@@ -171,7 +171,7 @@ BUG:
 
 
 INTERFACE
-{$I Frameworks.inc}
+{ $I Frameworks.inc}
 
 USES
   System.Classes, System.SysUtils, System.IniFiles, System.TypInfo, Vcl.Forms, Vcl.Menus, Vcl.ExtCtrls,

@@ -19,8 +19,6 @@ UNIT ccStreamMem2;
 
 INTERFACE
 
-{$I Frameworks.inc}
-
 USES
   System.SysUtils, System.Math, System.Classes,
   ccStreamMem;

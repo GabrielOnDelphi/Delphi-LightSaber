@@ -25,7 +25,7 @@ UNIT cbLogTypes;
 =============================================================================================================}
 
 INTERFACE
-{$I Frameworks.inc}
+{ $I Frameworks.inc}
 
 USES
    System.UITypes;

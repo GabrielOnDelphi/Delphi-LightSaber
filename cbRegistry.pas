@@ -13,7 +13,7 @@
 =============================================================================================================}
 
 INTERFACE
-{$I Frameworks.inc}
+{ $I Frameworks.inc}
 
 USES
    Winapi.Windows, System.SysUtils, System.Classes, System.Win.Registry;

@@ -8,16 +8,16 @@ UNIT cbLogUtils;
 =============================================================================================================}
 
 INTERFACE
-{$I Frameworks.inc}
+{ $I Frameworks.inc}
 
 USES
    System.SysUtils,
    system.UITypes,
-   {$IFDEF MsWindows}
+ //  {$IFDEF MsWindows}
    Vcl.Graphics,
-   {$ELSE FRAMEWORK_FMX}
-   FMX.Graphics,
-   {$Endif}
+  // {$ELSE FRAMEWORK_FMX}
+  // FMX.Graphics,
+  // {$Endif}
    cbLogTypes,
    ccColors;
 

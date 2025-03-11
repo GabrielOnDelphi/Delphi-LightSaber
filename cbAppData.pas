@@ -1,4 +1,4 @@
-﻿NIT cbAppData;
+﻿UNIT cbAppData;
 
 {=============================================================================================================
    www.GabrielMoraru.com
@@ -184,9 +184,8 @@ TYPE
     function  ExtractData(VAR Msg: TWMCopyData; OUT s: string): Boolean;
     {}
     class VAR Initializing: Boolean;                 // See documentation at the top of the file
-  del  class VAR AutoSignalInitializationEnd: Boolean;  // See documentation at the top of the file
 
-    constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; SignalInitEnd: Boolean= TRUE; MultiThreaded: Boolean= FALSE); virtual;
+    constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE); virtual;
     procedure AfterConstruction; override;
     destructor Destroy; override;                    // This is called automatically by "Finalization" in order to call it as late as possible }
     procedure Run;
@@ -342,12 +341,11 @@ end;
        This string must be unique in the whole computer! No other app is allowed to have this ID.
        If you leave it empty, the aAppName is used. But AppName might not be that unique, or you might want to change it over time.
 -------------------------------------------------------------------------------------------------------------}
-constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= ''; SignalInitEnd: Boolean= TRUE; MultiThreaded: Boolean= FALSE);
+constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE);
 begin
   Application.Initialize;                         // Note: Emba: Although Initialize is the first method called in the main project source code, it is not the first code that is executed in a GUI application. For example, in Delphi, the application first executes the initialization section of all the units used by the Application. in modern Delphi (non-.NET), you can remove Application.Initialize without breaking your program. The method is almost empty and no longer plays a critical role in setting up the VCL or application environment. Its historical purpose was to initialize COM and CORBA, but since those are no longer used, the method is effectively redundant.
 
   inherited Create;
-  AutoSignalInitializationEnd:= SignalInitEnd;    // See documentation at the top of the file
   Initializing:= True;                            // Used in cv_IniFile.pas. Set it to false once your app finished initializing.
 
   { Sanity check }
@@ -429,8 +427,7 @@ end;
 
 procedure TAppData.Run;
 begin
-  if AutoSignalInitializationEnd
-  then Initializing:= FALSE;
+  Initializing:= FALSE;
   Application.Run;
 end;
 
@@ -456,6 +453,8 @@ begin
   Assert(Font = NIL,                 'AppData.Font already assigned!');
 
   // Create form
+  Application.DefaultFont.Name  := 'Segoe UI';
+  Application.DefaultFont.Size  := 10;
   Application.MainFormOnTaskbar := MainFormOnTaskbar;
   Application.ShowMainForm      := Show;      // Must be false if we want to prevent form flicker during skin loading at startup
   Application.CreateForm(aClass, Reference);

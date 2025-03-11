@@ -67,7 +67,7 @@ end;
 procedure TfrmSmtpSettings.FormDestroy(Sender: TObject);
 begin
  edtPsw.Text:= Simpleencode(edtPsw.Text);   // encrypt the password BEFORE saving to INI!
- SaveForm(Self);
+ //SaveForm(Self); called by AppData
 end;
 
 

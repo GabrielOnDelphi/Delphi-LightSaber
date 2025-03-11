@@ -75,7 +75,7 @@ begin
 
  Assert(ComponentCount > 5, 'TfrmTimer.Container already nilled?');
  Container.Parent:= Self;    { We need to move the container back on its original form, in order to let that form to correctly save its children }
- SaveForm(self);
+ //SaveForm(Self); called by AppData
 end;
 
 

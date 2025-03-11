@@ -62,7 +62,7 @@ UNIT cbVersion;
 =============================================================================================================}
 
 INTERFACE
-{$I Frameworks.inc}
+{ $I Frameworks.inc}
 
 USES
    WinApi.Windows, System.SysUtils;

@@ -18,7 +18,7 @@
 =============================================================================================================}
 
 INTERFACE
-{$I Frameworks.inc}
+{ $I Frameworks.inc}
 USES
    Winapi.Windows, System.TypInfo, System.Classes, System.SysUtils,
    Vcl.StdCtrls, Vcl.Menus, Vcl.ActnList, Vcl.ComCtrls, Vcl.Controls, Vcl.Forms;

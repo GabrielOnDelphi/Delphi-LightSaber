@@ -13,7 +13,7 @@ UNIT ccCompiler;
 
 INTERFACE
 
-{$I Frameworks.inc}
+{ $I Frameworks.inc}
 
 CONST
   Delphi_Athenes = 36.0;  // Product Version: 29    Delphi 12

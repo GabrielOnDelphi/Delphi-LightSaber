@@ -103,7 +103,7 @@ end;
 
 procedure TfrmComposer.SaveSettings;
 begin
- SaveForm(Self);
+ //SaveForm(Self); called by AppData
  mmoEmailBody.Lines.SaveToFile(AppData.AppDataFolder+ 'Email body.txt');  { AUTO SAVE EMAIL BODY }
 end;
 

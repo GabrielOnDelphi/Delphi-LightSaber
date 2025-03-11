@@ -84,7 +84,7 @@ begin
  Assert(AppData <> NIL, 'AppData is gone already!');
  Container.Parent:= Self;
  if NOT cbAppData.AppData.Initializing
- then SaveForm(Self); // We don't save anything if the start up was improper!
+ then //SaveForm(Self); called by AppData // We don't save anything if the start up was improper!
 end;
 
 
