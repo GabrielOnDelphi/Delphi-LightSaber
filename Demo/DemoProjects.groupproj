@@ -3,13 +3,13 @@
         <ProjectGuid>{86A7DC54-2BCF-43C4-B6A1-11E9B4207D4B}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="Template App\Minimal\TemplateMicro.dproj">
+        <Projects Include="Template App\VCL Minimal\TemplateMicro.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Template App\Simple\TemplateSimple.dproj">
+        <Projects Include="Template App\VCL Simple\TemplateSimple.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Template App\Full\TemplateFull.dproj">
+        <Projects Include="Template App\VCL Full\TemplateFull.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="Template Universal Uninstaller\Uninstaller.dproj">
@@ -39,6 +39,12 @@
         <Projects Include="C:\Projects-3rd_Packages\Third party packages\ThirdPartyLibs.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="Template App\FMX Minimal\FmxTemplateMicro.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo Binary file\DemoBinaryFile.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -48,31 +54,31 @@
         </BorlandProject>
     </ProjectExtensions>
     <Target Name="TemplateMicro">
-        <MSBuild Projects="Template App\Minimal\TemplateMicro.dproj"/>
+        <MSBuild Projects="Template App\VCL Minimal\TemplateMicro.dproj"/>
     </Target>
     <Target Name="TemplateMicro:Clean">
-        <MSBuild Projects="Template App\Minimal\TemplateMicro.dproj" Targets="Clean"/>
+        <MSBuild Projects="Template App\VCL Minimal\TemplateMicro.dproj" Targets="Clean"/>
     </Target>
     <Target Name="TemplateMicro:Make">
-        <MSBuild Projects="Template App\Minimal\TemplateMicro.dproj" Targets="Make"/>
+        <MSBuild Projects="Template App\VCL Minimal\TemplateMicro.dproj" Targets="Make"/>
     </Target>
     <Target Name="TemplateSimple">
-        <MSBuild Projects="Template App\Simple\TemplateSimple.dproj"/>
+        <MSBuild Projects="Template App\VCL Simple\TemplateSimple.dproj"/>
     </Target>
     <Target Name="TemplateSimple:Clean">
-        <MSBuild Projects="Template App\Simple\TemplateSimple.dproj" Targets="Clean"/>
+        <MSBuild Projects="Template App\VCL Simple\TemplateSimple.dproj" Targets="Clean"/>
     </Target>
     <Target Name="TemplateSimple:Make">
-        <MSBuild Projects="Template App\Simple\TemplateSimple.dproj" Targets="Make"/>
+        <MSBuild Projects="Template App\VCL Simple\TemplateSimple.dproj" Targets="Make"/>
     </Target>
     <Target Name="TemplateFull">
-        <MSBuild Projects="Template App\Full\TemplateFull.dproj"/>
+        <MSBuild Projects="Template App\VCL Full\TemplateFull.dproj"/>
     </Target>
     <Target Name="TemplateFull:Clean">
-        <MSBuild Projects="Template App\Full\TemplateFull.dproj" Targets="Clean"/>
+        <MSBuild Projects="Template App\VCL Full\TemplateFull.dproj" Targets="Clean"/>
     </Target>
     <Target Name="TemplateFull:Make">
-        <MSBuild Projects="Template App\Full\TemplateFull.dproj" Targets="Make"/>
+        <MSBuild Projects="Template App\VCL Full\TemplateFull.dproj" Targets="Make"/>
     </Target>
     <Target Name="Uninstaller">
         <MSBuild Projects="Template Universal Uninstaller\Uninstaller.dproj"/>
@@ -155,14 +161,32 @@
     <Target Name="ThirdPartyLibs:Make">
         <MSBuild Projects="C:\Projects-3rd_Packages\Third party packages\ThirdPartyLibs.dproj" Targets="Make"/>
     </Target>
+    <Target Name="FmxTemplateMicro">
+        <MSBuild Projects="Template App\FMX Minimal\FmxTemplateMicro.dproj"/>
+    </Target>
+    <Target Name="FmxTemplateMicro:Clean">
+        <MSBuild Projects="Template App\FMX Minimal\FmxTemplateMicro.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FmxTemplateMicro:Make">
+        <MSBuild Projects="Template App\FMX Minimal\FmxTemplateMicro.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DemoBinaryFile">
+        <MSBuild Projects="Demo Binary file\DemoBinaryFile.dproj"/>
+    </Target>
+    <Target Name="DemoBinaryFile:Clean">
+        <MSBuild Projects="Demo Binary file\DemoBinaryFile.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DemoBinaryFile:Make">
+        <MSBuild Projects="Demo Binary file\DemoBinaryFile.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="TemplateMicro;TemplateSimple;TemplateFull;Uninstaller;Demo_VisualControls;AutoTranslatorDemo;Demo_SaveGUI;Tester_ccIO;Tester_FileStream;Tester_WinVers;DemoLog;ThirdPartyLibs"/>
+        <CallTarget Targets="TemplateMicro;TemplateSimple;TemplateFull;Uninstaller;Demo_VisualControls;AutoTranslatorDemo;Demo_SaveGUI;Tester_ccIO;Tester_FileStream;Tester_WinVers;DemoLog;ThirdPartyLibs;FmxTemplateMicro;DemoBinaryFile"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="TemplateMicro:Clean;TemplateSimple:Clean;TemplateFull:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;AutoTranslatorDemo:Clean;Demo_SaveGUI:Clean;Tester_ccIO:Clean;Tester_FileStream:Clean;Tester_WinVers:Clean;DemoLog:Clean;ThirdPartyLibs:Clean"/>
+        <CallTarget Targets="TemplateMicro:Clean;TemplateSimple:Clean;TemplateFull:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;AutoTranslatorDemo:Clean;Demo_SaveGUI:Clean;Tester_ccIO:Clean;Tester_FileStream:Clean;Tester_WinVers:Clean;DemoLog:Clean;ThirdPartyLibs:Clean;FmxTemplateMicro:Clean;DemoBinaryFile:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="TemplateMicro:Make;TemplateSimple:Make;TemplateFull:Make;Uninstaller:Make;Demo_VisualControls:Make;AutoTranslatorDemo:Make;Demo_SaveGUI:Make;Tester_ccIO:Make;Tester_FileStream:Make;Tester_WinVers:Make;DemoLog:Make;ThirdPartyLibs:Make"/>
+        <CallTarget Targets="TemplateMicro:Make;TemplateSimple:Make;TemplateFull:Make;Uninstaller:Make;Demo_VisualControls:Make;AutoTranslatorDemo:Make;Demo_SaveGUI:Make;Tester_ccIO:Make;Tester_FileStream:Make;Tester_WinVers:Make;DemoLog:Make;ThirdPartyLibs:Make;FmxTemplateMicro:Make;DemoBinaryFile:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

@@ -29,9 +29,9 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>TemplateFull</SanitizedProjectName>
-        <DCC_Alignment>2</DCC_Alignment>
+        <SanitizedProjectName>DemoLog</SanitizedProjectName>
         <Custom_Styles>Auric|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Auric.vsf;&quot;Ruby Graphite|VCLSTYLE|$(BDSCOMMONDIR)\Styles\RubyGraphite.vsf&quot;</Custom_Styles>
+        <DCC_Alignment>2</DCC_Alignment>
         <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
         <DCC_DcuOutput>$(ProductVersion)_$(Platform)_$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\</DCC_ExeOutput>
