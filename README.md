@@ -49,7 +49,7 @@ This library follows strictly the following programming standards:
  - Consistent file naming
 
 The library uses modern packaging techniques and its nicely split into layers and grouped under a master file "LightSaber.groupproj". 
-By the grace of the $(Auto) compiler directive, the madness of "one package per Delphi version" is gone now. 
+By the grace of the new $ (Auto) compiler directive, the madness of "one package per Delphi version" is gone now. 
 (If you use an older Delphi edition that does not support the $(Auto) directive, just delete it and recompile.)
 
 **Road Map**  
