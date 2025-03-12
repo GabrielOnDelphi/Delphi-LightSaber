@@ -2,7 +2,7 @@
 
 {=============================================================================================================
    www.GabrielMoraru.com
-   2024.05
+   2025.03
 --------------------------------------------------------------------------------------------------------------
 
    Automatic language translator engine for Delphi [LightSaber]
@@ -89,7 +89,7 @@
     * To save all live forms to the INI file to be translated:
 
         a. Call Translator.SaveTranslation;                    //Note: Only currently existing/live forms will be saved to disk.
-        b. Manually translate the text (or use www.DeepL.com). There is a helper tool in FormTranslEditor.pas.
+        b. Manually translate the text (or use www.DeepL.com). There is a helper tool in FormTranslEditor.pas.  https://github.com/DeveloppeurPascal/DeepL4Delphi
         c. Place the newly translated file in the 'Lang' folder. The program will discover the new file when the  New -> TfrmTranslSelector.ShowSelector procedure is called (no need to restart).
 
 
@@ -146,6 +146,7 @@
          I can have a comment to indicate that a line was changed so the translator can see it. Once the translation is updated, the comment will be deleted by the tool.
          What will happen wit conflicting numbers?}
 
+//ToDo 1: Send data to DeepL for automatic translation. There is already a library for Delphi but we can create our own.
 //ToDo 1: Make program work even if there is no default (EN) file in the Lang folder
 //todo 3: I need special labels, with two fields: one that is static and needs to be translated, and one that is dynamic and does not appear in the INI file. Example: "Battery status: 30%" . The 30% is the dynamic part
 //ToDo 4: When the program starts, the default selected language should be system's language.

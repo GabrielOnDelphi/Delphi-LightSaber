@@ -99,12 +99,13 @@ end;
 
 {-------------------------------------------------------------------------------------------------------------
    PADDING
-   It is important to read/write some padding bytes.
-   If you later (as your program evolves) need to save extra data into your file, you use the padding bytes. This way you don't need to change your file format.
+   It is important to leave some space at the end of your file (aka padding bytes).
+   If you later (as your program evolves) need to save extra data into your file,
+     you use the padding bytes. This way you don't need to change your file format.
 -------------------------------------------------------------------------------------------------------------}
 
 CONST
-   CheckpointStr: AnsiString= '<LightSaber - Buffer of 100 bytes. Pattern check -> Raises exception if the pattern not found!! ###>'; //This string is 100 chars long
+  PaddingStr: AnsiString= '<LightSaber - Buffer of 100 bytes. Pattern check -> Raises exception if the pattern not found!! ###>'; //This string is exactly 100 chars long
 
 // Write a string as padding bytes.
 procedure TCubicBuffStream2.WritePadding(CONST Bytes: Integer);
@@ -114,20 +115,22 @@ VAR
   i: Integer;
 begin
   SetLength(b, Bytes);
-  CheckPointSize:= Length(CheckpointStr);
+  CheckPointSize:= Length(PaddingStr);
+
   // Copy the string to the byte array (up to the available bytes or string length)
   for i := 0 to Min(Bytes, CheckPointSize) - 1
-    do b[i] := Byte(CheckpointStr[i + 1]);
+    do b[i] := Byte(PaddingStr[i + 1]);
 
   // Fill the rest of the buffer with zeros
   if Bytes > CheckPointSize
   then FillChar(b[CheckPointSize], Bytes - CheckPointSize, #0);
+
   // Write the buffer to the stream
   WriteBuffer(b[0], Bytes);
 end;
 
 
- //Raises an exception if the buffer does not contain the signature string (CheckpointStr)
+// Raises an exception if the buffer does not contain the signature string (CheckpointStr)
 procedure TCubicBuffStream2.ReadPaddingE(CONST Bytes: Integer);
 VAR
   b: TBytes;
@@ -140,12 +143,13 @@ begin
 
     SetLength(b, Bytes);
     ReadBuffer(b[0], Bytes);
-    CheckPointSize := Length(CheckpointStr);
+    CheckPointSize := Length(PaddingStr);
+
     // Check if the beginning of the buffer matches the string
     if CheckPointSize <= Bytes then
       for i := 0 to CheckPointSize - 1 do
-        if b[i] <> Byte(CheckpointStr[i + 1]) then
-          RAISE Exception.Create('Invalid checkpoint!!');
+        if b[i] <> Byte(PaddingStr[i + 1])
+        then RAISE Exception.Create('Invalid checkpoint!!');
   end;
 end;
 
@@ -154,7 +158,7 @@ CONST
    PaddingSize = 100; // 100 bytes. Enough for 18 Int64 variables. NEVER-EVER MODIFY THIS CONSTANT! All files saved with this constant will not work anymore.
 
 
-procedure TCubicBuffStream2.ReadPaddingDef;
+procedure TCubicBuffStream2.ReadPaddingDef;   // Def = default (default number of padding bytes is 100
 begin
   ReadPaddingE(PaddingSize);
 end;
