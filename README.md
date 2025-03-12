@@ -10,9 +10,9 @@ Contains useful Delphi functions. Lightweight (only 10000 lines of code) alterna
 
 This repository contains a group of general-purpose Delphi libraries, that make your life easier.
 The library also wants to be a lightweight replacement for the mammoth Delphi Jedi library.  
-Simple, crystal clear, non-obfuscated, fully commented and curated code. 
-No (direct) external dependencies. 
-More than 15 years of development have been put in this library.   
+Simple, crystal clear, non-obfuscated, fully commented and curated code.  
+No (direct) external dependencies.   
+More than 15 years of development have been put in this library.     
 Click the 'Watch' button if you want to get notified about updates.  
 
 [More like this](https://gabrielmoraru.com/my-delphi-code) 
@@ -42,11 +42,11 @@ More about my libraries [here](https://gabrielmoraru.com/publications-citations/
 
 **Documentation**
 
-The code is nicely documented. Each method has a comment on top of it.
-Some units have FULL documentation at the top and code/usage examples.
-Complex classes have testing code that can be used also as demo (example of usage) programs. Check the \LightSaber\Demo\ folder.
-I also started a new video channel. I will post a new video every time this library collects 100 stars. 
-https://www.youtube.com/watch?v=a9nZiDXYmIo
+The code is nicely documented. Each method has a comment on top of it.  
+Some units have FULL documentation at the top and code/usage examples.  
+Complex classes have testing code that can be used also as demo (example of usage) programs. Check the \LightSaber\Demo\ folder.  
+I also started a new video channel. I will post a new video every time this library collects 100 stars.   
+https://www.youtube.com/watch?v=a9nZiDXYmIo  
 
 All documentation is in English.
 
