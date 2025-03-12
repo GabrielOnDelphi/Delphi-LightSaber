@@ -65,14 +65,20 @@ _________________
 
 **Road Map**  
 
-The LightSaber Graphics, LightSaber Visual Controls was added in 2023, as promissed.
+The LightSaber Internet, Graphics, LightSaber Visual Controls was added in 2023, as promissed.
 The Proteus library will be added as soon as my free time allows it.   
 
-**This library will be expanded if it gets enough Stars.**   
-Click the 'Star' button (top-right corner) if you like this library.  
-Over 100 files are waiting to be cured and added: graphichs, simple encryption, internet functions (including file download routines), HTML manipulation, image manipulation, registry, math and LOTS of visual components!
+**Pricing**
 
 This library is freeware (see included copyright notice). The library cannot be used in Russia!
+I don't ask money, not even donations for this library but you can help me by spreading the word.  
+
+This library will be expanded if it gets enough Stars:
+ - Click the 'Star' button (top-right corner) if you like this library.  
+ - Over 100 files are waiting to be cured and added: graphichs, simple encryption, internet functions (including file download routines), HTML manipulation, image manipulation, registry, math and LOTS of visual components!  
+
+
+
 
 _________________
 
