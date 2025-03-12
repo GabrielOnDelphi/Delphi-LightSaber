@@ -13,9 +13,23 @@ The library also wants to be a lightweight replacement for the mammoth Delphi Je
 Simple, crystal clear, non-obfuscated, fully commented and curated code.  
 No (direct) external dependencies.   
 More than 15 years of development have been put in this library.     
-Click the 'Watch' button if you want to get notified about updates.  
+Click the 'Watch' button if you want to get notified about updates.   
 
-[More like this](https://gabrielmoraru.com/my-delphi-code) 
+[More libraries like this](https://gabrielmoraru.com/my-delphi-code) 
+
+**What you can do with this library**   
+
+There is a gazzillion of cool things this library can do for you. Here are only a few examples, and all from the Core/Base library (I am not even touching the higher-level libraries):  
+ - Save your GUI state (checkboxes, radiobuttons, editboxes, etc) to disk and then restore it when the application starts. All this with only 4 lines of code.
+ - Automatically translate your GUI to multiple laguages via DeepL (no lines of code)
+ - Logging - Send color-coded messages to a log. The log will automatically popup on errors so the user can take action.
+ - AppData - A dramatically improved TApplication object that gives you lots and lots and lots of goodies such as "RunningHome", "RunningFirstTime", "BetaTesterMode", "CurrentUserDir", "LastUsedFolder"
+ - "SingleInstance" (prevent your program from running as multiple instances in a computer and pass the command line parameters to the already running instance)
+ - Uninstaller - The application writes itself in Windows "Add remove programs" so the user can uninstall it.
+ - App control: Restore, Restart, SelfDelete (useful for the uninstaller), RunSelfAtWinStartUp, HideFromTaskbar...
+ - etc etc etc
+
+Most of this functionality can be acchived with maximum 2-3 lines of code. Some of them with zero lines of code!
 
 _________________
 
