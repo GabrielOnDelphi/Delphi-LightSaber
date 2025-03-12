@@ -13,20 +13,20 @@ More than 15 years of development have been put in this library.
 
 **What you can do with this library**   
 
-There are a gazillion of cool things this library can do for you. Here are only a few examples, and all from the Core/Base library (I am not even touching the higher-level libraries):
- - Save your GUI state (checkboxes, radiobuttons, editboxes, etc) to disk and then restore it when the application starts. All this with only 4 lines of code.
- - Automatically translate your GUI to multiple languages via DeepL (no lines of code)
- - Logging - Send color-coded messages to a log. The log will automatically pop up on errors, so the user can take action.
- - AppData - A dramatically improved TApplication object that gives you lots and lots and lots of goodies such as "RunningHome", "RunningFirstTime", "BetaTesterMode", "CurrentUserDir", "LastUsedFolder"
- - "SingleInstance" (prevent your program from running as multiple instances in a computer and pass the command line parameters to the already running instance)
- - Uninstaller - The application writes itself in Windows "Add remove programs" so the user can uninstall it.
- - App control: Restore, Restart, SelfDelete (useful for the uninstaller), RunSelfAtWinStartUp, HideFromTaskbar...
- - etc etc etc
+There are a gazillion of cool things this library can do for you. Here are only a few examples, and all from the Core/Base library (I am not even touching the higher-level libraries):  
+ - Save your GUI state (checkboxes, radiobuttons, editboxes, etc) to disk and then restore it when the application starts. All this with only 4 lines of code.  
+ - Automatically translate your GUI to multiple languages via DeepL (no lines of code).  
+ - Logging - Send color-coded messages to a log. The log will automatically pop up on errors, so the user can take action.  
+ - AppData - A dramatically improved TApplication object that gives you lots and lots and lots of goodies such as "RunningHome", "RunningFirstTime", "BetaTesterMode", "CurrentUserDir", "LastUsedFolder"  
+ - "SingleInstance" (prevent your program from running as multiple instances in a computer and pass the command line parameters to the already running instance)  
+ - Uninstaller - The application writes itself in Windows "Add remove programs" so the user can uninstall it.  
+ - App control: Restore, Restart, SelfDelete (useful for the uninstaller), RunSelfAtWinStartUp, HideFromTaskbar...  
+ - etc etc etc  
 
-Most of this functionality can be achieved with maximum 2-3 lines of code. Some of them with zero lines of code!
-
-Click the 'Watch' button if you want to get notified about updates.   
-[More libraries like this](https://gabrielmoraru.com/my-delphi-code) 
+Most of this functionality can be achieved with maximum 2-3 lines of code. Some of them with zero lines of code!  
+  
+Click the 'Watch' button if you want to get notified about updates.    
+[More libraries like this](https://gabrielmoraru.com/my-delphi-code)  
 
 _________________
 
@@ -35,11 +35,11 @@ _________________
 This repository contains the following libraries: 
  - Core
  - AppData + Log + FormTranslator
- - Common
- - Internet
- - Translator 
- - Graphics
- - Visual Controls 
+ - Common  
+ - Internet  
+ - Translator  
+ - Graphics  
+ - Visual Controls  
  
 Each library depends on the previous one, in the order specified above.  
 LightSaber Core does not depend on any other library.   
@@ -68,17 +68,16 @@ _________________
 The LightSaber Internet, Graphics, LightSaber Visual Controls was added in 2023, as promissed.
 The Proteus library will be added as soon as my free time allows it.   
 
-**Pricing**
+**Pricing**  
 
-This library is freeware (see included copyright notice). The library cannot be used in Russia!
-I don't ask money, not even donations for this library but you can help me by spreading the word.  
+This library is freeware (see included copyright notice). 
+I don't ask money, not even donations for this library but you can help me by spreading the word.   
 
-This library will be expanded if it gets enough Stars:
- - Click the 'Star' button (top-right corner) if you like this library.  
- - Over 100 files are waiting to be cured and added: graphichs, simple encryption, internet functions (including file download routines), HTML manipulation, image manipulation, registry, math and LOTS of visual components!  
+This library will be expanded if it gets enough Stars:  
+ - Click the 'Star' button (top-right corner) if you like this library.   
+ - Over 100 files are waiting to be cured and added: graphichs, simple encryption, internet functions (including file download routines), HTML manipulation, image manipulation, registry, math and LOTS of visual components!   
 
-
-
+The library cannot be used in Russia! If you are from Russia and want to use this library we can arrange a price per PAS unit.  
 
 _________________
 
