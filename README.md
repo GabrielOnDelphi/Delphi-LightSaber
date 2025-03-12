@@ -40,6 +40,16 @@ Your code could use directly the bottom library (Core) or higher libraries in th
 If you only need the only one library (for example, the Core library), you can of course delete the rest of the libraries.
 More about my libraries [here](https://gabrielmoraru.com/publications-citations/).
 
+**Documentation**
+
+The code is nicely documented. Each method has a comment on top of it.
+Some units have FULL documentation at the top and code/usage examples.
+Complex classes have testing code that can be used also as demo (example of usage) programs. Check the \LightSaber\Demo\ folder.
+I also started a new video channel. I will post a new video every time this library collects 100 stars. 
+https://www.youtube.com/watch?v=a9nZiDXYmIo
+
+All documentation is in English.
+
 _________________
 
 **Road Map**  
@@ -50,7 +60,6 @@ The Proteus library will be added as soon as my free time allows it.
 **This library will be expanded if it gets enough Stars.**   
 Click the 'Star' button (top-right corner) if you like this library.  
 Over 100 files are waiting to be cured and added: graphichs, simple encryption, internet functions (including file download routines), HTML manipulation, image manipulation, registry, math and LOTS of visual components!
-
 
 This library is freeware (see included copyright notice). The library cannot be used in Russia!
 
@@ -63,7 +72,7 @@ In Project Manager, right click on the group (top) and select "Build all" in the
 
 _________________
 
-**Files in CoreLib**
+**Example of units** (showing only units in the Core library)
 
 **ccCore.pas**  
   Over 200 functions for:  
