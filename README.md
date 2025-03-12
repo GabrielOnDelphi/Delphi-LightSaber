@@ -6,7 +6,7 @@
 **Description**   
 
 This repository contains a group of general-purpose Delphi libraries, that make your life easier.
-The library wants to be a lightweight replacement for the mammoth Delphi Jedi library.  
+The library wants to be a lightweight replacement for the mammoth Jedi library.  
 Simple, crystal clear, non-obfuscated, fully commented and curated code.  
 No (direct) external dependencies.   
 More than 15 years of development have been put in this library.     
