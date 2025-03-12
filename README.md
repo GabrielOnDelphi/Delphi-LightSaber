@@ -46,11 +46,11 @@ This library follows strictly the following programming standards:
  - Zero tolerance for swallowed exceptions  
  - Zero tolerance for memory leaks  
  - Consistent code formatting - most of my formatting respects the Embarcadero recommendations. A noticeable exception is if/then/else.
- - Consistent file naming
+ - Consistent file naming.
 
-The library uses modern packaging techniques and its nicely split into layers and grouped under a master file "LightSaber.groupproj". 
-By the grace of the new $ (Auto) compiler directive, the madness of "one package per Delphi version" is gone now. 
-(If you use an older Delphi edition that does not support the $(Auto) directive, just delete it and recompile.)
+The library uses modern packaging techniques and its nicely split into layers and grouped under a master file "LightSaber.groupproj".  
+By the grace of the new $ (Auto) compiler directive, the madness of "one package per Delphi version" is gone now.  
+(If you use an older Delphi edition that does not support the $(Auto) directive, just delete it and recompile.)  
 
 **Road Map**  
 
