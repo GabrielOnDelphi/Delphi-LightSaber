@@ -79,7 +79,8 @@ _________________
 **Installation**  
 
 Double click the LightSaber.groupproj to load it in Delphi.
-In Project Manager, right click on the group (top) and select "Build all" in the popup menu.
+In Project Manager, right click on the group (top) and select "Build all" in the popup menu. If you want to install also the visual compoments, right click on them and choose "Install".   
+That's it.
 
 _________________
 
@@ -93,7 +94,6 @@ _________________
 - Advanced/easy message boxes  
 - DateTime utilities  
 - etc etc etc etc etc etc etc 
-    
     
 **ccIO.pas**  
   Super useful functions for file/folder/disk manipulation:  
@@ -190,13 +190,16 @@ _________________
 
 **External dependencies**
 
-Some parts (especially the graphic part) of LightSaber depends on external libraries. HOWEVER, those dependencies are disabled by default, so you don't need to install any extra libraries in order to use LightSaber. But in this case, some functionality (Exif support for JPG images, Fast Jpeg decoder, and support for Jpeg2000) of LightSaber will not be available, but the impact will be minimal. To enable the support for the above-mentioned features, install the libraries (see links below) and then add these "defines" in your project's settings: CCRExif;FastJpg;jpg2000.     
-The "Conditional defines" field is in your project options: Right-click your project, and choose "Project options -> Delphi compiler -> All configurations -> Conditional defines".   
-     
-https://github.com/esmondb/ccr-exif/    
-https://github.com/galfar/PasJpeg2000    
-http://www.marktg.com/jpegdec/    
-    
+Some parts (especially the graphic part) of LightSaber depends on these external libraries:  
+
+- https://github.com/esmondb/ccr-exif/    
+- https://github.com/galfar/PasJpeg2000    
+- http://www.marktg.com/jpegdec/  
+
+HOWEVER, those dependencies are disabled by default, so you don't need to install any extra libraries in order to use the LightSaber. But in this case, some functionality (Exif support for JPG images, Fast Jpeg decoder, and support for Jpeg2000) of LightSaber will not be available, but the impact will be minimal. 
+
+To enable the support for the above-mentioned features, install the libraries (see links below) and then add these "defines" to your project's settings: CCRExif;FastJpg;Jpg2000.     
+The "Conditional defines" field is located in Project Options: Right-click your project, and choose "Project options -> Delphi compiler -> All configurations -> Conditional defines".   
 
 _________________
 
@@ -217,13 +220,11 @@ Example:
 - ccBinary.pas  (Cubic core library)
 - cvMemo.pas    (Cubic visual component)
 - cGraphFX.pas  (Cubic graphic library) 
-- clVisLog.pas (Cubic log library)  
+- clVisLog.pas  (Cubic log library)  
 - ciEmailSender.pas (Cubic internet library)  
-- cmPowerUtils.pas (Cubic common library)  
+- cmPowerUtils.pas  (Cubic common library)  
 - ciEmailSender.pas (Cubic internet library)  
-- cmPowerUtils.pas (Cubic common library)  
-
-
+- cmPowerUtils.pas  (Cubic common library)  
 
 
 [More like this](https://gabrielmoraru.com/my-delphi-code) 
