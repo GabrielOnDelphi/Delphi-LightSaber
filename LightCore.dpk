@@ -44,6 +44,8 @@ contains
   ccStreamBuff in 'ccStreamBuff.pas',
   ccStreamBuff2 in 'ccStreamBuff2.pas',
   ccTextFile in 'ccTextFile.pas',
-  ccStreamMem2 in 'ccStreamMem2.pas';
+  ccStreamMem2 in 'ccStreamMem2.pas',
+  ccStreamFile in 'ccStreamFile.pas';
+
 end.
 

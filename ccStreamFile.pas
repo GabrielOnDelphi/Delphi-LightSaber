@@ -1,25 +1,29 @@
 UNIT ccStreamFile;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.05
+   2025.02
    www.GabrielMoraru.com
-   See Copyright file
 --------------------------------------------------------------------------------------------------------------
-  Direct read/write bytes, cardinals, words, integers, strings to a (binary) file.
-  It loads the entire contents of a file into the memory so don't use it with huge (hundreds MB) files.
-  If the file is large or you want to read only a portion of the file, consider ccStreamBuff.pas
-  All string-related functions work for both Delphi 7 and Delphi Unicode.
+   Description
+      Extends TFileStream. It may be used as a drop-in replacement for TFileStream.
+      https://gabrielmoraru.com/saving-an-object-to-disk-file/
+--------------------------------------------------------------------------------------------------------------
+  Features:
+     Direct read/write bytes, cardinals, words, integers, strings to a (binary) file.
+     Supports both ANSI and Unicode.
 
-  Note: We don't use SizeOf. We always use constant values when reading/writing from disk. This way, we can always read our data even if Delphi changes the size of Integer.
+  Large files
+     It loads the entire contents of a file into the memory so don't use it with huge (hundreds MB) files.
+     If the file is large or you want to read only a portion of the file, consider ccStreamBuff.pas
 
-  DOCS:
-     Wrtiting string to TMemoryStream - Pointer to string - http://stackoverflow.com/questions/3808104/wrtiting-string-to-tmemorystream-pointer-to-string
-     How do I put a string onto a stream? http://pages.cs.wisc.edu/~rkennedy/string-stream
+  Speed
+     TCubicBuffStream is much faster!
+     We don't use SizeOf. We always use constant values when reading/writing from disk. This way, we can always read our data even if Delphi changes the size of Integer.
 
   Read vs ReadBuffer:
      Read treats Count as an upper bound.
-     The ReadBuffer, by contrast, raises an exception if Count bytes cannot be read. So this is better if I don't accept errors in my files.
+     The ReadBuffer, by contrast, raises an exception if Count bytes cannot be read.
+     So this is better if I don't accept errors in my files.
 
   Also see TBinaryReader / TBinaryWriter
      http://docwiki.embarcadero.com/CodeExamples/Tokyo/en/TBinaryReader_and_TBinaryWriter_(Delphi)
@@ -28,10 +32,9 @@ UNIT ccStreamFile;
 
 INTERFACE
 
-{$I Frameworks.inc}
+{ $I Frameworks.inc}
 
 USES
-   //Winapi.Windows,
    System.SysUtils, System.Classes;
 
 TYPE
@@ -39,7 +42,7 @@ TYPE
     public
      { Strings }
      procedure WriteString         (CONST s: string);                                        { Old name: WriteString }
-     procedure WriteStringNoLen   (CONST s: string);
+     procedure WriteStringNoLen    (CONST s: string);
      procedure WriteStringList     (CONST TSL: TStringList);
      procedure WriteStringANoLen   (CONST s: AnsiString);                                    { Write the string but don't write its length }
      procedure WriteStringA        (CONST s: AnsiString);
@@ -65,22 +68,22 @@ TYPE
      function  ReadByte        : Byte;
      function  ReadWord        : Word;
      function  ReadDate        : TDateTime;
-     procedure ReadPadding         (CONST Bytes: Integer);
-     function  ReadStringNoLen    (CONST Len: Integer): string;
+     procedure ReadPadding     (CONST Bytes: Integer);
+     function  ReadStringNoLen (CONST Len: Integer): string;
      {}
-     procedure WriteUInt64         (const i: UInt64);
-     procedure WriteInteger        (CONST i: Longint);
-     procedure WriteBoolean        (CONST b: Boolean);
-     procedure WriteCardinal       (CONST c: Cardinal);
-     procedure WritePadding        (CONST Bytes: Integer);
-     procedure WriteDate           (CONST aDate: TDateTime);
-     procedure WriteByte           (CONST aByte: Byte);
-     procedure WriteWord           (CONST aWord: Word);
+     procedure WriteUInt64     (const i: UInt64);
+     procedure WriteInteger    (CONST i: Longint);
+     procedure WriteBoolean    (CONST b: Boolean);
+     procedure WriteCardinal   (CONST c: Cardinal);
+     procedure WritePadding    (CONST Bytes: Integer);
+     procedure WriteDate       (CONST aDate: TDateTime);
+     procedure WriteByte       (CONST aByte: Byte);
+     procedure WriteWord       (CONST aWord: Word);
 
      function  ReadCheckPoint: Boolean;
      procedure WriteCheckPoint;
-     function  ReadMagicNo         (CONST MagicNo: AnsiString): Boolean;
-     procedure WriteMagicNo        (CONST MagicNo: AnsiString);
+     function  ReadMagicNo     (CONST MagicNo: AnsiString): Boolean;
+     procedure WriteMagicNo    (CONST MagicNo: AnsiString);
 
      function  AsStringU: String;                                                            { Returns the content of the stream as a string }
      function  AsString: AnsiString;

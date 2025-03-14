@@ -2,36 +2,37 @@
 
 {=============================================================================================================
    www.GabrielMoraru.com
-   2025.01.19
+   2025.03.08
 --------------------------------------------------------------------------------------------------------------
    WARNING
      While it works for me, the FMX part of LightSaber is still in Beta stage!
 
    FEATURES
-     Via class you can:
-        - Get application's %appdata% folder (the folder where you save temporary, app-related and ini files)
-        - Get application's command line parameters
-        - Get application's version
 
-        - Force single instance (allow only one instance of your program to run). Second inst sends its command line to the first inst then shuts down
-        - Detect if the application is running for the first time on this computer
+    Via class you can:
+       - Get application's %appdata% folder (the folder where you save temporary, app-related and ini files)
+       - Get application's command line parameters
+       - Get application's version
 
-        - Application self-restart
-        - Application self-delete
+       - Force single instance (allow only one instance of your program to run). Second inst sends its command line to the first inst then shuts down
+       - Detect if the application is running for the first time on this computer
 
-        - Easily create new forms and set its font to be the same as main forms' font.
-        - Change the font for all running forms
+       - Application self-restart
+       - Application self-delete
 
-        - Log error messages to a special window that is automatically created
-        - Basic support for Uninstaller (The Uninstaller can find out where the app was installed)
-        - Basic support for licensing (trial period) system. See Proteus for details.
+       - Easily create new forms and set its font to be the same as main forms' font.
+       - Change the font for all running forms
 
-        - LOG
-          TAppData class also creates a global Log form.
-          This form automatically pops up when you send warnings and errors to it.
-          For details see: FormLog.pas
+       - Log error messages to a special window that is automatically created
+       - Basic support for Uninstaller (The Uninstaller can find out where the app was installed)
+       - Basic support for licensing (trial period) system. See Proteus for details.
 
-        - etc
+       - LOG
+         TAppData class also creates a global Log form.
+         This form automatically pops up when you send warnings and errors to it.
+         For details see: FormLog.pas
+
+       - etc
 
  ____________________________________________________________________________________________________________
 

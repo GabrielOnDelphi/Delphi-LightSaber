@@ -1,14 +1,13 @@
 UNIT ccStreamBuff;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.10
+   2025.02
    www.GabrielMoraru.com
-   See Copyright file
 --------------------------------------------------------------------------------------------------------------
    Description
       Extends TBufferedFileStream.
-      It may be used as a drop-in replacement for TFileStream.
+      It may be used as a drop-in replacement for TBufferedFileStream/TFileStream.
+      https://gabrielmoraru.com/saving-an-object-to-disk-file/
 
       TBufferedFileStream optimizes multiple consecutive small reads or writes.
       It will not give performance gain for random or large reads/writes.

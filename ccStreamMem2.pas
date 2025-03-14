@@ -1,7 +1,8 @@
 UNIT ccStreamMem2;
 
 {-------------------------------------------------------------------------------------------------------------
-   Extension for TCubicBuffStream
+   Extension for TCubicMemStream
+   https://gabrielmoraru.com/saving-an-object-to-disk-file/
 --------------------------------------------------------------------------------------------------------------
 
    NEW HEADER FORMAT

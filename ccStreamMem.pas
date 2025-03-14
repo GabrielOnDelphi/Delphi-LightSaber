@@ -1,10 +1,9 @@
 ﻿UNIT ccStreamMem;
 
 {=============================================================================================================
-   Gabriel Moraru
    2024.10
    www.GabrielMoraru.com
-   See Copyright file
+   https://gabrielmoraru.com/saving-an-object-to-disk-file/
 --------------------------------------------------------------------------------------------------------------
    Description
       Class extender for TMemoryStream
