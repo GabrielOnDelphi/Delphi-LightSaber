@@ -31,7 +31,9 @@ package LightCore;
 {$IMPLICITBUILD ON}
 
 requires
-  BindEngine;
+  Rtl,
+  BindEngine,
+  soaprtl;
 
 contains
   ccIO in 'ccIO.pas',
@@ -45,7 +47,26 @@ contains
   ccStreamBuff2 in 'ccStreamBuff2.pas',
   ccTextFile in 'ccTextFile.pas',
   ccStreamMem2 in 'ccStreamMem2.pas',
-  ccStreamFile in 'ccStreamFile.pas';
+  ccStreamFile in 'ccStreamFile.pas',
+  ccLogUtils in 'ccLogUtils.pas',
+  ccLogTypes in 'ccLogTypes.pas',
+  ccLogRam in 'ccLogRam.pas',
+  ccLogLinesS in 'ccLogLinesS.pas',
+  ccLogLinesAbstract in 'ccLogLinesAbstract.pas',
+  ccLogLinesM in 'ccLogLinesM.pas',
+  ccAppData in 'ccAppData.pas',
+  ccMath in 'ccMath.pas',
+  ccPascal in 'ccPascal.pas',
+  ccPlatformFile in 'ccPlatformFile.pas',
+  ccEncodeCRC in 'ccEncodeCRC.pas',
+  ccEncodeMime in 'ccEncodeMime.pas',
+  ccEncodeXOR in 'ccEncodeXOR.pas',
+  ccMRU in 'ccMRU.pas',
+  ccRttiSetToString in 'ccRttiSetToString.pas',
+  ccStrBuilder in 'ccStrBuilder.pas',
+  ccStringList in 'ccStringList.pas',
+  ccStringListA in 'ccStringListA.pas',
+  ccWrapString in 'ccWrapString.pas';
 
 end.
 

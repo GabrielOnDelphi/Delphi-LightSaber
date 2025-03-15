@@ -26,7 +26,8 @@ INTERFACE
 USES
    Winapi.Windows, Winapi.MultiMon, Winapi.ShlObj, Winapi.SHFolder,
    System.Diagnostics, System.Classes, System.SysUtils,
-   Vcl.Forms, cbAppDataForm, Vcl.Dialogs;
+   Vcl.Forms, Vcl.Dialogs,
+   ccAppData, cbAppDataVCL;
 
  { ANTI-DEBUGGER PROTECTION }
  procedure AntiDebug; assembler;
@@ -84,7 +85,7 @@ USES
 
 IMPLEMENTATION
 USES
-   csSystem, ccCore, cbDialogs, cbAppData, {cbINIFile,} ccIO, ccTextFile, cmIO, cmIO.Win, cbVersion, csExecuteProc, cmPermissions, System.DateUtils;
+   csSystem, ccCore, cbDialogs, {cbINIFile,} ccIO, ccTextFile, cmIO, cmIO.Win, cbVersion, csExecuteProc, cmPermissions, System.DateUtils;
 
 
 
@@ -376,7 +377,7 @@ begin
  if FileExists(LogFile)
  then DeleteFile(LogFile);                                               { Clear existing log }
 
- StringToFile(LogFile, LogFile+ CRLF+ AppData.AppName+ ' v'+ AppData.GetVersionInfo+ CRLF+ DateTimeToStr(Now)+ CRLF +LBRK, woAppend);
+ StringToFile(LogFile, LogFile+ CRLF+ TAppData.AppName+ ' v'+ TAppData.GetVersionInfo+ CRLF+ DateTimeToStr(Now)+ CRLF +LBRK, woAppend);
 end;
 
 
@@ -495,13 +496,13 @@ end;
 { The AppDataPath parameter lets the user provide the data path in case the app is not using the Default data path }
 function GenerateAppRep: string;
 begin
- AppData.AppDataFolder(True);
+ TAppData.AppDataFolder(True);
  Result:= ' [APPLICATION]'+ CRLF;
- Result:= Result+'  AppDataFolder: '       + Tab + AppData.AppDataFolder+ CRLF;
- Result:= Result+'  AppData.IniFile: '     + Tab + AppData.IniFile+ CRLF;
- Result:= Result+'  AppData.CurFolder: '   + Tab + AppData.CurFolder+ CRLF;
+ Result:= Result+'  AppDataFolder: '       + Tab + TAppData.AppDataFolder+ CRLF;
+ Result:= Result+'  AppData.IniFile: '     + Tab + TAppData.IniFile+ CRLF;
+ ///Result:= Result+'  AppData.CurFolder: '   + Tab + AppDataEx.CurFolder+ CRLF;
  Result:= Result+'  Exe name: '            + Tab + Tab + Application.ExeName+ CRLF;
- Result:= Result+'  Version: '             + Tab + Tab + AppData.GetVersionInfo+ CRLF;
+ Result:= Result+'  Version: '             + Tab + Tab + TAppData.GetVersionInfo+ CRLF;
  Result:= Result+'  RunningUnderDelphi: '  + Tab + BoolToStrYesNo(IsRunningUnderDelphiDebugger)+ CRLF;
  Result:= Result+'  IsDebuggerPresent: '   + Tab + BoolToStrYesNo(IsDebuggerPresent)+ CRLF;
  Result:= Result+'  AppBitness: '          + Tab + AppBitness;

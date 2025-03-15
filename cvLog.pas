@@ -23,9 +23,12 @@ UNIT cvLog;
 INTERFACE
 
 USES
-   Winapi.Messages, System.SysUtils, Winapi.Windows, System.Classes,
-   Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls, Vcl.Forms, cbAppDataForm,Vcl.Grids, Vcl.ExtCtrls, VCL.ComCtrls,
-   cbLogRam, cbLogUtils, cbLogTypes, cbLogLinesAbstract;
+   Winapi.Messages,
+   Winapi.Windows,
+   System.Classes,  System.SysUtils,
+   Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls, Vcl.Forms, Vcl.Grids, Vcl.ExtCtrls, VCL.ComCtrls,
+   ccLogRam, ccLogUtils, ccLogTypes, ccLogLinesAbstract,
+   cbAppDataForm;
 
 TYPE
   TLogGrid = class(TStringGrid, ILogObserver)
@@ -77,11 +80,17 @@ TYPE
      property OnVerbChanged: TNotifyEvent read FVerbChanged write FVerbChanged;   { Triggered before deleting the content of a cell }
   end;
 
+function Verbosity2Color (Verbosity: TLogVerbLvl): TColor;
+
 procedure Register;
+
+
 
 IMPLEMENTATION
 
-USES ccCore, csSystem, cvLogFilter;
+USES
+   ccCore, ccColors, csSystem, cvLogFilter;
+
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -457,6 +466,22 @@ procedure TLogGrid.RegisterVerbFilter(TrackBar: TPanel);
 begin
  // mesaj('Trackbar registered for log');
   FVerbTrackBar:= TrackBar;  // Let the Log know that its verbosity is controlled by this TrackBar
+end;
+
+
+function Verbosity2Color(Verbosity: TLogVerbLvl): TColor;
+begin
+ CASE Verbosity of
+  lvDebug    : Result:= clSilverLight;
+  lvVerbose  : Result:= clSilverDark;
+  lvHints    : Result:= clGray;
+  lvInfos    : Result:= clBlack;
+  lvImportant: Result:= clOrangeDk;
+  lvWarnings : Result:= clOrange;
+  lvErrors   : Result:= clRed;
+ else
+   RAISE Exception.Create('Invalid log verbosity!');
+ end;
 end;
 
 

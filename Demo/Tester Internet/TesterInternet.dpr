@@ -3,11 +3,11 @@ program TesterInternet;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF }
+  {$ENDIF}
   WinApi.Windows,
   VCL.Forms,
   FormMain in 'FormMain.pas' {MainForm},
-  cbAppData in '..\..\cbAppData.pas',
+  cbAppDataVCL in '..\..\cbAppData.pas',
   FormRamLog in '..\..\FormRamLog.pas',
   ciInetDonwIndy in '..\..\ciInetDonwIndy.pas',
   ciInternet in '..\..\ciInternet.pas';
@@ -24,5 +24,5 @@ begin
   AppData.CreateMainForm(TMainForm, MainForm, True, True);
   TfrmRamLog.CreateGlobalLog;
   
-  Application.Run;
+  AppData.Run;
 end.

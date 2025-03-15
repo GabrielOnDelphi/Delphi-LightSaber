@@ -16,6 +16,7 @@ INTERFACE
 USES
   System.StrUtils, System.IOUtils, System.SysUtils;
 
+  //todo: move this to ccCore
 
  function  DirectoryExistMsg    (CONST Path: string): Boolean;
  function  FileExistsMsg        (CONST FileName: string): Boolean;
@@ -31,7 +32,9 @@ USES
 IMPLEMENTATION
 
 USES
-  ccCore, cbDialogs, ccIO;
+  ccCore,
+  cbDialogs,
+  ccIO;
 
 
 

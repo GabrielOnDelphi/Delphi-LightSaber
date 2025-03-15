@@ -84,7 +84,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-  Math, cmMath;
+  Math, ccMath;
 
 
 procedure RResizeParams.Reset;
@@ -201,7 +201,7 @@ begin
    end;
 
   { Overshoot! }                             { If after zoom, we loose more than 10% of the image, we go back to Fit }
-  Overshoot:= cmMath.ProcentRepresent(OutW*OutH, OutputArea);
+  Overshoot:= ccMath.ProcentRepresent(OutW*OutH, OutputArea);
   if Overshoot > 105 then
    begin
     ComputeFit(InpW, InpH);

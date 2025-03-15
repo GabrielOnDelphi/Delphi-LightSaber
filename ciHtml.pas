@@ -15,7 +15,7 @@ INTERFACE
 
 USES
    System.SysUtils, msHtml, System.AnsiStrings, System.StrUtils, System.Classes, System.Math,
-   cmStringList, ccCore;
+   ccStringList, ccCore;
 
 {--------------------------------------------------------------------------------------------------
    HTML PARSING

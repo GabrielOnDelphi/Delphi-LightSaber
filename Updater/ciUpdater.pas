@@ -44,7 +44,9 @@
 INTERFACE
 
 USES
-  System.SysUtils, System.DateUtils, System.Classes, Vcl.ExtCtrls, ciUpdaterRec;
+  System.SysUtils, System.DateUtils, System.Classes,
+  Vcl.ExtCtrls,
+  ciUpdaterRec;
 
 TYPE
   TCheckWhen = (cwNever,
@@ -110,7 +112,7 @@ VAR
 IMPLEMENTATION
 
 USES
-  FormAsyncMessage, ciDownload, ccINIFile, cmDebugger, cbAppData;
+  FormAsyncMessage, ciDownload, ccINIFile, cmDebugger, ccAppData, cbAppDataVCL;
 
 Const
   TooLongNoSeeInterval = 180;    { Force to check for updates every 180 days even if the updater is disabled }
@@ -313,7 +315,7 @@ end;
 { Returns true when the online version is higher than the local version }
 function TUpdater.NewVersionFound: boolean;
 begin
-  Result:= (NewsRec.AppVersion <> '?') AND (NewsRec.AppVersion > AppData.GetVersionInfo);
+  Result:= (NewsRec.AppVersion <> '?') AND (NewsRec.AppVersion > TAppData.GetVersionInfo);
 end;
 
 

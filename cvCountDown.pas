@@ -63,7 +63,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES cmMath, ccCore;
+USES ccMath, ccCore;
 
 
 
@@ -194,7 +194,7 @@ begin
 
    { Update associated indicators }
    iTime:= Round(Value / 2);            { Compute animation speed for aciCountDown }
-   cmMath.EnsureRange(iTime, 50, 1000);  { 50 is hit at 1min 38sec. 100 is hit at 33 minutes }
+   ccMath.EnsureRange(iTime, 50, 1000);  { 50 is hit at 1min 38sec. 100 is hit at 33 minutes }
    if ActivityIndic <> NIL then ActivityIndic.FrameDelay:= iTime;
    if Taskbar <> NIL then
     begin

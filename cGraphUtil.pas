@@ -184,7 +184,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   cGraphBitmap, ccColors, cmMath;
+   cGraphBitmap, ccColors, ccMath;
 
 
 
@@ -822,9 +822,9 @@ end;
 function MixColors(FG, BG: TColor; BlendPower: byte): TColor;
 var r,g,b:byte;                                                                       { As you know, TColor value is 4 bytes length integer value where low byte is red channel, 2nd byte is green and 3rd byte is blue }
 begin
-  R := cmMath.MixBytes( FG and 255,BG and 255, BlendPower);                                  // extracting and mixing Red
-  G := cmMath.MixBytes((FG shr 8 ) and 255, (BG shr 8 ) and 255, BlendPower);                // the same with green
-  B := cmMath.MixBytes((FG shr 16) and 255, (BG shr 16) and 255, BlendPower);                // and blue, of course
+  R := ccMath.MixBytes( FG and 255,BG and 255, BlendPower);                                  // extracting and mixing Red
+  G := ccMath.MixBytes((FG shr 8 ) and 255, (BG shr 8 ) and 255, BlendPower);                // the same with green
+  B := ccMath.MixBytes((FG shr 16) and 255, (BG shr 16) and 255, BlendPower);                // and blue, of course
   Result:= r+ g* 256+ b* 65536;                                                       // finishing with combining all channels together
 end;
 

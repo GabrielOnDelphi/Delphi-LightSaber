@@ -23,6 +23,12 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
@@ -37,7 +43,7 @@
         <DCC_ExeOutput>.\</DCC_ExeOutput>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;Winapi;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>c:\MyProjects\Packages\LightSaber\;c:\MyProjects\Packages\Third party packages\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\FrameVCL\;..\..\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
         <VerInfo_AutoIncVersion>true</VerInfo_AutoIncVersion>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
@@ -57,6 +63,10 @@
         <DCC_Optimize>false</DCC_Optimize>
         <DCC_RangeChecking>true</DCC_RangeChecking>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <VerInfo_Build>1</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=uninstaller;FileDescription=Lightweight uninstaller;FileVersion=5.0.0.1;InternalName=uninstaller;LegalCopyright=uninstaller;LegalTrademarks=uninstaller;OriginalFilename=uninstaller;ProductName=uninstaller;ProductVersion=5.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
@@ -67,7 +77,6 @@
         <DCCReference Include="UninstallerForm.pas">
             <Form>frmMain</Form>
         </DCCReference>
-        <DCCReference Include="..\..\LightSaber\cbAppData.pas"/>
         <DCCReference Include="..\..\LightSaber\cvCountDown.pas"/>
         <DCCReference Include="..\..\LightSaber\csShell.pas"/>
         <None Include="C:\Project support\Tool - DUT - My Delphi utilities\FastMM_FullDebugMode.dll"/>
@@ -94,6 +103,7 @@
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp280.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LabBookClient280.bpl">LabBook Lib</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Platforms>

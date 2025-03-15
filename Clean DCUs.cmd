@@ -2,6 +2,6 @@ echo off
 prompt $
 cls
 
-del  /s *.dcu
+del /s *.dcu
 
-delay 500 s b
+c:\Windows\Delay.exe 3000 s b

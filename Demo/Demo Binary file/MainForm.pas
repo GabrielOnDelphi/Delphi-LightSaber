@@ -4,8 +4,8 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  cbAppDataForm, ccStreamBuff, ccStreamBuff2, uSoldier, Vcl.Mask, Vcl.ExtCtrls, Vcl.Samples.Spin;
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Mask, Vcl.ExtCtrls, Vcl.Samples.Spin,
+  cbAppDataForm, ccStreamBuff, ccStreamBuff2, uSoldier;
 
 type
   TfrmMain = class(TLightForm)
@@ -30,7 +30,8 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  cbAppData;
+  ccAppData, cbAppDataVCL
+;
 
 
 procedure TfrmMain.FormCreate(Sender: TObject);

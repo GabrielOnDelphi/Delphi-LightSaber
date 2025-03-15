@@ -54,7 +54,8 @@ IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   cvINIFile, cbAppData;
+   cvINIFile, ccAppData, cbAppDataVCL
+;
 
 
 
@@ -83,7 +84,8 @@ procedure TfrmRichLog.FormDestroy(Sender: TObject);
 begin
  Assert(AppData <> NIL, 'AppData is gone already!');
  Container.Parent:= Self;
- if NOT cbAppData.AppData.Initializing
+ if NOT ccAppData, cbAppDataVCL
+.AppData.Initializing
  then //SaveForm(Self); called by AppData // We don't save anything if the start up was improper!
 end;
 

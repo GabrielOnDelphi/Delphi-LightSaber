@@ -15,7 +15,11 @@ UNIT cmMemoInputBox;
 
 INTERFACE
 USES
-  Winapi.Windows, System.SysUtils, Vcl.Controls, System.Types, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.Consts, Vcl.Graphics;
+  Winapi.Windows,
+  System.SysUtils, System.Types,
+  Vcl.Controls,  Vcl.Forms, Vcl.StdCtrls, Vcl.Consts, Vcl.Graphics,
+  ccAppData, cbAppDataVCL
+;
 
 
 function GetAverageCharSize(Canvas: TCanvas): TPoint;

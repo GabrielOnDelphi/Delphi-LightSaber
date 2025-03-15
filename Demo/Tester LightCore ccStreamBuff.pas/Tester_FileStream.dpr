@@ -1,9 +1,10 @@
 program Tester_FileStream;
 
 uses
+  {$IFDEF DEBUG}
   FastMM4,
-  VCL.Forms,
-  cbAppData,
+  {$ENDIF}
+  cbAppDataVCL,
   FormMain in 'FormMain.pas' {MainForm},
   FormRamLog in '..\..\FormRamLog.pas';
 
@@ -13,6 +14,6 @@ begin
   AppData:= TAppData.Create('BigSearch');
   AppData.CreateMainForm(TMainForm, MainForm, True, True);    // Main form
   TfrmRamLog.CreateGlobalLog;
-  Application.Run;
+  AppData.Run;
 end.
 

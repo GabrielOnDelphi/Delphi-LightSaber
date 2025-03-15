@@ -27,7 +27,7 @@ INTERFACE
 
 USES
    System.SysUtils, System.Classes, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.StdCtrls,
-   cvLog, cbLogUtils, cbLogTypes;
+   cvLog, ccLogUtils, ccLogTypes;
 
 TYPE
   TLogVerbFilter = class(TPanel)

@@ -44,6 +44,7 @@
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_Optimize>false</DCC_Optimize>
         <DCC_RangeChecking>true</DCC_RangeChecking>
+        <DCC_UnitSearchPath>c:\Projects\LightSaber\FrameVCL\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DllSuffix>$(Auto)</DllSuffix>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
@@ -81,35 +82,27 @@
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="vclx.dcp"/>
         <DCCReference Include="LightCore.dcp"/>
+        <DCCReference Include="LightAppDataVCL.dcp"/>
         <DCCReference Include="vclWinx.dcp"/>
         <DCCReference Include="SoapRtl.dcp"/>
-        <DCCReference Include="LightAppData.dcp"/>
         <DCCReference Include="IndySystem.dcp"/>
+        <DCCReference Include="VclSmp.dcp"/>
         <DCCReference Include="cmCursorGuard.pas"/>
         <DCCReference Include="cmDebugger.pas"/>
         <DCCReference Include="cmEllipsisText.pas"/>
-        <DCCReference Include="cmEncodeMime.pas"/>
-        <DCCReference Include="cmEncodeXOR.pas"/>
         <DCCReference Include="cmIO.pas"/>
         <DCCReference Include="cmIO.Win.pas"/>
-        <DCCReference Include="cmMath.pas"/>
         <DCCReference Include="cmMemoInputBox.pas"/>
-        <DCCReference Include="cmMRU.pas"/>
         <DCCReference Include="cmMutexSingleInstance.pas"/>
         <DCCReference Include="cmPascal.pas"/>
         <DCCReference Include="cmPermissions.pas"/>
-        <DCCReference Include="cmPlatformFile.pas"/>
         <DCCReference Include="cmPopUpUp.pas"/>
         <DCCReference Include="cmPowerUtils.pas"/>
-        <DCCReference Include="cmRttiSetToString.pas"/>
         <DCCReference Include="cmSearchResult.pas"/>
         <DCCReference Include="cmSound.pas"/>
-        <DCCReference Include="cmStrBuilder.pas"/>
-        <DCCReference Include="cmStringListA.pas"/>
         <DCCReference Include="cmWindow.pas"/>
         <DCCReference Include="cmWinPlatform.pas"/>
         <DCCReference Include="cmWinVersionOthers.pas"/>
-        <DCCReference Include="cmWrapString.pas"/>
         <DCCReference Include="csEnvironmentVar.pas"/>
         <DCCReference Include="csExecuteProc.pas"/>
         <DCCReference Include="csExecuteShell.pas"/>
@@ -122,8 +115,6 @@
         <DCCReference Include="FormAsyncMessage.pas"/>
         <DCCReference Include="cmGuiSettings.pas"/>
         <DCCReference Include="csProcess.pas"/>
-        <DCCReference Include="cmStringList.pas"/>
-        <DCCReference Include="cmEncodeCRC.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -147,9 +138,11 @@
                 <Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k280.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp280.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\CubicProteus280.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\CubicProteus280.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LightCommon280.bpl">LightSaber - Common tools</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LightCore280.bpl">LightSaber - Core library</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\BioControl280.bpl">BioControls</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\BionixVCL280.bpl">BioniX VCL</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LabBookClient280.bpl">LabBook Lib</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LightProteus280.bpl">Proteus</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\LightVisControls280.bpl">LightSaber - Visual Controls</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Platforms>

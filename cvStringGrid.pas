@@ -133,7 +133,7 @@ procedure Register;
 
 IMPLEMENTATION {$R *.res}
 
-USES ccColors, ccTextFile, cmMath, csSystem;
+USES ccColors, ccTextFile, ccMath, csSystem;
 
 
 

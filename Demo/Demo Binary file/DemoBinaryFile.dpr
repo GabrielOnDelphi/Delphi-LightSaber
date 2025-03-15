@@ -1,10 +1,12 @@
 program DemoBinaryFile;
 
 uses
-  Vcl.Forms,
-  MainForm in 'MainForm.pas' {frmMain},
-  cbAppData,
+  {$IFDEF DEBUG}
+  FastMM4,
+  {$ENDIF}
+  cbAppDataVCL,
   ccINIFile,
+  MainForm in 'MainForm.pas' {frmMain},
   uSoldier in 'uSoldier.pas';
 
 {$R *.res}

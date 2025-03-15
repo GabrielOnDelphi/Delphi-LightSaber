@@ -4,10 +4,8 @@ uses
   {$IFDEF DEBUG}
   FastMM4,
   {$ENDIF}
-  WinApi.Windows,
-  VCL.Forms,
   ccINIFile,
-  cbAppData,
+  cbAppDataVCL,
   FormMain in 'FormMain.pas' {MainForm},
   FormRamLog in '..\..\FormRamLog.pas';
 
@@ -19,9 +17,8 @@ begin
   CONST
      AppName= 'Light Template Simple';  // Absolutelly critical if you use the SaveForm/LoadForm functionality. This string will be used as the name of the INI file.
 
-  AppData:= TAppData.Create(AppName, '', TRUE, MultiThreaded);
+  AppData:= TAppData.Create(AppName, '', MultiThreaded);
   AppData.CreateMainForm(TMainForm, MainForm, TRUE, TRUE, asFull);
   TfrmRamLog.CreateGlobalLog;
-  
   AppData.Run;
 end.

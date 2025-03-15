@@ -30,7 +30,8 @@ INTERFACE
 USES
   System.Classes, System.SysUtils,
   Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls,
-  cbAppData, cbLogRam, cvLog, cvLogFilter, Vcl.Menus, Vcl.Grids;
+  ccAppData, cbAppDataVCL
+, ccLogRam, cvLog, cvLogFilter, Vcl.Menus, Vcl.Grids;
 
 TYPE
   TfrmRamLog = class(TLightForm)
@@ -72,7 +73,7 @@ IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   cbLogTypes, ccINIFile;
+   ccLogTypes, ccINIFile;
 
 
 
@@ -132,9 +133,6 @@ end;
 procedure TfrmRamLog.SaveSettings;
 begin
   Assert(AppData <> NIL, 'AppData is gone already!');
-
-  // Save form position
-  //del if NOT cbAppData.AppData.Initializing then cvINIFile.//SaveForm(Self); called by AppData // We don't save anything if the start up was improper!
 
   // Save Log verbosity
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);

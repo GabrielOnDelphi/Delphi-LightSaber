@@ -32,7 +32,8 @@ TYPE
 IMPLEMENTATION
 
 USES
-   cbAppData;
+   ccAppData, cbAppDataVCL
+;
 
 
 procedure TGuiSettings.Save;

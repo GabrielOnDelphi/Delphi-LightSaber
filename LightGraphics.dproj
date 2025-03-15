@@ -68,7 +68,7 @@
         <DCCReference Include="rtl.dcp"/>
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="LightCore.dcp"/>
-        <DCCReference Include="LightAppData.dcp"/>
+        <DCCReference Include="LightAppDataVCL.dcp"/>
         <DCCReference Include="LightCommon.dcp"/>
         <DCCReference Include="vclimg.dcp"/>
         <DCCReference Include="vclwinx.dcp"/>

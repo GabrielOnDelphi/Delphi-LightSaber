@@ -12,7 +12,6 @@ INTERFACE
 USES System.SysUtils, System.Generics.Collections,
      ccStreamBuff, ccStreamBuff2;
 
-
 TYPE
   TSoldier = class(TObject)
   private
@@ -34,7 +33,7 @@ IMPLEMENTATION
 
 procedure TSoldier.Save(Stream: TCubicBuffStream2);
 begin
-  Stream.WriteHeader(StreamSignature, 1);  // Header & version number
+  Stream.WriteHeader(StreamSignature, 2);  // Header & version number
 
   Stream.WriteInteger(Life);
   Stream.WriteInteger(Ammo);
@@ -47,18 +46,24 @@ end;
 
 
 procedure TSoldier.Load(Stream: TCubicBuffStream2);
+VAR Version: Word;
 begin
-  Stream.ReadHeader(StreamSignature, 1);   // Header & version number
+  if NOT Stream.ReadHeaderVersion(StreamSignature, Version) then EXIT;   // Header & version number
 
   Life   := Stream.ReadInteger;
   Ammo   := Stream.ReadInteger;
   Name   := Stream.ReadString;
-  Gun    := Stream.ReadString;
+
+  if Version = 2
+  then
+    begin
+      Gun:= Stream.ReadString;
+      Stream.ReadPadding(94);
+    end
+  else
+    Stream.ReadPadding(100);
   //Speed  := Stream.ReadInteger;
-
-  Stream.ReadPadding(94);
 end;
-
 
 
 end.

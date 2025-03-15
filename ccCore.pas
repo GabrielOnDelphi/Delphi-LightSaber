@@ -266,7 +266,7 @@ TYPE
  function  GetStringRAMSize    (CONST s: string): Integer;          overload;
  function  GetStringRAMSize    (CONST s: AnsiString): Integer;      overload;
 
- // WRAP: See cmWrapString.pas
+ // WRAP: See ccWrapString.pas
  // Shorten text and put ellipsis in it: ShortenString & GetEllipsisText -> moved to cmEllipsisText.pas
 
 {============================================================================================================

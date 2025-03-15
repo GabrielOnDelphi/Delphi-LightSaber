@@ -27,8 +27,9 @@ UNIT cGraphBkgColorEditor;
 
 INTERFACE
 USES
-  Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.Dialogs, Vcl.StdCtrls, Vcl.Samples.Spin, System.Classes, Vcl.ExtCtrls,
-  cGraphBkgColorParams;
+  System.Classes,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
+  cGraphBkgColorParams, cbAppDataForm;
 
 TYPE
   TfrmBorderEditor = class(TLightForm)
@@ -99,8 +100,8 @@ TYPE
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-  cGraphUtil, cbVclUtils, cbINIFileQuick, cbCenterControl, cbDialogs, ccINIFile, cbAppData;
-{ Don't use cvIniFile because it belongs to LightVisControls pkg which is after this (LightGraphics) package }
+  cGraphUtil, cbVclUtils, cbINIFileQuick, cbCenterControl, cbDialogs, ccINIFile, ccAppData, cbAppDataVCL;
+  { Don't use cvIniFile because it belongs to LightVisControls pkg which is after this (LightGraphics) package }
 
 
 

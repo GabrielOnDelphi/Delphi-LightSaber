@@ -37,37 +37,29 @@ requires
   vcl,
   vclx,
   LightCore,
+  LightAppDataVCL,
   vclWinx,
   SoapRtl,
-  LightAppData,
-  IndySystem;
+  IndySystem,
+  VclSmp;
 
 contains
   cmCursorGuard in 'cmCursorGuard.pas',
   cmDebugger in 'cmDebugger.pas',
   cmEllipsisText in 'cmEllipsisText.pas',
-  cmEncodeMime in 'cmEncodeMime.pas',
-  cmEncodeXOR in 'cmEncodeXOR.pas',
   cmIO in 'cmIO.pas',
   cmIO.Win in 'cmIO.Win.pas',
-  cmMath in 'cmMath.pas',
   cmMemoInputBox in 'cmMemoInputBox.pas',
-  cmMRU in 'cmMRU.pas',
   cmMutexSingleInstance in 'cmMutexSingleInstance.pas',
   cmPascal in 'cmPascal.pas',
   cmPermissions in 'cmPermissions.pas',
-  cmPlatformFile in 'cmPlatformFile.pas',
   cmPopUpUp in 'cmPopUpUp.pas',
   cmPowerUtils in 'cmPowerUtils.pas',
-  cmRttiSetToString in 'cmRttiSetToString.pas',
   cmSearchResult in 'cmSearchResult.pas',
   cmSound in 'cmSound.pas',
-  cmStrBuilder in 'cmStrBuilder.pas',
-  cmStringListA in 'cmStringListA.pas',
   cmWindow in 'cmWindow.pas',
   cmWinPlatform in 'cmWinPlatform.pas',
   cmWinVersionOthers in 'cmWinVersionOthers.pas',
-  cmWrapString in 'cmWrapString.pas',
   csEnvironmentVar in 'csEnvironmentVar.pas',
   csExecuteProc in 'csExecuteProc.pas',
   csExecuteShell in 'csExecuteShell.pas',
@@ -79,9 +71,7 @@ contains
   csWMIResolution in 'csWMIResolution.pas',
   FormAsyncMessage in 'FormAsyncMessage.pas',
   cmGuiSettings in 'cmGuiSettings.pas',
-  csProcess in 'csProcess.pas',
-  cmStringList in 'cmStringList.pas',
-  cmEncodeCRC in 'cmEncodeCRC.pas';
+  csProcess in 'csProcess.pas';
 
 end.
 

@@ -50,7 +50,7 @@
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UsePackage>LightCore;LightProteus;LightCommon;CCRExif;LightGraphics;LightInternet;vcl;rtl;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>LightCore;LightProteus;LightCommon;CCRExif;LightGraphics;LightInternet;vcl;rtl;LightAppDataVCL;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_AssertionsAtRuntime>false</DCC_AssertionsAtRuntime>
@@ -69,6 +69,7 @@
         <DCCReference Include="Rtl.dcp"/>
         <DCCReference Include="Vcl.dcp"/>
         <DCCReference Include="LightCore.dcp"/>
+        <DCCReference Include="LightAppDataVCL.dcp"/>
         <DCCReference Include="LightCommon.dcp"/>
         <DCCReference Include="LightInternet.dcp"/>
         <DCCReference Include="LightGraphics.dcp"/>

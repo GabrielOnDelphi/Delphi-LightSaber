@@ -1,12 +1,13 @@
 program Demo_SaveGUI;
 
 uses
+  {$IFDEF DEBUG}
   FastMM4,
+  {$ENDIF}
   System.SysUtils,
-  Forms,
   MainForm in 'MainForm.pas' {frmTester},
   SecondForm in 'SecondForm.pas' {frmContainer},
-  cbAppData in '..\..\cbAppData.pas',
+  cbAppDataVCL in '..\..\cbAppData.pas',
   FormRamLog in '..\..\FormRamLog.pas';
 
 {$R *.res}
@@ -26,7 +27,7 @@ procedure Main;
    begin
      AppData.CreateMainForm(TfrmTester, frmTester, TRUE, TRUE);
      TfrmRamLog.CreateGlobalLog;
-     Application.Run;
+     AppData.Run;
    end;
  end;
 

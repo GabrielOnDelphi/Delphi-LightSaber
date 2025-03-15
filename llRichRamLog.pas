@@ -24,7 +24,7 @@ UNIT llRichRamLog;
      c:\Myprojects\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
-//Note: use cbLogRam is you want support for timestamp
+//Note: use ccLogRam is you want support for timestamp
 
 INTERFACE
 

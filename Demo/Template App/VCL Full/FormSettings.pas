@@ -22,7 +22,8 @@ INTERFACE
 
 USES
   WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs,
-  cvIniFile, cvPathEdit, cmDebugger, cvRadioButton, cvCheckBox, cbAppData, cbAppDataForm,
+  cvIniFile, cvPathEdit, cmDebugger, cvRadioButton, cvCheckBox, ccAppData, cbAppDataVCL
+, cbAppDataForm,
   cmGuiSettings;
 
 TYPE

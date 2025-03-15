@@ -64,7 +64,8 @@ function GetVideoPlayerLogo: TBitmap;
 
 IMPLEMENTATION
 USES
-   cGraphBitmap, cGraphLoader, cbAppData;
+   cGraphBitmap, cGraphLoader, ccAppData, cbAppDataVCL
+;
 
 
 

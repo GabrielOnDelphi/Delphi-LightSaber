@@ -23,7 +23,8 @@ INTERFACE                                                                       
 
 USES
    Winapi.Windows, Winapi.MAPI, Winapi.ShellAPI{ Required by OpenDefaultEmail },
-   System.SysUtils, System.StrUtils, System.Classes, Vcl.Forms, cbAppDataForm,System.Win.Registry,
+   System.SysUtils, System.StrUtils, System.Classes, System.Win.Registry,
+   Vcl.Forms,
    ccCore, cbDialogs;
 
 CONST
@@ -62,10 +63,7 @@ CONST
 IMPLEMENTATION
 
 Uses
-   cmMath, csExecuteShell;
-
-
-
+   ccMath, csExecuteShell;
 
 
 

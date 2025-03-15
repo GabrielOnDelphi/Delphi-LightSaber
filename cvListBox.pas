@@ -183,7 +183,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-  cbVclUtils, cmSound, ccCore, cmMath, ccTextFile;
+  cbVclUtils, cmSound, ccCore, ccMath, ccTextFile;
 
 
 

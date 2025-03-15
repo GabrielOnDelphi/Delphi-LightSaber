@@ -4,7 +4,8 @@ INTERFACE
 
 USES
   WinApi.Windows, Winapi.ShellAPI, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin,
-  Vcl.ComCtrls, Vcl.ExtCtrls, cbAppData, cbAppDataForm;
+  Vcl.ComCtrls, Vcl.ExtCtrls, ccAppData, cbAppDataVCL
+, cbAppDataForm;
 
 const
    CRLF = #13#10;

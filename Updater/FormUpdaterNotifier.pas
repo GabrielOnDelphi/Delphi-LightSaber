@@ -83,7 +83,8 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   llRichLogUtils, cbTranslate, ccColors, cbAppData, cvINIFile, ciInternet;
+   llRichLogUtils, cbTranslate, ccColors, ccAppData, cbAppDataVCL
+, cvINIFile, ciInternet;
 
 
 
@@ -203,7 +204,7 @@ end;
 procedure TFrmUpdater.PopulateNews;
 begin     //clr
  { Show version }
- lblVersion.Caption:= 'You are running version '+ AppData.GetVersionInfo
+ lblVersion.Caption:= 'You are running version '+ TAppData.GetVersionInfo
                 +CRLF+'Online version is '+ Updater.NewsRec.AppVersion;
 
  if Updater.NewsRec.CriticalUpd

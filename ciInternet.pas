@@ -178,7 +178,8 @@ CONST
 IMPLEMENTATION
 
 USES
-   cbAppData, ciHtml, ccIO, ciDownload;
+   ccAppData, cbAppDataVCL
+, ciHtml, ccIO, ciDownload;
 
 
  function  PathIsUrlA; external 'shlwapi' name 'PathIsURLA';

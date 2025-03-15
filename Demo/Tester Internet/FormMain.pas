@@ -46,7 +46,8 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   csShell, csExecuteShell, cbAppData, cbCenterControl, ciInternet;
+   csShell, csExecuteShell, ccAppData, cbAppDataVCL
+, cbCenterControl, ciInternet;
 
 
 

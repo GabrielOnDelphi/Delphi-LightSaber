@@ -104,7 +104,8 @@ USES
    {$IFDEF Jpg2000}OpenJpeg2000Bitmap,{$ENDIF} // Download OpenJpeg Pas library from: www.github.com/galfar/PasJpeg2000
    {$IFDEF FastJpg}FastJpegDecHelper,{$ENDIF}
    cGraphResize, cGraphResizeVCL, cGraphLoader.Resolution, cGraphUtilGray,
-   cGraphLoader.WB1, cGraphLoader.RainDrop, ccIO, cmIO, cGraphFx.Rotate, cbAppData, ccCore, cGraphAviFrame, cGraphGIF;
+   cGraphLoader.WB1, cGraphLoader.RainDrop, ccIO, cmIO, cGraphFx.Rotate, ccAppData, cbAppDataVCL
+, ccCore, cGraphAviFrame, cGraphGIF;
 
 
 

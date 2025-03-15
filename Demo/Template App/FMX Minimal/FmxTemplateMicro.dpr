@@ -1,6 +1,9 @@
 program FmxTemplateMicro;
 
 uses
+  {$IFDEF DEBUG}
+  FastMM4,
+  {$ENDIF}
   System.StartUpCopy,
   FMX.Forms,
   MainForm in 'MainForm.pas' {Form1},

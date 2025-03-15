@@ -16,7 +16,8 @@ USES
   //WinApi.Messages,
   System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.ExtCtrls,
   cvIniFile, InternetLabel, cvPathEdit, cvSpinEdit,
-  llRichLogTrack, cvCheckBox, llRichLog, cbAppData, chHardID, cbAppDataForm;
+  llRichLogTrack, cvCheckBox, llRichLog, ccAppData, cbAppDataVCL
+, chHardID, cbAppDataForm;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -87,7 +88,7 @@ procedure TMainForm.FormInitialize;
 begin
  inherited FormInitialize;
  //SetCaption('');
- lblVers.Caption:= 'Version: '+ AppData.GetVersionInfoV;
+ lblVers.Caption:= 'Version: '+ TAppData.GetVersionInfoV;
  Show;
 end;
 
