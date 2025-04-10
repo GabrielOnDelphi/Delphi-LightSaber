@@ -22,7 +22,8 @@ INTERFACE
 
 USES
   WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs,
-  cvIniFile, cvPathEdit, cmDebugger, cvRadioButton, cvCheckBox, cbAppData, cbAppDataForm,
+  cvIniFile, cvPathEdit, cmDebugger, cvRadioButton, cvCheckBox, ccAppData, cbAppDataVCL
+, cbAppDataForm,
   cmGuiSettings;
 
 TYPE
@@ -75,8 +76,8 @@ TYPE
     procedure ObjectFromGUI;
 
   public
-    procedure FormInitialize; override; // Called after the main form was fully created
-    procedure FormRelease; override;
+    procedure FormPostInitialize; override; // Called after the main form was fully created
+    procedure FormPreRelease; override;
     class procedure CreateFormModal(aGuiSettings: TGuiSettings); static;
  end;
 
@@ -115,15 +116,15 @@ begin
 end;
 
 
-procedure TfrmSettings.FormInitialize;
+procedure TfrmSettings.FormPostInitialize;
 begin
-  inherited FormInitialize;
+  inherited FormPostInitialize;
   FontDialog.Font.Assign(Font);
   btnCrash.Visible:= AppData.BetaTesterMode;
 end;
 
 
-procedure TfrmSettings.FormRelease;
+procedure TfrmSettings.FormPreRelease;
 begin
   inherited;
   ObjectFromGUI;

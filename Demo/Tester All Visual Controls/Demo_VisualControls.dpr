@@ -1,9 +1,10 @@
 ﻿program Demo_VisualControls;
 
 uses
+  {$IFDEF DEBUG}
   FastMM4,
-  cbAppData,
-  Vcl.Forms,
+  {$ENDIF}
+  cbAppDataVCL,
   MainForm in 'MainForm.pas' {frmMain};
 
 {$R *.res}
@@ -11,5 +12,5 @@ uses
 begin
   AppData:= TAppData.Create('Light Tester WinVer');
   AppData.CreateMainForm(TfrmMain, frmMain, TRUE);
-  Application.Run;
+  AppData.Run;
 end.

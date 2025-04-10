@@ -19,7 +19,8 @@ USES
 
 IMPLEMENTATION
 
-USES cbRegistry, cbAppData;
+USES cbRegistry, ccAppData, cbAppDataVCL
+;
 
 
 {moved to

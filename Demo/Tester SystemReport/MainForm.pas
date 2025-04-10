@@ -4,13 +4,14 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.Dialogs, Vcl.StdCtrls, cbAppData, cbAppDataForm;
+  Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.Dialogs, Vcl.StdCtrls, ccAppData, cbAppDataVCL
+, cbAppDataForm;
 
 type
   TfrmMain = class(TLightForm)
     Memo: TMemo;
   private
-    procedure FormInitialize; {don't forget inherited in FormInitialize!} override;
+    procedure FormPostInitialize; {don't forget inherited in FormPostInitialize!} override;
   public
   end;
 
@@ -22,9 +23,9 @@ USES cmDebugger;
 
 
 
-procedure TfrmMain.FormInitialize;
+procedure TfrmMain.FormPostInitialize;
 begin
-  inherited FormInitialize;
+  inherited FormPostInitialize;
   Memo.Text:= cmDebugger.GenerateSystemRep;
 end;
 

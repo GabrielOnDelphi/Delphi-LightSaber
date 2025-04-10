@@ -78,7 +78,7 @@ procedure StretchGr32(BMP: TBitmap; ScaleX, ScaleY: Double; aKernelResampler: By
 
 IMPLEMENTATION
 
-USES cmMath, cGraphLoader;
+USES ccMath, cGraphLoader;
 
 
 constructor TGr32Stretch.Create(Resampler, Kernel: Integer);

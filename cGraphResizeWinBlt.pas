@@ -27,7 +27,7 @@ USES
 IMPLEMENTATION
 
 USES
-  cmMath, cGraphLoader, cGraphFX;
+  ccMath, cGraphLoader, cGraphFX;
 
 
 {-------------------------------------------------------------------------------------------------------------

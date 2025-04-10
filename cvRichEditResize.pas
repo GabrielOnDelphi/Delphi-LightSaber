@@ -98,7 +98,8 @@ begin
   then NewHeight:= FMinHeight;
 
   // Prepare the parent
-  if (Parent is TPanel) AND (TPanel(Parent).autosize)
+  if (Parent is TPanel)
+  AND (TPanel(Parent).AutoSize)
   then ShowMessage('TRichEditResize - Parent panel cannot be set to autosize!');
 
   NewHeight:= Top+ NewHeight + 5; // Add padding to the panel

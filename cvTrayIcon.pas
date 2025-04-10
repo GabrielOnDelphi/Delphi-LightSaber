@@ -36,7 +36,8 @@ IMPORTANT
 INTERFACE
 
 USES
-  Winapi.Windows, System.Classes, Vcl.Forms, cbAppDataForm,Vcl.ExtCtrls;
+  Winapi.Windows, System.Classes,
+  Vcl.Forms, Vcl.ExtCtrls;
 
 TYPE
   TCubicTrayIcon = class(TTrayIcon)

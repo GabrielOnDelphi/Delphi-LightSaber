@@ -36,7 +36,8 @@ UNIT cGraphResizeParamFrame;
 INTERFACE
 
 USES
-  System.Classes, Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.NumberBox, Vcl.Samples.Spin,
+  System.Classes,
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.NumberBox, Vcl.Samples.Spin,
   cGraphResizeParams;
 
 TYPE

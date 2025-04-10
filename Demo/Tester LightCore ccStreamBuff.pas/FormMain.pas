@@ -16,7 +16,8 @@ USES
   //WinApi.Messages,
   System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.ExtCtrls,
   cvIniFile, InternetLabel, cvPathEdit, cvSpinEdit,
-  llRichLogTrack, cvCheckBox, llRichLog, cbAppData, chHardID, cbAppDataForm;
+  llRichLogTrack, cvCheckBox, llRichLog, ccAppData, cbAppDataVCL
+, chHardID, cbAppDataForm;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -63,7 +64,7 @@ TYPE
     procedure btnStreamReadClick      (Sender: TObject);
   private
   public
-    procedure FormInitialize; override; // Called after the main form was fully created
+    procedure FormPostInitialize; override; // Called after the main form was fully created
  end;
 
 VAR
@@ -83,11 +84,11 @@ USES
 {--------------------------------------------------------------------------------------------------
    APP START/CLOSE
 --------------------------------------------------------------------------------------------------}
-procedure TMainForm.FormInitialize;
+procedure TMainForm.FormPostInitialize;
 begin
- inherited FormInitialize;
+ inherited FormPostInitialize;
  //SetCaption('');
- lblVers.Caption:= 'Version: '+ AppData.GetVersionInfoV;
+ lblVers.Caption:= 'Version: '+ TAppData.GetVersionInfoV;
  Show;
 end;
 

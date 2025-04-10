@@ -36,7 +36,6 @@ object frmShowMsgAsync: TfrmShowMsgAsync
     ShowHint = True
     Layout = tlCenter
     WordWrap = True
-    ExplicitWidth = 19
   end
   object Panel1: TPanel
     Left = 0

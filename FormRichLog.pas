@@ -45,7 +45,7 @@ TYPE
     procedure FormCreate   (Sender: TObject);
     procedure FormDestroy  (Sender: TObject);  // Would be nice to make this protected but we can't. All event handlers must be accesible/visible
   public
-    procedure FormInitialize; {don't forget inherited in FormInitialize!} override; // Called after the main form was fully initilized
+    procedure FormPostInitialize; {don't forget inherited in FormPostInitialize!} override; // Called after the main form was fully initilized
   end;
 
 
@@ -54,7 +54,8 @@ IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   cvINIFile, cbAppData;
+   cvINIFile, ccAppData, cbAppDataVCL
+;
 
 
 
@@ -70,9 +71,9 @@ begin
 end;
 
 
-procedure TfrmRichLog.FormInitialize;
+procedure TfrmRichLog.FormPostInitialize;
 begin
- inherited FormInitialize;
+ inherited FormPostInitialize;
   LoadForm(Self);
 end;
 
@@ -83,7 +84,8 @@ procedure TfrmRichLog.FormDestroy(Sender: TObject);
 begin
  Assert(AppData <> NIL, 'AppData is gone already!');
  Container.Parent:= Self;
- if NOT cbAppData.AppData.Initializing
+ if NOT ccAppData, cbAppDataVCL
+.AppData.Initializing
  then //SaveForm(Self); called by AppData // We don't save anything if the start up was improper!
 end;
 

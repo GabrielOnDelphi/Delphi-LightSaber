@@ -18,7 +18,8 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, System.IOUtils, Vcl.Mask,
-  cbTranslate, ccCore, cbDialogs, cbAppData, cbAppDataForm;
+  cbTranslate, ccCore, cbDialogs, ccAppData, cbAppDataVCL
+, cbAppDataForm;
 
 TYPE
   TfrmTranslEditor = class(TLightForm)
@@ -75,7 +76,7 @@ TYPE
     procedure LoadCurTranslation;
   public
     class procedure ShowEditor; static;
-    procedure FormInitialize; override; // Called after the main form was fully created
+    procedure FormPostInitialize; override; // Called after the main form was fully created
   end;
 
 
@@ -96,9 +97,9 @@ end;
 
 
 
-procedure TfrmTranslEditor.FormInitialize;
+procedure TfrmTranslEditor.FormPostInitialize;
 begin
-  inherited FormInitialize;
+  inherited FormPostInitialize;
   Assert(Translator <> NIL);
   lblLiveFormsClick(Self);
 end;

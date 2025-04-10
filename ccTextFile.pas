@@ -21,14 +21,24 @@
        IsMacFile
        GetEnterType
        WinToUnix, UnixToWin, MacToWin
+
+   New:
+      Delphi 12 allows us to use enumerators to read a file line by line:
+        for var Line in TFile.GetLinesEnumerator(FileName)
+          do Memo1.Lines.Add(Line);
+
+       Note: TFileStream can also do something similar by using ReadLine:
+         while not Reader.EndOfStream
+           do Line := Reader.ReadLine;
+
+      GabrielMoraru.com/new-feature-in-delphi-12-getlinesenumerator-for-reading-text-files-line-by-line/
+
 --------------------------------------------------------------------------------------------------------------
    Tester app:
       c:\Projects\Project Support\Tool - Light Delphi utilities (DUT)\LDU.dpr
 =============================================================================================================}
 
 INTERFACE
-
-{ $I Frameworks.inc}
 
 USES
   System.IOUtils, System.SysUtils, System.Classes;
@@ -256,7 +266,7 @@ begin
 end;
 
 { Opens a LARGE text file and counts how many lines it has.
-  It does this by loading a small portion of the file in a RAM buffer.
+  It uses RAM buffers.
 
   We only rely on LF which should be present on all OSes except old Mac:
       Windows                ->  CRLF

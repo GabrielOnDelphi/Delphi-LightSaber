@@ -51,7 +51,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  cbTranslate, cbINIFile, cbAppData;
+  cbTranslate, cbINIFile, ccAppData, cbAppDataVCL;
    {Don't add dependencies to cvIniFile because that package is not available yet}
 
 

@@ -27,7 +27,11 @@ UNIT cmMutexSingleInstance;
 INTERFACE
 
 USES
-  System.SysUtils, Vcl.Forms, cbAppDataForm,WinApi.Windows;
+  WinApi.Windows,
+  System.SysUtils,
+  Vcl.Forms,
+  ccAppData, cbAppDataVCL
+;
 
 procedure FreeMutex;
 function  IsSingleInstance(MutexName : string):Boolean;

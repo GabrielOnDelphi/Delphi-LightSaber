@@ -600,7 +600,7 @@ begin
  then Border:= [btTop, btBottom, btLeft, btRight]
  else
   begin
-   Mesaj('OutBMP < InpBMP');
+   MesajErrDetail('OutBMP < InpBMP', 'FadeBorderAuto');
    //OutBMP.Canvas.Draw(iLeft, iTop, InpBmp);    { Copy input BMP in the middle of the output BMP }
    EXIT;
   end;

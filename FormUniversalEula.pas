@@ -24,7 +24,8 @@ procedure ShowEulaModal;
 
 implementation {$R *.dfm}
 Uses
-   ccTextFile, cbAppData;
+   ccTextFile, ccAppData, cbAppDataVCL
+;
 
 
 

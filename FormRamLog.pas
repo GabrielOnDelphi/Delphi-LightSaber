@@ -30,7 +30,8 @@ INTERFACE
 USES
   System.Classes, System.SysUtils,
   Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls,
-  cbAppData, cbLogRam, cvLog, cvLogFilter, Vcl.Menus, Vcl.Grids;
+  ccAppData, cbAppDataVCL
+, ccLogRam, cvLog, cvLogFilter, Vcl.Menus, Vcl.Grids;
 
 TYPE
   TfrmRamLog = class(TLightForm)
@@ -59,7 +60,7 @@ TYPE
     procedure SaveSettings;
   public
     class procedure CreateGlobalLog; static; // Would be nice to make this protected but we can't. All event handlers must be accesible/visible
-    procedure FormInitialize; override; // Called after the main form was fully initilized
+    procedure FormPostInitialize; override; // Called after the main form was fully initilized
   end;
 
 
@@ -72,7 +73,7 @@ IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   cbLogTypes, ccINIFile;
+   ccLogTypes, ccINIFile;
 
 
 
@@ -102,9 +103,9 @@ begin
 end;
 
 
-procedure TfrmRamLog.FormInitialize;
+procedure TfrmRamLog.FormPostInitialize;
 begin
-  inherited FormInitialize;
+  inherited FormPostInitialize;
 
   LoadSettings;
   chkLogOnError.Checked:= AppData.RamLog.ShowOnError;
@@ -132,9 +133,6 @@ end;
 procedure TfrmRamLog.SaveSettings;
 begin
   Assert(AppData <> NIL, 'AppData is gone already!');
-
-  // Save form position
-  //del if NOT cbAppData.AppData.Initializing then cvINIFile.//SaveForm(Self); called by AppData // We don't save anything if the start up was improper!
 
   // Save Log verbosity
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);

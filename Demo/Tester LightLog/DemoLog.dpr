@@ -3,24 +3,9 @@ program DemoLog;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF }
-  WinApi.Windows,
-  VCL.Forms,
-  cbAppData in '..\..\cbAppData.pas',
+  {$ENDIF}
+  cbAppDataVCL,
   FormMain in 'FormMain.pas' {MainForm},
-  cvINIFile in '..\..\cvINIFile.pas',
-  cbDialogs in '..\..\cbDialogs.pas',
-  cbIniFile in '..\..\cbIniFile.pas',
-  ccINIFile in '..\..\ccINIFile.pas',
-  ccIO in '..\..\ccIO.pas',
-  ccBinary in '..\..\ccBinary.pas',
-  ccColors in '..\..\ccColors.pas',
-  ccCompiler in '..\..\ccCompiler.pas',
-  ccCore in '..\..\ccCore.pas',
-  ccStreamBuff in '..\..\ccStreamBuff.pas',
-  ccStreamBuff2 in '..\..\ccStreamBuff2.pas',
-  ccStreamFile in '..\..\ccStreamFile.pas',
-  ccStreamMem in '..\..\ccStreamMem.pas',
   cvLog in '..\..\cvLog.pas';
 
 {$R *.res}
@@ -29,5 +14,5 @@ uses
 begin
   AppData:= TAppData.Create('Light Commercial Template');
   AppData.CreateMainForm(TMainForm, MainForm, TRUE);
-  Application.Run;
+  AppData.Run;
 end.

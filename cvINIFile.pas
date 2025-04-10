@@ -18,10 +18,9 @@ UNIT cvIniFile;
 INTERFACE
 
 USES
-   System.Classes, System.SysUtils, System.IniFiles, Vcl.Forms, Vcl.Controls,
+   System.Classes, System.SysUtils, System.IniFiles,
+   Vcl.Forms, Vcl.Controls,
    cbDialogs, cbINIFile, ccINIFile, cbAppDataForm;
-
-{$WARN DUPLICATE_CTOR_DTOR OFF}                                                                               {Silence the: W1029 Duplicate constructor  with identical parameters will be inacessible from C++ }
 
 TYPE
  TIniFileVCL = class(TIniFileApp)   
@@ -41,7 +40,7 @@ IMPLEMENTATION
 
 USES
    cvFloatSpinEdit, cvFileListBox, cvSpinEdit, cvSpinEditDelayed, cvPathEdit,
-   cbCenterControl, cbAppData, cvLog, cbLogUtils, cbLogTypes;
+   cbCenterControl, ccAppData, cbAppDataVCL, cvLog, ccLogUtils, ccLogTypes;
 
 
 
@@ -145,8 +144,6 @@ end;
 
 
 
-
-
 {-----------------------------------------------------------------------------------------------------------------------
    MAIN
 
@@ -161,10 +158,10 @@ procedure SaveForm(Form: TLightForm);
 VAR
    IniFile: TIniFileVCL;
 begin
- if TAppData.Initializing
+ if TAppDataCore.Initializing
  AND (Form = Application.MainForm) then
   begin
-   if TAppData.RunningHome
+   if TAppDataCore.RunningHome
    then MesajError('Closing application while still initializing!');
    Exit; // We don't save anything if the start up was improper!
   end;

@@ -52,7 +52,8 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   cbAppData, csSystem, cbTranslate, ciUpdaterRec, cbDialogs, ccINIFile, cvINIFile;
+   ccAppData, cbAppDataVCL
+, csSystem, cbTranslate, ciUpdaterRec, cbDialogs, ccINIFile, cvINIFile;
 
 
 

@@ -58,7 +58,8 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   cbCenterControl, cbAppData, cbDialogs, ccINIFile;
+   cbCenterControl, ccAppData, cbAppDataVCL
+, cbDialogs, ccINIFile;
 
 
 
@@ -101,7 +102,7 @@ begin
  lblCompany.Caption := AppData.CompanyName;
  lblCompany.Link    := AppData.ProductHome;
  lblAppName.Caption := AppData.AppName;
- lblVersion.Caption := AppData.GetVersionInfoV;
+ lblVersion.Caption := TAppData.GetVersionInfoV;
 end;
 
 

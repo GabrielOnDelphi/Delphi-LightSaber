@@ -159,38 +159,38 @@ end;}
 
 Constructor TCubicMemo.Create(AOwner: TComponent);
 begin
- inherited Create(AOwner);    // Note: Don't set 'Parent:= Owner' in constructor. See this for details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
- FTypeMode:= tmInsert;
- HideSelection:= FALSE;                                                                            { Show the selection even if the memo isn't focussed. }
- SearchOptions:= [soIgnoreCase, soWrap];
- FCursAfter:= FALSE;                                                                               { If TRUE, instead of highlighting the found word, place the cursor after the word (no selection) }
+  inherited Create(AOwner);    // Note: Don't set 'Parent:= Owner' in constructor. See this for details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
+  FTypeMode:= tmInsert;
+  HideSelection:= FALSE;                                                                            { Show the selection even if the memo isn't focussed. }
+  SearchOptions:= [soIgnoreCase, soWrap];
+  FCursAfter:= FALSE;                                                                               { If TRUE, instead of highlighting the found word, place the cursor after the word (no selection) }
 
- {This won't work: it says: TMemoStyleHook is already registered for TMyMemo. }
-// TCustomStyleEngine.RegisterStyleHook(TCubicMemo, TMemoStyleHook);     { Fix: http://stackoverflow.com/questions/28463556/vcl-styles-breaks-randomly }
+  {This won't work: it says: TMemoStyleHook is already registered for TMyMemo. }
+  // TCustomStyleEngine.RegisterStyleHook(TCubicMemo, TMemoStyleHook);     { Fix: http://stackoverflow.com/questions/28463556/vcl-styles-breaks-randomly }
 end;
 
 
 procedure TCubicMemo.CreateWnd;
 begin
- inherited CreateWnd;
+  inherited CreateWnd;
   //CreateWnd can be called more than once:  http://docs.embarcadero.com/products/rad_studio/delphiAndcpp2009/HelpUpdate2/EN/html/delphivclwin32/Controls_TWinControl_CreateWnd.html
 end;
 
 
 destructor TCubicMemo.Destroy;
 begin
- {This seems to work: }
- TCustomStyleEngine.UnRegisterStyleHook(TCubicMemo, TMemoStyleHook);   { Fix: http://stackoverflow.com/questions/28463556/vcl-styles-breaks-randomly }
- inherited;
+  {This seems to work: }
+  TCustomStyleEngine.UnRegisterStyleHook(TCubicMemo, TMemoStyleHook);   { Fix: http://stackoverflow.com/questions/28463556/vcl-styles-breaks-randomly }
+  inherited;
 end;
 
 
 
 function TCubicMemo.LoadFromFile(FileName: string): Boolean;         { Load text from specified file IF the file exists. Otherwise, don't show an error }
 begin
- Result:= FileExists(FileName) AND NOT FileIsLockedR(FileName); //FileIsLockedR was added in BioniX v10.82 or below. does the bug still appears?
- if Result
- then Text := StringFromFile(FileName)
+  Result:= FileExists(FileName) AND NOT FileIsLockedR(FileName); //FileIsLockedR was added in BioniX v10.82 or below. does the bug still appears?
+  if Result
+  then Text := StringFromFile(FileName)
 end;
 
 

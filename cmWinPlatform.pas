@@ -14,7 +14,10 @@
 INTERFACE
 
 USES
-   System.SysUtils, Generics.Collections, Vcl.Themes, Vcl.Forms, cbAppDataForm,Vcl.Dialogs;
+   System.SysUtils, Generics.Collections,
+   Vcl.Themes, Vcl.Forms, Vcl.Dialogs,
+   ccAppData, cbAppDataVCL
+;
 
 
 

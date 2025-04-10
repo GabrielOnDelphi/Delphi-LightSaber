@@ -96,7 +96,8 @@ USES
  
 IMPLEMENTATION
 USES
-   ccIO, ccTextFile, cmIO.Win, cbAppData, {cbINIFile,} cbRegistry, ccCore, cbDialogs;
+   ccIO, ccTextFile, cmIO.Win, ccAppData, cbAppDataVCL
+, {cbINIFile,} cbRegistry, ccCore, cbDialogs;
 
  
 

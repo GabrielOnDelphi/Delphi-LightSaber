@@ -36,6 +36,7 @@ requires
   Rtl,
   Vcl,
   LightCore,
+  LightAppDataVCL,
   LightCommon,
   LightInternet,
   LightGraphics,

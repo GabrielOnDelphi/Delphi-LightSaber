@@ -58,7 +58,8 @@ TYPE
 
 IMPLEMENTATION {$R *.dfm}
 USES
-  cbAppData, cbDialogs, ccIO, cmIO, FormTranslEditor;
+  ccAppData, cbAppDataVCL
+, cbDialogs, ccIO, cmIO, FormTranslEditor;
 
 
 
@@ -68,9 +69,9 @@ VAR
 begin
   Assert(Translator <> NIL);
 
-  Appdata.CreateFormHidden(TfrmTranslSelector, frmSelector);
+  AppData.CreateFormHidden(TfrmTranslSelector, frmSelector);
   TRY
-    frmSelector.btnTranslate.Visible:= NOT Appdata.RunningFirstTime;
+    frmSelector.btnTranslate.Visible:= NOT AppData.RunningFirstTime;
     frmSelector.btnRefresh.Visible:= frmSelector.btnTranslate.Visible;
     frmSelector.PopulateLanguageFiles;    { Populate the ListBox with languages we found in 'Lang' folder }
     frmSelector.ShowModal;
