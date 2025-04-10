@@ -39,7 +39,13 @@
         <Projects Include="Template App\FMX Minimal\FmxTemplateMicro.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Demo Binary file\DemoBinaryFile.dproj">
+        <Projects Include="Demo binary file 1\DemoBinary1.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo binary file 2\DemoBinary2.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo binary file 3\DemoBinary3.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -158,23 +164,41 @@
     <Target Name="FmxTemplateMicro:Make">
         <MSBuild Projects="Template App\FMX Minimal\FmxTemplateMicro.dproj" Targets="Make"/>
     </Target>
-    <Target Name="DemoBinaryFile">
-        <MSBuild Projects="Demo Binary file\DemoBinaryFile.dproj"/>
+    <Target Name="DemoBinary1">
+        <MSBuild Projects="Demo binary file 1\DemoBinary1.dproj"/>
     </Target>
-    <Target Name="DemoBinaryFile:Clean">
-        <MSBuild Projects="Demo Binary file\DemoBinaryFile.dproj" Targets="Clean"/>
+    <Target Name="DemoBinary1:Clean">
+        <MSBuild Projects="Demo binary file 1\DemoBinary1.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="DemoBinaryFile:Make">
-        <MSBuild Projects="Demo Binary file\DemoBinaryFile.dproj" Targets="Make"/>
+    <Target Name="DemoBinary1:Make">
+        <MSBuild Projects="Demo binary file 1\DemoBinary1.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DemoBinary2">
+        <MSBuild Projects="Demo binary file 2\DemoBinary2.dproj"/>
+    </Target>
+    <Target Name="DemoBinary2:Clean">
+        <MSBuild Projects="Demo binary file 2\DemoBinary2.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DemoBinary2:Make">
+        <MSBuild Projects="Demo binary file 2\DemoBinary2.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="DemoBinary3">
+        <MSBuild Projects="Demo binary file 3\DemoBinary3.dproj"/>
+    </Target>
+    <Target Name="DemoBinary3:Clean">
+        <MSBuild Projects="Demo binary file 3\DemoBinary3.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DemoBinary3:Make">
+        <MSBuild Projects="Demo binary file 3\DemoBinary3.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="TemplateMicro;TemplateSimple;TemplateFull;Uninstaller;Demo_VisualControls;AutoTranslatorDemo;Demo_SaveGUI;Tester_ccIO;Tester_FileStream;Tester_WinVers;DemoLog;FmxTemplateMicro;DemoBinaryFile"/>
+        <CallTarget Targets="TemplateMicro;TemplateSimple;TemplateFull;Uninstaller;Demo_VisualControls;AutoTranslatorDemo;Demo_SaveGUI;Tester_ccIO;Tester_FileStream;Tester_WinVers;DemoLog;FmxTemplateMicro;DemoBinary1;DemoBinary2;DemoBinary3"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="TemplateMicro:Clean;TemplateSimple:Clean;TemplateFull:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;AutoTranslatorDemo:Clean;Demo_SaveGUI:Clean;Tester_ccIO:Clean;Tester_FileStream:Clean;Tester_WinVers:Clean;DemoLog:Clean;FmxTemplateMicro:Clean;DemoBinaryFile:Clean"/>
+        <CallTarget Targets="TemplateMicro:Clean;TemplateSimple:Clean;TemplateFull:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;AutoTranslatorDemo:Clean;Demo_SaveGUI:Clean;Tester_ccIO:Clean;Tester_FileStream:Clean;Tester_WinVers:Clean;DemoLog:Clean;FmxTemplateMicro:Clean;DemoBinary1:Clean;DemoBinary2:Clean;DemoBinary3:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="TemplateMicro:Make;TemplateSimple:Make;TemplateFull:Make;Uninstaller:Make;Demo_VisualControls:Make;AutoTranslatorDemo:Make;Demo_SaveGUI:Make;Tester_ccIO:Make;Tester_FileStream:Make;Tester_WinVers:Make;DemoLog:Make;FmxTemplateMicro:Make;DemoBinaryFile:Make"/>
+        <CallTarget Targets="TemplateMicro:Make;TemplateSimple:Make;TemplateFull:Make;Uninstaller:Make;Demo_VisualControls:Make;AutoTranslatorDemo:Make;Demo_SaveGUI:Make;Tester_ccIO:Make;Tester_FileStream:Make;Tester_WinVers:Make;DemoLog:Make;FmxTemplateMicro:Make;DemoBinary1:Make;DemoBinary2:Make;DemoBinary3:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

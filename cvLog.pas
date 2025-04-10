@@ -27,8 +27,7 @@ USES
    Winapi.Windows,
    System.Classes,  System.SysUtils,
    Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls, Vcl.Forms, Vcl.Grids, Vcl.ExtCtrls, VCL.ComCtrls,
-   ccLogRam, ccLogUtils, ccLogTypes, ccLogLinesAbstract,
-   cbAppDataForm;
+   ccLogRam, ccLogTypes, ccLogLinesAbstract;
 
 TYPE
   TLogGrid = class(TStringGrid, ILogObserver)

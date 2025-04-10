@@ -150,7 +150,7 @@ begin
  Update;
  Refresh;
  Caption:= ProgramConnect2InternetS;
- mesaj(Caption);
+ MesajInfo(Caption);
 end;
 
 

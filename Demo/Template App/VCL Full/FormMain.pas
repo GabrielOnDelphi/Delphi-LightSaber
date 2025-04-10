@@ -37,8 +37,7 @@ USES
   WinApi.Windows, WinApi.Messages, Winapi.ShellApi,
   System.SysUtils, System.Classes, System.Actions,
   VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
-  CoolTrayIcon, ccAppData, cbAppDataVCL
-, csSystem, cvPathEdit, cvStatusBar, cpProteus {Delete this line if you don't have Proteus library}, cpProteusIO, cmGuiSettings, cbAppDataForm, ccCore;
+  CoolTrayIcon, ccAppData, cbAppDataVCL, csSystem, cvPathEdit, cvStatusBar, cpProteus {Delete this line if you don't have Proteus library}, cpProteusIO, cmGuiSettings, cbAppDataForm, ccCore;
 
 TYPE
   TMainForm = class(TLightForm)

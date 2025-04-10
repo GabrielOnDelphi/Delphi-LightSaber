@@ -3,13 +3,14 @@ program FmxTemplateMicro;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF}
+  {$ENDIF }
   System.StartUpCopy,
   FMX.Forms,
   MainForm in 'MainForm.pas' {Form1},
-  LightFMX.AppData in '..\..\..\FMX\LightFMX.AppData.pas',
-  LightFMX.AppDataForm in '..\..\..\FMX\LightFMX.AppDataForm.pas',
-  cbIniFileFMX in '..\..\..\FMX\cbIniFileFMX.pas';
+  LightFMX.AppData in '..\..\..\FrameFMX\LightFMX.AppData.pas',
+  LightFMX.AppData.Forms in '..\..\..\FrameFMX\LightFMX.AppData.Forms.pas',
+  LightFmx.DialogsDesktop in '..\..\..\FrameFMX\LightFmx.DialogsDesktop.pas',
+  LightFMX.IniFile in '..\..\..\FrameFMX\LightFMX.IniFile.pas';
 
 {$R *.res}
 

@@ -30,8 +30,7 @@ INTERFACE
 USES
   System.Classes, System.SysUtils,
   Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls,
-  ccAppData, cbAppDataVCL
-, ccLogRam, cvLog, cvLogFilter, Vcl.Menus, Vcl.Grids;
+  ccAppData, cbAppDataVCL, ccLogRam, cvLog, cvLogFilter, Vcl.Menus, Vcl.Grids;
 
 TYPE
   TfrmRamLog = class(TLightForm)

@@ -6,7 +6,7 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics,
   FMX.Dialogs, FMX.Controls.Presentation, FMX.StdCtrls, FMX.DialogService,
-  ccAppDataFmxForm, cbDialogsFMX, ccIniFile;
+  LightFMX.AppData, LightFmx.DialogsDesktop, LightFMX.AppData.Forms, ccIniFile;
 
 TYPE
   TForm1 = class(TLightForm)

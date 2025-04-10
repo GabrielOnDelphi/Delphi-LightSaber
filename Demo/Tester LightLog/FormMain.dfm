@@ -135,9 +135,9 @@ object MainForm: TMainForm
         TrackBar.Anchors = [akLeft, akTop, akRight, akBottom]
         TrackBar.Max = 6
         TrackBar.Min = 1
-        TrackBar.Position = 3
+        TrackBar.Position = 1
         TrackBar.TabOrder = 0
-        Verbosity = lvInfos
+        Verbosity = lvVerbose
         Log = VisLog
       end
       object Button3: TButton

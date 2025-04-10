@@ -3,9 +3,9 @@ unit FormMain;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, ccLogRam, Vcl.Grids, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.ComCtrls,
-  llRichLogTrack, llRichLogUtils, llRichLog, cvLog, cvLogFilter, cbAppDataForm;
+  System.SysUtils, System.Classes,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, ccLogRam, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.ComCtrls,
+  llRichLogTrack, llRichLogUtils, llRichLog, cvLog, cvLogFilter, cbAppDataForm, Vcl.Grids;
 
 type
   TMainForm = class(TLightForm)
@@ -42,14 +42,15 @@ type
 var
   MainForm: TMainForm;
 
-implementation {$R *.dfm}
-Uses ccAppData, cbAppDataVCL
-, ccLogUtils, ccLogTypes, ccINIFile, cvINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
+IMPLEMENTATION {$R *.dfm}
+
+USES
+  ccAppData, cbAppDataVCL, ccLogTypes, ccINIFile, cbDialogs;
 
 
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
- RichLog.Clear;
+  RichLog.Clear;
 end;
 
 
@@ -154,11 +155,6 @@ procedure TMainForm.SaveForm;
 begin
   Assert(AppData <> NIL, 'AppData is gone already!');
   inherited SaveForm;
-
-  // Save form position
-  if NOT ccAppData, cbAppDataVCL
-.AppData.Initializing
-  then cvINIFile.//SaveForm(Self); called by AppData // We don't save anything if the start up was improper!
 
   // Save Log verbosity
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);

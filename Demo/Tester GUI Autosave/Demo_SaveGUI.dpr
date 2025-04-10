@@ -3,12 +3,12 @@ program Demo_SaveGUI;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF}
+  {$ENDIF }
   System.SysUtils,
   MainForm in 'MainForm.pas' {frmTester},
   SecondForm in 'SecondForm.pas' {frmContainer},
-  cbAppDataVCL in '..\..\cbAppData.pas',
-  FormRamLog in '..\..\FormRamLog.pas';
+  FormRamLog in '..\..\FormRamLog.pas',
+  cbAppDataVCL in '..\..\FrameVCL\cbAppDataVCL.pas';
 
 {$R *.res}
 
