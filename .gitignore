@@ -58,3 +58,6 @@ Demo/Template App/FMX Minimal2/Project1.exe
 Demo/Template App/FMX Minimal/TemplateMicro.exe
 Demo/Demo Binary file/DemoBinaryFile.exe
 Demo/Demo Binary file/Soldier.bin
+Demo/Tester All Visual Controls/Demo_VisualControls.prjmgc
+/FrameFMX/old
+*.dsv
