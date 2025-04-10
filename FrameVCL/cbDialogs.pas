@@ -1,17 +1,17 @@
 ﻿UNIT cbDialogs;
 
 {=============================================================================================================
-   2025.03
    www.GabrielMoraru.com
+   2025.04
 --------------------------------------------------------------------------------------------------------------
-   Advanced message boxes for VCL
+   Easy message boxes (for VCL only)
 =============================================================================================================}
 
 INTERFACE
 
 USES
-   System.SysUtils, System.UITypes, Generics.Collections,
-   Vcl.Forms;
+   System.SysUtils, System.UITypes, Generics.Collections
+   , Vcl.Forms;
 
  function  MesajGeneric   (CONST MessageText: string; Title: string= ''; Icon: Integer= -1): integer;         { 'Title' will appear in window's caption }
  procedure Mesaj          (CONST MessageText: string);
@@ -27,14 +27,7 @@ IMPLEMENTATION
 USES
    ccCore;
 
-
-{============================================================================================================
-   MESSAGES
-============================================================================================================}
-
 { Displays a message box with an approriate icon (info, warning, error, ask).
-  Cross-platform.
-
   IMPORTANT:
     Application.MessageBox uses the handle of the current active window.
     This can of course create problems if the current window (is not the main form and) is closed.
@@ -81,28 +74,28 @@ procedure Mesaj(CONST MessageText: string);   { 'Title' will appear in window's 
 
 
 
-procedure MesajInfo(CONST MessageText: string; CONST Title: string= '');
+procedure MesajInfo(CONST MessageText: string; CONST Caption: string= '');
 begin
- MesajGeneric(MessageText, Title, -1);
+ MesajGeneric(MessageText, Caption, -1);
 end;
 
 
 
-procedure MesajWarning(CONST MessageText: string);
+procedure MesajWarning(const MessageText, Caption: string);
 begin
  MesajGeneric(MessageText, 'Warning', MB_ICONWARNING or MB_OK);
 end;
 
 
 
-procedure MesajError(CONST MessageText: string);                                                   { afiseaza un mesaj cu icon de eroare pe ecran. If the MessageText is empty then dispaly nothing }
+procedure MesajError(const MessageText, Caption: string);                                                  { afiseaza un mesaj cu icon de eroare pe ecran. If the MessageText is empty then dispaly nothing }
 begin
  MesajGeneric(MessageText, 'Error', MB_ICONERROR or MB_OK);
 end;
 
 
 
-procedure MesajErrDetail(CONST MessageText, Where: string);                                                    { afiseaza un mesaj cu icon de eroare pe ecran }
+procedure MesajErrDetail(const MessageText, Caption: string);                                                   { afiseaza un mesaj cu icon de eroare pe ecran }
 VAR sMsg: string;
 begin
  sMsg:= MessageText+

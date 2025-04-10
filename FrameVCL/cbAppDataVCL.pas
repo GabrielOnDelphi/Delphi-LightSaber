@@ -120,7 +120,7 @@ TYPE
   TAppData= class(TAppDataCore)
   private
     FFont: TFont;
-    FHideHint: Integer;
+  //  FHideHint: Integer;
     procedure SetGuiProperties(Form: TForm);
     procedure setFont(aFont: TFont);
 
@@ -169,10 +169,10 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       App Control
    --------------------------------------------------------------------------------------------------}
-    procedure Minimize;
     procedure Restore;
     procedure Restart;
     procedure SelfDelete;
+    procedure Minimize; override;
     function  RunFileAtStartUp(CONST FilePath: string; Active: Boolean): Boolean;
 
     class procedure RaiseIfStillInitializing;
@@ -314,12 +314,12 @@ begin
     then TForm(Reference).Show;
 
   // Show app name
-  MainFormCaption('');      // Must be before FormInitialize because the user could put his own caption there.
+  MainFormCaption('');      // Must be before FormPostInitialize because the user could put his own caption there.
 
   // Window fully constructed. Now we can let user run its own initialization process.
   // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory [Part 2]" book) for details.
   if TObject(Reference) is TLightForm
-  then TLightForm(Reference).FormInitialize;
+  then TLightForm(Reference).FormPostInitialize;
 
   // Uninstaller
   if RunningFirstTime
@@ -380,7 +380,7 @@ begin
   // Window fully constructed.
   // Now we can let user run its own initialization process.
   if TObject(Reference) is TLightForm
-  then TLightForm(Reference).FormInitialize;
+  then TLightForm(Reference).FormPostInitialize;
 
   // Translator
   if Translator <> NIL
@@ -576,7 +576,6 @@ end;
 {--------------------------------------------------------------------------------------------------
    VERSION INFO
 --------------------------------------------------------------------------------------------------}
-
 
 function TAppData.GetVersionInfoMajor: Word;
 VAR FixedInfo: TVSFixedFileInfo;
@@ -955,3 +954,9 @@ end;
 
 
 end.
+
+
+
+
+
+

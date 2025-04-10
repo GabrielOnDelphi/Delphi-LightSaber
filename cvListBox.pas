@@ -211,8 +211,8 @@ end;
 procedure TCubicListBox.SetHeightAuto(MaxHeight: Integer; aForm: TControl);
 begin
   VAR MaxHeightPx := (aForm.Height * MaxHeight) DIV 100;
-  VAR ItemCount := Min(Items.Count, 10); // Limit to 10 items for height calculation
-  VAR iHeight := ItemCount * ItemHeight;
+  VAR ItemCount   := Min(Items.Count, 10); // Limit to 10 items for height calculation
+  VAR iHeight     := ItemCount * ItemHeight;
 
   // Add some padding for the border and potential scrollbar
   iHeight := iHeight + 6;

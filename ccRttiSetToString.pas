@@ -87,7 +87,7 @@ var
   P: PChar;
   EnumInfo: PTypeInfo;
   EnumName: String;
-  EnumValue, SetValue: Longint;
+  EnumValue, SetValue: Integer;
 
   function NextWord(var P: PChar): String;
   var

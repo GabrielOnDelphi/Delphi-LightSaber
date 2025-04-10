@@ -60,7 +60,7 @@ TYPE
     procedure FormDestroy        (Sender: TObject);
   private
   public
-    procedure FormInitialize; override; // Called after the main form was fully created
+    procedure FormPostInitialize; override; // Called after the main form was fully created
  end;
 
 VAR
@@ -82,9 +82,9 @@ begin
 end;
 
 
-procedure TfrmTester.FormInitialize;
+procedure TfrmTester.FormPostInitialize;
 begin
- inherited FormInitialize;
+ inherited FormPostInitialize;
 
  if AppData.RunningFirstTime
  then MesajInfo(

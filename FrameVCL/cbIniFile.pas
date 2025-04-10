@@ -43,10 +43,8 @@
      The TIniFileApp class will use AppName to automatically determine the INI file name/path which is %AppData%\AppName.Ini.
      Example: If the AppData.AppName is set to "DelphiLightSaber",
      the ini file will be "c:\Users\UserName\AppData\Roaming\DelphiLightSaber\DelphiLightSaber.ini"
-     See ccAppData, cbAppDataVCL
-.pas for details.
-     The TIniFileApp class will also automatically save the ccAppData, cbAppDataVCL
-.AppData.LastUsedFolder variable to the INI file.
+     See ccAppData.pas for details.
+     The TIniFileApp class will also automatically save the ccAppData.AppData.LastUsedFolder variable to the INI file.
 
 
   Important:
@@ -97,7 +95,6 @@ USES
    Vcl.Graphics, Vcl.Forms, Vcl.FileCtrl, Vcl.Menus, Vcl.ExtCtrls, Vcl.NumberBox, Vcl.ComCtrls, Vcl.WinXCtrls, Vcl.Samples.Spin, Vcl.ActnList, Vcl.Dialogs, Vcl.Controls, Vcl.StdCtrls,
    ccINIFile;
 
-{.$WARN UNIT_PLATFORM OFF}
 {$WARN GARBAGE OFF}              {Silence the: 'W1011 Text after final END' warning }
 
 TYPE
@@ -142,7 +139,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   ccIO, ccTextFile, ccCore, ccAppData, cbAppDataVCL; //{$IFDEF FRAMEWORK_FMX}cbAppDataFMX{$ELSE}cbAppDataVCL,{$ENDIF};
+   ccIO, ccTextFile, ccCore, ccAppData, cbAppDataVCL; //{$IFDEF FRAMEWORK_FMX}LightFMX.AppData{$ELSE}cbAppDataVCL,{$ENDIF};
 
 
 {-----------------------------------------------------------------------------------------------------------------------

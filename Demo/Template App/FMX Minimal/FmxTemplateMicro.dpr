@@ -7,8 +7,8 @@ uses
   System.StartUpCopy,
   FMX.Forms,
   MainForm in 'MainForm.pas' {Form1},
-  cbAppDataFMX in '..\..\..\FMX\cbAppDataFMX.pas',
-  cbAppDataFmxForm in '..\..\..\FMX\cbAppDataFmxForm.pas',
+  LightFMX.AppData in '..\..\..\FMX\LightFMX.AppData.pas',
+  LightFMX.AppDataForm in '..\..\..\FMX\LightFMX.AppDataForm.pas',
   cbIniFileFMX in '..\..\..\FMX\cbIniFileFMX.pas';
 
 {$R *.res}

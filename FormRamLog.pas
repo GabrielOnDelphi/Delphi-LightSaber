@@ -60,7 +60,7 @@ TYPE
     procedure SaveSettings;
   public
     class procedure CreateGlobalLog; static; // Would be nice to make this protected but we can't. All event handlers must be accesible/visible
-    procedure FormInitialize; override; // Called after the main form was fully initilized
+    procedure FormPostInitialize; override; // Called after the main form was fully initilized
   end;
 
 
@@ -103,9 +103,9 @@ begin
 end;
 
 
-procedure TfrmRamLog.FormInitialize;
+procedure TfrmRamLog.FormPostInitialize;
 begin
-  inherited FormInitialize;
+  inherited FormPostInitialize;
 
   LoadSettings;
   chkLogOnError.Checked:= AppData.RamLog.ShowOnError;

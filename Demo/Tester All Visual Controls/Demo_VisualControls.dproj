@@ -84,6 +84,7 @@
         </DelphiCompile>
         <DCCReference Include="MainForm.pas">
             <Form>frmMain</Form>
+            <FormType>dfm</FormType>
         </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

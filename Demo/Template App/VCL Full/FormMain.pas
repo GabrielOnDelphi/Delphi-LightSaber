@@ -108,8 +108,8 @@ TYPE
     procedure WMDROPFILES (VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Accept the dropped files from Windows Explorer }
   private
   public
-    procedure FormInitialize; override;  { Called after the main form was fully created }
-    procedure FormRelease; override;
+    procedure FormPostInitialize; override;  { Called after the main form was fully created }
+    procedure FormPreRelease; override;
     procedure FontSizeChanged;
  end;
 
@@ -141,9 +141,9 @@ begin
 end;
 
 
-procedure TMainForm.FormInitialize;
+procedure TMainForm.FormPostInitialize;
 begin
-  inherited FormInitialize;
+  inherited FormPostInitialize;
 
   uInitialization.LateInitialization;
   btnStartClick(self);
@@ -165,9 +165,9 @@ end;
 
 { It is enough to put SaveBeforeExit in thse two places only: OnCloseQueryand & OnDestroy.
   Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
-procedure TMainForm.FormRelease;
+procedure TMainForm.FormPreRelease;
 begin
-  inherited FormRelease;
+  inherited FormPreRelease;
   if NOT Saved then
    begin
      GuiSettings.Save;

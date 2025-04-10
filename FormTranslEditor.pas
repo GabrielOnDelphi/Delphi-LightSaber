@@ -76,7 +76,7 @@ TYPE
     procedure LoadCurTranslation;
   public
     class procedure ShowEditor; static;
-    procedure FormInitialize; override; // Called after the main form was fully created
+    procedure FormPostInitialize; override; // Called after the main form was fully created
   end;
 
 
@@ -97,9 +97,9 @@ end;
 
 
 
-procedure TfrmTranslEditor.FormInitialize;
+procedure TfrmTranslEditor.FormPostInitialize;
 begin
-  inherited FormInitialize;
+  inherited FormPostInitialize;
   Assert(Translator <> NIL);
   lblLiveFormsClick(Self);
 end;

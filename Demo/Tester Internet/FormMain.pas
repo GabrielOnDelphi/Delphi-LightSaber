@@ -34,10 +34,10 @@ TYPE
     procedure FormClose     (Sender: TObject; var Action: TCloseAction);
     procedure btnGetExtIpClick(Sender: TObject);
   protected
-    procedure FormRelease; override;
+    procedure FormPreRelease; override;
   private
   public
-    procedure FormInitialize; {don't forget inherited in FormInitialize!} override;
+    procedure FormPostInitialize; {don't forget inherited in FormPostInitialize!} override;
  end;
 
 VAR
@@ -54,7 +54,7 @@ USES
 {--------------------------------------------------------------------------------------------------
    APP START/CLOSE
 --------------------------------------------------------------------------------------------------}
-procedure TMainForm.FormInitialize; inherited FormInitialize;
+procedure TMainForm.FormPostInitialize; inherited FormPostInitialize;
 begin
   { Application }
   AppData.CompanyName:= 'SciVance Technologies';
@@ -99,7 +99,7 @@ end;
 
 { It is enough to put SaveBeforeExit in thse two places only: OnCloseQueryand & OnDestroy.
   Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
-procedure TMainForm.FormRelease;
+procedure TMainForm.FormPreRelease;
 begin
   if NOT Saved then
    begin

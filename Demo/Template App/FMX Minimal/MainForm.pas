@@ -13,7 +13,7 @@ TYPE
     CheckBox1: TCheckBox;
   private
   public
-   procedure FormInitialize; override;
+   procedure FormPostInitialize; override;
   end;
 
 VAR
@@ -24,7 +24,7 @@ IMPLEMENTATION
 
 
 
-procedure TForm1.FormInitialize;
+procedure TForm1.FormPostInitialize;
 begin
   AutoState:= asFull;  // Must set it before inherited!
   inherited;           // This will load the form's state from disk

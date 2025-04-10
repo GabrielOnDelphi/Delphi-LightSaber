@@ -36,11 +36,10 @@ requires
   Fmx;
 
 contains
-  cbAppDataFMX in 'cbAppDataFMX.pas',
-  cbAppDataFmxForm in 'cbAppDataFmxForm.pas',
-  cbIniFileFMX in 'cbIniFileFMX.pas',
-  cbDialogsFMX in 'cbDialogsFMX.pas',
-  cbTranslate in 'cbTranslate.pas';
+  LightFMX.AppData in 'LightFMX.AppData.pas',
+  LightFMX.AppData.Forms in 'LightFMX.AppData.Forms.pas',
+  LightFmx.DialogsDesktop in 'LightFmx.DialogsDesktop.pas',
+  LightFMX.DropDownSearch in 'LightFMX.DropDownSearch.pas',
+  LightFMX.IniFile in 'LightFMX.IniFile.pas';
 
 end.
-

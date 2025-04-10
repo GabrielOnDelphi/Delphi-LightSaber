@@ -83,8 +83,8 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   llRichLogUtils, cbTranslate, ccColors, ccAppData, cbAppDataVCL
-, cvINIFile, ciInternet;
+   llRichLogUtils, ccColors, ccAppData, cbAppDataVCL
+, ciInternet;
 
 
 

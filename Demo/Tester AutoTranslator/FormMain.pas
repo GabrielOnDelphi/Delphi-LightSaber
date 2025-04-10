@@ -22,7 +22,7 @@ TYPE
   private
     procedure TranslationLoaded(Sender: TObject);
   public
-    procedure FormInitialize; override; // Called after the main form was fully created
+    procedure FormPostInitialize; override; // Called after the main form was fully created
  end;
 
 VAR
@@ -41,9 +41,9 @@ USES
 {--------------------------------------------------------------------------------------------------
    APP START/CLOSE
 --------------------------------------------------------------------------------------------------}
-procedure TMainForm.FormInitialize;
+procedure TMainForm.FormPostInitialize;
 begin
-  inherited FormInitialize;
+  inherited FormPostInitialize;
 
   Translator.OnTranslationLoaded:= TranslationLoaded;  // Event handler
   TranslationLoaded(Self);                             // Show current loaded translation

@@ -36,7 +36,7 @@ type
   public
     procedure LoadForm; override;
     procedure SaveForm; override;
-    procedure FormInitialize; override;
+    procedure FormPostInitialize; override;
   end;
 
 var
@@ -53,7 +53,7 @@ begin
 end;
 
 
-procedure TMainForm.FormInitialize;
+procedure TMainForm.FormPostInitialize;
 begin
   inherited;
   if AppData.RunningHome

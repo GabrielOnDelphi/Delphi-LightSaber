@@ -54,7 +54,7 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
    cbDialogs, ccAppData, cbAppDataVCL
-, ciInternet, cbTranslate, ccINIFile, cvINIFile; //, cvINIFile;
+, ciInternet; //, cvINIFile;
 
 
 

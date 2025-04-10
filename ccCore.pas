@@ -253,12 +253,15 @@ TYPE
  function  UnicodeToAnsi       (CONST str: UnicodeString; codePage: Integer): RawByteString;
  function  AddNullToStr        (CONST Path: string): string;
 
+ // GENERATE LISTS
+ function  GetRandomPersonName: string;                                                                       { Returns a random name in a 100 unique name list }
+ function  GetRandomStreetName: string;
+ function  GetRockBands: TStringList;
+
  // OTHERS
  function  InsertCharEvery     (CONST c: char; CONST Target: string; Every: Integer): string;                 { Insert a char into TargetStr every x characters }
  function  DoubleQuoteStr      (CONST s: string): string;
  function  Reverse             (CONST s: String): string; deprecated 'ccCore.Reverse is deprecated. Use System.StrUtils.ReverseString';
- function  GetRandomPersonName: string;                                                                       { Returns a random name in a 100 unique name list }
- function  GetRandomStreetName: string;
  function  CharIsLetter        (CONST c: char): Boolean;
 
  // STRING RAM SIZE
@@ -1476,7 +1479,6 @@ begin
 end;
 
 
-
 function ReplaceString(CONST s, SearchFor, ReplaceWith: string): string;
 begin
  Result:= StringReplace(s, SearchFor, ReplaceWith, [rfReplaceAll, rfIgnoreCase]);
@@ -2236,6 +2238,81 @@ begin
    end;
 end;
 
+
+
+{ Returns a random name in a 100 unique names list }
+function GetRandomPersonName: string;
+CONST
+   Names: array[0..199] of string = ('Aaron','Abigail','Adam','Alan','Albert','Alexander','Alexis','Alice','Amanda','Amber','Amy','Andrea','Andrew','Angela','Ann','Anna','Anthony','Arthur','Ashley','Austin','Barbara','Benjamin','Betty','Beverly','Billy','Bobby','Brandon','Brenda','Brian','Brittany','Bruce','Bryan','Carl','Carol','Carolyn','Catherine','Charles',
+                                     'Charlotte','Cheryl','Christian','Christina','Christine','Christopher','Cynthia','Daniel','Danielle','David','Deborah','Debra','Denise','Dennis','Diana','Diane','Donald','Donna','Doris','Dorothy','Douglas','Dylan','Edward','Elijah','Elizabeth','Emily','Emma','Eric','Ethan','Eugene','Evelyn','Frances','Frank','Gabriel','Gary','George','Gerald','Gloria','Grace','Gregory','Hannah','Harold','Heather','Helen','Henry',
+                                     'Isabella','Jack','Jacob','Jacqueline','James','Janet','Janice','Jason','Jean','Jeffrey','Jennifer','Jeremy','Jerry','Jesse','Jessica','Joan','Joe','John','Jonathan','Jordan','Jose','Joseph','Joshua','Joyce','Juan','Judith','Judy','Julia','Julie','Justin','Karen','Katherine','Kathleen','Kathryn','Kayla','Keith','Kelly','Kenneth','Kevin','Kimberly','Kyle','Larry','Laura',
+                                     'Lauren','Lawrence','Linda','Lisa','Logan','Lori','Louis','Madison','Margaret','Maria','Marie','Marilyn','Mark','Martha','Mary','Mason','Matthew','Megan','Melissa','Michael','Michelle','Nancy','Natalie','Nathan','Nicholas','Nicole','Noah','Olivia','Pamela','Patricia','Patrick','Paul','Peter','Philip','Rachel','Ralph','Randy','Raymond','Rebecca','Richard','Robert','Roger','Ronald','Roy','Russell','Ruth','Ryan','Samantha','Samuel','Sandra','Sara','Sarah','Scott','Sean','Sharon','Shirley','Sophia','Stephanie','Stephen','Steven','Susan','Teresa','Terry','Theresa','Thomas','Timothy','Tyler','Victoria','Vincent','Virginia','Walter','Wayne','William','Willie','Zachary');
+begin
+  Result:= Names[Random(High(Names))];
+end;
+
+
+function GetRandomStreetName: string;
+CONST
+   Names: array[0..40] of string = ('Abbey Road', 'Abbotswell Street', 'Abingdon Street', 'Acacia Road', 'Acorn Street', 'Acton Street', 'Adam Street', 'Adelaide Place', 'Admiral Street', 'Agnes Street', 'Albany Street', 'Albemarle Street', 'Albert Cottages', 'Albert Mews', 'Albert Road', 'Albion Mews', 'Alexander Street', 'Alfred Mews', 'Allen Street', 'Allington Street', 'Alma Road', 'Amberley Road', 'Anchor Alley', 'Angel Count', 'Ann Street', 'Anstey Road', 'Beech Street', 'Belgrave Road', 'Belgrave Street', 'Belgrave Terrace', 'Bell Court', 'Bell Yard', 'Belmont Road', 'Bendall Street', 'Bendmore Road', 'Bennett Street', 'Bentinck Street', 'Beresford Street', 'Berkley Street', 'Berwick Street', 'Birdcage Walk');
+begin
+  Result:= Names[Random(High(Names))];
+end;
+
+
+function GetRockBands: TStringList;
+begin
+  Result:= TStringList.Create;
+  TRY
+    Result.Add('Pink Floyd');
+    Result.Add('The Moody Blues');
+    Result.Add('Fleetwood Mac');
+    Result.Add('Queen');
+    Result.Add('The Doors');
+    Result.Add('Led Zeppelin');
+    Result.Add('The Beatles');
+    Result.Add('The Zombies');
+    Result.Add('The Pretenders');
+    Result.Add('Foreigner');
+    Result.Add('The Animals');
+    Result.Add('Arcade Fire');
+    Result.Add('The Byrds');
+    Result.Add('The Who');
+    Result.Add('Boston');
+    Result.Add('The Rolling Stones');
+    Result.Add('Metallica');
+    Result.Add('The Beach Boys');
+    Result.Add('The Yardbirds');
+    Result.Add('Lynyrd Skynyrd');
+    Result.Add('Def Leppard');
+    Result.Add('The Small Faces');
+    Result.Add('The Velvet Underground');
+    Result.Add('Radiohead');
+    Result.Add('Black Sabbath');
+    Result.Add('The Troggs');
+    Result.Add('Kansas');
+    Result.Add('The Police');
+    Result.Add('The Jimi Hendrix Experience');
+    Result.Add('Rush');
+    Result.Add('The Hollies');
+    Result.Add('Tom Petty and the Heartbreakers');
+    Result.Add('The Eagles');
+    Result.Add('The Cars');
+    Result.Add('Deep Purple');
+    Result.Add('The Clash');
+    Result.Add('The Kinks');
+    Result.Add('The Ramones');
+    Result.Add('Jethro Tull');
+    Result.Add('The Cult');
+    Result.Add('Nirvana');
+    Result.Add('U2');
+    Result.Add('Pearl Jam');
+    Result.Add('Soundgarden');
+    Result.Add('Foo Fighters');
+  EXCEPT
+    FreeAndNil(Result);
+  END;
+end;
 
 
 
@@ -3128,26 +3205,6 @@ begin
  if s= '' then EXIT;
  for i:= Length(S) DownTo 1
   DO Result:= Result+ s[i];
-end;
-
-
-
-{ Returns a random name in a 100 unique names list }
-function GetRandomPersonName: string;
-CONST
-   Names: array[0..199] of string = ('Aaron','Abigail','Adam','Alan','Albert','Alexander','Alexis','Alice','Amanda','Amber','Amy','Andrea','Andrew','Angela','Ann','Anna','Anthony','Arthur','Ashley','Austin','Barbara','Benjamin','Betty','Beverly','Billy','Bobby','Brandon','Brenda','Brian','Brittany','Bruce','Bryan','Carl','Carol','Carolyn','Catherine','Charles',
-                                     'Charlotte','Cheryl','Christian','Christina','Christine','Christopher','Cynthia','Daniel','Danielle','David','Deborah','Debra','Denise','Dennis','Diana','Diane','Donald','Donna','Doris','Dorothy','Douglas','Dylan','Edward','Elijah','Elizabeth','Emily','Emma','Eric','Ethan','Eugene','Evelyn','Frances','Frank','Gabriel','Gary','George','Gerald','Gloria','Grace','Gregory','Hannah','Harold','Heather','Helen','Henry',
-                                     'Isabella','Jack','Jacob','Jacqueline','James','Janet','Janice','Jason','Jean','Jeffrey','Jennifer','Jeremy','Jerry','Jesse','Jessica','Joan','Joe','John','Jonathan','Jordan','Jose','Joseph','Joshua','Joyce','Juan','Judith','Judy','Julia','Julie','Justin','Karen','Katherine','Kathleen','Kathryn','Kayla','Keith','Kelly','Kenneth','Kevin','Kimberly','Kyle','Larry','Laura',
-                                     'Lauren','Lawrence','Linda','Lisa','Logan','Lori','Louis','Madison','Margaret','Maria','Marie','Marilyn','Mark','Martha','Mary','Mason','Matthew','Megan','Melissa','Michael','Michelle','Nancy','Natalie','Nathan','Nicholas','Nicole','Noah','Olivia','Pamela','Patricia','Patrick','Paul','Peter','Philip','Rachel','Ralph','Randy','Raymond','Rebecca','Richard','Robert','Roger','Ronald','Roy','Russell','Ruth','Ryan','Samantha','Samuel','Sandra','Sara','Sarah','Scott','Sean','Sharon','Shirley','Sophia','Stephanie','Stephen','Steven','Susan','Teresa','Terry','Theresa','Thomas','Timothy','Tyler','Victoria','Vincent','Virginia','Walter','Wayne','William','Willie','Zachary');
-begin
-  Result:= Names[Random(High(Names))];
-end;
-
-function GetRandomStreetName: string;
-CONST
-   Names: array[0..40] of string = ('Abbey Road', 'Abbotswell Street', 'Abingdon Street', 'Acacia Road', 'Acorn Street', 'Acton Street', 'Adam Street', 'Adelaide Place', 'Admiral Street', 'Agnes Street', 'Albany Street', 'Albemarle Street', 'Albert Cottages', 'Albert Mews', 'Albert Road', 'Albion Mews', 'Alexander Street', 'Alfred Mews', 'Allen Street', 'Allington Street', 'Alma Road', 'Amberley Road', 'Anchor Alley', 'Angel Count', 'Ann Street', 'Anstey Road', 'Beech Street', 'Belgrave Road', 'Belgrave Street', 'Belgrave Terrace', 'Bell Court', 'Bell Yard', 'Belmont Road', 'Bendall Street', 'Bendmore Road', 'Bennett Street', 'Bentinck Street', 'Beresford Street', 'Berkley Street', 'Berwick Street', 'Birdcage Walk');
-begin
-  Result:= Names[Random(High(Names))];
 end;
 
 

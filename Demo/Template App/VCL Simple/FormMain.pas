@@ -35,8 +35,8 @@ TYPE
   protected
   private
   public
-    procedure FormInitialize; override;
-    procedure FormRelease; override;
+    procedure FormPostInitialize; override;
+    procedure FormPreRelease; override;
  end;
 
 VAR
@@ -60,9 +60,9 @@ begin
 end;
 
 
-procedure TMainForm.FormInitialize;
+procedure TMainForm.FormPostInitialize;
 begin
-  inherited FormInitialize;
+  inherited FormPostInitialize;
 
   // Application
   AppData.CompanyName:= 'SciVance Technologies';
@@ -109,7 +109,7 @@ begin
 end;
 
 
-procedure TMainForm.FormRelease;
+procedure TMainForm.FormPreRelease;
 begin
   inherited;
 

@@ -18,6 +18,7 @@ USES
 TYPE
   TSingleArray = array of Single;
 
+
 {==================================================================================================
    MIN/MAX
 ==================================================================================================}
@@ -26,6 +27,7 @@ TYPE
  function  Find_Max        (CONST a, b, c: integer): Integer; overload;
  function  Find_Max        (CONST a, b, c: Cardinal): Cardinal; overload;
  function  Find_Max        (CONST a, b, c: Double): Double ; overload;
+
 
 {==================================================================================================
    RANGE
@@ -37,12 +39,14 @@ TYPE
  procedure EnsureZero      (VAR i: Integer);
  procedure EnsureRange     (VAR i: Integer; CONST Min, Max: Integer);
 
+
 {==================================================================================================
    PERCENT
 ==================================================================================================}
  function  ProcentNormal   (CONST WhatIs, From: Extended): Extended;                             { What is 10% of 20? Answer: 2}
  function  ProcentRepresent(CONST xRepresent, From: Int64) : Extended; overload;
  function  ProcentRepresent(CONST xRepresent, From: Extended): Extended; overload;
+
 
 {==================================================================================================
    ROUND
@@ -57,6 +61,7 @@ TYPE
 
  function  SameValue    (R1, R2: Real): Boolean;
 
+
 {==================================================================================================
    MEDIAN/INTERQ
 ==================================================================================================}
@@ -68,12 +73,16 @@ TYPE
  function  Interq75 (MX: System.Types.TIntegerDynArray): Integer;
  function  Interq90 (MX: System.Types.TIntegerDynArray): Integer;
 
+
 {==================================================================================================
    BASIC MATH
 ==================================================================================================}
  function  Factorial       (CONST n: byte): Int64;                                               { ATENTIE: din cauza numerelor gigantice pe care mi le da, parametrul 'n' nu poate fi mai mare de 20.  Formula n!= n*(n-1)*(n-2)*...*3*2*1 }
  function  Combinations    (CONST n, r: integer): Int64;                                         { Combinations of n taken r at the time= n! / (n-r)! * r! }
+ {$IFDEF CPUX86}
  function  FastModulo(const X, Y: Integer): Integer; assembler; { https://forum.lazarus.freepascal.org/index.php/topic,36342.15.html }
+ {$ENDIF}
+
 
 {==================================================================================================
    BINARY
@@ -81,6 +90,7 @@ TYPE
  {$IF Defined(CPUX86)}
  function MixBytes(FG, BG, BlendPower: byte): Byte; { This function mixes two bytes According to value of TRANS. The value of TRANS is between 0 (result then will be equal to FG) and 255 (result then will be equal to BG) }
  {$ENDIF}
+
 
 {==================================================================================================
    OTHERS
@@ -318,6 +328,7 @@ end;
 
 
 { Source: https://forum.lazarus.freepascal.org/index.php/topic,36342.15.html }
+{$IFDEF CPUX86}
 function FastModulo(const X, Y: Integer): Integer; assembler;
 asm
   mov eax, ecx
@@ -326,6 +337,7 @@ asm
   idiv ecx
   mov eax, edx
 end;
+{$ENDIF}
 
 
 { FORMULA:  Combinations of n taken r at the time= n! / (n-r)! * r! }

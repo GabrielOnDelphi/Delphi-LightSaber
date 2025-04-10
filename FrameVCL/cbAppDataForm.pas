@@ -12,8 +12,8 @@
       The TLightForm provides two places that (in conjunction with TAppData) offer you two methods that are guaranteed to be executed:
       TMyForm = class(TLightForm)
           protected
-            procedure FormInitialize; override; // Called after the main form was fully initialized.
-            procedure FormRelease;
+            procedure FormPostInitialize; override; // Called after the main form was fully initialized.
+            procedure FormPreRelease;
          end;
 
 
@@ -28,12 +28,12 @@
         TYourForm = class(TLightForm)
         protected
         public
-          procedure FormInitialize;  override;    // Optional
+          procedure FormPostInitialize;  override;    // Optional
         end;
 
-       procedure TYourForm.FormInitialize;
+       procedure TYourForm.FormPostInitialize;
        begin
-         inherited FormInitialize;
+         inherited FormPostInitialize;
 
          // Initialize your own code here
        end;
@@ -42,12 +42,12 @@
 
   Extra features
 
-      FormRelease
+      FormPreRelease
 
-         Optionally you can use the FormRelease event to execute your code on application shutdown.
-         Unlike other events, FormRelease is always called, and it is guaranteed to be called once and only once!
+         Optionally you can use the FormPreRelease event to execute your code on application shutdown.
+         Unlike other events, FormPreRelease is always called, and it is guaranteed to be called once and only once!
 
-         Execution order: FormRelease -> FormClose -> FormDestroy
+         Execution order: FormPreRelease -> FormClose -> FormDestroy
 
       Self saving forms
 
@@ -85,8 +85,8 @@ TYPE
     constructor Create(AOwner: TComponent; AutoSaveForm: TAutoState); reintroduce; overload; virtual;
     function CloseQuery: boolean; override;
 
-    procedure FormInitialize; virtual;
-    procedure FormRelease; virtual;
+    procedure FormPostInitialize; virtual;   // Takes place after the form was fully created
+    procedure FormPreRelease; virtual;       // Takes place before the form is destroyed. It is guaranteed to be called excetly once.
 
     procedure LoadForm; virtual;
     procedure SaveForm; virtual;
@@ -98,8 +98,7 @@ TYPE
 
 IMPLEMENTATION
 USES
-  ccAppData, cbAppDataVCL
-;
+  ccAppData, cbAppDataVCL;
 
 
 constructor TLightForm.Create(AOwner: TComponent; AutoSaveForm: TAutoState);
@@ -115,7 +114,7 @@ begin
 end;
 
 
-procedure TLightForm.FormInitialize;
+procedure TLightForm.FormPostInitialize;
 begin
   // This can be overridden by the user to implement initialization after the form is ready
 end;
@@ -157,7 +156,7 @@ begin
   AND NOT AppData.Initializing then
   begin
     try
-      FormRelease;
+      FormPreRelease;
 
       if AutoState > asNone  // Give the user the option not to save the form
       then SaveForm;
@@ -169,7 +168,7 @@ end;
 
 
 { Called ONLY once, when Saved = False }
-procedure TLightForm.FormRelease;
+procedure TLightForm.FormPreRelease;
 begin
   // Give user a chance to call its own finalization code (guaranteed once)
 end;
