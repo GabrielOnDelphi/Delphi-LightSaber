@@ -5,10 +5,11 @@
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>None</FrameworkType>
         <MainSource>LightCore.dpk</MainSource>
-        <Platform Condition="'$(Platform)'==''">Android64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
         <ProjectVersion>20.3</ProjectVersion>
         <TargetedPlatforms>167939</TargetedPlatforms>
+        <ProjectName Condition="'$(ProjectName)'==''">LightCore</ProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>

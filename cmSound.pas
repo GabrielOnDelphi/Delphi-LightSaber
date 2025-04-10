@@ -160,7 +160,7 @@ begin
 
   if Frequency > (0.6 * SampleRate) then
   begin
-    Mesaj(Format('Sample rate of %d is too low to play a tone of %dHz', [SampleRate, Frequency]));
+    MesajWarning(Format('Sample rate of %d is too low to play a tone of %dHz', [SampleRate, Frequency]));
     EXIT;
   end;
 

@@ -245,7 +245,7 @@ begin
   then Ph:= sei.hProcess
   else
    begin
-    Mesaj(SysErrorMessage(GetLastError));
+    MesajError(SysErrorMessage(GetLastError));
     EXIT(FALSE);
    end;
 

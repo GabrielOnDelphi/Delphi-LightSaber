@@ -14,10 +14,9 @@ USES
    , Vcl.Forms;
 
  function  MesajGeneric   (CONST MessageText: string; Title: string= ''; Icon: Integer= -1): integer;         { 'Title' will appear in window's caption }
- procedure Mesaj          (CONST MessageText: string);
- procedure MesajInfo      (CONST MessageText: string; CONST Title: string= '');
- procedure MesajWarning   (CONST MessageText: string);
- procedure MesajError     (CONST MessageText: string);
+ procedure MesajInfo      (CONST MessageText: string; CONST Caption: string= '');
+ procedure MesajWarning   (CONST MessageText: string; CONST Caption: string= '');
+ procedure MesajError     (CONST MessageText: string; CONST Caption: string= '');
  procedure MesajErrDetail (CONST MessageText, Where: string);
  function  MesajYesNo     (CONST MessageText: string; CONST Title: string= ''): Boolean;                      { Returns True if the user presses the YES btn }
 
@@ -67,35 +66,30 @@ end;
 
 
 
-procedure Mesaj(CONST MessageText: string);   { 'Title' will appear in window's caption } //todo: get rid of if. use MesajInfo instead
- begin
-  MesajInfo(MessageText, '');
- end;
-
 
 
 procedure MesajInfo(CONST MessageText: string; CONST Caption: string= '');
 begin
- MesajGeneric(MessageText, Caption, -1);
+  MesajGeneric(MessageText, Caption, -1);
 end;
 
 
 
 procedure MesajWarning(const MessageText, Caption: string);
 begin
- MesajGeneric(MessageText, 'Warning', MB_ICONWARNING or MB_OK);
+  MesajGeneric(MessageText, 'Warning', MB_ICONWARNING or MB_OK);
 end;
 
 
 
-procedure MesajError(const MessageText, Caption: string);                                                  { afiseaza un mesaj cu icon de eroare pe ecran. If the MessageText is empty then dispaly nothing }
+procedure MesajError(const MessageText, Caption: string);
 begin
  MesajGeneric(MessageText, 'Error', MB_ICONERROR or MB_OK);
 end;
 
 
 
-procedure MesajErrDetail(const MessageText, Caption: string);                                                   { afiseaza un mesaj cu icon de eroare pe ecran }
+procedure MesajErrDetail(CONST MessageText, Where: string);
 VAR sMsg: string;
 begin
  sMsg:= MessageText+
