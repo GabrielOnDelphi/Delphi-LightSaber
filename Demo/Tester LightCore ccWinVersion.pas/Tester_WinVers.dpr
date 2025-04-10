@@ -3,9 +3,8 @@ program Tester_WinVers;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF }
-  cbAppData,
-  Forms,
+  {$ENDIF}
+  cbAppDataVCL,
   FormMain in 'FormMain.pas' {frmTester},
   FormRamLog in '..\..\FormRamLog.pas';
 
@@ -15,5 +14,5 @@ begin
   AppData:= TAppData.Create('Light Tester WinVer');
   AppData.CreateMainForm(TfrmTester, frmTester, TRUE);
   TfrmRamLog.CreateGlobalLog;
-  Application.Run;
+  AppData.Run;
 end.

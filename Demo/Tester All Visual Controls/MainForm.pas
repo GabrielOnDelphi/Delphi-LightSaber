@@ -3,43 +3,37 @@ UNIT MainForm;
 INTERFACE
 
 USES
-  System.SysUtils, System.Classes, Vcl.Graphics,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cvListBox, cvStringGridBase, cvStringGrid, Vcl.ExtCtrls,
+  System.SysUtils, System.Classes, Vcl.Graphics, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.WinXCtrls, Vcl.FileCtrl, Vcl.ValEdit, Vcl.Grids, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Mask, Vcl.Samples.Spin, Vcl.CheckLst,
+  cvListBox, cvStringGridBase, cvStringGrid,
   cvLabelEdit, cvPathEdit, cvSpinEditDelayed, cvSpinEdit, cvFileListBox,
-  cvFloatSpinEdit, Vcl.StdCtrls, cvCheckBox, cvMsgDispatcher, cvRichEditResize, cvGradientPanel,
+  cvFloatSpinEdit, cvCheckBox, cvMsgDispatcher, cvRichEditResize, cvGradientPanel,
   cvActivityIndicator, cvCreationOrderTester, cvCaptionedThumb, cvTimeLine, cvTrayIcon, cvToolBox, cvTimer,
-  Vcl.ComCtrls, cvStatusBar, cvSplitter, cvScrollBox, cvRichEdit, cvRadioButton, cvProxyList, cvPanel,
+  cvStatusBar, cvSplitter, cvScrollBox, cvRichEdit, cvRadioButton, cvProxyList, cvPanel,
   cvMinimalPathLabel, cvMemo, cvLstEditor, cvGroupBox, cvGraphChart, cvFreeDiskSpace,
-  cvFileFilter, cvEdit, cvDirectoryListBox, cvCountDown, cvComboBox,
-  cvCheckListBox, cvAssociateExt, cvDropDownSearch, Vcl.WinXCtrls, Vcl.FileCtrl, Vcl.ValEdit, Vcl.Grids,
-  Vcl.Mask, Vcl.Samples.Spin, Vcl.CheckLst, cbAppDataForm;
+  cvFileFilter, cvEdit, cvDirectoryListBox, cvCountDown, cvComboBox, cvCheckListBox, cvAssociateExt, cvDropDownSearch,
+  cbAppDataForm;
 
 TYPE
   TfrmMain = class(TLightForm)
     AssociateFileExt1     : TAssociateFileExt;
     BaseStrGrid1          : TBaseStrGrid;
     CationedThumbnail     : TCationedThumbnail;
-    CMinimalLabel         : TMinimalPathLabel;
     CountDown             : TCountDown;
     CubicCheckBox1        : TCubicCheckBox;
     CheckListBox          : TCubicCheckListBox;
     ComboBox              : TCubicComboBox;
     CubicDirListBox1      : TCubicDirListBox;
-    CubicEdit             : TCubicEdit;
     CubicFileList1        : TCubicFileList;
     CubicFilterBox1       : TCubicFilterBox;
     GroupBox              : TCubicGroupBox;
-    LabelEdit             : TCubicLabelEdit;
     ListBox               : TCubicListBox;
-    Memo                  : TCubicMemo;
-    Panel                 : TCubicPanel;
-    PathEdit              : TCubicPathEdit;
+    CubicPanel            : TCubicPanel;
     CubicRadioButton1     : TCubicRadioButton;
     ScrollBox             : TCubicScrollBox;
     SpinEdit              : TCubicSpinEdit;
     SpinEditD             : TCubicSpinEditD;
     SpinEditSplit         : TCubicSpinEditSplit;
-    cubicStatusBar1       : TcubicStatusBar;
+    StatusBar             : TcubicStatusBar;
     CubicTimer            : TCubicTimer;
     CubicTrayIcon         : TCubicTrayIcon;
     ValueListEditor       : TCubicValueListEditor;
@@ -52,7 +46,7 @@ TYPE
     PageControl           : TPageControl;
     ProxyList1            : TProxyList;
     TabSheet1             : TTabSheet;
-    tabEnhanced           : TTabSheet;
+    tabText               : TTabSheet;
     TabSheet4             : TTabSheet;
     TabSheet5             : TTabSheet;
     TabSheet6             : TTabSheet;
@@ -62,22 +56,28 @@ TYPE
     TimeLine              : TTimeLine;
     ToolBox               : TToolBox;
     CreationOrder_Test    : TCreationOrderTest;
-    CubicSplitter1        : TCubicSplitter;
     RichEdit              : TCubicRichEdit;
     Label1                : TLabel;
     Label2                : TLabel;
     Label3                : TLabel;
-    TabSheet2             : TTabSheet;
-    CMinimalLabel1: TMinimalPathLabel;
-    pnlRichEditResize: TPanel;
-    RichEditResize1: TRichEditResize;
-    Panel1: TPanel;
-    DropDownSearchBox: TDropDownSearchBox;
+    pnlRichEditResize     : TPanel;
+    RichEditResize1       : TRichEditResize;
+    PathEdit              : TCubicPathEdit;
+    lblMinimalLabel       : TMinimalPathLabel;
+    Label4                : TLabel;
+    Panel2                : TPanel;
+    Memo                  : TCubicMemo;
+    LabelEdit             : TCubicLabelEdit;
+    CubicEdit             : TCubicEdit;
+    CMinimalLabel         : TMinimalPathLabel;
+    Panel1                : TPanel;
+    DropDownSearchBox     : TDropDownSearchBox;
+    CubicSplitter         : TCubicSplitter;
     procedure FormShow(Sender: TObject);
     procedure DropDownSearchBoxEndSearch(Sender, SelectedItem: TObject);
   private
-    SearchBox: TDropDownSearchBox;
   public
+    procedure CreateSearchBox; // Dynamically created. del
   end;
 
 VAR
@@ -88,20 +88,7 @@ IMPLEMENTATION  {$R *.dfm}
 
 procedure TfrmMain.FormShow(Sender: TObject);
 begin
-  VAR TSL:= TStringList.Create;
-  TRY
-    TSL.Add('Pink Floyd');
-    TSL.Add('Deep Purple');
-    TSL.Add('Fleetwood Mac');
-
-    SearchBox:= TDropDownSearchBox.Create(TabSheet5);
-    SearchBox.Parent:= TabSheet5;
-    SearchBox.OnEndSearch:= DropDownSearchBoxEndSearch;
-    //SearchBox.SetHostParent(Self);
-    SearchBox.Populate(TSL);
-  FINALLY
-    FreeAndNil(TSL);
-  END;
+  DropDownSearchBox.AddDemoStrings;
   {
   VAR RichResize:= TRichEditResize.Create(pnlRichEditResize);
   RichResize.Parent:= pnlRichEditResize;
@@ -112,6 +99,22 @@ end;
 procedure TfrmMain.DropDownSearchBoxEndSearch(Sender, SelectedItem: TObject);
 begin
   Caption:= DropDownSearchBox.SelectedString;
+end;
+
+
+
+
+
+//del
+procedure TfrmMain.CreateSearchBox; // Dynamically created
+VAR
+   SearchBox: TDropDownSearchBox;
+begin
+  SearchBox:= TDropDownSearchBox.Create(TabSheet5);
+  SearchBox.Parent:= TabSheet5;
+  SearchBox.OnEndSearch:= DropDownSearchBoxEndSearch;
+  //SearchBox.SetHostParent(Self);
+  SearchBox.AddDemoStrings;
 end;
 
 

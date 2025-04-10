@@ -37,7 +37,8 @@ USES
   WinApi.Windows, WinApi.Messages, Winapi.ShellApi,
   System.SysUtils, System.Classes, System.Actions,
   VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
-  CoolTrayIcon, cbAppData, csSystem, cvPathEdit, cvStatusBar, cpProteus {Delete this line if you don't have Proteus library}, cpProteusIO, cmGuiSettings, cbAppDataForm, ccCore;
+  CoolTrayIcon, ccAppData, cbAppDataVCL
+, csSystem, cvPathEdit, cvStatusBar, cpProteus {Delete this line if you don't have Proteus library}, cpProteusIO, cmGuiSettings, cbAppDataForm, ccCore;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -107,8 +108,8 @@ TYPE
     procedure WMDROPFILES (VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Accept the dropped files from Windows Explorer }
   private
   public
-    procedure FormInitialize; override;  { Called after the main form was fully created }
-    procedure FormRelease; override;
+    procedure FormPostInitialize; override;  { Called after the main form was fully created }
+    procedure FormPreRelease; override;
     procedure FontSizeChanged;
  end;
 
@@ -140,9 +141,9 @@ begin
 end;
 
 
-procedure TMainForm.FormInitialize;
+procedure TMainForm.FormPostInitialize;
 begin
-  inherited FormInitialize;
+  inherited FormPostInitialize;
 
   uInitialization.LateInitialization;
   btnStartClick(self);
@@ -164,9 +165,9 @@ end;
 
 { It is enough to put SaveBeforeExit in thse two places only: OnCloseQueryand & OnDestroy.
   Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
-procedure TMainForm.FormRelease;
+procedure TMainForm.FormPreRelease;
 begin
-  inherited FormRelease;
+  inherited FormPreRelease;
   if NOT Saved then
    begin
      GuiSettings.Save;

@@ -4,7 +4,8 @@ INTERFACE
 
 USES
   WinApi.Windows, Winapi.ShellAPI, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin,
-  Vcl.ComCtrls, Vcl.ExtCtrls, cbAppData, cbAppDataForm;
+  Vcl.ComCtrls, Vcl.ExtCtrls, ccAppData, cbAppDataVCL
+, cbAppDataForm;
 
 const
    CRLF = #13#10;
@@ -19,7 +20,7 @@ TYPE
   protected
   private
   public
-    procedure FormInitialize; override; // Called after the main form was fully created
+    procedure FormPostInitialize; override; // Called after the main form was fully created
  end;
 
 VAR
@@ -37,9 +38,9 @@ begin
 end;
 
 
-procedure TfrmTester.FormInitialize;
+procedure TfrmTester.FormPostInitialize;
 begin
- inherited FormInitialize;
+ inherited FormPostInitialize;
  btnStartClick(Self);
 end;
 

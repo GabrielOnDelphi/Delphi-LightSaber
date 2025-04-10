@@ -23,7 +23,8 @@ INTERFACE
 USES
   WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin,
   cvRichEdit, Vcl.ComCtrls, ccCore, csSystem, cbDialogs, ccINIFile, cbAppDataForm,  Vcl.Dialogs, cvCheckBox, Vcl.ExtCtrls, llRichLogTrack,
-  System.Actions, Vcl.ActnList, Vcl.Menus, cvRadioButton, cbAppData;
+  System.Actions, Vcl.ActnList, Vcl.Menus, cvRadioButton, ccAppData, cbAppDataVCL
+;
 
 TYPE
  TfrmTester = class(TLightForm)
@@ -59,7 +60,7 @@ TYPE
     procedure FormDestroy        (Sender: TObject);
   private
   public
-    procedure FormInitialize; override; // Called after the main form was fully created
+    procedure FormPostInitialize; override; // Called after the main form was fully created
  end;
 
 VAR
@@ -81,9 +82,9 @@ begin
 end;
 
 
-procedure TfrmTester.FormInitialize;
+procedure TfrmTester.FormPostInitialize;
 begin
- inherited FormInitialize;
+ inherited FormPostInitialize;
 
  if AppData.RunningFirstTime
  then MesajInfo(

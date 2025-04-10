@@ -19,32 +19,14 @@ object frmMain: TfrmMain
     Top = 3
     Width = 889
     Height = 530
-    ActivePage = TabSheet5
+    ActivePage = tabText
     Align = alClient
     TabOrder = 0
     object TabSheet1: TTabSheet
       Caption = 'Basics'
-      object CMinimalLabel: TMinimalPathLabel
-        Left = 33
-        Top = 94
-        Width = 112
-        Height = 13
-        Hint = 'c:\Users\trei\Downloads\'
-        AutoSize = False
-        Caption = 'c:\...\Downloads\'
-        ParentShowHint = False
-        ShowHint = True
-        CaptionMin = 'c:\Users\trei\Downloads\'
-      end
-      object CubicSplitter1: TCubicSplitter
-        Left = 0
-        Top = 0
-        Height = 482
-        ResizeStyle = rsUpdate
-      end
       object CheckListBox: TCubicCheckListBox
-        Left = 664
-        Top = 214
+        Left = 577
+        Top = 213
         Width = 185
         Height = 95
         ItemHeight = 17
@@ -56,9 +38,9 @@ object frmMain: TfrmMain
         TabOrder = 0
       end
       object ComboBox: TCubicComboBox
-        Left = 33
-        Top = 237
-        Width = 145
+        Left = 133
+        Top = 221
+        Width = 185
         Height = 22
         Style = csOwnerDrawFixed
         ItemIndex = 0
@@ -71,62 +53,52 @@ object frmMain: TfrmMain
           ' Item3'
           ' Item4')
       end
-      object Memo: TCubicMemo
-        Left = 217
-        Top = 220
-        Width = 185
-        Height = 89
-        HideSelection = False
-        Lines.Strings = (
-          'Memo text')
-        TabOrder = 2
-        TypeMode = tmInsert
-      end
-      object Panel: TCubicPanel
-        Left = 220
-        Top = 94
+      object CubicPanel: TCubicPanel
+        Left = 133
+        Top = 95
         Width = 185
         Height = 109
         Alignment = taLeftJustify
-        TabOrder = 3
+        TabOrder = 2
         object CubicRadioButton1: TCubicRadioButton
           Left = 20
-          Top = 30
-          Width = 130
+          Top = 32
+          Width = 123
           Height = 17
-          Caption = 'CubicRadioButton1'
+          Caption = 'CubicRadioButton'
           TabOrder = 0
           AutoSize = True
         end
         object CubicCheckBox1: TCubicCheckBox
           Left = 20
-          Top = 58
-          Width = 115
+          Top = 60
+          Width = 108
           Height = 17
-          Caption = 'CubicCheckBox1'
+          Caption = 'CubicCheckBox'
           TabOrder = 1
           AutoSize = True
         end
       end
-      object cubicStatusBar1: TcubicStatusBar
+      object StatusBar: TcubicStatusBar
         Left = 0
-        Top = 501
+        Top = 481
         Width = 881
         Height = 19
         Panels = <>
         SimplePanel = True
+        SimpleText = 'CubicStatusBar'
       end
       object GroupBox: TCubicGroupBox
-        Left = 442
-        Top = 94
+        Left = 355
+        Top = 87
         Width = 185
-        Height = 215
+        Height = 221
         Caption = 'Spin editors'
-        TabOrder = 5
+        TabOrder = 4
         object FloatSpinEdit: TFloatSpinEdit
           Left = 29
           Top = 39
-          Width = 75
+          Width = 78
           Height = 21
           Hint = ''
           MinValue = -10.000000000000000000
@@ -139,10 +111,10 @@ object frmMain: TfrmMain
         end
         object SpinEditSplit: TCubicSpinEditSplit
           AlignWithMargins = True
-          Left = 31
+          Left = 29
           Top = 158
-          Width = 120
-          Height = 22
+          Width = 133
+          Height = 25
           BevelOuter = bvNone
           Caption = 'SpinEditSplit'
           ParentBackground = False
@@ -150,10 +122,10 @@ object frmMain: TfrmMain
           ShowCaption = False
           TabOrder = 1
           Spin.AlignWithMargins = True
-          Spin.Left = 57
+          Spin.Left = 65
           Spin.Top = 0
           Spin.Width = 50
-          Spin.Height = 24
+          Spin.Height = 25
           Spin.Margins.Top = 0
           Spin.Margins.Bottom = 0
           Spin.Align = alLeft
@@ -186,28 +158,9 @@ object frmMain: TfrmMain
           Value = 0
         end
       end
-      object LabelEdit: TCubicLabelEdit
-        Left = 33
-        Top = 187
-        Width = 121
-        Height = 23
-        EditLabel.Width = 50
-        EditLabel.Height = 15
-        EditLabel.Caption = 'LabelEdit'
-        TabOrder = 6
-        Text = ''
-      end
-      object CubicEdit: TCubicEdit
-        Left = 33
-        Top = 133
-        Width = 121
-        Height = 23
-        TabOrder = 7
-        Text = 'CubicEdit'
-      end
       object ListBox: TCubicListBox
-        Left = 664
-        Top = 94
+        Left = 577
+        Top = 95
         Width = 185
         Height = 97
         ItemHeight = 15
@@ -217,31 +170,27 @@ object frmMain: TfrmMain
           ' Item2'
           ' Item3')
         ScrollWidth = 6
-        TabOrder = 8
+        TabOrder = 5
       end
     end
-    object tabEnhanced: TTabSheet
-      Caption = 'Enhanced controls'
+    object tabText: TTabSheet
+      Caption = 'Text'
       ImageIndex = 2
-      object CMinimalLabel1: TMinimalPathLabel
-        AlignWithMargins = True
-        Left = 3
-        Top = 3
-        Width = 110
-        Height = 15
-        Hint = 
-          'c:\Projects\LightSaber\Demo\Tester All Visual Controls\dropdown.' +
-          'PNG'
-        Caption = 'c:\...\dropdown.PNG'
+      object CMinimalLabel: TMinimalPathLabel
+        Left = 22
+        Top = 36
+        Width = 112
+        Height = 13
+        Hint = 'c:\Users\trei\Downloads\'
+        AutoSize = False
+        Caption = 'c:\...\Downloads\'
         ParentShowHint = False
         ShowHint = True
-        CaptionMin = 
-          'c:\Projects\LightSaber\Demo\Tester All Visual Controls\dropdown.' +
-          'PNG'
+        CaptionMin = 'c:\Users\trei\Downloads\'
       end
       object ScrollBox: TCubicScrollBox
         Left = 22
-        Top = 33
+        Top = 121
         Width = 341
         Height = 247
         TabOrder = 0
@@ -264,11 +213,10 @@ object frmMain: TfrmMain
         end
       end
       object pnlRichEditResize: TPanel
-        Left = 459
-        Top = 33
+        Left = 379
+        Top = 121
         Width = 193
         Height = 97
-        AutoSize = True
         BevelOuter = bvNone
         Caption = 'Autoresizable rich edit'
         ParentBackground = False
@@ -293,14 +241,73 @@ object frmMain: TfrmMain
           MinHeight = 50
         end
       end
+      object Memo: TCubicMemo
+        Left = 593
+        Top = 124
+        Width = 185
+        Height = 91
+        HideSelection = False
+        Lines.Strings = (
+          'Memo text')
+        TabOrder = 2
+        TypeMode = tmInsert
+      end
+      object LabelEdit: TCubicLabelEdit
+        Left = 190
+        Top = 27
+        Width = 121
+        Height = 23
+        EditLabel.Width = 50
+        EditLabel.Height = 15
+        EditLabel.Caption = 'LabelEdit'
+        TabOrder = 3
+        Text = ''
+      end
+      object CubicEdit: TCubicEdit
+        Left = 190
+        Top = 59
+        Width = 121
+        Height = 23
+        TabOrder = 4
+        Text = 'CubicEdit'
+      end
+      object Panel1: TPanel
+        Left = 382
+        Top = 224
+        Width = 396
+        Height = 101
+        TabOrder = 5
+        object DropDownSearchBox: TDropDownSearchBox
+          AlignWithMargins = True
+          Left = 4
+          Top = 4
+          Width = 388
+          Height = 23
+          Align = alTop
+          TabOrder = 0
+          TextHint = 'Search...'
+          OnEndSearch = DropDownSearchBoxEndSearch
+        end
+      end
     end
     object TabSheet4: TTabSheet
       Caption = 'String grids'
       ImageIndex = 3
-      object BaseStrGrid1: TBaseStrGrid
+      object CubicSplitter: TCubicSplitter
         Left = 0
-        Top = 126
-        Width = 885
+        Top = 132
+        Width = 881
+        Height = 8
+        Cursor = crVSplit
+        Hint = 'CubicSplitter'
+        Align = alTop
+        ResizeStyle = rsUpdate
+      end
+      object BaseStrGrid1: TBaseStrGrid
+        AlignWithMargins = True
+        Left = 3
+        Top = 143
+        Width = 875
         Height = 175
         Align = alTop
         DefaultColWidth = 80
@@ -318,9 +325,10 @@ object frmMain: TfrmMain
         LargeColumn = 0
       end
       object EnhStrGrid1: TEnhStrGrid
-        Left = 0
-        Top = 0
-        Width = 885
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 875
         Height = 126
         Align = alTop
         DefaultColWidth = 80
@@ -346,14 +354,14 @@ object frmMain: TfrmMain
         AlignWithMargins = True
         Left = 99
         Top = 9
-        Width = 687
+        Width = 683
         Height = 120
         Margins.Left = 99
         Margins.Top = 9
         Margins.Right = 99
         Margins.Bottom = 9
         TopCaption = ' Tool box'
-        CloseButton.Left = 660
+        CloseButton.Left = 656
         CloseButton.Top = 0
         CloseButton.Width = 22
         CloseButton.Height = 20
@@ -363,7 +371,7 @@ object frmMain: TfrmMain
         CloseButton.TabOrder = 0
         TopBar.Left = 1
         TopBar.Top = 1
-        TopBar.Width = 681
+        TopBar.Width = 677
         TopBar.Height = 18
         TopBar.Cursor = crHandPoint
         TopBar.Align = alTop
@@ -391,7 +399,7 @@ object frmMain: TfrmMain
       object ValueListEditor: TCubicValueListEditor
         AlignWithMargins = True
         Left = 99
-        Top = 289
+        Top = 210
         Width = 683
         Height = 116
         Margins.Left = 99
@@ -402,14 +410,14 @@ object frmMain: TfrmMain
         TabOrder = 1
         ColWidths = (
           150
-          531)
+          527)
       end
       object MsgDispatcher: TMsgDispatcher
         AlignWithMargins = True
         Left = 99
-        Top = 207
+        Top = 147
         Width = 683
-        Height = 64
+        Height = 45
         Margins.Left = 99
         Margins.Top = 9
         Margins.Right = 99
@@ -420,20 +428,6 @@ object frmMain: TfrmMain
         Caption = 'MsgDispatcher'
         ShowCaption = False
         TabOrder = 2
-      end
-      object PathEdit: TCubicPathEdit
-        AlignWithMargins = True
-        Left = 99
-        Top = 147
-        Width = 683
-        Height = 42
-        Margins.Left = 99
-        Margins.Top = 9
-        Margins.Right = 99
-        Margins.Bottom = 9
-        Align = alTop
-        Caption = 'PathEdit'
-        TabOrder = 3
       end
     end
     object TabSheet6: TTabSheet
@@ -465,35 +459,94 @@ object frmMain: TfrmMain
     object TabSheet7: TTabSheet
       Caption = 'I/O'
       ImageIndex = 6
-      object CubicFilterBox1: TCubicFilterBox
-        Left = 14
-        Top = 204
-        Width = 300
-        Height = 23
-        TabOrder = 0
+      object lblMinimalLabel: TMinimalPathLabel
+        AlignWithMargins = True
+        Left = 98
+        Top = 135
+        Width = 152
+        Height = 15
+        Hint = 
+          'c:\Projects\LightSaber\Demo\Tester All Visual Controls\MinimalPa' +
+          'thLabel.pas'
+        Caption = 'c:\...\MinimalPathLabel.pas'
+        Color = 16773601
+        ParentColor = False
+        ParentShowHint = False
+        ShowHint = True
+        Transparent = False
+        CaptionMin = 
+          'c:\Projects\LightSaber\Demo\Tester All Visual Controls\MinimalPa' +
+          'thLabel.pas'
+      end
+      object Label4: TLabel
+        Left = 99
+        Top = 80
+        Width = 648
+        Height = 45
+        Caption = 
+          'When displaying a path, truncates the middle of the text if the ' +
+          'entire path cannot fit into the visible area of the control.'#13#10'  ' +
+          'It ONLY works with filenames and paths because of MinimizeName!'#13 +
+          #10'  If ShowFullTextAsHint is true then the entire text will be sh' +
+          'own into the Hint.'
       end
       object FreeDiskSpace1: TFreeDiskSpace
-        Left = 14
-        Top = 22
-        Width = 300
-        Height = 63
+        Left = 318
+        Top = 258
+        Width = 267
+        Height = 103
+        TabOrder = 0
+      end
+      object PathEdit: TCubicPathEdit
+        AlignWithMargins = True
+        Left = 99
+        Top = 9
+        Width = 683
+        Height = 42
+        Margins.Left = 99
+        Margins.Top = 9
+        Margins.Right = 99
+        Margins.Bottom = 9
+        Align = alTop
+        Caption = 'PathEdit'
         TabOrder = 1
       end
-      object CubicDirListBox1: TCubicDirListBox
+      object Panel2: TPanel
         Left = 14
-        Top = 94
-        Width = 300
-        Height = 97
+        Top = 168
+        Width = 185
+        Height = 329
+        Caption = 'Panel2'
         TabOrder = 2
-      end
-      object CubicFileList1: TCubicFileList
-        Left = 14
-        Top = 238
-        Width = 300
-        Height = 109
-        Hint = 'Press the "Delete" key to delete the selected file from disk.'
-        ItemHeight = 15
-        TabOrder = 3
+        object CubicFilterBox1: TCubicFilterBox
+          AlignWithMargins = True
+          Left = 4
+          Top = 4
+          Width = 177
+          Height = 23
+          Align = alTop
+          TabOrder = 0
+        end
+        object CubicDirListBox1: TCubicDirListBox
+          AlignWithMargins = True
+          Left = 4
+          Top = 33
+          Width = 177
+          Height = 120
+          Align = alTop
+          TabOrder = 1
+        end
+        object CubicFileList1: TCubicFileList
+          AlignWithMargins = True
+          Left = 4
+          Top = 159
+          Width = 177
+          Height = 166
+          Hint = 'Press the "Delete" key to delete the selected file from disk.'
+          Align = alClient
+          ItemHeight = 15
+          TabOrder = 2
+        end
       end
     end
     object TabSheet8: TTabSheet
@@ -589,28 +642,6 @@ object frmMain: TfrmMain
         Button.Font.Style = []
         Button.ParentFont = False
         Button.TabOrder = 0
-      end
-    end
-    object TabSheet2: TTabSheet
-      Caption = 'Search Box'
-      ImageIndex = 8
-      object Panel1: TPanel
-        Left = 291
-        Top = 156
-        Width = 341
-        Height = 89
-        TabOrder = 0
-        object DropDownSearchBox: TDropDownSearchBox
-          AlignWithMargins = True
-          Left = 4
-          Top = 4
-          Width = 333
-          Height = 23
-          Align = alTop
-          TabOrder = 0
-          TextHint = 'Search...'
-          OnEndSearch = DropDownSearchBoxEndSearch
-        end
       end
     end
   end

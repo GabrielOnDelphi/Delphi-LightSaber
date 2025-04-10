@@ -75,7 +75,8 @@ IMPLEMENTATION {$R *.dfm}
 {/$DEFINE BASER}
 
 USES
-   cmWindow, csExecuteShell, csShell, cbAppData;
+   cmWindow, csExecuteShell, csShell, ccAppData, cbAppDataVCL
+;
 
    {$IFDEF BioniX}BxConstants;{$ENDIF}
    {$IFDEF BASER} BaserConst, BxConstants;{$ENDIF}
@@ -132,7 +133,7 @@ end;
 procedure TfrmMain.FormCreate(Sender: TObject);
 VAR DetectedFolder: string;
 begin
- lblVersion.Caption:= 'Uninstaller version: '+ AppData.GetVersionInfo;
+ lblVersion.Caption:= 'Uninstaller version: '+ TAppData.GetVersionInfo;
  /// inetDiscount.Link:= BxConstants.wwwUninstallDiscount; { Give user a 50% discount so he won't uninstall. }
 
  if FileExists(AppData.CurFolder+ 'DebugMode')

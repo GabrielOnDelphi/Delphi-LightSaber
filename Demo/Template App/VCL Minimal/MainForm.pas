@@ -17,8 +17,6 @@ type
   public
   end;
 
-VAR
-  frmMain: TfrmMain;
 
 IMPLEMENTATION {$R *.dfm}
 

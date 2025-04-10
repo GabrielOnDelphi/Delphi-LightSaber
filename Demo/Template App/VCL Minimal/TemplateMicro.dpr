@@ -1,15 +1,17 @@
 program TemplateMicro;
 
 uses
-  Vcl.Forms,
+  {$IFDEF DEBUG}
+  FastMM4,
+  {$ENDIF}
   MainForm in 'MainForm.pas' {frmMain},
-  cbAppData,
+  cbAppDataVCL,
   ccINIFile;
 
 {$R *.res}
 
 begin
   AppData:= TAppData.Create('Light Template Micro');
-  AppData.CreateMainForm(TfrmMain, frmMain, TRUE, TRUE, asFull);
+  AppData.CreateMainForm(TfrmMain, TRUE, TRUE, asFull);
   AppData.Run;
 end.

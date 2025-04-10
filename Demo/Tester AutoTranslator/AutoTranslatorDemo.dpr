@@ -3,13 +3,11 @@ program AutoTranslatorDemo;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF }
-  Forms,
+  {$ENDIF}
+  cbAppDataVCL,
   FormMain in 'FormMain.pas' {MainForm},
   FormTranslEditor in '..\..\FormTranslEditor.pas' {frmTranslEditor},
-  FormTranslSelector in '..\..\FormTranslSelector.pas' {frmTranslSelector},
-  cbAppData in '..\..\cbAppData.pas',
-  cbTranslate in '..\..\cbTranslate.pas';
+  FormTranslSelector in '..\..\FormTranslSelector.pas' {frmTranslSelector};
 
 {$R *.res}
 

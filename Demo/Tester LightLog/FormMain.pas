@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cbLogRam, Vcl.Grids, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.ComCtrls,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, ccLogRam, Vcl.Grids, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.ComCtrls,
   llRichLogTrack, llRichLogUtils, llRichLog, cvLog, cvLogFilter, cbAppDataForm;
 
 type
@@ -36,14 +36,15 @@ type
   public
     procedure LoadForm; override;
     procedure SaveForm; override;
-    procedure FormInitialize; override;
+    procedure FormPostInitialize; override;
   end;
 
 var
   MainForm: TMainForm;
 
 implementation {$R *.dfm}
-Uses cbAppData, cbLogUtils, cbLogTypes, ccINIFile, cvINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
+Uses ccAppData, cbAppDataVCL
+, ccLogUtils, ccLogTypes, ccINIFile, cvINIFile, ccIO, ccTextFile, cmIO, cmIO.Win, ccCore, csSystem, cbDialogs;
 
 
 procedure TMainForm.FormCreate(Sender: TObject);
@@ -52,7 +53,7 @@ begin
 end;
 
 
-procedure TMainForm.FormInitialize;
+procedure TMainForm.FormPostInitialize;
 begin
   inherited;
   if AppData.RunningHome
@@ -155,7 +156,8 @@ begin
   inherited SaveForm;
 
   // Save form position
-  if NOT cbAppData.AppData.Initializing
+  if NOT ccAppData, cbAppDataVCL
+.AppData.Initializing
   then cvINIFile.//SaveForm(Self); called by AppData // We don't save anything if the start up was improper!
 
   // Save Log verbosity

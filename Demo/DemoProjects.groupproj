@@ -36,9 +36,6 @@
         <Projects Include="Tester LightLog\DemoLog.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="C:\Projects-3rd_Packages\Third party packages\ThirdPartyLibs.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="Template App\FMX Minimal\FmxTemplateMicro.dproj">
             <Dependencies/>
         </Projects>
@@ -152,15 +149,6 @@
     <Target Name="DemoLog:Make">
         <MSBuild Projects="Tester LightLog\DemoLog.dproj" Targets="Make"/>
     </Target>
-    <Target Name="ThirdPartyLibs">
-        <MSBuild Projects="C:\Projects-3rd_Packages\Third party packages\ThirdPartyLibs.dproj"/>
-    </Target>
-    <Target Name="ThirdPartyLibs:Clean">
-        <MSBuild Projects="C:\Projects-3rd_Packages\Third party packages\ThirdPartyLibs.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="ThirdPartyLibs:Make">
-        <MSBuild Projects="C:\Projects-3rd_Packages\Third party packages\ThirdPartyLibs.dproj" Targets="Make"/>
-    </Target>
     <Target Name="FmxTemplateMicro">
         <MSBuild Projects="Template App\FMX Minimal\FmxTemplateMicro.dproj"/>
     </Target>
@@ -180,13 +168,13 @@
         <MSBuild Projects="Demo Binary file\DemoBinaryFile.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="TemplateMicro;TemplateSimple;TemplateFull;Uninstaller;Demo_VisualControls;AutoTranslatorDemo;Demo_SaveGUI;Tester_ccIO;Tester_FileStream;Tester_WinVers;DemoLog;ThirdPartyLibs;FmxTemplateMicro;DemoBinaryFile"/>
+        <CallTarget Targets="TemplateMicro;TemplateSimple;TemplateFull;Uninstaller;Demo_VisualControls;AutoTranslatorDemo;Demo_SaveGUI;Tester_ccIO;Tester_FileStream;Tester_WinVers;DemoLog;FmxTemplateMicro;DemoBinaryFile"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="TemplateMicro:Clean;TemplateSimple:Clean;TemplateFull:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;AutoTranslatorDemo:Clean;Demo_SaveGUI:Clean;Tester_ccIO:Clean;Tester_FileStream:Clean;Tester_WinVers:Clean;DemoLog:Clean;ThirdPartyLibs:Clean;FmxTemplateMicro:Clean;DemoBinaryFile:Clean"/>
+        <CallTarget Targets="TemplateMicro:Clean;TemplateSimple:Clean;TemplateFull:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;AutoTranslatorDemo:Clean;Demo_SaveGUI:Clean;Tester_ccIO:Clean;Tester_FileStream:Clean;Tester_WinVers:Clean;DemoLog:Clean;FmxTemplateMicro:Clean;DemoBinaryFile:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="TemplateMicro:Make;TemplateSimple:Make;TemplateFull:Make;Uninstaller:Make;Demo_VisualControls:Make;AutoTranslatorDemo:Make;Demo_SaveGUI:Make;Tester_ccIO:Make;Tester_FileStream:Make;Tester_WinVers:Make;DemoLog:Make;ThirdPartyLibs:Make;FmxTemplateMicro:Make;DemoBinaryFile:Make"/>
+        <CallTarget Targets="TemplateMicro:Make;TemplateSimple:Make;TemplateFull:Make;Uninstaller:Make;Demo_VisualControls:Make;AutoTranslatorDemo:Make;Demo_SaveGUI:Make;Tester_ccIO:Make;Tester_FileStream:Make;Tester_WinVers:Make;DemoLog:Make;FmxTemplateMicro:Make;DemoBinaryFile:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
