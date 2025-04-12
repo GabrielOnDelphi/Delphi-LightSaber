@@ -183,8 +183,8 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       FORM
    --------------------------------------------------------------------------------------------------}
-    procedure CreateMainForm  (aClass: TComponentClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE;                         AutoState: TAutoState= asPosOnly); overload;
-    procedure CreateMainForm  (aClass: TComponentClass;                MainFormOnTaskbar: Boolean= FALSE; Visible: Boolean= TRUE; AutoState: TAutoState= asPosOnly); overload;
+    procedure CreateMainForm  (aClass: TComponentClass; OUT aReference; MainFormOnTaskbar: Boolean= FALSE;                         AutoState: TAutoState= asPosOnly); overload;
+    procedure CreateMainForm  (aClass: TComponentClass;                 MainFormOnTaskbar: Boolean= FALSE; Visible: Boolean= TRUE; AutoState: TAutoState= asPosOnly); overload;
 
     procedure CreateForm      (aClass: TComponentClass; OUT Reference;                                    Visible: Boolean= TRUE; Owner: TFmxObject = NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
     procedure CreateFormHidden(aClass: TComponentClass; OUT Reference;                                                            ParentWnd: TFmxObject = NIL);
@@ -259,10 +259,10 @@ end;
      On FMX, CreateForm does not create the given form immediately.
      It just adds a request to the pending list. RealCreateForms creates the real forms.
 -------------------------------------------------------------------------------------------------------------}
-procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; AutoState: TAutoState= asPosOnly);
+procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT aReference; MainFormOnTaskbar: Boolean= FALSE; AutoState: TAutoState= asPosOnly);
 begin
   Assert(Application.MainForm = NIL, 'MainForm already exists!');  //ToDo: test if this works under FMX because of RealCreateForms
-  Application.CreateForm(aClass, Reference);                       // Reference is NIL here because of RealCreateForms
+  Application.CreateForm(aClass, aReference);                       // Reference is NIL here because of RealCreateForms
 
   //Assert(TForm(Reference) <> NIL, ' Reference is NIL here because of RealCreateForms!');
   //TLightForm(Reference).AutoState:= AutoState;
@@ -271,9 +271,8 @@ end;
 
 procedure TAppData.CreateMainForm(aClass: TComponentClass; MainFormOnTaskbar: Boolean= FALSE; Visible: Boolean= TRUE; AutoState: TAutoState= asPosOnly);
 begin
-  VAR Reference: TForm;
-  CreateMainForm(aClass, Reference, MainFormOnTaskbar, AutoState);
-  Reference.Visible:= Visible;
+  VAR aReference: TForm;
+  CreateMainForm(aClass, aReference, MainFormOnTaskbar, AutoState);
 end;
 
 
@@ -662,7 +661,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    Prompt To Save/Load File
 
-   These functions are also duplicated in cmIO, cmIO.Win.
+   These functions are also duplicated in cmIO.Win.
    The difference is that there, those functions cannot read/write the LastUsedFolder var so the app cannot remmeber last use folder.
 
    Example: PromptToSaveFile(s, cGraphUtil.JPGFtl, 'txt');

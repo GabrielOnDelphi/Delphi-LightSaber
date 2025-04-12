@@ -808,7 +808,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    Prompt To Save/Load File
 
-   These functions are also duplicated in cmIO, cmIO.Win.
+   These functions are also duplicated in cmIO.Win.
    The difference is that there, those functions cannot read/write the LastUsedFolder var so the app cannot remmeber last use folder.
 
    Example: PromptToSaveFile(s, cGraphUtil.JPGFtl, 'txt');

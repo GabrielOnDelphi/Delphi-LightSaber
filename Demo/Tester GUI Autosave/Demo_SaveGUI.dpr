@@ -7,8 +7,8 @@ uses
   System.SysUtils,
   MainForm in 'MainForm.pas' {frmTester},
   SecondForm in 'SecondForm.pas' {frmContainer},
-  FormRamLog in '..\..\FormRamLog.pas',
-  cbAppDataVCL in '..\..\FrameVCL\cbAppDataVCL.pas';
+  FormRamLog in '..\..\FrameVCL\FrameVCL\FormRamLog.pas',
+  cbAppDataVCL in '..\..\FrameVCL\FrameVCL\FrameVCL\cbAppDataVCL.pas';
 
 {$R *.res}
 

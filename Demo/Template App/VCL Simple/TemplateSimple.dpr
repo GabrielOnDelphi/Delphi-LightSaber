@@ -7,7 +7,7 @@ uses
   ccINIFile,
   cbAppDataVCL,
   FormMain in 'FormMain.pas' {MainForm},
-  FormRamLog in '..\..\FormRamLog.pas';
+  FormRamLog in '..\..\FrameVCL\FormRamLog.pas';
 
 {$R *.res}
 

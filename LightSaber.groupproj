@@ -6,13 +6,13 @@
         <Projects Include="LightCore.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="FrameVCL\LightAppDataVCL.dproj">
+        <Projects Include="LightAppDataVCL.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="FrameFMX\LightAppDataFMX.dproj">
+        <Projects Include="LightAppDataFMX.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="LightCommon.dproj">
+        <Projects Include="LightCommonVCL.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="..\LightProteus\LightProteus.dproj">
@@ -57,31 +57,31 @@
         <MSBuild Projects="LightCore.dproj" Targets="Make"/>
     </Target>
     <Target Name="LightAppDataVCL">
-        <MSBuild Projects="FrameVCL\LightAppDataVCL.dproj"/>
+        <MSBuild Projects="LightAppDataVCL.dproj"/>
     </Target>
     <Target Name="LightAppDataVCL:Clean">
-        <MSBuild Projects="FrameVCL\LightAppDataVCL.dproj" Targets="Clean"/>
+        <MSBuild Projects="LightAppDataVCL.dproj" Targets="Clean"/>
     </Target>
     <Target Name="LightAppDataVCL:Make">
-        <MSBuild Projects="FrameVCL\LightAppDataVCL.dproj" Targets="Make"/>
+        <MSBuild Projects="LightAppDataVCL.dproj" Targets="Make"/>
     </Target>
     <Target Name="LightAppDataFMX">
-        <MSBuild Projects="FrameFMX\LightAppDataFMX.dproj"/>
+        <MSBuild Projects="LightAppDataFMX.dproj"/>
     </Target>
     <Target Name="LightAppDataFMX:Clean">
-        <MSBuild Projects="FrameFMX\LightAppDataFMX.dproj" Targets="Clean"/>
+        <MSBuild Projects="LightAppDataFMX.dproj" Targets="Clean"/>
     </Target>
     <Target Name="LightAppDataFMX:Make">
-        <MSBuild Projects="FrameFMX\LightAppDataFMX.dproj" Targets="Make"/>
+        <MSBuild Projects="LightAppDataFMX.dproj" Targets="Make"/>
     </Target>
-    <Target Name="LightCommon">
-        <MSBuild Projects="LightCommon.dproj"/>
+    <Target Name="LightCommonVCL">
+        <MSBuild Projects="LightCommonVCL.dproj"/>
     </Target>
-    <Target Name="LightCommon:Clean">
-        <MSBuild Projects="LightCommon.dproj" Targets="Clean"/>
+    <Target Name="LightCommonVCL:Clean">
+        <MSBuild Projects="LightCommonVCL.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="LightCommon:Make">
-        <MSBuild Projects="LightCommon.dproj" Targets="Make"/>
+    <Target Name="LightCommonVCL:Make">
+        <MSBuild Projects="LightCommonVCL.dproj" Targets="Make"/>
     </Target>
     <Target Name="LightProteus">
         <MSBuild Projects="..\LightProteus\LightProteus.dproj"/>
@@ -156,13 +156,13 @@
         <MSBuild Projects="Demo\Tester AutoTranslator\AutoTranslatorDemo.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightAppDataVCL;LightAppDataFMX;LightCommon;LightProteus;LightInternet;LightGraphics;LightVisControls;LightNGC;BioControl;BionixVCL;AutoTranslatorDemo"/>
+        <CallTarget Targets="LightCore;LightAppDataVCL;LightAppDataFMX;LightCommonVCL;LightProteus;LightInternet;LightGraphics;LightVisControls;LightNGC;BioControl;BionixVCL;AutoTranslatorDemo"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightAppDataVCL:Clean;LightAppDataFMX:Clean;LightCommon:Clean;LightProteus:Clean;LightInternet:Clean;LightGraphics:Clean;LightVisControls:Clean;LightNGC:Clean;BioControl:Clean;BionixVCL:Clean;AutoTranslatorDemo:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightAppDataVCL:Clean;LightAppDataFMX:Clean;LightCommonVCL:Clean;LightProteus:Clean;LightInternet:Clean;LightGraphics:Clean;LightVisControls:Clean;LightNGC:Clean;BioControl:Clean;BionixVCL:Clean;AutoTranslatorDemo:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightAppDataVCL:Make;LightAppDataFMX:Make;LightCommon:Make;LightProteus:Make;LightInternet:Make;LightGraphics:Make;LightVisControls:Make;LightNGC:Make;BioControl:Make;BionixVCL:Make;AutoTranslatorDemo:Make"/>
+        <CallTarget Targets="LightCore:Make;LightAppDataVCL:Make;LightAppDataFMX:Make;LightCommonVCL:Make;LightProteus:Make;LightInternet:Make;LightGraphics:Make;LightVisControls:Make;LightNGC:Make;BioControl:Make;BionixVCL:Make;AutoTranslatorDemo:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
@@ -172,7 +172,7 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightAppDataVCL.dproj">
+        <BuildGroupProject Include="LightAppDataVCL.dproj">
             <ProjectGuid>{5EBF048A-F527-4583-BE0A-C834930EA04C}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -184,7 +184,7 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightCommon.dproj">
+        <BuildGroupProject Include="LightCommonVCL.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win64</Platforms>
@@ -208,7 +208,7 @@
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameFMX\LightAppDataFMX.dproj">
+        <BuildGroupProject Include="LightAppDataFMX.dproj">
             <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -246,7 +246,7 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightAppDataVCL.dproj">
+        <BuildGroupProject Include="LightAppDataVCL.dproj">
             <ProjectGuid>{5EBF048A-F527-4583-BE0A-C834930EA04C}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -258,7 +258,7 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightCommon.dproj">
+        <BuildGroupProject Include="LightCommonVCL.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
@@ -282,7 +282,7 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameFMX\LightAppDataFMX.dproj">
+        <BuildGroupProject Include="LightAppDataFMX.dproj">
             <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -320,7 +320,7 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightAppDataVCL.dproj">
+        <BuildGroupProject Include="LightAppDataVCL.dproj">
             <ProjectGuid>{5EBF048A-F527-4583-BE0A-C834930EA04C}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -332,7 +332,7 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightCommon.dproj">
+        <BuildGroupProject Include="LightCommonVCL.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -356,7 +356,7 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameFMX\LightAppDataFMX.dproj">
+        <BuildGroupProject Include="LightAppDataFMX.dproj">
             <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -394,7 +394,7 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightAppDataVCL.dproj">
+        <BuildGroupProject Include="LightAppDataVCL.dproj">
             <ProjectGuid>{5EBF048A-F527-4583-BE0A-C834930EA04C}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -406,7 +406,7 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightCommon.dproj">
+        <BuildGroupProject Include="LightCommonVCL.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
@@ -430,7 +430,7 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameFMX\LightAppDataFMX.dproj">
+        <BuildGroupProject Include="LightAppDataFMX.dproj">
             <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>

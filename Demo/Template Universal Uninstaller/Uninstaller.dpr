@@ -8,8 +8,8 @@ uses
   Vcl.Themes,
   Vcl.Styles,
   cbAppDataVCL,
-  cvCountDown in '..\..\LightSaber\cvCountDown.pas',
-  csShell in '..\..\LightSaber\csShell.pas';
+  cvCountDown in '..\..\FrameVCL\LightSaber\cvCountDown.pas',
+  csShell in '..\..\FrameVCL\LightSaber\csShell.pas';
 
 {$R *.res}
 

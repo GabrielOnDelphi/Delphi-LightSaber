@@ -3,7 +3,7 @@ program Demo_SystemReport;
 uses
   Vcl.Forms,
   MainForm in 'MainForm.pas' {frmMain},
-  cbAppDataVCL in '..\..\cbAppData.pas';
+  cbAppDataVCL in '..\..\FrameVCL\cbAppData.pas';
 
 {$R *.res}
 

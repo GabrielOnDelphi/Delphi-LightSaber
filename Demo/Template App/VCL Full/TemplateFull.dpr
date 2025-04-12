@@ -7,18 +7,18 @@ uses
   ccINIFile,
   cbAppDataVCL,
   FormMain in 'FormMain.pas' {MainForm},
-  FormRamLog in '..\..\FormRamLog.pas',
+  FormRamLog in '..\..\FrameVCL\FormRamLog.pas',
   FormSettings in 'FormSettings.pas',
-  FormAbout in '..\..\FormAbout.pas',
-  FormSkinsDisk in '..\..\FormSkinsDisk.pas',
-  FormSkinsRes in '..\..\FormSkinsRes.pas',
-  FormSplashScreen in '..\..\FormSplashScreen.pas',
-  FormUniversalEula in '..\..\FormUniversalEula.pas',
-  FormUpdaterNotifier in '..\..\Updater\FormUpdaterNotifier.pas',
-  FormUpdaterRecEditor in '..\..\Updater\FormUpdaterRecEditor.pas',
-  FormUpdaterSettings in '..\..\Updater\FormUpdaterSettings.pas',
+  FormAbout in '..\..\FrameVCL\FormAbout.pas',
+  FormSkinsDisk in '..\..\FrameVCL\FormSkinsDisk.pas',
+  FormSkinsRes in '..\..\FrameVCL\FormSkinsRes.pas',
+  FormSplashScreen in '..\..\FrameVCL\FormSplashScreen.pas',
+  FormUniversalEula in '..\..\FrameVCL\FormUniversalEula.pas',
+  FormUpdaterNotifier in '..\..\FrameVCL\Updater\FormUpdaterNotifier.pas',
+  FormUpdaterRecEditor in '..\..\FrameVCL\Updater\FormUpdaterRecEditor.pas',
+  FormUpdaterSettings in '..\..\FrameVCL\Updater\FormUpdaterSettings.pas',
   uInitialization in 'uInitialization.pas',
-  ciUpdater in '..\..\Updater\ciUpdater.pas';
+  ciUpdater in '..\..\FrameVCL\Updater\ciUpdater.pas';
 
 {$R *.res}
 

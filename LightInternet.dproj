@@ -107,20 +107,20 @@
         <DCCReference Include="Rtl.dcp"/>
         <DCCReference Include="Vcl.dcp"/>
         <DCCReference Include="LightCore.dcp"/>
-        <DCCReference Include="LightCommon.dcp"/>
+        <DCCReference Include="LightCommonVCL.dcp"/>
         <DCCReference Include="IndyProtocols.dcp"/>
         <DCCReference Include="vclie.dcp"/>
-        <DCCReference Include="ciHtml.pas"/>
-        <DCCReference Include="ciHtmlImg.pas"/>
-        <DCCReference Include="ciHtmlWriter.pas"/>
-        <DCCReference Include="ciDownload.pas"/>
-        <DCCReference Include="ciDownloadThread.pas"/>
-        <DCCReference Include="ciEmail.pas"/>
-        <DCCReference Include="ciInternet.pas"/>
-        <DCCReference Include="ciCommonWebDown.pas"/>
-        <DCCReference Include="ciEmailSender.pas"/>
-        <DCCReference Include="Updater\ciUpdater.pas"/>
-        <DCCReference Include="Updater\ciUpdaterRec.pas"/>
+        <DCCReference Include="FrameVCL\ciHtml.pas"/>
+        <DCCReference Include="FrameVCL\ciHtmlImg.pas"/>
+        <DCCReference Include="FrameVCL\ciHtmlWriter.pas"/>
+        <DCCReference Include="FrameVCL\ciDownload.pas"/>
+        <DCCReference Include="FrameVCL\ciDownloadThread.pas"/>
+        <DCCReference Include="FrameVCL\ciEmail.pas"/>
+        <DCCReference Include="FrameVCL\ciInternet.pas"/>
+        <DCCReference Include="FrameVCL\ciCommonWebDown.pas"/>
+        <DCCReference Include="FrameVCL\ciEmailSender.pas"/>
+        <DCCReference Include="FrameVCL\Updater\ciUpdater.pas"/>
+        <DCCReference Include="FrameVCL\Updater\ciUpdaterRec.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

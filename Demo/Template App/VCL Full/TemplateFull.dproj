@@ -83,8 +83,8 @@
         <DCC_RangeChecking>true</DCC_RangeChecking>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <VerInfo_Build>3</VerInfo_Build>
-        <VerInfo_Keys>CompanyName=GM;FileDescription=Gabriel Moraru;FileVersion=0.7.0.3;InternalName=;LegalCopyright=Gabriel Moraru;LegalTrademarks=Gabriel Moraru;OriginalFilename=;ProductName=Demo app;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
+        <VerInfo_Build>4</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=GM;FileDescription=Gabriel Moraru;FileVersion=0.7.0.4;InternalName=;LegalCopyright=Gabriel Moraru;LegalTrademarks=Gabriel Moraru;OriginalFilename=;ProductName=Demo app;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -96,18 +96,18 @@
         <DCCReference Include="FormMain.pas">
             <Form>MainForm</Form>
         </DCCReference>
-        <DCCReference Include="..\..\FormRamLog.pas"/>
+        <DCCReference Include="..\..\FrameVCL\FormRamLog.pas"/>
         <DCCReference Include="FormSettings.pas"/>
-        <DCCReference Include="..\..\FormAbout.pas"/>
-        <DCCReference Include="..\..\FormSkinsDisk.pas"/>
-        <DCCReference Include="..\..\FormSkinsRes.pas"/>
-        <DCCReference Include="..\..\FormSplashScreen.pas"/>
-        <DCCReference Include="..\..\FormUniversalEula.pas"/>
-        <DCCReference Include="..\..\Updater\FormUpdaterNotifier.pas"/>
-        <DCCReference Include="..\..\Updater\FormUpdaterRecEditor.pas"/>
-        <DCCReference Include="..\..\Updater\FormUpdaterSettings.pas"/>
+        <DCCReference Include="..\..\FrameVCL\FormAbout.pas"/>
+        <DCCReference Include="..\..\FrameVCL\FormSkinsDisk.pas"/>
+        <DCCReference Include="..\..\FrameVCL\FormSkinsRes.pas"/>
+        <DCCReference Include="..\..\FrameVCL\FormSplashScreen.pas"/>
+        <DCCReference Include="..\..\FrameVCL\FormUniversalEula.pas"/>
+        <DCCReference Include="..\..\FrameVCL\Updater\FormUpdaterNotifier.pas"/>
+        <DCCReference Include="..\..\FrameVCL\Updater\FormUpdaterRecEditor.pas"/>
+        <DCCReference Include="..\..\FrameVCL\Updater\FormUpdaterSettings.pas"/>
         <DCCReference Include="uInitialization.pas"/>
-        <DCCReference Include="..\..\Updater\ciUpdater.pas"/>
+        <DCCReference Include="..\..\FrameVCL\Updater\ciUpdater.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

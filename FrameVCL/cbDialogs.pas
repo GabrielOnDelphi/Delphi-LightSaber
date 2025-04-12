@@ -10,8 +10,7 @@
 INTERFACE
 
 USES
-   System.SysUtils, System.UITypes, Generics.Collections
-   , Vcl.Forms;
+   System.SysUtils, System.UITypes, Generics.Collections, Vcl.Forms;
 
  function  MesajGeneric   (CONST MessageText: string; Title: string= ''; Icon: Integer= -1): integer;         { 'Title' will appear in window's caption }
  procedure MesajInfo      (CONST MessageText: string; CONST Caption: string= '');

@@ -7,10 +7,10 @@ uses
   WinApi.Windows,
   VCL.Forms,
   FormMain in 'FormMain.pas' {MainForm},
-  cbAppDataVCL in '..\..\cbAppData.pas',
-  FormRamLog in '..\..\FormRamLog.pas',
-  ciInetDonwIndy in '..\..\ciInetDonwIndy.pas',
-  ciInternet in '..\..\ciInternet.pas';
+  cbAppDataVCL in '..\..\FrameVCL\cbAppData.pas',
+  FormRamLog in '..\..\FrameVCL\FormRamLog.pas',
+  ciInetDonwIndy in '..\..\FrameVCL\ciInetDonwIndy.pas',
+  ciInternet in '..\..\FrameVCL\ciInternet.pas';
 
 {$R *.res}
 

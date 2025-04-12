@@ -34,22 +34,22 @@ requires
   Rtl,
   Vcl,
   LightCore,
-  LightCommon,
+  LightCommonVCL,
   IndyProtocols,
   vclie;
 
 contains
   Vcl.IdAntiFreeze,
-  ciHtml in 'ciHtml.pas',
-  ciHtmlImg in 'ciHtmlImg.pas',
-  ciHtmlWriter in 'ciHtmlWriter.pas',
-  ciDownload in 'ciDownload.pas',
-  ciDownloadThread in 'ciDownloadThread.pas',
-  ciEmail in 'ciEmail.pas',
-  ciInternet in 'ciInternet.pas',
-  ciCommonWebDown in 'ciCommonWebDown.pas',
-  ciEmailSender in 'ciEmailSender.pas',
-  ciUpdater in 'Updater\ciUpdater.pas',
-  ciUpdaterRec in 'Updater\ciUpdaterRec.pas';
+  ciHtml in 'FrameVCL\ciHtml.pas',
+  ciHtmlImg in 'FrameVCL\ciHtmlImg.pas',
+  ciHtmlWriter in 'FrameVCL\ciHtmlWriter.pas',
+  ciDownload in 'FrameVCL\ciDownload.pas',
+  ciDownloadThread in 'FrameVCL\ciDownloadThread.pas',
+  ciEmail in 'FrameVCL\ciEmail.pas',
+  ciInternet in 'FrameVCL\ciInternet.pas',
+  ciCommonWebDown in 'FrameVCL\ciCommonWebDown.pas',
+  ciEmailSender in 'FrameVCL\ciEmailSender.pas',
+  ciUpdater in 'FrameVCL\Updater\ciUpdater.pas',
+  ciUpdaterRec in 'FrameVCL\Updater\ciUpdaterRec.pas';
 
 end.

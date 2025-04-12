@@ -69,7 +69,7 @@ VAR
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-   cvIniFile, ccIO, ccTextFile, cmIO, cmIO.Win, cmDebugger, SecondForm;
+   cvIniFile, ccIO, ccTextFile, cmIO, cmDebugger, SecondForm;
 
 
 

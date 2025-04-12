@@ -20,7 +20,7 @@ VAR
   frmTestIO: TfrmTestIO;
 
 IMPLEMENTATION {$R *.dfm}
-USES ccIO, ccTextFile, cmIO, cmIO.Win;
+USES ccIO, ccTextFile, cmIO;
 
 
 procedure TfrmTestIO.FormCreate(Sender: TObject);

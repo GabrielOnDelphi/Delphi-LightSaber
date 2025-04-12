@@ -6,8 +6,8 @@ uses
   {$ENDIF}
   cbAppDataVCL,
   FormMain in 'FormMain.pas' {MainForm},
-  FormTranslEditor in '..\..\FormTranslEditor.pas' {frmTranslEditor},
-  FormTranslSelector in '..\..\FormTranslSelector.pas' {frmTranslSelector};
+  FormTranslEditor in '..\..\FrameVCL\FormTranslEditor.pas' {frmTranslEditor},
+  FormTranslSelector in '..\..\FrameVCL\FormTranslSelector.pas' {frmTranslSelector};
 
 {$R *.res}
 

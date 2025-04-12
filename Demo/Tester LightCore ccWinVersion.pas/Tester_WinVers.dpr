@@ -6,7 +6,7 @@ uses
   {$ENDIF}
   cbAppDataVCL,
   FormMain in 'FormMain.pas' {frmTester},
-  FormRamLog in '..\..\FormRamLog.pas';
+  FormRamLog in '..\..\FrameVCL\FormRamLog.pas';
 
 {$R *.res}
 

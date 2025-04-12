@@ -81,8 +81,8 @@
         <DCC_RangeChecking>true</DCC_RangeChecking>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <VerInfo_Build>1</VerInfo_Build>
-        <VerInfo_Keys>CompanyName=uninstaller;FileDescription=Lightweight uninstaller;FileVersion=5.0.0.1;InternalName=uninstaller;LegalCopyright=uninstaller;LegalTrademarks=uninstaller;OriginalFilename=uninstaller;ProductName=uninstaller;ProductVersion=5.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
+        <VerInfo_Build>2</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=uninstaller;FileDescription=Lightweight uninstaller;FileVersion=5.0.0.2;InternalName=uninstaller;LegalCopyright=uninstaller;LegalTrademarks=uninstaller;OriginalFilename=uninstaller;ProductName=uninstaller;ProductVersion=5.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -94,8 +94,8 @@
         <DCCReference Include="UninstallerForm.pas">
             <Form>frmMain</Form>
         </DCCReference>
-        <DCCReference Include="..\..\LightSaber\cvCountDown.pas"/>
-        <DCCReference Include="..\..\LightSaber\csShell.pas"/>
+        <DCCReference Include="..\..\FrameVCL\LightSaber\cvCountDown.pas"/>
+        <DCCReference Include="..\..\FrameVCL\LightSaber\csShell.pas"/>
         <None Include="C:\Project support\Tool - DUT - My Delphi utilities\FastMM_FullDebugMode.dll"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
