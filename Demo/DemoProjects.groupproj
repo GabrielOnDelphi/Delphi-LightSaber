@@ -12,40 +12,40 @@
         <Projects Include="Template App\VCL Full\TemplateFull.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="Template App\FMX Minimal\TemplateMicro_Fmx.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="Template Universal Uninstaller\Uninstaller.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Tester All Visual Controls\Demo_VisualControls.dproj">
+        <Projects Include="Demo All Visual Controls\Demo_VisualControls.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Tester AutoTranslator\AutoTranslatorDemo.dproj">
+        <Projects Include="Demo AutoTranslator\Demo_AutoTranslator.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Tester GUI Autosave\Demo_SaveGUI.dproj">
+        <Projects Include="Demo GUI Autosave\Demo_SaveGUI.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Tester LightCore ccIO.pas\Tester_ccIO.dproj">
+        <Projects Include="Demo Internet\Demo_Internet.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj">
+        <Projects Include="Demo LightCore ccIO\Demo_ccIO.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Tester LightCore ccWinVersion.pas\Tester_WinVers.dproj">
+        <Projects Include="Demo LightCore ccStreamBuff\Demo_FileStream.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Tester LightLog\DemoLog.dproj">
+        <Projects Include="Demo LightCore ccWinVersion\Demo_WinVers.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Template App\FMX Minimal\FmxTemplateMicro.dproj">
+        <Projects Include="Demo LightLog\Demo_Log.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Demo binary file 1\DemoBinary1.dproj">
+        <Projects Include="Demo SystemReport\Demo_SystemReport.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Demo binary file 2\DemoBinary2.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="Demo binary file 3\DemoBinary3.dproj">
+        <Projects Include="FMX - Demo Message boxes\FMX_Demo_MessageBoxes.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -83,6 +83,15 @@
     <Target Name="TemplateFull:Make">
         <MSBuild Projects="Template App\VCL Full\TemplateFull.dproj" Targets="Make"/>
     </Target>
+    <Target Name="TemplateMicro_Fmx">
+        <MSBuild Projects="Template App\FMX Minimal\TemplateMicro_Fmx.dproj"/>
+    </Target>
+    <Target Name="TemplateMicro_Fmx:Clean">
+        <MSBuild Projects="Template App\FMX Minimal\TemplateMicro_Fmx.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="TemplateMicro_Fmx:Make">
+        <MSBuild Projects="Template App\FMX Minimal\TemplateMicro_Fmx.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Uninstaller">
         <MSBuild Projects="Template Universal Uninstaller\Uninstaller.dproj"/>
     </Target>
@@ -93,112 +102,103 @@
         <MSBuild Projects="Template Universal Uninstaller\Uninstaller.dproj" Targets="Make"/>
     </Target>
     <Target Name="Demo_VisualControls">
-        <MSBuild Projects="Tester All Visual Controls\Demo_VisualControls.dproj"/>
+        <MSBuild Projects="Demo All Visual Controls\Demo_VisualControls.dproj"/>
     </Target>
     <Target Name="Demo_VisualControls:Clean">
-        <MSBuild Projects="Tester All Visual Controls\Demo_VisualControls.dproj" Targets="Clean"/>
+        <MSBuild Projects="Demo All Visual Controls\Demo_VisualControls.dproj" Targets="Clean"/>
     </Target>
     <Target Name="Demo_VisualControls:Make">
-        <MSBuild Projects="Tester All Visual Controls\Demo_VisualControls.dproj" Targets="Make"/>
+        <MSBuild Projects="Demo All Visual Controls\Demo_VisualControls.dproj" Targets="Make"/>
     </Target>
-    <Target Name="AutoTranslatorDemo">
-        <MSBuild Projects="Tester AutoTranslator\AutoTranslatorDemo.dproj"/>
+    <Target Name="Demo_AutoTranslator">
+        <MSBuild Projects="Demo AutoTranslator\Demo_AutoTranslator.dproj"/>
     </Target>
-    <Target Name="AutoTranslatorDemo:Clean">
-        <MSBuild Projects="Tester AutoTranslator\AutoTranslatorDemo.dproj" Targets="Clean"/>
+    <Target Name="Demo_AutoTranslator:Clean">
+        <MSBuild Projects="Demo AutoTranslator\Demo_AutoTranslator.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="AutoTranslatorDemo:Make">
-        <MSBuild Projects="Tester AutoTranslator\AutoTranslatorDemo.dproj" Targets="Make"/>
+    <Target Name="Demo_AutoTranslator:Make">
+        <MSBuild Projects="Demo AutoTranslator\Demo_AutoTranslator.dproj" Targets="Make"/>
     </Target>
     <Target Name="Demo_SaveGUI">
-        <MSBuild Projects="Tester GUI Autosave\Demo_SaveGUI.dproj"/>
+        <MSBuild Projects="Demo GUI Autosave\Demo_SaveGUI.dproj"/>
     </Target>
     <Target Name="Demo_SaveGUI:Clean">
-        <MSBuild Projects="Tester GUI Autosave\Demo_SaveGUI.dproj" Targets="Clean"/>
+        <MSBuild Projects="Demo GUI Autosave\Demo_SaveGUI.dproj" Targets="Clean"/>
     </Target>
     <Target Name="Demo_SaveGUI:Make">
-        <MSBuild Projects="Tester GUI Autosave\Demo_SaveGUI.dproj" Targets="Make"/>
+        <MSBuild Projects="Demo GUI Autosave\Demo_SaveGUI.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Tester_ccIO">
-        <MSBuild Projects="Tester LightCore ccIO.pas\Tester_ccIO.dproj"/>
+    <Target Name="Demo_Internet">
+        <MSBuild Projects="Demo Internet\Demo_Internet.dproj"/>
     </Target>
-    <Target Name="Tester_ccIO:Clean">
-        <MSBuild Projects="Tester LightCore ccIO.pas\Tester_ccIO.dproj" Targets="Clean"/>
+    <Target Name="Demo_Internet:Clean">
+        <MSBuild Projects="Demo Internet\Demo_Internet.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="Tester_ccIO:Make">
-        <MSBuild Projects="Tester LightCore ccIO.pas\Tester_ccIO.dproj" Targets="Make"/>
+    <Target Name="Demo_Internet:Make">
+        <MSBuild Projects="Demo Internet\Demo_Internet.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Tester_FileStream">
-        <MSBuild Projects="Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj"/>
+    <Target Name="Demo_ccIO">
+        <MSBuild Projects="Demo LightCore ccIO\Demo_ccIO.dproj"/>
     </Target>
-    <Target Name="Tester_FileStream:Clean">
-        <MSBuild Projects="Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj" Targets="Clean"/>
+    <Target Name="Demo_ccIO:Clean">
+        <MSBuild Projects="Demo LightCore ccIO\Demo_ccIO.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="Tester_FileStream:Make">
-        <MSBuild Projects="Tester LightCore ccStreamBuff.pas\Tester_FileStream.dproj" Targets="Make"/>
+    <Target Name="Demo_ccIO:Make">
+        <MSBuild Projects="Demo LightCore ccIO\Demo_ccIO.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Tester_WinVers">
-        <MSBuild Projects="Tester LightCore ccWinVersion.pas\Tester_WinVers.dproj"/>
+    <Target Name="Demo_FileStream">
+        <MSBuild Projects="Demo LightCore ccStreamBuff\Demo_FileStream.dproj"/>
     </Target>
-    <Target Name="Tester_WinVers:Clean">
-        <MSBuild Projects="Tester LightCore ccWinVersion.pas\Tester_WinVers.dproj" Targets="Clean"/>
+    <Target Name="Demo_FileStream:Clean">
+        <MSBuild Projects="Demo LightCore ccStreamBuff\Demo_FileStream.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="Tester_WinVers:Make">
-        <MSBuild Projects="Tester LightCore ccWinVersion.pas\Tester_WinVers.dproj" Targets="Make"/>
+    <Target Name="Demo_FileStream:Make">
+        <MSBuild Projects="Demo LightCore ccStreamBuff\Demo_FileStream.dproj" Targets="Make"/>
     </Target>
-    <Target Name="DemoLog">
-        <MSBuild Projects="Tester LightLog\DemoLog.dproj"/>
+    <Target Name="Demo_WinVers">
+        <MSBuild Projects="Demo LightCore ccWinVersion\Demo_WinVers.dproj"/>
     </Target>
-    <Target Name="DemoLog:Clean">
-        <MSBuild Projects="Tester LightLog\DemoLog.dproj" Targets="Clean"/>
+    <Target Name="Demo_WinVers:Clean">
+        <MSBuild Projects="Demo LightCore ccWinVersion\Demo_WinVers.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="DemoLog:Make">
-        <MSBuild Projects="Tester LightLog\DemoLog.dproj" Targets="Make"/>
+    <Target Name="Demo_WinVers:Make">
+        <MSBuild Projects="Demo LightCore ccWinVersion\Demo_WinVers.dproj" Targets="Make"/>
     </Target>
-    <Target Name="FmxTemplateMicro">
-        <MSBuild Projects="Template App\FMX Minimal\FmxTemplateMicro.dproj"/>
+    <Target Name="Demo_Log">
+        <MSBuild Projects="Demo LightLog\Demo_Log.dproj"/>
     </Target>
-    <Target Name="FmxTemplateMicro:Clean">
-        <MSBuild Projects="Template App\FMX Minimal\FmxTemplateMicro.dproj" Targets="Clean"/>
+    <Target Name="Demo_Log:Clean">
+        <MSBuild Projects="Demo LightLog\Demo_Log.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="FmxTemplateMicro:Make">
-        <MSBuild Projects="Template App\FMX Minimal\FmxTemplateMicro.dproj" Targets="Make"/>
+    <Target Name="Demo_Log:Make">
+        <MSBuild Projects="Demo LightLog\Demo_Log.dproj" Targets="Make"/>
     </Target>
-    <Target Name="DemoBinary1">
-        <MSBuild Projects="Demo binary file 1\DemoBinary1.dproj"/>
+    <Target Name="Demo_SystemReport">
+        <MSBuild Projects="Demo SystemReport\Demo_SystemReport.dproj"/>
     </Target>
-    <Target Name="DemoBinary1:Clean">
-        <MSBuild Projects="Demo binary file 1\DemoBinary1.dproj" Targets="Clean"/>
+    <Target Name="Demo_SystemReport:Clean">
+        <MSBuild Projects="Demo SystemReport\Demo_SystemReport.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="DemoBinary1:Make">
-        <MSBuild Projects="Demo binary file 1\DemoBinary1.dproj" Targets="Make"/>
+    <Target Name="Demo_SystemReport:Make">
+        <MSBuild Projects="Demo SystemReport\Demo_SystemReport.dproj" Targets="Make"/>
     </Target>
-    <Target Name="DemoBinary2">
-        <MSBuild Projects="Demo binary file 2\DemoBinary2.dproj"/>
+    <Target Name="FMX_Demo_MessageBoxes">
+        <MSBuild Projects="FMX - Demo Message boxes\FMX_Demo_MessageBoxes.dproj"/>
     </Target>
-    <Target Name="DemoBinary2:Clean">
-        <MSBuild Projects="Demo binary file 2\DemoBinary2.dproj" Targets="Clean"/>
+    <Target Name="FMX_Demo_MessageBoxes:Clean">
+        <MSBuild Projects="FMX - Demo Message boxes\FMX_Demo_MessageBoxes.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="DemoBinary2:Make">
-        <MSBuild Projects="Demo binary file 2\DemoBinary2.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="DemoBinary3">
-        <MSBuild Projects="Demo binary file 3\DemoBinary3.dproj"/>
-    </Target>
-    <Target Name="DemoBinary3:Clean">
-        <MSBuild Projects="Demo binary file 3\DemoBinary3.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="DemoBinary3:Make">
-        <MSBuild Projects="Demo binary file 3\DemoBinary3.dproj" Targets="Make"/>
+    <Target Name="FMX_Demo_MessageBoxes:Make">
+        <MSBuild Projects="FMX - Demo Message boxes\FMX_Demo_MessageBoxes.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="TemplateMicro;TemplateSimple;TemplateFull;Uninstaller;Demo_VisualControls;AutoTranslatorDemo;Demo_SaveGUI;Tester_ccIO;Tester_FileStream;Tester_WinVers;DemoLog;FmxTemplateMicro;DemoBinary1;DemoBinary2;DemoBinary3"/>
+        <CallTarget Targets="TemplateMicro;TemplateSimple;TemplateFull;TemplateMicro_Fmx;Uninstaller;Demo_VisualControls;Demo_AutoTranslator;Demo_SaveGUI;Demo_Internet;Demo_ccIO;Demo_FileStream;Demo_WinVers;Demo_Log;Demo_SystemReport;FMX_Demo_MessageBoxes"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="TemplateMicro:Clean;TemplateSimple:Clean;TemplateFull:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;AutoTranslatorDemo:Clean;Demo_SaveGUI:Clean;Tester_ccIO:Clean;Tester_FileStream:Clean;Tester_WinVers:Clean;DemoLog:Clean;FmxTemplateMicro:Clean;DemoBinary1:Clean;DemoBinary2:Clean;DemoBinary3:Clean"/>
+        <CallTarget Targets="TemplateMicro:Clean;TemplateSimple:Clean;TemplateFull:Clean;TemplateMicro_Fmx:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;Demo_AutoTranslator:Clean;Demo_SaveGUI:Clean;Demo_Internet:Clean;Demo_ccIO:Clean;Demo_FileStream:Clean;Demo_WinVers:Clean;Demo_Log:Clean;Demo_SystemReport:Clean;FMX_Demo_MessageBoxes:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="TemplateMicro:Make;TemplateSimple:Make;TemplateFull:Make;Uninstaller:Make;Demo_VisualControls:Make;AutoTranslatorDemo:Make;Demo_SaveGUI:Make;Tester_ccIO:Make;Tester_FileStream:Make;Tester_WinVers:Make;DemoLog:Make;FmxTemplateMicro:Make;DemoBinary1:Make;DemoBinary2:Make;DemoBinary3:Make"/>
+        <CallTarget Targets="TemplateMicro:Make;TemplateSimple:Make;TemplateFull:Make;TemplateMicro_Fmx:Make;Uninstaller:Make;Demo_VisualControls:Make;Demo_AutoTranslator:Make;Demo_SaveGUI:Make;Demo_Internet:Make;Demo_ccIO:Make;Demo_FileStream:Make;Demo_WinVers:Make;Demo_Log:Make;Demo_SystemReport:Make;FMX_Demo_MessageBoxes:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

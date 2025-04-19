@@ -1,4 +1,4 @@
-program DemoBinary2;
+program Demo_Binary2;
 
 uses
   {$IFDEF DEBUG}

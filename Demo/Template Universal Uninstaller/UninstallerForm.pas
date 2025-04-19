@@ -114,7 +114,7 @@ begin
    FileCopyQuick(Application.ExeName, GetTempFolder);
    if FileExists(SelfCopy)
    then ExecuteShellEx(SelfCopy, 'uninstall')           { Doesn't matter what I pass to the copy. I just need to pass something. Anything. So the ParamCount gets > 0 }
-   else MesajError('Cannot create temporary copy! Most probable cause: your antivirus is blocking it.');
+   else MessageError('Cannot create temporary copy! Most probable cause: your antivirus is blocking it.');
    Application.Terminate;
   end
 end;
@@ -161,7 +161,7 @@ begin
     begin
      frmMain.Show;
      mmoLog.AddEmptyRow;
-     MesajError('Original installation folder does not exist. CRLF Probably moved or deleted manually.'+ CRLF+ 'Folder: '+ DetectedFolder);
+     MessageError('Original installation folder does not exist. CRLF Probably moved or deleted manually.'+ CRLF+ 'Folder: '+ DetectedFolder);
      mmoLog.AddWarn('Folder to be entered manually by user.');
     end;
    CountDown.Start;
@@ -227,7 +227,7 @@ begin
  WHILE RestoreWindowByName(AppData.SingleInstClassName) DO
    begin
     mmoLog.Lines.Add(AppData.AppName+ ' is running. Please shut it down.');
-    MesajWarning(AppData.AppName+ ' is still running. Please shut it down NOW in order to uninstall it properly!'+
+    MessageWarning(AppData.AppName+ ' is still running. Please shut it down NOW in order to uninstall it properly!'+
                  LBRK+ 'Note: If the application is not responding you can use the TaskManager to kill it.'+
                  LBRK+ 'When ready press OK to continue the uninstall process.');
    end;
@@ -265,7 +265,7 @@ begin
  else
    if NOT DeleteItem(AppFolder) then
     begin
-     MesajInfo(AppFolder+ CRLF+ 'This folder is locked by a 3rd party application. Please try to delete it manually.');
+     MessageInfo(AppFolder+ CRLF+ 'This folder is locked by a 3rd party application. Please try to delete it manually.');
      mmoLog.AddMsg('The user will manually delete the folder: '+ AppFolder);
      ExecuteShell(AppFolder);
     end;
@@ -323,7 +323,7 @@ begin
 
  if NOT FeedbackSent then
   begin
-   MesajInfo('Please tell us why you uninstalled the program so we can make it better. CRLF CRLF CONSTRUCTIVE feedback is always appreciated. CRLF CRLF Thank you.');
+   MessageInfo('Please tell us why you uninstalled the program so we can make it better. CRLF CRLF CONSTRUCTIVE feedback is always appreciated. CRLF CRLF Thank you.');
    ExecuteShell(AppData.ProductUninstal);
   end;
 
