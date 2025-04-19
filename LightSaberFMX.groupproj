@@ -1,0 +1,212 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{889D79DE-7E8C-4310-8E76-49C32EC57928}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="LightCore.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="LightAppDataFMX.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\LightProteus\LightProteus.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="C:\Delphi\FMX\My tests\empty app\ProjectEmpty.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo\FMX\Blocking message box\SyncMsgbox_Demo.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="LightCore">
+        <MSBuild Projects="LightCore.dproj"/>
+    </Target>
+    <Target Name="LightCore:Clean">
+        <MSBuild Projects="LightCore.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightCore:Make">
+        <MSBuild Projects="LightCore.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="LightAppDataFMX">
+        <MSBuild Projects="LightAppDataFMX.dproj"/>
+    </Target>
+    <Target Name="LightAppDataFMX:Clean">
+        <MSBuild Projects="LightAppDataFMX.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightAppDataFMX:Make">
+        <MSBuild Projects="LightAppDataFMX.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="LightProteus">
+        <MSBuild Projects="..\LightProteus\LightProteus.dproj"/>
+    </Target>
+    <Target Name="LightProteus:Clean">
+        <MSBuild Projects="..\LightProteus\LightProteus.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightProteus:Make">
+        <MSBuild Projects="..\LightProteus\LightProteus.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="ProjectEmpty">
+        <MSBuild Projects="C:\Delphi\FMX\My tests\empty app\ProjectEmpty.dproj"/>
+    </Target>
+    <Target Name="ProjectEmpty:Clean">
+        <MSBuild Projects="C:\Delphi\FMX\My tests\empty app\ProjectEmpty.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ProjectEmpty:Make">
+        <MSBuild Projects="C:\Delphi\FMX\My tests\empty app\ProjectEmpty.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="SyncMsgbox_Demo">
+        <MSBuild Projects="Demo\FMX\Blocking message box\SyncMsgbox_Demo.dproj"/>
+    </Target>
+    <Target Name="SyncMsgbox_Demo:Clean">
+        <MSBuild Projects="Demo\FMX\Blocking message box\SyncMsgbox_Demo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="SyncMsgbox_Demo:Make">
+        <MSBuild Projects="Demo\FMX\Blocking message box\SyncMsgbox_Demo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="LightCore;LightAppDataFMX;LightProteus;ProjectEmpty;SyncMsgbox_Demo"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="LightCore:Clean;LightAppDataFMX:Clean;LightProteus:Clean;ProjectEmpty:Clean;SyncMsgbox_Demo:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="LightCore:Make;LightAppDataFMX:Make;LightProteus:Make;ProjectEmpty:Make;SyncMsgbox_Demo:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+    <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
+        <BuildGroupProject Include="Demo\FMX\Blocking message box\SyncMsgbox_Demo.dproj">
+            <ProjectGuid>{9CFD9A9B-70B4-4070-A841-117FB101DF95}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightAppDataFMX.dproj">
+            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="C:\Delphi\FMX\My tests\empty app\ProjectEmpty.dproj">
+            <ProjectGuid>{E9EE01C0-4134-43A7-92BB-8AEDD4EC84F3}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+    <ItemGroup Condition="'$(BuildGroup)'=='Win32_Debug'">
+        <BuildGroupProject Include="Demo\FMX\Blocking message box\SyncMsgbox_Demo.dproj">
+            <ProjectGuid>{9CFD9A9B-70B4-4070-A841-117FB101DF95}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightAppDataFMX.dproj">
+            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="C:\Delphi\FMX\My tests\empty app\ProjectEmpty.dproj">
+            <ProjectGuid>{E9EE01C0-4134-43A7-92BB-8AEDD4EC84F3}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+    <ItemGroup Condition="'$(BuildGroup)'=='Win32_Release'">
+        <BuildGroupProject Include="Demo\FMX\Blocking message box\SyncMsgbox_Demo.dproj">
+            <ProjectGuid>{9CFD9A9B-70B4-4070-A841-117FB101DF95}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightAppDataFMX.dproj">
+            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="C:\Delphi\FMX\My tests\empty app\ProjectEmpty.dproj">
+            <ProjectGuid>{E9EE01C0-4134-43A7-92BB-8AEDD4EC84F3}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+    <ItemGroup Condition="'$(BuildGroup)'=='All'">
+        <BuildGroupProject Include="Demo\FMX\Blocking message box\SyncMsgbox_Demo.dproj">
+            <ProjectGuid>{9CFD9A9B-70B4-4070-A841-117FB101DF95}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightAppDataFMX.dproj">
+            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="C:\Delphi\FMX\My tests\empty app\ProjectEmpty.dproj">
+            <ProjectGuid>{E9EE01C0-4134-43A7-92BB-8AEDD4EC84F3}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\LightProteus\LightProteus.dproj">
+            <ProjectGuid>{0F0F34CD-A0E0-4E93-B1FF-9A96F7EE624E}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+    </ItemGroup>
+</Project>
