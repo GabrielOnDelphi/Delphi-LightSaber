@@ -29,9 +29,9 @@ type
   end;
 
 procedure MesajAsync     (CONST Msg: string; CONST Caption: string= ''; PopupParent: TCustomForm= NIL);
-procedure MesajInfoAsync (CONST Msg: string; PopupParent: TCustomForm= NIL);
+procedure MessageInfoAsync (CONST Msg: string; PopupParent: TCustomForm= NIL);
 procedure MesajWarnAsync (CONST Msg: string; PopupParent: TCustomForm= NIL);
-procedure MesajErrorAsync(CONST Msg: string; PopupParent: TCustomForm= NIL);
+procedure MessageErrorAsync(CONST Msg: string; PopupParent: TCustomForm= NIL);
 
 
 IMPLEMENTATION {$R *.dfm}
@@ -49,7 +49,7 @@ begin
 end;
 
 
-procedure MesajInfoAsync(CONST Msg: string; PopupParent: TCustomForm= NIL);
+procedure MessageInfoAsync(CONST Msg: string; PopupParent: TCustomForm= NIL);
 begin
  MesajAsync(Msg, 'Info', PopupParent);
 end;
@@ -59,7 +59,7 @@ begin
  MesajAsync(Msg, 'Warning', PopupParent);
 end;
 
-procedure MesajErrorAsync(CONST Msg: string; PopupParent: TCustomForm= NIL);
+procedure MessageErrorAsync(CONST Msg: string; PopupParent: TCustomForm= NIL);
 begin
  MesajAsync(Msg, 'Error', PopupParent);
 end;

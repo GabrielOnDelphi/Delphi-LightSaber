@@ -5,7 +5,9 @@
 --------------------------------------------------------------------------------------------------------------
    Easy message boxes (FMX)
    Type: Synchronous (blocking)
-   Platform: Windows, OS X, iOS (no Android!)
+   Platform: Windows, OS X, iOS (Android not supported!)
+
+   Note: This will not compile on Android because FMX.DialogService.Sync does not exist there!
 =============================================================================================================}
 
 INTERFACE
@@ -17,11 +19,12 @@ USES
   FMX.DialogService.Sync;
 
 
-procedure GenericMessage  (CONST MessageText: string; CONST Caption: string= ''; DlgType: TMsgDlgType= TMsgDlgType.mtCustom);   { 'Title' will appear in window's caption }
-procedure MesajInfo       (CONST MessageText: string; CONST Caption: string= '');
-procedure MesajWarning    (CONST MessageText: string; CONST Caption: string= '');
-procedure MesajError      (CONST MessageText: string; CONST Caption: string= '');
-procedure MesajErrorSubmit(CONST MessageText, Where: string; CONST Caption: string= '');
+{ Displays a generic message dialog synchronously }
+procedure GenericMessage  (CONST MessageText: string; CONST Caption: string= ''; DlgType: TMsgDlgType= TMsgDlgType.mtCustom);  
+procedure MessageInfo       (CONST MessageText: string; CONST Caption: string= '');
+procedure MessageWarning    (CONST MessageText: string; CONST Caption: string= '');
+procedure MessageError      (CONST MessageText: string; CONST Caption: string= '');
+procedure MessageErrorSubmit(CONST MessageText, Where: string; CONST Caption: string= '');
 function  MesajYesNo      (CONST MessageText: string; CONST Caption: string= ''): Boolean;
 
 
@@ -48,32 +51,32 @@ end;
 
 
 
-procedure MesajInfo(CONST MessageText: string; CONST Caption: string= '');
+procedure MessageInfo(CONST MessageText: string; CONST Caption: string= '');
 begin
   GenericMessage(MessageText, Caption, TMsgDlgType.mtInformation);
 end;
 
 
-procedure MesajWarning(CONST MessageText: string; CONST Caption: string= '');
+procedure MessageWarning(CONST MessageText: string; CONST Caption: string= '');
 begin
   GenericMessage(MessageText, Caption, TMsgDlgType.mtWarning);
 end;
 
 
-procedure MesajError(CONST MessageText: string; CONST Caption: string= '');
+procedure MessageError(CONST MessageText: string; CONST Caption: string= '');
 begin
   GenericMessage(MessageText, Caption, TMsgDlgType.mtError);
 end;
 
 
-procedure MesajErrorSubmit(const MessageText, Where: string; CONST Caption: string= '');
+procedure MessageErrorSubmit(const MessageText, Where: string; CONST Caption: string= '');
 VAR sMsg: string;
 begin
   sMsg:= MessageText+
          sLineBreak+sLineBreak+ 'Please report this error to us and the exact steps to reproduce it and we will fix it.'+
          sLineBreak+ 'Hint: press Control+C to copy this message to clipboard.';
 
-  MesajError(sMsg, 'Error in '+  Where);
+  MessageError(sMsg, 'Error in '+  Where);
 end;
 
 

@@ -232,7 +232,7 @@ begin
      then Result:= esTriangles
      else
       begin
-        mesajerror('Invalid shape');
+        MessageError('Invalid shape');
         Result:= esOneColor;
       end;
 end;
@@ -250,7 +250,7 @@ begin
    then Result:= ecUserColor
    else
     begin
-     MesajError('Invalid color effect');
+     MessageError('Invalid color effect');
      Result:= ecImageAverage;
     end;
 end;

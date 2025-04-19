@@ -135,7 +135,7 @@ VAR s: string;
 begin
   if NOT System.IOUtils.TPath.HasValidPathChars(GetNewFileName, FALSE) then
    begin
-     MesajError('The file name has invalid characters!'+ GetNewFileName);
+     MessageError('The file name has invalid characters!'+ GetNewFileName);
      EXIT;
    end;
 

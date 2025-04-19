@@ -134,7 +134,7 @@ begin
       end
     else Result:= FALSE
   else
-     MesajError('Style is not valid: '+ GetSkinDir+ DiskShortName);
+     MessageError('Style is not valid: '+ GetSkinDir+ DiskShortName);
 end;
 
 

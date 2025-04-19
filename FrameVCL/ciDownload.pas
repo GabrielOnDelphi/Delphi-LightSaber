@@ -203,7 +203,7 @@ begin
      on EFCreateError DO    { I got this error from one user: EFCreateError. Cannot create file. Access denied. Probably it was the antivirus blockin the program. C:\Users\x\AppData\Roaming\BX\Downloaded wallpapers\tegeler-segel-club.de_webcam_tsc_webcam_98D624.jpg }
       begin
        Result:= FALSE;
-       MesajError('Cannot write to '+ CRLFw+ DestinationFile+ LBRK+ 'Please make sure your antivirus is not blocking the program. Please contact us if you think this is unrelated to your antivirus.');
+       MessageError('Cannot write to '+ CRLFw+ DestinationFile+ LBRK+ 'Please make sure your antivirus is not blocking the program. Please contact us if you think this is unrelated to your antivirus.');
       end;
     END;
   end;

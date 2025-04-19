@@ -145,11 +145,11 @@ begin
   Result:= DirectoryExists(Path);
   if NOT Result then
     if Path= ''
-    then MesajError('DirectoryExistMsg: No folder specified!')
+    then MessageError('DirectoryExistMsg: No folder specified!')
     else
       if Pos(':', Path)< 1                                                                             { check if the user has given a full path as c:\xxx }
-      then MesajError('A relative path was provided instead of a full path!'+ CRLFw+ Path)
-      else MesajError('Folder does not exist:'+ CRLFw+ Path);
+      then MessageError('A relative path was provided instead of a full path!'+ CRLFw+ Path)
+      else MessageError('Folder does not exist:'+ CRLFw+ Path);
 end;
 
 
@@ -158,7 +158,7 @@ function ForceDirectoriesMsg(CONST FullPath: string): Boolean;
 begin
   Result:= ccIO.ForceDirectories(FullPath) >= 0;
   if NOT Result
-  then MesajError('Cannot create folder: '+ FullPath+ CRLFw+ 'Probably you are trying to write to a folder to which you don''t have write permissions, or, the folder you want to create is invalid.');
+  then MessageError('Cannot create folder: '+ FullPath+ CRLFw+ 'Probably you are trying to write to a folder to which you don''t have write permissions, or, the folder you want to create is invalid.');
 end;
 
 
@@ -169,8 +169,8 @@ begin
  Result:= FileExists(FileName);
  if NOT Result then
  if FileName= ''
- then MesajError('No file specified!')
- else MesajError('File does not exist!'+ CRLFw+ FileName);
+ then MessageError('No file specified!')
+ else MessageError('File does not exist!'+ CRLFw+ FileName);
 end;
 
 
@@ -179,7 +179,7 @@ function DeleteFileWithMsg(const FileName: string): Boolean;
 begin
  Result:= DeleteFile(FileName);
  if NOT Result
- then MesajError('Cannot delete file '+CRLFw+ FileName);
+ then MessageError('Cannot delete file '+CRLFw+ FileName);
 end;
 
 
@@ -877,7 +877,7 @@ function CanWriteToFolderMsg(CONST Folder: string): Boolean;
 begin
  Result:= CanWriteToFolder(Folder);
  if NOT Result
- then MesajWarning(ShowMsg_CannotWriteTo(Folder));
+ then MessageWarning(ShowMsg_CannotWriteTo(Folder));
 end;
 
 

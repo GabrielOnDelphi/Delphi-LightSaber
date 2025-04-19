@@ -236,7 +236,7 @@ begin
  Result:= CheckURLStart(URL);
 
  if NOT Result
- then MesajWarning('Invalid URL:'+ CRLFw+ URL);
+ then MessageWarning('Invalid URL:'+ CRLFw+ URL);
 end;
 
 
@@ -1088,10 +1088,10 @@ function TestProgramConnection(ShowMsgOnSuccess: Boolean= FALSE): Integer;      
 begin
  Result:= ProgramConnect2Internet;
  case Result of
-  -1: MesajWarning(ComputerCannotAccessInet);
-   0: MesajError(CheckYourFirewallMsg);
+  -1: MessageWarning(ComputerCannotAccessInet);
+   0: MessageError(CheckYourFirewallMsg);
   +1: if ShowMsgOnSuccess
-      then MesajInfo('Successfully connected to Internet');
+      then MessageInfo('Successfully connected to Internet');
  end;
 end;
 

@@ -507,7 +507,7 @@ begin
    Progman:= FindWindow('Progman', NIL);     // Obtain Program Manager Handle
    if Progman <> 0
    then SendMessageTimeout(Progman, $052C, 0, 0, SMTO_NORMAL, 1000, {Res}NIL)      //Send  0x052C Message to Program Manager (Progman). This message directs Progman to spawn a WorkerW behind the desktop icons. If it is already there, nothing happens.
-   else MesajError('Cannot initiate Progman window!');
+   else MessageError('Cannot initiate Progman window!');
   end;
 
  Handle:= GetDesktopHandle;
@@ -653,7 +653,7 @@ begin
      BMP.SaveToFile(SaveAs);                { LOTS of errors in v9.113 on this line.          Cannot create file "C:\Users\UserName\AppData\Local\Temp\BlankDesktop.BMP". The process cannot access the file because it is being used by another process.        Possible causes:       * File locked by antivirus       * File locked by SystemParametersInfo API (called in DrawOnDesktop) }
     EXCEPT
       //todo 1: trap only specific exceptions
-      on E: Exception DO MesajError(E.Message+ ' (in BlankDesktop)'+ CRLFw+ PleaseReportIssue);
+      on E: Exception DO MessageError(E.Message+ ' (in BlankDesktop)'+ CRLFw+ PleaseReportIssue);
     END;
     SetWallpaper(SaveAs);
  FINALLY

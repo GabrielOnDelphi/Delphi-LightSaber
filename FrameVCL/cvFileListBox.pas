@@ -339,7 +339,7 @@ begin
 
     { Delete to recycle }
     if NOT cmIO.RecycleItem(FileName, TRUE, DelShowConfirm)
-    then MesajWarning('File not deleted.'+ CRLFw+ FileName);
+    then MessageWarning('File not deleted.'+ CRLFw+ FileName);
 
     DeleteSelected;                                                                              { Delete list box item }
 

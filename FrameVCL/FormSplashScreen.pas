@@ -78,7 +78,7 @@ begin
  TRY
    frmSplash.imgSplash.Picture.LoadFromFile(AppData.SysDir+'Splash.png');
  EXCEPT
-   MesajWarning('The program cannot load its logo/graphics. Your antivirus is probably a bit to overzealous!'+ CRLF+'(Are you using IOBit? Consider switching to a better program.)');
+   MessageWarning('The program cannot load its logo/graphics. Your antivirus is probably a bit to overzealous!'+ CRLF+'(Are you using IOBit? Consider switching to a better program.)');
    FreeAndNil(frmSplash);
    EXIT;
  END;

@@ -264,7 +264,7 @@ begin
   DbThumbs.SaveToFile(CacheFolder+ 'CacheDBOutput');
  except
   //todo 1: trap only specific exceptions
-  MesajError('Cannot save cache database!');
+  MessageError('Cannot save cache database!');
  END;
 
  CacheSettings:= TIniFileEx.Create('Cache', CacheFolder+ 'CacheSettings.ini');
@@ -306,7 +306,7 @@ begin
    FCacheFolder:= Trail(Value);
    ForceDirectoriesMsg(Value);
   end
- else MesajError('You don''t have write permissions for this folder.'+ CRLFw+ Value);
+ else MessageError('You don''t have write permissions for this folder.'+ CRLFw+ Value);
 end;
 
 
@@ -335,7 +335,7 @@ VAR i, DbIndex, CurThumb: Integer;
 begin
  Result:= 0;
  if DbThumbs.Count<> DbPicts.Count                                                                 { check }
- then MesajError('Number of entries in DB does not match! You maight fix this by reseting your cache.');
+ then MessageError('Number of entries in DB does not match! You maight fix this by reseting your cache.');
 
  { Delete thumbs for non existing images }
  for i:= DbPicts.Count-1 DOWNTO 0 DO

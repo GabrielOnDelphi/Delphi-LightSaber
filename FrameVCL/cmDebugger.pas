@@ -269,7 +269,7 @@ VAR
 procedure TimerStart;
 begin
   if NOT TStopWatch.IsHighResolution
-  then MesajWarning('High resolution timer not availalbe!');
+  then MessageWarning('High resolution timer not availalbe!');
   sw := TStopWatch.Create;      { Hint: We can use directly: TStopWatch.CreateNew but SilverWarior says there is a bug in it. Maybe this one? https://codeverge.com/embarcadero.delphi.win32/tstopwatch-a-bug-delphi-2010/1046096 }
   sw.Start;
 end;
@@ -586,7 +586,7 @@ end;
 
 procedure EmptyDummy(i: Integer);
 begin
- MesajInfo(IntToStr(i));
+ MessageInfo(IntToStr(i));
 end;
 
 

@@ -5,27 +5,9 @@
    2025.04
 --------------------------------------------------------------------------------------------------------------
    Easy message boxes (for VCL only)
-=============================================================================================================}
-
-INTERFACE
-
-USES
-   System.SysUtils, System.UITypes, Generics.Collections, Vcl.Forms;
-
- function  MesajGeneric   (CONST MessageText: string; Title: string= ''; Icon: Integer= -1): integer;         { 'Title' will appear in window's caption }
- procedure MesajInfo      (CONST MessageText: string; CONST Caption: string= '');
- procedure MesajWarning   (CONST MessageText: string; CONST Caption: string= '');
- procedure MesajError     (CONST MessageText: string; CONST Caption: string= '');
- procedure MesajErrDetail (CONST MessageText, Where: string);
- function  MesajYesNo     (CONST MessageText: string; CONST Title: string= ''): Boolean;                      { Returns True if the user presses the YES btn }
 
 
-IMPLEMENTATION
-
-USES
-   ccCore;
-
-{ Displays a message box with an approriate icon (info, warning, error, ask).
+  Displays a message box with an approriate icon (info, warning, error, ask).
   IMPORTANT:
     Application.MessageBox uses the handle of the current active window.
     This can of course create problems if the current window (is not the main form and) is closed.
@@ -43,7 +25,26 @@ USES
     https://stackoverflow.com/questions/1256963/if-messagebox-related-are-synchronous-why-doesnt-my-message-loop-freeze
     http://www.delphigroups.info/2/11/544013.html
     https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-messagebox?redirectedfrom=MSDN
- }
+=============================================================================================================}
+
+INTERFACE
+
+USES
+   System.SysUtils, System.UITypes, Generics.Collections, Vcl.Forms;
+
+ function  MesajGeneric   (CONST MessageText: string; Title: string= ''; Icon: Integer= -1): integer;         { 'Title' will appear in window's caption }
+ procedure MessageInfo    (CONST MessageText: string; CONST Caption: string= '');
+ procedure MessageWarning (CONST MessageText: string; CONST Caption: string= '');
+ procedure MessageError   (CONST MessageText: string; CONST Caption: string= '');
+ procedure MesajErrDetail (CONST MessageText, Where: string);
+ function  MesajYesNo     (CONST MessageText: string; CONST Title: string= ''): Boolean;                      { Returns True if the user presses the YES btn }
+
+
+IMPLEMENTATION
+
+USES
+   ccCore;
+
 CONST
    MB_OK              = $00000000;  // Defined originally in Windows.pas but we don't want to include that platform unit here.
    MB_YESNO           = $00000004;
@@ -67,21 +68,21 @@ end;
 
 
 
-procedure MesajInfo(CONST MessageText: string; CONST Caption: string= '');
+procedure MessageInfo(CONST MessageText: string; CONST Caption: string= '');
 begin
   MesajGeneric(MessageText, Caption, -1);
 end;
 
 
 
-procedure MesajWarning(const MessageText, Caption: string);
+procedure MessageWarning(const MessageText, Caption: string);
 begin
   MesajGeneric(MessageText, 'Warning', MB_ICONWARNING or MB_OK);
 end;
 
 
 
-procedure MesajError(const MessageText, Caption: string);
+procedure MessageError(const MessageText, Caption: string);
 begin
  MesajGeneric(MessageText, 'Error', MB_ICONERROR or MB_OK);
 end;

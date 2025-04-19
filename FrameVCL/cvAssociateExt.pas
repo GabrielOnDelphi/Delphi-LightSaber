@@ -143,18 +143,18 @@ begin
  then AssocName:= Application.ExeName;
 
  if AssociateWith(FileType, AssocName, chkAllUsers.Checked, TRUE, TRUE)
- then MesajInfo('The program will now automatically start when you double click a '+ FileType+ ' file.')
+ then MessageInfo('The program will now automatically start when you double click a '+ FileType+ ' file.')
  else
     if chkAllUsers.Checked AND NOT AppHasAdminRights
-    then MesajInfo('On Windows Vista/7 you need to run the program with administrator rights in order to set file association for ALL users in the system!');
+    then MessageInfo('On Windows Vista/7 you need to run the program with administrator rights in order to set file association for ALL users in the system!');
 end;
 
 
 procedure TAssociateFileExt.btnAssociateDelClick(Sender: TObject);
 begin
  if AssociationReset(FileType, chkAllUsers.Checked)
- then MesajInfo('Association removed.')
- else MesajInfo('Cannot delete file association.');
+ then MessageInfo('Association removed.')
+ else MessageInfo('Cannot delete file association.');
 end;
 
 

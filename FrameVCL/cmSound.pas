@@ -111,21 +111,21 @@ Begin
  hResInfo:= FindResource(HInstance,PChar(RESName),MAKEINTRESOURCE('WAVEFILE'));
  if hResInfo = 0 then
   begin
-    MesajError('Could not find resource'+ CRLFw+ RESName);
+    MessageError('Could not find resource'+ CRLFw+ RESName);
     EXIT;
   end;
 
  hRes:=LoadResource(HInstance,hResinfo);
  if hRes = 0 then
   begin
-    MesajError('Could not load resource'+ CRLFw+ RESName);
+    MessageError('Could not load resource'+ CRLFw+ RESName);
     EXIT;
   end;
 
  lpGlob:=LockResource(hRes);
  if lpGlob=Nil then
   begin
-    MesajError('Bad resource'+ CRLFw+ RESName);
+    MessageError('Bad resource'+ CRLFw+ RESName);
     EXIT;
   end;
 
@@ -160,7 +160,7 @@ begin
 
   if Frequency > (0.6 * SampleRate) then
   begin
-    MesajWarning(Format('Sample rate of %d is too low to play a tone of %dHz', [SampleRate, Frequency]));
+    MessageWarning(Format('Sample rate of %d is too low to play a tone of %dHz', [SampleRate, Frequency]));
     EXIT;
   end;
 

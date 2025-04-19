@@ -186,7 +186,7 @@ function TGifLoader.ExtractFrame(FrameNo: Cardinal): TBitmap;
 begin
  if FrameNo >= FrameCount then
   begin
-   MesajWarning('Invalid frame number. Total frames in this GIF: '+ IntToStr(FrameCount));
+   MessageWarning('Invalid frame number. Total frames in this GIF: '+ IntToStr(FrameCount));
    EXIT(NIL);
   end;
 

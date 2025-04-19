@@ -128,8 +128,8 @@ end;
 procedure TfrmAboutApp.btnEnterKeyClick(Sender: TObject);
 begin
  if Proteus.ShowEnterKeyBox
- then MesajInfo ('Key accepted. Please restart the program.')
- else MesajError('Key not accepted!');
+ then MessageInfo ('Key accepted. Please restart the program.')
+ else MessageError('Key not accepted!');
 end;
 
 

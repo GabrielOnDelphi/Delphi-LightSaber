@@ -323,7 +323,7 @@ end;
 procedure TMsgDispatcher.setTime(Value: Integer);
 begin
  if Value< 5
- then MesajWarning('Interval is too small.');
+ then MessageWarning('Interval is too small.');
 
  FTime:= Value;
 end;

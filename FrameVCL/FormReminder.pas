@@ -158,7 +158,7 @@ begin
      if NOT ExecuteShell(edtPath.Path)              { MUST BE shellexec so I can load mp3, txt, doc, exe, etc }
      then BipError;
     end
-   else MesajError('[Reminder times up] CRLF No file to execute!');
+   else MessageError('[Reminder times up] CRLF No file to execute!');
 
  if radSleep.Checked    then cmPowerUtils.SystemSleep;
  if radShutDown.Checked then cmPowerUtils.WinShutDown(TRUE, FALSE);

@@ -67,7 +67,7 @@ function ExecuteProcMsg(ExeFile: string): Boolean;
 begin
  Result:= ExecuteProc(ExeFile);                                                                     { If the function succeeds, the return value is the instance handle of the application that was run, or the handle of a dynamic data exchange (DDE) server application. If the function fails, the return value is an error value that is less than or equal to 32. The following table lists these error Value: }
  if NOT Result
- then MesajError('Cannot execute file '+ CRLFw+ ExeFile);
+ then MessageError('Cannot execute file '+ CRLFw+ ExeFile);
 end;
 
 

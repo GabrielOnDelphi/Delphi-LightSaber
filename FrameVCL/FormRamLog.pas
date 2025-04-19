@@ -65,9 +65,6 @@ TYPE
 
 
 
-
-
-
 IMPLEMENTATION {$R *.dfm}
 
 

@@ -1,4 +1,4 @@
-﻿UNIT LightFMX.AppData.Forms;
+﻿UNIT LightFMX.AppData.Form;
 
 {=============================================================================================================
    www.GabrielMoraru.com
@@ -70,10 +70,10 @@ USES
   System.Classes,
   System.UITypes,
   System.IniFiles,
-  FMX.Controls,
+
   FMX.Forms,
   FMX.Types,
-  FMX.Dialogs,
+
 
   LightFMX.IniFile,
   ccINIFile;
@@ -143,7 +143,7 @@ begin
 
   // Load form
   // Limitation: At this point we can only load "standard" Delphi components. Loading of our Light components can only be done in cvIniFile.pas -> TIniFileVCL
-  Assert(AutoState <> asUndefined, 'The user must set the AutoState property in code!');
+  Assert(AutoState <> asUndefined, 'The user must set the AutoState property in code (see TLightForm.FormPostInitialize) !');
   if AutoState <> asNone
   then LoadForm;
 
@@ -256,7 +256,7 @@ begin
   AND (Self= Application.MainForm) then
    begin
     //if TAppDataCore.RunningHome
-    //then MesajError('Closing application while still initializing!');
+    //then MessageError('Closing application while still initializing!');
     Exit; // We don't save anything if the start up was improper!
    end;
 

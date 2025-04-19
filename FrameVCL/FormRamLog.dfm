@@ -84,9 +84,9 @@ object frmRamLog: TfrmRamLog
         TrackBar.Align = alRight
         TrackBar.Max = 6
         TrackBar.Min = 1
-        TrackBar.Position = 3
+        TrackBar.Position = 6
         TrackBar.TabOrder = 0
-        Verbosity = lvInfos
+        Verbosity = lvErrors
         Log = Log
       end
       object chkShowTime: TCheckBox

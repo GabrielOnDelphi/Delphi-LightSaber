@@ -456,7 +456,7 @@ var SelCol: Integer;
 begin
  if Objects[ACol, Row]<> NIL then                                                                  { This column has an object associated. therefore, cannot be deleted. }
   begin
-   MesajInfo('Cannot delete this column.');
+   MessageInfo('Cannot delete this column.');
    EXIT;
   end;
 

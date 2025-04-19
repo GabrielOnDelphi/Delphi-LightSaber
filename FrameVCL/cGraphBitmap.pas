@@ -119,7 +119,7 @@ begin
  EXCEPT
    On EOutOfMemory DO
       { With size over 1GB it might start to fail in some computers because of 32 bit mem limit/fragmentation limit }
-      MesajWarning('Cannot set bitmap size to: '+ IntToStr(Width)+ ' x '+ IntToStr(Height)+ 'pixels.'
+      MessageWarning('Cannot set bitmap size to: '+ IntToStr(Width)+ ' x '+ IntToStr(Height)+ 'pixels.'
              +CRLFw+'Required RAM: '+ FormatBytes(RequiredRam, 2));
  END;
 end;

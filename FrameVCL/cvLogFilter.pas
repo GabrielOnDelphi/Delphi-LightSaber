@@ -117,7 +117,7 @@ begin
    begin
      if Log = NIL then
        begin
-         MesajError('No log assigned!');
+         MessageError('No log assigned!');
          EXIT;
        end;
 

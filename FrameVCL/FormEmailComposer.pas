@@ -121,20 +121,20 @@ begin
  { Check composer fields }
  if edtSubject.Text = '' then
   begin
-   MesajWarning('Please enter a subject...');
+   MessageWarning('Please enter a subject...');
    EXIT;
   end;
 
  if ledFrom.Text = '' then
   begin
-   MesajWarning('Please enter your email address...');
+   MessageWarning('Please enter your email address...');
    EXIT;
   end;
 
  //ToDo 5: validate each email
  if edtTo.Text = '' then
   begin
-   MesajWarning('Where do you want to send the email? Please fill in the field...');
+   MessageWarning('Where do you want to send the email? Please fill in the field...');
    EXIT;
   end;
 
@@ -147,7 +147,7 @@ begin
     { Check SMTP server settings }
     if NOT frmSmtpSettings.IsValid(SMTP) then
      begin
-       MesajWarning('Please check the email server settings.');
+       MessageWarning('Please check the email server settings.');
        frmSmtpSettings.Show;
        EXIT;
      end;

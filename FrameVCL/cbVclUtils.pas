@@ -249,7 +249,7 @@ begin
  Style := GetWindowLongPtr(Handle, GWL_STYLE);                { getWindowLong_ was replaced with getWindowLongPtr for 64 bit compatibility. Details: http://docwiki.embarcadero.com/RADStudio/Seattle/en/Converting_32-bit_Delphi_Applications_to_64-bit_Windows }
  SetLastError(0);
  if SetWindowLongptr(Handle, GWL_STYLE, Style OR bs_left)= 0  { setWindowLong_ was replaced with getWindowLongPtr for 64 bit compatibility. Details: http://docwiki.embarcadero.com/RADStudio/Seattle/en/Converting_32-bit_Delphi_Applications_to_64-bit_Windows }
- then MesajWarning('Cannot align caption!');
+ then MessageWarning('Cannot align caption!');
 end;
 
 

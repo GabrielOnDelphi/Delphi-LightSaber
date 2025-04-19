@@ -505,7 +505,7 @@ begin
  s:= PathIsValid;
  Result:= s= '';
  if NOT Result
- then MesajError(s);
+ then MessageError(s);
 end;
 
 
@@ -583,7 +583,7 @@ begin
 
  if s > '' then
   begin
-   MesajError(s);
+   MessageError(s);
    EXIT;
   end;
 
@@ -635,7 +635,7 @@ end;
 procedure TCubicPathEdit.btnExploreClick(Sender: TObject);
 begin
  if Path = ''
- then MesajError('No file/folder selected!')
+ then MessageError('No file/folder selected!')
  else
    case InputType of
     itFile  : ExecuteExplorerSelect (Path);

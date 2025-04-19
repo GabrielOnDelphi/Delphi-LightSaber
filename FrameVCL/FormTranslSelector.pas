@@ -106,7 +106,7 @@ begin
   if ListBox.ItemIndex < 0 then EXIT;
 
   if GetSelectedFileName = ''
-  then MesajInfo('Please select a language!')
+  then MessageInfo('Please select a language!')
   else
     if FileExistsMsg(GetSelectedFilePath)
     then
@@ -117,7 +117,7 @@ begin
         lblAuthors.Visible:= TRUE;
       end
     else
-      MesajWarning('Cannot load language file!');
+      MessageWarning('Cannot load language file!');
 end;
 
 

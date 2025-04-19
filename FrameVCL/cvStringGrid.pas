@@ -989,7 +989,7 @@ procedure TEnhStrGrid.Help;                                                     
 begin
  if Assigned(FOnSort)
  AND (MouseSort= msSortShiftClick)
- then MesajInfo('Press SHIFT while clicking the top row to sort the grid.');
+ then MessageInfo('Press SHIFT while clicking the top row to sort the grid.');
 end;
 
 

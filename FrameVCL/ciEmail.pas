@@ -228,7 +228,7 @@ begin
     END;
 
   if Result <> 0
-  then MesajError('Error sending mail (' + IntToStr(Result) + ').');
+  then MessageError('Error sending mail (' + IntToStr(Result) + ').');
 end;
 
 

@@ -274,12 +274,12 @@ begin
      RegWriteString(RootKey, Path+ FName+'\DefaultIcon'       , '', Application.ExeName+ ',0',    TRUE);
 
    if NOT Result AND ShowError
-   then mesajWarning('Cannot associate application with '+FileExtension);
+   then MessageWarning('Cannot associate application with '+FileExtension);
  EXCEPT
    on E: ERegistryException DO
      begin
        if ShowError    //todo: trap only specific exceptions
-       then MesajWarning('Cannot associate application with '+FileExtension);
+       then MessageWarning('Cannot associate application with '+FileExtension);
      end;
    else RAISE;
  END;
@@ -321,7 +321,7 @@ begin
    on E: ERegistryException DO
      begin
        if ShowError    //todo: trap only specific exceptions
-       then MesajError('Cannot associate application!');
+       then MessageError('Cannot associate application!');
      end;
    else RAISE;
  END;

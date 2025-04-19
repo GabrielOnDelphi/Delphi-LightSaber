@@ -174,7 +174,7 @@ begin
  if not FFPlayer.AVLibLoaded then
    if not FFPlayer.LoadAVLib(LibraryPath) then
    begin
-     MesajError(FFPlayer.LastErrMsg);
+     MessageError(FFPlayer.LastErrMsg);
      EXIT(FALSE);
    end;
 

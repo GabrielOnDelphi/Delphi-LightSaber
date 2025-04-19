@@ -145,7 +145,7 @@ begin
         Msg:= 'ShellExecute error '+ IntToStr(i);
    end;
 
-   MesajError(Msg);
+   MessageError(Msg);
   end;
 end;
 
@@ -174,7 +174,7 @@ begin
  else
   begin
    if ShowErrorMsg
-   then MesajError(SysErrorMessage(GetLastError));
+   then MessageError(SysErrorMessage(GetLastError));
    EXIT(FALSE);
   end;
 
@@ -245,7 +245,7 @@ begin
   then Ph:= sei.hProcess
   else
    begin
-    MesajError(SysErrorMessage(GetLastError));
+    MessageError(SysErrorMessage(GetLastError));
     EXIT(FALSE);
    end;
 

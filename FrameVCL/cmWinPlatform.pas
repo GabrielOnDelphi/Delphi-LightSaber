@@ -60,7 +60,7 @@ begin
    END
   end
  else
-   MesajInfo(MessageText, Title);
+   MessageInfo(MessageText, Title);
 end;
 
 

@@ -19,9 +19,9 @@ unit LightFMX.DropDownSearch;
 
 INTERFACE
 USES
-  System.SysUtils, System.Classes, System.Types, system.Math,
+  System.SysUtils, System.Classes, System.Types, System.Math,
   FMX.Controls, FMX.Edit, FMX.ListBox, FMX.Types, FMX.Forms,
-  System.UITypes, System.Generics.Collections;
+  System.UITypes;
 
 TYPE
   TSelectNotifyEvent = procedure (Sender: TObject; SelectedItem: TObject) of object;

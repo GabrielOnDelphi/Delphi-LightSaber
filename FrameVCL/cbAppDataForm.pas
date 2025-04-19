@@ -210,7 +210,7 @@ begin
   AND (Self= Application.MainForm) then
    begin
     if TAppDataCore.RunningHome
-    then MesajError('Closing application while still initializing!');
+    then MessageError('Closing application while still initializing!');
     Exit; // We don't save anything if the start up was improper!
    end;
 
