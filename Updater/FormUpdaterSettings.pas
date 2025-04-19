@@ -150,7 +150,7 @@ begin
  Update;
  Refresh;
  Caption:= ProgramConnect2InternetS;
- MesajInfo(Caption);
+ MessageInfo(Caption);
 end;
 
 
@@ -173,7 +173,7 @@ begin
  UpdateVisibility;
 
  if TCheckWhen(cmbWhen.ItemIndex) = cwNever
- then MesajWarning('Are you really really sure you want to disable the updater? CRLF You will miss not only information about new features and discounts, but also information about critical updates!');
+ then MessageWarning('Are you really really sure you want to disable the updater? CRLF You will miss not only information about new features and discounts, but also information about critical updates!');
 end;
 
 

@@ -277,7 +277,7 @@ begin
    if Assigned(FConnectError)
    then FConnectError(Self);
 
-   // if ShowConnectFail then TFrmUpdater.ShowUpdater;  // del MesajError('Cannot check for news & updates!'{+ CRLF+ ErrorMsg});
+   // if ShowConnectFail then TFrmUpdater.ShowUpdater;  // del MessageError('Cannot check for news & updates!'{+ CRLF+ ErrorMsg});
   end;
 
  if Assigned(FUpdaterEnd) then FUpdaterEnd(Self);

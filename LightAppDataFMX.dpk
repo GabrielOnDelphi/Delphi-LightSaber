@@ -37,9 +37,9 @@ requires
 
 contains
   LightFMX.AppData in 'FrameFMX\LightFMX.AppData.pas',
-  LightFMX.AppData.Forms in 'FrameFMX\LightFMX.AppData.Forms.pas',
   LightFmx.DialogsDesktop in 'FrameFMX\LightFmx.DialogsDesktop.pas',
   LightFMX.DropDownSearch in 'FrameFMX\LightFMX.DropDownSearch.pas',
-  LightFMX.IniFile in 'FrameFMX\LightFMX.IniFile.pas';
+  LightFMX.IniFile in 'FrameFMX\LightFMX.IniFile.pas',
+  LightFMX.AppData.Form in 'FrameFMX\LightFMX.AppData.Form.pas';
 
 end.

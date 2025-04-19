@@ -392,6 +392,7 @@ begin
  if Result then NotifyLogObserver;
 end;
 
+
 procedure TRamLog.SaveToFile(const FullPath: string);
 begin
  VAR Stream:= TCubicBuffStream2.CreateWrite(FullPath);

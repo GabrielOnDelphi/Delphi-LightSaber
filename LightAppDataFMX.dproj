@@ -169,10 +169,10 @@
         <DCCReference Include="LightCore.dcp"/>
         <DCCReference Include="Fmx.dcp"/>
         <DCCReference Include="FrameFMX\LightFMX.AppData.pas"/>
-        <DCCReference Include="FrameFMX\LightFMX.AppData.Forms.pas"/>
         <DCCReference Include="FrameFMX\LightFmx.DialogsDesktop.pas"/>
         <DCCReference Include="FrameFMX\LightFMX.DropDownSearch.pas"/>
         <DCCReference Include="FrameFMX\LightFMX.IniFile.pas"/>
+        <DCCReference Include="FrameFMX\LightFMX.AppData.Form.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

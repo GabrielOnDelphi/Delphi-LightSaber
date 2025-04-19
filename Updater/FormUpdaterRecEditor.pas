@@ -112,7 +112,7 @@ begin
   News.IsBetaVers  := chkBetaVer.Checked;
 
   News.SaveTo(GetBinFileName);
-  MesajInfo('FileSearch saved as '+ GetBinFileName);
+  MessageInfo('FileSearch saved as '+ GetBinFileName);
 end;
 
 
