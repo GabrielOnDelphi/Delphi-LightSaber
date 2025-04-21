@@ -11,34 +11,39 @@
       VCL forms offer no good place where to execute your initialization/finalization code.
       OnCreate is too early, and OnShow may never be called (or called too late) or called multiple times.
 
+   Methods
+
       The TLightForm provides two places that (in conjunction with TAppData) offer you two methods that are guaranteed to be executed:
-      TMyForm = class(TLightForm)
-          protected
-            procedure FormPostInitialize; override; // Called after the main form was fully initialized.
-            procedure FormPreRelease;
-         end;
-
-
+        procedure FormPostInitialize;  // Called after the main form was fully initialized.
+        procedure FormPreRelease;      // Called ONLY ONCE before the form is destroyed
 
    How to use it
 
       Change the declaration of your form from TForm to TLightForm.
       Optionally, if you want to execute your own initialization code, override the LateInitialize (don't forget to call inherited).
+      See: c:\Projects\LightSaber\Demo\Template App\FMX Minimal\TemplateMicro_Fmx.dpr
 
       uses cbAppDataForm;
       Type
         TYourForm = class(TLightForm)
-        protected
         public
-          procedure FormPostInitialize;  override;    // Optional
+          procedure FormPostInitialize; override;    // Optional
+          procedure FormPreRelease;     override;
         end;
 
-       procedure TYourForm.FormPostInitialize;
-       begin
-         inherited FormPostInitialize;
+        procedure TYourForm.FormPostInitialize;
+        begin
+          AutoState:= asFull;  // Must set it before inherited!
+          inherited FormPostInitialize;
+          // Initialize your own code here
+        end;
 
-         // Initialize your own code here
-       end;
+        procedure TYourForm.FormPreRelease;
+        begin
+          // Free your stuff here
+          inherited FormPreRelease;
+        end;
+
 
 --------------------------------------------------------------------------------------------------------------
 
