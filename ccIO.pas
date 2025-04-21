@@ -242,7 +242,7 @@ CONST
    FILE EXTENSION
 --------------------------------------------------------------------------------------------------}
  function  RemoveLastExtension (CONST FileName: string): string;                                   { Extrage numele fisierului din nume+extensie. Daca numele este de tipul nume+extensie+extensie, doar ultima extensie este eliminata }
- function  ForceExtension      (CONST FileName, Ext: string): string;                              { makes sure that the 'FileName' file has the extension set to 'Ext'. The 'Ext' parameter should be like: '.txt' }
+ function  ForceExtension      (CONST FileName, Ext: string): string;                              { Makes sure that the 'FileName' file has the extension set to 'Ext'. The 'Ext' parameter should be like: '.txt' }
  function  ExtractFileExtUp    (CONST FileName: string): string;                                   { Case insensitive version }
  function  AppendFileExtension (CONST FileName, Ext: string): string;
 
@@ -726,7 +726,7 @@ end;
 
 { Returns true if the specified file is of the 'FileType' type.
   Example: Check if a file is BMP:
-           IsThisType('c:\Test.bMP', BmP) will return true }
+           IsThisType('c:\Test.bMP', 'BmP') will return true }
 function IsThisType(CONST AFile, FileType: string) : Boolean;
 VAR sExtension: string;
 begin
@@ -979,8 +979,8 @@ end;
   Works with UNC paths. }
 function ChangeFilePath(CONST FullFileName, NewPath: string): string;
 begin
- Result:= ExtractFileName(FullFileName);
- Result:= Trail(NewPath)+ Result;
+  Result:= ExtractFileName(FullFileName);
+  Result:= Trail(NewPath)+ Result;
 end;
 
 
@@ -989,34 +989,43 @@ end;
   Works with UNC paths. }
 function AppendBeforeName(CONST FullPath, ApendedText: string): string;
 begin
- Result:= ExtractFilePath (FullPath)+
-          ApendedText+
-          ExtractFileName (FullPath);
+  Result:= ExtractFilePath (FullPath)+
+           ApendedText+
+           ExtractFileName (FullPath);
 end;
 
 
 { ReplaceExtension
   Makes sure that the 'FileName' file has indicated extension.
-  If file already has an extension, it is replaced by the indicated one.
-  The 'Ext' parameter should be like: '.txt' }
+  If file already has an extension, it is replaced by the indicated one, if not, the new extension is added.
+  If the file is called file.tar.gz, only GZ will be replaced.
+
+  Compared to System.SysUtils.ChangeFileExt():
+    1. The 'Ext' parameter may contain the dot, or not: '.txt' or 'txt'.
+    2. ChangeFileExt accepts Ext to be empty which is not ok! }
 function ForceExtension(CONST FileName, Ext: string): string;
 begin
- Result:= ExtractOnlyName(FileName);                                      { Extact only file name... }
- Result:= ExtractFilePath(FileName)+ Result+ Ext;                         { ... and append new ext to it }
+  if Ext = '' then RAISE Exception.Create('ForceExtension - No extension provided!');
+
+  { Append new extension }
+  Result:= ExtractFilePath(FileName)+ ExtractOnlyName(FileName);
+  if Ext[1] = '.'
+  then Result:= Result+ Ext
+  else Result:= Result+ '.'+Ext;
 end;
 
 
 { Replaces the old System.SysUtils.ExtractFileDir
-  If AcceptInvalidPaths= True, it will raise an exception when the path is empty or has invalid chars }
+  If AcceptInvalidPaths= True, it will not raise an exception when the path is empty or has invalid chars }
 function ExtractFilePath(CONST FullPath: string; AcceptInvalidPaths: Boolean= TRUE): string;
 begin
- if (FullPath > '')
- AND PathNameIsValid(FullPath)
- then Result:= Trail(TPath.GetDirectoryName(FullPath)) { WARNING: GetDirectoryName crashes when the filename is too long!!!!!!!!!!!! }
- else
-   if AcceptInvalidPaths
-   then Result:= ''
-   else RAISE Exception.Create('The path is invalid!' + CRLFw+ FullPath);    { GetDirectoryName shows an error message if the path is empty but the debuger won't stop. So I force the stop. }
+  if (FullPath > '')
+  AND PathNameIsValid(FullPath)
+  then Result:= Trail(TPath.GetDirectoryName(FullPath)) { WARNING: GetDirectoryName crashes when the filename is too long!!!!! }
+  else
+    if AcceptInvalidPaths
+    then Result:= ''
+    else RAISE Exception.Create('The path is invalid!' + CRLFw+ FullPath);    { GetDirectoryName shows an error message if the path is empty but the debuger won't stop. So I force the stop. }
 end;
 
 
