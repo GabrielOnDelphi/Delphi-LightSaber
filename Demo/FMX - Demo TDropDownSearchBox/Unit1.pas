@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.cvDropDownSearch,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, LightFMX.DropDownSearch,
   FMX.Controls.Presentation, FMX.StdCtrls;
 
 type
@@ -24,11 +24,11 @@ IMPLEMENTATION
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  SearchBox:= TDropDownSearchBox.Create(self);
-  SearchBox.Parent    := self;
+  SearchBox:= TDropDownSearchBox.Create(Panel);
+  SearchBox.Parent    := Panel;
   SearchBox.Visible   := TRUE;
   SearchBox.Position.X:= 10;
-  SearchBox.Position.Y:= 200;
+  SearchBox.Position.Y:= 10;
   SearchBox.AddDemoStrings;
 end;
 

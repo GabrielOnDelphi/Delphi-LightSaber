@@ -72,7 +72,7 @@ end;
 procedure MessageError(const MessageText, Where: string; CONST Caption: string);
 VAR sMsg: string;
 begin
-  sMsg := MessageText + sLineBreak + sLineBreak +
+  sMsg := MessageText + CRLF + CRLF +
           'Please report this error to us along with the exact steps to reproduce it, and we will fix it.' +
           sLineBreak + 'Hint: press Control+C to copy this message to clipboard.';
 
@@ -80,8 +80,7 @@ begin
 end;
 
 
-procedure MessageYesNo(const MessageText: string; const Caption: string;
-  const Callback: TProc<Boolean>);
+procedure MessageYesNo(const MessageText: string; const Caption: string; const Callback: TProc<Boolean>);
 begin
   // Although a caption parameter is provided here for consistency,
   // you might want to combine it with MessageText if needed.

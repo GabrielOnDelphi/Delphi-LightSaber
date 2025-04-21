@@ -14,7 +14,8 @@ unit LightFMX.Panel;
 INTERFACE
 
 USES
-  System.Classes, FMX.Controls, FMX.Layouts, FMX.StdCtrls;
+  System.Classes,
+  FMX.Controls, FMX.Layouts, FMX.StdCtrls;
 
 TYPE
   TLightPanel = class(TPanel)

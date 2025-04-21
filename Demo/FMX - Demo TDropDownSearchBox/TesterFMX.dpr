@@ -3,8 +3,7 @@ program TesterFMX;
 uses
   System.StartUpCopy,
   FMX.Forms,
-  Unit1 in 'Unit1.pas' {Form1},
-  FMX.cvDropDownSearch in '..\FMX.cvDropDownSearch.pas';
+  Unit1 in 'Unit1.pas' {Form1};
 
 {$R *.res}
 

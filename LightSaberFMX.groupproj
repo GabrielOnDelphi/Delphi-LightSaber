@@ -9,13 +9,13 @@
         <Projects Include="LightAppDataFMX.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="LightFMX_Visual.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="..\LightProteus\LightProteus.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="C:\Delphi\FMX\My tests\empty app\ProjectEmpty.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="Demo\FMX\Blocking message box\SyncMsgbox_Demo.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -44,6 +44,15 @@
     <Target Name="LightAppDataFMX:Make">
         <MSBuild Projects="LightAppDataFMX.dproj" Targets="Make"/>
     </Target>
+    <Target Name="LightFMX_Visual">
+        <MSBuild Projects="LightFMX_Visual.dproj"/>
+    </Target>
+    <Target Name="LightFMX_Visual:Clean">
+        <MSBuild Projects="LightFMX_Visual.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightFMX_Visual:Make">
+        <MSBuild Projects="LightFMX_Visual.dproj" Targets="Make"/>
+    </Target>
     <Target Name="LightProteus">
         <MSBuild Projects="..\LightProteus\LightProteus.dproj"/>
     </Target>
@@ -62,28 +71,19 @@
     <Target Name="ProjectEmpty:Make">
         <MSBuild Projects="C:\Delphi\FMX\My tests\empty app\ProjectEmpty.dproj" Targets="Make"/>
     </Target>
-    <Target Name="SyncMsgbox_Demo">
-        <MSBuild Projects="Demo\FMX\Blocking message box\SyncMsgbox_Demo.dproj"/>
-    </Target>
-    <Target Name="SyncMsgbox_Demo:Clean">
-        <MSBuild Projects="Demo\FMX\Blocking message box\SyncMsgbox_Demo.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="SyncMsgbox_Demo:Make">
-        <MSBuild Projects="Demo\FMX\Blocking message box\SyncMsgbox_Demo.dproj" Targets="Make"/>
-    </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightAppDataFMX;LightProteus;ProjectEmpty;SyncMsgbox_Demo"/>
+        <CallTarget Targets="LightCore;LightAppDataFMX;LightFMX_Visual;LightProteus;ProjectEmpty"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightAppDataFMX:Clean;LightProteus:Clean;ProjectEmpty:Clean;SyncMsgbox_Demo:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightAppDataFMX:Clean;LightFMX_Visual:Clean;LightProteus:Clean;ProjectEmpty:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightAppDataFMX:Make;LightProteus:Make;ProjectEmpty:Make;SyncMsgbox_Demo:Make"/>
+        <CallTarget Targets="LightCore:Make;LightAppDataFMX:Make;LightFMX_Visual:Make;LightProteus:Make;ProjectEmpty:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
-        <BuildGroupProject Include="Demo\FMX\Blocking message box\SyncMsgbox_Demo.dproj">
-            <ProjectGuid>{9CFD9A9B-70B4-4070-A841-117FB101DF95}</ProjectGuid>
+        <BuildGroupProject Include="LightFMX_Visual.dproj">
+            <ProjectGuid>{1B99132F-3E32-4911-B8F0-F9DA00251E7A}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -114,8 +114,8 @@
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Debug'">
-        <BuildGroupProject Include="Demo\FMX\Blocking message box\SyncMsgbox_Demo.dproj">
-            <ProjectGuid>{9CFD9A9B-70B4-4070-A841-117FB101DF95}</ProjectGuid>
+        <BuildGroupProject Include="LightFMX_Visual.dproj">
+            <ProjectGuid>{1B99132F-3E32-4911-B8F0-F9DA00251E7A}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -146,8 +146,8 @@
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Release'">
-        <BuildGroupProject Include="Demo\FMX\Blocking message box\SyncMsgbox_Demo.dproj">
-            <ProjectGuid>{9CFD9A9B-70B4-4070-A841-117FB101DF95}</ProjectGuid>
+        <BuildGroupProject Include="LightFMX_Visual.dproj">
+            <ProjectGuid>{1B99132F-3E32-4911-B8F0-F9DA00251E7A}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -178,8 +178,8 @@
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='All'">
-        <BuildGroupProject Include="Demo\FMX\Blocking message box\SyncMsgbox_Demo.dproj">
-            <ProjectGuid>{9CFD9A9B-70B4-4070-A841-117FB101DF95}</ProjectGuid>
+        <BuildGroupProject Include="LightFMX_Visual.dproj">
+            <ProjectGuid>{1B99132F-3E32-4911-B8F0-F9DA00251E7A}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>

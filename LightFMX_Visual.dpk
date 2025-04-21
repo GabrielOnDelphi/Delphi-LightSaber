@@ -32,6 +32,7 @@ requires
   fmx;
 
 contains
-  LightFMX.Panel in 'FrameFMX\LightFMX.Panel.pas';
+  LightFMX.Panel in 'FrameFMX\LightFMX.Panel.pas',
+  LightFMX.DropDownSearch in 'FrameFMX\LightFMX.DropDownSearch.pas';
 
 end.
