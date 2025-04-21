@@ -64,3 +64,4 @@ Demo/Tester All Visual Controls/Demo_VisualControls.prjmgc
 *.res
 Demo/FMX - Demo LightPanel/Win32/Debug/Demo_LightPanel.exe
 Demo/FMX - Demo TDropDownSearchBox/Win32/Debug/TesterFMX.exe
+*.exe

@@ -23,6 +23,8 @@ uses
 {$R *.res}
 
 begin
+  ReportMemoryLeaksOnShutdown:= TRUE;
+  
   CONST MultiThreaded= FALSE;         // True => Only if we need to use multithreading in the Log.
   CONST AppName= 'Light Template Full';       // Absolutelly critical if you use the SaveForm/LoadForm functionality. This string will be used as the name of the INI file.
 

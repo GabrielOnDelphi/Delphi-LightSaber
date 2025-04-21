@@ -1,4 +1,4 @@
-program Test_FMX_App;
+program FMX_Demo_ccPlatformFile;
 
 uses
   System.StartUpCopy,

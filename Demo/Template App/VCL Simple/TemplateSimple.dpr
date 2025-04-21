@@ -12,6 +12,8 @@ uses
 {$R *.res}
 
 begin
+  ReportMemoryLeaksOnShutdown:= TRUE;
+  
   CONST
      MultiThreaded= FALSE;         // True => Only if we need to use multithreading in the Log.
   CONST

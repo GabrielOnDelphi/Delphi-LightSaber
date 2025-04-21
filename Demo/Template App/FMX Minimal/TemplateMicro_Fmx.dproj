@@ -247,7 +247,6 @@
             <FormType>fmx</FormType>
         </DCCReference>
         <DCCReference Include="..\..\..\FrameFMX\LightFMX.AppData.pas"/>
-        <DCCReference Include="..\..\..\FrameFMX\LightFMX.DialogsDesktop.pas"/>
         <DCCReference Include="..\..\..\FrameFMX\LightFMX.IniFile.pas"/>
         <DCCReference Include="..\..\..\FrameFMX\LightFMX.AppData.Form.pas"/>
         <BuildConfiguration Include="Base">

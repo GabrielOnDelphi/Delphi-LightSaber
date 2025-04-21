@@ -4,12 +4,12 @@
         <AppType>Application</AppType>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>FMX</FrameworkType>
-        <MainSource>Test_FMX_App.dpr</MainSource>
+        <MainSource>FMX_Demo_ccPlatformFile.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <ProjectGuid>{AAD968A3-06F2-4647-B76E-D4548C4625A0}</ProjectGuid>
         <ProjectVersion>20.3</ProjectVersion>
         <TargetedPlatforms>693267</TargetedPlatforms>
-        <ProjectName Condition="'$(ProjectName)'==''">Test_FMX_App</ProjectName>
+        <ProjectName Condition="'$(ProjectName)'==''">FMX_Demo_ccPlatformFile</ProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -89,7 +89,7 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>Test_FMX_App</SanitizedProjectName>
+        <SanitizedProjectName>FMX_Demo_ccPlatformFile</SanitizedProjectName>
         <AUP_ACCESS_COARSE_LOCATION>true</AUP_ACCESS_COARSE_LOCATION>
         <AUP_ACCESS_FINE_LOCATION>true</AUP_ACCESS_FINE_LOCATION>
         <AUP_CALL_PHONE>true</AUP_CALL_PHONE>
@@ -291,7 +291,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">Test_FMX_App.dpr</Source>
+                    <Source Name="MainSource">FMX_Demo_ccPlatformFile.dpr</Source>
                 </Source>
             </Delphi.Personality>
             <Platforms>
@@ -320,9 +320,9 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="Win32\Debug\Test_FMX_App.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Win32\Debug\FMX_Demo_ccPlatformFile.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>Test_FMX_App.exe</RemoteName>
+                        <RemoteName>FMX_Demo_ccPlatformFile.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

@@ -85,6 +85,7 @@ Platform    ACloseDialogProc 	 ACloseDialogProc
 procedure TForm1.btnFmxDialogs2Click(Sender: TObject);
 begin
   Caption:= '';
+  // Compiler warning here: W1000 Symbol 'MessageDlg' is deprecated: 'Use FMX.DialogService methods'
   FMX.Dialogs.MessageDlg('FMX.Dialogs.MessageDlg', TMsgDlgType.mtInformation, [TMsgDlgBtn.mbOK, TMsgDlgBtn.mbCancel], 0);
   Caption:= 'sssss';
 end;
