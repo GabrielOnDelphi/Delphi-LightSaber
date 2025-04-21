@@ -29,10 +29,12 @@ package LightFMX_Visual;
 
 requires
   rtl,
-  fmx;
+  fmx,
+  LightCore;
 
 contains
   LightFMX.Panel in 'FrameFMX\LightFMX.Panel.pas',
-  LightFMX.DropDownSearch in 'FrameFMX\LightFMX.DropDownSearch.pas';
+  LightFMX.DropDownSearch in 'FrameFMX\LightFMX.DropDownSearch.pas',
+  LightFMX.Layout in 'FrameFMX\LightFMX.Layout.pas';
 
 end.
