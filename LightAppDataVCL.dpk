@@ -27,7 +27,6 @@ package LightAppDataVCL;
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'LightSaber - AppData VCL library'}
 {$LIBSUFFIX AUTO}
-{$RUNONLY}
 {$IMPLICITBUILD ON}
 
 requires
@@ -40,8 +39,6 @@ requires
   VclSmp;
 
 contains
-  cbAppDataForm in 'FrameVCL\cbAppDataForm.pas',
-  cbAppDataVCL in 'FrameVCL\cbAppDataVCL.pas',
   cbCenterControl in 'FrameVCL\cbCenterControl.pas',
   cbDialogs in 'FrameVCL\cbDialogs.pas',
   cbIniFile in 'FrameVCL\cbIniFile.pas',
@@ -49,6 +46,12 @@ contains
   cbRegistry in 'FrameVCL\cbRegistry.pas',
   cbTranslate in 'FrameVCL\cbTranslate.pas',
   cbVclUtils in 'FrameVCL\cbVclUtils.pas',
-  cbVersion in 'FrameVCL\cbVersion.pas';
+  cbVersion in 'FrameVCL\cbVersion.pas',
+  cbAppDataForm in 'FrameVCL\cbAppDataForm.pas',
+  cbAppDataVCL in 'FrameVCL\cbAppDataVCL.pas',
+  FormRamLog in 'FrameVCL\FormRamLog.pas',
+  cbLog in 'FrameVCL\cbLog.pas',
+  cbLogFilter in 'FrameVCL\cbLogFilter.pas',
+  cbClipboard in 'FrameVCL\cbClipboard.pas';
 
 end.

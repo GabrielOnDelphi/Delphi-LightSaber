@@ -1,10 +1,8 @@
 UNIT cvComboBox;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.05
    www.GabrielMoraru.com
-   See Copyright file
+   2024.05
 --------------------------------------------------------------------------------------------------------------
 
   Features:
@@ -13,9 +11,9 @@ UNIT cvComboBox;
 
   DualItems:
     Allows user to add two strings separated by |.
-    The format is: 'int_cmd|Nice Screen Name' wich is stored in Items like this:  Names | Value
-    The graphic interface will only show the second string.
-    The first string can be retrieved like this: s:= TCubicComboBox.SelectedDualItem;
+    The format is: 'int_cmd|Nice Screen Name' stored in Items as: Names | Value
+    The UI shows the second string (Value).
+    The first string (Name) can be retrieved with: s := TCubicComboBox.SelectedDualItem;
 
   Tester: c:\MyProjects\Project support\Testers\CubicCombobox tester\Tester.dpr
 =============================================================================================================}
@@ -132,9 +130,9 @@ end;
 
 function TCubicComboBox.SelectFirstItem: Boolean;
 begin
- Result:= Items.Count > 0;
- if Result
- then ItemIndex:= 0;
+  Result:= Items.Count > 0;
+  if Result
+  then ItemIndex:= 0;
 end;
 
 
@@ -231,5 +229,3 @@ begin
 end;
 
 end.
-
-

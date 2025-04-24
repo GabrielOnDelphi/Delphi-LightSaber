@@ -83,7 +83,7 @@ TYPE
 
 IMPLEMENTATION {$R *.dfm}
 USES
-   csExecuteShell, csSystem, ccIO, ccTextFile, cmIO;
+   csExecuteShell, csSystem, cbClipboard, ccIO, ccTextFile, cmIO;
 
 
 
@@ -302,13 +302,13 @@ end;
 
 procedure TfrmTranslEditor.btnCopyClick(Sender: TObject);
 begin
-  csSystem.StringToClipboard(mmoLangEditor.Text);
+  StringToClipboard(mmoLangEditor.Text);
 end;
 
 
 procedure TfrmTranslEditor.btnCopyRightClick(Sender: TObject);
 begin
-  csSystem.StringToClipboard(mmoValues.Text);
+  StringToClipboard(mmoValues.Text);
 end;
 
 

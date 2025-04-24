@@ -6,6 +6,7 @@ unit MainForm;
 ==============================================================================================================
 
    Demo for c:\Projects\LightSaber\ccPlatformFile.pas
+   You will see the results of this program during compilation in the "Messages" panel.
 
 =============================================================================================================}
 

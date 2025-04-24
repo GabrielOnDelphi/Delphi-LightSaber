@@ -20,7 +20,7 @@ begin
 
   AppData:= TAppData.Create(AppName);
   AppData.CreateMainForm(TMainForm, MainForm, True, True);
-  TfrmRamLog.CreateGlobalLog;
+  TfrmRamLog.CreateGlobalLog !Remove this!;
   
   AppData.Run;
 end.

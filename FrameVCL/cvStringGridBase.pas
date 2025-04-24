@@ -183,7 +183,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES ccMath, csSystem, cmSound, ccCore, cbDialogs;
+USES ccMath, csSystem, cbClipboard, cmSound, ccCore, cbDialogs;
 
 CONST
    MinColWidth= 20;

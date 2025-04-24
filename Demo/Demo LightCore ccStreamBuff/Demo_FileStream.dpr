@@ -13,7 +13,7 @@ uses
 begin
   AppData:= TAppData.Create('BigSearch');
   AppData.CreateMainForm(TMainForm, MainForm, True, True);    // Main form
-  TfrmRamLog.CreateGlobalLog;
+  TfrmRamLog.CreateGlobalLog !Remove this!;
   AppData.Run;
 end.
 

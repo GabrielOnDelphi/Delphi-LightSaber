@@ -50,6 +50,7 @@ TYPE
      constructor Create(AOwner: TComponent); override;
      destructor Destroy; override;
 
+//     procedure ClearDictionary;
      procedure  PopulateDictionary(Words: TStringList);
      procedure  AddDemoStrings;
 
@@ -360,6 +361,8 @@ end;
 { Note: The TStrings object does not own the objects you add this way. Objects added to the TStrings object still exist even if the TStrings instance is destroyed. They must be explicitly destroyed by the application. }
 procedure TDropDownSearchBox.PopulateDictionary(Words: TStringList);
 begin
+  //todo: question: Does this "clear" first ??????????????????????????????????
+
   FWords.Assign(Words);    // Store all items in FFullItemList
 end;
 

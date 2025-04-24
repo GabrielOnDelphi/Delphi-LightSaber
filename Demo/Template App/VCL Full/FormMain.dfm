@@ -28,7 +28,7 @@ object MainForm: TMainForm
     Top = 0
     Width = 668
     Height = 509
-    ActivePage = tabMain
+    ActivePage = tabProgress
     Align = alClient
     TabOrder = 0
     object tabMain: TTabSheet
@@ -37,24 +37,26 @@ object MainForm: TMainForm
         AlignWithMargins = True
         Left = 3
         Top = 3
-        Width = 475
-        Height = 474
+        Width = 463
+        Height = 471
         Align = alClient
         TabOrder = 1
       end
       object pnlRight: TPanel
         AlignWithMargins = True
-        Left = 484
+        Left = 472
         Top = 3
         Width = 185
-        Height = 474
+        Height = 471
         Align = alRight
         TabOrder = 0
         object btnStart: TButton
-          Left = 21
-          Top = 357
-          Width = 134
+          AlignWithMargins = True
+          Left = 4
+          Top = 4
+          Width = 177
           Height = 53
+          Align = alTop
           Caption = 'START'
           TabOrder = 0
           OnClick = btnSTARTClick
@@ -68,9 +70,9 @@ object MainForm: TMainForm
         660
         477)
       object btnProgress: TButton
-        Left = 212
-        Top = 394
-        Width = 143
+        Left = 233
+        Top = 359
+        Width = 193
         Height = 49
         Anchors = [akTop]
         Caption = 'Progress'
@@ -79,36 +81,36 @@ object MainForm: TMainForm
         OnClick = btnProgressClick
       end
       object Button1: TButton
-        Left = 212
-        Top = 104
-        Width = 143
+        Left = 233
+        Top = 69
+        Width = 193
         Height = 49
         Action = actUpdater
         Anchors = [akTop]
         TabOrder = 1
       end
       object Button2: TButton
-        Left = 212
-        Top = 158
-        Width = 143
+        Left = 233
+        Top = 123
+        Width = 193
         Height = 49
         Action = actEnterKey
         Anchors = [akTop]
         TabOrder = 2
       end
       object Button3: TButton
-        Left = 212
-        Top = 211
-        Width = 143
+        Left = 233
+        Top = 176
+        Width = 193
         Height = 49
         Action = actLanguage
         Anchors = [akTop]
         TabOrder = 3
       end
       object Button4: TButton
-        Left = 212
-        Top = 265
-        Width = 143
+        Left = 233
+        Top = 230
+        Width = 193
         Height = 49
         Action = actSettings
         Anchors = [akTop]
@@ -122,91 +124,91 @@ object MainForm: TMainForm
         660
         477)
       object btnShowLog: TButton
-        Left = 194
-        Top = 58
+        Left = 234
+        Top = 46
         Width = 191
         Height = 45
         Action = actShowLog
-        Anchors = []
+        Anchors = [akTop]
         Caption = 'Show the log window'
         TabOrder = 0
       end
       object Button5: TButton
-        Left = 194
-        Top = 107
+        Left = 234
+        Top = 106
         Width = 191
         Height = 34
-        Anchors = []
+        Anchors = [akTop]
         Caption = 'Send msg to log (hint)'
         TabOrder = 1
         OnClick = Button5Click
       end
       object Button6: TButton
-        Left = 194
-        Top = 149
+        Left = 234
+        Top = 148
         Width = 191
         Height = 34
-        Anchors = []
+        Anchors = [akTop]
         Caption = 'Send msg to log (Info)'
         TabOrder = 2
         OnClick = Button6Click
       end
       object Button7: TButton
-        Left = 194
-        Top = 192
+        Left = 234
+        Top = 189
         Width = 191
         Height = 34
-        Anchors = []
+        Anchors = [akTop]
         Caption = 'Send msg to log (Verbose)'
         TabOrder = 3
         OnClick = Button7Click
       end
       object Button8: TButton
-        Left = 194
-        Top = 226
+        Left = 234
+        Top = 231
         Width = 191
         Height = 34
-        Anchors = []
+        Anchors = [akTop]
         Caption = 'Send msg to log (Important)'
         TabOrder = 4
         OnClick = Button8Click
       end
       object Button9: TButton
-        Left = 194
-        Top = 269
+        Left = 234
+        Top = 273
         Width = 191
         Height = 34
-        Anchors = []
+        Anchors = [akTop]
         Caption = 'Send msg to log (Warning)'
         TabOrder = 5
         OnClick = Button9Click
       end
       object Button11: TButton
-        Left = 194
-        Top = 311
+        Left = 234
+        Top = 314
         Width = 191
         Height = 34
-        Anchors = []
+        Anchors = [akTop]
         Caption = 'Send msg to log (Error)'
         TabOrder = 6
         OnClick = Button11Click
       end
       object Button10: TButton
-        Left = 194
-        Top = 351
+        Left = 234
+        Top = 356
         Width = 191
         Height = 34
-        Anchors = []
+        Anchors = [akTop]
         Caption = 'Send empty line'
         TabOrder = 7
         OnClick = Button10Click
       end
       object Button12: TButton
-        Left = 194
-        Top = 391
+        Left = 234
+        Top = 398
         Width = 191
         Height = 34
-        Anchors = []
+        Anchors = [akTop]
         Caption = 'Send bold text'
         TabOrder = 8
         OnClick = Button12Click

@@ -11,6 +11,7 @@ object MainForm: TMainForm
   Font.Name = 'Tahoma'
   Font.Style = []
   Position = poDesigned
+  ShowHint = True
   OnCreate = FormCreate
   TextHeight = 13
   object Panel1: TPanel
@@ -135,9 +136,9 @@ object MainForm: TMainForm
         TrackBar.Anchors = [akLeft, akTop, akRight, akBottom]
         TrackBar.Max = 6
         TrackBar.Min = 1
-        TrackBar.Position = 1
+        TrackBar.Position = 3
         TrackBar.TabOrder = 0
-        Verbosity = lvVerbose
+        Verbosity = lvInfos
         Log = VisLog
       end
       object Button3: TButton
@@ -214,7 +215,7 @@ object MainForm: TMainForm
       TabOrder = 2
       Verbosity = lvVerbose
       ColWidths = (
-        374)
+        391)
     end
   end
 end

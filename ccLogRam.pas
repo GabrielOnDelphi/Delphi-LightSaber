@@ -32,7 +32,6 @@ UNIT ccLogRam;
 // It would be much more efficient probably, not to create the queue if we are not in multithreaded mode.
 
 INTERFACE
-{ $I Frameworks.inc}
 
 USES
    System.SysUtils, System.DateUtils,
@@ -45,8 +44,6 @@ TYPE
     procedure PopUpWindow;
   end;
 
-
-TYPE
   TRamLog = class(TObject)
    private
      FLogObserver: ILogObserver;
@@ -406,3 +403,4 @@ end;
 
 
 end.
+

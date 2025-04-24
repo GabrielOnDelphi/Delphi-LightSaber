@@ -16,7 +16,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, System.Actions,
   VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList,
-  csSystem, cbAppDataForm;
+  csSystem, cbClipboard, cbAppDataForm;
 
 TYPE
   TMainForm = class(TLightForm)

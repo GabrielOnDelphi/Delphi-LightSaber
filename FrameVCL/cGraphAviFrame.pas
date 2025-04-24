@@ -126,7 +126,7 @@ function GetVideoPlayerLogo(FileName: string; OUT FrameCount: Cardinal): TBitmap
 
 IMPLEMENTATION
 USES
-   ccCore, csSystem, cbDialogs, ccINIFile, cbAppDataForm, cGraphBitmap, cGraphLoader, ccIO, ccTextFile, cmIO;
+   ccCore, csSystem, cbClipboard, cbDialogs, ccINIFile, cbAppDataForm, cGraphBitmap, cGraphLoader, ccIO, ccTextFile, cmIO;
 
 
 

@@ -13,6 +13,6 @@ uses
 begin
   AppData:= TAppData.Create('Light Tester WinVer');
   AppData.CreateMainForm(TfrmTester, frmTester, TRUE);
-  TfrmRamLog.CreateGlobalLog;
+  TfrmRamLog.CreateGlobalLog !Remove this!;
   AppData.Run;
 end.

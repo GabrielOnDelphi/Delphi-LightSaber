@@ -1,12 +1,10 @@
-UNIT cvLogFilter;
+UNIT cbLogFilter;
 
 // NEW LOG based on TStringGrid
 
 {=============================================================================================================
-   Gabriel Moraru
    2024.05
    www.GabrielMoraru.com
-   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
    WARNING!
@@ -20,14 +18,14 @@ UNIT cvLogFilter;
      Max= ?       lvErrors
 
    Tester:
-     c:\Myprojects\LightSaber\Demo\LightLog\
+     c:\Projects\LightSaber\Demo\Demo LightLog\Demo_Log.dpr
 =============================================================================================================}
 
 INTERFACE
 
 USES
    System.SysUtils, System.Classes, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.StdCtrls,
-   cvLog, ccLogUtils, ccLogTypes;
+   cbLog, ccLogTypes;
 
 TYPE
   TLogVerbFilter = class(TPanel)
@@ -94,8 +92,8 @@ begin
    VerboLabel.Layout   := tlCenter;
    VerboLabel.Align    := alLeft;
    VerboLabel.Alignment:= taCenter;
-   VerboLabel.Hint     := 'Log verbosity' +#13#10+ 'Hide all messages below this level.';
-   VerboLabel.Caption  := 'Log verbosity: '+ Verbosity2String(DefaultVerbosity);
+   VerboLabel.Hint     := 'Log verbosity' +#13#10+ '(Hide all messages below this level.)';
+   VerboLabel.Caption  := 'Verbosity: '+ Verbosity2String(DefaultVerbosity);
 
    TrackBar.Min        := 1;
    TrackBar.Max        := Integer(High(TLogVerbLvl));           { About enumerations: http://www.delphipages.com/forum/showthread.php?t=58129 }
@@ -122,8 +120,7 @@ begin
        end;
 
      Log.Verbosity:= Verbosity;
-
-     VerboLabel.Caption:= 'Log verbosity: '+ Verbosity2String(Verbosity);
+     VerboLabel.Caption:= 'Verbosity: '+ Verbosity2String(Verbosity);
    end;
 
  Log.Populate;
@@ -162,8 +159,6 @@ begin
   then TrackBar.Min:= 0
   else TrackBar.Min:= 1;
 end;
-
-
 
 
 

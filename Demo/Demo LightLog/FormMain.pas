@@ -1,13 +1,13 @@
-unit FormMain;
+UNIT FormMain;
 
-interface
+INTERFACE
 
-uses
+USES
   System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, ccLogRam, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.ComCtrls,
-  llRichLogTrack, llRichLogUtils, llRichLog, cvLog, cvLogFilter, cbAppDataForm, Vcl.Grids;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Grids,
+  llRichLogTrack, llRichLogUtils, llRichLog, cbLog, cbLogFilter, cbAppDataForm, ccLogRam;
 
-type
+TYPE
   TMainForm = class(TLightForm)
     Panel1: TPanel;
     Panel2: TPanel;
@@ -66,6 +66,8 @@ end;
 procedure TMainForm.Button1Click(Sender: TObject);
 begin
  RichLog.Clear;
+ RichLog.AddImpo ('This is TRichLog based on TRichEdit');
+ RichLog.AddEmptyRow;
 
  RichLog.AddVerb ('AddVerb');
  RichLog.AddHint ('AddHint');
@@ -93,6 +95,9 @@ begin
  LogVis.TrackBar.Position:= 0;
 
  VisLog.Clear;
+ VisLog.RamLog.AddImpo('This is TLogGrid based on TStringGrid');
+ VisLog.RamLog.AddEmptyRow;
+
  VisLog.RamLog.AddDebug('AddDebug');
  VisLog.RamLog.AddVerb ('AddVerb');
  VisLog.RamLog.AddHint ('AddHint');

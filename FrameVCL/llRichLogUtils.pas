@@ -3,10 +3,8 @@ UNIT llRichLogUtils;
 // OLD LOG based on RichEdit
 
 {=============================================================================================================
-   Gabriel Moraru
    2023.06
    www.GabrielMoraru.com
-   See Copyright file
 
    A simple but effective visual log control/library.
    The programmer can send messages to the log that will be shown or not, depending on the chousen verbosity level of the log (see Verbosity property).

@@ -10,6 +10,6 @@ uses
 begin
   AppData:= TAppData.Create('Orinoco Reader', 'Orinoco', FALSE);
   AppData.CreateMainForm(TfrmMain, frmMain, True, True);
-  //TfrmRamLog.CreateGlobalLog;
+  //TfrmRamLog.CreateGlobalLog !Remove this!;
   AppData.Run;
 end.

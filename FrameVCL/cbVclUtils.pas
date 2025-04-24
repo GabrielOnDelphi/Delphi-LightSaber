@@ -44,6 +44,7 @@ TYPE
  function  HasAction         (Component: TComponent): Boolean;                   { Returns true if this component (TMenuItem, TButton), etc has an action assigned to it. }
  procedure ActionVisibility  (Item: TAction; Show: Boolean);
 
+
 {=============================================================================================================
    FORM
 =============================================================================================================}
@@ -68,6 +69,7 @@ TYPE
  procedure SetFocus          (Control: TWinControl);
 
  procedure RefreshNow(Ctrl: TControl);
+
 
 {=============================================================================================================
    DESIGN TIME DEBUGGING

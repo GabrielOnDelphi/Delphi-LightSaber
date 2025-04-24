@@ -13,18 +13,7 @@
        - Detect if the application is running for the first time on this computer
        - Application self-restart
        - Application self-delete
-	   	   
-     TAppDataEx	   
-       - Get application's version
-       - Log error messages to a special window that pops up when you send warnings and errors to it. 
-       - Easily create new forms and set its font to be the same as main forms' font.
-       - Change the font for all running forms
-       - Basic support for Uninstaller (The Uninstaller can find out where the app was installed)
-       - Basic support for licensing (trial period) system. See Proteus for details.
-       - Translation
-         (Multi-language GUI) 
 
-       - etc, etc
  ____________________________________________________________________________________________________________
 
    HOW TO USE IT
@@ -34,11 +23,10 @@
        program MyConsole;
        uses
          FastMM4,
-         cbINIFile,
-         ccAppData, cbAppDataVCL;
+         ccAppData;
        begin
-         AppData:= TAppDataEx.Create('MyCollApp');
-         Application.Run;
+         AppDataCore:= TAppDataCore.Create('MyCollApp');
+         AppDataCore.Run;
        end.
 
      For GUI projects see cbAppDataVCL.pas
@@ -95,7 +83,7 @@ TYPE
     class VAR Initializing: Boolean;                 // See documentation at the top of the file
 
     constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE); virtual;
-    procedure AfterConstruction; override;
+    procedure  AfterConstruction; override;
     destructor Destroy; override;                    // This is called automatically by "Finalization" in order to call it as late as possible }
 
    {--------------------------------------------------------------------------------------------------
@@ -104,7 +92,10 @@ TYPE
     var
       UserPath     : string;           // User defined path where to save (large) files. Useful when the program needs to save large amounts of data that we don't want to put on a SSD drive.
       AutoStartUp  : Boolean;          // Start app at Windows startup
-      StartMinim   : Boolean;          // Start minimized
+
+    var
+      // These are here so they can be shared with the VCL/FMX variant of AppData
+      StartMinim   : Boolean;          // Start minimized. Remmbers application's last state (it was minimized or not)
       Minimize2Tray: Boolean;          // Minimize to tray
       HintType     : THintType;        // Turn off the embedded help system
       Opacity      : Integer;          // Form opacity
@@ -170,19 +161,14 @@ procedure ExtractPathFromCmdLine(MixedInput: string; OUT Path, Parameters: strin
 function  FindCmdLineSwitch(const Switch: string; IgnoreCase: Boolean): Boolean; deprecated 'Use System.SysUtils.FindCmdLineSwitch';
 function  ExeName: string;
 
+VAR                              // ToDo: make sure AppDataCore is unique (make it a Singleton)
+   AppDataCore: TAppDataCore;    // This obj is automatically freed on app shutdown (via FINALIZATION)
+
 
 IMPLEMENTATION
 
 USES
   ccIO, ccTextFile;
-
-
-
-
-function ExeName: string;
-begin
-  Result:= ParamStr(0);   //  Application.ExeName is available only on VCL
-end;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -560,7 +546,7 @@ end;
    Global settings
 --------------------------------------------------------------------------------------------------}
 
-// Hide hint after 'Value' ms. Does nothing here. The child class mush override this
+// Hide hint after 'Value' ms. Does nothing here. The child class must override this
 procedure TAppDataCore.setHideHint(const Value: Integer);
 begin
   FHideHint := Value;
@@ -572,6 +558,7 @@ begin
   VAR IniFile := TIniFileEx.Create('AppData Settings', IniFile);
   try
     IniFile.Write('AutoStartUp'   , AutoStartUp);
+
     IniFile.Write('StartMinim'    , StartMinim);
     IniFile.Write('Minimize2Tray' , Minimize2Tray);
     IniFile.Write('Opacity'       , Opacity);
@@ -612,6 +599,12 @@ begin
   HintType     := htTooltips;                // Turn off the embeded help system
   Opacity      := 250;
   UserPath     := AppDataFolder;
+end;
+
+
+function ExeName: string;
+begin
+  Result:= ParamStr(0);   //  Application.ExeName is available only on VCL
 end;
 
 

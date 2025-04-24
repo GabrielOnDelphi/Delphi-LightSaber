@@ -296,7 +296,7 @@ end;
    READ/WRITE INDIVIDUAL CTRLS
 -----------------------------------------------------------------------------------------------------------------------}
 //ToDo: here make an array of supported controls (class references?) then go with InheritsFrom through the list
-function TIniFileApp.WriteComp(Comp: TComponent): Boolean;                                                             { Write 'any' control to INI file }
+function TIniFileApp.WriteComp(Comp: TComponent): Boolean;                                                    { Write 'any' control to INI file }
 VAR s: String;
 begin
  Assert(AppData <> NIL);
@@ -304,22 +304,27 @@ begin
  if Comp.Name = '' then
   begin
     s := '[TIniFileApp.WriteComp] The control has no name! Class: ' + Comp.ClassName;
-   if (Comp.InheritsFrom(TControl))
-   and (TControl(Comp).Parent <> nil)
-   then s := s + '. Parent: ' + TControl(Comp).Parent.Name;
-   RAISE Exception.Create(s);
+    if (Comp.InheritsFrom(TControl))
+    and (TControl(Comp).Parent <> nil)
+    then s := s + '. Parent: ' + TControl(Comp).Parent.Name;
+    RAISE Exception.Create(s);
   end;
 
  Result:= TRUE;
 
  if Comp.InheritsFrom(TForm) then
-  begin
-   WriteCtrlPos (TControl(Comp));
-   Write('FormFont', TForm(Comp).Font);
+   begin
+     WriteCtrlPos (TControl(Comp));
 
-   if Comp = Application.MainForm
-   then WriteString(Comp.Name, 'LastUsedFolder', AppData.LastUsedFolder); //todo: make it a parameter for TIniFileApp
-  end
+     if Comp = Application.MainForm then
+       begin
+         // Font. All other forms will use main form's font
+         Write('MainFormFont', TForm(Comp).Font);
+
+         // LastUsedFolder
+         WriteString(Comp.Name, 'LastUsedFolder', AppData.LastUsedFolder);
+       end;
+   end
  else
 
   if Comp.InheritsFrom(TAction)
@@ -428,10 +433,11 @@ begin
      then ShowMessage(Comp.Name+ CRLFw+ 'The main menu will not appear because the form is set to bsDialog!');
 
      ReadCtrlPos(TControl(Comp));
-     Read('FormFont', TForm(Comp).Font);
-
-     if Comp = Application.MainForm
-     then AppData.LastUsedFolder:= ReadString(Comp.Name, 'LastUsedFolder', '');
+     if Comp = Application.MainForm then
+       begin
+         Read('MainFormFont', TForm(Comp).Font);  // All other forms will use main form's font
+         AppData.LastUsedFolder:= ReadString(Comp.Name, 'LastUsedFolder', '');
+       end;
    end
  else
 
@@ -677,7 +683,7 @@ end;
   Don't forget to force the app to save its INI file to disk before loading the file. }             { Old name: IniFileToString }
 class function TIniFileApp.AsString: string;
 begin
-  Result:= StringFromFile(AppData.IniFile);
+  Result:= StringFromFile(TAppDataCore.IniFile);
 end;
 
 

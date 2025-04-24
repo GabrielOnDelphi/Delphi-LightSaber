@@ -70,7 +70,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  cvIniFile, ccCore, csSystem, cbDialogs, ccINIFile, cbAppDataForm, cmSound, ccAppData, cbAppDataVCL
+  cvIniFile, ccCore, csSystem, cbClipboard, cbDialogs, ccINIFile, cbAppDataForm, cmSound, ccAppData, cbAppDataVCL
 , ccIO, ccTextFile, cmIO, ciEmailSender;
 
 

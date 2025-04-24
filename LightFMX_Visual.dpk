@@ -35,6 +35,7 @@ requires
 contains
   LightFMX.Panel in 'FrameFMX\LightFMX.Panel.pas',
   LightFMX.DropDownSearch in 'FrameFMX\LightFMX.DropDownSearch.pas',
-  LightFMX.Layout in 'FrameFMX\LightFMX.Layout.pas';
+  LightFMX.Layout in 'FrameFMX\LightFMX.Layout.pas',
+  LightFMX.vComboBox in 'FrameFMX\LightFMX.vComboBox.pas';
 
 end.

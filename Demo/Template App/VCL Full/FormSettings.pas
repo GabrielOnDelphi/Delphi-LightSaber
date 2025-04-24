@@ -21,10 +21,10 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs,
-  cvIniFile, cvPathEdit, cmDebugger, cvRadioButton, cvCheckBox, ccAppData, cbAppDataVCL
-, cbAppDataForm,
-  cmGuiSettings;
+  WinApi.Windows, WinApi.Messages,
+  System.SysUtils, System.Classes,
+  Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs,
+  cvIniFile, cvPathEdit, cmDebugger, cvRadioButton, cvCheckBox, ccAppData, cbAppDataVCL, cbAppDataForm, cmGuiSettings;
 
 TYPE
   TfrmSettings = class(TLightForm)
@@ -68,6 +68,8 @@ TYPE
     procedure spnHideHintChange       (Sender: TObject);
     procedure FormKeyPress            (Sender: TObject; var Key: Char);
     procedure spnOpacityChange        (Sender: TObject);
+    procedure FontDialogClose(Sender: TObject);
+    procedure FontDialogShow(Sender: TObject);
   protected
   private
     GuiSettings: TGuiSettings;    // GUI Settings are created separatedly from the form because we want to access them even if the form is not running.
@@ -237,16 +239,26 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TfrmSettings.FontDialogApply(Sender: TObject; Wnd: HWND);
 begin
- AppData.Font:= FontDialog.Font; // Apply this font to all existing forms.
- //ToDo: Application.MainForm.FontSizeChanged; Let the form recalculate its GUI stuff when font size changes
- MainForm.FontSizeChanged;
+  FontDialogClose(Sender);
 end;
 
 
+procedure TfrmSettings.FontDialogClose(Sender: TObject);
+begin
+  AppData.Font:= FontDialog.Font; // Apply this font to all existing forms.
+  //ToDo: Application.MainForm.FontSizeChanged; Let the form recalculate its GUI stuff when font size changes
+  MainForm.FontSizeChanged;
+end;
+
+procedure TfrmSettings.FontDialogShow(Sender: TObject);
+begin
+  //
+end;
+
 procedure TfrmSettings.btnFontClick(Sender: TObject);
 begin
- FontDialog.Font:= AppData.Font;
- FontDialog.Execute(Self.Handle);
+  FontDialog.Font:= AppData.Font;
+  FontDialog.Execute(Self.Handle);
 end;
 
 

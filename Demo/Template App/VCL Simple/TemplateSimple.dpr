@@ -21,6 +21,6 @@ begin
 
   AppData:= TAppData.Create(AppName, '', MultiThreaded);
   AppData.CreateMainForm(TMainForm, MainForm, TRUE, TRUE, asFull);
-  TfrmRamLog.CreateGlobalLog;
+  TfrmRamLog.CreateGlobalLog !Remove this!;
   AppData.Run;
 end.

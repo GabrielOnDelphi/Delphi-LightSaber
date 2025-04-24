@@ -25,7 +25,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls,
   InternetLabel,
-  ccCore, csSystem, ciUpdater, llRichLog, llRichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
+  ccCore, csSystem, cbClipboard, ciUpdater, llRichLog, llRichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
 
 CONST
   UpdaterURL = 'https://www.GabrielMoraru.com/uploads/OnlineNews_v2_TemplateApp.bin'; { For demo purposes }

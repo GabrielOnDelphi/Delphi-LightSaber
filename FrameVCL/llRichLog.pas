@@ -1,12 +1,10 @@
-﻿UNIT llRichLog;
+UNIT llRichLog;
 
-// OLD LOG based on RichEdit
+// Old log based on RichEdit
 
 {=============================================================================================================
-   Gabriel Moraru
    2024.05
    www.GabrielMoraru.com
-   See Copyright file 
 --------------------------------------------------------------------------------------------------------------
 
    A simple but effective visual log.
@@ -26,7 +24,7 @@
      TRamLog even though fully functional, it is a bit outdated. The plan is to be replaced with VisLogRam.
 
    Tester:
-     c:\Myprojects\LightSaber\Demo\LightLog\
+     c:\Projects\LightSaber\Demo\Demo LightLog\Demo_Log.dpr
 =============================================================================================================}
 
 INTERFACE

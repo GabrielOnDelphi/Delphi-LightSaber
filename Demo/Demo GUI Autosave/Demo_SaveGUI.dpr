@@ -26,7 +26,7 @@ procedure Main;
   else
    begin
      AppData.CreateMainForm(TfrmTester, frmTester, TRUE, TRUE);
-     TfrmRamLog.CreateGlobalLog;
+     TfrmRamLog.CreateGlobalLog !Remove this!;
      AppData.Run;
    end;
  end;

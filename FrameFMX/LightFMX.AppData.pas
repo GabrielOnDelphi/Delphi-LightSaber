@@ -35,14 +35,14 @@
          Forms,
          FormRamLog,
          cbINIFile,
-         ccAppData,
+         ccAppData, cbAppDataVCL,
          cbAppDataVCL,
          MainForm in 'MainForm.pas' {frmMain);
        begin
          AppData:= TAppData.Create('MyCollApp');
          AppData.CreateMainForm(TMainForm, MainForm, False, True);   // Main form
          AppData.CreateForm(TSecondFrom, frmSecond);                 // Secondary form (optional)
-         TfrmRamLog.CreateGlobalLog;                                 // Log (optional)
+         TfrmRamLog.CreateGlobalLog !Remove this!;                                 // Log (optional)
          AppData.Run;
        end.
 
@@ -116,8 +116,6 @@ USES
 
   {$IFDEF msWindows}
     Winapi.Windows,
-
-
     System.Win.Registry,
   {$ENDIF}
 
@@ -225,7 +223,8 @@ constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: strin
 begin
   inherited Create(aAppName, WindowClassName, MultiThreaded);
   Application.Initialize;                         // Note: Emba: Although Initialize is the first method called in the main project source code, it is not the first code that is executed in a GUI application. For example, in Delphi, the application first executes the initialization section of all the units used by the Application. in modern Delphi (non-.NET), you can remove Application.Initialize without breaking your program. The method is almost empty and no longer plays a critical role in setting up the VCL or application environment. Its historical purpose was to initialize COM and CORBA, but since those are no longer used, the method is effectively redundant.
-  Application.Title         := aAppName;
+  Application.Title    := aAppName;
+  Application.ShowHint := TRUE;
 
   { All done }
   LogVerb(AppName+ ' started.');
@@ -339,8 +338,6 @@ procedure TAppData.CreateFormModal(aClass: TComponentClass; OUT Reference; Paren
 begin
   CreateFormModal(aClass, ParentWnd);
 end;
-
-
 
 
 

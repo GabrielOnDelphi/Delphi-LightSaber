@@ -90,7 +90,7 @@ begin
         end;
  EXCEPT
   //todo 1: trap only specific exceptions
-  //DO NOTHING    or: write this directly in ccCore, csSystem, cbDialogs log
+  //DO NOTHING    or: write this directly in ccCore, csSystem, cbClipboard, cbDialogs log
   Width := -1;    //DO NOT RAISE AN exception HERE IF THE FILE TYPE IS UNSUPORTED! Let the caller decide what to do. This could happen when bionix downloads and URL and the server returns a HTML instead of an image!
   Height:= -1;
  END;

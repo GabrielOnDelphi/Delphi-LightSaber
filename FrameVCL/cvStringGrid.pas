@@ -36,8 +36,11 @@
 
 INTERFACE
 
-USES Winapi.Windows, System.SysUtils,Messages, Vcl.Grids, System.Classes, Vcl.Graphics, Vcl.Controls,
-     Vcl.Clipbrd, cvStringGridBase, ccCore, cbDialogs;
+USES
+   Winapi.Windows, Winapi.Messages,
+   System.SysUtils, System.Classes,
+   Vcl.Grids, Vcl.Graphics, Vcl.Controls, Vcl.Clipbrd,
+   cvStringGridBase, ccCore, cbDialogs;
 
 {$WARN GARBAGE OFF}   {Silent the: 'W1011 Text after final END' warning }
 
@@ -133,7 +136,7 @@ procedure Register;
 
 IMPLEMENTATION {$R *.res}
 
-USES ccColors, ccTextFile, ccMath, csSystem;
+USES ccColors, ccTextFile, ccMath, csSystem, cbClipboard;
 
 
 

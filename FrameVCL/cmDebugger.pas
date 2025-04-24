@@ -85,7 +85,7 @@ USES
 
 IMPLEMENTATION
 USES
-   csSystem, ccCore, cbDialogs, {cbINIFile,} ccIO, ccTextFile, cmIO, cbVersion, csExecuteProc, cmPermissions, System.DateUtils;
+   csSystem, cbClipboard, ccCore, cbDialogs, {cbINIFile,} ccIO, ccTextFile, cmIO, cbVersion, csExecuteProc, cmPermissions, System.DateUtils;
 
 
 

@@ -1,4 +1,4 @@
-UNIT cvLog;
+UNIT cbLog;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -25,7 +25,7 @@ INTERFACE
 USES
    Winapi.Messages,
    Winapi.Windows,
-   System.Classes,  System.SysUtils,
+   System.Classes, System.SysUtils,
    Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls, Vcl.Forms, Vcl.Grids, Vcl.ExtCtrls, VCL.ComCtrls,
    ccLogRam, ccLogTypes, ccLogLinesAbstract;
 
@@ -38,9 +38,9 @@ TYPE
      FShowTime    : Boolean;
      FShowDate    : Boolean;
      FRamLog      : TRamLog;
-     FOwnRamLog   : Boolean;
-     FVerbTrackBar: TPanel; // TLogVerbFilter
-     FFilteredRowCount: Integer;  // Cached value
+     FVerbTrackBar: TPanel;         // TLogVerbFilter
+     FOwnRamLog   : Boolean;        // It frees the RamLog it if owns it
+     FFilteredRowCount: Integer;    // Cached value
      procedure setShowDate(const Value: Boolean);
      procedure setShowTime(const Value: Boolean);
      procedure FixFixedRow;
@@ -88,7 +88,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   ccCore, ccColors, csSystem, cvLogFilter;
+   ccCore, ccColors, cbClipboard, cbLogFilter;
 
 
 
@@ -100,7 +100,8 @@ begin
  inherited Create(AOwner);
 
  FOwnRamLog:= TRUE;
- FRamLog:= TRamLog.Create(TRUE, Self as ILogObserver);
+ if FOwnRamLog
+ then FRamLog:= TRamLog.Create(TRUE, Self as ILogObserver);
 
  ShowTime        := FALSE;
  ShowDate        := FALSE;
@@ -207,7 +208,7 @@ begin
   if FOwnRamLog
   then FreeAndNil(FRamLog);
 
-  FOwnRamLog:= FALSE;          // We received the log from an external source. Don't release it anymore
+  FOwnRamLog:= FALSE;          // We received the log from an external source. We don't auto release it anymore
   FRamLog:= ExternalLog;
   FRamLog.RegisterLogObserver(Self as ILogObserver);
 end;
@@ -334,13 +335,13 @@ end;
 { Returns all lines, even if a filter is applied }
 procedure TLogGrid.CopyAll;
 begin
-  csSystem.StringToClipboard(RamLog.GetAsText);
+  cbClipboard.StringToClipboard(RamLog.GetAsText);
 end;
 
 
 procedure TLogGrid.CopyCurLine;
 begin
-  csSystem.StringToClipboard(GetLineFiltered(Row).Msg);
+  cbClipboard.StringToClipboard(GetLineFiltered(Row).Msg);
 end;
 
 

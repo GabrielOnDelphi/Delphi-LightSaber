@@ -4,8 +4,8 @@ object frmRamLog: TfrmRamLog
   AlphaBlend = True
   BorderIcons = [biSystemMenu, biMaximize]
   Caption = 'Log'
-  ClientHeight = 508
-  ClientWidth = 584
+  ClientHeight = 507
+  ClientWidth = 643
   Color = clBtnFace
   DoubleBuffered = True
   Font.Charset = DEFAULT_CHARSET
@@ -23,8 +23,8 @@ object frmRamLog: TfrmRamLog
   object Container: TPanel
     Left = 0
     Top = 0
-    Width = 584
-    Height = 508
+    Width = 643
+    Height = 507
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
@@ -32,7 +32,7 @@ object frmRamLog: TfrmRamLog
     object pnlBottom: TPanel
       Left = 0
       Top = 477
-      Width = 584
+      Width = 647
       Height = 31
       Align = alBottom
       BevelOuter = bvNone
@@ -54,7 +54,7 @@ object frmRamLog: TfrmRamLog
       end
       object btnClear: TButton
         AlignWithMargins = True
-        Left = 513
+        Left = 576
         Top = 1
         Width = 68
         Height = 29
@@ -70,13 +70,13 @@ object frmRamLog: TfrmRamLog
         AlignWithMargins = True
         Left = 348
         Top = 3
-        Width = 159
+        Width = 222
         Height = 25
         Align = alClient
         BevelOuter = bvNone
         ShowCaption = False
         TabOrder = 2
-        TrackBar.Left = 39
+        TrackBar.Left = 102
         TrackBar.Top = 0
         TrackBar.Width = 120
         TrackBar.Height = 25
@@ -116,7 +116,7 @@ object frmRamLog: TfrmRamLog
       AlignWithMargins = True
       Left = 3
       Top = 3
-      Width = 578
+      Width = 641
       Height = 471
       Align = alClient
       BevelOuter = bvNone
@@ -137,7 +137,7 @@ object frmRamLog: TfrmRamLog
       TabOrder = 1
       Verbosity = lvErrors
       ColWidths = (
-        574)
+        620)
     end
   end
   object PopupMenu: TPopupMenu

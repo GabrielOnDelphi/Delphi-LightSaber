@@ -1,104 +1,69 @@
 UNIT FormRamLog;
 
 {=============================================================================================================
-   Gabriel Moraru
    2024.05
    www.GabrielMoraru.com
-   See Copyright file
 --------------------------------------------------------------------------------------------------------------
+   Visual log window.
+   Reads the content of a TRamLog.
 
-   Visual log (window).
-   More details in llRichLogUtils.pas
+   It is automatically created by TAppDataVCL.pas
+   But can be also created manually if you don't use AppData.
+   User's prefferences are managed via LoadSettings/SaveSettings.
 
-   Usage:
-     It is CRITICAL to create the AppData object as soon as the application starts.
-     Prefferably in the DPR file before creating the main form!
-       DPR:
-          AppData:= TAppData.Create('MyCollApp');
-       OnLateInitialize:
-          AppData.Initilizing:= False;
-
-     AppDataEx is automatically destroyed by the Finalization section of this unit.
-
-   Tester:
-     c:\Myprojects\LightSaber\Demo\LightLog\
+   TLogGrid tester:
+     c:\Projects\LightSaber\Demo\Demo LightLog\Demo_Log.dpr
 =============================================================================================================}
 
 INTERFACE
-{.$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
   System.Classes, System.SysUtils,
-  Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls,
-  ccAppData, cbAppDataVCL, ccLogRam, cvLog, cvLogFilter, Vcl.Menus, Vcl.Grids;
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, Vcl.Grids,
+  ccAppData, cbAppDataForm, ccLogRam, cbLog, cbLogFilter;
 
 TYPE
   TfrmRamLog = class(TLightForm)
-    Log           : TLogGrid;
-    Container     : TPanel;    { We use a container for all controls on this form so we can reparent them easily to another form }
-    btnClear      : TButton;
-    chkLogOnError : TCheckBox;
-    chkShowTime   : TCheckBox;
-    pnlBottom     : TPanel;
-    trkLogVerb    : TLogVerbFilter;
-    chkShowDate   : TCheckBox;
-    PopupMenu: TPopupMenu;
-    mnuCopy: TMenuItem;
-    mnuCopyAll: TMenuItem;
+    btnClear       : TButton;
+    chkLogOnError  : TCheckBox;
+    chkShowDate    : TCheckBox;
+    chkShowTime    : TCheckBox;
+    Container      : TPanel;    { We use a container for all controls on this form so we can reparent them easily to another form }
+    Log            : TLogGrid;
+    mnuCopy        : TMenuItem;
+    mnuCopyAll     : TMenuItem;
     mnuCopyFiltered: TMenuItem;
+    pnlBottom      : TPanel;
+    PopupMenu      : TPopupMenu;
+    trkLogVerb     : TLogVerbFilter;
     procedure btnClearClick      (Sender: TObject);
-    procedure FormDestroy        (Sender: TObject);
     procedure chkLogOnErrorClick (Sender: TObject);
-    procedure FormClose          (Sender: TObject; var Action: TCloseAction);
-    procedure chkShowTimeClick   (Sender: TObject);
     procedure chkShowDateClick   (Sender: TObject);
-    procedure mnuCopyClick(Sender: TObject);
-    procedure mnuCopyAllClick(Sender: TObject);
+    procedure chkShowTimeClick   (Sender: TObject);
+    procedure FormClose          (Sender: TObject; var Action: TCloseAction);
+    procedure FormDestroy        (Sender: TObject);
+    procedure mnuCopyAllClick    (Sender: TObject);
+    procedure mnuCopyClick       (Sender: TObject);
   private
     procedure LoadSettings;
     procedure SaveSettings;
   public
-    class procedure CreateGlobalLog; static; // Would be nice to make this protected but we can't. All event handlers must be accesible/visible
     procedure FormPostInitialize; override; // Called after the main form was fully initilized
   end;
-
-
 
 
 IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   ccLogTypes, ccINIFile;
+   ccLogTypes, ccINIFile, cbAppDataVCL;
+
 
 
 
 {-------------------------------------------------------------------------------------------------------------
-   FORM
-
-   Create the Log form globally (to be used by the entire application)
+  FORM CREATION
 -------------------------------------------------------------------------------------------------------------}
-VAR
-  FormLog: TfrmRamLog= NIL;  // Accessible via AppData only
-
-
-{ToDo 5: Find a way to create it automatically from AppData (interfaces?). We cannot do it from AppData itself because this form depends on my LightVisControls.dpk which is not available at this compilation point.
-  We could use something like:
-  TAppData = class
-    class procedure RegisterFormCreator(AFormCreator: TFunc<TForm>); static;  // This class procedure would be called when we initialize the high-level package that contains the FormLog.
-  But this method seems to brittle. }
-class procedure TfrmRamLog.CreateGlobalLog;
-begin
-  Assert(FormLog = NIL, 'Form log already created!');
-
-  VAR CreateBeforeMainForm:= Application.MainForm = NIL;
-  AppData.CreateForm(TfrmRamLog, FormLog, FALSE, asPosOnly, NIL, FALSE, CreateBeforeMainForm);
-  FormLog.Log.AssignExternalRamLog(AppData.RamLog);   // We will read data from AppData's log
-
-  Assert(Application.MainForm <> FormLog, 'The Log should not be the MainForm!'); { Just in case: Make sure this is not the first form created }
-end;
-
-
 procedure TfrmRamLog.FormPostInitialize;
 begin
   inherited FormPostInitialize;
@@ -118,6 +83,8 @@ end;
 // Triggered by application shutdown
 procedure TfrmRamLog.FormDestroy(Sender: TObject);
 begin
+  Assert(Owner = NIL); // This form should have no owner. If it has an owner (like Application), it will destroy the form. We want AppData to destroy the form!
+
   Log.RamLog.UnregisterLogObserver;  //ToDo: do I need this?
   SaveSettings;
   Container.Parent:= Self;
@@ -126,6 +93,11 @@ end;
 
 
 
+
+
+{-------------------------------------------------------------------------------------------------------------
+   SETTINGS
+-------------------------------------------------------------------------------------------------------------}
 procedure TfrmRamLog.SaveSettings;
 begin
   Assert(AppData <> NIL, 'AppData is gone already!');
@@ -164,7 +136,6 @@ begin
 end;
 
 
-
 procedure TfrmRamLog.btnClearClick(Sender: TObject);
 begin
   Log.Clear;
@@ -174,7 +145,9 @@ end;
 
 
 
-
+{-------------------------------------------------------------------------------------------------------------
+   GUI
+-------------------------------------------------------------------------------------------------------------}
 procedure TfrmRamLog.chkLogOnErrorClick(Sender: TObject);
 begin
   AppData.RamLog.ShowOnError:= chkLogOnError.Checked;
@@ -198,13 +171,11 @@ begin
   Log.CopyAll;
 end;
 
+
 procedure TfrmRamLog.mnuCopyClick(Sender: TObject);
 begin
   Log.CopyCurLine;
 end;
 
 
-
 end.
-
-

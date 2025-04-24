@@ -53,7 +53,7 @@ IMPLEMENTATION  {$R *.DFM}
 
 USES
    ccAppData, cbAppDataVCL
-, csSystem, cbTranslate, ciUpdaterRec, cbDialogs, ccINIFile, cvINIFile;
+, csSystem, cbClipboard, cbTranslate, ciUpdaterRec, cbDialogs, ccINIFile, cvINIFile;
 
 
 

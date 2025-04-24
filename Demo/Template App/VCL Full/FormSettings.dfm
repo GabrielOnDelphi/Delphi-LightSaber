@@ -4,8 +4,8 @@ object frmSettings: TfrmSettings
   AlphaBlendValue = 249
   BorderIcons = [biSystemMenu]
   Caption = 'Settings'
-  ClientHeight = 510
-  ClientWidth = 766
+  ClientHeight = 509
+  ClientWidth = 762
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 350
@@ -27,18 +27,18 @@ object frmSettings: TfrmSettings
   object pgCtrl: TPageControl
     Left = 0
     Top = 0
-    Width = 766
-    Height = 510
-    ActivePage = tabSystem
+    Width = 762
+    Height = 509
+    ActivePage = tabInterface
     Align = alClient
     TabOrder = 0
     object tabSystem: TTabSheet
       Caption = 'System'
       DesignSize = (
-        758
-        478)
+        754
+        477)
       object grpSystem: TGroupBox
-        Left = 170
+        Left = 164
         Top = 97
         Width = 381
         Height = 246
@@ -102,8 +102,8 @@ object frmSettings: TfrmSettings
       end
       object Path: TCubicPathEdit
         Left = 82
-        Top = 363
-        Width = 559
+        Top = 362
+        Width = 547
         Height = 49
         Hint = 
           'User defined path where to save (large) files. Useful when the p' +
@@ -114,7 +114,7 @@ object frmSettings: TfrmSettings
         TabOrder = 1
       end
       object btnCrash: TButton
-        Left = 604
+        Left = 592
         Top = 12
         Width = 101
         Height = 25
@@ -129,10 +129,10 @@ object frmSettings: TfrmSettings
       Caption = 'Help'
       ImageIndex = 1
       DesignSize = (
-        758
-        478)
+        754
+        477)
       object GroupHelp: TGroupBox
-        Left = 188
+        Left = 182
         Top = 129
         Width = 345
         Height = 221
@@ -204,10 +204,10 @@ object frmSettings: TfrmSettings
       Caption = 'Interface'
       ImageIndex = 2
       DesignSize = (
-        758
-        478)
+        754
+        477)
       object GroupBox1: TGroupBox
-        Left = 216
+        Left = 210
         Top = 112
         Width = 290
         Height = 226
@@ -264,10 +264,10 @@ object frmSettings: TfrmSettings
       Caption = 'User defined'
       ImageIndex = 3
       DesignSize = (
-        758
-        478)
+        754
+        477)
       object grpUser: TGroupBox
-        Left = 190
+        Left = 184
         Top = 129
         Width = 345
         Height = 221
@@ -309,6 +309,8 @@ object frmSettings: TfrmSettings
     end
   end
   object FontDialog: TFontDialog
+    OnClose = FontDialogClose
+    OnShow = FontDialogShow
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
     Font.Height = -13

@@ -83,7 +83,7 @@ TYPE
     procedure FormKeyPress(Sender: TObject; var Key: Char);  // We can use this later in the destructor to know how to save the form: asPosOnly/asFull
   public
     constructor Create(AOwner: TComponent; AutoSaveForm: TAutoState); reintroduce; overload; virtual;
-    function CloseQuery: boolean; override;
+    function  CloseQuery: boolean; override;
 
     procedure FormPostInitialize; virtual;   // Takes place after the form was fully created
     procedure FormPreRelease; virtual;       // Takes place before the form is destroyed. It is guaranteed to be called excetly once.
@@ -209,12 +209,11 @@ begin
   if TAppDataCore.Initializing
   AND (Self= Application.MainForm) then
    begin
-    if TAppDataCore.RunningHome
-    then MessageError('Closing application while still initializing!');
-    Exit; // We don't save anything if the start up was improper!
+     if TAppDataCore.RunningHome
+     then MessageError('Closing application while still initializing!');
+     Exit; // We don't save anything if the start up was improper!
    end;
 
-  Assert(AppData <> NIL, '!!!');
   IniFile:= TIniFileApp.Create(Self.Name);
   TRY
    TRY
