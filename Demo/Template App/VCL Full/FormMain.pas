@@ -1,10 +1,10 @@
 UNIT FormMain;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.05
+   2025.05
    www.GabrielMoraru.com
-   See Copyright file
+--------------------------------------------------------------------------------------------------------------
+   Use this as a template when you start a new commercial application
 --------------------------------------------------------------------------------------------------------------
    Application that implements the following features:
      About box
@@ -25,10 +25,6 @@ UNIT FormMain;
      Accepts Drag and Drop.
      Create startmenu/desktop shortcut (on first run)
      Associates itself with its own file extension (app starts when the user double clicks a '.LightSaber' file in Explorer
-
-   Can be used as template for future applications.
---------------------------------------------------------------------------------------------------------------
-
 =============================================================================================================}
 
 INTERFACE
@@ -37,7 +33,7 @@ USES
   WinApi.Windows, WinApi.Messages, Winapi.ShellApi,
   System.SysUtils, System.Classes, System.Actions,
   VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
-  CoolTrayIcon, ccAppData, cbAppDataVCL, csSystem, cbClipboard, cvPathEdit, cvStatusBar, cpProteus {Delete this line if you don't have Proteus library}, cpProteusIO, cmGuiSettings, cbAppDataForm, ccCore;
+  CoolTrayIcon, ccAppData, LightCom.AppData, LightCom.SystemTime, LightCom.Clipboard, cvPathEdit, cvStatusBar, cpProteus {Delete this line if you don't have Proteus library}, cpProteusIO, LightCom.GuiSettings, LightCom.AppDataForm, ccCore;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -120,8 +116,9 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
    ciUpdater,
-   cbTranslate,
+   LightCom.Translate,
    cvIniFile,
+   LightCom.System,
    FormAbout,
    FormSettings,
    FormTranslSelector,

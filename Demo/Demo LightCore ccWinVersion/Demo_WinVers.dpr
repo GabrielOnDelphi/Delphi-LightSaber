@@ -3,16 +3,18 @@ program Demo_WinVers;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF}
-  cbAppDataVCL,
+  {$ENDIF }
+  LightCom.AppData,
   FormMain in 'FormMain.pas' {frmTester},
-  FormRamLog in '..\..\FrameVCL\FormRamLog.pas';
+  LightVcl.LogForm in '..\..\FrameVCL\LightVcl.LogForm.pas',
+  ccAppData in '..\..\ccAppData.pas';
 
 {$R *.res}
 
 begin
+  ReportMemoryLeaksOnShutdown:= TRUE;
+
   AppData:= TAppData.Create('Light Tester WinVer');
-  AppData.CreateMainForm(TfrmTester, frmTester, TRUE);
-  TfrmRamLog.CreateGlobalLog !Remove this!;
+  AppData.CreateMainForm(TfrmTester, frmTester, TRUE, TRUE, asFull);
   AppData.Run;
 end.

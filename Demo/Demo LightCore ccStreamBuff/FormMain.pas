@@ -16,8 +16,8 @@ USES
   //WinApi.Messages,
   System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.ExtCtrls,
   cvIniFile, InternetLabel, cvPathEdit, cvSpinEdit,
-  llRichLogTrack, cvCheckBox, llRichLog, ccAppData, cbAppDataVCL
-, chHardID, cbAppDataForm;
+  llRichLogTrack, cvCheckBox, llRichLog, ccAppData, LightCom.AppData
+, chHardID, LightCom.AppDataForm;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -75,7 +75,7 @@ IMPLEMENTATION {$R *.dfm}
 {.$I SynDprUses.inc} // use FastMM4 on older Delphi, or set FPC threads
 
 USES
-   system.Math, ccCore, ccStreamBuff2, cmDebugger;
+   system.Math, ccCore, ccStreamBuff2, LightCom.Debugger;
 
 
 
@@ -166,7 +166,7 @@ begin
      then Inc(Count);
 
  Log.AddInfo('Cache size: ' + IntToStr(spnCacheSize.Value)+ 'KB.  Time: '+ TimerElapsedS+ '.  Count: '+ IntToStr(Count)+ '.  RAM: '+ ProcessPeakMem);
- log.SaveAsRtf(AppData.CurFolder+ 'Log.rtf');
+ log.SaveAsRtf(AppData.ExeFolder+ 'Log.rtf');
 
  FreeAndNil(DelphiStream);
 end;
@@ -198,7 +198,7 @@ begin
   end;
 
  Log.AddInfo('Cache size: ' + IntToStr(spnCacheSize.Value)+ 'KB.  Time: '+ TimerElapsedS+ '.  Count: '+ IntToStr(LineCount2)+ '.  RAM: '+ ProcessPeakMem);
- log.SaveAsRtf(AppData.CurFolder+ 'Log.rtf');
+ log.SaveAsRtf(AppData.ExeFolder+ 'Log.rtf');
 
  FreeAndNil(DelphiStream);
 end;
@@ -364,7 +364,7 @@ begin
   end;    }
 
  Log.AddInfo('Cache size: ' + IntToStr(spnCacheSize.Value)+ 'KB.  Time: '+ TimerElapsedS+ '.  Count: '+ IntToStr(LineCount2)+ '.  RAM: '+ ProcessPeakMem);
- log.SaveAsRtf(AppData.CurFolder+ 'Log.rtf');
+ log.SaveAsRtf(AppData.ExeFolder+ 'Log.rtf');
 
  FreeAndNil(Stream2);
 end;
@@ -396,7 +396,7 @@ begin
   end;
 
  Log.AddInfo('Cache size: ' + IntToStr(spnCacheSize.Value)+ 'KB.  Time: '+ TimerElapsedS+ '.  Count: '+ IntToStr(LineCount2)+ '.  RAM: '+ ProcessPeakMem);
- log.SaveAsRtf(AppData.CurFolder+ 'Log.rtf');
+ log.SaveAsRtf(AppData.ExeFolder+ 'Log.rtf');
 
  FreeAndNil(Stream2);
 end;
@@ -428,7 +428,7 @@ begin
      then Inc(Count);
 
  Log.AddInfo('Cache size: ' + IntToStr(spnCacheSize.Value)+ 'KB.  Time: '+ TimerElapsedS+ tab+ '.  Count: '+ IntToStr(Count)+ '.  RAM: '+ ProcessPeakMem);
- log.SaveAsRtf(AppData.CurFolder+ 'Log.rtf');
+ log.SaveAsRtf(AppData.ExeFolder+ 'Log.rtf');
 
  FreeAndNil(Stream);
 end; *)

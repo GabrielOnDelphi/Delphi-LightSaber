@@ -3,14 +3,17 @@
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF}
-  cbAppDataVCL,
-  MainForm in 'MainForm.pas' {frmMain};
+  {$ENDIF }
+  LightCom.AppData,
+  MainForm in 'MainForm.pas' {frmMain},
+  ccAppData in '..\..\ccAppData.pas';
 
 {$R *.res}
 
 begin
-  AppData:= TAppData.Create('Light Tester WinVer');
-  AppData.CreateMainForm(TfrmMain, frmMain, TRUE);
+  ReportMemoryLeaksOnShutdown:= TRUE;
+
+  AppData:= TAppData.Create('Light Demo Visual Controls');
+  AppData.CreateMainForm(TfrmMain, frmMain, TRUE, TRUE, asFull);
   AppData.Run;
 end.

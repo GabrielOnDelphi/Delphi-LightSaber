@@ -1,0 +1,85 @@
+package LightVclCommon;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 2}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'LightSaber - VCL library'}
+{$LIBSUFFIX AUTO}
+{$RUNONLY}
+{$IMPLICITBUILD ON}
+
+requires
+  rtl,
+  vclimg,
+  vcl,
+  vclx,
+  LightCore,
+  vclWinx,
+  VclSmp;
+
+contains
+  LightCom.Debugger in 'LightCom.Debugger.pas',
+  LightCom.EllipsisText in 'LightCom.EllipsisText.pas',
+  LightCom.EnvironmentVar in 'LightCom.EnvironmentVar.pas',
+  LightCom.ExecuteProc in 'LightCom.ExecuteProc.pas',
+  LightCom.ExecuteShell in 'LightCom.ExecuteShell.pas',
+  LightCom.GuiSettings in 'LightCom.GuiSettings.pas',
+  LightCom.IO in 'LightCom.IO.pas',
+  LightCom.Keyboard in 'LightCom.Keyboard.pas',
+  LightCom.KeybShortcuts in 'LightCom.KeybShortcuts.pas',
+  LightCom.MemoInputBox in 'LightCom.MemoInputBox.pas',
+  LightCom.MutexSingleInstance in 'LightCom.MutexSingleInstance.pas',
+  LightCom.PopUp in 'LightCom.PopUp.pas',
+  LightCom.PowerUtils in 'LightCom.PowerUtils.pas',
+  LightCom.Process in 'LightCom.Process.pas',
+  LightCom.Shell in 'LightCom.Shell.pas',
+  LightCom.Sound in 'LightCom.Sound.pas',
+  LightCom.System in 'LightCom.System.pas',
+  LightCom.SystemPermissions in 'LightCom.SystemPermissions.pas',
+  LightCom.SystemSecurity in 'LightCom.SystemSecurity.pas',
+  LightCom.SystemTime in 'LightCom.SystemTime.pas',
+  LightCom.Window in 'LightCom.Window.pas',
+  LightCom.WindowMetrics in 'LightCom.WindowMetrics.pas',
+  LightCom.WinVersion in 'LightCom.WinVersion.pas',
+  LightCom.WMIResolution in 'LightCom.WMIResolution.pas',
+  LightCom.AppData in 'LightCom.AppData.pas',
+  LightCom.AppDataForm in 'LightCom.AppDataForm.pas',
+  LightCom.CenterControl in 'LightCom.CenterControl.pas',
+  LightCom.Clipboard in 'LightCom.Clipboard.pas',
+  LightCom.Colors in 'LightCom.Colors.pas',
+  LightCom.Dialogs in 'LightCom.Dialogs.pas',
+  LightCom.INIFile in 'LightCom.INIFile.pas',
+  LightCom.INIFileQuick in 'LightCom.INIFileQuick.pas',
+  LightCom.LogFilter in 'LightCom.LogFilter.pas',
+  LightCom.LogViewer in 'LightCom.LogViewer.pas',
+  LightCom.Translate in 'LightCom.Translate.pas',
+  LightCom.VclUtils in 'LightCom.VclUtils.pas',
+  LightCom.Version in 'LightCom.Version.pas',
+  LightVCL.LogForm in 'LightVCL.LogForm.pas',
+  FormAsyncMessage in 'FormAsyncMessage.pas',
+  LightCom.CursorGuard in 'LightCom.CursorGuard.pas';
+
+end.
+

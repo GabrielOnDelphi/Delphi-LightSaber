@@ -3,10 +3,11 @@ program TemplateMicro;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF}
+  {$ENDIF }
   MainForm in 'MainForm.pas' {frmMain},
-  cbAppDataVCL,
-  ccINIFile;
+  LightCom.AppData,
+  ccINIFile,
+  ccAppData in '..\..\..\ccAppData.pas';
 
 {$R *.res}
 

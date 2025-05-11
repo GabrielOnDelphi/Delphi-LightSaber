@@ -4,7 +4,7 @@ uses
   {$IFDEF DEBUG}
   FastMM4,
   {$ENDIF }
-  cbAppDataVCL,
+  LightCom.AppData,
   ccINIFile,
   MainForm1 in 'MainForm1.pas' {frmMain},
   uSoldier_v1 in 'uSoldier_v1.pas';

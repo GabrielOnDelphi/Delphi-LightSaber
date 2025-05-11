@@ -1,14 +1,10 @@
 UNIT FormMain;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2025.01
+   2025.05
    www.GabrielMoraru.com
-   See Copyright file
 --------------------------------------------------------------------------------------------------------------
-   Can be used as template for future applications.
---------------------------------------------------------------------------------------------------------------
-
+   Use this as a template when you start a new simple application
 =============================================================================================================}
 
 INTERFACE
@@ -16,7 +12,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, System.Actions,
   VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList,
-  csSystem, cbClipboard, cbAppDataForm;
+  LightCom.SystemTime, LightCom.Clipboard, LightCom.AppDataForm;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -45,8 +41,7 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   csShell, csExecuteShell, ccAppData, cbAppDataVCL
-, cbCenterControl;
+   LightCom.Shell, LightCom.System, LightCom.ExecuteShell, ccAppData, LightCom.AppData, LightCom.CenterControl;
 
 
 
@@ -79,15 +74,15 @@ begin
     if NOT AppData.RunningHome then
       begin
         // Desktop shortcuts
-        csShell.CreateShortcut(AppData.AppName, TRUE);        // OnDesktop
-        csShell.CreateShortcut(AppData.AppName, FALSE);       // OnStartMenu
+        LightCom.Shell.CreateShortcut(AppData.AppName, TRUE);        // OnDesktop
+        LightCom.Shell.CreateShortcut(AppData.AppName, FALSE);       // OnStartMenu
 
         // File association
         AssociateWith('.LightSaber', AppData.AppName, FALSE, FALSE, TRUE);
 
         // Welcome page
         if NOT AppData.BetaTesterMode  // The program is in BetaTester mode if a file called "betatester" is found in the "System" folder.
-        then csExecuteShell.ExecuteURL(AppData.ProductWelcome);
+        then LightCom.ExecuteShell.ExecuteURL(AppData.ProductWelcome);
       end;
    end
   else
@@ -112,7 +107,6 @@ end;
 procedure TMainForm.FormPreRelease;
 begin
   inherited;
-
 end;
 
 

@@ -51,7 +51,7 @@ INTERFACE
 
 USES
   Winapi.Windows, System.SysUtils, System.Classes,
-  Vcl.Themes, Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls;
+  Vcl.Themes, Vcl.Controls, Vcl.Forms, LightCom.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls;
 
 TYPE
   TfrmSkinRes = class(TLightForm)
@@ -86,8 +86,8 @@ procedure LoadLastSkin(CONST DefaultSkin: string= '');  { On first run, set the 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   csExecuteShell, ccAppData, cbAppDataVCL
-, cvINIFile, cbTranslate, cbINIFileQuick;
+   LightCom.ExecuteShell, ccAppData, LightCom.AppData
+, cvINIFile, LightCom.Translate, LightCom.IniFileQuick;
 
 CONST
   DefWinTheme= 'Windows default theme';
@@ -104,7 +104,7 @@ VAR
 
 procedure LoadLastSkin(CONST DefaultSkin: string= '');
 begin
- LastSkin:= cbINIFileQuick.ReadString('LastSkin', DefaultSkin);   { This is a relative path so the skin can still be loaded when the application is moved to a different folder }
+ LastSkin:= LightCom.IniFileQuick.ReadString('LastSkin', DefaultSkin);   { This is a relative path so the skin can still be loaded when the application is moved to a different folder }
 
  if LastSkin = ''
  then LastSkin:= DefaultSkin;
@@ -162,7 +162,7 @@ procedure TfrmSkinRes.FormDestroy(Sender: TObject);
 begin
  SaveForm;
  if NOT AppData.Initializing
- then cbINIFileQuick.WriteString ('LastSkin', LastSkin);   { We don't save anything if the start up was improper! }
+ then LightCom.IniFileQuick.WriteString ('LastSkin', LastSkin);   { We don't save anything if the start up was improper! }
 end;
 
 

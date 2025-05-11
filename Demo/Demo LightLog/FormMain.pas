@@ -5,7 +5,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Grids,
-  llRichLogTrack, llRichLogUtils, llRichLog, cbLog, cbLogFilter, cbAppDataForm, ccLogRam;
+  llRichLogTrack, llRichLogUtils, llRichLog, LightCom.LogViewer, LightCom.LogFilter, LightCom.AppDataForm, ccLogRam;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -45,7 +45,7 @@ var
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  ccAppData, cbAppDataVCL, ccLogTypes, ccINIFile, cbDialogs;
+  ccAppData, LightCom.AppData, ccLogTypes, ccINIFile, LightCom.Dialogs;
 
 
 procedure TMainForm.FormCreate(Sender: TObject);
@@ -85,7 +85,7 @@ begin
  RichLog.AddEmptyRow;
 
  RichLog.AddInteger(42);
- RichLog.AddFromFile(AppData.CurFolder+ 'Test file.txt', lvrImportant);
+ RichLog.AddFromFile(AppData.ExeFolder+ 'Test file.txt', lvrImportant);
 end;
 
 
@@ -134,12 +134,12 @@ end;
 
 procedure TMainForm.Button3Click(Sender: TObject);
 begin
- VisLog.RamLog.SaveToFile(AppData.CurFolder+ 'LogFile.log');
+ VisLog.RamLog.SaveToFile(AppData.ExeFolder+ 'LogFile.log');
 end;
 
 procedure TMainForm.Button4Click(Sender: TObject);
 begin
- VisLog.RamLog.LoadFromFile(AppData.CurFolder+ 'LogFile.log');
+ VisLog.RamLog.LoadFromFile(AppData.ExeFolder+ 'LogFile.log');
 end;
 
 

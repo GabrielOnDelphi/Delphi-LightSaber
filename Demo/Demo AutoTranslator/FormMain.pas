@@ -5,7 +5,7 @@ INTERFACE
 USES
 
   System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls,
-  cbAppDataForm, Vcl.Mask;
+  LightCom.AppDataForm, Vcl.Mask;
 
 TYPE
  TMainForm = class(TLightForm)
@@ -31,7 +31,7 @@ VAR
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-  cbTranslate,
+  LightCom.Translate,
   FormTranslEditor,
   FormTranslSelector;
 

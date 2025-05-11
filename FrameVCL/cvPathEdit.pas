@@ -30,7 +30,7 @@ USES
   Winapi.Windows,
   System.SysUtils, System.Classes, System.IOUtils,
   Vcl.StdCtrls, Vcl.Controls, Vcl.Graphics, Vcl.ImgList, Vcl.CONSTs, Vcl.FileCtrl, Vcl.ExtCtrls,
-  ccCore, cbDialogs;
+  ccCore, LightCom.Dialogs;
 
 TYPE
   TValidity= (vaNone, vaValid, vaInvalid);                   { Normal / Green / Red color }
@@ -167,7 +167,7 @@ procedure Register;
 IMPLEMENTATION {$R cvPathEdit.res}
 
 USES
-   ccColors, csExecuteShell, ccIO, ccTextFile, cmIO;
+   LightCom.Colors, LightCom.ExecuteShell, ccIO, ccTextFile, LightCom.IO;
 
 
 
@@ -464,7 +464,7 @@ begin
 
  { Valid colon }
  if (InputType= itFolder)
- AND NOT cmio.PathHasValidColon(edtPath.Text)
+ AND NOT LightCom.IO.PathHasValidColon(edtPath.Text)
  then EXIT('The path has invalid characters!');
 
 // HasValidFileNameChars only work with file names, not also with full paths

@@ -114,7 +114,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES cbCenterControl;
+USES LightCom.CenterControl;
 
 
 

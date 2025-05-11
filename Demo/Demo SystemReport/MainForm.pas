@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, ccAppData, cbAppDataVCL, cbAppDataForm;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, ccAppData, LightCom.AppData, LightCom.AppDataForm;
 
 type
   TfrmMain = class(TLightForm)
@@ -18,14 +18,14 @@ var
   frmMain: TfrmMain;
 
 IMPLEMENTATION {$R *.dfm}
-USES cmDebugger;
+USES LightCom.Debugger;
 
 
 
 procedure TfrmMain.FormPostInitialize;
 begin
   inherited FormPostInitialize;
-  Memo.Text:= cmDebugger.GenerateSystemRep;
+  Memo.Text:= LightCom.Debugger.GenerateSystemRep;
 end;
 
 end.

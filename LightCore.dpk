@@ -36,13 +36,13 @@ requires
   soaprtl;
 
 contains
+  ccRegistry in 'ccRegistry.pas',
   ccIO in 'ccIO.pas',
   ccCore in 'ccCore.pas',
   ccBinary in 'ccBinary.pas',
   ccINIFile in 'ccINIFile.pas',
   ccCompiler in 'ccCompiler.pas',
   ccStreamMem in 'ccStreamMem.pas',
-  ccColors in 'ccColors.pas',
   ccStreamBuff in 'ccStreamBuff.pas',
   ccStreamBuff2 in 'ccStreamBuff2.pas',
   ccTextFile in 'ccTextFile.pas',
@@ -67,6 +67,7 @@ contains
   ccStringList in 'ccStringList.pas',
   ccStringListA in 'ccStringListA.pas',
   ccWrapString in 'ccWrapString.pas',
-  ccSearchResult in 'ccSearchResult.pas';
+  ccSearchResult in 'ccSearchResult.pas',
+  ccDownload in 'ccDownload.pas';
 
 end.

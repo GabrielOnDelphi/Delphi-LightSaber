@@ -20,7 +20,7 @@ INTERFACE
 USES
    System.Classes, System.SysUtils, System.IniFiles,
    Vcl.Forms, Vcl.Controls,
-   cbDialogs, cbINIFile, ccINIFile, cbAppDataForm;
+   LightCom.Dialogs, LightCom.IniFile, ccINIFile, LightCom.AppDataForm;
 
 TYPE
  TIniFileVCL = class(TIniFileApp)   
@@ -40,7 +40,7 @@ IMPLEMENTATION
 
 USES
    cvFloatSpinEdit, cvFileListBox, cvSpinEdit, cvSpinEditDelayed, cvPathEdit,
-   cbCenterControl, ccAppData, cbAppDataVCL, cbLog, ccLogUtils, ccLogTypes;
+   LightCom.CenterControl, ccAppData, LightCom.AppData, LightCom.LogViewer, ccLogUtils, ccLogTypes;
 
 
 
@@ -106,7 +106,7 @@ begin
      else
 
      if Comp.InheritsFrom(TCubicPathEdit)
-     then TCubicPathEdit (Comp).Path := Self.ReadString (Comp.Owner.Name, Comp.Name, AppData.CurFolder)
+     then TCubicPathEdit (Comp).Path := Self.ReadString (Comp.Owner.Name, Comp.Name, AppData.ExeFolder)
      else
 
      {NOTE! The last item will be selected only if the TCubicPathEdit associated with this component was read from INI before this. For this, make sure that the TCubicPathEdit appears in the DFM before this component. A simply cut and paste for this component (in form designed) is enough. }
@@ -158,27 +158,27 @@ procedure SaveForm(Form: TLightForm);
 VAR
    IniFile: TIniFileVCL;
 begin
- if TAppDataCore.Initializing
- AND (Form = Application.MainForm) then
-  begin
-   if TAppDataCore.RunningHome
-   then MessageError('Closing application while still initializing!');
-   Exit; // We don't save anything if the start up was improper!
-  end;
+  if (AppData <> NIL)
+  AND TAppDataCore.Initializing
+  AND (Form = Application.MainForm) then
+   begin
+    if TAppDataCore.RunningHome
+    then MessageError('Closing application while still initializing!');
+    Exit; // We don't save anything if the start up was improper!
+   end;
 
- Assert(AppData <> NIL, '!!!');
- IniFile:= TIniFileVCL.Create(Form.Name);
- TRY
+  IniFile:= TIniFileVCL.Create(Form.Name);
   TRY
-    IniFile.SaveForm(Form, Form.AutoState);
-  EXCEPT
-    ON EIniFileexception DO
-      if AppData <> NIL
-      then AppData.LogWarn('Cannot save INI file: '+ IniFile.FileName);
+   TRY
+     IniFile.SaveForm(Form, Form.AutoState);
+   EXCEPT
+     ON EIniFileexception DO
+       if AppData <> NIL
+       then AppData.LogWarn('Cannot save INI file: '+ IniFile.FileName);
+   END;
+  FINALLY
+    FreeAndNil(IniFile);
   END;
- FINALLY
-   FreeAndNil(IniFile);
- END;
 end;
 
 
@@ -189,26 +189,26 @@ procedure LoadForm(Form: TLightForm);
 VAR
    IniFile: TIniFileVCL;
 begin
- if AppData = NIL then                { If AppData exists, let it deal with the font }
-   if (Application.MainForm <> NIL)     { Set font only for secondary forms }
-   AND (Form <> Application.MainForm)
-   then Form.Font:= Application.MainForm.Font;
+  { If AppData exists, let it deal with the font }
+  if AppData = NIL then
+    if (Application.MainForm <> NIL)     { Set font only for secondary forms }
+    AND (Form <> Application.MainForm)
+    then Form.Font:= Application.MainForm.Font;
 
- IniFile:= TIniFileVCL.Create(Form.Name);
- TRY
+  IniFile:= TIniFileVCL.Create(Form.Name);
   TRY
-    IniFile.LoadForm(Form, Form.AutoState);
-    CorrectFormPositionScreen(Form);
-  EXCEPT
-    ON EIniFileException DO
-      if appdata <> NIL
-      then appdata.LogWarn('Cannot load INI file: '+ IniFile.FileName);
+   TRY
+     IniFile.LoadForm(Form, Form.AutoState);
+     CorrectFormPositionDesktop(Form);
+   EXCEPT
+     ON EIniFileException DO
+       if AppData <> NIL
+       then AppData.LogWarn('Cannot load INI file: '+ IniFile.FileName);
+   END;
+  FINALLY
+    FreeAndNil(IniFile);
   END;
- FINALLY
-   FreeAndNil(IniFile);
- END;
 end;
-
 
 
 

@@ -44,8 +44,6 @@
 
 INTERFACE
 
-{ $I Frameworks.inc}
-
 USES
    System.SysUtils, System.Classes;
 
@@ -97,8 +95,8 @@ TYPE
      procedure WriteWord     (w: Word);
 
      { Unicode }
-     procedure WriteString    (CONST s: string);                          { Works for both Delphi7 and Delphi UNICODE }
-     function  ReadString : string;                                       { Works for both Delphi7 and Delphi UNICODE }
+     procedure WriteString   (CONST s: string);                            { Works for both Delphi7 and Delphi UNICODE }
+     function  ReadString: string;                                         { Works for both Delphi7 and Delphi UNICODE }
 
 	 { ANSI }
      procedure WriteStringA(CONST s: AnsiString);
@@ -111,15 +109,15 @@ TYPE
      procedure WriteStrings (TSL: TStrings);
 
      { Chars }
-     procedure WriteChars(CONST s: AnsiString);    overload;               { Write the string but don't write its length }
-     procedure WriteChars(CONST s: string);        overload;
-     function  ReadCharsA(Count: Integer): AnsiString; 	 
-     function  ReadChars (Count: Integer): string;              { Works for both Delphi7 and Delphi UNICODE }
+     procedure WriteChars(CONST s: AnsiString);               overload;    { Write the string but don't write its length }
+     procedure WriteChars(CONST s: string);                   overload;
+     function  ReadCharsA(Count: Integer): AnsiString;
+     function  ReadChars (Count: Integer): string;                         { Works for both Delphi7 and Delphi UNICODE }
 
 
      { Char }
-     procedure WriteChar       (CONST c: AnsiChar);
-     function  ReadChar    : AnsiChar;
+     procedure WriteChar(CONST c: AnsiChar);
+     function  ReadChar: AnsiChar;
 
      { Reverse read }
      function  RevReadCardinal: Cardinal;                                  { REVERSE READ - read 4 bytes and swap their position }

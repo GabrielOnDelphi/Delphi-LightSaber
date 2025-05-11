@@ -23,7 +23,7 @@
 INTERFACE
 
 USES
-   System.SysUtils, System.UITypes, System.IniFiles, System.IOUtils;
+   System.SysUtils, System.UITypes, System.IniFiles, System.IOUtils; //, ccCore;
 
 TYPE
   FontStruct = record
@@ -32,13 +32,6 @@ TYPE
     Style : TFontStyle;
     Color : TColor;
   end;
-
-TYPE
-  TAutoState = (asUndefined,
-                asNone,       // Don't save the form automatically.
-                asPosOnly,    // Restore form position
-                asFull);      // Restore form position and GUI elements
-
 
 TYPE
 {

@@ -29,8 +29,8 @@ INTERFACE
 
 USES
   Winapi.Windows, Winapi.Messages, System.Classes,
-  Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
-  llRichLogTrack, llRichLog, cbAppDataForm;
+  Vcl.Controls, Vcl.Forms, LightCom.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
+  llRichLogTrack, llRichLog, LightCom.AppDataForm;
 
 TYPE
   TfrmRichLog = class(TLightForm)
@@ -54,7 +54,7 @@ IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   cvINIFile, ccAppData, cbAppDataVCL
+   cvINIFile, ccAppData, LightCom.AppData
 ;
 
 
@@ -84,7 +84,7 @@ procedure TfrmRichLog.FormDestroy(Sender: TObject);
 begin
  Assert(AppData <> NIL, 'AppData is gone already!');
  Container.Parent:= Self;
- if NOT ccAppData, cbAppDataVCL
+ if NOT ccAppData, LightCom.AppData
 .AppData.Initializing
  then //SaveForm(Self); called by AppData // We don't save anything if the start up was improper!
 end;

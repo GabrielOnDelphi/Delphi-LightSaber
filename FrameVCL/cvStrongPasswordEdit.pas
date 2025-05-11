@@ -30,7 +30,9 @@ type
 procedure Register;
 
 IMPLEMENTATION
-USES System.Math, csSystem;
+
+USES
+  System.Math, LightCom.SystemSecurity, LightCom.System;
 
 
 
@@ -62,7 +64,7 @@ var
   Strength: Integer;
   GreenValue: Byte;
 begin
-  Strength := csSystem.CalculatePasswordStrength(Text);
+  Strength := CalculatePasswordStrength(Text);
 
   // Map strength to a green value (0 to 255)
   GreenValue := Min(255, Strength * 51);  // 5 levels (0..5), 51 increment each level

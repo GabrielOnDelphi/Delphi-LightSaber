@@ -40,7 +40,7 @@ USES
    Winapi.Windows, Winapi.Messages,
    System.SysUtils, System.Classes,
    Vcl.Grids, Vcl.Graphics, Vcl.Controls, Vcl.Clipbrd,
-   cvStringGridBase, ccCore, cbDialogs;
+   cvStringGridBase, ccCore, LightCom.Dialogs;
 
 {$WARN GARBAGE OFF}   {Silent the: 'W1011 Text after final END' warning }
 
@@ -136,7 +136,7 @@ procedure Register;
 
 IMPLEMENTATION {$R *.res}
 
-USES ccColors, ccTextFile, ccMath, csSystem, cbClipboard;
+USES LightCom.Colors, ccTextFile, ccMath, LightCom.SystemTime, LightCom.Clipboard;
 
 
 

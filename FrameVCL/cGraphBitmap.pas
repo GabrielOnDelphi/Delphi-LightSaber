@@ -98,7 +98,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   ccCore, cbDialogs, ccMath, cGraphLoader.Resolution;
+   ccCore, LightCom.Dialogs, ccMath, cGraphLoader.Resolution;
 
 
 

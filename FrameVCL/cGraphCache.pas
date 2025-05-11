@@ -79,7 +79,7 @@ TYPE
 IMPLEMENTATION
 
 uses
-   ccINIFile, cGraphLoader, ccCore, cbDialogs, ccAppData, cbAppDataVCL, ccIO, cmIO;
+   ccINIFile, cGraphLoader, ccCore, LightCom.Dialogs, ccAppData, LightCom.AppData, ccIO, LightCom.IO;
 
 
 

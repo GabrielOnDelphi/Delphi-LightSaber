@@ -22,7 +22,7 @@ function GetUnsplashImage(CONST URL, LocalFile: string): Boolean;
 
 IMPLEMENTATION
 
-USES ciDownload, ciHTML;
+USES ccDownload, ciHTML;
 
 
 
@@ -38,7 +38,7 @@ function GetUnsplashImage(CONST URL, LocalFile: string): Boolean;
 VAR
    HighResImg, Tag, HTML: string;
 begin
- HTML:= GetTextFile(URL);
+ HTML:= DownloadAsString(URL);
  if HTML = '' then EXIT(FALSE);
 
  Tag:= ciHTML.ExtractLine(HTML, '<meta data-react-helmet="true" property="og:image"');    //find: <meta data-react-helmet="true" property="og:image"
@@ -46,7 +46,7 @@ begin
  HighResImg:= CopyTo(HighResImg, 1, '?', FALSE);
 
  //FullPath:= LocalFolder+ extractfileext(HighResImg);
- Result:= DownloadFile(HighResImg, URL, LocalFile);
+ Result:= DownloadToFile(HighResImg, LocalFile) = HTTP_STATUS_OK;
 end;
 
 
@@ -66,8 +66,8 @@ begin
   URL:= GetImageFromUnsplashPage(Edit1.Text);
   lblInfo.Caption:= 'High res image: '+ URL;
 
-  FileName:= AppData.CurFolder+ GenerateUniqueString(5)+ '.jpg';
-  DownloadFile(URL, URL, FileName);
+  FileName:= AppData.ExeFolder+ GenerateUniqueString(5)+ '.jpg';
+  [DownloadFile->new name] DownloadToFile(URL, URL, FileName);
   Image.Picture.LoadFromFile(FileName);
  FINALLY
   CursorNotBusy;

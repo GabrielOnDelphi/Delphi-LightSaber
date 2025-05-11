@@ -4,8 +4,8 @@ INTERFACE
 
 USES
   WinApi.Windows, Winapi.ShellAPI, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin,
-  Vcl.ComCtrls, Vcl.ExtCtrls, ccAppData, cbAppDataVCL
-, cbAppDataForm;
+  Vcl.ComCtrls, Vcl.ExtCtrls, ccAppData, LightCom.AppData
+, LightCom.AppDataForm;
 
 const
    CRLF = #13#10;
@@ -29,7 +29,7 @@ VAR
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-   cbVersion, cmWinVersionOthers;
+   LightCom.Version,  LightCom.WinVersion;
 
 
 procedure TfrmTester.FormCreate(Sender: TObject);
@@ -49,11 +49,11 @@ procedure TfrmTester.btnStartClick(Sender: TObject);
 begin
  Memo.Text:= '';
  Memo.Lines.Add('');
- Memo.Lines.Add('cbVersion');
- Memo.Lines.Add(cbVersion.GenerateReport);
+ Memo.Lines.Add('LightCom.Version');
+ Memo.Lines.Add(LightCom.Version.GenerateReport);
  Memo.Lines.Add('');
- Memo.Lines.Add('cmWinVersionOthers');
- Memo.Lines.Add(cmWinVersionOthers.GenerateReport);
+ Memo.Lines.Add(' LightCom.WinVersion');
+ Memo.Lines.Add( LightCom.WinVersion.GenerateReport);
 end;
 
 

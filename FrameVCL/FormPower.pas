@@ -51,8 +51,8 @@ VAR
 
 IMPLEMENTATION {$R *.dfm}
 USES
-   CpuUsageTotal, ccAppData, cbAppDataVCL
-, cvINIFile, cvIniFile, cmPowerUtils, ccCore, csSystem, cbClipboard, cbDialogs, ccINIFile, cbAppDataForm, FormLog;
+   CpuUsageTotal, ccAppData, LightCom.AppData
+, cvINIFile, LightCom.PowerUtils, ccCore, LightCom.SystemTime, LightCom.Clipboard, LightCom.Dialogs, ccINIFile, LightCom.AppDataForm, FormLog;
 
 
 
@@ -98,9 +98,9 @@ begin
 
   begin
    ShowCpuUtilization;                                     { Show the average CPU usage }
-   lblPwrType.Caption:= cmPowerUtils.PowerStatusString;
+   lblPwrType.Caption:= LightCom.PowerUtils.PowerStatusString;
 
-   if cmPowerUtils.BatteryLeft<= 100
+   if LightCom.PowerUtils.BatteryLeft<= 100
    then lblBatProc.Caption:= ' Battery left: '+ IntToStr(BatteryLeft)+ '%'
    else lblBatProc.Caption:= 'No battery detected.';
   end;
@@ -187,7 +187,7 @@ VAR Now: TPowerType;
 begin
  if NOT chkOutOfJuice.Checked then EXIT;
 
- Now:= cmPowerUtils.PowerStatus;
+ Now:= LightCom.PowerUtils.PowerStatus;
  if (Now<> LastPowerType) then
   begin
     case Now of

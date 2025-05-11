@@ -3,6 +3,12 @@
         <ProjectGuid>{86A7DC54-2BCF-43C4-B6A1-11E9B4207D4B}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
+        <Projects Include="..\LightCore.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\FrameVCL\LightVclCommon.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="Template App\VCL Minimal\TemplateMicro.dproj">
             <Dependencies/>
         </Projects>
@@ -21,13 +27,13 @@
         <Projects Include="Demo All Visual Controls\Demo_VisualControls.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="Demo Internet\Demo_Internet.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="Demo AutoTranslator\Demo_AutoTranslator.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="Demo GUI Autosave\Demo_SaveGUI.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="Demo Internet\Demo_Internet.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="Demo LightCore ccIO\Demo_ccIO.dproj">
@@ -56,6 +62,24 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
+    <Target Name="LightCore">
+        <MSBuild Projects="..\LightCore.dproj"/>
+    </Target>
+    <Target Name="LightCore:Clean">
+        <MSBuild Projects="..\LightCore.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightCore:Make">
+        <MSBuild Projects="..\LightCore.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="LightVclCommon">
+        <MSBuild Projects="..\FrameVCL\LightVclCommon.dproj"/>
+    </Target>
+    <Target Name="LightVclCommon:Clean">
+        <MSBuild Projects="..\FrameVCL\LightVclCommon.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightVclCommon:Make">
+        <MSBuild Projects="..\FrameVCL\LightVclCommon.dproj" Targets="Make"/>
+    </Target>
     <Target Name="TemplateMicro">
         <MSBuild Projects="Template App\VCL Minimal\TemplateMicro.dproj"/>
     </Target>
@@ -110,6 +134,15 @@
     <Target Name="Demo_VisualControls:Make">
         <MSBuild Projects="Demo All Visual Controls\Demo_VisualControls.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Demo_Internet">
+        <MSBuild Projects="Demo Internet\Demo_Internet.dproj"/>
+    </Target>
+    <Target Name="Demo_Internet:Clean">
+        <MSBuild Projects="Demo Internet\Demo_Internet.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Demo_Internet:Make">
+        <MSBuild Projects="Demo Internet\Demo_Internet.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Demo_AutoTranslator">
         <MSBuild Projects="Demo AutoTranslator\Demo_AutoTranslator.dproj"/>
     </Target>
@@ -127,15 +160,6 @@
     </Target>
     <Target Name="Demo_SaveGUI:Make">
         <MSBuild Projects="Demo GUI Autosave\Demo_SaveGUI.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="Demo_Internet">
-        <MSBuild Projects="Demo Internet\Demo_Internet.dproj"/>
-    </Target>
-    <Target Name="Demo_Internet:Clean">
-        <MSBuild Projects="Demo Internet\Demo_Internet.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="Demo_Internet:Make">
-        <MSBuild Projects="Demo Internet\Demo_Internet.dproj" Targets="Make"/>
     </Target>
     <Target Name="Demo_ccIO">
         <MSBuild Projects="Demo LightCore ccIO\Demo_ccIO.dproj"/>
@@ -192,13 +216,13 @@
         <MSBuild Projects="FMX - Demo Message boxes\FMX_Demo_MessageBoxes.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="TemplateMicro;TemplateSimple;TemplateFull;TemplateMicro_Fmx;Uninstaller;Demo_VisualControls;Demo_AutoTranslator;Demo_SaveGUI;Demo_Internet;Demo_ccIO;Demo_FileStream;Demo_WinVers;Demo_Log;Demo_SystemReport;FMX_Demo_MessageBoxes"/>
+        <CallTarget Targets="LightCore;LightVclCommon;TemplateMicro;TemplateSimple;TemplateFull;TemplateMicro_Fmx;Uninstaller;Demo_VisualControls;Demo_Internet;Demo_AutoTranslator;Demo_SaveGUI;Demo_ccIO;Demo_FileStream;Demo_WinVers;Demo_Log;Demo_SystemReport;FMX_Demo_MessageBoxes"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="TemplateMicro:Clean;TemplateSimple:Clean;TemplateFull:Clean;TemplateMicro_Fmx:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;Demo_AutoTranslator:Clean;Demo_SaveGUI:Clean;Demo_Internet:Clean;Demo_ccIO:Clean;Demo_FileStream:Clean;Demo_WinVers:Clean;Demo_Log:Clean;Demo_SystemReport:Clean;FMX_Demo_MessageBoxes:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightVclCommon:Clean;TemplateMicro:Clean;TemplateSimple:Clean;TemplateFull:Clean;TemplateMicro_Fmx:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;Demo_Internet:Clean;Demo_AutoTranslator:Clean;Demo_SaveGUI:Clean;Demo_ccIO:Clean;Demo_FileStream:Clean;Demo_WinVers:Clean;Demo_Log:Clean;Demo_SystemReport:Clean;FMX_Demo_MessageBoxes:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="TemplateMicro:Make;TemplateSimple:Make;TemplateFull:Make;TemplateMicro_Fmx:Make;Uninstaller:Make;Demo_VisualControls:Make;Demo_AutoTranslator:Make;Demo_SaveGUI:Make;Demo_Internet:Make;Demo_ccIO:Make;Demo_FileStream:Make;Demo_WinVers:Make;Demo_Log:Make;Demo_SystemReport:Make;FMX_Demo_MessageBoxes:Make"/>
+        <CallTarget Targets="LightCore:Make;LightVclCommon:Make;TemplateMicro:Make;TemplateSimple:Make;TemplateFull:Make;TemplateMicro_Fmx:Make;Uninstaller:Make;Demo_VisualControls:Make;Demo_Internet:Make;Demo_AutoTranslator:Make;Demo_SaveGUI:Make;Demo_ccIO:Make;Demo_FileStream:Make;Demo_WinVers:Make;Demo_Log:Make;Demo_SystemReport:Make;FMX_Demo_MessageBoxes:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

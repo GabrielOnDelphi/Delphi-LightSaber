@@ -66,7 +66,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES cGraphUtil, ccColors;
+USES cGraphUtil, LightCom.Colors;
 
 
 

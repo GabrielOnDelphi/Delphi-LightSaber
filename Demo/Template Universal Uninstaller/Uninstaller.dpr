@@ -3,20 +3,23 @@ program Uninstaller;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF}
+  {$ENDIF }
   UninstallerForm in 'UninstallerForm.pas' {frmMain},
   Vcl.Themes,
   Vcl.Styles,
-  cbAppDataVCL,
+  LightCom.AppData,
   cvCountDown in '..\..\FrameVCL\LightSaber\cvCountDown.pas',
-  csShell in '..\..\FrameVCL\LightSaber\csShell.pas';
+  LightCom.Shell in '..\..\FrameVCL\LightSaber\LightCom.Shell.pas',
+  ccAppData in '..\..\ccAppData.pas';
 
 {$R *.res}
 
 begin
-  AppData:= TAppData.Create('Uninstaller'{, WindowClassName});   // stackoverflow.com/questions/75449673/is-it-ok-to-create-an-object-before-application-initialize
+  ReportMemoryLeaksOnShutdown:= TRUE;
+
+  AppData:= TAppData.Create('Light Template Uninstaller');   // stackoverflow.com/questions/75449673/is-it-ok-to-create-an-object-before-application-initialize
   UninstallerForm.CreateCopy;
-  AppData.CreateMainForm(TfrmMain, frmMain, TRUE);
+  AppData.CreateMainForm(TfrmMain, frmMain, TRUE, TRUE, asFull);
   AppData.Run;
 end.
 

@@ -35,7 +35,7 @@ procedure DrawRedPattern(BMP: TBitmap);     { Draws a nice rectangle patern }
 
 IMPLEMENTATION
 USES
-   cbVclUtils, cGraphUtil, cGraphBitmap;
+   LightCom.VclUtils, cGraphUtil, cGraphBitmap;
 
 
 

@@ -25,7 +25,7 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls,
+  System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, LightCom.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls,
   Vcl.Samples.Spin, cvPathEdit, cvTimer, cvRadioButton, cvCheckBox, cvGroupBox, cvSpinEdit;
 
 TYPE
@@ -79,7 +79,7 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   cbVclUtils, ccColors, cGraphUtil, cmSound, cGraphDesktop, cvIniFile, ccCore, csSystem, cbClipboard, cbDialogs, ccINIFile, cbAppDataForm, cmPowerUtils, csExecuteShell;
+   LightCom.VclUtils, LightCom.Colors, cGraphUtil, LightCom.Sound, cGraphDesktop, cvIniFile, ccCore, LightCom.SystemTime, LightCom.Clipboard, LightCom.Dialogs, ccINIFile, LightCom.AppDataForm, LightCom.PowerUtils, LightCom.ExecuteShell;
 
 
 
@@ -160,8 +160,8 @@ begin
     end
    else MessageError('[Reminder times up] CRLF No file to execute!');
 
- if radSleep.Checked    then cmPowerUtils.SystemSleep;
- if radShutDown.Checked then cmPowerUtils.WinShutDown(TRUE, FALSE);
+ if radSleep.Checked    then LightCom.PowerUtils.SystemSleep;
+ if radShutDown.Checked then LightCom.PowerUtils.WinShutDown(TRUE, FALSE);
 end;
 
 

@@ -7,11 +7,19 @@ object Form1: TForm1
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
   DesignerMasterStyle = 0
   object CheckBox1: TCheckBox
+    ControlType = Platform
     Position.X = 40.000000000000000000
     Position.Y = 56.000000000000000000
+    StyleLookup = 'checkboxstyle'
     TabOrder = 4
     Text = 'CheckBox1'
+    object RadioButton1: TRadioButton
+      Position.Y = 56.000000000000000000
+      TabOrder = 18
+      Text = 'RadioButton1'
+    end
   end
 end

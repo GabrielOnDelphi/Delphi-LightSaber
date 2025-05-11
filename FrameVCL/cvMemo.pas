@@ -138,7 +138,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   ccTextFile, cmIO, ccCore;
+   ccTextFile, LightCom.IO, ccCore;
 
    {
 How to know when the USER changed the text in a TMemo/TEdit?

@@ -44,9 +44,8 @@
 INTERFACE
 
 USES
-  System.SysUtils, System.DateUtils, System.Classes,
-  Vcl.ExtCtrls,
-  ciUpdaterRec;
+  System.SysUtils, System.DateUtils, System.Classes, Vcl.ExtCtrls,
+  ciUpdaterRec, ccCore;
 
 TYPE
   TCheckWhen = (cwNever,
@@ -59,7 +58,7 @@ TYPE
     LocalNewsID    : Integer;                 { The online counter is saved to disk after we successfully read it from the online file }
     FUpdaterStart  : TNotifyEvent;
     FUpdaterEnd    : TNotifyEvent;
-    FConnectError  : TNotifyEvent;
+    FConnectError  : TNotifyMsgEvent;
     FHasNews       : TNotifyEvent;
     FNoNews        : TNotifyEvent;
     procedure GetNewsDelay;
@@ -99,11 +98,11 @@ TYPE
     procedure Save;
 
     { Events }
-    property  OnUpdateStart : TNotifyEvent read FUpdaterStart  write FUpdaterStart;
-    property  OnHasNews     : TNotifyEvent read FHasNews       write FHasNews;
-    property  OnNoNews      : TNotifyEvent read FNoNews        write FNoNews;
-    property  OnConnectError: TNotifyEvent read FConnectError  write FConnectError;
-    property  OnUpdateEnd   : TNotifyEvent read FUpdaterEnd    write FUpdaterEnd;
+    property  OnUpdateStart : TNotifyEvent    read FUpdaterStart  write FUpdaterStart;
+    property  OnHasNews     : TNotifyEvent    read FHasNews       write FHasNews;
+    property  OnNoNews      : TNotifyEvent    read FNoNews        write FNoNews;
+    property  OnConnectError: TNotifyMsgEvent read FConnectError  write FConnectError;
+    property  OnUpdateEnd   : TNotifyEvent    read FUpdaterEnd    write FUpdaterEnd;
   end;
 
 VAR
@@ -112,7 +111,7 @@ VAR
 IMPLEMENTATION
 
 USES
-  FormAsyncMessage, ciDownload, ccINIFile, cmDebugger, ccAppData, cbAppDataVCL;
+  FormAsyncMessage, ccDownload, ccINIFile, LightCom.Debugger, ccAppData, LightCom.AppData;
 
 Const
   TooLongNoSeeInterval = 180;    { Force to check for updates every 180 days even if the updater is disabled }
@@ -170,7 +169,7 @@ begin
   TRY
     Save;
   EXCEPT
-    on E: Exception DO cmDebugger.OutputDebugStr(E.Message);
+    on E: Exception DO LightCom.Debugger.OutputDebugStr(E.Message);
   END;
 
   inherited Destroy;
@@ -229,6 +228,7 @@ end;
 { Download data from website right now.
   Returns TRUE if we need to show the form (in case of error or news) and FALSE if no errors AND no news. }
 function TUpdater.GetNews: Boolean;
+VAR ErrorMsg: string;
 begin
  Timer.Enabled:= FALSE;
  HasNews:= FALSE;
@@ -238,8 +238,8 @@ begin
  then FUpdaterStart(Self);
 
  { Download the Bin file }
- Result := ciDownload.DownloadFile(URLNewsFile, '', UpdaterFileLocation, TRUE);    { Returns false if the Internet connection failed. If the URL is invalid, probably it will return the content of the 404 page (if the server automatically returns a 404 page). }
- // Result := ciInetDonwIndy.DownloadFile(URLNewsFile, '', UpdaterFileLocation, ErrorMsg);
+ ccDownload.DownloadToFile(URLNewsFile, UpdaterFileLocation, ErrorMsg);    { Returns false if the Internet connection failed. If the URL is invalid, probably it will return the content of the 404 page (if the server automatically returns a 404 page). }
+ Result:= ErrorMsg = '';
 
  { Parse the binary file }
  if Result
@@ -250,10 +250,10 @@ begin
    if NOT Result then
     begin
      if Assigned(FConnectError)
-     then FConnectError(Self);
+     then FConnectError(Self, 'Cannot load new record from disk!');
 
      if ShowConnectFail
-     then MesajAsync('The updater file seems to be invalid.'); // This message also appears if the online does not exist and the server returns a 404 page
+     then MesajAsync('The updater file seems to be invalid!'); // This message also appears if the online does not exist and the server returns a 404 page
 
      EXIT;
     end;
@@ -275,7 +275,7 @@ begin
    ConnectionError:= TRUE;
 
    if Assigned(FConnectError)
-   then FConnectError(Self);
+   then FConnectError(Self, ErrorMsg);
 
    // if ShowConnectFail then TFrmUpdater.ShowUpdater;  // del MessageError('Cannot check for news & updates!'{+ CRLF+ ErrorMsg});
   end;

@@ -18,8 +18,8 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, System.IOUtils, Vcl.Mask,
-  cbTranslate, ccCore, cbDialogs, ccAppData, cbAppDataVCL
-, cbAppDataForm;
+  LightCom.Translate, ccCore, LightCom.Dialogs, ccAppData, LightCom.AppData
+, LightCom.AppDataForm;
 
 TYPE
   TfrmTranslEditor = class(TLightForm)
@@ -83,7 +83,7 @@ TYPE
 
 IMPLEMENTATION {$R *.dfm}
 USES
-   csExecuteShell, csSystem, cbClipboard, ccIO, ccTextFile, cmIO;
+   LightCom.ExecuteShell, LightCom.SystemTime, LightCom.Clipboard, ccIO, ccTextFile, LightCom.IO;
 
 
 
@@ -326,7 +326,7 @@ end;
 
 procedure TfrmTranslEditor.btnHelpClick(Sender: TObject);
 begin
-  csExecuteShell.ExecuteShell(Translator.GetLangFolder+'How to translate.rtf');
+  LightCom.ExecuteShell.ExecuteShell(Translator.GetLangFolder+'How to translate.rtf');
 end;
 
 

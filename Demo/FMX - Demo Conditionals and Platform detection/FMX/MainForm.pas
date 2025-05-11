@@ -15,7 +15,7 @@ interface
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs,
-  LightFMX.AppData.Form;
+  LightFMX.lbAppData.Form;
 
 type
   TForm3 = class(TLightForm)

@@ -10,7 +10,7 @@ UNIT ccMRU;
 
    Also see:
       \Third party packages\Mru.pas
-      AddFile2TaskbarMRU in csShell.pas
+      AddFile2TaskbarMRU in LightCom.Shell.pas
 
 =============================================================================================================}
 

@@ -181,6 +181,7 @@ TYPE
  function  TrimUntilDiff       (CONST s: string; Limiter: Char): string;                                          { Remove characters from both ends of a string until something different than Limiter is found. Example:  TrimUntilDiff('--ACGT--', '-') returns 'ACGT' }
 
  function  Retabulate          (CONST s, Delimiter: string; SpaceCount: Integer): string;                         { Converts multiple spaces to Tab or other similar separator. For example Retabulate('xx   xx  yy, 3, Tab') will convert the first 3 spaces to tab but not also the next 2 spaces }
+ function  ReplaceNbsp         (CONST s, ReplaceWith: string): string;
 
  // WORDS
  function  IsWordSeparator     (CONST aChar: Char): Boolean;                                                      { Returns true if the specified char is a word separator .;?,! }
@@ -345,7 +346,7 @@ TYPE
 {=============================================================================================================
   VCL
 =============================================================================================================}
- // VCL Controls, Menus & Actions. Moved to: cbVclUtils.pas
+ // VCL Controls, Menus & Actions. Moved to: LightCom.VclUtils.pas
 
 
 {=============================================================================================================
@@ -1848,6 +1849,19 @@ begin
     Spaces:= Spaces+ s[i];
 end;
 
+
+// Replace character #160 (A0) with space
+function ReplaceNbsp(CONST s, ReplaceWith: string): string;
+VAR i: integer;
+begin
+ if s= '' then EXIT('');
+ Result:= '';
+
+ for i:= 1 to Length(s) DO
+  if (s[i]= #160 {A0})
+  then Result:= Result+ ReplaceWith
+  else Result:= Result+ s[i];
+end;
 
 
 

@@ -3,11 +3,12 @@ program TemplateSimple;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF}
+  {$ENDIF }
   ccINIFile,
-  cbAppDataVCL,
+  LightCom.AppData,
   FormMain in 'FormMain.pas' {MainForm},
-  FormRamLog in '..\..\FrameVCL\FormRamLog.pas';
+  LightVcl.LogForm in '..\..\FrameVCL\LightVcl.LogForm.pas',
+  ccAppData in '..\..\..\ccAppData.pas';
 
 {$R *.res}
 
@@ -21,6 +22,5 @@ begin
 
   AppData:= TAppData.Create(AppName, '', MultiThreaded);
   AppData.CreateMainForm(TMainForm, MainForm, TRUE, TRUE, asFull);
-  TfrmRamLog.CreateGlobalLog !Remove this!;
   AppData.Run;
 end.

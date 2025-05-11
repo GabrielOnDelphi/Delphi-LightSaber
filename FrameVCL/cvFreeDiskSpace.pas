@@ -41,7 +41,7 @@ procedure Register;
 IMPLEMENTATION
 {$R cvFreeDiskSpace.res}
 
-USES ccCore, cmIO;
+USES ccCore, LightCom.IO;
 
 
 

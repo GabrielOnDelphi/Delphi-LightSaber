@@ -109,8 +109,9 @@
         <DCCReference Include="SecondForm.pas">
             <Form>frmContainer</Form>
         </DCCReference>
-        <DCCReference Include="..\..\FormRamLog.pas"/>
-        <DCCReference Include="..\..\FrameVCL\cbAppDataVCL.pas"/>
+        <DCCReference Include="..\..\FrameVCL\FrameVCL\LightVcl.LogForm.pas"/>
+        <DCCReference Include="..\..\FrameVCL\FrameVCL\FrameVCL\LightCom.AppData.pas"/>
+        <DCCReference Include="..\..\ccAppData.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

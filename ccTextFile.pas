@@ -78,16 +78,21 @@ USES
 {--------------------------------------------------------------------------------------------------
    UTF8 helpers
 --------------------------------------------------------------------------------------------------}
- function  FileHasBOM     (CONST FileName: string): Boolean;
- function  DetectEncoding (CONST FileName: string): TEncoding;
- function  IsValidUTF8    (CONST FileName: string): Boolean;
+ function  FileHasBOM          (CONST FileName: string): Boolean;
+
+ function  DetectFileEncoding  (CONST FileName: string): TEncoding;
+// function  DetectTextEncoding  (CONST Text    : string): TEncoding;
+
+ function  IsValidUtf8File     (CONST FileName: string): Boolean;
+ function  IsValidUtf8Stream   (Stream: TStream): Boolean;
+
  function  ContainsUnicodeChars(CONST S: string): Boolean;
 
- function  ConvertToAnsi  (CONST FileName: string): Boolean;
- procedure ConvertToUTF   (CONST FileName: string);
+ function  ConvertToAnsi       (CONST FileName: string): Boolean;
+ procedure ConvertToUTF        (CONST FileName: string);
 
- function  ForceAddBOM    (CONST FileName: string): Boolean;
- function  ForceRemoveBOM (CONST FileName: string): Boolean;
+ function  ForceAddBOM         (CONST FileName: string): Boolean;
+ function  ForceRemoveBOM      (CONST FileName: string): Boolean;
 
 
 IMPLEMENTATION
@@ -386,7 +391,10 @@ TYPE
       If any invalid byte or sequence is found, it exits with False.
     At the end it checks if the last chunk (which may be partial) ends with an incomplete multi-byte sequence.
   }
-function IsValidUTF8(const FileName: string): Boolean;
+
+{ ALSO SEE TEncoding.GetBufferEncoding!!!!!!!!!!!!!!!!!!!! }
+
+function IsValidUtf8File(const FileName: string): Boolean;
 const
   BufferSize = 8192; // Read in 8KB chunks
 var
@@ -438,16 +446,69 @@ begin
   end;
 end;
 
-
-function DetectEncoding(const FileName: string): TEncoding;
+function DetectFileEncoding(const FileName: string): TEncoding;
 begin
   if FileHasBOM(FileName)
   then Result:= TEncoding.UTF8
   else
-    if IsValidUTF8(FileName)       // If no BOM, check if the content is valid UTF-8
+    if IsValidUtf8File(FileName)       // If no BOM, check if the content is valid UTF-8
     then Result:= TEncoding.UTF8   // file is valid UTF-8 without BOM
     else Result := TEncoding.ANSI; // assume ANSI
 end;
+
+
+// Not tested!
+ function IsValidUtf8Stream(Stream: TStream): Boolean;
+const
+  BufferSize = 8192;
+var
+  Buffer: array[0..BufferSize-1] of Byte;
+  I, BytesRead: Integer;
+  SequenceLen: Integer;
+begin
+  Result := True;
+  Stream.Position := 0;
+  repeat
+    BytesRead := Stream.Read(Buffer[0], BufferSize);
+    if BytesRead = 0 then Break;
+
+    I := 0;
+    while I < BytesRead do
+    begin
+      if Buffer[I] <= 127 then
+        SequenceLen := 1
+      else if (Buffer[I] and $E0) = $C0 then
+        SequenceLen := 2
+      else if (Buffer[I] and $F0) = $E0 then
+        SequenceLen := 3
+      else if (Buffer[I] and $F8) = $F0 then
+        SequenceLen := 4
+      else
+        Exit(False);
+
+      if I + SequenceLen > BytesRead then
+        Exit(False);
+
+      for var J := 1 to SequenceLen - 1 do
+        if (Buffer[I + J] and $C0) <> $80 then
+          Exit(False);
+
+      Inc(I, SequenceLen);
+    end;
+  until BytesRead < BufferSize;
+
+  if (BytesRead > 0) and ((Buffer[BytesRead - 1] and $C0) = $80) then
+    Result := False;
+end;
+
+{
+function DetectTextEncoding(const s: string): TEncoding;
+begin
+  if IsValidUtf8File(FileName)       // If no BOM, check if the content is valid UTF-8
+  then Result:= TEncoding.UTF8   // file is valid UTF-8 without BOM
+  else Result := TEncoding.ANSI; // assume ANSI
+end;
+}
 
 
 
@@ -493,7 +554,7 @@ var
   FileContent: string;
   DetectedEncoding: TEncoding;
 begin
-  DetectedEncoding := DetectEncoding(FileName);                      // Detect the file's encoding (UTF-8 with BOM, UTF-8 without BOM, or ANSI)
+  DetectedEncoding := ccTextFile.DetectFileEncoding {was DetectEncoding}(FileName);                      // Detect the file's encoding (UTF-8 with BOM, UTF-8 without BOM, or ANSI)
   FileContent      := TFile.ReadAllText(FileName, DetectedEncoding); // Read the file content using the detected encoding
   StringToFile(FileName, FileContent, woOverwrite, wpOn);            // Write the file back in UTF-8 encoding with BOM
 end;
@@ -508,7 +569,7 @@ var
   UTF8String: TStringStream;
   InputFile, OutputFile: TFileStream;
 begin
-  Result:= DetectEncoding(FileName)= TEncoding.UTF8;
+  Result:= ccTextFile.DetectFileEncoding {was DetectEncoding}(FileName)= TEncoding.UTF8;
   if Result then
     begin
       OutFileName:= FileName+ '.temp';

@@ -11,7 +11,7 @@ USES
   cvStatusBar, cvSplitter, cvScrollBox, cvRichEdit, cvRadioButton, cvProxyList, cvPanel,
   cvMinimalPathLabel, cvMemo, cvLstEditor, cvGroupBox, cvGraphChart, cvFreeDiskSpace,
   cvFileFilter, cvEdit, cvDirectoryListBox, cvCountDown, cvComboBox, cvCheckListBox, cvAssociateExt, cvDropDownSearch,
-  cbAppDataForm;
+  LightCom.AppDataForm;
 
 TYPE
   TfrmMain = class(TLightForm)

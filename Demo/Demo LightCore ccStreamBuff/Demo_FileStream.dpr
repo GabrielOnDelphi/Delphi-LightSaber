@@ -3,17 +3,19 @@ program Demo_FileStream;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF}
-  cbAppDataVCL,
+  {$ENDIF }
+  LightCom.AppData,
   FormMain in 'FormMain.pas' {MainForm},
-  FormRamLog in '..\..\FrameVCL\FormRamLog.pas';
+  LightVcl.LogForm in '..\..\FrameVCL\LightVcl.LogForm.pas',
+  ccAppData in '..\..\ccAppData.pas';
 
 {$R *.res}
 
 begin
-  AppData:= TAppData.Create('BigSearch');
-  AppData.CreateMainForm(TMainForm, MainForm, True, True);    // Main form
-  TfrmRamLog.CreateGlobalLog !Remove this!;
+  ReportMemoryLeaksOnShutdown:= TRUE;
+
+  AppData:= TAppData.Create('Light Demo FileStream');
+  AppData.CreateMainForm(TMainForm, MainForm, True, True, asFull);    // Main form
   AppData.Run;
 end.
 

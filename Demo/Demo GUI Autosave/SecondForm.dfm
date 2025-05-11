@@ -12,15 +12,13 @@ object frmContainer: TfrmContainer
   Font.Name = 'Tahoma'
   Font.Style = []
   Position = poDesigned
-  OnCreate = FormCreate
-  OnDestroy = FormDestroy
   TextHeight = 13
   object grpContainer: TGroupBox
     Left = 60
     Top = 16
     Width = 245
     Height = 139
-    Caption = 'Container on second form'
+    Caption = 'Second form'
     TabOrder = 0
     object Label1: TLabel
       Left = 2

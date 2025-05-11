@@ -29,7 +29,7 @@ object frmSettings: TfrmSettings
     Top = 0
     Width = 762
     Height = 509
-    ActivePage = tabInterface
+    ActivePage = tabSystem
     Align = alClient
     TabOrder = 0
     object tabSystem: TTabSheet
@@ -187,7 +187,7 @@ object frmSettings: TfrmSettings
         object spnHideHint: TSpinEdit
           Left = 156
           Top = 170
-          Width = 50
+          Width = 77
           Height = 27
           Hint = 'miliseconds'
           Increment = 100
@@ -208,7 +208,7 @@ object frmSettings: TfrmSettings
         477)
       object GroupBox1: TGroupBox
         Left = 210
-        Top = 112
+        Top = 111
         Width = 290
         Height = 226
         Anchors = []

@@ -14,17 +14,27 @@ object frmTestIO: TfrmTestIO
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 3
-  OnCreate = FormCreate
   TextHeight = 13
   object Memo: TMemo
     AlignWithMargins = True
     Left = 3
-    Top = 3
+    Top = 34
     Width = 620
-    Height = 328
+    Height = 297
     Align = alClient
     Lines.Strings = (
       'Memo')
     TabOrder = 0
+  end
+  object Button1: TButton
+    AlignWithMargins = True
+    Left = 3
+    Top = 3
+    Width = 620
+    Height = 25
+    Align = alTop
+    Caption = 'TEST'
+    TabOrder = 1
+    OnClick = Button1Click
   end
 end

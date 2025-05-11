@@ -45,7 +45,7 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
-USES ccColors;
+USES LightCom.Colors;
 
 
 

@@ -3,16 +3,19 @@ program Demo_AutoTranslator;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF}
-  cbAppDataVCL,
+  {$ENDIF }
+  LightCom.AppData,
   FormMain in 'FormMain.pas' {MainForm},
   FormTranslEditor in '..\..\FrameVCL\FormTranslEditor.pas' {frmTranslEditor},
-  FormTranslSelector in '..\..\FrameVCL\FormTranslSelector.pas' {frmTranslSelector};
+  FormTranslSelector in '..\..\FrameVCL\FormTranslSelector.pas' {frmTranslSelector},
+  ccAppData in '..\..\ccAppData.pas';
 
 {$R *.res}
 
 begin
-  AppData:= TAppData.Create('Light Translator Demo');
-  AppData.CreateMainForm(TMainForm, MainForm, TRUE);
+  ReportMemoryLeaksOnShutdown:= TRUE;
+
+  AppData:= TAppData.Create('Light Demo Translator');
+  AppData.CreateMainForm(TMainForm, MainForm, TRUE, TRUE, asFull);
   AppData.Run;
 end.

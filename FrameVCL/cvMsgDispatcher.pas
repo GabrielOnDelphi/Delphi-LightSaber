@@ -63,7 +63,7 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
-USES cmSound, ccCore, cbDialogs;
+USES LightCom.Sound, ccCore, LightCom.Dialogs;
 {$WARN GARBAGE OFF}                                                                                {Silence the: 'W1011 Text after final END' warning }
 {.$D-}
 

@@ -2,8 +2,8 @@ object frmMain: TfrmMain
   Left = 0
   Top = 0
   Caption = 'Light Saber - No code demo'
-  ClientHeight = 294
-  ClientWidth = 504
+  ClientHeight = 180
+  ClientWidth = 413
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -22,7 +22,7 @@ object frmMain: TfrmMain
   end
   object RadioButton1: TRadioButton
     Left = 32
-    Top = 80
+    Top = 112
     Width = 113
     Height = 17
     Caption = 'Choice A'
@@ -30,7 +30,7 @@ object frmMain: TfrmMain
   end
   object RadioButton2: TRadioButton
     Left = 32
-    Top = 103
+    Top = 135
     Width = 113
     Height = 17
     Caption = 'Choice B'
@@ -38,10 +38,25 @@ object frmMain: TfrmMain
   end
   object CheckBox1: TCheckBox
     Left = 32
-    Top = 192
+    Top = 64
     Width = 97
     Height = 17
     Caption = 'CheckBox1'
     TabOrder = 3
+  end
+  object Panel1: TPanel
+    Left = 168
+    Top = 40
+    Width = 201
+    Height = 112
+    TabOrder = 4
+    object Button1: TButton
+      Left = 64
+      Top = 80
+      Width = 75
+      Height = 25
+      Caption = 'Button1'
+      TabOrder = 0
+    end
   end
 end

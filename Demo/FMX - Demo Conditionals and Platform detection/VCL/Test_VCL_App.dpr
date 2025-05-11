@@ -4,11 +4,11 @@ uses
   Vcl.Forms,
   MainForm in 'MainForm.pas' {Form3},
   PlatformTest in '..\PlatformTest.pas',
-  cbAppDataForm in '..\..\..\FrameVCL\cbAppDataForm.pas',
-  cbAppDataVCL in '..\..\..\FrameVCL\cbAppDataVCL.pas',
+  LightCom.AppDataForm in '..\..\..\FrameVCL\LightCom.AppDataForm.pas',
+  LightCom.AppData in '..\..\..\FrameVCL\LightCom.AppData.pas',
   ccAppData in '..\..\..\ccAppData.pas',
   ccBinary in '..\..\..\ccBinary.pas',
-  ccColors in '..\..\..\ccColors.pas',
+  LightCom.Colors in '..\..\..\LightCom.Colors.pas',
   ccCompiler in '..\..\..\ccCompiler.pas',
   ccCore in '..\..\..\ccCore.pas',
   ccEncodeCRC in '..\..\..\ccEncodeCRC.pas',
@@ -38,14 +38,14 @@ uses
   ccStringListA in '..\..\..\ccStringListA.pas',
   ccTextFile in '..\..\..\ccTextFile.pas',
   ccWrapString in '..\..\..\ccWrapString.pas',
-  cbCenterControl in '..\..\..\FrameVCL\cbCenterControl.pas',
-  cbDialogs in '..\..\..\FrameVCL\cbDialogs.pas',
-  cbIniFile in '..\..\..\FrameVCL\cbIniFile.pas',
-  cbINIFileQuick in '..\..\..\FrameVCL\cbINIFileQuick.pas',
+  LightCom.CenterControl in '..\..\..\FrameVCL\LightCom.CenterControl.pas',
+  LightCom.Dialogs in '..\..\..\FrameVCL\LightCom.Dialogs.pas',
+  LightCom.IniFile in '..\..\..\FrameVCL\LightCom.IniFile.pas',
+  LightCom.IniFileQuick in '..\..\..\FrameVCL\LightCom.IniFileQuick.pas',
   cbRegistry in '..\..\..\FrameVCL\cbRegistry.pas',
-  cbTranslate in '..\..\..\FrameVCL\cbTranslate.pas',
-  cbVclUtils in '..\..\..\FrameVCL\cbVclUtils.pas',
-  cbVersion in '..\..\..\FrameVCL\cbVersion.pas';
+  LightCom.Translate in '..\..\..\FrameVCL\LightCom.Translate.pas',
+  LightCom.VclUtils in '..\..\..\FrameVCL\LightCom.VclUtils.pas',
+  LightCom.Version in '..\..\..\FrameVCL\LightCom.Version.pas';
 
 {$R *.res}
 

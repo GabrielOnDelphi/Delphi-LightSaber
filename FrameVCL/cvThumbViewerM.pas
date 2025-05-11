@@ -25,8 +25,7 @@ INTERFACE
 
 USES
   Winapi.Windows, System.SysUtils, Winapi.Messages, System.Classes, Vcl.Graphics, Vcl.Grids, Vcl.ComCtrls, Vcl.Controls,
-  cGraphLoader.Thread, ccColors, cGraphBitmap, cGraphResize, cGraphResizeVCL, cGraphResizeParams;
-
+  cGraphLoader.Thread, LightCom.Colors, cGraphBitmap, cGraphResize, cGraphResizeVCL, cGraphResizeParams;
 
 TYPE
   ThumbPtr = ^TThumb;                                                                              { The record also contains the BMP thumb }
@@ -111,7 +110,7 @@ procedure Register;
 IMPLEMENTATION
 {$WARN GARBAGE OFF}                                                                                {Silence the: 'W1011 Text after final END' warning }
 
-USES cGraphUtil, ccCore, csSystem, cbClipboard, ccMath, ccIO;
+USES cGraphUtil, ccCore, LightCom.System, LightCom.SystemTime, LightCom.Clipboard, ccMath, ccIO;
 
 
 

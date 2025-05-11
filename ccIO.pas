@@ -170,9 +170,9 @@ CONST
 {--------------------------------------------------------------------------------------------------
    CREATE FOLDERS
 --------------------------------------------------------------------------------------------------}
- procedure ForceDirectoriesE    (CONST FullPath: string);
- function  ForceDirectoriesB    (CONST FullPath: string): Boolean;                                 { Replacement for System.SysUtils.ForceDirectories - elimina problema: " { Do not call ForceDirectories with an empty string. Doing so causes ForceDirectories to raise an exception" }
- function  ForceDirectories     (CONST FullPath: string): Integer;
+ procedure ForceDirectoriesE    (CONST Folder: string);
+ function  ForceDirectoriesB    (CONST Folder: string): Boolean;                                 { Replacement for System.SysUtils.ForceDirectories - elimina problema: " { Do not call ForceDirectories with an empty string. Doing so causes ForceDirectories to raise an exception" }
+ function  ForceDirectories     (CONST Folder: string): Integer;
 
 
 {--------------------------------------------------------------------------------------------------
@@ -292,7 +292,7 @@ CONST
 
 
  { OTHERS }
- function  WriteBinFile       (CONST FileName: string; CONST Data: TBytes; CONST Overwrite: Boolean= TRUE): Boolean;
+ function  BytesToFile       (CONST FileName: string; CONST Data: TBytes; CONST Overwrite: Boolean= TRUE): Boolean;
 {System.IOUtils.TFile.Encrypt https://docwiki.embarcadero.com/Libraries/Alexandria/en/System.IOUtils.TFile.Encrypt - Encrypt a given file using the operating system-provided facilities.}
 
 
@@ -668,10 +668,10 @@ end;
      False if the path is invalid.
      False if the drive is readonly.
 --------------------------------------------------------------------------------------------------}
-function ForceDirectoriesB(CONST FullPath: string): Boolean;
+function ForceDirectoriesB(CONST Folder: string): Boolean;
 begin
   TRY
-    TDirectory.CreateDirectory(FullPath);
+    TDirectory.CreateDirectory(Folder);
   EXCEPT
     on EInOutError DO EXIT(FALSE);   // Handle I/O errors (e.g., no write permission)
     else RAISE;
@@ -681,7 +681,7 @@ begin
       on EArgumentException DO RAISE;  // Re-raise exception for invalid characters in path
       on EInOutArgumentException DO RAISE;  //   'Path is empty'.    }
   END;
-  Result:= DirectoryExists(FullPath);
+  Result:= DirectoryExists(Folder);
 end;
 
 //
@@ -692,24 +692,24 @@ end;
    Raises exception if parameter is empty
    Raises exception if drive is invalid
 --------------------------------------------------------------------------------------------------}
-procedure ForceDirectoriesE(CONST FullPath: string);
+procedure ForceDirectoriesE(CONST Folder: string);
 begin
-  TDirectory.CreateDirectory(FullPath);
+  TDirectory.CreateDirectory(Folder);
 end;
 
 
 // Works with UNC paths
-function ForceDirectories(CONST FullPath: string): Integer;
+function ForceDirectories(CONST Folder: string): Integer;
 {RETURNS:
   -1 = Error creating the directory
    0 = Directory already exists
   +1 = Directory created succesfully  }
 begin
-  Assert(FullPath> '', 'ForceDirectories - Parameter is empty!');
-  if DirectoryExists (FullPath)
+  Assert(Folder> '', 'ForceDirectories - Parameter is empty!');
+  if TDirectory.Exists(Folder)
   then Result:= 0
   else
-    if ForceDirectoriesB(FullPath)
+    if ForceDirectoriesB(Folder)
     then Result:= +1
     else Result:= -1;
 end;
@@ -1687,7 +1687,7 @@ end;
 
 { Writes binary data in "Data" to disk file.
   Returns TRUE if eveything is OK }
-function WriteBinFile (CONST FileName: string; CONST Data: TBytes; CONST Overwrite: Boolean= TRUE): Boolean;
+function BytesToFile (CONST FileName: string; CONST Data: TBytes; CONST Overwrite: Boolean= TRUE): Boolean;    // Old name: WriteBinFile
 VAR StreamFile: TFileStream;
     AccessType: Word;
 begin
@@ -1781,7 +1781,7 @@ end;
 
 { Example: MoveFolder('c:\Documents', 'C:\Backups').
   It will overwrite all files in 'ToFolder' without asking.
-  If you want feedback from user use cmIO.Win.MoveFolderMsg }
+  If you want feedback from user use LightCom.IO.Win.MoveFolderMsg }
 procedure MoveFolder(CONST FromFolder, ToFolder: String; SilentOverwrite: Boolean);      { Also see: http://www.swissdelphicenter.ch/en/showcode.php?id=152 }
 begin
   if NOT DirectoryExists(ToFolder) then EXIT;

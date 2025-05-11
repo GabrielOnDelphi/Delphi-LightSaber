@@ -131,11 +131,11 @@
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\PlatformTest.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\cbAppDataForm.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\cbAppDataVCL.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightCom.AppDataForm.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightCom.AppData.pas"/>
         <DCCReference Include="..\..\..\ccAppData.pas"/>
         <DCCReference Include="..\..\..\ccBinary.pas"/>
-        <DCCReference Include="..\..\..\ccColors.pas"/>
+        <DCCReference Include="..\..\..\LightCom.Colors.pas"/>
         <DCCReference Include="..\..\..\ccCompiler.pas"/>
         <DCCReference Include="..\..\..\ccCore.pas"/>
         <DCCReference Include="..\..\..\ccEncodeCRC.pas"/>
@@ -165,14 +165,14 @@
         <DCCReference Include="..\..\..\ccStringListA.pas"/>
         <DCCReference Include="..\..\..\ccTextFile.pas"/>
         <DCCReference Include="..\..\..\ccWrapString.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\cbCenterControl.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\cbDialogs.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\cbIniFile.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\cbINIFileQuick.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightCom.CenterControl.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightCom.Dialogs.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightCom.IniFile.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightCom.IniFileQuick.pas"/>
         <DCCReference Include="..\..\..\FrameVCL\cbRegistry.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\cbTranslate.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\cbVclUtils.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\cbVersion.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightCom.Translate.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightCom.VclUtils.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightCom.Version.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

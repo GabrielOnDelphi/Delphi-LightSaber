@@ -19,7 +19,7 @@ USES
 
 IMPLEMENTATION
 
-USES cbRegistry, ccAppData, cbAppDataVCL
+USES ccRegistry, ccAppData, LightCom.AppData
 ;
 
 

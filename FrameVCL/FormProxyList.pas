@@ -23,7 +23,7 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls, ccINIFile, cbAppDataForm, cvIniFile, ccCore, csSystem, cbClipboard, cbDialogs, ccINIFile, cbAppDataForm,
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, LightCom.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls, ccINIFile, LightCom.AppDataForm, cvIniFile, ccCore, LightCom.SystemTime, LightCom.Clipboard, LightCom.Dialogs, ccINIFile, LightCom.AppDataForm,
   cvRadioButton;
 
 TYPE

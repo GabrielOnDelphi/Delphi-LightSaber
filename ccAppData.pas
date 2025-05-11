@@ -29,13 +29,16 @@
          AppDataCore.Run;
        end.
 
-     For GUI projects see cbAppDataVCL.pas
+     For GUI projects see LightCom.AppData.pas
 
 =============================================================================================================}
 
 INTERFACE
 
 USES
+  {$IFDEF MsWindows}
+    Winapi.Windows, {System.Win.Registry,} ccRegistry, // for SelfStartup
+  {$ENDIF}
   System.IOUtils, System.AnsiStrings, System.SysUtils,
   ccCore, ccINIFile, ccLogRam;
 
@@ -44,11 +47,17 @@ TYPE
                htTooltips,                 // Show help as tool-tips
                htStatBar);                 // Show help in status bar
 
+TYPE
+  TAutoState = (asUndefined,
+                asNone,       // Don't save the form automatically.
+                asPosOnly,    // Restore form position
+                asFull);      // Restore form position and GUI elements
+
   TAppDataCore= class(TObject)
   private
     FShowOnError: Boolean;                 // Automatically show the visual log form when warnings/errors are added to the log. This way the user is informed about the problems.
-    FHideHint: Integer;	
-    FLastFolder: string;
+    FHideHint   : Integer;
+    FLastFolder : string;
     FSingleInstClassName: string;          { Used by the Single Instance mechanism. } {Old name: AppWinClassName }
     FRunningFirstTime: Boolean;
     CONST
@@ -58,11 +67,20 @@ TYPE
     class VAR FAppName: string;
     function  getLastUsedFolder: string;
     procedure setShowOnError(const Value: Boolean);
+
+    // Installer
+    procedure writeAppDataFolder;
+    procedure writeInstallationFolder;
   protected
+    FHintType   : THintType;        // Turn off the embedded help system
     procedure setHideHint(const Value: Integer); virtual;
     procedure loadSettings;     virtual;
     procedure saveSettings;     virtual;
     procedure defaultSettings;  virtual;
+    procedure setHintType(const Value: THintType); virtual; abstract;
+
+    // Installer
+    procedure RegisterUninstaller;
   public
     RamLog: TRamLog;
 
@@ -97,13 +115,18 @@ TYPE
       // These are here so they can be shared with the VCL/FMX variant of AppData
       StartMinim   : Boolean;          // Start minimized. Remmbers application's last state (it was minimized or not)
       Minimize2Tray: Boolean;          // Minimize to tray
-      HintType     : THintType;        // Turn off the embedded help system
       Opacity      : Integer;          // Form opacity
+
+   {--------------------------------------------------------------------------------------------------
+      Installer
+   --------------------------------------------------------------------------------------------------}
+    function  ReadAppDataFolder(CONST UninstalledApp: string): string;  //used by Uninstaller App
+    function  ReadInstallationFolder(CONST UninstalledApp: string): string;
 
    {--------------------------------------------------------------------------------------------------
       App path/name
    --------------------------------------------------------------------------------------------------}
-    function CurFolder: string;        // The folder where the exe file is located. Old name: AppDir
+    function ExeFolder: string;        // The folder where the exe file is located. Old name: AppDir
     function SysDir: string;
     function CheckSysDir: Boolean;
     class function IniFile: string;
@@ -115,13 +138,13 @@ TYPE
 
     class property AppName:  string read FAppName;
     property HideHint: Integer read FHideHint write setHideHint;       // Hide hint after x ms. Does nothing here. The child class mush override this
+    property HintType: THintType  read FHintType write setHintType;         // Turn off the embedded help system
 
    {--------------------------------------------------------------------------------------------------
       App Control
    --------------------------------------------------------------------------------------------------}
     procedure Minimize; virtual; abstract;
     property  RunningFirstTime: Boolean read FRunningFirstTime;    // Returns true if the application is running for the first time on this computer.
-
 
    {--------------------------------------------------------------------------------------------------
       BetaTester tools
@@ -258,8 +281,8 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 
 { Returns the folder where the EXE file resides.
-  The path ended with backslash. Works with UNC paths. Example: c:\Program Files\MyCoolApp\ }
-function TAppDataCore.CurFolder: string;
+  The path ended with backslash. Works with UNC paths. Example: c:\Program Files\MyCoolApp\ }                            // Oldname: CurFolder
+function TAppDataCore.ExeFolder: string;
 begin
   Result:= ExtractFilePath(ExeName);
 end;
@@ -269,7 +292,7 @@ end;
   The path ended with backslash. Works with UNC paths. Example: c:\Program Files\MyCoolApp\System\ }
 function TAppDataCore.SysDir: string;
 begin
-  Result:= CurFolder+ Trail('System');
+  Result:= ExeFolder+ Trail('System');
 end;
 
 
@@ -374,7 +397,7 @@ end;
 { Returns true if a file called 'betatester' exists in application's folder or in application's system folder. }
 function TAppDataCore.BetaTesterMode: Boolean;
 begin
-  Result:= FileExists(SysDir+ 'betatester') OR FileExists(CurFolder+ 'betatester');
+  Result:= FileExists(SysDir+ 'betatester') OR FileExists(ExeFolder+ 'betatester');
 end;
 
 
@@ -386,10 +409,10 @@ VAR
    s: string;
    HardCodedDate: TDateTime;
 begin
- if FileExists(CurFolder+ 'dvolume.bin')         { If file exists, ignore the date passed as parameter and use the date written in file }
+ if FileExists(ExeFolder+ 'dvolume.bin')         { If file exists, ignore the date passed as parameter and use the date written in file }
  then
    begin
-     s:= StringFromFile(CurFolder+ 'dvolume.bin');
+     s:= StringFromFile(ExeFolder+ 'dvolume.bin');
      HardCodedDate:= StrToInt64Def(s, 0);
      Result:= round(HardCodedDate- Date) <= 0;     { For example: 2016.07.18 is 3678001053146ms. One day more is: 3678087627949 }
    end
@@ -564,7 +587,7 @@ begin
     IniFile.Write('Opacity'       , Opacity);
     IniFile.Write('ShowOnError'   , FShowOnError);
     IniFile.Write('HintType'      , Ord(HintType));
-    IniFile.Write('HideHint'      , HideHint);	
+    IniFile.Write('HideHint'      , HideHint);
   finally
     FreeAndNil(IniFile);
   end;
@@ -581,7 +604,7 @@ begin
     Opacity       := IniFile.Read('Opacity'            , 255);
     FShowOnError  := IniFile.Read('ShowOnError'        , True);
     HintType      := THintType(IniFile.Read('HintType' , 0));
-    HideHint      := IniFile.Read('HideHint'           , 2500);	
+    HideHint      := IniFile.Read('HideHint'           , 2500);
   finally
     FreeAndNil(IniFile);
   end;
@@ -605,6 +628,57 @@ end;
 function ExeName: string;
 begin
   Result:= ParamStr(0);   //  Application.ExeName is available only on VCL
+end;
+
+
+
+
+{--------------------------------------------------------------------------------------------------
+   UNINSTALLER
+---------------------------------------------------------------------------------------------------
+   READ/WRITE folders to registry
+   This is used by the Uninstaller.
+   See c:\MyProjects\Project support\Cubic Universal Uninstaller\Uninstaller.dpr
+--------------------------------------------------------------------------------------------------}
+CONST
+   UninstallerRegKey: string= 'Software\CubicDesign\';
+
+procedure TAppDataCore.writeAppDataFolder;                                           { Called by the original app }
+begin
+  RegWriteString(HKEY_CURRENT_USER, UninstallerRegKey+ AppName, 'App data path', AppDataFolder);                                                                                                                              {Old name: WriteAppGlobalData }
+end;
+
+
+function TAppDataCore.ReadAppDataFolder(CONST UninstalledApp: string): string;       { Called by the uninstaller }
+begin
+  Result:= RegReadString(HKEY_CURRENT_USER, UninstallerRegKey+ UninstalledApp, 'App data path');
+end;
+
+
+{------------------------
+   Instalation Folder
+------------------------}
+procedure TAppDataCore.writeInstallationFolder;                                      { Called by the original app }                                                                                                                                       {Old name: WriteAppGlobalData }
+begin
+  RegWriteString(HKEY_CURRENT_USER, UninstallerRegKey+ AppName, 'Install path', ExeFolder);
+end;
+
+
+function TAppDataCore.ReadInstallationFolder(CONST UninstalledApp: string): string;  { Called by the uninstaller }
+begin
+  Result:= RegReadString(HKEY_CURRENT_USER, UninstallerRegKey+ UninstalledApp, 'Install path');
+end;
+
+
+// This will be called automatically by CreateMainForm
+procedure TAppDataCore.RegisterUninstaller;
+begin
+  // Write to Control Panel
+  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'DisplayName', AppName);
+  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'UninstallString', SysDir+ 'Uninstall.exe');
+
+  writeAppDataFolder;
+  writeInstallationFolder;
 end;
 
 

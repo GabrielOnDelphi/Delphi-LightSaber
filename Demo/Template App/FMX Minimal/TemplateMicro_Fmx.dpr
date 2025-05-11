@@ -7,16 +7,16 @@ uses
   System.StartUpCopy,
   FMX.Forms,
   MainForm in 'MainForm.pas' {Form1},
-  LightFMX.AppData in '..\..\..\FrameFMX\LightFMX.AppData.pas',
-  LightFMX.IniFile in '..\..\..\FrameFMX\LightFMX.IniFile.pas',
-  LightFMX.AppData.Form in '..\..\..\FrameFMX\LightFMX.AppData.Form.pas';
+  LightFMX.lbAppData in '..\..\..\FrameFMX\LightFMX.lbAppData.pas',
+  LightFMX.lbIniFile in '..\..\..\FrameFMX\LightFMX.lbIniFile.pas',
+  LightFMX.lbAppData.Form in '..\..\..\FrameFMX\LightFMX.lbAppData.Form.pas';
 
 {$R *.res}
 
 begin
   ReportMemoryLeaksOnShutdown:= TRUE;
 
-  AppData:= TAppData.Create('Light FMX micro demo');
+  AppData:= TAppData.Create('Light Template FMX micro');
   AppData.CreateMainForm(TForm1, Form1, TRUE);
   AppData.Run;
 end.

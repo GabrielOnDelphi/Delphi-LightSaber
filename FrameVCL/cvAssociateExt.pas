@@ -17,7 +17,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls,
-  cvCheckBox, cbDialogs;
+  cvCheckBox, LightCom.Dialogs;
 
 TYPE
   TAssociateFileExt = class(TGroupBox)
@@ -49,7 +49,7 @@ procedure Register;
 
 IMPLEMENTATION
 USES
-    cmPermissions, csShell;
+    LightCom.SystemPermissions, LightCom.Shell;
 
 
 constructor TAssociateFileExt.Create(aOwner: TComponent);

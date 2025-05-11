@@ -81,7 +81,7 @@ procedure Register;
 
 IMPLEMENTATION
 USES
-   ccCore, cbDialogs, cmIO;
+   ccCore, LightCom.Dialogs, LightCom.IO;
 
 
 
@@ -338,7 +338,7 @@ begin
     then FBeforeDelete(Self);
 
     { Delete to recycle }
-    if NOT cmIO.RecycleItem(FileName, TRUE, DelShowConfirm)
+    if NOT RecycleItem(FileName, TRUE, DelShowConfirm)
     then MessageWarning('File not deleted.'+ CRLFw+ FileName);
 
     DeleteSelected;                                                                              { Delete list box item }

@@ -3,13 +3,15 @@ program Demo_SystemReport;
 uses
   Vcl.Forms,
   MainForm in 'MainForm.pas' {frmMain},
-  cbAppDataVCL in '..\..\FrameVCL\cbAppDataVCL.pas';
+  LightCom.AppData in '..\..\FrameVCL\LightCom.AppData.pas',
+  ccAppData in '..\..\ccAppData.pas';
 
 {$R *.res}
 
 begin
-  AppData:= TAppData.Create('Orinoco Reader', 'Orinoco', FALSE);
-  AppData.CreateMainForm(TfrmMain, frmMain, True, True);
-  //TfrmRamLog.CreateGlobalLog !Remove this!;
+  ReportMemoryLeaksOnShutdown:= TRUE;
+
+  AppData:= TAppData.Create('Light Demo System Report');
+  AppData.CreateMainForm(TfrmMain, frmMain, True, True, asFull);
   AppData.Run;
 end.

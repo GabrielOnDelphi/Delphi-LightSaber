@@ -56,7 +56,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   cGraphBitmap, ccIO, ccCore, cbDialogs, cbVersion;
+   cGraphBitmap, ccIO, ccCore, LightCom.Dialogs, LightCom.Version;
 
 
 

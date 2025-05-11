@@ -73,7 +73,7 @@ IMPLEMENTATION
 {$WARN GARBAGE OFF}                                                                                {Silence the: 'W1011 Text after final END' warning }
 
 USES
-   ciInternet, IniFiles, csExecuteShell;
+   ciInternet, IniFiles, LightCom.ExecuteShell;
 
 
 

@@ -1,18 +1,19 @@
 UNIT ciDownloadThread;
 
 {-------------------------------------------------------------------------------------------------------------
-   Gabriel Moraru
-   2023.06
+   2025.05
    www.GabrielMoraru.com
-   See Copyright file
-
-   Downloads a file [ via WinInet ]
+--------------------------------------------------------------------------------------------------------------
+   DOWNLOADS A FILE FROM THE INTERNET
+   Uses WinInet.
+--------------------------------------------------------------------------------------------------------------
 
    Also see:
        c:\Users\Public\Documents\Embarcadero\Studio\21.0\Samples\Object Pascal\RTL\HttpAsyncDownload\HttpAsyncDownloadDemo.dpr
 
    Tester:
-       c:\MyProjects\Project Testers\Internet download tester\
+       c:\Projects\LightSaber\Demo\Demo Internet\
+       c:\Projects\Testers\Internet download tester images\
 -------------------------------------------------------------------------------------------------------------}
 
 {$WARN GARBAGE OFF}                                                                                                     {Silence the: 'W1011 Text after final END' warning }
@@ -26,7 +27,7 @@ TYPE
  TWinInetObj = class(TThread)
   private
    FUrl: String;                                                                                                        { URL that we are downloading }
-   FData : TBytes;                                                                                                      { The downloaded file will be here }
+   FData : TMemoryStream;                                                                                                      { The downloaded file will be here }
    FOnDownloadDone: TNotifyEvent;
    procedure SetURL(CONST Value: string);
   protected
@@ -37,7 +38,7 @@ TYPE
    Referer: string;
    SSL: Boolean;
    property URL  : String read FUrl write SetUrl;
-   property Data : TBytes read FData;
+   property Data : TMemoryStream read FData;
    property OnDownloadDone: TNotifyEvent read FOnDownloadDone write FOnDownloadDone;
  end;
 
@@ -45,12 +46,13 @@ TYPE
 IMPLEMENTATION
 
 USES
-   ciDownload, ccCore;
+   ccDownload, ccCore;
 
 
 procedure TWinInetObj.Execute;
+VAR HttpRetCode: Integer;
 begin
- ciDownload.DownloadFile(URL, Referer, fdata, '', SSL);
+ FData:= ccDownload.DownloadToStream(URL, HttpRetCode);
  if Assigned(FOnDownloadDone)
  then FOnDownloadDone(Self);
 end;

@@ -3,7 +3,7 @@ object MainForm: TMainForm
   Top = 327
   AlphaBlendValue = 249
   Caption = 'Enviroment'
-  ClientHeight = 528
+  ClientHeight = 490
   ClientWidth = 668
   Color = clBtnFace
   Constraints.MinHeight = 300
@@ -27,8 +27,8 @@ object MainForm: TMainForm
     Left = 0
     Top = 0
     Width = 668
-    Height = 509
-    ActivePage = tabProgress
+    Height = 471
+    ActivePage = tabMain
     Align = alClient
     TabOrder = 0
     object tabMain: TTabSheet
@@ -38,7 +38,7 @@ object MainForm: TMainForm
         Left = 3
         Top = 3
         Width = 463
-        Height = 471
+        Height = 433
         Align = alClient
         TabOrder = 1
       end
@@ -47,7 +47,7 @@ object MainForm: TMainForm
         Left = 472
         Top = 3
         Width = 185
-        Height = 471
+        Height = 433
         Align = alRight
         TabOrder = 0
         object btnStart: TButton
@@ -64,14 +64,14 @@ object MainForm: TMainForm
       end
     end
     object tabProgress: TTabSheet
-      Caption = 'Demos'
+      Caption = 'Settings'
       ImageIndex = 3
       DesignSize = (
         660
-        477)
+        439)
       object btnProgress: TButton
         Left = 233
-        Top = 359
+        Top = 314
         Width = 193
         Height = 49
         Anchors = [akTop]
@@ -122,10 +122,10 @@ object MainForm: TMainForm
       ImageIndex = 4
       DesignSize = (
         660
-        477)
+        439)
       object btnShowLog: TButton
         Left = 234
-        Top = 46
+        Top = 21
         Width = 191
         Height = 45
         Action = actShowLog
@@ -135,7 +135,7 @@ object MainForm: TMainForm
       end
       object Button5: TButton
         Left = 234
-        Top = 106
+        Top = 81
         Width = 191
         Height = 34
         Anchors = [akTop]
@@ -145,7 +145,7 @@ object MainForm: TMainForm
       end
       object Button6: TButton
         Left = 234
-        Top = 148
+        Top = 123
         Width = 191
         Height = 34
         Anchors = [akTop]
@@ -155,7 +155,7 @@ object MainForm: TMainForm
       end
       object Button7: TButton
         Left = 234
-        Top = 189
+        Top = 164
         Width = 191
         Height = 34
         Anchors = [akTop]
@@ -165,7 +165,7 @@ object MainForm: TMainForm
       end
       object Button8: TButton
         Left = 234
-        Top = 231
+        Top = 206
         Width = 191
         Height = 34
         Anchors = [akTop]
@@ -175,7 +175,7 @@ object MainForm: TMainForm
       end
       object Button9: TButton
         Left = 234
-        Top = 273
+        Top = 248
         Width = 191
         Height = 34
         Anchors = [akTop]
@@ -185,7 +185,7 @@ object MainForm: TMainForm
       end
       object Button11: TButton
         Left = 234
-        Top = 314
+        Top = 289
         Width = 191
         Height = 34
         Anchors = [akTop]
@@ -195,7 +195,7 @@ object MainForm: TMainForm
       end
       object Button10: TButton
         Left = 234
-        Top = 356
+        Top = 331
         Width = 191
         Height = 34
         Anchors = [akTop]
@@ -205,7 +205,7 @@ object MainForm: TMainForm
       end
       object Button12: TButton
         Left = 234
-        Top = 398
+        Top = 373
         Width = 191
         Height = 34
         Anchors = [akTop]
@@ -217,7 +217,7 @@ object MainForm: TMainForm
   end
   object StatBar: TStatusBar
     Left = 0
-    Top = 509
+    Top = 471
     Width = 668
     Height = 19
     Panels = <>

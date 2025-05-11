@@ -13,16 +13,16 @@ UNIT uInitialization;
 INTERFACE
 
 USES
-   Winapi.ShellApi, System.SysUtils, Vcl.Forms, cbAppDataForm,Vcl.Dialogs, Vcl.Controls;
+   Winapi.ShellApi, System.SysUtils, Vcl.Forms, LightCom.AppDataForm,Vcl.Dialogs, Vcl.Controls;
 
 procedure LateInitialization;
 
 IMPLEMENTATION
 
 USES
-  chHardID, csShell, csExecuteShell, cmGuiSettings,
-  cpCertificate, ccAppData, cbAppDataVCL
-, cbCenterControl, cbTranslate, ciUpdater,
+  chHardID, LightCom.Shell, LightCom.ExecuteShell, LightCom.GuiSettings,
+  cpCertificate, ccAppData, LightCom.AppData
+, LightCom.CenterControl, LightCom.Translate, ciUpdater,
   FormMain, FormUniversalEula, FormSkinsDisk, FormSettings, FormSplashScreen, FormUpdaterNotifier;
 
 
@@ -88,15 +88,15 @@ begin
     if NOT AppData.RunningHome then
       begin
         // Desktop shortcuts
-        csShell.CreateShortcut(AppData.AppName, TRUE);        // OnDesktop
-        csShell.CreateShortcut(AppData.AppName, FALSE);       // OnStartMenu
+        LightCom.Shell.CreateShortcut(AppData.AppName, TRUE);        // OnDesktop
+        LightCom.Shell.CreateShortcut(AppData.AppName, FALSE);       // OnStartMenu
 
         // File association
         AssociateWith('.LightSaber', AppData.AppName, FALSE, FALSE, TRUE);
 
         // Welcome page
         if NOT AppData.BetaTesterMode
-        then csExecuteShell.ExecuteURL(AppData.ProductWelcome);
+        then LightCom.ExecuteShell.ExecuteURL(AppData.ProductWelcome);
 
         FormUniversalEula.ShowEulaModal;                      // EULA
         TfrmSkinDisk.CreateFormModal;                         // Choose skin. There is a bug: Form losses modal attribute after applying skin. So, I can call this ONLY at the end of initialization procedure. Even though I can click the main form, the Skins form is still marked as modal.

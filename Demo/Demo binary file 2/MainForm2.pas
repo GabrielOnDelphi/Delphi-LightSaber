@@ -13,7 +13,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Mask, Vcl.ExtCtrls, Vcl.Samples.Spin,
-  cbAppDataForm, ccStreamBuff, ccStreamBuff2, uSoldier_v2;
+  LightCom.AppDataForm, ccStreamBuff, ccStreamBuff2, uSoldier_v2;
 
 type
   TfrmMain = class(TLightForm)
@@ -36,7 +36,7 @@ type
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  ccAppData, cbAppDataVCL;
+  ccAppData, LightCom.AppData;
 
 
 procedure TfrmMain.FormCreate(Sender: TObject);
@@ -67,7 +67,7 @@ function GetBinaryFileName: string;
 CONST
   MyFile= 'Soldier.bin';
 begin
-  Result:= AppData.CurFolder+ MyFile;  // The files is saved where the EXE file is.
+  Result:= AppData.ExeFolder+ MyFile;  // The files is saved where the EXE file is.
 end;
 
 

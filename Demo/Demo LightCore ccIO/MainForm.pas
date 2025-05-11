@@ -6,12 +6,13 @@ USES
   //Winapi.Windows, Winapi.Messages,
   System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  cbAppDataForm;
+  LightCom.AppDataForm;
 
 TYPE
   TfrmTestIO = class(TLightForm)
     Memo: TMemo;
-    procedure FormCreate(Sender: TObject);
+    Button1: TButton;
+    procedure Button1Click(Sender: TObject);
   private
   public
   end;
@@ -20,12 +21,13 @@ VAR
   frmTestIO: TfrmTestIO;
 
 IMPLEMENTATION {$R *.dfm}
-USES ccIO, ccTextFile, cmIO;
+USES ccIO, ccTextFile, LightCom.IO;
 
 
-procedure TfrmTestIO.FormCreate(Sender: TObject);
+procedure TfrmTestIO.Button1Click(Sender: TObject);
 begin
  Memo.Clear;
+ Memo.Lines.Add('Some functions will fail. This  is normal!');
 
 
  // Test "normal"
@@ -37,7 +39,7 @@ begin
  Memo.Lines.Add('');
 
 
- // Test create on readonly folder (please prepare the folder first)
+ // Test create a readonly folder (please prepare the folder first)
  Memo.Lines.Add('Readonly folder: ForceDirectoriesB(''C:\ReadOnly\1'') = '+ BoolToStr(ForceDirectoriesB('C:\ReadOnly\1'), TRUE));  // Returns true
  Memo.Lines.Add('');
 
@@ -77,5 +79,6 @@ begin
  Memo.Lines.Add(' '+ BoolToStr(ForceDirectoriesB('W:\1'), TRUE));
  Memo.Lines.Add('');
 end;
+
 
 end.

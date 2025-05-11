@@ -22,8 +22,8 @@ INTERFACE
 
 USES
   WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin,
-  cvRichEdit, Vcl.ComCtrls, ccCore, csSystem, cbClipboard, cbDialogs, ccINIFile, cbAppDataForm,  Vcl.Dialogs, cvCheckBox, Vcl.ExtCtrls, llRichLogTrack,
-  System.Actions, Vcl.ActnList, Vcl.Menus, cvRadioButton, ccAppData, cbAppDataVCL
+  cvRichEdit, Vcl.ComCtrls, ccCore, LightCom.SystemTime, LightCom.Clipboard, LightCom.Dialogs, ccINIFile, LightCom.AppDataForm,  Vcl.Dialogs, cvCheckBox, Vcl.ExtCtrls, llRichLogTrack,
+  System.Actions, Vcl.ActnList, Vcl.Menus, cvRadioButton, ccAppData, LightCom.AppData
 ;
 
 TYPE
@@ -69,7 +69,7 @@ VAR
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-   cvIniFile, ccIO, ccTextFile, cmIO, cmDebugger, SecondForm;
+   cvIniFile, ccIO, ccTextFile, LightCom.IO, LightCom.Debugger, SecondForm;
 
 
 
@@ -168,7 +168,7 @@ procedure TfrmTester.Button5Click(Sender: TObject);
 VAR
   frmContainer: TfrmContainer;
 begin
-  AppData.CreateForm(TfrmContainer, frmContainer, FALSE);
+  AppData.CreateForm(TfrmContainer, frmContainer, FALSE, asFull);
   frmContainer.grpContainer.Parent:= Self;
   frmContainer.grpContainer.Align := alTop;
 end;
@@ -181,20 +181,3 @@ end;
 
 
 end.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

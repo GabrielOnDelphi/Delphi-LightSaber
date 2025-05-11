@@ -184,7 +184,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   cGraphBitmap, ccColors, ccMath;
+   cGraphBitmap, LightCom.Colors, ccMath;
 
 
 

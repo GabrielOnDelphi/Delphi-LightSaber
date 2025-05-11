@@ -2,7 +2,7 @@ object MainForm: TMainForm
   Left = 891
   Top = 327
   AlphaBlendValue = 249
-  Caption = 'Enviroment'
+  Caption = 'Template App'
   ClientHeight = 370
   ClientWidth = 680
   Color = clBtnFace

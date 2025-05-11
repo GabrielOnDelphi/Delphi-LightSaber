@@ -6,7 +6,7 @@ UNIT FrameExplorer;
 INTERFACE
 
 USES
-  System.Classes, Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, cvPathEdit, Vcl.FileCtrl, cvFileFilter,
+  System.Classes, Vcl.Controls, Vcl.Forms, LightCom.AppDataForm,Vcl.StdCtrls, cvPathEdit, Vcl.FileCtrl, cvFileFilter,
   cvFileListBox, Vcl.ExtCtrls;
 
 TYPE

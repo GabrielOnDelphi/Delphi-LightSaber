@@ -44,7 +44,7 @@ function  GetBorderDominantColor(BMP: TBitmap; Border: TBorderType; Tolerance: I
 IMPLEMENTATION
 
 USES
-   cGraphUtil, ccBinary, ccCore, cbDialogs, cGraphFX, cGraphBitmap;
+   cGraphUtil, ccBinary, ccCore, LightCom.Dialogs, cGraphFX, cGraphBitmap;
 
 
 

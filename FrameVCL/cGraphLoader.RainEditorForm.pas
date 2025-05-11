@@ -4,7 +4,7 @@ INTERFACE
 
 USES
   Winapi.Windows, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, cbAppDataForm,Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ComCtrls,
+  Vcl.Controls, Vcl.Forms, LightCom.AppDataForm,Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ComCtrls,
   cGraphLoader.RainDrop;
 
 TYPE
@@ -51,7 +51,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  cbTranslate, cbINIFile, ccAppData, cbAppDataVCL;
+  LightCom.Translate, LightCom.IniFile, ccAppData, LightCom.AppData;
    {Don't add dependencies to cvIniFile because that package is not available yet}
 
 

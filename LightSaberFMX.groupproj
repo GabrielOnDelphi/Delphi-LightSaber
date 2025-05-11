@@ -6,10 +6,10 @@
         <Projects Include="LightCore.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="LightAppDataFMX.dproj">
+        <Projects Include="FrameFMX\LightFmxBase.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="LightFMX_Visual.dproj">
+        <Projects Include="FrameFMX\LightFmxCommon.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="Demo\FMX - Demo Conditionals and Platform detection\FMX\FMX_Demo_ccPlatformFile.dproj">
@@ -25,6 +25,9 @@
             <Dependencies/>
         </Projects>
         <Projects Include="Demo\Template App\FMX Minimal\TemplateMicro_Fmx.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\Light VCL to FMX converter\Light_VCL2FMX.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -44,23 +47,23 @@
     <Target Name="LightCore:Make">
         <MSBuild Projects="LightCore.dproj" Targets="Make"/>
     </Target>
-    <Target Name="LightAppDataFMX">
-        <MSBuild Projects="LightAppDataFMX.dproj"/>
+    <Target Name="LightFmxBase">
+        <MSBuild Projects="FrameFMX\LightFmxBase.dproj"/>
     </Target>
-    <Target Name="LightAppDataFMX:Clean">
-        <MSBuild Projects="LightAppDataFMX.dproj" Targets="Clean"/>
+    <Target Name="LightFmxBase:Clean">
+        <MSBuild Projects="FrameFMX\LightFmxBase.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="LightAppDataFMX:Make">
-        <MSBuild Projects="LightAppDataFMX.dproj" Targets="Make"/>
+    <Target Name="LightFmxBase:Make">
+        <MSBuild Projects="FrameFMX\LightFmxBase.dproj" Targets="Make"/>
     </Target>
-    <Target Name="LightFMX_Visual">
-        <MSBuild Projects="LightFMX_Visual.dproj"/>
+    <Target Name="LightFmxCommon">
+        <MSBuild Projects="FrameFMX\LightFmxCommon.dproj"/>
     </Target>
-    <Target Name="LightFMX_Visual:Clean">
-        <MSBuild Projects="LightFMX_Visual.dproj" Targets="Clean"/>
+    <Target Name="LightFmxCommon:Clean">
+        <MSBuild Projects="FrameFMX\LightFmxCommon.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="LightFMX_Visual:Make">
-        <MSBuild Projects="LightFMX_Visual.dproj" Targets="Make"/>
+    <Target Name="LightFmxCommon:Make">
+        <MSBuild Projects="FrameFMX\LightFmxCommon.dproj" Targets="Make"/>
     </Target>
     <Target Name="FMX_Demo_ccPlatformFile">
         <MSBuild Projects="Demo\FMX - Demo Conditionals and Platform detection\FMX\FMX_Demo_ccPlatformFile.dproj"/>
@@ -107,14 +110,23 @@
     <Target Name="TemplateMicro_Fmx:Make">
         <MSBuild Projects="Demo\Template App\FMX Minimal\TemplateMicro_Fmx.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Light_VCL2FMX">
+        <MSBuild Projects="..\Light VCL to FMX converter\Light_VCL2FMX.dproj"/>
+    </Target>
+    <Target Name="Light_VCL2FMX:Clean">
+        <MSBuild Projects="..\Light VCL to FMX converter\Light_VCL2FMX.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Light_VCL2FMX:Make">
+        <MSBuild Projects="..\Light VCL to FMX converter\Light_VCL2FMX.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightAppDataFMX;LightFMX_Visual;FMX_Demo_ccPlatformFile;FMX_Demo_LightPanel;FMX_Demo_MessageBoxes;FMX_Demo_TDropDownSearchBox;TemplateMicro_Fmx"/>
+        <CallTarget Targets="LightCore;LightFmxBase;LightFmxCommon;FMX_Demo_ccPlatformFile;FMX_Demo_LightPanel;FMX_Demo_MessageBoxes;FMX_Demo_TDropDownSearchBox;TemplateMicro_Fmx;Light_VCL2FMX"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightAppDataFMX:Clean;LightFMX_Visual:Clean;FMX_Demo_ccPlatformFile:Clean;FMX_Demo_LightPanel:Clean;FMX_Demo_MessageBoxes:Clean;FMX_Demo_TDropDownSearchBox:Clean;TemplateMicro_Fmx:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightFmxBase:Clean;LightFmxCommon:Clean;FMX_Demo_ccPlatformFile:Clean;FMX_Demo_LightPanel:Clean;FMX_Demo_MessageBoxes:Clean;FMX_Demo_TDropDownSearchBox:Clean;TemplateMicro_Fmx:Clean;Light_VCL2FMX:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightAppDataFMX:Make;LightFMX_Visual:Make;FMX_Demo_ccPlatformFile:Make;FMX_Demo_LightPanel:Make;FMX_Demo_MessageBoxes:Make;FMX_Demo_TDropDownSearchBox:Make;TemplateMicro_Fmx:Make"/>
+        <CallTarget Targets="LightCore:Make;LightFmxBase:Make;LightFmxCommon:Make;FMX_Demo_ccPlatformFile:Make;FMX_Demo_LightPanel:Make;FMX_Demo_MessageBoxes:Make;FMX_Demo_TDropDownSearchBox:Make;TemplateMicro_Fmx:Make;Light_VCL2FMX:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
@@ -130,8 +142,20 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightFMX_Visual.dproj">
+        <BuildGroupProject Include="FrameFMX\LightFmxCommon.dproj">
             <ProjectGuid>{1B99132F-3E32-4911-B8F0-F9DA00251E7A}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\Light VCL to FMX converter\Light_VCL2FMX.dproj">
+            <ProjectGuid>{75CFD3C8-1117-4D3C-B7C3-021CF9B67A99}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -142,7 +166,7 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightAppDataFMX.dproj">
+        <BuildGroupProject Include="FrameFMX\LightFmxBase.dproj">
             <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -150,12 +174,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="Demo\FMX - Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj">
             <ProjectGuid>{C3CE6255-4B44-40D5-8686-A5CB367B1CE4}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCore.dproj">
-            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -180,8 +198,20 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightFMX_Visual.dproj">
+        <BuildGroupProject Include="FrameFMX\LightFmxCommon.dproj">
             <ProjectGuid>{1B99132F-3E32-4911-B8F0-F9DA00251E7A}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\Light VCL to FMX converter\Light_VCL2FMX.dproj">
+            <ProjectGuid>{75CFD3C8-1117-4D3C-B7C3-021CF9B67A99}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -192,7 +222,7 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightAppDataFMX.dproj">
+        <BuildGroupProject Include="FrameFMX\LightFmxBase.dproj">
             <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -200,12 +230,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="Demo\FMX - Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj">
             <ProjectGuid>{C3CE6255-4B44-40D5-8686-A5CB367B1CE4}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCore.dproj">
-            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -230,8 +254,20 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightFMX_Visual.dproj">
+        <BuildGroupProject Include="FrameFMX\LightFmxCommon.dproj">
             <ProjectGuid>{1B99132F-3E32-4911-B8F0-F9DA00251E7A}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\Light VCL to FMX converter\Light_VCL2FMX.dproj">
+            <ProjectGuid>{75CFD3C8-1117-4D3C-B7C3-021CF9B67A99}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -242,7 +278,7 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightAppDataFMX.dproj">
+        <BuildGroupProject Include="FrameFMX\LightFmxBase.dproj">
             <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -250,12 +286,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="Demo\FMX - Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj">
             <ProjectGuid>{C3CE6255-4B44-40D5-8686-A5CB367B1CE4}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCore.dproj">
-            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -280,8 +310,20 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightFMX_Visual.dproj">
+        <BuildGroupProject Include="FrameFMX\LightFmxCommon.dproj">
             <ProjectGuid>{1B99132F-3E32-4911-B8F0-F9DA00251E7A}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="..\Light VCL to FMX converter\Light_VCL2FMX.dproj">
+            <ProjectGuid>{75CFD3C8-1117-4D3C-B7C3-021CF9B67A99}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -292,7 +334,7 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="LightAppDataFMX.dproj">
+        <BuildGroupProject Include="FrameFMX\LightFmxBase.dproj">
             <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -300,12 +342,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="Demo\FMX - Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj">
             <ProjectGuid>{C3CE6255-4B44-40D5-8686-A5CB367B1CE4}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCore.dproj">
-            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>

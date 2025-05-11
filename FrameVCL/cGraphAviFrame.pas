@@ -64,7 +64,7 @@ function GetVideoPlayerLogo: TBitmap;
 
 IMPLEMENTATION
 USES
-   cGraphBitmap, cGraphLoader, ccAppData, cbAppDataVCL
+   cGraphBitmap, cGraphLoader, ccAppData, LightCom.AppData
 ;
 
 
@@ -126,7 +126,7 @@ function GetVideoPlayerLogo(FileName: string; OUT FrameCount: Cardinal): TBitmap
 
 IMPLEMENTATION
 USES
-   ccCore, csSystem, cbClipboard, cbDialogs, ccINIFile, cbAppDataForm, cGraphBitmap, cGraphLoader, ccIO, ccTextFile, cmIO;
+   ccCore, LightCom.SystemTime, LightCom.Clipboard, LightCom.Dialogs, ccINIFile, LightCom.AppDataForm, cGraphBitmap, cGraphLoader, ccIO, ccTextFile, LightCom.IO;
 
 
 
@@ -232,7 +232,7 @@ var
   PTS: Int64;
 begin
   if FFPlayer.CurrentFrame(BMP, PTS)
-  then BMP.SaveToFile(AppData.CurFolder+ '\capture' + IntToStr(PTS) + '.bmp');
+  then BMP.SaveToFile(AppData.ExeFolder+ '\capture' + IntToStr(PTS) + '.bmp');
 end;
 
 
@@ -250,7 +250,7 @@ begin
    TRY
     BMP.SetSize(DrawingForm.Width, DrawingForm.Height);
     DrawingForm.Canvas.CopyRect(BMP.Canvas.ClipRect, BMP.Canvas, BMP.Canvas.ClipRect);
-    BMP.SaveToFile(AppData.CurFolder+ TimeToStr_IO(now));
+    BMP.SaveToFile(AppData.ExeFolder+ TimeToStr_IO(now));
    FINALLY
     FreeAndNil(BMP);
    END;

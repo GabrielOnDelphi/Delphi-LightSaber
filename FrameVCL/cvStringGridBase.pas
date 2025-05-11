@@ -25,7 +25,7 @@
 INTERFACE
 
 USES
-   Winapi.Windows, System.SysUtils, Winapi.Messages, Vcl.Grids, Vcl.Forms, cbAppDataForm,System.Classes, Vcl.Graphics, vcl.Controls;      
+   Winapi.Windows, System.SysUtils, Winapi.Messages, Vcl.Grids, Vcl.Forms, LightCom.AppDataForm,System.Classes, Vcl.Graphics, vcl.Controls;      
 
 CONST
    MaxTextInCellBug= 2000;    { Work around this bug: http://stackoverflow.com/questions/30574585/tstringgrid-cannot-display-very-long-6k-strings }
@@ -183,7 +183,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES ccMath, csSystem, cbClipboard, cmSound, ccCore, cbDialogs;
+USES ccMath, LightCom.SystemTime, LightCom.Clipboard, LightCom.Sound, ccCore, LightCom.Dialogs;
 
 CONST
    MinColWidth= 20;

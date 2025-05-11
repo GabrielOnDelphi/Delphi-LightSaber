@@ -159,6 +159,6 @@ end.
   Count:= WB1Stream.Read(sTemp[1], Count);                                                         { Try to read LOTS. The function will return the actual number of read bytes }
   SetLength(sTemp, Count);                                                                         { Now I know how much I read }
   Data:= Data+ sTemp;
-  WriteToFileA(AppData.CurFolder+ 'tst.jpg', Data, TRUE, TRUE);
+  WriteToFileA(AppData.ExeFolder+ 'tst.jpg', Data, TRUE, TRUE);
   IT WORKS!
   *)

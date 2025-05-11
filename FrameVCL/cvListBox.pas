@@ -183,7 +183,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-  cbVclUtils, cmSound, ccCore, ccMath, ccTextFile;
+  LightCom.VclUtils, LightCom.Sound, ccCore, ccMath, ccTextFile;
 
 
 
@@ -346,7 +346,7 @@ begin
  if (Button= mbRight)
  AND RightClickSelects then
   begin
-   cbVclUtils.SetFocus(self);
+   LightCom.VclUtils.SetFocus(self);
    Point.X:= X;
    Point.Y:= Y;
    ItemUnderMouse:= ItemAtPos(Point, TRUE);

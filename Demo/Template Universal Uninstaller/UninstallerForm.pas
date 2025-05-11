@@ -30,8 +30,8 @@ INTERFACE
 USES
   Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Controls,
   Vcl.ExtCtrls, System.Classes, SysUtils, Vcl.Forms, System.IOUtils,
-  ccCore, csSystem, cbClipboard, cbDialogs, ccIO, ccTextFile, cmIO, cvPathEdit, cvCountDown,
-  InternetLabel, llRichLog, Vcl.Imaging.pngimage, cbAppDataForm;
+  ccCore, LightCom.SystemTime, LightCom.Clipboard, LightCom.Dialogs, ccIO, ccTextFile, LightCom.IO, cvPathEdit, cvCountDown,
+  InternetLabel, llRichLog, Vcl.Imaging.pngimage, LightCom.AppDataForm;
 
 TYPE
   TfrmMain = class(TLightForm)
@@ -75,7 +75,7 @@ IMPLEMENTATION {$R *.dfm}
 {/$DEFINE BASER}
 
 USES
-   cmWindow, csExecuteShell, csShell, ccAppData, cbAppDataVCL
+   LightCom.Window, LightCom.ExecuteShell, LightCom.Shell, ccAppData, LightCom.AppData
 ;
 
    {$IFDEF BioniX}BxConstants;{$ENDIF}
@@ -136,7 +136,7 @@ begin
  lblVersion.Caption:= 'Uninstaller version: '+ TAppData.GetVersionInfo;
  /// inetDiscount.Link:= BxConstants.wwwUninstallDiscount; { Give user a 50% discount so he won't uninstall. }
 
- if FileExists(AppData.CurFolder+ 'DebugMode')
+ if FileExists(AppData.ExeFolder+ 'DebugMode')
  then Caption:= Application.ExeName
  else Caption:= AppData.AppName+ ' uninstaller - This program is provided "as is"';
  mmoLog.AddEmptyRow;
@@ -146,11 +146,11 @@ begin
  if DetectedFolder= ''
  then
   begin
-   frmMain.Show;
-   mmoLog.AddEmptyRow;
-   edtPath.Path:= 'Cannot detect installation folder! Please enter the path here manually.';
-   mmoLog.AddWarn('Cannot detect installation folder!');
-   mmoLog.AddWarn('Unless changed by user, the default path should be "C:\BioniX Wallpaper\"');
+    frmMain.Show;
+    mmoLog.AddEmptyRow;
+    edtPath.Path:= 'Cannot detect installation folder! Please enter the path here manually.';
+    mmoLog.AddWarn('Cannot detect installation folder!');
+    mmoLog.AddWarn('Unless changed by user, the default path should be "C:\BioniX Wallpaper\"');
   end
  else
   begin
@@ -159,10 +159,10 @@ begin
 
    if NOT DirectoryExists(DetectedFolder) then
     begin
-     frmMain.Show;
-     mmoLog.AddEmptyRow;
-     MessageError('Original installation folder does not exist. CRLF Probably moved or deleted manually.'+ CRLF+ 'Folder: '+ DetectedFolder);
-     mmoLog.AddWarn('Folder to be entered manually by user.');
+      frmMain.Show;
+      mmoLog.AddEmptyRow;
+      MessageError('Original installation folder does not exist. CRLF Probably moved or deleted manually.'+ CRLF+ 'Folder: '+ DetectedFolder);
+      mmoLog.AddWarn('Folder to be entered manually by user.');
     end;
    CountDown.Start;
   end;
@@ -174,11 +174,11 @@ end;
 
 function TfrmMain.DeleteItem(Item: string): Boolean;  { Delete to RecycleBin }
 begin
- { This creates problems with RamDisk. The folder gets locked after BioniX deletes it }
- Result:= RecycleItem(Item, TRUE, FALSE);
- if Result
- then mmoLog.AddInfo('Folder '+Item+' deleted to RecycleBin.')
- else mmoLog.AddWarn('Folder '+Item+' not deleted. Probably another application is locking the folder.');
+  { This creates problems with RamDisk. The folder gets locked after BioniX deletes it }
+  Result:= RecycleItem(Item, TRUE, FALSE);
+  if Result
+  then mmoLog.AddInfo('Folder '+Item+' deleted to RecycleBin.')
+  else mmoLog.AddWarn('Folder '+Item+' not deleted. Probably another application is locking the folder.');
 end;
 
 
@@ -190,7 +190,7 @@ VAR
 begin
  AppFolder:= edtPath.Path;
 
- if FileExists(AppData.CurFolder+ 'DebugMode')
+ if FileExists(AppData.ExeFolder+ 'DebugMode')
  then AddDataFolder:= 'Protected while uninstaller running in debugg mode'
  else AddDataFolder:= AppData.ReadAppDataFolder(AppData.AppName);
 

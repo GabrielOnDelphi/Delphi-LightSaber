@@ -23,9 +23,9 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  System.SysUtils, System.Classes, Vcl.Forms, cbAppDataForm,Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls,
+  System.SysUtils, System.Classes, Vcl.Forms, LightCom.AppDataForm,Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls,
   InternetLabel,
-  ccCore, csSystem, cbClipboard, ciUpdater, llRichLog, llRichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
+  ccCore, LightCom.SystemTime, LightCom.Clipboard, ciUpdater, llRichLog, llRichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
 
 CONST
   UpdaterURL = 'https://www.GabrielMoraru.com/uploads/OnlineNews_v2_TemplateApp.bin'; { For demo purposes }
@@ -63,7 +63,7 @@ TYPE
     procedure btnNewVersFoundClick  (Sender: TObject);
     procedure btnSettingsClick      (Sender: TObject);
     procedure btnTestInternetClick  (Sender: TObject);
-    procedure OnConnectError        (Sender: TObject);
+    procedure OnConnectError        (Sender: TObject; Msg: string);
     procedure OnHasNews             (Sender: TObject);
     procedure OnNoNews              (Sender: TObject);
     procedure OnUpdateEnd           (Sender: TObject);
@@ -83,8 +83,7 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   llRichLogUtils, ccColors, ccAppData, cbAppDataVCL
-, ciInternet;
+   llRichLogUtils, LightCom.Colors, ccAppData, LightCom.AppData, LightCom.CursorGuard, LightCom.System, ciInternet;
 
 
 
@@ -338,11 +337,11 @@ end;
 
 
 
-procedure TFrmUpdater.OnConnectError(Sender: TObject);
+procedure TFrmUpdater.OnConnectError(Sender: TObject; Msg: string);
 begin
  lblConnectError.Visible:= TRUE;
  lblStatus.Visible:= FALSE;
- Log.AddError('Connection error!');
+ Log.AddError(Msg);
 
  if Visible
  then Show     { Cannot make a visible window modal! }

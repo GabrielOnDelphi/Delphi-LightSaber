@@ -12,7 +12,7 @@ UNIT FormEmailComposer;
 INTERFACE
 
 USES
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Vcl.Forms, cbAppDataForm, Dialogs, StdCtrls, Buttons, ActnList, Menus, ComCtrls, ExtCtrls, Spin,  ExtDlgs, System.Actions,
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Vcl.Forms, LightCom.AppDataForm, Dialogs, StdCtrls, Buttons, ActnList, Menus, ComCtrls, ExtCtrls, Spin,  ExtDlgs, System.Actions,
   IdSSL, IdComponent, IdSMTP, IdAntiFreeze,
   IdSSLOpenSSL, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack,
    cvCheckBox, cvSplitter, IdBaseComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase,
@@ -70,8 +70,8 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  cvIniFile, ccCore, csSystem, cbClipboard, cbDialogs, ccINIFile, cbAppDataForm, cmSound, ccAppData, cbAppDataVCL
-, ccIO, ccTextFile, cmIO, ciEmailSender;
+  cvIniFile, ccCore, LightCom.SystemTime, LightCom.Clipboard, LightCom.Dialogs, ccINIFile, LightCom.AppDataForm, LightCom.Sound, ccAppData, LightCom.AppData
+, ccIO, ccTextFile, LightCom.IO, ciEmailSender;
 
 
 procedure TfrmComposer.Initialize; { This will create also the frmSmtpSettings }
