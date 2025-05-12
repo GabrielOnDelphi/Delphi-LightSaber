@@ -63,4 +63,5 @@ begin
   else messageError('Clipboard service not available.'); // Optional user feedback
 end;
 
+
 end.

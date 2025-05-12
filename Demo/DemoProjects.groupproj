@@ -42,19 +42,16 @@
         <Projects Include="Demo LightCore ccStreamBuff\Demo_FileStream.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Demo LightCore ccWinVersion\Demo_WinVers.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="Demo LightLog\Demo_Log.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="Demo SystemReport\Demo_SystemReport.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="FMX - Demo Message boxes\FMX_Demo_MessageBoxes.dproj">
+        <Projects Include="Demo LightCore WinVersion\Demo_WinVers.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Demo Detect WinVer\WinOsTest.dproj">
+        <Projects Include="FMX - Demo Conditionals and Platform detection\VCL\Demo_PlatformDetection.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -182,15 +179,6 @@
     <Target Name="Demo_FileStream:Make">
         <MSBuild Projects="Demo LightCore ccStreamBuff\Demo_FileStream.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Demo_WinVers">
-        <MSBuild Projects="Demo LightCore ccWinVersion\Demo_WinVers.dproj"/>
-    </Target>
-    <Target Name="Demo_WinVers:Clean">
-        <MSBuild Projects="Demo LightCore ccWinVersion\Demo_WinVers.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="Demo_WinVers:Make">
-        <MSBuild Projects="Demo LightCore ccWinVersion\Demo_WinVers.dproj" Targets="Make"/>
-    </Target>
     <Target Name="Demo_Log">
         <MSBuild Projects="Demo LightLog\Demo_Log.dproj"/>
     </Target>
@@ -209,32 +197,32 @@
     <Target Name="Demo_SystemReport:Make">
         <MSBuild Projects="Demo SystemReport\Demo_SystemReport.dproj" Targets="Make"/>
     </Target>
-    <Target Name="FMX_Demo_MessageBoxes">
-        <MSBuild Projects="FMX - Demo Message boxes\FMX_Demo_MessageBoxes.dproj"/>
+    <Target Name="Demo_WinVers">
+        <MSBuild Projects="Demo LightCore WinVersion\Demo_WinVers.dproj"/>
     </Target>
-    <Target Name="FMX_Demo_MessageBoxes:Clean">
-        <MSBuild Projects="FMX - Demo Message boxes\FMX_Demo_MessageBoxes.dproj" Targets="Clean"/>
+    <Target Name="Demo_WinVers:Clean">
+        <MSBuild Projects="Demo LightCore WinVersion\Demo_WinVers.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="FMX_Demo_MessageBoxes:Make">
-        <MSBuild Projects="FMX - Demo Message boxes\FMX_Demo_MessageBoxes.dproj" Targets="Make"/>
+    <Target Name="Demo_WinVers:Make">
+        <MSBuild Projects="Demo LightCore WinVersion\Demo_WinVers.dproj" Targets="Make"/>
     </Target>
-    <Target Name="WinOsTest">
-        <MSBuild Projects="Demo Detect WinVer\WinOsTest.dproj"/>
+    <Target Name="Demo_PlatformDetection">
+        <MSBuild Projects="FMX - Demo Conditionals and Platform detection\VCL\Demo_PlatformDetection.dproj"/>
     </Target>
-    <Target Name="WinOsTest:Clean">
-        <MSBuild Projects="Demo Detect WinVer\WinOsTest.dproj" Targets="Clean"/>
+    <Target Name="Demo_PlatformDetection:Clean">
+        <MSBuild Projects="FMX - Demo Conditionals and Platform detection\VCL\Demo_PlatformDetection.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="WinOsTest:Make">
-        <MSBuild Projects="Demo Detect WinVer\WinOsTest.dproj" Targets="Make"/>
+    <Target Name="Demo_PlatformDetection:Make">
+        <MSBuild Projects="FMX - Demo Conditionals and Platform detection\VCL\Demo_PlatformDetection.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightVclCommon;TemplateMicro;TemplateSimple;TemplateFull;TemplateMicro_Fmx;Uninstaller;Demo_VisualControls;Demo_Internet;Demo_AutoTranslator;Demo_SaveGUI;Demo_ccIO;Demo_FileStream;Demo_WinVers;Demo_Log;Demo_SystemReport;FMX_Demo_MessageBoxes;WinOsTest"/>
+        <CallTarget Targets="LightCore;LightVclCommon;TemplateMicro;TemplateSimple;TemplateFull;TemplateMicro_Fmx;Uninstaller;Demo_VisualControls;Demo_Internet;Demo_AutoTranslator;Demo_SaveGUI;Demo_ccIO;Demo_FileStream;Demo_Log;Demo_SystemReport;Demo_WinVers;Demo_PlatformDetection"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightVclCommon:Clean;TemplateMicro:Clean;TemplateSimple:Clean;TemplateFull:Clean;TemplateMicro_Fmx:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;Demo_Internet:Clean;Demo_AutoTranslator:Clean;Demo_SaveGUI:Clean;Demo_ccIO:Clean;Demo_FileStream:Clean;Demo_WinVers:Clean;Demo_Log:Clean;Demo_SystemReport:Clean;FMX_Demo_MessageBoxes:Clean;WinOsTest:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightVclCommon:Clean;TemplateMicro:Clean;TemplateSimple:Clean;TemplateFull:Clean;TemplateMicro_Fmx:Clean;Uninstaller:Clean;Demo_VisualControls:Clean;Demo_Internet:Clean;Demo_AutoTranslator:Clean;Demo_SaveGUI:Clean;Demo_ccIO:Clean;Demo_FileStream:Clean;Demo_Log:Clean;Demo_SystemReport:Clean;Demo_WinVers:Clean;Demo_PlatformDetection:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightVclCommon:Make;TemplateMicro:Make;TemplateSimple:Make;TemplateFull:Make;TemplateMicro_Fmx:Make;Uninstaller:Make;Demo_VisualControls:Make;Demo_Internet:Make;Demo_AutoTranslator:Make;Demo_SaveGUI:Make;Demo_ccIO:Make;Demo_FileStream:Make;Demo_WinVers:Make;Demo_Log:Make;Demo_SystemReport:Make;FMX_Demo_MessageBoxes:Make;WinOsTest:Make"/>
+        <CallTarget Targets="LightCore:Make;LightVclCommon:Make;TemplateMicro:Make;TemplateSimple:Make;TemplateFull:Make;TemplateMicro_Fmx:Make;Uninstaller:Make;Demo_VisualControls:Make;Demo_Internet:Make;Demo_AutoTranslator:Make;Demo_SaveGUI:Make;Demo_ccIO:Make;Demo_FileStream:Make;Demo_Log:Make;Demo_SystemReport:Make;Demo_WinVers:Make;Demo_PlatformDetection:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

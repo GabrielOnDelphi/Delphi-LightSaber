@@ -1,4 +1,4 @@
-program FMX_Demo_ccPlatformFile;
+program FMX_Demo_PlatformDetection;
 
 uses
   System.StartUpCopy,

@@ -2,9 +2,9 @@ unit PlatformTest;
 
 // This demonstrates Platform and Framework detection
 
-interface
+INTERFACE
 
-implementation
+IMPLEMENTATION
 
 
 // Framework Detection: VCL

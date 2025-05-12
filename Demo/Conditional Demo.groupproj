@@ -1,0 +1,48 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{FEAFD301-FC4B-42D7-8A5C-4FF39EE54BB2}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Conditionals and Platform detection\VCL\VCL_Demo_PlatformDetection.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Conditionals and Platform detection\FMX\FMX_Demo_PlatformDetection.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="VCL_Demo_PlatformDetection">
+        <MSBuild Projects="Conditionals and Platform detection\VCL\VCL_Demo_PlatformDetection.dproj"/>
+    </Target>
+    <Target Name="VCL_Demo_PlatformDetection:Clean">
+        <MSBuild Projects="Conditionals and Platform detection\VCL\VCL_Demo_PlatformDetection.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="VCL_Demo_PlatformDetection:Make">
+        <MSBuild Projects="Conditionals and Platform detection\VCL\VCL_Demo_PlatformDetection.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="FMX_Demo_PlatformDetection">
+        <MSBuild Projects="Conditionals and Platform detection\FMX\FMX_Demo_PlatformDetection.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_PlatformDetection:Clean">
+        <MSBuild Projects="Conditionals and Platform detection\FMX\FMX_Demo_PlatformDetection.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_PlatformDetection:Make">
+        <MSBuild Projects="Conditionals and Platform detection\FMX\FMX_Demo_PlatformDetection.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="VCL_Demo_PlatformDetection;FMX_Demo_PlatformDetection"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="VCL_Demo_PlatformDetection:Clean;FMX_Demo_PlatformDetection:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="VCL_Demo_PlatformDetection:Make;FMX_Demo_PlatformDetection:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
