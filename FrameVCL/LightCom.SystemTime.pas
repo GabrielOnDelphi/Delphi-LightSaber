@@ -30,7 +30,7 @@ USES
 IMPLEMENTATION
 
 USES
-   LightCom.Keyboard, ccIO, LightCom.IO, LightCom.Version, ccRegistry;
+   LightCom.Keyboard, ccIO, LightCom.IO, LightCom.WinVersion, LightCom.WinVersionAPI, LightCom.ExeVersion, ccRegistry;
 
 
 
@@ -67,7 +67,7 @@ begin
  strWinDir:= GetWinDir;
  Assert(DirectoryExistMsg(strWinDir));
 
- if LightCom.Version.IsNTKernel
+ if LightCom.WinVersion.IsNTKernel
  then
     begin
      strF:= strWinDir+ 'system32\config\software';                                                 { fisierul asta exista in Windowsul meu (XP) si arata data can a fost oprit Windows-ul ultima data. NU EXISTA IN WIN7!!! }

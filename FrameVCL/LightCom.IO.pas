@@ -120,7 +120,7 @@ USES
 IMPLEMENTATION
 
 USES
-  ccCore, ccRegistry, ccIO, LightCom.Dialogs, LightCom.Version;
+  ccCore, ccRegistry, ccIO, LightCom.Dialogs, LightCom.WinVersion, LightCom.WinVersionAPI, LightCom.ExeVersion;
 
 
 { Copied from IOUtils.TPath.HasPathValidColon where it is PRIVATE }
@@ -261,7 +261,7 @@ function SelectAFolder(VAR Folder: string; CONST Title: string = ''; CONST Optio
 VAR Dlg: TFileOpenDialog;
 begin
  { Win Vista and up }
- if LightCom.Version.IsWindowsVistaUp then
+ if LightCom.WinVersion.IsWindowsVistaUp then
   begin
    Dlg:= TFileOpenDialog.Create(NIL);   { Class for Vista and newer Windows operating systems style file open dialogs }
     TRY

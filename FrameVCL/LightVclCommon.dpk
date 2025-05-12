@@ -27,7 +27,6 @@ package LightVclCommon;
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'LightSaber - VCL library'}
 {$LIBSUFFIX AUTO}
-{$RUNONLY}
 {$IMPLICITBUILD ON}
 
 requires
@@ -62,7 +61,7 @@ contains
   LightCom.SystemTime in 'LightCom.SystemTime.pas',
   LightCom.Window in 'LightCom.Window.pas',
   LightCom.WindowMetrics in 'LightCom.WindowMetrics.pas',
-  LightCom.WinVersion in 'LightCom.WinVersion.pas',
+  LightCom.WinVersionApi in 'LightCom.WinVersionApi.pas',
   LightCom.WMIResolution in 'LightCom.WMIResolution.pas',
   LightCom.AppData in 'LightCom.AppData.pas',
   LightCom.AppDataForm in 'LightCom.AppDataForm.pas',
@@ -76,10 +75,11 @@ contains
   LightCom.LogViewer in 'LightCom.LogViewer.pas',
   LightCom.Translate in 'LightCom.Translate.pas',
   LightCom.VclUtils in 'LightCom.VclUtils.pas',
-  LightCom.Version in 'LightCom.Version.pas',
+  LightCom.WinVersion in 'LightCom.WinVersion.pas',
   LightVCL.LogForm in 'LightVCL.LogForm.pas',
   FormAsyncMessage in 'FormAsyncMessage.pas',
-  LightCom.CursorGuard in 'LightCom.CursorGuard.pas';
+  LightCom.CursorGuard in 'LightCom.CursorGuard.pas',
+  LightCom.ExeVersion in 'LightCom.ExeVersion.pas';
 
 end.
 

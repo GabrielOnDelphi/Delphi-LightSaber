@@ -19,7 +19,7 @@ function  CalculatePasswordStrength(const Password: string): Integer;
 IMPLEMENTATION
 
 USES
-   LightCom.Keyboard, ccIO, LightCom.IO, LightCom.Version, ccRegistry;
+   LightCom.Keyboard, ccIO, LightCom.IO, LightCom.WinVersion, LightCom.WinVersionAPI, LightCom.ExeVersion, ccRegistry;
 
 
 { Disable task switching

@@ -83,7 +83,7 @@ USES
 
 IMPLEMENTATION
 USES
-   LightCom.SystemTime, LightCom.System, LightCom.Clipboard, ccCore, LightCom.Dialogs, ccIO, ccTextFile, LightCom.IO, LightCom.Version, LightCom.ExecuteProc, LightCom.SystemPermissions, System.DateUtils;
+   LightCom.SystemTime, LightCom.System, LightCom.Clipboard, ccCore, LightCom.Dialogs, ccIO, ccTextFile, LightCom.IO, LightCom.WinVersion, LightCom.WinVersionAPI, LightCom.ExeVersion, LightCom.ExecuteProc, LightCom.SystemPermissions, System.DateUtils;
 
 
 
@@ -511,8 +511,8 @@ end;
 function GenerateWinSysRep: string;
 begin
  Result:= ' [SYSTEM/OS]'+ CRLF;
- Result:= Result+'  OS platform: '          + Tab+ Tab+ LightCom.Version.GetOSName+ CRLF;
- Result:= Result+'  OS architecture: '      + Tab     + LightCom.Version.Architecture+ CRLF;
+ Result:= Result+'  OS platform: '          + Tab+ Tab+ LightCom.WinVersion.GetOSName+ CRLF;
+ Result:= Result+'  OS architecture: '      + Tab     + LightCom.WinVersion.Architecture+ CRLF;
  Result:= Result+'  App has admin rights: ' + BoolToStr(AppHasAdminRights, TRUE)+ CRLF;
  Result:= Result+'  Invalid system time: '  + Tab+ BoolToStr(SystemTimeIsInvalid , TRUE)+ CRLF;
  Result:= Result+'  Windows up time: '      + Tab+ Date2FormatAuto(WindowsUpTime);

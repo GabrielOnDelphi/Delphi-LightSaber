@@ -1,21 +1,68 @@
-﻿UNIT  LightCom.WinVersion;
+UNIT LightCom.WinVersion;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.05
+   2025.03
    www.GabrielMoraru.com
-   See Copyright file
 --------------------------------------------------------------------------------------------------------------
+   Returns Windows OS version.
+   Based on Delphi's TOSVersion.
+   (Expands the TOSVersion)
+==============================================================================================================
 
-   Other functions (based on GetWinVersion)
-   Better use LightCom.Version.pas instead of this because it relies on TOSVersion.
+   Microsoft Window releases:
+      Windows 11              10.0
+      Windows Serv 2019       10.0
+      Windows 10              10.0 *
+      Windows Serv 2016       10.0
+      Windows 8.1             6.3
+      Windows Serv 2012 R2    6.3
+      -                       Manifest barrier!
+      Windows 8               6.2
+      Windows Serv 2012       6.2
+      Windows 7               6.1  *
+      Windows Serv 2008 R2    6.1
+      Windows Vista           6.0
+      Windows Serv 2008       6.0
+      Windows XP 64-Bit       5.2  *
+      Windows Serv 2003 R2    5.2
+      Windows Serv 2003       5.2
+      Windows XP              5.1  *
+      Windows 2000            5.0
+      Windows Millenium       4.9
+      Windows 98              4.1
+      Windows 95              4.0
+      Windows NT 4.0          4.0
+      Windows NT 3.51         3.51
+      Windows NT 3.5          3.5
+      Windows NT 3.1          3.1
+     ---------------------------------------------
 
-   This library provides 3 ways to get Windows version:
-      Using RtlGetVersion in NtDLL.dll
-      Using GetVersionEx
-      Using NetServerGetInfo
+    More info:
+      https://www.anoopcnair.com/windows-11-version-numbers-build-numbers-major/
+      https://techthoughts.info/windows-version-numbers/
 
-   A 4th alternative proposed by u_dzOsUtils.pas (dummzeuch) is GetKernel32Version which uses GetFileVersionInfo on kernel32.dll
+    ---------------------------------------------
+
+   Manifest barrier (from dummzeuch):
+      Starting with Windows 8 the GerVersionEx function is lying. Quote ( https://docs.microsoft.com/en-us/windows/desktop/api/sysinfoapi/nf-sysinfoapi-getversionexa )
+      "With the release of Windows 8.1, the behavior of the GetVersionEx API has changed in the value it will return for the operating system version.
+      The value returned by the GetVersionEx function now depends on how the application is manifested.
+      Applications not manifested for Windows 8.1 or Windows 10 will return the Windows 8 OS version value (6.2).
+      Once an application is manifested for a given operating system version, GetVersionEx will always return the version that the application is manifested for in future releases. To manifest your applications  for Windows 8.1 or Windows 10"
+
+      So, we can only get the correct version, if the Delphi IDE has a manifest telling Windows that it supports the version installed.
+      This of course will not work if the Delphi version is older than the Windows version (e.g. Delphi 2007 won't know about anything newer than Windows XP).
+      Instead we now use GetFileVersionInfo on kernel32.dll.
+      https://docs.microsoft.com/en-us/windows/desktop/sysinfo/getting-the-system-version
+
+   Also see:
+      LightCom.WinVersion
+      LightCom.ExeVersion
+      LightCom.WinVersionApi
+
+   Tester:
+      c:\Projects\LightSaber\Demo\Demo Detect WinVer\
+
 =============================================================================================================}
 
 INTERFACE
@@ -24,148 +71,116 @@ USES
    WinApi.Windows, System.SysUtils;
 
 
-procedure GetWinVersion (OUT MajVersion, MinVersion: Cardinal);  overload;
-function  GetWinVersion: string;                                 overload;
-function  GetWinVerNetServer: string;   { Alternative to GetWinVersion }
-function  GetWinVersionEx: string;
-
-function  GenerateReport: string; { For testing }
-
-
-{$WARN GARBAGE OFF}                               {Silence the: W1011 Text after final END warning }
-
-IMPLEMENTATION
-USES ccCore;
-
-
+{-------------------------------------------------------------------------------------------------------------
+   Check for specific OS version
+-------------------------------------------------------------------------------------------------------------}
+function  IsWindowsXP     : Boolean;
+function  IsWindowsXPUp   : Boolean;
+function  IsWindowsVista  : Boolean;
+function  IsWindowsVistaUp: Boolean;
+function  IsWindows7      : Boolean;
+function  IsWindows7Up    : Boolean;
+function  IsWindows8      : Boolean;
+function  IsWindows8Up    : Boolean;
+function  IsWindows10     : Boolean;
+function  IsWindows10Up   : Boolean;
+function  IsWindows11     : Boolean;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   Read RTL Version directly from NTDLL
-   On Win10 returns 10.0
+   OS utils
 -------------------------------------------------------------------------------------------------------------}
-procedure GetWinVersion(OUT MajVersion, MinVersion: Cardinal);
-TYPE
-   pfnRtlGetVersion = function(var RTL_OSVERSIONINFOEXW): LONG; stdcall;
-VAR
-   Ver: RTL_OSVERSIONINFOEXW;
-   RtlGetVersion: pfnRtlGetVersion;
+function GetOSName: string;
+function GetOSDetails: string;
+function Architecture: string;
+function Is64Bit    : Boolean;
+function IsNTKernel : Boolean;
+
+function GenerateReport: string; { For testing }
+
+
+IMPLEMENTATION    
+
+const
+   TAB  = #9;
+   CRLF = #13#10;
+   Win10FirstRel = 10240;  //July 29, 2015
+   Win11FirstRel = 22000;  //October 4, 2021
+
+
+{ Win XP }
+function IsWindowsXP: Boolean;
 begin
-  MajVersion:= 0;
-  MinVersion:= 0;
+ Result:= (TOSVersion.Major = 5)
+     AND ((TOSVersion.Build = 1) OR (TOSVersion.Build = 2));
+end;
 
-  @RtlGetVersion := GetProcAddress(GetModuleHandle('ntdll.dll'), 'RtlGetVersion');
-  if Assigned(RtlGetVersion) then
-  begin
-    ZeroMemory(@ver, SizeOf(ver));
-    ver.dwOSVersionInfoSize := SizeOf(ver);
-
-    if RtlGetVersion(ver) = 0 then
-     begin
-      MajVersion:= ver.dwMajorVersion;
-      MinVersion:= ver.dwMinorVersion;
-     end;
-  end;
+function IsWindowsXPUp: Boolean;
+begin
+ Result:= (TOSVersion.Major = 5) AND (TOSVersion.Build >= 1)
+       OR (TOSVersion.Major > 5);
 end;
 
 
-function GetWinVersion: string;
-var MajVersion, MinVersion: Cardinal;
+
+{ Vista }
+function IsWindowsVista: Boolean;
 begin
- GetWinVersion(MajVersion, MinVersion);
- result:= IntToStr(MajVersion)+ '.'+ IntToStr(MinVersion);
+ Result:= (TOSVersion.Major = 6) AND (TOSVersion.Build = 0);
+end;
+
+function IsWindowsVistaUp: Boolean;
+begin
+ Result:= (TOSVersion.Major = 6) AND (TOSVersion.Build >= 0)
+       OR (TOSVersion.Major > 6);
 end;
 
 
-{ Verified: IT WORKS ON WINDOWS 10 also! }
-//ToDo: don't use Buffer. Use the OsVinfo.dwMajorVersion/OsVinfo.dwMinorVersion directly
-function GetWinVersionEx: String;
-var
-  i: integer;
-  s, Temp: string;
-  OsVinfo: TOSVERSIONINFO;
-  Buffer: array[0..255] of Char;
+
+{ Win 7 }
+function IsWindows7: Boolean;
 begin
-  Result:='Unknown OS';
+ Result:= (TOSVersion.Major = 6) AND (TOSVersion.Build = 1);
+end;
 
-  ZeroMemory(@OsVinfo, SizeOf(OsVinfo));
-  OsVinfo.dwOSVersionInfoSize := SizeOf(TOSVERSIONINFO);
-  if GetVersionEx(OsVinfo)
-  then
-    begin
-      if OsVinfo.dwPlatformId = VER_PLATFORM_WIN32_WINDOWS then
-        if (OsVinfo.dwMajorVersion = 4) and (OsVinfo.dwMinorVersion > 0)
-        then StrFmt(Buffer, 'Windows 98 - Version %d.%.2d, Build %d, %s', [OsVinfo.dwMajorVersion, OsVinfo.dwMinorVersion, OsVinfo.dwBuildNumber and $FFFF, OSVinfo.szCSDVersion])
-        else StrFmt(Buffer, 'Windows 95 - Version %d.%d, Build %d, %s',   [OsVinfo.dwMajorVersion, OsVinfo.dwMinorVersion, OsVinfo.dwBuildNumber and $FFFF, OSVinfo.szCSDVersion]);
-      if OsVinfo.dwPlatformId = VER_PLATFORM_WIN32_NT
-      then StrFmt(Buffer, 'Microsoft Windows NT Version %d.%.2d, Build %d, %s', [OsVinfo.dwMajorVersion, OsVinfo.dwMinorVersion, OsVinfo.dwBuildNumber and $FFFF, OSVinfo.szCSDVersion]);
-    end
-  else
-    StrCopy(Buffer, 'Error retrieving Win version!');
+function IsWindows7Up: Boolean;
+begin
+ Result:= (TOSVersion.Major = 6) AND (TOSVersion.Build >= 1)
+       OR (TOSVersion.Major > 6);
+end;
 
- s:= Buffer;
- i:= Pos('Build', s);
- if i > 0 then
-   begin
-    Temp:= copy(s,i+6,maxint);   //on win11 I get:  'Microsoft Windows NT Version 10.00, Build 22621, '
-    i:= ExtractIntFromStr(Temp);
-    if i>  900 then Result:='95';
-    if i> 1900 then Result:='98';
-    if i> 2000 then Result:='2000';
-    if i> 2500 then Result:='XP';
-    if i> 3000 then Result:='2003';
-    if i> 5000 then Result:='Vista';
-    if i> 6000 then Result:='2008';
-    if i> 7000 then Result:='7';
-    if i> 8000 then Result:='8';
-    if i> 9000 then Result:='8.1';
-    if i> 9100 then Result:='10';
-    if i>=2200 then Result:='11';
-   end;
+
+
+{ Win 8 }
+function IsWindows8: Boolean;
+begin
+ Result:= (TOSVersion.Major = 6)
+     AND ((TOSVersion.Build = 2) OR (TOSVersion.Build = 3));
+end;
+
+function IsWindows8Up: Boolean;
+begin
+ Result:= (TOSVersion.Major = 6) AND (TOSVersion.Build >= 2)
+       OR (TOSVersion.Major > 6);
 end;
 
 
 
 
-{-------------------------------------------------------------------------------------------------------------
-   NetServerGetInfo
-   Tested: On Win10 returns 10.0
--------------------------------------------------------------------------------------------------------------}
-TYPE
-  NET_API_STATUS = DWORD;
-
-  _SERVER_INFO_101 = record
-    sv101_platform_id: DWORD;
-    sv101_name: LPWSTR;
-    sv101_version_major: DWORD;
-    sv101_version_minor: DWORD;
-    sv101_type: DWORD;
-    sv101_comment: LPWSTR;
-  end;
-
- SERVER_INFO_101   = _SERVER_INFO_101;
- PSERVER_INFO_101  = ^SERVER_INFO_101;
- LPSERVER_INFO_101 = PSERVER_INFO_101;
-
-CONST
-  MAJOR_VERSION_MASK = $0F;
-
-function NetServerGetInfo(servername: LPWSTR; level: DWORD; var bufptr): NET_API_STATUS; stdcall; external 'Netapi32.dll';
-function NetApiBufferFree(Buffer: LPVOID): NET_API_STATUS; stdcall; external 'Netapi32.dll';
-
-
-function GetWinVerNetServer: string;
-VAR
-   Buffer: PSERVER_INFO_101;
+{ Win 10//11 }
+function IsWindows10: Boolean;
 begin
-  Result:='Unknown OS';
-  Buffer:= NIL;
-  if NetServerGetInfo(nil, 101, Buffer) = NO_ERROR then
-  TRY
-    Result:= Format('%d.%d', [Buffer.sv101_version_major and MAJOR_VERSION_MASK, Buffer.sv101_version_minor]);
-  FINALLY
-    NetApiBufferFree(Buffer);
-  END;
+ Result:= (TOSVersion.Major = 10) AND (TOSVersion.Build < Win11FirstRel);
+end;
+
+function IsWindows10Up: Boolean;
+begin
+  Result:= (TOSVersion.Major = 10) AND (TOSVersion.Build >= Win10FirstRel);
+end;
+
+function IsWindows11: Boolean;
+begin
+  Result:= (TOSVersion.Major = 10) AND (TOSVersion.Build >= Win11FirstRel);
 end;
 
 
@@ -177,101 +192,100 @@ end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-  TestUnit
+   UTILS
 -------------------------------------------------------------------------------------------------------------}
+
+function Is64Bit: Boolean;
+begin
+  Result := TOSVersion.Architecture = arIntelX64
+end;
+
+
+function IsNTKernel: Boolean;                                                                                           { Win32Platform is defined as system var }
+begin
+  Result:= (Win32Platform = VER_PLATFORM_WIN32_NT);
+end;
+
+
+function Architecture: string;
+begin
+ case TOSVersion.Architecture of
+    arIntelX86: Result := 'Intel 32bit';
+    arIntelX64: Result := 'AMD 64bit';
+    arARM32   : Result := 'ARM 32bit';
+    arARM64   : Result := 'ARM 64bit';   //supported on Delphi 10+
+   else
+      Result:= 'Unknown architecture';
+ end;
+end;
+
+
+{ On Delphi 11/Win10 it returns: Windows 10 (Version 10.0, Build 19041, 64-bit Edition) }
+function GetOSName: String;
+begin
+  Result:= TOSVersion.ToString;
+end;
+
+
+function GetOSDetails: String;
+begin
+  Result:= '';
+  Result:= Result+ '  '+ TOSVersion.ToString+ CRLF;  // Also see TOSVersion.Name & TOSVersion.Build
+  // This is not reliable because these numbers are hardcoded by Delphi. They don't come from API! So, older versions of Delphi won't recognize newer versions of Windows!
+  Result:= Result+ '  '+ 'Major/Minor '  + IntToStr(TOSVersion.Major)+ '.'+ IntToStr(TOSVersion.Minor)+ '.  Service Pack: '+ IntToStr(TOSVersion.ServicePackMajor)+ '/'+ IntToStr(TOSVersion.ServicePackMinor)+ CRLF;
+  Result:= Result+ '  '+ 'Architecture: '+ Architecture;  {x32/x64}
+end;
+
+
+
 
 function GenerateReport: string;
-CONST
-   CRLF = #13#10;
-   TAB  = #9;
-VAR
-   vMajor, vMinor: Cardinal;
 begin
  Result:= '';
 
- { Delphi XE7  -> On XE7/Win10 returns 6.2 which is WRONG
-   Delphi 10.2 -> It reports the correct Win version on Win10 because the manifest generated by Delphi 10.2 says the app is Win10 ready }
- Result:= Result+ '[SysUtils.Win32MajorVersion]'+CRLF;
- Result:= Result+ Tab+ IntToStr(System.SysUtils.Win32MajorVersion)+ '.'+ IntToStr(System.SysUtils.Win32MinorVersion)+ CRLF;
+ Result:= Result+ '[GetWinVersion Is]'+ CRLF;
+ Result:= Result+ Tab+ 'IsWindowsXP: '      + Tab+ BoolToStr(IsWindowsXP, TRUE)+ CRLF;
+ Result:= Result+ Tab+ 'IsWinVista: '       + Tab+ BoolToStr(IsWindowsVista, TRUE)+ CRLF;
+ Result:= Result+ Tab+ 'IsWindows7: '       + Tab+ BoolToStr(IsWindows7, TRUE)+ CRLF;
+ Result:= Result+ Tab+ 'IsWindows8: '       + Tab+ BoolToStr(IsWindows8, TRUE)+ CRLF;
+ Result:= Result+ Tab+ 'IsWindows10: '      + Tab+ BoolToStr(IsWindows10, TRUE)+ CRLF;
+ Result:= Result+ Tab+ 'IsWindows11: '      + Tab+ BoolToStr(IsWindows11, TRUE)+ CRLF;
+
+ Result:= Result+ CRLF;
+ Result:= Result+ Tab+ 'IsWindowsXPUp: '    + Tab+ BoolToStr(IsWindowsXPUp, TRUE)+ CRLF;
+ Result:= Result+ Tab+ 'IsWinVistaUp: '     + Tab+ BoolToStr(IsWindowsVistaUp, TRUE)+ CRLF;
+ Result:= Result+ Tab+ 'IsWindows7Up: '     + Tab+ BoolToStr(IsWindows7Up, TRUE)+ CRLF;
+ Result:= Result+ Tab+ 'IsWindows8Up: '     + Tab+ BoolToStr(IsWindows8Up, TRUE)+ CRLF;
+ Result:= Result+ Tab+ 'IsWindows10Up: '    + Tab+ BoolToStr(IsWindows10Up, TRUE)+ CRLF;
  Result:= Result+ CRLF;
 
- Result:= Result+ '[GetWinVerNetServer]'+ CRLF;
- Result:= Result+ Tab+ GetWinVerNetServer+ CRLF;
- Result:= Result+ CRLF;
-
- GetWinVersion(vMajor, vMinor);
- Result:= Result+ '[GetWinVersion]'+ CRLF;     { Works on Win10 }
- Result:= Result+ Tab+ IntToStr(vMajor)+ '.'+IntToStr(vMinor)+ CRLF;
- Result:= Result+ CRLF;
+ Result:= Result+ '[GetOSDetails]'+ CRLF;
+ Result:= Result+ GetOSDetails+ CRLF;
 end;
 
+{-------------------------------------------------------------------------------------------------------------
+  Results for GenerateReport:
 
+    [GetWinVersion Is]
+        IsWindowsXP: 	False
+        IsWinVista: 	False
+        IsWindows7: 	False
+        IsWindows8: 	False
+        IsWindows10: 	True
+        IsWindows11: 	False
 
-end.(*
+        IsWindowsXPUp: 	True
+        IsWinVistaUp: 	True
+        IsWindows7Up: 	True
+        IsWindows8Up: 	True
+        IsWindows10Up: 	True
 
-
-{Does not work!!!!!!!!!!!!!!!}
-{ Source http://www.angusj.com/delphitips/getversion.php }
-type
-  TVS_FIXEDFILEINFO = record
-    dwSignature: DWORD ;
-    dwStrucVersion: DWORD ;
-    dwFileVersionMS: DWORD ;
-    dwFileVersionLS: DWORD ;
-    dwProductVersionMS: DWORD ;
-    dwProductVersionLS: DWORD ;
-    dwFileFlagsMask: DWORD ;
-    dwFileFlags: DWORD ;
-    dwFileOS: DWORD ;
-    dwFileType: DWORD ;
-    dwFileSubtype: DWORD ;
-    dwFileDateMS: DWORD ;
-    dwFileDateLS: DWORD ;
-  end;
-
-  TVS_VERSION_INFO = packed record
-    Length          :WORD;
-    wValueLength    :WORD;
-    wType           :WORD;
-    szKey:array[0..Length('VS_VERSION_INFO')] of WideChar;
-    Padding1        :array[0..0] of Word;
-    FixedInfo       :TVS_FIXEDFILEINFO;
-    // WORD  Padding2[];
-    // WORD  Children[];
-  end;
-
-function GetProductVersion: string;
-var
-  rs: TResourceStream;
-  w: Word;
-  vsvi: TVS_VERSION_INFO;
-  ffi: TVS_FIXEDFILEINFO;
-begin
-  result := '';
-  rs := TResourceStream.CreateFromID(hInstance, 1, RT_VERSION);
-  try
-    rs.read(vsvi, sizeof(vsvi));
-    if vsvi.wValueLength <> sizeof(vsvi.FixedInfo) then exit;
-    with vsvi.FixedInfo do
-      result := format('%d.%d.%d (build %d)',
-          [dwFileVersionMS shr 16, dwFileVersionMS and $FFFF,
-          dwFileVersionLS shr 16, dwFileVersionLS and $FFFF]);
-  finally
-    rs.Free;
-  end;
-end;
+    [GetOSDetails]
+      Windows 10 (Version 10.0, Build 19041, 64-Bit-Edition)
+      Major/Minor 10.0  Service Pack (Major/Minor): 0/0
+      Architecture: AMD 64bit
+-------------------------------------------------------------------------------------------------------------}
 
 
 
-
-
-
-{OLD
-function GetOSName: string;
-begin
- if IsWindows10
- then Result:= 'Windows 10'  // In Delphi XE7, TOSVersion.ToString will report Win10 as Win8. So I don't use it there.
- else Result:= TOSVersion.ToString;
-end; }
-
-
+end.

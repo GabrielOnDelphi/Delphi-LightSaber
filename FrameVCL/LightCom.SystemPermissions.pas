@@ -30,7 +30,7 @@ USES
 IMPLEMENTATION
 
 USES
-   System.Win.Registry, LightCom.Version;
+   System.Win.Registry, LightCom.WinVersion, LightCom.WinVersionAPI, LightCom.ExeVersion;
 
 
 

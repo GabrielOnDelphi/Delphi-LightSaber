@@ -172,7 +172,7 @@
         <DCCReference Include="..\..\..\FrameVCL\cbRegistry.pas"/>
         <DCCReference Include="..\..\..\FrameVCL\LightCom.Translate.pas"/>
         <DCCReference Include="..\..\..\FrameVCL\LightCom.VclUtils.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\LightCom.Version.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightCom.WinVersion.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

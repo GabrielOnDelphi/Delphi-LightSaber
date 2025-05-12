@@ -113,7 +113,7 @@ end;
 procedure TMainForm.btnDownloadStreamRTLClick(Sender: TObject);
 VAR
   Stream: TMemoryStream;
-  RetCode: Integer;
+  RetCode: string;
   Headers: System.Net.URLClient.TNetHeaders;
 begin
  mmoDown2.Text:= 'DownloadToStream [System.Net.HttpClient]...';
@@ -129,9 +129,9 @@ begin
  Stream:= ccDownload.DownloadToStream(TestURL, RetCode);
  TRY
    stream.SaveToFile(AppData.ExeFolder+ 'DownloadToStreamRTL.BIN');
-   if RetCode= 200
+   if RetCode= ''
    then mmoDown2.Lines.Add('OK!')
-   else mmoDown2.Lines.Add('Failed! Code: '+ IntToStr(RetCode));
+   else mmoDown2.Lines.Add(RetCode);
  FINALLY
    FreeAndNil(Stream);
  END;
@@ -142,16 +142,16 @@ end;
 
 
 procedure TMainForm.btnDownloadFileRTLClick(Sender: TObject);
-VAR RetCode: Integer;
+VAR RetCode: string;
 begin
  mmoDown2.Text:= 'DownloadToFile [System.Net.HttpClient]...';
  mmoDown2.Update;
 
  c:= GetTickCount;
- RetCode:= ccDownload.DownloadToFile(TestURL, AppData.ExeFolder+ 'DownloadToFileRTL.BIN');
- if RetCode= HTTP_STATUS_OK
+ ccDownload.DownloadToFile(TestURL, AppData.ExeFolder+ 'DownloadToFileRTL.BIN', RetCode);
+ if RetCode= ''
  then mmoDown2.Lines.Add('OK!')
- else mmoDown2.Lines.Add('Failed!');
+ else mmoDown2.Lines.Add(RetCode);
 
  mmoDown2.Lines.Add('Done in ' + Real2Str((GetTickCount-c) / 1000)+ 'sec');
  BipConfirmation;

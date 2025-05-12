@@ -30,12 +30,6 @@
         <Projects Include="Demo\Template App\VCL Full\TemplateFull.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Demo\Demo Internet\Demo_Internet.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="Demo\Demo LightLog\Demo_Log.dproj">
-            <Dependencies/>
-        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -125,32 +119,14 @@
     <Target Name="TemplateFull:Make">
         <MSBuild Projects="Demo\Template App\VCL Full\TemplateFull.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Demo_Internet">
-        <MSBuild Projects="Demo\Demo Internet\Demo_Internet.dproj"/>
-    </Target>
-    <Target Name="Demo_Internet:Clean">
-        <MSBuild Projects="Demo\Demo Internet\Demo_Internet.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="Demo_Internet:Make">
-        <MSBuild Projects="Demo\Demo Internet\Demo_Internet.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="Demo_Log">
-        <MSBuild Projects="Demo\Demo LightLog\Demo_Log.dproj"/>
-    </Target>
-    <Target Name="Demo_Log:Clean">
-        <MSBuild Projects="Demo\Demo LightLog\Demo_Log.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="Demo_Log:Make">
-        <MSBuild Projects="Demo\Demo LightLog\Demo_Log.dproj" Targets="Make"/>
-    </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightVclCommon;LightVclInternet;LightVclGraphics;LightVisControls;LightProteus;BioControl;BionixVCL;TemplateFull;Demo_Internet;Demo_Log"/>
+        <CallTarget Targets="LightCore;LightVclCommon;LightVclInternet;LightVclGraphics;LightVisControls;LightProteus;BioControl;BionixVCL;TemplateFull"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightVclCommon:Clean;LightVclInternet:Clean;LightVclGraphics:Clean;LightVisControls:Clean;LightProteus:Clean;BioControl:Clean;BionixVCL:Clean;TemplateFull:Clean;Demo_Internet:Clean;Demo_Log:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightVclCommon:Clean;LightVclInternet:Clean;LightVclGraphics:Clean;LightVisControls:Clean;LightProteus:Clean;BioControl:Clean;BionixVCL:Clean;TemplateFull:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightVclCommon:Make;LightVclInternet:Make;LightVclGraphics:Make;LightVisControls:Make;LightProteus:Make;BioControl:Make;BionixVCL:Make;TemplateFull:Make;Demo_Internet:Make;Demo_Log:Make"/>
+        <CallTarget Targets="LightCore:Make;LightVclCommon:Make;LightVclInternet:Make;LightVclGraphics:Make;LightVisControls:Make;LightProteus:Make;BioControl:Make;BionixVCL:Make;TemplateFull:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
@@ -162,12 +138,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="Demo\Template App\VCL Full\TemplateFull.dproj">
             <ProjectGuid>{19D67F4E-49C5-4F47-B479-ABDFD305599E}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Demo LightLog\Demo_Log.dproj">
-            <ProjectGuid>{7FB29DC7-5854-4A00-AB0C-20FE70A6D532}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -189,12 +159,6 @@
             <Configurations>Debug</Configurations>
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Demo Internet\Demo_Internet.dproj">
-            <ProjectGuid>{9FE5949E-7007-46D5-83C8-39AAC87B3074}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\Biology\!BioControl Lib\BioControl.dproj">
             <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
@@ -234,12 +198,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Demo LightLog\Demo_Log.dproj">
-            <ProjectGuid>{7FB29DC7-5854-4A00-AB0C-20FE70A6D532}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="FrameVCL\LightVclCommon.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -257,12 +215,6 @@
             <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Demo Internet\Demo_Internet.dproj">
-            <ProjectGuid>{9FE5949E-7007-46D5-83C8-39AAC87B3074}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\Biology\!BioControl Lib\BioControl.dproj">
             <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
@@ -302,12 +254,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Demo LightLog\Demo_Log.dproj">
-            <ProjectGuid>{7FB29DC7-5854-4A00-AB0C-20FE70A6D532}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="FrameVCL\LightVclCommon.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -325,12 +271,6 @@
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Demo Internet\Demo_Internet.dproj">
-            <ProjectGuid>{9FE5949E-7007-46D5-83C8-39AAC87B3074}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\Biology\!BioControl Lib\BioControl.dproj">
             <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>
@@ -370,12 +310,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Demo LightLog\Demo_Log.dproj">
-            <ProjectGuid>{7FB29DC7-5854-4A00-AB0C-20FE70A6D532}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="FrameVCL\LightVclCommon.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -393,12 +327,6 @@
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\Demo Internet\Demo_Internet.dproj">
-            <ProjectGuid>{9FE5949E-7007-46D5-83C8-39AAC87B3074}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="..\Biology\!BioControl Lib\BioControl.dproj">
             <ProjectGuid>{95C8E337-AC3B-49BE-9330-CC76A137B2E2}</ProjectGuid>

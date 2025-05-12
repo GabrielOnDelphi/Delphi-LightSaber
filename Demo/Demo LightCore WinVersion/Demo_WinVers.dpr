@@ -6,7 +6,6 @@ uses
   {$ENDIF }
   LightCom.AppData,
   FormMain in 'FormMain.pas' {frmTester},
-  LightVcl.LogForm in '..\..\FrameVCL\LightVcl.LogForm.pas',
   ccAppData in '..\..\ccAppData.pas';
 
 {$R *.res}

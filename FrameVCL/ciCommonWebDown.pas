@@ -36,7 +36,7 @@ USES ccDownload, ciHTML;
   Returns the file name of the file downloaded to disk }
 function GetUnsplashImage(CONST URL, LocalFile: string): Boolean;
 VAR
-   HighResImg, Tag, HTML: string;
+   HighResImg, Tag, HTML, ErrorMsg: string;
 begin
  HTML:= DownloadAsString(URL);
  if HTML = '' then EXIT(FALSE);
@@ -46,7 +46,8 @@ begin
  HighResImg:= CopyTo(HighResImg, 1, '?', FALSE);
 
  //FullPath:= LocalFolder+ extractfileext(HighResImg);
- Result:= DownloadToFile(HighResImg, LocalFile) = HTTP_STATUS_OK;
+ DownloadToFile(HighResImg, LocalFile, ErrorMsg);
+ Result:= ErrorMsg= '';
 end;
 
 

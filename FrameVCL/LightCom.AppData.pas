@@ -198,7 +198,7 @@ VAR                      // ToDo 5: make sure AppData is unique (make it Singlet
 IMPLEMENTATION
 
 USES
-  LightCom.Version, LightCom.Translate, ccIO, LightCom.CenterControl, LightCom.AppDataForm;
+  LightCom.WinVersion, LightCom.WinVersionAPI, LightCom.ExeVersion, LightCom.Translate, ccIO, LightCom.CenterControl, LightCom.AppDataForm;
 
 
 { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }
@@ -616,7 +616,7 @@ begin
     then Form.Font:= Self.Font;
 
   // Fix issues with snap to edge of the screen
-  if LightCom.Version.IsWindows8Up
+  if LightCom.WinVersion.IsWindows8Up
   then Form.SnapBuffer:= 4;
 
   // Form transparency
@@ -657,7 +657,7 @@ class function TAppData.GetVersionInfo(ShowBuildNo: Boolean= False): string;
 VAR FixedInfo: TVSFixedFileInfo;
 begin
   FixedInfo.dwSignature:= 0;
-  if LightCom.Version.GetVersionInfoFile(Application.ExeName, FixedInfo)
+  if LightCom.ExeVersion.GetVersionInfoFile(Application.ExeName, FixedInfo)
   then
      begin
       Result:= IntToStr(HiWord(FixedInfo.dwFileVersionMS))+'.'+ IntToStr(LoWord(FixedInfo.dwFileVersionMS))+'.'+ IntToStr(HiWord(FixedInfo.dwFileVersionLS));

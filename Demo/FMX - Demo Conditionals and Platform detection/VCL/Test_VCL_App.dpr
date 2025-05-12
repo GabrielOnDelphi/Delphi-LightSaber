@@ -45,7 +45,7 @@ uses
   cbRegistry in '..\..\..\FrameVCL\cbRegistry.pas',
   LightCom.Translate in '..\..\..\FrameVCL\LightCom.Translate.pas',
   LightCom.VclUtils in '..\..\..\FrameVCL\LightCom.VclUtils.pas',
-  LightCom.Version in '..\..\..\FrameVCL\LightCom.Version.pas';
+  LightCom.Version in '..\..\..\FrameVCL\LightCom.WinVersion.pas';
 
 {$R *.res}
 

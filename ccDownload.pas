@@ -74,7 +74,7 @@ function  DownloadAsString(CONST URL: string): string; overload;
 IMPLEMENTATION
 
 USES
-  ccIO, ccTextFile;
+  ccIO;
 
 
 procedure RHttpOptions.Reset;

@@ -50,7 +50,7 @@ USES
 
 
 procedure TWinInetObj.Execute;
-VAR HttpRetCode: Integer;
+VAR HttpRetCode: string;
 begin
  FData:= ccDownload.DownloadToStream(URL, HttpRetCode);
  if Assigned(FOnDownloadDone)

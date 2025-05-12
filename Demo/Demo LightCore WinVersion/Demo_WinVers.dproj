@@ -106,7 +106,6 @@
         <DCCReference Include="FormMain.pas">
             <Form>frmTester</Form>
         </DCCReference>
-        <DCCReference Include="..\..\FrameVCL\LightVcl.LogForm.pas"/>
         <DCCReference Include="..\..\ccAppData.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
