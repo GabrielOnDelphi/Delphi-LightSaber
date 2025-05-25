@@ -198,7 +198,7 @@ VAR                      // ToDo 5: make sure AppData is unique (make it Singlet
 IMPLEMENTATION
 
 USES
-  LightCom.WinVersion, LightCom.WinVersionAPI, LightCom.ExeVersion, LightCom.Translate, ccIO, LightCom.CenterControl, LightCom.AppDataForm;
+  LightCom.WinVersion, LightCom.ExeVersion, LightCom.Translate, ccIO, LightCom.CenterControl, LightCom.AppDataForm;
 
 
 { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }

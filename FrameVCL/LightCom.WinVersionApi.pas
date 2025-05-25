@@ -13,8 +13,8 @@
       Using GetVersionEx
       Using NetServerGetInfo
 
-   A 4th alternative proposed by u_dzOsUtils.pas (dummzeuch)
-     is GetKernel32Version which uses GetFileVersionInfo on kernel32.dll
+   A 4th alternative is GetKernel32Version which uses GetFileVersionInfo on kernel32.dll
+   https://github.com/aehimself/AEFramework/blob/master/3rdParty/OSVersion.pas
 
    Also see:
       LightCom.WinVersion

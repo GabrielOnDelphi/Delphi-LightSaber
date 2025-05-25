@@ -1,10 +1,8 @@
 UNIT cvListBox;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.05
+   2025.05
    www.GabrielMoraru.com
-   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
   Features:
@@ -54,6 +52,7 @@ TYPE
     procedure SetHeightAuto(MaxHeight: Integer; aForm: TControl);
 
     { Get selected }
+    function  SelectedItemI: Integer;
     function  SelectedItemForce: string;                                 { Same as SelectedItem but if no item is selected then force the first item selected }
     function  SelectedItem: string;                                      { returns the item the cursor is on }
     function  SelectedItems: string;                                     { return all selected text }
@@ -61,7 +60,6 @@ TYPE
     function  SelCountEx: Integer;                                       { does the same thing as 'SelCount' but also works when MultiSelect=False. SelCount does not work if MultiSelect=False }
 
     { Set selected }
-
     procedure DeSelectAll;
     procedure SelectNext;
     procedure SelectFirstItem;
@@ -431,20 +429,21 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-
+   SET
 --------------------------------------------------------------------------------------------------}
 
+{ Does not crash if we try to select an item that does not exist }
 procedure TCubicListBox.SelectItemSafe(Index: Integer);
 begin
- if Count < 1 then EXIT;
- if Index < 0
- then ItemIndex:= 0
- else
-    if Index > Count-1
-    then ItemIndex:= Count-1
-    else ItemIndex:= Index;
+  if Count < 1 then EXIT;
+  if Index < 0
+  then ItemIndex:= 0
+  else
+     if Index > Count-1
+     then ItemIndex:= Count-1
+     else ItemIndex:= Index;
 
- Selected[ItemIndex]:= TRUE;
+  Selected[ItemIndex]:= TRUE;
 end;
 
 
@@ -462,48 +461,69 @@ end;
 
 procedure TCubicListBox.SelectFirstItem;
 begin
- if Count= 0 then EXIT;
- ItemIndex:= 0;
- Selected[0]:= TRUE
+  if Count= 0 then EXIT;
+  ItemIndex:= 0;
+  Selected[0]:= TRUE
 end;
 
 
 procedure TCubicListBox.SelectLastItem;
 begin
- if Count= 0 then EXIT;
- ItemIndex:= Count-1;
- Selected[Count-1]:= TRUE;
+  if Count= 0 then EXIT;
+  ItemIndex:= Count-1;
+  Selected[Count-1]:= TRUE;
 end;
 
 
 procedure TCubicListBox.SelectNext;
 begin
- if ItemIndex+ 1 < Count
- then
-  begin
-   //Selected[ItemIndex]:= FALSE;  { Deselect cur item }
-   ItemIndex:= ItemIndex+ 1;
-   Selected[ItemIndex]:= TRUE  { Select next item }
-  end
- else BipErrorShort;
+  if ItemIndex+ 1 < Count
+  then
+   begin
+    //Selected[ItemIndex]:= FALSE;  { Deselect cur item }
+    ItemIndex:= ItemIndex+ 1;
+    Selected[ItemIndex]:= TRUE  { Select next item }
+   end
+  else BipErrorShort;
 end;
 
+
+procedure TCubicListBox.DeselectAll;
+VAR I: Integer;
+begin
+  for I:= 0 to Items.Count- 1
+    DO Selected[I]:= FALSE;
+end;
+
+
+
+{--------------------------------------------------------------------------------------------------
+   GET
+--------------------------------------------------------------------------------------------------}
 
 function TCubicListBox.SelectedItem: string;
-VAR i: Integer;
+VAR Selected: Integer;
 begin
- Result:= '';
- if Items.Count> 0 then
- for I:= 0 TO Items.Count-1 DO
-   if Selected[i] then
-    begin
-     Result:= Items[i];
-     break;
-    end;
+ Selected:= SelectedItemI;
+ if Selected > -1
+ then Result:= Items[SelectedItemI]
+ else Result:= '';
 end;
 
 
-function TCubicListBox.SelectedItemForce: string;        { Same as SelectedItem but if no item is selected then force the first item selected }
+{ Returns the first selected item. Subsequent selected items are ignored. }
+function TCubicListBox.SelectedItemI: Integer;
+VAR i: Integer;
+begin
+ Result:= -1;
+ //if Items.Count> 0 then
+ for i:= 0 TO Items.Count-1 DO
+   if Selected[i] then EXIT(i);
+end;
+
+
+{ Same as SelectedItem but if no item is selected then force the first item selected }
+function TCubicListBox.SelectedItemForce: string;
 begin
  if Count< 1 then EXIT('');
 
@@ -520,7 +540,7 @@ begin
 end;
 
 
-function TCubicListBox.SelectedItems: string;   { return all selected text }
+function TCubicListBox.SelectedItems: string;   { Return all selected text }
 VAR i: Integer;
 begin
  Result:= '';
@@ -528,14 +548,6 @@ begin
  for I:= 0 TO Items.Count-1 DO
    if Selected[i]
    then Result:= Result+ Items[i]+ CRLFw;
-end;
-
-
-procedure TCubicListBox.DeSelectAll;
-VAR I: Integer;
-begin
-  for I := 0 to Items.Count- 1
-    DO Selected[I] := FALSE;
 end;
 
 
@@ -549,7 +561,9 @@ end;
 
 
 
-
+{--------------------------------------------------------------------------------------------------
+   Swap/Move
+--------------------------------------------------------------------------------------------------}
 procedure TCubicListBox.MoveUp;   { Move current item up }
 begin
  if ItemIndex < 0 then EXIT;           { No item selected }
@@ -557,6 +571,7 @@ begin
  SwapItems(ItemIndex, ItemIndex -1);
  ItemIndex:= ItemIndex- 1;
 end;
+
 
 procedure TCubicListBox.MoveDown;
 begin

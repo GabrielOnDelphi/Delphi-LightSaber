@@ -33,14 +33,16 @@
 
 =============================================================================================================}
 
+//ToDo: open "our" ini file and keep it open until shutdown. better I implement true support for the "Light" visual components
+
 INTERFACE
 
 USES
   {$IFDEF MsWindows}
-    Winapi.Windows, {System.Win.Registry,} ccRegistry, // for SelfStartup
+    Winapi.Windows, ccRegistry, // for SelfStartup
   {$ENDIF}
-  System.IOUtils, System.AnsiStrings, System.SysUtils,
-  ccCore, ccINIFile, ccLogRam;
+   System.IOUtils, System.AnsiStrings, System.SysUtils,
+   ccCore, ccINIFile, ccLogRam;
 
 TYPE
   THintType = (htOff,                      // Turn off the embedded help system

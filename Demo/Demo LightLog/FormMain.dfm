@@ -2,8 +2,8 @@ object MainForm: TMainForm
   Left = 0
   Top = 0
   Caption = 'LightSaber Log Demo'
-  ClientHeight = 437
-  ClientWidth = 793
+  ClientHeight = 451
+  ClientWidth = 836
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -19,7 +19,7 @@ object MainForm: TMainForm
     Left = 3
     Top = 3
     Width = 381
-    Height = 431
+    Height = 445
     Align = alLeft
     BevelOuter = bvNone
     Caption = 'Panel1'
@@ -28,7 +28,7 @@ object MainForm: TMainForm
       Left = 0
       Top = 0
       Width = 381
-      Height = 398
+      Height = 412
       Align = alClient
       Font.Charset = ANSI_CHARSET
       Font.Color = clWindowText
@@ -45,7 +45,7 @@ object MainForm: TMainForm
     end
     object Panel3: TPanel
       Left = 0
-      Top = 398
+      Top = 412
       Width = 381
       Height = 33
       Align = alBottom
@@ -89,22 +89,22 @@ object MainForm: TMainForm
   end
   object Panel2: TPanel
     AlignWithMargins = True
-    Left = 395
+    Left = 390
     Top = 3
-    Width = 395
-    Height = 431
+    Width = 443
+    Height = 445
     Align = alRight
     BevelOuter = bvNone
     ShowCaption = False
     TabOrder = 1
     object Panel4: TPanel
       Left = 0
-      Top = 398
-      Width = 395
+      Top = 412
+      Width = 443
       Height = 33
       Align = alBottom
       TabOrder = 0
-      object Button2: TButton
+      object btnTest2: TButton
         AlignWithMargins = True
         Left = 2
         Top = 4
@@ -115,21 +115,21 @@ object MainForm: TMainForm
         Align = alLeft
         Caption = 'Test'
         TabOrder = 0
-        OnClick = Button2Click
+        OnClick = btnTest2Click
       end
       object LogVis: TLogVerbFilter
         AlignWithMargins = True
-        Left = 160
+        Left = 245
         Top = 4
-        Width = 231
+        Width = 194
         Height = 25
         Align = alClient
         BevelOuter = bvNone
         ShowCaption = False
         TabOrder = 1
-        TrackBar.Left = 111
+        TrackBar.Left = 51
         TrackBar.Top = 0
-        TrackBar.Width = 120
+        TrackBar.Width = 143
         TrackBar.Height = 25
         TrackBar.Hint = 'Hide all messages below this level'
         TrackBar.Align = alRight
@@ -139,11 +139,11 @@ object MainForm: TMainForm
         TrackBar.Position = 3
         TrackBar.TabOrder = 0
         Verbosity = lvInfos
-        Log = VisLog
+        Log = GridLog
       end
-      object Button3: TButton
+      object btnSave: TButton
         AlignWithMargins = True
-        Left = 62
+        Left = 147
         Top = 4
         Width = 46
         Height = 25
@@ -152,11 +152,11 @@ object MainForm: TMainForm
         Align = alLeft
         Caption = 'Save'
         TabOrder = 2
-        OnClick = Button3Click
+        OnClick = btnSaveClick
       end
-      object Button4: TButton
+      object btnLoad: TButton
         AlignWithMargins = True
-        Left = 110
+        Left = 195
         Top = 4
         Width = 46
         Height = 25
@@ -165,13 +165,26 @@ object MainForm: TMainForm
         Align = alLeft
         Caption = 'Load'
         TabOrder = 3
-        OnClick = Button4Click
+        OnClick = btnLoadClick
+      end
+      object btnLoopTest: TButton
+        AlignWithMargins = True
+        Left = 62
+        Top = 4
+        Width = 83
+        Height = 25
+        Margins.Left = 1
+        Margins.Right = 1
+        Align = alLeft
+        Caption = 'Test 1000000'
+        TabOrder = 4
+        OnClick = btnLoopTestClick
       end
     end
     object Panel5: TPanel
       Left = 0
-      Top = 365
-      Width = 395
+      Top = 379
+      Width = 443
       Height = 33
       Align = alBottom
       BevelOuter = bvNone
@@ -198,24 +211,29 @@ object MainForm: TMainForm
         TabOrder = 1
         OnClick = chkShowTimeClick
       end
+      object btnClear: TButton
+        AlignWithMargins = True
+        Left = 396
+        Top = 3
+        Width = 46
+        Height = 27
+        Margins.Left = 1
+        Margins.Right = 1
+        Align = alRight
+        Caption = 'Clear'
+        TabOrder = 2
+        OnClick = btnClearClick
+      end
     end
-    object VisLog: TLogGrid
+    object GridLog: TLogGrid
       Left = 0
       Top = 0
-      Width = 395
-      Height = 365
+      Width = 443
+      Height = 379
       Align = alClient
       BevelOuter = bvNone
-      ColCount = 1
-      DefaultRowHeight = 22
-      FixedCols = 0
-      RowCount = 1
-      FixedRows = 0
-      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goRowSelect, goFixedRowDefAlign]
       TabOrder = 2
       Verbosity = lvVerbose
-      ColWidths = (
-        391)
     end
   end
 end

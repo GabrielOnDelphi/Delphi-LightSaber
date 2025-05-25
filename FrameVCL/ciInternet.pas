@@ -178,8 +178,7 @@ CONST
 IMPLEMENTATION
 
 USES
-   ccAppData, LightCom.AppData
-, ciHtml, ccIO, ccDownload;
+   ccAppData, LightCom.AppData, ciHtml, ccIO, ccDownload;
 
 
  function  PathIsUrlA; external 'shlwapi' name 'PathIsURLA';

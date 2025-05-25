@@ -198,6 +198,7 @@ constructor TBaseStrGrid.Create(AOwner: TComponent);
 begin
  inherited Create(AOwner);                                  // Note: Don't set 'Parent:= Owner' in constructor. Details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
  SortedCol        := -1;
+
  {VCL}
  FileName         := '';
  Width            := 380;
@@ -216,10 +217,10 @@ begin
  FAutoRowHeight   := TRUE;
 
  {COLORS}
- FColorCursor        := clNavy;
- FColorCursorText    := clYellow;
- FColorTextDis       := clGrayText;
- FColorEnabled       := clBlack;
+ FColorCursor     := clNavy;
+ FColorCursorText := clYellow;
+ FColorTextDis    := clGrayText;
+ FColorEnabled    := clBlack;
  
  FTextSpacing     := 7;
  FAutoRowHeight   := FALSE; 

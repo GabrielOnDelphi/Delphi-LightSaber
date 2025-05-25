@@ -96,7 +96,7 @@ TYPE
      procedure RemoveEmptyLines;
      procedure RemoveEmptyLinesEx;                                        { Applies trim before removing empty lines. This way more lines will become empty }
      function  RemoveDuplicates: Integer;
-     function  RemoveLines (const BadWord : string): Integer;             { Remove lines that contain the specified text }
+     function  RemoveLines (const BadWord : string; PartialMatch: Boolean): Integer;             { Remove lines that contain the specified text }
      function  KeepLines   (const KeepText: string): Integer;             { Keep lines that contain the specified text }
      procedure KeepFirstLines(const HowManyLines: Integer);
      procedure Trim;                                                      { Trim empty spaces and control caracters at the begining/end of each line }
@@ -185,12 +185,12 @@ begin
 end;
 
 
-
-function TCubicMemo.LoadFromFile(FileName: string): Boolean;         { Load text from specified file IF the file exists. Otherwise, don't show an error }
+{ Load text from specified file IF the file exists. Otherwise, don't show an error }
+function TCubicMemo.LoadFromFile(FileName: string): Boolean;
 begin
-  Result:= FileExists(FileName) AND NOT FileIsLockedR(FileName); //FileIsLockedR was added in BioniX v10.82 or below. does the bug still appears?
+  Result:= FileExists(FileName) AND NOT FileIsLockedR(FileName);
   if Result
-  then Text := StringFromFile(FileName)
+  then Lines.LoadFromFile(FileName);  // Text:= StringFromFile(FileName)
 end;
 
 
@@ -663,7 +663,8 @@ begin
 end;
 
 
-procedure TCubicMemo.RemoveEmptyLinesEx;  { Applies trim before removing empty lines. This way more lines will become empty }
+{ Applies trim before removing empty lines. This way more lines will become empty }
+procedure TCubicMemo.RemoveEmptyLinesEx;
 VAR i: Integer;
 begin
  Trim;                                               { Trim empty spaces and control caracters at the begining/end of each line }
@@ -719,22 +720,30 @@ begin
 end;
 
 
-
-function TCubicMemo.RemoveLines(const BadWord: string): Integer;  { Remove all lines that contains the specified text }
-VAR i: Integer;
+{ Remove all lines that contains the specified text.
+  The function is case INSENSITIVE }
+function TCubicMemo.RemoveLines(const BadWord: string; PartialMatch: Boolean): Integer;
+VAR Before, i: Integer;
 begin
- Result:= 0;
- for i:= Lines.Count-1 downto 0 DO
-  if PosInsensitive(BadWord, Lines[i]) > 0 then   { if text found, then delete line }
-   begin
-    Lines.Delete(i);
-    Inc(Result);
-   end;
+ Before:= Lines.Count;
+
+ if PartialMatch
+ then
+   for i:= Lines.Count-1 downto 0 DO
+     if PosInsensitive(BadWord, Lines[i]) > 0
+     then Lines.Delete(i)
+     else
+ else
+   for i:= Lines.Count-1 downto 0 DO
+     if SameText(BadWord, Lines[i])
+     then Lines.Delete(i);
+
+ Result:= Before - Lines.Count;
 end;
 
 
-
-function TCubicMemo.KeepLines(CONST KeepText: string): Integer;    { Remove all lines that does not contain this text }
+{ Remove all lines that does not contain this text }
+function TCubicMemo.KeepLines(CONST KeepText: string): Integer;
 VAR i: Integer;
 begin
  Result:= 0;
@@ -756,7 +765,8 @@ begin
 end;
 
 
-procedure TCubicMemo.Trim;   { Trim empty spaces and control caracters at the begining/end of each line }
+{ Trim empty spaces and control caracters at the begining/end of each line }
+procedure TCubicMemo.Trim;
 VAR i: Integer;
     TSL: TStringList;
 begin

@@ -12,9 +12,6 @@
         <Projects Include="FrameFMX\LightFmxCommon.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Demo\FMX - Demo Conditionals and Platform detection\FMX\FMX_Demo_ccPlatformFile.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="Demo\FMX - Demo LightPanel\FMX_Demo_LightPanel.dproj">
             <Dependencies/>
         </Projects>
@@ -65,15 +62,6 @@
     <Target Name="LightFmxCommon:Make">
         <MSBuild Projects="FrameFMX\LightFmxCommon.dproj" Targets="Make"/>
     </Target>
-    <Target Name="FMX_Demo_ccPlatformFile">
-        <MSBuild Projects="Demo\FMX - Demo Conditionals and Platform detection\FMX\FMX_Demo_ccPlatformFile.dproj"/>
-    </Target>
-    <Target Name="FMX_Demo_ccPlatformFile:Clean">
-        <MSBuild Projects="Demo\FMX - Demo Conditionals and Platform detection\FMX\FMX_Demo_ccPlatformFile.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="FMX_Demo_ccPlatformFile:Make">
-        <MSBuild Projects="Demo\FMX - Demo Conditionals and Platform detection\FMX\FMX_Demo_ccPlatformFile.dproj" Targets="Make"/>
-    </Target>
     <Target Name="FMX_Demo_LightPanel">
         <MSBuild Projects="Demo\FMX - Demo LightPanel\FMX_Demo_LightPanel.dproj"/>
     </Target>
@@ -120,13 +108,13 @@
         <MSBuild Projects="..\Light VCL to FMX converter\Light_VCL2FMX.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightFmxBase;LightFmxCommon;FMX_Demo_ccPlatformFile;FMX_Demo_LightPanel;FMX_Demo_MessageBoxes;FMX_Demo_TDropDownSearchBox;TemplateMicro_Fmx;Light_VCL2FMX"/>
+        <CallTarget Targets="LightCore;LightFmxBase;LightFmxCommon;FMX_Demo_LightPanel;FMX_Demo_MessageBoxes;FMX_Demo_TDropDownSearchBox;TemplateMicro_Fmx;Light_VCL2FMX"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightFmxBase:Clean;LightFmxCommon:Clean;FMX_Demo_ccPlatformFile:Clean;FMX_Demo_LightPanel:Clean;FMX_Demo_MessageBoxes:Clean;FMX_Demo_TDropDownSearchBox:Clean;TemplateMicro_Fmx:Clean;Light_VCL2FMX:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightFmxBase:Clean;LightFmxCommon:Clean;FMX_Demo_LightPanel:Clean;FMX_Demo_MessageBoxes:Clean;FMX_Demo_TDropDownSearchBox:Clean;TemplateMicro_Fmx:Clean;Light_VCL2FMX:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightFmxBase:Make;LightFmxCommon:Make;FMX_Demo_ccPlatformFile:Make;FMX_Demo_LightPanel:Make;FMX_Demo_MessageBoxes:Make;FMX_Demo_TDropDownSearchBox:Make;TemplateMicro_Fmx:Make;Light_VCL2FMX:Make"/>
+        <CallTarget Targets="LightCore:Make;LightFmxBase:Make;LightFmxCommon:Make;FMX_Demo_LightPanel:Make;FMX_Demo_MessageBoxes:Make;FMX_Demo_TDropDownSearchBox:Make;TemplateMicro_Fmx:Make;Light_VCL2FMX:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
@@ -174,12 +162,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="Demo\FMX - Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj">
             <ProjectGuid>{C3CE6255-4B44-40D5-8686-A5CB367B1CE4}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\FMX - Demo Conditionals and Platform detection\FMX\FMX_Demo_ccPlatformFile.dproj">
-            <ProjectGuid>{AAD968A3-06F2-4647-B76E-D4548C4625A0}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -234,12 +216,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\FMX - Demo Conditionals and Platform detection\FMX\FMX_Demo_ccPlatformFile.dproj">
-            <ProjectGuid>{AAD968A3-06F2-4647-B76E-D4548C4625A0}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Debug'">
         <BuildGroupProject Include="Demo\FMX - Demo LightPanel\FMX_Demo_LightPanel.dproj">
@@ -290,12 +266,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Demo\FMX - Demo Conditionals and Platform detection\FMX\FMX_Demo_ccPlatformFile.dproj">
-            <ProjectGuid>{AAD968A3-06F2-4647-B76E-D4548C4625A0}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='All'">
         <BuildGroupProject Include="Demo\FMX - Demo LightPanel\FMX_Demo_LightPanel.dproj">
@@ -342,12 +312,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="Demo\FMX - Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj">
             <ProjectGuid>{C3CE6255-4B44-40D5-8686-A5CB367B1CE4}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="Demo\FMX - Demo Conditionals and Platform detection\FMX\FMX_Demo_ccPlatformFile.dproj">
-            <ProjectGuid>{AAD968A3-06F2-4647-B76E-D4548C4625A0}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>

@@ -1,10 +1,8 @@
 UNIT cvIniFile;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.09
+   2025.04
    www.GabrielMoraru.com
-   See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
   Extension of TIniFileApp.
@@ -39,7 +37,7 @@ procedure LoadForm (Form: TLightForm);
 IMPLEMENTATION
 
 USES
-   cvFloatSpinEdit, cvFileListBox, cvSpinEdit, cvSpinEditDelayed, cvPathEdit,
+   cvFloatSpinEdit, cvFileListBox, cvSpinEdit, cvSpinEditDelayed, cvPathEdit, cvListBox,
    LightCom.CenterControl, ccAppData, LightCom.AppData, LightCom.LogViewer, ccLogUtils, ccLogTypes;
 
 
@@ -48,13 +46,13 @@ USES
 
 {-----------------------------------------------------------------------------------------------------------------------
    READ/WRITE INDIVIDUAL CTRLS
-   We handle here components of LightSaber libbbrary.
+   We handle here components of LightSaber library.
    Classic VCL compoents are handled by "inherided"
 -----------------------------------------------------------------------------------------------------------------------}
-function TIniFileVCL.WriteComp(Comp: TComponent): Boolean;                                                             { Write 'any' control to INI file }
+function TIniFileVCL.WriteComp(Comp: TComponent): Boolean;                                    { Write 'any' control to INI file }
 begin
   Result:= inherited WriteComp(Comp);
-  if Result then EXIT; { We handled this component in the parent class. Nothing to do here. }
+  if Result then EXIT;                                                                        { We handled this component in the parent class. Nothing to do here. }
 
   if Comp.InheritsFrom(TCubicPathEdit)
   then WriteString(Comp.Owner.Name, Comp.Name, TCubicPathEdit(Comp).Path) else
@@ -65,14 +63,17 @@ begin
   if Comp.InheritsFrom(TFloatSpinEdit)
   then WriteFloat(Comp.Owner.Name, Comp.Name, TFloatSpinEdit(Comp).Value) else
 
-  if Comp.InheritsFrom(TLogGrid)     { This MUST be before InheritsFrom(TTrackBar) }
+  if Comp.InheritsFrom(TLogGrid)                                                              { This MUST be before InheritsFrom(TTrackBar) }
   then WriteInteger(Comp.Owner.Name, Comp.Name, ord(TLogGrid(Comp).Verbosity)) else
+
+  if Comp.InheritsFrom(TCubicListBox)
+  then WriteInteger (Comp.Owner.Name, Comp.Name, TCubicListBox(Comp).SelectedItemI) else
 
   if Comp.InheritsFrom(TCubicFileList)
   then WriteString(Comp.Owner.Name, Comp.Name, TCubicFileList(Comp).SelectedItem)
 
   else
-      RAISE Exception.Create('Unsupported control: '+ Comp.ClassName+ ', '+ Comp.Name);
+    RAISE Exception.Create('Unsupported control: '+ Comp.ClassName+ ', '+ Comp.Name);
 end;
 
 
@@ -107,6 +108,10 @@ begin
 
      if Comp.InheritsFrom(TCubicPathEdit)
      then TCubicPathEdit (Comp).Path := Self.ReadString (Comp.Owner.Name, Comp.Name, AppData.ExeFolder)
+     else
+
+     if Comp.InheritsFrom(TCubicListBox)
+     then TCubicListBox (Comp).SelectItemSafe(Self.ReadInteger (Comp.Owner.Name, Comp.Name, 0))
      else
 
      {NOTE! The last item will be selected only if the TCubicPathEdit associated with this component was read from INI before this. For this, make sure that the TCubicPathEdit appears in the DFM before this component. A simply cut and paste for this component (in form designed) is enough. }

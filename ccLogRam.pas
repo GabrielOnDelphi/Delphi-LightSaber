@@ -7,6 +7,7 @@ UNIT ccLogRam;
 
    A simple but effective log (non-visual).
    Its data can be displayed by TLogGrid, but it can also work alone without being connected to a TLogGrid.
+   It can easily hold up to 1 million entries. Being a good citizen, when it reaches this number it saves existing data to disk and then clears it from RAM.
 
    Verbosity:
      Supports several verbosity levels (verbose, info, warnings, errors, etc)
@@ -49,7 +50,6 @@ TYPE
      FSaveInterval: Integer; // Interval in seconds for auto-save
      const
       StreamSign  = 'TRamLog';
-      //CurVer      = 4;
       MaxEntries  = 1000000; // Maximum number of entries before saving and clearing
    protected
      function prepareString(CONST Msg: string): string;
@@ -169,7 +169,7 @@ end;
 
 procedure TRamLog.UnregisterLogObserver;
 begin
-  FLogObserver := nil;
+  FLogObserver := NIL;
 end;
 
 
@@ -293,6 +293,7 @@ begin
   NotifyLogObserverAndShow;
 end;
 
+
 {-------------------------------------------------------------------------------------------------------------
    CHECK AND SAVE TO DISK
 -------------------------------------------------------------------------------------------------------------}
@@ -304,12 +305,13 @@ begin
     Lines.Clear;
   end;
 
-  if SecondsBetween(Now, FLastSaveTime) >= FSaveInterval then
+  if SecondsBetween(Now, FLastSaveTime) >= FSaveInterval then  // Default 60 sec
   begin
     SaveToFile(TAppDataCore.AppDataFolder+ 'PeriodicLogSave.txt');
     FLastSaveTime := Now;
   end;
 end;
+
 
 {-------------------------------------------------------------------------------------------------------------
    TEXT
@@ -400,4 +402,3 @@ end;
 
 
 end.
-

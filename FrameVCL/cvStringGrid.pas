@@ -1,19 +1,12 @@
 ﻿UNIT cvStringGrid;
 
 {=============================================================================================================
-   Gabriel Moraru
    2024.05
    www.GabrielMoraru.com
    See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
   See this: http://www.delphiforfun.org/Programs/Delphi_Techniques/GridSort.htm
-
-  Split from cmStringListOwn.pas as it was on 2012.08.15.
-  Differences are in the way the Grid manages associated objects:
-       cStrGridOwn has a list of objects (Fitems).
-       cStrGrid    stores the objects on column zero using the Objects[] property.
-
 
   IMPORTANT. BUG:
     There is a bug in TStringGrid. The first line is fucked when goRowSelect and goEditing are both true. Details: http://stackoverflow.com/questions/24163773/very-odd-behavior-with-tstringgrid-how-to-fix-it
@@ -166,12 +159,8 @@ end;
 //CreateWnd can be called more than once:  http://docs.embarcadero.com/products/rad_studio/delphiAndcpp2009/HelpUpdate2/EN/html/delphivclwin32/Controls_TWinControl_CreateWnd.html
 procedure TEnhStrGrid.CreateWnd;
 begin
- inherited CreateWnd;
+  inherited CreateWnd;
 end;
-
-
-
-
 
 
 
