@@ -1,17 +1,16 @@
 UNIT LightCom.LogViewer;
 
 {=============================================================================================================
-   2025.04
+   2025.05.25
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
-   The new log (based on TStringGrid)
-   Drop a TLogGrid on your form. Pass its RamLog property as reference to all TCube objects when I need to log stuff.
+   The logging system based on TStringGrid.
+   Drop a TLogGrid on your form.
+   It can easily show up to 1 million entries. Being a good citizen, when it reaches this number it saves existing data to disk and then clears it from RAM.
 
-   Hint: http://stackoverflow.com/questions/11719454/why-dont-child-controls-of-a-tstringgrid-work-properly
-
-   Tester VCL:
-     c:\Myprojects\LightSaber\Demo\LightLog\
+   See demo
+     c:\Projects\LightSaber\Demo\Demo LightLog\Demo_Log.dpr
 =============================================================================================================}
 
 {TODO 5: Sort lines by criticality (all errors together, all warnings together, etc) }
@@ -21,34 +20,45 @@ INTERFACE
 
 USES
    Winapi.Messages, Winapi.Windows,
-   System.Classes, System.SysUtils,
+   System.Classes, System.SysUtils, Generics.Collections,
    Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls, Vcl.Forms, Vcl.Grids, Vcl.ExtCtrls, VCL.ComCtrls,
    ccLogRam, ccLogTypes, ccLogLinesAbstract;
 
 TYPE
-  TLogGrid = class(TStringGrid, ILogObserver)
+  THackGrid = class(TStringGrid)
+  public
+    function CalculateColWidth(const ATextLength: Integer; const ACaption: string): Integer; // TCustomGrid.CalcColWidth is protected!
+  end;
+
+  TLogGrid = class(TPanel, ILogObserver)
    private
+     FGrid        : THackGrid;
      FVerbChanged : TNotifyEvent;
      FVerbosity   : TLogVerbLvl;
-     FAutoScroll  : Boolean;        // Autoscroll to bottom
+     FAutoScroll  : Boolean;           // Autoscroll to bottom
      FShowTime    : Boolean;
      FShowDate    : Boolean;
      FRamLog      : TRamLog;
-     FVerbTrackBar: TPanel;         // TLogVerbFilter
-     FOwnRamLog   : Boolean;        // Frees RamLog if owned
-     FFilteredRowCount: Integer;    // Cached count of filtered rows
+     FVerbTrackBar: TPanel;            // TLogVerbFilter
+     FOwnRamLog   : Boolean;           // Frees RamLog if owned
+	 FFilteredIndices: TList<Integer>; // Caching 
+     FFilteredRowCount: Integer;       // Cached count of filtered rows
+     FScrollBar: TScrollBar;
      procedure setShowDate(const Value: Boolean);
      procedure setShowTime(const Value: Boolean);
      procedure FixFixedRow;
-     procedure ResizeColumns;
-     procedure ScrollToBottom;
+     procedure resizeColumns;
+     procedure scrollToBottom;
      procedure setVerbFilter(const Value: TLogVerbLvl);
-     function  FilteredRow(aRow: Integer): integer;
-     function  GetLineFiltered(Row: Integer): PLogLine;
+     function  filteredRow(aRow: Integer): integer;
+     function  getLineFiltered(Row: Integer): PLogLine;
+     procedure scrollBarChange(Sender: TObject);
+     procedure rebuildFilteredIndices;
    protected
+     procedure CreateWnd; override;
      procedure Resize; override;
-     procedure WMCommand(var AMessage: TWMCommand); message WM_COMMAND;
-     procedure DrawCell(ACol, ARow: Longint; ARect: TRect; AState: TGridDrawState); override;
+     procedure SetUpRows;
+     procedure GridDrawCell(Sender: TObject; ACol, ARow: Longint; ARect: TRect; AState: TGridDrawState);
    public
      constructor Create(AOwner: TComponent); override;
      constructor AssignExternalRamLog(ExternalLog: TRamLog);
@@ -58,9 +68,9 @@ TYPE
      procedure RegisterVerbFilter(TrackBar: TPanel{TLogVerbFilter});
      procedure Populate;
      procedure PopUpWindow;
+     procedure ChangeScrollBarVisibility(aVisible: boolean);
      procedure SaveAsRtf(const FullPath: string);
 
-     procedure setUpRows;
      function  Count: Integer;
      procedure CopyAll;
      procedure CopyCurLine;
@@ -92,28 +102,53 @@ USES
 -------------------------------------------------------------------------------------------------------------}
 constructor TLogGrid.Create(AOwner: TComponent);
 begin
- inherited Create(AOwner);
+  inherited Create(AOwner);
 
- FOwnRamLog:= TRUE;
- if FOwnRamLog
- then FRamLog:= TRamLog.Create(TRUE, Self as ILogObserver);
+  FOwnRamLog:= TRUE;
+  if FOwnRamLog
+  then FRamLog:= TRamLog.Create(TRUE, Self as ILogObserver);
 
- FShowTime   := FALSE;
- FShowDate   := FALSE;
- FVerbosity      := lvVerbose;
- FAutoScroll     := TRUE;
+  FShowTime   := FALSE;
+  FShowDate   := FALSE;
+  FVerbosity  := lvVerbose;
+  FAutoScroll := TRUE;
+  FFilteredIndices := TList<Integer>.Create;  //Optimize with Caching
 
- // TStringGrid initializations
- AutoScroll      := TRUE;
- BevelOuter      := bvNone;
- RowCount        := HeaderOverhead;
- FixedRows       := 0;
- ColCount        := 1;
- FixedCols       := 0;
- DefaultRowHeight:= 22;
- Options         := Options+ [goColSizing, goRowSelect] - [goRangeselect];
+  FScrollBar         := TScrollBar.Create(Self);
+  FScrollBar.Parent  := Self; // Assumes a parent panel
 
- setUpRows;
+  // Grid setup
+  FGrid        := THackGrid.Create(Self);
+  FGrid.Parent := Self; // Set the panel as parent
+end;
+
+
+procedure TLogGrid.CreateWnd;
+begin
+  inherited CreateWnd;
+  BevelOuter:= bvNone;
+  ShowCaption:= FALSE;
+
+  // ScrollBar
+  FScrollBar.Visible    := FALSE;
+  FScrollBar.Align      := alRight;
+  FScrollBar.Kind       := sbVertical;
+  FScrollBar.Width      := 12;
+  FScrollBar.OnChange   := scrollBarChange;
+
+  // Grid
+  FGrid.Align           := alClient;
+  FGrid.BevelOuter      := bvNone;
+  FGrid.ScrollBars      := ssNone;         // Disable grid's built-in scrollbars
+  FGrid.RowCount        := HeaderOverhead;
+  FGrid.ColCount        := 1;
+  FGrid.DefaultRowHeight:= 22;
+  FGrid.Options         := FGrid.Options+ [goColSizing, goRowSelect] - [goRangeselect];
+  FGrid.OnDrawCell      := GridDrawCell;
+
+  // First setup
+  setUpRows;
+  resizeColumns;
 end;
 
 
@@ -122,83 +157,100 @@ begin
   if FOwnRamLog
   then FreeAndNil(FRamLog);
 
+  FreeAndNil(FFilteredIndices);
+  FreeAndNil(Fgrid);
+  FreeAndNil(FScrollBar);
   inherited;
 end;
 
 
 procedure TLogGrid.Clear;
 begin
- RowCount:= 1;
- Assert(FRamLog <> NIL, 'RamLog not assigned!');
+  FGrid.RowCount := HeaderOverhead; // Reset to header only
+  Assert(FRamLog <> NIL, 'RamLog not assigned!');
 
- FRamLog.Clear;
+  FRamLog.Clear;
+  resizeColumns;
+end;
+
+
+procedure TLogGrid.ChangeScrollBarVisibility(aVisible: boolean);
+var MustResize: Boolean;
+begin
+  MustResize:= aVisible <> FScrollBar.Visible;
+  FScrollBar.Visible:= aVisible;
+  if MustResize
+  then resizeColumns;        // Call this only if wthe scroll bar visibility changed (to prevent extra processing)
 end;
 
 
 procedure TLogGrid.setUpRows;
-CONST
-  LessRam = FALSE;  { Without this we create a row for each line of the Log. This might be ok if the log has 10000 lines but not if it has 10000000 lines }
-VAR
-  NewRowCount: Integer;
-  NewColCount: Integer;
+var
+  NewColCount, VisibleRows: Integer;
 begin
   Assert(FRamLog <> NIL, 'RamLog not assigned!!');
-  BeginUpdate;
+  if NOT HandleAllocated then EXIT; { We can call setUpRows only after the component has a handle }
+
+  FGrid.BeginUpdate;
   try
+    // Row count
+    FFilteredRowCount:= RamLog.Count(FVerbosity > lvDebug, FVerbosity);   // cache this value to increase speed!
 
-    FFilteredRowCount:= RamLog.Count(FVerbosity > lvDebug, FVerbosity);   //ToDo: cache this value to increase speed!
+    VisibleRows:= Trunc((ClientHeight / FGrid.DefaultRowHeight)) - HeaderOverhead;
+    if VisibleRows < 1
+    then VisibleRows := 1;
+    FGrid.RowCount:= VisibleRows + HeaderOverhead;
+    FixFixedRow;
 
-    if LessRam
-    then
-      begin
-        {This is if we need to show only what can fit into the screen
-         We need to implement an external scrollbar for this }
-        NewRowCount := Trunc((ClientHeight / DefaultRowHeight)) - HeaderOverhead;
-        if NewRowCount > VisibleRowCount
-        then NewRowCount := VisibleRowCount;
-      end
-    else
-      NewRowCount:= Count;
-
-    NewRowCount:= NewRowCount + HeaderOverhead;
-
-    if RowCount <> NewRowCount
-    then RowCount:= NewRowCount;
-
-    // Determine the new column count
+    // Column count
     if FShowDate or FShowTime
     then NewColCount := 2
     else NewColCount := 1;
+    FGrid.ColCount:= NewColCount;
 
-    // Update only if changed
-    if ColCount <> NewColCount
-    then ColCount := NewColCount;
-
-    FixFixedRow;
+    // Configure scrollbar
+    if FFilteredRowCount > VisibleRows
+    then
+      begin
+        FScrollBar.Max:= FFilteredRowCount - VisibleRows;
+        ChangeScrollBarVisibility(TRUE);
+      end
+    else
+      begin
+        FScrollBar.Max:= 0;
+        FScrollBar.Position:= 0;
+        ChangeScrollBarVisibility(FALSE);
+      end;
+    FScrollBar.LargeChange := VisibleRows;
 
   finally
-    EndUpdate;
+    FGrid.EndUpdate;
   end;
-   
-  ResizeColumns;   
-  InvalidateGrid; // Mandatory because this will force the grid to paint itself and this is where we read the new information from RAMLog
+
+  //del FGrid.Invalidate; // Trigger repaint
+  //del FGrid.InvalidateGrid; // Mandatory because this will force the grid to paint itself and this is where we read the new information from RAMLog
 end;
 
 
 procedure TLogGrid.setVerbFilter(const Value: TLogVerbLvl);
 begin
-  //todo: put this back: if FVerbFilter = Value then EXIT;
+  if FVerbosity <> Value then
+  begin
+    FVerbosity:= Value;
+    //del FFilteredRowCount:= RamLog.Count(FVerbosity > lvDebug, FVerbosity);   //ToDo: cache this value to increase speed!
+    rebuildFilteredIndices;
 
-  FVerbosity:= Value;
-  FFilteredRowCount:= RamLog.Count(FVerbosity > lvDebug, FVerbosity);   //ToDo: cache this value to increase speed!
+    if (FVerbTrackBar <> NIL)
+    AND ((FVerbTrackBar as TLogVerbFilter).Verbosity <> Self.Verbosity)
+    then (FVerbTrackBar as TLogVerbFilter).Verbosity:= Self.Verbosity;
 
-  if (FVerbTrackBar <> NIL)
-  AND ((FVerbTrackBar as TLogVerbFilter).Verbosity <> Self.Verbosity)
-  then (FVerbTrackBar as TLogVerbFilter).Verbosity:= Self.Verbosity;
+    if Assigned(FVerbChanged)
+    then FVerbChanged(Self);            { Let GUI know that the user changed the verbosity }
 
-  if Assigned(FVerbChanged)
-  then FVerbChanged(Self);                                                                  { Let GUI know that the user changed the verbosity }
+    setUpRows;
+  end;
 end;
+
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -219,56 +271,73 @@ end;
 
 procedure TLogGrid.Populate;
 begin
+  rebuildFilteredIndices;
   setUpRows;
   if AutoScroll
-  then ScrollToBottom;
+  then scrollToBottom;
 end;
 
 
 { Converts aRow to the real row number (visible on screen) after the filtering has been applied }
-function TLogGrid.FilteredRow(aRow: Integer): integer;
+function TLogGrid.filteredRow(aRow: Integer): integer;
 begin
   Result:= RamLog.Lines.Row2FilteredRow(aRow- HeaderOverhead, FVerbosity);
 end;
 
+
 { Returns the content of the specified line, after the grid has been filtered }
-function TLogGrid.GetLineFiltered(Row: Integer): PLogLine;
+function TLogGrid.getLineFiltered(Row: Integer): PLogLine;
 begin
-  Result:= RamLog.Lines[FilteredRow(Row)];
+  Result:= RamLog.Lines[filteredRow(Row)];
 end;
 
 
-procedure TLogGrid.DrawCell(ACol, ARow: Integer; ARect: TRect; AState: TGridDrawState);
+procedure TLogGrid.GridDrawCell(Sender: TObject; ACol, ARow: Integer; ARect: TRect; AState: TGridDrawState);
 VAR
    s: string;
+   LogIndex, FilteredIndex: Integer;
    CurLine: PLogLine;
 begin
   if (csDesigning in ComponentState)
-  OR (csCreating in ControlState)
-  OR (RamLog= NIL)                 // No log assigned
-  OR (FFilteredRowCount= 0)        // Log is empty
-  OR (ARow = 0)                    // Don't draw in the header
-  OR NOT DefaultDrawing then
-   begin
-    inherited;
+  or (csCreating in ControlState) or
+     (RamLog = nil) or (FFilteredRowCount = 0) or (ARow = 0) or not FGrid.DefaultDrawing then
+  begin
+    FGrid.Canvas.FillRect(ARect); // Clear the cell
+    Exit;
+  end;
+
+  // Header row
+  if ARow = 0 then
+  begin
+    if ACol = 0
+	then S := 'Time'
+    else
+      if (ACol = 1) and (FGrid.ColCount = 2)
+      then S := 'Message';
+    FGrid.Canvas.TextRect(ARect, ARect.Left + 5, ARect.Top + 2, S);
+    Exit;
+  end;
+
+  // Calculate log index from scrollbar position
+  LogIndex := FScrollBar.Position + ARow - HeaderOverhead;
+  if (LogIndex < 0)
+  OR (LogIndex >= FFilteredIndices.Count) then  // use the cache
+  begin
+    FGrid.Canvas.FillRect(ARect); // Clear if out of bounds
+    Exit;
+  end;
+
+  // Map to filtered index
+  FilteredIndex := FFilteredIndices[LogIndex]; {del RamLog.Lines.Row2FilteredRow(LogIndex, FVerbosity);}
+  if FilteredIndex < 0 then
+  begin
+    FGrid.Canvas.FillRect(ARect);
     EXIT;
-   end;
+  end;
 
-  if ARow- HeaderOverhead > FFilteredRowCount then
-   begin
-    inherited;
-    EXIT;
-   end;
+  CurLine := RamLog.Lines[FilteredIndex];
 
-  if FilteredRow(aRow) < 0 then
-   begin
-    inherited;
-    EXIT;
-   end;
-
-  CurLine:= GetLineFiltered(aRow);
-
-  if ColCount = 2
+  if FGrid.ColCount = 2
   then
     case ACol of
      0: begin
@@ -280,11 +349,11 @@ begin
     else
        raise Exception.Create('Invalid ColCount!');
     end
-   else
-      s:= CurLine.Msg;
+  else
+    s:= CurLine.Msg;
 
-  Canvas.Font.Color:= Verbosity2Color(CurLine.Level);
-  Canvas.TextRect(ARect, ARect.Left+5, ARect.Top+2, s);
+  FGrid.Canvas.Font.Color := Verbosity2Color(CurLine.Level);
+  FGrid.Canvas.TextRect(ARect, ARect.Left + 5, ARect.Top + 2, S);
 end;
 
 
@@ -297,20 +366,23 @@ begin
 end;
 
 
-procedure TLogGrid.ScrollToBottom;
+procedure TLogGrid.scrollToBottom;
+var
+  VisibleRows: Integer;
 begin
-  if RowCount > VisibleRowCount
-  then TopRow := RowCount - VisibleRowCount;
+  VisibleRows := FGrid.RowCount - HeaderOverhead;
+  if FFilteredRowCount > VisibleRows
+  then FScrollBar.Position := FFilteredRowCount - VisibleRows
+  else FScrollBar.Position := 0;
 end;
-
 
 procedure TLogGrid.FixFixedRow;
 begin
   if (csCreating in ControlState) then Exit;
 
-  if RowCount > 1
-  then FixedRows := 1
-  else FixedRows := 0;
+  if FGrid.RowCount > 1
+  then FGrid.FixedRows := 1
+  else FGrid.FixedRows := 0;
 end;
 
 
@@ -320,6 +392,7 @@ begin
   begin
     FShowDate := Value;
     setUpRows;
+    resizeColumns;
   end;
 end;
 
@@ -330,37 +403,16 @@ begin
   begin
     FShowTime := Value;
     setUpRows;
+    resizeColumns;
   end;
 end;
 
 
-{ Returns all lines, even if a filter is applied }
-procedure TLogGrid.CopyAll;
-begin
-  LightCom.Clipboard.StringToClipboard(RamLog.GetAsText);
-end;
-
-
-procedure TLogGrid.CopyCurLine;
-begin
-  LightCom.Clipboard.StringToClipboard(GetLineFiltered(Row).Msg);
-end;
 
 
 {-------------------------------------------------------------------------------------------------------------
    WND
 -------------------------------------------------------------------------------------------------------------}
-{ Allows the 'click' action to reach the Button }
-procedure TLogGrid.WMCommand(var AMessage: TWMCommand);
-begin
-  if EditorMode AND (AMessage.Ctl = InplaceEditor.Handle)
-  then inherited
-  else
-    if AMessage.Ctl <> 0
-    then AMessage.Result := SendMessage(AMessage.Ctl, CN_COMMAND, TMessage(AMessage).WParam, TMessage(AMessage).LParam);
-end;
-
-
 { Show the form that owns this control }
 procedure TLogGrid.PopUpWindow;
 var
@@ -380,47 +432,42 @@ begin
 end;
 
 
+
+{-------------------------------------------------------------------------------------------------------------
+   COLUMNS
+-------------------------------------------------------------------------------------------------------------}
 { Resize column width when the form is resized }
-procedure TLogGrid.ResizeColumns;
+procedure TLogGrid.resizeColumns;
 var
   sTime: string;
-  ScrollBarWidth: Integer;
+  TimeColWidth: Integer;
 begin
-  if ScrollBars in [ssVertical, ssBoth]
-  then ScrollBarWidth := GetSystemMetrics(SM_CXVSCROLL)
-  else ScrollBarWidth := 0;
+  case FGrid.ColCount of  // Warning: This can be zero when the application starts because ColCount is set in CreateWnd which starts late.
+    1: begin
+         FGrid.Cells[0, 0] := 'Message';
+         FGrid.ColWidths[0] := FGrid.ClientWidth;
+       end;
+    2: begin
+         FGrid.Cells[0, 0] := 'Time';
+         FGrid.Cells[1, 0] := 'Message';
 
-  // Adjust column widths here if necessary
-  if ColCount = 2 then
-   begin
-     Cells[0, 0] := 'Time';
-     Cells[1, 0] := 'Message';
+         // Adjust as needed for date/time column
+         sTime:= '';
+         if ShowDate then sTime:= DateToStr(Now);
+         if ShowTime then sTime:= sTime+ ' '+  FormatDateTime('hh:nn', Now);
 
-     // Adjust as needed for date/time column
-     sTime:= '';
-     if ShowDate then sTime:= DateToStr(Now);
-     if ShowTime then sTime:= sTime+ ' '+  FormatDateTime('hh:nn', Now);
-
-     {del
-     ColWdth:= 0;
-     if ShowDate then ColWdth:= ColWdth+ 75;
-     if ShowTime then ColWdth:= ColWdth+ 45; }
-     ColWidths[0]:= CalcColWidth(Length(sTime), sTime, NIL);
-
-     ColWidths[1]:= ClientWidth -ColWidths[0] -ScrollBarWidth;
-   end
-  else
-   begin
-     Cells[0, 0] := 'Message';
-     ColWidths[0]:= ClientWidth -ScrollBarWidth; // Full width for single column
-   end;
+         TimeColWidth := FGrid.CalculateColWidth(Length(sTime), sTime);  // Make first col as large as the text
+         FGrid.ColWidths[0] := TimeColWidth;
+         FGrid.ColWidths[1] := FGrid.ClientWidth - TimeColWidth - FGrid.GridLineWidth;
+       end;
+  end;
 end;
 
 
 procedure TLogGrid.Resize;
 begin
   inherited Resize;  // Call the inherited method first
-  ResizeColumns;
+  resizeColumns;
 end;
 
 
@@ -430,7 +477,20 @@ end;
 
 
 
+{-------------------------------------------------------------------------------------------------------------
+   TEXT
+-------------------------------------------------------------------------------------------------------------}
+{ Returns all lines, even if a filter is applied }
+procedure TLogGrid.CopyAll;
+begin
+  LightCom.Clipboard.StringToClipboard(RamLog.GetAsText);
+end;
 
+
+procedure TLogGrid.CopyCurLine;
+begin
+  LightCom.Clipboard.StringToClipboard(getLineFiltered(FGrid.Row).Msg);
+end;
 
 
 { Save as text with colors }
@@ -471,26 +531,58 @@ begin
 end;
 
 
+procedure TLogGrid.scrollBarChange(Sender: TObject);
+begin
+  FGrid.InvalidateGrid; // Redraw with new scrollbar position
+  //InvalidateGrid; // Redraw with new data
+end;
+
+
 function Verbosity2Color(Verbosity: TLogVerbLvl): TColor;
 begin
  CASE Verbosity of
-  lvDebug    : Result:= clSilverLight;
-  lvVerbose  : Result:= clSilverDark;
-  lvHints    : Result:= clGray;
-  lvInfos    : Result:= clBlack;
-  lvImportant: Result:= clOrangeDk;
-  lvWarnings : Result:= clOrange;
-  lvErrors   : Result:= clRed;
+   lvDebug    : Result:= TColor($909090);
+   lvVerbose  : Result:= TColor($808080);    // Silver
+   lvHints    : Result:= TColor($707070);    // Gray
+   lvInfos    : Result:= clBlack;
+   lvImportant: Result:= clOrangeDk;
+   lvWarnings : Result:= clOrange;
+   lvErrors   : Result:= clRed;
  else
    RAISE Exception.Create('Invalid log verbosity!');
  end;
 end;
 
 
+{ Rebuild the cache when needed }
+procedure TLogGrid.rebuildFilteredIndices;
+var
+  i: Integer;
+begin
+  FFilteredIndices.Clear;
+
+  for i := 0 to RamLog.Lines.Count - 1 do
+    if RamLog.Lines[i].Level >= FVerbosity
+    then FFilteredIndices.Add(i);
+
+  FFilteredRowCount:= FFilteredIndices.Count;
+end;
+
+
+{ THackGrid }
+function THackGrid.CalculateColWidth(const ATextLength: Integer; const ACaption: string): Integer;
+begin
+  Result:= CalcColWidth(ATextLength, ACaption, nil)
+end;
+
+
+
+
 procedure Register;
 begin
   RegisterComponents('LightSaber', [TLogGrid]);
 end;
+
 
 
 end.

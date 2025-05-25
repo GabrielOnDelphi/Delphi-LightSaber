@@ -28,14 +28,12 @@ TYPE
     chkLogOnError  : TCheckBox;
     chkShowDate    : TCheckBox;
     chkShowTime    : TCheckBox;
-    Container      : TPanel;    { We use a container for all controls on this form so we can reparent them easily to another form }
-    Log            : TLogGrid;
+    Container      : TPanel;
     mnuCopy        : TMenuItem;
     mnuCopyAll     : TMenuItem;
     mnuCopyFiltered: TMenuItem;
     pnlBottom      : TPanel;
     PopupMenu      : TPopupMenu;
-    trkLogVerb     : TLogVerbFilter;
     procedure btnClearClick      (Sender: TObject);
     procedure chkLogOnErrorClick (Sender: TObject);
     procedure chkShowDateClick   (Sender: TObject);
@@ -48,6 +46,8 @@ TYPE
     procedure LoadSettings;
     procedure SaveSettings;
   public
+    Log: TLogGrid;
+    LogFilter: TLogVerbFilter;
     procedure FormPostInitialize; override; // Called after the main form was fully initilized
   end;
 
@@ -59,8 +59,6 @@ USES
    ccLogTypes, ccINIFile, LightCom.AppData;
 
 
-
-
 {-------------------------------------------------------------------------------------------------------------
   FORM CREATION
 -------------------------------------------------------------------------------------------------------------}
@@ -68,9 +66,18 @@ procedure TfrmRamLog.FormPostInitialize;
 begin
   inherited FormPostInitialize;
 
+  // Must be created dynamically because the component might not be installed at this point
+  Log:= TLogGrid.Create(Self);
+  Log.Parent:= Container;
+  Log.Align:= alclient;
+
+  LogFilter:= TLogVerbFilter(Self);
+  //LogFilter.Parent:= pnlBottom;  // Program freezes here!
+  LogFilter.Align:= alRight;
+
   LoadSettings;
   chkLogOnError.Checked:= AppData.RamLog.ShowOnError;
-  chkShowTime.Checked  := Log.ShowTime;
+  chkShowTime.Checked:= Log.ShowTime;
 end;
 
 

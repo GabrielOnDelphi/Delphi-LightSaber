@@ -66,29 +66,6 @@ object frmRamLog: TfrmRamLog
         TabOrder = 1
         OnClick = btnClearClick
       end
-      object trkLogVerb: TLogVerbFilter
-        AlignWithMargins = True
-        Left = 348
-        Top = 3
-        Width = 218
-        Height = 25
-        Align = alClient
-        BevelOuter = bvNone
-        ShowCaption = False
-        TabOrder = 2
-        TrackBar.Left = 98
-        TrackBar.Top = 0
-        TrackBar.Width = 120
-        TrackBar.Height = 25
-        TrackBar.Hint = 'Hide all messages below this level'
-        TrackBar.Align = alRight
-        TrackBar.Max = 6
-        TrackBar.Min = 1
-        TrackBar.Position = 3
-        TrackBar.TabOrder = 0
-        Verbosity = lvInfos
-        Log = Log
-      end
       object chkShowTime: TCheckBox
         AlignWithMargins = True
         Left = 103
@@ -108,36 +85,9 @@ object frmRamLog: TfrmRamLog
         Height = 25
         Align = alLeft
         Caption = 'Show date'
-        TabOrder = 4
+        TabOrder = 2
         OnClick = chkShowDateClick
       end
-    end
-    object Log: TLogGrid
-      AlignWithMargins = True
-      Left = 3
-      Top = 3
-      Width = 637
-      Height = 470
-      Align = alClient
-      BevelOuter = bvNone
-      ColCount = 1
-      DefaultRowHeight = 22
-      FixedCols = 0
-      RowCount = 1
-      FixedRows = 0
-      Font.Charset = ANSI_CHARSET
-      Font.Color = clWindowText
-      Font.Height = -11
-      Font.Name = 'Tahoma'
-      Font.Style = []
-      Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goColSizing, goRowSelect, goFixedRowDefAlign]
-      ParentColor = True
-      ParentFont = False
-      PopupMenu = PopupMenu
-      TabOrder = 1
-      Verbosity = lvErrors
-      ColWidths = (
-        633)
     end
   end
   object PopupMenu: TPopupMenu
