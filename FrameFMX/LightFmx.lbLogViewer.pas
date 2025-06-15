@@ -1,3 +1,18 @@
+{
+   I am an experienced Delphi VCL developer but my experience with FMX is low.
+   I have this FMX component (see code below).
+
+   Issue:
+   I instantiate the component dynamically, at runtime.
+   But the component is rendered only as a rectangle. Inside the rectangle I see instead this message:
+      "A descendant of, TstyledPresentationProxy has not been registered for lass TLogViewer. Maybe it is necessary to add the FMX.Grid.Style module to the uses section."
+   Don't concentrate on the DesignTime part (Register) since I get this message at runtime.
+   Think like an experienced Delphi developer.
+   Double check your facts.
+   Do google searches if necessary.
+   Do a good job or else...
+}
+
 UNIT LightFmx.lbLogViewer;
 
 {=============================================================================================================
@@ -7,8 +22,9 @@ UNIT LightFmx.lbLogViewer;
    FMX version of TLogGrid, a log viewer based on TStringGrid.
    Drop a TLogGrid on your form and pass its RamLog property to objects needing to log.
    Converted from VCL to FMX for cross-platform support.
-   Tester VCL:
-     c:\Myprojects\LightSaber\Demo\LightLog\
+   Tester:
+     c:\Projects\LightSaber\Demo\Demo LightLog\FMX\FMX_Demo_Log.dpr
+
 =============================================================================================================}
 
 {TODO 5: Sort lines by criticality (all errors together, all warnings together, etc) }
@@ -45,6 +61,8 @@ TYPE
      procedure MyDrawColumnCell(Sender: TObject; const Canvas: TCanvas; const Column: TColumn; const Bounds: TRectF; const Row: Integer; const Value: TValue; const State: TGridDrawStates);
    protected
      procedure Resize; override;
+//     function GetDefaultStyleLookupName: string; override;
+     function DefinePresentationName: string; override;
    public
      constructor Create(AOwner: TComponent); override;
      constructor AssignExternalRamLog(ExternalLog: TRamLog);
@@ -611,12 +629,51 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 procedure Register;
 begin
-
   RegisterComponents('LightSaber FMX', [TLogViewer]);
 
   // Register the presentation proxy for TLogGrid, telling FMX to style it using the same proxy as its base class, TStringGrid.
-  TPresentationProxyFactory.Current.Register(TLogViewer, TControlType.Styled, TStyledPresentationProxy<TStyledGrid>);
+  // TPresentationProxyFactory.Current.Register(TLogViewer, TControlType.Styled, TStyledPresentationProxy<TStyledGrid>);
   // Registration procedure, @Lightfmx@Lblogviewer@Register$qqrv.Register in package LightFmxBase290.bpl raised exception class EPresentationProxy: Presentation Proxy class [TStyledPresentationProxy<FMX.Grid.Style.TStyledGrid>] for this presentation name [LogViewer-style] has already been registered..
 end;
+
+
+{
+ GetDefaultStyleLookupName:
+ Returns the full style lookup key (e.g., stringgridstyle) used to find style templates in the stylebook.
+ Many FMX controls override this to provide a base name.
+
+ By overriding GetDefaultStyleLookupName, the component insists on using "stringgridstyle" (or a variant) regardless of the proxy we registered via DefinePresentationName.
+ This name did not match the actual style templates FMX had for TStyledGrid. This is not what we want!
+
+ FMX checks GetDefaultStyleLookupName first. If it returns non-empty, FMX bypasses DefinePresentationName entirely,
+ so, your Grid-Styled proxy registration never takes effect.
+
+
+ The Inheritance Model (Using GetDefaultStyleLookupName)
+
+    This is the most common and intuitive approach. It relies on piggybacking on the ancestor's style registration.
+    The logic is as follows: "I am a TLogViewer, and for styling purposes, I want you to treat me exactly like a TStringGrid."
+
+    You accomplish this by overriding the GetDefaultStyleLookupName function:
+
+    This tells the framework that if no other StyleLookup is specified, it should search the style file for a definition named stringgridstyle. Since this is the same name used by TStringGrid, your component will inherit its appearance.
+
+    The Prerequisite: This method has a critical dependency. It only works if the presentation for 'stringgridstyle' has already been registered with the factory. This registration happens in the initialization section of the FMX.Grid.Style unit. Therefore, for this method to succeed at runtime, the application must include FMX.Grid.Style in its uses clause. Without it, the factory has no entry for 'stringgridstyle', and the chain is broken.
+
+function TLogViewer.GetDefaultStyleLookupName: string;
+begin
+  Result := 'stringgridstyle'; // This is the standard style name for TStringGrid
+end; }
+
+
+{ DefinePresentationName:
+  Returns the base presentation name (e.g., Grid-) to which FMX appends a suffix (like Style) to form the actual lookup key (e.g., Grid-Style) for the stylebook. }
+function TLogViewer.DefinePresentationName: string;
+begin
+  // "grid-style" suffix is exactly what FMX.Grid.Style registered for TStringGrid
+  Result := 'grid-' + GetPresentationSuffix;
+end;
+
+
 
 end.

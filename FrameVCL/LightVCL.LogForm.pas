@@ -34,6 +34,7 @@ TYPE
     mnuCopyFiltered: TMenuItem;
     pnlBottom      : TPanel;
     PopupMenu      : TPopupMenu;
+    chkScrollBown: TCheckBox;
     procedure btnClearClick      (Sender: TObject);
     procedure chkLogOnErrorClick (Sender: TObject);
     procedure chkShowDateClick   (Sender: TObject);
@@ -42,6 +43,7 @@ TYPE
     procedure FormDestroy        (Sender: TObject);
     procedure mnuCopyAllClick    (Sender: TObject);
     procedure mnuCopyClick       (Sender: TObject);
+    procedure chkScrollBownClick(Sender: TObject);
   private
     procedure LoadSettings;
     procedure SaveSettings;
@@ -69,11 +71,13 @@ begin
   // Must be created dynamically because the component might not be installed at this point
   Log:= TLogGrid.Create(Self);
   Log.Parent:= Container;
-  Log.Align:= alclient;
+  Log.Align:= alClient;
 
-  LogFilter:= TLogVerbFilter(Self);
-  //LogFilter.Parent:= pnlBottom;  // Program freezes here!
+  LogFilter:= TLogVerbFilter.Create(Self);
+  LogFilter.Parent:= pnlBottom;
   LogFilter.Align:= alRight;
+  LogFilter.Log:= Log;
+  LogFilter.PopupMenu:= PopupMenu;
 
   LoadSettings;
   chkLogOnError.Checked:= AppData.RamLog.ShowOnError;
@@ -158,6 +162,12 @@ end;
 procedure TfrmRamLog.chkLogOnErrorClick(Sender: TObject);
 begin
   AppData.RamLog.ShowOnError:= chkLogOnError.Checked;
+end;
+
+
+procedure TfrmRamLog.chkScrollBownClick(Sender: TObject);
+begin
+  Log.AutoScroll:= chkScrollBown.Checked;
 end;
 
 

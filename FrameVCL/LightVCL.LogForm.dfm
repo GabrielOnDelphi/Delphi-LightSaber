@@ -2,6 +2,7 @@ object frmRamLog: TfrmRamLog
   Left = 549
   Top = 450
   AlphaBlend = True
+  AlphaBlendValue = 251
   BorderIcons = [biSystemMenu, biMaximize]
   Caption = 'Log'
   ClientHeight = 507
@@ -87,6 +88,20 @@ object frmRamLog: TfrmRamLog
         Caption = 'Show date'
         TabOrder = 2
         OnClick = chkShowDateClick
+      end
+      object chkScrollBown: TCheckBox
+        AlignWithMargins = True
+        Left = 348
+        Top = 3
+        Width = 93
+        Height = 25
+        Hint = 'Scroll to the latest entry'
+        Align = alLeft
+        Caption = 'Scroll down'
+        Checked = True
+        State = cbChecked
+        TabOrder = 4
+        OnClick = chkScrollBownClick
       end
     end
   end
