@@ -15,7 +15,7 @@ uses
   LightVcl.Internet.Download.Thread in '..\..\FrameVCL\LightVcl.Internet.Download.Thread.pas',
   LightVcl.Internet.Download.WinInet in '..\..\FrameVCL\LightVcl.Internet.Download.WinInet.pas',
   ccDownload in '..\..\ccDownload.pas',
-  ccAppData in '..\..\ccAppData.pas';
+  LighCore.AppData in '..\..\LighCore.AppData.pas';
 
 {$R *.res}
 

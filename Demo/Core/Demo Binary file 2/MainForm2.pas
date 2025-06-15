@@ -36,7 +36,7 @@ type
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  ccAppData, LightVcl.Common.AppData;
+  LighCore.AppData, LightVcl.Common.AppData;
 
 
 procedure TfrmMain.FormCreate(Sender: TObject);

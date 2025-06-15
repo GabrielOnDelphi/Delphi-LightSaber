@@ -116,7 +116,7 @@
             <Form>MainForm</Form>
         </DCCReference>
         <DCCReference Include="..\..\FrameVCL\LightVcl.LogForm.pas"/>
-        <DCCReference Include="..\..\ccAppData.pas"/>
+        <DCCReference Include="..\..\LighCore.AppData.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

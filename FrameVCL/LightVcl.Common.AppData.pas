@@ -102,7 +102,7 @@ USES
   Winapi.Windows, Winapi.Messages, Winapi.ShellAPI,
   System.Win.Registry, System.SysUtils, System.Classes, System.IOUtils, System.UITypes, System.Types,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Consts,
-  ccAppData, LightVcl.LogForm;
+  LighCore.AppData, LightVcl.LogForm;
 
  {
 TYPE

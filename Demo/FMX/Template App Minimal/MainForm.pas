@@ -26,7 +26,7 @@ VAR
 IMPLEMENTATION
 {$R *.fmx}
 
-USES ccAppData;
+USES LighCore.AppData;
 
 
 

@@ -46,8 +46,8 @@
      The TIniFileApp class will use AppName to automatically determine the INI file name/path which is %AppData%\AppName.Ini.
      Example: If the AppData.AppName is set to "DelphiLightSaber",
      the ini file will be "c:\Users\UserName\AppData\Roaming\DelphiLightSaber\DelphiLightSaber.ini"
-     See ccAppData.pas for details.
-     The TIniFileApp class will also automatically save the ccAppData.AppData.LastUsedFolder variable to the INI file.
+     See LighCore.AppData.pas for details.
+     The TIniFileApp class will also automatically save the LighCore.AppData.AppData.LastUsedFolder variable to the INI file.
 
 
   Important:
@@ -97,7 +97,7 @@ USES
    System.Classes, System.IniFiles, System.SysUtils, System.UITypes, System.UIConsts,
    FMX.Graphics, FMX.Forms, FMX.Controls, FMX.StdCtrls, FMX.NumberBox, FMX.Colors,
    FMX.ActnList, FMX.Edit, FMX.SpinBox, FMX.Menus, FMX.Types, FMX.Dialogs, FMX.ListBox,
-   ccINIFile, ccAppData;
+   ccINIFile, LighCore.AppData;
 
 TYPE
 

@@ -111,7 +111,7 @@ VAR
 IMPLEMENTATION
 
 USES
-  FormAsyncMessage, ccDownload, ccINIFile, LightVcl.Common.Debugger, ccAppData, LightVcl.Common.AppData;
+  FormAsyncMessage, ccDownload, ccINIFile, LightVcl.Common.Debugger, LighCore.AppData, LightVcl.Common.AppData;
 
 Const
   TooLongNoSeeInterval = 180;    { Force to check for updates every 180 days even if the updater is disabled }

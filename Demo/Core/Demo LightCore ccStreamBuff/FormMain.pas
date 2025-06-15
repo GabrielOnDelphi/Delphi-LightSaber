@@ -16,7 +16,7 @@ USES
   //WinApi.Messages,
   System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.ExtCtrls,
   LightVcl.Visual.INIFile, InternetLabel, LightVcl.Visual.PathEdit, LightVcl.Visual.SpinEdit,
-  llRichLogTrack, LightVcl.Visual.CheckBox, llRichLog, ccAppData, LightVcl.Common.AppData
+  llRichLogTrack, LightVcl.Visual.CheckBox, llRichLog, LighCore.AppData, LightVcl.Common.AppData
 , chHardID, LightVcl.Common.AppDataForm;
 
 TYPE

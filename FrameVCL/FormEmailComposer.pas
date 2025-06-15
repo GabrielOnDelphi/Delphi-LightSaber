@@ -70,7 +70,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  LightVcl.Visual.INIFile, ccCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, ccINIFile, LightVcl.Common.AppDataForm, LightVcl.Common.Sound, ccAppData, LightVcl.Common.AppData
+  LightVcl.Visual.INIFile, ccCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, ccINIFile, LightVcl.Common.AppDataForm, LightVcl.Common.Sound, LighCore.AppData, LightVcl.Common.AppData
 , ccIO, ccTextFile, LightVcl.Common.IO, LightVcl.Internet.EmailSender;
 
 

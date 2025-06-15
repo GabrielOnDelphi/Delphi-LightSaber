@@ -79,7 +79,7 @@ TYPE
 IMPLEMENTATION
 
 uses
-   ccINIFile, LightVcl.Graph.Loader, ccCore, LightVcl.Common.Dialogs, ccAppData, LightVcl.Common.AppData, ccIO, LightVcl.Common.IO;
+   ccINIFile, LightVcl.Graph.Loader, ccCore, LightVcl.Common.Dialogs, LighCore.AppData, LightVcl.Common.AppData, ccIO, LightVcl.Common.IO;
 
 
 

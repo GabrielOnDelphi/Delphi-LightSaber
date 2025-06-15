@@ -43,8 +43,8 @@
      The TIniFileApp class will use AppName to automatically determine the INI file name/path which is %AppData%\AppName.Ini.
      Example: If the AppData.AppName is set to "DelphiLightSaber",
      the ini file will be "c:\Users\UserName\AppData\Roaming\DelphiLightSaber\DelphiLightSaber.ini"
-     See ccAppData.pas for details.
-     The TIniFileApp class will also automatically save the ccAppData.AppData.LastUsedFolder variable to the INI file.
+     See LighCore.AppData.pas for details.
+     The TIniFileApp class will also automatically save the LighCore.AppData.AppData.LastUsedFolder variable to the INI file.
 
 
   Important:
@@ -93,7 +93,7 @@ INTERFACE
 USES
    System.Classes, System.IniFiles, System.SysUtils, System.UITypes,
    Vcl.Graphics, Vcl.Forms, Vcl.FileCtrl, Vcl.Menus, Vcl.ExtCtrls, Vcl.NumberBox, Vcl.ComCtrls, Vcl.WinXCtrls, Vcl.Samples.Spin, Vcl.ActnList, Vcl.Dialogs, Vcl.Controls, Vcl.StdCtrls,
-   ccINIFile, ccAppData; //, LightVcl.Common.AppData;
+   ccINIFile, LighCore.AppData; //, LightVcl.Common.AppData;
 
 {$WARN GARBAGE OFF}              {Silence the: 'W1011 Text after final END' warning }
 
@@ -139,7 +139,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   ccIO, ccTextFile, ccCore, {ccAppData,} LightVcl.Common.AppData; //{$IFDEF FRAMEWORK_FMX}LightFMX.lbAppData{$ELSE}LightCom.AppData,{$ENDIF};
+   ccIO, ccTextFile, ccCore, {LighCore.AppData,} LightVcl.Common.AppData; //{$IFDEF FRAMEWORK_FMX}LightFMX.lbAppData{$ELSE}LightCom.AppData,{$ENDIF};
 
 
 {-----------------------------------------------------------------------------------------------------------------------

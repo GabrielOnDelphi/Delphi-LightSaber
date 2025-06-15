@@ -112,7 +112,7 @@ USES
    Posix.Stdlib, Posix.Unistd,
   {$ENDIF}
 
-  ccCore, ccINIFile, ccAppData; //LightVcl.LogForm
+  ccCore, ccINIFile, LighCore.AppData; //LightVcl.LogForm
 
 TYPE
   TAppData= class(TAppDataCore)

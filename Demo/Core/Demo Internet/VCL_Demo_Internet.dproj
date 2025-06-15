@@ -104,7 +104,7 @@
         <DCCReference Include="..\..\FrameVCL\LightVcl.Internet.Download.Thread.pas"/>
         <DCCReference Include="..\..\FrameVCL\LightVcl.Internet.Download.WinInet.pas"/>
         <DCCReference Include="..\..\ccDownload.pas"/>
-        <DCCReference Include="..\..\ccAppData.pas"/>
+        <DCCReference Include="..\..\LighCore.AppData.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

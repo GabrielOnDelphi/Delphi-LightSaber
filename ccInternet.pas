@@ -127,7 +127,7 @@ CONST
 IMPLEMENTATION
 
 USES
-   ccAppData,
+   LighCore.AppData,
    //LightVcl.Common.AppData,
    ccHTML, ccIO, ccDownload;
 

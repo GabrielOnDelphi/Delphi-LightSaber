@@ -45,7 +45,7 @@ USES
 
 
 IMPLEMENTATION
-USES ccAppData, LightVcl.Common.AppData
+USES LighCore.AppData, LightVcl.Common.AppData
 ;
 
 

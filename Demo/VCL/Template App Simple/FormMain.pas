@@ -41,7 +41,7 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.Shell, LightVcl.Common.System, LightVcl.Common.ExecuteShell, ccAppData, LightVcl.Common.AppData, LightVcl.Common.CenterControl;
+   LightVcl.Common.Shell, LightVcl.Common.System, LightVcl.Common.ExecuteShell, LighCore.AppData, LightVcl.Common.AppData, LightVcl.Common.CenterControl;
 
 
 

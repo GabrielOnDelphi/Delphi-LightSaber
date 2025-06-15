@@ -66,7 +66,7 @@ function ExtractMiddleFrame(CONST FileName: string; OUT FrameCount: Cardinal): T
 IMPLEMENTATION
 
 USES
-  GifParser, ccCore, LightVcl.Common.Dialogs, ccAppData, LightVcl.Common.AppData
+  GifParser, ccCore, LightVcl.Common.Dialogs, LighCore.AppData, LightVcl.Common.AppData
 , {LightCom.IniFile,} ccIO;
 
 

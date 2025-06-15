@@ -21,7 +21,7 @@ IMPLEMENTATION
 
 USES
   chHardID, LightVcl.Common.Shell, LightVcl.Common.ExecuteShell, LightVcl.Common.GuiSettings,
-  cpCertificate, ccAppData, LightVcl.Common.AppData
+  cpCertificate, LighCore.AppData, LightVcl.Common.AppData
 , LightVcl.Common.CenterControl, LightVcl.Common.Translate, ciUpdater,
   FormMain, FormUniversalEula, FormSkinsDisk, FormSettings, FormSplashScreen, FormUpdaterNotifier;
 

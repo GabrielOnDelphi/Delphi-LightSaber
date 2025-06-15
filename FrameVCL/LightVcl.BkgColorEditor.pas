@@ -100,7 +100,7 @@ TYPE
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-  LightVcl.Graph.Util, LightVcl.Common.VclUtils, LightVcl.Common.IniFileQuick, LightVcl.Common.CenterControl, LightVcl.Common.Dialogs, ccINIFile, ccAppData, LightVcl.Common.AppData;
+  LightVcl.Graph.Util, LightVcl.Common.VclUtils, LightVcl.Common.IniFileQuick, LightVcl.Common.CenterControl, LightVcl.Common.Dialogs, ccINIFile, LighCore.AppData, LightVcl.Common.AppData;
   { Don't use LightVcl.Visual.INIFile because it belongs to LightVisControls pkg which is after this (LightVclGraphics) package }
 
 

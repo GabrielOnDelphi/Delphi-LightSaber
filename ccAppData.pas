@@ -1,4 +1,4 @@
-﻿UNIT ccAppData;
+﻿UNIT LighCore.AppData;
 
 {=============================================================================================================
    2025.03
@@ -23,7 +23,7 @@
        program MyConsole;
        uses
          FastMM4,
-         ccAppData;
+         LighCore.AppData;
        begin
          AppDataCore:= TAppDataCore.Create('MyCollApp');
          AppDataCore.Run;

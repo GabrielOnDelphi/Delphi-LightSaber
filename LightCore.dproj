@@ -168,7 +168,7 @@
         <DCCReference Include="ccLogLinesS.pas"/>
         <DCCReference Include="ccLogLinesAbstract.pas"/>
         <DCCReference Include="ccLogLinesM.pas"/>
-        <DCCReference Include="ccAppData.pas"/>
+        <DCCReference Include="LighCore.AppData.pas"/>
         <DCCReference Include="ccMath.pas"/>
         <DCCReference Include="ccPascal.pas"/>
         <DCCReference Include="ccPlatformFile.pas"/>

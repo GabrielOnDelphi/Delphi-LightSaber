@@ -54,7 +54,7 @@ contains
   ccLogLinesS in 'ccLogLinesS.pas',
   ccLogLinesAbstract in 'ccLogLinesAbstract.pas',
   ccLogLinesM in 'ccLogLinesM.pas',
-  ccAppData in 'ccAppData.pas',
+  LighCore.AppData in 'LighCore.AppData.pas',
   ccMath in 'ccMath.pas',
   ccPascal in 'ccPascal.pas',
   ccPlatformFile in 'ccPlatformFile.pas',

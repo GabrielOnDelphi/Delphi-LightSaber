@@ -54,7 +54,7 @@ IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   LightVcl.Visual.INIFile, ccAppData, LightVcl.Common.AppData
+   LightVcl.Visual.INIFile, LighCore.AppData, LightVcl.Common.AppData
 ;
 
 
@@ -84,7 +84,7 @@ procedure TfrmRichLog.FormDestroy(Sender: TObject);
 begin
  Assert(AppData <> NIL, 'AppData is gone already!');
  Container.Parent:= Self;
- if NOT ccAppData, LightVcl.Common.AppData
+ if NOT LighCore.AppData, LightVcl.Common.AppData
 .AppData.Initializing
  then //SaveForm(Self); called by AppData // We don't save anything if the start up was improper!
 end;

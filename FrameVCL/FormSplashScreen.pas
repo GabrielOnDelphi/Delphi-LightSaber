@@ -45,7 +45,7 @@ procedure ShowSplashScreen(ImgFileSize: integer);
 
 
 IMPLEMENTATION  {$R *.dfm}
-USES ccIO, LightVcl.Common.CenterControl, ccAppData, LightVcl.Common.AppData
+USES ccIO, LightVcl.Common.CenterControl, LighCore.AppData, LightVcl.Common.AppData
 ;
 
 CONST

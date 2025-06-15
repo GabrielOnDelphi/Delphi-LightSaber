@@ -6,7 +6,7 @@ uses
   {$ENDIF }
   MainForm in 'MainForm.pas' {frmTestIO},
   LightVcl.Common.AppData,
-  ccAppData in '..\..\ccAppData.pas';
+  LighCore.AppData in '..\..\LighCore.AppData.pas';
 
 {$R *.res}
 

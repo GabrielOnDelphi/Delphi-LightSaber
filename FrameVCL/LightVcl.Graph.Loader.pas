@@ -104,7 +104,7 @@ USES
    {$IFDEF Jpg2000}OpenJpeg2000Bitmap,{$ENDIF} // Download OpenJpeg Pas library from: www.github.com/galfar/PasJpeg2000
    {$IFDEF FastJpg}FastJpegDecHelper,{$ENDIF}
    LightVcl.Graph.Resize, LightVcl.Graph.ResizeVCL, LightVcl.Graph.Loader.Resolution, LightVcl.Graph.UtilGray,
-   LightVcl.Graph.Loader.WB1, LightVcl.Graph.Loader.RainDrop, ccIO, LightVcl.Common.IO, LightVcl.Graph.FX.Rotate, ccAppData, LightVcl.Common.AppData
+   LightVcl.Graph.Loader.WB1, LightVcl.Graph.Loader.RainDrop, ccIO, LightVcl.Common.IO, LightVcl.Graph.FX.Rotate, LighCore.AppData, LightVcl.Common.AppData
 , ccCore, LightVcl.Graph.AviFrame, LightVcl.Graph.Gif;
 
 

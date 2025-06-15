@@ -98,7 +98,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-  ccCore, ccTextFile, ccAppData;
+  ccCore, ccTextFile, LighCore.AppData;
 
 
 {-------------------------------------------------------------------------------------------------------------

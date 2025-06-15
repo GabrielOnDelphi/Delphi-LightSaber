@@ -74,7 +74,7 @@
          AppData will automatically create the Translator object.
          Create a new form with AppData.CreateForm(). This will take care of everything. Seriously!
 
-         Check the ccAppData, LightVcl.Common.AppData
+         Check the LighCore.AppData, LightVcl.Common.AppData
 .pas for more info.
 
     * Manually
@@ -175,7 +175,7 @@ INTERFACE
 USES
   System.Classes, System.SysUtils, System.IniFiles, System.TypInfo,
   Vcl.Forms, Vcl.Menus, Vcl.ExtCtrls,
-  ccAppData, LightVcl.Common.AppData;
+  LighCore.AppData, LightVcl.Common.AppData;
 
 { Bitwise constants for TControl.Tag }
 CONST

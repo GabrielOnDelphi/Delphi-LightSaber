@@ -98,7 +98,7 @@ procedure LoadLastSkin(CONST DefaultSkin: string= '');  { On first run, set the 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.Colors, LightVcl.Common.Translate, LightVcl.Common.IniFileQuick, {uLinks,} Vcl.Themes, ccAppData, LightVcl.Common.AppData, LightVcl.Common.ExecuteShell,
+   LightVcl.Common.Colors, LightVcl.Common.Translate, LightVcl.Common.IniFileQuick, {uLinks,} Vcl.Themes, LighCore.AppData, LightVcl.Common.AppData, LightVcl.Common.ExecuteShell,
    LightVcl.Visual.INIFile, IOUtils, ccIO, ccCore, LightVcl.Common.Dialogs;   { VCL.Styles is mandatory here}
 
 CONST

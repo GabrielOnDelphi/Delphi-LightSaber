@@ -96,7 +96,7 @@ USES
  
 IMPLEMENTATION
 USES
-   LightVcl.Common.IO, ccIO, ccTextFile, ccAppData, LightVcl.Common.AppData, ccRegistry, ccCore, LightVcl.Common.Dialogs;
+   LightVcl.Common.IO, ccIO, ccTextFile, LighCore.AppData, LightVcl.Common.AppData, ccRegistry, ccCore, LightVcl.Common.Dialogs;
 
  
 

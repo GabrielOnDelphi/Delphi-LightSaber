@@ -58,7 +58,7 @@ TYPE
 
 IMPLEMENTATION {$R *.dfm}
 USES
-  ccAppData, LightVcl.Common.AppData
+  LighCore.AppData, LightVcl.Common.AppData
 , LightVcl.Common.Dialogs, ccIO, LightVcl.Common.IO, FormTranslEditor;
 
 

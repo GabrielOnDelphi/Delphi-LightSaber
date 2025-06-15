@@ -39,7 +39,7 @@ VAR
 IMPLEMENTATION
 {$R *.fmx}
 
-USES ccAppData;
+USES LighCore.AppData;
 
 
 procedure TForm1.FormPostInitialize;

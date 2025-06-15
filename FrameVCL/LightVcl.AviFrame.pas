@@ -64,7 +64,7 @@ function GetVideoPlayerLogo: TBitmap;
 
 IMPLEMENTATION
 USES
-   LightVcl.Graph.Bitmap, LightVcl.Graph.Loader, ccAppData, LightVcl.Common.AppData
+   LightVcl.Graph.Bitmap, LightVcl.Graph.Loader, LighCore.AppData, LightVcl.Common.AppData
 ;
 
 

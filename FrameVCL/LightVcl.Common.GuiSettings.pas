@@ -32,7 +32,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   ccAppData, LightVcl.Common.AppData;
+   LighCore.AppData, LightVcl.Common.AppData;
 
 
 procedure TGuiSettings.Save;

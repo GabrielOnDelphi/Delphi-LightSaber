@@ -98,7 +98,7 @@
         <DCCReference Include="MainForm.pas">
             <Form>frmMain</Form>
         </DCCReference>
-        <DCCReference Include="..\..\..\ccAppData.pas"/>
+        <DCCReference Include="..\..\..\LighCore.AppData.pas"/>
         <DCCReference Include="..\..\..\FrameVCL\LightCom.AppDataForm.pas"/>
         <DCCReference Include="..\..\..\FrameVCL\LightCom.IniFile.pas"/>
         <DCCReference Include="..\..\..\FrameVCL\LightCom.AppData.pas"/>

@@ -20,7 +20,7 @@ function SendEmail(SMTP: TIdSMTP; CONST AdrTo, AdrFrom, Subject, Body, HtmlImage
 IMPLEMENTATION
 
 USES
-  IdMessageBuilder, ccAppData, LightVcl.Common.AppData
+  IdMessageBuilder, LighCore.AppData, LightVcl.Common.AppData
 ;
 
 

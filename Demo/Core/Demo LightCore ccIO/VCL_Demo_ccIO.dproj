@@ -97,7 +97,7 @@
             <Form>frmTestIO</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\ccAppData.pas"/>
+        <DCCReference Include="..\..\LighCore.AppData.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

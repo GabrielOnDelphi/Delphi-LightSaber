@@ -25,7 +25,7 @@ USES
    Winapi.Windows, Winapi.MultiMon, Winapi.ShlObj, Winapi.SHFolder,
    System.Diagnostics, System.Classes, System.SysUtils,
    Vcl.Forms, Vcl.Dialogs,
-   ccAppData, LightVcl.Common.AppData;
+   LighCore.AppData, LightVcl.Common.AppData;
 
  { ANTI-DEBUGGER PROTECTION }
  procedure AntiDebug; assembler;

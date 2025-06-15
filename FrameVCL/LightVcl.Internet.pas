@@ -97,7 +97,7 @@ USES
 IMPLEMENTATION
 
 USES
-   ccAppData, LightVcl.Common.AppData, LightVcl.Internet.HTML, ccIO, ccDownload;
+   LighCore.AppData, LightVcl.Common.AppData, LightVcl.Internet.HTML, ccIO, ccDownload;
 
 
  function  PathIsUrlA; external 'shlwapi' name 'PathIsURLA';

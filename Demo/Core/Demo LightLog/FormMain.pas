@@ -48,7 +48,7 @@ var
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  ccAppData, LightVcl.Common.AppData, ccLogTypes, ccINIFile, LightVcl.Common.Dialogs;
+  LighCore.AppData, LightVcl.Common.AppData, ccLogTypes, ccINIFile, LightVcl.Common.Dialogs;
 
 
 procedure TMainForm.FormCreate(Sender: TObject);
