@@ -1,0 +1,132 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{86A7DC54-2BCF-43C4-B6A1-11E9B4207D4B}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Template App Minimal\VCL_TemplateMicro.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Template App Simple\VCL_TemplateSimple.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Template App Full\VCL_TemplateFull.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Template Universal Uninstaller\VCL_Uninstaller.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo All Visual Controls\VCL_Demo_VisualControls.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo AutoTranslator\VCL_Demo_AutoTranslator.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo GUI Autosave\VCL_Demo_SaveGUI.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo SystemReport\VCL_Demo_SystemReport.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo LightCore WinVersion\VCL_Demo_WinVers.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="VCL_TemplateMicro">
+        <MSBuild Projects="Template App Minimal\VCL_TemplateMicro.dproj"/>
+    </Target>
+    <Target Name="VCL_TemplateMicro:Clean">
+        <MSBuild Projects="Template App Minimal\VCL_TemplateMicro.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="VCL_TemplateMicro:Make">
+        <MSBuild Projects="Template App Minimal\VCL_TemplateMicro.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="VCL_TemplateSimple">
+        <MSBuild Projects="Template App Simple\VCL_TemplateSimple.dproj"/>
+    </Target>
+    <Target Name="VCL_TemplateSimple:Clean">
+        <MSBuild Projects="Template App Simple\VCL_TemplateSimple.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="VCL_TemplateSimple:Make">
+        <MSBuild Projects="Template App Simple\VCL_TemplateSimple.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="VCL_TemplateFull">
+        <MSBuild Projects="Template App Full\VCL_TemplateFull.dproj"/>
+    </Target>
+    <Target Name="VCL_TemplateFull:Clean">
+        <MSBuild Projects="Template App Full\VCL_TemplateFull.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="VCL_TemplateFull:Make">
+        <MSBuild Projects="Template App Full\VCL_TemplateFull.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="VCL_Uninstaller">
+        <MSBuild Projects="Template Universal Uninstaller\VCL_Uninstaller.dproj"/>
+    </Target>
+    <Target Name="VCL_Uninstaller:Clean">
+        <MSBuild Projects="Template Universal Uninstaller\VCL_Uninstaller.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="VCL_Uninstaller:Make">
+        <MSBuild Projects="Template Universal Uninstaller\VCL_Uninstaller.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="VCL_Demo_VisualControls">
+        <MSBuild Projects="Demo All Visual Controls\VCL_Demo_VisualControls.dproj"/>
+    </Target>
+    <Target Name="VCL_Demo_VisualControls:Clean">
+        <MSBuild Projects="Demo All Visual Controls\VCL_Demo_VisualControls.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="VCL_Demo_VisualControls:Make">
+        <MSBuild Projects="Demo All Visual Controls\VCL_Demo_VisualControls.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="VCL_Demo_AutoTranslator">
+        <MSBuild Projects="Demo AutoTranslator\VCL_Demo_AutoTranslator.dproj"/>
+    </Target>
+    <Target Name="VCL_Demo_AutoTranslator:Clean">
+        <MSBuild Projects="Demo AutoTranslator\VCL_Demo_AutoTranslator.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="VCL_Demo_AutoTranslator:Make">
+        <MSBuild Projects="Demo AutoTranslator\VCL_Demo_AutoTranslator.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="VCL_Demo_SaveGUI">
+        <MSBuild Projects="Demo GUI Autosave\VCL_Demo_SaveGUI.dproj"/>
+    </Target>
+    <Target Name="VCL_Demo_SaveGUI:Clean">
+        <MSBuild Projects="Demo GUI Autosave\VCL_Demo_SaveGUI.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="VCL_Demo_SaveGUI:Make">
+        <MSBuild Projects="Demo GUI Autosave\VCL_Demo_SaveGUI.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="VCL_Demo_SystemReport">
+        <MSBuild Projects="Demo SystemReport\VCL_Demo_SystemReport.dproj"/>
+    </Target>
+    <Target Name="VCL_Demo_SystemReport:Clean">
+        <MSBuild Projects="Demo SystemReport\VCL_Demo_SystemReport.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="VCL_Demo_SystemReport:Make">
+        <MSBuild Projects="Demo SystemReport\VCL_Demo_SystemReport.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="VCL_Demo_WinVers">
+        <MSBuild Projects="Demo LightCore WinVersion\VCL_Demo_WinVers.dproj"/>
+    </Target>
+    <Target Name="VCL_Demo_WinVers:Clean">
+        <MSBuild Projects="Demo LightCore WinVersion\VCL_Demo_WinVers.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="VCL_Demo_WinVers:Make">
+        <MSBuild Projects="Demo LightCore WinVersion\VCL_Demo_WinVers.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="VCL_TemplateMicro;VCL_TemplateSimple;VCL_TemplateFull;VCL_Uninstaller;VCL_Demo_VisualControls;VCL_Demo_AutoTranslator;VCL_Demo_SaveGUI;VCL_Demo_SystemReport;VCL_Demo_WinVers"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="VCL_TemplateMicro:Clean;VCL_TemplateSimple:Clean;VCL_TemplateFull:Clean;VCL_Uninstaller:Clean;VCL_Demo_VisualControls:Clean;VCL_Demo_AutoTranslator:Clean;VCL_Demo_SaveGUI:Clean;VCL_Demo_SystemReport:Clean;VCL_Demo_WinVers:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="VCL_TemplateMicro:Make;VCL_TemplateSimple:Make;VCL_TemplateFull:Make;VCL_Uninstaller:Make;VCL_Demo_VisualControls:Make;VCL_Demo_AutoTranslator:Make;VCL_Demo_SaveGUI:Make;VCL_Demo_SystemReport:Make;VCL_Demo_WinVers:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
