@@ -18,8 +18,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, System.IOUtils, Vcl.Mask,
-  LightCom.Translate, ccCore, LightCom.Dialogs, ccAppData, LightCom.AppData
-, LightCom.AppDataForm;
+  LightCom.Translate, ccCore, LightCom.Dialogs, ccAppData, LightCom.AppData, LightCom.AppDataForm;
 
 TYPE
   TfrmTranslEditor = class(TLightForm)
