@@ -105,7 +105,7 @@ USES
 IMPLEMENTATION
 
 USES
-   LightVcl.Common.Keyboard, ccIO;
+   LightVcl.Common.Keyboard, LightCore.IO;
 
 
 

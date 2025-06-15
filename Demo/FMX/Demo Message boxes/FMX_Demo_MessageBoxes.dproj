@@ -298,7 +298,7 @@
         <DCCReference Include="..\..\..\FrameFMX\LightFMX.lbAppData.pas"/>
         <DCCReference Include="..\..\..\FrameFMX\LightFMX.lbAppData.Form.pas"/>
         <DCCReference Include="..\..\..\FrameFMX\LightFMX.lbIniFile.pas"/>
-        <DCCReference Include="..\..\..\ccINIFile.pas"/>
+        <DCCReference Include="..\..\..\LightCore.INIFile.pas"/>
         <DCCReference Include="..\..\..\FrameFMX\LightFMX.lbDialogs.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

@@ -13,7 +13,7 @@ UNIT LightVcl.Graph.Loader.WB1;
 INTERFACE
 
 USES
-  System.SysUtils, System.Classes, ccStreamMem, Vcl.Imaging.jpeg,
+  System.SysUtils, System.Classes, LightCore.StreamMem, Vcl.Imaging.jpeg,
   System.AnsiStrings;
 
 CONST

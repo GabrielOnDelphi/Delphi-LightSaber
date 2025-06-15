@@ -29,7 +29,7 @@ UNIT LightVcl.Graph.ResizeParamFrame;
 
        VAR BMP:= LoadAndStretch(FileName, Params);
        if BMP <> NIL
-       then Bmp2Jpg(BMP, ccIO.IncrementFileName(FileName), 95);
+       then Bmp2Jpg(BMP, LightCore.IO.IncrementFileName(FileName), 95);
       end;
 -------------------------------------------------------------------------------------------------------------}
 

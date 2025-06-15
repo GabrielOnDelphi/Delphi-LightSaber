@@ -46,7 +46,7 @@ USES
 IMPLEMENTATION
 
 USES
-   ccCore;
+   LightCore.Core;
 
 CONST
    MB_OK              = $00000000;  // Defined originally in Windows.pas but we don't want to include that platform unit here.

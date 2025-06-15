@@ -33,7 +33,7 @@ procedure Register;
 IMPLEMENTATION {$R *.dfm}
 
 
-{ Example of filter: Filter.Filter:= ccIO.FilterAllFiles + '|' + LightVcl.Graph.Util.AllImgFlt; }
+{ Example of filter: Filter.Filter:= LightCore.IO.FilterAllFiles + '|' + LightVcl.Graph.Util.AllImgFlt; }
 
 
 procedure TFrameWinExplorer.DirectoryChange(Sender: TObject);

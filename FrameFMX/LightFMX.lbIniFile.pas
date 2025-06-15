@@ -6,7 +6,7 @@
    See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
-  Same as ccINIFile but adds support for forms to save themselves to disk.
+  Same as LightCore.INIFile but adds support for forms to save themselves to disk.
   Ini file name/file path is automatically calculated.
 
 --------------------------------------------------------------------------------------------------------------
@@ -46,8 +46,8 @@
      The TIniFileApp class will use AppName to automatically determine the INI file name/path which is %AppData%\AppName.Ini.
      Example: If the AppData.AppName is set to "DelphiLightSaber",
      the ini file will be "c:\Users\UserName\AppData\Roaming\DelphiLightSaber\DelphiLightSaber.ini"
-     See LighCore.AppData.pas for details.
-     The TIniFileApp class will also automatically save the LighCore.AppData.AppData.LastUsedFolder variable to the INI file.
+     See LightCore.AppData.pas for details.
+     The TIniFileApp class will also automatically save the LightCore.AppData.AppData.LastUsedFolder variable to the INI file.
 
 
   Important:
@@ -97,7 +97,7 @@ USES
    System.Classes, System.IniFiles, System.SysUtils, System.UITypes, System.UIConsts,
    FMX.Graphics, FMX.Forms, FMX.Controls, FMX.StdCtrls, FMX.NumberBox, FMX.Colors,
    FMX.ActnList, FMX.Edit, FMX.SpinBox, FMX.Menus, FMX.Types, FMX.Dialogs, FMX.ListBox,
-   ccINIFile, LighCore.AppData;
+   LightCore.INIFile, LightCore.AppData;
 
 TYPE
 
@@ -117,11 +117,11 @@ TYPE
     procedure SaveForm (Form: TForm; AutoState: TAutoState= asPosOnly);      { Save ALL supported controls on this form }
     procedure LoadForm (Form: TForm; AutoState: TAutoState= asPosOnly);
 
-    { Font - this requires VCL framework so it cannot be moved to ccINIFile }
+    { Font - this requires VCL framework so it cannot be moved to LightCore.INIFile }
     function  Read       (CONST Ident: string; Font: TFont): Boolean;  overload;
     procedure Write      (CONST Ident: string; Font: TFont);           overload;
 
-    { Color - this requires VCL framework so it cannot be moved to ccINIFile }
+    { Color - this requires VCL framework so it cannot be moved to LightCore.INIFile }
     function  ReadColor  (CONST Ident: string; Default: TColor): TColor;
     procedure WriteColor (CONST Ident: string; Value: TColor);
 
@@ -137,7 +137,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   ccIO, ccTextFile, ccCore, LightFMX.lbAppData;
+   LightCore.IO, LightCore.TextFile, LightCore.Core, LightFMX.lbAppData;
 
 
 {-----------------------------------------------------------------------------------------------------------------------

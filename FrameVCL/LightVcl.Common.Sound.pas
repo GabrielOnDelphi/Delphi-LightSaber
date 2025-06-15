@@ -39,7 +39,7 @@ USES
 
 IMPLEMENTATION
 USES
-  ccCore, LightVcl.Common.Dialogs;
+  LightCore.Core, LightVcl.Common.Dialogs;
 
 
 procedure PlayWinSound(CONST SystemSoundName: string);

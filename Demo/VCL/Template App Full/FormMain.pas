@@ -33,7 +33,7 @@ USES
   WinApi.Windows, WinApi.Messages, Winapi.ShellApi,
   System.SysUtils, System.Classes, System.Actions,
   VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
-  CoolTrayIcon, LighCore.AppData, LightVcl.Common.AppData, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Visual.PathEdit, LightVcl.Visual.StatusBar, cpProteus {Delete this line if you don't have Proteus library}, cpProteusIO, LightVcl.Common.GuiSettings, LightVcl.Common.AppDataForm, ccCore;
+  CoolTrayIcon, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Visual.PathEdit, LightVcl.Visual.StatusBar, cpProteus {Delete this line if you don't have Proteus library}, cpProteusIO, LightVcl.Common.GuiSettings, LightVcl.Common.AppDataForm, LightCore.Core;
 
 TYPE
   TMainForm = class(TLightForm)

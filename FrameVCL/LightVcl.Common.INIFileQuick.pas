@@ -48,7 +48,7 @@ procedure WriteFont    (CONST Identifier: string; Font: TFont);
 IMPLEMENTATION
 
 USES
-   LighCore.AppData, LightVcl.Common.AppData, LightVcl.Common.IniFile;
+   LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.IniFile;
 
 
 

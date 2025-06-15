@@ -53,7 +53,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.Dialogs, LighCore.AppData, LightVcl.Common.AppData
+   LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Common.AppData
 , LightVcl.Internet; //, LightVcl.Visual.INIFile;
 
 

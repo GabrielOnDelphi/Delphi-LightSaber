@@ -67,7 +67,8 @@ function DownloadToFile    (CONST URL, Referer, DestinationFile: string): Cardin
 IMPLEMENTATION
 
 USES
-   ccCore, LightVcl.Common.Dialogs, ccIO, ccTextFile, LightVcl.Internet;
+   LightCore.Core, LightVcl.Common.Dialogs, LightCore.IO, LightCore.TextFile,
+   LightCore.Internet, LightVcl.Internet;
 
 
 //Hint: use TIdURI.URLEncode() in IdURI.pas to encode an URL.
@@ -212,7 +213,7 @@ begin
 
   Result:= DownloadBytes(URL, Referer, BinData);
   if Result = ERROR_SUCCESS
-  then ccIO.BytesToFile(DestinationFile, BinData, TRUE);
+  then LightCore.IO.BytesToFile(DestinationFile, BinData, TRUE);
 end;
 
 

@@ -26,7 +26,7 @@
      Or use something like this:
        uses
          FastMM4,
-         ccINIFile,
+         LightCore.INIFile,
          LightFMX.lbAppData,
          LightFMX.lbAppData.Form in 'LightFMX.lbAppData.Form.pas';
          MainForm in 'MainForm.pas' {frmMain);
@@ -99,7 +99,7 @@ INTERFACE
 USES
 
   {$IFDEF MsWindows}
-    Winapi.Windows, System.Win.Registry, //ccRegistry, // SelfStartup
+    Winapi.Windows, System.Win.Registry, //LightCore.Registry, // SelfStartup
   {$ENDIF}
   System.SysUtils, System.Classes, System.UITypes, System.Types,
   FMX.Forms, FMX.Graphics, FMX.Types, FMX.Platform,
@@ -112,7 +112,7 @@ USES
    Posix.Stdlib, Posix.Unistd,
   {$ENDIF}
 
-  ccCore, ccINIFile, LighCore.AppData; //LightVcl.LogForm
+  LightCore.Core, LightCore.INIFile, LightCore.AppData; //LightVcl.LogForm
 
 TYPE
   TAppData= class(TAppDataCore)
@@ -193,7 +193,7 @@ VAR                      // ToDo 5: make sure AppData is unique (make it Singlet
 IMPLEMENTATION
 
 USES
-  ccIO;
+  LightCore.IO;
 
 
 

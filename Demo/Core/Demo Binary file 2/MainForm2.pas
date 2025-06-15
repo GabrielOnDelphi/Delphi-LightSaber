@@ -13,7 +13,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Mask, Vcl.ExtCtrls, Vcl.Samples.Spin,
-  LightVcl.Common.AppDataForm, ccStreamBuff, ccStreamBuff2, uSoldier_v2;
+  LightVcl.Common.AppDataForm, LightCore.StreamBuff, LightCore.StreamBuff2, uSoldier_v2;
 
 type
   TfrmMain = class(TLightForm)
@@ -36,7 +36,7 @@ type
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  LighCore.AppData, LightVcl.Common.AppData;
+  LightCore.AppData, LightVcl.Common.AppData;
 
 
 procedure TfrmMain.FormCreate(Sender: TObject);

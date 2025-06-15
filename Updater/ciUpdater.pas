@@ -45,7 +45,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.DateUtils, System.Classes, Vcl.ExtCtrls,
-  ciUpdaterRec, ccCore;
+  ciUpdaterRec, LightCore.Core;
 
 TYPE
   TCheckWhen = (cwNever,
@@ -111,7 +111,7 @@ VAR
 IMPLEMENTATION
 
 USES
-  FormAsyncMessage, ccDownload, ccINIFile, LightVcl.Common.Debugger, LighCore.AppData, LightVcl.Common.AppData;
+  FormAsyncMessage, LightCore.Download, LightCore.INIFile, LightVcl.Common.Debugger, LightCore.AppData, LightVcl.Common.AppData;
 
 Const
   TooLongNoSeeInterval = 180;    { Force to check for updates every 180 days even if the updater is disabled }
@@ -238,7 +238,7 @@ begin
  then FUpdaterStart(Self);
 
  { Download the Bin file }
- ccDownload.DownloadToFile(URLNewsFile, UpdaterFileLocation, ErrorMsg);    { Returns false if the Internet connection failed. If the URL is invalid, probably it will return the content of the 404 page (if the server automatically returns a 404 page). }
+ LightCore.Download.DownloadToFile(URLNewsFile, UpdaterFileLocation, ErrorMsg);    { Returns false if the Internet connection failed. If the URL is invalid, probably it will return the content of the 404 page (if the server automatically returns a 404 page). }
  Result:= ErrorMsg = '';
 
  { Parse the binary file }

@@ -3,7 +3,7 @@
         <Base>True</Base>
         <AppType>Application</AppType>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <DCC_DCCCompiler>DCC32</DCC_DCCCompiler>
+        <DCC_DLightCore.Compiler>DCC32</DCC_DLightCore.Compiler>
         <FrameworkType>VCL</FrameworkType>
         <MainSource>VCL_Demo_FileStream.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
@@ -116,7 +116,7 @@
             <Form>MainForm</Form>
         </DCCReference>
         <DCCReference Include="..\..\FrameVCL\LightVcl.LogForm.pas"/>
-        <DCCReference Include="..\..\LighCore.AppData.pas"/>
+        <DCCReference Include="..\..\LightCore.AppData.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

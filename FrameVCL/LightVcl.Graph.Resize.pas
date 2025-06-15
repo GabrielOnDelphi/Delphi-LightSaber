@@ -75,7 +75,7 @@ USES
 IMPLEMENTATION
 
 USES
-  ccMath, LightVcl.Graph.Loader, LightVcl.Graph.FX;
+  LightCore.Math, LightVcl.Graph.Loader, LightVcl.Graph.FX;
 
 
 

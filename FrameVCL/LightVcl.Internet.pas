@@ -25,7 +25,7 @@ USES
    Winapi.WinSock,  { Required by GetLocalIP }
    Winapi.WinInet,  { Required by IE_ApplySettings }
    System.SysUtils, System.StrUtils, System.Classes, System.IniFiles, System.Win.Registry,
-   ccCore, LightVcl.Common.Dialogs;
+   LightCore.Core, LightCore.Internet, LightVcl.Common.Dialogs;
 
 
 
@@ -97,7 +97,7 @@ USES
 IMPLEMENTATION
 
 USES
-   LighCore.AppData, LightVcl.Common.AppData, LightVcl.Internet.HTML, ccIO, ccDownload;
+   LightCore.AppData, LightVcl.Common.AppData, LightVcl.Internet.HTML, LightCore.IO, LightCore.Download;
 
 
  function  PathIsUrlA; external 'shlwapi' name 'PathIsURLA';
@@ -186,7 +186,7 @@ begin
  if PCConnected2Internet
  then
   begin
-    Result:= ccDownload.DownloadAsString('http://www.google.com/');
+    Result:= LightCore.Download.DownloadAsString('http://www.google.com/');
     if Result= ''
     then Result:= CheckYourFirewallMsg
     else Result:= ConnectedToInternet
@@ -205,7 +205,7 @@ function ProgramConnect2Internet: Integer;
 begin
  if PCConnected2Internet
  then
-   if ccDownload.DownloadAsString('http://www.google.com/') > ''                                   { 1 = Can connect to internet, 0 = blocked by firewall, -1 = PC not connected to Internet }
+   if LightCore.Download.DownloadAsString('http://www.google.com/') > ''                                   { 1 = Can connect to internet, 0 = blocked by firewall, -1 = PC not connected to Internet }
    then Result := 1
    else Result := 0
  else

@@ -10,7 +10,7 @@ UNIT uSoldier_v3;
 INTERFACE
 
 USES System.SysUtils, System.Generics.Collections, System.Contnrs, System.Classes,
-     ccStreamBuff, ccStreamBuff2;
+     LightCore.StreamBuff, LightCore.StreamBuff2;
 
 TYPE
   TGun = class

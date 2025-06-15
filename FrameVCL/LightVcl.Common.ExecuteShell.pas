@@ -72,7 +72,7 @@ USES
 IMPLEMENTATION
 
 USES
-   ccIO, LightVcl.Common.IO, LightVcl.Common.Dialogs;
+   LightCore.IO, LightVcl.Common.IO, LightVcl.Common.Dialogs;
 
 
 

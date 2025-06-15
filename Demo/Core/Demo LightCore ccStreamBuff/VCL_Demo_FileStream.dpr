@@ -7,7 +7,7 @@ uses
   LightVcl.Common.AppData,
   FormMain in 'FormMain.pas' {MainForm},
   LightVcl.LogForm in '..\..\FrameVCL\LightVcl.LogForm.pas',
-  LighCore.AppData in '..\..\LighCore.AppData.pas';
+  LightCore.AppData in '..\..\LightCore.AppData.pas';
 
 {$R *.res}
 

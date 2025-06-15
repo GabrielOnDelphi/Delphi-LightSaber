@@ -3,7 +3,7 @@ program VCL_Demo_SystemReport;
 uses
   Vcl.Forms,
   MainForm in 'MainForm.pas' {frmMain},
-  LighCore.AppData in '..\..\..\LighCore.AppData.pas',
+  LightCore.AppData in '..\..\..\LightCore.AppData.pas',
   LightVcl.Common.AppDataForm in '..\..\..\FrameVCL\LightCom.AppDataForm.pas',
   LightVcl.Common.IniFile in '..\..\..\FrameVCL\LightCom.IniFile.pas',
   LightVcl.Common.AppData in '..\..\..\FrameVCL\LightCom.AppData.pas',

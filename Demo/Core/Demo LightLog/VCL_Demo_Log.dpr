@@ -5,9 +5,9 @@ uses
   FastMM4,
   {$ENDIF }
   FormMain in 'FormMain.pas' {MainForm},
-  ccINIFile in '..\..\ccINIFile.pas',
+  LightCore.INIFile in '..\..\LightCore.INIFile.pas',
   LightVcl.Common.AppData in '..\..\FrameVCL\LightCom.AppData.pas',
-  LighCore.AppData in '..\..\LighCore.AppData.pas',
+  LightCore.AppData in '..\..\LightCore.AppData.pas',
   LightVcl.Common.LogFilter in '..\..\FrameVCL\LightCom.LogFilter.pas',
   LightVcl.Common.LogViewer in '..\..\FrameVCL\LightCom.LogViewer.pas';
 

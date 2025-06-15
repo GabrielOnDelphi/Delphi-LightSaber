@@ -7,7 +7,7 @@ uses
   LightFMX.lbAppData in '..\..\..\FrameFMX\LightFMX.lbAppData.pas',
   LightFMX.lbAppData.Form in '..\..\..\FrameFMX\LightFMX.lbAppData.Form.pas',
   LightFMX.lbIniFile in '..\..\..\FrameFMX\LightFMX.lbIniFile.pas',
-  ccINIFile in '..\..\..\ccINIFile.pas',
+  LightCore.INIFile in '..\..\..\LightCore.INIFile.pas',
   LightFMX.lbDialogs in '..\..\..\FrameFMX\LightFMX.lbDialogs.pas';
 
 {$R *.res}

@@ -103,7 +103,7 @@
         <DCCReference Include="..\..\..\FrameVCL\FormTranslSelector.pas">
             <Form>frmTranslSelector</Form>
         </DCCReference>
-        <DCCReference Include="..\..\..\LighCore.AppData.pas"/>
+        <DCCReference Include="..\..\..\LightCore.AppData.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

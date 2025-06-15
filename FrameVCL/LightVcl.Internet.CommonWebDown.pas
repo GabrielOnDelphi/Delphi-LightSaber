@@ -16,13 +16,13 @@
 INTERFACE
 
 USES
-  System.SysUtils, ccCore;
+  System.SysUtils, LightCore.Core;
 
 function GetUnsplashImage(CONST URL, LocalFile: string): Boolean;
 
 IMPLEMENTATION
 
-USES ccDownload, LightVcl.Internet.HTML;
+USES LightCore.Download, LightVcl.Internet.HTML, LightCore.HTML;
 
 
 
@@ -41,7 +41,7 @@ begin
  HTML:= DownloadAsString(URL);
  if HTML = '' then EXIT(FALSE);
 
- Tag:= LightVcl.Internet.HTML.ExtractLine(HTML, '<meta data-react-helmet="true" property="og:image"');    //find: <meta data-react-helmet="true" property="og:image"
+ Tag:= LightCore.HTML.ExtractLine(HTML, '<meta data-react-helmet="true" property="og:image"');    //find: <meta data-react-helmet="true" property="og:image"
  HighResImg:= ExtractAttribValue(Tag, 'content');
  HighResImg:= CopyTo(HighResImg, 1, '?', FALSE);
 

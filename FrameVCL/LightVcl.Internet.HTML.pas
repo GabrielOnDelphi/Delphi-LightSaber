@@ -17,7 +17,7 @@ INTERFACE
 USES
    MsHtml,
    System.SysUtils, System.AnsiStrings, System.StrUtils, System.Classes, System.Math,
-   ccStringList, ccCore;
+   LightCore.StringList, LightCore.Core;
 
 {--------------------------------------------------------------------------------------------------
    HTML MANIPULATION
@@ -30,7 +30,7 @@ USES
 IMPLEMENTATION
 
 USES
-  ccIO, ccInternet, ccTextFile;
+  LightCore.IO, LightCore.Internet, LightCore.TextFile;
 
 
 procedure SetFieldValue(aForm: IHTMLFormElement; const fieldName: string; const newValue: string; const instance: integer=0);

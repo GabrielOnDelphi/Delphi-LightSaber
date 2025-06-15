@@ -16,8 +16,6 @@ INTERFACE
 
 USES System.SysUtils, System.Classes;
 
-{$R *.Res}
-
 TYPE
  THtmlWriter = class(TComponent)
   private
@@ -60,7 +58,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   ccCore, ccIO, ccTextFile;
+   LightCore.Core, LightCore.IO, LightCore.TextFile;
 
 
 constructor THtmlWriter.Create(AOwner: TComponent);

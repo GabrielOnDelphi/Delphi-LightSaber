@@ -63,7 +63,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES ccMath, ccCore;
+USES LightCore.Math, LightCore.Core;
 
 
 
@@ -194,7 +194,7 @@ begin
 
    { Update associated indicators }
    iTime:= Round(Value / 2);            { Compute animation speed for aciCountDown }
-   ccMath.EnsureRange(iTime, 50, 1000);  { 50 is hit at 1min 38sec. 100 is hit at 33 minutes }
+   LightCore.Math.EnsureRange(iTime, 50, 1000);  { 50 is hit at 1min 38sec. 100 is hit at 33 minutes }
    if ActivityIndic <> NIL then ActivityIndic.FrameDelay:= iTime;
    if Taskbar <> NIL then
     begin

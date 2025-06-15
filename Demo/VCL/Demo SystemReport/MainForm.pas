@@ -4,7 +4,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, LighCore.AppData, LightVcl.Common.AppData, LightVcl.Common.AppDataForm;
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.AppDataForm;
 
 type
   TfrmMain = class(TLightForm)

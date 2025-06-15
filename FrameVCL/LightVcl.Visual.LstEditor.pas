@@ -19,7 +19,7 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
-USES ccTextFile;
+USES LightCore.TextFile;
 
 
 

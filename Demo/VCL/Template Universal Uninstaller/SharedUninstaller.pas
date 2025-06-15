@@ -19,7 +19,7 @@ USES
 
 IMPLEMENTATION
 
-USES ccRegistry, LighCore.AppData, LightVcl.Common.AppData
+USES LightCore.Registry, LightCore.AppData, LightVcl.Common.AppData
 ;
 
 

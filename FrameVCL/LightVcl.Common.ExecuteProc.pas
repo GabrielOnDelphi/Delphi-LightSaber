@@ -50,7 +50,7 @@ USES
 IMPLEMENTATION
 
 USES
-   LightVcl.Common.IO, ccCore, LightVcl.Common.Dialogs;
+   LightVcl.Common.IO, LightCore.Core, LightVcl.Common.Dialogs;
 
 
 {--------------------------------------------------------------------------------------------------

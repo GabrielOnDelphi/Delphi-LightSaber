@@ -20,7 +20,7 @@ INTERFACE
 USES
    System.SysUtils, System.Classes,
    FMX.Controls, FMX.StdCtrls, FMX.Types,
-   LightFmx.lbLogViewer, ccLogTypes;
+   LightFmx.lbLogViewer, LightCore.LogTypes;
 
 TYPE
   TLogVerbFilter = class(FMX.StdCtrls.TPanel)//could be TLayout

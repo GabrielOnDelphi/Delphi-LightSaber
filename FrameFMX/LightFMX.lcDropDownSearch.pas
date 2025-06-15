@@ -67,7 +67,7 @@ procedure Register;
 
 IMPLEMENTATION
 USES
-   ccCore;
+   LightCore.Core;
 
 
 

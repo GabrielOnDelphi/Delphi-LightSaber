@@ -86,7 +86,7 @@ procedure LoadLastSkin(CONST DefaultSkin: string= '');  { On first run, set the 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.ExecuteShell, LighCore.AppData, LightVcl.Common.AppData
+   LightVcl.Common.ExecuteShell, LightCore.AppData, LightVcl.Common.AppData
 , LightVcl.Visual.INIFile, LightVcl.Common.Translate, LightVcl.Common.IniFileQuick;
 
 CONST

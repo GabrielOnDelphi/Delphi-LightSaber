@@ -22,7 +22,7 @@ USES
    Winapi.Windows,
    System.Classes, System.SysUtils, Generics.Collections,
    Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls, Vcl.Forms, Vcl.Grids, Vcl.ExtCtrls, VCL.ComCtrls,
-   ccLogRam, ccLogTypes, ccLogLinesAbstract;
+   LightCore.LogRam, LightCore.LogTypes, LightCore.LogLinesAbstract;
 
 TYPE
   THackGrid = class(TStringGrid)
@@ -93,7 +93,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   ccCore, LightVcl.Common.Colors, LightVcl.Common.Clipboard, LightVcl.Common.LogFilter;
+   LightCore.Core, LightVcl.Common.Colors, LightVcl.Common.Clipboard, LightVcl.Common.LogFilter;
 
 
 

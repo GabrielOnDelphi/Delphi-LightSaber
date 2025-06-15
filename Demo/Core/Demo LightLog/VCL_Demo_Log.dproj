@@ -80,9 +80,9 @@
             <Form>MainForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\ccINIFile.pas"/>
+        <DCCReference Include="..\..\LightCore.INIFile.pas"/>
         <DCCReference Include="..\..\FrameVCL\LightCom.AppData.pas"/>
-        <DCCReference Include="..\..\LighCore.AppData.pas"/>
+        <DCCReference Include="..\..\LightCore.AppData.pas"/>
         <DCCReference Include="..\..\FrameVCL\LightCom.LogFilter.pas"/>
         <DCCReference Include="..\..\FrameVCL\LightCom.LogViewer.pas"/>
         <BuildConfiguration Include="Base">

@@ -30,8 +30,8 @@ INTERFACE
 USES
   Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Controls,
   Vcl.ExtCtrls, System.Classes, SysUtils, Vcl.Forms, System.IOUtils,
-  ccCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, ccIO, ccTextFile, LightVcl.Common.IO, LightVcl.Visual.PathEdit, LightVcl.Visual.CountDown,
-  InternetLabel, llRichLog, Vcl.Imaging.pngimage, LightVcl.Common.AppDataForm;
+  LightCore.Core, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO, LightVcl.Visual.PathEdit, LightVcl.Visual.CountDown,
+  InternetLabel, LightVcl.Visual.RichLog, Vcl.Imaging.pngimage, LightVcl.Common.AppDataForm;
 
 TYPE
   TfrmMain = class(TLightForm)
@@ -75,7 +75,7 @@ IMPLEMENTATION {$R *.dfm}
 {/$DEFINE BASER}
 
 USES
-   LightVcl.Common.Window, LightVcl.Common.ExecuteShell, LightVcl.Common.Shell, LighCore.AppData, LightVcl.Common.AppData
+   LightVcl.Common.Window, LightVcl.Common.ExecuteShell, LightVcl.Common.Shell, LightCore.AppData, LightVcl.Common.AppData
 ;
 
    {$IFDEF BioniX}BxConstants;{$ENDIF}
@@ -314,7 +314,7 @@ begin
  mmoLog.AddEmptyRow;
  CheckValidAppName;
  TRY
-  mmoLog.SaveAsRtf(GetDesktopFolder+ AppData.AppName+ ' - uninstall confirmation '+ ccIO.TimeToStr_IO(Now)+'.RTF');
+  mmoLog.SaveAsRtf(GetDesktopFolder+ AppData.AppName+ ' - uninstall confirmation '+ LightCore.IO.TimeToStr_IO(Now)+'.RTF');
  EXCEPT
    on EFCreateError do MesajGeneric('The uninstaller was blocked from creating the uninstall log on your desktop! Some overzealous antivirus programs misbehave by blocking legitimate applications.')
    { This is here because I got bug reports from users saying "Cannot create file".

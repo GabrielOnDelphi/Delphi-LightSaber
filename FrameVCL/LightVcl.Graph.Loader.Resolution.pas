@@ -60,7 +60,7 @@ TYPE
 
  IMPLEMENTATION
 
- USES ccBinary, LightVcl.Graph.Util, ccIO;
+ USES LightCore.Binary, LightVcl.Graph.Util, LightCore.IO;
 
  
 
@@ -90,7 +90,7 @@ begin
         end;
  EXCEPT
   //todo 1: trap only specific exceptions
-  //DO NOTHING    or: write this directly in ccCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs log
+  //DO NOTHING    or: write this directly in LightCore.Core, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs log
   Width := -1;    //DO NOT RAISE AN exception HERE IF THE FILE TYPE IS UNSUPORTED! Let the caller decide what to do. This could happen when bionix downloads and URL and the server returns a HTML instead of an image!
   Height:= -1;
  END;
@@ -240,10 +240,10 @@ begin
 
  { Read image size }
  Stream.Seek(18, 0);
- Width := ccBinary.ReadMotorolaWord(Stream);
+ Width := LightCore.Binary.ReadMotorolaWord(Stream);
 
  Stream.Seek(22, 0);
- Height := ccBinary.ReadMotorolaWord(Stream);
+ Height := LightCore.Binary.ReadMotorolaWord(Stream);
 end;
 
 

@@ -20,7 +20,7 @@ INTERFACE
 USES
   System.Classes, System.SysUtils,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus,
-  LighCore.AppData, LightVcl.Common.AppDataForm, ccLogRam, LightVcl.Common.LogViewer, LightVcl.Common.LogFilter;
+  LightCore.AppData, LightVcl.Common.AppDataForm, LightCore.LogRam, LightVcl.Common.LogViewer, LightVcl.Common.LogFilter;
 
 TYPE
   TfrmRamLog = class(TLightForm)
@@ -58,7 +58,7 @@ IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   ccLogTypes, ccINIFile, LightVcl.Common.AppData;
+   LightCore.LogTypes, LightCore.INIFile, LightVcl.Common.AppData;
 
 
 {-------------------------------------------------------------------------------------------------------------

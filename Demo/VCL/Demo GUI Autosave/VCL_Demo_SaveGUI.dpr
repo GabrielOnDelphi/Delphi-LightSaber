@@ -7,7 +7,7 @@ uses
   System.SysUtils,
   MainForm in 'MainForm.pas' {frmTester},
   SecondForm in 'SecondForm.pas' {frmContainer},
-  LighCore.AppData in '..\..\..\LighCore.AppData.pas',
+  LightCore.AppData in '..\..\..\LightCore.AppData.pas',
   LightVcl.Common.AppDataForm in '..\..\..\FrameVCL\LightCom.AppDataForm.pas',
   LightVcl.Common.IniFile in '..\..\..\FrameVCL\LightCom.IniFile.pas',
   LightVcl.Common.AppData in '..\..\..\FrameVCL\LightCom.AppData.pas',

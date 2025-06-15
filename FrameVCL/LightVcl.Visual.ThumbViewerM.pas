@@ -110,7 +110,7 @@ procedure Register;
 IMPLEMENTATION
 {$WARN GARBAGE OFF}                                                                                {Silence the: 'W1011 Text after final END' warning }
 
-USES LightVcl.Graph.Util, ccCore, LightVcl.Common.System, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, ccMath, ccIO;
+USES LightVcl.Graph.Util, LightCore.Core, LightVcl.Common.System, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightCore.Math, LightCore.IO;
 
 
 

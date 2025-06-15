@@ -77,7 +77,7 @@ CONST
 
 
 IMPLEMENTATION
-USES ccCore;
+USES LightCore.Core;
 
 
 
@@ -230,7 +230,7 @@ begin
    begin
      GetWindowText(NextHandle, NextTitle, 255);                               // retrieve its text
      s:= StrPas(NextTitle);
-     if ccCore.find(WindowTitle, s, PartialSearch, CaseSens)
+     if LightCore.Core.find(WindowTitle, s, PartialSearch, CaseSens)
      then
       begin
        Result:= NextHandle;

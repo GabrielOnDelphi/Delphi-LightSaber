@@ -4,7 +4,7 @@
    www.GabrielMoraru.com
    2025.05
 --------------------------------------------------------------------------------------------------------------
-   Extension for ccIO. pas
+   Extension for LightCore.IO. pas
    Framework: VCL only
    Shows error messages (dialog boxes) when the I/O peeration failed.
 ==================================================================================================}
@@ -120,7 +120,7 @@ USES
 IMPLEMENTATION
 
 USES
-  ccCore, ccRegistry, ccIO, LightVcl.Common.Dialogs, LightVcl.Common.WinVersion;
+  LightCore.Core, LightCore.Registry, LightCore.IO, LightVcl.Common.Dialogs, LightVcl.Common.WinVersion;
 
 
 { Copied from IOUtils.TPath.HasPathValidColon where it is PRIVATE }
@@ -156,7 +156,7 @@ end;
 { Shows an error message if the folder cannot be created. }
 function ForceDirectoriesMsg(CONST FullPath: string): Boolean;
 begin
-  Result:= ccIO.ForceDirectories(FullPath) >= 0;
+  Result:= LightCore.IO.ForceDirectories(FullPath) >= 0;
   if NOT Result
   then MessageError('Cannot create folder: '+ FullPath+ CRLFw+ 'Probably you are trying to write to a folder to which you don''t have write permissions, or, the folder you want to create is invalid.');
 end;
@@ -776,7 +776,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    TFileOpenDlg
 
-   Example: PromptToSaveFile(s, ccCore.FilterTxt, 'txt')
+   Example: PromptToSaveFile(s, LightCore.Core.FilterTxt, 'txt')
    Note: You might want to use PromptForFileName instead
 -------------------------------------------------------------------------------------------------------------}
 
@@ -796,7 +796,7 @@ begin
 end;
 
 
-{ Example: SaveDialog(ccCore.FilterTxt, 'csv');  }
+{ Example: SaveDialog(LightCore.Core.FilterTxt, 'csv');  }
 Function GetSaveDialog(CONST FileName, Filter, DefaultExt: string; CONST Caption: string= ''): TSaveDialog;
 begin
  Result:= TSaveDialog.Create(NIL);

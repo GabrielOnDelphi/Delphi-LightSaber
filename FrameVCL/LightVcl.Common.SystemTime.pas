@@ -29,7 +29,7 @@ USES
 IMPLEMENTATION
 
 USES
-   LightVcl.Common.IO, LightVcl.Common.WinVersion, ccRegistry;
+   LightVcl.Common.IO, LightVcl.Common.WinVersion, LightCore.Registry;
 
 
 

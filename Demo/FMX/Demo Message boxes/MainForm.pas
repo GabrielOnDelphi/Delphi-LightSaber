@@ -7,7 +7,7 @@ uses
   System.UITypes, System.Classes, System.SysUtils,
   FMX.Dialogs, // Warning: MessageDlg is deprecated. Please use IFMXDialogServiceAsync.MessageDialogAsync or IFMXDialogServiceSync.MessageDialogSync from the FMX.Platform unit.
   FMX.DialogService, FMX.Types, FMX.Forms, FMX.StdCtrls, FMX.Controls, FMX.Controls.Presentation,
-  LightFMX.lbAppData.Form, LightFMX.lbDialogs, ccIniFile;
+  LightFMX.lbAppData.Form, LightFMX.lbDialogs, LightCore.INIFile;
 
 TYPE
   TForm1 = class(TLightForm)
@@ -39,7 +39,7 @@ VAR
 IMPLEMENTATION
 {$R *.fmx}
 
-USES LighCore.AppData;
+USES LightCore.AppData;
 
 
 procedure TForm1.FormPostInitialize;

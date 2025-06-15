@@ -10,7 +10,7 @@ UNIT uSoldier_v1;
 INTERFACE
 
 USES System.SysUtils, System.Generics.Collections,
-     ccStreamBuff, ccStreamBuff2;
+     LightCore.StreamBuff, LightCore.StreamBuff2;
 
 TYPE
   TSoldier = class(TObject)

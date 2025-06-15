@@ -66,8 +66,8 @@ function ExtractMiddleFrame(CONST FileName: string; OUT FrameCount: Cardinal): T
 IMPLEMENTATION
 
 USES
-  GifParser, ccCore, LightVcl.Common.Dialogs, LighCore.AppData, LightVcl.Common.AppData
-, {LightCom.IniFile,} ccIO;
+  GifParser, LightCore.Core, LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Common.AppData
+, {LightCom.IniFile,} LightCore.IO;
 
 
 constructor TGifLoader.Create;
@@ -138,7 +138,7 @@ procedure TGifLoader.SaveFrame(Frame: TBitmap; FrameNo: Integer; OutputFolder: s
 VAR
    CurFile, sCounter: string;
 begin
- sCounter:= ccCore.LeadingZeros(IntToStr(FrameNo), 6);
+ sCounter:= LightCore.Core.LeadingZeros(IntToStr(FrameNo), 6);
  CurFile:= OutputFolder+ ExtractOnlyName(FileName)+ sCounter+ '.bmp';
  Frame.SaveToFile(CurFile);
 end;
@@ -218,7 +218,7 @@ begin
  then IsAnimGif := IsAnimatedGif(AGraphFile) > 1
  else IsAnimGif := FALSE;
 
- Result:= IsAnimGif OR ccIO.IsVideo(AGraphFile);
+ Result:= IsAnimGif OR LightCore.IO.IsVideo(AGraphFile);
 end;
 
 

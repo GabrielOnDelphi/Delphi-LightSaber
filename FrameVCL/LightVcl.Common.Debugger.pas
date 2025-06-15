@@ -25,7 +25,7 @@ USES
    Winapi.Windows, Winapi.MultiMon, Winapi.ShlObj, Winapi.SHFolder,
    System.Diagnostics, System.Classes, System.SysUtils,
    Vcl.Forms, Vcl.Dialogs,
-   LighCore.AppData, LightVcl.Common.AppData;
+   LightCore.AppData, LightVcl.Common.AppData;
 
  { ANTI-DEBUGGER PROTECTION }
  procedure AntiDebug; assembler;
@@ -83,7 +83,7 @@ USES
 
 IMPLEMENTATION
 USES
-   LightVcl.Common.SystemTime, LightVcl.Common.System, ccCore, LightVcl.Common.Dialogs, ccIO, ccTextFile, LightVcl.Common.IO, LightVcl.Common.WinVersion, LightVcl.Common.ExecuteProc, LightVcl.Common.SystemPermissions, System.DateUtils;
+   LightVcl.Common.SystemTime, LightVcl.Common.System, LightCore.Core, LightVcl.Common.Dialogs, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO, LightVcl.Common.WinVersion, LightVcl.Common.ExecuteProc, LightVcl.Common.SystemPermissions, System.DateUtils;
 
 
 

@@ -5,7 +5,7 @@ unit MainForm;
    www.GabrielMoraru.com
 ==============================================================================================================
 
-   Demo for c:\Projects\LightSaber\ccPlatformFile.pas
+   Demo for c:\Projects\LightSaber\LightCore.PlatformFile.pas
    You will see the results of this program during compilation in the "Messages" panel.
 
 =============================================================================================================}
@@ -30,6 +30,6 @@ var
 implementation {$R *.fmx}
 
 USES
-   ccPlatformFile;
+   LightCore.PlatformFile;
 
 end.

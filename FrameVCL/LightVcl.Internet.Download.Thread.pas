@@ -46,13 +46,13 @@ TYPE
 IMPLEMENTATION
 
 USES
-   ccDownload, ccCore;
+   LightCore.Download, LightCore.Core;
 
 
 procedure TWinInetObj.Execute;
 VAR HttpRetCode: string;
 begin
- FData:= ccDownload.DownloadToStream(URL, HttpRetCode);
+ FData:= LightCore.Download.DownloadToStream(URL, HttpRetCode);
  if Assigned(FOnDownloadDone)
  then FOnDownloadDone(Self);
 end;

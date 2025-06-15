@@ -45,7 +45,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES ccIO;
+USES LightCore.IO;
 
 
 

@@ -38,7 +38,7 @@ USES
    FMX.Presentation.Factory, // Required for TPresentationProxyFactory
    FMX.Presentation.Style,   // Required for TStyledPresentationProxy<> (Likely)
    FMX.Grid.Style,           // Required for TStyledGrid AND already added previously
-   ccLogRam, ccLogTypes, ccLogLinesAbstract;
+   LightCore.LogRam, LightCore.LogTypes, LightCore.LogLinesAbstract;
 
 TYPE
    TLogViewer = class(FMX.Grid.TStringGrid, ILogObserver)
@@ -98,7 +98,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-  ccCore,
+  LightCore.Core,
   LightFMX.lbHelpers, LightFMX.lbDialogs, LightFmx.lbLogFilter;
 
 {-------------------------------------------------------------------------------------------------------------

@@ -118,9 +118,9 @@
         <DCCReference Include="LightVcl.Visual.StringGridScrollFix.pas"/>
         <DCCReference Include="LightVcl.Visual.DropDownSearch.pas"/>
         <DCCReference Include="LightVcl.Visual.StrongPasswordEdit.pas"/>
-        <DCCReference Include="llRichLogTrack.pas"/>
-        <DCCReference Include="llRichLogUtils.pas"/>
-        <DCCReference Include="llRichLog.pas"/>
+        <DCCReference Include="LightVcl.Visual.RichLogTrack.pas"/>
+        <DCCReference Include="LightVcl.Visual.RichLogUtils.pas"/>
+        <DCCReference Include="LightVcl.Visual.RichLog.pas"/>
         <DCCReference Include="LightVcl.Visual.RichEditResize.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

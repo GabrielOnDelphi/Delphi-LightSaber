@@ -72,7 +72,7 @@ IMPLEMENTATION
 {.$DEFINE HOERTECH}
 
 USES
-   ShadowText, LightVcl.Graph.Text, LightVcl.Graph.Util, {$IFDEF HOERTECH}Common,{$else}ccIO{$ENDIF};
+   ShadowText, LightVcl.Graph.Text, LightVcl.Graph.Util, {$IFDEF HOERTECH}Common,{$else}LightCore.IO{$ENDIF};
 
 
 

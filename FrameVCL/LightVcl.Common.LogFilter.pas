@@ -9,7 +9,7 @@ UNIT LightVcl.Common.LogFilter;
 
    WARNING!
    THIS UNIT IS STILL UNDER CONSTRUCTION.
-   For the moment the library uses the old llRichLog unit.
+   For the moment the library uses the old LightVcl.Visual.RichLog unit.
 
 
 ==============================================================================================================
@@ -25,7 +25,7 @@ INTERFACE
 
 USES
    System.SysUtils, System.Classes, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.StdCtrls,
-   LightVcl.Common.LogViewer, ccLogTypes;
+   LightVcl.Common.LogViewer, LightCore.LogTypes;
 
 TYPE
   TLogVerbFilter = class(TPanel)

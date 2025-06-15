@@ -21,7 +21,7 @@ UNIT LightVcl.Internet.Download.Indy;
     - The program does not exit until the download is complete?
 
   Alternatives:
-     ccDownload.pas
+     LightCore.Download.pas
      HTTPGet.pas
      UrlMon       -  UrlMon.UrlDownloadToFile (nil, <url>, <file destination path (PChar)>, 0, nil);  Don't know if it is thread-safe, UrlMon.pas is just an interface for calling UrlMon.dll, a Microsoft API. And yes, is a Borland unit \delphi6\source\rtl\Win\UrlMon.pas
      Indy.TDownloadURL.ExecuteTarget   it can also be threaded -> https://stackoverflow.com/questions/3187446/the-connection-does-not-timeout-while-using-indy

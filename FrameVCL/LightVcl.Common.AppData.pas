@@ -26,7 +26,7 @@
      Or use something like this:
        uses
          FastMM4,
-         ccINIFile,
+         LightCore.INIFile,
          LightVcl.Common.AppData,
          LightVcl.Common.AppDataForm in 'LightCom.AppDataForm.pas';
          MainForm in 'MainForm.pas' {frmMain);
@@ -102,7 +102,7 @@ USES
   Winapi.Windows, Winapi.Messages, Winapi.ShellAPI,
   System.Win.Registry, System.SysUtils, System.Classes, System.IOUtils, System.UITypes, System.Types,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Consts,
-  LighCore.AppData, LightVcl.LogForm;
+  LightCore.AppData, LightVcl.LogForm;
 
  {
 TYPE
@@ -198,7 +198,7 @@ VAR                      // ToDo 5: make sure AppData is unique (make it Singlet
 IMPLEMENTATION
 
 USES
-  LightVcl.Common.WinVersion, LightVcl.Common.ExeVersion, LightVcl.Common.Translate, ccIO, LightVcl.Common.CenterControl, LightVcl.Common.AppDataForm;
+  LightVcl.Common.WinVersion, LightVcl.Common.ExeVersion, LightVcl.Common.Translate, LightCore.IO, LightVcl.Common.CenterControl, LightVcl.Common.AppDataForm;
 
 
 { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }

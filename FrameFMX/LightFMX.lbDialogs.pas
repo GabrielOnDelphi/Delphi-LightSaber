@@ -34,7 +34,7 @@ procedure MessageError      (CONST MessageText, Where: string; CONST Caption: st
 procedure MessageYesNo(const MessageText: string; const Caption: string; const Callback: TProc<Boolean>);
 
 IMPLEMENTATION
-USES ccCore;
+USES LightCore.Core;
 
 
 // Note: FMX.DialogService.ShowMessage exists but doesn't support icons.

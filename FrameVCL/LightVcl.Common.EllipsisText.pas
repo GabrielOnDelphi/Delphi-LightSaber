@@ -11,8 +11,8 @@
    Also exists:
         FileCtrl.MinimizeName (if you require pixels)
         cGraphics.DrawStringEllipsis
-        ccCore.ShortenString
-        ccIO.ShortenFileName
+        LightCore.Core.ShortenString
+        LightCore.IO.ShortenFileName
 
    TESTER:
        c:\Myprojects\Project Testers\gr LightVcl.Graph.Text.pas\

@@ -130,7 +130,7 @@
             <Form>Form3</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\..\ccPlatformFile.pas"/>
+        <DCCReference Include="..\..\..\LightCore.PlatformFile.pas"/>
         <DCCReference Include="..\PlatformTest.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

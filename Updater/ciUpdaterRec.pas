@@ -48,7 +48,7 @@ procedure PopulateUsers(Combo: TComboBox);
 IMPLEMENTATION
 
 USES
-  ccStreamBuff2;
+  LightCore.StreamBuff2;
 
 
 

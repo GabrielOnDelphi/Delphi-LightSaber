@@ -31,7 +31,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, Vcl.Graphics, System.Types,
-  GR32, GR32_Transforms, GR32_Resamplers, ccCore;
+  GR32, GR32_Transforms, GR32_Resamplers, LightCore.Core;
 
 CONST
   { Resamplers }
@@ -78,7 +78,7 @@ procedure StretchGr32(BMP: TBitmap; ScaleX, ScaleY: Double; aKernelResampler: By
 
 IMPLEMENTATION
 
-USES ccMath, LightVcl.Graph.Loader;
+USES LightCore.Math, LightVcl.Graph.Loader;
 
 
 constructor TGr32Stretch.Create(Resampler, Kernel: Integer);

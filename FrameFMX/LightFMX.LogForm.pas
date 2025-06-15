@@ -22,7 +22,7 @@ USES
   FMX.Grid.Style, FMX.Grid, FMX.Types, FMX.Controls, FMX.Forms, FMX.Layouts, FMX.Menus,
   FMX.ScrollBox, FMX.StdCtrls, FMX.Controls.Presentation, FMX.Presentation.Factory,
   LightVcl.Common.AppDataForm, LightVcl.Common.LogFilter, LightVcl.Common.LogViewer,
-  LighCore.AppData, ccLogRam, LightFmx.lbLogViewer;
+  LightCore.AppData, LightCore.LogRam, LightFmx.lbLogViewer;
 
 TYPE
   TfrmRamLog = class(TLightForm)
@@ -55,7 +55,7 @@ IMPLEMENTATION {$R *.FMX}
 
 
 USES
-   ccLogTypes, ccINIFile, LightVcl.Common.AppData;
+   LightCore.LogTypes, LightCore.INIFile, LightVcl.Common.AppData;
 
 
 

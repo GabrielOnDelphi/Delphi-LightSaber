@@ -7,7 +7,7 @@ uses
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Controls.Presentation, FMX.StdCtrls, FMX.DialogService,
   FMX.Grid.Style, FMX.Presentation.Factory, FMX.Presentation.Style,
   LightFMX.lbAppData, LightFMX.lbAppData.Form,
-  ccIniFile,  ccLogRam, FMX.ScrollBox, FMX.Grid,
+  LightCore.INIFile,  LightCore.LogRam, FMX.ScrollBox, FMX.Grid,
   LightFmx.lbLogViewer;
 
 TYPE
@@ -26,7 +26,7 @@ VAR
 IMPLEMENTATION
 {$R *.fmx}
 
-USES LighCore.AppData;
+USES LightCore.AppData;
 
 
 

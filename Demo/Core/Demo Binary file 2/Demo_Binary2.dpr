@@ -5,7 +5,7 @@ uses
   FastMM4,
   {$ENDIF }
   LightVcl.Common.AppData,
-  ccINIFile,
+  LightCore.INIFile,
   MainForm2 in 'MainForm2.pas' {frmMain},
   uSoldier_v2 in 'uSoldier_v2.pas';
 

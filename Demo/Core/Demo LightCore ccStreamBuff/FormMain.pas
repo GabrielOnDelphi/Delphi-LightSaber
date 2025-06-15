@@ -1,7 +1,7 @@
 UNIT FormMain;
 
 {
- Tester for ccStreamBuffer.pas
+ Tester for LightCore.StreamBuffer.pas
  Tester for other streams
 
  Memory usage:
@@ -16,7 +16,7 @@ USES
   //WinApi.Messages,
   System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.ExtCtrls,
   LightVcl.Visual.INIFile, InternetLabel, LightVcl.Visual.PathEdit, LightVcl.Visual.SpinEdit,
-  llRichLogTrack, LightVcl.Visual.CheckBox, llRichLog, LighCore.AppData, LightVcl.Common.AppData
+  LightVcl.Visual.RichLogTrack, LightVcl.Visual.CheckBox, LightVcl.Visual.RichLog, LightCore.AppData, LightVcl.Common.AppData
 , chHardID, LightVcl.Common.AppDataForm;
 
 TYPE
@@ -75,7 +75,7 @@ IMPLEMENTATION {$R *.dfm}
 {.$I SynDprUses.inc} // use FastMM4 on older Delphi, or set FPC threads
 
 USES
-   system.Math, ccCore, ccStreamBuff2, LightVcl.Common.Debugger;
+   system.Math, LightCore.Core, LightCore.StreamBuff2, LightVcl.Common.Debugger;
 
 
 
@@ -404,7 +404,7 @@ end;
 
 
 
-{  ccStreamBuff
+{  LightCore.StreamBuff
    Read characters one by one }
 procedure TMainForm.btnReadChar1Click(Sender: TObject);
 VAR

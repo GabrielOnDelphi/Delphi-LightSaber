@@ -19,7 +19,7 @@ UNIT LightVcl.Graph.Loader.RainDrop;
 INTERFACE
 
 USES
-  System.SysUtils, System.Classes, vcl.Graphics, Vcl.Imaging.jpeg, ccStreamBuff;
+  System.SysUtils, System.Classes, vcl.Graphics, Vcl.Imaging.jpeg, LightCore.StreamBuff;
 
 TYPE
    TPixelMap= array of array of Boolean;  { Map of bits. True bits correspond to a pink pixel (where we draw water) }

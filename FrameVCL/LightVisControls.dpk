@@ -86,9 +86,10 @@ contains
   LightVcl.Visual.StringGridScrollFix in 'LightVcl.Visual.StringGridScrollFix.pas',
   LightVcl.Visual.DropDownSearch in 'LightVcl.Visual.DropDownSearch.pas',
   LightVcl.Visual.StrongPasswordEdit in 'LightVcl.Visual.StrongPasswordEdit.pas',
-  llRichLogTrack in 'llRichLogTrack.pas',
-  llRichLogUtils in 'llRichLogUtils.pas',
-  llRichLog in 'llRichLog.pas',
+
+  LightVcl.Visual.RichLogTrack in 'LightVcl.Visual.RichLogTrack.pas',
+  LightVcl.Visual.RichLogUtils in 'LightVcl.Visual.RichLogUtils.pas',
+  LightVcl.Visual.RichLog in 'LightVcl.Visual.RichLog.pas',
   LightVcl.Visual.RichEditResize in 'LightVcl.Visual.RichEditResize.pas';
 
 end.

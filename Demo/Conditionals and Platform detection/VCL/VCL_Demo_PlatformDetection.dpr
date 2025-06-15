@@ -3,7 +3,7 @@ program VCL_Demo_PlatformDetection;
 uses
   Vcl.Forms,
   MainForm in 'MainForm.pas' {Form3},
-  ccPlatformFile in '..\..\..\ccPlatformFile.pas',
+  LightCore.PlatformFile in '..\..\..\LightCore.PlatformFile.pas',
   PlatformTest in '..\PlatformTest.pas';
 
 {$R *.res}

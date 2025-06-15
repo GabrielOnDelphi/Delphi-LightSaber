@@ -1,4 +1,4 @@
-program VCL_Demo_ccIO;
+program VCL_Demo_LightCore.IO;
 
 uses
   {$IFDEF DEBUG}
@@ -6,7 +6,7 @@ uses
   {$ENDIF }
   MainForm in 'MainForm.pas' {frmTestIO},
   LightVcl.Common.AppData,
-  LighCore.AppData in '..\..\LighCore.AppData.pas';
+  LightCore.AppData in '..\..\LightCore.AppData.pas';
 
 {$R *.res}
 

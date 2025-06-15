@@ -6,7 +6,7 @@ uses
   Vcl.Styles,
   UninstallerForm in 'UninstallerForm.pas' {frmMain},
   LightVcl.Common.Shell in '..\..\..\FrameVCL\LightSaber\LightCom.Shell.pas',
-  LighCore.AppData in '..\..\..\LighCore.AppData.pas',
+  LightCore.AppData in '..\..\..\LightCore.AppData.pas',
   LightVcl.Common.AppDataForm in '..\..\..\FrameVCL\LightCom.AppDataForm.pas',
   LightVcl.Common.IniFile in '..\..\..\FrameVCL\LightCom.IniFile.pas',
   LightVcl.Common.AppData in '..\..\..\FrameVCL\LightCom.AppData.pas',

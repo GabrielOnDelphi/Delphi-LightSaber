@@ -21,7 +21,7 @@ USES
   Winapi.Windows,
   System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls,
-  ccINIFile, LightVcl.Visual.RadioButton, ccCore;
+  LightCore.INIFile, LightVcl.Visual.RadioButton, LightCore.Core;
 
 TYPE
   TConType= (ctDirect, ctGateway, ctProxyList);

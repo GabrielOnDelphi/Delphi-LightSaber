@@ -37,7 +37,7 @@
 
 INTERFACE
 USES
-  winapi.Windows, System.Types, system.SysUtils, Vcl.Graphics, System.Math, ccStreamBuff,
+  winapi.Windows, System.Types, system.SysUtils, Vcl.Graphics, System.Math, LightCore.StreamBuff,
   GDIPAPI, GDIPOBJ //GdiPlus; >= Delphi2009
   {$IFDEF CCRExif},janFX{$ENDIF}
   {$IFDEF CCRExif},CCR.Exif{$ENDIF};   { CCR Exif library can be found here: Github.com/exilon/ccr-exif }

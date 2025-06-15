@@ -32,7 +32,7 @@ function  MessageYesNo      (CONST MessageText: string; CONST Caption: string= '
 
 
 IMPLEMENTATION
-USES ccCore;
+USES LightCore.Core;
 
 
 // Note: FMX.DialogService.ShowMessage exists but doesn't support icons.

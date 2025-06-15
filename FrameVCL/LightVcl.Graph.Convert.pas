@@ -40,7 +40,7 @@ CONST
  IMPLEMENTATION
 
 USES
-   ccIO, ccCore;
+   LightCore.IO, LightCore.Core;
 
 
 

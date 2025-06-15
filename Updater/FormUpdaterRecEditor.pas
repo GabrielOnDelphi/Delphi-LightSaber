@@ -52,8 +52,8 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   LighCore.AppData, LightVcl.Common.AppData
-, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Translate, ciUpdaterRec, LightVcl.Common.Dialogs, ccINIFile, LightVcl.Visual.INIFile;
+   LightCore.AppData, LightVcl.Common.AppData
+, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Translate, ciUpdaterRec, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Visual.INIFile;
 
 
 

@@ -21,7 +21,7 @@ UNIT LightVcl.Graph.ResizeParams;
 INTERFACE
 
 USES
-   System.SysUtils, LightVcl.Graph.Bitmap, ccStreamBuff;
+   System.SysUtils, LightVcl.Graph.Bitmap, LightCore.StreamBuff;
 
 TYPE
  TResizeOp=
@@ -84,7 +84,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-  Math, ccMath;
+  Math, LightCore.Math;
 
 
 procedure RResizeParams.Reset;
@@ -201,7 +201,7 @@ begin
    end;
 
   { Overshoot! }                             { If after zoom, we loose more than 10% of the image, we go back to Fit }
-  Overshoot:= ccMath.ProcentRepresent(OutW*OutH, OutputArea);
+  Overshoot:= LightCore.Math.ProcentRepresent(OutW*OutH, OutputArea);
   if Overshoot > 105 then
    begin
     ComputeFit(InpW, InpH);

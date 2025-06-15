@@ -24,7 +24,7 @@ procedure ShowEulaModal;
 
 implementation {$R *.dfm}
 Uses
-   ccTextFile, LighCore.AppData, LightVcl.Common.AppData
+   LightCore.TextFile, LightCore.AppData, LightVcl.Common.AppData
 ;
 
 

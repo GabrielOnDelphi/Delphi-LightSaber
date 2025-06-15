@@ -30,7 +30,7 @@ INTERFACE
 
 USES
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Forms, vcl.StdCtrls, vcl.Menus, Vcl.ActnList,
-  ccCore;
+  LightCore.Core;
 
  procedure ShowConflicts;
 
@@ -45,7 +45,7 @@ USES
 
 
 IMPLEMENTATION
-USES LighCore.AppData, LightVcl.Common.AppData
+USES LightCore.AppData, LightVcl.Common.AppData
 ;
 
 

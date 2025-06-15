@@ -19,7 +19,7 @@ UNIT LightVcl.Graph.FX;
 INTERFACE
 
 USES
-   Winapi.Windows, System.SysUtils, Vcl.Graphics, ccStreamBuff;
+   Winapi.Windows, System.SysUtils, Vcl.Graphics, LightCore.StreamBuff;
 
 TYPE
   RTileType = record

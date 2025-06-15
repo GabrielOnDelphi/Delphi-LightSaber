@@ -13,7 +13,7 @@ UNIT LightVcl.Common.GuiSettings;
 INTERFACE
 
 USES
-  System.SysUtils, ccStreamBuff2;
+  System.SysUtils, LightCore.StreamBuff2;
 
 TYPE
 
@@ -32,7 +32,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LighCore.AppData, LightVcl.Common.AppData;
+   LightCore.AppData, LightVcl.Common.AppData;
 
 
 procedure TGuiSettings.Save;

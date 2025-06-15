@@ -42,7 +42,7 @@ function ExpandRelativePaths (CONST HtmlBody, Base: string): string;
 IMPLEMENTATION                                                                                                                                   {$WARN GARBAGE OFF}   {Silence the: 'W1011 Text after final END' warning }
 
 USES
-   ccIO, LightVcl.Internet, ccCore, LightVcl.Internet.HTML;
+   LightCore.IO, LightVcl.Internet, LightCore.Core, LightVcl.Internet.HTML, LightCore.Internet, LightCore.HTML;
 
 
 
@@ -124,7 +124,7 @@ begin
   for CurTag in AHRefTags DO
    begin
     ImgURL:= ExtractAttribValue(CurTag, 'href');
-    if ccIO.IsImage(ImgURL)
+    if LightCore.IO.IsImage(ImgURL)
     then Result.Add(ImgURL);   { This is an <a href> tag so it contains no info about the size of the image }
    end;
  FINALLY
@@ -502,7 +502,7 @@ begin
        if QEnd> 0 then
         begin
          URL:= CopyTo(CurLine, QStart+1, QEnd-1);                                                  { +1 -1 to remove the " signs }
-         if ccIO.IsImage(URL)
+         if LightCore.IO.IsImage(URL)
          then Result.Add(URL);
         end;
       end;

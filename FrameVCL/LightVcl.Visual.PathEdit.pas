@@ -30,7 +30,7 @@ USES
   Winapi.Windows,
   System.SysUtils, System.Classes, System.IOUtils,
   Vcl.StdCtrls, Vcl.Controls, Vcl.Graphics, Vcl.ImgList, Vcl.CONSTs, Vcl.FileCtrl, Vcl.ExtCtrls,
-  ccCore, LightVcl.Common.Dialogs;
+  LightCore.Core, LightVcl.Common.Dialogs;
 
 TYPE
   TValidity= (vaNone, vaValid, vaInvalid);                   { Normal / Green / Red color }
@@ -167,7 +167,7 @@ procedure Register;
 IMPLEMENTATION {$R LightVcl.Visual.PathEdit.res}
 
 USES
-   LightVcl.Common.Colors, LightVcl.Common.ExecuteShell, ccIO, ccTextFile, LightVcl.Common.IO;
+   LightVcl.Common.Colors, LightVcl.Common.ExecuteShell, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO;
 
 
 

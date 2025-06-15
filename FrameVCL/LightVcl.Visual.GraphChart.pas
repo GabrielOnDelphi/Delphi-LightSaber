@@ -127,7 +127,7 @@ function FindMax         (DataPoints: TDataPoints): Integer;                    
 IMPLEMENTATION
 {$WARN GARBAGE OFF}                                                                                {Silence the: 'W1011 Text after final END' warning }
 
-USES ccMath, ccCore;
+USES LightCore.Math, LightCore.Core;
 
 
 
@@ -292,7 +292,7 @@ begin
  then
    begin
     XAxis.FTickEvery:= XAxis.LengthDp DIV 50;
-    ccMath.NotSmallerThan(XAxis.FTickEvery, 10);      { Too few ticks? }
+    LightCore.Math.NotSmallerThan(XAxis.FTickEvery, 10);      { Too few ticks? }
    end
  else
    XAxis.FTickEvery:= XAxis.TickEvery;
@@ -301,7 +301,7 @@ begin
  then
    begin
     YAxis.FTickEvery:= YAxis.LengthDp DIV 10;
-    ccMath.NotSmallerThan(YAxis.FTickEvery, 10);   { Too few ticks? }
+    LightCore.Math.NotSmallerThan(YAxis.FTickEvery, 10);   { Too few ticks? }
    end
  else
    YAxis.FTickEvery:= YAxis.TickEvery;

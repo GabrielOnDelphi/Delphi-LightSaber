@@ -25,7 +25,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls,
   InternetLabel,
-  ccCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, ciUpdater, llRichLog, llRichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
+  LightCore.Core, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, ciUpdater, LightVcl.Visual.RichLog, LightVcl.Visual.RichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
 
 CONST
   UpdaterURL = 'https://www.GabrielMoraru.com/uploads/OnlineNews_v2_TemplateApp.bin'; { For demo purposes }
@@ -83,7 +83,7 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   llRichLogUtils, LightVcl.Common.Colors, LighCore.AppData, LightVcl.Common.AppData, LightVcl.Common.CursorGuard, LightVcl.Common.System, LightVcl.Internet;
+   LightVcl.Visual.RichLogUtils, LightVcl.Common.Colors, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.CursorGuard, LightVcl.Common.System, LightVcl.Internet;
 
 
 

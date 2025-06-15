@@ -21,7 +21,7 @@ VAR
   frmTestIO: TfrmTestIO;
 
 IMPLEMENTATION {$R *.dfm}
-USES ccIO, ccTextFile, LightVcl.Common.IO;
+USES LightCore.IO, LightCore.TextFile, LightVcl.Common.IO;
 
 
 procedure TfrmTestIO.Button1Click(Sender: TObject);
