@@ -1,0 +1,84 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{4B5017AB-5EF2-4001-BEE1-340155F6D7D6}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Template App Minimal\VCL_TemplateMicro_Fmx.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo LightLog\FMX_Demo_Log.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo LightPanel\FMX_Demo_LightPanel.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo Message boxes\FMX_Demo_MessageBoxes.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="VCL_TemplateMicro_Fmx">
+        <MSBuild Projects="Template App Minimal\VCL_TemplateMicro_Fmx.dproj"/>
+    </Target>
+    <Target Name="VCL_TemplateMicro_Fmx:Clean">
+        <MSBuild Projects="Template App Minimal\VCL_TemplateMicro_Fmx.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="VCL_TemplateMicro_Fmx:Make">
+        <MSBuild Projects="Template App Minimal\VCL_TemplateMicro_Fmx.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="FMX_Demo_Log">
+        <MSBuild Projects="Demo LightLog\FMX_Demo_Log.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_Log:Clean">
+        <MSBuild Projects="Demo LightLog\FMX_Demo_Log.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_Log:Make">
+        <MSBuild Projects="Demo LightLog\FMX_Demo_Log.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="FMX_Demo_LightPanel">
+        <MSBuild Projects="Demo LightPanel\FMX_Demo_LightPanel.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_LightPanel:Clean">
+        <MSBuild Projects="Demo LightPanel\FMX_Demo_LightPanel.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_LightPanel:Make">
+        <MSBuild Projects="Demo LightPanel\FMX_Demo_LightPanel.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="FMX_Demo_MessageBoxes">
+        <MSBuild Projects="Demo Message boxes\FMX_Demo_MessageBoxes.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_MessageBoxes:Clean">
+        <MSBuild Projects="Demo Message boxes\FMX_Demo_MessageBoxes.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_MessageBoxes:Make">
+        <MSBuild Projects="Demo Message boxes\FMX_Demo_MessageBoxes.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="FMX_Demo_TDropDownSearchBox">
+        <MSBuild Projects="Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_TDropDownSearchBox:Clean">
+        <MSBuild Projects="Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_TDropDownSearchBox:Make">
+        <MSBuild Projects="Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="VCL_TemplateMicro_Fmx;FMX_Demo_Log;FMX_Demo_LightPanel;FMX_Demo_MessageBoxes;FMX_Demo_TDropDownSearchBox"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="VCL_TemplateMicro_Fmx:Clean;FMX_Demo_Log:Clean;FMX_Demo_LightPanel:Clean;FMX_Demo_MessageBoxes:Clean;FMX_Demo_TDropDownSearchBox:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="VCL_TemplateMicro_Fmx:Make;FMX_Demo_Log:Make;FMX_Demo_LightPanel:Make;FMX_Demo_MessageBoxes:Make;FMX_Demo_TDropDownSearchBox:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
