@@ -1781,7 +1781,7 @@ end;
 
 { Example: MoveFolder('c:\Documents', 'C:\Backups').
   It will overwrite all files in 'ToFolder' without asking.
-  If you want feedback from user use LightCom.IO.Win.MoveFolderMsg }
+  If you want feedback from user use LightVcl.Common.IO.Win.MoveFolderMsg }
 procedure MoveFolder(CONST FromFolder, ToFolder: String; SilentOverwrite: Boolean);      { Also see: http://www.swissdelphicenter.ch/en/showcode.php?id=152 }
 begin
   if NOT DirectoryExists(ToFolder) then EXIT;

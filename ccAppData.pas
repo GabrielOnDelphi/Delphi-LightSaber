@@ -29,7 +29,7 @@
          AppDataCore.Run;
        end.
 
-     For GUI projects see LightCom.AppData.pas
+     For GUI projects see LightVcl.Common.AppData.pas
 
 =============================================================================================================}
 

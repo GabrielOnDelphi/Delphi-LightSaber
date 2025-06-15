@@ -16,7 +16,7 @@ UNIT ccDownload;
       easier to use than WinInet
 
    ALSO SEE:
-       ciInetDonwIndy.pas
+       LightVcl.Internet.Download.Indy.pas
        c:\Users\Public\Documents\Embarcadero\Studio\21.0\Samples\Object Pascal\RTL\HttpDownload\HttpDownloadDemo.dpr
        c:\MyProjects\Packages\BSalsa EmbeddedWB\Demos\IEDownload_Simple_Demo\
 
