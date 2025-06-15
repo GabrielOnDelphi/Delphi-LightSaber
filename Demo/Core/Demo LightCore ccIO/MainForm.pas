@@ -6,7 +6,7 @@ USES
   //Winapi.Windows, Winapi.Messages,
   System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  LightCom.AppDataForm;
+  LightVcl.Common.AppDataForm;
 
 TYPE
   TfrmTestIO = class(TLightForm)
@@ -21,7 +21,7 @@ VAR
   frmTestIO: TfrmTestIO;
 
 IMPLEMENTATION {$R *.dfm}
-USES ccIO, ccTextFile, LightCom.IO;
+USES ccIO, ccTextFile, LightVcl.Common.IO;
 
 
 procedure TfrmTestIO.Button1Click(Sender: TObject);

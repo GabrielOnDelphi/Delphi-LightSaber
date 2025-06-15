@@ -4,7 +4,7 @@ uses
   {$IFDEF DEBUG}
   FastMM4,
   {$ENDIF }
-  LightCom.AppData,
+  LightVcl.Common.AppData,
   FormMain in 'FormMain.pas' {MainForm},
   LightVcl.LogForm in '..\..\FrameVCL\LightVcl.LogForm.pas',
   ccAppData in '..\..\ccAppData.pas';

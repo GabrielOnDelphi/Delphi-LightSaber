@@ -16,15 +16,15 @@ UNIT FormProxyList;
     Initialize like this: frameProxy.LoadProxyFile(AppData.AppDataFolder+ 'ProxyList.txt');
 
 
-  Note: This is also available as vis component: cvProxyList.pas
+  Note: This is also available as vis component: LightVcl.Visual.ProxyList.pas
 =============================================================================================================}
 
 INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, LightCom.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls, ccINIFile, LightCom.AppDataForm, cvIniFile, ccCore, LightCom.SystemTime, LightCom.Clipboard, LightCom.Dialogs, ccINIFile, LightCom.AppDataForm,
-  cvRadioButton;
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls, ccINIFile, LightVcl.Common.AppDataForm, LightVcl.Visual.INIFile, ccCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, ccINIFile, LightVcl.Common.AppDataForm,
+  LightVcl.Visual.RadioButton;
 
 TYPE
   TConType= (ctDirect, ctGateway, ctProxyList);
@@ -65,7 +65,7 @@ IMPLEMENTATION
 {$WARN GARBAGE OFF}                                                                                {Silence the: 'W1011 Text after final END' warning }
 
 USES
-   ciInternet, IniFiles;
+   LightVcl.Internet, IniFiles;
 
 {todo:
 oncreate
@@ -112,7 +112,7 @@ procedure TfrmProxyList.btnAutoDetectClick(Sender: TObject);
 VAR sProxyAdr, sProxyPort: string;
     UseProxy: Boolean;
 begin
- if ciInternet.IE_GetProxySettings(sProxyAdr, sProxyPort, UseProxy) then
+ if LightVcl.Internet.IE_GetProxySettings(sProxyAdr, sProxyPort, UseProxy) then
   begin
    radGateway.Checked := UseProxy;
    radDirect .Checked := NOT UseProxy;

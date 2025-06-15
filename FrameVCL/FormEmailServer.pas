@@ -10,8 +10,8 @@ INTERFACE
 {Hostinger: the max PHP emails per minute is 60 and your limit for emails per day is 3000 ? = 1 email at 24 sec  }
 
 USES
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, LightCom.AppDataForm,Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
-  IdSMTP, IdExplicitTLSClientServerBase, Vcl.ComCtrls, cvRadioButton, InternetLabel;
+  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
+  IdSMTP, IdExplicitTLSClientServerBase, Vcl.ComCtrls, LightVcl.Visual.RadioButton, InternetLabel;
 
 type
   TfrmSmtpSettings = class(TLightForm)
@@ -47,7 +47,7 @@ VAR
 
 IMPLEMENTATION {$R *.dfm}
 
-USES cmEncodeXOR, cvIniFile;
+USES cmEncodeXOR, LightVcl.Visual.INIFile;
 
 
 

@@ -76,41 +76,41 @@
         <DCCReference Include="GR32_R.dcp"/>
         <DCCReference Include="CCRExif.dcp"/>
         <DCCReference Include="ThirdPartyLibs.dcp"/>
-        <DCCReference Include="cGraphFX.RotateGr32.pas"/>
-        <DCCReference Include="cGraphResizeParams.pas"/>
-        <DCCReference Include="cGraphAviFrame.pas"/>
-        <DCCReference Include="cGraphBitmap.pas"/>
-        <DCCReference Include="cGraphBkgColor.pas"/>
-        <DCCReference Include="cGraphBkgColorEditor.pas"/>
-        <DCCReference Include="cGraphCache.pas"/>
-        <DCCReference Include="cGraphFX.pas"/>
-        <DCCReference Include="cGraphFX.Gradient.pas"/>
-        <DCCReference Include="cGraphFX.Rotate.pas"/>
-        <DCCReference Include="cGraphGif.pas"/>
-        <DCCReference Include="cGraphLoader.pas"/>
-        <DCCReference Include="cGraphLoader.Resolution.pas"/>
-        <DCCReference Include="cGraphLoader.Thread.pas"/>
-        <DCCReference Include="cGraphLoader.WB1.pas"/>
-        <DCCReference Include="cGraphLoader.WBC.pas"/>
-        <DCCReference Include="cGraphText.pas"/>
-        <DCCReference Include="cGraphUtil.pas"/>
-        <DCCReference Include="cGraphResizeParamFrame.pas">
+        <DCCReference Include="LightVcl.Graph.FX.RotateGr32.pas"/>
+        <DCCReference Include="LightVcl.Graph.ResizeParams.pas"/>
+        <DCCReference Include="LightVcl.Graph.AviFrame.pas"/>
+        <DCCReference Include="LightVcl.Graph.Bitmap.pas"/>
+        <DCCReference Include="LightVcl.Graph.BkgColor.pas"/>
+        <DCCReference Include="LightVcl.Graph.BkgColorEditor.pas"/>
+        <DCCReference Include="LightVcl.Graph.Cache.pas"/>
+        <DCCReference Include="LightVcl.Graph.FX.pas"/>
+        <DCCReference Include="LightVcl.Graph.FX.Gradient.pas"/>
+        <DCCReference Include="LightVcl.Graph.FX.Rotate.pas"/>
+        <DCCReference Include="LightVcl.Graph.Gif.pas"/>
+        <DCCReference Include="LightVcl.Graph.Loader.pas"/>
+        <DCCReference Include="LightVcl.Graph.Loader.Resolution.pas"/>
+        <DCCReference Include="LightVcl.Graph.Loader.Thread.pas"/>
+        <DCCReference Include="LightVcl.Graph.Loader.WB1.pas"/>
+        <DCCReference Include="LightVcl.Graph.Loader.WBC.pas"/>
+        <DCCReference Include="LightVcl.Graph.Text.pas"/>
+        <DCCReference Include="LightVcl.Graph.Util.pas"/>
+        <DCCReference Include="LightVcl.Graph.ResizeParamFrame.pas">
             <Form>ResizeParameters</Form>
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
-        <DCCReference Include="cGraphLoader.RainDrop.pas"/>
-        <DCCReference Include="cGraphBkgColorParams.pas"/>
-        <DCCReference Include="cGraphConvert.pas"/>
-        <DCCReference Include="cGraphAlpha.pas"/>
-        <DCCReference Include="cGraphDesktop.pas"/>
-        <DCCReference Include="cGraphResizeGr32.pas"/>
-        <DCCReference Include="cGraphResizeVCL.pas"/>
-        <DCCReference Include="cGraphUtilGray.pas"/>
-        <DCCReference Include="cGraphResize.pas"/>
-        <DCCReference Include="cGraphResizeWinBlt.pas"/>
-        <DCCReference Include="cGraphResizeWinThumb.pas"/>
-        <DCCReference Include="cGraphResizeWinWIC.pas"/>
+        <DCCReference Include="LightVcl.Graph.Loader.RainDrop.pas"/>
+        <DCCReference Include="LightVcl.Graph.BkgColorParams.pas"/>
+        <DCCReference Include="LightVcl.Graph.Convert.pas"/>
+        <DCCReference Include="LightVcl.Graph.Alpha.pas"/>
+        <DCCReference Include="LightVcl.Graph.Desktop.pas"/>
+        <DCCReference Include="LightVcl.Graph.ResizeGr32.pas"/>
+        <DCCReference Include="LightVcl.Graph.ResizeVCL.pas"/>
+        <DCCReference Include="LightVcl.Graph.UtilGray.pas"/>
+        <DCCReference Include="LightVcl.Graph.Resize.pas"/>
+        <DCCReference Include="LightVcl.Graph.ResizeWinBlt.pas"/>
+        <DCCReference Include="LightVcl.Graph.ResizeWinThumb.pas"/>
+        <DCCReference Include="LightVcl.Graph.ResizeWinWIC.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

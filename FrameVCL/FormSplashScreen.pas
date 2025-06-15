@@ -25,7 +25,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, LightCom.AppDataForm,Vcl.ExtCtrls, ccCore, LightCom.Dialogs;
+  Vcl.Controls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.ExtCtrls, ccCore, LightVcl.Common.Dialogs;
 
 TYPE
   TfrmSplash = class(TLightForm)
@@ -45,7 +45,7 @@ procedure ShowSplashScreen(ImgFileSize: integer);
 
 
 IMPLEMENTATION  {$R *.dfm}
-USES ccIO, LightCom.CenterControl, ccAppData, LightCom.AppData
+USES ccIO, LightVcl.Common.CenterControl, ccAppData, LightVcl.Common.AppData
 ;
 
 CONST

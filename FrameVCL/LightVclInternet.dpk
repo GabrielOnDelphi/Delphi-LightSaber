@@ -40,17 +40,17 @@ requires
 
 contains
   Vcl.IdAntiFreeze,
-  ciHtml in 'ciHtml.pas',
-  ciHtmlImg in 'ciHtmlImg.pas',
-  ciHtmlWriter in 'ciHtmlWriter.pas',
-  ciDownloadThread in 'ciDownloadThread.pas',
-  ciEmail in 'ciEmail.pas',
-  ciInternet in 'ciInternet.pas',
-  ciCommonWebDown in 'ciCommonWebDown.pas',
-  ciEmailSender in 'ciEmailSender.pas',
+  LightVcl.Internet.HTMLImg in 'LightVcl.Internet.HTMLImg.pas',
+  LightVcl.Internet.HTMLWriter in 'LightVcl.Internet.HTMLWriter.pas',
+  LightVcl.Internet.Download.Thread in 'LightVcl.Internet.Download.Thread.pas',
+  LightVcl.Internet.Email in 'LightVcl.Internet.Email.pas',
+  LightVcl.Internet in 'LightVcl.Internet.pas',
+  LightVcl.Internet.CommonWebDown in 'LightVcl.Internet.CommonWebDown.pas',
+  LightVcl.Internet.EmailSender in 'LightVcl.Internet.EmailSender.pas',
   ciUpdater in 'Updater\ciUpdater.pas',
   ciUpdaterRec in 'Updater\ciUpdaterRec.pas',
-  ciDownload_WinInet in 'ciDownload_WinInet.pas';
+  LightVcl.Internet.Download.WinInet in 'LightVcl.Internet.Download.WinInet.pas',
+  LightVcl.Internet.HTML in 'LightVcl.Internet.HTML.pas';
 
 end.
 

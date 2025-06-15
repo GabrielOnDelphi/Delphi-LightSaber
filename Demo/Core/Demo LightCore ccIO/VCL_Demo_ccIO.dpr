@@ -5,7 +5,7 @@ uses
   FastMM4,
   {$ENDIF }
   MainForm in 'MainForm.pas' {frmTestIO},
-  LightCom.AppData,
+  LightVcl.Common.AppData,
   ccAppData in '..\..\ccAppData.pas';
 
 {$R *.res}

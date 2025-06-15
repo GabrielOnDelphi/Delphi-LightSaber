@@ -17,7 +17,7 @@ INTERFACE
 
 USES
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.StdCtrls, cvSpinEdit, {ProgressBarAL, }Vcl.ExtCtrls, cvCheckBox, cvGroupBox,
+  Vcl.StdCtrls, LightVcl.Visual.SpinEdit, {ProgressBarAL, }Vcl.ExtCtrls, LightVcl.Visual.CheckBox, LightVcl.Visual.GroupBox,
   Vcl.ComCtrls;
 
 TYPE
@@ -51,8 +51,8 @@ VAR
 
 IMPLEMENTATION {$R *.dfm}
 USES
-   CpuUsageTotal, ccAppData, LightCom.AppData
-, cvINIFile, LightCom.PowerUtils, ccCore, LightCom.SystemTime, LightCom.Clipboard, LightCom.Dialogs, ccINIFile, LightCom.AppDataForm, FormLog;
+   CpuUsageTotal, ccAppData, LightVcl.Common.AppData
+, LightVcl.Visual.INIFile, LightVcl.Common.PowerUtils, ccCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, ccINIFile, LightVcl.Common.AppDataForm, FormLog;
 
 
 
@@ -98,9 +98,9 @@ begin
 
   begin
    ShowCpuUtilization;                                     { Show the average CPU usage }
-   lblPwrType.Caption:= LightCom.PowerUtils.PowerStatusString;
+   lblPwrType.Caption:= LightVcl.Common.PowerUtils.PowerStatusString;
 
-   if LightCom.PowerUtils.BatteryLeft<= 100
+   if LightVcl.Common.PowerUtils.BatteryLeft<= 100
    then lblBatProc.Caption:= ' Battery left: '+ IntToStr(BatteryLeft)+ '%'
    else lblBatProc.Caption:= 'No battery detected.';
   end;
@@ -187,7 +187,7 @@ VAR Now: TPowerType;
 begin
  if NOT chkOutOfJuice.Checked then EXIT;
 
- Now:= LightCom.PowerUtils.PowerStatus;
+ Now:= LightVcl.Common.PowerUtils.PowerStatus;
  if (Now<> LastPowerType) then
   begin
     case Now of

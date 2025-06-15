@@ -4,14 +4,14 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, Vcl.Graphics, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.ExtCtrls, Vcl.WinXCtrls, Vcl.FileCtrl, Vcl.ValEdit, Vcl.Grids, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Mask, Vcl.Samples.Spin, Vcl.CheckLst,
-  cvListBox, cvStringGridBase, cvStringGrid,
-  cvLabelEdit, cvPathEdit, cvSpinEditDelayed, cvSpinEdit, cvFileListBox,
-  cvFloatSpinEdit, cvCheckBox, cvMsgDispatcher, cvRichEditResize, cvGradientPanel,
-  cvActivityIndicator, cvCreationOrderTester, cvCaptionedThumb, cvTimeLine, cvTrayIcon, cvToolBox, cvTimer,
-  cvStatusBar, cvSplitter, cvScrollBox, cvRichEdit, cvRadioButton, cvProxyList, cvPanel,
-  cvMinimalPathLabel, cvMemo, cvLstEditor, cvGroupBox, cvGraphChart, cvFreeDiskSpace,
-  cvFileFilter, cvEdit, cvDirectoryListBox, cvCountDown, cvComboBox, cvCheckListBox, cvAssociateExt, cvDropDownSearch,
-  LightCom.AppDataForm;
+  LightVcl.Visual.ListBox, LightVcl.Visual.StringGridBase, LightVcl.Visual.StringGrid,
+  LightVcl.Visual.LabelEdit, LightVcl.Visual.PathEdit, LightVcl.Visual.SpinEditDelayed, LightVcl.Visual.SpinEdit, LightVcl.Visual.FileListBox,
+  LightVcl.Visual.FloatSpinEdit, LightVcl.Visual.CheckBox, LightVcl.Visual.MsgDispatcher, LightVcl.Visual.RichEditResize, LightVcl.Visual.GradientPanel,
+  LightVcl.Visual.ActivityIndicator, LightVcl.Visual.CreationOrderTester, LightVcl.Visual.CaptionedThumb, LightVcl.Visual.TimeLine, LightVcl.Visual.TrayIcon, LightVcl.Visual.ToolBox, LightVcl.Visual.Timer,
+  LightVcl.Visual.StatusBar, LightVcl.Visual.Splitter, LightVcl.Visual.ScrollBox, LightVcl.Visual.RichEdit, LightVcl.Visual.RadioButton, LightVcl.Visual.ProxyList, LightVcl.Visual.Panel,
+  LightVcl.Visual.MinimalPathLabel, LightVcl.Visual.Memo, LightVcl.Visual.LstEditor, LightVcl.Visual.GroupBox, LightVcl.Visual.GraphChart, LightVcl.Visual.FreeDiskSpace,
+  LightVcl.Visual.FileFilter, LightVcl.Visual.Edit, LightVcl.Visual.DirectoryListBox, LightVcl.Visual.CountDown, LightVcl.Visual.ComboBox, LightVcl.Visual.CheckListBox, LightVcl.Visual.AssociateExt, LightVcl.Visual.DropDownSearch,
+  LightVcl.Common.AppDataForm;
 
 TYPE
   TfrmMain = class(TLightForm)

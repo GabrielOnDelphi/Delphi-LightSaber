@@ -19,8 +19,8 @@ INTERFACE
 
 USES
   System.Classes, System.SysUtils,
-  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus, Vcl.Grids,
-  ccAppData, LightCom.AppDataForm, ccLogRam, LightCom.LogViewer, LightCom.LogFilter;
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Menus,
+  ccAppData, LightVcl.Common.AppDataForm, ccLogRam, LightVcl.Common.LogViewer, LightVcl.Common.LogFilter;
 
 TYPE
   TfrmRamLog = class(TLightForm)
@@ -58,7 +58,7 @@ IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   ccLogTypes, ccINIFile, LightCom.AppData;
+   ccLogTypes, ccINIFile, LightVcl.Common.AppData;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -129,7 +129,7 @@ end;
 
 procedure TfrmRamLog.LoadSettings;
 begin
-  //del cvINIFile.LoadForm(Self);
+  //del LightVcl.Visual.INIFile.LoadForm(Self);
 
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);
   try

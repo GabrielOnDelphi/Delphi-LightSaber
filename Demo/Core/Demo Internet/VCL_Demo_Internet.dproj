@@ -98,11 +98,11 @@
         </DCCReference>
         <DCCReference Include="..\..\FrameVCL\LightCom.AppData.pas"/>
         <DCCReference Include="..\..\FrameVCL\LightVcl.LogForm.pas"/>
-        <DCCReference Include="..\..\FrameVCL\ciInetDonwIndy.pas"/>
-        <DCCReference Include="..\..\FrameVCL\ciInternet.pas"/>
+        <DCCReference Include="..\..\FrameVCL\LightVcl.Internet.Download.Indy.pas"/>
+        <DCCReference Include="..\..\FrameVCL\LightVcl.Internet.pas"/>
         <DCCReference Include="..\..\FrameVCL\LightCom.AppDataForm.pas"/>
-        <DCCReference Include="..\..\FrameVCL\ciDownloadThread.pas"/>
-        <DCCReference Include="..\..\FrameVCL\ciDownload_WinInet.pas"/>
+        <DCCReference Include="..\..\FrameVCL\LightVcl.Internet.Download.Thread.pas"/>
+        <DCCReference Include="..\..\FrameVCL\LightVcl.Internet.Download.WinInet.pas"/>
         <DCCReference Include="..\..\ccDownload.pas"/>
         <DCCReference Include="..\..\ccAppData.pas"/>
         <BuildConfiguration Include="Base">

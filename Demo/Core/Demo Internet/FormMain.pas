@@ -10,7 +10,7 @@ INTERFACE
 USES
   windows, System.SysUtils, System.Classes, System.Actions, System.Net.URLClient,
   VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList,
-  LightCom.SystemTime, LightCom.Clipboard, LightCom.AppDataForm, ciDownloadThread;
+  LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.AppDataForm, LightVcl.Internet.Download.Thread;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -58,8 +58,8 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightCom.Sound, ccCore, LightCom.System, LightCom.Shell, LightCom.ExecuteShell, ccAppData, LightCom.AppData, LightCom.CenterControl,
-   ccTextFile, ciInternet, ccDownload, ccIO, ciDownload_WinInet;
+   LightVcl.Common.Sound, ccCore, LightVcl.Common.System, LightVcl.Common.Shell, LightVcl.Common.ExecuteShell, ccAppData, LightVcl.Common.AppData, LightVcl.Common.CenterControl,
+   ccTextFile, LightVcl.Internet, ccDownload, ccIO, LightVcl.Internet.Download.WinInet;
 
 
 
@@ -90,7 +90,7 @@ begin
   CursorBusy;
   TRY
     Caption:= 'Connecting...';
-    ciInternet.TestProgramConnection(TRUE);
+    LightVcl.Internet.TestProgramConnection(TRUE);
   FINALLY
     CursorNotBusy;
   END;
@@ -194,7 +194,7 @@ begin
  mmoDown3.Update;
 
  c:= GetTickCount;
- HttpRetCode:= ciDownload_WinInet.DownloadBytes(TestURL, '', BinData);
+ HttpRetCode:= LightVcl.Internet.Download.WinInet.DownloadBytes(TestURL, '', BinData);
 
  if HttpRetCode = 0
  then
@@ -217,7 +217,7 @@ begin
  mmoDown3.Update;
 
  c:= GetTickCount;
- if ciDownload_WinInet.DownloadToFile(TestURL, '', AppData.ExeFolder+ 'DownloadToFile.BIN') = 0
+ if LightVcl.Internet.Download.WinInet.DownloadToFile(TestURL, '', AppData.ExeFolder+ 'DownloadToFile.BIN') = 0
  then mmoDown3.Lines.Add('OK!')
  else mmoDown3.Lines.Add('Failed!');
 
@@ -245,7 +245,7 @@ begin
  FreeAndNil(myDownload);
 
  c:= GetTickCount;
- myDownload:= ciDownloadThread.TWinInetObj.Create(TRUE);  { You can't restart a thread once it is finished/terminated. https://stackoverflow.com/questions/6719949/restart-delphi-tthread-that-lives-the-entire-app-lifetime }
+ myDownload:= LightVcl.Internet.Download.Thread.TWinInetObj.Create(TRUE);  { You can't restart a thread once it is finished/terminated. https://stackoverflow.com/questions/6719949/restart-delphi-tthread-that-lives-the-entire-app-lifetime }
  myDownload.OnDownloadDone:= OnDownloadDone;  // WARNING! THIS IS CALLED EVEN IF THE DOWNLOAD FAILS!
  myDownload.UserAgent:= 'IEXPLORE';
  myDownload.Referer:= '';
@@ -271,7 +271,7 @@ begin
  mmoDown3.Update;
 
  c:= GetTickCount;
- VAR s:= ciDownload_WinInet.DownloadAsString(TestURL);
+ VAR s:= LightVcl.Internet.Download.WinInet.DownloadAsString(TestURL);
  StringToFile(AppData.ExeFolder+ 'DownloadAsString.txt', s, woOverwrite, wpOff);
  mmoDown3.Lines.Add('Done in ' + Real2Str((GetTickCount-c) / 1000)+ 'sec');
  BipConfirmation;

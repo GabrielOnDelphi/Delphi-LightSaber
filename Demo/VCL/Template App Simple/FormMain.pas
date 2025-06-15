@@ -12,7 +12,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, System.Actions,
   VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList,
-  LightCom.SystemTime, LightCom.Clipboard, LightCom.AppDataForm;
+  LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.AppDataForm;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -41,7 +41,7 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightCom.Shell, LightCom.System, LightCom.ExecuteShell, ccAppData, LightCom.AppData, LightCom.CenterControl;
+   LightVcl.Common.Shell, LightVcl.Common.System, LightVcl.Common.ExecuteShell, ccAppData, LightVcl.Common.AppData, LightVcl.Common.CenterControl;
 
 
 
@@ -74,15 +74,15 @@ begin
     if NOT AppData.RunningHome then
       begin
         // Desktop shortcuts
-        LightCom.Shell.CreateShortcut(AppData.AppName, TRUE);        // OnDesktop
-        LightCom.Shell.CreateShortcut(AppData.AppName, FALSE);       // OnStartMenu
+        LightVcl.Common.Shell.CreateShortcut(AppData.AppName, TRUE);        // OnDesktop
+        LightVcl.Common.Shell.CreateShortcut(AppData.AppName, FALSE);       // OnStartMenu
 
         // File association
         AssociateWith('.LightSaber', AppData.AppName, FALSE, FALSE, TRUE);
 
         // Welcome page
         if NOT AppData.BetaTesterMode  // The program is in BetaTester mode if a file called "betatester" is found in the "System" folder.
-        then LightCom.ExecuteShell.ExecuteURL(AppData.ProductWelcome);
+        then LightVcl.Common.ExecuteShell.ExecuteURL(AppData.ProductWelcome);
       end;
    end
   else

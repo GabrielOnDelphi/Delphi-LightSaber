@@ -25,8 +25,8 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, LightCom.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.Samples.Spin, cvPathEdit, cvTimer, cvRadioButton, cvCheckBox, cvGroupBox, cvSpinEdit;
+  System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls,
+  Vcl.Samples.Spin, LightVcl.Visual.PathEdit, LightVcl.Visual.Timer, LightVcl.Visual.RadioButton, LightVcl.Visual.CheckBox, LightVcl.Visual.GroupBox, LightVcl.Visual.SpinEdit;
 
 TYPE
   TfrmReminder = class(TLightForm)
@@ -79,7 +79,7 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightCom.VclUtils, LightCom.Colors, cGraphUtil, LightCom.Sound, cGraphDesktop, cvIniFile, ccCore, LightCom.SystemTime, LightCom.Clipboard, LightCom.Dialogs, ccINIFile, LightCom.AppDataForm, LightCom.PowerUtils, LightCom.ExecuteShell;
+   LightVcl.Common.VclUtils, LightVcl.Common.Colors, LightVcl.Graph.Util, LightVcl.Common.Sound, LightVcl.Graph.Desktop, LightVcl.Visual.INIFile, ccCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, ccINIFile, LightVcl.Common.AppDataForm, LightVcl.Common.PowerUtils, LightVcl.Common.ExecuteShell;
 
 
 
@@ -148,7 +148,7 @@ begin
  then FTimeUp(Self);
 
  TimeLeft:= spnTime.Value * 60;
- cGraphDesktop.WriteTextOnDesktopOver(10, 10, 'Reminder!', 'Arial', 30, clRedBrick);  { Paint text over all windows }
+ LightVcl.Graph.Desktop.WriteTextOnDesktopOver(10, 10, 'Reminder!', 'Arial', 30, clRedBrick);  { Paint text over all windows }
 
  if radRunFile.Checked then
    if (edtPath.Path > '')
@@ -160,8 +160,8 @@ begin
     end
    else MessageError('[Reminder times up] CRLF No file to execute!');
 
- if radSleep.Checked    then LightCom.PowerUtils.SystemSleep;
- if radShutDown.Checked then LightCom.PowerUtils.WinShutDown(TRUE, FALSE);
+ if radSleep.Checked    then LightVcl.Common.PowerUtils.SystemSleep;
+ if radShutDown.Checked then LightVcl.Common.PowerUtils.WinShutDown(TRUE, FALSE);
 end;
 
 
@@ -212,7 +212,7 @@ end;
 procedure TfrmReminder.spnTimeChange(Sender: TObject);
 begin
  TimeLeft:= spnTime.Value* 60;
- cvTimer.ResetTimer(Timer);
+ LightVcl.Visual.Timer.ResetTimer(Timer);
  ShowRemainingTime;
 end;
 

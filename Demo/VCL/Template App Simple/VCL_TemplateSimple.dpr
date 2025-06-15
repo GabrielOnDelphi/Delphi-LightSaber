@@ -4,9 +4,9 @@ uses
   {$IFDEF DEBUG}FastMM4,{$ENDIF }
   FormMain in 'FormMain.pas' {MainForm},
   ccAppData in '..\..\..\ccAppData.pas',
-  LightCom.AppDataForm in '..\..\..\FrameVCL\LightCom.AppDataForm.pas',
-  LightCom.IniFile in '..\..\..\FrameVCL\LightCom.IniFile.pas',
-  LightCom.AppData in '..\..\..\FrameVCL\LightCom.AppData.pas',
+  LightVcl.Common.AppDataForm in '..\..\..\FrameVCL\LightCom.AppDataForm.pas',
+  LightVcl.Common.IniFile in '..\..\..\FrameVCL\LightCom.IniFile.pas',
+  LightVcl.Common.AppData in '..\..\..\FrameVCL\LightCom.AppData.pas',
   LightVcl.LogForm in '..\..\..\FrameVCL\LightVcl.LogForm.pas';
 
 {$R *.res}

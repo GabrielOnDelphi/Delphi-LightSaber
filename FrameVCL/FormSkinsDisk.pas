@@ -58,7 +58,7 @@ INTERFACE
 
 USES
   Winapi.Windows, System.SysUtils, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Classes, Vcl.Forms,
-  LightCom.AppDataForm;
+  LightVcl.Common.AppDataForm;
 
 TYPE
   TfrmSkinDisk = class(TLightForm)
@@ -98,8 +98,8 @@ procedure LoadLastSkin(CONST DefaultSkin: string= '');  { On first run, set the 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightCom.Colors, LightCom.Translate, LightCom.IniFileQuick, {uLinks,} Vcl.Themes, ccAppData, LightCom.AppData, LightCom.ExecuteShell,
-   cvIniFile, IOUtils, ccIO, ccCore, LightCom.Dialogs;   { VCL.Styles is mandatory here}
+   LightVcl.Common.Colors, LightVcl.Common.Translate, LightVcl.Common.IniFileQuick, {uLinks,} Vcl.Themes, ccAppData, LightVcl.Common.AppData, LightVcl.Common.ExecuteShell,
+   LightVcl.Visual.INIFile, IOUtils, ccIO, ccCore, LightVcl.Common.Dialogs;   { VCL.Styles is mandatory here}
 
 CONST
   DefWinTheme= 'Windows default theme';
@@ -140,7 +140,7 @@ end;
 
 procedure LoadLastSkin(CONST DefaultSkin: string= '');
 begin
- LastSkin:= LightCom.IniFileQuick.ReadString('LastSkin', DefaultSkin);   { This is a relative path so the skin can still be loaded when the application is moved to a different folder }
+ LastSkin:= LightVcl.Common.IniFileQuick.ReadString('LastSkin', DefaultSkin);   { This is a relative path so the skin can still be loaded when the application is moved to a different folder }
 
  if LastSkin = ''
  then LastSkin:= DefaultSkin;
@@ -214,7 +214,7 @@ procedure TfrmSkinDisk.FormDestroy(Sender: TObject);
 begin
  SaveForm;
  if NOT AppData.Initializing
- then LightCom.IniFileQuick.WriteString ('LastSkin', LastSkin);   { We don't save anything if the start up was improper! }
+ then LightVcl.Common.IniFileQuick.WriteString ('LastSkin', LastSkin);   { We don't save anything if the start up was improper! }
 end;
 
 

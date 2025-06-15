@@ -12,11 +12,11 @@ UNIT FormEmailComposer;
 INTERFACE
 
 USES
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Vcl.Forms, LightCom.AppDataForm, Dialogs, StdCtrls, Buttons, ActnList, Menus, ComCtrls, ExtCtrls, Spin,  ExtDlgs, System.Actions,
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Vcl.Forms, LightVcl.Common.AppDataForm, Dialogs, StdCtrls, Buttons, ActnList, Menus, ComCtrls, ExtCtrls, Spin,  ExtDlgs, System.Actions,
   IdSSL, IdComponent, IdSMTP, IdAntiFreeze,
   IdSSLOpenSSL, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack,
-   cvCheckBox, cvSplitter, IdBaseComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase,
-  IdMessageClient, IdSMTPBase, cvPathEdit, FormEmailServer, Vcl.Mask;
+   LightVcl.Visual.CheckBox, LightVcl.Visual.Splitter, IdBaseComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase,
+  IdMessageClient, IdSMTPBase, LightVcl.Visual.PathEdit, FormEmailServer, Vcl.Mask;
 
 TYPE
   TfrmComposer = class(TLightForm)
@@ -70,8 +70,8 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  cvIniFile, ccCore, LightCom.SystemTime, LightCom.Clipboard, LightCom.Dialogs, ccINIFile, LightCom.AppDataForm, LightCom.Sound, ccAppData, LightCom.AppData
-, ccIO, ccTextFile, LightCom.IO, ciEmailSender;
+  LightVcl.Visual.INIFile, ccCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, ccINIFile, LightVcl.Common.AppDataForm, LightVcl.Common.Sound, ccAppData, LightVcl.Common.AppData
+, ccIO, ccTextFile, LightVcl.Common.IO, LightVcl.Internet.EmailSender;
 
 
 procedure TfrmComposer.Initialize; { This will create also the frmSmtpSettings }
@@ -162,7 +162,7 @@ begin
   then Body:= mmoEmailBody.Text+ LBRK+ Advert       { Send HTML email }
   else Body:= mmoEmailBody.Text+ LBRK+ Advert;
 
-  Result:= ciEmailSender.SendEmail(SMTP, edtTo.Text, ledFrom.Text, edtSubject.Text, Body, '', edtAttachment.path, chkSendAsHtml.Checked);
+  Result:= LightVcl.Internet.EmailSender.SendEmail(SMTP, edtTo.Text, ledFrom.Text, edtSubject.Text, Body, '', edtAttachment.path, chkSendAsHtml.Checked);
  FINALLY
   CursorNotBusy;
  END;

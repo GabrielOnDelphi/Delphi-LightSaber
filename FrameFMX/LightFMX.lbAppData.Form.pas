@@ -22,7 +22,7 @@
       Optionally, if you want to execute your own initialization code, override the LateInitialize (don't forget to call inherited).
       See: c:\Projects\LightSaber\Demo\Template App\FMX Minimal\TemplateMicro_Fmx.dpr
 
-      uses LightCom.AppDataForm;
+      uses LightVcl.Common.AppDataForm;
       Type
         TYourForm = class(TLightForm)
         public
@@ -138,7 +138,7 @@ begin
   FormPostInitialize;
 
   // Load form
-  // Limitation: At this point we can only load "standard" Delphi components. Loading of our Light components can only be done in cvIniFile.pas -> TIniFileVCL
+  // Limitation: At this point we can only load "standard" Delphi components. Loading of our Light components can only be done in LightVcl.Visual.INIFile.pas -> TIniFileVCL
   ///Assert(AutoState <> asUndefined, 'The user must set the AutoState property in code (see TLightForm.FormPostInitialize)!' + CRLF+'Form: '+ Name+ ' / '+ ClassName);
   if AutoState <> asNone
   then LoadForm;
@@ -241,7 +241,7 @@ end;
          OnlyFormPos=True   ->  It will only save the position of the form (only Left/Top, no width/height/WndState)
 
 
-   Also see LoadForm/SaveForm in cvINIFile.pas
+   Also see LoadForm/SaveForm in LightVcl.Visual.INIFile.pas
 -----------------------------------------------------------------------------------------------------------------------}
 
 procedure TLightForm.SaveForm;

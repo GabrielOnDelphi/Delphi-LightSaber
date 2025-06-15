@@ -30,8 +30,8 @@ INTERFACE
 USES
   Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Controls,
   Vcl.ExtCtrls, System.Classes, SysUtils, Vcl.Forms, System.IOUtils,
-  ccCore, LightCom.SystemTime, LightCom.Clipboard, LightCom.Dialogs, ccIO, ccTextFile, LightCom.IO, cvPathEdit, cvCountDown,
-  InternetLabel, llRichLog, Vcl.Imaging.pngimage, LightCom.AppDataForm;
+  ccCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, ccIO, ccTextFile, LightVcl.Common.IO, LightVcl.Visual.PathEdit, LightVcl.Visual.CountDown,
+  InternetLabel, llRichLog, Vcl.Imaging.pngimage, LightVcl.Common.AppDataForm;
 
 TYPE
   TfrmMain = class(TLightForm)
@@ -75,7 +75,7 @@ IMPLEMENTATION {$R *.dfm}
 {/$DEFINE BASER}
 
 USES
-   LightCom.Window, LightCom.ExecuteShell, LightCom.Shell, ccAppData, LightCom.AppData
+   LightVcl.Common.Window, LightVcl.Common.ExecuteShell, LightVcl.Common.Shell, ccAppData, LightVcl.Common.AppData
 ;
 
    {$IFDEF BioniX}BxConstants;{$ENDIF}

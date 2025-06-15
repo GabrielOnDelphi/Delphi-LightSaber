@@ -63,7 +63,7 @@
         In this case, you will have to set the Initializing manually, once the program is fully initialized (usually in the LateInitialize of the main form, or in the LateInitialize of the last created form).
         If you forget it, the AppData will not save the forms to the INI file and you will have a warning on shutdown.
         Usage:
-          Used by SaveForm in LightCom.IniFile.pas/cvINIFile.pas (and a few other places) to signal not to save the form if the application has crashed while still in the initialization phase.
+          Used by SaveForm in LightVcl.Common.IniFile.pas/LightVcl.Visual.INIFile.pas (and a few other places) to signal not to save the form if the application has crashed while still in the initialization phase.
           You can use it also personally, to avoid executing some of your code during the initialization stages.
 
 
@@ -609,10 +609,10 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    Prompt To Save/Load File
    Remembers the last used folder.
-   Example: PromptToSaveFile(s, cGraphUtil.JPGFtl, 'txt');
+   Example: PromptToSaveFile(s, LightVcl.Graph.Util.JPGFtl, 'txt');
 
    Note:
-      These functions are also duplicated in LightCom.IO.Win.
+      These functions are also duplicated in LightVcl.Common.IO.Win.
       The difference is that there, those functions cannot read/write the LastUsedFolder var so the app cannot remmeber last use folder.
 
    Note:

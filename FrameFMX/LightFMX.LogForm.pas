@@ -21,7 +21,7 @@ USES
   System.Classes, System.SysUtils, System.Types, System.UITypes, System.Rtti,
   FMX.Grid.Style, FMX.Grid, FMX.Types, FMX.Controls, FMX.Forms, FMX.Layouts, FMX.Menus,
   FMX.ScrollBox, FMX.StdCtrls, FMX.Controls.Presentation, FMX.Presentation.Factory,
-  LightCom.AppDataForm, LightCom.LogFilter, LightCom.LogViewer,
+  LightVcl.Common.AppDataForm, LightVcl.Common.LogFilter, LightVcl.Common.LogViewer,
   ccAppData, ccLogRam, LightFmx.lbLogViewer;
 
 TYPE
@@ -55,7 +55,7 @@ IMPLEMENTATION {$R *.FMX}
 
 
 USES
-   ccLogTypes, ccINIFile, LightCom.AppData;
+   ccLogTypes, ccINIFile, LightVcl.Common.AppData;
 
 
 
@@ -117,7 +117,7 @@ end;
 
 procedure TfrmRamLog.LoadSettings;
 begin
-  //del cvINIFile.LoadForm(Self);
+  //del LightVcl.Visual.INIFile.LoadForm(Self);
 
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);
   try

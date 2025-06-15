@@ -33,7 +33,7 @@ USES
   WinApi.Windows, WinApi.Messages, Winapi.ShellApi,
   System.SysUtils, System.Classes, System.Actions,
   VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
-  CoolTrayIcon, ccAppData, LightCom.AppData, LightCom.SystemTime, LightCom.Clipboard, cvPathEdit, cvStatusBar, cpProteus {Delete this line if you don't have Proteus library}, cpProteusIO, LightCom.GuiSettings, LightCom.AppDataForm, ccCore;
+  CoolTrayIcon, ccAppData, LightVcl.Common.AppData, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Visual.PathEdit, LightVcl.Visual.StatusBar, cpProteus {Delete this line if you don't have Proteus library}, cpProteusIO, LightVcl.Common.GuiSettings, LightVcl.Common.AppDataForm, ccCore;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -116,9 +116,9 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
    ciUpdater,
-   LightCom.Translate,
-   cvIniFile,
-   LightCom.System,
+   LightVcl.Common.Translate,
+   LightVcl.Visual.INIFile,
+   LightVcl.Common.System,
    FormAbout,
    FormSettings,
    FormTranslSelector,

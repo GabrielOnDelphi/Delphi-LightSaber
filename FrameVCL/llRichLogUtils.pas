@@ -27,7 +27,7 @@ UNIT llRichLogUtils;
 INTERFACE
 
 USES
-   System.SysUtils, Vcl.Graphics, LightCom.Colors;
+   System.SysUtils, Vcl.Graphics, LightVcl.Common.Colors;
 
 TYPE
   TLogVerb= (lvrVerbose, lvrHints, lvrInfos, lvrImportant, lvrWarnings, lvrErrors);

@@ -4,7 +4,7 @@ INTERFACE
 
 USES
   System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls,
-  Vcl.ExtCtrls, LightCom.AppDataForm;
+  Vcl.ExtCtrls, LightVcl.Common.AppDataForm;
 
 const
    CRLF = #13#10;
@@ -28,7 +28,7 @@ VAR
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-   cvINIFile, LightCom.WinVersionApi, LightCom.WinVersion, LightCom.ExeVersion;
+   LightVcl.Visual.INIFile, LightVcl.Common.WinVersionApi, LightVcl.Common.WinVersion, LightVcl.Common.ExeVersion;
 
 
 procedure TfrmTester.FormCreate(Sender: TObject);
@@ -56,7 +56,7 @@ begin
   Memo.Lines.Add('LightCom.WinVersionApi.pas');
   Memo.Lines.Add('');
   Memo.Lines.Add(LightCom.WinVersionApi.GenerateReport);
-  LightCom.WinVersion.GenerateReport;
+  LightVcl.Common.WinVersion.GenerateReport;
 
   Memo.Lines.Add('_________________');
   Memo.Lines.Add('');

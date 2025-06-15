@@ -6,8 +6,8 @@ UNIT FrameExplorer;
 INTERFACE
 
 USES
-  System.Classes, Vcl.Controls, Vcl.Forms, LightCom.AppDataForm,Vcl.StdCtrls, cvPathEdit, Vcl.FileCtrl, cvFileFilter,
-  cvFileListBox, Vcl.ExtCtrls;
+  System.Classes, Vcl.Controls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.StdCtrls, LightVcl.Visual.PathEdit, Vcl.FileCtrl, LightVcl.Visual.FileFilter,
+  LightVcl.Visual.FileListBox, Vcl.ExtCtrls;
 
 TYPE
   TFrameWinExplorer = class(TFrame)
@@ -33,7 +33,7 @@ procedure Register;
 IMPLEMENTATION {$R *.dfm}
 
 
-{ Example of filter: Filter.Filter:= ccIO.FilterAllFiles + '|' + cGraphUtil.AllImgFlt; }
+{ Example of filter: Filter.Filter:= ccIO.FilterAllFiles + '|' + LightVcl.Graph.Util.AllImgFlt; }
 
 
 procedure TFrameWinExplorer.DirectoryChange(Sender: TObject);

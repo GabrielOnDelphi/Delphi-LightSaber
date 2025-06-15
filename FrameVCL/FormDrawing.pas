@@ -65,7 +65,7 @@ ________________________________________________________________________________
 INTERFACE
 
 USES
-   Winapi.Windows, System.Classes, System.SysUtils, System.Types, Vcl.Graphics, Vcl.Controls, Vcl.Forms, LightCom.AppDataForm,Vcl.ExtCtrls;
+   Winapi.Windows, System.Classes, System.SysUtils, System.Types, Vcl.Graphics, Vcl.Controls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.ExtCtrls;
 
 TYPE
   TDrawingForm = class(TLightForm)
@@ -89,8 +89,8 @@ function GetHiddenWindow(Color: TColor; ExpandOnAllMon, Hidden: Boolean): TDrawi
 
 IMPLEMENTATION {$R *.dfm}
 USES
-    LightCom.WinVersion, LightCom.WinVersionAPI, LightCom.ExeVersion, ccAppData, LightCom.AppData
-, cvINIFile, cGraphDesktop;
+    LightVcl.Common.WinVersion, LightVcl.Common.WinVersionAPI, LightVcl.Common.ExeVersion, ccAppData, LightVcl.Common.AppData
+, LightVcl.Visual.INIFile, LightVcl.Graph.Desktop;
 
 
 
@@ -118,7 +118,7 @@ begin
  DoubleBuffered:= TRUE;
  Caption       := 'frmBxDraw';
  Name          := 'frmBxDraw';
- Tag           := 128; {128 = DontTranslate in LightCom.Translate.pas }
+ Tag           := 128; {128 = DontTranslate in LightVcl.Common.Translate.pas }
  StyleElements := [];    { The form will be painted to the skin color if skins are enabled. My color will be ignored. Therefore we need to disable skins for this form! }
 
  {del

@@ -22,8 +22,8 @@ INTERFACE
 
 USES
   WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin,
-  cvRichEdit, Vcl.ComCtrls, ccCore, LightCom.SystemTime, LightCom.Clipboard, LightCom.Dialogs, ccINIFile, LightCom.AppDataForm,  Vcl.Dialogs, cvCheckBox, Vcl.ExtCtrls, llRichLogTrack,
-  System.Actions, Vcl.ActnList, Vcl.Menus, cvRadioButton, ccAppData, LightCom.AppData
+  LightVcl.Visual.RichEdit, Vcl.ComCtrls, ccCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, ccINIFile, LightVcl.Common.AppDataForm,  Vcl.Dialogs, LightVcl.Visual.CheckBox, Vcl.ExtCtrls, llRichLogTrack,
+  System.Actions, Vcl.ActnList, Vcl.Menus, LightVcl.Visual.RadioButton, ccAppData, LightVcl.Common.AppData
 ;
 
 TYPE
@@ -69,7 +69,7 @@ VAR
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-   cvIniFile, ccIO, ccTextFile, LightCom.IO, LightCom.Debugger, SecondForm;
+   LightVcl.Visual.INIFile, ccIO, ccTextFile, LightVcl.Common.IO, LightVcl.Common.Debugger, SecondForm;
 
 
 

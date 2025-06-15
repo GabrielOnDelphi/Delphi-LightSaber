@@ -16,7 +16,7 @@ INTERFACE
 USES
   System.Classes,
   Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Controls,
-  LightCom.AppDataForm;
+  LightVcl.Common.AppDataForm;
 
 type
   TfrmShowMsgAsync = class(TLightForm)

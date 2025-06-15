@@ -15,9 +15,9 @@ INTERFACE
 USES
   //WinApi.Messages,
   System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.ExtCtrls,
-  cvIniFile, InternetLabel, cvPathEdit, cvSpinEdit,
-  llRichLogTrack, cvCheckBox, llRichLog, ccAppData, LightCom.AppData
-, chHardID, LightCom.AppDataForm;
+  LightVcl.Visual.INIFile, InternetLabel, LightVcl.Visual.PathEdit, LightVcl.Visual.SpinEdit,
+  llRichLogTrack, LightVcl.Visual.CheckBox, llRichLog, ccAppData, LightVcl.Common.AppData
+, chHardID, LightVcl.Common.AppDataForm;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -75,7 +75,7 @@ IMPLEMENTATION {$R *.dfm}
 {.$I SynDprUses.inc} // use FastMM4 on older Delphi, or set FPC threads
 
 USES
-   system.Math, ccCore, ccStreamBuff2, LightCom.Debugger;
+   system.Math, ccCore, ccStreamBuff2, LightVcl.Common.Debugger;
 
 
 

@@ -5,7 +5,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Grids,
-  llRichLogTrack, llRichLogUtils, llRichLog, LightCom.LogViewer, LightCom.LogFilter, LightCom.AppDataForm, ccLogRam;
+  llRichLogTrack, llRichLogUtils, llRichLog, LightVcl.Common.LogViewer, LightVcl.Common.LogFilter, LightVcl.Common.AppDataForm, ccLogRam;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -48,7 +48,7 @@ var
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  ccAppData, LightCom.AppData, ccLogTypes, ccINIFile, LightCom.Dialogs;
+  ccAppData, LightVcl.Common.AppData, ccLogTypes, ccINIFile, LightVcl.Common.Dialogs;
 
 
 procedure TMainForm.FormCreate(Sender: TObject);
