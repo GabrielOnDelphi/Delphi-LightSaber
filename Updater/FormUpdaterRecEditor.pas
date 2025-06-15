@@ -8,7 +8,7 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  System.SysUtils, System.Classes, Vcl.Forms, LightCom.AppDataForm,Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.Samples.Spin;
+  System.SysUtils, System.Classes, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.Samples.Spin;
 
 TYPE
   TfrmRecEditor = class(TLightForm)
@@ -52,8 +52,8 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   ccAppData, LightCom.AppData
-, LightCom.SystemTime, LightCom.Clipboard, LightCom.Translate, ciUpdaterRec, LightCom.Dialogs, ccINIFile, cvINIFile;
+   ccAppData, LightVcl.Common.AppData
+, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Translate, ciUpdaterRec, LightVcl.Common.Dialogs, ccINIFile, LightVcl.Visual.INIFile;
 
 
 

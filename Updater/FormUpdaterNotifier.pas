@@ -23,9 +23,9 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  System.SysUtils, System.Classes, Vcl.Forms, LightCom.AppDataForm,Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls,
+  System.SysUtils, System.Classes, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls,
   InternetLabel,
-  ccCore, LightCom.SystemTime, LightCom.Clipboard, ciUpdater, llRichLog, llRichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
+  ccCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, ciUpdater, llRichLog, llRichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
 
 CONST
   UpdaterURL = 'https://www.GabrielMoraru.com/uploads/OnlineNews_v2_TemplateApp.bin'; { For demo purposes }
@@ -83,7 +83,7 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   llRichLogUtils, LightCom.Colors, ccAppData, LightCom.AppData, LightCom.CursorGuard, LightCom.System, ciInternet;
+   llRichLogUtils, LightVcl.Common.Colors, ccAppData, LightVcl.Common.AppData, LightVcl.Common.CursorGuard, LightVcl.Common.System, LightVcl.Internet;
 
 
 
@@ -372,7 +372,7 @@ end;
 
 procedure TFrmUpdater.btnTestInternetClick(Sender: TObject);
 begin
-  lblConnectError.Visible:= ciInternet.TestProgramConnection(TRUE) <= 0;
+  lblConnectError.Visible:= LightVcl.Internet.TestProgramConnection(TRUE) <= 0;
 end;
 
 

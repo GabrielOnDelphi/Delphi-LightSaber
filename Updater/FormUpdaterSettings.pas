@@ -13,7 +13,7 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  Winapi.Windows, System.Classes, Vcl.Controls, Vcl.Forms, LightCom.AppDataForm,Vcl.StdCtrls, Vcl.Samples.Spin, cvSpinEdit, cvCheckBox, Vcl.ExtCtrls,
+  Winapi.Windows, System.Classes, Vcl.Controls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.StdCtrls, Vcl.Samples.Spin, LightVcl.Visual.SpinEdit, LightVcl.Visual.CheckBox, Vcl.ExtCtrls,
   ciUpdater;
 
 TYPE
@@ -53,8 +53,8 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightCom.Dialogs, ccAppData, LightCom.AppData
-, ciInternet; //, cvINIFile;
+   LightVcl.Common.Dialogs, ccAppData, LightVcl.Common.AppData
+, LightVcl.Internet; //, LightVcl.Visual.INIFile;
 
 
 
