@@ -33,7 +33,7 @@ UNIT ccLogRam;
 INTERFACE
 
 USES
-   System.SysUtils, System.DateUtils,
+   System.SysUtils, System.DateUtils, System.Classes,
    ccLogLinesAbstract, ccLogLinesS, ccLogLinesM, ccLogTypes, ccStreamBuff2;
 
 TYPE
@@ -173,25 +173,33 @@ begin
 end;
 
 
+{ For the multithreaded case: VCL updates must be synchronized to the main thread. }
 procedure TRamLog.NotifyLogObserver;
 begin
-  if Assigned(FLogObserver)
-  then FLogObserver.Populate;
+  if Assigned(FLogObserver) then
+    if TThread.CurrentThread.ThreadID = MainThreadID
+    then FLogObserver.Populate
+    else TThread.Queue(nil, procedure begin FLogObserver.Populate; end);  // TThread.Queue schedules the call on the main thread without blocking the caller, suitable for frequent log updates from background threads.
 end;
 
 
 procedure TRamLog.NotifyLogObserverAndShow;
 begin
-  NotifyLogObserver;
-  if ShowOnError
-  then PopUpWindow;
+  if Assigned(FLogObserver) then
+   begin
+     NotifyLogObserver;
+     if ShowOnError
+     then PopUpWindow;
+   end;
 end;
 
 
 procedure TRamLog.PopUpWindow;
 begin
-  if Assigned(FLogObserver)
-  then FLogObserver.PopUpWindow;
+  if Assigned(FLogObserver) then
+    if TThread.CurrentThread.ThreadID = MainThreadID
+      then FLogObserver.PopUpWindow
+      else TThread.Queue(nil, procedure begin FLogObserver.PopUpWindow; end);
 end;
 
 
