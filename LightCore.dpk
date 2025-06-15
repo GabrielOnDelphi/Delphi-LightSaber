@@ -68,6 +68,8 @@ contains
   ccStringListA in 'ccStringListA.pas',
   ccWrapString in 'ccWrapString.pas',
   ccSearchResult in 'ccSearchResult.pas',
-  ccDownload in 'ccDownload.pas';
+  ccDownload in 'ccDownload.pas',
+  ccHTML in 'ccHTML.pas',
+  ccInternet in 'ccInternet.pas';
 
 end.
