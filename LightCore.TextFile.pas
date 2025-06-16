@@ -97,7 +97,7 @@ USES
 
 IMPLEMENTATION
 USES
-   LightCore.Core, LightCore.StreamBuff, LightCore.IO;
+   LightCore, LightCore.StreamBuff, LightCore.IO;
 
 
 
@@ -358,7 +358,7 @@ begin
     begin
      s:= Stream.ReadStringA(1024*KB);
      Inc(BuffPo, 1024*KB);
-     Result:= Result+ Cardinal(LightCore.Core.CountAppearance(c, s));
+     Result:= Result+ Cardinal(LightCore.CountAppearance(c, s));
     end;
  FINALLY
    FreeAndNil(Stream);

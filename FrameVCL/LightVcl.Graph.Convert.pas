@@ -40,7 +40,7 @@ CONST
  IMPLEMENTATION
 
 USES
-   LightCore.IO, LightCore.Core;
+   LightCore.IO, LightCore;
 
 
 

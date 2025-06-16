@@ -14,7 +14,7 @@ UNIT LightCore.EncodeXOR;
 INTERFACE
 
 USES
-   System.SysUtils, {System.NetEncoding, Soap.EncdDecd, }LightCore.Core;
+   System.SysUtils, {System.NetEncoding, Soap.EncdDecd, }LightCore;
 
  { CHAR_SHIFT ENCRYPTION }
  function  SimpleDecode      (CONST s: string): string;

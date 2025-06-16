@@ -168,7 +168,7 @@ TYPE
 
 IMPLEMENTATION
 USES
-   LightCore.Core, LightCore.Binary; 
+   LightCore, LightCore.Binary; 
 
 
 

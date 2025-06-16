@@ -18,7 +18,7 @@ INTERFACE
 USES
    System.SysUtils, // msHtml,
    System.AnsiStrings, System.StrUtils, System.Classes, System.Math,
-   LightCore.StringList, LightCore.Core;
+   LightCore.StringList, LightCore;
 
 {--------------------------------------------------------------------------------------------------
    HTML PARSING
@@ -53,7 +53,7 @@ USES
  function  MakeLinksRelativeToRoot (CONST HTMLBody,   HtmlUrl: string): string;
  function  ColapseUrlDots          (sURL: string): string;
 
- { Also see LightCore.Core.ExtractTex tBetween }
+ { Also see LightCore.ExtractTex tBetween }
  function  LineIsMeta      (CONST HtmlLine, MetaName: string): Boolean;                             { Returns true if this line is the specified 'meta'. For example: <meta name="Keywords" content="">  }
  function  LineIsTitle     (CONST HtmlLine: string): Boolean;
 
@@ -70,7 +70,7 @@ USES
 
 IMPLEMENTATION
 
-USES //LightVcl.Internet,
+USES //LightVcl.Internet, LightCore.Internet,
      LightCore.IO, LightCore.Internet, LightCore.TextFile;
 
 
@@ -304,7 +304,7 @@ begin
         if (iEnd> 0) AND (iStart2< iend)
         then
          begin
-          Tag:= LightCore.Core.CopyTo(Result, iStart1, iEnd);
+          Tag:= LightCore.CopyTo(Result, iStart1, iEnd);
 
           URL:= ExtractAttribValue(Tag, 'href');
           URL:= MakeLinkRelativeToRoot(HtmlUrl, URL);
@@ -340,7 +340,7 @@ begin
         if (iEnd> 0) AND (iStart2< iend)
         then
          begin
-          Tag:= LightCore.Core.CopyTo(Result, iStart1, iEnd);
+          Tag:= LightCore.CopyTo(Result, iStart1, iEnd);
 
           URL:= ExtractAttribValue(Tag, 'src');
           URL:= MakeLinkRelativeToRoot(HtmlUrl, URL);
@@ -461,7 +461,7 @@ begin
      QEnd := FindQuoteEnd(HtmlTag, QStart+1);
      if QEnd> 0 then
       begin
-        Result:= LightCore.Core.CopyTo(HtmlTag, QStart+1, QEnd-1);               { +1 -1 to remove the quotes }
+        Result:= LightCore.CopyTo(HtmlTag, QStart+1, QEnd-1);               { +1 -1 to remove the quotes }
         {
         if Pos('?', Result) > 0
         then Result:= '';                                         { treat this case: src="http://sstatic1.histats.com/0.gif?2376752&amp;101" }
@@ -510,7 +510,7 @@ begin
     begin
      QEnd := FindQuoteEndIE(HtmlTag, QStart+1);
      if QEnd> 0
-     then Result:= LightCore.Core.CopyTo(HtmlTag, QStart+1, QEnd-1);               { +1 -1 to remove the quotes }
+     then Result:= LightCore.CopyTo(HtmlTag, QStart+1, QEnd-1);               { +1 -1 to remove the quotes }
     end;
   end;
 end;
@@ -578,7 +578,7 @@ begin
       if (Tag2Start> 0)
       then
        begin
-        Tag:= LightCore.Core.CopyTo(HtmlBody, Tag1End, Tag2Start-1);
+        Tag:= LightCore.CopyTo(HtmlBody, Tag1End, Tag2Start-1);
         Result.Add(Tag);
         Offset:= Tag1End;
        end
@@ -635,7 +635,7 @@ begin
         if (iEnd> 0) AND (iStart2< iend)
         then
          begin
-          Tag:= LightCore.Core.CopyTo(HtmlBody, iStart1, iEnd);
+          Tag:= LightCore.CopyTo(HtmlBody, iStart1, iEnd);
           if Tag = ''
           then EmptyDummy; // raise exception.Create('Empty tag!');
           Result.Add(Tag);
@@ -722,7 +722,7 @@ begin
 
          { Add it to list }
          Inc(Result);
-         AdreseExtrase.Add(LightCore.Core.CopyTo(Text, StartPos, EndPos) );
+         AdreseExtrase.Add(LightCore.CopyTo(Text, StartPos, EndPos) );
 
          { Prepare for the next loop }
          StartPos:= EndPos+1;

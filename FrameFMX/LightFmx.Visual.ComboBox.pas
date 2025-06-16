@@ -1,4 +1,4 @@
-unit LightFMX.lcComboBox;
+unit LightFmx.Visual.ComboBox;
 
 {=============================================================================================================
    www.GabrielMoraru.com

@@ -110,7 +110,7 @@ procedure Register;
 IMPLEMENTATION
 {$WARN GARBAGE OFF}                                                                                {Silence the: 'W1011 Text after final END' warning }
 
-USES LightVcl.Graph.Util, LightCore.Core, LightVcl.Common.System, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightCore.Math, LightCore.IO;
+USES LightVcl.Graph.Util, LightCore, LightVcl.Common.System, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightCore.Math, LightCore.IO;
 
 
 
@@ -297,7 +297,7 @@ VAR
    Phumb: ThumbPtr;
    CurCell, ACol, ARow: Integer;
 begin
- CursorBusy;
+ LightVcl.Common.System.CursorBusy;
  TRY
    for CurCell:= 0 to (RowCount* ColCount) -1 DO                                                    { For all grid cells }
     begin

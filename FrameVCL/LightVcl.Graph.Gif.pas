@@ -66,7 +66,7 @@ function ExtractMiddleFrame(CONST FileName: string; OUT FrameCount: Cardinal): T
 IMPLEMENTATION
 
 USES
-  GifParser, LightCore.Core, LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Common.AppData
+  GifParser, LightCore, LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Common.AppData
 , {LightCom.IniFile,} LightCore.IO;
 
 
@@ -138,7 +138,7 @@ procedure TGifLoader.SaveFrame(Frame: TBitmap; FrameNo: Integer; OutputFolder: s
 VAR
    CurFile, sCounter: string;
 begin
- sCounter:= LightCore.Core.LeadingZeros(IntToStr(FrameNo), 6);
+ sCounter:= LightCore.LeadingZeros(IntToStr(FrameNo), 6);
  CurFile:= OutputFolder+ ExtractOnlyName(FileName)+ sCounter+ '.bmp';
  Frame.SaveToFile(CurFile);
 end;

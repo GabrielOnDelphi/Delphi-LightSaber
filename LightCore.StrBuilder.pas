@@ -20,7 +20,7 @@ UNIT LightCore.StrBuilder;
      SysUtils.WrapText       ->  484ms
      Result:= Result+ s[i]   -> 5788ms
 
-  If you want to make it even faster, integrate it directly in your code. Example in LightCore.Core.RemoveNumbers
+  If you want to make it even faster, integrate it directly in your code. Example in LightCore.RemoveNumbers
   ------------------------
 
   Also exists:

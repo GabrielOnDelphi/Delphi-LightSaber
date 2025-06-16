@@ -30,7 +30,7 @@ USES
   Winapi.Windows,
   System.SysUtils, System.Classes, System.IOUtils,
   Vcl.StdCtrls, Vcl.Controls, Vcl.Graphics, Vcl.ImgList, Vcl.CONSTs, Vcl.FileCtrl, Vcl.ExtCtrls,
-  LightCore.Core, LightVcl.Common.Dialogs;
+  LightCore, LightVcl.Common.Dialogs;
 
 TYPE
   TValidity= (vaNone, vaValid, vaInvalid);                   { Normal / Green / Red color }

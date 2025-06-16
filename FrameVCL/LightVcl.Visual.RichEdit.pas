@@ -57,7 +57,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   LightCore.Core;
+   LightCore;
 
 
 {

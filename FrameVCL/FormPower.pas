@@ -52,7 +52,7 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 USES
    CpuUsageTotal, LightCore.AppData, LightVcl.Common.AppData
-, LightVcl.Visual.INIFile, LightVcl.Common.PowerUtils, LightCore.Core, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.AppDataForm, FormLog;
+, LightVcl.Visual.INIFile, LightVcl.Common.PowerUtils, LightCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.AppDataForm, FormLog;
 
 
 

@@ -19,7 +19,7 @@ INTERFACE
 
 USES
    System.SysUtils, System.StrUtils, System.Classes, System.IniFiles,
-   LightCore.Core;
+   LightCore;
 
 
 CONST
@@ -309,7 +309,7 @@ begin
 
  { Remove www }
  if CountAppearance('.', Result) > 1
- then Result:= LightCore.Core.CopyFrom(Result, '.', maxint, FALSE);
+ then Result:= LightCore.CopyFrom(Result, '.', maxint, FALSE);
 end;
 
 
@@ -319,13 +319,13 @@ begin
  Result:= URL;
 
  if CheckWwwStart(Result)
- then Result:= LightCore.Core.CopyFrom(Result, 'www.', MaxInt, FALSE)
+ then Result:= LightCore.CopyFrom(Result, 'www.', MaxInt, FALSE)
  else
    if (PosInsensitive('http://' , Result) = 1)
-   then Result:= LightCore.Core.CopyFrom(Result, 'http://', MaxInt, FALSE)
+   then Result:= LightCore.CopyFrom(Result, 'http://', MaxInt, FALSE)
    else
      if (PosInsensitive('https://' , Result) = 1)
-     then Result:= LightCore.Core.CopyFrom(Result, 'https://', MaxInt, FALSE);
+     then Result:= LightCore.CopyFrom(Result, 'https://', MaxInt, FALSE);
 
  Assert(Result<> '', 'Empty in UrlRemoveStart');
 end;
@@ -397,7 +397,7 @@ end;
 
 function UrlExtractResource(CONST URL: string): string;             { www.cams.de/getImage.php?w=1200 -> /getImage.php }
 begin
- Result:= LightCore.Core.CopyTo(URL, Length(UrlExtractProtAndDomain(URL))+ 1, '?', FALSE, TRUE, 1);
+ Result:= LightCore.CopyTo(URL, Length(UrlExtractProtAndDomain(URL))+ 1, '?', FALSE, TRUE, 1);
 end;
 
 function UrlExtractResourceParams(CONST URL: string): string;       { www.cams.de/getImage.php?w=1200 -> /getImage.php?w=1200 }
@@ -435,7 +435,7 @@ begin
 
  if CleanServerCommands
  AND (Pos('?', Result) > 0)
- then Result:= LightCore.Core.CopyTo(Result, 1, '?', FALSE);   { This fixes this case: worldnow.com/7day_web.jpg?7439232   or   cam_1.jpg?uniq=0.63  }
+ then Result:= LightCore.CopyTo(Result, 1, '?', FALSE);   { This fixes this case: worldnow.com/7day_web.jpg?7439232   or   cam_1.jpg?uniq=0.63  }
 end;
 
 
@@ -443,7 +443,7 @@ end;
 function CleanServerCommands(CONST URL: string): string;    { FILTER: Remove server commands (everything after '?') from URL  }           { Example: www.pexels.com/1.jpeg?h=350&amp; -> www.pexels.com/1.jpeg }
 begin
  if Pos('?', URL) > 0
- then Result:= LightCore.Core.CopyTo(url, 1, '?', FALSE)
+ then Result:= LightCore.CopyTo(url, 1, '?', FALSE)
  else Result:= url;
 end;
 
@@ -638,7 +638,7 @@ end;
 
 function IpExtractPort(CONST Address: string): string;     { Example  For 192.168.0.1:80 will retun '80' }
 begin
- Result:= Trim(LightCore.Core.CopyFrom(Address, ':', High(Integer), FALSE));
+ Result:= Trim(LightCore.CopyFrom(Address, ':', High(Integer), FALSE));
 end;
 
 
@@ -682,7 +682,7 @@ begin
      Dec(i);
    UNTIL (i= 0) OR NOT CharIsNumber(IP[i]);
 
- IP:= LightCore.Core.CopyTo(IP, i+1, High(Integer));
+ IP:= LightCore.CopyTo(IP, i+1, High(Integer));
 
  Port:= IpExtractPort(Line);
  if Port = '' then EXIT;
@@ -690,7 +690,7 @@ begin
  REPEAT
    Inc(i);
  UNTIL (i > Length(Port)) OR NOT CharIsNumber(Port[i]);
- Port:= LightCore.Core.CopyTo(Port, 1, i-1);
+ Port:= LightCore.CopyTo(Port, 1, i-1);
 
 
  if (IP > '') AND (Port > '')

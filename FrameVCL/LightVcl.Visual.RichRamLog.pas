@@ -88,7 +88,7 @@ TYPE
 IMPLEMENTATION
 
 Uses
-   LightCore.IO, LightCore.TextFile, LightCore.Core;
+   LightCore.IO, LightCore.TextFile, LightCore;
 
 
 

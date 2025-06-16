@@ -16,13 +16,13 @@
 INTERFACE
 
 USES
-  System.SysUtils, LightCore.Core;
+  System.SysUtils, LightCore;
 
 function GetUnsplashImage(CONST URL, LocalFile: string): Boolean;
 
 IMPLEMENTATION
 
-USES LightCore.Download, LightVcl.Internet.HTML, LightCore.HTML;
+USES LightCore.Download, LightVcl.Internet, LightCore.HTML;
 
 
 
@@ -62,7 +62,7 @@ end;
 procedure TfrmTester.btnStartClick(Sender: TObject);
 VAR FileName, URL: string;
 begin
- CursorBusy;
+ LightVcl.Common.System.CursorBusy;
  TRY
   URL:= GetImageFromUnsplashPage(Edit1.Text);
   lblInfo.Caption:= 'High res image: '+ URL;

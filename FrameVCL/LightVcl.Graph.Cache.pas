@@ -79,7 +79,7 @@ TYPE
 IMPLEMENTATION
 
 uses
-   LightCore.INIFile, LightVcl.Graph.Loader, LightCore.Core, LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Common.AppData, LightCore.IO, LightVcl.Common.IO;
+   LightCore.INIFile, LightVcl.Graph.Loader, LightCore, LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Common.AppData, LightCore.IO, LightVcl.Common.IO;
 
 
 

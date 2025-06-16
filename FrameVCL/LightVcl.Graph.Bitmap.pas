@@ -98,7 +98,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightCore.Core, LightVcl.Common.Dialogs, LightCore.Math, LightVcl.Graph.Loader.Resolution;
+   LightCore, LightVcl.Common.Dialogs, LightCore.Math, LightVcl.Graph.Loader.Resolution;
 
 
 

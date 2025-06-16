@@ -237,11 +237,11 @@
         <DCCReference Include="MainForm.pas">
             <Form>Form1</Form>
         </DCCReference>
-        <DCCReference Include="..\..\..\FrameFMX\LightFMX.lbAppData.pas"/>
-        <DCCReference Include="..\..\..\FrameFMX\LightFMX.lbIniFile.pas"/>
-        <DCCReference Include="..\..\..\FrameFMX\LightFMX.lbAppData.Form.pas"/>
-        <DCCReference Include="..\..\..\FrameFMX\LightFMX.lbLogFilter.pas"/>
-        <DCCReference Include="..\..\..\FrameFMX\LightFmx.lbLogViewer.pas"/>
+        <DCCReference Include="..\..\..\FrameFMX\LightFmx.Common.AppData.pas"/>
+        <DCCReference Include="..\..\..\FrameFMX\LightFmx.Common.IniFile.pas"/>
+        <DCCReference Include="..\..\..\FrameFMX\LightFmx.Common.AppData.Form.pas"/>
+        <DCCReference Include="..\..\..\FrameFMX\LightFmx.Common.LogFilter.pas"/>
+        <DCCReference Include="..\..\..\FrameFMX\LightFmx.Common.LogViewer.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

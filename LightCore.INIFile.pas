@@ -23,7 +23,7 @@
 INTERFACE
 
 USES
-   System.SysUtils, System.UITypes, System.IniFiles, System.IOUtils; //, LightCore.Core;
+   System.SysUtils, System.UITypes, System.IniFiles, System.IOUtils; //, LightCore;
 
 TYPE
   FontStruct = record

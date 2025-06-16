@@ -218,7 +218,7 @@ CONST
  function  ChangeFilePath       (CONST FullFileName, NewPath: string): string;                     { Change file path to NewPath }
  function  AppendNumber2Filename(CONST FileName: string; StartAt, NumberLength: Integer): string;  { Add the number at the end of the filename. Example: AppendNumber2Filename('Log.txt', 1) will output 'Log1.txt' }
  function  FileEndsInNumber     (CONST FileName: string): Boolean;                                 { Returns true is the filename ends with a number. Example: MyFile02.txt returns TRUE }
- // function GetUniqueFileName: string;      //replaced by LightCore.Core.GenerateUniqueString
+ // function GetUniqueFileName: string;      //replaced by LightCore.GenerateUniqueString
 
 
 {--------------------------------------------------------------------------------------------------
@@ -366,7 +366,7 @@ CONST
 IMPLEMENTATION
 
 USES
-  LightCore.Core;
+  LightCore;
 
 
 
@@ -403,7 +403,7 @@ end;
 function TrimLastLinuxSeparator(CONST Path: string): string;
 begin
  if LastChar(Path) = '/'
- then Result:= LightCore.Core.RemoveLastChar(Path)
+ then Result:= LightCore.RemoveLastChar(Path)
  else Result:= Path;
 end;
 
@@ -535,7 +535,7 @@ end;
   Also exists:
        FileCtrl.MinimizeName (if you require pixels)
        cGraphics.DrawStringEllipsis
-       LightCore.Core.ShortenString
+       LightCore.ShortenString
        LightCore.IO.ShortenFileName
 }
 function ShortenFileName(CONST FullPath: String; MaxLength: Integer= MAXPATH): string;
@@ -1373,7 +1373,7 @@ end;
 function GetFileSizeFormat(CONST FileName: string): string;
 begin
  if FileExists(FileName)
- then Result:= LightCore.Core.FormatBytes(GetFileSize(FileName), 2)
+ then Result:= LightCore.FormatBytes(GetFileSize(FileName), 2)
  else Result:= '0 (file does not exist)';
 end;
 

@@ -126,7 +126,7 @@ function GetVideoPlayerLogo(FileName: string; OUT FrameCount: Cardinal): TBitmap
 
 IMPLEMENTATION
 USES
-   LightCore.Core, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.AppDataForm, LightVcl.Graph.Bitmap, LightVcl.Graph.Loader, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO;
+   LightCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.AppDataForm, LightVcl.Graph.Bitmap, LightVcl.Graph.Loader, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO;
 
 
 

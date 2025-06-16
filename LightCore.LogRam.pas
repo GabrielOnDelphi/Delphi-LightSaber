@@ -98,7 +98,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-  LightCore.Core, LightCore.TextFile, LightCore.AppData;
+  LightCore, LightCore.TextFile, LightCore.AppData;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -333,7 +333,7 @@ begin
    DO Result:= Result+ Lines[i].Msg+ CRLF;
 
  {Cut the last enter}
- Result:= LightCore.Core.RemoveLastEnter(Result);
+ Result:= LightCore.RemoveLastEnter(Result);
 end;
 
 

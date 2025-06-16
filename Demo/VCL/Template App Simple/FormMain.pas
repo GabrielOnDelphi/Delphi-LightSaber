@@ -118,7 +118,7 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TMainForm.btnSTARTClick(Sender: TObject);
 begin
-  CursorBusy;
+  LightVcl.Common.System.CursorBusy;
   TRY
     Caption:= 'Started...';
   FINALLY

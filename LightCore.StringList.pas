@@ -44,7 +44,7 @@ TYPE
 
 IMPLEMENTATION
 
-USES LightCore.Core;
+USES LightCore;
 
 
 
@@ -120,7 +120,7 @@ VAR
    i: Integer;
 begin
  for i:= Count-1 downto 0 DO
-    Self[i]:= LightCore.Core.RemoveFormatings(Self[i]);
+    Self[i]:= LightCore.RemoveFormatings(Self[i]);
 
  for i:= Count-1 downto 0 DO
     Self[i]:= System.SysUtils.Trim(Self[i]);

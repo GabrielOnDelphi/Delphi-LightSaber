@@ -138,7 +138,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   LightCore.TextFile, LightVcl.Common.IO, LightCore.Core;
+   LightCore.TextFile, LightVcl.Common.IO, LightCore;
 
    {
 How to know when the USER changed the text in a TMemo/TEdit?
@@ -679,7 +679,7 @@ end;
 
 procedure TCubicMemo.RemoveLastEmptyLine;
 begin
- Text:= LightCore.Core.RemoveLastEnter(Text);
+ Text:= LightCore.RemoveLastEnter(Text);
 end;
 
 

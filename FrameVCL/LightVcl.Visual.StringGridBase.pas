@@ -183,7 +183,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES LightCore.Math, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Sound, LightCore.Core, LightVcl.Common.Dialogs;
+USES LightCore.Math, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Sound, LightCore, LightVcl.Common.Dialogs;
 
 CONST
    MinColWidth= 20;

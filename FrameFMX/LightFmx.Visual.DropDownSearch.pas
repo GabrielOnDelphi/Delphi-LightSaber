@@ -1,4 +1,4 @@
-unit LightFMX.lcDropDownSearch;
+unit LightFmx.Visual.DropDownSearch;
 
 {=============================================================================================================
    2025.03
@@ -67,7 +67,7 @@ procedure Register;
 
 IMPLEMENTATION
 USES
-   LightCore.Core;
+   LightCore;
 
 
 

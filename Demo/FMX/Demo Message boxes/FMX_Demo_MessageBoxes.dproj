@@ -295,11 +295,11 @@
             <Form>Form1</Form>
             <FormType>fmx</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\..\FrameFMX\LightFMX.lbAppData.pas"/>
-        <DCCReference Include="..\..\..\FrameFMX\LightFMX.lbAppData.Form.pas"/>
-        <DCCReference Include="..\..\..\FrameFMX\LightFMX.lbIniFile.pas"/>
+        <DCCReference Include="..\..\..\FrameFMX\LightFmx.Common.AppData.pas"/>
+        <DCCReference Include="..\..\..\FrameFMX\LightFmx.Common.AppData.Form.pas"/>
+        <DCCReference Include="..\..\..\FrameFMX\LightFmx.Common.IniFile.pas"/>
         <DCCReference Include="..\..\..\LightCore.INIFile.pas"/>
-        <DCCReference Include="..\..\..\FrameFMX\LightFMX.lbDialogs.pas"/>
+        <DCCReference Include="..\..\..\FrameFMX\LightFmx.Common.Dialogs.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

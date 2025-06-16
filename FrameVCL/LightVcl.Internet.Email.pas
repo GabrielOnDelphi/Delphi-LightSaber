@@ -25,7 +25,7 @@ USES
    Winapi.Windows, Winapi.MAPI, Winapi.ShellAPI{ Required by OpenDefaultEmail },
    System.SysUtils, System.StrUtils, System.Classes, System.Win.Registry,
    Vcl.Forms,
-   LightCore.Core, LightVcl.Common.Dialogs;
+   LightCore, LightVcl.Common.Dialogs;
 
 CONST
   SeparatorsEmail= [' ', '~', '`', '!', '#', '$', '%', '^', '&', '*', '(', ')', '+', '=', '[', ']', '{', '}', ';', ':', '''', '"', '<', '>', ',', '/', '?', '\', '|', #10, #13, #9];
@@ -648,7 +648,7 @@ begin
      break;
     end;
 
- Result:= LightCore.Core.CopyTo(SmallText, StartPos, EndPos);
+ Result:= LightCore.CopyTo(SmallText, StartPos, EndPos);
 end;
 
 

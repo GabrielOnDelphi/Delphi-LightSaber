@@ -17,7 +17,7 @@ INTERFACE
 USES
    MsHtml,
    System.SysUtils, System.AnsiStrings, System.StrUtils, System.Classes, System.Math,
-   LightCore.StringList, LightCore.Core;
+   LightCore.StringList, LightCore;
 
 {--------------------------------------------------------------------------------------------------
    HTML MANIPULATION

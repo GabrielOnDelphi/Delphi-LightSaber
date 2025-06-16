@@ -39,18 +39,19 @@ requires
   vclie;
 
 contains
-  Vcl.IdAntiFreeze,
-  LightVcl.Internet.HTMLImg in 'LightVcl.Internet.HTMLImg.pas',
-  LightVcl.Internet.HTMLWriter in 'LightVcl.Internet.HTMLWriter.pas',
-  LightVcl.Internet.Download.Thread in 'LightVcl.Internet.Download.Thread.pas',
-  LightVcl.Internet.Email in 'LightVcl.Internet.Email.pas',
+  vcl.IdAntiFreeze,
   LightVcl.Internet in 'LightVcl.Internet.pas',
   LightVcl.Internet.CommonWebDown in 'LightVcl.Internet.CommonWebDown.pas',
-  LightVcl.Internet.EmailSender in 'LightVcl.Internet.EmailSender.pas',
-  ciUpdater in 'Updater\ciUpdater.pas',
-  ciUpdaterRec in 'Updater\ciUpdaterRec.pas',
+  LightVcl.Internet.Download.Indy in 'LightVcl.Internet.Download.Indy.pas',
+  LightVcl.Internet.Download.Thread in 'LightVcl.Internet.Download.Thread.pas',
   LightVcl.Internet.Download.WinInet in 'LightVcl.Internet.Download.WinInet.pas',
-  LightVcl.Internet.HTML in 'LightVcl.Internet.HTML.pas';
+  LightVcl.Internet.Email in 'LightVcl.Internet.Email.pas',
+  LightVcl.Internet.EmailSender in 'LightVcl.Internet.EmailSender.pas',
+  LightVcl.Internet.HTML in 'LightVcl.Internet.HTML.pas',
+  LightVcl.Internet.HTMLImg in 'LightVcl.Internet.HTMLImg.pas',
+  LightVcl.Internet.HtmlWriter in 'LightVcl.Internet.HtmlWriter.pas',
+  ciUpdater in '..\Updater\ciUpdater.pas',
+  ciUpdaterRec in '..\Updater\ciUpdaterRec.pas';
 
 end.
 

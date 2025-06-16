@@ -6,9 +6,9 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Rtti,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Controls.Presentation, FMX.StdCtrls, FMX.DialogService,
   FMX.Grid.Style, FMX.Presentation.Factory, FMX.Presentation.Style,
-  LightFMX.lbAppData, LightFMX.lbAppData.Form,
+  LightFmx.Common.AppData, LightFmx.Common.AppData.Form,
   LightCore.INIFile,  LightCore.LogRam, FMX.ScrollBox, FMX.Grid,
-  LightFmx.lbLogViewer;
+  LightFmx.Common.LogViewer;
 
 TYPE
   TForm1 = class(TLightForm)

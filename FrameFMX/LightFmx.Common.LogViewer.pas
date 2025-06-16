@@ -1,19 +1,4 @@
-{
-   I am an experienced Delphi VCL developer but my experience with FMX is low.
-   I have this FMX component (see code below).
-
-   Issue:
-   I instantiate the component dynamically, at runtime.
-   But the component is rendered only as a rectangle. Inside the rectangle I see instead this message:
-      "A descendant of, TstyledPresentationProxy has not been registered for lass TLogViewer. Maybe it is necessary to add the FMX.Grid.Style module to the uses section."
-   Don't concentrate on the DesignTime part (Register) since I get this message at runtime.
-   Think like an experienced Delphi developer.
-   Double check your facts.
-   Do google searches if necessary.
-   Do a good job or else...
-}
-
-UNIT LightFmx.lbLogViewer;
+UNIT LightFmx.Common.LogViewer;
 
 {=============================================================================================================
    2025.05
@@ -29,6 +14,10 @@ UNIT LightFmx.lbLogViewer;
 
 {TODO 5: Sort lines by criticality (all errors together, all warnings together, etc) }
 {TODO 5: Let user show/hide grid lines}
+
+// IMPORTANT! If we create subcomponents dynamically, they must be set like this:
+// Sub.Locked:= TRUE;
+// Sub.Stored:= FALSE:
 
 INTERFACE
 
@@ -98,8 +87,8 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-  LightCore.Core,
-  LightFMX.lbHelpers, LightFMX.lbDialogs, LightFmx.lbLogFilter;
+  LightCore,
+  LightFmx.Common.Helpers, LightFmx.Common.Dialogs, LightFmx.Common.LogFilter;
 
 {-------------------------------------------------------------------------------------------------------------
    CONSTRUCTOR
@@ -584,16 +573,6 @@ begin
 end;
 
 
-
-
-
-
-
-
-
-
-
-
 procedure TLogViewer.RegisterVerbFilter(TrackBar: TFmxObject);
 begin
   FVerbTrackBar:= TrackBar as TLogVerbFilter;
@@ -670,8 +649,7 @@ end; }
   Returns the base presentation name (e.g., Grid-) to which FMX appends a suffix (like Style) to form the actual lookup key (e.g., Grid-Style) for the stylebook. }
 function TLogViewer.DefinePresentationName: string;
 begin
-  // "grid-style" suffix is exactly what FMX.Grid.Style registered for TStringGrid
-  Result := 'grid-' + GetPresentationSuffix;
+  Result := 'grid-' + GetPresentationSuffix;  // "grid-style" suffix is exactly what FMX.Grid.Style registered for TStringGrid
 end;
 
 

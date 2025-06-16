@@ -48,7 +48,7 @@ CONST
 
 
 IMPLEMENTATION
-USES LightCore.Core;
+USES LightCore;
 
 
 
@@ -364,7 +364,7 @@ begin
  Result:= FALSE;
  for s in Pairs DO
   begin
-   LightCore.Core.SplitLine(s, Delimiter, ValueName, ValueData);
+   LightCore.SplitLine(s, Delimiter, ValueName, ValueData);
    Result:= RegWriteString(Root, Key, ValueName, ValueData, Lazy);
   end;
 end;

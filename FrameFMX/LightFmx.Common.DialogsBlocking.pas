@@ -1,4 +1,4 @@
-﻿unit LightFMX.lbDialogsBlocking;
+﻿unit LightFmx.Common.DialogsBlocking;
 {=============================================================================================================
    www.GabrielMoraru.com
    2025.04
@@ -32,7 +32,7 @@ function  MessageYesNo      (CONST MessageText: string; CONST Caption: string= '
 
 
 IMPLEMENTATION
-USES LightCore.Core;
+USES LightCore;
 
 
 // Note: FMX.DialogService.ShowMessage exists but doesn't support icons.

@@ -32,7 +32,7 @@ UNIT LightVcl.Internet.Download.WinInet;
 --------------------------------------------------------------------------------------------------------------
 
   Alternatives:
-     LightVcl.InternetDIndy.pas - OK
+     LightVcl.Internet, LightCore.InternetDIndy.pas - OK
      HTTPGet.pas
      UrlMon  -  UrlMon.UrlDownloadToFile (nil, <url>, <file destination path (PChar)>, 0, nil);  Don't know if it is thread-safe, UrlMon.pas is just an interface for calling UrlMon.dll, a Microsoft API. And yes, is a Borland unit \delphi6\source\rtl\Win\UrlMon.pas
      mORMot  - TSQLHttpClientWinSock.InternalReques in mORMotHttpClient.pas. But that function is not almost impossible to extract from that library
@@ -67,7 +67,7 @@ function DownloadToFile    (CONST URL, Referer, DestinationFile: string): Cardin
 IMPLEMENTATION
 
 USES
-   LightCore.Core, LightVcl.Common.Dialogs, LightCore.IO, LightCore.TextFile,
+   LightCore, LightVcl.Common.Dialogs, LightCore.IO, LightCore.TextFile,
    LightCore.Internet, LightVcl.Internet;
 
 

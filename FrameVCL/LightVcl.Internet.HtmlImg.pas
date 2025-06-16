@@ -42,7 +42,7 @@ function ExpandRelativePaths (CONST HtmlBody, Base: string): string;
 IMPLEMENTATION                                                                                                                                   {$WARN GARBAGE OFF}   {Silence the: 'W1011 Text after final END' warning }
 
 USES
-   LightCore.IO, LightVcl.Internet, LightCore.Core, LightVcl.Internet.HTML, LightCore.Internet, LightCore.HTML;
+   LightCore.IO, LightVcl.Internet, LightCore.Internet, LightCore,LightVcl.Internet.HTML, LightCore.HTML;
 
 
 
@@ -389,7 +389,7 @@ end;   }
 TESTER:
 
 procedure TForm5.Button1Click(Sender: TObject);
-CONST HtmlFile= 'c:\MyProjects\BX\SourceCode\Tester StripWebPage\tester LightVcl.Internet.HTMLImg\2.html';
+CONST HtmlFile= 'c:\MyProjects\BX\SourceCode\Tester StripWebPage\testerLightVcl.Internet.HTMLImg\2.html';
 VAR
    Tags: TStringList;
    HtmlBody: TStringList;
@@ -480,7 +480,7 @@ end;   *)
 --------------------------------------------------------------------------------------------------}
 (*UNUSED
 
-instead of this, use: LightVcl.Internet.ExtractAttribValue
+instead of this, use:LightVcl.Internet.ExtractAttribValue
 
 
 function extractLinkedImges(TagList: TStringList): TStringList;
@@ -523,7 +523,7 @@ end;
 function extractLinkedImges(HtmlBody: string): TStringList;
 VAR AHRefTags: TStringList;
 begin
- raise exception.Create('extractLinkedImges function is obsolete. Use LightVcl.Internet.HTMLImg.ExtractImagesFromAHREF instead.');
+ raise exception.Create('extractLinkedImges function is obsolete. UseLightVcl.Internet.HTMLImg.ExtractImagesFromAHREF instead.');
 
  AHRefTags:= ExtractAhrefTags(HtmlBody);
  TRY

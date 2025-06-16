@@ -42,7 +42,7 @@ function RelaxedSearchEx  (Query: string; Haystack: TStringList; StartAt: Intege
 IMPLEMENTATION
 
 USES
-  LightCore.Core;
+  LightCore;
 
 {-------------------------------------------------------------------------------------------------------------
     COMMENTS
@@ -113,7 +113,7 @@ end;
 function ExtractObjectName(Line: string): string;
 begin
   Line:= Trim(Line);
-  VAR LastDot:= LightCore.Core.LastPos('.', Line)-1;
+  VAR LastDot:= LightCore.LastPos('.', Line)-1;
   Result:= CopyTo(Line, 1, LastDot);
 end;
 

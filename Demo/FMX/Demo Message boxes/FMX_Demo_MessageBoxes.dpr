@@ -4,11 +4,11 @@ uses
   System.StartUpCopy,
   FMX.Forms,
   MainForm in 'MainForm.pas' {Form1},
-  LightFMX.lbAppData in '..\..\..\FrameFMX\LightFMX.lbAppData.pas',
-  LightFMX.lbAppData.Form in '..\..\..\FrameFMX\LightFMX.lbAppData.Form.pas',
-  LightFMX.lbIniFile in '..\..\..\FrameFMX\LightFMX.lbIniFile.pas',
+  LightFmx.Common.AppData in '..\..\..\FrameFMX\LightFmx.Common.AppData.pas',
+  LightFmx.Common.AppData.Form in '..\..\..\FrameFMX\LightFmx.Common.AppData.Form.pas',
+  LightFmx.Common.IniFile in '..\..\..\FrameFMX\LightFmx.Common.IniFile.pas',
   LightCore.INIFile in '..\..\..\LightCore.INIFile.pas',
-  LightFMX.lbDialogs in '..\..\..\FrameFMX\LightFMX.lbDialogs.pas';
+  LightFmx.Common.Dialogs in '..\..\..\FrameFMX\LightFmx.Common.Dialogs.pas';
 
 {$R *.res}
 

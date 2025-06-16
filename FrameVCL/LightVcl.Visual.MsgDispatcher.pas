@@ -63,7 +63,7 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
-USES LightVcl.Common.Sound, LightCore.Core, LightVcl.Common.Dialogs;
+USES LightVcl.Common.Sound, LightCore, LightVcl.Common.Dialogs;
 {$WARN GARBAGE OFF}                                                                                {Silence the: 'W1011 Text after final END' warning }
 {.$D-}
 

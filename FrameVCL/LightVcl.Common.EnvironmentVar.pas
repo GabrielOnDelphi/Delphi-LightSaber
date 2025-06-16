@@ -36,7 +36,7 @@ USES
 IMPLEMENTATION
 
 USES
-   LightCore.Core;
+   LightCore;
 
 
 function GetEnvironmentVars(TSL: TStrings): Boolean;

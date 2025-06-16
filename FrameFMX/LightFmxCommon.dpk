@@ -2,7 +2,7 @@ package LightFmxCommon;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
-{$ALIGN 8}
+{$ALIGN 2}
 {$ASSERTIONS ON}
 {$BOOLEVAL OFF}
 {$DEBUGINFO OFF}
@@ -25,19 +25,23 @@ package LightFmxCommon;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'LightSaber - AppData FMX library'}
 {$LIBSUFFIX AUTO}
 {$IMPLICITBUILD ON}
 
 requires
-  rtl,
-  fmx,
+  Rtl,
   LightCore,
-  LightFmxBase;
+  Fmx;
 
 contains
-  LightFMX.lcPanel in 'LightFMX.lcPanel.pas',
-  LightFMX.lcDropDownSearch in 'LightFMX.lcDropDownSearch.pas',
-  LightFMX.lcLayout in 'LightFMX.lcLayout.pas',
-  LightFMX.lcComboBox in 'LightFMX.lcComboBox.pas';
+  LightFmx.Common.AppData in 'LightFmx.Common.AppData.pas',
+  LightFmx.Common.AppData.Form in 'LightFmx.Common.AppData.Form.pas',
+  LightFmx.Common.LogFilter in 'LightFmx.Common.LogFilter.pas',
+  LightFmx.Common.LogViewer in 'LightFmx.Common.LogViewer.pas',
+  LightFmx.Common.CenterControl in 'LightFmx.Common.CenterControl.pas',
+  LightFmx.Common.Dialogs in 'LightFmx.Common.Dialogs.pas',
+  LightFmx.Common.IniFile in 'LightFmx.Common.IniFile.pas',
+  LightFmx.Common.Helpers in 'LightFmx.Common.Helpers.pas';
 
 end.

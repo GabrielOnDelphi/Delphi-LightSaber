@@ -25,7 +25,8 @@ USES
    Winapi.WinSock,  { Required by GetLocalIP }
    Winapi.WinInet,  { Required by IE_ApplySettings }
    System.SysUtils, System.StrUtils, System.Classes, System.IniFiles, System.Win.Registry,
-   LightCore.Core, LightCore.Internet, LightVcl.Common.Dialogs;
+   LightCore,
+   {LightCore.Internet,} LightVcl.Common.Dialogs;
 
 
 
@@ -83,7 +84,7 @@ USES
  function  ProgramConnect2InternetS: string;
  function  TestProgramConnection(ShowMsgOnSuccess: Boolean= FALSE): Integer;
  function  IsPortOpened(const Host: string; Port: Integer): Boolean;            { Here's something very simple with which you can check a port status(opened/closed) on remote host. Add WinSock to uses clause}
- //see: c:\MyProjects\Projects INTERNET\Test Internet is connected\LightVcl.Internet-is_connected.dpr
+ //see: c:\MyProjects\Projects INTERNET\Test Internet is connected\LightVcl.Internet, LightCore.Internet-is_connected.dpr
 
 
 {--------------------------------------------------------------------------------------------------
@@ -97,7 +98,11 @@ USES
 IMPLEMENTATION
 
 USES
-   LightCore.AppData, LightVcl.Common.AppData, LightVcl.Internet.HTML, LightCore.IO, LightCore.Download;
+   LightCore.AppData,
+   LightCore.IO,
+   LightCore.Internet,
+   LightCore.Download,
+   LightVcl.Common.AppData;
 
 
  function  PathIsUrlA; external 'shlwapi' name 'PathIsURLA';

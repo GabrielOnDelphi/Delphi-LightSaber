@@ -38,7 +38,7 @@ requires
 contains
   LightCore.Registry in 'LightCore.Registry.pas',
   LightCore.IO in 'LightCore.IO.pas',
-  LightCore.Core in 'LightCore.Core.pas',
+  LightCore in 'LightCore.pas',
   LightCore.Binary in 'LightCore.Binary.pas',
   LightCore.INIFile in 'LightCore.INIFile.pas',
   LightCore.Compiler in 'LightCore.Compiler.pas',

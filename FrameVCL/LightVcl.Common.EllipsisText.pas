@@ -11,7 +11,7 @@
    Also exists:
         FileCtrl.MinimizeName (if you require pixels)
         cGraphics.DrawStringEllipsis
-        LightCore.Core.ShortenString
+        LightCore.ShortenString
         LightCore.IO.ShortenFileName
 
    TESTER:

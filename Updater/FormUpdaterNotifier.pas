@@ -25,7 +25,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls,
   InternetLabel,
-  LightCore.Core, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, ciUpdater, LightVcl.Visual.RichLog, LightVcl.Visual.RichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
+  LightCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, ciUpdater, LightVcl.Visual.RichLog, LightVcl.Visual.RichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
 
 CONST
   UpdaterURL = 'https://www.GabrielMoraru.com/uploads/OnlineNews_v2_TemplateApp.bin'; { For demo purposes }
@@ -83,7 +83,7 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   LightVcl.Visual.RichLogUtils, LightVcl.Common.Colors, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.CursorGuard, LightVcl.Common.System, LightVcl.Internet;
+   LightVcl.Visual.RichLogUtils, LightVcl.Common.Colors, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.CursorGuard, LightVcl.Common.System, LightVcl.Internet, LightCore.Internet;
 
 
 
@@ -184,7 +184,7 @@ begin
 
  Updater.Delay:= 1; { Delay is ignored! }
  btnCheckManually.Enabled:= FALSE;                 { Don't let user to close the form until the HTTP thread returns something (even an error). Else, I get an acces violation in THttpThread.Create }
- CursorBusy;                                       { Check for news }
+ LightVcl.Common.System.CursorBusy;                                       { Check for news }
  TRY
    Updater.GetNews;
    PopulateNews;
@@ -372,7 +372,7 @@ end;
 
 procedure TFrmUpdater.btnTestInternetClick(Sender: TObject);
 begin
-  lblConnectError.Visible:= LightVcl.Internet.TestProgramConnection(TRUE) <= 0;
+  lblConnectError.Visible:=LightVcl.Internet.TestProgramConnection(TRUE) <= 0;
 end;
 
 

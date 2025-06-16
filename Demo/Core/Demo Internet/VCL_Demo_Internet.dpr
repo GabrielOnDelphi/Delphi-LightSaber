@@ -9,11 +9,11 @@ uses
   FormMain in 'FormMain.pas' {MainForm},
   LightVcl.Common.AppData in '..\..\FrameVCL\LightCom.AppData.pas',
   LightVcl.LogForm in '..\..\FrameVCL\LightVcl.LogForm.pas',
-  LightVcl.Internet.Download.Indy in '..\..\FrameVCL\LightVcl.Internet.Download.Indy.pas',
-  LightVcl.Internet in '..\..\FrameVCL\LightVcl.Internet.pas',
+ LightVcl.Internet.Download.Indy in '..\..\FrameVCL\LightVcl.Internet, LightCore.Internet.Download.Indy.pas',
+  LightVcl.Internet, LightCore.Internet in '..\..\FrameVCL\LightVcl.Internet, LightCore.Internet.pas',
   LightVcl.Common.AppDataForm in '..\..\FrameVCL\LightCom.AppDataForm.pas',
-  LightVcl.Internet.Download.Thread in '..\..\FrameVCL\LightVcl.Internet.Download.Thread.pas',
-  LightVcl.Internet.Download.WinInet in '..\..\FrameVCL\LightVcl.Internet.Download.WinInet.pas',
+ LightVcl.Internet.Download.Thread in '..\..\FrameVCL\LightVcl.Internet, LightCore.Internet.Download.Thread.pas',
+ LightVcl.Internet.Download.WinInet in '..\..\FrameVCL\LightVcl.Internet, LightCore.Internet.Download.WinInet.pas',
   LightCore.Download in '..\..\LightCore.Download.pas',
   LightCore.AppData in '..\..\LightCore.AppData.pas';
 

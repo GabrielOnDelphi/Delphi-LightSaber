@@ -70,8 +70,8 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  LightVcl.Visual.INIFile, LightCore.Core, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.AppDataForm, LightVcl.Common.Sound, LightCore.AppData, LightVcl.Common.AppData
-, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO, LightVcl.Internet.EmailSender;
+  LightVcl.Visual.INIFile, LightCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.AppDataForm, LightVcl.Common.Sound, LightCore.AppData, LightVcl.Common.AppData
+, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO,LightVcl.Internet.EmailSender;
 
 
 procedure TfrmComposer.Initialize; { This will create also the frmSmtpSettings }
@@ -153,7 +153,7 @@ begin
      end;
    end;
 
- CursorBusy;
+ LightVcl.Common.System.CursorBusy;
  TRY
   { Add my own ads }
   Advert:= 'PS: I use BioniX Wallpaper to manage my images/wallpaper. I totally recommend it to you. www.BioniXWallpaper.com';
@@ -162,7 +162,7 @@ begin
   then Body:= mmoEmailBody.Text+ LBRK+ Advert       { Send HTML email }
   else Body:= mmoEmailBody.Text+ LBRK+ Advert;
 
-  Result:= LightVcl.Internet.EmailSender.SendEmail(SMTP, edtTo.Text, ledFrom.Text, edtSubject.Text, Body, '', edtAttachment.path, chkSendAsHtml.Checked);
+  Result:=LightVcl.Internet.EmailSender.SendEmail(SMTP, edtTo.Text, ledFrom.Text, edtSubject.Text, Body, '', edtAttachment.path, chkSendAsHtml.Checked);
  FINALLY
   CursorNotBusy;
  END;

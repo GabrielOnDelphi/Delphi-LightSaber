@@ -93,7 +93,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   LightCore.Core, LightVcl.Common.Colors, LightVcl.Common.Clipboard, LightVcl.Common.LogFilter;
+   LightCore, LightVcl.Common.Colors, LightVcl.Common.Clipboard, LightVcl.Common.LogFilter;
 
 
 

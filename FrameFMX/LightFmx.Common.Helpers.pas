@@ -1,4 +1,4 @@
-unit LightFMX.lbHelpers;
+unit LightFmx.Common.Helpers;
 
 interface
 
@@ -16,7 +16,7 @@ function CopyToClipboard(CONST s: string): Boolean;
 IMPLEMENTATION
 
 USES
-  LightFMX.lbDialogs;
+  LightFmx.Common.Dialogs;
 
 
 function FindImmediateParentForm(Obj: TFmxObject): TCommonCustomForm;

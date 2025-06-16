@@ -1,4 +1,4 @@
-﻿UNIT LightFMX.lbAppData;
+﻿UNIT LightFmx.Common.AppData;
 
 {=============================================================================================================
    2025.04.26
@@ -27,8 +27,8 @@
        uses
          FastMM4,
          LightCore.INIFile,
-         LightFMX.lbAppData,
-         LightFMX.lbAppData.Form in 'LightFMX.lbAppData.Form.pas';
+         LightFmx.Common.AppData,
+         LightFmx.Common.AppData.Form in 'LightFmx.Common.AppData.Form.pas';
          MainForm in 'MainForm.pas' {frmMain);
        begin
          AppData:= TAppData.Create('MyAppName', '', MultiThreaded);
@@ -53,7 +53,7 @@
 
 
      OnFormCreate
-        See LightFMX.lbAppDataForm.FormPostInitialize()
+        See LightFmx.Common.AppDataForm.FormPostInitialize()
 
 
      AppData.Initializing
@@ -103,7 +103,7 @@ USES
   {$ENDIF}
   System.SysUtils, System.Classes, System.UITypes, System.Types,
   FMX.Forms, FMX.Graphics, FMX.Types, FMX.Platform,
-  LightFmx.lbLogViewer, // LightFMX.LogForm,
+  LightFmx.Common.LogViewer, // LightFMX.LogForm,
 
   {$IFDEF ANDROID}
    Androidapi.Helpers, Androidapi.JNI.App, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText,
@@ -112,7 +112,7 @@ USES
    Posix.Stdlib, Posix.Unistd,
   {$ENDIF}
 
-  LightCore.Core, LightCore.INIFile, LightCore.AppData; //LightVcl.LogForm
+  LightCore, LightCore.INIFile, LightCore.AppData; //LightVcl.LogForm
 
 TYPE
   TAppData= class(TAppDataCore)
@@ -356,7 +356,7 @@ begin
   Assert(RamLog <> NIL, 'RamLog not created!');
   ///Assert(FFormLog = NIL, 'Form log already created!');
 
-  VAR CreateBeforeMainForm:= Application.MainForm = NIL;
+  //VAR CreateBeforeMainForm:= Application.MainForm = NIL;
   ///CreateForm(TfrmRamLog, FFormLog, FALSE, asPosOnly, NIL, FALSE, CreateBeforeMainForm);
   ///FormLog.Log.AssignExternalRamLog(RamLog);   // FormLog will display data from AppData's RAM log
 

@@ -1,4 +1,4 @@
-﻿UNIT LightFMX.lbIniFile;
+﻿UNIT LightFmx.Common.IniFile;
 
 {=============================================================================================================
    www.GabrielMoraru.com
@@ -137,7 +137,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightCore.IO, LightCore.TextFile, LightCore.Core, LightFMX.lbAppData;
+   LightCore.IO, LightCore.TextFile, LightCore, LightFmx.Common.AppData;
 
 
 {-----------------------------------------------------------------------------------------------------------------------

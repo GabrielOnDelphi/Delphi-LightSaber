@@ -5,9 +5,9 @@ uses
   FMX.Forms,
   MainForm in 'MainForm.pas' {Form3},
   PlatformTest in '..\PlatformTest.pas',
-  LightFMX.lbAppData.Form in '..\..\..\FrameFMX\LightFMX.lbAppData.Form.pas',
-  LightFMX.lbIniFile in '..\..\..\FrameFMX\LightFMX.lbIniFile.pas',
-  LightFMX.lbAppData in '..\..\..\FrameFMX\LightFMX.lbAppData.pas';
+  LightFmx.Common.AppData.Form in '..\..\..\FrameFMX\LightFmx.Common.AppData.Form.pas',
+  LightFmx.Common.IniFile in '..\..\..\FrameFMX\LightFmx.Common.IniFile.pas',
+  LightFmx.Common.AppData in '..\..\..\FrameFMX\LightFmx.Common.AppData.pas';
 
 {$R *.res}
 

@@ -1,4 +1,4 @@
-﻿unit LightFMX.lbDialogs;
+﻿unit LightFmx.Common.Dialogs;
 {=============================================================================================================
    www.GabrielMoraru.com
    2025.04
@@ -34,7 +34,7 @@ procedure MessageError      (CONST MessageText, Where: string; CONST Caption: st
 procedure MessageYesNo(const MessageText: string; const Caption: string; const Callback: TProc<Boolean>);
 
 IMPLEMENTATION
-USES LightCore.Core;
+USES LightCore;
 
 
 // Note: FMX.DialogService.ShowMessage exists but doesn't support icons.

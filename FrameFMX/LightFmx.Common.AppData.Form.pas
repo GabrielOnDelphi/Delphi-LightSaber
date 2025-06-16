@@ -1,4 +1,4 @@
-﻿UNIT LightFMX.lbAppData.Form;
+﻿UNIT LightFmx.Common.AppData.Form;
 
 {=============================================================================================================
    2025.04
@@ -72,7 +72,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, System.UITypes, System.IniFiles,
   FMX.Forms, FMX.Types,
-  LightFMX.lbIniFile, LightCore.INIFile, LightCore.AppData;
+  LightFmx.Common.IniFile, LightCore.INIFile, LightCore.AppData;
 
 TYPE
   TLightForm = class(TForm)
@@ -104,7 +104,7 @@ TYPE
 
 IMPLEMENTATION
 USES
-  LightFMX.lbAppData, LightFMX.lbCenterControl, LightCore.Core;
+  LightFmx.Common.AppData, LightFmx.Common.CenterControl, LightCore;
 
 
 constructor TLightForm.Create(AOwner: TComponent; aShow: Boolean= TRUE{UNUSED});

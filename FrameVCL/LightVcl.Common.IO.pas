@@ -120,7 +120,7 @@ USES
 IMPLEMENTATION
 
 USES
-  LightCore.Core, LightCore.Registry, LightCore.IO, LightVcl.Common.Dialogs, LightVcl.Common.WinVersion;
+  LightCore, LightCore.Registry, LightCore.IO, LightVcl.Common.Dialogs, LightVcl.Common.WinVersion;
 
 
 { Copied from IOUtils.TPath.HasPathValidColon where it is PRIVATE }
@@ -776,7 +776,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    TFileOpenDlg
 
-   Example: PromptToSaveFile(s, LightCore.Core.FilterTxt, 'txt')
+   Example: PromptToSaveFile(s, LightCore.FilterTxt, 'txt')
    Note: You might want to use PromptForFileName instead
 -------------------------------------------------------------------------------------------------------------}
 
@@ -796,7 +796,7 @@ begin
 end;
 
 
-{ Example: SaveDialog(LightCore.Core.FilterTxt, 'csv');  }
+{ Example: SaveDialog(LightCore.FilterTxt, 'csv');  }
 Function GetSaveDialog(CONST FileName, Filter, DefaultExt: string; CONST Caption: string= ''): TSaveDialog;
 begin
  Result:= TSaveDialog.Create(NIL);

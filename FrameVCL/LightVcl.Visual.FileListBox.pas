@@ -81,7 +81,7 @@ procedure Register;
 
 IMPLEMENTATION
 USES
-   LightCore.Core, LightVcl.Common.Dialogs, LightVcl.Common.IO;
+   LightCore, LightVcl.Common.Dialogs, LightVcl.Common.IO;
 
 
 

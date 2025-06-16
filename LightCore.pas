@@ -1,4 +1,4 @@
-﻿UNIT LightCore.Core;
+﻿UNIT LightCore;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -262,7 +262,7 @@ TYPE
  // OTHERS
  function  InsertCharEvery     (CONST c: char; CONST Target: string; Every: Integer): string;                 { Insert a char into TargetStr every x characters }
  function  DoubleQuoteStr      (CONST s: string): string;
- function  Reverse             (CONST s: String): string; deprecated 'LightCore.Core.Reverse is deprecated. Use System.StrUtils.ReverseString';
+ function  Reverse             (CONST s: String): string; deprecated 'LightCore.Reverse is deprecated. Use System.StrUtils.ReverseString';
  function  CharIsLetter        (CONST c: char): Boolean;
 
  // STRING RAM SIZE
@@ -271,7 +271,7 @@ TYPE
  function  GetStringRAMSize    (CONST s: AnsiString): Integer;      overload;
 
  // WRAP: See LightCore.WrapString.pas
- // Shorten text and put ellipsis in it: ShortenString & GetEllipsisText -> moved to cmEllipsisText.pas
+ // Shorten text and put ellipsis in it: ShortenString & GetEllipsisText -> moved to LightVcl.Common.EllipsisText.pas
 
 {============================================================================================================
    STRINGS: POS
@@ -422,7 +422,7 @@ CONST
 
 IMPLEMENTATION
 
-{ Don't add any dependecies to LightSaber here if possible in order to keep LightCore.Core as single-file library }
+{ Don't add any dependecies to LightSaber here if possible in order to keep LightCore as single-file library }
 
 
 
@@ -2077,7 +2077,7 @@ end;
 { Works only with letters. It might be faster than IsUpcase }
 function IsUpcaseLetter(CONST C: Char): Boolean;
 begin
- Result:= CharInSet(c, LightCore.Core.LettersUpCase);
+ Result:= CharInSet(c, LightCore.LettersUpCase);
 end;
 
 

@@ -42,7 +42,7 @@ USES
     Winapi.Windows, LightCore.Registry, // for SelfStartup
   {$ENDIF}
    System.IOUtils, System.AnsiStrings, System.SysUtils,
-   LightCore.Core, LightCore.INIFile, LightCore.LogRam;
+   LightCore, LightCore.INIFile, LightCore.LogRam;
 
 TYPE
   THintType = (htOff,                      // Turn off the embedded help system
@@ -463,7 +463,7 @@ begin
    for i:= 2 to Length(MixedInput) DO                                                   { This supposes that " is on the first position }
     if MixedInput[i]= '"' then                                                          { Find next " character }
      begin
-      // ToDo: use LightCore.Core.ExtractTextBetween
+      // ToDo: use LightCore.ExtractTextBetween
       Path:= CopyTo(MixedInput, 1+1, i-1);   // Exclude the double quotes               { +1 si -1 because we want to exclude "" }
       Parameters:= Trim(System.COPY(MixedInput, i+1, MaxInt));
       Break;
