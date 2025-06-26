@@ -26,7 +26,7 @@ object Form1: TForm1
       Size.Width = 102.000000000000000000
       Size.Height = 35.000000000000000000
       Size.PlatformDefault = False
-      TabOrder = 2
+      TabOrder = 3
       Text = 'Test'
       TextSettings.Trimming = None
       OnClick = Button1Click
@@ -42,7 +42,7 @@ object Form1: TForm1
       Size.Width = 102.000000000000000000
       Size.Height = 35.000000000000000000
       Size.PlatformDefault = False
-      TabOrder = 1
+      TabOrder = 2
       Text = 'Load'
       TextSettings.Trimming = None
       OnClick = btnLoadClick
@@ -58,10 +58,21 @@ object Form1: TForm1
       Size.Width = 102.000000000000000000
       Size.Height = 35.000000000000000000
       Size.PlatformDefault = False
-      TabOrder = 0
+      TabOrder = 1
       Text = 'Save'
       TextSettings.Trimming = None
       OnClick = btnSaveClick
+    end
+    object LogVerbFilter1: TLogVerbFilter
+      Align = Right
+      Position.X = 420.000000000000000000
+      Size.Width = 260.000000000000000000
+      Size.Height = 41.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      TrackBar = LogVerbFilter1.VerbosityTrackbar
+      Verbosity = lvVerbose
+      Log = LogViewer
     end
   end
   object Layout2: TLayout
@@ -71,7 +82,7 @@ object Form1: TForm1
     Size.Height = 32.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
-    object CheckBox1: TCheckBox
+    object chkShowDate: TCheckBox
       Align = Left
       Margins.Left = 3.000000000000000000
       Margins.Top = 3.000000000000000000
@@ -84,6 +95,7 @@ object Form1: TForm1
       Size.PlatformDefault = False
       TabOrder = 2
       Text = 'Show date'
+      OnChange = chkShowDateChange
     end
     object chkShowTime: TCheckBox
       Align = Left
@@ -98,6 +110,7 @@ object Form1: TForm1
       Size.PlatformDefault = False
       TabOrder = 1
       Text = 'Show time'
+      OnChange = chkShowTimeChange
     end
     object btnClear: TButton
       Align = Right
@@ -128,8 +141,14 @@ object Form1: TForm1
     Size.PlatformDefault = False
     TabOrder = 2
     RowHeight = 22.000000000000000000
+    RowCount = 1
     Options = [Editing, ColumnResize, ColumnMove, ColLines, RowLines, RowSelect, Tabs, Header, HeaderClick, AutoDisplacement]
     Viewport.Width = 670.000000000000000000
     Viewport.Height = 313.000000000000000000
+    object TStringColumn
+      Header = 'Message'
+      HeaderSettings.TextSettings.WordWrap = False
+      Size.Width = 656.000000000000000000
+    end
   end
 end

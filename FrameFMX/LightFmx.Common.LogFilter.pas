@@ -77,8 +77,8 @@ begin
   TrackBar.Name       := 'VerbosityTrackbar';                  { This control MUST have a name so I can save it to INI file }
   TrackBar.OnChange   := TrackBarChange;
   TrackBar.Width      := 120;
-  VerboLabel.Locked   := TRUE;
-  VerboLabel.Stored   := FALSE;
+  TrackBar.Locked     := TRUE;
+  TrackBar.Stored     := FALSE;
   //ShowText := FALSE;                     { https://stackoverflow.com/questions/56859524/how-to-initialize-a-custom-control/64974040?noredirect=1#comment114931111_64974040 }
 
   // Set panel properties
@@ -101,10 +101,9 @@ begin
        end;
 
      Log.Verbosity:= Verbosity;
+     Log.Populate;
      VerboLabel.Text := 'Verbosity: ' + Verbosity2String(Verbosity);
    end;
-
- Log.Populate;
 end;
 
 

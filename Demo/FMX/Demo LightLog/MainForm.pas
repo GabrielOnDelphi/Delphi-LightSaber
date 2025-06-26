@@ -8,22 +8,25 @@ uses
   FMX.Grid.Style, FMX.Presentation.Factory, FMX.Presentation.Style,
   LightFmx.Common.AppData, LightFmx.Common.AppData.Form,
   LightCore.INIFile,  LightCore.LogRam, FMX.ScrollBox, FMX.Grid,
-  LightFmx.Common.LogViewer, FMX.Layouts;
+  LightFmx.Common.LogViewer, FMX.Layouts, LightFmx.Common.LogFilter;
 
 TYPE
   TForm1 = class(TLightForm)
     Layout1: TLayout;
     Button1: TButton;
     Layout2: TLayout;
-    CheckBox1: TCheckBox;
+    chkShowDate: TCheckBox;
     chkShowTime: TCheckBox;
     btnClear: TButton;
     btnLoad: TButton;
     btnSave: TButton;
     LogViewer: TLogViewer;
+    LogVerbFilter1: TLogVerbFilter;
     procedure Button1Click(Sender: TObject);
     procedure btnSaveClick(Sender: TObject);
     procedure btnLoadClick(Sender: TObject);
+    procedure chkShowDateChange(Sender: TObject);
+    procedure chkShowTimeChange(Sender: TObject);
   private
   public
    procedure FormPostInitialize; override;
@@ -31,6 +34,7 @@ TYPE
 
 VAR
   Form1: TForm1;
+
 
 IMPLEMENTATION
 {$R *.fmx}
@@ -92,5 +96,19 @@ begin
  LogViewer.RamLog.AddMsg   ('AddMsg');
  LogViewer.RamLog.AddMsgInt('AddMsgInt', 42);
 end;
+
+
+
+procedure TForm1.chkShowDateChange(Sender: TObject);
+begin
+  LogViewer.ShowDate:= chkShowDate.isChecked;
+end;
+
+
+procedure TForm1.chkShowTimeChange(Sender: TObject);
+begin
+  LogViewer.ShowTime:= chkShowTime.isChecked;
+end;
+
 
 end.

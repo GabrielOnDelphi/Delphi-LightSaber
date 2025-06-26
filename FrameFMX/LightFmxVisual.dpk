@@ -32,7 +32,7 @@ requires
   rtl,
   fmx,
   LightCore,
-  LightFmxBase;
+  LightFmxCommon;
 
 contains
   LightFmx.Visual.Panel in 'LightFmx.Visual.Panel.pas',
