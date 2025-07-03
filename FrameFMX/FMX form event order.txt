@@ -1,8 +1,4 @@
-As explained by Copilot.
-
-Step 1: Determine the Creation Order of FMX Forms
-
-Based on the obtained information, here is the creation order of FMX forms and the sequence of constructors/events called:
+The creation order of FMX forms and the sequence of constructors/events called:
 
     Create - The constructor of the form is called.
     Loaded - This method is called after the form and its components are loaded.
@@ -45,4 +41,7 @@ The sequence for dynamic creation, DFM streaming, and other scenarios can be sum
         CreateWnd post
         SetParent post
 
+_____________________________
 
+I created my own test for forms:
+c:\GabrielMoraru\My books\Delphi in all its glory\Demo projects\Forms-Form construction order\FMX\FormCreationOrder_FMXTest.dpr
