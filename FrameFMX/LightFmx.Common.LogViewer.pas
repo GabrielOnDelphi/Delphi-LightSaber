@@ -1,21 +1,35 @@
 UNIT LightFmx.Common.LogViewer;
 
 {=============================================================================================================
-   2025.05
+   2025.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-   FMX version of TLogGrid, a log viewer based on TStringGrid.
-   Drop a TLogGrid on your form and pass its RamLog property to objects needing to log.
-   Converted from VCL to FMX for cross-platform support.
-   Tester:
-     c:\Projects\LightSaber\Demo\Demo LightLog\FMX\FMX_Demo_Log.dpr
+   A log viewer based on TStringGrid.
+   It can easily show up to 1 million entries. Being a good citizen, when it reaches this number it saves existing data to disk and then clears it from RAM.
+
+   How to use it
+      Drop a TLogViewer on your form and use it to log messages like this:
+         LogViewer.RamLog.AddError('Something bad happent!');
+
+   Application wide logging
+      This component can also be used to see messages logged at the application level (see TAppData).
+      For this, just assign
+         LogViewer.RamLog:= AppData.RamLog;
+
+      Now on you can send your logging messages directly to AppData, instead of sending them to the log window:
+         LogViewer.RamLog.AddError('Something bad happent!');
+
+      The log window will automatically pop-up when a error is received.
+
+   Full demo in:
+      c:\Projects\LightSaber\Demo\Demo LightLog\FMX\FMX_Demo_Log.dpr
 
 =============================================================================================================}
 
-{TODO 5: Sort lines by criticality (all errors together, all warnings together, etc) }
+{TODO 5: Let user sort lines by criticality (all errors together, all warnings together, etc) }
 {TODO 5: Let user show/hide grid lines}
 
-// IMPORTANT! If we create subcomponents dynamically, they must be set like this:
+// IMPORTANT! In FMX, if we create subcomponents dynamically, they must be set like this:
 // Sub.Locked:= TRUE;
 // Sub.Stored:= FALSE:
 
@@ -23,10 +37,7 @@ INTERFACE
 
 USES
    System.Classes, System.SysUtils, System.Types, System.Rtti, System.UITypes, System.Math,
-   FMX.Types, FMX.Controls, FMX.Grid, FMX.Graphics, FMX.Platform, FMX.StdCtrls, FMX.Forms, FMX.Layouts,
-   FMX.Presentation.Factory, // Required for TPresentationProxyFactory
-   FMX.Presentation.Style,   // Required for TStyledPresentationProxy<> (Likely)
-   FMX.Grid.Style,           // Required for TStyledGrid AND already added previously
+   FMX.Types, FMX.Controls, FMX.Grid, FMX.Graphics, FMX.Platform, FMX.StdCtrls, FMX.Forms, FMX.Layouts, FMX.Presentation.Factory, FMX.Presentation.Style, FMX.Grid.Style,
    LightCore.LogRam, LightCore.LogTypes, LightCore.LogLinesAbstract;
 
 TYPE
@@ -43,14 +54,14 @@ TYPE
      FFilteredRowCount: Integer;    // Cached count of filtered rows
      procedure setShowDate(const Value: Boolean);
      procedure setShowTime(const Value: Boolean);
-     procedure ResizeColumns;
+     procedure resizeColumns;
      procedure scrollToBottom;
      procedure setVerbFilter(const Value: TLogVerbLvl);
-     function  GetLineFiltered(Row: Integer): PLogLine;
+     function  getLineFiltered(Row: Integer): PLogLine;
      procedure MyDrawColumnCell(Sender: TObject; const Canvas: TCanvas; const Column: TColumn; const Bounds: TRectF; const Row: Integer; const Value: TValue; const State: TGridDrawStates);
    protected
      procedure Resize; override;
-//     function GetDefaultStyleLookupName: string; override;
+     procedure setUpRows;
      function DefinePresentationName: string; override;
    public
      constructor Create(AOwner: TComponent); override;
@@ -62,11 +73,11 @@ TYPE
      procedure Populate;
      procedure PopUpWindow;
 
-     procedure setUpRows;
+   //  procedure setUpRows;
      function  Count: Integer;
      procedure CopyAll;
-     procedure CopyVisible;
      procedure CopyCurLine;
+     procedure CopyVisible;	 
    published
      property ShowTime     : Boolean      read FShowTime    write setShowTime default FALSE;
      property ShowDate     : Boolean      read FShowDate    write setShowDate default FALSE;
@@ -83,23 +94,24 @@ function Verbosity2Color(Verbosity: TLogVerbLvl): TAlphaColor;
 procedure Register;
 
 
-
 IMPLEMENTATION
 
 USES
-  LightCore,
-  LightFmx.Common.Helpers, LightFmx.Common.Dialogs, LightFmx.Common.LogFilter;
+   LightCore, 
+   LightFmx.Common.Helpers, LightFmx.Common.Dialogs, LightFmx.Common.LogFilter;
+
+
 
 {-------------------------------------------------------------------------------------------------------------
    CONSTRUCTOR
 -------------------------------------------------------------------------------------------------------------}
-constructor TLogViewer.Create(AOwner: TComponent);
+constructor TLogViewer.Create(AOwner: TComponent); 
 begin
   inherited Create(AOwner);
 
-  FOwnRamLog := TRUE;
+  FOwnRamLog:= TRUE;
   if FOwnRamLog
-  then FRamLog := TRamLog.Create(TRUE, Self as ILogObserver);
+  then FRamLog:= TRamLog.Create(TRUE, Self as ILogObserver);
 
   FShowTime   := FALSE;
   FShowDate   := FALSE;
@@ -244,11 +256,10 @@ begin
 
   // Release owned log if it exists
   if FOwnRamLog
-  and Assigned(FRamLog)
   then FreeAndNil(FRamLog);
 
   FOwnRamLog:= FALSE;          // We received the log from an external source. We don't auto release it anymore
-  FRamLog := ExternalLog;
+  FRamLog:= ExternalLog;
   FRamLog.RegisterLogObserver(Self as ILogObserver);
 
   // Populate the grid with the data from the newly assigned log
@@ -268,13 +279,13 @@ begin
   // InvalidateContent; // Usually not needed if RowCount changed
 
   // Scroll to bottom if auto-scroll is enabled
-  if FAutoScroll
-  then ScrollToBottom;
+  if AutoScroll
+  then scrollToBottom;
 end;
 
 
 { Returns the content of the specified line, after the grid has been filtered }
-function TLogViewer.GetLineFiltered(Row: Integer): PLogLine;
+function TLogViewer.getLineFiltered(Row: Integer): PLogLine;
 VAR
    actualIndex: Integer;
 begin
@@ -422,7 +433,7 @@ begin
   if Assigned(ParentForm) then
     begin
       // Show if hidden
-      if not ParentForm.Visible
+      if NOT ParentForm.Visible
       then ParentForm.Show;
 
       // Restore if minimized
@@ -447,8 +458,11 @@ begin
 end;
 
 
+{-------------------------------------------------------------------------------------------------------------
+   COLUMNS
+-------------------------------------------------------------------------------------------------------------}
 { Resize column width when the form is resized }
-procedure TLogViewer.ResizeColumns;
+procedure TLogViewer.resizeColumns;
 var
   TimeColWidth: Single;
   MsgColWidth: Single;
@@ -480,16 +494,15 @@ end;
 
 procedure TLogViewer.Resize;
 begin
-  inherited Resize;  // Call inherited FIRST
-  ResizeColumns;     // Then adjust columns based on the new size
+  inherited Resize;  // Call the inherited method first
+  resizeColumns;     // Then adjust columns based on the new size
 end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   UTILITIES / MISC
+   TEXT UTILITIES / MISC
 -------------------------------------------------------------------------------------------------------------}
 
-{ Note: The TrichEdit needs a parent window otherwise we get "EInvalidOperation - Control TRichEdit has no parent window." }
 procedure TLogViewer.CopyVisible;
 VAR
   i: Integer;
@@ -582,7 +595,6 @@ end;
 
 function Verbosity2Color(Verbosity: TLogVerbLvl): TAlphaColor;
 begin
-  // Using standard TAlphaColors constants
   CASE Verbosity of
    lvDebug    : Result := TAlphaColors.Lightgray;
    lvVerbose  : Result := TAlphaColors.Gray;
@@ -610,10 +622,10 @@ procedure Register;
 begin
   RegisterComponents('LightSaber FMX', [TLogViewer]);
 
-  // Register the presentation proxy for TLogGrid, telling FMX to style it using the same proxy as its base class, TStringGrid.
+  // Register the presentation proxy for TLogViewer, telling FMX to style it using the same proxy as its base class, TStringGrid.
   // TPresentationProxyFactory.Current.Register(TLogViewer, TControlType.Styled, TStyledPresentationProxy<TStyledGrid>);
   // Registration procedure, @Lightfmx@Lblogviewer@Register$qqrv.Register in package LightFmxBase290.bpl raised exception class EPresentationProxy: Presentation Proxy class [TStyledPresentationProxy<FMX.Grid.Style.TStyledGrid>] for this presentation name [LogViewer-style] has already been registered..
-end;
+end; 
 
 
 {

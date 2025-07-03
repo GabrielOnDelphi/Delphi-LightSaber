@@ -6,7 +6,7 @@ UNIT LightCore.LogRam;
 --------------------------------------------------------------------------------------------------------------
 
    A simple but effective log (non-visual).
-   Its data can be displayed by TLogGrid, but it can also work alone without being connected to a TLogGrid.
+   Its data can be displayed by an observer (such as TLogViewer in Light.Common.LogViewer.pas), but it can also work alone without being connected to an observer.
    It can easily hold up to 1 million entries. Being a good citizen, when it reaches this number it saves existing data to disk and then clears it from RAM.
 
    Verbosity:
@@ -45,7 +45,7 @@ TYPE
 
   TRamLog = class(TObject)
    private
-     FLogObserver: ILogObserver;
+     FLogObserver: ILogObserver;    // This is the GUI element that observes this log
      FLastSaveTime: TDateTime;
      FSaveInterval: Integer; // Interval in seconds for auto-save
      const
@@ -169,7 +169,7 @@ end;
 
 procedure TRamLog.UnregisterLogObserver;
 begin
-  FLogObserver := NIL;
+  FLogObserver:= NIL;
 end;
 
 

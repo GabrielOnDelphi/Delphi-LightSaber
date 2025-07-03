@@ -89,19 +89,19 @@ object frmRamLog: TfrmRamLog
         TabOrder = 2
         OnClick = chkShowDateClick
       end
-      object chkScrollBown: TCheckBox
+      object chkScrollDown: TCheckBox
         AlignWithMargins = True
         Left = 348
         Top = 3
-        Width = 93
+        Width = 109
         Height = 25
-        Hint = 'Scroll to the latest entry'
+        Hint = 'This will take a tiny bit more CPU if you have lots of messages.'
         Align = alLeft
         Caption = 'Scroll down'
         Checked = True
         State = cbChecked
         TabOrder = 4
-        OnClick = chkScrollBownClick
+        OnClick = chkScrollDownClick
       end
     end
   end

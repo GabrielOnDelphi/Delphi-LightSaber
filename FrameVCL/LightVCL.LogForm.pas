@@ -11,7 +11,7 @@ UNIT LightVCL.LogForm;
    But can be also created manually if you don't use AppData.
    User's prefferences are managed via LoadSettings/SaveSettings.
 
-   TLogGrid tester:
+   TLogViewer tester:
      c:\Projects\LightSaber\Demo\Demo LightLog\Demo_Log.dpr
 =============================================================================================================}
 
@@ -34,7 +34,7 @@ TYPE
     mnuCopyFiltered: TMenuItem;
     pnlBottom      : TPanel;
     PopupMenu      : TPopupMenu;
-    chkScrollBown: TCheckBox;
+    chkScrollDown: TCheckBox;
     procedure btnClearClick      (Sender: TObject);
     procedure chkLogOnErrorClick (Sender: TObject);
     procedure chkShowDateClick   (Sender: TObject);
@@ -43,18 +43,18 @@ TYPE
     procedure FormDestroy        (Sender: TObject);
     procedure mnuCopyAllClick    (Sender: TObject);
     procedure mnuCopyClick       (Sender: TObject);
-    procedure chkScrollBownClick(Sender: TObject);
+    procedure chkScrollDownClick(Sender: TObject);
   private
     procedure LoadSettings;
     procedure SaveSettings;
   public
-    Log: TLogGrid;
+    Log: TLogViewer;
     LogFilter: TLogVerbFilter;
     procedure FormPostInitialize; override; // Called after the main form was fully initilized
   end;
 
 
-IMPLEMENTATION {$R *.dfm}
+IMPLEMENTATION {$R *.DFM}
 
 
 USES
@@ -69,7 +69,7 @@ begin
   inherited FormPostInitialize;
 
   // Must be created dynamically because the component might not be installed at this point
-  Log:= TLogGrid.Create(Self);
+  Log:= TLogViewer.Create(Self);
   Log.Parent:= Container;
   Log.Align:= alClient;
 
@@ -165,9 +165,9 @@ begin
 end;
 
 
-procedure TfrmRamLog.chkScrollBownClick(Sender: TObject);
+procedure TfrmRamLog.chkScrollDownClick(Sender: TObject);
 begin
-  Log.AutoScroll:= chkScrollBown.Checked;
+  Log.AutoScroll:= chkScrollDown.Checked;
 end;
 
 
