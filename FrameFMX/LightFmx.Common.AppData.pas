@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.AppData;
 
 {=============================================================================================================
-   2025.04.26
+   2025.05.27
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -14,7 +14,7 @@
        - Change the font for all running forms.
        - Basic support for Uninstaller (The Uninstaller can find out where the app was installed).
        - Basic support for licensing (trial period) system. See Proteus for details.
-       - Translation engine (multi-language GUI) (Not ready yet under FMX)
+       - Translation engine (multi-language GUI) (Not ready yet, under FMX)
        - etc, etc
  ____________________________________________________________________________________________________________
 
@@ -63,7 +63,7 @@
         In this case, you will have to set the Initializing manually, once the program is fully initialized (usually in the LateInitialize of the main form, or in the LateInitialize of the last created form).
         If you forget it, the AppData will not save the forms to the INI file and you will have a warning on shutdown.
         Usage:
-          Used by SaveForm in LightVcl.Common.IniFile.pas/LightVcl.Visual.INIFile.pas (and a few other places) to signal not to save the form if the application has crashed while still in the initialization phase.
+          Used by SaveForm in Light_FMX.Common.IniFile.pas/Light_FMX.Visual.INIFile.pas (and a few other places) to signal not to save the form if the application has crashed while still in the initialization phase.
           You can use it also personally, to avoid executing some of your code during the initialization stages.
 
 
@@ -99,27 +99,30 @@ INTERFACE
 USES
 
   {$IFDEF MsWindows}
-    Winapi.Windows, System.Win.Registry, //LightCore.Registry, // SelfStartup
+    Winapi.Windows, System.Win.Registry, 
   {$ENDIF}
-  System.SysUtils, System.Classes, System.UITypes, System.Types,
-  FMX.Forms, FMX.Graphics, FMX.Types, FMX.Platform,
-  LightFmx.Common.LogViewer, // LightFMX.LogForm,
 
   {$IFDEF ANDROID}
    Androidapi.Helpers, Androidapi.JNI.App, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText,
   {$ENDIF}
   {$IFDEF MacOS}
    Posix.Stdlib, Posix.Unistd,
-  {$ENDIF}
+  {$ENDIF}  
+  System.SysUtils, System.Classes, System.UITypes, System.Types, System.Generics.Collections,
+  FMX.Forms, FMX.Graphics, FMX.Types, FMX.Platform,
+  LightFmx.Common.LogViewer, LightFMX.LogForm,
 
-  LightCore, LightCore.INIFile, LightCore.AppData; //LightVcl.LogForm
+
+  LightCore, LightCore.INIFile, LightCore.AppData; //Light_FMX.LogForm
 
 TYPE
   TAppData= class(TAppDataCore)
   private
+    FAutoStateQueue: TList<TAutoState>;
     FFont: TFont;
-    ///FFormLog: TfrmRamLog;       // Create the Log form globally (to be used by the entire Application).
+    FFormLog: TfrmRamLog;       // Create the Log form (to be used by the entire program). It is released by TApplication
     procedure setFont(aFont: TFont);
+    procedure createGlobalLog;
   protected
     procedure setHintType(const aHintType: THintType); override;
     procedure setHideHint(const Value: Integer); override;
@@ -163,25 +166,21 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       FORMS
    --------------------------------------------------------------------------------------------------}
-    procedure CreateMainForm  (aClass: TComponentClass; OUT aReference; MainFormOnTaskbar: Boolean= FALSE                        ); overload;
-    procedure CreateMainForm  (aClass: TComponentClass;                 MainFormOnTaskbar: Boolean= FALSE; Visible: Boolean= TRUE); overload;
+    procedure CreateMainForm  (aClass: TComponentClass; OUT aReference; Show: Boolean = TRUE; AutoState: TAutoState = asPosOnly); overload;
+    procedure CreateMainForm  (aClass: TComponentClass;                 Show: Boolean = TRUE); overload;
 
-    procedure CreateForm      (aClass: TComponentClass; OUT Reference;                                    Visible: Boolean= TRUE; Owner: TFmxObject = NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
-    procedure CreateFormHidden(aClass: TComponentClass; OUT Reference;                                                            ParentWnd: TFmxObject = NIL);
+    procedure CreateForm      (aClass: TComponentClass; OUT aReference; Show: Boolean = TRUE; AutoState: TAutoState = asPosOnly; Parented: Boolean = FALSE; CreateBeforeMainForm: Boolean = FALSE); overload;
+    procedure CreateFormHidden(aClass: TComponentClass; OUT aReference);
+    procedure CreateFormModal (aClass: TComponentClass);  // Problem in Android with modal forms!
 
-    procedure CreateFormModal (aClass: TComponentClass; OUT Reference;                                                            ParentWnd: TFmxObject= NIL); overload;   // Do I need this?
-    procedure CreateFormModal (aClass: TComponentClass;                                                                           ParentWnd: TFmxObject= NIL); overload;
-
-
-    procedure createGlobalLog;
-
-    procedure SetMaxPriority;
+    function  GetAutoState: TAutoState;
 
    {--------------------------------------------------------------------------------------------------
       Others
    --------------------------------------------------------------------------------------------------}
+    procedure SetMaxPriority;
     procedure MainFormCaption(const Caption: string); override;
-    ///property FormLog: TfrmRamLog read FFormLog;
+    property FormLog: TfrmRamLog read FFormLog;
     property Font: TFont read FFont write setFont;
   end;
 
@@ -193,7 +192,7 @@ VAR                      // ToDo 5: make sure AppData is unique (make it Singlet
 IMPLEMENTATION
 
 USES
-  LightCore.IO;
+  LightCore.IO, LightFmx.Common.AppData.Form;
 
 
 
@@ -201,12 +200,15 @@ USES
 constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE);
 begin
   inherited Create(aAppName, WindowClassName, MultiThreaded);
+  FFormLog := nil;  
   AppDataCore:= Self;                             // This sets the other variable to self. The non-visual code uses it.
   Application.Initialize;                         // Note: Emba: Although Initialize is the first method called in the main project source code, it is not the first code that is executed in a GUI application. For example, in Delphi, the application first executes the initialization section of all the units used by the Application. in modern Delphi (non-.NET), you can remove Application.Initialize without breaking your program. The method is almost empty and no longer plays a critical role in setting up the VCL or application environment. Its historical purpose was to initialize COM and CORBA, but since those are no longer used, the method is effectively redundant.
   { App stuff }
   Application.Title               := aAppName;
   Application.ShowHint := TRUE;                   // Set later via the HintType property. It is true by default anyway
 
+  FAutoStateQueue := TList<TAutoState>.Create;
+  
   { All done }
   LogVerb(AppName+ ' started.');
 end;
@@ -214,7 +216,8 @@ end;
 
 destructor TAppData.Destroy;
 begin
-  ///FreeAndNil(FormLog);
+  FreeAndNil(FAutoStateQueue);
+  //FreeAndNil(FormLog);  Freed by TApplication
   inherited Destroy;
 end;
 
@@ -233,142 +236,124 @@ end;
 
 
 
+
 {-------------------------------------------------------------------------------------------------------------
    CREATE FORMS
 --------------------------------------------------------------------------------------------------------------
    W A R N I N G
      On FMX, CreateForm does not create the given form immediately.
      It just adds a request to the pending list. RealCreateForms creates the real forms.
+     So, we cannot access the form here because it was not yet created!
 -------------------------------------------------------------------------------------------------------------}
-procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT aReference; MainFormOnTaskbar: Boolean= FALSE);
+procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT aReference; Show: Boolean = TRUE; AutoState: TAutoState = asPosOnly);
 begin
-  ///CreateGlobalLog;
-
   Assert(Application.MainForm = NIL, 'MainForm already exists!');   //ToDo: test if this works under FMX because of RealCreateForms
+  CreateGlobalLog;
+  
+  FAutoStateQueue.Add(AutoState);
   Application.CreateForm(aClass, aReference);                       // Reference is NIL here because of RealCreateForms
-
-  // We cannot access the form here because it was not yet created!
-  //TLightForm(Reference).AutoState:= AutoState;
-  //ToDo: if RunningFirstTime then CenterForm(aReference);
 end;
 
 
-procedure TAppData.CreateMainForm(aClass: TComponentClass; MainFormOnTaskbar: Boolean= FALSE; Visible: Boolean= TRUE);
+procedure TAppData.CreateMainForm(aClass: TComponentClass; Show: Boolean= TRUE);
+var
+  aReference: TForm;
 begin
-  VAR aReference: TForm;
-  CreateMainForm(aClass, aReference, MainFormOnTaskbar);
-end; //todo: overide here the RealCreatForms
+  CreateMainForm(aClass, aReference, Show);
+end; 
+
 
 
 { Create secondary form
   "Loading" indicates if the GUI settings are remembered or not }
-procedure TAppData.CreateForm(aClass: TComponentClass; OUT Reference; Visible: Boolean= TRUE; Owner: TFmxObject= NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
+procedure TAppData.CreateForm(aClass: TComponentClass; OUT aReference; Show: Boolean = TRUE; AutoState: TAutoState = asPosOnly; Parented: Boolean = FALSE; CreateBeforeMainForm: Boolean = FALSE);
+VAR Instance: TComponent;
 begin
   if CreateBeforeMainForm
   then
     begin
-      { PUT IT BACK!
-      // We allow the Log form to be created before the main form.
-      if (aClass = TfrmRamLog)
-      then TComponent(Reference):= aClass.Create(NIL) // AppData will release it on Finalize
-      else   }
-        if (Owner = NIL)
-        then TComponent(Reference):= aClass.Create(Application)  // Owned by Application. But we cannot use Application.CreateForm here because then, this form will be the main form!
-        else TComponent(Reference):= aClass.Create(Owner);       // Owned by Owner
+      FAutoStateQueue.Add(AutoState);
+      Application.CreateForm(aClass, aReference);
 
-      //ToDo 4: For the case where the frmLog is created before the MainForm: copy the frmLog.Font from the MainForm AFTER the main MainForm created.
+
+
+
+
+      ///TForm(aReference).SetOwner(nil);  // Optional: manage lifetime manually
     end
   else
     begin
-      ///if Application.MainForm = NIL
-      ///then RAISE Exception.Create('Probably you forgot to create the main form with AppData.CreateMainForm!');
+      if Application.MainForm = nil
+      then RAISE Exception.Create('Probably you forgot to create the main form with AppData.CreateMainForm!');
 
-      if Owner = NIL
-      then Application.CreateForm(aClass, Reference)        // Owned by Application
-      else TComponent(Reference):= aClass.Create(Owner);    // Owned by Owner
+      // Deferred creation (initial or queued dynamic form)
+      FAutoStateQueue.Add(AutoState);
+      Application.CreateForm(aClass, aReference);
     end;
+end;
 
 
-(* ALL THIS CAN ONLY BE CALLED AFTER RealCreateForms
-
-  // Center form in the Owner
-  if (Owner <> NIL)
-  AND Parented then
+{ Returns the next AutoState from the list. }
+function TAppData.GetAutoState: TAutoState;
+begin
+  if (FAutoStateQueue <> nil)  // Check if the queue exists and has items
+  AND (FAutoStateQueue.Count > 0) then
     begin
-      TForm(Reference).Parent:= Owner;
-      CenterChild(TForm(Reference), Owner);
-    end;
+      // Retrieve and remove this form's AutoState
+      Result := FAutoStateQueue.First;
+      FAutoStateQueue.Delete(0);
 
-  Assert(TForm(Reference) <> NIL, ' Reference is NIL here because of RealCreateForms!');
-
-  // Font, snap, alpha
-  SetGuiProperties(TForm(Reference));
-
-  // Load form settings/position
-  if TForm(Reference) is TLightForm then
-    begin
-     TLightForm(Reference).AutoState:= AutoState;
-     TLightForm(Reference).LoadForm;
-    end;
-
-  if Show
-  then TForm(Reference).Show;
-
-  // Window fully constructed.
-  // Now we can let user run its own initialization process.
-  if TObject(Reference) is TLightForm
-  then TLightForm(Reference).FormPostInitialize;
-
-  // Translator
-  if Translator <> NIL
-  then Translator.LoadTranslation(TForm(Reference)); *)
-end;
-
-
-
-{ Create secondary form }
-procedure TAppData.CreateFormHidden(aClass: TComponentClass; OUT Reference; ParentWnd: TFmxObject= NIL);
-begin
-  CreateForm(aClass, Reference, FALSE, ParentWnd);
+      // If the queue is now empty, free it
+      if FAutoStateQueue.Count = 0
+      then FreeAndNil(FAutoStateQueue);
+    end
+  else
+    Result := asNone; // Default value if queue is empty or nil
 end;
 
 
 { Create secondary form }
-procedure TAppData.CreateFormModal(aClass: TComponentClass; ParentWnd: TFmxObject= NIL);
-VAR Reference: TForm;
+procedure TAppData.CreateFormHidden(aClass: TComponentClass; OUT aReference);
 begin
-  CreateForm(aClass, Reference, FALSE, ParentWnd);
-  Reference.ShowModal;
+  CreateForm(aClass, aReference, FALSE);
 end;
 
 
 { Create secondary form }
-//ToDo: Do I need this? Since the form is modal, I should never need the Reference? To be deleted
-procedure TAppData.CreateFormModal(aClass: TComponentClass; OUT Reference; ParentWnd: TFmxObject= NIL);
+procedure TAppData.CreateFormModal(aClass: TComponentClass);
+VAR aReference: TForm;
 begin
-  CreateFormModal(aClass, ParentWnd);
+  // Problem in Android with modal forms!
+  CreateForm(aClass, aReference, FALSE);
+  aReference.ShowModal;
 end;
 
 
 // The TfrmRamLog is destroyed by AppData in Finalize
 procedure TAppData.createGlobalLog;
 begin
-  Assert(RamLog <> NIL, 'RamLog not created!');
-  ///Assert(FFormLog = NIL, 'Form log already created!');
-
-  //VAR CreateBeforeMainForm:= Application.MainForm = NIL;
-  ///CreateForm(TfrmRamLog, FFormLog, FALSE, asPosOnly, NIL, FALSE, CreateBeforeMainForm);
-  ///FormLog.Log.AssignExternalRamLog(RamLog);   // FormLog will display data from AppData's RAM log
-
-  ///Assert(Application.MainForm <> FormLog, 'Sanity check! The Log should not be the MainForm!'); { Make sure this is not the first form created }
+  Assert(RamLog  <> NIL, 'RamLog not created!');
+  Assert(FFormLog = NIL, 'Form log already created!');
+  
+  Application.CreateForm(TfrmRamLog, FFormLog);
+  //FFormLog.Owner:= NIL;  // Remove from TApplication ownership
+  FAutoStateQueue.Add(asPosOnly);  // Queue its AutoState
 end;
+
+
+
+
+
+
+
+
 
 
 procedure TAppData.setHideHint(const Value: Integer);
 begin
   inherited;
-
 end;
+
 
 // Note:
 // In FMX the forms don't have a hint.
@@ -380,6 +365,7 @@ begin
   FHintType:= aHintType;
   Application.ShowHint:= aHintType > htOff;
 end;
+
 
 
 
@@ -585,15 +571,15 @@ end;
 { Apply this font to all existing forms. }
 procedure TAppData.setFont(aFont: TFont);
 begin
-  if FFont = NIL
+  {if FFont = NIL
   then FFont:= aFont   // We set the font for the first time.
   else
     begin
       // Note: FormCount also counts invisible forms and forms created TFrom.Create(Nil).
       FFont:= aFont;
       for VAR i:= 0 to Screen.FormCount - 1 DO    // FormCount => forms currently displayed on the screen. CustomFormCount = as FormCount but also includes the property pages
-        //Screen.Forms[i].Font:= aFont;
-    end;
+        Screen.Forms[i].Font:= aFont;
+    end;  }
 end;
 
 
@@ -609,10 +595,10 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    Prompt To Save/Load File
    Remembers the last used folder.
-   Example: PromptToSaveFile(s, LightVcl.Graph.Util.JPGFtl, 'txt');
+   Example: PromptToSaveFile(s, Light_FMX.Graph.Util.JPGFtl, 'txt');
 
    Note:
-      These functions are also duplicated in LightVcl.Common.IO.Win.
+      These functions are also duplicated in Light_FMX.Common.IO.Win.
       The difference is that there, those functions cannot read/write the LastUsedFolder var so the app cannot remmeber last use folder.
 
    Note:
@@ -685,8 +671,6 @@ begin
   END;
 end;
 
-
-
 {$ENDIF}
 
 
@@ -697,15 +681,13 @@ procedure TAppData.MainFormCaption(CONST Caption: string);
 begin
   inherited;
   
-  {$IFDEF Framework_FMX}
-   // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
-   if Application.MainForm = NIL then EXIT;
-  {$ENDIF}
+  // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
+  if Application.MainForm = NIL then EXIT;
+
   if Caption= ''
   then Application.MainForm.Caption:= AppName+ ' '
   else Application.MainForm.Caption:= AppName+ ' '+ ' - ' + Caption;
 end;
-
 
 
 

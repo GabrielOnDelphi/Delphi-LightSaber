@@ -176,7 +176,7 @@ end;}
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TLogVerbFilter]);
+  RegisterComponents('LightSaber FMX', [TLogVerbFilter]);
 end;
 
 

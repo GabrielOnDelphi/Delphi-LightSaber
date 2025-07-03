@@ -90,23 +90,31 @@ object frmRamLog: TfrmRamLog
         Text = 'Show date'
         OnClick = chkShowDateClick
       end
+      object chkScrollDown: TCheckBox
+        Align = Left
+        Hint = 'This will take a tiny bit more CPU if you have lots of messages.'
+        IsChecked = True
+        Position.X = 345.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 31.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+        Text = 'Scroll down'
+        OnChange = chkScrollDownChange
+      end
     end
-    object Log: TLogGrid
+    object LogViewer: TLogViewer
       Align = Client
       CanFocus = True
       ClipChildren = True
-      Margins.Left = 3.000000000000000000
-      Margins.Top = 3.000000000000000000
-      Margins.Right = 3.000000000000000000
-      Margins.Bottom = 3.000000000000000000
-      Size.Width = 637.000000000000000000
-      Size.Height = 470.000000000000000000
+      Size.Width = 643.000000000000000000
+      Size.Height = 476.000000000000000000
       Size.PlatformDefault = False
-      TabOrder = 2
+      TabOrder = 1
       RowHeight = 22.000000000000000000
       Options = [Editing, ColumnResize, ColumnMove, ColLines, RowLines, RowSelect, Tabs, Header, HeaderClick, AutoDisplacement]
-      Viewport.Width = 633.000000000000000000
-      Viewport.Height = 445.000000000000000000
+      Viewport.Width = 639.000000000000000000
+      Viewport.Height = 451.000000000000000000
     end
   end
   object PopupMenu: TPopupMenu

@@ -22,7 +22,7 @@
       Optionally, if you want to execute your own initialization code, override the LateInitialize (don't forget to call inherited).
       See: c:\Projects\LightSaber\Demo\Template App\FMX Minimal\TemplateMicro_Fmx.dpr
 
-      uses LightVcl.Common.AppDataForm;
+      uses Light_FMX.Common.AppDataForm;
       Type
         TYourForm = class(TLightForm)
         public
@@ -118,7 +118,7 @@ begin
 end;
 
 
-// In FMX this is called before FormCreate!
+// In FMX, Loaded is called before FormCreate!
 procedure TLightForm.Loaded;
 begin
   Position:= TFormPosition.Designed;
@@ -130,24 +130,32 @@ begin
   SetGuiProperties(Self);
 
   // Off-screen?
-  EnsureFormVisibleOnScreen(Self);
+  if AppData.RunningFirstTime
+  then EnsureFormVisibleOnScreen(Self);
 
   // Show app name
   AppData.MainFormCaption('');      // Must be before FormPostInitialize because the user could put his own caption there.
 
-  FormPostInitialize;
-
   // Load form
-  // Limitation: At this point we can only load "standard" Delphi components. Loading of our Light components can only be done in LightVcl.Visual.INIFile.pas -> TIniFileVCL
-  ///Assert(AutoState <> asUndefined, 'The user must set the AutoState property in code (see TLightForm.FormPostInitialize)!' + CRLF+'Form: '+ Name+ ' / '+ ClassName);
-  if AutoState <> asNone
-  then LoadForm;
+  // Limitation: At this point we can only load "standard" Delphi components. Loading of our Light components can only be done in Light_FMX.Visual.INIFile.pas -> TIniFileVCL
+
+  if AutoState = asUndefined  // Only check queue if AutoState wasn’t set in CreateForm
+  then AutoState:= AppData.GetAutoState;
+
+  if AutoState = asUndefined
+  then RAISE Exception.Create('The user must set the AutoState property in code (see TLightForm.FormPostInitialize)!' + CRLF+'Form: '+ Name+ ' / '+ ClassName)
+  else
+    if AutoState <> asNone
+    then LoadForm;
 
   // Ignore the "Show" parameter if "StartMinimized" is active
   // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
   if NOT AppData.StartMinim
   AND Visible
   then Show;
+
+  // Window fully constructed. Now we can let user run its own initialization process.
+  FormPostInitialize;
 end;
 
 
@@ -241,7 +249,7 @@ end;
          OnlyFormPos=True   ->  It will only save the position of the form (only Left/Top, no width/height/WndState)
 
 
-   Also see LoadForm/SaveForm in LightVcl.Visual.INIFile.pas
+   Also see LoadForm/SaveForm in Light_FMX.Visual.INIFile.pas
 -----------------------------------------------------------------------------------------------------------------------}
 
 procedure TLightForm.SaveForm;

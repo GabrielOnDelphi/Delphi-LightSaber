@@ -11,7 +11,7 @@ UNIT LightFMX.LogForm;
    But can be also created manually if you don't use AppData.
    User's prefferences are managed via LoadSettings/SaveSettings.
 
-   TLogGrid tester:
+   TLogViewer tester:
      c:\Projects\LightSaber\Demo\Demo LightLog\Demo_Log.dpr
 =============================================================================================================}
 
@@ -21,8 +21,8 @@ USES
   System.Classes, System.SysUtils, System.Types, System.UITypes, System.Rtti,
   FMX.Grid.Style, FMX.Grid, FMX.Types, FMX.Controls, FMX.Forms, FMX.Layouts, FMX.Menus,
   FMX.ScrollBox, FMX.StdCtrls, FMX.Controls.Presentation, FMX.Presentation.Factory,
-  LightVcl.Common.AppDataForm, LightVcl.Common.LogFilter, LightVcl.Common.LogViewer,
-  LightCore.AppData, LightCore.LogRam, LightFmx.Common.LogViewer;
+  LightFmx.Common.AppData.Form, LightFMX.Common.LogFilter, LightFMX.Common.LogViewer,
+  LightCore.AppData, LightCore.LogRam;
 
 TYPE
   TfrmRamLog = class(TLightForm)
@@ -34,7 +34,8 @@ TYPE
     mnuCopyAll     : TMenuItem;
     mnuCopyFiltered: TMenuItem;
     pnlBottom      : TPanel;
-    Log: TLogGrid;
+    chkScrollDown: TCheckBox;
+    LogViewer: TLogViewer;
     procedure btnClearClick      (Sender: TObject);
     procedure chkLogOnErrorClick (Sender: TObject);
     procedure chkShowDateClick   (Sender: TObject);
@@ -43,6 +44,7 @@ TYPE
     procedure FormDestroy        (Sender: TObject);
     procedure mnuCopyAllClick    (Sender: TObject);
     procedure mnuCopyClick       (Sender: TObject);
+    procedure chkScrollDownChange(Sender: TObject);
   private
     procedure LoadSettings;
     procedure SaveSettings;
@@ -55,9 +57,7 @@ IMPLEMENTATION {$R *.FMX}
 
 
 USES
-   LightCore.LogTypes, LightCore.INIFile, LightVcl.Common.AppData;
-
-
+   LightCore.LogTypes, LightCore.INIFile, LightFMX.Common.AppData;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -66,16 +66,19 @@ USES
 procedure TfrmRamLog.FormPostInitialize;
 begin
   inherited FormPostInitialize;
+  LogViewer.AssignExternalRamLog(AppData.RamLog);   // FormLog will display data from AppData's RAM log
 
   LoadSettings;
-  chkLogOnError.isChecked:= AppData.RamLog.ShowOnError;
-  chkShowTime.isChecked  := Log.ShowTime;
+  chkLogOnError.IsChecked:= AppData.RamLog.ShowOnError;
+  chkShowTime.IsChecked  := LogViewer.ShowTime;
+
+  Assert(Application.MainForm <> TCommonCustomForm(Self), 'Sanity check! The Log should not be the MainForm!'); { Make sure this is not the first form created }
 end;
 
 
 procedure TfrmRamLog.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  Action:= caHide;  // This window is global (tied to AppData). We cannot close it.
+  Action:= TCloseAction.caHide;  // This window is global (tied to AppData). We cannot close it.
 end;
 
 
@@ -84,9 +87,8 @@ procedure TfrmRamLog.FormDestroy(Sender: TObject);
 begin
   Assert(Owner = NIL); // This form should have no owner. If it has an owner (like Application), it will destroy the form. We want AppData to destroy the form!
 
-  Log.RamLog.UnregisterLogObserver;  //ToDo: do I need this?
+  LogViewer.RamLog.UnregisterLogObserver;  // I need this so I don't send messages to the LogViewer.
   SaveSettings;
-  Container.Parent:= Self;
 end;
 
 
@@ -106,9 +108,9 @@ begin
   try
     IniFile.Write('ShowOnError', AppData.RamLog.ShowOnError);
 
-    IniFile.Write('ShowTime'   , Log.ShowTime);
-    IniFile.Write('ShowDate'   , Log.ShowDate);
-    IniFile.Write('Verbosity'  , Ord(Log.Verbosity));
+    IniFile.Write('ShowTime'   , LogViewer.ShowTime);
+    IniFile.Write('ShowDate'   , LogViewer.ShowDate);
+    IniFile.Write('Verbosity'  , Ord(LogViewer.Verbosity));
   finally
     FreeAndNil(IniFile);
   end;
@@ -117,18 +119,18 @@ end;
 
 procedure TfrmRamLog.LoadSettings;
 begin
-  //del LightVcl.Visual.INIFile.LoadForm(Self);
+  //del Light_FMX.Visual.INIFile.LoadForm(Self);
 
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);
   try
     AppData.RamLog.ShowOnError:= IniFile.Read('ShowOnError', TRUE);
 
-    Log.ShowTime              := IniFile.Read('ShowTime', TRUE);
-    Log.ShowDate              := IniFile.Read('ShowDate', TRUE);
-    Log.Verbosity             := TLogVerbLvl(IniFile.Read('Verbosity', Ord(lvHints)));
+    LogViewer.ShowTime              := IniFile.Read('ShowTime', TRUE);
+    LogViewer.ShowDate              := IniFile.Read('ShowDate', TRUE);
+    LogViewer.Verbosity             := TLogVerbLvl(IniFile.Read('Verbosity', Ord(lvHints)));
 
-    chkShowDate.Checked:= Log.ShowDate;
-    chkShowTime.Checked:= Log.ShowTime;
+    //chkShowDate.isChecked:= LogViewer.ShowDate;
+    chkShowTime.isChecked:= LogViewer.ShowTime;
   finally
     FreeAndNil(IniFile);
   end;
@@ -137,7 +139,7 @@ end;
 
 procedure TfrmRamLog.btnClearClick(Sender: TObject);
 begin
-  Log.Clear;
+  LogViewer.Clear;
 end;
 
 
@@ -149,31 +151,37 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 procedure TfrmRamLog.chkLogOnErrorClick(Sender: TObject);
 begin
-  AppData.RamLog.ShowOnError:= chkLogOnError.Checked;
+  AppData.RamLog.ShowOnError:= chkLogOnError.IsChecked;
+end;
+
+
+procedure TfrmRamLog.chkScrollDownChange(Sender: TObject);
+begin
+  LogViewer.AutoScroll:= chkScrollDown.IsChecked;
 end;
 
 
 procedure TfrmRamLog.chkShowDateClick(Sender: TObject);
 begin
-  Log.ShowDate:= chkShowDate.Checked;
+  //LogViewer.ShowDate:= chkShowDate.IsChecked;
 end;
 
 
 procedure TfrmRamLog.chkShowTimeClick(Sender: TObject);
 begin
-  Log.ShowTime:= chkShowTime.Checked;
+  LogViewer.ShowTime:= chkShowTime.IsChecked;
 end;
 
 
 procedure TfrmRamLog.mnuCopyAllClick(Sender: TObject);
 begin
-  Log.CopyAll;
+  LogViewer.CopyAll;
 end;
 
 
 procedure TfrmRamLog.mnuCopyClick(Sender: TObject);
 begin
-  Log.CopyCurLine;
+  LogViewer.CopyCurLine;
 end;
 
 
