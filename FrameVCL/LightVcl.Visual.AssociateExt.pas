@@ -162,7 +162,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TAssociateFileExt]);
+  RegisterComponents('LightSaber VCL', [TAssociateFileExt]);
 end;
 
 

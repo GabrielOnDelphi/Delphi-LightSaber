@@ -5,7 +5,7 @@ INTERFACE
 USES
   System.SysUtils, System.Types, System.UITypes, System.Classes,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Controls.Presentation, FMX.StdCtrls,
-  LightFMX.Panel, LightFmx.Visual.Panel;
+  LightFmx.Visual.Panel;
 
 TYPE
   TForm2 = class(TForm)

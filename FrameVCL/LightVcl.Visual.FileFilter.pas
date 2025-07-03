@@ -39,7 +39,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCubicFilterBox]);
+  RegisterComponents('LightSaber VCL', [TCubicFilterBox]);
 end;
 
 

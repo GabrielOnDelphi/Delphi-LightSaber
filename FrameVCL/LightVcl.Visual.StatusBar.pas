@@ -27,7 +27,7 @@ IMPLEMENTATION
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TcubicStatusBar]);
+  RegisterComponents('LightSaber VCL', [TcubicStatusBar]);
 end;
 
 

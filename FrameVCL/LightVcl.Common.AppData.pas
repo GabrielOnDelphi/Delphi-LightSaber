@@ -1,7 +1,7 @@
 ﻿UNIT LightVcl.Common.AppData;
 
 {=============================================================================================================
-   2025.05
+   2025.05.27
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -104,13 +104,7 @@ USES
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Consts,
   LightCore.AppData, LightVcl.LogForm;
 
- {
-TYPE
-  TAutoState = (asUndefined,
-                asNone,       // Don't save the form automatically.
-                asPosOnly,    // Restore form position
-                asFull);      // Restore form position and GUI elements
-                            }
+
 TYPE
   TAppData= class(TAppDataCore)
   private
@@ -120,7 +114,7 @@ TYPE
     procedure setGuiProperties(Form: TForm);
     procedure setFont(aFont: TFont);
     procedure createGlobalLog;
-   protected
+  protected
     procedure setHintType(const aHintType: THintType); override;
     procedure setHideHint(const Value: Integer); override;
   public
@@ -336,11 +330,12 @@ begin
     begin
       // We allow the Log form to be created before the main form.
       if (aClass = TfrmRamLog)
-      then TComponent(Reference):= aClass.Create(NIL) // AppData will release it on Finalize
+      then TForm(Reference):= TFormClass.Create(NIL) // AppData will release it on Finalize
       else
         if (Owner = NIL)
-        then TComponent(Reference):= aClass.Create(Application)  // Owned by Application. But we cannot use Application.CreateForm here because then, this form will be the main form!
-        else TComponent(Reference):= aClass.Create(Owner);       // Owned by Owner
+        then TForm(Reference):= TFormClass.Create(Application)  // Owned by Application. But we cannot use Application.CreateForm here because then, this form will be the main form!
+        else TForm(Reference):= TFormClass.Create(Owner);       // Owned by Owner
+      //ToDo 4: For the case where the frmLog is created before the MainForm: copy the frmLog.Font from the MainForm AFTER the main MainForm created.
     end
   else
     begin
@@ -349,7 +344,7 @@ begin
 
       if Owner = NIL
       then Application.CreateForm(aClass, Reference)        // Owned by Application
-      else TComponent(Reference):= aClass.Create(Owner);    // Owned by Owner
+      else TForm(Reference):= TFormClass.Create(Owner);    // Owned by Owner
     end;
 
   // Center form in the Owner

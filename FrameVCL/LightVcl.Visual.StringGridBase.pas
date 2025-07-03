@@ -1289,7 +1289,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TBaseStrGrid]);
+  RegisterComponents('LightSaber VCL', [TBaseStrGrid]);
 end;
 
 

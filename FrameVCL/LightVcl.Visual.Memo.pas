@@ -893,8 +893,8 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCubicMemo]);
- // RegisterComponents('LightSaber', [TCubicMemo2]);
+  RegisterComponents('LightSaber VCL', [TCubicMemo]);
+ // RegisterComponents('LightSaber VCL', [TCubicMemo2]);
 end;
 
 

@@ -82,7 +82,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TMinimalPathLabel]);
+  RegisterComponents('LightSaber VCL', [TMinimalPathLabel]);
 end;
 
 end.{============================================================================

@@ -249,8 +249,8 @@ end;
 
 procedure Register;
 begin
- RegisterComponents('LightSaber', [TCubicSpinEdit]);
- RegisterComponents('LightSaber', [TCubicSpinEditSplit]);
+ RegisterComponents('LightSaber VCL', [TCubicSpinEdit]);
+ RegisterComponents('LightSaber VCL', [TCubicSpinEditSplit]);
 end;
 
 

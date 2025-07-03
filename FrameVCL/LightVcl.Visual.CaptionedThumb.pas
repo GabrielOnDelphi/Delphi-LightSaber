@@ -283,7 +283,7 @@ begin
   // This will register the control into the IDE (Tool Palette) so we canuse it at Design time.
   // But of course, the component must be installed first.
   // This is be a bit pointless anyway, because we need to create x tbumnails (x= unknown at design time) dynamically.
-  RegisterComponents('LightSaber', [TCationedThumbnail]);
+  RegisterComponents('LightSaber VCL', [TCationedThumbnail]);
 end;
 
 

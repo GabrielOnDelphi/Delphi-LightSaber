@@ -96,7 +96,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCubicFileList]);
+  RegisterComponents('LightSaber VCL', [TCubicFileList]);
 end;
 
 

@@ -1,19 +1,32 @@
 UNIT LightVcl.Common.LogViewer;
 
 {=============================================================================================================
-   2025.05.25
-   www.GabrielMoraru.com
+   2025.06
+   www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-
-   The logging system based on TStringGrid.
-   Drop a TLogGrid on your form.
+   A log viewer based on TStringGrid.
    It can easily show up to 1 million entries. Being a good citizen, when it reaches this number it saves existing data to disk and then clears it from RAM.
 
-   See demo
-     c:\Projects\LightSaber\Demo\Demo LightLog\Demo_Log.dpr
+   How to use it
+      Drop a TLogViewer on your form and use it to log messages like this:
+         LogViewer.RamLog.AddError('Something bad happent!');
+
+   Application wide logging
+      This component can also be used to see messages logged at the application level (see TAppData).
+      For this, just assign
+         LogViewer.RamLog:= AppData.RamLog;
+
+      Now on you can send your logging messages directly to AppData, instead of sending them to the log window:
+         LogViewer.RamLog.AddError('Something bad happent!');
+
+      The log window will automatically pop-up when a error is received.
+
+   Full demo in:
+      c:\Projects\LightSaber\Demo\Demo LightLog\FMX\FMX_Demo_Log.dpr
+
 =============================================================================================================}
 
-{TODO 5: Sort lines by criticality (all errors together, all warnings together, etc) }
+{TODO 5: Let user sort lines by criticality (all errors together, all warnings together, etc) }
 {TODO 5: Let user show/hide grid lines}
 
 INTERFACE
@@ -30,7 +43,7 @@ TYPE
     function CalculateColWidth(const ATextLength: Integer; const ACaption: string): Integer; // TCustomGrid.CalcColWidth is protected!
   end;
 
-  TLogGrid = class(TPanel, ILogObserver)
+  TLogViewer = class(TPanel, ILogObserver)
    private
      FGrid        : THackGrid;
      FVerbChanged : TNotifyEvent;
@@ -57,7 +70,7 @@ TYPE
    protected
      procedure CreateWnd; override;
      procedure Resize; override;
-     procedure SetUpRows;
+     procedure setUpRows;
      procedure GridDrawCell(Sender: TObject; ACol, ARow: Longint; ARect: TRect; AState: TGridDrawState);
    public
      constructor Create(AOwner: TComponent); override;
@@ -73,6 +86,7 @@ TYPE
 
      function  Count: Integer;
      procedure CopyAll;
+     procedure CopyVisible;
      procedure CopyCurLine;
    published
      property ShowTime     : Boolean      read FShowTime    write setShowTime default FALSE;
@@ -81,7 +95,7 @@ TYPE
 
      property RamLog       : TRamLog      read FRamLog;
 
-     property Verbosity    : TLogVerbLvl  read FVerbosity   write setVerbFilter;
+     property Verbosity    : TLogVerbLvl  read FVerbosity   write SetVerbFilter default lvVerbose;
      property OnVerbChanged: TNotifyEvent read FVerbChanged write FVerbChanged;   { Triggered before deleting the content of a cell }
   end;
 
@@ -93,14 +107,15 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   LightCore, LightVcl.Common.Colors, LightVcl.Common.Clipboard, LightVcl.Common.LogFilter;
+   LightCore, 
+   LightVcl.Common.Colors, LightVcl.Common.Clipboard, LightVcl.Common.LogFilter;
 
 
 
 {-------------------------------------------------------------------------------------------------------------
    CONSTRUCTOR
 -------------------------------------------------------------------------------------------------------------}
-constructor TLogGrid.Create(AOwner: TComponent);
+constructor TLogViewer.Create(AOwner: TComponent); 
 begin
   inherited Create(AOwner);
 
@@ -123,7 +138,7 @@ begin
 end;
 
 
-procedure TLogGrid.CreateWnd;
+procedure TLogViewer.CreateWnd;
 begin
   inherited CreateWnd;
   BevelOuter:= bvNone;
@@ -152,7 +167,7 @@ begin
 end;
 
 
-destructor TLogGrid.Destroy;
+destructor TLogViewer.Destroy;
 begin
   if FOwnRamLog
   then FreeAndNil(FRamLog);
@@ -164,7 +179,7 @@ begin
 end;
 
 
-procedure TLogGrid.Clear;
+procedure TLogViewer.Clear;
 begin
   FGrid.RowCount := HeaderOverhead; // Reset to header only
   Assert(FRamLog <> NIL, 'RamLog not assigned!');
@@ -174,7 +189,7 @@ begin
 end;
 
 
-procedure TLogGrid.ChangeScrollBarVisibility(aVisible: boolean);
+procedure TLogViewer.ChangeScrollBarVisibility(aVisible: boolean);
 var MustResize: Boolean;
 begin
   MustResize:= aVisible <> FScrollBar.Visible;
@@ -184,7 +199,7 @@ begin
 end;
 
 
-procedure TLogGrid.setUpRows;
+procedure TLogViewer.setUpRows;
 var
   NewColCount, VisibleRows: Integer;
 begin
@@ -232,46 +247,57 @@ begin
 end;
 
 
-procedure TLogGrid.setVerbFilter(const Value: TLogVerbLvl);
+procedure TLogViewer.setVerbFilter(const Value: TLogVerbLvl);
 begin
   if FVerbosity <> Value then
-  begin
-    FVerbosity:= Value;
+   begin
+     FVerbosity:= Value;
     //del FFilteredRowCount:= RamLog.Count(FVerbosity > lvDebug, FVerbosity);   //ToDo: cache this value to increase speed!
     rebuildFilteredIndices;
+	
+     // Update associated UI element if it exists and needs syncing
+     if (FVerbTrackBar <> NIL) then
+       if (FVerbTrackBar as TLogVerbFilter).Verbosity <> Self.Verbosity
+       then (FVerbTrackBar as TLogVerbFilter).Verbosity := Self.Verbosity;
 
-    if (FVerbTrackBar <> NIL)
-    AND ((FVerbTrackBar as TLogVerbFilter).Verbosity <> Self.Verbosity)
-    then (FVerbTrackBar as TLogVerbFilter).Verbosity:= Self.Verbosity;
+     // Notify listeners that verbosity changed
+     if Assigned(FVerbChanged)
+     then FVerbChanged(Self);            { Let GUI know that the user changed the verbosity }
 
-    if Assigned(FVerbChanged)
-    then FVerbChanged(Self);            { Let GUI know that the user changed the verbosity }
-
-    setUpRows;
-  end;
+     // Refresh the grid content based on the new filter
+     setUpRows;
+   end;
 end;
 
 
-
 {-------------------------------------------------------------------------------------------------------------
-   CONTENT
+   CONTENT & DRAWING
 -------------------------------------------------------------------------------------------------------------}
-constructor TLogGrid.AssignExternalRamLog(ExternalLog: TRamLog);
+constructor TLogViewer.AssignExternalRamLog(ExternalLog: TRamLog);
 begin
-  Assert(ExternalLog <> NIL, 'RamLog not assigned!!');
+  Assert(ExternalLog <> NIL, 'External TRamLog not assigned!!');
 
+  // Release owned log if it exists
   if FOwnRamLog
   then FreeAndNil(FRamLog);
 
   FOwnRamLog:= FALSE;          // We received the log from an external source. We don't auto release it anymore
   FRamLog:= ExternalLog;
   FRamLog.RegisterLogObserver(Self as ILogObserver);
+
+  // Populate the grid with the data from the newly assigned log
+  Populate;
 end;
 
 
-procedure TLogGrid.Populate;
+procedure TLogViewer.Populate;
 begin
+  // Ensure RamLog is assigned before proceeding
+  if not Assigned(FRamLog) then Exit;
+  
   rebuildFilteredIndices;
+  
+  // Reconfigure rows/columns and update row count based on current filter  
   setUpRows;
   if AutoScroll
   then scrollToBottom;
@@ -279,20 +305,20 @@ end;
 
 
 { Converts aRow to the real row number (visible on screen) after the filtering has been applied }
-function TLogGrid.filteredRow(aRow: Integer): integer;
+function TLogViewer.filteredRow(aRow: Integer): integer;
 begin
   Result:= RamLog.Lines.Row2FilteredRow(aRow- HeaderOverhead, FVerbosity);
 end;
 
 
 { Returns the content of the specified line, after the grid has been filtered }
-function TLogGrid.getLineFiltered(Row: Integer): PLogLine;
+function TLogViewer.getLineFiltered(Row: Integer): PLogLine;
 begin
   Result:= RamLog.Lines[filteredRow(Row)];
 end;
 
 
-procedure TLogGrid.GridDrawCell(Sender: TObject; ACol, ARow: Integer; ARect: TRect; AState: TGridDrawState);
+procedure TLogViewer.GridDrawCell(Sender: TObject; ACol, ARow: Integer; ARect: TRect; AState: TGridDrawState);
 VAR
    s: string;
    LogIndex, FilteredIndex: Integer;
@@ -358,15 +384,15 @@ end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   GRID ACCESS
+   GRID ACCESS & UI Interaction
 -------------------------------------------------------------------------------------------------------------}
-function TLogGrid.Count: Integer;
+function TLogViewer.Count: Integer;
 begin
   Result:= RamLog.Count(FVerbosity > lvDebug, FVerbosity);
 end;
 
 
-procedure TLogGrid.scrollToBottom;
+procedure TLogViewer.scrollToBottom;
 var
   VisibleRows: Integer;
 begin
@@ -376,7 +402,7 @@ begin
   else FScrollBar.Position := 0;
 end;
 
-procedure TLogGrid.FixFixedRow;
+procedure TLogViewer.FixFixedRow;
 begin
   if (csCreating in ControlState) then Exit;
 
@@ -386,49 +412,53 @@ begin
 end;
 
 
-procedure TLogGrid.setShowDate(const Value: Boolean);
+procedure TLogViewer.setShowDate(const Value: Boolean);
 begin
   if FShowDate <> Value then
-  begin
-    FShowDate := Value;
-    setUpRows;
-    resizeColumns;
-  end;
+    begin
+      FShowDate:= Value;
+      setUpRows;
+      resizeColumns;
+    end;
 end;
 
 
-procedure TLogGrid.setShowTime(const Value: Boolean);
+procedure TLogViewer.setShowTime(const Value: Boolean);
 begin
   if FShowTime <> Value then
-  begin
-    FShowTime := Value;
-    setUpRows;
-    resizeColumns;
-  end;
+    begin
+      FShowTime := Value;
+      setUpRows;
+      resizeColumns;
+    end;
 end;
-
-
 
 
 {-------------------------------------------------------------------------------------------------------------
-   WND
+   WND / Form Interaction
 -------------------------------------------------------------------------------------------------------------}
 { Show the form that owns this control }
-procedure TLogGrid.PopUpWindow;
+procedure TLogViewer.PopUpWindow;
 var
   ParentForm: TCustomForm;
 begin
   ParentForm := GetParentForm(Self);
   if Assigned(ParentForm) then
-  begin
-    if NOT ParentForm.Visible
-    then ParentForm.Show
-    else
-      if ParentForm.WindowState = wsMinimized
-      then ParentForm.WindowState := wsNormal;
+    begin
+      // Show if hidden
+      if NOT ParentForm.Visible
+      then ParentForm.Show;
 
-    ParentForm.BringToFront;
-  end;
+      // Restore if minimized
+      if ParentForm.WindowState = TWindowState.wsMinimized
+      then ParentForm.WindowState:= TWindowState.wsNormal;
+
+      // Bring to front
+      ParentForm.BringToFront;
+
+      // Optionally focus the grid itself?
+      // Self.SetFocus;
+    end;
 end;
 
 
@@ -437,7 +467,7 @@ end;
    COLUMNS
 -------------------------------------------------------------------------------------------------------------}
 { Resize column width when the form is resized }
-procedure TLogGrid.resizeColumns;
+procedure TLogViewer.resizeColumns;
 var
   sTime: string;
   TimeColWidth: Integer;
@@ -464,30 +494,58 @@ begin
 end;
 
 
-procedure TLogGrid.Resize;
+procedure TLogViewer.Resize;
 begin
   inherited Resize;  // Call the inherited method first
-  resizeColumns;
+  resizeColumns;     // Then adjust columns based on the new size
 end;
-
-
-
-
-
-
 
 
 {-------------------------------------------------------------------------------------------------------------
-   TEXT
+   TEXT UTILITIES / MISC
 -------------------------------------------------------------------------------------------------------------}
-{ Returns all lines, even if a filter is applied }
-procedure TLogGrid.CopyAll;
+
+procedure TLogViewer.CopyVisible;
+VAR
+  i: Integer;
+  Lines: TStringList;
+  CurLine: PLogLine;
 begin
-  LightVcl.Common.Clipboard.StringToClipboard(RamLog.GetAsText);
+  Lines := TStringList.Create; // TStringList is a non-visual component
+  try
+    Lines.BeginUpdate;
+    try
+      // This loop iterates through FILTERED rows currently in the grid
+      for i := 1 to Lines.Count - 1 do // Data rows are 1 to RowCount-1
+      begin
+        CurLine := GetLineFiltered(i - 1); // Get data for the visible row
+        if CurLine <> nil then
+        begin
+           // Construct line string similarly...
+           Lines.Add(CurLine.Msg); // Add message part
+        end;
+      end;
+    finally
+      Lines.EndUpdate;
+    end;
+  finally
+    FreeAndNil(Lines);
+  end;
 end;
 
 
-procedure TLogGrid.CopyCurLine;
+{ Returns all lines, even if a filter is applied }
+procedure TLogViewer.CopyAll;
+VAR sText: string;
+begin
+  if Assigned(FRamLog)
+  then sText := RamLog.GetAsText
+  else sText := 'No RAM log assigned!';
+  LightVcl.Common.Clipboard.StringToClipboard(sText);
+end;
+
+
+procedure TLogViewer.CopyCurLine;
 begin
   LightVcl.Common.Clipboard.StringToClipboard(getLineFiltered(FGrid.Row).Msg);
 end;
@@ -495,7 +553,7 @@ end;
 
 { Save as text with colors }
 { Note: The TrichEdit needs a parent window otherwise we get "EInvalidOperation - Control TRichEdit has no parent window." }
-procedure TLogGrid.SaveAsRtf(const FullPath: string);
+procedure TLogViewer.SaveAsRtf(const FullPath: string);
 VAR
   i: Integer;
   RichEdit: TRichEdit;
@@ -524,14 +582,14 @@ begin
 end;
 
 
-procedure TLogGrid.RegisterVerbFilter(TrackBar: TPanel);
+procedure TLogViewer.RegisterVerbFilter(TrackBar: TPanel);
 begin
  // mesaj('Trackbar registered for log');
   FVerbTrackBar:= TrackBar;  // Let the Log know that its verbosity is controlled by this TrackBar
 end;
 
 
-procedure TLogGrid.scrollBarChange(Sender: TObject);
+procedure TLogViewer.scrollBarChange(Sender: TObject);
 begin
   FGrid.InvalidateGrid; // Redraw with new scrollbar position
   //InvalidateGrid; // Redraw with new data
@@ -555,7 +613,7 @@ end;
 
 
 { Rebuild the cache when needed }
-procedure TLogGrid.rebuildFilteredIndices;
+procedure TLogViewer.rebuildFilteredIndices;
 var
   i: Integer;
 begin
@@ -580,8 +638,8 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TLogGrid]);
-end;
+  RegisterComponents('LightSaber VCL', [TLogViewer]);
+end; 
 
 
 

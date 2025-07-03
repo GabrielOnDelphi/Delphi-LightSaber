@@ -246,7 +246,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCreationOrderTest]);
+  RegisterComponents('LightSaber VCL', [TCreationOrderTest]);
 end;
 
 

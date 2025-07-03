@@ -141,7 +141,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCubicGroupBox]);
+  RegisterComponents('LightSaber VCL', [TCubicGroupBox]);
 end;
 
 end.

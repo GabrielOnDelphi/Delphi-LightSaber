@@ -378,7 +378,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TMsgDispatcher]);
+  RegisterComponents('LightSaber VCL', [TMsgDispatcher]);
 end;
 
 

@@ -108,7 +108,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TGradPanel]);
+  RegisterComponents('LightSaber VCL', [TGradPanel]);
 end;
 
 

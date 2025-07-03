@@ -68,7 +68,7 @@
   Demo code:
      procedure TCoreSv.saveBuildID;
      begin
-       var INI := LightVcl.Common.IniFile.TIniFileApp.Create('SectionName');
+       var INI := Light_FMX.Common.IniFile.TIniFileApp.Create('SectionName');
        TRY
          INI.Write('LastID', 0);
        FINALLY
@@ -241,7 +241,7 @@ end;
 
 
 
-{ For strange reasons, for Vcl.Forms, LightVcl.Common.AppDataForm, I cannot read/write the ClientWidth. I need to use Width. }
+{ For strange reasons, for Vcl.Forms, Light_FMX.Common.AppDataForm, I cannot read/write the ClientWidth. I need to use Width. }
 procedure TIniFileApp.ReadCtrlPos(Ctrl: TControl);
 var
   IsNonResizable: Boolean;
@@ -363,7 +363,7 @@ end;
 
 
 {Important:
-    The LightVcl.Visual.RadioButton/LightVcl.Visual.RadioButton will NOT be automatically resized if you call LoadForm(self) in FormCreate (canvas not ready). You need to call LoadForm(self) in LateInitialize. }
+    The Light_FMX.Visual.RadioButton/Light_FMX.Visual.RadioButton will NOT be automatically resized if you call LoadForm(self) in FormCreate (canvas not ready). You need to call LoadForm(self) in LateInitialize. }
 function TIniFileApp.ReadComp(Comp: TComponent): Boolean;
 VAR s: string;
 begin

@@ -112,7 +112,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TRichEditResize]);
+  RegisterComponents('LightSaber VCL', [TRichEditResize]);
 end;
 
 

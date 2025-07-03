@@ -863,7 +863,7 @@ end;
 
 procedure Register;
 begin
- RegisterComponents('LightSaber', [TFastQChart]);
+ RegisterComponents('LightSaber VCL', [TFastQChart]);
 end;
 
 

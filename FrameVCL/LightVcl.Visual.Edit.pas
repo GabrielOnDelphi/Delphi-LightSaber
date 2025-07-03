@@ -109,7 +109,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCubicEdit]);
+  RegisterComponents('LightSaber VCL', [TCubicEdit]);
 end;
 
 

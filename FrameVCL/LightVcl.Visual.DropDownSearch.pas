@@ -375,7 +375,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TDropDownSearchBox]);
+  RegisterComponents('LightSaber VCL', [TDropDownSearchBox]);
 end;
 
 

@@ -524,7 +524,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCubicSplitter]);
+  RegisterComponents('LightSaber VCL', [TCubicSplitter]);
 end;
 
 

@@ -49,7 +49,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TActivityIndicatorC]);
+  RegisterComponents('LightSaber VCL', [TActivityIndicatorC]);
 end;
 
 

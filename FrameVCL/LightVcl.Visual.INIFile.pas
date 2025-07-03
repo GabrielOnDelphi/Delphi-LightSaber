@@ -63,8 +63,8 @@ begin
   if Comp.InheritsFrom(TFloatSpinEdit)
   then WriteFloat(Comp.Owner.Name, Comp.Name, TFloatSpinEdit(Comp).Value) else
 
-  if Comp.InheritsFrom(TLogGrid)                                                              { This MUST be before InheritsFrom(TTrackBar) }
-  then WriteInteger(Comp.Owner.Name, Comp.Name, ord(TLogGrid(Comp).Verbosity)) else
+  if Comp.InheritsFrom(TLogViewer)                                                              { This MUST be before InheritsFrom(TTrackBar) }
+  then WriteInteger(Comp.Owner.Name, Comp.Name, ord(TLogViewer(Comp).Verbosity)) else
 
   if Comp.InheritsFrom(TCubicListBox)
   then WriteInteger (Comp.Owner.Name, Comp.Name, TCubicListBox(Comp).SelectedItemI) else
@@ -94,8 +94,8 @@ begin
      then TCubicSpinEditD(Comp).StopTimer   { Stop the event from triggering some seconds later after the value of this spinbox was loaded from the INI file }
      else
 
-     if Comp.InheritsFrom(TLogGrid)     { This MUST be before InheritsFrom(TTrackBar) }
-     then TLogGrid(Comp).Verbosity:= TLogVerbLvl(ReadInteger(Comp.Owner.Name, Comp.Name, 0))
+     if Comp.InheritsFrom(TLogViewer)     { This MUST be before InheritsFrom(TTrackBar) }
+     then TLogViewer(Comp).Verbosity:= TLogVerbLvl(ReadInteger(Comp.Owner.Name, Comp.Name, 0))
      else
 
      if Comp.InheritsFrom(TFloatSpinEdit)
@@ -137,7 +137,7 @@ begin
        OR WinCtrl.InheritsFrom (TFloatSpinEdit)
        OR WinCtrl.InheritsFrom (TCubicFileList)
        OR WinCtrl.InheritsFrom (TCubicSpinEditD)
-       OR WinCtrl.InheritsFrom (TLogGrid)  //Note: The "master" of the verbosity events is the Grid not the trackbar
+       OR WinCtrl.InheritsFrom (TLogViewer)  //Note: The "master" of the verbosity events is the Grid not the trackbar
        ;
 end;
 

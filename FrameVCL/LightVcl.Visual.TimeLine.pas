@@ -119,7 +119,7 @@ end;  }
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TTimeLine]);
+  RegisterComponents('LightSaber VCL', [TTimeLine]);
 end;
 
 

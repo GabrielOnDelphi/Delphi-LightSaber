@@ -388,7 +388,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TProxyList]);
+  RegisterComponents('LightSaber VCL', [TProxyList]);
 end;
 
 

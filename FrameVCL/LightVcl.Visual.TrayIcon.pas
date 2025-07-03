@@ -92,7 +92,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCubicTrayIcon]);
+  RegisterComponents('LightSaber VCL', [TCubicTrayIcon]);
 end;
 
 

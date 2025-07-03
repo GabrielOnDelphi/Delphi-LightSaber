@@ -225,7 +225,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCubicComboBox]);
+  RegisterComponents('LightSaber VCL', [TCubicComboBox]);
 end;
 
 end.

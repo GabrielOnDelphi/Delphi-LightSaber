@@ -403,7 +403,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TDropDownSearchBox]);
+  RegisterComponents('LightSaber FMX', [TDropDownSearchBox]);
 end;
 
 

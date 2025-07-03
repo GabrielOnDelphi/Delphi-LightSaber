@@ -364,7 +364,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCubicPanel]);
+  RegisterComponents('LightSaber VCL', [TCubicPanel]);
 end;
 
 

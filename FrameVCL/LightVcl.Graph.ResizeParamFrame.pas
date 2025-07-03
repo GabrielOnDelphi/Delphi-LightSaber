@@ -131,7 +131,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TResizeParameters]); //register the frame in the desired component category
+  RegisterComponents('LightSaber VCL', [TResizeParameters]); //register the frame in the desired component category
 end;
 
 

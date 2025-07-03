@@ -53,7 +53,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TFrameWinExplorer]);
+  RegisterComponents('LightSaber VCL', [TFrameWinExplorer]);
 end;
 
 

@@ -79,7 +79,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TStrongPasswordEdit]);
+  RegisterComponents('LightSaber VCL', [TStrongPasswordEdit]);
 end;
 
 

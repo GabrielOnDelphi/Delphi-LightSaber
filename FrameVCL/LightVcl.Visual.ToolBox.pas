@@ -276,7 +276,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TToolBox]);
+  RegisterComponents('LightSaber VCL', [TToolBox]);
 end;
 
 

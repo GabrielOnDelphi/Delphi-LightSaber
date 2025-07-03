@@ -153,7 +153,7 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [THtmlWriter]);
+  RegisterComponents('LightSaber VCL', [THtmlWriter]);
 end;
 
 

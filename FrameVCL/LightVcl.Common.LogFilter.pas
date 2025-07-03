@@ -30,7 +30,7 @@ USES
 TYPE
   TLogVerbFilter = class(TPanel)
    private
-     FLog          : TLogGrid;
+     FLog          : TLogViewer;
      VerboLabel    : TLabel;
      FTrackBar     : TTrackBar;
      Initialized   : Boolean;
@@ -38,7 +38,7 @@ TYPE
 
      function  getVerbosity: TLogVerbLvl;            //Note: The "master" of the verbosity events is the Grid not the trackbar
      procedure setVerbosity   (Value: TLogVerbLvl);
-     procedure setLog         (Value: TLogGrid);
+     procedure setLog         (Value: TLogViewer);
      procedure setShowDebugMsg(Value: Boolean);
    protected
      procedure CreateWnd; override;
@@ -49,7 +49,7 @@ TYPE
      property ShowDebugMsg  : Boolean       read FShowDebugMsg  write setShowDebugMsg default FALSE; { Allow the user to access the lowest (Debug) level }
      property TrackBar      : TTrackBar     read FTrackBar      write FTrackBar;
      property Verbosity     : TLogVerbLvl   read getVerbosity   write setVerbosity;      //Note: The "master" of the verbosity events is the Grid not the trackbar
-     property Log           : TLogGrid      read FLog           write setLog;
+     property Log           : TLogViewer      read FLog           write setLog;
   end;
 
 procedure Register;
@@ -143,7 +143,7 @@ begin
 end;
 
 
-procedure TLogVerbFilter.setLog(Value: TLogGrid);
+procedure TLogVerbFilter.setLog(Value: TLogViewer);
 begin
   FLog:= Value;
   Verbosity:= FLog.Verbosity;
@@ -168,7 +168,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TLogVerbFilter]);
+  RegisterComponents('LightSaber VCL', [TLogVerbFilter]);
 end;
 
 

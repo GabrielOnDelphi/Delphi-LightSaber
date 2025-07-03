@@ -240,7 +240,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCubicScrollBox]);
+  RegisterComponents('LightSaber VCL', [TCubicScrollBox]);
 end;
 
 

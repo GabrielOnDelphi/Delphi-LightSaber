@@ -227,7 +227,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCountDown]);
+  RegisterComponents('LightSaber VCL', [TCountDown]);
 end;
 
 end.

@@ -144,7 +144,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCubicRichEdit]);
+  RegisterComponents('LightSaber VCL', [TCubicRichEdit]);
 end;
 
 

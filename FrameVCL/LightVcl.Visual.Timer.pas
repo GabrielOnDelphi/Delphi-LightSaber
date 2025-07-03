@@ -70,7 +70,7 @@ end;
 
 procedure Register;
 begin
- RegisterComponents('LightSaber', [TCubicTimer]);
+ RegisterComponents('LightSaber VCL', [TCubicTimer]);
 end;
 
 

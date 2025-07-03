@@ -6,7 +6,10 @@ uses
   {$ENDIF }
   System.StartUpCopy,
   FMX.Forms,
-  MainForm in 'MainForm.pas' {Form1},
+  LightCore.INIFile in '..\..\LightCore.INIFile.pas',
+  LightCore.AppData in '..\..\LightCore.AppData.pas',
+
+  FormMain in 'FormMain.pas' {MainForm},
   LightFmx.Common.AppData in '..\..\..\FrameFMX\LightFmx.Common.AppData.pas',
   LightFmx.Common.IniFile in '..\..\..\FrameFMX\LightFmx.Common.IniFile.pas',
   LightFmx.Common.AppData.Form in '..\..\..\FrameFMX\LightFmx.Common.AppData.Form.pas',
@@ -18,7 +21,7 @@ uses
 begin
   ReportMemoryLeaksOnShutdown:= TRUE;
 
-  AppData:= TAppData.Create('Light Demo Visual Log');
-  AppData.CreateMainForm(TForm1, Form1, TRUE);
+  AppData:= TAppData.Create('Light Demo FMX Visual Log');
+  AppData.CreateMainForm(TMainForm, MainForm, TRUE);
   AppData.Run;
 end.

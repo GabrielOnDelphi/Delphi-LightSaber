@@ -145,7 +145,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCubicRadioButton]);
+  RegisterComponents('LightSaber VCL', [TCubicRadioButton]);
 end;
 
 

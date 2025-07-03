@@ -1034,7 +1034,7 @@ End; }
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TEnhStrGrid]);
+  RegisterComponents('LightSaber VCL', [TEnhStrGrid]);
 end;
 
 

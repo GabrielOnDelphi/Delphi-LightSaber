@@ -205,7 +205,7 @@ end;
 
 procedure Register;
 begin
- RegisterComponents('LightSaber', [TRichLogTrckbr]);
+ RegisterComponents('LightSaber VCL', [TRichLogTrckbr]);
 end;
 
 

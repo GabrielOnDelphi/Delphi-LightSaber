@@ -133,7 +133,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TFreeDiskSpace]);
+  RegisterComponents('LightSaber VCL', [TFreeDiskSpace]);
 end;
 
 

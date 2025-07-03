@@ -206,7 +206,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TLightComboBox]);
+  RegisterComponents('LightSaber FMX', [TLightComboBox]);
 end;
 
 end.

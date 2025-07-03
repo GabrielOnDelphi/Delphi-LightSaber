@@ -121,7 +121,7 @@ end;  }
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCubicCheckListBox]);
+  RegisterComponents('LightSaber VCL', [TCubicCheckListBox]);
 end;
 
 

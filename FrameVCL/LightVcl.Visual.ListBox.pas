@@ -722,7 +722,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCubicListBox]);
+  RegisterComponents('LightSaber VCL', [TCubicListBox]);
 end;
 
 

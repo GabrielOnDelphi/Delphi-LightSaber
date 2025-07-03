@@ -629,7 +629,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCubicThumbs]);
+  RegisterComponents('LightSaber VCL', [TCubicThumbs]);
 end;
 
 

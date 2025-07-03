@@ -513,7 +513,7 @@ end;
 
 procedure Register;
 begin
- RegisterComponents('LightSaber', [TFloatSpinEdit]);
+ RegisterComponents('LightSaber VCL', [TFloatSpinEdit]);
 end;
 
 end.

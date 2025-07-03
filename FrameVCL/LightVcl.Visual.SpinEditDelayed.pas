@@ -65,7 +65,7 @@ IMPLEMENTATION
 procedure Register;
 begin
 
- RegisterComponents('LightSaber', [TCubicSpinEditD]);
+ RegisterComponents('LightSaber VCL', [TCubicSpinEditD]);
 end;
 
 

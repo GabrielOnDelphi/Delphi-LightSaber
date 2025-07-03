@@ -650,7 +650,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber', [TCubicPathEdit]);
+  RegisterComponents('LightSaber VCL', [TCubicPathEdit]);
 end;
 
 
