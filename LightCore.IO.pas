@@ -247,7 +247,7 @@ CONST
  function  AppendFileExtension (CONST FileName, Ext: string): string;
 
 {--------------------------------------------------------------------------------------------------
-   FILE - DETECT FILE TYPE
+   FILE TYPE
 --------------------------------------------------------------------------------------------------}
  function IsThisType    (CONST AFile, FileType: string) : Boolean;                                 { Returns true if the specified file is of the 'FileType' type }
 
@@ -273,6 +273,9 @@ CONST
  function IsDpk   (CONST FileName  : string) : Boolean;
  function IsDelphi(CONST FileName  : string) : Boolean;
  function IsExec  (CONST FileName  : string) : Boolean;
+
+ function ExtensionToMimeType  (const FileName: string): string;   // Determines the MIME type of a file based on its extension
+ function ExtensionFromMimeType(const MimeType: string): string;   // Determines the file extension based on a given MIME type
 
 
 {--------------------------------------------------------------------------------------------------
@@ -721,7 +724,7 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-   FILE - DETECT FILE TYPE
+   DETECT FILE TYPE
 --------------------------------------------------------------------------------------------------}
 
 { Returns true if the specified file is of the 'FileType' type.
@@ -909,6 +912,33 @@ end;
 
 
 
+// MIME TYPE
+function ExtensionToMimeType(const FileName: string): string;
+begin
+  var Ext:= LowerCase(ExtractFileExt(FileName));
+
+  if Ext = '.txt'  then Result := 'text/plain' else
+  if Ext = '.md'   then Result := 'text/markdown' else
+  if Ext = '.pdf'  then Result := 'application/pdf' else
+  if Ext = '.png'  then Result := 'image/png' else
+  if Ext = '.gif'  then Result := 'image/gif' else
+  if IsJpg(Ext)    then Result := 'image/jpeg'
+
+  else Result := 'application/octet-stream'; // Default to octet-stream for unknown types
+end;
+
+
+function ExtensionFromMimeType(const MimeType: string): string;
+begin
+  if MimeType = 'text/plain'      then Result := '.txt' else
+  if MimeType = 'text/markdown'   then Result := '.md' else
+  if MimeType = 'application/pdf' then Result := '.pdf' else
+  if MimeType = 'image/jpeg'      then Result := '.jpg' else
+  if MimeType = 'image/png'       then Result := '.png' else
+  if MimeType = 'image/gif'       then Result := '.gif'
+  else Result := '';
+end;
+
 
 
 function IsExec(CONST FileName: string) : Boolean;
@@ -935,6 +965,9 @@ begin
     (ExtractFileExtUp(FileName)= '.VBS');
 end;
 
+
+
+// DELPHI
 
 function IsPas(CONST FileName: string) : Boolean;
 begin
@@ -966,6 +999,8 @@ begin
         OR IsDpk(FileName)
         OR IsDpr(FileName);
 end;
+
+
 
 
 
