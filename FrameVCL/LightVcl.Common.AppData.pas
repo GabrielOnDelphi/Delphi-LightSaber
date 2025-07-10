@@ -330,7 +330,7 @@ begin
     begin
       // We allow the Log form to be created before the main form.
       if (aClass = TfrmRamLog)
-      then TForm(Reference):= TFormClass.Create(NIL) // AppData will release it on Finalize
+      then TForm(Reference):= aClass.Create(NIL) // AppData will release the logform on Finalize
       else
         if (Owner = NIL)
         then TForm(Reference):= TFormClass.Create(Application)  // Owned by Application. But we cannot use Application.CreateForm here because then, this form will be the main form!
@@ -375,7 +375,7 @@ begin
 
   // Window fully constructed.
   // Now we can let user run its own initialization process.
-  if TObject(Reference) is TLightForm
+  if TComponent(Reference).InheritsFrom(TLightForm)
   then TLightForm(Reference).FormPostInitialize;
 
   // Translator
@@ -417,7 +417,10 @@ begin
 
   VAR CreateBeforeMainForm:= Application.MainForm = NIL;
   CreateForm(TfrmRamLog, FFormLog, FALSE, asPosOnly, NIL, FALSE, CreateBeforeMainForm);
-  FormLog.Log.AssignExternalRamLog(RamLog);   // FormLog will display data from AppData's RAM log
+
+  // Connect the RamLog with the visual log
+  Assert(FFormLog.Log <> NIL);
+  FFormLog.Log.AssignExternalRamLog(RamLog);   // FormLog will display data from AppData's RAM log
 
   Assert(Application.MainForm <> FormLog, 'Sanity check! The Log should not be the MainForm!'); { Make sure this is not the first form created }
 end;
