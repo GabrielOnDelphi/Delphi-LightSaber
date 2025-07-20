@@ -72,7 +72,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, System.UITypes, System.IniFiles,
   FMX.Forms, FMX.Types,
-  LightFmx.Common.IniFile, LightCore.INIFile, LightCore.AppData;
+  LightFmx.Common.IniFile, LightCore.AppData;
 
 TYPE
   TLightForm = class(TForm)
