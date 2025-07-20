@@ -269,6 +269,7 @@
             <Form>Form1</Form>
             <FormType>fmx</FormType>
         </DCCReference>
+        <DCCReference Include="..\..\..\FrameFMX\LightFmx.Visual.DropDownSearch.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

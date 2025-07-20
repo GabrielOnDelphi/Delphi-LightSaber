@@ -4,7 +4,7 @@ interface
 
 uses
   System.SysUtils, System.Types, System.UITypes, System.Classes,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, LightFMX.DropDownSearch,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, LightFmx.Visual.DropDownSearch,
   FMX.Controls.Presentation, FMX.StdCtrls;
 
 type
