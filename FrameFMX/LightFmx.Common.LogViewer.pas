@@ -5,21 +5,21 @@ UNIT LightFmx.Common.LogViewer;
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    A log viewer based on TStringGrid.
-   It can easily show up to 1 million entries. Being a good citizen, when it reaches this number it saves existing data to disk and then clears it from RAM.
+   It can easily show up to 1 million entries.
+   Being a good citizen, when it reaches this number it saves existing data to disk and then clears it from RAM.
 
    How to use it
-      Drop a TLogViewer on your form and use it to log messages like this:
-         LogViewer.RamLog.AddError('Something bad happent!');
+      1. Alone: Drop a TLogViewer on your form and use it to log messages like this:
+                LogViewer.ConstructInternalRamLog;
+                LogViewer.RamLog.AddError('Something bad happent!');
 
-   Application wide logging
-      This component can also be used to see messages logged at the application level (see TAppData).
-      For this, just assign
-         LogViewer.RamLog:= AppData.RamLog;
-
-      Now on you can send your logging messages directly to AppData, instead of sending them to the log window:
-         LogViewer.RamLog.AddError('Something bad happent!');
-
-      The log window will automatically pop-up when a error is received.
+      2. Application wide logging
+           This component can also be used to see messages logged at the application level (see TAppData).
+           For this, just call:
+                LogViewer.ObserveAppDataLog;
+           From now on, all messages sent to AppData, will also be shown in this log viewer:
+                RamLog.AddError('Something bad happent!');
+           The log window will automatically pop-up when a error is received.
 
    Full demo in:
       c:\Projects\LightSaber\Demo\Demo LightLog\FMX\FMX_Demo_Log.dpr
@@ -65,15 +65,19 @@ TYPE
      function DefinePresentationName: string; override;
    public
      constructor Create(AOwner: TComponent); override;
-     constructor AssignExternalRamLog(ExternalLog: TRamLog);
      destructor Destroy; override;
      procedure Clear;
 
+     // Log
      procedure RegisterVerbFilter(TrackBar: TFmxObject); {TLogVerbFilter}
+     procedure ConstructInternalRamLog;
+     procedure AssignExternalRamLog(ExternalLog: TRamLog);
+     procedure ObserveAppDataLog;
+     property  RamLog: TRamLog read FRamLog;
+
      procedure Populate;
      procedure PopUpWindow;
 
-   //  procedure setUpRows;
      function  Count: Integer;
      procedure CopyAll;
      procedure CopyCurLine;
@@ -82,8 +86,6 @@ TYPE
      property ShowTime     : Boolean      read FShowTime    write setShowTime default FALSE;
      property ShowDate     : Boolean      read FShowDate    write setShowDate default FALSE;
      property AutoScroll   : Boolean      read FAutoScroll  write FAutoScroll default TRUE;
-
-     property RamLog       : TRamLog      read FRamLog;
 
      property Verbosity    : TLogVerbLvl  read FVerbosity   write SetVerbFilter default lvVerbose;
      property OnVerbChanged: TNotifyEvent read FVerbChanged write FVerbChanged;   { Triggered before deleting the content of a cell }
@@ -97,7 +99,8 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   LightCore, 
+   LightCore,
+   LightFmx.Common.AppData,
    LightFmx.Common.Helpers, LightFmx.Common.Dialogs, LightFmx.Common.LogFilter;
 
 
@@ -109,9 +112,7 @@ constructor TLogViewer.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
-  FOwnRamLog:= TRUE;
-  if FOwnRamLog
-  then FRamLog:= TRamLog.Create(TRUE, Self as ILogObserver);
+  FOwnRamLog:= FALSE;
 
   FShowTime   := FALSE;
   FShowDate   := FALSE;
@@ -161,6 +162,7 @@ end;
 procedure TLogViewer.setUpRows;
 var
   col: TStringColumn;
+  RequiredColumnCount: Integer;
 begin
   Assert(FRamLog <> nil, 'RamLog not assigned!');     // 1) Ensure RamLog exists
 
@@ -174,36 +176,46 @@ begin
     // Set RowCount (reserve row 0 for headers)
     RowCount := FFilteredRowCount + 1; // +1 for the header row
 
-    // Clear existing columns BEFORE adding new ones
-    while ColumnCount > 0 do
-      Columns[0].Free; // Freeing the first column shifts the next one to index 0
+    // Determine required column count
+    if FShowDate or FShowTime
+    then RequiredColumnCount := 2
+    else RequiredColumnCount := 1;
 
-    // Create 1 or 2 columns based on ShowDate/ShowTime
-    if FShowDate or FShowTime then
+    // Only recreate columns if the count has changed
+    if ColumnCount <> RequiredColumnCount then
     begin
-      // Time Column
-      col := TStringColumn.Create(Self);
-      col.Header := 'Time';
+      // Clear existing columns BEFORE adding new ones
+      while ColumnCount > 0 do
+        Columns[0].Free; // Freeing the first column shifts the next one to index 0
 
-      // Set reasonable initial width, ResizeColumns will adjust later
-      col.Width := 100;
-      AddObject(col); // Add column to the grid
+        // Create new columns
+      if RequiredColumnCount = 2
+      then
+        begin
+          // Time Column
+          col := TStringColumn.Create(Self);
+          col.Header := 'Time';
 
-      // Message Column
-      col := TStringColumn.Create(Self);
-      col.Header := 'Message';
+          // Set reasonable initial width, ResizeColumns will adjust later
+          col.Width := 100;
+          AddObject(col); // Add column to the grid
 
-      // Let this column take up remaining space initially
-      col.Width := 150; // Placeholder, ResizeColumns adjusts
-      AddObject(col);
-    end
-    else
-    begin
-      // Message Column Only
-      col := TStringColumn.Create(Self);
-      col.Header := 'Message';
-      col.Width := 250; // Placeholder, ResizeColumns adjusts
-      AddObject(col);
+          // Message Column
+          col := TStringColumn.Create(Self);
+          col.Header := 'Message';
+
+          // Let this column take up remaining space initially
+          col.Width := 150; // Placeholder, ResizeColumns adjusts
+          AddObject(col);
+        end
+      else
+        begin
+          // Message Column Only
+          col := TStringColumn.Create(Self);
+          col.Header := 'Message';
+          col.Width := 250; // Placeholder, ResizeColumns adjusts
+          AddObject(col);  //ToDo: I do this way too often. This will result in serious performance penalty!!!
+        end;
     end;
 
     // 5) Populate header row text (optional in FMX if using styled headers, but good practice)
@@ -248,9 +260,25 @@ end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   CONTENT & DRAWING
+   RAM LOG
 -------------------------------------------------------------------------------------------------------------}
-constructor TLogViewer.AssignExternalRamLog(ExternalLog: TRamLog);
+// This constructs an RamLog that we can use it internally with this LogViewer.
+procedure TLogViewer.ConstructInternalRamLog;
+begin
+  Assert(FRamLog = NIL, 'TLogViewer.Name='+ Name+' already has a RamLog assigned! Free it before you assign a new one to it!');
+
+  FRamLog:= TRamLog.Create(TRUE, Self as ILogObserver);
+  FRamLog.RegisterLogObserver(Self as ILogObserver);
+
+  // Populate the grid with the data from the newly assigned log
+  Populate;
+
+  FOwnRamLog:= TRUE;
+end;
+
+
+// This assigns a random RamLog to the LogViewer
+procedure TLogViewer.AssignExternalRamLog(ExternalLog: TRamLog);
 begin
   Assert(ExternalLog <> NIL, 'External TRamLog not assigned!!');
 
@@ -267,6 +295,21 @@ begin
 end;
 
 
+// This connects the LogViewer to the RamLog
+procedure TLogViewer.ObserveAppDataLog;
+begin
+  Assert(AppData.RamLog <> NIL, 'AppData.RamLog not assigned!!');
+
+  AssignExternalRamLog(AppData.RamLog);
+end;
+
+
+
+
+
+{-------------------------------------------------------------------------------------------------------------
+   CONTENT & DRAWING
+-------------------------------------------------------------------------------------------------------------}
 procedure TLogViewer.Populate;
 begin
   // Ensure RamLog is assigned before proceeding
