@@ -30,15 +30,15 @@ Click the 'Watch' button if you want to get notified about updates.
 
 **Documentation**
 
-Update 2025:
+Emergency documentation update 2025:
 
 The library had an MASSIVE MASSIVE update in the last months because I try to make it cross-platform.
 The part of the documentation about the file naming and structure is now 100% obsolete. 
 Once the porting is over I will update also the documentation. 
 Now you need to install:
- * LightCore.dpk - for the RTL part of the library 
- * LightSaberFMX.groupproj - for the FMX part of the library 
- * LightSaberVCL.groupproj - for the VCL part of the library 
+ * LightCore.dpk - if you want to compile only the RTL part of the library 
+ * LightSaberFMX.groupproj - for the RTL/FMX part of the library 
+ * LightSaberVCL.groupproj - for the RTL/VCL part of the library 
 
 If the compiler complain that there are some some missing libraries like 
 GR32, CcrExif, ThirdPartyLibs, janFX, Jpeg2000: These are 3rd party libraries. You will have to download them from Internet OR simply ignore them. My LightSaber can include or exclude those 3rd party libraries.
