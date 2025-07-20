@@ -79,3 +79,8 @@ contains
   LightVcl.Graph.ResizeWinWIC in 'LightVcl.Graph.ResizeWinWIC.pas';
 
 end.
+
+Note: Undefine the following compiler switches if you don't have these 3rd party libraries:
+{$UNDEFINE CCRExif}
+{$UNDEFINE Jpg2000}
+{$UNDEFINE FastJpg}
