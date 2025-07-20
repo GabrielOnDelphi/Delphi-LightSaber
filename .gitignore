@@ -1,70 +1,67 @@
-*.~*
-*.dsk
+*.cbk
 *.dcu
-*.local
-*.identcache
+*.deployproj
 *.dproj.local
+*.drc
+*.dsk
+*.dsv
+*.exe
+*.json
+*.ficfg
+*.identcache
+*.local
 *.map
-*.~dsk
-*.~1~
+*.mes
+*.o
 *.tvsconfig
 *.vsf
-*.mes
-*.cbk
-*.drc
-*.ficfg
+*.xml
+*.~*
+*.~dsk
 
-desktop.ini
-uLinks.pas
 /__history
 /__recovery
 
-/21.0_Win32_Debug
+FrameVCL/AI
+
 /22.0_Android64_Debug
 /22.0_Android_Debug
 /22.0_Linux64_Debug/
 /22.0_Linux_Debug/
 /22.0_Win32_Debug/
 /22.0_Win32_Release
+
+/Demo/Template App/FMX Minimal/FmxTemplateMicro/res
 /Demo/Tester All Visual Controls/21.0
 /Demo/Tester All Visual Controls/__recovery
 /Demo/Tester GUI Autosave/__recovery
 /Demo/Tester LightCore ccIO.pas/__recovery
 /Demo/Tester SystemReport/__recovery
-/FMX/22.0_Android64_Debug
-1.pas
-2.pas
+/Demo/VCL/Template Universal Uninstaller/icon.ico
+/Demo/VCL/Demo AutoTranslator/competition.url
+
 Demo/All Visual Controls/22.0/Win32_Debug/DemoAllVisualControls.exe
+Demo/Demo Binary file/DemoBinaryFile.exe
+Demo/Demo Binary file/Soldier.bin
+Demo/FMX - Demo LightPanel/Win32/Debug/Demo_LightPanel.exe
+Demo/FMX - Demo TDropDownSearchBox/Win32/Debug/TesterFMX.exe
+Demo/Template App/FMX Minimal/FMXTemplateMicro.exe
+Demo/Template App/FMX Minimal/TemplateMicro.exe
+Demo/Template App/FMX Minimal/Win32
+Demo/Template App/FMX Minimal2/Project1.exe
+Demo/Template App/FMX Minimal2/Win32/Debug/Project1.exe
 Demo/Template App/TemplateApp.delphilsp.json
 Demo/Template Universal Uninstaller/BUG REPORTS.LNK
-Demo/Tester AutoTranslator/competition.url
-Demo/Tester LightCore ccStreamBuff.pas/TCubicBuffStream.bin
-Demo/Tester LightCore ccWinVersion.pas/Tester_WinVers.drc
-HardwareID/chHardID.pas
-System/Credits.lnk
-System/Eula.txt
-cbAppData mixed fmx vcl.pas
 Demo/Template Universal Uninstaller/Uninstaller.exe
 Demo/Template Universal Uninstaller/Uninstaller.res
 Demo/Template Universal Uninstaller/Uninstaller.res
-Demo/Template App/FMX Minimal/FMXTemplateMicro.exe
-Demo/Template App/FMX Minimal2/Win32/Debug/Project1.exe
-/Demo/Template App/FMX Minimal/Win32
-Demo/Template App/FMX Minimal2/Project1.exe
-*.o
-/Demo/Template App/FMX Minimal/FmxTemplateMicro/res
-*.xml
-*.deployproj
-Demo/Template App/FMX Minimal/TemplateMicro.exe
-Demo/Demo Binary file/DemoBinaryFile.exe
-Demo/Demo Binary file/Soldier.bin
 Demo/Tester All Visual Controls/Demo_VisualControls.prjmgc
-/FrameFMX/old
-*.dsv
-*.res
-Demo/FMX - Demo LightPanel/Win32/Debug/Demo_LightPanel.exe
-Demo/FMX - Demo TDropDownSearchBox/Win32/Debug/TesterFMX.exe
-*.exe
-FrameVCL/AI
-Demo/VCL/Template Universal Uninstaller/icon.ico
-Demo/VCL/Demo AutoTranslator/competition.url
+Demo/Tester AutoTranslator/competition.url
+Demo/Tester LightCore ccStreamBuff.pas/TCubicBuffStream.bin
+Demo/Tester LightCore ccWinVersion.pas/Tester_WinVers.drc
+
+HardwareID/chHardID.pas
+System/Credits.lnk
+System/Eula.txt
+desktop.ini
+uLinks.pas
