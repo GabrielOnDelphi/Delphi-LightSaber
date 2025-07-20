@@ -75,8 +75,7 @@ IMPLEMENTATION {$R *.dfm}
 {/$DEFINE BASER}
 
 USES
-   LightVcl.Common.Window, LightVcl.Common.ExecuteShell, LightVcl.Common.Shell, LightCore.AppData, LightVcl.Common.AppData
-;
+   LightVcl.Common.Window, LightVcl.Common.ExecuteShell, LightVcl.Common.Shell, LightCore.AppData, LightVcl.Common.AppData;
 
    {$IFDEF BioniX}BxConstants;{$ENDIF}
    {$IFDEF BASER} BaserConst, BxConstants;{$ENDIF}

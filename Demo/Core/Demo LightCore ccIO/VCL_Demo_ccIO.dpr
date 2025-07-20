@@ -5,10 +5,8 @@ uses
   FastMM4,
   {$ENDIF }
   MainForm in 'MainForm.pas' {frmTestIO},
-  LightVcl.Common.AppData,
-  LightCore.AppData in '..\..\LightCore.AppData.pas';
-
-{$R *.res}
+  LightCore.AppData in '..\..\..\LightCore.AppData.pas',
+  LightVcl.Common.AppData in '..\..\..\FrameVCL\LightVcl.Common.AppData.pas';
 
 begin
   ReportMemoryLeaksOnShutdown:= TRUE;

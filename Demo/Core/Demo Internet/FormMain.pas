@@ -10,7 +10,7 @@ INTERFACE
 USES
   windows, System.SysUtils, System.Classes, System.Actions, System.Net.URLClient,
   VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList,
-  LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.AppDataForm,LightVcl.Internet.Download.Thread;
+  LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.AppDataForm, LightVcl.Internet.Download.Thread;
 
 TYPE
   TMainForm = class(TLightForm)

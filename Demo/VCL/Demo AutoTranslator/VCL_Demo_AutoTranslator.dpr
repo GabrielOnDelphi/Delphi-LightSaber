@@ -7,11 +7,9 @@ uses
   FormMain in 'FormMain.pas' {MainForm},
   FormTranslEditor in '..\..\..\FrameVCL\FormTranslEditor.pas' {frmTranslEditor},
   FormTranslSelector in '..\..\..\FrameVCL\FormTranslSelector.pas' {frmTranslSelector},
-  LightCore.AppData in '..\..\..\LightCore.AppData.pas',
-  LightVcl.Common.AppDataForm in '..\..\..\FrameVCL\LightCom.AppDataForm.pas',
-  LightVcl.Common.IniFile in '..\..\..\FrameVCL\LightCom.IniFile.pas',
-  LightVcl.Common.AppData in '..\..\..\FrameVCL\LightCom.AppData.pas',
-  LightVcl.LogForm in '..\..\..\FrameVCL\LightVcl.LogForm.pas';
+  LightVcl.Common.AppData in '..\..\..\FrameVCL\LightVcl.Common.AppData.pas',
+  LightVcl.Common.AppDataForm in '..\..\..\FrameVCL\LightVcl.Common.AppDataForm.pas',
+  LightCore.AppData in '..\..\..\LightCore.AppData.pas';
 
 {$R *.res}
 

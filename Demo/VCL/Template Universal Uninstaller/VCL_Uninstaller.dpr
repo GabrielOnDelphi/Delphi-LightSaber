@@ -1,17 +1,16 @@
 program VCL_Uninstaller;
 
 uses
-  {$IFDEF DEBUG}FastMM4, {$ENDIF }
+  {$IFDEF DEBUG}
+  FastMM4,
+  {$ENDIF }
   Vcl.Themes,
   Vcl.Styles,
   UninstallerForm in 'UninstallerForm.pas' {frmMain},
-  LightVcl.Common.Shell in '..\..\..\FrameVCL\LightSaber\LightCom.Shell.pas',
+  LightVcl.Common.AppData in '..\..\..\FrameVCL\LightVcl.Common.AppData.pas',
+  LightVcl.Common.AppDataForm in '..\..\..\FrameVCL\LightVcl.Common.AppDataForm.pas',
   LightCore.AppData in '..\..\..\LightCore.AppData.pas',
-  LightVcl.Common.AppDataForm in '..\..\..\FrameVCL\LightCom.AppDataForm.pas',
-  LightVcl.Common.IniFile in '..\..\..\FrameVCL\LightCom.IniFile.pas',
-  LightVcl.Common.AppData in '..\..\..\FrameVCL\LightCom.AppData.pas',
-  LightVcl.LogForm in '..\..\..\FrameVCL\LightVcl.LogForm.pas';
-
+  LightVcl.Common.Shell in '..\..\..\FrameVCL\LightVcl.Common.Shell.pas';
 
 {$R *.res}
 

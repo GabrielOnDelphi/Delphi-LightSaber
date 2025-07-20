@@ -49,25 +49,20 @@ begin
   Memo.Clear;
   Memo.Lines.Add('LightCom.WinVersion.pas');
   Memo.Lines.Add('');
-  Memo.Lines.Add(LightCom.WinVersion.GenerateReport);
+  Memo.Lines.Add(LightVcl.Common.WinVersion.GenerateReport);
 
   Memo.Lines.Add('_________________');
   Memo.Lines.Add('');
   Memo.Lines.Add('LightCom.WinVersionApi.pas');
   Memo.Lines.Add('');
-  Memo.Lines.Add(LightCom.WinVersionApi.GenerateReport);
+  Memo.Lines.Add(LightVcl.Common.WinVersionApi.GenerateReport);
   LightVcl.Common.WinVersion.GenerateReport;
 
   Memo.Lines.Add('_________________');
   Memo.Lines.Add('');
   Memo.Lines.Add('LightCom.ExeVersion.pas');
-  Memo.Lines.Add(LightCom.ExeVersion.GetVersionInfo(ParamStr(0), TRUE));
+  Memo.Lines.Add(LightVcl.Common.ExeVersion.GetVersionInfo(ParamStr(0), TRUE));
 end;
-
-
-
-
-
 
 
 end.

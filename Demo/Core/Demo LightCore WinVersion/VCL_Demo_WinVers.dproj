@@ -107,10 +107,7 @@
             <Form>frmTester</Form>
         </DCCReference>
         <DCCReference Include="..\..\..\LightCore.AppData.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\LightCom.AppDataForm.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\LightCom.IniFile.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\LightCom.AppData.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\LightVcl.LogForm.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightVcl.Common.AppData.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

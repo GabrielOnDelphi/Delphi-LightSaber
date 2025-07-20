@@ -109,11 +109,9 @@
         <DCCReference Include="SecondForm.pas">
             <Form>frmContainer</Form>
         </DCCReference>
+        <DCCReference Include="..\..\..\FrameVCL\LightVcl.Common.AppData.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightVcl.Common.AppDataForm.pas"/>
         <DCCReference Include="..\..\..\LightCore.AppData.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\LightCom.AppDataForm.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\LightCom.IniFile.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\LightCom.AppData.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\LightVcl.LogForm.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

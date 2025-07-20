@@ -3,11 +3,9 @@ program VCL_Demo_SystemReport;
 uses
   Vcl.Forms,
   MainForm in 'MainForm.pas' {frmMain},
-  LightCore.AppData in '..\..\..\LightCore.AppData.pas',
-  LightVcl.Common.AppDataForm in '..\..\..\FrameVCL\LightCom.AppDataForm.pas',
-  LightVcl.Common.IniFile in '..\..\..\FrameVCL\LightCom.IniFile.pas',
-  LightVcl.Common.AppData in '..\..\..\FrameVCL\LightCom.AppData.pas',
-  LightVcl.LogForm in '..\..\..\FrameVCL\LightVcl.LogForm.pas';
+  LightVcl.Common.AppData in '..\..\..\FrameVCL\LightVcl.Common.AppData.pas',
+  LightVcl.Common.AppDataForm in '..\..\..\FrameVCL\LightVcl.Common.AppDataForm.pas',
+  LightCore.AppData in '..\..\..\LightCore.AppData.pas';
 
 {$R *.res}
 
