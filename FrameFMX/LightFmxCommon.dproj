@@ -230,6 +230,9 @@
         <DCCReference Include="LightFmx.Common.Dialogs.pas"/>
         <DCCReference Include="LightFmx.Common.IniFile.pas"/>
         <DCCReference Include="LightFmx.Common.Helpers.pas"/>
+        <DCCReference Include="LightFmx.LogForm.pas">
+            <FormType>fmx</FormType>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

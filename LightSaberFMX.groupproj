@@ -18,9 +18,6 @@
         <Projects Include="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="C:\GabrielMoraru\My books\Delphi in all its glory\Demo projects\Forms-Form construction order\FMX\FormCreationOrder_FMXTest.dproj">
-            <Dependencies/>
-        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -74,23 +71,14 @@
     <Target Name="FMX_Demo_Log:Make">
         <MSBuild Projects="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj" Targets="Make"/>
     </Target>
-    <Target Name="FormCreationOrder_FMXTest">
-        <MSBuild Projects="C:\GabrielMoraru\My books\Delphi in all its glory\Demo projects\Forms-Form construction order\FMX\FormCreationOrder_FMXTest.dproj"/>
-    </Target>
-    <Target Name="FormCreationOrder_FMXTest:Clean">
-        <MSBuild Projects="C:\GabrielMoraru\My books\Delphi in all its glory\Demo projects\Forms-Form construction order\FMX\FormCreationOrder_FMXTest.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="FormCreationOrder_FMXTest:Make">
-        <MSBuild Projects="C:\GabrielMoraru\My books\Delphi in all its glory\Demo projects\Forms-Form construction order\FMX\FormCreationOrder_FMXTest.dproj" Targets="Make"/>
-    </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightFmxCommon;LightFmxVisual;Light_VCL2FMX;FMX_Demo_Log;FormCreationOrder_FMXTest"/>
+        <CallTarget Targets="LightCore;LightFmxCommon;LightFmxVisual;Light_VCL2FMX;FMX_Demo_Log"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightFmxCommon:Clean;LightFmxVisual:Clean;Light_VCL2FMX:Clean;FMX_Demo_Log:Clean;FormCreationOrder_FMXTest:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightFmxCommon:Clean;LightFmxVisual:Clean;Light_VCL2FMX:Clean;FMX_Demo_Log:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightFmxCommon:Make;LightFmxVisual:Make;Light_VCL2FMX:Make;FMX_Demo_Log:Make;FormCreationOrder_FMXTest:Make"/>
+        <CallTarget Targets="LightCore:Make;LightFmxCommon:Make;LightFmxVisual:Make;Light_VCL2FMX:Make;FMX_Demo_Log:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
@@ -120,12 +108,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="..\Light VCL to FMX converter\Light_VCL2FMX.dproj">
             <ProjectGuid>{75CFD3C8-1117-4D3C-B7C3-021CF9B67A99}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="C:\GabrielMoraru\My books\Delphi in all its glory\Demo projects\Forms-Form construction order\FMX\FormCreationOrder_FMXTest.dproj">
-            <ProjectGuid>{9B95101A-8BDB-450E-BC0D-969E8AFEB1E9}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -162,12 +144,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="C:\GabrielMoraru\My books\Delphi in all its glory\Demo projects\Forms-Form construction order\FMX\FormCreationOrder_FMXTest.dproj">
-            <ProjectGuid>{9B95101A-8BDB-450E-BC0D-969E8AFEB1E9}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Debug'">
         <BuildGroupProject Include="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj">
@@ -200,12 +176,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="C:\GabrielMoraru\My books\Delphi in all its glory\Demo projects\Forms-Form construction order\FMX\FormCreationOrder_FMXTest.dproj">
-            <ProjectGuid>{9B95101A-8BDB-450E-BC0D-969E8AFEB1E9}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='All'">
         <BuildGroupProject Include="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj">
@@ -234,12 +204,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="..\Light VCL to FMX converter\Light_VCL2FMX.dproj">
             <ProjectGuid>{75CFD3C8-1117-4D3C-B7C3-021CF9B67A99}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="C:\GabrielMoraru\My books\Delphi in all its glory\Demo projects\Forms-Form construction order\FMX\FormCreationOrder_FMXTest.dproj">
-            <ProjectGuid>{9B95101A-8BDB-450E-BC0D-969E8AFEB1E9}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
