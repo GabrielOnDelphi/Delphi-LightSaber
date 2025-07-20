@@ -6,7 +6,7 @@
         <FrameworkType>FMX</FrameworkType>
         <MainSource>FMX_TemplateMicro.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <ProjectGuid>{4096D27E-D330-45E3-8D4E-5F87E822E139}</ProjectGuid>
+        <ProjectGuid>{FA1AEE06-FF44-4E00-99C6-F81870C44F5C}</ProjectGuid>
         <ProjectVersion>20.3</ProjectVersion>
         <TargetedPlatforms>693251</TargetedPlatforms>
         <ProjectName Condition="'$(ProjectName)'==''">FMX_TemplateMicro</ProjectName>

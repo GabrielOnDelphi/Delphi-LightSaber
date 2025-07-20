@@ -3,21 +3,22 @@ unit MainForm;
 interface
 
 uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Rtti,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Controls.Presentation, FMX.StdCtrls, FMX.DialogService,
-  FMX.Grid.Style, FMX.Presentation.Factory, FMX.Presentation.Style,
-  LightFmx.Common.AppData, LightFmx.Common.AppData.Form,
-  LightCore.INIFile,  LightCore.LogRam, FMX.ScrollBox, FMX.Grid,
-  LightFmx.Common.LogViewer;
+  System.Classes,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.Controls.Presentation, FMX.StdCtrls, FMX.DialogService, FMX.Grid,
+  LightCore.LogRam, LightFmx.Common.AppData, LightFmx.Common.AppData.Form, LightFmx.Common.LogViewer;
 
 TYPE
   TForm1 = class(TLightForm)
+    Button1: TButton;
     CheckBox1: TCheckBox;
     RadioButton1: TRadioButton;
-    procedure FormCreate(Sender: TObject);
+    procedure FormCreate  (Sender: TObject);
+    procedure Button1Click(Sender: TObject);
   private
+    LogViewer: TLogViewer;
   public
-   procedure FormPostInitialize; override;
+    procedure FormPostInitialize; override;
+    procedure FormPreRelease;     override;
   end;
 
 VAR
@@ -26,21 +27,45 @@ VAR
 IMPLEMENTATION
 {$R *.fmx}
 
-USES LightCore.AppData;
+USES LightCore.AppData, LightCore.LogTypes;
 
 
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
- VAR LogViewer:= TLogViewer.Create(Self);
- LogViewer.Parent:= Self;
+  //
 end;
+
 
 procedure TForm1.FormPostInitialize;
 begin
   AutoState:= asFull;  // Must set it before inherited!
+
+  //Optional: assign a viewer to the log
+  LogViewer:= TLogViewer.Create(Self);
+  LogViewer.Parent:= Self;
+  LogViewer.Align:= TAlignLayout.Bottom;
+  LogViewer.Verbosity:= LightCore.LogTypes.lvDebug;
+  LogViewer.Height:= 300;
+  LogViewer.ObserveAppDataLog;   // This connects the LogViewer to the RamLog
+
+  LogViewer.RamLog.AddWarn('Hi1');
+  LogViewer.RamLog.AddWarn('Hi2');
+  AppData  .RamLog.AddWarn('Hi3');
   inherited;           // This will load the form's state from disk
 end;
 
+
+procedure TForm1.FormPreRelease;
+begin
+  Caption:= 'Bye Bye!';
+  inherited;
+end;
+
+
+procedure TForm1.Button1Click(Sender: TObject);
+begin
+  AppData.LogImpo('Something');
+end;
 
 end.
