@@ -180,7 +180,7 @@ TYPE
    --------------------------------------------------------------------------------------------------}
     procedure SetMaxPriority;
     procedure MainFormCaption(const Caption: string); override;
-    property FormLog: TfrmRamLog read FFormLog;
+    property FormLog: TfrmRamLog read FFormLog;   //I could create this form, at runtime, as necessary
     property Font: TFont read FFont write setFont;
   end;
 
@@ -267,18 +267,12 @@ end;
 { Create secondary form
   "Loading" indicates if the GUI settings are remembered or not }
 procedure TAppData.CreateForm(aClass: TComponentClass; OUT aReference; Show: Boolean = TRUE; AutoState: TAutoState = asPosOnly; Parented: Boolean = FALSE; CreateBeforeMainForm: Boolean = FALSE);
-VAR Instance: TComponent;
 begin
   if CreateBeforeMainForm
   then
     begin
       FAutoStateQueue.Add(AutoState);
       Application.CreateForm(aClass, aReference);
-
-
-
-
-
       ///TForm(aReference).SetOwner(nil);  // Optional: manage lifetime manually
     end
   else
