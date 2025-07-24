@@ -106,6 +106,10 @@
         <AUP_WRITE_EXTERNAL_STORAGE>true</AUP_WRITE_EXTERNAL_STORAGE>
         <AUP_READ_PHONE_STATE>true</AUP_READ_PHONE_STATE>
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
+        <DCC_Alignment>2</DCC_Alignment>
+        <DCC_DcuOutput>$(ProductVersion)_$(Platform)_$(Config)</DCC_DcuOutput>
+        <DCC_ExeOutput>.\</DCC_ExeOutput>
+        <DCC_UnitSearchPath>..\..\..\FrameFMX;..\..\..\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
         <SanitizedProjectName>FMX_Demo_LightPanel</SanitizedProjectName>
     </PropertyGroup>
@@ -302,6 +306,8 @@
             <Form>Form2</Form>
             <FormType>fmx</FormType>
         </DCCReference>
+        <DCCReference Include="..\..\..\FrameFMX\LightFmx.Common.AppData.pas"/>
+        <DCCReference Include="..\..\..\FrameFMX\LightFmx.Common.IniFile.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

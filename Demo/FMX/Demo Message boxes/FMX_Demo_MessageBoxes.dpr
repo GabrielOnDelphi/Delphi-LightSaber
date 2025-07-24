@@ -5,10 +5,7 @@ uses
   FMX.Forms,
   MainForm in 'MainForm.pas' {Form1},
   LightFmx.Common.AppData in '..\..\..\FrameFMX\LightFmx.Common.AppData.pas',
-  LightFmx.Common.AppData.Form in '..\..\..\FrameFMX\LightFmx.Common.AppData.Form.pas',
-  LightFmx.Common.IniFile in '..\..\..\FrameFMX\LightFmx.Common.IniFile.pas',
-  LightCore.INIFile in '..\..\..\LightCore.INIFile.pas',
-  LightFmx.Common.Dialogs in '..\..\..\FrameFMX\LightFmx.Common.Dialogs.pas';
+  LightFmx.Common.IniFile in '..\..\..\FrameFMX\LightFmx.Common.IniFile.pas';
 
 {$R *.res}
 
