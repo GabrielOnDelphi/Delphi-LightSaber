@@ -31,13 +31,13 @@ object frmMain: TfrmMain
   end
   object Label2: TLabel
     Left = 26
-    Top = 127
+    Top = 128
     Width = 20
     Height = 17
     Caption = 'Life'
   end
   object btnSave: TButton
-    Left = 100
+    Left = 98
     Top = 266
     Width = 107
     Height = 37
@@ -46,7 +46,7 @@ object frmMain: TfrmMain
     TabOrder = 0
     OnClick = btnSaveClick
   end
-  object ntnLoad: TButton
+  object btnLoad: TButton
     Left = 211
     Top = 266
     Width = 107
@@ -54,10 +54,10 @@ object frmMain: TfrmMain
     Anchors = [akBottom]
     Caption = 'Load'
     TabOrder = 1
-    OnClick = ntnLoadClick
+    OnClick = btnLoadClick
   end
   object spnLife: TSpinEdit
-    Left = 56
+    Left = 52
     Top = 124
     Width = 55
     Height = 27
@@ -68,7 +68,7 @@ object frmMain: TfrmMain
   end
   object edtName: TLabeledEdit
     Left = 26
-    Top = 72
+    Top = 80
     Width = 121
     Height = 25
     EditLabel.Width = 77

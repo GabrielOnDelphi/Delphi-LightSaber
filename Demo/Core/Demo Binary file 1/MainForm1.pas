@@ -18,13 +18,13 @@ type
   TfrmMain = class(TLightForm)
     Label1 : TLabel;
     btnSave: TButton;
-    ntnLoad: TButton;
+    btnLoad: TButton;
     spnLife: TSpinEdit;
     edtName: TLabeledEdit;
     Label2 : TLabel;
     procedure FormCreate  (Sender: TObject);
     procedure btnSaveClick(Sender: TObject);
-    procedure ntnLoadClick(Sender: TObject);
+    procedure btnLoadClick(Sender: TObject);
     procedure FormDestroy (Sender: TObject);
   private
     Soldier: TSoldier;
@@ -87,7 +87,7 @@ begin
 end;
 
 
-procedure TfrmMain.ntnLoadClick(Sender: TObject);
+procedure TfrmMain.btnLoadClick(Sender: TObject);
 begin
   // Prepare binary file
   VAR Stream:= TCubicBuffStream2.CreateRead(GetBinaryFileName);
