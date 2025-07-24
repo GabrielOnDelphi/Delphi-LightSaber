@@ -177,7 +177,7 @@ USES
 --------------------------------------------------------------------------------------------------}
 constructor TCubicBuffStream.CreateRead(CONST FileName: string);
 begin
- inherited Create(FileName, fmOpenRead, 1*mb);
+ inherited Create(FileName, fmOpenRead, 1*MB);
 end;
 
 
