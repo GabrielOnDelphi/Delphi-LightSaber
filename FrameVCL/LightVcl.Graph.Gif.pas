@@ -39,13 +39,13 @@ TYPE
   TGifLoader = class(TObject)
   private
     FFrameDelay: Integer;
+    FFrameCount: Cardinal;
     FileName: string;
     GIFImg  : TGIFImage;
     Renderer: TGIFRenderer;
     procedure saveFrame (Frame: TBitmap; FrameNo: Integer; OutputFolder: string);
   public
-    { Output }
-    FrameCount: Cardinal;
+
 
     constructor Create;
     destructor Destroy; override; 
@@ -55,7 +55,9 @@ TYPE
     function  SaveFrames(OutputFolder: string): Boolean;
     function  ExtractFrame(FrameNo: Cardinal): TBitmap;
 
+    {//} Output
     property FrameDelay: Integer read FFrameDelay;
+    property FrameCount: Integer read FFrameCount;
  end;
 
 
