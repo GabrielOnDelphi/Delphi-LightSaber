@@ -24,10 +24,10 @@
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
-{$DEFINE CCRExif_}
-{$DEFINE FastJpg_}
-{$DEFINE GR32_}
-{$DEFINE Jpg2000_}
+{$DEFINE CCRExif}
+{$DEFINE FastJpg}
+{$DEFINE GR32}
+{$DEFINE Jpg2000}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'LightSaber - Graphics lib'}
 {$LIBSUFFIX AUTO}
@@ -77,11 +77,9 @@ contains
   LightVcl.Graph.ResizeWinThumb in 'LightVcl.Graph.ResizeWinThumb.pas',
   LightVcl.Graph.ResizeWinWIC in 'LightVcl.Graph.ResizeWinWIC.pas',
   LightVcl.Graph.ShadowText in 'LightVcl.Graph.ShadowText.pas',
-  {$IFDEF GR32}
   LightVcl.Graph.FX.RotateGr32 in 'LightVcl.Graph.FX.RotateGr32.pas',
-  LightVcl.Graph.ResizeGr32 in 'LightVcl.Graph.ResizeGr32.pas', {$ENDIF}
-
-  GifParser in '..\External\GifParser.pas',
+  LightVcl.Graph.ResizeGr32 in 'LightVcl.Graph.ResizeGr32.pas',
+  GifProperties in '..\External\GifProperties.pas',
   janFX in '..\External\janFX.pas',
   janFxStretch in '..\External\janFxStretch.pas';
 

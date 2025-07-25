@@ -38,12 +38,13 @@ USES
 TYPE
   TGifLoader = class(TObject)
   private
+    FFrameDelay: Integer;
     FileName: string;
     GIFImg  : TGIFImage;
     Renderer: TGIFRenderer;
+    procedure saveFrame (Frame: TBitmap; FrameNo: Integer; OutputFolder: string);
   public
     { Output }
-    FrameDelay: Integer;
     FrameCount: Cardinal;
 
     constructor Create;
@@ -52,12 +53,12 @@ TYPE
     { Utils }
     function  Open(aFileName: string): Boolean;
     function  SaveFrames(OutputFolder: string): Boolean;
-    procedure SaveFrame (Frame: TBitmap; FrameNo: Integer; OutputFolder: string);
     function  ExtractFrame(FrameNo: Cardinal): TBitmap;
+
+    property FrameDelay: Integer read FFrameDelay;
  end;
 
 
- function IsAnimatedGif     (CONST FileName: string): Integer;
  function IsAnimated        (CONST AGraphFile: string): Boolean;
  function ExtractMiddleFrame(CONST FileName: string; OUT FrameCount: Cardinal): TBitmap;
 
@@ -65,7 +66,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-  GifParser,
+  GifProperties,
   LightCore, LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Common.AppData, LightCore.IO;
 
 
@@ -121,7 +122,7 @@ begin
   TempBMP.SetSize(GIFImg.Width, GIFImg.Height);
   Renderer.Draw(TempBMP.Canvas, TempBMP.Canvas.ClipRect); { THIS IS FUCKING IMPORTANT! WE NEED TO PAINT FIRST FRAME OTHERWIESE WE DON'T FET A VALID d FrameDelay }
   Renderer.FrameIndex:= 0;                                { We return to the first frame }
-  FrameDelay:= Renderer.FrameDelay;
+  FFrameDelay:= Renderer.FrameDelay;
  FINALLY
   FreeAndNil(TempBMP);
  END;
@@ -133,7 +134,7 @@ end;
 
 
 {todo 5: save as PNG }
-procedure TGifLoader.SaveFrame(Frame: TBitmap; FrameNo: Integer; OutputFolder: string);   { Save frame to disk }
+procedure TGifLoader.saveFrame(Frame: TBitmap; FrameNo: Integer; OutputFolder: string);   { Save frame to disk }
 VAR
    CurFile, sCounter: string;
 begin
@@ -214,23 +215,10 @@ function IsAnimated(CONST AGraphFile: string): Boolean;
 VAR IsAnimGif: Boolean;
 begin
  if IsGIF(AGraphFile)
- then IsAnimGif := IsAnimatedGif(AGraphFile) > 1
+ then IsAnimGif := IsAnimatedGif(AGraphFile)
  else IsAnimGif := FALSE;
 
  Result:= IsAnimGif OR LightCore.IO.IsVideo(AGraphFile);
-end;
-
-
-function IsAnimatedGif(CONST FileName: string): Integer;
-VAR GIFImg: TGifReader;
-begin
- GIFImg := TGifReader.Create;
- TRY
-   GIFImg.Read(FileName);
-   Result:= GIFImg.FrameIndex; //GifFrameList.Count;
- FINALLY
-   FreeAndNil(GIFImg);
- END;
 end;
 
 

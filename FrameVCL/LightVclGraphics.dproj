@@ -111,7 +111,7 @@
         <DCCReference Include="LightVcl.Graph.ShadowText.pas"/>
         <DCCReference Include="LightVcl.Graph.FX.RotateGr32.pas"/>
         <DCCReference Include="LightVcl.Graph.ResizeGr32.pas"/>
-        <DCCReference Include="..\External\GifParser.pas"/>
+        <DCCReference Include="..\External\GifProperties.pas"/>
         <DCCReference Include="..\External\janFX.pas"/>
         <DCCReference Include="..\External\janFxStretch.pas"/>
         <BuildConfiguration Include="Base">
