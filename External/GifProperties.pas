@@ -1,8 +1,8 @@
-UNIT GifParser;
+UNIT GifProperties;
 
 {-------------------------------------------------------------------------------------------------------------
-  Returns the FrameGount of an animated gif.
-  It will not decode the actual frames!
+  Returns the properties of a Gif without decoding the actual frames!
+  Very fast!
 
   Source:
     This was converted from FMX.
@@ -13,12 +13,13 @@ UNIT GifParser;
 
 
   TESTER:
-     c:\Myprojects\Project Testers\gr GIF frame counter\
+     Project Testers\gr GIF frame counter\
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE  
 USES 
-  System.Classes, System.SysUtils, System.Types, System.UITypes, Vcl.Graphics;
+  System.Classes, System.SysUtils, System.Types, System.UITypes,
+  Vcl.Graphics, Vcl.Imaging.GIFImg;
 
 TYPE
   TGifVer = (verUnknow, ver87a, ver89a);
@@ -70,8 +71,7 @@ TYPE
   // Palette
   TPalette = TArray<TInternalColor>;
 
-  { TGifReader }
-  TGifReader = class(TObject)
+  TGifProperties = class(TObject)
   protected
     FHeader: TGIFHeaderX;
     FPalette: TPalette;
@@ -85,9 +85,9 @@ TYPE
   public
     Interlace: Boolean;
     FrameIndex: Integer;
-    function Read(FileName: string): Boolean; overload; virtual;
-    function Check(Stream: TStream): Boolean; overload; virtual;
+    function Read (FileName: string): Boolean; overload; virtual;
     function Check(FileName: string): Boolean; overload; virtual;
+    function Check(Stream: TStream): Boolean;  overload; virtual;
   public
     property Header      : TGIFHeaderX read FHeader;
     property ScreenWidth : Integer read FScreenWidth;
@@ -97,48 +97,41 @@ TYPE
     property GifVer      : TGifVer read FGifVer;
   end;
 
- { NOTE!! I won't be able to get resolution for images that have wrong extension (image is GIF but the extension is JPG) }
-  function IsAnimatedGif(CONST FileName: string): integer;
+  function IsAnimatedGif    (CONST FileName: string): Boolean;     // Fast
+  function IsAnimatedGif_VCL(CONST FileName: string): Boolean;     // Slow
+
 
 IMPLEMENTATION
 
-CONST
-  alphaTransparent = $00;
-  GifSignature   : array [0 .. 2] of Byte = ($47, $49, $46); // GIF
-  VerSignature87a: array [0 .. 2] of Byte = ($38, $37, $61); // 87a
-  VerSignature89a: array [0 .. 2] of Byte = ($38, $39, $61); // 89a
 
-
-(*
-function IsAnimatedGif(CONST FileName: string): Boolean;
+{ Tested with 100mb GIF: ~24 sec }
+function IsAnimatedGif_VCL(CONST FileName: string): Boolean;
 VAR GIF: TGIFImage;
 begin
- GIF := TGIFImage.Create;
- TRY
+  GIF:= TGIFImage.Create;
   TRY
-   GIF.LoadFromFile(FileName);     { This takes ~12sec for a 50MB GIF }    // <-----   bug report here:   Bug D49A0000 StackOVerflow in GifImg.pas
-   Result:= Gif.Images.Count> 1;
-  except_
-    EXIT(FALSE);   { Don't crash on invalid images }
+    GIF.LoadFromFile(FileName);
+    Result:= Gif.Images.Count > 1;
+  FINALLY
+    FreeAndNil(GIF);
   END;
- FINALLY
-   FreeAndNil(GIF);
- END;
-end;   *)
+end;
 
 
-{Test with 100mb GIF (Animated Elementalist Lux Desktop Background.gif) = 4.1s }
-function IsAnimatedGif(CONST FileName: string): integer;
-VAR
-   GIFImg: TGifReader;
+{ Returns the FrameGount of an animated gif without decoding the actual frames!
+  I won't be able to get resolution for images that have wrong extension (image is GIF but the extension is JPG)
+
+  Tested with 100mb GIF: 4.1s }
+function IsAnimatedGif(CONST FileName: string): Boolean;
+VAR GIF: TGifProperties;
 begin
- GIFImg := TGifReader.Create;
- TRY
-   GIFImg.Read(FileName);
-   Result:= GIFImg.FrameIndex; //GifFrameList.Count;
- FINALLY
-   FreeAndNil(GIFImg);
- END;
+  GIF:= TGifProperties.Create;
+  TRY
+    GIF.Read(FileName);
+    Result:= GIF.FrameIndex > 1; //GifFrameList.Count;
+  FINALLY
+    FreeAndNil(GIF);
+  END;
 end;
 
 
@@ -152,7 +145,15 @@ end;
 
 
 { TGifReader }
-function TGifReader.Read(FileName: string): Boolean;
+
+CONST
+  alphaTransparent = $00;
+  GifSignature   : array [0 .. 2] of Byte = ($47, $49, $46); // GIF
+  VerSignature87a: array [0 .. 2] of Byte = ($38, $37, $61); // 87a
+  VerSignature89a: array [0 .. 2] of Byte = ($38, $39, $61); // 89a
+
+
+function TGifProperties.Read(FileName: string): Boolean;
 VAR
   fs: TFileStream;
 begin
@@ -166,7 +167,7 @@ begin
 end;
 
 
-function TGifReader.Read(Stream: TStream): Boolean;
+function TGifProperties.Read(Stream: TStream): Boolean;
 var
   LDescriptor: TGifImageDescriptor;
   LGraphicsCtrlExt: TGifGraphicsControlExtension;
@@ -231,7 +232,7 @@ var
     if LGraphCtrlExt then
      begin
       LIsTransparent := (LGraphicsCtrlExt.Packedbit and $01) <> 0;
-      If LIsTransparent 
+      If LIsTransparent
       then LBackColorIndex := LGraphicsCtrlExt.ColorIndex;
      end
     else
@@ -323,7 +324,7 @@ var
         UNTIL B = 0;
 
         // Read the compressed table.
-        SetLength(DataComp, 2 * PackedSize);        
+        SetLength(DataComp, 2 * PackedSize);
         // Read a compressed table
         SourcePtr := @DataComp[0];
         Stream.Position := OldPos;
@@ -342,10 +343,10 @@ var
           Prefix[I] := 4096;
           Suffix[I] := I;
          end;
-      FINALLY 
+      FINALLY
         DataComp := nil;
       END;
-    EXCEPT 
+    EXCEPT
     END;
     Result := True;
   end;
@@ -390,7 +391,7 @@ begin
        Stream.Read(LDescriptor, SizeOf(LDescriptor));
 
       // If you have a local palette, you use the local palette, otherwise copy the global palette
-       if (LDescriptor.Packedbit and $80) <> 0 
+       if (LDescriptor.Packedbit and $80) <> 0
        then
         begin
          ColorTableSize := LDescriptor.Packedbit and 7 + 1;
@@ -409,7 +410,7 @@ begin
       end;
 
     Result := True;
-  FINALLY 
+  FINALLY
     LLocalPalette := nil;
     LScanLineBuf  := nil;
     rendered      := nil;
@@ -417,21 +418,21 @@ begin
 end;
 
 
-function TGifReader.Check(Stream: TStream): Boolean;
+function TGifProperties.Check(Stream: TStream): Boolean;
 var OldPos: Int64;
 begin
-  TRY 
+  TRY
     OldPos := Stream.Position;
     Stream.Read(FHeader, SizeOf(FHeader));
     Result := (CompareMem(@FHeader.Signature, @GifSignature, 3)) AND (CompareMem(@FHeader.Version, @VerSignature87a, 3)) OR (CompareMem(@FHeader.Version, @VerSignature89a, 3));
     Stream.Position := OldPos;
-  EXCEPT 
+  EXCEPT
     Result := False;
   end;
 end;
 
 
-function TGifReader.Check(FileName: string): Boolean;
+function TGifProperties.Check(FileName: string): Boolean;
 var fs: TFileStream;
 begin
   Result:= False;
