@@ -24,7 +24,7 @@ INTERFACE
 
 USES
    Winapi.Windows, System.SysUtils, System.Types, Vcl.Graphics,
-   janFX; // Download it from jansFreeware.com or Jedi JVCL
+   janFX;
 
 {-------------------------------------------------------------------------------------------------------------
    Text routines

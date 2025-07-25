@@ -31,7 +31,8 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, Vcl.Graphics, System.Types,
-  GR32, GR32_Transforms, GR32_Resamplers, LightCore;
+  GR32, GR32_Transforms, GR32_Resamplers,
+  LightCore;
 
 CONST
   { Resamplers }

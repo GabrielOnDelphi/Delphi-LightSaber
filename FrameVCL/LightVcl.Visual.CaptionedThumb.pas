@@ -69,10 +69,8 @@ function CreateThumbnail(Owner, Parent: TWinControl; FileName: string): TCatione
 
 IMPLEMENTATION
 
-{.$DEFINE HOERTECH}
-
 USES
-   ShadowText, LightVcl.Graph.Text, LightVcl.Graph.Util, {$IFDEF HOERTECH}Common,{$else}LightCore.IO{$ENDIF};
+   LightCore.IO, LightVcl.Graph.ShadowText, LightVcl.Graph.Text, LightVcl.Graph.Util;
 
 
 
@@ -266,7 +264,7 @@ begin
      iLeft:= ThumbBMP.Canvas.TextWidth(FCaption);
      iLeft:= (ThumbBMP.Width - iLeft) DIV 2;                    //current size: 164x116
      TextHeight:= ThumbBMP.Canvas.TextHeight(FCaption);
-     ShadowText.DrawShadowText (ThumbBMP.Canvas, FCaption, iLeft, ThumbBMP.Height-TextHeight-BorderSizeV, clWhite, clDkGray, 2);
+     DrawShadowText (ThumbBMP.Canvas, FCaption, iLeft, ThumbBMP.Height-TextHeight-BorderSizeV, clWhite, clDkGray, 2);
     end;
 end;
 

@@ -28,7 +28,8 @@ INTERFACE
 { $I GR32.Inc}
 
 USES
-  System.SysUtils, System.Types, Vcl.Graphics, GR32, GR32_Transforms, GR32_Resamplers, LightVcl.Graph.ResizeGr32;
+  System.SysUtils, System.Types, Vcl.Graphics,
+  LightVcl.Graph.ResizeGr32, GR32, GR32_Transforms, GR32_Resamplers;
 
 
 procedure RotateBitmapGR32 (Bmp: TBitmap32; Angle: Single; AdjustSize: Boolean= True; BkColor: TColor = clPurple; Transparent: Boolean = FALSE; ResamplerKernel: Integer= HermiteKernel); overload;

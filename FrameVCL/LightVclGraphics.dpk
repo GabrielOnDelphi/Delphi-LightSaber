@@ -24,9 +24,10 @@
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
-{$DEFINE CCRExif}
-{$DEFINE Jpg2000}
-{$DEFINE FastJpg}
+{$DEFINE CCRExif_}
+{$DEFINE FastJpg_}
+{$DEFINE GR32_}
+{$DEFINE Jpg2000_}
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'LightSaber - Graphics lib'}
 {$LIBSUFFIX AUTO}
@@ -41,12 +42,11 @@ requires
   vclimg,
   vclwinx,
   vclie,
-  GR32_R,
   CCRExif,
+  GR32_R,
   ThirdPartyLibs;
 
 contains
-  LightVcl.Graph.FX.RotateGr32 in 'LightVcl.Graph.FX.RotateGr32.pas',
   LightVcl.Graph.ResizeParams in 'LightVcl.Graph.ResizeParams.pas',
   LightVcl.Graph.AviFrame in 'LightVcl.Graph.AviFrame.pas',
   LightVcl.Graph.Bitmap in 'LightVcl.Graph.Bitmap.pas',
@@ -70,17 +70,45 @@ contains
   LightVcl.Graph.Convert in 'LightVcl.Graph.Convert.pas',
   LightVcl.Graph.Alpha in 'LightVcl.Graph.Alpha.pas',
   LightVcl.Graph.Desktop in 'LightVcl.Graph.Desktop.pas',
-  LightVcl.Graph.ResizeGr32 in 'LightVcl.Graph.ResizeGr32.pas',
   LightVcl.Graph.ResizeVCL in 'LightVcl.Graph.ResizeVCL.pas',
   LightVcl.Graph.UtilGray in 'LightVcl.Graph.UtilGray.pas',
   LightVcl.Graph.Resize in 'LightVcl.Graph.Resize.pas',
   LightVcl.Graph.ResizeWinBlt in 'LightVcl.Graph.ResizeWinBlt.pas',
   LightVcl.Graph.ResizeWinThumb in 'LightVcl.Graph.ResizeWinThumb.pas',
-  LightVcl.Graph.ResizeWinWIC in 'LightVcl.Graph.ResizeWinWIC.pas';
+  LightVcl.Graph.ResizeWinWIC in 'LightVcl.Graph.ResizeWinWIC.pas',
+  LightVcl.Graph.ShadowText in 'LightVcl.Graph.ShadowText.pas',
+  {$IFDEF GR32}
+  LightVcl.Graph.FX.RotateGr32 in 'LightVcl.Graph.FX.RotateGr32.pas',
+  LightVcl.Graph.ResizeGr32 in 'LightVcl.Graph.ResizeGr32.pas', {$ENDIF}
+
+  GifParser in '..\External\GifParser.pas',
+  janFX in '..\External\janFX.pas',
+  janFxStretch in '..\External\janFxStretch.pas';
 
 end.
 
-Note: Undefine the following compiler switches if you don't have these 3rd party libraries:
-{$UNDEFINE CCRExif}
-{$UNDEFINE Jpg2000}
-{$UNDEFINE FastJpg}
+Note:
+  This package uses a few 3rd party libraries (all Free).
+  If you don"t want to download these 3rd party libraries, you can get rid of them.
+  The package will continue to work but with some reduced functionality:
+    * slower JPG decoding,
+    * no support for jpg2000,
+    * no support for Jpeg Exif (digital camera rotation detection).
+
+  To get rid of 3rd party libraries:
+      1. In this file, simply delete any references to 'CCRExif, GR32, ThirdPartyLibs, Jpg2000, FastJpg'.
+      2. Go to 'Project Options' and undefine (remove) the following compiler switches:
+         {$CCRExif}
+         {$Jpg2000}
+         {$FastJpg}
+
+  Example:
+    Delete from uses:
+      CCRExif,
+      GR32_R,
+      ThirdPartyLibs;
+
+    Delete from contains:
+      {$IFDEF GR32}
+      LightVcl.Graph.FX.RotateGr32 in 'LightVcl.Graph.FX.RotateGr32.pas',
+      LightVcl.Graph.ResizeGr32 in 'LightVcl.Graph.ResizeGr32.pas', {$ENDIF}

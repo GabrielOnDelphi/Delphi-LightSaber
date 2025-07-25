@@ -68,7 +68,11 @@ TYPE
 
 
 IMPLEMENTATION
-USES LightVcl.Graph.FX.RotateGr32, LightVcl.Graph.Bitmap;
+USES
+   {$IFDEF GR32}
+   LightVcl.Graph.FX.RotateGr32,   {$ENDIF}
+   LightVcl.Graph.Bitmap;
+
 
 
 
@@ -97,20 +101,19 @@ end;
   RotateBitmapGR32 is super slow but it works without issues. However, I WANT TO GET RID OF Graphics32 }
 procedure RotateBitmap(BMP: TBitmap; Degs: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone);
 begin
- if Degs <> 0
- then RotateBitmapGR32(Bmp, Degs, AdjustSize, BkColor, TRUE, 13);
+ if Degs <> 0 then
+   {$IFDEF GR32}
+     RotateBitmapGR32(Bmp, Degs, AdjustSize, BkColor, TRUE, 13);
+   {$ELSE}
+     RotateBitmapGDI(Bmp, Degs, AdjustSize, BkColor);
+   {$ENDIF}
 end;
 
 
 
 
 
-
-
-
-{ based on GDI+
-
-  I broke  it from accident. Can't find it in D: backup. need to dig into the external drive  }
+{ Based on GDI+ }
 procedure RotateBitmapGDI(BMP: TBitmap; Degs: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone);
 var
   Tmp: TGPBitmap;
@@ -492,7 +495,6 @@ begin
  BMP.Height := lHeight;
  BitBlt(BMP.Canvas.Handle, 0, 0, lWidth, lHeight, hBitmapDC, 0, 0, SRCCOPY);
 End;
-
 
 
 

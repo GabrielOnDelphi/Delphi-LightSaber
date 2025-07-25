@@ -57,17 +57,16 @@ TYPE
  end;
 
 
-function IsAnimatedGif     (CONST FileName: string): Integer;
-function IsAnimated        (CONST AGraphFile: string): Boolean;
-
-function ExtractMiddleFrame(CONST FileName: string; OUT FrameCount: Cardinal): TBitmap;
+ function IsAnimatedGif     (CONST FileName: string): Integer;
+ function IsAnimated        (CONST AGraphFile: string): Boolean;
+ function ExtractMiddleFrame(CONST FileName: string; OUT FrameCount: Cardinal): TBitmap;
 
 
 IMPLEMENTATION
 
 USES
-  GifParser, LightCore, LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Common.AppData
-, {LightCom.IniFile,} LightCore.IO;
+  GifParser,
+  LightCore, LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Common.AppData, LightCore.IO;
 
 
 constructor TGifLoader.Create;
@@ -222,9 +221,8 @@ begin
 end;
 
 
-function IsAnimatedGif(CONST FileName: string): integer;
-VAR
-   GIFImg: TGifReader;
+function IsAnimatedGif(CONST FileName: string): Integer;
+VAR GIFImg: TGifReader;
 begin
  GIFImg := TGifReader.Create;
  TRY
@@ -234,8 +232,6 @@ begin
    FreeAndNil(GIFImg);
  END;
 end;
-
-
 
 
 function ExtractMiddleFrame(CONST FileName: string; OUT FrameCount: Cardinal): TBitmap;
