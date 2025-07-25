@@ -112,12 +112,12 @@ const
 function IsWindowsXP: Boolean;
 begin
  Result:= (TOSVersion.Major = 5)
-     AND ((TOSVersion.Build = 1) OR (TOSVersion.Build = 2));
+      AND (TOSVersion.Build >= 1);
 end;
 
 function IsWindowsXPUp: Boolean;
 begin
- Result:= (TOSVersion.Major = 5) AND (TOSVersion.Build >= 1)
+ Result:= IsWindowsXP
        OR (TOSVersion.Major > 5);
 end;
 
