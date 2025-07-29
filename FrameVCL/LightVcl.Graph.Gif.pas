@@ -55,7 +55,7 @@ TYPE
     function  SaveFrames(OutputFolder: string): Boolean;
     function  ExtractFrame(FrameNo: Cardinal): TBitmap;
 
-    {//} Output
+    // Output
     property FrameDelay: Integer read FFrameDelay;
     property FrameCount: Integer read FFrameCount;
  end;
