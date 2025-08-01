@@ -143,8 +143,8 @@ begin
 
   uInitialization.LateInitialization;
   //btnStartClick(self);
-  actShowLogExecute(Self);    //temp
-  show;
+  //actShowLogExecute(Self);    //temp
+  Show;
 end;
 
 
@@ -155,7 +155,7 @@ end;
 
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  Action := caFree;
+  Action:= caFree;
 end;
 
 

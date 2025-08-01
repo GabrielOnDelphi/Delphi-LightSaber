@@ -4,6 +4,8 @@ uses
   {$IFDEF DEBUG}
   FastMM4,
   {$ENDIF }
+  Vcl.Themes,
+  Vcl.Styles,  
   FormMain in 'FormMain.pas' {MainForm},
   FormSettings in 'FormSettings.pas',
   uInitialization in 'uInitialization.pas',
@@ -23,5 +25,11 @@ begin
 
   AppData:= TAppData.Create(AppName, '', MultiThreaded);
   AppData.CreateMainForm(TMainForm, MainForm, FALSE, TRUE, asFull);
+
+  // Warning: Don't call TrySetStyle until the main form is visible.
+  //TStyleManager.TrySetStyle('Amakrits');
+
   AppData.Run;
 end.
+
+
