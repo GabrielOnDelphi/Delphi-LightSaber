@@ -29,7 +29,7 @@ INTERFACE
 
 USES
   Winapi.Windows, Winapi.Messages, System.Classes,
-  Vcl.Controls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
   LightVcl.Visual.RichLogTrack, LightVcl.Visual.RichLog, LightVcl.Common.AppDataForm;
 
 TYPE
@@ -54,8 +54,7 @@ IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   LightVcl.Visual.INIFile, LightCore.AppData, LightVcl.Common.AppData
-;
+   LightVcl.Visual.INIFile, LightCore.AppData, LightVcl.Common.AppData;
 
 
 
@@ -65,16 +64,16 @@ USES
 -------------------------------------------------------------------------------------------------------------}
 procedure TfrmRichLog.FormCreate(Sender: TObject);
 begin
- Log.Onwarn := LogError;               // Auto show form if we send an error msg to the log
- Log.OnError:= LogError;
- PostMessage(Self.Handle, WM_APP + 4712, 0, 0);
+  Log.Onwarn := LogError;               // Auto show form if we send an error msg to the log
+  Log.OnError:= LogError;
+  PostMessage(Self.Handle, WM_APP + 4712, 0, 0);
 end;
 
 
 procedure TfrmRichLog.FormPostInitialize;
 begin
- inherited FormPostInitialize;
-  LoadForm(Self);
+  inherited FormPostInitialize;
+  //LoadForm(Self);
 end;
 
 
@@ -84,9 +83,8 @@ procedure TfrmRichLog.FormDestroy(Sender: TObject);
 begin
  Assert(AppData <> NIL, 'AppData is gone already!');
  Container.Parent:= Self;
- if NOT LightCore.AppData, LightVcl.Common.AppData
-.AppData.Initializing
- then //SaveForm(Self); called by AppData // We don't save anything if the start up was improper!
+
+ //if NOT AppData.Initializing then SaveForm(Self); called by AppData // We don't save anything if the start up was improper!
 end;
 
 

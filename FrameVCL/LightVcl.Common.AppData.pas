@@ -1,7 +1,7 @@
 ﻿UNIT LightVcl.Common.AppData;
 
 {=============================================================================================================
-   2025.05.27
+   2025.08.01
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -96,13 +96,15 @@
 
 =============================================================================================================}
 
+//ToDo: don't create the LogForm when application starts.Created when needed
+
 INTERFACE
 
 USES
   Winapi.Windows, Winapi.Messages, Winapi.ShellAPI,
   System.Win.Registry, System.SysUtils, System.Classes, System.IOUtils, System.UITypes, System.Types,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Consts,
-  LightCore.AppData, LightVcl.LogForm;
+  LightCore.AppData, LightVCL.LogForm;
 
 
 TYPE
@@ -113,7 +115,7 @@ TYPE
     CopyDataID: DWORD;          // For SingleInstance. This is a unique message ID for our applications. Used when we send the command line to the first running instance via WM_COPYDATA
     procedure setGuiProperties(Form: TForm);
     procedure setFont(aFont: TFont);
-    procedure createGlobalLog;
+    function getGlobalLog: TfrmRamLog;
   protected
     procedure setHintType(const aHintType: THintType); override;
     procedure setHideHint(const Value: Integer); override;
@@ -180,7 +182,7 @@ TYPE
       Others
    --------------------------------------------------------------------------------------------------}
     procedure MainFormCaption(const Caption: string); override;
-    property FormLog: TfrmRamLog read FFormLog;
+    property FormLog: TfrmRamLog read getGlobalLog;
     property Font: TFont read FFont write setFont;
   end;
 
@@ -204,7 +206,7 @@ begin
 
   { Single instance } { Register a unique message ID for this applications. Used when we send the command line to the first running instance via WM_COPYDATA. We can do this only once per app so the best place is the Initialization section. However, since AppData is created only once, we can also do it here, in the constructor. https://stackoverflow.com/questions/35516347/sendmessagewm-copydata-record-string }
   CopyDataID:= RegisterWindowMessage('LightSaberCopyDataID');
-  
+
   { App stuff }
   Application.Title               := aAppName;
   Application.HintColor           := $c0c090;
@@ -226,13 +228,13 @@ begin
   then Translator.LoadLastTranslation;           // Load last language and apply it to all existing forms
 
   { All done }
-  LogVerb(AppName+ GetVersionInfoV+ ' started.'); 
+  LogVerb(AppName+ GetVersionInfoV+ ' started.');
 end;
 
 
 destructor TAppData.Destroy;
 begin
-  FreeAndNil(FormLog);
+  FreeAndNil(FFormLog);
   FreeAndNil(Translator);
   inherited Destroy;
 end;
@@ -268,7 +270,7 @@ begin
   Assert(Font = NIL,                 'AppData.Font already assigned!');
 
   // Create the log BEFORE we create the main form so we can log possible problems.
-  CreateGlobalLog;
+  getGlobalLog;
 
   // Create form
   Application.MainFormOnTaskbar := MainFormOnTaskbar;
@@ -289,9 +291,6 @@ begin
 
   // Font
   SetGuiProperties(TForm(Reference));
-
-  // Log font
-  FormLog.Font:= TForm(Reference).Font;   // The frmLog is created before the MainForm, so copy the frmLog.Font from the MainForm AFTER the main MainForm created.
 
   // Ignore the "Show" parameter if "StartMinim" is active
   if StartMinim
@@ -410,19 +409,27 @@ end;
 
 
 // The TfrmRamLog is destroyed by AppData in Finalize
-procedure TAppData.createGlobalLog;
+function TAppData.getGlobalLog: TfrmRamLog;
 begin
   Assert(RamLog <> NIL, 'RamLog not created!');
-  Assert(FFormLog = NIL, 'Form log already created!');
 
-  VAR CreateBeforeMainForm:= Application.MainForm = NIL;
-  CreateForm(TfrmRamLog, FFormLog, FALSE, asPosOnly, NIL, FALSE, CreateBeforeMainForm);
+  if FFormLog = NIL
+  then
+    begin
+      VAR CreateBeforeMainForm:= Application.MainForm = NIL;
+      CreateForm(TfrmRamLog, FFormLog, FALSE, asPosOnly, NIL, FALSE, CreateBeforeMainForm);
+      Assert(FFormLog.Log <> NIL);
+      FFormLog.Log.AssignExternalRamLog(RamLog);   // Connect the RamLog with the visual log. FormLog will display data from AppData's RAM log
 
-  // Connect the RamLog with the visual log
-  Assert(FFormLog.Log <> NIL);
-  FFormLog.Log.AssignExternalRamLog(RamLog);   // FormLog will display data from AppData's RAM log
+      // Set font
+      if Application.MainForm <> NIL
+      then FFormLog.Font:= Application.MainForm.Font;   // If the frmLog is created before the MainForm, copy the frmLog.Font from the MainForm AFTER the main MainForm created.
+    end
+  else
+    FFormLog.Show;
 
-  Assert(Application.MainForm <> FormLog, 'Sanity check! The Log should not be the MainForm!'); { Make sure this is not the first form created }
+  Result:= FFormLog;
+  Assert(Application.MainForm <> FFormLog, 'Sanity check! The Log should not be the MainForm!'); { Make sure this is not the first form created }
 end;
 
 

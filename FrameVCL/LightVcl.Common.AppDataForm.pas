@@ -66,7 +66,8 @@ INTERFACE
 USES
   Winapi.Windows, Winapi.Messages,
   System.SysUtils, System.Classes, System.IniFiles, Vcl.Controls, Vcl.Forms,
-  LightVcl.Common.Dialogs, LightVcl.Common.CenterControl, LightVcl.Common.IniFile, LightCore.AppData; // Do not add dependencies higher than "cb" level
+  LightVcl.Common.Dialogs, LightVcl.Common.CenterControl, LightVcl.Common.IniFile,
+  LightCore.AppData; // Do not add dependencies higher than "cb" level
 
 TYPE
   TLightForm = class(TForm)

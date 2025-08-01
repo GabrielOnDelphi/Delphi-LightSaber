@@ -28,8 +28,8 @@ object frmRichLog: TfrmRichLog
       AlignWithMargins = True
       Left = 3
       Top = 3
-      Width = 708
-      Height = 473
+      Width = 704
+      Height = 472
       Align = alClient
       Font.Charset = ANSI_CHARSET
       Font.Color = clWindowText
@@ -72,7 +72,7 @@ object frmRichLog: TfrmRichLog
       end
       object btnClear: TButton
         AlignWithMargins = True
-        Left = 647
+        Left = 639
         Top = 1
         Width = 68
         Height = 32
@@ -86,7 +86,7 @@ object frmRichLog: TfrmRichLog
       end
       object trkLogVerb: TRichLogTrckbr
         AlignWithMargins = True
-        Left = 381
+        Left = 373
         Top = 3
         Width = 260
         Height = 28
