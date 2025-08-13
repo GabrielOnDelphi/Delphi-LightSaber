@@ -88,8 +88,8 @@ TYPE
     procedure Loaded; override;
     procedure DoClose(var Action: TCloseAction); override;
   public
-    constructor Create(AOwner: TComponent; aShow: Boolean= TRUE); reintroduce; overload; virtual;
-    function CloseQuery: boolean; override;
+    constructor Create(AOwner: TComponent; aAutoState: TAutoState); reintroduce; overload; virtual;
+    function CloseQuery: Boolean; override;
 
     procedure FormPostInitialize; virtual;   // Users should initialize their code here.
     procedure FormPreRelease; virtual;
@@ -97,7 +97,7 @@ TYPE
     procedure LoadForm; virtual;
     procedure SaveForm; virtual;
   published
-    property AutoState: TAutoState   read FAutoState      write FAutoState;        // The user needs to set this property if they want to auto save/load the form.
+    property AutoState: TAutoState   read FAutoState;                              // The user needs to set this property if they want to auto save/load the form.
     property CloseOnEscape: Boolean  read FCloseOnEscape  write FCloseOnEscape;    // Close this form when the Esc key is pressed
   end;
 
@@ -107,14 +107,15 @@ USES
   LightFmx.Common.AppData, LightFmx.Common.CenterControl, LightCore;
 
 
-constructor TLightForm.Create(AOwner: TComponent; aShow: Boolean= TRUE{UNUSED});
+constructor TLightForm.Create(AOwner: TComponent; aAutoState: TAutoState);
 begin
   inherited Create(AOwner);
 
-  Showhint  := TRUE;
-  Saved     := FALSE;
+  Showhint:= TRUE;
+  Saved   := FALSE;
+  FAutoState:= aAutoState;
 
-  FAutoState := asUndefined; // Default value. Can be overriden by AppData.CreateForm
+  FAutoState:= asUndefined; // Default value. Can be overriden by AppData.CreateForm
 end;
 
 
@@ -139,8 +140,8 @@ begin
   // Load form
   // Limitation: At this point we can only load "standard" Delphi components. Loading of our Light components can only be done in Light_FMX.Visual.INIFile.pas -> TIniFileVCL
 
-  if AutoState = asUndefined  // Only check queue if AutoState wasn’t set in CreateForm
-  then AutoState:= AppData.GetAutoState;
+  if FAutoState = asUndefined  // Only check queue if AutoState wasn’t set in Create
+  then FAutoState:= AppData.GetAutoState;
 
   if AutoState = asUndefined
   then RAISE Exception.Create('The user must set the AutoState property in code (see TLightForm.FormPostInitialize)!' + CRLF+'Form: '+ Name+ ' / '+ ClassName)

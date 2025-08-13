@@ -41,7 +41,7 @@ object frmRamLog: TfrmRamLog
         Size.PlatformDefault = False
         TabOrder = 0
         Text = 'Show log on error'
-        OnClick = chkLogOnErrorClick
+        OnChange = chkLogOnErrorChange
       end
       object btnClear: TButton
         Align = Right
@@ -73,7 +73,19 @@ object frmRamLog: TfrmRamLog
         Size.PlatformDefault = False
         TabOrder = 2
         Text = 'Show time'
-        OnClick = chkShowTimeClick
+        OnChange = chkShowTimeChange
+      end
+      object chkScrollDown: TCheckBox
+        Align = Left
+        Hint = 'This will take a tiny bit more CPU if you have lots of messages.'
+        IsChecked = True
+        Position.X = 345.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 31.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+        Text = 'Scroll down'
+        OnChange = chkScrollDownChange
       end
       object chkShowDate: TCheckBox
         Align = Left
@@ -88,19 +100,7 @@ object frmRamLog: TfrmRamLog
         Size.PlatformDefault = False
         TabOrder = 3
         Text = 'Show date'
-        OnClick = chkShowDateClick
-      end
-      object chkScrollDown: TCheckBox
-        Align = Left
-        Hint = 'This will take a tiny bit more CPU if you have lots of messages.'
-        IsChecked = True
-        Position.X = 345.000000000000000000
-        Size.Width = 120.000000000000000000
-        Size.Height = 31.000000000000000000
-        Size.PlatformDefault = False
-        TabOrder = 4
-        Text = 'Scroll down'
-        OnChange = chkScrollDownChange
+        OnChange = chkShowDateChange
       end
     end
     object LogViewer: TLogViewer

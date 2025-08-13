@@ -28,23 +28,24 @@ TYPE
   TfrmRamLog = class(TLightForm)
     btnClear       : TButton;
     chkLogOnError  : TCheckBox;
+    chkScrollDown  : TCheckBox;
     chkShowTime    : TCheckBox;
     Container      : TPanel;
+    LogViewer      : TLogViewer;
     mnuCopy        : TMenuItem;
     mnuCopyAll     : TMenuItem;
     mnuCopyFiltered: TMenuItem;
     pnlBottom      : TPanel;
-    chkScrollDown: TCheckBox;
-    LogViewer: TLogViewer;
+    chkShowDate: TCheckBox;
     procedure btnClearClick      (Sender: TObject);
-    procedure chkLogOnErrorClick (Sender: TObject);
-    procedure chkShowDateClick   (Sender: TObject);
-    procedure chkShowTimeClick   (Sender: TObject);
+    procedure chkScrollDownChange(Sender: TObject);
     procedure FormClose          (Sender: TObject; var Action: TCloseAction);
     procedure FormDestroy        (Sender: TObject);
     procedure mnuCopyAllClick    (Sender: TObject);
     procedure mnuCopyClick       (Sender: TObject);
-    procedure chkScrollDownChange(Sender: TObject);
+    procedure chkLogOnErrorChange(Sender: TObject);
+    procedure chkShowTimeChange(Sender: TObject);
+    procedure chkShowDateChange(Sender: TObject);
   private
     procedure LoadSettings;
     procedure SaveSettings;
@@ -149,7 +150,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    GUI
 -------------------------------------------------------------------------------------------------------------}
-procedure TfrmRamLog.chkLogOnErrorClick(Sender: TObject);
+procedure TfrmRamLog.chkLogOnErrorChange(Sender: TObject);
 begin
   AppData.RamLog.ShowOnError:= chkLogOnError.IsChecked;
 end;
@@ -161,13 +162,13 @@ begin
 end;
 
 
-procedure TfrmRamLog.chkShowDateClick(Sender: TObject);
+procedure TfrmRamLog.chkShowDateChange(Sender: TObject);
 begin
-  //LogViewer.ShowDate:= chkShowDate.IsChecked;
+  LogViewer.ShowDate:= chkShowDate.IsChecked;
 end;
 
 
-procedure TfrmRamLog.chkShowTimeClick(Sender: TObject);
+procedure TfrmRamLog.chkShowTimeChange(Sender: TObject);
 begin
   LogViewer.ShowTime:= chkShowTime.IsChecked;
 end;

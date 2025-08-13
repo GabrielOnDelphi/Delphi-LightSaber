@@ -81,7 +81,7 @@ TYPE
      function  Count: Integer;
      procedure CopyAll;
      procedure CopyCurLine;
-     procedure CopyVisible;	 
+     procedure CopyVisible;
    published
      property ShowTime     : Boolean      read FShowTime    write setShowTime default FALSE;
      property ShowDate     : Boolean      read FShowDate    write setShowDate default FALSE;
@@ -108,7 +108,7 @@ USES
 {-------------------------------------------------------------------------------------------------------------
    CONSTRUCTOR
 -------------------------------------------------------------------------------------------------------------}
-constructor TLogViewer.Create(AOwner: TComponent); 
+constructor TLogViewer.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
@@ -668,7 +668,7 @@ begin
   // Register the presentation proxy for TLogViewer, telling FMX to style it using the same proxy as its base class, TStringGrid.
   // TPresentationProxyFactory.Current.Register(TLogViewer, TControlType.Styled, TStyledPresentationProxy<TStyledGrid>);
   // Registration procedure, @Lightfmx@Lblogviewer@Register$qqrv.Register in package LightFmxBase290.bpl raised exception class EPresentationProxy: Presentation Proxy class [TStyledPresentationProxy<FMX.Grid.Style.TStyledGrid>] for this presentation name [LogViewer-style] has already been registered..
-end; 
+end;
 
 
 {

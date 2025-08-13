@@ -111,8 +111,6 @@ USES
   System.SysUtils, System.Classes, System.UITypes, System.Types, System.Generics.Collections,
   FMX.Forms, FMX.Graphics, FMX.Platform,
   LightFMX.LogForm,
-
-
   LightCore.AppData; //Light_FMX.LogForm
 
 TYPE
@@ -166,10 +164,10 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       FORMS
    --------------------------------------------------------------------------------------------------}
-    procedure CreateMainForm  (aClass: TComponentClass; OUT aReference; Show: Boolean = TRUE; AutoState: TAutoState = asPosOnly); overload;
-    procedure CreateMainForm  (aClass: TComponentClass;                 Show: Boolean = TRUE); overload;
+    procedure CreateMainForm  (aClass: TComponentClass; OUT aReference; AutoState: TAutoState = asPosOnly); overload;
+    procedure CreateMainForm  (aClass: TComponentClass); overload;
 
-    procedure CreateForm      (aClass: TComponentClass; OUT aReference; Show: Boolean = TRUE; AutoState: TAutoState = asPosOnly; Parented: Boolean = FALSE; CreateBeforeMainForm: Boolean = FALSE); overload;
+    procedure CreateForm      (aClass: TComponentClass; OUT aReference; AutoState: TAutoState = asPosOnly; Parented: Boolean = FALSE; CreateBeforeMainForm: Boolean = FALSE); overload;
     procedure CreateFormHidden(aClass: TComponentClass; OUT aReference);
     procedure CreateFormModal (aClass: TComponentClass);  // Problem in Android with modal forms!
 
@@ -180,7 +178,7 @@ TYPE
    --------------------------------------------------------------------------------------------------}
     procedure SetMaxPriority;
     procedure MainFormCaption(const Caption: string); override;
-    property FormLog: TfrmRamLog read getLogForm;   //I could create this form, at runtime, as necessary
+    property FormLog: TfrmRamLog read getLogForm;   //Created at runtime, as/if necessary
     property Font: TFont read FFont write setFont;
   end;
 
@@ -245,7 +243,7 @@ end;
      It just adds a request to the pending list. RealCreateForms creates the real forms.
      So, we cannot access the form here because it was not yet created!
 -------------------------------------------------------------------------------------------------------------}
-procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT aReference; Show: Boolean = TRUE; AutoState: TAutoState = asPosOnly);
+procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT aReference; AutoState: TAutoState = asPosOnly);
 begin
   Assert(Application.MainForm = NIL, 'MainForm already exists!');   //ToDo: test if this works under FMX because of RealCreateForms
 
@@ -254,18 +252,17 @@ begin
 end;
 
 
-procedure TAppData.CreateMainForm(aClass: TComponentClass; Show: Boolean= TRUE);
-var
-  aReference: TForm;
+procedure TAppData.CreateMainForm(aClass: TComponentClass);
+var aReference: TForm;
 begin
-  CreateMainForm(aClass, aReference, Show);
+  CreateMainForm(aClass, aReference);
 end;
 
 
 
 { Create secondary form
   "Loading" indicates if the GUI settings are remembered or not }
-procedure TAppData.CreateForm(aClass: TComponentClass; OUT aReference; Show: Boolean = TRUE; AutoState: TAutoState = asPosOnly; Parented: Boolean = FALSE; CreateBeforeMainForm: Boolean = FALSE);
+procedure TAppData.CreateForm(aClass: TComponentClass; OUT aReference; AutoState: TAutoState = asPosOnly; Parented: Boolean = FALSE; CreateBeforeMainForm: Boolean = FALSE);
 begin
   if CreateBeforeMainForm
   then
@@ -310,7 +307,7 @@ end;
 { Create secondary form }
 procedure TAppData.CreateFormHidden(aClass: TComponentClass; OUT aReference);
 begin
-  CreateForm(aClass, aReference, FALSE);
+  CreateForm(aClass, aReference);
 end;
 
 
@@ -319,7 +316,7 @@ procedure TAppData.CreateFormModal(aClass: TComponentClass);
 VAR aReference: TForm;
 begin
   //ToDo: Problems in Android with modal forms!
-  CreateForm(aClass, aReference, FALSE);
+  CreateForm(aClass, aReference);
   aReference.ShowModal;
 end;
 
@@ -678,7 +675,7 @@ end;
 procedure TAppData.MainFormCaption(CONST Caption: string);
 begin
   inherited;
-  
+
   // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
   if Application.MainForm = NIL then EXIT;
 
