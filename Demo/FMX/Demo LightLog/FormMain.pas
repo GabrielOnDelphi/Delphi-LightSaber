@@ -10,25 +10,24 @@ uses
 
 TYPE
   TMainForm = class(TLightForm)
-    Layout1: TLayout;
-    Button1: TButton;
-    laySettings: TLayout;
-    chkShowDate: TCheckBox;
-    chkShowTime: TCheckBox;
-    btnClear: TButton;
-    btnLoad: TButton;
-    btnSave: TButton;
-    LogViewer: TLogViewer;
-    LogVerbFilter1: TLogVerbFilter;
-    chkScrollDown: TCheckBox;
-    procedure Button1Click(Sender: TObject);
-    procedure btnSaveClick(Sender: TObject);
-    procedure btnLoadClick(Sender: TObject);
-    procedure chkShowDateChange(Sender: TObject);
-    procedure chkShowTimeChange(Sender: TObject);
-    procedure chkScrollDownChange(Sender: TObject);
-    procedure btnClearClick(Sender: TObject);
-    procedure Layout1Click(Sender: TObject);
+    btnClear       : TButton;
+    btnLoad        : TButton;
+    btnSave        : TButton;
+    Button1        : TButton;
+    chkScrollDown  : TCheckBox;
+    chkShowDate    : TCheckBox;
+    chkShowTime    : TCheckBox;
+    layBottom      : TLayout;
+    laySettings    : TLayout;
+    LogFilter      : TLogVerbFilter;
+    LogViewer      : TLogViewer;
+    procedure Button1Click        (Sender: TObject);
+    procedure btnSaveClick        (Sender: TObject);
+    procedure btnLoadClick        (Sender: TObject);
+    procedure chkShowDateChange   (Sender: TObject);
+    procedure chkShowTimeChange   (Sender: TObject);
+    procedure chkScrollDownChange (Sender: TObject);
+    procedure btnClearClick       (Sender: TObject);
   private
   public
    procedure FormPostInitialize; override;
@@ -48,6 +47,8 @@ USES LightCore.AppData;
 
 procedure TMainForm.FormPostInitialize;
 begin
+  LogViewer.ObserveAppDataLog;
+
   AutoState:= asFull;  // Must set it before inherited!
   inherited FormPostInitialize;           // This will load the form's state from disk
   {
@@ -64,12 +65,6 @@ begin
 end;
 
 
-
-
-procedure TMainForm.Layout1Click(Sender: TObject);
-begin
-
-end;
 
 {-------------------------------------------------------------------------------------------------------------
    GRID LOG

@@ -8,14 +8,13 @@ object MainForm: TMainForm
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
   DesignerMasterStyle = 0
-  object Layout1: TLayout
+  object layBottom: TLayout
     Align = Bottom
     Position.Y = 376.000000000000000000
     Size.Width = 680.000000000000000000
     Size.Height = 41.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 1
-    OnClick = Layout1Click
     object Button1: TButton
       Align = Left
       Margins.Left = 3.000000000000000000
@@ -64,14 +63,14 @@ object MainForm: TMainForm
       TextSettings.Trimming = None
       OnClick = btnSaveClick
     end
-    object LogVerbFilter1: TLogVerbFilter
+    object LogFilter: TLogVerbFilter
       Align = Right
       Position.X = 420.000000000000000000
       Size.Width = 260.000000000000000000
       Size.Height = 41.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
-      TrackBar = LogVerbFilter1.VerbosityTrackbar
+      TrackBar = LogFilter.VerbosityTrackbar
       Verbosity = lvVerbose
       Log = LogViewer
     end
