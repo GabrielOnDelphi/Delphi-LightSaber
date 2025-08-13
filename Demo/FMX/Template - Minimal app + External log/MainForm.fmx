@@ -1,0 +1,73 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'FMX minimalistic demo - External Log'
+  ClientHeight = 270
+  ClientWidth = 549
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  DesignerMasterStyle = 0
+  object chkSome: TCheckBox
+    ControlType = Platform
+    Position.X = 32.000000000000000000
+    Position.Y = 148.000000000000000000
+    StyleLookup = 'checkboxstyle'
+    TabOrder = 4
+    Text = 'Some CheckBox'
+  end
+  object RadioButton1: TRadioButton
+    Position.X = 31.000000000000000000
+    Position.Y = 175.000000000000000000
+    TabOrder = 17
+    Text = 'Some RadioButton'
+  end
+  object btnShowErr: TButton
+    Position.X = 256.000000000000000000
+    Position.Y = 148.000000000000000000
+    Size.Width = 136.000000000000000000
+    Size.Height = 37.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 18
+    Text = 'Show error in log'
+    TextSettings.Trimming = None
+    OnClick = btnShowErrClick
+  end
+  object lblInfoTop: TLabel
+    Align = Top
+    AutoSize = True
+    Margins.Left = 4.000000000000000000
+    Margins.Top = 4.000000000000000000
+    Margins.Right = 4.000000000000000000
+    Margins.Bottom = 4.000000000000000000
+    Position.X = 4.000000000000000000
+    Position.Y = 4.000000000000000000
+    Size.Width = 541.000000000000000000
+    Size.Height = 48.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    Text = 
+      'This small program demonstrates how to send messages to the glob' +
+      'al log.'#13#10'The messages are collected into the RamLog. Once we hav' +
+      'e a form, we can display them in that form.'#13#10'AppData gives you a' +
+      'n already made log form via "AppData.FormLog"'
+    TabOrder = 20
+  end
+  object lblIniFile: TLabel
+    Align = Bottom
+    AutoSize = True
+    Margins.Left = 4.000000000000000000
+    Margins.Top = 4.000000000000000000
+    Margins.Right = 4.000000000000000000
+    Margins.Bottom = 4.000000000000000000
+    Position.X = 4.000000000000000000
+    Position.Y = 250.000000000000000000
+    Size.Width = 541.000000000000000000
+    Size.Height = 16.000000000000000000
+    Size.PlatformDefault = False
+    TextSettings.HorzAlign = Center
+    Text = 'INI'
+    TabOrder = 19
+  end
+end
