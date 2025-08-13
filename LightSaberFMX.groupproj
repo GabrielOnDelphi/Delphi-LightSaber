@@ -12,9 +12,6 @@
         <Projects Include="FrameFMX\LightFmxVisual.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="..\Light VCL to FMX converter\Light_VCL2FMX.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj">
             <Dependencies/>
         </Projects>
@@ -53,15 +50,6 @@
     <Target Name="LightFmxVisual:Make">
         <MSBuild Projects="FrameFMX\LightFmxVisual.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Light_VCL2FMX">
-        <MSBuild Projects="..\Light VCL to FMX converter\Light_VCL2FMX.dproj"/>
-    </Target>
-    <Target Name="Light_VCL2FMX:Clean">
-        <MSBuild Projects="..\Light VCL to FMX converter\Light_VCL2FMX.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="Light_VCL2FMX:Make">
-        <MSBuild Projects="..\Light VCL to FMX converter\Light_VCL2FMX.dproj" Targets="Make"/>
-    </Target>
     <Target Name="FMX_Demo_Log">
         <MSBuild Projects="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj"/>
     </Target>
@@ -72,13 +60,13 @@
         <MSBuild Projects="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightFmxCommon;LightFmxVisual;Light_VCL2FMX;FMX_Demo_Log"/>
+        <CallTarget Targets="LightCore;LightFmxCommon;LightFmxVisual;FMX_Demo_Log"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightFmxCommon:Clean;LightFmxVisual:Clean;Light_VCL2FMX:Clean;FMX_Demo_Log:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightFmxCommon:Clean;LightFmxVisual:Clean;FMX_Demo_Log:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightFmxCommon:Make;LightFmxVisual:Make;Light_VCL2FMX:Make;FMX_Demo_Log:Make"/>
+        <CallTarget Targets="LightCore:Make;LightFmxCommon:Make;LightFmxVisual:Make;FMX_Demo_Log:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
@@ -102,12 +90,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Light VCL to FMX converter\Light_VCL2FMX.dproj">
-            <ProjectGuid>{75CFD3C8-1117-4D3C-B7C3-021CF9B67A99}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -138,12 +120,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\Light VCL to FMX converter\Light_VCL2FMX.dproj">
-            <ProjectGuid>{75CFD3C8-1117-4D3C-B7C3-021CF9B67A99}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Debug'">
         <BuildGroupProject Include="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj">
@@ -170,12 +146,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="..\Light VCL to FMX converter\Light_VCL2FMX.dproj">
-            <ProjectGuid>{75CFD3C8-1117-4D3C-B7C3-021CF9B67A99}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='All'">
         <BuildGroupProject Include="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj">
@@ -198,12 +168,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="..\Light VCL to FMX converter\Light_VCL2FMX.dproj">
-            <ProjectGuid>{75CFD3C8-1117-4D3C-B7C3-021CF9B67A99}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
