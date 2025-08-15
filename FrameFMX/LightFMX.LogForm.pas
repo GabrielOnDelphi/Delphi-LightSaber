@@ -36,7 +36,8 @@ TYPE
     mnuCopyAll     : TMenuItem;
     mnuCopyFiltered: TMenuItem;
     pnlBottom      : TPanel;
-    chkShowDate: TCheckBox;
+    chkShowDate    : TCheckBox;
+    LogFilter      : TLogVerbFilter;
     procedure btnClearClick      (Sender: TObject);
     procedure chkScrollDownChange(Sender: TObject);
     procedure FormClose          (Sender: TObject; var Action: TCloseAction);
@@ -44,13 +45,14 @@ TYPE
     procedure mnuCopyAllClick    (Sender: TObject);
     procedure mnuCopyClick       (Sender: TObject);
     procedure chkLogOnErrorChange(Sender: TObject);
-    procedure chkShowTimeChange(Sender: TObject);
-    procedure chkShowDateChange(Sender: TObject);
+    procedure chkShowTimeChange  (Sender: TObject);
+    procedure chkShowDateChange  (Sender: TObject);
+    procedure FormCreate         (Sender: TObject);
   private
     procedure LoadSettings;
     procedure SaveSettings;
   public
-    procedure FormPostInitialize; override; // Called after the main form was fully initilized
+    //procedure FormPostInitialize; override; // Called after the main form was fully initilized
   end;
 
 
@@ -64,9 +66,14 @@ USES
 {-------------------------------------------------------------------------------------------------------------
   FORM CREATION
 -------------------------------------------------------------------------------------------------------------}
-procedure TfrmRamLog.FormPostInitialize;
+{procedure TfrmRamLog.FormPostInitialize;
 begin
   inherited FormPostInitialize;
+end;}
+
+
+procedure TfrmRamLog.FormCreate(Sender: TObject);
+begin
   LogViewer.AssignExternalRamLog(AppData.RamLog);   // FormLog will display data from AppData's RAM log
 
   LoadSettings;

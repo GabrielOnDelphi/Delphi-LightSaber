@@ -4,10 +4,11 @@ object frmRamLog: TfrmRamLog
   BorderIcons = [biSystemMenu, biMaximize]
   Caption = 'Log'
   ClientHeight = 507
-  ClientWidth = 643
+  ClientWidth = 782
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop, iPhone, iPad]
+  OnCreate = FormCreate
   OnClose = FormClose
   OnDestroy = FormDestroy
   Left = 549
@@ -15,14 +16,14 @@ object frmRamLog: TfrmRamLog
   DesignerMasterStyle = 0
   object Container: TPanel
     Align = Client
-    Size.Width = 643.000000000000000000
+    Size.Width = 782.000000000000000000
     Size.Height = 507.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
     object pnlBottom: TPanel
       Align = Bottom
       Position.Y = 476.000000000000000000
-      Size.Width = 643.000000000000000000
+      Size.Width = 782.000000000000000000
       Size.Height = 31.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
@@ -34,12 +35,12 @@ object frmRamLog: TfrmRamLog
         Margins.Top = 3.000000000000000000
         Margins.Right = 3.000000000000000000
         Margins.Bottom = 3.000000000000000000
-        Position.X = 204.000000000000000000
+        Position.X = 183.000000000000000000
         Position.Y = 3.000000000000000000
-        Size.Width = 138.000000000000000000
+        Size.Width = 126.000000000000000000
         Size.Height = 25.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 0
+        TabOrder = 1
         Text = 'Show log on error'
         OnChange = chkLogOnErrorChange
       end
@@ -50,12 +51,12 @@ object frmRamLog: TfrmRamLog
         Margins.Top = 1.000000000000000000
         Margins.Right = 3.000000000000000000
         Margins.Bottom = 1.000000000000000000
-        Position.X = 572.000000000000000000
+        Position.X = 734.000000000000000000
         Position.Y = 1.000000000000000000
-        Size.Width = 68.000000000000000000
+        Size.Width = 45.000000000000000000
         Size.Height = 29.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 1
+        TabOrder = 2
         Text = 'Clear'
         TextSettings.Trimming = None
         OnClick = btnClearClick
@@ -66,12 +67,12 @@ object frmRamLog: TfrmRamLog
         Margins.Top = 3.000000000000000000
         Margins.Right = 3.000000000000000000
         Margins.Bottom = 3.000000000000000000
-        Position.X = 103.000000000000000000
+        Position.X = 92.000000000000000000
         Position.Y = 3.000000000000000000
-        Size.Width = 95.000000000000000000
+        Size.Width = 85.000000000000000000
         Size.Height = 25.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 2
+        TabOrder = 3
         Text = 'Show time'
         OnChange = chkShowTimeChange
       end
@@ -79,11 +80,11 @@ object frmRamLog: TfrmRamLog
         Align = Left
         Hint = 'This will take a tiny bit more CPU if you have lots of messages.'
         IsChecked = True
-        Position.X = 345.000000000000000000
-        Size.Width = 120.000000000000000000
+        Position.X = 312.000000000000000000
+        Size.Width = 95.000000000000000000
         Size.Height = 31.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 4
+        TabOrder = 5
         Text = 'Scroll down'
         OnChange = chkScrollDownChange
       end
@@ -95,25 +96,37 @@ object frmRamLog: TfrmRamLog
         Margins.Bottom = 3.000000000000000000
         Position.X = 3.000000000000000000
         Position.Y = 3.000000000000000000
-        Size.Width = 94.000000000000000000
+        Size.Width = 83.000000000000000000
         Size.Height = 25.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 3
+        TabOrder = 4
         Text = 'Show date'
         OnChange = chkShowDateChange
+      end
+      object LogFilter: TLogVerbFilter
+        Align = Right
+        Position.X = 480.000000000000000000
+        Size.Width = 251.000000000000000000
+        Size.Height = 31.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        TrackBar = LogFilter.VerbosityTrackbar
+        Verbosity = lvVerbose
+        Log = LogViewer
       end
     end
     object LogViewer: TLogViewer
       Align = Client
       CanFocus = True
       ClipChildren = True
-      Size.Width = 643.000000000000000000
+      PopupMenu = PopupMenu
+      Size.Width = 782.000000000000000000
       Size.Height = 476.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 1
       RowHeight = 22.000000000000000000
       Options = [Editing, ColumnResize, ColumnMove, ColLines, RowLines, RowSelect, Tabs, Header, HeaderClick, AutoDisplacement]
-      Viewport.Width = 639.000000000000000000
+      Viewport.Width = 778.000000000000000000
       Viewport.Height = 451.000000000000000000
     end
   end
