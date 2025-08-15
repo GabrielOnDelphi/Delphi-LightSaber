@@ -48,8 +48,6 @@ USES LightCore.AppData;
 procedure TMainForm.FormPostInitialize;
 begin
   LogViewer.ObserveAppDataLog;
-
-  AutoState:= asFull;  // Must set it before inherited!
   inherited FormPostInitialize;           // This will load the form's state from disk
   {
   if AppData.RunningHome
