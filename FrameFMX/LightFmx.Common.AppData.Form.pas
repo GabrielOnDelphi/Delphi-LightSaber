@@ -1,59 +1,39 @@
 ﻿UNIT LightFmx.Common.AppData.Form;
 
 {=============================================================================================================
-   2025.04
+   2025.08
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
    Motivation - Where to initialize own code?
 
-      VCL forms offer no good place where to execute your initialization/finalization code.
-      OnCreate is too early, and OnShow may never be called (or called too late) or called multiple times.
+   FormPreRelease
 
-   Methods
+      The TLightForm provides the FormPreRelease method that, unlike other events, is guaranteed to be executed once and only once when the form is closed.
 
-      The TLightForm provides two places that (in conjunction with TAppData) offer you two methods that are guaranteed to be executed:
-        procedure FormPostInitialize;  // Called after the main form was fully initialized.
-        procedure FormPreRelease;      // Called ONLY ONCE before the form is destroyed
+      Execution order: FormPreRelease -> FormClose -> FormDestroy
 
-   How to use it
+      How to use it
 
-      Change the declaration of your form from TForm to TLightForm.
-      Optionally, if you want to execute your own initialization code, override the LateInitialize (don't forget to call inherited).
-      See: c:\Projects\LightSaber\Demo\Template App\FMX Minimal\TemplateMicro_Fmx.dpr
+         Change the declaration of your form from TForm to TLightForm.
+         Optionally, if you want to execute your own initialization code, override the LateInitialize (don't forget to call inherited).
+         See: c:\Projects\LightSaber\Demo\Template App\FMX Minimal\TemplateMicro_Fmx.dpr
 
-      uses Light_FMX.Common.AppDataForm;
-      Type
-        TYourForm = class(TLightForm)
-        public
-          procedure FormPostInitialize; override;    // Optional
-          procedure FormPreRelease;     override;
-        end;
+         uses Light_FMX.Common.AppDataForm;
+         Type
+           TYourForm = class(TLightForm)
+           public
+             procedure FormPreRelease; override;
+           end;
 
-        procedure TYourForm.FormPostInitialize;
-        begin
-          AutoState:= asFull;  // Must set it before inherited!
-          inherited FormPostInitialize;
-          // Initialize your own code here
-        end;
-
-        procedure TYourForm.FormPreRelease;
-        begin
-          // Free your stuff here
-          inherited FormPreRelease;
-        end;
+           procedure TYourForm.FormPreRelease;
+           begin
+             // Free your stuff here
+             inherited FormPreRelease;
+           end;
 
 
 --------------------------------------------------------------------------------------------------------------
-
-  Extra features
-
-      FormPreRelease
-
-         Optionally you can use the FormPreRelease event to execute your code on application shutdown.
-         Unlike other events, FormPreRelease is always called, and it is guaranteed to be called once and only once!
-
-         Execution order: FormPreRelease -> FormClose -> FormDestroy
 
       Self saving forms
 
@@ -91,7 +71,6 @@ TYPE
     constructor Create(AOwner: TComponent; aAutoState: TAutoState); reintroduce; overload; virtual;
     function CloseQuery: Boolean; override;
 
-    procedure FormPostInitialize; virtual;   // Users should initialize their code here.
     procedure FormPreRelease; virtual;
 
     procedure LoadForm; virtual;
@@ -135,7 +114,7 @@ begin
   then EnsureFormVisibleOnScreen(Self);
 
   // Show app name
-  AppData.MainFormCaption('');      // Must be before FormPostInitialize because the user could put his own caption there.
+  AppData.MainFormCaption('');
 
   // Load form
   // Limitation: At this point we can only load "standard" Delphi components. Loading of our Light components can only be done in Light_FMX.Visual.INIFile.pas -> TIniFileVCL
@@ -144,7 +123,7 @@ begin
   then FAutoState:= AppData.GetAutoState;
 
   if AutoState = asUndefined
-  then RAISE Exception.Create('The user must set the AutoState property in code (see TLightForm.FormPostInitialize)!' + CRLF+'Form: '+ Name+ ' / '+ ClassName)
+  then RAISE Exception.Create('The user must set the AutoState via AppData.CreateForm()' + CRLF + 'Form: '+ Name+ ' / '+ ClassName)
   else
     if AutoState <> asNone
     then LoadForm;
@@ -154,15 +133,6 @@ begin
   if NOT AppData.StartMinim
   AND Visible
   then Show;
-
-  // Window fully constructed. Now we can let user run its own initialization process.
-  FormPostInitialize;
-end;
-
-
-procedure TLightForm.FormPostInitialize;
-begin
-  // This can be overridden by the user to implement initialization after the form is ready
 end;
 
 
