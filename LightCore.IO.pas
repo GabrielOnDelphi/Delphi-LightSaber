@@ -1,9 +1,8 @@
 ﻿UNIT LightCore.IO;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.06
    www.GabrielMoraru.com
+   2025
    See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
@@ -113,6 +112,34 @@ CONST
    {}
    FilterApps    = 'Applications|*.exe';
    Executables   = '*.exe;*.cmd;*.bat;*.dll;*.ocx';
+
+   { GRAPH FILTERS }
+   // Also see this FMX function: TBitmapCodecManager.GetFileTypes.
+   JPG           = '*.jpg;*.jpeg;*.jpe;*.jp;*.jfif';
+   JPGFtl        = 'JPEG|'+ JPG;
+
+   JPG2k         = '*.J2K;*JPC;*.JP2';
+   JPG2kFtl      = 'JPEG 2000|'+ JPG2k;
+
+   JPGAll        = JPG+ ';'+ JPG2k;
+   JPGAllFlt     = JPGFtl+ '|'+ JPG2kFtl;
+
+   BmpType       = '*.BMP';   // Also you can use: GraphicExtension(TBitmap)
+   BMPFtl        = 'Bitmaps|'+ BmpType;
+
+   PNG           = '*.PNG';
+   PNGFtl        = 'PNG|'+ PNG;
+
+   GIF           = '*.GIF';
+   GIFFtl        = 'GIF|'+ GIF;
+
+   XMF           = '*.EMF;*.WMF';
+   XMFFtl        = 'Microsoft EMF/WMF|'+ XMF;
+
+   AllImg        = JPG+ ';'+ JPG2k+ ';'+ BmpType+ ';'+ PNG+ ';'+ GIF;
+   AllImgFlt     = 'Images|'+ AllImg;
+
+   AllImgFltLong =  AllImgFlt+ '|'+ JPGFtl+ '|'+ JPG2kFtl+ '|'+ BMPFtl+ '|'+ PNGFtl+ '|'+ GIFFtl+ '|'+ XMFFtl;
 
 
 
