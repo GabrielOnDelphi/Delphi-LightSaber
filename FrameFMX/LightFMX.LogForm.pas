@@ -52,7 +52,6 @@ TYPE
     procedure LoadSettings;
     procedure SaveSettings;
   public
-    //procedure FormPostInitialize; override; // Called after the main form was fully initilized
   end;
 
 
@@ -66,12 +65,6 @@ USES
 {-------------------------------------------------------------------------------------------------------------
   FORM CREATION
 -------------------------------------------------------------------------------------------------------------}
-{procedure TfrmRamLog.FormPostInitialize;
-begin
-  inherited FormPostInitialize;
-end;}
-
-
 procedure TfrmRamLog.FormCreate(Sender: TObject);
 begin
   LogViewer.AssignExternalRamLog(AppData.RamLog);   // FormLog will display data from AppData's RAM log
