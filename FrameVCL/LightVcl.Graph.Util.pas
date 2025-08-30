@@ -44,34 +44,6 @@ USES
    System.SysUtils, System.Classes, System.Types, System.Math,
    Vcl.Graphics, Vcl.Controls, Vcl.Imaging.PngImage, Vcl.Themes, Vcl.GraphUtil;
 
-CONST
-  JPG             = '*.jpg;*.jpeg;*.jpe;*.jp;*.jfif';
-  JPGFtl          = 'JPEG|'+ JPG;
-
-  JPG2k           = '*.J2K;*JPC;*.JP2';
-  JPG2kFtl        = 'JPEG 2000|'+ JPG2k;
-
-  JPGAll          = JPG+ ';'+ JPG2k;
-  JPGAllFlt       = JPGFtl+ '|'+ JPG2kFtl;
-
-  BmpType         = '*.BMP';   // Also you can use: GraphicExtension(TBitmap)
-  BMPFtl          = 'Bitmaps|'+ BmpType;
-
-  PNG             = '*.PNG';
-  PNGFtl          = 'PNG|'+ PNG;
-
-  GIF             = '*.GIF';
-  GIFFtl          = 'GIF|'+ GIF;
-
-  XMF             = '*.EMF;*.WMF';
-  XMFFtl          = 'Microsoft EMF/WMF|'+ XMF;
-
-  AllImg          = JPG+ ';'+ JPG2k+ ';'+ BmpType+ ';'+ PNG+ ';'+ GIF;
-  AllImgFlt       = 'Images|'+ AllImg;
-
-  AllImgFltLong   =  AllImgFlt+ '|'+ JPGFtl+ '|'+ JPG2kFtl+ '|'+ BMPFtl+ '|'+ PNGFtl+ '|'+ GIFFtl+ '|'+ XMFFtl;
-
-
 TYPE
 
   { Scan line for pf24 images }
