@@ -38,6 +38,8 @@ contains
   LightFmx.Visual.Panel in 'LightFmx.Visual.Panel.pas',
   LightFmx.Visual.DropDownSearch in 'LightFmx.Visual.DropDownSearch.pas',
   LightFmx.Visual.Layout in 'LightFmx.Visual.Layout.pas',
-  LightFmx.Visual.ComboBox in 'LightFmx.Visual.ComboBox.pas';
+  LightFmx.Visual.ComboBox in 'LightFmx.Visual.ComboBox.pas',
+  LightFmx.Visual.LabeledEdit in 'LightFmx.Visual.LabeledEdit.pas',
+  LightFmx.Visual.SpinBox in 'LightFmx.Visual.SpinBox.pas';
 
 end.
