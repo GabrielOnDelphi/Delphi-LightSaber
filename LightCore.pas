@@ -17,8 +17,6 @@
 
 INTERFACE
 
-{ $I Frameworks.inc}
-
 USES
    System.AnsiStrings, System.Character, System.SysUtils, System.Math, System.IOUtils, System.StrUtils,
    System.Classes, System.Types, System.TimeSpan, System.DateUtils;
@@ -80,12 +78,10 @@ CONST
    IndexedIn0        = 0;
    IndexDiff         = 1;
    HeaderOverhead    = 1;
-   HeaderRow0        = 0;
+   HeaderRow         = 0;
 
 { Mine }
 CONST
-   //CanCreate       = TRUE;
-   //CantCreate      = FALSE;
    SHOW              = TRUE;
    HIDE              = FALSE;
    OFF               = FALSE;
@@ -103,25 +99,35 @@ CONST
 CONST
    UnInitialized     = -7777777;
    MinINT            = Low(Integer);                  { -2147483648 }
-   MAXSMALLINT       = high(smallint);
-   MINSMALLINT       = low(smallint);
-   MINWORD           = low(word);
-   MAXSHORTINT       = high(shortint);
-   MINSHORTINT       = low(shortint);
-   MINBYTE           = low(byte);
-   MAXLONGWORD       = high(longword);
-   MINLONGWORD       = low(longword);
-   MAXSTRING         = MaxInt;
+
+   MAXSMALLINT       = High(smallint);
+   MINSMALLINT       = Low(smallint);
+
+   MAXSHORTINT       = High(shortint);
+   MINSHORTINT       = Low(shortint);
+   {
+   MINBYTE           = Low(byte);
+   MAXLONGWORD       = High(longword);
+   MINLONGWORD       = Low(longword);
+   MAXSTRING         = MaxInt;  }
 
    RegStartUpKey     = 'Software\Microsoft\Windows\CurrentVersion\Run';
 
 TYPE
   TStringArray       = array of string;
+  TSingleArray       = array of Single;
+  TDoubleArray       = array of Double;
   TBytesArray        = System.SysUtils.TBytes;
   TNotifyMsgEvent    = procedure(Sender: TObject; Msg: string) of object;    { For general use }
   WebURL             = string;
 
 
+  TIntegerArray      = array of Integer;
+  TIntegerArrayHelper= record helper for TIntegerArray
+  public
+    function Average: Single;
+    procedure Add(const Element: Integer);
+  end;
 
 
 
@@ -3249,6 +3255,34 @@ begin
    end;
   LastPos:= Found;
 end; *)
+
+
+
+
+
+
+{ TIntegerArrayHelper }
+
+procedure TIntegerArrayHelper.Add(const Element: Integer);
+var Len: Integer;
+begin
+  Len:= Length(Self);
+  SetLength(Self, Len + 1);
+  Self[len]:= Element;
+end;
+
+
+function TIntegerArrayHelper.Average: Single;
+VAR i, Summ: Integer;
+begin
+  if Length(Self) = 0 then EXIT(0);
+
+  Summ:= 0;
+  for i in Self DO
+    Summ:= Summ+ i;
+
+  Result:= Summ / Length(Self);
+end;
 
 
 end.
