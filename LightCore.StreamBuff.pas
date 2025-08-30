@@ -55,7 +55,7 @@ INTERFACE
 { $I Frameworks.inc}
 
 USES
-   System.SysUtils, System.Classes;
+   System.SysUtils, System.Classes, System.Types, LightCore;
 
 TYPE
   TCubicBuffStream= class(System.Classes.TBufferedFileStream)
@@ -102,9 +102,19 @@ TYPE
      procedure WriteUInt64   (i: UInt64);
      procedure WriteWord     (w: Word);
 
+     { Complex structures }
+     function  ReadRect: TRect;
+     procedure WriteRect(Rect: TRect);
+
+     procedure ReadList (List: LightCore.TIntegerArray); overload;
+     procedure WriteList(List: LightCore.TIntegerArray); overload;
+
+     procedure ReadList (List: LightCore.TDoubleArray);  overload;
+     procedure WriteList(List: LightCore.TDoubleArray);  overload;
+
      { Reverse read }
      function  RevReadCardinal: Cardinal;                                  { REVERSE READ - read 4 bytes and swap their position. For Motorola format. }
-     function  RevReadInteger: Integer;
+     function  RevReadInteger : Integer;
      function  RevReadWord    : Word;                                      { REVERSE READ - read 2 bytes and swap their position. For Motorola format. }
 
      { Unicode }
@@ -168,7 +178,7 @@ TYPE
 
 IMPLEMENTATION
 USES
-   LightCore, LightCore.Binary; 
+   LightCore.Binary;
 
 
 
@@ -656,11 +666,6 @@ end;
 
 
 
-
-
-
-
-
 {--------------------------------------------------------------------------------------------------
    FLOATS
 --------------------------------------------------------------------------------------------------}
@@ -704,6 +709,67 @@ procedure TCubicBuffStream.WriteDate(d: TDateTime);
 begin
  WriteBuffer(d, 8);             { The size of Double is 8 bytes }
 end;
+
+
+
+
+{--------------------------------------------------------------------------------------------------
+   COMPLEX STRUCTURES
+--------------------------------------------------------------------------------------------------}
+function TCubicBuffStream.ReadRect: TRect;
+begin
+  ReadBuffer(Result.Left  , 4);
+  ReadBuffer(Result.Top   , 4);
+  ReadBuffer(Result.Right , 4);
+  ReadBuffer(Result.Bottom, 4);
+end;
+
+procedure TCubicBuffStream.WriteRect(Rect: TRect);
+begin
+  WriteBuffer(Rect.Left  , 4);
+  WriteBuffer(Rect.Top   , 4);
+  WriteBuffer(Rect.Right , 4);
+  WriteBuffer(Rect.Bottom, 4);
+end;
+
+
+
+procedure TCubicBuffStream.ReadList(List: LightCore.TIntegerArray);
+VAR i: Integer;
+begin
+ VAR Count:= ReadInteger;
+ SetLength(List, Count);
+ for i:= 0 to High(List) DO
+   List[i]:= ReadInteger;
+end;
+
+procedure TCubicBuffStream.WriteList(List: LightCore.TIntegerArray);
+VAR Int: Integer;
+begin
+ WriteInteger(Length(List));
+ for Int in List DO
+   WriteInteger(Int);
+end;
+
+
+
+procedure TCubicBuffStream.ReadList(List: LightCore.TDoubleArray);
+VAR i: Integer;
+begin
+ VAR Count:= ReadInteger;
+ SetLength(List, Count);
+ for i:= 0 to High(List) DO
+   List[i]:= ReadDouble;
+end;
+
+procedure TCubicBuffStream.WriteList(List: LightCore.TDoubleArray);
+VAR Dbl: Double;
+begin
+ WriteInteger(Length(List));
+ for Dbl in List DO
+   WriteDouble(Dbl);
+end;
+
 
 
 
