@@ -28,9 +28,9 @@ TYPE
     procedure chkShowTimeChange   (Sender: TObject);
     procedure chkScrollDownChange (Sender: TObject);
     procedure btnClearClick       (Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
   public
-   procedure FormPostInitialize; override;
   end;
 
 VAR
@@ -45,10 +45,9 @@ USES LightCore.AppData;
 
 
 
-procedure TMainForm.FormPostInitialize;
+procedure TMainForm.FormCreate(Sender: TObject);
 begin
   LogViewer.ObserveAppDataLog;
-  inherited FormPostInitialize;           // This will load the form's state from disk
   {
   if AppData.RunningHome
   then LogViewer.TrackBar.Min:= 0    // We allow us to see the "Debug" lines
