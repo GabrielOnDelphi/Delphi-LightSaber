@@ -13,10 +13,8 @@ UNIT LightCore.Math;
 INTERFACE
 
 USES
-   System.Math, System.Types, System.Generics.Collections;
+   System.Math, System.Types, System.Generics.Collections, LightCore;
 
-TYPE
-  TSingleArray = array of Single;
 
 
 {==================================================================================================
@@ -79,6 +77,7 @@ TYPE
 ==================================================================================================}
  function  Factorial       (CONST n: byte): Int64;                                               { ATENTIE: din cauza numerelor gigantice pe care mi le da, parametrul 'n' nu poate fi mai mare de 20.  Formula n!= n*(n-1)*(n-2)*...*3*2*1 }
  function  Combinations    (CONST n, r: integer): Int64;                                         { Combinations of n taken r at the time= n! / (n-r)! * r! }
+ function  Average         (aArray: TIntegerArray): Single;
  {$IFDEF CPUX86}
  function  FastModulo(const X, Y: Integer): Integer; assembler; { https://forum.lazarus.freepascal.org/index.php/topic,36342.15.html }
  {$ENDIF}
@@ -343,9 +342,8 @@ end;
 { FORMULA:  Combinations of n taken r at the time= n! / (n-r)! * r! }
 function Combinations(CONST n, r: integer): Int64;
 begin
- Result:= round(Factorial(n) / ( Factorial(n-r) * Factorial(r)));
+  Result:= round(Factorial(n) / ( Factorial(n-r) * Factorial(r)));
 end;
-
 
 
 
