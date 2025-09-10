@@ -25,7 +25,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls,
   InternetLabel,
-  LightCore, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, ciUpdater, LightVcl.Visual.RichLog, LightVcl.Visual.RichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
+  LightCore, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, ciUpdater, LightVcl.Visual.RichLog, LightVcl.Visual.RichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
 
 CONST
   UpdaterURL = 'https://www.GabrielMoraru.com/uploads/OnlineNews_v2_TemplateApp.bin'; { For demo purposes }

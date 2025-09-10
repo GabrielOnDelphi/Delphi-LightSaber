@@ -99,7 +99,7 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
    LightVcl.Common.Colors, LightVcl.Common.Translate, LightVcl.Common.IniFileQuick, {uLinks,} Vcl.Themes, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.ExecuteShell,
-   LightVcl.Visual.INIFile, IOUtils, LightCore.IO, LightCore, LightVcl.Common.Dialogs;   { VCL.Styles is mandatory here}
+   LightVcl.Visual.INIFile, IOUtils, LightCore.IO, LightCore, LightCore.Types, LightVcl.Common.Dialogs;   { VCL.Styles is mandatory here}
 
 CONST
   DefWinTheme= 'Windows default theme';

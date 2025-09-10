@@ -55,7 +55,7 @@ INTERFACE
 { $I Frameworks.inc}
 
 USES
-   System.SysUtils, System.Classes, System.Types, LightCore;
+   System.SysUtils, System.Classes, System.Types, LightCore, LightCore.Types;
 
 TYPE
   TCubicBuffStream= class(System.Classes.TBufferedFileStream)
@@ -106,11 +106,11 @@ TYPE
      function  ReadRect: TRect;
      procedure WriteRect(Rect: TRect);
 
-     procedure ReadList (List: LightCore.TIntegerArray); overload;
-     procedure WriteList(List: LightCore.TIntegerArray); overload;
+     procedure ReadList (List: TIntegerArray); overload;
+     procedure WriteList(List: TIntegerArray); overload;
 
-     procedure ReadList (List: LightCore.TDoubleArray);  overload;
-     procedure WriteList(List: LightCore.TDoubleArray);  overload;
+     procedure ReadList (List: TDoubleArray);  overload;
+     procedure WriteList(List: TDoubleArray);  overload;
 
      { Reverse read }
      function  RevReadCardinal: Cardinal;                                  { REVERSE READ - read 4 bytes and swap their position. For Motorola format. }
@@ -734,7 +734,7 @@ end;
 
 
 
-procedure TCubicBuffStream.ReadList(List: LightCore.TIntegerArray);
+procedure TCubicBuffStream.ReadList(List: TIntegerArray);
 VAR i: Integer;
 begin
  VAR Count:= ReadInteger;
@@ -743,7 +743,7 @@ begin
    List[i]:= ReadInteger;
 end;
 
-procedure TCubicBuffStream.WriteList(List: LightCore.TIntegerArray);
+procedure TCubicBuffStream.WriteList(List: TIntegerArray);
 VAR Int: Integer;
 begin
  WriteInteger(Length(List));
@@ -753,7 +753,7 @@ end;
 
 
 
-procedure TCubicBuffStream.ReadList(List: LightCore.TDoubleArray);
+procedure TCubicBuffStream.ReadList(List: TDoubleArray);
 VAR i: Integer;
 begin
  VAR Count:= ReadInteger;
@@ -762,7 +762,7 @@ begin
    List[i]:= ReadDouble;
 end;
 
-procedure TCubicBuffStream.WriteList(List: LightCore.TDoubleArray);
+procedure TCubicBuffStream.WriteList(List: TDoubleArray);
 VAR Dbl: Double;
 begin
  WriteInteger(Length(List));

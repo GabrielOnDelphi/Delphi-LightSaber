@@ -181,7 +181,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-  LightVcl.Common.VclUtils, LightVcl.Common.Sound, LightCore, LightCore.Math, LightCore.TextFile;
+  LightVcl.Common.VclUtils, LightVcl.Common.Sound, LightCore, LightCore.Types, LightCore.Math, LightCore.TextFile;
 
 
 

@@ -1,4 +1,4 @@
-﻿UNIT LightCore.Registry;
+﻿UNIT LightVcl.Common.Registry;
 
 {=============================================================================================================
    2025.03
@@ -16,6 +16,7 @@ USES
 
 CONST
    LazyWrite = TRUE;
+   RegStartUpKey   = 'Software\Microsoft\Windows\CurrentVersion\Run';
 
  function Convert_HKey2Str      (CONST Key: HKEY): string;
  function Convert_Str2HKey      (CONST Key: string): HKEY;

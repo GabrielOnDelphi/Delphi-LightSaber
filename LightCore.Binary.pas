@@ -21,14 +21,10 @@
 
 INTERFACE
 
-{ $I Frameworks.inc}
-
 USES
    {$IFDEF MSWINDOWS}Winapi.Windows,{$ENDIF}
-   System.SysUtils, System.Classes, System.Types;
+   System.SysUtils, System.Classes, System.Types, LightCore.Types;
  
-CONST
-   HexNumbers = ['0'..'9', 'a'..'f', 'A'..'F'];
 
 
 {--------------------------------------------------------------------------------------------------

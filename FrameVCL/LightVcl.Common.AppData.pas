@@ -116,9 +116,16 @@ TYPE
     procedure setGuiProperties(Form: TForm);
     procedure setFont(aFont: TFont);
     function getGlobalLog: TfrmRamLog;
+
+    // Installer
+    procedure writeAppDataFolder;
+    procedure writeInstallationFolder;
   protected
     procedure setHintType(const aHintType: THintType); override;
     procedure setHideHint(const Value: Integer); override;
+
+    // Installer
+    procedure RegisterUninstaller;
   public
    {--------------------------------------------------------------------------------------------------
       INIT
@@ -154,6 +161,12 @@ TYPE
     function  RunSelfAtStartUp(Active: Boolean): Boolean;
 
     class procedure RaiseIfStillInitializing;
+
+   {--------------------------------------------------------------------------------------------------
+      Installer
+   --------------------------------------------------------------------------------------------------}
+    function  ReadAppDataFolder(CONST UninstalledApp: string): string;  //used by Uninstaller App
+    function  ReadInstallationFolder(CONST UninstalledApp: string): string;
 
    {--------------------------------------------------------------------------------------------------
       FORMS
@@ -194,7 +207,8 @@ VAR                      // ToDo 5: make sure AppData is unique (make it Singlet
 IMPLEMENTATION
 
 USES
-  LightVcl.Common.WinVersion, LightVcl.Common.ExeVersion, LightVcl.Common.Translate, LightCore.IO, LightVcl.Common.CenterControl, LightVcl.Common.AppDataForm;
+  LightVcl.Common.WinVersion, LightVcl.Common.ExeVersion, LightVcl.Common.Translate,
+  LightCore.IO, LightVcl.Common.CenterControl, LightVcl.Common.AppDataForm, LightVcl.Common.Registry;
 
 
 { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }
@@ -909,6 +923,59 @@ begin
   then RAISE Exception.Create(AppStillInitializingMsg);
 end;
 
+
+
+
+
+
+
+{--------------------------------------------------------------------------------------------------
+   UNINSTALLER
+---------------------------------------------------------------------------------------------------
+   READ/WRITE folders to registry
+   This is used by the Uninstaller.
+   See c:\MyProjects\Project support\Cubic Universal Uninstaller\Uninstaller.dpr
+--------------------------------------------------------------------------------------------------}
+CONST
+   UninstallerRegKey: string= 'Software\CubicDesign\';
+
+procedure TAppData.writeAppDataFolder;                                           { Called by the original app }
+begin
+  RegWriteString(HKEY_CURRENT_USER, UninstallerRegKey+ AppName, 'App data path', AppDataFolder);                                                                                                                              {Old name: WriteAppGlobalData }
+end;
+
+
+function TAppData.ReadAppDataFolder(CONST UninstalledApp: string): string;       { Called by the uninstaller }
+begin
+  Result:= RegReadString(HKEY_CURRENT_USER, UninstallerRegKey+ UninstalledApp, 'App data path');
+end;
+
+
+{------------------------
+   Instalation Folder
+------------------------}
+procedure TAppData.writeInstallationFolder;                                      { Called by the original app }                                                                                                                                       {Old name: WriteAppGlobalData }
+begin
+  RegWriteString(HKEY_CURRENT_USER, UninstallerRegKey+ AppName, 'Install path', ExeFolder);
+end;
+
+
+function TAppData.ReadInstallationFolder(CONST UninstalledApp: string): string;  { Called by the uninstaller }
+begin
+  Result:= RegReadString(HKEY_CURRENT_USER, UninstallerRegKey+ UninstalledApp, 'Install path');
+end;
+
+
+// This will be called automatically by CreateMainForm
+procedure TAppData.RegisterUninstaller;
+begin
+  // Write to Control Panel
+  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'DisplayName', AppName);
+  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'UninstallString', SysDir+ 'Uninstall.exe');
+
+  writeAppDataFolder;
+  writeInstallationFolder;
+end;
 
 
 

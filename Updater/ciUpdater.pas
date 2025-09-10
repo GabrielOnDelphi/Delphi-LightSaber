@@ -45,7 +45,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.DateUtils, System.Classes, Vcl.ExtCtrls,
-  ciUpdaterRec, LightCore;
+  ciUpdaterRec, LightCore, LightCore.Types;
 
 TYPE
   TCheckWhen = (cwNever,

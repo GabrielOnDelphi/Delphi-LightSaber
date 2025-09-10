@@ -58,7 +58,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   LightCore, LightCore.IO, LightCore.TextFile;
+   LightCore, LightCore.Types, LightCore.IO, LightCore.TextFile;
 
 
 constructor THtmlWriter.Create(AOwner: TComponent);

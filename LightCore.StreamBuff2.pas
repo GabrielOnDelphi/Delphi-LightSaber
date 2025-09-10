@@ -20,8 +20,6 @@ UNIT LightCore.StreamBuff2;
 
 INTERFACE
 
-{ $I Frameworks.inc}
-
 USES
   System.SysUtils, math, System.Classes, LightCore.StreamBuff;
 

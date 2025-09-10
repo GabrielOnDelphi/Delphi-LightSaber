@@ -56,8 +56,8 @@ TYPE
     function  ExtractFrame(FrameNo: Cardinal): TBitmap;
 
     // Output
-    property FrameDelay: Integer read FFrameDelay;
-    property FrameCount: Integer read FFrameCount;
+    property FrameDelay: Integer  read FFrameDelay;
+    property FrameCount: Cardinal read FFrameCount;
  end;
 
 
@@ -69,7 +69,7 @@ IMPLEMENTATION
 
 USES
   GifProperties,
-  LightCore, LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Common.AppData, LightCore.IO;
+  LightCore, LightCore.Types, LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Common.AppData, LightCore.IO;
 
 
 constructor TGifLoader.Create;
@@ -89,7 +89,7 @@ end;
 
 function TGifLoader.Open(aFileName: string): Boolean;  { GIF frames are stored in RAM or to disk }
 begin
- FrameCount:= 0;
+ FFrameCount:= 0;
  Result    := TRUE;
  FileName  := aFileName;
 
@@ -106,7 +106,7 @@ begin
  END;
 
  { STATIC GIF? }
- FrameCount:= GIFImg.Images.Count;
+ FFrameCount:= GIFImg.Images.Count;
  if FrameCount <= 1 then
   begin
    AppData.LogError('This is not an animated GIF: '+ FileName);

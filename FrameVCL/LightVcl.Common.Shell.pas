@@ -96,7 +96,7 @@ USES
  
 IMPLEMENTATION
 USES
-   LightVcl.Common.IO, LightCore.IO, LightCore.TextFile, LightCore.AppData, LightVcl.Common.AppData, LightCore.Registry, LightCore, LightVcl.Common.Dialogs;
+   LightVcl.Common.IO, LightCore.IO, LightCore.TextFile, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.Registry, LightCore, LightCore.Types, LightVcl.Common.Dialogs;
 
  
 

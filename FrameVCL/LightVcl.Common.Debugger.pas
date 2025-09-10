@@ -83,7 +83,7 @@ USES
 
 IMPLEMENTATION
 USES
-   LightVcl.Common.SystemTime, LightVcl.Common.System, LightCore, LightVcl.Common.Dialogs, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO, LightVcl.Common.WinVersion, LightVcl.Common.ExecuteProc, LightVcl.Common.SystemPermissions, System.DateUtils;
+   LightVcl.Common.SystemTime, LightVcl.Common.System, LightCore, LightCore.Types, LightVcl.Common.Dialogs, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO, LightVcl.Common.WinVersion, LightVcl.Common.ExecuteProc, LightVcl.Common.SystemPermissions, System.DateUtils;
 
 
 

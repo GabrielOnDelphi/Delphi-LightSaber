@@ -183,7 +183,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES LightCore.Math, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Sound, LightCore, LightVcl.Common.Dialogs;
+USES LightCore.Math, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Sound, LightCore, LightCore.Types, LightVcl.Common.Dialogs;
 
 CONST
    MinColWidth= 20;
@@ -663,13 +663,13 @@ begin
  if (csCreating in ControlState) then EXIT(0);
 
  Result:= Row;
- if Result<= HeaderRow0
+ if Result<= HeaderRow
  then
     if NOT IsEmpty
     then
       begin
-       Row   := HeaderRow0 +1;                                                                     { pun cursorul pe primul element din lista }
-       Result:= HeaderRow0 +1;
+       Row   := HeaderRow +1;                                                                     { pun cursorul pe primul element din lista }
+       Result:= HeaderRow +1;
       end
     else Result:= 0;                                                                              { Cannot fix cursor }
 end;

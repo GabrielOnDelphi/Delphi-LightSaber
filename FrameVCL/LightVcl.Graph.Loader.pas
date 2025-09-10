@@ -105,7 +105,7 @@ USES
    {$IFDEF FastJpg}FastJpegDecHelper,{$ENDIF}
    LightVcl.Graph.Resize, LightVcl.Graph.ResizeVCL, LightVcl.Graph.Loader.Resolution, LightVcl.Graph.UtilGray,
    LightVcl.Graph.Loader.WB1, LightVcl.Graph.Loader.RainDrop, LightCore.IO, LightVcl.Common.IO, LightVcl.Graph.FX.Rotate,
-   LightCore.AppData, LightVcl.Common.AppData, LightCore, LightVcl.Graph.AviFrame, LightVcl.Graph.Gif;
+   LightCore.AppData, LightVcl.Common.AppData, LightCore, LightCore.Types, LightVcl.Graph.AviFrame, LightVcl.Graph.Gif;
 
 
 

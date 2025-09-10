@@ -142,31 +142,19 @@
                 <Source>
                     <Source Name="MainSource">LightVisControls.dpk</Source>
                 </Source>
-                <Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k290.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp290.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\BioControl290.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\BioControl290.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\FMX_Test.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\FMX_Test.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightAppDataVCL290.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightAppDataVCL290.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightFMX_Visual.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightFMX_Visual.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightFmxBase290.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightFmxBase290.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightFmxCommon290.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightFmxCommon290.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightProteus290.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightProteus290.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightVclBase290.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightVclBase290.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightVisControls290.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightVisControls290.bpl not found</Excluded_Packages>
-                </Excluded_Packages>
+                <Excluded_Packages/>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Android">False</Platform>
                 <Platform value="Android64">False</Platform>
-                <Platform value="iOSDevice64">False</Platform>
-                <Platform value="iOSSimARM64">False</Platform>
                 <Platform value="Linux64">False</Platform>
                 <Platform value="OSX64">False</Platform>
                 <Platform value="OSXARM64">False</Platform>
                 <Platform value="Win32">True</Platform>
                 <Platform value="Win64">False</Platform>
                 <Platform value="Win64x">False</Platform>
+                <Platform value="iOSDevice64">False</Platform>
+                <Platform value="iOSSimARM64">False</Platform>
             </Platforms>
         </BorlandProject>
         <ProjectFileVersion>12</ProjectFileVersion>
