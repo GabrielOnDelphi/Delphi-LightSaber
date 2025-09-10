@@ -39,10 +39,10 @@ INTERFACE
 
 USES
   {$IFDEF MsWindows}
-    Winapi.Windows, LightCore.Registry, // for SelfStartup
+    Winapi.Windows, //LightVcl.Common.Registry, // for SelfStartup
   {$ENDIF}
    System.IOUtils, System.AnsiStrings, System.SysUtils,
-   LightCore, LightCore.INIFile, LightCore.LogRam;
+   LightCore, LightCore.Types, LightCore.INIFile, LightCore.LogRam;
 
 TYPE
   THintType = (htOff,                      // Turn off the embedded help system
@@ -69,10 +69,6 @@ TYPE
     class VAR FAppName: string;
     function  getLastUsedFolder: string;
     procedure setShowOnError(const Value: Boolean);
-
-    // Installer
-    procedure writeAppDataFolder;
-    procedure writeInstallationFolder;
   protected
     FHintType   : THintType;        // Turn off the embedded help system
     procedure setHideHint(const Value: Integer); virtual;
@@ -80,9 +76,6 @@ TYPE
     procedure saveSettings;     virtual;
     procedure defaultSettings;  virtual;
     procedure setHintType(const Value: THintType); virtual; abstract;
-
-    // Installer
-    procedure RegisterUninstaller;
   public
     RamLog: TRamLog;
 
@@ -118,12 +111,6 @@ TYPE
       StartMinim   : Boolean;          // Start minimized. Remmbers application's last state (it was minimized or not)
       Minimize2Tray: Boolean;          // Minimize to tray
       Opacity      : Integer;          // Form opacity
-
-   {--------------------------------------------------------------------------------------------------
-      Installer
-   --------------------------------------------------------------------------------------------------}
-    function  ReadAppDataFolder(CONST UninstalledApp: string): string;  //used by Uninstaller App
-    function  ReadInstallationFolder(CONST UninstalledApp: string): string;
 
    {--------------------------------------------------------------------------------------------------
       App path/name
@@ -630,57 +617,6 @@ end;
 function ExeName: string;
 begin
   Result:= ParamStr(0);   //  Application.ExeName is available only on VCL
-end;
-
-
-
-
-{--------------------------------------------------------------------------------------------------
-   UNINSTALLER
----------------------------------------------------------------------------------------------------
-   READ/WRITE folders to registry
-   This is used by the Uninstaller.
-   See c:\MyProjects\Project support\Cubic Universal Uninstaller\Uninstaller.dpr
---------------------------------------------------------------------------------------------------}
-CONST
-   UninstallerRegKey: string= 'Software\CubicDesign\';
-
-procedure TAppDataCore.writeAppDataFolder;                                           { Called by the original app }
-begin
-  RegWriteString(HKEY_CURRENT_USER, UninstallerRegKey+ AppName, 'App data path', AppDataFolder);                                                                                                                              {Old name: WriteAppGlobalData }
-end;
-
-
-function TAppDataCore.ReadAppDataFolder(CONST UninstalledApp: string): string;       { Called by the uninstaller }
-begin
-  Result:= RegReadString(HKEY_CURRENT_USER, UninstallerRegKey+ UninstalledApp, 'App data path');
-end;
-
-
-{------------------------
-   Instalation Folder
-------------------------}
-procedure TAppDataCore.writeInstallationFolder;                                      { Called by the original app }                                                                                                                                       {Old name: WriteAppGlobalData }
-begin
-  RegWriteString(HKEY_CURRENT_USER, UninstallerRegKey+ AppName, 'Install path', ExeFolder);
-end;
-
-
-function TAppDataCore.ReadInstallationFolder(CONST UninstalledApp: string): string;  { Called by the uninstaller }
-begin
-  Result:= RegReadString(HKEY_CURRENT_USER, UninstallerRegKey+ UninstalledApp, 'Install path');
-end;
-
-
-// This will be called automatically by CreateMainForm
-procedure TAppDataCore.RegisterUninstaller;
-begin
-  // Write to Control Panel
-  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'DisplayName', AppName);
-  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'UninstallString', SysDir+ 'Uninstall.exe');
-
-  writeAppDataFolder;
-  writeInstallationFolder;
 end;
 
 

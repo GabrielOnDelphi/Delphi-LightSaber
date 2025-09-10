@@ -36,7 +36,6 @@ requires
   soaprtl;
 
 contains
-  LightCore.Registry in 'LightCore.Registry.pas',
   LightCore.IO in 'LightCore.IO.pas',
   LightCore in 'LightCore.pas',
   LightCore.Binary in 'LightCore.Binary.pas',
@@ -70,6 +69,7 @@ contains
   LightCore.SearchResult in 'LightCore.SearchResult.pas',
   LightCore.Download in 'LightCore.Download.pas',
   LightCore.HTML in 'LightCore.HTML.pas',
-  LightCore.Internet in 'LightCore.Internet.pas';
+  LightCore.Internet in 'LightCore.Internet.pas',
+  LightCore.Types in 'LightCore.Types.pas';
 
 end.
