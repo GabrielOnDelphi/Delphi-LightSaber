@@ -58,7 +58,7 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.Sound, LightCore, LightVcl.Common.System, LightVcl.Common.Shell, LightVcl.Common.ExecuteShell, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.CenterControl,
+   LightVcl.Common.Sound, LightCore, LightCore.Types, LightVcl.Common.System, LightVcl.Common.Shell, LightVcl.Common.ExecuteShell, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.CenterControl,
    LightCore.TextFile, LightVcl.Internet, LightCore.Internet, LightCore.Download, LightCore.IO,LightVcl.Internet.Download.WinInet;
 
 

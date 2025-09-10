@@ -29,7 +29,7 @@ IMPLEMENTATION
 {$R *.fmx}
 
 USES
-   LightCore, LightCore.AppData, LightCore.LogTypes, LightCore.LogRam, LightFmx.Common.AppData;
+   LightCore, LightCore.Types, LightCore.AppData, LightCore.LogTypes, LightCore.LogRam, LightFmx.Common.AppData;
 
 
 
