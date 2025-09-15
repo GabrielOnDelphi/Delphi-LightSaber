@@ -127,7 +127,7 @@ function FindMax         (DataPoints: TDataPoints): Integer;                    
 IMPLEMENTATION
 {$WARN GARBAGE OFF}                                                                                {Silence the: 'W1011 Text after final END' warning }
 
-USES LightCore.Math, LightCore;
+USES LightCore.Math, LightCore, LightCore.Time;
 
 
 

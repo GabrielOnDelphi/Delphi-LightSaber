@@ -98,7 +98,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-  LightCore, LightCore.Types, LightCore.TextFile, LightCore.AppData;
+  LightCore, LightCore.Time, LightCore.Types, LightCore.TextFile, LightCore.AppData;
 
 
 {-------------------------------------------------------------------------------------------------------------

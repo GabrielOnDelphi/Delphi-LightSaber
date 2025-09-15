@@ -14,7 +14,7 @@ INTERFACE
 USES
   Winapi.Windows,
   System.SysUtils, System.Classes, Vcl.Graphics, System.Types,
-  LightCore;
+  LightCore, LightCore.Time;
 
 procedure ResizeBitmapGDI(Source, Dest: TBitmap; OutWidth, OutHeight: integer);
 

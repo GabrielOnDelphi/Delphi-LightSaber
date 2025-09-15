@@ -396,7 +396,7 @@ CONST
 IMPLEMENTATION
 
 USES
-  LightCore;
+  LightCore, LightCore.Time;
 
 
 

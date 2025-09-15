@@ -18,7 +18,7 @@ INTERFACE
 USES
    System.SysUtils, // msHtml,
    System.AnsiStrings, System.StrUtils, System.Classes, System.Math,
-   LightCore.StringList, LightCore;
+   LightCore.StringList, LightCore, LightCore.Time;
 
 {--------------------------------------------------------------------------------------------------
    HTML PARSING

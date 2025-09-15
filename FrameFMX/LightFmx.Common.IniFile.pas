@@ -137,7 +137,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightCore.IO, LightCore.TextFile, LightCore, LightFmx.Common.AppData;
+   LightCore.IO, LightCore.TextFile, LightCore, LightCore.Time, LightFmx.Common.AppData;
 
 
 {-----------------------------------------------------------------------------------------------------------------------

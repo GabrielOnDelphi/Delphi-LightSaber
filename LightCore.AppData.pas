@@ -42,7 +42,7 @@ USES
     Winapi.Windows, //LightVcl.Common.Registry, // for SelfStartup
   {$ENDIF}
    System.IOUtils, System.AnsiStrings, System.SysUtils,
-   LightCore, LightCore.Types, LightCore.INIFile, LightCore.LogRam;
+   LightCore, LightCore.Time, LightCore.Types, LightCore.INIFile, LightCore.LogRam;
 
 TYPE
   THintType = (htOff,                      // Turn off the embedded help system

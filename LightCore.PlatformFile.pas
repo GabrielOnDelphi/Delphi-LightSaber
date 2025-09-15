@@ -36,7 +36,7 @@ TYPE
 
 
 IMPLEMENTATION
-USES LightCore, LightCore.Types;
+USES LightCore, LightCore.Time, LightCore.Types;
 
 
 { Detects if the specified stream contains Windows or Linux enters }

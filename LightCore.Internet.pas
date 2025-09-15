@@ -19,7 +19,7 @@ INTERFACE
 
 USES
    System.SysUtils, System.StrUtils, System.Classes, System.IniFiles,
-   LightCore;
+   LightCore, LightCore.Time;
 
 
 CONST

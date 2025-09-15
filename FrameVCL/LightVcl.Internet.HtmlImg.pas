@@ -42,7 +42,7 @@ function ExpandRelativePaths (CONST HtmlBody, Base: string): string;
 IMPLEMENTATION                                                                                                                                   {$WARN GARBAGE OFF}   {Silence the: 'W1011 Text after final END' warning }
 
 USES
-   LightCore.IO, LightVcl.Internet, LightCore.Internet, LightCore, LightCore.Types,LightVcl.Internet.HTML, LightCore.HTML;
+   LightCore.IO, LightVcl.Internet, LightCore.Internet, LightCore, LightCore.Time, LightCore.Types,LightVcl.Internet.HTML, LightCore.HTML;
 
 
 

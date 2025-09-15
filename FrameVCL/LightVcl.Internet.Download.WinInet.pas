@@ -67,7 +67,7 @@ function DownloadToFile    (CONST URL, Referer, DestinationFile: string): Cardin
 IMPLEMENTATION
 
 USES
-   LightCore, LightCore.Types, LightVcl.Common.Dialogs, LightCore.IO, LightCore.TextFile,
+   LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs, LightCore.IO, LightCore.TextFile,
    LightCore.Internet, LightVcl.Internet;
 
 

@@ -90,7 +90,7 @@ begin
         end;
  EXCEPT
   //todo 1: trap only specific exceptions
-  //DO NOTHING    or: write this directly in LightCore, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs log
+  //DO NOTHING    or: write this directly in LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs log
   Width := -1;    //DO NOT RAISE AN exception HERE IF THE FILE TYPE IS UNSUPORTED! Let the caller decide what to do. This could happen when bionix downloads and URL and the server returns a HTML instead of an image!
   Height:= -1;
  END;

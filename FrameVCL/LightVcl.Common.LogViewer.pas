@@ -107,7 +107,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   LightCore, LightCore.Types, 
+   LightCore, LightCore.Time, LightCore.Types, 
    LightVcl.Common.Colors, LightVcl.Common.Clipboard, LightVcl.Common.LogFilter;
 
 

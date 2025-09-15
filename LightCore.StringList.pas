@@ -24,12 +24,12 @@ USES
 
 TYPE
   TTSL= class helper for TStringList
+  private
     public
      procedure RemoveDuplicateString(CONST s: string);            { Removes the specified item from the list if it exists there }
      procedure RemoveDuplicateFile(CONST FileName: string);       { Similar as above but it uses a faster algorithm specialized in comparing file names }
      procedure RemoveDuplicates;                                  { THIS WILL SORT THE LIST !!! }
      procedure RemoveEmptyLines;
-     procedure RemoveTopLines(const aCount: Integer);
      function  RemoveLines   (const BadWord: string): Integer;
      function  KeepLines     (const KeepText: string): Integer;
      procedure Trim;                                              { Trim empty spaces, tab, enters, etc on each line }
@@ -38,13 +38,21 @@ TYPE
      procedure SortReverse;
      function  HighestString: string;
      function  Concatenate(const Separator: string): String;
+
+     // Top
+     function  GetTopLines(Count: Integer; IgnoreEmptyLines: Boolean= TRUE): string;
+     procedure RemoveTopLines(const aCount: Integer);
    end;
 
 
+ // Work on a multi-line text
+ function  String2TSL     (CONST s: string): TStringList;                                                     { Converts a string to a TStringList. In other words it breaks the text to multiple lines. I need to call Free after this! }
+ function  ExtractTopLines(CONST Text: string; Count: Integer; IgnoreEmptyLines: Boolean= TRUE): string;      { Returns the top x lines from a text (multiple lines) }
+ function  FindLine       (CONST Needle, Haystack: string): string;
+
 
 IMPLEMENTATION
-
-USES LightCore;
+USES LightCore, LightCore.Time;
 
 
 
@@ -92,16 +100,6 @@ begin
     Delete(i);
     Inc(Result);
    end;
-end;
-
-
-procedure TTSL.RemoveTopLines(CONST aCount: Integer);    { Remove the firs x lines }
-VAR
-   i: Integer;
-begin
- Assert(acount <= Count);
- for i:= aCount-1 downto 0
-  DO Self.Delete(i);
 end;
 
 
@@ -204,6 +202,99 @@ begin
  END;
 
  Sorted:= FALSE;    { We need to cancel Sorted now, otherwise I get "EStringListError: Operation not allowed on sorted list" when I try to edit the lines }
+end;
+
+
+
+
+
+
+{ TOP }
+procedure TTSL.RemoveTopLines(CONST aCount: Integer);    { Remove the firs x lines }
+VAR
+   i: Integer;
+begin
+ Assert(acount <= Count);
+ for i:= aCount-1 downto 0
+  DO Self.Delete(i);
+end;
+
+
+function TTSL.GetTopLines(Count: Integer; IgnoreEmptyLines: Boolean= TRUE): string;
+VAR
+   s: string;
+   Total: Integer;
+begin
+  Total:= 0;
+  Result:= '';
+
+  for s in Self DO
+    if IgnoreEmptyLines AND (s > '')
+    OR NOT IgnoreEmptyLines then
+     begin
+       Inc(Total);
+       Result:= Result+ s+ CRLF;
+       if Total = Count then Break;
+     end;
+
+  Result:= RemoveLastEnter(Result);
+end;
+
+
+
+
+
+
+
+
+
+
+
+
+function String2TSL(CONST s: string): TStringList;                                                       { Converts a string to a TStringList. Need to call Free after this! }
+begin
+ Result:= TStringList.Create;
+ Result.Text:= s;
+end;
+
+
+
+{-----------------------------------------------------------------------------
+   EXTRACT
+-----------------------------------------------------------------------------}
+{ Returns the top x lines from a text (multiple lines) }
+function ExtractTopLines(CONST Text: string; Count: Integer; IgnoreEmptyLines: Boolean= TRUE): string;
+begin
+ VAR TSL:= TStringList.Create;
+ TRY
+  TSL.Text:= Text;
+  Result:= TSL.GetTopLines(Count, IgnoreEmptyLines);
+ FINALLY
+   FreeAndNil(TSL);
+ END;
+end;
+
+
+
+
+
+{ Looks for Needle (partial search) into the Haystack.
+  If found, returns the whole line that contained the Needle.
+  Haystack is a string what contains multiple lines of text separated by enter. } // Old name: ExtractLine
+function FindLine(CONST Needle, Haystack: string): string;
+VAR
+   TSL: TStringList;
+   s: string;
+begin
+ Result:= '';
+ TSL:= String2TSL(Haystack);
+ TRY
+  for s in TSL DO
+    if Pos(Needle, s) > 0
+    then EXIT(s);
+ FINALLY
+  FreeAndNil(TSL);
+ END;
 end;
 
 

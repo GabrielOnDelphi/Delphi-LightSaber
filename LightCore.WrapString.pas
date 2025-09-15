@@ -30,7 +30,7 @@ USES System.SysUtils, System.Classes;
 
 IMPLEMENTATION
 
-USES LightCore, LightCore.Types, LightCore.StrBuilder;
+USES LightCore, LightCore.Time, LightCore.Types, LightCore.StrBuilder;
 
 {-----------------------------------------------------------------------------------------------------------------------
    ForcedWrapString

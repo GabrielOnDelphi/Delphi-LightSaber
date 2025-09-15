@@ -77,7 +77,7 @@ CONST
 
 
 IMPLEMENTATION
-USES LightCore;
+USES LightCore, LightCore.Time;
 
 
 

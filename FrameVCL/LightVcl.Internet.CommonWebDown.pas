@@ -16,7 +16,7 @@
 INTERFACE
 
 USES
-  System.SysUtils, LightCore;
+  System.SysUtils, LightCore, LightCore.Time;
 
 function GetUnsplashImage(CONST URL, LocalFile: string): Boolean;
 

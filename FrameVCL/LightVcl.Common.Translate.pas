@@ -233,7 +233,7 @@ VAR
 IMPLEMENTATION
 
 USES
-   LightVcl.Common.IniFile, LightVcl.Common.VclUtils, LightCore, LightCore.Types, LightCore.IO;
+   LightVcl.Common.IniFile, LightVcl.Common.VclUtils, LightCore, LightCore.Time, LightCore.Types, LightCore.IO;
 
 CONST
    NoLanguage = 'No_Language';

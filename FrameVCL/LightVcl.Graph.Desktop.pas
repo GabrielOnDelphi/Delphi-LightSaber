@@ -56,7 +56,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightVcl.Graph.Bitmap, LightCore.IO, LightCore, LightCore.Types, LightVcl.Common.Dialogs, LightVcl.Common.WinVersion, LightVcl.Common.WinVersionAPI, LightVcl.Common.ExeVersion;
+   LightVcl.Graph.Bitmap, LightCore.IO, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs, LightVcl.Common.WinVersion, LightVcl.Common.WinVersionAPI, LightVcl.Common.ExeVersion;
 
 
 

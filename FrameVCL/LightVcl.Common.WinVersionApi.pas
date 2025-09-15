@@ -42,7 +42,7 @@ function  GenerateReport: string; { For testing }
 
 
 IMPLEMENTATION
-USES LightCore;
+USES LightCore, LightCore.Time;
 
 
 

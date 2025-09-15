@@ -139,7 +139,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightCore.IO, LightCore.TextFile, LightCore, LightCore.Types, {LightCore.AppData,} LightVcl.Common.AppData; //{$IFDEF FRAMEWORK_FMX}LightFmx.Common.AppData{$ELSE}LightCom.AppData,{$ENDIF};
+   LightCore.IO, LightCore.TextFile, LightCore, LightCore.Time, LightCore.Types, {LightCore.AppData,} LightVcl.Common.AppData; //{$IFDEF FRAMEWORK_FMX}LightFmx.Common.AppData{$ELSE}LightCom.AppData,{$ENDIF};
 
 
 {-----------------------------------------------------------------------------------------------------------------------

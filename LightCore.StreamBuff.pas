@@ -55,7 +55,7 @@ INTERFACE
 { $I Frameworks.inc}
 
 USES
-   System.SysUtils, System.Classes, System.Types, LightCore, LightCore.Types;
+   System.SysUtils, System.Classes, System.Types, LightCore, LightCore.Time, LightCore.Types;
 
 TYPE
   TCubicBuffStream= class(System.Classes.TBufferedFileStream)

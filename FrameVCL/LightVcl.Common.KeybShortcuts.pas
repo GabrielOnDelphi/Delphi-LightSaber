@@ -30,7 +30,7 @@ INTERFACE
 
 USES
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Forms, vcl.StdCtrls, vcl.Menus, Vcl.ActnList,
-  LightCore;
+  LightCore, LightCore.Time;
 
  procedure ShowConflicts;
 

@@ -70,6 +70,7 @@ contains
   LightCore.Download in 'LightCore.Download.pas',
   LightCore.HTML in 'LightCore.HTML.pas',
   LightCore.Internet in 'LightCore.Internet.pas',
-  LightCore.Types in 'LightCore.Types.pas';
+  LightCore.Types in 'LightCore.Types.pas',
+  LightCore.Time in 'LightCore.Time.pas';
 
 end.

@@ -21,7 +21,7 @@ USES
   Winapi.Windows,
   System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls,
-  LightCore.INIFile, LightVcl.Visual.RadioButton, LightCore;
+  LightCore.INIFile, LightVcl.Visual.RadioButton, LightCore, LightCore.Time;
 
 TYPE
   TConType= (ctDirect, ctGateway, ctProxyList);

@@ -92,7 +92,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES LightCore.TextFile, LightCore;
+USES LightCore.TextFile, LightCore, LightCore.Time;
 
 const
   LogDefaultColor = clBlack;

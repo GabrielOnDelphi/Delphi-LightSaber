@@ -25,7 +25,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.ExtCtrls, LightCore, LightCore.Types, LightVcl.Common.Dialogs;
+  Vcl.Controls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.ExtCtrls, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs;
 
 TYPE
   TfrmSplash = class(TLightForm)

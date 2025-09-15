@@ -33,7 +33,7 @@ USES
    Winapi.Windows, Winapi.Messages,
    System.SysUtils, System.Classes,
    Vcl.Grids, Vcl.Graphics, Vcl.Controls, Vcl.Clipbrd,
-   LightVcl.Visual.StringGridBase, LightCore, LightCore.Types, LightVcl.Common.Dialogs;
+   LightVcl.Visual.StringGridBase, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs;
 
 {$WARN GARBAGE OFF}   {Silent the: 'W1011 Text after final END' warning }
 

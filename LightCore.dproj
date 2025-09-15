@@ -185,6 +185,7 @@
         <DCCReference Include="LightCore.HTML.pas"/>
         <DCCReference Include="LightCore.Internet.pas"/>
         <DCCReference Include="LightCore.Types.pas"/>
+        <DCCReference Include="LightCore.Time.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

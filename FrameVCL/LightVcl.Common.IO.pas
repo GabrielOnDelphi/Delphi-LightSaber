@@ -120,7 +120,7 @@ USES
 IMPLEMENTATION
 
 USES
-  LightCore, LightCore.Types, LightVcl.Common.Registry, LightCore.IO, LightVcl.Common.Dialogs, LightVcl.Common.WinVersion;
+  LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Registry, LightCore.IO, LightVcl.Common.Dialogs, LightVcl.Common.WinVersion;
 
 
 { Copied from IOUtils.TPath.HasPathValidColon where it is PRIVATE }

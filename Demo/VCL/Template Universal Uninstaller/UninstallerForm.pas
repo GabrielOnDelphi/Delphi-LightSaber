@@ -30,7 +30,7 @@ INTERFACE
 USES
   Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Controls,
   Vcl.ExtCtrls, System.Classes, SysUtils, Vcl.Forms, System.IOUtils,
-  LightCore, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO, LightVcl.Visual.PathEdit, LightVcl.Visual.CountDown,
+  LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO, LightVcl.Visual.PathEdit, LightVcl.Visual.CountDown,
   InternetLabel, LightVcl.Visual.RichLog, Vcl.Imaging.pngimage, LightVcl.Common.AppDataForm;
 
 TYPE

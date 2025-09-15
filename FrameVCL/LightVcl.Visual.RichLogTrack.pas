@@ -49,7 +49,7 @@ procedure Register;
 
 
 IMPLEMENTATION
-USES LightCore;
+USES LightCore, LightCore.Time;
 
 
 

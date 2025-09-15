@@ -69,7 +69,7 @@ IMPLEMENTATION
 
 USES
   GifProperties,
-  LightCore, LightCore.Types, LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Common.AppData, LightCore.IO;
+  LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Common.AppData, LightCore.IO;
 
 
 constructor TGifLoader.Create;

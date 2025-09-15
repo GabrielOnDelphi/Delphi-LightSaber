@@ -46,7 +46,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightCore.Download, LightCore;
+   LightCore.Download, LightCore, LightCore.Time;
 
 
 procedure TWinInetObj.Execute;

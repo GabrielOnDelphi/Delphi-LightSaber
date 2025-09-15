@@ -25,7 +25,7 @@ USES
    Winapi.WinSock,  { Required by GetLocalIP }
    Winapi.WinInet,  { Required by IE_ApplySettings }
    System.SysUtils, System.StrUtils, System.Classes, System.IniFiles, System.Win.Registry,
-   LightCore, LightCore.Types,
+   LightCore, LightCore.Time, LightCore.Types,
    {LightCore.Internet,} LightVcl.Common.Dialogs;
 
 

@@ -99,7 +99,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   LightCore, LightCore.Types,
+   LightCore, LightCore.Time, LightCore.Types,
    LightFmx.Common.AppData,
    LightFmx.Common.Helpers, LightFmx.Common.Dialogs, LightFmx.Common.LogFilter;
 

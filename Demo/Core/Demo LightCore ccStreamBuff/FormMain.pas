@@ -75,7 +75,7 @@ IMPLEMENTATION {$R *.dfm}
 {.$I SynDprUses.inc} // use FastMM4 on older Delphi, or set FPC threads
 
 USES
-   system.Math, LightCore, LightCore.Types, LightCore.StreamBuff2, LightVcl.Common.Debugger;
+   system.Math, LightCore, LightCore.Time, LightCore.Types, LightCore.StreamBuff2, LightVcl.Common.Debugger;
 
 
 

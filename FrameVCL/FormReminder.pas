@@ -79,7 +79,7 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.VclUtils, LightVcl.Common.Colors, LightVcl.Graph.Util, LightVcl.Common.Sound, LightVcl.Graph.Desktop, LightVcl.Visual.INIFile, LightCore, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.AppDataForm, LightVcl.Common.PowerUtils, LightVcl.Common.ExecuteShell;
+   LightVcl.Common.VclUtils, LightVcl.Common.Colors, LightVcl.Graph.Util, LightVcl.Common.Sound, LightVcl.Graph.Desktop, LightVcl.Visual.INIFile, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.AppDataForm, LightVcl.Common.PowerUtils, LightVcl.Common.ExecuteShell;
 
 
 

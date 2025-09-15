@@ -22,7 +22,7 @@ INTERFACE
 
 USES
   WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin,
-  LightVcl.Visual.RichEdit, Vcl.ComCtrls, LightCore, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.AppDataForm,  Vcl.Dialogs, LightVcl.Visual.CheckBox, Vcl.ExtCtrls, LightVcl.Visual.RichLogTrack,
+  LightVcl.Visual.RichEdit, Vcl.ComCtrls, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.AppDataForm,  Vcl.Dialogs, LightVcl.Visual.CheckBox, Vcl.ExtCtrls, LightVcl.Visual.RichLogTrack,
   System.Actions, Vcl.ActnList, Vcl.Menus, LightVcl.Visual.RadioButton, LightCore.AppData, LightVcl.Common.AppData
 ;
 
