@@ -1,18 +1,14 @@
 ﻿UNIT LightCore;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.05
    www.GabrielMoraru.com
+   2024.05
    See Copyright file
 --------------------------------------------------------------------------------------------------------------
-   Over 200 functions for:
-     - String manipulation (string conversions, sub-string detection, word manipulation, cut, copy, split, wrap, etc)
-     - Programmer's helper
-     - Advanced message boxes
-     - Easy message boxes
-     - DateTime utilities
-     - etc
+   - String manipulation (string conversions, sub-string detection, word manipulation, cut, copy, split, wrap, etc)
+   - Programmer's helper
+
+   See also LightCore.WrapString.pas
 =============================================================================================================}
 
 INTERFACE
@@ -41,7 +37,7 @@ CONST
 
 
 {=============================================================================================================
-   STRINGS / ENTER
+   ENTER
    Also see cmPlatformFile.pas
  ============================================================================================================}
  function  CRLFToEnter         (CONST s: string): string;     // old name: FixCRLF
@@ -59,11 +55,10 @@ CONST
  function  RemoveLastEnter     (CONST s: string): string;         overload;                                       { Cuts the last Enter from a string }
  function  RemoveLastEnter     (CONST s: AnsiString): AnsiString; overload;
 
-{=============================================================================================================
-   STRINGS
- ============================================================================================================}
 
- // REPLACE
+{=============================================================================================================
+   REPLACE
+ ============================================================================================================}
  function  ReplaceUnicodeChars (CONST s: string; ReplaceWith: char): String;                                      { Replace all Unicode characters withsomething else }
  function  ReplaceCharF        (CONST s: string; CONST SearchFor, ReplaceWith: char): string;
  procedure ReplaceChar         (var   s: string; CONST SearchFor, ReplaceWith: Char);         overload;
@@ -74,7 +69,9 @@ CONST
  function  SearchBetween       (CONST s, TagStart, TagEnd: string; Start: Integer = 1): Integer;
 
 
- // CLEAN STRINGS
+{=============================================================================================================
+   CLEAN STRINGS
+ ============================================================================================================}
  function  RemoveNonAlphanum   (CONST s: string): string;                                                         { Keep only letters and numbers }
  function  RemoveFormatings    (CONST s: string): string;
  function  RemoveLowChars      (CONST s: string): string;                 overload;
@@ -98,7 +95,10 @@ CONST
  function  Retabulate          (CONST s, Delimiter: string; SpaceCount: Integer): string;                         { Converts multiple spaces to Tab or other similar separator. For example Retabulate('xx   xx  yy, 3, Tab') will convert the first 3 spaces to tab but not also the next 2 spaces }
  function  ReplaceNbsp         (CONST s, ReplaceWith: string): string;
 
- // WORDS
+
+{=============================================================================================================
+   WORDS
+ ============================================================================================================}
  function  IsWordSeparator     (CONST aChar: Char): Boolean;                                                      { Returns true if the specified char is a word separator .;?,! }
  function  CopyWords           (CONST s: string; MaxChars: Integer): string;                                      { Copy from s all complete words. The result will not have more than MaxChars characters. }
  procedure ReplaceShortWords   (var   s: string; MinLength: Integer; FilterIfNoWovels: Boolean);                  { This procedure will replace short words (length < MinLength) with spaces.   It also filters words that only contain consonants }
@@ -107,11 +107,21 @@ CONST
  function  WordCountStrict     (CONST s: string): Integer;
  function  WordCount           (CONST s: string): Integer;
 
- // COPY from/to a marker
- function  ExtractTextBetween  (CONST s, TagStart, TagEnd: string): string;                                       { Extract the text between the tags. For example '<H>Title</H>' will return 'Title' is iFrom= '<H>' and iTo= '</H>' }
 
+{=============================================================================================================
+   CUT
+ ============================================================================================================}
+ function  CutInclude2Left     (CONST s, SearchFor: string): string;                                              { Delete all chars from end of MATCH to Left  - including the match }
+ function  CutInclude2Right    (CONST s, SearchFor: string): string;                                              { Delete all chars from beg of MATCH to Right - including the match }
+ function  CutExcludeLeft      (CONST s, SearchFor: string): string;                                              { Delete all chars from beg of MATCH to Left  - excluding the match }
+ function  CutExcludeRight     (CONST s, SearchFor: string): string;                                              { Delete all chars from end of MATCH to Right - excluding the match }
+
+
+ {=============================================================================================================
+   COPY
+ ============================================================================================================}
  function  CopyTo              (CONST s: String; iFrom: Integer; CONST sTo: string; IncludeMarker: Boolean= TRUE; CopyAllMarkerNotFound: Boolean= FALSE; MarkerOffset: Integer= 1): string; overload;
- function  CopyFromTo          (CONST s, sFrom, sTo: string;          IncludeMarkers: Boolean= FALSE): string;
+ function  CopyFromTo          (CONST s, sFrom, sTo: string; IncludeMarkers: Boolean= FALSE): string;
 
  function  CopyFrom            (CONST s, sFrom: string;     Count: Integer; IncludeMarker: Boolean= TRUE; SearchOffset: Integer= 1): string;     overload;  { Find sFrom in s. Returns the string from the postion where the text was found, to the end. }
  function  CopyFrom            (CONST s, sFrom: AnsiString; Count: Integer; IncludeMarker: Boolean= TRUE; SearchOffset: Integer= 1): AnsiString; overload;
@@ -120,15 +130,10 @@ CONST
  function  CopyTo              (CONST s: string;     iFrom, iTo: integer): string;     overload;                  { Copy the text between iFrom and ending at iTo (including) }
  function  CopyTo              (CONST s: AnsiString; iFrom, iTo: integer): AnsiString; overload;                  { Copy the text between iFrom and ending at iTo (including) }
 
- function  ExtractTopLines     (CONST Text: string; Count: Integer; IgnoreEmptyLines: Boolean= TRUE): string;     { Returns the top x lines from a text (multiple lines) }
 
- // CUT
- function  CutInclude2Left     (CONST s, SearchFor: string): string;                                              { Delete all chars from end of MATCH to Left  - including the match }
- function  CutInclude2Right    (CONST s, SearchFor: string): string;                                              { Delete all chars from beg of MATCH to Right - including the match }
- function  CutExcludeLeft      (CONST s, SearchFor: string): string;                                              { Delete all chars from beg of MATCH to Left  - excluding the match }
- function  CutExcludeRight     (CONST s, SearchFor: string): string;                                              { Delete all chars from end of MATCH to Right - excluding the match }
-
- // SPLIT
+{=============================================================================================================
+   SPLIT
+ ============================================================================================================}
  function  SplitText           (CONST Text, Delimiter: string): TStringList;                                      { Splits a text in lines and puts the lines in a TStringList } {Note: Exista System.StrUtils.SplitString } { Old name: SplitStrings }
  procedure SplitLine           (CONST Text, Delimiter: string; OUT sField, sValue: string);    overload;          { Split a string in its components. For example 'ClientName=Bubu' will return in 'ClientName' and 'Bubu' }
  procedure SplitStrings        (CONST Text: string; TSL: TStringList);                         overload;          { Split a string in multiple rows every time the #13#10 char is found (I took this code from Embarcadero's TStringList.Text:= s ) }
@@ -137,62 +142,11 @@ CONST
  procedure SplitStringList     (StringList: TStrings; OUT OutList1, OutList2: TStringArray);                      { Split each row of the provided StringList into two parts. The two resulted strings are placed in an ArrayOfStrings }
  procedure SplitStringListI    (StringList: TStrings; OUT OutList1: TStringArray; OUT OutList2: System.Types.TIntegerDynArray);   { Split each row of the provided StringList into two parts. The two resulted strings are placed in an ArrayOfStrings }
 
- // GENERATE RAND STRING
- function  GenerateString        (RepeatTimes: Integer; C: char): string; deprecated 'Use System.StringOfChar instead';    { Exista System.StrUtils.DupeString and StuffString                                       Returns the concatenation of a string with itself a specified number of repeats. }
- function  GenerateUniqueString  (Len: Integer=32): string;
-
- function  GenerateRandomWord    (Len: Integer=16; StartWithVowel: Boolean= FALSE): string;
- function  GenerateRandString    (minLen, maxLen: Integer): string;                                           { This will return all printable craracters (from 65 to 125) }
- function  GenerateRandStringLet (Len: Integer): string;                                                      { This will return ONLY letters and numbers } { YOU MUST call randomize before calling this function! }
-
- // COMPARE
- function  StringFuzzyCompare  (s1, s2: string): Integer;                                                     { The function checks if any identical characters is in the near of the actual compare position }
- function  FileNameNaturalSort (s1, s2: String): Integer;                                                     { Natural compare two filenames }
- {$IFDEF MSWINDOWS}
- function  StrCmpLogicalW      (psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll'; {$ENDIF}    { Natural compare two strings. Digits in the strings are considered as numerical content rather than text. This test is not case-sensitive. Use it like this: StrCmpLogicalW(PChar(s1), PChar(s2));  see: http://stackoverflow.com/questions/1024515/delphi-is-it-necessary-to-convert-string-to-widestring.  }
-
-
- // MAKE STRING
- function  MakeStringLongRight (CONST s, c: AnsiChar; ForcedLength: integer): AnsiString;   overload;
- function  MakeStringLongRight (CONST s, c: Char;     ForcedLength: integer): string;       overload;
- function  MakeStringLongRight (CONST s, Pad: string; ForcedLength: integer): string;       overload;         { Make sure the string has ForcedLength. If not, add some extra characters at its end to make it that long  }
- function  MakeStringLongLeft  (CONST s, Pad: string; ForcedLength: integer): string;                         { Make sure the string has ForcedLength. If not, add some extra characters at its front to make it that long  }
-
- function  LeadingZeros        (CONST s: string; ForcedLength: integer): string;                              { insert (ForcedLength-1) zeros in front of the specified string. ForcedLength shows which is the desired lenght of the new string. Example: LeadingZeros('a', 4) will result in '000a'  }
- function  LeadingZeros2       (CONST s: string; ForcedLength: integer): string; { Not tested }
- function  LeadingZerosAuto    (CONST s: string; MaxValue: integer): string;                                  { Same as above except_ that the user doesn't have to specify how many zeros to add. Instead the function will determine this automaticxally based on the number received as parameter. For example LeadingZeros('1', 50) will generate '01' but LeadingZeros('1', 500) will generate '001' }
-
- // TStringList
- function  String2TSL          (CONST s: string): TStringList;                                                { Converts a string to a TStringList. In other words it breaks the text to multiple lines. I need to call Free after this! }
-
- // PCHAR
- function  UnicodeToAnsi       (CONST str: UnicodeString; codePage: Integer): RawByteString;
- function  AddNullToStr        (CONST Path: string): string;
-
- // GENERATE LISTS
- function  GetRandomPersonName: string;                                                                       { Returns a random name in a 100 unique name list }
- function  GetRandomStreetName: string;
- function  GetRockBands: TStringList;
-
- // OTHERS
- function  InsertCharEvery     (CONST c: char; CONST Target: string; Every: Integer): string;                 { Insert a char into TargetStr every x characters }
- function  DoubleQuoteStr      (CONST s: string): string;
- function  Reverse             (CONST s: String): string; deprecated 'LightCore.Reverse is deprecated. Use System.StrUtils.ReverseString';
- function  CharIsLetter        (CONST c: char): Boolean;
-
- // STRING RAM SIZE
- function  GetStringSize       (CONST s: string): Integer;                                                    { Returns the length of a given string in bytes }
- function  GetStringRAMSize    (CONST s: string): Integer;          overload;
- function  GetStringRAMSize    (CONST s: AnsiString): Integer;      overload;
-
- // WRAP: See LightCore.WrapString.pas
- // Shorten text and put ellipsis in it: ShortenString & GetEllipsisText -> moved to LightVcl.Common.EllipsisText.pas
 
 {============================================================================================================
-   STRINGS: POS
+   STRING POS
  ============================================================================================================}
  function  Find                (CONST Needle, Haystack: string; PartialSearch: Boolean= False; CaseSens: Boolean= False): boolean;
- function  FindLine            (CONST Needle, Haystack: string): string;                                      { Looks for Needle (partial search) into the MultipleLines. When needle it found then it returns the whole line that contained the Needle. MultipleLines is a string what contains multiple lines of text separated by enter. } // Old name: ExtractLine. THE PARAMETER ORDER WAS CHANGED
 
  function  CountAppearance     (CONST Needle, Haystack: string; CaseSensit: Boolean): integer;     overload;
  function  CountAppearance     (CONST Niddle: Char;     CONST Haystack: string)    : Integer;      overload;
@@ -213,7 +167,7 @@ CONST
 
 
 {============================================================================================================
-   STRINGS: CONVERSION TO NUMBERS
+   CONVERSION TO NUMBERS
 ============================================================================================================}
  function  i2s                 (Value: Integer):           string; overload;  inline;
  function  i2s                 (Value, MaxVal: integer):   string; overload;                                  { Add the specified number of zeros before the string. See LeadingZerosAuto help for details }
@@ -229,11 +183,10 @@ CONST
 
 
 {============================================================================================================
-   STRINGS: NUMBERS
+   NUMBERS
 ============================================================================================================}
  function  FixNumber           (CONST s: string): Integer;                                                    { Converts a text that contains an invalid number to a valid number. For example  '!2345' will return '2345' }
- function  StringIsInteger     (CONST s: string): Boolean;                                                    { Varianta 2 }
- function  StringIsInteger2    (CONST s: string): Boolean;                                                    { Varianta 3 }
+ function  StringIsInteger     (CONST s: string): Boolean;
  function  CharIsNumber        (CONST c: char)  : Boolean;
  procedure SplitNumber_Start   (CONST s: string; OUT Text, Number: string);                                   { Splits a string that STARTS with a number into its parts. Example: 01_Render   ->  01 + _Render   }
  procedure SplitNumber_End     (CONST s: string; OUT Text, Number: string);                                   { Splits a string that ENDS     in a number into its parts. Example: Document12  ->  Document + 12                                    }
@@ -245,71 +198,92 @@ CONST
 
 
 {=============================================================================================================
-  DEVELOP UTILS
+   OTHERS
+ ============================================================================================================}
+ function  InsertCharEvery     (CONST c: char; CONST Target: string; Every: Integer): string;                 { Insert a char into TargetStr every x characters }
+ function  DoubleQuoteStr      (CONST s: string): string;
+ function  Reverse             (CONST s: String): string; deprecated 'LightCore.Reverse is deprecated. Use System.StrUtils.ReverseString';
+
+ function  CharIsLetter        (CONST c: char): Boolean;
+ function  IsUpcaseLetter      (CONST c: Char): Boolean;
+ function  IsUpcase            (CONST c: Char): Boolean;     { Works only with letters. }
+
+ // COPY from/to marker
+ function  ExtractTextBetween  (CONST s, TagStart, TagEnd: string): string;                                       { Extract the text between the tags. For example '<H>Title</H>' will return 'Title' is iFrom= '<H>' and iTo= '</H>' }
+
+
+{=============================================================================================================
+   COMPARE STRINGS
+ ============================================================================================================}
+ function  StringFuzzyCompare  (s1, s2: string): Integer;                                                     { The function checks if any identical characters is in the near of the actual compare position }
+ function  FileNameNaturalSort (s1, s2: String): Integer;                                                     { Natural compare two filenames }
+ {$IFDEF MSWINDOWS}
+ function  StrCmpLogicalW      (psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll'; {$ENDIF}    { Natural compare two strings. Digits in the strings are considered as numerical content rather than text. This test is not case-sensitive. Use it like this: StrCmpLogicalW(PChar(s1), PChar(s2));  see: http://stackoverflow.com/questions/1024515/delphi-is-it-necessary-to-convert-string-to-widestring.  }
+
+
+{=============================================================================================================
+   GENERATE - MAKE STRING
+ ============================================================================================================}
+ function  MakeStringLongRight (CONST s, c: AnsiChar; ForcedLength: integer): AnsiString;   overload;
+ function  MakeStringLongRight (CONST s, c: Char;     ForcedLength: integer): string;       overload;
+ function  MakeStringLongRight (CONST s, Pad: string; ForcedLength: integer): string;       overload;         { Make sure the string has ForcedLength. If not, add some extra characters at its end to make it that long  }
+ function  MakeStringLongLeft  (CONST s, Pad: string; ForcedLength: integer): string;                         { Make sure the string has ForcedLength. If not, add some extra characters at its front to make it that long  }
+
+ function  LeadingZeros        (CONST s: string; ForcedLength: integer): string;                              { insert (ForcedLength-1) zeros in front of the specified string. ForcedLength shows which is the desired lenght of the new string. Example: LeadingZeros('a', 4) will result in '000a'  }
+ function  LeadingZeros2       (CONST s: string; ForcedLength: integer): string; { Not tested }
+ function  LeadingZerosAuto    (CONST s: string; MaxValue: integer): string;                                  { Same as above except_ that the user doesn't have to specify how many zeros to add. Instead the function will determine this automaticxally based on the number received as parameter. For example LeadingZeros('1', 50) will generate '01' but LeadingZeros('1', 500) will generate '001' }
+
+
+{=============================================================================================================
+   GENERATE - RANDOM STRINGS
+ ============================================================================================================}
+ function  GenerateString        (RepeatTimes: Integer; C: char): string; deprecated 'Use System.StringOfChar instead';    { Exista System.StrUtils.DupeString and StuffString                                       Returns the concatenation of a string with itself a specified number of repeats. }
+ function  GenerateUniqueString  (Len: Integer=32): string;
+
+ function  GenerateRandomWord    (Len: Integer=16; StartWithVowel: Boolean= FALSE): string;
+ function  GenerateRandString    (minLen, maxLen: Integer): string;                                           { This will return all printable craracters (from 65 to 125) }
+ function  GenerateRandStringLet (Len: Integer): string;                                                      { This will return ONLY letters and numbers } { YOU MUST call randomize before calling this function! }
+
+
+{=============================================================================================================
+   GENERATE - LISTS OF NAMES
+ ============================================================================================================}
+ function  GetRandomPersonName: string;                                                                       { Returns a random name in a 100 unique name list }
+ function  GetRandomStreetName: string;
+ function  GetRockBands: TStringList;
+
+
+{=============================================================================================================
+   UNICODE
+ ============================================================================================================}
+ function  UnicodeToAnsi       (CONST str: UnicodeString; codePage: Integer): RawByteString;
+ function  AddNullToStr        (CONST Path: string): string;
+
+
+{=============================================================================================================
+   STRING RAM SIZE
+ ============================================================================================================}
+ function  GetStringSize       (CONST s: string): Integer;                                                    { Returns the length of a given string in bytes }
+ function  GetStringRAMSize    (CONST s: string): Integer;          overload;
+ function  GetStringRAMSize    (CONST s: AnsiString): Integer;      overload;
+
+
+{=============================================================================================================
+   DEVELOP UTILS
 =============================================================================================================}
  procedure NotImplemented;
  procedure EmptyDummy;
 
- { SysUtils }
  procedure DisposeAndNil(VAR P: Pointer);
  procedure FillZeros(VAR IntArray: TIntegerDynArray);
 
- function  GetResourceAsString(CONST ResName: string): AnsiString;    { Extract a resource from self (exe) }
-
 
 {=============================================================================================================
-   TIME
+   SYSTEM
 =============================================================================================================}
- // CURRENT DATE-TIME
- function TodayIs: string;                                         { Returns today as date based on Locale. Example: Montag }
- function CurrentDateToString{(ShowSeconds: Boolean)}: string;     { Returns today as date & time. Example: 31.12.2021 - 16:50 }
- function CurrentTimeToString(ShowSeconds: Boolean): string;       { Returns time in short format (no seconds). Example: 16:50 }
- function TimeToString(CONST T: TDateTime; ShowSeconds: Boolean): string;
-
- function CurrentYear: Word;
- function CurrentMonth: Word;
- function CurrentDay: Word;
- function CurrentHour: Word;
-
- // DECODE
- function DecodeHour             (Time: TTime): Word;
- function DecodeMinute           (Time: TTime): Word;
- function DecodeSecond           (Time: TTime): Word;
-
- // FORMAT
- function GetUniversalDateFormat: TFormatSettings;
-
- // COMPARISON
- function SameDateEx             (Time1, Time2: TDateTime): boolean;  deprecated 'Use System.DateUtils.SameDate instead';
- function EarlierThan            (Date1, Date2: TDateTime): boolean;                           { Returns true if Date1 is smaller (earlier) than Date2 }
- function DaysBetweenEx          (CONST MilestoneDate, CurrentDate: TDateTime): Double; deprecated 'Use System.DateUtils.DaySpan instead';
- function NewDaysBetween         (CONST MilestoneDate, CurrentDate: TdateTime): Double;
- function SecondsBetweenEx       (CONST MilestoneDate, CurrentDate: TDateTime): Int64;         { Returns the number of seconds between two specified TDateTime values.  The difference between this function and the Embarcadero one is that it returns zero if CurrentDate >= MilestoneDate }
- function DateIsToday            (Year, Month, Day: word): Boolean;                            { Returns true if the specified date is today }
-
- // STRING CONVERSIONS
- function  StringToSeconds       (CONST s: String): Integer;                                   { Converts a string formated like 'hh:mm:ss' to seconds.  }
- function  StringIsDate          (CONST s: string): Boolean;
- function  StringIsTime          (CONST s: string): Boolean;
- function  DateToStrUS           (CONST Time: TDateTime): string;                              { converts date to string, using the US (YYY.MM.DD) format }
-
- // CONVERSIONS
- procedure SecondsToTime         (CONST Seconds : Cardinal; VAR D, H, M, S: Cardinal);
- function  SecondsToTimeAuto     (CONST Seconds : Cardinal): string;
- function  MiliSecToTimeAuto     (CONST MSeconds: Cardinal): string;
- function  mSecondsToTime        (mSeconds: Cardinal): string;
-
- function  Date2FormatAuto       (CONST Time: TDateTime): string;
- function  DateTimeToMilliseconds(CONST ADateTime: TDateTime): Int64;
- function  DateToTime_           (CONST aDate : TDateTime): string;
-
- // CONVERSIONS
- function  Date2Cardinal         (xDate: TDate): Cardinal;
- function  Cardinal2Date         (xCardinal: Cardinal): TDate;
-
-
- // SYSTEM
+ function GetResourceAsString(CONST ResName: string): AnsiString;    { Extract a resource from self (exe) }
  function GetSystemLanguageName: string;
+ function GetSystemLanguageNameShort: string;
 
 
 
@@ -324,7 +298,7 @@ IMPLEMENTATION
 
 
 {============================================================================================================
-                                      UTILS
+   UTILS
 ============================================================================================================}
 
 { Similar to FreeAndNil but it works on pointers.
@@ -354,16 +328,6 @@ begin
 end;
 
 
-
-
-
-
-
-
-{============================================================================================================
-   APP UTILS
-============================================================================================================}
-
 { Extract a resource from self }
 function GetResourceAsString(CONST ResName: string): AnsiString;
 VAR
@@ -380,390 +344,28 @@ begin
 end;
 
 
-
-
-
-
-
-{============================================================================================================
-   TIME
-============================================================================================================}
-function mSecondsToTime(mSeconds: Cardinal): string;                                                { folosit in WindowsUpTime }
+// Returns the language of the operating system in this format: "English (United States)"
+function GetSystemLanguageName: string;
 begin
-  Result:= SecondsToTimeAuto(mSeconds DIV 1000);
+  VAR Locale:= TLanguages.UserDefaultLocale;
+  Result := TLanguages.Create.NameFromLocaleID[Locale];
 end;
 
 
-
-function DateToTime_(CONST aDate: TDateTime): string;
-begin
- Result:= FormatDateTime('d:hh:nn:ss', aDate);
-end;
-
-
-
-procedure SecondsToTime (CONST Seconds: Cardinal; VAR D, H, M, S: Cardinal);
-begin
- D := (Seconds DIV SecsPerDay);
- H := (Seconds DIV SecsPerHour) - (D* 24);
- M := (Seconds DIV SecsPerMin)  - (D* 24* SecsPerMin) - (H* 60);
- S :=  Seconds                  - (D* SecsPerday)     - (H* 3600)- (M*60);
-end;
-
-
-{ check if I call this in my projects. if not, delete it!
-function SecondsToTime_FormatLong (CONST Seconds: Cardinal): string;     // in TDateTime, o secunda e egal cu 1.1574074074e-05        1sec:= frac(real(StrToTime('00:00:01')))
-VAR D, H, M, S: Cardinal;
-begin
- Result:= '';
- SecondsToTime(Seconds, D, H, M, S);
-
- if D > 0
- then Result:= IntToStr(D) + ' days ';
-
- Result:= Result + IntToStr(H) + 'h ' + IntToStr(M) + 'm ' + IntToStr(S)+ 's';
-end;}
-
-
-{ Converts seconds to time, but showing the shortest string possible. For example: it will convert 59 to '59s' and 61 to '1m 01s' }
-function SecondsToTimeAuto(CONST Seconds: Cardinal): string; // Old name: SecondsToTime_FormatAuto
-VAR D, H, M, S: Cardinal;
-begin
- Result:= '';
-
- D := (Seconds DIV SecsPerDay);
- H := (Seconds DIV SecsPerHour) - (D* 24);
-
- { Add days }
- if D> 0 then Result:= IntToStr(D) + ' days ';
-
- { Add hours }
- if H> 0 then Result:= Result+ IntToStr(H) + 'h ';
-
- { Add minutes but ONLY if I have less than 30 days }
- if D<= 7 then
-  begin
-   M := (Seconds DIV SecsPerMin)  - (D* 24* SecsPerMin) - (H* 60);
-   Result:= Result+ IntToStr(M) + 'm ';
-
-   { Add seconds ONLY if I don't add days (keep text short) }
-   if (D= 0) then
-    begin
-      S := Seconds- (D* SecsPerday) - (H* 3600)- (M* 60);
-      Result:= Result {+ ' ' del } + IntToStr(S)+ 's';
-    end;
-  end;
-end;
-
-
-
-function MiliSecToTimeAuto(CONST MSeconds: Cardinal): string;     //old name: mSecondsToTime
-begin
- if MSeconds< 1000                                                                                 { under 1 sec }
- then Result:= IntToStr(MSeconds)+ 'ms'
- else
-   if MSeconds< 60000                                                                              { under 1 minute }
-   then Result:= Real2Str(MSeconds / 1000, 3)+ 'sec'
-   else Result:= SecondsToTimeAuto(MSeconds DIV 1000);
-end;
-
-
-
-function Date2FormatAuto(CONST Time: TDateTime): string;
-VAR D: Integer;
-    H, M, S: Word;
-begin
- Result:= '';
-
- D := Trunc(Time);
- H := HourOf(Time);
- M := MinuteOf(Time);
- S := SecondOf(Time);
-
- { Add days }
- if D> 0 then Result:= IntToStr(D) + ' days ';
-
- { Add hours }
- if H> 0 then Result:= Result+ IntToStr(H) + 'h:';
-
- { Always add minutes }
- Result:= Result+ IntToStr(M) + 'm';
-
- { Add seconds ONLY if I don't add days (keep text short) }
- if D= 0 then Result:= Result + ' :' + IntToStr(S)+ 's';
-end;
-
-
-function DateToStrUS(CONST Time: TDateTime): string; { converts date to string, using the US (YYY.MM.DD) format }
-VAR aYear, aMonth, aDay : Word;
-begin
-  DecodeDate(Time, aYear, aMonth, aDay);
-
-  Result:= IntToStr(aYear)+ '.';
-  if aMonth < 10
-  then Result:= Result+ '0'+IntToStr(aMonth)+ '.'
-  else Result:= Result+ IntToStr(aMonth)+ '.';
-
-  if aDay < 10
-  then Result:= Result+ '0'+IntToStr(aDay)
-  else Result:= Result+ IntToStr(aDay);
-end;
-
-
-
-
-function SameDateEx(Time1, Time2: TDateTime): boolean;     { We cannot compare two TDateTimes in Delphi because of Real precision. CompareDateTime also won't work. See: http://stackoverflow.com/questions/38705011/odd-behavior-when-comparing-two-tdatetime-vars }
-VAR
-   Year1, Month1, Day1, Hour1, Min1, Sec1, Msec1: Word;
-   Year2, Month2, Day2, Hour2, Min2, Sec2, Msec2: Word;
-begin
- DecodeDateTime(Time1, Year1, Month1, Day1, Hour1, Min1, Sec1, Msec1);
- DecodeDateTime(Time2, Year2, Month2, Day2, Hour2, Min2, Sec2, Msec2);
- Result:= (Year1 = Year2) AND (Month1 = Month2) AND (Day1 = Day2) AND (Hour1 = Hour2) AND (Min1 = Min2) AND (Sec1 = Sec2) AND (Msec1 = Msec2);
-end;
-
-
-function EarlierThan(Date1, Date2: TDateTime): boolean;      { Returns true if Date1 is smaller (earlier) than Date2 }
-begin
- Result:= System.DateUtils.CompareDateTime(Date1, Date2) = -1;
-end;
-
-
-
-
-
-function DecodeHour(Time: TTime): Word;
-VAR wMin, wSec, wMsec: word;
-begin
- DecodeTime(Time, Result, wMin, wSec, wMsec);
-end;
-
-
-function DecodeMinute(Time: TTime): Word;
-VAR wHor, wSec, wMsec: word;
-begin
- DecodeTime(Time, wHor, Result, wSec, wMsec);
-end;
-
-
-function DecodeSecond(Time: TTime): Word;
-VAR wHor, wMin, wMsec: word;
-begin
- DecodeTime(Time, wHor, wMin, Result, wMsec);
-end;
-
-
-
-
-{ Was used to save our data in INI files. Now we save it as floats. }
-function GetUniversalDateFormat: TFormatSettings;  //Unused
-begin
-  Result:= TFormatSettings.Create;
-  Result.DateSeparator:= '-';
-  Result.TimeSeparator:= ':';
-  Result.ShortDateFormat:= 'YYYY-MM-DD';
-end;
-
-
-
-
-{ Converts a string formatted like 'hh:mm:ss' or 'mm:ss' to seconds.
-  Returns -1 is the string does not contain a valid time.
-
-    StringToSeconds('00:01:30')     // returns 90     (sec)
-    StringToSeconds('01:30')        // returns 5400   (sec)
-    StringToSeconds('10')           // returns 864000 (sec)
-    StringToSeconds('1.30')         // returns -1
-    StringToSeconds('x')            // returns -1 }
-function StringToSeconds(CONST s: String): integer;
-VAR
-  TimeSpan: TTimeSpan;
-begin
-  TRY
-   TimeSpan:= System.TimeSpan.TTimeSpan.Parse(s);
-   Result  := Round(TimeSpan.TotalSeconds);
-  EXCEPT
-   Result:= -1;
-  end;
-end;
-
-
-{...check if a string is a valid date or time?}
-function StringIsDate(CONST s: string): Boolean;
-begin
-  Result:= True;
-  TRY
-    StrToDate(s);
-  EXCEPT
-    Result:= False;
-  END;
-end;
-
-{...check if a string is a valid date or time?}
-function StringIsTime(CONST s: string): Boolean;
-begin
-  Result:= True;
-  TRY
-    StrToTime(s);
-  EXCEPT
-    Result:= False;
-  end;
-end;
-
-
-
-
-
-
-
-function CurrentYear: Word;
-VAR aMonth, aDay : Word;
-begin
-  DecodeDate(Now, Result, aMonth, aDay);
-end;
-
-
-function CurrentMonth: Word;
-VAR aYear, aDay : Word;
-begin
-  DecodeDate(Now, aYear, Result, aDay);
-end;
-
-
-function CurrentDay: Word;
-VAR aMonth, aYear : Word;
-begin
-  DecodeDate(Now, aYear, aMonth, Result);
-end;
-
-
-function CurrentHour: Word;
-VAR aMin, aSec, mSec: Word;
-begin
-  DecodeTime(Now, Result, aMin, aSec, mSec);
-end;
-
-
-{ Returns today as date (string) based on Locale. Example: Montag }
-function TodayIs: string; // This is cross-platform
+// Returns the language of the operating system in this format: "English"
+function GetSystemLanguageNameShort: string;
 var
-  FormatSettings: TFormatSettings;
+  FullName: string;
+  P: Integer;
 begin
-  FormatSettings := TFormatSettings.Create;  // Use the current locale settings
-  Result := FormatDateTime('dddd', Now, FormatSettings);
+  FullName := GetSystemLanguageName;
+  P := Pos('(', FullName);
+  if P > 0
+  then Result := Trim(Copy(FullName, 1, P - 1))
+  else Result := FullName;
 end;
 
 
-{ Returns today as date AND time. Example: 31.12.2021 - 16:50 }
-function CurrentDateToString: string;
-VAR
-  Present: TDateTime;
-  Year, Month, Day, Hour, Min, Sec, MSec: Word;
-begin
-  Present:= Now;
-  DecodeDate(Present, Year, Month, Day);
-  DecodeTime(Present, Hour, Min, Sec, MSec);
-  Result:= IntToStr(Day)+'.'+IntToStr(Month)+'.'+IntToStr(Year)+' - '+ TimeToString(Present, FALSE);
-end;
-
-
-{ Returns time in short format (no seconds). Example: 16:50 }
-function CurrentTimeToString(ShowSeconds: Boolean): string;
-begin
-  Result:= TimeToString(Now, ShowSeconds);
-end;
-
-
-{ Returns time in short format. Example: 16:50 }
-function TimeToString(CONST T: TDateTime; ShowSeconds: Boolean): string;
-VAR
-  Hour, Min, Sec, MSec: Word;
-begin
-  DecodeTime(T, Hour, Min, Sec, MSec);
-
-  if Hour < 10
-  then Result:= '0'+ IntToStr(Hour)
-  else Result:= IntToStr(Hour);
-
-  if Min < 10
-  then Result:= Result+ ':'+ '0'+IntToStr(Min)
-  else Result:= Result+ ':'+ IntToStr(Min);
-
-  if ShowSeconds then
-    if Sec < 10
-    then Result:= Result+ ':'+ '0'+IntToStr(Sec)
-    else Result:= Result+ ':'+ IntToStr(Sec);
-end;
-
-
-function DateIsToday(Year, Month, Day: word): Boolean;   { Returns true if the specified date is today }
-VAR NewDate: TDateTime;
-begin
-  NewDate:= EncodeDate(Year, Month, Day);
-  Result:= IsToday(NewDate);
-end;
-
-
-function Date2Cardinal(xDate: TDate): Cardinal;
-begin
-  Result:= DaysBetween(xDate, 0);                        { Calculate how many days are between xDate and 01/01/1899 }
-end;
-
-
-function Cardinal2Date(xCardinal: Cardinal): TDate;      { Date returned is in US format }
-begin
-  Result:= IncDay(0, xCardinal);
-end;
-
-
-
-
-{ Copied from DateUtils.PAS where it is marked as 'Internal'.
-  These functions in DateUtils.pas are not accurate. See this of details: http://stackoverflow.com/questions/17109814/why-datetimetomilliseconds-in-dateutils-pas-is-marked-as-internal }
-function DateTimeToMilliseconds(CONST ADateTime: TDateTime): Int64;
-var
-  LTimeStamp: TTimeStamp;
-begin
-  LTimeStamp := DateTimeToTimeStamp(ADateTime);
-  Result := LTimeStamp.Date;
-  Result := (Result * MSecsPerDay) + LTimeStamp.Time;
-end;
-
-
-{ Returns the number of seconds between two specified TDateTime values.
-  The difference between this function and Embarcadero.DateUtils.SecondsBetween is that it returns zero if CurrentDate >= MilestoneDate.
-  These functions in DateUtils.pas are not accurate. See this of details: http://stackoverflow.com/questions/17109814/why-datetimetomilliseconds-in-dateutils-pas-is-marked-as-internal }
-function SecondsBetweenEx(CONST MilestoneDate, CurrentDate: TDateTime): Int64;
-begin
-  if CurrentDate < MilestoneDate
-  then Result := (DateTimeToMilliseconds(MilestoneDate) - DateTimeToMilliseconds(CurrentDate)) DIV (MSecsPerSec)
-  else Result := 0;
-end;
-
-
-
-{ Comparing '31 Dec 1999 23:59' and '1 Jan 2000 00:01' (2 minutes difference):
-     DaySpan        returns 0.03  (or something like this)
-     DaysBetween    returns 0
-     NewDaysBetween retunrs 1,03 }
-function DaysBetweenEx(CONST MilestoneDate, CurrentDate: TdateTime): Double;
-begin
- RAISE exception.Create('DaysBetweenEx is deprecated ');
-end;
-
-
-function NewDaysBetween(CONST MilestoneDate, CurrentDate: TdateTime): Double;
-begin
-  if SameDate(MilestoneDate, CurrentDate)
-  then Result := DaySpan(MilestoneDate, CurrentDate)
-  else Result := DaySpan(MilestoneDate, CurrentDate) + 1;
-end;
-
-{ Exaclty the same as DaysBetweenEx but uses a different approach to calculate it
-function DaySpanEx(CONST MilestoneDate, CurrentDate: TDateTime): Double;
-begin
-  Result := Abs(DateTimeToMilliseconds(MilestoneDate) - DateTimeToMilliseconds(CurrentDate)) / MSecsPerDay;
-end; }
 
 
 
@@ -771,23 +373,9 @@ end; }
    STRING  -  CONVERSII
 ============================================================================================================}
 
-{ Also see: LightCore.Binary.StringIsHexNumber
-  Doesn't work with Real numbers!
-  It works with signs like: '+1' and '-1' }
-function StringIsInteger(CONST S: string): Boolean;
-begin
-  Result:= True;
-  TRY
-    StrToInt(S);
-  EXCEPT
-    //todo 1: trap only specific exceptions (EConvertError)
-    Result:= FALSE;
-  END;
-end;
-
-
-{$Hints Off}       {Needed to silence  "Value assigned to 'iTemp' never used" }
-function StringIsInteger2(CONST s: string): Boolean;
+{ It works with signs like: '+1' and '-1' }
+{$Hints Off}                                            {Needed to silence  "Value assigned to 'iTemp' never used" }
+function StringIsInteger(CONST s: string): Boolean;
 VAR iTemp, E: integer;
 begin
  Val(s, iTemp, E);
@@ -1914,23 +1502,6 @@ begin
 end;
 
 
-function String2TSL(CONST s: string): TStringList;                                                       { Converts a string to a TStringList. Need to call Free after this! }
-begin
- Result:= TStringList.Create;
- Result.Text:= s;
-end;
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2721,67 +2292,6 @@ end;
 
 
 
-
-
-
-
-
-
-
-{-----------------------------------------------------------------------------
-   EXTRACT
------------------------------------------------------------------------------}
-{ Returns the top x lines from a text (multiple lines) }
-function ExtractTopLines(CONST Text: string; Count: Integer; IgnoreEmptyLines: Boolean= TRUE): string;
-VAR
-   TSL: TStringList;
-   s: string;
-   Total: Integer;
-begin
- Total:= 0;
- Result:= '';
- TSL:= TStringList.Create;
- TRY
-  TSL.Text:= Text;
-
-  for s in TSL DO
-    if IgnoreEmptyLines AND (s > '')
-    OR NOT IgnoreEmptyLines then
-     begin
-       Inc(Total);
-       Result:= Result+ s+ CRLF;
-       if Total = Count then Break;
-     end;
-
-  Result:= RemoveLastEnter(Result);
- FINALLY
-   FreeAndNil(TSL);
- END;
-end;
-
-
-{ Looks for Needle (partial search) into the Haystack.
-  If found, returns the whole line that contained the Needle.
-  Haystack is a string what contains multiple lines of text separated by enter. } // Old name: ExtractLine
-function FindLine(CONST Needle, Haystack: string): string;
-VAR
-   TSL: TStringList;
-   s: string;
-begin
- Result:= '';
- TSL:= String2TSL(Haystack);
- TRY
-  for s in TSL DO
-    if Pos(Needle, s) > 0
-    then EXIT(s);
- FINALLY
-  FreeAndNil(TSL);
- END;
-end;
-
-
-
-
 {-----------------------------------------------------------------------------
    WORDS
 -----------------------------------------------------------------------------}
@@ -2886,14 +2396,6 @@ function IsWordSeparator(CONST aChar: Char): Boolean;
 begin
   IsWordSeparator := CharInSet(aChar, [#0..#31, ' ', '.', ',', '?', '=', '<', '>', '!', ':', ';', '(', ')', '/', '\']);
 end;
-
-
-
-
-
-
-
-
 
 
 
@@ -3116,28 +2618,6 @@ begin
 end; *)
 
 
-
-
-// Returns the language of the operating system in this format: "English (United States)"
-function GetSystemLanguageName: string;
-begin
-  VAR Locale:= TLanguages.UserDefaultLocale;
-  Result := TLanguages.Create.NameFromLocaleID[Locale];
-end;
-
-
-// Returns the language of the operating system in this format: "English"
-function GetSystemLanguageShortName: string;
-var
-  FullName: string;
-  P: Integer;
-begin
-  FullName := GetSystemLanguageName;
-  P := Pos('(', FullName);
-  if P > 0
-  then Result := Trim(Copy(FullName, 1, P - 1))
-  else Result := FullName;
-end;
 
 end.
 
