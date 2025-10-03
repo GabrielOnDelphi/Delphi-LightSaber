@@ -4,46 +4,47 @@
    2025.08
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
+   DESCRIPTION
 
-   Motivation - Where to initialize own code?
+     By deriving your forms from TLightForm they gain the ability to save to disk their:
+       * size
+       * position
+       * controls (checkboxes, radiobuttons, etc)
+     When the application starts again, all the above properties are restored automagically.
 
-   FormPreRelease
+--------------------------------------------------------------------------------------------------------------
+   HOW TO USE IT?
 
-      The TLightForm provides the FormPreRelease method that, unlike other events, is guaranteed to be executed once and only once when the form is closed.
+      1. Change the DPR file as shown in the demo below (use TAppData.CreateForm to create your forms).
+      2. Change the declaration of your form from TForm to TLightForm.
 
-      Execution order: FormPreRelease -> FormClose -> FormDestroy
-
-      How to use it
-
-         Change the declaration of your form from TForm to TLightForm.
-         Optionally, if you want to execute your own initialization code, override the LateInitialize (don't forget to call inherited).
-         See: c:\Projects\LightSaber\Demo\Template App\FMX Minimal\TemplateMicro_Fmx.dpr
-
-         uses Light_FMX.Common.AppDataForm;
-         Type
-           TYourForm = class(TLightForm)
-           public
-             procedure FormPreRelease; override;
-           end;
-
-           procedure TYourForm.FormPreRelease;
-           begin
-             // Free your stuff here
-             inherited FormPreRelease;
-           end;
-
+      See: LightSaber\Demo\FMX\Template - Minimal app\FMX_MinimalApp.dpr
 
 --------------------------------------------------------------------------------------------------------------
 
-      Self saving forms
+   DETAILS
 
-         Using SaveForm/LoadForm, a form can save its status (including checkboxes/radio buttons/etc on it))
-         to disk on shutdown and resume exaclty from where it left on application startup.
+     Events execution order:
 
-         LoadForm is automatically called by TAppData.CreateForm(). Therefore, you must create all your forms with this method.
-         The TLightForm.SaveForm is called automatically when the form closes.
+        TAppData.CreateMainForm
+          TLightForm.Loaded
+            TLightForm.LoadForm
+              TForm1.FormCreate
 
-         Override SaveForm/LoadForm if you want to do your own loading/saving (in this case, don't call inherited)!
+        TForm1.FormPreRelease
+           TLightForm.FormPreRelease
+             TLightForm.SaveForm
+
+
+     FormPreRelease
+
+        The TLightForm.FormPreRelease method, unlike other events, is guaranteed to be executed once and only once when the form is closed.
+        This is your nice chance to perform clean up code.
+
+
+     Self saving forms
+
+         Using SaveForm/LoadForm, a form can save its size and position to disk.
 
 =============================================================================================================}
 
@@ -72,6 +73,7 @@ TYPE
     function CloseQuery: Boolean; override;
 
     procedure FormPreRelease; virtual;
+    procedure ShowModal;
 
     procedure LoadForm; virtual;
     procedure SaveForm; virtual;
@@ -83,7 +85,7 @@ TYPE
 
 IMPLEMENTATION
 USES
-  LightFmx.Common.AppData, LightFmx.Common.CenterControl, LightCore, LightCore.Time;
+  LightFmx.Common.AppData, LightFmx.Common.CenterControl, LightFmx.Common.Dialogs, LightCore, LightCore.Time;
 
 
 constructor TLightForm.Create(AOwner: TComponent; aAutoState: TAutoState);
@@ -92,13 +94,13 @@ begin
 
   Showhint:= TRUE;
   Saved   := FALSE;
-  FAutoState:= aAutoState;
 
+  FAutoState:= aAutoState;
   FAutoState:= asUndefined; // Default value. Can be overriden by AppData.CreateForm
 end;
 
 
-// In FMX, Loaded is called before FormCreate!
+// WARNING: In FMX, Loaded is called before FormCreate!
 procedure TLightForm.Loaded;
 begin
   Position:= TFormPosition.Designed;
@@ -207,43 +209,35 @@ end;
 
 
 
-
-
-
 {-----------------------------------------------------------------------------------------------------------------------
    MAIN
-
    Load/Save all controls on this form to their initial state.
-
    Parameters:
          OnlyFormPos=False  ->  Save all supported controls on this form
          OnlyFormPos=True   ->  It will only save the position of the form (only Left/Top, no width/height/WndState)
-
 
    Also see LoadForm/SaveForm in Light_FMX.Visual.INIFile.pas
 -----------------------------------------------------------------------------------------------------------------------}
 
 procedure TLightForm.SaveForm;
-VAR
-   IniFile: TIniFileApp;
+VAR IniFile: TIniFileApp;
 begin
   if TAppData.Initializing
   AND (Self= Application.MainForm) then
    begin
-    //if TAppDataCore.RunningHome
-    //then MessageError('Closing application while still initializing!');
-    Exit; // We don't save anything if the start up was improper!
+     if TAppDataCore.RunningHome
+     then MessageError('Closing application while still initializing!');
+     Exit; // We don't save anything if the start up was improper!
    end;
 
-  Assert(AppData <> NIL, '!!!');
+  Assert(AppData <> NIL, 'AppData is NIL at app shutdown!');
   IniFile:= TIniFileApp.Create(Self.Name);
   TRY
    TRY
      IniFile.SaveForm(Self, AutoState);
    EXCEPT
      ON EIniFileException DO
-       if AppData <> NIL
-       then AppData.LogWarn('Cannot save INI file: '+ IniFile.FileName);
+       MessageError('Cannot save INI file: '+ IniFile.FileName);
    END;
   FINALLY
     FreeAndNil(IniFile);
@@ -282,5 +276,10 @@ begin
 end;
 
 
+
+procedure TLightForm.ShowModal;
+begin
+  AppData.ShowModal(Self);
+end;
 
 end.

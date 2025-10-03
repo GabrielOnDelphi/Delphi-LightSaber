@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.AppData;
 
 {=============================================================================================================
-   2025.05.27
+   2025.09
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -52,10 +52,6 @@
         Not necessary to free AppData. It frees itself.
 
 
-     OnFormCreate
-        See LightFmx.Common.AppDataForm.FormPostInitialize()
-
-
      AppData.Initializing
         When the application starts, this flag is set to True.
         Then it is automatically set to False once all the forms are is fully loaded.
@@ -87,7 +83,7 @@
            https://stackoverflow.com/questions/14587456/how-can-i-stop-my-application-showing-on-the-taskbar
 
 
-     Known issues
+      Known issues
            If you are creating copies of the same form, the second, third, etc will get a dynamic name.
            This means that they will not be stored/loaded properly from the INI file (because of the dynamic name).
 
@@ -165,13 +161,14 @@ TYPE
       FORMS
    --------------------------------------------------------------------------------------------------}
     procedure CreateMainForm  (aClass: TComponentClass; OUT aReference; AutoState: TAutoState = asPosOnly); overload;
-    procedure CreateMainForm  (aClass: TComponentClass); overload;
+    procedure CreateMainForm  (aClass: TComponentClass;                 AutoState: TAutoState = asPosOnly); overload;
 
     procedure CreateForm      (aClass: TComponentClass; OUT aReference; AutoState: TAutoState = asPosOnly; Parented: Boolean = FALSE; CreateBeforeMainForm: Boolean = FALSE); overload;
     procedure CreateFormHidden(aClass: TComponentClass; OUT aReference);
     procedure CreateFormModal (aClass: TComponentClass);  // Problem in Android with modal forms!
 
     function  GetAutoState: TAutoState;
+    procedure ShowModal(aForm: TForm);
 
    {--------------------------------------------------------------------------------------------------
       Others
@@ -252,10 +249,10 @@ begin
 end;
 
 
-procedure TAppData.CreateMainForm(aClass: TComponentClass);
+procedure TAppData.CreateMainForm(aClass: TComponentClass; AutoState: TAutoState = asPosOnly);
 var aReference: TForm;
 begin
-  CreateMainForm(aClass, aReference);
+  CreateMainForm(aClass, aReference, AutoState);
 end;
 
 
@@ -280,6 +277,16 @@ begin
       FAutoStateQueue.Add(AutoState);
       Application.CreateForm(aClass, aReference);
     end;
+end;
+
+
+procedure TAppData.ShowModal(aForm: TForm);
+begin
+  {$IFDEF ANDROID}
+    aForm.Show; // Modal forms not supported on Android!
+  {$ELSE}
+    aForm.ShowModal;
+  {$ENDIF}
 end;
 
 
@@ -315,9 +322,8 @@ end;
 procedure TAppData.CreateFormModal(aClass: TComponentClass);
 VAR aReference: TForm;
 begin
-  //ToDo: Problems in Android with modal forms!
   CreateForm(aClass, aReference);
-  aReference.ShowModal;
+  ShowModal(aReference); // It will not show modal on Android
 end;
 
 
