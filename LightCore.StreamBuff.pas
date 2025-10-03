@@ -106,11 +106,11 @@ TYPE
      function  ReadRect: TRect;
      procedure WriteRect(Rect: TRect);
 
-     procedure ReadList (List: TIntegerArray); overload;
-     procedure WriteList(List: TIntegerArray); overload;
+     procedure ReadIntegers (List: TIntegerArray); overload;
+     procedure WriteIntegers(List: TIntegerArray); overload;
 
-     procedure ReadList (List: TDoubleArray);  overload;
-     procedure WriteList(List: TDoubleArray);  overload;
+     procedure ReadDoubles (List: TDoubleArray);  overload;
+     procedure WriteDoubles(List: TDoubleArray);  overload;
 
      { Reverse read }
      function  RevReadCardinal: Cardinal;                                  { REVERSE READ - read 4 bytes and swap their position. For Motorola format. }
@@ -734,7 +734,7 @@ end;
 
 
 
-procedure TCubicBuffStream.ReadList(List: TIntegerArray);
+procedure TCubicBuffStream.ReadIntegers(List: TIntegerArray);
 VAR i: Integer;
 begin
  VAR Count:= ReadInteger;
@@ -743,7 +743,7 @@ begin
    List[i]:= ReadInteger;
 end;
 
-procedure TCubicBuffStream.WriteList(List: TIntegerArray);
+procedure TCubicBuffStream.WriteIntegers(List: TIntegerArray);
 VAR Int: Integer;
 begin
  WriteInteger(Length(List));
@@ -753,7 +753,7 @@ end;
 
 
 
-procedure TCubicBuffStream.ReadList(List: TDoubleArray);
+procedure TCubicBuffStream.ReadDoubles(List: TDoubleArray);
 VAR i: Integer;
 begin
  VAR Count:= ReadInteger;
@@ -762,7 +762,7 @@ begin
    List[i]:= ReadDouble;
 end;
 
-procedure TCubicBuffStream.WriteList(List: TDoubleArray);
+procedure TCubicBuffStream.WriteDoubles(List: TDoubleArray);
 VAR Dbl: Double;
 begin
  WriteInteger(Length(List));
