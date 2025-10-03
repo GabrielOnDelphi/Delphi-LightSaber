@@ -137,7 +137,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightCore.IO, LightCore.TextFile, LightCore, LightCore.Time, LightFmx.Common.AppData;
+   LightCore.IO, LightCore.TextFile, LightCore, LightFmx.Common.AppData;
 
 
 {-----------------------------------------------------------------------------------------------------------------------
@@ -178,12 +178,18 @@ procedure TIniFileApp.SaveForm(Form: TForm; AutoState: TAutoState= asPosOnly);
   end;
 
 begin
- Assert(Form <> NIL);
- Assert(AutoState <> asNone, 'AutoState = asNone detected in SaveFrom');
+  Assert(Form <> NIL);
+  Assert(AutoState <> asNone, 'AutoState = asNone detected in SaveFrom');
 
- WriteComp(Form);
- if AutoState= asFull
- then WriteComponentsOf(Form);
+  {$IF NOT DEFINED(ANDROID) AND NOT DEFINED(IOS)}
+  // Write the form size/pos.
+  // On Android (and iOS), forms are always full screen, so saving/restoring position and size is pointless.
+  WriteComp(Form);
+  {$ENDIF}
+
+  // Write the components
+  if AutoState= asFull
+  then WriteComponentsOf(Form);
 end;
 
 
@@ -200,12 +206,17 @@ procedure TIniFileApp.LoadForm(Form: TForm; AutoState: TAutoState= asPosOnly);
    end;
 
 begin
- Assert(Form <> NIL);
- Assert(AutoState <> asNone, 'AutoState = asNone detected in SaveFrom');
+  Assert(Form <> NIL);
+  Assert(AutoState <> asNone, 'AutoState = asNone detected in SaveFrom');
 
- ReadComp(Form);             { Read form itself }
- if AutoState= asFull        { Read form's sub-components }
- then ReadComponentsOf(Form);
+  {$IF NOT DEFINED(ANDROID) AND NOT DEFINED(IOS)}
+  // Read the form
+  ReadComp(Form);
+  {$ENDIF}
+
+  // Read form's sub-components
+  if AutoState= asFull
+  then ReadComponentsOf(Form);
 end;
 
 
@@ -272,7 +283,7 @@ begin
       //todo: !!!!!!!!!!!!!!!! use Ctrl.width instead of 0 and get rid of ValueExists
 
       if (NOT IsNonResizable) AND ValueExists(Form.Name, 'Height')
-      then Form.Height:= ReadInteger (Form.Name, 'Height', 0);    //todo 1: !!!!!!!!!!!!! use Ctrl.Height instead of 0 and get rid of ValueExists
+      then Form.Height:= ReadInteger (Form.Name, 'Height', 0);    //todo: !!!!!!!!!!!!! use Ctrl.Height instead of 0 and get rid of ValueExists
 
       if ShowPositionWarn
       AND (Form.Position <> TFormPosition.Designed)
