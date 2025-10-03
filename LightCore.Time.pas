@@ -6,14 +6,21 @@
    See Copyright file
 --------------------------------------------------------------------------------------------------------------
    DateTime utilities
+
+   For I/O (disk, files) related functions see the "Time" section in LightCore.IO:
+      function  ExtractTimeFromFileName
+      function  DateToStr_IO
+      function  TimeToStr_IO
+      function  DateTimeToStr_IO
+      function  DateTimeToStr_IO
+
 =============================================================================================================}
 
 INTERFACE
 
 USES
-   System.AnsiStrings, System.Character, System.SysUtils, System.Math, System.IOUtils, System.StrUtils,
-   System.Classes, System.Types, System.TimeSpan, System.DateUtils, LightCore.Types;
-
+   System.AnsiStrings, System.Character, System.SysUtils, System.Math, System.IOUtils, System.StrUtils, System.Classes, System.Types, System.TimeSpan, System.DateUtils,
+   LightCore.Types;
 
  // CURRENT DATE-TIME
  function TodayIs: string;                                         { Returns today as date based on Locale. Example: Montag }
@@ -49,14 +56,15 @@ USES
  function  DateToStrUS           (CONST Time: TDateTime): string;                              { converts date to string, using the US (YYY.MM.DD) format }
 
  // CONVERSIONS
- procedure SecondsToTime         (CONST Seconds : Cardinal; VAR D, H, M, S: Cardinal);
- function  SecondsToTimeAuto     (CONST Seconds : Cardinal): string;
- function  MiliSecToTimeAuto     (CONST MSeconds: Cardinal): string;
+ procedure SecondsToTime         (Seconds : Cardinal; VAR D, H, M, S: Cardinal);
+ function  MiliSecToTimeAuto     (MSeconds: Cardinal): string;
  function  mSecondsToTime        (mSeconds: Cardinal): string;
 
- function  Date2FormatAuto       (CONST Time: TDateTime): string;
- function  DateTimeToMilliseconds(CONST ADateTime: TDateTime): Int64;
- function  DateToTime_           (CONST aDate : TDateTime): string;
+ function  ShowTimeNice          (Seconds: Cardinal): string;  overload;
+ function  ShowTimeNice          (aTime: TDateTime): string;   overload;
+
+ function  DateTimeToMilliseconds(aDateTime: TDateTime): Int64;
+ function  DateToTime_           (aDate : TDateTime): string;
 
  // CONVERSIONS
  function  Date2Cardinal         (xDate: TDate): Cardinal;
@@ -64,39 +72,24 @@ USES
 
 
 
-
-
 IMPLEMENTATION
 USES LightCore;
 
-{ Don't add any dependecies to LightSaber here if possible in order to keep LightCore as single-file library }
 
-
-
-
-
-
-
-
-
-{============================================================================================================
-   TIME
-============================================================================================================}
-function mSecondsToTime(mSeconds: Cardinal): string;                                                { folosit in WindowsUpTime }
+function mSecondsToTime(mSeconds: Cardinal): string;
 begin
-  Result:= SecondsToTimeAuto(mSeconds DIV 1000);
+  Result:= ShowTimeNice(mSeconds DIV 1000);
 end;
 
 
 
-function DateToTime_(CONST aDate: TDateTime): string;
+function DateToTime_(aDate: TDateTime): string;
 begin
  Result:= FormatDateTime('d:hh:nn:ss', aDate);
 end;
 
 
-
-procedure SecondsToTime (CONST Seconds: Cardinal; VAR D, H, M, S: Cardinal);
+procedure SecondsToTime (Seconds: Cardinal; VAR D, H, M, S: Cardinal);
 begin
  D := (Seconds DIV SecsPerDay);
  H := (Seconds DIV SecsPerHour) - (D* 24);
@@ -105,87 +98,67 @@ begin
 end;
 
 
-{ check if I call this in my projects. if not, delete it!
-function SecondsToTime_FormatLong (CONST Seconds: Cardinal): string;     // in TDateTime, o secunda e egal cu 1.1574074074e-05        1sec:= frac(real(StrToTime('00:00:01')))
-VAR D, H, M, S: Cardinal;
+{ Common function that does the actual formatting }
+function ShowTimeNiceCommon(D, H, M, S: Cardinal): string;
 begin
- Result:= '';
- SecondsToTime(Seconds, D, H, M, S);
+  Result := '';
 
- if D > 0
- then Result:= IntToStr(D) + ' days ';
+  { Show days }
+  if D > 0 then Result := IntToStr(D) + ' days ';
 
- Result:= Result + IntToStr(H) + 'h ' + IntToStr(M) + 'm ' + IntToStr(S)+ 's';
-end;}
+  { Show hours }
+  if H > 0 then Result := Result + IntToStr(H) + 'h ';
 
-
-{ Converts seconds to time, but showing the shortest string possible. For example: it will convert 59 to '59s' and 61 to '1m 01s' }
-function SecondsToTimeAuto(CONST Seconds: Cardinal): string; // Old name: SecondsToTime_FormatAuto
-VAR D, H, M, S: Cardinal;
-begin
- Result:= '';
-
- D := (Seconds DIV SecsPerDay);
- H := (Seconds DIV SecsPerHour) - (D* 24);
-
- { Add days }
- if D> 0 then Result:= IntToStr(D) + ' days ';
-
- { Add hours }
- if H> 0 then Result:= Result+ IntToStr(H) + 'h ';
-
- { Add minutes but ONLY if I have less than 30 days }
- if D<= 7 then
+  { Show minutes but ONLY if we have less than 7 days }
+  if D <= 7 then
   begin
-   M := (Seconds DIV SecsPerMin)  - (D* 24* SecsPerMin) - (H* 60);
-   Result:= Result+ IntToStr(M) + 'm ';
+    Result := Result + IntToStr(M) + 'm ';
 
-   { Add seconds ONLY if I don't add days (keep text short) }
-   if (D= 0) then
-    begin
-      S := Seconds- (D* SecsPerday) - (H* 3600)- (M* 60);
-      Result:= Result {+ ' ' del } + IntToStr(S)+ 's';
-    end;
+    { Show seconds ONLY if the time is short (under 1h) }
+    if (D = 0) AND (H = 0)
+    then Result := Result + IntToStr(S) + 's';
   end;
 end;
 
 
-
-function MiliSecToTimeAuto(CONST MSeconds: Cardinal): string;     //old name: mSecondsToTime
+{ Converts seconds to time, but showing the shortest string possible.
+  For example: it will convert 59 to '59s' and 61 to '1m 01s' }
+function ShowTimeNice(Seconds: Cardinal): string; // Old name: SecondsToTime_FormatAuto
+var D, H, M, S: Cardinal;
 begin
- if MSeconds< 1000                                                                                 { under 1 sec }
- then Result:= IntToStr(MSeconds)+ 'ms'
- else
-   if MSeconds< 60000                                                                              { under 1 minute }
-   then Result:= Real2Str(MSeconds / 1000, 3)+ 'sec'
-   else Result:= SecondsToTimeAuto(MSeconds DIV 1000);
+  D := (Seconds DIV SecsPerDay);
+  H := (Seconds DIV SecsPerHour)  - (D * 24);
+  M := (Seconds DIV SecsPerMin)   - (D * 24 * SecsPerMin) - (H * 60);
+  S := Seconds - (D * SecsPerDay) - (H * 3600) - (M * 60);
+
+  Result := ShowTimeNiceCommon(D, H, M, S);
 end;
 
 
-
-function Date2FormatAuto(CONST Time: TDateTime): string;
-VAR D: Integer;
+{ Example 5 days, 23h:59m:59s }
+function ShowTimeNice(aTime: TDateTime): string;
+var D: Integer;
     H, M, S: Word;
 begin
- Result:= '';
+  D := Trunc(aTime);
+  H := HourOf(aTime);
+  M := MinuteOf(aTime);
+  S := SecondOf(aTime);
 
- D := Trunc(Time);
- H := HourOf(Time);
- M := MinuteOf(Time);
- S := SecondOf(Time);
-
- { Add days }
- if D> 0 then Result:= IntToStr(D) + ' days ';
-
- { Add hours }
- if H> 0 then Result:= Result+ IntToStr(H) + 'h:';
-
- { Always add minutes }
- Result:= Result+ IntToStr(M) + 'm';
-
- { Add seconds ONLY if I don't add days (keep text short) }
- if D= 0 then Result:= Result + ' :' + IntToStr(S)+ 's';
+  Result:= ShowTimeNiceCommon(D, H, M, S);
 end;
+
+
+function MiliSecToTimeAuto(MSeconds: Cardinal): string;     //old name: mSecondsToTime
+begin
+  if MSeconds< 1000                                                                                 { under 1 sec }
+  then Result:= IntToStr(MSeconds)+ 'ms'
+  else
+    if MSeconds< 60000                                                                              { under 1 minute }
+    then Result:= Real2Str(MSeconds / 1000, 3)+ 'sec'
+    else Result:= ShowTimeNice(MSeconds DIV 1000);
+end;
+
 
 
 function DateToStrUS(CONST Time: TDateTime): string; { converts date to string, using the US (YYY.MM.DD) format }
@@ -414,7 +387,7 @@ end;
 
 { Copied from DateUtils.PAS where it is marked as 'Internal'.
   These functions in DateUtils.pas are not accurate. See this of details: http://stackoverflow.com/questions/17109814/why-datetimetomilliseconds-in-dateutils-pas-is-marked-as-internal }
-function DateTimeToMilliseconds(CONST ADateTime: TDateTime): Int64;
+function DateTimeToMilliseconds(aDateTime: TDateTime): Int64;
 var
   LTimeStamp: TTimeStamp;
 begin
