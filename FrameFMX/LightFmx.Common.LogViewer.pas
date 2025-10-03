@@ -59,6 +59,8 @@ TYPE
      procedure setVerbFilter(const Value: TLogVerbLvl);
      function  getLineFiltered(Row: Integer): PLogLine;
      procedure MyDrawColumnCell(Sender: TObject; const Canvas: TCanvas; const Column: TColumn; const Bounds: TRectF; const Row: Integer; const Value: TValue; const State: TGridDrawStates);
+     function  AddColumn(aHeader: string): TStringColumn;
+    procedure RemoveAllColumns;
    protected
      procedure Resize; override;
      procedure setUpRows;
@@ -148,33 +150,59 @@ procedure TLogViewer.Clear;
 begin
   Assert(FRamLog <> NIL, 'RamLog not assigned!');
 
-  RowCount := 1; // Keep header row if applicable
-  FFilteredRowCount := 0;
+  RowCount:= 0; // The value of RowCount includes the scrollable rows in the grid, but not the fixed row with the headers.
+  FFilteredRowCount:= 0;
   //InvalidateContent; // Redraw content area
   FRamLog.Clear;
   // No need to call Populate here, RamLog.Clear triggers NotifyLogObserver which calls Populate.
 end;
 
 
+function TLogViewer.AddColumn(aHeader: string): TStringColumn;
+begin
+  // When we add a column using AddObject, the grid takes ownership of the column, meaning it will manage the column's lifecycle, including freeing it when the grid is destroyed.
+  Result:= TStringColumn.Create(Self);
+  try
+    Result.Header := aHeader;
+    Result.Width  := 100;       // Set the desired width
+    Result.Parent := Self;     // Important: Set the parent to the grid
+    AddObject(Result);         // Add the column to the grid
+  except
+    Result.Free; // Free the column if there's an error
+    RAISE;
+  end;
+end;
+
+
+procedure TLogViewer.RemoveAllColumns;
+var i: Integer;
+begin
+  if ColumnCount > 0 then
+    for i:= ColumnCount - 1 downto 0 do
+      RemoveObject(Columns[i]);  // We should not manually call Free on the column before removing it from the grid, as this can lead to access violations or other unexpected behavior.
+end;
+
+
+
 {-------------------------------------------------------------------------------------------------------------
    SETUP & DATA HANDLING
 -------------------------------------------------------------------------------------------------------------}
 procedure TLogViewer.setUpRows;
-var
-  col: TStringColumn;
-  RequiredColumnCount: Integer;
+VAR RequiredColumnCount: Integer;
 begin
   Assert(FRamLog <> nil, 'RamLog not assigned!');     // 1) Ensure RamLog exists
+
+  // Safety check - don't proceed if component isn't fully initialized
+  if (csDestroying in ComponentState) or (csLoading in ComponentState) then Exit;
 
   // Lock updates for performance and visual stability
   BeginUpdate;
   try
-
     // Recompute filtered rows
     FFilteredRowCount:= FRamLog.Count(FVerbosity > lvDebug, FVerbosity); // Consider caching Filtered flag logic
 
     // Set RowCount (reserve row 0 for headers)
-    RowCount := FFilteredRowCount + 1; // +1 for the header row
+    RowCount:= FFilteredRowCount + 1; // +1 for the header row
 
     // Determine required column count
     if FShowDate or FShowTime
@@ -182,41 +210,22 @@ begin
     else RequiredColumnCount := 1;
 
     // Only recreate columns if the count has changed
+    //ToDo: don't destroy existing columns. Reused them!
     if ColumnCount <> RequiredColumnCount then
-    begin
-      // Clear existing columns BEFORE adding new ones
-      while ColumnCount > 0 do
-        Columns[0].Free; // Freeing the first column shifts the next one to index 0
+      begin
+        // Clear existing columns BEFORE adding new ones
+        RemoveAllColumns;
 
         // Create new columns
-      if RequiredColumnCount = 2
-      then
-        begin
-          // Time Column
-          col := TStringColumn.Create(Self);
-          col.Header := 'Time';
-
-          // Set reasonable initial width, ResizeColumns will adjust later
-          col.Width := 100;
-          AddObject(col); // Add column to the grid
-
-          // Message Column
-          col := TStringColumn.Create(Self);
-          col.Header := 'Message';
-
-          // Let this column take up remaining space initially
-          col.Width := 150; // Placeholder, ResizeColumns adjusts
-          AddObject(col);
-        end
-      else
-        begin
-          // Message Column Only
-          col := TStringColumn.Create(Self);
-          col.Header := 'Message';
-          col.Width := 250; // Placeholder, ResizeColumns adjusts
-          AddObject(col);  //ToDo: I do this way too often. This will result in serious performance penalty!!!
-        end;
-    end;
+        if RequiredColumnCount = 2
+        then
+          begin
+            AddColumn('Time');
+            AddColumn('Message').Width:= 150;
+          end
+        else
+          AddColumn('Message').Width:= 250;  //ToDo: I call this way too often. This will result in serious performance penalty!!!
+      end;
 
     // 5) Populate header row text (optional in FMX if using styled headers, but good practice)
     // The TColumn.Header property already sets the header text. No need for Cells[i, 0].
@@ -299,7 +308,6 @@ end;
 procedure TLogViewer.ObserveAppDataLog;
 begin
   Assert(AppData.RamLog <> NIL, 'AppData.RamLog not assigned!!');
-
   AssignExternalRamLog(AppData.RamLog);
 end;
 
@@ -355,8 +363,8 @@ VAR
 begin
   // Row index is 0-based, Row 0 is the header. Data rows start at 1.
   if (Row <= 0)
-  or (Row > FFilteredRowCount)
-  or not Assigned(RamLog)
+  OR (Row > FFilteredRowCount)
+  OR NOT Assigned(RamLog)
   then EXIT;
 
   // Get the underlying log line for this *visible* row (adjusting for header)
@@ -365,27 +373,20 @@ begin
   then Exit;
 
   // Determine text based on column index
-  if ColumnCount = 2
-  then
-    if Column.Index = 0 // Time column
-    then
-     begin
-       s := '';
-       if FShowDate then s := DateToStr(CurLine.Time);
-       if FShowTime then s := s + ' ' + FormatDateTime('hh:nn', CurLine.Time);
-      // Handle case where neither is shown (shouldn't happen with ColumnCount=2, but safe)
-      if s = '' then s := '?time?';
-     end
-    else if Column.Index = 1 // Message column
-    then s := CurLine.Msg
-    else Exit              // Should not happen
-  else
-  if ColumnCount = 1 // Message column only
-  then
-     if Column.Index = 0
-     then s := CurLine.Msg
-     else Exit            // Should not happen
-  else Exit;              // No columns defined?
+  case ColumnCount of
+   1: if Column.Index = 0 then s:= CurLine.Msg;  // Message column only
+   2: case Column.Index of
+        0:
+          begin                    // Time column
+            s:= '';
+            if FShowDate then s := DateToStr(CurLine.Time);
+            if FShowTime then s := s + ' ' + FormatDateTime('hh:nn', CurLine.Time);
+          end;
+        1: s:= CurLine.Msg;        // Message column
+      end;
+
+    else Exit;   // No columns defined?
+  end;
 
   // --- Custom Drawing ---
   // 1. Set Fill Color (Background) based on verbosity
@@ -404,7 +405,7 @@ begin
   //Canvas.Font.Color := TAlphaColors.Black; // Defaulting to black for now
 
   // 4. Prepare drawing rectangle (optional padding)
-  DrawRect := Bounds;
+  DrawRect:= Bounds;
   DrawRect.Inflate(-2, -1); // Small horizontal/vertical padding
 
   // 5. Draw the Text
@@ -418,7 +419,7 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 function TLogViewer.Count: Integer;
 begin
-  Result := FFilteredRowCount; // Return the count of currently visible data rows
+  Result:= FFilteredRowCount; // Return the count of currently visible data rows
 end;
 
 
@@ -497,7 +498,7 @@ function GetScrollBarWidth: Single;
 begin
   // This is an approximation. Real width depends on style and platform. A more robust way might involve checking style resources.
   // Consider platform specifics if necessary: TPlatformServices.Current.GetPlatformService(...)
-  Result := 18; // Common default width
+  Result:= 18; // Common default width
 end;
 
 
@@ -518,9 +519,8 @@ begin
     begin
        // Assign fixed width for time, rest for message
        TimeColWidth := 120; // Adjust as needed for date/time format
-       MsgColWidth := TotalWidth - TimeColWidth;
-       // Ensure message column has a minimum width
-       if MsgColWidth < 100 then MsgColWidth := 100;
+       MsgColWidth  := TotalWidth - TimeColWidth;
+       if MsgColWidth < 100 then MsgColWidth := 100;  // Ensure message column has a minimum width
 
        // Apply widths (check if columns exist before accessing)
        if Columns[0] <> nil then Columns[0].Width := TimeColWidth;
@@ -558,14 +558,11 @@ begin
     try
       // This loop iterates through FILTERED rows currently in the grid
       for i := 1 to Lines.Count - 1 do // Data rows are 1 to RowCount-1
-      begin
-        CurLine := GetLineFiltered(i - 1); // Get data for the visible row
-        if CurLine <> nil then
         begin
-           // Construct line string similarly...
-           Lines.Add(CurLine.Msg); // Add message part
+          CurLine := GetLineFiltered(i - 1); // Get data for the visible row
+          if CurLine <> NIL
+          then Lines.Add(CurLine.Msg);
         end;
-      end;
     finally
       Lines.EndUpdate;
     end;
@@ -604,7 +601,8 @@ begin
   SelectedRowIndex := Selected; // This is the visual row index (including header)
 
   // Check if a valid data row is selected (Selected > 0)
-  if (SelectedRowIndex > 0) and (SelectedRowIndex <= FFilteredRowCount) // Use FFilteredRowCount
+  if  (SelectedRowIndex > 0)
+  AND (SelectedRowIndex <= FFilteredRowCount) // Use FFilteredRowCount
   then
    begin
       // Get the corresponding log line (adjust for header row)

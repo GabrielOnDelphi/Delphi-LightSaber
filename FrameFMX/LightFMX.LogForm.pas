@@ -120,7 +120,7 @@ end;
 
 procedure TfrmRamLog.LoadSettings;
 begin
-  //del Light_FMX.Visual.INIFile.LoadForm(Self);
+
 
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);
   try

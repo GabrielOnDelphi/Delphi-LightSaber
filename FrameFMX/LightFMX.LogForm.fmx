@@ -58,7 +58,6 @@ object frmRamLog: TfrmRamLog
         Size.PlatformDefault = False
         TabOrder = 2
         Text = 'Clear'
-        TextSettings.Trimming = None
         OnClick = btnClearClick
       end
       object chkShowTime: TCheckBox
