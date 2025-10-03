@@ -1,57 +1,52 @@
-unit MainForm;
+UNIT MainForm;
 
-interface
+{=============================================================================================================
+   2025.09
+   www.GabrielMoraru.com
+--------------------------------------------------------------------------------------------------------------
 
-uses
+   By deriving your forms from TLightForm they gain the ability to save to disk their:
+     * size
+     * position
+     * controls (checkboxes, radiobuttons, etc)
+
+   When the application starts again, all the above properties are restored.
+   As you can see this is done automagically. The user has to write zero code for that!
+
+--------------------------------------------------------------------------------------------------------------
+   More documentation in LightSaber\FrameFMX\LightFmx.Common.AppData.Form.pas
+-------------------------------------------------------------------------------------------------------------}
+
+INTERFACE
+
+USES
   System.Classes,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Controls.Presentation, FMX.StdCtrls, FMX.DialogService, FMX.Grid,
-  LightFmx.Common.AppData.Form, LightFmx.Common.LogViewer;
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Controls.Presentation, FMX.StdCtrls,
+  LightFmx.Common.AppData.Form;
 
 TYPE
-  TForm1 = class(TLightForm)
+  TfrmSimpleDemo = class(TLightForm)  // This form derives from TLightForm (which does all the magic)
     chkSome: TCheckBox;
     RadioButton1: TRadioButton;
+    RadioButton2: TRadioButton;
     lblInfoTop: TLabel;
     lblIniFile: TLabel;
     procedure FormCreate  (Sender: TObject);
   private
   public
-    procedure FormPostInitialize; override;
-    procedure FormPreRelease;     override;
   end;
 
-VAR
-  Form1: TForm1;
 
 IMPLEMENTATION
 {$R *.fmx}
 
 USES
-   LightCore, LightCore.Time, LightCore.Types, LightCore.AppData, LightCore.LogTypes, LightCore.LogRam, LightFmx.Common.AppData;
+   LightFmx.Common.AppData;
 
 
-
-procedure TForm1.FormCreate(Sender: TObject);
+procedure TfrmSimpleDemo.FormCreate(Sender: TObject);
 begin
-  // FormPostInitialize is a much better place to initialize your code!
-end;
-
-
-procedure TForm1.FormPostInitialize;
-begin
-  inherited; // This will load the form's state from disk
-  
-  // Now we can show something in the log by sending the message directly to AppData object
-  // The information will not be shown on the screeen until we assign a visual log to show it, as demonstrated in the next demo app.
-  AppData.LogError('Some error.');
-  lblIniFile.Text:= 'Your INI file is here: ' + CRLF+ AppData.IniFile;  
-end;
-
-
-procedure TForm1.FormPreRelease;
-begin
-  Caption:= 'Bye Bye!'; // This place is a better than FormClose/FormDestroy to deinitialize code.
-  inherited;
+  lblIniFile.Text:= 'Your form''s settings are saved here: ' + AppData.IniFile;  // Indeed they are...
 end;
 
 

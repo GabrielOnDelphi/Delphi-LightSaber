@@ -1,4 +1,4 @@
-object Form1: TForm1
+object frmSimpleDemo: TfrmSimpleDemo
   Left = 0
   Top = 0
   Caption = 'FMX minimalistic demo'
@@ -12,16 +12,19 @@ object Form1: TForm1
   object chkSome: TCheckBox
     ControlType = Platform
     Position.X = 32.000000000000000000
-    Position.Y = 148.000000000000000000
+    Position.Y = 138.000000000000000000
     StyleLookup = 'checkboxstyle'
     TabOrder = 4
     Text = 'Some CheckBox'
   end
   object RadioButton1: TRadioButton
     Position.X = 31.000000000000000000
-    Position.Y = 175.000000000000000000
-    TabOrder = 17
-    Text = 'Some RadioButton'
+    Position.Y = 178.000000000000000000
+    Size.Width = 146.000000000000000000
+    Size.Height = 19.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 18
+    Text = 'RadioButton 1'
   end
   object lblInfoTop: TLabel
     Align = Top
@@ -43,7 +46,7 @@ object Form1: TForm1
       'cally saved to disk and restored when the program is restarted.'#13 +
       #10'This form also offer better places where to initialize and fina' +
       'lize business-logic code.'
-    TabOrder = 20
+    TabOrder = 21
   end
   object lblIniFile: TLabel
     Align = Bottom
@@ -59,6 +62,12 @@ object Form1: TForm1
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
     Text = 'INI'
-    TabOrder = 19
+    TabOrder = 20
+  end
+  object RadioButton2: TRadioButton
+    Position.X = 32.000000000000000000
+    Position.Y = 205.000000000000000000
+    TabOrder = 17
+    Text = 'RadioButton 2'
   end
 end

@@ -19,8 +19,7 @@ TYPE
   private
     LogViewer: TLogViewer;
   public
-    procedure FormPostInitialize; override;
-    procedure FormPreRelease;     override;
+    procedure FormPreRelease; override;
   end;
 
 VAR
@@ -36,14 +35,6 @@ USES
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  // FormPostInitialize is a much better place to initialize your code!
-end;
-
-
-procedure TForm1.FormPostInitialize;
-begin
-  inherited; // This will load the form's state from disk
-  
   // Here we create a log viewer dynamically but we could also just drag and drop a component
   LogViewer:= TLogViewer.Create(Self);
   LogViewer.Parent:= Self;

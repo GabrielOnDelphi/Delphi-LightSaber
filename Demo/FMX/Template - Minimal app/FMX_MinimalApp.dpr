@@ -3,11 +3,11 @@ program FMX_MinimalApp;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF }
+  {$ENDIF}
   System.StartUpCopy,
   FMX.Forms,
-  MainForm in 'MainForm.pas' {Form1},
-  LightCore.AppData       in '..\..\..\LightCore.AppData.pas',
+  MainForm in 'MainForm.pas' {frmSimpleDemo},
+  LightCore.AppData in '..\..\..\LightCore.AppData.pas',
   LightFmx.Common.AppData in '..\..\..\FrameFMX\LightFmx.Common.AppData.pas',
   LightFmx.Common.IniFile in '..\..\..\FrameFMX\LightFmx.Common.IniFile.pas';
 
@@ -17,8 +17,6 @@ begin
   ReportMemoryLeaksOnShutdown:= TRUE;
 
   AppData:= TAppData.Create('Light Template FMX micro');
-  AppData.CreateMainForm(TForm1, Form1, asFull);
+  AppData.CreateMainForm(TfrmSimpleDemo, asFull); // Change AutoState from asFull to asNone if you don't want to save form's state to disk.
   AppData.Run;
 end.
-
-// Info: AutoState must be set to asFull if we want to save/load form's position and state from the INI file

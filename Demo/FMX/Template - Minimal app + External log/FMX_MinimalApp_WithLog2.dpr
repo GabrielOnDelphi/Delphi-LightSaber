@@ -3,7 +3,7 @@ program FMX_MinimalApp_WithLog2;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF }
+  {$ENDIF}
   System.StartUpCopy,
   FMX.Forms,
   MainForm in 'MainForm.pas' {Form1},
@@ -18,8 +18,6 @@ begin
   ReportMemoryLeaksOnShutdown:= TRUE;
 
   AppData:= TAppData.Create('Light Template FMX mini Log2');
-  AppData.CreateMainForm(TForm1, Form1, asFull);
+  AppData.CreateMainForm(TForm1, Form1, asFull);  // Change AutoState from asFull to asNone if you don't want to save form's state to disk.
   AppData.Run;
 end.
-
-// Info: AutoState must be set to asFull if we want to save/load form's position and state from the INI file
