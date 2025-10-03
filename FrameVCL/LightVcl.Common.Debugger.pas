@@ -515,7 +515,7 @@ begin
  Result:= Result+'  OS architecture: '      + Tab     + LightVcl.Common.WinVersion.Architecture+ CRLF;
  Result:= Result+'  App has admin rights: ' + BoolToStr(AppHasAdminRights, TRUE)+ CRLF;
  Result:= Result+'  Invalid system time: '  + Tab+ BoolToStr(SystemTimeIsInvalid , TRUE)+ CRLF;
- Result:= Result+'  Windows up time: '      + Tab+ Date2FormatAuto(WindowsUpTime);
+ Result:= Result+'  Windows up time: '      + Tab+ ShowTimeNice(WindowsUpTime);
 end;
 
 

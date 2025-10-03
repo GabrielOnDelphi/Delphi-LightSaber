@@ -273,6 +273,7 @@ CONST
  function  ExtractFileExtUp    (CONST FileName: string): string;                                   { Case insensitive version }
  function  AppendFileExtension (CONST FileName, Ext: string): string;
 
+
 {--------------------------------------------------------------------------------------------------
    FILE TYPE
 --------------------------------------------------------------------------------------------------}

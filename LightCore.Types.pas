@@ -101,7 +101,7 @@ TYPE
   end;
 
 
-  TIntegerArray    = array of Integer;
+  TIntegerArray     = array of Integer;
   TIntegerArrayHelper= record helper for TIntegerArray
   public
     function Average: Single;

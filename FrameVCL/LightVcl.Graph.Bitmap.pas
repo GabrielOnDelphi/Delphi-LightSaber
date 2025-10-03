@@ -140,7 +140,7 @@ end;
 
 
 
-function CreateBlankBitmap(Width, Height: Integer; BkgClr: TColor= clBlack; PixelFormat: TPixelFormat= pf24bit): TBitmap;   // old name: GetBlankImage
+function CreateBlankBitmap(Width, Height: Integer; BkgClr: TColor= clBlack; PixelFormat: TPixelFormat= pf24bit): TBitmap;
 begin
   Result:= CreateBitmap(Width, Height, PixelFormat);
   FillBitmap(Result, BkgClr);   { Make it black }

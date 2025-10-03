@@ -43,7 +43,8 @@ contains
   LightFmx.Common.Dialogs in 'LightFmx.Common.Dialogs.pas',
   LightFmx.Common.IniFile in 'LightFmx.Common.IniFile.pas',
   LightFmx.Common.Helpers in 'LightFmx.Common.Helpers.pas',
-  LightFmx.LogForm in 'LightFmx.LogForm.pas';
+  LightFmx.LogForm in 'LightFmx.LogForm.pas',
+  LightFmx.Graph in 'LightFmx.Graph.pas';
 
 end.
 

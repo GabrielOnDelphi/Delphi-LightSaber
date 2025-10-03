@@ -19,7 +19,7 @@
    HOW TO USE IT
 
      In the DPR file of your console app replace the code with:
-	 
+
        program MyConsole;
        uses
          FastMM4,
@@ -39,10 +39,10 @@ INTERFACE
 
 USES
   {$IFDEF MsWindows}
-    Winapi.Windows, //LightVcl.Common.Registry, // for SelfStartup
+    //LightVcl.Common.Registry, // for SelfStartup
   {$ENDIF}
    System.IOUtils, System.AnsiStrings, System.SysUtils,
-   LightCore, LightCore.Time, LightCore.Types, LightCore.INIFile, LightCore.LogRam;
+   LightCore, LightCore.Types, LightCore.INIFile, LightCore.LogRam;
 
 TYPE
   THintType = (htOff,                      // Turn off the embedded help system

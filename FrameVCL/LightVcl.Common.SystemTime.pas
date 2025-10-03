@@ -38,7 +38,7 @@ USES
 --------------------------------------------------------------------------------------------------}
 { Also see this: http://docwiki.embarcadero.com/Libraries/XE4/en/System.Diagnostics.TStopwatch
   Time since boot
-  Use it as: Date2FormatAuto(WindowsUpTime)  }
+  Use it as: ShowTimeNice(WindowsUpTime)  }
 function WindowsUpTime: TDateTime;
 begin
  Result:= GetTickCount / SecsPerDay / MSecsPerSec;   // GetTickCount accuracy is 15ms+  https://blogs.msdn.microsoft.com/oldnewthing/20050902-00/?p=34333

@@ -198,7 +198,7 @@ end;
 procedure TfrmReminder.ShowRemainingTime;
 begin
  if Timer.Enabled
- then Caption:= 'Reminder in '+ SecondsToTimeAuto(TimeLeft)
+ then Caption:= 'Reminder in '+ ShowTimeNice(TimeLeft)
  else Caption:= 'Timer disabled!';
 end;
 
