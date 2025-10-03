@@ -15,7 +15,7 @@ INTERFACE
 
 USES
    System.AnsiStrings, System.Character, System.SysUtils, System.Math, System.IOUtils, System.StrUtils,
-   System.Classes, System.Types, System.TimeSpan, System.DateUtils, LightCore.Types;
+   System.Classes, System.Types, LightCore.Types;
 
 { Enters }
 CONST
@@ -344,11 +344,17 @@ begin
 end;
 
 
-// Returns the language of the operating system in this format: "English (United States)"
+// Returns the language of the operating system in this format: "English (United States)".
 function GetSystemLanguageName: string;
+var Languages: TLanguages;
 begin
-  VAR Locale:= TLanguages.UserDefaultLocale;
-  Result := TLanguages.Create.NameFromLocaleID[Locale];
+  var Locale:= TLanguages.UserDefaultLocale;
+  Languages:= TLanguages.Create;
+  try
+    Result:= Languages.NameFromLocaleID[Locale];
+  finally
+    Languages.Free;
+  end;
 end;
 
 
