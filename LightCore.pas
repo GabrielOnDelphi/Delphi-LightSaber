@@ -204,6 +204,7 @@ CONST
  function  DoubleQuoteStr      (CONST s: string): string;
  function  Reverse             (CONST s: String): string; deprecated 'LightCore.Reverse is deprecated. Use System.StrUtils.ReverseString';
 
+ function  CharInArray         (CONST c: Char; const Chars: TCharArray): Boolean;
  function  CharIsLetter        (CONST c: char): Boolean;
  function  IsUpcaseLetter      (CONST c: Char): Boolean;
  function  IsUpcase            (CONST c: Char): Boolean;     { Works only with letters. }
@@ -402,6 +403,14 @@ begin
 end;
 
 
+function CharInArray(const C: Char; const Chars: TCharArray): Boolean;
+VAR Ch: Char;
+begin
+  for Ch in Chars do
+    if Ch = C then
+      Exit(True);
+  Result := False;
+end;
 
 
 
