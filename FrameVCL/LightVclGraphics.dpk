@@ -37,11 +37,11 @@
 requires
   rtl,
   vcl,
-  LightCore,
-  LightVclCommon,
   vclimg,
   vclwinx,
-  vclie,
+  LightCore,
+  LightVclCommon,
+
   CCRExif,
   GR32_R,
   ThirdPartyLibs;
@@ -79,16 +79,18 @@ contains
   LightVcl.Graph.ShadowText in 'LightVcl.Graph.ShadowText.pas',
   LightVcl.Graph.FX.RotateGr32 in 'LightVcl.Graph.FX.RotateGr32.pas',
   LightVcl.Graph.ResizeGr32 in 'LightVcl.Graph.ResizeGr32.pas',
-  GifProperties in '..\External\GifProperties.pas',
+
+  janFxStretch in '..\External\janFxStretch.pas',
   janFX in '..\External\janFX.pas',
-  janFxStretch in '..\External\janFxStretch.pas';
+  GifProperties in '..\External\GifProperties.pas';
 
 end.
 
 Note:
+(*
   This package uses a few 3rd party libraries (all Free).
-  If you don"t want to download these 3rd party libraries, you can get rid of them.
-  The package will continue to work but with some reduced functionality:
+  It is not mandatory to download AND install these 3rd party libraries.
+  My package will continue to work but with some reduced functionality:
     * slower JPG decoding,
     * no support for jpg2000,
     * no support for Jpeg Exif (digital camera rotation detection).
@@ -100,13 +102,4 @@ Note:
          {$Jpg2000}
          {$FastJpg}
 
-  Example:
-    Delete from uses:
-      CCRExif,
-      GR32_R,
-      ThirdPartyLibs;
 
-    Delete from contains:
-      {$IFDEF GR32}
-      LightVcl.Graph.FX.RotateGr32 in 'LightVcl.Graph.FX.RotateGr32.pas',
-      LightVcl.Graph.ResizeGr32 in 'LightVcl.Graph.ResizeGr32.pas', {$ENDIF}
