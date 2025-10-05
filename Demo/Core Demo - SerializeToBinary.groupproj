@@ -3,13 +3,13 @@
         <ProjectGuid>{73116B00-773D-4D80-8D3E-CFD134F995CA}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="Demo Binary file 1\Demo_Binary1.dproj">
+        <Projects Include="Core\Demo Binary file 1\Demo_Binary1.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Demo Binary file 2\Demo_Binary2.dproj">
+        <Projects Include="Core\Demo Binary file 2\Demo_Binary2.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Demo Binary file 3\Demo_Binary3.dproj">
+        <Projects Include="Core\Demo Binary file 3\Demo_Binary3.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -21,31 +21,31 @@
         </BorlandProject>
     </ProjectExtensions>
     <Target Name="Demo_Binary1">
-        <MSBuild Projects="Demo Binary file 1\Demo_Binary1.dproj"/>
+        <MSBuild Projects="Core\Demo Binary file 1\Demo_Binary1.dproj"/>
     </Target>
     <Target Name="Demo_Binary1:Clean">
-        <MSBuild Projects="Demo Binary file 1\Demo_Binary1.dproj" Targets="Clean"/>
+        <MSBuild Projects="Core\Demo Binary file 1\Demo_Binary1.dproj" Targets="Clean"/>
     </Target>
     <Target Name="Demo_Binary1:Make">
-        <MSBuild Projects="Demo Binary file 1\Demo_Binary1.dproj" Targets="Make"/>
+        <MSBuild Projects="Core\Demo Binary file 1\Demo_Binary1.dproj" Targets="Make"/>
     </Target>
     <Target Name="Demo_Binary2">
-        <MSBuild Projects="Demo Binary file 2\Demo_Binary2.dproj"/>
+        <MSBuild Projects="Core\Demo Binary file 2\Demo_Binary2.dproj"/>
     </Target>
     <Target Name="Demo_Binary2:Clean">
-        <MSBuild Projects="Demo Binary file 2\Demo_Binary2.dproj" Targets="Clean"/>
+        <MSBuild Projects="Core\Demo Binary file 2\Demo_Binary2.dproj" Targets="Clean"/>
     </Target>
     <Target Name="Demo_Binary2:Make">
-        <MSBuild Projects="Demo Binary file 2\Demo_Binary2.dproj" Targets="Make"/>
+        <MSBuild Projects="Core\Demo Binary file 2\Demo_Binary2.dproj" Targets="Make"/>
     </Target>
     <Target Name="Demo_Binary3">
-        <MSBuild Projects="Demo Binary file 3\Demo_Binary3.dproj"/>
+        <MSBuild Projects="Core\Demo Binary file 3\Demo_Binary3.dproj"/>
     </Target>
     <Target Name="Demo_Binary3:Clean">
-        <MSBuild Projects="Demo Binary file 3\Demo_Binary3.dproj" Targets="Clean"/>
+        <MSBuild Projects="Core\Demo Binary file 3\Demo_Binary3.dproj" Targets="Clean"/>
     </Target>
     <Target Name="Demo_Binary3:Make">
-        <MSBuild Projects="Demo Binary file 3\Demo_Binary3.dproj" Targets="Make"/>
+        <MSBuild Projects="Core\Demo Binary file 3\Demo_Binary3.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
         <CallTarget Targets="Demo_Binary1;Demo_Binary2;Demo_Binary3"/>
