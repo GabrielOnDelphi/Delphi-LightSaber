@@ -91,7 +91,7 @@ procedure TAbstractLogLines.ReadFromStream(Stream: TCubicBuffStream2);
 VAR
    StreamVer: Word;
 begin
-  if NOT Stream.ReadHeaderVersion(StreamSign, StreamVer)
+  if NOT Stream.TryReadHeaderVersion(StreamSign, StreamVer)
   then RAISE Exception.Create('Unknown stream signature.');
 
   case StreamVer of
