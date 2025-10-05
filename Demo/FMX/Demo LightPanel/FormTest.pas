@@ -1,10 +1,25 @@
 UNIT FormTest;
 
+{=============================================================================================================
+   2025.04
+   www.GabrielMoraru.com
+==============================================================================================================
+
+   In FMX, unlike the VCL, the Visible property affects both design time and runtime when set in the Object Inspector.
+   That’s why setting Visible:= False in FMX hides components in the Form Designer, which is a big inconvenience.
+
+   Solution:
+     In the Form Designer, the component is always visible (Visible := True) so you can edit it,
+     regardless of the VisibleAtRuntime value.
+     Set VisibleAtRuntime to false to set the Visible to False at runtime (making the component invisible).
+
+=============================================================================================================}
+
 INTERFACE
 
 USES
-  System.SysUtils, System.Types, System.UITypes, System.Classes,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Controls.Presentation, FMX.StdCtrls,
+  System.SysUtils, System.Types, System.Classes,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.Controls.Presentation, FMX.StdCtrls,
   LightFmx.Visual.Panel;
 
 TYPE

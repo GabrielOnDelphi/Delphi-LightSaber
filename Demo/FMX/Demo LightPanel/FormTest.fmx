@@ -50,7 +50,6 @@ object Form2: TForm2
     Size.PlatformDefault = False
     TabOrder = 2
     Text = 'Set Visible'
-    TextSettings.Trimming = None
     OnClick = Button1Click
   end
 end

@@ -30,7 +30,6 @@ TYPE
   private
     procedure DoSomething;
   public
-   procedure FormPostInitialize; override;
   end;
 
 VAR
@@ -40,14 +39,6 @@ IMPLEMENTATION
 {$R *.fmx}
 
 USES LightCore.AppData;
-
-
-procedure TForm1.FormPostInitialize;
-begin
-  AutoState:= asPosOnly;
-  inherited;
-end;
-
 
 
 procedure TForm1.DoSomething;
@@ -216,6 +207,7 @@ begin
 
   Caption:= UserName; // This is executed BEFORE the user has a chance to enter its name!
 end;
+
 
 
 end.

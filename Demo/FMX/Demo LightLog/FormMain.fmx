@@ -29,7 +29,6 @@ object MainForm: TMainForm
       Size.PlatformDefault = False
       TabOrder = 3
       Text = 'Test'
-      TextSettings.Trimming = None
       OnClick = Button1Click
     end
     object btnLoad: TButton
@@ -45,7 +44,6 @@ object MainForm: TMainForm
       Size.PlatformDefault = False
       TabOrder = 2
       Text = 'Load'
-      TextSettings.Trimming = None
       OnClick = btnLoadClick
     end
     object btnSave: TButton
@@ -61,7 +59,6 @@ object MainForm: TMainForm
       Size.PlatformDefault = False
       TabOrder = 1
       Text = 'Save'
-      TextSettings.Trimming = None
       OnClick = btnSaveClick
     end
     object LogFilter: TLogVerbFilter
@@ -126,7 +123,6 @@ object MainForm: TMainForm
       Size.PlatformDefault = False
       TabOrder = 0
       Text = 'Clear'
-      TextSettings.Trimming = None
       OnClick = btnClearClick
     end
     object chkScrollDown: TCheckBox

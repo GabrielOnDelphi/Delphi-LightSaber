@@ -3,10 +3,11 @@ unit FormMain;
 interface
 
 uses
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Rtti,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Controls.Presentation, FMX.Layouts, FMX.StdCtrls, FMX.DialogService, FMX.Grid.Style, FMX.Presentation.Factory, FMX.Presentation.Style, FMX.ScrollBox, FMX.Grid,
-  LightCore.INIFile, LightCore.LogRam,
-  LightFmx.Common.AppData, LightFmx.Common.AppData.Form, LightFmx.Common.LogViewer, LightFmx.Common.LogFilter;
+  System.SysUtils, System.Types, System.Classes,
+  FMX.Types, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.Controls.Presentation, FMX.Layouts, FMX.StdCtrls, FMX.DialogService,
+  LightCore.LogRam,
+  LightFmx.Common.AppData, LightFmx.Common.AppData.Form, LightFmx.Common.LogViewer, LightFmx.Common.LogFilter,
+  System.Rtti, FMX.Grid.Style, FMX.Grid, FMX.ScrollBox;
 
 TYPE
   TMainForm = class(TLightForm)

@@ -13,6 +13,8 @@ unit LightFmx.Visual.Panel;
      regardless of the VisibleAtRuntime value.
      Set VisibleAtRuntime to false to set the Visible to False at runtime (making the component invisible).
 
+   Demo:
+     LightSaber\Demo\FMX\Demo LightPanel\FMX_Demo_LightPanel.dpr
 =============================================================================================================}
 
 INTERFACE

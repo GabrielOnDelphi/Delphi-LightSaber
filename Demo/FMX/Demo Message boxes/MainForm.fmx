@@ -21,7 +21,6 @@ object Form1: TForm1
     Size.PlatformDefault = False
     TabOrder = 7
     Text = 'FMX.Dialogs.ShowMessage'
-    TextSettings.Trimming = None
     OnClick = btnFmxDialogsClick
   end
   object btnMessageInfo: TButton
@@ -37,7 +36,6 @@ object Form1: TForm1
     Size.PlatformDefault = False
     TabOrder = 3
     Text = 'LightSaber.MessageInfo'
-    TextSettings.Trimming = None
     OnClick = btnMessageInfoClick
   end
   object Button3: TButton
@@ -53,7 +51,6 @@ object Form1: TForm1
     Size.PlatformDefault = False
     TabOrder = 5
     Text = 'TDialogService.MessageDialog'
-    TextSettings.Trimming = None
     OnClick = Button3Click
   end
   object btnQuestion: TButton
@@ -69,7 +66,6 @@ object Form1: TForm1
     Size.PlatformDefault = False
     TabOrder = 4
     Text = 'TDialogService.MessageDialog'#13#10'[Question]'
-    TextSettings.Trimming = None
     OnClick = btnQuestionClick
   end
   object btnFmxDialogs2: TButton
@@ -85,7 +81,6 @@ object Form1: TForm1
     Size.PlatformDefault = False
     TabOrder = 6
     Text = 'FMX.Dialogs.ShowMessage'
-    TextSettings.Trimming = None
     OnClick = btnFmxDialogs2Click
   end
   object btnInputQuery1: TButton
@@ -101,7 +96,6 @@ object Form1: TForm1
     Size.PlatformDefault = False
     TabOrder = 2
     Text = 'TDialogService.InputQuery'
-    TextSettings.Trimming = None
     OnClick = btnInputQuery1Click
   end
   object btnInputQuery3: TButton
@@ -117,7 +111,6 @@ object Form1: TForm1
     Size.PlatformDefault = False
     TabOrder = 1
     Text = 'TDialogService.InputQuery'
-    TextSettings.Trimming = None
     OnClick = btnInputQuery3Click
   end
   object btnInputQuery2: TButton
@@ -133,7 +126,6 @@ object Form1: TForm1
     Size.PlatformDefault = False
     TabOrder = 0
     Text = 'TDialogService.InputQuery'
-    TextSettings.Trimming = None
     OnClick = btnInputQuery2Click
   end
 end
