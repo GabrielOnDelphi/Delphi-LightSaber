@@ -51,6 +51,7 @@
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_MajorVer>0</VerInfo_MajorVer>
         <VerInfo_MinorVer>7</VerInfo_MinorVer>
+        <DCC_UnitSearchPath>..\..\..\;..\..\..\FrameVCL\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
@@ -80,11 +81,8 @@
             <Form>MainForm</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\LightCore.INIFile.pas"/>
-        <DCCReference Include="..\..\FrameVCL\LightCom.AppData.pas"/>
-        <DCCReference Include="..\..\LightCore.AppData.pas"/>
-        <DCCReference Include="..\..\FrameVCL\LightCom.LogFilter.pas"/>
-        <DCCReference Include="..\..\FrameVCL\LightCom.LogViewer.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightVcl.Common.AppData.pas"/>
+        <DCCReference Include="..\..\..\LightCore.AppData.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -106,13 +104,8 @@
                     <Source Name="MainSource">VCL_Demo_Log.dpr</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\FMX_Test.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\FMX_Test.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightFmxCommon290.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightFmxCommon290.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightFmxBase290.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightFmxBase290.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightAppDataVCL290.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightAppDataVCL290.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightFMX_Visual.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightFMX_Visual.bpl not found</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k290.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
-                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp290.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k370.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp370.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>
             </Delphi.Personality>
             <Platforms>

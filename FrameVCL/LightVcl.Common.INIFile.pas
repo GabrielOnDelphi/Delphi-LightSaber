@@ -125,7 +125,7 @@ TYPE
     { Read/write controls directly }
     function  WriteComp  (Comp: TComponent): Boolean; virtual;
     function  ReadComp   (Comp: TComponent): Boolean; virtual;
-	
+
     procedure ReadGroup  (WinCtrl: TWinControl);
     procedure WriteGroup (WinCtrl: TWinControl);
   end;
