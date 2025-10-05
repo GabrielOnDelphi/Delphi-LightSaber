@@ -180,7 +180,7 @@ TYPE
   end;
 
 
-VAR                      // ToDo 5: make sure AppData is unique (make it Singleton)
+VAR                      // To-Do: make sure AppData is unique (make it Singleton)
    AppData: TAppData;    // This obj is automatically freed on app shutdown (via FINALIZATION)
 
 
@@ -382,41 +382,39 @@ end;
 --------------------------------------------------------------------------------------------------}
 {Summary
 
-    macOS: Uses launchctl to manage startup items.
+    macOS  : Uses launchctl to manage startup items.
     Android: Uses broadcast receivers to trigger actions at boot.
-    Linux: Uses .desktop files in the ~/.config/autostart directory to manage startup items.}
+    Linux  : Uses .desktop files in the ~/.config/autostart directory to manage startup items.
 
-//ToDo: Ensure that you handle permissions and platform-specific requirements properly. For example, on Android, you need to declare the appropriate permissions in the manifest file, and on Linux, ensure the .desktop file has the correct permissions.
+    To-Do: Ensure that we handle permissions and platform-specific requirements properly. For example, on Android, we need to declare the appropriate permissions in the manifest file, and on Linux, ensure the .desktop file has the correct permissions. }
 
 { Run the specified application at Windows startup }
 {$IFDEF MSWINDOWS}
 function TAppData.RunFileAtStartUp(CONST FilePath: string; Active: Boolean): Boolean;
 VAR Reg: TRegistry;
 begin
- Result:= FALSE;
- TRY
-  Reg:= TRegistry.Create;
+  Result:= FALSE;
   TRY
-   Reg.LazyWrite:= TRUE;
-   Reg.RootKey:= HKEY_CURRENT_USER;                                                   { This is set by default by the constructor }
-   if Reg.OpenKey('\Software\Microsoft\Windows\CurrentVersion\Run', TRUE) then
-     begin
-      if Active
-      then Reg.WriteString(ExtractOnlyName(FilePath),'"'+ FilePath + '"')             { I got once an error here: ERegistryexception-Failed to set data for 'App-Name2'. Probably cause by an anti-virus }
-      else Reg.DeleteValue(ExtractOnlyName(FilePath));
-      Reg.CloseKey;
-      Result:= TRUE;
-     end;
-  FINALLY
-    FreeAndNil(Reg);
+    Reg:= TRegistry.Create;
+    TRY
+      Reg.LazyWrite:= TRUE;
+      Reg.RootKey:= HKEY_CURRENT_USER;                                                { This is set by default by the constructor }
+      if Reg.OpenKey('\Software\Microsoft\Windows\CurrentVersion\Run', TRUE) then
+        begin
+          if Active
+          then Reg.WriteString(ExtractOnlyName(FilePath),'"'+ FilePath + '"')         { I got once an error here: ERegistryexception-Failed to set data for 'App-Name2'. Probably cause by an anti-virus }
+          else Reg.DeleteValue(ExtractOnlyName(FilePath));
+          Reg.CloseKey;
+          Result:= TRUE;
+        end;
+    FINALLY
+      FreeAndNil(Reg);
+    END;
+  except
+    Result:= FALSE;                                                                   { To catch possible issues caused by antivirus programs that won't let the program write to 'autorun' section }
   END;
- except
-   Result:= FALSE;                                                                    { To catch possible issues caused by antivirus programs that won't let the program write to 'autorun' section }
- END;
 end;
 {$ENDIF}
-
-
 
 
 {$IFDEF MACOS}
