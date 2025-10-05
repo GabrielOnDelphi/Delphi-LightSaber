@@ -365,7 +365,7 @@ end;
 function TRamLog.LoadFromStream(Stream: TCubicBuffStream2): Boolean;
 VAR StreamVer: Word;
 begin
-  Result:= Stream.ReadHeaderVersion(StreamSign, StreamVer);
+  Result:= Stream.TryReadHeaderVersion(StreamSign, StreamVer);
   if NOT Result then EXIT;
   if StreamVer <= 3 then EXIT;    // Old/unsupported version
 
