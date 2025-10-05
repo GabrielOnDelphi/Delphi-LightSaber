@@ -2,7 +2,7 @@
 
 {=============================================================================================================
    www.GabrielMoraru.com
-   2025
+   2025.10
    See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
@@ -71,6 +71,8 @@ INTERFACE
 //del {.$WARN UNIT_PLATFORM ON}   { OFF: Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
 
 USES
+  System.Generics.Collections,
+  System.Generics.Defaults,
   System.Diagnostics,
   System.Math,
   System.Masks,
@@ -83,12 +85,10 @@ USES
 CONST
   DigSubdirectories = TRUE;
   UseFullPath       = TRUE;
-  InvalidFileCharWin= ['/','*','?','<','>','|', '"', ':', '\'];     { Characters that are invalid for file names OR for folder (just single folders) }
-  InvalidPathChar   = ['/','*','?','<','>','|', '"'];               { Characters that are invalid for a FULL path }
   {$IFDEF MSWINDOWS}
    MAXPATH= 260-12;
   {$ELSE}
-   MAXPATH= 260;
+   MAXPATH= 4095;
   {$ENDIF}
 
    { FILTERS }
@@ -400,7 +400,6 @@ USES
   LightCore, LightCore.Time;
 
 
-
 {--------------------------------------------------------------------------------------------------
    LINUX
 --------------------------------------------------------------------------------------------------}
@@ -411,11 +410,11 @@ begin
  Result:= Path;
  if Path > '' then
   begin
-   if FirstChar(Result) <> '/'
-   then Result:= '/'+ Result;
+    if FirstChar(Result) <> '/'
+    then Result:= '/'+ Result;
 
-   if LastChar(Result) <> '/'
-   then Result:= Result+ '/';
+    if LastChar(Result) <> '/'
+    then Result:= Result+ '/';
   end;
 end;
 
@@ -613,12 +612,13 @@ end;
 --------------------------------------------------------------------------------------------------}
 function CorrectFolder(CONST Folder: string; ReplaceWith: Char): string;                                                                                                     { Old name: CorrectPath, RemoveInvalidPathChars }
 VAR i: Integer;
+    InvalidChars: TCharArray;
 begin
  {TODO: Make it work with UNC paths! }
+ InvalidChars := TPath.GetInvalidPathChars;
  Result:= Folder;
  for i:= 1 to Length(Result) DO
-   if CharInSet(Result[I], InvalidPathChar)
-   OR (Result[i] < ' ')                                                                            { tot ce e sub SPACE }
+   if (Result[i] < ' ') or CharInArray(Result[i], InvalidChars)
    then Result[i]:= ReplaceWith;
 end;
 
@@ -629,13 +629,9 @@ end;
   Note: TPath.HasValidPathChars is bugged. https://stackoverflow.com/questions/45346525/why-tpath-hasvalidpathchars-accepts-as-valid-char-in-a-path/45346869#45346869
 }
 function PathNameIsValid(CONST Path: string): Boolean;
-VAR i: Integer;
 begin
  {ToDo: Accept UNC paths like: \??\Windows. For this check for the \?? patern }
- Result:= Length(Path) > 0;                                                                        { Minimum I can have 'C:' }
- for i:= 1 to Length(Path) DO
-  if CharInSet(Path[I], InvalidPathChar)
-  then EXIT(FALSE);
+ Result := TPath.HasValidPathChars(Path, False);
 end;
 
 
@@ -644,7 +640,9 @@ end;
   HasValidFileNameChars only work with file names, not also with full paths. }
 function FileNameIsValid_(CONST FileName: string): Boolean;
 VAR i, Spaces: Integer;
+    InvalidChars: TCharArray;
 begin
+ InvalidChars := TPath.GetInvalidFileNameChars;
  if Length(FileName) > 0
  then Result:= TRUE
  else EXIT(FALSE);
@@ -660,7 +658,7 @@ begin
 
  { Check invalid chars }
  for i := 1 to Length(FileName) DO
-   if CharInSet(FileName[i], InvalidFileCharWin)
+   if CharInArray(FileName[i], InvalidChars)
    OR (Ord(FileName[i]) < 32)
    then EXIT(FALSE);
 end;
@@ -679,8 +677,10 @@ end;
    Works with UNC paths! }
 function DirectoryExists(CONST Directory: String; FollowLink: Boolean= TRUE): Boolean;
 begin
-  Result:= (LastChar(Directory)<> ' ')                                                              { Don't accept Space at the end of a path (after the backslash) }
-       AND System.SysUtils.DirectoryExists(Directory, FollowLink);
+  Result:= System.SysUtils.DirectoryExists(Directory, FollowLink)
+  {$IFDEF MSWINDOWS}
+       AND (LastChar(Directory)<> ' ')                                                              { Don't accept Space at the end of a path (after the backslash) }
+  {$ENDIF}
 end;
 
 
@@ -1339,11 +1339,13 @@ end;
   UNC test does not apply to this function because the function only accepts filenames which are not UNC }
 function CorrectFilename(CONST FileName: string; ReplaceWith: Char= ' '): string;
 VAR i: Integer;
+    InvalidChars: TCharArray;
 begin
+ InvalidChars := TPath.GetInvalidFileNameChars;
  Result:= FileName;
 
  for i:= 1 to Length(Result) DO
-   if CharInSet(Result[I], InvalidFileCharWin)
+   if CharInArray(Result[I], InvalidChars)
    OR (Result[i] < ' ')
    then Result[i]:= ReplaceWith;
 
@@ -1684,7 +1686,7 @@ begin
  FullPath:= RemoveLastChar(FullPath);
 
  for i:= Length(FullPath) downto 1 DO                { Find first \ starting from the end of the string }
-  if FullPath[i]= '\'
+  if FullPath[i]= PathDelim
   then EXIT(system.COPY(FullPath, i+1, MaxInt));
 end;
 
@@ -1704,12 +1706,12 @@ end;
 function ExtractFirstFolder(CONST Folder: string): string;
 VAR iPos: Integer;
 begin
- iPos:= Pos(':\', Folder);
+ iPos:= Pos(':' + PathDelim, Folder);
  if iPos > 0
  then Result:= system.COPY(Folder, iPos+2, MaxInt)
  else Result:= Folder;
 
- Result:= CopyTo(Result, 1, '\', TRUE, TRUE, 2); {  copy until the first \ }
+ Result:= CopyTo(Result, 1, PathDelim, TRUE, TRUE, 2); {  copy until the first \ }
 end;
 
 
@@ -2038,9 +2040,32 @@ begin
 end;
 
 
+{ Delete all empty folders / sub-folders (any sub level) under the provided "rootFolder". }
+procedure RemoveEmptyFolders (CONST RootFolder: string);
+var
+  Dirs: TStringDynArray;
+  SubDir: string;
+begin
+  Dirs:= TDirectory.GetDirectories(RootFolder, '*', TSearchOption.soAllDirectories);
+
+  // Sort by length descending to delete deepest first
+  TArray.Sort<string>(Dirs, TComparer<string>.Construct(
+      function (const L, R: string): Integer
+      begin
+        Result := Length(R) - Length(L);
+        if Result = 0
+        then Result := CompareStr(R, L);
+      end));
+
+  for SubDir in Dirs do
+    if TDirectory.IsEmpty(SubDir)
+    then TDirectory.Delete(SubDir);
+end;
+
+
 { Delete all empty folders / sub-folders (any sub level) under the provided "rootFolder".
   Works with UNC paths. }
-procedure RemoveEmptyFolders(const RootFolder: string);
+procedure RemoveEmptyFolders_Alternative(const RootFolder: string);
 var
   SRec: TSearchRec;
   listDir: TStringList;
@@ -2309,13 +2334,13 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-   DRIVE
+   DRIVES
 --------------------------------------------------------------------------------------------------}
 function DriveProtected(CONST Drive: Char):  Boolean;                                               { Attempt to create temporary file on specified drive. If created, the temporary file is deleted. see: http://stackoverflow.com/questions/15312704/gettempfilename-creates-an-empty-file }
 VAR
    Directory: string;
 begin
- Directory := Drive + ':\TestDrive002964982363';
+ Directory := Drive + ':' + PathDelim + 'TestDrive002964982363';
  Result:= NOT ForceDirectoriesB(Directory);
  if NOT Result
  then RemoveDir(Directory);
@@ -2377,17 +2402,6 @@ end;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
  
 
 
@@ -2423,4 +2437,3 @@ end;
 
 
 end.
-
