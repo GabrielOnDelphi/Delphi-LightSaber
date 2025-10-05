@@ -1,7 +1,7 @@
 ﻿UNIT LightVcl.Common.EllipsisText;
 
 {=============================================================================================================
-   2025.05
+   2025.10
    www.GabrielMoraru.com
 ==============================================================================================================
 
@@ -15,7 +15,7 @@
         LightCore.IO.ShortenFileName
 
    TESTER:
-       c:\Myprojects\Project Testers\gr LightVcl.Graph.Text.pas\
+       LightSaber\Demo\VCL\Demo cGraphText.pas\VCL_Demo_cGraphText.dpr
 
 =============================================================================================================}
 
@@ -140,9 +140,23 @@ end;
 
 
 function DrawStringEllipsis(CONST s: string; Canvas: TCanvas; aRect: TRect): integer;
+var
+  Buf: array of Char;
+  BufLen: Integer;
 begin
-  //Use DT_WORDBREAK  to break the text on multiple lines
-  Result:= DrawText(Canvas.Handle, PChar(s), length(s), aRect, DT_LEFT or DT_END_ELLIPSIS or DT_MODIFYSTRING {or DT_CALCRECT});
+  // DrawText with DT_MODIFYSTRING modifies the buffer in-place.
+  // We must supply a writable buffer large enough to hold modifications.
+  BufLen := Length(s) + 16; // allocate a little extra for ellipsis/changes
+  if BufLen < 32
+  then BufLen := 32; // ensure a minimum buffer size
+
+  SetLength(Buf, BufLen + 1); // +1 for null terminator
+  // copy original text into the buffer (StrPLCopy writes a terminating #0)
+  StrPLCopy(PChar(Buf), s, BufLen);
+
+  // Pass buffer and buffer length (not the original string length) to DrawText.
+  Result:= DrawText(Canvas.Handle, PChar(Buf), BufLen, aRect,
+                    DT_LEFT or DT_END_ELLIPSIS or DT_MODIFYSTRING {or DT_CALCRECT});
 end;
 
 
