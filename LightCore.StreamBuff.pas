@@ -926,7 +926,7 @@ function TCubicBuffStream.ReadStringA: AnsiString;
 VAR Len: Cardinal;
 begin
  ReadBuffer(Len, SizeOf(Len));                                                                         { First, find out how many characters to read }
- Assert(Len<= Size- Position, 'TReadCachedStream: String lenght > string size!');
+ Assert(Len<= Size- Position, 'TReadCachedStream: String lenght > file size!');
  Result:= ReadStringA(Len);        { Do the actual strign reading }
 end;
 
