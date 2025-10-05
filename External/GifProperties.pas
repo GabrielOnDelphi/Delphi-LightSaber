@@ -1,11 +1,10 @@
 UNIT GifProperties;
 
 {-------------------------------------------------------------------------------------------------------------
-  Returns the properties of a Gif without decoding the actual frames!
-  Very fast!
+  Returns the properties of a Gif without decoding the actual frames! Very fast!
+  This was converted from FMX.
 
   Source:
-    This was converted from FMX.
        Original code: http://www.raysoftware.cn/?p=559
        Pointing from: https://stackoverflow.com/questions/45285599/how-to-use-animated-gif-in-firemonkey
 
