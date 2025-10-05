@@ -281,6 +281,7 @@ begin
 end;
 
 
+// Show this form modal if not running on Android. On Android, we fall back to non-modal
 procedure TAppData.ShowModal(aForm: TForm);
 begin
   {$IFDEF ANDROID}
