@@ -5,7 +5,8 @@ INTERFACE
 USES
   System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Grids,
-  LightVcl.Visual.RichLogTrack, LightVcl.Visual.RichLogUtils, LightVcl.Visual.RichLog, LightVcl.Common.LogViewer, LightVcl.Common.LogFilter, LightVcl.Common.AppDataForm, LightCore.LogRam;
+  LightVcl.Visual.RichLogTrack, LightVcl.Visual.RichLogUtils, LightVcl.Visual.RichLog,
+  LightVcl.Common.LogFilter, LightVcl.Common.AppDataForm, LightCore.LogRam, LightVcl.Common.LogViewer;
 
 TYPE
   TMainForm = class(TLightForm)
