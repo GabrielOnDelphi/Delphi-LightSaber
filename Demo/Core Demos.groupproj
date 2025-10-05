@@ -3,16 +3,16 @@
         <ProjectGuid>{40097F72-3518-41F5-B7A8-AA69F72FBE6E}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="Demo Internet\VCL_Demo_Internet.dproj">
+        <Projects Include="Core\Demo Internet\VCL_Demo_Internet.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Demo LightCore ccIO\VCL_Demo_ccIO.dproj">
+        <Projects Include="Core\Demo LightCore ccIO\VCL_Demo_ccIO.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Demo LightCore ccStreamBuff\VCL_Demo_FileStream.dproj">
+        <Projects Include="Core\Demo LightCore ccStreamBuff\VCL_Demo_FileStream.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Demo LightCore WinVersion\VCL_Demo_WinVers.dproj">
+        <Projects Include="Core\Demo LightCore WinVersion\VCL_Demo_WinVers.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -24,40 +24,40 @@
         </BorlandProject>
     </ProjectExtensions>
     <Target Name="VCL_Demo_Internet">
-        <MSBuild Projects="Demo Internet\VCL_Demo_Internet.dproj"/>
+        <MSBuild Projects="Core\Demo Internet\VCL_Demo_Internet.dproj"/>
     </Target>
     <Target Name="VCL_Demo_Internet:Clean">
-        <MSBuild Projects="Demo Internet\VCL_Demo_Internet.dproj" Targets="Clean"/>
+        <MSBuild Projects="Core\Demo Internet\VCL_Demo_Internet.dproj" Targets="Clean"/>
     </Target>
     <Target Name="VCL_Demo_Internet:Make">
-        <MSBuild Projects="Demo Internet\VCL_Demo_Internet.dproj" Targets="Make"/>
+        <MSBuild Projects="Core\Demo Internet\VCL_Demo_Internet.dproj" Targets="Make"/>
     </Target>
     <Target Name="VCL_Demo_ccIO">
-        <MSBuild Projects="Demo LightCore ccIO\VCL_Demo_ccIO.dproj"/>
+        <MSBuild Projects="Core\Demo LightCore ccIO\VCL_Demo_ccIO.dproj"/>
     </Target>
     <Target Name="VCL_Demo_ccIO:Clean">
-        <MSBuild Projects="Demo LightCore ccIO\VCL_Demo_ccIO.dproj" Targets="Clean"/>
+        <MSBuild Projects="Core\Demo LightCore ccIO\VCL_Demo_ccIO.dproj" Targets="Clean"/>
     </Target>
     <Target Name="VCL_Demo_ccIO:Make">
-        <MSBuild Projects="Demo LightCore ccIO\VCL_Demo_ccIO.dproj" Targets="Make"/>
+        <MSBuild Projects="Core\Demo LightCore ccIO\VCL_Demo_ccIO.dproj" Targets="Make"/>
     </Target>
     <Target Name="VCL_Demo_FileStream">
-        <MSBuild Projects="Demo LightCore ccStreamBuff\VCL_Demo_FileStream.dproj"/>
+        <MSBuild Projects="Core\Demo LightCore ccStreamBuff\VCL_Demo_FileStream.dproj"/>
     </Target>
     <Target Name="VCL_Demo_FileStream:Clean">
-        <MSBuild Projects="Demo LightCore ccStreamBuff\VCL_Demo_FileStream.dproj" Targets="Clean"/>
+        <MSBuild Projects="Core\Demo LightCore ccStreamBuff\VCL_Demo_FileStream.dproj" Targets="Clean"/>
     </Target>
     <Target Name="VCL_Demo_FileStream:Make">
-        <MSBuild Projects="Demo LightCore ccStreamBuff\VCL_Demo_FileStream.dproj" Targets="Make"/>
+        <MSBuild Projects="Core\Demo LightCore ccStreamBuff\VCL_Demo_FileStream.dproj" Targets="Make"/>
     </Target>
     <Target Name="VCL_Demo_WinVers">
-        <MSBuild Projects="Demo LightCore WinVersion\VCL_Demo_WinVers.dproj"/>
+        <MSBuild Projects="Core\Demo LightCore WinVersion\VCL_Demo_WinVers.dproj"/>
     </Target>
     <Target Name="VCL_Demo_WinVers:Clean">
-        <MSBuild Projects="Demo LightCore WinVersion\VCL_Demo_WinVers.dproj" Targets="Clean"/>
+        <MSBuild Projects="Core\Demo LightCore WinVersion\VCL_Demo_WinVers.dproj" Targets="Clean"/>
     </Target>
     <Target Name="VCL_Demo_WinVers:Make">
-        <MSBuild Projects="Demo LightCore WinVersion\VCL_Demo_WinVers.dproj" Targets="Make"/>
+        <MSBuild Projects="Core\Demo LightCore WinVersion\VCL_Demo_WinVers.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
         <CallTarget Targets="VCL_Demo_Internet;VCL_Demo_ccIO;VCL_Demo_FileStream;VCL_Demo_WinVers"/>

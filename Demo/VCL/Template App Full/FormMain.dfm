@@ -429,11 +429,4 @@ object MainForm: TMainForm
     Left = 244
     Top = 50
   end
-  object Proteus: TProteus
-    ProductVers = 0
-    ProductName = 'My product'
-    RegKeyPath = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Defrag32\'
-    Left = 303
-    Top = 50
-  end
 end
