@@ -13,8 +13,9 @@ unit LightFmx.Visual.DropDownSearch;
   The list can be navigated with arrow up/down.
   Use PopulateDictionary to add words to your list.
   Adapted from VCL to FMX, replacing TSearchBox with TEdit and TCubicListBox with TListBox.
-  Tester:
-    c:\Projects\LightSaber\FrameFMX\Tester\TesterFMX.dpr
+
+  Demo:
+    LightSaber\FrameFMX\Tester\TesterFMX.dpr
 =============================================================================================================}
 
 INTERFACE
