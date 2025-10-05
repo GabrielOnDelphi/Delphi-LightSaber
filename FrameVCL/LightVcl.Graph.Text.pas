@@ -1,23 +1,21 @@
 ﻿UNIT LightVcl.Graph.Text;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2023.08.05
    www.GabrielMoraru.com
-   See Copyright file
+   2025.10
 --------------------------------------------------------------------------------------------------------------
   Features:
     Text-related routines
     Draw text with shadow
 
   Dependencies:
-    JanFx
+    JanFx - Install the JanFx free library, OR remove LightVcl.Graph.Text.pas from your package.
 
   More shadows:
     Semi-transparent text here:  stackoverflow.com/questions/360476/writing-transparent-text-on-image
     Nice shadow under controls (not under text): stackoverflow.com/questions/27359570/delphi-vcl-shadoweffect-like-fmx-tshadoweffect
 
-  TESTER: c:\Myprojects\Project Testers\gr LightVcl.Graph.Text.pas\
+  Demo: c:\Projects\Testers\gr cGraphText.pas\Tester.dpr
 --------------------------------------------------------------------------------------------------}
 
 INTERFACE
@@ -61,19 +59,17 @@ IMPLEMENTATION
 
 function GetFontHeight(aFont : TFont) : integer;     //not tested. ce face?
 var
-   DC       : HDC;
-   SysMetrics,
-   Metrics  : TTextMetric;
+   DC        : HDC;
+   SysMetrics: TTextMetric;
+   Metrics   : TTextMetric;
 begin
  DC := GetDC(0);
  GetTextMetrics(DC, SysMetrics);
- SelectObject(DC, aFont.Handle);
+ SelectObject  (DC, aFont.Handle);
  GetTextMetrics(DC, Metrics);
  ReleaseDC(0, DC);
  Result := Metrics.tmHeight;
 end;
-
-
 
 
 
@@ -119,9 +115,6 @@ begin
  Result:= BMP.Canvas.TextHeight(Text);
  Result:= (BMP.Height - Result) DIV 2;
 end;
-
-
-
 
 
 
@@ -442,7 +435,6 @@ begin
   FreeAndNil(BMP);
  END;
 end;
-
 
 
 end.

@@ -33,14 +33,9 @@
 
 =============================================================================================================}
 
-//ToDo: open "our" ini file and keep it open until shutdown. better I implement true support for the "Light" visual components
-
 INTERFACE
 
 USES
-  {$IFDEF MsWindows}
-    //LightVcl.Common.Registry, // for SelfStartup
-  {$ENDIF}
    System.IOUtils, System.AnsiStrings, System.SysUtils,
    LightCore, LightCore.Types, LightCore.INIFile, LightCore.LogRam;
 
@@ -51,26 +46,26 @@ TYPE
 
 TYPE
   TAutoState = (asUndefined,
-                asNone,       // Don't save the form automatically.
-                asPosOnly,    // Restore form position
-                asFull);      // Restore form position and GUI elements
+                asNone,                    // Don't save the form automatically.
+                asPosOnly,                 // Restore form position
+                asFull);                   // Restore form position and GUI elements
 
   TAppDataCore= class(TObject)
   private
     FShowOnError: Boolean;                 // Automatically show the visual log form when warnings/errors are added to the log. This way the user is informed about the problems.
     FHideHint   : Integer;
     FLastFolder : string;
-    FSingleInstClassName: string;          { Used by the Single Instance mechanism. } {Old name: AppWinClassName }
+    FSingleInstClassName: string;          // Used by the Single Instance mechanism.   {Old name: AppWinClassName }
     FRunningFirstTime: Boolean;
     CONST
-      Signature: AnsiString= 'AppDataSettings';{ Do not change it! }
+      Signature: AnsiString= 'AppDataSettings'; { Do not change it! }
       DefaultHomePage= 'https://www.GabrielMoraru.com';
-    class VAR FCreated: Boolean;            { Sanity check. Make sure the user did not created this obj twice }
+    class VAR FCreated: Boolean;           // Sanity check. Make sure the user did not created this obj twice
     class VAR FAppName: string;
     function  getLastUsedFolder: string;
     procedure setShowOnError(const Value: Boolean);
   protected
-    FHintType   : THintType;        // Turn off the embedded help system
+    FHintType   : THintType;                // Turn off the embedded help system
     procedure setHideHint(const Value: Integer); virtual;
     procedure loadSettings;     virtual;
     procedure saveSettings;     virtual;
@@ -158,7 +153,7 @@ TYPE
 
     procedure PopUpLogWindow;
 
-    property ShowLogOnError: Boolean read FShowOnError write setShowOnError;       // Automatically show the visual log form when warnings/errors are added to the log. This way the user is informed about the problems.
+    property  ShowLogOnError: Boolean read FShowOnError write setShowOnError;    // Automatically show the visual log form when warnings/errors are added to the log. This way the user is informed about the problems.
 
     procedure MainFormCaption(const Caption: string); virtual; abstract;
   end;
@@ -173,8 +168,7 @@ procedure ExtractPathFromCmdLine(MixedInput: string; OUT Path, Parameters: strin
 function  FindCmdLineSwitch(const Switch: string; IgnoreCase: Boolean): Boolean; deprecated 'Use System.SysUtils.FindCmdLineSwitch';
 function  ExeName: string;
 
-VAR                              // ToDo: make sure AppDataCore is unique (make it a Singleton)
-   AppDataCore: TAppDataCore;    // This obj is automatically freed on app shutdown (via FINALIZATION)
+VAR AppDataCore: TAppDataCore;    // The global var "AppData" takes over this one in TAppData.Create. This obj is automatically freed on app shutdown (via FINALIZATION)
 
 
 IMPLEMENTATION
@@ -202,9 +196,9 @@ begin
   inherited Create;
   Initializing:= True;                            // Used in cv_IniFile.pas. Set it to false once your app finished initializing.
 
-  { Sanity check }
+  { Sanity check via class var }
   if FCreated
-  then RAISE Exception.Create('Error! AppData already constructed!')
+  then RAISE Exception.Create('Error! AppDataCore already constructed!')
   else FCreated:= TRUE;
 
   { App name }

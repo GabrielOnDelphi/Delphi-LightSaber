@@ -6,11 +6,14 @@ unit LightVcl.Graph.ShadowText;
   
   Requires:
      Comctl32.DLL v6 (Windows Vista or up)
-	 App with manifest
+     App with manifest
 
   Features
-   * Uses lazy loading for DLL/function.
-   * Fallback for XP or no manifest.
+     * Uses lazy loading for DLL/function.
+     * Fallback for XP or no manifest.
+
+   TESTER:
+       LightSaber\Demo\VCL\Demo cGraphText.pas\VCL_Demo_cGraphText.dpr
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE

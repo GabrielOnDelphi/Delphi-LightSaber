@@ -195,8 +195,8 @@ USES
 constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE);
 begin
   inherited Create(aAppName, WindowClassName, MultiThreaded);
-  FFormLog := nil;
-  AppDataCore:= Self;                             // This sets the other variable to self. The non-visual code uses it.
+  FFormLog:= nil;
+  AppDataCore:= Self;                             // This sets the other global variable to self. So we can use both variables. The first one is for non-visual code. The second one (this one) is for visual (GUI) code.
 
   { App stuff }
   Application.Initialize;                         // Note: Emba: Although Initialize is the first method called in the main project source code, it is not the first code that is executed in a GUI application. For example, in Delphi, the application first executes the initialization section of all the units used by the Application. in modern Delphi (non-.NET), you can remove Application.Initialize without breaking your program. The method is almost empty and no longer plays a critical role in setting up the VCL or application environment. Its historical purpose was to initialize COM and CORBA, but since those are no longer used, the method is effectively redundant.
@@ -242,17 +242,17 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT aReference; AutoState: TAutoState = asPosOnly);
 begin
-  Assert(Application.MainForm = NIL, 'MainForm already exists!');   //ToDo: test if this works under FMX because of RealCreateForms
+  Assert(Application.MainForm = NIL, 'MainForm already exists!');
 
   FAutoStateQueue.Add(AutoState);
-  Application.CreateForm(aClass, aReference);                       // Reference is NIL here because of RealCreateForms
+  Application.CreateForm(aClass, aReference);   // Reference is NIL here because of the form is created later (by RealCreateForms)
 end;
 
 
 procedure TAppData.CreateMainForm(aClass: TComponentClass; AutoState: TAutoState = asPosOnly);
 var aReference: TForm;
 begin
-  CreateMainForm(aClass, aReference, AutoState);
+  CreateMainForm(aClass, aReference, AutoState);   // Reference is NIL here because of the form is created later (by RealCreateForms)
 end;
 
 
@@ -266,10 +266,11 @@ begin
     begin
       FAutoStateQueue.Add(AutoState);
       Application.CreateForm(aClass, aReference);
-      ///TForm(aReference).SetOwner(nil);  // Optional: manage lifetime manually
+      ///TForm(aReference).SetOwner(nil);  // Optional: manage lifetime manually   // Reference is NIL here because of the form is created later (by RealCreateForms)
     end
   else
-    begin  {we cannot call it here as under FMX forms are created later
+    begin
+      {we cannot call it here as under FMX forms are created later
       if Application.MainForm = nil
       then RAISE Exception.Create('Probably you forgot to create the main form with AppData.CreateMainForm!'); }
 
@@ -293,7 +294,7 @@ end;
 { Returns the next AutoState from the list. }
 function TAppData.GetAutoState: TAutoState;
 begin
-  if (FAutoStateQueue <> nil)  // Check if the queue exists and has items
+  if  (FAutoStateQueue <> nil)  // Check if the queue exists and has items
   AND (FAutoStateQueue.Count > 0) then
     begin
       // Retrieve and remove this form's AutoState
@@ -301,8 +302,7 @@ begin
       FAutoStateQueue.Delete(0);
 
       // If the queue is now empty, free it
-
-      {WARNING: This crashes if I try to create a form AFTER the RealCreateForms was called (see IsRealCreateFormsCalled) because we freed the list. So, we suspend this Free for the moment. Fix it later!
+      {WARNING: Cannot create a form AFTER the RealCreateForms was called (see IsRealCreateFormsCalled) because we freed the list. So, we suspend this Free for the moment. Fix it later!
       if FAutoStateQueue.Count = 0
       then FreeAndNil(FAutoStateQueue); }
     end
@@ -343,42 +343,8 @@ end;
 
 
 
-
-
-
-
-
-
-
-procedure TAppData.setHideHint(const Value: Integer);
-begin
-  inherited;
-end;
-
-
-// Note:
-// In FMX the forms don't have a hint.
-// Hints are supported on Windows and macOS only.
-// Application.ShowHint = Global setting. Applies also to actions.
-// https://docwiki.embarcadero.com/RADStudio/Athens/en/Using_Hints_to_Show_Contextual_Help_in_a_FireMonkey_Application
-procedure TAppData.setHintType(const aHintType: THintType);
-begin
-  FHintType:= aHintType;
-  Application.ShowHint:= aHintType > htOff;
-end;
-
-
-
-
-
-
-
-
-
-
 {--------------------------------------------------------------------------------------------------
-   APPLICATION CONTROL
-      WIN START UP
+   SELF START UP
 --------------------------------------------------------------------------------------------------}
 {Summary
 
@@ -387,6 +353,13 @@ end;
     Linux  : Uses .desktop files in the ~/.config/autostart directory to manage startup items.
 
     To-Do: Ensure that we handle permissions and platform-specific requirements properly. For example, on Android, we need to declare the appropriate permissions in the manifest file, and on Linux, ensure the .desktop file has the correct permissions. }
+
+{ Run THIS application at Windows startup }
+function TAppData.runSelfAtStartUp(Active: Boolean): Boolean;
+begin
+  Result:= RunFileAtStartUp(ParamStr(0), Active);
+end;
+
 
 { Run the specified application at Windows startup }
 {$IFDEF MSWINDOWS}
@@ -532,24 +505,8 @@ end;
 {$ENDIF}
 
 
-{ Run THIS application at Windows startup }
-function TAppData.runSelfAtStartUp(Active: Boolean): Boolean;
-begin
-  Result:= RunFileAtStartUp(ParamStr(0), Active);
-end;
-
-{ Set this process to maximum priority. Usefull when measuring time }
-procedure TAppData.SetMaxPriority;
-begin
-  {$IFDEF MSWINDOWS}
-  SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS); //  https://stackoverflow.com/questions/13631644/setthreadpriority-and-setpriorityclass
-  {$ENDIF}
-end;
-
-
 {--------------------------------------------------------------------------------------------------
    APPLICATION CONTROL
-        WND STATE
 --------------------------------------------------------------------------------------------------}
 procedure TAppData.Minimize;
 begin
@@ -560,17 +517,20 @@ begin
 end;
 
 
+{ Set this process to maximum priority. Usefull when measuring time }
+procedure TAppData.SetMaxPriority;
+begin
+  {$IFDEF MSWINDOWS}
+  SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS); //  https://stackoverflow.com/questions/13631644/setthreadpriority-and-setpriorityclass
+  {$ENDIF}
+end;
 
 
-
-
-{-------------------------------------------------------------------------------------------------------------
-   OTHERS
--------------------------------------------------------------------------------------------------------------}
 { Apply this font to all existing forms. }
 procedure TAppData.setFont(aFont: TFont);
 begin
-  {if FFont = NIL
+  {Won't work in FMX
+  if FFont = NIL
   then FFont:= aFont   // We set the font for the first time.
   else
     begin
@@ -578,19 +538,29 @@ begin
       FFont:= aFont;
       for VAR i:= 0 to Screen.FormCount - 1 DO    // FormCount => forms currently displayed on the screen. CustomFormCount = as FormCount but also includes the property pages
         Screen.Forms[i].Font:= aFont;
-    end;  }
+    end;}
 end;
 
 
+procedure TAppData.setHideHint(const Value: Integer);
+begin
+  inherited;
+end;
 
+
+// Note:
+// In FMX the forms don't have a hint.
+// Hints are supported on Windows and macOS only.
+// Application.ShowHint = Global setting. Applies also to actions.
+// https://docwiki.embarcadero.com/RADStudio/Athens/en/Using_Hints_to_Show_Contextual_Help_in_a_FireMonkey_Application
+procedure TAppData.setHintType(const aHintType: THintType);
+begin
+  FHintType:= aHintType;
+  Application.ShowHint:= aHintType > htOff;
+end;
 
 
 {$IFDEF FullAppData}
-
-
-
-
-
 {-------------------------------------------------------------------------------------------------------------
    Prompt To Save/Load File
    Remembers the last used folder.
@@ -680,18 +650,13 @@ procedure TAppData.MainFormCaption(CONST Caption: string);
 begin
   inherited;
 
-  // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
+  // Note: FMX: CreateForm does not create the given form immediately. RealCreateForms creates the real forms. So, we cannot access MainForm here.
   if Application.MainForm = NIL then EXIT;
 
   if Caption= ''
   then Application.MainForm.Caption:= AppName+ ' '
   else Application.MainForm.Caption:= AppName+ ' '+ ' - ' + Caption;
 end;
-
-
-
-
-
 
 
 
