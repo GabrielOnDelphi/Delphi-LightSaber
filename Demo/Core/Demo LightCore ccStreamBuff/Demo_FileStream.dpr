@@ -1,10 +1,10 @@
-program VCL_Demo_WinVers;
+program Demo_FileStream;
 
 uses
   {$IFDEF DEBUG}
   FastMM4,
   {$ENDIF }
-  FormMain in 'FormMain.pas' {frmTester},
+  FormMain in 'FormMain.pas' {MainForm},
   LightCore.AppData in '..\..\..\LightCore.AppData.pas',
   LightVcl.Common.AppData in '..\..\..\FrameVCL\LightVcl.Common.AppData.pas';
 
@@ -13,7 +13,8 @@ uses
 begin
   ReportMemoryLeaksOnShutdown:= TRUE;
 
-  AppData:= TAppData.Create('Light Tester WinVer');
-  AppData.CreateMainForm(TfrmTester, frmTester, TRUE, TRUE, asFull);
+  AppData:= TAppData.Create('Light Demo FileStream');
+  AppData.CreateMainForm(TMainForm, MainForm, True, True, asFull);    // Main form
   AppData.Run;
 end.
+

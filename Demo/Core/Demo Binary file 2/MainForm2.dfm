@@ -28,6 +28,7 @@ object frmMain: TfrmMain
       'This demo demonstrates how to save some data to a binary file an' +
       'd read it back'
     WordWrap = True
+    ExplicitWidth = 403
   end
   object Label2: TLabel
     Left = 26

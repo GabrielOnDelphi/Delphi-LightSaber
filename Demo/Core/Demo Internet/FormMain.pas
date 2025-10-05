@@ -8,9 +8,9 @@ UNIT FormMain;
 INTERFACE
 
 USES
-  windows, System.SysUtils, System.Classes, System.Actions, System.Net.URLClient,
-  VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList,
-  LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.AppDataForm, LightVcl.Internet.Download.Thread;
+  windows, System.SysUtils, System.Classes, System.Net.URLClient,
+  Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls,
+  LightVcl.Common.AppDataForm, LightVcl.Internet.Download.Thread;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -58,8 +58,9 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.Sound, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.System, LightVcl.Common.Shell, LightVcl.Common.ExecuteShell, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.CenterControl,
-   LightCore.TextFile, LightVcl.Internet, LightCore.Internet, LightCore.Download, LightCore.IO,LightVcl.Internet.Download.WinInet;
+   LightVcl.Common.Sound, LightCore, LightVcl.Common.System, LightCore.AppData, LightVcl.Common.AppData,
+   LightCore.TextFile, LightVcl.Internet, LightCore.Download, LightCore.IO,
+   LightVcl.Internet.Download.WinInet;
 
 
 
@@ -107,7 +108,7 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-    DOWNLOAD Delphi RTL
+    DOWNLOAD FILE via Delphi RTL
 --------------------------------------------------------------------------------------------------}
 
 procedure TMainForm.btnDownloadStreamRTLClick(Sender: TObject);
@@ -182,8 +183,7 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-   DOWNLOAD FILE
-   WinInet
+   DOWNLOAD FILE via WinInet
 --------------------------------------------------------------------------------------------------}
 procedure TMainForm.btnDownload1Click(Sender: TObject);
 VAR
@@ -231,8 +231,7 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-   DOWNLOAD FILE
-   WinInet
+   DOWNLOAD FILE via WinInet
    Async
 --------------------------------------------------------------------------------------------------}
 

@@ -25,11 +25,12 @@ object frmMain: TfrmMain
       'This demo demonstrates how to save some data to a binary file an' +
       'd read it back'
     WordWrap = True
+    ExplicitWidth = 472
   end
   object GroupBox1: TGroupBox
     AlignWithMargins = True
     Left = 3
-    Top = 23
+    Top = 26
     Width = 482
     Height = 93
     Align = alTop
@@ -161,21 +162,21 @@ object frmMain: TfrmMain
   object GroupBox3: TGroupBox
     AlignWithMargins = True
     Left = 3
-    Top = 122
+    Top = 125
     Width = 482
-    Height = 189
+    Height = 186
     Align = alClient
     Caption = 'Equipment'
     TabOrder = 3
     DesignSize = (
       482
-      189)
+      186)
     object ListBox1: TListBox
       AlignWithMargins = True
       Left = 5
       Top = 22
       Width = 188
-      Height = 162
+      Height = 159
       Align = alLeft
       ItemHeight = 17
       TabOrder = 0

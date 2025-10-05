@@ -22,13 +22,11 @@ TYPE
     procedure FormPostInitialize; override; // Called after the main form was fully created
  end;
 
-VAR
-   frmTester: TfrmTester;
 
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-   LightVcl.Visual.INIFile, LightVcl.Common.WinVersionApi, LightVcl.Common.WinVersion, LightVcl.Common.ExeVersion;
+   LightVcl.Common.WinVersionApi, LightVcl.Common.WinVersion, LightVcl.Common.ExeVersion;
 
 
 procedure TfrmTester.FormCreate(Sender: TObject);

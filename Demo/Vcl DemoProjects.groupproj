@@ -33,6 +33,9 @@
         <Projects Include="VCL\Demo LightLog\VCL_Demo_Log.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="VCL\Demo WinVersion\VCL_Demo_WinVers.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -131,14 +134,23 @@
     <Target Name="VCL_Demo_Log:Make">
         <MSBuild Projects="VCL\Demo LightLog\VCL_Demo_Log.dproj" Targets="Make"/>
     </Target>
+    <Target Name="VCL_Demo_WinVers">
+        <MSBuild Projects="VCL\Demo WinVersion\VCL_Demo_WinVers.dproj"/>
+    </Target>
+    <Target Name="VCL_Demo_WinVers:Clean">
+        <MSBuild Projects="VCL\Demo WinVersion\VCL_Demo_WinVers.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="VCL_Demo_WinVers:Make">
+        <MSBuild Projects="VCL\Demo WinVersion\VCL_Demo_WinVers.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="VCL_TemplateMicro;VCL_TemplateSimple;VCL_TemplateFull;VCL_Uninstaller;VCL_Demo_VisualControls;VCL_Demo_AutoTranslator;VCL_Demo_SaveGUI;VCL_Demo_SystemReport;VCL_Demo_cGraphText;VCL_Demo_Log"/>
+        <CallTarget Targets="VCL_TemplateMicro;VCL_TemplateSimple;VCL_TemplateFull;VCL_Uninstaller;VCL_Demo_VisualControls;VCL_Demo_AutoTranslator;VCL_Demo_SaveGUI;VCL_Demo_SystemReport;VCL_Demo_cGraphText;VCL_Demo_Log;VCL_Demo_WinVers"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="VCL_TemplateMicro:Clean;VCL_TemplateSimple:Clean;VCL_TemplateFull:Clean;VCL_Uninstaller:Clean;VCL_Demo_VisualControls:Clean;VCL_Demo_AutoTranslator:Clean;VCL_Demo_SaveGUI:Clean;VCL_Demo_SystemReport:Clean;VCL_Demo_cGraphText:Clean;VCL_Demo_Log:Clean"/>
+        <CallTarget Targets="VCL_TemplateMicro:Clean;VCL_TemplateSimple:Clean;VCL_TemplateFull:Clean;VCL_Uninstaller:Clean;VCL_Demo_VisualControls:Clean;VCL_Demo_AutoTranslator:Clean;VCL_Demo_SaveGUI:Clean;VCL_Demo_SystemReport:Clean;VCL_Demo_cGraphText:Clean;VCL_Demo_Log:Clean;VCL_Demo_WinVers:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="VCL_TemplateMicro:Make;VCL_TemplateSimple:Make;VCL_TemplateFull:Make;VCL_Uninstaller:Make;VCL_Demo_VisualControls:Make;VCL_Demo_AutoTranslator:Make;VCL_Demo_SaveGUI:Make;VCL_Demo_SystemReport:Make;VCL_Demo_cGraphText:Make;VCL_Demo_Log:Make"/>
+        <CallTarget Targets="VCL_TemplateMicro:Make;VCL_TemplateSimple:Make;VCL_TemplateFull:Make;VCL_Uninstaller:Make;VCL_Demo_VisualControls:Make;VCL_Demo_AutoTranslator:Make;VCL_Demo_SaveGUI:Make;VCL_Demo_SystemReport:Make;VCL_Demo_cGraphText:Make;VCL_Demo_Log:Make;VCL_Demo_WinVers:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

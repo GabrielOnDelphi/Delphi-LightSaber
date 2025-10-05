@@ -4,12 +4,12 @@
         <AppType>Application</AppType>
         <Config Condition="'$(Config)'==''">Debug</Config>
         <FrameworkType>VCL</FrameworkType>
-        <MainSource>VCL_Demo_ccIO.dpr</MainSource>
+        <MainSource>Demo_Internet.dpr</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <ProjectGuid>{F573B10F-CD3E-4673-9AE7-C86C6652179E}</ProjectGuid>
+        <ProjectGuid>{9FE5949E-7007-46D5-83C8-39AAC87B3074}</ProjectGuid>
         <ProjectVersion>20.3</ProjectVersion>
         <TargetedPlatforms>1</TargetedPlatforms>
-        <ProjectName Condition="'$(ProjectName)'==''">VCL_Demo_ccIO</ProjectName>
+        <ProjectName Condition="'$(ProjectName)'==''">Demo_Internet</ProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -46,9 +46,9 @@
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base)'!=''">
-        <SanitizedProjectName>VCL_Demo_ccIO</SanitizedProjectName>
-        <Custom_Styles>Auric|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Auric.vsf;&quot;Ruby Graphite|VCLSTYLE|$(BDSCOMMONDIR)\Styles\RubyGraphite.vsf&quot;</Custom_Styles>
+        <SanitizedProjectName>Demo_Internet</SanitizedProjectName>
         <DCC_Alignment>2</DCC_Alignment>
+        <Custom_Styles>Auric|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Auric.vsf;&quot;Ruby Graphite|VCLSTYLE|$(BDSCOMMONDIR)\Styles\RubyGraphite.vsf&quot;</Custom_Styles>
         <DCC_DUPLICATE_CTOR_DTOR>false</DCC_DUPLICATE_CTOR_DTOR>
         <DCC_DcuOutput>$(ProductVersion)_$(Platform)_$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\</DCC_ExeOutput>
@@ -83,8 +83,8 @@
         <DCC_RangeChecking>true</DCC_RangeChecking>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <VerInfo_Build>4</VerInfo_Build>
-        <VerInfo_Keys>CompanyName=GM;FileDescription=Gabriel Moraru;FileVersion=0.7.0.4;InternalName=;LegalCopyright=Gabriel Moraru;LegalTrademarks=Gabriel Moraru;OriginalFilename=;ProductName=Demo app;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
+        <VerInfo_Build>5</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=GM;FileDescription=Gabriel Moraru;FileVersion=0.7.0.5;InternalName=;LegalCopyright=Gabriel Moraru;LegalTrademarks=Gabriel Moraru;OriginalFilename=;ProductName=Demo app;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -93,9 +93,8 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="MainForm.pas">
-            <Form>frmTestIO</Form>
-            <FormType>dfm</FormType>
+        <DCCReference Include="FormMain.pas">
+            <Form>MainForm</Form>
         </DCCReference>
         <DCCReference Include="..\..\..\LightCore.AppData.pas"/>
         <DCCReference Include="..\..\..\FrameVCL\LightVcl.Common.AppData.pas"/>
@@ -117,7 +116,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">VCL_Demo_ccIO.dpr</Source>
+                    <Source Name="MainSource">Demo_Internet.dpr</Source>
                 </Source>
                 <Excluded_Packages>
                     <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightFmxBase290.bpl">File C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightFmxBase290.bpl not found</Excluded_Packages>
@@ -140,9 +139,9 @@
                 <Platform value="Win64">False</Platform>
             </Platforms>
             <Deployment Version="5">
-                <DeployFile LocalName="VCL_Demo_LightCore.IO.exe" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="Demo_Internet.exe" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
-                        <RemoteName>VCL_Demo_LightCore.IO.exe</RemoteName>
+                        <RemoteName>Demo_Internet.exe</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

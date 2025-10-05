@@ -1,4 +1,4 @@
-program VCL_Demo_Internet;
+program Demo_Internet;
 
 uses
   {$IFDEF DEBUG}

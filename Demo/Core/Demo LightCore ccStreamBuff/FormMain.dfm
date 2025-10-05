@@ -18,7 +18,6 @@ object MainForm: TMainForm
   ScreenSnap = True
   SnapBuffer = 5
   Visible = True
-  OnClose = FormClose
   TextHeight = 15
   object InternetLabel: TInternetLabel
     Left = 610
@@ -94,6 +93,7 @@ object MainForm: TMainForm
         Font.Style = []
         ParentFont = False
         Layout = tlCenter
+        ExplicitWidth = 305
       end
       object edtFile2: TCubicPathEdit
         Left = 120
@@ -230,6 +230,7 @@ object MainForm: TMainForm
         Font.Style = []
         ParentFont = False
         Layout = tlCenter
+        ExplicitWidth = 339
       end
       object btnStreamRead: TButton
         Left = 260

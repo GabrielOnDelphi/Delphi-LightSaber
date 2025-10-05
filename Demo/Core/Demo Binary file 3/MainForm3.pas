@@ -12,7 +12,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, System.Contnrs,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Mask, Vcl.ExtCtrls, Vcl.Samples.Spin,
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Mask, Vcl.ExtCtrls, Vcl.Samples.Spin,
   LightVcl.Common.AppDataForm, LightCore.StreamBuff, LightCore.StreamBuff2, uSoldier_v3;
 
 type

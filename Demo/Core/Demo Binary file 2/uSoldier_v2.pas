@@ -9,7 +9,7 @@ UNIT uSoldier_v2;
 
 INTERFACE
 
-USES System.SysUtils, System.Generics.Collections,
+USES System.SysUtils,
      LightCore.StreamBuff, LightCore.StreamBuff2;
 
 TYPE

@@ -13,17 +13,15 @@ UNIT FormMain;
 INTERFACE
 
 USES
-  //WinApi.Messages,
   System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.ExtCtrls,
-  LightVcl.Visual.INIFile, InternetLabel, LightVcl.Visual.PathEdit, LightVcl.Visual.SpinEdit,
-  LightVcl.Visual.RichLogTrack, LightVcl.Visual.CheckBox, LightVcl.Visual.RichLog, LightCore.AppData, LightVcl.Common.AppData
-, chHardID, LightVcl.Common.AppDataForm;
+  InternetLabel, LightVcl.Visual.PathEdit, LightVcl.Visual.SpinEdit,
+  LightVcl.Visual.RichLogTrack, LightVcl.Visual.CheckBox, LightVcl.Visual.RichLog, LightCore.AppData,
+  LightVcl.Common.AppData, LightVcl.Common.AppDataForm, chHardID;
 
 TYPE
   TMainForm = class(TLightForm)
     Log                : TRichLog;
     pgCtrl             : TPageControl;
-
     btnClear           : TButton;
     btnStreamRead      : TButton;
     btnStreamWrite     : TButton;
@@ -53,7 +51,6 @@ TYPE
     lblReadWrite: TLabel;
     lblTestSpeed: TLabel;
     btnSaveIni: TButton;
-    procedure FormClose               (Sender: TObject; var Action: TCloseAction);
     procedure actExitExecute          (Sender: TObject);
     procedure btnClearClick           (Sender: TObject);
     procedure SwitchToLog             (Sender: TObject);
@@ -75,7 +72,7 @@ IMPLEMENTATION {$R *.dfm}
 {.$I SynDprUses.inc} // use FastMM4 on older Delphi, or set FPC threads
 
 USES
-   system.Math, LightCore, LightCore.Time, LightCore.Types, LightCore.StreamBuff2, LightVcl.Common.Debugger;
+   System.Math, LightCore.Types, LightCore.StreamBuff2, LightVcl.Common.Debugger;
 
 
 
@@ -97,15 +94,6 @@ procedure TMainForm.actExitExecute(Sender: TObject);
 begin
  Close;
 end;
-
-
-procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
-begin
-end;
-
-
-
-
 
 
 

@@ -3,9 +3,8 @@ UNIT MainForm;
 INTERFACE
 
 USES
-  //Winapi.Windows, Winapi.Messages,
   System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls,
   LightVcl.Common.AppDataForm;
 
 TYPE
@@ -21,7 +20,7 @@ VAR
   frmTestIO: TfrmTestIO;
 
 IMPLEMENTATION {$R *.dfm}
-USES LightCore.IO, LightCore.TextFile, LightVcl.Common.IO;
+USES LightCore.IO;
 
 
 procedure TfrmTestIO.Button1Click(Sender: TObject);
