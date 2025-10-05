@@ -33,10 +33,10 @@ TYPE
     procedure ReadPaddingDef;
     procedure WritePaddingDef;
     {}
-    procedure WriteHeader  (CONST Signature: AnsiString; Version: Word);
-    function  ReadHeader   (CONST Signature: AnsiString; Version: Word): Boolean;
-
-    function  ReadHeaderVersion(CONST Signature: AnsiString; OUT Version: Word): Boolean;
+    procedure WriteHeader         (CONST Signature: AnsiString; Version: Word);
+    procedure ReadHeader          (CONST Signature: AnsiString; Version: Word);
+    function  TryReadHeader       (CONST Signature: AnsiString; Version: Word): Boolean;
+    function  TryReadHeaderVersion(CONST Signature: AnsiString; OUT Version: Word): Boolean;
   end;
 
 IMPLEMENTATION
@@ -56,7 +56,7 @@ end;
 { Returns True if it can read all 3 fields.
   Returns the version number.
   Does not check the version number. }
-function TCubicBuffStream2.ReadHeaderVersion(CONST Signature: AnsiString; OUT Version: Word): Boolean;
+function TCubicBuffStream2.TryReadHeaderVersion(CONST Signature: AnsiString; OUT Version: Word): Boolean;
 VAR
   MagicNumber: Cardinal;
   FileSignature: AnsiString;
@@ -79,18 +79,40 @@ end;
 
 
 { Returns True if signature & version number matches.
-  An exception may be raised if the file smaller than what we want to read }
-function TCubicBuffStream2.ReadHeader(CONST Signature: AnsiString; Version: Word): Boolean;
+  No exception will be raised except if the file smaller than what we want to read. }
+function TCubicBuffStream2.TryReadHeader(CONST Signature: AnsiString; Version: Word): Boolean;
 VAR lVersion: Word;
 begin
  Assert(Signature > '', 'Signature is empty!');
  Assert(Version   > 0 , 'Version must be > 0');
 
- Result:= ReadHeaderVersion(Signature, lVersion);
+ Result:= TryReadHeaderVersion(Signature, lVersion);
  Result:= Result AND (Version = lVersion);
 end;
 
 
+// This will raise an exception if anything goes wrong
+procedure TCubicBuffStream2.ReadHeader(CONST Signature: AnsiString; Version: Word);
+VAR
+  MagicNumber: Cardinal;
+  FileVersion: Word;
+  FileSignature: AnsiString;
+begin
+  // Read magic no
+  MagicNumber := ReadCardinal;
+  if MagicNumber <> ctMagicNumber
+  then Exception.Create('Magic number mismatch!');
+
+  // Read signature
+  FileSignature:= ReadStringA;
+  if FileSignature <> Signature
+  then RAISE Exception.Create('Header signature expected: '+ string(Signature)+ '. Found: '+ string(FileSignature));
+
+  // Read the version number
+  FileVersion:= ReadWord;
+  if FileVersion <> Version
+  then RAISE Exception.Create('Header version expected: '+ IntToStr(Version)+ '. Found: '+ IntToStr(FileVersion));
+end;
 
 
 
@@ -145,8 +167,8 @@ begin
     CheckPointSize := Length(PaddingStr);
 
     // Check if the beginning of the buffer matches the string
-    if CheckPointSize <= Bytes then
-      for i := 0 to CheckPointSize - 1 do
+    VAR MinSize:= Min(CheckPointSize, Bytes);
+    for i := 0 to MinSize- 1 do
         if b[i] <> Byte(PaddingStr[i + 1])
         then RAISE Exception.Create('Invalid checkpoint!!');
   end;
