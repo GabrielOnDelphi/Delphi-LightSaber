@@ -40,6 +40,7 @@ contains
   LightFmx.Visual.Layout in 'LightFmx.Visual.Layout.pas',
   LightFmx.Visual.ComboBox in 'LightFmx.Visual.ComboBox.pas',
   LightFmx.Visual.LabeledEdit in 'LightFmx.Visual.LabeledEdit.pas',
-  LightFmx.Visual.SpinBox in 'LightFmx.Visual.SpinBox.pas';
+  LightFmx.Visual.SpinBox in 'LightFmx.Visual.SpinBox.pas',
+  LightFmx.Visual.AutoHeightRectangle in 'LightFmx.Visual.AutoHeightRectangle.pas';
 
 end.
