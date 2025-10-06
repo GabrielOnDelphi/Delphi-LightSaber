@@ -14,6 +14,7 @@
        - Application self-restart
        - Application self-delete
 
+    Cross-platform ready: stamped 2025.10
  ____________________________________________________________________________________________________________
 
    HOW TO USE IT
@@ -168,14 +169,15 @@ procedure ExtractPathFromCmdLine(MixedInput: string; OUT Path, Parameters: strin
 function  FindCmdLineSwitch(const Switch: string; IgnoreCase: Boolean): Boolean; deprecated 'Use System.SysUtils.FindCmdLineSwitch';
 function  ExeName: string;
 
-VAR AppDataCore: TAppDataCore;    // The global var "AppData" takes over this one in TAppData.Create. This obj is automatically freed on app shutdown (via FINALIZATION)
+VAR
+  AppDataCore: TAppDataCore;    // The global var "AppData" takes over this one in TAppData.Create. This obj is automatically freed on app shutdown (via FINALIZATION)
+
 
 
 IMPLEMENTATION
 
 USES
   LightCore.IO, LightCore.TextFile;
-
 
 {-------------------------------------------------------------------------------------------------------------
  Parameters
@@ -264,7 +266,7 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 
 { Returns the folder where the EXE file resides.
-  The path ended with backslash. Works with UNC paths. Example: c:\Program Files\MyCoolApp\ }                            // Oldname: CurFolder
+  The path ended with backslash. Works with UNC paths. Example: c:\Program Files\MyCoolApp\ }       // Oldname: CurFolder
 function TAppDataCore.ExeFolder: string;
 begin
   Result:= ExtractFilePath(ExeName);
