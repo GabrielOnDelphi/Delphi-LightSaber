@@ -20,6 +20,8 @@
      - Sort lines in a file
      - Drive manipulation (IsDiskInDrive, etc)
      - etc
+
+    Cross-platform ready: stamped 2025.10
 ==============================================================================================================
 
   EXISTS:
