@@ -1,0 +1,100 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 472
+  ClientWidth = 516
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  DesignerMasterStyle = 0
+  object boxConversation: TFramedVertScrollBox
+    Align = Client
+    Margins.Left = 3.000000000000000000
+    Margins.Top = 3.000000000000000000
+    Margins.Right = 3.000000000000000000
+    Margins.Bottom = 3.000000000000000000
+    Size.Width = 510.000000000000000000
+    Size.Height = 426.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    Viewport.Width = 506.000000000000000000
+    Viewport.Height = 422.000000000000000000
+    object Bubble: TAutoHeightRectangle
+      Align = Top
+      Fill.Color = xFFE4F3E2
+      Padding.Left = 3.000000000000000000
+      Padding.Top = 3.000000000000000000
+      Padding.Right = 3.000000000000000000
+      Padding.Bottom = 3.000000000000000000
+      Margins.Left = 3.000000000000000000
+      Margins.Top = 3.000000000000000000
+      Margins.Right = 3.000000000000000000
+      Margins.Bottom = 3.000000000000000000
+      Position.X = 3.000000000000000000
+      Position.Y = 3.000000000000000000
+      Size.Width = 500.000000000000000000
+      Size.Height = 24.000000000000000000
+      Size.PlatformDefault = False
+      Stroke.Color = xFF006300
+      XRadius = 11.000000000000000000
+      YRadius = 11.000000000000000000
+      object TShadowEffect
+        Distance = 3.000000000000000000
+        Direction = 45.000000000000000000
+        Softness = 0.300000011920929000
+        Opacity = 0.600000023841857900
+        ShadowColor = claBlack
+      end
+      object TShadowEffect
+        Distance = 3.000000000000000000
+        Direction = 45.000000000000000000
+        Softness = 0.300000011920929000
+        Opacity = 0.600000023841857900
+        ShadowColor = claBlack
+      end
+    end
+  end
+  object laySend: TLayout
+    Align = Bottom
+    Position.Y = 432.000000000000000000
+    Size.Width = 516.000000000000000000
+    Size.Height = 40.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    OnClick = laySendClick
+    object mmoUserResponse: TMemo
+      Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+      DataDetectorTypes = []
+      Align = Client
+      Hint = 'Send the answer'
+      Margins.Left = 3.000000000000000000
+      Margins.Top = 3.000000000000000000
+      Margins.Right = 3.000000000000000000
+      Margins.Bottom = 3.000000000000000000
+      Size.Width = 449.000000000000000000
+      Size.Height = 34.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      Viewport.Width = 445.000000000000000000
+      Viewport.Height = 30.000000000000000000
+    end
+    object btnSendAnswer: TButton
+      Align = Right
+      Hint = 'Send the answer'
+      Margins.Left = 3.000000000000000000
+      Margins.Top = 3.000000000000000000
+      Margins.Right = 3.000000000000000000
+      Margins.Bottom = 3.000000000000000000
+      Position.X = 458.000000000000000000
+      Position.Y = 3.000000000000000000
+      Size.Width = 55.000000000000000000
+      Size.Height = 34.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Send'
+      OnClick = btnSendAnswerClick
+    end
+  end
+end
