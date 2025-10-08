@@ -18,7 +18,7 @@
       1. Change the DPR file as shown in the demo below (use TAppData.CreateForm to create your forms).
       2. Change the declaration of your form from TForm to TLightForm.
 
-      See: LightSaber\Demo\FMX\Template - Minimal app\FMX_MinimalApp.dpr
+      Full demos here: LightSaber\Demo\FMX\Template - Minimal app\FMX_MinimalApp.dpr
 
 --------------------------------------------------------------------------------------------------------------
 
@@ -34,6 +34,9 @@
         TForm1.FormPreRelease
            TLightForm.FormPreRelease
              TLightForm.SaveForm
+
+     More about this here:
+        LightSaber\FrameFMX\FMX form event order.txt
 
 
      FormPreRelease

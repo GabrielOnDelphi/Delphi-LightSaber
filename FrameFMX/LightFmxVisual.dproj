@@ -102,7 +102,8 @@
         <DCCReference Include="LightFmx.Visual.ComboBox.pas"/>
         <DCCReference Include="LightFmx.Visual.LabeledEdit.pas"/>
         <DCCReference Include="LightFmx.Visual.SpinBox.pas"/>
-        <DCCReference Include="LightFmx.Visual.AutoHeightRectangle.pas"/>
+        <DCCReference Include="LightFmx.Visual.AutoSizeBoxTxt.pas"/>
+        <DCCReference Include="LightFmx.Visual.AutoSizeBoxImg.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
