@@ -1,4 +1,4 @@
-﻿UNIT LightCore.Internet;
+UNIT LightCore.Internet;
 
 {-------------------------------------------------------------------------------------------------------------
    2025
@@ -914,7 +914,7 @@ begin
   Result := '';
   for i := 1 to Length(URL) DO
     if  (URL[i]> #32)
-    AND (URL[i]<= #128)       { € = char #128}
+    AND (URL[i]<= #128)       { � = char #128}
     AND (NOT CharInSet(URL[i], UnsafeChars))
     then Result := Result + URL[i]
     else Result := Result + '%' + IntToHex(Ord(URL[i]), 2);
