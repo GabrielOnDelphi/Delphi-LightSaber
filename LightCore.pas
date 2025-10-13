@@ -1,4 +1,4 @@
-ï»¿UNIT LightCore;
+UNIT LightCore;
 
 {=============================================================================================================
    www.GabrielMoraru.com
@@ -31,8 +31,8 @@ CONST
    ESC             = #27;
    Space           = #32;         { $20 }
    Quote           = #39;
-   CopyrightSymbol = 'Â©';
-   GradCelsius     = 'Â°';
+   CopyrightSymbol = '©';
+   GradCelsius     = '°';
    Euro            = #8364;       { Euro Sign: Alt+0128.  Unicode Number: 8364 }
 
 
@@ -1383,8 +1383,9 @@ end;
 
 
 
-{ Convert Linux enters to Windows enters }
-function LinuxEnter2Win(CONST s: string): string;    {Use System.SysUtils.AdjustLineBreaks(s, tlbsCRLF) !! }
+{ Convert Linux enters to Windows enters
+  Deprecated. Instead use System.SysUtils.AdjustLineBreaks(s, tlbsCRLF) }
+function LinuxEnter2Win(CONST s: string): string;
 VAR i: integer;
 begin
  if s= '' then EXIT('');
