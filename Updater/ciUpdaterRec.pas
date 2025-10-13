@@ -74,7 +74,7 @@ begin
  Clear;
  Stream:= TCubicBuffStream2.CreateRead(FileName);
  TRY
-   Result:= Stream.ReadHeader(Signature, CurrentVersion);
+   Result:= Stream.ReadHeaderTry(Signature, CurrentVersion);
    if Result then
     begin
       Comment     := Stream.ReadString;

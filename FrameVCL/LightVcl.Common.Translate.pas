@@ -1,4 +1,4 @@
-﻿unit LightVcl.Common.Translate;
+unit LightVcl.Common.Translate;
 
 {=============================================================================================================
    www.GabrielMoraru.com
@@ -131,13 +131,13 @@
        Call:
           ShowMessage(Trs(Unique_str_as_ID));
           or
-          Mesaj(Unique_str_as_ID);
+          MessageInfo(Unique_str_as_ID);
 
        'Unique_str_as_ID' is then loaded from a INI or CSV files (one per language) in the following format: Unique_IDx = 'some text'.
        If the string is not found in the INI file the const is used and an warning is logged.
         Create a function Trs(TextID) that will take the ID and return the text based on the installed language.
         Pass the Const identifier.
-        The Trs function can be integrated directly into an overloaded variant of the Mesaj() procedure.
+        The Trs function can be integrated directly into an overloaded variant of the MessageInfo() procedure.
       5.
          Variation on the (4) idea.
          Put the Unique_str_as_ID in an external ini file (EN): 57 = 'String to translate.'

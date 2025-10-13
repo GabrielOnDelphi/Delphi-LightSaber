@@ -70,8 +70,9 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  LightVcl.Visual.INIFile, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.AppDataForm, LightVcl.Common.Sound, LightCore.AppData, LightVcl.Common.AppData
-, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO,LightVcl.Internet.EmailSender;
+  LightVcl.Visual.INIFile, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard,
+  LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.Sound, LightCore.AppData, LightVcl.Common.AppData,
+  LightCore.IO, LightCore.TextFile, LightVcl.Common.IO,LightVcl.Internet.EmailSender, LightVcl.Common.System;
 
 
 procedure TfrmComposer.Initialize; { This will create also the frmSmtpSettings }
@@ -79,7 +80,6 @@ begin
  frmSmtpSettings:= TfrmSmtpSettings.Create(Self);  { Freed by self }
  frmSmtpSettings.Initialize;
 
- LoadForm(Self);
  Font:= Application.MainForm.Font;
 
  { RELOAD EMAIL BODY }

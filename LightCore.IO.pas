@@ -1,4 +1,4 @@
-ï»¿UNIT LightCore.IO;
+UNIT LightCore.IO;
 
 {=============================================================================================================
    www.GabrielMoraru.com
@@ -633,7 +633,7 @@ end;
 function PathNameIsValid(CONST Path: string): Boolean;
 begin
  {ToDo: Accept UNC paths like: \??\Windows. For this check for the \?? patern }
- Result := TPath.HasValidPathChars(Path, False);
+ Result:= (Path <> '') AND TPath.HasValidPathChars(Path, FALSE);
 end;
 
 
@@ -1566,8 +1566,8 @@ end;
 
   You should use GetHomePath to store settings per user. For example: TFile.WriteAllText(TPath.GetHomePath() + TPath.DirectorySeparatorChar + 'sample.txt', s);
 
-  On Windows        points to the userâ€™s application data folder.
-  On Linux & OS X   points to the userâ€™s home folder, as defined by the $(HOME) environment variable.
+  On Windows        points to the user’s application data folder.
+  On Linux & OS X   points to the user’s home folder, as defined by the $(HOME) environment variable.
   On iOS & Android  points to the device-specific location of the sandbox for the application; the iOS home location is individually defined for each application instance and for each iOS device.
 
   Windows XP       C:\Documents and Settings\<username>\Application Data  CSIDL_APPDATA
@@ -2010,7 +2010,7 @@ end;
   We need a delay here because the TDirectory.Delete is asynchron.
   The function seems to return before it finished deleting the folder:
     Details: http://stackoverflow.com/questions/42809389/tdirectory-delete-seems-to-be-asynchronous?noredirect=1#comment72732153_42809389
-    Answer: Perhaps the Remarks section on the msdn page about RemoveDirectory gives us a clue? (msdn.microsoft.com/en-us/library/windows/desktop/â€¦) The RemoveDirectory function marks a directory for deletion on close. Therefore, the directory is not removed until the last handle to the directory is closed. This indicates that the call may return before the directory has actually been deleted }
+    Answer: Perhaps the Remarks section on the msdn page about RemoveDirectory gives us a clue? (msdn.microsoft.com/en-us/library/windows/desktop/…) The RemoveDirectory function marks a directory for deletion on close. Therefore, the directory is not removed until the last handle to the directory is closed. This indicates that the call may return before the directory has actually been deleted }
 procedure EmptyDirectory(const Path: string);
 CONST
   MaxWaitTime = 6000; // Maximum time to wait for directory deletion (in milliseconds)

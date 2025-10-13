@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Visual.StringGrid;
+UNIT LightVcl.Visual.StringGrid;
 
 {=============================================================================================================
    2024.05
@@ -1105,7 +1105,7 @@ begin
       0..2:
         begin
           // Code to be executed...
-          // Programmcode der ausgeführt werden soll
+          // Programmcode der ausgef�hrt werden soll
           ShowMessage('Column ' + IntToStr(acol));
           zelle := stringgrid1.CellRect(1, 1);
         end;

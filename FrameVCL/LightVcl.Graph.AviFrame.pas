@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Graph.AviFrame;
+UNIT LightVcl.Graph.AviFrame;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -194,7 +194,7 @@ begin
    arOriginal : FFPlayer.AspectRatio := 0;   //   = 0 -> keeping original
  end;
 
- { Mesaj(Format('duration: %s,   frame size: %dx%d,   screensize: %dx%d ',  //screensize:= 0x0 [ IntToStr(ADuration), AFrameWidth, AFrameHeight, AScreenWidth, AScreenHeight]));  }
+ { MessageInfo(Format('duration: %s,   frame size: %dx%d,   screensize: %dx%d ',  //screensize:= 0x0 [ IntToStr(ADuration), AFrameWidth, AFrameHeight, AScreenWidth, AScreenHeight]));  }
 end;
 
 (*

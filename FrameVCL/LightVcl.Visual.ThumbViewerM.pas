@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Visual.ThumbViewerM;                                                                            {Multithreaded}
+UNIT LightVcl.Visual.ThumbViewerM;                                                                            {Multithreaded}
 
 {=============================================================================================================
    Gabriel Moraru

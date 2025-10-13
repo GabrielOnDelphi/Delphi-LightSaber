@@ -1,4 +1,4 @@
-﻿UNIT LightCore.HTML;
+UNIT LightCore.HTML;
 
 //This hould be moved to core
 

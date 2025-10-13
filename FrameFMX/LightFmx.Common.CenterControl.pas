@@ -1,4 +1,4 @@
-﻿UNIT LightFmx.Common.CenterControl;
+UNIT LightFmx.Common.CenterControl;
 
 {=============================================================================================================
    2025.04

@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Common.IO;
+UNIT LightVcl.Common.IO;
 
 {=============================================================================================================
    www.GabrielMoraru.com
@@ -554,7 +554,7 @@ begin
 
  Result:= SHFileOperation(SHFileOpStruct)= 0;
 
- //DEBUG ONLY if Result<> 0 then Mesaj('last error: ' + IntToStr(Result)+ CRLF+ 'last error message: '+ SysErrorMessage(Result));
+ //DEBUG ONLY if Result<> 0 then MessageInfo('last error: ' + IntToStr(Result)+ CRLF+ 'last error message: '+ SysErrorMessage(Result));
  //if fos.fAnyOperationsAborted = True then Result:= -1;
 end;
 

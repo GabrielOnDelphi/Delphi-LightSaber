@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Graph.ResizeWinGDI;
+UNIT LightVcl.Graph.ResizeWinGDI;
 
 {=============================================================================================================
    Gabriel Moraru

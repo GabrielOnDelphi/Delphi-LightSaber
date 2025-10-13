@@ -153,7 +153,7 @@ procedure SmoothResize(Src, Dst: TBitmap);
               |    SmoothResize           Stretch(Hermite)      Its quality, compared to Hermite
               |------------------------------------------------------------------------------------
 Resize down   |       40ms                    655ms                too sharp (barelly usable)
-Resize up     |       85ms                    375ms                quite good (a bit to soft)
+Resize up     |       85ms                    375ms                quite good (a bit too soft)
 --------------+-----------------------------------------------------------------------------------}
 VAR
   X, Y, xP, yP, yP2, xP2: Integer;

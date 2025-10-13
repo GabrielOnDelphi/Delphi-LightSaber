@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{272BF477-37D4-4648-8DC0-FDFB454C500C}</ProjectGuid>
         <MainSource>Demo_FileStream.dpr</MainSource>

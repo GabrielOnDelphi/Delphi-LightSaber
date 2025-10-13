@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Common.WMIResolution;
+UNIT LightVcl.Common.WMIResolution;
 
 {=============================================================================================================
    2023.01

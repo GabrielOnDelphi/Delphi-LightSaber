@@ -1,4 +1,4 @@
-﻿unit LightFmx.Common.Dialogs;
+unit LightFmx.Common.Dialogs;
 {=============================================================================================================
    www.GabrielMoraru.com
    2025.04

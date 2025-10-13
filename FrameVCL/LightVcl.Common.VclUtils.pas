@@ -1,7 +1,7 @@
-﻿UNIT LightVcl.Common.VclUtils;
+UNIT LightVcl.Common.VclUtils;
 
 {=============================================================================================================
-   2025.03
+   2025.08
    www.GabrielMoraru.com
 ==============================================================================================================
    Utility functions that we can apply to VCL components

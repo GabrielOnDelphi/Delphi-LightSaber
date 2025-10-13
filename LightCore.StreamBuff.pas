@@ -106,6 +106,9 @@ TYPE
      function  ReadRect: TRect;
      procedure WriteRect(Rect: TRect);
 
+     function  ReadRectF: TRectF;
+     procedure WriteRectF(Rect: TRectF);
+
      procedure ReadIntegers (List: TIntegerArray); overload;
      procedure WriteIntegers(List: TIntegerArray); overload;
 
@@ -725,6 +728,24 @@ begin
 end;
 
 procedure TCubicBuffStream.WriteRect(Rect: TRect);
+begin
+  WriteBuffer(Rect.Left  , 4);
+  WriteBuffer(Rect.Top   , 4);
+  WriteBuffer(Rect.Right , 4);
+  WriteBuffer(Rect.Bottom, 4);
+end;
+
+
+
+function TCubicBuffStream.ReadRectF: TRectF;
+begin
+  ReadBuffer(Result.Left  , 4);
+  ReadBuffer(Result.Top   , 4);
+  ReadBuffer(Result.Right , 4);
+  ReadBuffer(Result.Bottom, 4);
+end;
+
+procedure TCubicBuffStream.WriteRectF(Rect: TRectF);
 begin
   WriteBuffer(Rect.Left  , 4);
   WriteBuffer(Rect.Top   , 4);

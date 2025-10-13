@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Graph.Text;
+UNIT LightVcl.Graph.Text;
 
 {=============================================================================================================
    www.GabrielMoraru.com

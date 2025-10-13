@@ -1,15 +1,15 @@
 UNIT LightFmx.Common.LogViewer;
 
 {=============================================================================================================
-   2025.06
-   www.GabrielMoraru.com
+   2025.06
+   www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-   A log viewer based on TStringGrid.
+   A log viewer based on TStringGrid.
    It can easily show up to 1 million entries.
    Being a good citizen, when it reaches this number it saves existing data to disk and then clears it from RAM.
 
    How to use it
-      1. Alone: Drop a TLogViewer on your form and use it to log messages like this:
+      1. Alone: Drop a TLogViewer on your form and use it to log messages like this:
                 LogViewer.ConstructInternalRamLog;
                 LogViewer.RamLog.AddError('Something bad happent!');
 
@@ -21,8 +21,8 @@ UNIT LightFmx.Common.LogViewer;
                 RamLog.AddError('Something bad happent!');
            The log window will automatically pop-up when a error is received.
 
-   Full demo in:
-      c:\Projects\LightSaber\Demo\Demo LightLog\FMX\FMX_Demo_Log.dpr
+   Full demo in:
+      c:\Projects\LightSaber\Demo\Demo LightLog\FMX\FMX_Demo_Log.dpr
 
 =============================================================================================================}
 
@@ -708,5 +708,3 @@ end;
 
 
 end.
-
-

@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Common.Shell;
+UNIT LightVcl.Common.Shell;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -113,7 +113,7 @@ var
   Directory : String;
   WFileName : WideString;
 begin
- { if not (CoInitialize (nil) = S_OK) then Mesaj('Failed to initialize the COM layer!')
+ { if not (CoInitialize (nil) = S_OK) then MessageInfo('Failed to initialize the COM layer!')
  IT IS NECESSARY ONLY WHEN I PRESS THIS FUNCTION BEFORE Application.Initialize
  Because Application.Initialize automatically calls CoInitialize.   http://coding.derkeiler.com/Archive/Delphi/borland.public.delphi.database.ado/2005-03/0064.html
  Also see: http://www.google.ro/search?num=100&q=delphi+%22CoInitialize+has+not+been+called }
@@ -173,7 +173,7 @@ end;
 
   Usage:
     1. On the FirstRun, call CreateShortcutIn(CSIDL_SENDTO, App_Name2) to add self to the 'SendTo' menu
-    2. In TForm1.OnCreate do this:  if ParamCount > 0 then Mesaj(ParamStr(1))
+    2. In TForm1.OnCreate do this:  if ParamCount > 0 then MessageInfo(ParamStr(1))
 
   From:
     http://delphi.about.com/od/adptips2006/qt/app2sendtomenu.htm

@@ -1556,6 +1556,7 @@ begin
       else
        // CubicDesign
        raise Exception.Create('Error in janFX.SplitRound');
+       dx := 0; // CubicDesign
      end;
 
      r := rect(0, y, dx, y + 1);
@@ -3088,7 +3089,7 @@ begin
    Memo := YOrigin;
    YOrigin := YFinal;
    YFinal := Memo;
-  end; (* si diff‚rence n‚gative *)
+  end; (* si difference negative *)
 
  XOrigin := Max(1, XOrigin);
  YOrigin := Max(1, YOrigin);

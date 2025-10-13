@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Common.KeybShortcuts;
+UNIT LightVcl.Common.KeybShortcuts;
 
 {=============================================================================================================
    SYSTEM - Keyboard Shortcuts

@@ -1,20 +1,26 @@
 UNIT LightFmx.Graph;
 
+{-------------------------------------------------------------------------------------------------------------
+    GabrielMoraru.com
+    2025.09
+--------------------------------------------------------------------------------------------------------------
+    Graphics utilities for FMX
+-------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
 
 USES
-  System.SysUtils, System.Types, System.UITypes,
-  FMX.Graphics, FMX.Types, FMX.Objects;
+  System.SysUtils, System.Types, System.UITypes, FMX.Graphics, FMX.Types, FMX.Objects;
 
 procedure GetImageResolution(FileName: string; Out Width, Height: Integer);
+procedure LoadImage         (FileName: string; Image: TImage; Color: TAlphaColor= TAlphaColorRec.DeepPink);
 
 procedure FillBitmap   (BMP: TBitmap; Color: TAlphaColor);
 function  CreateBitmap (Width, Height: Integer; BkgClr: TAlphaColor= TAlphaColorRec.Black): TBitmap;
 
-function  CropBitmap   (InputBMP: TBitmap; CropRect: TRect): TBitmap;        overload;
-function  CropBitmap   (FileName: string;  CropRect: TRect): TBitmap;        overload;
-procedure CropBitmap   (FileName: string;  CropRect: TRect; Image: TImage);  overload;
+function  CropBitmap   (InputBMP: TBitmap; CropRect: TRectF): TBitmap;        overload;
+function  CropBitmap   (FileName: string;  CropRect: TRectF): TBitmap;        overload;
+procedure CropBitmap   (FileName: string;  CropRect: TRectF; Image: TImage);  overload;
 
 
 
@@ -47,27 +53,48 @@ begin
 end;
 
 
+// Load a file into TImage. If file is not found, it returns a pink image anyway.
+procedure LoadImage(FileName: string; Image: TImage; Color: TAlphaColor= TAlphaColorRec.DeepPink);
+VAR Bitmap: TBitmap;
+begin
+  if FileExists(FileName)
+  then
+    begin
+      Bitmap:= TBitmap.Create;
+      Bitmap.LoadFromFile(FileName);       // Supports JPG, PNG, BMP
+    end
+  else
+    Bitmap:= CreateBitmap(77, 77, Color);  // Fake the image for debugging
+
+  TRY
+    Image.Bitmap.Assign(Bitmap);
+  FINALLY
+    FreeAndNil(Bitmap);
+  END;
+end;
+
+
 
 {-------------------------------------------------------------------------------
   TBitmap Cropping (OPTIMIZED using CopyFromBitmap)
 -------------------------------------------------------------------------------}
 
 // We copy the CropRect area from InputBMP to the start of ResultBmp.
-function CropBitmap(InputBMP: TBitmap; CropRect: TRect): TBitmap;
+function CropBitmap(InputBMP: TBitmap; CropRect: TRectF): TBitmap;
 begin
   Assert((CropRect.Width > 0) and (CropRect.Height > 0));
   Result:= TBitmap.Create;
-  try
-    Result.SetSize(CropRect.Width, CropRect.Height);  // match the area being cropped
-    Result.CopyFromBitmap(InputBMP, CropRect, 0, 0);   // Using CopyFromBitmap for faster, pure pixel copying.
-  except
+  TRY
+    Result.SetSize(Round(CropRect.Width), Round(CropRect.Height));  // Match the area being cropped
+    Result.CopyFromBitmap(InputBMP, CropRect.Round, 0, 0);          // Using CopyFromBitmap for faster, pure pixel copying.
+  EXCEPT
     Result.Free;
-    raise;
-  end;
+    RAISE;
+  END;
 end;
 
 
-function CropBitmap(FileName: string; CropRect: TRect): TBitmap;
+function CropBitmap(FileName: string; CropRect: TRectF): TBitmap;
 VAR SrcBmp: TBitmap;
 begin
   SrcBmp := TBitmap.Create;
@@ -81,7 +108,7 @@ end;
 
 
 // Load the image from file, then crops it then assign it to a TImage
-procedure CropBitmap(FileName: string; CropRect: TRect; Image: TImage);
+procedure CropBitmap(FileName: string; CropRect: TRectF; Image: TImage);
 VAR CropBmp: TBitmap;
 begin
   Assert(NOT CropRect.IsEmpty, 'BoundBox not defined!');

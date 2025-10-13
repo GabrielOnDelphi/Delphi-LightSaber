@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Common.CenterControl;
+UNIT LightVcl.Common.CenterControl;
 
 {=============================================================================================================
    2025.04

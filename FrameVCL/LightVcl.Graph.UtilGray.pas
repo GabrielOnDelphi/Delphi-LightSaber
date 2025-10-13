@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Graph.UtilGray;
+UNIT LightVcl.Graph.UtilGray;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -187,7 +187,7 @@ end; }
      2. Desaturate the RGB
 
    Formula:
-      Y = 0.21 × R + 0.72 × G + 0.07 × B.    Rec. 709 (also used by Gimp)
+      Y = 0.21 * R + 0.72 * G + 0.07 * B.    Rec. 709 (also used by Gimp)
 
    Source:
      en.delphipraxis.net/topic/6501-any-example-bitmap-to-grayscale

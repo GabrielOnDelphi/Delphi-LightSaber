@@ -11,7 +11,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
-  IdSMTP, IdExplicitTLSClientServerBase, Vcl.ComCtrls, LightVcl.Visual.RadioButton, InternetLabel;
+  IdSMTP, IdExplicitTLSClientServerBase, Vcl.ComCtrls, LightVcl.Visual.RadioButton, InternetLabel, Vcl.Mask;
 
 type
   TfrmSmtpSettings = class(TLightForm)
@@ -47,7 +47,7 @@ VAR
 
 IMPLEMENTATION {$R *.dfm}
 
-USES cmEncodeXOR, LightVcl.Visual.INIFile;
+USES LightCore.EncodeXOR, LightVcl.Visual.INIFile;
 
 
 
@@ -59,7 +59,6 @@ end;
 
 procedure TfrmSmtpSettings.Initialize;
 begin
- LoadForm(Self);
  edtPsw.Text:= SimpleDecode(edtPsw.Text);  // automatically decrypt AFTER loading from INI
 end;
 

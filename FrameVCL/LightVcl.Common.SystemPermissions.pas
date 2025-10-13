@@ -117,7 +117,7 @@ begin
      CloseHandle(token);
    END
  else
-   Result:= -1;  { Mesaj(SysErrorMessage(GetLastError)) }
+   Result:= -1;  { MessageInfo(SysErrorMessage(GetLastError)) }
 end;
 
 

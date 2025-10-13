@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Graph.Bitmap;
+UNIT LightVcl.Graph.Bitmap;
 
 {=============================================================================================================
    Gabriel Moraru

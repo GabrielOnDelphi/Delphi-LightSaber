@@ -7,7 +7,7 @@ UNIT LightVcl.Visual.SpinEdit;
    See Copyright file
 --------------------------------------------------------------------------------------------------------------
 
-  TCubicSpinEdit â€“ A SpinEdit with two extra labels
+  TCubicSpinEdit – A SpinEdit with two extra labels
       Sometimes we need to have some text in front or after the SpinEdit (number). For example: Maximum zoom: 20 %. For this we need to manually create three controls: a label, a SpinEdit and then another label and align them all in a TPanel. TCubicSpinEdit does it for you. Also, the control will automatically resize to fit the text in it.
       ToDo: If the user deleted the value (not the editor is empty), OnLoseFocus, put the value back in the editor.
 

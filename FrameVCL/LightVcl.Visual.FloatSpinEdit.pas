@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Visual.FloatSpinEdit;
+UNIT LightVcl.Visual.FloatSpinEdit;
 
 {=============================================================================================================
    Gabriel Moraru

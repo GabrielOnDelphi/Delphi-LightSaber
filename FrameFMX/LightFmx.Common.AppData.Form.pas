@@ -1,4 +1,4 @@
-﻿UNIT LightFmx.Common.AppData.Form;
+UNIT LightFmx.Common.AppData.Form;
 
 {=============================================================================================================
    2025.08
@@ -124,7 +124,7 @@ begin
   // Load form
   // Limitation: At this point we can only load "standard" Delphi components. Loading of our Light components can only be done in Light_FMX.Visual.INIFile.pas -> TIniFileVCL
 
-  if FAutoState = asUndefined  // Only check queue if AutoState wasn’t set in Create
+  if FAutoState = asUndefined  // Only check queue if AutoState wasn�t set in Create
   then FAutoState:= AppData.GetAutoState;
 
   if AutoState = asUndefined

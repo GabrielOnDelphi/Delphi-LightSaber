@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Graph.Loader;
+UNIT LightVcl.Graph.Loader;
 
 {=============================================================================================================
    Gabriel Moraru

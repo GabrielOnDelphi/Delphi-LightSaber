@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Internet.HTMLImg;
+UNIT LightVcl.Internet.HTMLImg;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru

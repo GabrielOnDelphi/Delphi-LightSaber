@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Common.SystemConsole;
+UNIT LightVcl.Common.SystemConsole;
 
 {=============================================================================================================
    2025.05

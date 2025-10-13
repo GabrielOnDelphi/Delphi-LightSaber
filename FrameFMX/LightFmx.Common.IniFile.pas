@@ -1,4 +1,4 @@
-﻿UNIT LightFmx.Common.IniFile;
+UNIT LightFmx.Common.IniFile;
 
 {=============================================================================================================
    www.GabrielMoraru.com

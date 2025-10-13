@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Common.SystemTime;
+UNIT LightVcl.Common.SystemTime;
 
 {=============================================================================================================
    SYSTEM TIME

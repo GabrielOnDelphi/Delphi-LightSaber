@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Internet.CommonWebDown;
+UNIT LightVcl.Internet.CommonWebDown;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru

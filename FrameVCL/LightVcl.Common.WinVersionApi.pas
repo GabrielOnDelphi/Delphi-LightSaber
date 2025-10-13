@@ -1,4 +1,4 @@
-﻿UNIT  LightVcl.Common.WinVersionApi;
+UNIT  LightVcl.Common.WinVersionApi;
 
 {=============================================================================================================
    2025.05

@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Common.Dialogs;
+UNIT LightVcl.Common.Dialogs;
 
 {=============================================================================================================
    www.GabrielMoraru.com

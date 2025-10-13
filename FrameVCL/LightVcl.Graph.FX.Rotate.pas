@@ -1,4 +1,4 @@
-ï»¿UNIT LightVcl.Graph.FX.Rotate;
+UNIT LightVcl.Graph.FX.Rotate;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -24,7 +24,7 @@
   Also see:
      Fastest possible, but quality not so great: c:\MyProjects\Packages\Third party packages\Rotate Image VCL\RotImg.pas
      Fade image to white: https://stackoverflow.com/questions/13701685/fade-an-image-using-gdi-i-e-change-only-the-alpha-channel-of-a-tgpgraphic
-     Hier mal eine Alternative zu GDI+, die ich persÃ¶nlich Ã¼bersichtlicher finde: WIC: https://www.delphipraxis.net/199843-gdi-bilddrehung-mit-transparenz.html
+     Hier mal eine Alternative zu GDI+, die ich persönlich übersichtlicher finde: WIC: https://www.delphipraxis.net/199843-gdi-bilddrehung-mit-transparenz.html
 
   If AdjustSize is:
     True : then the size of BMP will adjusted to hold the entire rotated image.

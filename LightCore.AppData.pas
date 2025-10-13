@@ -1,4 +1,4 @@
-﻿UNIT LightCore.AppData;
+UNIT LightCore.AppData;
 
 {=============================================================================================================
    2025.03
@@ -66,7 +66,7 @@ TYPE
     function  getLastUsedFolder: string;
     procedure setShowOnError(const Value: Boolean);
   protected
-    FHintType   : THintType;                // Turn off the embedded help system
+    FHintType: THintType;                // Turn off the embedded help system
     procedure setHideHint(const Value: Integer); virtual;
     procedure loadSettings;     virtual;
     procedure saveSettings;     virtual;

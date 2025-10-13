@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Common.IniFile;
+UNIT LightVcl.Common.IniFile;
 
 {=============================================================================================================
    2025.03
@@ -139,13 +139,13 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightCore.IO, LightCore.TextFile, LightCore, LightCore.Time, LightCore.Types, {LightCore.AppData,} LightVcl.Common.AppData; //{$IFDEF FRAMEWORK_FMX}LightFmx.Common.AppData{$ELSE}LightCom.AppData,{$ENDIF};
+   LightCore.IO, LightCore.TextFile, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.AppData;
 
 
 {-----------------------------------------------------------------------------------------------------------------------
    MAIN
 -----------------------------------------------------------------------------------------------------------------------}
-constructor TIniFileApp.Create(SectionName: string; ForcedName: string= '');                             { Open INI file for writing }
+constructor TIniFileApp.Create(SectionName: string; ForcedName: string= '');   { Open INI file for writing }
 VAR Path: string;
 begin
  if ForcedName= ''

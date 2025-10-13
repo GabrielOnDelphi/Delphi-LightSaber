@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Internet.HTML;
+UNIT LightVcl.Internet.HTML;
 
 //This hould be moved to core
 

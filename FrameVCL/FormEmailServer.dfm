@@ -15,14 +15,12 @@ object frmSmtpSettings: TfrmSmtpSettings
   Font.Height = -11
   Font.Name = 'Tahoma'
   Font.Style = []
-  OldCreateOrder = False
   Position = poDesigned
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   DesignSize = (
     557
     311)
-  PixelsPerInch = 96
   TextHeight = 13
   object grpSettings: TGroupBox
     AlignWithMargins = True
@@ -83,6 +81,7 @@ object frmSmtpSettings: TfrmSmtpSettings
       EditLabel.Font.Style = []
       EditLabel.ParentFont = False
       TabOrder = 0
+      Text = ''
       TextHint = 'mail.YourServer.com'
     end
     object edtPsw: TLabeledEdit
@@ -104,6 +103,7 @@ object frmSmtpSettings: TfrmSmtpSettings
       EditLabel.ParentFont = False
       PasswordChar = '*'
       TabOrder = 1
+      Text = ''
       TextHint = '**********'
     end
     object spnPort: TSpinEdit
@@ -135,6 +135,7 @@ object frmSmtpSettings: TfrmSmtpSettings
       EditLabel.ParentFont = False
       ParentDoubleBuffered = False
       TabOrder = 3
+      Text = ''
       TextHint = 'JohnLennon@Gmail.com'
     end
     object grpTSL: TGroupBox

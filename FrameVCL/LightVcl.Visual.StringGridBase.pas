@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Visual.StringGridBase;
+UNIT LightVcl.Visual.StringGridBase;
 
 {=============================================================================================================
    Gabriel Moraru

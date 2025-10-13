@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Internet.HTMLWriter;
+UNIT LightVcl.Internet.HTMLWriter;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru

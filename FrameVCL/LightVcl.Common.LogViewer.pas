@@ -1,14 +1,14 @@
 UNIT LightVcl.Common.LogViewer;
 
 {=============================================================================================================
-   2025.06
-   www.GabrielMoraru.com
+   2025.06
+   www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-   A log viewer based on TStringGrid.
+   A log viewer based on TStringGrid.
    It can easily show up to 1 million entries. Being a good citizen, when it reaches this number it saves existing data to disk and then clears it from RAM.
 
    How to use it
-      Drop a TLogViewer on your form and use it to log messages like this:
+      Drop a TLogViewer on your form and use it to log messages like this:
          LogViewer.RamLog.AddError('Something bad happent!');
 
    Application wide logging
@@ -21,8 +21,8 @@ UNIT LightVcl.Common.LogViewer;
 
       The log window will automatically pop-up when a error is received.
 
-   Full demo in:
-      c:\Projects\LightSaber\Demo\Demo LightLog\FMX\FMX_Demo_Log.dpr
+   Full demo in:
+      c:\Projects\LightSaber\Demo\Demo LightLog\FMX\FMX_Demo_Log.dpr
 
 =============================================================================================================}
 
@@ -584,7 +584,7 @@ end;
 
 procedure TLogViewer.RegisterVerbFilter(TrackBar: TPanel);
 begin
- // mesaj('Trackbar registered for log');
+ // MessageInfo('Trackbar registered for log');
   FVerbTrackBar:= TrackBar;  // Let the Log know that its verbosity is controlled by this TrackBar
 end;
 

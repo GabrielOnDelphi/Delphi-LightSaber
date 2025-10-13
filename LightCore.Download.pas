@@ -151,8 +151,16 @@ end;
    Other positive values: HTTP status code if the request was sent but the status is not 200.
    ERROR_CLIENT_EXCEPTION: A client error occurred before the request was sent.
    ERROR_SAVE_FILE_FAILED: Download succeeded but saving the file failed.
-   ERROR_EMPTY_CONTENT: Download succeeded but the content is empty. }
-procedure DownloadToFile(CONST URL, SaveTo: string; OUT ErrorMsg: string; CustomHeaders: TNetHeaders = nil; HttpOptions: PHttpOptions = NIL);
+   ERROR_EMPTY_CONTENT: Download succeeded but the content is empty.
+
+Example of CustomHeaders
+   var Headers: TNetHeaders;
+   begin
+     SetLength(Headers, 1);
+     Headers[0].Name  := 'Referer';
+     Headers[0].Value := 'https://my.custom.referer/';
+    }
+procedure DownloadToFile(CONST URL, SaveTo: string; OUT ErrorMsg: string; CustomHeaders: TNetHeaders = NIL; HttpOptions: PHttpOptions = NIL);
 VAR
   Stream: TMemoryStream;
 begin

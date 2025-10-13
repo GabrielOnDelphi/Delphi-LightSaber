@@ -229,7 +229,7 @@ end;
 
     procedure DoOutput(Text: string);
     begin
-     Mesaj(Text);
+     MessageInfo(Text);
     end;
 
   Source:

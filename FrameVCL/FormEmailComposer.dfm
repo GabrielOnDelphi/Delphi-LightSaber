@@ -26,7 +26,6 @@ object frmComposer: TfrmComposer
     Top = 0
     Height = 329
     ResizeStyle = rsUpdate
-    ExplicitHeight = 341
   end
   object pnlBottom: TPanel
     AlignWithMargins = True
@@ -37,8 +36,6 @@ object frmComposer: TfrmComposer
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 491
-    ExplicitHeight = 335
     DesignSize = (
       483
       323)
@@ -63,12 +60,11 @@ object frmComposer: TfrmComposer
       ParentFont = False
       Visible = False
       StyleElements = [seClient, seBorder]
-      ExplicitWidth = 411
     end
     object lblInfoAttachment: TLabel
       AlignWithMargins = True
       Left = 3
-      Top = 263
+      Top = 260
       Width = 477
       Height = 13
       Align = alBottom
@@ -76,15 +72,13 @@ object frmComposer: TfrmComposer
         'Note: The program will automatically attach the wallpaper to the' +
         ' email.'
       Visible = False
-      ExplicitTop = 275
-      ExplicitWidth = 339
     end
     object mmoEmailBody: TMemo
       AlignWithMargins = True
       Left = 9
       Top = 72
       Width = 465
-      Height = 185
+      Height = 182
       Hint = 'Email body'
       Margins.Left = 9
       Margins.Top = 9
@@ -113,7 +107,6 @@ object frmComposer: TfrmComposer
       ShowHint = True
       TabOrder = 0
       Visible = False
-      ExplicitLeft = 447
     end
     object Panel1: TPanel
       AlignWithMargins = True
@@ -125,7 +118,6 @@ object frmComposer: TfrmComposer
       BevelOuter = bvNone
       ShowCaption = False
       TabOrder = 2
-      ExplicitWidth = 485
       DesignSize = (
         477
         41)
@@ -145,7 +137,6 @@ object frmComposer: TfrmComposer
         ShowHint = True
         TabOrder = 0
         Text = ''
-        ExplicitWidth = 473
       end
     end
     object edtAttachment: TCubicPathEdit
@@ -161,8 +152,6 @@ object frmComposer: TfrmComposer
       Align = alBottom
       Caption = 'File'
       TabOrder = 3
-      ExplicitTop = 291
-      ExplicitWidth = 473
     end
   end
   object pnlBottomToolBar: TPanel
@@ -179,8 +168,6 @@ object frmComposer: TfrmComposer
     BevelKind = bkSoft
     BevelOuter = bvNone
     TabOrder = 1
-    ExplicitTop = 343
-    ExplicitWidth = 672
     object btnServSett: TButton
       AlignWithMargins = True
       Left = 560
@@ -255,7 +242,6 @@ object frmComposer: TfrmComposer
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 2
-    ExplicitHeight = 335
     DesignSize = (
       170
       323)
@@ -330,7 +316,6 @@ object frmComposer: TfrmComposer
       Caption = 'Send as HTML'
       TabOrder = 3
       AutoSize = True
-      ExplicitTop = 315
     end
     object chkInternalSMTP: TCubicCheckBox
       AlignWithMargins = True
@@ -351,7 +336,6 @@ object frmComposer: TfrmComposer
       TabOrder = 4
       OnClick = chkInternalSMTPClick
       AutoSize = True
-      ExplicitTop = 292
     end
   end
   object SMTP: TIdSMTP

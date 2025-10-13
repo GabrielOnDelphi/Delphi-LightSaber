@@ -1,4 +1,4 @@
-ï»¿UNIT chHardID_C;
+UNIT chHardID_C;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -12,9 +12,9 @@ http://rvelthuis.de/articles/articles-dlls.html
 
 Delphi
 
-In Delphi, this looks like it could be some work, but it isnâ€™t. Newer versions of Delphi have project options in the IDE that allow you to generate object files and headers:
+In Delphi, this looks like it could be some work, but it isn’t. Newer versions of Delphi have project options in the IDE that allow you to generate object files and headers:
 
-Project menu ? Options ? Delphi Compiler ? Output â€“ C/C++ ? C/C++ output file generation
+Project menu ? Options ? Delphi Compiler ? Output – C/C++ ? C/C++ output file generation
 
 The last item is a combobox that allows you to create a number of output files to be consumed by C and/or C++. Just choose an option that includes headers.
 

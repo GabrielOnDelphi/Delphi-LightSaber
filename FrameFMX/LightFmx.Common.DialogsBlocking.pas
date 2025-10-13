@@ -1,4 +1,4 @@
-﻿unit LightFmx.Common.DialogsBlocking;
+unit LightFmx.Common.DialogsBlocking;
 {=============================================================================================================
    www.GabrielMoraru.com
    2025.04

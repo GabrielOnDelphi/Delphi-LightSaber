@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Visual.LstEditor;
+UNIT LightVcl.Visual.LstEditor;
 
 interface
 uses

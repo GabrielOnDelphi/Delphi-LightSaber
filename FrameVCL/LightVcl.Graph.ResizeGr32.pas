@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Graph.ResizeGr32;
+UNIT LightVcl.Graph.ResizeGr32;
 
 {=============================================================================================================
    Gabriel Moraru

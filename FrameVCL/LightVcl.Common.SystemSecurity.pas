@@ -1,4 +1,4 @@
-﻿UNIT LightVcl.Common.SystemSecurity;
+UNIT LightVcl.Common.SystemSecurity;
 
 {=============================================================================================================
    2025.05
