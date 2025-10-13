@@ -1,4 +1,4 @@
-﻿unit LightCore.TextFile;
+unit LightCore.TextFile;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -179,7 +179,7 @@ end;
 
   If it cannot detect the correct encoding automatically, we can force it to what we want by setting the second paramater.
       Example: System.SysUtils.TEncoding.UTF8
-      However this is buggy! It will raise an exception if the file is ANSI but it contains high characters such as ½ (#189)
+      However this is buggy! It will raise an exception if the file is ANSI but it contains high characters such as � (#189)
       See: https://stackoverflow.com/questions/35708827/what-could-cause-no-mapping-for-the-unicode-character-exists-in-the-target-mult }
 function StringFromFile(CONST FileName: string; Enc: TEncoding= NIL): String;
 begin
