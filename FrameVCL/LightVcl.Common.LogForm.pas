@@ -1,4 +1,4 @@
-UNIT LightVCL.LogForm;
+UNIT LightVcl.Common.LogForm;
 
 {=============================================================================================================
    2024.05
@@ -72,12 +72,12 @@ begin
   Log:= TLogViewer.Create(Self);
   Log.Parent:= Container;
   Log.Align:= alClient;
+  Log.PopupMenu:= PopupMenu;
 
   LogFilter:= TLogVerbFilter.Create(Self);
   LogFilter.Parent:= pnlBottom;
   LogFilter.Align:= alRight;
   LogFilter.Log:= Log;
-  LogFilter.PopupMenu:= PopupMenu;
 
   LoadSettings;
   chkLogOnError.Checked:= AppData.RamLog.ShowOnError;

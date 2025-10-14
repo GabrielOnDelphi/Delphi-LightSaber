@@ -79,8 +79,9 @@ contains
   LightVcl.Common.WinVersion in 'LightVcl.Common.WinVersion.pas',
   LightVcl.Common.WinVersionApi in 'LightVcl.Common.WinVersionApi.pas',
   LightVcl.Common.WMIResolution in 'LightVcl.Common.WMIResolution.pas',
-  LightVcl.LogForm in 'LightVcl.LogForm.pas',
+  LightVcl.Common.LogForm in 'LightVcl.Common.LogForm.pas',
   LightVcl.Common.Registry in 'LightVcl.Common.Registry.pas';
 
 end.
+
 

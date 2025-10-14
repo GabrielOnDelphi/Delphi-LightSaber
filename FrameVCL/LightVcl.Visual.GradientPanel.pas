@@ -44,10 +44,8 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
-USES LightVcl.Graph.FX.Gradient;
-
-
-
+USES
+  LightVcl.Graph.FX.Gradient;
 
 
 

@@ -17,8 +17,9 @@ UNIT LightVcl.Common.VclUtils;
 INTERFACE
 { $I Frameworks.inc}
 USES
-   Winapi.Windows, System.TypInfo, System.Classes, System.SysUtils,
-   Vcl.StdCtrls, Vcl.Menus, Vcl.ActnList, Vcl.ComCtrls, Vcl.Controls, Vcl.Forms;
+   Winapi.Windows,  Winapi.Messages,
+   System.TypInfo, System.Classes, System.SysUtils,
+   Vcl.StdCtrls, Vcl.Menus, Vcl.ActnList, Vcl.ComCtrls, Vcl.Controls, Vcl.Forms, Vcl.Imaging.PngImage, Vcl.GraphUtil, Vcl.Graphics;
 
 
 TYPE
@@ -72,6 +73,14 @@ TYPE
 
 
 {=============================================================================================================
+   CAPTURE CONTROL
+=============================================================================================================}
+ function  CopyControl2Bitmap (Control: TWinControl): TBitmap;    { Copy the image of a VCL control (tbutton, tmemo, tcalendar) to a bitmap }
+ function  CopyControl2Png    (Control: TWinControl): TPngImage;
+ procedure CopyParentImage    (Control: TControl; Dest: TCanvas);
+
+
+{=============================================================================================================
    DESIGN TIME DEBUGGING
 =============================================================================================================}
  function ShowComponentState (Component: TComponent): string;
@@ -85,7 +94,7 @@ TYPE
 
 IMPLEMENTATION
 USES
-   LightVcl.Common.Dialogs;
+   LightVcl.Common.Dialogs; // LightVcl.Graph.Bitmap;
 
 
 
@@ -157,6 +166,124 @@ begin
 end;
 
 
+
+
+
+
+
+
+{--------------------------------------------------------------------------------------------------
+   VCL
+--------------------------------------------------------------------------------------------------}
+
+{ Copy the image of a VCL control (tbutton, tmemo, tcalendar) to a bitmap }
+function CopyControl2Bitmap(Control: TWinControl): TBitmap;    { This will create a BMP object. Don't forget to free it! }
+VAR DC: HDC;
+begin
+ if NOT Assigned(Control)
+ then RAISE exception.Create('Cannot copy control image. Control is NIL!');
+
+ Result:= TBitmap.Create;
+ TRY
+   Result.SetSize(Control.Width, Control.Height);
+ EXCEPT
+   FreeAndNil(Result); { Free result ONLY in case of error }
+   RAISE;
+ END;
+
+ DC := GetWindowDC(Control.Handle);
+ TRY
+   Control.PaintTo(Result.Canvas, 0, 0);
+ FINALLY
+   ReleaseDC(Control.Handle, DC);
+ END;
+end;
+
+
+
+function CopyControl2Png(Control: TWinControl): TPngImage;
+VAR BMP: TBitmap;
+begin
+ BMP:= CopyControl2Bitmap(Control);
+ TRY
+  Result:= TPngImage.Create;
+  Result.Assign(BMP);
+ FINALLY
+  FreeAndNil(BMP);
+ END;
+end;
+
+
+
+{ This procedure is copied from RxLibrary VCLUtils.
+  It copies the background image of a control's parent, including any overlapping sibling graphic controls, onto a destination canvas—useful for rendering transparent or custom-painted controls in Delphi. }
+TYPE
+     TParentControl = class(TWinControl);
+
+procedure CopyParentImage(Control: TControl; Dest: TCanvas);
+var
+  I, Count, X, Y, SaveIndex: Integer;
+  DC: HDC;
+  R, SelfR, CtlR: TRect;
+begin
+  if (Control = nil) OR (Control.Parent = nil)
+  then Exit;
+
+  Count := Control.Parent.ControlCount;
+  DC    := Dest.Handle;
+  with Control.Parent
+   DO ControlState := ControlState + [csPaintCopy];
+
+  TRY
+    with Control do
+     begin
+      SelfR := Bounds(Left, Top, Width, Height);
+      X := -Left; Y := -Top;
+     end;
+
+    { Copy parent control image }
+    SaveIndex := SaveDC(DC);
+    TRY
+      SetViewportOrgEx(DC, X, Y, nil);
+      IntersectClipRect(DC, 0, 0, Control.Parent.ClientWidth, Control.Parent.ClientHeight);
+      with TParentControl(Control.Parent) DO
+       begin
+        Perform(WM_ERASEBKGND, wParam(DC), 0);         { see: http://stackoverflow.com/questions/4072974/range-check-error-while-painting-the-canvas }
+        PaintWindow(DC);
+       end;
+    FINALLY
+      RestoreDC(DC, SaveIndex);
+    END;
+
+    { Copy images of graphic controls }
+    for I := 0 to Count - 1 do begin
+      if Control.Parent.Controls[I] = Control then Break
+      else if (Control.Parent.Controls[I] <> nil) and
+        (Control.Parent.Controls[I] is TGraphicControl) then
+      begin
+        with TGraphicControl(Control.Parent.Controls[I]) do begin
+          CtlR := Bounds(Left, Top, Width, Height);
+          if Bool(IntersectRect(R, SelfR, CtlR)) and Visible then
+          begin
+            ControlState := ControlState + [csPaintCopy];
+            SaveIndex := SaveDC(DC);
+            try
+              SetViewportOrgEx(DC, Left + X, Top + Y, nil);
+              IntersectClipRect(DC, 0, 0, Width, Height);
+              Perform(WM_PAINT, wParam(DC), 0);                            { see: http://stackoverflow.com/questions/4072974/range-check-error-while-painting-the-canvas }
+            finally
+              RestoreDC(DC, SaveIndex);
+              ControlState := ControlState - [csPaintCopy];
+            end;
+          end;
+        end;
+      end;
+    end;
+  FINALLY
+    with Control.Parent DO
+     ControlState := ControlState - [csPaintCopy];
+  end;
+end;
 
 
 

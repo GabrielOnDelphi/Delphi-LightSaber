@@ -221,7 +221,7 @@ end;
 { Where we store the News file locally }
 function UpdaterFileLocation: string;
 begin
- Result:= AppData.AppDataFolder+ 'Online_v2.News';
+ Result:= AppData.AppDataFolder+ 'Online_v3.News';
 end;
 
 
@@ -253,7 +253,7 @@ begin
      then FConnectError(Self, 'Cannot load new record from disk!');
 
      if ShowConnectFail
-     then MesajAsync('The updater file seems to be invalid!'); // This message also appears if the online does not exist and the server returns a 404 page
+     then AppData.LogError('The updater file seems to be invalid!'); // This message also appears if the online does not exist and the server returns a 404 page
 
      EXIT;
     end;

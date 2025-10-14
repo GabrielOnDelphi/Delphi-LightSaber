@@ -1,4 +1,4 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <Base>True</Base>
         <AppType>Package</AppType>
@@ -124,7 +124,7 @@
         <DCCReference Include="LightVcl.Common.WinVersion.pas"/>
         <DCCReference Include="LightVcl.Common.WinVersionApi.pas"/>
         <DCCReference Include="LightVcl.Common.WMIResolution.pas"/>
-        <DCCReference Include="LightVcl.LogForm.pas">
+        <DCCReference Include="LightVcl.Common.LogForm.pas">
             <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="LightVcl.Common.Registry.pas"/>

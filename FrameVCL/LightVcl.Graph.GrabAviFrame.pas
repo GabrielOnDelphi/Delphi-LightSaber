@@ -1,54 +1,44 @@
-UNIT LightVcl.Graph.AviFrame;
+UNIT LightVcl.Graph.GrabAviFrame;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2023.08.05
-   www.GabrielMoraru.com
-   See Copyright file
---------------------------------------------------------------------------------------------------------------
    Obtains a frame from the middle of a video file.
-   Requires the FFVCL 3rd party library.
-
-   As decoder it uses FFVCL
-        www.delphiffmpeg.com  ($199)
-        Support@DelphiFFmpeg.com
-        c:\Myprojects\Projects GRAPH-Video\lib-FFVCL\2020\FFVCL_Trial\
    Replaces the old cFrameServerVFW
+--------------------------------------------------------------------------------------------------------------
 
-   Advantage:
-      Real-time, onthe fly video decoding.
-      No video frames must be written to disk first.
-      Fast
-   Disadvantage:
-      The library (DLLs) is 46MB!
+   FFVCL
+     Requires the FFVCL 3rd party library, as decoder.
 
-   Documentation:
-      http://www.delphiffmpeg.com/interface-ffplayer.html
-      in c:\Users\trei\Documents\FFVCL_Demos\Player\PlayerFrm.pas
-      see:
-         SpeedChange
-         cboAspectRatioChange
-         FFPlayer.mute
-         FFPlayer.Seek
-         if FFPlayer.CurrentFrame(BMP, PTS)
-         FFPlayer.TryOpen(URL, LScreenHandle, chkOpenPaused.Checked);
-         change brightness range (-10 - 10) FBrightness := trbBrightness.Position / 10; FFPlayer.SendVideoFilterCommand('hue', 'b', FloatToStr(FBrightness), 0);
+     Advantage:
+        Real-time, onthe fly video decoding.
+        No video frames must be written to disk first.
+        Fast
+     Disadvantage:
+        The library (DLLs) is 46MB!
+        Difficult to install
 
-         if FFPlayer.Paused then FFPlayer.Resume else FFPlayer.Pause;
-         FFPlayer.OnOpenFailed := FFPlayerOpenFailed;
-         FFPlayer.OnPosition   := FFPlayerPosition;
+     Documentation:
+        delphiffmpeg.com/interface-ffplayer.html
+        in FFVCL_Demos\Player\PlayerFrm.pas
+        see:
+           SpeedChange
+           cboAspectRatioChange
+           FFPlayer.mute
+           FFPlayer.Seek
+           if FFPlayer.CurrentFrame(BMP, PTS)
+           FFPlayer.TryOpen(URL, LScreenHandle, chkOpenPaused.Checked);
+           change brightness range (-10 - 10) FBrightness := trbBrightness.Position / 10; FFPlayer.SendVideoFilterCommand('hue', 'b', FloatToStr(FBrightness), 0);
 
-     See:
-        LightCore.IO.IsVideo() and LightCore.IO.IsVideoGeneric()
+           if FFPlayer.Paused then FFPlayer.Resume else FFPlayer.Pause;
+           FFPlayer.OnOpenFailed := FFPlayerOpenFailed;
+           FFPlayer.OnPosition   := FFPlayerPosition;
+
+       See:
+          LightCore.IO.IsVideo() and LightCore.IO.IsVideoGeneric()
 
    Tester:
       See cVideoAnimator.pas
-
-  FFVCL Installation:
-    The FFMpeg package needs to be installed: c:\Users\Public\Documents\Embarcadero\Studio\22.0\Bpl\FFmpeg_DXT4.bpl
-    Seach path must include: c:\Myprojects\Packages\FFVCL\FFVCL Lite\DCU_DXT4\Win32\
-
 -------------------------------------------------------------------------------------------------------------}
+
 INTERFACE
 
 USES
@@ -64,8 +54,7 @@ function GetVideoPlayerLogo: TBitmap;
 
 IMPLEMENTATION
 USES
-   LightVcl.Graph.Bitmap, LightVcl.Graph.Loader, LightCore.AppData, LightVcl.Common.AppData
-;
+   LightVcl.Graph.Bitmap, LightVcl.Graph.Loader, LightCore.AppData, LightVcl.Common.AppData;
 
 
 

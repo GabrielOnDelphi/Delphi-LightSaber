@@ -76,7 +76,7 @@
         <DCCReference Include="GR32_R.dcp"/>
         <DCCReference Include="ThirdPartyLibs.dcp"/>
         <DCCReference Include="LightVcl.Graph.Alpha.pas"/>
-        <DCCReference Include="LightVcl.Graph.AviFrame.pas"/>
+        <DCCReference Include="LightVcl.Graph.GrabAviFrame.pas"/>
         <DCCReference Include="LightVcl.Graph.Bitmap.pas"/>
         <DCCReference Include="LightVcl.Graph.BkgColor.pas"/>
         <DCCReference Include="LightVcl.Graph.BkgColorEditor.pas"/>

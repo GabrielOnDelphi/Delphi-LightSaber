@@ -105,7 +105,7 @@ USES
    {$IFDEF FastJpg}FastJpegDecHelper,{$ENDIF}
    LightVcl.Graph.Resize, LightVcl.Graph.ResizeVCL, LightVcl.Graph.Loader.Resolution, LightVcl.Graph.UtilGray,
    LightVcl.Graph.Loader.WB1, LightVcl.Graph.Loader.RainDrop, LightCore.IO, LightVcl.Common.IO, LightVcl.Graph.FX.Rotate,
-   LightCore.AppData, LightVcl.Common.AppData, LightCore, LightCore.Time, LightCore.Types, LightVcl.Graph.AviFrame, LightVcl.Graph.Gif;
+   LightCore.AppData, LightVcl.Common.AppData, LightCore, LightCore.Time, LightCore.Types, LightVcl.Graph.GrabAviFrame, LightVcl.Graph.Gif;
 
 
 
@@ -556,8 +556,8 @@ begin
  then
    begin
     if IsGIF(FileName)
-    then Result:= LightVcl.Graph.AviFrame.GetVideoPlayerLogo
-    else Result:= LightVcl.Graph.AviFrame.GetVideoPlayerLogo;
+    then Result:= LightVcl.Graph.GrabAviFrame.GetVideoPlayerLogo
+    else Result:= LightVcl.Graph.GrabAviFrame.GetVideoPlayerLogo;
     FrameCount:= 2;   // 2 for avi/gif
    end
  else

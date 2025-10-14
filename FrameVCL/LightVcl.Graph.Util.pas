@@ -129,13 +129,6 @@ TYPE
  //procedure DrawChevron(Canvas: TCanvas; Direction: TScrollDirection; Location: TPoint; Size: Integer); deprecated 'Call directly VCLGhraphUtil instead.' { Draws arrows that look like ">" which can point in any TScrollDirection }
  //procedure DrawArrow  (Canvas: TCanvas; Direction: TScrollDirection; Location: TPoint; Size: Integer); deprecated 'Call directly VCLGhraphUtil instead.' { Draws a solid triangular arrow that can point in any TScrollDirection }
 
-
-{-------------------------------------------------------------------------------------------------------------
-   Graph controls
--------------------------------------------------------------------------------------------------------------}
- function  Control2Bitmap      (Control: TWinControl): TBitmap;                                  { Copy the image of a VCL control (tbutton, tmemo, tcalendar) to a bitmap }
- function  Control2Png         (Control: TWinControl): TPngImage;
-
 {-------------------------------------------------------------------------------------------------------------
    Themes
 -------------------------------------------------------------------------------------------------------------}
@@ -827,7 +820,8 @@ end;
 
 
 {$IF Defined(CPUX86)}
-function CombinePixels(Pixels: PByte; Weights: PInteger; Size: Cardinal): Integer;           { http://stackoverflow.com/questions/10126198/how-to-optimize-this-delphi-function-with-sse2 }
+{ http://stackoverflow.com/questions/10126198/how-to-optimize-this-delphi-function-with-sse2 }
+function CombinePixels(Pixels: PByte; Weights: PInteger; Size: Cardinal): Integer;
 //x86, register calling convention - three parameters in EAX, EDX, ECX
 const
   Precision: Single = 1.0;
@@ -866,55 +860,6 @@ end;
 {$ENDIF}
 
 
-
- 
-
-
-
-{--------------------------------------------------------------------------------------------------
-   VCL
---------------------------------------------------------------------------------------------------}
-
-function Control2Bitmap(Control: TWinControl): TBitmap;                                           { This will create a BMP object. Don't forget to free it! } { Copy the image of a VCL control (tbutton, tmemo, tcalendar) to a bitmap }
-VAR DC: HDC;
-begin
- if NOT Assigned(Control)
- then RAISE exception.Create('Cannot copy control image. Control is NIL!');
-
- Result:= LightVcl.Graph.Bitmap.CreateBitmap(Control.Width, Control.Height);
-
- DC := GetWindowDC(Control.Handle);
- TRY
-   Control.PaintTo(Result.Canvas, 0, 0);
- FINALLY
-   ReleaseDC(Control.Handle, DC);
- END;
-end;
-
-
-
-function Control2Png(Control: TWinControl): TPngImage;
-VAR BMP: TBitmap;
-begin
- BMP:= Control2Bitmap(Control);
- TRY
-  Result:= TPngImage.Create;
-  Result.Assign(BMP);
- FINALLY
-  FreeAndNil(BMP);
- END;
-end;
-
-
-
-
-
-
-
-
-
-
- 
 
 
 

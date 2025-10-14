@@ -5,14 +5,16 @@ UNIT LightVcl.Visual.MsgDispatcher;
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
-  See: What's the difference between CreateWnd and CreateWindowHandle? https://stackoverflow.com/questions/582903/whats-the-difference-between-createwnd-and-createwindowhandle
+  See: What's the difference between CreateWnd and CreateWindowHandle?
+  https://stackoverflow.com/questions/582903/whats-the-difference-between-createwnd-and-createwindowhandle
 =============================================================================================================}
 
 INTERFACE
 
 USES
    System.SysUtils, System.Classes, Vcl.Controls, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Graphics,
-   LightVcl.Visual.GradientPanel, AniImg;
+   LightVcl.Visual.GradientPanel,
+   AniImg;
 
 TYPE
  TOnClose = procedure(Sender: TObject) of object;

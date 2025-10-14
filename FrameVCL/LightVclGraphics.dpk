@@ -41,14 +41,13 @@ requires
   vclwinx,
   LightCore,
   LightVclCommon,
-
   CCRExif,
   GR32_R,
   ThirdPartyLibs;
 
 contains
   LightVcl.Graph.Alpha in 'LightVcl.Graph.Alpha.pas',
-  LightVcl.Graph.AviFrame in 'LightVcl.Graph.AviFrame.pas',
+  LightVcl.Graph.GrabAviFrame in 'LightVcl.Graph.GrabAviFrame.pas',
   LightVcl.Graph.Bitmap in 'LightVcl.Graph.Bitmap.pas',
   LightVcl.Graph.BkgColor in 'LightVcl.Graph.BkgColor.pas',
   LightVcl.Graph.BkgColorEditor in 'LightVcl.Graph.BkgColorEditor.pas',
@@ -79,7 +78,6 @@ contains
   LightVcl.Graph.Text in 'LightVcl.Graph.Text.pas',
   LightVcl.Graph.Util in 'LightVcl.Graph.Util.pas',
   LightVcl.Graph.UtilGray in 'LightVcl.Graph.UtilGray.pas',
-
   janFxStretch in '..\External\janFxStretch.pas',
   janFX in '..\External\janFX.pas',
   GifProperties in '..\External\GifProperties.pas';

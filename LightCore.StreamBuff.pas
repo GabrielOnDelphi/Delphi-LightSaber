@@ -181,7 +181,7 @@ TYPE
 
 IMPLEMENTATION
 USES
-   LightCore.Binary;
+   LightCore.Binary, LightCore.AppData;
 
 
 
@@ -291,23 +291,23 @@ end;
 procedure TCubicBuffStream.WritePadding(CONST Bytes: Integer);
 VAR b: TBytes;
 begin
- if Bytes> 0 then
-  begin
-   SetLength(b, Bytes);
-   FillChar (b[0], Bytes, #0);
-   WriteBuffer(b[0], Bytes);
-  end;
+  if Bytes> 0 then
+    begin
+     SetLength(b, Bytes);
+     FillChar (b[0], Bytes, #0);
+     WriteBuffer(b[0], Bytes);
+    end;
 end;
 
 // Reads the padding bytes back and does not check them for validity
 procedure TCubicBuffStream.ReadPadding(CONST Bytes: Integer);
 VAR b: TBytes;
 begin
- if Bytes> 0 then
-  begin
-   SetLength(b, Bytes);
-   ReadBuffer(b[0], Bytes);
-  end;
+  if Bytes> 0 then
+    begin
+     SetLength(b, Bytes);
+     ReadBuffer(b[0], Bytes);
+    end;
 end;
 
 
@@ -320,16 +320,27 @@ end;
    HEADER
 --------------------------------------------------------------------------------------------------}
 
-{ Reads file signature and version number. Returns True if found correct data. }
+{ Reads file signature and version number. Returns True if found correct data.
+  It doesn't throw exceptions. }
 function TCubicBuffStream.ReadHeaderTry(CONST Signature: AnsiString; Version: Word): Boolean; // old name: ReadHeaderB
+VAR s: AnsiString;
 begin
- Assert(Signature > '', 'Signature is empty!');
- Assert(Version   > 0 , 'Version must be > 0');
+  Assert(Signature > '', 'Signature is empty!');
+  Assert(Version   > 0 , 'Version must be > 0');
 
- VAR s:= ReadStringA;
- Result:= s = Signature;
- if Result
- then Result:= ReadWord = Version;
+  TRY
+    s:= ReadStringA;
+  EXCEPT
+    on E: Exception DO
+      begin
+        AppDataCore.LogError('Signature: '+ AnsiString(Signature) + ' - '+ E.Message);
+        EXIT(FALSE);
+      end;
+  END;
+
+  Result:= s = Signature;
+  if Result
+  then Result:= ReadWord = Version;
 end;
 
 
@@ -337,12 +348,12 @@ end;
   This is useful when we want to read multiple versions from disk. }
 function TCubicBuffStream.ReadHeaderVersion(CONST Signature: AnsiString): Word;
 begin
- Assert(Signature > '', 'Signature is empty!');
+  Assert(Signature > '', 'Signature is empty!');
 
- VAR s:= ReadStringA;
- if s <> Signature
- then RAISE Exception.Create('The file signature does not match!'+ CRLF+ string(s)+ '/'+ string(Signature));
- Result:= ReadWord;
+  VAR s:= ReadStringA;
+  if s <> Signature
+  then RAISE Exception.Create('The file signature does not match!'+ CRLF+ string(s)+ '/'+ string(Signature));
+  Result:= ReadWord;
 end;
 
 
@@ -351,12 +362,12 @@ end;
   Useful when we have multiple file versions }
 function TCubicBuffStream.ReadHeader(CONST Signature: AnsiString): Word;
 begin
- Assert(Signature > '', 'Signature is empty!');
+  Assert(Signature > '', 'Signature is empty!');
 
- VAR s:= ReadStringA;
- if s = Signature
- then Result:= ReadWord
- else Result:= 0;
+  VAR s:= ReadStringA;
+  if s = Signature
+  then Result:= ReadWord
+  else Result:= 0;
 end;
 
 
@@ -946,7 +957,7 @@ end;
 function TCubicBuffStream.ReadStringA: AnsiString;
 VAR Len: Cardinal;
 begin
- ReadBuffer(Len, SizeOf(Len));                                                                         { First, find out how many characters to read }
+ ReadBuffer(Len, SizeOf(Len));                                          { First, find out how many characters to read }
  Assert(Len<= Size- Position, 'TReadCachedStream: String lenght > file size!');
  Result:= ReadStringA(Len);        { Do the actual strign reading }
 end;

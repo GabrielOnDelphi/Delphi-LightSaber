@@ -104,7 +104,7 @@ USES
   Winapi.Windows, Winapi.Messages, Winapi.ShellAPI,
   System.Win.Registry, System.SysUtils, System.Classes, System.IOUtils, System.UITypes, System.Types,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Consts,
-  LightCore.AppData, LightVCL.LogForm;
+  LightCore.AppData, LightVcl.Common.LogForm;
 
 
 TYPE
