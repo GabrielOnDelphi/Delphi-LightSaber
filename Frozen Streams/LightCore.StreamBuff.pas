@@ -1,9 +1,8 @@
 UNIT LightCore.StreamBuff;
 
 {=============================================================================================================
-   2025.09
+   2025.02
    www.GabrielMoraru.com
-   Article:    https://gabrielmoraru.com/saving-an-object-to-disk-file/
 --------------------------------------------------------------------------------------------------------------
    Description
       Extends TBufferedFileStream.
@@ -53,46 +52,34 @@ UNIT LightCore.StreamBuff;
 
 INTERFACE
 
+{ $I Frameworks.inc}
+
 USES
-   System.SysUtils, System.Classes, System.Types, System.Math, LightCore, LightCore.Time, LightCore.Types;
+   System.SysUtils, System.Classes, System.Types, LightCore, LightCore.Time, LightCore.Types;
 
 TYPE
   TLightStream= class(System.Classes.TBufferedFileStream)
    private
-     CONST LisaMagicNumber: Cardinal= $6153694C; // The LiSa string for "Light Saber'.  // Old number: $4C695361
-     CONST FrozenPaddingSize = 64;  // NEVER-EVER MODIFY THIS CONSTANT! All files saved with this constant will not work anymore. Enough for 16 Integer variables.
    public
-     StringSafetyLimit: Cardinal;   // If we try to read a string larger than this size then we are probably doing something wrong. Set it to zero to disable it.
-
-     constructor CreateRead (CONST FileName: string);
-     constructor CreateWrite(CONST FileName: string);
-
-     { Header }
-     procedure WriteHeader    (CONST Signature: AnsiString; Version: Word);
-     procedure ReadHeader     (CONST Signature: AnsiString; Version: Word);
-     function  TryReadHeader  (CONST Signature: AnsiString; Version: Word): Boolean;  overload;
-     function  TryReadHeader  (CONST Signature: AnsiString): Word;                    overload;
+     MagicNo: AnsiString; // Legacy!
 
      { Check point }
-     procedure WriteCheckPoint(CONST s: AnsiString= '');
      procedure ReadCheckPointE(CONST s: AnsiString= '');     // Raises an exception
      function  ReadCheckPoint (CONST s: AnsiString= ''): Boolean;
-
-     function  ReadEnter: Boolean;
+     procedure WriteCheckPoint(CONST s: AnsiString= '');
+	 	 
+     function  ReadEnter   : Boolean;
      procedure WriteEnter;
 
      { Padding }
-     procedure WritePadding0(Bytes: Integer= FrozenPaddingSize);
-     procedure ReadPadding0 (Bytes: Integer= FrozenPaddingSize);
-
-     procedure WritePadding (Bytes: Integer= FrozenPaddingSize);
-     procedure ReadPadding  (Bytes: Integer= FrozenPaddingSize);          // Raises an exception if the buffer does not contain the signature
+     procedure ReadPadding (const Bytes: Integer= 1024);
+     procedure WritePadding(const Bytes: Integer= 1024);
 
      { Numeric }
      function  ReadBoolean : Boolean;
      function  ReadByte    : Byte;
      function  ReadCardinal: Cardinal;
-     function  ReadDate    : TDateTime;                      // This is a DOUBLE
+     function  ReadDate    : TDateTime;      { This is a DOUBLE }
      function  ReadDouble  : Double;
      function  ReadInteger : Integer;
      function  ReadInt64   : Int64;
@@ -122,52 +109,73 @@ TYPE
      function  ReadRectF: TRectF;
      procedure WriteRectF(Rect: TRectF);
 
-     procedure ReadIntegers (out List: TIntegerArray);
-     procedure WriteIntegers(const List: TIntegerArray);
+     procedure ReadIntegers (List: TIntegerArray); overload;
+     procedure WriteIntegers(List: TIntegerArray); overload;
 
-     procedure ReadDoubles (out List: TDoubleArray);
-     procedure WriteDoubles(const List: TDoubleArray);
+     procedure ReadDoubles (List: TDoubleArray);  overload;
+     procedure WriteDoubles(List: TDoubleArray);  overload;
 
      { Reverse read }
-     function  RevReadCardinal: Cardinal;                                   { REVERSE READ - read 4 bytes and swap their position. For Motorola format. }
+     function  RevReadCardinal: Cardinal;                                  { REVERSE READ - read 4 bytes and swap their position. For Motorola format. }
      function  RevReadInteger : Integer;
-     function  RevReadWord    : Word;                                       { REVERSE READ - read 2 bytes and swap their position. For Motorola format. }
+     function  RevReadWord    : Word;                                      { REVERSE READ - read 2 bytes and swap their position. For Motorola format. }
 
      { Unicode }
-     procedure WriteString  (CONST s: string);
+     procedure WriteString   (CONST s: string);
      function  ReadString: string;  overload;
 
-     { ANSI }
+	 { ANSI }
+     function  ReadStringAR (CONST Len: integer): AnsiString;               { This is the relaxed version. It won't raise an error if there is not enough data (Len) to read }
      procedure WriteStringA (CONST s: AnsiString);
-     function  TryReadStringA (Count: Cardinal): AnsiString;                  { This is the relaxed version. It won't raise an error if there is not enough data (Len) to read }
-     function  ReadStringA  (Count: Cardinal): AnsiString;     overload;    { It will raise an error if there is not enough data (Len) to read }
+     function  ReadStringA  (CONST Len: integer): AnsiString;  overload;    { It will raise an error if there is not enough data (Len) to read }
      function  ReadStringA: AnsiString;                        overload;    { It automatically detects the length of the string }
 
-    { TSL }
+	 { TSL }
      function  ReadStrings: TStringList;                       overload;
      procedure ReadStrings  (TSL: TStrings);                   overload;
      procedure WriteStrings (TSL: TStrings);
 
-    { Chars }
+	 { Chars }
      procedure WriteChars   (CONST s: AnsiString);             overload;
      procedure WriteChars   (CONST s: string);                 overload;
-     function  ReadCharsA   (Count: Cardinal): AnsiString;
-     function  ReadChars    (Count: Cardinal): string;
+     function  ReadCharsA   (Count: Integer): AnsiString;
+     function  ReadChars    (Count: integer): string;
 
      { Strings without length }
-     procedure PushString   (CONST s: string);
-     function  ReadString   (CONST Len: Cardinal): string;     overload;     { Read 'Len' characters }
+     procedure WriteStringANoLen(CONST s: AnsiString);                   deprecated;    { Write the string but don't write its length }
+     procedure WriteStringNoLen (CONST s: string);                       deprecated;
+     function  ReadString       (CONST Len: Integer): string;  overload; deprecated;    { Read 'Len' characters }
+
+     { Old Header. Legacy! }
+     function  ReadMagicVer: Word;                                       deprecated;
+     function  ReadMagicNo  (const MagicNo: AnsiString): Boolean;        deprecated;
+     procedure WriteMagicNo (const MagicNo: AnsiString);                 deprecated;
+     procedure WriteMagicVer(const MVersion: Word);                      deprecated;
+
+     { Header NEW }
+     function  ReadHeader   (CONST Signature: AnsiString): Word;         overload;
+     procedure ReadHeader   (CONST Signature: AnsiString; Version: Word);overload;
+     function  ReadHeaderTry(CONST Signature: AnsiString; Version: Word): Boolean;
+     function  ReadHeaderVersion(const Signature: AnsiString): Word;
+     procedure WriteHeader  (CONST Signature: AnsiString; Version: Word);
 
      { Raw }
      function  AsBytes: TBytes;
+     function  AsStringU: String;                                          { Returns the content of the stream as a string }
      function  AsString: AnsiString;
 
-     procedure PushBytesCnt (CONST Buffer: TBytes);
+     procedure WriteByteChunk   (CONST Buffer: TBytes);
      function  ReadByteChunk: TBytes;
 
-     procedure PushAnsi (CONST s: AnsiString);
-     procedure PushBytes(CONST Bytes: TBytes);
+     procedure PushData(CONST s: AnsiString);     overload;
+     procedure PushData(CONST Bytes: TBytes);     overload;
+
+     {}
+     constructor CreateRead (CONST FileName: string);
+     constructor CreateWrite(CONST FileName: string);
   end;
+
+
 
 
 
@@ -176,142 +184,81 @@ USES
    LightCore.Binary, LightCore.AppData;
 
 
+
 {--------------------------------------------------------------------------------------------------
    CTOR
 --------------------------------------------------------------------------------------------------}
 constructor TLightStream.CreateRead(CONST FileName: string);
 begin
-  StringSafetyLimit:= 50 * MB; // If we try to read a string larger than this size then we are probably doing something wrong.
-  inherited Create(FileName, fmOpenRead, 1*MB);
+ inherited Create(FileName, fmOpenRead, 1*MB);
 end;
 
 
 constructor TLightStream.CreateWrite(CONST FileName: string);
 begin
-  inherited Create(FileName, fmOpenWrite OR fmCreate);
+ inherited Create(FileName, fmOpenWrite OR fmCreate);
 end;
 
 
+{--------------------------------------------------------------------------------------------------
+   MAGIC NO
+   Obsolete. Still used in Bionix. 
+   Use ReadMagicVer instead.
+--------------------------------------------------------------------------------------------------}
 
-{-------------------------------------------------------------------------------------------------------------
-   HEADER FORMAT:
-
-     4 bytes (Card): LiSa (always the same)
-     4 bytes (Card): Length of the magic signature
-       bytes (Ansi): Magic signature
-     2 bytes (Word): File version number.
-
-     This new file header is more reliable because we check
-       the magic number  - this is fixed for all TLightStream files
-       the signature
-       the file version
-
---------------------------------------------------------------------------------------------------------------
-     'L' = 0x4C
-     'i' = 0x69
-     'S' = 0x53
-     'a' = 0x61
--------------------------------------------------------------------------------------------------------------}
-
-procedure TLightStream.WriteHeader(CONST Signature: AnsiString; Version: Word);
+{ Read a string from file and compare it with MagicNo.
+  Return TRUE if it matches (it means we read the correct file format). }
+function TLightStream.ReadMagicNo(CONST MagicNo: AnsiString): Boolean;
+VAR s: AnsiString;
 begin
-  WriteCardinal(LisaMagicNumber);    // Write fixed magic no  "LiSa"
-  WriteStringA(Signature);           // Write signature
-  WriteWord(Version);                // Write the file version number
+ s:= ReadStringA(Length(MagicNo));
+ Result:= MagicNo = s;
 end;
 
 
-{ Returns the version or 0 in case of errors. }
-function TLightStream.TryReadHeader(CONST Signature: AnsiString): Word;
-VAR
-  MagicNo: Cardinal;
-  sStreamSignature: AnsiString;
+procedure TLightStream.WriteMagicNo(CONST MagicNo: AnsiString);
 begin
-  Assert(Signature > '', 'No signature!');
-  sStreamSignature:= '';
-
-  // Read LiSa magic no
-  TRY
-    MagicNo := ReadCardinal;
-  EXCEPT
-    on E: Exception DO
-      begin
-        AppDataCore.LogError('Cannot read magic number for: '+ String(Signature) + ' - '+ E.Message);
-        EXIT(0);
-      end;
-  END;
-  if MagicNo <> LisaMagicNumber then EXIT(0);
-
-  // Read signature
-  TRY
-    sStreamSignature:= ReadStringA;
-  EXCEPT
-    on E: Exception DO
-    begin
-      AppDataCore.LogError('Cannot read stream signature for: '+ String(Signature) + ' - '+ E.Message);
-      EXIT(0);
-    end;
-  END;
-  if sStreamSignature <> Signature then EXIT(0);
-
-  // Read the version number
-  TRY
-    Result:= ReadWord;
-  EXCEPT
-    on E: Exception DO
-    begin
-      AppDataCore.LogError('Cannot read stream version for: '+ String(Signature) + ' - '+ E.Message);
-      EXIT(0);
-    end;
-  END;
+ Assert(MagicNo > '', 'Magic number is empty!');
+ Write(MagicNo[1], Length(MagicNo));
 end;
 
 
-{ Returns True if signature & version number matches.
-  No exception will be raised unless if the file smaller than what we want to read. }
-function TLightStream.TryReadHeader(CONST Signature: AnsiString; Version: Word): Boolean;
-VAR lVersion: Word;
+
+{ Read the first x chars in a file and compares it with MagicNo.
+  If matches then reads another reads the FileVersion word.
+  Returns the FileVersion. If magicno fails, it returns zero }
+function TLightStream.ReadMagicVer: Word;
+VAR s: AnsiString;
 begin
- Assert(Signature > '', 'Signature is empty!');
- Assert(Version   > 0 , 'Version must be > 0');
+ Assert(MagicNo > '', 'MagicNo is empty!');
 
- lVersion:= TryReadHeader(Signature);
- Result:= (lVersion > 0) AND (Version = lVersion);
+ s:= ReadStringA(Length(MagicNo));
+ if s = MagicNo
+ then Result:= ReadWord
+ else Result:= 0;
 end;
 
 
-// This will raise an exception if anything goes wrong
-procedure TLightStream.ReadHeader(CONST Signature: AnsiString; Version: Word);
-VAR
-  MagicNo: Cardinal;
-  FileVersion: Word;
-  FileSignature: AnsiString;
+procedure TLightStream.WriteMagicVer(CONST MVersion: Word);
 begin
-  // Read magic no
-  MagicNo := ReadCardinal;
-  if MagicNo <> LisaMagicNumber
-  then RAISE Exception.Create('Magic number mismatch!');
+ Assert(MagicNo > '', 'Magic number is empty!');
+ if MVersion= 0
+ then RAISE Exception.Create('MagicVersion must be higher than 0!');
 
-  // Read signature
-  FileSignature:= ReadStringA;
-  if FileSignature <> Signature
-  then RAISE Exception.Create('Header signature expected: '+ string(Signature)+ '. Found: '+ string(FileSignature));
-
-  // Read the version number
-  FileVersion:= ReadWord;
-  if FileVersion <> Version
-  then RAISE Exception.Create('Header version expected: '+ IntToStr(Version)+ '. Found: '+ IntToStr(FileVersion));
+ WriteBuffer(MagicNo[1], Length(MagicNo));
+ WriteWord(MVersion);
 end;
 
 
 
-{-------------------------------------------------------------------------------------------------------------
+
+
+{--------------------------------------------------------------------------------------------------
    Write a checkpoint into the stream.
    Used for debugging.
-   Write this from time to time to your file so if you screwup, you check from time to time to see if you are still reading the correct data.
--------------------------------------------------------------------------------------------------------------}
+--------------------------------------------------------------------------------------------------}
 CONST
-   ctCheckPoint= '<*>Checkpoint<*>';
+   ctCheckPoint= '<*>Checkpoint<*>';    { For debugging. Write this from time to time to your file so if you screwup, you check from time to time to see if you are still reading the correct data. }
 
 
 { For debugging. Write a scheckpoint entry (just a string) from time to time to your file so if you screwup, you check from time to time to see if you are still reading the correct data. }
@@ -336,110 +283,124 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    PADDING
-   It is important to leave some space at the end of your file (aka padding bytes).
-   If you later (as your program evolves) need to save extra data into your file,
-     you use the padding bytes. This way you don't need to change your file format.
--------------------------------------------------------------------------------------------------------------}
+   It is important to read/write some padding bytes.
+   If you later (as your program evolves) need to save extra data into your file, you use the padding bytes. This way you don't need to change your file format.
+--------------------------------------------------------------------------------------------------}
 
 // Writes zeroes as padding bytes.
-procedure TLightStream.WritePadding0(Bytes: Integer);
+procedure TLightStream.WritePadding(CONST Bytes: Integer);
 VAR b: TBytes;
 begin
   if Bytes> 0 then
     begin
-      SetLength(b, Bytes);
-      FillChar (b[0], Bytes, #0);
-      WriteBuffer(b[0], Bytes);
+     SetLength(b, Bytes);
+     FillChar (b[0], Bytes, #0);
+     WriteBuffer(b[0], Bytes);
     end;
 end;
 
 // Reads the padding bytes back and does not check them for validity
-procedure TLightStream.ReadPadding0(Bytes: Integer);
+procedure TLightStream.ReadPadding(CONST Bytes: Integer);
 VAR b: TBytes;
 begin
   if Bytes> 0 then
     begin
-      SetLength(b, Bytes);
-      ReadBuffer(b[0], Bytes);
+     SetLength(b, Bytes);
+     ReadBuffer(b[0], Bytes);
     end;
 end;
 
 
 
-CONST
-  SafetyPaddingStr: AnsiString= '<##LightSaber - Pattern of exactly 64 bytes for safety check.##>';   //This string is exactly 64 chars long
 
-{ Read/write a string as padding bytes.
-  ReadPadding raises an exception if the padding does not match the SafetyPaddingStr string. Usefule to detect file corruption. }
-procedure TLightStream.WritePadding(Bytes: Integer);
-VAR
-  b: TBytes;
-  CheckPointSize: Integer;
-  i: Integer;
+
+
+
+{--------------------------------------------------------------------------------------------------
+   HEADER
+--------------------------------------------------------------------------------------------------}
+
+{ Reads file signature and version number. Returns True if found correct data.
+  It doesn't throw exceptions. }
+function TLightStream.ReadHeaderTry(CONST Signature: AnsiString; Version: Word): Boolean; // old name: ReadHeaderB
+VAR s: AnsiString;
 begin
-  SetLength(b, Bytes);
-  CheckPointSize:= Length(SafetyPaddingStr);
+  Assert(Signature > '', 'Signature is empty!');
+  Assert(Version   > 0 , 'Version must be > 0');
 
-  // Copy the string to the byte array (up to the available bytes or string length)
-  for i := 0 to Min(Bytes, CheckPointSize) - 1
-    do b[i] := Byte(SafetyPaddingStr[i + 1]);
+  TRY
+    s:= ReadStringA;
+  EXCEPT
+    on E: Exception DO
+      begin
+        AppDataCore.LogError('Signature: '+ String(Signature) + ' - '+ E.Message);
+        EXIT(FALSE);
+      end;
+  END;
 
-  // Fill the rest of the buffer with zeros
-  if Bytes > CheckPointSize
-  then FillChar(b[CheckPointSize], Bytes - CheckPointSize, #0);
-
-  // Write the buffer to the stream
-  WriteBuffer(b[0], Bytes);
+  Result:= s = Signature;
+  if Result
+  then Result:= ReadWord = Version;
 end;
 
 
-procedure TLightStream.ReadPadding(Bytes: Integer);
-VAR
-  b: TBytes;
-  CheckPointSize: Integer;
-  i: Integer;
-  MinSize: Integer;
+{ Reads and compares the Signature. If signature matches, then it returns the version number.
+  This is useful when we want to read multiple versions from disk. }
+function TLightStream.ReadHeaderVersion(CONST Signature: AnsiString): Word;
 begin
-  if Bytes > 0 then
-  begin
-    Assert(Bytes + Position <= Size, 'Read beyond stream!');
+  Assert(Signature > '', 'Signature is empty!');
 
-    SetLength(b, Bytes);
-    ReadBuffer(b[0], Bytes);
-    CheckPointSize:= Length(SafetyPaddingStr);
+  VAR s:= ReadStringA;
+  if s <> Signature
+  then RAISE Exception.Create('The file signature does not match!'+ CRLF+ string(s)+ '/'+ string(Signature));
+  Result:= ReadWord;
+end;
 
-    // Check if the beginning of the buffer matches the string
-    MinSize:= Min(CheckPointSize, Bytes);
-    for i := 0 to MinSize- 1 do
-        if b[i] <> Byte(SafetyPaddingStr[i + 1])
-        then RAISE Exception.Create('Invalid checkpoint!!');
-  end;
+
+{ Reads file signature and version number.
+  Returns version number or 0 on fail.
+  Useful when we have multiple file versions }
+function TLightStream.ReadHeader(CONST Signature: AnsiString): Word;
+begin
+  Assert(Signature > '', 'Signature is empty!');
+
+  VAR s:= ReadStringA;
+  if s = Signature
+  then Result:= ReadWord
+  else Result:= 0;
+end;
+
+
+{ Same as above but does the check internally and raises and exception if header sign/ver does not match }
+procedure TLightStream.ReadHeader(CONST Signature: AnsiString; Version: Word); // Old name: ReadHeaderE
+begin
+ Assert(Size > 0, 'File is empty!');
+ Assert(Signature > '', 'Signature is empty!');
+
+ VAR Sgn:= ReadStringA;
+ if Sgn = Signature
+ then
+   begin
+     VAR v:= ReadWord;
+     if v <> Version
+     then RAISE Exception.Create('Invalid file version in '+ FileName+ CRLF+ IntToStr(Version)+ ' expected. '+ IntToStr(v)+ ' found.');
+   end
+ else
+   RAISE Exception.Create('Invalid file signature in '+ FileName+ CRLF+ string(Signature)+ ' expected. '+ string(Sgn)+ ' found.');
 end;
 
 
 
-
-{-----------
-   ENTER
-------------}
-function TLightStream.ReadEnter: Boolean;   { Returns TRUE if the byte read is CR LF }
-VAR Byte1, Byte2: Byte;
+procedure TLightStream.WriteHeader(CONST Signature: AnsiString; Version: Word);
 begin
- ReadBuffer(Byte1, 1);
- ReadBuffer(Byte2, 1);
- Result:= (Byte1= Byte(#13)) AND (Byte2= Byte(#10));
+ Assert(Signature > '', 'Signature is empty!');
+ Assert(Version> 0, 'Version must be higher than 0!');
+
+ WriteStringA(Signature);
+ WriteWord(Version);
 end;
 
 
-procedure TLightStream.WriteEnter;
-VAR
-  Byte1, Byte2: Byte;
-begin
-  Byte1 := Byte(#13);  // CR
-  Byte2 := Byte(#10);  // LF
-  WriteBuffer(Byte1, 1);
-  WriteBuffer(Byte2, 1);
-end;
 
 
 
@@ -464,21 +425,17 @@ begin
 end;
 
 
-function TLightStream.ReadString: string;   { Works for both Delphi7 and Delphi UNICODE }
+function TLightStream.ReadString: string;     { Works for both Delphi7 and Delphi UNICODE }
 VAR
    Len: Cardinal;
    UTF: UTF8String;
 begin
- ReadBuffer(Len, 4);                        { Read length }
-
- if (StringSafetyLimit > 0)
- AND (Len > StringSafetyLimit)
- then RAISE Exception.CreateFmt('String too large: %d bytes', [Len]);
+ ReadBuffer(Len, 4);                                                        { Read length }
 
  if Len > 0
  then
    begin
-     SetLength(UTF, Len);                   { Read string }
+     SetLength(UTF, Len);                                                     { Read string }
      ReadBuffer(UTF[1], Len);
      Result:= string(UTF);
    end
@@ -511,7 +468,7 @@ begin
 end;
 
 
-function TLightStream.ReadChars(Count: Cardinal): string;        { Works for both Delphi7 and Delphi UNICODE }
+function TLightStream.ReadChars(Count: Integer): string;        { Works for both Delphi7 and Delphi UNICODE }
 VAR UTF: UTF8String;
 begin
  if Count < 1 then EXIT('');
@@ -523,19 +480,18 @@ end;
 
 
 { Reads a bunch of chars from the file. Why 'ReadChars' and not 'ReadString'? This function reads C++ strings (the length of the string was not written to disk also) and not real Delphi strings. So, i have to give the number of chars to read as parameter. IMPORTANT: The function will reserve memory for s.}
-function TLightStream.ReadCharsA(Count: Cardinal): AnsiString;
+function TLightStream.ReadCharsA(Count: Integer): AnsiString;
 begin
  if Count= 0
- then RAISE Exception.Create('Count is zero!');     { We cannot do s[1] on an empty string so we added 'Count = 0' as protection. }
-
- if (StringSafetyLimit > 0)
- AND (Count > StringSafetyLimit)
- then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
+ then RAISE Exception.Create('Count is zero!');                     { It gives a range check error if we try s[1] on an empty string so we added 'Count = 0' as protection. }
 
  SetLength(Result, Count);
  ReadBuffer(Result[1], Count);
 { Alternative:  Result:= Read(Pointer(s)^, Count)= Count;     <--- Don't use this! Ever. See explanation from A Buchez:   http://stackoverflow.com/questions/6411246/pointers-versus-s1 }
 end;
+
+
+
 
 
 
@@ -566,6 +522,37 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
+   ENTER
+--------------------------------------------------------------------------------------------------}
+function TLightStream.ReadEnter: Boolean;   { Returns TRUE if the byte read is CR LF }
+VAR Byte1, Byte2: Byte;
+begin
+ ReadBuffer(Byte1, 1);
+ ReadBuffer(Byte2, 1);
+ Result:= (Byte1= Byte(#13)) AND (Byte2= Byte(#10));
+end;
+
+
+procedure TLightStream.WriteEnter;
+VAR
+  Byte1, Byte2: Byte;
+begin
+  Byte1 := Byte(#13);  // CR
+  Byte2 := Byte(#10);  // LF
+  WriteBuffer(Byte1, 1);
+  WriteBuffer(Byte2, 1);
+end;
+
+
+
+
+
+
+
+
+
+
+{--------------------------------------------------------------------------------------------------
    NUMBERS
 --------------------------------------------------------------------------------------------------}
 
@@ -581,6 +568,7 @@ begin
  ReadBuffer(b, 1);    { Valid values for a Boolean are 0 and 1. If you put a different value into a Boolean variable then future behaviour is undefined. You should read into a byte variable b and assign b <> 0 into the Boolean. Or sanitise by casting the byte to ByteBool. Or you may choose to validate the value read from the file and reject anything other than 0 and 1. http://stackoverflow.com/questions/28383736/cannot-read-boolean-value-with-tmemorystream }
  Result:= b <> 0;
 end;
+
 
 
 
@@ -623,6 +611,9 @@ begin
 end;
 
 
+
+
+
 { WORD }
 procedure TLightStream.WriteWord(w: Word);
 begin
@@ -659,6 +650,7 @@ begin
 end;
 
 
+
 { INT64 }
 procedure TLightStream.WriteInt64(i: Int64);
 begin
@@ -686,17 +678,23 @@ end;
 
 
 
+
+
 {--------------------------------------------------------------------------------------------------
    FLOATS
 --------------------------------------------------------------------------------------------------}
+
+
+{ FLOATS }
+
 function TLightStream.ReadSingle: Single;
 begin
-  Read(Result, 4);
+  Read(Result, 4);     
 end;
 
 procedure TLightStream.WriteSingle(s: Single);
 begin
-  Write(s, 4);
+  Write(s, 4);                                                             
 end;
 
 
@@ -768,18 +766,16 @@ end;
 
 
 
-procedure TLightStream.ReadIntegers(out List: TIntegerArray);
-VAR 
-  i: Integer;
-  Count: Integer;
+procedure TLightStream.ReadIntegers(List: TIntegerArray);
+VAR i: Integer;
 begin
- Count:= ReadInteger;
+ VAR Count:= ReadInteger;
  SetLength(List, Count);
  for i:= 0 to High(List) DO
    List[i]:= ReadInteger;
 end;
 
-procedure TLightStream.WriteIntegers(const List: TIntegerArray);
+procedure TLightStream.WriteIntegers(List: TIntegerArray);
 VAR Int: Integer;
 begin
  WriteInteger(Length(List));
@@ -789,24 +785,28 @@ end;
 
 
 
-procedure TLightStream.ReadDoubles(out List: TDoubleArray);
-VAR 
-  i: Integer;
-  Count: Integer;
+procedure TLightStream.ReadDoubles(List: TDoubleArray);
+VAR i: Integer;
 begin
- Count:= ReadInteger;
+ VAR Count:= ReadInteger;
  SetLength(List, Count);
  for i:= 0 to High(List) DO
    List[i]:= ReadDouble;
 end;
 
-procedure TLightStream.WriteDoubles(const List: TDoubleArray);
+procedure TLightStream.WriteDoubles(List: TDoubleArray);
 VAR Dbl: Double;
 begin
  WriteInteger(Length(List));
  for Dbl in List DO
    WriteDouble(Dbl);
 end;
+
+
+
+
+
+
 
 
 
@@ -838,33 +838,52 @@ begin
 end;
 
 
+(*
+// BAD NAME!
+{ Read 4 bytes (UInt4) and swap their position }        // Old name RevReadInt. Use RevReadCardinal instead!                      // Used in 'UNIT ReadSCF'
+function TLightStream.RevReadInt: Cardinal;                                           
+begin
+ ReadBuffer(Result, 4);
+ SwapCardinal(Result);
+end;   *)
+
+
+
 
 
 {--------------------------------------------------------------------------------------------------
-   RAW DATA
+   PUSH/LOAD DATA DIRECTLY INTO THE STREAM
 ---------------------------------------------------------------------------------------------------
-   Read/write raw data to file.
+   Write raw data to file.
+
+   How to use it:
+      SetLength(MyArray, 10);
+      FStream.ReadData(MyArray[0], Length(Buffer));
+    OR:
+      SetLength(s, 10);
+      ReadBuffer(s[1], Length(Buffer));
 --------------------------------------------------------------------------------------------------}
 
-{ Writes the string to file but does not write its length.
-  In most cases you will want to use WriteString instead of PushString. }             { Used in cmEncodeMime.pas }
-procedure TLightStream.PushString(CONST s: string);    //  old name: WriteStringNoLen
-VAR UTF: UTF8String;
+{ Write raw data to file }
+procedure TLightStream.PushData(CONST s: AnsiString);   //ToDo: this should have an overload that saves an array of bytes instead of AnsiString
 begin
- UTF := UTF8String(s);
- if Length(UTF) > 0
- then WriteBuffer(UTF[1], Length(UTF));
-end;
-
-
-{ Write raw data to file. The length is not written! }
-procedure TLightStream.PushAnsi(CONST s: AnsiString);   // old name: WriteStringANoLen
-begin
- Assert(s<> '', 'WriteStringA - The string is empty');   { Make sure 's' is not empty, otherwise we get a RangeCheckError at runtime }
+ //Clear;       { Sets the Memory property to nil (Delphi). Sets the Position property to 0. Sets the Size property to 0. }
  WriteBuffer(s[1], Length(s));
 end;
 
 
+procedure TLightStream.PushData(CONST Bytes: TBytes);
+begin
+ //Clear;                                                           { Sets the Memory property to nil (Delphi). Sets the Position property to 0. Sets the Size property to 0. }
+ WriteBuffer(Bytes[0], Length(Bytes));
+end;
+
+
+
+
+{--------------------------------------------------------------------------------------------------
+   RAW
+--------------------------------------------------------------------------------------------------}
 { Read the raw content of the file and return it as string (for debugging) }
 function TLightStream.AsString: AnsiString;
 begin
@@ -873,26 +892,9 @@ begin
 end;
 
 
-function TLightStream.ReadStringA(Count: Cardinal): AnsiString;  { We need to specify the length of the string }
-VAR TotalBytes: Cardinal;
+function TLightStream.AsStringU: string;          {THIS SHOULD NEVER BE USED. TO BE DELETED! }
 begin
- if (StringSafetyLimit > 0)
- AND (Count > StringSafetyLimit)
- then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
-
- if Count > 0
- then
-   begin
-    SetLength(Result, Count);                                             { Initialize the result }
-    TotalBytes:= Read(Result[1], Count);                                  { Read is used in cases where the number of bytes to read from the stream is not necessarily fixed. It attempts to read up to Count bytes into buffer and returns the number of bytes actually read.  }
-
-    if TotalBytes= 0
-    then Result:= ''
-    else
-      if TotalBytes < Count                                               { If there is not enough data to read... }
-      then SetLength(Result, TotalBytes);                               { ...set the buffer to whater I was able to read }
-   end
- else Result:= '';
+ Result:= string(AsString);
 end;
 
 
@@ -905,36 +907,25 @@ begin
 end;
 
 
-{ TBYTES }
-procedure TLightStream.PushBytes(CONST Bytes: TBytes);
-begin
- Assert(Length(Bytes) > 0, 'Buffer is zero!!');
- WriteBuffer(Bytes[0], Length(Bytes));
-end;
-
-
 { Writes "Buffer" in the stream, at the current pos. The amount of data to be stored is also written down to the stream. }
-procedure TLightStream.PushBytesCnt(CONST Buffer: TBytes); // old name: WriteBytes
+procedure TLightStream.WriteByteChunk(CONST Buffer: TBytes); // old name: WriteBytes
 begin
- Assert(Length(Buffer) > 0, 'Buffer is zero!');
  WriteCardinal(Length(Buffer));
- PushBytes(Buffer);
+ WriteBuffer(Buffer[0], High(Buffer));
 end;
-
 
 { Reads a chunk of data from the current pos of the stream. The amount of data to read is also retrieved from the stream. }
 function TLightStream.ReadByteChunk: TBytes;
 VAR Cnt: Cardinal;
 begin
  Cnt:= ReadCardinal;
- if Cnt > 0 then
- begin
-   SetLength(Result, Cnt);
-   ReadBuffer(Result[0], Cnt);
- end
- else
-   SetLength(Result, 0);
+ SetLength(Result, Cnt);
+ ReadBuffer(Result[0], Cnt);
 end;
+
+
+
+
 
 
 
@@ -942,13 +933,23 @@ end;
 {--------------------------------------------------------------------------------------------------
    ANSI STRINGS
 --------------------------------------------------------------------------------------------------}
-procedure TLightStream.WriteStringA(CONST s: AnsiString);
-VAR Len: Cardinal;
+function TLightStream.ReadStringA(CONST Len: integer): AnsiString; { You need to specify the length of the string }
+VAR TotalBytes: Integer;
 begin
-  Len:= Length(s);
-  WriteBuffer(Len, SizeOf(Len));
-  if Len > 0                                                            { This makes sure 's' is not empty. Else I will get a RangeCheckError at runtime }
-  then WriteBuffer(s[1], Len);
+ if Len> 0
+ then
+   begin
+    SetLength(Result, Len);                                              { Initialize the result }
+    //FillChar(Result[1], Len, '?'); DEBUG ONLY!
+    TotalBytes:= Read(Result[1], Len);                                   { Read is used in cases where the number of bytes to read from the stream is not necessarily fixed. It attempts to read up to Count bytes into buffer and returns the number of bytes actually read.  }
+
+    if TotalBytes= 0
+    then Result:= ''
+    else
+      if TotalBytes < Len                                                { If there is not enough data to read... }
+      then SetLength(Result, TotalBytes);                                { ...set the buffer to whater I was able to read }
+   end
+ else Result:= '';
 end;
 
 
@@ -957,50 +958,70 @@ function TLightStream.ReadStringA: AnsiString;
 VAR Len: Cardinal;
 begin
  ReadBuffer(Len, SizeOf(Len));                                          { First, find out how many characters to read }
-
  Assert(Len<= Size- Position, 'TReadCachedStream: String lenght > file size!');
-
- if (StringSafetyLimit > 0)
- AND (Len > StringSafetyLimit)
- then RAISE Exception.CreateFmt('String too large: %d bytes', [Len]);
-
  Result:= ReadStringA(Len);        { Do the actual strign reading }
 end;
 
+
+procedure TLightStream.WriteStringA(CONST s: AnsiString);
+VAR Len: Cardinal;
+begin
+ Len:= Length(s);
+ WriteBuffer(Len, SizeOf(Len));
+ if Len > 0                                                                 { This makes sure 's' is not empty. Else I will get a RangeCheckError at runtime }
+ then WriteBuffer(s[1], Len);
+end;
 
 {  STRING WITHOUT LENGTH
    Read a string when its size is unknown (not written in the stream).
    We need to specify the string size from outside.
    This is the relaxed/safe version. It won't raise an error if there is not enough data (Len) to read }
-function TLightStream.TryReadStringA(Count: Cardinal): AnsiString;   // Old name: ReadStringAR
-VAR ReadBytes: Cardinal;
+function TLightStream.ReadStringAR(CONST Len: integer): AnsiString;
+VAR ReadBytes: Integer;
 begin
- if Count = 0
+ Assert(Len> -1, 'TLightStream-String size is: '+ IntToStr(Len));
+
+ if (Len+ Position > Size)
+ then RAISE exception.Create('TLightStream-Invalid string size: '+ IntToStr(Len));
+
+ if Len= 0
  then Result:= ''
  else
   begin
-   SetLength(Result, Count);             { Initialize the result }
-   ReadBytes:= Read(Result[1], Count);
-   if ReadBytes <> Count                 { Not enough data to read? }
+   SetLength(Result, Len);                                                  { Initialize the result }
+   ReadBytes:= Read(Result[1], Len);
+   if ReadBytes<> Len                                                       { Not enough data to read? }
    then SetLength(Result, ReadBytes);
   end;
 end;
 
 
+procedure TLightStream.WriteStringANoLen(CONST s: AnsiString);                           { Write the string but don't write its length }
+begin
+ Assert(s<> '', 'WriteStringA - The string is empty');                                       { This makes sure 's' is not empty. Else I will get a RangeCheckError at runtime }
+ WriteBuffer(s[1], Length(s));
+end;
+
+
+
+{ Writes the string to file but does not write its length.
+  In most cases you will want to use WriteString instead of WriteStringNoLen. }             { Used in cmEncodeMime.pas }
+procedure TLightStream.WriteStringNoLen(CONST s: string);
+VAR UTF: UTF8String;
+begin
+ UTF := UTF8String(s);
+ if Length(UTF) > 0
+ then WriteBuffer(UTF[1], Length(UTF));
+end;
+
+
 { Read a string from file. The length of the string will be provided from outside. }
-function TLightStream.ReadString(CONST Len: Cardinal): string;
+function TLightStream.ReadString(CONST Len: Integer): string;
 VAR UTF: UTF8String;
 begin
  if Len > 0
  then
    begin
-     if (Len+ Position > Size)
-     then RAISE exception.Create('TLightStream-Invalid string size! '+ IntToStr(Len));
-
-     if (StringSafetyLimit > 0)
-     AND (Len > StringSafetyLimit)
-     then RAISE Exception.CreateFmt('String too large: %d bytes', [Len]);
-
      SetLength(UTF, Len);
      ReadBuffer(UTF[1], Len);
      Result:= string(UTF);
@@ -1010,5 +1031,28 @@ begin
 end;
 
 
+
+
+
+
+{--------------------------------------------------------------------------------------------------
+   UTILS / CONVERSIONS
+--------------------------------------------------------------------------------------------------}
+
+{ Read the first Count characters from a file.
+  Returns ANSI string. 
+function StringFromFileStart (CONST FileName: string; Count: Cardinal): AnsiString;
+VAR StreamFile: TLightStream;
+begin
+ SetLength(Result, Count);
+
+ StreamFile:= TLightStream.Create(FileName, fmOpenRead);          { <--------- EFCreateError:   Cannot create file "blablabla". Access is denied.
+ TRY
+   Result:= StreamFile.ReadStringAR(Count);
+ FINALLY
+   FreeAndNil(StreamFile);
+ END;
+end;}
+ 
 
 end.
