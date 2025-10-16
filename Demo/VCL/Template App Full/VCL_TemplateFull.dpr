@@ -5,13 +5,15 @@ uses
   FastMM4,
   {$ENDIF }
   Vcl.Themes,
-  Vcl.Styles,  
+  Vcl.Styles,
   FormMain in 'FormMain.pas' {MainForm},
   FormSettings in 'FormSettings.pas',
   uInitialization in 'uInitialization.pas',
   LightVcl.Common.AppData in '..\..\..\FrameVCL\LightVcl.Common.AppData.pas',
   LightVcl.Common.AppDataForm in '..\..\..\FrameVCL\LightVcl.Common.AppDataForm.pas',
-  LightCore.AppData in '..\..\..\LightCore.AppData.pas';
+  LightCore.AppData in '..\..\..\LightCore.AppData.pas',
+  ciUpdater in '..\..\..\Updater\ciUpdater.pas',
+  ciUpdaterRec in '..\..\..\Updater\ciUpdaterRec.pas';
 
 {$R *.res}
 

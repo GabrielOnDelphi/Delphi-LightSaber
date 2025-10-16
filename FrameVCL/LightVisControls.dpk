@@ -36,9 +36,9 @@ requires
   Vcl,
   CcrExif,
   LightCore,
-  LightVclCommon,
+  LightVclGraphics,
   LightVclInternet,
-  LightVclGraphics;
+  LightVclCommon;
 
 contains
   LightVcl.Visual.ActivityIndicator in 'LightVcl.Visual.ActivityIndicator.pas',

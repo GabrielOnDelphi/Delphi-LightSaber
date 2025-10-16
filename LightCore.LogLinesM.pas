@@ -18,7 +18,7 @@ INTERFACE
 
 USES
    System.SysUtils, System.Classes,
-   LightCore.LogTypes, LightCore.StreamBuff2, LightCore.LogLinesAbstract;
+   LightCore.LogTypes, LightCore.StreamBuff, LightCore.LogLinesAbstract;
 
 TYPE
   TLogLinesMultiThreaded = class(TAbstractLogLines)
@@ -37,8 +37,8 @@ TYPE
     function AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE): PLogLine; override;
     function Add(Value: PLogLine): Integer; override;
 
-    procedure ReadFromStream(Stream: TCubicBuffStream2); override;
-    procedure WriteToStream (Stream: TCubicBuffStream2); override;
+    procedure ReadFromStream(Stream: TLightStream); override;
+    procedure WriteToStream (Stream: TLightStream); override;
   end;
 
 
@@ -168,7 +168,7 @@ end;
 
 
 
-procedure TLogLinesMultiThreaded.ReadFromStream(Stream: TCubicBuffStream2);
+procedure TLogLinesMultiThreaded.ReadFromStream(Stream: TLightStream);
 begin
   FLock.BeginWrite;
   try
@@ -178,7 +178,7 @@ begin
   end;
 end;
 
-procedure TLogLinesMultiThreaded.WriteToStream(Stream: TCubicBuffStream2);
+procedure TLogLinesMultiThreaded.WriteToStream(Stream: TLightStream);
 begin
   FLock.BeginRead;
   try

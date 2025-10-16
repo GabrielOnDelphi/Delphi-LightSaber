@@ -47,8 +47,8 @@ TYPE
     property  Damping: TWaterDamping read FDamping write SetDamping;
     procedure Reset;
 
-    procedure Load(Stream: TCubicBuffStream);
-    procedure Save(Stream: TCubicBuffStream);
+    procedure Load(Stream: TLightStream);
+    procedure Save(Stream: TLightStream);
   end;
 
   TRainShelter = class(TObject)
@@ -67,7 +67,6 @@ TYPE
   end;
 
 function IsRainDrop       (CONST FileName: string): Boolean;
-function DetectRainShelter(CONST FileName: string): Boolean;
 function LoadRainShelter  (CONST FileName: string): TBitmap;
 
 
@@ -80,18 +79,18 @@ CONST
    Verification=  $50505050;
 
 
-
-function DetectRainShelter(CONST FileName: string): Boolean;   { Unused }
+{
+function DetectRainShelter(CONST FileName: string): Boolean;    Unused
 VAR
-   Stream: TCubicBuffStream;
+   Stream: TLightStream;
 begin
- Stream:= TCubicBuffStream.CreateRead(FileName);
+ Stream:= TLightStream.CreateRead(FileName);
  TRY
-   Result:= Stream.ReadHeaderTry(RainMagicNo, 1);
+   Result:= Stream.TryReadHeader(RainMagicNo, 1);
  FINALLY
-  FreeAndNil(Stream);
+   FreeAndNil(Stream);
  END;
-end;
+end; }
 
 
 function IsRainDrop(CONST FileName: string): Boolean;
@@ -166,14 +165,14 @@ procedure TRainShelter.SaveToFile(aFileName: string; Mask: TBitmap);
 VAR
    x, y, w, h: Integer;
    b: Boolean;
-   Stream: TCubicBuffStream;
+   Stream: TLightStream;
 begin
  Assert(Mask <> NIL);
  Assert(OrigImage <> NIL);
  FileName:= aFileName;
 
  { Prepare output stream }
- Stream:= TCubicBuffStream.CreateWrite(aFileName);
+ Stream:= TLightStream.CreateWrite(aFileName);
  TRY
    Stream.WriteHeader(RainMagicNo, 1);
 
@@ -183,7 +182,7 @@ begin
    Stream.WriteCardinal(w);
    Stream.WriteCardinal(h);
    Params.Save(Stream);
-   Stream.WritePadding(940);
+   Stream.WritePaddingE(940);
 
    { Write original image to the output stream }
    VAR JpgStream:= LightVcl.Graph.Convert.Bmp2JpgStream(OrigImage);
@@ -224,16 +223,17 @@ VAR
    x, y: Integer;
    w, h: Integer;
    JpegImg: TJpegImage;
-   Stream: TCubicBuffStream;
+   Stream: TLightStream;
 begin
  Result:= FALSE;
  Clear;
+ Version:= 0;
  FileName:= aFileName;
 
  { Open inp stream }
- Stream:= TCubicBuffStream.CreateRead(FileName);
+ Stream:= TLightStream.CreateRead(FileName);
  TRY
-   Version:= Stream.ReadHeader(RainMagicNo);
+   Stream.TryReadHeader(RainMagicNo, Version);
    case Version of
     0: Result:= FALSE; //'Invalid magic number!'
     1: begin
@@ -241,7 +241,7 @@ begin
         w:= Stream.ReadCardinal;
         h:= Stream.ReadCardinal;
         Params.Load(Stream);
-        Stream.ReadPadding(940);
+        Stream.ReadPaddingE(940);
         Count:= Stream.ReadInteger;
 
         OrigImage:= TBitmap.Create;
@@ -304,25 +304,25 @@ begin
 end;
 
 
-procedure RRaindropParams.Save(Stream: TCubicBuffStream);
+procedure RRaindropParams.Save(Stream: TLightStream);
 begin
   Stream.WriteInteger(FDamping);
   Stream.WriteInteger(TargetFPS);
   Stream.WriteInteger(WaveAplitude);
   Stream.WriteInteger(WaveTravelDist);
   Stream.WriteInteger(DropInterval);
-  Stream.WritePadding(64);
+  Stream.WritePaddingE(64);
 end;
 
 
-procedure RRaindropParams.Load(Stream: TCubicBuffStream);
+procedure RRaindropParams.Load(Stream: TLightStream);
 begin
   Damping       := Stream.ReadInteger;
   TargetFPS     := Stream.ReadInteger;
   WaveAplitude  := Stream.ReadInteger;
   WaveTravelDist:= Stream.ReadInteger;
   DropInterval  := Stream.ReadInteger;
-  Stream.ReadPadding(64);
+  Stream.ReadPaddingE(64);
 end;
 
 

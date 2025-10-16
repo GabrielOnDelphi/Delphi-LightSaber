@@ -29,7 +29,7 @@ TYPE
   public
     { Padding }
     procedure ReadPaddingE (CONST Bytes: Integer);          //Raises an exception if the buffer does not contain the signature
-    procedure WritePaddingE(CONST Bytes: Integer);
+    procedure WritePadding (CONST Bytes: Integer);
     procedure ReadPadding;
     procedure WritePadding;
     {}
@@ -106,7 +106,7 @@ CONST
    CheckpointStr: AnsiString= '<LightSaber - Buffer of 100 bytes. Pattern check -> Raises exception if the pattern not found!! ###>'; //This string is 100 chars long
 
 // Write a string as padding bytes.
-procedure TMemStreamEx.WritePaddingE(CONST Bytes: Integer);
+procedure TMemStreamEx.WritePadding(CONST Bytes: Integer);
 VAR
   b: TBytes;
   CheckPointSize: Integer;
@@ -158,7 +158,7 @@ end;
 
 procedure TMemStreamEx.WritePadding;
 begin
-  WritePaddingE(PaddingSize);
+  WritePadding(PaddingSize);
 end;
 
 

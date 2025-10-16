@@ -1,7 +1,7 @@
 UNIT FormUpdaterRecEditor;
 {-------------------------------------------------------------------------------------------------------------
    Editor for RNews
-   2022-01-29
+   2025.10
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
@@ -52,14 +52,13 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   LightCore.AppData, LightVcl.Common.AppData
-, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Translate, ciUpdaterRec, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Visual.INIFile;
+   LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Translate, ciUpdaterRec, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Visual.INIFile;
 
 
 
 function GetBinFileName: string;
 begin
-  Result:= AppData.ExeFolder+ 'OnlineNews_v2'+ AppData.AppName+'.bin';
+  Result:= AppData.ExeFolder+ 'OnlineNews_v3'+ AppData.AppName+'.bin';  // switched to v3 since 2025.10
 end;
 
 
@@ -112,7 +111,7 @@ begin
   News.IsBetaVers  := chkBetaVer.Checked;
 
   News.SaveTo(GetBinFileName);
-  MessageInfo('FileSearch saved as '+ GetBinFileName);
+  MessageInfo('File saved as '+ GetBinFileName);
 end;
 
 
@@ -131,7 +130,6 @@ begin
   chkBetaVer.Checked  := News.IsBetaVers;
   chkCriticalUpd.Checked:= News.CriticalUpd;
 end;
-
 
 
 end.

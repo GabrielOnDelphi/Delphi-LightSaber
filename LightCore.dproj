@@ -1,4 +1,4 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <Base>True</Base>
         <AppType>Package</AppType>
@@ -157,7 +157,6 @@
         <DCCReference Include="LightCore.Compiler.pas"/>
         <DCCReference Include="LightCore.StreamMem.pas"/>
         <DCCReference Include="LightCore.StreamBuff.pas"/>
-        <DCCReference Include="LightCore.StreamBuff2.pas"/>
         <DCCReference Include="LightCore.TextFile.pas"/>
         <DCCReference Include="LightCore.StreamMem2.pas"/>
         <DCCReference Include="LightCore.StreamFile.pas"/>

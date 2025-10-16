@@ -52,7 +52,7 @@ USES
    TWriteOperation= (woAppend, woOverwrite);
    TWritePreamble = (wpOff, wpOn, wpAuto);
 
- procedure StringToFile         (CONST FileName: string; CONST aString: String; CONST WriteOp: TWriteOperation= woOverwrite; WritePreamble: TWritePreamble= wpAuto);
+ procedure StringToFile         (CONST FileName: string; CONST aString: String; WriteOp: TWriteOperation= woOverwrite; WritePreamble: TWritePreamble= wpAuto);
  function  StringFromFile       (CONST FileName: string; Enc: TEncoding= Nil): string;
 
  function  StringFromFileExists (CONST FileName: string): String;                                  { Read file IF it exists. Otherwise, return '' }
@@ -61,14 +61,14 @@ USES
 
  // ANSI
  function  StringFromFileA      (CONST FileName: string): AnsiString;                              { Read a WHOLE file and return its content as String. Also see this: http://www.fredshack.com/docs/delphi.html }
- procedure StringToFileA        (CONST FileName: string; CONST aString: AnsiString; CONST WriteOp: TWriteOperation);  overload;
- procedure StringToFileA        (CONST FileName: string; CONST aString: String;     CONST WriteOp: TWriteOperation);  overload;
-
+ procedure StringToFileA        (CONST FileName: string; CONST aString: AnsiString; WriteOp: TWriteOperation);  overload;
+ procedure StringToFileA        (CONST FileName: string; CONST aString: String;     WriteOp: TWriteOperation);  overload;
+ function  StringFromFileStart  (CONST FileName: string; Count: Cardinal): AnsiString;
 
 {--------------------------------------------------------------------------------------------------
    UTILS
 --------------------------------------------------------------------------------------------------}
- function  FirstLineFromFile(FileName: string): string;
+ function  FirstLineFromFile     (CONST FileName: string): string;
 
  function  CountLines            (CONST Filename: string; CONST BufferSize: Cardinal= 128000): Int64;                     { Opens a LARGE text file and counts how many lines it has. It does this by loading a small portion of the file in a RAM buffer }
  function  CountCharAppearance   (CONST FileName: string; C: AnsiChar): Int64;
@@ -81,7 +81,6 @@ USES
  function  FileHasBOM          (CONST FileName: string): Boolean;
 
  function  DetectFileEncoding  (CONST FileName: string): TEncoding;
-// function  DetectTextEncoding  (CONST Text    : string): TEncoding;
 
  function  IsValidUtf8File     (CONST FileName: string): Boolean;
  function  IsValidUtf8Stream   (Stream: TStream): Boolean;
@@ -110,7 +109,7 @@ USES
   FileName must be a full path. If the path does not exist it is created.
   It can also write a preamble.
   Based on: http://stackoverflow.com/questions/35710087/how-to-save-classic-delphi-string-to-disk-and-read-them-back/36106740#36106740  }
-procedure StringToFile(CONST FileName: string; CONST aString: String; CONST WriteOp: TWriteOperation= woOverwrite; WritePreamble: TWritePreamble= wpAuto);
+procedure StringToFile(CONST FileName: string; CONST aString: String; WriteOp: TWriteOperation= woOverwrite; WritePreamble: TWritePreamble= wpAuto);
 VAR
    Stream: TFileStream;
    Preamble: TBytes;
@@ -160,9 +159,25 @@ end;
 
 
 
-procedure StringToFileA (CONST FileName: string; CONST aString: String; CONST WriteOp: TWriteOperation);
+procedure StringToFileA (CONST FileName: string; CONST aString: String; WriteOp: TWriteOperation);
 begin
  StringToFileA(FileName, AnsiString(aString), WriteOp);
+end;
+
+
+{ Read the first Count characters from a file.
+  Return ANSI string. }
+function StringFromFileStart (CONST FileName: string; Count: Cardinal): AnsiString;
+VAR StreamFile: TLightStream;
+begin
+ SetLength(Result, Count);
+
+ StreamFile:= TLightStream.Create(FileName, fmOpenRead);
+ TRY
+   Result:= StreamFile.TryReadStringA(Count);
+ FINALLY
+   FreeAndNil(StreamFile);
+ END;
 end;
 
 
@@ -223,14 +238,15 @@ begin
 end;
 
 
-procedure StringToFileA (CONST FileName: string; CONST aString: AnsiString; CONST WriteOp: TWriteOperation);
+procedure StringToFileA (CONST FileName: string; CONST aString: AnsiString; WriteOp: TWriteOperation);
 VAR
-   Stream: TFileStream;
    aMode: Integer;
+   Stream: TFileStream;
 begin
  ForceDirectories(ExtractFilePath(FileName));
 
- if (WriteOp= woAppend) AND FileExists(FileName)
+ if (WriteOp= woAppend)
+ AND FileExists(FileName)
  then aMode := fmOpenReadWrite
  else aMode := fmCreate;
 
@@ -260,7 +276,7 @@ end;
    LINES
 -----------------------------------------------------------------------------------------------------------------------}
 // Returns the first line from a text file
-function FirstLineFromFile(FileName: string): string;
+function FirstLineFromFile(CONST FileName: string): string;
 begin
   VAR TSL:= StringFromFileTSL(FileName);
   TRY
@@ -284,7 +300,7 @@ end;
     Tester here: LightSaber\CubicCommonControls-Testers\CountLines tester\Tester.exe
 
     TFileStream (this): 15ms
-    TCubicBuffStream  : 78ms
+    TLightStream  : 78ms
     Delphi's ReadLn   : 8518ms
 
   Buffer speed:
@@ -297,6 +313,7 @@ end;
    Same speed for SSD and HDD - probably because of OS buffering!
 
 See also: http://www.delphipages.com/forum/showthread.php?t=201629 }
+
 
 function CountLines(CONST Filename: string; CONST BufferSize: Cardinal= 128000): Int64;            { Source: http://www.delphipages.com/forum/showthread.php?t=201629 }
 {TODO: use TBufferedFile }
@@ -352,7 +369,7 @@ VAR
 begin
  Result:= 0;
  BuffPo:= 0;
- VAR Stream:= TCubicBuffStream.CreateWrite(FileName);
+ VAR Stream:= TLightStream.CreateWrite(FileName);
  TRY
    WHILE BuffPo < Stream.Size DO
     begin
@@ -687,9 +704,6 @@ begin
 end;
 
 
-
-
-
 { Creates a file that contains random strings. NoOfLines=10000000 creates a files of about 140MB }
 procedure GenerateRandomTextFile(CONST Filename: string; NoOfLines: Integer);
 VAR
@@ -701,6 +715,7 @@ begin
     DO s:= s+ GenerateRandString(5, 20)+ CRLFw;
   stringtofile(FileName, s);
 end;
+
 
 
 end.

@@ -74,8 +74,8 @@ TYPE
     procedure Reset;                                           { Reset to default values }
     procedure ComputeOutputSize(InpW, InpH: Integer);
 
-    procedure WriteToStream (IOStream: TCubicBuffStream);
-    procedure ReadFromStream(IOStream: TCubicBuffStream);
+    procedure WriteToStream (IOStream: TLightStream);
+    procedure ReadFromStream(IOStream: TLightStream);
 
     procedure Convert(Res: TResizeOpp_; FT: TFillType_);        { Used to convert from the old format used by BioniX v12 to the new format }
  end;
@@ -324,7 +324,7 @@ end;
    Stream
 --------------------------------------------------------------------------------------------------}
 
-procedure RResizeParams.WriteToStream(IOStream: TCubicBuffStream);
+procedure RResizeParams.WriteToStream(IOStream: TLightStream);
 begin
 { These are not saved, because they should be recalculated:
    MaxWidth, MaxHeight: Integer;
@@ -337,11 +337,11 @@ begin
    IOStream.WriteInteger (ForcedHeight);
    IOStream.WriteBoolean (ResizePanoram);
    IOStream.WriteByte    (FitTolerance);
-   IOStream.WritePadding(32);
+   IOStream.WritePaddingE(32);
 end;
 
 
-procedure RResizeParams.ReadFromStream(IOStream: TCubicBuffStream);
+procedure RResizeParams.ReadFromStream(IOStream: TLightStream);
 begin
    ResizeOpp    := TResizeOp(IOStream.ReadByte);
    MaxZoomUse   := IOStream.ReadBoolean;
@@ -351,7 +351,7 @@ begin
    ForcedHeight := IOStream.ReadInteger;
    ResizePanoram:= IOStream.ReadBoolean;
    FitTolerance := IOStream.ReadByte;
-   IOStream.ReadPadding(32);
+   IOStream.ReadPaddingE(32);
 end;
 
 

@@ -34,7 +34,7 @@ INTERFACE
 
 USES
    System.SysUtils, System.DateUtils, System.Classes,
-   LightCore.LogLinesAbstract, LightCore.LogLinesS, LightCore.LogLinesM, LightCore.LogTypes, LightCore.StreamBuff2;
+   LightCore.LogLinesAbstract, LightCore.LogLinesS, LightCore.LogLinesM, LightCore.LogTypes, LightCore.StreamBuff;
 
 TYPE
   ILogObserver = interface
@@ -79,8 +79,8 @@ TYPE
      function  GetAsText: string;
      procedure SaveAsText  (CONST FullPath: string);
      {}
-     function  LoadFromStream(Stream: TCubicBuffStream2): Boolean;
-     procedure SaveToStream  (Stream: TCubicBuffStream2);
+     function  LoadFromStream(Stream: TLightStream): Boolean;
+     procedure SaveToStream  (Stream: TLightStream);
 
      procedure SaveToFile  (CONST FullPath: string);
      function  LoadFromFile(CONST FullPath: string): Boolean;
@@ -99,6 +99,8 @@ IMPLEMENTATION
 
 USES
   LightCore, LightCore.Time, LightCore.Types, LightCore.TextFile, LightCore.AppData;
+
+CONST CurrentVersion = 4;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -340,10 +342,8 @@ end;
 
 function TRamLog.prepareString(CONST Msg: string): string;
 begin
- Result:= ReplaceEnters (Msg , ' ');
- //Result:= StringOfChar(' ', Indent)+ Result;
+  Result:= ReplaceEnters(Msg , ' ');
 end;
-
 
 
 
@@ -362,22 +362,23 @@ end;
 
 
 
-function TRamLog.LoadFromStream(Stream: TCubicBuffStream2): Boolean;
+function TRamLog.LoadFromStream(Stream: TLightStream): Boolean;
 VAR StreamVer: Word;
 begin
-  Result:= Stream.TryReadHeaderVersion(StreamSign, StreamVer);
-  if NOT Result then EXIT;
-  if StreamVer <= 3 then EXIT;    // Old/unsupported version
-
-  Lines.ReadFromStream(Stream);
-  Stream.ReadPaddingDef;
+  StreamVer:= Stream.TryReadHeader(StreamSign);
+  Result:= StreamVer = CurrentVersion;    // Unsupported version?
+  if Result then
+    begin
+      Lines.ReadFromStream(Stream);
+      Stream.ReadPadding;
+    end;
 end;
 
-procedure TRamLog.SaveToStream(Stream: TCubicBuffStream2);
+procedure TRamLog.SaveToStream(Stream: TLightStream);
 begin
   Stream.WriteHeader(StreamSign, TAbstractLogLines.CurVer);
   Lines.WriteToStream(Stream);
-  Stream.WritePaddingdef;
+  Stream.WritePadding;
 end;
 
 
@@ -387,7 +388,7 @@ function TRamLog.LoadFromFile(const FullPath: string): Boolean;
 begin
  Clear;
 
- VAR Stream:= TCubicBuffStream2.CreateRead(FullPath);
+ VAR Stream:= TLightStream.CreateRead(FullPath);
  TRY
    Result:= LoadFromStream(Stream);
  FINALLY
@@ -400,7 +401,7 @@ end;
 
 procedure TRamLog.SaveToFile(const FullPath: string);
 begin
- VAR Stream:= TCubicBuffStream2.CreateWrite(FullPath);
+ VAR Stream:= TLightStream.CreateWrite(FullPath);
  TRY
    SaveToStream(Stream);
  FINALLY

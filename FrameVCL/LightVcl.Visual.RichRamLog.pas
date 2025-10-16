@@ -57,9 +57,9 @@ TYPE
      procedure importRawData(const RamLogRawLines: string);   { Access to the unformated lines of the log } { One ore more lines of data in TRamLog format (#1# text_text_text). Used by Baser to restore Log from disk }
 
      { Export (new) }
-     procedure LoadFromStream(Stream: TCubicBuffStream);   overload;
+     procedure LoadFromStream(Stream: TLightStream);   overload;
      procedure LoadFromStream(Stream: TCubicMemStream);    overload;
-     procedure SaveToStream  (Stream: TCubicBuffStream);   overload;
+     procedure SaveToStream  (Stream: TLightStream);   overload;
      procedure SaveToStream  (Stream: TCubicMemStream);    overload;
 
      {}
@@ -261,7 +261,7 @@ end;
 CONST
    LogHeader= CRLF+'#Log';
 
-procedure TRamLog.SaveToStream(Stream: TCubicBuffStream);
+procedure TRamLog.SaveToStream(Stream: TLightStream);
 begin
   Stream.WriteStringA(LogHeader);
   Stream.WriteInteger(RawLines.Count);
@@ -285,7 +285,7 @@ end;
 
 
 
-procedure TRamLog.LoadFromStream(Stream: TCubicBuffStream);
+procedure TRamLog.LoadFromStream(Stream: TLightStream);
 VAR s: string;
 begin
   s:= string(Stream.ReadStringA);

@@ -43,7 +43,6 @@ contains
   LightCore.Compiler in 'LightCore.Compiler.pas',
   LightCore.StreamMem in 'LightCore.StreamMem.pas',
   LightCore.StreamBuff in 'LightCore.StreamBuff.pas',
-  LightCore.StreamBuff2 in 'LightCore.StreamBuff2.pas',
   LightCore.TextFile in 'LightCore.TextFile.pas',
   LightCore.StreamMem2 in 'LightCore.StreamMem2.pas',
   LightCore.StreamFile in 'LightCore.StreamFile.pas',

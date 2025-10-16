@@ -38,7 +38,7 @@ UNIT ciUpdater;
       Updater.URLDownload:= URL2;
       Updater.CheckForNews;
 
-      LightSaber\Demo\LightUpdater\Tester_Updater.dpr
+      c:\Projects\Testers\LightUpdater\Tester_Updater.dpr
 ==============================================================================================================}
 
 INTERFACE

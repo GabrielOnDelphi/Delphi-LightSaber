@@ -81,16 +81,15 @@ TYPE
     property OnWrap         : TNotifyEvent read FOnWrap write FOnWrap;
   end;
 
-procedure CopyParentImage(Control: TControl; Dest: TCanvas);
 
 procedure Register;
 
-implementation
+IMPLEMENTATION
+USES LightVcl.Common.VclUtils;
 
 
 
 
-  
 
 { TAnimateImage }
 constructor TAnimateImage.Create(AOwner: TComponent);
@@ -158,7 +157,7 @@ procedure TAnimateImage.Paint;
   procedure PaintFrame(C: TCanvas);
   begin
     if FTransparent then
-      CopyParentImage(Self, C)
+      LightVcl.Common.VclUtils.CopyParentImage(Self, C)
     else
     begin
       C.Brush.Color := Color;
@@ -407,10 +406,14 @@ end;
 
 
 
-            7
+(*  moved to: LightVcl.Common.VclUtils.pas
+
 { This procedure is copied from RxLibrary VCLUtils.
   It copies the background image of a control's parent, including any overlapping sibling graphic controls,
   onto a destination canvas—useful for rendering transparent or custom-painted controls in Delphi. }
+TYPE
+  TParentControl = class(TWinControl);
+
 procedure CopyParentImage(Control: TControl; Dest: TCanvas);
 var
   I, Count, X, Y, SaveIndex: Integer;
@@ -474,7 +477,7 @@ begin
     with Control.Parent DO
      ControlState := ControlState - [csPaintCopy];
   end;
-end;
+end;  *)
 
 
 

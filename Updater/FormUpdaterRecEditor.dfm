@@ -4,8 +4,8 @@ object frmRecEditor: TfrmRecEditor
   AlphaBlendValue = 245
   Anchors = []
   Caption = 'News & Updates Editor'
-  ClientHeight = 325
-  ClientWidth = 651
+  ClientHeight = 321
+  ClientWidth = 635
   Color = clBtnFace
   Constraints.MinHeight = 335
   Constraints.MinWidth = 434
@@ -26,8 +26,8 @@ object frmRecEditor: TfrmRecEditor
   TextHeight = 15
   object pnlBtm: TPanel
     Left = 0
-    Top = 289
-    Width = 651
+    Top = 285
+    Width = 635
     Height = 36
     Align = alBottom
     TabOrder = 0
@@ -75,7 +75,7 @@ object frmRecEditor: TfrmRecEditor
     end
     object btnClose: TButton
       AlignWithMargins = True
-      Left = 565
+      Left = 553
       Top = 4
       Width = 90
       Height = 28
@@ -92,7 +92,7 @@ object frmRecEditor: TfrmRecEditor
     AlignWithMargins = True
     Left = 4
     Top = 4
-    Width = 643
+    Width = 627
     Height = 34
     Margins.Left = 4
     Margins.Top = 4
@@ -105,7 +105,7 @@ object frmRecEditor: TfrmRecEditor
       Left = 4
       Top = 4
       Width = 44
-      Height = 15
+      Height = 26
       Align = alLeft
       Caption = 'NewsID'
       Layout = tlCenter
@@ -115,7 +115,7 @@ object frmRecEditor: TfrmRecEditor
       Left = 138
       Top = 4
       Width = 34
-      Height = 15
+      Height = 26
       Align = alLeft
       Caption = 'Target'
       Layout = tlCenter
@@ -125,7 +125,7 @@ object frmRecEditor: TfrmRecEditor
       Left = 297
       Top = 4
       Width = 34
-      Height = 15
+      Height = 26
       Align = alLeft
       Caption = 'Show '
       Layout = tlCenter
@@ -135,7 +135,7 @@ object frmRecEditor: TfrmRecEditor
       Left = 384
       Top = 4
       Width = 39
-      Height = 15
+      Height = 26
       Align = alLeft
       Caption = 'time(s)'
       Layout = tlCenter
@@ -202,7 +202,7 @@ object frmRecEditor: TfrmRecEditor
     AlignWithMargins = True
     Left = 4
     Top = 46
-    Width = 643
+    Width = 627
     Height = 34
     Margins.Left = 4
     Margins.Top = 4
@@ -284,7 +284,7 @@ object frmRecEditor: TfrmRecEditor
       AlignWithMargins = True
       Left = 467
       Top = 6
-      Width = 180
+      Width = 168
       Height = 23
       Hint = 'News headline'
       Margins.Top = 5
@@ -298,8 +298,8 @@ object frmRecEditor: TfrmRecEditor
     AlignWithMargins = True
     Left = 4
     Top = 88
-    Width = 643
-    Height = 197
+    Width = 627
+    Height = 193
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -311,7 +311,7 @@ object frmRecEditor: TfrmRecEditor
       AlignWithMargins = True
       Left = 5
       Top = 20
-      Width = 641
+      Width = 629
       Height = 23
       Hint = 'News headline'
       Align = alTop
@@ -322,8 +322,8 @@ object frmRecEditor: TfrmRecEditor
       AlignWithMargins = True
       Left = 8
       Top = 52
-      Width = 635
-      Height = 139
+      Width = 623
+      Height = 136
       Margins.Left = 6
       Margins.Top = 6
       Margins.Right = 6

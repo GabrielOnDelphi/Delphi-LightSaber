@@ -72,7 +72,7 @@ IMPLEMENTATION {$R *.dfm}
 {.$I SynDprUses.inc} // use FastMM4 on older Delphi, or set FPC threads
 
 USES
-   System.Math, LightCore.Types, LightCore.StreamBuff2, LightVcl.Common.Debugger;
+   System.Math, LightCore.Types, LightCore.StreamBuff, LightVcl.Common.Debugger;
 
 
 
@@ -202,7 +202,7 @@ end;
 procedure TMainForm.btnStreamWriteClick(Sender: TObject);
 VAR
    TSL: TStringList;
-   Stream: TCubicBuffStream2;
+   Stream: TLightStream;
    dDate: TDate;
 begin
   Caption:= 'Writing...';
@@ -211,7 +211,7 @@ begin
   TSL.Add('List0');
   TSL.Add('List1');
 
-  Stream:= TCubicBuffStream2.CreateWrite('TCubicBuffStream.bin');
+  Stream:= TLightStream.CreateWrite('TLightStream.bin');
   TRY
    Stream.WriteHeader   ('MagicNo', 1);
    Stream.WriteBoolean  (TRUE);
@@ -235,10 +235,7 @@ begin
    Stream.WriteDouble   (3.14);
    Stream.WriteSingle   (3.14);
 
-   Stream.WritePadding(30);
-   Stream.WritePaddingDef;
-   Stream.WritePadding(128);
-
+   Stream.WritePadding;
    Stream.WriteCheckPoint('!');
   FINALLY
     FreeAndNil(Stream);
@@ -253,15 +250,15 @@ end;
 procedure TMainForm.btnStreamReadClick(Sender: TObject);
 VAR
    TSL: TStringList;
-   Stream: TCubicBuffStream2;
+   Stream: TLightStream;
    dDate: TDate;
 begin
   Caption:= 'Reading...';
   dDate:= EncodeDate(2024, 08, 10);
 
-  Stream:= TCubicBuffStream2.CreateRead('TCubicBuffStream.bin');
+  Stream:= TLightStream.CreateRead('TLightStream.bin');
   TRY
-   if NOT Stream.ReadHeader('MagicNo', 1)
+   if NOT Stream.TryReadHeader('MagicNo', 1)
    then RAISE Exception.Create('Cannot read header!');
 
    if NOT Stream.ReadBoolean                  then RAISE Exception.Create('Bool failure!');
@@ -291,9 +288,7 @@ begin
    if NOT SameValue(Stream.ReadDouble, 3.14, 0.01) then RAISE Exception.Create('ReadDouble failure!');
    if NOT SameValue(Stream.ReadSingle, 3.14, 0.01) then RAISE Exception.Create('ReadSingle failure!');
 
-   Stream.ReadPadding(30);
-   Stream.ReadPaddingDef;
-   Stream.ReadPaddingE(128);
+   Stream.ReadPadding;
    Stream.ReadCheckPointE('!');
 
    {ToDo: test also these:

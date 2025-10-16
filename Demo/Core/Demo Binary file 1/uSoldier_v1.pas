@@ -10,47 +10,47 @@ UNIT uSoldier_v1;
 INTERFACE
 
 USES System.SysUtils,
-     LightCore.StreamBuff, LightCore.StreamBuff2;
+     LightCore.StreamBuff;
 
 TYPE
   TSoldier = class(TObject)
   private
-    CONST StreamSignature: AnsiString= 'TSoldier';
+    CONST ClassSignature: AnsiString= 'TSoldier';
   public
     Life : Integer;
     Ammo : Integer;
     Name : string;
 
-    procedure Load(Stream: TCubicBuffStream2); virtual;
-    procedure Save(Stream: TCubicBuffStream2); virtual;
+    procedure Load(Stream: TLightStream); virtual;
+    procedure Save(Stream: TLightStream); virtual;
   end;
 
 
 IMPLEMENTATION
 
 
-procedure TSoldier.Save(Stream: TCubicBuffStream2);
+procedure TSoldier.Save(Stream: TLightStream);
 begin
-  Stream.WriteHeader(StreamSignature, 1);  // Header & version number
+  Stream.WriteHeader(ClassSignature, 1);  // Header & version number
 
   Stream.WriteInteger(Life);
   Stream.WriteInteger(Ammo);
   Stream.WriteString(Name);
 
-  Stream.WritePaddingDef;
+  Stream.WritePadding;
 end;
 
 
-procedure TSoldier.Load(Stream: TCubicBuffStream2);
+procedure TSoldier.Load(Stream: TLightStream);
 VAR Version: Word;
 begin
-  if NOT Stream.ReadHeaderVersion(StreamSignature, Version) then EXIT;   // Header & version number
+  if NOT Stream.TryReadHeaderVersion(ClassSignature, Version) then EXIT;   // Header & version number
 
   Life   := Stream.ReadInteger;
   Ammo   := Stream.ReadInteger;
   Name   := Stream.ReadString;
 
-  Stream.ReadPaddingDef;
+  Stream.ReadPadding;
 end;
 
 

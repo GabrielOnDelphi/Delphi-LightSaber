@@ -33,7 +33,9 @@ USES
   WinApi.Windows, WinApi.Messages, Winapi.ShellApi,
   System.SysUtils, System.Classes, System.Actions,
   VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
-  CoolTrayIcon, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Visual.PathEdit, LightVcl.Visual.StatusBar, cpProteus {Delete this line if you don't have Proteus library}, cpProteusIO, LightVcl.Common.GuiSettings, LightVcl.Common.AppDataForm, LightCore, LightCore.Time;
+  CoolTrayIcon, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Visual.PathEdit, LightVcl.Visual.StatusBar,
+  cpProteus {Delete this line if you don't have Proteus library}, cpProteusIO,
+  LightVcl.Common.GuiSettings, LightVcl.Common.AppDataForm, LightCore, LightCore.Time;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -71,13 +73,13 @@ TYPE
     N1          : TMenuItem;
     pgCtrl      : TPageControl;
     pnlRight    : TPanel;
-    Proteus     : TProteus;
     tabLog      : TTabSheet;
     tabMain     : TTabSheet;
     tabProgress : TTabSheet;
     TrayIcon    : TCoolTrayIcon;
     btnStart    : TButton;
     StatBar     : TStatusBar;
+    Proteus: TProteus;
     procedure actAboutExecute    (Sender: TObject);
     procedure actEnterKeyExecute (Sender: TObject);
     procedure actLanguageExecute (Sender: TObject);

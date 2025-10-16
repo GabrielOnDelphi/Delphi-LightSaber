@@ -54,10 +54,10 @@ object FrmUpdater: TFrmUpdater
   end
   object PageCtrl: TPageControl
     Left = 0
-    Top = 22
+    Top = 25
     Width = 666
-    Height = 351
-    ActivePage = tabNews
+    Height = 348
+    ActivePage = tabRecEditor
     Align = alClient
     TabOrder = 0
     object tabNews: TTabSheet
@@ -79,7 +79,7 @@ object FrmUpdater: TFrmUpdater
       object pnlBottom: TPanel
         AlignWithMargins = True
         Left = 3
-        Top = 271
+        Top = 268
         Width = 652
         Height = 45
         Align = alBottom
@@ -91,7 +91,7 @@ object FrmUpdater: TFrmUpdater
           Left = 129
           Top = 3
           Width = 286
-          Height = 42
+          Height = 39
           Align = alClient
           Alignment = taCenter
           AutoSize = False
@@ -199,9 +199,9 @@ object FrmUpdater: TFrmUpdater
       object Log: TRichLog
         AlignWithMargins = True
         Left = 3
-        Top = 23
+        Top = 26
         Width = 652
-        Height = 209
+        Height = 203
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
@@ -220,7 +220,7 @@ object FrmUpdater: TFrmUpdater
       object LogVerb: TRichLogTrckbr
         AlignWithMargins = True
         Left = 3
-        Top = 238
+        Top = 235
         Width = 652
         Height = 27
         Hint = 'For beta testers only'
@@ -248,7 +248,7 @@ object FrmUpdater: TFrmUpdater
       ImageIndex = 1
       DesignSize = (
         658
-        319)
+        316)
       object Panel3: TPanel
         AlignWithMargins = True
         Left = 210
@@ -309,20 +309,22 @@ object FrmUpdater: TFrmUpdater
       ImageIndex = 2
       DesignSize = (
         658
-        319)
+        316)
       object Panel2: TPanel
         AlignWithMargins = True
-        Left = 190
-        Top = 123
-        Width = 246
-        Height = 72
+        Left = 188
+        Top = 119
+        Width = 283
+        Height = 70
         Anchors = []
+        AutoSize = True
+        BevelOuter = bvNone
         TabOrder = 0
         object btnBinFile: TButton
           AlignWithMargins = True
-          Left = 4
-          Top = 4
-          Width = 238
+          Left = 3
+          Top = 3
+          Width = 277
           Height = 29
           Align = alTop
           Caption = 'Create BIN file'
@@ -331,9 +333,9 @@ object FrmUpdater: TFrmUpdater
         end
         object Button1: TButton
           AlignWithMargins = True
-          Left = 4
-          Top = 39
-          Width = 238
+          Left = 3
+          Top = 38
+          Width = 277
           Height = 29
           Align = alTop
           Caption = 'Show Updater Settings'

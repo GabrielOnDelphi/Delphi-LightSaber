@@ -13,7 +13,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, System.Contnrs,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Mask, Vcl.ExtCtrls, Vcl.Samples.Spin,
-  LightVcl.Common.AppDataForm, LightCore.StreamBuff, LightCore.StreamBuff2, uSoldier_v3;
+  LightVcl.Common.AppDataForm, LightCore.StreamBuff, uSoldier_v3;
 
 type
   TfrmMain = class(TLightForm)
@@ -108,6 +108,7 @@ begin
   Soldier3.Guns.Add(Gun);
   Soldier3.Guns.ActiveGun:= Soldier3.Guns.Count-1;
   btnSave.Enabled:= TRUE;
+  GroupBox2.Visible:= FALSE;
 
   ShowGuns;
 end;
@@ -153,7 +154,7 @@ begin
   Soldier3.Name:= edtName.Text;
 
   // Prepare binary file
-  VAR Stream:= TCubicBuffStream2.CreateWrite(GetBinaryFileName);
+  VAR Stream:= TLightStream.CreateWrite(GetBinaryFileName);
   TRY
     Soldier3.Save(Stream);  // Write Soldier to binary file
   FINALLY
@@ -167,7 +168,7 @@ begin
   btnClearClick(Sender);
 
   // Prepare binary file
-  VAR Stream:= TCubicBuffStream2.CreateRead(GetBinaryFileName);
+  VAR Stream:= TLightStream.CreateRead(GetBinaryFileName);
   TRY
     Soldier3.Load(Stream); // Read Soldier from binary file
     Caption:= Soldier3.ShowVersion;
@@ -180,6 +181,7 @@ begin
   spnLife.Value := Soldier3.Life;
   edtName.Text  := Soldier3.Name;
 end;
+
 
 procedure TfrmMain.btnNewGunClick(Sender: TObject);
 begin

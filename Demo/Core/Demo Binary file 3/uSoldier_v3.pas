@@ -1,32 +1,33 @@
 UNIT uSoldier_v3;
 
 {=============================================================================================================
-   2025.03.16
+   2025.09
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-   This demonstrates how to save/load a simple object from a binary file, using versioning.
+   This demonstrates how to save/load a simple object from a binary file, with versioning (posibility to add more data).
 =============================================================================================================}
 
 INTERFACE
 
 USES System.SysUtils, System.Contnrs, System.Classes,
-     LightCore.StreamBuff, LightCore.StreamBuff2;
+     LightCore.StreamBuff;
 
 TYPE
   TGun = class
     Name: string;
     Ammo: Integer;
-    CONST StreamSignature: AnsiString= 'TGun';
-    procedure Load(Stream: TCubicBuffStream2);
-    procedure Save(Stream: TCubicBuffStream2);
+    CONST ClassSignature: AnsiString= 'TGun';
+    CONST GunVersion = 1;
+    procedure Load(Stream: TLightStream);
+    procedure Save(Stream: TLightStream);
   end;
 
   TGuns = class(TObjectList)   // OwnsObjects is True by default
     ActiveGun: Integer;
-    CONST StreamSignature: AnsiString= 'TGuns';
+    CONST ClassSignature: AnsiString= 'TGuns';
     function ActiveGunName: string;
-    procedure Load(Stream: TCubicBuffStream2);
-    procedure Save(Stream: TCubicBuffStream2);
+    procedure Load(Stream: TLightStream);
+    procedure Save(Stream: TLightStream);
   end;
 
 
@@ -34,21 +35,22 @@ TYPE
   TSoldier3 = class(TObject)
   private
     LoadedVersion: Word;
-    procedure Load_v3(Stream: TCubicBuffStream2);
-    CONST StreamSignature: AnsiString= 'TSoldier';
-    procedure Load_v1(Stream: TCubicBuffStream2);
-    procedure Load_v2(Stream: TCubicBuffStream2);
+    CONST ClassSignature: AnsiString= 'TSoldier';
+    procedure Load_v3(Stream: TLightStream);
+    procedure Load_v1(Stream: TLightStream);
+    procedure Load_v2(Stream: TLightStream);
   public
     Life : Integer;
     Speed: Integer;
+    Ammo : Integer;
     Name : string;
     Guns : TGuns;  // List of guns
 
     constructor Create;
     destructor Destroy; override;
 
-    procedure Load(Stream: TCubicBuffStream2); virtual;
-    procedure Save(Stream: TCubicBuffStream2); virtual;
+    procedure Load(Stream: TLightStream); virtual;
+    procedure Save(Stream: TLightStream); virtual;
 
     function ShowVersion: string;
   end;
@@ -71,9 +73,9 @@ end;
 
 
 
-procedure TSoldier3.Save(Stream: TCubicBuffStream2);
+procedure TSoldier3.Save(Stream: TLightStream);
 begin
-  Stream.WriteHeader(StreamSignature, 3);  // Header & version number
+  Stream.WriteHeader(ClassSignature, 3);  // Header & version number
 
   Stream.WriteInteger(Life);
   Stream.WriteString(Name);
@@ -82,11 +84,12 @@ begin
 end;
 
 
-procedure TSoldier3.Load(Stream: TCubicBuffStream2);
+procedure TSoldier3.Load(Stream: TLightStream);
 begin
-  if NOT Stream.ReadHeaderVersion(StreamSignature, LoadedVersion) then EXIT;   // Header & version number
+  VAR Version:= Stream.TryReadHeader(ClassSignature);
+  if Version = 0 then EXIT;   // -1 if reading the header failed.
 
-  case LoadedVersion of
+  case Version of
     1: Load_v1(Stream);
     2: Load_v2(Stream);
     3: Load_v3(Stream);
@@ -94,20 +97,18 @@ begin
 end;
 
 
-procedure TSoldier3.Load_v1(Stream: TCubicBuffStream2);
-VAR Ammo: Integer;
+procedure TSoldier3.Load_v1(Stream: TLightStream);
 begin
   Life := Stream.ReadInteger;
   Ammo := Stream.ReadInteger;
   Name := Stream.ReadString;
 
-  Stream.ReadPaddingDef;
+  Stream.ReadPadding;
 end;
 
 
-procedure TSoldier3.Load_v2(Stream: TCubicBuffStream2);
+procedure TSoldier3.Load_v2(Stream: TLightStream);
 VAR
-   Ammo: Integer;
    Gun : string;
 begin
   Life  := Stream.ReadInteger;
@@ -115,11 +116,11 @@ begin
   Name  := Stream.ReadString;
   Speed := Stream.ReadInteger;
   Gun   := Stream.ReadString;
-  //todo: Gun   :=  =FindInList;
+  //todo: Gun:= FindInList;
 end;
 
 
-procedure TSoldier3.Load_v3(Stream: TCubicBuffStream2);
+procedure TSoldier3.Load_v3(Stream: TLightStream);
 begin
   Life  := Stream.ReadInteger;
   Name  := Stream.ReadString;
@@ -140,19 +141,18 @@ end;
 
 
 { TGun }
-CONST GunVersion = 1;
-
-procedure TGun.Save(Stream: TCubicBuffStream2);
+procedure TGun.Save(Stream: TLightStream);
 begin
-  Stream.WriteHeader(StreamSignature, GunVersion);  // Header & version number
+  Stream.WriteHeader(ClassSignature, GunVersion);  // Header & version number
 
   Stream.WriteInteger(Ammo);
   Stream.WriteString(Name);
 end;
 
-procedure TGun.Load(Stream: TCubicBuffStream2);
+
+procedure TGun.Load(Stream: TLightStream);
 begin
-  Stream.ReadHeader(StreamSignature, GunVersion);
+  Stream.ReadHeader(ClassSignature, GunVersion);
 
   Ammo := Stream.ReadInteger;
   Name := Stream.ReadString;
@@ -172,9 +172,10 @@ begin
   else Result:= (Self[ActiveGun] as TGun).Name;
 end;
 
-procedure TGuns.Save(Stream: TCubicBuffStream2);
+
+procedure TGuns.Save(Stream: TLightStream);
 begin
-  Stream.WriteHeader(StreamSignature, 1);  // Header & version number
+  Stream.WriteHeader(ClassSignature, 1);  // Header & version number
 
   Stream.WriteInteger(ActiveGun);
   Stream.WriteInteger(Count);
@@ -183,12 +184,12 @@ begin
 end;
 
 
-procedure TGuns.Load(Stream: TCubicBuffStream2);
+procedure TGuns.Load(Stream: TLightStream);
 VAR
-   iCount: Integer;
    Gun: TGun;
+   iCount: Integer;
 begin
-  Stream.ReadHeader(StreamSignature, 1);
+  Stream.ReadHeader(ClassSignature, 1);
 
   ActiveGun:= Stream.ReadInteger;
   iCount   := Stream.ReadInteger;

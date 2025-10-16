@@ -13,7 +13,7 @@ UNIT LightVcl.Common.GuiSettings;
 INTERFACE
 
 USES
-  System.SysUtils, LightCore.StreamBuff2;
+  System.SysUtils, LightCore.StreamBuff;
 
 TYPE
 
@@ -39,13 +39,13 @@ procedure TGuiSettings.Save;
 begin
   VAR SettingsFile:= AppData.AppDataFolder(TRUE)+ 'GUISettings.bin';
 
-  VAR Stream:= TCubicBuffStream2.CreateWrite(SettingsFile);    { This will give an AV if the file cannot be saved (folder readonly) }
+  VAR Stream:= TLightStream.CreateWrite(SettingsFile);    { This will give an AV if the file cannot be saved (folder readonly) }
   TRY
     Stream.WriteHeader(Signature, 1);
     Stream.WriteBoolean(bUser);
     Stream.WriteInteger(iUser);
 
-    Stream.WritePaddingDef;
+    Stream.WritePadding;
   FINALLY
     FreeAndNil(Stream);
   END;
@@ -57,14 +57,14 @@ begin
   VAR SettingsFile:= AppData.AppDataFolder(TRUE)+ 'GUISettings.bin';
   if NOT FileExists(SettingsFile) then EXIT;
 
-  VAR Stream:= TCubicBuffStream2.CreateRead(SettingsFile);
+  VAR Stream:= TLightStream.CreateRead(SettingsFile);
   TRY
     Stream.ReadHeader(Signature, 1);
  
     bUser  := Stream.ReadBoolean;
     iUser  := Stream.ReadInteger;
 
-    Stream.ReadPaddingDef;
+    Stream.ReadPadding;
   FINALLY
     FreeAndNil(Stream);
   END;

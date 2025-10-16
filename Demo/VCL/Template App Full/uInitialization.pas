@@ -21,15 +21,14 @@ IMPLEMENTATION
 
 USES
   chHardID, LightVcl.Common.Shell, LightVcl.Common.ExecuteShell, LightVcl.Common.GuiSettings,
-  cpCertificate, LightCore.AppData, LightVcl.Common.AppData
-, LightVcl.Common.CenterControl, LightVcl.Common.Translate, ciUpdater,
+  cpCertificate, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.CenterControl, LightVcl.Common.Translate, ciUpdater,
   FormMain, FormUniversalEula, FormSkinsDisk, FormSettings, FormSplashScreen, FormUpdaterNotifier;
 
 
 procedure LateInitialization;
 begin
-  { Add your brand here }{
-  AppData.CompanyName    := 'BuyTime Ltd';
+  { Add your brand here }
+  {AppData.CompanyName    := 'BuyTime Ltd';
   AppData.ProductHome    := 'https://YourWebsiteHere.com';
   AppData.ProductSupport := 'https://YourWebsiteHere.com';
   AppData.ProductUninstal:= 'https://YourWebsiteHere.com'; }
@@ -77,7 +76,7 @@ begin
      MainForm.TrayIcon.PutIconOnlyInTask;   // Restore the app, but don't automatically show its taskbar icon
    end;
 
-  // First run
+  { First run }
   if AppData.RunningFirstTime then
    begin
     // Preparation of the main form
@@ -105,7 +104,7 @@ begin
 
   { Auto updater / Internet news }
   AppData.MainFormCaption('Starting autoupdater...');
-  Updater:= TUpdater.Create(UpdaterURL);
+  Updater:= TUpdater.Create(UpdaterDemoURL);
   Updater.URLDownload  := AppData.ProductHome;
   Updater.URLRelHistory:= AppData.ProductHome;
   Updater.CheckForNews;

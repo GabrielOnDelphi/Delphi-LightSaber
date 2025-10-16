@@ -51,8 +51,8 @@ TYPE
     Mirror: Boolean;
     Rotation: TRotateSense;
     procedure Reset;
-    procedure WriteToStream  (Stream: TCubicBuffStream);
-    procedure ReadFromStream (Stream: TCubicBuffStream);
+    procedure WriteToStream  (Stream: TLightStream);
+    procedure ReadFromStream (Stream: TLightStream);
  end;
 
  {$IFDEF CCRExif}
@@ -572,21 +572,21 @@ begin
 end;
 
 
-procedure RSpatialParams.WriteToStream(Stream: TCubicBuffStream);
+procedure RSpatialParams.WriteToStream(Stream: TLightStream);
 begin
  Stream.WriteBoolean (Flip);
  Stream.WriteBoolean (Mirror);
  Stream.WriteByte    (Ord(Rotation));
- Stream.WritePadding(32);
+ Stream.WritePaddingE(32);
 end;
 
 
-procedure RSpatialParams.ReadFromStream(Stream: TCubicBuffStream);
+procedure RSpatialParams.ReadFromStream(Stream: TLightStream);
 begin
  Flip    := Stream.ReadBoolean;
  Mirror  := Stream.ReadBoolean;
  Rotation:= TRotateSense(Stream.ReadByte);
- Stream.ReadPadding(32);
+ Stream.ReadPaddingE(32);
 end;
 
 

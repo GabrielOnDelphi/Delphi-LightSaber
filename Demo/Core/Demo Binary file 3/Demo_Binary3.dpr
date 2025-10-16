@@ -12,7 +12,7 @@ uses
 {$R *.res}
 
 begin
-  AppData:= TAppData.Create('Light Demo Binary 2');
+  AppData:= TAppData.Create('Light Demo Binary 3');
   AppData.CreateMainForm(TfrmMain);
   AppData.Run;
 end.

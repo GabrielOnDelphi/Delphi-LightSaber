@@ -10,15 +10,15 @@ UNIT uSoldier_v2;
 INTERFACE
 
 USES System.SysUtils,
-     LightCore.StreamBuff, LightCore.StreamBuff2;
+     LightCore.StreamBuff;
 
 TYPE
   TSoldier2 = class(TObject)
   private
     LoadedVersion: Word;
-    CONST StreamSignature: AnsiString= 'TSoldier';
-    procedure Load_v1(Stream: TCubicBuffStream2);
-    procedure Load_v2(Stream: TCubicBuffStream2);
+    CONST ClassSignature: AnsiString= 'TSoldier';
+    procedure Load_v1(Stream: TLightStream);
+    procedure Load_v2(Stream: TLightStream);
   public
     Life : Integer;
     Ammo : Integer;
@@ -26,8 +26,8 @@ TYPE
     Name : string;
     Gun  : string;  // GunType
 
-    procedure Load(Stream: TCubicBuffStream2); virtual;
-    procedure Save(Stream: TCubicBuffStream2); virtual;
+    procedure Load(Stream: TLightStream); virtual;
+    procedure Save(Stream: TLightStream); virtual;
 
     function ShowVersion: string;
   end;
@@ -36,9 +36,9 @@ TYPE
 IMPLEMENTATION
 
 
-procedure TSoldier2.Save(Stream: TCubicBuffStream2);
+procedure TSoldier2.Save(Stream: TLightStream);
 begin
-  Stream.WriteHeader(StreamSignature, 2);  // Header & version number
+  Stream.WriteHeader(ClassSignature, 2);  // Header & version number
 
   Stream.WriteInteger(Life);
   Stream.WriteInteger(Ammo);
@@ -48,10 +48,10 @@ begin
 end;
 
 
-procedure TSoldier2.Load(Stream: TCubicBuffStream2);
+procedure TSoldier2.Load(Stream: TLightStream);
 VAR Version: Word;
 begin
-  if NOT Stream.ReadHeaderVersion(StreamSignature, Version) then EXIT;   // Header & version number
+  if NOT Stream.TryReadHeaderVersion(ClassSignature, Version) then EXIT;   // Header & version number
 
   case Version of
     1: Load_v1(Stream);
@@ -61,18 +61,18 @@ begin
 end;
 
 
-procedure TSoldier2.Load_v1(Stream: TCubicBuffStream2);
+procedure TSoldier2.Load_v1(Stream: TLightStream);
 begin
   Life := Stream.ReadInteger;
   Ammo := Stream.ReadInteger;
   Name := Stream.ReadString;
 
-  Stream.ReadPaddingDef;
+  Stream.ReadPadding;
   LoadedVersion:= 1;
 end;
 
 
-procedure TSoldier2.Load_v2(Stream: TCubicBuffStream2);
+procedure TSoldier2.Load_v2(Stream: TLightStream);
 begin
   Life  := Stream.ReadInteger;
   Ammo  := Stream.ReadInteger;

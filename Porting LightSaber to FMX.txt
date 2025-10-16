@@ -1,5 +1,9 @@
-The Core package was made platform agnostic. This means that you can use it both from VCL and FMX. For this the following changes were made. 
-Note: This is a breaking change. Your code will not compile anymore. However, in less than 5 minutes, with some batch replace, you will be back online.
+With some work, I make the Core package platform agnostic. 
+This means that you can use it both VCL and FMX projects. 
+This is a breaking change. Your code will not compile anymore. However, in less than 5 minutes, with some batch replace, you will be back online.
+
+The following changes were made. 
+
 
 1. The new library was moved to a new branch.
 

@@ -13,7 +13,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Mask, Vcl.ExtCtrls, Vcl.Samples.Spin,
-  LightVcl.Common.AppDataForm, LightCore.StreamBuff, LightCore.StreamBuff2, uSoldier_v2;
+  LightVcl.Common.AppDataForm, LightCore.StreamBuff, uSoldier_v2;
 
 type
   TfrmMain = class(TLightForm)
@@ -79,7 +79,7 @@ begin
   Soldier2.Ammo:= 3;
 
   // Prepare binary file
-  VAR Stream:= TCubicBuffStream2.CreateWrite(GetBinaryFileName);
+  VAR Stream:= TLightStream.CreateWrite(GetBinaryFileName);
   TRY
     Soldier2.Save(Stream);  // Write Soldier to binary file
   FINALLY
@@ -91,7 +91,7 @@ end;
 procedure TfrmMain.btnLoadClick(Sender: TObject);
 begin
   // Prepare binary file
-  VAR Stream:= TCubicBuffStream2.CreateRead(GetBinaryFileName);
+  VAR Stream:= TLightStream.CreateRead(GetBinaryFileName);
   TRY
     Soldier2.Load(Stream); // Read Soldier from binary file
     Caption:= Soldier2.ShowVersion;

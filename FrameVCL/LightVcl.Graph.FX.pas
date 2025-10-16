@@ -34,8 +34,8 @@ TYPE
     TileAuto      : Boolean;          { False = No tile, True = Auto Tile (small images will be tiled. If wallpaper's height at least 40% of desktop's height, then 'Perfect Tile' effect will be applied (see the manual for details)). }
     TileThreshold : Integer; {%}      { Any image with an area higher or equal with desktop's size is considered 'normal'. Any image with area between 99% and this value is considered 'small' and it will be stretched to fill the desktop. Any image below this value is considered 'tiny' (to small to be stretched). }
     procedure Reset;
-    procedure WriteToStream (Stream: TCubicBuffStream);
-    procedure ReadFromStream(Stream: TCubicBuffStream);
+    procedure WriteToStream (Stream: TLightStream);
+    procedure ReadFromStream(Stream: TLightStream);
   end;
 
  PEnhanceParams = ^REnhanceParams;    { Parameters for the 'Enhance' routine }
@@ -46,8 +46,8 @@ TYPE
     Contrast   : Smallint;
     Saturation : Smallint;
     procedure Reset;
-    procedure WriteToStream (Stream: TCubicBuffStream);
-    procedure ReadFromStream(Stream: TCubicBuffStream);
+    procedure WriteToStream (Stream: TLightStream);
+    procedure ReadFromStream(Stream: TLightStream);
    end;
 
  { Crop }
@@ -302,25 +302,25 @@ begin
 end;
 
 
-procedure RTileParams.WriteToStream(Stream: TCubicBuffStream);
+procedure RTileParams.WriteToStream(Stream: TLightStream);
 begin
  Stream.WriteBoolean (TileAuto);
  Stream.WriteBoolean (TileType.Horizon);
  Stream.WriteBoolean (TileType.OneRow);
  Stream.WriteBoolean (TileType.Vertical);
  Stream.WriteInteger (TileThreshold);
- Stream.WritePadding(32);
+ Stream.WritePaddingE(32);
 end;
 
 
-procedure RTileParams.ReadFromStream(Stream: TCubicBuffStream);
+procedure RTileParams.ReadFromStream(Stream: TLightStream);
 begin
  TileAuto         := Stream.ReadBoolean;
  TileType.Horizon := Stream.ReadBoolean;
  TileType.OneRow  := Stream.ReadBoolean;
  TileType.Vertical:= Stream.ReadBoolean;
  TileThreshold    := Stream.ReadInteger;
-                     Stream.ReadPadding(32);
+                     Stream.ReadPaddingE(32);
 end;
 
 
@@ -343,25 +343,25 @@ begin
 end;
 
 
-procedure REnhanceParams.WriteToStream(Stream: TCubicBuffStream);
+procedure REnhanceParams.WriteToStream(Stream: TLightStream);
 begin
  Stream.WriteSmallInt (Brightness);
  Stream.WriteSmallInt (Contrast);
  Stream.WriteSmallInt (Saturation);
  Stream.WriteShortInt (Darkness);
  Stream.WriteBoolean  (Smooth);
- Stream.WritePadding(32);
+ Stream.WritePaddingE(32);
 end;
 
 
-procedure REnhanceParams.ReadFromStream(Stream: TCubicBuffStream);
+procedure REnhanceParams.ReadFromStream(Stream: TLightStream);
 begin
  Brightness := Stream.ReadSmallInt;
  Contrast   := Stream.ReadSmallInt;
  Saturation := Stream.ReadSmallInt;
  Darkness   := Stream.ReadShortInt;
  Smooth     := Stream.ReadBoolean;
- Stream.ReadPadding(32);
+ Stream.ReadPaddingE(32);
 end;
 
 

@@ -29,7 +29,7 @@ object frmSettings: TfrmSettings
     Top = 0
     Width = 762
     Height = 509
-    ActivePage = tabInterface
+    ActivePage = tabHelp
     Align = alClient
     TabOrder = 0
     object tabSystem: TTabSheet

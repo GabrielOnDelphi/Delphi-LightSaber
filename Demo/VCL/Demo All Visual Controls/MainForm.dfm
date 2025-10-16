@@ -19,7 +19,7 @@ object frmMain: TfrmMain
     Top = 3
     Width = 889
     Height = 530
-    ActivePage = tabText
+    ActivePage = TabSheet1
     Align = alClient
     TabOrder = 0
     object TabSheet1: TTabSheet
@@ -392,6 +392,7 @@ object frmMain: TfrmMain
         ParentColor = True
         ShowCaption = False
         TabOrder = 0
+        ExplicitWidth = 300
         DesignSize = (
           679
           116)
@@ -399,7 +400,7 @@ object frmMain: TfrmMain
       object ValueListEditor: TCubicValueListEditor
         AlignWithMargins = True
         Left = 99
-        Top = 210
+        Top = 211
         Width = 683
         Height = 116
         Margins.Left = 99
@@ -408,6 +409,7 @@ object frmMain: TfrmMain
         Margins.Bottom = 9
         Align = alTop
         TabOrder = 1
+        ExplicitTop = 210
         ColWidths = (
           150
           527)
@@ -417,7 +419,7 @@ object frmMain: TfrmMain
         Left = 99
         Top = 147
         Width = 683
-        Height = 45
+        Height = 46
         Margins.Left = 99
         Margins.Top = 9
         Margins.Right = 99

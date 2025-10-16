@@ -48,7 +48,7 @@ procedure PopulateUsers(Combo: TComboBox);
 IMPLEMENTATION
 
 USES
-  LightCore.StreamBuff2;
+  LightCore.StreamBuff;
 
 
 
@@ -69,12 +69,12 @@ end;
 
 function RNews.LoadFrom(FileName: string): Boolean;
 VAR
-   Stream: TCubicBuffStream2;
+   Stream: TLightStream;
 begin
  Clear;
- Stream:= TCubicBuffStream2.CreateRead(FileName);
+ Stream:= TLightStream.CreateRead(FileName);
  TRY
-   Result:= Stream.ReadHeaderTry(Signature, CurrentVersion);
+   Result:= Stream.TryReadHeader(Signature, CurrentVersion);
    if Result then
     begin
       Comment     := Stream.ReadString;
@@ -87,7 +87,7 @@ begin
       ShowCounter := Stream.ReadInteger;
       IsBetaVers  := Stream.ReadBoolean;
 
-      Stream.ReadPaddingDef;
+      Stream.ReadPadding;
     end;
 
  FINALLY
@@ -98,22 +98,22 @@ end;
 
 procedure RNews.SaveTo(FileName: string);
 VAR
-   Stream: TCubicBuffStream2;
+   Stream: TLightStream;
 begin
- Stream:= TCubicBuffStream2.CreateWrite(FileName);
+ Stream:= TLightStream.CreateWrite(FileName);
  TRY
    Stream.WriteHeader(Signature, CurrentVersion);
-   Stream.WriteString (Comment);
-   Stream.WriteString (AppVersion);
+   Stream.WriteString  (Comment);
+   Stream.WriteString  (AppVersion);
    Stream.WriteInteger (NewsID);
-   Stream.WriteString (NewsHeadline);
-   Stream.WriteString (NewsBody);
-   Stream.WriteByte(Ord(TargetUser));
+   Stream.WriteString  (NewsHeadline);
+   Stream.WriteString  (NewsBody);
+   Stream.WriteByte    (Ord(TargetUser));
    Stream.WriteBoolean (CriticalUpd);
    Stream.WriteInteger (ShowCounter);
    Stream.WriteBoolean (IsBetaVers);
 
-   Stream.WritePaddingDef;
+   Stream.WritePadding;
  FINALLY
    FreeAndNil(Stream);
  END;

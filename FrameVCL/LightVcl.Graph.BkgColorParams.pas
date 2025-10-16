@@ -48,8 +48,8 @@ TYPE
    private
      CONST CurrentVersion: Integer= 1;
    public
-     procedure ReadFromStream(IOStream: TCubicBuffStream);
-     procedure WriteToStream (IOStream: TCubicBuffStream);
+     procedure ReadFromStream(IOStream: TLightStream);
+     procedure WriteToStream (IOStream: TLightStream);
    end;
 
 
@@ -70,7 +70,7 @@ begin
 end;
 
 
-procedure RBkgColorParams.ReadFromStream(IOStream: TCubicBuffStream);
+procedure RBkgColorParams.ReadFromStream(IOStream: TLightStream);
 begin
   VAR Version:= IOStream.ReadInteger;
   if Version = CurrentVersion then
@@ -85,7 +85,7 @@ begin
     Tolerance     :=              IOStream.ReadInteger;
     FadeSpeed     :=              IOStream.ReadInteger;
     NeighborWeight:=              IOStream.ReadInteger;
-    IOStream.ReadPadding(64);
+    IOStream.ReadPaddingE(64);
    end
   else
    begin
@@ -103,7 +103,7 @@ begin
 end;
 
 
-procedure RBkgColorParams.WriteToStream(IOStream: TCubicBuffStream);
+procedure RBkgColorParams.WriteToStream(IOStream: TLightStream);
 begin
   IOStream.WriteInteger (CurrentVersion);
   IOStream.WriteInteger (Color);
@@ -115,7 +115,7 @@ begin
   IOStream.WriteInteger (Tolerance);
   IOStream.WriteInteger (FadeSpeed);
   IOStream.WriteInteger (NeighborWeight);
-  IOStream.WritePadding(64);
+  IOStream.WritePaddingE(64);
 end;
 
 

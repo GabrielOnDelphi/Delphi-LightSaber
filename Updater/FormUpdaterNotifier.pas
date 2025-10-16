@@ -28,7 +28,7 @@ USES
   LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, ciUpdater, LightVcl.Visual.RichLog, LightVcl.Visual.RichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
 
 CONST
-  UpdaterURL = 'https://www.GabrielMoraru.com/uploads/OnlineNews_v2_TemplateApp.bin'; { For demo purposes }
+  UpdaterDemoURL = 'https://www.GabrielMoraru.com/uploads/OnlineNews_v2_TemplateApp.bin'; { For demo purposes }
 
 TYPE
   TFrmUpdater = class(TLightForm)

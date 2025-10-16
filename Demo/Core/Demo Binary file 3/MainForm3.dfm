@@ -3,7 +3,7 @@ object frmMain: TfrmMain
   Top = 0
   Caption = 'Light Saber - Binary file demo'
   ClientHeight = 457
-  ClientWidth = 488
+  ClientWidth = 503
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -18,24 +18,25 @@ object frmMain: TfrmMain
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 482
+    Width = 497
     Height = 17
     Align = alTop
     Caption = 
-      'This demo demonstrates how to save some data to a binary file an' +
-      'd read it back'
+      'This demo demonstrates how to save an object to a binary file an' +
+      'd read it back.'
     WordWrap = True
-    ExplicitWidth = 472
+    ExplicitWidth = 467
   end
   object GroupBox1: TGroupBox
     AlignWithMargins = True
     Left = 3
     Top = 26
-    Width = 482
+    Width = 497
     Height = 93
     Align = alTop
     Caption = 'Soldier'
     TabOrder = 0
+    ExplicitWidth = 482
     object Label2: TLabel
       Left = 194
       Top = 57
@@ -69,14 +70,15 @@ object frmMain: TfrmMain
     AlignWithMargins = True
     Left = 3
     Top = 317
-    Width = 482
+    Width = 497
     Height = 97
     Align = alBottom
     Caption = 'New gun'
     TabOrder = 1
     Visible = False
+    ExplicitWidth = 482
     DesignSize = (
-      482
+      497
       97)
     object Label3: TLabel
       Left = 181
@@ -90,8 +92,8 @@ object frmMain: TfrmMain
       Top = 50
       Width = 55
       Height = 27
-      MaxValue = 0
-      MinValue = 0
+      MaxValue = 199
+      MinValue = 1
       TabOrder = 0
       Value = 0
     end
@@ -104,15 +106,15 @@ object frmMain: TfrmMain
       EditLabel.Height = 17
       EditLabel.Caption = 'Gun name'
       TabOrder = 1
-      Text = ''
+      Text = 'Pistol'
     end
     object btnAddGun: TButton
-      Left = 367
-      Top = 50
+      Left = 372
+      Top = 48
       Width = 99
       Height = 34
       Anchors = [akBottom]
-      Caption = 'Add gun'
+      Caption = 'Apply'
       TabOrder = 2
       OnClick = btnAddGunClick
     end
@@ -120,13 +122,14 @@ object frmMain: TfrmMain
   object Panel1: TPanel
     Left = 0
     Top = 417
-    Width = 488
+    Width = 503
     Height = 40
     Align = alBottom
     TabOrder = 2
+    ExplicitWidth = 488
     object btnSave: TButton
       AlignWithMargins = True
-      Left = 264
+      Left = 279
       Top = 4
       Width = 107
       Height = 32
@@ -135,10 +138,11 @@ object frmMain: TfrmMain
       Enabled = False
       TabOrder = 0
       OnClick = btnSaveClick
+      ExplicitLeft = 264
     end
     object btnLoad: TButton
       AlignWithMargins = True
-      Left = 377
+      Left = 392
       Top = 4
       Width = 107
       Height = 32
@@ -146,6 +150,7 @@ object frmMain: TfrmMain
       Caption = 'Load'
       TabOrder = 1
       OnClick = btnLoadClick
+      ExplicitLeft = 377
     end
     object btnClear: TButton
       AlignWithMargins = True
@@ -163,13 +168,14 @@ object frmMain: TfrmMain
     AlignWithMargins = True
     Left = 3
     Top = 125
-    Width = 482
+    Width = 497
     Height = 186
     Align = alClient
     Caption = 'Equipment'
     TabOrder = 3
+    ExplicitWidth = 482
     DesignSize = (
-      482
+      497
       186)
     object ListBox1: TListBox
       AlignWithMargins = True
@@ -183,23 +189,23 @@ object frmMain: TfrmMain
       OnClick = ListBox1Click
     end
     object btnSetActive: TButton
-      Left = 367
-      Top = 83
-      Width = 99
+      Left = 275
+      Top = 91
+      Width = 108
       Height = 34
       Hint = 'Set selected gun as active gun'
       Anchors = [akBottom]
-      Caption = 'Set active'
+      Caption = 'Set active gun'
       TabOrder = 1
       OnClick = btnSetActiveClick
     end
     object btnNewGun: TButton
-      Left = 367
-      Top = 43
-      Width = 99
+      Left = 275
+      Top = 51
+      Width = 108
       Height = 34
       Anchors = [akBottom]
-      Caption = 'New gun'
+      Caption = 'Add new gun'
       TabOrder = 2
       OnClick = btnNewGunClick
     end

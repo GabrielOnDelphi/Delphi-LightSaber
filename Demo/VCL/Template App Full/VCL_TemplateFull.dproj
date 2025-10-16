@@ -1,4 +1,4 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <Base>True</Base>
         <AppType>Application</AppType>
@@ -66,8 +66,8 @@
         <DCC_RangeChecking>true</DCC_RangeChecking>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <VerInfo_Build>15</VerInfo_Build>
-        <VerInfo_Keys>CompanyName=GM;FileDescription=Gabriel Moraru;FileVersion=0.7.0.15;InternalName=;LegalCopyright=Gabriel Moraru;LegalTrademarks=Gabriel Moraru;OriginalFilename=;ProductName=Demo app;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
+        <VerInfo_Build>17</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=GM;FileDescription=Gabriel Moraru;FileVersion=0.7.0.17;InternalName=;LegalCopyright=Gabriel Moraru;LegalTrademarks=Gabriel Moraru;OriginalFilename=;ProductName=Demo app;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
         <VerInfo_MinorVer>7</VerInfo_MinorVer>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
@@ -86,6 +86,8 @@
         <DCCReference Include="..\..\..\FrameVCL\LightVcl.Common.AppData.pas"/>
         <DCCReference Include="..\..\..\FrameVCL\LightVcl.Common.AppDataForm.pas"/>
         <DCCReference Include="..\..\..\LightCore.AppData.pas"/>
+        <DCCReference Include="..\..\..\Updater\ciUpdater.pas"/>
+        <DCCReference Include="..\..\..\Updater\ciUpdaterRec.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
