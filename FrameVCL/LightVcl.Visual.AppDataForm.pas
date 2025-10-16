@@ -1,7 +1,7 @@
-UNIT LightVcl.Common.AppDataForm;
+UNIT LightVcl.Visual.AppDataForm;
 
 {=============================================================================================================
-   2025.03
+   2025.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Motivation - Where to initialize own code?
@@ -23,7 +23,7 @@ UNIT LightVcl.Common.AppDataForm;
       Change the declaration of your form from TForm to TLightForm.
       Optionally, if you want to execute your own initialization code, override the LateInitialize (don't forget to call inherited).
 
-      uses LightVcl.Common.AppDataForm;
+      uses LightVcl.Visual.AppDataForm;
       Type
         TYourForm = class(TLightForm)
         protected
@@ -66,8 +66,7 @@ INTERFACE
 USES
   Winapi.Windows, Winapi.Messages,
   System.SysUtils, System.Classes, System.IniFiles, Vcl.Controls, Vcl.Forms,
-  LightVcl.Common.Dialogs, LightVcl.Common.CenterControl, LightVcl.Common.IniFile,
-  LightCore.AppData; // Do not add dependencies higher than "cb" level
+  LightCore.AppData, LightVcl.Common.Dialogs, LightVcl.Common.CenterControl, LightVcl.Common.IniFile;
 
 TYPE
   TLightForm = class(TForm)
@@ -99,7 +98,7 @@ TYPE
 
 IMPLEMENTATION
 USES
-  LightVcl.Common.AppData, LightVcl.Visual.INIFile;
+  LightVcl.Visual.AppData, LightVcl.Visual.INIFile;
 
 
 constructor TLightForm.Create(AOwner: TComponent; AutoSaveForm: TAutoState);

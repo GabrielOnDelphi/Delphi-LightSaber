@@ -54,7 +54,7 @@ function GetVideoPlayerLogo: TBitmap;
 
 IMPLEMENTATION
 USES
-   LightVcl.Graph.Bitmap, LightVcl.Graph.Loader, LightCore.AppData, LightVcl.Common.AppData;
+   LightVcl.Graph.Bitmap, LightVcl.Graph.Loader, LightCore.AppData;
 
 
 
@@ -63,7 +63,7 @@ USES
 function GetVideoPlayerLogo: TBitmap;   // Old name: ExtractMiddleFrame
 begin
  Result:= LightVcl.Graph.Bitmap.CreateBlankBitmap(192, 128, clBlack);   // 234x174 is the size of the Preview window in BX
- VAR AviLogo:= LightVcl.Graph.Loader.LoadGraph(AppData.SysDir+ 'video_player_icon.png', FALSE, TRUE);
+ VAR AviLogo:= LightVcl.Graph.Loader.LoadGraph(AppDataCore.SysDir+ 'video_player_icon.png', FALSE, TRUE);
  TRY
    //Result.Canvas.Draw(10, 10, AviLogo);
    LightVcl.Graph.Bitmap.CenterBitmap(AviLogo, Result);
@@ -115,7 +115,7 @@ function GetVideoPlayerLogo(FileName: string; OUT FrameCount: Cardinal): TBitmap
 
 IMPLEMENTATION
 USES
-   LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.AppDataForm, LightVcl.Graph.Bitmap, LightVcl.Graph.Loader, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO;
+   LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.AppDataCoreForm, LightVcl.Graph.Bitmap, LightVcl.Graph.Loader, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO;
 
 
 
@@ -193,7 +193,7 @@ begin
  // try to open and play media file, render on the custom window specified by handle
  Result:= FFPlayer.Open(FileName, FDrawingForm.Handle);
  if NOT Result
- then AppData.LogError(FFPlayer.LastErrMsg);
+ then AppDataCore.LogError(FFPlayer.LastErrMsg);
 end;
 
 
@@ -221,7 +221,7 @@ var
   PTS: Int64;
 begin
   if FFPlayer.CurrentFrame(BMP, PTS)
-  then BMP.SaveToFile(AppData.ExeFolder+ '\capture' + IntToStr(PTS) + '.bmp');
+  then BMP.SaveToFile(AppDataCore.ExeFolder+ '\capture' + IntToStr(PTS) + '.bmp');
 end;
 
 
@@ -239,7 +239,7 @@ begin
    TRY
     BMP.SetSize(DrawingForm.Width, DrawingForm.Height);
     DrawingForm.Canvas.CopyRect(BMP.Canvas.ClipRect, BMP.Canvas, BMP.Canvas.ClipRect);
-    BMP.SaveToFile(AppData.ExeFolder+ TimeToStr_IO(now));
+    BMP.SaveToFile(AppDataCore.ExeFolder+ TimeToStr_IO(now));
    FINALLY
     FreeAndNil(BMP);
    END;
@@ -255,7 +255,7 @@ begin
 
  if VideoOpened
  then Timer.Enabled:= TRUE
- else AppData.LogError(FFPlayer.LastErrMsg);
+ else AppDataCore.LogError(FFPlayer.LastErrMsg);
 end;
 
 *)

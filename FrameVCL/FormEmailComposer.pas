@@ -12,7 +12,7 @@ UNIT FormEmailComposer;
 INTERFACE
 
 USES
-  Windows, Messages, SysUtils, Classes, Graphics, Controls, Vcl.Forms, LightVcl.Common.AppDataForm, Dialogs, StdCtrls, Buttons, ActnList, Menus, ComCtrls, ExtCtrls, Spin,  ExtDlgs, System.Actions,
+  Windows, Messages, SysUtils, Classes, Graphics, Controls, Vcl.Forms, LightVcl.Visual.AppDataForm, Dialogs, StdCtrls, Buttons, ActnList, Menus, ComCtrls, ExtCtrls, Spin,  ExtDlgs, System.Actions,
   IdSSL, IdComponent, IdSMTP, IdAntiFreeze,
   IdSSLOpenSSL, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack,
    LightVcl.Visual.CheckBox, LightVcl.Visual.Splitter, IdBaseComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase,
@@ -71,7 +71,7 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
   LightVcl.Visual.INIFile, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard,
-  LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.Sound, LightCore.AppData, LightVcl.Common.AppData,
+  LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.Sound, LightCore.AppData, LightVcl.Visual.AppData,
   LightCore.IO, LightCore.TextFile, LightVcl.Common.IO,LightVcl.Internet.EmailSender, LightVcl.Common.System;
 
 

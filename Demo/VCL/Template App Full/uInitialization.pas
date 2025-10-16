@@ -13,7 +13,7 @@ UNIT uInitialization;
 INTERFACE
 
 USES
-   Winapi.ShellApi, System.SysUtils, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.Dialogs, Vcl.Controls;
+   Winapi.ShellApi, System.SysUtils, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.Dialogs, Vcl.Controls;
 
 procedure LateInitialization;
 
@@ -21,7 +21,7 @@ IMPLEMENTATION
 
 USES
   chHardID, LightVcl.Common.Shell, LightVcl.Common.ExecuteShell, LightVcl.Common.GuiSettings,
-  cpCertificate, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.CenterControl, LightVcl.Common.Translate, ciUpdater,
+  cpCertificate, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.CenterControl, LightVcl.Common.Translate, ciUpdater,
   FormMain, FormUniversalEula, FormSkinsDisk, FormSettings, FormSplashScreen, FormUpdaterNotifier;
 
 

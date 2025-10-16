@@ -6,7 +6,7 @@ uses
   {$ENDIF}
   FormMain in 'FormMain.pas' {MainForm},
   LightCore.AppData in '..\..\..\LightCore.AppData.pas',
-  LightVcl.Common.AppData in '..\..\..\FrameVCL\LightVcl.Common.AppData.pas';
+  LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas';
 
 {$R *.res}
 

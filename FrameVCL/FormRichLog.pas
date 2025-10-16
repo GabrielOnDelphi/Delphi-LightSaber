@@ -30,7 +30,7 @@ INTERFACE
 USES
   Winapi.Windows, Winapi.Messages, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
-  LightVcl.Visual.RichLogTrack, LightVcl.Visual.RichLog, LightVcl.Common.AppDataForm;
+  LightVcl.Visual.RichLogTrack, LightVcl.Visual.RichLog, LightVcl.Visual.AppDataForm;
 
 TYPE
   TfrmRichLog = class(TLightForm)
@@ -54,7 +54,7 @@ IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   LightVcl.Visual.INIFile, LightCore.AppData, LightVcl.Common.AppData;
+   LightVcl.Visual.INIFile, LightCore.AppData, LightVcl.Visual.AppData;
 
 
 

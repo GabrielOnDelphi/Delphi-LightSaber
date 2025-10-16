@@ -100,7 +100,7 @@ IMPLEMENTATION
 USES
   LightCore, LightCore.Time, LightCore.Types, LightCore.TextFile, LightCore.AppData;
 
-CONST CurrentVersion = 4;
+CONST CurrentVersion = 5;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -365,7 +365,7 @@ end;
 function TRamLog.LoadFromStream(Stream: TLightStream): Boolean;
 VAR StreamVer: Word;
 begin
-  StreamVer:= Stream.TryReadHeader(StreamSign);
+  StreamVer:= stream.TryReadHeader(StreamSign);
   Result:= StreamVer = CurrentVersion;    // Unsupported version?
   if Result then
     begin

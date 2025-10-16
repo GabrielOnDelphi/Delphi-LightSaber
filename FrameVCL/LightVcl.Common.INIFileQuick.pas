@@ -48,28 +48,31 @@ procedure WriteFont    (CONST Identifier: string; Font: TFont);
 IMPLEMENTATION
 
 USES
-   LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.IniFile;
+   LightCore.AppData,
+   //LightVcl.Visual.AppData,
+   LightVcl.Common.IniFile;
+   //LightVcl.Visual.INIFile;
 
 
 
 
 procedure WriteInteger(CONST Identifier: string; i: Integer);
-VAR IniFile: TIniFileVCL;
+VAR IniFile: TIniFileApp;
 begin
-  IniFile:= TIniFileVCL.Create(AppData.AppName, AppData.IniFile);
+  IniFile:= TIniFileApp.Create(AppDataCore.AppName, AppDataCore.IniFile);
   TRY
-    IniFile.WriteInteger(AppData.AppName, Identifier, i)
+    IniFile.WriteInteger(AppDataCore.AppName, Identifier, i)
   FINALLY
     FreeAndNil(IniFile);
   END;
 end;
 
 function ReadInteger(CONST Identifier: string; DefaultVal: Integer): Integer;
-VAR IniFile: TIniFileVCL;
+VAR IniFile: TIniFileApp;
 begin
-  IniFile:= TIniFileVCL.Create(AppData.AppName, AppData.IniFile);
+  IniFile:= TIniFileApp.Create(AppDataCore.AppName, AppDataCore.IniFile);
   TRY
-    Result:= IniFile.ReadInteger(AppData.AppName, Identifier, DefaultVal);
+    Result:= IniFile.ReadInteger(AppDataCore.AppName, Identifier, DefaultVal);
   FINALLY
     FreeAndNil(IniFile);
   END;
@@ -80,22 +83,22 @@ end;
 
 { TIniFile bug: Cannot put spaces at the beggining of a 'value'. The spaces will be trimmed }
 procedure WriteString(CONST Identifier, s: string);
-VAR IniFile: TIniFileVCL;
+VAR IniFile: TIniFileApp;
 begin
-  IniFile:= TIniFileVCL.Create(AppData.AppName, AppData.IniFile);
+  IniFile:= TIniFileApp.Create(AppDataCore.AppName, AppDataCore.IniFile);
   TRY
-    IniFile.WriteString(AppData.AppName, Identifier, s)
+    IniFile.WriteString(AppDataCore.AppName, Identifier, s)
   FINALLY
     FreeAndNil(IniFile);
   END;
 end;
 
 function ReadString(CONST Identifier: string; DefaultVal: string): string;
-VAR IniFile: TIniFileVCL;
+VAR IniFile: TIniFileApp;
 begin
-  IniFile:= TIniFileVCL.Create(AppData.AppName, AppData.IniFile);
+  IniFile:= TIniFileApp.Create(AppDataCore.AppName, AppDataCore.IniFile);
   TRY
-    Result:= IniFile.ReadString(AppData.AppName, Identifier, DefaultVal);
+    Result:= IniFile.ReadString(AppDataCore.AppName, Identifier, DefaultVal);
   FINALLY
     FreeAndNil(IniFile);
   END;
@@ -105,22 +108,22 @@ end;
 
 
 procedure WriteBool(CONST Identifier: string; b: Boolean);
-VAR IniFile: TIniFileVCL;
+VAR IniFile: TIniFileApp;
 begin
-  IniFile:= TIniFileVCL.Create(AppData.AppName, AppData.IniFile);
+  IniFile:= TIniFileApp.Create(AppDataCore.AppName, AppDataCore.IniFile);
   TRY
-    IniFile.WriteBool(AppData.AppName, Identifier, b)
+    IniFile.WriteBool(AppDataCore.AppName, Identifier, b)
   FINALLY
     FreeAndNil(IniFile);
   END;
 end;
 
 function ReadBoolean(CONST Identifier: string; DefaultVal: Boolean= FALSE): Boolean;
-VAR IniFile: TIniFileVCL;
+VAR IniFile: TIniFileApp;
 begin
-  IniFile:= TIniFileVCL.Create(AppData.AppName, AppData.IniFile);
+  IniFile:= TIniFileApp.Create(AppDataCore.AppName, AppDataCore.IniFile);
   TRY
-    Result:= IniFile.ReadBool(AppData.AppName, Identifier, DefaultVal);
+    Result:= IniFile.ReadBool(AppDataCore.AppName, Identifier, DefaultVal);
   FINALLY
     FreeAndNil(IniFile);
   END;
@@ -130,9 +133,9 @@ end;
 
 
 procedure WriteDbl (CONST Identifier: string; d: Double);
-VAR IniFile: TIniFileVCL;
+VAR IniFile: TIniFileApp;
 begin
-  IniFile:= TIniFileVCL.Create(AppData.AppName, AppData.IniFile);
+  IniFile:= TIniFileApp.Create(AppDataCore.AppName, AppDataCore.IniFile);
   TRY
     IniFile.Write(Identifier, d)
   FINALLY
@@ -141,9 +144,9 @@ begin
 end;
 
 function  ReadDbl (CONST Identifier: string; DefaultVal: Double= 0.0): Double;
-VAR IniFile: TIniFileVCL;
+VAR IniFile: TIniFileApp;
 begin
-  IniFile:= TIniFileVCL.Create(AppData.AppName, AppData.IniFile);
+  IniFile:= TIniFileApp.Create(AppDataCore.AppName, AppDataCore.IniFile);
   TRY
     Result:= IniFile.Read(Identifier, DefaultVal);
   FINALLY
@@ -156,9 +159,9 @@ end;
 
 
 procedure WriteDate (CONST Identifier: string; d: TDateTime);
-VAR IniFile: TIniFileVCL;
+VAR IniFile: TIniFileApp;
 begin
-  IniFile:= TIniFileVCL.Create(AppData.AppName, AppData.IniFile);
+  IniFile:= TIniFileApp.Create(AppDataCore.AppName, AppDataCore.IniFile);
   TRY
     IniFile.WriteDate(Identifier, d)
   FINALLY
@@ -167,9 +170,9 @@ begin
 end;
 
 function  ReadDate (CONST Identifier: string; DefaultVal: TDateTime): Double;
-VAR IniFile: TIniFileVCL;
+VAR IniFile: TIniFileApp;
 begin
-  IniFile:= TIniFileVCL.Create(AppData.AppName, AppData.IniFile);
+  IniFile:= TIniFileApp.Create(AppDataCore.AppName, AppDataCore.IniFile);
   TRY
     Result:= IniFile.ReadDate(Identifier, DefaultVal);
   FINALLY
@@ -181,9 +184,9 @@ end;
 
 
 function ReadFont(CONST Identifier: string; Font: TFont): Boolean;
-VAR IniFile: TIniFileVCL;
+VAR IniFile: TIniFileApp;
 begin
-  IniFile:= TIniFileVCL.Create(AppData.AppName, AppData.IniFile);
+  IniFile:= TIniFileApp.Create(AppDataCore.AppName, AppDataCore.IniFile);
   TRY
     Result:= IniFile.Read(Identifier, Font);
   FINALLY
@@ -192,9 +195,9 @@ begin
 end;
 
 procedure WriteFont(CONST Identifier: string; Font: TFont);
-VAR IniFile: TIniFileVCL;
+VAR IniFile: TIniFileApp;
 begin
-  IniFile:= TIniFileVCL.Create(AppData.AppName, AppData.IniFile);
+  IniFile:= TIniFileApp.Create(AppDataCore.AppName, AppDataCore.IniFile);
   TRY
     IniFile.Write(Identifier, Font)
   FINALLY

@@ -23,9 +23,8 @@ INTERFACE
 
 USES
    Winapi.Windows, Winapi.MultiMon, Winapi.ShlObj, Winapi.SHFolder,
-   System.Diagnostics, System.Classes, System.SysUtils,
-   Vcl.Forms, Vcl.Dialogs,
-   LightCore.AppData, LightVcl.Common.AppData;
+   System.Diagnostics, System.Classes, System.SysUtils, Vcl.Forms, Vcl.Dialogs,
+   LightCore.AppData;
 
  { ANTI-DEBUGGER PROTECTION }
  procedure AntiDebug; assembler;
@@ -375,7 +374,7 @@ begin
  if FileExists(LogFile)
  then DeleteFile(LogFile);                                               { Clear existing log }
 
- StringToFile(LogFile, LogFile+ CRLF+ TAppData.AppName+ ' v'+ TAppData.GetVersionInfo+ CRLF+ DateTimeToStr(Now)+ CRLF +LBRK, woAppend);
+ StringToFile(LogFile, LogFile+ CRLF+ TAppDataCore.AppName+ {' v'+ TAppDataCore.GetVersionInfo+} CRLF+ DateTimeToStr(Now)+ CRLF +LBRK, woAppend);
 end;
 
 
@@ -494,17 +493,16 @@ end;
 { The AppDataPath parameter lets the user provide the data path in case the app is not using the Default data path }
 function GenerateAppRep: string;
 begin
- TAppData.AppDataFolder(True);
+ TAppDataCore.AppDataFolder(True);
  Result:= ' [APPLICATION]'+ CRLF;
- Result:= Result+'  AppDataFolder: '       + Tab + TAppData.AppDataFolder+ CRLF;
- Result:= Result+'  AppData.IniFile: '     + Tab + TAppData.IniFile+ CRLF;
- ///Result:= Result+'  AppData.ExeFolder: '   + Tab + AppDataEx.CurFolder+ CRLF;
+ Result:= Result+'  AppDataFolder: '       + Tab + TAppDataCore.AppDataFolder+ CRLF;
+ Result:= Result+'  AppData.IniFile: '     + Tab + TAppDataCore.IniFile+ CRLF;
  Result:= Result+'  Exe name: '            + Tab + Tab + Application.ExeName+ CRLF;
- Result:= Result+'  Version: '             + Tab + Tab + TAppData.GetVersionInfo+ CRLF;
  Result:= Result+'  RunningUnderDelphi: '  + Tab + BoolToStrYesNo(IsRunningUnderDelphiDebugger)+ CRLF;
  Result:= Result+'  IsDebuggerPresent: '   + Tab + BoolToStrYesNo(IsDebuggerPresent)+ CRLF;
  Result:= Result+'  AppBitness: '          + Tab + AppBitness;
  Result:= Result+'  CompilerOptimiz: '     + Tab + CompilerOptimizationS+ CRLF;
+ //Result:= Result+'  Version: '             + Tab + Tab + TAppDataCore.GetVersionInfo+ CRLF;   //not available at this level!
 end;
 
 
@@ -567,10 +565,10 @@ VAR
 function FixEmbarcaderoAtomTableMemLeak: Boolean;  { Deprecated "Use in-program leak fixing: 3rdPartyPkg.AtomGarbageCollector.pas.GarbageCollectAtoms(Log)" }
 begin
  if (System.DateUtils.MinutesBetween(now, LastLeakFix) > 15)
- AND FileExists(AppData.SysDir+ 'AtomGarbageCollector.exe')
+ AND FileExists(AppDataCore.SysDir+ 'AtomGarbageCollector.exe')
  then
   begin
-   Result:= LightVcl.Common.ExecuteProc.ExecuteProc(AppData.SysDir+ 'AtomGarbageCollector.exe', SW_HIDE);
+   Result:= LightVcl.Common.ExecuteProc.ExecuteProc(AppDataCore.SysDir+ 'AtomGarbageCollector.exe', SW_HIDE);
    LastLeakFix:= now;
   end
  else Result:= TRUE;

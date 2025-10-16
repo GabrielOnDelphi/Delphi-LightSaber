@@ -12,7 +12,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, System.Actions,
   VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList,
-  LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.AppDataForm;
+  LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Visual.AppDataForm;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -41,7 +41,7 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.Shell, LightVcl.Common.System, LightVcl.Common.ExecuteShell, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.CenterControl;
+   LightVcl.Common.Shell, LightVcl.Common.System, LightVcl.Common.ExecuteShell, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.CenterControl;
 
 
 

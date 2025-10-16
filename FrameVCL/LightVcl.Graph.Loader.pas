@@ -105,7 +105,8 @@ USES
    {$IFDEF FastJpg}FastJpegDecHelper,{$ENDIF}
    LightVcl.Graph.Resize, LightVcl.Graph.ResizeVCL, LightVcl.Graph.Loader.Resolution, LightVcl.Graph.UtilGray,
    LightVcl.Graph.Loader.WB1, LightVcl.Graph.Loader.RainDrop, LightCore.IO, LightVcl.Common.IO, LightVcl.Graph.FX.Rotate,
-   LightCore.AppData, LightVcl.Common.AppData, LightCore, LightCore.Time, LightCore.Types, LightVcl.Graph.GrabAviFrame, LightVcl.Graph.Gif;
+   LightCore.AppData, LightCore, LightCore.Time, LightCore.Types, LightVcl.Graph.GrabAviFrame,
+   LightVcl.Graph.Gif;
 
 
 
@@ -149,7 +150,7 @@ begin
       on E: Exception do
        begin
         { Don't crash on invalid images. Show the problem in log }
-        AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
         EXIT(NIL);
        end;
     END;
@@ -160,7 +161,7 @@ begin
     EXCEPT
       on E: Exception do
        begin
-        AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
         FreeAndNil(Result);
        end;
     END;
@@ -207,7 +208,7 @@ begin
    on E: Exception do     //todo 1: trap only specific exceptions
     begin
      FreeAndNil(Result);
-     AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+     AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
     end;
  END;
 end;
@@ -229,7 +230,7 @@ begin
  EXCEPT
   on E: Exception do
    begin
-    AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+    AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
     EXIT(NIL);       { Do not crash on failure }
    end;
  END;
@@ -238,7 +239,7 @@ begin
    Note: No need to do it for jpeg images with png ext. The algorithm already recognizes that and loads the image just fine. }
  if IsJpg(FileName) AND (Signature= 2) then
   begin
-   AppData.LogWarn(FileName+ CRLF+ ' is a PNG file with invalid file extension (jpg). You can fix this by changing the extension from JPG to PNG.');
+   AppDataCore.LogWarn(FileName+ CRLF+ ' is a PNG file with invalid file extension (jpg). You can fix this by changing the extension from JPG to PNG.');
    EXIT(NIL);
   end;
 
@@ -260,7 +261,7 @@ begin
           Result:= FastJpegDecHelper.FastJpgDecode(FileName);
           if Result = NIL then { Not all jpegs are supported by JpegDecHelper. In this case we fall back to WIC or the standard LoadGraph loader (WIC). }
         {$ELSE}
-          AppData.LogWarn('FastJpg not available!');
+          AppDataCore.LogWarn('FastJpg not available!');
         {$ENDIF}
         {ToDo 1: is JpegDecHelper indeed faster than WIC? }
           if UseWic
@@ -275,7 +276,7 @@ begin
            LightVcl.Graph.FX.Rotate.RotateExif(Result, ExifData);
            FreeAndNil(ExifData);
            {$ELSE}
-             AppData.LogVerb('FastJpg not available!');
+             AppDataCore.LogVerb('FastJpg not available!');
            {$ENDIF}
          end;
        end;
@@ -414,7 +415,7 @@ begin
  EXCEPT
    on E: Exception do     //todo 1: trap only specific exceptions
     begin
-     AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+     AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
      FreeAndNil(Result);    { Don't crash on invalid images }
     end;
  end;
@@ -496,7 +497,7 @@ begin
    EXCEPT
      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        EXIT(NIL);
       end;
    END;
@@ -527,7 +528,7 @@ begin
    EXCEPT
      on E: Exception do      { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        FreeAndNil(Result);   { We only free the result in case of failure }
       end;
    END;
@@ -632,7 +633,7 @@ begin
    EXCEPT
      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        FreeAndNil(JPG);   { We only free the result in case of failure }
        EXIT(NIL);
       end;
@@ -651,7 +652,7 @@ begin
    EXCEPT
      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        FreeAndNil(Result);   { We only free the result in case of failure }
       end;
    end;
@@ -682,7 +683,7 @@ begin
    EXCEPT
      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        FreeAndNil(JP2);   { We only free the result in case of failure }
        EXIT(NIL);
       end;
@@ -698,7 +699,7 @@ begin
    EXCEPT
      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        FreeAndNil(Result);   { We only free the result in case of failure }
       end;
    end;
@@ -742,7 +743,7 @@ begin
    EXCEPT
      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        FreeAndNil(GIF);   { We only free the result in case of failure }
        EXIT(NIL);
       end;
@@ -760,7 +761,7 @@ begin
    EXCEPT
      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        FreeAndNil(Result);   { We only free the result in case of failure }
       end;
    end;
@@ -794,7 +795,7 @@ begin
    EXCEPT
      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        FreeAndNil(PNG);   { We only free the result in case of failure }
        EXIT(NIL);
       end;
@@ -811,7 +812,7 @@ begin
    EXCEPT
      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        FreeAndNil(Result);   { We only free the result in case of failure }
       end;
    end;
@@ -844,7 +845,7 @@ begin
    EXCEPT
      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        FreeAndNil(Result_);   { We only free the result in case of failure }
       end;
    END;
@@ -870,7 +871,7 @@ begin
    EXCEPT
      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        FreeAndNil(Result);   { We only free the result in case of failure }
        EXIT(NIL);
       end;
@@ -897,7 +898,7 @@ begin
    EXCEPT
      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        FreeAndNil(MetaFile);   { We only free the result in case of failure }
        EXIT(NIL);
       end;
@@ -913,7 +914,7 @@ begin
      EXCEPT
        on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
         begin
-         AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+         AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
          FreeAndNil(Result);   { We only free the result in case of failure }
         end;
      end;
@@ -941,7 +942,7 @@ begin
    EXCEPT
      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        FreeAndNil(WB1);   { We only free the result in case of failure }
        EXIT(NIL);
       end;
@@ -958,7 +959,7 @@ begin
    EXCEPT
      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        FreeAndNil(Result);   { We only free the result in case of failure }
       end;
    end;
@@ -983,7 +984,7 @@ begin
    EXCEPT
      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        FreeAndNil(ICO1);   { We only free the result in case of failure }
        EXIT(NIL);
       end;
@@ -995,7 +996,7 @@ begin
    EXCEPT
      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
       begin
-       AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        FreeAndNil(Result);   { We only free the result in case of failure }
       end;
    end;
@@ -1064,7 +1065,7 @@ begin
       EXCEPT
         on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
          begin
-          AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+          AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
           Result:= -1;   { We only free the result in case of failure }
          end;
       END;

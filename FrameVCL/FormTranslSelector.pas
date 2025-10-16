@@ -26,7 +26,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes,
   Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Controls,
-  LightVcl.Common.AppDataForm, LightVcl.Common.Translate;
+  LightVcl.Visual.AppDataForm, LightVcl.Common.Translate;
 
 TYPE
   TfrmTranslSelector = class(TLightForm)
@@ -58,7 +58,7 @@ TYPE
 
 IMPLEMENTATION {$R *.dfm}
 USES
-  LightCore.AppData, LightVcl.Common.AppData
+  LightCore.AppData, LightVcl.Visual.AppData
 , LightVcl.Common.Dialogs, LightCore.IO, LightVcl.Common.IO, FormTranslEditor;
 
 

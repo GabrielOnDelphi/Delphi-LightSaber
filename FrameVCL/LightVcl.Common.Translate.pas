@@ -74,7 +74,7 @@ unit LightVcl.Common.Translate;
          AppData will automatically create the Translator object.
          Create a new form with AppData.CreateForm(). This will take care of everything. Seriously!
 
-         Check the LightCore.AppData, LightVcl.Common.AppData
+         Check the LightCore.AppData, LightVcl.Visual.AppData
 .pas for more info.
 
     * Manually
@@ -175,7 +175,7 @@ INTERFACE
 USES
   System.Classes, System.SysUtils, System.IniFiles, System.TypInfo,
   Vcl.Forms, Vcl.Menus, Vcl.ExtCtrls,
-  LightCore.AppData, LightVcl.Common.AppData;
+  LightCore.AppData;
 
 { Bitwise constants for TControl.Tag }
 CONST
@@ -543,7 +543,7 @@ end;
 ---------------------------------------------------------------------------}
 function TTranslator.GetLangFolder: string;
 begin
-  Result:= AppData.ExeFolder + 'Lang\';
+  Result:= AppDataCore.ExeFolder + 'Lang\';
 end;
 
 

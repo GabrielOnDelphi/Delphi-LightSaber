@@ -18,7 +18,7 @@ INTERFACE
 USES
    System.Classes, System.SysUtils, System.IniFiles,
    Vcl.Forms, Vcl.Controls,
-   LightVcl.Common.Dialogs, LightVcl.Common.IniFile, LightCore.INIFile, LightVcl.Common.AppDataForm;
+   LightVcl.Common.Dialogs, LightVcl.Common.IniFile, LightCore.INIFile, LightVcl.Visual.AppDataForm;
 
 TYPE
  TIniFileVCL = class(TIniFileApp)   
@@ -38,7 +38,7 @@ IMPLEMENTATION
 
 USES
    LightVcl.Visual.FloatSpinEdit, LightVcl.Visual.FileListBox, LightVcl.Visual.SpinEdit, LightVcl.Visual.SpinEditDelayed, LightVcl.Visual.PathEdit, LightVcl.Visual.ListBox,
-   LightVcl.Common.CenterControl, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.LogViewer, LightCore.LogUtils, LightCore.LogTypes;
+   LightVcl.Common.CenterControl, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.LogViewer, LightCore.LogUtils, LightCore.LogTypes;
 
 
 

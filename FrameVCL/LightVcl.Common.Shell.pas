@@ -96,7 +96,7 @@ USES
  
 IMPLEMENTATION
 USES
-   LightVcl.Common.IO, LightCore.IO, LightCore.TextFile, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.Registry, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs;
+   LightVcl.Common.IO, LightCore.IO, LightCore.TextFile, LightCore.AppData, LightVcl.Common.Registry, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs;
 
  
 
@@ -125,7 +125,7 @@ begin
   begin
    SetArguments('');                                                                               {exemplu de argument 'C:\AUTOEXEC.BAT'}
    SetPath(PChar(ShortcutTo));
-   SetWorkingDirectory(PChar(AppData.ExeFolder));                                                          { SetWorkingDirectory(PChar(AppData.ExeFolder)) facea probleme foarte urata cand aplicatia ruleaza de pe un mediu ReadOnly. in 2013 am probat pe Win7 si nu face probleme!    Error message: Write Protect Error - The disk cannot be written to because it is write protected. Please remove the write protection from the volume USB_BOOT in drive D:. Cancel TryAgain Continue }
+   SetWorkingDirectory(PChar(AppDataCore.ExeFolder));                                                          { SetWorkingDirectory(PChar(AppData.ExeFolder)) facea probleme foarte urata cand aplicatia ruleaza de pe un mediu ReadOnly. in 2013 am probat pe Win7 si nu face probleme!    Error message: Write Protect Error - The disk cannot be written to because it is write protected. Please remove the write protection from the volume USB_BOOT in drive D:. Cancel TryAgain Continue }
   end;
 
  if OnDesktop
@@ -311,7 +311,7 @@ begin
   VAR Reg:= TRegistry.Create;
   TRY
     Reg.RootKey:= HKEY_CLASSES_ROOT;
-    Reg.OpenKey('*\Shell\Open with '+AppData.AppName +'\Command', TRUE);
+    Reg.OpenKey('*\Shell\Open with '+AppDataCore.AppName +'\Command', TRUE);
     Reg.WriteString('', Lowercase(ParamStr(0)) + ' %1');
     Reg.CloseKey;
   FINALLY

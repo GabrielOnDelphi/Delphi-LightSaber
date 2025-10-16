@@ -65,7 +65,7 @@ ________________________________________________________________________________
 INTERFACE
 
 USES
-   Winapi.Windows, System.Classes, System.SysUtils, System.Types, Vcl.Graphics, Vcl.Controls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.ExtCtrls;
+   Winapi.Windows, System.Classes, System.SysUtils, System.Types, Vcl.Graphics, Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.ExtCtrls;
 
 TYPE
   TDrawingForm = class(TLightForm)
@@ -89,7 +89,7 @@ function GetHiddenWindow(Color: TColor; ExpandOnAllMon, Hidden: Boolean): TDrawi
 
 IMPLEMENTATION {$R *.dfm}
 USES
-    LightVcl.Common.WinVersion, LightVcl.Common.WinVersionAPI, LightVcl.Common.ExeVersion, LightCore.AppData, LightVcl.Common.AppData
+    LightVcl.Common.WinVersion, LightVcl.Common.WinVersionAPI, LightVcl.Common.ExeVersion, LightCore.AppData, LightVcl.Visual.AppData
 , LightVcl.Visual.INIFile, LightVcl.Graph.Desktop;
 
 

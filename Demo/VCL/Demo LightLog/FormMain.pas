@@ -6,7 +6,7 @@ USES
   System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Grids,
   LightVcl.Visual.RichLogTrack, LightVcl.Visual.RichLogUtils, LightVcl.Visual.RichLog,
-  LightVcl.Common.LogFilter, LightVcl.Common.AppDataForm, LightCore.LogRam, LightVcl.Common.LogViewer;
+  LightVcl.Common.LogFilter, LightVcl.Visual.AppDataForm, LightCore.LogRam, LightVcl.Common.LogViewer;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -50,7 +50,7 @@ IMPLEMENTATION
 {$R *.dfm}
 
 USES
-  LightCore.AppData, LightVcl.Common.AppData, LightCore.LogTypes, LightCore.INIFile, LightVcl.Common.Dialogs;
+  LightCore.AppData, LightVcl.Visual.AppData, LightCore.LogTypes, LightCore.INIFile, LightVcl.Common.Dialogs;
 
 
 procedure TMainForm.FormCreate(Sender: TObject);

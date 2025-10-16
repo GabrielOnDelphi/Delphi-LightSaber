@@ -32,16 +32,16 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightCore.AppData, LightVcl.Common.AppData;
+   LightCore.AppData;
 
 
 procedure TGuiSettings.Save;
 begin
-  VAR SettingsFile:= AppData.AppDataFolder(TRUE)+ 'GUISettings.bin';
+  VAR SettingsFile:= AppDataCore.AppDataFolder(TRUE)+ 'GUISettings.bin';
 
   VAR Stream:= TLightStream.CreateWrite(SettingsFile);    { This will give an AV if the file cannot be saved (folder readonly) }
   TRY
-    Stream.WriteHeader(Signature, 1);
+    Stream.WriteHeader(Signature, 2);
     Stream.WriteBoolean(bUser);
     Stream.WriteInteger(iUser);
 
@@ -54,13 +54,12 @@ end;
 
 procedure TGuiSettings.Load;
 begin
-  VAR SettingsFile:= AppData.AppDataFolder(TRUE)+ 'GUISettings.bin';
+  VAR SettingsFile:= AppDataCore.AppDataFolder(TRUE)+ 'GUISettings.bin';
   if NOT FileExists(SettingsFile) then EXIT;
 
   VAR Stream:= TLightStream.CreateRead(SettingsFile);
   TRY
-    Stream.ReadHeader(Signature, 1);
- 
+    if NOT stream.TryReadHeader(Signature, 2) then EXIT;
     bUser  := Stream.ReadBoolean;
     iUser  := Stream.ReadInteger;
 

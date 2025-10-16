@@ -69,7 +69,7 @@ IMPLEMENTATION
 
 USES
   GifProperties,
-  LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Common.AppData, LightCore.IO;
+  LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs, LightCore.AppData, LightCore.IO;
 
 
 constructor TGifLoader.Create;
@@ -100,7 +100,7 @@ begin
  EXCEPT
    on E: Exception do
     begin
-     AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+     AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
      EXIT(FALSE);    { Do not crash on failure }
     end;
  END;
@@ -109,7 +109,7 @@ begin
  FFrameCount:= GIFImg.Images.Count;
  if FrameCount <= 1 then
   begin
-   AppData.LogError('This is not an animated GIF: '+ FileName);
+   AppDataCore.LogError('This is not an animated GIF: '+ FileName);
    EXIT(FALSE);
   end;
 
@@ -170,7 +170,7 @@ begin
 
       { Check }
       if FrameCount < 1
-      then AppData.LogWarn('AVI frame count mismatch!');
+      then AppDataCore.LogWarn('AVI frame count mismatch!');
    FINALLY
     FreeAndNil(BMP);
    END;

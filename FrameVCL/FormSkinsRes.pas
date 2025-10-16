@@ -51,7 +51,7 @@ INTERFACE
 
 USES
   Winapi.Windows, System.SysUtils, System.Classes,
-  Vcl.Themes, Vcl.Controls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls;
+  Vcl.Themes, Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls;
 
 TYPE
   TfrmSkinRes = class(TLightForm)
@@ -86,7 +86,7 @@ procedure LoadLastSkin(CONST DefaultSkin: string= '');  { On first run, set the 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.ExecuteShell, LightCore.AppData, LightVcl.Common.AppData
+   LightVcl.Common.ExecuteShell, LightCore.AppData, LightVcl.Visual.AppData
 , LightVcl.Visual.INIFile, LightVcl.Common.Translate, LightVcl.Common.IniFileQuick;
 
 CONST

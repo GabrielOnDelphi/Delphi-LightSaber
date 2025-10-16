@@ -12,7 +12,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
-  LightVcl.Common.AppDataForm, Vcl.ExtCtrls;
+  LightVcl.Visual.AppDataForm, Vcl.ExtCtrls;
 
 type
   TfrmMain = class(TLightForm)

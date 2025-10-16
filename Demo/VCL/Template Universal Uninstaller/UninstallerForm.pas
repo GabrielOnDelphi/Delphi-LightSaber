@@ -31,7 +31,7 @@ USES
   Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Controls,
   Vcl.ExtCtrls, System.Classes, SysUtils, Vcl.Forms, System.IOUtils,
   LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO, LightVcl.Visual.PathEdit, LightVcl.Visual.CountDown,
-  InternetLabel, LightVcl.Visual.RichLog, Vcl.Imaging.pngimage, LightVcl.Common.AppDataForm;
+  InternetLabel, LightVcl.Visual.RichLog, Vcl.Imaging.pngimage, LightVcl.Visual.AppDataForm;
 
 TYPE
   TfrmMain = class(TLightForm)
@@ -75,7 +75,7 @@ IMPLEMENTATION {$R *.dfm}
 {/$DEFINE BASER}
 
 USES
-   LightVcl.Common.Window, LightVcl.Common.ExecuteShell, LightVcl.Common.Shell, LightCore.AppData, LightVcl.Common.AppData;
+   LightVcl.Common.Window, LightVcl.Common.ExecuteShell, LightVcl.Common.Shell, LightCore.AppData, LightVcl.Visual.AppData;
 
    {$IFDEF BioniX}BxConstants;{$ENDIF}
    {$IFDEF BASER} BaserConst, BxConstants;{$ENDIF}

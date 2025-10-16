@@ -5,7 +5,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls,
-  LightVcl.Common.AppDataForm;
+  LightVcl.Visual.AppDataForm;
 
 TYPE
   TfrmTestIO = class(TLightForm)

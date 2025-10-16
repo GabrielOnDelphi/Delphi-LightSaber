@@ -1,10 +1,10 @@
 ﻿program VCL_Demo_VisualControls;
 
 uses
-  {$IFDEF DEBUG} FastMM4, {$ENDIF }
+  {$IFDEF DEBUG} FastMM4, {$ENDIF}
   MainForm in 'MainForm.pas' {frmMain},
-  LightVcl.Common.AppData in '..\..\..\FrameVCL\LightVcl.Common.AppData.pas',
-  LightVcl.Common.AppDataForm in '..\..\..\FrameVCL\LightVcl.Common.AppDataForm.pas',
+  LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas',
+  LightVcl.Visual.AppDataForm in '..\..\..\FrameVCL\LightVcl.Visual.AppDataForm.pas',
   LightCore.AppData in '..\..\..\LightCore.AppData.pas';
 
 {$R *.res}

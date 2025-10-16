@@ -10,7 +10,7 @@ INTERFACE
 USES
   windows, System.SysUtils, System.Classes, System.Net.URLClient,
   Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls,
-  LightVcl.Common.AppDataForm, LightVcl.Internet.Download.Thread;
+  LightVcl.Visual.AppDataForm, LightVcl.Internet.Download.Thread;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -58,7 +58,7 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.Sound, LightCore, LightVcl.Common.System, LightCore.AppData, LightVcl.Common.AppData,
+   LightVcl.Common.Sound, LightCore, LightVcl.Common.System, LightCore.AppData, LightVcl.Visual.AppData,
    LightCore.TextFile, LightVcl.Internet, LightCore.Download, LightCore.IO,
    LightVcl.Internet.Download.WinInet;
 

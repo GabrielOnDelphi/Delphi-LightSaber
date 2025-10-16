@@ -21,7 +21,7 @@ INTERFACE
 USES
   Winapi.Windows, Winapi.Messages,
   System.Classes, System.UITypes,
-  Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.ComCtrls, Vcl.Controls, Vcl.Dialogs;
+  Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.ComCtrls, Vcl.Controls, Vcl.Dialogs;
 
 
 TYPE

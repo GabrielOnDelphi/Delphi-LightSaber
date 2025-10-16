@@ -45,8 +45,7 @@ USES
 
 
 IMPLEMENTATION
-USES LightCore.AppData, LightVcl.Common.AppData
-;
+USES LightCore.AppData;
 
 
 
@@ -121,7 +120,7 @@ VAR
   Menu: TMenuItem;
   Action: TAction;
 begin
- AppData.LogMsg('Form: '+ Form.Name);
+ AppDataCore.LogMsg('Form: '+ Form.Name);
  for i:= 0 to Form.ComponentCount-1 DO   {Note: Iterating over Components[]: that just yields the components that are OWNED by the form. You will miss any components that are added dynamically, and not owned by the form, or components that are owned by frames }
    begin
     { List actions }
@@ -130,7 +129,7 @@ begin
     then
      begin
       Action:= TAction(Component);
-      AppData.LogInfo(' '+ Component.Name+ Tab
+      AppDataCore.LogInfo(' '+ Component.Name+ Tab
                     + IntToStr(Action.ShortCut)+ Tab
                     + Vcl.Menus.ShortCutToText(Action.ShortCut)+ Tab
                     + Form.Name+ Tab
@@ -148,17 +147,17 @@ begin
         then
           begin
             if Menu.ShortCut <> 0
-            then AppData.LogInfo(' '+ Menu.Name+ Tab+ IntToStr(Menu.ShortCut));
+            then AppDataCore.LogInfo(' '+ Menu.Name+ Tab+ IntToStr(Menu.ShortCut));
           end
         else
           { We only list menus that have a different shortcut than their associated action }
           if Menu.ShortCut <> Action.ShortCut
-          then AppData.LogWarn(' Shortcut for menu '+ Menu.Name+ ' is different than shortcut for its associated action! '+ IntToStr(Action.ShortCut))
+          then AppDataCore.LogWarn(' Shortcut for menu '+ Menu.Name+ ' is different than shortcut for its associated action! '+ IntToStr(Action.ShortCut))
        end;
    end;
 
- AppData.LogEmptyRow;
- AppData.LogEmptyRow;
+ AppDataCore.LogEmptyRow;
+ AppDataCore.LogEmptyRow;
 end;
 
 

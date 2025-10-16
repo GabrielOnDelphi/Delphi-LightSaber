@@ -20,8 +20,7 @@ function SendEmail(SMTP: TIdSMTP; CONST AdrTo, AdrFrom, Subject, Body, HtmlImage
 IMPLEMENTATION
 
 USES
-  IdMessageBuilder, LightCore.AppData, LightVcl.Common.AppData
-;
+  IdMessageBuilder, LightCore.AppData;
 
 
 
@@ -67,8 +66,8 @@ begin
   EXCEPT
     on E: Exception DO
      begin
-      AppData.LogError('Cannot connect to the email server.');
-      AppData.LogError(E.Message);
+      AppDataCore.LogError('Cannot connect to the email server.');
+      AppDataCore.LogError(E.Message);
      end;
   END;
 
@@ -80,8 +79,8 @@ begin
    EXCEPT
      on E:Exception DO
       begin
-       AppData.LogError('Connected to server but could not send email!');
-       AppData.LogError(E.Message);
+       AppDataCore.LogError('Connected to server but could not send email!');
+       AppDataCore.LogError(E.Message);
       end;
    END;
 

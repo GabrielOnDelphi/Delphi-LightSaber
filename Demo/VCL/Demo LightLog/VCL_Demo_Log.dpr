@@ -3,9 +3,9 @@ program VCL_Demo_Log;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF }
+  {$ENDIF}
   FormMain in 'FormMain.pas' {MainForm},
-  LightVcl.Common.AppData in '..\..\..\FrameVCL\LightVcl.Common.AppData.pas',
+  LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas',
   LightCore.AppData in '..\..\..\LightCore.AppData.pas';
 
 {$R *.res}

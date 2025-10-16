@@ -4,7 +4,7 @@ INTERFACE
 
 USES
   Winapi.Windows, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ComCtrls,
+  Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ComCtrls,
   LightVcl.Graph.Loader.RainDrop;
 
 TYPE
@@ -51,7 +51,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  LightVcl.Common.Translate, LightVcl.Common.IniFile, LightCore.AppData, LightVcl.Common.AppData;
+  LightVcl.Common.Translate, LightVcl.Common.IniFile, LightCore.AppData, LightVcl.Visual.AppData;
    {Don't add dependencies to LightVcl.Visual.INIFile because that package is not available yet}
 
 

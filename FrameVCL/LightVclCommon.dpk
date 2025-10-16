@@ -40,8 +40,6 @@ requires
 
 contains
   FormAsyncMessage in 'FormAsyncMessage.pas',
-  LightVcl.Common.AppData in 'LightVcl.Common.AppData.pas',
-  LightVcl.Common.AppDataForm in 'LightVcl.Common.AppDataForm.pas',
   LightVcl.Common.CenterControl in 'LightVcl.Common.CenterControl.pas',
   LightVcl.Common.Clipboard in 'LightVcl.Common.Clipboard.pas',
   LightVcl.Common.Colors in 'LightVcl.Common.Colors.pas',
@@ -79,9 +77,9 @@ contains
   LightVcl.Common.WinVersion in 'LightVcl.Common.WinVersion.pas',
   LightVcl.Common.WinVersionApi in 'LightVcl.Common.WinVersionApi.pas',
   LightVcl.Common.WMIResolution in 'LightVcl.Common.WMIResolution.pas',
-  LightVcl.Common.LogForm in 'LightVcl.Common.LogForm.pas',
   LightVcl.Common.Registry in 'LightVcl.Common.Registry.pas';
 
 end.
+
 
 

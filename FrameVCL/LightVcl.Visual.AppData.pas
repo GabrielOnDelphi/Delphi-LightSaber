@@ -1,4 +1,4 @@
-UNIT LightVcl.Common.AppData;
+UNIT LightVcl.Visual.AppData;
 
 {=============================================================================================================
    2025.08.01
@@ -27,8 +27,8 @@ UNIT LightVcl.Common.AppData;
        uses
          FastMM4,
          LightCore.INIFile,
-         LightVcl.Common.AppData,
-         LightVcl.Common.AppDataForm in 'LightCom.AppDataForm.pas';
+         LightVcl.Visual.AppData,
+         LightVcl.Visual.AppDataForm in 'LightCom.AppDataForm.pas';
          MainForm in 'MainForm.pas' {frmMain);
        begin
          AppData:= TAppData.Create('MyAppName', '', MultiThreaded);
@@ -53,7 +53,7 @@ UNIT LightVcl.Common.AppData;
 
 
      OnFormCreate
-        See LightVcl.Common.AppDataForm.FormPostInitialize()
+        See LightVcl.Visual.AppDataForm.FormPostInitialize()
 
 
      AppData.Initializing
@@ -104,7 +104,7 @@ USES
   Winapi.Windows, Winapi.Messages, Winapi.ShellAPI,
   System.Win.Registry, System.SysUtils, System.Classes, System.IOUtils, System.UITypes, System.Types,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Consts,
-  LightCore.AppData, LightVcl.Common.LogForm;
+  LightCore.AppData, LightVcl.Visual.LogForm;
 
 
 TYPE
@@ -208,7 +208,7 @@ IMPLEMENTATION
 
 USES
   LightVcl.Common.WinVersion, LightVcl.Common.ExeVersion, LightVcl.Common.Translate,
-  LightCore.IO, LightVcl.Common.CenterControl, LightVcl.Common.AppDataForm, LightVcl.Common.Registry;
+  LightCore.IO, LightVcl.Common.CenterControl, LightVcl.Visual.AppDataForm, LightVcl.Common.Registry;
 
 
 { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }

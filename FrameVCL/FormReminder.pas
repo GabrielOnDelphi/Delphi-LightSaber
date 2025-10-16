@@ -25,7 +25,7 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls,
+  System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls,
   Vcl.Samples.Spin, LightVcl.Visual.PathEdit, LightVcl.Visual.Timer, LightVcl.Visual.RadioButton, LightVcl.Visual.CheckBox, LightVcl.Visual.GroupBox, LightVcl.Visual.SpinEdit;
 
 TYPE

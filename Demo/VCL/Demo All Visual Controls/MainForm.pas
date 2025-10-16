@@ -11,7 +11,7 @@ USES
   LightVcl.Visual.StatusBar, LightVcl.Visual.Splitter, LightVcl.Visual.ScrollBox, LightVcl.Visual.RichEdit, LightVcl.Visual.RadioButton, LightVcl.Visual.ProxyList, LightVcl.Visual.Panel,
   LightVcl.Visual.MinimalPathLabel, LightVcl.Visual.Memo, LightVcl.Visual.LstEditor, LightVcl.Visual.GroupBox, LightVcl.Visual.GraphChart, LightVcl.Visual.FreeDiskSpace,
   LightVcl.Visual.FileFilter, LightVcl.Visual.Edit, LightVcl.Visual.DirectoryListBox, LightVcl.Visual.CountDown, LightVcl.Visual.ComboBox, LightVcl.Visual.CheckListBox, LightVcl.Visual.AssociateExt, LightVcl.Visual.DropDownSearch,
-  LightVcl.Common.AppDataForm;
+  LightVcl.Visual.AppDataForm;
 
 TYPE
   TfrmMain = class(TLightForm)

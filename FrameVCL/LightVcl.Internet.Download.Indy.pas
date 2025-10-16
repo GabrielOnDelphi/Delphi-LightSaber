@@ -33,7 +33,7 @@ UNIT LightVcl.Internet.Download.Indy;
 INTERFACE
 
 USES
-   Winapi.Windows, System.SysUtils, System.AnsiStrings, System.StrUtils, Vcl.Forms, LightVcl.Common.AppDataForm,System.Classes,
+   Winapi.Windows, System.SysUtils, System.AnsiStrings, System.StrUtils, Vcl.Forms, System.Classes,
    IdBaseComponent, IdComponent, IdTCPClient, IdHTTP, vcl.IdAntiFreeze;
 
 TYPE

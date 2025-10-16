@@ -15,11 +15,10 @@ INTERFACE
 
 USES
   System.Classes,
-  Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Controls,
-  LightVcl.Common.AppDataForm;
+  Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Controls;
 
 type
-  TfrmShowMsgAsync = class(TLightForm)
+  TfrmShowMsgAsync = class(TForm)
     lblMessage: TLabel;
     Panel1: TPanel;
     btnOK: TButton;
@@ -28,9 +27,9 @@ type
   public
   end;
 
-procedure MesajAsync     (CONST Msg: string; CONST Caption: string= ''; PopupParent: TCustomForm= NIL);
+procedure MesajAsync       (CONST Msg: string; CONST Caption: string= ''; PopupParent: TCustomForm= NIL);
 procedure MessageInfoAsync (CONST Msg: string; PopupParent: TCustomForm= NIL);
-procedure MesajWarnAsync (CONST Msg: string; PopupParent: TCustomForm= NIL);
+procedure MesajWarnAsync   (CONST Msg: string; PopupParent: TCustomForm= NIL);
 procedure MessageErrorAsync(CONST Msg: string; PopupParent: TCustomForm= NIL);
 
 

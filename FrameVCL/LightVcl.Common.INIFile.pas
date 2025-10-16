@@ -93,12 +93,12 @@ INTERFACE
 USES
    System.Classes, System.IniFiles, System.SysUtils, System.UITypes,
    Vcl.Graphics, Vcl.Forms, Vcl.FileCtrl, Vcl.Menus, Vcl.ExtCtrls, Vcl.NumberBox, Vcl.ComCtrls, Vcl.WinXCtrls, Vcl.Samples.Spin, Vcl.ActnList, Vcl.Dialogs, Vcl.Controls, Vcl.StdCtrls,
-   LightCore.INIFile, LightCore.AppData; //, LightVcl.Common.AppData;
+   LightCore.INIFile, LightCore.AppData;
 
 {$WARN GARBAGE OFF}              {Silence the: 'W1011 Text after final END' warning }
 
 TYPE
- TIniFileApp = class(TIniFileEx)
+ TIniFileApp = class(TIniFileEx)    //todo: rename this to  TIniFileCommon
   private
   protected
     procedure readCtrlPos  (Ctrl: TControl);
@@ -139,7 +139,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightCore.IO, LightCore.TextFile, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.AppData;
+   LightCore.IO, LightCore.TextFile, LightCore, LightCore.Time, LightCore.Types;
 
 
 {-----------------------------------------------------------------------------------------------------------------------
@@ -239,7 +239,7 @@ end;
 
 
 
-{ For strange reasons, for Vcl.Forms, LightVcl.Common.AppDataForm, I cannot read/write the ClientWidth. I need to use Width. }
+{ For strange reasons, for Vcl.Forms, LightVcl.Visual.AppDataForm, I cannot read/write the ClientWidth. I need to use Width. }
 procedure TIniFileApp.ReadCtrlPos(Ctrl: TControl);
 begin
  if Ctrl.InheritsFrom(TForm)
@@ -265,7 +265,7 @@ begin
     then Ctrl.Width := ReadInteger (Ctrl.Name, 'Width' , 0);
     //todo: !!!!!!!!!!!!!!!! use Ctrl.width instead of 0 and get rid of ValueExists
 
-    {Note: For strange reasons, for Vcl.Forms, LightVcl.Common.AppDataForm, I cannot read/write the ClientWidth (maybe because I call this routine from FormCreate?). I need to use Width. }
+    {Note: For strange reasons, for Vcl.Forms, LightVcl.Visual.AppDataForm, I cannot read/write the ClientWidth (maybe because I call this routine from FormCreate?). I need to use Width. }
     {Note: If the form was maximized when it was closed, the Ctrl.Width will be different than W }
 
     if (NOT IsNonResizable) AND ValueExists(Ctrl.Name, 'Height')
@@ -299,7 +299,7 @@ end;
 function TIniFileApp.WriteComp(Comp: TComponent): Boolean;                                                    { Write 'any' control to INI file }
 VAR s: String;
 begin
- Assert(AppData <> NIL);
+ Assert(AppDataCore <> NIL);
 
  if Comp.Name = '' then
   begin
@@ -322,7 +322,7 @@ begin
          Write('MainFormFont', TForm(Comp).Font);
 
          // LastUsedFolder
-         WriteString(Comp.Name, 'LastUsedFolder', AppData.LastUsedFolder);
+         WriteString(Comp.Name, 'LastUsedFolder', AppDataCore.LastUsedFolder);
        end;
    end
  else
@@ -436,7 +436,7 @@ begin
      if Comp = Application.MainForm then
        begin
          Read('MainFormFont', TForm(Comp).Font);  // All other forms will use main form's font
-         AppData.LastUsedFolder:= ReadString(Comp.Name, 'LastUsedFolder', '');
+         AppDataCore.LastUsedFolder:= ReadString(Comp.Name, 'LastUsedFolder', '');
        end;
    end
  else

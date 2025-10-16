@@ -24,7 +24,7 @@ USES
   WinApi.Windows, WinApi.Messages,
   System.SysUtils, System.Classes,
   Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs,
-  LightVcl.Visual.INIFile, LightVcl.Visual.PathEdit, LightVcl.Common.Debugger, LightVcl.Visual.RadioButton, LightVcl.Visual.CheckBox, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.AppDataForm, LightVcl.Common.GuiSettings;
+  LightVcl.Visual.INIFile, LightVcl.Visual.PathEdit, LightVcl.Common.Debugger, LightVcl.Visual.RadioButton, LightVcl.Visual.CheckBox, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Visual.AppDataForm, LightVcl.Common.GuiSettings;
 
 TYPE
   TfrmSettings = class(TLightForm)

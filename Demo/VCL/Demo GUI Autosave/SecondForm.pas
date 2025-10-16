@@ -4,7 +4,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Variants, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, LightVcl.Visual.CheckBox, Vcl.StdCtrls, LightVcl.Visual.RadioButton, LightVcl.Common.AppDataForm;
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, LightVcl.Visual.CheckBox, Vcl.StdCtrls, LightVcl.Visual.RadioButton, LightVcl.Visual.AppDataForm;
 
 TYPE
   TfrmContainer = class(TLightForm)

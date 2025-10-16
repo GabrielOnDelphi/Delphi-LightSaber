@@ -4,7 +4,7 @@ INTERFACE
 
 USES
   System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls,
-  Vcl.ExtCtrls, LightVcl.Common.AppDataForm;
+  Vcl.ExtCtrls, LightVcl.Visual.AppDataForm;
 
 const
    CRLF = #13#10;

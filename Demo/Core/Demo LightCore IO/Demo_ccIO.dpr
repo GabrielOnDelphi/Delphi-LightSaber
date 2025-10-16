@@ -3,10 +3,10 @@ program Demo_ccIO;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF }
+  {$ENDIF}
   MainForm in 'MainForm.pas' {frmTestIO},
   LightCore.AppData in '..\..\..\LightCore.AppData.pas',
-  LightVcl.Common.AppData in '..\..\..\FrameVCL\LightVcl.Common.AppData.pas';
+  LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas';
 
 begin
   ReportMemoryLeaksOnShutdown:= TRUE;

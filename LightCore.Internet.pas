@@ -128,7 +128,7 @@ IMPLEMENTATION
 
 USES
    LightCore.AppData,
-   //LightVcl.Common.AppData,
+   //LightVcl.Visual.AppData,
    LightCore.HTML, LightCore.IO, LightCore.Download;
 
 

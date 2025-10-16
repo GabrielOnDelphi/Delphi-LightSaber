@@ -23,7 +23,7 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  System.SysUtils, System.Classes, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls,
+  System.SysUtils, System.Classes, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls,
   InternetLabel,
   LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, ciUpdater, LightVcl.Visual.RichLog, LightVcl.Visual.RichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
 
@@ -83,7 +83,7 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   LightVcl.Visual.RichLogUtils, LightVcl.Common.Colors, LightCore.AppData, LightVcl.Common.AppData, LightVcl.Common.CursorGuard, LightVcl.Common.System, LightVcl.Internet, LightCore.Internet;
+   LightVcl.Visual.RichLogUtils, LightVcl.Common.Colors, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.CursorGuard, LightVcl.Common.System, LightVcl.Internet, LightCore.Internet;
 
 
 
@@ -213,7 +213,7 @@ begin     //clr
  Log.AddMsg(Updater.NewsRec.NewsBody);
 
  { Show new version in red }
- if Updater.NewVersionFound then
+ if Updater.NewVersionFound(TAppData.GetVersionInfo) then
   begin
    { Show as label }
    lblVersion.Color:= clRedFade;
@@ -257,7 +257,7 @@ end;
 
 procedure TFrmUpdater.btnNewVersFoundClick(Sender: TObject);
 begin
- if Updater.NewVersionFound
+ if Updater.NewVersionFound(TAppData.GetVersionInfo)
  then Log.AddInfo('NewVersionFound')
  else Log.AddInfo('No NewVersionFound');
 

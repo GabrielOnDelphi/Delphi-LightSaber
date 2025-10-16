@@ -10,7 +10,7 @@ INTERFACE
 {Hostinger: the max PHP emails per minute is 60 and your limit for emails per day is 3000 ? = 1 email at 24 sec  }
 
 USES
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, LightVcl.Common.AppDataForm,Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
+  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
   IdSMTP, IdExplicitTLSClientServerBase, Vcl.ComCtrls, LightVcl.Visual.RadioButton, InternetLabel, Vcl.Mask;
 
 type

@@ -21,7 +21,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes,
   Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.ComCtrls, LightCore, Vcl.FileCtrl, LightVcl.Common.Dialogs, Vcl.ExtCtrls,  Vcl.WinXCtrls,  vcl.Graphics,
-  LightVcl.Common.AppDataForm, LightVcl.Visual.SpinEdit, LightVcl.Visual.Panel, LightVcl.Visual.FileListBox, LightVcl.Visual.RichLog, LightVcl.Common.AppData,
+  LightVcl.Visual.AppDataForm, LightVcl.Visual.SpinEdit, LightVcl.Visual.Panel, LightVcl.Visual.FileListBox, LightVcl.Visual.RichLog, LightVcl.Visual.AppData,
   GR32_ColorPicker;
 
 TYPE

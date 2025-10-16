@@ -79,7 +79,7 @@ TYPE
 IMPLEMENTATION
 
 uses
-   LightCore.INIFile, LightVcl.Graph.Loader, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Common.AppData, LightCore.IO, LightVcl.Common.IO;
+   LightCore.INIFile, LightVcl.Graph.Loader, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs, LightCore.AppData, LightCore.IO, LightVcl.Common.IO;
 
 
 
@@ -179,7 +179,7 @@ begin
        EXCEPT
          on E: Exception do
           begin
-           AppData.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+           AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
            Exit(False);
           end;
        end;

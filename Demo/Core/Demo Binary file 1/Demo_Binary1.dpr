@@ -3,8 +3,8 @@ program Demo_Binary1;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF }
-  LightVcl.Common.AppData,
+  {$ENDIF}
+  LightVcl.Visual.AppData,
   LightCore.INIFile,
   MainForm1 in 'MainForm1.pas' {frmMain},
   uSoldier_v1 in 'uSoldier_v1.pas';

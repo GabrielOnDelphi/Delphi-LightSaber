@@ -86,10 +86,12 @@ contains
   LightVcl.Visual.Timer in 'LightVcl.Visual.Timer.pas',
   LightVcl.Visual.ToolBox in 'LightVcl.Visual.ToolBox.pas',
   LightVcl.Visual.TrayIcon in 'LightVcl.Visual.TrayIcon.pas',
-
   LightVcl.Visual.RichLogTrack in 'LightVcl.Visual.RichLogTrack.pas',
   LightVcl.Visual.RichLogUtils in 'LightVcl.Visual.RichLogUtils.pas',
   LightVcl.Visual.RichLog in 'LightVcl.Visual.RichLog.pas',
-  LightVcl.Visual.RichEditResize in 'LightVcl.Visual.RichEditResize.pas';
+  LightVcl.Visual.RichEditResize in 'LightVcl.Visual.RichEditResize.pas',
+  LightVcl.Visual.AppData in 'LightVcl.Visual.AppData.pas',
+  LightVcl.Visual.AppDataForm in 'LightVcl.Visual.AppDataForm.pas',
+  LightVcl.Visual.LogForm in 'LightVcl.Visual.LogForm.pas';
 
 end.

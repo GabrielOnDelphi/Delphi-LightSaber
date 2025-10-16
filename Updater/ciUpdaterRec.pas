@@ -24,7 +24,7 @@ TYPE
   private
     const
       Signature = 'LightUpdater';
-      CurrentVersion = 2;
+      CurrentVersion = 3;
   public
     Comment     : string;
     { News }
@@ -74,7 +74,7 @@ begin
  Clear;
  Stream:= TLightStream.CreateRead(FileName);
  TRY
-   Result:= Stream.TryReadHeader(Signature, CurrentVersion);
+   Result:= stream.TryReadHeader(Signature, CurrentVersion);
    if Result then
     begin
       Comment     := Stream.ReadString;

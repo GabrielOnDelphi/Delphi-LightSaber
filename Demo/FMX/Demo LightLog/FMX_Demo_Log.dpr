@@ -3,7 +3,7 @@ program FMX_Demo_Log;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF }
+  {$ENDIF}
   System.StartUpCopy,
   FMX.Forms,
   FormMain in 'FormMain.pas' {MainForm},

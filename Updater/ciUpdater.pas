@@ -86,7 +86,7 @@ TYPE
     constructor Create(CONST aURLNewsFile: string);
     destructor Destroy; override;
 
-    function  NewVersionFound: Boolean;
+    function  NewVersionFound(CONST AppVersion: string): Boolean;
 
     function  IsTimeToCheckAgain: Boolean;
     procedure CheckForNews;
@@ -111,7 +111,7 @@ VAR
 IMPLEMENTATION
 
 USES
-  FormAsyncMessage, LightCore.Download, LightCore.INIFile, LightVcl.Common.Debugger, LightCore.AppData, LightVcl.Common.AppData;
+  FormAsyncMessage, LightCore.Download, LightCore.INIFile, LightVcl.Common.Debugger, LightCore.AppData;
 
 Const
   TooLongNoSeeInterval = 180;    { Force to check for updates every 180 days even if the updater is disabled }
@@ -132,7 +132,7 @@ begin
 
   Clear;    { Default settings }
 
-  if AppData.RunningFirstTime
+  if AppDataCore.RunningFirstTime
   then Delay      := 300          { Don't bother the user on first startup. Probably he has the latest version anyway. }
   else Delay      := 30;
 
@@ -140,7 +140,7 @@ begin
   URLRelHistory  := '';
 
   { Load user settings }
-  if FileExists(AppData.IniFile)
+  if FileExists(AppDataCore.IniFile)
   then Load;
 end;
 
@@ -221,7 +221,7 @@ end;
 { Where we store the News file locally }
 function UpdaterFileLocation: string;
 begin
- Result:= AppData.AppDataFolder+ 'Online_v3.News';
+ Result:= AppDataCore.AppDataFolder+ 'Online_v3.News';
 end;
 
 
@@ -253,7 +253,7 @@ begin
      then FConnectError(Self, 'Cannot load new record from disk!');
 
      if ShowConnectFail
-     then AppData.LogError('The updater file seems to be invalid!'); // This message also appears if the online does not exist and the server returns a 404 page
+     then AppDataCore.LogError('The updater file seems to be invalid!'); // This message also appears if the online does not exist and the server returns a 404 page
 
      EXIT;
     end;
@@ -313,9 +313,9 @@ end;
 
 
 { Returns true when the online version is higher than the local version }
-function TUpdater.NewVersionFound: boolean;
+function TUpdater.NewVersionFound(CONST AppVersion: string): boolean;  // Obtain AppVersion via TAppData.GetVersionInfo
 begin
-  Result:= (NewsRec.AppVersion <> '?') AND (NewsRec.AppVersion > TAppData.GetVersionInfo);
+  Result:= (NewsRec.AppVersion <> '?') AND (NewsRec.AppVersion > AppVersion);
 end;
 
 
@@ -330,13 +330,13 @@ end;
 { Load/save object settings }
 procedure TUpdater.Save;
 begin
-  SaveTo(AppData.IniFile);
+  SaveTo(AppDataCore.IniFile);
 end;
 
 
 procedure TUpdater.Load;
 begin
-  LoadFrom(AppData.IniFile);
+  LoadFrom(AppDataCore.IniFile);
 end;
 
 

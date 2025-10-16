@@ -1,178 +1,8 @@
-UNIT FormMain;
-
-{
- Tester for LightCore.StreamBuffer.pas
- Tester for other streams
-
- Memory usage:
-   File2 size:  20MBB ->  RAM 200MB
-   File2 size:  700MB ->  RAM 1540MB. Finished OK
-   File2 size: 1.11GB ->  RAM 1600MB, then it showed OutOfMem
-}
-
-INTERFACE
-
-USES
-  System.SysUtils, System.Classes, System.Types, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.ExtCtrls,
-  InternetLabel, LightVcl.Visual.PathEdit, LightVcl.Visual.SpinEdit,
-  LightVcl.Visual.RichLogTrack, LightVcl.Visual.CheckBox, LightVcl.Visual.RichLog, LightCore.AppData,
-  LightVcl.Visual.AppData, LightVcl.Visual.AppDataForm, chHardID;
-
-TYPE
-  TMainForm = class(TLightForm)
-    pgCtrl             : TPageControl;
-    btnClear           : TButton;
-    chkAutoOpen        : TCubicCheckBox;
-    edtFile2           : TCubicPathEdit;
-    InternetLabel      : TInternetLabel;
-    Label1             : TLabel;
-    Label2             : TLabel;
-    pnlBottom          : TPanel;
-    RichLogTrckbr1     : TRichLogTrckbr;
-    tabLog             : TTabSheet;
-    tabMain            : TTabSheet;
-    spnCacheSize: TCubicSpinEdit;
-    TabSheet1: TTabSheet;
-    GroupBox1: TGroupBox;
-    btnStreamWrite: TButton;
-    btnStreamRead: TButton;
-    GroupBox2: TGroupBox;
-    btnReadChar2: TButton;
-    btnNewDelphiStream: TButton;
-    Label3: TLabel;
-    Label4: TLabel;
-    procedure actExitExecute          (Sender: TObject);
-    procedure btnClearClick           (Sender: TObject);
-    procedure SwitchToLog             (Sender: TObject);
-    procedure btnNewDelphiStreamClick (Sender: TObject);
-    procedure btnReadChar2Click       (Sender: TObject);
-    procedure btnStreamWriteClick     (Sender: TObject);
-    procedure btnStreamReadClick      (Sender: TObject);
-  private
-  public
-    procedure FormPostInitialize; override; // Called after the main form was fully created
- end;
-
-
-IMPLEMENTATION {$R *.dfm}
-
-
-USES
-   System.Math, LightCore.Types, LightCore.StreamBuff, LightVcl.Common.Debugger;
-
-
-
-
-
 {--------------------------------------------------------------------------------------------------
-   APP START/CLOSE
---------------------------------------------------------------------------------------------------}
-procedure TMainForm.FormPostInitialize;
-begin
- inherited FormPostInitialize;
- Show;
-end;
-
-
-procedure TMainForm.actExitExecute(Sender: TObject);
-begin
- Close;
-end;
-
-
-
-
-{--------------------------------------------------------------------------------------------------
-   LOG
---------------------------------------------------------------------------------------------------}
-procedure TMainForm.btnClearClick(Sender: TObject);
-begin
- Log.Clear;
-end;
-
-
-procedure TMainForm.SwitchToLog(Sender: TObject);
-begin
- if chkAutoOpen.Checked
- then pgCtrl.ActivePage:= tabLog;
- Application.ProcessMessages;
-end;
-
-
-
-
-{--------------------------------------------------------------------------------------------------
-
+   COMPREHENSIVE READ/WRITE TEST for TLightStream
+   Tests all methods in LightCore.StreamBuff.pas
 --------------------------------------------------------------------------------------------------}
 
-{ Delphi's TBufferedFileStream
-  Read characters one by one
-
-  Almost two times faster! }
-procedure TMainForm.btnReadChar2Click(Sender: TObject);
-VAR
-   DelphiStream: TBufferedFileStream;
-   Count: Cardinal;
-   CacheSize: Integer;
-   Char: AnsiChar;
-begin
- SwitchToLog(Self);
- Log.AddVerb('  Loading...');
- Count:= 0;
- CacheSize:= spnCacheSize.Value;
-
- DelphiStream:= TBufferedFileStream.Create(edtFile2.Path, fmOpenRead, CacheSize * KB);
- DelphiStream.Position:= 0;                                      { Go to first line }
-
- TimerStart;
- WHILE DelphiStream.Read(Char, 1) > 0 DO
-     if Char = #32
-     then Inc(Count);
-
- Log.AddInfo('Cache size: ' + IntToStr(spnCacheSize.Value)+ 'KB.  Time: '+ TimerElapsedS+ '.  Count: '+ IntToStr(Count)+ '.  RAM: '+ ProcessPeakMem);
- log.SaveAsRtf(AppData.ExeFolder+ 'Log.rtf');
-
- FreeAndNil(DelphiStream);
-end;
-
-
-
-procedure TMainForm.btnNewDelphiStreamClick(Sender: TObject);
-VAR
-   DelphiStream: TBufferedFileStream;
-   FileSize, LineCount2: Cardinal;
-   Buff, i, CacheSize: Integer;
-begin
- Randomize;
- SwitchToLog(Self);
- Log.AddVerb('  Loading...');
- LineCount2:= 0;
- CacheSize:= spnCacheSize.Value;
-
- DelphiStream:= TBufferedFileStream.Create(edtFile2.Path, fmOpenRead, CacheSize * KB);
- FileSize:= DelphiStream.Size;
- //DelphiStream.FirstLine;                                        { Go to first line }
-
- TimerStart;
- for i:= 1 to 100000 DO
-  begin
-   DelphiStream.Position:= Random(FileSize);
-   DelphiStream.Read(Buff, 4);
-   Inc(LineCount2)
-  end;
-
- Log.AddInfo('Cache size: ' + IntToStr(spnCacheSize.Value)+ 'KB.  Time: '+ TimerElapsedS+ '.  Count: '+ IntToStr(LineCount2)+ '.  RAM: '+ ProcessPeakMem);
- log.SaveAsRtf(AppData.ExeFolder+ 'Log.rtf');
-
- FreeAndNil(DelphiStream);
-end;
-
-
-
-
-{--------------------------------------------------------------------------------------------------
-   READ/WRITE TEST
---------------------------------------------------------------------------------------------------}
 procedure TMainForm.btnStreamWriteClick(Sender: TObject);
 VAR
    TSL: TStringList;
@@ -186,6 +16,7 @@ VAR
 begin
   Caption:= 'Writing...';
   dDate:= EncodeDate(2024, 08, 10);
+  
   TSL:= TStringList.Create;
   TSL.Add('List0');
   TSL.Add('List1');
@@ -351,7 +182,7 @@ begin
     FreeAndNil(TSL);
   END;
 
-  Caption:= 'Write successful';
+  Caption:= 'Write successful - ' + IntToStr(GetTickCount);
 end;
 
 
@@ -566,8 +397,5 @@ begin
     FreeAndNil(Stream);
   END;
 
-  Caption:= 'Read successful - All tests passed!';
+  Caption:= 'Read successful - All tests passed! - ' + IntToStr(GetTickCount);
 end;
-
-
-end.

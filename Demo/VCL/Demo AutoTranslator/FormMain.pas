@@ -5,7 +5,7 @@ INTERFACE
 USES
 
   System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls,
-  LightVcl.Common.AppDataForm, Vcl.Mask;
+  LightVcl.Visual.AppDataForm, Vcl.Mask;
 
 TYPE
  TMainForm = class(TLightForm)

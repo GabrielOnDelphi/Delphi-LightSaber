@@ -346,9 +346,9 @@ object frmBorderEditor: TfrmBorderEditor
       object lblExplain: TLabel
         AlignWithMargins = True
         Left = 5
-        Top = 19
-        Width = 496
-        Height = 45
+        Top = 22
+        Width = 499
+        Height = 112
         Cursor = crHandPoint
         Margins.Top = 0
         Align = alClient
@@ -370,7 +370,7 @@ object frmBorderEditor: TfrmBorderEditor
         AlignWithMargins = True
         Left = 5
         Top = 5
-        Width = 31
+        Width = 499
         Height = 14
         Cursor = crHandPoint
         Align = alTop
@@ -400,7 +400,7 @@ object frmBorderEditor: TfrmBorderEditor
     BevelOuter = bvNone
     TabOrder = 1
     object btnApply: TButton
-      Left = 472
+      Left = 468
       Top = 0
       Width = 72
       Height = 35
@@ -410,7 +410,7 @@ object frmBorderEditor: TfrmBorderEditor
       OnClick = btnApplyClick
     end
     object btnOk: TButton
-      Left = 328
+      Left = 324
       Top = 0
       Width = 72
       Height = 35
@@ -421,7 +421,7 @@ object frmBorderEditor: TfrmBorderEditor
       OnClick = btnOkClick
     end
     object btnCancel: TButton
-      Left = 400
+      Left = 396
       Top = 0
       Width = 72
       Height = 35

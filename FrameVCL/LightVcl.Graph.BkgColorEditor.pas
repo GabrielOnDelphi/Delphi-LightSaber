@@ -29,10 +29,10 @@ INTERFACE
 USES
   System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
-  LightVcl.Graph.BkgColorParams, LightVcl.Common.AppDataForm;
+  LightVcl.Graph.BkgColorParams;
 
 TYPE
-  TfrmBorderEditor = class(TLightForm)
+  TfrmBorderEditor = class(TForm)
     btnApply          : TButton;
     btnBackgroundClr  : TButton;
     btnCancel         : TButton;
@@ -100,7 +100,7 @@ TYPE
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-  LightVcl.Graph.Util, LightVcl.Common.VclUtils, LightVcl.Common.IniFileQuick, LightVcl.Common.CenterControl, LightVcl.Common.Dialogs, LightCore.INIFile, LightCore.AppData, LightVcl.Common.AppData;
+  LightVcl.Graph.Util, LightVcl.Common.VclUtils, LightVcl.Common.IniFileQuick, LightVcl.Common.CenterControl, LightVcl.Common.Dialogs, LightCore.INIFile, LightCore.AppData;
   { Don't use LightVcl.Visual.INIFile because it belongs to LightVisControls pkg which is after this (LightVclGraphics) package }
 
 
@@ -108,7 +108,8 @@ USES
 class function TfrmBorderEditor.CreateParented(Parent: TWinControl; aBkgClrParams: PBkgColorParams): TfrmBorderEditor;
 begin
  Assert(aBkgClrParams <> NIL, 'aBkgClrParams is nil!!');
- AppData.CreateFormHidden(TfrmBorderEditor, Result);  { Freed by Parent }
+
+ Application.CreateForm(TfrmBorderEditor, Result);  { Freed by Parent }
  Result.Container.Align:= alNone;
  Result.Container.Parent:= Parent;
  CenterChild(Result.Container, Parent);
@@ -139,6 +140,7 @@ end;
 
 procedure TfrmBorderEditor.FormDestroy(Sender: TObject);
 begin
+  Container.Parent:= Self;
   WriteBool('AutoBkg.ShowInfo', pnlExplain.Visible);
   //SaveForm(Self, TRUE);  { Don't use LightVcl.Visual.INIFile because it belongs to LightVisControls pkg which is after this (LightVclGraphics) package }
 end;

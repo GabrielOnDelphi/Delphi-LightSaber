@@ -86,7 +86,7 @@ VAR
 begin
  Stream:= TLightStream.CreateRead(FileName);
  TRY
-   Result:= Stream.TryReadHeader(RainMagicNo, 1);
+   Result:= stream.TryReadHeader_(RainMagicNo, 1);
  FINALLY
    FreeAndNil(Stream);
  END;
@@ -182,7 +182,7 @@ begin
    Stream.WriteCardinal(w);
    Stream.WriteCardinal(h);
    Params.Save(Stream);
-   Stream.WritePaddingE(940);
+   Stream.WritePadding;
 
    { Write original image to the output stream }
    VAR JpgStream:= LightVcl.Graph.Convert.Bmp2JpgStream(OrigImage);
@@ -233,7 +233,7 @@ begin
  { Open inp stream }
  Stream:= TLightStream.CreateRead(FileName);
  TRY
-   Stream.TryReadHeader(RainMagicNo, Version);
+   stream.TryReadHeader_(RainMagicNo, Version);
    case Version of
     0: Result:= FALSE; //'Invalid magic number!'
     1: begin
@@ -241,7 +241,7 @@ begin
         w:= Stream.ReadCardinal;
         h:= Stream.ReadCardinal;
         Params.Load(Stream);
-        Stream.ReadPaddingE(940);
+        Stream.ReadPadding;
         Count:= Stream.ReadInteger;
 
         OrigImage:= TBitmap.Create;
@@ -311,7 +311,7 @@ begin
   Stream.WriteInteger(WaveAplitude);
   Stream.WriteInteger(WaveTravelDist);
   Stream.WriteInteger(DropInterval);
-  Stream.WritePaddingE(64);
+  Stream.WritePadding;
 end;
 
 
@@ -322,7 +322,7 @@ begin
   WaveAplitude  := Stream.ReadInteger;
   WaveTravelDist:= Stream.ReadInteger;
   DropInterval  := Stream.ReadInteger;
-  Stream.ReadPaddingE(64);
+  Stream.ReadPadding;
 end;
 
 

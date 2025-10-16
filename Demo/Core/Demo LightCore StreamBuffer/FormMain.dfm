@@ -41,41 +41,22 @@ object MainForm: TMainForm
     NotVisitedColor = clBlue
     OverColor = clRed
   end
-  object lblTestSpeed: TLabel
-    AlignWithMargins = True
-    Left = 3
-    Top = 3
-    Width = 711
-    Height = 20
-    Align = alTop
-    Alignment = taCenter
-    Caption = 'Tests the speed of different stream classes'
-    Font.Charset = DEFAULT_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -16
-    Font.Name = 'MS Sans Serif'
-    Font.Style = []
-    ParentFont = False
-    Layout = tlCenter
-    ExplicitWidth = 305
-  end
   object pgCtrl: TPageControl
     Left = 0
-    Top = 26
+    Top = 0
     Width = 717
-    Height = 568
-    ActivePage = TabSheet1
+    Height = 594
+    ActivePage = tabMain
     Align = alClient
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
-    ExplicitTop = 0
     ExplicitHeight = 575
     object tabMain: TTabSheet
       Caption = 'TBufferedFileStream'
       DesignSize = (
         709
-        538)
+        564)
       object Label1: TLabel
         Left = 527
         Top = 103
@@ -88,8 +69,8 @@ object MainForm: TMainForm
         Transparent = False
       end
       object Label2: TLabel
-        Left = 3
-        Top = 19
+        Left = 582
+        Top = 443
         Width = 108
         Height = 75
         Caption = 
@@ -97,6 +78,16 @@ object MainForm: TMainForm
           'its'
         Visible = False
         WordWrap = True
+      end
+      object Label4: TLabel
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 703
+        Height = 15
+        Align = alTop
+        Caption = 'This tests the speed of TBufferedFileStream (RTL)'
+        ExplicitWidth = 263
       end
       object edtFile2: TCubicPathEdit
         Left = 130
@@ -160,6 +151,16 @@ object MainForm: TMainForm
     object TabSheet1: TTabSheet
       Caption = 'LightStream'
       ImageIndex = 2
+      object Label3: TLabel
+        AlignWithMargins = True
+        Left = 3
+        Top = 3
+        Width = 703
+        Height = 15
+        Align = alTop
+        Caption = 'This tests all the methods of TLightStream'
+        ExplicitWidth = 227
+      end
       object GroupBox1: TGroupBox
         Left = 182
         Top = 136
@@ -200,7 +201,7 @@ object MainForm: TMainForm
       ImageIndex = 4
       object pnlBottom: TPanel
         Left = 0
-        Top = 493
+        Top = 519
         Width = 709
         Height = 45
         Align = alBottom
@@ -275,7 +276,7 @@ object MainForm: TMainForm
         Left = 0
         Top = 0
         Width = 709
-        Height = 493
+        Height = 519
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText

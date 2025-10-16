@@ -51,7 +51,7 @@ end;
 procedure TSoldier2.Load(Stream: TLightStream);
 VAR Version: Word;
 begin
-  if NOT Stream.TryReadHeaderVersion(ClassSignature, Version) then EXIT;   // Header & version number
+  if NOT stream.TryReadHeader_Version(ClassSignature, Version) then EXIT;   // Header & version number
 
   case Version of
     1: Load_v1(Stream);

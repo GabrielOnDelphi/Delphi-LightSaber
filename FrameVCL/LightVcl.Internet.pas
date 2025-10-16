@@ -101,8 +101,7 @@ USES
    LightCore.AppData,
    LightCore.IO,
    LightCore.Internet,
-   LightCore.Download,
-   LightVcl.Common.AppData;
+   LightCore.Download;
 
 
  function  PathIsUrlA; external 'shlwapi' name 'PathIsURLA';
@@ -440,7 +439,7 @@ Better way:
 procedure IE_ApplySettings;
 VAR HInet: HINTERNET;
 begin
-  hInet:= InternetOpen(PChar(AppData.AppName), INTERNET_OPEN_TYPE_DIRECT, nil, nil, INTERNET_FLAG_OFFLINE);
+  hInet:= InternetOpen(PChar(AppDataCore.AppName), INTERNET_OPEN_TYPE_DIRECT, nil, nil, INTERNET_FLAG_OFFLINE);
   TRY
     if hInet <> NIL
     then InternetSetOption(hInet, INTERNET_OPTION_SETTINGS_CHANGED, nil, 0);

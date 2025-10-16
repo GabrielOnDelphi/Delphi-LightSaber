@@ -30,7 +30,7 @@ UNIT LightCore.AppData;
          AppDataCore.Run;
        end.
 
-     For GUI projects see LightVcl.Common.AppData.pas
+     For GUI projects see LightVcl.Visual.AppData.pas
 
 =============================================================================================================}
 
