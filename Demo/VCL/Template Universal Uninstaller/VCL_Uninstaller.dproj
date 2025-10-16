@@ -65,8 +65,8 @@
         <DCC_RangeChecking>true</DCC_RangeChecking>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
-        <VerInfo_Build>9</VerInfo_Build>
-        <VerInfo_Keys>CompanyName=uninstaller;FileDescription=Lightweight uninstaller;FileVersion=5.0.0.9;InternalName=uninstaller;LegalCopyright=uninstaller;LegalTrademarks=uninstaller;OriginalFilename=uninstaller;ProductName=uninstaller;ProductVersion=5.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
+        <VerInfo_Build>10</VerInfo_Build>
+        <VerInfo_Keys>CompanyName=uninstaller;FileDescription=Lightweight uninstaller;FileVersion=5.0.0.10;InternalName=uninstaller;LegalCopyright=uninstaller;LegalTrademarks=uninstaller;OriginalFilename=uninstaller;ProductName=uninstaller;ProductVersion=5.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -79,8 +79,8 @@
             <Form>frmMain</Form>
             <FormType>dfm</FormType>
         </DCCReference>
-        <DCCReference Include="..\..\..\FrameVCL\LightVcl.Common.AppData.pas"/>
-        <DCCReference Include="..\..\..\FrameVCL\LightVcl.Common.AppDataForm.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightVcl.Visual.AppData.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightVcl.Visual.AppDataForm.pas"/>
         <DCCReference Include="..\..\..\LightCore.AppData.pas"/>
         <DCCReference Include="..\..\..\FrameVCL\LightVcl.Common.Shell.pas"/>
         <None Include="C:\Project support\Tool - DUT - My Delphi utilities\FastMM_FullDebugMode.dll"/>

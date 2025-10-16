@@ -21,15 +21,10 @@ USES
 TYPE
   TMainForm = class(TLightForm)
     pgCtrl             : TPageControl;
-    btnClear           : TButton;
-    chkAutoOpen        : TCubicCheckBox;
     edtFile2           : TCubicPathEdit;
     InternetLabel      : TInternetLabel;
     Label1             : TLabel;
     Label2             : TLabel;
-    pnlBottom          : TPanel;
-    RichLogTrckbr1     : TRichLogTrckbr;
-    tabLog             : TTabSheet;
     tabMain            : TTabSheet;
     spnCacheSize: TCubicSpinEdit;
     TabSheet1: TTabSheet;
@@ -42,8 +37,6 @@ TYPE
     Label3: TLabel;
     Label4: TLabel;
     procedure actExitExecute          (Sender: TObject);
-    procedure btnClearClick           (Sender: TObject);
-    procedure SwitchToLog             (Sender: TObject);
     procedure btnNewDelphiStreamClick (Sender: TObject);
     procedure btnReadChar2Click       (Sender: TObject);
     procedure btnStreamWriteClick     (Sender: TObject);
@@ -82,24 +75,6 @@ end;
 
 
 
-{--------------------------------------------------------------------------------------------------
-   LOG
---------------------------------------------------------------------------------------------------}
-procedure TMainForm.btnClearClick(Sender: TObject);
-begin
- Log.Clear;
-end;
-
-
-procedure TMainForm.SwitchToLog(Sender: TObject);
-begin
- if chkAutoOpen.Checked
- then pgCtrl.ActivePage:= tabLog;
- Application.ProcessMessages;
-end;
-
-
-
 
 {--------------------------------------------------------------------------------------------------
 
@@ -116,23 +91,23 @@ VAR
    CacheSize: Integer;
    Char: AnsiChar;
 begin
- SwitchToLog(Self);
- Log.AddVerb('  Loading...');
  Count:= 0;
  CacheSize:= spnCacheSize.Value;
 
  DelphiStream:= TBufferedFileStream.Create(edtFile2.Path, fmOpenRead, CacheSize * KB);
- DelphiStream.Position:= 0;                                      { Go to first line }
+ TRY
+   DelphiStream.Position:= 0;                                      { Go to first line }
 
- TimerStart;
- WHILE DelphiStream.Read(Char, 1) > 0 DO
-     if Char = #32
-     then Inc(Count);
+   TimerStart;
+   WHILE DelphiStream.Read(Char, 1) > 0 DO
+       if Char = #32
+       then Inc(Count);
 
- Log.AddInfo('Cache size: ' + IntToStr(spnCacheSize.Value)+ 'KB.  Time: '+ TimerElapsedS+ '.  Count: '+ IntToStr(Count)+ '.  RAM: '+ ProcessPeakMem);
- log.SaveAsRtf(AppData.ExeFolder+ 'Log.rtf');
+   Caption:= 'Cache size: ' + IntToStr(spnCacheSize.Value)+ 'KB.  Time: '+ TimerElapsedS+ '.  Count: '+ IntToStr(Count)+ '.  RAM: '+ ProcessPeakMem;
 
- FreeAndNil(DelphiStream);
+ FINALLY
+   FreeAndNil(DelphiStream);
+ END;
 end;
 
 
@@ -144,8 +119,6 @@ VAR
    Buff, i, CacheSize: Integer;
 begin
  Randomize;
- SwitchToLog(Self);
- Log.AddVerb('  Loading...');
  LineCount2:= 0;
  CacheSize:= spnCacheSize.Value;
 
@@ -161,8 +134,7 @@ begin
    Inc(LineCount2)
   end;
 
- Log.AddInfo('Cache size: ' + IntToStr(spnCacheSize.Value)+ 'KB.  Time: '+ TimerElapsedS+ '.  Count: '+ IntToStr(LineCount2)+ '.  RAM: '+ ProcessPeakMem);
- log.SaveAsRtf(AppData.ExeFolder+ 'Log.rtf');
+ Caption:= 'Cache size: ' + IntToStr(spnCacheSize.Value)+ 'KB.  Time: '+ TimerElapsedS+ '.  Count: '+ IntToStr(LineCount2)+ '.  RAM: '+ ProcessPeakMem;
 
  FreeAndNil(DelphiStream);
 end;
@@ -382,13 +354,13 @@ begin
   Stream:= TLightStream.CreateRead('TLightStream.bin');
   TRY
    {----------------- HEADER -----------------}
-   if NOT stream.TryReadHeader_('MagicNo', 1)
+   if NOT stream.TryReadHeader('MagicNo', 1)
    then RAISE Exception.Create('Cannot read header!');
    
    // Test alternative header reading
    SavedPos := Stream.Position;
    Stream.Position := 0;
-   if stream.TryReadHeader_('MagicNo') <> 1
+   if stream.TryReadHeader('MagicNo') <> 1
    then RAISE Exception.Create('TryReadHeader (version) failed!');
    Stream.Position := SavedPos;
    

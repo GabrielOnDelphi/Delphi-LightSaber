@@ -51,7 +51,6 @@ object MainForm: TMainForm
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
-    ExplicitHeight = 575
     object tabMain: TTabSheet
       Caption = 'TBufferedFileStream'
       DesignSize = (
@@ -109,7 +108,7 @@ object MainForm: TMainForm
         MaxValue = 125
         MinValue = 0
         TabOrder = 1
-        Value = 1000
+        Value = 125
       end
       object GroupBox2: TGroupBox
         Left = 130
@@ -129,8 +128,6 @@ object MainForm: TMainForm
           Caption = 'Read Char'
           TabOrder = 0
           OnClick = btnReadChar2Click
-          ExplicitTop = 140
-          ExplicitWidth = 206
         end
         object btnNewDelphiStream: TButton
           AlignWithMargins = True
@@ -143,8 +140,6 @@ object MainForm: TMainForm
           Caption = 'Read random'
           TabOrder = 1
           OnClick = btnNewDelphiStreamClick
-          ExplicitTop = 71
-          ExplicitWidth = 206
         end
       end
     end
@@ -178,8 +173,6 @@ object MainForm: TMainForm
           Caption = 'StreamBuff Write'
           TabOrder = 0
           OnClick = btnStreamWriteClick
-          ExplicitTop = 408
-          ExplicitWidth = 206
         end
         object btnStreamRead: TButton
           AlignWithMargins = True
@@ -191,111 +184,7 @@ object MainForm: TMainForm
           Caption = 'StreamBuff Read'
           TabOrder = 1
           OnClick = btnStreamReadClick
-          ExplicitTop = 477
-          ExplicitWidth = 206
         end
-      end
-    end
-    object tabLog: TTabSheet
-      Caption = 'Log'
-      ImageIndex = 4
-      object pnlBottom: TPanel
-        Left = 0
-        Top = 519
-        Width = 709
-        Height = 45
-        Align = alBottom
-        TabOrder = 0
-        ExplicitTop = 500
-        DesignSize = (
-          709
-          45)
-        object chkAutoOpen: TCubicCheckBox
-          Left = 334
-          Top = 17
-          Width = 113
-          Height = 13
-          Hint = 'Show Log window whenever BioniX encounters errors'
-          Anchors = [akLeft]
-          Caption = 'Auto open on error'
-          Checked = True
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = []
-          ParentFont = False
-          ParentShowHint = False
-          ShowHint = True
-          State = cbChecked
-          TabOrder = 0
-          AutoSize = True
-        end
-        object btnClear: TButton
-          Left = 6
-          Top = 10
-          Width = 73
-          Height = 27
-          Hint = 'Clear log'
-          Anchors = [akLeft]
-          Caption = 'Clear'
-          Font.Charset = DEFAULT_CHARSET
-          Font.Color = clWindowText
-          Font.Height = -11
-          Font.Name = 'MS Sans Serif'
-          Font.Style = []
-          ParentFont = False
-          ParentShowHint = False
-          ShowHint = True
-          TabOrder = 1
-          OnClick = btnClearClick
-        end
-        object RichLogTrckbr1: TRichLogTrckbr
-          AlignWithMargins = True
-          Left = 91
-          Top = 11
-          Width = 260
-          Height = 27
-          Anchors = [akLeft]
-          BevelOuter = bvNone
-          ShowCaption = False
-          TabOrder = 2
-          TrackBar.Left = 110
-          TrackBar.Top = 0
-          TrackBar.Width = 150
-          TrackBar.Height = 27
-          TrackBar.Hint = 'Hide all messages below this level'
-          TrackBar.Align = alRight
-          TrackBar.Max = 5
-          TrackBar.TabOrder = 0
-          Verbosity = lvrVerbose
-          Log = Log
-        end
-      end
-      object Log: TRichLog
-        Left = 0
-        Top = 0
-        Width = 709
-        Height = 519
-        Align = alClient
-        Font.Charset = ANSI_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -11
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        Lines.Strings = (
-          'Log')
-        MaxLength = 2147483632
-        ParentFont = False
-        ParentShowHint = False
-        ScrollBars = ssVertical
-        ShowHint = True
-        TabOrder = 1
-        WordWrap = False
-        Verbosity = lvrVerbose
-        OnError = SwitchToLog
-        OnWarn = SwitchToLog
-        ExplicitHeight = 500
       end
     end
   end

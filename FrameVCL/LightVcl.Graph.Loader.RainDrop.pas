@@ -160,6 +160,7 @@ begin
 end;
 
 
+CONST CurrVersion = 3;
 
 procedure TRainShelter.SaveToFile(aFileName: string; Mask: TBitmap);
 VAR
@@ -174,7 +175,7 @@ begin
  { Prepare output stream }
  Stream:= TLightStream.CreateWrite(aFileName);
  TRY
-   Stream.WriteHeader(RainMagicNo, 1);
+   Stream.WriteHeader(RainMagicNo, CurrVersion);
 
    { Write img resolution }
    w:= OrigImage.Width;
@@ -219,7 +220,6 @@ end;
 function TRainShelter.LoadFromFile(aFileName: string): Boolean;
 VAR
    Count: Integer;
-   Version: Word;
    x, y: Integer;
    w, h: Integer;
    JpegImg: TJpegImage;
@@ -227,16 +227,13 @@ VAR
 begin
  Result:= FALSE;
  Clear;
- Version:= 0;
  FileName:= aFileName;
 
  { Open inp stream }
  Stream:= TLightStream.CreateRead(FileName);
  TRY
-   stream.TryReadHeader_(RainMagicNo, Version);
-   case Version of
-    0: Result:= FALSE; //'Invalid magic number!'
-    1: begin
+   if stream.TryReadHeader(RainMagicNo, CurrVersion) then
+     begin
         { Read size }
         w:= Stream.ReadCardinal;
         h:= Stream.ReadCardinal;
@@ -273,8 +270,7 @@ begin
            PixelMap[x, y]:= Stream.ReadBoolean;
 
         Result:= TRUE;
-       end;
-   end;
+     end;
  FINALLY
    freeAndNil(Stream);
  END;

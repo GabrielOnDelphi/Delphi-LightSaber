@@ -15,8 +15,9 @@ USES System.SysUtils,
 TYPE
   TSoldier2 = class(TObject)
   private
-    LoadedVersion: Word;
-    CONST ClassSignature: AnsiString= 'TSoldier';
+    LoadedVersion: Word;   // Detected version
+    CONST CurVersion = 2;
+    CONST ClassSignature: AnsiString= 'TSoldier2';
     procedure Load_v1(Stream: TLightStream);
     procedure Load_v2(Stream: TLightStream);
   public
@@ -35,10 +36,9 @@ TYPE
 
 IMPLEMENTATION
 
-
 procedure TSoldier2.Save(Stream: TLightStream);
 begin
-  Stream.WriteHeader(ClassSignature, 2);  // Header & version number
+  Stream.WriteHeader(ClassSignature, CurVersion);  // Header & version number
 
   Stream.WriteInteger(Life);
   Stream.WriteInteger(Ammo);
@@ -51,7 +51,7 @@ end;
 procedure TSoldier2.Load(Stream: TLightStream);
 VAR Version: Word;
 begin
-  if NOT stream.TryReadHeader_Version(ClassSignature, Version) then EXIT;   // Header & version number
+  Version:= Stream.TryReadHeader(ClassSignature);   // Header & version number
 
   case Version of
     1: Load_v1(Stream);

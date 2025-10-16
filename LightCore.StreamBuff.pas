@@ -47,8 +47,8 @@ UNIT LightCore.StreamBuff;
    Speed
       When reading character by character, the new System.Classes.TBufferedFileStream seems to be 210% faster than LightCore.StreamBuffHefferman
 
-   Tester:
-      c:\MyProjects\packages old\LightSaber  - keeeep\Demo\_LightCore.StreamBuff.pas\BigSearch.dpr
+   Full tester:
+      LightSaber\Demo\Core\Demo LightCore StreamBuffer\Demo_FileStream.dpr
 =============================================================================================================}
 
 INTERFACE

@@ -35,7 +35,8 @@ TYPE
   TSoldier3 = class(TObject)
   private
     LoadedVersion: Word;
-    CONST ClassSignature: AnsiString= 'TSoldier';
+    CONST CurVersion = 3;
+    CONST ClassSignature: AnsiString= 'TSoldier3';
     procedure Load_v3(Stream: TLightStream);
     procedure Load_v1(Stream: TLightStream);
     procedure Load_v2(Stream: TLightStream);
@@ -75,7 +76,7 @@ end;
 
 procedure TSoldier3.Save(Stream: TLightStream);
 begin
-  Stream.WriteHeader(ClassSignature, 3);  // Header & version number
+  Stream.WriteHeader(ClassSignature, CurVersion);  // Header & version number
 
   Stream.WriteInteger(Life);
   Stream.WriteString(Name);
@@ -86,7 +87,7 @@ end;
 
 procedure TSoldier3.Load(Stream: TLightStream);
 begin
-  VAR Version:= stream.TryReadHeader_(ClassSignature);
+  VAR Version:= Stream.TryReadHeader(ClassSignature);
   if Version = 0 then EXIT;   // -1 if reading the header failed.
 
   case Version of
