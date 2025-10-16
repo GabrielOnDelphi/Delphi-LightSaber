@@ -156,7 +156,7 @@ TYPE
 
      { Strings without length }
      procedure PushString   (CONST s: string);
-     function  ReadString   (CONST Len: Cardinal): string;     overload;     { Read 'Len' characters }
+     function  ReadString   (CONST Count: Cardinal): string;     overload;     { Read 'Len' characters }
 
      { Raw }
      function  AsBytes: TBytes;
@@ -374,8 +374,7 @@ CONST
 procedure TLightStream.WritePadding(Bytes: Integer);
 VAR
   b: TBytes;
-  CheckPointSize: Integer;
-  i: Integer;
+  i, CheckPointSize: Integer;
 begin
   SetLength(b, Bytes);
   CheckPointSize:= Length(SafetyPaddingStr);
@@ -425,9 +424,9 @@ end;
 function TLightStream.ReadEnter: Boolean;   { Returns TRUE if the byte read is CR LF }
 VAR Byte1, Byte2: Byte;
 begin
- ReadBuffer(Byte1, 1);
- ReadBuffer(Byte2, 1);
- Result:= (Byte1= Byte(#13)) AND (Byte2= Byte(#10));
+  ReadBuffer(Byte1, 1);
+  ReadBuffer(Byte2, 1);
+  Result:= (Byte1= Byte(#13)) AND (Byte2= Byte(#10));
 end;
 
 
@@ -449,41 +448,41 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TLightStream.WriteString(CONST s: string);
 VAR
-  Len: cardinal;
+  Count: cardinal;
   UTF: UTF8String;
 begin
- UTF := UTF8String(s);
+  UTF := UTF8String(s);
 
- { Write length }
- Len := Length(UTF);
- WriteBuffer(Len, SizeOf(Len));
+  { Write length }
+  Count := Length(UTF);
+  WriteBuffer(Count, SizeOf(Count));
 
- { Write string }
- if Len > 0
- then WriteBuffer(UTF[1], Len);
+  { Write string }
+  if Count > 0
+  then WriteBuffer(UTF[1], Count);
 end;
 
 
 function TLightStream.ReadString: string;   { Works for both Delphi7 and Delphi UNICODE }
 VAR
-   Len: Cardinal;
+   Count: Cardinal;
    UTF: UTF8String;
 begin
- ReadBuffer(Len, 4);                        { Read length }
+  ReadBuffer(Count, 4);                        { Read length }
 
- if (StringSafetyLimit > 0)
- AND (Len > StringSafetyLimit)
- then RAISE Exception.CreateFmt('String too large: %d bytes', [Len]);
+  if (StringSafetyLimit > 0)
+  AND (Count > StringSafetyLimit)
+  then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
 
- if Len > 0
- then
-   begin
-     SetLength(UTF, Len);                   { Read string }
-     ReadBuffer(UTF[1], Len);
-     Result:= string(UTF);
-   end
- else
-   Result:= '';
+  if Count > 0
+  then
+    begin
+      SetLength(UTF, Count);                   { Read string }
+      ReadBuffer(UTF[1], Count);
+      Result:= string(UTF);
+    end
+  else
+    Result:= '';
 end;
 
 
@@ -497,44 +496,44 @@ end;
   Why 'chars' and not 'string'? This function writes C++ strings (the length of the string was not written to disk also) and not real Delphi strings. }
 procedure TLightStream.WriteChars(CONST s: AnsiString);
 begin
- Assert(s<> '', 'TLightStream.WriteChars - The string is empty');       { This makes sure 's' is not empty. Else I will get a RangeCheckError at runtime }
- WriteBuffer(s[1], Length(s));
+  Assert(s<> '', 'TLightStream.WriteChars - The string is empty');       { This makes sure 's' is not empty. Else I will get a RangeCheckError at runtime }
+  WriteBuffer(s[1], Length(s));
 end;
 
 
 procedure TLightStream.WriteChars(CONST s: string);                     { Works for both Delphi7 and Delphi UNICODE }    // old name: WriteStringANoLen
 VAR UTF: UTF8String;
 begin
- UTF := UTF8String(s);
- if Length(UTF) > 0
- then WriteBuffer(UTF[1], Length(UTF));
+  UTF := UTF8String(s);
+  if Length(UTF) > 0
+  then WriteBuffer(UTF[1], Length(UTF));
 end;
 
 
 function TLightStream.ReadChars(Count: Cardinal): string;        { Works for both Delphi7 and Delphi UNICODE }
 VAR UTF: UTF8String;
 begin
- if Count < 1 then EXIT('');
+  if Count < 1 then EXIT('');
 
- SetLength(UTF, Count);
- ReadBuffer(UTF[1], Count);
- Result:= string(UTF);
+  SetLength(UTF, Count);
+  ReadBuffer(UTF[1], Count);
+  Result:= string(UTF);
 end;
 
 
 { Reads a bunch of chars from the file. Why 'ReadChars' and not 'ReadString'? This function reads C++ strings (the length of the string was not written to disk also) and not real Delphi strings. So, i have to give the number of chars to read as parameter. IMPORTANT: The function will reserve memory for s.}
 function TLightStream.ReadCharsA(Count: Cardinal): AnsiString;
 begin
- if Count= 0
- then RAISE Exception.Create('Count is zero!');     { We cannot do s[1] on an empty string so we added 'Count = 0' as protection. }
+  if Count= 0
+  then RAISE Exception.Create('Count is zero!');     { We cannot do s[1] on an empty string so we added 'Count = 0' as protection. }
 
- if (StringSafetyLimit > 0)
- AND (Count > StringSafetyLimit)
- then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
+  if (StringSafetyLimit > 0)
+  AND (Count > StringSafetyLimit)
+  then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
 
- SetLength(Result, Count);
- ReadBuffer(Result[1], Count);
-{ Alternative:  Result:= Read(Pointer(s)^, Count)= Count;     <--- Don't use this! Ever. See explanation from A Buchez:   http://stackoverflow.com/questions/6411246/pointers-versus-s1 }
+  SetLength(Result, Count);
+  ReadBuffer(Result[1], Count);
+ { Alternative:  Result:= Read(Pointer(s)^, Count)= Count;     <--- Don't use this! Ever. See explanation from A Buchez:   http://stackoverflow.com/questions/6411246/pointers-versus-s1 }
 end;
 
 
@@ -558,8 +557,8 @@ end;
 
 function TLightStream.ReadStrings: TStringList;
 begin
- Result:= TStringList.Create;
- Result.Text:= ReadString;
+  Result:= TStringList.Create;
+  Result.Text:= ReadString;
 end;
 
 
@@ -572,14 +571,14 @@ end;
 { BOOLEAN }
 procedure TLightStream.WriteBoolean(b: Boolean);
 begin
- WriteBuffer(b, 1);
+  WriteBuffer(b, 1);
 end;
 
 function TLightStream.ReadBoolean: Boolean;
 VAR b: byte;
 begin
- ReadBuffer(b, 1);    { Valid values for a Boolean are 0 and 1. If you put a different value into a Boolean variable then future behaviour is undefined. You should read into a byte variable b and assign b <> 0 into the Boolean. Or sanitise by casting the byte to ByteBool. Or you may choose to validate the value read from the file and reject anything other than 0 and 1. http://stackoverflow.com/questions/28383736/cannot-read-boolean-value-with-tmemorystream }
- Result:= b <> 0;
+  ReadBuffer(b, 1);    { Valid values for a Boolean are 0 and 1. If you put a different value into a Boolean variable then future behaviour is undefined. You should read into a byte variable b and assign b <> 0 into the Boolean. Or sanitise by casting the byte to ByteBool. Or you may choose to validate the value read from the file and reject anything other than 0 and 1. http://stackoverflow.com/questions/28383736/cannot-read-boolean-value-with-tmemorystream }
+  Result:= b <> 0;
 end;
 
 
@@ -588,12 +587,12 @@ end;
 { BYTE }
 procedure TLightStream.WriteByte(b: Byte);
 begin
- WriteBuffer(b, 1);
+  WriteBuffer(b, 1);
 end;
 
 function TLightStream.ReadByte: Byte;
 begin
- ReadBuffer(Result, 1);
+  ReadBuffer(Result, 1);
 end;
 
 
@@ -601,12 +600,12 @@ end;
 { SIGNED }
 procedure TLightStream.WriteShortInt(s: ShortInt);     //Signed 8bit: -128..127
 begin
- Write(s, 1);
+  Write(s, 1);
 end;
 
 function TLightStream.ReadShortInt: ShortInt;
 begin
- Read(Result, 1);
+  Read(Result, 1);
 end;
 
 
@@ -614,55 +613,55 @@ end;
 {}
 procedure TLightStream.WriteSmallInt(s: SmallInt);     //Signed 16bit: -32768..32767
 begin
- Write(s, 2);
+  Write(s, 2);
 end;
 
 function TLightStream.ReadSmallInt: SmallInt;
 begin
- Read(Result, 2);
+  Read(Result, 2);
 end;
 
 
 { WORD }
 procedure TLightStream.WriteWord(w: Word);
 begin
- WriteBuffer(w, 2);
+  WriteBuffer(w, 2);
 end;
 
 function TLightStream.ReadWord: Word;
 begin
- ReadBuffer(Result, 2);
+  ReadBuffer(Result, 2);
 end;
 
 
 { CARDINAL }
 procedure TLightStream.WriteCardinal(c: Cardinal);
 begin
- WriteBuffer(c, 4);
+  WriteBuffer(c, 4);
 end;
 
 function TLightStream.ReadCardinal: Cardinal;    { Cardinal IS NOT a fundamental type BUT its size is 32 bits across 64-bit and 32-bit platforms.  }
 begin
- ReadBuffer(Result, 4);
+  ReadBuffer(Result, 4);
 end;
 
 
 { INTEGER }
 procedure TLightStream.WriteInteger(i: Integer);
 begin
- WriteBuffer(i, 4);
+  WriteBuffer(i, 4);
 end;
 
 function TLightStream.ReadInteger: Integer;
 begin
- ReadBuffer(Result, 4);
+  ReadBuffer(Result, 4);
 end;
 
 
 { INT64 }
 procedure TLightStream.WriteInt64(i: Int64);
 begin
- WriteBuffer(i, 8);
+  WriteBuffer(i, 8);
 end;
 
 function TLightStream.ReadInt64: Int64;
@@ -671,16 +670,15 @@ begin
 end;
 
 
-{ UINT64 }
-{ UInt64 Defines a 64-bit unsigned integer type. UInt64 represents a subset of the natural numbers. The range for the UInt64 type is from 0 through 2^64-1. The size of UInt64 is 64 bits across all 64-bit and 32-bit platforms. }
+{ UINT64 - The size of UInt64 is 64 bits across all 64-bit and 32-bit platforms. }
 procedure TLightStream.WriteUInt64(i: UInt64);
 begin
- WriteBuffer(i, 8);
+  WriteBuffer(i, 8);
 end;
 
 function TLightStream.ReadUInt64: UInt64;
 begin
- ReadBuffer(Result, 8);
+  ReadBuffer(Result, 8);
 end;
 
 
@@ -703,12 +701,12 @@ end;
 
 function TLightStream.ReadDouble: Double;
 begin
- Read(Result, 8);
+  Read(Result, 8);
 end;
 
 procedure TLightStream.WriteDouble(d: Double);
 begin
- Write(d, 8);
+  Write(d, 8);
 end;
 
 
@@ -718,12 +716,12 @@ end;
 
 function TLightStream.ReadDate: TDateTime;
 begin
- ReadBuffer(Result, 8);
+  ReadBuffer(Result, 8);
 end;
 
 procedure TLightStream.WriteDate(d: TDateTime);
 begin
- WriteBuffer(d, 8);             { The size of Double is 8 bytes }
+  WriteBuffer(d, 8);             { The size of Double is 8 bytes }
 end;
 
 
@@ -769,43 +767,43 @@ end;
 
 
 procedure TLightStream.ReadIntegers(out List: TIntegerArray);
-VAR 
+VAR
   i: Integer;
   Count: Integer;
 begin
- Count:= ReadInteger;
- SetLength(List, Count);
- for i:= 0 to High(List) DO
-   List[i]:= ReadInteger;
+  Count:= ReadInteger;
+  SetLength(List, Count);
+  for i:= 0 to High(List) DO
+    List[i]:= ReadInteger;
 end;
 
 procedure TLightStream.WriteIntegers(const List: TIntegerArray);
 VAR Int: Integer;
 begin
- WriteInteger(Length(List));
- for Int in List DO
-   WriteInteger(Int);
+  WriteInteger(Length(List));
+  for Int in List DO
+    WriteInteger(Int);
 end;
 
 
 
 procedure TLightStream.ReadDoubles(out List: TDoubleArray);
-VAR 
+VAR
   i: Integer;
   Count: Integer;
 begin
- Count:= ReadInteger;
- SetLength(List, Count);
- for i:= 0 to High(List) DO
-   List[i]:= ReadDouble;
+  Count:= ReadInteger;
+  SetLength(List, Count);
+  for i:= 0 to High(List) DO
+    List[i]:= ReadDouble;
 end;
 
 procedure TLightStream.WriteDoubles(const List: TDoubleArray);
 VAR Dbl: Double;
 begin
- WriteInteger(Length(List));
- for Dbl in List DO
-   WriteDouble(Dbl);
+  WriteInteger(Length(List));
+  for Dbl in List DO
+    WriteDouble(Dbl);
 end;
 
 
@@ -823,17 +821,17 @@ begin
 end;
 
 
-function TLightStream.RevReadInteger: Integer;     // old name: RevReadLongInt
+function TLightStream.RevReadInteger: Integer;
 begin
-  ReadBuffer(Result, 4);    // Warning! LongInt is 8 byte on Linux, but I read 4!
+  ReadBuffer(Result, 4);
   SwapInt(Result);
 end;
 
 
-function TLightStream.RevReadWord: Word;                                                 { REVERSE READ - read 2 bytes and swap their position }   // old name ReadWordSwap
+function TLightStream.RevReadWord: Word; { REVERSE READ - read 2 bytes and swap their position }
 begin
   ReadBuffer(Result, 2);
-  Result:= Swap(Result);                             { Exchanges high order byte with the low order byte of an integer or word. In Delphi code, Swap exchanges the high-order bytes with the low-order bytes of the argument. X is an expression of type SmallInt, as a 16-bit value, or Word. This is provided for backward compatibility only. }
+  Result:= Swap(Result);     { Exchanges high order byte with the low order byte of an integer or word. In Delphi code, Swap exchanges the high-order bytes with the low-order bytes of the argument. X is an expression of type SmallInt, as a 16-bit value, or Word. This is provided for backward compatibility only. }
   //Also see: LightCore.Binary.SwapWord
 end;
 
@@ -851,89 +849,89 @@ end;
 procedure TLightStream.PushString(CONST s: string);    //  old name: WriteStringNoLen
 VAR UTF: UTF8String;
 begin
- UTF := UTF8String(s);
- if Length(UTF) > 0
- then WriteBuffer(UTF[1], Length(UTF));
+  UTF := UTF8String(s);
+  if Length(UTF) > 0
+  then WriteBuffer(UTF[1], Length(UTF));
 end;
 
 
 { Write raw data to file. The length is not written! }
 procedure TLightStream.PushAnsi(CONST s: AnsiString);   // old name: WriteStringANoLen
 begin
- Assert(s<> '', 'WriteStringA - The string is empty');   { Make sure 's' is not empty, otherwise we get a RangeCheckError at runtime }
- WriteBuffer(s[1], Length(s));
+  Assert(s<> '', 'WriteStringA - The string is empty');   { Make sure 's' is not empty, otherwise we get a RangeCheckError at runtime }
+  WriteBuffer(s[1], Length(s));
 end;
 
 
 { Read the raw content of the file and return it as string (for debugging) }
 function TLightStream.AsString: AnsiString;
 begin
- Position:= 0;
- Result:= ReadStringA(Size);
+  Position:= 0;
+  Result:= ReadStringA(Size);
 end;
 
 
 function TLightStream.ReadStringA(Count: Cardinal): AnsiString;  { We need to specify the length of the string }
 VAR TotalBytes: Cardinal;
 begin
- if (StringSafetyLimit > 0)
- AND (Count > StringSafetyLimit)
- then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
+  if (StringSafetyLimit > 0)
+  AND (Count > StringSafetyLimit)
+  then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
 
- if Count > 0
- then
-   begin
-    SetLength(Result, Count);                                             { Initialize the result }
-    TotalBytes:= Read(Result[1], Count);                                  { Read is used in cases where the number of bytes to read from the stream is not necessarily fixed. It attempts to read up to Count bytes into buffer and returns the number of bytes actually read.  }
+  if Count > 0
+  then
+    begin
+     SetLength(Result, Count);                                             { Initialize the result }
+     TotalBytes:= Read(Result[1], Count);                                  { Read is used in cases where the number of bytes to read from the stream is not necessarily fixed. It attempts to read up to Count bytes into buffer and returns the number of bytes actually read.  }
 
-    if TotalBytes= 0
-    then Result:= ''
-    else
-      if TotalBytes < Count                                               { If there is not enough data to read... }
-      then SetLength(Result, TotalBytes);                               { ...set the buffer to whater I was able to read }
-   end
- else Result:= '';
+     if TotalBytes= 0
+     then Result:= ''
+     else
+       if TotalBytes < Count                                               { If there is not enough data to read... }
+       then SetLength(Result, TotalBytes);                               { ...set the buffer to whater I was able to read }
+    end
+  else Result:= '';
 end;
 
 
 { Returns the content of the ENTIRE stream }
 function TLightStream.AsBytes: TBytes;          { Put the content of the stream into a string }
 begin
- Position:= 0;            // Reset stream position
- SetLength(Result, Size); // Allocate size
- Read(Result[0], Size);   // Read content of stream
+  Position:= 0;            // Reset stream position
+  SetLength(Result, Size); // Allocate size
+  Read(Result[0], Size);   // Read content of stream
 end;
 
 
 { TBYTES }
 procedure TLightStream.PushBytes(CONST Bytes: TBytes);
 begin
- Assert(Length(Bytes) > 0, 'Buffer is zero!!');
- WriteBuffer(Bytes[0], Length(Bytes));
+  Assert(Length(Bytes) > 0, 'Buffer is zero!!');
+  WriteBuffer(Bytes[0], Length(Bytes));
 end;
 
 
 { Writes "Buffer" in the stream, at the current pos. The amount of data to be stored is also written down to the stream. }
 procedure TLightStream.PushBytesCnt(CONST Buffer: TBytes); // old name: WriteBytes
 begin
- Assert(Length(Buffer) > 0, 'Buffer is zero!');
- WriteCardinal(Length(Buffer));
- PushBytes(Buffer);
+  Assert(Length(Buffer) > 0, 'Buffer is zero!');
+  WriteCardinal(Length(Buffer));
+  PushBytes(Buffer);
 end;
 
 
 { Reads a chunk of data from the current pos of the stream. The amount of data to read is also retrieved from the stream. }
 function TLightStream.ReadByteChunk: TBytes;
-VAR Cnt: Cardinal;
+VAR Count: Cardinal;
 begin
- Cnt:= ReadCardinal;
- if Cnt > 0 then
- begin
-   SetLength(Result, Cnt);
-   ReadBuffer(Result[0], Cnt);
- end
- else
-   SetLength(Result, 0);
+  Count:= ReadCardinal;
+  if Count > 0 then
+  begin
+    SetLength(Result, Count);
+    ReadBuffer(Result[0], Count);
+  end
+  else
+    SetLength(Result, 0);
 end;
 
 
@@ -943,28 +941,28 @@ end;
    ANSI STRINGS
 --------------------------------------------------------------------------------------------------}
 procedure TLightStream.WriteStringA(CONST s: AnsiString);
-VAR Len: Cardinal;
+VAR Count: Cardinal;
 begin
-  Len:= Length(s);
-  WriteBuffer(Len, SizeOf(Len));
-  if Len > 0                                                            { This makes sure 's' is not empty. Else I will get a RangeCheckError at runtime }
-  then WriteBuffer(s[1], Len);
+  Count:= Length(s);
+  WriteBuffer(Count, SizeOf(Count));
+  if Count > 0                                                            { This makes sure 's' is not empty. Else I will get a RangeCheckError at runtime }
+  then WriteBuffer(s[1], Count);
 end;
 
 
 { It automatically detects the length of the string }
 function TLightStream.ReadStringA: AnsiString;
-VAR Len: Cardinal;
+VAR Count: Cardinal;
 begin
- ReadBuffer(Len, SizeOf(Len));                                          { First, find out how many characters to read }
+ ReadBuffer(Count, SizeOf(Count));                                          { First, find out how many characters to read }
 
- Assert(Len<= Size- Position, 'TReadCachedStream: String lenght > file size!');
+ Assert(Count<= Size- Position, 'TReadCachedStream: String lenght > file size!');
 
  if (StringSafetyLimit > 0)
- AND (Len > StringSafetyLimit)
- then RAISE Exception.CreateFmt('String too large: %d bytes', [Len]);
+ AND (Count > StringSafetyLimit)
+ then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
 
- Result:= ReadStringA(Len);        { Do the actual strign reading }
+ Result:= ReadStringA(Count);        { Do the actual strign reading }
 end;
 
 
@@ -975,6 +973,8 @@ end;
 function TLightStream.TryReadStringA(Count: Cardinal): AnsiString;   // Old name: ReadStringAR
 VAR ReadBytes: Cardinal;
 begin
+ Assert(Count<= Size- Position, 'TReadCachedStream: String lenght > file size!');
+
  if Count = 0
  then Result:= ''
  else
@@ -988,21 +988,21 @@ end;
 
 
 { Read a string from file. The length of the string will be provided from outside. }
-function TLightStream.ReadString(CONST Len: Cardinal): string;
+function TLightStream.ReadString(CONST Count: Cardinal): string;
 VAR UTF: UTF8String;
 begin
- if Len > 0
+ if Count > 0
  then
    begin
-     if (Len+ Position > Size)
-     then RAISE exception.Create('TLightStream-Invalid string size! '+ IntToStr(Len));
+     if (Count+ Position > Size)
+     then RAISE exception.Create('TLightStream-Invalid string size! '+ IntToStr(Count));
 
      if (StringSafetyLimit > 0)
-     AND (Len > StringSafetyLimit)
-     then RAISE Exception.CreateFmt('String too large: %d bytes', [Len]);
+     AND (Count > StringSafetyLimit)
+     then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
 
-     SetLength(UTF, Len);
-     ReadBuffer(UTF[1], Len);
+     SetLength(UTF, Count);
+     ReadBuffer(UTF[1], Count);
      Result:= string(UTF);
    end
  else

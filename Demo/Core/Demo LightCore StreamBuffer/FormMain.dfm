@@ -41,24 +41,44 @@ object MainForm: TMainForm
     NotVisitedColor = clBlue
     OverColor = clRed
   end
+  object lblTestSpeed: TLabel
+    AlignWithMargins = True
+    Left = 3
+    Top = 3
+    Width = 711
+    Height = 20
+    Align = alTop
+    Alignment = taCenter
+    Caption = 'Tests the speed of different stream classes'
+    Font.Charset = DEFAULT_CHARSET
+    Font.Color = clWindowText
+    Font.Height = -16
+    Font.Name = 'MS Sans Serif'
+    Font.Style = []
+    ParentFont = False
+    Layout = tlCenter
+    ExplicitWidth = 305
+  end
   object pgCtrl: TPageControl
     Left = 0
-    Top = 0
+    Top = 26
     Width = 717
-    Height = 575
-    ActivePage = tabMain
+    Height = 568
+    ActivePage = TabSheet1
     Align = alClient
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
+    ExplicitTop = 0
+    ExplicitHeight = 575
     object tabMain: TTabSheet
-      Caption = 'Main'
+      Caption = 'TBufferedFileStream'
       DesignSize = (
         709
-        545)
+        538)
       object Label1: TLabel
-        Left = 576
-        Top = 150
+        Left = 527
+        Top = 103
         Width = 163
         Height = 15
         Anchors = [akTop]
@@ -68,189 +88,111 @@ object MainForm: TMainForm
         Transparent = False
       end
       object Label2: TLabel
-        Left = 18
-        Top = 35
+        Left = 3
+        Top = 19
         Width = 108
         Height = 75
         Caption = 
           'TODO:'#13#10'FastMM: Off'#13#10'Compiler optimization: On'#13#10'Compile for: 64 b' +
           'its'
+        Visible = False
         WordWrap = True
       end
-      object lblTestSpeed: TLabel
-        AlignWithMargins = True
-        Left = 3
-        Top = 3
-        Width = 703
-        Height = 20
-        Align = alTop
-        Alignment = taCenter
-        Caption = 'Tests the speed of different stream classes'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -16
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-        Layout = tlCenter
-        ExplicitWidth = 305
-      end
       object edtFile2: TCubicPathEdit
-        Left = 120
+        Left = 130
         Top = 124
         Width = 449
-        Height = 41
+        Height = 44
         Path = 'c:\TestFile'
         InputType = itFile
         Anchors = [akTop]
         Caption = 'File'
         TabOrder = 0
       end
-      object edtOutput: TCubicPathEdit
-        Left = 120
-        Top = 187
-        Width = 449
-        Height = 41
-        Anchors = [akTop]
-        Caption = 'Folder'
+      object spnCacheSize: TCubicSpinEdit
+        Left = 135
+        Top = 376
+        Width = 70
+        Height = 24
+        Hint = 'Buffer size (KB)'
+        MaxValue = 125
+        MinValue = 0
         TabOrder = 1
+        Value = 1000
       end
-      object Panel1: TPanel
-        Left = 148
-        Top = 269
-        Width = 392
-        Height = 212
-        Anchors = [akTop]
-        BevelInner = bvLowered
+      object GroupBox2: TGroupBox
+        Left = 130
+        Top = 178
+        Width = 449
+        Height = 170
+        Caption = 'System.Classes.TBufferedFileStream'
         TabOrder = 2
-        object spnCacheSize: TCubicSpinEdit
-          Left = 324
-          Top = 48
-          Width = 53
-          Height = 24
-          MaxValue = 1000
-          MinValue = 0
+        object btnReadChar2: TButton
+          AlignWithMargins = True
+          Left = 5
+          Top = 102
+          Width = 439
+          Height = 63
+          Hint = 'Linear'#13#10'System.Classes.TBufferedFileStream'
+          Align = alBottom
+          Caption = 'Read Char'
           TabOrder = 0
-          Value = 0
+          OnClick = btnReadChar2Click
+          ExplicitTop = 140
+          ExplicitWidth = 206
         end
-        object GroupBox1: TGroupBox
-          Left = 2
-          Top = 2
-          Width = 121
-          Height = 208
-          Align = alLeft
-          Caption = 'ccStreamBuffHeff.pas'
+        object btnNewDelphiStream: TButton
+          AlignWithMargins = True
+          Left = 5
+          Top = 33
+          Width = 439
+          Height = 63
+          Hint = 'System.Classes.TBufferedFileStream'
+          Align = alBottom
+          Caption = 'Read random'
           TabOrder = 1
-          object btnLines: TButton
-            Left = 12
-            Top = 80
-            Width = 75
-            Height = 25
-            Caption = 'Linear lines'
-            TabOrder = 0
-          end
-          object btnRandom: TButton
-            Left = 12
-            Top = 126
-            Width = 75
-            Height = 25
-            Caption = 'Random read'
-            TabOrder = 1
-          end
-          object btnReadChar1: TButton
-            Left = 12
-            Top = 38
-            Width = 75
-            Height = 25
-            Caption = 'Read Char'
-            TabOrder = 2
-          end
+          OnClick = btnNewDelphiStreamClick
+          ExplicitTop = 71
+          ExplicitWidth = 206
         end
-        object GroupBox2: TGroupBox
-          Left = 123
-          Top = 2
-          Width = 185
-          Height = 208
-          Align = alLeft
-          Caption = 'System.Classes.TBufferedFileStream'
-          TabOrder = 2
-          object btnReadChar2: TButton
-            Left = 25
-            Top = 40
-            Width = 87
-            Height = 25
-            Hint = 'Linear'#13#10'System.Classes.TBufferedFileStream'
-            Caption = 'Read Char'
-            TabOrder = 0
-            OnClick = btnReadChar2Click
-          end
-          object btnNewDelphiStream: TButton
-            Left = 25
-            Top = 83
-            Width = 87
-            Height = 25
-            Hint = 'System.Classes.TBufferedFileStream'
-            Caption = 'Read random'
-            TabOrder = 1
-            OnClick = btnNewDelphiStreamClick
-          end
-        end
-      end
-      object btnSaveIni: TButton
-        Left = 615
-        Top = 51
-        Width = 75
-        Height = 25
-        Hint = 'Save settings'
-        Anchors = [akTop, akRight]
-        Caption = 'Save settings'
-        TabOrder = 3
-        OnClick = btnSaveIniClick
       end
     end
-    object tabStreamBuff: TTabSheet
-      Caption = 'ccStreamBuff'
-      ImageIndex = 3
-      DesignSize = (
-        709
-        545)
-      object lblReadWrite: TLabel
-        AlignWithMargins = True
-        Left = 3
-        Top = 3
-        Width = 703
-        Height = 20
-        Align = alTop
-        Alignment = taCenter
-        Caption = 'Tests the Stream.Read / Stream.Write functions'
-        Font.Charset = DEFAULT_CHARSET
-        Font.Color = clWindowText
-        Font.Height = -16
-        Font.Name = 'MS Sans Serif'
-        Font.Style = []
-        ParentFont = False
-        Layout = tlCenter
-        ExplicitWidth = 339
-      end
-      object btnStreamRead: TButton
-        Left = 260
-        Top = 278
-        Width = 173
-        Height = 63
-        Anchors = []
-        Caption = 'StreamBuff Read'
+    object TabSheet1: TTabSheet
+      Caption = 'LightStream'
+      ImageIndex = 2
+      object GroupBox1: TGroupBox
+        Left = 182
+        Top = 136
+        Width = 347
+        Height = 177
+        Caption = 'LightStream'
         TabOrder = 0
-        OnClick = btnStreamReadClick
-      end
-      object btnStreamWrite: TButton
-        Left = 260
-        Top = 204
-        Width = 173
-        Height = 63
-        Anchors = []
-        Caption = 'StreamBuff Write'
-        TabOrder = 1
-        OnClick = btnStreamWriteClick
+        object btnStreamWrite: TButton
+          AlignWithMargins = True
+          Left = 5
+          Top = 40
+          Width = 337
+          Height = 63
+          Align = alBottom
+          Caption = 'StreamBuff Write'
+          TabOrder = 0
+          OnClick = btnStreamWriteClick
+          ExplicitTop = 408
+          ExplicitWidth = 206
+        end
+        object btnStreamRead: TButton
+          AlignWithMargins = True
+          Left = 5
+          Top = 109
+          Width = 337
+          Height = 63
+          Align = alBottom
+          Caption = 'StreamBuff Read'
+          TabOrder = 1
+          OnClick = btnStreamReadClick
+          ExplicitTop = 477
+          ExplicitWidth = 206
+        end
       end
     end
     object tabLog: TTabSheet
@@ -258,11 +200,12 @@ object MainForm: TMainForm
       ImageIndex = 4
       object pnlBottom: TPanel
         Left = 0
-        Top = 500
+        Top = 493
         Width = 709
         Height = 45
         Align = alBottom
         TabOrder = 0
+        ExplicitTop = 500
         DesignSize = (
           709
           45)
@@ -323,9 +266,8 @@ object MainForm: TMainForm
           TrackBar.Hint = 'Hide all messages below this level'
           TrackBar.Align = alRight
           TrackBar.Max = 5
-          TrackBar.Position = 2
           TrackBar.TabOrder = 0
-          Verbosity = lvrInfos
+          Verbosity = lvrVerbose
           Log = Log
         end
       end
@@ -333,7 +275,7 @@ object MainForm: TMainForm
         Left = 0
         Top = 0
         Width = 709
-        Height = 500
+        Height = 493
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
@@ -349,31 +291,11 @@ object MainForm: TMainForm
         ShowHint = True
         TabOrder = 1
         WordWrap = False
+        Verbosity = lvrVerbose
         OnError = SwitchToLog
         OnWarn = SwitchToLog
+        ExplicitHeight = 500
       end
     end
-    object TabSheet1: TTabSheet
-      Caption = 'About'
-      ImageIndex = 3
-      object lblVers: TLabel
-        Left = 376
-        Top = 268
-        Width = 117
-        Height = 15
-        Alignment = taCenter
-        Caption = 'Search key in 8GB file'
-      end
-    end
-  end
-  object StatBar: TStatusBar
-    Left = 0
-    Top = 575
-    Width = 717
-    Height = 19
-    Panels = <>
-    ParentShowHint = False
-    ShowHint = True
-    SimplePanel = True
   end
 end

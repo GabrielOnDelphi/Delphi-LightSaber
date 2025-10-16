@@ -10,7 +10,7 @@ UNIT LightVcl.Visual.INIFile;
 
   Important:
      The LightVcl.Visual.RadioButton/LightVcl.Visual.CheckBox will NOT be automatically resized if you call LoadForm(self) in FormCreate (canvas not ready).
-     You need to call LoadForm(self) in after the form was fully created.
+     LoadForm(self) should be called after the form was fully created.
 =======================================================================================================================}
 
 INTERFACE

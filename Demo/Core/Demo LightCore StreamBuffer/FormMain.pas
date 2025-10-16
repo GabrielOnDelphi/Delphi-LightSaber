@@ -23,38 +23,27 @@ TYPE
     Log                : TRichLog;
     pgCtrl             : TPageControl;
     btnClear           : TButton;
-    btnStreamRead      : TButton;
-    btnStreamWrite     : TButton;
     chkAutoOpen        : TCubicCheckBox;
     edtFile2           : TCubicPathEdit;
-    edtOutput          : TCubicPathEdit;
     InternetLabel      : TInternetLabel;
     Label1             : TLabel;
     Label2             : TLabel;
-    lblVers            : TLabel;
     pnlBottom          : TPanel;
     RichLogTrckbr1     : TRichLogTrckbr;
-    StatBar            : TStatusBar;
     tabLog             : TTabSheet;
     tabMain            : TTabSheet;
-    TabSheet1          : TTabSheet;
-    tabStreamBuff      : TTabSheet;
-    Panel1: TPanel;
+    lblTestSpeed: TLabel;
     spnCacheSize: TCubicSpinEdit;
+    TabSheet1: TTabSheet;
     GroupBox1: TGroupBox;
-    btnLines: TButton;
-    btnRandom: TButton;
-    btnReadChar1: TButton;
+    btnStreamWrite: TButton;
+    btnStreamRead: TButton;
     GroupBox2: TGroupBox;
     btnReadChar2: TButton;
     btnNewDelphiStream: TButton;
-    lblReadWrite: TLabel;
-    lblTestSpeed: TLabel;
-    btnSaveIni: TButton;
     procedure actExitExecute          (Sender: TObject);
     procedure btnClearClick           (Sender: TObject);
     procedure SwitchToLog             (Sender: TObject);
-    procedure btnSaveIniClick         (Sender: TObject);
     procedure btnNewDelphiStreamClick (Sender: TObject);
     procedure btnReadChar2Click       (Sender: TObject);
     procedure btnStreamWriteClick     (Sender: TObject);
@@ -64,12 +53,9 @@ TYPE
     procedure FormPostInitialize; override; // Called after the main form was fully created
  end;
 
-VAR
-   MainForm: TMainForm;
 
 IMPLEMENTATION {$R *.dfm}
 
-{.$I SynDprUses.inc} // use FastMM4 on older Delphi, or set FPC threads
 
 USES
    System.Math, LightCore.Types, LightCore.StreamBuff, LightVcl.Common.Debugger;
@@ -84,8 +70,6 @@ USES
 procedure TMainForm.FormPostInitialize;
 begin
  inherited FormPostInitialize;
- //SetCaption('');
- lblVers.Caption:= 'Version: '+ TAppData.GetVersionInfoV;
  Show;
 end;
 
@@ -94,10 +78,6 @@ procedure TMainForm.actExitExecute(Sender: TObject);
 begin
  Close;
 end;
-
-
-
-
 
 
 
@@ -117,10 +97,6 @@ begin
  then pgCtrl.ActivePage:= tabLog;
  Application.ProcessMessages;
 end;
-
-
-
-
 
 
 
@@ -194,8 +170,6 @@ end;
 
 
 
-
-
 {--------------------------------------------------------------------------------------------------
    READ/WRITE TEST
 --------------------------------------------------------------------------------------------------}
@@ -253,8 +227,9 @@ VAR
    Stream: TLightStream;
    dDate: TDate;
 begin
-  Caption:= 'Reading...';
+  if NOT LocaleFileExists('TLightStream.bin') then EXIT;
   dDate:= EncodeDate(2024, 08, 10);
+  Caption:= 'Reading...';
 
   Stream:= TLightStream.CreateRead('TLightStream.bin');
   TRY
@@ -302,10 +277,5 @@ begin
   Caption:= 'Read successful';
 end;
 
-
-procedure TMainForm.btnSaveIniClick(Sender: TObject);
-begin
-  SaveForm;
-end;
 
 end.

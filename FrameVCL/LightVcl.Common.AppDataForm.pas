@@ -99,7 +99,7 @@ TYPE
 
 IMPLEMENTATION
 USES
-  LightVcl.Common.AppData;
+  LightVcl.Common.AppData, LightVcl.Visual.INIFile;
 
 
 constructor TLightForm.Create(AOwner: TComponent; AutoSaveForm: TAutoState);
@@ -205,7 +205,7 @@ end;
 
 procedure TLightForm.SaveForm;
 VAR
-   IniFile: TIniFileApp;
+   IniFile: TIniFileVCL;
 begin
   if TAppDataCore.Initializing
   AND (Self= Application.MainForm) then
@@ -215,7 +215,7 @@ begin
      Exit; // We don't save anything if the start up was improper!
    end;
 
-  IniFile:= TIniFileApp.Create(Self.Name);
+  IniFile:= TIniFileVCL.Create(Self.Name);
   TRY
    TRY
      IniFile.SaveForm(Self, AutoState);
@@ -238,9 +238,9 @@ end;
     * If the form is out of screen, LoadForm will also bring the form back to screen. }
 procedure TLightForm.LoadForm;
 VAR
-   IniFile: TIniFileApp;
+   IniFile: TIniFileVCL;
 begin
-  IniFile:= TIniFileApp.Create(Self.Name);
+  IniFile:= TIniFileVCL.Create(Self.Name);
   TRY
    TRY
      IniFile.LoadForm(Self, AutoState);

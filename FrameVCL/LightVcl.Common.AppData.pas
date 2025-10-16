@@ -231,7 +231,7 @@ begin
   // Changing DefaultFont later at run-time will trigger an update for all forms that use the parent font.
   // However, we cannot use it becuase it applies only to forms that are controlled by TApplication. But TFormLoglog is not controlled by TApplication (we want to manually release it as late as possible).
   // Now we take the font from the main form (whatwever the user sets there). So Application.DefaultFont isn't doing anything here!
-  // The font of the MainForm is saved in TIniFileApp.WriteComp
+  // The font of the MainForm is saved in TIniFileVCL.WriteComp
   Application.DefaultFont.Name    := 'Segoe UI';
   Application.DefaultFont.Size    := 10;
   Application.ShowHint := TRUE;                   // Set later via the HintType property. It is true by default anyway
@@ -374,11 +374,11 @@ begin
   // Load form settings/position
   if TForm(Reference) is TLightForm then
     begin
-     //
+
      // Load form size and position
      // Load form font
      // Repair position on desktop
-     //
+
      TLightForm(Reference).AutoState:= AutoState;
      TLightForm(Reference).LoadForm;
     end;
