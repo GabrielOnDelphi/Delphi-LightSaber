@@ -365,7 +365,7 @@ end;
 function TRamLog.LoadFromStream(Stream: TLightStream): Boolean;
 VAR StreamVer: Word;
 begin
-  StreamVer:= stream.TryReadHeader(StreamSign);
+  StreamVer:= Stream.ReadHeader(StreamSign);
   Result:= StreamVer = CurrentVersion;    // Unsupported version?
   if Result then
     begin

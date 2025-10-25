@@ -84,7 +84,7 @@ end;
 procedure TAbstractLogLines.ReadFromStream(Stream: TLightStream);
 VAR StreamVer: Word;
 begin
-  StreamVer:= stream.TryReadHeader(StreamSign);
+  StreamVer:= Stream.ReadHeader(StreamSign);
   if StreamVer = 0 then EXIT;
 
   if StreamVer= CurVer

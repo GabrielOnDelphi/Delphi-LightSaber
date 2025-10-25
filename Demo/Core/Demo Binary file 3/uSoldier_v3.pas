@@ -87,10 +87,10 @@ end;
 
 procedure TSoldier3.Load(Stream: TLightStream);
 begin
-  VAR Version:= Stream.TryReadHeader(ClassSignature);
-  if Version = 0 then EXIT;   // -1 if reading the header failed.
+  LoadedVersion:= Stream.ReadHeader(ClassSignature);
+  if LoadedVersion = 0 then EXIT;   // -1 if reading the header failed.
 
-  case Version of
+  case LoadedVersion of
     1: Load_v1(Stream);
     2: Load_v2(Stream);
     3: Load_v3(Stream);

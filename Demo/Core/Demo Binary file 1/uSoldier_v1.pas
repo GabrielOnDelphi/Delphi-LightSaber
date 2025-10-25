@@ -45,7 +45,7 @@ end;
 
 procedure TSoldier.Load(Stream: TLightStream);
 begin
-  if NOT stream.TryReadHeader(ClassSignature, CurVersion) then EXIT;   // Header & version number
+  if NOT Stream.ReadHeader(ClassSignature, CurVersion) then EXIT;   // Header & version number
 
   Life   := Stream.ReadInteger;
   Ammo   := Stream.ReadInteger;

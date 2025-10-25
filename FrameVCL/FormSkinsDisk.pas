@@ -1,14 +1,14 @@
 UNIT FormSkinsDisk;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.05
+   2025.10
    www.GabrielMoraru.com
-   See Copyright file
 --------------------------------------------------------------------------------------------------------------
    Universal skin loader. Loads skins from disk (vsf file)
 
-   DON'T ADD IT TO ANY DPK!
+   Warning:
+     * Vcl.Styles &  VCL.Forms must be present in the DPR file.
+     * DON'T ADD THIS UNIT TO ANY DPK!
 
    To use it:
       Application.ShowMainForm:= FALSE;   // Necessary so the form won't flicker during skin loading at startup
@@ -58,6 +58,7 @@ INTERFACE
 
 USES
   Winapi.Windows, System.SysUtils, Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, System.Classes, Vcl.Forms,
+  Vcl.Themes, Vcl.Styles,  {Vcl.Themes, Vcl.Styles MUST be present in the DPR file (before the Forms.pas) or at least here }
   LightVcl.Visual.AppDataForm;
 
 TYPE
@@ -98,7 +99,7 @@ procedure LoadLastSkin(CONST DefaultSkin: string= '');  { On first run, set the 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.Colors, LightVcl.Common.Translate, LightVcl.Common.IniFileQuick, {uLinks,} Vcl.Themes, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.ExecuteShell,
+   LightVcl.Common.Colors, LightVcl.Common.Translate, LightVcl.Common.IniFileQuick, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.ExecuteShell,
    LightVcl.Visual.INIFile, IOUtils, LightCore.IO, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs;   { VCL.Styles is mandatory here}
 
 CONST
@@ -114,7 +115,7 @@ VAR
 -----------------------------------------------------------------------------------------------------------------------}
 function GetSkinDir: string;
 begin
- Result:= AppData.SysDir+ 'skins\';
+  Result:= AppData.SysDir+ 'Skins\';
 end;
 
 
@@ -308,3 +309,5 @@ end;
 
 
 end.
+
+

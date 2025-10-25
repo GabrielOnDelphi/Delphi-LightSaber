@@ -1,7 +1,7 @@
 UNIT MainForm3;
 
 {=============================================================================================================
-   2025.03.16
+   2025.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    This demonstrates how to save/load a simple object from a binary file, using versioning.
@@ -34,7 +34,7 @@ type
     Panel1       : TPanel;
     spnAmmo      : TSpinEdit;
     spnLife      : TSpinEdit;
-    btnNewGun: TButton;
+    btnNewGun    : TButton;
     procedure btnAddGunClick    (Sender: TObject);
     procedure btnClearClick     (Sender: TObject);
     procedure btnLoadClick      (Sender: TObject);

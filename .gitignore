@@ -78,3 +78,5 @@ _AI
 /FrameFMX/__recovery
 /_Frozen Streams
 *.res
+*.bin
+*.res

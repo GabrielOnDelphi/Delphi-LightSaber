@@ -36,7 +36,6 @@ object frmMain: TfrmMain
     Align = alTop
     Caption = 'Soldier'
     TabOrder = 0
-    ExplicitWidth = 482
     object Label2: TLabel
       Left = 194
       Top = 57
@@ -76,7 +75,6 @@ object frmMain: TfrmMain
     Caption = 'New gun'
     TabOrder = 1
     Visible = False
-    ExplicitWidth = 482
     DesignSize = (
       497
       97)
@@ -95,7 +93,7 @@ object frmMain: TfrmMain
       MaxValue = 199
       MinValue = 1
       TabOrder = 0
-      Value = 0
+      Value = 1
     end
     object edtGunName: TLabeledEdit
       Left = 34
@@ -126,7 +124,6 @@ object frmMain: TfrmMain
     Height = 40
     Align = alBottom
     TabOrder = 2
-    ExplicitWidth = 488
     object btnSave: TButton
       AlignWithMargins = True
       Left = 279
@@ -138,7 +135,6 @@ object frmMain: TfrmMain
       Enabled = False
       TabOrder = 0
       OnClick = btnSaveClick
-      ExplicitLeft = 264
     end
     object btnLoad: TButton
       AlignWithMargins = True
@@ -150,7 +146,6 @@ object frmMain: TfrmMain
       Caption = 'Load'
       TabOrder = 1
       OnClick = btnLoadClick
-      ExplicitLeft = 377
     end
     object btnClear: TButton
       AlignWithMargins = True
@@ -173,7 +168,6 @@ object frmMain: TfrmMain
     Align = alClient
     Caption = 'Equipment'
     TabOrder = 3
-    ExplicitWidth = 482
     DesignSize = (
       497
       186)

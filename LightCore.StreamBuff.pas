@@ -1,54 +1,90 @@
 UNIT LightCore.StreamBuff;
 
 {=============================================================================================================
-   2025.09
+   2025.10
    www.GabrielMoraru.com
-   Article:    https://gabrielmoraru.com/saving-an-object-to-disk-file/
 --------------------------------------------------------------------------------------------------------------
-   Description
-      Extends TBufferedFileStream.
-      It may be used as a drop-in replacement for TBufferedFileStream/TFileStream.
-      https://gabrielmoraru.com/saving-an-object-to-disk-file/
+   Extends TBufferedFileStream.
+   Ideal for multiple consecutive small reads or writes.
+   Specially designed for saving your classes to disk.
 
-      TBufferedFileStream optimizes multiple consecutive small reads or writes.
-      It will not give performance gain for random or large reads/writes.
+   Article: www.GabrielMoraru.com/saving-an-object-to-disk-file
+--------------------------------------------------------------------------------------------------------------
+
+   [FEATURES]
 
       This class adds new functionality that does not exist in Delphi's original stream classes:
-       - Read/WriteBoolean
-       - Read/WriteString (Ansi/Unicode)
-       - Read/WriteInteger
-       - Read/WriteCardinal
-       - Read/WriteDate
-       - Read/Write mac files (inverted byte endianness)
+       - Stream versioning
+       - Read/Write Boolean
+       - Read/Write String
+       - Read/Write Integer
+       - Read/Write Cardinal
+       - Read/Write Date
+       - Read/Write Mac files (inverted endianness)
        - etc
 
-   Constructor:
-       TLightStream.Create(FileName, fmOpenRead)                  -> to read
-       TLightStream.Create(FileName, fmOpenWrite OR fmCreate)     -> to write to existing or create new file if none exists
-     or:
-       constructor CreateRead (FileName);                             -> to read
-       constructor CreateWrite(FileName);                             -> to write to existing or create new file if none exists
+      Stream versioning:
+        This class offers embedded support for file versioning and signature (magic number).
+        By using WriteHeader you can put a unique identifier in each of your file.
+        Later you can user ReadHeader to verify that your program is trying to read a file that is yours. This prevent the user from feeding the wrong file an input into your program.
+        Even more, this class allows you to expand your class - add new fields that are saved to disk while keeping the file format backword compatible.
+
+
+    [HOW TO USE IT]
+
+       Call Load in your class constructor.
+       Call Save in your class destructor.
+
+       procedure TMyClass.Load(Stream: TLightStream);
+       begin
+         if NOT Stream.ReadHeader('MySignature', 1)          // Is the file valid?
+         then RAISE Exception.Create('Cannot load data!');
+         FSomeField:= Stream.ReadInteger;                    // Save your fields
+         ...
+       end;
+
+       procedure TLessons.Save(Stream: TLightStream);
+       begin
+         Stream.WriteHeader('MySignature', 1);
+         Stream.WriteInteger(FSomeField);                    // Write your fields
+         ...
+       end;
+
+       See the attached demo project for a full example.
+
+
+   [CONSTRUCTORS]
+
+      Use the classic constructor:
+         Create(FileName, fmOpenRead)                -> to read
+         Create(FileName, fmOpenWrite OR fmCreate)   -> to write to existing or create new file if none exists
+      Or use the new constructor:
+        constructor CreateRead (FileName);           -> to read
+        constructor CreateWrite(FileName);           -> to write to existing or create new file if none exists
+
+      File Mode:
+         fmOpenRead      - Open the file for reading only.
+         fmOpenWrite     - Open the file for writing only. Writing to the file completely REPLACES the current contents.
+         fmOpenReadWrite - Open the file to modify the current contents rather than replace them.
+         fmCreate        - Create a file with the given name. If a file with the given name exists, override the existing file and open it in write mode. Destroys any file that's already there. (size will be zero)
+
+         Both fmOpenWrite and fmOpenReadWrite can be used to append a file except that fmOpenWrite won't allow reading the file.
+         One should remember to set the file position to the end of file prior writing it. Otherwise it will replace the existing data.
 
 --------------------------------------------------------------------------------------------------------------
-   TBufferedFileStream info:
+
+   TBufferedFileStream INFO
       TBufferedFileStream provides VERY fast reading/writing access to a file.
-      It is optimized for multiple consecutive small reads or writes.
       TBufferedFileStream will not give performance gain, when there are random position reads or writes, or large reads or writes.
+      TLightStream can be used as a drop-in replacement for TBufferedFileStream/TFileStream.
+      TLightStream Speed
+         When reading character by character, the new System.Classes.TBufferedFileStream seems to be 210% faster than LightCore.StreamBuffHefferman
 
-   File Mode:
-      fmCreate        - Create a file with the given name. If a file with the given name exists, override the existing file and open it in write mode. Destroys any file that's already there. (size will be zero)
-      fmOpenRead      - Open the file for reading only.
-      fmOpenWrite     - Open the file for writing only. Writing to the file completely REPLACES the current contents.
-      fmOpenReadWrite - Open the file to modify the current contents rather than replace them.
+--------------------------------------------------------------------------------------------------------------
 
-      Both fmOpenWrite and fmOpenReadWrite can be used to append a file except that fmOpenWrite won't allow reading the file.
-      One should remember to set the file position to the end of file prior writing it. Otherwise it will replace the existing data.
-
-   Speed
-      When reading character by character, the new System.Classes.TBufferedFileStream seems to be 210% faster than LightCore.StreamBuffHefferman
-
-   Full tester:
+   DEMO/TESTER
       LightSaber\Demo\Core\Demo LightCore StreamBuffer\Demo_FileStream.dpr
+
 =============================================================================================================}
 
 INTERFACE
@@ -59,19 +95,19 @@ USES
 TYPE
   TLightStream= class(System.Classes.TBufferedFileStream)
    private
-     CONST LisaMagicNumber: Cardinal= $6153694C; // The LiSa string for "Light Saber'.  // Old number: $4C695361
-     CONST FrozenPaddingSize = 64;  // NEVER-EVER MODIFY THIS CONSTANT! All files saved with this constant will not work anymore. Enough for 16 Integer variables.
+     CONST LisaMagicNumber: Cardinal= $6153694C;
+     CONST FrozenPaddingSize = 64;                // NEVER-EVER MODIFY THIS CONSTANT! All files saved with this constant will not work anymore. Enough for 16 Integer variables.
+     function ReadSignature: AnsiString;          // The LiSa string for "Light Saber'.  // Old number: $4C695361
    public
-     StringSafetyLimit: Cardinal;   // If we try to read a string larger than this size then we are probably doing something wrong. Set it to zero to disable it.
+     StringSafetyLimit: Cardinal;                 // If we try to read a string larger than this size then we are probably doing something wrong. Set it to zero to disable it.
 
      constructor CreateRead (CONST FileName: string);
      constructor CreateWrite(CONST FileName: string);
 
      { Header }
-     procedure WriteHeader    (CONST Signature: AnsiString; Version: Word);
-     procedure ReadHeader     (CONST Signature: AnsiString; Version: Word);
-     function  TryReadHeader  (CONST Signature: AnsiString; Version: Word): Boolean;  overload;
-     function  TryReadHeader  (CONST Signature: AnsiString): Word;                    overload;
+     procedure WriteHeader (CONST Signature: AnsiString; Version: Word);
+     function  ReadHeader  (CONST Signature: AnsiString; Version: Word): Boolean;  overload;
+     function  ReadHeader  (CONST Signature: AnsiString): Word;                    overload;
 
      { Check point }
      procedure WriteCheckPoint(CONST s: AnsiString= '');
@@ -215,24 +251,25 @@ end;
 
 procedure TLightStream.WriteHeader(CONST Signature: AnsiString; Version: Word);
 begin
-  WriteCardinal(LisaMagicNumber);    // Write fixed magic no  "LiSa"
-  WriteStringA(Signature);           // Write signature
-  WriteWord(Version);                // Write the file version number
+  Assert(Length(Signature) <= 64, 'The Signature cannot be larger the 64 chars!');
+  WriteCardinal  (LisaMagicNumber);  // Write fixed magic no  "LiSa"
+  WriteStringA   (Signature);        // Write signature
+  WriteWord      (Version);          // Write the file version number
 end;
 
 
-{ Returns the version or 0 in case of errors. }
-function TLightStream.TryReadHeader(CONST Signature: AnsiString): Word;
+{ Returns the version or 0 in case of error.
+  No exception will be raised unless when the file is smaller than what we want to read. }
+function TLightStream.ReadHeader(CONST Signature: AnsiString): Word;
 VAR
   MagicNo: Cardinal;
-  sStreamSignature: AnsiString;
+  FileSignature: AnsiString;
 begin
-  Assert(Signature > '', 'No signature!');
-  sStreamSignature:= '';
+  Assert(Signature > '', 'TLightStream - No signature provided!');
 
-  // Read LiSa magic no
+  // Read "LiSa" magic no
   TRY
-    MagicNo := ReadCardinal;
+    MagicNo:= ReadCardinal;
   EXCEPT
     on E: Exception DO
       begin
@@ -244,7 +281,7 @@ begin
 
   // Read signature
   TRY
-    sStreamSignature:= ReadStringA;
+    FileSignature:= ReadSignature;
   EXCEPT
     on E: Exception DO
     begin
@@ -252,7 +289,16 @@ begin
       EXIT(0);
     end;
   END;
-  if sStreamSignature <> Signature then EXIT(0);
+  if FileSignature = '' then
+    begin
+      AppDataCore.LogError('Cannot read file signature: '+ string(Signature));
+      EXIT(0);
+    end;
+  if FileSignature <> Signature then
+    begin
+      AppDataCore.LogError('Signature mismatch: '+ string(Signature));
+      EXIT(0);
+    end;
 
   // Read the version number
   TRY
@@ -267,40 +313,41 @@ begin
 end;
 
 
-{ Returns True if signature & version number matches.
-  No exception will be raised unless if the file smaller than what we want to read. }
-function TLightStream.TryReadHeader(CONST Signature: AnsiString; Version: Word): Boolean;
-VAR lVersion: Word;
+{ Returns True if signature & version number matches. }
+function TLightStream.ReadHeader(CONST Signature: AnsiString; Version: Word): Boolean;
+VAR FileVersion: Word;
 begin
- Assert(Signature > '', 'Signature is empty!');
- Assert(Version   > 0 , 'Version must be > 0');
+  Assert(Version> 0 , 'TLightStream - Version must be > 0!');
 
- lVersion:= TryReadHeader(Signature);
- Result:= (lVersion > 0) AND (Version = lVersion);
+  FileVersion:= ReadHeader(Signature);
+  Result:= (FileVersion > 0) AND (Version = FileVersion);
 end;
 
 
-// This will raise an exception if anything goes wrong
-procedure TLightStream.ReadHeader(CONST Signature: AnsiString; Version: Word);
-VAR
-  MagicNo: Cardinal;
-  FileVersion: Word;
-  FileSignature: AnsiString;
+{ A dedicated function to read the signature.
+  It raises an error if we try to read too many chars, which can happen when we read random data (file corrupted or version changed) }
+function TLightStream.ReadSignature: AnsiString;
+VAR Count: Cardinal;
 begin
-  // Read magic no
-  MagicNo := ReadCardinal;
-  if MagicNo <> LisaMagicNumber
-  then RAISE Exception.Create('Magic number mismatch!');
+  // First, find out how many characters to read
+  ReadBuffer(Count, SizeOf(Count));
 
-  // Read signature
-  FileSignature:= ReadStringA;
-  if FileSignature <> Signature
-  then RAISE Exception.Create('Header signature expected: '+ string(Signature)+ '. Found: '+ string(FileSignature));
+  // Check size
+  if Count > 64 then
+    begin
+      AppDataCore.LogError('ReadSignature: Signature larger than 64 bytes: '+ IntToStr(Count)+' bytes');
+      EXIT('');
+    end;
 
-  // Read the version number
-  FileVersion:= ReadWord;
-  if FileVersion <> Version
-  then RAISE Exception.Create('Header version expected: '+ IntToStr(Version)+ '. Found: '+ IntToStr(FileVersion));
+  // Enough data to read?
+  if Count > Size- Position then
+    begin
+      AppDataCore.LogError('ReadSignature: Signature lenght > file size!');
+      EXIT('');
+    end;
+
+  // Do the actual strign reading
+  Result:= ReadStringA(Count);
 end;
 
 

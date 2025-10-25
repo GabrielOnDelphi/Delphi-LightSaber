@@ -423,7 +423,7 @@ begin
   OR (HasAct AND ParseCtrlsWithAction) then
    begin
     ReadProperty(Component, '', 'Hint',     Section, Ini);
-    ReadProperty(Component, '', 'Caption',  Section, Ini);
+    //ReadProperty(Component, '', 'Caption',  Section, Ini);  //Important: don't load form caption via translator because it can show obsolete information such as version number.
     ReadProperty(Component, '', 'TextHint', Section, Ini);
     if Component.InheritsFrom(TLabeledEdit)
     then ReadProperty(TLabeledEdit(Component).EditLabel, Component.Name, 'Caption', Section, Ini);
@@ -447,7 +447,7 @@ begin
     {Note: We don't write here TEdit.Text. Maybe we should? The idea is that in most cases, this text will be filled by the program at run time }
 
     WriteProperty(Component, '', 'Hint'    , Section, Ini); 
-    WriteProperty(Component, '', 'Caption' , Section, Ini);
+    //WriteProperty(Component, '', 'Caption' , Section, Ini);
     WriteProperty(Component, '', 'TextHint', Section, Ini);
 
     { Composite controls }

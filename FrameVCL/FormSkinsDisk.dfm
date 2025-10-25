@@ -48,7 +48,7 @@ object frmSkinDisk: TfrmSkinDisk
   object lblMoreSkinsTrial: TLabel
     AlignWithMargins = True
     Left = 3
-    Top = 398
+    Top = 395
     Width = 298
     Height = 30
     Align = alBottom
@@ -62,7 +62,7 @@ object frmSkinDisk: TfrmSkinDisk
     Left = 3
     Top = 23
     Width = 298
-    Height = 365
+    Height = 362
     Align = alClient
     ItemHeight = 15
     ScrollWidth = 6
@@ -71,7 +71,7 @@ object frmSkinDisk: TfrmSkinDisk
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 391
+    Top = 388
     Width = 304
     Height = 4
     Align = alBottom

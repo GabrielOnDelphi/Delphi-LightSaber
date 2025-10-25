@@ -232,7 +232,7 @@ begin
  { Open inp stream }
  Stream:= TLightStream.CreateRead(FileName);
  TRY
-   if stream.TryReadHeader(RainMagicNo, CurrVersion) then
+   if Stream.ReadHeader(RainMagicNo, CurrVersion) then
      begin
         { Read size }
         w:= Stream.ReadCardinal;

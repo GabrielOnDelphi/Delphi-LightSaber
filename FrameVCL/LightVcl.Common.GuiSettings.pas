@@ -59,7 +59,7 @@ begin
 
   VAR Stream:= TLightStream.CreateRead(SettingsFile);
   TRY
-    if NOT stream.TryReadHeader(Signature, 2) then EXIT;
+    if NOT Stream.ReadHeader(Signature, 2) then EXIT;
     bUser  := Stream.ReadBoolean;
     iUser  := Stream.ReadInteger;
 

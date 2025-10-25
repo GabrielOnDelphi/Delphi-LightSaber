@@ -74,7 +74,7 @@ begin
  Clear;
  Stream:= TLightStream.CreateRead(FileName);
  TRY
-   Result:= stream.TryReadHeader(Signature, CurrentVersion);
+   Result:= Stream.ReadHeader(Signature, CurrentVersion);
    if Result then
     begin
       Comment     := Stream.ReadString;
