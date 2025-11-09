@@ -261,7 +261,7 @@ begin
           Result:= FastJpegDecHelper.FastJpgDecode(FileName);
           if Result = NIL then { Not all jpegs are supported by JpegDecHelper. In this case we fall back to WIC or the standard LoadGraph loader (WIC). }
         {$ELSE}
-          AppDataCore.LogWarn('FastJpg not available!');
+          AppDataCore.LogWarn('FastJpg not available! Download this library and set the compiler switch.');
         {$ENDIF}
         {ToDo 1: is JpegDecHelper indeed faster than WIC? }
           if UseWic

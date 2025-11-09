@@ -68,7 +68,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-  GifProperties,
+  GifProperties {External lib},
   LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs, LightCore.AppData, LightCore.IO;
 
 

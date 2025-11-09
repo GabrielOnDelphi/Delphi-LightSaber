@@ -4,8 +4,8 @@ object frmSettings: TfrmSettings
   AlphaBlendValue = 249
   BorderIcons = [biSystemMenu]
   Caption = 'Settings'
-  ClientHeight = 509
-  ClientWidth = 762
+  ClientHeight = 418
+  ClientWidth = 600
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 350
@@ -27,19 +27,21 @@ object frmSettings: TfrmSettings
   object pgCtrl: TPageControl
     Left = 0
     Top = 0
-    Width = 762
-    Height = 509
-    ActivePage = tabHelp
+    Width = 600
+    Height = 418
+    ActivePage = tabSystem
     Align = alClient
     TabOrder = 0
+    ExplicitWidth = 762
+    ExplicitHeight = 509
     object tabSystem: TTabSheet
       Caption = 'System'
       DesignSize = (
-        754
-        477)
+        592
+        386)
       object grpSystem: TGroupBox
-        Left = 164
-        Top = 97
+        Left = 88
+        Top = 53
         Width = 381
         Height = 246
         Anchors = []
@@ -101,21 +103,21 @@ object frmSettings: TfrmSettings
         end
       end
       object Path: TCubicPathEdit
-        Left = 82
-        Top = 362
-        Width = 547
+        Left = 88
+        Top = 306
+        Width = 381
         Height = 49
         Hint = 
           'User defined path where to save (large) files. Useful when the p' +
           'rogram needs to save large amounts of data that we don'#39't want to' +
           ' put on a SSD drive.'
-        Anchors = [akLeft, akRight]
+        Anchors = [akLeft, akRight, akBottom]
         Caption = 'Data folder'
         TabOrder = 1
       end
       object btnCrash: TButton
-        Left = 592
-        Top = 12
+        Left = 486
+        Top = 3
         Width = 101
         Height = 25
         Anchors = [akTop, akRight]
@@ -129,11 +131,11 @@ object frmSettings: TfrmSettings
       Caption = 'Help'
       ImageIndex = 1
       DesignSize = (
-        754
-        477)
+        592
+        386)
       object GroupHelp: TGroupBox
-        Left = 182
-        Top = 129
+        Left = 106
+        Top = 83
         Width = 345
         Height = 221
         Anchors = []
@@ -141,6 +143,8 @@ object frmSettings: TfrmSettings
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
+        ExplicitLeft = 182
+        ExplicitTop = 129
         object lblHintHide: TLabel
           Left = 36
           Top = 173
@@ -204,28 +208,28 @@ object frmSettings: TfrmSettings
       Caption = 'Interface'
       ImageIndex = 2
       DesignSize = (
-        754
-        477)
+        592
+        386)
       object GroupBox1: TGroupBox
-        Left = 210
-        Top = 111
-        Width = 290
+        Left = 123
+        Top = 80
+        Width = 347
         Height = 226
         Anchors = []
-        Caption = 'Interface'
+        Caption = 'User interface'
         TabOrder = 0
         DesignSize = (
-          290
+          347
           226)
         object lblOpacity: TLabel
-          Left = 84
+          Left = 86
           Top = 51
           Width = 93
           Height = 17
           Caption = 'Window opacity'
         end
         object btnSkins: TButton
-          Left = 86
+          Left = 115
           Top = 117
           Width = 124
           Height = 33
@@ -233,9 +237,10 @@ object frmSettings: TfrmSettings
           Caption = 'Skins'
           TabOrder = 0
           OnClick = btnSkinsClick
+          ExplicitLeft = 86
         end
         object btnFont: TButton
-          Left = 86
+          Left = 115
           Top = 156
           Width = 124
           Height = 33
@@ -243,9 +248,10 @@ object frmSettings: TfrmSettings
           Caption = 'Font'
           TabOrder = 1
           OnClick = btnFontClick
+          ExplicitLeft = 86
         end
         object spnOpacity: TSpinEdit
-          Left = 165
+          Left = 160
           Top = 74
           Width = 50
           Height = 27
@@ -264,11 +270,11 @@ object frmSettings: TfrmSettings
       Caption = 'User defined'
       ImageIndex = 3
       DesignSize = (
-        754
-        477)
+        592
+        386)
       object grpUser: TGroupBox
-        Left = 184
-        Top = 129
+        Left = 108
+        Top = 83
         Width = 345
         Height = 221
         Anchors = []
@@ -276,15 +282,17 @@ object frmSettings: TfrmSettings
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
+        ExplicitLeft = 184
+        ExplicitTop = 129
         object Label1: TLabel
-          Left = 36
+          Left = 56
           Top = 137
           Width = 75
           Height = 17
           Caption = 'User defined'
         end
         object spnUser: TSpinEdit
-          Left = 126
+          Left = 146
           Top = 134
           Width = 50
           Height = 27
@@ -298,7 +306,7 @@ object frmSettings: TfrmSettings
           OnChange = spnHideHintChange
         end
         object chkUser: TCheckBox
-          Left = 36
+          Left = 56
           Top = 84
           Width = 97
           Height = 17
@@ -318,7 +326,7 @@ object frmSettings: TfrmSettings
     Font.Style = []
     Options = [fdEffects, fdApplyButton]
     OnApply = FontDialogApply
-    Left = 566
-    Top = 31
+    Left = 558
+    Top = 71
   end
 end

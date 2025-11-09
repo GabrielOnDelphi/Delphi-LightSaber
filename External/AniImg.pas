@@ -15,8 +15,8 @@ UNIT AniImg;
 INTERFACE
 
 USES
-  WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, VCL.Controls, VCL.Graphics,
-  VCL.ExtCtrls, VCL.Menus, VCL.ImgList, System.UITypes;
+  WinApi.Messages, System.SysUtils, System.Classes, VCL.Controls, VCL.Graphics,
+  VCL.ExtCtrls, VCL.ImgList, System.UITypes;
 
 TYPE
   TAnimateImage = class(TGraphicControl)
@@ -24,7 +24,7 @@ TYPE
     FActive          : Boolean;
     FCenter          : Boolean;
     FDoubleBuffered  : Boolean;
-    FFrameIndex      : TImageIndex;
+    FFrameIndex      : System.UITypes.TImageIndex;
     FImageChangeLink : TChangeLink;
     FImages          : TCustomImageList;
     FLoopCount       : Integer;
@@ -34,8 +34,8 @@ TYPE
     FOnMouseLeave    : TNotifyEvent;
     FOnWrap          : TNotifyEvent;
     FReverse         : Boolean;
-    FStartFrame      : TImageIndex;
-    FStopFrame       : TImageIndex;
+    FStartFrame      : System.UITypes.TImageIndex;
+    FStopFrame       : System.UITypes.TImageIndex;
     FTimer           : TTimer;
     FTransparent     : Boolean;
     function  GetInterval: Integer;
@@ -45,11 +45,11 @@ TYPE
     procedure ImageListChange (Sender: TObject);
     procedure SetActive       (Value: Boolean);
     procedure SetCenter       (Value: Boolean);
-    procedure SetFrameIndex   (Value: TImageIndex);
+    procedure SetFrameIndex   (Value: System.UITypes.TImageIndex);
     procedure SetImages       (Value: TCustomImageList);
     procedure SetInterval     (Value: Integer);
-    procedure SetStartFrame   (Value: TImageIndex);
-    procedure SetStopFrame    (Value: TImageIndex);
+    procedure SetStartFrame   (Value: System.UITypes.TImageIndex);
+    procedure SetStopFrame    (Value: System.UITypes.TImageIndex);
     procedure SetTransparent  (Value: Boolean);
     procedure TimerExpired    (Sender: TObject);
   protected

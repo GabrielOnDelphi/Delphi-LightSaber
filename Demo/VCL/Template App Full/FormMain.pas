@@ -19,7 +19,7 @@ UNIT FormMain;
      GUI saves/loads its state from disk
      GUI minimizable to taskbar or to system tray
      Splash screen
-     Trial protection (via Proteus)
+     Trial protection (via Proteus library)
      Event log
      Only one instance - prevents the user to start more than one instance of this app
      Accepts Drag and Drop.
@@ -30,12 +30,11 @@ UNIT FormMain;
 INTERFACE
 
 USES
-  WinApi.Windows, WinApi.Messages, Winapi.ShellApi,
-  System.SysUtils, System.Classes, System.Actions,
-  VCL.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
-  CoolTrayIcon, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Visual.PathEdit, LightVcl.Visual.StatusBar,
-  cpProteus {Delete this line if you don't have Proteus library}, cpProteusIO,
-  LightVcl.Common.GuiSettings, LightVcl.Visual.AppDataForm, LightCore, LightCore.Time;
+  WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, System.Actions,
+  Vcl.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
+  CoolTrayIcon,           {Delete this line if you don't have CoolTrayIcon library}
+  cpProteus, cpProteusIO, {Delete this line if you don't have Proteus library}
+  LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Visual.PathEdit, LightVcl.Visual.StatusBar, LightVcl.Common.GuiSettings, LightVcl.Visual.AppDataForm, LightCore, LightCore.Time;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -79,7 +78,7 @@ TYPE
     TrayIcon    : TCoolTrayIcon;
     btnStart    : TButton;
     StatBar     : TStatusBar;
-    Proteus: TProteus;
+    Proteus     : TProteus;
     procedure actAboutExecute    (Sender: TObject);
     procedure actEnterKeyExecute (Sender: TObject);
     procedure actLanguageExecute (Sender: TObject);
@@ -102,7 +101,6 @@ TYPE
     procedure actShowLogExecute  (Sender: TObject);
     procedure FormCreate         (Sender: TObject);
   protected
-    procedure WMDROPFILES (VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Accept the dropped files from Windows Explorer }
   private
   public
     procedure FormPostInitialize; override;  { Called after the main form was fully created }
@@ -201,25 +199,6 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    STUFF
 -------------------------------------------------------------------------------------------------------------}
-
-procedure TMainForm.WMDROPFILES(var Msg: TWMDropFiles);  { Accept the dropped files from Windows Explorer }
-var
-  i, amount: Integer;
-  FileName: array[0..MAX_PATH] of Char;
-begin
-  inherited;
-  TRY
-    Amount := DragQueryFile(Msg.Drop, $FFFFFFFF, FileName, MAX_PATH);
-    for i := 0 to (Amount - 1) do
-     begin
-      DragQueryFile(Msg.Drop, i, FileName, MAX_PATH);
-      Caption:= FileName;
-     end;
-  FINALLY
-    DragFinish(Msg.Drop);
-  END;
-end;
-
 
 { Calculates the size of GUI after the user applies new font. Needs to be called manually. }
 {ToDo: intercept the FontSizeChange msg }

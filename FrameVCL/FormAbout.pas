@@ -58,8 +58,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.CenterControl, LightCore.AppData, LightVcl.Visual.AppData
-, LightVcl.Common.Dialogs, LightCore.INIFile;
+   LightVcl.Common.CenterControl, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.Dialogs, LightCore.INIFile;
 
 
 

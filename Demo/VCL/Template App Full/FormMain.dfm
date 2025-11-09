@@ -40,6 +40,10 @@ object MainForm: TMainForm
         Width = 463
         Height = 433
         Align = alClient
+        Lines.Strings = (
+          
+            'This simple app demonstrates the capabilities of the LightSaber ' +
+            'library.')
         TabOrder = 1
       end
       object pnlRight: TPanel

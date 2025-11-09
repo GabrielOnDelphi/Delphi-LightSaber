@@ -53,7 +53,7 @@ object frmAboutApp: TfrmAboutApp
     object lblChildren: TLabel
       AlignWithMargins = True
       Left = 4
-      Top = 401
+      Top = 398
       Width = 497
       Height = 13
       Align = alBottom
@@ -71,11 +71,13 @@ object frmAboutApp: TfrmAboutApp
       ParentShowHint = False
       ShowHint = True
       Transparent = True
+      ExplicitTop = 401
+      ExplicitWidth = 438
     end
     object lblVersion: TLabel
       AlignWithMargins = True
       Left = 4
-      Top = 40
+      Top = 43
       Width = 497
       Height = 13
       Align = alTop
@@ -86,13 +88,15 @@ object frmAboutApp: TfrmAboutApp
       ParentShowHint = False
       ShowHint = True
       Transparent = True
+      ExplicitTop = 40
+      ExplicitWidth = 91
     end
     object imgLogo: TImage
       AlignWithMargins = True
       Left = 4
-      Top = 75
+      Top = 81
       Width = 497
-      Height = 300
+      Height = 291
       Align = alClient
       Center = True
       Picture.Data = {
@@ -2838,11 +2842,13 @@ object frmAboutApp: TfrmAboutApp
         9302185D6D6D03045C834A29BD5D6A5D9200637E69DB8A3A14341030FE1F1B50
         11767085E5D20000000049454E44AE426082}
       Stretch = True
+      ExplicitTop = 75
+      ExplicitHeight = 300
     end
     object lblCompany: TInternetLabel
       AlignWithMargins = True
       Left = 4
-      Top = 56
+      Top = 62
       Width = 497
       Height = 13
       Cursor = crHandPoint
@@ -2863,6 +2869,8 @@ object frmAboutApp: TfrmAboutApp
       VisitedColor = clPurple
       NotVisitedColor = clBlue
       OverColor = clRed
+      ExplicitTop = 56
+      ExplicitWidth = 55
     end
     object lblAppName: TLabel
       AlignWithMargins = True
@@ -2910,7 +2918,7 @@ object frmAboutApp: TfrmAboutApp
     object inetEULA: TInternetLabel
       AlignWithMargins = True
       Left = 4
-      Top = 381
+      Top = 378
       Width = 497
       Height = 14
       Cursor = crHandPoint
@@ -2931,6 +2939,8 @@ object frmAboutApp: TfrmAboutApp
       VisitedColor = clPurple
       NotVisitedColor = clBlue
       OverColor = clRed
+      ExplicitTop = 381
+      ExplicitWidth = 126
     end
     object btnEnterKey: TButton
       AlignWithMargins = True

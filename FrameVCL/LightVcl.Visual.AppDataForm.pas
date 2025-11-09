@@ -64,7 +64,7 @@ UNIT LightVcl.Visual.AppDataForm;
 INTERFACE
 
 USES
-  Winapi.Windows, Winapi.Messages,
+  Winapi.Windows, Winapi.Messages, Winapi.ShellAPI,
   System.SysUtils, System.Classes, System.IniFiles, Vcl.Controls, Vcl.Forms,
   LightCore.AppData, LightVcl.Common.Dialogs, LightVcl.Common.CenterControl, LightVcl.Common.IniFile;
 
@@ -78,9 +78,10 @@ TYPE
     procedure saveBeforeExit;
 
     procedure DoDestroy; override;
-    procedure DoClose(var Action: TCloseAction); override;
-    procedure WMEndSession(var Msg: TWMEndSession);
+    procedure DoClose(VAR Action: TCloseAction); override;
     procedure FormKeyPress(Sender: TObject; var Key: Char);  // We can use this later in the destructor to know how to save the form: asPosOnly/asFull
+    procedure WMEndSession(VAR Msg: TWMEndSession);
+    procedure WMDropFiles (VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Accept the dropped files from Windows Explorer }
   public
     constructor Create(AOwner: TComponent; AutoSaveForm: TAutoState); reintroduce; overload; virtual;
     function  CloseQuery: boolean; override;
@@ -182,6 +183,24 @@ begin
 end;
 
 
+procedure TLightForm.WMDROPFILES(var Msg: TWMDropFiles);  { Accept the dropped files from Windows Explorer }
+var
+  i, amount: Integer;
+  FileName: array[0..MAX_PATH] of Char;
+begin
+  inherited;
+  TRY
+    Amount := DragQueryFile(Msg.Drop, $FFFFFFFF, FileName, MAX_PATH);
+    for i := 0 to (Amount - 1) do
+     begin
+      DragQueryFile(Msg.Drop, i, FileName, MAX_PATH);
+      Caption:= FileName;
+     end;
+  FINALLY
+    DragFinish(Msg.Drop);
+  END;
+end;
+
 
 
 
@@ -259,6 +278,8 @@ begin
   if Self <> Application.MainForm
   then Self.Font:= AppData.Font;  }
 end;
+
+
 
 
 
