@@ -93,8 +93,8 @@ begin
   MaxZoomVal    := 50;
   MaxZoomUse    := TRUE;
   CustomZoom    := 1.5;    { times }
-  MaxWidth      := -7777;  { This will be provided by TWallpaperBase.LoadFromFile(MaxWidth, MaxHeight: Integer) }
-  MaxHeight     := -7777;
+  MaxWidth      := 1920;   { This will be provided by TWallpaperBase.LoadFromFile(MaxWidth, MaxHeight: Integer) }
+  MaxHeight     := 1200;
   OutW          := -7777;
   OutH          := -7777;
   FitTolerance  := 10;     { % }
