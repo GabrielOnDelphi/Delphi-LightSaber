@@ -4,7 +4,7 @@ UNIT LightVcl.Visual.FloatSpinEdit;
    Gabriel Moraru
    2024.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
   FLOAT SPIN EDIT - v1.8
   Allows user to enter a float number and increase/decrease its value (via spin buttons) or manually edit it.

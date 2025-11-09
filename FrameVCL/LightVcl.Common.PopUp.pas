@@ -3,7 +3,7 @@ UNIT LightVcl.Common.PopUp;
 {=============================================================================================================
    2023.01
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
   Display the popup menu at coordinates above the cursor instead of the classical way (under the cursor).

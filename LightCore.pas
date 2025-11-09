@@ -3,7 +3,7 @@ UNIT LightCore;
 {=============================================================================================================
    www.GabrielMoraru.com
    2024.05
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    - String manipulation (string conversions, sub-string detection, word manipulation, cut, copy, split, wrap, etc)
    - Programmer's helper

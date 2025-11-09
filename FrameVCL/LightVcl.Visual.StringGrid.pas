@@ -3,7 +3,7 @@ UNIT LightVcl.Visual.StringGrid;
 {=============================================================================================================
    2024.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   See this: http://www.delphiforfun.org/Programs/Delphi_Techniques/GridSort.htm

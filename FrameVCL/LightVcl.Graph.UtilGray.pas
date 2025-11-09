@@ -4,7 +4,7 @@ UNIT LightVcl.Graph.UtilGray;
    Gabriel Moraru
    2024.03
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Functions for converting color images to gray-scale
 -------------------------------------------------------------------------------------------------------------}

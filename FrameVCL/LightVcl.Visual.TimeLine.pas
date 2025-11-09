@@ -4,7 +4,7 @@ UNIT LightVcl.Visual.TimeLine;
    Gabriel Moraru
    2024.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
  A control that tries to simulate the timeline bar in VLC or BSPlayer.

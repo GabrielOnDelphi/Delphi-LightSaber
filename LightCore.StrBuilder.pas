@@ -3,7 +3,7 @@ UNIT LightCore.StrBuilder;
 {=============================================================================================================
    2023.01
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
   Replacement for TStringBuilder which can be slow.

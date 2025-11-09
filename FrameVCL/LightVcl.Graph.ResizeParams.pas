@@ -4,7 +4,7 @@ UNIT LightVcl.Graph.ResizeParams;
    Gabriel Moraru
    2023.08.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Parameters for resamplers in LightVcl.Graph.Resize.pas
    The record is filled with data from GUI (provoded by LightVcl.Graph.ResizeParamEdt.pas).

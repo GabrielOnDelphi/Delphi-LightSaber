@@ -4,7 +4,7 @@ UNIT LightVcl.Visual.RichEditResize;
    Gabriel Moraru
    2024.09
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   This component resizes itself as we add lines to it (instead of showing the vert scrollbars)

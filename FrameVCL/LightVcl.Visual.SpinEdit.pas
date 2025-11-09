@@ -4,7 +4,7 @@ UNIT LightVcl.Visual.SpinEdit;
    Gabriel Moraru
    2024.12
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   TCubicSpinEdit – A SpinEdit with two extra labels

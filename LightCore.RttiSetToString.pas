@@ -3,7 +3,7 @@ UNIT LightCore.RttiSetToString;
 {=============================================================================================================
    2023.01
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
    Converts a set to its string representation (and vice-versa)

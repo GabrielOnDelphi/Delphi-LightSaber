@@ -3,7 +3,7 @@ UNIT LightVcl.Common.SystemPermissions;
 {=============================================================================================================
    2025.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
    Functions to set/test user permissions and priviledges

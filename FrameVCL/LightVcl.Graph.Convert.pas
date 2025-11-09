@@ -4,7 +4,7 @@ UNIT LightVcl.Graph.Convert;
    Gabriel Moraru
    2023.08.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
   Converts between JPG and BMP
 =============================================================================================================}

@@ -4,7 +4,7 @@ UNIT LightVcl.Graph.Cache;
    Gabriel Moraru
    2024.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   Thumbnail caching system.

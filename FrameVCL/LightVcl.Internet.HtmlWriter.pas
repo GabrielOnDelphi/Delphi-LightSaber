@@ -4,7 +4,7 @@ UNIT LightVcl.Internet.HTMLWriter;
    Gabriel Moraru
    2024.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
    Basic objects that allow you to enter miscellaneous HTML parts such as
    keywords, title, and body text and write this data to disk as an HTML file.

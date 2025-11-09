@@ -4,7 +4,7 @@ UNIT LightVcl.Graph.ResizeWinBlt;
    Gabriel Moraru
    2024.12
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
    Image resizer using Windows StretchBlt API

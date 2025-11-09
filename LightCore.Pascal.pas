@@ -4,7 +4,7 @@ UNIT LightCore.Pascal;
    Gabriel Moraru
    2021
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Very crude routines for processing PAS files.
 -------------------------------------------------------------------------------------------------------------}

@@ -4,7 +4,7 @@ UNIT LightVcl.Internet.CommonWebDown;
    Gabriel Moraru
    2023.06
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
   Common WebSite Downloader
   This tool will locate the high resolution images on webpages of popular websites like: Unsplash.com, Pexels, pixabay.com, wallpaperscraft.com (work in progress)

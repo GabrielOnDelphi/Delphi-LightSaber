@@ -4,7 +4,7 @@ UNIT FormSettings;
    Gabriel Moraru
    2024.10
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    A template form that allows the user to change the behavior/settings of an application:
      Skins

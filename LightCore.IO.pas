@@ -3,7 +3,7 @@ UNIT LightCore.IO;
 {=============================================================================================================
    www.GabrielMoraru.com
    2025.10
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
    Super useful functions for file/folder/disk manipulation:

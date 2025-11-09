@@ -4,7 +4,7 @@ UNIT LightVcl.Visual.ToolBox;
    Gabriel Moraru
    2024.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    A panel that acts as a toolbox. You can drag it arround the screen with the mouse and close it from the X button.
    Useful for non-window tools such as Search boxes.

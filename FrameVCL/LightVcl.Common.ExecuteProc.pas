@@ -4,7 +4,7 @@ UNIT LightVcl.Common.ExecuteProc;
    SYSTEM - Execute Process
    2023.01
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
    Execute a process, using the CreateProcess API (recommended)

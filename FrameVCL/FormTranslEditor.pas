@@ -8,7 +8,7 @@ UNIT FormTranslEditor;
    https://scotthollows.com/2016/10/12/list-of-delphi-controls-on-a-form-hierarchical-and-flat-list-vcl/
 
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 -------------------------------------------------------------------------------------------------------------}
 
 //todo: put digger in the programs to help users translate the program

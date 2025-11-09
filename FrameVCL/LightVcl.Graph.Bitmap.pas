@@ -4,7 +4,7 @@ UNIT LightVcl.Graph.Bitmap;
    Gabriel Moraru
    2023.08.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Basic BMP functions
    External dependencies: None

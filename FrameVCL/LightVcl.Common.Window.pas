@@ -4,7 +4,7 @@ UNIT LightVcl.Common.Window;
    SYSTEM - Window
    2023.01
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
    Locate windows (anywhere in the OS) by

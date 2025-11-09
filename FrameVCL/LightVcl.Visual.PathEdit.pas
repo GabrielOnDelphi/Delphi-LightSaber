@@ -3,7 +3,7 @@ UNIT LightVcl.Visual.PathEdit;
 {=============================================================================================================
    www.GabrielMoraru.com
    2024.05
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   An edit box that allows user to choose/enter a file or folder.

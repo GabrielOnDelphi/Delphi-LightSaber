@@ -4,7 +4,7 @@ UNIT FormProxyList;
    Gabriel Moraru
    2024.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   Let user specify if he wants to connect the program directly to Internet, via a gateway or via a proxy list.

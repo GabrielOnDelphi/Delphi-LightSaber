@@ -4,7 +4,7 @@ UNIT LightVcl.Graph.Resize;
    Gabriel Moraru
    2024.12
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Image resizers
    They all use Windows StretchBlt in LightVcl.Graph.ResizeWin.pas

@@ -4,7 +4,7 @@ UNIT LightVcl.Graph.Loader.Resolution;
    Gabriel Moraru
    2023.08.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
   Retrieve image resolution without decoding the entire image.
   This is done by opening the binary file and reading the file header.

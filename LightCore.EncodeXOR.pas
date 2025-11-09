@@ -3,7 +3,7 @@ UNIT LightCore.EncodeXOR;
 {=============================================================================================================
    2024.12
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
    RUDIMENTARY XOR STRING ENCRYPTION

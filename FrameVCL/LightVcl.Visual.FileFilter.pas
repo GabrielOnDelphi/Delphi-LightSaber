@@ -4,7 +4,7 @@ UNIT LightVcl.Visual.FileFilter;
    Gabriel Moraru
    2024.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   Allows access to Change method which I need to call after I load the controls from IniFile

@@ -4,7 +4,7 @@ UNIT LightVcl.Graph.ResizeFMX;
    Gabriel Moraru
    2024.12
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Image resizers based on Embarcadero's code (FMX)
    Terribly slow.

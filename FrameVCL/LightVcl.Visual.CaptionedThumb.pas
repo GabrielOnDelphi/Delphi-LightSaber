@@ -4,7 +4,7 @@ UNIT LightVcl.Visual.CaptionedThumb;
    Gabriel Moraru
    2024.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
    A panel that shows the thumbnail of an image and draws a caption over it

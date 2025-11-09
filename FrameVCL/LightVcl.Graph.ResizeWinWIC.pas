@@ -4,7 +4,7 @@ UNIT LightVcl.Graph.ResizeWinWIC;
    Gabriel Moraru
    2024.12
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Based on MS Windows WIC which is implemented in Delphi since 2010.
 

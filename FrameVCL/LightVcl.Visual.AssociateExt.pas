@@ -4,7 +4,7 @@ UNIT LightVcl.Visual.AssociateExt;
    Gabriel Moraru
    2024.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   http://stackoverflow.com/questions/23316113/control-has-no-parrent-window-error

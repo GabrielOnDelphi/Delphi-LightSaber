@@ -3,7 +3,7 @@ UNIT LightFmx.Common.IniFile;
 {=============================================================================================================
    www.GabrielMoraru.com
    2024.09
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   Same as LightCore.INIFile but adds support for forms to save themselves to disk.

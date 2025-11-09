@@ -4,7 +4,7 @@ UNIT LightVcl.Graph.ResizeParamFrame;
    Gabriel Moraru
    2023.08.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
    GUI where the user can edit the paramaters of the resizing algorithm (LightVcl.Graph.Resize.pas).

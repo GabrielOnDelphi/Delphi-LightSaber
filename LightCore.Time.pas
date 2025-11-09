@@ -3,7 +3,7 @@ UNIT LightCore.Time;
 {=============================================================================================================
    www.GabrielMoraru.com
    2025.09.14
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    DateTime utilities
 

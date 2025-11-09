@@ -5,7 +5,7 @@ UNIT LightVcl.Internet.HTML;
 {-------------------------------------------------------------------------------------------------------------
    2023.06
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
    HTML Parsing
 

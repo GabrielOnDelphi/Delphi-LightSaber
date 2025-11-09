@@ -3,7 +3,7 @@ UNIT LightVcl.Common.PowerUtils;
 {=============================================================================================================
    2025
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
    Utility functions related to system power.

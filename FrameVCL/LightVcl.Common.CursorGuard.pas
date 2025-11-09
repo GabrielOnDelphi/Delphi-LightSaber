@@ -4,7 +4,7 @@ UNIT LightVcl.Common.CursorGuard;
    Gabriel Moraru
    2024.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Allows you to sets the cursor to crHourglass and then back to crDefault without the need of the classic try-finally block.
    When the procedure where you use TCursorGuard exits, the cursor is put back automatically.

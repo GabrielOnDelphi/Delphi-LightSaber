@@ -4,7 +4,7 @@ UNIT LightVcl.Internet.Download.Indy;
    Gabriel Moraru
    2023.06
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
    DOWNLOAD A FILE FROM INTERNET Indy
    If you add it to your project, it will drag in the whole Indy and the compilation will be slower.

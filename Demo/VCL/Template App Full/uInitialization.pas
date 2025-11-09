@@ -3,7 +3,7 @@ UNIT uInitialization;
    Gabriel Moraru
    2025.01
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Can be used as template for future applications.
 --------------------------------------------------------------------------------------------------------------

@@ -4,7 +4,7 @@ UNIT LightVcl.Common.WindowMetrics;
    SYSTEM - Window Metrics
    2023.01
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
    Get Window metrics

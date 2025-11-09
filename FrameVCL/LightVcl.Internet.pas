@@ -4,7 +4,7 @@ UNIT LightVcl.Internet;
    Gabriel Moraru
    2025
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
    URL utils / URL parsing and validation
 

@@ -4,7 +4,7 @@ UNIT LightVcl.Graph.BkgColorParams;
    Gabriel Moraru
    2023.08.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   Used by LightVcl.Graph.BkgColor.pas

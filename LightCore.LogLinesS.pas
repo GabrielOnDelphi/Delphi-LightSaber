@@ -4,7 +4,7 @@ UNIT LightCore.LogLinesS;
    Gabriel Moraru
    2024.10
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Single-Threaded Version of LogLines
    For the new log (the one based on TStringGrid)

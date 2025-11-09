@@ -4,7 +4,7 @@ UNIT LightVcl.Visual.RichEdit;
    Gabriel Moraru
    2024.09
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
   Features:
     Adds a 'OnVScroll' property.

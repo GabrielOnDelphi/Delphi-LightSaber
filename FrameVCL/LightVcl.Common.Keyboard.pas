@@ -4,7 +4,7 @@ UNIT LightVcl.Common.Keyboard;
    SYSTEM - Keyboard
    2023.01
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
   System function to access the keyboard

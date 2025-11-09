@@ -4,7 +4,7 @@ UNIT FormSkinsRes;
    Gabriel Moraru
    2024.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Universal skin loader. Loads skins from internal resource (from exe).
 

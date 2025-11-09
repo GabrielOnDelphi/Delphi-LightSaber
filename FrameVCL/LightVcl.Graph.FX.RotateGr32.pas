@@ -4,7 +4,7 @@ UNIT LightVcl.Graph.FX.RotateGr32;
    Gabriel Moraru
    2023.08.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
   The best function I have found is RotateBitmapGR32 (antialising, fastest).
   However, it seems that RotateBitmapGDIP is even better but it doesn't work.

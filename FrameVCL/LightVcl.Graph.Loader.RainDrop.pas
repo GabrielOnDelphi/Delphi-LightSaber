@@ -4,7 +4,7 @@ UNIT LightVcl.Graph.Loader.RainDrop;
    Gabriel Moraru
    2023.08.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
   Reads/writes files in RainDrop format (own format).
   It saves itself to disk to a binaray file that contains:

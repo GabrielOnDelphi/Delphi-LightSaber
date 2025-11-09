@@ -3,7 +3,7 @@ UNIT LightVcl.Common.MemoInputBox;
 {=============================================================================================================
    2023.01
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
    A box in which the user can enter some text.

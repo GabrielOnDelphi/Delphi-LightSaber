@@ -4,7 +4,7 @@ UNIT LightCore.LogTypes;
    Gabriel Moraru
    2024.05
    www.GabrielMoraru.com
-   See Copyright file
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
    A simple but effective visual log control/library.
    The programmer can send messages to the log that will be shown or not, depending on the chousen verbosity level of the log (see Verbosity property).
