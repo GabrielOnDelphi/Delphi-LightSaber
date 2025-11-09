@@ -1,15 +1,44 @@
-Copyright/Conditions
+## LightSaber Library – Copyright & Conditions
 
-Library provided by Gabriel Moraru 
+**Author & Ownership**
+LightSaber Library © Gabriel Moraru.
+The author retains full ownership and reserves the right to modify or update these terms at any time.
 
-1. You can use this library for free in your personal/commercial applications as long as you don't modify it.
-   If you modify/update/extend/change/improve this library you MUST share your modifications with the rest of the world.
-   The only place where you can share the changes to the library, is here, on GitHub ( https://github.com/AdminUser0/Delphi-LightSaber/ ) 
-2. Keep this original copyright notice so people would know that the library is free.
-3. This library cannot be used in applications/platforms that promote illegal/immoral activities such as (but not limited to) hate/piracy/racism/pseudo-science (including anti-vaccine and flat earth).
-4. The owner of the library reserves the right to update/change these conditions at any time. 
-5. This library cannot be used in Russia. The ban applies 25 years after the Russia-Ukraine war ends.
-6. The library name cannot be changed.
+Most parts of this library were written by the author. Some small code fragments were adapted from public sources such as StackOverflow; in such cases, attribution and a link to the original source are provided.
 
-Note: 
-Most parts of this library were written by myself. Some other parts (small snippets) were inspired or simply copied from miscellaneous Internet sources (mostly StackOverflow). A link to the original source was provided in this case.
+---
+
+### 1. Free Use
+
+You may use this library **free of charge** in both personal and commercial projects, **provided that you do not modify the library files**.
+Simply reference the unmodified library in your project, and keep this copyright notice intact. 
+
+---
+
+### 2. Modifications & Contributions
+
+If you modify, extend, or improve the library in any way, you **must share your changes publicly** by submitting them to the official GitHub repository:
+
+**[https://github.com/GabrielOnDelphi/Delphi-LightSaber](https://github.com/GabrielOnDelphi/Delphi-LightSaber)**
+
+Instead, contribute via a **Pull Request** so your improvements can be merged into the main project.
+
+---
+
+### 3. Redistribution
+
+You **may not redistribute** the library independently (for example, as your own library, git forks, your website, other channels...).
+Use the GitHub contribution workflow described above instead.
+
+---
+
+### 4. Ethical Restrictions
+
+This library **may not** be used in any software or platform that promotes, supports, or profits from:
+
+* Hate, violence, racism, or discrimination
+* Piracy, fraud, or other illegal activity
+* Pseudoscience or misinformation (including anti-vaccine and flat-earth content)
+
+Additionally, this library **may not be used in Russia** until **25 years after the end of the Russia–Ukraine war**.
+ 
