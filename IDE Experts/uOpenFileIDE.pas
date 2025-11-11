@@ -3,7 +3,7 @@
 {=============================================================================================================
    www.GabrielMoraru.com
    2024
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+   GitHub.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
  This general purpose unit opens the specified file in the IDE.
   Used by:
