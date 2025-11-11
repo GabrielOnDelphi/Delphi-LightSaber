@@ -1,19 +1,24 @@
 ﻿UNIT uOpenFileIDE;
 
-{ This general purpose unit opens the specified file in the IDE.
+{=============================================================================================================
+   www.GabrielMoraru.com
+   2024
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+--------------------------------------------------------------------------------------------------------------
+ This general purpose unit opens the specified file in the IDE.
   Used by:
     IDE_FileReceiver expert
     IDE_OpenFile expert
 
   https://stackoverflow.com/questions/24690352
   https://en.delphipraxis.net/topic/7955-how-to-open-a-file-in-the-already-running-ide/?page=3
--------------------------------------------------------------------------------------------------------------------------}
+--------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
 
 USES
-  Windows, Messages, System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, 
+  System.SysUtils,
+  Vcl.Dialogs,
   ToolsAPI;
 
 TYPE
@@ -22,6 +27,7 @@ TYPE
     Col : Integer;            // Put cursor on this column
     FileName: String;         // File to open
     Comment: string;          // Text that we insert in the file, at the specified position?
+    procedure Default(aFileName: string);
   end;
 
 
@@ -129,6 +135,18 @@ begin
         end;
     end;
   end;
+end;
+
+
+
+{ RIDEPosition }
+
+procedure RIDEPosition.Default(aFileName: string);
+begin
+    Line:= 1;
+    Col := 1;
+    FileName:= aFileName;
+    Comment:= '';
 end;
 
 end.
