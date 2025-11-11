@@ -1,0 +1,49 @@
+package CCRExif;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 2}
+{$ASSERTIONS OFF}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE RELEASE}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'CCR Exif'}
+{$LIBSUFFIX AUTO}
+{$RUNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  vclimg,
+  vcl,
+  xmlrtl;
+
+contains
+  CCR.Exif in 'CCR.Exif.pas',
+  CCR.Exif.BaseUtils in 'CCR.Exif.BaseUtils.pas',
+  CCR.Exif.Consts in 'CCR.Exif.Consts.pas',
+  CCR.Exif.IPTC in 'CCR.Exif.IPTC.pas',
+  CCR.Exif.StreamHelper in 'CCR.Exif.StreamHelper.pas',
+  CCR.Exif.TagIDs in 'CCR.Exif.TagIDs.pas',
+  CCR.Exif.TiffUtils in 'CCR.Exif.TiffUtils.pas',
+  CCR.Exif.XMPUtils in 'CCR.Exif.XMPUtils.pas';
+
+end.
