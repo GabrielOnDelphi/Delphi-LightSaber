@@ -148,7 +148,7 @@
                 <Excluded_Packages/>
             </Delphi.Personality>
             <Deployment Version="5">
-                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\23.0\Bpl\LightVisControls290.bpl" Configuration="Debug" Class="ProjectOutput">
+                <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\LightVisControls370.bpl" Configuration="Debug" Class="ProjectOutput">
                     <Platform Name="Win32">
                         <RemoteName>LightVisControls.bpl</RemoteName>
                         <Overwrite>true</Overwrite>
