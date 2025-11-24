@@ -4,6 +4,7 @@ uses
   System.StartUpCopy,
   FMX.Forms,
   FormTest in 'FormTest.pas' {Form2},
+  LightCore.AppData in '..\..\..\LightCore.AppData.pas',
   LightFmx.Common.AppData in '..\..\..\FrameFMX\LightFmx.Common.AppData.pas',
   LightFmx.Common.IniFile in '..\..\..\FrameFMX\LightFmx.Common.IniFile.pas';
 

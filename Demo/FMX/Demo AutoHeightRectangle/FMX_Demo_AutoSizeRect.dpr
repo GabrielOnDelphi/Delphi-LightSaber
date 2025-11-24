@@ -4,12 +4,15 @@ uses
   System.StartUpCopy,
   FMX.Forms,
   MainForm in 'MainForm.pas' {Form1},
-  LightFmx.Visual.AutoSizeBoxTxt in '..\..\..\FrameFMX\LightFmx.Visual.AutoSizeBoxTxt.pas';
+  LightCore.AppData in '..\..\..\LightCore.AppData.pas',
+  LightFmx.Common.AppData in '..\..\..\FrameFMX\LightFmx.Common.AppData.pas',
+  LightFmx.Visual.AutoSizeBoxTxt in '..\..\..\FrameFMX\LightFmx.Visual.AutoSizeBoxTxt.pas',
+  LightFmx.Visual.AutoSizeBox in '..\..\..\FrameFMX\LightFmx.Visual.AutoSizeBox.pas';
 
 {$R *.res}
 
 begin
-  Application.Initialize;
-  Application.CreateForm(TForm1, Form1);
-  Application.Run;
+  AppData:= TAppData.Create('Light Template FMX Demo AutoSizeRect');
+  AppData.CreateMainForm(TForm1, Form1, asFull);  // Change AutoState from asFull to asNone if you don't want to save form's state to disk.
+  AppData.Run;
 end.

@@ -6,11 +6,11 @@ USES
   System.SysUtils, System.Types, System.UITypes, System.Classes,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Layouts, FMX.Objects,
   FMX.Controls.Presentation, FMX.StdCtrls, FMX.Effects, FMX.Memo.Types, FMX.ScrollBox, FMX.Memo,
-  LightFmx.Visual.AutoHeightRectangle;
+  LightFmx.Visual.AutoSizeBoxTxt, LightFmx.Visual.AutoSizeBox;
 
 TYPE
   TForm1 = class(TForm)
-    Bubble: TAutoHeightRectangle;
+    Bubble: TAutoSizeBoxTxt;
     boxConversation: TFramedVertScrollBox;
     btnSendAnswer: TButton;
     laySend: TLayout;
