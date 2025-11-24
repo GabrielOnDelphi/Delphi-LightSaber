@@ -37,6 +37,8 @@ TYPE
   end;
 
 
+VAR frmSimpleDemo: TfrmSimpleDemo;
+
 IMPLEMENTATION
 {$R *.fmx}
 

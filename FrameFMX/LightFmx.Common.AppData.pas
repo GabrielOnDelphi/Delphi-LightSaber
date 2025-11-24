@@ -160,8 +160,7 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       FORMS
    --------------------------------------------------------------------------------------------------}
-    procedure CreateMainForm  (aClass: TComponentClass; OUT aReference; AutoState: TAutoState = asPosOnly); overload;
-    procedure CreateMainForm  (aClass: TComponentClass;                 AutoState: TAutoState = asPosOnly); overload;
+    procedure CreateMainForm  (aClass: TComponentClass; OUT aReference; AutoState: TAutoState = asPosOnly);
 
     procedure CreateForm      (aClass: TComponentClass; OUT aReference; AutoState: TAutoState = asPosOnly; Parented: Boolean = FALSE; CreateBeforeMainForm: Boolean = FALSE); overload;
     procedure CreateFormHidden(aClass: TComponentClass; OUT aReference);
@@ -194,15 +193,15 @@ USES
 { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }
 constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE);
 begin
-  inherited Create(aAppName, WindowClassName, MultiThreaded);
-  FFormLog:= nil;
-  AppDataCore:= Self;                             // This sets the other global variable to self. So we can use both variables. The first one is for non-visual code. The second one (this one) is for visual (GUI) code.
-
   { App stuff }
   Application.Initialize;                         // Note: Emba: Although Initialize is the first method called in the main project source code, it is not the first code that is executed in a GUI application. For example, in Delphi, the application first executes the initialization section of all the units used by the Application. in modern Delphi (non-.NET), you can remove Application.Initialize without breaking your program. The method is almost empty and no longer plays a critical role in setting up the VCL or application environment. Its historical purpose was to initialize COM and CORBA, but since those are no longer used, the method is effectively redundant.
   Application.Title    := aAppName;
   Application.ShowHint := TRUE;                   // Set later via the HintType property. It is true by default anyway
   FAutoStateQueue      := TList<TAutoState>.Create;
+
+  inherited Create(aAppName, WindowClassName, MultiThreaded);
+  FFormLog:= NIL;
+  AppDataCore:= Self;                             // This sets the other global variable to self. So we can use both variables. The first one is for non-visual code. The second one (this one) is for visual (GUI) code.
 
   { All done }
   LogVerb(AppName+ ' started.');
@@ -249,12 +248,11 @@ begin
 end;
 
 
-procedure TAppData.CreateMainForm(aClass: TComponentClass; AutoState: TAutoState = asPosOnly);
-var aReference: TForm;
+{procedure TAppData.CreateMainForm(aClass: TComponentClass; AutoState: TAutoState = asPosOnly);
+var aReference: TForm;  //NOPE! FMX stores the ADDRESS of the variable you passed! Once the procedure is over, the variable is gone but FMX still holds this stack address (now occupied by something else)
 begin
   CreateMainForm(aClass, aReference, AutoState);   // Reference is NIL here because of the form is created later (by RealCreateForms)
-end;
-
+end; }
 
 
 { Create secondary form
@@ -512,8 +510,8 @@ end;
 procedure TAppData.Minimize;
 begin
   var WindowService: IFMXWindowService;
-  if TPlatformServices.Current.SupportsPlatformService(IFMXWindowService, IInterface(WindowService)) then
-    WindowService.SetWindowState(Application.MainForm, TWindowState.wsMinimized);
+  if TPlatformServices.Current.SupportsPlatformService(IFMXWindowService, IInterface(WindowService))
+  then WindowService.SetWindowState(Application.MainForm, TWindowState.wsMinimized);
   StartMinim:= TRUE;
 end;
 

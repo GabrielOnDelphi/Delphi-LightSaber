@@ -80,6 +80,7 @@ TYPE
 
     procedure LoadForm; virtual;
     procedure SaveForm; virtual;
+    destructor Destroy; override;
   published
     property AutoState: TAutoState   read FAutoState;                              // The user needs to set this property if they want to auto save/load the form.
     property CloseOnEscape: Boolean  read FCloseOnEscape  write FCloseOnEscape;    // Close this form when the Esc key is pressed
@@ -190,6 +191,14 @@ begin
       Saved:= TRUE;             // Make sure it is put to true even on accidents, otherwise we might call it multiple times.
     end;
   end;
+end;
+
+
+{ If we close the main application window, secondary forms are often destroyed directly by Application without DoClose being called. }
+destructor TLightForm.Destroy;
+begin
+  saveBeforeExit; // Try to save if we haven't already
+  inherited;
 end;
 
 
