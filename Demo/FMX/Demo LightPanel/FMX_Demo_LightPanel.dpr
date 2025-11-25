@@ -1,6 +1,11 @@
 program FMX_Demo_LightPanel;
 
-uses
+USES
+  {$IF Defined(MSWINDOWS)}
+   {$IFDEF DEBUG}
+    FastMM4,
+   {$ENDIF }
+  {$ENDIF }
   System.StartUpCopy,
   FMX.Forms,
   FormTest in 'FormTest.pas' {Form2},

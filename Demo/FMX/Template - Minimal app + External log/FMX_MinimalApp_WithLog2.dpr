@@ -1,9 +1,11 @@
 program FMX_MinimalApp_WithLog2;
 
 uses
-  {$IFDEF DEBUG}
-  FastMM4,
-  {$ENDIF}
+  {$IF Defined(MSWINDOWS)}
+   {$IFDEF DEBUG}
+    FastMM4,
+   {$ENDIF }
+  {$ENDIF }
   System.StartUpCopy,
   FMX.Forms,
   MainForm in 'MainForm.pas' {Form1},

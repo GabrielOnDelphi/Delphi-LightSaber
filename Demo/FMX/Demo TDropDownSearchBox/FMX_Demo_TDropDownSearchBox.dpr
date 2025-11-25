@@ -1,6 +1,11 @@
 program FMX_Demo_TDropDownSearchBox;
 
 uses
+  {$IF Defined(MSWINDOWS)}
+   {$IFDEF DEBUG}
+    FastMM4,
+   {$ENDIF }
+  {$ENDIF }
   System.StartUpCopy,
   FMX.Forms,
   Unit1 in 'Unit1.pas' {Form1},
