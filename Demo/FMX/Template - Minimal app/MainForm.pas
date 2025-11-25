@@ -37,7 +37,7 @@ TYPE
   end;
 
 
-VAR frmSimpleDemo: TfrmSimpleDemo;
+VAR frmSimpleDemo: TfrmSimpleDemo;  // Unfortunatelly we cannot get rid of this global var under FMX
 
 IMPLEMENTATION
 {$R *.fmx}
