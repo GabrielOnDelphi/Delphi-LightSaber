@@ -9,7 +9,7 @@ UNIT FormTest;
    That’s why setting Visible:= False in FMX hides components in the Form Designer, which is a big inconvenience.
 
    Solution:
-     In the Form Designer, the component is always visible (Visible := True) so you can edit it,
+     In the Form Designer, my TLightPanel component is always visible so you can edit it,
      regardless of the VisibleAtRuntime value.
      Set VisibleAtRuntime to false to set the Visible to False at runtime (making the component invisible).
 
