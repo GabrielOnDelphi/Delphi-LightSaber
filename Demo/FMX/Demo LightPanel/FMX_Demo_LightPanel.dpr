@@ -4,8 +4,8 @@ USES
   {$IF Defined(MSWINDOWS)}
    {$IFDEF DEBUG}
     FastMM4,
-   {$ENDIF }
-  {$ENDIF }
+   {$ENDIF}
+  {$ENDIF}
   System.StartUpCopy,
   FMX.Forms,
   FormTest in 'FormTest.pas' {Form2},
