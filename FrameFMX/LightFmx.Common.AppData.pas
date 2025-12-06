@@ -144,17 +144,9 @@ TYPE
     procedure SelfDelete;
     {$ENDIF}
     procedure Minimize; override;
-
-    {$IFDEF MSWINDOWS}
-    function  RunFileAtStartUp(CONST FilePath: string; Active: Boolean): Boolean; {$ENDIF}
-    {$IFDEF MacOS}
-    function RunFileAtStartup(const FilePath: string; Active: Boolean): Boolean; {$ENDIF}
-    {$IFDEF ANDROID}
-    function RunFileAtStartup(const FilePath: string; Active: Boolean): Boolean; {$ENDIF}
-    {$IFDEF LINUX}
-    function RunFileAtStartup(const FilePath: string; Active: Boolean): Boolean; {$ENDIF}
+    function  RunFileAtStartup(const FilePath: string; Active: Boolean): Boolean;
     function  RunSelfAtStartUp(Active: Boolean): Boolean;
-
+    function  GetAppVersion: string;
 
 
    {--------------------------------------------------------------------------------------------------
@@ -556,6 +548,15 @@ procedure TAppData.setHintType(const aHintType: THintType);
 begin
   FHintType:= aHintType;
   Application.ShowHint:= aHintType > htOff;
+end;
+
+
+function TAppData.GetAppVersion: string;
+var AppService: IFMXApplicationService;
+begin
+  if TPlatformServices.Current.SupportsPlatformService(IFMXApplicationService, AppService)
+  then Result := AppService.AppVersion
+  else Result := '';
 end;
 
 
