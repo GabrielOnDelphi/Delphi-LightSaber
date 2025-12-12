@@ -8,9 +8,9 @@ UNIT LightVcl.Common.SystemTime;
 
 INTERFACE
 USES
-   Winapi.Windows, Winapi.WinSvc,
-   System.SysUtils, System.Win.Registry, System.UITypes,
-   Vcl.Controls, Vcl.Forms, Vcl.Dialogs;
+   Winapi.Windows,
+   System.SysUtils, System.UITypes,
+   Vcl.Forms, Vcl.Dialogs;
 
 
  procedure DelayEx(CONST ms : cardinal);

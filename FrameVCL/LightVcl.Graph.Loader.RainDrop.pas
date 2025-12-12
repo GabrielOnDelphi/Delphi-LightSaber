@@ -249,7 +249,7 @@ begin
           JpgStream.CopyFrom(Stream, Count);
           JpgStream.Position := 0;
           JpegImg.LoadFromStream(JpgStream);
-          //JpgStream.SaveToFile(AppData.ExeFolder+ '1.jpg');
+          //JpgStream.SaveToFile(Appdata.AppFolder+ '1.jpg');
           OrigImage.Assign(JpegImg);         { it must be a bitmap otherwise we get "Can only modify an image if it contains a bitmap": https://stackoverflow.com/questions/35703863/why-cant-i-draw-on-my-images-canvas }
 
           if (w <> OrigImage.Width) OR (h <> OrigImage.Height)

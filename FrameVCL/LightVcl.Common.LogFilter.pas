@@ -49,13 +49,13 @@ TYPE
      property ShowDebugMsg  : Boolean       read FShowDebugMsg  write setShowDebugMsg default FALSE; { Allow the user to access the lowest (Debug) level }
      property TrackBar      : TTrackBar     read FTrackBar      write FTrackBar;
      property Verbosity     : TLogVerbLvl   read getVerbosity   write setVerbosity;      //Note: The "master" of the verbosity events is the Grid not the trackbar
-     property Log           : TLogViewer      read FLog           write setLog;
+     property Log           : TLogViewer    read FLog           write setLog;
   end;
 
 procedure Register;
 
 IMPLEMENTATION
-Uses LightVcl.Common.Dialogs;
+USES LightVcl.Common.Dialogs;
 
 
 

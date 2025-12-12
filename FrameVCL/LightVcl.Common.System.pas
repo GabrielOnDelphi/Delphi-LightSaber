@@ -35,7 +35,7 @@ UNIT LightVcl.Common.System;
 INTERFACE
 USES
    Winapi.Windows, Winapi.Messages, Winapi.WinSock, Winapi.WinSvc,
-   System.SysUtils, System.Win.Registry, System.UITypes, System.IOUtils,
+   System.SysUtils, System.Win.Registry, System.IOUtils,
    Vcl.Controls, Vcl.Forms;
 
 

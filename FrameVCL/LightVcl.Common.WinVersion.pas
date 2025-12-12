@@ -92,8 +92,6 @@ function  IsWindows11     : Boolean;
 -------------------------------------------------------------------------------------------------------------}
 function GetOSName: string;
 function GetOSDetails: string;
-function Architecture: string;
-function Is64Bit    : Boolean;
 function IsNTKernel : Boolean;
 
 function GenerateReport: string; { For testing }
@@ -194,29 +192,9 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    UTILS
 -------------------------------------------------------------------------------------------------------------}
-
-function Is64Bit: Boolean;
-begin
-  Result := TOSVersion.Architecture = arIntelX64
-end;
-
-
 function IsNTKernel: Boolean;                                                                                           { Win32Platform is defined as system var }
 begin
   Result:= (Win32Platform = VER_PLATFORM_WIN32_NT);
-end;
-
-
-function Architecture: string;
-begin
- case TOSVersion.Architecture of
-    arIntelX86: Result := 'Intel 32bit';
-    arIntelX64: Result := 'AMD 64bit';
-    arARM32   : Result := 'ARM 32bit';
-    arARM64   : Result := 'ARM 64bit';   //supported on Delphi 10+
-   else
-      Result:= 'Unknown architecture';
- end;
 end;
 
 
@@ -233,7 +211,6 @@ begin
   Result:= Result+ '  '+ TOSVersion.ToString+ CRLF;  // Also see TOSVersion.Name & TOSVersion.Build
   // This is not reliable because these numbers are hardcoded by Delphi. They don't come from API! So, older versions of Delphi won't recognize newer versions of Windows!
   Result:= Result+ '  '+ 'Major/Minor '  + IntToStr(TOSVersion.Major)+ '.'+ IntToStr(TOSVersion.Minor)+ '.  Service Pack: '+ IntToStr(TOSVersion.ServicePackMajor)+ '/'+ IntToStr(TOSVersion.ServicePackMinor)+ CRLF;
-  Result:= Result+ '  '+ 'Architecture: '+ Architecture;  {x32/x64}
 end;
 
 

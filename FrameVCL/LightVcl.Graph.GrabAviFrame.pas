@@ -63,7 +63,7 @@ USES
 function GetVideoPlayerLogo: TBitmap;   // Old name: ExtractMiddleFrame
 begin
  Result:= LightVcl.Graph.Bitmap.CreateBlankBitmap(192, 128, clBlack);   // 234x174 is the size of the Preview window in BX
- VAR AviLogo:= LightVcl.Graph.Loader.LoadGraph(AppDataCore.SysDir+ 'video_player_icon.png', FALSE, TRUE);
+ VAR AviLogo:= LightVcl.Graph.Loader.LoadGraph(Appdatacore.AppSysDir+ 'video_player_icon.png', FALSE, TRUE);
  TRY
    //Result.Canvas.Draw(10, 10, AviLogo);
    LightVcl.Graph.Bitmap.CenterBitmap(AviLogo, Result);
@@ -221,7 +221,7 @@ var
   PTS: Int64;
 begin
   if FFPlayer.CurrentFrame(BMP, PTS)
-  then BMP.SaveToFile(AppDataCore.ExeFolder+ '\capture' + IntToStr(PTS) + '.bmp');
+  then BMP.SaveToFile(Appdatacore.AppFolder+ '\capture' + IntToStr(PTS) + '.bmp');
 end;
 
 
@@ -239,7 +239,7 @@ begin
    TRY
     BMP.SetSize(DrawingForm.Width, DrawingForm.Height);
     DrawingForm.Canvas.CopyRect(BMP.Canvas.ClipRect, BMP.Canvas, BMP.Canvas.ClipRect);
-    BMP.SaveToFile(AppDataCore.ExeFolder+ TimeToStr_IO(now));
+    BMP.SaveToFile(Appdatacore.AppFolder+ TimeToStr_IO(now));
    FINALLY
     FreeAndNil(BMP);
    END;

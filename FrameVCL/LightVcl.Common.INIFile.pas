@@ -139,7 +139,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightCore.IO, LightCore.TextFile, LightCore, LightCore.Time, LightCore.Types;
+   LightCore.IO, LightCore.TextFile, LightCore;
 
 
 {-----------------------------------------------------------------------------------------------------------------------

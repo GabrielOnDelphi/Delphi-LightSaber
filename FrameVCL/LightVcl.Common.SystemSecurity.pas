@@ -8,7 +8,7 @@ UNIT LightVcl.Common.SystemSecurity;
 INTERFACE
 USES
    Winapi.Windows,
-   System.Classes, System.SysUtils;
+   System.SysUtils;
 
 procedure Hack_DisableSystemKeys(Disable: Boolean);
 function  CalculatePasswordStrength(const Password: string): Integer;

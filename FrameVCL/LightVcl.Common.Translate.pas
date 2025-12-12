@@ -233,7 +233,7 @@ VAR
 IMPLEMENTATION
 
 USES
-   LightVcl.Common.IniFile, LightVcl.Common.VclUtils, LightCore, LightCore.Time, LightCore.Types, LightCore.IO;
+   LightVcl.Common.IniFile, LightVcl.Common.VclUtils, LightCore, LightCore.IO;
 
 CONST
    NoLanguage = 'No_Language';
@@ -543,7 +543,7 @@ end;
 ---------------------------------------------------------------------------}
 function TTranslator.GetLangFolder: string;
 begin
-  Result:= AppDataCore.ExeFolder + 'Lang\';
+  Result:= Appdatacore.AppFolder + 'Lang\';
 end;
 
 

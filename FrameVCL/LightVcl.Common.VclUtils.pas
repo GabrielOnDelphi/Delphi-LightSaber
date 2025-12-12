@@ -19,7 +19,7 @@ INTERFACE
 USES
    Winapi.Windows,  Winapi.Messages,
    System.TypInfo, System.Classes, System.SysUtils,
-   Vcl.StdCtrls, Vcl.Menus, Vcl.ActnList, Vcl.ComCtrls, Vcl.Controls, Vcl.Forms, Vcl.Imaging.PngImage, Vcl.GraphUtil, Vcl.Graphics;
+   Vcl.StdCtrls, Vcl.Menus, Vcl.ActnList, Vcl.ComCtrls, Vcl.Controls, Vcl.Forms, Vcl.Imaging.PngImage, Vcl.Graphics;
 
 
 TYPE
