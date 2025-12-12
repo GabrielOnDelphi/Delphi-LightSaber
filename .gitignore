@@ -95,3 +95,4 @@ External/Exif/ last update 2025.11
 *.res
 /Demo/FMX/Template - Minimal app/37.0_Android64_Debug
 *.res
+*.rsm
