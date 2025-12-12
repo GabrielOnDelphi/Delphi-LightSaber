@@ -1,4 +1,4 @@
-package LightVclGraphics;
+package LightVcl.Graphics;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -40,7 +40,7 @@ requires
   vclimg,
   vclwinx,
   LightCore,
-  LightVclCommon,
+  LightVcl.Common,
   CCRExif,
   GR32_R,
   ThirdPartyLibs;

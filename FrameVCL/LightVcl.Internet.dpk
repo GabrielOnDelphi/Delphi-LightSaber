@@ -1,4 +1,4 @@
-package LightVclInternet;
+package LightVcl.Internet;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -34,13 +34,13 @@ requires
   Rtl,
   Vcl,
   LightCore,
-  LightVclCommon,
+  LightVcl.Common,
   IndyProtocols,
   vclie;
 
 contains
   vcl.IdAntiFreeze,
-  LightVcl.Internet in 'LightVcl.Internet.pas',
+  LightVcl.Internet.Common in 'LightVcl.Internet.Common.pas',
   LightVcl.Internet.CommonWebDown in 'LightVcl.Internet.CommonWebDown.pas',
   LightVcl.Internet.Download.Indy in 'LightVcl.Internet.Download.Indy.pas',
   LightVcl.Internet.Download.Thread in 'LightVcl.Internet.Download.Thread.pas',

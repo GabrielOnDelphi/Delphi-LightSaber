@@ -1,4 +1,4 @@
-package LightVclCommon;
+package LightVcl.Common;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -77,9 +77,8 @@ contains
   LightVcl.Common.WinVersion in 'LightVcl.Common.WinVersion.pas',
   LightVcl.Common.WinVersionApi in 'LightVcl.Common.WinVersionApi.pas',
   LightVcl.Common.WMIResolution in 'LightVcl.Common.WMIResolution.pas',
-  LightVcl.Common.Registry in 'LightVcl.Common.Registry.pas';
+  LightVcl.Common.Registry in 'LightVcl.Common.Registry.pas',
+  LightVcl.Common.Reports in 'LightVcl.Common.Reports.pas',
+  MonitorHelper in '..\External\MonitorHelper.pas';
 
 end.
-
-
-
