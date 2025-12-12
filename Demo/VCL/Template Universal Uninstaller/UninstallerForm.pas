@@ -135,7 +135,7 @@ begin
  lblVersion.Caption:= 'Uninstaller version: '+ TAppData.GetVersionInfo;
  /// inetDiscount.Link:= BxConstants.wwwUninstallDiscount; { Give user a 50% discount so he won't uninstall. }
 
- if FileExists(AppData.ExeFolder+ 'DebugMode')
+ if FileExists(Appdata.AppFolder+ 'DebugMode')
  then Caption:= Application.ExeName
  else Caption:= AppData.AppName+ ' uninstaller - This program is provided "as is"';
  mmoLog.AddEmptyRow;
@@ -189,7 +189,7 @@ VAR
 begin
  AppFolder:= edtPath.Path;
 
- if FileExists(AppData.ExeFolder+ 'DebugMode')
+ if FileExists(Appdata.AppFolder+ 'DebugMode')
  then AddDataFolder:= 'Protected while uninstaller running in debugg mode'
  else AddDataFolder:= AppData.ReadAppDataFolder(AppData.AppName);
 

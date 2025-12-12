@@ -49,7 +49,7 @@ begin
   { Trial/License }
   { Load the log early othewise it will overwrite the existing text }
   chHardID.HDIDValid:= TRUE;
-  MainForm.Proteus.VerboseLogActive:= FileExists(AppData.SysDir+ 'ProteusVerboseLog');
+  MainForm.Proteus.VerboseLogActive:= FileExists(Appdata.AppSysDir+ 'ProteusVerboseLog');
   MainForm.Proteus.ProductName:= AppData.AppName;
   MainForm.Proteus.DefaultKey := cpCertificate.GenerateTrialCertificate(AppData.AppName, 1, 365).GenerateKeyString;
   MainForm.Proteus.Initialize;

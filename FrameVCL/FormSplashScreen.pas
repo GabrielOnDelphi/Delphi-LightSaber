@@ -60,15 +60,15 @@ CONST
 procedure ShowSplashScreen(ImgFileSize: integer);
 VAR frmSplash: TfrmSplash;
 begin
- if FileExists(AppData.SysDir+ 'NoSplashScreen') then EXIT;
+ if FileExists(Appdata.AppSysDir+ 'NoSplashScreen') then EXIT;
  if AppData.RunningFirstTime then EXIT; { It is confusing for the user to see this splash screen when the program starts for the first time AND the "setup" wizard is presented. }
 
  frmSplash:= TfrmSplash.Create(Application);
  Assert(frmSplash.Name= 'frmSplash', 'Dont change form name because of TfrmSettings.spnOpacityChange!'); { We don't apply custom transparency to the splash screen. It handles the transparency by its own. }
 
  { Protection }
- if NOT FileExists(AppData.SysDir+'Splash.png')
- AND (GetFileSize(AppData.SysDir+'Splash.png') = ImgFileSize) then
+ if NOT FileExists(Appdata.AppSysDir+'Splash.png')
+ AND (GetFileSize(Appdata.AppSysDir+'Splash.png') = ImgFileSize) then
   begin
     FreeAndNil(frmSplash);
     EXIT;
@@ -76,7 +76,7 @@ begin
 
  { Load logo img }
  TRY
-   frmSplash.imgSplash.Picture.LoadFromFile(AppData.SysDir+'Splash.png');
+   frmSplash.imgSplash.Picture.LoadFromFile(Appdata.AppSysDir+'Splash.png');
  EXCEPT
    MessageWarning('The program cannot load its logo/graphics. Your antivirus is probably a bit to overzealous!'+ CRLF+'(Are you using IOBit? Consider switching to a better program.)');
    FreeAndNil(frmSplash);

@@ -65,7 +65,7 @@ IMPLEMENTATION
 {$WARN GARBAGE OFF}                                                                                {Silence the: 'W1011 Text after final END' warning }
 
 USES
-   LightVcl.Internet, LightCore.Internet, IniFiles;
+   LightVcl.Internet.Common, LightCore.Internet, IniFiles;
 
 {todo:
 oncreate

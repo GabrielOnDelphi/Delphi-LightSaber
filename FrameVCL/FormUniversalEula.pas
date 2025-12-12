@@ -42,8 +42,8 @@ begin
  Assert(frmEULA.FormStyle= fsStayOnTop, 'EULA form is not fsStayOnTop!');
  Assert(frmEULA.Visible = False);  // The form visibility must be False in the editor, otherwise ShowModal won't work!
 
- if FileExists(AppData.SysDir+ 'Eula.txt')
- then frmEULA.mmoLicense.Text:= StringFromFile(AppData.SysDir+ 'Eula.Text');
+ if FileExists(Appdata.AppSysDir+ 'Eula.txt')
+ then frmEULA.mmoLicense.Text:= StringFromFile(Appdata.AppSysDir+ 'Eula.Text');
 
  frmEULA.ShowModal;
 end;

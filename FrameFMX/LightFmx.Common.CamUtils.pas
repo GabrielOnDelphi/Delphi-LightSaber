@@ -23,9 +23,6 @@ procedure RequestStorageReadPermission(const AOnGranted: TProc);  // For image p
 // Public folder (Gallery) - Requires permissions or MediaStore API
 function GetPublicPicturesFolder: string;
 
-// Private folder (App Sandbox) - No permissions needed, always accessible via LoadFromFile
-function GetInternalDataFolder: string;
-
 function GetNewTimestampFileName(const Folder: string): string;
 
 procedure AddToPhotosAlbum(const ABitmap: TBitmap);  // Saves to gallery, handles indexing
@@ -111,14 +108,14 @@ begin
   {$ENDIF}
 end;
 
-
+{
 function GetInternalDataFolder: string;
 begin
   // This path is PRIVATE to the application. No permissions are required to Read/Write here.
   Result := TPath.GetDocumentsPath;
   // On Win this is: 'C:\Users\trei\Documents\'
   // On Android: /data/user/0/com.embrcadero.demoTakePtohot/files/2025.etc.jpg  (in TCMD Windows I see them as: \\:OnePlus Nord\Internal shared storage\Android\data\com.embarcadero.DemoTakePhoto\)
-end;
+end;   }
 
 
 function GetNewTimestampFileName(const Folder: string): string;
@@ -211,8 +208,9 @@ begin
   end;
   
   // 5. Final check: verify file is not 0 bytes
-  if (Result <> '') and (TJFile.JavaClass.&init(StringToJString(Result)).length = 0) then
-    Result := '';  // File is empty, treat as failure
+  if  (Result <> '')
+  AND (TJFile.JavaClass.&init(StringToJString(Result)).length = 0)
+  then Result := '';  // File is empty, treat as failure
 end;
 
 
@@ -250,93 +248,6 @@ begin
     end);
 end;
 {$ENDIF}
-
-
-
-
-(*
-// Helper to copy from URI to app's cache dir and return a usable path (fallback if GetPathFromUri fails or for reliability)
-function CopyUriToCacheFile(const AUri: Jnet_Uri; const AFileExtension: string = '.jpg'): string;
-{$IFDEF ANDROID}
-var
-  InputStream: JInputStream;
-  OutputStream: JFileOutputStream;
-  CacheFile: JFile;
-  Buffer: TArray<Byte>;
-  BytesRead: Integer;
-begin
-  Result := '';
-  if AUri = nil then Exit;
-  // Create a temp file in cache dir
-  CacheFile := TJFile.JavaClass.createTempFile(StringToJString('temp_image_'), StringToJString(AFileExtension),
-    TAndroidHelper.Context.getCacheDir);
-  if CacheFile = nil then Exit;
-  Result := JStringToString(CacheFile.getAbsolutePath);
-  InputStream := TAndroidHelper.ContentResolver.openInputStream(AUri);
-  if InputStream = nil then Exit;
-  try
-    OutputStream := TJFileOutputStream.JavaClass.&init(CacheFile);
-    try
-      SetLength(Buffer, 4096);
-      BytesRead := InputStream.read(TJavaArray<Byte>.Create(Buffer));
-      while BytesRead > 0 do
-      begin
-        OutputStream.write(TJavaArray<Byte>.Create(Buffer), 0, BytesRead);
-        BytesRead := InputStream.read(TJavaArray<Byte>.Create(Buffer));
-      end;
-    finally
-      OutputStream.close;
-    end;
-  finally
-    InputStream.close;
-  end;
-{$ELSE}
-begin
-  Result := '';
-{$ENDIF}
-end;  *)
-
-
-
-{dave notage said "There is already an import for it in the Androidapi.JNI.Provider unit. In Delphi 10.4.1, starting at line 3658".
-https://en.delphipraxis.net/topic/3856-open-android-gallery-with-intent/
- 
-It is not there anymore in D13. I looked in Androidapi.JNI.Provider. I can find TJMediaStore_Images but not MediaStore_Images_Media.
-}
-
-// Attempts to get absolute path; may not always work on Android 10+
-(*
-function GetPathFromUri(const AUri: Jnet_Uri): string;
-{$IFDEF ANDROID}
-var
-  Cursor: JCursor;
-  ColumnIndex: Integer;
-  Projection: TJavaObjectArray<JString>;
-begin
-  Result := '';
-  if AUri = nil then Exit;
-
-  Projection := TJavaObjectArray<JString>.Create(1);
-  Projection.Items[0] := TJMediaStore_Images_Media.JavaClass.DATA;
-
-  Cursor := TAndroidHelper.ContentResolver.query(AUri, Projection, nil, nil, nil);
-  if Cursor <> nil then
-  try
-    if Cursor.moveToFirst then
-    begin
-      ColumnIndex := Cursor.getColumnIndexOrThrow(TJMediaStore_Images_Media.JavaClass.DATA);
-      Result := JStringToString(Cursor.getString(ColumnIndex));
-    end;
-  finally
-    Cursor.close;
-  end;
-{$ELSE}
-begin
-  Result := '';  // No-op on non-Android platforms
-{$ENDIF}
-end;  *)
-
-
 
 
 end.

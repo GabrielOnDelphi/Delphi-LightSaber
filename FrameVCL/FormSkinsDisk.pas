@@ -115,7 +115,7 @@ VAR
 -----------------------------------------------------------------------------------------------------------------------}
 function GetSkinDir: string;
 begin
-  Result:= AppData.SysDir+ 'Skins\';
+  Result:= Appdata.AppSysDir+ 'Skins\';
 end;
 
 
@@ -295,8 +295,8 @@ end;
 
 procedure TfrmSkinDisk.btnSkinEditorClick(Sender: TObject);
 begin
- if FileExists(AppData.SysDir+ 'SkinDesigner.exe')
- then ExecuteShell(AppData.SysDir+ 'SkinDesigner.exe')
+ if FileExists(Appdata.AppSysDir+ 'SkinDesigner.exe')
+ then ExecuteShell(Appdata.AppSysDir+ 'SkinDesigner.exe')
  else ExecuteURL(wwwSkinDesinger);
 end;
 
