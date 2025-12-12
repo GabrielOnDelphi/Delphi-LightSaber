@@ -1,7 +1,7 @@
 UNIT MainForm;
 
 {=============================================================================================================
-   2025.09
+   2025.12
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -22,7 +22,7 @@ INTERFACE
 USES
   System.Classes,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Controls.Presentation, FMX.StdCtrls,
-  LightFmx.Common.AppData.Form;
+  LightFmx.Common.AppData.Form, FMX.Layouts;
 
 TYPE
   TfrmSimpleDemo = class(TLightForm)  // This form derives from TLightForm (which does all the magic)
@@ -31,6 +31,7 @@ TYPE
     RadioButton2: TRadioButton;
     lblInfoTop: TLabel;
     lblIniFile: TLabel;
+    Layout1: TLayout;
     procedure FormCreate  (Sender: TObject);
   private
   public

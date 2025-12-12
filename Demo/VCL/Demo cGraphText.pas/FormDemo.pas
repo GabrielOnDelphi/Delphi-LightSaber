@@ -107,7 +107,7 @@ begin
  BMP.Canvas.Font.Color:= clWhite;
  BMP.Canvas.Font.Style:= [fsBold];
 
- FileList.Directory:= AppData.ExeFolder+ '..\..\Resources\';
+ FileList.Directory:= Appdata.AppFolder+ '..\..\Resources\';
  ShadowX:= 30;
  ShadowY:= 50;
  //ColorPicker.SelectedColor:= Color32(clGray);
@@ -120,7 +120,7 @@ begin
     //btnShadowBoxRectClick(Self);
   end
  else
-  MessageError('No images found in '+ AppData.ExeFolder+ 'Test images\');
+  MessageError('No images found in '+ Appdata.AppFolder+ 'Test images\');
 end;
 
 

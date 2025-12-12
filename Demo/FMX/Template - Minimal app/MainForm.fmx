@@ -2,30 +2,13 @@ object frmSimpleDemo: TfrmSimpleDemo
   Left = 0
   Top = 0
   Caption = 'FMX minimalistic demo'
-  ClientHeight = 376
-  ClientWidth = 549
+  ClientHeight = 367
+  ClientWidth = 412
   FormFactor.Width = 320
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
   OnCreate = FormCreate
   DesignerMasterStyle = 0
-  object chkSome: TCheckBox
-    ControlType = Platform
-    Position.X = 32.000000000000000000
-    Position.Y = 138.000000000000000000
-    StyleLookup = 'checkboxstyle'
-    TabOrder = 4
-    Text = 'Some CheckBox'
-  end
-  object RadioButton1: TRadioButton
-    Position.X = 31.000000000000000000
-    Position.Y = 178.000000000000000000
-    Size.Width = 146.000000000000000000
-    Size.Height = 19.000000000000000000
-    Size.PlatformDefault = False
-    TabOrder = 18
-    Text = 'RadioButton 1'
-  end
   object lblInfoTop: TLabel
     Align = Top
     AutoSize = True
@@ -35,18 +18,18 @@ object frmSimpleDemo: TfrmSimpleDemo
     Margins.Bottom = 4.000000000000000000
     Position.X = 4.000000000000000000
     Position.Y = 4.000000000000000000
-    Size.Width = 541.000000000000000000
-    Size.Height = 64.000000000000000000
+    Size.Width = 404.000000000000000000
+    Size.Height = 80.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
     Text = 
       'This minimalistic program demonstrates how to use the LightSaber' +
-      ' FMX framework.'#13#10'The position of the form on the screen and the ' +
-      'state of the GUI elements (checkboxes, radiobuttons) is automati' +
-      'cally saved to disk and restored when the program is restarted.'#13 +
-      #10'This form also offer better places where to initialize and fina' +
-      'lize business-logic code.'
-    TabOrder = 21
+      ' FMX framework. The position of the form on the screen and the s' +
+      'tate of the GUI elements (checkboxes, radiobuttons) is automatic' +
+      'ally saved to disk and restored when the program is restarted. T' +
+      'his form also offer better places where to initialize and finali' +
+      'ze business-logic code.'
+    TabOrder = 18
   end
   object lblIniFile: TLabel
     Align = Bottom
@@ -56,18 +39,49 @@ object frmSimpleDemo: TfrmSimpleDemo
     Margins.Right = 4.000000000000000000
     Margins.Bottom = 4.000000000000000000
     Position.X = 4.000000000000000000
-    Position.Y = 356.000000000000000000
-    Size.Width = 541.000000000000000000
+    Position.Y = 347.000000000000000000
+    Size.Width = 404.000000000000000000
     Size.Height = 16.000000000000000000
     Size.PlatformDefault = False
     TextSettings.HorzAlign = Center
     Text = 'INI'
-    TabOrder = 20
-  end
-  object RadioButton2: TRadioButton
-    Position.X = 32.000000000000000000
-    Position.Y = 205.000000000000000000
     TabOrder = 17
-    Text = 'RadioButton 2'
+  end
+  object Layout1: TLayout
+    Align = Top
+    Margins.Left = 4.000000000000000000
+    Margins.Top = 4.000000000000000000
+    Margins.Right = 4.000000000000000000
+    Margins.Bottom = 4.000000000000000000
+    Position.X = 4.000000000000000000
+    Position.Y = 92.000000000000000000
+    Size.Width = 404.000000000000000000
+    Size.Height = 121.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 20
+    object chkSome: TCheckBox
+      Anchors = [akTop, akRight]
+      ControlType = Platform
+      Position.X = 263.000000000000000000
+      Position.Y = 47.000000000000000000
+      StyleLookup = 'checkboxstyle'
+      TabOrder = 4
+      Text = 'Some CheckBox'
+    end
+    object RadioButton1: TRadioButton
+      Position.X = 31.000000000000000000
+      Position.Y = 35.000000000000000000
+      Size.Width = 146.000000000000000000
+      Size.Height = 19.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 18
+      Text = 'RadioButton 1'
+    end
+    object RadioButton2: TRadioButton
+      Position.X = 31.000000000000000000
+      Position.Y = 62.000000000000000000
+      TabOrder = 17
+      Text = 'RadioButton 2'
+    end
   end
 end

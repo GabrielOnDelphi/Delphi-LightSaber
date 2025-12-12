@@ -135,7 +135,7 @@ begin
  RichLog.AddEmptyRow;
 
  RichLog.AddInteger(42);
- RichLog.AddFromFile(AppData.ExeFolder+ 'Test file.txt', lvrImportant);
+ RichLog.AddFromFile(Appdata.AppFolder+ 'Test file.txt', lvrImportant);
 end;
 
 
@@ -204,13 +204,13 @@ end;
 
 procedure TMainForm.btnSaveClick(Sender: TObject);
 begin
- GridLog.RamLog.SaveToFile(AppData.ExeFolder+ 'LogFile.log');
+ GridLog.RamLog.SaveToFile(Appdata.AppFolder+ 'LogFile.log');
 end;
 
 procedure TMainForm.btnLoadClick(Sender: TObject);
 begin
  GridLog.RamLog.Clear;
- GridLog.RamLog.LoadFromFile(AppData.ExeFolder+ 'LogFile.log');
+ GridLog.RamLog.LoadFromFile(Appdata.AppFolder+ 'LogFile.log');
 end;
 
 

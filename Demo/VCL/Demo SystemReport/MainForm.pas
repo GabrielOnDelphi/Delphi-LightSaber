@@ -3,29 +3,28 @@ unit MainForm;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Visual.AppDataForm;
+  System.SysUtils, System.Classes,
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, LightVcl.Visual.AppDataForm;
 
 type
   TfrmMain = class(TLightForm)
     Memo: TMemo;
-  private
   public
     procedure FormPostInitialize; override;
   end;
 
-var
-  frmMain: TfrmMain;
 
 IMPLEMENTATION {$R *.dfm}
-USES LightVcl.Common.Debugger;
+USES
+   LightCore.Reports, LightVCL.Common.Reports, LightVcl.Common.Debugger;
 
 
 
 procedure TfrmMain.FormPostInitialize;
 begin
   inherited FormPostInitialize;
-  Memo.Text:= LightVcl.Common.Debugger.GenerateSystemRep;
+  Memo.Text:= LightVCL.Common.Reports.GenerateSystemReport;
+  Memo.Lines.Add(LightVcl.Common.Debugger.GenerateCompilerReport);
 end;
 
 end.
