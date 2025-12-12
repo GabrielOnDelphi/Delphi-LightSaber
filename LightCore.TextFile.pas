@@ -96,7 +96,7 @@ USES
 
 IMPLEMENTATION
 USES
-   LightCore, LightCore.Time, LightCore.Types, LightCore.StreamBuff, LightCore.IO;
+   LightCore, LightCore.Types, LightCore.StreamBuff, LightCore.IO;
 
 
 

@@ -9,8 +9,8 @@
 INTERFACE
 
 USES
-   System.AnsiStrings, System.Character, System.SysUtils, System.Math, System.IOUtils, System.StrUtils,
-   System.Classes, System.Types, System.TimeSpan, System.DateUtils;
+   System.SysUtils,
+   System.Classes;
 
 { Extra VK constants that are missing from Delphi's Win dows API interface (Windows.pas unit)
   More virtual keys here: http://delphi.about.com/od/objectpascalide/l/blvkc.htm }

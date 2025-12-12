@@ -90,7 +90,7 @@ UNIT LightCore.StreamBuff;
 INTERFACE
 
 USES
-   System.SysUtils, System.Classes, System.Types, System.Math, LightCore, LightCore.Time, LightCore.Types;
+   System.SysUtils, System.Classes, System.Types, System.Math, LightCore, LightCore.Types;
 
 TYPE
   TLightStream= class(System.Classes.TBufferedFileStream)

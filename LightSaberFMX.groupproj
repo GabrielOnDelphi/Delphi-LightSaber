@@ -70,6 +70,12 @@
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj">
             <ProjectGuid>{34931AEA-C2A9-4E66-BD5A-76013B543D07}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -84,18 +90,18 @@
         </BuildGroupProject>
         <BuildGroupProject Include="FrameFMX\LightFmxCommon.dproj">
             <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCore.dproj">
-            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Release'">
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj">
             <ProjectGuid>{34931AEA-C2A9-4E66-BD5A-76013B543D07}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -110,18 +116,18 @@
         </BuildGroupProject>
         <BuildGroupProject Include="FrameFMX\LightFmxCommon.dproj">
             <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCore.dproj">
-            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Debug'">
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj">
             <ProjectGuid>{34931AEA-C2A9-4E66-BD5A-76013B543D07}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -136,18 +142,18 @@
         </BuildGroupProject>
         <BuildGroupProject Include="FrameFMX\LightFmxCommon.dproj">
             <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCore.dproj">
-            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='All'">
+        <BuildGroupProject Include="LightCore.dproj">
+            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj">
             <ProjectGuid>{34931AEA-C2A9-4E66-BD5A-76013B543D07}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -162,12 +168,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="FrameFMX\LightFmxCommon.dproj">
             <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="LightCore.dproj">
-            <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>

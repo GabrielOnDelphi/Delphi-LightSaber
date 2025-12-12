@@ -83,7 +83,7 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   LightVcl.Visual.RichLogUtils, LightVcl.Common.Colors, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.CursorGuard, LightVcl.Common.System, LightVcl.Internet, LightCore.Internet;
+   LightVcl.Visual.RichLogUtils, LightVcl.Common.Colors, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.CursorGuard, LightVcl.Common.System, LightVcl.Internet.Common, LightCore.Internet;
 
 
 

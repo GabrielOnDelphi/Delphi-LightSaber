@@ -6,16 +6,16 @@
         <Projects Include="LightCore.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="FrameVCL\LightVclCommon.dproj">
+        <Projects Include="FrameVCL\LightVcl.Common.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="FrameVCL\LightVclInternet.dproj">
+        <Projects Include="FrameVCL\LightVcl.Internet.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="FrameVCL\LightVclGraphics.dproj">
+        <Projects Include="FrameVCL\LightVcl.Graphics.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="FrameVCL\LightVisControls.dproj">
+        <Projects Include="FrameVCL\LightVcl.Visual.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -35,60 +35,60 @@
     <Target Name="LightCore:Make">
         <MSBuild Projects="LightCore.dproj" Targets="Make"/>
     </Target>
-    <Target Name="LightVclCommon">
-        <MSBuild Projects="FrameVCL\LightVclCommon.dproj"/>
+    <Target Name="LightVcl_Common">
+        <MSBuild Projects="FrameVCL\LightVcl.Common.dproj"/>
     </Target>
-    <Target Name="LightVclCommon:Clean">
-        <MSBuild Projects="FrameVCL\LightVclCommon.dproj" Targets="Clean"/>
+    <Target Name="LightVcl_Common:Clean">
+        <MSBuild Projects="FrameVCL\LightVcl.Common.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="LightVclCommon:Make">
-        <MSBuild Projects="FrameVCL\LightVclCommon.dproj" Targets="Make"/>
+    <Target Name="LightVcl_Common:Make">
+        <MSBuild Projects="FrameVCL\LightVcl.Common.dproj" Targets="Make"/>
     </Target>
-    <Target Name="LightVclInternet">
-        <MSBuild Projects="FrameVCL\LightVclInternet.dproj"/>
+    <Target Name="LightVcl_Internet">
+        <MSBuild Projects="FrameVCL\LightVcl.Internet.dproj"/>
     </Target>
-    <Target Name="LightVclInternet:Clean">
-        <MSBuild Projects="FrameVCL\LightVclInternet.dproj" Targets="Clean"/>
+    <Target Name="LightVcl_Internet:Clean">
+        <MSBuild Projects="FrameVCL\LightVcl.Internet.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="LightVclInternet:Make">
-        <MSBuild Projects="FrameVCL\LightVclInternet.dproj" Targets="Make"/>
+    <Target Name="LightVcl_Internet:Make">
+        <MSBuild Projects="FrameVCL\LightVcl.Internet.dproj" Targets="Make"/>
     </Target>
-    <Target Name="LightVclGraphics">
-        <MSBuild Projects="FrameVCL\LightVclGraphics.dproj"/>
+    <Target Name="LightVcl_Graphics">
+        <MSBuild Projects="FrameVCL\LightVcl.Graphics.dproj"/>
     </Target>
-    <Target Name="LightVclGraphics:Clean">
-        <MSBuild Projects="FrameVCL\LightVclGraphics.dproj" Targets="Clean"/>
+    <Target Name="LightVcl_Graphics:Clean">
+        <MSBuild Projects="FrameVCL\LightVcl.Graphics.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="LightVclGraphics:Make">
-        <MSBuild Projects="FrameVCL\LightVclGraphics.dproj" Targets="Make"/>
+    <Target Name="LightVcl_Graphics:Make">
+        <MSBuild Projects="FrameVCL\LightVcl.Graphics.dproj" Targets="Make"/>
     </Target>
-    <Target Name="LightVisControls">
-        <MSBuild Projects="FrameVCL\LightVisControls.dproj"/>
+    <Target Name="LightVcl_Visual">
+        <MSBuild Projects="FrameVCL\LightVcl.Visual.dproj"/>
     </Target>
-    <Target Name="LightVisControls:Clean">
-        <MSBuild Projects="FrameVCL\LightVisControls.dproj" Targets="Clean"/>
+    <Target Name="LightVcl_Visual:Clean">
+        <MSBuild Projects="FrameVCL\LightVcl.Visual.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="LightVisControls:Make">
-        <MSBuild Projects="FrameVCL\LightVisControls.dproj" Targets="Make"/>
+    <Target Name="LightVcl_Visual:Make">
+        <MSBuild Projects="FrameVCL\LightVcl.Visual.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightVclCommon;LightVclInternet;LightVclGraphics;LightVisControls"/>
+        <CallTarget Targets="LightCore;LightVcl_Common;LightVcl_Internet;LightVcl_Graphics;LightVcl_Visual"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightVclCommon:Clean;LightVclInternet:Clean;LightVclGraphics:Clean;LightVisControls:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightVcl_Common:Clean;LightVcl_Internet:Clean;LightVcl_Graphics:Clean;LightVcl_Visual:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightVclCommon:Make;LightVclInternet:Make;LightVclGraphics:Make;LightVisControls:Make"/>
+        <CallTarget Targets="LightCore:Make;LightVcl_Common:Make;LightVcl_Internet:Make;LightVcl_Graphics:Make;LightVcl_Visual:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
-        <BuildGroupProject Include="FrameVCL\LightVclGraphics.dproj">
+        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
             <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVclCommon.dproj">
+        <BuildGroupProject Include="FrameVCL\LightVcl.Common.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -100,13 +100,13 @@
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVclInternet.dproj">
+        <BuildGroupProject Include="FrameVCL\LightVcl.Internet.dproj">
             <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVisControls.dproj">
+        <BuildGroupProject Include="FrameVCL\LightVcl.Visual.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win64</Platforms>
@@ -114,13 +114,13 @@
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Release'">
-        <BuildGroupProject Include="FrameVCL\LightVclGraphics.dproj">
+        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
             <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVclCommon.dproj">
+        <BuildGroupProject Include="FrameVCL\LightVcl.Common.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
@@ -132,13 +132,13 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVclInternet.dproj">
+        <BuildGroupProject Include="FrameVCL\LightVcl.Internet.dproj">
             <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
             <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVisControls.dproj">
+        <BuildGroupProject Include="FrameVCL\LightVcl.Visual.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
             <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
@@ -146,13 +146,13 @@
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Debug'">
-        <BuildGroupProject Include="FrameVCL\LightVclGraphics.dproj">
+        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
             <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVclCommon.dproj">
+        <BuildGroupProject Include="FrameVCL\LightVcl.Common.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -164,13 +164,13 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVclInternet.dproj">
+        <BuildGroupProject Include="FrameVCL\LightVcl.Internet.dproj">
             <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVisControls.dproj">
+        <BuildGroupProject Include="FrameVCL\LightVcl.Visual.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -178,13 +178,13 @@
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='All'">
-        <BuildGroupProject Include="FrameVCL\LightVclGraphics.dproj">
+        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
             <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVclCommon.dproj">
+        <BuildGroupProject Include="FrameVCL\LightVcl.Common.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
@@ -196,13 +196,13 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVclInternet.dproj">
+        <BuildGroupProject Include="FrameVCL\LightVcl.Internet.dproj">
             <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVisControls.dproj">
+        <BuildGroupProject Include="FrameVCL\LightVcl.Visual.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>

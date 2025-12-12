@@ -58,7 +58,7 @@ USES
 
 function GetBinFileName: string;
 begin
-  Result:= AppData.ExeFolder+ 'OnlineNews_v3'+ AppData.AppName+'.bin';  // switched to v3 since 2025.10
+  Result:= Appdata.AppFolder+ 'OnlineNews_v3'+ AppData.AppName+'.bin';  // switched to v3 since 2025.10
 end;
 
 

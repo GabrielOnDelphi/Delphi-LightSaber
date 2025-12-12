@@ -19,8 +19,7 @@ UNIT LightCore.Time;
 INTERFACE
 
 USES
-   System.AnsiStrings, System.Character, System.SysUtils, System.Math, System.IOUtils, System.StrUtils, System.Classes, System.Types, System.TimeSpan, System.DateUtils,
-   LightCore.Types;
+   System.SysUtils, System.TimeSpan, System.DateUtils;
 
  // CURRENT DATE-TIME
  function TodayIs: string;                                         { Returns today as date based on Locale. Example: Montag }

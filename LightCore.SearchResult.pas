@@ -37,7 +37,7 @@ TYPE
 
 IMPLEMENTATION
 
-USES LightCore, LightCore.Time;
+USES LightCore;
 
 
 
