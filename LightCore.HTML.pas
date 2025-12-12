@@ -18,7 +18,7 @@ INTERFACE
 USES
    System.SysUtils, // msHtml,
    System.AnsiStrings, System.StrUtils, System.Classes, System.Math,
-   LightCore.StringList, LightCore, LightCore.Time;
+   LightCore.StringList, LightCore;
 
 {--------------------------------------------------------------------------------------------------
    HTML PARSING
@@ -70,7 +70,7 @@ USES
 
 IMPLEMENTATION
 
-USES //LightVcl.Internet, LightCore.Internet,
+USES //LightVcl.Internet.Common, LightCore.Internet,
      LightCore.IO, LightCore.Internet, LightCore.TextFile;
 
 

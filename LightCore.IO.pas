@@ -69,8 +69,9 @@ UNIT LightCore.IO;
      c:\MyProjects\LightSaber\UNC Tester\
 ==================================================================================================}
 
+//todo 1: check this file to make sure it also works on Android.
+
 INTERFACE
-//del {.$WARN UNIT_PLATFORM ON}   { OFF: Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
 
 USES
   System.Generics.Collections,
@@ -399,7 +400,7 @@ CONST
 IMPLEMENTATION
 
 USES
-  LightCore, LightCore.Time;
+  LightCore;
 
 
 {--------------------------------------------------------------------------------------------------
@@ -1708,9 +1709,12 @@ end;
 function ExtractFirstFolder(CONST Folder: string): string;
 VAR iPos: Integer;
 begin
+ {$IFNDEF MSWindows}
+ raise Exception.Create('ExtractFirstFolder won''t work on Android!');
+ {$ENDIF}
  iPos:= Pos(':' + PathDelim, Folder);
  if iPos > 0
- then Result:= system.COPY(Folder, iPos+2, MaxInt)
+ then Result:= System.COPY(Folder, iPos+2, MaxInt)
  else Result:= Folder;
 
  Result:= CopyTo(Result, 1, PathDelim, TRUE, TRUE, 2); {  copy until the first \ }

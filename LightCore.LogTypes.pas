@@ -1,9 +1,8 @@
 UNIT LightCore.LogTypes;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.05
    www.GabrielMoraru.com
+   2025
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
    A simple but effective visual log control/library.
@@ -20,18 +19,15 @@ UNIT LightCore.LogTypes;
      Each verbosity level has a predefined color.
    **I/O**
    The log can be save to disk to a binary file so it can be restored when the next app startup.
+
    Tester:
-     c:\Myprojects\LightSaber\Demo\LightLog\
+     Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE
-{ $I Frameworks.inc}
 
 USES
    System.SysUtils;
-   {
-    System.UITypes,
-   LightCore.LogTypes, ;}
 
 TYPE
   TLogVerbLvl= (lvDebug, lvVerbose, lvHints {Default}, lvInfos, lvImportant, lvWarnings, lvErrors);  { Exist also 7 which is of type 'Msg' and it is always shown in log }

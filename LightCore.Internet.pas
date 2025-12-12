@@ -19,7 +19,7 @@ INTERFACE
 
 USES
    System.SysUtils, System.StrUtils, System.Classes, System.IniFiles,
-   LightCore, LightCore.Time;
+   LightCore;
 
 
 CONST
@@ -127,7 +127,7 @@ CONST
 IMPLEMENTATION
 
 USES
-   LightCore.AppData,
+
    //LightVcl.Visual.AppData,
    LightCore.HTML, LightCore.IO, LightCore.Download;
 

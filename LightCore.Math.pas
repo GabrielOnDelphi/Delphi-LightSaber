@@ -13,7 +13,7 @@ UNIT LightCore.Math;
 INTERFACE
 
 USES
-   System.Math, System.Types, System.Generics.Collections, LightCore, LightCore.Time, LightCore.Types;
+   System.Math, System.Types, System.Generics.Collections;
 
 
 

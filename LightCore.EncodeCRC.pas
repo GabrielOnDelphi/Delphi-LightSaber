@@ -11,7 +11,7 @@ UNIT LightCore.EncodeCRC;
 INTERFACE
 
 USES
-   System.Classes, System.SysUtils, LightCore, LightCore.Time, LightCore.Types;
+   System.Classes, System.SysUtils, LightCore.Types;
 
  function CRC32_U(CONST s : string)        : Cardinal;               { For UNICODE - does not output the same result as Total Commander! }
  function CRC32  (CONST s: AnsiString)     : Cardinal;  overload;    { Tested: ok }

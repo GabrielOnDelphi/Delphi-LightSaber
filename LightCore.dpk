@@ -55,7 +55,7 @@ contains
   LightCore.AppData in 'LightCore.AppData.pas',
   LightCore.Math in 'LightCore.Math.pas',
   LightCore.Pascal in 'LightCore.Pascal.pas',
-  LightCore.PlatformFile in 'LightCore.PlatformFile.pas',
+  LightCore.IOPlatformFile in 'LightCore.IOPlatformFile.pas',
   LightCore.EncodeCRC in 'LightCore.EncodeCRC.pas',
   LightCore.EncodeMime in 'LightCore.EncodeMime.pas',
   LightCore.EncodeXOR in 'LightCore.EncodeXOR.pas',
@@ -70,6 +70,8 @@ contains
   LightCore.HTML in 'LightCore.HTML.pas',
   LightCore.Internet in 'LightCore.Internet.pas',
   LightCore.Types in 'LightCore.Types.pas',
-  LightCore.Time in 'LightCore.Time.pas';
+  LightCore.Time in 'LightCore.Time.pas',
+  LightCore.Platform in 'LightCore.Platform.pas',
+  LightCore.Reports in 'LightCore.Reports.pas';
 
 end.

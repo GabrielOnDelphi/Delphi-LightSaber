@@ -15,7 +15,7 @@ INTERFACE
 
 USES
    System.SysUtils, {System.NetEncoding, Soap.EncdDecd, }
-   LightCore, LightCore.Time, LightCore.Types;
+   LightCore, LightCore.Types;
 
  { CHAR_SHIFT ENCRYPTION }
  function  SimpleDecode      (CONST s: string): string;
