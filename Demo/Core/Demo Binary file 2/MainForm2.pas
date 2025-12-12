@@ -67,7 +67,7 @@ function GetBinaryFileName: string;
 CONST
   MyFile= 'Soldier.bin';
 begin
-  Result:= AppData.ExeFolder+ MyFile;  // The files is saved where the EXE file is.
+  Result:= Appdata.AppFolder+ MyFile;  // The files is saved where the EXE file is.
 end;
 
 

@@ -59,7 +59,7 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
    LightVcl.Common.Sound, LightCore, LightVcl.Common.System, LightCore.AppData, LightVcl.Visual.AppData,
-   LightCore.TextFile, LightVcl.Internet, LightCore.Download, LightCore.IO,
+   LightCore.TextFile, LightVcl.Internet.Common, LightCore.Download, LightCore.IO,
    LightVcl.Internet.Download.WinInet;
 
 
@@ -129,7 +129,7 @@ begin
 
  Stream:= LightCore.Download.DownloadToStream(TestURL, RetCode);
  TRY
-   stream.SaveToFile(AppData.ExeFolder+ 'DownloadToStreamRTL.BIN');
+   stream.SaveToFile(Appdata.AppFolder+ 'DownloadToStreamRTL.BIN');
    if RetCode= ''
    then mmoDown2.Lines.Add('OK!')
    else mmoDown2.Lines.Add(RetCode);
@@ -149,7 +149,7 @@ begin
  mmoDown2.Update;
 
  c:= GetTickCount;
- LightCore.Download.DownloadToFile(TestURL, AppData.ExeFolder+ 'DownloadToFileRTL.BIN', RetCode);
+ LightCore.Download.DownloadToFile(TestURL, Appdata.AppFolder+ 'DownloadToFileRTL.BIN', RetCode);
  if RetCode= ''
  then mmoDown2.Lines.Add('OK!')
  else mmoDown2.Lines.Add(RetCode);
@@ -201,7 +201,7 @@ begin
   begin
     mmoDown3.Lines.Add('OK!');
     mmoDown3.Lines.Add('Done in ' + Real2Str((GetTickCount-c) / 1000)+ 'sec');
-    LightCore.IO.BytesToFile(AppData.ExeFolder+ 'DownloadBytes.BIN', BinData, TRUE);
+    LightCore.IO.BytesToFile(Appdata.AppFolder+ 'DownloadBytes.BIN', BinData, TRUE);
   end
  else
    mmoDown3.Text:= 'Failed! '+ GetWin32ErrorString(HttpRetCode);
@@ -217,7 +217,7 @@ begin
  mmoDown3.Update;
 
  c:= GetTickCount;
- if LightVcl.Internet.Download.WinInet.DownloadToFile(TestURL, '', AppData.ExeFolder+ 'DownloadToFile.BIN') = 0
+ if LightVcl.Internet.Download.WinInet.DownloadToFile(TestURL, '', Appdata.AppFolder+ 'DownloadToFile.BIN') = 0
  then mmoDown3.Lines.Add('OK!')
  else mmoDown3.Lines.Add('Failed!');
 
@@ -256,7 +256,7 @@ end;
 procedure TMainForm.OnDownloadDone(Sender: TObject);
 begin
  if myDownload.Data.Size > 0
- then myDownload.Data.SaveToFile(AppData.ExeFolder+ 'THREADED.BIN')  //LightCore.IO.BytesToFile(AppData.ExeFolder+ 'THREADED.BIN', myDownload.Data, TRUE)
+ then myDownload.Data.SaveToFile(Appdata.AppFolder+ 'THREADED.BIN')  //LightCore.IO.BytesToFile(Appdata.AppFolder+ 'THREADED.BIN', myDownload.Data, TRUE)
  else mmoDown3.Lines.Add('Failure!');
 
  mmoDown3.Lines.Add('Returned in ' + Real2Str((GetTickCount-c) / 1000)+ 'sec');
@@ -271,7 +271,7 @@ begin
 
  c:= GetTickCount;
  VAR s:=LightVcl.Internet.Download.WinInet.DownloadAsString(TestURL);
- StringToFile(AppData.ExeFolder+ 'DownloadAsString.txt', s, woOverwrite, wpOff);
+ StringToFile(Appdata.AppFolder+ 'DownloadAsString.txt', s, woOverwrite, wpOff);
  mmoDown3.Lines.Add('Done in ' + Real2Str((GetTickCount-c) / 1000)+ 'sec');
  BipConfirmation;
 end;

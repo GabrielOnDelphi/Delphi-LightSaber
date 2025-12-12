@@ -119,14 +119,14 @@ end;
 
 procedure TMainForm.btnSaveClick(Sender: TObject);
 begin
-  LogViewer.RamLog.SaveToFile(AppData.ExeFolder+ 'LogFile.log');
+  LogViewer.RamLog.SaveToFile(Appdata.AppFolder+ 'LogFile.log');
 end;
 
 
 procedure TMainForm.btnLoadClick(Sender: TObject);
 begin
   LogViewer.RamLog.Clear;
-  LogViewer.RamLog.LoadFromFile(AppData.ExeFolder+ 'LogFile.log');
+  LogViewer.RamLog.LoadFromFile(Appdata.AppFolder+ 'LogFile.log');
 end;
 
 

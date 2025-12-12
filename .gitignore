@@ -93,3 +93,4 @@ External/Exif/ last update 2025.11
 /Demo/FMX/Template - Minimal app + External log/FMX_MinimalApp_WithLog2/library
 /Demo/FMX/Demo LightPanel/__recovery
 *.res
+/Demo/FMX/Template - Minimal app/37.0_Android64_Debug

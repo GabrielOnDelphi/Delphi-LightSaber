@@ -3,18 +3,6 @@
         <ProjectGuid>{4B5017AB-5EF2-4001-BEE1-340155F6D7D6}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
-        <Projects Include="FMX\Demo LightLog\FMX_Demo_Log.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="FMX\Demo LightPanel\FMX_Demo_LightPanel.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="FMX\Demo Message boxes\FMX_Demo_MessageBoxes.dproj">
-            <Dependencies/>
-        </Projects>
-        <Projects Include="FMX\Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="FMX\Template - Minimal app\FMX_MinimalApp.dproj">
             <Dependencies/>
         </Projects>
@@ -24,7 +12,19 @@
         <Projects Include="FMX\Template - Minimal app + External log\FMX_MinimalApp_WithLog2.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="FMX\Demo LightLog\FMX_Demo_Log.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="FMX\Demo LightPanel\FMX_Demo_LightPanel.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="FMX\Demo AutoHeightRectangle\FMX_Demo_AutoSizeRect.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="FMX\Demo Message boxes\FMX_Demo_MessageBoxes.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="FMX\Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -35,42 +35,6 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
-    <Target Name="FMX_Demo_Log">
-        <MSBuild Projects="FMX\Demo LightLog\FMX_Demo_Log.dproj"/>
-    </Target>
-    <Target Name="FMX_Demo_Log:Clean">
-        <MSBuild Projects="FMX\Demo LightLog\FMX_Demo_Log.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="FMX_Demo_Log:Make">
-        <MSBuild Projects="FMX\Demo LightLog\FMX_Demo_Log.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="FMX_Demo_LightPanel">
-        <MSBuild Projects="FMX\Demo LightPanel\FMX_Demo_LightPanel.dproj"/>
-    </Target>
-    <Target Name="FMX_Demo_LightPanel:Clean">
-        <MSBuild Projects="FMX\Demo LightPanel\FMX_Demo_LightPanel.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="FMX_Demo_LightPanel:Make">
-        <MSBuild Projects="FMX\Demo LightPanel\FMX_Demo_LightPanel.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="FMX_Demo_MessageBoxes">
-        <MSBuild Projects="FMX\Demo Message boxes\FMX_Demo_MessageBoxes.dproj"/>
-    </Target>
-    <Target Name="FMX_Demo_MessageBoxes:Clean">
-        <MSBuild Projects="FMX\Demo Message boxes\FMX_Demo_MessageBoxes.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="FMX_Demo_MessageBoxes:Make">
-        <MSBuild Projects="FMX\Demo Message boxes\FMX_Demo_MessageBoxes.dproj" Targets="Make"/>
-    </Target>
-    <Target Name="FMX_Demo_TDropDownSearchBox">
-        <MSBuild Projects="FMX\Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj"/>
-    </Target>
-    <Target Name="FMX_Demo_TDropDownSearchBox:Clean">
-        <MSBuild Projects="FMX\Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="FMX_Demo_TDropDownSearchBox:Make">
-        <MSBuild Projects="FMX\Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj" Targets="Make"/>
-    </Target>
     <Target Name="FMX_MinimalApp">
         <MSBuild Projects="FMX\Template - Minimal app\FMX_MinimalApp.dproj"/>
     </Target>
@@ -98,6 +62,24 @@
     <Target Name="FMX_MinimalApp_WithLog2:Make">
         <MSBuild Projects="FMX\Template - Minimal app + External log\FMX_MinimalApp_WithLog2.dproj" Targets="Make"/>
     </Target>
+    <Target Name="FMX_Demo_Log">
+        <MSBuild Projects="FMX\Demo LightLog\FMX_Demo_Log.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_Log:Clean">
+        <MSBuild Projects="FMX\Demo LightLog\FMX_Demo_Log.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_Log:Make">
+        <MSBuild Projects="FMX\Demo LightLog\FMX_Demo_Log.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="FMX_Demo_LightPanel">
+        <MSBuild Projects="FMX\Demo LightPanel\FMX_Demo_LightPanel.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_LightPanel:Clean">
+        <MSBuild Projects="FMX\Demo LightPanel\FMX_Demo_LightPanel.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_LightPanel:Make">
+        <MSBuild Projects="FMX\Demo LightPanel\FMX_Demo_LightPanel.dproj" Targets="Make"/>
+    </Target>
     <Target Name="FMX_Demo_AutoSizeRect">
         <MSBuild Projects="FMX\Demo AutoHeightRectangle\FMX_Demo_AutoSizeRect.dproj"/>
     </Target>
@@ -107,14 +89,32 @@
     <Target Name="FMX_Demo_AutoSizeRect:Make">
         <MSBuild Projects="FMX\Demo AutoHeightRectangle\FMX_Demo_AutoSizeRect.dproj" Targets="Make"/>
     </Target>
+    <Target Name="FMX_Demo_MessageBoxes">
+        <MSBuild Projects="FMX\Demo Message boxes\FMX_Demo_MessageBoxes.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_MessageBoxes:Clean">
+        <MSBuild Projects="FMX\Demo Message boxes\FMX_Demo_MessageBoxes.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_MessageBoxes:Make">
+        <MSBuild Projects="FMX\Demo Message boxes\FMX_Demo_MessageBoxes.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="FMX_Demo_TDropDownSearchBox">
+        <MSBuild Projects="FMX\Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_TDropDownSearchBox:Clean">
+        <MSBuild Projects="FMX\Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_TDropDownSearchBox:Make">
+        <MSBuild Projects="FMX\Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="FMX_Demo_Log;FMX_Demo_LightPanel;FMX_Demo_MessageBoxes;FMX_Demo_TDropDownSearchBox;FMX_MinimalApp;FMX_MinimalApp_WithLog1;FMX_MinimalApp_WithLog2;FMX_Demo_AutoSizeRect"/>
+        <CallTarget Targets="FMX_MinimalApp;FMX_MinimalApp_WithLog1;FMX_MinimalApp_WithLog2;FMX_Demo_Log;FMX_Demo_LightPanel;FMX_Demo_AutoSizeRect;FMX_Demo_MessageBoxes;FMX_Demo_TDropDownSearchBox"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="FMX_Demo_Log:Clean;FMX_Demo_LightPanel:Clean;FMX_Demo_MessageBoxes:Clean;FMX_Demo_TDropDownSearchBox:Clean;FMX_MinimalApp:Clean;FMX_MinimalApp_WithLog1:Clean;FMX_MinimalApp_WithLog2:Clean;FMX_Demo_AutoSizeRect:Clean"/>
+        <CallTarget Targets="FMX_MinimalApp:Clean;FMX_MinimalApp_WithLog1:Clean;FMX_MinimalApp_WithLog2:Clean;FMX_Demo_Log:Clean;FMX_Demo_LightPanel:Clean;FMX_Demo_AutoSizeRect:Clean;FMX_Demo_MessageBoxes:Clean;FMX_Demo_TDropDownSearchBox:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="FMX_Demo_Log:Make;FMX_Demo_LightPanel:Make;FMX_Demo_MessageBoxes:Make;FMX_Demo_TDropDownSearchBox:Make;FMX_MinimalApp:Make;FMX_MinimalApp_WithLog1:Make;FMX_MinimalApp_WithLog2:Make;FMX_Demo_AutoSizeRect:Make"/>
+        <CallTarget Targets="FMX_MinimalApp:Make;FMX_MinimalApp_WithLog1:Make;FMX_MinimalApp_WithLog2:Make;FMX_Demo_Log:Make;FMX_Demo_LightPanel:Make;FMX_Demo_AutoSizeRect:Make;FMX_Demo_MessageBoxes:Make;FMX_Demo_TDropDownSearchBox:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
