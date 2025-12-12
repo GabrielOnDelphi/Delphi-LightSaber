@@ -58,6 +58,7 @@ TYPE
     FLastFolder : string;
     FSingleInstClassName: string;          // Used by the Single Instance mechanism.   {Old name: AppWinClassName }
     FRunningFirstTime: Boolean;
+    class function getAppName: string; static;
     CONST
       Signature: AnsiString= 'AppDataSettings'; { Do not change it! }
       DefaultHomePage= 'https://www.GabrielMoraru.com';
@@ -111,17 +112,17 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       App path/name
    --------------------------------------------------------------------------------------------------}
-    function ExeFolder: string;        // The folder where the exe file is located. Old name: AppDir
-    function SysDir: string;
+    class function AppSysDir: string;
     function CheckSysDir: Boolean;
     class function IniFile: string;
+    class function AppFolder: string;      // The folder where the exe file is located. Old name: ExeFolder/AppDir
     class function AppDataFolder(ForceDir: Boolean= FALSE): string;
     class function AppDataFolderAllUsers(ForceDir: Boolean = FALSE): string;
 
-    function AppShortName:  string;
+    class function ExeShortName:  string;
     property LastUsedFolder: string read getLastUsedFolder write FLastFolder;
 
-    class property AppName:  string read FAppName;
+    class property AppName: string read getAppName;
     property HideHint: Integer read FHideHint write setHideHint;       // Hide hint after x ms. Does nothing here. The child class mush override this
     property HintType: THintType  read FHintType write setHintType;         // Turn off the embedded help system
 
@@ -177,7 +178,7 @@ VAR
 IMPLEMENTATION
 
 USES
-  LightCore.IO, LightCore.TextFile;
+  LightCore.IO, LightCore.TextFile, LightCore.Platform;
 
 {-------------------------------------------------------------------------------------------------------------
  Parameters
@@ -262,91 +263,129 @@ end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   APP PATH
+   SYSTEM PATHS
+--------------------------------------------------------------------------------------------------------------
+
+  GetDocumentsPath
+    Returns the path to the directory where user documents are stored.
+     * On Windows and OS X, it points to a user-specific, application-agnostic directory.
+     * On iOS and Android, it points to an application-specific, user-agnostic directory.
+    Example:
+      Vista+         -> C:\Users\<USERNAME>\Documents
+      OS X           -> /Users/<USERNAME>/Documents
+      iOS Device     -> /var/mobile/Containers/Data/Application/<APPLICATION_ID>/Documents
+      Android        -> /data/data/<APPLICATION_ID>/files
+   _________
+
+  GetHomePath
+    Returns either the home path of the user or the application's writable scratch directory or storage.
+    You should use GetHomePath to store settings PER USER.
+
+    Windows          -> User specific
+    Linux            -> User specific
+    OS X             -> User specific
+    iOS/Android      -> device-specific & app specific
+
+    Example:
+      Vista+         -> C:\Users\<USERNAME>\AppData\Roaming
+      OS X           -> /Users/<USERNAME>
+      Linux          -> /home/<USERNAME>
+      iOS Device     -> /private/var/mobile/Containers/Data/Application/<APPLICATION_ID>
+      Android        -> /data/data/<APPLICATION_ID>/files
+  _________
+
+ GetPublicPath
+   Returns the path to the directory where you can store application data that can be shared with other applications.
+   Note:
+     In desktop applications, "shared" means "shared between different users".
+     In mobile  applications, "shared" means "shared between different applications".
+
+   Windows,                 -> points to a system-wide directory.
+   OS X,                    -> points to a user-specific, application-agnostic directory.
+   iOS Device,              -> returns an EMPTY string as this directory is currently not supported.
+   iOS Simulator & Android  -> points to an application-specific, user-specific directory.
+
+   Example:
+     iOS Device      -> N/A               WARNING!
+     Vista+          -> C:\ProgramData
+     OS X            -> /Users/<USERNAME>/Public
+     iOS Simulator   -> /Users/<USERNAME>/Library/Developer/CoreSimulator/Devices/<Device ID>/data/Containers/Data/Application/<APPLICATION_ID>/Public
+     Android         -> /storage/emulated/0/Android/data/<APPLICATION_ID>/files
 -------------------------------------------------------------------------------------------------------------}
 
-{ Returns the folder where the EXE file resides.
-  The path ended with backslash. Works with UNC paths. Example: c:\Program Files\MyCoolApp\ }       // Oldname: CurFolder
-function TAppDataCore.ExeFolder: string;
+function ExeName: string;
 begin
-  Result:= ExtractFilePath(ExeName);
+  Result:= ParamStr(0);   //  Application.ExeName is available only on VCL
+end;
+
+
+{ Returns ONLY the name of the app (exe name without extension) }
+class function TAppDataCore.ExeShortName: string;
+begin
+  Result:= ExtractOnlyName(ExeName);
 end;
 
 
 { Returns the folder where the EXE file resides plus one extra folder called 'System'
   The path ended with backslash. Works with UNC paths. Example: c:\Program Files\MyCoolApp\System\ }
-function TAppDataCore.SysDir: string;
+class function TAppDataCore.AppSysDir: string;
 begin
-  Result:= ExeFolder+ Trail('System');
+  Result:= AppFolder+ Trail('System');
 end;
 
 
 { Check if the System folder exists. If not, we should kill the program! }
 function TAppDataCore.CheckSysDir: Boolean;
 begin
-  Result:= DirectoryExists(SysDir);
+  Result:= DirectoryExists(AppSysDir);
 
   if NOT Result
-  then LogError('The program was not properly installed! The "System" folder is missing.');
+  then LogError('The program was not properly installed! The "System" folder is missing. Checked in: '+ AppSysDir);
 end;
 
 
-{ Returns ONLY the name of the app (exe name without extension) }
-function TAppDataCore.AppShortName: string;
+{ Returns the path where we find application's resources (files delivered with the app). The path ends with backslash.
+  Works with UNC paths. Example: c:\Program Files\MyCoolApp\
+
+  Android
+  On Android these files are not next to the exe file as on Windows.
+  They are copied from the APK to /data/data/<APPLICATION_ID>/files
+  System.StartUpCopy copies files from the APK/Bundle to Documents }
+class function TAppDataCore.AppFolder: string;                                    // Oldname: CurFolder / ExeFolder
 begin
-  Result:= ExtractOnlyName(ExeName);
+  if OsIsMobile
+  then Result:= Trail(TPath.GetDocumentsPath)    // GetDocumentsPath is PRIVATE to the application. No permissions are required to Read/Write here.
+  else Result:= ExtractFilePath(ExeName);        // On Windows/OSX/Linux, files are strictly next to the executable
 end;
 
 
-{ Returns the last folder used when the user opened a LoadFile/SaveFile dialog box }
-//ToDo: save this to a INI file
-function TAppDataCore.getLastUsedFolder: string;
-begin
-  if FLastFolder = ''
-  then Result:= GetMyDocuments
-  else Result:= FLastFolder;
-end;
-
-
-{ Returns the path to current user's AppData folder on Windows, and to the current user's home directory on Mac OS X.
-  Cannot be used at design-time because AppName is not set!
-
-  Windows XP       C:\Documents and Settings\UserName\Application Data
-  Windows Vista+   C:\Users\UserName\AppData\Roaming
-  OS X             /Users/UserName
-  iOS Device       /private/var/mobile/Containers/Data/Application/Application_ID
-  iOS Simulator    /Users/UserName/Library/Developer/CoreSimulator/Devices/Device_ID/data/Containers/Data/Application/Application_ID
-  Android          /data/data/Application_ID/files
-  Linux            /home/UserName
-
-  If ForceDir, then it creates the folder (full path) where the INI file will be written. }
+{ Returns a folder that is app AND user specific.
+  Example: C:\Users\Gabriel\AppData\Roaming\AppName\
+  Cannot be used at design-time because AppName is not set! }
 class function TAppDataCore.AppDataFolder(ForceDir: Boolean = FALSE): string;
 begin
-  Assert(AppName > '', 'AppName is empty!');
   Assert(System.IOUtils.TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
 
-  Result := Trail(TPath.Combine(TPath.GetHomePath, AppName));
+  if OsIsMobile
+  then Result:= Trail(TPath.GetDocumentsPath)   // Android does not have the concept of "per-user". GetDocumentsPath is the path used by the Deployment Manager.
+  else Result:= Trail(TPath.Combine(TPath.GetHomePath, AppName));
 
   if ForceDir
   then ForceDirectories(Result);
 end;
 
 
-
-{ Example:
-   Windows XP      C:\Documents and Settings\All Users\Application Data
-   Windows Vista+  C:\ProgramData
-   OS X            /Users/<username>/Public
-   iOS Device      N/A
-   iOS Simulator   /Users/<username>/Library/Developer/CoreSimulator/Devices/<Device ID>/data/Containers/Data/Application/<application ID>/Public
-   Android         /storage/emulated/0/Android/data/<application ID>/files
-}
 class function TAppDataCore.AppDataFolderAllUsers(ForceDir: Boolean = FALSE): string;
 begin
-  Assert(AppName > '', 'AppName is empty!');
   Assert(TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
 
-  Result := Trail(TPath.Combine(TPath.GetPublicPath, AppName));
+  {$IFDEF IOS}
+    // On iOS, true 'Public' (shared) storage requires App Groups entitlement. For general non-user data, we fall back to the app's writable Library path.
+    Result := Trail(TPath.Combine(TPath.GetLibraryPath, AppName));
+  {$ELSE}
+    // Windows/Android/Other: Use standard GetPublicPath (which maps to /ProgramData or external storage)
+    Result := Trail(TPath.Combine(TPath.GetPublicPath, AppName));
+  {$ENDIF}
 
   if ForceDir
   then ForceDirectories(Result);
@@ -357,12 +396,27 @@ end;
   It is based on the name of the application. Example: c:\Documents and Settings\MyName\Application Data\MyApp\MyApp.ini }
 class function TAppDataCore.IniFile: string;
 begin
-  Assert(AppName > '', 'AppName is empty!');
   Assert(TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
 
   Result := TPath.Combine(AppDataFolder, AppName + '.ini');
 end;
 
+
+{ Returns the last folder used when the user opened a LoadFile/SaveFile dialog box }
+//ToDo 4: save this to the INI file
+function TAppDataCore.getLastUsedFolder: string;
+begin
+  if FLastFolder = ''
+  then Result:= GetMyDocuments
+  else Result:= FLastFolder;
+end;
+
+
+class function TAppDataCore.getAppName: string;
+begin
+  Result:= FAppName;
+  Assert(FAppName > '', 'getAppName - AppName is empty!');
+end;
 
 
 
@@ -382,7 +436,7 @@ end;
 { Returns true if a file called 'betatester' exists in application's folder or in application's system folder. }
 function TAppDataCore.BetaTesterMode: Boolean;
 begin
-  Result:= FileExists(SysDir+ 'betatester') OR FileExists(ExeFolder+ 'betatester');
+  Result:= FileExists(AppSysDir+ 'betatester') OR FileExists(AppFolder+ 'betatester');
 end;
 
 
@@ -394,10 +448,10 @@ VAR
    s: string;
    HardCodedDate: TDateTime;
 begin
- if FileExists(ExeFolder+ 'dvolume.bin')         { If file exists, ignore the date passed as parameter and use the date written in file }
+ if FileExists(AppFolder+ 'dvolume.bin')         { If file exists, ignore the date passed as parameter and use the date written in file }
  then
    begin
-     s:= StringFromFile(ExeFolder+ 'dvolume.bin');
+     s:= StringFromFile(AppFolder+ 'dvolume.bin');
      HardCodedDate:= StrToInt64Def(s, 0);
      Result:= round(HardCodedDate- Date) <= 0;     { For example: 2016.07.18 is 3678001053146ms. One day more is: 3678087627949 }
    end
@@ -610,10 +664,6 @@ begin
 end;
 
 
-function ExeName: string;
-begin
-  Result:= ParamStr(0);   //  Application.ExeName is available only on VCL
-end;
 
 
 end.
