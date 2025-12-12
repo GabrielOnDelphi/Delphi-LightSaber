@@ -73,7 +73,7 @@ IMPLEMENTATION
 {$WARN GARBAGE OFF}                                                                                {Silence the: 'W1011 Text after final END' warning }
 
 USES
-   LightVcl.Internet, LightCore.Internet, IniFiles, LightVcl.Common.ExecuteShell;
+   LightVcl.Internet.Common, LightCore.Internet, IniFiles, LightVcl.Common.ExecuteShell;
 
 
 
@@ -288,7 +288,7 @@ procedure TProxyList.btnAutoDetectClick(Sender: TObject);
 VAR sProxyAdr, sProxyPort: string;
     UseProxy: Boolean;
 begin
- if LightVcl.Internet.IE_GetProxySettings(sProxyAdr, sProxyPort, UseProxy) then
+ if LightVcl.Internet.Common.IE_GetProxySettings(sProxyAdr, sProxyPort, UseProxy) then
   begin
    radGateway.Checked := UseProxy;
    radDirect .Checked := NOT UseProxy;

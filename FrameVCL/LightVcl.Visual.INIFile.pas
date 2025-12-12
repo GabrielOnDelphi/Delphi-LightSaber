@@ -107,7 +107,7 @@ begin
      else
 
      if Comp.InheritsFrom(TCubicPathEdit)
-     then TCubicPathEdit (Comp).Path := Self.ReadString (Comp.Owner.Name, Comp.Name, AppData.ExeFolder)
+     then TCubicPathEdit (Comp).Path := Self.ReadString (Comp.Owner.Name, Comp.Name, Appdata.AppFolder)
      else
 
      if Comp.InheritsFrom(TCubicListBox)

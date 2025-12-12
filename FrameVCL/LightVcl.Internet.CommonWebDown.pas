@@ -22,7 +22,7 @@ function GetUnsplashImage(CONST URL, LocalFile: string): Boolean;
 
 IMPLEMENTATION
 
-USES LightCore.Download, LightVcl.Internet, LightCore.HTML;
+USES LightCore.Download, LightVcl.Internet.common, LightCore.HTML;
 
 
 
@@ -67,7 +67,7 @@ begin
   URL:= GetImageFromUnsplashPage(Edit1.Text);
   lblInfo.Caption:= 'High res image: '+ URL;
 
-  FileName:= AppData.ExeFolder+ GenerateUniqueString(5)+ '.jpg';
+  FileName:= Appdata.AppFolder+ GenerateUniqueString(5)+ '.jpg';
   [DownloadFile->new name] DownloadToFile(URL, URL, FileName);
   Image.Picture.LoadFromFile(FileName);
  FINALLY

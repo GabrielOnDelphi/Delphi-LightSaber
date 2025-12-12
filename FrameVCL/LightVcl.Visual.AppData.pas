@@ -528,7 +528,7 @@ VAR
  SI      : TStartupInfo;
  BatPath : string;
 begin
-  BatPath := TPath.Combine(TPath.GetTempPath, ChangeFileExt(AppShortName, '.BAT'));
+  BatPath := TPath.Combine(TPath.GetTempPath, ChangeFileExt(ExeShortName, '.BAT'));
   List := TStringList.Create;
   TRY
     List.Text := Format(BatCode, [Application.ExeName, Application.ExeName, BatPath]);
@@ -956,7 +956,7 @@ end;
 ------------------------}
 procedure TAppData.writeInstallationFolder;                                      { Called by the original app }                                                                                                                                       {Old name: WriteAppGlobalData }
 begin
-  RegWriteString(HKEY_CURRENT_USER, UninstallerRegKey+ AppName, 'Install path', ExeFolder);
+  RegWriteString(HKEY_CURRENT_USER, UninstallerRegKey+ AppName, 'Install path', AppFolder);
 end;
 
 
@@ -971,7 +971,7 @@ procedure TAppData.RegisterUninstaller;
 begin
   // Write to Control Panel
   RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'DisplayName', AppName);
-  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'UninstallString', SysDir+ 'Uninstall.exe');
+  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'UninstallString', AppFolder+ 'Uninstall.exe');
 
   writeAppDataFolder;
   writeInstallationFolder;
