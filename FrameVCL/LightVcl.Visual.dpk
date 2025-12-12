@@ -1,0 +1,98 @@
+package LightVcl.Visual;
+
+{$R *.res}
+{$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
+{$ALIGN 2}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS ON}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION OFF}
+{$OVERFLOWCHECKS ON}
+{$RANGECHECKS ON}
+{$REFERENCEINFO ON}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES ON}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DEFINE DEBUG}
+{$DEFINE CCRExif}
+{$DEFINE Jpg2000}
+{$DEFINE FastJpg}
+{$ENDIF IMPLICITBUILDING}
+{$DESCRIPTION 'LightSaber - Visual Controls'}
+{$LIBSUFFIX AUTO}
+{$IMPLICITBUILD ON}
+
+requires
+  Vcl,
+  CcrExif,
+  LightCore,
+  LightVcl.Common,
+  LightVcl.Graphics,
+  LightVcl.Internet;
+
+contains
+  LightVcl.Visual.ActivityIndicator in 'LightVcl.Visual.ActivityIndicator.pas',
+  LightVcl.Visual.AssociateExt in 'LightVcl.Visual.AssociateExt.pas',
+  LightVcl.Visual.CalendarCanvas in 'LightVcl.Visual.CalendarCanvas.pas',
+  LightVcl.Visual.CaptionedThumb in 'LightVcl.Visual.CaptionedThumb.pas',
+  LightVcl.Visual.CheckBox in 'LightVcl.Visual.CheckBox.pas',
+  LightVcl.Visual.CheckListBox in 'LightVcl.Visual.CheckListBox.pas',
+  LightVcl.Visual.ComboBox in 'LightVcl.Visual.ComboBox.pas',
+  LightVcl.Visual.CountDown in 'LightVcl.Visual.CountDown.pas',
+  LightVcl.Visual.CreationOrderTester in 'LightVcl.Visual.CreationOrderTester.pas',
+  LightVcl.Visual.DirectoryListBox in 'LightVcl.Visual.DirectoryListBox.pas',
+  LightVcl.Visual.DropDownSearch in 'LightVcl.Visual.DropDownSearch.pas',
+  LightVcl.Visual.Edit in 'LightVcl.Visual.Edit.pas',
+  LightVcl.Visual.FileFilter in 'LightVcl.Visual.FileFilter.pas',
+  LightVcl.Visual.FileListBox in 'LightVcl.Visual.FileListBox.pas',
+  LightVcl.Visual.FloatSpinEdit in 'LightVcl.Visual.FloatSpinEdit.pas',
+  LightVcl.Visual.FreeDiskSpace in 'LightVcl.Visual.FreeDiskSpace.pas',
+  LightVcl.Visual.GradientPanel in 'LightVcl.Visual.GradientPanel.pas',
+  LightVcl.Visual.GraphChart in 'LightVcl.Visual.GraphChart.pas',
+  LightVcl.Visual.GroupBox in 'LightVcl.Visual.GroupBox.pas',
+  LightVcl.Visual.INIFile in 'LightVcl.Visual.INIFile.pas',
+  LightVcl.Visual.LabelEdit in 'LightVcl.Visual.LabelEdit.pas',
+  LightVcl.Visual.ListBox in 'LightVcl.Visual.ListBox.pas',
+  LightVcl.Visual.LstEditor in 'LightVcl.Visual.LstEditor.pas',
+  LightVcl.Visual.Memo in 'LightVcl.Visual.Memo.pas',
+  LightVcl.Visual.MinimalPathLabel in 'LightVcl.Visual.MinimalPathLabel.pas',
+  LightVcl.Visual.MsgDispatcher in 'LightVcl.Visual.MsgDispatcher.pas',
+  LightVcl.Visual.Panel in 'LightVcl.Visual.Panel.pas',
+  LightVcl.Visual.PathEdit in 'LightVcl.Visual.PathEdit.pas',
+  LightVcl.Visual.ProxyList in 'LightVcl.Visual.ProxyList.pas',
+  LightVcl.Visual.RadioButton in 'LightVcl.Visual.RadioButton.pas',
+  LightVcl.Visual.RichEdit in 'LightVcl.Visual.RichEdit.pas',
+  LightVcl.Visual.ScrollBox in 'LightVcl.Visual.ScrollBox.pas',
+  LightVcl.Visual.SpinEdit in 'LightVcl.Visual.SpinEdit.pas',
+  LightVcl.Visual.SpinEditDelayed in 'LightVcl.Visual.SpinEditDelayed.pas',
+  LightVcl.Visual.Splitter in 'LightVcl.Visual.Splitter.pas',
+  LightVcl.Visual.StatusBar in 'LightVcl.Visual.StatusBar.pas',
+  LightVcl.Visual.StringGrid in 'LightVcl.Visual.StringGrid.pas',
+  LightVcl.Visual.StringGridBase in 'LightVcl.Visual.StringGridBase.pas',
+  LightVcl.Visual.StringGridScrollFix in 'LightVcl.Visual.StringGridScrollFix.pas',
+  LightVcl.Visual.StrongPasswordEdit in 'LightVcl.Visual.StrongPasswordEdit.pas',
+  LightVcl.Visual.ThumbViewerM in 'LightVcl.Visual.ThumbViewerM.pas',
+  LightVcl.Visual.TimeLine in 'LightVcl.Visual.TimeLine.pas',
+  LightVcl.Visual.Timer in 'LightVcl.Visual.Timer.pas',
+  LightVcl.Visual.ToolBox in 'LightVcl.Visual.ToolBox.pas',
+  LightVcl.Visual.TrayIcon in 'LightVcl.Visual.TrayIcon.pas',
+  LightVcl.Visual.RichLogTrack in 'LightVcl.Visual.RichLogTrack.pas',
+  LightVcl.Visual.RichLogUtils in 'LightVcl.Visual.RichLogUtils.pas',
+  LightVcl.Visual.RichLog in 'LightVcl.Visual.RichLog.pas',
+  LightVcl.Visual.RichEditResize in 'LightVcl.Visual.RichEditResize.pas',
+  LightVcl.Visual.AppData in 'LightVcl.Visual.AppData.pas',
+  LightVcl.Visual.AppDataForm in 'LightVcl.Visual.AppDataForm.pas',
+  LightVcl.Visual.LogForm in 'LightVcl.Visual.LogForm.pas',
+  AniImg in '..\External\AniImg.pas';
+
+end.
