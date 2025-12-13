@@ -27,6 +27,9 @@
         <Projects Include="FMX\Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="FMX\Demo SystemReport\FMX_Demo_SystemReport.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -107,14 +110,23 @@
     <Target Name="FMX_Demo_TDropDownSearchBox:Make">
         <MSBuild Projects="FMX\Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj" Targets="Make"/>
     </Target>
+    <Target Name="FMX_Demo_SystemReport">
+        <MSBuild Projects="FMX\Demo SystemReport\FMX_Demo_SystemReport.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_SystemReport:Clean">
+        <MSBuild Projects="FMX\Demo SystemReport\FMX_Demo_SystemReport.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_SystemReport:Make">
+        <MSBuild Projects="FMX\Demo SystemReport\FMX_Demo_SystemReport.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="FMX_MinimalApp;FMX_MinimalApp_WithLog1;FMX_MinimalApp_WithLog2;FMX_Demo_Log;FMX_Demo_LightPanel;FMX_Demo_AutoSizeRect;FMX_Demo_MessageBoxes;FMX_Demo_TDropDownSearchBox"/>
+        <CallTarget Targets="FMX_MinimalApp;FMX_MinimalApp_WithLog1;FMX_MinimalApp_WithLog2;FMX_Demo_Log;FMX_Demo_LightPanel;FMX_Demo_AutoSizeRect;FMX_Demo_MessageBoxes;FMX_Demo_TDropDownSearchBox;FMX_Demo_SystemReport"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="FMX_MinimalApp:Clean;FMX_MinimalApp_WithLog1:Clean;FMX_MinimalApp_WithLog2:Clean;FMX_Demo_Log:Clean;FMX_Demo_LightPanel:Clean;FMX_Demo_AutoSizeRect:Clean;FMX_Demo_MessageBoxes:Clean;FMX_Demo_TDropDownSearchBox:Clean"/>
+        <CallTarget Targets="FMX_MinimalApp:Clean;FMX_MinimalApp_WithLog1:Clean;FMX_MinimalApp_WithLog2:Clean;FMX_Demo_Log:Clean;FMX_Demo_LightPanel:Clean;FMX_Demo_AutoSizeRect:Clean;FMX_Demo_MessageBoxes:Clean;FMX_Demo_TDropDownSearchBox:Clean;FMX_Demo_SystemReport:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="FMX_MinimalApp:Make;FMX_MinimalApp_WithLog1:Make;FMX_MinimalApp_WithLog2:Make;FMX_Demo_Log:Make;FMX_Demo_LightPanel:Make;FMX_Demo_AutoSizeRect:Make;FMX_Demo_MessageBoxes:Make;FMX_Demo_TDropDownSearchBox:Make"/>
+        <CallTarget Targets="FMX_MinimalApp:Make;FMX_MinimalApp_WithLog1:Make;FMX_MinimalApp_WithLog2:Make;FMX_Demo_Log:Make;FMX_Demo_LightPanel:Make;FMX_Demo_AutoSizeRect:Make;FMX_Demo_MessageBoxes:Make;FMX_Demo_TDropDownSearchBox:Make;FMX_Demo_SystemReport:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
