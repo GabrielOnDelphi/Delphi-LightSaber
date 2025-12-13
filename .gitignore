@@ -96,3 +96,7 @@ External/Exif/ last update 2025.11
 /Demo/FMX/Template - Minimal app/37.0_Android64_Debug
 *.res
 *.rsm
+/Demo/FMX/Demo SystemReport/37.0_Android64_Debug
+*.res
+*.res
+/Demo/FMX/Demo AutoHeightRectangle/37.0_Android64_Debug

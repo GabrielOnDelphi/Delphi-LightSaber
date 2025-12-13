@@ -1,0 +1,29 @@
+object frmSimpleDemo: TfrmSimpleDemo
+  Left = 0
+  Top = 0
+  Caption = 'FMX minimalistic demo'
+  ClientHeight = 864
+  ClientWidth = 534
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  DesignerMasterStyle = 0
+  object Memo: TMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    DataDetectorTypes = []
+    StyledSettings = [Size, Style, FontColor]
+    TextSettings.Font.Family = 'Consolas'
+    Align = Client
+    Margins.Left = 3.000000000000000000
+    Margins.Top = 3.000000000000000000
+    Margins.Right = 3.000000000000000000
+    Margins.Bottom = 3.000000000000000000
+    Size.Width = 528.000000000000000000
+    Size.Height = 858.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 18
+    Viewport.Width = 524.000000000000000000
+    Viewport.Height = 854.000000000000000000
+  end
+end
