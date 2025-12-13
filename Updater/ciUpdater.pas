@@ -111,7 +111,7 @@ VAR
 IMPLEMENTATION
 
 USES
-  FormAsyncMessage, LightCore.Download, LightCore.INIFile, LightVcl.Common.Debugger, LightCore.AppData;
+  FormAsyncMessage, LightCore.Download, LightCore.INIFile, LightCore.Debugger, LightVcl.Common.Debugger, LightCore.AppData;
 
 Const
   TooLongNoSeeInterval = 180;    { Force to check for updates every 180 days even if the updater is disabled }

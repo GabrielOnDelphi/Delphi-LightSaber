@@ -372,7 +372,7 @@ end;
 
 procedure TFrmUpdater.btnTestInternetClick(Sender: TObject);
 begin
-  lblConnectError.Visible:=LightVcl.Internet.TestProgramConnection(TRUE) <= 0;
+  lblConnectError.Visible:= TestProgramConnection(TRUE) <= 0;
 end;
 
 

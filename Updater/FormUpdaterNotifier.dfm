@@ -51,6 +51,7 @@ object FrmUpdater: TFrmUpdater
     Transparent = False
     Visible = False
     StyleElements = [seBorder]
+    ExplicitWidth = 598
   end
   object PageCtrl: TPageControl
     Left = 0
@@ -75,6 +76,7 @@ object FrmUpdater: TFrmUpdater
         Visible = False
         WordWrap = True
         StyleElements = [seBorder]
+        ExplicitWidth = 47
       end
       object pnlBottom: TPanel
         AlignWithMargins = True

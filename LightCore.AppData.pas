@@ -168,7 +168,8 @@ TYPE
 function  CommandLinePath: string;
 procedure ExtractPathFromCmdLine(MixedInput: string; OUT Path, Parameters: string);
 function  FindCmdLineSwitch(const Switch: string; IgnoreCase: Boolean): Boolean; deprecated 'Use System.SysUtils.FindCmdLineSwitch';
-function  ExeName: string;
+{$IFDEF MsWindows}
+function  ExeName: string;{$ENDIF}
 
 VAR
   AppDataCore: TAppDataCore;    // The global var "AppData" takes over this one in TAppData.Create. This obj is automatically freed on app shutdown (via FINALIZATION)
@@ -315,14 +316,15 @@ end;
 
 function ExeName: string;
 begin
-  Result:= ParamStr(0);   //  Application.ExeName is available only on VCL
+  Result:= ParamStr(0);   //  Application.ExeName is available only on VCL and
+  //RAISE Exception.Create('ParamStr(0) returns '' on Android!');
 end;
 
 
 { Returns ONLY the name of the app (exe name without extension) }
 class function TAppDataCore.ExeShortName: string;
 begin
-  Result:= ExtractOnlyName(ExeName);
+  Result:= ExtractOnlyName(ExeName);      // WARNING !!!!!!!!!!!!!!!!!!! On Android, this is empty!
 end;
 
 
@@ -429,7 +431,7 @@ end;
 { Returns true if the application is "home" (in the computer where it was created). This is based on the presence of a DPR file that has the same name as the exe file. }
 class function TAppDataCore.RunningHome: Boolean;
 begin
-  Result:= FileExists(ChangeFileExt(ExeName, '.dpr'));
+  Result:= FileExists(ChangeFileExt(ExeName, '.dpr')) OR FileExists(Trail(AppFolder) + 'RunningHome');
 end;
 
 

@@ -72,6 +72,8 @@ contains
   LightCore.Types in 'LightCore.Types.pas',
   LightCore.Time in 'LightCore.Time.pas',
   LightCore.Platform in 'LightCore.Platform.pas',
-  LightCore.Reports in 'LightCore.Reports.pas';
+  LightCore.Reports in 'LightCore.Reports.pas',
+  LightCore.Debugger in 'LightCore.Debugger.pas';
 
 end.
+

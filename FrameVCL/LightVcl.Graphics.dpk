@@ -91,7 +91,6 @@ Note:
   My package will continue to work but with some reduced functionality:
     * slower JPG decoding,
     * no support for jpg2000,
-    * no support for Jpeg Exif (digital camera rotation detection).
 
   To get rid of 3rd party libraries:
       1. In this file, simply delete any references to 'GR32, ThirdPartyLibs, Jpg2000, FastJpg'.

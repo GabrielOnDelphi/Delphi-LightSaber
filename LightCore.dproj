@@ -187,6 +187,7 @@
         <DCCReference Include="LightCore.Time.pas"/>
         <DCCReference Include="LightCore.Platform.pas"/>
         <DCCReference Include="LightCore.Reports.pas"/>
+        <DCCReference Include="LightCore.Debugger.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
