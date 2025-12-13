@@ -5,32 +5,30 @@ UNIT LightCore.Reports;
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
-   Generate reports related to
-      App
-      Platforms
+   Generates reports.
+   Framework agnostic.
 
    The report formating is optimized for Lucinda Console monospaced font!
 
    Tester:
       c:\Projects\LightSaber\Demo\VCL\Demo SystemReport\VCL_Demo_SystemReport.dpr
+      c:\Projects\LightSaber\Demo\FMX\Demo SystemReport\FMX_Demo_SystemReport.dpr
 =============================================================================================================}
 
 INTERFACE
 
 USES
-   System.Classes, System.SysUtils;
+   System.SysUtils;
 
 
-function  GenerateReport: string;
+function  GenerateCoreReport: string;    // Global report
+function  GenerateAppRep: string;
 
-function  GenerateAppRep:       string;
-function  GeneratePlatformRep:  string;
 
 
 IMPLEMENTATION
 USES
-   LightCore, LightCore.AppData, LightCore.Platform;
-
+   LightCore, LightCore.AppData, LightCore.Platform, LightCore.Debugger;
 
 
 
@@ -39,22 +37,17 @@ USES
    Summary of all reports in this unit
 --------------------------------------------------------------------------------------------------}
 
-function GenerateReport: string;
+function GenerateCoreReport: string;
 begin
- Result:= '=< APP REPORT >='+ CRLF;
+ Result:= Result+ GenerateAppRep+ CRLF+ CRLF;
+ Result:= Result+ GeneratePlatformRep+ CRLF+ CRLF;
+ Result:= Result+ GenerateCompilerReport;
+  {$IFDEF FRAMEWORK_FMX}
  Result:= Result+ CRLF;
- Result:= Result+ GenerateAppRep      + CRLF+ CRLF;
- Result:= Result+ GeneratePlatformRep + CRLF+ CRLF;
+ Result:= Result+ GenerateDeviceRep;  {$ENDIF}
 end;
 
 
-
-
-{--------------------------------------------------------------------------------------------------
-   INDIVIDUAL REPORTS
---------------------------------------------------------------------------------------------------}
-
-{ The AppDataPath parameter lets the user provide the data path in case the app is not using the Default data path }
 function GenerateAppRep: string;
 begin
   TAppDataCore.AppDataFolder(True);
@@ -67,20 +60,6 @@ begin
   Result:= Result+'  IniFile: '          + Tab+Tab+ TAppDataCore.IniFile+ CRLF;
   Result:= Result+'  ExeShortName: '     + Tab+     TAppDataCore.ExeShortName+ CRLF;
   Result:= Result+'  LastUsedFolder: '   + Tab+      AppDataCore.LastUsedFolder;
-end;
-
-
-function GeneratePlatformRep: string;
-begin
-  Result:= ' [PLATFORM OS]'+ CRLF;
-  Result:= Result+'  Platform: '         + Tab+Tab+ OsType+ CRLF;
-  Result:= Result+'  OsArchitecture: '   + Tab    + OsArchitecture+ CRLF;
-
-  Result:= Result+ CRLF;
-  Result:= Result+' [APP BITNESS]'+ CRLF;
-  Result:= Result+'  AppBitness:    '    + Tab    + AppBitness+ CRLF;
-  Result:= Result+'  AppBitnessEx: '     + Tab    + AppBitnessEx+ CRLF;
-  Result:= Result+'  Is64Bit: '          + Tab+Tab+ BoolToStr(AppIs64Bit, TRUE);
 end;
 
 
