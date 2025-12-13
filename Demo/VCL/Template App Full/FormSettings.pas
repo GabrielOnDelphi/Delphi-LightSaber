@@ -24,7 +24,7 @@ USES
   WinApi.Windows, WinApi.Messages,
   System.SysUtils, System.Classes,
   Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs,
-  LightVcl.Visual.INIFile, LightVcl.Visual.PathEdit, LightVcl.Common.Debugger, LightVcl.Visual.RadioButton, LightVcl.Visual.CheckBox, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Visual.AppDataForm, LightVcl.Common.GuiSettings;
+  LightVcl.Visual.INIFile, LightVcl.Visual.PathEdit, LightVcl.Visual.RadioButton, LightVcl.Visual.CheckBox, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Visual.AppDataForm, LightVcl.Common.GuiSettings;
 
 TYPE
   TfrmSettings = class(TLightForm)
@@ -87,7 +87,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightCore.INIFile, LightVcl.Common.Translate, FormSkinsDisk, LightVcl.Common.Shell, FormMain;
+   LightCore.INIFile, LightCore.Debugger, LightVcl.Common.Debugger, LightVcl.Common.Translate, FormSkinsDisk, LightVcl.Common.Shell, FormMain;
 
 
 
@@ -270,7 +270,7 @@ end;
 
 procedure TfrmSettings.btnCrashClick(Sender: TObject);
 begin
-  LightVcl.Common.Debugger.GenerateCrashNIL;
+  GenerateCrashNIL;
 end;
 
 

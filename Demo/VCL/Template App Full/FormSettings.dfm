@@ -143,8 +143,6 @@ object frmSettings: TfrmSettings
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
-        ExplicitLeft = 182
-        ExplicitTop = 129
         object lblHintHide: TLabel
           Left = 36
           Top = 173

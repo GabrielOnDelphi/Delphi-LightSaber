@@ -3,7 +3,7 @@ unit MainForm;
 interface
 
 uses
-  System.SysUtils, System.Classes,
+  System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, LightVcl.Visual.AppDataForm;
 
 type
@@ -16,15 +16,15 @@ type
 
 IMPLEMENTATION {$R *.dfm}
 USES
-   LightCore.Reports, LightVCL.Common.Reports, LightVcl.Common.Debugger;
+   LightVCL.Common.Reports;
 
 
 
 procedure TfrmMain.FormPostInitialize;
 begin
   inherited FormPostInitialize;
-  Memo.Text:= LightVCL.Common.Reports.GenerateSystemReport;
-  Memo.Lines.Add(LightVcl.Common.Debugger.GenerateCompilerReport);
+  Memo.Clear;
+  Memo.Lines.Add(LightVCL.Common.Reports.GenerateVCLReport);
 end;
 
 end.

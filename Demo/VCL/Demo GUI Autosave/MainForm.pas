@@ -68,7 +68,7 @@ VAR
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-   LightVcl.Visual.INIFile, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO, LightVcl.Common.Debugger, SecondForm;
+   LightVcl.Visual.INIFile, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO, LightCore.Debugger, LightVcl.Common.Debugger, SecondForm;
 
 
 

@@ -2,8 +2,8 @@ object frmMain: TfrmMain
   Left = 674
   Top = 393
   Caption = 'System and hardware report'
-  ClientHeight = 940
-  ClientWidth = 711
+  ClientHeight = 335
+  ClientWidth = 395
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -16,8 +16,8 @@ object frmMain: TfrmMain
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 705
-    Height = 934
+    Width = 389
+    Height = 329
     Align = alClient
     Font.Charset = ANSI_CHARSET
     Font.Color = clWindowText
@@ -28,6 +28,7 @@ object frmMain: TfrmMain
     ScrollBars = ssVertical
     TabOrder = 0
     WordWrap = False
-    ExplicitHeight = 882
+    ExplicitWidth = 705
+    ExplicitHeight = 934
   end
 end

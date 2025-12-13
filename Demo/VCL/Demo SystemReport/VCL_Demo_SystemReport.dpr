@@ -9,7 +9,8 @@ uses
   LightCore.AppData in '..\..\..\LightCore.AppData.pas',
   LightVcl.Common.Debugger in '..\..\..\FrameVCL\LightVcl.Common.Debugger.pas',
   LightCore.Platform in '..\..\..\LightCore.Platform.pas',
-  LightVcl.Common.Reports in '..\..\..\FrameVCL\LightVcl.Common.Reports.pas';
+  LightVcl.Common.Reports in '..\..\..\FrameVCL\LightVcl.Common.Reports.pas',
+  LightCore.Reports in '..\..\..\LightCore.Reports.pas';
 
 {$R *.res}
 

@@ -93,7 +93,6 @@ INTERFACE
 {$I Frameworks.inc}
 
 USES
-
   {$IFDEF MsWindows}
     Winapi.Windows, System.Win.Registry,
   {$ENDIF}
@@ -107,7 +106,7 @@ USES
   System.SysUtils, System.Classes, System.UITypes, System.Types, System.Generics.Collections,
   FMX.Forms, FMX.Graphics, FMX.Platform,
   LightFMX.LogForm,
-  LightCore.AppData; //Light_FMX.LogForm
+  LightCore.AppData;
 
 TYPE
   TAppData= class(TAppDataCore)
@@ -176,9 +175,9 @@ VAR                      // To-Do: make sure AppData is unique (make it Singleto
 
 
 IMPLEMENTATION
+USES LightCore.IO;
 
-USES
-  LightCore.IO;
+
 
 
 

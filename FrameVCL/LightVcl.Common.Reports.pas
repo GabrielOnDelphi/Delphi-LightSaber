@@ -22,7 +22,7 @@ USES
    System.Classes, System.SysUtils, Vcl.Forms;
 
 
- function  GenerateSystemReport: string;
+ function  GenerateVCLReport: string;
 
  function  GenerateWinSysRep:    string;
  function  GenerateWinPathRep:   string;
@@ -42,16 +42,16 @@ USES
 
 
 {--------------------------------------------------------------------------------------------------
-   Summary of all reports in this unit
+   Core report + VCL report
 --------------------------------------------------------------------------------------------------}
 
-function GenerateSystemReport: string;
+function GenerateVCLReport: string;
 begin
- Result:= Result+ LightCore.Reports.GenerateReport+ CRLF;
- Result:= Result+ CRLF;
+ Result:= Result+ '=< CORE REPORT >='+ CRLF+ CRLF;
+ Result:= Result+ LightCore.Reports.GenerateCoreReport+ CRLF;
  Result:= Result+ CRLF;
  
- Result:= Result+ '=< OS REPORT >='+ CRLF;
+ Result:= Result+ '=< VCL REPORT >='+ CRLF;
  Result:= Result+ CRLF;
 
  Result:= Result+ GenerateWinSysRep   + CRLF+ CRLF;

@@ -89,7 +89,7 @@ TYPE
 
 IMPLEMENTATION
 USES
-  LightFmx.Common.AppData, LightFmx.Common.CenterControl, LightFmx.Common.Dialogs, LightCore, LightCore.Time;
+  LightFmx.Common.AppData, LightFmx.Common.CenterControl, LightFmx.Common.Dialogs, LightCore;
 
 
 constructor TLightForm.Create(AOwner: TComponent; aAutoState: TAutoState);

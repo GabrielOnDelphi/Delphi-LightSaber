@@ -11,7 +11,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Types, System.UITypes, System.Classes, System.Permissions, System.IOUtils, System.JSON, System.Messaging,
-  FMX.Types, FMX.Graphics, FMX.MediaLibrary, FMX.Platform, FMX.DialogService;
+  FMX.Types, FMX.Graphics, FMX.MediaLibrary, FMX.Platform, FMX.DialogService, LightCore.AppData;
 
 
 TYPE
@@ -20,10 +20,10 @@ TYPE
 procedure RequestCameraPermission(const AOnGranted: TProc);
 procedure RequestStorageReadPermission(const AOnGranted: TProc);  // For image picking on Android 13+
 
-// Public folder (Gallery) - Requires permissions or MediaStore API
-function GetPublicPicturesFolder: string;
+function  GetPublicPicturesFolder: string;
+function  LocalJpeg: string;
 
-function GetNewTimestampFileName(const Folder: string): string;
+function  GetNewTimestampFileName(const Folder: string): string;
 
 procedure AddToPhotosAlbum(const ABitmap: TBitmap);  // Saves to gallery, handles indexing
 
@@ -94,34 +94,6 @@ begin
 {$ELSE}
   if Assigned(AOnGranted) then AOnGranted;  // No permission needed on non-Android platforms
 {$ENDIF}
-end;
-
-
-function GetPublicPicturesFolder: string;
-begin
-  {$IFDEF MSWINDOWS}
-  Result := TPath.Combine(TPath.GetHomePath, 'AppData\Roaming\LightSaber-DemoAppPhotos');
-  {$ELSEIF DEFINED(ANDROID)}
-  Result := TPath.GetSharedPicturesPath;
-  {$ELSE}
-  Result := TPath.GetDocumentsPath;
-  {$ENDIF}
-end;
-
-{
-function GetInternalDataFolder: string;
-begin
-  // This path is PRIVATE to the application. No permissions are required to Read/Write here.
-  Result := TPath.GetDocumentsPath;
-  // On Win this is: 'C:\Users\trei\Documents\'
-  // On Android: /data/user/0/com.embrcadero.demoTakePtohot/files/2025.etc.jpg  (in TCMD Windows I see them as: \\:OnePlus Nord\Internal shared storage\Android\data\com.embarcadero.DemoTakePhoto\)
-end;   }
-
-
-function GetNewTimestampFileName(const Folder: string): string;
-begin
-  if not DirectoryExists(Folder) then ForceDirectories(Folder);
-  Result := TPath.Combine(Folder, FormatDateTime('yyyy.mm.dd_hh.nn.ss_zzz', Now) + '.jpg');
 end;
 
 
@@ -248,6 +220,40 @@ begin
     end);
 end;
 {$ENDIF}
+
+
+
+{-------------------------------------------------------------------------------------------------------------
+   PATHS
+-------------------------------------------------------------------------------------------------------------}
+// Public folder (Gallery) - Requires permissions or MediaStore API
+function GetPublicPicturesFolder: string;
+begin
+  {$IFDEF MSWINDOWS}
+  Result := TPath.Combine(TPath.GetHomePath, 'AppData\Roaming\LightSaber-DemoAppPhotos');
+  {$ELSEIF DEFINED(ANDROID)}
+  Result := TPath.GetSharedPicturesPath;
+  {$ELSE}
+  Result := TPath.GetDocumentsPath;
+  {$ENDIF}
+end;
+
+
+function LocalJpeg: string;
+begin
+   // Generate a filename in INTERNAL storage (No permissions needed)
+   Result:= TAppdataCore.AppFolder+ 'MyPhoto.jpg';
+
+  // On Win this is: 'C:\Users\MyName\Documents\'
+  // On Android:      /data/user/0/com.embrcadero.DemoTakePtohot/files/MyPhoto.jpg
+end;
+
+
+function GetNewTimestampFileName(const Folder: string): string;
+begin
+  if not DirectoryExists(Folder) then ForceDirectories(Folder);
+  Result := TPath.Combine(Folder, FormatDateTime('yyyy.mm.dd_hh.nn.ss_zzz', Now) + '.jpg');
+end;
 
 
 end.
