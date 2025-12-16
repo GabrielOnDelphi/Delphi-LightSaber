@@ -19,6 +19,7 @@ USES
 procedure GetImageResolution(FileName: string; Out Width, Height: Integer);
 procedure LoadImage         (FileName: string; Image: TImage; Color: TAlphaColor= TAlphaColorRec.DeepPink);   overload;
 function  LoadImage         (FileName: string): TBitmap;                                                      overload;
+procedure SaveBitmap        (BMP: TBitmap; FileName: string);
 
 procedure FillBitmap   (BMP: TBitmap; Color: TAlphaColor);
 function  CreateBitmap (Width, Height: Integer; BkgClr: TAlphaColor= TAlphaColorRec.Black): TBitmap;
@@ -32,7 +33,7 @@ procedure CropBitmap   (FileName: string;  CropRect: TRectF; Image: TImage);  ov
 IMPLEMENTATION
 
 USES
-   LightFmx.Common.AppData;
+   LightFmx.Common.AppData, FMX.DialogService;
 
 
 
@@ -58,10 +59,10 @@ procedure LoadImage(FileName: string; Image: TImage; Color: TAlphaColor= TAlphaC
 VAR Bitmap: TBitmap;
 begin
   // Check file existence first
-  if FileExists(FileName) then
-  begin
-    Bitmap := LoadImage(FileName); // Use the function above for consistency
-  end
+  if FileExists(FileName)
+  then
+    Bitmap := LoadImage(FileName) // Use the function above for consistency
+
   else
     Bitmap := nil;
 
@@ -157,6 +158,32 @@ begin
     end;
   end;
 end;
+
+
+// SaveToFile calls TBitmapCodecManager. The manager looks at the file extension provided in the filename (jpg, png, etc).
+procedure SaveBitmap(BMP: TBitmap; FileName: string);
+begin
+  VAR TempBMP:= TBitmap.Create;
+  TRY
+    // Save
+    TempBMP.Assign(BMP);
+    try
+      TempBMP.SaveToFile(FileName);
+    except
+      on E: Exception do
+      begin
+        TDialogService.ShowMessage('Save Failed: ' + E.Message);
+        Exit;
+      end;
+    end;
+  FINALLY
+    FreeAndNil(TempBMP);
+  END;
+end;
+
+
+
+
 
 
 {-------------------------------------------------------------------------------

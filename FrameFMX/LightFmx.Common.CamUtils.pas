@@ -18,18 +18,18 @@ TYPE
   TImageSelectedEvent = procedure(const Path: string) of object;
 
 procedure RequestCameraPermission(const AOnGranted: TProc);
-procedure RequestStorageReadPermission(const AOnGranted: TProc);  // For image picking on Android 13+
+procedure RequestStorageReadPermission(const AOnGranted: TProc);       // For image picking on Android 13+
 
+procedure AddToPhotosAlbum(const ABitmap: TBitmap);                    // Saves to gallery, handles indexing
+
+procedure ScanMediaFile(const AFileName: string);                      // If manually saving files
+
+procedure PickImageFromGallery;                                        // Opens the Photos/Gallery picker
+
+// Paths
 function  GetPublicPicturesFolder: string;
-function  LocalJpeg: string;
-
 function  GetNewTimestampFileName(const Folder: string): string;
 
-procedure AddToPhotosAlbum(const ABitmap: TBitmap);  // Saves to gallery, handles indexing
-
-procedure ScanMediaFile(const AFileName: string);  // If manually saving files
-
-procedure PickImageFromGallery;  // Opens the Photos/Gallery picker
 
 {$IFDEF ANDROID}
 procedure SetupImagePickerCallback(const AOnImageSelected: TImageSelectedEvent);
@@ -38,14 +38,13 @@ procedure SetupImagePickerCallback(const AOnImageSelected: TImageSelectedEvent);
 
 IMPLEMENTATION
 
-{$IFDEF ANDROID}
 uses
-  FMX.Platform.Android,
-  Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Net, Androidapi.JNI.App, Androidapi.JNI.Media, Androidapi.JNI.Provider, Androidapi.JNIBridge, FMX.Helpers.Android;
-{$ENDIF}
+  LightCore.IO {$IFDEF ANDROID}
+  , FMX.Platform.Android, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Net, Androidapi.JNI.App, Androidapi.JNI.Media, Androidapi.JNI.Provider, Androidapi.JNIBridge, FMX.Helpers.Android {$ENDIF};
 
 CONST
   REQUEST_PICK_IMAGE = 1;
+
 
 
 procedure RequestCameraPermission(const AOnGranted: TProc);
@@ -226,33 +225,24 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    PATHS
 -------------------------------------------------------------------------------------------------------------}
-// Public folder (Gallery) - Requires permissions or MediaStore API
+
 function GetPublicPicturesFolder: string;
 begin
   {$IFDEF MSWINDOWS}
-  Result := TPath.Combine(TPath.GetHomePath, 'AppData\Roaming\LightSaber-DemoAppPhotos');
+  Result := Trail(TPath.GetPicturesPath);
   {$ELSEIF DEFINED(ANDROID)}
-  Result := TPath.GetSharedPicturesPath;
+  Result := Trail(TPath.GetSharedPicturesPath); // Public folder (Gallery) -  Ensure permissions or use MediaStore API
   {$ELSE}
-  Result := TPath.GetDocumentsPath;
+  Result := Trail(TPath.GetDocumentsPath);
   {$ENDIF}
-end;
-
-
-function LocalJpeg: string;
-begin
-   // Generate a filename in INTERNAL storage (No permissions needed)
-   Result:= TAppdataCore.AppFolder+ 'MyPhoto.jpg';
-
-  // On Win this is: 'C:\Users\MyName\Documents\'
-  // On Android:      /data/user/0/com.embrcadero.DemoTakePtohot/files/MyPhoto.jpg
 end;
 
 
 function GetNewTimestampFileName(const Folder: string): string;
 begin
-  if not DirectoryExists(Folder) then ForceDirectories(Folder);
-  Result := TPath.Combine(Folder, FormatDateTime('yyyy.mm.dd_hh.nn.ss_zzz', Now) + '.jpg');
+  if not DirectoryExists(Folder)
+  then ForceDirectories(Folder);
+  Result:= TPath.Combine(Folder, FormatDateTime('yyyy.mm.dd_hh.nn.ss_zzz', Now) + '.png');
 end;
 
 

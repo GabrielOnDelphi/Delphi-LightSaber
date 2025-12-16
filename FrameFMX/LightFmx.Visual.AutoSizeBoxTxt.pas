@@ -2,26 +2,22 @@ UNIT LightFmx.Visual.AutoSizeBoxTxt;
 
 {-------------------------------------------------------------------------------------------------------------
    GabrielMoraru.com
-   2025.07
+   2025.12
 --------------------------------------------------------------------------------------------------------------
-   A TRectangle that automatically adjusts its height to fit its internal text.
-   Has the equivalent of an AutoSize property (but not exposed/published)
-   Look a bit like a TWhatsApp dialog bubble.
-
-   Demo: Test Bubble\BubbleTest.dpr
+   Same as LightFmx.Visual.AutoSizeBox.pas but it adds text (caption) capabilities
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
 
 USES
-  System.SysUtils, System.Types, System.Classes, System.Math,
+  System.SysUtils, System.Classes, System.Math,
   FMX.StdCtrls, FMX.Graphics, FMX.Types, FMX.Controls, FMX.Objects, FMX.Controls.Presentation,
   LightFmx.Visual.AutoSizeBox;
 
 TYPE
   TAutoSizeBoxTxt = class(TAutoSizeBox)
   private
-    FTextLabel: TLabel;    // The internal control that holds the text
+    FTextLabel: TLabel;
     FText: string;
     procedure SetText(const Value: string);
   protected
@@ -36,7 +32,6 @@ procedure Register;
 
 
 IMPLEMENTATION
-
 
 
 constructor TAutoSizeBoxTxt.Create(AOwner: TComponent);
@@ -65,10 +60,11 @@ procedure TAutoSizeBoxTxt.SetText(const Value: string);
 begin
   if FText <> Value then
     begin
-      FText := Value;
-      FTextLabel.Text := Value;
-      // Directly update height on text change (handles startup and runtime text updates reliably)
-      UpdateSize;    // After loading the image, recalculate the size based on the new image dimensions  // In FMX, setting Text often triggers an internal RGN_Change (Region Change) message which leads to a Resize, so we just set the flag and let the system handle it.
+      FText:= Value;
+      FTextLabel.Text:= Value;
+      // Directly update height on text change (handles startup and runtime text updates reliably).
+      // After loading the image, recalculate the size based on the new image dimensions  // In FMX, setting Text often triggers an internal RGN_Change (Region Change) message which leads to a Resize, so we just set the flag and let the system handle it.
+      UpdateSize;
     end;
 end;
 

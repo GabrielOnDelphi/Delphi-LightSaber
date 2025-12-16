@@ -61,6 +61,13 @@ object Form1: TForm1
         Opacity = 0.600000023841857900
         ShadowColor = claBlack
       end
+      object TShadowEffect
+        Distance = 3.000000000000000000
+        Direction = 45.000000000000000000
+        Softness = 0.300000011920929000
+        Opacity = 0.600000023841857900
+        ShadowColor = claBlack
+      end
     end
   end
   object laySend: TLayout

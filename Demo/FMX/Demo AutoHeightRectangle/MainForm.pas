@@ -1,12 +1,23 @@
 unit MainForm;
 
+{-------------------------------------------------------------------------------------------------------------
+   GabrielMoraru.com
+   2025.07
+--------------------------------------------------------------------------------------------------------------
+   This demonstrates how to use TAutoSizeBoxTxt.
+
+   TAutoSizeBoxTxt looks like a WhatsApp text buuble.
+   It automatically adjusts its height to fit its internal component (text or image).
+-------------------------------------------------------------------------------------------------------------}
+
 INTERFACE
 
 USES
-  System.SysUtils, System.Types, System.UITypes, System.Classes,
-  FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Layouts, FMX.Objects,
-  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Effects, FMX.Memo.Types, FMX.ScrollBox, FMX.Memo,
-  LightFmx.Visual.AutoSizeBoxTxt, LightFmx.Visual.AutoSizeBox;
+  System.Types, System.Classes,
+  FMX.Types, FMX.Forms, FMX.Layouts, FMX.Objects,
+  FMX.Controls.Presentation, FMX.StdCtrls, FMX.Memo,
+  LightFmx.Visual.AutoSizeBoxTxt, LightFmx.Visual.AutoSizeBox, FMX.Memo.Types, FMX.ScrollBox, FMX.Effects,
+  FMX.Controls;
 
 TYPE
   TForm1 = class(TForm)

@@ -2,25 +2,24 @@ UNIT LightFmx.Visual.AutoSizeBox;
 
 {-------------------------------------------------------------------------------------------------------------
    GabrielMoraru.com
-   2025.07
+   2025.12
 --------------------------------------------------------------------------------------------------------------
-   A TRectangle that automatically adjusts its height to fit its internal component (text or image).
-   Has the equivalent of an AutoSize property (but not exposed/published)
-   Looks a bit like a TWhatsApp dialog bubble, with a nice shadow effect.
+   A TRectangle that automatically adjusts its height to fit its internal text.
+   Look a bit like a TWhatsApp dialog bubble.
+   Implements the equivalent of an AutoSize property (but not exposed/published).
 
-   Demo: Test Bubble\BubbleTest.dpr
+   Demo: LightSaber\Demo\FMX\Demo AutoHeightRectangle\FMX_Demo_AutoSizeRect.dpr
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
 
 USES
-  System.SysUtils, System.Types, System.Classes, System.Math, System.UITypes,
-  FMX.StdCtrls, FMX.Effects, FMX.Graphics, FMX.Types, FMX.Controls, FMX.Objects, FMX.Controls.Presentation,
-  FMX.TextLayout;
+  System.SysUtils, System.Types, System.Classes, System.UITypes,
+  FMX.Effects, FMX.Graphics, FMX.Types, FMX.Controls, FMX.Objects, FMX.Controls.Presentation;
 
 CONST
-  CResizeTolerance  = 0.5; // Use a small, reasonable value for float comparison
-  CTextHeightBuffer = 1.0; // Small buffer to prevent text from being cut (e.g., antialiasing issues)
+  CResizeTolerance  = 0.5;             // Use a small, reasonable value for float comparison
+  CTextHeightBuffer = 1.0;             // Small buffer to prevent text from being cut (e.g., antialiasing issues)
   WhatsAppGreen     = $FFE4F3E2;
   WhatsAppGrey      = $FFEFEFEF;
 
@@ -43,10 +42,7 @@ TYPE
   end;
 
 
-
-
 IMPLEMENTATION
-
 
 
 constructor TAutoSizeBox.Create(AOwner: TComponent);
@@ -78,10 +74,7 @@ begin
   Shadow.ShadowColor := TAlphaColor($FF000000); // claBlack
 
   FBoxType := bxModel; // Default alignment
-
-
 end;
-
 
 
 procedure TAutoSizeBox.SetBoxType(Value: TBoxType);
