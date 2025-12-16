@@ -105,3 +105,6 @@ External/Exif/ last update 2025.11
 *.res
 *.so
 *.res
+Demo/FMX/Demo AutoHeightRectangle/FMX_Demo_AutoSizeRect.res
+Demo/FMX/Demo AutoHeightRectangle/FMX_Demo_AutoSizeRect.res
+Demo/Conditionals and Platform detection/FMX/FMX_Demo_PlatformDetection.res
