@@ -69,22 +69,11 @@ CONST
    GB              = 1073741824;
    TB: Int64       = 1099511627776;
 
-{ Range limits on integer type vars }
-{ Int64 max value is 9223372036854775807 = 9.2 quintillion }
-CONST
-   MinINT          = Low(Integer);                  { -2147483648 }
-
-   MaxSmallInt     = High(SmallInt);
-   MinSmallInt     = Low (SmallInt);
-
 CONST
    HexNumbers = ['0'..'9', 'a'..'f', 'A'..'F'];
 
-   {
-   MINBYTE         = Low(byte);
-   MAXLONGWORD     = High(longword);
-   MINLONGWORD     = Low(longword);
-   MAXSTRING       = MaxInt;  }
+CONST
+   IconRecycleBin = #$D83D + #$DDD1;
 
 TYPE
   TStringArray     = array of string;
