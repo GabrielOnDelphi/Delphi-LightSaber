@@ -1,0 +1,30 @@
+object Form1: TForm1
+  Left = 0
+  Top = 0
+  Caption = 'Form1'
+  ClientHeight = 338
+  ClientWidth = 333
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  DesignerMasterStyle = 0
+  object mmoAni: TAnimatedMemo
+    Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+    DataDetectorTypes = []
+    Position.X = 16.000000000000000000
+    Position.Y = 8.000000000000000000
+    Size.Width = 297.000000000000000000
+    Size.Height = 273.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    Viewport.Width = 293.000000000000000000
+    Viewport.Height = 269.000000000000000000
+  end
+  object Button2: TButton
+    Position.X = 128.000000000000000000
+    Position.Y = 308.000000000000000000
+    TabOrder = 1
+    Text = 'Button1'
+    OnClick = Button2Click
+  end
+end

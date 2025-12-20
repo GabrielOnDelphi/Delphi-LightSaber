@@ -2,17 +2,18 @@ program FMX_Demo_AutoSizeRect;
 
 uses
   {$IF Defined(MSWINDOWS)}
-   {$IFDEF DEBUG}
-    FastMM4,
-   {$ENDIF }
+  {$IFDEF DEBUG}
+  FastMM4,
+  {$ENDIF }
   {$ENDIF }
   System.StartUpCopy,
   FMX.Forms,
-  MainForm in 'MainForm.pas' {Form1},
+  FormAutoSize in 'FormAutoSize.pas' {Form1},
   LightCore.AppData in '..\..\..\LightCore.AppData.pas',
   LightFmx.Common.AppData in '..\..\..\FrameFMX\LightFmx.Common.AppData.pas',
   LightFmx.Visual.AutoSizeBoxTxt in '..\..\..\FrameFMX\LightFmx.Visual.AutoSizeBoxTxt.pas',
-  LightFmx.Visual.AutoSizeBox in '..\..\..\FrameFMX\LightFmx.Visual.AutoSizeBox.pas';
+  LightFmx.Visual.AutoSizeBox in '..\..\..\FrameFMX\LightFmx.Visual.AutoSizeBox.pas',
+  LightFmx.Visual.AutoSizeBoxImg in '..\..\..\FrameFMX\LightFmx.Visual.AutoSizeBoxImg.pas';
 
 {$R *.res}
 
