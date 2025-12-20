@@ -60,20 +60,32 @@ CONST
    HIDE            = FALSE;
    OFF             = FALSE;
    &ON             = TRUE;
-
+   OwnObjects      = TRUE;
 
 { Units }
 CONST
    KB              = 1024;
    MB              = 1048576;
    GB              = 1073741824;
-   TB: Int64       = 1099511627776;
+   TB              = 1099511627776;
 
 CONST
    HexNumbers = ['0'..'9', 'a'..'f', 'A'..'F'];
 
 CONST
-   IconRecycleBin = #$D83D + #$DDD1;
+   // Use 'Segoe UI Symbol' or 'Segoe UI' for monochrome symbol glyphs.
+   // Use 'Segoe UI Emoji'                for color emoji.
+   IconRecycleBin    = #$D83D + #$DDD1;     // Recycle basket
+   IconRecycleBinBW  = #9851;               // BLACK UNIVERSAL RECYCLING SYMBOL
+   IconCancel        = '❌';                // #10006  Red
+   IconCancelPurple  = '✖';                // Purple
+   IconCheckMark     = '✔';
+   IconBackArro      = #$2B05;
+   IconUndo          = #$21BA;              // ANTICLOCKWISE OPEN CIRCLE ARROW— good for "reverse direction / undo order"
+   IconSettingsGear  = '⚙';                // U+2699
+   IconSettingsKey   = '🔧';                // U+1F527 (WRENCH)
+
+
 
 TYPE
   TStringArray     = array of string;
@@ -188,4 +200,9 @@ end;
 
 
 end.
+
+
+
+
+
 

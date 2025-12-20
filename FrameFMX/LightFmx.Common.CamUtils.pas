@@ -10,8 +10,8 @@ unit LightFmx.Common.CamUtils;
 INTERFACE
 
 USES
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Permissions, System.IOUtils, System.JSON, System.Messaging,
-  FMX.Types, FMX.Graphics, FMX.MediaLibrary, FMX.Platform, FMX.DialogService, LightCore.AppData;
+  System.SysUtils, System.IOUtils,
+  FMX.Graphics, FMX.MediaLibrary, FMX.Platform;
 
 
 TYPE

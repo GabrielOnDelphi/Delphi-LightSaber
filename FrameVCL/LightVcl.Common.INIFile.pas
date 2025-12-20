@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.IniFile;
 
 {=============================================================================================================
-   2025.03
+   2025.12
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
   Same as LightCore.INIFile but adds support for forms to save themselves to disk.
@@ -131,9 +131,9 @@ TYPE
   end;
 
 
-{ These only support standard VCL controls. If you want to save also the custom (LightSaber) controls see LightVcl.Visual.INIFile }
-//procedure SaveFormBase (Form: TForm); moved to TLightForm.SaveForm
-//procedure LoadFormBase (Form: TForm); moved to TLightForm.SaveForm
+//Quick functions to read/write font to App's INI file
+function  ReadFont  (CONST Identifier: string; Font: TFont): Boolean;
+procedure WriteFont (CONST Identifier: string; Font: TFont);
 
 
 IMPLEMENTATION
@@ -731,6 +731,39 @@ procedure TIniFileApp.WriteColor(CONST Ident: string; Value: TColor);
 begin
   WriteString(FSection, Ident, ColorToString(Value));
 end;
+
+
+
+
+
+
+{---------------
+   FONT
+----------------}
+
+{ If the INI file does not contains informations about font then this function will return FALSE and no modification will be done to the 'Font' object passed as parameter. }
+function ReadFont(CONST Identifier: string; Font: TFont): Boolean;
+VAR IniFile: TIniFileEx;
+begin
+  IniFile:= TIniFileEx.Create(AppDataCore.AppName, AppDataCore.IniFile);
+  TRY
+    Result:= IniFile.Read(Identifier, Font);
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
+end;
+
+procedure WriteFont(CONST Identifier: string; Font: TFont);
+VAR IniFile: TIniFileEx;
+begin
+  IniFile:= TIniFileEx.Create(AppDataCore.AppName, AppDataCore.IniFile);
+  TRY
+    IniFile.Write(Identifier, Font)
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
+end;
+
 
 
 

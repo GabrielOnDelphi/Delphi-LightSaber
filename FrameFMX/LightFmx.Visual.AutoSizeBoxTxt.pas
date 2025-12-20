@@ -11,7 +11,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, System.Math,
-  FMX.StdCtrls, FMX.Graphics, FMX.Types, FMX.Controls, FMX.Objects, FMX.Controls.Presentation,
+  FMX.StdCtrls, FMX.Graphics, FMX.Types, FMX.Controls, FMX.Objects,
   LightFmx.Visual.AutoSizeBox;
 
 TYPE
@@ -28,6 +28,7 @@ TYPE
   end;
 
 
+function MakeBubbleText(Parent: TControl; const Text: string; BoxType: TBoxType): TAutoSizeBoxTxt;
 procedure Register;
 
 
@@ -73,25 +74,30 @@ end;
 procedure TAutoSizeBoxTxt.UpdateSize;
 VAR LMinHeight: Single;
 begin
-  ParentWidthCache := GetParentContentWidth;
-  
   // Width must be set for text wrapping/height calculation to be meaningful
   if Width <= 0 then Exit; 
 
   // Compute the required height for the TRectangle (Bubble)
   // FTextLabel.Height is now guaranteed to be correct after inherited Resize has run.
-  LMinHeight := FTextLabel.Height + Self.Padding.Top + Self.Padding.Bottom + CTextHeightBuffer;
+  LMinHeight:= FTextLabel.Height + Self.Padding.Top + Self.Padding.Bottom + CTextHeightBuffer;
 
   // Set the new height, overriding any parent/alignment setting.
   // This sets Self.Height, which does NOT trigger Resize via a width change, thus avoiding a loop.
   Self.Height := Ceil(LMinHeight);
-
-  // CRITICAL: Update the cache *after* setting the size, using the parent's current width.
-  // This is what prevents the loop, as Resize will now compare the new width to this cached value.
-  if Assigned(Parent)
-  then ParentWidthCache:= (Parent as TControl).Width;
 end;
 
+
+
+function MakeBubbleText(Parent: TControl; const Text: string; BoxType: TBoxType): TAutoSizeBoxTxt;
+begin
+  Result := TAutoSizeBoxTxt.Create(Parent);
+  Result.Parent := Parent;
+  Result.Stored := FALSE;
+  Result.BoxType:= BoxType;
+  Result.Text   := Text;
+  Result.Position.Y:= 99999999;
+  Result.UpdateSize;   // We use Bubble.UpdateHeight here to force the initial sizing (which also sets Bubble.Height).
+end;
 
 
 

@@ -43,6 +43,7 @@ contains
   LightFmx.Visual.SpinBox in 'LightFmx.Visual.SpinBox.pas',
   LightFmx.Visual.AutoSizeBoxTxt in 'LightFmx.Visual.AutoSizeBoxTxt.pas',
   LightFmx.Visual.AutoSizeBoxImg in 'LightFmx.Visual.AutoSizeBoxImg.pas',
-  LightFmx.Visual.AutoSizeBox in 'LightFmx.Visual.AutoSizeBox.pas';
+  LightFmx.Visual.AutoSizeBox in 'LightFmx.Visual.AutoSizeBox.pas',
+  LightFmx.Visual.AnimatedMemo in 'LightFmx.Visual.AnimatedMemo.pas';
 
 end.

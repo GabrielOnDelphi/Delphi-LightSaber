@@ -61,6 +61,7 @@ USES
 TYPE
   TLightForm = class(TForm)
   private
+    FOnAfterCtur: TNotifyEvent;
     FCloseOnEscape: Boolean;
     FAutoState: TAutoState;
     procedure SetGuiProperties(Form: TForm);
@@ -73,6 +74,7 @@ TYPE
     procedure DoClose(var Action: TCloseAction); override;
   public
     constructor Create(AOwner: TComponent; aAutoState: TAutoState); reintroduce; overload; virtual;
+    procedure AfterConstruction; override;
     function CloseQuery: Boolean; override;
 
     procedure FormPreRelease; virtual;
@@ -82,8 +84,10 @@ TYPE
     procedure SaveForm; virtual;
     destructor Destroy; override;
   published
+    // Unfortunatelly, these won't appear in the Object Inspector. I guess I need to call something like RegisterCustomModule
     property AutoState: TAutoState   read FAutoState;                              // The user needs to set this property if they want to auto save/load the form.
     property CloseOnEscape: Boolean  read FCloseOnEscape  write FCloseOnEscape;    // Close this form when the Esc key is pressed
+    property OnAfterConstruction: TNotifyEvent read FOnAfterCtur write FOnAfterCtur;
   end;
 
 
@@ -108,7 +112,8 @@ end;
 procedure TLightForm.Loaded;
 begin
   Position:= TFormPosition.Designed;
-  AppData.MainFormCaption('Initializing...');
+  if Self=Application.MainForm
+  then AppData.MainFormCaption('Initializing...');
 
   inherited Loaded;
 
@@ -120,7 +125,8 @@ begin
   then EnsureFormVisibleOnScreen(Self);
 
   // Show app name
-  AppData.MainFormCaption('');
+  if Self=Application.MainForm
+  then AppData.MainFormCaption('');
 
   // Load form
   // Limitation: At this point we can only load "standard" Delphi components. Loading of our Light components can only be done in Light_FMX.Visual.INIFile.pas -> TIniFileVCL
@@ -292,6 +298,13 @@ end;
 procedure TLightForm.ShowModal;
 begin
   AppData.ShowModal(Self);
+end;
+
+
+procedure TLightForm.AfterConstruction;
+begin
+  inherited;
+  if Assigned(FOnAfterCtur) then FOnAfterCtur(Self);
 end;
 
 end.

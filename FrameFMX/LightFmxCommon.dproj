@@ -177,7 +177,6 @@
         </DCCReference>
         <DCCReference Include="LightFmx.Graph.pas"/>
         <DCCReference Include="LightFmx.Common.CamUtils.pas"/>
-        <DCCReference Include="LightFmx.Platform.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

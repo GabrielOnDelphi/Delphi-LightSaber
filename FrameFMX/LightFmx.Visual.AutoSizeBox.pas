@@ -8,6 +8,8 @@ UNIT LightFmx.Visual.AutoSizeBox;
    Look a bit like a TWhatsApp dialog bubble.
    Implements the equivalent of an AutoSize property (but not exposed/published).
 
+   Do not instantiate. Contains abstract method "UpdateSize". Use TAutoImageBubble instead.
+
    Demo: LightSaber\Demo\FMX\Demo AutoHeightRectangle\FMX_Demo_AutoSizeRect.dpr
 -------------------------------------------------------------------------------------------------------------}
 
@@ -18,7 +20,7 @@ USES
   FMX.Effects, FMX.Graphics, FMX.Types, FMX.Controls, FMX.Objects, FMX.Controls.Presentation;
 
 CONST
-  CResizeTolerance  = 0.5;             // Use a small, reasonable value for float comparison
+  CResizeTolerance  = 1;               // Use a small, reasonable value for float comparison
   CTextHeightBuffer = 1.0;             // Small buffer to prevent text from being cut (e.g., antialiasing issues)
   WhatsAppGreen     = $FFE4F3E2;
   WhatsAppGrey      = $FFEFEFEF;
@@ -29,20 +31,21 @@ TYPE
 TYPE
   TAutoSizeBox = class(TRectangle)
   private
-    FBoxType: TBoxType;  
-    procedure SetBoxType(Value: TBoxType);
+    procedure setBoxType(Value: TBoxType);
   protected
-    ParentWidthCache: Single; // Caches Self.Width to track width change
+    FBoxType: TBoxType;
     procedure Resize; override;
-    function GetParentContentWidth: Single;
+    function getParentContentWidth: Single;
   public
+    CurScale: Single;
     constructor Create(AOwner: TComponent); override;
     procedure UpdateSize; virtual; abstract;
-    property BoxType: TBoxType read FBoxType write SetBoxType;
+    property BoxType: TBoxType read FBoxType write setBoxType;
   end;
 
 
 IMPLEMENTATION
+USES FMX.Layouts;
 
 
 constructor TAutoSizeBox.Create(AOwner: TComponent);
@@ -51,8 +54,6 @@ var
 begin
   inherited Create(AOwner);
 
-  // Flag set to -1 ensures the first system Resize event runs the calculation.
-  ParentWidthCache := -1; // Initialize the cache
   Align:= TAlignLayout.Top;
 
   // The Bubble
@@ -73,21 +74,22 @@ begin
   Shadow.Opacity   := 0.60;
   Shadow.ShadowColor := TAlphaColor($FF000000); // claBlack
 
-  FBoxType := bxModel; // Default alignment
+  FBoxType:= bxModel; // Default alignment
 end;
 
 
-procedure TAutoSizeBox.SetBoxType(Value: TBoxType);
+// This aligns the box to the left/right based on Value
+procedure TAutoSizeBox.setBoxType(Value: TBoxType);
 begin
   //if FBoxType = Value then EXIT; // Allow re-setting to force margin/color update
-  FBoxType := Value;
+  FBoxType:= Value;
 
   case FBoxType of
     bxUser:
       begin
         // Wide LEFT margin pushes the bubble to the right (User side)
         Margins.Rect := TRectF.Create(40, 5, 5, 5);
-        Fill.Color   := WhatsAppGreen;            // WhatsApp green
+        Fill.Color   := WhatsAppGreen;
         Stroke.Kind  := TBrushKind.None;
       end;
     bxModel:
@@ -105,30 +107,23 @@ end;
 
 
 procedure TAutoSizeBox.Resize;
-var CurrentParentWidth: Single;
 begin
-  // 1. Call inherited first. This is where FMX is forced to update FTextLabel.Height based on the current Self.Width and the wrapped text.
   inherited Resize;
-
-  // 2. Only re-run UpdateSize if the *Parent's* width has changed (e.g., window resize, scrollbar change).
-  // The goal is to detect an external size change, not a change caused by us setting our own Width/Height.
-  if Assigned(Parent) then
-  begin
-    CurrentParentWidth:= (Parent as TControl).Width;
-
-    // Check if parent width has changed (or if it's the initial run)
-    if (ParentWidthCache < 0)
-    OR (Abs(CurrentParentWidth - ParentWidthCache) > CResizeTolerance)
-    then UpdateSize;   // UpdateSize recalculates Self.Width and Self.Height based on CurrentParentWidth, and then updates FParentWidthCache at the end of its execution, breaking the loop.
-  end;
+  if Parent = NIL then EXIT;
+  UpdateSize;   // UpdateSize recalculates Self.Width and Self.Height based on CurrentParentWidth, and then updates FParentWidthCache at the end of its execution, breaking the loop.
 end;
 
 
-function TAutoSizeBox.GetParentContentWidth: Single;
+ // The width available for content is the Parent's width minus margins and scrollbar.
+function TAutoSizeBox.getParentContentWidth: Single;
 begin
-  if (Parent = nil) or ((Parent as TControl).Width <= 0)
-  then Result:= 0 // Not ready
-  else Result := (Parent as TControl).Width - Self.Margins.Left - Self.Margins.Right;     // The width available for content is the Parent's width minus our margins.
+  Result:= 0;
+  if Parent = NIL then EXIT;
+
+  Result:= (Parent as TControl).Width- Self.Margins.Left - Self.Margins.Right;  // fallback: use visible client area (parent width minus margins)
+
+  if Result < 0
+  then Result := 0;
 end;
 
 
