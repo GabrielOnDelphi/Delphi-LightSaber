@@ -91,10 +91,7 @@ begin
 end;
 
 
-// I have this weird bug in Delphi 13 fmx: when I click this button, the TAutosizeBubble does not have the correct size. Looks like Width/Height of the form or of the boxConversation.Content is not correctly read.
-// However, if I click the button the second time or if I resize the window, the next TAutosizeBubble has the correct size!
-// Even more weird, I realised that if I touch (read) Form.Width or Form.Hieght at program startup, the height of the TAutosizeBubble is correct (or much better).
-// If I read (in the first run) the width of the Parent - see the line ParentContentWidth:= GetParentContentWidth in TAutosizeBubble.UpdateSize, I get ParentContentWidth = 35 pixels, instead of 500, the correct width on the screen, later after the forms appears on the screen.
+// BUG: https://stackoverflow.com/questions/79851998/fmx-form-has-incorrect-size-after-startup
 procedure TForm1.btnImageClick(Sender: TObject);
 begin
   // The Image Bubble component
