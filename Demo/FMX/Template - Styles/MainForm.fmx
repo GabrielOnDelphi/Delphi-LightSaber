@@ -1,0 +1,220 @@
+object frmSimpleDemo: TfrmSimpleDemo
+  Left = 0
+  Top = 0
+  Caption = 'FMX minimalistic demo'
+  ClientHeight = 502
+  ClientWidth = 475
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  DesignerMasterStyle = 0
+  object Layout1: TLayout
+    Align = Top
+    Margins.Left = 4.000000000000000000
+    Margins.Top = 4.000000000000000000
+    Margins.Right = 4.000000000000000000
+    Margins.Bottom = 4.000000000000000000
+    Position.X = 285.000000000000000000
+    Position.Y = 4.000000000000000000
+    Size.Width = 186.000000000000000000
+    Size.Height = 453.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 18
+    object chkSome: TCheckBox
+      Align = Top
+      ControlType = Platform
+      Margins.Left = 3.000000000000000000
+      Margins.Top = 9.000000000000000000
+      Margins.Right = 3.000000000000000000
+      Margins.Bottom = 9.000000000000000000
+      Position.X = 3.000000000000000000
+      Position.Y = 127.000000000000000000
+      Size.Width = 180.000000000000000000
+      Size.Height = 19.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'checkboxstyle'
+      TabOrder = 4
+      Text = 'Some CheckBox'
+    end
+    object Button1: TButton
+      Anchors = [akBottom]
+      Position.X = 37.000000000000000000
+      Position.Y = 404.000000000000000000
+      Size.Width = 105.000000000000000000
+      Size.Height = 41.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 17
+      Text = 'Next'
+      OnClick = Button1Click
+    end
+    object GroupBox1: TGroupBox
+      Align = Top
+      Margins.Left = 5.000000000000000000
+      Margins.Top = 5.000000000000000000
+      Margins.Right = 5.000000000000000000
+      Margins.Bottom = 5.000000000000000000
+      Position.X = 5.000000000000000000
+      Position.Y = 5.000000000000000000
+      Size.Width = 176.000000000000000000
+      Size.Height = 108.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Preview'
+      TabOrder = 18
+      object RadioButton1: TRadioButton
+        Align = Top
+        Margins.Left = 8.000000000000000000
+        Margins.Top = 9.000000000000000000
+        Margins.Right = 3.000000000000000000
+        Margins.Bottom = 3.000000000000000000
+        Position.X = 8.000000000000000000
+        Position.Y = 76.000000000000000000
+        Size.Width = 165.000000000000000000
+        Size.Height = 19.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 14
+        Text = 'RadioButton 1'
+      end
+      object RadioButton2: TRadioButton
+        Align = Top
+        Margins.Left = 8.000000000000000000
+        Margins.Top = 45.000000000000000000
+        Margins.Right = 3.000000000000000000
+        Margins.Bottom = 3.000000000000000000
+        Position.X = 8.000000000000000000
+        Position.Y = 45.000000000000000000
+        Size.Width = 165.000000000000000000
+        Size.Height = 19.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 13
+        Text = 'RadioButton 2'
+      end
+    end
+    object ProgressBar: TProgressBar
+      Align = Top
+      Orientation = Horizontal
+      Margins.Left = 3.000000000000000000
+      Margins.Top = 9.000000000000000000
+      Margins.Right = 3.000000000000000000
+      Margins.Bottom = 9.000000000000000000
+      Position.X = 3.000000000000000000
+      Position.Y = 164.000000000000000000
+      Size.Width = 180.000000000000000000
+      Size.Height = 20.000000000000000000
+      Size.PlatformDefault = False
+    end
+    object TrackBar1: TTrackBar
+      Align = Top
+      CanParentFocus = True
+      Orientation = Horizontal
+      Margins.Left = 3.000000000000000000
+      Margins.Top = 9.000000000000000000
+      Margins.Right = 3.000000000000000000
+      Margins.Bottom = 9.000000000000000000
+      Position.X = 3.000000000000000000
+      Position.Y = 202.000000000000000000
+      Size.Width = 180.000000000000000000
+      Size.Height = 19.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 20
+    end
+    object Memo1: TMemo
+      Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+      DataDetectorTypes = []
+      Align = Top
+      Margins.Left = 3.000000000000000000
+      Margins.Top = 3.000000000000000000
+      Margins.Right = 3.000000000000000000
+      Margins.Bottom = 3.000000000000000000
+      Position.X = 3.000000000000000000
+      Position.Y = 233.000000000000000000
+      Size.Width = 180.000000000000000000
+      Size.Height = 140.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 21
+      Viewport.Width = 176.000000000000000000
+      Viewport.Height = 136.000000000000000000
+    end
+  end
+  object Layout2: TLayout
+    Align = MostLeft
+    Size.Width = 281.000000000000000000
+    Size.Height = 480.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 19
+    object ListView: TListView
+      ItemAppearanceClassName = 'TListItemAppearance'
+      ItemEditAppearanceClassName = 'TListItemShowCheckAppearance'
+      HeaderAppearanceClassName = 'TListHeaderObjects'
+      FooterAppearanceClassName = 'TListHeaderObjects'
+      OnUpdateObjects = ListViewUpdateObjects
+      Align = Client
+      Margins.Left = 3.000000000000000000
+      Margins.Top = 3.000000000000000000
+      Margins.Right = 3.000000000000000000
+      Margins.Bottom = 3.000000000000000000
+      Size.Width = 275.000000000000000000
+      Size.Height = 424.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      ItemAppearance.ItemHeight = 30
+      OnItemClick = ListViewItemClick
+    end
+    object lblFolder: TLabel
+      Align = Top
+      AutoSize = True
+      Margins.Left = 3.000000000000000000
+      Margins.Top = 3.000000000000000000
+      Margins.Right = 3.000000000000000000
+      Margins.Bottom = 3.000000000000000000
+      Position.X = 3.000000000000000000
+      Position.Y = 3.000000000000000000
+      Size.Width = 275.000000000000000000
+      Size.Height = 16.000000000000000000
+      Size.PlatformDefault = False
+      Text = 'Styles folder'
+      TabOrder = 1
+    end
+    object edtPath: TEdit
+      Touch.InteractiveGestures = [LongTap, DoubleTap]
+      Align = Top
+      TabOrder = 2
+      Position.X = 3.000000000000000000
+      Position.Y = 25.000000000000000000
+      Margins.Left = 3.000000000000000000
+      Margins.Top = 3.000000000000000000
+      Margins.Right = 3.000000000000000000
+      Margins.Bottom = 3.000000000000000000
+      Size.Width = 275.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+    end
+    object btnRefresh: TButton
+      Anchors = [akTop, akRight]
+      Hint = 'Refresh'
+      Position.X = 235.000000000000000000
+      Position.Y = 2.000000000000000000
+      Size.Width = 37.000000000000000000
+      Size.Height = 22.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 3
+      Text = 'R'
+      OnClick = btnRefreshClick
+    end
+  end
+  object StatusBar1: TStatusBar
+    Align = MostBottom
+    Position.Y = 480.000000000000000000
+    ShowSizeGrip = True
+    Size.Width = 475.000000000000000000
+    Size.Height = 22.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 20
+  end
+  object Timer: TTimer
+    Interval = 200
+    OnTimer = TimerTimer
+    Left = 184
+    Top = 152
+  end
+end
