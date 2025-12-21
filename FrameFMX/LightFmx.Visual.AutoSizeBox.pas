@@ -1,4 +1,4 @@
-UNIT LightFmx.Visual.AutoSizeBox;
+UNIT LightFmx.Visual.AutosizeBox;
 
 {-------------------------------------------------------------------------------------------------------------
    GabrielMoraru.com
@@ -7,6 +7,7 @@ UNIT LightFmx.Visual.AutoSizeBox;
    A TRectangle that automatically adjusts its height to fit its internal text.
    Look a bit like a TWhatsApp dialog bubble.
    Implements the equivalent of an AutoSize property (but not exposed/published).
+   Intended to be used in an AI discussion.
 
    Do not instantiate. Contains abstract method "UpdateSize". Use TAutoImageBubble instead.
 
@@ -48,7 +49,7 @@ IMPLEMENTATION
 USES FMX.Layouts;
 
 
-constructor TAutoSizeBox.Create(AOwner: TComponent);
+constructor TAutosizeBox.Create(AOwner: TComponent);
 var
   Shadow: TShadowEffect;
 begin
@@ -119,7 +120,6 @@ function TAutoSizeBox.getParentContentWidth: Single;
 begin
   Result:= 0;
   if Parent = NIL then EXIT;
-
   Result:= (Parent as TControl).Width- Self.Margins.Left - Self.Margins.Right;  // fallback: use visible client area (parent width minus margins)
 
   if Result < 0

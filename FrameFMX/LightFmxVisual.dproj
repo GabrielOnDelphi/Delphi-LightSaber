@@ -102,7 +102,7 @@
         <DCCReference Include="LightFmx.Visual.ComboBox.pas"/>
         <DCCReference Include="LightFmx.Visual.LabeledEdit.pas"/>
         <DCCReference Include="LightFmx.Visual.SpinBox.pas"/>
-        <DCCReference Include="LightFmx.Visual.AutoSizeBoxTxt.pas"/>
+        <DCCReference Include="LightFmx.Visual.AutosizeBoxText.pas"/>
         <DCCReference Include="LightFmx.Visual.AutoSizeBoxImg.pas"/>
         <DCCReference Include="LightFmx.Visual.AutoSizeBox.pas"/>
         <DCCReference Include="LightFmx.Visual.AnimatedMemo.pas"/>

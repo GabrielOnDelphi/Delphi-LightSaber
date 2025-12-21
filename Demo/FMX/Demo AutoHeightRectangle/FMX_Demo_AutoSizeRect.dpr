@@ -11,7 +11,7 @@ uses
   FormAutoSize in 'FormAutoSize.pas' {Form1},
   LightCore.AppData in '..\..\..\LightCore.AppData.pas',
   LightFmx.Common.AppData in '..\..\..\FrameFMX\LightFmx.Common.AppData.pas',
-  LightFmx.Visual.AutoSizeBoxTxt in '..\..\..\FrameFMX\LightFmx.Visual.AutoSizeBoxTxt.pas',
+  LightFmx.Visual.AutosizeBoxText in '..\..\..\FrameFMX\LightFmx.Visual.AutosizeBoxText.pas',
   LightFmx.Visual.AutoSizeBox in '..\..\..\FrameFMX\LightFmx.Visual.AutoSizeBox.pas',
   LightFmx.Visual.AutoSizeBoxImg in '..\..\..\FrameFMX\LightFmx.Visual.AutoSizeBoxImg.pas';
 

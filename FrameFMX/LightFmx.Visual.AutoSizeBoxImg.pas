@@ -1,4 +1,4 @@
-UNIT LightFmx.Visual.AutoSizeBoxImg;
+UNIT LightFmx.Visual.AutosizeBoxImg;
 
 {-------------------------------------------------------------------------------------------------------------
     GabrielMoraru.com
@@ -17,12 +17,12 @@ USES
   System.SysUtils, System.Types, System.Classes, System.Math,
   FMX.Graphics, FMX.Types, FMX.Controls, FMX.Objects,
   LightFmx.Visual.AutoSizeBox, LightFmx.Graph;
-
+{
 type
-  TControlHack = class(TControl);
+  TControlHack = class(TControl);   }
 
 TYPE
-  TAutosizeBubble = class(TAutoSizeBox)
+  TAutosizeBoxImg = class(TAutoSizeBox)
   private
     FImage: TImage;
     FBoundBox: TRectF;   //used?
@@ -43,7 +43,7 @@ IMPLEMENTATION
 
 
 
-constructor TAutosizeBubble.Create(AOwner: TComponent);
+constructor TAutosizeBoxImg.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
@@ -57,7 +57,7 @@ end;
 
 
 // Crop the figure bound box from the input image
-procedure TAutosizeBubble.LoadImage(FileName: string; aBoundBox: TRectF);
+procedure TAutosizeBoxImg.LoadImage(FileName: string; aBoundBox: TRectF);
 begin
   FBoxType := bxModel;    // Image bubble is always 'Model' side
   FBoundBox:= aBoundBox;  //used?
@@ -72,16 +72,17 @@ end;
 // Core logic: scale img proportionally and set bubble size.
 // Called whenever the image loads, or when the parent container resizes.
 
-procedure TAutosizeBubble.UpdateSize;
+procedure TAutosizeBoxImg.UpdateSize;
 var
   ParentContentWidth: Single;
   MaxWidth: Single;
   NewWidth, NewHeight: Single;
 begin
-  if FImage.Bitmap.IsEmpty then EXIT;
   Assert(Parent <> NIL);
+  if FImage.Bitmap.IsEmpty then EXIT;
+
   if FUpdatingSize then Exit;
-  FUpdatingSize := True;
+  FUpdatingSize:= True;
   try
     ParentContentWidth:= GetParentContentWidth;
 
@@ -111,50 +112,11 @@ begin
     FUpdatingSize:= False;
   end;
 end;
-      (*
-procedure TAutosizeBubble.UpdateSize;
-begin
-  if FImage.Bitmap.IsEmpty or (Parent = nil) then EXIT;
-  if FUpdatingSize then Exit;
-
-  // Use ForceQueue to wait for the UI message loop to finish layout passes
-  TThread.ForceQueue(nil,
-    procedure
-    var
-      ParentWidth: Single;
-      MaxWidth, NewWidth, NewHeight: Single;
-    begin
-      FUpdatingSize := True;
-      try
-        ParentWidth := GetParentContentWidth;
-
-        // If it's still 35 or 0, the Parent really isn't ready.
-        // We stop here to prevent a tiny bubble.
-
-
-        MaxWidth := ParentWidth * MaxImageWidthRatio;
-        var CurScale := Min(1.0, MaxWidth / FImage.Bitmap.Width);
-
-        NewWidth  := Ceil(FImage.Bitmap.Width  * CurScale) + Padding.Left + Padding.Right;
-        NewHeight := Ceil(FImage.Bitmap.Height * CurScale) + Padding.Top  + Padding.Bottom;
-
-        // Apply sizes
-        Self.Width := NewWidth;
-        Self.Height := NewHeight;
-
-        // Adjust right margin if you want it aligned to the left
-        Self.Margins.Right := ParentWidth - NewWidth;
-      finally
-        FUpdatingSize := False;
-      end;
-    end);
-end;  *)
-
 
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber FMX', [TAutosizeBubble]);
+  RegisterComponents('LightSaber FMX', [TAutosizeBoxImg]);
 end;
 
 

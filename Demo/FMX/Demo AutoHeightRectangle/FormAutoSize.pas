@@ -24,15 +24,18 @@ TYPE
     laySend: TLayout;
     mmoUserResponse: TMemo;
     btnImage: TButton;
+    Timer: TTimer;
     procedure btnSendAnswerClick(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
     procedure btnImageClick(Sender: TObject);
-    procedure FormResize(Sender: TObject);
     procedure FormActivate(Sender: TObject);
+    procedure TimerTimer(Sender: TObject);
   private
     Shown: Boolean;
     procedure ScrollDown;
+    procedure MakeDemoTextBubble;
+    procedure MakeDemoImageBubble;
   public
+    procedure FixFmxBug;
     procedure AfterConstruction; override;
   end;
 
@@ -41,35 +44,25 @@ var
 
 IMPLEMENTATION {$R *.fmx}
 
-USES LightFmx.Visual.AutoSizeBoxImg, LightFmx.Visual.AutoSizeBoxTxt, LightFmx.Visual.AutoSizeBox;
+USES LightFmx.Visual.AutoSizeBoxImg, LightFmx.Visual.AutosizeBoxText, LightFmx.Visual.AutoSizeBox;
 
 
-procedure TForm1.FormCreate(Sender: TObject);
-begin
-  //
-end;
 
 
+{-------------------------------------------------------------------------------------------------------------
+   STARTUP
+-------------------------------------------------------------------------------------------------------------}
 procedure TForm1.AfterConstruction;
 begin
   inherited AfterConstruction;
-  { Not a good place to initialize code here. The form is not ready yet. }
-
-  // Weird bug: reading the Width/Height of the form, sets its correct size.
-  mmoUserResponse.Text :=
-      'WhatsApp-like text bubble. ' + #13#10+
-      'Cool and green!';
-
-  //mmoUserResponse.Text:= IntToStr(Round(width)) + '/'+ IntToStr(Round(height));
-
-  btnSendAnswerClick(Self);
-  btnImageClick(Self);
+  MakeDemoImageBubble;
 end;
 
 
-procedure TForm1.FormResize(Sender: TObject);
+procedure TForm1.TimerTimer(Sender: TObject);
 begin
-  //
+  Timer.Enabled:= FALSE;
+  MakeDemoTextBubble;
 end;
 
 
@@ -80,28 +73,64 @@ begin
 end;
 
 
-procedure TForm1.btnSendAnswerClick(Sender: TObject);
+
+{-------------------------------------------------------------------------------------------------------------
+   FMX BUG
+   stackoverflow.com/questions/79851998/fmx-form-has-incorrect-size-after-startup
+-------------------------------------------------------------------------------------------------------------}
+procedure TForm1.FixFmxBug;
 begin
-  //mmoUserResponse.Text:= IntToStr(Round(width)) + '/'+ IntToStr(Round(height));
-
-  MakeBubbleText(boxConversation.Content, mmoUserResponse.text, bxUser);
-  MakeBubbleText(boxConversation.Content, 'You are right!', bxModel);
-
-  ScrollDown;
+  mmoUserResponse.Text:= IntToStr(Round(width)) + '/'+ IntToStr(Round(height)); // This magically fixes the bug
 end;
 
 
-// BUG: https://stackoverflow.com/questions/79851998/fmx-form-has-incorrect-size-after-startup
-procedure TForm1.btnImageClick(Sender: TObject);
+
+
+{-------------------------------------------------------------------------------------------------------------
+   DEMO BUBBLES
+-------------------------------------------------------------------------------------------------------------}
+procedure TForm1.MakeDemoTextBubble;
+begin
+  mmoUserResponse.Text :=
+      'WhatsApp-like text bubble. ' + #13#10+
+      'Cool and green!' + #13#10+
+      'And fresh';
+
+  //FixFmxBug;
+  btnSendAnswerClick(Self);
+end;
+
+
+procedure TForm1.MakeDemoImageBubble;
 begin
   // The Image Bubble component
-  VAR Img     := TAutosizeBubble.Create(Self);
+  VAR Img     := TAutosizeBoxImg.Create(Self);
   Img.Parent  := boxConversation.Content;
   Img.Stored  := FALSE;
   Img.Position.Y:= 99999999;
   Img.LoadImage('..\..\Demo image - Geek queen.jpg', TRect.Create(0, 0, 1344, 768));    // This triggers image loading and self-sizing!
 
   ScrollDown;
+end;
+
+
+
+
+
+{-------------------------------------------------------------------------------------------------------------
+   GUI
+-------------------------------------------------------------------------------------------------------------}
+procedure TForm1.btnSendAnswerClick(Sender: TObject);
+begin
+  MakeTextBubble(boxConversation.Content, mmoUserResponse.text, bxUser);
+  MakeTextBubble(boxConversation.Content, 'You are right!', bxModel);
+  ScrollDown;
+end;
+
+
+procedure TForm1.btnImageClick(Sender: TObject);
+begin
+  MakeDemoImageBubble;
 end;
 
 

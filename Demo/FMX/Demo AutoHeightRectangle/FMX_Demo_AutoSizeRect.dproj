@@ -203,7 +203,7 @@
         </DCCReference>
         <DCCReference Include="..\..\..\LightCore.AppData.pas"/>
         <DCCReference Include="..\..\..\FrameFMX\LightFmx.Common.AppData.pas"/>
-        <DCCReference Include="..\..\..\FrameFMX\LightFmx.Visual.AutoSizeBoxTxt.pas"/>
+        <DCCReference Include="..\..\..\FrameFMX\LightFmx.Visual.AutosizeBoxText.pas"/>
         <DCCReference Include="..\..\..\FrameFMX\LightFmx.Visual.AutoSizeBox.pas"/>
         <DCCReference Include="..\..\..\FrameFMX\LightFmx.Visual.AutoSizeBoxImg.pas"/>
         <BuildConfiguration Include="Base">
