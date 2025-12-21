@@ -55,7 +55,7 @@ USES LightFmx.Visual.AutoSizeBoxImg, LightFmx.Visual.AutosizeBoxText, LightFmx.V
 procedure TForm1.AfterConstruction;
 begin
   inherited AfterConstruction;
-  MakeDemoImageBubble;
+  MakeDemoTextBubble;
 end;
 
 
