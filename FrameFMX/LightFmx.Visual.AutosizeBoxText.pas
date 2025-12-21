@@ -1,10 +1,10 @@
-UNIT LightFmx.Visual.AutoSizeBoxTxt;
+UNIT LightFmx.Visual.AutosizeBoxText;
 
 {-------------------------------------------------------------------------------------------------------------
    GabrielMoraru.com
    2025.12
 --------------------------------------------------------------------------------------------------------------
-   Same as LightFmx.Visual.AutoSizeBox.pas but it adds text (caption) capabilities
+   Same as LightFmx.Visual.AutosizeBox.pas but it adds text (caption) capabilities.
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
@@ -15,7 +15,7 @@ USES
   LightFmx.Visual.AutoSizeBox;
 
 TYPE
-  TAutoSizeBoxTxt = class(TAutoSizeBox)
+  TAutosizeBoxText = class(TAutoSizeBox)
   private
     FTextLabel: TLabel;
     FText: string;
@@ -28,22 +28,22 @@ TYPE
   end;
 
 
-function MakeBubbleText(Parent: TControl; const Text: string; BoxType: TBoxType): TAutoSizeBoxTxt;
+function MakeTextBubble(Parent: TControl; const Text: string; BoxType: TBoxType): TAutosizeBoxText;
 procedure Register;
 
 
 IMPLEMENTATION
 
 
-constructor TAutoSizeBoxTxt.Create(AOwner: TComponent);
+constructor TAutosizeBoxText.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner); 
+  inherited Create(AOwner);
 
   // Internal label
   FTextLabel := TLabel.Create(Self);
   FTextLabel.Parent   := Self;
   FTextLabel.Align    := TAlignLayout.Top; // This is important!
-  FTextLabel.AutoSize := True;             // The key for the label to wrap and set its height
+  FTextLabel.AutoSize := TRUE;
   FTextLabel.WordWrap := True;
   FTextLabel.HitTest  := False;
   FTextLabel.Stored   := False;            //  tells the Form Designer not to write the component's state to the .fmx or .dfm file when the parent component (TAutoHeightRectangle) is created at design time. Since the TAutoHeightRectangle's constructor already creates and configures the internal FTextLabel, we don't want the DFM to create it again, which would lead to duplicate controls and memory leaks if the component user were to place the control on a form and save it.
@@ -57,40 +57,37 @@ begin
 end;
 
 
-procedure TAutoSizeBoxTxt.SetText(const Value: string);
+procedure TAutosizeBoxText.SetText(const Value: string);
 begin
   if FText <> Value then
     begin
       FText:= Value;
       FTextLabel.Text:= Value;
-      // Directly update height on text change (handles startup and runtime text updates reliably).
-      // After loading the image, recalculate the size based on the new image dimensions  // In FMX, setting Text often triggers an internal RGN_Change (Region Change) message which leads to a Resize, so we just set the flag and let the system handle it.
+      // In FMX, setting Text often triggers an internal RGN_Change (Region Change) message which leads to a Resize
       UpdateSize;
     end;
 end;
 
 
 // Perform the actual height adjustment.
-procedure TAutoSizeBoxTxt.UpdateSize;
-VAR LMinHeight: Single;
+procedure TAutosizeBoxText.UpdateSize;
+VAR MinHeight: Single;
 begin
-  // Width must be set for text wrapping/height calculation to be meaningful
-  if Width <= 0 then Exit; 
-
-  // Compute the required height for the TRectangle (Bubble)
-  // FTextLabel.Height is now guaranteed to be correct after inherited Resize has run.
-  LMinHeight:= FTextLabel.Height + Self.Padding.Top + Self.Padding.Bottom + CTextHeightBuffer;
-
-  // Set the new height, overriding any parent/alignment setting.
-  // This sets Self.Height, which does NOT trigger Resize via a width change, thus avoiding a loop.
-  Self.Height := Ceil(LMinHeight);
+  if Width <= 0 then Exit;
+  MinHeight:= FTextLabel.Height + Self.Padding.Top + Self.Padding.Bottom + CTextHeightBuffer;
+  Self.Height:= Ceil(MinHeight);
 end;
 
 
 
-function MakeBubbleText(Parent: TControl; const Text: string; BoxType: TBoxType): TAutoSizeBoxTxt;
+
+
+
+{------------------------------------------------------------------------------------------------------------}
+
+function MakeTextBubble(Parent: TControl; const Text: string; BoxType: TBoxType): TAutosizeBoxText;
 begin
-  Result := TAutoSizeBoxTxt.Create(Parent);
+  Result := TAutosizeBoxText.Create(Parent);
   Result.Parent := Parent;
   Result.Stored := FALSE;
   Result.BoxType:= BoxType;
@@ -100,10 +97,9 @@ begin
 end;
 
 
-
 procedure Register;
 begin
-  RegisterComponents('LightSaber FMX', [TAutoSizeBoxTxt]);
+  RegisterComponents('LightSaber FMX', [TAutosizeBoxText]);
 end;
 
 
