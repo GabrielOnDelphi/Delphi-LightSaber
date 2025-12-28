@@ -1,5 +1,13 @@
 unit LightFmx.Visual.LabeledEdit;
 
+{=============================================================================================================
+   www.GabrielMoraru.com
+   2024.05
+-------------------------------------------------------------------------------------------------------------
+   Exactly like the one in VCL
+=============================================================================================================}
+
+
 interface
 
 uses
@@ -12,12 +20,12 @@ type
   private
     FLabel: TLabel;
     FEdit: TEdit;
-    function GetLabelText: string;
+    function  GetLabelText: string;
     procedure SetLabelText(const Value: string);
-    function GetEditText: string;
+    function  GetEditText: string;
     procedure SetEditText(const Value: string);
-    function GetEdit: TEdit;
-    function GetLabel: TLabel;
+    function  GetEdit: TEdit;
+    function  GetLabel: TLabel;
   protected
     procedure Resize; override;
   public
@@ -37,7 +45,8 @@ type
 
 procedure Register;
 
-implementation
+
+IMPLEMENTATION
 
 
 constructor TLabeledEdit.Create(AOwner: TComponent);
