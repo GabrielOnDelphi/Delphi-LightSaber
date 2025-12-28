@@ -99,7 +99,7 @@ TYPE
      CONST FrozenPaddingSize = 64;                // NEVER-EVER MODIFY THIS CONSTANT! All files saved with this constant will not work anymore. Enough for 16 Integer variables.
      function ReadSignature: AnsiString;          // The LiSa string for "Light Saber'.  // Old number: $4C695361
    public
-     StringSafetyLimit: Cardinal;                 // If we try to read a string larger than this size then we are probably doing something wrong. Set it to zero to disable it.
+     //StringSafetyLimit: Cardinal;                 // If we try to read a string larger than this size then we are probably doing something wrong. Set it to zero to disable it.
 
      constructor CreateRead (CONST FileName: string);
      constructor CreateWrite(CONST FileName: string);
@@ -171,13 +171,13 @@ TYPE
 
      { Unicode }
      procedure WriteString  (CONST s: string);
-     function  ReadString: string;  overload;
+     function  ReadString(SafetyLimit: Cardinal = 1*KB): string;  overload;
 
      { ANSI }
-     procedure WriteStringA (CONST s: AnsiString);
-     function  TryReadStringA (Count: Cardinal): AnsiString;                  { This is the relaxed version. It won't raise an error if there is not enough data (Len) to read }
-     function  ReadStringA  (Count: Cardinal): AnsiString;     overload;    { It will raise an error if there is not enough data (Len) to read }
-     function  ReadStringA: AnsiString;                        overload;    { It automatically detects the length of the string }
+     procedure WriteStringA  (CONST s: AnsiString);
+     function  TryReadStringA(Count: Cardinal): AnsiString;                { This is the relaxed version. It won't raise an error if there is not enough data (Len) to read }
+     function  ReadStringACnt(Count: Cardinal; SafetyLimit: Cardinal): AnsiString;       { It will raise an error if there is not enough data (Len) to read }
+     function  ReadStringA   (SafetyLimit: Cardinal = 1*KB): AnsiString;                        { It automatically detects the length of the string }
 
     { TSL }
      function  ReadStrings: TStringList;                       overload;
@@ -187,12 +187,12 @@ TYPE
     { Chars }
      procedure WriteChars   (CONST s: AnsiString);             overload;
      procedure WriteChars   (CONST s: string);                 overload;
-     function  ReadCharsA   (Count: Cardinal): AnsiString;
+     function  ReadCharsA   (Count: Cardinal; SafetyLimit: Cardinal = 1*KB): AnsiString;
      function  ReadChars    (Count: Cardinal): string;
 
      { Strings without length }
      procedure PushString   (CONST s: string);
-     function  ReadString   (CONST Count: Cardinal): string;     overload;     { Read 'Len' characters }
+     function  ReadStringCnt   (Count: Cardinal; SafetyLimit: Cardinal = 1*KB): string;     overload;     { Read 'Len' characters }
 
      { Raw }
      function  AsBytes: TBytes;
@@ -217,7 +217,6 @@ USES
 --------------------------------------------------------------------------------------------------}
 constructor TLightStream.CreateRead(CONST FileName: string);
 begin
-  StringSafetyLimit:= 50 * MB; // If we try to read a string larger than this size then we are probably doing something wrong.
   inherited Create(FileName, fmOpenRead, 1*MB);
 end;
 
@@ -347,7 +346,7 @@ begin
     end;
 
   // Do the actual strign reading
-  Result:= ReadStringA(Count);
+  Result:= ReadStringACnt(Count, 128);
 end;
 
 
@@ -510,15 +509,14 @@ begin
 end;
 
 
-function TLightStream.ReadString: string;   { Works for both Delphi7 and Delphi UNICODE }
+function TLightStream.ReadString(SafetyLimit: Cardinal = 1*KB): string;   { Works for both Delphi7 and Delphi UNICODE }
 VAR
    Count: Cardinal;
    UTF: UTF8String;
 begin
   ReadBuffer(Count, 4);                        { Read length }
 
-  if (StringSafetyLimit > 0)
-  AND (Count > StringSafetyLimit)
+  if Count > SafetyLimit
   then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
 
   if Count > 0
@@ -569,13 +567,12 @@ end;
 
 
 { Reads a bunch of chars from the file. Why 'ReadChars' and not 'ReadString'? This function reads C++ strings (the length of the string was not written to disk also) and not real Delphi strings. So, i have to give the number of chars to read as parameter. IMPORTANT: The function will reserve memory for s.}
-function TLightStream.ReadCharsA(Count: Cardinal): AnsiString;
+function TLightStream.ReadCharsA(Count: Cardinal; SafetyLimit: Cardinal = 1*KB): AnsiString;
 begin
   if Count= 0
   then RAISE Exception.Create('Count is zero!');     { We cannot do s[1] on an empty string so we added 'Count = 0' as protection. }
 
-  if (StringSafetyLimit > 0)
-  AND (Count > StringSafetyLimit)
+  if Count > SafetyLimit
   then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
 
   SetLength(Result, Count);
@@ -918,11 +915,10 @@ begin
 end;
 
 
-function TLightStream.ReadStringA(Count: Cardinal): AnsiString;  { We need to specify the length of the string }
+function TLightStream.ReadStringACnt(Count: Cardinal; SafetyLimit: Cardinal): AnsiString;  { We need to specify the length of the string }
 VAR TotalBytes: Cardinal;
 begin
-  if (StringSafetyLimit > 0)
-  AND (Count > StringSafetyLimit)
+  if Count > SafetyLimit
   then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
 
   if Count > 0
@@ -998,15 +994,14 @@ end;
 
 
 { It automatically detects the length of the string }
-function TLightStream.ReadStringA: AnsiString;
+function TLightStream.ReadStringA(SafetyLimit: Cardinal = 1*KB): AnsiString;
 VAR Count: Cardinal;
 begin
  ReadBuffer(Count, SizeOf(Count));                                          { First, find out how many characters to read }
 
  Assert(Count<= Size- Position, 'TReadCachedStream: String lenght > file size!');
 
- if (StringSafetyLimit > 0)
- AND (Count > StringSafetyLimit)
+ if Count > SafetyLimit
  then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
 
  Result:= ReadStringA(Count);        { Do the actual strign reading }
@@ -1035,7 +1030,7 @@ end;
 
 
 { Read a string from file. The length of the string will be provided from outside. }
-function TLightStream.ReadString(CONST Count: Cardinal): string;
+function TLightStream.ReadStringCnt(Count: Cardinal; SafetyLimit: Cardinal = 1*KB): string;
 VAR UTF: UTF8String;
 begin
  if Count > 0
@@ -1044,8 +1039,7 @@ begin
      if (Count+ Position > Size)
      then RAISE exception.Create('TLightStream-Invalid string size! '+ IntToStr(Count));
 
-     if (StringSafetyLimit > 0)
-     AND (Count > StringSafetyLimit)
+     if (Count > SafetyLimit)
      then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
 
      SetLength(UTF, Count);
