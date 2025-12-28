@@ -15,8 +15,10 @@ UNIT LightFmx.Common.AppData.Form;
 --------------------------------------------------------------------------------------------------------------
    HOW TO USE IT?
 
-      1. Change the DPR file as shown in the demo below (use TAppData.CreateForm to create your forms).
-      2. Change the declaration of your form from TForm to TLightForm.
+      1. Change the .DPR file as shown in the demo below (use TAppData.CreateForm to create your forms).
+      2. When you create a new form in Delphi, use TLightForm as ancestor:
+        2a. In the .PAS file, change the declaration of your form from "TForm" to "TLightForm".
+        2b. In the .FMX file, change the declaration of your form from "object Form1: TForm" to "inherited Form1: TForm". Only this way, all the visual "goodies" in TLightForm will appear in your form editor.
 
       Full demos here: LightSaber\Demo\FMX\Template - Minimal app\FMX_MinimalApp.dpr
 
@@ -55,11 +57,17 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes, System.UITypes, System.IniFiles,
-  FMX.Forms, FMX.Types,
-  LightFmx.Common.IniFile, LightCore.AppData;
+  FMX.Forms, FMX.Types, FMX.StdCtrls, FMX.Controls, FMX.Controls.Presentation,
+  LightFmx.Common.IniFile, LightCore.AppData, LightCore.Platform;
 
 TYPE
   TLightForm = class(TForm)
+    TopBar: TToolBar;
+    lblToolBarCapt: TLabel;
+    btnOsBack: TSpeedButton;
+    btnOsNext: TSpeedButton;
+    procedure FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
+    procedure btnOsBackClick(Sender: TObject);
   private
     FOnAfterCtur: TNotifyEvent;
     FCloseOnEscape: Boolean;
@@ -91,11 +99,14 @@ TYPE
   end;
 
 
-IMPLEMENTATION
+IMPLEMENTATION   {$R *.fmx}
 USES
   LightFmx.Common.AppData, LightFmx.Common.CenterControl, LightFmx.Common.Dialogs, LightCore;
 
 
+{-------------------------------------------------------------------------------------------------------------
+   CREATE
+-------------------------------------------------------------------------------------------------------------}
 constructor TLightForm.Create(AOwner: TComponent; aAutoState: TAutoState);
 begin
   inherited Create(AOwner);
@@ -108,10 +119,38 @@ begin
 end;
 
 
+procedure TLightForm.AfterConstruction;
+begin
+  inherited;
+
+  if OsIsMobile then
+    begin
+      TopBar.Height := 56;                // Standard Material Design header height
+      TopBar.Visible:= True;
+      lblToolBarCapt.Text:= Self.Caption; // Automatically grab the Form's caption
+    end
+  else
+    TopBar.Visible := False;
+
+  // Off-screen?
+  if AppData.RunningFirstTime
+  then EnsureFormVisibleOnScreen(Self);
+
+  // Ignore the "Show" parameter if "StartMinimized" is active
+  // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
+  if NOT AppData.StartMinim
+  AND Visible
+  then Show;
+
+  if Assigned(FOnAfterCtur) then FOnAfterCtur(Self);
+end;
+
+
 // WARNING: In FMX, Loaded is called before FormCreate!
 procedure TLightForm.Loaded;
 begin
   Position:= TFormPosition.Designed;
+
   if Self=Application.MainForm
   then AppData.MainFormCaption('Initializing...');
 
@@ -119,10 +158,6 @@ begin
 
   // Font, snap, alpha
   SetGuiProperties(Self);
-
-  // Off-screen?
-  if AppData.RunningFirstTime
-  then EnsureFormVisibleOnScreen(Self);
 
   // Show app name
   if Self=Application.MainForm
@@ -139,12 +174,6 @@ begin
   else
     if AutoState <> asNone
     then LoadForm;
-
-  // Ignore the "Show" parameter if "StartMinimized" is active
-  // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
-  if NOT AppData.StartMinim
-  AND Visible
-  then Show;
 end;
 
 
@@ -166,6 +195,19 @@ begin
 end;
 
 
+
+// Show this form modal if not running on Android. On Android, we fall back to non-modal
+procedure TLightForm.ShowModal;
+begin
+  AppData.ShowModal(Self);
+end;
+
+
+
+
+{-------------------------------------------------------------------------------------------------------------
+   CLOSE
+-------------------------------------------------------------------------------------------------------------}
 procedure TLightForm.DoClose(var Action: TCloseAction);
 begin
   inherited DoClose(Action);
@@ -223,19 +265,29 @@ begin
 end;
 
 
+procedure TLightForm.btnOsBackClick(Sender: TObject);
+begin
+  Close;  // This will call saveBeforeExit;
+end;
+
+
+procedure TLightForm.FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
+begin
+  if (Key = vkHardwareBack) then Close;
+end;
 
 
 
 
-{-----------------------------------------------------------------------------------------------------------------------
-   MAIN
+
+{-------------------------------------------------------------------------------------------------------------
    Load/Save all controls on this form to their initial state.
    Parameters:
          OnlyFormPos=False  ->  Save all supported controls on this form
          OnlyFormPos=True   ->  It will only save the position of the form (only Left/Top, no width/height/WndState)
 
    Also see LoadForm/SaveForm in Light_FMX.Visual.INIFile.pas
------------------------------------------------------------------------------------------------------------------------}
+-------------------------------------------------------------------------------------------------------------}
 
 procedure TLightForm.SaveForm;
 VAR IniFile: TIniFileApp;
@@ -294,17 +346,7 @@ begin
 end;
 
 
-// Show this form modal if not running on Android. On Android, we fall back to non-modal
-procedure TLightForm.ShowModal;
-begin
-  AppData.ShowModal(Self);
-end;
 
 
-procedure TLightForm.AfterConstruction;
-begin
-  inherited;
-  if Assigned(FOnAfterCtur) then FOnAfterCtur(Self);
-end;
 
 end.
