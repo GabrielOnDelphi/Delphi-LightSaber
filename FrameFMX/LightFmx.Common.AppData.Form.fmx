@@ -1,0 +1,44 @@
+object LightForm: TLightForm
+  Left = 0
+  Top = 0
+  ClientHeight = 445
+  ClientWidth = 451
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop, iPhone, iPad]
+  OnKeyUp = FormKeyUp
+  DesignerMasterStyle = 0
+  object TopBar: TToolBar
+    Anchors = []
+    Size.Width = 451.000000000000000000
+    Size.Height = 44.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object lblToolBarCapt: TLabel
+      Align = Contents
+      Size.Width = 451.000000000000000000
+      Size.Height = 44.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'toollabel'
+      TextSettings.HorzAlign = Center
+      Text = 'Caption'
+    end
+    object btnOsBack: TSpeedButton
+      Align = MostLeft
+      Size.Width = 48.000000000000000000
+      Size.Height = 44.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'backtoolbutton'
+      OnClick = btnOsBackClick
+    end
+    object btnOsNext: TSpeedButton
+      Align = MostRight
+      Position.X = 407.000000000000000000
+      Size.Width = 44.000000000000000000
+      Size.Height = 44.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'nexttoolbutton'
+      Visible = False
+    end
+  end
+end
