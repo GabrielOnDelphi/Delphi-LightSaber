@@ -58,7 +58,7 @@ begin
   Align:= TAlignLayout.Top;
 
   // The Bubble
-  Fill.Color   := WhatsAppGreen; // Matches xFFE4F3E2 (WhatsApp green/user answer)
+  Fill.Color   := WhatsAppGreen;
   Stroke.Color := $FF006300;
   Stroke.Kind  := TBrushKind.Solid;
   XRadius      := 11;        // Corner size
@@ -73,7 +73,7 @@ begin
   Shadow.Direction := 45.0;
   Shadow.Softness  := 0.30;
   Shadow.Opacity   := 0.60;
-  Shadow.ShadowColor := TAlphaColor($FF000000); // claBlack
+  Shadow.ShadowColor := TAlphaColorRec.Black;
 
   FBoxType:= bxModel; // Default alignment
 end;
