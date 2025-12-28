@@ -35,7 +35,6 @@ TYPE
     procedure MakeDemoTextBubble;
     procedure MakeDemoImageBubble;
   public
-    procedure FixFmxBug;
     procedure AfterConstruction; override;
   end;
 
@@ -55,7 +54,8 @@ USES LightFmx.Visual.AutoSizeBoxImg, LightFmx.Visual.AutosizeBoxText, LightFmx.V
 procedure TForm1.AfterConstruction;
 begin
   inherited AfterConstruction;
-  MakeDemoTextBubble;
+  Timer.Enabled:= TRUE;
+  //MakeDemoTextBubble;
 end;
 
 
@@ -75,18 +75,6 @@ end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   FMX BUG
-   stackoverflow.com/questions/79851998/fmx-form-has-incorrect-size-after-startup
--------------------------------------------------------------------------------------------------------------}
-procedure TForm1.FixFmxBug;
-begin
-  mmoUserResponse.Text:= IntToStr(Round(width)) + '/'+ IntToStr(Round(height)); // This magically fixes the bug
-end;
-
-
-
-
-{-------------------------------------------------------------------------------------------------------------
    DEMO BUBBLES
 -------------------------------------------------------------------------------------------------------------}
 procedure TForm1.MakeDemoTextBubble;
@@ -96,7 +84,6 @@ begin
       'Cool and green!' + #13#10+
       'And fresh';
 
-  //FixFmxBug;
   btnSendAnswerClick(Self);
 end;
 
