@@ -49,6 +49,7 @@ object frmBorderEditor: TfrmBorderEditor
       Transparent = True
       Visible = False
       WordWrap = True
+      ExplicitWidth = 325
     end
     object btnReset: TButton
       Left = 494
@@ -347,8 +348,8 @@ object frmBorderEditor: TfrmBorderEditor
         AlignWithMargins = True
         Left = 5
         Top = 22
-        Width = 499
-        Height = 112
+        Width = 496
+        Height = 45
         Cursor = crHandPoint
         Margins.Top = 0
         Align = alClient
@@ -370,7 +371,7 @@ object frmBorderEditor: TfrmBorderEditor
         AlignWithMargins = True
         Left = 5
         Top = 5
-        Width = 499
+        Width = 31
         Height = 14
         Cursor = crHandPoint
         Align = alTop

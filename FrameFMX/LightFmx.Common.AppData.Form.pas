@@ -346,7 +346,10 @@ begin
 end;
 
 
+initialization
+  RegisterClass(TLightForm);
 
-
+finalization
+  UnregisterClass(TLightForm);
 
 end.

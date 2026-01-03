@@ -99,7 +99,7 @@ procedure LoadLastSkin(CONST DefaultSkin: string= '');  { On first run, set the 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.Colors, LightVcl.Common.Translate, LightVcl.Common.IniFileQuick, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.ExecuteShell,
+   LightVcl.Common.Colors, LightVcl.Common.Translate, LightCore.INIFileQuick, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.ExecuteShell,
    LightVcl.Visual.INIFile, IOUtils, LightCore.IO, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs;   { VCL.Styles is mandatory here}
 
 CONST
@@ -141,7 +141,7 @@ end;
 
 procedure LoadLastSkin(CONST DefaultSkin: string= '');
 begin
- LastSkin:= LightVcl.Common.IniFileQuick.ReadString('LastSkin', DefaultSkin);   { This is a relative path so the skin can still be loaded when the application is moved to a different folder }
+ LastSkin:= LightCore.INIFileQuick.ReadString('LastSkin', DefaultSkin);   { This is a relative path so the skin can still be loaded when the application is moved to a different folder }
 
  if LastSkin = ''
  then LastSkin:= DefaultSkin;
@@ -215,7 +215,7 @@ procedure TfrmSkinDisk.FormDestroy(Sender: TObject);
 begin
  SaveForm;
  if NOT AppData.Initializing
- then LightVcl.Common.IniFileQuick.WriteString ('LastSkin', LastSkin);   { We don't save anything if the start up was improper! }
+ then LightCore.INIFileQuick.WriteString ('LastSkin', LastSkin);   { We don't save anything if the start up was improper! }
 end;
 
 

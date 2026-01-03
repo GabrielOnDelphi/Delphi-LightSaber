@@ -99,7 +99,6 @@ USES
 
 TYPE
  TIniFileApp = class(TIniFileEx)    //todo: rename this to  TIniFileCommon
-  private
   protected
     procedure readCtrlPos  (Ctrl: TControl);
     procedure writeCtrlPos (Ctrl: TControl);
@@ -132,8 +131,8 @@ TYPE
 
 
 //Quick functions to read/write font to App's INI file
-function  ReadFont  (CONST Identifier: string; Font: TFont): Boolean;
-procedure WriteFont (CONST Identifier: string; Font: TFont);
+//function  ReadFont  (CONST Identifier: string; Font: TFont): Boolean;
+//procedure WriteFont (CONST Identifier: string; Font: TFont);
 
 
 IMPLEMENTATION
@@ -735,19 +734,23 @@ end;
 
 
 
-
-
 {---------------
    FONT
 ----------------}
-
+ (*
 { If the INI file does not contains informations about font then this function will return FALSE and no modification will be done to the 'Font' object passed as parameter. }
 function ReadFont(CONST Identifier: string; Font: TFont): Boolean;
 VAR IniFile: TIniFileEx;
+    FontRec: FontStruct;
 begin
+  FontRec.Name:= Font.Name;
+  FontRec.Size:= Font.Size;
+  FontRec.Style:= Font.Style;
+  FontRec.Color:= Font.Color;
+
   IniFile:= TIniFileEx.Create(AppDataCore.AppName, AppDataCore.IniFile);
   TRY
-    Result:= IniFile.Read(Identifier, Font);
+    Result:= IniFile.Read(Identifier, FontRec);
   FINALLY
     FreeAndNil(IniFile);
   END;
@@ -762,7 +765,7 @@ begin
   FINALLY
     FreeAndNil(IniFile);
   END;
-end;
+end;   *)
 
 
 

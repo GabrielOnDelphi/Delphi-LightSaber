@@ -87,7 +87,7 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
    LightVcl.Common.ExecuteShell, LightCore.AppData, LightVcl.Visual.AppData
-, LightVcl.Visual.INIFile, LightVcl.Common.Translate, LightVcl.Common.IniFileQuick;
+, LightVcl.Visual.INIFile, LightVcl.Common.Translate, LightCore.INIFileQuick;
 
 CONST
   DefWinTheme= 'Windows default theme';
@@ -104,7 +104,7 @@ VAR
 
 procedure LoadLastSkin(CONST DefaultSkin: string= '');
 begin
- LastSkin:= LightVcl.Common.IniFileQuick.ReadString('LastSkin', DefaultSkin);   { This is a relative path so the skin can still be loaded when the application is moved to a different folder }
+ LastSkin:= LightCore.INIFileQuick.ReadString('LastSkin', DefaultSkin);   { This is a relative path so the skin can still be loaded when the application is moved to a different folder }
 
  if LastSkin = ''
  then LastSkin:= DefaultSkin;
@@ -162,7 +162,7 @@ procedure TfrmSkinRes.FormDestroy(Sender: TObject);
 begin
  SaveForm;
  if NOT AppData.Initializing
- then LightVcl.Common.IniFileQuick.WriteString ('LastSkin', LastSkin);   { We don't save anything if the start up was improper! }
+ then LightCore.INIFileQuick.WriteString ('LastSkin', LastSkin);   { We don't save anything if the start up was improper! }
 end;
 
 

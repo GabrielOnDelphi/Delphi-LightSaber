@@ -98,7 +98,6 @@
         <DCCReference Include="LightVcl.Common.ExeVersion.pas"/>
         <DCCReference Include="LightVcl.Common.GuiSettings.pas"/>
         <DCCReference Include="LightVcl.Common.INIFile.pas"/>
-        <DCCReference Include="LightVcl.Common.INIFileQuick.pas"/>
         <DCCReference Include="LightVcl.Common.IO.pas"/>
         <DCCReference Include="LightVcl.Common.Keyboard.pas"/>
         <DCCReference Include="LightVcl.Common.KeybShortcuts.pas"/>

@@ -53,7 +53,6 @@ contains
   LightVcl.Common.ExeVersion in 'LightVcl.Common.ExeVersion.pas',
   LightVcl.Common.GuiSettings in 'LightVcl.Common.GuiSettings.pas',
   LightVcl.Common.INIFile in 'LightVcl.Common.INIFile.pas',
-  LightVcl.Common.INIFileQuick in 'LightVcl.Common.INIFileQuick.pas',
   LightVcl.Common.IO in 'LightVcl.Common.IO.pas',
   LightVcl.Common.Keyboard in 'LightVcl.Common.Keyboard.pas',
   LightVcl.Common.KeybShortcuts in 'LightVcl.Common.KeybShortcuts.pas',
