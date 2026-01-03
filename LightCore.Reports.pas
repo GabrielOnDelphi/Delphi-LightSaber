@@ -42,7 +42,9 @@ begin
  Result:= Result+ GenerateAppRep+ CRLF+ CRLF;
  Result:= Result+ GeneratePlatformRep+ CRLF+ CRLF;
  Result:= Result+ GenerateCompilerReport;
-  {$IFDEF FRAMEWORK_FMX}
+
+ // Cannot do this. This Core package is framework agnostic!
+ { $IFDEF FRAMEWORK_FMX
  Result:= Result+ CRLF;
  Result:= Result+ GenerateDeviceRep;  {$ENDIF}
 end;
