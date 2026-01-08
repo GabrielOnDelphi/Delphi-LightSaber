@@ -31,6 +31,7 @@ TYPE
     RadioButton1: TRadioButton;
     lblInfoTop: TLabel;
     lblIniFile: TLabel;
+    lblVersion: TLabel;
     procedure FormCreate  (Sender: TObject);
     procedure btnShowErrClick(Sender: TObject);
   private
@@ -51,6 +52,7 @@ USES
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
+  lblVersion.Text:= 'App version ' + AppData.GetAppVersion;
   lblIniFile.Text:= 'Your form''s settings are saved here: ' + CRLF+ AppData.IniFile;
   lblIniFile.Position.Y:= 999999999999;  // Move it to the bottom
 
