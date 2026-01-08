@@ -1,0 +1,75 @@
+object frmScreenCapture: TfrmScreenCapture
+  Left = 0
+  Top = 0
+  BorderStyle = None
+  ClientHeight = 600
+  ClientWidth = 800
+  FormStyle = StayOnTop
+  WindowState = wsMaximized
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  OnClose = FormClose
+  OnKeyDown = FormKeyDown
+  DesignerMasterStyle = 0
+  object layMain: TLayout
+    Align = Client
+    Size.Width = 800.000000000000000000
+    Size.Height = 600.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object imgScreenshot: TImageControl
+      Align = Client
+      Locked = True
+      HitTest = False
+      Size.Width = 800.000000000000000000
+      Size.Height = 520.000000000000000000
+      Size.PlatformDefault = False
+      Visible = False
+    end
+    object pbOverlay: TPaintBox
+      Align = Client
+      HitTest = False
+      Size.Width = 800.000000000000000000
+      Size.Height = 520.000000000000000000
+      Size.PlatformDefault = False
+      OnPaint = pbOverlayPaint
+    end
+    object SelectionRect: TSelection
+      Cursor = crHandPoint
+      GripSize = 8.000000000000000000
+      HideSelection = False
+      Proportional = False
+      Position.X = 228.000000000000000000
+      Position.Y = 88.000000000000000000
+      Size.Width = 300.000000000000000000
+      Size.Height = 200.000000000000000000
+      Size.PlatformDefault = False
+      ShowHandles = True
+      OnChange = SelectionRectChange
+    end
+    object layInstructions: TLayout
+      Align = Top
+      Size.Width = 800.000000000000000000
+      Size.Height = 80.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      object lblInstructions: TLabel
+        Align = Client
+        StyledSettings = []
+        Size.Width = 800.000000000000000000
+        Size.Height = 80.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.Font.Size = 16.000000000000000000
+        TextSettings.Font.StyleExt = {00070000000000000004000000}
+        TextSettings.FontColor = xFFEA0F0F
+        TextSettings.HorzAlign = Center
+        Text = 
+          '1. Select a rectangle on your screen'#13#10'2. Press Ctrl+P to capture' +
+          #13#10'3. Press ESC when done'
+        TabOrder = 0
+      end
+    end
+  end
+end
