@@ -99,8 +99,6 @@ TYPE
      CONST FrozenPaddingSize = 64;                // NEVER-EVER MODIFY THIS CONSTANT! All files saved with this constant will not work anymore. Enough for 16 Integer variables.
      function ReadSignature: AnsiString;          // The LiSa string for "Light Saber'.  // Old number: $4C695361
    public
-     //StringSafetyLimit: Cardinal;                 // If we try to read a string larger than this size then we are probably doing something wrong. Set it to zero to disable it.
-
      constructor CreateRead (CONST FileName: string);
      constructor CreateWrite(CONST FileName: string);
 
