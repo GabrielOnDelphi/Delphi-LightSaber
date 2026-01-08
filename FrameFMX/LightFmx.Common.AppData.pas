@@ -104,7 +104,7 @@ USES
    Posix.Stdlib, Posix.Unistd,
   {$ENDIF}
   System.SysUtils, System.Classes, System.UITypes, System.Types, System.Generics.Collections,
-  FMX.Forms, FMX.Graphics, FMX.Platform,
+  FMX.Forms, FMX.Platform,
   LightFMX.LogForm,
   LightCore.AppData;
 
@@ -112,9 +112,7 @@ TYPE
   TAppData= class(TAppDataCore)
   private
     FAutoStateQueue: TList<TAutoState>;
-    FFont: TFont;
     FFormLog: TfrmRamLog;       // Create the Log form (to be used by the entire program). It is released by TApplication
-    procedure setFont(aFont: TFont);
     function getLogForm: TfrmRamLog;
   protected
     procedure setHintType(const aHintType: THintType); override;
@@ -166,7 +164,6 @@ TYPE
     procedure SetMaxPriority;
     procedure MainFormCaption(const Caption: string); override;
     property FormLog: TfrmRamLog read getLogForm;   //Created at runtime, as/if necessary
-    property Font: TFont read FFont write setFont;
   end;
 
 
@@ -516,33 +513,16 @@ begin
 end;
 
 
-{ Apply this font to all existing forms. }
-procedure TAppData.setFont(aFont: TFont);
-begin
-  {Won't work in FMX
-  if FFont = NIL
-  then FFont:= aFont   // We set the font for the first time.
-  else
-    begin
-      // Note: FormCount also counts invisible forms and forms created TFrom.Create(Nil).
-      FFont:= aFont;
-      for VAR i:= 0 to Screen.FormCount - 1 DO    // FormCount => forms currently displayed on the screen. CustomFormCount = as FormCount but also includes the property pages
-        Screen.Forms[i].Font:= aFont;
-    end;}
-end;
-
-
 procedure TAppData.setHideHint(const Value: Integer);
 begin
   inherited;
 end;
 
 
-// Note:
-// In FMX the forms don't have a hint.
-// Hints are supported on Windows and macOS only.
-// Application.ShowHint = Global setting. Applies also to actions.
-// https://docwiki.embarcadero.com/RADStudio/Athens/en/Using_Hints_to_Show_Contextual_Help_in_a_FireMonkey_Application
+{ Note: In FMX the forms don't have a hint.
+ Hints are supported on Windows and macOS only.
+ Application.ShowHint = Global setting. Applies also to actions.
+ https://docwiki.embarcadero.com/RADStudio/Athens/en/Using_Hints_to_Show_Contextual_Help_in_a_FireMonkey_Application }
 procedure TAppData.setHintType(const aHintType: THintType);
 begin
   FHintType:= aHintType;
