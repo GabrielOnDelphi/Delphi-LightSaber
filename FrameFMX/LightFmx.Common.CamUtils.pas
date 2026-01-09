@@ -28,7 +28,6 @@ procedure PickImageFromGallery;                                        // Opens 
 
 // Paths
 function  GetPublicPicturesFolder: string;
-function  GetNewTimestampFileName(const Folder: string): string;
 
 
 {$IFDEF ANDROID}
@@ -235,14 +234,6 @@ begin
   {$ELSE}
   Result := Trail(TPath.GetDocumentsPath);
   {$ENDIF}
-end;
-
-
-function GetNewTimestampFileName(const Folder: string): string;
-begin
-  if not DirectoryExists(Folder)
-  then ForceDirectories(Folder);
-  Result:= TPath.Combine(Folder, FormatDateTime('yyyy.mm.dd_hh.nn.ss_zzz', Now) + '.png');
 end;
 
 
