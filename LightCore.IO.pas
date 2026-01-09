@@ -2,7 +2,7 @@ UNIT LightCore.IO;
 
 {=============================================================================================================
    www.GabrielMoraru.com
-   2025.10
+   2026.01
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
@@ -242,6 +242,7 @@ CONST
 {--------------------------------------------------------------------------------------------------
    FILE AUTO-NAME
 --------------------------------------------------------------------------------------------------}
+ function  GetTimestampFileName(CONST Folder, Prefix, Extension: string): string;
  function  IncrementFileNameEx  (CONST FileName: string; StartAt, NumberLength: Integer): string;  { Same sa IncrementFileName but it automatically adds a number if the file doesn't already ends with a number }
  function  IncrementFileName    (CONST FileName: string; AddDash: Boolean = false): string;        { Receives a file name that ends in a number. returns the same filename plus the number incremented with one. }
  function  MakeUniqueFolderName (CONST RootPath, FolderName: string): string;                      { Returns a unique path ended with a number. Old name:  Getnewfoldername }
@@ -1232,6 +1233,15 @@ begin
  if FileEndsInNumber(FileName)
  then Result:= IncrementFileName(FileName)
  else Result:= AppendNumber2Filename(FileName, StartAt, NumberLength);
+end;
+
+
+// The extension must have a DOT.
+function GetTimestampFileName(const Folder, Prefix, Extension: string): string;
+begin
+  if not DirectoryExists(Folder)
+  then ForceDirectories(Folder);
+  Result:= TPath.Combine(Folder, Prefix+ FormatDateTime('yyyy.mm.dd_hh.nn.ss_zzz', Now) + Extension);
 end;
 
 

@@ -95,7 +95,7 @@ begin
   Img.Parent  := boxConversation.Content;
   Img.Stored  := FALSE;
   Img.Position.Y:= 99999999;
-  Img.LoadImage('..\..\Demo image - Geek queen.jpg', TRect.Create(0, 0, 1344, 768));    // This triggers image loading and self-sizing!
+  Img.LoadImage('..\..\Demo image - Geek queen.png', TRect.Create(0, 0, 1344, 768));    // This triggers image loading and self-sizing!
 
   ScrollDown;
 end;
