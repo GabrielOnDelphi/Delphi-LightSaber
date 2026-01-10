@@ -45,7 +45,6 @@ USES LightCore.AppData;
 
 
 
-
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   LogViewer.ObserveAppDataLog;
