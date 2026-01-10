@@ -1,4 +1,4 @@
-UNIT LightFmx.Common.AppData.Form;
+ï»¿UNIT LightFmx.Common.AppData.Form;
 
 {=============================================================================================================
    2025.08
@@ -62,10 +62,6 @@ USES
 
 TYPE
   TLightForm = class(TForm)
-    TopBar: TToolBar;
-    lblToolBarCapt: TLabel;
-    btnOsBack: TSpeedButton;
-    btnOsNext: TSpeedButton;
     procedure FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
     procedure btnOsBackClick(Sender: TObject);
   private
@@ -76,11 +72,18 @@ TYPE
   protected
     Saved: Boolean;
     procedure saveBeforeExit;
+    procedure CreateToolbar;
 
     procedure FormKeyPress(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState); // We can use this later in the destructor to know how to save the form: asPosOnly/asFull
     procedure Loaded; override;
     procedure DoClose(var Action: TCloseAction); override;
   public
+    TopBar         : TToolBar;
+    lblToolBarCapt : TLabel;
+    btnOsBack      : TSpeedButton;
+    btnOsNext      : TSpeedButton;
+
+    constructor Create(AOwner: TComponent); overload; override;
     constructor Create(AOwner: TComponent; aAutoState: TAutoState); reintroduce; overload; virtual;
     procedure AfterConstruction; override;
     function CloseQuery: Boolean; override;
@@ -91,9 +94,8 @@ TYPE
     procedure LoadForm; virtual;
     procedure SaveForm; virtual;
     destructor Destroy; override;
-  published
-    // Unfortunatelly, these won't appear in the Object Inspector. I guess I need to call something like RegisterCustomModule
     property AutoState: TAutoState   read FAutoState;                              // The user needs to set this property if they want to auto save/load the form.
+  published
     property CloseOnEscape: Boolean  read FCloseOnEscape  write FCloseOnEscape;    // Close this form when the Esc key is pressed
     property OnAfterConstruction: TNotifyEvent read FOnAfterCtur write FOnAfterCtur;
   end;
@@ -107,6 +109,12 @@ USES
 {-------------------------------------------------------------------------------------------------------------
    CREATE
 -------------------------------------------------------------------------------------------------------------}
+constructor TLightForm.Create(AOwner: TComponent);    // Needed for the IDE
+begin
+  Create(AOwner, asUndefined);
+end;
+
+
 constructor TLightForm.Create(AOwner: TComponent; aAutoState: TAutoState);
 begin
   inherited Create(AOwner);
@@ -122,15 +130,6 @@ end;
 procedure TLightForm.AfterConstruction;
 begin
   inherited;
-
-  if OsIsMobile then
-    begin
-      TopBar.Height := 56;                // Standard Material Design header height
-      TopBar.Visible:= True;
-      lblToolBarCapt.Text:= Self.Caption; // Automatically grab the Form's caption
-    end
-  else
-    TopBar.Visible := False;
 
   // Off-screen?
   if AppData.RunningFirstTime
@@ -166,7 +165,7 @@ begin
   // Load form
   // Limitation: At this point we can only load "standard" Delphi components. Loading of our Light components can only be done in Light_FMX.Visual.INIFile.pas -> TIniFileVCL
 
-  if FAutoState = asUndefined  // Only check queue if AutoState wasn’t set in Create
+  if FAutoState = asUndefined  // Only check queue if AutoState wasnï¿½t set in Create
   then FAutoState:= AppData.GetAutoState;
 
   if AutoState = asUndefined
@@ -346,10 +345,73 @@ begin
 end;
 
 
+procedure TLightForm.CreateToolbar;
+begin
+  if NOT OsIsMobile then EXIT;
+
+  // Create toolbar - use class field, not local var
+  TopBar := TToolBar.Create(Self);
+  TopBar.Parent := Self;
+  TopBar.Name := 'TopBar';
+  TopBar.Anchors := [];
+  TopBar.Height := 56;  // Standard Material Design header height
+  TopBar.TabOrder := 0;
+  {$IFDEF ANDROID}
+  TopBar.Align := TAlignLayout.Top; {$ENDIF}
+  {$IFDEF IOS}
+  TopBar.Align := TAlignLayout.Bottom; {$ENDIF}
+
+  // Create caption label
+  lblToolBarCapt := TLabel.Create(Self);
+  lblToolBarCapt.Parent := TopBar;
+  lblToolBarCapt.Name := 'lblToolBarCapt';
+  lblToolBarCapt.Align := TAlignLayout.Contents;
+  lblToolBarCapt.StyleLookup := 'toollabel';
+  lblToolBarCapt.TextSettings.HorzAlign := TTextAlign.Center;
+  lblToolBarCapt.Text := Self.Caption;
+  lblToolBarCapt.Text := Self.Caption; // Automatically grab the Form's caption
+
+  // Create back button
+  btnOsBack := TSpeedButton.Create(Self);
+  btnOsBack.Parent := TopBar;
+  btnOsBack.Name := 'btnOsBack';
+  btnOsBack.Align := TAlignLayout.MostLeft;
+  btnOsBack.Width := 48;
+  btnOsBack.StyleLookup := 'backtoolbutton';
+  btnOsBack.OnClick := btnOsBackClick;
+
+  // Create next button
+  btnOsNext := TSpeedButton.Create(Self);
+  btnOsNext.Parent := TopBar;
+  btnOsNext.Name := 'btnOsNext';
+  btnOsNext.Align := TAlignLayout.MostRight;
+  btnOsNext.Width := 44;
+  btnOsNext.StyleLookup := 'nexttoolbutton';
+  btnOsNext.Visible := False;
+end;
+
+
+
+
+
+
+
+
+{
+
+Designtime error:
+  Error creating form in FormWhatsApp.fmx: Ancestor for 'TLightForm' not found.
+
+procedure Register;
+begin
+  RegisterNoIcon([TLightForm]);
+end;
+
+
 initialization
-  RegisterClass(TLightForm);
+  RegisterNoIcon([TLightForm]);  //todo: do I need this? RegisterComponents('LightSaber', [TLightForm]);
 
 finalization
-  UnregisterClass(TLightForm);
+  UnregisterClass(TLightForm);}
 
 end.
