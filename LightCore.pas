@@ -210,16 +210,16 @@ CONST
  function  IsUpcase            (CONST c: Char): Boolean;     { Works only with letters. }
 
  // COPY from/to marker
- function  ExtractTextBetween  (CONST s, TagStart, TagEnd: string): string;                                       { Extract the text between the tags. For example '<H>Title</H>' will return 'Title' is iFrom= '<H>' and iTo= '</H>' }
+ function  ExtractTextBetween  (CONST s, TagStart, TagEnd: string): string;                                   { Extract the text between the tags. For example '<H>Title</H>' will return 'Title' is iFrom= '<H>' and iTo= '</H>' }
 
 
 {=============================================================================================================
-   COMPARE STRINGS
+   COMPARE/SIMILARITY/SORT
  ============================================================================================================}
- function  StringFuzzyCompare  (s1, s2: string): Integer;                                                     { The function checks if any identical characters is in the near of the actual compare position }
  function  FileNameNaturalSort (s1, s2: String): Integer;                                                     { Natural compare two filenames }
  {$IFDEF MSWINDOWS}
  function  StrCmpLogicalW      (psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll'; {$ENDIF}    { Natural compare two strings. Digits in the strings are considered as numerical content rather than text. This test is not case-sensitive. Use it like this: StrCmpLogicalW(PChar(s1), PChar(s2));  see: http://stackoverflow.com/questions/1024515/delphi-is-it-necessary-to-convert-string-to-widestring.  }
+ function  StringFuzzyCompare  (s1, s2: string): Integer;                                                     { Text similarity. The function checks if any identical characters is in the near of the actual compare position.  }
 
 
 {=============================================================================================================
