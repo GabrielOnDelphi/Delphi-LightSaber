@@ -3,6 +3,7 @@ prompt $
 cls
 
 del /s *.dcu
+del /s *.map
 del /s *.o
 del /s *.so
 del /s PackagedResources.zip

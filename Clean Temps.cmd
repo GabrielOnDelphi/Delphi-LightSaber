@@ -2,8 +2,6 @@ echo off
 prompt $
 cls
 
-del /s *.exe
-del /s *.map
 del /s *.dsm
 del /s *.ddp
 del /s *.bak
