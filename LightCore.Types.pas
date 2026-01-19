@@ -10,7 +10,8 @@ INTERFACE
 
 USES
    System.SysUtils,
-   System.Classes;
+   System.Classes,
+   System.Generics.Collections;
 
 { Extra VK constants that are missing from Delphi's Win dows API interface (Windows.pas unit)
   More virtual keys here: http://delphi.about.com/od/objectpascalide/l/blvkc.htm }
@@ -99,6 +100,7 @@ TYPE
   TDoubleArrayHelper= record helper for TDoubleArray
   public
     procedure Add(const Element: Double);
+    procedure Sort;
   end;
 
 
@@ -196,6 +198,12 @@ begin
   Len:= Length(Self);
   SetLength(Self, Len + 1);
   Self[len]:= Element;
+end;
+
+
+procedure TDoubleArrayHelper.Sort;
+begin
+  TArray.Sort<Double>(Self);
 end;
 
 
