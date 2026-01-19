@@ -405,7 +405,7 @@ end;
 
 
 { Returns the last folder used when the user opened a LoadFile/SaveFile dialog box }
-//ToDo 4: save this to the INI file
+//ToDo 4: TAppDataCore.getLastUsedFolder - save this to the INI file
 function TAppDataCore.getLastUsedFolder: string;
 begin
   if FLastFolder = ''
