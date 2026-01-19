@@ -56,7 +56,8 @@ TYPE
 IMPLEMENTATION
 
 USES
-  LightFmx.Common.IniFile  {$IFDEF MSWINDOWS}, Winapi.Windows{$ENDIF}
+  LightFmx.Common.IniFile, LightCore.Types
+  {$IFDEF MSWINDOWS}, Winapi.Windows{$ENDIF}
   {$IFDEF MACOS}, Macapi.AppKit {$ENDIF};
 
 
@@ -67,7 +68,7 @@ USES
 constructor TScreenCaptureManager.Create;
 begin
   inherited Create;
-  FCapturedImages:= TObjectList<FMX.Graphics.TBitmap>.Create(True);  // Owns objects
+  FCapturedImages:= TObjectList<FMX.Graphics.TBitmap>.Create(OwnObjects);
   FScreenshot:= FMX.Graphics.TBitmap.Create;
   FLastSelectionRect:= TRectF.Empty;
 
