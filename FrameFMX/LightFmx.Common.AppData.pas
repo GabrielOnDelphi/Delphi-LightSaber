@@ -149,9 +149,9 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       FORMS
    --------------------------------------------------------------------------------------------------}
-    procedure CreateMainForm  (aClass: TComponentClass; OUT aReference; AutoState: TAutoState = asPosOnly);
+    procedure CreateMainForm  (aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly);
 
-    procedure CreateForm      (aClass: TComponentClass; OUT aReference; AutoState: TAutoState = asPosOnly; Parented: Boolean = FALSE; CreateBeforeMainForm: Boolean = FALSE); overload;
+    procedure CreateForm      (aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly; Parented: Boolean = FALSE; CreateBeforeMainForm: Boolean = FALSE); overload;
     procedure CreateFormHidden(aClass: TComponentClass; OUT aReference);
     procedure CreateFormModal (aClass: TComponentClass);  // Problem in Android with modal forms!
 
@@ -227,30 +227,30 @@ end;
      It just adds a request to the pending list. RealCreateForms creates the real forms.
      So, we cannot access the form here because it was not yet created!
 -------------------------------------------------------------------------------------------------------------}
-procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT aReference; AutoState: TAutoState = asPosOnly);
+procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly);
 begin
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
 
-  FAutoStateQueue.Add(AutoState);
+  FAutoStateQueue.Add(aAutoState);
   Application.CreateForm(aClass, aReference);   // Reference is NIL here because of the form is created later (by RealCreateForms)
 end;
 
 
-{procedure TAppData.CreateMainForm(aClass: TComponentClass; AutoState: TAutoState = asPosOnly);
+{procedure TAppData.CreateMainForm(aClass: TComponentClass; aAutoState: TAutoState = asPosOnly);
 var aReference: TForm;  //NOPE! FMX stores the ADDRESS of the variable you passed! Once the procedure is over, the variable is gone but FMX still holds this stack address (now occupied by something else)
 begin
-  CreateMainForm(aClass, aReference, AutoState);   // Reference is NIL here because of the form is created later (by RealCreateForms)
+  CreateMainForm(aClass, aReference, aAutoState);   // Reference is NIL here because of the form is created later (by RealCreateForms)
 end; }
 
 
 { Create secondary form
   "Loading" indicates if the GUI settings are remembered or not }
-procedure TAppData.CreateForm(aClass: TComponentClass; OUT aReference; AutoState: TAutoState = asPosOnly; Parented: Boolean = FALSE; CreateBeforeMainForm: Boolean = FALSE);
+procedure TAppData.CreateForm(aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly; Parented: Boolean = FALSE; CreateBeforeMainForm: Boolean = FALSE);
 begin
   if CreateBeforeMainForm
   then
     begin
-      FAutoStateQueue.Add(AutoState);
+      FAutoStateQueue.Add(aAutoState);
       Application.CreateForm(aClass, aReference);
       ///TForm(aReference).SetOwner(nil);  // Optional: manage lifetime manually   // Reference is NIL here because of the form is created later (by RealCreateForms)
     end
@@ -261,7 +261,7 @@ begin
       then RAISE Exception.Create('Probably you forgot to create the main form with AppData.CreateMainForm!'); }
 
       // Deferred creation (initial or queued dynamic form)
-      FAutoStateQueue.Add(AutoState);
+      FAutoStateQueue.Add(aAutoState);
       Application.CreateForm(aClass, aReference);
     end;
 end;
