@@ -1,4 +1,4 @@
-UNIT LightCore;
+﻿UNIT LightCore;
 
 {=============================================================================================================
    www.GabrielMoraru.com
@@ -31,8 +31,8 @@ CONST
    ESC             = #27;
    Space           = #32;         { $20 }
    Quote           = #39;
-   CopyrightSymbol = '�';
-   GradCelsius     = '�';
+   CopyrightSymbol = '©';
+   GradCelsius     = '°';
    Euro            = #8364;       { Euro Sign: Alt+0128.  Unicode Number: 8364 }
 
 
@@ -219,7 +219,7 @@ CONST
  function  FileNameNaturalSort (s1, s2: String): Integer;                                                     { Natural compare two filenames }
  {$IFDEF MSWINDOWS}
  function  StrCmpLogicalW      (psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll'; {$ENDIF}    { Natural compare two strings. Digits in the strings are considered as numerical content rather than text. This test is not case-sensitive. Use it like this: StrCmpLogicalW(PChar(s1), PChar(s2));  see: http://stackoverflow.com/questions/1024515/delphi-is-it-necessary-to-convert-string-to-widestring.  }
- function  StringFuzzyCompare  (s1, s2: string): Integer;                                                     { Text similarity. The function checks if any identical characters is in the near of the actual compare position.  }
+ function  FuzzyStringCompare  (CONST s1, s2: string): Integer;                                                     { Text similarity. The function checks if any identical characters is in the near of the actual compare position.  }
 
 
 {=============================================================================================================
@@ -1850,92 +1850,109 @@ begin
 end;
 
 
+{
+  FuzzyStringCompare calculates an approximate similarity percentage between two strings.
+  It uses a heuristic to count matching characters that are roughly in similar positions,
+  allowing for a tolerance based on string lengths. The tolerance is about one-third of the
+  longer string's length plus the length difference.
 
+  The algorithm greedily matches characters from the shorter string to unique positions in the longer string,
+  if within the tolerance distance and not previously matched. It advances positions and backtracks when necessary to skip unmatched sections.
 
-{ The function checks if any identical characters is near of the actual compare position.
-  This is calculated in a formula depending on the length of the strings (diff).
-  http://www.helli.de/index.php/tips-and-tricks-delphi-108/fuzzy-compare-delphi-110.html
+  Comparisons are case-sensitive, as in the original. You might want to lowecase your strings.
 
-  Example:
-   "John" and "John" = 100%
-   "John" and "Jon"  = 75%
-   "Jim"  and "James" = 40%
-   "Luke Skywalker" and "Darth Vader" = 0% (Hmmm...)
+  Examples:
+  - 'John' and 'John' → 100%
+  - 'John' and 'Jon' → 75%
 
-  Keywords: similar compare words text. }
-function StringFuzzyCompare (s1, s2: string): Integer;
-VAR hit: Integer;                                        // Number of identical chars
-    p1, p2: Integer;                                     // Position count
-    l1, l2: Integer;                                     // Length of strings
-    pt: Integer;                                         // for counter
-    diff: Integer;                                       // unsharp factor
-    hstr: string;                                        // help VAR for swap strings
-    test: array [1..255] of Boolean;                     // Array shows if position is tested
+  Also see: github.com/DavidMoraisFerreira/FuzzyWuzzy.pas}
+function FuzzyStringCompare(const S1, S2: string): Integer;
+var
+  StrLong, StrShort: string;
+  Matches: Integer;           // Number of matching characters found
+  Pos1, Pos2: Integer;        // Current positions in StrLong and StrShort
+  LenLong, LenShort: Integer; // Lengths of the longer and shorter strings
+  I: Integer;                 // Loop counter for initialization
+  Tolerance: Integer;         // Allowed position difference (fuzz factor)
+  Tested: TArray<Boolean>;    // Tracks matched positions in StrLong (dynamic to handle any length)
 begin
-  if Length(s1) < Length(s2) then
-   begin                                                 // Test Length and swap, if s1 is smaller we alway search along the longer string
-    hstr:= s2;
-    s2:= s1;
-    s1:= hstr;
-   end;
+  // Ensure StrLong is the longer string
+  if Length(S1) >= Length(S2) then
+  begin
+    StrLong := S1;
+    StrShort := S2;
+  end
+  else
+  begin
+    StrLong := S2;
+    StrShort := S1;
+  end;
 
-  l1:= Length (s1);                                      // store length of strings to speed up the function
-  l2:= Length (s2);
-  p1:= 1; p2:= 1;
-  hit:= 0;
-  diff:= Max (l1, l2) div 3 + ABS (l1 - l2);             // calc the unsharp factor depending on the length of the strings. Its about a third of the whole length
+  LenLong := Length(StrLong);
+  LenShort := Length(StrShort);
 
-  for pt:= 1 to l1
-    do test[pt]:= False;                                 // init the test array
+  // Early exit for empty short string
+  if LenShort = 0 then
+    Exit(0);
 
-  repeat                                                 // loop through the string
-    if not test[p1]
-    then
-     begin                                               // position tested?
-       if (s1[p1] = s2[p2]) and (ABS(p1-p2) <= diff)
-       then
-        begin                                            // found a matching character?
-         test[p1]:= True;
-         Inc (hit);                                      // increment the hit count next positions
-         Inc (p1); Inc (p2);
-         if p1 > l1
-         then p1:= 1;
-        end
-       else
-        begin
-         test[p1]:= False;                               // Set test array
-         Inc (p1);
-         if p1 > l1 then
-          begin                                          // Loop back to next test position if end of the string
-           while (p1 > 1) and not (test[p1])
-             do Dec (p1);
-           Inc (p2)
-          end;
-        end;
-      end
-    else
+  // Calculate tolerance: ~1/3 of longer length + length difference
+  Tolerance := LenLong div 3 + (LenLong - LenShort);
+
+  // Initialize dynamic array for tested positions
+  SetLength(Tested, LenLong + 1);
+  for I := 1 to LenLong do
+    Tested[I] := False;
+
+  Pos1 := 1;
+  Pos2 := 1;
+  Matches := 0;
+
+  repeat
+    if not Tested[Pos1] then
+    begin
+      // Check for match within tolerance
+      if (StrLong[Pos1] = StrShort[Pos2]) and (Abs(Pos1 - Pos2) <= Tolerance) then
       begin
-       Inc (p1);
-       if p1 > l1 then
-        begin                                            // Loop back to next test position if end of string
-         repeat Dec (p1); until (p1 = 1) or test[p1];
-         Inc (p2);
+        Tested[Pos1] := True;
+        Inc(Matches);
+        Inc(Pos1);
+        Inc(Pos2);
+        if Pos1 > LenLong then
+          Pos1 := 1;
+      end
+      else
+      begin
+        // No match: advance Pos1
+        Inc(Pos1);
+        if Pos1 > LenLong then
+        begin
+          // Backtrack to last matched or start
+          Pos1 := LenLong;
+          while (Pos1 > 1) and not Tested[Pos1] do
+            Dec(Pos1);
+          Inc(Pos2);
         end;
       end;
-  until p2 > Length(s2);
-  Result:= 100 * hit DIV l1;                             // calc procentual value
+    end
+    else
+    begin
+      // Position already matched: skip it
+      Inc(Pos1);
+      if Pos1 > LenLong then
+      begin
+        // Backtrack to last matched or start
+        Pos1 := LenLong;
+        repeat
+          Dec(Pos1);
+        until (Pos1 = 1) or Tested[Pos1];
+        Inc(Pos2);
+      end;
+    end;
+  until Pos2 > LenShort;
+
+  // Compute percentage based on longer string
+  Result := 100 * Matches div LenLong;
 end;
-
-
-
-
-
-
-
-
-
-
-
 
 
 
