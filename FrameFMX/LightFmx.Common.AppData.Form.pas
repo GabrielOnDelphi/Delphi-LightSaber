@@ -67,7 +67,6 @@ TYPE
   private
     FOnAfterCtur: TNotifyEvent;
     FCloseOnEscape: Boolean;
-    FAutoState: TAutoState;
     procedure SetGuiProperties(Form: TForm);
   protected
     Saved: Boolean;
@@ -78,6 +77,7 @@ TYPE
     procedure Loaded; override;
     procedure DoClose(var Action: TCloseAction); override;
   public
+    AutoState      : TAutoState;    // Controls form save/restore behavior (asNone, asPosOnly, asFull)
     TopBar         : TToolBar;
     lblToolBarCapt : TLabel;
     btnOsBack      : TSpeedButton;
@@ -93,7 +93,6 @@ TYPE
     procedure LoadForm; virtual;
     procedure SaveForm; virtual;
     destructor Destroy; override;
-    property AutoState: TAutoState   read FAutoState;                              // The user needs to set this property if they want to auto save/load the form.
   published
     property CloseOnEscape: Boolean  read FCloseOnEscape  write FCloseOnEscape;    // Close this form when the Esc key is pressed
     property OnAfterConstruction: TNotifyEvent read FOnAfterCtur write FOnAfterCtur;
@@ -112,10 +111,9 @@ constructor TLightForm.Create(AOwner: TComponent; aAutoState: TAutoState);
 begin
   inherited Create(AOwner);
 
-  Showhint:= TRUE;
-  Saved   := FALSE;
-
-  FAutoState:= aAutoState;
+  Showhint := TRUE;
+  Saved    := FALSE;
+  AutoState:= aAutoState;
 end;
 
 
@@ -157,14 +155,12 @@ begin
   // Load form
   // Limitation: At this point we can only load "standard" Delphi components. Loading of our Light components can only be done in Light_FMX.Visual.INIFile.pas -> TIniFileVCL
 
-  if FAutoState = asUndefined  // Only check queue if AutoState wasn't set in Create
-  then FAutoState:= AppData.GetAutoState;
+  if AutoState = asUndefined  // Only retrieve if AutoState wasn't set in Create
+  then AutoState:= AppData.GetAutoState(Self);  // Raises exception if not found
 
-  if AutoState = asUndefined
-  then RAISE Exception.Create('The user must set the AutoState via AppData.CreateForm()' + CRLF + 'Form: '+ Name+ ' / '+ ClassName)
-  else
-    if AutoState <> asNone
-    then LoadForm;
+  // Load form if AutoState requests it
+  if AutoState <> asNone
+  then LoadForm;
 end;
 
 

@@ -1,4 +1,4 @@
-UNIT LightFmx.Common.AppData;
+﻿UNIT LightFmx.Common.AppData;
 
 {=============================================================================================================
    2025.09
@@ -109,9 +109,15 @@ USES
   LightCore.AppData;
 
 TYPE
+  TPendingAutoState = record
+    ClassName: string;
+    AutoState: TAutoState;
+  end;
+
+TYPE
   TAppData= class(TAppDataCore)
   private
-    FAutoStateQueue: TList<TAutoState>;
+    FPendingAutoStates: TList<TPendingAutoState>;  // Stores AutoState by class name for queued forms (aReference = NIL)
     FFormLog: TfrmRamLog;       // Create the Log form (to be used by the entire program). It is released by TApplication
     function getLogForm: TfrmRamLog;
   protected
@@ -150,12 +156,11 @@ TYPE
       FORMS
    --------------------------------------------------------------------------------------------------}
     procedure CreateMainForm  (aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly);
-
-    procedure CreateForm      (aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly; Parented: Boolean = FALSE; CreateBeforeMainForm: Boolean = FALSE); overload;
+    procedure CreateForm      (aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly);
     procedure CreateFormHidden(aClass: TComponentClass; OUT aReference);
     procedure CreateFormModal (aClass: TComponentClass);  // Problem in Android with modal forms!
 
-    function  GetAutoState: TAutoState;
+    function  GetAutoState(Form: TForm): TAutoState;  // Called from TLightForm.Loaded
     procedure ShowModal(aForm: TForm);
 
    {--------------------------------------------------------------------------------------------------
@@ -172,7 +177,7 @@ VAR                      // To-Do: make sure AppData is unique (make it Singleto
 
 
 IMPLEMENTATION
-USES LightCore.IO;
+USES LightCore, LightCore.IO, LightFmx.Common.AppData.Form;
 
 
 
@@ -185,7 +190,7 @@ begin
   Application.Initialize;                         // Note: Emba: Although Initialize is the first method called in the main project source code, it is not the first code that is executed in a GUI application. For example, in Delphi, the application first executes the initialization section of all the units used by the Application. in modern Delphi (non-.NET), you can remove Application.Initialize without breaking your program. The method is almost empty and no longer plays a critical role in setting up the VCL or application environment. Its historical purpose was to initialize COM and CORBA, but since those are no longer used, the method is effectively redundant.
   Application.Title    := aAppName;
   Application.ShowHint := TRUE;                   // Set later via the HintType property. It is true by default anyway
-  FAutoStateQueue      := TList<TAutoState>.Create;
+  FPendingAutoStates   := TList<TPendingAutoState>.Create;
 
   inherited Create(aAppName, WindowClassName, MultiThreaded);
   FFormLog:= NIL;
@@ -198,7 +203,7 @@ end;
 
 destructor TAppData.Destroy;
 begin
-  FreeAndNil(FAutoStateQueue);
+  FreeAndNil(FPendingAutoStates);
   //FreeAndNil(FormLog);  Freed by TApplication
   inherited Destroy;
 end;
@@ -223,46 +228,38 @@ end;
    CREATE FORMS
 --------------------------------------------------------------------------------------------------------------
    W A R N I N G
-     On FMX, CreateForm does not create the given form immediately.
-     It just adds a request to the pending list. RealCreateForms creates the real forms.
-     So, we cannot access the form here because it was not yet created!
+     On FMX, CreateForm behavior depends on timing:
+       - During startup (before Run): Forms are queued and created later by RealCreateForms
+         → aReference = NIL (form not created yet)
+       - After Run (dynamic): Forms are created immediately
+         → aReference <> NIL (form exists)
+
+     This implementation handles BOTH cases:
+       - Queued forms (aReference = NIL): Store AutoState by class name in pending list
+       - Immediate forms (aReference <> NIL): Set AutoState property directly on form instance
 -------------------------------------------------------------------------------------------------------------}
 procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly);
 begin
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
-
-  FAutoStateQueue.Add(aAutoState);
-  Application.CreateForm(aClass, aReference);   // Reference is NIL here because of the form is created later (by RealCreateForms)
+  CreateForm(aClass, aReference);
 end;
 
 
-{procedure TAppData.CreateMainForm(aClass: TComponentClass; aAutoState: TAutoState = asPosOnly);
-var aReference: TForm;  //NOPE! FMX stores the ADDRESS of the variable you passed! Once the procedure is over, the variable is gone but FMX still holds this stack address (now occupied by something else)
+{ Create secondary forms }
+procedure TAppData.CreateForm(aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly);
+VAR Pending: TPendingAutoState;
 begin
-  CreateMainForm(aClass, aReference, aAutoState);   // Reference is NIL here because of the form is created later (by RealCreateForms)
-end; }
+  Application.CreateForm(aClass, aReference);   // Reference may be NIL if form creation is deferred
 
-
-{ Create secondary form
-  "Loading" indicates if the GUI settings are remembered or not }
-procedure TAppData.CreateForm(aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly; Parented: Boolean = FALSE; CreateBeforeMainForm: Boolean = FALSE);
-begin
-  if CreateBeforeMainForm
-  then
-    begin
-      FAutoStateQueue.Add(aAutoState);
-      Application.CreateForm(aClass, aReference);
-      ///TForm(aReference).SetOwner(nil);  // Optional: manage lifetime manually   // Reference is NIL here because of the form is created later (by RealCreateForms)
-    end
+  // Store/set AutoState based on whether form was created immediately or queued
+  if TObject(aReference) <> NIL
+  then TLightForm(aReference).AutoState:= aAutoState  // Created immediately - set property directly
   else
     begin
-      {we cannot call it here as under FMX forms are created later
-      if Application.MainForm = nil
-      then RAISE Exception.Create('Probably you forgot to create the main form with AppData.CreateMainForm!'); }
-
-      // Deferred creation (initial or queued dynamic form)
-      FAutoStateQueue.Add(aAutoState);
-      Application.CreateForm(aClass, aReference);
+      // Queued for later creation - store by class name
+      Pending.ClassName:= aClass.ClassName;
+      Pending.AutoState:= aAutoState;
+      FPendingAutoStates.Add(Pending);
     end;
 end;
 
@@ -278,23 +275,24 @@ begin
 end;
 
 
-{ Returns the next AutoState from the list. }
-function TAppData.GetAutoState: TAutoState;
+{ Retrieves AutoState for queued forms (from pending list by class name).
+  For immediate forms, AutoState is already set via property in CreateForm/CreateMainForm.
+  This method is called from TLightForm.Loaded when FAutoState = asUndefined }
+function TAppData.GetAutoState(Form: TForm): TAutoState;
+VAR i: Integer;
 begin
-  if  (FAutoStateQueue <> nil)  // Check if the queue exists and has items
-  AND (FAutoStateQueue.Count > 0) then
+  // Search pending list by class name (for queued forms only)
+  for i:= 0 to FPendingAutoStates.Count - 1 do
+    if FPendingAutoStates[i].ClassName = Form.ClassName then
     begin
-      // Retrieve and remove this form's AutoState
-      Result := FAutoStateQueue.First;
-      FAutoStateQueue.Delete(0);
+      Result:= FPendingAutoStates[i].AutoState;
+      FPendingAutoStates.Delete(i);  // Remove this entry
+      EXIT;
+    end;
 
-      // If the queue is now empty, free it
-      {WARNING: Cannot create a form AFTER the RealCreateForms was called (see IsRealCreateFormsCalled) because we freed the list. So, we suspend this Free for the moment. Fix it later!
-      if FAutoStateQueue.Count = 0
-      then FreeAndNil(FAutoStateQueue); }
-    end
-  else
-    Result := asNone; // Default value if queue is empty or nil
+  RAISE Exception.Create('Form was not created via AppData.CreateForm()!' + CRLF +
+                         'Form: ' + Form.Name + ' (' + Form.ClassName + ')' + CRLF + CRLF +
+                         'Use: AppData.CreateForm(T' + Form.ClassName + ', MyForm, asPosOnly);' + CRLF + 'Or: MyForm := T' + Form.ClassName + '.Create(nil, asPosOnly);');
 end;
 
 
@@ -319,12 +317,8 @@ function TAppData.getLogForm: TfrmRamLog;
 begin
   Assert(RamLog <> NIL, 'RamLog not created!');
 
-  if FFormLog = NIL then
-    begin
-      Application.CreateForm(TfrmRamLog, FFormLog);
-      FAutoStateQueue.Add(asPosOnly);  // Queue its AutoState
-    end;
-
+  if FFormLog = NIL
+  then CreateForm(TfrmRamLog, FFormLog, asPosOnly);  // Use CreateForm instead of direct queue access
   Result:= FFormLog;
 end;
 
