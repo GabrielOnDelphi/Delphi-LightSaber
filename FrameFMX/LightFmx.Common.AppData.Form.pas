@@ -83,7 +83,6 @@ TYPE
     btnOsBack      : TSpeedButton;
     btnOsNext      : TSpeedButton;
 
-    constructor Create(AOwner: TComponent); overload; override;
     constructor Create(AOwner: TComponent; aAutoState: TAutoState); reintroduce; overload; virtual;
     procedure AfterConstruction; override;
     function CloseQuery: Boolean; override;
@@ -109,12 +108,6 @@ USES
 {-------------------------------------------------------------------------------------------------------------
    CREATE
 -------------------------------------------------------------------------------------------------------------}
-constructor TLightForm.Create(AOwner: TComponent);    // Needed for the IDE
-begin
-  Create(AOwner, asUndefined);
-end;
-
-
 constructor TLightForm.Create(AOwner: TComponent; aAutoState: TAutoState);
 begin
   inherited Create(AOwner);
@@ -123,7 +116,6 @@ begin
   Saved   := FALSE;
 
   FAutoState:= aAutoState;
-  FAutoState:= asUndefined; // Default value. Can be overriden by AppData.CreateForm
 end;
 
 
@@ -165,7 +157,7 @@ begin
   // Load form
   // Limitation: At this point we can only load "standard" Delphi components. Loading of our Light components can only be done in Light_FMX.Visual.INIFile.pas -> TIniFileVCL
 
-  if FAutoState = asUndefined  // Only check queue if AutoState wasn�t set in Create
+  if FAutoState = asUndefined  // Only check queue if AutoState wasn't set in Create
   then FAutoState:= AppData.GetAutoState;
 
   if AutoState = asUndefined
@@ -232,7 +224,7 @@ begin
     try
       FormPreRelease;
 
-      if AutoState > asNone  // Give the user the option not to save the form
+      if AutoState > asNone     // Give the user the option not to save the form
       then SaveForm;
     finally
       Saved:= TRUE;             // Make sure it is put to true even on accidents, otherwise we might call it multiple times.
