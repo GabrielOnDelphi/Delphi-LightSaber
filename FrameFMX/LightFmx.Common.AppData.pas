@@ -112,6 +112,7 @@ TYPE
   TPendingAutoState = record
     ClassName: string;
     AutoState: TAutoState;
+    QueuedBeforeRun: Boolean;  // TRUE = queued in DPR before Run; FALSE = created dynamically during/after Run
   end;
 
 TYPE
@@ -234,33 +235,49 @@ end;
        - After Run (dynamic): Forms are created immediately
          → aReference <> NIL (form exists)
 
-     This implementation handles BOTH cases:
-       - Queued forms (aReference = NIL): Store AutoState by class name in pending list
-       - Immediate forms (aReference <> NIL): Set AutoState property directly on form instance
+     IMPORTANT: Application.CreateForm may trigger Loaded SYNCHRONOUSLY (before returning),
+     especially when called during another form's FormCreate. This means we must add to the
+     pending list BEFORE calling Application.CreateForm, so GetAutoState can find the entry
+     when Loaded is called.
+
+     This implementation:
+       1. Always adds AutoState to pending list BEFORE calling Application.CreateForm
+       2. GetAutoState (called from TLightForm.Loaded) retrieves and removes the entry
+       3. If form was created immediately (aReference <> NIL), cleanup any leftover entry
 -------------------------------------------------------------------------------------------------------------}
 procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly);
 begin
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
-  CreateForm(aClass, aReference);
+  CreateForm(aClass, aReference, aAutoState);
 end;
 
 
 { Create secondary forms }
 procedure TAppData.CreateForm(aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly);
-VAR Pending: TPendingAutoState;
+VAR
+  Pending: TPendingAutoState;
+  i: Integer;
 begin
+  // Add to pending list BEFORE creating form.
+  // This ensures GetAutoState can find it when Loaded is called during form creation.
+  // (Application.CreateForm may trigger Loaded synchronously before returning)
+  Pending.ClassName:= aClass.ClassName;
+  Pending.AutoState:= aAutoState;
+  Pending.QueuedBeforeRun:= Initializing;  // Track if queued before Run (DPR) or created dynamically
+  FPendingAutoStates.Add(Pending);
+
   Application.CreateForm(aClass, aReference);   // Reference may be NIL if form creation is deferred
 
-  // Store/set AutoState based on whether form was created immediately or queued
-  if TObject(aReference) <> NIL
-  then TLightForm(aReference).AutoState:= aAutoState  // Created immediately - set property directly
-  else
-    begin
-      // Queued for later creation - store by class name
-      Pending.ClassName:= aClass.ClassName;
-      Pending.AutoState:= aAutoState;
-      FPendingAutoStates.Add(Pending);
-    end;
+  // If form was created immediately (reference not nil), AutoState was already
+  // set via GetAutoState in Loaded. Clean up any remaining pending entry.
+  if TObject(aReference) <> NIL then
+    for i := FPendingAutoStates.Count - 1 downto 0 do
+      if FPendingAutoStates[i].ClassName = aClass.ClassName then
+      begin
+        FPendingAutoStates.Delete(i);
+        Break;
+      end;
+  // If reference is NIL, form is queued for later - pending entry remains for GetAutoState
 end;
 
 
@@ -279,14 +296,25 @@ end;
   For immediate forms, AutoState is already set via property in CreateForm/CreateMainForm.
   This method is called from TLightForm.Loaded when FAutoState = asUndefined }
 function TAppData.GetAutoState(Form: TForm): TAutoState;
-VAR i: Integer;
+VAR
+  i: Integer;
+  WasQueuedBeforeRun: Boolean;
 begin
   // Search pending list by class name (for queued forms only)
   for i:= 0 to FPendingAutoStates.Count - 1 do
     if FPendingAutoStates[i].ClassName = Form.ClassName then
     begin
       Result:= FPendingAutoStates[i].AutoState;
+      WasQueuedBeforeRun:= FPendingAutoStates[i].QueuedBeforeRun;
       FPendingAutoStates.Delete(i);  // Remove this entry
+
+      {$IFDEF DEBUG}
+        // Show if form was created from pending queue (queued in DPR before Run) or created instantly (dynamically during/after Run)
+        if WasQueuedBeforeRun
+        then LogVerb('Form created from pending queue: ' + Form.ClassName)
+        else LogVerb('Form created instantly: ' + Form.ClassName);
+      {$ENDIF}
+
       EXIT;
     end;
 
