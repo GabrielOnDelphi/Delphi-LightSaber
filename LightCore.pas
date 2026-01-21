@@ -220,6 +220,8 @@ CONST
  {$IFDEF MSWINDOWS}
  function  StrCmpLogicalW      (psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll'; {$ENDIF}    { Natural compare two strings. Digits in the strings are considered as numerical content rather than text. This test is not case-sensitive. Use it like this: StrCmpLogicalW(PChar(s1), PChar(s2));  see: http://stackoverflow.com/questions/1024515/delphi-is-it-necessary-to-convert-string-to-widestring.  }
  function  FuzzyStringCompare  (CONST s1, s2: string): Integer;                                                     { Text similarity. The function checks if any identical characters is in the near of the actual compare position.  }
+ function  LevenshteinDistance (CONST s1, s2: string): Integer;                                                     { Returns the minimum number of single-character edits (insert, delete, substitute) to transform s1 into s2. }
+ function  LevenshteinSimilarity(CONST s1, s2: string): Integer;                                                    { Returns similarity as percentage (0-100). Based on Levenshtein distance. }
 
 
 {=============================================================================================================
@@ -1799,7 +1801,7 @@ end;
 
 
 {============================================================================================================
-   STRING COMPARE
+   STRING SORT
 ============================================================================================================}
 
 { Natural compare two strings.
@@ -1850,14 +1852,27 @@ begin
 end;
 
 
+{============================================================================================================
+   STRING COMPARE
+============================================================================================================
+
+ Levenshtein Distance:
+  - Counts minimum edits (insert, delete, substitute) to transform string A into B
+  - Returns a distance (lower = more similar)
+  - Example: "John" → "Jon" = distance 1 (one deletion)
+
+  FuzzyStringCompare:
+  - Counts matching characters in approximately similar positions
+  - Uses a tolerance window (about 1/3 of string length)
+  - Returns a percentage (0-100, higher = more similar)
+  - Greedy positional matching, not edit-based
+
+============================================================================================================}
+
 {
   FuzzyStringCompare calculates an approximate similarity percentage between two strings.
-  It uses a heuristic to count matching characters that are roughly in similar positions,
-  allowing for a tolerance based on string lengths. The tolerance is about one-third of the
-  longer string's length plus the length difference.
-
-  The algorithm greedily matches characters from the shorter string to unique positions in the longer string,
-  if within the tolerance distance and not previously matched. It advances positions and backtracks when necessary to skip unmatched sections.
+  It uses a heuristic to count matching characters that are roughly in similar positions, allowing for a tolerance based on string lengths. The tolerance is about one-third of the longer string's length plus the length difference.
+  The algorithm greedily matches characters from the shorter string to unique positions in the longer string, if within the tolerance distance and not previously matched. It advances positions and backtracks when necessary to skip unmatched sections.
 
   Comparisons are case-sensitive, as in the original. You might want to lowecase your strings.
 
@@ -1865,7 +1880,7 @@ end;
   - 'John' and 'John' → 100%
   - 'John' and 'Jon' → 75%
 
-  Also see: github.com/DavidMoraisFerreira/FuzzyWuzzy.pas}
+  Also see: github.com/DavidMoraisFerreira/FuzzyWuzzy.pas }
 function FuzzyStringCompare(const S1, S2: string): Integer;
 var
   StrLong, StrShort: string;
@@ -1877,23 +1892,23 @@ var
   Tested: TArray<Boolean>;    // Tracks matched positions in StrLong (dynamic to handle any length)
 begin
   // Ensure StrLong is the longer string
-  if Length(S1) >= Length(S2) then
-  begin
-    StrLong := S1;
-    StrShort := S2;
-  end
+  if Length(S1) >= Length(S2)
+  then
+    begin
+      StrLong := S1;
+      StrShort:= S2;
+    end
   else
-  begin
-    StrLong := S2;
-    StrShort := S1;
-  end;
+    begin
+      StrLong := S2;
+      StrShort:= S1;
+    end;
 
   LenLong := Length(StrLong);
-  LenShort := Length(StrShort);
+  LenShort:= Length(StrShort);
 
   // Early exit for empty short string
-  if LenShort = 0 then
-    Exit(0);
+  if LenShort = 0 then Exit(0);
 
   // Calculate tolerance: ~1/3 of longer length + length difference
   Tolerance := LenLong div 3 + (LenLong - LenShort);
@@ -1909,51 +1924,87 @@ begin
 
   repeat
     if not Tested[Pos1] then
-    begin
-      // Check for match within tolerance
-      if (StrLong[Pos1] = StrShort[Pos2]) and (Abs(Pos1 - Pos2) <= Tolerance) then
       begin
-        Tested[Pos1] := True;
-        Inc(Matches);
-        Inc(Pos1);
-        Inc(Pos2);
-        if Pos1 > LenLong then
-          Pos1 := 1;
+        // Check for match within tolerance
+        if (StrLong[Pos1] = StrShort[Pos2]) and (Abs(Pos1 - Pos2) <= Tolerance) then
+          begin
+            Tested[Pos1] := True;
+            Inc(Matches);
+            Inc(Pos1);
+            Inc(Pos2);
+            if Pos1 > LenLong then Pos1 := 1;
+          end
+        else
+          begin
+            // No match: advance Pos1
+            Inc(Pos1);
+            if Pos1 > LenLong then
+            begin
+              // Backtrack to last matched or start
+              Pos1 := LenLong;
+              while (Pos1 > 1) and not Tested[Pos1] do
+                Dec(Pos1);
+              Inc(Pos2);
+            end;
+          end;
       end
-      else
+    else
       begin
-        // No match: advance Pos1
+        // Position already matched: skip it
         Inc(Pos1);
         if Pos1 > LenLong then
         begin
           // Backtrack to last matched or start
           Pos1 := LenLong;
-          while (Pos1 > 1) and not Tested[Pos1] do
+          repeat
             Dec(Pos1);
+          until (Pos1 = 1) or Tested[Pos1];
           Inc(Pos2);
         end;
       end;
-    end
-    else
-    begin
-      // Position already matched: skip it
-      Inc(Pos1);
-      if Pos1 > LenLong then
-      begin
-        // Backtrack to last matched or start
-        Pos1 := LenLong;
-        repeat
-          Dec(Pos1);
-        until (Pos1 = 1) or Tested[Pos1];
-        Inc(Pos2);
-      end;
-    end;
   until Pos2 > LenShort;
 
   // Compute percentage based on longer string
   Result := 100 * Matches div LenLong;
 end;
 
+
+function LevenshteinDistance(const s1, s2: string): Integer;
+var
+  Arr: array of array of integer;
+  LenS1, LenS2, i1, i2: integer;
+begin
+  LenS1 := length(s1);
+  LenS2 := length(s2);
+  if LenS1 = 0 then Exit(LenS2);
+  if LenS2 = 0 then Exit(LenS1);
+
+  SetLength(Arr, LenS1 + 1, LenS2 + 1);
+  for i1:= 0 to LenS1 do Arr[i1, 0] := i1;
+  for i2:= 0 to LenS2 do Arr[0, i2] := i2;
+
+  for i1:= 1 to LenS1 do
+    for i2:= 1 to LenS2 do
+      Arr[i1, i2]:= Min(Min(Arr[i1-1, i2] + 1, Arr[i1,i2-1]+1), Arr[i1-1,i2-1] + Integer(s1[i1] <> s2[i2]));
+
+  Result:= Arr[LenS1, LenS2];   // Distance
+end;
+
+
+{ Returns similarity as percentage (0-100) based on Levenshtein distance.
+  100 = identical strings, 0 = completely different.
+  Case-sensitive. Lowercase your strings before calling if needed. }
+function LevenshteinSimilarity(const s1, s2: string): Integer;
+var
+  MaxLen, Distance: Integer;
+begin
+  MaxLen:= Max(Length(s1), Length(s2));
+  if MaxLen = 0
+  then EXIT(100);  // Both empty = identical
+
+  Distance:= LevenshteinDistance(s1, s2);
+  Result:= Round(100 * (1 - Distance / MaxLen));
+end;
 
 
 
