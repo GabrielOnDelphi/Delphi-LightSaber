@@ -93,6 +93,8 @@ TYPE
     procedure LoadForm; virtual;
     procedure SaveForm; virtual;
     destructor Destroy; override;
+
+    procedure MainFormCaption(aCaption: string);
   published
     property CloseOnEscape: Boolean  read FCloseOnEscape  write FCloseOnEscape;    // Close this form when the Esc key is pressed
     property OnAfterConstruction: TNotifyEvent read FOnAfterCtur write FOnAfterCtur;
@@ -141,7 +143,7 @@ begin
   Position:= TFormPosition.Designed;
 
   if Self=Application.MainForm
-  then AppData.MainFormCaption('Initializing...');
+  then MainFormCaption('Initializing...');
 
   inherited Loaded;
 
@@ -150,7 +152,7 @@ begin
 
   // Show app name
   if Self=Application.MainForm
-  then AppData.MainFormCaption('');
+  then MainFormCaption('');
 
   // Load form
   // Limitation: At this point we can only load "standard" Delphi components. Loading of our Light components can only be done in Light_FMX.Visual.INIFile.pas -> TIniFileVCL
@@ -378,6 +380,28 @@ begin
   btnOsNext.Visible := False;
 end;
 
+
+
+
+{-------------------------------------------------------------------------------------------------------------
+   OTHERS
+-------------------------------------------------------------------------------------------------------------}
+// WARNING: FMX: CreateForm does not create the given form immediately. RealCreateForms creates the real forms. So, we cannot access Application.MainForm here.
+procedure TLightForm.MainFormCaption(aCaption: string);
+begin
+  if aCaption= ''
+  then aCaption:= AppData.AppName+ ' '
+  else aCaption:= AppData.AppName+ ' '+ ' - ' + aCaption;
+
+  if AppData.RunningHome
+  then aCaption:= aCaption+ ' [Running home]';
+
+  {$IFDEF DEBUG}
+    aCaption:= aCaption+ ' [Debug]';
+  {$ENDIF}
+
+  Caption:= aCaption;
+end;
 
 
 

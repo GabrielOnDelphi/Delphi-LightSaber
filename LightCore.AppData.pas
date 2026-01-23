@@ -157,7 +157,7 @@ TYPE
 
     property  ShowLogOnError: Boolean read FShowOnError write setShowOnError;    // Automatically show the visual log form when warnings/errors are added to the log. This way the user is informed about the problems.
 
-    procedure MainFormCaption(const Caption: string); virtual; abstract;
+    //del procedure MainFormCaption(const Caption: string); virtual; abstract;
   end;
 
 
