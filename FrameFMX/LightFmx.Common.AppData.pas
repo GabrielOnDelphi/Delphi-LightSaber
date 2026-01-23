@@ -168,7 +168,6 @@ TYPE
       Others
    --------------------------------------------------------------------------------------------------}
     procedure SetMaxPriority;
-    procedure MainFormCaption(const Caption: string); override;
     property FormLog: TfrmRamLog read getLogForm;   //Created at runtime, as/if necessary
   end;
 
@@ -642,23 +641,6 @@ begin
 end;
 
 {$ENDIF}
-
-
-{-------------------------------------------------------------------------------------------------------------
-   OTHERS
--------------------------------------------------------------------------------------------------------------}
-procedure TAppData.MainFormCaption(CONST Caption: string);
-begin
-  inherited;
-
-  // Note: FMX: CreateForm does not create the given form immediately. RealCreateForms creates the real forms. So, we cannot access MainForm here.
-  if Application.MainForm = NIL then EXIT;
-
-  if Caption= ''
-  then Application.MainForm.Caption:= AppName+ ' '
-  else Application.MainForm.Caption:= AppName+ ' '+ ' - ' + Caption;
-end;
-
 
 
 INITIALIZATION
