@@ -91,6 +91,8 @@ TYPE
 
     procedure LoadForm; virtual;
     procedure SaveForm; virtual;
+
+    procedure MainFormCaption(const Caption: string);
   published
     property AutoState: TAutoState   read FAutoSaveForm   write FAutoSaveForm;
     property CloseOnEscape: Boolean  read FCloseOnEscape  write FCloseOnEscape;    // Close this form when the Esc key is pressed
@@ -280,6 +282,15 @@ begin
 end;
 
 
+
+
+procedure TLightForm.MainFormCaption(CONST Caption: string);
+begin
+  if Caption= ''
+  then Application.MainForm.Caption:= appData.AppName+ ' '+ appData.GetVersionInfoV
+  else Application.MainForm.Caption:= appData.AppName+ ' '+ appData.GetVersionInfoV+ ' - ' + Caption;
+  //todo: show debug release modes as in fmx
+end;
 
 
 
