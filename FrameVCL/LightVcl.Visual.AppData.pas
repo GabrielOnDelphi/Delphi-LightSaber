@@ -194,7 +194,6 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       Others
    --------------------------------------------------------------------------------------------------}
-    procedure MainFormCaption(const Caption: string); override;
     property FormLog: TfrmRamLog read getGlobalLog;
     property Font: TFont read FFont write setFont;
   end;
@@ -314,7 +313,7 @@ begin
     then TForm(Reference).Show;
 
   // Show app name
-  MainFormCaption('');      // Must be before FormPostInitialize because the user could put his own caption there.
+  TLightForm(Reference).MainFormCaption('');      // Must be before FormPostInitialize because the user could put his own caption there.
 
   // Window fully constructed. Now we can let user run its own initialization process.
   // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory [Part 2]" book) for details.
@@ -620,7 +619,7 @@ end;
 
 procedure TAppData.setGuiProperties(Form: TForm);
 begin
-  MainFormCaption('Initializing form '+ Form.Name);
+  TLightForm(Form).MainFormCaption('Initializing form '+ Form.Name);
 
   Form.ShowHint:= HintType > htOff;
   Form.ParentFont:= TRUE;
@@ -898,16 +897,6 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    OTHERS
 -------------------------------------------------------------------------------------------------------------}
-procedure TAppData.MainFormCaption(CONST Caption: string);
-begin
-  inherited;
-  
-  if Caption= ''
-  then Application.MainForm.Caption:= AppName+ ' '+ GetVersionInfoV
-  else Application.MainForm.Caption:= AppName+ ' '+ GetVersionInfoV+ ' - ' + Caption;
-end;
-
-
 procedure TAppData.setHideHint(const Value: Integer);
 begin
   inherited;
