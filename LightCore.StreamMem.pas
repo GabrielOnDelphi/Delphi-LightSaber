@@ -1,42 +1,80 @@
 UNIT LightCore.StreamMem;
 
 {=============================================================================================================
-   2024.10
+   2026.01
    www.GabrielMoraru.com
-   https://gabrielmoraru.com/saving-an-object-to-disk-file/
 --------------------------------------------------------------------------------------------------------------
-   Description
-      Class extender for TMemoryStream
-      
+   Extends TMemoryStream.
+   Allows you to read and write data directly into a memory stream.
+
+   Article: www.GabrielMoraru.com/saving-an-object-to-disk-file
+--------------------------------------------------------------------------------------------------------------
+
+   [FEATURES]
+
       This class adds new functionality that does not exist in Delphi's original stream classes:
-      - Read/WriteBoolean
-      - Read/WriteString (Ansi/Unicode)
-      - Read/WriteInteger
-      - Read/WriteCardinal
-      - Read/WriteDate
-      - Read/Write mac files (inverted byte endianness)
-      - etc
+       - Stream versioning
+       - Read/Write Boolean
+       - Read/Write String
+       - Read/Write Integer
+       - Read/Write Cardinal
+       - Read/Write Date
+       - Read/Write Mac files (inverted endianness)
+       - etc
 
-      Allows you to read and write data directly into a memory stream.
-      Allows reading directly non-Intel (Macintosh) data and raw data
+      Stream versioning:
+        This class offers embedded support for file versioning and signature (magic number).
+        By using WriteHeader you can put a unique identifier in each of your file.
+        Later you can user ReadHeader to verify that your program is trying to read a file that is yours. This prevent the user from feeding the wrong file an input into your program.
+        Even more, this class allows you to expand your class - add new fields that are saved to disk while keeping the file format backword compatible.
 
-   Warning
+
+    [HOW TO USE IT]
+
+       Call Load in your class constructor.
+       Call Save in your class destructor.
+
+       procedure TMyClass.Load(Stream: TCubicMemStream);
+       begin
+         if NOT Stream.ReadHeader('MySignature', 1)          // Is the file valid?
+         then RAISE Exception.Create('Cannot load data!');
+         FSomeField:= Stream.ReadInteger;                    // Save your fields
+         ...
+       end;
+
+       procedure TLessons.Save(Stream: TCubicMemStream);
+       begin
+         Stream.WriteHeader('MySignature', 1);
+         Stream.WriteInteger(FSomeField);                    // Write your fields
+         ...
+       end;
+
+       See the attached demo project for a full example.
+
+--------------------------------------------------------------------------------------------------------------
+
+   WARNING
       TMemoryStream loads the entire contents of a file into the memory so don't use it with large files.
+      For large files or buffered access, use TLightStream from LightCore.StreamBuff.pas instead.
 
-   Dependencies
-      This file must remain free of any LightSaber dependencies.
+--------------------------------------------------------------------------------------------------------------
 
-  --------------------------------------------------------------------------------------------------
+   Read vs ReadBuffer:
+      Read treats Count as an upper bound.
+      The ReadBuffer, by contrast, raises an exception if Count bytes cannot be read.
+      So this is better if I don't accept errors in my files.
 
-   Documentation:
-      Wrtiting string to TMemoryStream - Pointer to string - http://stackoverflow.com/questions/3808104/wrtiting-string-to-tmemorystream-pointer-to-string
+   Also see:
+      TBinaryReader / TBinaryWriter
+         http://docwiki.embarcadero.com/CodeExamples/Tokyo/en/TBinaryReader_and_TBinaryWriter_(Delphi)
+         Disadvantage: the class can only read or write from a file (not both at the same time).
+      TLightStream
+         Buffered file stream version
 
-      Read vs ReadBuffer:
-        Read treats Count as an upper bound.
-        The ReadBuffer, by contrast, raises an exception if Count bytes cannot be read. So this is better if I don't accept errors in my files.
+--------------------------------------------------------------------------------------------------------------
 
-   Also see TBinaryReader / TBinaryWriter
-     http://docwiki.embarcadero.com/CodeExamples/Tokyo/en/TBinaryReader_and_TBinaryWriter_(Delphi)
+   DEMO/TESTER
+      LightSaber\Demo\Core\Demo LightCore StreamBuffer\Demo_FileStream.dpr
 
 =============================================================================================================}
 
@@ -45,33 +83,42 @@ UNIT LightCore.StreamMem;
 INTERFACE
 
 USES
-   System.SysUtils, System.Classes;
+   System.SysUtils, System.Classes, System.Types, System.Math, LightCore, LightCore.Types;
 
 TYPE
   TCubicMemStream= class(TMemoryStream)
    private
+     CONST LisaMagicNumber: Cardinal= $6153694C;
+     CONST FrozenPaddingSize = 64;                // NEVER-EVER MODIFY THIS CONSTANT! All files saved with this constant will not work anymore. Enough for 16 Integer variables.
+     function ReadSignature: AnsiString;          // The LiSa string for "Light Saber'.  // Old number: $4C695361
    public
-     constructor CreateFromStream   (Stream: TMemoryStream);
-     constructor CreateFromStreamPos(Stream: TMemoryStream);
+     constructor CreateFromStream(Stream: TMemoryStream; FromPos: Int64 = 0);
 
      { Header }
-     function  ReadMagicNo  (CONST MagicNo: AnsiString): Boolean;
-     procedure WriteMagicNo (CONST MagicNo: AnsiString);
-	 
-     function  ReadCheckPoint: Boolean;
-     procedure WriteCheckPoint;
-     {}
-     function  ReadLF: Boolean;
-     procedure WriteLF;
+     procedure WriteHeader (CONST Signature: AnsiString; Version: Word);
+     function  ReadHeader  (CONST Signature: AnsiString; Version: Word): Boolean;  overload;
+     function  ReadHeader  (CONST Signature: AnsiString): Word;                    overload;
+
+     { Check point }
+     procedure WriteCheckPoint(CONST s: AnsiString= '');
+     procedure ReadCheckPointE(CONST s: AnsiString= '');     // Raises an exception
+     function  ReadCheckPoint (CONST s: AnsiString= ''): Boolean;
+
+     function  ReadEnter: Boolean;
+     procedure WriteEnter;
+
      { Padding }
-     procedure ReadPadding     (CONST Bytes: Integer= 1024);
-     procedure WritePadding    (CONST Bytes: Integer= 1024);
+     procedure WritePadding0(Bytes: Integer= FrozenPaddingSize);
+     procedure ReadPadding0 (Bytes: Integer= FrozenPaddingSize);
+
+     procedure WritePadding (Bytes: Integer= FrozenPaddingSize);
+     procedure ReadPadding  (Bytes: Integer= FrozenPaddingSize);          // Raises an exception if the buffer does not contain the signature
 
      { Numeric }
      function  ReadBoolean : Boolean;
      function  ReadByte    : Byte;
      function  ReadCardinal: Cardinal;
-     function  ReadDate    : TDateTime;      { This is a DOUBLE }
+     function  ReadDate    : TDateTime;                      // This is a DOUBLE
      function  ReadDouble  : Double;
      function  ReadInteger : Integer;
      function  ReadInt64   : Int64;
@@ -94,47 +141,65 @@ TYPE
      procedure WriteUInt64   (i: UInt64);
      procedure WriteWord     (w: Word);
 
+     { Complex structures }
+     function  ReadRect: TRect;
+     procedure WriteRect(Rect: TRect);
+
+     function  ReadRectF: TRectF;
+     procedure WriteRectF(Rect: TRectF);
+
+     procedure ReadIntegers (out List: TIntegerArray);
+     procedure WriteIntegers(const List: TIntegerArray);
+
+     procedure ReadDoubles (out List: TDoubleArray);
+     procedure WriteDoubles(const List: TDoubleArray);
+
+     { Reverse read }
+     function  RevReadCardinal: Cardinal;                                   { REVERSE READ - read 4 bytes and swap their position. For Motorola format. }
+     function  RevReadInteger : Integer;
+     function  RevReadSmallInt: SmallInt;
+     function  RevReadWord    : Word;                                       { REVERSE READ - read 2 bytes and swap their position. For Motorola format. }
+
      { Unicode }
-     procedure WriteString   (CONST s: string);                            { Works for both Delphi7 and Delphi UNICODE }
-     function  ReadString: string;                                         { Works for both Delphi7 and Delphi UNICODE }
+     procedure WriteString  (CONST s: string);
+     function  ReadString(SafetyLimit: Cardinal = 1*KB): string;  overload;
 
-	 { ANSI }
-     procedure WriteStringA(CONST s: AnsiString);
-     function  ReadStringA (CONST Len : integer): AnsiString; overload;    { We need to specify the length of the string }
-     function  ReadStringA : AnsiString;                      overload;    { It automatically detects the length of the string }
+     { ANSI }
+     procedure WriteStringA  (CONST s: AnsiString);
+     function  TryReadStringA(Count: Cardinal): AnsiString;                { This is the relaxed version. It won't raise an error if there is not enough data (Len) to read }
+     function  ReadStringACnt(Count: Cardinal; SafetyLimit: Cardinal): AnsiString;       { It will raise an error if there is not enough data (Len) to read }
+     function  ReadStringA   (SafetyLimit: Cardinal = 1*KB): AnsiString;                        { It automatically detects the length of the string }
 
-	 { TSL }
-     function  ReadStrings: TStringList;                      overload;
-     procedure ReadStrings  (TSL: TStrings);                  overload;
+    { TSL }
+     function  ReadStrings: TStringList;                       overload;
+     procedure ReadStrings  (TSL: TStrings);                   overload;
      procedure WriteStrings (TSL: TStrings);
 
-     { Chars }
-     procedure WriteChars(CONST s: AnsiString);               overload;    { Write the string but don't write its length }
-     procedure WriteChars(CONST s: string);                   overload;
-     function  ReadCharsA(Count: Integer): AnsiString;
-     function  ReadChars (Count: Integer): string;                         { Works for both Delphi7 and Delphi UNICODE }
-
+    { Chars }
+     procedure WriteChars   (CONST s: AnsiString);             overload;
+     procedure WriteChars   (CONST s: string);                 overload;
+     function  ReadCharsA   (Count: Cardinal; SafetyLimit: Cardinal = 1*KB): AnsiString;
+     function  ReadChars    (Count: Cardinal): string;
 
      { Char }
      procedure WriteChar(CONST c: AnsiChar);
      function  ReadChar: AnsiChar;
 
-     { Reverse read }
-     function  RevReadCardinal: Cardinal;                                  { REVERSE READ - read 4 bytes and swap their position }
-     function  RevReadInteger : Integer;
-     function  RevReadSmallInt: Smallint;
-     function  RevReadWord    : Word;                                      { REVERSE READ - read 2 bytes and swap their position }
+     { Strings without length }
+     procedure PushString   (CONST s: string);
+     function  ReadStringCnt   (Count: Cardinal; SafetyLimit: Cardinal = 1*KB): string;     overload;     { Read 'Len' characters }
 
      { Raw }
      function  AsBytes: TBytes;
-     function  AsStringU: String;                                          { Returns the content of the stream as a string }
      function  AsString: AnsiString;
 
-     procedure WriteByteChunk(CONST Buffer: TBytes);
+     procedure PushBytesCnt (CONST Buffer: TBytes);
      function  ReadByteChunk: TBytes;
 
-     procedure PushData(CONST s: AnsiString); overload;                    { Put binary data (or text) into the stream }
-     procedure PushData(CONST Bytes: TBytes);  overload;
+     procedure PushAnsi (CONST s: AnsiString);
+     procedure PushBytes(CONST Bytes: TBytes);
+     procedure PushData (CONST s: AnsiString);        overload;            { Clears stream first, then writes }
+     procedure PushData (CONST Bytes: TBytes);        overload;            { Clears stream first, then writes }
 
      { Disk }
      procedure LoadFromFile(CONST FileName: string);
@@ -147,89 +212,193 @@ function StringFromStream(MemStream: TMemoryStream; Count: Integer= 0; Pos: Inte
 
 IMPLEMENTATION
 USES
-   LightCore.Binary, LightCore.StreamBuff;
+   LightCore.Binary, LightCore.AppData, LightCore.StreamBuff;
 
 
-constructor TCubicMemStream.CreateFromStream(Stream: TMemoryStream);
-begin
-  inherited Create;
-  Assert(Stream <> NIL);
-  CopyFrom(Stream, Stream.Size);
-  Position := 0;
-end;
+{--------------------------------------------------------------------------------------------------
+   CTOR
+--------------------------------------------------------------------------------------------------}
 
-
-{ Creates the object and copy the data from the specified stream, from its current pos }
-constructor TCubicMemStream.CreateFromStreamPos(Stream: TMemoryStream);
+{ Creates the object and copies data from the specified stream.
+  FromPos = 0 (default): copy entire stream
+  FromPos > 0: copy from that position to end
+  Pass Stream.Position to copy from current position (old CreateFromStreamPos behavior) }
+constructor TCubicMemStream.CreateFromStream(Stream: TMemoryStream; FromPos: Int64 = 0);
 var
-  CurrentPos: Int64;
+  SavedPos: Int64;
   BytesToCopy: Int64;
 begin
   inherited Create;
-
   Assert(Stream <> NIL);
 
-  CurrentPos := Stream.Position;
+  if FromPos < 0
+  then FromPos:= 0;
 
-  // Calculate how much data remains in the stream from the current position
-  BytesToCopy := Stream.Size - CurrentPos;
-  Assert(BytesToCopy > 0, 'TCubicMemStream - Nothing to copy!');
+  BytesToCopy:= Stream.Size - FromPos;
+  if BytesToCopy <= 0
+  then EXIT;
+
+  // Save source position, seek to FromPos
+  SavedPos:= Stream.Position;
+  Stream.Position:= FromPos;
 
   CopyFrom(Stream, BytesToCopy);
 
-  // Restore the stream's position
-  Stream.Position := CurrentPos;
+  // Restore source stream position
+  Stream.Position:= SavedPos;
 
-  Position := 0;
+  Position:= 0;
 end;
 
 
 
+{-------------------------------------------------------------------------------------------------------------
+   HEADER FORMAT:
 
+     4 bytes (Card): LiSa (always the same)
+     4 bytes (Card): Length of the magic signature
+       bytes (Ansi): Magic signature
+     2 bytes (Word): File version number.
 
-{--------------------------------------------------------------------------------------------------
-   MAGIC NO
-   Obsolete. Still used in Bionix. 
-   Use ReadMagicVer instead.
----------------------------------------------------------------------------------------------------
-   This can be used as signature for your stream/file.
-   It is already recommended that the first bytes in a stream/file are a signature
---------------------------------------------------------------------------------------------------}
-function TCubicMemStream.ReadMagicNo(CONST MagicNo: AnsiString): Boolean;       { Read a string from disk and compare it with MagicNo. Retursn TRUE if it matches }
+     This new file header is more reliable because we check
+       the magic number  - this is fixed for all TCubicMemStream files
+       the signature
+       the file version
+
+--------------------------------------------------------------------------------------------------------------
+     'L' = 0x4C
+     'i' = 0x69
+     'S' = 0x53
+     'a' = 0x61
+-------------------------------------------------------------------------------------------------------------}
+
+procedure TCubicMemStream.WriteHeader(CONST Signature: AnsiString; Version: Word);
 begin
- Result:= ReadCharsA(Length(MagicNo)) = MagicNo;
+  Assert(Length(Signature) <= 64, 'The Signature cannot be larger the 64 chars!');
+  WriteCardinal  (LisaMagicNumber);  // Write fixed magic no  "LiSa"
+  WriteStringA   (Signature);        // Write signature
+  WriteWord      (Version);          // Write the file version number
 end;
 
-procedure TCubicMemStream.WriteMagicNo(CONST MagicNo: AnsiString);
+
+{ Returns the version or 0 in case of error.
+  No exception will be raised unless when the file is smaller than what we want to read. }
+function TCubicMemStream.ReadHeader(CONST Signature: AnsiString): Word;
+VAR
+  MagicNo: Cardinal;
+  FileSignature: AnsiString;
 begin
- Assert(MagicNo > '', 'Magic number is empty!');
- WriteChars(MagicNo);
+  Assert(Signature > '', 'TCubicMemStream - No signature provided!');
+
+  // Read "LiSa" magic no
+  TRY
+    MagicNo:= ReadCardinal;
+  EXCEPT
+    on E: Exception DO
+      begin
+        AppDataCore.LogError('Cannot read magic number for: '+ String(Signature) + ' - '+ E.Message);
+        EXIT(0);
+      end;
+  END;
+  if MagicNo <> LisaMagicNumber then EXIT(0);
+
+  // Read signature
+  TRY
+    FileSignature:= ReadSignature;
+  EXCEPT
+    on E: Exception DO
+    begin
+      AppDataCore.LogError('Cannot read stream signature for: '+ String(Signature) + ' - '+ E.Message);
+      EXIT(0);
+    end;
+  END;
+  if FileSignature = '' then
+    begin
+      AppDataCore.LogError('Cannot read file signature: '+ string(Signature));
+      EXIT(0);
+    end;
+  if FileSignature <> Signature then
+    begin
+      AppDataCore.LogError('Signature mismatch: '+ string(Signature));
+      EXIT(0);
+    end;
+
+  // Read the version number
+  TRY
+    Result:= ReadWord;
+  EXCEPT
+    on E: Exception DO
+    begin
+      AppDataCore.LogError('Cannot read stream version for: '+ String(Signature) + ' - '+ E.Message);
+      EXIT(0);
+    end;
+  END;
+end;
+
+
+{ Returns True if signature & version number matches. }
+function TCubicMemStream.ReadHeader(CONST Signature: AnsiString; Version: Word): Boolean;
+VAR FileVersion: Word;
+begin
+  Assert(Version> 0 , 'TCubicMemStream - Version must be > 0!');
+
+  FileVersion:= ReadHeader(Signature);
+  Result:= (FileVersion > 0) AND (Version = FileVersion);
+end;
+
+
+{ A dedicated function to read the signature.
+  It raises an error if we try to read too many chars, which can happen when we read random data (file corrupted or version changed) }
+function TCubicMemStream.ReadSignature: AnsiString;
+VAR Count: Cardinal;
+begin
+  // First, find out how many characters to read
+  ReadBuffer(Count, SizeOf(Count));
+
+  // Check size
+  if Count > 64 then
+    begin
+      AppDataCore.LogError('ReadSignature: Signature larger than 64 bytes: '+ IntToStr(Count)+' bytes');
+      EXIT('');
+    end;
+
+  // Enough data to read?
+  if Count > Size- Position then
+    begin
+      AppDataCore.LogError('ReadSignature: Signature lenght > file size!');
+      EXIT('');
+    end;
+
+  // Do the actual strign reading
+  Result:= ReadStringACnt(Count, 128);
 end;
 
 
 
-
-
-
-
-
-{--------------------------------------------------------------------------------------------------
+{-------------------------------------------------------------------------------------------------------------
    Write a checkpoint into the stream.
    Used for debugging.
---------------------------------------------------------------------------------------------------}
+   Write this from time to time to your file so if you screwup, you check from time to time to see if you are still reading the correct data.
+-------------------------------------------------------------------------------------------------------------}
 CONST
-   ctCheckPoint= '<*>Checkpoint<*>';    { For debugging. Write this from time to time to your file so if you screwup, you check from time to time to see if you are still reading the correct data. }
+   ctCheckPoint= '<*>Checkpoint<*>';
 
 
 { For debugging. Write a scheckpoint entry (just a string) from time to time to your file so if you screwup, you check from time to time to see if you are still reading the correct data. }
-function TCubicMemStream.ReadCheckPoint: Boolean;
+procedure TCubicMemStream.ReadCheckPointE(CONST s: AnsiString= '');
 begin
- Result:= ReadStringA = ctCheckPoint;
+  if NOT ReadCheckPoint(s)
+  then raise Exception.Create('Checkpoint failure! '+ crlf+ string(s));
 end;
 
-procedure TCubicMemStream.WriteCheckPoint;
+function TCubicMemStream.ReadCheckPoint(CONST s: AnsiString= ''): Boolean;
 begin
- WriteStringA(ctCheckPoint);
+  Result:= ReadStringA = ctCheckPoint+ s;
+end;
+
+procedure TCubicMemStream.WriteCheckPoint(CONST s: AnsiString= '');
+begin
+  WriteStringA(ctCheckPoint+ s);
 end;
 
 
@@ -237,37 +406,109 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    PADDING
-   It is important to read/write some padding bytes.
-   If you later (as your program evolves) need to save extra data into your file, you use the padding bytes. This way you don't need to change your file format.
---------------------------------------------------------------------------------------------------}
+   It is important to leave some space at the end of your file (aka padding bytes).
+   If you later (as your program evolves) need to save extra data into your file,
+     you use the padding bytes. This way you don't need to change your file format.
+-------------------------------------------------------------------------------------------------------------}
 
 // Writes zeroes as padding bytes.
-procedure TCubicMemStream.WritePadding(CONST Bytes: Integer);
+procedure TCubicMemStream.WritePadding0(Bytes: Integer);
 VAR b: TBytes;
 begin
- if Bytes> 0 then
-  begin
-   SetLength(b, Bytes);
-   FillChar (b[0], Bytes, #0);
-   WriteBuffer(b[0], Bytes);
-  end;
+  if Bytes> 0 then
+    begin
+      SetLength(b, Bytes);
+      FillChar (b[0], Bytes, #0);
+      WriteBuffer(b[0], Bytes);
+    end;
 end;
 
 // Reads the padding bytes back and does not check them for validity
-procedure TCubicMemStream.ReadPadding(CONST Bytes: Integer);
+procedure TCubicMemStream.ReadPadding0(Bytes: Integer);
 VAR b: TBytes;
 begin
- if Bytes> 0 then
+  if Bytes> 0 then
+    begin
+      SetLength(b, Bytes);
+      ReadBuffer(b[0], Bytes);
+    end;
+end;
+
+
+
+CONST
+  SafetyPaddingStr: AnsiString= '<##LightSaber - Pattern of exactly 64 bytes for safety check.##>';   //This string is exactly 64 chars long
+
+{ Read/write a string as padding bytes.
+  ReadPadding raises an exception if the padding does not match the SafetyPaddingStr string. Usefule to detect file corruption. }
+procedure TCubicMemStream.WritePadding(Bytes: Integer);
+VAR
+  b: TBytes;
+  i, CheckPointSize: Integer;
+begin
+  SetLength(b, Bytes);
+  CheckPointSize:= Length(SafetyPaddingStr);
+
+  // Copy the string to the byte array (up to the available bytes or string length)
+  for i := 0 to Min(Bytes, CheckPointSize) - 1
+    do b[i] := Byte(SafetyPaddingStr[i + 1]);
+
+  // Fill the rest of the buffer with zeros
+  if Bytes > CheckPointSize
+  then FillChar(b[CheckPointSize], Bytes - CheckPointSize, #0);
+
+  // Write the buffer to the stream
+  WriteBuffer(b[0], Bytes);
+end;
+
+
+procedure TCubicMemStream.ReadPadding(Bytes: Integer);
+VAR
+  b: TBytes;
+  CheckPointSize: Integer;
+  i: Integer;
+  MinSize: Integer;
+begin
+  if Bytes > 0 then
   begin
-   SetLength(b, Bytes);
-   ReadBuffer(b[0], Bytes);
+    Assert(Bytes + Position <= Size, 'Read beyond stream!');
+
+    SetLength(b, Bytes);
+    ReadBuffer(b[0], Bytes);
+    CheckPointSize:= Length(SafetyPaddingStr);
+
+    // Check if the beginning of the buffer matches the string
+    MinSize:= Min(CheckPointSize, Bytes);
+    for i := 0 to MinSize- 1 do
+        if b[i] <> Byte(SafetyPaddingStr[i + 1])
+        then RAISE Exception.Create('Invalid checkpoint!!');
   end;
 end;
 
 
 
 
+{-----------
+   ENTER
+------------}
+function TCubicMemStream.ReadEnter: Boolean;   { Returns TRUE if the byte read is CR LF }
+VAR Byte1, Byte2: Byte;
+begin
+  ReadBuffer(Byte1, 1);
+  ReadBuffer(Byte2, 1);
+  Result:= (Byte1= Byte(#13)) AND (Byte2= Byte(#10));
+end;
 
+
+procedure TCubicMemStream.WriteEnter;
+VAR
+  Byte1, Byte2: Byte;
+begin
+  Byte1 := Byte(#13);  // CR
+  Byte2 := Byte(#10);  // LF
+  WriteBuffer(Byte1, 1);
+  WriteBuffer(Byte2, 1);
+end;
 
 
 
@@ -275,38 +516,42 @@ end;
 {--------------------------------------------------------------------------------------------------
    UNICODE STRINGS
 --------------------------------------------------------------------------------------------------}
-procedure TCubicMemStream.WriteString(CONST s: string);                        { Works for both Delphi7 and Delphi UNICODE }
+procedure TCubicMemStream.WriteString(CONST s: string);
 VAR
-  Len: cardinal;
+  Count: cardinal;
   UTF: UTF8String;
 begin
- UTF := UTF8String(s);
+  UTF := UTF8String(s);
 
- { Write length }
- Len := Length(UTF);
- WriteBuffer(Len, SizeOf(Len));
+  { Write length }
+  Count := Length(UTF);
+  WriteBuffer(Count, SizeOf(Count));
 
- { Write string }
- if Len > 0
- then WriteBuffer(UTF[1], Len);
+  { Write string }
+  if Count > 0
+  then WriteBuffer(UTF[1], Count);
 end;
 
-function TCubicMemStream.ReadString: string;     { Works for both Delphi7 and Delphi UNICODE }
+
+function TCubicMemStream.ReadString(SafetyLimit: Cardinal = 1*KB): string;   { Works for both Delphi7 and Delphi UNICODE }
 VAR
-   Len: Cardinal;
+   Count: Cardinal;
    UTF: UTF8String;
 begin
- ReadBuffer(Len, 4);                                                        { Read length }
+  ReadBuffer(Count, 4);                        { Read length }
 
- if Len > 0
- then
-   begin
-     SetLength(UTF, Len);                                                     { Read string }
-     ReadBuffer(UTF[1], Len);
-     Result:= string(UTF);
-   end
- else
-   Result:= '';
+  if Count > SafetyLimit
+  then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
+
+  if Count > 0
+  then
+    begin
+      SetLength(UTF, Count);                   { Read string }
+      ReadBuffer(UTF[1], Count);
+      Result:= string(UTF);
+    end
+  else
+    Result:= '';
 end;
 
 
@@ -316,46 +561,48 @@ end;
    CHARS
 --------------------------------------------------------------------------------------------------}
 
-{ Writes a bunch of chars from the file. Why 'chars' and not 'string'? This function writes C++ strings (the length of the string was not written to disk also) and not real Delphi strings. }
-procedure TCubicMemStream.WriteChars(CONST s: AnsiString);                  { Write the string but don't write its length }
+{ Writes a bunch of chars from the file.
+  Why 'chars' and not 'string'? This function writes C++ strings (the length of the string was not written to disk also) and not real Delphi strings. }
+procedure TCubicMemStream.WriteChars(CONST s: AnsiString);
 begin
- Assert(s<> '', 'TCubicMemStream.WriteChars - The string is empty');   { This makes sure 's' is not empty. Else I will get a RangeCheckError at runtime }
- WriteBuffer(s[1], Length(s));
+  Assert(s<> '', 'TCubicMemStream.WriteChars - The string is empty');       { This makes sure 's' is not empty. Else I will get a RangeCheckError at runtime }
+  WriteBuffer(s[1], Length(s));
 end;
 
 
-procedure TCubicMemStream.WriteChars(CONST s: string);                      { Works for both Delphi7 and Delphi UNICODE }    // old name: WriteStringANoLen
+procedure TCubicMemStream.WriteChars(CONST s: string);                     { Works for both Delphi7 and Delphi UNICODE }    // old name: WriteStringANoLen
 VAR UTF: UTF8String;
 begin
- UTF := UTF8String(s);
- if Length(UTF) > 0
- then WriteBuffer(UTF[1], Length(UTF));
+  UTF := UTF8String(s);
+  if Length(UTF) > 0
+  then WriteBuffer(UTF[1], Length(UTF));
 end;
 
 
-function TCubicMemStream.ReadChars(Count: Integer): string;        { Works for both Delphi7 and Delphi UNICODE }
+function TCubicMemStream.ReadChars(Count: Cardinal): string;        { Works for both Delphi7 and Delphi UNICODE }
 VAR UTF: UTF8String;
 begin
- if Count < 1 then EXIT('');
+  if Count < 1 then EXIT('');
 
- SetLength(UTF, Count);
- ReadBuffer(UTF[1], Count);
- Result:= string(UTF);
+  SetLength(UTF, Count);
+  ReadBuffer(UTF[1], Count);
+  Result:= string(UTF);
 end;
 
 
 { Reads a bunch of chars from the file. Why 'ReadChars' and not 'ReadString'? This function reads C++ strings (the length of the string was not written to disk also) and not real Delphi strings. So, i have to give the number of chars to read as parameter. IMPORTANT: The function will reserve memory for s.}
-function TCubicMemStream.ReadCharsA(Count: Integer): AnsiString;
+function TCubicMemStream.ReadCharsA(Count: Cardinal; SafetyLimit: Cardinal = 1*KB): AnsiString;
 begin
- if Count= 0 then RAISE Exception.Create('Count is zero!');                     { It gives a range check error if we try s[1] on an empty string so we added 'Count = 0' as protection. }
+  if Count= 0
+  then RAISE Exception.Create('Count is zero!');     { We cannot do s[1] on an empty string so we added 'Count = 0' as protection. }
 
- SetLength(Result, Count);
- ReadBuffer(Result[1], Count);
-{ Alternative:  Result:= Read(Pointer(s)^, Count)= Count;     <--- Don't use this! Ever. See explanation from A Buchez:   http://stackoverflow.com/questions/6411246/pointers-versus-s1 }
+  if Count > SafetyLimit
+  then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
+
+  SetLength(Result, Count);
+  ReadBuffer(Result[1], Count);
+ { Alternative:  Result:= Read(Pointer(s)^, Count)= Count;     <--- Don't use this! Ever. See explanation from A Buchez:   http://stackoverflow.com/questions/6411246/pointers-versus-s1 }
 end;
-
-
-
 
 
 
@@ -378,35 +625,9 @@ end;
 
 function TCubicMemStream.ReadStrings: TStringList;
 begin
- Result:= TStringList.Create;
- Result.Text:= ReadString;
+  Result:= TStringList.Create;
+  Result.Text:= ReadString;
 end;
-
-
-
-
-{--------------------------------------------------------------------------------------------------
-   ENTER
---------------------------------------------------------------------------------------------------}
-function TCubicMemStream.ReadLF: Boolean;                                    { Returns TRUE if the byte read is LF }
-VAR aByte: Byte;
-begin
- ReadBuffer(aByte, 1);
- Result:= aByte= Byte(#10);
-end;
-
-procedure TCubicMemStream.WriteLF;
-VAR aByte: Byte;
-begin
- aByte:= Byte(#10);
- WriteBuffer(abyte, 1);
-end;
-
-
-
-
-
-
 
 
 
@@ -418,16 +639,15 @@ end;
 { BOOLEAN }
 procedure TCubicMemStream.WriteBoolean(b: Boolean);
 begin
- WriteBuffer(b, 1);
+  WriteBuffer(b, 1);
 end;
 
 function TCubicMemStream.ReadBoolean: Boolean;
 VAR b: byte;
 begin
- ReadBuffer(b, 1);    { Valid values for a Boolean are 0 and 1. If you put a different value into a Boolean variable then future behaviour is undefined. You should read into a byte variable b and assign b <> 0 into the Boolean. Or sanitise by casting the byte to ByteBool. Or you may choose to validate the value read from the file and reject anything other than 0 and 1. http://stackoverflow.com/questions/28383736/cannot-read-boolean-value-with-tmemorystream }
- Result:= b <> 0;
+  ReadBuffer(b, 1);    { Valid values for a Boolean are 0 and 1. If you put a different value into a Boolean variable then future behaviour is undefined. You should read into a byte variable b and assign b <> 0 into the Boolean. Or sanitise by casting the byte to ByteBool. Or you may choose to validate the value read from the file and reject anything other than 0 and 1. http://stackoverflow.com/questions/28383736/cannot-read-boolean-value-with-tmemorystream }
+  Result:= b <> 0;
 end;
-
 
 
 
@@ -435,12 +655,12 @@ end;
 { BYTE }
 procedure TCubicMemStream.WriteByte(b: Byte);
 begin
- WriteBuffer(b, 1);
+  WriteBuffer(b, 1);
 end;
 
 function TCubicMemStream.ReadByte: Byte;
 begin
- ReadBuffer(Result, 1);
+  ReadBuffer(Result, 1);
 end;
 
 
@@ -448,12 +668,12 @@ end;
 { SIGNED }
 procedure TCubicMemStream.WriteShortInt(s: ShortInt);     //Signed 8bit: -128..127
 begin
- Write(s, 1);
+  Write(s, 1);
 end;
 
 function TCubicMemStream.ReadShortInt: ShortInt;
 begin
- Read(Result, 1);
+  Read(Result, 1);
 end;
 
 
@@ -461,59 +681,55 @@ end;
 {}
 procedure TCubicMemStream.WriteSmallInt(s: SmallInt);     //Signed 16bit: -32768..32767
 begin
- Write(s, 2);
+  Write(s, 2);
 end;
 
 function TCubicMemStream.ReadSmallInt: SmallInt;
 begin
- Read(Result, 2);
+  Read(Result, 2);
 end;
-
-
-
 
 
 { WORD }
 procedure TCubicMemStream.WriteWord(w: Word);
 begin
- WriteBuffer(w, 2);
+  WriteBuffer(w, 2);
 end;
 
 function TCubicMemStream.ReadWord: Word;
 begin
- ReadBuffer(Result, 2);
+  ReadBuffer(Result, 2);
 end;
 
 
 { CARDINAL }
 procedure TCubicMemStream.WriteCardinal(c: Cardinal);
 begin
- WriteBuffer(c, 4);
+  WriteBuffer(c, 4);
 end;
 
 function TCubicMemStream.ReadCardinal: Cardinal;    { Cardinal IS NOT a fundamental type BUT its size is 32 bits across 64-bit and 32-bit platforms.  }
 begin
- ReadBuffer(Result, 4);
+  ReadBuffer(Result, 4);
 end;
 
 
 { INTEGER }
 procedure TCubicMemStream.WriteInteger(i: Integer);
 begin
- WriteBuffer(i, 4);
+  WriteBuffer(i, 4);
 end;
 
 function TCubicMemStream.ReadInteger: Integer;
 begin
- ReadBuffer(Result, 4);
+  ReadBuffer(Result, 4);
 end;
-
 
 
 { INT64 }
 procedure TCubicMemStream.WriteInt64(i: Int64);
 begin
- WriteBuffer(i, 8);
+  WriteBuffer(i, 8);
 end;
 
 function TCubicMemStream.ReadInt64: Int64;
@@ -522,24 +738,16 @@ begin
 end;
 
 
-{ UINT64 }
-{ UInt64 Defines a 64-bit unsigned integer type. UInt64 represents a subset of the natural numbers. The range for the UInt64 type is from 0 through 2^64-1. The size of UInt64 is 64 bits across all 64-bit and 32-bit platforms. }
+{ UINT64 - The size of UInt64 is 64 bits across all 64-bit and 32-bit platforms. }
 procedure TCubicMemStream.WriteUInt64(i: UInt64);
 begin
- WriteBuffer(i, 8);
+  WriteBuffer(i, 8);
 end;
 
 function TCubicMemStream.ReadUInt64: UInt64;
 begin
- ReadBuffer(Result, 8);
+  ReadBuffer(Result, 8);
 end;
-
-
-
-
-
-
-
 
 
 
@@ -547,30 +755,26 @@ end;
 {--------------------------------------------------------------------------------------------------
    FLOATS
 --------------------------------------------------------------------------------------------------}
-
-
-{ FLOATS }
-
 function TCubicMemStream.ReadSingle: Single;
 begin
-  Read(Result, 4);     
+  Read(Result, 4);
 end;
 
 procedure TCubicMemStream.WriteSingle(s: Single);
 begin
-  Write(s, 4);                                                             
+  Write(s, 4);
 end;
 
 
 
 function TCubicMemStream.ReadDouble: Double;
 begin
- Read(Result, 8);
+  Read(Result, 8);
 end;
 
 procedure TCubicMemStream.WriteDouble(d: Double);
 begin
- Write(d, 8);
+  Write(d, 8);
 end;
 
 
@@ -580,18 +784,95 @@ end;
 
 function TCubicMemStream.ReadDate: TDateTime;
 begin
- ReadBuffer(Result, 8);
+  ReadBuffer(Result, 8);
 end;
 
 procedure TCubicMemStream.WriteDate(d: TDateTime);
 begin
- WriteBuffer(d, 8);             { The size of Double is 8 bytes }
+  WriteBuffer(d, 8);             { The size of Double is 8 bytes }
 end;
 
 
 
 
+{--------------------------------------------------------------------------------------------------
+   COMPLEX STRUCTURES
+--------------------------------------------------------------------------------------------------}
+function TCubicMemStream.ReadRect: TRect;
+begin
+  ReadBuffer(Result.Left  , 4);
+  ReadBuffer(Result.Top   , 4);
+  ReadBuffer(Result.Right , 4);
+  ReadBuffer(Result.Bottom, 4);
+end;
 
+procedure TCubicMemStream.WriteRect(Rect: TRect);
+begin
+  WriteBuffer(Rect.Left  , 4);
+  WriteBuffer(Rect.Top   , 4);
+  WriteBuffer(Rect.Right , 4);
+  WriteBuffer(Rect.Bottom, 4);
+end;
+
+
+
+function TCubicMemStream.ReadRectF: TRectF;
+begin
+  ReadBuffer(Result.Left  , 4);
+  ReadBuffer(Result.Top   , 4);
+  ReadBuffer(Result.Right , 4);
+  ReadBuffer(Result.Bottom, 4);
+end;
+
+procedure TCubicMemStream.WriteRectF(Rect: TRectF);
+begin
+  WriteBuffer(Rect.Left  , 4);
+  WriteBuffer(Rect.Top   , 4);
+  WriteBuffer(Rect.Right , 4);
+  WriteBuffer(Rect.Bottom, 4);
+end;
+
+
+
+procedure TCubicMemStream.ReadIntegers(out List: TIntegerArray);
+VAR
+  i: Integer;
+  Count: Integer;
+begin
+  Count:= ReadInteger;
+  SetLength(List, Count);
+  for i:= 0 to High(List) DO
+    List[i]:= ReadInteger;
+end;
+
+procedure TCubicMemStream.WriteIntegers(const List: TIntegerArray);
+VAR Int: Integer;
+begin
+  WriteInteger(Length(List));
+  for Int in List DO
+    WriteInteger(Int);
+end;
+
+
+
+procedure TCubicMemStream.ReadDoubles(out List: TDoubleArray);
+VAR
+  i: Integer;
+  Count: Integer;
+begin
+  Count:= ReadInteger;
+  SetLength(List, Count);
+  for i:= 0 to High(List) DO
+    List[i]:= ReadDouble;
+end;
+
+procedure TCubicMemStream.WriteDoubles(const List: TDoubleArray);
+VAR Dbl: Double;
+begin
+  WriteInteger(Length(List));
+  for Dbl in List DO
+    WriteDouble(Dbl);
+end;
 
 
 
@@ -601,123 +882,149 @@ end;
 --------------------------------------------------------------------------------------------------}
 { REVERSE READ - read 4 bytes and swap their position
   LongWord = Cardinal }
-function TCubicMemStream.RevReadCardinal: Cardinal;  // Old name: RevReadLongWord
+function TCubicMemStream.RevReadCardinal: Cardinal;    // Old name: RevReadLongWord
 begin
   ReadBuffer(Result, 4);
   SwapCardinal(Result);        { SwapCardinal will correctly swap the byte order of the 32-bit value regardless whether the number is signed or unsigned }
 end;
 
 
-function TCubicMemStream.RevReadInteger: Integer;  // old name: RevReadLongInt
+function TCubicMemStream.RevReadInteger: Integer;
 begin
-  ReadBuffer(Result, 4);    // Warning! LongInt is 8 byte on Linux, but I read 4!
+  ReadBuffer(Result, 4);
   SwapInt(Result);
-end;
-
-
-function TCubicMemStream.RevReadWord: Word;          { REVERSE READ - read 2 bytes and swap their position }
-begin
-  ReadBuffer(Result, 2);
-  Result:= Swap(Result);                             { Exchanges high order byte with the low order byte of an integer or word. In Delphi code, Swap exchanges the high-order bytes with the low-order bytes of the argument. X is an expression of type SmallInt, as a 16-bit value, or Word. This is provided for backward compatibility only. }
-  //Also see: LightCore.Binary.SwapWord
 end;
 
 
 function TCubicMemStream.RevReadSmallInt: SmallInt;
 begin
   ReadBuffer(Result, 2);
-  Result:= Swap(Result);                             { Exchanges high order byte with the low order byte of an integer or word. In Delphi code, Swap exchanges the high-order bytes with the low-order bytes of the argument. X is an expression of type SmallInt, as a 16-bit value, or Word. This is provided for backward compatibility only. }
+  Result:= Swap(Result);
 end;
 
 
-(*
-// BAD NAME!
-{ Read 4 bytes (UInt4) and swap their position }        // Old name RevReadInt                      // Used in 'UNIT ReadSCF'
-function TCubicMemStream.RevReadCardinal_: Cardinal;
+function TCubicMemStream.RevReadWord: Word; { REVERSE READ - read 2 bytes and swap their position }
 begin
- ReadBuffer(Result, 4);
- SwapCardinal(Result);
-end;   *)
-
+  ReadBuffer(Result, 2);
+  Result:= Swap(Result);     { Exchanges high order byte with the low order byte of an integer or word. In Delphi code, Swap exchanges the high-order bytes with the low-order bytes of the argument. X is an expression of type SmallInt, as a 16-bit value, or Word. This is provided for backward compatibility only. }
+  //Also see: LightCore.Binary.SwapWord
+end;
 
 
 
 
 {--------------------------------------------------------------------------------------------------
-   PUSH/LOAD DATA DIRECTLY INTO THE STREAM
+   RAW DATA
 ---------------------------------------------------------------------------------------------------
-   Write raw data to file.
-
-   How to use it:
-      SetLength(MyArray, 10);
-      FStream.ReadData(MyArray[0], Length(Buffer));
-    OR:
-      SetLength(s, 10);
-      ReadBuffer(s[1], Length(Buffer));
+   Read/write raw data to file.
 --------------------------------------------------------------------------------------------------}
 
-{ Write raw data to file }
-procedure TCubicMemStream.PushData(CONST s: AnsiString);    //ToDo: this should have an overload that saves an array of bytes instead of AnsiString
+{ Writes the string to file but does not write its length.
+  In most cases you will want to use WriteString instead of PushString. }             { Used in cmEncodeMime.pas }
+procedure TCubicMemStream.PushString(CONST s: string);    //  old name: WriteStringNoLen
+VAR UTF: UTF8String;
 begin
- Clear;       { Sets the Memory property to nil (Delphi). Sets the Position property to 0. Sets the Size property to 0. }
- WriteBuffer(s[1], Length(s));
+  UTF := UTF8String(s);
+  if Length(UTF) > 0
+  then WriteBuffer(UTF[1], Length(UTF));
 end;
 
 
-procedure TCubicMemStream.PushData(CONST Bytes: TBytes);
+{ Write raw data to file. The length is not written! }
+procedure TCubicMemStream.PushAnsi(CONST s: AnsiString);   // old name: WriteStringANoLen
 begin
- Clear;           { Sets the Memory property to nil (Delphi). Sets the Position property to 0. Sets the Size property to 0. }
- WriteBuffer(Bytes[0], Length(Bytes));
+  Assert(s<> '', 'WriteStringA - The string is empty');   { Make sure 's' is not empty, otherwise we get a RangeCheckError at runtime }
+  WriteBuffer(s[1], Length(s));
 end;
 
 
-
-
-{--------------------------------------------------------------------------------------------------
-   RAW
---------------------------------------------------------------------------------------------------}
 { Read the raw content of the file and return it as string (for debugging) }
-function TCubicMemStream.AsString: AnsiString;    
+function TCubicMemStream.AsString: AnsiString;
 begin
- Position:= 0;
- Result:= ReadStringA(Size);
+  Position:= 0;
+  Result:= ReadStringA(Size);
 end;
 
 
-function TCubicMemStream.AsStringU: string;          {THIS SHOULD NEVER BE USED. TO BE DELETED! }
+function TCubicMemStream.ReadStringACnt(Count: Cardinal; SafetyLimit: Cardinal): AnsiString;  { We need to specify the length of the string }
+VAR TotalBytes: Cardinal;
 begin
- Result:= string(AsString);
+  if Count > SafetyLimit
+  then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
+
+  if Count > 0
+  then
+    begin
+     SetLength(Result, Count);                                             { Initialize the result }
+     TotalBytes:= Read(Result[1], Count);                                  { Read is used in cases where the number of bytes to read from the stream is not necessarily fixed. It attempts to read up to Count bytes into buffer and returns the number of bytes actually read.  }
+
+     if TotalBytes= 0
+     then Result:= ''
+     else
+       if TotalBytes < Count                                               { If there is not enough data to read... }
+       then SetLength(Result, TotalBytes);                               { ...set the buffer to whater I was able to read }
+    end
+  else Result:= '';
 end;
 
 
 { Returns the content of the ENTIRE stream }
 function TCubicMemStream.AsBytes: TBytes;          { Put the content of the stream into a string }
 begin
- Position:= 0;            // Reset stream position
- SetLength(Result, Size); // Allocate size
- Read(Result[0], Size);   // Read content of stream
+  Position:= 0;            // Reset stream position
+  SetLength(Result, Size); // Allocate size
+  Read(Result[0], Size);   // Read content of stream
+end;
+
+
+{ TBYTES }
+procedure TCubicMemStream.PushBytes(CONST Bytes: TBytes);
+begin
+  Assert(Length(Bytes) > 0, 'Buffer is zero!!');
+  WriteBuffer(Bytes[0], Length(Bytes));
 end;
 
 
 { Writes "Buffer" in the stream, at the current pos. The amount of data to be stored is also written down to the stream. }
-procedure TCubicMemStream.WriteByteChunk(CONST Buffer: TBytes); // old name: WriteBytes
+procedure TCubicMemStream.PushBytesCnt(CONST Buffer: TBytes); // old name: WriteBytes
 begin
- WriteCardinal(Length(Buffer));
- WriteBuffer(Buffer[0], High(Buffer));
+  Assert(Length(Buffer) > 0, 'Buffer is zero!');
+  WriteCardinal(Length(Buffer));
+  PushBytes(Buffer);
 end;
+
 
 { Reads a chunk of data from the current pos of the stream. The amount of data to read is also retrieved from the stream. }
 function TCubicMemStream.ReadByteChunk: TBytes;
-VAR Cnt: Cardinal;
+VAR Count: Cardinal;
 begin
- Cnt:= ReadCardinal;
- SetLength(Result, Cnt);
- ReadBuffer(Result[0], Cnt);
+  Count:= ReadCardinal;
+  if Count > 0 then
+  begin
+    SetLength(Result, Count);
+    ReadBuffer(Result[0], Count);
+  end
+  else
+    SetLength(Result, 0);
 end;
 
 
+{ Write raw data to stream, replacing any existing content.
+  Clears the stream first, then writes the provided data. }
+procedure TCubicMemStream.PushData(CONST s: AnsiString);
+begin
+  Clear;       { Sets the Memory property to nil (Delphi). Sets the Position property to 0. Sets the Size property to 0. }
+  if Length(s) > 0
+  then WriteBuffer(s[1], Length(s));
+end;
 
 
+procedure TCubicMemStream.PushData(CONST Bytes: TBytes);
+begin
+  Clear;           { Sets the Memory property to nil (Delphi). Sets the Position property to 0. Sets the Size property to 0. }
+  if Length(Bytes) > 0
+  then WriteBuffer(Bytes[0], Length(Bytes));
+end;
 
 
 
@@ -725,59 +1032,93 @@ end;
 {--------------------------------------------------------------------------------------------------
    ANSI STRINGS
 --------------------------------------------------------------------------------------------------}
+procedure TCubicMemStream.WriteStringA(CONST s: AnsiString);
+VAR Count: Cardinal;
+begin
+  Count:= Length(s);
+  WriteBuffer(Count, SizeOf(Count));
+  if Count > 0                                                            { This makes sure 's' is not empty. Else I will get a RangeCheckError at runtime }
+  then WriteBuffer(s[1], Count);
+end;
+
 
 { It automatically detects the length of the string }
-function TCubicMemStream.ReadStringA: AnsiString;         
-VAR Len: Cardinal;
+function TCubicMemStream.ReadStringA(SafetyLimit: Cardinal = 1*KB): AnsiString;
+VAR Count: Cardinal;
 begin
- ReadBuffer(Len, SizeOf(Len));                                                        { First, find out how many characters to read }
- Assert(Len<= Size- Position, 'TReadCachedStream: String lenght > string size!');
- Result:= ReadStringA(Len);        { Do the actual strign reading }
+ ReadBuffer(Count, SizeOf(Count));                                          { First, find out how many characters to read }
+
+ Assert(Count<= Size- Position, 'TCubicMemStream: String lenght > file size!');
+
+ if Count > SafetyLimit
+ then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
+
+ if Count > 0 then
+ begin
+   SetLength(Result, Count);
+   ReadBuffer(Result[1], Count);
+ end
+ else
+   Result:= '';
 end;
 
-
-procedure TCubicMemStream.WriteStringA(CONST s: AnsiString);
-VAR Len: Cardinal;
-begin
- Len:= Length(s);
- WriteBuffer(Len, SizeOf(Len));
- if Len > 0                                                                 { This makes sure 's' is not empty. Else I will get a RangeCheckError at runtime }
- then WriteBuffer(s[1], Len);
-end;
 
 {  STRING WITHOUT LENGTH
    Read a string when its size is unknown (not written in the stream).
-   We need to specify the string size from outside. }
-function TCubicMemStream.ReadStringA(CONST Len: integer): AnsiString;
-VAR ReadBytes: Integer;
+   We need to specify the string size from outside.
+   This is the relaxed/safe version. It won't raise an error if there is not enough data (Len) to read }
+function TCubicMemStream.TryReadStringA(Count: Cardinal): AnsiString;   // Old name: ReadStringAR
+VAR ReadBytes: Cardinal;
 begin
- Assert(Len> -1, 'TCubicMemStream.ReadStringA-String size is: '+ IntToStr(Len));
+ Assert(Count<= Size- Position, 'TCubicMemStream: String lenght > file size!');
 
- if (Len+ Position > Size)
- then RAISE exception.Create('TCubicMemStream-Invalid string size: '+ IntToStr(Len));
-
- if Len= 0
+ if Count = 0
  then Result:= ''
  else
   begin
-   SetLength(Result, Len);                                                  { Initialize the result }
-   ReadBytes:= Read(Result[1], Len);
-   if ReadBytes<> Len                                                       { Not enough data to read? }
+   SetLength(Result, Count);             { Initialize the result }
+   ReadBytes:= Read(Result[1], Count);
+   if ReadBytes <> Count                 { Not enough data to read? }
    then SetLength(Result, ReadBytes);
   end;
 end;
 
 
+{ Read a string from file. The length of the string will be provided from outside. }
+function TCubicMemStream.ReadStringCnt(Count: Cardinal; SafetyLimit: Cardinal = 1*KB): string;
+VAR UTF: UTF8String;
+begin
+ if Count > 0
+ then
+   begin
+     if (Count+ Position > Size)
+     then RAISE exception.Create('TCubicMemStream-Invalid string size! '+ IntToStr(Count));
 
-{ CHAR }
+     if (Count > SafetyLimit)
+     then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
+
+     SetLength(UTF, Count);
+     ReadBuffer(UTF[1], Count);
+     Result:= string(UTF);
+   end
+ else
+   Result:= '';
+end;
+
+
+
+
+{--------------------------------------------------------------------------------------------------
+   CHAR
+--------------------------------------------------------------------------------------------------}
 function TCubicMemStream.ReadChar: AnsiChar;                                    { Read one single Ansi character }
 begin
- ReadBuffer(Result, 1);
+  ReadBuffer(Result, 1);
 end;
 
 procedure TCubicMemStream.WriteChar(CONST C: AnsiChar);
 begin
- WriteBuffer(c, 1);
+  WriteBuffer(c, 1);
 end;
 
 
@@ -795,7 +1136,7 @@ begin
     FileStream.Free;
   end;
 end;
- 
+
 
 procedure TCubicMemStream.SaveToFile(CONST FileName: string);
 begin
@@ -810,20 +1151,29 @@ end;
 
 
 
-
-
 {--------------------------------------------------------------------------------------------------
    UTILS / CONVERSIONS
 --------------------------------------------------------------------------------------------------}
 
+{ Reads a portion of a memory stream and returns it as an ASCII string.
+  Count: Number of bytes to read (0 = read from Pos to end of stream)
+  Pos: Starting position in the stream (default = 0) }
 function StringFromStream(MemStream: TMemoryStream; Count: Integer = 0; Pos: Integer = 0): string;
 var
   StringBytes: TBytes;
 begin
-  Assert(Count+Pos <= MemStream.Size, 'StringFromStream - Count higher than stream size!');
+  Assert(MemStream <> nil, 'StringFromStream - MemStream is nil!');
+  Assert(Pos >= 0, 'StringFromStream - Pos cannot be negative!');
+  Assert(Count >= 0, 'StringFromStream - Count cannot be negative!');
+  Assert(Pos <= MemStream.Size, 'StringFromStream - Pos beyond stream size!');
+
   if (Count = 0)
   OR (Count > MemStream.Size - Pos)
-  then Count:= MemStream.Size - Pos;  // Ensure Count is within bounds of the stream
+  then Count := MemStream.Size - Pos;  // Ensure Count is within bounds of the stream
+
+  if Count = 0
+  then EXIT('');  { Return empty string for empty content }
+
   SetLength(StringBytes, Count);
   MemStream.Position := Pos;  // Ensure we're at the correct position in the stream
   MemStream.ReadBuffer(StringBytes[0], Count);
