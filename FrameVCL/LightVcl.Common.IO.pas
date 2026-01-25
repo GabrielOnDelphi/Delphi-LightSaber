@@ -4,9 +4,9 @@ UNIT LightVcl.Common.IO;
    www.GabrielMoraru.com
    2025.05
 --------------------------------------------------------------------------------------------------------------
-   Extension for LightCore.IO. pas
+   Extension for LightCore.IO.pas
    Framework: VCL only
-   Shows error messages (dialog boxes) when the I/O peeration failed.
+   Shows error messages (dialog boxes) when the I/O operation failed.
 ==================================================================================================}
 
 INTERFACE
@@ -72,6 +72,8 @@ USES
 --------------------------------------------------------------------------------------------------}
  function RecycleItem           (CONST ItemName: string; CONST DeleteToRecycle: Boolean= TRUE; CONST ShowConfirm: Boolean= TRUE; CONST TotalSilence: Boolean= FALSE): Boolean;
  function FileOperation         (CONST Source, Dest: string; Op, Flags: Integer): Boolean;                     { Performs: Copy, Move, Delete, Rename on files + folders via WinAPI}
+ function FileMoveTo            (CONST From_FullPath, To_FullPath: string): Boolean;                           { Moves a file to a new location, overwriting if exists }
+ function FileMoveToDir         (CONST From_FullPath, To_DestFolder: string; Overwrite: Boolean): Boolean;     { Moves a file to a destination folder }
 
  function FileAge               (CONST FileName: string): TDateTime;
  function FileTimeToDateTimeStr (FTime: TFileTime; CONST DFormat, TFormat: string): string;
@@ -184,7 +186,9 @@ end;
 
 
 
-{ Example:  MoveFolderMsg('c:\Documents', 'C:\Backups') }
+{ Example:  MoveFolderMsg('c:\Documents', 'C:\Backups')
+  Moves FromFolder to ToFolder. If ToFolder exists and SilentOverwrite is True,
+  copies contents and deletes the source folder. }
 procedure MoveFolderMsg(CONST FromFolder, ToFolder: String; SilentOverwrite: Boolean);      { Also see: http://www.swissdelphicenter.ch/en/showcode.php?id=152 }
 begin
  if DirectoryExists(ToFolder) then
@@ -192,7 +196,7 @@ begin
    then
      begin
        CopyFolder(FromFolder, ToFolder, True);
-       Deletefolder(ToFolder);  { This is slow. Do a direct file move for each file. }
+       Deletefolder(FromFolder);  { Delete source after successful copy (was incorrectly ToFolder before) }
      end
    else
      { Move raises an exception if the destination folder already exists, so we have to delete the Destination folder first. But for this we need to ask the user. }
@@ -532,12 +536,22 @@ end;
    Old name: Trashafile
    Note related to UNC: The function won't move a file to the RecycleBin if the file is UNC. MAYBE it was moved to the remote's computer RecycleBin
 --------------------------------------------------------------------------------------------------}
+{ Deletes a file or folder to the Recycle Bin (or permanently if DeleteToRecycle is False).
+  ShowConfirm: if True, asks user for confirmation before deletion.
+  TotalSilence: if True, suppresses all UI including progress dialogs. }
 function RecycleItem(CONST ItemName: string; CONST DeleteToRecycle: Boolean= TRUE; CONST ShowConfirm: Boolean= TRUE; CONST TotalSilence: Boolean= FALSE): Boolean;
 VAR
    SHFileOpStruct: TSHFileOpStruct;
+   WndHandle: HWND;
 begin
  FillChar(SHFileOpStruct, SizeOf(SHFileOpStruct), #0);
- SHFileOpStruct.wnd              := Application.MainForm.Handle;                                   { Others are using 0. But Application.MainForm.Handle is better because otherwise, the 'Are you sure you want to delete' will be hidden under program's window }
+
+ { Get a valid window handle - use MainForm if available, otherwise use Application.Handle or 0 }
+ if Assigned(Application.MainForm)
+ then WndHandle := Application.MainForm.Handle
+ else WndHandle := Application.Handle;  { Fallback to avoid nil access if MainForm not yet created }
+
+ SHFileOpStruct.wnd              := WndHandle;
  SHFileOpStruct.wFunc            := FO_DELETE;
  SHFileOpStruct.pFrom            := PChar(ItemName+ #0);                                           { ATENTION!   This last #0 is MANDATORY. See this for details: http://stackoverflow.com/questions/6332259/i-cannot-delete-files-to-recycle-bin  -   Although this member is declared as a single null-terminated string, it is actually a buffer that can hold multiple null-delimited file names. Each file name is terminated by a single NULL character. The last file name is terminated with a double NULL character ("\0\0") to indicate the end of the buffer }
  SHFileOpStruct.pTo              := NIL;
@@ -627,10 +641,10 @@ begin
     else raise exception.CreateFmt('%s does not exist', [FileName]);
 
   Handle := CreateFile(PChar(FileName), GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, Flags, 0);
-  if Handle=0
+  if Handle = INVALID_HANDLE_VALUE  { CreateFile returns INVALID_HANDLE_VALUE on failure, not 0 }
   then RaiseLastOSError;
 
-  if not DeviceIoControl(Handle, FSCTL_SET_COMPRESSION, @CompressionFormat, SizeOf(Comp), nil, 0, BytesReturned, nil) then
+  if not DeviceIoControl(Handle, FSCTL_SET_COMPRESSION, @CompressionFormat, SizeOf(CompressionFormat), nil, 0, BytesReturned, nil) then  { Fixed: was SizeOf(Comp) - undefined variable }
    begin
     CloseHandle(Handle);
     RaiseLastOSError;
@@ -652,21 +666,29 @@ end;
     For System.SysUtils.FileAge which is not working with 'c:\pagefile.sys'.
     Details dee: http://stackoverflow.com/questions/3825077/fileage-is-not-working-with-c-pagefile-sys
 }
+{ Returns the last modification time of a file.
+  Unlike System.SysUtils.FileAge, this works with system files like 'c:\pagefile.sys'.
+  Returns -1 if the file cannot be accessed. }
 function FileAge(CONST FileName: string): TDateTime;
 VAR
   LocalFileTime: TFileTime;
   SystemTime   : TSystemTime;
   SRec         : TSearchRec;
+  FindResult   : Integer;
 begin
- FindFirst(FileName, faAnyFile, SRec);
+ Result := -1;  { Default to error state }
+ FindResult := FindFirst(FileName, faAnyFile, SRec);
+ if FindResult <> 0
+ then EXIT;  { File not found or access denied }
+
  TRY
    TRY
      {$WARN SYMBOL_PLATFORM OFF}   { OFF: Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
      FileTimeToLocalFileTime(SRec.FindData.ftLastWriteTime, LocalFileTime);
      FileTimeToSystemTime(LocalFileTime, SystemTime);
      Result := SystemTimeToDateTime(SystemTime);
-   EXCEPT   //todo 1: trap only specific exceptions
-     on e: Exception do Result:= -1;
+   EXCEPT
+     on E: EConvertError do Result := -1;  { Handle date/time conversion errors specifically }
    END;
  FINALLY
    FindClose(SRec);
