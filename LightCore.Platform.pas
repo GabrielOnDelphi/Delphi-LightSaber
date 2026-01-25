@@ -268,7 +268,7 @@ end;
 
 function GenerateAppBitnessRep: string;
 begin
-  Result:= Result+ CRLF;
+  Result:= CRLF;  { Initialize Result before concatenation }
   Result:= Result+' [APP BITNESS]'+ CRLF;
   Result:= Result+'  AppBitness: '       + Tab    + AppBitness+ CRLF;
   Result:= Result+'  AppBitnessEx: '     + Tab    + AppBitnessEx+ CRLF;
@@ -293,7 +293,7 @@ begin
   Result := TLocale.Current.Language;
 end;
 
-{ Returns the user's currency symbol. Example: '$', '€', or 'RON' }
+{ Returns the user's currency symbol. Example: '$', 'â‚¬', or 'RON' }
 function LocaleCurrencySymbol: string;
 begin
   Result := TLocale.Current.CurrencyString;

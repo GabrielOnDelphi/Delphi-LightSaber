@@ -29,7 +29,7 @@ USES
  { XOR ENCRYPTION}
  function  EncodeDecode_XOR  (CONST s: string         ; Key: Byte): string;      overload;     { Torry Encode/Decode}
  function  EncodeDecode_XOR  (CONST Bytes: TBytesArray; Key: Byte): TBytesArray; overload;
- function  EncodeDecode_XOR  (CONST s: AnsiString     ; Key: Byte): AnsiString;  overload
+ function  EncodeDecode_XOR  (CONST s: AnsiString     ; Key: Byte): AnsiString;  overload;
 
  function  EncodeXorText     (CONST PlainText: string; Key: Byte): string;
  function  DecodeXorText     (CONST EncodedArr: array of Byte; Key: Byte): string;
@@ -54,7 +54,7 @@ begin
   begin
    CurChar:= ord(s[i]);
    if CurChar= 0
-   then Result:= Result+ 'ÿ'    { ÿ is #255 }
+   then Result:= Result+ #255   { Ã¿ is #255 }
    else Result:= Result+ char(curchar-1);
   end;
 end;

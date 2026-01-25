@@ -220,7 +220,7 @@ begin
     on E: ENetException
       DO ErrorMsg := 'Network error: ' + E.Message;
   end;
-  FreeAndNil(HttpClient);
+  FreeAndNil(HttpClient);  { Safe here: try/except without re-raise ensures this line executes }
 end;
 
 
