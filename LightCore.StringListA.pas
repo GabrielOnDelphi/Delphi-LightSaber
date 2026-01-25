@@ -90,13 +90,13 @@ begin
     L := Length(S);
     if L <> 0 then
     begin
-      System.Move(Pointer(S)^, P^, L * SizeOf(Char));
+      System.Move(Pointer(S)^, P^, L * SizeOf(AnsiChar));  { Use AnsiChar (1 byte) not Char (2 bytes) for AnsiString }
       Inc(P, L);
     end;
     L := Length(LB);
     if L <> 0 then
     begin
-      System.Move(Pointer(LB)^, P^, L * SizeOf(Char));
+      System.Move(Pointer(LB)^, P^, L * SizeOf(AnsiChar));  { Use AnsiChar (1 byte) not Char (2 bytes) for AnsiString }
       Inc(P, L);
     end;
   end;
