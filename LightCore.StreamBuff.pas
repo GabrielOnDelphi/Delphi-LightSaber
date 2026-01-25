@@ -1002,7 +1002,13 @@ begin
  if Count > SafetyLimit
  then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
 
- Result:= ReadStringA(Count);        { Do the actual strign reading }
+ if Count > 0 then
+ begin
+   SetLength(Result, Count);
+   ReadBuffer(Result[1], Count);
+ end
+ else
+   Result:= '';
 end;
 
 
