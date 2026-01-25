@@ -125,7 +125,7 @@ begin
 
   FLock.BeginWrite;
   try
-    Add(Result);
+    FList.Add(Result);  { Use FList.Add directly to avoid double-locking (Add method also acquires the lock) }
   finally
     FLock.EndWrite;
   end;
