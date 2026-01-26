@@ -287,27 +287,32 @@ CONST
  function IsVideoGeneric(CONST AGraphFile: string) : Boolean;                                      { Generic video file detection. It doesn't mean I have support for all those files in my app }
  function IsGIF         (CONST AGraphFile: string) : Boolean;
 
- function IsJpg   (CONST AGraphFile: string) : Boolean;
- function IsJp2   (CONST AGraphFile: string) : Boolean;
- function IsBMP   (CONST AGraphFile: string) : Boolean;
- function IsWB1   (CONST AGraphFile: string) : Boolean;
- function IsWBC   (CONST AGraphFile: string) : Boolean;
- function IsPNG   (CONST AGraphFile: string) : Boolean;
- function IsICO   (CONST AGraphFile: string) : Boolean;
- function IsEMF   (CONST AGraphFile: string) : Boolean;
- function IsWMF   (CONST AGraphFile: string) : Boolean;
- function IsImage (CONST AGraphFile: string) : Boolean;                                            { Returns TRUE if the file has a good/known extension and it can be converted to BMP }
- function IsImage2Bmp(CONST AGraphFile: string) : Boolean;
+ function IsJpg         (CONST AGraphFile: string) : Boolean;
+ function IsJp2         (CONST AGraphFile: string) : Boolean;
+ function IsBMP         (CONST AGraphFile: string) : Boolean;
+ function IsWebP        (CONST AGraphFile: string) : Boolean;
+ function IsPNG         (CONST AGraphFile: string) : Boolean;
+ function IsWB1         (CONST AGraphFile: string) : Boolean;
+ function IsWBC         (CONST AGraphFile: string) : Boolean;
+ function IsICO         (CONST AGraphFile: string) : Boolean;
+ function IsEMF         (CONST AGraphFile: string) : Boolean;
+ function IsWMF         (CONST AGraphFile: string) : Boolean;
 
- function IsDfm   (CONST FileName  : string) : Boolean;
- function IsPas   (CONST FileName  : string) : Boolean;
- function IsDpr   (CONST FileName  : string) : Boolean;
- function IsDpk   (CONST FileName  : string) : Boolean;
- function IsDelphi(CONST FileName  : string) : Boolean;
- function IsExec  (CONST FileName  : string) : Boolean;
+ function IsImage       (CONST AGraphFile: string) : Boolean;                                            { Returns TRUE if the file has a good/known extension and it can be converted to BMP }
+ function IsImage2Bmp   (CONST AGraphFile: string) : Boolean;
 
- function ExtensionToMimeType  (const FileName: string): string;   // Determines the MIME type of a file based on its extension
- function ExtensionFromMimeType(const MimeType: string): string;   // Determines the file extension based on a given MIME type
+ function IsText        (CONST FileName: string) : Boolean;
+ function IsDocument    (CONST FileName: string) : Boolean;
+
+ function IsDfm         (CONST FileName: string) : Boolean;
+ function IsPas         (CONST FileName: string) : Boolean;
+ function IsDpr         (CONST FileName: string) : Boolean;
+ function IsDpk         (CONST FileName: string) : Boolean;
+ function IsDelphi      (CONST FileName: string) : Boolean;
+ function IsExec        (CONST FileName: string) : Boolean;
+
+ function ExtensionToMimeType  (CONST FileName: string): string;   // Determines the MIME type of a file based on its extension
+ function ExtensionFromMimeType(CONST MimeType: string): string;   // Determines the file extension based on a given MIME type
 
 
 {--------------------------------------------------------------------------------------------------
@@ -920,6 +925,12 @@ begin
 end;
 
 
+function IsWebP(CONST AGraphFile: string): Boolean;
+begin
+  Result:= ExtractFileExtUp(AGraphFile)= '.WEBP';
+end;
+
+
 function IsImage(CONST AGraphFile: string): Boolean;
 begin
   Result:=
@@ -928,7 +939,8 @@ begin
   OR IsBMP(AGraphFile)
   OR IsGIF(AGraphFile)
   OR IsPNG(AGraphFile)
-  OR IsBMP(AGraphFile);
+  OR IsBMP(AGraphFile)
+  OR IsWebP(AGraphFile);
 end;
 
 
@@ -995,6 +1007,25 @@ begin
     (ExtractFileExtUp(FileName)= '.WSC') OR   //Windows Script Component and Windows Script Host control files. Used along with with Windows Script files.
     (ExtractFileExtUp(FileName)= '.WSH') OR   //Windows Script Component and Windows Script Host control files. Used along with with Windows Script files.
     (ExtractFileExtUp(FileName)= '.VBS');
+end;
+
+
+
+// TEXT
+
+function IsText(CONST FileName  : string) : Boolean;
+begin
+  Result:= (ExtractFileExtUp(FileName)= '.TXT') OR
+           (ExtractFileExtUp(FileName)= '.MD');
+end;
+
+
+function IsDocument(CONST FileName  : string) : Boolean;
+begin
+  Result:= (ExtractFileExtUp(FileName)= '.PDF') OR
+           (ExtractFileExtUp(FileName)= '.RTF') OR
+           (ExtractFileExtUp(FileName)= '.DOC') OR
+           (ExtractFileExtUp(FileName)= '.DOCX');
 end;
 
 
