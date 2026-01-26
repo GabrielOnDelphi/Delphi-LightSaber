@@ -293,6 +293,9 @@ CONST
 
 
 IMPLEMENTATION
+USES
+  {$IFDEF MSWINDOWS}Winapi.Windows,{$ENDIF}
+  System.SysConst;  // For SUnknown constant
 
 { Don't add any dependecies to LightSaber here if possible in order to keep LightCore as single-file library }
 
@@ -348,17 +351,30 @@ end;
 
 
 // Returns the language of the operating system in this format: "English (United States)".
+// Uses Windows API directly for better Win11 compatibility (TLanguages can return <unknown>).
 function GetSystemLanguageName: string;
+{$IFDEF MSWINDOWS}
+var
+  Buffer: array[0..255] of Char;
+begin
+  if GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SLANGUAGE, Buffer, Length(Buffer)) > 0
+  then Result:= Buffer
+  else Result:= 'English';  // Fallback if API fails
+end;
+{$ELSE}
 var Languages: TLanguages;
 begin
   var Locale:= TLanguages.UserDefaultLocale;
   Languages:= TLanguages.Create;
   try
     Result:= Languages.NameFromLocaleID[Locale];
+    if (Result = '') OR (Result = SUnknown)
+    then Result:= 'English';  // Fallback
   finally
     Languages.Free;
   end;
 end;
+{$ENDIF}
 
 
 // Returns the language of the operating system in this format: "English"
