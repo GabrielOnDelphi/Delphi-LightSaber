@@ -29,6 +29,7 @@ uses
   Test.LightCore.Types in 'Test.LightCore.Types.pas',
   Test.LightCore.TextFile in 'Test.LightCore.TextFile.pas',
   Test.LightCore.StrBuilder in 'Test.LightCore.StrBuilder.pas',
+  Test.LightCore.StreamBuff in 'Test.LightCore.StreamBuff.pas',
   { Source units }
   LightCore in '..\LightCore.pas',
   LightCore.Types in '..\LightCore.Types.pas',

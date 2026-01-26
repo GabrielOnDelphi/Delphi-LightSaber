@@ -20,6 +20,9 @@ type
     procedure TestCreate;
 
     [Test]
+    procedure TestCreate_CustomBufferSize;
+
+    [Test]
     procedure TestAddChar_Single;
 
     [Test]
@@ -29,7 +32,13 @@ type
     procedure TestAddEnter;
 
     [Test]
+    procedure TestAddEnter_Multiple;
+
+    [Test]
     procedure TestAsText;
+
+    [Test]
+    procedure TestAsText_CalledMultipleTimes;
 
     [Test]
     procedure TestClear;
@@ -39,7 +48,16 @@ type
     procedure TestBufferGrowth;
 
     [Test]
+    procedure TestBufferGrowth_MultipleGrowths;
+
+    [Test]
     procedure TestSmallBuffer;
+
+    [Test]
+    procedure TestExactBufferBoundary;
+
+    [Test]
+    procedure TestBufferBoundaryPlusOne;
 
     { Combined Operations Tests }
     [Test]
@@ -51,6 +69,9 @@ type
     [Test]
     procedure TestReuseAfterClear;
 
+    [Test]
+    procedure TestClearAndRebuildLarger;
+
     { Edge Cases Tests }
     [Test]
     procedure TestEmptyResult;
@@ -60,6 +81,16 @@ type
 
     [Test]
     procedure TestUnicodeCharacters;
+
+    [Test]
+    procedure TestHighUnicodeCharacters;
+
+    { Stress Tests }
+    [Test]
+    procedure TestLargeString;
+
+    [Test]
+    procedure TestEnterAtBufferBoundary;
   end;
 
 implementation
@@ -301,17 +332,229 @@ end;
 procedure TTestLightCoreStrBuilder.TestUnicodeCharacters;
 var
   SB: TCStringBuilder;
+  Expected: string;
 begin
   SB:= TCStringBuilder.Create;
   try
-    SB.AddChar('é');
-    SB.AddChar('ñ');
-    SB.AddChar('ü');
-    Assert.AreEqual('éñü', SB.AsText);
+    { Use character codes to avoid file encoding issues }
+    SB.AddChar(Char($00E9));  { é - Latin Small Letter E with Acute }
+    SB.AddChar(Char($00F1));  { ñ - Latin Small Letter N with Tilde }
+    SB.AddChar(Char($00FC));  { ü - Latin Small Letter U with Diaeresis }
+    Expected:= Char($00E9) + Char($00F1) + Char($00FC);
+    Assert.AreEqual(Expected, SB.AsText);
+    Assert.AreEqual(3, Length(SB.AsText));
   finally
     SB.Free;
   end;
 end;
+
+
+{ Additional Tests }
+
+procedure TTestLightCoreStrBuilder.TestCreate_CustomBufferSize;
+var
+  SB: TCStringBuilder;
+begin
+  SB:= TCStringBuilder.Create(500);
+  try
+    Assert.AreEqual(500, SB.BuffSize);
+    Assert.AreEqual('', SB.AsText);
+  finally
+    SB.Free;
+  end;
+end;
+
+
+procedure TTestLightCoreStrBuilder.TestAddEnter_Multiple;
+var
+  SB: TCStringBuilder;
+  ResultText: string;
+begin
+  SB:= TCStringBuilder.Create;
+  try
+    SB.AddEnter;
+    SB.AddEnter;
+    SB.AddEnter;
+    ResultText:= SB.AsText;
+    Assert.AreEqual(6, Length(ResultText), 'Three enters = 6 chars (CR+LF each)');
+    Assert.AreEqual(#13#10#13#10#13#10, ResultText);
+  finally
+    SB.Free;
+  end;
+end;
+
+
+procedure TTestLightCoreStrBuilder.TestAsText_CalledMultipleTimes;
+var
+  SB: TCStringBuilder;
+  First, Second, Third: string;
+begin
+  SB:= TCStringBuilder.Create;
+  try
+    SB.AddChar('A');
+    SB.AddChar('B');
+    SB.AddChar('C');
+    { Calling AsText multiple times should return the same result }
+    First:= SB.AsText;
+    Second:= SB.AsText;
+    Third:= SB.AsText;
+    Assert.AreEqual('ABC', First);
+    Assert.AreEqual(First, Second);
+    Assert.AreEqual(Second, Third);
+  finally
+    SB.Free;
+  end;
+end;
+
+
+procedure TTestLightCoreStrBuilder.TestBufferGrowth_MultipleGrowths;
+var
+  SB: TCStringBuilder;
+  i: Integer;
+  ResultText: string;
+begin
+  { Use tiny buffer to force many growths }
+  SB:= TCStringBuilder.Create(3);
+  try
+    { Add 50 characters to trigger multiple buffer expansions }
+    for i:= 1 to 50 do
+      SB.AddChar(Char(Ord('A') + (i mod 26)));
+
+    ResultText:= SB.AsText;
+    Assert.AreEqual(50, Length(ResultText));
+  finally
+    SB.Free;
+  end;
+end;
+
+
+procedure TTestLightCoreStrBuilder.TestExactBufferBoundary;
+var
+  SB: TCStringBuilder;
+  i: Integer;
+begin
+  SB:= TCStringBuilder.Create(10);
+  try
+    { Add exactly buffer size characters }
+    for i:= 1 to 10 do
+      SB.AddChar('X');
+
+    Assert.AreEqual(10, Length(SB.AsText));
+    Assert.AreEqual(StringOfChar('X', 10), SB.AsText);
+  finally
+    SB.Free;
+  end;
+end;
+
+
+procedure TTestLightCoreStrBuilder.TestBufferBoundaryPlusOne;
+var
+  SB: TCStringBuilder;
+  i: Integer;
+begin
+  SB:= TCStringBuilder.Create(10);
+  try
+    { Add buffer size + 1 characters to trigger exactly one growth }
+    for i:= 1 to 11 do
+      SB.AddChar('Y');
+
+    Assert.AreEqual(11, Length(SB.AsText));
+    Assert.AreEqual(StringOfChar('Y', 11), SB.AsText);
+  finally
+    SB.Free;
+  end;
+end;
+
+
+procedure TTestLightCoreStrBuilder.TestClearAndRebuildLarger;
+var
+  SB: TCStringBuilder;
+  i: Integer;
+begin
+  SB:= TCStringBuilder.Create(10);
+  try
+    { First build }
+    for i:= 1 to 5 do
+      SB.AddChar('A');
+    Assert.AreEqual('AAAAA', SB.AsText);
+
+    SB.Clear;
+
+    { Second build is larger than first }
+    for i:= 1 to 20 do
+      SB.AddChar('B');
+    Assert.AreEqual(StringOfChar('B', 20), SB.AsText);
+  finally
+    SB.Free;
+  end;
+end;
+
+
+procedure TTestLightCoreStrBuilder.TestHighUnicodeCharacters;
+var
+  SB: TCStringBuilder;
+  Expected: string;
+begin
+  SB:= TCStringBuilder.Create;
+  try
+    { Test characters from various Unicode ranges }
+    SB.AddChar(Char($03B1));  { Greek Alpha }
+    SB.AddChar(Char($0414));  { Cyrillic De }
+    SB.AddChar(Char($4E2D));  { CJK character for "middle" }
+    Expected:= Char($03B1) + Char($0414) + Char($4E2D);
+    Assert.AreEqual(Expected, SB.AsText);
+    Assert.AreEqual(3, Length(SB.AsText));
+  finally
+    SB.Free;
+  end;
+end;
+
+
+procedure TTestLightCoreStrBuilder.TestLargeString;
+var
+  SB: TCStringBuilder;
+  i: Integer;
+  ResultText: string;
+const
+  LargeSize = 100000;
+begin
+  SB:= TCStringBuilder.Create;
+  try
+    for i:= 1 to LargeSize do
+      SB.AddChar(Char(Ord('A') + (i mod 26)));
+
+    ResultText:= SB.AsText;
+    Assert.AreEqual(LargeSize, Length(ResultText));
+    { Verify first and last characters }
+    Assert.AreEqual('B', ResultText[1]);  { (1 mod 26) + 'A' = 'B' }
+  finally
+    SB.Free;
+  end;
+end;
+
+
+procedure TTestLightCoreStrBuilder.TestEnterAtBufferBoundary;
+var
+  SB: TCStringBuilder;
+  i: Integer;
+  ResultText: string;
+begin
+  { Buffer of 10, fill with 9 chars, then add Enter (2 chars) to cross boundary }
+  SB:= TCStringBuilder.Create(10);
+  try
+    for i:= 1 to 9 do
+      SB.AddChar('X');
+    SB.AddEnter;  { This crosses the buffer boundary }
+    SB.AddChar('Y');
+
+    ResultText:= SB.AsText;
+    Assert.AreEqual(12, Length(ResultText));  { 9 + 2 + 1 }
+    Assert.AreEqual('XXXXXXXXX'#13#10'Y', ResultText);
+  finally
+    SB.Free;
+  end;
+end;
+
 
 initialization
   TDUnitX.RegisterTestFixture(TTestLightCoreStrBuilder);

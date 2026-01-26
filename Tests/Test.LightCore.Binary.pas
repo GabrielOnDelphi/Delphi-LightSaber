@@ -9,8 +9,7 @@ interface
 
 uses
   DUnitX.TestFramework,
-  System.SysUtils,
-  System.Classes;
+  System.SysUtils, System.Types, System.Classes;
 
 type
   [TestFixture]
