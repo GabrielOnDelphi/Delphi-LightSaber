@@ -56,6 +56,7 @@ begin
   // Create Label
   FLabel := TLabel.Create(Self);
   FLabel.Parent := Self;
+  FLabel.Stored := False;  // Prevent streaming to FMX file (avoids duplicate children)
   FLabel.Position.X := 0;
   FLabel.Position.Y := 0;
   FLabel.Text := 'Label:';
@@ -63,6 +64,7 @@ begin
   // Create Edit
   FEdit := TEdit.Create(Self);
   FEdit.Parent := Self;
+  FEdit.Stored := False;  // Prevent streaming to FMX file (avoids duplicate children)
   FEdit.Position.X := 0;
   FEdit.Position.Y := FLabel.Height + 4; // Space between label and edit
   FEdit.Width := 120;
@@ -75,8 +77,7 @@ end;
 
 destructor TLabeledEdit.Destroy;
 begin
-  FLabel.Free;
-  FEdit.Free;
+  // FLabel and FEdit are owned by Self, so they're freed automatically
   inherited;
 end;
 
@@ -91,7 +92,9 @@ end;
 
 function TLabeledEdit.GetEditText: string;
 begin
-  Result := FEdit.Text;
+  if FEdit = NIL
+  then Result := ''
+  else Result := FEdit.Text;
 end;
 
 
@@ -103,13 +106,19 @@ end;
 
 function TLabeledEdit.GetLabelText: string;
 begin
-  Result := FLabel.Text;
+  if FLabel = NIL
+  then Result := ''
+  else Result := FLabel.Text;
 end;
 
 
 procedure TLabeledEdit.Resize;
 begin
   inherited;
+
+  // Guard - controls might not exist during streaming
+  if (FLabel = NIL) OR (FEdit = NIL) then EXIT;
+
   // Simple vertical layout: label on top, edit below
   FLabel.Position.X := 0;
   FLabel.Position.Y := 0;
@@ -123,13 +132,15 @@ end;
 
 procedure TLabeledEdit.SetEditText(const Value: string);
 begin
-  FEdit.Text := Value;
+  if FEdit <> NIL
+  then FEdit.Text := Value;
 end;
 
 
 procedure TLabeledEdit.SetLabelText(const Value: string);
 begin
-  FLabel.Text := Value;
+  if FLabel <> NIL
+  then FLabel.Text := Value;
 end;
 
 
