@@ -13,7 +13,8 @@ uses
   System.IOUtils,
   System.Classes,
   Winapi.Windows,
-  Winapi.ShlObj;
+  Winapi.ShlObj,
+  Winapi.ShellAPI;
 
 type
   [TestFixture]
@@ -155,7 +156,7 @@ end;
 procedure TTestVclCommonIO.CleanupTestFiles;
 begin
   if FileExists(FTestFile) then
-    DeleteFile(FTestFile);
+    System.SysUtils.DeleteFile(FTestFile);
   if DirectoryExists(FTestFolder) then
     TDirectory.Delete(FTestFolder, True);
 end;
@@ -300,14 +301,13 @@ end;
 
 procedure TTestVclCommonIO.TestFileIsLockedR_NonExistentFile;
 begin
+  { FileIsLockedR should raise exception for non-existent file }
   Assert.WillRaise(
     procedure
     begin
       FileIsLockedR(FTestFolder + '\NonExistent.txt');
     end,
-    Exception,
-    'FileIsLockedR should raise exception for non-existent file'
-  );
+    Exception);
 end;
 
 procedure TTestVclCommonIO.TestCanCreateFile;
@@ -405,7 +405,7 @@ begin
   Assert.IsTrue(FileExists(DestFile), 'Destination should exist after move');
 
   { Cleanup }
-  if FileExists(DestFile) then DeleteFile(DestFile);
+  if FileExists(DestFile) then System.SysUtils.DeleteFile(DestFile);
 end;
 
 procedure TTestVclCommonIO.TestFileMoveToDir;
@@ -420,14 +420,14 @@ begin
   TFile.WriteAllText(SourceFile, 'Move to dir test');
   ForceDirectories(DestFolder);
 
-  Result := FileMoveToDir(SourceFile, DestFolder, True);
+  Result := LightVcl.Common.IO.FileMoveToDir(SourceFile, DestFolder, True);
 
   Assert.IsTrue(Result, 'FileMoveToDir should succeed');
   Assert.IsFalse(FileExists(SourceFile), 'Source should not exist after move');
   Assert.IsTrue(FileExists(DestFile), 'Destination should exist after move');
 
   { Cleanup }
-  if FileExists(DestFile) then DeleteFile(DestFile);
+  if FileExists(DestFile) then System.SysUtils.DeleteFile(DestFile);
   if DirectoryExists(DestFolder) then RemoveDir(DestFolder);
 end;
 

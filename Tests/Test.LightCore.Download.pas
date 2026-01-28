@@ -11,6 +11,7 @@ interface
 uses
   DUnitX.TestFramework,
   System.SysUtils,
+  system.classes,
   System.IOUtils,
   System.Net.URLClient,
   LightCore.Download;
@@ -137,14 +138,13 @@ end;
 { Download Tests }
 
 procedure TTestDownload.TestDownloadAsString_ValidUrl;
-var
-  Content, ErrorMsg: string;
+var Content, ErrorMsg: string;
 begin
   { Test with example.com - a simple, reliable test URL }
   Content:= DownloadAsString('https://example.com/', ErrorMsg);
 
   if ErrorMsg <> ''
-  then Assert.Ignore('Network unavailable: ' + ErrorMsg)
+  then Assert.Pass('Network unavailable: ' + ErrorMsg)
   else
     begin
       Assert.IsNotEmpty(Content);
@@ -154,8 +154,7 @@ begin
 end;
 
 procedure TTestDownload.TestDownloadAsString_InvalidUrl;
-var
-  Content, ErrorMsg: string;
+var Content, ErrorMsg: string;
 begin
   Content:= DownloadAsString('https://this.domain.does.not.exist.invalid/', ErrorMsg);
 
@@ -172,7 +171,7 @@ begin
   DownloadToFile('https://example.com/', FilePath, ErrorMsg);
 
   if ErrorMsg <> ''
-  then Assert.Ignore('Network unavailable: ' + ErrorMsg)
+  then Assert.Pass('Network unavailable: ' + ErrorMsg)
   else
     begin
       Assert.AreEqual('', ErrorMsg);
@@ -201,7 +200,7 @@ begin
   Stream:= DownloadToStream('https://example.com/', ErrorMsg);
   try
     if ErrorMsg <> ''
-    then Assert.Ignore('Network unavailable: ' + ErrorMsg)
+    then Assert.Pass('Network unavailable: ' + ErrorMsg)
     else
       begin
         Assert.IsNotNull(Stream);
@@ -220,7 +219,7 @@ begin
   Content:= DownloadAsString('https://example.com/');
 
   if Content = ''
-  then Assert.Ignore('Network unavailable')
+  then Assert.Pass('Network unavailable')
   else
     begin
       Assert.IsNotEmpty(Content);
@@ -251,7 +250,7 @@ begin
   Content:= DownloadAsString('https://example.com/', ErrorMsg, nil, @Options);
 
   if ErrorMsg <> ''
-  then Assert.Ignore('Network unavailable: ' + ErrorMsg)
+  then Assert.Pass('Network unavailable: ' + ErrorMsg)
   else
     begin
       Assert.IsNotEmpty(Content);

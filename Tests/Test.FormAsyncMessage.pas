@@ -271,7 +271,7 @@ begin
   MsgForm:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
   TrackForm(MsgForm);
 
-  Assert.AreEqual(ParentForm, MsgForm.PopupParent, 'PopupParent should be set to provided parent');
+  Assert.IsTrue(MsgForm.PopupParent = ParentForm, 'PopupParent should be set to provided parent');
 end;
 
 

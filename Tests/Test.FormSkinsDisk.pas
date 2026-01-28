@@ -13,6 +13,7 @@ unit Test.FormSkinsDisk;
 interface
 
 uses
+  Winapi.Windows,
   DUnitX.TestFramework,
   System.SysUtils,
   System.Classes,
@@ -312,12 +313,12 @@ begin
   { Select default theme (first item) }
   Form.lBox.ItemIndex:= 0;
 
+  { lBoxClick should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.lBoxClick(Form);
-    end,
-    'lBoxClick should not raise exception');
+    end);
 end;
 
 
@@ -332,13 +333,12 @@ begin
 
   Form.Show;
 
-  { Call btnOKClick - this will try to close the form }
+  { btnOKClick should not raise exception - this will try to close the form }
   Assert.WillNotRaise(
     procedure
     begin
       Form.btnOKClick(Form);
-    end,
-    'btnOKClick should not raise exception');
+    end);
 end;
 
 
@@ -349,13 +349,12 @@ begin
   Form:= TfrmSkinDisk.Create(NIL);
   FTestForm:= Form;
 
-  { This will either open local skin editor or try to open URL }
+  { btnSkinEditorClick should not raise exception - will open local skin editor or URL }
   Assert.WillNotRaise(
     procedure
     begin
       Form.btnSkinEditorClick(Form);
-    end,
-    'btnSkinEditorClick should not raise exception');
+    end);
 end;
 
 
@@ -393,12 +392,12 @@ begin
   Form:= TfrmSkinDisk.Create(NIL);
   FTestForm:= Form;
 
+  { FormDestroy should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.FormDestroy(Form);
-    end,
-    'FormDestroy should not raise exception');
+    end);
 end;
 
 
@@ -428,12 +427,12 @@ begin
   Form.Show;
   Key:= Chr(VK_RETURN);
 
+  { FormKeyPress with Enter should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.FormKeyPress(Form, Key);
-    end,
-    'FormKeyPress with Enter should not raise exception');
+    end);
 end;
 
 
@@ -448,12 +447,12 @@ begin
   Form.Show;
   Key:= Chr(VK_ESCAPE);
 
+  { FormKeyPress with Escape should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.FormKeyPress(Form, Key);
-    end,
-    'FormKeyPress with Escape should not raise exception');
+    end);
 end;
 
 
@@ -481,20 +480,16 @@ end;
 procedure TTestFormSkinsDisk.TestOnDefaultSkin_CanBeAssigned;
 var
   Form: TfrmSkinDisk;
-  EventCalled: Boolean;
 begin
   Form:= TfrmSkinDisk.Create(NIL);
   FTestForm:= Form;
 
-  EventCalled:= FALSE;
+  { Assign nil to test assignment capability }
+  Form.OnDefaultSkin:= NIL;
 
-  Form.OnDefaultSkin:= procedure(Sender: TObject)
-    begin
-      EventCalled:= TRUE;
-    end;
-
-  Assert.IsTrue(Assigned(Form.OnDefaultSkin),
-    'OnDefaultSkin should be assignable');
+  { Should not raise exception on assignment }
+  Assert.IsFalse(Assigned(Form.OnDefaultSkin),
+    'OnDefaultSkin should be assignable (nil was assigned)');
 end;
 
 

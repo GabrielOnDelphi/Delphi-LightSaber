@@ -105,7 +105,7 @@ begin
     nunitLogger := TDUnitXXMLNUnitFileLogger.Create(TDUnitX.Options.XMLOutputFile);
     runner.AddLogger(nunitLogger);
 
-    runner.FailsOnNoAsserts := False;
+    runner.FailsOnNoAsserts := FALSE;
 
     // Run tests
     results := runner.Execute;

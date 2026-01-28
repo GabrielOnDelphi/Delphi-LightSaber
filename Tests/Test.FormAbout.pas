@@ -180,7 +180,7 @@ begin
   TestForm:= TfrmAboutApp.CreateFormParented(TestParentPanel);
 
   Assert.IsNotNull(TestForm.Container, 'Form should have Container panel');
-  Assert.AreEqual(TestParentPanel, TestForm.Container.Parent,
+  Assert.IsTrue(TestForm.Container.Parent = TestParentPanel,
     'Container should be parented to the provided parent');
 end;
 
@@ -201,14 +201,13 @@ end;
 
 procedure TTestFormAbout.TestCreateFormParented_NilParentAsserts;
 begin
-  // Passing nil should trigger an assertion
+  { Passing nil should trigger an assertion }
   Assert.WillRaise(
     procedure
     begin
       TfrmAboutApp.CreateFormParented(NIL);
     end,
-    EAssertionFailed,
-    'Should raise assertion when Parent is nil');
+    EAssertionFailed);
 end;
 
 

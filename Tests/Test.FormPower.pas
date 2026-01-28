@@ -503,13 +503,12 @@ begin
   Form.chkBatteries.Checked:= FALSE;
   Form.spnMaxCPU.Value:= 100;
 
-  // Should pass the battery check
+  { OkToChangeWallpaper should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.OkToChangeWallpaper;
-    end,
-    'OkToChangeWallpaper should not raise exception');
+    end);
 end;
 
 
@@ -555,12 +554,12 @@ begin
   Form:= TfrmPower.Create(NIL);
   FTestForm:= Form;
 
+  { spnMaxCPUChange should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.spnMaxCPUChange(Form);
-    end,
-    'spnMaxCPUChange should not raise exception');
+    end);
 end;
 
 
@@ -573,13 +572,13 @@ begin
   Form:= TfrmPower.Create(NIL);
   FTestForm:= Form;
 
-  // Container parent is form, not nil, but test the general behavior
+  { Container parent is form, not nil, but test the general behavior.
+    TimerPwrTimer should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.TimerPwrTimer(Form);
-    end,
-    'TimerPwrTimer should not raise exception');
+    end);
 end;
 
 
@@ -594,12 +593,12 @@ begin
   FTestParent.Visible:= TRUE;
   Form.Initialize(FTestParent);
 
+  { TimerPwrTimer should not raise exception when parent is visible }
   Assert.WillNotRaise(
     procedure
     begin
       Form.TimerPwrTimer(Form);
-    end,
-    'TimerPwrTimer should not raise exception when parent is visible');
+    end);
 end;
 
 
@@ -614,12 +613,12 @@ begin
   FTestParent.Visible:= FALSE;
   Form.Initialize(FTestParent);
 
+  { TimerPwrTimer should not raise exception when parent is hidden }
   Assert.WillNotRaise(
     procedure
     begin
       Form.TimerPwrTimer(Form);
-    end,
-    'TimerPwrTimer should not raise exception when parent is hidden');
+    end);
 end;
 
 

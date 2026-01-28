@@ -1,27 +1,38 @@
 UNIT FormTranslSelector;
 
-{-------------------------------------------------------------------------------------------------------------
-   www.GabrielMoraru.com
+{=============================================================================================================
    2025.01
-
-   Let user choose a language file.
-
+   www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-   How to use it:
-      Instantiate the TTranslator class
-      The path where the translation files are stored is returned by GetLangFolder
-      Call PopulateLanguageFiles to populate a listbox with all discovered language files
+   LANGUAGE SELECTOR FORM
 
-   Default language
-      The English.ini file can be empty! In this cases the program will use the default (design time) strings.
-      But in this case, a program restart will be necessary to apply that language.
+   Allows users to choose a language/translation file from available options.
+   Works with LightVcl.Common.Translate.pas translation engine.
 
-   Coupling warning:
-      Don't add dependencies to CubicVisualControls here!
--------------------------------------------------------------------------------------------------------------}
+   USAGE:
+     Call TfrmTranslSelector.ShowSelector to display the language selection dialog.
+     The TTranslator instance must be created before calling this.
+
+   FEATURES:
+     - Lists all .ini translation files from the Lang folder
+     - Remembers and pre-selects the last used language
+     - Shows translator credits after selection
+     - Links to TfrmTranslEditor for creating new translations
+
+   DEFAULT LANGUAGE:
+     The English.ini file can be empty! In this case the program uses design-time strings.
+     Note: A program restart may be necessary when switching to default English.
+
+   NOTES:
+     Don't add dependencies to CubicVisualControls here!
+
+   RELATED:
+     - LightVcl.Common.Translate.pas - Translation engine
+     - FormTranslEditor.pas - Translation editor form
+=============================================================================================================}
 
 INTERFACE
-{.$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
+{$DENYPACKAGEUNIT ON}
 
 USES
   System.SysUtils, System.Classes,
@@ -48,7 +59,7 @@ TYPE
     function GetSelectedFilePath: string;
     procedure ApplyLanguage;
   public
-    function IsEnglish: Boolean;  //unused
+    function IsEnglish: Boolean;
     function PopulateLanguageFiles: Boolean;
     class procedure ShowSelector; static;
   end;
@@ -57,27 +68,35 @@ TYPE
 
 
 IMPLEMENTATION {$R *.dfm}
+
 USES
-  LightCore.AppData, LightVcl.Visual.AppData
-, LightVcl.Common.Dialogs, LightCore.IO, LightVcl.Common.IO, FormTranslEditor;
+  LightCore.AppData,
+  LightVcl.Visual.AppData,
+  LightVcl.Common.Dialogs,
+  LightCore.IO,
+  LightVcl.Common.IO,
+  FormTranslEditor;
 
 
 
+{ Shows the language selector form as a modal dialog.
+  Translator must be initialized before calling this method. }
 class procedure TfrmTranslSelector.ShowSelector;
-VAR
-   frmSelector: TfrmTranslSelector;
+var
+  frmSelector: TfrmTranslSelector;
 begin
-  Assert(Translator <> NIL);
+  Assert(Translator <> NIL, 'Translator must be initialized before showing selector');
 
   AppData.CreateFormHidden(TfrmTranslSelector, frmSelector);
-  TRY
+  try
+    { Hide translation editor button on first run (no settings yet) }
     frmSelector.btnTranslate.Visible:= NOT AppData.RunningFirstTime;
     frmSelector.btnRefresh.Visible:= frmSelector.btnTranslate.Visible;
-    frmSelector.PopulateLanguageFiles;    { Populate the ListBox with languages we found in 'Lang' folder }
+    frmSelector.PopulateLanguageFiles;
     frmSelector.ShowModal;
-  FINALLY
+  finally
     FreeAndNil(frmSelector);
-  END;
+  end;
 end;
 
 
@@ -92,15 +111,18 @@ end;
 
 
 
-{---------------------------------------------------------------------------
-   LOAD EXISTING LANGUAGE FILE
----------------------------------------------------------------------------}
+{-------------------------------------------------------------------------------------------------------------
+   APPLY LANGUAGE
+-------------------------------------------------------------------------------------------------------------}
+
 procedure TfrmTranslSelector.ListBoxDblClick(Sender: TObject);
 begin
   ApplyLanguage;
 end;
 
 
+{ Applies the selected language file to the application.
+  Shows translator credits after successful application. }
 procedure TfrmTranslSelector.ApplyLanguage;
 begin
   if ListBox.ItemIndex < 0 then EXIT;
@@ -111,9 +133,8 @@ begin
     if FileExistsMsg(GetSelectedFilePath)
     then
       begin
-        Translator.CurLanguage:= Translator.GetLangFolder+ GetSelectedFileName;
-
-        lblAuthors.Caption:= 'Translated by: '+ Translator.Authors;
+        Translator.CurLanguage:= Translator.GetLangFolder + GetSelectedFileName;
+        lblAuthors.Caption:= 'Translated by: ' + Translator.Authors;
         lblAuthors.Visible:= TRUE;
       end
     else
@@ -133,26 +154,29 @@ end;
 
 
 
-{---------------------------------------------------------------------------
+{-------------------------------------------------------------------------------------------------------------
    UTILS
----------------------------------------------------------------------------}
+-------------------------------------------------------------------------------------------------------------}
+
+{ Returns the full path to the selected language file, or empty string if none selected }
 function TfrmTranslSelector.GetSelectedFilePath: string;
 begin
   if ListBox.ItemIndex < 0
   then Result:= ''
-  else Result:= Translator.GetLangFolder+ GetSelectedFileName;
+  else Result:= Translator.GetLangFolder + GetSelectedFileName;
 end;
 
 
+{ Returns the file name (with .ini extension) of the selected language, or empty string if none selected }
 function TfrmTranslSelector.GetSelectedFileName: string;
 begin
   if ListBox.ItemIndex < 0
   then Result:= ''
-  else Result:= ListBox.Items.Strings[ListBox.ItemIndex]+ '.ini';
+  else Result:= ListBox.Items.Strings[ListBox.ItemIndex] + '.ini';
 end;
 
 
-{ Reurns True if the selected language is English }
+{ Returns True if the selected language is English }
 function TfrmTranslSelector.IsEnglish: Boolean;
 begin
   if ListBox.ItemIndex < 0
@@ -161,47 +185,49 @@ begin
 end;
 
 
-{ Returns false if no language file was found }
+{ Populates the listbox with available language files from the Lang folder.
+  Pre-selects the previously used language if available, otherwise selects the first one.
+  Returns False if no language files were found. }
 function TfrmTranslSelector.PopulateLanguageFiles: Boolean;
-VAR
-   iLastLang: Integer;
-   Files: TStringList;
+var
+  iLastLang: Integer;
+  Files: TStringList;
 begin
   ListBox.Clear;
 
-  { Read all files in folder }
+  { Read all .ini files in Lang folder }
   Files:= ListFilesOf(Translator.GetLangFolder, '*.ini', True, FALSE);
-  TRY
-   if Files.Count = 0
-   then AppData.LogWarn('No language files detected in '+ Translator.GetLangFolder);
+  try
+    if Files.Count = 0
+    then AppData.LogWarn('No language files detected in ' + Translator.GetLangFolder);
 
-   { Remove path & ext, then populate the list box }
-   for var s in Files DO
-     ListBox.Items.Add(ExtractOnlyName(s));
-  FINALLY
+    { Remove path & extension, then populate the list box }
+    for var s in Files do
+      ListBox.Items.Add(ExtractOnlyName(s));
+  finally
     FreeAndNil(Files);
-  END;
+  end;
 
-  { Select lang }
+  { Pre-select appropriate language }
   if ListBox.Items.Count > 0 then
-   begin
-     iLastLang:= ListBox.Items.IndexOf(ExtractOnlyName(Translator.CurLanguageName));
-     if iLastLang < 0
-     then
-      begin
-       // Pre-select the first language in the list
-       ListBox.Selected[0];  //ToDo: Pre-select the english lang (preferentially)
-       ListBox.ItemIndex:= 0;
-      end
-     else
-       begin
-        // Pre-select the last language used
-        ListBox.Selected[iLastLang];
-        ListBox.ItemIndex:= iLastLang;
-       end;
-   end;
+    begin
+      iLastLang:= ListBox.Items.IndexOf(ExtractOnlyName(Translator.CurLanguageName));
+      if iLastLang < 0
+      then
+        begin
+          { Pre-select the first language in the list }
+          ListBox.Selected[0]:= True;  //ToDo: Pre-select the English lang preferentially
+          ListBox.ItemIndex:= 0;
+        end
+      else
+        begin
+          { Pre-select the last language used }
+          ListBox.Selected[iLastLang]:= True;
+          ListBox.ItemIndex:= iLastLang;
+        end;
+    end;
 
- Result:= ListBox.Items.Count > 0;
+  Result:= ListBox.Items.Count > 0;
 end;
 
 
@@ -222,7 +248,6 @@ procedure TfrmTranslSelector.btnTranslateClick(Sender: TObject);
 begin
   TfrmTranslEditor.ShowEditor;
 end;
-
 
 
 

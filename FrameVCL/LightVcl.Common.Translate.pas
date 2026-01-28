@@ -1,19 +1,23 @@
 unit LightVcl.Common.Translate;
 
 {=============================================================================================================
-   www.GabrielMoraru.com
+   Gabriel Moraru
    2025.03
+   www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-   Automatic language translator engine for Delphi [LightSaber]
-   RTTI-based
+   AUTOMATIC LANGUAGE TRANSLATOR ENGINE FOR DELPHI [LightSaber]
+
+   RTTI-based translation system for VCL applications.
+
 -----------------------------------------------------------------------------------------
 
    **DESCRIPTION**
 
-     This class will translate all components (on a form) that have a text-like property (for example: TLabel.Caption, TLabel.Hint, TMenuItem.Caption)
-     It does this automatically (no line of code necessary) for all forms created with AppData.CreateForm().
+     This class translates all components (on a form) that have a text-like property
+     (for example: TLabel.Caption, TLabel.Hint, TMenuItem.Caption).
+     It does this automatically (no code necessary) for all forms created with AppData.CreateForm().
      The text is stored in an INI file.
-      In the future the INI file will be sent to DeepL or GoogleTranslate (via API) for automatic translation.
+     In the future the INI file will be sent to DeepL or GoogleTranslate (via API) for automatic translation.
 
 -----------------------------------------------------------------------------------------
 
@@ -22,9 +26,9 @@ unit LightVcl.Common.Translate;
      Changes the GUI language live, without the need to restart the app.
 
      Embedded tools:
-        It offers a "transaltion editor" form. See: FormTranslEditor.pas
-        It offers a "transaltion selctor" form. See: FormTranslSelector.pas
-        The user can create his own translations easily (with the above mentione utility).
+        It offers a "translation editor" form. See: FormTranslEditor.pas
+        It offers a "translation selector" form. See: FormTranslSelector.pas
+        The user can create their own translations easily (with the above mentioned utility).
         The text translated can be seen live, as we translate it (press Apply).
 
      Instant translations:
@@ -478,9 +482,9 @@ begin
 
     { Read }
     Translation:= Ini.ReadString(Section, Ident, '');
-    Translation:= CRLFToEnter(Translation);           // We cannot write the ENTER character into a INI file
-    if Translation > ''
-    then SetStrProp(Component, PropertyType, Translation );
+    Translation:= CRLFToEnter(Translation);  { We cannot write the ENTER character into a INI file }
+    if Translation <> ''
+    then SetStrProp(Component, PropertyType, Translation);
    end;
 
   // todo: else if Component is TComboBox then (Component as TComboBox).Text:= Translation;
@@ -518,11 +522,11 @@ begin
     if SameStr(PropertyType, 'Caption')
     then PropertyValue:= ReplaceString(PropertyValue, '&', '');
 
-    // Finally write to INI
+    { Finally write to INI }
     VAR Ident: string;
-    if ParentName > ''
-    then Ident:= ParentName+'.' + Component.Name+'.'+PropertyType
-    else Ident:=                  Component.Name+'.'+PropertyType;
+    if ParentName <> ''
+    then Ident:= ParentName + '.' + Component.Name + '.' + PropertyType
+    else Ident:= Component.Name + '.' + PropertyType;
     Ini.WriteString(Section, Ident, PropertyValue);
    end;
 
@@ -543,7 +547,7 @@ end;
 ---------------------------------------------------------------------------}
 function TTranslator.GetLangFolder: string;
 begin
-  Result:= Appdatacore.AppFolder + 'Lang\';
+  Result:= FAppData.AppFolder + 'Lang\';
 end;
 
 
@@ -559,7 +563,7 @@ function TTranslator.ReadString(CONST Identifier: string; DefaultVal: string): s
 begin
   VAR IniFile:= TIniFileApp.Create(FAppData.AppName, FAppData.IniFile);
   TRY
-    Result:= IniFile.ReadString('Transaltor', Identifier, DefaultVal);
+    Result:= IniFile.ReadString('Translator', Identifier, DefaultVal);
   FINALLY
     FreeAndNil(IniFile);
   END;
@@ -569,7 +573,7 @@ procedure TTranslator.WriteString(CONST Identifier, s: string);
 begin
   VAR IniFile:= TIniFileApp.Create(FAppData.AppName, FAppData.IniFile);
   TRY
-    IniFile.WriteString('Transaltor', Identifier, s)
+    IniFile.WriteString('Translator', Identifier, s)
   FINALLY
     FreeAndNil(IniFile);
   END;

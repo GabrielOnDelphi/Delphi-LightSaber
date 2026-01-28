@@ -1,31 +1,42 @@
 UNIT FormSplashScreen;
-{-------------------------------------------------------------------------------------------------------------
- How to use it:
-   Load PNG. Set its transparency to match background's color.
-   Set form transparency to the same color.
-   ShowSplashScreen(SizeOfImage);
 
-   Main Form:
-   Use this if you want to create first frmSplash but don't want to use it as MainForm:
-     frmSplash:= TfrmSplash.Create(Application);
-   The splash screen it is not the Main form because it is not created with 'Application.CreateForm'.
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
+   www.GabrielMoraru.com
+--------------------------------------------------------------------------------------------------------------
+   SPLASH SCREEN
 
-   Running home:
-     fsStayOnTop interferes with the IDE, when I debug BioniX during its startup. So, I better don't load the SplashScreen at all!
-     Warning (EmbarcaderoHelp): It is not advisable to change FormStyle (fsStayOnTop) at runtime.
+   Displays a fade-in/fade-out splash screen during application startup.
+   The splash screen loads a PNG image with transparency support.
 
+   WARNING:
+     * DON'T ADD THIS UNIT TO ANY DPK! (enforced by $DENYPACKAGEUNIT)
+     * fsStayOnTop interferes with the IDE when debugging during startup
+     * It is not advisable to change FormStyle (fsStayOnTop) at runtime
 
- DON'T ADD IT TO ANY DPK!
+   USAGE:
+     1. Place 'Splash.png' in AppData.AppSysDir folder
+     2. Set PNG transparency to match background color
+     3. Call: ShowSplashScreen(SizeOfImage)
 
- Tester:
+   NOTES:
+     - The splash screen is NOT the MainForm (created with TfrmSplash.Create, not Application.CreateForm)
+     - Create a file 'NoSplashScreen' in AppSysDir to disable the splash
+     - Splash is not shown on first run (when setup wizard appears)
+     - Click the image to close the splash immediately
+
+   TESTER:
      c:\MyProjects\Project Testers\SplashScreen.pas\SplashTester.dpr
--------------------------------------------------------------------------------------------------------------}
+=============================================================================================================}
+
 INTERFACE
-{$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
+{$DENYPACKAGEUNIT ON}
 
 USES
   System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.ExtCtrls, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs;
+  Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls,
+  LightVcl.Visual.AppDataForm, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs;
 
 TYPE
   TfrmSplash = class(TLightForm)
@@ -36,110 +47,147 @@ TYPE
     procedure FormDestroy(Sender: TObject);
     procedure imgSplashClick(Sender: TObject);
   private
-    Increment: Integer; { First we make the splash visible }
-    CurrAlpha: Integer;
-  public
+    FIncrement: Integer;  { Alpha step: positive=fade in, negative=fade out }
+    FCurrAlpha: Integer;  { Current alpha blend value (0-255) }
   end;
 
-procedure ShowSplashScreen(ImgFileSize: integer);
+{ Shows the splash screen with fade-in/fade-out animation.
+  ImgFileSize: Expected size of Splash.png for integrity check.
+               Pass 0 to skip the size check. }
+procedure ShowSplashScreen(ImgFileSize: Integer);
 
 
-IMPLEMENTATION  {$R *.dfm}
-USES LightCore.IO, LightVcl.Common.CenterControl, LightCore.AppData, LightVcl.Visual.AppData
-;
+IMPLEMENTATION {$R *.dfm}
+
+USES
+  LightCore.IO,
+  LightVcl.Common.CenterControl,
+  LightCore.AppData,
+  LightVcl.Visual.AppData;
 
 CONST
-  StepUp    = 30;  { The higher the number the faster the speed (less time on screen) }
-  StepDown  = -12;
-  StartValue= 40;  { This is the alpha value from which we start }
-  EndValue  = 90;  { When alpha is under this value we simply close the splash screen }
+  { Alpha animation constants }
+  ALPHA_STEP_UP   = 30;   { Fade-in step (higher = faster) }
+  ALPHA_STEP_DOWN = -12;  { Fade-out step (negative value) }
+  ALPHA_START     = 40;   { Initial alpha value when splash appears }
+  ALPHA_END       = 90;   { Close splash when alpha falls below this during fade-out }
+  SPLASH_FILENAME = 'Splash.png';
 
 
 
 
-procedure ShowSplashScreen(ImgFileSize: integer);
-VAR frmSplash: TfrmSplash;
+procedure ShowSplashScreen(ImgFileSize: Integer);
+var
+  frmSplash: TfrmSplash;
+  SplashPath: string;
 begin
- if FileExists(Appdata.AppSysDir+ 'NoSplashScreen') then EXIT;
- if AppData.RunningFirstTime then EXIT; { It is confusing for the user to see this splash screen when the program starts for the first time AND the "setup" wizard is presented. }
+  { Check if splash is disabled or should be skipped }
+  if FileExists(Appdata.AppSysDir + 'NoSplashScreen')
+  then EXIT;
 
- frmSplash:= TfrmSplash.Create(Application);
- Assert(frmSplash.Name= 'frmSplash', 'Dont change form name because of TfrmSettings.spnOpacityChange!'); { We don't apply custom transparency to the splash screen. It handles the transparency by its own. }
+  { Don't show splash on first run - setup wizard will appear instead }
+  if AppData.RunningFirstTime
+  then EXIT;
 
- { Protection }
- if NOT FileExists(Appdata.AppSysDir+'Splash.png')
- AND (GetFileSize(Appdata.AppSysDir+'Splash.png') = ImgFileSize) then
-  begin
-    FreeAndNil(frmSplash);
-    EXIT;
+  SplashPath:= Appdata.AppSysDir + SPLASH_FILENAME;
+
+  { Verify splash image exists and has expected size (integrity check) }
+  if NOT FileExists(SplashPath)
+  then EXIT;
+
+  if (ImgFileSize > 0) AND (GetFileSize(SplashPath) <> ImgFileSize)
+  then EXIT;
+
+  { Create the splash form }
+  frmSplash:= TfrmSplash.Create(Application);
+
+  { Form name must not change - other forms check for it to skip opacity changes }
+  Assert(frmSplash.Name = 'frmSplash',
+    'Do not change form name - TfrmSettings.spnOpacityChange depends on it!');
+
+  { Load the splash image }
+  try
+    frmSplash.imgSplash.Picture.LoadFromFile(SplashPath);
+  except
+    on E: Exception do
+    begin
+      MessageWarning('The program cannot load its logo/graphics. ' +
+        'Your antivirus may be blocking access.' + CRLF +
+        '(If using IOBit, consider switching to a better program.)');
+      FreeAndNil(frmSplash);
+      EXIT;
+    end;
   end;
 
- { Load logo img }
- TRY
-   frmSplash.imgSplash.Picture.LoadFromFile(Appdata.AppSysDir+'Splash.png');
- EXCEPT
-   MessageWarning('The program cannot load its logo/graphics. Your antivirus is probably a bit to overzealous!'+ CRLF+'(Are you using IOBit? Consider switching to a better program.)');
-   FreeAndNil(frmSplash);
-   EXIT;
- END;
+  { Initialize alpha animation }
+  frmSplash.AlphaBlendValue:= ALPHA_START;
+  frmSplash.FCurrAlpha:= frmSplash.AlphaBlendValue;
+  frmSplash.FIncrement:= ALPHA_STEP_UP;  { Start with fade-in }
 
- { Form setup }
- frmSplash.AlphaBlendValue:= StartValue;
- frmSplash.CurrAlpha:= frmSplash.AlphaBlendValue;
- frmSplash.Increment:= StepUp;   { First we make the splash visible }
- CenterForm(frmSplash);
- frmSplash.Show;                 { Cannot center splash screen to BioniX main form because at this point we don't know the position of the main form yet (INI not loaded). }
- frmSplash.TimerTimer(NIL);      { Show the first step now }
- frmSplash.Timer.Enabled:= TRUE;
+  { Show the splash }
+  CenterForm(frmSplash);
+  frmSplash.Show;
+  { Note: Cannot center to main form - INI not loaded yet, position unknown }
+
+  { Trigger first animation step immediately }
+  frmSplash.TimerTimer(NIL);
+  frmSplash.Timer.Enabled:= TRUE;
 end;
 
 
+{ Handles the fade-in/fade-out animation.
+  Called by timer at regular intervals to update alpha transparency. }
 procedure TfrmSplash.TimerTimer(Sender: TObject);
 begin
- BringToFront;
- Refresh;
+  BringToFront;
+  Refresh;
 
- { Time to close the splash? }
- if  (Increment < 0)
- AND (CurrAlpha < EndValue) then
+  { Check if fade-out is complete - time to close }
+  if (FIncrement < 0) AND (FCurrAlpha < ALPHA_END) then
   begin
-   Timer.Enabled:= FALSE;
-   Close;
-   EXIT;
+    Timer.Enabled:= FALSE;
+    Close;
+    EXIT;
   end;
 
- CurrAlpha:= CurrAlpha+ Increment;
+  { Update alpha value }
+  FCurrAlpha:= FCurrAlpha + FIncrement;
 
- { Fade out }
- if CurrAlpha >= 255 then
+  { Check if fade-in is complete - switch to fade-out }
+  if FCurrAlpha >= 255 then
   begin
-   Increment:= StepDown;
-   CurrAlpha:= 255;
-   BringToFront;
+    FIncrement:= ALPHA_STEP_DOWN;
+    FCurrAlpha:= 255;
+    BringToFront;
   end;
 
- if CurrAlpha < 0
- then CurrAlpha:= 0;
- AlphaBlendValue:= CurrAlpha;
+  { Clamp alpha to valid range }
+  if FCurrAlpha < 0
+  then FCurrAlpha:= 0;
+
+  AlphaBlendValue:= FCurrAlpha;
 end;
 
 
 procedure TfrmSplash.FormDestroy(Sender: TObject);
 begin
- EmptyDummy;
+  { Form cleanup - currently no special cleanup needed }
 end;
 
 
+{ Allows user to close splash immediately by clicking on it }
 procedure TfrmSplash.imgSplashClick(Sender: TObject);
 begin
- Close;
+  Close;
 end;
 
 
 procedure TfrmSplash.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
- Action:= caFree;      // mandatory. reason: https://stackoverflow.com/questions/45611162/how-to-create-a-form-before-the-mainform
- {Action:= caFree; WARNING: Delphi bug: https://quality.embarcadero.com/browse/RSP-33140. Fixed in Alexandria }
+  { Must use caFree because splash is created before MainForm.
+    See: https://stackoverflow.com/questions/45611162/how-to-create-a-form-before-the-mainform
+    Note: caFree bug (RSP-33140) was fixed in Delphi 11 (Alexandria) }
+  Action:= caFree;
 end;
 
 

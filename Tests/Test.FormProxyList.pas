@@ -628,12 +628,12 @@ begin
   // Ensure file doesn't exist
   DeleteTestFile;
 
+  { LoadProxyFile should not raise exception for non-existent file }
   Assert.WillNotRaise(
     procedure
     begin
       Form.LoadProxyFile(FTestFile);
-    end,
-    'LoadProxyFile should not raise exception for non-existent file');
+    end);
 
   Assert.AreEqual(FTestFile, Form.FileName,
     'FileName should be set even if file does not exist');
@@ -707,12 +707,12 @@ begin
 
   Form.mmoProxyList.Clear;
 
+  { CleanList should not raise exception on empty memo }
   Assert.WillNotRaise(
     procedure
     begin
       Form.CleanList;
-    end,
-    'CleanList should not raise exception on empty memo');
+    end);
 end;
 
 
@@ -754,13 +754,13 @@ begin
 
   Form.FileName:= '';
 
+  { Save should raise assertion when FileName is empty }
   Assert.WillRaise(
     procedure
     begin
       Form.Save;
     end,
-    EAssertionFailed,
-    'Save should raise assertion when FileName is empty');
+    EAssertionFailed);
 end;
 
 
@@ -776,12 +776,12 @@ begin
   Form.FileName:= FTestFile;
   Form.mmoProxyList.Lines.Add('test');
 
+  { btnSaveProxyClick should not raise exception when FileName is set }
   Assert.WillNotRaise(
     procedure
     begin
       Form.btnSaveProxyClick(Form);
-    end,
-    'btnSaveProxyClick should not raise exception when FileName is set');
+    end);
 end;
 
 
@@ -792,12 +792,12 @@ begin
   Form:= TfrmProxyList.Create(NIL);
   FTestForm:= Form;
 
+  { btnCleanClick should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.btnCleanClick(Form);
-    end,
-    'btnCleanClick should not raise exception');
+    end);
 end;
 
 
@@ -810,12 +810,12 @@ begin
 
   Form.FileName:= '';
 
+  { btnLocateClick should not raise exception when FileName is empty }
   Assert.WillNotRaise(
     procedure
     begin
       Form.btnLocateClick(Form);
-    end,
-    'btnLocateClick should not raise exception when FileName is empty');
+    end);
 end;
 
 
@@ -826,12 +826,12 @@ begin
   Form:= TfrmProxyList.Create(NIL);
   FTestForm:= Form;
 
+  { btnAutoDetectClick should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.btnAutoDetectClick(Form);
-    end,
-    'btnAutoDetectClick should not raise exception');
+    end);
 end;
 
 

@@ -1,22 +1,17 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
-        <ProjectGuid>{5216FFFC-4185-4210-B2B2-91B47B5805A9}</ProjectGuid>
-        <MainSource>LightCoreTests.dpr</MainSource>
+        <ProjectGuid>{4560913D-9812-4328-A5F6-ACB31275D904}</ProjectGuid>
+        <MainSource>LightVclTests.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <ProjectName Condition="'$(ProjectName)'==''">LightCoreTests</ProjectName>
-        <TargetedPlatforms>32769</TargetedPlatforms>
-        <AppType>Console</AppType>
-        <FrameworkType>None</FrameworkType>
+        <ProjectName Condition="'$(ProjectName)'==''">LightVclTests</ProjectName>
+        <TargetedPlatforms>1</TargetedPlatforms>
+        <AppType>Application</AppType>
+        <FrameworkType>VCL</FrameworkType>
         <ProjectVersion>20.3</ProjectVersion>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='Android' and '$(Base)'=='true') or '$(Base_Android)'!=''">
-        <Base_Android>true</Base_Android>
-        <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Android64' and '$(Base)'=='true') or '$(Base_Android64)'!=''">
@@ -34,9 +29,20 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+        <Base_Win64>true</Base_Win64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_1)'!=''">
         <Cfg_1>true</Cfg_1>
         <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
         <Base>true</Base>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_2)'!=''">
@@ -46,24 +52,6 @@
     </PropertyGroup>
     <PropertyGroup Condition="('$(Platform)'=='Android64' and '$(Cfg_2)'=='true') or '$(Cfg_2_Android64)'!=''">
         <Cfg_2_Android64>true</Cfg_2_Android64>
-        <CfgParent>Cfg_2</CfgParent>
-        <Cfg_2>true</Cfg_2>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='iOSDevice64' and '$(Cfg_2)'=='true') or '$(Cfg_2_iOSDevice64)'!=''">
-        <Cfg_2_iOSDevice64>true</Cfg_2_iOSDevice64>
-        <CfgParent>Cfg_2</CfgParent>
-        <Cfg_2>true</Cfg_2>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='OSX64' and '$(Cfg_2)'=='true') or '$(Cfg_2_OSX64)'!=''">
-        <Cfg_2_OSX64>true</Cfg_2_OSX64>
-        <CfgParent>Cfg_2</CfgParent>
-        <Cfg_2>true</Cfg_2>
-        <Base>true</Base>
-    </PropertyGroup>
-    <PropertyGroup Condition="('$(Platform)'=='OSXARM64' and '$(Cfg_2)'=='true') or '$(Cfg_2_OSXARM64)'!=''">
-        <Cfg_2_OSXARM64>true</Cfg_2_OSXARM64>
         <CfgParent>Cfg_2</CfgParent>
         <Cfg_2>true</Cfg_2>
         <Base>true</Base>
@@ -80,31 +68,13 @@
         <DCC_K>false</DCC_K>
         <DCC_N>false</DCC_N>
         <DCC_S>false</DCC_S>
-        <SanitizedProjectName>LightCoreTests</SanitizedProjectName>
+        <SanitizedProjectName>LightVclTests</SanitizedProjectName>
+        <DCC_Namespace>Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
-        <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
-        <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
-        <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
-        <DCC_DcuOutput>$(Platform)_$(Config)</DCC_DcuOutput>
-        <DCC_ExeOutput>.\</DCC_ExeOutput>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_Define>TESTINSIGHT;$(DCC_Define)</DCC_Define>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Base_Android)'!=''">
-        <VerInfo_Keys>package=com.embarcadero.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=TitleBar;hardwareAccelerated=true;apiKey=;minSdkVersion=23;targetSdkVersion=35</VerInfo_Keys>
-        <BT_BuildType>Debug</BT_BuildType>
-        <AUP_ACCESS_COARSE_LOCATION>true</AUP_ACCESS_COARSE_LOCATION>
-        <AUP_ACCESS_FINE_LOCATION>true</AUP_ACCESS_FINE_LOCATION>
-        <AUP_CALL_PHONE>true</AUP_CALL_PHONE>
-        <AUP_CAMERA>true</AUP_CAMERA>
-        <AUP_INTERNET>true</AUP_INTERNET>
-        <AUP_READ_CALENDAR>true</AUP_READ_CALENDAR>
-        <AUP_READ_EXTERNAL_STORAGE>true</AUP_READ_EXTERNAL_STORAGE>
-        <AUP_WRITE_CALENDAR>true</AUP_WRITE_CALENDAR>
-        <AUP_WRITE_EXTERNAL_STORAGE>true</AUP_WRITE_EXTERNAL_STORAGE>
-        <AUP_READ_PHONE_STATE>true</AUP_READ_PHONE_STATE>
-        <EnabledSysJars>activity-1.7.2.dex.jar;annotation-experimental-1.4.1.dex.jar;annotation-jvm-1.8.1.dex.jar;annotations-13.0.dex.jar;appcompat-1.2.0.dex.jar;appcompat-resources-1.2.0.dex.jar;billing-7.1.1.dex.jar;biometric-1.1.0.dex.jar;browser-1.4.0.dex.jar;cloud-messaging.dex.jar;collection-jvm-1.4.2.dex.jar;concurrent-futures-1.1.0.dex.jar;core-1.15.0.dex.jar;core-common-2.2.0.dex.jar;core-ktx-1.15.0.dex.jar;core-runtime-2.2.0.dex.jar;cursoradapter-1.0.0.dex.jar;customview-1.0.0.dex.jar;documentfile-1.0.0.dex.jar;drawerlayout-1.0.0.dex.jar;error_prone_annotations-2.9.0.dex.jar;exifinterface-1.3.6.dex.jar;firebase-annotations-16.2.0.dex.jar;firebase-common-20.3.1.dex.jar;firebase-components-17.1.0.dex.jar;firebase-datatransport-18.1.7.dex.jar;firebase-encoders-17.0.0.dex.jar;firebase-encoders-json-18.0.0.dex.jar;firebase-encoders-proto-16.0.0.dex.jar;firebase-iid-interop-17.1.0.dex.jar;firebase-installations-17.1.3.dex.jar;firebase-installations-interop-17.1.0.dex.jar;firebase-measurement-connector-19.0.0.dex.jar;firebase-messaging-23.1.2.dex.jar;fmx.dex.jar;fragment-1.2.5.dex.jar;google-play-licensing.dex.jar;interpolator-1.0.0.dex.jar;javax.inject-1.dex.jar;kotlin-stdlib-1.8.22.dex.jar;kotlin-stdlib-common-1.8.22.dex.jar;kotlin-stdlib-jdk7-1.8.22.dex.jar;kotlin-stdlib-jdk8-1.8.22.dex.jar;kotlinx-coroutines-android-1.6.4.dex.jar;kotlinx-coroutines-core-jvm-1.6.4.dex.jar;legacy-support-core-utils-1.0.0.dex.jar;lifecycle-common-2.6.2.dex.jar;lifecycle-livedata-2.6.2.dex.jar;lifecycle-livedata-core-2.6.2.dex.jar;lifecycle-runtime-2.6.2.dex.jar;lifecycle-service-2.6.2.dex.jar;lifecycle-viewmodel-2.6.2.dex.jar;lifecycle-viewmodel-savedstate-2.6.2.dex.jar;listenablefuture-1.0.dex.jar;loader-1.0.0.dex.jar;localbroadcastmanager-1.0.0.dex.jar;okio-jvm-3.4.0.dex.jar;play-services-ads-22.2.0.dex.jar;play-services-ads-base-22.2.0.dex.jar;play-services-ads-identifier-18.0.0.dex.jar;play-services-ads-lite-22.2.0.dex.jar;play-services-appset-16.0.1.dex.jar;play-services-base-18.5.0.dex.jar;play-services-basement-18.4.0.dex.jar;play-services-cloud-messaging-17.0.1.dex.jar;play-services-location-21.0.1.dex.jar;play-services-maps-18.1.0.dex.jar;play-services-measurement-base-20.1.2.dex.jar;play-services-measurement-sdk-api-20.1.2.dex.jar;play-services-stats-17.0.2.dex.jar;play-services-tasks-18.2.0.dex.jar;print-1.0.0.dex.jar;profileinstaller-1.3.0.dex.jar;room-common-2.2.5.dex.jar;room-runtime-2.2.5.dex.jar;savedstate-1.2.1.dex.jar;sqlite-2.1.0.dex.jar;sqlite-framework-2.1.0.dex.jar;startup-runtime-1.1.1.dex.jar;tracing-1.2.0.dex.jar;transport-api-3.0.0.dex.jar;transport-backend-cct-3.1.8.dex.jar;transport-runtime-3.1.8.dex.jar;user-messaging-platform-2.0.0.dex.jar;vectordrawable-1.1.0.dex.jar;vectordrawable-animated-1.1.0.dex.jar;versionedparcelable-1.1.1.dex.jar;viewpager-1.0.0.dex.jar;work-runtime-2.7.0.dex.jar</EnabledSysJars>
+        <DCC_DcuOutput>$(Platform)_$(Config)</DCC_DcuOutput>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android64)'!=''">
         <Android_LauncherIcon192>$(BDS)\bin\Artwork\Android\FM_LauncherIcon_192x192.png</Android_LauncherIcon192>
@@ -115,13 +85,24 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
+        <DCC_UnitSearchPath>..\FrameVCL;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <BT_BuildType>Debug</BT_BuildType>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
         <VerInfo_Locale>1033</VerInfo_Locale>
+        <Manifest_File>$(BDS)\bin\default_app.manifest</Manifest_File>
+        <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
+        <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base_Win64)'!=''">
+        <UWP_DelphiLogo44>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_44.png</UWP_DelphiLogo44>
+        <UWP_DelphiLogo150>$(BDS)\bin\Artwork\Windows\UWP\delphi_UwpDefault_150.png</UWP_DelphiLogo150>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
-        <DCC_AssertionsAtRuntime>false</DCC_AssertionsAtRuntime>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -132,78 +113,51 @@
     <PropertyGroup Condition="'$(Cfg_2_Android64)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_2_iOSDevice64)'!=''">
-        <BT_BuildType>Debug</BT_BuildType>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_2_OSX64)'!=''">
-        <BT_BuildType>Debug</BT_BuildType>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Cfg_2_OSXARM64)'!=''">
-        <BT_BuildType>Debug</BT_BuildType>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2_Win32)'!=''">
+        <AppDPIAwarenessMode>PerMonitorV2</AppDPIAwarenessMode>
+        <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
-        <Manifest_File>(None)</Manifest_File>
-        <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
     <ItemGroup>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="Test.LightCore.EncodeCRC.pas"/>
-        <DCCReference Include="Test.LightCore.EncodeXOR.pas"/>
-        <DCCReference Include="Test.LightCore.StringList.pas"/>
-        <DCCReference Include="Test.LightCore.Internet.pas"/>
-        <DCCReference Include="Test.LightCore.StreamFile.pas"/>
-        <DCCReference Include="Test.LightCore.StreamMem.pas"/>
-        <DCCReference Include="Test.LightCore.Binary.pas"/>
-        <DCCReference Include="Test.LightCore.Math.pas"/>
-        <DCCReference Include="Test.LightCore.Time.pas"/>
-        <DCCReference Include="Test.LightCore.HTML.pas"/>
-        <DCCReference Include="Test.LightCore.Types.pas"/>
-        <DCCReference Include="Test.LightCore.TextFile.pas"/>
-        <DCCReference Include="Test.LightCore.StrBuilder.pas"/>
-        <DCCReference Include="Test.LightCore.StreamBuff.pas"/>
-        <DCCReference Include="Test.LightCore.Core.pas"/>
-        <DCCReference Include="Test.LightCore.AppData.pas"/>
-        <DCCReference Include="Test.LightCore.INIFile.pas"/>
-        <DCCReference Include="Test.LightCore.IO.pas"/>
-        <DCCReference Include="Test.LightCore.EncodeMime.pas"/>
-        <DCCReference Include="Test.LightCore.Download.pas"/>
-        <DCCReference Include="Test.LightCore.LogTypes.pas"/>
-        <DCCReference Include="Test.LightCore.LogLinesS.pas"/>
-        <DCCReference Include="Test.LightCore.LogLinesM.pas"/>
-        <DCCReference Include="Test.LightCore.LogRam.pas"/>
-        <DCCReference Include="Test.LightCore.Compiler.pas"/>
-        <DCCReference Include="Test.LightCore.Debugger.pas"/>
-        <DCCReference Include="..\LightCore.pas"/>
-        <DCCReference Include="..\LightCore.Types.pas"/>
-        <DCCReference Include="..\LightCore.EncodeCRC.pas"/>
-        <DCCReference Include="..\LightCore.EncodeXOR.pas"/>
-        <DCCReference Include="..\LightCore.StringList.pas"/>
-        <DCCReference Include="..\LightCore.Internet.pas"/>
-        <DCCReference Include="..\LightCore.StreamFile.pas"/>
-        <DCCReference Include="..\LightCore.Binary.pas"/>
-        <DCCReference Include="..\LightCore.IO.pas"/>
-        <DCCReference Include="..\LightCore.HTML.pas"/>
-        <DCCReference Include="..\LightCore.Download.pas"/>
-        <DCCReference Include="..\LightCore.StreamMem.pas"/>
-        <DCCReference Include="..\LightCore.Math.pas"/>
-        <DCCReference Include="..\LightCore.Time.pas"/>
-        <DCCReference Include="..\LightCore.TextFile.pas"/>
-        <DCCReference Include="..\LightCore.StrBuilder.pas"/>
-        <DCCReference Include="..\LightCore.StreamBuff.pas"/>
-        <DCCReference Include="..\LightCore.AppData.pas"/>
-        <DCCReference Include="..\LightCore.INIFile.pas"/>
-        <DCCReference Include="..\LightCore.EncodeMime.pas"/>
-        <DCCReference Include="..\LightCore.LogTypes.pas"/>
-        <DCCReference Include="..\LightCore.LogLinesAbstract.pas"/>
-        <DCCReference Include="..\LightCore.LogLinesS.pas"/>
-        <DCCReference Include="..\LightCore.LogLinesM.pas"/>
-        <DCCReference Include="..\LightCore.LogRam.pas"/>
-        <DCCReference Include="..\LightCore.Compiler.pas"/>
-        <DCCReference Include="..\LightCore.Debugger.pas"/>
-        <DCCReference Include="..\LightCore.Platform.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Visual.AppData.pas"/>
+        <DCCReference Include="Test.LightVcl.Common.IO.pas"/>
+        <DCCReference Include="Test.FormAbout.pas"/>
+        <DCCReference Include="Test.FormAsyncMessage.pas"/>
+        <DCCReference Include="Test.FormDrawing.pas"/>
+        <DCCReference Include="Test.FormEmailComposer.pas"/>
+        <DCCReference Include="Test.FormEmailServer.pas"/>
+        <DCCReference Include="Test.FormPower.pas"/>
+        <DCCReference Include="Test.FormProxyList.pas"/>
+        <DCCReference Include="Test.FormReminder.pas"/>
+        <DCCReference Include="Test.FormRichLog.pas"/>
+        <DCCReference Include="Test.FormSkinsDisk.pas"/>
+        <DCCReference Include="Test.FormSkinsRes.pas"/>
+        <DCCReference Include="Test.FormSplashScreen.pas"/>
+        <DCCReference Include="Test.FormTranslEditor.pas"/>
+        <DCCReference Include="Test.FormTranslSelector.pas"/>
+        <DCCReference Include="Test.FormUniversalEula.pas"/>
+        <DCCReference Include="Test.FrameExplorer.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Common.IO.pas"/>
+        <DCCReference Include="..\FrameVCL\FormAbout.pas"/>
+        <DCCReference Include="..\FrameVCL\FormAsyncMessage.pas"/>
+        <DCCReference Include="..\FrameVCL\FormDrawing.pas"/>
+        <DCCReference Include="..\FrameVCL\FormEmailComposer.pas"/>
+        <DCCReference Include="..\FrameVCL\FormEmailServer.pas"/>
+        <DCCReference Include="..\FrameVCL\FormPower.pas"/>
+        <DCCReference Include="..\FrameVCL\FormProxyList.pas"/>
+        <DCCReference Include="..\FrameVCL\FormReminder.pas"/>
+        <DCCReference Include="..\FrameVCL\FormRichLog.pas"/>
+        <DCCReference Include="..\FrameVCL\FormSkinsDisk.pas"/>
+        <DCCReference Include="..\FrameVCL\FormSkinsRes.pas"/>
+        <DCCReference Include="..\FrameVCL\FormSplashScreen.pas"/>
+        <DCCReference Include="..\FrameVCL\FormTranslEditor.pas"/>
+        <DCCReference Include="..\FrameVCL\FormTranslSelector.pas"/>
+        <DCCReference Include="..\FrameVCL\FormUniversalEula.pas"/>
+        <DCCReference Include="..\FrameVCL\FrameExplorer.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Common.Translate.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -222,7 +176,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">LightCoreTests.dpr</Source>
+                    <Source Name="MainSource">LightVclTests.dpr</Source>
                 </Source>
                 <Excluded_Packages>
                     <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\BionixVCL370.bpl">BioniX VCL</Excluded_Packages>
@@ -232,8 +186,7 @@
                 </Excluded_Packages>
             </Delphi.Personality>
             <Platforms>
-                <Platform value="Android">False</Platform>
-                <Platform value="Android64">True</Platform>
+                <Platform value="Android64">False</Platform>
                 <Platform value="iOSDevice64">False</Platform>
                 <Platform value="iOSSimARM64">False</Platform>
                 <Platform value="Linux64">False</Platform>

@@ -526,12 +526,12 @@ begin
   Form:= TfrmReminder.Create(NIL);
   FTestForm:= Form;
 
+  { Initialize should accept nil handlers }
   Assert.WillNotRaise(
     procedure
     begin
       Form.Initialize(NIL, NIL);
-    end,
-    'Initialize should accept nil handlers');
+    end);
 end;
 
 
@@ -626,7 +626,7 @@ begin
   Form.spnTime.Value:= 2;
   Form.spnTimeChange(Form);
 
-  Assert.IsTrue(Form.Caption.Contains('Reminder in'),
+  Assert.IsTrue(Pos('Reminder in', Form.Caption) > 0,
     'Caption should show "Reminder in" when timer is enabled');
 end;
 
@@ -751,12 +751,12 @@ begin
 
   Form.edtPath.Path:= '';
 
+  { btnRunClick should not raise exception with empty path }
   Assert.WillNotRaise(
     procedure
     begin
       Form.btnRunClick(Form);
-    end,
-    'btnRunClick should not raise exception with empty path');
+    end);
 end;
 
 
@@ -770,12 +770,12 @@ begin
   // Use a path that likely doesn't exist but won't cause an exception
   Form.edtPath.Path:= 'C:\NonExistent\File.txt';
 
+  { btnRunClick should not raise exception with non-existent path }
   Assert.WillNotRaise(
     procedure
     begin
       Form.btnRunClick(Form);
-    end,
-    'btnRunClick should not raise exception with non-existent path');
+    end);
 end;
 
 

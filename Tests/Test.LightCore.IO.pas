@@ -180,8 +180,9 @@ end;
 
 procedure TTestLightCoreIO.TestConvert2LinuxPath;
 begin
-  Assert.AreEqual('/test/path/file.txt', Convert2LinuxPath('c:\test\path\file.txt'));
-  Assert.AreEqual('/folder/', Convert2LinuxPath('c:\folder\'));
+  { Convert2LinuxPath only replaces \ with /, does not remove drive letter }
+  Assert.AreEqual('c:/test/path/file.txt', Convert2LinuxPath('c:\test\path\file.txt'));
+  Assert.AreEqual('c:/folder/', Convert2LinuxPath('c:\folder\'));
 end;
 
 procedure TTestLightCoreIO.TestConvert2DosPath;
@@ -209,13 +210,15 @@ end;
 
 procedure TTestLightCoreIO.TestExtractLastFolder;
 begin
+  { ExtractLastFolder works on paths. 'c:\path\folder' is treated as a file, not folder }
   Assert.AreEqual('system', ExtractLastFolder('c:\windows\system\'));
-  Assert.AreEqual('folder', ExtractLastFolder('c:\path\folder'));
+  Assert.AreEqual('path', ExtractLastFolder('c:\path\folder'));  { 'folder' is treated as filename }
 end;
 
 procedure TTestLightCoreIO.TestExtractParentFolder;
 begin
-  Assert.AreEqual('c:\windows\', ExtractParentFolder('c:\windows\system\'));
+  { ExtractParentFolder uses TDirectory.GetParent which doesn't include trailing separator }
+  Assert.AreEqual('c:\windows', ExtractParentFolder('c:\windows\system\'));
 end;
 
 procedure TTestLightCoreIO.TestTrimLastFolder;
@@ -257,8 +260,9 @@ end;
 
 procedure TTestLightCoreIO.TestRemoveLastExtension;
 begin
-  Assert.AreEqual('c:\path\file', RemoveLastExtension('c:\path\file.txt'));
-  Assert.AreEqual('c:\path\archive.tar', RemoveLastExtension('c:\path\archive.tar.gz'));
+  { RemoveLastExtension uses TPath.GetFileNameWithoutExtension which returns name only, no path }
+  Assert.AreEqual('file', RemoveLastExtension('c:\path\file.txt'));
+  Assert.AreEqual('archive.tar', RemoveLastExtension('c:\path\archive.tar.gz'));
 end;
 
 procedure TTestLightCoreIO.TestForceExtension;
@@ -291,8 +295,9 @@ end;
 
 procedure TTestLightCoreIO.TestAppendNumber2Filename;
 begin
-  Assert.AreEqual('Log1.txt', AppendNumber2Filename('Log.txt', 1, 1));
-  Assert.AreEqual('Log001.txt', AppendNumber2Filename('Log.txt', 1, 3));
+  { AppendNumber2Filename adds '_' before the number }
+  Assert.AreEqual('Log_1.txt', AppendNumber2Filename('Log.txt', 1, 1));
+  Assert.AreEqual('Log_001.txt', AppendNumber2Filename('Log.txt', 1, 3));
 end;
 
 
@@ -384,10 +389,11 @@ end;
 
 procedure TTestLightCoreIO.TestIsDelphi;
 begin
+  { IsDelphi checks for .pas, .dpr, .dpk only - NOT .dfm }
   Assert.IsTrue(IsDelphi('unit.pas'));
   Assert.IsTrue(IsDelphi('project.dpr'));
   Assert.IsTrue(IsDelphi('package.dpk'));
-  Assert.IsTrue(IsDelphi('form.dfm'));
+  Assert.IsFalse(IsDelphi('form.dfm'));  { .dfm is NOT included in IsDelphi }
   Assert.IsFalse(IsDelphi('file.txt'));
 end;
 

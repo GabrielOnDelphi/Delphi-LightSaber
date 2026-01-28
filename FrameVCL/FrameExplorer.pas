@@ -1,13 +1,46 @@
 UNIT FrameExplorer;
 
-{Note: if this file is renamed/move, the IDE will complaing that it cannot find the file.
- So, I have to remove the component from the palete, and re-add by opening the file, at its new location. }
+{=============================================================================================================
+   2024.05
+   www.GabrielMoraru.com
+--------------------------------------------------------------------------------------------------------------
+   WINDOWS EXPLORER FRAME
+
+   A reusable frame that provides file explorer functionality similar to Windows Explorer.
+   Contains directory tree, file list, path editor, and filter components.
+
+   COMPONENTS:
+     - Directory: TDirectoryListBox - Shows directory tree
+     - FileList: TCubicFileList - Shows files in selected directory
+     - Path: TCubicPathEdit - Shows/edits current path
+     - Filter: TCubicFilterBox - Filter files by extension
+
+   USAGE:
+     Drop this frame onto a form to add file browsing capability.
+     Set Filter.Filter to customize file type filters.
+     Example: Filter.Filter:= LightCore.IO.FilterAllFiles + '|' + LightVcl.Graph.Util.AllImgFlt;
+
+   IDE NOTE:
+     If this file is renamed/moved, the IDE will complain that it cannot find the file.
+     To fix: remove the component from the palette, then re-add by opening the file at its new location.
+
+   REGISTRATION:
+     Registered in 'LightSaber VCL' component palette.
+=============================================================================================================}
 
 INTERFACE
 
 USES
-  System.Classes, Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.StdCtrls, LightVcl.Visual.PathEdit, Vcl.FileCtrl, LightVcl.Visual.FileFilter,
-  LightVcl.Visual.FileListBox, Vcl.ExtCtrls;
+  System.Classes,
+  Vcl.Controls,
+  Vcl.Forms,
+  Vcl.StdCtrls,
+  Vcl.ExtCtrls,
+  Vcl.FileCtrl,
+  LightVcl.Visual.AppDataForm,
+  LightVcl.Visual.PathEdit,
+  LightVcl.Visual.FileFilter,
+  LightVcl.Visual.FileListBox;
 
 TYPE
   TFrameWinExplorer = class(TFrame)
@@ -33,20 +66,18 @@ procedure Register;
 IMPLEMENTATION {$R *.dfm}
 
 
-{ Example of filter: Filter.Filter:= LightCore.IO.FilterAllFiles + '|' + LightVcl.Graph.Util.AllImgFlt; }
-
-
+{ Called when user selects a different directory in the tree }
 procedure TFrameWinExplorer.DirectoryChange(Sender: TObject);
 begin
- Path.Path:= Directory.Directory;
+  Path.Path:= Directory.Directory;
 end;
 
+
+{ Refreshes the file list to show current directory contents }
 procedure TFrameWinExplorer.btnRefreshClick(Sender: TObject);
 begin
- FileList.Update;
+  FileList.Update;
 end;
-
-
 
 
 

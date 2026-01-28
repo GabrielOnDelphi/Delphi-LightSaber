@@ -52,7 +52,7 @@ object frmReminder: TfrmReminder
     end
     object grpExecute: TCubicGroupBox
       Left = 56
-      Top = 222
+      Top = 223
       Width = 343
       Height = 106
       Enabled = False
@@ -141,7 +141,7 @@ object frmReminder: TfrmReminder
         Left = 107
         Top = 26
         Width = 53
-        Height = 22
+        Height = 24
         Hint = 
           'Time interval (in seconds) to start the specified application. I' +
           'f this box is green, then the timer is running, if it is dark, t' +
@@ -157,7 +157,7 @@ object frmReminder: TfrmReminder
       Left = 36
       Top = 197
       Width = 298
-      Height = 14
+      Height = 15
       Hint = 
         'When the time is up, run a file. '#13#10'This file can be: application' +
         ', image, sound file (mp3), movie, document, etc'#13#10#13#10'Example: '#13#10'  ' +

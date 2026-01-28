@@ -48,7 +48,8 @@ CONST
   Delphi_7       = 15.0;  // Product Version: 7
 
   { Backward compatibility aliases }
-  Delphi_Alexa   = Delphi_Alex;     
+  Delphi_Alexa   = Delphi_Alex;
+  Delphi_Athenes = Delphi_Athens;     
 
 (*
   Example usage:

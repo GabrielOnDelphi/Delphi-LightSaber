@@ -370,12 +370,12 @@ begin
 
   Form.Show;
 
+  { imgSplashClick should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.imgSplashClick(Form);
-    end,
-    'imgSplashClick should not raise exception');
+    end);
 end;
 
 
@@ -401,12 +401,12 @@ begin
   Form:= TfrmSplash.Create(NIL);
   FTestForm:= Form;
 
+  { FormDestroy should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.FormDestroy(Form);
-    end,
-    'FormDestroy should not raise exception');
+    end);
 end;
 
 
@@ -422,12 +422,12 @@ begin
   { Initialize alpha values before calling timer }
   Form.AlphaBlendValue:= 40;
 
+  { TimerTimer should not raise exception on first call }
   Assert.WillNotRaise(
     procedure
     begin
       Form.TimerTimer(NIL);
-    end,
-    'TimerTimer should not raise exception on first call');
+    end);
 end;
 
 
@@ -447,7 +447,7 @@ begin
   Form.TimerTimer(NIL);
 
   { Alpha should change (either increase during fade-in or decrease during fade-out) }
-  Assert.AreNotEqual(InitialAlpha, Form.AlphaBlendValue,
+  Assert.IsTrue(InitialAlpha <> Form.AlphaBlendValue,
     'TimerTimer should update AlphaBlendValue');
 end;
 

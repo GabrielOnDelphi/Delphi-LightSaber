@@ -73,8 +73,8 @@ TYPE
     function  Read       (CONST Ident: string; Default: Boolean= TRUE): Boolean; overload;
     procedure Write      (const Ident: string;   Value: Boolean);                overload;
 
-    function  Read       (CONST Ident: string): FontStruct;                      overload;
-    procedure Write      (CONST Ident: string; Font: FontStruct);                overload;
+    function  ReadFont   (CONST Ident: string): FontStruct;
+    procedure WriteFont  (CONST Ident: string; Font: FontStruct);
 
     { Float }
     function  Read       (const Ident: string; Default: Double): Double;         overload;
@@ -107,7 +107,7 @@ end;
 ---------------}
 
 { Reads font settings from INI file. Returns defaults if font entry not found. }
-function TIniFileEx.Read(CONST Ident: string): FontStruct;
+function TIniFileEx.ReadFont(CONST Ident: string): FontStruct;
 begin
  if ValueExists(FSection, Ident+ 'Name')
  then
@@ -128,8 +128,8 @@ begin
 end;
 
 { Writes font settings to INI file.
-  Note: Writes empty string for Ident so TIniFileVCL.Read can find the font by identifier. }
-procedure TIniFileEx.Write(CONST Ident: string; Font: FontStruct);
+  Note: Writes empty string for Ident so TIniFileVCL.ReadFont can find the font by identifier. }
+procedure TIniFileEx.WriteFont(CONST Ident: string; Font: FontStruct);
 begin
   WriteString (FSection, Ident,            '');
   WriteString (FSection, Ident + 'Name',   Font.Name);

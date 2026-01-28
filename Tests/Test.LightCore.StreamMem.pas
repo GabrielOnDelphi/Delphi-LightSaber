@@ -236,6 +236,7 @@ uses
 procedure TTestStreamMem.Setup;
 begin
   FStream:= TCubicMemStream.Create;
+  FStream.StringListSafetyLimit:= 1024 * 1024;  { 1 MB - required for ReadStrings to work }
 end;
 
 procedure TTestStreamMem.TearDown;

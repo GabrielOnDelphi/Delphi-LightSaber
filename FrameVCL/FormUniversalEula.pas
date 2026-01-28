@@ -1,20 +1,39 @@
 UNIT FormUniversalEula;
 
 {=============================================================================================================
-   www.GabrielMoraru.com
    2025.10
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+   www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-   DON'T ADD IT TO ANY DPK!
+   UNIVERSAL EULA FORM
+
+   Displays the End User License Agreement (EULA) in a modal dialog.
+   The license text can be loaded from an external file or uses the built-in default text.
+
+   USAGE:
+     Call ShowEulaModal to display the EULA dialog.
+     The form stays on top and must be acknowledged before continuing.
+
+   EXTERNAL EULA FILE:
+     Place 'Eula.txt' in AppData.AppSysDir to override the built-in license text.
+
+   NOTES:
+     - Form closes on OK button, Enter key, or Escape key
+     - DON'T ADD IT TO ANY DPK!
+
+   See: Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 =============================================================================================================}
 
-
-
 INTERFACE
-{$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
+{$DENYPACKAGEUNIT ON}
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.StdCtrls;
+  Winapi.Windows,
+  System.SysUtils,
+  System.Classes,
+  Vcl.Controls,
+  Vcl.Forms,
+  Vcl.StdCtrls,
+  LightVcl.Visual.AppDataForm;
 
 TYPE
   TfrmEULA = class(TLightForm)
@@ -28,42 +47,60 @@ TYPE
 
 procedure ShowEulaModal;
 
-implementation {$R *.dfm}
-Uses
-   LightCore.TextFile, LightCore.AppData, LightVcl.Visual.AppData
-;
+IMPLEMENTATION {$R *.dfm}
+
+USES
+  LightCore.TextFile,
+  LightCore.AppData,
+  LightVcl.Visual.AppData;
 
 
+CONST
+  EULA_FILENAME = 'Eula.txt';
 
+
+{ Displays the EULA form as a modal dialog.
+  If an external Eula.txt file exists in AppSysDir, it loads that text.
+  Otherwise uses the built-in license text from the form. }
 procedure ShowEulaModal;
+var
+  frmEULA: TfrmEULA;
+  EulaPath: string;
 begin
- var frmEULA:= TfrmEULA.Create(Nil);
+  frmEULA:= TfrmEULA.Create(NIL);
+  try
+    Assert(frmEULA.FormStyle = fsStayOnTop, 'EULA form must be fsStayOnTop!');
+    Assert(frmEULA.Visible = FALSE, 'Form Visible must be False for ShowModal to work!');
 
- Assert(frmEULA.FormStyle= fsStayOnTop, 'EULA form is not fsStayOnTop!');
- Assert(frmEULA.Visible = False);  // The form visibility must be False in the editor, otherwise ShowModal won't work!
+    { Load external EULA text if available }
+    EulaPath:= AppData.AppSysDir + EULA_FILENAME;
+    if FileExists(EulaPath)
+    then frmEULA.mmoLicense.Text:= StringFromFile(EulaPath);
 
- if FileExists(Appdata.AppSysDir+ 'Eula.txt')
- then frmEULA.mmoLicense.Text:= StringFromFile(Appdata.AppSysDir+ 'Eula.Text');
-
- frmEULA.ShowModal;
+    frmEULA.ShowModal;
+  finally
+    FreeAndNil(frmEULA);
+  end;
 end;
 
 
 procedure TfrmEULA.btnOKClick(Sender: TObject);
 begin
- Close;
+  Close;
 end;
 
 
 procedure TfrmEULA.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
- Action:= TCloseAction.caFree;
+  Action:= TCloseAction.caFree;
 end;
 
 
+{ Closes the form when user presses Escape or Enter }
 procedure TfrmEULA.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
-  if (Key = 27) OR (Key = Winapi.Windows.VK_RETURN) then Close;
+  if (Key = VK_ESCAPE) OR (Key = VK_RETURN)
+  then Close;
 end;
 
 

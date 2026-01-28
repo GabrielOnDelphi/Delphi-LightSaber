@@ -644,12 +644,12 @@ begin
 
   Form.mmoLangEditor.Text:= 'Test content';
 
+  { Copy click should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.btnCopyClick(Form);
-    end,
-    'Copy click should not raise exception');
+    end);
 end;
 
 
@@ -660,12 +660,12 @@ begin
   Form:= TfrmTranslEditor.Create(NIL);
   FTestForm:= Form;
 
+  { DeepL click should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.inetDeepLClick(Form);
-    end,
-    'DeepL click should not raise exception');
+    end);
 end;
 
 
@@ -676,12 +676,12 @@ begin
   Form:= TfrmTranslEditor.Create(NIL);
   FTestForm:= Form;
 
+  { Google translate click should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.InternetLabel1Click(Form);
-    end,
-    'Google translate click should not raise exception');
+    end);
 end;
 
 

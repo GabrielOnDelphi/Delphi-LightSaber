@@ -6,209 +6,217 @@ UNIT FormProxyList;
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
+   PROXY LIST CONFIGURATION FORM
 
-  Let user specify if he wants to connect the program directly to Internet, via a gateway or via a proxy list.
-  For the third option, a proxy list can be loaded/saved to/from disk
+   Allows the user to specify how the program connects to the Internet:
+     - Direct connection (no proxy)
+     - Via a gateway/proxy server
+     - Via a rotating proxy list
 
-  DON'T ADD IT TO ANY DPK!
+   For the proxy list option, a list of proxies can be loaded/saved to/from disk.
 
-  How to use it:
-    Initialize like this: frameProxy.LoadProxyFile(AppData.AppDataFolder+ 'ProxyList.txt');
+   DON'T ADD IT TO ANY DPK!
 
+   USAGE:
+     frmProxyList:= TfrmProxyList.Create(Application);
+     frmProxyList.LoadProxyFile(AppData.AppDataFolder + 'ProxyList.txt');
 
-  Note: This is also available as vis component: LightVcl.Visual.ProxyList.pas
+   See also: LightVcl.Visual.ProxyList.pas (visual component version)
 =============================================================================================================}
 
 INTERFACE
-{$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
+{$DENYPACKAGEUNIT ON}  // Prevents unit from being placed in a package
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls, LightCore.INIFile, LightVcl.Visual.AppDataForm, LightVcl.Visual.INIFile, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Visual.AppDataForm,
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms,
+  Vcl.StdCtrls, Vcl.ExtCtrls,
+  LightCore, LightCore.Time, LightCore.Types, LightCore.INIFile,
+  LightVcl.Visual.AppDataForm, LightVcl.Visual.INIFile,
+  LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs,
   LightVcl.Visual.RadioButton;
 
 TYPE
-  TConType= (ctDirect, ctGateway, ctProxyList);
+  { Connection type enumeration }
+  TConType = (
+    ctDirect,     // Direct internet connection (no proxy)
+    ctGateway,    // Single gateway/proxy server
+    ctProxyList   // Rotating list of proxy servers
+  );
 
   TfrmProxyList = class(TLightForm)
-    grpInternetType   : TGroupBox;
-    radGateway        : TCubicRadioButton;
-    radDirect         : TCubicRadioButton;
-    radProxyList      : TCubicRadioButton;
-    grpProxyList      : TGroupBox;
-    pnlBottom         : TPanel;
-    btnSaveProxy      : TButton;
-    btnLocate         : TButton;
-    btnAutoDetect     : TButton;
-    btnClean          : TButton;
-    procedure btnSaveProxyClick    (Sender: TObject);
-    procedure ConectionTypeChanged (Sender: TObject);
-    procedure btnLocateClick       (Sender: TObject);
-    procedure btnAutoDetectClick   (Sender: TObject);
-    procedure btnCleanClick        (Sender: TObject);
+    grpInternetType : TGroupBox;          // Group for connection type selection
+    radGateway      : TCubicRadioButton;  // Use gateway option
+    radDirect       : TCubicRadioButton;  // Direct connection option
+    radProxyList    : TCubicRadioButton;  // Use proxy list option
+    grpProxyList    : TGroupBox;          // Group containing proxy list controls
+    pnlBottom       : TPanel;             // Bottom panel for buttons
+    btnSaveProxy    : TButton;            // Save proxy list button
+    btnLocate       : TButton;            // Open proxy file location button
+    btnAutoDetect   : TButton;            // Auto-detect system proxy button
+    btnClean        : TButton;            // Clean proxy list button
+    mmoProxyList    : TMemo;              // Memo for proxy list entries
+    edtGateway      : TEdit;              // Edit for gateway address (host:port)
+    procedure btnSaveProxyClick(Sender: TObject);
+    procedure ConnectionTypeChanged(Sender: TObject);
+    procedure btnLocateClick(Sender: TObject);
+    procedure btnAutoDetectClick(Sender: TObject);
+    procedure btnCleanClick(Sender: TObject);
   private
-  protected
+    FFileName: string;
   public
-    FileName: string;
-    mmoProxyList : TMemo;
-    edtGateway   : TEdit;
     function  GetConnectionType: TConType;
-    procedure LoadProxyFile(CONST aFileName: string);
-    procedure Save;                                   { Save content to disk }
+    procedure LoadProxyFile(const AFileName: string);
+    procedure Save;
     procedure CleanList;
+
+    property FileName: string read FFileName write FFileName;
   end;
 
-VAR frmProxyList: TfrmProxyList;
+{VAR
+    Global form reference - used for singleton access pattern.
+    Consider using AppData.GetForm<TfrmProxyList> instead for better encapsulation. 
+  frmProxyList: TfrmProxyList;}
 
 
-IMPLEMENTATION
-{$R *.dfm}
-{$WARN GARBAGE OFF}                                                                                {Silence the: 'W1011 Text after final END' warning }
+IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Internet.Common, LightCore.Internet, IniFiles;
-
-{todo:
-oncreate
-loadForm;
-
-ondestroy
-saveForm;}
-
-function TfrmProxyList.GetConnectionType: TConType;
-begin
- if radDirect.Checked                                                                              { DIRECT CONNECTION }
- then Result:= ctDirect
- else
-
- if radGateway.Checked
- then Result:= ctGateway
- else
-
- if radProxyList.Checked                                                                           { PROXY LIST }
- then Result:= ctProxyList
- else
-   begin
-    radDirect.Checked:= TRUE;
-    Result:= ctDirect;
-   end;
-end;
-
-
+  LightVcl.Internet.Common,
+  LightVcl.Common.IO,
+  LightVcl.Common.ExecuteShell;
 
 
 
 {--------------------------------------------------------------------------------------------------
-   EVENTS
+   CONNECTION TYPE
 --------------------------------------------------------------------------------------------------}
-procedure TfrmProxyList.ConectionTypeChanged(Sender: TObject);
+
+{ Returns the currently selected connection type based on radio button state.
+  If no radio button is checked (shouldn't happen), defaults to ctDirect. }
+function TfrmProxyList.GetConnectionType: TConType;
 begin
- grpProxyList.Visible := radProxyList.Checked;
- edtGateway.Enabled   := radGateway.Checked;
- btnAutoDetect.Visible:= radGateway.Checked;
+  if radDirect.Checked
+  then Result:= ctDirect
+  else
+    if radGateway.Checked
+    then Result:= ctGateway
+    else
+      if radProxyList.Checked
+      then Result:= ctProxyList
+      else
+        begin
+          // Fallback: no option selected, default to direct
+          radDirect.Checked:= TRUE;
+          Result:= ctDirect;
+        end;
 end;
 
 
+
+{--------------------------------------------------------------------------------------------------
+   EVENT HANDLERS
+--------------------------------------------------------------------------------------------------}
+
+{ Called when the connection type radio buttons change.
+  Updates visibility and enabled state of related controls. }
+procedure TfrmProxyList.ConnectionTypeChanged(Sender: TObject);
+begin
+  grpProxyList.Visible:= radProxyList.Checked;
+  edtGateway.Enabled:= radGateway.Checked;
+  btnAutoDetect.Visible:= radGateway.Checked;
+end;
+
+
+{ Auto-detects system proxy settings from Internet Explorer/Windows configuration }
 procedure TfrmProxyList.btnAutoDetectClick(Sender: TObject);
-VAR sProxyAdr, sProxyPort: string;
-    UseProxy: Boolean;
+var
+  ProxyAddress: string;
+  ProxyPort: string;
+  UseProxy: Boolean;
 begin
- if LightVcl.Internet.IE_GetProxySettings(sProxyAdr, sProxyPort, UseProxy) then
-  begin
-   radGateway.Checked := UseProxy;
-   radDirect .Checked := NOT UseProxy;
-  end;
- edtGateway.Text:= sProxyAdr+ ':'+ sProxyPort;
+  if LightVcl.Internet.Common.IE_GetProxySettings(ProxyAddress, ProxyPort, UseProxy) then
+    begin
+      radGateway.Checked:= UseProxy;
+      radDirect.Checked:= NOT UseProxy;
+    end;
+
+  edtGateway.Text:= ProxyAddress + ':' + ProxyPort;
 end;
-
-
-
 
 
 
 {--------------------------------------------------------------------------------------------------
    LOAD/SAVE PROXY LIST
 --------------------------------------------------------------------------------------------------}
-procedure TfrmProxyList.LoadProxyFile(CONST aFileName: string);
+
+{ Loads a proxy list from the specified file.
+
+  Parameters:
+    AFileName - Full path to the proxy list text file.
+
+  The file should contain one proxy per line in format: host:port
+  Example: 192.168.1.1:8080 }
+procedure TfrmProxyList.LoadProxyFile(const AFileName: string);
 begin
- if FileExists(FileName) then
-  begin
-   mmoProxyList.lines.LoadFromFile(FileName);
-   FileName:= aFileName;
-  end;
+  FFileName:= AFileName;  // Store filename first
+
+  if FileExists(FFileName)
+  then mmoProxyList.Lines.LoadFromFile(FFileName);
 end;
 
 
-procedure TfrmProxyList.Save;              { Save content to disk }
+{ Saves the current proxy list to the file specified by FileName }
+procedure TfrmProxyList.Save;
 begin
- mmoProxyList.Lines.SaveToFile(FileName);
+  Assert(FFileName <> '', 'TfrmProxyList.Save: FileName not set');
+  mmoProxyList.Lines.SaveToFile(FFileName);
 end;
 
 
-
+{ Opens Windows Explorer at the proxy file's location }
 procedure TfrmProxyList.btnLocateClick(Sender: TObject);
 begin
- ExecuteExplorer(ExtractFilePath(FileName))
+  if FFileName <> ''
+  then ExecuteExplorer(ExtractFilePath(FFileName));
 end;
 
 
+{ Cleans the proxy list and saves it to disk }
 procedure TfrmProxyList.btnSaveProxyClick(Sender: TObject);
 begin
- CleanList;
- mmoProxyList.Lines.SaveToFile(FileName);
+  CleanList;
+
+  if FFileName <> ''
+  then mmoProxyList.Lines.SaveToFile(FFileName);
 end;
 
 
 
-
-
 {--------------------------------------------------------------------------------------------------
-   CLEAN
+   PROXY LIST CLEANUP
 --------------------------------------------------------------------------------------------------}
+
+{ Button handler for cleaning the proxy list }
 procedure TfrmProxyList.btnCleanClick(Sender: TObject);
 begin
- CleanList;
+  CleanList;
 end;
 
 
-procedure TfrmProxyList.CleanList;                                                                    {TODO: Willy: Imi trebuie o functie care verifica daca un string e un valid proxy. de exemplu 192.168.0.1:80 }
-VAR i: Integer;
+{ Removes empty and whitespace-only lines from the proxy list.
+
+  TODO: Add validation for proper proxy format (e.g., 192.168.0.1:80)
+  TODO: Add duplicate removal
+  TODO: Add validation that port is numeric and in valid range }
+procedure TfrmProxyList.CleanList;
+var
+  i: Integer;
 begin
- {TODO: check for invalid proxy lines }
- for i:= mmoProxyList.Lines.Count-1 downto 0 DO
-   if (mmoProxyList.Lines[i]= '')
-   OR (mmoProxyList.Lines[i]= ' ')
-   then mmoProxyList.Lines.Delete(i);
+  // Remove empty lines (iterate backwards to safely delete)
+  for i:= mmoProxyList.Lines.Count - 1 downto 0 do
+    if Trim(mmoProxyList.Lines[i]) = ''
+    then mmoProxyList.Lines.Delete(i);
 end;
 
 
-
-
-
-
-
-
-{--------------------------------------------------------------------------------------------------
-   LOAD/SAVE SETTINGS
---------------------------------------------------------------------------------------------------}
-{
-procedure TfrmProxyList.LoadSettings(CONST IniFile: TIniFileEx);
-begin
- radDirect.Checked    := IniFile.ReadBool   ('PROXY', 'radDirect'   , TRUE);
- radGateway.Checked   := IniFile.ReadBool   ('PROXY', 'radGateway'  , FALSE);
- radProxyList.Checked := IniFile.ReadBool   ('PROXY', 'radProxyList', FALSE);
- edtGateway.Text      := IniFile.ReadString ('PROXY', 'edtGateway'  , '');
-end;
-
-
-procedure TfrmProxyList.SaveSettings(CONST IniFile: TIniFileEx);
-begin
- IniFile.WriteBool   ('PROXY', 'radDirect'   , radDirect.Checked);
- IniFile.WriteBool   ('PROXY', 'radGateway'  , radGateway.Checked);
- IniFile.WriteBool   ('PROXY', 'radProxyList', radProxyList.Checked);
- IniFile.WriteString ('PROXY', 'edtGateway'  , edtGateway.Text);
-end;
-}
-
-
-
-end.{===================================================================================================================
+end.

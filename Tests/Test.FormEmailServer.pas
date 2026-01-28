@@ -388,12 +388,12 @@ begin
   Form:= TfrmSmtpSettings.Create(NIL);
   FTestForm:= Form;
 
+  { Initialize should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.Initialize;
-    end,
-    'Initialize should not raise exception');
+    end);
 end;
 
 
@@ -622,12 +622,12 @@ begin
 
   // We can't actually connect without a server, but we can verify
   // the method doesn't crash when SMTP is not connected
+  { UseExternalMailer should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.UseExternalMailer(FSMTP);
-    end,
-    'UseExternalMailer should not raise exception');
+    end);
 end;
 
 

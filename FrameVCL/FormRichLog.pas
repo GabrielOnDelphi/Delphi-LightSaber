@@ -6,103 +6,130 @@ UNIT FormRichLog;
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
+   RICH LOG FORM
 
-   Visual log (window).
-   More details in LightVcl.Visual.RichLogUtils.pas
+   A visual log window based on TRichLog (TRichEdit descendant).
+   Displays log messages with different verbosity levels and colors.
 
-   Usage:
+   USAGE:
      It is CRITICAL to create the AppData object as soon as the application starts.
-     Prefferably in the DPR file before creating the main form!
-       DPR:
-          AppData:= TAppData.Create('MyCollApp');
-       OnLateInitialize:
-          AppData.Initilizing:= False;
+     Preferably in the DPR file before creating the main form!
 
-     AppDataEx is automatically destroyed by the Finalization section of this unit.
+     DPR:
+       AppData:= TAppData.Create('MyCollApp');
 
-   Tester:
-     c:\Myprojects\LightSaber\Demo\LightLog\
+     OnLateInitialize:
+       AppData.Initializing:= False;
+
+     AppData is automatically destroyed by its Finalization section.
+
+   FEATURES:
+     - Verbosity-based message filtering (via TRichLogTrckbr trackbar)
+     - Auto-show on error/warning (controlled by chkAutoOpen checkbox)
+     - Clear log button
+     - Container panel for easy reparenting to other forms
+
+   RELATED UNITS:
+     - LightVcl.Visual.RichLog.pas - The TRichLog component
+     - LightVcl.Visual.RichLogUtils.pas - Verbosity types and colors
+     - LightVcl.Visual.RichLogTrack.pas - Verbosity trackbar component
+     - LightCore.LogRam.pas - Non-visual RAM-based log (newer implementation)
+
+   TESTER:
+     c:\Projects\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE
-{.$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  Winapi.Windows, Winapi.Messages, System.Classes,
+  Winapi.Windows, Winapi.Messages,
+  System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
   LightVcl.Visual.RichLogTrack, LightVcl.Visual.RichLog, LightVcl.Visual.AppDataForm;
 
 TYPE
   TfrmRichLog = class(TLightForm)
-    Log        : TRichLog;
-    Container  : TPanel;    { We use a container for all controls on this form so we can reparent them easily to another form }
-    pnlBottom  : TPanel;
-    btnClear   : TButton;
-    chkAutoOpen: TCheckBox;
-    trkLogVerb : TRichLogTrckbr;
+    Log        : TRichLog;         // The main log control (TRichEdit descendant)
+    Container  : TPanel;           // Container for all controls - enables reparenting
+    pnlBottom  : TPanel;           // Bottom panel with controls
+    btnClear   : TButton;          // Clear log button
+    chkAutoOpen: TCheckBox;        // Auto-show form on error/warning
+    trkLogVerb : TRichLogTrckbr;   // Verbosity filter trackbar
     procedure btnClearClick(Sender: TObject);
-    procedure LogError     (Sender: TObject);
-    procedure FormCreate   (Sender: TObject);
-    procedure FormDestroy  (Sender: TObject);  // Would be nice to make this protected but we can't. All event handlers must be accesible/visible
+    procedure LogError(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
   public
-    procedure FormPostInitialize; {don't forget inherited in FormPostInitialize!} override; // Called after the main form was fully initilized
+    { Called after the main form was fully initialized.
+      Override to perform post-initialization tasks. }
+    procedure FormPostInitialize; override;
   end;
-
 
 
 IMPLEMENTATION {$R *.dfm}
 
-
 USES
-   LightVcl.Visual.INIFile, LightCore.AppData, LightVcl.Visual.AppData;
+  LightVcl.Visual.INIFile,
+  LightCore.AppData,
+  LightVcl.Visual.AppData;
 
 
 
+{--------------------------------------------------------------------------------------------------
+   FORM LIFECYCLE
+--------------------------------------------------------------------------------------------------}
 
-{-------------------------------------------------------------------------------------------------------------
-   FORM
--------------------------------------------------------------------------------------------------------------}
+{ Initializes the form and connects error/warning events to auto-show handler }
 procedure TfrmRichLog.FormCreate(Sender: TObject);
 begin
-  Log.Onwarn := LogError;               // Auto show form if we send an error msg to the log
+  // Connect log events to auto-show the form on errors/warnings
+  Log.OnWarn:= LogError;
   Log.OnError:= LogError;
-  PostMessage(Self.Handle, WM_APP + 4712, 0, 0);
 end;
 
 
+{ Called after the main form is fully initialized.
+  Can be used to perform deferred initialization tasks. }
 procedure TfrmRichLog.FormPostInitialize;
 begin
   inherited FormPostInitialize;
-  //LoadForm(Self);
+  // Note: LoadForm is called automatically by AppData infrastructure
 end;
 
 
-
-// This is called automatically by "Finalization"
+{ Cleanup when form is destroyed.
+  Moves Container back to Self for proper INI file saving. }
 procedure TfrmRichLog.FormDestroy(Sender: TObject);
 begin
- Assert(AppData <> NIL, 'AppData is gone already!');
- Container.Parent:= Self;
+  Assert(AppData <> NIL, 'AppData is gone already!');
 
- //if NOT AppData.Initializing then SaveForm(Self); called by AppData // We don't save anything if the start up was improper!
+  // Move Container back to this form for proper INI saving
+  // (in case it was reparented to another form)
+  Container.Parent:= Self;
+
+  // Note: SaveForm is called automatically by AppData
 end;
 
 
+
+{--------------------------------------------------------------------------------------------------
+   EVENT HANDLERS
+--------------------------------------------------------------------------------------------------}
+
+{ Clears all messages from the log }
 procedure TfrmRichLog.btnClearClick(Sender: TObject);
 begin
- Log.Clear;
+  Log.Clear;
 end;
 
 
+{ Called when an error or warning is added to the log.
+  Shows the form if auto-open is enabled. }
 procedure TfrmRichLog.LogError(Sender: TObject);
 begin
- if chkAutoOpen.Checked
- then Show;
+  if chkAutoOpen.Checked
+  then Show;
 end;
-
 
 
 end.
-
-
-

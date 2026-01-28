@@ -13,6 +13,7 @@ unit Test.FormSkinsRes;
 interface
 
 uses
+  Winapi.Windows,
   DUnitX.TestFramework,
   System.SysUtils,
   System.Classes,
@@ -309,12 +310,12 @@ begin
   if Form.lBox.Items.Count > 0
   then Form.lBox.ItemIndex:= 0;
 
+  { lBoxClick should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.lBoxClick(Form);
-    end,
-    'lBoxClick should not raise exception');
+    end);
 end;
 
 
@@ -348,12 +349,12 @@ begin
 
   Form.Show;
 
+  { btnOKClick should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.btnOKClick(Form);
-    end,
-    'btnOKClick should not raise exception');
+    end);
 end;
 
 
@@ -364,13 +365,12 @@ begin
   Form:= TfrmSkinRes.Create(NIL);
   FTestForm:= Form;
 
-  { This will either open local skin editor or try to open URL }
+  { btnSkinEditorClick should not raise exception - will open local skin editor or URL }
   Assert.WillNotRaise(
     procedure
     begin
       Form.btnSkinEditorClick(Form);
-    end,
-    'btnSkinEditorClick should not raise exception');
+    end);
 end;
 
 
@@ -408,12 +408,12 @@ begin
   Form:= TfrmSkinRes.Create(NIL);
   FTestForm:= Form;
 
+  { FormDestroy should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.FormDestroy(Form);
-    end,
-    'FormDestroy should not raise exception');
+    end);
 end;
 
 
@@ -443,12 +443,12 @@ begin
   Form.Show;
   Key:= Chr(VK_RETURN);
 
+  { FormKeyPress with Enter should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.FormKeyPress(Form, Key);
-    end,
-    'FormKeyPress with Enter should not raise exception');
+    end);
 end;
 
 
@@ -463,12 +463,12 @@ begin
   Form.Show;
   Key:= Chr(VK_ESCAPE);
 
+  { FormKeyPress with Escape should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.FormKeyPress(Form, Key);
-    end,
-    'FormKeyPress with Escape should not raise exception');
+    end);
 end;
 
 

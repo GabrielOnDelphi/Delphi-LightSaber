@@ -372,13 +372,13 @@ begin
   // After Initialize, btnServSettClick should work without exception
   Form.Initialize;
 
+  { Initialize should create frmSmtpSettings }
   Assert.WillNotRaise(
     procedure
     begin
       // This would raise assertion if frmSmtpSettings is nil
       Form.btnServSettClick(Form);
-    end,
-    'Initialize should create frmSmtpSettings');
+    end);
 end;
 
 
@@ -395,12 +395,12 @@ begin
   try
     // Note: We can't actually set MainForm to nil in a running app,
     // but Initialize should handle the case gracefully
+    { Initialize should not raise exception }
     Assert.WillNotRaise(
       procedure
       begin
         Form.Initialize;
-      end,
-      'Initialize should not raise exception');
+      end);
   finally
     // MainForm cannot be changed, test passes if Initialize completes
   end;
@@ -453,12 +453,12 @@ begin
 
   Form.mmoEmailBody.Clear;
 
+  { SaveSettings should not raise exception with empty body }
   Assert.WillNotRaise(
     procedure
     begin
       Form.FormDestroy(Form);  // This calls SaveSettings
-    end,
-    'SaveSettings should not raise exception with empty body');
+    end);
 end;
 
 
@@ -471,12 +471,12 @@ begin
   Form:= TfrmComposer.Create(NIL);
   FTestForm:= Form;
 
+  { SMTPConnected should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.SMTPConnected(Form);
-    end,
-    'SMTPConnected should not raise exception');
+    end);
 end;
 
 
@@ -487,12 +487,12 @@ begin
   Form:= TfrmComposer.Create(NIL);
   FTestForm:= Form;
 
+  { SMTPDisconnected should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.SMTPDisconnected(Form);
-    end,
-    'SMTPDisconnected should not raise exception');
+    end);
 end;
 
 
@@ -505,12 +505,12 @@ begin
   FTestForm:= Form;
 
   VContinue:= TRUE;
+  { SMTPTLSNotAvailable should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.SMTPTLSNotAvailable(Form, VContinue);
-    end,
-    'SMTPTLSNotAvailable should not raise exception');
+    end);
 end;
 
 
@@ -551,9 +551,9 @@ begin
 
   Form.SMTPWork(Form, wmWrite, 12345);
 
-  Assert.IsTrue(Form.Caption.Contains('12345'),
+  Assert.IsTrue(Pos('12345', Form.Caption) > 0,
     'SMTPWork should show byte count in caption');
-  Assert.IsTrue(Form.Caption.Contains('bytes'),
+  Assert.IsTrue(Pos('bytes', Form.Caption) > 0,
     'SMTPWork caption should contain "bytes"');
 end;
 

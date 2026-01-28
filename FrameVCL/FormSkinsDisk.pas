@@ -1,55 +1,60 @@
 UNIT FormSkinsDisk;
 
 {=============================================================================================================
-   2025.10
+   Gabriel Moraru
+   2024.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-   Universal skin loader. Loads skins from disk (vsf file)
+   UNIVERSAL SKIN LOADER
 
-   Warning:
-     * Vcl.Styles &  VCL.Forms must be present in the DPR file.
-     * DON'T ADD THIS UNIT TO ANY DPK!
+   Loads VCL style skins from disk (.vsf files) at runtime.
+   Provides a visual form for users to select and apply skins.
 
-   To use it:
-      Application.ShowMainForm:= FALSE;   // Necessary so the form won't flicker during skin loading at startup
-      MainForm.Visible:= FALSE;
-      LoadLastSkin  (during application initialization)
-      MainForm.Show;
-      Skins should be present in the 'System\skins' folder
-      On first run, set the DefaultSkin to an existing file (no path) like: 'Graphite Green.vsf'. Leave it empty if you want the default Windows theme to load 
+   WARNING:
+     * Vcl.Styles & VCL.Forms MUST be present in the DPR file BEFORE Forms.pas
+     * DON'T ADD THIS UNIT TO ANY DPK! (enforced by $DENYPACKAGEUNIT)
 
-      Call TfrmSkinDisk.ShowEditor to show this form.
-	  
-   Info:  
-      If you want to make your code aware of the selected VCL style, you can use StyleServices.GetStyleColor, StyleServices.GetStyleFontColor, and StyleServices.GetSystemColor in Vcl.Themes unit.
-      It does not work with MDI forms (the MDI children are not correctly painted). However, it works if I apply the skins directly from the IDE.
+   USAGE:
+     1. In DPR file, before creating main form:
+        Application.ShowMainForm:= FALSE;   // Prevents flicker during skin loading
+        MainForm.Visible:= FALSE;
 
--------------------------------------------------------------------------------------------------------------
-  Skins folder:
-         c:\MyProjects\Packages\VCL Styles utils\Styles\
-         c:\Users\Public\Documents\Embarcadero\Studio\20.0\Styles\
-         c:\Users\Public\Documents\Embarcadero\Studio\21.0\Styles\
+     2. Call LoadLastSkin during application initialization:
+        LoadLastSkin('Graphite Green.vsf');  // Default skin on first run
+        // Pass empty string for default Windows theme
 
-  Tester:
+     3. Show main form:
+        MainForm.Show;
+
+     4. Skins must be in 'System\skins' folder relative to AppData.AppSysDir
+
+     5. To show skin selector: TfrmSkinDisk.CreateForm or CreateFormModal
+
+   STYLE-AWARE CODE:
+     Use StyleServices.GetStyleColor, StyleServices.GetStyleFontColor,
+     and StyleServices.GetSystemColor from Vcl.Themes unit.
+
+   LIMITATIONS:
+     Does not work correctly with MDI forms (children are not painted correctly).
+     Works if skins are applied directly from the IDE.
+
+--------------------------------------------------------------------------------------------------------------
+   SKIN FOLDERS:
+     c:\Users\Public\Documents\Embarcadero\Studio\XX.0\Styles\
+
+   TESTER:
      c:\MyProjects\Packages\VCL Styles Tools\FrmSkins tester\
 
-  More:
+   MORE INFO:
      https://subscription.packtpub.com/book/application_development/9781783559589/1/ch01lvl1sec10/changing-the-style-of-your-vcl-application-at-runtime
 
-  KNOWN BUGS:
+   KNOWN BUGS:
 
-     XE7
-       TStyleManager.IsValidStyle always fails if Vcl.Styles is not in the USES list!!
+     XE7: TStyleManager.IsValidStyle always fails if Vcl.Styles is not in USES list!
        http://stackoverflow.com/questions/30328644/how-to-check-if-a-style-file-is-already-loaded
 
-     caFree
-       procedure Tfrm.FormClose(Sender: TObject; var Action: TCloseAction);
-       begin
-        Action:= caFree;
-        Delphi bug: Don't use caFree: https://quality.embarcadero.com/browse/RSP-33140
-       end;
-
-     Solution:
+     caFree bug (fixed in Delphi 11):
+       https://quality.embarcadero.com/browse/RSP-33140
        https://stackoverflow.com/questions/70840792/how-to-patch-vcl-forms-pas
 =============================================================================================================}
 
@@ -83,16 +88,19 @@ TYPE
     procedure PopulateSkins;
   public
     class procedure CreateFormModal; static;
-    class procedure CreateForm(Nottify: TNotifyEvent= NIL); static;
+    class procedure CreateForm(Notify: TNotifyEvent= NIL); static;
   published
     property OnDefaultSkin: TNotifyEvent read FOnDefaultSkin write FOnDefaultSkin;
- end;
+  end;
 
 
 CONST
    wwwSkinDesinger = 'https://www.bionixwallpaper.com/downloads/Skin_Designer/index.html';
 
-procedure LoadLastSkin(CONST DefaultSkin: string= '');  { On first run, set the DefaultSkin to an existing file (no path) like: 'Graphite Green.vsf'. Leave it empty if you want the default Windows theme to load }
+{ Loads the last used skin from INI file. Call during app initialization.
+  DefaultSkin: Skin filename to use on first run (e.g. 'Graphite Green.vsf').
+               Pass empty string for default Windows theme. }
+procedure LoadLastSkin(const DefaultSkin: string= '');
 
 
 
@@ -100,13 +108,17 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
    LightVcl.Common.Colors, LightVcl.Common.Translate, LightCore.INIFileQuick, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.ExecuteShell,
-   LightVcl.Visual.INIFile, IOUtils, LightCore.IO, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs;   { VCL.Styles is mandatory here}
+   LightVcl.Visual.INIFile, System.IOUtils, LightCore.IO, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs;
 
 CONST
-  DefWinTheme= 'Windows default theme';
+  DefWinTheme = 'Windows default theme';
 
 VAR
-  LastSkin: string;                                              { Disk short file name (not full path) for the current loaded skin }
+  { Unit-level variable for current skin name.
+    Kept as unit variable (not class var) because LoadLastSkin is called
+    before any form instance exists. The skin name is a short filename
+    (not full path) stored in INI for portability when app folder moves. }
+  CurrentSkinName: string;
 
 
 
@@ -119,36 +131,49 @@ begin
 end;
 
 
-function LoadSkinFromFile(CONST DiskShortName: string): Boolean;
-VAR  Style : TStyleInfo;
+{ Loads and applies a skin from the skins directory.
+  DiskShortName: Skin filename without path (e.g. 'MyStyle.vsf')
+  Returns: TRUE if skin was loaded and applied successfully }
+function LoadSkinFromFile(const DiskShortName: string): Boolean;
+var
+  FullPath: string;
+  Style: TStyleInfo;
 begin
- Result:= FileExists(GetSkinDir+ DiskShortName);
+  FullPath:= GetSkinDir + DiskShortName;
 
- if Result then
-  if TStyleManager.IsValidStyle(GetSkinDir+ DiskShortName, Style)
-  then
-    if NOT TStyleManager.TrySetStyle(Style.Name, FALSE)
-    then
-      begin
-       TStyleManager.LoadFromFile(GetSkinDir+ DiskShortName);
-       TStyleManager.SetStyle(Style.Name);
-      end
-    else Result:= FALSE
+  if NOT FileExists(FullPath)
+  then EXIT(FALSE);
+
+  if NOT TStyleManager.IsValidStyle(FullPath, Style) then
+  begin
+    MessageError('Style is not valid: ' + FullPath);
+    EXIT(FALSE);
+  end;
+
+  { TrySetStyle returns TRUE if the style is already loaded and was set.
+    If FALSE, we need to load it first from file. }
+  if TStyleManager.TrySetStyle(Style.Name, FALSE)
+  then Result:= TRUE
   else
-     MessageError('Style is not valid: '+ GetSkinDir+ DiskShortName);
+  begin
+    TStyleManager.LoadFromFile(FullPath);
+    TStyleManager.SetStyle(Style.Name);
+    Result:= TRUE;
+  end;
 end;
 
 
-procedure LoadLastSkin(CONST DefaultSkin: string= '');
+procedure LoadLastSkin(const DefaultSkin: string= '');
 begin
- LastSkin:= LightCore.INIFileQuick.ReadString('LastSkin', DefaultSkin);   { This is a relative path so the skin can still be loaded when the application is moved to a different folder }
+  { Read from INI using 'LastSkin' key for backward compatibility }
+  CurrentSkinName:= LightCore.INIFileQuick.ReadString('LastSkin', DefaultSkin);
 
- if LastSkin = ''
- then LastSkin:= DefaultSkin;
+  if CurrentSkinName = ''
+  then CurrentSkinName:= DefaultSkin;
 
- if (LastSkin > '')
- AND (LastSkin <> DefWinTheme)              { DefWinTheme represents the default Windows theme/skin. In other words don't load any skin file. Let Win skin the app }
- then LoadSkinFromFile(LastSkin);
+  { DefWinTheme = use default Windows theme (don't load any skin file) }
+  if (CurrentSkinName <> '') AND (CurrentSkinName <> DefWinTheme)
+  then LoadSkinFromFile(CurrentSkinName);
 end;
 
 
@@ -164,28 +189,30 @@ end;
    SHOW EDITOR
 -----------------------------------------------------------------------------------------------------------------------}
 
-{ THERE IS A BUG THAT CRASHES THE PROGRAM WHEN I CLOSE THIS WINDOW (after applying a skin) }
+{ Shows skin selector as a modal dialog.
+  WARNING: There is a known bug that crashes the program when closing
+  this window after applying a skin. Use CreateForm for non-modal display. }
 class procedure TfrmSkinDisk.CreateFormModal;
-VAR
+var
   frmEditor: TfrmSkinDisk;
 begin
- AppData.CreateFormHidden(TfrmSkinDisk, frmEditor);
-
- { Closed by mrOk/mrCancel. Set to caFree. }
- frmEditor.ShowModal;      { Bug: IF I use ShowModal, after applying a new skin, the window will loose its 'modal' attribute! }
+  AppData.CreateFormHidden(TfrmSkinDisk, frmEditor);
+  { Note: ShowModal has a bug - after applying a skin, the window loses its modal attribute }
+  frmEditor.ShowModal;
 end;
 
 
-{ Show non modal, for testing against bug: Crash when closing the "Skins" form.
-  Fixed by keeping the form open!
-  Remember to call FreeAndNil(frmEditor) }
-class procedure TfrmSkinDisk.CreateForm(Nottify: TNotifyEvent= NIL);
-VAR frmEditor: TfrmSkinDisk;
+{ Shows skin selector as a non-modal form.
+  Non-modal mode is used as a workaround for a crash when closing after applying a skin.
+  Notify: Optional event handler called when default Windows theme is selected. }
+class procedure TfrmSkinDisk.CreateForm(Notify: TNotifyEvent= NIL);
+var
+  frmEditor: TfrmSkinDisk;
 begin
- AppData.CreateFormHidden(TfrmSkinDisk, frmEditor);
-
- frmEditor.OnDefaultSkin:= Nottify;
- frmEditor.Show;      { Bug: IF I use ShowModal, after applying a new skin, the window will lose its 'modal' attribute! }
+  AppData.CreateFormHidden(TfrmSkinDisk, frmEditor);
+  frmEditor.OnDefaultSkin:= Notify;
+  frmEditor.Show;
+  { Note: ShowModal has a bug - after applying a skin, the window loses its modal attribute }
 end;
 
 
@@ -194,117 +221,132 @@ end;
 
 
 {-----------------------------------------------------------------------------------------------------------------------
-   CREATE
+   FORM LIFECYCLE
 -----------------------------------------------------------------------------------------------------------------------}
+
 procedure TfrmSkinDisk.FormCreate(Sender: TObject);
 begin
- LoadForm;
- PopulateSkins;    
- lblTop.Hint:= 'Skin files are located in '+ GetSkinDir;
+  LoadForm;
+  PopulateSkins;
+  lblTop.Hint:= 'Skin files are located in ' + GetSkinDir;
 end;
 
 
 procedure TfrmSkinDisk.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
- Action:= caFree;
- {Action:= caFree; Delphi bug: https://quality.embarcadero.com/browse/RSP-33140. Fixed in delphi 11 }
+  Action:= caFree;
+  { Note: caFree bug (RSP-33140) was fixed in Delphi 11 }
 end;
 
 
 procedure TfrmSkinDisk.FormDestroy(Sender: TObject);
 begin
- SaveForm;
- if NOT AppData.Initializing
- then LightCore.INIFileQuick.WriteString ('LastSkin', LastSkin);   { We don't save anything if the start up was improper! }
+  SaveForm;
+  { Save using 'LastSkin' key for backward compatibility.
+    Don't save if startup was improper (Initializing still TRUE). }
+  if NOT AppData.Initializing
+  then LightCore.INIFileQuick.WriteString('LastSkin', CurrentSkinName);
 end;
 
 
 procedure TfrmSkinDisk.btnOKClick(Sender: TObject);
 begin
- Close; // Not needed when I show the form modal
+  Close;
 end;
 
 
 
 
 
-{-------------------------------------------------------------------------------------------------------------
-   Populate skins
--------------------------------------------------------------------------------------------------------------}
+{-----------------------------------------------------------------------------------------------------------------------
+   SKIN LIST POPULATION
+-----------------------------------------------------------------------------------------------------------------------}
 
+{ Clicking the label refreshes the skin list }
 procedure TfrmSkinDisk.lblTopClick(Sender: TObject);
 begin
- PopulateSkins;
+  PopulateSkins;
 end;
 
 
+{ Fills the listbox with available skins from the skins directory }
 procedure TfrmSkinDisk.PopulateSkins;
-VAR
-   s, FullFileName: string;
+var
+  s, FullFileName: string;
 begin
- lBox.Clear;
- lBox.Items.Add(DefWinTheme);    { This corresponds to Windows' default theme }
- lblTop.Hint:= GetSkinDir;
+  lBox.Clear;
+  lBox.Items.Add(DefWinTheme);  { First item is the default Windows theme }
+  lblTop.Hint:= GetSkinDir;
 
- if NOT DirectoryExists(GetSkinDir) then
+  if NOT DirectoryExists(GetSkinDir) then
   begin
-   lblTop.Caption:= 'The skin directory could not be located! '+ GetSkinDir+ CRLF+ 'Add skins then click here to refresh the list.';
-   lblTop.Color:= clRedBright;
-   lblTop.Transparent:= FALSE;
-   EXIT;
+    lblTop.Caption:= 'The skin directory could not be located! ' + GetSkinDir + CRLF +
+                     'Add skins then click here to refresh the list.';
+    lblTop.Color:= clRedBright;
+    lblTop.Transparent:= FALSE;
+    EXIT;
   end;
 
- { Display all *.vsf files }
- for FullFileName in TDirectory.GetFiles(GetSkinDir, '*.vsf') DO
+  { Display all *.vsf files }
+  for FullFileName in TDirectory.GetFiles(GetSkinDir, '*.vsf') do
   begin
-   s:= ExtractFileName(FullFileName);
-   lBox.Items.Add(s);
+    s:= ExtractFileName(FullFileName);
+    lBox.Items.Add(s);
   end;
 
- lBox.ItemIndex := lBox.Items.IndexOf(TStyleManager.ActiveStyle.Name);
+  { Select the currently active style in the list }
+  lBox.ItemIndex:= lBox.Items.IndexOf(TStyleManager.ActiveStyle.Name);
 end;
 
 
+{ Handles skin selection - loads and applies the selected skin }
 procedure TfrmSkinDisk.lBoxClick(Sender: TObject);
 begin
- if lBox.ItemIndex < 0 then EXIT;
+  if lBox.ItemIndex < 0
+  then EXIT;
 
- lBox.Enabled:= FALSE;   { Prevent user to double click (because of Application.ProcessMessages below) }
- TRY
-  LastSkin:= lBox.Items[lBox.ItemIndex];
+  { Disable list to prevent double-clicks during skin loading }
+  lBox.Enabled:= FALSE;
+  try
+    CurrentSkinName:= lBox.Items[lBox.ItemIndex];
 
-  if LastSkin= DefWinTheme then
-   begin
-    TStyleManager.SetStyle('Windows');
-    LastSkin:= DefWinTheme;
-    if Assigned(FOnDefaultSkin) then FOnDefaultSkin(Self);
-   end
-  else
-   if LoadSkinFromFile(LastSkin) then
+    if CurrentSkinName = DefWinTheme then
     begin
-     { Bug fix for: http://stackoverflow.com/questions/30328924/form-losses-modal-attribute-after-changing-app-style?noredirect=1#comment48752692_30328924
-       Seems to have been fixed in Alexandria (from which I copied the patch. }
-     Application.ProcessMessages;
-     BringToFront;
+      TStyleManager.SetStyle('Windows');
+      CurrentSkinName:= DefWinTheme;
+      if Assigned(FOnDefaultSkin)
+      then FOnDefaultSkin(Self);
+    end
+    else if LoadSkinFromFile(CurrentSkinName) then
+    begin
+      { Bug workaround: Form loses modal attribute after changing app style.
+        ProcessMessages + BringToFront fixes this.
+        See: http://stackoverflow.com/questions/30328924 }
+      Application.ProcessMessages;
+      BringToFront;
     end;
- FINALLY
-  lBox.Enabled:= TRUE;
- END;
+  finally
+    lBox.Enabled:= TRUE;
+  end;
 end;
 
 
+{ Opens local skin editor if available, otherwise opens web-based designer }
 procedure TfrmSkinDisk.btnSkinEditorClick(Sender: TObject);
 begin
- if FileExists(Appdata.AppSysDir+ 'SkinDesigner.exe')
- then ExecuteShell(Appdata.AppSysDir+ 'SkinDesigner.exe')
- else ExecuteURL(wwwSkinDesinger);
+  if FileExists(Appdata.AppSysDir + 'SkinDesigner.exe')
+  then ExecuteShell(Appdata.AppSysDir + 'SkinDesigner.exe')
+  else ExecuteURL(wwwSkinDesinger);
 end;
 
 
+{ Closes form on Enter or Escape key }
 procedure TfrmSkinDisk.FormKeyPress(Sender: TObject; var Key: Char);
 begin
- if Ord(Key) = VK_RETURN then Close;
- if Ord(Key) = VK_ESCAPE then Close;
+  if Ord(Key) = VK_RETURN
+  then Close;
+  if Ord(Key) = VK_ESCAPE
+  then Close;
 end;
 
 

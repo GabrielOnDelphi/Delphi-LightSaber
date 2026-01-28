@@ -364,13 +364,12 @@ begin
   Form:= TDrawingForm.Create(NIL);
   FTestForm:= Form;
 
-  // Should not raise any exception
+  { ClearBkg should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.ClearBkg;
-    end,
-    'ClearBkg should not raise exception');
+    end);
 end;
 
 
@@ -482,13 +481,12 @@ begin
   Form:= TDrawingForm.Create(NIL);
   FTestForm:= Form;
 
-  // Repair is currently a no-op, but should not raise exception
+  { Repair is currently a no-op, but should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.Repair;
-    end,
-    'Repair should not raise exception');
+    end);
 end;
 
 

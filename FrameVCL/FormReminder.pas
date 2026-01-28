@@ -1,256 +1,321 @@
 UNIT FormReminder;
-{--------------------------------------------------------------------------------------------------
-   REMINDER FORM
+{=============================================================================================================
    2020-02-12
-   Shows a riminder after x seconds.
+   www.GabrielMoraru.com
+--------------------------------------------------------------------------------------------------------------
+   REMINDER FORM
+
+   Shows a reminder after a specified number of minutes.
+   Can optionally execute a file, put the system to sleep, or shut down the computer.
 
    DON'T ADD IT TO ANY DPK!
 
-   How to use it:
-     frmReminder:= TfrmReminder(Self);
-     frmReminder.LoadForm(Self);
-     Use the OnTimeUp event if you want to execute your own stuff.
+   USAGE:
+     frmReminder:= TfrmReminder.Create(Self);
+     frmReminder.Initialize(OnAdvanceHandler, OnTimeUpHandler);
+     frmReminder.Show;
 
-    TODO:
-      There is a problem when I press Start/Stop - See the TitleBar (says stop when I press start). When I press stop is should say: Timer disabled.
-      Disable all controls when "Show a reminder" is unckeched.
-      Later: Add option: shutdown computer.
-      Copy the tool tip from the "execute a file" radio btn also to the "file to execute groupbox".
-      Bug: if I press the Apply btn the "show a reminder" timer will be reset. Get rid of that button. The effects are applied as soon as the user clicks the radiobox.
-      Issue: when it shows the reminder, it only paints it on desktop.
-                Maybe I should also show a non-modal window, that I bring to top. Show in it the reminder and the time when it was shown.
-                Also, paint BIG, in center of the screen!
---------------------------------------------------------------------------------------------------}
+   FEATURES:
+     - Countdown timer with visual feedback
+     - Optional sound notification when time is up
+     - Execute file/program when timer expires
+     - Put system to sleep or shutdown
+     - Run once or repeat mode
+     - OnTimeUp event for custom actions
+     - OnAdvance event called every second
+
+   TODO:
+     - Fix Start/Stop button caption sync issue
+     - Disable all controls when "Show a reminder" is unchecked
+     - Add option: shutdown computer with delay
+     - Show reminder in a non-modal window instead of just painting on desktop
+=============================================================================================================}
+
 INTERFACE
-{$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
+{$DENYPACKAGEUNIT ON}  // Prevents unit from being placed in a package
 
 USES
-  System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls,
-  Vcl.Samples.Spin, LightVcl.Visual.PathEdit, LightVcl.Visual.Timer, LightVcl.Visual.RadioButton, LightVcl.Visual.CheckBox, LightVcl.Visual.GroupBox, LightVcl.Visual.SpinEdit;
+  System.SysUtils, System.Classes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Samples.Spin,
+  LightVcl.Visual.AppDataForm, LightVcl.Visual.PathEdit, LightVcl.Visual.Timer,
+  LightVcl.Visual.RadioButton, LightVcl.Visual.CheckBox, LightVcl.Visual.GroupBox,
+  LightVcl.Visual.SpinEdit;
+
+CONST
+  { Color for active timer state (light green) }
+  TIMER_ACTIVE_COLOR = $00C6E7C6;
+
+  { Desktop reminder text settings }
+  REMINDER_TEXT_X = 10;
+  REMINDER_TEXT_Y = 10;
+  REMINDER_FONT_NAME = 'Arial';
+  REMINDER_FONT_SIZE = 30;
 
 TYPE
   TfrmReminder = class(TLightForm)
-    btnReset     : TButton;
-    btnRun       : TButton;
-    btnStart     : TButton;
-    btnStop      : TButton;
-    chkMakeNoise : TCubicCheckBox;
-    radRunFile: TCubicRadioButton;
-    edtPath      : TCubicPathEdit;
-    grpExecute   : TCubicGroupBox;
-    grpTimer     : TCubicGroupBox;
-    Label1       : TLabel;
-    lblInterval  : TLabel;
-    pnlReminder  : TCubicGroupBox;
-    radShutDown  : TCubicRadioButton;
-    radSleep     : TCubicRadioButton;
-    Timer        : TTimer;
-    chkRunOnce: TCubicCheckBox;
-    spnTime: TCubicSpinEdit;                                             { replace this with TCubicTimer}
-    procedure btnResetClick  (Sender: TObject);
-    procedure btnRunClick    (Sender: TObject);
-    procedure btnStartClick  (Sender: TObject);
-    procedure btnStopClick   (Sender: TObject);
+    btnReset     : TButton;            // Reset timer to initial value
+    btnRun       : TButton;            // Manually run the configured file
+    btnStart     : TButton;            // Start the timer
+    btnStop      : TButton;            // Stop/pause the timer
+    chkMakeNoise : TCubicCheckBox;     // Play sound when time is up
+    chkRunOnce   : TCubicCheckBox;     // Run action only once (don't repeat)
+    radRunFile   : TCubicRadioButton;  // Execute file when time is up
+    radShutDown  : TCubicRadioButton;  // Shutdown computer when time is up
+    radSleep     : TCubicRadioButton;  // Put system to sleep when time is up
+    edtPath      : TCubicPathEdit;     // Path to file to execute
+    grpExecute   : TCubicGroupBox;     // Group for file execution settings
+    grpTimer     : TCubicGroupBox;     // Group for timer settings
+    pnlReminder  : TCubicGroupBox;     // Main reminder panel
+    lblInterval  : TLabel;             // Label for interval setting
+    Label1       : TLabel;             // Additional label
+    Timer        : TTimer;             // Main countdown timer (1 second interval)
+    spnTime      : TCubicSpinEdit;     // Timer interval in minutes
+    procedure btnResetClick(Sender: TObject);
+    procedure btnRunClick(Sender: TObject);
+    procedure btnStartClick(Sender: TObject);
+    procedure btnStopClick(Sender: TObject);
     procedure radRunFileClick(Sender: TObject);
-    procedure FormCreate     (Sender: TObject);
-    procedure FormDestroy    (Sender: TObject);
-    procedure spnTimeChange  (Sender: TObject);
-    procedure TimerTimer     (Sender: TObject);
-    procedure radSleepClick  (Sender: TObject);
+    procedure radSleepClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
+    procedure spnTimeChange(Sender: TObject);
+    procedure TimerTimer(Sender: TObject);
   private
     FTimeUp: TNotifyEvent;
     FAdvance: TNotifyEvent;
+    FTimeLeft: Integer;               // Number of seconds remaining
     procedure TimesUp;
-    procedure AdvanceReminderWith1Sec;
-    procedure ShowRemainingTime;
+    procedure AdvanceTimer;
+    procedure UpdateDisplay;
+    procedure ExecuteTimerAction;
   public
-    TimeLeft: Integer;         { Number of seconds left }
-    procedure Initialize(aOnAdvance, aOnTimeUp: TNotifyEvent);
-  published
-    property OnTimeUp : TNotifyEvent read FTimeUp  write FTimeUp;
+    procedure Initialize(AOnAdvance, AOnTimeUp: TNotifyEvent);
+
+    { Number of seconds left until reminder fires }
+    property TimeLeft: Integer read FTimeLeft write FTimeLeft;
+
+    { Fired when the timer reaches zero }
+    property OnTimeUp: TNotifyEvent read FTimeUp write FTimeUp;
+
+    { Fired every second while timer is running }
     property OnAdvance: TNotifyEvent read FAdvance write FAdvance;
   end;
 
-                                                  { Don't let the user choose an interval under 2s }
 VAR
-   frmReminder: TfrmReminder= NIL;
+  { Global form reference - used for singleton access pattern.
+    Consider using AppData.GetForm<TfrmReminder> instead for better encapsulation. }
+  frmReminder: TfrmReminder = NIL;
 
 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.VclUtils, LightVcl.Common.Colors, LightVcl.Graph.Util, LightVcl.Common.Sound, LightVcl.Graph.Desktop, LightVcl.Visual.INIFile, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.PowerUtils, LightVcl.Common.ExecuteShell;
-
-
-
+  LightVcl.Common.VclUtils,
+  LightVcl.Common.Colors,
+  LightVcl.Common.Sound,
+  LightVcl.Common.PowerUtils,
+  LightVcl.Common.ExecuteShell,
+  LightVcl.Common.Dialogs,
+  LightVcl.Graph.Desktop,
+  LightVcl.Visual.INIFile,
+  LightCore.Time;
 
 
 
 {--------------------------------------------------------------------------------------------------
-   CREATE/DESTROY
+   FORM LIFECYCLE
 --------------------------------------------------------------------------------------------------}
+
+{ Initializes the form with default values }
 procedure TfrmReminder.FormCreate(Sender: TObject);
 begin
- TimeLeft:= MaxInt;
+  FTimeLeft:= MaxInt;  // Will be set properly when timer starts
 end;
 
 
-procedure TfrmReminder.Initialize(aOnAdvance, aOnTimeUp: TNotifyEvent);
+{ Initializes the form with event handlers.
+
+  Parameters:
+    AOnAdvance - Called every second while timer is running (can be nil)
+    AOnTimeUp  - Called when timer reaches zero (can be nil) }
+procedure TfrmReminder.Initialize(AOnAdvance, AOnTimeUp: TNotifyEvent);
 begin
- OnTimeUp := aOnTimeUp;
- OnAdvance:= aOnAdvance;
+  FTimeUp:= AOnTimeUp;
+  FAdvance:= AOnAdvance;
 end;
 
 
+{ Cleanup when form is destroyed }
 procedure TfrmReminder.FormDestroy(Sender: TObject);
 begin
- Timer.Enabled:= FALSE;
- //SaveForm(Self); called by AppData
+  Timer.Enabled:= FALSE;
+  // Note: SaveForm is called automatically by AppData
 end;
 
 
 
+{--------------------------------------------------------------------------------------------------
+   TIMER LOGIC
+--------------------------------------------------------------------------------------------------}
 
-
-
-
-
-
-
-
-{-------------------------------------------------------------------------------
-   TIMER
---------------------------------------------------------------------------------}
-procedure TfrmReminder.btnRunClick(Sender: TObject);
-begin
- btnResetClick(Sender);                { RESET TIMER }
- ExecuteShell(edtPath.Path);           { MUST BE shellexec so I can load mp3, txt, doc, exe, etc }
-end;
-
-
+{ Timer event - called every second }
 procedure TfrmReminder.TimerTimer(Sender: TObject);
 begin
- AdvanceReminderWith1Sec;
+  AdvanceTimer;
 end;
 
 
+{ Decrements the timer and checks if time is up }
+procedure TfrmReminder.AdvanceTimer;
+begin
+  Dec(FTimeLeft);
+
+  if FTimeLeft <= 0 then
+    begin
+      FTimeLeft:= spnTime.Value * 60;  // Reset for next cycle
+      TimesUp;
+    end;
+
+  // Update visual feedback
+  if Timer.Enabled
+  then spnTime.Color:= TIMER_ACTIVE_COLOR
+  else spnTime.Color:= clDkGray;
+
+  UpdateDisplay;
+
+  // Fire advance event
+  if Assigned(FAdvance)
+  then FAdvance(Self);
+end;
+
+
+{ Called when the timer reaches zero - executes the configured action }
 procedure TfrmReminder.TimesUp;
 begin
- if chkRunOnce.Checked                  { Don't run the file multiple times }
- or RadSleep.Checked                    { Don't enter sleep twice! }
- then Timer.Enabled:= FALSE;
+  // Stop timer if configured to run only once or if sleep/shutdown selected
+  if chkRunOnce.Checked OR radSleep.Checked
+  then Timer.Enabled:= FALSE;
 
- if chkMakeNoise.Checked
- then BipCoconuts;
+  // Play notification sound if enabled
+  if chkMakeNoise.Checked
+  then BipCoconuts;
 
- if Assigned(FTimeUp)
- then FTimeUp(Self);
+  // Fire the OnTimeUp event
+  if Assigned(FTimeUp)
+  then FTimeUp(Self);
 
- TimeLeft:= spnTime.Value * 60;
- LightVcl.Graph.Desktop.WriteTextOnDesktopOver(10, 10, 'Reminder!', 'Arial', 30, clRedBrick);  { Paint text over all windows }
+  // Reset time for next cycle
+  FTimeLeft:= spnTime.Value * 60;
 
- if radRunFile.Checked then
-   if (edtPath.Path > '')
-   then
+  // Show reminder on desktop
+  LightVcl.Graph.Desktop.WriteTextOnDesktopOver(
+    REMINDER_TEXT_X,
+    REMINDER_TEXT_Y,
+    'Reminder!',
+    REMINDER_FONT_NAME,
+    REMINDER_FONT_SIZE,
+    clRedBrick);
+
+  // Execute the configured action
+  ExecuteTimerAction;
+end;
+
+
+{ Executes the action selected by the user (run file, sleep, or shutdown) }
+procedure TfrmReminder.ExecuteTimerAction;
+begin
+  if radRunFile.Checked then
     begin
-     Timer.Enabled:= FALSE;
-     if NOT ExecuteShell(edtPath.Path)              { MUST BE shellexec so I can load mp3, txt, doc, exe, etc }
-     then BipError;
+      if edtPath.Path <> '' then
+        begin
+          Timer.Enabled:= FALSE;
+          if NOT ExecuteShell(edtPath.Path)
+          then BipError;
+        end
+      else
+        MessageError('Reminder time is up!' + sLineBreak + 'No file to execute!');
     end
-   else MessageError('[Reminder times up] CRLF No file to execute!');
-
- if radSleep.Checked    then LightVcl.Common.PowerUtils.SystemSleep;
- if radShutDown.Checked then LightVcl.Common.PowerUtils.WinShutDown(TRUE, FALSE);
+  else 
+  if radSleep.Checked then LightVcl.Common.PowerUtils.SystemSleep
+  else 
+  if radShutDown.Checked then LightVcl.Common.PowerUtils.WinShutDown(TRUE, FALSE);
 end;
 
 
-
-
+{ Updates the form caption to show remaining time }
+procedure TfrmReminder.UpdateDisplay;
+begin
+  if Timer.Enabled
+  then Caption:= 'Reminder in ' + ShowTimeNice(FTimeLeft)
+  else Caption:= 'Timer disabled!';
+end;
 
 
 
 {--------------------------------------------------------------------------------------------------
-   UTILS
+   BUTTON HANDLERS
 --------------------------------------------------------------------------------------------------}
-procedure TfrmReminder.AdvanceReminderWith1Sec;
-begin
- Dec(TimeLeft);
 
- if TimeLeft <= 0 then
-  begin
-   TimeLeft:= spnTime.Value * 60;
-   TimesUp;
-  end;
-
- if Timer.Enabled
- then spnTime.Color:= $00C6E7C6                                                 { Verde }
- else spnTime.Color:= clDkGray;
-
- ShowRemainingTime;
-
- if Assigned(FAdvance)
- then FAdvance(Self);
-end;
-
-
-
-procedure TfrmReminder.ShowRemainingTime;
-begin
- if Timer.Enabled
- then Caption:= 'Reminder in '+ ShowTimeNice(TimeLeft)
- else Caption:= 'Timer disabled!';
-end;
-
-
-
-
-
-{--------------------------------------------------------------------------------------------------
-   SETTINGS
---------------------------------------------------------------------------------------------------}
-procedure TfrmReminder.spnTimeChange(Sender: TObject);
-begin
- TimeLeft:= spnTime.Value* 60;
- LightVcl.Visual.Timer.ResetTimer(Timer);
- ShowRemainingTime;
-end;
-
-
-procedure TfrmReminder.radRunFileClick(Sender: TObject);
-begin
- EnableDisable(grpExecute, radRunFile.Checked);
-end;
-
-
-procedure TfrmReminder.radSleepClick(Sender: TObject);
-begin
- EnableDisable(grpExecute, radRunFile.Checked);
-end;
-
-
-{ START/STOP TIMER}
+{ Starts the countdown timer }
 procedure TfrmReminder.btnStartClick(Sender: TObject);
 begin
- Timer.Enabled:= TRUE;
- spnTimeChange(Sender);
+  Timer.Enabled:= TRUE;
+  spnTimeChange(Sender);
 end;
 
 
+{ Stops/pauses the countdown timer }
 procedure TfrmReminder.btnStopClick(Sender: TObject);
 begin
- Timer.Enabled:= FALSE;
- ShowRemainingTime;
+  Timer.Enabled:= FALSE;
+  UpdateDisplay;
 end;
 
 
+{ Resets the timer to the configured interval }
 procedure TfrmReminder.btnResetClick(Sender: TObject);
 begin
- spnTimeChange(Sender);
+  spnTimeChange(Sender);
+end;
+
+
+{ Manually runs the configured file without waiting for timer }
+procedure TfrmReminder.btnRunClick(Sender: TObject);
+begin
+  btnResetClick(Sender);  // Reset timer first
+
+  if edtPath.Path <> ''
+  then ExecuteShell(edtPath.Path)
+  else MessageWarning('No file path specified.');
 end;
 
 
 
+{--------------------------------------------------------------------------------------------------
+   SETTINGS HANDLERS
+--------------------------------------------------------------------------------------------------}
 
+{ Called when the timer interval is changed }
+procedure TfrmReminder.spnTimeChange(Sender: TObject);
+begin
+  FTimeLeft:= spnTime.Value * 60;  // Convert minutes to seconds
+  LightVcl.Visual.Timer.ResetTimer(Timer);
+  UpdateDisplay;
+end;
+
+
+{ Updates UI when "Run File" option is selected }
+procedure TfrmReminder.radRunFileClick(Sender: TObject);
+begin
+  EnableDisable(grpExecute, radRunFile.Checked);
+end;
+
+
+{ Updates UI when "Sleep" option is selected }
+procedure TfrmReminder.radSleepClick(Sender: TObject);
+begin
+  EnableDisable(grpExecute, radRunFile.Checked);
+end;
 
 
 end.

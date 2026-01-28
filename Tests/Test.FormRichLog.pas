@@ -391,12 +391,12 @@ begin
   Form:= TfrmRichLog.Create(NIL);
   FTestForm:= Form;
 
+  { btnClearClick should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.btnClearClick(Form);
-    end,
-    'btnClearClick should not raise exception');
+    end);
 end;
 
 
@@ -475,12 +475,12 @@ begin
   Form:= TfrmRichLog.Create(NIL);
   FTestForm:= Form;
 
+  { FormDestroy should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.FormDestroy(Form);
-    end,
-    'FormDestroy should not raise exception');
+    end);
 end;
 
 
@@ -518,12 +518,12 @@ begin
   Form:= TfrmRichLog.Create(NIL);
   FTestForm:= Form;
 
+  { FormPostInitialize should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.FormPostInitialize;
-    end,
-    'FormPostInitialize should not raise exception');
+    end);
 end;
 
 
@@ -557,12 +557,12 @@ begin
   // Disable auto-open to prevent form from showing
   Form.chkAutoOpen.Checked:= FALSE;
 
+  { AddError should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.Log.AddError('Test error');
-    end,
-    'AddError should not raise exception');
+    end);
 end;
 
 
@@ -576,12 +576,12 @@ begin
   // Disable auto-open to prevent form from showing
   Form.chkAutoOpen.Checked:= FALSE;
 
+  { AddWarn should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.Log.AddWarn('Test warning');
-    end,
-    'AddWarn should not raise exception');
+    end);
 end;
 
 
@@ -594,12 +594,12 @@ begin
 
   Form.Log.AddInfo('Test');
 
+  { Clear should not raise exception }
   Assert.WillNotRaise(
     procedure
     begin
       Form.Log.Clear;
-    end,
-    'Clear should not raise exception');
+    end);
 end;
 
 

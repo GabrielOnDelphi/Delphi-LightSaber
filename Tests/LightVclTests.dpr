@@ -17,7 +17,7 @@ uses
   {$ENDIF }
   DUnitX.TestFramework,
   LightCore.AppData,
-  LightVcl.Visual.AppData,
+  LightVcl.Visual.AppData in '..\FrameVCL\LightVcl.Visual.AppData.pas',
   Test.LightVcl.Common.IO in 'Test.LightVcl.Common.IO.pas',
   Test.FormAbout in 'Test.FormAbout.pas',
   Test.FormAsyncMessage in 'Test.FormAsyncMessage.pas',
@@ -33,6 +33,8 @@ uses
   Test.FormSplashScreen in 'Test.FormSplashScreen.pas',
   Test.FormTranslEditor in 'Test.FormTranslEditor.pas',
   Test.FormTranslSelector in 'Test.FormTranslSelector.pas',
+  Test.FormUniversalEula in 'Test.FormUniversalEula.pas',
+  Test.FrameExplorer in 'Test.FrameExplorer.pas',
   LightVcl.Common.IO in '..\FrameVCL\LightVcl.Common.IO.pas',
   FormAbout in '..\FrameVCL\FormAbout.pas',
   FormAsyncMessage in '..\FrameVCL\FormAsyncMessage.pas',
@@ -48,6 +50,8 @@ uses
   FormSplashScreen in '..\FrameVCL\FormSplashScreen.pas',
   FormTranslEditor in '..\FrameVCL\FormTranslEditor.pas',
   FormTranslSelector in '..\FrameVCL\FormTranslSelector.pas',
+  FormUniversalEula in '..\FrameVCL\FormUniversalEula.pas',
+  FrameExplorer in '..\FrameVCL\FrameExplorer.pas',
   LightVcl.Common.Translate in '..\FrameVCL\LightVcl.Common.Translate.pas';
 
 {$IFNDEF TESTINSIGHT}

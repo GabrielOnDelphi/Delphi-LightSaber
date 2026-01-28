@@ -44,7 +44,7 @@ object frmProxyList: TfrmProxyList
       ParentShowHint = False
       ShowHint = False
       TabOrder = 1
-      OnClick = ConectionTypeChanged
+      OnClick = ConnectionTypeChanged
       AutoSize = True
     end
     object radDirect: TCubicRadioButton
@@ -63,7 +63,7 @@ object frmProxyList: TfrmProxyList
       ParentShowHint = False
       ShowHint = False
       TabOrder = 0
-      OnClick = ConectionTypeChanged
+      OnClick = ConnectionTypeChanged
       AutoSize = True
     end
     object radProxyList: TCubicRadioButton
@@ -82,7 +82,7 @@ object frmProxyList: TfrmProxyList
       ParentShowHint = False
       ShowHint = False
       TabOrder = 2
-      OnClick = ConectionTypeChanged
+      OnClick = ConnectionTypeChanged
       AutoSize = True
     end
     object edtGateway: TEdit

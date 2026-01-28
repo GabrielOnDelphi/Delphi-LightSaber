@@ -49,60 +49,60 @@ USES
 {--------------------------------------------------------------------------------------------------
    BINARY
 --------------------------------------------------------------------------------------------------}
- {$IFDEF CPUx86}                                                                                    { Contitional compilation: http://docwiki.embarcadero.com/RADStudio/XE8/en/Conditional_compilation_%28Delphi%29 }
- procedure SwapWord     (VAR TwoBytes : Word);                 assembler;
- Procedure SwapCardinal (VAR aCardinal: Cardinal);             assembler;                           { Swap32bits unsigned integer}
- Procedure SwapInt      (VAR aInteger : Longint);              assembler;                           { Swap32bits signed integer} {INTEL= Little ENDIAN}
+ {$IFDEF CPUx86}                                                                                { Contitional compilation: http://docwiki.embarcadero.com/RADStudio/XE8/en/Conditional_compilation_%28Delphi%29 }
+ procedure SwapWord         (VAR TwoBytes : Word);                 assembler;
+ Procedure SwapCardinal     (VAR aCardinal: Cardinal);             assembler;                   { Swap32bits unsigned integer}
+ Procedure SwapInt          (VAR aInteger : Longint);              assembler;                   { Swap32bits signed integer} {INTEL= Little ENDIAN}
  {$ELSE}
- procedure SwapWord     (VAR TwoBytes: Word);                  inline;
- Procedure SwapCardinal (VAR aCardinal: Cardinal);             inline;                              { Swap32bits unsigned integer}
- Procedure SwapInt      (VAR aInteger: Integer);               inline;                              { Swap32bits signed integer} {INTEL= Little ENDIAN}
+ procedure SwapWord         (VAR TwoBytes: Word);                  inline;
+ Procedure SwapCardinal     (VAR aCardinal: Cardinal);             inline;                      { Swap32bits unsigned integer}
+ Procedure SwapInt          (VAR aInteger: Integer);               inline;                      { Swap32bits signed integer} {INTEL= Little ENDIAN}
  {$ENDIF}
- function  SwapUInt64   (Value: UInt64): UInt64;               inline;  { Not tested }
+ function  SwapUInt64       (Value: UInt64): UInt64;               inline;
  {$IFDEF MSWINDOWS}
- function  SwapInt64    (Value: Int64 ): Int64;                assembler;
- function  SwapCardinalF(aCardinal: Cardinal): Cardinal;       assembler;                           { reverse the order of bytes in eax }
- function  SwapWordF    (twoBytes: Word): Word;                assembler;
+ function  SwapInt64        (Value: Int64 ): Int64;                assembler;
+ function  SwapCardinalF    (aCardinal: Cardinal): Cardinal;       assembler;                   { reverse the order of bytes in eax }
+ function  SwapWordF        (twoBytes: Word): Word;                assembler;
  {$ENDIF}
- function  ReverseByte  (      b: Byte): Byte;                 inline;                              { "Inverts" a binary nunber, so, if the number is "1101", I need to end with "1011".  }
- function  ReverseByte2 (CONST b: Byte): Byte;                 { DO NOT INLINE! }                   { This should be the fastest since it uses a LUT - http://stackoverflow.com/questions/14400845/how-can-i-bit-reflect-a-byte-in-delphi }
- function  ReverseByte3 (CONST b: Byte): Byte;                 inline;
+ function  ReverseByte      (b: Byte): Byte;                 inline;                            { "Inverts" a binary nunber, so, if the number is "1101", I need to end with "1011".  }
+ function  ReverseByte2     (b: Byte): Byte;                                  { This should be the fastest since it uses a LUT - http://stackoverflow.com/questions/14400845/how-can-i-bit-reflect-a-byte-in-delphi }
+ function  ReverseByte3     (b: Byte): Byte;                 inline;
 
- function  RotateRight64 (Value : int64 ; N : Integer): int64; inline;
- function  RotateLeft64  (Value : int64 ; N : Integer): int64; inline;
- function  RotateRight32 (Value : dword ; N : Integer): dword; inline;
- function  RotateLeft32  (Value : dword ; N : Integer): dword; inline;
+ function  RotateRight64    (Value : int64 ; N : Integer): int64; inline;
+ function  RotateLeft64     (Value : int64 ; N : Integer): int64; inline;
+ function  RotateRight32    (Value : dword ; N : Integer): dword; inline;
+ function  RotateLeft32     (Value : dword ; N : Integer): dword; inline;
 
  function  MakeWord         (B1, B2: byte): Word;              inline;
- function  MakeByte         (CONST b1, b2, b3, b4, b5, b6, b7, b8: Boolean): Byte;  inline;         { B1 is MSB }
- function  MakeCardinal_    (MSB, b2, b3, b4: Cardinal): Cardinal;                                  { Make a cardinal number from 4 bytes. It merges the bytes in the order the were given }
+ function  MakeByte         (b1, b2, b3, b4, b5, b6, b7, b8: Boolean): Byte;  inline;           { B1 is MSB }
+ function  MakeCardinal_    (MSB, b2, b3, b4: Cardinal): Cardinal;                              { Make a cardinal number from 4 bytes. It merges the bytes in the order the were given }
  function  MakeCardinal_Slow(MSB, b2, b3, b4: Cardinal): Cardinal;
 
- function  MakeCardinal     (CONST Hex: String): Cardinal;         overload;                        { Make a cardinal number from a special string. This string contains 4 substrings, each of 2 chars long. Each substring represents a hex number. The order of the hex numbers is MSB. Example: FF332211 }
- function  MakeCardinal     (Hex1, Hex2, hex3, hex4: String): Cardinal;  overload;                  { Make a cardinal number from strings representing HEX numbers. The order of the parameters is MSB }
+ function  MakeCardinal     (CONST Hex: String): Cardinal;         overload;                    { Make a cardinal number from a special string. This string contains 4 substrings, each of 2 chars long. Each substring represents a hex number. The order of the hex numbers is MSB. Example: FF332211 }
+ function  MakeCardinal     (Hex1, Hex2, hex3, hex4: String): Cardinal;  overload;              { Make a cardinal number from strings representing HEX numbers. The order of the parameters is MSB }
  {$IFDEF MSWINDOWS}
- function  SerializeWord    (W: Word): String;  {$ENDIF}                                            { Does the opposite of MakeWord:     Converts the bytes that form this number into their ASCII equivalent. The result is in 'big endian' order. Note that Intel uses 'lil endian'! Exemple: for number 65280 (1111111100000000) the function will return #255 + #0. }
- function  SerializeCardinal(C: Cardinal): string;                                                  { Does the opposite of MakeCardinal: Converts the bytes that form this number into their ASCII equivalent. The result is in 'big endian' order. Note that Intel uses 'lil endian'! Exemple: for number 65280 (1111111100000000) the function will return #255 + #0. }
+ function  SerializeWord    (W: Word): String;  {$ENDIF}                                        { Does the opposite of MakeWord:     Converts the bytes that form this number into their ASCII equivalent. The result is in 'big endian' order. Note that Intel uses 'lil endian'! Exemple: for number 65280 (1111111100000000) the function will return #255 + #0. }
+ function  SerializeCardinal(C: Cardinal): string;                                              { Does the opposite of MakeCardinal: Converts the bytes that form this number into their ASCII equivalent. The result is in 'big endian' order. Note that Intel uses 'lil endian'! Exemple: for number 65280 (1111111100000000) the function will return #255 + #0. }
 
- function  GetBit      (CONST Value: Cardinal; CONST BitPos: Byte): Boolean;    inline;             { The BitPos numbering starts from left (7) to right (0). For example for number 254 (11111110), the bit at pos 0 si 0 and the bit at pos 7 (MSB) is 1 }
- function  ClearBit    (CONST Value: Cardinal; CONST BitPos: Byte): Cardinal;   inline;
- function  SetBit      (CONST Value: Cardinal; CONST BitPos: Byte): Cardinal;   inline;
- function  ToggleBit   (CONST Value: Cardinal; CONST BitPos: Byte; CONST TurnOn: Boolean): Cardinal; inline;
+ function  GetBit           (Value: Cardinal; BitPos: Byte): Boolean;    inline;          { The BitPos numbering starts from left (7) to right (0). For example for number 254 (11111110), the bit at pos 0 si 0 and the bit at pos 7 (MSB) is 1 }
+ function  ClearBit         (Value: Cardinal; BitPos: Byte): Cardinal;   inline;
+ function  SetBit           (Value: Cardinal; BitPos: Byte): Cardinal;   inline;
+ function  ToggleBit        (Value: Cardinal; BitPos: Byte; TurnOn: Boolean): Cardinal; inline;
 
- function  GetByte     (BytePos: Byte; C: Cardinal): Byte;           overload;                      { Byte order (position): 1 2 3 4.   For example GetByte(3, $AAFFCC) returns $CC }
- function  GetByte     (BytePos: Byte; i: Integer ): Byte;           overload;
- function  GetByte     (BytePos: Byte; W: Word): Byte;               overload;
- function  GetBits     (CONST Value: Cardinal; const BitFrom, BitTo: Byte): Cardinal;
+ function  GetByte          (BytePos: Byte; C: Cardinal): Byte;           overload;             { Byte order (position): 1 2 3 4.   For example GetByte(3, $AAFFCC) returns $CC }
+ function  GetByte          (BytePos: Byte; i: Integer ): Byte;           overload;
+ function  GetByte          (BytePos: Byte; W: Word): Byte;               overload;
+ function  GetBits          (Value: Cardinal; BitFrom, BitTo: Byte): Cardinal;
 
- procedure ChangeByteOrder(VAR Data; Size : Integer);      inline;
- function  Base255to256(CONST cInput: Cardinal): Cardinal; inline;                                  { http://stackoverflow.com/questions/5680895/i-need-to-convert-a-number-from-base-255-to-base-256 }
- function  Base256to255(CONST cInput: Cardinal): Cardinal; inline;
+ procedure ChangeByteOrder  (VAR Data; Size : Integer);   inline;
+ function  Base255to256     (cInput: Cardinal): Cardinal; inline;                               { http://stackoverflow.com/questions/5680895/i-need-to-convert-a-number-from-base-255-to-base-256 }
+ function  Base256to255     (cInput: Cardinal): Cardinal; inline;
 
- function  EnsureByte  (b: Integer): Byte;                 inline; overload;                        { Make sure that i is in 'byte' range. In other words, returns 0 if i < 0 and 255 if i > 255. Otherwise return i }
- function  EnsureByte  (b: Real): Byte;                    inline; overload;
+ function  EnsureByte       (b: Integer): Byte;                 inline; overload;               { Make sure that i is in 'byte' range. In other words, returns 0 if i < 0 and 255 if i > 255. Otherwise return i }
+ function  EnsureByte       (b: Real): Byte;                    inline; overload;
 
- function  Ensure100   (i: integer): Byte;                 inline; overload;                        { Makes sure that the 'I' is not lower than 0 and not higher than 100 }
- function  Ensure100   (s: Single): Single;                inline; overload;                        { Makes sure that the 'S' is not lower than 0 and not higher than 100 }
+ function  Ensure100        (i: integer): Byte;                 inline; overload;               { Makes sure that the 'I' is not lower than 0 and not higher than 100 }
+ function  Ensure100        (s: Single): Single;                inline; overload;               { Makes sure that the 'S' is not lower than 0 and not higher than 100 }
 
  function  ReadMotorolaWord(Stream: TStream): Word;
 
@@ -410,7 +410,7 @@ begin
 end;
 
 
-function ReverseByte3(CONST b : Byte): Byte;
+function ReverseByte3(b : Byte): Byte;
 TYPE BS= set of 0..7;
 VAR
    K: byte;
@@ -424,7 +424,7 @@ begin
 end;
 
 
-function ReverseByte2(CONST b: Byte): Byte;                                                        { This should be the fastest since it uses a LUT - http://stackoverflow.com/questions/14400845/how-can-i-bit-reflect-a-byte-in-delphi }
+function ReverseByte2(b: Byte): Byte;                                                        { This should be the fastest since it uses a LUT - http://stackoverflow.com/questions/14400845/how-can-i-bit-reflect-a-byte-in-delphi }
 CONST
   Table: array [Byte] of Byte = (
     0,128,64,192,32,160,96,224,16,144,80,208,48,176,112,240,8,136,72,200,40,168,104,232,24,152,88,216,56,184,120,248,
@@ -463,13 +463,13 @@ end;
    SINGLE BIT OP
 -------------------------------------------------------------------------------------------------------------}
 
-function GetBit(CONST Value: Cardinal; CONST BitPos: Byte): Boolean;    // Tested. Works ok
+function GetBit(Value: Cardinal; BitPos: Byte): Boolean;    // Tested. Works ok
 begin
   Result := (Value AND (1 shl BitPos)) <> 0;
 end;
 
 
-function ClearBit(CONST Value: Cardinal; CONST BitPos: Byte): Cardinal;
+function ClearBit(Value: Cardinal; BitPos: Byte): Cardinal;
 begin
  Result := Value AND NOT (1 shl BitPos);
 end;
@@ -486,13 +486,13 @@ end;
   7=00000000 10000000
   8=00000001 00000000  - next octet
   etc }
-function SetBit(CONST Value: Cardinal; CONST BitPos: Byte): Cardinal;    // Tested. Works ok
+function SetBit(Value: Cardinal; BitPos: Byte): Cardinal;    // Tested. Works ok
 begin
  Result := Value OR (1 shl BitPos);
 end;
 
 
-function ToggleBit(CONST Value: Cardinal; CONST BitPos: Byte; CONST TurnOn: Boolean): DWord;
+function ToggleBit(Value: Cardinal; BitPos: Byte; TurnOn: Boolean): DWord;
 begin
  {$Warnings off}
  Result := (Value OR (1 shl BitPos)) XOR (Cardinal(NOT TurnOn) shl BitPos);       
@@ -500,7 +500,7 @@ begin
 end;
 
 
-function MakeByte(CONST b1, b2, b3, b4, b5, b6, b7, b8: Boolean): Byte;                            { B1 is MSB }
+function MakeByte(b1, b2, b3, b4, b5, b6, b7, b8: Boolean): Byte;                            { B1 is MSB }
 begin
  Result:= 0;
  if b8 then Result:= Result OR (1 shl 0);
@@ -556,7 +556,7 @@ begin
 end;
 
 
-function GetBits(const Value: Cardinal; const BitFrom, BitTo: Byte): Cardinal;
+function GetBits(Value: Cardinal; BitFrom, BitTo: Byte): Cardinal;
 var i, j : Byte;
 begin
  Result:=0;
@@ -757,7 +757,7 @@ end;
 
 
 
-function Base255to256(CONST cInput: Cardinal): Cardinal;
+function Base255to256(cInput: Cardinal): Cardinal;
 VAR MSB, b2, b3, b4: Byte;
 begin
  MSB:= Byte(cInput SHR 24);
@@ -773,7 +773,7 @@ begin
 end;
 
 
-function Base256to255(CONST cInput: Cardinal): Cardinal;                          { MUST SEE THIS:  http://stackoverflow.com/questions/6015477/i-cannot-use-shl-shift-left-with-int64-variables }
+function Base256to255(cInput: Cardinal): Cardinal;                          { MUST SEE THIS:  http://stackoverflow.com/questions/6015477/i-cannot-use-shl-shift-left-with-int64-variables }
 VAR MSB, b2, b3, b4: Byte;
 begin
  b4 :=  cInput               mod 255;

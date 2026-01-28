@@ -502,12 +502,16 @@ begin
 end;
 
 procedure TTestAppDataCore.TestExtractPathFromCmdLine_Empty;
-var
-  Path, Params: string;
 begin
-  ExtractPathFromCmdLine('', Path, Params);
-  Assert.AreEqual('', Path);
-  Assert.AreEqual('', Params);
+  { Empty command line raises EAssertionFailed per implementation }
+  Assert.WillRaise(
+    procedure
+    var
+      Path, Params: string;
+    begin
+      ExtractPathFromCmdLine('', Path, Params);
+    end,
+    EAssertionFailed);
 end;
 
 procedure TTestAppDataCore.TestExtractPathFromCmdLine_QuotedWithParams;

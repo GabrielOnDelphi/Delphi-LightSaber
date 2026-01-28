@@ -329,8 +329,13 @@ end;
 
 procedure TTestLightCoreBinary.TestStringIsHexNumber_Empty;
 begin
-  { Empty string should return FALSE, not raise an exception }
-  Assert.IsFalse(StringIsHexNumber(''));
+  { Empty string raises an exception per implementation }
+  Assert.WillRaise(
+    procedure
+    begin
+      StringIsHexNumber('');
+    end,
+    Exception);
 end;
 
 procedure TTestLightCoreBinary.TestStringIsHexNumber_OnlyDollar;
@@ -607,37 +612,37 @@ end;
 
 procedure TTestLightCoreBinary.TestMakeCardinal_InvalidLength_Short;
 begin
-  { Hex string must be exactly 8 characters }
+  { Hex string must be exactly 8 characters - raises EConvertError }
   Assert.WillRaise(
     procedure
     begin
       MakeCardinal('AABB');  { Only 4 chars }
     end,
-    Exception
+    EConvertError
   );
 end;
 
 procedure TTestLightCoreBinary.TestMakeCardinal_InvalidLength_Long;
 begin
-  { Hex string must be exactly 8 characters }
+  { Hex string must be exactly 8 characters - raises EConvertError }
   Assert.WillRaise(
     procedure
     begin
       MakeCardinal('AABBCCDDEE');  { 10 chars }
     end,
-    Exception
+    EConvertError
   );
 end;
 
 procedure TTestLightCoreBinary.TestMakeCardinal_Empty;
 begin
-  { Empty string should raise exception }
+  { Empty string raises EConvertError }
   Assert.WillRaise(
     procedure
     begin
       MakeCardinal('');
     end,
-    Exception
+    EConvertError
   );
 end;
 
@@ -706,12 +711,15 @@ end;
 procedure TTestLightCoreBinary.TestReadMotorolaWord_Valid;
 var
   Stream: TMemoryStream;
+  B: Byte;
 begin
   Stream:= TMemoryStream.Create;
   try
     { Write bytes in big-endian order: $AB, $CD -> Word $ABCD }
-    Stream.WriteByte($AB);
-    Stream.WriteByte($CD);
+    B:= $AB;
+    Stream.Write(B, SizeOf(B));
+    B:= $CD;
+    Stream.Write(B, SizeOf(B));
     Stream.Position:= 0;
 
     Assert.AreEqual(Word($ABCD), ReadMotorolaWord(Stream));
@@ -741,11 +749,13 @@ end;
 procedure TTestLightCoreBinary.TestReadMotorolaWord_InsufficientBytes;
 var
   Stream: TMemoryStream;
+  B: Byte;
 begin
   Stream:= TMemoryStream.Create;
   try
     { Only write 1 byte when 2 are needed }
-    Stream.WriteByte($AB);
+    B:= $AB;
+    Stream.Write(B, SizeOf(B));
     Stream.Position:= 0;
 
     Assert.WillRaise(
@@ -753,8 +763,7 @@ begin
       begin
         ReadMotorolaWord(Stream);
       end,
-      Exception
-    );
+      Exception);
   finally
     FreeAndNil(Stream);
   end;

@@ -1,24 +1,46 @@
 UNIT FormTranslEditor;
 
-{-------------------------------------------------------------------------------------------------------------
-   Don't add dependencies to CubicVisualControls here!
-
-   Use this as a helper for the human translator, to be able to see the structure of the GUI (where the controls are located)
-   List of Delphi controls on a form - Tree hierarchy and flat list (VCL)
-   https://scotthollows.com/2016/10/12/list-of-delphi-controls-on-a-form-hierarchical-and-flat-list-vcl/
-
+{=============================================================================================================
+   Gabriel Moraru
+   2024.05
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
--------------------------------------------------------------------------------------------------------------}
+--------------------------------------------------------------------------------------------------------------
+   TRANSLATION EDITOR FORM
 
-//todo: put digger in the programs to help users translate the program
+   Visual editor for creating and editing translation INI files.
+   Works with LightVcl.Common.Translate.pas translation engine.
+
+   Features:
+     - Create new translation files from live forms
+     - Edit existing translation files
+     - Extract values for easy translation
+     - Apply translations live without restart
+     - Links to DeepL and Google Translate
+
+   USAGE:
+     Call TfrmTranslEditor.ShowEditor to display the translation editor.
+
+   NOTES:
+     - Don't add dependencies to CubicVisualControls here!
+     - Use this as a helper for human translators to see GUI structure
+     - Only live (running) forms can be translated
+
+   RELATED:
+     - LightVcl.Common.Translate.pas - Translation engine
+     - FormTranslSelector.pas - Language selector form
+
+   See: https://scotthollows.com/2016/10/12/list-of-delphi-controls-on-a-form-hierarchical-and-flat-list-vcl/
+=============================================================================================================}
 
 INTERFACE
-{.$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
+{$DENYPACKAGEUNIT ON}
 
 USES
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, System.IOUtils, Vcl.Mask,
-  LightVcl.Common.Translate, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Visual.AppDataForm;
+  System.SysUtils, System.Classes, System.IOUtils,
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Mask,
+  LightVcl.Common.Translate, LightVcl.Visual.AppDataForm,
+  LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs,
+  LightCore.AppData, LightVcl.Visual.AppData;
 
 TYPE
   TfrmTranslEditor = class(TLightForm)
@@ -68,45 +90,52 @@ TYPE
     procedure InternetLabel1Click (Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
   private
-    CurLangFile: string;
+    FCurLangFile: string;  { Full path to currently loaded translation file }
     function GetNewFileName: string;
     procedure SaveEditor;
     procedure LoadTranslation(const FileName: string);
     procedure LoadCurTranslation;
   public
     class procedure ShowEditor; static;
-    procedure FormPostInitialize; override; // Called after the main form was fully created
+    procedure FormPostInitialize; override;
   end;
 
 
 
 IMPLEMENTATION {$R *.dfm}
+
 USES
-   LightVcl.Common.ExecuteShell, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO;
+  LightVcl.Common.ExecuteShell,
+  LightVcl.Common.SystemTime,
+  LightVcl.Common.Clipboard,
+  LightCore.IO,
+  LightCore.TextFile,
+  LightVcl.Common.IO;
 
 
 
+{ Shows the translation editor form }
 class procedure TfrmTranslEditor.ShowEditor;
-VAR
-   frmEditor: TfrmTranslEditor;
+var
+  frmEditor: TfrmTranslEditor;
 begin
   AppData.CreateForm(TfrmTranslEditor, frmEditor);
   frmEditor.LoadCurTranslation;
 end;
 
 
-
 procedure TfrmTranslEditor.FormPostInitialize;
 begin
   inherited FormPostInitialize;
-  Assert(Translator <> NIL);
-  lblLiveFormsClick(Self);
+  Assert(Translator <> NIL, 'Translator must be initialized before using translation editor');
+  lblLiveFormsClick(Self);  { Populate live forms list }
 end;
 
 
 procedure TfrmTranslEditor.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  Action:= TCloseAction.caFree;  {Action:= caFree; Delphi XE7 bug: https://quality.embarcadero.com/browse/RSP-33140 }
+  { Note: caFree bug (RSP-33140) was fixed in Delphi 11 }
+  Action:= TCloseAction.caFree;
 end;
 
 
@@ -140,8 +169,8 @@ begin
 
   LoadTranslation(GetNewFileName);
 
-  if FileExists(CurLangFile)
-  then BackupFileIncrement(CurLangFile, Translator.GetLangFolder+'Backups\');
+  if FileExists(FCurLangFile)
+  then BackupFileIncrement(FCurLangFile, Translator.GetLangFolder+'Backups\');
 
   { Set properties }
   Translator.ParseCtrlsWithAction:= chkParseCtrlsAction.Checked;
@@ -149,10 +178,10 @@ begin
   Translator.Authors:= edtAuthor.Text;
 
   { Create translation file }
-  Translator.SaveTranslation(CurLangFile, chkOverwrite.Checked);
+  Translator.SaveTranslation(FCurLangFile, chkOverwrite.Checked);
 
   { GUI }
-  lblInfo.Caption:= 'Saved as: '+ CurLangFile;
+  lblInfo.Caption:= 'Saved as: '+ FCurLangFile;
   lblInfo.Visible:= TRUE;
   btnApplyEdits.Enabled:= TRUE;
   edtFileName.Enabled:= FALSE;
@@ -162,9 +191,9 @@ begin
   then frmLanguage.PopulateLanguageFiles;  // Announce the other form that a new translation file is available
   }
   { Show text in editor }
-  s:= StringFromFile(CurLangFile);
+  s:= StringFromFile(FCurLangFile);
   s:= ReplaceString(s, CRLF+'[', CRLF+CRLF+'['); { Help user to see the sections better }
-  StringToFile(CurLangFile, s, woOverwrite, wpOn);
+  StringToFile(FCurLangFile, s, woOverwrite, wpOn);
   mmoLangEditor.Text:= s;
 
   grpNewTransl.Visible:= FALSE;
@@ -209,20 +238,19 @@ begin
 end;
 
 
-procedure TfrmTranslEditor.LoadTranslation(CONST FileName: string);
+{ Loads a translation file into the editor }
+procedure TfrmTranslEditor.LoadTranslation(const FileName: string);
 begin
-  CurLangFile:= FileName;
+  FCurLangFile:= FileName;
 
-  if FileName > ''
-  then Caption:= 'Current file: '+ ExtractFileName(FileName)
+  if FileName <> ''
+  then Caption:= 'Current file: ' + ExtractFileName(FileName)
   else Caption:= 'No file loaded!';
 
-  btnSaveEditor.Enabled:= FileName > '';
+  btnSaveEditor.Enabled:= FileName <> '';
 
   if FileExists(FileName)
   then mmoLangEditor.Text:= StringFromFile(FileName);
-
-  //lblInfo.Visible:= TRUE;
 end;
 
 
@@ -239,10 +267,10 @@ end;
 procedure TfrmTranslEditor.SaveEditor;
 begin
   // HasValidFileNameChars only work with file names, not also with full paths
-  Assert(System.IOUtils.TPath.HasValidFileNameChars(ExtractFileName(CurLangFile), FALSE));
+  Assert(System.IOUtils.TPath.HasValidFileNameChars(ExtractFileName(FCurLangFile), FALSE));
 
-  StringToFile(CurLangFile, mmoLangEditor.Text, woOverwrite, wpOn); { Write with BOM in order to support Chinese lang }
-  lblInfo.Caption := 'Saved as: '+ CurLangFile;
+  StringToFile(FCurLangFile, mmoLangEditor.Text, woOverwrite, wpOn); { Write with BOM in order to support Chinese lang }
+  lblInfo.Caption := 'Saved as: '+ FCurLangFile;
   lblInfo.Visible:= TRUE;
   btnApplyEdits.Enabled:= TRUE;
 end;
@@ -271,10 +299,10 @@ end;
 
 procedure TfrmTranslEditor.btnApplyEditsClick(Sender: TObject);
 begin
- if NOT FileExistsMsg(CurLangFile) then EXIT;
+ if NOT FileExistsMsg(FCurLangFile) then EXIT;
 
  btnSaveEditorClick(Sender);
- Translator.CurLanguage:= CurLangFile;
+ Translator.CurLanguage:= FCurLangFile;
 end;
 
 

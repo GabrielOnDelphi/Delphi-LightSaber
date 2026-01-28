@@ -13,6 +13,7 @@ object frmRichLog: TfrmRichLog
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 3
+  OnCreate = FormCreate
   OnDestroy = FormDestroy
   TextHeight = 15
   object Container: TPanel
