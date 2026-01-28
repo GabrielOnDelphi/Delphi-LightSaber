@@ -15,7 +15,7 @@ uses
   DUnitX.Loggers.Xml.NUnit,
   {$ENDIF }
   DUnitX.TestFramework,
-  { Test units }
+  { Test units - existing }
   Test.LightCore.EncodeCRC in 'Test.LightCore.EncodeCRC.pas',
   Test.LightCore.EncodeXOR in 'Test.LightCore.EncodeXOR.pas',
   Test.LightCore.StringList in 'Test.LightCore.StringList.pas',
@@ -30,6 +30,19 @@ uses
   Test.LightCore.TextFile in 'Test.LightCore.TextFile.pas',
   Test.LightCore.StrBuilder in 'Test.LightCore.StrBuilder.pas',
   Test.LightCore.StreamBuff in 'Test.LightCore.StreamBuff.pas',
+  { Test units - new }
+  Test.LightCore.Core in 'Test.LightCore.Core.pas',
+  Test.LightCore.AppData in 'Test.LightCore.AppData.pas',
+  Test.LightCore.INIFile in 'Test.LightCore.INIFile.pas',
+  Test.LightCore.IO in 'Test.LightCore.IO.pas',
+  Test.LightCore.EncodeMime in 'Test.LightCore.EncodeMime.pas',
+  Test.LightCore.Download in 'Test.LightCore.Download.pas',
+  Test.LightCore.LogTypes in 'Test.LightCore.LogTypes.pas',
+  Test.LightCore.LogLinesS in 'Test.LightCore.LogLinesS.pas',
+  Test.LightCore.LogLinesM in 'Test.LightCore.LogLinesM.pas',
+  Test.LightCore.LogRam in 'Test.LightCore.LogRam.pas',
+  Test.LightCore.Compiler in 'Test.LightCore.Compiler.pas',
+  Test.LightCore.Debugger in 'Test.LightCore.Debugger.pas',
   { Source units }
   LightCore in '..\LightCore.pas',
   LightCore.Types in '..\LightCore.Types.pas',
@@ -47,7 +60,18 @@ uses
   LightCore.Time in '..\LightCore.Time.pas',
   LightCore.TextFile in '..\LightCore.TextFile.pas',
   LightCore.StrBuilder in '..\LightCore.StrBuilder.pas',
-  LightCore.StreamBuff in '..\LightCore.StreamBuff.pas';
+  LightCore.StreamBuff in '..\LightCore.StreamBuff.pas',
+  LightCore.AppData in '..\LightCore.AppData.pas',
+  LightCore.INIFile in '..\LightCore.INIFile.pas',
+  LightCore.EncodeMime in '..\LightCore.EncodeMime.pas',
+  LightCore.LogTypes in '..\LightCore.LogTypes.pas',
+  LightCore.LogLinesAbstract in '..\LightCore.LogLinesAbstract.pas',
+  LightCore.LogLinesS in '..\LightCore.LogLinesS.pas',
+  LightCore.LogLinesM in '..\LightCore.LogLinesM.pas',
+  LightCore.LogRam in '..\LightCore.LogRam.pas',
+  LightCore.Compiler in '..\LightCore.Compiler.pas',
+  LightCore.Debugger in '..\LightCore.Debugger.pas',
+  LightCore.Platform in '..\LightCore.Platform.pas';
 
 {$IFNDEF TESTINSIGHT}
 var
@@ -58,7 +82,10 @@ var
 {$ENDIF}
 
 begin
-  ReportMemoryLeaksOnShutdown := True;
+  ReportMemoryLeaksOnShutdown:= True;
+
+  { Initialize AppDataCore - required by TLightStream and other units that use logging }
+  AppDataCore:= TAppDataCore.Create('LightCoreTests');
 
 {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX.RunRegisteredTests;
@@ -97,5 +124,6 @@ begin
     on E: Exception do
       System.Writeln(E.ClassName, ': ', E.Message);
   end;
+  readln;
 {$ENDIF}
 end.

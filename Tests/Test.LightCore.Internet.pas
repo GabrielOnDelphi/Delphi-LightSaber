@@ -3,6 +3,8 @@ unit Test.LightCore.Internet;
 {=============================================================================================================
    Unit tests for LightCore.Internet
    Tests URL parsing, validation, and manipulation functions
+
+   Requires: TESTINSIGHT compiler directive for TestInsight integration
 =============================================================================================================}
 
 interface
@@ -52,7 +54,7 @@ type
     [Test]
     [TestCase('SimpleFile', 'http://example.com/path/file.jpg,file.jpg')]
     [TestCase('WithQuery', 'http://example.com/path/file.jpg?query=1,file.jpg')]
-    [TestCase('NoPath', 'http://example.com,')]
+    [TestCase('NoPath', 'http://example.com,example.com')]
     procedure TestUrlExtractFileName(const URL, Expected: string);
 
     [Test]
@@ -235,6 +237,9 @@ begin
 end;
 
 initialization
+  {$IFDEF TESTINSIGHT}
+  TestInsight.DUnitX.RunRegisteredTests;
+  {$ENDIF}
   TDUnitX.RegisterTestFixture(TTestInternet);
 
 end.

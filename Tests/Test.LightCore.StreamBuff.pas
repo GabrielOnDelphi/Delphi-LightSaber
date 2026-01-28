@@ -2,7 +2,9 @@ unit Test.LightCore.StreamBuff;
 
 {=============================================================================================================
    Unit tests for LightCore.StreamBuff
-   Tests TLightStream - extended buffered file stream with versioning and type-safe read/write
+   Tests TLightStream - extended buffered file stream with versioning and type-safe read/write.
+
+   Includes TestInsight support: define TESTINSIGHT in project options.
 =============================================================================================================}
 
 interface
@@ -12,7 +14,8 @@ uses
   System.SysUtils,
   System.Classes,
   System.Types,
-  System.IOUtils;
+  System.IOUtils,
+  LightCore.Types;
 
 type
   [TestFixture]
@@ -20,7 +23,6 @@ type
   private
     FTestDir: string;
     FTestFile: string;
-    function GetTestFileName: string;
     procedure CleanupTestFile;
   public
     [Setup]
@@ -49,9 +51,15 @@ type
     [Test]
     procedure TestReadHeader_VersionOnly;
 
+    [Test]
+    procedure TestReadHeader_LongSignature;
+
     { Numeric Types Tests }
     [Test]
     procedure TestBoolean;
+
+    [Test]
+    procedure TestBoolean_NonZeroValues;
 
     [Test]
     procedure TestByte;
@@ -102,6 +110,9 @@ type
     [Test]
     procedure TestStringA_Short;
 
+    [Test]
+    procedure TestStringA_SafetyLimit;
+
     { Complex Structure Tests }
     [Test]
     procedure TestRect;
@@ -118,6 +129,9 @@ type
     [Test]
     procedure TestDoubles;
 
+    [Test]
+    procedure TestDoubles_Empty;
+
     { Checkpoint Tests }
     [Test]
     procedure TestCheckPoint;
@@ -133,6 +147,9 @@ type
     procedure TestPadding0;
 
     [Test]
+    procedure TestPadding0_Zero;
+
+    [Test]
     procedure TestPadding_WithValidation;
 
     { Enter Tests }
@@ -144,7 +161,13 @@ type
     procedure TestChars;
 
     [Test]
+    procedure TestChars_Empty;
+
+    [Test]
     procedure TestCharsA;
+
+    [Test]
+    procedure TestCharsA_Empty;
 
     { TStringList Tests }
     [Test]
@@ -153,12 +176,46 @@ type
     [Test]
     procedure TestStrings_Empty;
 
+    [Test]
+    procedure TestStrings_CreateReturn;
+
     { Bytes Tests }
     [Test]
     procedure TestPushBytes;
 
     [Test]
     procedure TestByteChunk;
+
+    [Test]
+    procedure TestByteChunk_Empty;
+
+    [Test]
+    procedure TestAsBytes;
+
+    [Test]
+    procedure TestAsBytes_Empty;
+
+    [Test]
+    procedure TestAsString;
+
+    { Raw String Tests }
+    [Test]
+    procedure TestPushString;
+
+    [Test]
+    procedure TestPushAnsi;
+
+    [Test]
+    procedure TestPushAnsi_Empty;
+
+    [Test]
+    procedure TestTryReadStringA;
+
+    [Test]
+    procedure TestTryReadStringA_Partial;
+
+    [Test]
+    procedure TestReadStringCnt;
 
     { Reverse Read Tests (Motorola format) }
     [Test]
@@ -186,12 +243,6 @@ uses
 
 
 { Helper Methods }
-
-function TTestLightStream.GetTestFileName: string;
-begin
-  Result:= FTestFile;
-end;
-
 
 procedure TTestLightStream.CleanupTestFile;
 begin
@@ -278,6 +329,7 @@ end;
 procedure TTestLightStream.TestReadHeader_WrongSignature;
 var
   WriteStream, ReadStream: TLightStream;
+  Version: Word;
 begin
   WriteStream:= TLightStream.CreateWrite(FTestFile);
   try
@@ -288,7 +340,9 @@ begin
 
   ReadStream:= TLightStream.CreateRead(FTestFile);
   try
-    Assert.IsFalse(ReadStream.ReadHeader('WrongSig', 1), 'Wrong signature should fail');
+    { ReadHeader returns 0 when signature doesn't match (and logs error internally) }
+    Version:= ReadStream.ReadHeader('WrongSig');
+    Assert.AreEqual(Word(0), Version, 'Wrong signature should return version 0');
   finally
     ReadStream.Free;
   end;
@@ -337,6 +391,29 @@ begin
 end;
 
 
+procedure TTestLightStream.TestReadHeader_LongSignature;
+var
+  WriteStream, ReadStream: TLightStream;
+  LongSig: AnsiString;
+begin
+  LongSig:= 'ThisIsALongerSignatureForTesting';
+
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.WriteHeader(LongSig, 10);
+  finally
+    WriteStream.Free;
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    Assert.IsTrue(ReadStream.ReadHeader(LongSig, 10), 'Long signature should work');
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
 { Numeric Types Tests }
 
 procedure TTestLightStream.TestBoolean;
@@ -355,6 +432,33 @@ begin
   try
     Assert.IsTrue(ReadStream.ReadBoolean);
     Assert.IsFalse(ReadStream.ReadBoolean);
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
+procedure TTestLightStream.TestBoolean_NonZeroValues;
+var
+  WriteStream, ReadStream: TLightStream;
+begin
+  { Test that any non-zero byte is read as True }
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.WriteByte(0);    // False
+    WriteStream.WriteByte(1);    // True
+    WriteStream.WriteByte(2);    // Should also be True
+    WriteStream.WriteByte(255);  // Should also be True
+  finally
+    WriteStream.Free;
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    Assert.IsFalse(ReadStream.ReadBoolean, '0 should be False');
+    Assert.IsTrue(ReadStream.ReadBoolean, '1 should be True');
+    Assert.IsTrue(ReadStream.ReadBoolean, '2 should be True');
+    Assert.IsTrue(ReadStream.ReadBoolean, '255 should be True');
   finally
     ReadStream.Free;
   end;
@@ -743,6 +847,37 @@ begin
 end;
 
 
+procedure TTestLightStream.TestStringA_SafetyLimit;
+var
+  WriteStream, ReadStream: TLightStream;
+  LargeString: AnsiString;
+begin
+  SetLength(LargeString, 100);
+  FillChar(LargeString[1], 100, 'X');
+
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.WriteStringA(LargeString);
+  finally
+    WriteStream.Free;
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    { Should raise exception when SafetyLimit is exceeded }
+    Assert.WillRaise(
+      procedure
+      begin
+        ReadStream.ReadStringA(50);  // SafetyLimit = 50, but string is 100
+      end,
+      Exception
+    );
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
 { Complex Structure Tests }
 
 procedure TTestLightStream.TestRect;
@@ -802,9 +937,14 @@ end;
 procedure TTestLightStream.TestIntegers;
 var
   WriteStream, ReadStream: TLightStream;
-  WriteArr, ReadArr: TArray<Integer>;
+  WriteArr, ReadArr: TIntegerArray;
 begin
-  WriteArr:= [1, 2, 3, -100, 1000];
+  SetLength(WriteArr, 5);
+  WriteArr[0]:= 1;
+  WriteArr[1]:= 2;
+  WriteArr[2]:= 3;
+  WriteArr[3]:= -100;
+  WriteArr[4]:= 1000;
 
   WriteStream:= TLightStream.CreateWrite(FTestFile);
   try
@@ -831,7 +971,7 @@ end;
 procedure TTestLightStream.TestIntegers_Empty;
 var
   WriteStream, ReadStream: TLightStream;
-  WriteArr, ReadArr: TArray<Integer>;
+  WriteArr, ReadArr: TIntegerArray;
 begin
   SetLength(WriteArr, 0);
 
@@ -855,9 +995,12 @@ end;
 procedure TTestLightStream.TestDoubles;
 var
   WriteStream, ReadStream: TLightStream;
-  WriteArr, ReadArr: TArray<Double>;
+  WriteArr, ReadArr: TDoubleArray;
 begin
-  WriteArr:= [1.1, 2.2, 3.3];
+  SetLength(WriteArr, 3);
+  WriteArr[0]:= 1.1;
+  WriteArr[1]:= 2.2;
+  WriteArr[2]:= 3.3;
 
   WriteStream:= TLightStream.CreateWrite(FTestFile);
   try
@@ -873,6 +1016,30 @@ begin
     Assert.AreEqual(1.1, ReadArr[0], 0.0001);
     Assert.AreEqual(2.2, ReadArr[1], 0.0001);
     Assert.AreEqual(3.3, ReadArr[2], 0.0001);
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
+procedure TTestLightStream.TestDoubles_Empty;
+var
+  WriteStream, ReadStream: TLightStream;
+  WriteArr, ReadArr: TDoubleArray;
+begin
+  SetLength(WriteArr, 0);
+
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.WriteDoubles(WriteArr);
+  finally
+    WriteStream.Free;
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    ReadStream.ReadDoubles(ReadArr);
+    Assert.AreEqual(0, Length(ReadArr));
   finally
     ReadStream.Free;
   end;
@@ -967,6 +1134,31 @@ begin
 end;
 
 
+procedure TTestLightStream.TestPadding0_Zero;
+var
+  WriteStream, ReadStream: TLightStream;
+begin
+  { Test that zero-byte padding works }
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.WriteInteger(42);
+    WriteStream.WritePadding0(0);  // Zero bytes
+    WriteStream.WriteInteger(99);
+  finally
+    WriteStream.Free;
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    Assert.AreEqual(42, ReadStream.ReadInteger);
+    ReadStream.ReadPadding0(0);
+    Assert.AreEqual(99, ReadStream.ReadInteger);
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
 procedure TTestLightStream.TestPadding_WithValidation;
 var
   WriteStream, ReadStream: TLightStream;
@@ -1036,6 +1228,30 @@ begin
 end;
 
 
+procedure TTestLightStream.TestChars_Empty;
+var
+  WriteStream, ReadStream: TLightStream;
+begin
+  { Test that empty WriteChars doesn't crash }
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.WriteInteger(42);
+    WriteStream.WriteChars(AnsiString(''));  // Empty - should do nothing
+    WriteStream.WriteInteger(99);
+  finally
+    WriteStream.Free;
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    Assert.AreEqual(42, ReadStream.ReadInteger);
+    Assert.AreEqual(99, ReadStream.ReadInteger);  // Should be immediately after
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
 procedure TTestLightStream.TestCharsA;
 var
   WriteStream, ReadStream: TLightStream;
@@ -1050,6 +1266,29 @@ begin
   ReadStream:= TLightStream.CreateRead(FTestFile);
   try
     Assert.AreEqual(AnsiString('World'), ReadStream.ReadCharsA(5));
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
+procedure TTestLightStream.TestCharsA_Empty;
+var
+  ReadStream: TLightStream;
+  WriteStream: TLightStream;
+begin
+  { Test that ReadCharsA(0) returns empty string }
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.WriteInteger(42);
+  finally
+    WriteStream.Free;
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    Assert.AreEqual(AnsiString(''), ReadStream.ReadCharsA(0));
+    Assert.AreEqual(42, ReadStream.ReadInteger);  // Position should not have changed
   finally
     ReadStream.Free;
   end;
@@ -1123,6 +1362,43 @@ begin
 end;
 
 
+procedure TTestLightStream.TestStrings_CreateReturn;
+var
+  WriteStream, ReadStream: TLightStream;
+  WriteTSL, ReadTSL: TStringList;
+begin
+  { Test the function that creates and returns a TStringList }
+  WriteTSL:= TStringList.Create;
+  try
+    WriteTSL.Add('Alpha');
+    WriteTSL.Add('Beta');
+
+    WriteStream:= TLightStream.CreateWrite(FTestFile);
+    try
+      WriteStream.WriteStrings(WriteTSL);
+    finally
+      WriteStream.Free;
+    end;
+
+    ReadStream:= TLightStream.CreateRead(FTestFile);
+    try
+      ReadTSL:= ReadStream.ReadStrings;
+      try
+        Assert.AreEqual(2, ReadTSL.Count);
+        Assert.AreEqual('Alpha', ReadTSL[0]);
+        Assert.AreEqual('Beta', ReadTSL[1]);
+      finally
+        ReadTSL.Free;
+      end;
+    finally
+      ReadStream.Free;
+    end;
+  finally
+    WriteTSL.Free;
+  end;
+end;
+
+
 { Bytes Tests }
 
 procedure TTestLightStream.TestPushBytes;
@@ -1181,6 +1457,223 @@ begin
     Assert.AreEqual(Byte(10), ReadBytes[0]);
     Assert.AreEqual(Byte(20), ReadBytes[1]);
     Assert.AreEqual(Byte(30), ReadBytes[2]);
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
+procedure TTestLightStream.TestByteChunk_Empty;
+var
+  WriteStream, ReadStream: TLightStream;
+  ReadBytes: TBytes;
+begin
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.WriteCardinal(0);  // Write zero length
+  finally
+    WriteStream.Free;
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    ReadBytes:= ReadStream.ReadByteChunk;
+    Assert.AreEqual(0, Length(ReadBytes));
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
+procedure TTestLightStream.TestAsBytes;
+var
+  WriteStream, ReadStream: TLightStream;
+  Bytes: TBytes;
+begin
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.WriteByte(1);
+    WriteStream.WriteByte(2);
+    WriteStream.WriteByte(3);
+  finally
+    WriteStream.Free;
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    Bytes:= ReadStream.AsBytes;
+    Assert.AreEqual(3, Length(Bytes));
+    Assert.AreEqual(Byte(1), Bytes[0]);
+    Assert.AreEqual(Byte(2), Bytes[1]);
+    Assert.AreEqual(Byte(3), Bytes[2]);
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
+procedure TTestLightStream.TestAsBytes_Empty;
+var
+  WriteStream, ReadStream: TLightStream;
+  Bytes: TBytes;
+begin
+  { Create empty file }
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  WriteStream.Free;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    Bytes:= ReadStream.AsBytes;
+    Assert.AreEqual(0, Length(Bytes));
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
+procedure TTestLightStream.TestAsString;
+var
+  WriteStream, ReadStream: TLightStream;
+  Content: AnsiString;
+begin
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.WriteStringA('TestContent');
+  finally
+    WriteStream.Free;
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    Content:= ReadStream.AsString;
+    Assert.IsTrue(Length(Content) > 0);
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
+procedure TTestLightStream.TestPushString;
+var
+  WriteStream, ReadStream: TLightStream;
+begin
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.PushString('RawData');  // No length prefix
+  finally
+    WriteStream.Free;
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    Assert.AreEqual('RawData', ReadStream.ReadChars(7));
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
+procedure TTestLightStream.TestPushAnsi;
+var
+  WriteStream, ReadStream: TLightStream;
+begin
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.PushAnsi('AnsiData');
+  finally
+    WriteStream.Free;
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    Assert.AreEqual(AnsiString('AnsiData'), ReadStream.ReadCharsA(8));
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
+procedure TTestLightStream.TestPushAnsi_Empty;
+var
+  WriteStream, ReadStream: TLightStream;
+begin
+  { Test that empty PushAnsi doesn't crash }
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.WriteInteger(123);
+    WriteStream.PushAnsi('');  // Empty - should do nothing
+    WriteStream.WriteInteger(456);
+  finally
+    WriteStream.Free;
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    Assert.AreEqual(123, ReadStream.ReadInteger);
+    Assert.AreEqual(456, ReadStream.ReadInteger);
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
+procedure TTestLightStream.TestTryReadStringA;
+var
+  WriteStream, ReadStream: TLightStream;
+begin
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.PushAnsi('HelloWorld');
+  finally
+    WriteStream.Free;
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    Assert.AreEqual(AnsiString('HelloWorld'), ReadStream.TryReadStringA(10));
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
+procedure TTestLightStream.TestTryReadStringA_Partial;
+var
+  WriteStream, ReadStream: TLightStream;
+  Result: AnsiString;
+begin
+  { TryReadStringA should read whatever is available without error }
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.PushAnsi('Short');  // 5 bytes
+  finally
+    WriteStream.Free;
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    Result:= ReadStream.TryReadStringA(100);  // Request 100, but only 5 available
+    Assert.AreEqual(AnsiString('Short'), Result);
+  finally
+    ReadStream.Free;
+  end;
+end;
+
+
+procedure TTestLightStream.TestReadStringCnt;
+var
+  WriteStream, ReadStream: TLightStream;
+begin
+  WriteStream:= TLightStream.CreateWrite(FTestFile);
+  try
+    WriteStream.PushString('TestString');
+  finally
+    WriteStream.Free;
+  end;
+
+  ReadStream:= TLightStream.CreateRead(FTestFile);
+  try
+    Assert.AreEqual('TestString', ReadStream.ReadStringCnt(10));
   finally
     ReadStream.Free;
   end;

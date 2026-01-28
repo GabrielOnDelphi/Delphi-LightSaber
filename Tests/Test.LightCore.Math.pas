@@ -3,6 +3,8 @@ unit Test.LightCore.Math;
 {=============================================================================================================
    Unit tests for LightCore.Math
    Tests math functions: min/max, range, percent, round, median, factorial
+
+   Requires: TESTINSIGHT compiler directive for TestInsight integration
 =============================================================================================================}
 
 interface
@@ -417,10 +419,8 @@ end;
 
 procedure TTestLightCoreMath.TestFactorial_0;
 begin
-  { 0! is typically defined as 1, but let's see what this implementation does }
-  { Based on the code: for i:= 1 to n-1, when n=0, loop doesn't execute, returns 0 }
-  { This is actually a bug in the implementation - 0! should be 1 }
-  Assert.AreEqual(Int64(0), Factorial(0));  { Testing actual behavior }
+  { 0! = 1 by mathematical definition }
+  Assert.AreEqual(Int64(1), Factorial(0));
 end;
 
 procedure TTestLightCoreMath.TestFactorial_1;
@@ -469,6 +469,9 @@ begin
 end;
 
 initialization
+  {$IFDEF TESTINSIGHT}
+  TestInsight.DUnitX.RunRegisteredTests;
+  {$ENDIF}
   TDUnitX.RegisterTestFixture(TTestLightCoreMath);
 
 end.

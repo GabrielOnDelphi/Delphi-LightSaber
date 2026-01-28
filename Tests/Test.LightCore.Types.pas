@@ -3,6 +3,8 @@ unit Test.LightCore.Types;
 {=============================================================================================================
    Unit tests for LightCore.Types
    Tests type definitions, array helpers, and weekday helpers
+
+   Requires: TESTINSIGHT compiler directive for TestInsight integration
 =============================================================================================================}
 
 interface
@@ -260,6 +262,9 @@ begin
 end;
 
 initialization
+  {$IFDEF TESTINSIGHT}
+  TestInsight.DUnitX.RunRegisteredTests;
+  {$ENDIF}
   TDUnitX.RegisterTestFixture(TTestLightCoreTypes);
 
 end.

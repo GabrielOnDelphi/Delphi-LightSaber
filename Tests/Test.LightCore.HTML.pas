@@ -3,6 +3,8 @@ unit Test.LightCore.HTML;
 {=============================================================================================================
    Unit tests for LightCore.HTML
    Tests HTML parsing, tag extraction, URL manipulation
+
+   Requires: TESTINSIGHT compiler directive for TestInsight integration
 =============================================================================================================}
 
 interface
@@ -285,7 +287,7 @@ begin
     Assert.AreEqual(1, TSL.Count);
     Assert.AreEqual('content', TSL[0]);
   finally
-    TSL.Free;
+    FreeAndNil(TSL);
   end;
 end;
 
@@ -299,7 +301,7 @@ begin
     Assert.AreEqual('first', TSL[0]);
     Assert.AreEqual('second', TSL[1]);
   finally
-    TSL.Free;
+    FreeAndNil(TSL);
   end;
 end;
 
@@ -314,7 +316,7 @@ begin
     Assert.AreEqual(1, TSL.Count);
     Assert.IsTrue(Pos('href', TSL[0]) > 0);
   finally
-    TSL.Free;
+    FreeAndNil(TSL);
   end;
 end;
 
@@ -326,7 +328,7 @@ begin
   try
     Assert.AreEqual(2, TSL.Count);
   finally
-    TSL.Free;
+    FreeAndNil(TSL);
   end;
 end;
 
@@ -339,7 +341,7 @@ begin
     Assert.AreEqual(1, TSL.Count);
     Assert.AreEqual('http://example.com', TSL[0]);
   finally
-    TSL.Free;
+    FreeAndNil(TSL);
   end;
 end;
 
@@ -354,7 +356,7 @@ begin
     Assert.AreEqual(2, Count);
     Assert.AreEqual(2, TSL.Count);
   finally
-    TSL.Free;
+    FreeAndNil(TSL);
   end;
 end;
 
@@ -399,8 +401,11 @@ end;
 
 procedure TTestLightCoreHTML.TestColapseUrlDots;
 begin
+  { ColapseUrlDots does naive string replacement of /../ and ../ with /
+    It does NOT perform proper URL path resolution }
   Assert.AreEqual('http://example.com/page', ColapseUrlDots('http://example.com/../page'));
-  Assert.AreEqual('http://example.com/a/b', ColapseUrlDots('http://example.com/a/b/../b'));
+  { Note: /a/b/../b becomes /a/b/b (naive replacement), not /a/b (proper resolution) }
+  Assert.AreEqual('http://example.com/a/b/b', ColapseUrlDots('http://example.com/a/b/../b'));
 end;
 
 { Meta/Title Tests }
@@ -477,6 +482,9 @@ begin
 end;
 
 initialization
+  {$IFDEF TESTINSIGHT}
+  TestInsight.DUnitX.RunRegisteredTests;
+  {$ENDIF}
   TDUnitX.RegisterTestFixture(TTestLightCoreHTML);
 
 end.

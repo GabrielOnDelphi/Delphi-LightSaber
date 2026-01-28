@@ -3,6 +3,8 @@ unit Test.LightCore.EncodeXOR;
 {=============================================================================================================
    Unit tests for LightCore.EncodeXOR
    Tests XOR encoding/decoding and simple encryption functions
+
+   Requires: TESTINSIGHT compiler directive for TestInsight integration
 =============================================================================================================}
 
 interface
@@ -214,6 +216,9 @@ begin
 end;
 
 initialization
+  {$IFDEF TESTINSIGHT}
+  TestInsight.DUnitX.RunRegisteredTests;
+  {$ENDIF}
   TDUnitX.RegisterTestFixture(TTestEncodeXOR);
 
 end.

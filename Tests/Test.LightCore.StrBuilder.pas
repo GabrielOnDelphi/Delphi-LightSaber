@@ -3,6 +3,8 @@ unit Test.LightCore.StrBuilder;
 {=============================================================================================================
    Unit tests for LightCore.StrBuilder
    Tests TCStringBuilder - fast string builder implementation
+
+   Requires: TESTINSIGHT compiler directive for TestInsight integration
 =============================================================================================================}
 
 interface
@@ -39,6 +41,9 @@ type
 
     [Test]
     procedure TestAsText_CalledMultipleTimes;
+
+    [Test]
+    procedure TestAsText_AddContentAfterAsText;
 
     [Test]
     procedure TestClear;
@@ -106,10 +111,10 @@ var
 begin
   SB:= TCStringBuilder.Create;
   try
-    Assert.AreEqual(10000, SB.BuffSize);
+    Assert.AreEqual(10000, SB.BufferGrowth);
     Assert.AreEqual('', SB.AsText);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -122,7 +127,7 @@ begin
     SB.AddChar('A');
     Assert.AreEqual('A', SB.AsText);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -139,7 +144,7 @@ begin
     SB.AddChar('o');
     Assert.AreEqual('Hello', SB.AsText);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -156,7 +161,7 @@ begin
     Result:= SB.AsText;
     Assert.AreEqual('A'#13#10'B', Result);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -173,7 +178,7 @@ begin
     Assert.AreEqual(3, Length(SB.AsText));
     Assert.AreEqual('XYZ', SB.AsText);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -188,7 +193,7 @@ begin
     SB.Clear;
     Assert.AreEqual('', SB.AsText);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -211,7 +216,7 @@ begin
     Assert.AreEqual(100, Length(Result));
     Assert.AreEqual(StringOfChar('X', 100), Result);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -221,7 +226,7 @@ var
 begin
   SB:= TCStringBuilder.Create(5);
   try
-    Assert.AreEqual(5, SB.BuffSize);
+    Assert.AreEqual(5, SB.BufferGrowth);
     { Should still work with very small buffer }
     SB.AddChar('1');
     SB.AddChar('2');
@@ -231,7 +236,7 @@ begin
     SB.AddChar('6');  { Triggers buffer growth }
     Assert.AreEqual('123456', SB.AsText);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -255,7 +260,7 @@ begin
     Result:= SB.AsText;
     Assert.AreEqual('L1'#13#10'L2'#13#10'L3', Result);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -273,7 +278,7 @@ begin
 
     Assert.AreEqual(Sentence, SB.AsText);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -293,7 +298,7 @@ begin
     SB.AddChar('D');
     Assert.AreEqual('CD', SB.AsText);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -308,7 +313,7 @@ begin
     Assert.AreEqual('', SB.AsText);
     Assert.AreEqual(0, Length(SB.AsText));
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -325,7 +330,7 @@ begin
 
     Assert.AreEqual(4, Length(SB.AsText));
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -344,7 +349,7 @@ begin
     Assert.AreEqual(Expected, SB.AsText);
     Assert.AreEqual(3, Length(SB.AsText));
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -357,10 +362,10 @@ var
 begin
   SB:= TCStringBuilder.Create(500);
   try
-    Assert.AreEqual(500, SB.BuffSize);
+    Assert.AreEqual(500, SB.BufferGrowth);
     Assert.AreEqual('', SB.AsText);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -379,7 +384,7 @@ begin
     Assert.AreEqual(6, Length(ResultText), 'Three enters = 6 chars (CR+LF each)');
     Assert.AreEqual(#13#10#13#10#13#10, ResultText);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -402,7 +407,31 @@ begin
     Assert.AreEqual(First, Second);
     Assert.AreEqual(Second, Third);
   finally
-    SB.Free;
+    FreeAndNil(SB);
+  end;
+end;
+
+
+procedure TTestLightCoreStrBuilder.TestAsText_AddContentAfterAsText;
+var
+  SB: TCStringBuilder;
+  First, Second: string;
+begin
+  { Critical test: Verifies AsText doesn't modify internal state }
+  SB:= TCStringBuilder.Create;
+  try
+    SB.AddChar('A');
+    SB.AddChar('B');
+    First:= SB.AsText;
+    Assert.AreEqual('AB', First);
+
+    { Add more content after AsText was called }
+    SB.AddChar('C');
+    SB.AddChar('D');
+    Second:= SB.AsText;
+    Assert.AreEqual('ABCD', Second, 'Adding content after AsText should work correctly');
+  finally
+    FreeAndNil(SB);
   end;
 end;
 
@@ -423,7 +452,7 @@ begin
     ResultText:= SB.AsText;
     Assert.AreEqual(50, Length(ResultText));
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -442,7 +471,7 @@ begin
     Assert.AreEqual(10, Length(SB.AsText));
     Assert.AreEqual(StringOfChar('X', 10), SB.AsText);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -461,7 +490,7 @@ begin
     Assert.AreEqual(11, Length(SB.AsText));
     Assert.AreEqual(StringOfChar('Y', 11), SB.AsText);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -485,7 +514,7 @@ begin
       SB.AddChar('B');
     Assert.AreEqual(StringOfChar('B', 20), SB.AsText);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -505,7 +534,7 @@ begin
     Assert.AreEqual(Expected, SB.AsText);
     Assert.AreEqual(3, Length(SB.AsText));
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -528,7 +557,7 @@ begin
     { Verify first and last characters }
     Assert.AreEqual('B', ResultText[1]);  { (1 mod 26) + 'A' = 'B' }
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
@@ -551,12 +580,15 @@ begin
     Assert.AreEqual(12, Length(ResultText));  { 9 + 2 + 1 }
     Assert.AreEqual('XXXXXXXXX'#13#10'Y', ResultText);
   finally
-    SB.Free;
+    FreeAndNil(SB);
   end;
 end;
 
 
 initialization
+  {$IFDEF TESTINSIGHT}
+  TestInsight.DUnitX.RunRegisteredTests;
+  {$ENDIF}
   TDUnitX.RegisterTestFixture(TTestLightCoreStrBuilder);
 
 end.

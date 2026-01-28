@@ -3,6 +3,8 @@ unit Test.LightCore.Time;
 {=============================================================================================================
    Unit tests for LightCore.Time
    Tests datetime utilities, conversions, comparisons, and formatting
+
+   Requires: TESTINSIGHT compiler directive for TestInsight integration
 =============================================================================================================}
 
 interface
@@ -496,6 +498,9 @@ begin
 end;
 
 initialization
+  {$IFDEF TESTINSIGHT}
+  TestInsight.DUnitX.RunRegisteredTests;
+  {$ENDIF}
   TDUnitX.RegisterTestFixture(TTestLightCoreTime);
 
 end.

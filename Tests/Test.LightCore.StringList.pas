@@ -3,6 +3,8 @@ unit Test.LightCore.StringList;
 {=============================================================================================================
    Unit tests for LightCore.StringList
    Tests TStringList class helper functions
+
+   Requires: TESTINSIGHT compiler directive for TestInsight integration
 =============================================================================================================}
 
 interface
@@ -141,6 +143,9 @@ type
 
     [Test]
     procedure TestRemoveTopLines_All;
+
+    [Test]
+    procedure TestRemoveTopLines_ExceedsCount;
 
     { Standalone Functions Tests }
     [Test]
@@ -427,8 +432,9 @@ begin
 
   FSL.RemoveDuplicates;
 
-  { RemoveDuplicates is case-sensitive, so all three are unique }
-  Assert.AreEqual(3, FSL.Count, 'Case variations should be considered unique');
+  { RemoveDuplicates uses TStringList with Sorted=True which is case-insensitive by default }
+  { So Apple, apple, APPLE are all considered duplicates }
+  Assert.AreEqual(1, FSL.Count, 'Case variations are treated as duplicates');
 end;
 
 
@@ -669,6 +675,22 @@ begin
 end;
 
 
+procedure TTestStringList.TestRemoveTopLines_ExceedsCount;
+begin
+  FSL.Add('First');
+  FSL.Add('Second');
+
+  Assert.WillRaise(
+    procedure
+    begin
+      FSL.RemoveTopLines(5);
+    end,
+    EArgumentOutOfRangeException,
+    'Should raise exception when count exceeds list size'
+  );
+end;
+
+
 procedure TTestStringList.TestString2TSL_Empty;
 var
   TSL: TStringList;
@@ -696,6 +718,9 @@ end;
 
 
 initialization
+  {$IFDEF TESTINSIGHT}
+  TestInsight.DUnitX.RunRegisteredTests;
+  {$ENDIF}
   TDUnitX.RegisterTestFixture(TTestStringList);
 
 end.

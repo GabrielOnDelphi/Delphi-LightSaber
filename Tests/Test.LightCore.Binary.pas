@@ -55,6 +55,12 @@ type
     [Test]
     procedure TestStringIsHexNumber_Invalid;
 
+    [Test]
+    procedure TestStringIsHexNumber_Empty;
+
+    [Test]
+    procedure TestStringIsHexNumber_OnlyDollar;
+
     { Number to String Conversions }
     [Test]
     procedure TestIntToBin_Zero;
@@ -125,6 +131,15 @@ type
     [Test]
     procedure TestSwapInt;
 
+    [Test]
+    procedure TestSwapUInt64;
+
+    [Test]
+    procedure TestSwapUInt64_Zero;
+
+    [Test]
+    procedure TestSwapUInt64_MaxValue;
+
     { Byte Reversal }
     [Test]
     procedure TestReverseByte_Zero;
@@ -167,6 +182,15 @@ type
     [Test]
     procedure TestMakeCardinal_FourHexStrings;
 
+    [Test]
+    procedure TestMakeCardinal_InvalidLength_Short;
+
+    [Test]
+    procedure TestMakeCardinal_InvalidLength_Long;
+
+    [Test]
+    procedure TestMakeCardinal_Empty;
+
     { Ensure Range }
     [Test]
     procedure TestEnsureByte_Integer_InRange;
@@ -193,6 +217,16 @@ type
     { Serialization }
     [Test]
     procedure TestSerializeCardinal;
+
+    { Stream Reading - Motorola format (big-endian) }
+    [Test]
+    procedure TestReadMotorolaWord_Valid;
+
+    [Test]
+    procedure TestReadMotorolaWord_EmptyStream;
+
+    [Test]
+    procedure TestReadMotorolaWord_InsufficientBytes;
   end;
 
 implementation
@@ -291,6 +325,18 @@ procedure TTestLightCoreBinary.TestStringIsHexNumber_Invalid;
 begin
   Assert.IsFalse(StringIsHexNumber('GG'));
   Assert.IsFalse(StringIsHexNumber('XYZ'));
+end;
+
+procedure TTestLightCoreBinary.TestStringIsHexNumber_Empty;
+begin
+  { Empty string should return FALSE, not raise an exception }
+  Assert.IsFalse(StringIsHexNumber(''));
+end;
+
+procedure TTestLightCoreBinary.TestStringIsHexNumber_OnlyDollar;
+begin
+  { Just a dollar sign with no hex digits should return FALSE }
+  Assert.IsFalse(StringIsHexNumber('$'));
 end;
 
 { Number to String Conversions }
@@ -440,6 +486,27 @@ begin
   Assert.AreEqual(Integer($78563412), I);
 end;
 
+procedure TTestLightCoreBinary.TestSwapUInt64;
+var
+  V: UInt64;
+begin
+  { Test byte reversal: $0102030405060708 -> $0807060504030201 }
+  V:= $0102030405060708;
+  Assert.AreEqual(UInt64($0807060504030201), SwapUInt64(V));
+end;
+
+procedure TTestLightCoreBinary.TestSwapUInt64_Zero;
+begin
+  { Zero should remain zero }
+  Assert.AreEqual(UInt64(0), SwapUInt64(0));
+end;
+
+procedure TTestLightCoreBinary.TestSwapUInt64_MaxValue;
+begin
+  { MaxValue should remain MaxValue (all bytes are $FF) }
+  Assert.AreEqual(UInt64($FFFFFFFFFFFFFFFF), SwapUInt64($FFFFFFFFFFFFFFFF));
+end;
+
 { Byte Reversal }
 
 procedure TTestLightCoreBinary.TestReverseByte_Zero;
@@ -538,6 +605,42 @@ begin
   Assert.AreEqual(Cardinal($AABBCCDD), MakeCardinal('AA', 'BB', 'CC', 'DD'));
 end;
 
+procedure TTestLightCoreBinary.TestMakeCardinal_InvalidLength_Short;
+begin
+  { Hex string must be exactly 8 characters }
+  Assert.WillRaise(
+    procedure
+    begin
+      MakeCardinal('AABB');  { Only 4 chars }
+    end,
+    Exception
+  );
+end;
+
+procedure TTestLightCoreBinary.TestMakeCardinal_InvalidLength_Long;
+begin
+  { Hex string must be exactly 8 characters }
+  Assert.WillRaise(
+    procedure
+    begin
+      MakeCardinal('AABBCCDDEE');  { 10 chars }
+    end,
+    Exception
+  );
+end;
+
+procedure TTestLightCoreBinary.TestMakeCardinal_Empty;
+begin
+  { Empty string should raise exception }
+  Assert.WillRaise(
+    procedure
+    begin
+      MakeCardinal('');
+    end,
+    Exception
+  );
+end;
+
 { Ensure Range }
 
 procedure TTestLightCoreBinary.TestEnsureByte_Integer_InRange;
@@ -596,6 +699,65 @@ procedure TTestLightCoreBinary.TestSerializeCardinal;
 begin
   Assert.AreEqual('AABBCCDD', SerializeCardinal($AABBCCDD));
   Assert.AreEqual('12345678', SerializeCardinal($12345678));
+end;
+
+{ Stream Reading - Motorola format (big-endian) }
+
+procedure TTestLightCoreBinary.TestReadMotorolaWord_Valid;
+var
+  Stream: TMemoryStream;
+begin
+  Stream:= TMemoryStream.Create;
+  try
+    { Write bytes in big-endian order: $AB, $CD -> Word $ABCD }
+    Stream.WriteByte($AB);
+    Stream.WriteByte($CD);
+    Stream.Position:= 0;
+
+    Assert.AreEqual(Word($ABCD), ReadMotorolaWord(Stream));
+  finally
+    FreeAndNil(Stream);
+  end;
+end;
+
+procedure TTestLightCoreBinary.TestReadMotorolaWord_EmptyStream;
+var
+  Stream: TMemoryStream;
+begin
+  Stream:= TMemoryStream.Create;
+  try
+    Assert.WillRaise(
+      procedure
+      begin
+        ReadMotorolaWord(Stream);
+      end,
+      Exception
+    );
+  finally
+    FreeAndNil(Stream);
+  end;
+end;
+
+procedure TTestLightCoreBinary.TestReadMotorolaWord_InsufficientBytes;
+var
+  Stream: TMemoryStream;
+begin
+  Stream:= TMemoryStream.Create;
+  try
+    { Only write 1 byte when 2 are needed }
+    Stream.WriteByte($AB);
+    Stream.Position:= 0;
+
+    Assert.WillRaise(
+      procedure
+      begin
+        ReadMotorolaWord(Stream);
+      end,
+      Exception
+    );
+  finally
+    FreeAndNil(Stream);
+  end;
 end;
 
 initialization
