@@ -45,6 +45,7 @@ contains
   LightFmx.Visual.AutoSizeBoxImg in 'LightFmx.Visual.AutoSizeBoxImg.pas',
   LightFmx.Visual.AutoSizeBox in 'LightFmx.Visual.AutoSizeBox.pas',
   LightFmx.Visual.AnimatedMemo in 'LightFmx.Visual.AnimatedMemo.pas',
-  LightFmx.Visual.ColorPalette in 'LightFmx.Visual.ColorPalette.pas';
+  LightFmx.Visual.ColorPalette in 'LightFmx.Visual.ColorPalette.pas',
+  LightFmx.Visual.SearchListBox in 'LightFmx.Visual.SearchListBox.pas';
 
 end.

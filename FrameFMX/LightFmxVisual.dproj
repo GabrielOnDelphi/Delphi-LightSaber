@@ -107,6 +107,7 @@
         <DCCReference Include="LightFmx.Visual.AutoSizeBox.pas"/>
         <DCCReference Include="LightFmx.Visual.AnimatedMemo.pas"/>
         <DCCReference Include="LightFmx.Visual.ColorPalette.pas"/>
+        <DCCReference Include="LightFmx.Visual.SearchListBox.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
