@@ -9,12 +9,30 @@ object Form1: TForm1
   FormFactor.Devices = [Desktop]
   OnCreate = FormCreate
   DesignerMasterStyle = 0
-  object Panel: TPanel
-    Position.X = 104.000000000000000000
-    Position.Y = 96.000000000000000000
-    Size.Width = 329.000000000000000000
-    Size.Height = 161.000000000000000000
+  object pnlDropDownSearchBox: TPanel
+    Align = Scale
+    Position.X = 5.000000000000000000
+    Position.Y = 8.000000000000000000
+    Size.Width = 265.000000000000000000
+    Size.Height = 350.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+  end
+  object pnlSearchListBox: TPanel
+    Align = Scale
+    Position.X = 274.000000000000000000
+    Position.Y = 8.000000000000000000
+    Size.Width = 265.000000000000000000
+    Size.Height = 350.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 1
+    object LightSearchListBox1: TLightSearchListBox
+      Position.X = 32.000000000000000000
+      Position.Y = 48.000000000000000000
+      Size.Width = 200.000000000000000000
+      Size.Height = 250.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+    end
   end
 end

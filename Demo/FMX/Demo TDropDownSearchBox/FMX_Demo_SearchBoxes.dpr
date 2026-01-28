@@ -1,10 +1,10 @@
-program FMX_Demo_TDropDownSearchBox;
+program FMX_Demo_SearchBoxes;
 
 uses
   {$IF Defined(MSWINDOWS)}
-   {$IFDEF DEBUG}
-    FastMM4,
-   {$ENDIF }
+  {$IFDEF DEBUG}
+  FastMM4,
+  {$ENDIF }
   {$ENDIF }
   System.StartUpCopy,
   FMX.Forms,
@@ -12,7 +12,8 @@ uses
   LightCore.AppData in '..\..\..\LightCore.AppData.pas',
   LightFmx.Visual.DropDownSearch in '..\..\..\FrameFMX\LightFmx.Visual.DropDownSearch.pas',
   LightFmx.Common.AppData in '..\..\..\FrameFMX\LightFmx.Common.AppData.pas',
-  LightFmx.Common.IniFile in '..\..\..\FrameFMX\LightFmx.Common.IniFile.pas';
+  LightFmx.Common.IniFile in '..\..\..\FrameFMX\LightFmx.Common.IniFile.pas',
+  LightFmx.Visual.SearchListBox in '..\..\..\FrameFMX\LightFmx.Visual.SearchListBox.pas';
 
 {$R *.res}
 

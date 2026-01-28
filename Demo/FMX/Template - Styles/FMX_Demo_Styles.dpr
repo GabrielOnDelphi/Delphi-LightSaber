@@ -22,7 +22,6 @@ begin
   ReportMemoryLeaksOnShutdown:= TRUE;
 
   AppData:= TAppData.Create('Light Template FMX micro');
-  //AppData.CreateForm(TdatMod, datMod, asNone, FALSE, FALSE);
   AppData.CreateMainForm(TfrmSimpleDemo, frmSimpleDemo, asFull); // Change AutoState from asFull to asNone if you don't want to save form's state to disk.
   AppData.CreateForm(TfrmSecondary, frmSecondary, asFull);
   AppData.Run;
