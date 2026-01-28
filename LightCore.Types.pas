@@ -13,7 +13,7 @@ USES
    System.Classes,
    System.Generics.Collections;
 
-{ Extra VK constants that are missing from Delphi's Win dows API interface (Windows.pas unit)
+{ Extra VK constants that are missing from Delphi's Windows API interface (Windows.pas unit)
   More virtual keys here: http://delphi.about.com/od/objectpascalide/l/blvkc.htm }
 CONST
    VK_NULL         = 0;
@@ -31,10 +31,10 @@ CONST
    VK_SLASH        = 191;
    VK_BACKQUOTE    = 192;
    VK_LEFTBRACKET  = 219;
-   VK_BBACKSLASH   = 220;
+   VK_BACKSLASH    = 220;
    VK_RIGHTBRACKET = 221;
    VK_QUOTE        = 222;
-  {VK_ENTER        = Winapi.Windows.VK_RETURN; { #13 }
+   { Note: VK_ENTER = VK_RETURN ($0D / 13) is defined in Winapi.Windows }
 
 CONST
    Numbers         = ['0'..'9'];
@@ -44,7 +44,7 @@ CONST
    Alphabet        = ['a'..'z', 'A'..'Z'];
    AlphabetNo      = ['a'..'z', 'A'..'Z', '0'..'9'];
    Vowels          = ['a', 'e', 'i','o', 'u', 'y', 'A', 'E', 'I', 'O', 'U', 'Y'];
-   LettersSpecial  = [#10, #13, #9]; { CR, LF, TAB }
+   LettersSpecial  = [#10, #13, #9]; { LF, CR, TAB }
 
 { Indexes }
 CONST
@@ -81,7 +81,7 @@ CONST
    IconCancel        = '❌';                // #10006  Red
    IconCancelPurple  = '✖';                // Purple
    IconCheckMark     = '✔';
-   IconBackArro      = #$2B05;
+   IconBackArrow     = #$2B05;
    IconUndo          = #$21BA;              // ANTICLOCKWISE OPEN CIRCLE ARROW— good for "reverse direction / undo order"
    IconSettingsGear  = '⚙';                // U+2699
    IconSettingsKey   = '🔧';                // U+1F527 (WRENCH)
@@ -126,13 +126,17 @@ TYPE
 
 CONST
    NullDate     = -700000;                    { https://stackoverflow.com/questions/14985037/delphi-how-to-determine-and-empty-tdatetime-value }
-   Second       = 1000;                       { Miliseconds per sec. Already exists: MSecsPerSec }
-   Minute       = 60;                         { Miliseconds per min. Already exists System.SysUtils.SecsPerMin }
-   Hour         = 3600;                       { Miliseconds per hour }
-   Day          = 86400;
-   MSecsPerMin  = 60000;
-   MinutesPerDay= 24*60;
+   Second       = 1000;                       { Milliseconds per second. See also: MSecsPerSec }
+   Minute       = 60;                         { Seconds per minute. See also: System.SysUtils.SecsPerMin }
+   Hour         = 3600;                       { Seconds per hour }
+   Day          = 86400;                      { Seconds per day }
+   MSecsPerMin  = 60000;                      { Milliseconds per minute }
+   MinutesPerDay= 24 * 60;                    { Minutes per day (1440) }
 
+   NanosPerMicroSec= 1000;
+   NanosPerMileSec = 1000000;
+   NanosPerSecond  = 1000000000;
+   NanosPerMinute  = Int64(60) * NanosPerSecond;
 
 IMPLEMENTATION
 
@@ -150,23 +154,22 @@ end;
 
 
 function TIntegerArrayHelper.Average: Single;
-VAR i, Summ: Integer;
+VAR i, Sum: Integer;
 begin
   if Length(Self) = 0 then EXIT(0);
 
-  Summ:= 0;
-  for i in Self DO
-    Summ:= Summ+ i;
+  Sum:= 0;
+  for i in Self do
+    Sum:= Sum + i;
 
-  Result:= Summ / Length(Self);
+  Result:= Sum / Length(Self);
 end;
 
 
 
 { Returns the next day in the week }
 function TWeekDaysHelper.NextDay: TWeekDays;
-var
-    Next: Integer;
+var Next: Integer;
 begin
     Next := Ord(Self) + 1;
 
@@ -178,13 +181,15 @@ end;
 function TWeekDaysHelper.ToString: string;
 begin
   case Self of
-     Monday    : Result := 'Monday';
-     Tuesday   : Result := 'Tuesday';
-     Wednesday : Result := 'Wednesday';
-     Thursday  : Result := 'Thursday';
-     Friday    : Result := 'Friday';
-     Saturday  : Result := 'Saturday';
-     Sunday    : Result := 'Sunday';
+    Monday    : Result:= 'Monday';
+    Tuesday   : Result:= 'Tuesday';
+    Wednesday : Result:= 'Wednesday';
+    Thursday  : Result:= 'Thursday';
+    Friday    : Result:= 'Friday';
+    Saturday  : Result:= 'Saturday';
+    Sunday    : Result:= 'Sunday';
+  else
+    RAISE Exception.Create('TWeekDaysHelper - Unknown type');
   end;
 end;
 
@@ -205,12 +210,6 @@ procedure TDoubleArrayHelper.Sort;
 begin
   TArray.Sort<Double>(Self);
 end;
-
+ 
 
 end.
-
-
-
-
-
-

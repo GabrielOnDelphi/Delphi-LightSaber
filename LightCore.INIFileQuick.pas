@@ -38,7 +38,7 @@ procedure WriteDbl     (CONST Identifier: string; d: Double);
 function  ReadDbl      (CONST Identifier: string; DefaultVal: Double= 0.0): Double;
 
 procedure WriteDate    (CONST Identifier: string; d: TDateTime);
-function  ReadDate     (CONST Identifier: string; DefaultVal: TDateTime): Double;
+function  ReadDate     (CONST Identifier: string; DefaultVal: TDateTime): TDateTime;
 
 
 
@@ -75,7 +75,7 @@ end;
 
 
 
-{ TIniFile bug: Cannot put spaces at the beggining of a 'value'. The spaces will be trimmed }
+{ TIniFile bug: Cannot put spaces at the beginning of a 'value'. The spaces will be trimmed }
 procedure WriteString(CONST Identifier, s: string);
 VAR IniFile: TIniFileEx;
 begin
@@ -163,7 +163,7 @@ begin
   END;
 end;
 
-function  ReadDate (CONST Identifier: string; DefaultVal: TDateTime): Double;
+function  ReadDate (CONST Identifier: string; DefaultVal: TDateTime): TDateTime;
 VAR IniFile: TIniFileEx;
 begin
   IniFile:= TIniFileEx.Create(AppDataCore.AppName, AppDataCore.IniFile);

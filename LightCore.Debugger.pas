@@ -5,15 +5,18 @@ UNIT LightCore.Debugger;
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
-   Functions to:
-      Measure code execution time
+   Debugging and profiling utilities:
+     - Code execution timing (using high-resolution TStopwatch)
+     - Debugger detection (check if running under Delphi IDE)
+     - Compiler optimization status
+     - Crash/leak generators for testing error handlers
+     - Simple file-based logging
 
-      Test if the application is being debugged
-      Generate reports about the hardware
-      Generate errors (for testing)
-      Check compiler options
+   Platform: Cross-platform via System.Diagnostics.TStopwatch
+             (DebugHook is Windows-specific)
 
-   This uses System.Diagnostics.TStopwatch which is platform independent.
+   WARNING: Timer functions use global state and are NOT thread-safe.
+            For multi-threaded timing, create local TStopwatch instances.
 
    Tester:
       c:\Projects\LightSaber\Demo\VCL\Demo SystemReport\VCL_Demo_SystemReport.dpr
@@ -56,7 +59,7 @@ USES
 
 IMPLEMENTATION
 USES
-   LightCore, LightCore.Platform, LightCore.IO, LightCore.TextFile, LightCore.AppData;
+   LightCore, LightCore.Platform, LightCore.IO, LightCore.TextFile, LightCore.AppData, LightCore.Types;
 
 
 
@@ -85,10 +88,11 @@ end;
    COMPILER
 -------------------------------------------------------------------------------------------------------------}
 
-{ Importan note:
-   $O+ has a local scope, therefore, the result of the function reflects only the optimization state at that specific source code location.
-   So, if you are using the $O switch to optimize pieces of code then the function MUST be used as a subfunction;
-   Otherwise, if you use the global switch ONLY (in Project Options) it can be used as a normal (declared) function. }
+{ Important note:
+   $O+ has LOCAL scope - the result reflects the optimization state at THIS specific location.
+   If you use $O+ / $O- switches inline to optimize specific code sections, this function
+   must be INLINED at each call site to reflect the local setting.
+   If you only use the global switch (Project Options), it works as a normal function. }
 
 { Returns true in the compiler optimization is on (probably we are in release mode, in this case) }
 function CompilerOptimization: Boolean;
@@ -154,54 +158,48 @@ end;
 
 
 
+{  Converts elapsed time to human-readable format with appropriate units.
+   Returns the most suitable unit based on magnitude:
+   - ns (nanoseconds)  for < 1 microsecond
+   - us (microseconds) for < 1 millisecond
+   - ms (milliseconds) for < 1 second
+   - s  (seconds)      for < 1 minute
+   - m  (minutes)      for >= 1 minute  }
 function TimerElapsedS: string;
 VAR NanoSec: Int64;
 begin
   sw.Stop;
-  NanoSec:= sw.Elapsed.Ticks*100;     { is in 100ns increments Elapsed.Ticks }
+  NanoSec:= sw.Elapsed.Ticks * 100;     { Elapsed.Ticks is in 100ns increments }
 
-  if NanoSec < 1000
-  then Result := IntToStr(NanoSec)+ 'ns'
+  if NanoSec < NanosPerMicroSec
+  then Result:= IntToStr(NanoSec) + 'ns'
   else
-    if NanoSec < 1000000
-    then Result := Real2Str(NanoSec / 1000, 3)+ 'us'
+    if NanoSec < NanosPerMileSec
+    then Result:= Real2Str(NanoSec / NanosPerMicroSec, 3) + 'us'
     else
-      if NanoSec < 1000000000
-      then Result := Real2Str(NanoSec / 1000000, 3)+ 'ms'
+      if NanoSec < NanosPerSecond
+      then Result:= Real2Str(NanoSec / NanosPerMileSec, 3) + 'ms'
       else
-        if NanoSec < 1000000000000
-        then Result := Real2Str(NanoSec / 1000000000, 3)+ 's'
-        else Result := Real2Str(NanoSec / 60*1000000000, 3)+ 'm'
+        if NanoSec < NanosPerMinute
+        then Result:= Real2Str(NanoSec / NanosPerSecond, 3) + 's'
+        else Result:= Real2Str(NanoSec / NanosPerMinute, 3) + 'm';  { BUG FIX: was NanoSec / 60*1000000000 (wrong precedence) }
 end;
 
 
-{ In seconds/miliseconds }   (*
-function TimerElapsedS: string;
-VAR
-   elapsedMilliseconds : Int64;
-begin
- sw.Stop;
- elapsedMilliseconds:= sw.ElapsedMilliseconds;  {WARNING!  The value of Elapsed is only updated if the stopwatch is priorly stopped. Reading the Elapsed property while the stopwatch is running does not yield any difference. }
-
- if elapsedMilliseconds = 0         // If the time is too small we cannot show it as 0ms so we show it as "high precision"
- then Result:= sw.Elapsed.ToString + 'ms'
- else
-   if elapsedMilliseconds < 1000
-   then Result:= Real2Str(elapsedMilliseconds, 12)+ 'ms'
-   else Result:= Real2Str(elapsedMilliseconds / 1000, 2)+ 's';
-end;
-*)
-
-
-
-{ Shows the disk/internet trnasfer speed. Use it in conjuction with TimerStart.
-  Usage:
-        TimerStart;
-        CopyFile(FileName);
-        ShowTransferSpeed(GetFileSize(FileName))   }
+{ Calculates and formats transfer speed (disk/network).
+  Call TimerStart before the operation, then pass the transferred size.
+  Example:
+      TimerStart;
+      CopyFile(FileName);
+      Caption:= ShowTransferSpeed(GetFileSize(FileName));  }
 function ShowTransferSpeed(FileSize: Cardinal): string;
+VAR
+  ElapsedSec: Double;
 begin
- Result:= 'Speed '+ FormatBytes( Round(FileSize / (TimerElapsed / 1000)), 1)+ '/sec';
+  ElapsedSec:= TimerElapsed / 1000;
+  if ElapsedSec > 0
+  then Result:= 'Speed: ' + FormatBytes(Round(FileSize / ElapsedSec), 1) + '/sec'
+  else Result:= 'Speed: UFO (too fast to measure)';
 end;
 
 
@@ -211,49 +209,67 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    LOGGING
-   Writes strings to a Log file that is placed in app's data folder.
-   You must use AppLog_Init one time before calling AppLog_Add.
+
+   Simple file-based logging. NOT thread-safe (uses global LogFile variable).
+   Call LogFile_Init once before using LogFile_Add.
+
+   WARNING: Uses global state. For thread-safe logging, use a proper logging framework
+            or create a TLogFile class with instance-based state.
 --------------------------------------------------------------------------------------------------}
 
-VAR LogFile: string;
+VAR
+  LogFile: string;  { Global: path to the log file. Set by LogFile_Init. }
 
-procedure LogFile_Init(FullFileName: string);                                 { Init the log  }
+
+{ Initializes the log file. Creates parent directories if needed.
+  Clears any existing log file and writes a header with app name and timestamp. }
+procedure LogFile_Init(FullFileName: string);
 begin
- LogFile:= FullFileName;
- ForceDirectories(ExtractFilePath(FullFileName));
+  Assert(FullFileName <> '', 'LogFile_Init: FullFileName cannot be empty');
 
- if FileExists(LogFile)
- then DeleteFile(LogFile);                                               { Clear existing log }
+  LogFile:= FullFileName;
+  ForceDirectories(ExtractFilePath(FullFileName));
 
- StringToFile(LogFile, LogFile+ CRLF+ TAppDataCore.AppName+ {' v'+ TAppDataCore.GetVersionInfo+} CRLF+ DateTimeToStr(Now)+ CRLF +LBRK, woAppend);
+  if FileExists(LogFile)
+  then DeleteFile(LogFile);
+
+  StringToFile(LogFile, LogFile + CRLF + TAppDataCore.AppName + CRLF + DateTimeToStr(Now) + CRLF + LBRK, woAppend);
 end;
 
 
-procedure LogFile_Add(s: string);                                       { Writes a tring to the 'crash' log file. The writing happens only if a file called CrashLog.txt' is present in AppData.AppDataFolder. The file is cleared every time I call CrashLog_Init }
+{ Appends a line to the log file. Only writes if the log file exists (was initialized).
+  Silently ignores writes if LogFile_Init was not called. }
+procedure LogFile_Add(s: string);
 begin
- if FileExists(LogFile)
- then StringToFile(LogFile, s+ CRLF, woAppend);
+  if (LogFile <> '')
+  AND FileExists(LogFile)
+  then StringToFile(LogFile, s + CRLF, woAppend);
 end;
 
 
 
 
 {--------------------------------------------------------------------------------------------------
-   DEBUGER
+   CRASH/LEAK GENERATORS (for testing error handlers and memory leak detection)
 --------------------------------------------------------------------------------------------------}
+
+{ Intentionally causes an Access Violation by calling a method on a nil reference.
+  Use this to test exception handlers, crash reporters, or madExcept/EurekaLog. }
 procedure GenerateCrashNIL;
 VAR T: TObject;
 begin
   T:= NIL;
-  T.ClassName;  // We could also simply use "Raise"
+  T.ClassName;  { Access Violation: calling virtual method on nil }
 end;
 
 
+{ Intentionally creates a memory leak by allocating an object without freeing it.
+  Use this to test ReportMemoryLeaksOnShutdown or memory leak detection tools. }
 procedure GenerateLeak;
 VAR T: TObject;
 begin
   T:= TObject.Create;
-  T.ToString;
+  T.ToString;  { Reference T to prevent compiler hint, but never free it }
 end;
 
 

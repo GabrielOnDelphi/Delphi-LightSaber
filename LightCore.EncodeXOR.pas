@@ -14,7 +14,7 @@ UNIT LightCore.EncodeXOR;
 INTERFACE
 
 USES
-   System.SysUtils, {System.NetEncoding, Soap.EncdDecd, }
+   System.SysUtils,
    LightCore, LightCore.Types;
 
  { CHAR_SHIFT ENCRYPTION }
@@ -139,23 +139,31 @@ end;
      const Psw = array[0..2] of Byte = ($22, $21, $20);  // The ABC text encoded. Use the EncodeXorText to obtain this line of code.
 }
 
-function EncodeXorText(CONST PlainText: string; Key: Byte): string;
+{ Generates Delphi code for an encoded byte array constant.
+  Use this to encode text/passwords for storage in source files.
+  Example output: array[0..2] of Byte = ($22, $21, $20); }
+function EncodeXorText(const PlainText: string; Key: Byte): string;
+var
+  Encoded: string;
+  sOut: string;
+  i: Integer;
 begin
-  VAR Encoded:= EncodeDecode_XOR(PlainText, 99);
-  Result:= 'array[0..'+IntToStr(Length(Encoded)-1)+'] of Byte = (';
+  Encoded:= EncodeDecode_XOR(PlainText, Key);
+  Result:= 'array[0..' + IntToStr(Length(Encoded) - 1) + '] of Byte = (';
 
-  VAR sOut:= '';
-  for VAR I := 1 to Length(Encoded) do
-    begin
-      sOut := sOut + '$'+ IntToHex( Ord(Encoded[i]) );
-      if I < Length(Encoded)
-      then sOut := sOut + ', ';     // Add comma except for the last element
-    end;
+  sOut:= '';
+  for i:= 1 to Length(Encoded) do
+  begin
+    sOut:= sOut + '$' + IntToHex(Ord(Encoded[i]));
+    if i < Length(Encoded)
+    then sOut:= sOut + ', ';
+  end;
 
-  sOut:= ReplaceString(sOut, '$0', '$');  // Too many zeroes. Remove unused ones to make the string shorter.
+  { Remove extra zeroes to make string shorter }
+  sOut:= ReplaceString(sOut, '$0', '$');
   sOut:= ReplaceString(sOut, '$0', '$');
 
-  Result:= Result+ sOut+ ');';
+  Result:= Result + sOut + ');';
 end;
 
 
@@ -173,7 +181,7 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    Advantages: The result is always alphanumeric. Example: 12345 -> 364944BC8C
-   Disadvantage: The resulted encodded string is twice as long as the input string
+   Disadvantage: The resulting encoded string is twice as long as the input string
 --------------------------------------------------------------------------------------------------}
 {$R-}{$Q-}
 CONST

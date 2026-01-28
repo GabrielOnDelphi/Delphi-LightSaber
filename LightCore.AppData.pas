@@ -37,7 +37,7 @@ UNIT LightCore.AppData;
 INTERFACE
 
 USES
-   System.IOUtils, System.AnsiStrings, System.SysUtils,
+   System.IOUtils, System.SysUtils,
    LightCore, LightCore.Types, LightCore.INIFile, LightCore.LogRam;
 
 TYPE
@@ -72,7 +72,7 @@ TYPE
     procedure loadSettings;     virtual;
     procedure saveSettings;     virtual;
     procedure defaultSettings;  virtual;
-    procedure setHintType(const Value: THintType); virtual; abstract;
+    procedure setHintType(const Value: THintType); virtual;
   public
     RamLog: TRamLog;
 
@@ -129,7 +129,7 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       App Control
    --------------------------------------------------------------------------------------------------}
-    procedure Minimize; virtual; abstract;
+    procedure Minimize; virtual;
     property  RunningFirstTime: Boolean read FRunningFirstTime;    // Returns true if the application is running for the first time on this computer.
 
    {--------------------------------------------------------------------------------------------------
@@ -168,8 +168,7 @@ TYPE
 function  CommandLinePath: string;
 procedure ExtractPathFromCmdLine(MixedInput: string; OUT Path, Parameters: string);
 function  FindCmdLineSwitch(const Switch: string; IgnoreCase: Boolean): Boolean; deprecated 'Use System.SysUtils.FindCmdLineSwitch';
-{$IFDEF MsWindows}
-function  ExeName: string;{$ENDIF}
+function ExeName: string;
 
 VAR
   AppDataCore: TAppDataCore;    // The global var "AppData" takes over this one in TAppData.Create. This obj is automatically freed on app shutdown (via FINALIZATION)
@@ -314,10 +313,16 @@ end;
      Android         -> /storage/emulated/0/Android/data/<APPLICATION_ID>/files
 -------------------------------------------------------------------------------------------------------------}
 
+{ Returns the full path to the executable.
+  Note: On Android, ParamStr(0) may return empty string. }
 function ExeName: string;
 begin
-  Result:= ParamStr(0);   //  Application.ExeName is available only on VCL and
-  //RAISE Exception.Create('ParamStr(0) returns '' on Android!');
+  Result:= ParamStr(0);
+  {$IFDEF ANDROID}
+    {$MESSAGE ERROR 'ExeName not available on Android! Use alternative method.'}
+  if Result = ''
+  then Result:= TPath.GetDocumentsPath;  { Fallback to documents path }
+  {$ENDIF}
 end;
 
 
@@ -414,10 +419,11 @@ begin
 end;
 
 
+{ Returns the application name. Raises assertion if not set (Create not called). }
 class function TAppDataCore.getAppName: string;
 begin
+  Assert(FAppName > '', 'AppName is empty! Ensure TAppDataCore.Create was called.');
   Result:= FAppName;
-  Assert(FAppName > '', 'getAppName - AppName is empty!');
 end;
 
 
@@ -484,7 +490,9 @@ begin
 end;
 
 
-{ Recieves a full path and returns the path and the parameters separately }
+{ Receives a command line string and extracts the path and parameters separately.
+  Handles quoted paths: "C:\My Path\file.exe" -param1 -param2
+  Returns Path='C:\My Path\file.exe', Parameters='-param1 -param2' }
 procedure ExtractPathFromCmdLine(MixedInput: string; OUT Path, Parameters: string);
 VAR i: Integer;
 begin
@@ -494,19 +502,22 @@ begin
  Parameters:= '';
  MixedInput:= Trim(MixedInput);
 
-  // Check if the first character is a double quote
- if MixedInput[1]<> '"'
+ // Handle empty input after trim
+ if MixedInput = '' then EXIT;
+
+ // Check if the first character is a double quote
+ if MixedInput[1] <> '"'
  then Path:= MixedInput
  else
-   { Copy all between ""}
-   for i:= 2 to Length(MixedInput) DO                                                   { This supposes that " is on the first position }
-    if MixedInput[i]= '"' then                                                          { Find next " character }
-     begin
+     // Find closing quote and extract path between quotes
+     for i:= 2 to Length(MixedInput) DO
+       if MixedInput[i] = '"' then
+         begin
       // ToDo: use LightCore.ExtractTextBetween
-      Path:= CopyTo(MixedInput, 1+1, i-1);   // Exclude the double quotes               { +1 si -1 because we want to exclude "" }
-      Parameters:= Trim(System.COPY(MixedInput, i+1, MaxInt));
-      Break;
-     end;
+           Path:= CopyTo(MixedInput, 1+1, i - 1);                   // Exclude the double quotes   { +1 si -1 because we want to exclude "" }
+           Parameters:= Trim(System.COPY(MixedInput, i + 1, MaxInt));
+           Break;
+         end;
 end;   { See also: http://delphi.about.com/od/delphitips2007/qt/parse_cmd_line.htm }
 
 
@@ -519,80 +530,91 @@ end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   LOG
-   ---
-   SEND MESSAGES DIRECTLY TO LOG WND
+   LOG - Send messages directly to log window
 -------------------------------------------------------------------------------------------------------------}
+
 procedure TAppDataCore.LogVerb(CONST Msg: string);
 begin
-  RamLog.AddVerb(Msg);   // This will call NotifyLogObserver
+  if RamLog <> NIL
+  then RamLog.AddVerb(Msg);
 end;
 
 
 procedure TAppDataCore.LogHint(CONST Msg: string);
 begin
-  RamLog.AddHint(Msg);    // This will call NotifyLogObserver
+  if RamLog <> NIL
+  then RamLog.AddHint(Msg);
 end;
 
 
 procedure TAppDataCore.LogInfo(CONST Msg: string);
 begin
-  RamLog.AddInfo(Msg);    // This will call NotifyLogObserver
+  if RamLog <> NIL
+  then RamLog.AddInfo(Msg);
 end;
 
 
 procedure TAppDataCore.LogImpo(CONST Msg: string);
 begin
-  RamLog.AddImpo(Msg);    // This will call NotifyLogObserver
+  if RamLog <> NIL
+  then RamLog.AddImpo(Msg);
 end;
 
 
 procedure TAppDataCore.LogWarn(CONST Msg: string);
 begin
-  RamLog.AddWarn(Msg);    // This will call NotifyLogObserver
+  if RamLog <> NIL
+  then RamLog.AddWarn(Msg);
 end;
 
 
 procedure TAppDataCore.LogError(CONST Msg: string);
 begin
-  RamLog.AddError(Msg);   // This will call NotifyLogObserver
+  if RamLog <> NIL
+  then RamLog.AddError(Msg);
 end;
 
 
-procedure TAppDataCore.LogMsg(CONST Msg: string);  { Always show this message, no matter the verbosity of the log. Equivalent to Log.AddError but the msg won't be shown in red. }
+procedure TAppDataCore.LogMsg(CONST Msg: string);
 begin
-  RamLog.AddMsg(Msg);     // This will call NotifyLogObserver
+  if RamLog <> NIL
+  then RamLog.AddMsg(Msg);
 end;
 
 
 procedure TAppDataCore.LogBold(CONST Msg: string);
 begin
-  RamLog.AddBold(Msg);    // This will call NotifyLogObserver
+  if RamLog <> NIL
+  then RamLog.AddBold(Msg);
 end;
 
 
 procedure TAppDataCore.LogClear;
 begin
-  RamLog.clear;
+  if RamLog <> NIL
+  then RamLog.Clear;
 end;
 
 
 procedure TAppDataCore.LogEmptyRow;
 begin
-  RamLog.AddEmptyRow;
+  if RamLog <> NIL
+  then RamLog.AddEmptyRow;
 end;
 
 
 procedure TAppDataCore.setShowOnError(const Value: Boolean);
 begin
   FShowOnError:= Value;
-  RamLog.ShowonError:= Value;
+  if RamLog <> NIL
+  then RamLog.ShowonError:= Value;
 end;
 
 
 procedure TAppDataCore.PopUpLogWindow;
 begin
-  RamLog.PopUpWindow;
+  if RamLog <> NIL
+  then RamLog.PopUpWindow;
 end;
 
 
@@ -613,41 +635,61 @@ end;
 // Hide hint after 'Value' ms. Does nothing here. The child class must override this
 procedure TAppDataCore.setHideHint(const Value: Integer);
 begin
-  FHideHint := Value;
+  FHideHint:= Value;
 end;
 
 
+// Store hint type. VCL/FMX descendants override this to update the UI
+procedure TAppDataCore.setHintType(const Value: THintType);
+begin
+  FHintType:= Value;
+end;
+
+
+// No-op in core. VCL/FMX descendants override this to minimize the main form
+procedure TAppDataCore.Minimize;
+begin
+  // Does nothing in core - GUI descendants override this
+end;
+
+
+{ Saves application settings to the INI file. Called automatically in Destroy. }
 procedure TAppDataCore.SaveSettings;
 begin
-  VAR IniFile := TIniFileEx.Create('AppData Settings', IniFile);
+  var IniFileObj:= TIniFileEx.Create('AppData Settings', Self.IniFile);
   try
-    IniFile.Write('AutoStartUp'   , AutoStartUp);
-
-    IniFile.Write('StartMinim'    , StartMinim);
-    IniFile.Write('Minimize2Tray' , Minimize2Tray);
-    IniFile.Write('Opacity'       , Opacity);
-    IniFile.Write('ShowOnError'   , FShowOnError);
-    IniFile.Write('HintType'      , Ord(HintType));
-    IniFile.Write('HideHint'      , HideHint);
+    IniFileObj.Write('AutoStartUp'   , AutoStartUp);
+    IniFileObj.Write('StartMinim'    , StartMinim);
+    IniFileObj.Write('Minimize2Tray' , Minimize2Tray);
+    IniFileObj.Write('Opacity'       , Opacity);
+    IniFileObj.Write('ShowOnError'   , FShowOnError);
+    IniFileObj.Write('HintType'      , Ord(HintType));
+    IniFileObj.Write('HideHint'      , HideHint);
   finally
-    FreeAndNil(IniFile);
+    FreeAndNil(IniFileObj);
   end;
 end;
 
 
+{ Loads application settings from the INI file.
+  Called during construction if INI file exists. }
 procedure TAppDataCore.LoadSettings;
 begin
-  VAR IniFile := TIniFileEx.Create('AppData Settings', IniFile);
+  var IniFileObj:= TIniFileEx.Create('AppData Settings', Self.IniFile);
   try
-    AutoStartUp   := IniFile.Read('AutoStartUp'        , False);
-    StartMinim    := IniFile.Read('StartMinim'         , False);
-    Minimize2Tray := IniFile.Read('Minimize2Tray'      , False);
-    Opacity       := IniFile.Read('Opacity'            , 255);
-    FShowOnError  := IniFile.Read('ShowOnError'        , True);
-    HintType      := THintType(IniFile.Read('HintType' , 0));
-    HideHint      := IniFile.Read('HideHint'           , 2500);
+    AutoStartUp   := IniFileObj.Read('AutoStartUp'        , False);
+    StartMinim    := IniFileObj.Read('StartMinim'         , False);
+    Minimize2Tray := IniFileObj.Read('Minimize2Tray'      , False);
+    Opacity       := IniFileObj.Read('Opacity'            , 255);
+    FShowOnError  := IniFileObj.Read('ShowOnError'        , True);
+    HintType      := THintType(IniFileObj.Read('HintType' , 0));
+    HideHint      := IniFileObj.Read('HideHint'           , 2500);
+
+    // Apply loaded setting to RamLog (it was created before LoadSettings)
+    if RamLog <> NIL
+    then RamLog.ShowonError:= FShowOnError;
   finally
-    FreeAndNil(IniFile);
+    FreeAndNil(IniFileObj);
   end;
 end;
 
@@ -660,12 +702,10 @@ begin
   AutoStartUp  := FALSE;
   StartMinim   := FALSE;
   Minimize2Tray:= TRUE;                      // Minimize to tray
-  HintType     := htTooltips;                // Turn off the embeded help system
+  HintType     := htTooltips;                // Turn off the embedded help system
   Opacity      := 250;
   UserPath     := AppDataFolder;
 end;
-
-
 
 
 end.

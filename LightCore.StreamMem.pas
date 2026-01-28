@@ -26,7 +26,7 @@ UNIT LightCore.StreamMem;
         This class offers embedded support for file versioning and signature (magic number).
         By using WriteHeader you can put a unique identifier in each of your file.
         Later you can user ReadHeader to verify that your program is trying to read a file that is yours. This prevent the user from feeding the wrong file an input into your program.
-        Even more, this class allows you to expand your class - add new fields that are saved to disk while keeping the file format backword compatible.
+        Even more, this class allows you to expand your class - add new fields that are saved to disk while keeping the file format backward compatible.
 
 
     [HOW TO USE IT]
@@ -92,6 +92,7 @@ TYPE
      CONST FrozenPaddingSize = 64;                // NEVER-EVER MODIFY THIS CONSTANT! All files saved with this constant will not work anymore. Enough for 16 Integer variables.
      function ReadSignature: AnsiString;          // The LiSa string for "Light Saber'.  // Old number: $4C695361
    public
+     StringListSafetyLimit: Cardinal;             // Don't try to read more than this
      constructor CreateFromStream(Stream: TMemoryStream; FromPos: Int64 = 0);
 
      { Header }
@@ -230,13 +231,12 @@ var
 begin
   inherited Create;
   Assert(Stream <> NIL);
+  StringListSafetyLimit:= 1 * MB;
 
-  if FromPos < 0
-  then FromPos:= 0;
+  if FromPos < 0 then RAISE Exception.Create('TCubicMemStream!');
 
   BytesToCopy:= Stream.Size - FromPos;
-  if BytesToCopy <= 0
-  then EXIT;
+  if BytesToCopy <= 0 then EXIT;
 
   // Save source position, seek to FromPos
   SavedPos:= Stream.Position;
@@ -291,48 +291,53 @@ begin
   Assert(Signature > '', 'TCubicMemStream - No signature provided!');
 
   // Read "LiSa" magic no
-  TRY
+  try
     MagicNo:= ReadCardinal;
-  EXCEPT
-    on E: Exception DO
-      begin
-        AppDataCore.LogError('Cannot read magic number for: '+ String(Signature) + ' - '+ E.Message);
-        EXIT(0);
-      end;
-  END;
+  except
+    on E: Exception do
+    begin
+      if AppDataCore <> NIL
+      then AppDataCore.LogError('Cannot read magic number for: ' + String(Signature) + ' - ' + E.Message);
+      EXIT(0);
+    end;
+  end;
   if MagicNo <> LisaMagicNumber then EXIT(0);
 
   // Read signature
-  TRY
+  try
     FileSignature:= ReadSignature;
-  EXCEPT
-    on E: Exception DO
+  except
+    on E: Exception do
     begin
-      AppDataCore.LogError('Cannot read stream signature for: '+ String(Signature) + ' - '+ E.Message);
+      if AppDataCore <> NIL
+      then AppDataCore.LogError('Cannot read stream signature for: ' + String(Signature) + ' - ' + E.Message);
       EXIT(0);
     end;
-  END;
+  end;
   if FileSignature = '' then
-    begin
-      AppDataCore.LogError('Cannot read file signature: '+ string(Signature));
-      EXIT(0);
-    end;
+  begin
+    if AppDataCore <> NIL
+    then AppDataCore.LogError('Cannot read file signature: ' + string(Signature));
+    EXIT(0);
+  end;
   if FileSignature <> Signature then
-    begin
-      AppDataCore.LogError('Signature mismatch: '+ string(Signature));
-      EXIT(0);
-    end;
+  begin
+    if AppDataCore <> NIL
+    then AppDataCore.LogError('Signature mismatch: ' + string(Signature));
+    EXIT(0);
+  end;
 
   // Read the version number
-  TRY
+  try
     Result:= ReadWord;
-  EXCEPT
-    on E: Exception DO
+  except
+    on E: Exception do
     begin
-      AppDataCore.LogError('Cannot read stream version for: '+ String(Signature) + ' - '+ E.Message);
+      if AppDataCore <> NIL
+      then AppDataCore.LogError('Cannot read stream version for: ' + String(Signature) + ' - ' + E.Message);
       EXIT(0);
     end;
-  END;
+  end;
 end;
 
 
@@ -357,19 +362,21 @@ begin
 
   // Check size
   if Count > 64 then
-    begin
-      AppDataCore.LogError('ReadSignature: Signature larger than 64 bytes: '+ IntToStr(Count)+' bytes');
-      EXIT('');
-    end;
+  begin
+    if AppDataCore <> NIL
+    then AppDataCore.LogError('ReadSignature: Signature larger than 64 bytes: ' + IntToStr(Count) + ' bytes');
+    EXIT('');
+  end;
 
   // Enough data to read?
-  if Count > Size- Position then
-    begin
-      AppDataCore.LogError('ReadSignature: Signature lenght > file size!');
-      EXIT('');
-    end;
+  if Count > Size - Position then
+  begin
+    if AppDataCore <> NIL
+    then AppDataCore.LogError('ReadSignature: Signature length > file size!');
+    EXIT('');
+  end;
 
-  // Do the actual strign reading
+  // Do the actual string reading
   Result:= ReadStringACnt(Count, 128);
 end;
 
@@ -384,11 +391,11 @@ CONST
    ctCheckPoint= '<*>Checkpoint<*>';
 
 
-{ For debugging. Write a scheckpoint entry (just a string) from time to time to your file so if you screwup, you check from time to time to see if you are still reading the correct data. }
+{ For debugging. Write a checkpoint entry (just a string) from time to time to your file so if you screw up, you check from time to time to see if you are still reading the correct data. }
 procedure TCubicMemStream.ReadCheckPointE(CONST s: AnsiString= '');
 begin
   if NOT ReadCheckPoint(s)
-  then raise Exception.Create('Checkpoint failure! '+ crlf+ string(s));
+  then RAISE Exception.Create('Checkpoint failure! ' + CRLF + string(s));
 end;
 
 function TCubicMemStream.ReadCheckPoint(CONST s: AnsiString= ''): Boolean;
@@ -593,8 +600,7 @@ end;
 { Reads a bunch of chars from the file. Why 'ReadChars' and not 'ReadString'? This function reads C++ strings (the length of the string was not written to disk also) and not real Delphi strings. So, i have to give the number of chars to read as parameter. IMPORTANT: The function will reserve memory for s.}
 function TCubicMemStream.ReadCharsA(Count: Cardinal; SafetyLimit: Cardinal = 1*KB): AnsiString;
 begin
-  if Count= 0
-  then RAISE Exception.Create('Count is zero!');     { We cannot do s[1] on an empty string so we added 'Count = 0' as protection. }
+  if Count = 0 then EXIT('');
 
   if Count > SafetyLimit
   then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
@@ -610,23 +616,29 @@ end;
 {--------------------------------------------------------------------------------------------------
    STRING LIST
 --------------------------------------------------------------------------------------------------}
-
 procedure TCubicMemStream.WriteStrings(TSL: TStrings);
 begin
+  Assert(TSL <> NIL, 'TCubicMemStream.WriteStrings: TSL is nil');
   WriteString(TSL.Text);
 end;
 
 
 procedure TCubicMemStream.ReadStrings(TSL: TStrings);
 begin
-  TSL.Text:= ReadString;
+  Assert(TSL <> NIL, 'TCubicMemStream.ReadStrings: TSL is nil');
+  TSL.Text:= ReadString(StringListSafetyLimit);
 end;
 
 
 function TCubicMemStream.ReadStrings: TStringList;
 begin
   Result:= TStringList.Create;
-  Result.Text:= ReadString;
+  try
+  Result.Text:= ReadString(StringListSafetyLimit);
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
 end;
 
 
@@ -665,28 +677,27 @@ end;
 
 
 
-{ SIGNED }
-procedure TCubicMemStream.WriteShortInt(s: ShortInt);     //Signed 8bit: -128..127
+{ SHORTINT - Signed 8bit: -128..127 }
+procedure TCubicMemStream.WriteShortInt(s: ShortInt);
 begin
-  Write(s, 1);
+  WriteBuffer(s, 1);
 end;
 
 function TCubicMemStream.ReadShortInt: ShortInt;
 begin
-  Read(Result, 1);
+  ReadBuffer(Result, 1);
 end;
 
 
-
-{}
-procedure TCubicMemStream.WriteSmallInt(s: SmallInt);     //Signed 16bit: -32768..32767
+{ SMALLINT - Signed 16bit: -32768..32767 }
+procedure TCubicMemStream.WriteSmallInt(s: SmallInt);
 begin
-  Write(s, 2);
+  WriteBuffer(s, 2);
 end;
 
 function TCubicMemStream.ReadSmallInt: SmallInt;
 begin
-  Read(Result, 2);
+  ReadBuffer(Result, 2);
 end;
 
 
@@ -757,24 +768,23 @@ end;
 --------------------------------------------------------------------------------------------------}
 function TCubicMemStream.ReadSingle: Single;
 begin
-  Read(Result, 4);
+  ReadBuffer(Result, 4);
 end;
 
 procedure TCubicMemStream.WriteSingle(s: Single);
 begin
-  Write(s, 4);
+  WriteBuffer(s, 4);
 end;
-
 
 
 function TCubicMemStream.ReadDouble: Double;
 begin
-  Read(Result, 8);
+  ReadBuffer(Result, 8);
 end;
 
 procedure TCubicMemStream.WriteDouble(d: Double);
 begin
-  Write(d, 8);
+  WriteBuffer(d, 8);
 end;
 
 
@@ -933,16 +943,20 @@ end;
 { Write raw data to file. The length is not written! }
 procedure TCubicMemStream.PushAnsi(CONST s: AnsiString);   // old name: WriteStringANoLen
 begin
-  Assert(s<> '', 'WriteStringA - The string is empty');   { Make sure 's' is not empty, otherwise we get a RangeCheckError at runtime }
-  WriteBuffer(s[1], Length(s));
+  if Length(s) > 0
+  then WriteBuffer(s[1], Length(s));
 end;
 
 
 { Read the raw content of the file and return it as string (for debugging) }
 function TCubicMemStream.AsString: AnsiString;
 begin
-  Position:= 0;
-  Result:= ReadStringA(Size);
+   if Size = 0 then RAISE Exception.Create('TCubicMemStream is empty!');
+
+
+      Position:= 0;
+      SetLength(Result, Size);
+      Read(Result[1], Size);
 end;
 
 
@@ -973,7 +987,8 @@ function TCubicMemStream.AsBytes: TBytes;          { Put the content of the stre
 begin
   Position:= 0;            // Reset stream position
   SetLength(Result, Size); // Allocate size
-  Read(Result[0], Size);   // Read content of stream
+  if Size > 0
+  then Read(Result[0], Size);   // Read content of stream
 end;
 
 
@@ -1046,20 +1061,22 @@ end;
 function TCubicMemStream.ReadStringA(SafetyLimit: Cardinal = 1*KB): AnsiString;
 VAR Count: Cardinal;
 begin
- ReadBuffer(Count, SizeOf(Count));                                          { First, find out how many characters to read }
+  ReadBuffer(Count, SizeOf(Count));  { First, find out how many characters to read }
 
- Assert(Count<= Size- Position, 'TCubicMemStream: String lenght > file size!');
+ if Count > Cardinal(Size - Position)
+  then RAISE Exception.Create('TCubicMemStream.ReadStringA: String length > remaining stream size!');
 
- if Count > SafetyLimit
- then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
+  if Count > SafetyLimit
+  then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
 
- if Count > 0 then
- begin
-   SetLength(Result, Count);
-   ReadBuffer(Result[1], Count);
- end
- else
-   Result:= '';
+  if Count > 0 
+  then
+    begin
+      SetLength(Result, Count);
+      ReadBuffer(Result[1], Count);
+    end
+  else
+    Result:= '';
 end;
 
 
@@ -1067,20 +1084,24 @@ end;
    Read a string when its size is unknown (not written in the stream).
    We need to specify the string size from outside.
    This is the relaxed/safe version. It won't raise an error if there is not enough data (Len) to read }
-function TCubicMemStream.TryReadStringA(Count: Cardinal): AnsiString;   // Old name: ReadStringAR
-VAR ReadBytes: Cardinal;
+function TCubicMemStream.TryReadStringA(Count: Cardinal): AnsiString;
+var
+  ReadBytes: Cardinal;
+  AvailableBytes: Int64;
 begin
- Assert(Count<= Size- Position, 'TCubicMemStream: String lenght > file size!');
+ if Count = 0 then EXIT('');
 
- if Count = 0
- then Result:= ''
- else
-  begin
-   SetLength(Result, Count);             { Initialize the result }
-   ReadBytes:= Read(Result[1], Count);
-   if ReadBytes <> Count                 { Not enough data to read? }
-   then SetLength(Result, ReadBytes);
-  end;
+ // Limit Count to available data
+  AvailableBytes:= Size - Position;
+ if Count > Cardinal(AvailableBytes)
+ then Count:= Cardinal(AvailableBytes);
+
+ if Count = 0 then EXIT('');
+
+  SetLength(Result, Count);
+  ReadBytes:= Read(Result[1], Count);
+  if ReadBytes <> Count
+  then SetLength(Result, ReadBytes);
 end;
 
 
@@ -1128,23 +1149,27 @@ end;
    I/O
 --------------------------------------------------------------------------------------------------}
 procedure TCubicMemStream.LoadFromFile(CONST FileName: string);
+var
+  FileStream: TLightStream;
 begin
-  VAR FileStream := TLightStream.Create(FileName, fmOpenRead);
+  FileStream:= TLightStream.Create(FileName, fmOpenRead);
   try
     LoadFromStream(FileStream);
   finally
-    FileStream.Free;
+    FreeAndNil(FileStream);
   end;
 end;
 
 
 procedure TCubicMemStream.SaveToFile(CONST FileName: string);
+var
+  FileStream: TLightStream;
 begin
-  VAR FileStream := TLightStream.Create(FileName, fmCreate);
+  FileStream:= TLightStream.Create(FileName, fmCreate);
   try
     SaveToStream(FileStream);
   finally
-    FileStream.Free;
+    FreeAndNil(FileStream);
   end;
 end;
 

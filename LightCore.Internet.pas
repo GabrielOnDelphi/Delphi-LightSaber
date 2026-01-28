@@ -449,49 +449,54 @@ end;
 
 
 
-function UrlRemovePort(CONST URL: string): string;    { Example www.Domain.com:80 -> www.Domain.com }
+{ Removes port from URL. Example: www.Domain.com:80 -> www.Domain.com }
+function UrlRemovePort(CONST URL: string): string;
 VAR iPos: Integer;
 begin
- iPos:= Pos(':', URL);
- if ipos > 0
- then
-  begin
-   if URL[iPos+1]= '/'        { if the URL starts with 'http:\\' then we ignore that column (:) }
-   then iPos:= PosEx(':', URL, ipos+1);
+  iPos:= Pos(':', URL);
+  if iPos > 0
+  then
+   begin
+    { Skip the colon in 'http://' or 'https://' }
+    if (iPos + 1 <= Length(URL)) AND (URL[iPos + 1] = '/')
+    then iPos:= PosEx(':', URL, iPos + 1);
 
-   if iPos > 0
-   then Result:= system.Copy(url, 1, ipos-1)
-   else Result:= url;          { There is no port in this URL }
+    if iPos > 0
+    then Result:= System.Copy(URL, 1, iPos - 1)
+    else Result:= URL;  { No port in this URL }
   end
- else Result:= url;
+   else Result:= URL;
 end;
 
 
 
-function UrlExtractPort(CONST URL: string): Integer;    { Example www.Domain.com:80 -> 80 }
+{ Extracts port number from URL. Example: www.Domain.com:80 -> 80
+  Returns 0 if no port is specified. }
+function UrlExtractPort(CONST URL: string): Integer;
 VAR
-   sURL: string;
-   iPos: Integer;
+  sURL: string;
+  iPos: Integer;
 begin
- iPos:= Pos(':', URL);
- if ipos > 0
- then
-  begin
-   if URL[iPos+1]= '/'        { if the URL starts with 'http:\\' then we ignore that column (:) }
-   then iPos:= PosEx(':', URL, ipos+1);
+  iPos:= Pos(':', URL);
+  if iPos > 0
+  then 
+   begin
+    { Skip the colon in 'http://' or 'https://' }
+    if (iPos + 1 <= Length(URL)) AND (URL[iPos + 1] = '/')
+    then iPos:= PosEx(':', URL, iPos + 1);
 
-   if iPos > 0
-   then
-    begin
-     sURL:= system.Copy(url, ipos+1, MaxInt);
-     iPos:= Pos('/', sURL);
-     if iPos > 0
-     then sURL:= Copy(sURL, 1, iPos-1);
-     Result:= StrToIntDef(sURL, 0);
-    end
-   else Result:= 0;          { There is no port in this URL }
-  end
- else Result:= 0;
+    if iPos > 0
+    then 
+	 begin
+      sURL:= System.Copy(URL, iPos + 1, MaxInt);
+      iPos:= Pos('/', sURL);
+      if iPos > 0
+      then sURL:= Copy(sURL, 1, iPos - 1);
+      Result:= StrToIntDef(sURL, 0);
+     end
+    else Result:= 0;  { No port in this URL }
+   end
+  else Result:= 0;
 end;
 
 
@@ -652,50 +657,56 @@ begin
 end;
 
 
-//ToDo: W521 Return value of function 'ExtractProxyFrom' might be undefined
-function ExtractProxyFrom(Line: string): string;   { Tested ok! Extracts an IP from a garbage text. Example: xxxxx1.210.03.23:80xxxx returns: 1.210.03.23:80 }
+{ Extracts a proxy address (IP:Port) from garbage text.
+  Example: "xxxxx1.210.03.23:80xxxx" returns "1.210.03.23:80"
+  Returns empty string if no valid proxy found. }
+function ExtractProxyFrom(Line: string): string;
 VAR
   IP, Port: string;
   i, Total, ColumnPos: Integer;
 begin
+  Result:= '';  { Initialize to prevent undefined return }
 
- ColumnPos:= Pos(':', Line);
- if ColumnPos < 1 then EXIT('');
- Line:= RemoveFormatings(Line);
+  ColumnPos:= Pos(':', Line);
+  if ColumnPos < 1 then EXIT;
 
- Total:= 0;
- IP:= SplitIpFromAdr  (Line);
+  Line:= RemoveFormatings(Line);
+  IP:= SplitIpFromAdr(Line);
 
- { Count the '.' three times to the left }
- for i:= Length(IP) downto 1 DO
+  { Count the dots - need exactly 3 for IPv4 }
+  Total:= 0;
+  for i:= Length(IP) downto 1 do
   begin
-    if IP[i]= '.' then Inc(Total);
-    if Total = 3 then Break;
+    if IP[i] = '.'
+    then Inc(Total);
+    if Total = 3
+    then Break;
   end;
 
  if Total< 3 then EXIT('');
 
- { Find first char which is not number }
- i:= i-1;                                   { Jump on the left side of the '.' }
- if i >= 1 then                             { Here I must keep the = sign else it won't work correctly when the IP is like this:  1.2.3.4 }
-   REPEAT
-     Dec(i);
-   UNTIL (i= 0) OR NOT CharIsNumber(IP[i]);
+  { Find first char which is not a number (scanning left from the third dot) }
+  i:= i - 1;  { Jump to the left side of the '.' }
+  if i >= 1 then 
 
- IP:= LightCore.CopyTo(IP, i+1, High(Integer));
-
- Port:= IpExtractPort(Line);
- if Port = '' then EXIT('');  { Return empty string if no port found }
- i:= 0;
- REPEAT
-   Inc(i);
- UNTIL (i > Length(Port)) OR NOT CharIsNumber(Port[i]);
- Port:= LightCore.CopyTo(Port, 1, i-1);
+    while (i > 0) AND CharIsNumber(IP[i]) do
+      Dec(i);
 
 
- if (IP > '') AND (Port > '')
- then Result:= IP+ ':'+ Port   //ValidateIpAddress(IP) + ':'+ ValidatePort(Port);
- else Result:= '';   // ????????????????
+  IP:= LightCore.CopyTo(IP, i + 1, High(Integer));
+
+  { Extract port }
+  Port:= IpExtractPort(Line);
+  if Port = '' then EXIT;
+
+  { Find end of port number }
+  i:= 1;
+  while (i <= Length(Port)) AND CharIsNumber(Port[i]) do
+    Inc(i);
+  Port:= LightCore.CopyTo(Port, 1, i - 1);
+
+  if (IP <> '') AND (Port <> '')
+  then Result:= IP + ':' + Port;
 end;
 
 
@@ -722,10 +733,17 @@ begin
 end;
 
 
-function CollectIPAddress(CONST HTMLBody: string): string; { WTF ? }
+{ Extracts IP address from HTML response (e.g., "Current IP Address: 192.168.1.1").
+  Looks for text after the first colon (:) delimiter. }
+function CollectIPAddress(CONST HTMLBody: string): string;
 CONST DELIMITER = ':';
+VAR
+  ColonPos: Integer;
 begin
- Result:= Trim(system.COPY(HTMLBody, Pos(DELIMITER, HTMLBody)+1, Length(HTMLBody) ));
+  ColonPos:= Pos(DELIMITER, HTMLBody);
+  if ColonPos > 0
+  then Result:= Trim(System.Copy(HTMLBody, ColonPos + 1, Length(HTMLBody)))
+  else Result:= '';
 end;
 
 
@@ -784,52 +802,61 @@ end;
 {--------------------------------------------------------------------------------------------------
    IP VALIDATION
 --------------------------------------------------------------------------------------------------}
+{ Validates an IPv4 address string (e.g., "192.168.1.1").
+  Returns True if the address has exactly 4 octets, each 0-255. }
 function ValidateIpAddress(CONST Address: string): Boolean;
 CONST
-    Valid = ['0'..'9', '.'];
+  ValidChars = ['0'..'9', '.'];
 VAR
-   I, J, Point: Integer;
-   sAddress, W: string;
+  i, OctetCount, OctetValue: Integer;
+  sAddress, Octet: string;
 begin
- sAddress:= Trim(Address);
- if sAddress= '' then EXIT(FALSE);
+  sAddress:= Trim(Address);
 
- if (Length(sAddress) > 15) OR (sAddress[1] = '.') then EXIT(FALSE);
+  if sAddress = ''
+  then EXIT(FALSE);
 
- I := 1;
- J := 0;
- Point := 0;
- W := '';
+  if (Length(sAddress) > 15) OR (sAddress[1] = '.') OR (sAddress[Length(sAddress)] = '.')
+  then EXIT(FALSE);
 
- REPEAT
-   if CharInSet(sAddress[I], Valid) and (J < 4)
-   then
-    begin
-      if sAddress[I] = '.' then
-      begin
-        Inc(Point);
-        J := 0;
-        TRY
-          StrToInt(sAddress[I + 1]);
-        except
-          //todo 1: trap only specific exceptions
-          EXIT(FALSE);
-        END;
-        W := '';
-      end
-     else
-       begin
-        W := W + sAddress[I];
-        if (StrToInt(W) > 255) or (Length(W) > 3) then EXIT(FALSE);
-        Inc(J);
-       end;
+  { Validate all characters are digits or dots }
+  for i:= 1 to Length(sAddress) do
+    if NOT CharInSet(sAddress[i], ValidChars)
+    then EXIT(FALSE);
+
+  { Check no consecutive dots }
+  if Pos('..', sAddress) > 0
+  then EXIT(FALSE);
+
+  { Parse and validate each octet }
+  OctetCount:= 0;
+  Octet:= '';
+
+  for i:= 1 to Length(sAddress) do
+  begin
+    if sAddress[i] = '.'
+    then begin
+      if Octet = ''
+      then EXIT(FALSE);  { Empty octet }
+      OctetValue:= StrToIntDef(Octet, -1);
+      if (OctetValue < 0) OR (OctetValue > 255)
+      then EXIT(FALSE);
+      Inc(OctetCount);
+      Octet:= '';
     end
-   else EXIT(FALSE);
+    else
+      Octet:= Octet + sAddress[i];
+  end;
 
-   Inc(I);
- UNTIL I > Length(sAddress);
+  { Validate last octet }
+  if Octet = ''
+  then EXIT(FALSE);
+  OctetValue:= StrToIntDef(Octet, -1);
+  if (OctetValue < 0) OR (OctetValue > 255)
+  then EXIT(FALSE);
+  Inc(OctetCount);
 
- Result:= Point= 3;                                                                                { Change sign to =3 to enforce loose Address address checking }
+  Result:= (OctetCount = 4);
 end;
 
 
@@ -852,20 +879,6 @@ begin
  Result:= ValidateIpAddress(IP) AND ValidatePort(Port);
 end;
 
-
-
-
-function GetConnectionStatus_DEL(ErrorCode: Integer): string;                                      {DEL}
-begin
- CASE ErrorCode of
-   1: Result:= '';
-   0: Result:= 'Unknown error';
-  -1: Result:= 'No Internet connection';
-  -2: Result:= 'Connection lost';
-  -3: Result:= 'File not found/File cannot be downloaded';
-  -4: Result:= 'Cannot open Internet connection';
- end;
-end;
 
 
 
@@ -892,16 +905,19 @@ end;
 
 
 {==================================================================================================
-   .URL
+   .URL FILE CREATION
 ==================================================================================================}
-Procedure CreateUrl(CONST FullFileName, sFullURL: string);                                            { create a URL file - The filename should end in .URL }
+
+{ Creates a Windows .URL shortcut file. The filename should end in .URL extension. }
+procedure CreateUrl(CONST FullFileName, sFullURL: string);
+VAR IniFile: TIniFile;
 begin
-  with TIniFile.Create(FullFileName) DO
-   TRY
-     WriteString('InternetShortcut', 'URL', sFullURL);
-   FINALLY
-     Free;
-   END;
+  IniFile:= TIniFile.Create(FullFileName);
+  TRY
+    IniFile.WriteString('InternetShortcut', 'URL', sFullURL);
+  FINALLY
+    FreeAndNil(IniFile);
+  END;
 end;
 
 

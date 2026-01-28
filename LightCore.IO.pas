@@ -1,4 +1,4 @@
-UNIT LightCore.IO;
+ï»¿UNIT LightCore.IO;
 
 {=============================================================================================================
    www.GabrielMoraru.com
@@ -493,17 +493,18 @@ begin
 end;
 
 
-{ Appends the 'delimiter' at the ends of the string IF it doesn't already exists there. Works with UNC paths }
+{ Appends the 'delimiter' at the ends of the string IF it doesn't already exist there. Works with UNC paths }
 function ForcePathDelimiters(CONST Path, Delimiter: string; SetAtBegining, SetAtEnd: Boolean): string;
 begin
- Assert(Path > '');
+  if Path = ''
+  then EXIT('');
 
- Result:= Path;
- if SetAtBegining AND (Result[1]<> Delimiter)
- then Result:= Delimiter+ Result;
+  Result:= Path;
+  if SetAtBegining AND (Result[1] <> Delimiter)
+  then Result:= Delimiter + Result;
 
- if SetAtEnd AND (Result[Length(Result)]<> Delimiter)
- then Result:= Result+ Delimiter;
+  if SetAtEnd AND (Result[Length(Result)] <> Delimiter)
+  then Result:= Result + Delimiter;
 end;
 
 
@@ -939,7 +940,6 @@ begin
   OR IsBMP(AGraphFile)
   OR IsGIF(AGraphFile)
   OR IsPNG(AGraphFile)
-  OR IsBMP(AGraphFile)
   OR IsWebP(AGraphFile);
 end;
 
@@ -1345,13 +1345,16 @@ end;
 
 
 
-{ Returns true is the filename ends with a number.
+{ Returns true if the filename ends with a number.
   Example: MyFile02.txt returns TRUE.
   Works with UNC paths. }
 function FileEndsInNumber(CONST FileName: string): Boolean;
 VAR ShortName: string;
 begin
   ShortName:= ExtractOnlyName(FileName);
+
+  if ShortName = ''
+  then RAISE Exception.Create('FileEndsInNumber');
   Result:= CharIsNumber(ShortName[Length(ShortName)]);
 end;
 
@@ -1608,8 +1611,8 @@ end;
 
   You should use GetHomePath to store settings per user. For example: TFile.WriteAllText(TPath.GetHomePath() + TPath.DirectorySeparatorChar + 'sample.txt', s);
 
-  On Windows        points to the user’s application data folder.
-  On Linux & OS X   points to the user’s home folder, as defined by the $(HOME) environment variable.
+  On Windows        points to the user's application data folder.
+  On Linux & OS X   points to the user's home folder, as defined by the $(HOME) environment variable.
   On iOS & Android  points to the device-specific location of the sandbox for the application; the iOS home location is individually defined for each application instance and for each iOS device.
 
   Windows XP       C:\Documents and Settings\<username>\Application Data  CSIDL_APPDATA
@@ -1631,7 +1634,7 @@ end;
 
 function GetSharedDocumentsPath: string;
 begin
- Result:= TPath.GetDocumentsPath;
+  Result:= TPath.GetSharedDocumentsPath;
 end;
 
 
@@ -1798,25 +1801,28 @@ end;
 -----------------------------------------------------------------------------------------------------------------------}
 
 { Writes binary data in "Data" to disk file.
-  Returns TRUE if eveything is OK }
-function BytesToFile (CONST FileName: string; CONST Data: TBytes; CONST Overwrite: Boolean= TRUE): Boolean;    // Old name: WriteBinFile
-VAR StreamFile: TFileStream;
-    AccessType: Word;
+  Returns TRUE if everything is OK. }
+function BytesToFile(CONST FileName: string; CONST Data: TBytes; CONST Overwrite: Boolean= TRUE): Boolean;
+VAR
+  StreamFile: TFileStream;
+  AccessType: Word;
+  BytesWritten: Integer;
 begin
- if Overwrite
- then AccessType:= fmCreate
- else
-   if FileExists(FileName)
-   then AccessType:= fmOpenWrite
-   else AccessType:= fmCreate;
+  if Overwrite
+  then AccessType:= fmCreate
+  else
+    if FileExists(FileName)
+    then AccessType:= fmOpenWrite
+    else AccessType:= fmCreate;
 
- StreamFile:= TFileStream.Create(FileName, AccessType);    { <--------- EFCreateError:   Cannot create file "blablabla". Access is denied. }
- TRY
-   StreamFile.Position:= StreamFile.Size;  { Jump at the end of the file }   //it was: Seek(StreamFile.Size, soFromCurrent);
-   Result:= NOT StreamFile.Write(Data, Length(Data))= Length(Data);
- FINALLY
-   FreeAndNil(StreamFile);
- END;
+  StreamFile:= TFileStream.Create(FileName, AccessType);
+  TRY
+    StreamFile.Position:= StreamFile.Size;  { Jump at the end of the file }
+    BytesWritten:= StreamFile.Write(Data[0], Length(Data));
+    Result:= (BytesWritten = Length(Data));
+  FINALLY
+    FreeAndNil(StreamFile);
+  END;
 end;
 
 
@@ -1853,13 +1859,13 @@ begin
 end;
 
 
-{ Same as FileMoveTo but the user will provide a folder for the second parameter instead of a full path (folder = file name) } { Old name: FileMoveQuick }
-{ If destination folder does not exists it is created }
+{ Same as FileMoveTo but the user provides a folder for the second parameter instead of a full path.
+  If destination folder does not exist it is created. }
 function FileMoveToDir(CONST From_FullPath, To_DestFolder: string): boolean;
 begin
- Result:= TRUE;
- ForceDirectories(To_DestFolder);
- TFile.Move(From_FullPath, Trail(To_DestFolder+ ExtractFileName(From_FullPath)));
+  Result:= TRUE;
+  ForceDirectories(To_DestFolder);
+  TFile.Move(From_FullPath, Trail(To_DestFolder) + ExtractFileName(From_FullPath));
 end;
 
 
@@ -1894,12 +1900,10 @@ end;
 { Example: MoveFolder('c:\Documents', 'C:\Backups').
   It will overwrite all files in 'ToFolder' without asking.
   If you want feedback from user use LightVcl.Common.IO.Win.MoveFolderMsg }
-procedure MoveFolder(CONST FromFolder, ToFolder: String; SilentOverwrite: Boolean);      { Also see: http://www.swissdelphicenter.ch/en/showcode.php?id=152 }
+procedure MoveFolder(CONST FromFolder, ToFolder: String; SilentOverwrite: Boolean);
 begin
-  if NOT DirectoryExists(ToFolder) then EXIT;
-
   CopyFolder(FromFolder, ToFolder, SilentOverwrite);
-  DeleteFolder(ToFolder);  { This is slow. Do a direct file move for each file. }
+  DeleteFolder(FromFolder);
 end;
 
 
@@ -1949,10 +1953,10 @@ begin
         Inc(TotalCopied, NumToCopy);
       end;
     finally
-      DestStream.Free;
+      FreeAndNil(DestStream);
     end;
   finally
-    SrcStream.Free;
+    FreeAndNil(SrcStream);
   end;
 end;
 
@@ -2021,14 +2025,13 @@ begin
  TRY
    Result:= TSL.Count;
 
-   // The masterfile must exist otherwise 'AppendTo' will fail.
-   // So, if it doesn't exists, we create it.
+   { The masterfile must exist otherwise 'AppendTo' will fail.
+     So, if it doesn't exist, we create it. }
    if NOT FileExists(OutputFile) then
-     TRY
-       OutputStream:= TFileStream.Create(OutputFile, fmOpenWrite or fmShareExclusive);
-     FINALLY
+     begin
+       OutputStream:= TFileStream.Create(OutputFile, fmCreate);
        FreeAndNil(OutputStream);
-     END;
+     end;
 
    for CurFile in TSL
     DO AppendTo(OutputFile, CurFile, Separator, SeparatorFirst);
@@ -2055,7 +2058,7 @@ end;
   We need a delay here because the TDirectory.Delete is asynchron.
   The function seems to return before it finished deleting the folder:
     Details: http://stackoverflow.com/questions/42809389/tdirectory-delete-seems-to-be-asynchronous?noredirect=1#comment72732153_42809389
-    Answer: Perhaps the Remarks section on the msdn page about RemoveDirectory gives us a clue? (msdn.microsoft.com/en-us/library/windows/desktop/…) The RemoveDirectory function marks a directory for deletion on close. Therefore, the directory is not removed until the last handle to the directory is closed. This indicates that the call may return before the directory has actually been deleted }
+    Answer: Perhaps the Remarks section on the msdn page about RemoveDirectory gives us a clue? (msdn.microsoft.com/en-us/library/windows/desktop/ï¿½) The RemoveDirectory function marks a directory for deletion on close. Therefore, the directory is not removed until the last handle to the directory is closed. This indicates that the call may return before the directory has actually been deleted }
 procedure EmptyDirectory(const Path: string);
 CONST
   MaxWaitTime = 6000; // Maximum time to wait for directory deletion (in milliseconds)
@@ -2072,7 +2075,7 @@ begin
       if Stopwatch.ElapsedMilliseconds >= MaxWaitTime then
         RAISE Exception.Create('EmptyDirectory - Directory deletion timed out!'+ IntToStr(MaxWaitTime)+ ' sec');
     end;
-    if NOT ForceDirectories(Path) < 0
+    if ForceDirectories(Path) < 0
     then RAISE Exception.Create('EmptyDirectory - Cannot reconstruct directory!');
   end;
 end;

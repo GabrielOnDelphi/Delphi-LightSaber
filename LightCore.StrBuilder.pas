@@ -35,19 +35,24 @@ UNIT LightCore.StrBuilder;
 
 INTERFACE
 
+USES LightCore;
+
 TYPE
  TCStringBuilder = class(TObject)
   private
-   s: string;
-   CurBuffLen, BuffPos: Integer;
+    FBuffer: string;
+    FAllocatedLen: Integer;  { Currently allocated buffer length }
+    FPosition: Integer;      { Current write position (1-based) }
+    FBufferGrowth: Integer;  { Amount to grow buffer when full }
   public
-   BuffSize: Integer;
-   constructor Create(InitialBuffSize: Integer= 10000);
-   procedure AddChar(Ch: Char);
-   procedure AddEnter;
+    constructor Create(InitialBuffSize: Integer= 10000);
+    procedure AddChar(Ch: Char);
+    procedure AddEnter;
 
-   function  AsText: string;
-   procedure Clear;
+    function  AsText: string;
+    procedure Clear;
+
+    property BufferGrowth: Integer read FBufferGrowth write FBufferGrowth;
  end;
 
 
@@ -55,19 +60,19 @@ TYPE
 IMPLEMENTATION
 
 
-
 constructor TCStringBuilder.Create(InitialBuffSize: Integer= 10000);
 begin
- BuffSize:= InitialBuffSize;
- Clear;
+  inherited Create;
+  FBufferGrowth:= InitialBuffSize;
+  Clear;
 end;
 
 
 procedure TCStringBuilder.Clear;
 begin
- BuffPos:= 1;
- CurBuffLen:= 0;
- s:= '';
+  FPosition:= 1;
+  FAllocatedLen:= 0;
+  FBuffer:= '';
 end;
 
 
@@ -75,38 +80,41 @@ end;
 
 
 
+{ Returns the accumulated string without modifying internal state.
+  Can be called multiple times safely. }
 function TCStringBuilder.AsText: string;
 begin
- SetLength(s, BuffPos-1);  { Cut down the pre-allocated buffer that we haven't used }
- Result:= s;
+  Result:= Copy(FBuffer, 1, FPosition - 1);
 end;
 
 
+{ Appends a single character to the buffer, growing if needed. }
 procedure TCStringBuilder.AddChar(Ch: Char);
 begin
- if BuffPos > CurBuffLen then
+  if FPosition > FAllocatedLen then
   begin
-   SetLength(s, CurBuffLen+ BuffSize);
-   CurBuffLen:= Length(s)
+    SetLength(FBuffer, FAllocatedLen + FBufferGrowth);
+    FAllocatedLen:= Length(FBuffer);
   end;
 
- s[BuffPos]:= Ch;
- Inc(BuffPos);
+  FBuffer[FPosition]:= Ch;
+  Inc(FPosition);
 end;
 
 
+{ Appends a line break (CRLF) to the buffer. }
 procedure TCStringBuilder.AddEnter;
 begin
- if BuffPos+1 > CurBuffLen then    { +1 because we enter two characters into the string instead of 1 }
+  { +1 because we write two characters }
+  if FPosition + 1 > FAllocatedLen then
   begin
-   SetLength(s, CurBuffLen+ BuffSize);
-   CurBuffLen:= Length(s)
+    SetLength(FBuffer, FAllocatedLen + FBufferGrowth);
+    FAllocatedLen:= Length(FBuffer);
   end;
 
- s[BuffPos  ]:= #13;  //CR
- s[BuffPos+1]:= #10;  //LF
-
- Inc(BuffPos, 2);
+  FBuffer[FPosition]:= CR;
+  FBuffer[FPosition + 1]:= LF;
+  Inc(FPosition, 2);
 end;
 
 

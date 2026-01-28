@@ -39,12 +39,7 @@ USES
 
 
 CONST
-  HTTP_STATUS_OK = 200; // Standard HTTP status code for "OK", defined here as System.Net.HttpClient does not provide it directly
-
-  // Error codes for download operations
-  ERROR_CLIENT_EXCEPTION = -1; // Indicates a client-side exception before the request was sent
-  ERROR_SAVE_FILE_FAILED = -2; // Indicates that the download succeeded but saving the file failed
-  ERROR_EMPTY_CONTENT    = -3; // Indicates that the download succeeded but the content is empty
+  HTTP_STATUS_OK = 200;  { Standard HTTP status code for "OK" }
 
 CONST
   USER_AGENT_STRING = 'DelphiApp/1.0 (MyApp HttpDownloader; +http://www.example.com)';
@@ -100,43 +95,44 @@ You can pass Referers like this:
 
 function DownloadToStream(CONST URL: string; OUT ErrorMsg: string; CustomHeaders: TNetHeaders = nil; HttpOptions: PHttpOptions = nil): TMemoryStream;
 VAR
-  HttpClient: System.Net.HttpClient.THTTPClient;
+  HttpClient: THTTPClient;
   Options: RHttpOptions;
   HttpResponse: IHTTPResponse;
 begin
   Result:= NIL;
-  ErrorMsg := '';  // Empty means success
+  ErrorMsg:= '';  { Empty means success }
 
-  // Handle the optional HttpOptions parameter
+  { Handle the optional HttpOptions parameter }
   if HttpOptions = nil
-  then Options.Reset             // Use default options
-  else Options := HttpOptions^;
+  then Options.Reset
+  else Options:= HttpOptions^;
 
-  HttpClient := THTTPClient.Create;
+  HttpClient:= THTTPClient.Create;
   try
-    // Configure HttpClient
+    { Configure HttpClient }
     HttpClient.UserAgent         := Options.UserAgent;
     HttpClient.HandleRedirects   := Options.HandleRedirects;
     HttpClient.MaxRedirects      := Options.MaxRedirects;
     HttpClient.AllowCookies      := Options.AllowCookies;
     HttpClient.ResponseTimeout   := Options.ResponseTimeout;
     HttpClient.ConnectionTimeout := Options.ConnectionTimeout;
-    HttpClient.SecureProtocols   := [THTTPSecureProtocol.TLS12, THTTPSecureProtocol.TLS13]; // Important for modern HTTPS
+    HttpClient.SecureProtocols   := [THTTPSecureProtocol.TLS12, THTTPSecureProtocol.TLS13];
 
     Result:= TMemoryStream.Create;
     try
-      HttpResponse := HttpClient.Get(URL, Result, CustomHeaders);
-      if HttpResponse.StatusCode <> 200 then
-      begin
-        ErrorMsg:= 'HTTP error ' + IntToStr(HttpResponse.StatusCode) + ': ' + HttpResponse.StatusText;
-        FreeAndNil(Result);
-      end;
+      HttpResponse:= HttpClient.Get(URL, Result, CustomHeaders);
+      if HttpResponse.StatusCode <> HTTP_STATUS_OK
+      then
+        begin
+          ErrorMsg:= 'HTTP error ' + IntToStr(HttpResponse.StatusCode) + ': ' + HttpResponse.StatusText;
+          FreeAndNil(Result);
+        end;
     except
-      on E: ENetException do
-      begin
-        ErrorMsg:= 'Network error: ' + E.Message;
-        FreeAndNil(Result);
-      end;
+      on E: Exception do
+        begin
+          ErrorMsg:= 'Download error: ' + E.Message;
+          FreeAndNil(Result);
+        end;
     end;
   finally
     FreeAndNil(HttpClient);
@@ -145,46 +141,43 @@ end;
 
 
 { Downloads content to a file.
- Does not raise exceptions; errors are indicated via the return value.
- Returns
-   200: Download and file saving were successful.
-   Other positive values: HTTP status code if the request was sent but the status is not 200.
-   ERROR_CLIENT_EXCEPTION: A client error occurred before the request was sent.
-   ERROR_SAVE_FILE_FAILED: Download succeeded but saving the file failed.
-   ERROR_EMPTY_CONTENT: Download succeeded but the content is empty.
+  Does not raise exceptions; errors are indicated via ErrorMsg (empty = success).
 
-Example of CustomHeaders
-   var Headers: TNetHeaders;
-   begin
-     SetLength(Headers, 1);
-     Headers[0].Name  := 'Referer';
-     Headers[0].Value := 'https://my.custom.referer/';
-    }
+  Example of CustomHeaders:
+    var Headers: TNetHeaders;
+    begin
+      SetLength(Headers, 1);
+      Headers[0].Name  := 'Referer';
+      Headers[0].Value := 'https://my.custom.referer/';
+}
 procedure DownloadToFile(CONST URL, SaveTo: string; OUT ErrorMsg: string; CustomHeaders: TNetHeaders = NIL; HttpOptions: PHttpOptions = NIL);
 VAR
   Stream: TMemoryStream;
 begin
-  Stream := DownloadToStream(URL, ErrorMsg, CustomHeaders, HttpOptions);
+  Stream:= DownloadToStream(URL, ErrorMsg, CustomHeaders, HttpOptions);
   try
-    if (ErrorMsg = '') AND (Stream <> NIL) then
+    if (ErrorMsg = '') AND (Stream <> NIL)
+    then
       if Stream.Size > 0
       then
         try
           LightCore.IO.ForceDirectoriesB(TPath.GetDirectoryName(SaveTo));
-          Stream.SaveToFile(SaveTo); // Successfully downloaded and saved
+          Stream.SaveToFile(SaveTo);
         except
-          on E: Exception
-            DO ErrorMsg:= 'Download succeeded, but file save failed: '+ SaveTo
+          on E: Exception do
+            ErrorMsg:= 'Download succeeded, but file save failed: ' + SaveTo + ' - ' + E.Message;
         end
       else
-        ErrorMsg:= 'HTTP 200 OK, but content is empty!'
+        ErrorMsg:= 'HTTP 200 OK, but content is empty!';
   finally
     FreeAndNil(Stream);
   end;
 end;
 
 
-// Edge Cases: If a server omits the charset and the content is UTF-8 without a BOM, it may be misdecoded as ISO-8859-1. However, this is rare with modern servers, and you could extend the function to pass a default encoding (e.g., ContentAsString(TEncoding.UTF8)) if needed.
+{ Downloads URL content as a string.
+  Edge case: If server omits charset and content is UTF-8 without BOM, it may be misdecoded.
+  This is rare with modern servers. }
 function DownloadAsString(const URL: string; OUT ErrorMsg: string; CustomHeaders: TNetHeaders = nil; HttpOptions: PHttpOptions = nil): string;
 var
   HttpClient: THTTPClient;
@@ -194,47 +187,46 @@ begin
   Result:= '';
   ErrorMsg:= '';
 
-  // Handle the optional HttpOptions parameter
+  { Handle the optional HttpOptions parameter }
   if HttpOptions = nil
-  then Options.Reset             // Use default options
+  then Options.Reset
   else Options:= HttpOptions^;
 
-  HttpClient := THTTPClient.Create;
+  HttpClient:= THTTPClient.Create;
   try
-    // Apply the options (default or provided)
-    HttpClient.UserAgent         := Options.UserAgent;
-    HttpClient.HandleRedirects   := Options.HandleRedirects;
-    HttpClient.MaxRedirects      := Options.MaxRedirects;
-    HttpClient.AllowCookies      := Options.AllowCookies;
-    HttpClient.ResponseTimeout   := Options.ResponseTimeout;
-    HttpClient.ConnectionTimeout := Options.ConnectionTimeout;
-    HttpClient.SecureProtocols   := [THTTPSecureProtocol.TLS12, THTTPSecureProtocol.TLS13];  // Important for modern HTTPS
+    try
+      { Apply the options }
+      HttpClient.UserAgent         := Options.UserAgent;
+      HttpClient.HandleRedirects   := Options.HandleRedirects;
+      HttpClient.MaxRedirects      := Options.MaxRedirects;
+      HttpClient.AllowCookies      := Options.AllowCookies;
+      HttpClient.ResponseTimeout   := Options.ResponseTimeout;
+      HttpClient.ConnectionTimeout := Options.ConnectionTimeout;
+      HttpClient.SecureProtocols   := [THTTPSecureProtocol.TLS12, THTTPSecureProtocol.TLS13];
 
-    // Perform the GET request, no stream needed since we want a string
-    HttpResponse:= HttpClient.Get(URL, nil, CustomHeaders);
+      { Perform the GET request }
+      HttpResponse:= HttpClient.Get(URL, nil, CustomHeaders);
 
-    if HttpResponse.StatusCode = HTTP_STATUS_OK
-    then Result:= HttpResponse.ContentAsString       // RTL handles encoding via Content-Type charset
-    else ErrorMsg:= 'HTTP Error ' + IntToStr(HttpResponse.StatusCode) + ': ' + HttpResponse.StatusText;
-  except
-    on E: ENetException
-      DO ErrorMsg := 'Network error: ' + E.Message;
+      if HttpResponse.StatusCode = HTTP_STATUS_OK
+      then Result:= HttpResponse.ContentAsString
+      else ErrorMsg:= 'HTTP error ' + IntToStr(HttpResponse.StatusCode) + ': ' + HttpResponse.StatusText;
+    except
+      on E: Exception do
+        ErrorMsg:= 'Download error: ' + E.Message;
+    end;
+  finally
+    FreeAndNil(HttpClient);
   end;
-  FreeAndNil(HttpClient);  { Safe here: try/except without re-raise ensures this line executes }
 end;
 
 
-// Downloads content as a string, ignoring errors (returns an empty string on failure).
-// Assumes UTF-8 encoding.
+{ Downloads content as a string, ignoring errors (returns empty string on failure). }
 function DownloadAsString(CONST URL: string): string;
-VAR ErrorMsg: string;
+VAR
+  ErrorMsg: string;
 begin
-  try
-    Result:= DownloadAsString(URL, ErrorMsg);
-  except
-    on E: ENetException
-      DO ErrorMsg := 'Network error: ' + E.Message;
-  end;
+  Result:= DownloadAsString(URL, ErrorMsg);
+  { ErrorMsg is intentionally ignored - caller doesn't want error details }
 end;
 
 

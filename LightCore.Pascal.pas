@@ -6,7 +6,18 @@ UNIT LightCore.Pascal;
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
-   Very crude routines for processing PAS files.
+   Simple routines for processing Pascal source files.
+
+   Features:
+     - Extract object/method names from code lines
+     - Find and manipulate USES clauses
+     - Detect and strip comments
+     - Search code with relaxed matching (ignores spacing/case)
+     - Search with [AND], [OR], [NOT] operators
+
+   Limitations:
+     - Not a full parser - uses heuristics and may have edge cases
+     - Comment detection doesn't handle // inside string literals
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
@@ -47,33 +58,42 @@ USES
 {-------------------------------------------------------------------------------------------------------------
     COMMENTS
 -------------------------------------------------------------------------------------------------------------}
-{ Returns true if the lines that start with a comment symbol:   // { (*
-  Line is a line of Pascal code. }
+
+{ Returns True if the line starts with a comment symbol: //, {, or (*
+  Note: Does not detect lines that are continuations of multi-line comments. }
 function LineIsAComment(Line: string): Boolean;
 begin
   Result:= FALSE;
   Line:= Trim(Line);
   if Line = '' then EXIT(FALSE);
 
-  if (Pos('{', Line) = 1)
+  { Check for curly brace comment }
+  if Line[1] = '{'
   then EXIT(TRUE);
 
+  { Check for // and (* comments }
   if Length(Line) > 1
   then Result:= ((Line[1] = '/') AND (Line[2] = '/'))
              OR ((Line[1] = '(') AND (Line[2] = '*'));
 end;
 
 
-{ Extract comments (//) and process only the actual code. At the end put the comment back }
+{ Extracts // comments from a line of code.
+  Returns True if a comment was found and separated.
+  CodeLine is modified to contain only the code (without comment).
+  Comment receives the comment portion (including //).
+  Note: Does not handle // inside string literals - a known limitation. }
 function SeparateComments(var CodeLine: string; out Comment: string): Boolean;
+var iPos: Integer;
 begin
-  var iPos:= Pos('//', CodeLine);
+  Comment:= '';
+  iPos:= Pos('//', CodeLine);
   Result:= iPos > 0;
   if Result then
-   begin
-    Comment := Copy(CodeLine, iPos, MaxInt);  // Get the comment BEFORE I modify the sLine
-    CodeLine:= Copy(CodeLine, 1, iPos-1);
-   end;
+  begin
+    Comment := Copy(CodeLine, iPos, MaxInt);
+    CodeLine:= Copy(CodeLine, 1, iPos - 1);
+  end;
 end;
 
 
@@ -87,7 +107,8 @@ begin
 end;
 
 
-{ Returns the approximate number of comment lines }
+{ Returns the approximate number of comment lines.
+  Returns -1 if file does not exist. }
 function CountComments(const FileName: string): Integer;
 begin
   Result:= 0;
@@ -107,26 +128,33 @@ end;
     CLASSES & OBJECTS
 -------------------------------------------------------------------------------------------------------------}
 
-{ Separate an object from its properties.
-  Line is a line of Pascal code
-  Example: Form1.Button1.SetFocus returns Form1.Button1 }
+{ Separates an object from its method/property.
+  Line is a line of Pascal code.
+  Example: Form1.Button1.SetFocus returns Form1.Button1
+  Returns empty string if no dot is found. }
 function ExtractObjectName(Line: string): string;
+var LastDot: Integer;
 begin
   Line:= Trim(Line);
-  VAR LastDot:= LightCore.LastPos('.', Line)-1;
-  Result:= CopyTo(Line, 1, LastDot);
+  LastDot:= LightCore.LastPos('.', Line);
+  if LastDot < 1
+  then Result:= ''
+  else Result:= CopyTo(Line, 1, LastDot - 1);
 end;
 
 
-{ Returns true if this line of code starts with "procedure" or "function" }
+{ Returns true if this line declares a method, type, or type alias.
+  Checks for: function, procedure, constructor, destructor, class, record, and pointer types.
+  Note: This is a heuristic check, not a full parser. May have false positives. }
 function IsMethod(const CodeLine: string): Boolean;
 begin
-  Result:= (PosInsensitive('function' , CodeLine) > 0)
+  Result:= (PosInsensitive('function', CodeLine) > 0)
         OR (PosInsensitive('procedure', CodeLine) > 0)
-        OR (PosInsensitive('constructor', CodeLine) > 0)    // constructor TMyClass.Create(x, y: integer);
-        OR (PosInsensitive('class', CodeLine) > 0)          // Examples: TMyAliasis = class;    TMyAliasis = class(Tobject)
-        OR (PosInsensitive('record', CodeLine) > 0)         // TMyRec = packed record
-        OR (PosInsensitive('^', CodeLine) > 10);            // PMyRec = ^TMyRec;
+        OR (PosInsensitive('constructor', CodeLine) > 0)
+        OR (PosInsensitive('destructor', CodeLine) > 0)
+        OR (PosInsensitive('class', CodeLine) > 0)
+        OR (PosInsensitive('record', CodeLine) > 0)
+        OR (Pos('^', CodeLine) > 0);  { Pointer type declaration: PMyRec = ^TMyRec }
 end;
 
 
@@ -183,51 +211,59 @@ end;
 
 { Add the specified unit to the "uses" clause.
   Returns True if the unit was added or if it already existed in the Uses.
-  Warning! This will add the unit only to IMPLEMENTATION }
+  Note: This will add the unit to the IMPLEMENTATION section's uses clause. }
 function AddUnitToUses(PasBody: TStringList; CONST UnitToAdd: string): Boolean;
-VAR
-   sLine: string;
-   iPos, i: Integer;
-   MultiLine: Boolean;
+var
+  sLine: string;
+  iPos, i: Integer;
+  MultiLine: Boolean;
+  Units: string;
 begin
- Result:= FALSE;
+  Result:= FALSE;
+  if (PasBody.Count = 0) then RAISE Exception.Create('AddUnitToUses!');
 
- { Find the INTERFACE section }
- iPos:= FindSection(PasBody, TRUE);
- if iPos < 1 then EXIT(FALSE);
+  { Find the INTERFACE section }
+  iPos:= FindSection(PasBody, TRUE);
+  if iPos < 1 then EXIT(FALSE);
 
- { Check and don't add the unit if it already exists }
- if UnitIncluded(PasBody, UnitToAdd, iPos)
- then EXIT(TRUE);
+  { Check and don't add the unit if it already exists in interface }
+  if UnitIncluded(PasBody, UnitToAdd, iPos)
+  then EXIT(TRUE);
 
- { Find the IMPLEMENTATION section }
- iPos:= FindSection(PasBody, FALSE);
- if iPos < 1 then EXIT(FALSE);
+  { Find the IMPLEMENTATION section }
+  iPos:= FindSection(PasBody, FALSE);
+  if iPos < 1 then EXIT(FALSE);
 
- { Check and don't add the unit if it already exists }
- if UnitIncluded(PasBody, UnitToAdd, iPos)
- then EXIT(TRUE);
+  { Check and don't add the unit if it already exists in implementation }
+  if UnitIncluded(PasBody, UnitToAdd, iPos)
+  then EXIT(TRUE);
 
- for i:= iPos to PasBody.Count-1 do
-   begin
-     sLine:= PasBody[i];
+  for i:= iPos to PasBody.Count - 1 do
+  begin
+    sLine:= PasBody[i];
 
-     iPos:= PosInsensitive('USES', sLine);
-     if (iPos > 0) then
+    iPos:= PosInsensitive('USES', sLine);
+    if iPos > 0 then
+    begin
+      { Is the "uses" written as a single line or as multiple lines? }
+      MultiLine:= UpperCase(Trim(sLine)) = 'USES';
+      if MultiLine then
       begin
-        { Is the "uses" written as a single line or as multiple lines? }
-        MultiLine:= UpperCase(Trim(sLine)) = 'USES';
-        if MultiLine
-        then PasBody[i+1]:= '  '+ UnitToAdd+',' + Trim(PasBody[i+1])  // Warning: this will crash and burn if the Pas file is invalid (if there is no next line after "uses" )
-        else
-         begin
-           VAR Units:= CopyfromTo(Trim(PasBody[i]), ' ', ';', TRUE); //the rest of the line;
-           PasBody[i]:= 'USES ' + UnitToAdd+ ', '+ Trim(Units);
-         end;
-
-        EXIT(TRUE);
+        { Multi-line uses - insert on next line }
+        if i + 1 < PasBody.Count
+        then PasBody[i + 1]:= '  ' + UnitToAdd + ', ' + Trim(PasBody[i + 1])
+        else PasBody.Add('  ' + UnitToAdd + ';');  { Handle malformed file }
+      end
+      else
+      begin
+        { Single-line uses - insert unit at beginning }
+        Units:= CopyfromTo(Trim(PasBody[i]), ' ', ';', TRUE);
+        PasBody[i]:= 'USES ' + UnitToAdd + ', ' + Trim(Units);
       end;
-   end;
+
+      EXIT(TRUE);
+    end;
+  end;
 end;
 
 
@@ -236,13 +272,18 @@ end;
     PARSE LINES OF CODE
 -------------------------------------------------------------------------------------------------------------}
 
-{ Returns the first line where the 'Needle' was found }
-function FindLine(CONST Needle: string; Haystack: TStringList; StartAt: integer): Integer;
+{ Returns the first line index where the 'Needle' was found, or -1 if not found.
+  Search starts at StartAt (0-based index). }
+function FindLine(CONST Needle: string; Haystack: TStringList; StartAt: Integer): Integer;
 begin
- for var i:= StartAt to Haystack.Count-1 do
-   if PosInsensitive(Needle, Haystack[i]) > 0
-   then EXIT(i);
- Result:= -1;
+  if (Haystack = NIL) 
+  OR (StartAt < 0) 
+  OR (StartAt >= Haystack.Count)
+  then EXIT(-1);
+
+  for var i:= StartAt to Haystack.Count - 1 do
+    if PosInsensitive(Needle, Haystack[i]) > 0
+    then EXIT(i);
 end;
 
 
@@ -302,12 +343,9 @@ begin
 end;
 
 
-{
-  As above. It finds a method even if it has some spaces in it.
-  The advantage of this is that it returns the exact position where the text was found.
-  Example. Both work: SetFocus( and SetFocus (
-}
-//ToDo: The function assumes LineLower and SubstringLower are always lowercase. Instead of LowerCase calls inside the loop, preprocess once.
+{ Finds a substring even if it has extra spaces around it.
+  Returns the position where the text was found, or -1 if not found.
+  Example: Both "SetFocus(" and "SetFocus (" are matched. }
 function RelaxedSearchI(const CodeLine, Instruction: string): Integer;
 var
   SubstringLower,
@@ -344,19 +382,31 @@ begin
 end;
 
 
-{ Returns the position where Needle was found in the haystack.
-  BUT does so only if the character in front of the Needle is a non-alphabetic character (a-z, A-Z) }
-//ToDo: Pos = 1 is valid only if it's a standalone word. The function should check if HayStack[Pos + Length(Needle)] is also a separator.
+{ Returns the position where Needle was found in the haystack as a whole word.
+  Returns 0 if not found or if found as part of another word.
+  A "whole word" means the characters before and after are non-alphabetic. }
 function WordPos(const Needle, HayStack: string): Integer;
+var
+  FoundPos, EndPos: Integer;
+  CharBefore, CharAfter: Boolean;
 begin
-  var Pos:= PosInsensitive(Needle, HayStack);
-  if (Pos < 1) then Exit(Pos);     // Not found
-  if (Pos = 1) then Exit(Pos);     // The Needle is at the beginning og the haystack. There is nothing more to check.
+  FoundPos:= PosInsensitive(Needle, HayStack);
+  if FoundPos < 1 then EXIT(0);  { Not found }
 
-  // Check if the previous character is a letter or a space (or other signs like .,_+-!; etc)
-  if CharInSet(HayStack[Pos-1], Alphabet)
-  then Result:= 0                // Not a whole word!
-  else Result:= Pos;             // Still valid
+  { Check character before the needle }
+  if FoundPos = 1
+  then CharBefore:= True  { Beginning of string - valid }
+  else CharBefore:= NOT CharInSet(HayStack[FoundPos - 1], Alphabet);
+
+  { Check character after the needle }
+  EndPos:= FoundPos + Length(Needle);
+  if EndPos > Length(HayStack)
+  then CharAfter:= True  { End of string - valid }
+  else CharAfter:= NOT CharInSet(HayStack[EndPos], Alphabet);
+
+  if CharBefore AND CharAfter
+  then Result:= FoundPos
+  else Result:= 0;
 end;
 
 
@@ -364,66 +414,105 @@ end;
 
 
 
-{ Search multiple strings sepparated by special instructions like [OR] and [AND] and [NOT].
-  For example if I look for a line of code that must contain both the keywords 'if' and 'then' than I will write my query as:
-  usage:
-     FindLine(InputText, 'if[AND]then'): Integer;  }
+{ Search for lines matching a query with [AND], [OR], and [NOT] operators.
+  Returns the line index where a match was found, or -1 if not found.
 
-// !!!!!!!!!!!! NOT TESTED YET !!!!!!!!!!!!
-// ChatGPT    (better)
+  Syntax:
+    - [AND] between terms: ALL terms must be present
+    - [OR] between terms: ANY term must be present
+    - [NOT] before a term: Term must NOT be present
+
+  Examples:
+    'if[AND]then'         - Line must contain both 'if' AND 'then'
+    'begin[OR]end'        - Line must contain 'begin' OR 'end'
+    'procedure[NOT]virtual' - Line must contain 'procedure' but NOT 'virtual'
+
+  Note: Only supports one operator type per query. Mixed operators not supported. }
 function RelaxedSearchEx(Query: string; Haystack: TStringList; StartAt: Integer = 0): Integer;
 var
-  Terms: TArray<string>;
-  IncludeList, ExcludeList: TArray<string>;
   Line, Term: string;
-  Found, MatchAND, MatchOR: Boolean;
   i: Integer;
+  HasAND, HasOR, HasNOT: Boolean;
+  Parts: TArray<string>;
+  MainTerm, ExcludeTerm: string;
+  AllMatch, AnyMatch: Boolean;
 begin
-  Result := -1;
-  Terms := Query.Split(['[AND]', '[OR]', '[NOT]'], TStringSplitOptions.ExcludeEmpty);
-  // Process Terms into Include and Exclude lists
-  for Term in Terms do
+  Result:= -1;
+  if (Haystack = NIL) OR (Haystack.Count = 0)
+  then EXIT;
+  if (StartAt < 0) OR (StartAt >= Haystack.Count)
+  then EXIT;
+
+  Query:= Trim(Query);
+  if Query = ''
+  then EXIT;
+
+  HasAND:= Pos('[AND]', Query) > 0;
+  HasOR:= Pos('[OR]', Query) > 0;
+  HasNOT:= Pos('[NOT]', Query) > 0;
+
+  { Handle [NOT] operator: term[NOT]excluded }
+  if HasNOT then
   begin
-    if Pos('[NOT]', Query) > 0
-    then ExcludeList := ExcludeList + [Trim(Term)]
-    else
-      if Pos('[AND]', Query) > 0
-      then IncludeList := IncludeList + [Trim(Term)]
-      else IncludeList := IncludeList + [Trim(Term)];
+    Parts:= Query.Split(['[NOT]'], TStringSplitOptions.ExcludeEmpty);
+    if Length(Parts) < 2
+    then EXIT;
+    MainTerm:= LowerCase(Trim(Parts[0]));
+    ExcludeTerm:= LowerCase(Trim(Parts[1]));
+
+    for i:= StartAt to Haystack.Count - 1 do
+    begin
+      Line:= LowerCase(Haystack[i]);
+      if (Pos(MainTerm, Line) > 0) AND (Pos(ExcludeTerm, Line) = 0)
+      then EXIT(i);
+    end;
+    EXIT;
   end;
-  // Search
-  for i := StartAt to Haystack.Count - 1 do
+
+  { Handle [AND] operator: all terms must match }
+  if HasAND then
   begin
-    Line := LowerCase(Trim(Haystack[i]));
-    MatchAND := True;
-    MatchOR := False;
-    // Check Include terms (AND condition)
-    for Term in IncludeList do
-      if Pos(LowerCase(Term), Line) = 0 then
-      begin
-        MatchAND := False;
-        Break;
-      end;
-    // Check Exclude terms (NOT condition)
-    for Term in ExcludeList do
-      if Pos(LowerCase(Term), Line) > 0 then
-      begin
-        MatchAND := False;
-        Break;
-      end;
-    // If we have `[OR]` conditions, allow at least one match
-    for Term in IncludeList do
-      if Pos(LowerCase(Term), Line) > 0 then
-      begin
-        MatchOR := True;
-        Break;
-      end;
-    // Result
-    Found := (MatchAND and (Pos('[AND]', Query) > 0)) or
-             (MatchOR  and (Pos('[OR]', Query) > 0)) or
-             (MatchAND and NOT MatchOR);
-    if Found then Exit(i);
+    Parts:= Query.Split(['[AND]'], TStringSplitOptions.ExcludeEmpty);
+    for i:= StartAt to Haystack.Count - 1 do
+    begin
+      Line:= LowerCase(Haystack[i]);
+      AllMatch:= True;
+      for Term in Parts do
+        if Pos(LowerCase(Trim(Term)), Line) = 0 then
+        begin
+          AllMatch:= False;
+          Break;
+        end;
+      if AllMatch
+      then EXIT(i);
+    end;
+    EXIT;
   end;
+
+  { Handle [OR] operator: any term must match }
+  if HasOR then
+  begin
+    Parts:= Query.Split(['[OR]'], TStringSplitOptions.ExcludeEmpty);
+    for i:= StartAt to Haystack.Count - 1 do
+    begin
+      Line:= LowerCase(Haystack[i]);
+      AnyMatch:= False;
+      for Term in Parts do
+        if Pos(LowerCase(Trim(Term)), Line) > 0 then
+        begin
+          AnyMatch:= True;
+          Break;
+        end;
+      if AnyMatch
+      then EXIT(i);
+    end;
+    EXIT;
+  end;
+
+  { No operators - simple search }
+  for i:= StartAt to Haystack.Count - 1 do
+    if Pos(LowerCase(Query), LowerCase(Haystack[i])) > 0
+    then EXIT(i);
 end;
 
 

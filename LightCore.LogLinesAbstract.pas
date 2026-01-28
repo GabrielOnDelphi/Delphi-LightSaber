@@ -89,7 +89,7 @@ begin
 
   if StreamVer= CurVer
   then readFromStream_v5(Stream)
-  else RAISE Exception.Create('Usupported stream version.');
+  else RAISE Exception.Create('Unsupported stream version.');
 
   Stream.ReadPadding;
 end;

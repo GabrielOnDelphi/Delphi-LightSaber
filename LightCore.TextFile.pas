@@ -166,18 +166,16 @@ end;
 
 
 { Read the first Count characters from a file.
-  Return ANSI string. }
-function StringFromFileStart (CONST FileName: string; Count: Cardinal): AnsiString;
+  Returns ANSI string. }
+function StringFromFileStart(CONST FileName: string; Count: Cardinal): AnsiString;
 VAR StreamFile: TLightStream;
 begin
- SetLength(Result, Count);
-
- StreamFile:= TLightStream.Create(FileName, fmOpenRead);
- TRY
-   Result:= StreamFile.TryReadStringA(Count);
- FINALLY
-   FreeAndNil(StreamFile);
- END;
+  StreamFile:= TLightStream.Create(FileName, fmOpenRead);
+  TRY
+    Result:= StreamFile.TryReadStringA(Count);
+  FINALLY
+    FreeAndNil(StreamFile);
+  END;
 end;
 
 
@@ -194,7 +192,7 @@ end;
 
   If it cannot detect the correct encoding automatically, we can force it to what we want by setting the second paramater.
       Example: System.SysUtils.TEncoding.UTF8
-      However this is buggy! It will raise an exception if the file is ANSI but it contains high characters such as ½ (#189)
+      However this is buggy! It will raise an exception if the file is ANSI but it contains high characters such as ï¿½ (#189)
       See: https://stackoverflow.com/questions/35708827/what-could-cause-no-mapping-for-the-unicode-character-exists-in-the-target-mult }
 function StringFromFile(CONST FileName: string; Enc: TEncoding= NIL): String;
 begin
@@ -275,12 +273,15 @@ end;
 {-----------------------------------------------------------------------------------------------------------------------
    LINES
 -----------------------------------------------------------------------------------------------------------------------}
-// Returns the first line from a text file
+{ Returns the first line from a text file.
+  Returns empty string if file is empty. }
 function FirstLineFromFile(CONST FileName: string): string;
 begin
   VAR TSL:= StringFromFileTSL(FileName);
   TRY
-    Result:= TSL[0];
+    if TSL.Count > 0
+    then Result:= TSL[0]
+    else Result:= '';
   FINALLY
     FreeAndNil(TSL);
   END;
@@ -362,24 +363,24 @@ end;
 
 
 
-function CountCharAppearance(CONST FileName: string; C: AnsiChar): Int64;    { Used by TFasParser.CountSequences }
+function CountCharAppearance(CONST FileName: string; C: AnsiChar): Int64;
 VAR
    s: AnsiString;
    BuffPo: Int64;
 begin
- Result:= 0;
- BuffPo:= 0;
- VAR Stream:= TLightStream.CreateWrite(FileName);
- TRY
-   WHILE BuffPo < Stream.Size DO
-    begin
-     s:= Stream.ReadStringA(1024*KB);
-     Inc(BuffPo, 1024*KB);
-     Result:= Result+ Cardinal(LightCore.CountAppearance(c, s));
-    end;
- FINALLY
-   FreeAndNil(Stream);
- END;
+  Result:= 0;
+  BuffPo:= 0;
+  VAR Stream:= TLightStream.CreateRead(FileName);
+  TRY
+    WHILE BuffPo < Stream.Size DO
+      begin
+        s:= Stream.ReadStringA(1024*KB);
+        Inc(BuffPo, 1024*KB);
+        Result:= Result + Cardinal(LightCore.CountAppearance(c, s));
+      end;
+  FINALLY
+    FreeAndNil(Stream);
+  END;
 end;
 
 
@@ -539,7 +540,7 @@ begin
   if InpStream.Size < 3 then Exit(FALSE); // File too small for BOM
 
   InpStream.Read(Buffer, SizeOf(Buffer));
-  //InpStream.Seek(0, soFromBeginning);  // Rewind the stream
+  InpStream.Seek(0, soFromBeginning);  // Rewind the stream
 
   Result:= (Buffer[1] = $EF)
        AND (Buffer[2] = $BB)
@@ -598,7 +599,8 @@ begin
         AnsiStr    := AnsiString(UTF8String.DataString);
         OutputFile := TFileStream.Create(OutFileName, fmCreate);
         try
-          OutputFile.WriteBuffer(AnsiStr[1], Length(AnsiStr));
+          if Length(AnsiStr) > 0
+          then OutputFile.WriteBuffer(AnsiStr[1], Length(AnsiStr));
         finally
           FreeAndNil(OutputFile);
         end;
@@ -625,7 +627,7 @@ end;
    BRUTE FORCE
 -------------------------------------------------------------------------------------------------------------}
 
-{ Adds the BOM onyl if the file is not empty and does not have BOM already.
+{ Adds the BOM only if the file is not empty and does not have BOM already.
   Warning. Does this with brute force (no text conversion).
   Returns a TSearchResult that indicates if the file was found without BOM.
   Works. }

@@ -221,8 +221,9 @@ end;
 
 
 
-{ Was used to save our data in INI files. Now we save it as floats. }
-function GetUniversalDateFormat: TFormatSettings;  //Unused
+{ Returns ISO 8601 compatible format settings (YYYY-MM-DD).
+  Useful for locale-independent date serialization. }
+function GetUniversalDateFormat: TFormatSettings;
 begin
   Result:= TFormatSettings.Create;
   Result.DateSeparator:= '-';
@@ -234,46 +235,48 @@ end;
 
 
 { Converts a string formatted like 'hh:mm:ss' or 'mm:ss' to seconds.
-  Returns -1 is the string does not contain a valid time.
+  Returns -1 if the string does not contain a valid time.
 
+  Examples:
     StringToSeconds('00:01:30')     // returns 90     (sec)
-    StringToSeconds('01:30')        // returns 5400   (sec)
-    StringToSeconds('10')           // returns 864000 (sec)
+    StringToSeconds('01:30:00')     // returns 5400   (sec)
     StringToSeconds('1.30')         // returns -1
     StringToSeconds('x')            // returns -1 }
-function StringToSeconds(CONST s: String): integer;
-VAR
-  TimeSpan: TTimeSpan;
+function StringToSeconds(CONST s: String): Integer;
+VAR TimeSpan: TTimeSpan;
 begin
   TRY
-   TimeSpan:= System.TimeSpan.TTimeSpan.Parse(s);
-   Result  := Round(TimeSpan.TotalSeconds);
+    TimeSpan:= System.TimeSpan.TTimeSpan.Parse(s);
+    Result:= Round(TimeSpan.TotalSeconds);
   EXCEPT
-   Result:= -1;
-  end;
+    Result:= -1;
+  END;
 end;
 
 
-{...check if a string is a valid date or time?}
+{ Returns True if the string can be parsed as a valid date (locale-dependent). }
 function StringIsDate(CONST s: string): Boolean;
 begin
   Result:= True;
   TRY
     StrToDate(s);
   EXCEPT
-    Result:= False;
+    on EConvertError do
+      Result:= False;
   END;
 end;
 
-{...check if a string is a valid date or time?}
+
+{ Returns True if the string can be parsed as a valid time (locale-dependent). }
 function StringIsTime(CONST s: string): Boolean;
 begin
   Result:= True;
   TRY
     StrToTime(s);
   EXCEPT
-    Result:= False;
-  end;
+    on EConvertError do
+      Result:= False;
+  END;
 end;
 
 

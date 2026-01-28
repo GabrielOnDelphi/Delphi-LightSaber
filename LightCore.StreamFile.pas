@@ -27,7 +27,7 @@ UNIT LightCore.StreamFile;
         This class offers embedded support for file versioning and signature (magic number).
         By using WriteHeader you can put a unique identifier in each of your file.
         Later you can user ReadHeader to verify that your program is trying to read a file that is yours. This prevent the user from feeding the wrong file an input into your program.
-        Even more, this class allows you to expand your class - add new fields that are saved to disk while keeping the file format backword compatible.
+        Even more, this class allows you to expand your class - add new fields that are saved to disk while keeping the file format backward compatible.
 
 
     [HOW TO USE IT]
@@ -262,48 +262,53 @@ begin
   Assert(Signature > '', 'TCubicFileStream - No signature provided!');
 
   // Read "LiSa" magic no
-  TRY
+  try
     MagicNo:= ReadCardinal;
-  EXCEPT
-    on E: Exception DO
-      begin
-        AppDataCore.LogError('Cannot read magic number for: '+ String(Signature) + ' - '+ E.Message);
-        EXIT(0);
-      end;
-  END;
+  except
+    on E: Exception do
+    begin
+      if AppDataCore <> NIL
+      then AppDataCore.LogError('Cannot read magic number for: '+ string(Signature) + ' - '+ E.Message);
+      EXIT(0);
+    end;
+  end;
   if MagicNo <> LisaMagicNumber then EXIT(0);
 
   // Read signature
-  TRY
+  try
     FileSignature:= ReadSignature;
-  EXCEPT
-    on E: Exception DO
+  except
+    on E: Exception do
     begin
-      AppDataCore.LogError('Cannot read stream signature for: '+ String(Signature) + ' - '+ E.Message);
+      if AppDataCore <> NIL
+      then AppDataCore.LogError('Cannot read stream signature for: '+ string(Signature) + ' - '+ E.Message);
       EXIT(0);
     end;
-  END;
+  end;
   if FileSignature = '' then
-    begin
-      AppDataCore.LogError('Cannot read file signature: '+ string(Signature));
-      EXIT(0);
-    end;
+  begin
+    if AppDataCore <> NIL
+    then AppDataCore.LogError('Cannot read file signature: '+ string(Signature));
+    EXIT(0);
+  end;
   if FileSignature <> Signature then
-    begin
-      AppDataCore.LogError('Signature mismatch: '+ string(Signature));
-      EXIT(0);
-    end;
+  begin
+    if AppDataCore <> NIL
+    then AppDataCore.LogError('Signature mismatch: '+ string(Signature));
+    EXIT(0);
+  end;
 
   // Read the version number
-  TRY
+  try
     Result:= ReadWord;
-  EXCEPT
-    on E: Exception DO
+  except
+    on E: Exception do
     begin
-      AppDataCore.LogError('Cannot read stream version for: '+ String(Signature) + ' - '+ E.Message);
+      if AppDataCore <> NIL
+      then AppDataCore.LogError('Cannot read stream version for: '+ string(Signature) + ' - '+ E.Message);
       EXIT(0);
     end;
-  END;
+  end;
 end;
 
 
@@ -328,19 +333,21 @@ begin
 
   // Check size
   if Count > 64 then
-    begin
-      AppDataCore.LogError('ReadSignature: Signature larger than 64 bytes: '+ IntToStr(Count)+' bytes');
-      EXIT('');
-    end;
+  begin
+    if AppDataCore <> NIL
+    then AppDataCore.LogError('ReadSignature: Signature larger than 64 bytes: '+ IntToStr(Count) + ' bytes');
+    EXIT('');
+  end;
 
   // Enough data to read?
-  if Count > Size- Position then
-    begin
-      AppDataCore.LogError('ReadSignature: Signature lenght > file size!');
-      EXIT('');
-    end;
+  if Count > Size - Position then
+  begin
+    if AppDataCore <> NIL
+    then AppDataCore.LogError('ReadSignature: Signature length > file size!');
+    EXIT('');
+  end;
 
-  // Do the actual strign reading
+  // Do the actual string reading
   Result:= ReadStringACnt(Count, 128);
 end;
 
@@ -359,7 +366,7 @@ CONST
 procedure TCubicFileStream.ReadCheckPointE(CONST s: AnsiString= '');
 begin
   if NOT ReadCheckPoint(s)
-  then raise Exception.Create('Checkpoint failure! '+ crlf+ string(s));
+  then raise Exception.Create('Checkpoint failure! '+ CRLF + string(s));
 end;
 
 function TCubicFileStream.ReadCheckPoint(CONST s: AnsiString= ''): Boolean;
@@ -637,27 +644,26 @@ end;
 
 
 { SIGNED }
-procedure TCubicFileStream.WriteShortInt(s: ShortInt);     //Signed 8bit: -128..127
+procedure TCubicFileStream.WriteShortInt(s: ShortInt);     // Signed 8-bit: -128..127
 begin
-  Write(s, 1);
+  WriteBuffer(s, 1);
 end;
 
 function TCubicFileStream.ReadShortInt: ShortInt;
 begin
-  Read(Result, 1);
+  ReadBuffer(Result, 1);
 end;
 
 
-
-{}
-procedure TCubicFileStream.WriteSmallInt(s: SmallInt);     //Signed 16bit: -32768..32767
+{ SMALLINT }
+procedure TCubicFileStream.WriteSmallInt(s: SmallInt);     // Signed 16-bit: -32768..32767
 begin
-  Write(s, 2);
+  WriteBuffer(s, 2);
 end;
 
 function TCubicFileStream.ReadSmallInt: SmallInt;
 begin
-  Read(Result, 2);
+  ReadBuffer(Result, 2);
 end;
 
 
@@ -728,24 +734,23 @@ end;
 --------------------------------------------------------------------------------------------------}
 function TCubicFileStream.ReadSingle: Single;
 begin
-  Read(Result, 4);
+  ReadBuffer(Result, 4);
 end;
 
 procedure TCubicFileStream.WriteSingle(s: Single);
 begin
-  Write(s, 4);
+  WriteBuffer(s, 4);
 end;
-
 
 
 function TCubicFileStream.ReadDouble: Double;
 begin
-  Read(Result, 8);
+  ReadBuffer(Result, 8);
 end;
 
 procedure TCubicFileStream.WriteDouble(d: Double);
 begin
-  Write(d, 8);
+  WriteBuffer(d, 8);
 end;
 
 
@@ -905,8 +910,14 @@ end;
 { Read the raw content of the file and return it as string (for debugging) }
 function TCubicFileStream.AsString: AnsiString;
 begin
-  Position:= 0;
-  Result:= ReadStringA(Size);
+  if Size = 0
+  then Result:= ''
+  else
+    begin
+      Position:= 0;
+      SetLength(Result, Size);
+      Read(Result[1], Size);
+    end;
 end;
 
 
@@ -937,7 +948,8 @@ function TCubicFileStream.AsBytes: TBytes;          { Put the content of the str
 begin
   Position:= 0;            // Reset stream position
   SetLength(Result, Size); // Allocate size
-  Read(Result[0], Size);   // Read content of stream
+  if Size > 0
+  then Read(Result[0], Size);   // Read content of stream
 end;
 
 

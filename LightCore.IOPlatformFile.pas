@@ -2,11 +2,18 @@ UNIT LightCore.IOPlatformFile;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
 --------------------------------------------------------------------------------------------------------------
-   Converts the 'Enter' between Mac, Linux and Win.
+   Line ending conversion utilities for cross-platform text files.
 
-   Also see: LightCore.TextFile.pas
+   Line ending formats:
+     - Windows (CRLF)  : $0D $0A (CR + LF)
+     - Unix/Linux (LF) : $0A only
+     - Classic Mac (CR): $0D only (pre-OS X, rarely used today)
+
+   Note: Modern macOS uses Unix-style LF line endings.
+
+   Also see: LightCore.TextFile.pas, System.SysUtils.AdjustLineBreaks()
 --------------------------------------------------------------------------------------------------------------
    Tester app:
       c:\Projects\Project Support\Tool - Light Delphi utilities (DUT)\LDU.dpr
@@ -17,10 +24,15 @@ INTERFACE
 USES
    System.SysUtils, System.Classes;
 
+CONST
+  CHAR_CR = $0D;  { Carriage Return }
+  CHAR_LF = $0A;  { Line Feed }
+
 TYPE
-  EnterType          = (etUnknown, etWin, etNix, etMac);
   TConvertNotifyKind = (nkMax, nkProgress);
   TConvertNotify     = procedure(Kind: TConvertNotifyKind; Value: LongInt);
+  TEnterType         = (etUnknown, etWin, etNix, etMac);
+  EnterType = TEnterType;  { Backward compatibility alias }
 
  function  IsMacFile     (InStream: TStream): Boolean;                                                { Returns true if the Enter is format from a single CR character }
  function  GetEnterType  (InStream: TStream): EnterType;
@@ -39,29 +51,40 @@ IMPLEMENTATION
 USES LightCore.Types;
 
 
-{ Detects if the specified stream contains Windows or Linux enters }
-function GetEnterType(InStream: TStream): EnterType;
+{ Detects line ending format in the stream.
+  Returns etUnknown if no line endings found (single-line file).
+  Note: Stream position is modified; caller should save/restore if needed. }
+function GetEnterType(InStream: TStream): TEnterType;
 VAR
    B1, B2: Byte;
+   SavedPos: Int64;
 begin
  if NOT Assigned(InStream)
  then raise exception.Create('Input stream not assigned!');
 
- Result:= etUnknown;
- WHILE InStream.Position < InStream.Size-1 DO
+  Result:= etUnknown;
+  SavedPos:= InStream.Position;
+
+  while InStream.Position < InStream.Size do
   begin
-   InStream.Read(B1, 1);
-   case B1 of
-    $0D:                           { Look for Mac }
-     begin
-      InStream.Read(B2, 1);        { Check next char }
-      if B2= $0A
-      then EXIT(etWin)             { Win: 0D0A }
-      else EXIT(etMac);            { Mac: 0D }
-     end;
-    $0A: EXIT(etNix);              { Linux: 0A }
-   end;
+    InStream.Read(B1, 1);
+    case B1 of
+      CHAR_CR:  { Found CR - could be Win (CRLF) or Mac (CR only) }
+        begin
+          if InStream.Position < InStream.Size
+          then begin
+            InStream.Read(B2, 1);
+            if B2 = CHAR_LF
+            then EXIT(etWin)   { CR+LF = Windows }
+            else EXIT(etMac);  { CR alone = Classic Mac }
+          end
+          else EXIT(etMac);    { CR at end of file = Classic Mac }
+        end;
+      CHAR_LF: EXIT(etNix);    { LF alone = Unix/Linux }
+    end;
   end;
+
+  InStream.Position:= SavedPos;  { Restore position if no line ending found }
 end;
 
 
@@ -89,198 +112,215 @@ end;
 
 
 
-{ Returns true if the Enter is format from a single CR character }
+{ Returns True if the file uses classic Mac line endings (CR only, not CRLF).
+  Note: Stream position is modified; caller should save/restore if needed. }
 function IsMacFile(InStream: TStream): Boolean;
 VAR
    B: Byte;
 begin
- if NOT Assigned(InStream) then raise exception.Create('Input stream not assigned!');
+ if NOT Assigned(InStream) then raise exception.Create('IsMacFile - Input stream not assigned!');
 
- Result:= FALSE;
- WHILE InStream.Position < InStream.Size-1 DO
+  Result:= FALSE;
+  while InStream.Position < InStream.Size do
   begin
-   InStream.Read(B, 1);
-   if B= $0D then
-     begin
-      InStream.Read(B, 1);
-      if (B <> $0A) then EXIT(TRUE);        { Make sure the next char is NOT a LF char }
-     end;
+    InStream.Read(B, 1);
+    if B = CHAR_CR
+    then begin
+      { Check if CR is followed by LF (Windows) or standalone (Mac) }
+      if InStream.Position < InStream.Size
+      then begin
+        InStream.Read(B, 1);
+        if B <> CHAR_LF
+        then EXIT(TRUE);  { CR not followed by LF = Mac format }
+      end
+      else EXIT(TRUE);    { CR at end of file = Mac format }
+    end;
   end;
 end;
 
 
 
-{ Convert all ENTERs in this file from Linux (LF) to Windows (CRLF) format.
-  Gives feedback (so you can update a progress bar) as the file is processed.
-  EXISTS: System.SysUtils.AdjustLineBreaks() }
+{ Convert Unix (LF) to Windows (CRLF) line endings.
+  Replaces each LF ($0A) with CRLF ($0D $0A).
+  See also: System.SysUtils.AdjustLineBreaks() }
 procedure UnixToWin(InStream: TStream; OutStream: TStream; Notify: TConvertNotify);
 VAR
-   B, NewB: Byte; Value: LongInt;
+   B: Byte;
+   BytesProcessed: Int64;
 begin
- if NOT Assigned(InStream)  then raise exception.Create('Input stream not assigned!');
- if NOT Assigned(OutStream) then raise exception.Create('Output stream not assigned!');
+ if NOT Assigned(InStream)  then raise exception.Create('UnixToWin-Input stream not assigned!');
+ if NOT Assigned(OutStream) then raise exception.Create('UnixToWin-Output stream not assigned!');
 
- if Assigned(Notify)
- then Notify(nkMax, InStream.Size);
+  if Assigned(Notify)
+  then Notify(nkMax, InStream.Size);
 
- Value := 0;
- WHILE InStream.Position < InStream.Size DO
+  BytesProcessed:= 0;
+  while InStream.Position < InStream.Size do
   begin
-   InStream.Read(B, 1);
-   case B of
-    $0A: begin
-          NewB := $0D;
-          OutStream.Write(NewB, 1);
-          NewB := $0A;
-          OutStream.Write(NewB, 1);
-         end;
-   else
-     OutStream.Write(B, 1);
-  end;
+    InStream.Read(B, 1);
 
-  if Assigned(Notify) then
-   begin
-    Inc(Value);
-    Notify(nkProgress, Value);
-   end;
- end;
+    if B = CHAR_LF
+    then begin
+      { Replace LF with CRLF }
+      B:= CHAR_CR;
+      OutStream.Write(B, 1);
+      B:= CHAR_LF;
+      OutStream.Write(B, 1);
+    end
+    else
+      OutStream.Write(B, 1);
 
- if (Value = InStream.Size)
- AND Assigned(Notify)
- then Notify(nkProgress, 0);
-end;
-
-
-
-procedure WinToUnix(InStream: TStream; OutStream: TStream; Notify: TConvertNotify);
-VAR
-   B: Byte; Value: LongInt;
-begin
- if NOT Assigned(InStream)  then raise exception.Create('Input stream not assigned!');
- if NOT Assigned(OutStream) then raise exception.Create('Output stream not assigned!');
-
- if Assigned(Notify)
- then Notify(nkMax, InStream.Size);
-
- Value := 0;
- while InStream.Position < InStream.Size DO
-  begin
-   InStream.Read(B, 1);
-   if B <> $0A
-   then OutStream.Write(B, 1);
-
-   if Assigned(Notify) then
-    begin
-     Inc(Value);
-     Notify(nkProgress, Value);
+    if Assigned(Notify)
+    then begin
+      Inc(BytesProcessed);
+      Notify(nkProgress, BytesProcessed);
     end;
   end;
 
- OutStream.Seek(1, soFromEnd);
- OutStream.Read(B, 1);
-
- if B <> $0D then
-  begin
-   B := $0D;
-   OutStream.Write(B, 1);
-  end;
-
- if (Value = InStream.Size)
- AND Assigned(Notify)
- then Notify(nkProgress, 0);
+  { Signal completion }
+  if Assigned(Notify)
+  then Notify(nkProgress, 0);
 end;
 
 
 
+{ Convert Windows (CRLF) to Unix (LF) line endings.
+  Removes CR ($0D) characters, keeping only LF ($0A).
+  BUG FIX: Previous version incorrectly removed LF instead of CR! }
+procedure WinToUnix(InStream: TStream; OutStream: TStream; Notify: TConvertNotify);
+VAR
+   B: Byte;
+   BytesProcessed: Int64;
+begin
+ if NOT Assigned(InStream)  then raise exception.Create('WinToUnix-Input stream not assigned!');
+ if NOT Assigned(OutStream) then raise exception.Create('WinToUnix-Output stream not assigned!');
+
+  if Assigned(Notify)
+  then Notify(nkMax, InStream.Size);
+
+  BytesProcessed:= 0;
+  while InStream.Position < InStream.Size do
+  begin
+    InStream.Read(B, 1);
+
+    { Skip CR characters - keep everything else including LF }
+    if B <> CHAR_CR
+    then OutStream.Write(B, 1);
+
+    if Assigned(Notify)
+    then begin
+      Inc(BytesProcessed);
+      Notify(nkProgress, BytesProcessed);
+    end;
+  end;
+
+  { Signal completion }
+  if Assigned(Notify)
+  then Notify(nkProgress, 0);
+end;
+
+
+
+{ Convert classic Mac (CR) to Windows (CRLF) line endings.
+  Replaces each CR ($0D) with CRLF ($0D $0A). }
 procedure MacToWin(InStream: TStream; OutStream: TStream);
 VAR
-   B, NewB: Byte;
+   B: Byte;
 begin
- if NOT Assigned(InStream)  then raise exception.Create('Input stream not assigned!');
- if NOT Assigned(OutStream) then raise exception.Create('Output stream not assigned!');
+ if NOT Assigned(InStream)  then raise exception.Create('MacToWin-Input stream not assigned!');
+ if NOT Assigned(OutStream) then raise exception.Create('MacToWin-Output stream not assigned!');
 
- WHILE InStream.Position < InStream.Size DO
+  while InStream.Position < InStream.Size do
   begin
-   InStream.Read(B, 1);
-   case B of
-    $0D: begin
-          NewB := $0D;
-          OutStream.Write(NewB, 1);
-          NewB := $0A;
-          OutStream.Write(NewB, 1);
-         end;
-   else
-     OutStream.Write(B, 1);
+    InStream.Read(B, 1);
+
+    if B = CHAR_CR
+    then begin
+      { Replace CR with CRLF }
+      B:= CHAR_CR;
+      OutStream.Write(B, 1);
+      B:= CHAR_LF;
+      OutStream.Write(B, 1);
+    end
+    else
+      OutStream.Write(B, 1);
   end;
- end;
 end;
 
 
 
+{ File-based conversion: Windows to Unix line endings }
 procedure WinToUnix(CONST InputFile, OutputFile: String; Notify: TConvertNotify);
 VAR
-   InpStream: System.Classes.TBufferedFileStream;
-   OutStream: System.Classes.TBufferedFileStream;
+   InpStream: TBufferedFileStream;
+   OutStream: TBufferedFileStream;
 begin
- if NOT FileExists(InputFile)
- then RAISE Exception.Create('Input file does not exist!');
+  if NOT FileExists(InputFile)
+  then raise Exception.Create('WinToUnix: Input file does not exist: ' + InputFile);
 
- InpStream:= TBufferedFileStream.Create(InputFile,  fmOpenRead, 1*mb);
- OutStream:= TBufferedFileStream.Create(OutputFile, fmOpenWrite OR fmCreate);
- TRY
-   WinToUnix(InpStream, OutStream, Notify);
- FINALLY
-   FreeAndNil(InpStream);
-   FreeAndNil(OutStream);
- END;
+  InpStream:= TBufferedFileStream.Create(InputFile, fmOpenRead, 1*mb);
+  TRY
+    OutStream:= TBufferedFileStream.Create(OutputFile, fmCreate OR fmOpenWrite, 1*mb);
+    TRY
+      WinToUnix(InpStream, OutStream, Notify);
+    FINALLY
+      FreeAndNil(OutStream);
+    END;
+  FINALLY
+    FreeAndNil(InpStream);
+  END;
 end;
 
 
-
+{ File-based conversion: Unix to Windows line endings }
 procedure UnixToWin(CONST InputFile, OutputFile: String; Notify: TConvertNotify);
 VAR
-   InpStream: System.Classes.TBufferedFileStream;
-   OutStream: System.Classes.TBufferedFileStream;
+   InpStream: TBufferedFileStream;
+   OutStream: TBufferedFileStream;
 begin
- if NOT FileExists(InputFile)
- then raise exception.Create('Input file does not exist!');
+  if NOT FileExists(InputFile)
+  then raise Exception.Create('UnixToWin: Input file does not exist: ' + InputFile);
 
- InpStream:= TBufferedFileStream.Create(InputFile,  fmOpenRead);
- OutStream:= TBufferedFileStream.Create(OutputFile, fmOpenWrite OR fmCreate);
- TRY
-  UnixToWin(InpStream, OutStream, Notify);
- FINALLY
-  FreeAndNil(InpStream);
-  FreeAndNil(OutStream);
- END;
+  InpStream:= nil;
+  OutStream:= nil;  
+  TRY
+    InpStream:= TBufferedFileStream.Create(InputFile, fmOpenRead, 1*mb);
+    OutStream:= TBufferedFileStream.Create(OutputFile, fmCreate OR fmOpenWrite, 1*mb);
+    UnixToWin(InpStream, OutStream, Notify);
+  FINALLY
+    FreeAndNil(OutStream); 
+    FreeAndNil(InpStream);
+  END;
 end;
 
 
-
-function MacToWin(CONST InputFile, OutputFile: string): Boolean;                                         { CR to CRLF. Not tested! }
+{ File-based conversion: Classic Mac (CR) to Windows (CRLF).
+  Returns True if the file was Mac format and was converted.
+  Returns False if the file was not Mac format (no conversion performed). }
+function MacToWin(CONST InputFile, OutputFile: string): Boolean;
 VAR
-   InpStream: System.Classes.TBufferedFileStream;
-   OutStream: System.Classes.TBufferedFileStream;
+   InpStream: TBufferedFileStream;
+   OutStream: TBufferedFileStream;
 begin
- if NOT FileExists(InputFile)
- then raise exception.Create('Input file does not exist!');
+  if NOT FileExists(InputFile)
+  then raise Exception.Create('MacToWin: Input file does not exist: ' + InputFile);
 
- InpStream:= TBufferedFileStream.Create(InputFile, fmOpenRead, 1*mb);
- TRY
-  Result:= IsMacFile(InpStream);
-  if Result then
-   begin
-    OutStream:= TBufferedFileStream.Create(OutputFile, fmOpenWrite OR fmCreate);
-    TRY
-     InpStream.Position:= 0;    { Needs reset because of IsMacFile }
-     MacToWin(InpStream, OutStream);
-    FINALLY
-     FreeAndNil(OutStream);
-    END;
-   end;
- FINALLY
-  FreeAndNil(InpStream);
- END;
+  InpStream:= TBufferedFileStream.Create(InputFile, fmOpenRead, 1*mb);
+  TRY
+    Result:= IsMacFile(InpStream);
+    if Result then 
+    begin
+      InpStream.Position:= 0;  { Reset after IsMacFile scan }
+      OutStream:= TBufferedFileStream.Create(OutputFile, fmCreate OR fmOpenWrite, 1*mb);
+      TRY
+        MacToWin(InpStream, OutStream);
+      FINALLY
+        FreeAndNil(OutStream);
+      END;
+    end;
+  FINALLY
+    FreeAndNil(InpStream);
+  END;
 end;
 
 

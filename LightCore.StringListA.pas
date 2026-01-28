@@ -13,7 +13,7 @@ UNIT LightCore.StringListA;
 INTERFACE
 
 USES
-   System.SysUtils, System.Types, System.AnsiStrings, Generics.Collections;
+   System.SysUtils, System.AnsiStrings, Generics.Collections;
 
 TYPE
   { ANSI TStringList }
@@ -32,73 +32,66 @@ IMPLEMENTATION
 
 
 
+const
+  AnsiCRLF: AnsiString = #13#10;
+
+{ Parses a multi-line AnsiString and adds each line to the list.
+  Handles CR, LF, and CRLF line endings. }
 procedure TAnsiTSL.SetTextStr(const Value: AnsiString);
 var
-  P, Start, LB: PAnsiChar;
+  P, Start: PAnsiChar;
   S: AnsiString;
-  LineBreakLen: Integer;
 begin
- Clear;
- P := Pointer(Value);
- if P <> nil then
-   if CompareStr(#13#10, sLineBreak) = 0 then
-   begin
-     // This is a lot faster than using StrPos/AnsiStrPos when LineBreak is the default (#13#10)
-     while P^ <> #0 do
-     begin
-       Start := P;
-       while not (P^ in [#0, #10, #13]) do Inc(P);
-       SetString(S, Start, P - Start);
-       Add(S);
-       if P^ = #13 then Inc(P);
-       if P^ = #10 then Inc(P);
-     end;
-   end
-   else
-   begin
-     LineBreakLen := Length(#13#10);
-     while P^ <> #0 DO
-     begin
-       Start := P;
-       LB := System.AnsiStrings.AnsiStrPos(P, PAnsiChar(#13#10));
-       WHILE (P^ <> #0) AND (P <> LB)
-        DO Inc(P);
-       SetString(S, Start, P - Start);
-       Add(S);
-       if P = LB
-       then Inc(P, LineBreakLen);
-     end;
-   end;
+  Clear;
+  P:= Pointer(Value);
+  if P = nil then EXIT;
+
+  { Fast path: scan for CR/LF characters directly }
+  while P^ <> #0 do
+  begin
+    Start:= P;
+    while NOT (P^ in [#0, #10, #13]) do
+      Inc(P);
+    SetString(S, Start, P - Start);
+    Add(S);
+    if P^ = #13 then Inc(P);
+    if P^ = #10 then Inc(P);
+  end;
 end;
 
 
+{ Concatenates all lines into a single AnsiString with CRLF line endings.
+  Note: Adds CRLF after the last line as well. }
 function TAnsiTSL.GetTextStr: AnsiString;
 var
-  I, L, Size: Integer;
+  i, Len, TotalSize: Integer;
   P: PAnsiChar;
-  S, LB: AnsiString;
+  Line: AnsiString;
+const
+  LineBreakLen = 2;  { Length of #13#10 }
 begin
-  //Count := GetCount;
-  Size := 0;
-  LB := #13#10;
-  for I := 0 to Count - 1 do Inc(Size, Length(Self[I]) + Length(LB));
-  SetString(Result, nil, Size);
-  P := Pointer(Result);
-  for I := 0 to Count - 1 do
+  { Calculate total size needed }
+  TotalSize:= 0;
+  for i:= 0 to Count - 1 do
+    Inc(TotalSize, Length(Self[i]) + LineBreakLen);
+
+  SetString(Result, nil, TotalSize);
+  P:= Pointer(Result);
+
+  for i:= 0 to Count - 1 do
   begin
-    S := Self[I];
-    L := Length(S);
-    if L <> 0 then
+    Line:= Self[i];
+    Len:= Length(Line);
+    if Len > 0 then
     begin
-      System.Move(Pointer(S)^, P^, L * SizeOf(AnsiChar));  { Use AnsiChar (1 byte) not Char (2 bytes) for AnsiString }
-      Inc(P, L);
+      System.Move(Pointer(Line)^, P^, Len);
+      Inc(P, Len);
     end;
-    L := Length(LB);
-    if L <> 0 then
-    begin
-      System.Move(Pointer(LB)^, P^, L * SizeOf(AnsiChar));  { Use AnsiChar (1 byte) not Char (2 bytes) for AnsiString }
-      Inc(P, L);
-    end;
+    { Add CRLF }
+    P^:= #13;
+    Inc(P);
+    P^:= #10;
+    Inc(P);
   end;
 end;
 

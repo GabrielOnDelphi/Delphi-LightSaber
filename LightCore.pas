@@ -316,9 +316,12 @@ begin
 end;
 
 
+{ Fills all elements of a dynamic integer array with zeros.
+  Note: Uses FillChar on the array data, not the array reference. }
 procedure FillZeros(VAR IntArray: TIntegerDynArray);
 begin
- FillChar(IntArray, Length(IntArray)*SizeOf(Integer), 0);
+ if Length(IntArray) > 0
+ then FillChar(IntArray[0], Length(IntArray) * SizeOf(Integer), 0);
 end;
 
 
@@ -334,14 +337,19 @@ begin
 end;
 
 
-{ Extract a resource from self }
+{ Extract a resource from self (the executable).
+  Returns the resource content as AnsiString.
+  Returns empty string if resource is empty.
+  Raises EResNotFound if resource doesn't exist. }
 function GetResourceAsString(CONST ResName: string): AnsiString;
 VAR
    ResStream: TResourceStream;
 begin
-  ResStream := TResourceStream.Create(HInstance, ResName, RT_RCDATA);
+  ResStream:= TResourceStream.Create(HInstance, ResName, RT_RCDATA);
   TRY
-    ResStream.Position := 0;
+    ResStream.Position:= 0;
+    if ResStream.Size = 0
+    then raise Exception.Create('GetResourceAsString');
     SetLength(Result, ResStream.Size);
     ResStream.ReadBuffer(Result[1], ResStream.Size);
   FINALLY
@@ -362,16 +370,18 @@ begin
   else Result:= 'English';  // Fallback if API fails
 end;
 {$ELSE}
-var Languages: TLanguages;
+var
+  Languages: TLanguages;
+  Locale: TLocaleID;
 begin
-  var Locale:= TLanguages.UserDefaultLocale;
+  Locale:= TLanguages.UserDefaultLocale;
   Languages:= TLanguages.Create;
   try
     Result:= Languages.NameFromLocaleID[Locale];
     if (Result = '') OR (Result = SUnknown)
     then Result:= 'English';  // Fallback
   finally
-    Languages.Free;
+    FreeAndNil(Languages);
   end;
 end;
 {$ENDIF}
@@ -464,12 +474,18 @@ begin
 end;
 
 
-{ Returns the postion of the last non-number character in a string. For example 9d9ad8f7ax0000 returns 10 (the position of x) } {Old name: LastCharInString}
+{ Returns the position of the last non-digit character in a string.
+  Scans from end towards beginning, skipping trailing digits.
+  Example: '9d9ad8f7ax0000' returns 10 (the position of 'x').
+  Returns 0 if string is empty or contains only digits. }
 function LastLetterInString(CONST s: string): Integer;
 begin
+ if s = ''
+ then raise Exception.Create('LastLetterInString');
+
  Result:= Length(s);
- WHILE NOT s[Result].IsDigit
-  DO Dec(Result);
+ while s[Result].IsDigit DO
+   Dec(Result);
 end;
 
 
@@ -572,15 +588,25 @@ begin
 end;
 
 
-{ Returns:
-  1=1st, 2=2nd, 3=3rd, 4=4th, etc }
+{ Converts a number to its ordinal string representation.
+  Examples: 1='1st', 2='2nd', 3='3rd', 4='4th', 11='11th', 21='21st', 22='22nd'.
+  Handles special cases for 11th, 12th, 13th which use 'th' suffix. }
 function i2sHuman(Value: Int64): string;
+VAR
+   LastTwoDigits, LastDigit: Integer;
 begin
- case Value of
-    1 : Result:= '1st';
-    2 : Result:= '2nd';
-    3 : Result:= '3rd';
-  else Result:= IntToStr(Value)+ 'th';
+ LastTwoDigits:= Abs(Value) mod 100;
+ LastDigit:= Abs(Value) mod 10;
+
+ // Special case: 11, 12, 13 always use 'th'
+ if (LastTwoDigits >= 11) AND (LastTwoDigits <= 13)
+ then EXIT(IntToStr(Value) + 'th');
+
+ case LastDigit of
+    1 : Result:= IntToStr(Value) + 'st';
+    2 : Result:= IntToStr(Value) + 'nd';
+    3 : Result:= IntToStr(Value) + 'rd';
+  else Result:= IntToStr(Value) + 'th';
  end;
 end;
 
@@ -908,15 +934,15 @@ begin
 end;
 
 
-{ Searches in s the two tags (TagStart/TagEnd).
-  TagEnd must be after TagStart.
-  If both are find, replace the text between them with 'ReplaceWith'.
-  It replaces the substring only once. So, wee need to loop (using the Start parameter as the start point for the next search) until all substrings are found.
-  TagStart/End are removed from the text if EliminateTags is true.
-  Returns the new string.   }
+{ Replaces text between TagStart and TagEnd with ReplaceWith.
+  - Start: position to begin searching from
+  - EliminateTags: if True, removes the tags; if False, keeps them
+  - LastPos: outputs the position after the replacement (for looping)
+  - Returns original string if tags not found.
+  Call repeatedly using LastPos as next Start to replace all occurrences. }
 function ReplaceBetween(CONST s, TagStart, TagEnd, ReplaceWith: string; Start: Integer; EliminateTags: Boolean; OUT LastPos: Integer): string;
 VAR
-   iTagStart1, iTagStart2, iTagEnd: Integer;
+   iTagStart1, iTagStart2, iTagEndPos: Integer;
    sRemaining: string;
 begin
   LastPos:= -1;
@@ -924,23 +950,28 @@ begin
   iTagStart1:= Pos(TagStart, s, Start);                         // Where the TagStart begins
   if iTagStart1 < 1 then EXIT(s);
 
-  iTagStart2:= iTagStart1+Length(TagStart)-1;                   // Where the TagStart ends
+  iTagStart2:= iTagStart1 + Length(TagStart) - 1;               // Where the TagStart ends
 
-  // Copy the text after TagEnd
-  sRemaining:= Copy(s, iTagStart2+1, High(Integer));
+  // Search for TagEnd in the remaining text (after TagStart)
+  sRemaining:= Copy(s, iTagStart2 + 1, High(Integer));
+  iTagEndPos:= PosInsensitive(TagEnd, sRemaining);
 
-  iTagEnd:= PosInsensitive(TagEnd, sRemaining)+ iTagStart2;     // Where the TagEnd begins
-  if iTagEnd < 1 then EXIT(s);
+  // TagEnd not found - return original string
+  if iTagEndPos < 1
+  then EXIT(s);
+
+  // Convert relative position to absolute position in original string
+  iTagEndPos:= iTagEndPos + iTagStart2;                         // Where the TagEnd begins (absolute)
 
   if EliminateTags
-  then Result:= Copy(s, 1, iTagStart1-1)+ ReplaceWith           // Copy the beginning of the text, excluding TagStart
-  else Result:= Copy(s, 1, iTagStart2)+ ReplaceWith;            // Copy the beginning of the text, including TagStart
+  then Result:= Copy(s, 1, iTagStart1 - 1) + ReplaceWith        // Exclude TagStart
+  else Result:= Copy(s, 1, iTagStart2) + ReplaceWith;           // Include TagStart
 
   LastPos:= Length(Result);
 
   if EliminateTags
-  then Result:= Result+ Copy(s, iTagEnd+(Length(TagEnd)), High(Integer))     // excluding TagStart
-  else Result:= Result+ Copy(s, iTagEnd,                  High(Integer));    // including TagStart
+  then Result:= Result + Copy(s, iTagEndPos + Length(TagEnd), High(Integer))  // Exclude TagEnd
+  else Result:= Result + Copy(s, iTagEndPos, High(Integer));                  // Include TagEnd
 end;
 
 
@@ -1014,10 +1045,15 @@ begin
 end;
 
 
+{ Replaces all line breaks (CRLF, CR, LF) with the specified string.
+  Handles Windows CRLF, Unix LF, and old Mac CR line endings.
+  CRLF is replaced as a single unit, not as two separate replacements. }
 function ReplaceEnters(CONST s, ReplaceWith: string): string;
 begin
- Result:= StringReplace(s, #10, ReplaceWith, [rfReplaceAll]);
- Result:= StringReplace(Result     , #13, ReplaceWith, [rfReplaceAll]);
+ // First replace CRLF as a unit, then individual CR and LF
+ Result:= StringReplace(s, CRLFw, ReplaceWith, [rfReplaceAll]);
+ Result:= StringReplace(Result, #13, ReplaceWith, [rfReplaceAll]);
+ Result:= StringReplace(Result, #10, ReplaceWith, [rfReplaceAll]);
 end;
 
 
@@ -1506,18 +1542,22 @@ begin
 end;
 
 
-procedure SplitStringListI(StringList: TStrings; OUT OutList1: TStringArray; OUT OutList2: System.Types.TIntegerDynArray);  { Split each row of the provided StringList into two parts. The two resulted strings are placed in an ArrayOfStrings }
+{ Split each row of StringList into string + integer parts (comma-delimited).
+  Example: 'Name,123' splits into OutList1='Name', OutList2=123.
+  Invalid integers default to 0. }
+procedure SplitStringListI(StringList: TStrings; OUT OutList1: TStringArray; OUT OutList2: System.Types.TIntegerDynArray);
 VAR
    i: Integer;
    s: string;
 begin
+ Assert(StringList <> NIL, 'StringList cannot be nil');
  SetLength(OutList1, StringList.Count);
  SetLength(OutList2, StringList.Count);
 
- for i:= 0 to StringList.Count-1 DO
+ for i:= 0 to StringList.Count - 1 DO
   begin
    SplitLine(StringList[i], ',', OutList1[i], s);
-   OutList2[i]:= StrToInt(s);
+   OutList2[i]:= StrToIntDef(s, 0);  // Use StrToIntDef to avoid exceptions
   end;
 end;
 
@@ -1569,10 +1609,13 @@ begin
 end;
 
 
-{TEST IT !!!!!!!!!}
-function LeadingZeros2(CONST s: string; ForcedLength: integer): string;
+{ Alternative implementation using Format. Pads numeric string with leading zeros.
+  Example: LeadingZeros2('42', 5) returns '00042'. }
+function LeadingZeros2(CONST s: string; ForcedLength: Integer): string;
+VAR NumValue: Integer;
 begin
- Result:= Format(s+'<%'+IntToStr(ForcedLength)+'d>', [s]);
+ NumValue:= StrToIntDef(s, 0);
+ Result:= Format('%.*d', [ForcedLength, NumValue]);
 end;
 
 
@@ -1651,15 +1694,21 @@ end;
 
 
 
-{ RANDOM/UNIQUE STRINGS }
-function GenerateRandString(minLen, maxLen: Integer): string;      { This will return all printable craracters (from 65 to 125) }      { YOU MUST call randomize before calling this function! }
+{ Generates a random string with length between minLen and maxLen (inclusive).
+  Returns printable ASCII characters (codes 65-124: A-Z, some symbols, a-z).
+  IMPORTANT: Call Randomize once before using this function. }
+function GenerateRandString(minLen, maxLen: Integer): string;
 var
-  i: Integer;
+  i, Len: Integer;
 begin
-  Assert(minlen > 0);
-  SetLength(Result, minLen + Random(maxlen - 4));
-  for i := 1 to Length(Result)
-   DO Result[i] := Chr(65 + Random(60));
+  Assert(minLen > 0, 'minLen must be positive');
+  Assert(maxLen >= minLen, 'maxLen must be >= minLen');
+
+  // Random length between minLen and maxLen
+  Len:= minLen + Random(maxLen - minLen + 1);
+  SetLength(Result, Len);
+  for i:= 1 to Len DO
+    Result[i]:= Chr(65 + Random(60));  // ASCII 65-124
 end;
 
 
@@ -1744,58 +1793,56 @@ begin
 end;
 
 
+{ Returns a TStringList containing names of classic rock bands.
+  Caller is responsible for freeing the returned list. }
 function GetRockBands: TStringList;
 begin
   Result:= TStringList.Create;
-  TRY
-    Result.Add('Pink Floyd');
-    Result.Add('The Moody Blues');
-    Result.Add('Fleetwood Mac');
-    Result.Add('Queen');
-    Result.Add('The Doors');
-    Result.Add('Led Zeppelin');
-    Result.Add('The Beatles');
-    Result.Add('The Zombies');
-    Result.Add('The Pretenders');
-    Result.Add('Foreigner');
-    Result.Add('The Animals');
-    Result.Add('Arcade Fire');
-    Result.Add('The Byrds');
-    Result.Add('The Who');
-    Result.Add('Boston');
-    Result.Add('The Rolling Stones');
-    Result.Add('Metallica');
-    Result.Add('The Beach Boys');
-    Result.Add('The Yardbirds');
-    Result.Add('Lynyrd Skynyrd');
-    Result.Add('Def Leppard');
-    Result.Add('The Small Faces');
-    Result.Add('The Velvet Underground');
-    Result.Add('Radiohead');
-    Result.Add('Black Sabbath');
-    Result.Add('The Troggs');
-    Result.Add('Kansas');
-    Result.Add('The Police');
-    Result.Add('The Jimi Hendrix Experience');
-    Result.Add('Rush');
-    Result.Add('The Hollies');
-    Result.Add('Tom Petty and the Heartbreakers');
-    Result.Add('The Eagles');
-    Result.Add('The Cars');
-    Result.Add('Deep Purple');
-    Result.Add('The Clash');
-    Result.Add('The Kinks');
-    Result.Add('The Ramones');
-    Result.Add('Jethro Tull');
-    Result.Add('The Cult');
-    Result.Add('Nirvana');
-    Result.Add('U2');
-    Result.Add('Pearl Jam');
-    Result.Add('Soundgarden');
-    Result.Add('Foo Fighters');
-  EXCEPT
-    FreeAndNil(Result);
-  END;
+  Result.Add('Pink Floyd');
+  Result.Add('The Moody Blues');
+  Result.Add('Fleetwood Mac');
+  Result.Add('Queen');
+  Result.Add('The Doors');
+  Result.Add('Led Zeppelin');
+  Result.Add('The Beatles');
+  Result.Add('The Zombies');
+  Result.Add('The Pretenders');
+  Result.Add('Foreigner');
+  Result.Add('The Animals');
+  Result.Add('Arcade Fire');
+  Result.Add('The Byrds');
+  Result.Add('The Who');
+  Result.Add('Boston');
+  Result.Add('The Rolling Stones');
+  Result.Add('Metallica');
+  Result.Add('The Beach Boys');
+  Result.Add('The Yardbirds');
+  Result.Add('Lynyrd Skynyrd');
+  Result.Add('Def Leppard');
+  Result.Add('The Small Faces');
+  Result.Add('The Velvet Underground');
+  Result.Add('Radiohead');
+  Result.Add('Black Sabbath');
+  Result.Add('The Troggs');
+  Result.Add('Kansas');
+  Result.Add('The Police');
+  Result.Add('The Jimi Hendrix Experience');
+  Result.Add('Rush');
+  Result.Add('The Hollies');
+  Result.Add('Tom Petty and the Heartbreakers');
+  Result.Add('The Eagles');
+  Result.Add('The Cars');
+  Result.Add('Deep Purple');
+  Result.Add('The Clash');
+  Result.Add('The Kinks');
+  Result.Add('The Ramones');
+  Result.Add('Jethro Tull');
+  Result.Add('The Cult');
+  Result.Add('Nirvana');
+  Result.Add('U2');
+  Result.Add('Pearl Jam');
+  Result.Add('Soundgarden');
+  Result.Add('Foo Fighters');
 end;
 
 
@@ -1820,21 +1867,21 @@ end;
    STRING SORT
 ============================================================================================================}
 
-{ Natural compare two strings.
-  Example: We have 3 files: pic1, pic2, pic10
-     Delphi sort: pic1 pic10 pic2.
-     Natural compare sort: pic1 pic2 pic10
-  Source: http://www.delphi3000.com/articles/article_5295.asp?SK=                                                 // old name: StrNaturalCompare
-
-  Also see: StrCmpLogicalW }
+{ Natural compare two strings (for filename sorting).
+  Digits in strings are compared as numbers, not characters.
+  Example: 'pic1, pic2, pic10' sorts correctly (not 'pic1, pic10, pic2').
+  Returns: negative if s1 < s2, 0 if equal, positive if s1 > s2.
+  Also see: StrCmpLogicalW for Windows API alternative. }
 function FileNameNaturalSort(s1, s2: String): Integer;
 
+  { Extracts leading number from txt starting at position n.
+    Removes the extracted portion from txt. }
   function ExtractNr(n: Integer; VAR txt: String): Int64;
   begin
-    while (n = Length(txt)) AND ((txt[n]>= '0') and (txt[n]<= '9'))
-      do n:= n + 1;
+    while (n <= Length(txt)) AND (txt[n] >= '0') AND (txt[n] <= '9') DO
+      Inc(n);
     Result:= StrToInt64Def(system.COPY(txt, 1, n - 1), 0);
-    Delete(txt, 1, (n - 1));
+    Delete(txt, 1, n - 1);
   end;
 
 VAR b: Boolean;

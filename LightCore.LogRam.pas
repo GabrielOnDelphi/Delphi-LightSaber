@@ -311,13 +311,13 @@ procedure TRamLog.CheckAndSaveToDisk;
 begin
   if Lines.Count > MaxEntries then
   begin
-    SaveToFile(TAppDataCore.AppDataFolder+ 'LargeLogSave.txt');
+    SaveToFile(TAppDataCore.AppDataFolder+ 'LargeLogSave.logbin');
     Lines.Clear;
   end;
 
   if SecondsBetween(Now, FLastSaveTime) >= FSaveInterval then  // Default 60 sec
   begin
-    SaveToFile(TAppDataCore.AppDataFolder+ 'PeriodicLogSave.txt');
+    SaveToFile(TAppDataCore.AppDataFolder+ 'PeriodicLogSave.logbin');
     FLastSaveTime := Now;
   end;
 end;
@@ -376,7 +376,7 @@ end;
 
 procedure TRamLog.SaveToStream(Stream: TLightStream);
 begin
-  Stream.WriteHeader(StreamSign, TAbstractLogLines.CurVer);
+  Stream.WriteHeader(StreamSign, CurrentVersion);
   Lines.WriteToStream(Stream);
   Stream.WritePadding;
 end;
@@ -386,6 +386,9 @@ end;
 
 function TRamLog.LoadFromFile(const FullPath: string): Boolean;
 begin
+ if NOT FileExists(FullPath)
+ then EXIT(FALSE);
+
  Clear;
 
  VAR Stream:= TLightStream.CreateRead(FullPath);

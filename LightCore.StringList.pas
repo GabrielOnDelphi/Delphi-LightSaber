@@ -19,15 +19,16 @@ UNIT LightCore.StringList;
 =============================================================================================================}
 
 INTERFACE
+
 USES
-   System.SysUtils, System.Classes, System.Types, System.AnsiStrings, Generics.Collections;
+   System.SysUtils, System.Classes;
 
 TYPE
   TTSL= class helper for TStringList
   private
     public
-     procedure RemoveDuplicateString(CONST s: string);            { Removes the specified item from the list if it exists there }
-     procedure RemoveDuplicateFile(CONST FileName: string);       { Similar as above but it uses a faster algorithm specialized in comparing file names }
+     procedure RemoveDuplicateString(CONST s: string);            { Removes the first occurrence of the specified string (case-insensitive) }
+     procedure RemoveDuplicateFile(CONST FileName: string);       { Removes the first occurrence of the specified filename (case-insensitive) }
      procedure RemoveDuplicates;                                  { THIS WILL SORT THE LIST !!! }
      procedure RemoveEmptyLines;
      function  RemoveLines   (const BadWord: string): Integer;
@@ -57,8 +58,9 @@ USES LightCore;
 
 
 { Returns all lines concatenated in one single line.
-Good to convert a list of items into a single string, where items are separated by semicolumn }
-function TTSL.Concatenate(const Separator: string): String;
+  Good to convert a list of items into a single string, where items are separated by the specified separator.
+  Note: Returns trailing separator after last item. }
+function TTSL.Concatenate(const Separator: string): string;
 begin
   Result:= '';
   for var s in Self do
@@ -66,142 +68,154 @@ begin
 end;
 
 
-function TTSL.FindLine(CONST Needle: string): Integer;    { Find line that contains the specified text }
-VAR
-   i: Integer;
-begin
- Result:= -1;
- for i:= 0 to Count-1 DO
-  if Pos(Needle, Self[i]) > 0
-  then EXIT(i);
-end;
-
-
-function TTSL.RemoveLines(const BadWord: string): Integer;  { Remove all lines that contains the specified text }
+{ Finds the first line that contains the specified text (case-sensitive).
+  Returns the line index, or -1 if not found. }
+function TTSL.FindLine(const Needle: string): Integer;
 VAR i: Integer;
 begin
- Result:= 0;
- for i:= Count-1 downto 0 DO
-  if PosInsensitive(BadWord, self[i]) > 0 then   { if text found, then delete line }
-   begin
-    Delete(i);
-    Inc(Result);
-   end;
+  Result:= -1;
+  for i:= 0 to Count-1 do
+    if Pos(Needle, Self[i]) > 0
+    then EXIT(i);
 end;
 
 
-function TTSL.KeepLines(CONST KeepText: string): Integer;    { Remove all lines that does not contain this text }
+{ Remove all lines that contain the specified text (case-insensitive).
+  Returns the number of lines removed. }
+function TTSL.RemoveLines(const BadWord: string): Integer;
 VAR i: Integer;
 begin
- Result:= 0;
- for i:= Count-1 downto 0 DO
-  if PosInsensitive(KeepText, self[i])= 0 then { if text not found, then delete line }
-   begin
-    Delete(i);
-    Inc(Result);
-   end;
+  Result:= 0;
+  for i:= Count-1 downto 0 do
+    if PosInsensitive(BadWord, Self[i]) > 0 then
+    begin
+      Delete(i);
+      Inc(Result);
+    end;
 end;
 
 
-procedure TTSL.RemoveEmptyLines;     
-VAR
-   i: Integer;
+{ Remove all lines that do NOT contain the specified text (case-insensitive).
+  Returns the number of lines removed. }
+function TTSL.KeepLines(const KeepText: string): Integer;
+VAR i: Integer;
 begin
- for i:= Count-1 downto 0 DO
-   if Self[i]= ''
-   then Self.Delete(i);
+  Result:= 0;
+  for i:= Count-1 downto 0 do
+    if PosInsensitive(KeepText, Self[i]) = 0 then
+    begin
+      Delete(i);
+      Inc(Result);
+    end;
 end;
 
 
-procedure TTSL.Trim;    { Trim empty spaces, tab, enters, etc on each line }
-VAR
-   i: Integer;
+{ Removes all empty lines from the list. }
+procedure TTSL.RemoveEmptyLines;
+VAR i: Integer;
 begin
- for i:= Count-1 downto 0 DO
+  for i:= Count-1 downto 0 do
+    if Self[i] = ''
+    then Self.Delete(i);
+end;
+
+
+{ Trim whitespace (spaces, tabs, line breaks) from each line. }
+procedure TTSL.Trim;
+VAR i: Integer;
+begin
+  for i:= Count-1 downto 0 do
     Self[i]:= LightCore.RemoveFormatings(Self[i]);
 
- for i:= Count-1 downto 0 DO
+  for i:= Count-1 downto 0 do
     Self[i]:= System.SysUtils.Trim(Self[i]);
 end;
 
 
-{ Returns the 'highest' string. For example, if the list contains ABC and ABCD it will return the ABCD string. If the list contains ABCD and B it will return B }
+{ Returns the lexicographically highest string in the list.
+  For example: [ABC, ABCD] returns ABCD; [ABCD, B] returns B. }
 function TTSL.HighestString: string;
 VAR i: Integer;
 begin
- Result:= '';
- for i:= 0 to Self.Count-1 DO
-   if Self[i] > Result
-   then Result:= Self[i];
+  Result:= '';
+  for i:= 0 to Self.Count-1 do
+    if Self[i] > Result
+    then Result:= Self[i];
 end;
 
 
+{ Compare function for reverse sorting. }
 function StringListSortCompare(List: TStringList; Index1, Index2: Integer): Integer;
 begin
-  Result := AnsiCompareStr(List[Index2], List[Index1]); // Will sort in reverse order
+  Result:= AnsiCompareStr(List[Index2], List[Index1]);
 end;
 
 
+{ Sorts the list in reverse (descending) order. }
 procedure TTSL.SortReverse;
 begin
- CustomSort(StringListSortCompare);
+  CustomSort(StringListSortCompare);
 end;
 
 
+{ Randomly shuffles the items in the list (Fisher-Yates algorithm). }
 procedure TTSL.Shuffle;
 VAR i: Integer;
 begin
-  for i:= Count-1 downto 1 DO
-    Exchange(i, Random(i+1));
+  for i:= Count-1 downto 1 do
+    Exchange(i, Random(i + 1));
 end;
 
 
-procedure TTSL.RemoveDuplicateString(CONST s: string);
-VAR
+{ Removes the first occurrence of the specified string (case-insensitive). }
+procedure TTSL.RemoveDuplicateString(const s: string);
+VAR i: Integer;
+begin
+  for i:= Count-1 downto 0 do
+    if SameText(s, Self[i]) then
+    begin
+      Delete(i);
+      Break;
+    end;
+end;
+
+
+{ Removes the first occurrence of the specified filename (case-insensitive). }
+procedure TTSL.RemoveDuplicateFile(const FileName: string);
+var
    i: Integer;
 begin
- for i:= Count-1 downto 0 DO
-  if SameText(s, Self[i]) then
-   begin
-    Delete(i);
-    Break;
-   end;
+  for i:= Count-1 downto 0 do
+    if SameText(FileName, Self[i]) then
+    begin
+      Delete(i);
+      Break;
+    end;
 end;
 
 
-procedure TTSL.RemoveDuplicateFile(CONST FileName: string);
-VAR
-   i: Integer;
+{ Removes duplicate entries from the list.
+  WARNING: This will SORT the list! }
+procedure TTSL.RemoveDuplicates;
+var
+  Buffer: TStringList;
+  i: Integer;
 begin
- for i:= Count-1 downto 0 DO
-  if SameText(FileName, Self[i]) then
-   begin
-    Delete(i);
-    Break;
-   end;
-end;
+  Buffer:= TStringList.Create;
+  try
+    Buffer.Sorted:= True;
+    Buffer.Duplicates:= dupIgnore;
+    Buffer.BeginUpdate;
+    for i:= 0 to Count - 1 do
+      Buffer.Add(Self[i]);
+    Buffer.EndUpdate;
+    Assign(Buffer);
+  finally
+    FreeAndNil(Buffer);
+  end;
 
-
-procedure TTSL.RemoveDuplicates;             { THIS WILL SORT THE LIST !!! }
-VAR
-  buffer: TStringList;
-  cnt: Integer;
-begin
- Sort;
- buffer := TStringList.Create;
- TRY
-   buffer.Sorted:= True;
-   buffer.Duplicates:= System.Types.dupIgnore;
-   buffer.BeginUpdate;
-   for cnt := 0 to Count - 1
-     DO buffer.Add(Self[cnt]) ;
-   buffer.EndUpdate;
-   Assign(buffer);
- FINALLY
-   FreeandNil(buffer);
- END;
-
- Sorted:= FALSE;    { We need to cancel Sorted now, otherwise I get "EStringListError: Operation not allowed on sorted list" when I try to edit the lines }
+  { Cancel Sorted flag to allow editing, otherwise "Operation not allowed on sorted list" }
+  Sorted:= FALSE;
 end;
 
 
@@ -210,32 +224,41 @@ end;
 
 
 { TOP }
-procedure TTSL.RemoveTopLines(CONST aCount: Integer);    { Remove the firs x lines }
-VAR
+
+{ Remove the first x lines from the list. }
+procedure TTSL.RemoveTopLines(CONST aCount: Integer);
+var
    i: Integer;
 begin
- Assert(acount <= Count);
- for i:= aCount-1 downto 0
-  DO Self.Delete(i);
+  if aCount > Count
+  then raise EArgumentOutOfRangeException.CreateFmt('RemoveTopLines: aCount (%d) exceeds list Count (%d)', [aCount, Count]);
+
+  for i:= aCount-1 downto 0 do
+    Self.Delete(i);
 end;
 
 
+{ Returns the first Count lines as a single string.
+  If IgnoreEmptyLines is True, empty lines are skipped (not counted). }
 function TTSL.GetTopLines(Count: Integer; IgnoreEmptyLines: Boolean= TRUE): string;
-VAR
+var
    s: string;
    Total: Integer;
 begin
   Total:= 0;
   Result:= '';
 
-  for s in Self DO
-    if IgnoreEmptyLines AND (s > '')
-    OR NOT IgnoreEmptyLines then
-     begin
-       Inc(Total);
-       Result:= Result+ s+ CRLF;
-       if Total = Count then Break;
-     end;
+  for s in Self do
+  begin
+    { Skip empty lines if requested }
+    if IgnoreEmptyLines AND (s = '')
+    then Continue;
+
+    Inc(Total);
+    Result:= Result + s + CRLF;
+    if Total = Count
+    then Break;
+  end;
 
   Result:= RemoveLastEnter(Result);
 end;
@@ -251,10 +274,12 @@ end;
 
 
 
-function String2TSL(CONST s: string): TStringList;                                                       { Converts a string to a TStringList. Need to call Free after this! }
+{ Converts a multi-line string to a TStringList.
+  IMPORTANT: Caller must free the returned object! }
+function String2TSL(const s: string): TStringList;
 begin
- Result:= TStringList.Create;
- Result.Text:= s;
+  Result:= TStringList.Create;
+  Result.Text:= s;
 end;
 
 
@@ -262,39 +287,40 @@ end;
 {-----------------------------------------------------------------------------
    EXTRACT
 -----------------------------------------------------------------------------}
-{ Returns the top x lines from a text (multiple lines) }
-function ExtractTopLines(CONST Text: string; Count: Integer; IgnoreEmptyLines: Boolean= TRUE): string;
+
+{ Returns the first Count lines from a multi-line text. }
+function ExtractTopLines(const Text: string; Count: Integer; IgnoreEmptyLines: Boolean= TRUE): string;
+var TSL: TStringList;
 begin
- VAR TSL:= TStringList.Create;
- TRY
-  TSL.Text:= Text;
-  Result:= TSL.GetTopLines(Count, IgnoreEmptyLines);
- FINALLY
-   FreeAndNil(TSL);
- END;
+  TSL:= TStringList.Create;
+  try
+    TSL.Text:= Text;
+    Result:= TSL.GetTopLines(Count, IgnoreEmptyLines);
+  finally
+    FreeAndNil(TSL);
+  end;
 end;
 
 
 
 
 
-{ Looks for Needle (partial search) into the Haystack.
-  If found, returns the whole line that contained the Needle.
-  Haystack is a string what contains multiple lines of text separated by enter. } // Old name: ExtractLine
-function FindLine(CONST Needle, Haystack: string): string;
-VAR
+{ Searches for Needle (partial match) in a multi-line Haystack.
+  Returns the entire line containing the Needle, or empty string if not found. }
+function FindLine(const Needle, Haystack: string): string;
+var
    TSL: TStringList;
    s: string;
 begin
- Result:= '';
- TSL:= String2TSL(Haystack);
- TRY
-  for s in TSL DO
-    if Pos(Needle, s) > 0
-    then EXIT(s);
- FINALLY
-  FreeAndNil(TSL);
- END;
+  Result:= '';
+  TSL:= String2TSL(Haystack);
+  try
+    for s in TSL do
+      if Pos(Needle, s) > 0
+      then EXIT(s);
+  finally
+    FreeAndNil(TSL);
+  end;
 end;
 
 

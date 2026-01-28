@@ -101,7 +101,7 @@ begin
     end;
     Result := NOT Result;
   finally
-    aMemStream.Free;
+    FreeAndNil(aMemStream);
   end;
 end;
 
@@ -109,11 +109,11 @@ end;
 function CRC32_U(CONST s : string) : Cardinal;     { Unicode }  { Does it have the same problem as the above code when it comes to unicode strings? }
 VAR aStringStream : TStringStream;
 begin
-  aStringStream := TStringStream.Create(s);
+  aStringStream:= TStringStream.Create(s);
   TRY
     Result:= CRC32Stream(aStringStream);
   FINALLY
-    aStringStream.Free;
+    FreeAndNil(aStringStream);
   END;
 end;
 

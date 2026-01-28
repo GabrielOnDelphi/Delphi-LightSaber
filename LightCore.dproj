@@ -158,7 +158,6 @@
         <DCCReference Include="LightCore.StreamMem.pas"/>
         <DCCReference Include="LightCore.StreamBuff.pas"/>
         <DCCReference Include="LightCore.TextFile.pas"/>
-        <DCCReference Include="LightCore.StreamMem2.pas"/>
         <DCCReference Include="LightCore.StreamFile.pas"/>
         <DCCReference Include="LightCore.LogUtils.pas"/>
         <DCCReference Include="LightCore.LogTypes.pas"/>

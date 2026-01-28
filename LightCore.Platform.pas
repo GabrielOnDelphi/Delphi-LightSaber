@@ -4,9 +4,16 @@ UNIT LightCore.Platform;
    2025.12
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
+   Platform detection utilities for cross-platform applications.
+
+   Features:
+     - OS type, version, and architecture detection
+     - Application bitness detection (32/64-bit)
+     - Device information (FMX only)
+     - Platform reports for diagnostics
 
    Documentation:
-      Contitional compilation: https://docwiki.embarcadero.com/RADStudio/Athens/en/Conditional_compilation
+      Conditional compilation: https://docwiki.embarcadero.com/RADStudio/Athens/en/Conditional_compilation
 
    Tester:
       c:\Projects\LightSaber\Demo\VCL\Demo SystemReport\VCL_Demo_SystemReport.dpr
@@ -16,7 +23,8 @@ UNIT LightCore.Platform;
 INTERFACE
 
 USES
-   System.SysUtils, System.Devices;
+   System.SysUtils
+   {$IFDEF FRAMEWORK_FMX}, System.Devices{$ENDIF};
 
 
 // OS
@@ -35,15 +43,7 @@ function GeneratePlatformRep: string;
 function GenerateAppBitnessRep: string; {$IFDEF FRAMEWORK_FMX}
 function  GenerateDeviceRep: string;  {$ENDIF}
 
-// Device
-//function DeviceModel: string;
-//function DevicePlatformDetails: string;
 
-// Device locale
-{
-function LocaleLanguage: string;
-function LocaleCurrencySymbol: string;
-function LocaleDateFormat: string;}
 
 
 IMPLEMENTATION
@@ -191,62 +191,43 @@ end;
 
 
 
-{ Same as above but returns a more detailed string }
+{ Returns detailed CPU architecture information.
+  Includes specific platform details like x86, x64, ARM32, ARM64. }
 function AppBitnessEx: string;
 begin
-  Result := ''; // Initialize Result
+  Result:= '';
 
-  //  Desktop CPUs
+  { Desktop CPUs }
   {$IFDEF CPUX86}
-    Result := 'x86 (32-bit)';
+    Result:= 'x86 (32-bit)';
   {$ENDIF}
 
   {$IFDEF CPUX64}
-    Result := 'x64 (64-bit)';
+    Result:= 'x64 (64-bit)';
   {$ENDIF}
 
-  // Mobile/Embedded CPUs
-  // ARM (Mobile and embedded systems)
+  { ARM CPUs (Mobile and embedded systems) }
   {$IFDEF CPUARM}
-    // Differentiating between ARM versions is complex; use the most specific flag when available.
-    {$IFDEF CPUIOSARM}
-      // Specifically for iOS/tvOS ARM 32-bit (older devices)
-      Result := 'ARM (iOS 32-bit)';
-    {$ENDIF}
-
     {$IFDEF CPUARM64}
-      // General ARM 64-bit (Android, iOS, macOS (Simulators can run x64))
-      Result := 'ARM64 (64-bit)';
+      Result:= 'ARM64 (64-bit)';
+    {$ELSE}
+      {$IFDEF CPUIOSARM}
+        Result:= 'ARM (iOS 32-bit)';
+      {$ELSE}
+        Result:= 'ARM (32-bit)';
+      {$ENDIF}
     {$ENDIF}
   {$ENDIF}
 
-  // Fallback
+  { Fallback for unknown or future architectures }
   if Result = '' then
   begin
-    // Check general IFDEFs if specific CPU tags weren't found (e.g., if a new CPU tag is introduced)
-    {$IFDEF CPU32BITS}
-      Result := '32-bit Architecture';
+    {$IFDEF CPU64BITS}
+      Result:= '64-bit (Unknown CPU)';
+    {$ELSEIF Defined(CPU32BITS)}
+      Result:= '32-bit (Unknown CPU)';
     {$ELSE}
-      // Nested check for 64-bit architecture
-      {$IFDEF CPU64BITS}
-        Result := '64-bit Architecture';
-      {$ELSE}
-        // Final fallback if neither 32-bit nor 64-bit was defined
-        Result := 'CPU Architecture Unknown';
-      {$ENDIF}
-    {$ENDIF}
-  end;
-
-  // Final check to handle older ARM definitions if CPUARM wasn't specific enough
-  // and we still have an empty result.
-  if Result = '' then
-  begin
-    {$IFDEF CPUIOSARM}
-      Result := 'iOS ARM';
-    {$ELSE}
-      {$IFDEF CPUNONIOSARM}
-        Result := 'Non-iOS ARM (e.g., Android)';
-      {$ENDIF}
+      Result:= 'Unknown Architecture';
     {$ENDIF}
   end;
 end;
@@ -259,52 +240,21 @@ end;
 
 function GeneratePlatformRep: string;
 begin
-  Result:= ' [PLATFORM OS]'+ CRLF;
-  Result:= Result+'  Platform: '         + Tab+Tab+ OsType+ CRLF;
-  Result:= Result+'  OsArchitecture: '   + Tab    + OsArchitecture+ CRLF;
-  Result:= Result+'  OS Version: '       + Tab+Tab+ OsVersion;
+  Result:= ' [PLATFORM OS]' + CRLF;
+  Result:= Result + '  Platform: '       + Tab + Tab + OsType + CRLF;
+  Result:= Result + '  OsArchitecture: '   + Tab    + OsArchitecture+ CRLF;
+  Result:= Result + '  OS Version: '     + Tab + Tab + OsVersion;
 end;
 
 
 function GenerateAppBitnessRep: string;
 begin
-  Result:= CRLF;  { Initialize Result before concatenation }
-  Result:= Result+' [APP BITNESS]'+ CRLF;
-  Result:= Result+'  AppBitness: '       + Tab    + AppBitness+ CRLF;
-  Result:= Result+'  AppBitnessEx: '     + Tab    + AppBitnessEx+ CRLF;
-  Result:= Result+'  Is64Bit: '          + Tab+Tab+ BoolToStr(AppIs64Bit, TRUE)+ CRLF;
-
-  // DEVICE INFO
-  //Result:= Result+'  Device Model: '     + Tab     + DeviceModel+ CRLF;
-  //Result:= Result+'  Full Details: '     + Tab     + DevicePlatformDetails+ CRLF;
-  Result:= Result+'  Is Mobile: '        + Tab+Tab+ BoolToStr(OsIsMobile, TRUE);
+  Result:= ' [APP BITNESS]' + CRLF;
+  Result:= Result + '  AppBitness: '   + Tab + AppBitness + CRLF;
+  Result:= Result + '  AppBitnessEx: ' + Tab + AppBitnessEx + CRLF;
+  Result:= Result + '  Is64Bit: '      + Tab + Tab + BoolToStr(AppIs64Bit, TRUE) + CRLF;
+  Result:= Result + '  Is Mobile: '    + Tab + Tab + BoolToStr(OsIsMobile, TRUE);
 end;
 
 
-{-------------------------------------------------------------------------------------------------------------
-    LOCALES
--------------------------------------------------------------------------------------------------------------}
-
-//ToDo: AI:  this does not exist. was a hallucination. fix it
-(*
-{ Returns the user's primary language and country code. Example: 'en-US' }
-function LocaleLanguage: string;
-begin
-  Result := TLocale.Current.Language;
-end;
-
-{ Returns the user's currency symbol. Example: '$', '€', or 'RON' }
-function LocaleCurrencySymbol: string;
-begin
-  Result := TLocale.Current.CurrencyString;
-end;
-
-{ Returns the user's date format short string. Example: 'M/d/yyyy' }
-function LocaleDateFormat: string;
-begin
-  // TLocale doesn't expose a clean format string directly,
-  // so we use the standard System.SysUtils format settings.
-  Result := ShortDateFormat;
-end;
-        *)
 end.

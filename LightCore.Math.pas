@@ -6,7 +6,13 @@ UNIT LightCore.Math;
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
-   Math functions
+   Math utility functions:
+     - Min/Max for 3 values
+     - Range clamping
+     - Percent calculations
+     - Rounding variants
+     - Statistical functions (median, mean, interquartile)
+     - Factorial and combinations
 
 =============================================================================================================}
 
@@ -30,8 +36,8 @@ USES
 {==================================================================================================
    RANGE
 ==================================================================================================}
- procedure NotHigherThan   (VAR iInput: Integer; MaxVal: Integer);                               { Makes sura that the value of iInput is not bigger MaxVal }
- procedure NotSmallerThan  (VAR iInput: Integer; MinVal: Integer);         overload;             { Makes sura that the value of iInput is not < than MinVal }
+ procedure NotHigherThan   (VAR iInput: Integer; MaxVal: Integer);                               { Clamps iInput to be no greater than MaxVal }
+ procedure NotSmallerThan  (VAR iInput: Integer; MinVal: Integer);         overload;             { Clamps iInput to be no less than MinVal }
  procedure NotSmallerThan  (VAR iInput: Real   ; MinVal: Integer);         overload;
 
  procedure EnsureZero      (VAR i: Integer);
@@ -228,7 +234,7 @@ end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-  PRECENT
+   PERCENT
 --------------------------------------------------------------------------------------------------------------
   Example:
     ProcentRepresent(5  , 20 )= 25%
@@ -302,10 +308,10 @@ begin
 end;
 
 
-{ Example: Rounds 341 to 344.9 and 346 to 349.9 }
+{ Rounds price to a "pretty" value ending in .9 (e.g., 341 -> 344.9, 346 -> 349.9) }
 function BeautifyPrice(Total: Extended): Extended;
 begin
- Result:= RoundTo(Total, 5) - 0.1;      { !DO NOT CHANGE the '5' cosntant }
+  Result:= RoundTo(Total, 5) - 0.1;  { Rounds to nearest 5 then subtracts 0.1 }
 end;
 
 
@@ -315,13 +321,22 @@ end;
    BASIC MATH
 -------------------------------------------------------------------------------------------------------------}
 
-{ WARNING: because of the giant numbers that result, the 'n' parameter cannot be greater than 20 }
+{ Calculates n! (n factorial).
+  Formula: n! = n * (n-1) * (n-2) * ... * 3 * 2 * 1
+  Special case: 0! = 1 by definition.
+  WARNING: n must be <= 20 to avoid Int64 overflow (21! > MaxInt64). }
 function Factorial(CONST n: byte): Int64;
-VAR i: Integer;                                                   { FORMULA:    n!= n*(n-1)*(n-2)*...*3*2*1 }
+VAR
+  i: Integer;
 begin
- Result:= n;
- for i:= 1 TO n-1 DO
-   Result:= Result*(n-i);
+  Assert(n <= 20, 'Factorial: n must be <= 20 to avoid overflow');
+
+  if n <= 1
+  then EXIT(1);  { 0! = 1 and 1! = 1 }
+
+  Result:= n;
+  for i:= 1 to n - 1 do
+    Result:= Result * (n - i);
 end;
 
 
@@ -350,30 +365,36 @@ end;
     MEDIAN / QUARTILE on arrays
 -------------------------------------------------------------------------------------------------------------}
 
-{ Use it like this: Median(TDoubleDynArray.Create(4.1, 5.6, 7.2, 1.7, 9.3, 4.4, 3.2)) }
+{ Calculates median of an array of doubles.
+  Usage: Median(TDoubleDynArray.Create(4.1, 5.6, 7.2, 1.7, 9.3)) }
 function Median(MX: TDoubleDynArray): Double;
 VAR
    Middle: Integer;
 begin
+  Assert(Length(MX) > 0, 'Median: Array cannot be empty');
+
   TArray.Sort<Double>(MX);
 
-  Middle := Length(MX) div 2;
+  Middle:= Length(MX) div 2;
   if Odd(Length(MX))
-  then Result := MX[Middle]
-  else Result := (MX[Middle - 1] + MX[Middle]) / 2;
+  then Result:= MX[Middle]
+  else Result:= (MX[Middle - 1] + MX[Middle]) / 2;
 end;
 
 
+{ Calculates median of an array of integers (returns rounded result). }
 function Median(MX: System.Types.TIntegerDynArray): Integer;
 VAR
    Middle: Integer;
 begin
+  Assert(Length(MX) > 0, 'Median: Array cannot be empty');
+
   TArray.Sort<Integer>(MX);
 
-  Middle := Length(MX) div 2;
+  Middle:= Length(MX) div 2;
   if Odd(Length(MX))
-  then Result := MX[Middle]
-  else Result := RoundEx( (MX[Middle - 1] + MX[Middle]) / 2 );
+  then Result:= MX[Middle]
+  else Result:= RoundEx((MX[Middle - 1] + MX[Middle]) / 2);
 end;
 
 

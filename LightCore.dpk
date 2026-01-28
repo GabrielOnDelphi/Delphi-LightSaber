@@ -44,7 +44,6 @@ contains
   LightCore.StreamMem in 'LightCore.StreamMem.pas',
   LightCore.StreamBuff in 'LightCore.StreamBuff.pas',
   LightCore.TextFile in 'LightCore.TextFile.pas',
-  LightCore.StreamMem2 in 'LightCore.StreamMem2.pas',
   LightCore.StreamFile in 'LightCore.StreamFile.pas',
   LightCore.LogUtils in 'LightCore.LogUtils.pas',
   LightCore.LogTypes in 'LightCore.LogTypes.pas',

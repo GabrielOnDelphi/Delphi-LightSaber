@@ -54,9 +54,9 @@ USES
  Procedure SwapCardinal (VAR aCardinal: Cardinal);             assembler;                           { Swap32bits unsigned integer}
  Procedure SwapInt      (VAR aInteger : Longint);              assembler;                           { Swap32bits signed integer} {INTEL= Little ENDIAN}
  {$ELSE}
- procedure SwapWord     (VAR TwoBytes: word);                  inline;
+ procedure SwapWord     (VAR TwoBytes: Word);                  inline;
  Procedure SwapCardinal (VAR aCardinal: Cardinal);             inline;                              { Swap32bits unsigned integer}
- Procedure SwapInt      (VAR aInteger : integer);               inline;                              { Swap32bits signed integer} {INTEL= Little ENDIAN}
+ Procedure SwapInt      (VAR aInteger: Integer);               inline;                              { Swap32bits signed integer} {INTEL= Little ENDIAN}
  {$ENDIF}
  function  SwapUInt64   (Value: UInt64): UInt64;               inline;  { Not tested }
  {$IFDEF MSWINDOWS}
@@ -137,19 +137,29 @@ begin
 end;
 
 
-function StringIsHexNumber(CONST s: string): boolean;  { Returns TRUE if the input parameter is a valid hex number (has the '$0123ABCDEF' or '0123ABCDEF' format) }
-VAR Start, i: Integer;
+{ Returns TRUE if the input parameter is a valid hex number.
+  Accepts formats: '$0123ABCDEF' or '0123ABCDEF'.
+  Returns FALSE for empty strings or invalid characters. }
+function StringIsHexNumber(CONST s: string): Boolean;
+VAR
+   Start, i: Integer;
 begin
- if s= '' then RAISE exception.Create('The hex string is empty!');
- Result:= TRUE;
+ if s = ''
+ then raise Exception.Create('StringIsHexNumber');
 
- if s[1]= '$'
+ if s[1] = '$'
  then Start:= 2
  else Start:= 1;
 
+ // Must have at least one hex digit
+ if Start > Length(s)
+ then EXIT(FALSE);
+
  for i:= Start to Length(s) DO
-  if NOT CharInSet(s[i], HexNumbers)
-  then EXIT(FALSE);
+   if NOT CharInSet(s[i], HexNumbers)
+   then EXIT(FALSE);
+
+ Result:= TRUE;
 end;
 
 
@@ -184,7 +194,7 @@ begin
 end;
 
 
-{ Shows which bits are enabled in IntegerNumber. The endianess is irrelevant. The bits are shown exaclty in the order found: b0, b1, b2... }
+{ Shows which bits are enabled in IntegerNumber. The endianness is irrelevant. The bits are shown exactly in the order found: b0, b1, b2... }
 function IntToBin(CONST IntNumber, Digits: Integer): string;
 begin
  if Digits= 0
@@ -231,7 +241,7 @@ end;
   READ HERE:: http://codeverge.com/embarcadero.delphi.basm/fastest-best-way-to-reverse-byte-orde/1096017
 -----------------------------------------------------------------------------------------------------------------------}
 
-{$IFDEF MSWINDOWS} //ASM instrauctions not available on Android
+{$IFDEF MSWINDOWS} //ASM instructions not available on Android
 { WORD }
 function SwapWordF(TwoBytes: word): Word; assembler;    { NOT TESTED! }
 asm
@@ -267,7 +277,7 @@ end;
 
 
 { CARDINAL }
-{$IFDEF MSWINDOWS}   //ASM instrauctions not available on Android
+{$IFDEF MSWINDOWS}   //ASM instructions not available on Android
 function SwapCardinalF(aCardinal: Cardinal): Cardinal; assembler;   { NOT TESTED! }
 asm
   {$IFDEF CPUX64}
@@ -314,7 +324,7 @@ end;
 
 
 
-{$IFDEF MSWINDOWS}   //ASM instrauctions not available on Android
+{$IFDEF MSWINDOWS}   //ASM instructions not available on Android
 function SwapInt64(Value: Int64): Int64;
  {$IF Defined(CPUX86)}
  asm
@@ -346,10 +356,18 @@ function SwapInt64(Value: Int64): Int64;
 
 
 
-function SwapUInt64(Value: UInt64): UInt64;   { Not tested }
+{ Swaps byte order of a 64-bit unsigned integer (big-endian <-> little-endian).
+  $0102030405060708 becomes $0807060504030201 }
+function SwapUInt64(Value: UInt64): UInt64;
 begin
- { Source: http://stackoverflow.com/questions/2882434/how-to-convert-big-endian-and-how-to-flip-the-highest-bit/2882606#2882606 }
- raise exception.Create('SwapUInt64-Not implemented!');
+ Result:= ((Value AND $00000000000000FF) SHL 56) OR
+          ((Value AND $000000000000FF00) SHL 40) OR
+          ((Value AND $0000000000FF0000) SHL 24) OR
+          ((Value AND $00000000FF000000) SHL  8) OR
+          ((Value AND $000000FF00000000) SHR  8) OR
+          ((Value AND $0000FF0000000000) SHR 24) OR
+          ((Value AND $00FF000000000000) SHR 40) OR
+          ((Value AND $FF00000000000000) SHR 56);
 end;
 
 
@@ -381,7 +399,8 @@ end; }
 
 
 
-function ReverseByte(b: Byte): Byte;                                                               { "Inverts" a binary nunber, so, if the number is "1101", I need to end with "1011".   http://webcache.googleusercontent.com/search?q=cache:zuCvhGuAgr4J:www.experts-exchange.com/Programming/Game/Q_20497309.html+reverse+of+a+number+binary&cd=3&hl=en&ct=clnk&gl=us&client=firefox-a s}
+{ Reverses the bit order of a byte: 1101 becomes 1011, 10000000 becomes 00000001. }
+function ReverseByte(b: Byte): Byte;
 VAR i: Byte;
 begin
   for i:= 0 to 3 DO
@@ -679,13 +698,20 @@ begin
 end;
 
 
-function MakeCardinal (CONST Hex: String): Cardinal;                              { Make a cardinal number from a special string. This string contains 4 substrings, each of 2 chars long. Each substring represents a Hex number. The order of the Hex numbers is MSB. Example: FF332211 }
-VAR Hex1, Hex2, Hex3, Hex4: string;
+{ Make a cardinal from a hex string of exactly 8 characters (4 bytes).
+  Example: 'FF332211' -> $FF332211 (MSB first).
+  Raises exception if string is not exactly 8 hex characters. }
+function MakeCardinal(CONST Hex: String): Cardinal;
+VAR
+   Hex1, Hex2, Hex3, Hex4: string;
 begin
- Hex1:= system.COPY(Hex, 1, 2);
- Hex2:= system.COPY(Hex, 3, 2);
- Hex3:= system.COPY(Hex, 5, 2);
- Hex4:= system.COPY(Hex, 7, 2);
+ if Length(Hex) <> 8
+ then RAISE EConvertError.CreateFmt('MakeCardinal requires exactly 8 hex chars, got %d', [Length(Hex)]);
+
+ Hex1:= System.Copy(Hex, 1, 2);
+ Hex2:= System.Copy(Hex, 3, 2);
+ Hex3:= System.Copy(Hex, 5, 2);
+ Hex4:= System.Copy(Hex, 7, 2);
 
  Result:= MakeCardinal(Hex1, Hex2, Hex3, Hex4);
 end;
@@ -763,20 +789,27 @@ begin
 end;
 
 
+{ Reads a Word from a stream in Motorola (big-endian) format.
+  Raises exception if not enough data available. }
 function ReadMotorolaWord(Stream: TStream): Word;
- TYPE
-   TMotorolaWord = record
-     case Byte of
-       0: (Value: Word);
-       1: (Byte1, Byte2: Byte);
-   end;
-
- VAR
-    MW: TMotorolaWord;
+TYPE
+  TMotorolaWord = record
+    case Byte of
+      0: (Value: Word);
+      1: (Byte1, Byte2: Byte);
+  end;
+VAR
+   MW: TMotorolaWord;
+   BytesRead: Integer;
 begin
-  { It would probably be better to just read these two bytes in normally and then do a small ASM routine to swap them.  But we aren't talking about reading entire files, so I doubt the performance gain would be worth the trouble. }
-  Stream.Read(MW.Byte2, SizeOf(Byte));
-  Stream.Read(MW.Byte1, SizeOf(Byte));
+  BytesRead:= Stream.Read(MW.Byte2, SizeOf(Byte));
+  if BytesRead <> SizeOf(Byte)
+  then RAISE Exception.Create('ReadMotorolaWord: Unexpected end of stream');
+
+  BytesRead:= Stream.Read(MW.Byte1, SizeOf(Byte));
+  if BytesRead <> SizeOf(Byte)
+  then RAISE Exception.Create('ReadMotorolaWord: Unexpected end of stream');
+
   Result:= MW.Value;
 end;
 

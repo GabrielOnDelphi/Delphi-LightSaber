@@ -18,7 +18,6 @@ INTERFACE
 
 USES System.SysUtils, System.Classes;
 
- function  WrapStringEdi    (InStrg: String; WrapWidth: Integer): string;  // not tested
  function  WrapStringForced (CONST s: string; MaxRowLength: integer): string; {old name WrapString }           { Makes sure that none of the lines of 's' is longer than RowLenght chars }     { Also exists: System.SysUtils.WrapText }
  function  WrapStringForcedA(CONST s: AnsiString; MaxRowLength: integer): AnsiString;
 
@@ -54,31 +53,35 @@ USES LightCore, LightCore.StrBuilder;
     31ms     WrapString        - buffered (cmStrBuilder)
 -----------------------------------------------------------------------------------------------------------------------}
 
-function WrapStringForced(CONST s: string; MaxRowLength: integer): string;
-VAR BufferSize, i, Row: Integer;
-    StrBuilder: LightCore.StrBuilder.TCStringBuilder;
-Begin
- Row:= 0;
- Result:= '';
- BufferSize:= Length(s);
- BufferSize:= BufferSize+ Round(BufferSize * 0.02);  { Add 2 percent more }
- StrBuilder:= TCStringBuilder.Create(BufferSize);
- TRY
-  for i:= 1 TO Length(s) DO
-   begin
-    inc(Row);
-    StrBuilder.AddChar(s[i]);   { trunchez liniile la 'RowLength' caractere no matter what }
-    if Row >= MaxRowLength then                                                                        { trunchez liniile la 'RowLength' caractere }
-     begin
-      StrBuilder.AddEnter;
-      Row:= 0;
-     end;
-   end;
-  Result:= StrBuilder.AsText;
- FINALLY
-  FreeAndNil(StrBuilder);
- END;
-End;
+{ Wraps a string by inserting line breaks at fixed intervals.
+  Unlike System.SysUtils.WrapText, this forces breaks regardless of word boundaries.
+  Useful for DNA sequences, fixed-width data, etc. }
+function WrapStringForced(const s: string; MaxRowLength: Integer): string;
+var
+   BufferSize, i, Row: Integer;
+   StrBuilder: LightCore.StrBuilder.TCStringBuilder;
+begin
+  Row:= 0;
+  Result:= '';
+  BufferSize:= Length(s);
+  BufferSize:= BufferSize + Round(BufferSize * 0.02);  { Add 2% buffer for line breaks }
+  StrBuilder:= TCStringBuilder.Create(BufferSize);
+  try
+    for i:= 1 to Length(s) do
+    begin
+      Inc(Row);
+      StrBuilder.AddChar(s[i]);
+      if Row >= MaxRowLength then
+      begin
+        StrBuilder.AddEnter;
+        Row:= 0;
+      end;
+    end;
+    Result:= StrBuilder.AsText;
+  finally
+    FreeAndNil(StrBuilder);
+  end;
+end;
 
 
 
@@ -88,32 +91,40 @@ begin
 end;
 
 
-// Truncates s to full words. But the result will never pass over the MaxChars limit!
-function TruncateToWord(CONST s: string; MaxChars: Integer): string;
-VAR CurSize: Integer;
+{ Truncates string to full words, ensuring result never exceeds MaxChars.
+  If no word boundary found within MaxChars, performs hard truncation. }
+function TruncateToWord(const s: string; MaxChars: Integer): string;
+var
+  CurSize: Integer;
+  TSL: TStringList;
+  Ln: string;
 begin
   Result:= '';
   CurSize:= 0;
 
-  VAR TSL:= TStringList.Create;
-  TRY
-    TSL.Text:= System.SysUtils.WrapText(s, MaxChars);  // WrapText has a problem: if the separator is not encountered, the text is never wrapped !!!
+  TSL:= TStringList.Create;
+  try
+    { WrapText breaks at word boundaries; if no separator found, text isn't wrapped }
+    TSL.Text:= System.SysUtils.WrapText(s, MaxChars);
 
-    for VAR Ln in TSL DO
-      begin
-       CurSize:= CurSize + Ln.Length;
-       if CurSize > MaxChars
-       then Break
-       else Result:= Result+ Ln;
-      end;
+    for Ln in TSL do
+    begin
+      CurSize:= CurSize + Ln.Length;
+      if CurSize > MaxChars
+      then Break
+      else Result:= Result + Ln;
+    end;
 
+    { Fallback: hard truncate if no words fit }
     if Result.Length < 1
     then Result:= Copy(s, 1, MaxChars);
 
-    Assert(Result.Length <= MaxChars)
-  FINALLY
+    { Safety check - should never fail given the logic above }
+    if Result.Length > MaxChars
+    then Result:= Copy(Result, 1, MaxChars);
+  finally
     FreeAndNil(TSL);
-  END;
+  end;
 end;
 
 
@@ -136,156 +147,85 @@ end;
 
 
 
-{ It marges ALL lines in a file into a single block of text.
-  Painfully slow! Takes 75 seconds to process a 1.87 MB text file }
-function UnWrapString(CONST s: string): string;
-Begin
- Result:= StringReplace(s     , CRLF, '' , [rfReplaceAll, rfIgnoreCase]);
- Result:= StringReplace(Result, Tab  , ' ', [rfReplaceAll, rfIgnoreCase]);
-End;
+{ Merges ALL lines into a single block of text by removing line breaks.
+  Replaces CRLF with nothing and TAB with space.
+  Note: Performance warning - slow for large files (75s for 1.87MB). }
+function UnWrapString(const s: string): string;
+begin
+  Result:= StringReplace(s,      CRLF, '',  [rfReplaceAll]);
+  Result:= StringReplace(Result, Tab,  ' ', [rfReplaceAll]);
+end;
 
 
-{
- Description:
-   Text Unwrap can restore the text in a document that has been formatted with a broken line / row, for example, those files that have short rows because they were formatted for a page layout different than yours (like A4/L8).</p>
+{ Restores text that has been formatted with broken lines (e.g., different page layouts).
 
- Paramaters:
-   Separators - If one of these characters is found before an empty line then that line will not be unwrapped. Use #tab for tab and #enter for enter.
-   RemoveExtraEnters - If the program encounters a block of multiple empty lines it eliminates some of them.
-   AddExtraSpace - Put a space at the place where the text is cancatenated.
-}
+  Parameters:
+    Separators - Characters that indicate intentional line breaks. Use #tab for tab, #enter for enter.
+    RemoveExtraEnters - Collapses multiple consecutive empty lines into one.
+    AddExtraSpace - Adds a space where lines are joined. }
 function UnwrapText(s: string; Separators: string; RemoveExtraEnters, AddExtraSpace: Boolean): string;
-VAR
-   x: integer;
-   IsSepa: boolean;
-   enum: TSysCharSet;
+var
+  x: Integer;
+  IsSepa: Boolean;
+  SeparatorSet: TSysCharSet;
 
-  function PreviousCharIsSeparator: boolean;
-  VAR c: char;
+  function PreviousCharIsSeparator: Boolean;
   begin
-   c:= s[x-1];
-   Result:= CharInSet(c, enum);
+    Result:= CharInSet(s[x-1], SeparatorSet);
   end;
 
 begin
- { Remove extra enters }
- if RemoveExtraEnters then
+  { Handle short strings }
+  if Length(s) < 3 then
   begin
-   s:= StringReplace(s, CRLF+CRLF+CRLF+CRLF, CRLF+CRLF, [rfReplaceAll]);
-   s:= StringReplace(s, CRLF+CRLF+CRLF     , CRLF+CRLF, [rfReplaceAll]);
+    Result:= s;
+    EXIT;
   end;
 
- { Remove multiple consecutive spaces }
- s:= StringReplace(s, '    ', ' ', [rfReplaceAll]);
+  { Remove extra enters }
+  if RemoveExtraEnters then
+  begin
+    s:= StringReplace(s, CRLF+CRLF+CRLF+CRLF, CRLF+CRLF, [rfReplaceAll]);
+    s:= StringReplace(s, CRLF+CRLF+CRLF,      CRLF+CRLF, [rfReplaceAll]);
+  end;
 
- { Extract separators }
- Separators:= StringReplace(Separators, '#tab'  , Tab , [rfReplaceAll, rfIgnoreCase]);
- Separators:= StringReplace(Separators, '#enter', CRLF, [rfReplaceAll, rfIgnoreCase]);
- enum:= [];
- for x:= 1 to Length(Separators)
-   DO enum:= enum+ [Separators[x]];
+  { Remove multiple consecutive spaces }
+  s:= StringReplace(s, '    ', ' ', [rfReplaceAll]);
 
- { Start }
- x:= 3;
- Result:= s[1] + s[2];
- REPEAT                                                                       //pentru poate randurile
-  if (s[x]= #13) AND (s[x+1]= #10)
-  then
-    Begin
+  { Build separator set from string }
+  Separators:= StringReplace(Separators, '#tab',   Tab,  [rfReplaceAll, rfIgnoreCase]);
+  Separators:= StringReplace(Separators, '#enter', CRLF, [rfReplaceAll, rfIgnoreCase]);
+  SeparatorSet:= [];
+  for x:= 1 to Length(Separators) do
+    SeparatorSet:= SeparatorSet + [Separators[x]];
+
+  { Process the string }
+  x:= 3;
+  Result:= s[1] + s[2];
+  repeat
+    if (s[x] = #13) AND (s[x+1] = #10) then
+    begin
       IsSepa:= PreviousCharIsSeparator;
-
-      if IsSepa
-      then                                      { daca s-a gasit ENTER nejustificat (nu s-a gasit PUNCT), atunci ignore this current fake enter }
-       begin
+      if IsSepa then
+      begin
+        { Keep the line break (it follows a separator like period) }
         Result:= Result + CRLF;
-        inc(x, 2);
-       end
+        Inc(x, 2);
+      end
       else
-       begin
-        inc(x, 2);
+      begin
+        { Remove the line break (unwrap the text) }
+        Inc(x, 2);
         if AddExtraSpace
         then Result:= Result + ' ';
-       end
-    End
-  else
-   begin
-    Result:= Result + s[x];
-    inc(x);
-   end;
- UNTIL x >= length(s);
-end;
-
-
-
-{ Not tested }
-function WrapStringEdi(InStrg: String; WrapWidth: Integer): String;
-var
-   I,u : integer;
-   BStrg: String;
-
-  function findenter: Integer;
-  var j,imax:integer;
-  begin
-   result:= 0;
-   if WrapWidth <= Length(InStrg)
-   then imax:= WrapWidth
-   else imax:= Length(InStrg);
-
-   for j := iMax downto 1 do
+      end
+    end
+    else
     begin
-     if (InStrg[j]=#13) or (InStrg[j]=#10) then
-       result:= j+1;
-     Break            //?????????????????
+      Result:= Result + s[x];
+      Inc(x);
     end;
-  end;
-
-begin
-  Result:='';
-  BStrg:='';
-  u:= findenter;
-  I := WrapWidth+U;
-
-  while true do
-   begin
-     if i> length(InStrg) then
-      begin
-        result:= result+ InStrg;
-        exit;
-      end;
-
-     if InStrg[i]= ' '
-     then
-       begin
-        BStrg:= Copy(InStrg, 1, WrapWidth);
-        InStrg:= Copy (InStrg, WrapWidth+1, High(integer));
-        u:= findenter;
-        i:= WrapWidth+u;
-        Result:= Result+ BStrg+ CRLF;
-       end
-     else
-       begin
-         REPEAT
-           dec(I);
-         UNTIL InStrg[i]= ' ';
-
-         if I >= WrapWidth  then
-           begin
-            BStrg := Copy(InStrg, 1, i);
-            InStrg:= Copy(InStrg, WrapWidth+1, High(integer));
-            u:= findenter;
-            i:= WrapWidth+u;
-           end
-         else
-           begin
-            BStrg := Copy(InStrg, 1, i);
-            InStrg:= Copy(InStrg, i+1, High(integer));
-            u:= findenter;
-            i:= WrapWidth+u;
-           end;
-
-         Result:= Result+ BStrg + CRLF;
-       end;
-   end;
+  until x >= Length(s);
 end;
 
 

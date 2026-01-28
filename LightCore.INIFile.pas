@@ -14,7 +14,7 @@ UNIT LightCore.INIFile;
 
 
   Reminder: TIniFile limitations:
-     - Cannot put spaces at the beggining of a 'value'. The spaces will be trimmed. This behavior does not happen if you use a TMemInifile.      https://stackoverflow.com/questions/3702647/reading-inifile-to-stringlist-problem-spaces-problem
+     - Cannot put spaces at the beginning of a 'value'. The spaces will be trimmed. This behavior does not happen if you use a TMemInifile.      https://stackoverflow.com/questions/3702647/reading-inifile-to-stringlist-problem-spaces-problem
      - Cannot handle quotes and enters
      - Issues with Unicode strings
      Some of these limitations are not in TMemIniFile.
@@ -29,7 +29,7 @@ TYPE
   FontStruct = record
     Name  : string;
     Size  : Integer;
-    Style : TFontStyle;
+    Style : TFontStyles;   { Set of TFontStyle - can hold multiple styles like [fsBold, fsItalic] }
     Color : TColor;
   end;
 
@@ -40,9 +40,9 @@ TYPE
   This method cannot be simply named Write because it will conflict with Write(Real).
   I had a case where it wrote Write(2.0) to the ini file as a date (1900-01-01)
   The Default MUST be in the 0.0 format otherwise the wrong function will be called (the one for integer) }
+ { Extends TIniFile to handle dates using float format (independent of regional settings).
+   See: stackoverflow.com/questions/20419347/delphi-inifiles-readdatetime }
  TIniFileDt = class(TIniFile)
-  protected
-    FSection: string;
   public
     function  ReadDate (CONST Section, Ident: string; Default: TDateTime): TDateTime; reintroduce;
     procedure WriteDate(CONST Section, Ident: string; Value  : TDateTime);            reintroduce;
@@ -106,32 +106,36 @@ end;
    FONT
 ---------------}
 
-//ToDo: Return value of function 'TIniFileEx.Read' might be undefined
+{ Reads font settings from INI file. Returns defaults if font entry not found. }
 function TIniFileEx.Read(CONST Ident: string): FontStruct;
 begin
- if ValueExists(FSection, Ident+ 'Name') then
+ if ValueExists(FSection, Ident+ 'Name')
+ then
    begin
-     Result.Name  := ReadString (FSection,              Ident+ 'Name',    'Arial');
-     Result.Color := TColor     (ReadInteger (FSection, Ident+ 'Color',   0));
-     Result.Size  := ReadInteger(FSection,              Ident+ 'Size',    8);
-     Result.Style := TFontStyle (Byte(ReadInteger (FSection, Ident+ 'Style',   0)) );
+     Result.Name  := ReadString (FSection, Ident+ 'Name',  'Arial');
+     Result.Color := TColor     (ReadInteger(FSection, Ident+ 'Color', 0));
+     Result.Size  := ReadInteger(FSection, Ident+ 'Size',  8);
+     Result.Style := TFontStyles(Byte(ReadInteger(FSection, Ident+ 'Style', 0)));
    end
-  else
-    begin
-      Result.Name  := 'Arial';
-      Result.Color := 255;
-      Result.Size  := 77;
-      //Result.Style := fsBold;
-    end;
+ else
+   begin
+     { Return sensible defaults }
+     Result.Name  := 'Arial';
+     Result.Color := TColor(0);   { clBlack }
+     Result.Size  := 8;
+     Result.Style := [];
+   end;
 end;
 
+{ Writes font settings to INI file.
+  Note: Writes empty string for Ident so TIniFileVCL.Read can find the font by identifier. }
 procedure TIniFileEx.Write(CONST Ident: string; Font: FontStruct);
 begin
-  WriteString (FSection, Ident,  '');      // I need this here so I can find the font by its identifier (name). Otherwise it will be filtered out by TIniFileVCL.Read: if ValueExists(FSection, Comp.Name) then
-  WriteString (FSection, Ident + 'Name',    Font.Name);
-  WriteInteger(FSection, Ident + 'Color',   Font.Color);
-  WriteInteger(FSection, Ident + 'Size',    Font.Size);
-  WriteInteger(FSection, Ident + 'Style',   Byte(Font.Style));
+  WriteString (FSection, Ident,            '');
+  WriteString (FSection, Ident + 'Name',   Font.Name);
+  WriteInteger(FSection, Ident + 'Color',  Font.Color);
+  WriteInteger(FSection, Ident + 'Size',   Font.Size);
+  WriteInteger(FSection, Ident + 'Style',  Byte(Font.Style));
 end;
 
 
@@ -224,16 +228,17 @@ end;
 
 {-------------------------------------------------------------------------------------------------------------
    TIniFileDt
+   Overrides date read/write to use float format (independent of regional settings).
 -------------------------------------------------------------------------------------------------------------}
 function TIniFileDt.ReadDate(const Section, Ident: string; Default: TDateTime): TDateTime;
 begin
-  Result:= TDateTime(ReadFloat(FSection, Ident, default));
+  Result:= TDateTime(ReadFloat(Section, Ident, Default));
 end;
 
 
 procedure TIniFileDt.WriteDate(const Section, Ident: string; Value: TDateTime);
 begin
-  WriteFloat(FSection, Ident, Value);
+  WriteFloat(Section, Ident, Value);
 end;
 
 

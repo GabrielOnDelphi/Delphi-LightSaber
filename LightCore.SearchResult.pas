@@ -1,6 +1,16 @@
 unit LightCore.SearchResult;
-{ This units implements a list of positions in a PAS file. Each position stores the line and column number where an issue was found on that line of code.
-  It also stores the issue and the solution. }
+
+{=============================================================================================================
+   www.GabrielMoraru.com
+--------------------------------------------------------------------------------------------------------------
+   Search result classes for IDE integration.
+
+   TIDEPosition: Stores a single position in a source file where an issue was found.
+   TSearchResult: Collection of positions within a single file.
+   TSearchResults: Collection of TSearchResult objects (multiple files).
+
+   Used for reporting code analysis results, warnings, and suggested fixes.
+=============================================================================================================}
 
 INTERFACE
 
@@ -8,30 +18,41 @@ USES
   System.SysUtils, System.Generics.Collections;
 
 TYPE
+  { Represents a single position in a source file where an issue was found }
   TIDEPosition = record
-    LinePos, ColumnPos: Integer;           // The position in the IDE where to put the cursor
-    CodeLine: string;                      // The line of code where the problem was found.
-    WarningMsg: string;                    // The warning message to show to the user. It usually explained what was wrong at that line and how to fix it.
-    Offender: string;                      // The piece of code that caused the problem.
-    //FileName: string;                    // Which file is being processed
+    LinePos: Integer;      { Line number (1-based) }
+    ColumnPos: Integer;    { Column number (1-based) }
+    CodeLine: string;      { The line of code where the problem was found }
+    WarningMsg: string;    { Warning/fix message to show to the user }
+    Offender: string;      { The piece of code that caused the problem }
   end;
 
-  TSearchResult= class(TObject)
-     FileName: string;
-     Positions: TArray<TIDEPosition>;      // The line(s) where the text was found
-     procedure AddNewPos(LinePos, ColumnPos: Integer; const CodeLine: string);                       overload;
-     procedure AddNewPos(LinePos, ColumnPos: Integer; const CodeLine, Offender, WarningMsg: string); overload;
-     procedure AddNewPos(WarningMsg: string);                                                        overload;
-     function AsString: string;            // List of positions where issues were found AND the fix
-     function PositionsAsString: string;   // Comma sepparated list of positions where the issue was found
-     function Found: Boolean;
-     function Count: Integer;
-     procedure Clear;
-     constructor Create(const aFileName: string);
+  { Collection of positions within a single source file }
+  TSearchResult = class(TObject)
+  private
+    FFileName: string;
+    FPositions: TList<TIDEPosition>;
+  public
+    constructor Create(CONST aFileName: string);
+    destructor Destroy; override;
+
+    procedure AddNewPos(LinePos, ColumnPos: Integer; CONST CodeLine: string); overload;
+    procedure AddNewPos(LinePos, ColumnPos: Integer; CONST CodeLine, Offender, WarningMsg: string); overload;
+    procedure AddNewPos(CONST WarningMsg: string); overload;  { For file-wide issues }
+
+    function AsString: string;           { Full report with positions and messages }
+    function PositionsAsString: string;  { Comma-separated list of line numbers }
+    function Found: Boolean;             { True if any positions recorded }
+    function Count: Integer;
+    procedure Clear;
+
+    property FileName: string read FFileName;
+    property Positions: TList<TIDEPosition> read FPositions;
   end;
 
-  TSearchResults= class(TObjectList<TSearchResult>)
-     function Last: TSearchResult;
+  { Collection of search results from multiple files }
+  TSearchResults = class(TObjectList<TSearchResult>)
+    function Last: TSearchResult;
   end;
 
 
@@ -44,107 +65,100 @@ USES LightCore;
 constructor TSearchResult.Create(const aFileName: string);
 begin
   inherited Create;
-  FileName:= aFileName;
+  FFileName:= aFileName;
+  FPositions:= TList<TIDEPosition>.Create;
+end;
+
+
+destructor TSearchResult.Destroy;
+begin
+  FreeAndNil(FPositions);
+  inherited Destroy;
 end;
 
 
 procedure TSearchResult.Clear;
 begin
- // Add it to the list
- SetLength(Positions, 0);
+  FPositions.Clear;
 end;
 
 
 { CodeLine is the line of code where the problem was found.
   Offender is the piece of code that caused the problem.
-  WarningMsg is the warning message to show to the user. It usually explained what was wrong at that line and how to fix it. }
+  WarningMsg is the warning message to show to the user. It usually explains what was wrong at that line and how to fix it. }
 procedure TSearchResult.AddNewPos(LinePos, ColumnPos: Integer; const CodeLine, Offender, WarningMsg: string);
 var IDEPosition: TIDEPosition;
 begin
- // New postion
- IDEPosition.LinePos   := LinePos;
- IDEPosition.ColumnPos := ColumnPos;
- IDEPosition.CodeLine  := CodeLine;
- IDEPosition.WarningMsg:= WarningMsg;
- IDEPosition.Offender  := Offender;
- //IDEPosition.FileName  := FileName;
-
- // Add it to the list
- SetLength(Positions, Length(Positions)+1);
- Positions[High(Positions)]:= IDEPosition;
+  IDEPosition.LinePos   := LinePos;
+  IDEPosition.ColumnPos := ColumnPos;
+  IDEPosition.CodeLine  := CodeLine;
+  IDEPosition.WarningMsg:= WarningMsg;
+  IDEPosition.Offender  := Offender;
+  FPositions.Add(IDEPosition);
 end;
 
 
 procedure TSearchResult.AddNewPos(LinePos, ColumnPos: Integer; const CodeLine: string);
 var IDEPosition: TIDEPosition;
 begin
- // New postion
- IDEPosition.LinePos   := LinePos;
- IDEPosition.ColumnPos := ColumnPos;
- IDEPosition.CodeLine  := CodeLine;
- IDEPosition.WarningMsg:= '';
- IDEPosition.Offender  := '';
- //IDEPosition.FileName  := FileName;
-
- // Add it to the list
- SetLength(Positions, Length(Positions)+1);
- Positions[High(Positions)]:= IDEPosition;
+  IDEPosition.LinePos   := LinePos;
+  IDEPosition.ColumnPos := ColumnPos;
+  IDEPosition.CodeLine  := CodeLine;
+  IDEPosition.WarningMsg:= '';
+  IDEPosition.Offender  := '';
+  FPositions.Add(IDEPosition);
 end;
 
 
-{ A generic issue that does not apply to a certain line number but to the whole file  }
-procedure TSearchResult.AddNewPos(WarningMsg: string);
+{ A generic issue that does not apply to a certain line number but to the whole file }
+procedure TSearchResult.AddNewPos(CONST WarningMsg: string);
 var IDEPosition: TIDEPosition;
 begin
- // New postion
- IDEPosition.LinePos   := 1;
- IDEPosition.ColumnPos := 1;
- //IDEPosition.FileName  := FileName;
- IDEPosition.CodeLine  := '';
- IDEPosition.WarningMsg:= WarningMsg;
-
- // Add it to the list
- SetLength(Positions, Length(Positions)+1);
- Positions[High(Positions)]:= IDEPosition;
+  IDEPosition.LinePos   := 1;
+  IDEPosition.ColumnPos := 1;
+  IDEPosition.CodeLine  := '';
+  IDEPosition.WarningMsg:= WarningMsg;
+  IDEPosition.Offender  := '';
+  FPositions.Add(IDEPosition);
 end;
 
 
 function TSearchResult.Found: Boolean;
 begin
- Result:= Length(Positions) > 0;
+  Result:= FPositions.Count > 0;
 end;
 
 
 function TSearchResult.Count: Integer;
 begin
- Result:= Length(Positions);
+  Result:= FPositions.Count;
 end;
 
 
-{ Comma sepparated list of positions where issues were found }
+{ Comma-separated list of positions where issues were found }
 function TSearchResult.PositionsAsString: string;
 begin
- Result:= '';
+  Result:= '';
 
- for var IDEPosition in Positions
-   do Result:= Result+ IntToStr(IDEPosition.LinePos)+ ', ';
+  for var IDEPosition in FPositions do
+    Result:= Result + IntToStr(IDEPosition.LinePos) + ', ';
 
- Result:= RemoveLastChar(Result);
- Result:= RemoveLastChar(Result);
+  Result:= RemoveLastChar(Result);
+  Result:= RemoveLastChar(Result);
 end;
 
 
-{ List of positions where issues were found AND the warning msg (or the fix) }
+{ List of positions where issues were found AND the warning message (or the fix) }
 function TSearchResult.AsString: string;
 begin
- Result:= '';
+  Result:= '';
 
- for var IDEPosition in Positions
-   do Result:= Result+ '   Line '+ IntToStr(IDEPosition.LinePos)+':'
-              + CRLF + '   '+Trim(IDEPosition.CodeLine)
-              + CRLF + '   '+IDEPosition.Offender+ ' ' + IDEPosition.WarningMsg+ CRLF;
+  for var IDEPosition in FPositions do
+    Result:= Result + '   Line ' + IntToStr(IDEPosition.LinePos) + ':'
+           + CRLF + '   ' + Trim(IDEPosition.CodeLine)
+           + CRLF + '   ' + IDEPosition.Offender + ' ' + IDEPosition.WarningMsg + CRLF;
 
- Result:= RemoveLastEnter(Result);
+  Result:= RemoveLastEnter(Result);
 end;
 
 

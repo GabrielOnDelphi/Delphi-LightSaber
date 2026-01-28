@@ -1,6 +1,6 @@
 UNIT LightCore.HTML;
 
-//This hould be moved to core
+{ This should be moved to core }
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
@@ -16,8 +16,7 @@ UNIT LightCore.HTML;
 INTERFACE
 
 USES
-   System.SysUtils, // msHtml,
-   System.AnsiStrings, System.StrUtils, System.Classes, System.Math,
+   System.SysUtils, System.AnsiStrings, System.StrUtils, System.Classes, System.Math,
    LightCore.StringList, LightCore;
 
 {--------------------------------------------------------------------------------------------------
@@ -53,7 +52,7 @@ USES
  function  MakeLinksRelativeToRoot (CONST HTMLBody,   HtmlUrl: string): string;
  function  ColapseUrlDots          (sURL: string): string;
 
- { Also see LightCore.ExtractTex tBetween }
+ { Also see LightCore.ExtractTextBetween }
  function  LineIsMeta      (CONST HtmlLine, MetaName: string): Boolean;                             { Returns true if this line is the specified 'meta'. For example: <meta name="Keywords" content="">  }
  function  LineIsTitle     (CONST HtmlLine: string): Boolean;
 
@@ -70,8 +69,8 @@ USES
 
 IMPLEMENTATION
 
-USES //LightVcl.Internet.Common, LightCore.Internet,
-     LightCore.IO, LightCore.Internet, LightCore.TextFile;
+USES
+   LightCore.IO, LightCore.Internet, LightCore.TextFile;
 
 
 
@@ -636,9 +635,8 @@ begin
         then
          begin
           Tag:= LightCore.CopyTo(HtmlBody, iStart1, iEnd);
-          if Tag = ''
-          then EmptyDummy; // raise exception.Create('Empty tag!');
-          Result.Add(Tag);
+          if Tag <> ''
+          then Result.Add(Tag);
           offset:= iEnd+1;
          end
         else
@@ -698,17 +696,23 @@ begin
    PosWww  := PosInsensitive ('www.', Text);
 
    { Finds out which appears first }
-   if  (PosHttp < PosWww)
-   AND (PosHttp > 0)                                                               { ASTA e neaparat necesara aici }
+   if (PosHttp > 0) AND ((PosWww = 0) OR (PosHttp < PosWww))
    then
     begin
      StartPos := PosHttp;
      Pad:= PadHttp;
     end
    else
+   if PosWww > 0
+   then
     begin
      StartPos := PosWww;
      Pad:= PadWww;
+    end
+   else
+    begin
+     StartPos := 0;   { Neither found, exit loop }
+     Pad:= 0;
     end;
 
    if StartPos> 0 then                                                             { daca e o adrese web valida, atunci}
@@ -747,13 +751,9 @@ begin
  while Pos('../', Result)  > 0
   do Result:= System.SysUtils.StringReplace(Result, '../', '/', [rfReplaceAll]);
 
- Assert( Pos('../', Result)  = 0, 'ColapseUrlDots failed');   //raise - make sure this never happens
+ if Pos('../', Result) > 0
+ then raise Exception.Create('ColapseUrlDots failed - URL still contains "../"');
 end;
-
-
-
-
-
 
 
 
@@ -806,7 +806,7 @@ end;
 
 function LineIsTitle(CONST HtmlLine: string): Boolean;    {Example of line:   <title>Small Business-Bootstrap Template</title> }
 begin
- Result:= (PosInsensitive(HtmlLine, '<title>') > 0) AND (PosInsensitive(HtmlLine, '</title>') > 7);
+ Result:= (PosInsensitive('<title>', HtmlLine) > 0) AND (PosInsensitive('</title>', HtmlLine) > 7);
 end;
 
 
