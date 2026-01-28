@@ -15,7 +15,7 @@ unit LightFmx.Visual.DropDownSearch;
   Adapted from VCL to FMX, replacing TSearchBox with TEdit and TCubicListBox with TListBox.
 
   Demo:
-    LightSaber\FrameFMX\Tester\TesterFMX.dpr
+    c:\Projects\LightSaber\Demo\FMX\Demo TDropDownSearchBox\FMX_Demo_SearchBoxes.dpr
 =============================================================================================================}
 
 INTERFACE
