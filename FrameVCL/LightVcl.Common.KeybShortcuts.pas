@@ -8,7 +8,7 @@ UNIT LightVcl.Common.KeybShortcuts;
 
    A tool that lists all keyboard shortcuts assigned to all actions/menus in an application.
 
-   A tool somehow simmilar to mine:
+   A tool somehow similar to mine:
        https://scotthollows.com/2016/10/12/list-of-delphi-controls-on-a-form-hierarchical-and-flat-list-vcl/
    Discussion about the gory details of TActionList:
        https://stackoverflow.com/questions/1852976/how-can-i-prevent-shortcuts-from-colliding-interacting-in-delphi
@@ -88,13 +88,16 @@ begin
 end;
 
 
-// Show keyboard shortcuts for all buttons in a form that have an action assigned to them
+{ Show keyboard shortcuts for all buttons in a form that have an action assigned to them }
 procedure ShowShortcutsInButtons(aForm: TForm);
 VAR
    i: Integer;
    comp: TComponent;
    act: TAction;
 begin
+ if aForm = NIL
+ then raise Exception.Create('ShowShortcutsInButtons: aForm parameter cannot be nil');
+
  for i:= 0 to aForm.ComponentCount-1 DO
   begin
    comp:= aForm.Components[i];
@@ -120,40 +123,48 @@ VAR
   Menu: TMenuItem;
   Action: TAction;
 begin
+ if Form = NIL
+ then raise Exception.Create('ShowConflictsIn: Form parameter cannot be nil');
+
  AppDataCore.LogMsg('Form: '+ Form.Name);
- for i:= 0 to Form.ComponentCount-1 DO   {Note: Iterating over Components[]: that just yields the components that are OWNED by the form. You will miss any components that are added dynamically, and not owned by the form, or components that are owned by frames }
+
+ { Note: Components[] yields only components OWNED by the form.
+   Components added dynamically without ownership or owned by frames will be missed. }
+ for i:= 0 to Form.ComponentCount-1 DO
    begin
-    { List actions }
     Component:= Form.Components[i];
-    if Component is TAction
-    then
-     begin
-      Action:= TAction(Component);
-      AppDataCore.LogInfo(' '+ Component.Name+ Tab
-                    + IntToStr(Action.ShortCut)+ Tab
-                    + Vcl.Menus.ShortCutToText(Action.ShortCut)+ Tab
-                    + Form.Name+ Tab
-                    + Action.Caption); { List all actions including those that have no shortcuts so we can see them and assign a shortcut to them }
-     end
+
+    { List actions }
+    if Component is TAction then
+      begin
+        Action:= TAction(Component);
+        AppDataCore.LogInfo(' '+ Component.Name+ Tab
+                      + IntToStr(Action.ShortCut)+ Tab
+                      + Vcl.Menus.ShortCutToText(Action.ShortCut)+ Tab
+                      + Form.Name+ Tab
+                      + Action.Caption); { List all actions including those without shortcuts }
+      end
     else
       { List menus }
-      if (Component is TMenuItem) then
-       begin
-        Menu:= TMenuItem(Component);
-        Action:= Menu.Action as TAction;
+      if Component is TMenuItem then
+        begin
+          Menu:= TMenuItem(Component);
 
-        { We only list menu items that have no action assigned to them }
-        if Action = NIL
-        then
-          begin
-            if Menu.ShortCut <> 0
-            then AppDataCore.LogInfo(' '+ Menu.Name+ Tab+ IntToStr(Menu.ShortCut));
-          end
-        else
-          { We only list menus that have a different shortcut than their associated action }
-          if Menu.ShortCut <> Action.ShortCut
-          then AppDataCore.LogWarn(' Shortcut for menu '+ Menu.Name+ ' is different than shortcut for its associated action! '+ IntToStr(Action.ShortCut))
-       end;
+          { Check if menu has an associated action that is a TAction }
+          if (Menu.Action <> NIL) AND (Menu.Action is TAction) then
+            begin
+              Action:= TAction(Menu.Action);
+              { Report if menu shortcut differs from action shortcut }
+              if Menu.ShortCut <> Action.ShortCut
+              then AppDataCore.LogWarn(' Shortcut for menu '+ Menu.Name+ ' is different than shortcut for its associated action! '+ IntToStr(Action.ShortCut));
+            end
+          else
+            begin
+              { Menu has no action - list it if it has a shortcut }
+              if Menu.ShortCut <> 0
+              then AppDataCore.LogInfo(' '+ Menu.Name+ Tab+ IntToStr(Menu.ShortCut));
+            end;
+        end;
    end;
 
  AppDataCore.LogEmptyRow;

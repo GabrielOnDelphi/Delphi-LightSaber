@@ -46,10 +46,10 @@ TYPE
     function  MakeThumb(CONST FileName, ShortThumbName: string): Boolean;
    protected
     function  AddToCache  (const FileName: string): string;                                        { add this image into the cache and return its FULL path }
-    function  DeleteImage (CONST FileName: string): Boolean;                                       { Delete the original image from disk then the thumnail from cache. Returns true if the image was deleted. Search to see if the image exists in cache before deleting it. }
-    function  DeleteThumb (CONST ThumbShortName: string): Boolean; overload;                       { Delete only the thumnail from cache. Returns true if the image was deleted. Search to see if the image exists in cache before deleting it. }
-    function  DeleteThumb (CONST Position: integer): Boolean; overload;                            { Delete only the thumnail from cache. Returns true if the image was deleted. Search to see if the image exists in cache before deleting it. }
-    function  FormatName  (iName, NameLength: Integer): string;                                    { format the file name of the new added thumbail so it will be 9 chars long }
+    function  DeleteImage (CONST FileName: string): Boolean;                                       { Delete the original image from disk then the thumbnail from cache. Returns true if the image was deleted. Search to see if the image exists in cache before deleting it. }
+    function  DeleteThumb (CONST ThumbShortName: string): Boolean; overload;                       { Delete only the thumbnail from cache. Returns true if the image was deleted. Search to see if the image exists in cache before deleting it. }
+    function  DeleteThumb (CONST Position: integer): Boolean; overload;                            { Delete only the thumbnail from cache. Returns true if the image was deleted. Search to see if the image exists in cache before deleting it. }
+    function  FormatName  (iName, NameLength: Integer): string;                                    { format the file name of the new added thumbnail so it will be 9 chars long }
    public
     ThumbsAreBitmaps: Boolean;                                                                     { the thumbs are saved in JPEG or BMP format? }
     ResamplerQuality: Byte;                                                                        { from 0 to 6 }
@@ -65,7 +65,7 @@ TYPE
     function  ImagePosDB (FileName: string): Integer;                            overload;         { There is a thumnail for this image in the database? If yes, returns its position in DB }
     function  ThumbPosDB (ShortThumbName: string): Integer;                                        { Returns the position of this thumbnail in DB }
 
-    function  MantainCache: Integer;                                                               { Delete all thumbnails from cache for which the original image doesn not exist anymore. Returns the number of deleted thumbnails }
+    function  MaintainCache: Integer;                                                              { Delete all thumbnails from cache for which the original image does not exist anymore. Returns the number of deleted thumbnails }
     procedure ClearCache;                                                                          { CLEAR CACHE. Delete absolutelly everything from cache }
 
     property  CacheFolder: string  read FCacheFolder  write SetCacheFolder;                        { Path used to store the cached files }
@@ -111,10 +111,10 @@ begin
     Result:= CurEntry;
     ShortThumPath:= DbThumbs[CurEntry];
 
-    if NOT FileExists(CacheFolder+ ShortThumPath)                                                  { poate thumbnail-ul e in DB dar a fost sters manual de pe disk }
+    if NOT FileExists(CacheFolder+ ShortThumPath)                                                  { The thumbnail is in DB but was manually deleted from disk }
     then
      begin
-      DeleteThumb(CurEntry);                                                                       { Delete it from DB - ASTA E CRITIC }
+      DeleteThumb(CurEntry);                                                                       { Delete it from DB - This is critical }
       ShortThumPath:= AddToCache(FileName);                                                       { ADD TO CACHE }
      end;
     Break;
@@ -167,31 +167,32 @@ begin
  Result:= BMP <> Nil;
  if NOT Result then Exit;
 
- if ThumbsAreBitmaps
- then
-   BMP.SaveToFile(CacheFolder+ ShortThumbName)   { save it to disk as BMP }
- else
-   TRY
-     JPG:= TJPEGImage.Create;
-     try
-       TRY
-         JPG.Assign(BMP);
-       EXCEPT
-         on E: Exception do
-          begin
-           AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-           Exit(False);
-          end;
+ TRY
+   if ThumbsAreBitmaps
+   then
+     BMP.SaveToFile(CacheFolder+ ShortThumbName)   { save it to disk as BMP }
+   else
+     begin
+       JPG:= TJPEGImage.Create;
+       try
+         TRY
+           JPG.Assign(BMP);
+         EXCEPT
+           on E: Exception do
+            begin
+             AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+             Exit(False);
+            end;
+         end;
+
+         JPG.SaveToFile(CacheFolder+ ShortThumbName);   { save it to disk as JPG }
+       finally
+         FreeAndNil(JPG);
        end;
-
-       JPG.SaveToFile(CacheFolder+ ShortThumbName);   { save it to disk as JPG }
-     finally
-       FreeAndNil(JPG);
      end;
-
-   FINALLY
-      FreeAndNil(BMP);
-   END;
+ FINALLY
+    FreeAndNil(BMP);
+ END;
 end;
 
 
@@ -225,24 +226,29 @@ begin
 end;
 
 
-function TCacheObj.DeleteThumb (CONST ThumbShortName: string): Boolean;                            { Delete only the thumnail from cache. Returns true if the image was deleted. Search to see if the image exists in cache before deleting it. }
+function TCacheObj.DeleteThumb (CONST ThumbShortName: string): Boolean;                            { Delete only the thumbnail from cache. Returns true if the image was deleted. Search to see if the image exists in cache before deleting it. }
 VAR Position: Integer;
 begin
  Result:= FALSE;
  Position:= ThumbPosDB(ThumbShortName);
+ if Position < 0
+ then raise Exception.Create('TCacheObj.DeleteThumb: Thumbnail not found in DB: ' + ThumbShortName);
+
  DbPicts .Delete(Position);
  DbThumbs.Delete(Position);
 
- DeleteFile(CacheFolder+ ThumbShortName);     
+ DeleteFile(CacheFolder+ ThumbShortName);
 end;
 
 
-function TCacheObj.DeleteThumb (CONST Position: integer): Boolean;                                 { Delete only the thumnail from cache. Returns true if the image was deleted. Search to see if the image exists in cache before deleting it. }
+function TCacheObj.DeleteThumb (CONST Position: integer): Boolean;                                 { Delete only the thumbnail from cache. Returns true if the image was deleted. Search to see if the image exists in cache before deleting it. }
 VAR ThumbName: string;
 begin
  Result:= FALSE;
- Assert(Position>= 0, 'Cannot delete thumb at position '+ IntToStr(Position));
- Assert(DbThumbs.count > 0, 'Cannot delete thumb '+ IntToStr(Position)+ '! The DB is empty.');
+ if Position < 0
+ then raise Exception.Create('TCacheObj.DeleteThumb: Cannot delete thumb at position '+ IntToStr(Position));
+ if DbThumbs.count <= 0
+ then raise Exception.Create('TCacheObj.DeleteThumb: Cannot delete thumb at position '+ IntToStr(Position)+ '. The DB is empty.');
 
  ThumbName:= DbThumbs[Position];
  DbPicts .Delete(Position);
@@ -278,7 +284,7 @@ begin
 end;
 
 
-procedure TCacheObj.LoadDB;                                                                        { save the cache DB to disk }
+procedure TCacheObj.LoadDB;                                                                        { Load the cache DB from disk }
 VAR CacheSettings: TIniFileEx;
 begin
  if FileExists(CacheFolder+ 'CacheDBInput')
@@ -300,8 +306,11 @@ end;
 
 procedure TCacheObj.setCacheFolder(Value: string);
 begin
+ if Value = ''
+ then raise Exception.Create('TCacheObj.setCacheFolder: Value parameter cannot be empty');
+
  ForceDirectories(Value);
- if CanWriteToFolder(Value) then                                                                    { Check if this folder has write permitions }
+ if CanWriteToFolder(Value) then                                                                    { Check if this folder has write permissions }
   begin
    FCacheFolder:= Trail(Value);
    ForceDirectoriesMsg(Value);
@@ -318,7 +327,7 @@ end;
 {--------------------------------------------------------------------------------------------------
    CLEAR/MANTAIN
 --------------------------------------------------------------------------------------------------}
-procedure TCacheObj.ClearCache;                                                                    { CLEAR CACHE. Delete absolutelly everything from cache }
+procedure TCacheObj.ClearCache;                                                                    { CLEAR CACHE. Delete absolutely everything from cache }
 begin
  DbPicts.Clear;
  DbThumbs.Clear;
@@ -327,7 +336,7 @@ begin
 end;
 
 
-function TCacheObj.MantainCache: Integer;                                                          { Delete all thumbnails from cache for which the original image doesn not exist anymore. Returns the number of deleted thumbnails }
+function TCacheObj.MaintainCache: Integer;                                                         { Delete all thumbnails from cache for which the original image does not exist anymore. Returns the number of deleted thumbnails }
 VAR i, DbIndex, CurThumb: Integer;
     AllThumbs: TStringList;
     Exista: Boolean;
@@ -335,7 +344,7 @@ VAR i, DbIndex, CurThumb: Integer;
 begin
  Result:= 0;
  if DbThumbs.Count<> DbPicts.Count                                                                 { check }
- then MessageError('Number of entries in DB does not match! You maight fix this by reseting your cache.');
+ then MessageError('Number of entries in DB does not match! You might fix this by resetting your cache.');
 
  { Delete thumbs for non existing images }
  for i:= DbPicts.Count-1 DOWNTO 0 DO
@@ -351,7 +360,7 @@ begin
  then sFileType:= '*.bmp'
  else sFileType:= '*.jpg';
 
- AllThumbs:= ListFilesOf(CacheFolder, sFileType, FALSE, FALSE);                                       { intoarce toate fisierele cu extensia 'Extension' din directorul curent}
+ AllThumbs:= ListFilesOf(CacheFolder, sFileType, FALSE, FALSE);                                       { Returns all files with the 'Extension' from the current folder }
 
  if DbThumbs.Count= 0                                                                              { if I have no files in DB }
  then EmptyDirectory(CacheFolder)                                                           { delete all thumbs on disk }
@@ -359,13 +368,13 @@ begin
    for CurThumb:= 0 TO AllThumbs.Count-1 DO
     begin
      Exista:= FALSE;
-     for DbIndex:= DbThumbs.Count-1 DOWNTO 0 DO                                                    { For all entries in DB. Trebuie neaparat DownTo pt ca de fiecare data cand sterg un thumb, DB ramane cu mai putine intrari, si o dau in bara cand apelez 'DeleteThumb(DbIndex)' }
+     for DbIndex:= DbThumbs.Count-1 DOWNTO 0 DO                                                    { For all entries in DB. Must use DownTo because every time we delete a thumb, DB has fewer entries }
        if AllThumbs[CurThumb]= DbThumbs[DbIndex] then
          begin
            Exista:= TRUE;
            Break;
          end;
-      if NOT Exista AND (DbIndex> -1) then                                                         { DbIndex= -1 apara atunci cand am sters toate intrarile din DB }
+      if NOT Exista AND (DbIndex> -1) then                                                         { DbIndex = -1 occurs when all entries have been deleted from DB }
        begin
          DeleteThumb(DbIndex);
          Inc(Result);
@@ -406,6 +415,9 @@ end;
 constructor TCacheObj.Create(CONST sCacheFolder: string);
 begin
  inherited Create;
+ if sCacheFolder = ''
+ then raise Exception.Create('TCacheObj.Create: sCacheFolder parameter cannot be empty');
+
  CacheFolder:= sCacheFolder;
  DbPicts  := TStringList.Create{(AOwner: TComponent)};
  DbThumbs := TStringList.Create{(AOwner: TComponent)};

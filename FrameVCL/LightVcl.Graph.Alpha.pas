@@ -17,9 +17,9 @@ USES
 
  { Transparency }
  procedure AlphaBlendBitmaps (Source: TBitmap; Destination: TCanvas; DestRect: TRect; Opacity: Byte);   overload;
- procedure AlphaBlendBitmaps (MainBitmap, SmallBitmap: TBitmap; CONST Transparency, x, y: Integer);     overload;              { Transparency for SmallBitmap is between 0% and 100%. The SmallBitmap image MUST be smaller than MainBitmap. XY are the coordinates where the small imge will be blend in the main imge }
+ procedure AlphaBlendBitmaps (MainBitmap, SmallBitmap: TBitmap; CONST Transparency, x, y: Integer);     overload;              { Transparency for SmallBitmap is between 0% and 100%. The SmallBitmap image MUST be smaller than MainBitmap. XY are the coordinates where the small image will be blend in the main image }
 
- function  TransparencyBlend (MainBitmap, SmallBitmap: TBitmap; CONST TransparentColor: TColor; CONST x, y: Integer): TBitmap; { Mix two images. Pixels of 'TransparentColor' color in the SmallBitmap are 100% transparent. The SmallBitmap image MUST be smaller than MainBitmap. XY are the coordinates where the small imge will be blend in the main imge }
+ function  TransparencyBlend (MainBitmap, SmallBitmap: TBitmap; CONST TransparentColor: TColor; CONST x, y: Integer): TBitmap; { Mix two images. Pixels of 'TransparentColor' color in the SmallBitmap are 100% transparent. The SmallBitmap image MUST be smaller than MainBitmap. XY are the coordinates where the small image will be blend in the main image }
 
  { From Vcl.GraphUtil }
  procedure DrawTransparentBitmap(Source: TBitmap; Destination: TCanvas; DestRect: TRect; Opacity: Byte);                    overload; deprecated 'Call Vcl.GraphUtil.DrawTransparentBitmap directly!';
@@ -63,6 +63,12 @@ end;
 { This is WinApi based }
 procedure AlphaBlendBitmaps(Source: TBitmap; Destination: TCanvas; DestRect: TRect; Opacity: Byte);
 begin
+  if Source = NIL
+  then raise Exception.Create('AlphaBlendBitmaps: Source parameter cannot be nil');
+
+  if Destination = NIL
+  then raise Exception.Create('AlphaBlendBitmaps: Destination parameter cannot be nil');
+
   Vcl.GraphUtil.DrawTransparentBitmap(Source, Destination, DestRect, Opacity);
 end;
 
@@ -80,17 +86,22 @@ TYPE
 { Vcl.GraphUtil.DrawTransparentBitmap is WinApi based.
   This is not.
   Note: you can shift the x coordinate for R and G pixels to obtain stereoscopic images }
-procedure AlphaBlendBitmaps(MainBitmap, SmallBitmap: TBitmap; CONST Transparency, x, y: Integer);  { Transparency for SmallBitmap is between 0% and 100%. The SmallBitmap image MUST be smaller than MainBitmap. XY are the coordinates where the small imge will be blend in the main imge }
+procedure AlphaBlendBitmaps(MainBitmap, SmallBitmap: TBitmap; CONST Transparency, x, y: Integer);  { Transparency for SmallBitmap is between 0% and 100%. The SmallBitmap image MUST be smaller than MainBitmap. XY are the coordinates where the small image will be blend in the main image }
 VAR
    Col: integer;
    BlendRatio, BlendRatioMin, Row : integer;
    ScanLine1, ScanLine2: pRGBArray;
    ScanlinesOut : array of pRGBArray;
 begin
- //Assert(SmallBitmap.Width + x <= MainBitmap.Width);
- //Assert(SmallBitmap.Height+ y <= MainBitmap.Height);
+ if MainBitmap = NIL
+ then raise Exception.Create('AlphaBlendBitmaps: MainBitmap parameter cannot be nil');
 
- Assert(SmallBitmap.PixelFormat= pf24bit);
+ if SmallBitmap = NIL
+ then raise Exception.Create('AlphaBlendBitmaps: SmallBitmap parameter cannot be nil');
+
+ if SmallBitmap.PixelFormat <> pf24bit
+ then raise Exception.Create('AlphaBlendBitmaps: SmallBitmap must be pf24bit');
+
  MainBitmap.PixelFormat:= pf24bit;
 
  { Output scanline }
@@ -126,15 +137,24 @@ end;
 
 
 
-function TransparencyBlend(MainBitmap, SmallBitmap: TBitmap; CONST TransparentColor: TColor; CONST x, y: Integer): TBitmap; { Mix two images. Pixels of 'TransparentColor' color in the SmallBitmap are 100% transparent. The SmallBitmap image MUST be smaller than MainBitmap. XY are the coordinates where the small imge will be blend in the main imge }
+function TransparencyBlend(MainBitmap, SmallBitmap: TBitmap; CONST TransparentColor: TColor; CONST x, y: Integer): TBitmap; { Mix two images. Pixels of 'TransparentColor' color in the SmallBitmap are 100% transparent. The SmallBitmap image MUST be smaller than MainBitmap. XY are the coordinates where the small image will be blend in the main image }
 VAR
    Row, Col, MaxWidth, MaxHeight: integer;
    ScanLine2: pRGBArray;
    ScanlinesOut: array of pRGBArray;
    Color: TColor;
 begin
- Assert(MainBitmap.PixelFormat = pf24bit);
- Assert(SmallBitmap.PixelFormat= pf24bit);
+ if MainBitmap = NIL
+ then raise Exception.Create('TransparencyBlend: MainBitmap parameter cannot be nil');
+
+ if SmallBitmap = NIL
+ then raise Exception.Create('TransparencyBlend: SmallBitmap parameter cannot be nil');
+
+ if MainBitmap.PixelFormat <> pf24bit
+ then raise Exception.Create('TransparencyBlend: MainBitmap must be pf24bit');
+
+ if SmallBitmap.PixelFormat <> pf24bit
+ then raise Exception.Create('TransparencyBlend: SmallBitmap must be pf24bit');
 
  MaxWidth := MainBitmap.Width;
  MaxHeight:= MainBitmap.Height;
@@ -209,7 +229,16 @@ var
   i: Integer;
   ScanLinePtr: PByteArray;
 begin
-  // Set bitmap size and format
+  if ImageList = NIL
+  then raise Exception.Create('GetTransparentBitmapFromImagelist: ImageList parameter cannot be nil');
+
+  if Bitmap = NIL
+  then raise Exception.Create('GetTransparentBitmapFromImagelist: Bitmap parameter cannot be nil');
+
+  if (Index < 0) OR (Index >= ImageList.Count)
+  then raise Exception.Create('GetTransparentBitmapFromImagelist: Index out of range');
+
+  { Set bitmap size and format }
   Bitmap.SetSize(ImageList.Width, ImageList.Height);
   Bitmap.PixelFormat := pf32bit;  // Ensure 32-bit format
 

@@ -27,7 +27,7 @@ UNIT LightVcl.Graph.BkgColorEditor;
 
 INTERFACE
 USES
-  System.Classes,
+  System.Classes, System.SysUtils,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
   LightVcl.Graph.BkgColorParams;
 
@@ -107,7 +107,10 @@ USES
 
 class function TfrmBorderEditor.CreateParented(Parent: TWinControl; aBkgClrParams: PBkgColorParams): TfrmBorderEditor;
 begin
- Assert(aBkgClrParams <> NIL, 'aBkgClrParams is nil!!');
+ if Parent = NIL
+ then raise Exception.Create('TfrmBorderEditor.CreateParented: Parent parameter cannot be nil');
+ if aBkgClrParams = NIL
+ then raise Exception.Create('TfrmBorderEditor.CreateParented: aBkgClrParams parameter cannot be nil');
 
  Application.CreateForm(TfrmBorderEditor, Result);  { Freed by Parent }
  Result.Container.Align:= alNone;
@@ -159,6 +162,9 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TfrmBorderEditor.ObjectFromGUI;
 begin
+ if BkgClrParams = NIL
+ then raise Exception.Create('TfrmBorderEditor.ObjectFromGUI: BkgClrParams is not initialized');
+
   BkgClrParams.FillType      := GetFillType;
   BkgClrParams.EffectShape   := GetEffectShape;
   BkgClrParams.EffectColor   := GetEffectColor;
@@ -173,6 +179,9 @@ end;
 
 procedure TfrmBorderEditor.GuiFromObject;
 begin
+ if BkgClrParams = NIL
+ then raise Exception.Create('TfrmBorderEditor.GuiFromObject: BkgClrParams is not initialized');
+
  case BkgClrParams.EffectShape of
    esOneColor  : radShapeSolid.Checked := TRUE;
    esRectangles: radShapeRect.Checked  := TRUE;
@@ -304,6 +313,9 @@ end;
 
 procedure TfrmBorderEditor.btnBackgroundClrClick(Sender: TObject);
 begin
+ if BkgClrParams = NIL
+ then raise Exception.Create('TfrmBorderEditor.btnBackgroundClrClick: BkgClrParams is not initialized');
+
  if ColorDialog.Execute { The color is memorized in ColorDialog.Color }
  then BkgClrParams.Color:= ColorDialog.Color;
 end;
@@ -311,6 +323,9 @@ end;
 
 procedure TfrmBorderEditor.btnResetClick(Sender: TObject);
 begin
+ if BkgClrParams = NIL
+ then raise Exception.Create('TfrmBorderEditor.btnResetClick: BkgClrParams is not initialized');
+
  BkgClrParams.Reset;
  GuiFromObject;
 end;

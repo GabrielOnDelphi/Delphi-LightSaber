@@ -34,10 +34,10 @@ procedure ApplyBorderRectIn     (BMP: TBitmap; BorderSize: Integer; FrameColor: 
 
 { Border line }
 function  HasBlackBorder        (BMP: TBitmap; CONST Tolerance: Byte= 5): Boolean;    { Returns True if the border was black }
-procedure RemoveBorder          (BMP: TBitmap);                                       { Removes the black border that surronds an image. The returned image will have same size. The black border will be replaced with content from image (adiacent line). Only works if the border is 1 pixel wide! }
+procedure RemoveBorder          (BMP: TBitmap);                                       { Removes the black border that surrounds an image. The returned image will have same size. The black border will be replaced with content from image (adjacent line). Only works if the border is 1 pixel wide! }
 
 { Utils }
-function  LineIsBlack           (BMP: TBitmap; RowNo: Integer; Tolerance: Byte= 3): Boolean;
+function  LineIsBlack           (BMP: TBitmap; RowNo: Integer; Tolerance: Byte= 3): Boolean;              { Returns True if the specified line contains only black pixels }
 function  GetBorderDominantColor(BMP: TBitmap; Border: TBorderType; Tolerance: Integer= 8): TColor;
 
 
@@ -51,7 +51,7 @@ USES
 {--------------------------------------------------------------------------------------------------
    Border rectangle
 
-   Applies a colored border (see FrameColor) arroud the image.
+   Applies a colored border (see FrameColor) around the image.
    The resulted image size WILL increase with 2*BorderSize pixels. This way the border will not be drawn over the image.
    If DarkenFrame is true, a darkened FrameColor will be used.
 
@@ -60,6 +60,9 @@ USES
 procedure ApplyBorderRectOut(BMP: TBitmap; BorderSize: Integer; FrameColor: TColor; DarkenFrame: Boolean= FALSE);
 VAR Temp: TBitmap;
 begin
+ if BMP = NIL
+ then raise Exception.Create('ApplyBorderRectOut: BMP parameter cannot be nil');
+
  //todo: to be optimized
  if BorderSize = 0 then EXIT;
 
@@ -94,8 +97,10 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure ApplyBorderRectIn(BMP: TBitmap; BorderSize: Integer; FrameColor: TColor);
 begin
+ if BMP = NIL
+ then raise Exception.Create('ApplyBorderRectIn: BMP parameter cannot be nil');
+
  if BorderSize = 0 then EXIT;
- //Assert(BMP.PixelFormat= pf24bit);
  BMP.Canvas.Brush.Color:= FrameColor;
  for var i:= 1 to BorderSize do
    BMP.Canvas.FrameRect(Rect(i-1, i-1, BMP.Width-i, BMP.Height-i));
@@ -117,6 +122,11 @@ VAR
    r,g,b: Cardinal;
    Line: PRGB24Array;
 begin
+ if BMP = NIL
+ then raise Exception.Create('LineIsBlack: BMP parameter cannot be nil');
+ if (RowNo < 0) OR (RowNo >= BMP.Height)
+ then raise Exception.Create('LineIsBlack: RowNo is out of range: ' + IntToStr(RowNo));
+
  r:= 0;
  g:= 0;
  b:= 0;
@@ -144,6 +154,11 @@ VAR
    r,g,b: Cardinal;
    Line: PRGB24Array;
 begin
+ if BMP = NIL
+ then raise Exception.Create('ColumnIsBlack: BMP parameter cannot be nil');
+ if (ColNo < 0) OR (ColNo >= BMP.Width)
+ then raise Exception.Create('ColumnIsBlack: ColNo is out of range: ' + IntToStr(ColNo));
+
  r:= 0;
  g:= 0;
  b:= 0;
@@ -171,7 +186,11 @@ end;
   See above note about color tolerance. }
 function HasBlackBorder(Bmp: TBitmap; CONST Tolerance: Byte= 5): Boolean;
 begin
- Assert(bmp.pixelformat= pf24bit, 'HasBlackBorder - Wrong PixelFormat!');
+ if BMP = NIL
+ then raise Exception.Create('HasBlackBorder: BMP parameter cannot be nil');
+
+ if bmp.pixelformat <> pf24bit
+ then raise Exception.Create('HasBlackBorder: BMP must be pf24bit');
 
 
  { Top line }
@@ -199,12 +218,13 @@ end;
 
 
 
-{ Removes the black border that surronds an image. The returned image will 1 pixel (per border) smaller than the original image.
-  Only works if the border is 1 pixel wide!
-
-  Returns True if the black border was fixed }
+{ Removes the black border that surrounds an image. The returned image will 1 pixel (per border) smaller than the original image.
+  Only works if the border is 1 pixel wide! }
 procedure RemoveBorder(Bmp: TBitmap);     // Old name: RemoveBlackBorder
 begin
+ if BMP = NIL
+ then raise Exception.Create('RemoveBorder: BMP parameter cannot be nil');
+
  LightVcl.Graph.FX.CropBitmap(Bmp, 1, 1, Bmp.Width-2, bmp.Height-2);
 end;
 
@@ -362,7 +382,7 @@ VAR
    end;
 
 
-  function ProcessColumn(CurColumn, AdiaCol: Integer): Integer;   { AdiaCol is the adiacent column that will store the modified pixles }
+  function ProcessColumn(CurColumn, AdjaCol: Integer): Integer;   { AdjaCol is the adjacent column that will store the modified pixels }
   VAR
      Ln: Integer;
      R, G, B: Byte;   { Current pixel }
@@ -377,8 +397,10 @@ VAR
      begin
       { Get 3 neighbour pixels }
       L:= OutBMP.Scanline[Ln-BkgClrParams.NeighborDist];
-      Assert(CurColumn >= 0,           'Invalid curColumn: ' + IntToStr(CurColumn));
-      Assert(CurColumn < OutBMP.Width, 'Invalid CurColumn: ' + IntToStr(CurColumn)+ '. OutBMP.Width: '+ IntToStr(OutBMP.Width));
+      if CurColumn < 0
+      then raise Exception.Create('ProcessColumn: Invalid CurColumn: ' + IntToStr(CurColumn));
+      if CurColumn >= OutBMP.Width
+      then raise Exception.Create('ProcessColumn: Invalid CurColumn: ' + IntToStr(CurColumn)+ '. OutBMP.Width: '+ IntToStr(OutBMP.Width));
       LNeigbour:= l[CurColumn];
 
       MiddleLine:= OutBMP.Scanline[Ln];
@@ -400,40 +422,40 @@ VAR
       then
        begin
         Inc(Result);
-        MiddleLine[AdiaCol].R:= R;
+        MiddleLine[AdjaCol].R:= R;
        end
       else
         if (R> R_BkgClr)
-        then MiddleLine[AdiaCol].R:= EnsureByte(R- FadeSpeed)
+        then MiddleLine[AdjaCol].R:= EnsureByte(R- FadeSpeed)
         else
           if (R< R_BkgClr)
-          then MiddleLine[AdiaCol].R:= EnsureByte(R+ FadeSpeed);
+          then MiddleLine[AdjaCol].R:= EnsureByte(R+ FadeSpeed);
 
       if InRange(G, G1, G2)
       then
        begin
         Inc(Result);
-        MiddleLine[AdiaCol].G:= G;
+        MiddleLine[AdjaCol].G:= G;
        end
       else
         if (G> G_BkgClr)
-        then MiddleLine[AdiaCol].G:= EnsureByte(G- FadeSpeed)
+        then MiddleLine[AdjaCol].G:= EnsureByte(G- FadeSpeed)
         else
           if (G< G_BkgClr)
-          then MiddleLine[AdiaCol].G:= EnsureByte(G+ FadeSpeed);
+          then MiddleLine[AdjaCol].G:= EnsureByte(G+ FadeSpeed);
 
       if InRange(B, B1, B2)
       then
        begin
         Inc(Result);
-        MiddleLine[AdiaCol].B:= B;
+        MiddleLine[AdjaCol].B:= B;
        end
       else
         if (B> B_BkgClr)
-        then MiddleLine[AdiaCol].B:= EnsureByte(B- FadeSpeed)
+        then MiddleLine[AdjaCol].B:= EnsureByte(B- FadeSpeed)
         else
           if (B< B_BkgClr)
-          then MiddleLine[AdiaCol].B:= EnsureByte(B+ FadeSpeed);
+          then MiddleLine[AdjaCol].B:= EnsureByte(B+ FadeSpeed);
      end;
    end;
 
@@ -471,14 +493,14 @@ VAR
     begin
      ComputeColorRange(LeftColor);
      for c:= iLeft downto 1                                                  { go towards left edge of the screen }
-       DO ProcessColumn(c, c-1);                                             { Read this column and put the modified pixels in the adiacentcolumn }
+       DO ProcessColumn(c, c-1);                                             { Read this column and put the modified pixels in the adjacent column }
 
     { Right }
     if (btRight in Border) AND (RightColor > -1)  then
      begin
       ComputeColorRange(RightColor);
       for c:= iRight-1 to OutBMP.Width-IndexDiff-1
-       DO ProcessColumn(c, c+1);                                             { Read this column and put the modified pixels in the adiacentcolumn }
+       DO ProcessColumn(c, c+1);                                             { Read this column and put the modified pixels in the adjacent column }
      end;
     end;
   end;
@@ -486,8 +508,11 @@ VAR
 
 begin
  { Init }
- Assert(InpBmp <> NIL);
- Assert(OutBMP <> NIL);
+ if InpBmp = NIL
+ then raise Exception.Create('FadeBorder: InpBmp parameter cannot be nil');
+ if OutBMP = NIL
+ then raise Exception.Create('FadeBorder: OutBMP parameter cannot be nil');
+
  if (InpBmp.Width< 12) OR (InpBmp.Height< 12) then EXIT;
 
  if (OutBMP.Width <= InpBmp.Width)                            { if input and output have same width and... }
@@ -499,15 +524,19 @@ begin
  then EXIT;                                                   { Then there is nothing to do here }
 
 
- Assert(inpBMP.pixelformat= pf24bit, 'FadeBorder - inpBMP Wrong PixelFormat!');
- Assert(OutBMP.pixelformat= pf24bit, 'FadeBorder - Wrong PixelFormat!');
+ if inpBMP.pixelformat <> pf24bit
+ then raise Exception.Create('FadeBorder: InpBMP must be pf24bit');
+ if OutBMP.pixelformat <> pf24bit
+ then raise Exception.Create('FadeBorder: OutBMP must be pf24bit');
 
  { Compute from where I start the effect }
  iTop  := (OutBMP.Height - InpBmp.Height) div 2;
  iLeft := (OutBMP.Width  - InpBmp.Width)  div 2;
 
- Assert(iTop  >= 0, 'iTop.  The wallpaper is larger than the desktop! '+ IntToStr(iTop));
- Assert(iLeft >= 0, 'iLeft. The wallpaper is larger than the desktop! '+ IntToStr(iLeft));
+ if iTop < 0
+ then raise Exception.Create('FadeBorder: iTop is invalid. The wallpaper is larger than the desktop! '+ IntToStr(iTop));
+ if iLeft < 0
+ then raise Exception.Create('FadeBorder: iLeft is invalid. The wallpaper is larger than the desktop! '+ IntToStr(iLeft));
  (* if iTop < 0then iTop:= 0;                 { This happens when the wallpaper is bigger than the desktop! }
  if iLeft < 0 then iLeft:= 0;  *)
 
@@ -573,10 +602,15 @@ end;
 
 
 
-{ Same as FadeBorder but automatically detects which borders to process based n the InpBMP/OutBMP size ratio }
+{ Same as FadeBorder but automatically detects which borders to process based on the InpBMP/OutBMP size ratio }
 procedure FadeBorderAuto (InpBmp, OutBMP: TBitmap; BkgClrParams: RBkgColorParams);
 VAR Border: TBorderSet;
 begin
+ if InpBmp = NIL
+ then raise Exception.Create('FadeBorderAuto: InpBmp parameter cannot be nil');
+ if OutBMP = NIL
+ then raise Exception.Create('FadeBorderAuto: OutBMP parameter cannot be nil');
+
  inpBMP.PixelFormat:= pf24bit;
  OutBMP.PixelFormat:= pf24bit;
 
@@ -632,6 +666,9 @@ VAR
    Unique: Boolean;
    CurColor: TColor;
 begin
+ if BMP = NIL
+ then raise Exception.Create('GetBorderDominantColor: BMP parameter cannot be nil');
+
  Result:= -1;
  if (BMP.Width< 4) OR (BMP.Height< 4) then EXIT(-1);                                            { Check for invalid images }
 
@@ -667,7 +704,8 @@ begin
    if NOT Unique then continue;
 
    { if unique, add it to the matrix of unique colors }
-   Assert(TotalUniqueColors < Length(UniqueXM), 'TotalUniqueColors: '+ IntToStr(TotalUniqueColors)+ '   Length(UniqueXM)'+IntToStr(Length(UniqueXM)));
+   if TotalUniqueColors >= Length(UniqueXM)
+   then raise Exception.Create('GetBorderDominantColor: TotalUniqueColors exceeded array bounds. TotalUniqueColors: '+ IntToStr(TotalUniqueColors)+ '  Length(UniqueXM): '+IntToStr(Length(UniqueXM)));
 
    UniqueXM[TotalUniqueColors].Col  := CurColor;
    UniqueXM[TotalUniqueColors].Count:= 1;

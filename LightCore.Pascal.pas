@@ -284,6 +284,8 @@ begin
   for var i:= StartAt to Haystack.Count - 1 do
     if PosInsensitive(Needle, Haystack[i]) > 0
     then EXIT(i);
+
+  Result:= -1;
 end;
 
 

@@ -42,18 +42,18 @@ USES
 {==================================================================================================
    SYSTEM SERVICES
 ==================================================================================================}
- function ServiceStart        (aMachine, aServiceName: string): Boolean;
- function ServiceStop         (aMachine, aServiceName: string): Boolean;
- function ServiceGetStatus    (sMachine, sService    : string): DWord;
- function ServiceGetStatusName(sMachine, sService    : string): string;
+ function ServiceStart        (CONST aMachine, aServiceName: string): Boolean;
+ function ServiceStop         (CONST aMachine, aServiceName: string): Boolean;
+ function ServiceGetStatus    (CONST sMachine, sService: string): DWord;
+ function ServiceGetStatusName(CONST sMachine, sService: string): string;
 
 
 {==================================================================================================
    SYSTEM FONTS
 ==================================================================================================}
- function  InstallFont(FontFileName: string): Boolean;
- procedure UseUninstalledFont(FontFile: string);                                                   { Use a font without installing it. DON'T FORGET TO RELEASE IT WHEN YOU FINISH WITH IT or when you close the program }
- procedure FreeUninstalledFont(FontFile: string);
+ function  InstallFont(CONST FontFileName: string): Boolean;
+ procedure UseUninstalledFont(CONST FontFile: string);                                             { Use a font without installing it. DON'T FORGET TO RELEASE IT when you close the program }
+ procedure FreeUninstalledFont(CONST FontFile: string);
 
 
 {==================================================================================================
@@ -147,9 +147,8 @@ begin
  Result:= '';
  WHILE EnumDisplaySettings(NIL, cnt, DevMode) DO                                                   {TODO: instead of NIL I have to provide the name of the monitor }
   begin
-   with Devmode
-     do Result:= Result+ (Format('%dx%d %d Colors', [dmPelsWidth,dmPelsHeight,Int64(1) shl dmBitsperPel]))+ #13#10;
-   Inc(cnt) ;
+   Result:= Result+ Format('%dx%d %d Colors', [DevMode.dmPelsWidth, DevMode.dmPelsHeight, Int64(1) shl DevMode.dmBitsperPel])+ #13#10;
+   Inc(cnt);
   end;
 end;
 
@@ -184,17 +183,18 @@ end;
       http://stackoverflow.com/questions/30778736/how-to-get-the-full-computer-name-in-inno-setup/30779280#30779280 }
 function GetComputerName: string;
 VAR
-  buffer: array[0..MAX_COMPUTERNAME_LENGTH + 1] of Char; //ok
+  buffer: array[0..MAX_COMPUTERNAME_LENGTH + 1] of Char;
   Size: Cardinal;
 begin
   Size := MAX_COMPUTERNAME_LENGTH + 1;
-  WinApi.Windows.GetComputerName(@buffer, Size);
-  Result := StrPas(buffer);
+  if WinApi.Windows.GetComputerName(@buffer, Size)
+  then Result := StrPas(buffer)
+  else Result := '';
 end;
 
 
 
-{ works on Win 7 }
+{ Works on Win 7 }
 function GetLogonName: string;
 CONST cnMaxNameLen = 254;
 var
@@ -202,10 +202,15 @@ var
   dwNameLen: DWORD;
 begin
   dwNameLen:= cnMaxNameLen - 1;
-  SetLength  (sName, cnMaxNameLen);
-  WinApi.Windows.GetUserName(PChar(sName), dwNameLen);
-  SetLength  (sName, dwNameLen);
-  Result:= UpperCase(Trim(sName));
+  SetLength(sName, cnMaxNameLen);
+  if WinApi.Windows.GetUserName(PChar(sName), dwNameLen)
+  then
+    begin
+      SetLength(sName, dwNameLen - 1);  { -1 because dwNameLen includes null terminator }
+      Result:= UpperCase(Trim(sName));
+    end
+  else
+    Result:= '';
 end;
 
 
@@ -213,14 +218,18 @@ end;
   There is another function with the same name in WinSock }
 function GetHostName: string;    { It returns the name of my laptop: 'Qosmio' }
 var
-  HName: array[0..100] of AnsiChar;     //HEnt: pHostEnt;
+  HName: array[0..100] of AnsiChar;
   WSAData: TWSAData;
 begin
- if WSAStartup($0101, WSAData) <> 0 then EXIT('');
-
- if WinApi.Winsock.gethostname(HName, SizeOf(hName)) = 0
- then Result:= string(HName)   // HEnt := gethostbyname(HName);
- else Result:= '';
+ if WSAStartup($0101, WSAData) <> 0
+ then EXIT('');
+ TRY
+   if WinApi.Winsock.gethostname(HName, SizeOf(hName)) = 0
+   then Result:= string(HName)
+   else Result:= '';
+ FINALLY
+   WSACleanup;
+ END;
 end;
 
 
@@ -228,12 +237,10 @@ end;
 function GetDomainName: String;
 VAR
   vlDomainName: array[0..30] of WideChar;
-  vlSize: ^DWORD;
+  vlSize: DWORD;
 begin
- New(vlSize);
- vlSize^ := 30;
- WinApi.Windows.ExpandEnvironmentStrings(PChar('%USERDOMAIN%'), vlDomainName, vlSize^);
- system.Dispose(vlSize);
+ vlSize := Length(vlDomainName);
+ WinApi.Windows.ExpandEnvironmentStrings(PChar('%USERDOMAIN%'), vlDomainName, vlSize);
  Result:= vlDomainName;
 end;
 
@@ -318,15 +325,21 @@ end;
   install font                                             http://www.experts-exchange.com/Programming/Languages/Pascal/Delphi/Q_20906162.html?qid=20906162 }
 
 
-function InstallFont(FontFileName: string): Boolean;
+function InstallFont(CONST FontFileName: string): Boolean;
 const
   Win9x= 'Software\Microsoft\Windows\CurrentVersion\Fonts';
   WinXP= 'SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts';
 var
   CopyToWin: string;
-  WindowsPath: array[0..MAX_PATH] of char;  //ok
+  WindowsPath: array[0..MAX_PATH] of char;
   RegData: TRegistry;
 begin
+ if FontFileName = ''
+ then raise Exception.Create('InstallFont: FontFileName parameter cannot be empty');
+
+ if NOT FileExists(FontFileName)
+ then raise Exception.Create('InstallFont: Font file not found: ' + FontFileName);
+
  Result:= FALSE;
  GetWindowsDirectory(WindowsPath, MAX_PATH);
  CopyToWin:= WindowsPath + '\Fonts\' + ExtractFileName(FontFileName);
@@ -335,7 +348,7 @@ begin
   begin
 
    { COPY FONT TO WINDOWS }
-   TFile.Copy(FontFileName, CopyToWin, FALSE);
+   TFile.Copy(FontFileName, CopyToWin, FALSE);  { Note: TFile is deprecated but kept for compatibility }
 
    { WRITE TO REGISTRY }
    RegData := TRegistry.Create;
@@ -369,25 +382,35 @@ begin
 end;
 
 
-procedure UseUninstalledFont(FontFile: string);                                     { Use a font without installing it. DON'T FORGET TO RELEASE IT WHEN YOU FINISH WITH IT or when you close the program }
-begin                                                                               { working only with true type files }
-  if FileExists(FontFile) then
-   begin
-    AddFontResource (PChar(FontFile));
-    (* SAU ASA:  Result:= AddFontResourceEx(PChar(FontFile), FR_PRIVATE, nil);      { Font installing (just for the current process, and only for the duration of the process). Cu asta, nu trebuie sa mai apelez SendMessage *)
-    SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
-   end;
-  { DONT FORGET TO RELESE THE RESOUCE - OnFormClose }
+{ Use a font without installing it.
+  DON'T FORGET TO RELEASE IT WHEN YOU FINISH WITH IT or when you close the program.
+  Works only with TrueType files. }
+procedure UseUninstalledFont(CONST FontFile: string);
+begin
+  if FontFile = ''
+  then raise Exception.Create('UseUninstalledFont: FontFile parameter cannot be empty');
+
+  if NOT FileExists(FontFile)
+  then raise Exception.Create('UseUninstalledFont: Font file not found: ' + FontFile);
+
+  AddFontResource(PChar(FontFile));
+  { Alternative: AddFontResourceEx(PChar(FontFile), FR_PRIVATE, nil) - installs font just for the current process }
+  SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+  { DON'T FORGET TO RELEASE THE RESOURCE - call FreeUninstalledFont OnFormClose }
 end;
 
 
-procedure FreeUninstalledFont(FontFile: string);                                    { RELESE THE RESOUCE after you uses a font without installing it }
+{ Release the resource after you used a font without installing it }
+procedure FreeUninstalledFont(CONST FontFile: string);
 begin
-  if FileExists(FontFile) then
-   begin
-    RemoveFontResource(PChar(FontFile));
-    SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
-   end;
+  if FontFile = ''
+  then raise Exception.Create('FreeUninstalledFont: FontFile parameter cannot be empty');
+
+  if NOT FileExists(FontFile)
+  then raise Exception.Create('FreeUninstalledFont: Font file not found: ' + FontFile);
+
+  RemoveFontResource(PChar(FontFile));
+  SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
 end;
 
 
@@ -400,7 +423,7 @@ end;
    SERVICES
    aMachine is UNC path or local machine if left empty
 --------------------------------------------------------------------------------------------------}
-function ServiceStart(aMachine,aServiceName : string) : boolean;  { From BlackBox.pas }
+function ServiceStart(CONST aMachine, aServiceName: string): boolean;  { From BlackBox.pas }
 var
    h_manager,h_svc: SC_Handle;
    svc_status: TServiceStatus;
@@ -436,7 +459,7 @@ begin
 end;
 
 
-function ServiceStop(aMachine,aServiceName : string) : boolean;    { From BlackBox.pas }
+function ServiceStop(CONST aMachine, aServiceName: string): boolean;    { From BlackBox.pas }
 var h_manager,h_svc   : SC_Handle;
     svc_status     : TServiceStatus;
     dwCheckPoint : DWord;
@@ -477,7 +500,7 @@ end;
 // SERVICE_CONTINUE_PENDING
 // SERVICE_PAUSE_PENDING
 // =================================
-function ServiceGetStatus(sMachine, sService: string ): DWord;   { From BlackBox.pas }
+function ServiceGetStatus(CONST sMachine, sService: string): DWord;   { From BlackBox.pas }
 var h_manager,h_svc : SC_Handle;
     service_status  : TServiceStatus;
     hStat           : DWord;
@@ -501,7 +524,7 @@ begin
 end;
 
 
-function ServiceGetStatusName(sMachine,sService: string ): string;   { From BlackBox.pas }
+function ServiceGetStatusName(CONST sMachine, sService: string): string;   { From BlackBox.pas }
 var Cmd : string;
     Status : DWord;
 begin
@@ -526,19 +549,18 @@ end;
 // ================================================
 // Bios Information: Win2000/NT compatible
 // ================================================
-function BiosDate : string;   { From BlackBox.pas }
-var Cmd : string;
-    WinReg : TRegistry;
+function BiosDate: string;   { From BlackBox.pas }
+var
+  Cmd: string;
+  WinReg: TRegistry;
 begin
-  WinReg := nil;
   Cmd := '????????';
 
-  // Win 2000/NT
   WinReg := TRegistry.Create;
   TRY
     WinReg.RootKey := HKEY_LOCAL_MACHINE;
-    if WinReg.OpenKeyReadOnly('\HARDWARE\DESCRIPTION\System') then
-       Cmd := WinReg.ReadString('SystemBiosDate');
+    if WinReg.OpenKeyReadOnly('\HARDWARE\DESCRIPTION\System')
+    then Cmd := WinReg.ReadString('SystemBiosDate');
   FINALLY
      FreeAndNil(WinReg);
   END;
@@ -547,24 +569,26 @@ begin
 end;
 
 
-function BiosID : string;  { From BlackBox.pas }
-var Cmd : string;
-    Buffer : PChar;
-    WinReg : TRegistry;
+function BiosID: string;  { From BlackBox.pas }
+var
+  Cmd: string;
+  Buffer: PChar;
+  WinReg: TRegistry;
 begin
-  WinReg := nil;
   Cmd := '????????';
 
-  // Win 2000/NT
+  WinReg := TRegistry.Create;
   TRY
-    WinReg := TRegistry.Create;
     WinReg.RootKey := HKEY_LOCAL_MACHINE;
     if WinReg.OpenKeyReadOnly('\HARDWARE\DESCRIPTION\System') then
     begin
-       GetMem(Buffer,$2000);
-       WinReg.ReadBinaryData('SystemBiosVersion',Buffer^,$2000);
-       Cmd := WinReg.ReadString('Identifier') + ' ' + Buffer;
-       FreeMem(Buffer);
+       GetMem(Buffer, $2000);
+       TRY
+         WinReg.ReadBinaryData('SystemBiosVersion', Buffer^, $2000);
+         Cmd := WinReg.ReadString('Identifier') + ' ' + Buffer;
+       FINALLY
+         FreeMem(Buffer);
+       END;
     end;
   FINALLY
      FreeAndNil(WinReg);

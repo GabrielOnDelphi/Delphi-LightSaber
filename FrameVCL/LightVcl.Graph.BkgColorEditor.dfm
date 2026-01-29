@@ -49,7 +49,6 @@ object frmBorderEditor: TfrmBorderEditor
       Transparent = True
       Visible = False
       WordWrap = True
-      ExplicitWidth = 325
     end
     object btnReset: TButton
       Left = 494

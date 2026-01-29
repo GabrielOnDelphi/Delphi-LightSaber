@@ -9,7 +9,7 @@ UNIT LightVCL.Common.Reports;
       Win OS
       Hardware
 
-   The report formating is optimized for Lucinda Console monospaced font!
+   The report formatting is optimized for Lucida Console monospaced font!
 
    Tester:
       c:\Projects\LightSaber\Demo\VCL\Demo SystemReport\VCL_Demo_SystemReport.dpr
@@ -85,19 +85,23 @@ begin
 end;
 
 
-{ THIS WILL RETURN THE VIRTUALISED RESOLUTION (when high DPI is set).
-  It is useles if we want to get the real resolution.
-   http://stackoverflow.com/questions/7077572/get-current-native-screen-resolution-of-all-monitors-in-delphi-directx }
+{ THIS WILL RETURN THE VIRTUALIZED RESOLUTION (when high DPI is set).
+  It is useless if we want to get the real resolution.
+  http://stackoverflow.com/questions/7077572/get-current-native-screen-resolution-of-all-monitors-in-delphi-directx }
 function ScreenResApi: string;
 VAR MonInfo: TMonitorInfo;
 begin
- MonInfo.cbSize := SizeOf(MonInfo);
- Assert(Application.MainForm <> NIL, 'MainForm is nil. This happens usually when code is initialized in OnFormCreate.');
+ if Application.MainForm = NIL
+ then raise Exception.Create('ScreenResApi: MainForm is nil. This happens when code runs during OnFormCreate.');
+
+ MonInfo.cbSize:= SizeOf(MonInfo);
  GetMonitorInfo(MonitorFromWindow(Application.MainForm.Handle, MONITOR_DEFAULTTONEAREST), @MonInfo);
  Result:= Format('Monitor res (API): %dx%d', [MonInfo.rcMonitor.Right - MonInfo.rcMonitor.Left, MonInfo.rcMonitor.Bottom - MonInfo.rcMonitor.Top]);
 end;
 
 
+{ Returns hardware report as TStringList.
+  Note: Caller must free the returned TStringList! }
 function GenerateHardwareRepTSL: TStringList;
 begin
  Result:= TStringList.Create;

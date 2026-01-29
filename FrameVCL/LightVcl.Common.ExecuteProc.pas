@@ -2,17 +2,30 @@ UNIT LightVcl.Common.ExecuteProc;
 
 {=============================================================================================================
    SYSTEM - Execute Process
-   2023.01
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
-   Execute a process, using the CreateProcess API (recommended)
+   Execute external processes using the CreateProcess API (recommended over ShellExecute).
 
-   ShellExecute vs CreateProcess
-      CreateProcess - is not as straigth forward as ShellExecute but it allows you more control.
-      ShellExecute  - is easyer to use but you don't have a lot of control over it.
-      To obtain information about the application that is launched as a result of calling ShellExecute, use ShellExecuteEx.
+   ShellExecute vs CreateProcess:
+      CreateProcess - More complex but provides full control over process creation, handles,
+                      environment, and I/O redirection. Required for capturing stdout/stderr.
+      ShellExecute  - Simpler API but limited control. Cannot capture output.
+                      Use ShellExecuteEx for more information about launched application.
+
+   Functions:
+      ExecuteProc         - Launch process without waiting (fire and forget)
+      ExecuteProcMsg      - Launch process with error message on failure
+      ExecuteAndWait      - Launch process and wait for completion with exit code
+      ExecuteAndGetOut    - Launch process and capture stdout (static, after completion)
+      ExecuteAndGetOutDyn - Launch process and capture stdout dynamically (while running)
+
+   Notes:
+      - ExecuteProc cannot run programs requiring admin rights (UAC elevation)
+      - For elevated execution, use ShellExecute with 'runas' verb
+      - All functions accept command line parameters in ExeFile string
 
    For cross-platform see:
       Jedi.Execute - www.delphicorner.f9.co.uk/articles/wapi4.htm
@@ -26,7 +39,7 @@ UNIT LightVcl.Common.ExecuteProc;
      * LightVcl.Common.ExecuteShell.pas
      * csProcess.pas
 
-   Tester
+   Tester:
       c:\MyProjects\Project Testers\Tester Execute program (ShellExecute, CreateProcess)\
 
 =============================================================================================================}
@@ -36,14 +49,32 @@ USES
     WinApi.Windows, System.SysUtils, Vcl.Forms;
 
 
- function  ExecuteProcMsg     (ExeFile: string): Boolean;
- function  ExecuteProc        (ExeFile: string; WindowState: Integer= SW_SHOWNORMAL): Boolean;
- function  ExecuteAndWait     (ExeFile: string; Params: string= ''; Hide: Boolean= FALSE; WaitTime: Cardinal= INFINITE): Cardinal;
+{ Executes a process and shows error message if it fails }
+function ExecuteProcMsg(ExeFile: string): Boolean;
 
- {$IFDEF msWindows}
- procedure ExecuteAndGetOutDyn(CONST CmdLine: string; CONST Output: TProc<string>; AntiFreeze: Boolean; Hide: Boolean= TRUE; Timeout: Cardinal= 100);  { Run a DOS program and retrieve its output dynamically while it is running. } {$ENDIF}
- function  ExecuteAndGetOut   (CONST CmdLine: string; Work: string = 'C:\'): string;
+{ Executes a process without waiting. Returns True if process was created.
+  WindowState: SW_SHOWNORMAL, SW_HIDE, SW_MINIMIZE, etc. }
+function ExecuteProc(ExeFile: string; WindowState: Integer = SW_SHOWNORMAL): Boolean;
 
+{ Executes a process and waits for it to complete.
+  Returns the process exit code.
+  WaitTime: Maximum wait time in milliseconds, or INFINITE.
+  Hide: If True, hides console window (for console apps only). }
+function ExecuteAndWait(ExeFile: string; Params: string = ''; Hide: Boolean = FALSE; WaitTime: Cardinal = INFINITE): Cardinal;
+
+{ Executes a command and captures its stdout after completion.
+  CmdLine: Command to execute (passed to cmd.exe /C)
+  Work: Working directory for the process }
+function ExecuteAndGetOut(CONST CmdLine: string; Work: string = 'C:\'): string;
+
+{$IFDEF MSWINDOWS}
+{ Executes a command and captures its stdout dynamically while running.
+  Output: Callback procedure receiving output text chunks.
+  AntiFreeze: If True, calls Application.ProcessMessages during wait (use with caution).
+  Timeout: Poll interval in milliseconds. }
+procedure ExecuteAndGetOutDyn(CONST CmdLine: string; CONST Output: TProc<string>;
+  AntiFreeze: Boolean; Hide: Boolean = TRUE; Timeout: Cardinal = 100);
+{$ENDIF}
 
 
 
@@ -53,250 +84,337 @@ USES
    LightVcl.Common.IO, LightCore, LightVcl.Common.Dialogs;
 
 
-{--------------------------------------------------------------------------------------------------
-   CreateProcess
+{---------------------------------------------------------------------------------------------------------------
+   ExecuteProcMsg
 
-   Accepts also cmd line parameters. Example:  C:\MyApp.exe /c
-   Does not accept:  mailto:address@yahho.com or *.lnk files or Internet pages (www)
-   Shows error msg if file not found.
+   Executes a process using CreateProcess and shows an error message if it fails.
+   Wrapper around ExecuteProc that provides user feedback on failure.
 
-   Source: https://stackoverflow.com/questions/46672282/how-to-run-a-screensaver-in-config-mode-with-shellexecute-os-overrides-my-she#46672529
-   Similar: https://stackoverflow.com/questions/27249995/delphi-7-shellexecute-command-not-working-in-situations
----------------------------------------------------------------------------------------------------}
+   Parameters:
+     ExeFile - Full path to executable, may include command line arguments
+
+   Returns:
+     True if process was created successfully
+---------------------------------------------------------------------------------------------------------------}
 function ExecuteProcMsg(ExeFile: string): Boolean;
 begin
- Result:= ExecuteProc(ExeFile);                                                                     { If the function succeeds, the return value is the instance handle of the application that was run, or the handle of a dynamic data exchange (DDE) server application. If the function fails, the return value is an error value that is less than or equal to 32. The following table lists these error Value: }
- if NOT Result
- then MessageError('Cannot execute file '+ CRLFw+ ExeFile);
+  Result:= ExecuteProc(ExeFile);
+  if NOT Result
+  then MessageError('Cannot execute file' + CRLFw + ExeFile);
 end;
 
 
-// Warning: Cannot run a program if it requires admin rights!
-// See this: https://stackoverflow.com/questions/14130282/launch-an-exe-with-elevated-privileges-from-a-normal-non-elevated-one
-//     and https://stackoverflow.com/questions/74552937/delphi-createprocess-as-administrator
-function ExecuteProc(ExeFile: string; WindowState: Integer= SW_SHOWNORMAL): Boolean;
+{---------------------------------------------------------------------------------------------------------------
+   ExecuteProc
+
+   Creates a new process using CreateProcess API.
+   The function returns immediately after process creation (does not wait for completion).
+
+   Accepts command line parameters in ExeFile. Example: 'C:\MyApp.exe /c /debug'
+   Does NOT support: mailto: links, .lnk files, URLs, or document associations.
+   For those use cases, use ShellExecute instead.
+
+   WARNING: Cannot run programs requiring admin rights (UAC elevation).
+   See: https://stackoverflow.com/questions/14130282/launch-an-exe-with-elevated-privileges
+
+   Parameters:
+     ExeFile     - Executable path with optional command line arguments
+     WindowState - Window display state (SW_SHOWNORMAL, SW_HIDE, SW_MINIMIZE, etc.)
+
+   Returns:
+     True if process was created successfully
+---------------------------------------------------------------------------------------------------------------}
+function ExecuteProc(ExeFile: string; WindowState: Integer = SW_SHOWNORMAL): Boolean;
 VAR
   SI: TStartupInfo;
   PI: TProcessInformation;
 begin
+  if ExeFile = ''
+  then raise Exception.Create('ExecuteProc: ExeFile parameter cannot be empty');
+
+  { UniqueString ensures ExeFile has unique reference - required because
+    CreateProcess may modify the command line buffer }
   UniqueString(ExeFile);
 
   ZeroMemory(@SI, SizeOf(SI));
-  SI.cb := SizeOf(SI);
-  SI.dwFlags := STARTF_USESHOWWINDOW;
-  SI.wShowWindow := WindowState;
+  SI.cb:= SizeOf(SI);
+  SI.dwFlags:= STARTF_USESHOWWINDOW;
+  SI.wShowWindow:= WindowState;
 
-  Result:= CreateProcess(nil, PChar(ExeFile), nil, nil, FALSE, CREATE_NEW_CONSOLE or NORMAL_PRIORITY_CLASS, NIL, NIL{WorkingFolder}, SI, PI);
+  Result:= CreateProcess(NIL, PChar(ExeFile), NIL, NIL, FALSE, CREATE_NEW_CONSOLE or NORMAL_PRIORITY_CLASS, NIL, NIL, SI, PI);
+
   if Result then
-   begin
-    CloseHandle(PI.hThread);
-    CloseHandle(PI.hProcess);
-   end;
+    begin
+      { Close handles immediately - we don't need to wait or interact with the process }
+      CloseHandle(PI.hThread);
+      CloseHandle(PI.hProcess);
+    end;
 end;
 
 
+{---------------------------------------------------------------------------------------------------------------
+   ExecuteAndWait
 
+   Executes a program and waits for it to finish.
+   Keeps UI responsive by processing messages during the wait.
 
+   Parameters:
+     ExeFile  - Full path to executable
+     Params   - Command line parameters (separate from ExeFile)
+     Hide     - If True, hides console window. Only affects console applications;
+                most GUI applications ignore this flag.
+     WaitTime - Maximum time to wait in milliseconds, or INFINITE
 
+   Returns:
+     Process exit code
 
-{-------------------------------------------------------------------------------------------------------------
- Execute a program and wait for it to finish.
+   Raises:
+     EOSError if CreateProcess fails
 
- WaitTime:
-      The calling program cannot terminate until the called program exits unless WaitTime ms has passed.
-      You can use INFINITE for WaitTime. Not recommended.
- Hide:
-      Applies only to console (DOS) application. most GUI applications will not honnor it.
+   Note:
+     Uses Application.ProcessMessages to keep UI responsive during wait.
+     This is intentional for UI responsiveness but be aware of reentrancy issues.
 
- https://github.com/jrsoftware/issrc/blob/master/Projects/SetupLdr.dpr
- https://stackoverflow.com/questions/26775794/hide-process-window-with-createprocess
--------------------------------------------------------------------------------------------------------------}
-
-function ExecuteAndWait(ExeFile: string; Params: string= ''; Hide: Boolean= FALSE; WaitTime: Cardinal= INFINITE): Cardinal;
+   See:
+     https://github.com/jrsoftware/issrc/blob/master/Projects/SetupLdr.dpr
+     https://stackoverflow.com/questions/26775794/hide-process-window-with-createprocess
+---------------------------------------------------------------------------------------------------------------}
+function ExecuteAndWait(ExeFile: string; Params: string = ''; Hide: Boolean = FALSE; WaitTime: Cardinal = INFINITE): Cardinal;
 VAR
-  CmdLine: String;
+  CmdLine: string;
   ExitCode: Cardinal;
   dwCreationFlags: Cardinal;
   StartupInfo: TStartupInfo;
   ProcessInfo: TProcessInformation;
 begin
-  CmdLine := '"' + ExeFile + '" ' + Params;
+  if ExeFile = ''
+  then raise Exception.Create('ExecuteAndWait: ExeFile parameter cannot be empty');
+
+  CmdLine:= '"' + ExeFile + '" ' + Params;
 
   FillChar(StartupInfo, SizeOf(StartupInfo), 0);
-  FillChar(ProcessInfo, SizeOf(ProcessInfo), #0);
+  FillChar(ProcessInfo, SizeOf(ProcessInfo), 0);
 
-  StartupInfo.cb := SizeOf(StartupInfo);
-  if Hide
-  then
-   begin
-    StartupInfo.wShowWindow := SW_HIDE;
-    StartupInfo.dwFlags := STARTF_USESHOWWINDOW;
-    dwCreationFlags := CREATE_NO_WINDOW;
-   end
+  StartupInfo.cb:= SizeOf(StartupInfo);
+  if Hide then
+    begin
+      StartupInfo.wShowWindow:= SW_HIDE;
+      StartupInfo.dwFlags:= STARTF_USESHOWWINDOW;
+      dwCreationFlags:= CREATE_NO_WINDOW;
+    end
   else
-    dwCreationFlags := 0;
+    dwCreationFlags:= 0;
 
   if NOT CreateProcess(NIL, PChar(CmdLine), NIL, NIL, FALSE, dwCreationFlags, NIL, NIL, StartupInfo, ProcessInfo)
   then RaiseLastOSError;
+
   CloseHandle(ProcessInfo.hThread);
 
-  { Wait for the process to terminate, processing messages in the meantime }
+  { Wait for process to terminate while keeping UI responsive.
+    ProcessMessages is used intentionally here to prevent UI freeze. }
   REPEAT
     Application.ProcessMessages;
-  UNTIL MsgWaitForMultipleObjects(1, ProcessInfo.hProcess, FALSE, WaitTime, QS_ALLINPUT) <> WAIT_OBJECT_0+1;
+  UNTIL MsgWaitForMultipleObjects(1, ProcessInfo.hProcess, FALSE, WaitTime, QS_ALLINPUT) <> WAIT_OBJECT_0 + 1;
 
-  { Now that the process has exited, process any remaining messages.
-    There may be an asynchronously-sent "restart request" message still queued if MWFMO saw the process terminate before checking for new  messages.) }
+  { Process any remaining messages after process exits.
+    Important: there may be asynchronously-sent messages still queued
+    if MWFMO saw the process terminate before checking for messages. }
   Application.ProcessMessages;
   GetExitCodeProcess(ProcessInfo.hProcess, ExitCode);
 
   CloseHandle(ProcessInfo.hProcess);
-  Result := ExitCode;
+  Result:= ExitCode;
 end;
 
 
+{---------------------------------------------------------------------------------------------------------------
+   ExecuteAndGetOut
 
+   Executes a DOS/console command and captures its complete stdout output.
+   Waits for the command to complete before returning.
 
+   The command is executed via 'cmd.exe /C' which closes the console after completion.
 
-{-------------------------------------------------------------------------------------------------------------
-  Run a DOS program and retrieve its output (static)
-  Based on CreateProcess.
+   Parameters:
+     CmdLine - Command to execute (will be passed to cmd.exe /C)
+     Work    - Working directory for the command
 
-  http://stackoverflow.com/questions/9119999/getting-output-from-a-shell-dos-app-into-a-delphi-app
--------------------------------------------------------------------------------------------------------------}
-function ExecuteAndGetOut(CONST CmdLine: string; Work: string = 'C:\'): string;                                                                                                                          { Old name: GetDosOutput }
-var
+   Returns:
+     Complete stdout output as a string
+
+   Example:
+     Output := ExecuteAndGetOut('dir /b');
+     Output := ExecuteAndGetOut('ping localhost', 'C:\Windows');
+
+   Note:
+     Output is captured in chunks using a fixed buffer. Large outputs are handled
+     correctly through the read loop.
+
+   See:
+     http://stackoverflow.com/questions/9119999/getting-output-from-a-shell-dos-app-into-a-delphi-app
+---------------------------------------------------------------------------------------------------------------}
+function ExecuteAndGetOut(CONST CmdLine: string; Work: string = 'C:\'): string;
+VAR
   SecAtrrs: TSecurityAttributes;
   StartupInfo: TStartupInfo;
   ProcessInfo: TProcessInformation;
   StdOutPipeRead, StdOutPipeWrite: THandle;
   WasOK: Boolean;
-  pCommandLine: array[0..255] of AnsiChar;
+  Buffer: array[0..255] of AnsiChar;
   BytesRead: Cardinal;
-  WorkDir: string;
-  Handle: Boolean;
+  ProcessCreated: Boolean;
 begin
-  Result := '';
-  with SecAtrrs DO
-   begin
-    nLength := SizeOf(SecAtrrs);
-    bInheritHandle := True;
-    lpSecurityDescriptor := nil;
-   end;
+  if CmdLine = ''
+  then raise Exception.Create('ExecuteAndGetOut: CmdLine parameter cannot be empty');
 
+  Result:= '';
+
+  { Setup security attributes to allow handle inheritance }
+  SecAtrrs.nLength:= SizeOf(SecAtrrs);
+  SecAtrrs.bInheritHandle:= True;
+  SecAtrrs.lpSecurityDescriptor:= NIL;
+
+  { Create pipe for stdout redirection }
   CreatePipe(StdOutPipeRead, StdOutPipeWrite, @SecAtrrs, 0);
   TRY
-    WITH StartupInfo DO
-     begin
-      FillChar(StartupInfo, SizeOf(StartupInfo), 0);
-      cb         := SizeOf(StartupInfo);
-      dwFlags    := STARTF_USESHOWWINDOW or STARTF_USESTDHANDLES;
-      wShowWindow:= SW_HIDE;                                         //SW_SHOW SW_HIDE;
-      hStdInput  := GetStdHandle(STD_INPUT_HANDLE);                  // don't redirect stdin
-      hStdOutput := StdOutPipeWrite;
-      hStdError  := StdOutPipeWrite;
-     end;
-    WorkDir:= Work;
-    Handle := CreateProcess(NIL, PChar('cmd.exe /C ' + CmdLine), NIL, NIL, TRUE, 0, NIL, PChar(WorkDir), StartupInfo, ProcessInfo);   { The /c parameters means that I want to close the DOS box when the program executed in it is over }
+    { Configure startup info for hidden window with redirected output }
+    FillChar(StartupInfo, SizeOf(StartupInfo), 0);
+    StartupInfo.cb:= SizeOf(StartupInfo);
+    StartupInfo.dwFlags:= STARTF_USESHOWWINDOW or STARTF_USESTDHANDLES;
+    StartupInfo.wShowWindow:= SW_HIDE;
+    StartupInfo.hStdInput:= GetStdHandle(STD_INPUT_HANDLE);  { Don't redirect stdin }
+    StartupInfo.hStdOutput:= StdOutPipeWrite;
+    StartupInfo.hStdError:= StdOutPipeWrite;
+
+    { Create the process. /C flag closes cmd.exe when command completes }
+    ProcessCreated:= CreateProcess(NIL, PChar('cmd.exe /C ' + CmdLine), NIL, NIL, TRUE, 0, NIL, PChar(Work), StartupInfo, ProcessInfo);
+
+    { Close write end of pipe - child process has its own handle now.
+      We must close our handle so ReadFile will see EOF when child exits. }
     CloseHandle(StdOutPipeWrite);
 
-    if Handle then
+    if ProcessCreated then
       TRY
+        { Read all output from the pipe }
         REPEAT
-          WasOK := WinApi.Windows.ReadFile(StdOutPipeRead, pCommandLine, 255, BytesRead, NIL);
+          WasOK:= WinApi.Windows.ReadFile(StdOutPipeRead, Buffer, SizeOf(Buffer) - 1, BytesRead, NIL);
           if BytesRead > 0 then
-           begin
-            pCommandLine[BytesRead] := #0;
-            Result := Result + string(pCommandLine);                                               {Here I could do something like this: Log.AddInfo(string(pCommandLine)); }
-           end;
+            begin
+              Buffer[BytesRead]:= #0;
+              Result:= Result + string(Buffer);
+            end;
         UNTIL NOT WasOK or (BytesRead = 0);
         WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
       FINALLY
         CloseHandle(ProcessInfo.hThread);
         CloseHandle(ProcessInfo.hProcess);
-      end;
+      END;
   FINALLY
     CloseHandle(StdOutPipeRead);
-  end;
+  END;
 end;
 
 
+{---------------------------------------------------------------------------------------------------------------
+   ExecuteAndGetOutDyn
 
+   Executes a DOS/console command and captures its stdout dynamically while running.
+   Unlike ExecuteAndGetOut, this function provides output in real-time through a callback.
 
-{--------------------------------------------------------------------------------------------------
-  Run a DOS program and retrieve its output dynamically while it is running.
-  The Output parameter is a reference to a procedure (like this):
+   Parameters:
+     CmdLine    - Command to execute
+     Output     - Callback procedure receiving output text as it becomes available.
+                  May be called multiple times with chunks of output.
+     AntiFreeze - If True, calls Application.ProcessMessages during wait loops.
+                  WARNING: Use with caution as this can cause reentrancy issues.
+     Hide       - If True, hides console window
+     Timeout    - Poll interval in milliseconds (how often to check for output)
 
-    procedure DoOutput(Text: string);
-    begin
-     MessageInfo(Text);
-    end;
+   Example:
+     ExecuteAndGetOutDyn('ping localhost',
+       procedure(Text: string)
+       begin
+         Memo1.Lines.Add(Text);
+       end,
+       True, True, 100);
 
-  Source:
-      http://stackoverflow.com/questions/25723807/execute-dos-program-and-get-output-dynamically
---------------------------------------------------------------------------------------------------}
-{$IFDEF msWindows}
+   Note:
+     Application.ProcessMessages is used when AntiFreeze=True to keep UI responsive.
+     Be aware this can cause reentrancy if callback triggers operations.
+
+   See:
+     http://stackoverflow.com/questions/25723807/execute-dos-program-and-get-output-dynamically
+     https://gist.github.com/mmmunk/cbe059f06c42f60724ccdcf58f60a2b9
+---------------------------------------------------------------------------------------------------------------}
+{$IFDEF MSWINDOWS}
 {$WARN SYMBOL_PLATFORM OFF}
-//also see: https://gist.github.com/mmmunk/cbe059f06c42f60724ccdcf58f60a2b9
-procedure ExecuteAndGetOutDyn(CONST CmdLine: string; CONST Output: TProc<string>; AntiFreeze: Boolean; Hide: Boolean= TRUE; Timeout: Cardinal= 100);  { Run a DOS program and retrieve its output dynamically while it is running. As TimeOut use 100 (ms) }
+procedure ExecuteAndGetOutDyn(CONST CmdLine: string; CONST Output: TProc<string>;
+  AntiFreeze: Boolean; Hide: Boolean = TRUE; Timeout: Cardinal = 100);
 CONST
   InheritHandleSecurityAttributes: TSecurityAttributes = (nLength: SizeOf(TSecurityAttributes); bInheritHandle: True);
 VAR
   FileSize: Int64;
-  si: TStartupInfo;
-  pi: TProcessInformation;
+  SI: TStartupInfo;
+  PI: TProcessInformation;
   WaitRes, BytesRead: DWORD;
   ProcCreationFlags: Cardinal;
   hReadStdout, hWriteStdout: THandle;
-  AnsiBuffer: array [0 .. 1024 - 1] of AnsiChar;
+  AnsiBuffer: array[0..1023] of AnsiChar;
 begin
- Win32Check(CreatePipe(hReadStdout, hWriteStdout, @InheritHandleSecurityAttributes, 0));
- TRY
-   si := Default (TStartupInfo);
-   si.cb := SizeOf(TStartupInfo);
-   si.dwFlags := STARTF_USESTDHANDLES;
-   si.hStdOutput := hWriteStdout;
-   si.hStdError := hWriteStdout;
+  if CmdLine = ''
+  then raise Exception.Create('ExecuteAndGetOutDyn: CmdLine parameter cannot be empty');
 
-   if Hide
-   then ProcCreationFlags:= CREATE_NO_WINDOW+NORMAL_PRIORITY_CLASS
-   else ProcCreationFlags:= CREATE_NEW_PROCESS_GROUP+NORMAL_PRIORITY_CLASS;
+  Win32Check(CreatePipe(hReadStdout, hWriteStdout, @InheritHandleSecurityAttributes, 0));
+  TRY
+    SI:= Default(TStartupInfo);
+    SI.cb:= SizeOf(TStartupInfo);
+    SI.dwFlags:= STARTF_USESTDHANDLES;
+    SI.hStdOutput:= hWriteStdout;
+    SI.hStdError:= hWriteStdout;
 
-   Win32Check(CreateProcess(NIL, PChar(CmdLine), NIL, NIL, True, ProcCreationFlags, NIL, NIL, si, pi));
+    if Hide
+    then ProcCreationFlags:= CREATE_NO_WINDOW + NORMAL_PRIORITY_CLASS
+    else ProcCreationFlags:= CREATE_NEW_PROCESS_GROUP + NORMAL_PRIORITY_CLASS;
 
-   TRY
-    WHILE True DO
-     begin
-      WaitRes := WaitForSingleObject(pi.hProcess, Timeout);
-      Win32Check(WaitRes <> WAIT_FAILED);
+    Win32Check(CreateProcess(NIL, PChar(CmdLine), NIL, NIL, True, ProcCreationFlags, NIL, NIL, SI, PI));
+
+    TRY
       WHILE True DO
-       begin
-        if AntiFreeze then Application.ProcessMessages;    // Not good man! Not good!
+        begin
+          WaitRes:= WaitForSingleObject(PI.hProcess, Timeout);
+          Win32Check(WaitRes <> WAIT_FAILED);
 
-        Win32Check(GetFileSizeEx(hReadStdout, FileSize));
-        if FileSize = 0 then Break;
-        Win32Check(WinApi.Windows.ReadFile(hReadStdout, AnsiBuffer, SizeOf(AnsiBuffer) - 1, BytesRead, NIL));
-        if BytesRead = 0 then Break;
-        AnsiBuffer[BytesRead] := #0;
-        OemToAnsi(AnsiBuffer, AnsiBuffer);
-        if Assigned(Output) then Output(string(AnsiBuffer));
-       end;
-      if WaitRes = WAIT_OBJECT_0 then Break;
-     end;
-   FINALLY
-     CloseHandle(pi.hProcess);
-     CloseHandle(pi.hThread);
-   END;
- FINALLY
-   CloseHandle(hReadStdout);
-   CloseHandle(hWriteStdout);
- END;
+          { Read all available output }
+          WHILE True DO
+            begin
+              { Keep UI responsive if requested (use with caution) }
+              if AntiFreeze then Application.ProcessMessages;
+
+              Win32Check(GetFileSizeEx(hReadStdout, FileSize));
+              if FileSize = 0 then Break;
+
+              Win32Check(WinApi.Windows.ReadFile(hReadStdout, AnsiBuffer, SizeOf(AnsiBuffer) - 1, BytesRead, NIL));
+              if BytesRead = 0 then Break;
+
+              AnsiBuffer[BytesRead]:= #0;
+              OemToAnsi(AnsiBuffer, AnsiBuffer);
+
+              if Assigned(Output) then Output(string(AnsiBuffer));
+            end;
+
+          if WaitRes = WAIT_OBJECT_0 then Break;
+        end;
+    FINALLY
+      CloseHandle(PI.hProcess);
+      CloseHandle(PI.hThread);
+    END;
+  FINALLY
+    CloseHandle(hReadStdout);
+    CloseHandle(hWriteStdout);
+  END;
 end;
-{$WARN SYMBOL_PLATFORM On}
+{$WARN SYMBOL_PLATFORM ON}
 {$ENDIF}
-
-
-
 
 
 end.

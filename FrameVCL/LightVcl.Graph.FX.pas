@@ -1,19 +1,20 @@
 UNIT LightVcl.Graph.FX;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2023.08.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
   Graphic effects:
     * Crop image
     * Tile image
-    * Flip image
-    * Enhance image (Darkness, Brightness, Contrast, Saturation)
+    * Flip/Mirror image
+
+  Record types for tile and enhance parameters with stream serialization.
 
   External dependencies:
-    * None (had VclGraphUtil)
+    * LightCore.StreamBuff
+    * LightVcl.Graph.Bitmap
 ---------------------------------------------------------------------------------------------------}
 
 INTERFACE
@@ -79,13 +80,16 @@ USES
 
 procedure CropBitmap(BMP: TBitmap; X, Y, W, H: Integer);                                        { XYWH are crop coordinates }
 begin
- Assert(W > 0);
- Assert(H > 0);
+ Assert(BMP <> NIL, 'CropBitmap: BMP is nil');
+ Assert(W > 0, 'CropBitmap: W must be > 0');
+ Assert(H > 0, 'CropBitmap: H must be > 0');
+ Assert(X >= 0, 'CropBitmap: X must be >= 0');
+ Assert(Y >= 0, 'CropBitmap: Y must be >= 0');
 
  if BMP.Width < W
  then W:= BMP.Width;
- if BMP.Height < h
- then h:= BMP.Height;
+ if BMP.Height < H
+ then H:= BMP.Height;
 
  BitBlt(BMP.Canvas.Handle, 0, 0, W, H, BMP.Canvas.Handle, X, Y, SRCCOPY);
  BMP.Width := W;
@@ -98,6 +102,10 @@ end;
 procedure CropBitmap(BMP: TBitmap; W, H: Integer);
 VAR HalfX, HalfY: Integer;
 begin
+ Assert(BMP <> NIL, 'CropBitmap: BMP is nil');
+ Assert(W > 0, 'CropBitmap: W must be > 0');
+ Assert(H > 0, 'CropBitmap: H must be > 0');
+
  HalfX:= (BMP.Width  - W) DIV 2;
  HalfY:= (BMP.Height - H) DIV 2;
 
@@ -111,11 +119,17 @@ end;
 
 
 
-procedure CropBitmap(BMP: TBitmap; CONST MasterBMP: TBitmap);     { Crop the 'ToCropBMP' to fit into the MasterBMP. Basically, it is identical with the procedure above but instead of an integer parameter I give a BMP parameter }
+{ Crop the 'BMP' to fit into the MasterBMP dimensions. Centers the image before cropping. }
+procedure CropBitmap(BMP: TBitmap; CONST MasterBMP: TBitmap);
 VAR HalfX, HalfY: Integer;
 begin
- HalfX:= Round((BMP.Width  - MasterBMP.Width)  / 2);
- HalfY:= Round((BMP.Height - MasterBMP.Height) / 2);
+ Assert(BMP <> NIL, 'CropBitmap: BMP is nil');
+ Assert(MasterBMP <> NIL, 'CropBitmap: MasterBMP is nil');
+ Assert(MasterBMP.Width > 0, 'CropBitmap: MasterBMP.Width must be > 0');
+ Assert(MasterBMP.Height > 0, 'CropBitmap: MasterBMP.Height must be > 0');
+
+ HalfX:= (BMP.Width  - MasterBMP.Width)  DIV 2;
+ HalfY:= (BMP.Height - MasterBMP.Height) DIV 2;
 
  if HalfX < 0
  then HalfX:= 0;
@@ -135,22 +149,32 @@ end;
 {---------------------------------------------------------------------------------------------------
    TILE
 ---------------------------------------------------------------------------------------------------}
-function TileBitmap(BMP: TBitmap; CONST OutWidth, OutHeight: Integer): TBitmap;                     { Tile a image without using a secondary bitmap }
+{ Tiles the source BMP to fill the specified output dimensions.
+  Returns a NEW bitmap that caller must free. }
+function TileBitmap(BMP: TBitmap; CONST OutWidth, OutHeight: Integer): TBitmap;
 VAR
-   TileX, TileY: integer;
+   TileX, TileY: Integer;
 begin
+ Assert(BMP <> NIL, 'TileBitmap: BMP is nil');
+ Assert(BMP.Width > 0, 'TileBitmap: BMP.Width must be > 0');
+ Assert(BMP.Height > 0, 'TileBitmap: BMP.Height must be > 0');
+ Assert(OutWidth > 0, 'TileBitmap: OutWidth must be > 0');
+ Assert(OutHeight > 0, 'TileBitmap: OutHeight must be > 0');
+
  { Create bitmap and set its size }
  Result:= CreateBitmap(OutWidth, OutHeight);
- if Result= NIL then EXIT;
+ Assert(Result <> NIL, 'TileBitmap: Failed to create output bitmap');
 
  for TileX:= 0 TO (OutWidth div BMP.Width) do
-  for TileY:= 0 TO (OutHeight div BMP.Height) do
-   Result.Canvas.Draw (TileX* BMP.Width, TileY* BMP.Height, BMP);
+   for TileY:= 0 TO (OutHeight div BMP.Height) do
+     Result.Canvas.Draw(TileX * BMP.Width, TileY * BMP.Height, BMP);
 end;
 
 
 
-{ Use a mirror effect for every odd image }
+{ Tiles the source BMP with optional mirror effect for seamless patterns.
+  Use TileType to control horizontal, vertical, or both mirror directions.
+  Modifies BMP in-place with the tiled result. }
 procedure TileBitmapMirror(BMP: TBitmap; CONST OutWidth, OutHeight: Integer; TileType: RTileType);
 VAR
    w, h, iCol, iRow: Integer;
@@ -158,17 +182,23 @@ VAR
 
    procedure StitchBitmap(CurrBitmap: TBitmap);
    begin
-     OutputBMP.Canvas.Draw (iCol* w, iRow* h, CurrBitmap)
+     OutputBMP.Canvas.Draw(iCol * w, iRow * h, CurrBitmap);
    end;
 
 begin
+ Assert(BMP <> NIL, 'TileBitmapMirror: BMP is nil');
+ Assert(BMP.Width > 0, 'TileBitmapMirror: BMP.Width must be > 0');
+ Assert(BMP.Height > 0, 'TileBitmapMirror: BMP.Height must be > 0');
+ Assert(OutWidth > 0, 'TileBitmapMirror: OutWidth must be > 0');
+ Assert(OutHeight > 0, 'TileBitmapMirror: OutHeight must be > 0');
+
  MirrorBMP    := NIL;
  MirrorDownBMP:= NIL;
  DoubleMirror := NIL;
 
  OutputBMP:= CreateBitmap(OutWidth, OutHeight);
+ Assert(OutputBMP <> NIL, 'TileBitmapMirror: Failed to create output bitmap');
  TRY
-  //FillBitmap(OutputBMP, TileType.BkgColor);   del
   w:= BMP.Width;
   h:= BMP.Height;
 
@@ -214,31 +244,30 @@ begin
   { Flip horizontally & also vertically }
   for iRow:= 0 TO (OutHeight div h) DO
    for iCol:= 0 TO (OutWidth div w) DO
-      if (iRow mod 2 = 0)                                                       { Randurile Even }
+      if (iRow mod 2 = 0)                                                       { Even rows }
       then
           if (iCol mod 2 = 0)                                                   { Even columns }
-          then StitchBitmap( BMP)
+          then StitchBitmap(BMP)
           else
              if TileType.Horizon
-             then StitchBitmap( MirrorBMP)                                      { Apply mirrored BMP }
-             else StitchBitmap( BMP)                                            { Apply normal BMP }
-      else                                                                      { Randurile impare }
+             then StitchBitmap(MirrorBMP)                                       { Apply mirrored BMP }
+             else StitchBitmap(BMP)                                             { Apply normal BMP }
+      else                                                                      { Odd rows }
           if (iCol mod 2 = 0)                                                   { Even columns }
           then
              if TileType.Vertical
-             then StitchBitmap( MirrorDownBMP)
-             else StitchBitmap( BMP)
+             then StitchBitmap(MirrorDownBMP)
+             else StitchBitmap(BMP)
           else
-             if TileType.Horizon
-             AND TileType.Vertical
-             then StitchBitmap( DoubleMirror)
+             if TileType.Horizon AND TileType.Vertical
+             then StitchBitmap(DoubleMirror)
              else
                if TileType.Horizon
-               then StitchBitmap( MirrorBMP)
+               then StitchBitmap(MirrorBMP)
                else
                  if TileType.Vertical
-                 then StitchBitmap( MirrorDownBMP)
-                 else StitchBitmap( BMp);
+                 then StitchBitmap(MirrorDownBMP)
+                 else StitchBitmap(BMP);
 
    BMP.Assign(OutputBMP);
  FINALLY
@@ -264,23 +293,26 @@ end;
      Tester: c:\MyProjects\Projects GRAPHICS\Rotate, flip\RotateTester.dpr
 -------------------------------------------------------------------------------------------------------------}
 
-procedure FlipDown(Bmp: TBitmap);     { 16ms }    { Same as JanFx.FlipDown (20ms) }
-var dx, dy: integer;
+{ Flips the bitmap vertically (upside down). Modifies in-place. }
+procedure FlipDown(Bmp: TBitmap);
+var dx, dy: Integer;
 begin
+ Assert(Bmp <> NIL, 'FlipDown: Bmp is nil');
  dx:= Bmp.Width;
  dy:= Bmp.Height;
- Bmp.Canvas.CopyRect(Rect(0,0,dx,dy), Bmp.Canvas,Rect(0,dy,dx,0));
+ Bmp.Canvas.CopyRect(Rect(0, 0, dx, dy), Bmp.Canvas, Rect(0, dy, dx, 0));
 end;
 
 
 
-{ Mirror left-right }
-procedure FlipRight(Bmp: TBitmap);       { 18ms }
-var dx, dy: integer;
+{ Flips the bitmap horizontally (mirror left-right). Modifies in-place. }
+procedure FlipRight(Bmp: TBitmap);
+var dx, dy: Integer;
 begin
+ Assert(Bmp <> NIL, 'FlipRight: Bmp is nil');
  dx:= Bmp.Width;
  dy:= Bmp.Height;
- Bmp.Canvas.CopyRect(Rect(0,0,dx,dy),  Bmp.Canvas,Rect(dx,0,0,dy));
+ Bmp.Canvas.CopyRect(Rect(0, 0, dx, dy), Bmp.Canvas, Rect(dx, 0, 0, dy));
 end;
 
 

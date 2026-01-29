@@ -8,7 +8,6 @@ UNIT LightVcl.Common.VclUtils;
 
    See also:
       csWindow.pas
-      LightVcl.Common.VclUtils.pas
 
    Tester:
       c:\MyProjects\My books\Building cross-platform applications\Demo projects\Show VCL inheritance tree\
@@ -38,7 +37,7 @@ TYPE
  procedure SetChildVisibility(ParentMenu: TMenuItem; Enabled, Visible: Boolean); overload; { Change the visibility for all children of ParentMenu }
  procedure SetChildVisibility(ParentMenu: TMenuItem; Visible: Boolean);          overload;
 
- function  AddSubMenu        (ParentMenu: TMenuItem; Caption: string; Event: TNotifyEvent): TMenuItem;  { Add a sub-menu item to a menu item. Also returns a pointer to that menu. I don't have to free it. The owner will free it. }
+ function  AddSubMenu        (ParentMenu: TMenuItem; CONST Caption: string; Event: TNotifyEvent): TMenuItem;  { Add a sub-menu item to a menu item. Also returns a pointer to that menu. I don't have to free it. The owner will free it. }
  procedure RemoveSubmenus    (ParentMenu: TMenuItem);
 
  { Actions }
@@ -216,7 +215,7 @@ end;
 
 
 { This procedure is copied from RxLibrary VCLUtils.
-  It copies the background image of a control's parent, including any overlapping sibling graphic controls, onto a destination canvas—useful for rendering transparent or custom-painted controls in Delphi. }
+  It copies the background image of a control's parent, including any overlapping sibling graphic controls, onto a destination canvasï¿½useful for rendering transparent or custom-painted controls in Delphi. }
 TYPE
      TParentControl = class(TWinControl);
 
@@ -225,64 +224,63 @@ var
   I, Count, X, Y, SaveIndex: Integer;
   DC: HDC;
   R, SelfR, CtlR: TRect;
+  GraphicCtrl: TGraphicControl;
 begin
-  if (Control = nil) OR (Control.Parent = nil)
-  then Exit;
+  if Control = nil
+  then raise Exception.Create('CopyParentImage: Control parameter cannot be nil');
+
+  if Control.Parent = nil
+  then EXIT;
 
   Count := Control.Parent.ControlCount;
   DC    := Dest.Handle;
-  with Control.Parent
-   DO ControlState := ControlState + [csPaintCopy];
+  Control.Parent.ControlState := Control.Parent.ControlState + [csPaintCopy];
 
   TRY
-    with Control do
-     begin
-      SelfR := Bounds(Left, Top, Width, Height);
-      X := -Left; Y := -Top;
-     end;
+    SelfR := Bounds(Control.Left, Control.Top, Control.Width, Control.Height);
+    X := -Control.Left;
+    Y := -Control.Top;
 
     { Copy parent control image }
     SaveIndex := SaveDC(DC);
     TRY
       SetViewportOrgEx(DC, X, Y, nil);
       IntersectClipRect(DC, 0, 0, Control.Parent.ClientWidth, Control.Parent.ClientHeight);
-      with TParentControl(Control.Parent) DO
-       begin
-        Perform(WM_ERASEBKGND, wParam(DC), 0);         { see: http://stackoverflow.com/questions/4072974/range-check-error-while-painting-the-canvas }
-        PaintWindow(DC);
-       end;
+      TParentControl(Control.Parent).Perform(WM_ERASEBKGND, wParam(DC), 0);  { see: http://stackoverflow.com/questions/4072974/range-check-error-while-painting-the-canvas }
+      TParentControl(Control.Parent).PaintWindow(DC);
     FINALLY
       RestoreDC(DC, SaveIndex);
     END;
 
     { Copy images of graphic controls }
-    for I := 0 to Count - 1 do begin
-      if Control.Parent.Controls[I] = Control then Break
-      else if (Control.Parent.Controls[I] <> nil) and
-        (Control.Parent.Controls[I] is TGraphicControl) then
-      begin
-        with TGraphicControl(Control.Parent.Controls[I]) do begin
-          CtlR := Bounds(Left, Top, Width, Height);
-          if Bool(IntersectRect(R, SelfR, CtlR)) and Visible then
+    for I := 0 to Count - 1 do
+    begin
+      if Control.Parent.Controls[I] = Control
+      then Break
+      else
+        if (Control.Parent.Controls[I] <> nil)
+        AND (Control.Parent.Controls[I] is TGraphicControl) then
+        begin
+          GraphicCtrl := TGraphicControl(Control.Parent.Controls[I]);
+          CtlR := Bounds(GraphicCtrl.Left, GraphicCtrl.Top, GraphicCtrl.Width, GraphicCtrl.Height);
+          if Bool(IntersectRect(R, SelfR, CtlR)) AND GraphicCtrl.Visible then
           begin
-            ControlState := ControlState + [csPaintCopy];
+            GraphicCtrl.ControlState := GraphicCtrl.ControlState + [csPaintCopy];
             SaveIndex := SaveDC(DC);
-            try
-              SetViewportOrgEx(DC, Left + X, Top + Y, nil);
-              IntersectClipRect(DC, 0, 0, Width, Height);
-              Perform(WM_PAINT, wParam(DC), 0);                            { see: http://stackoverflow.com/questions/4072974/range-check-error-while-painting-the-canvas }
-            finally
+            TRY
+              SetViewportOrgEx(DC, GraphicCtrl.Left + X, GraphicCtrl.Top + Y, nil);
+              IntersectClipRect(DC, 0, 0, GraphicCtrl.Width, GraphicCtrl.Height);
+              GraphicCtrl.Perform(WM_PAINT, wParam(DC), 0);  { see: http://stackoverflow.com/questions/4072974/range-check-error-while-painting-the-canvas }
+            FINALLY
               RestoreDC(DC, SaveIndex);
-              ControlState := ControlState - [csPaintCopy];
-            end;
+              GraphicCtrl.ControlState := GraphicCtrl.ControlState - [csPaintCopy];
+            END;
           end;
         end;
-      end;
     end;
   FINALLY
-    with Control.Parent DO
-     ControlState := ControlState - [csPaintCopy];
-  end;
+    Control.Parent.ControlState := Control.Parent.ControlState - [csPaintCopy];
+  END;
 end;
 
 
@@ -352,7 +350,9 @@ end;
 { Makes the specified control to blink 5 times, to attract user's attention }
 procedure BlinkControl(Control: TControl);
 begin
- //Application.ProcessMessages;    // https://blog.dummzeuch.de/2018/09/29/calling-application-processmessages-in-a-delphi-program/
+ if Control = NIL
+ then raise Exception.Create('BlinkControl: Control parameter cannot be nil');
+
  Control.Visible:= FALSE;
  Control.Update;
  Sleep(100);
@@ -411,9 +411,13 @@ end;
   https://stackoverflow.com/questions/41016976 }
 function CanFocus(Control: TWinControl): Boolean;
 begin
+ if Control = NIL
+ then EXIT(FALSE);
+
  Result:= Control.CanFocus AND Control.Enabled AND Control.Visible;
  if Result
  AND NOT Control.InheritsFrom(TForm)
+ AND (Control.Parent <> NIL)
  then
    { Recursive call:
      This control might be hosted by a panel which could be also invisible/disabled. So, we need to check all the parents down the road. We stop when we encounter the parent Form.
@@ -433,9 +437,12 @@ end;
 procedure EnableDisable(Control: TWinControl; Enable: Boolean);
 VAR i: Integer;
 begin
+ if Control = NIL
+ then raise Exception.Create('EnableDisable: Control parameter cannot be nil');
+
  Control.Enabled:= Enable;                               { Disable self }
- for i:= 0 to Control.ControlCount-1
-  DO TWinControl(Control.Controls[i]).Enabled:= Enable;  { Disable children }
+ for i:= 0 to Control.ControlCount-1 DO
+   Control.Controls[i].Enabled:= Enable;                 { Disable children - TControl has Enabled property }
 end;
 
 
@@ -451,7 +458,7 @@ begin
      else RAISE Exception.Create('Unknown control in ToggleCheckbox: '+ BasedOn.Name);
 
  CheckBox.Enabled:= NOT Checked;
- if NOT CheckBox.Enabled                 { If disabled, aslo uncheck it }
+ if NOT CheckBox.Enabled                 { If disabled, also uncheck it }
  then CheckBox.Checked:= FALSE;
 end;
 
@@ -466,6 +473,12 @@ end;
 { Set the active tab for the specified PageControl, but instead of using an index we use a string }
 function SetActivePage(PageControl: TPageControl; CONST PageName: string): TTabSheet;
 begin
+ if PageControl = NIL
+ then raise Exception.Create('SetActivePage: PageControl parameter cannot be nil');
+
+ if PageName = ''
+ then raise Exception.Create('SetActivePage: PageName parameter cannot be empty');
+
  Result:= NIL;
  for VAR i:= 0 to PageControl.PageCount-1 DO
    if SameText(PageControl.Pages[i].Name, PageName)
@@ -481,6 +494,9 @@ end;
 { Force repainting of this control }
 procedure RefreshNow(Ctrl: TControl);
 begin
+  if Ctrl = NIL
+  then raise Exception.Create('RefreshNow: Ctrl parameter cannot be nil');
+
   Ctrl.Refresh;
 end;
 
@@ -497,15 +513,24 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure ScrollAppTitle(DirectionLeft: Boolean);                                        { use it in a timer set it at 250ms }
 begin
+ if Length(Application.Title) < 2
+ then EXIT;
+
  if DirectionLeft
- then Application.title:= system.COPY(Application.Title, 2, Length(Application.title)) + Application.title[1]   { left direction }
- else Application.title := Application.title[Length(Application.title)] + system.COPY(Application.title, 1, Length(Application.title) - 1);    { right direction }
+ then Application.Title:= System.Copy(Application.Title, 2, Length(Application.Title)) + Application.Title[1]   { left direction }
+ else Application.Title:= Application.Title[Length(Application.Title)] + System.Copy(Application.Title, 1, Length(Application.Title) - 1);    { right direction }
 end;
 
 
 procedure ScrollFormCaption(Form: TForm);                                                { use it in a timer set it at 250ms }
 begin
-  Form.Caption:= system.COPY(Form.Caption, 2, Length(Form.Caption))+ Form.Caption[1];    //left direction
+  if Form = NIL
+  then raise Exception.Create('ScrollFormCaption: Form parameter cannot be nil');
+
+  if Length(Form.Caption) < 2
+  then EXIT;
+
+  Form.Caption:= System.Copy(Form.Caption, 2, Length(Form.Caption)) + Form.Caption[1];    { left direction }
 end;
 
 
@@ -571,7 +596,7 @@ VAR I: Integer;
  end;
 
 begin
- { The parent itsself }
+ { The parent itself }
  MenuVisibility(ParentMenu, Enabled, Visible);
 
  { All items in the Parent menu }
@@ -589,7 +614,7 @@ begin
 end;
 
 
-function AddSubMenu(ParentMenu: TMenuItem; Caption: string; Event: TNotifyEvent): TMenuItem;       { Add a sub-menu item to a menu item. Also returns a pointer to that menu. I don't have to free it. The owner will free it. }
+function AddSubMenu(ParentMenu: TMenuItem; CONST Caption: string; Event: TNotifyEvent): TMenuItem;       { Add a sub-menu item to a menu item. Also returns a pointer to that menu. I don't have to free it. The owner will free it. }
 begin
    Result := TMenuItem.Create(ParentMenu);
    TRY                                                                                             { This inserts a menu item after  }

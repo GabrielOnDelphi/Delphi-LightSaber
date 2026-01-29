@@ -28,7 +28,7 @@ UNIT LightVcl.Common.WinVersion;
       Windows Serv 2003       5.2
       Windows XP              5.1  *
       Windows 2000            5.0
-      Windows Millenium       4.9
+      Windows Millennium      4.9
       Windows 98              4.1
       Windows 95              4.0
       Windows NT 4.0          4.0
@@ -56,7 +56,6 @@ UNIT LightVcl.Common.WinVersion;
       https://docs.microsoft.com/en-us/windows/desktop/sysinfo/getting-the-system-version
 
    Also see:
-      LightVcl.Common.WinVersion
       LightVcl.Common.ExeVersion
       LightVcl.Common.WinVersionApi
 
@@ -106,11 +105,11 @@ const
    Win11FirstRel = 22000;  //October 4, 2021
 
 
-{ Win XP }
+{ Win XP - Version 5.1 }
 function IsWindowsXP: Boolean;
 begin
  Result:= (TOSVersion.Major = 5)
-      AND (TOSVersion.Build >= 1);
+      AND (TOSVersion.Minor >= 1);
 end;
 
 function IsWindowsXPUp: Boolean;
@@ -121,51 +120,51 @@ end;
 
 
 
-{ Vista }
+{ Vista - Version 6.0 }
 function IsWindowsVista: Boolean;
 begin
- Result:= (TOSVersion.Major = 6) AND (TOSVersion.Build = 0);
+ Result:= (TOSVersion.Major = 6) AND (TOSVersion.Minor = 0);
 end;
 
 function IsWindowsVistaUp: Boolean;
 begin
- Result:= (TOSVersion.Major = 6) AND (TOSVersion.Build >= 0)
+ Result:= (TOSVersion.Major = 6) AND (TOSVersion.Minor >= 0)
        OR (TOSVersion.Major > 6);
 end;
 
 
 
-{ Win 7 }
+{ Win 7 - Version 6.1 }
 function IsWindows7: Boolean;
 begin
- Result:= (TOSVersion.Major = 6) AND (TOSVersion.Build = 1);
+ Result:= (TOSVersion.Major = 6) AND (TOSVersion.Minor = 1);
 end;
 
 function IsWindows7Up: Boolean;
 begin
- Result:= (TOSVersion.Major = 6) AND (TOSVersion.Build >= 1)
+ Result:= (TOSVersion.Major = 6) AND (TOSVersion.Minor >= 1)
        OR (TOSVersion.Major > 6);
 end;
 
 
 
-{ Win 8 }
+{ Win 8 - Version 6.2 (Win 8) and 6.3 (Win 8.1) }
 function IsWindows8: Boolean;
 begin
  Result:= (TOSVersion.Major = 6)
-     AND ((TOSVersion.Build = 2) OR (TOSVersion.Build = 3));
+     AND ((TOSVersion.Minor = 2) OR (TOSVersion.Minor = 3));
 end;
 
 function IsWindows8Up: Boolean;
 begin
- Result:= (TOSVersion.Major = 6) AND (TOSVersion.Build >= 2)
+ Result:= (TOSVersion.Major = 6) AND (TOSVersion.Minor >= 2)
        OR (TOSVersion.Major > 6);
 end;
 
 
 
 
-{ Win 10//11 }
+{ Win 10/11 - Version 10.0 (differentiated by Build number) }
 function IsWindows10: Boolean;
 begin
  Result:= (TOSVersion.Major = 10) AND (TOSVersion.Build < Win11FirstRel);

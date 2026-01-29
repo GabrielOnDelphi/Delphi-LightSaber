@@ -37,7 +37,7 @@ USES
    SLEEP/SHUT DOWN PC
 ==================================================================================================}
  function  SystemSleep    (ForceCritical: Boolean= FALSE): Boolean;
- function  SystemHybernate(ForceCritical: Boolean= FALSE): Boolean;
+ function  SystemHibernate(ForceCritical: Boolean= FALSE): Boolean;
  function  SetSuspendState(Hibernate, ForceCritical, DisableWakeEvent: Boolean): Boolean; stdcall; external 'powrprof.dll' name 'SetSuspendState';
 
  function  WinExit        (Flags: integer): boolean;       // Shut down, restart or logs off Windows
@@ -64,7 +64,7 @@ USES
  function  BatteryAsText: string;
 
 {==================================================================================================
-   SLEED MONITOR / SCREENSAVER
+   SLEEP MONITOR / SCREENSAVER
 ==================================================================================================}
  procedure MonitorsOff;
  procedure MonitorsSleep;
@@ -89,7 +89,7 @@ begin
 end;
 
 
-function SystemHybernate(ForceCritical: Boolean= FALSE): Boolean;
+function SystemHibernate(ForceCritical: Boolean= FALSE): Boolean;
 begin
  Result:= SetSuspendState(TRUE, ForceCritical, FALSE);
 end;
@@ -103,33 +103,35 @@ begin
 end;
 
 
-//source: dummzeuch
+{ Source: dummzeuch }
 function WinShutDown(Force, Reboot: Boolean): Boolean;
-var
+VAR
   TokenHandle: THandle;
   pToken: TTokenPrivileges;
   RetLength, Flag: DWORD;
 begin
-  if (Win32Platform = VER_PLATFORM_WIN32_NT)
-  then
-   begin
-     // For WinNT and up, first we get the rights
-     Flag := EWX_POWEROFF;
-     OpenProcessToken(GetCurrentProcess, TOKEN_ADJUST_PRIVILEGES, TokenHandle);
-     LookupPrivilegeValue(NIL, 'SeShutdownPrivilege', pToken.Privileges[0].Luid);
-     pToken.PrivilegeCount := 1;
-     pToken.Privileges[0].Attributes := SE_PRIVILEGE_ENABLED;
-     RetLength := 0;
-     AdjustTokenPrivileges(TokenHandle, False, pToken, 0, PTokenPrivileges(nil)^, RetLength);
-     CloseHandle(TokenHandle);
-   end
-  else
-    Flag := EWX_SHUTDOWN; // For Win98 & Me
+  { Note: Win32Platform check removed - Windows 98/Me are obsolete.
+    All modern Windows versions are NT-based and require privilege adjustment. }
+  Flag:= EWX_POWEROFF;
 
-  if Force  then Flag := Flag or EWX_FORCE;
-  if Reboot then Flag := Flag or EWX_REBOOT;
+  if OpenProcessToken(GetCurrentProcess, TOKEN_ADJUST_PRIVILEGES, TokenHandle) then
+    TRY
+      LookupPrivilegeValue(NIL, 'SeShutdownPrivilege', pToken.Privileges[0].Luid);
+      pToken.PrivilegeCount:= 1;
+      pToken.Privileges[0].Attributes:= SE_PRIVILEGE_ENABLED;
+      RetLength:= 0;
+      AdjustTokenPrivileges(TokenHandle, FALSE, pToken, 0, PTokenPrivileges(NIL)^, RetLength);
+    FINALLY
+      CloseHandle(TokenHandle);
+    END;
 
-  Result := ExitWindowsEx(Flag, 0);
+  if Force
+  then Flag:= Flag or EWX_FORCE;
+
+  if Reboot
+  then Flag:= Flag or EWX_REBOOT;
+
+  Result:= ExitWindowsEx(Flag, 0);
 end;
 
 
@@ -179,20 +181,26 @@ end;
 
 
 
+{ WARNING: This function may not work reliably on modern Windows versions.
+  Screen saver window class names vary between Windows versions. }
 function IsScreenSaverOn: Boolean;
 begin
- {DOESN'T WORK!}
- Result:= (FindWindow('WindowsScreenSaverClass', NIL)<> 0) OR (FindWindow('Default Screen Saver', NIL)<> 0);    { From here: http://bobmoore.mvps.org/Win32/w32tip22.htm}
+ Result:= (FindWindow('WindowsScreenSaverClass', NIL) <> 0)
+       OR (FindWindow('Default Screen Saver', NIL) <> 0);
 end;
 
 
 
 function TurnScreenSaverOn: Boolean;
-VAR b : bool;
+VAR
+  ScreenSaverActive: BOOL;
 begin
  Result:= FALSE;
- if SystemParametersInfo(SPI_GETSCREENSAVEACTIVE, 0, @b, 0) <> TRUE then EXIT;
- if NOT b then EXIT;
+
+ { Check if screen saver is enabled in Windows settings }
+ if NOT SystemParametersInfo(SPI_GETSCREENSAVEACTIVE, 0, @ScreenSaverActive, 0) then EXIT;
+ if NOT ScreenSaverActive then EXIT;
+
  PostMessage(GetDesktopWindow, WM_SYSCOMMAND, SC_SCREENSAVE, 0);
  Result:= TRUE;
 end;
@@ -228,12 +236,17 @@ begin
 end;
 
 
-function BatteryLeft: Integer; { Returns left power }                                            { Percentage of full battery charge remaining. It should be from 0 to 100. If it is over 100 then it cannot get battery status }
+{ Returns battery charge percentage (0-100), or -1 if status unknown.
+  Note: BatteryLifePercent can be 255 if status is unknown. }
+function BatteryLeft: Integer;
 VAR
   SysPowerStatus: TSystemPowerStatus;
 begin
   Win32Check(GetSystemPowerStatus(SysPowerStatus));
-  if SysPowerStatus.ACLineStatus= 3
+
+  { ACLineStatus: 0=Battery, 1=AC, 255=Unknown
+    BatteryLifePercent: 0-100 or 255 if unknown }
+  if (SysPowerStatus.ACLineStatus = 255) OR (SysPowerStatus.BatteryLifePercent = 255)
   then Result:= -1
   else Result:= SysPowerStatus.BatteryLifePercent;
 end;
@@ -274,7 +287,7 @@ end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   Enable/Disables a specific privilage in Widnows.
+   Enable/Disables a specific privilege in Windows.
 -------------------------------------------------------------------------------------------------------------}
 function InitSystemShutdown(const ComputerName: WideString; Reboot, Force: Boolean; const Msg: string; TimeOut: Cardinal=0): Boolean;
 begin

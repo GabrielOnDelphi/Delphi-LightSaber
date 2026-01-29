@@ -6,14 +6,14 @@ UNIT LightVcl.Common.WMIResolution;
 ==============================================================================================================
 
  If the program is not DPI aware, Windows will lie about the real screen resolution.
- This unit bypases this problem by reading the resolution (and other info) from the WMI system.
+ This unit bypasses this problem by reading the resolution (and other info) from the WMI system.
  However, WMI is a service and it could be disabled on some systems.
  Even more, the Screen WMI service is only supported starting with Win Vista AND in newer version of Windows has broken compatibility
 
  PROBLEM WITH THIS UNIT:
    It returns the real resolution, but it returns resolution per monitor not per desktop
 
- PEOBLEMS:
+ PROBLEMS:
    The code does not work on Win8
    WMI service might be disabled!
 
@@ -101,7 +101,7 @@ begin
 end;
 
 
-function GetWMIObject(const objectName: String): IDispatch;
+function GetWMIObject(CONST objectName: String): IDispatch;
 VAR
   chEaten: Integer;
   BindCtx: IBindCtx;
@@ -113,7 +113,7 @@ begin
 end;
 
 
-//ToDo: Return value of function 'GetMonitorInfoWMI' might be undefined
+{ Note: Returns empty/default record if WMI query returns no monitors }
 function GetMonitorInfoWMI: TMonitorInfo;
 var
   objWMIService: OleVariant;
@@ -122,6 +122,13 @@ var
   oEnum: IEnumvariant;
   iValue: Longword;
 begin
+  { Initialize result to avoid undefined return value }
+  Result.Dpi      := 0;
+  Result.Caption  := '';
+  Result.DeviceID := '';
+  Result.Width    := 0;
+  Result.Height   := 0;
+
   objWMIService := GetWMIObject('winmgmts:\\localhost\root\CIMV2');
   colItems := objWMIService.ExecQuery('SELECT * FROM Win32_DesktopMonitor', 'WQL', 0);  { Hardware that is not compatible with Windows Display Driver Model (WDDM) returns inaccurate property values for instances of this class:       https://msdn.microsoft.com/en-us/library/aa394122%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396  }
   oEnum    := IUnknown(colItems._NewEnum) as IEnumvariant;

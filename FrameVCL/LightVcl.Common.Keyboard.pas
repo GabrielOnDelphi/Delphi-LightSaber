@@ -2,7 +2,7 @@ UNIT LightVcl.Common.Keyboard;
 
 {=============================================================================================================
    SYSTEM - Keyboard
-   2023.01
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
@@ -39,7 +39,6 @@ USES
  function IsAltDown  : Boolean;
 
 
-
 IMPLEMENTATION
 
 
@@ -66,29 +65,44 @@ end;
 { Send a string as if the keys were pressed }
 procedure SendKeys(s : string);
 var
-  i : integer;
-  flag : bool;
-  w : word;
+  i: Integer;
+  CapsLockWasOn: Boolean;
+  w: Word;
 begin
-  flag := not GetKeyState(VK_CAPITAL) and 1 = 0;                                                   {Get the state of the caps lock key}
-  if flag then SimulateKeystroke(VK_CAPITAL, 0);                                                   {If the caps lock key is on then turn it off}
-  for i := 1 to Length(s) do
-  begin
-    w := VkKeyScan(s[i]);                                                                          {If there is not an error in the key translation}
-    if ((HiByte(w) <> $FF) and (LoByte(w) <> $FF)) then
-    begin                                                                                          {If the key requires the shift key down - hold it down}
-      if HiByte(w) and 1 = 1 then SimulateKeyDown(VK_SHIFT);
-      SimulateKeystroke(LoByte(w), 0);                                                             {Send the VK_KEY}
-      if HiByte(w) and 1 = 1 then SimulateKeyUp(VK_SHIFT);                                         {If the key required the shift key down - release it}
+  { Check if Caps Lock is currently ON (low bit of GetKeyState indicates toggle state) }
+  CapsLockWasOn:= (GetKeyState(VK_CAPITAL) and 1) <> 0;
+  if CapsLockWasOn
+  then SimulateKeystroke(VK_CAPITAL, 0);                                                           { Turn off Caps Lock to prevent case interference }
+  for i:= 1 to Length(s) do
+    begin
+      w:= VkKeyScan(s[i]);
+
+      { Check for valid key translation (both bytes must not be $FF) }
+      if (HiByte(w) <> $FF) AND (LoByte(w) <> $FF) then
+        begin
+          { Hold Shift if required (bit 0 of high byte indicates Shift needed) }
+          if (HiByte(w) and 1) = 1
+          then SimulateKeyDown(VK_SHIFT);
+
+          SimulateKeystroke(LoByte(w), 0);
+
+          { Release Shift if it was held }
+          if (HiByte(w) and 1) = 1
+          then SimulateKeyUp(VK_SHIFT);
+        end;
     end;
-  end;
-  if flag then SimulateKeystroke(VK_CAPITAL, 0);                                                   {if the caps lock key was on at start, turn it back on}
+
+  { Restore Caps Lock state if it was originally on }
+  if CapsLockWasOn
+  then SimulateKeystroke(VK_CAPITAL, 0);
 end;
 
 
-procedure SendText(text: string);                                                                  {Set the focus to a window (edit control) and send it a string}
+{ Send a string to the currently focused control.
+  Note: Ensure the target control has focus before calling this function.
+  The caller is responsible for proper focus management. }
+procedure SendText(text: string);
 begin
-  Application.ProcessMessages;   // https://blog.dummzeuch.de/2018/09/29/calling-application-processmessages-in-a-delphi-program/
   SendKeys(text);
 end;
 
@@ -101,26 +115,29 @@ end;
 
 
 function IsCtrlDown: Boolean;
-VAR State : TKeyboardState;
+VAR State: TKeyboardState;
 begin
-   GetKeyboardState(State) ;
-   Result := ((State[vk_Control] And 128) <> 0) ;
+  Result:= FALSE;
+  if GetKeyboardState(State)
+  then Result:= (State[VK_CONTROL] and 128) <> 0;
 end;
 
 
 function IsShiftDown: Boolean;
-VAR State : TKeyboardState;
+VAR State: TKeyboardState;
 begin
-   GetKeyboardState(State) ;
-   Result := ((State[vk_Shift] and 128) <> 0) ;
+  Result:= FALSE;
+  if GetKeyboardState(State)
+  then Result:= (State[VK_SHIFT] and 128) <> 0;
 end;
 
 
 function IsAltDown: Boolean;
-VAR State : TKeyboardState;
+VAR State: TKeyboardState;
 begin
-   GetKeyboardState(State) ;
-   Result := ((State[vk_Menu] and 128) <> 0) ;
+  Result:= FALSE;
+  if GetKeyboardState(State)
+  then Result:= (State[VK_MENU] and 128) <> 0;
 end;
 
 
@@ -129,13 +146,14 @@ var
   State: TKeyboardState;
 begin
   Result := [];
-  if GetKeyboardState(State) then begin
-    if ((State[vk_Shift] and 128) <> 0) then
-      Include(Result, ssShift);
-    if ((State[VK_CONTROL] and 128) <> 0) then
-      Include(Result, ssCtrl);
-    if ((State[VK_MENU] and 128) <> 0) then
-      Include(Result, ssAlt);
+  if GetKeyboardState(State) then 
+  begin
+    if ((State[vk_Shift] and 128) <> 0) 
+	then Include(Result, ssShift);
+    if ((State[VK_CONTROL] and 128) <> 0) 
+	then Include(Result, ssCtrl);
+    if ((State[VK_MENU] and 128) <> 0) 
+	then Include(Result, ssAlt);
   end;
 end;
 

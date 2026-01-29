@@ -138,7 +138,7 @@ unit LightVcl.Common.Translate;
           MessageInfo(Unique_str_as_ID);
 
        'Unique_str_as_ID' is then loaded from a INI or CSV files (one per language) in the following format: Unique_IDx = 'some text'.
-       If the string is not found in the INI file the const is used and an warning is logged.
+       If the string is not found in the INI file the const is used and a warning is logged.
         Create a function Trs(TextID) that will take the ID and return the text based on the installed language.
         Pass the Const identifier.
         The Trs function can be integrated directly into an overloaded variant of the MessageInfo() procedure.
@@ -155,14 +155,14 @@ unit LightVcl.Common.Translate;
 //todo 3: I need special labels, with two fields: one that is static and needs to be translated, and one that is dynamic and does not appear in the INI file. Example: "Battery status: 30%" . The 30% is the dynamic part
 //ToDo 4: When the program starts, the default selected language should be system's language.
 //todo 4: don't save internet labels: inetCodecFFD.Hint=https://sourceforge.net/projects/ffdshow-tryout/files/latest/download
-//ToDo 5: Should I save forms individualy or all in one INI file?
+//ToDo 5: Should I save forms individually or all in one INI file?
 //ToDo 5: With BioniX I might reach the 64KB limit of the INI file (50KB for Sp, 46KB for En). Use own format.
 
 
 {
 BUG:
   The translation for the caption holding the version of BioniX (in AutoUpdater form) was loaded from the translator.
-  Details: Now I load the translation later, after the forms have been fully initializaed,
+  Details: Now I load the translation later, after the forms have been fully initialized,
            in TTranslator.LoadTranslation(FileName) via uInitialization.LateInitialization
 
    Dirty fix:
@@ -192,15 +192,15 @@ TYPE
     LastLanguage: string;           // Used to skip translating a form when it is already in the chosen language.  THIS IS A SHORT NAME
     FOnTranslationLoaded: TNotifyEvent;
     FAppData: TAppDataCore;
-    procedure WriteComponent(Component: TComponent; Section: string; Ini: TMemIniFile);
-    procedure ReadComponent (Component: TComponent; Section: string; Ini: TMemIniFile);
-    procedure WriteProperty (Component: TComponent; ParentName, PropertyType, Section: string; Ini: TMemIniFile);
-    procedure ReadProperty  (Component: TComponent; ParentName, PropertyType, Section: string; Ini: TMemIniFile);
+    procedure WriteComponent(Component: TComponent; CONST Section: string; Ini: TMemIniFile);
+    procedure ReadComponent (Component: TComponent; CONST Section: string; Ini: TMemIniFile);
+    procedure WriteProperty (Component: TComponent; CONST ParentName, PropertyType, Section: string; Ini: TMemIniFile);
+    procedure ReadProperty  (Component: TComponent; CONST ParentName, PropertyType, Section: string; Ini: TMemIniFile);
 
     procedure setCurLanguage(const Value: string);
     function  getCurLanguage: string;
     procedure saveFormTranlation (Form: TForm; Ini: TMemIniFile);
-    function  ReadString(const Identifier: string; DefaultVal: string): string;
+    function  ReadString(CONST Identifier, DefaultVal: string): string;
     procedure WriteString(const Identifier, s: string);
   protected
     function  DefaultLang: string;
@@ -247,8 +247,10 @@ CONST
 constructor TTranslator.Create(aAppData: TAppDataCore);
 begin
   inherited Create;
+  if aAppData = NIL
+  then raise Exception.Create('TTranslator.Create: aAppData parameter cannot be nil');
+
   FAppData:= aAppData;
-  Assert(aAppData <> NIL);
   DontSaveEmpty:= TRUE;
   FCurLanguage:= GetLangFolder + ReadString('Last_Language', DefaultLang); // Set the last used language. If none, default to English
 end;
@@ -315,8 +317,8 @@ begin
 
    // FormCount       = forms currently displayed on the screen
    // CustomFormCount = forms or property pages currently displayed on the screen
-   for VAR i:= 0 to Screen.CustomFormCount - 1 DO
-      LoadTranslation(Screen.Forms[I], ForceLoad);
+   for VAR i:= 0 to Screen.FormCount - 1 DO
+      LoadTranslation(Screen.Forms[i], ForceLoad);
 
    LastLanguage:= CurLanguageName;
  FINALLY
@@ -414,7 +416,7 @@ end;
 ------------------------------------------------------------------------------}
 
 { Read translation for this component from INI file }
-procedure TTranslator.ReadComponent(Component: TComponent; Section: string; Ini: TMemIniFile);
+procedure TTranslator.ReadComponent(Component: TComponent; CONST Section: string; Ini: TMemIniFile);
 VAR
    HasAct: Boolean;
 begin
@@ -436,7 +438,7 @@ end;
 
 
 { Write the text (caption, hint, etc) of this component to INI file }
-procedure TTranslator.WriteComponent(Component: TComponent; Section: string; Ini: TMemIniFile);
+procedure TTranslator.WriteComponent(Component: TComponent; CONST Section: string; Ini: TMemIniFile);
 VAR
    HasAct: boolean;
 begin
@@ -468,7 +470,7 @@ end;
    Read/write strings to disk
    A "property" is a Caption, hint or text hint
 //------------------------------------------------------------------------------}
-procedure TTranslator.ReadProperty(Component: TComponent; ParentName, PropertyType, Section: string; Ini: TMemIniFile);
+procedure TTranslator.ReadProperty(Component: TComponent; CONST ParentName, PropertyType, Section: string; Ini: TMemIniFile);
 VAR
   Translation: string;
   Ident: string;
@@ -491,7 +493,7 @@ begin
 end;
 
 
-procedure TTranslator.WriteProperty(Component: TComponent; ParentName, PropertyType, Section: string; Ini: TMemIniFile);
+procedure TTranslator.WriteProperty(Component: TComponent; CONST ParentName, PropertyType, Section: string; Ini: TMemIniFile);
 VAR PropertyValue: string;
 begin
  if IsPublishedProp(Component, PropertyType) then
@@ -559,7 +561,7 @@ end;
 
 
 // Remember the last used language
-function TTranslator.ReadString(CONST Identifier: string; DefaultVal: string): string;
+function TTranslator.ReadString(CONST Identifier, DefaultVal: string): string;
 begin
   VAR IniFile:= TIniFileApp.Create(FAppData.AppName, FAppData.IniFile);
   TRY

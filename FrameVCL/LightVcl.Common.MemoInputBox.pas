@@ -6,10 +6,11 @@ UNIT LightVcl.Common.MemoInputBox;
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
-   A box in which the user can enter some text.
+   A box in which the user can enter multiline text.
    The entered text is returned in Value.
 
-   This unit is dependencies free!
+   Dependencies:
+     LightVcl.Common.EllipsisText (for GetAverageCharSize)
 
 =============================================================================================================}
 
@@ -17,10 +18,10 @@ INTERFACE
 USES
   Winapi.Windows,
   System.SysUtils, System.Types,
-  Vcl.Controls,  Vcl.Forms, Vcl.StdCtrls, Vcl.Consts, Vcl.Graphics;
+  Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Consts, Vcl.Graphics;
 
 
-function MemoInputQuery(const aCaption, aPrompt: string; VAR Value: string; CONST xScale: Integer= 2): Boolean;  { The smaller ScaleFactor the larger the width of the window }
+function MemoInputQuery(const aCaption, aPrompt: string; VAR Value: string; CONST xScale: Integer= 2): Boolean;  { The smaller xScale the larger the width of the window }
 
 
 IMPLEMENTATION
@@ -33,75 +34,72 @@ VAR
   Form: TForm;
   lblPrompt: TLabel;
   Memo: TMemo;
+  btnOK, btnCancel: TButton;
   DialogUnits: TPoint;
   ButtonTop, ButtonWidth, ButtonHeight: Integer;
 begin
-  Result:= False;
-  Form  := TForm.Create(Application);
-  with Form DO
-   TRY
-    Canvas.Font := Font;
-    DialogUnits := GetAverageCharSize(Canvas);
-    BorderStyle := bsDialog;
-    Caption     := ACaption;
-    ClientWidth := MulDiv(180, DialogUnits.X, xScale);
-    PopupMode   := pmAuto;
-    Position    := poScreenCenter;
-    lblPrompt   := TLabel.Create(Form);
+  Result:= FALSE;
 
-    with lblPrompt do
-    begin
-      Parent := Form;
-      Caption:= APrompt;
-      Left   := 5;
-      Top    := MulDiv(8, DialogUnits.Y, 8);
-      Constraints.MaxWidth := MulDiv(164, DialogUnits.X, xScale);
-      WordWrap := True;
-    end;
+  Form:= TForm.Create(Application);
+  TRY
+    Form.Canvas.Font:= Form.Font;
+    DialogUnits:= GetAverageCharSize(Form.Canvas);
 
-    Memo := TMemo.Create(Form);
-    with Memo do
-    begin
-      Parent := Form;
-      Left   := lblPrompt.Left;
-      Top    := lblPrompt.Top + lblPrompt.Height + 5;
-      Width  := Form.ClientWidth- Left- 5;
-      //MaxLength := 255;
-      Text   := Value;
-      SelectAll;
-    end;
+    Form.BorderStyle:= bsDialog;
+    Form.Caption:= ACaption;
+    Form.ClientWidth:= MulDiv(180, DialogUnits.X, xScale);
+    Form.PopupMode:= pmAuto;
+    Form.Position:= poScreenCenter;
 
-    ButtonTop    := Memo.Top + Memo.Height + 15;
-    ButtonWidth  := 82;
-    ButtonHeight := 27;
+    { Prompt label }
+    lblPrompt:= TLabel.Create(Form);
+    lblPrompt.Parent:= Form;
+    lblPrompt.Caption:= APrompt;
+    lblPrompt.Left:= 5;
+    lblPrompt.Top:= MulDiv(8, DialogUnits.Y, 8);
+    lblPrompt.Constraints.MaxWidth:= MulDiv(164, DialogUnits.X, xScale);
+    lblPrompt.WordWrap:= TRUE;
 
-    with TButton.Create(Form) do
-    begin
-      Parent := Form;
-      Caption := vcl.Consts.SMsgDlgOK;
-      ModalResult := mrOk;
-      Default := True;
-      SetBounds(16, ButtonTop, ButtonWidth, ButtonHeight);
-    end;
+    { Memo for text input }
+    Memo:= TMemo.Create(Form);
+    Memo.Parent:= Form;
+    Memo.Left:= lblPrompt.Left;
+    Memo.Top:= lblPrompt.Top + lblPrompt.Height + 5;
+    Memo.Width:= Form.ClientWidth - Memo.Left - 5;
+    Memo.Height:= 80;  { Set explicit height for multiline input }
+    Memo.Text:= Value;
+    Memo.SelectAll;
 
-    with TButton.Create(Form) do
-    begin
-      Parent := Form;
-      Caption := SMsgDlgCancel;
-      ModalResult := mrCancel;
-      Cancel := True;
-      SetBounds(22+ ButtonWidth, ButtonTop, ButtonWidth, ButtonHeight);
-      Form.ClientHeight := Top + Height + 13;
-    end;
+    ButtonTop:= Memo.Top + Memo.Height + 15;
+    ButtonWidth:= 82;
+    ButtonHeight:= 27;
 
-    if ShowModal = mrOk then
-     begin
-      Value := Memo.Text;
-      Result:= True;
-     end;
-   FINALLY
+    { OK button }
+    btnOK:= TButton.Create(Form);
+    btnOK.Parent:= Form;
+    btnOK.Caption:= SMsgDlgOK;
+    btnOK.ModalResult:= mrOk;
+    btnOK.Default:= TRUE;
+    btnOK.SetBounds(16, ButtonTop, ButtonWidth, ButtonHeight);
+
+    { Cancel button }
+    btnCancel:= TButton.Create(Form);
+    btnCancel.Parent:= Form;
+    btnCancel.Caption:= SMsgDlgCancel;
+    btnCancel.ModalResult:= mrCancel;
+    btnCancel.Cancel:= TRUE;
+    btnCancel.SetBounds(22 + ButtonWidth, ButtonTop, ButtonWidth, ButtonHeight);
+
+    Form.ClientHeight:= btnCancel.Top + btnCancel.Height + 13;
+
+    if Form.ShowModal = mrOk then
+      begin
+        Value:= Memo.Text;
+        Result:= TRUE;
+      end;
+  FINALLY
     FreeAndNil(Form);
-   END;
+  END;
 end;
 
 

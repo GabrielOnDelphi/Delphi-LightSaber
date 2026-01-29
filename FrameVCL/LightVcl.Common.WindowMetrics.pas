@@ -23,7 +23,7 @@ UNIT LightVcl.Common.WindowMetrics;
 INTERFACE
 
 USES
-   Winapi.Windows, Vcl.Controls, Vcl.StdCtrls;
+   Winapi.Windows, System.SysUtils, Vcl.Controls, Vcl.StdCtrls;
 
 {--------------------------------------------------------------------------------------------------
    WINDOW METRICS
@@ -168,11 +168,14 @@ end;
 
 { DOESN'T WORK }
 { Sets the thumb tab of a vertical scroll bar so that it represents the proportion of the scrolling range that is visible. }
-procedure SetProportionalThumbV (ScrollBar: TScrollBar; OwnerClientHeight: Integer);
+procedure SetProportionalThumbV(ScrollBar: TScrollBar; OwnerClientHeight: Integer);
 VAR
   TrackHeight: Integer;                                                                            { The size of the scroll bar track }
   MinHeight: Integer;                                                                              { The default size of the thumb tab }
 begin
+  if ScrollBar = NIL
+  then raise Exception.Create('SetProportionalThumbV: ScrollBar parameter cannot be nil');
+
   MinHeight:= GetSystemMetrics(SM_CYVTHUMB);                                                       { Save the default size. }
   TrackHeight := OwnerClientHeight - 2 * GetSystemMetrics(SM_CYVSCROLL);
   ScrollBar.PageSize := TrackHeight DIV (ScrollBar.Max - ScrollBar.Min + 1);
@@ -181,14 +184,17 @@ begin
 end;
 
 
- { DOESN'T WORK } 
-procedure SetProportionalThumbH (ScrollBar: TScrollBar; OwnerClientWidth: Integer);
+{ DOESN'T WORK }
+procedure SetProportionalThumbH(ScrollBar: TScrollBar; OwnerClientWidth: Integer);
 VAR
   MinWidth: Integer;                                                                               { The default size of the thumb tab }
   TotalData: Integer;                                                                              { The size of the scroll bar track }
 begin
+  if ScrollBar = NIL
+  then raise Exception.Create('SetProportionalThumbH: ScrollBar parameter cannot be nil');
+
   MinWidth:= GetSystemMetrics(SM_CXHTHUMB);                                                        { Save the default size. }
-  OwnerClientWidth:= OwnerClientWidth -  2*GetSystemMetrics(SM_CXVSCROLL);
+  OwnerClientWidth:= OwnerClientWidth - 2 * GetSystemMetrics(SM_CXVSCROLL);
   TotalData:= (ScrollBar.Max - ScrollBar.Min + 1);
 
   ScrollBar.PageSize:= TotalData DIV OwnerClientWidth;

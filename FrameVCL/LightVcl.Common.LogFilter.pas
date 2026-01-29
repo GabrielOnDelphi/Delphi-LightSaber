@@ -7,11 +7,6 @@ UNIT LightVcl.Common.LogFilter;
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
-   WARNING!
-   THIS UNIT IS STILL UNDER CONSTRUCTION.
-   For the moment the library uses the old LightVcl.Visual.RichLog unit.
-
-
 ==============================================================================================================
    For the new log (the one based on TStringGrid)
      Min= ?,      lvVerbose
@@ -95,7 +90,9 @@ begin
    VerboLabel.Hint     := 'Log verbosity' +#13#10+ '(Hide all messages below this level.)';
    VerboLabel.Caption  := 'Verbosity: '+ Verbosity2String(DefaultVerbosity);
 
-   TrackBar.Min        := 1;
+   if FShowDebugMsg
+   then TrackBar.Min:= 0
+   else TrackBar.Min:= 1;
    TrackBar.Max        := Integer(High(TLogVerbLvl));           { About enumerations: http://www.delphipages.com/forum/showthread.php?t=58129 }
    TrackBar.Position   := Ord(DefaultVerbosity);                { I need this to synchroniz Log's and track's verbosity. Cannot be moved to CreateWnd if I use LoadForm() }
    TrackBar.Hint       := 'Hide all messages below this level';
@@ -111,18 +108,17 @@ end;
 
 procedure TLogVerbFilter.TrackBarChange(Sender: TObject);
 begin
- if NOT (csLoading in ComponentState) then { This is MANDATORY because when the project loads, the value of the trackbar may change BEFORE the DFM loader assigns the Log to this trackbar. In other words, crash when I load a DFM file that contains this control }
-   begin
-     if Log = NIL then
-       begin
-         MessageError('No log assigned!');
-         EXIT;
-       end;
+ { Skip during DFM loading - trackbar value may change before Log is assigned }
+ if csLoading in ComponentState then EXIT;
 
-     Log.Verbosity:= Verbosity;
-     VerboLabel.Caption:= 'Verbosity: '+ Verbosity2String(Verbosity);
+ if Log = NIL then
+   begin
+     MessageError('No log assigned!');
+     EXIT;
    end;
 
+ Log.Verbosity:= Verbosity;
+ VerboLabel.Caption:= 'Verbosity: '+ Verbosity2String(Verbosity);
  Log.Populate;
 end;
 
@@ -146,8 +142,11 @@ end;
 procedure TLogVerbFilter.setLog(Value: TLogViewer);
 begin
   FLog:= Value;
-  Verbosity:= FLog.Verbosity;
-  FLog.RegisterVerbFilter(Self); // Let the Log know that its verbosity is controlled by this TrackBar
+  if FLog <> NIL then
+    begin
+      Verbosity:= FLog.Verbosity;
+      FLog.RegisterVerbFilter(Self);  { Let the Log know that its verbosity is controlled by this TrackBar }
+    end;
 end;
 
 

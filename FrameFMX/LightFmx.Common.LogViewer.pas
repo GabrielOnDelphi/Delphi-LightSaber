@@ -1,7 +1,7 @@
 UNIT LightFmx.Common.LogViewer;
 
 {=============================================================================================================
-   2025.06
+   2026.01
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    A log viewer based on TStringGrid.
@@ -9,17 +9,15 @@ UNIT LightFmx.Common.LogViewer;
    Being a good citizen, when it reaches this number it saves existing data to disk and then clears it from RAM.
 
    How to use it
-      1. Alone: Drop a TLogViewer on your form and use it to log messages like this:
-                LogViewer.ConstructInternalRamLog;
-                LogViewer.RamLog.AddError('Something bad happent!');
+      1. Standalone: Drop a TLogViewer on your form and use it to log messages:
+                LogViewer.RamLog.AddError('Something bad happened!');
 
-      2. Application wide logging
-           This component can also be used to see messages logged at the application level (see TAppData).
-           For this, just call:
+      2. Application-wide logging:
+           Connect to AppData's log to show application-level messages:
                 LogViewer.ObserveAppDataLog;
-           From now on, all messages sent to AppData, will also be shown in this log viewer:
-                RamLog.AddError('Something bad happent!');
-           The log window will automatically pop-up when a error is received.
+           Now all messages sent to AppData.RamLog will appear in this viewer:
+                AppData.RamLog.AddError('Something bad happened!');
+           The log window will automatically pop-up when an error is received.
 
    Full demo in:
       c:\Projects\LightSaber\Demo\Demo LightLog\FMX\FMX_Demo_Log.dpr
@@ -114,7 +112,9 @@ constructor TLogViewer.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
-  FOwnRamLog:= FALSE;
+  { Create internal RamLog by default so "drop and use" works immediately }
+  FOwnRamLog:= TRUE;
+  FRamLog:= TRamLog.Create(TRUE, Self as ILogObserver);
 
   FShowTime   := FALSE;
   FShowDate   := FALSE;
@@ -271,18 +271,20 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    RAM LOG
 -------------------------------------------------------------------------------------------------------------}
-// This constructs an RamLog that we can use it internally with this LogViewer.
+{ Creates a new internal RamLog, replacing any existing external log assignment.
+  Use this after AssignExternalRamLog to switch back to an internal log.
+  Note: The constructor already creates an internal log, so this is only needed
+  if you previously assigned an external log and want to switch back. }
 procedure TLogViewer.ConstructInternalRamLog;
 begin
-  Assert(FRamLog = NIL, 'TLogViewer.Name='+ Name+' already has a RamLog assigned! Free it before you assign a new one to it!');
+  { Release any existing log if we own it }
+  if FOwnRamLog
+  then FreeAndNil(FRamLog);
 
   FRamLog:= TRamLog.Create(TRUE, Self as ILogObserver);
-  FRamLog.RegisterLogObserver(Self as ILogObserver);
-
-  // Populate the grid with the data from the newly assigned log
-  Populate;
-
   FOwnRamLog:= TRUE;
+
+  Populate;
 end;
 
 

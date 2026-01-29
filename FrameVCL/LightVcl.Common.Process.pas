@@ -28,7 +28,7 @@ USES
    System.SysUtils, TlHelp32;
 
 
- function ProcessRunning   (ExeFileName: string): Boolean;
+ function ProcessRunning   (CONST ExeFileName: string): Boolean;
  function KillProcess      (CONST ExeName: string): Boolean;
 
 {
@@ -41,27 +41,33 @@ IMPLEMENTATION
 
 
 
-{ Returns True if the specified process if found running
-  Drawnbacks:
+{ Returns True if the specified process is found running.
+  Drawbacks:
      The Process.szExeFile name does not contain the full path so in case there are multiple processes with
      the same file name, but running from different paths we won't be able to differentiate between them! }
-function ProcessRunning(ExeFileName: string): Boolean;
-var
+function ProcessRunning(CONST ExeFileName: string): Boolean;
+VAR
   SnapshotHandle: THandle;
   Process: TProcessEntry32;
+  LowExeName, LowProcName: string;
 begin
-  Result := FALSE;
-  ExeFileName:= LowerCase(ExeFileName);
-  Process.dwSize := SizeOf(Process);
+  if ExeFileName = ''
+  then raise Exception.Create('ProcessRunning: ExeFileName parameter cannot be empty');
+
+  Result:= FALSE;
+  LowExeName:= LowerCase(ExeFileName);
+  Process.dwSize:= SizeOf(Process);
 
   SnapshotHandle:= CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if SnapshotHandle = INVALID_HANDLE_VALUE then EXIT;
+
   TRY
     if Process32First(SnapshotHandle, Process) then
       REPEAT
-        VAR LowProcName:= LowerCase(Process.szExeFile);
-        if (LowProcName = ExeFileName)
-        OR (LowProcName = ExtractFileName(ExeFileName))
-        then EXIT(True);
+        LowProcName:= LowerCase(Process.szExeFile);
+        if (LowProcName = LowExeName)
+        OR (LowProcName = LowerCase(ExtractFileName(ExeFileName)))
+        then EXIT(TRUE);
       UNTIL NOT Process32Next(SnapshotHandle, Process);
   FINALLY
     CloseHandle(SnapshotHandle);
@@ -69,14 +75,19 @@ begin
 end;
 
 
-// Terminates ALL running processes that match ExeName
+{ Terminates ALL running processes that match ExeName.
+  Returns True if all matching processes were terminated successfully,
+  or if no matching processes were found. }
 function KillProcess(CONST ExeName: string): Boolean;
-var
+VAR
   SnapshotHandle: THandle;
   ProcEntry: TProcessEntry32;
   ProcessHandle: THandle;
 begin
-  Result := TRUE; // Initialize Result to TRUE. It will be set to FALSE upon any failure.
+  if ExeName = ''
+  then raise Exception.Create('KillProcess: ExeName parameter cannot be empty');
+
+  Result:= TRUE;  { Will be set to FALSE upon any failure }
 
   SnapshotHandle := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   if SnapshotHandle = INVALID_HANDLE_VALUE

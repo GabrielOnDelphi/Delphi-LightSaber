@@ -6,7 +6,7 @@ UNIT LightVcl.Common.SystemPermissions;
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
-   Functions to set/test user permissions and priviledges
+   Functions to set/test user permissions and privileges
 
 =============================================================================================================}
 
@@ -61,27 +61,43 @@ begin
     IsAdmin := FALSE;
     ntauth := SECURITY_NT_AUTHORITY;
     psidAdmin := nil;
-    AllocateAndInitializeSid(ntauth, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, psidAdmin);
-
+    ptg := nil;
     TokenHandle := 0;
-    OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, TokenHandle);
-    GetTokenInformation(TokenHandle, TokenGroups, nil, 0, cb);
-    GetMem(ptg, cb);
-    GetTokenInformation(TokenHandle, TokenGroups, ptg, cb, cb);
 
-    grp := @(ptg.Groups[0]);
-    for i := 0 to ptg.GroupCount - 1 do
-     begin
-      if EqualSid(psidAdmin, grp.Sid) then
-       begin
-        IsAdmin := TRUE;
-        Break;
-       end;
-      Inc(grp);
-     end;
-    FreeMem(ptg);
-    CloseHandle(TokenHandle);
-    FreeSid(psidAdmin);
+    if NOT AllocateAndInitializeSid(ntauth, 2, SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS, 0, 0, 0, 0, 0, 0, psidAdmin)
+    then EXIT(FALSE);
+
+    TRY
+      if NOT OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, TokenHandle)
+      then EXIT(FALSE);
+
+      TRY
+        GetTokenInformation(TokenHandle, TokenGroups, nil, 0, cb);
+        if cb = 0
+        then EXIT(FALSE);
+
+        GetMem(ptg, cb);
+        if NOT GetTokenInformation(TokenHandle, TokenGroups, ptg, cb, cb)
+        then EXIT(FALSE);
+
+        grp := @(ptg.Groups[0]);
+        for i := 0 to ptg.GroupCount - 1 do
+         begin
+          if EqualSid(psidAdmin, grp.Sid) then
+           begin
+            IsAdmin := TRUE;
+            Break;
+           end;
+          Inc(grp);
+         end;
+      FINALLY
+        if ptg <> nil then FreeMem(ptg);
+        CloseHandle(TokenHandle);
+      END;
+    FINALLY
+      FreeSid(psidAdmin);
+    END;
+
     Result := IsAdmin;
    end;
 end;
@@ -123,28 +139,36 @@ end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   Enable/Disables a specific privilage in Widnows.
+   Enable/Disables a specific privilege in Windows.
 -------------------------------------------------------------------------------------------------------------}
-function SetPrivilege(CONST PrivilegeName: string; bEnabled : Boolean): Boolean;
+function SetPrivilege(CONST PrivilegeName: string; bEnabled: Boolean): Boolean;
 VAR
-   TPPrev, TP : TTokenPrivileges;
-   Token      : THandle;
-   dwRetLen   : DWord;
+   TPPrev, TP: TTokenPrivileges;
+   Token: THandle;
+   dwRetLen: DWord;
 begin
   Result := False;
 
-  OpenProcessToken(GetCurrentProcess, TOKEN_ADJUST_PRIVILEGES or TOKEN_QUERY, Token);
-  TP.PrivilegeCount := 1;
-  if( LookupPrivilegeValue(NIL, PwideChar(PrivilegeName), TP.Privileges[0].LUID)) then
-  begin
-    if (bEnabled)
-    then TP.Privileges[0].Attributes  := SE_PRIVILEGE_ENABLED
-    else TP.Privileges[0].Attributes  := 0;
+  if PrivilegeName = ''
+  then raise Exception.Create('SetPrivilege: PrivilegeName parameter cannot be empty');
 
-    dwRetLen := 0;
-    Result := AdjustTokenPrivileges(Token,False, TP, SizeOf(TPPrev), TPPrev, dwRetLen);
-  end;
-  CloseHandle(Token);
+  if NOT OpenProcessToken(GetCurrentProcess, TOKEN_ADJUST_PRIVILEGES or TOKEN_QUERY, Token)
+  then EXIT;
+
+  TRY
+    TP.PrivilegeCount := 1;
+    if LookupPrivilegeValue(NIL, PWideChar(PrivilegeName), TP.Privileges[0].LUID) then
+    begin
+      if bEnabled
+      then TP.Privileges[0].Attributes := SE_PRIVILEGE_ENABLED
+      else TP.Privileges[0].Attributes := 0;
+
+      dwRetLen := 0;
+      Result := AdjustTokenPrivileges(Token, False, TP, SizeOf(TPPrev), TPPrev, dwRetLen);
+    end;
+  FINALLY
+    CloseHandle(Token);
+  END;
 end;
 
 
@@ -176,13 +200,17 @@ end;
   Write to registry permitted -> The application has Administrator level privileges.
  }
 function AppHasAdminRights: boolean;
-var reg: TRegistry;
+var
+  reg: TRegistry;
 begin
   reg := TRegistry.Create(KEY_READ);
-  reg.RootKey := HKEY_LOCAL_MACHINE;
-  reg.Access  := KEY_WRITE;
-  result:= reg.OpenKey('Software\MyCompanyName\MyApplication\',True);
-  reg.Free;  { Free will call automatically CloseKey }
+  TRY
+    reg.RootKey := HKEY_LOCAL_MACHINE;
+    reg.Access  := KEY_WRITE;
+    Result:= reg.OpenKey('Software\MyCompanyName\MyApplication\', True);
+  FINALLY
+    FreeAndNil(reg);  { Free will call automatically CloseKey }
+  END;
 end;
 
 
@@ -190,15 +218,16 @@ end;
 
 
 
-//----------------------------------
-function OsHasNTSecurity: Boolean;  //source: dummzeuch
+{ Source: dummzeuch }
+function OsHasNTSecurity: Boolean;
 VAR
   vi: TOSVersionInfo;
 begin
   FillChar(vi, SizeOf(vi), 0);
   vi.dwOSVersionInfoSize := SizeOf(vi);
-  GetVersionEx(vi);
-  Result := (vi.dwPlatformId = VER_PLATFORM_WIN32_NT);
+  if GetVersionEx(vi)
+  then Result := (vi.dwPlatformId = VER_PLATFORM_WIN32_NT)
+  else Result := TRUE;  { Assume NT security on modern Windows if API fails }
 end;
 
 
@@ -256,6 +285,7 @@ begin
         FreeLibrary(Hdl);
         EXIT;
       end;
+      { Note: Library handle intentionally not freed - function pointer stored in global var }
     end;
     if CheckTokenMembership(0, AdministratorsGroup, b)
     then  Result := b;

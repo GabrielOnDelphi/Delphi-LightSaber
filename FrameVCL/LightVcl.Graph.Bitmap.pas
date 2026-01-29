@@ -51,7 +51,7 @@ TYPE
 {-------------------------------------------------------------------------------------------------------------
    MANIPULATION
 -------------------------------------------------------------------------------------------------------------}
- procedure CenterBitmap      (Source, InDest: TBitmap);                                                { Center Source into Dest, withour resizing any of them. The source can be bigger than destination or other way arround. }
+ procedure CenterBitmap      (Source, InDest: TBitmap);                                                { Center Source into Dest, without resizing any of them. The source can be bigger than destination or other way around. }
  procedure EnlargeCanvas     (BMP: TBitmap; NewWidth, NewHeight: Integer; CanvasFillColor: TColor);    { Enlarge the canvas of the specified image and put the original image in the center of the new canvas }
 
 
@@ -109,9 +109,15 @@ USES
 procedure SetLargeSize(BMP: TBitmap; CONST Width, Height: Integer);
 begin
  { Protect against empty images }
- Assert(BMP <> NIL, 'SetLargeSize');
- Assert(Width  > 0, 'SetLargeSize -  Width parameter is invalid: '+ IntToStr(Width));
- Assert(Height > 0, 'SetLargeSize - Height parameter is invalid: '+ IntToStr(Height));
+ if BMP = NIL
+ then raise Exception.Create('SetLargeSize: BMP parameter cannot be nil');
+
+ if Width <= 0
+ then raise Exception.Create('SetLargeSize: Width parameter is invalid: ' + IntToStr(Width));
+
+ if Height <= 0
+ then raise Exception.Create('SetLargeSize: Height parameter is invalid: ' + IntToStr(Height));
+
  VAR RequiredRam:= PredictBitmapRamSize(BMP, Width, Height);
 
  TRY
@@ -152,12 +158,18 @@ end;
 
 procedure ClearImage(Img: TImage);
 begin
+  if Img = NIL
+  then raise Exception.Create('ClearImage: Img parameter cannot be nil');
+
   Img.Picture := NIL;
 end;
 
 procedure ClearBitmap(BMP: TBitmap);
 begin
-  BMP.Assign( NIL );
+  if BMP = NIL
+  then raise Exception.Create('ClearBitmap: BMP parameter cannot be nil');
+
+  BMP.Assign(NIL);
 end;
 
 
@@ -165,6 +177,9 @@ end;
 { Fill bitmap with the specified color }
 procedure FillBitmap(BMP: TBitmap; Color: TColor);
 begin
+  if BMP = NIL
+  then raise Exception.Create('FillBitmap: BMP parameter cannot be nil');
+
   BMP.Canvas.Brush.Color:= Color;
   BMP.Canvas.Brush.Style:= bsSolid;
   BMP.Canvas.FillRect(BMP.Canvas.ClipRect);
@@ -178,6 +193,9 @@ end;
 { Uses whatever font was already set for the canvas }
 procedure CenterText(BMP: TBitmap; CONST Text: string);
 begin
+ if BMP = NIL
+ then raise Exception.Create('CenterText: BMP parameter cannot be nil');
+
  if Text > '' then
   begin
    //BMP.Canvas.Brush.Color:= Font.BkgClr;  del
@@ -190,6 +208,9 @@ end;
 { Uses Font as font }
 procedure CenterText(BMP: TBitmap; CONST Text: string; aFont: RFont);
 begin
+ if BMP = NIL
+ then raise Exception.Create('CenterText: BMP parameter cannot be nil');
+
  if Text > '' then
   begin
    //BMP.Canvas.Brush.Color:= Font.BkgClr;  del
@@ -202,9 +223,11 @@ end;
 
 procedure CenterText(BMP: TBitmap; CONST Text: string; CONST FontName: string; FontSize: Integer; FontColor: TColor);
 begin
+ if BMP = NIL
+ then raise Exception.Create('CenterText: BMP parameter cannot be nil');
+
  if Text > '' then
   begin
-   //BMP.Canvas.Brush.Color:= Font.BkgClr;  del
    BMP.Canvas.Brush.Style:= bsClear;
    BMP.Canvas.Font.Name:= FontName;
    BMP.Canvas.Font.Size:= FontSize;
@@ -222,6 +245,9 @@ end;
 function GetBitmapRamSize(BMP: TBitmap): Int64;
 VAR Stream: TMemoryStream;
 begin
+ if BMP = NIL
+ then raise Exception.Create('GetBitmapRamSize: BMP parameter cannot be nil');
+
  Stream:= TMemoryStream.Create;
  TRY
   Stream.Seek(0, soFromBeginning);     { Do we really need to do this?????????? }
@@ -233,10 +259,12 @@ begin
 end;
 
 
-{ Returns how much RAM will that BMP required after setting its size to the new values. The result is in bytes } //old name: BmpRequiredRAM
+{ Returns how much RAM will that BMP required after setting its size to the new values. The result is in bytes }
 function PredictBitmapRamSize(BMP: TBitmap; CONST NewWidth, NewHeight: Integer): Cardinal;
 begin
- Assert(BMP <> NIL);
+ if BMP = NIL
+ then raise Exception.Create('PredictBitmapRamSize: BMP parameter cannot be nil');
+
  Result:= (NewWidth * NewHeight) * (LightVcl.Graph.Loader.Resolution.GetBitsPerPixel(BMP) DIV 8);
 end;
 
@@ -274,6 +302,9 @@ end;
 { Panoramic images have width much much bigger than height }
 function IsPanoramic(BMP: TBitmap): Boolean;
 begin
+ if BMP = NIL
+ then raise Exception.Create('IsPanoramic: BMP parameter cannot be nil');
+
  Result:= IsPanoramic(BMP.Width, BMP.Height);
 end;
 
@@ -281,6 +312,9 @@ end;
 { Compare the aspect ratio of the specified image with the AR of the monitor (for example) }
 function AspectIsSmaller(SrcBMP: TBitmap; CONST Width, Height: Integer): Boolean;
 begin
+ if SrcBMP = NIL
+ then raise Exception.Create('AspectIsSmaller: SrcBMP parameter cannot be nil');
+
  Result:= (SrcBMP.Width / SrcBMP.Height) < (Width / Height);
 end;
 
@@ -297,6 +331,9 @@ end;
 { Returns image orientation (portrait/landscape) based on aspect ratio }
 function AspectOrientation(BMP: TBitmap): TImgOrientation;              { Old name: 'Orientation' }
 begin
+ if BMP = NIL
+ then raise Exception.Create('AspectOrientation: BMP parameter cannot be nil');
+
  if BMP.Width > BMP.Height
  then Result:= orLandscape
  else
@@ -333,6 +370,12 @@ end;
    Tiny  : Images with area < TinyThresh.  Tiny images are considered too small to be stretched. }
 function GetImageScale(InputImage, DesktopSize: TBitmap; Tile: RTileParams): TImageScale;
 begin
+ if InputImage = NIL
+ then raise Exception.Create('GetImageScale: InputImage parameter cannot be nil');
+
+ if DesktopSize = NIL
+ then raise Exception.Create('GetImageScale: DesktopSize parameter cannot be nil');
+
  Result:= GetImageScale(InputImage, DesktopSize.Width, DesktopSize.Height, Tile);
 end;
 
@@ -340,7 +383,11 @@ end;
 function GetImageScale(InputImage: TBitmap; DesktopWidth, DesktopHeight: Integer; Tile: RTileParams): TImageScale;
 VAR Percent: Extended;
 begin
- Assert(Tile.TileThreshold < 100, 'TinyThreshold cannot be 100% !');
+ if InputImage = NIL
+ then raise Exception.Create('GetImageScale: InputImage parameter cannot be nil');
+
+ if Tile.TileThreshold >= 100
+ then raise Exception.Create('GetImageScale: TileThreshold cannot be >= 100%');
  Percent:= ProcentRepresent(InputImage.Width* InputImage.Height, DesktopWidth* DesktopHeight);    { Percent of desktop area }
 
  if Percent < Tile.TileThreshold
@@ -351,7 +398,7 @@ begin
    else Result:= isLarge;       { over 100% it is large }
 
  { Extra condition:
-     Images that are taller/wider than the desktop cannot be declated tiny!
+     Images that are taller/wider than the desktop cannot be declared tiny!
 
    Explanations:
      I have a situation when the wallpaper is super tall and slim (W=300, H=1300).
@@ -383,6 +430,9 @@ procedure EnlargeCanvas(BMP: TBitmap; NewWidth, NewHeight: Integer; CanvasFillCo
 VAR NewCanvas: TBitmap;
     iTop, iLeft: Integer;
 begin
+ if BMP = NIL
+ then raise Exception.Create('EnlargeCanvas: BMP parameter cannot be nil');
+
  NewCanvas:= CreateBitmap(NewWidth, NewHeight);
  TRY
   FillBitmap(NewCanvas, CanvasFillColor);                       { Fill with CanvasFillColor }
@@ -400,14 +450,17 @@ end;
 
 
 
-{ Center Source into Dest, withour resizing any of them. The source can be bigger than destination or other way arround. }
+{ Center Source into Dest, without resizing any of them. The source can be bigger than destination or other way around. }
 procedure CenterBitmap(Source, InDest: TBitmap);
 VAR
    SrcTop, SrcLeft, SrcRight, SrcBottom: Integer;
    DestLeft, DestRight, DestTop, DestBottom: Integer;
 begin
- Assert(Source<> NIL, 'Source is NIL');
- Assert(InDest  <> NIL, 'Dest is NIL');
+ if Source = NIL
+ then raise Exception.Create('CenterBitmap: Source parameter cannot be nil');
+
+ if InDest = NIL
+ then raise Exception.Create('CenterBitmap: InDest parameter cannot be nil');
 
  if  (Source.Width = InDest.Width)
  AND (Source.Height= InDest.Height)
@@ -490,6 +543,9 @@ end;
 
 procedure RFont.AssignTo(Font: TFont);
 begin
+   if Font = NIL
+   then raise Exception.Create('RFont.AssignTo: Font parameter cannot be nil');
+
    Font.Name  := Name;
    Font.Size  := Size;
    Font.Color := Color;

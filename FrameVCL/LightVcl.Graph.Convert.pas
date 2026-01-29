@@ -20,7 +20,7 @@ CONST
 
 
 {-------------------------------------------------------------------------------------------------------------
-   CONVERTORS
+   CONVERTERS
 -------------------------------------------------------------------------------------------------------------}
  function  Bmp2Jpg   (BMP: TBitmap;                     CompressFactor: Integer= DelphiJpgQuality): TJpegImage; overload;
  procedure Bmp2Jpg   (BMP: TBitmap; OutputFile: string; CompressFactor: Integer= DelphiJpgQuality);             overload;
@@ -52,9 +52,13 @@ USES
 
 { Compresses a JPG image. The output is also a JPG image.
   Returns the size of the new compressed JPG image AND the size of the image after it was compressed.
-  This is done without actually saving the image to disk.}
+  This is done without actually saving the image to disk.
+  WARNING: The Outp parameter is created inside this function. Caller is responsible for freeing it. }
 function Recompress(Input, Outp: TJPEGImage; CompressFactor: Integer= DelphiJpgQuality): Integer;    { Old name: CompressJpg2RAM }
 begin
+ if Input = NIL
+ then raise Exception.Create('Recompress: Input parameter cannot be nil');
+
  VAR Stream:= TMemoryStream.Create;
  TRY
    Input.CompressionQuality:= CompressFactor;
@@ -74,6 +78,9 @@ end;
 
 function Recompress(Jpg: TJPEGImage; CompressFactor: Integer= DelphiJpgQuality): Integer;
 begin
+ if Jpg = NIL
+ then raise Exception.Create('Recompress: Jpg parameter cannot be nil');
+
  VAR Stream:= TMemoryStream.Create;
  TRY
    Jpg.CompressionQuality:= CompressFactor;
@@ -92,6 +99,9 @@ end;
   Returns the size of the resulted compressed image }
 function CompressBmp(BMP: TBitmap; CompressFactor: Integer= DelphiJpgQuality): Integer;
 begin
+  if BMP = NIL
+  then raise Exception.Create('CompressBmp: BMP parameter cannot be nil');
+
   VAR Jpg:= TJPEGImage.Create;
   VAR Stream:= TMemoryStream.Create;
   try
@@ -110,7 +120,10 @@ function Bmp2JpgStream(BMP: TBitmap; CompressFactor: Integer= DelphiJpgQuality):
 VAR
    JpegImg: TJpegImage;
 begin
- Result:= TStream.create;
+ if BMP = NIL
+ then raise Exception.Create('Bmp2JpgStream: BMP parameter cannot be nil');
+
+ Result:= TMemoryStream.Create;   { TStream is abstract, use TMemoryStream }
  JpegImg := TJpegImage.Create;
  TRY
   JpegImg.PixelFormat:= jf24Bit;
@@ -132,6 +145,9 @@ end;
 --------------------------------------------------------------------------------------------------}
 function Jpeg2Bmp(JPG: TJpegImage): TBitmap;
 begin
+   if JPG = NIL
+   then raise Exception.Create('Jpeg2Bmp: JPG parameter cannot be nil');
+
    Result:= TBitmap.Create;
    TRY
      Result.PixelFormat := pf24bit;
@@ -147,7 +163,9 @@ end;
 
 function Bmp2Jpg(BMP: TBitmap; CompressFactor: Integer= DelphiJpgQuality): TJpegImage;
 begin
- Assert(BMP<> NIL);
+ if BMP = NIL
+ then raise Exception.Create('Bmp2Jpg: BMP parameter cannot be nil');
+
  Result:= TJPEGImage.Create;
  TRY
    Result.CompressionQuality:= CompressFactor; { 100 = best }
@@ -164,6 +182,11 @@ end;
   JpgOutPath is the full path (incl name) for the output jpeg file. }
 procedure Bmp2Jpg(BMP: TBitmap; OutputFile: string; CompressFactor: Integer= DelphiJpgQuality);
 begin
+ if BMP = NIL
+ then raise Exception.Create('Bmp2Jpg: BMP parameter cannot be nil');
+ if OutputFile = ''
+ then raise Exception.Create('Bmp2Jpg: OutputFile parameter cannot be empty');
+
  var JPG:= Bmp2Jpg(BMP, CompressFactor);
  TRY
   var OutFolder:= ExtractFilePath(OutputFile);
@@ -181,6 +204,11 @@ end;
 procedure Graph2Jpg(Graph: TGraphic; OutputFile: string; CompressFactor: Integer= DelphiJpgQuality);
 VAR JPG: TJpegImage;
 begin
+ if Graph = NIL
+ then raise Exception.Create('Graph2Jpg: Graph parameter cannot be nil');
+ if OutputFile = ''
+ then raise Exception.Create('Graph2Jpg: OutputFile parameter cannot be empty');
+
  JPG:= TJpegImage.Create;
  TRY
   JPG.CompressionQuality:= CompressFactor;

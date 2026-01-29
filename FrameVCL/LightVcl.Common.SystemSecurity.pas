@@ -30,24 +30,35 @@ begin
 end;
 
 
+{ Returns password strength score 0-5 based on:
+  - Length >= 8 characters
+  - Contains lowercase letters
+  - Contains uppercase letters
+  - Contains digits
+  - Contains special characters }
 function CalculatePasswordStrength(const Password: string): Integer;
 begin
   Result := 0;
 
   // Length criteria
-  if Length(Password) >= 8 then Inc(Result);
+  if Length(Password) >= 8
+  then Inc(Result);
 
-  // Uppercase letter criteria
-  if Password.ToUpper <> Password then Inc(Result);
+  // Has lowercase letters (ToUpper changes it means it had lowercase)
+  if Password.ToUpper <> Password
+  then Inc(Result);
 
-  // Lowercase letter criteria
-  if Password.ToLower <> Password then Inc(Result);
+  // Has uppercase letters (ToLower changes it means it had uppercase)
+  if Password.ToLower <> Password
+  then Inc(Result);
 
   // Digit criteria
-  if Password.IndexOfAny(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']) >= 0 then Inc(Result);
+  if Password.IndexOfAny(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']) >= 0
+  then Inc(Result);
 
   // Special character criteria
-  if Password.IndexOfAny(['!', '@', '#', '$', '%', '^', '&', '*', '(', ')']) >= 0 then Inc(Result);
+  if Password.IndexOfAny(['!', '@', '#', '$', '%', '^', '&', '*', '(', ')']) >= 0
+  then Inc(Result);
 end;
 
 

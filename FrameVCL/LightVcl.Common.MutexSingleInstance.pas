@@ -31,8 +31,8 @@ USES
   System.SysUtils, Vcl.Forms;
 
 procedure FreeMutex;
-function  IsSingleInstance(MutexName : string):Boolean;
-procedure CreateMutexOrDie(MutexName: string);  // Utils
+function  IsSingleInstance(CONST MutexName: string): Boolean;
+procedure CreateMutexOrDie(CONST MutexName: string);  { Not recommended - calls Application.Terminate }
 
 
 IMPLEMENTATION
@@ -41,41 +41,52 @@ VAR
   SingleMutex: THandle = 0;
 
 
-//  Creates a mutex to see if the program is already running.
-//  By default (lpMutexAttributes =nil) created mutexes are accessible only by the user running the process.
-//  We need our mutexes to be accessible to all users, so that the mutex detection can work across user sessions.
-//  I.e. both the current user account and the System (Service) account.
-//  To do this we use a security descriptor with a null DACL.
-function IsSingleInstance(MutexName : string):boolean;
+{ Creates a mutex to see if the program is already running.
+  By default (lpMutexAttributes=nil) created mutexes are accessible only by the user running the process.
+  We need our mutexes to be accessible to all users, so that the mutex detection can work across user sessions.
+  I.e. both the current user account and the System (Service) account.
+  To do this we use a security descriptor with a null DACL. }
+function IsSingleInstance(CONST MutexName: string): Boolean;
 CONST
-    MUTEX_GLOBAL = 'Global\'; //Prefix to explicitly create the object in the global or session namespace. I.e. both client app (local user) and service (system account)
-VAR SecurityDesc: TSecurityDescriptor;
-    SecurityAttr: TSecurityAttributes;
-    ErrCode : integer;
+  MUTEX_GLOBAL = 'Global\';  { Prefix to create object in global namespace - accessible across user sessions }
+VAR
+  SecurityDesc: TSecurityDescriptor;
+  SecurityAttr: TSecurityAttributes;
+  ErrCode: Integer;
 begin
-  InitializeSecurityDescriptor(@SecurityDesc, SECURITY_DESCRIPTOR_REVISION);
-  SetSecurityDescriptorDacl(@SecurityDesc, True, nil, False);
-  SecurityAttr.nLength:=SizeOf(SecurityAttr);
-  SecurityAttr.lpSecurityDescriptor:=@SecurityDesc;
-  SecurityAttr.bInheritHandle:=False;
+  if MutexName = ''
+  then raise Exception.Create('IsSingleInstance: MutexName parameter cannot be empty');
 
-  //  The mutex is created in the global name space which makes it possible to access across user sessions.
-  SingleMutex := CreateMutex(@SecurityAttr, True, PChar(MUTEX_GLOBAL + MutexName));
-  ErrCode := GetLastError;
-
-  //  If the function fails, the return value is 0
-  //  If the mutex is a named mutex and the object existed before this function
-  //  call, the return value is a handle to the existing object, GetLastError returns ERROR_ALREADY_EXISTS.
-  if {(SingleMutex = 0) or } (ErrCode = ERROR_ALREADY_EXISTS)
-  then
+  { Release any previously created mutex to prevent handle leak if called multiple times }
+  if SingleMutex <> 0 then
     begin
-     Result:= false;
-     CloseHandle(SingleMutex);
+      CloseHandle(SingleMutex);
+      SingleMutex:= 0;
+    end;
+
+  InitializeSecurityDescriptor(@SecurityDesc, SECURITY_DESCRIPTOR_REVISION);
+  SetSecurityDescriptorDacl(@SecurityDesc, TRUE, NIL, FALSE);
+  SecurityAttr.nLength:= SizeOf(SecurityAttr);
+  SecurityAttr.lpSecurityDescriptor:= @SecurityDesc;
+  SecurityAttr.bInheritHandle:= FALSE;
+
+  { The mutex is created in the global namespace which makes it possible to access across user sessions }
+  SingleMutex:= CreateMutex(@SecurityAttr, TRUE, PChar(MUTEX_GLOBAL + MutexName));
+  ErrCode:= GetLastError;
+
+  { If the mutex already exists, another instance is running.
+    Note: CreateMutex returns a valid handle even if mutex exists, but GetLastError returns ERROR_ALREADY_EXISTS }
+  if ErrCode = ERROR_ALREADY_EXISTS then
+    begin
+      Result:= FALSE;
+      CloseHandle(SingleMutex);
+      SingleMutex:= 0;
     end
   else
-    Result:= TRUE; // Mutex object has not yet been created, meaning that no previous instance has been created.
+    Result:= TRUE;  { This is the first instance }
 
-  // The Mutexhandle is not closed because we want it to exist during the lifetime of the application. The system closes the handle automatically when the process terminates.
+  { The mutex handle is kept open for the lifetime of the application.
+    The system closes it automatically when the process terminates. }
 end;
 
 
@@ -90,19 +101,26 @@ end;
 
 
 
-procedure CreateMutexOrDie(MutexName: string);  { Not recommended }
+{ Creates a mutex or terminates the application if it already exists.
+  Not recommended - prefer IsSingleInstance with explicit handling. }
+procedure CreateMutexOrDie(CONST MutexName: string);
 begin
   if NOT IsSingleInstance(MutexName) then
-   begin
-    Application.ShowMainForm:= FALSE;     // The mutex did exist, so the application is running. Terminate it in this case.
-    Application.Terminate;
-   end;
+    begin
+      Application.ShowMainForm:= FALSE;  { Hide main form before terminating }
+      Application.Terminate;
+    end;
 end;
 
 
 
 INITIALIZATION
+  { No initialization needed }
+
 FINALIZATION
+  { Note: Finalization is used here to ensure the mutex is released even if
+    the application crashes or terminates unexpectedly. The OS will also
+    release it when the process ends, but explicit cleanup is preferred. }
   FreeMutex;
 
 end.

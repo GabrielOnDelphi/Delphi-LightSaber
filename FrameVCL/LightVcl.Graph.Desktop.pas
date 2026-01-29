@@ -39,12 +39,12 @@ TYPE
  procedure WriteTextOverAllDesktop(x, y: integer; Text: string; FontName: string; Size: integer; Color: TColor);
 
  { Set wallpaper IO }
- function  SetWallpaperBrodcast (FileName: string): Boolean;           { IO }
+ function  SetWallpaperBroadcast(FileName: string): Boolean;           { IO }
  function  SetWallpaper         (FileName: string): Boolean;           { IO }
  function  SetWallpaper0        (FileName: string): Boolean;           { IO }
 
  procedure SetSystemColor (PropertyToChange: Integer; Color: TColor);  { Sets a color (system wide), for example the color of the window Caption. }
- function  GetDesktopResolutionAPI: TRect;                             { CEL MAI SIMPLU E ASA: Screen.DesktopWidth, Screen.DesktopHeight}
+ function  GetDesktopResolutionAPI: TRect;                             { The simplest way is: Screen.DesktopWidth, Screen.DesktopHeight }
  function  GetDPI: Integer;
 
  { }
@@ -61,17 +61,17 @@ USES
 
 
 
-function GetDesktopResolutionAPI: TRect;                                                           {DOES NOT WORK ON DUAL MONITOR! IT WILL ONLY RETURN THE RES OF MAIN MONITOR }
+function GetDesktopResolutionAPI: TRect;                                                           { DOES NOT WORK ON DUAL MONITOR! IT WILL ONLY RETURN THE RES OF MAIN MONITOR }
 VAR r: TRect;
 begin
   SystemParametersInfo(SPI_GETWORKAREA, 0, @r, 0);
-  Result:= r;                                                                                      {CEL MAI SIMPLU E ASA: Screen.DesktopWidth, Screen.DesktopHeight}
+  Result:= r;                                                                                      { The simplest way is: Screen.DesktopWidth, Screen.DesktopHeight }
 end;
 
 
 function GetDPI: Integer;
 begin
- Result:= Screen.PixelsPerInch;                                                                    { returneaza dpi-ul userului standard este 96 }
+ Result:= Screen.PixelsPerInch;                                                                    { Returns user DPI, standard is 96 }
 end;
 
 
@@ -79,7 +79,7 @@ end;
 
   API details
     The SetSysColors function sends a WM_SYSCOLORCHANGE message to all windows to inform them of the change in color.
-    It also directs Windows to repaint. It hanges the current Windows session only!!! The new colors are not saved when Windows terminates!!!
+    It also directs Windows to repaint. It changes the current Windows session only!!! The new colors are not saved when Windows terminates!!!
 
   PropertyToChange
     COLOR_3DDKSHADOW             Dark shadow for three-dimensional display elements.
@@ -114,10 +114,10 @@ end;
     COLOR_WINDOWFRAME            Window frame.
     COLOR_WINDOWTEXT             Text in windows.  }
 
-{ FUCKING IMPORTANT! If I call this, I loose the DrawingForm in BioniX }
+{ IMPORTANT! If I call this, I lose the DrawingForm in BioniX }
 procedure SetSystemColor(PropertyToChange: Integer; Color: TColor);
 begin
-  Winapi.Windows.SetSysColors(1, PropertyToChange, Color);   { 1 arata cati parametri are de schimbat. in cazul nostru, doar unu: PropertyToChange }
+  Winapi.Windows.SetSysColors(1, PropertyToChange, Color);   { 1 indicates how many parameters to change. In our case, only one: PropertyToChange }
 end;
 
 
@@ -469,10 +469,10 @@ end;
 
 
 { The effect lasts until Win restart }
-function SetWallpaperBrodcast(FileName: string): Boolean;
+function SetWallpaperBroadcast(FileName: string): Boolean;
 begin
  Result:= SystemParametersInfo (SPI_SETDESKWALLPAPER, 0, PChar(FileName), SPIF_SENDCHANGE {2});
-end;     {I got this error here during GIF: Debugger Fault Notification. Project raised too many consecutive exceptions: 'system exception (code 0xc0000002) at 0x76dbc54f'. Process Stopped. Use Step or Run to continue. }
+end;     { I got this error here during GIF: Debugger Fault Notification. Project raised too many consecutive exceptions: 'system exception (code 0xc0000002) at 0x76dbc54f'. Process Stopped. Use Step or Run to continue. }
 
 
 { The effect lasts until Win restart. This MIGHT be the fastest way to dynamically paint animation on desktop since it doesn't send any messages }
@@ -500,6 +500,9 @@ function PaintOverIcons(X, Y: Integer; BMP : TBitmap): Boolean;
 VAR
    Progman, Handle : HWND;
 begin
+ if BMP = NIL
+ then raise Exception.Create('PaintOverIcons: BMP parameter cannot be nil');
+
  Result:= FALSE;
 
  if IsWindows8Up then
@@ -529,13 +532,20 @@ VAR
    Canvas: TCanvas;
 begin
  Result:= TRUE;
- Assert(Handle > 0);
+ if Handle <= 0
+ then raise Exception.Create('DrawOnWindow: Handle is invalid: ' + IntToStr(Handle));
+ if BMP = NIL
+ then raise Exception.Create('DrawOnWindow: BMP parameter cannot be nil');
+
  TRY
   DC := GetDC(Handle);
   Canvas:= TCanvas.Create;                                                  { This is probably slow }
-  Canvas.Handle := DC;
-  Canvas.Draw(x, y, bmp);                                                   { Draw the bitmap }
-  Canvas.Free;
+  TRY
+    Canvas.Handle := DC;
+    Canvas.Draw(x, y, bmp);                                                 { Draw the bitmap }
+  FINALLY
+    FreeAndNil(Canvas);
+  END;
   ReleaseDC(Handle, DC);
  EXCEPT
   //todo 1: trap only specific exceptions
@@ -546,12 +556,16 @@ end;
 
 
 { It is not faster than the one above, without bitblt }
-function DrawOnWindowBitBlt(Handle: HWND; X, Y: Integer; BMP : TBitmap): Boolean;  { It is not faster than the one above, without bitblt }  {    BitBlt documentation: https://msdn.microsoft.com/en-us/library/windows/desktop/dd183370(v=vs.85).aspx  }
+function DrawOnWindowBitBlt(Handle: HWND; X, Y: Integer; BMP : TBitmap): Boolean;  { It is not faster than the one above, without bitblt }  { BitBlt documentation: https://msdn.microsoft.com/en-us/library/windows/desktop/dd183370(v=vs.85).aspx }
 VAR
    DC: HDC;
 begin
  Result:= TRUE;
- Assert(Handle > 0);
+ if Handle <= 0
+ then raise Exception.Create('DrawOnWindowBitBlt: Handle is invalid: ' + IntToStr(Handle));
+ if BMP = NIL
+ then raise Exception.Create('DrawOnWindowBitBlt: BMP parameter cannot be nil');
+
  TRY
    DC := GetDC(Handle);                                                      { the dc is freed after repainting }
    BitBlt(DC, x, y, BMP.Width, BMP.Height, BMP.Canvas.Handle, 0, 0, SRCCOPY);

@@ -12,7 +12,7 @@ UNIT LightVcl.Common.Window;
      * Caption
      * Class name
 
-   Cahnge visibility for windows (Minimize, Maximize, Restore, SetBack)
+   Change visibility for windows (Minimize, Maximize, Restore, SetBack)
 
    See also:
      cmWindowMetrics.pas
@@ -64,7 +64,7 @@ CONST
  procedure MinimizeAllExcept(CONST ExceptApp: HWND);
  procedure MinAllWnd_ByShell;
  procedure MinAllWnd_ByShell2;                                                       { Minimize All Windows by sending a message to Shelltray }
- procedure MinAllWnd_ByHandle(ApplicationWindow: HWnd);                              { Merge prost}
+ procedure MinAllWnd_ByHandle(ApplicationWindow: HWnd);                              { Minimizes by iterating window handles }
  procedure MinAllWnd_ByWinMKey;                                                      { Simulate Win + M }
 
  function  RestoreWindowByName   (CONST ClassName: string): Boolean;
@@ -110,6 +110,9 @@ procedure KeepOnTop(Form: TForm; TopStyle: HWnd);
      HWND_TOP       - Places the window at the top of the Z order.
      HWND_BOTTOM    - Places the window at the bottom of the Z order.   }
 begin
+  if Form = NIL
+  then raise Exception.Create('KeepOnTop: Form parameter cannot be nil');
+
   SetWindowPos(Form.Handle, TopStyle, Form.Left, Form.Top, Form.Width, Form.Height, SWP_NOACTIVATE OR SWP_NOMOVE OR SWP_NOSIZE {or SWP_NOOWNERZORDER});
 end;
 
@@ -127,12 +130,10 @@ end;
 VAR
    LastBounds: TRect = ();
 procedure MaximizeForm(Form: TForm; Maximize: Boolean);
-//del
-//const
-{$J+}    { Writeable typed constants }
-  //LastBounds: TRect = ();
-{$J-}
 begin
+ if Form = NIL
+ then raise Exception.Create('MaximizeForm: Form parameter cannot be nil');
+
  if Maximize then
   begin
     LastBounds       := Form.BoundsRect;
@@ -159,10 +160,12 @@ end;
   Restore window if it was minimized to taskbar or systray }
 procedure RestoreWindow(WndHandle: HWND);
 begin
- Assert(WndHandle > 0);
- Winapi.Windows.SendMessage(WndHandle, UM_ENSURERESTORED, 0, 0);{ Send Restore signal to running instance. The application will respond to this ONLY if I implemented code for it }
+ if WndHandle = 0
+ then raise Exception.Create('RestoreWindow: WndHandle parameter cannot be 0');
+
+ Winapi.Windows.SendMessage(WndHandle, UM_ENSURERESTORED, 0, 0);  { Send Restore signal to running instance. The application will respond to this ONLY if I implemented code for it }
  ForceRestoreWindow(WndHandle, TRUE);
- ForceForegroundWindow(WndHandle);                              { Brings window on top of other windows. You need to call ForceRestoreWindow first }
+ ForceForegroundWindow(WndHandle);                                { Brings window on top of other windows. You need to call ForceRestoreWindow first }
 end;
 
 
@@ -277,7 +280,8 @@ end;
 function IsApplicationRunning(CONST ClassName: string): Boolean;
 VAR Wnd: HWND;
 begin
- Assert(ClassName > '', 'IsApplicationRunning - ClassName is empty!');
+ if ClassName = ''
+ then raise Exception.Create('IsApplicationRunning: ClassName parameter cannot be empty');
 
  Result:= FALSE;
  REPEAT
@@ -305,7 +309,7 @@ procedure MinimizeAllExcept(const ExceptApp : HWND);
 var
   Ole : OleVariant;
 begin
-  //This is like pressing WIN + M it makes use of the Shell. It's much safer for the user. Parameter excpt saves an window from beeing minimised
+  { This is like pressing WIN + M - it makes use of the Shell. It's much safer for the user. Parameter ExceptApp saves a window from being minimized }
   ShowWindow(ExceptApp, SW_HIDE);
   Ole := CreateOleObject('Shell.Application');
   Ole.MinimizeAll;
@@ -319,7 +323,7 @@ begin
 end;
 
 
-{ Recomended }
+{ Recommended }
 procedure MinAllWnd_ByShell;
 VAR Shell : OleVariant;
 begin
@@ -362,9 +366,10 @@ end;
 function RestoreWindowByName(CONST ClassName: string): Boolean;
 VAR Wnd: HWND;
 begin
- Assert(ClassName > '', 'ClassName was not defined!');
+ if ClassName = ''
+ then raise Exception.Create('RestoreWindowByName: ClassName parameter cannot be empty');
 
- Wnd:= FindTopWindowByClass(ClassName);                                 { Check if mutex exists }
+ Wnd:= FindTopWindowByClass(ClassName);                                 { Check if window exists }
  Result:= Wnd > 0;
  if Result
  then RestoreWindow(Wnd);      { Restore app }
@@ -378,9 +383,15 @@ end;
 {--------------------------------------------------------------------------------------------------
    FIND FORM
 --------------------------------------------------------------------------------------------------}
-function FindChildForm(Parent: TForm; CONST ClassName: string): THandle;     {Old name: FormFindChildWnd }
+function FindChildForm(Parent: TForm; CONST ClassName: string): THandle;     { Old name: FormFindChildWnd }
 VAR i: integer;
 begin
+ if Parent = NIL
+ then raise Exception.Create('FindChildForm: Parent parameter cannot be nil');
+
+ if ClassName = ''
+ then raise Exception.Create('FindChildForm: ClassName parameter cannot be empty');
+
  Result:= 0;
  for i:= 0 to Parent.MDIChildCount-1 DO
    if SameText(Parent.MDIChildren[i].ClassName, ClassName)
@@ -389,16 +400,20 @@ end;
 
 
 function GetTextFromHandle(hWND: THandle): string;
-VAR pText : PChar;
-    TextLen : integer;
+VAR
+  pText: PChar;
+  TextLen: integer;
 begin
- TextLen:=GetWindowTextLength(hWND);         { get the length of the text}
- GetMem(pText,TextLen);                      { alocate memory}   // takes a pointer
+ TextLen:= GetWindowTextLength(hWND);        { Get the length of the text }
+ if TextLen = 0
+ then EXIT('');
+
+ GetMem(pText, (TextLen + 1) * SizeOf(Char)); { Allocate memory including null terminator }
  TRY
-   GetWindowText(hWND, pText, TextLen + 1);  { get the control's text}
-   Result:= String(pText);                   { display the text}
+   GetWindowText(hWND, pText, TextLen + 1);   { Get the control's text }
+   Result:= String(pText);
  FINALLY
-   FreeMem(pText);                           { free the memory}
+   FreeMem(pText);
  END;
 end;
 

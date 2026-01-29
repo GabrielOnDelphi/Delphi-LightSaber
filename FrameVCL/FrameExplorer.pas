@@ -31,16 +31,8 @@ UNIT FrameExplorer;
 INTERFACE
 
 USES
-  System.Classes,
-  Vcl.Controls,
-  Vcl.Forms,
-  Vcl.StdCtrls,
-  Vcl.ExtCtrls,
-  Vcl.FileCtrl,
-  LightVcl.Visual.AppDataForm,
-  LightVcl.Visual.PathEdit,
-  LightVcl.Visual.FileFilter,
-  LightVcl.Visual.FileListBox;
+  System.Classes, Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.StdCtrls, LightVcl.Visual.PathEdit, Vcl.FileCtrl, LightVcl.Visual.FileFilter,
+  LightVcl.Visual.FileListBox, Vcl.ExtCtrls;
 
 TYPE
   TFrameWinExplorer = class(TFrame)

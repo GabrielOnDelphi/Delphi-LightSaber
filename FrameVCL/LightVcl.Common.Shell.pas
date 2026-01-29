@@ -12,7 +12,7 @@ UNIT LightVcl.Common.Shell;
      * Add commands to the context menu (right click menu).
      * Taskbar tools
      * Start menu tools
-     * Create desktop shortcuts (when your app strats for the first time it can create a shortcut on the desktop so use can easily find it)
+     * Create desktop shortcuts (when your app starts for the first time it can create a shortcut on the desktop so user can easily find it)
 
    In this group:
      * LightVcl.Common.Shell.pas
@@ -156,14 +156,17 @@ end;
 
 
 function DeleteStartMenuShortcut(CONST ShortcutName: string): Boolean;
-var
- Directory : String;
- MyReg     : TRegIniFile;
+VAR
+  Directory: String;
+  MyReg: TRegIniFile;
 begin
- MyReg:= TRegIniFile.Create('Software\MicroSoft\Windows\CurrentVersion\Explorer');
- Directory:= MyReg.ReadString('Shell Folders','Start Menu','');
- Result:= DeleteFile(Directory+ '\'+ ShortCutName+ '.lnk');                                        { Delete Start menu icon }
- FreeAndNil(MyReg);
+  MyReg:= TRegIniFile.Create('Software\MicroSoft\Windows\CurrentVersion\Explorer');
+  TRY
+    Directory:= MyReg.ReadString('Shell Folders', 'Start Menu', '');
+    Result:= DeleteFile(Directory + '\' + ShortCutName + '.lnk');
+  FINALLY
+    FreeAndNil(MyReg);
+  END;
 end;
 
 
@@ -257,7 +260,7 @@ begin
 
  Assert(FileExtension.Length > 0, 'FileExtension is empty!');
  Assert(FileExtension[1] = '.', 'FileExtension should start with dot!');
- Assert(Pos(FileExtension, '*')<= 0, 'Invalid file extension in AssociateWith!');
+ Assert(Pos('*', FileExtension) = 0, 'Invalid file extension in AssociateWith!');
 
  if ForAllUsers                      { On Windows 7 and up, you need admin rights to register a file type for all the machine users }
  then RootKey:= HKEY_CLASSES_ROOT
@@ -403,7 +406,7 @@ begin
      end
    else
      if Reg.OpenKey('.' + FileExtension, False) then
-      begin                                                                                          {perhaps thier is a system file pointer}
+      begin                                                                                          { Perhaps there is a system file pointer }
        s:= Reg.ReadString('');
        Reg.CloseKey;
        if s <> '' then
@@ -477,29 +480,32 @@ end;
 
 { Remove shell extension from the context menu }
 procedure RemoveContextMenu(CONST GUID: TGUID; CONST FileExt, UtilityName: string);
-VAR Key: string;
-    BufGUID: array [0..255] of WideChar;
-    FileType: string;
+VAR
+  Key: string;
+  BufGUID: array [0..255] of WideChar;
+  FileType: string;
+  Reg: TRegistry;
 begin
-  with TRegistry.Create do
+  Reg:= TRegistry.Create(KEY_ALL_ACCESS);
   TRY
-    RootKey := HKEY_CLASSES_ROOT;
+    Reg.RootKey:= HKEY_CLASSES_ROOT;
     StringFromGUID2(GUID, BufGUID, SizeOf(BufGUID));
-    FileType := FileExt;
-    if FileType <> '*' then
-    begin
-      if not OpenKey(FileExt, False) then Exit;
-      FileType := ReadString('');
-      CloseKey;
-    end;
+    FileType:= FileExt;
 
-    Key := Format('%s\shellex\ContextMenuHandlers\%s', [FileType,UtilityName]);
-    DeleteKey(Key);
-    Key := Format('CLSID\%s', [BufGUID]);
-    DeleteKey(Key);
+    if FileType <> '*' then
+      begin
+        if NOT Reg.OpenKey(FileExt, FALSE) then EXIT;
+        FileType:= Reg.ReadString('');
+        Reg.CloseKey;
+      end;
+
+    Key:= Format('%s\shellex\ContextMenuHandlers\%s', [FileType, UtilityName]);
+    Reg.DeleteKey(Key);
+    Key:= Format('CLSID\%s', [BufGUID]);
+    Reg.DeleteKey(Key);
   FINALLY
-    Free;
-  end;
+    FreeAndNil(Reg);
+  END;
 end;
 
 
@@ -581,7 +587,7 @@ end;
    SHELL
 --------------------------------------------------------------------------------------------------}
 
-{ Add the file to 'recent open files' menu taht appears when right clicking on program's button in TaskBar }       { From here : http://stackoverflow.com/questions/5806731/how-do-i-add-recent-items-to-my-programs-jump-list-on-the-windows-7-taskbar }
+{ Add the file to 'recent open files' menu that appears when right clicking on program's button in TaskBar }       { From here : http://stackoverflow.com/questions/5806731/how-do-i-add-recent-items-to-my-programs-jump-list-on-the-windows-7-taskbar }
 procedure AddFile2TaskbarMRU(FileName: string);
 begin
  SHAddToRecentDocs(SHARD_PATH, PChar(FileName));
@@ -684,19 +690,23 @@ end;
 {--------------------------------------------------------------------------------------------------
    API / ICON
 --------------------------------------------------------------------------------------------------}
-function IsApiFunctionAvailable(const DLLname, funcname: string; VAR p: pointer): Boolean;               { return True if _funcname exists in _dllname }
-var Lib: tHandle;
+{ Returns True if FuncName exists in DLLname.
+  Note: The DLL remains loaded - use FreeLibrary if you need to unload it. }
+function IsApiFunctionAvailable(const DLLname, FuncName: string; VAR p: pointer): Boolean;
+VAR
+  Lib: THandle;
 begin
-  Result:= False;
-  if LoadLibrary(PChar(DLLname)) = 0
-  then exit;
-  Lib:= GetModuleHandle(PChar(DLLname)) ;
-  if Lib <> 0 then
-   begin
-      p:= GetProcAddress(Lib, PChar(funcname));
-      if p <> NIL
-      then Result:= true;
-   end;
+  Result:= FALSE;
+  p:= NIL;
+
+  Lib:= LoadLibrary(PChar(DLLname));
+  if Lib = 0 then EXIT;
+
+  p:= GetProcAddress(Lib, PChar(FuncName));
+  Result:= (p <> NIL);
+
+  { Note: We don't call FreeLibrary here because the caller may want to use
+    the function pointer. The DLL will be unloaded when the process ends. }
 end;
 
 

@@ -19,7 +19,6 @@ UNIT  LightVcl.Common.WinVersionApi;
    Also see:
       LightVcl.Common.WinVersion
       LightVcl.Common.ExeVersion
-      LightVcl.Common.WinVersionApi
 
    Tester:
        c:\Projects\LightSaber\Demo\Demo Detect WinVer\
@@ -116,18 +115,18 @@ begin
    begin
     Temp:= copy(s,i+6,maxint);   //on win11 I get:  'Microsoft Windows NT Version 10.00, Build 22621, '
     i:= ExtractIntFromStr(Temp);
-    if i>  900 then Result:='95';
-    if i> 1900 then Result:='98';
-    if i> 2000 then Result:='2000';
-    if i> 2500 then Result:='XP';
-    if i> 3000 then Result:='2003';
-    if i> 5000 then Result:='Vista';
-    if i> 6000 then Result:='2008';
-    if i> 7000 then Result:='7';
-    if i> 8000 then Result:='8';
-    if i> 9000 then Result:='8.1';
-    if i> 9100 then Result:='10';
-    if i>=2200 then Result:='11';
+    if i >   900 then Result:= '95';
+    if i >  1900 then Result:= '98';
+    if i >  2000 then Result:= '2000';
+    if i >  2500 then Result:= 'XP';
+    if i >  3000 then Result:= '2003';
+    if i >  5000 then Result:= 'Vista';
+    if i >  6000 then Result:= '2008';
+    if i >  7000 then Result:= '7';
+    if i >  8000 then Result:= '8';
+    if i >  9000 then Result:= '8.1';
+    if i >  9100 then Result:= '10';
+    if i >= 22000 then Result:= '11';  { Win11 first build is 22000 }
    end;
 end;
 

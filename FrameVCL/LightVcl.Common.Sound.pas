@@ -164,44 +164,41 @@ begin
     EXIT;
   end;
 
-  with WaveFormatEx do
-  begin
-    wFormatTag     := WAVE_FORMAT_PCM;
-    nChannels      := Mono;
-    nSamplesPerSec := SampleRate;
-    wBitsPerSample := $0008;
-    nBlockAlign    := (nChannels * wBitsPerSample) div 8;
-    nAvgBytesPerSec:= nSamplesPerSec * nBlockAlign;
-    cbSize         := 0;
-  end;
+  WaveFormatEx.wFormatTag     := WAVE_FORMAT_PCM;
+  WaveFormatEx.nChannels      := Mono;
+  WaveFormatEx.nSamplesPerSec := SampleRate;
+  WaveFormatEx.wBitsPerSample := $0008;
+  WaveFormatEx.nBlockAlign    := (WaveFormatEx.nChannels * WaveFormatEx.wBitsPerSample) div 8;
+  WaveFormatEx.nAvgBytesPerSec:= WaveFormatEx.nSamplesPerSec * WaveFormatEx.nBlockAlign;
+  WaveFormatEx.cbSize         := 0;
 
   MS:= TMemoryStream.Create;
   TRY
-    with MS do
-    begin
-      {Calculate length of sound data and of file data}
-      DataCount := (Duration * SampleRate) div 1000;                              // sound data
-      RiffCount := Length(WaveId)+ Length(FmtId) + SizeOf(DWORD)+
-            SizeOf(TWaveFormatEx)+ Length(DataId)+ SizeOf(DWORD)+ DataCount;      // file data
-      {write out the wave header}
-      Write(RiffId[1], 4);                                                        // 'RIFF'
-      Write(RiffCount, SizeOf(DWORD));                                            // file data size
-      Write(WaveId[1], Length(WaveId));                                           // 'WAVE'
-      Write(FmtId [1], Length(FmtId));                                            // 'fmt '
-      TempInt := SizeOf(TWaveFormatEx);
-      Write(TempInt, SizeOf(DWORD));                                              // TWaveFormat data size
-      Write(WaveFormatEx, SizeOf(TWaveFormatEx));                                 // WaveFormatEx record
-      Write(DataId[1], Length(DataId));                                           // 'data'
-      Write(DataCount, SizeOf(DWORD));                                            // sound data size
-      {calculate and write out the tone signal} // now the data values
-      w := 2 * Pi * Frequency;                                                    // omega
-      for i := 0 to DataCount - 1 do
-       begin
-         SoundValue := 127 + trunc(Volume * sin(i * w / SampleRate));              // wt = w * i / SampleRate
-         Write(SoundValue, 1);
-       end;
-      sndPlaySound(MS.Memory, SND_MEMORY or SND_SYNC); {now play the sound}
-    end;
+    { Calculate length of sound data and file data }
+    DataCount:= (Duration * SampleRate) div 1000;
+    RiffCount:= Length(WaveId) + Length(FmtId) + SizeOf(DWORD) +
+                SizeOf(TWaveFormatEx) + Length(DataId) + SizeOf(DWORD) + DataCount;
+
+    { Write wave header }
+    MS.Write(RiffId[1], 4);
+    MS.Write(RiffCount, SizeOf(DWORD));
+    MS.Write(WaveId[1], Length(WaveId));
+    MS.Write(FmtId[1], Length(FmtId));
+    TempInt:= SizeOf(TWaveFormatEx);
+    MS.Write(TempInt, SizeOf(DWORD));
+    MS.Write(WaveFormatEx, SizeOf(TWaveFormatEx));
+    MS.Write(DataId[1], Length(DataId));
+    MS.Write(DataCount, SizeOf(DWORD));
+
+    { Calculate and write tone signal }
+    w:= 2 * Pi * Frequency;
+    for i:= 0 to DataCount - 1 do
+      begin
+        SoundValue:= 127 + Trunc(Volume * Sin(i * w / SampleRate));
+        MS.Write(SoundValue, 1);
+      end;
+
+    sndPlaySound(MS.Memory, SND_MEMORY or SND_SYNC);
   FINALLY
     FreeAndNil(MS);
   END;

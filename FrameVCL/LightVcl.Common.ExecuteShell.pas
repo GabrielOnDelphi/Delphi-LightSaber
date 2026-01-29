@@ -1,18 +1,33 @@
 UNIT LightVcl.Common.ExecuteShell;
 
 {=============================================================================================================
-   SYSTEM - Execute Process
-   2023.01
+   SYSTEM - Execute Process (ShellExecute)
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
-   Execute a process, using the ShellExecute API
+   Execute processes using the ShellExecute/ShellExecuteEx API.
 
-   ShellExecute vs CreateProcess
-      CreateProcess - is not as straigth forward as ShellExecute but it allows you more control.
-      ShellExecute  - is easyer to use but you don't have a lot of control over it.
-      To obtain information about the application that is launched as a result of calling ShellExecute, use ShellExecuteEx.
+   ShellExecute vs CreateProcess:
+      CreateProcess - More complex but provides full control over process creation, handles,
+                      environment, and I/O redirection. Required for capturing stdout/stderr.
+      ShellExecute  - Simpler API but limited control. Cannot capture output.
+                      Supports file associations, URLs, mailto:, .lnk files.
+                      Use ShellExecuteEx for more information about launched application.
+
+   Functions:
+      ExecuteShell         - Launch using ShellExecute with error reporting
+      ExecuteShellEx       - Launch using ShellExecuteEx with process handle
+      ExecuteShellAndWait  - Launch and wait for completion using ShellExecuteEx
+      ExecuteAsAdmin       - Launch with administrator elevation (runas verb)
+
+   Utility functions:
+      ExecuteURL           - Open URL in default browser
+      ExecuteSendEmail     - Open default email client with address
+      ExecuteExplorer      - Open Windows Explorer at path
+      ExecuteExplorerSelect - Open Explorer and select a specific file
+      ExecuteControlPanel_ScreenRes - Open display settings
 
    For cross-platform see:
       Jedi.Execute - www.delphicorner.f9.co.uk/articles/wapi4.htm
@@ -29,23 +44,28 @@ UNIT LightVcl.Common.ExecuteShell;
    NOTES:
      PARAMS needs to be in quotes: "c:\Test.doc". Use DoubleQuoteStr to quote the "Params" string.
      It can execute LNK files: "C:\Delphi3.lnk"
-     This function will open the "CPU assembly window" if the "Debug spawned processes" is active and OS is Win7.
+     This function will open the "CPU assembly window" if the "Debug spawned processes" is
+     active and OS is Win7.
 
-   Object Verbs
-     The verbs available for an object are essentially the items that you find on an object's shortcut menu. To find which verbs are available, look in the registry under
+   Object Verbs:
+     The verbs available for an object are essentially the items that you find on an object's
+     shortcut menu. To find which verbs are available, look in the registry under
      HKEY_CLASSES_ROOT\CLSID\{object_clsid\Shell\verb
 
    Commonly available verbs:
      edit       Launches an editor and opens the document for editing.
      find       Initiates a search starting from the specified directory.
-     open       Launches an application. If this file is not an executable file, its associated application is launched.
+     open       Launches an application. If this file is not an executable, its associated
+                application is launched.
      print      Prints the document file.
      properties Displays the object's properties.
-     runas      Launches an application as Administrator. User Account Control (UAC) will prompt the user for consent to run the application elevated or enter the credentials of an administrator account used to run the application.
+     runas      Launches an application as Administrator. User Account Control (UAC) will
+                prompt the user for consent to run the application elevated or enter the
+                credentials of an administrator account.
 
 ----------------------------------------------------------------------------------------------------
 
-  Tester
+  Tester:
      c:\MyProjects\Project Testers\Tester Execute program (ShellExecute, CreateProcess)\
 
 =============================================================================================================}
@@ -55,18 +75,38 @@ INTERFACE
 USES
     WinApi.Windows, Winapi.ShellAPI, Winapi.ShlObj, System.SysUtils, VCL.Forms;
 
- { ShellExecute }
- function  ExecuteShell    (CONST ExeFile: string; Params: string= ''; ShowErrorMsg: Boolean= TRUE; WindowState: Integer= SW_SHOWNORMAL): Boolean;  { WindowState can be  as defined in WinApi.Windows.pas: SW_HIDE, SW_SHOWNORMAL, SW_NORMAL, SW_SHOWMINIMIZED, SW_SHOWMAXIMIZED, SW_MAXIMIZE, SW_SHOWNOACTIVATE, SW_SHOW, SW_MINIMIZE, SW_SHOWMINNOACTIVE, SW_SHOWNA, SW_RESTORE, SW_SHOWDEFAULT, SW_MAX }
- function  ExecuteShellEx  (CONST ExeFile: string; Params: string= ''; ShowErrorMsg: Boolean= TRUE; WindowState: Integer= SW_SHOWNORMAL): Boolean;
- function  ExecuteAndWait  (CONST ExeFile: string; Params: string= ''; Hide: Boolean= FALSE; WaitTime: Cardinal= INFINITE): Boolean;
- function  ExecuteAsAdmin  (CONST ExeFile: string; Params: string= ''; hWnd: HWND= 0): Boolean;
 
- { ShellExecute Utils }
- procedure ExecuteURL      (URL: string);
- procedure ExecuteSendEmail(EmailAddress: string);
- procedure ExecuteExplorer (Path: string);                     { This will open Explorer in the specified folder. 'Execute' will browse the folder not explore }
- function  ExecuteExplorerSelect(FileName: string): Boolean;   { Execute Win Explorer and select the specified file }
- procedure ExecuteControlPanel_ScreenRes;                      { Open Control Panel to 'Screen Resolution' tab }
+{ ShellExecute wrappers }
+
+{ Executes file/program using ShellExecute. Supports URLs, .lnk files, document associations.
+  WindowState: SW_HIDE, SW_SHOWNORMAL, SW_SHOWMINIMIZED, SW_SHOWMAXIMIZED, etc.
+  Returns True if successful. }
+function ExecuteShell(CONST ExeFile: string; Params: string = '';
+  ShowErrorMsg: Boolean = TRUE; WindowState: Integer = SW_SHOWNORMAL): Boolean;
+
+{ Executes file using ShellExecuteEx. Provides access to process handle.
+  Returns True if successful. }
+function ExecuteShellEx(CONST ExeFile: string; Params: string = '';
+  ShowErrorMsg: Boolean = TRUE; WindowState: Integer = SW_SHOWNORMAL): Boolean;
+
+{ Executes file and waits for completion.
+  WaitTime: Maximum wait time in milliseconds, or INFINITE.
+  Returns True if successful. }
+function ExecuteShellAndWait(CONST ExeFile: string; Params: string = '';
+  Hide: Boolean = FALSE; WaitTime: Cardinal = INFINITE): Boolean;
+
+{ Executes file with administrator elevation (UAC prompt).
+  Returns True if user granted elevation and process started. }
+function ExecuteAsAdmin(CONST ExeFile: string; Params: string = ''; hWnd: HWND = 0): Boolean;
+
+
+{ ShellExecute utility functions }
+
+procedure ExecuteURL(URL: string);
+procedure ExecuteSendEmail(EmailAddress: string);
+procedure ExecuteExplorer(Path: string);
+function  ExecuteExplorerSelect(FileName: string): Boolean;
+procedure ExecuteControlPanel_ScreenRes;
 
 
 IMPLEMENTATION
@@ -75,254 +115,360 @@ USES
    LightCore.IO, LightVcl.Common.IO, LightVcl.Common.Dialogs;
 
 
+CONST
+   { ShellExecute returns value > 32 on success }
+   SE_SUCCESS_THRESHOLD = 32;
 
-{-------------------------------------------------------------------------------------------------------------
- WindowState
-     Can be as defined in Windows.pas:
-     SW_HIDE, SW_SHOWNORMAL, SW_NORMAL, SW_SHOWMINIMIZED, SW_SHOWMAXIMIZED, SW_MAXIMIZE, SW_SHOWNOACTIVATE, SW_SHOW, SW_MINIMIZE, SW_SHOWMINNOACTIVE, SW_SHOWNA, SW_RESTORE, SW_SHOWDEFAULT, SW_MAX
 
- Description of each parameter:  http://msdn.microsoft.com/en-us/library/windows/desktop/ms633548%28v=vs.85%29.aspx
+{---------------------------------------------------------------------------------------------------------------
+   ExecuteShell
 
- Official documentation:
-      https://msdn.microsoft.com/en-US/bb762153?f=255&MSPPError=-2147217396
- More:
-     http://tekreaders.com/blog/2011/08/03/shellexecute-in-delphi-launch-external-applications/
+   Executes a file/program using ShellExecute API.
+   Supports file associations, URLs, .lnk files, mailto: links, etc.
 
- This does not work well with *.scr programs: https://stackoverflow.com/questions/46672282/how-to-run-a-screensaver-in-config-mode-with-shellexecute
+   Parameters:
+     ExeFile      - File path, URL, or document to execute
+     Params       - Command line parameters (use quotes for paths with spaces)
+     ShowErrorMsg - If True, displays error message on failure
+     WindowState  - Window display state (SW_SHOWNORMAL, SW_HIDE, SW_MINIMIZE, etc.)
+                    See: http://msdn.microsoft.com/en-us/library/windows/desktop/ms633548
 
- ShellExecute return codes:
-   If the function succeeds, it sets the hInstApp member of the SHELLEXECUTEINFO structure to a value greater than 32. If the function fails, hInstApp is set to the SE_ERR_XXX error value that best indicates the cause of the failure. Although hInstApp is declared as an HINSTANCE for compatibility with 16-bit Windows applications, it is not a true HINSTANCE. It can be cast only to an int and can be compared only to either the value 32 or the SE_ERR_XXX error codes.
-   The SE_ERR_XXX error values are provided for compatibility with ShellExecute.
-   To retrieve more accurate error information, use GetLastError. It may return one of the following values:
-      // Error code definitions for the Win32 API functions
-      { 02  ERROR_FILE_NOT_FOUND    : Msg:= 'The specified file was not found.';
-      { 03  ERROR_PATH_NOT_FOUND    : Msg:= 'The specified path was not found.';
-      { 08  ERROR_NOT_ENOUGH_MEMORY : Msg:= 'There is not enough memory to perform the specified action!';
-      { 11  ERROR_BAD_FORMAT        : Msg:= 'The .exe file is invalid (non-Win32 .EXE or error in .EXE image).';
-      { 32  ERROR_SHARING_VIOLATION : Msg:= 'A sharing violation occurred!';
-      {1156 ERROR_DDE_FAIL          : Msg:= 'The Dynamic Data Exchange (DDE) transaction failed!';
-            ERROR_ACCESS_DENIED     : Msg:= 'Access to the specified file is denied!';
-            ERROR_CANCELLED         : Msg:= 'The function prompted the user for additional information, but the user canceled the request!';
-            ERROR_DLL_NOT_FOUND     : Msg:= 'One of the library files necessary to run the application can't be found!';
-            ERROR_NO_ASSOCIATION    : Msg:= 'There is no application associated with the specified file name extension!'
--------------------------------------------------------------------------------------------------------------}
-function ExecuteShell(CONST ExeFile: string; Params: string= ''; ShowErrorMsg: Boolean= TRUE; WindowState: Integer= WinApi.Windows.SW_SHOWNORMAL): Boolean;
+   Returns:
+     True if execution succeeded (return value > 32)
+
+   ShellExecute return codes (values <= 32 indicate failure):
+     0  - Out of memory or resources
+     2  - ERROR_FILE_NOT_FOUND
+     3  - ERROR_PATH_NOT_FOUND
+     5  - ERROR_ACCESS_DENIED
+     8  - ERROR_NOT_ENOUGH_MEMORY
+     26 - SE_ERR_SHARE (sharing violation)
+     27 - SE_ERR_ASSOCINCOMPLETE (incomplete file association)
+     28 - SE_ERR_DDETIMEOUT (DDE timeout)
+     29 - SE_ERR_DDEFAIL (DDE transaction failed)
+     30 - SE_ERR_DDEBUSY (DDE busy)
+     31 - SE_ERR_NOASSOC (no application associated)
+     32 - SE_ERR_DLLNOTFOUND
+
+   Note: Does not work well with .scr files in config mode.
+   See: https://stackoverflow.com/questions/46672282
+---------------------------------------------------------------------------------------------------------------}
+function ExecuteShell(CONST ExeFile: string; Params: string = '';
+  ShowErrorMsg: Boolean = TRUE; WindowState: Integer = WinApi.Windows.SW_SHOWNORMAL): Boolean;
 VAR
-   i: integer;
+   RetCode: Integer;
    WorkingFolder, Msg: string;
 begin
- WorkingFolder:= ExtractFilePath(ExeFile);
- i:= ShellExecute(0, 'open', PChar(ExeFile), Pointer(Params), PChar(WorkingFolder), WindowState);   //  See this about using 'Pointer' instead of 'PChar': http://stackoverflow.com/questions/3048188/shellexecute-not-working-from-ide-but-works-otherwise
- Result:= i > 32;
- if NOT Result AND ShowErrorMsg then
-  begin
-   case i of
-      // What are these?
-      0  : Msg:= 'The operating system is out of memory or resources.';
-      12 : Msg:= 'Application was designed for a different operating system.';
-      13 : Msg:= 'Application was designed for MS-DOS 4.0';
-      15 : Msg:= 'Attempt to load a real-mode program.';
-      16 : Msg:= 'Attempt to load a second instance of an application with non-readonly data segments.';
-      19 : Msg:= 'Attempt to load a compressed application file.';
-      20 : Msg:= 'Dynamic-link library (DLL) file failure.';
+  if not FileExists(ExeFile) then raise Exception.Create('ExecuteShell no file');
 
-      // Regular WinExec codes
-      { 02} SE_ERR_FNF            : Msg:= 'Exe file not found!'+ ExeFile;
-      { 03} SE_ERR_PNF            : Msg:= 'Path not found!';
-      { 08} SE_ERR_OOM            : Msg:= 'Out of memory!';
+  WorkingFolder:= ExtractFilePath(ExeFile);
 
-      // Error values for ShellExecute beyond the regular WinExec() codes
-      { 26} SE_ERR_SHARE          : Msg:= 'A sharing violation occurred!';
-      { 27} SE_ERR_ASSOCINCOMPLETE: Msg:= 'The file name association is incomplete or invalid!';
-      { 28} SE_ERR_DDETIMEOUT     : Msg:= 'The DDE transaction could not be completed because the request timed out!';
-      { 29} SE_ERR_DDEFAIL        : Msg:= 'The DDE transaction failed!';
-      { 30} SE_ERR_DDEBUSY        : Msg:= 'The DDE transaction could not be completed because other DDE transactions were being processed!';
-      { 31} SE_ERR_NOASSOC        : Msg:= 'There is no application associated with the given file name extension!';
+  { Using Pointer(Params) instead of PChar(Params) handles empty string correctly.
+    See: http://stackoverflow.com/questions/3048188/shellexecute-not-working-from-ide-but-works-otherwise }
+  RetCode:= ShellExecute(0, 'open', PChar(ExeFile), Pointer(Params), PChar(WorkingFolder), WindowState);
+  Result:= RetCode > SE_SUCCESS_THRESHOLD;
 
-      { 05} SE_ERR_ACCESSDENIED   : Msg:= 'The operating system denied access! Do you have admin rights?';       // https://answers.microsoft.com/en-us/windows/forum/windows_7-windows_programs/getting-error-shellexecuteex-failed-code-5-access/3af7bea3-5733-426c-9e12-6ec68bf7b38b?auth=1
-      { 32} SE_ERR_DLLNOTFOUND    : Msg:= 'The specified DLL was not found!'
-     else
-        Msg:= 'ShellExecute error '+ IntToStr(i);
-   end;
+  if NOT Result AND ShowErrorMsg then
+    begin
+      case RetCode of
+        { Legacy error codes }
+        0  : Msg:= 'The operating system is out of memory or resources.';
+        12 : Msg:= 'Application was designed for a different operating system.';
+        13 : Msg:= 'Application was designed for MS-DOS 4.0.';
+        15 : Msg:= 'Attempt to load a real-mode program.';
+        16 : Msg:= 'Attempt to load a second instance of an application with non-readonly data segments.';
+        19 : Msg:= 'Attempt to load a compressed application file.';
+        20 : Msg:= 'Dynamic-link library (DLL) file failure.';
 
-   MessageError(Msg);
-  end;
+        { Standard error codes }
+        SE_ERR_FNF            : Msg:= 'File not found: ' + ExeFile;
+        SE_ERR_PNF            : Msg:= 'Path not found!';
+        SE_ERR_OOM            : Msg:= 'Out of memory!';
+
+        { ShellExecute-specific error codes }
+        SE_ERR_SHARE          : Msg:= 'A sharing violation occurred!';
+        SE_ERR_ASSOCINCOMPLETE: Msg:= 'The file name association is incomplete or invalid!';
+        SE_ERR_DDETIMEOUT     : Msg:= 'The DDE transaction could not be completed because the request timed out!';
+        SE_ERR_DDEFAIL        : Msg:= 'The DDE transaction failed!';
+        SE_ERR_DDEBUSY        : Msg:= 'The DDE transaction could not be completed because other DDE transactions were being processed!';
+        SE_ERR_NOASSOC        : Msg:= 'There is no application associated with the given file name extension!';
+        SE_ERR_ACCESSDENIED   : Msg:= 'The operating system denied access! Do you have admin rights?';
+        SE_ERR_DLLNOTFOUND    : Msg:= 'The specified DLL was not found!';
+      else
+        Msg:= 'ShellExecute error ' + IntToStr(RetCode);
+      end;
+
+      MessageError(Msg);
+    end;
 end;
 
 
+{---------------------------------------------------------------------------------------------------------------
+   ExecuteShellEx
 
-{ Source: http://stackoverflow.com/questions/4295285/how-can-i-wait-for-a-command-line-program-to-finish }
-function ExecuteShellEx(CONST ExeFile: string; Params: string= ''; ShowErrorMsg: Boolean= TRUE; WindowState: Integer= SW_SHOWNORMAL): Boolean;
+   Executes a file using ShellExecuteEx API, which provides more control and information
+   than the basic ShellExecute.
+
+   Parameters:
+     ExeFile      - File path to execute
+     Params       - Command line parameters
+     ShowErrorMsg - If True, displays error message on failure
+     WindowState  - Window display state
+
+   Returns:
+     True if execution succeeded
+
+   See: http://stackoverflow.com/questions/4295285/how-can-i-wait-for-a-command-line-program-to-finish
+---------------------------------------------------------------------------------------------------------------}
+function ExecuteShellEx(CONST ExeFile: string; Params: string = '';
+  ShowErrorMsg: Boolean = TRUE; WindowState: Integer = SW_SHOWNORMAL): Boolean;
 VAR
-   sei: TShellExecuteInfo;
-   Ph: DWORD;
-CONST
-   bWaitAll = FALSE;    { Explanation for this: https://blogs.msdn.microsoft.com/larryosterman/2004/06/02/things-you-shouldnt-do-part-4-msgwaitformultipleobjects-is-a-very-tricky-api/ }
+   ShellInfo: TShellExecuteInfo;
 begin
- FillChar(sei, SizeOf(sei), 0);
- sei.cbSize := SizeOf(sei);
- sei.fMask  := SEE_MASK_NOCLOSEPROCESS or SEE_MASK_FLAG_DDEWAIT;
- sei.Wnd    := GetActiveWindow;
- sei.lpVerb := 'open';
- sei.lpParameters := PChar(Params);
- sei.lpFile := PChar(ExeFile);
- sei.nShow  := WindowState;
+  if not FileExists(ExeFile) then raise Exception.Create('ExecuteShell no file');
 
- Result:= ShellExecuteEx(@sei);
- if Result
- then Ph:= sei.hProcess
- else
-  begin
-   if ShowErrorMsg
-   then MessageError(SysErrorMessage(GetLastError));
-   EXIT(FALSE);
-  end;
+  FillChar(ShellInfo, SizeOf(ShellInfo), 0);
+  ShellInfo.cbSize:= SizeOf(ShellInfo);
+  ShellInfo.fMask:= SEE_MASK_NOCLOSEPROCESS or SEE_MASK_FLAG_DDEWAIT;
+  ShellInfo.Wnd:= GetActiveWindow;
+  ShellInfo.lpVerb:= 'open';
+  ShellInfo.lpParameters:= PChar(Params);
+  ShellInfo.lpFile:= PChar(ExeFile);
+  ShellInfo.nShow:= WindowState;
 
- CloseHandle(Ph);
- Result := true;
-end;
+  Result:= ShellExecuteEx(@ShellInfo);
 
-
-
-// learn.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-shellexecuteinfow
-function ExecuteAsAdmin(CONST ExeFile: string; Params: string= ''; hWnd: HWND= 0): Boolean; { Source: Delphi Handbook / Marco Cantu - Works fine }
-VAR ShellInfo: TShellExecuteInfo;
-begin
- FillChar(ShellInfo, SizeOf(ShellInfo), 0);
- ShellInfo.cbSize:= SizeOf(ShellInfo);
- ShellInfo.fMask:= SEE_MASK_FLAG_DDEWAIT OR SEE_MASK_FLAG_NO_UI;
- ShellInfo.Wnd:= hWnd;                           // Optional. A handle to the owner window, used to display and position any UI that the system might produce while executing this function.
- ShellInfo.lpVerb:= 'runas';
- ShellInfo.lpFile:= PChar(ExeFile);
- ShellInfo.lpParameters:= PChar(Params);
- ShellInfo.nShow:= SW_SHOWNORMAL;
-
- Result:= ShellExecuteEx(@ShellInfo);
-end;
-
-
-
-{ It seems to return '42' after a sucesful execution
-function ExecuteAsAdmin_Old(hWnd: HWND; aFile: String; Params: String): Integer;
-begin
- Result:= ShellExecute(hWnd, 'runas', PWideChar(aFile), PWideChar(Params), nil, SW_SHOWNORMAL);
-end; }
-
-
-
-
-
-{-------------------------------------------------------------------------------------------------------------
- Execute a program and wait for it to finish.
- Based on ShellExecuteEx.
- You can use INFINITE for WaitTime.
-
- http://stackoverflow.com/questions/4295285/how-can-i-wait-for-a-command-line-program-to-finish
- TESTER: c:\MyProjects\Project Testers\Tester ExecuteAndWait\
--------------------------------------------------------------------------------------------------------------}
-function ExecuteAndWait(CONST ExeFile: string; Params: string= ''; Hide: Boolean= FALSE; WaitTime: Cardinal= INFINITE): Boolean;
-VAR
-   sei: TShellExecuteInfo;
-   Ph: DWORD;
-CONST
-  bWaitAll = FALSE;  { Explanation for this: https://blogs.msdn.microsoft.com/larryosterman/2004/06/02/things-you-shouldnt-do-part-4-msgwaitformultipleobjects-is-a-very-tricky-api/ }
-begin
-  FillChar(sei, SizeOf(sei), 0);
-  with sei do
-   begin
-    cbSize := SizeOf(sei);
-    fMask := SEE_MASK_NOCLOSEPROCESS or SEE_MASK_FLAG_DDEWAIT;
-    Wnd := GetActiveWindow;
-    lpVerb := 'open';
-    lpParameters := PChar(Params);
-    lpFile := PChar(ExeFile);
-    if Hide
-    then nShow := SW_HIDE
-    else nShow := SW_SHOWNORMAL;
-   end;
-
-  if ShellExecuteEx(@sei)
-  then Ph:= sei.hProcess
-  else
-   begin
+  if Result then
+    begin
+      { Close the process handle since we don't need to wait for it }
+      if ShellInfo.hProcess <> 0
+      then CloseHandle(ShellInfo.hProcess);
+    end
+  else if ShowErrorMsg then
     MessageError(SysErrorMessage(GetLastError));
-    EXIT(FALSE);
-   end;
-
-  WHILE MsgWaitForMultipleObjects(1, sei.hProcess, bWaitAll, WaitTime, (QS_POSTMESSAGE Or QS_SENDMESSAGE)) <> WAIT_OBJECT_0
-   DO Application.ProcessMessages;
-
-  CloseHandle(Ph);
-  Result := TRUE;
 end;
 
 
+{---------------------------------------------------------------------------------------------------------------
+   ExecuteAsAdmin
+
+   Executes a program with administrator elevation using the 'runas' verb.
+   This will trigger a UAC (User Account Control) prompt on Vista and later.
+
+   Parameters:
+     ExeFile - Full path to executable
+     Params  - Command line parameters
+     hWnd    - Owner window handle for UAC dialog (0 for no owner)
+
+   Returns:
+     True if user granted elevation and process started successfully.
+     False if user cancelled UAC prompt or execution failed.
+
+   See: learn.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-shellexecuteinfow
+---------------------------------------------------------------------------------------------------------------}
+function ExecuteAsAdmin(CONST ExeFile: string; Params: string = ''; hWnd: HWND = 0): Boolean;
+VAR
+  ShellInfo: TShellExecuteInfo;
+begin
+  if not FileExists(ExeFile) then raise Exception.Create('ExecuteShell no file');
+
+  FillChar(ShellInfo, SizeOf(ShellInfo), 0);
+  ShellInfo.cbSize:= SizeOf(ShellInfo);
+  ShellInfo.fMask:= SEE_MASK_FLAG_DDEWAIT OR SEE_MASK_FLAG_NO_UI;
+  ShellInfo.Wnd:= hWnd;
+  ShellInfo.lpVerb:= 'runas';
+  ShellInfo.lpFile:= PChar(ExeFile);
+  ShellInfo.lpParameters:= PChar(Params);
+  ShellInfo.nShow:= SW_SHOWNORMAL;
+
+  Result:= ShellExecuteEx(@ShellInfo);
+end;
 
 
+{---------------------------------------------------------------------------------------------------------------
+   ExecuteShellAndWait
+
+   Executes a program using ShellExecuteEx and waits for it to finish.
+   Keeps UI responsive by processing messages during the wait.
+
+   Parameters:
+     ExeFile  - Full path to executable
+     Params   - Command line parameters
+     Hide     - If True, launches with SW_HIDE (for console apps)
+     WaitTime - Maximum time to wait in milliseconds, or INFINITE
+
+   Returns:
+     True if execution and wait succeeded
+
+   Note:
+     Uses Application.ProcessMessages to keep UI responsive during wait.
+     This is intentional for UI responsiveness but be aware of reentrancy issues.
+
+   See:
+     http://stackoverflow.com/questions/4295285/how-can-i-wait-for-a-command-line-program-to-finish
+     https://blogs.msdn.microsoft.com/larryosterman/2004/06/02/things-you-shouldnt-do-part-4-msgwaitformultipleobjects-is-a-very-tricky-api/
+---------------------------------------------------------------------------------------------------------------}
+function ExecuteShellAndWait(CONST ExeFile: string; Params: string = '';
+  Hide: Boolean = FALSE; WaitTime: Cardinal = INFINITE): Boolean;
+VAR
+  ShellInfo: TShellExecuteInfo;
+CONST
+  bWaitAll = FALSE;
+begin
+  if not FileExists(ExeFile) then raise Exception.Create('ExecuteShell no file');
+
+  FillChar(ShellInfo, SizeOf(ShellInfo), 0);
+  ShellInfo.cbSize:= SizeOf(ShellInfo);
+  ShellInfo.fMask:= SEE_MASK_NOCLOSEPROCESS or SEE_MASK_FLAG_DDEWAIT;
+  ShellInfo.Wnd:= GetActiveWindow;
+  ShellInfo.lpVerb:= 'open';
+  ShellInfo.lpParameters:= PChar(Params);
+  ShellInfo.lpFile:= PChar(ExeFile);
+
+  if Hide
+  then ShellInfo.nShow:= SW_HIDE
+  else ShellInfo.nShow:= SW_SHOWNORMAL;
+
+  if NOT ShellExecuteEx(@ShellInfo) then
+    begin
+      MessageError(SysErrorMessage(GetLastError));
+      EXIT(FALSE);
+    end;
+
+  { Wait for process while keeping UI responsive }
+  WHILE MsgWaitForMultipleObjects(1, ShellInfo.hProcess, bWaitAll, WaitTime, QS_POSTMESSAGE Or QS_SENDMESSAGE) <> WAIT_OBJECT_0 
+   DO Application.ProcessMessages; // is this wise?
+
+  CloseHandle(ShellInfo.hProcess);
+  Result:= TRUE;
+end;
 
 
+{---------------------------------------------------------------------------------------------------------------
+   UTILITY FUNCTIONS
+---------------------------------------------------------------------------------------------------------------}
 
 
+{---------------------------------------------------------------------------------------------------------------
+   ExecuteURL
 
+   Opens a URL in the default web browser.
+   Encodes special characters that may cause issues in URLs.
 
-{-------------------------------------------------------------------------------------------------------------
-   SHELLEXEC UTILS
--------------------------------------------------------------------------------------------------------------}
+   Parameters:
+     URL - The URL to open (http://, https://, etc.)
+---------------------------------------------------------------------------------------------------------------}
 procedure ExecuteURL(URL: string);
 begin
-  {ToDo 1: encode all other special URL chars}
-  URL := StringReplace(URL, '"', '%22', [rfReplaceAll]);
+  if URL = '' then EXIT;
+
+  { Encode special characters that may cause issues }
+  URL:= StringReplace(URL, '"', '%22', [rfReplaceAll]);
+
   ExecuteShell(URL, '', TRUE, SW_SHOWNORMAL);
 end;
 
 
+{---------------------------------------------------------------------------------------------------------------
+   ExecuteSendEmail
+
+   Opens the default email client with a new message to the specified address.
+
+   Parameters:
+     EmailAddress - Email address to send to (without mailto: prefix)
+---------------------------------------------------------------------------------------------------------------}
 procedure ExecuteSendEmail(EmailAddress: string);
 begin
- Winapi.ShellAPI.ShellExecute(0, 'mailto:', PChar(EmailAddress), NIL, NIL, SW_SHOW);
+  if EmailAddress = '' then EXIT;
+
+  { ShellExecute with mailto: protocol opens default email client }
+  ShellExecute(0, NIL, PChar('mailto:' + EmailAddress), NIL, NIL, SW_SHOW);
 end;
 
 
-procedure ExecuteExplorer(Path: string);                                                     { This will open Explorer in the specified folder. 'Execute' will browse the folder not explore }
+{---------------------------------------------------------------------------------------------------------------
+   ExecuteExplorer
+
+   Opens Windows Explorer at the specified path.
+   Uses 'explore' verb to open Explorer view (not just browse).
+
+   Parameters:
+     Path - Directory path to explore
+---------------------------------------------------------------------------------------------------------------}
+procedure ExecuteExplorer(Path: string);
 begin
- if DirectoryExistMsg(Path)
- then Winapi.ShellAPI.ShellExecute(0, 'explore', PChar(path), NIL, NIL, SW_SHOW);
+  if Path = '' then EXIT;
+
+  if DirectoryExistMsg(Path)
+  then ShellExecute(0, 'explore', PChar(Path), NIL, NIL, SW_SHOW);
 end;
 
 
-function ExecuteExplorerSelect(FileName: string): boolean;                                   { Execute Win Explorer and select the specified file. http://stackoverflow.com/questions/15300999/open-windows-explorer-directory-select-a-specific-file-in-delphi  }
-VAR IIDL: PItemIDList;
+{---------------------------------------------------------------------------------------------------------------
+   ExecuteExplorerSelect
+
+   Opens Windows Explorer at the file's location and selects the file.
+   Uses SHOpenFolderAndSelectItems API for proper selection behavior.
+
+   Parameters:
+     FileName - Full path to file to select
+
+   Returns:
+     True if Explorer was opened and file selected successfully
+
+   See: http://stackoverflow.com/questions/15300999/open-windows-explorer-directory-select-a-specific-file-in-delphi
+---------------------------------------------------------------------------------------------------------------}
+function ExecuteExplorerSelect(FileName: string): Boolean;
+VAR
+  ItemIDList: PItemIDList;
 begin
-  Result := FALSE;
-  IIDL   := ILCreateFromPath(PChar(FileName));
-  if IIDL <> NIL then
+  Result:= FALSE;
+  if not FileExists(FileName) then RAISE Exception.Create('ExecuteShell no file');
+
+  ItemIDList:= ILCreateFromPath(PChar(FileName));
+  if ItemIDList <> NIL then
     TRY
-      Result := SHOpenFolderAndSelectItems(IIDL, 0, NIL, 0) = S_OK;
+      Result:= SHOpenFolderAndSelectItems(ItemIDList, 0, NIL, 0) = S_OK;
     FINALLY
-      ILFree(IIDL);
+      ILFree(ItemIDList);
     END;
 end;
 
 
-{ Open Control Panel to 'Screen Resolution' tab
-  BETTER ALTERNATIVE:
+{---------------------------------------------------------------------------------------------------------------
+   ExecuteControlPanel_ScreenRes
+
+   Opens Windows Control Panel to the Screen Resolution / Display Settings page.
+
+   Uses CreateProcess to launch control.exe with the display settings applet.
+
+   See:
      http://stackoverflow.com/questions/18919089/how-to-execute-items-in-control-panel
-  more:
-     http://msdn.microsoft.com/en-us/library/windows/desktop/cc144191%28v=vs.85%29.aspx }
+     http://msdn.microsoft.com/en-us/library/windows/desktop/cc144191
+---------------------------------------------------------------------------------------------------------------}
 procedure ExecuteControlPanel_ScreenRes;
 VAR
-  App        : String;
-  Params     : String;
+  App: string;
+  CmdLine: string;
   StartupInfo: TStartupInfo;
   ProcessInfo: TProcessInformation;
 begin
-  App:= GetWinDir+ 'system32\control.exe';
+  App:= GetWinDir + 'system32\control.exe';
   if NOT FileExistsMsg(App) then EXIT;
 
-  Params := 'desk.cpl,Settings@Settings';
+  CmdLine:= App + ' desk.cpl,Settings@Settings';
+
   FillChar(StartupInfo, SizeOf(StartupInfo), 0);
-  StartupInfo.cb := SizeOf(StartupInfo);
-  if NOT CreateProcess(NIL, PChar(App+' '+Params), nil, nil, False, 0, nil, nil, StartupInfo, ProcessInfo)
-  then RaiseLastOSError;
+  StartupInfo.cb:= SizeOf(StartupInfo);
+
+  if CreateProcess(NIL, PChar(CmdLine), NIL, NIL, FALSE, 0, NIL, NIL, StartupInfo, ProcessInfo) then
+    begin
+      { Close handles - we don't need to wait for control panel }
+      CloseHandle(ProcessInfo.hThread);
+      CloseHandle(ProcessInfo.hProcess);
+    end
+  else
+    RaiseLastOSError;
 end;
 
 

@@ -4,7 +4,7 @@ UNIT LightVcl.Common.Registry;
    2025.03
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-   Allows us to work with registry more easily (without manuall creating and destroying a TRegistry object)
+   Allows us to work with registry more easily (without manually creating and destroying a TRegistry object)
 
    See LightCore.IO.GetProgramFilesDir for example of usage
 =============================================================================================================}
@@ -26,7 +26,7 @@ CONST
  function RegHasSubKeys         (CONST Root: HKEY; CONST Key: string): Boolean;
 
  function RegDeleteKey          (CONST Root: HKEY; CONST Key: string): Boolean;
- function RegClearKey           (CONST Root: HKEY; CONST Key: string): Boolean;                                                           { Deletes all value/name paires inside the key but don't delete the key }
+ function RegClearKey           (CONST Root: HKEY; CONST Key: string): Boolean;                                                           { Deletes all value/name pairs inside the key but don't delete the key }
  function RegDeleteValue        (CONST Root: HKEY; CONST Key, ValueName: string): Boolean;
 
  function RegWriteString        (CONST Root: HKEY; CONST Key, ValueName,         ValueData: string;  Lazy: Boolean= TRUE): Boolean;       { Writes a string to the specified key in the registry }
@@ -41,7 +41,7 @@ CONST
  function RegEnumSubKeys        (CONST Root: HKEY; const Key: string): TStringList;   { ! }
 
  function RegWriteValuePairs    (CONST Root: HKEY; CONST Key: string; Pairs     : TStringList; CONST Delimiter: char; Lazy     : Boolean= TRUE) : Boolean;
- function RegReadValuePairs     (CONST Root: HKEY; CONST Key: string; Pairs     : TStringList; CanCreate: Boolean= FALSE): Boolean;    { Enumerate all name/values pares contained in the specified key }
+ function RegReadValuePairs     (CONST Root: HKEY; CONST Key: string; Pairs     : TStringList; CanCreate: Boolean= FALSE): Boolean;    { Enumerate all name/values pairs contained in the specified key }
  function RegReadValueNames     (CONST Root: HKEY; CONST Key: string; ValueNames: TStringList; CanCreate: Boolean= FALSE): Boolean;    { Returns all values contained in the specified key }  //I think the old name was RegReadNames
  function RegReadValueDatas     (CONST Root: HKEY; CONST Key: string; ValueDatas: TStringList; CanCreate: Boolean= FALSE): Boolean;    { Returns all keys contained in the specified path }
  function RegReadMultiSzString  (CONST Root: HKEY; CONST Key, KeyName: string;                 CanCreate: Boolean= FALSE): string;     { Reads a REG_MULTI_SZ value From the Registry. This will return strings separated by ENTER }
@@ -397,8 +397,8 @@ function RegReadValueDatas(CONST Root: HKEY; CONST Key: string; ValueDatas: TStr
 VAR Rg: TRegistry;
      i: Integer;
 begin
- if ValueDatas= NIL
- then raise exception.Create('ValueDatas is NIL') at @RegReadValueNames;
+ if ValueDatas = NIL
+ then raise Exception.Create('ValueDatas is NIL') at @RegReadValueDatas;
 
  Rg:= TRegistry.Create(KEY_READ);
  TRY
@@ -418,20 +418,22 @@ end;
 
 
 
-{ Tested ok }
+{ Returns a list of subkey names under the specified key.
+  Note: Caller must free the returned TStringList! }
 function RegEnumSubKeys(CONST Root: HKEY; CONST Key: string): TStringList;
-var
+VAR
   Rg: TRegistry;
 begin
-  Rg := TRegistry.Create;
+  Result:= TStringList.Create;
+  Rg:= TRegistry.Create(KEY_READ);
   TRY
-    Rg.RootKey := Root;
-    Rg.OpenKeyReadOnly(Key);
-    Result:= TStringList.Create;
-    Rg.GetKeyNames(Result);
+    Rg.RootKey:= Root;
+    if Rg.OpenKeyReadOnly(Key)
+    then Rg.GetKeyNames(Result);
+    Rg.CloseKey;
   FINALLY
-   FreeAndNil(Rg);
-  End;
+    FreeAndNil(Rg);
+  END;
 end;
 
 
@@ -439,7 +441,7 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-   REGISTRY - MulstiSZ
+   REGISTRY - MultiSZ
 --------------------------------------------------------------------------------------------------}
 { Reads a REG_MULTI_SZ value From the Registry. This will return strings separated by ENTER.  From here: http://www.swissdelphicenter.ch/torry/showcode.php?id=1431 }
 function RegReadMultiSzString;
@@ -481,7 +483,7 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-   REGISTRY - CONVETORS
+   REGISTRY - CONVERTERS
 --------------------------------------------------------------------------------
     Documentation:
           The registry contains two basic elements: keys and values.

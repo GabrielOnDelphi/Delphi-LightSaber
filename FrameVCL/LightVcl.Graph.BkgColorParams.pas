@@ -66,12 +66,15 @@ begin
   NeighborWeight := 100;
   NeighborDist   := 2;
   Tolerance      := 8;                       { Border detection }
-  Color          := TColor($218F42);         { Albastru+gri+negru }
+  Color          := TColor($218F42);         { Blue+gray+black }
 end;
 
 
 procedure RBkgColorParams.ReadFromStream(IOStream: TLightStream);
 begin
+  if IOStream = NIL
+  then raise Exception.Create('RBkgColorParams.ReadFromStream: IOStream parameter cannot be nil');
+
   VAR Version:= IOStream.ReadInteger;
   if Version = CurrentVersion then
    begin
@@ -105,6 +108,9 @@ end;
 
 procedure RBkgColorParams.WriteToStream(IOStream: TLightStream);
 begin
+  if IOStream = NIL
+  then raise Exception.Create('RBkgColorParams.WriteToStream: IOStream parameter cannot be nil');
+
   IOStream.WriteInteger (CurrentVersion);
   IOStream.WriteInteger (Color);
   IOStream.WriteByte    (Ord(FillType));
