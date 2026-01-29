@@ -132,6 +132,31 @@ type
 
     [Test]
     procedure TestValidateForFileOperation_RecycleBin;
+
+    { Parameter Validation Tests }
+    [Test]
+    procedure TestFileMoveTo_EmptyFrom_ShouldRaise;
+
+    [Test]
+    procedure TestFileMoveTo_EmptyTo_ShouldRaise;
+
+    [Test]
+    procedure TestFileMoveToDir_EmptyFrom_ShouldRaise;
+
+    [Test]
+    procedure TestFileMoveToDir_EmptyTo_ShouldRaise;
+
+    [Test]
+    procedure TestMoveFolderMsg_EmptyFrom_ShouldRaise;
+
+    [Test]
+    procedure TestMoveFolderMsg_EmptyTo_ShouldRaise;
+
+    [Test]
+    procedure TestRecycleItem_EmptyItemName_ShouldRaise;
+
+    [Test]
+    procedure TestSetCompressionAtr_EmptyFileName_ShouldRaise;
   end;
 
 implementation
@@ -451,6 +476,97 @@ begin
   Assert.IsFalse(FileOperation('Recycle Bin', '', FO_DELETE, 0),
     'FileOperation should fail for Recycle Bin');
 end;
+
+
+{ Parameter Validation Tests }
+
+procedure TTestVclCommonIO.TestFileMoveTo_EmptyFrom_ShouldRaise;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      FileMoveTo('', 'C:\Temp\Test.txt');
+    end,
+    Exception);
+end;
+
+
+procedure TTestVclCommonIO.TestFileMoveTo_EmptyTo_ShouldRaise;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      FileMoveTo('C:\Temp\Test.txt', '');
+    end,
+    Exception);
+end;
+
+
+procedure TTestVclCommonIO.TestFileMoveToDir_EmptyFrom_ShouldRaise;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      LightVcl.Common.IO.FileMoveToDir('', 'C:\Temp', True);
+    end,
+    Exception);
+end;
+
+
+procedure TTestVclCommonIO.TestFileMoveToDir_EmptyTo_ShouldRaise;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      LightVcl.Common.IO.FileMoveToDir('C:\Temp\Test.txt', '', True);
+    end,
+    Exception);
+end;
+
+
+procedure TTestVclCommonIO.TestMoveFolderMsg_EmptyFrom_ShouldRaise;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      MoveFolderMsg('', 'C:\Temp', True);
+    end,
+    Exception);
+end;
+
+
+procedure TTestVclCommonIO.TestMoveFolderMsg_EmptyTo_ShouldRaise;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      MoveFolderMsg('C:\Temp', '', True);
+    end,
+    Exception);
+end;
+
+
+procedure TTestVclCommonIO.TestRecycleItem_EmptyItemName_ShouldRaise;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      RecycleItem('');
+    end,
+    Exception);
+end;
+
+
+procedure TTestVclCommonIO.TestSetCompressionAtr_EmptyFileName_ShouldRaise;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      SetCompressionAtr('');
+    end,
+    Exception);
+end;
+
 
 initialization
   TDUnitX.RegisterTestFixture(TTestVclCommonIO);

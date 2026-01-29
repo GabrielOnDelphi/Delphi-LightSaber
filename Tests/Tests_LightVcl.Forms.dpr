@@ -1,4 +1,14 @@
-program LightVclTests;
+program Tests_LightVcl.Forms;
+
+{=====================================================
+When TESTINSIGHT is defined:
+  - Test output is redirected to the TestInsight panel inside the Delphi IDE
+  - Console output is suppressed or minimal
+
+When TESTINSIGHT is not defined:
+  - Test results are written to the console/stdout
+  - Useful for command-line builds, CI/CD pipelines, or when running tests outside the IDE
+=====================================================}
 
 {$IFNDEF TESTINSIGHT}
 {$APPTYPE CONSOLE}
@@ -13,12 +23,10 @@ uses
   TestInsight.DUnitX,
   {$ELSE}
   DUnitX.Loggers.Console,
-  DUnitX.Loggers.Xml.NUnit,
   {$ENDIF }
   DUnitX.TestFramework,
   LightCore.AppData,
   LightVcl.Visual.AppData in '..\FrameVCL\LightVcl.Visual.AppData.pas',
-  Test.LightVcl.Common.IO in 'Test.LightVcl.Common.IO.pas',
   Test.FormAbout in 'Test.FormAbout.pas',
   Test.FormAsyncMessage in 'Test.FormAsyncMessage.pas',
   Test.FormDrawing in 'Test.FormDrawing.pas',
@@ -67,7 +75,7 @@ begin
   ReportMemoryLeaksOnShutdown := True;
 
   // Initialize AppData for tests that require it (e.g., FormAbout tests)
-  AppData:= TAppData.Create('LightVclTests');
+  AppData:= TAppData.Create('LightVclFormsTests');
   TRY
 
 {$IFDEF TESTINSIGHT}

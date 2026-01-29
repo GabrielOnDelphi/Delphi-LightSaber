@@ -238,9 +238,6 @@ end;
 
 
 initialization
-  {$IFDEF TESTINSIGHT}
-  TestInsight.DUnitX.RunRegisteredTests;
-  {$ENDIF}
   TDUnitX.RegisterTestFixture(TTestCompiler);
 
 end.

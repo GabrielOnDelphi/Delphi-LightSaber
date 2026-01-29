@@ -40,31 +40,26 @@ type
     [Test]
     procedure TestConstants;
 
-    { Download Tests - these may fail without network }
+    { Download Tests - require network access }
     [Test]
-    [Ignore('Network test - may fail without internet connection')]
     procedure TestDownloadAsString_ValidUrl;
 
     [Test]
     procedure TestDownloadAsString_InvalidUrl;
 
     [Test]
-    [Ignore('Network test - may fail without internet connection')]
     procedure TestDownloadToFile_ValidUrl;
 
     [Test]
     procedure TestDownloadToFile_InvalidUrl;
 
     [Test]
-    [Ignore('Network test - may fail without internet connection')]
     procedure TestDownloadToStream_ValidUrl;
 
     [Test]
-    [Ignore('Network test - may fail without internet connection')]
     procedure TestDownloadAsString_SimpleOverload;
 
     [Test]
-    [Ignore('Network test - may fail without internet connection')]
     procedure TestDownloadWithCustomOptions;
 
     [Test]
