@@ -18,10 +18,13 @@
         <Projects Include="FrameVCL\LightVcl.Visual.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Tests\LightCoreTests.dproj">
+        <Projects Include="Tests\Tests_LightCore.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Tests\LightVclTests.dproj">
+        <Projects Include="Tests\Tests_LightVcl.Common.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Tests\Tests_LightVcl.Forms.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -77,32 +80,41 @@
     <Target Name="LightVcl_Visual:Make">
         <MSBuild Projects="FrameVCL\LightVcl.Visual.dproj" Targets="Make"/>
     </Target>
-    <Target Name="LightCoreTests">
-        <MSBuild Projects="Tests\LightCoreTests.dproj"/>
+    <Target Name="Tests_LightCore">
+        <MSBuild Projects="Tests\Tests_LightCore.dproj"/>
     </Target>
-    <Target Name="LightCoreTests:Clean">
-        <MSBuild Projects="Tests\LightCoreTests.dproj" Targets="Clean"/>
+    <Target Name="Tests_LightCore:Clean">
+        <MSBuild Projects="Tests\Tests_LightCore.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="LightCoreTests:Make">
-        <MSBuild Projects="Tests\LightCoreTests.dproj" Targets="Make"/>
+    <Target Name="Tests_LightCore:Make">
+        <MSBuild Projects="Tests\Tests_LightCore.dproj" Targets="Make"/>
     </Target>
-    <Target Name="LightVclTests">
-        <MSBuild Projects="Tests\LightVclTests.dproj"/>
+    <Target Name="Tests_LightVcl_Common">
+        <MSBuild Projects="Tests\Tests_LightVcl.Common.dproj"/>
     </Target>
-    <Target Name="LightVclTests:Clean">
-        <MSBuild Projects="Tests\LightVclTests.dproj" Targets="Clean"/>
+    <Target Name="Tests_LightVcl_Common:Clean">
+        <MSBuild Projects="Tests\Tests_LightVcl.Common.dproj" Targets="Clean"/>
     </Target>
-    <Target Name="LightVclTests:Make">
-        <MSBuild Projects="Tests\LightVclTests.dproj" Targets="Make"/>
+    <Target Name="Tests_LightVcl_Common:Make">
+        <MSBuild Projects="Tests\Tests_LightVcl.Common.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Tests_LightVcl_Forms">
+        <MSBuild Projects="Tests\Tests_LightVcl.Forms.dproj"/>
+    </Target>
+    <Target Name="Tests_LightVcl_Forms:Clean">
+        <MSBuild Projects="Tests\Tests_LightVcl.Forms.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Tests_LightVcl_Forms:Make">
+        <MSBuild Projects="Tests\Tests_LightVcl.Forms.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightVcl_Common;LightVcl_Internet;LightVcl_Graphics;LightVcl_Visual;LightCoreTests;LightVclTests"/>
+        <CallTarget Targets="LightCore;LightVcl_Common;LightVcl_Internet;LightVcl_Graphics;LightVcl_Visual;Tests_LightCore;Tests_LightVcl_Common;Tests_LightVcl_Forms"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightVcl_Common:Clean;LightVcl_Internet:Clean;LightVcl_Graphics:Clean;LightVcl_Visual:Clean;LightCoreTests:Clean;LightVclTests:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightVcl_Common:Clean;LightVcl_Internet:Clean;LightVcl_Graphics:Clean;LightVcl_Visual:Clean;Tests_LightCore:Clean;Tests_LightVcl_Common:Clean;Tests_LightVcl_Forms:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightVcl_Common:Make;LightVcl_Internet:Make;LightVcl_Graphics:Make;LightVcl_Visual:Make;LightCoreTests:Make;LightVclTests:Make"/>
+        <CallTarget Targets="LightCore:Make;LightVcl_Common:Make;LightVcl_Internet:Make;LightVcl_Graphics:Make;LightVcl_Visual:Make;Tests_LightCore:Make;Tests_LightVcl_Common:Make;Tests_LightVcl_Forms:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
@@ -130,8 +142,14 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Tests\LightVclTests.dproj">
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Forms.dproj">
             <ProjectGuid>{4560913D-9812-4328-A5F6-ACB31275D904}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Common.dproj">
+            <ProjectGuid>{B7E2F8A1-3D5C-4E6F-9A2B-1C8D7E6F5A4B}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -142,7 +160,7 @@
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Tests\LightCoreTests.dproj">
+        <BuildGroupProject Include="Tests\Tests_LightCore.dproj">
             <ProjectGuid>{5216FFFC-4185-4210-B2B2-91B47B5805A9}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -174,8 +192,14 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Tests\LightVclTests.dproj">
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Forms.dproj">
             <ProjectGuid>{4560913D-9812-4328-A5F6-ACB31275D904}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Common.dproj">
+            <ProjectGuid>{B7E2F8A1-3D5C-4E6F-9A2B-1C8D7E6F5A4B}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -186,7 +210,7 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Tests\LightCoreTests.dproj">
+        <BuildGroupProject Include="Tests\Tests_LightCore.dproj">
             <ProjectGuid>{5216FFFC-4185-4210-B2B2-91B47B5805A9}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -218,8 +242,14 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Tests\LightVclTests.dproj">
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Forms.dproj">
             <ProjectGuid>{4560913D-9812-4328-A5F6-ACB31275D904}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Common.dproj">
+            <ProjectGuid>{B7E2F8A1-3D5C-4E6F-9A2B-1C8D7E6F5A4B}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -230,7 +260,7 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Tests\LightCoreTests.dproj">
+        <BuildGroupProject Include="Tests\Tests_LightCore.dproj">
             <ProjectGuid>{5216FFFC-4185-4210-B2B2-91B47B5805A9}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
@@ -262,8 +292,14 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Tests\LightVclTests.dproj">
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Forms.dproj">
             <ProjectGuid>{4560913D-9812-4328-A5F6-ACB31275D904}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Common.dproj">
+            <ProjectGuid>{B7E2F8A1-3D5C-4E6F-9A2B-1C8D7E6F5A4B}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -274,7 +310,7 @@
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="Tests\LightCoreTests.dproj">
+        <BuildGroupProject Include="Tests\Tests_LightCore.dproj">
             <ProjectGuid>{5216FFFC-4185-4210-B2B2-91B47B5805A9}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
