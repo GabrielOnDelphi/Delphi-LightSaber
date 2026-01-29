@@ -23,6 +23,7 @@ uses
   TestInsight.DUnitX,
   {$ELSE}
   DUnitX.Loggers.Console,
+  DUnitX.Loggers.Xml.NUnit,
   {$ENDIF }
   DUnitX.TestFramework,
   LightCore.AppData,
@@ -70,6 +71,9 @@ var
   nunitLogger: ITestLogger;
 {$ENDIF}
 
+var
+  MainForm: TForm;
+
 begin
   Application.Initialize;
   ReportMemoryLeaksOnShutdown := True;
@@ -77,6 +81,10 @@ begin
   // Initialize AppData for tests that require it (e.g., FormAbout tests)
   AppData:= TAppData.Create('LightVclFormsTests');
   TRY
+
+  // Create a dummy main form - required by AppData.CreateFormHidden
+  Application.CreateForm(TForm, MainForm);
+  MainForm.Visible:= FALSE;
 
 {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX.RunRegisteredTests;
@@ -117,6 +125,7 @@ begin
   end;
 {$ENDIF}
   FINALLY
+    FreeAndNil(MainForm);
     FreeAndNil(AppData);
   END;
 end.
