@@ -19,7 +19,7 @@
         http://en.wikipedia.org/wiki/Unsponsored_top-level_domain
 -------------------------------------------------------------------------------------------------------------}
 
-INTERFACE                                                                                                     {$WARN GARBAGE OFF}   {Silence the: 'W1011 Text after final END' warning }
+INTERFACE
 
 USES
    Winapi.Windows, Winapi.MAPI, Winapi.ShellAPI{ Required by OpenDefaultEmail },
@@ -80,11 +80,16 @@ end;
 
 
 
-function EmailSortByDomain(CONST InptList: TStrings): TStringList;                   { SORT }
+{ Sorts a list of email addresses alphabetically by domain name.
+  Uses selection sort algorithm - finds the smallest domain and moves it to result.
+  Note: Caller is responsible for freeing the returned TStringList. }
+function EmailSortByDomain(CONST InptList: TStrings): TStringList;
 VAR TmpList: TStringList;
     CurAddr, xPozition: integer;
     CurDomain, CurUser, xDomain, xUserName: string;
 begin
+ Assert(InptList <> NIL, 'InptList parameter cannot be nil');
+
  Result   := TStringList.Create;
  TmpList:= TStringList.Create;
  TRY
@@ -112,7 +117,8 @@ begin
     TmpList.Delete(xPozition);
    end;
 
-  Result.Add(TmpList[0]);                                                                        { add also last line, remained unprocessed  }
+  if TmpList.Count > 0
+  then Result.Add(TmpList[0]);                                                                     { add also last line, remained unprocessed  }
  FINALLY
   FreeAndNil(TmpList);
  END;
@@ -320,8 +326,10 @@ begin
    end;                                                                         // for
   //Result := False; // If we got here fail
  except
-   //todo 1: trap only specific exceptions
-   Result := false;                                                        // Just return false
+   on E: ERangeError do
+     Result:= False;  { String index out of bounds during correction attempt }
+   on E: EStringListError do
+     Result:= False;  { String manipulation error during correction }
  end;
 end;
 
@@ -352,26 +360,6 @@ begin
   end;
  Result:= ErrorDescriptions[Code];                                              // Get the error description from the constant array
 end;
-
-
-(*del
-function FailCode2Str (FailCode: Integer): string;
-begin
- Result:= '';
- case FailCode of
-    flUnknown: Result                := 'Unknown error';
-    flNoSeperator: Result            := '@ not found';
-    flToSmall: Result                := 'The email address is too short';
-    flUserNameToLong: Result         := 'The email address is too long';
-    flDomainNameToLong: Result       := 'The domain name is too long';
-    flInvalidChar: Result            := 'Invalid character detected';
-    flMissingUser: Result            := 'Missing user';
-    flMissingDomain: Result          := 'Missing domain';
-    flMissingDomainSeperator: Result := 'Missing domain separator (dot)';
-    flMissingGeneralDomain: Result   := 'Domain root is too short';
-    flToManyAtSymbols: Result        := 'To many symbols';
- end;
-end;  *)
 
 
 
@@ -606,9 +594,11 @@ begin
    // Well after all that checking, we should now have a valid address
    Result := True;
  except
-   //todo 1: trap only specific exceptions
-   Result := False;
-   FailCode := -1;
+   on E: ERangeError do
+    begin
+     Result:= False;
+     FailCode:= flUnknown;  { String index out of bounds during validation }
+    end;
  END;
 end;
 
@@ -621,23 +611,39 @@ end;
                                  EXTRACT  EMAIL
 ===============================================================================}
 
-function ExtractEmailEngine (CONST SmallText : string; StartPos: integer; var EndPos: integer): string;                                { extract the first email address encountered from a string  }
+{ Core engine for extracting email addresses from text.
+  Algorithm:
+    1. Find the @ symbol starting from StartPos
+    2. Scan backwards from @ to find the start of the email (stop at separators)
+    3. Scan forwards from @ to find the end of the email (stop at separators)
+    4. Extract and return the substring
+
+  Parameters:
+    SmallText - The text to search for email addresses
+    StartPos  - Position to start searching from (1-based)
+    EndPos    - Returns the position where the email ends (for chained calls)
+
+  Returns: The extracted email address, or empty string if not found }
+function ExtractEmailEngine (CONST SmallText : string; StartPos: integer; var EndPos: integer): string;
 var
   AtPos: integer;
   i, len: integer;
 begin
- Result:= '';                                                                   // SmallText:= CopyTo(SmallText, StartPos, EndPos);
+ Result:= '';
  AtPos:= PosEx('@', SmallText, StartPos);
  len:= length(SmallText);
- if (AtPos< 2) OR (len< 3) then Exit;
+ if (AtPos< 2) OR (len< 3) then Exit;                                          { Need at least x@y format }
  EndPos:= len;
 
+ { Scan backwards from @ to find email start }
  for i:= AtPos downto StartPos do
    if CharInSet(SmallText[i], SeparatorsEmail) then
     begin
      StartPos:= i+1;
      break;
     end;
+
+ { Scan forwards from @ to find email end }
  for i:= AtPos to len DO
    if CharInSet(SmallText[i], SeparatorsEmail) then
     begin
@@ -776,21 +782,20 @@ begin
 end;
 
 
-function GetDefaultEmailAddress: String;                                                           { Works only if the user uses Outlook as email client }
+{ Returns the default email address from Windows registry.
+  Works only if the user uses Outlook as email client.
+  Returns empty string if the registry key doesn't exist or cannot be read. }
+function GetDefaultEmailAddress: String;
 VAR Registry: TRegistry;
 begin
- Registry := TRegistry.Create;
+ Result:= '';
+ Registry:= TRegistry.Create;
  TRY
-  TRY
-    Registry.RootKey := HKEY_CURRENT_USER;                                                         { False because we do not want to create it if it doesn’t exist}
-    Registry.OpenKey('Software\Microsoft\Internet Account Manager\Accounts\00000001', FALSE);
-    Result := registry.ReadString('SMTP Email Address');
-   FINALLY
-    FreeAndNil(Registry);
-   END;
- except
-   //todo 1: trap only specific exceptions
-   Result:= '';
+   Registry.RootKey:= HKEY_CURRENT_USER;
+   if Registry.OpenKeyReadOnly('Software\Microsoft\Internet Account Manager\Accounts\00000001')
+   then Result:= Registry.ReadString('SMTP Email Address');
+ FINALLY
+   FreeAndNil(Registry);
  END;
 end;
 
@@ -806,254 +811,5 @@ end;
 
 
 
- end.(* ============================================================================
 
-
-
-    Question/Problem/Abstract:
-    Have you ever needed to verify that an e-mail address is correct, or have you had to work with a list of e-mail addresses and realized that some had simple problems that you could easily correct by hand?
-    Answer:
-
-    Article Updated 9/20/2000
-    Please note: I have made a correction to the e-mail validation function to correct a bug with handling small e-mail addresses like a@a.com (not a very common address). If you would like to be notified of any future enhancements or bug fixes, please e-mail me. – Thanks to Simon for catching this bug!
-    Thanks, enjoy!!!
-
-
-    Extended E-mail Address Verification and Correction
-
-    Have you ever needed to verify that an e-mail address is correct, or have you had to work with a list of e-mail addresses and realized that some had simple problems that you could easily correct by hand? Well the functions I present here are designed to do just that. In this article I present two functions, one to check that an e-mail address is valid, and another to try to correct an incorrect e-mail address.
-
-    Just what is a correct e-mail address?
-    The majority of articles I’ve seen on e-mail address verification use an over-simplified approach. For example, the most common approach I’ve seen is to ensure that an ‘@’ symbol is present, or that it’s a minimum size (ex. 7 characters), or a combination of both.  And a better, but less used method is to verify that only allowed characters (based on the SMTP standard) are in the address.
-
-    The problem with these approaches is that they only can tell you at the highest level that an address is POSSIBLY correct, for example:
-
-    The address: ------@--------
-    Can be considered a valid e-mail address, as it does contain an @, is at least 7 characters long and contains valid characters.
-
-    To ensure an address is truly correct, you must verify that all portions of the e-mail address are valid. The function I present performs the following checks:
-    a) Ensure an address is not blank
-    b) Ensure an @ is present
-    c) Ensure that only valid characters are used
-    Then splits the validation to the two individual sections:  username (or mailbox) and domain
-    Validation for the username:
-    a) Ensure it is not blank
-    b) Ensure the username is not longer than the current standard (RFC 821)
-    c) Ensures that periods (.) are used properly, specifically there can not be sequential periods (ex. David..Lederman is not valid) nor can there be a period in the first or last character of an e-mail address
-    Validation for the domain name:
-    a) Ensure it is not blank
-    b) Ensure the domain name is not longer than the current standard
-    d) Ensure that periods (.) are used properly, specifically there can not be sequential periods (ex. World..net is not valid) nor can there a period in the first or last character of the domain segment
-    e) Domain segments need to be checked  (ex. in someplace.somewhere.com, someplace, somewhere, and com are considered segments) to ensure that they do not start or end with a hyphen (-) (ex. somewhere.-someplace.com, is not valid)
-    f) Ensure that at least two domain segments exists (ex. someplace.com is valid, .com is not valid)
-    g) Ensure that there are no additional @ symbols in the domain portion
-
-    With the steps above most syntactically valid e-mail address that are not correct can be detected and invalidated.
-
-    The VerifyEmailAddress function:
-    This function takes 3 parameters:
-    Email – The e-mail address to check
-    FailCode – The error code reported by the function if it can’t validate an address
-    FailPosition – The position of the character (if available) where the validation failure occurred
-
-    The function returns a Boolean value that returns True if the address is valid, and False if it is invalid. If a failure does occur the FailCode can be used to determine the exact error that caused the problem:
-
-      flUnknown – An unknown error occurred, and was trapped by the exception handler.
-      flNoSeperator – No @ symbol was found.
-      flToSmall – The email address was blank.
-      flUserNameToLong – The user name was longer than the SMTP standard allows.
-      flDomainNameToLong – The domain name was longer than the SMTP standard allows.
-      flInvalidChar – An invalid character was found. (FailPosition returns the location of the character)
-      flMissingUser – The username section is not present.
-      flMissingDomain – The domain name section is not present
-      flMissingDomainSeperator – No domain segments where found
-      flMissingGeneralDomain – No top-level domain was found
-      flToManyAtSymbols – More than one @ symbol was found
-
-    For simple validation there is no use for FailCode and FailPosition, but can be used to display an error using the ValidationErrorString which takes the FailCode as a parameter and returns a text version of the error which can then be displayed.
-
-    E-mail Address Correction
-    Since the e-mail validation routine returns detailed error information an automated system to correct common e-mail address mistakes can be easily created.  The following common mistakes can all be corrected automatically:
-
-    example2.aol.com – The most common error (at least in my experience) is when entering an e-mail address a user doesn’t hold shift properly and instead enters a 2.
-    example@.aol.com - This error is just an extra character entered by the user, of course example@aol.com was the intended e-mail address.
-
-    example8080 @ aol .com – In this case another common error, spaces.
-    A Cool Screen name@AOL.com – In this case the user entered what they thought was their e-mail address, except_ while AOL allows screen names to contain spaces, the Internet does not.
-    myaddress@ispcom - In this case the period was not entered between ISP and Com.
-
-
-
-
-    Comments to this article:
-
-
-
-    Chris Bray (Sep 22 2000 6:57AM)
-    You asked for suggestions for improvements to your code.... so here goes.
-    You have an awful lot of 'Result := False' calls in your code.  I was always taught to define a default result (normally failure) as the first item in a function, and define the opposing result (normally success) as the last item.
-    This would mean that your function returns true if the code successfully reaches the end.  If it hits one of your errors it exits without the need to reset the result.
-    This would save quite a lot of lines of code, and reduce the possibility of coding errors if you have to add another check at a later date and forget to define the result..........
-
-
-    Chris Bray.
-    The best illustration ;)
-        Andrey Sorokin (Sep 20 2000 7:37AM)
-    It seems as THE BEST illustration for my article
-    E-mail address syntax checking ;)))
-    Your code is good and usefull, but just take a look at the problem from another point of view - read article noticed above..
-    I call it 'birds eye view' at text strings analyzing..
-
-
-    Respond
-        RE: The best illustration ;)
-        David Lederman (Sep 20 2000 10:16AM)
-        Agreed, but as mentioned your article only provides basic validation, and does not help prevent data entry stupidity. Plus, we use these functions in an application that delivers millions of messages a day for numerous clients, which get data from disparate sources and must be validated and if possible corrected.
-        Respond
-
-
-    Cool, but ...
-        Durin (Sep 20 2000 6:30AM)
-
-    Seems to be the right subject for writing a LLR(1) grammar and a parser based on it. Ever tried (just thought about it reading your article, but - pity - no time doing it myself)? Would reduce code substantially.
-    Nevertheless, cool! }
-
-
-
-
-
-
-
-    function ValidateEmailAddress (Email : String; var FailCode, FailPosition : Integer) : Boolean;
-    begin
-     Result:= UnitEmailVerifier.ValidateEmailAddress(Email, FailCode, FailPosition);
-    end;
-    function ValidateEmailAndReturnMessage(Email: string): string;                                 { Returns nothing if the email is valid else return the reason }
-    begin
-     Result:= UnitEmailVerifier.ValidateEmailAndReturnMessage(Email);
-    end;
-
-
-
-
-
-
-
-
-
-
-
-
-
-{--------------------------------------------------------------------------------------------------
-                              GET IP ADDRESS
---------------------------------------------------------------------------------------------------}
-{.$IFNDEF Unicode}
-function GetLocalIPAddress : string;                                                               { ALTERNATIVE:      Or else use third-party code that does it for you (Indy 10 loads GetAddrInfo/W(), for instance).}
-VAR wsdata : TWSAData;
-    HostAddress : PHostEnt;
-    ss : pchar;
-    ip : TInAddr;
-    i  : cardinal;
-    co : string;
-begin
- Result:= '';
- i := MAX_COMPUTERNAME_LENGTH + 1;
- SetLength(co,i);
- WinApi.Windows.GetComputerName(PChar(co),i);
- WSAStartup(MakeWord(1, 1), wsdata);
- HostAddress := GetHostByName(pchar(co));
- if HostAddress <> NIL then
-  begin
-   ip.S_addr:= integer(pointer(HostAddress^. h_addr_list^)^);
-   ss:= inet_ntoa(ip);
-   Result:= string(ss);
-  end;
- WSACleanup;
-end;
-
-
-function GetLocalIPAddress2: string;
-VAR WSAData: TWSAData;
-    HostAddress: PHostEnt;
-    HostName, Address: string;
-begin
- Result:= '';
- WSAStartup(2, WSAData);
- HostAddress := GetHostByName(PChar(HostName));
- with HostAddress^  DO
- Address:=  Format('%d.%d.%d.%d',[
-    Byte(h_addr^[0]), Byte(h_addr^[1]),
-    Byte(h_addr^[2]), Byte(h_addr^[3])]);
- WSACleanup;
- Result:= Address;
-end;
-
-
-function GetLocalIPAddress3: string;
-TYPE
-  TaPInAddr = array [0..10] of PInAddr;
-  PaPInAddr = ^TaPInAddr;
-VAR
-  HostAddress: PHostEnt;
-  pptr: PaPInAddr;
-  Buffer: array [0..63] of ansi char;
-  i: Integer;
-  GInitData: TWSADATA;
-begin
-  WSAStartup($101, GInitData);
-  Result := '';
-  Winsock.GethostName(Buffer, SizeOf(Buffer));                                                     { eu am functia 'CubicGetHostName' }
-  HostAddress := GetHostByName(Buffer);
-  if HostAddress = nil then Exit;
-  pptr := PaPInAddr(HostAddress^.h_addr_list);
-  i := 0;
-  while pptr^[i] <> nil do
-   begin
-    Result:= StrPas(inet_ntoa(pptr^[i]^));
-    Inc(i);
-   end;
-  WSACleanup;
-end;
-
-
-
-function GetLocalIPAddress4 (VAR HostName, IPaddr, WSAErr: string): Boolean;                       { uses Winsock; }
-TYPE
-  Name = array[0..100] of ansi Char;
-  PName = ^Name;
-var
-  HEnt: pHostEnt;
-  HName: PName;
-  WSAData: TWSAData;
-  i: Integer;
-begin
-  Result := False;
-  if WSAStartup($0101, WSAData) <> 0 then begin
-    WSAErr := 'Winsock is not responding."';
-    Exit;
-  end;
-  IPaddr := '';
-  New(HName);
-  if GetHostName(HName^, SizeOf(Name)) = 0 then
-  begin
-    HostName := StrPas(HName^);
-    HEnt := GetHostByName(HName^);
-    for i := 0 to HEnt^.h_length - 1 do
-     IPaddr :=
-      Concat(IPaddr,
-      IntToStr(Ord(HEnt^.h_addr_list^[i])) + '.');
-    SetLength(IPaddr, Length(IPaddr) - 1);
-    Result := True;
-  end
-  else begin
-   case WSAGetLastError of
-    WSANOTINITIALISED:WSAErr:='WSANotInitialised';
-    WSAENETDOWN      :WSAErr:='WSAENetDown';
-    WSAEINPROGRESS   :WSAErr:='WSAEInProgress';
-   end;
-  end;
-  Dispose(HName);
-  WSACleanup;
-end;
-{$ENDIF}
+end.

@@ -711,7 +711,7 @@ begin
   end;
 
  { Calculate actual pixel count based on rows processed }
- PixelCount := RowCount * Cardinal(bmp.Width);
+ PixelCount := Cardinal(RowCount) * Cardinal(bmp.Width);
  if PixelCount = 0
  then EXIT(0);
 

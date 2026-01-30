@@ -28,6 +28,7 @@ USES
    Winapi.Windows, System.SysUtils, System.Classes, System.Win.Registry;
 
 CONST
+   LazyWrite = TRUE;
    RegStartUpKey = 'Software\Microsoft\Windows\CurrentVersion\Run';
 
  function Convert_HKey2Str      (CONST Key: HKEY): string;
@@ -439,8 +440,7 @@ end;
 { Returns a list of subkey names under the specified key.
   Note: Caller must free the returned TStringList! }
 function RegEnumSubKeys(CONST Root: HKEY; CONST Key: string): TStringList;
-VAR
-  Rg: TRegistry;
+VAR Rg: TRegistry;
 begin
   Result:= TStringList.Create;
   Rg:= TRegistry.Create(KEY_READ);
@@ -537,7 +537,6 @@ begin
    if SameText(HKEYNames[i], Key)
    then Result:= HKEY_CLASSES_ROOT+ i;
 end;
-
 
 
 end.
