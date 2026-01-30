@@ -1,20 +1,29 @@
 unit LightVcl.Graph.ShadowText;
 
-{-------------------------------------------------------------------------------------------------------------
+{=============================================================================================================
+   Gabriel Moraru
+   2026.01.30
+   www.GabrielMoraru.com
+--------------------------------------------------------------------------------------------------------------
   Draws shadow under text using DrawShadowText API from ComCtl32.dll.
   If the API is not available the shadow is drawn manually.
-  
+
   Requires:
      Comctl32.DLL v6 (Windows Vista or up)
      App with manifest
 
-  Features
+  Features:
      * Uses lazy loading for DLL/function.
      * Fallback for XP or no manifest.
+     * Handles system colors (clBtnFace, etc.) correctly via ColorToRGB.
 
-   TESTER:
-       LightSaber\Demo\VCL\Demo cGraphText.pas\VCL_Demo_cGraphText.dpr
--------------------------------------------------------------------------------------------------------------}
+  Note:
+     The lazy loading is not thread-safe. If thread safety is required,
+     call GetDrawShadowTextFn() once from the main thread during startup.
+
+  TESTER:
+     LightSaber\Demo\VCL\Demo cGraphText.pas\VCL_Demo_cGraphText.dpr
+=============================================================================================================}
 
 INTERFACE
 
@@ -22,8 +31,15 @@ USES
   WinApi.Windows, System.SysUtils, System.Classes,
   Vcl.Graphics;
 
-function DrawShadowText(Canvas: TCanvas; const Text: string; X, Y: Integer;   TextColor, ShadowColor: TColor; ShadowDist: Integer = 2): Integer; overload;
-function DrawShadowText(Canvas: TCanvas; const Text: string; TextRect: TRect; TextColor, ShadowColor: TColor; ShadowDist: Integer; DrawFlags: DWORD = DT_LEFT or DT_END_ELLIPSIS or DT_MODIFYSTRING): Integer; overload;
+{ Draws text with shadow at specified X, Y coordinates.
+  TextColor/ShadowColor: Accepts both RGB colors and system colors (clBtnFace, etc.).
+  ShadowDist: Shadow offset in pixels (applied to both X and Y). }
+function DrawShadowText(Canvas: TCanvas; const Text: string; X, Y: Integer; TextColor, ShadowColor: TColor; ShadowDist: Integer = 2): Integer; overload;
+
+{ Draws text with shadow within specified rectangle with DrawText flags.
+  DrawFlags: Standard DrawText flags (DT_LEFT, DT_CENTER, DT_WORDBREAK, etc.).
+  Note: DT_MODIFYSTRING should be avoided as Text is const. }
+function DrawShadowText(Canvas: TCanvas; const Text: string; TextRect: TRect; TextColor, ShadowColor: TColor; ShadowDist: Integer; DrawFlags: DWORD = DT_LEFT or DT_END_ELLIPSIS): Integer; overload;
 
 IMPLEMENTATION
 USES LightVcl.Common.WinVersion;
