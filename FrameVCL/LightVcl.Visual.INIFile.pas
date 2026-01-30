@@ -38,7 +38,7 @@ IMPLEMENTATION
 
 USES
    LightVcl.Visual.FloatSpinEdit, LightVcl.Visual.FileListBox, LightVcl.Visual.SpinEdit, LightVcl.Visual.SpinEditDelayed, LightVcl.Visual.PathEdit, LightVcl.Visual.ListBox,
-   LightVcl.Common.CenterControl, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.LogViewer, LightCore.LogUtils, LightCore.LogTypes;
+   LightVcl.Common.CenterControl, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.LogViewer, LightCore.LogTypes;
 
 
 

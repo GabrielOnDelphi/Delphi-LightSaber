@@ -2,7 +2,7 @@ UNIT LightVcl.Internet.Download.Indy;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2023.06
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -50,10 +50,10 @@ TYPE
     destructor Destroy; override;
   end;
 
-function DownloadFile   (CONST URL, Referer, DestinationFile: string; OUT ErrorMsg: String): Boolean;         { Only suitable for small files because the whole download will be saved to RAM before writing it to disk }
+function DownloadFile   (CONST URL, Referer, DestinationFile: string; OUT ErrorMsg: String): Boolean;         { Downloads file using Indy with HTTPS support. Streams directly to disk. }
 
-function DownloadThread (CONST URL, DestinationFile: string; OUT ErrorMsg: String): Boolean;                  { Only suitable for small files because the whole download will be saved to RAM before writing it to disk }
-function DownloadThread2(CONST URL, DestinationFile: string; OUT ErrorMsg: String): Boolean;
+function DownloadThread (CONST URL, DestinationFile: string; OUT ErrorMsg: String): Boolean;                  { WARNING: Blocks GUI! Uses RAM. No HTTPS support. }
+function DownloadThread2(CONST URL, DestinationFile: string; OUT ErrorMsg: String): Boolean;                  { Threaded download. App won't close until done. No HTTPS support. }
     
 
 IMPLEMENTATION
@@ -65,15 +65,23 @@ USES
      IdIOHandlerSocket,
      IdIOHandlerStack;
 
-{ Only suitable for small files because the whole download will be saved to RAM before writing it to disk.
-  Similar example here: https://stackoverflow.com/questions/2184473/download-a-file-from-internet-programmatically-with-an-progress-event-using-delp
+{ Downloads a file from the internet using Indy with HTTPS/SSL support.
+  Streams directly to disk, suitable for files of any size.
 
-The HttpWork event handler could be something like:
+  Parameters:
+    URL             - The URL to download from (supports HTTP and HTTPS)
+    Referer         - Optional referer header (pass empty string if not needed)
+    DestinationFile - Full path where the file will be saved
+    ErrorMsg        - Returns error description if download fails
 
+  Similar example: https://stackoverflow.com/questions/2184473/download-a-file-from-internet-programmatically-with-an-progress-event-using-delp
+
+  The HttpWork event handler could be something like:
     procedure TFormMain.HttpWork(ASender: TObject; AWorkMode: TWorkMode; AWorkCount: Int64);
     begin
       var Http := TIdHTTP(ASender);
-      if (Pos('chunked', LowerCase(Http.Response.TransferEncoding)) = 0) AND (Http.Response.ContentLength > 0) then MemoOutput.Lines.Add('Downloaded  '+ IntToStr(100*AWorkCount div ContentLength)+ '%');
+      if (Pos('chunked', LowerCase(Http.Response.TransferEncoding)) = 0) AND (Http.Response.ContentLength > 0)
+      then MemoOutput.Lines.Add('Downloaded  '+ IntToStr(100*AWorkCount div ContentLength)+ '%');
     end;
 }
 function DownloadFile(CONST URL, Referer, DestinationFile: string; OUT ErrorMsg: String): Boolean;
@@ -83,6 +91,10 @@ VAR
   IDAntiFreeze: TIDAntiFreeze;
   IOHandler: TIdSSLIOHandlerSocketOpenSSL;
 begin
+  Assert(URL <> '', 'DownloadFile: URL is empty');
+  Assert(DestinationFile <> '', 'DownloadFile: DestinationFile is empty');
+
+  ErrorMsg:= '';
   Indy:= TIDHTTP.Create(NIL);
   IOHandler:= TIdSSLIOHandlerSocketOpenSSL.Create(NIL);
   IDAntiFreeze:= TIDAntiFreeze.Create(NIL);
@@ -100,7 +112,8 @@ begin
     Indy.Request.ProxyConnection := 'Keep-Alive';
     Indy.Request.CacheControl    := 'no-cache';
     Indy.IOHandler               := IOHandler;
-    //Indy.referer                 := Referer;
+    if Referer <> ''
+    then Indy.Request.Referer    := Referer;
     /// Indy.OnWork:= HttpWork;
 
     TRY
@@ -110,7 +123,7 @@ begin
       On E: Exception DO
         begin
           Result:= FALSE;
-          ErrorMsg := E.Message + ' (' + IntToStr(Indy.ResponseCode) + ')';
+          ErrorMsg:= E.Message + ' (' + IntToStr(Indy.ResponseCode) + ')';
         end;
     END;
   FINALLY
@@ -139,13 +152,20 @@ end;
 
 
 
-{NOT GOOD: it will block the GUI until it finishes! }
-function DownloadThread(CONST URL, DestinationFile: string; OUT ErrorMsg: String): Boolean;    { Only suitable for small files because the whole download will be saved to RAM before writing it to disk }
+{ WARNING: This function blocks the GUI until download finishes!
+  Consider using DownloadFile with TIdAntiFreeze instead.
+  Only suitable for small files because the whole download will be saved to RAM before writing it to disk.
+  Does NOT support HTTPS - use DownloadFile for HTTPS URLs. }
+function DownloadThread(CONST URL, DestinationFile: string; OUT ErrorMsg: String): Boolean;
 VAR
   Stream: TMemoryStream;
-  Indy : TIDHTTP;
+  Indy: TIDHTTP;
 begin
-  Indy                         := TIDHTTP.Create(NIL);
+  Assert(URL <> '', 'DownloadThread: URL is empty');
+  Assert(DestinationFile <> '', 'DownloadThread: DestinationFile is empty');
+
+  ErrorMsg:= '';
+  Indy:= TIDHTTP.Create(NIL);
   Indy.ConnectTimeout          := 0;                                      { Indy default value: 0 }
   Indy.ReadTimeout             := -1;                                     { Indy default value: -1 }
   Indy.HandleRedirects         := TRUE;                                   { http://stackoverflow.com/questions/4549809/indy-idhttp-how-to-handle-page-redirects }
@@ -155,18 +175,17 @@ begin
   Indy.Request.ProxyConnection := 'Keep-Alive';
   Indy.Request.CacheControl    := 'no-cache';
 
-  Stream := TMemoryStream.Create;
+  Stream:= TMemoryStream.Create;
   TRY
     TRY
       Indy.Get(URL, Stream);
-
       Stream.SaveToFile(DestinationFile);
       Result:= TRUE;
     EXCEPT
-      On E: exception do
+      On E: Exception do
         begin
           Result:= FALSE;
-          ErrorMsg := E.Message + ' (' + IntToStr(Indy.ResponseCode) + ')';
+          ErrorMsg:= E.Message + ' (' + IntToStr(Indy.ResponseCode) + ')';
         end;
     END;
   FINALLY
@@ -255,61 +274,77 @@ end;
 
 
 procedure TSendThread.Execute;
-VAR Stream: TFileStream;
+VAR
+  Stream: TFileStream;
 begin
-  Stream := TFileStream.Create(DestFile, fmCreate);
+  ErrorMsg:= '';
   TRY
+    Stream:= TFileStream.Create(DestFile, fmCreate);
     TRY
-      Indy.Get(URL, Stream);                      //Result := Indy.Get(URL);  // if I want to return a string, use this
-    EXCEPT
-      on E: exception
-       DO ErrorMsg:= E.Message + ' (' + IntToStr(Indy.ResponseCode) + ')';
+      TRY
+        Indy.Get(URL, Stream);  // To return a string instead, use: Result := Indy.Get(URL);
+      EXCEPT
+        on E: Exception
+         DO ErrorMsg:= E.Message + ' (' + IntToStr(Indy.ResponseCode) + ')';
+      END;
+    FINALLY
+      FreeAndNil(Stream);
     END;
-  FINALLY
-    FreeAndNil(Stream);
+  EXCEPT
+    on E: Exception
+     DO ErrorMsg:= 'Failed to create file: ' + E.Message;
   END;
 end;
 
 
 
 
-{ Disadvantage: the application won't Close until the download is over!!!! }
+{ Downloads a file in a background thread while keeping the UI responsive.
+  WARNING: The application won't close until the download is complete!
+  Uses MsgWaitForMultipleObjects to pump messages while waiting.
+  Does NOT support HTTPS - use DownloadFile for HTTPS URLs. }
 function DownloadThread2(CONST URL: string; CONST DestinationFile: string; OUT ErrorMsg: String): Boolean;
 VAR
-   Thread : TSendThread;
+   Thread: TSendThread;
    ThreadHandle: THandle;
 CONST
-  bWaitAll = FALSE;  { Explanation for this: https://blogs.msdn.microsoft.com/larryosterman/2004/06/02/things-you-shouldnt-do-part-4-msgwaitformultipleobjects-is-a-very-tricky-api/ }
+  bWaitAll = FALSE;  { Explanation: https://blogs.msdn.microsoft.com/larryosterman/2004/06/02/things-you-shouldnt-do-part-4-msgwaitformultipleobjects-is-a-very-tricky-api/ }
 begin
+  Assert(URL <> '', 'DownloadThread2: URL is empty');
+  Assert(DestinationFile <> '', 'DownloadThread2: DestinationFile is empty');
+
   Result:= FALSE;
-  Thread := TSendThread.Create;
-  try
-    Thread.URL := URL;
-    Thread.DestFile := DestinationFile;
-    Thread.ErrorMsg := ErrorMsg;
+  ErrorMsg:= '';
+
+  Thread:= TSendThread.Create;
+  TRY
+    Thread.URL:= URL;
+    Thread.DestFile:= DestinationFile;
     Thread.Start;
 
     ThreadHandle:= Thread.Handle;
     REPEAT
-      if Thread.Terminated then
-       begin
-        EXIT(false); //  Test this
-       end;
+      if Thread.Terminated
+      then EXIT(FALSE);
 
       case MsgWaitForMultipleObjects(1, ThreadHandle, bWaitAll, INFINITE, QS_ALLINPUT) of
         WAIT_OBJECT_0:
          begin
-          EXIT(TRUE);
+          ErrorMsg:= Thread.ErrorMsg;  // Retrieve error message from thread after completion
+          Result:= ErrorMsg = '';
+          EXIT;
          end;
-        WAIT_OBJECT_0+1: Application.ProcessMessages;
+        WAIT_OBJECT_0+1: Application.ProcessMessages;  // Process UI messages to keep app responsive
         WAIT_FAILED:     RaiseLastOSError;
       else
         Break;
       end;
     UNTIL FALSE;
-  finally
+
+    ErrorMsg:= Thread.ErrorMsg;
+  FINALLY
     FreeAndNil(Thread);
-  end;
+  END;
 end;
 
 

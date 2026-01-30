@@ -2,7 +2,7 @@ UNIT LightVcl.Internet.CommonWebDown;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2023.06
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -32,22 +32,39 @@ USES LightCore.Download, LightVcl.Internet.common, LightCore.HTML;
 {--------------------------------------------------------------------------------------------------
    UNSPLASH
 --------------------------------------------------------------------------------------------------}
-{ Receive the URL of a Unsplash.com webpage and extracts the main image from it.
-  Returns the file name of the file downloaded to disk }
+{ Receives the URL of an Unsplash.com webpage and extracts the main high-resolution image from it.
+  The function parses the HTML to find the og:image meta tag which contains the image URL.
+  Parameters:
+    URL       - The Unsplash page URL (e.g., https://unsplash.com/photos/xxxxx)
+    LocalFile - Full path where the downloaded image will be saved
+  Returns:
+    True if the image was successfully downloaded, False otherwise }
 function GetUnsplashImage(CONST URL, LocalFile: string): Boolean;
 VAR
    HighResImg, Tag, HTML, ErrorMsg: string;
 begin
- HTML:= DownloadAsString(URL);
- if HTML = '' then EXIT(FALSE);
+ Assert(URL <> '', 'GetUnsplashImage: URL is empty');
+ Assert(LocalFile <> '', 'GetUnsplashImage: LocalFile is empty');
 
- Tag:= LightCore.HTML.ExtractLine(HTML, '<meta data-react-helmet="true" property="og:image"');    //find: <meta data-react-helmet="true" property="og:image"
+ HTML:= DownloadAsString(URL);
+ if HTML = ''
+ then EXIT(FALSE);
+
+ // Find the og:image meta tag which contains the high-resolution image URL
+ Tag:= LightCore.HTML.ExtractLine(HTML, '<meta data-react-helmet="true" property="og:image"');
+ if Tag = ''
+ then EXIT(FALSE);
+
+ // Extract the image URL from the content attribute
  HighResImg:= ExtractAttribValue(Tag, 'content');
+ if HighResImg = ''
+ then EXIT(FALSE);
+
+ // Remove URL parameters (everything after '?') to get the clean image URL
  HighResImg:= CopyTo(HighResImg, 1, '?', FALSE);
 
- //FullPath:= LocalFolder+ extractfileext(HighResImg);
  DownloadToFile(HighResImg, LocalFile, ErrorMsg);
- Result:= ErrorMsg= '';
+ Result:= ErrorMsg = '';
 end;
 
 

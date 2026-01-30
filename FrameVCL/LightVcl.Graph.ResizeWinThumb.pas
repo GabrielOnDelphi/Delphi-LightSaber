@@ -1,19 +1,26 @@
 unit LightVcl.Graph.ResizeWinThumb;
 
 {=============================================================================================================
+   Gabriel Moraru
+   2026.01
+   www.GabrielMoraru.com
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+--------------------------------------------------------------------------------------------------------------
+   Generates thumbnails for files using Windows Shell APIs.
+   Uses IShellItemImageFactory (GenerateThumbnail) or IExtractImage (GenerateThumbnail2).
+
    Source:
       https://www.experts-exchange.com/questions/21330007/Thumbnail-in-TListView.html
       Prog.hu/tudastar/148932/fajlhoz-tartozo-windows-os-nezokep-lekerdezese#e3
 --------------------------------------------------------------------------------------------------------------
    ISSUES:
-      SIt seems it cannot generate images higher than 256px
-
+      It seems it cannot generate images higher than 256px
 
    INPUT:
       Videos, Images.
       Note: If the input file is not supported it will return a bitmap with a system icon for that file type
 
-   TESTER
+   TESTER:
       c:\MyProjects\Projects GRAPHICS Resamplers\GLOBAL Tester\TEST IMAGES\
 -------------------------------------------------------------------------------------------------------------}
 
@@ -95,7 +102,7 @@ end;
 
 destructor TFileThumb.Destroy;
 begin
-  FBmp.Free;
+  FreeAndNil(FBmp);
   inherited;
 end;
 
@@ -113,7 +120,9 @@ begin
 end;
 
 
-// This uses ImageFactory
+{ Generates a thumbnail using IShellItemImageFactory (Windows Vista+).
+  This is the preferred method as it supports larger thumbnail sizes.
+  If the file does not exist or cannot be processed, returns a blank bitmap. }
 procedure TFileThumb.GenerateThumbnail;
 var
   ShellItem: IShellItem;
@@ -138,8 +147,10 @@ end;
 
 
 
-// This uses IExtractImg which seems to be limited to max 160 pixels
-// I can delete this method
+{ Generates a thumbnail using IExtractImage (legacy API).
+  Limited to max 160 pixels. Prefer GenerateThumbnail for larger thumbnails.
+  Falls back to drawing the file's system icon if thumbnail extraction fails.
+  If the file does not exist or cannot be processed, returns a blank bitmap. }
 procedure TFileThumb.GenerateThumbnail2;
 var
   Path, Name: String;
