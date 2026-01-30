@@ -2,7 +2,7 @@
 
 {=============================================================================================================
    www.GabrielMoraru.com
-   2024.05
+   2026.01.30
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    - String manipulation (string conversions, sub-string detection, word manipulation, cut, copy, split, wrap, etc)
@@ -339,7 +339,7 @@ end;
 
 { Extract a resource from self (the executable).
   Returns the resource content as AnsiString.
-  Returns empty string if resource is empty.
+  Raises exception if resource is empty.
   Raises EResNotFound if resource doesn't exist. }
 function GetResourceAsString(CONST ResName: string): AnsiString;
 VAR
@@ -450,9 +450,9 @@ procedure SplitNumber_End(CONST s: string; OUT Text, Number: string);
 VAR i: Integer;
 begin
  Number:= s;
- for i:= Length(s) DownTO 1 DO                                                                     { cauta de la coada spre cap.  ->  tre sa vad unde se termina sirul si unde incep digitii. Exemplu: 'Monkey 02' }
+ for i:= Length(s) DownTO 1 DO                                                                     { Search from end to front. Need to find where string ends and digits start. Example: 'Monkey 02' }
    if NOT CharIsNumber(s[i]) then
-    begin                                                                                          { -> am dat de litere. Impart textul in doua }
+    begin                                                                                          { Found a letter. Split text in two }
      Text  := CopyTo(s, 1, i);
      Number:= system.COPY(s, i+1, MaxInt);
      EXIT;
@@ -477,15 +477,19 @@ end;
 { Returns the position of the last non-digit character in a string.
   Scans from end towards beginning, skipping trailing digits.
   Example: '9d9ad8f7ax0000' returns 10 (the position of 'x').
-  Returns 0 if string is empty or contains only digits. }
+  Raises exception if string is empty.
+  Raises ERangeError if string contains only digits. }
 function LastLetterInString(CONST s: string): Integer;
 begin
  if s = ''
- then raise Exception.Create('LastLetterInString');
+ then raise Exception.Create('LastLetterInString: Empty string');
 
  Result:= Length(s);
- while s[Result].IsDigit DO
+ while (Result > 0) AND s[Result].IsDigit DO
    Dec(Result);
+
+ if Result = 0
+ then raise ERangeError.Create('LastLetterInString: String contains only digits');
 end;
 
 
@@ -497,8 +501,8 @@ begin
  { Keep 0s }
  Zeros:= 0;
  for i:= 1 TO Length(s) DO
-   if s[i]= '0'                                                                { vad daca userul a pus zerouri in fata numarului }
-   then inc(Zeros)                                                             { daca da, le copiez }
+   if s[i]= '0'                                                                { Check if user put zeros in front of the number }
+   then inc(Zeros)                                                             { If so, count them }
    else Break;
 
  iNumar:= StrToInt(s);                                                         { Let it RAISE an error if the string is not a valid number }
@@ -507,7 +511,7 @@ begin
 
  if Length(IntToStr(iNumar)) > OldLength
  then Dec(Zeros);                                                              { we switched from 9 to 10 or 99 to 100, etc }
- Result:= StringOfChar('0', Zeros)+ IntToStr(iNumar);;
+ Result:= StringOfChar('0', Zeros)+ IntToStr(iNumar);
 end;
 
 
@@ -652,17 +656,6 @@ begin
 
    Result:= System.COPY(Result, 1, ComaPos);
   end;
-end;
-
-
-{ }
-function Real2StrEx(CONST ExtValue: Extended; Decimals: Byte = 1): string;
-VAR ComaPos: Integer;
-begin
-   Assert(NOT System.Math.IsNaN(ExtValue), 'Float is NAN!');
-   Result:= FloatToStrF(ExtValue, ffFixed, 16, Decimals);
-   ComaPos:= Pos(FormatSettings.DecimalSeparator, Result);
-   Result:= system.COPY(Result, 1, ComaPos+ Decimals);
 end;
 
 
@@ -1444,16 +1437,16 @@ VAR i: integer;
 begin
  if s= '' then EXIT('');
 
- { Cheack the first char }
+ { Check the first char }
  Result:= s[1];
 
- { Check all chars except_ the last }
+ { Check all chars except the last }
  for i:= 2 to Length(s)-1 DO
   if  (s[i]= #10) AND (s[i+1]<> #13) AND (s[i-1]<> #13)
   then Result:= Result+ CRLFw   {CRLF = $D$A}
   else Result:= Result+ s[i];
 
- { Cheack also the last char }
+ { Check also the last char }
  if s[Length(s)]= #10
   then Result:= Result+ CRLFw
   else Result:= Result+ s[Length(s)];
@@ -1773,7 +1766,7 @@ end;
 
 
 
-{ Returns a random name in a 100 unique names list }
+{ Returns a random name from a list of 200 unique names }
 function GetRandomPersonName: string;
 CONST
    Names: array[0..199] of string = ('Aaron','Abigail','Adam','Alan','Albert','Alexander','Alexis','Alice','Amanda','Amber','Amy','Andrea','Andrew','Angela','Ann','Anna','Anthony','Arthur','Ashley','Austin','Barbara','Benjamin','Betty','Beverly','Billy','Bobby','Brandon','Brenda','Brian','Brittany','Bruce','Bryan','Carl','Carol','Carolyn','Catherine','Charles',
@@ -1781,7 +1774,7 @@ CONST
                                      'Isabella','Jack','Jacob','Jacqueline','James','Janet','Janice','Jason','Jean','Jeffrey','Jennifer','Jeremy','Jerry','Jesse','Jessica','Joan','Joe','John','Jonathan','Jordan','Jose','Joseph','Joshua','Joyce','Juan','Judith','Judy','Julia','Julie','Justin','Karen','Katherine','Kathleen','Kathryn','Kayla','Keith','Kelly','Kenneth','Kevin','Kimberly','Kyle','Larry','Laura',
                                      'Lauren','Lawrence','Linda','Lisa','Logan','Lori','Louis','Madison','Margaret','Maria','Marie','Marilyn','Mark','Martha','Mary','Mason','Matthew','Megan','Melissa','Michael','Michelle','Nancy','Natalie','Nathan','Nicholas','Nicole','Noah','Olivia','Pamela','Patricia','Patrick','Paul','Peter','Philip','Rachel','Ralph','Randy','Raymond','Rebecca','Richard','Robert','Roger','Ronald','Roy','Russell','Ruth','Ryan','Samantha','Samuel','Sandra','Sara','Sarah','Scott','Sean','Sharon','Shirley','Sophia','Stephanie','Stephen','Steven','Susan','Teresa','Terry','Theresa','Thomas','Timothy','Tyler','Victoria','Vincent','Virginia','Walter','Wayne','William','Willie','Zachary');
 begin
-  Result:= Names[Random(High(Names))];
+  Result:= Names[Random(Length(Names))];
 end;
 
 
@@ -1789,7 +1782,7 @@ function GetRandomStreetName: string;
 CONST
    Names: array[0..40] of string = ('Abbey Road', 'Abbotswell Street', 'Abingdon Street', 'Acacia Road', 'Acorn Street', 'Acton Street', 'Adam Street', 'Adelaide Place', 'Admiral Street', 'Agnes Street', 'Albany Street', 'Albemarle Street', 'Albert Cottages', 'Albert Mews', 'Albert Road', 'Albion Mews', 'Alexander Street', 'Alfred Mews', 'Allen Street', 'Allington Street', 'Alma Road', 'Amberley Road', 'Anchor Alley', 'Angel Count', 'Ann Street', 'Anstey Road', 'Beech Street', 'Belgrave Road', 'Belgrave Street', 'Belgrave Terrace', 'Bell Court', 'Bell Yard', 'Belmont Road', 'Bendall Street', 'Bendmore Road', 'Bennett Street', 'Bentinck Street', 'Beresford Street', 'Berkley Street', 'Berwick Street', 'Birdcage Walk');
 begin
-  Result:= Names[Random(High(Names))];
+  Result:= Names[Random(Length(Names))];
 end;
 
 
@@ -2133,13 +2126,6 @@ end;
 
 
 
-function CutRight(CONST s: AnsiString; FromPos, ToPos: integer): AnsiString;  { Copy the text between FromPos and ending at ToPos. The char at ToPos is also copied. }
-begin
- Result:= system.COPY(s, FromPos, ToPos-FromPos+1);                           { +1 ca sa includa si valoarea de la potitia 'FromPos' }
-end;
-
-
-
 
 
 
@@ -2151,7 +2137,7 @@ end;
 { Copy the text between iFrom and iTo (including) }
 function CopyTo(CONST s: AnsiString; iFrom, iTo: integer): AnsiString;
 begin
- Result:= system.Copy(s, iFrom, iTo-iFrom+1);                                 { +1 ca sa includa si valoarea de la potitia 'iFrom' }
+ Result:= system.Copy(s, iFrom, iTo-iFrom+1);                                 { +1 to include the character at position 'iFrom' }
 end;
 
 
@@ -2221,7 +2207,7 @@ begin
    if IncludeMarkers
    then iTo:= iTo+ Length(sTo);
 
-   if iTo < 1              { If the ending sFrom (sTo) was not found, copy until the end of the string }
+   if iTo < 1              { If the ending marker (sTo) was not found, copy until the end of the string }
    then iTo:= maxint;
    Result:= system.COPY(s, iFrom, iTo-iFrom+1)
   end
@@ -2527,17 +2513,6 @@ begin
 end;
 
 
-{ A 'word' is separate by spaces AND other special characters.
-  1077ms on a 1.8MB TXT file (AMD 4GHz). }
-function WordCountSlow(CONST s: string): Integer;
-VAR
-   sArray: TStringDynArray;
-begin
-  sArray:= System.StrUtils.SplitString(s, '.,? =<>*!-:;()/\'+cr+lf);
-  Result:= Length(sArray);
-end;
-
-
 { Returns true if the specified char is a word separator (space, enter, signs, etc) }   // Old name: InSeparatorList
 function IsWordSeparator(CONST aChar: Char): Boolean;
 begin
@@ -2621,16 +2596,6 @@ begin
    end;
 end;
 
-
-{ Don't use: Slow! 15ms }
-function CountAppearanceC_(CONST Niddle: char; CONST Haystack: string): integer;
-VAR i: Integer;
-begin
- Result:= 0;
- for i := 1 to Length(Haystack) DO
-   if Haystack[i] = Niddle
-   then inc(Result);
-end;
 
 
 

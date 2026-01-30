@@ -1,7 +1,7 @@
 UNIT LightCore.StreamMem;
 
 {=============================================================================================================
-   2026.01
+   2026.01.30
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Extends TMemoryStream.
@@ -568,12 +568,13 @@ end;
    CHARS
 --------------------------------------------------------------------------------------------------}
 
-{ Writes a bunch of chars from the file.
-  Why 'chars' and not 'string'? This function writes C++ strings (the length of the string was not written to disk also) and not real Delphi strings. }
+{ Writes raw characters to file (no length prefix).
+  Unlike WriteStringA, this does NOT write the string length first.
+  Use when writing C-style strings or fixed-length character data. }
 procedure TCubicMemStream.WriteChars(CONST s: AnsiString);
 begin
-  Assert(s<> '', 'TCubicMemStream.WriteChars - The string is empty');       { This makes sure 's' is not empty. Else I will get a RangeCheckError at runtime }
-  WriteBuffer(s[1], Length(s));
+  if Length(s) > 0
+  then WriteBuffer(s[1], Length(s));
 end;
 
 

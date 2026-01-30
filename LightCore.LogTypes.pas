@@ -2,7 +2,7 @@ UNIT LightCore.LogTypes;
 
 {=============================================================================================================
    www.GabrielMoraru.com
-   2025
+   2026.01
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
    A simple but effective visual log control/library.

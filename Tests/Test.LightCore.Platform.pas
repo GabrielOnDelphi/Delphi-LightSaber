@@ -1,6 +1,7 @@
 unit Test.LightCore.Platform;
 
 {=============================================================================================================
+   2026.01.30
    Unit tests for LightCore.Platform
    Tests platform detection and reporting utilities
 
@@ -147,7 +148,7 @@ begin
     (OS = 'iOS') OR
     (OS = 'macOS') OR
     (OS = 'Linux') OR
-    (OS = 'pfWinRT') OR
+    (OS = 'WinRT') OR
     (OS = 'Unknown'),
     'OsType should return a known platform name'
   );

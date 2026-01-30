@@ -1,6 +1,7 @@
 unit Test.LightCore.Math;
 
 {=============================================================================================================
+   2026.01.30
    Unit tests for LightCore.Math
    Tests math functions: min/max, range, percent, round, median, factorial
 
@@ -77,10 +78,19 @@ type
     procedure TestRoundEx_Exact;
 
     [Test]
+    procedure TestRoundEx_Negative;
+
+    [Test]
     procedure TestRoundUp;
 
     [Test]
+    procedure TestRoundUp_Negative;
+
+    [Test]
     procedure TestRoundDown;
+
+    [Test]
+    procedure TestRoundDown_Negative;
 
     [Test]
     procedure TestRoundTo_Category5;
@@ -114,10 +124,22 @@ type
     procedure TestMean;
 
     [Test]
+    procedure TestInterq10;
+
+    [Test]
     procedure TestInterq25;
 
     [Test]
     procedure TestInterq75;
+
+    [Test]
+    procedure TestInterq90;
+
+    [Test]
+    procedure TestInterq_SmallArray;
+
+    [Test]
+    procedure TestInterq_SingleElement;
 
     { Basic Math Tests }
     [Test]
@@ -134,6 +156,12 @@ type
 
     [Test]
     procedure TestCombinations;
+
+    [Test]
+    procedure TestCombinations_EdgeCases;
+
+    [Test]
+    procedure TestFactorial_20;
 
     { Other Tests }
     [Test]
@@ -306,6 +334,15 @@ begin
   Assert.AreEqual(LongInt(5), RoundEx(5.0));
 end;
 
+procedure TTestLightCoreMath.TestRoundEx_Negative;
+begin
+  { For negative numbers, Frac() returns negative values, so RoundEx
+    behaves as "round toward positive infinity" }
+  Assert.AreEqual(LongInt(-2), RoundEx(-2.3));
+  Assert.AreEqual(LongInt(-2), RoundEx(-2.5));  { Frac(-2.5) = -0.5, not >= 0.50 }
+  Assert.AreEqual(LongInt(-2), RoundEx(-2.7));
+end;
+
 procedure TTestLightCoreMath.TestRoundUp;
 begin
   Assert.AreEqual(LongInt(3), RoundUp(2.1));
@@ -313,11 +350,29 @@ begin
   Assert.AreEqual(LongInt(2), RoundUp(2.0));  { No fractional part }
 end;
 
+procedure TTestLightCoreMath.TestRoundUp_Negative;
+begin
+  { For negative numbers, Frac() returns negative values
+    RoundUp(-2.3): Frac = -0.3, not > 0, returns Trunc(-2.3) = -2
+    This is actually ceiling behavior (smallest integer >= x) }
+  Assert.AreEqual(LongInt(-2), RoundUp(-2.3));
+  Assert.AreEqual(LongInt(-2), RoundUp(-2.7));
+  Assert.AreEqual(LongInt(-2), RoundUp(-2.0));
+end;
+
 procedure TTestLightCoreMath.TestRoundDown;
 begin
   Assert.AreEqual(LongInt(2), RoundDown(2.9));
   Assert.AreEqual(LongInt(2), RoundDown(2.1));
   Assert.AreEqual(LongInt(2), RoundDown(2.0));
+end;
+
+procedure TTestLightCoreMath.TestRoundDown_Negative;
+begin
+  { RoundDown uses Trunc which rounds toward zero }
+  Assert.AreEqual(LongInt(-2), RoundDown(-2.3));
+  Assert.AreEqual(LongInt(-2), RoundDown(-2.7));
+  Assert.AreEqual(LongInt(-2), RoundDown(-2.0));
 end;
 
 procedure TTestLightCoreMath.TestRoundTo_Category5;
@@ -407,12 +462,54 @@ begin
   Assert.IsTrue(Interq25(Arr) > 0);  { Just verify it returns something reasonable }
 end;
 
+procedure TTestLightCoreMath.TestInterq10;
+var
+  Arr: TIntegerDynArray;
+begin
+  { For array with 20 elements, Q10 is at position 2 }
+  Arr:= TIntegerDynArray.Create(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20);
+  Assert.IsTrue(Interq10(Arr) <= Interq25(Arr));  { Q10 should be <= Q25 }
+end;
+
 procedure TTestLightCoreMath.TestInterq75;
 var
   Arr: TIntegerDynArray;
 begin
   Arr:= TIntegerDynArray.Create(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12);
   Assert.IsTrue(Interq75(Arr) > Interq25(Arr));  { Q75 should be greater than Q25 }
+end;
+
+procedure TTestLightCoreMath.TestInterq90;
+var
+  Arr: TIntegerDynArray;
+begin
+  { For array with 20 elements, Q90 is near the end }
+  Arr:= TIntegerDynArray.Create(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20);
+  Assert.IsTrue(Interq90(Arr) >= Interq75(Arr));  { Q90 should be >= Q75 }
+end;
+
+procedure TTestLightCoreMath.TestInterq_SmallArray;
+var
+  Arr: TIntegerDynArray;
+begin
+  { Test with small array (3 elements) - should not crash }
+  Arr:= TIntegerDynArray.Create(5, 10, 15);
+  Assert.IsTrue(Interq10(Arr) >= 5);
+  Assert.IsTrue(Interq25(Arr) >= 5);
+  Assert.IsTrue(Interq75(Arr) <= 15);
+  Assert.IsTrue(Interq90(Arr) <= 15);
+end;
+
+procedure TTestLightCoreMath.TestInterq_SingleElement;
+var
+  Arr: TIntegerDynArray;
+begin
+  { Single element array - all quartiles should return that element }
+  Arr:= TIntegerDynArray.Create(42);
+  Assert.AreEqual(42, Interq10(Arr));
+  Assert.AreEqual(42, Interq25(Arr));
+  Assert.AreEqual(42, Interq75(Arr));
+  Assert.AreEqual(42, Interq90(Arr));
 end;
 
 { Basic Math Tests }
@@ -446,6 +543,25 @@ begin
   Assert.AreEqual(Int64(10), Combinations(5, 2));
   { C(6,3) = 6!/(3!*3!) = 720/(6*6) = 20 }
   Assert.AreEqual(Int64(20), Combinations(6, 3));
+end;
+
+procedure TTestLightCoreMath.TestCombinations_EdgeCases;
+begin
+  { C(n,0) = 1 for any n }
+  Assert.AreEqual(Int64(1), Combinations(5, 0));
+  Assert.AreEqual(Int64(1), Combinations(10, 0));
+  { C(n,n) = 1 for any n }
+  Assert.AreEqual(Int64(1), Combinations(5, 5));
+  { C(n,1) = n }
+  Assert.AreEqual(Int64(7), Combinations(7, 1));
+  { C(0,0) = 1 }
+  Assert.AreEqual(Int64(1), Combinations(0, 0));
+end;
+
+procedure TTestLightCoreMath.TestFactorial_20;
+begin
+  { 20! = 2432902008176640000 (maximum value before Int64 overflow) }
+  Assert.AreEqual(Int64(2432902008176640000), Factorial(20));
 end;
 
 { Other Tests }

@@ -1,13 +1,12 @@
 unit Test.LightVcl.Common.Dialogs;
 
 {=============================================================================================================
+   2026.01
    Unit tests for LightVcl.Common.Dialogs.pas
-   Tests message box utility functions.
 
+   Tests message box utility functions.
    Note: Most dialog functions display modal dialogs that would block automated tests.
    We focus on testing edge cases that don't show dialogs (empty messages, exceptions).
-
-   Includes TestInsight support: define TESTINSIGHT in project options.
 =============================================================================================================}
 
 interface
@@ -45,7 +44,7 @@ type
     [Test]
     procedure TestMesajTaskDlg_EmptyMessage_NoException;
 
-    { Function Existence Tests - verify functions are callable }
+    { Function Existence Tests - verify functions are callable with correct signatures }
     [Test]
     procedure TestMessageInfo_FunctionExists;
 
@@ -57,6 +56,9 @@ type
 
     [Test]
     procedure TestMesajErrDetail_FunctionExists;
+
+    [Test]
+    procedure TestMesajYesNo_FunctionExists;
   end;
 
 implementation
@@ -142,13 +144,12 @@ begin
 end;
 
 
-{ Function Existence Tests }
+{ Function Existence Tests - verify functions are callable with correct signatures }
 
 procedure TTestDialogs.TestMessageInfo_FunctionExists;
 var
-  Proc: procedure(const MessageText: string; const Caption: string);
+  Proc: procedure(CONST MessageText: string; CONST Title: string);
 begin
-  { Verify MessageInfo function exists and has correct signature }
   Proc:= MessageInfo;
   Assert.IsTrue(Assigned(@Proc), 'MessageInfo function should exist');
 end;
@@ -156,9 +157,8 @@ end;
 
 procedure TTestDialogs.TestMessageWarning_FunctionExists;
 var
-  Proc: procedure(const MessageText: string; const Caption: string);
+  Proc: procedure(CONST MessageText: string; CONST Title: string);
 begin
-  { Verify MessageWarning function exists and has correct signature }
   Proc:= MessageWarning;
   Assert.IsTrue(Assigned(@Proc), 'MessageWarning function should exist');
 end;
@@ -166,9 +166,8 @@ end;
 
 procedure TTestDialogs.TestMessageError_FunctionExists;
 var
-  Proc: procedure(const MessageText: string; const Caption: string);
+  Proc: procedure(CONST MessageText: string; CONST Title: string);
 begin
-  { Verify MessageError function exists and has correct signature }
   Proc:= MessageError;
   Assert.IsTrue(Assigned(@Proc), 'MessageError function should exist');
 end;
@@ -176,11 +175,19 @@ end;
 
 procedure TTestDialogs.TestMesajErrDetail_FunctionExists;
 var
-  Proc: procedure(const MessageText, Where: string);
+  Proc: procedure(CONST MessageText, Where: string);
 begin
-  { Verify MesajErrDetail function exists and has correct signature }
   Proc:= MesajErrDetail;
   Assert.IsTrue(Assigned(@Proc), 'MesajErrDetail function should exist');
+end;
+
+
+procedure TTestDialogs.TestMesajYesNo_FunctionExists;
+var
+  Func: function(CONST MessageText: string; CONST Title: string): Boolean;
+begin
+  Func:= MesajYesNo;
+  Assert.IsTrue(Assigned(@Func), 'MesajYesNo function should exist');
 end;
 
 

@@ -25,6 +25,7 @@ type
     [TearDown]
     procedure TearDown;
 
+    { Simple Encode/Decode tests }
     [Test]
     procedure TestSimpleEncode_Decode_Roundtrip;
 
@@ -32,8 +33,22 @@ type
     procedure TestSimpleEncode_ShiftsChars;
 
     [Test]
+    procedure TestSimpleEncode_Decode_EmptyString;
+
+    [Test]
+    procedure TestSimpleEncode_BoundaryChar255;
+
+    [Test]
+    procedure TestSimpleDecode_BoundaryChar0;
+
+    { NOT encryption tests }
+    [Test]
     procedure TestEncodeDecode_NOT_Roundtrip;
 
+    [Test]
+    procedure TestEncodeDecode_NOT_EmptyString;
+
+    { XOR encryption tests }
     [Test]
     procedure TestEncodeDecode_XOR_String_Roundtrip;
 
@@ -44,6 +59,13 @@ type
     procedure TestEncodeDecode_XOR_Bytes_Roundtrip;
 
     [Test]
+    procedure TestEncodeDecode_XOR_EmptyString;
+
+    [Test]
+    procedure TestEncodeDecode_XOR_KeyZero;
+
+    { Better Encode/Decode tests }
+    [Test]
     procedure TestBetterEncode_Decode_Roundtrip;
 
     [Test]
@@ -53,7 +75,20 @@ type
     procedure TestBetterDecode_InvalidLength;
 
     [Test]
+    procedure TestBetterDecode_InvalidHexChars;
+
+    [Test]
+    procedure TestBetterEncode_Decode_EmptyString;
+
+    { EncodeXorText / DecodeXorText tests }
+    [Test]
     procedure TestEncodeXorText_DecodeXorText_Roundtrip;
+
+    [Test]
+    procedure TestEncodeXorText_EmptyString;
+
+    [Test]
+    procedure TestEncodeXorText_ByteValueZero;
   end;
 
 implementation
@@ -90,6 +125,47 @@ begin
   Assert.AreEqual('BCD', Encoded, 'SimpleEncode should shift each character by +1');
 end;
 
+procedure TTestEncodeXOR.TestSimpleEncode_Decode_EmptyString;
+var
+  Encoded, Decoded: string;
+begin
+  Encoded := SimpleEncode('');
+  Decoded := SimpleDecode('');
+
+  Assert.AreEqual('', Encoded, 'SimpleEncode of empty string should be empty');
+  Assert.AreEqual('', Decoded, 'SimpleDecode of empty string should be empty');
+end;
+
+procedure TTestEncodeXOR.TestSimpleEncode_BoundaryChar255;
+var
+  Original, Encoded, Decoded: string;
+begin
+  { #255 should wrap to #0 when encoded }
+  Original := #255;
+  Encoded := SimpleEncode(Original);
+  Assert.AreEqual(#0, Encoded, 'SimpleEncode should wrap #255 to #0');
+
+  { Verify roundtrip }
+  Decoded := SimpleDecode(Encoded);
+  Assert.AreEqual(Original, Decoded, 'Roundtrip should preserve #255');
+end;
+
+procedure TTestEncodeXOR.TestSimpleDecode_BoundaryChar0;
+var
+  Original, Encoded, Decoded: string;
+begin
+  { #0 should wrap to #255 when decoded }
+  Original := #0;
+  Decoded := SimpleDecode(Original);
+  Assert.AreEqual(#255, Decoded, 'SimpleDecode should wrap #0 to #255');
+
+  { Verify roundtrip via encode first }
+  Encoded := SimpleEncode(#255);
+  Assert.AreEqual(#0, Encoded, 'SimpleEncode(#255) should produce #0');
+  Decoded := SimpleDecode(Encoded);
+  Assert.AreEqual(#255, Decoded, 'Roundtrip should preserve #255');
+end;
+
 procedure TTestEncodeXOR.TestEncodeDecode_NOT_Roundtrip;
 var
   Original, FirstPass, SecondPass: string;
@@ -99,6 +175,14 @@ begin
   SecondPass := EncodeDecode_NOT(FirstPass);
 
   Assert.AreEqual(Original, SecondPass, 'Double NOT should return original (NOT is its own inverse)');
+end;
+
+procedure TTestEncodeXOR.TestEncodeDecode_NOT_EmptyString;
+var
+  Result: string;
+begin
+  Result := EncodeDecode_NOT('');
+  Assert.AreEqual('', Result, 'NOT of empty string should be empty');
 end;
 
 procedure TTestEncodeXOR.TestEncodeDecode_XOR_String_Roundtrip;
@@ -151,6 +235,33 @@ begin
     Assert.AreEqual(Original[i], Decoded[i], Format('Byte at index %d should match', [i]));
 end;
 
+procedure TTestEncodeXOR.TestEncodeDecode_XOR_EmptyString;
+var
+  ResultStr: string;
+  ResultAnsi: AnsiString;
+  ResultBytes: TBytesArray;
+begin
+  ResultStr := EncodeDecode_XOR('', 42);
+  Assert.AreEqual('', ResultStr, 'XOR of empty string should be empty');
+
+  ResultAnsi := EncodeDecode_XOR(AnsiString(''), 42);
+  Assert.AreEqual(AnsiString(''), ResultAnsi, 'XOR of empty AnsiString should be empty');
+
+  SetLength(ResultBytes, 0);
+  ResultBytes := EncodeDecode_XOR(ResultBytes, 42);
+  Assert.AreEqual(0, Length(ResultBytes), 'XOR of empty byte array should be empty');
+end;
+
+procedure TTestEncodeXOR.TestEncodeDecode_XOR_KeyZero;
+var
+  Original, Result: string;
+begin
+  { XOR with key 0 should return the original string unchanged }
+  Original := 'TestString';
+  Result := EncodeDecode_XOR(Original, 0);
+  Assert.AreEqual(Original, Result, 'XOR with key 0 should leave string unchanged');
+end;
+
 procedure TTestEncodeXOR.TestBetterEncode_Decode_Roundtrip;
 var
   Original, Encoded, Decoded: string;
@@ -190,6 +301,29 @@ begin
   );
 end;
 
+procedure TTestEncodeXOR.TestBetterDecode_InvalidHexChars;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      BetterDecode('GH', 100);  { GH are not valid hex characters }
+    end,
+    Exception,
+    'BetterDecode should raise exception for invalid hex characters'
+  );
+end;
+
+procedure TTestEncodeXOR.TestBetterEncode_Decode_EmptyString;
+var
+  Encoded, Decoded: string;
+begin
+  Encoded := BetterEncode('', 12345);
+  Assert.AreEqual('', Encoded, 'BetterEncode of empty string should be empty');
+
+  Decoded := BetterDecode('', 12345);
+  Assert.AreEqual('', Decoded, 'BetterDecode of empty string should be empty');
+end;
+
 procedure TTestEncodeXOR.TestEncodeXorText_DecodeXorText_Roundtrip;
 var
   PlainText: string;
@@ -213,6 +347,39 @@ begin
   Decoded := DecodeXorText(EncodedArr, Key);
 
   Assert.AreEqual(PlainText, Decoded, 'DecodeXorText should recover original plaintext');
+end;
+
+procedure TTestEncodeXOR.TestEncodeXorText_EmptyString;
+var
+  Result: string;
+begin
+  Result := EncodeXorText('', 42);
+  Assert.AreEqual('', Result, 'EncodeXorText of empty string should return empty string');
+end;
+
+procedure TTestEncodeXOR.TestEncodeXorText_ByteValueZero;
+var
+  PlainText: string;
+  Key: Byte;
+  EncodedDef: string;
+  EncodedArr: array of Byte;
+  Decoded: string;
+begin
+  { Test that byte value 0 is correctly handled in the hex output.
+    Using Key=65 ('A') XOR 'A' = 0, so the first byte should be $0 (not just $) }
+  PlainText := 'A';
+  Key := 65;
+
+  EncodedDef := EncodeXorText(PlainText, Key);
+
+  { The output should contain $0 for byte value 0, not just $ }
+  Assert.Contains(EncodedDef, '$0', 'Byte value 0 should be encoded as $0, not stripped');
+
+  { Verify roundtrip works }
+  SetLength(EncodedArr, 1);
+  EncodedArr[0] := 0; { 'A' XOR 65 = 0 }
+  Decoded := DecodeXorText(EncodedArr, Key);
+  Assert.AreEqual(PlainText, Decoded, 'Roundtrip with byte value 0 should work');
 end;
 
 initialization

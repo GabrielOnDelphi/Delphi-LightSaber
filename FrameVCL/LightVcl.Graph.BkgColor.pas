@@ -2,16 +2,21 @@ UNIT LightVcl.Graph.BkgColor;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
+   Background border effects and color detection for bitmap images.
 
    Features:
-     * Fades the borders of BMP to the specified color
-     * Get border color
-     * Get border average color
-     * Get border dominant color
+     * Fades the borders of BMP to the specified color (gradual transition)
+     * Apply colored rectangular border frames
+     * Detect if image has black border
+     * Get border average/dominant color for auto-detection
+     * Remove black borders from images
+
+   Used by wallpaper/desktop background applications to blend images into screen borders.
+   Parameters are configured via RBkgColorParams from LightVcl.Graph.BkgColorParams.pas
 
    Tester:
      c:\MyProjects\Project Testers\gr cGraphBorder.pas tester\TesterFadeBrd.dpr
@@ -329,13 +334,16 @@ VAR
   end;
 
 
-  function ProcessRow: Integer;                                                              { Returns total number of black pixels on this row }
+  { Processes a single row of pixels, fading them towards the background color.
+    Reads from 'Line' and writes result to 'NextLine'.
+    Note: Return value is currently unused (always 0). Kept for potential future use. }
+  function ProcessRow: Integer;
   VAR
      x1: Integer;
      R, G, B: Byte;                                                                          { Current pixel }
      FadeSpeed, NeighborWeight: Real;
    begin
-    Result:= 0;
+    Result:= 0;   { Placeholder - return value not currently used }
     FadeSpeed     := BkgClrParams.FadeSpeed      / 100;
     NeighborWeight:= BkgClrParams.NeighborWeight / 100;
 
@@ -405,9 +413,6 @@ VAR
 
       MiddleLine:= OutBMP.Scanline[Ln];
       MainPixel:= MiddleLine[CurColumn];
-
-      {if Ln+BkgClrRec.NeighborDist >= OutBMP.Height
-      then EmptyDummy; }
 
       L:= OutBMP.Scanline[Ln+BkgClrParams.NeighborDist];
       RNeigbour:= l[CurColumn];
@@ -537,8 +542,6 @@ begin
  then raise Exception.Create('FadeBorder: iTop is invalid. The wallpaper is larger than the desktop! '+ IntToStr(iTop));
  if iLeft < 0
  then raise Exception.Create('FadeBorder: iLeft is invalid. The wallpaper is larger than the desktop! '+ IntToStr(iLeft));
- (* if iTop < 0then iTop:= 0;                 { This happens when the wallpaper is bigger than the desktop! }
- if iLeft < 0 then iLeft:= 0;  *)
 
  iRight:= InpBmp.Width + iLeft;
  iBott := InpBmp.Height+ iTop;
@@ -651,10 +654,13 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-  BORDER COLOR
-  Returns the DOMINANT color in the specified border of the image
+   GetBorderDominantColor
+   Returns the DOMINANT color in the specified border of the image.
+   Scans all pixels along the specified border edge and finds the most frequently occurring color.
+   Uses Tolerance to group similar colors together (avoids counting near-identical colors as different).
+   Returns -1 if the image is too small (< 4 pixels in either dimension).
 --------------------------------------------------------------------------------------------------}
-function GetBorderDominantColor;
+function GetBorderDominantColor(BMP: TBitmap; Border: TBorderType; Tolerance: Integer= 8): TColor;
 TYPE
    RDot= record
       Col  : TColor;

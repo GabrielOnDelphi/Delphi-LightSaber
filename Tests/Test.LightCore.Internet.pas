@@ -1,6 +1,7 @@
 unit Test.LightCore.Internet;
 
 {=============================================================================================================
+   2026.01.30
    Unit tests for LightCore.Internet
    Tests URL parsing, validation, and manipulation functions
 
@@ -12,6 +13,7 @@ interface
 uses
   DUnitX.TestFramework,
   System.SysUtils,
+  System.Classes,
   LightCore.Internet;
 
 type
@@ -78,12 +80,15 @@ type
     [TestCase('WithPort80', 'www.example.com:80,www.example.com')]
     [TestCase('WithPort8080', 'www.example.com:8080,www.example.com')]
     [TestCase('NoPort', 'www.example.com,www.example.com')]
+    [TestCase('HttpWithPort', 'http://example.com:8080/path,http://example.com/path')]
+    [TestCase('HttpsWithPort', 'https://example.com:443/path,https://example.com/path')]
     procedure TestUrlRemovePort(const URL, Expected: string);
 
     [Test]
     [TestCase('Port80', 'www.example.com:80,80')]
     [TestCase('Port8080', 'http://example.com:8080/path,8080')]
     [TestCase('NoPort', 'www.example.com,0')]
+    [TestCase('HttpsPort443', 'https://example.com:443/path,443')]
     procedure TestUrlExtractPort(const URL: string; Expected: Integer);
 
     { URL Comparison Tests }
@@ -105,6 +110,13 @@ type
     [TestCase('InvalidIP', '192.168.1.256,False')]
     [TestCase('TooShort', '192.168.1,False')]
     [TestCase('Empty', ',False')]
+    [TestCase('ValidZeros', '0.0.0.0,True')]
+    [TestCase('ValidMax', '255.255.255.255,True')]
+    [TestCase('DoubleDot', '192..168.1.1,False')]
+    [TestCase('LeadingDot', '.192.168.1.1,False')]
+    [TestCase('TrailingDot', '192.168.1.1.,False')]
+    [TestCase('TooManyOctets', '192.168.1.1.1,False')]
+    [TestCase('Letters', '192.168.1.abc,False')]
     procedure TestValidateIpAddress(const Address: string; Expected: Boolean);
 
     [Test]
@@ -112,6 +124,8 @@ type
     [TestCase('MaxPort', '65535,True')]
     [TestCase('InvalidPort', '70000,False')]
     [TestCase('NegativePort', '-1,False')]
+    [TestCase('ZeroPort', '0,True')]
+    [TestCase('NonNumeric', 'abc,False')]
     procedure TestValidatePort(const Port: string; Expected: Boolean);
 
     { URL Encoding }
@@ -121,6 +135,9 @@ type
     [Test]
     procedure TestUrlEncode_SpecialChars;
 
+    [Test]
+    procedure TestUrlEncode_ExtendedASCII;
+
     { IsWebPage Tests }
     [Test]
     [TestCase('HTML', 'http://example.com/page.html,True')]
@@ -128,7 +145,92 @@ type
     [TestCase('ASP', 'http://example.com/page.asp,True')]
     [TestCase('Image', 'http://example.com/image.jpg,False')]
     [TestCase('FolderSlash', 'http://example.com/folder/,True')]
+    [TestCase('HashOnly', '#,True')]
+    [TestCase('DomainOnly', 'http://example.com,True')]
     procedure TestIsWebPage(const URL: string; Expected: Boolean);
+
+    { IP Text Manipulation Tests }
+    [Test]
+    [TestCase('WithPort', '192.168.1.1:80,192.168.1.1')]
+    [TestCase('NoPort', '192.168.1.1,192.168.1.1')]
+    [TestCase('EmptyString', ',')]
+    procedure TestSplitIpFromAdr(const Address, Expected: string);
+
+    [Test]
+    [TestCase('WithPort', '192.168.1.1:8080,8080')]
+    [TestCase('NoPort', '192.168.1.1,')]
+    procedure TestIpExtractPort(const Address, Expected: string);
+
+    { Extract Proxy Tests }
+    [Test]
+    [TestCase('CleanProxy', '192.168.1.1:8080,192.168.1.1:8080')]
+    [TestCase('GarbageBefore', 'xxx192.168.1.1:8080,192.168.1.1:8080')]
+    [TestCase('GarbageAfter', '192.168.1.1:8080xxx,192.168.1.1:8080')]
+    [TestCase('GarbageBoth', 'xxx192.168.1.1:8080xxx,192.168.1.1:8080')]
+    [TestCase('NoColon', '192.168.1.1,')]
+    procedure TestExtractProxyFrom(const Line, Expected: string);
+
+    { Proxy Validation Tests }
+    [Test]
+    [TestCase('ValidProxy', '192.168.1.1:80,True')]
+    [TestCase('InvalidIP', '999.168.1.1:80,False')]
+    [TestCase('InvalidPort', '192.168.1.1:70000,False')]
+    [TestCase('NoPort', '192.168.1.1,False')]
+    procedure TestValidateProxyAdr(const Address: string; Expected: Boolean);
+
+    { URL Folder Extraction Tests }
+    [Test]
+    [TestCase('WithFile', 'http://server.com/folder1/folder2/file.txt,folder2')]
+    [TestCase('TrailingSlash', 'http://server.com/folder1/folder2/,folder2')]
+    [TestCase('SingleFolder', 'http://server.com/folder1/,')]
+    procedure TestURLExtractLastFolder(const URL, Expected: string);
+
+    [Test]
+    [TestCase('WithFile', 'http://server.com/folder1/folder2/file.txt,folder1')]
+    [TestCase('TrailingSlash', 'http://server.com/folder1/folder2/,folder1')]
+    [TestCase('SingleFolder', 'http://server.com/folder1/,')]
+    procedure TestURLExtractPrevFolder(const URL, Expected: string);
+
+    { URL Expansion Tests }
+    [Test]
+    procedure TestExpandURL_AbsoluteURL;
+
+    [Test]
+    procedure TestExpandURL_RootRelative;
+
+    [Test]
+    procedure TestExpandURL_PathRelative;
+
+    [Test]
+    procedure TestExpandURLs_ModifiesList;
+
+    { Protocol-Relative URL Tests }
+    [Test]
+    [TestCase('ProtocolRelative', '//example.com/path,http://example.com/path')]
+    [TestCase('AlreadyAbsolute', 'http://example.com/path,http://example.com/path')]
+    procedure TestURLMakeNonRelativeProtocol(const URL, Expected: string);
+
+    { FileIsInFolder Tests }
+    [Test]
+    procedure TestFileIsInFolder_InFolder;
+
+    [Test]
+    procedure TestFileIsInFolder_NotInFolder;
+
+    { HTTP Status Code Tests }
+    [Test]
+    [TestCase('OK', '200,OK')]
+    [TestCase('NotFound', '404,Not Found')]
+    [TestCase('ServerError', '500,Internal Server Error')]
+    [TestCase('Teapot', '418,I''m a teapot')]
+    [TestCase('Unknown', '999,999')]
+    procedure TestServerStatus2String(Status: Integer; const Expected: string);
+
+    { URL Path Extraction Tests }
+    [Test]
+    [TestCase('WithFile', 'http://example.com/folder/file.jpg,http://example.com/folder/')]
+    [TestCase('NoFile', 'http://example.com/folder/,http://example.com/folder/')]
+    procedure TestUrlExtractFilePath(const URL, Expected: string);
   end;
 
 implementation
@@ -229,11 +331,119 @@ procedure TTestInternet.TestUrlEncode_SpecialChars;
 begin
   { # character should be encoded }
   Assert.IsTrue(Pos('%23', UrlEncode('test#value')) > 0, 'Hash should be encoded');
+  { % character should be encoded }
+  Assert.IsTrue(Pos('%25', UrlEncode('100%')) > 0, 'Percent should be encoded');
+end;
+
+procedure TTestInternet.TestUrlEncode_ExtendedASCII;
+VAR
+  Encoded: string;
+begin
+  { Extended ASCII characters (>= 127) should be encoded }
+  Encoded:= UrlEncode('test'+ #128);
+  Assert.IsTrue(Pos('%80', Encoded) > 0, 'Extended ASCII should be encoded');
+
+  { DEL character (#127) should be encoded }
+  Encoded:= UrlEncode('test'+ #127);
+  Assert.IsTrue(Pos('%7F', Encoded) > 0, 'DEL character should be encoded');
 end;
 
 procedure TTestInternet.TestIsWebPage(const URL: string; Expected: Boolean);
 begin
   Assert.AreEqual(Expected, IsWebPage(URL));
+end;
+
+procedure TTestInternet.TestSplitIpFromAdr(const Address, Expected: string);
+begin
+  Assert.AreEqual(Expected, SplitIpFromAdr(Address));
+end;
+
+procedure TTestInternet.TestIpExtractPort(const Address, Expected: string);
+begin
+  Assert.AreEqual(Expected, IpExtractPort(Address));
+end;
+
+procedure TTestInternet.TestExtractProxyFrom(const Line, Expected: string);
+begin
+  Assert.AreEqual(Expected, ExtractProxyFrom(Line));
+end;
+
+procedure TTestInternet.TestValidateProxyAdr(const Address: string; Expected: Boolean);
+begin
+  Assert.AreEqual(Expected, ValidateProxyAdr(Address));
+end;
+
+procedure TTestInternet.TestURLExtractLastFolder(const URL, Expected: string);
+begin
+  Assert.AreEqual(Expected, URLExtractLastFolder(URL));
+end;
+
+procedure TTestInternet.TestURLExtractPrevFolder(const URL, Expected: string);
+begin
+  Assert.AreEqual(Expected, URLExtractPrevFolder(URL));
+end;
+
+procedure TTestInternet.TestExpandURL_AbsoluteURL;
+begin
+  { Already absolute URLs should be returned as-is }
+  Assert.AreEqual('http://other.com/page', ExpandURL('http://other.com/page', 'http://example.com/folder/'));
+  Assert.AreEqual('https://secure.com/path', ExpandURL('https://secure.com/path', 'http://example.com/'));
+end;
+
+procedure TTestInternet.TestExpandURL_RootRelative;
+begin
+  { URLs starting with / should be appended to domain only }
+  Assert.AreEqual('http://example.com/images/logo.png', ExpandURL('/images/logo.png', 'http://example.com/folder/page.html'));
+end;
+
+procedure TTestInternet.TestExpandURL_PathRelative;
+begin
+  { Relative URLs should be appended to the base path }
+  Assert.AreEqual('http://example.com/download/', ExpandURL('download/', 'http://example.com/'));
+end;
+
+procedure TTestInternet.TestExpandURLs_ModifiesList;
+VAR
+  URLs: TStringList;
+begin
+  URLs:= TStringList.Create;
+  TRY
+    URLs.Add('/image1.jpg');
+    URLs.Add('/image2.jpg');
+    ExpandURLs(URLs, 'http://example.com/folder/');
+
+    Assert.AreEqual('http://example.com/image1.jpg', URLs[0]);
+    Assert.AreEqual('http://example.com/image2.jpg', URLs[1]);
+  FINALLY
+    URLs.Free;
+  END;
+end;
+
+procedure TTestInternet.TestURLMakeNonRelativeProtocol(const URL, Expected: string);
+begin
+  Assert.AreEqual(Expected, URLMakeNonRelativeProtocol(URL));
+end;
+
+procedure TTestInternet.TestFileIsInFolder_InFolder;
+begin
+  Assert.IsTrue(FileIsInFolder('http://test.com/images/', 'http://test.com/images/photo.jpg'));
+  Assert.IsTrue(FileIsInFolder('http://test.com/images/', 'http://test.com/images/sub/photo.jpg'));
+end;
+
+procedure TTestInternet.TestFileIsInFolder_NotInFolder;
+begin
+  Assert.IsFalse(FileIsInFolder('http://test.com/images/', 'http://test.com/art/photo.jpg'));
+  Assert.IsFalse(FileIsInFolder('http://test.com/images/', 'http://test.com/photo.jpg'));
+end;
+
+procedure TTestInternet.TestServerStatus2String(Status: Integer; const Expected: string);
+begin
+  Assert.AreEqual(Expected, ServerStatus2String(Status));
+end;
+
+procedure TTestInternet.TestUrlExtractFilePath(const URL, Expected: string);
+begin
+  Assert.AreEqual(Expected, UrlExtractFilePath(URL));
 end;
 
 initialization

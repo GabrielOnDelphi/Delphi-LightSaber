@@ -167,6 +167,7 @@
         <DCCReference Include="Test.LightCore.Core.pas"/>
         <DCCReference Include="Test.LightCore.AppData.pas"/>
         <DCCReference Include="Test.LightCore.INIFile.pas"/>
+        <DCCReference Include="Test.LightCore.INIFileQuick.pas"/>
         <DCCReference Include="Test.LightCore.IO.pas"/>
         <DCCReference Include="Test.LightCore.EncodeMime.pas"/>
         <DCCReference Include="Test.LightCore.Download.pas"/>
@@ -174,7 +175,7 @@
         <DCCReference Include="Test.LightCore.LogLinesS.pas"/>
         <DCCReference Include="Test.LightCore.LogLinesM.pas"/>
         <DCCReference Include="Test.LightCore.LogRam.pas"/>
-        <DCCReference Include="Test.LightCore.Compiler.pas"/>
+        <DCCReference Include="Test.LightCore.CompilerVersions.pas"/>
         <DCCReference Include="Test.LightCore.Debugger.pas"/>
         <DCCReference Include="..\LightCore.pas"/>
         <DCCReference Include="..\LightCore.Types.pas"/>
@@ -195,13 +196,14 @@
         <DCCReference Include="..\LightCore.StreamBuff.pas"/>
         <DCCReference Include="..\LightCore.AppData.pas"/>
         <DCCReference Include="..\LightCore.INIFile.pas"/>
+        <DCCReference Include="..\LightCore.INIFileQuick.pas"/>
         <DCCReference Include="..\LightCore.EncodeMime.pas"/>
         <DCCReference Include="..\LightCore.LogTypes.pas"/>
         <DCCReference Include="..\LightCore.LogLinesAbstract.pas"/>
         <DCCReference Include="..\LightCore.LogLinesS.pas"/>
         <DCCReference Include="..\LightCore.LogLinesM.pas"/>
         <DCCReference Include="..\LightCore.LogRam.pas"/>
-        <DCCReference Include="..\LightCore.Compiler.pas"/>
+        <DCCReference Include="..\LightCore.CompilerVersions.pas"/>
         <DCCReference Include="..\LightCore.Debugger.pas"/>
         <DCCReference Include="..\LightCore.Platform.pas"/>
         <BuildConfiguration Include="Base">

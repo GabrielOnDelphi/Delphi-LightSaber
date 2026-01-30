@@ -93,6 +93,14 @@
         <DCCReference Include="..\FrameVCL\LightVcl.Graph.FX.Gradient.pas"/>
         <DCCReference Include="Test.LightVcl.Graph.FX.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Graph.FX.pas"/>
+        <DCCReference Include="Test.LightVcl.Graph.Desktop.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Graph.Desktop.pas"/>
+        <DCCReference Include="Test.LightVcl.Graph.UtilGray.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Graph.UtilGray.pas"/>
+        <DCCReference Include="Test.LightVcl.Graph.Alpha.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Graph.Alpha.pas"/>
+        <DCCReference Include="Test.LightVcl.Graph.Cache.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Graph.Cache.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

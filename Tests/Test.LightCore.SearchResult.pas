@@ -1,6 +1,7 @@
 unit Test.LightCore.SearchResult;
 
 {=============================================================================================================
+   2026.01.30
    Unit tests for LightCore.SearchResult
    Tests IDE position tracking and search result collection classes
 

@@ -2,7 +2,7 @@ UNIT LightCore.Time;
 
 {=============================================================================================================
    www.GabrielMoraru.com
-   2025.09.14
+   2026.01.30
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    DateTime utilities
@@ -178,7 +178,12 @@ end;
 
 
 
-function SameDateEx(Time1, Time2: TDateTime): boolean;     { We cannot compare two TDateTimes in Delphi because of Real precision. CompareDateTime also won't work. See: http://stackoverflow.com/questions/38705011/odd-behavior-when-comparing-two-tdatetime-vars }
+{ Compares two TDateTime values by decoding all components (including milliseconds).
+  Note: Despite the name 'SameDateEx', this actually compares the FULL datetime including time.
+  For date-only comparison, use System.DateUtils.SameDate instead.
+  We cannot compare two TDateTimes directly in Delphi because of floating-point precision.
+  See: stackoverflow.com/questions/38705011/odd-behavior-when-comparing-two-tdatetime-vars }
+function SameDateEx(Time1, Time2: TDateTime): boolean;
 VAR
    Year1, Month1, Day1, Hour1, Min1, Sec1, Msec1: Word;
    Year2, Month2, Day2, Hour2, Min2, Sec2, Msec2: Word;
@@ -234,14 +239,17 @@ end;
 
 
 
-{ Converts a string formatted like 'hh:mm:ss' or 'mm:ss' to seconds.
+{ Converts a string formatted like 'hh:mm:ss' to seconds using TTimeSpan.Parse.
   Returns -1 if the string does not contain a valid time.
 
+  Note: TTimeSpan.Parse expects 'hh:mm:ss' format (or '[d.]hh:mm:ss[.fffffff]').
+        It does NOT support 'mm:ss' shorthand.
+
   Examples:
-    StringToSeconds('00:01:30')     // returns 90     (sec)
-    StringToSeconds('01:30:00')     // returns 5400   (sec)
-    StringToSeconds('1.30')         // returns -1
-    StringToSeconds('x')            // returns -1 }
+    StringToSeconds('00:01:30')     // returns 90     (1 min 30 sec)
+    StringToSeconds('01:30:00')     // returns 5400   (1 hour 30 min)
+    StringToSeconds('1.30')         // returns -1     (invalid format)
+    StringToSeconds('x')            // returns -1     (invalid) }
 function StringToSeconds(CONST s: String): Integer;
 VAR TimeSpan: TTimeSpan;
 begin
@@ -323,15 +331,15 @@ begin
 end;
 
 
-{ Returns today as date AND time. Example: 31.12.2021 - 16:50 }
+{ Returns today as date AND time. Example: 31.12.2021 - 16:50
+  Format: DD.MM.YYYY - HH:MM }
 function CurrentDateToString: string;
 VAR
   Present: TDateTime;
-  Year, Month, Day, Hour, Min, Sec, MSec: Word;
+  Year, Month, Day: Word;
 begin
   Present:= Now;
   DecodeDate(Present, Year, Month, Day);
-  DecodeTime(Present, Hour, Min, Sec, MSec);
   Result:= IntToStr(Day)+'.'+IntToStr(Month)+'.'+IntToStr(Year)+' - '+ TimeToString(Present, FALSE);
 end;
 
@@ -373,13 +381,17 @@ begin
 end;
 
 
+{ Converts a TDate to Cardinal by counting days since Delphi epoch (30 Dec 1899).
+  Note: TDateTime value 0 corresponds to 30 Dec 1899, not 01 Jan 1899. }
 function Date2Cardinal(xDate: TDate): Cardinal;
 begin
-  Result:= DaysBetween(xDate, 0);                        { Calculate how many days are between xDate and 01/01/1899 }
+  Result:= DaysBetween(xDate, 0);
 end;
 
 
-function Cardinal2Date(xCardinal: Cardinal): TDate;      { Date returned is in US format }
+{ Converts a Cardinal back to TDate by adding days to Delphi epoch (30 Dec 1899).
+  This is the inverse of Date2Cardinal. }
+function Cardinal2Date(xCardinal: Cardinal): TDate;
 begin
   Result:= IncDay(0, xCardinal);
 end;
@@ -387,8 +399,10 @@ end;
 
 
 
-{ Copied from DateUtils.PAS where it is marked as 'Internal'.
-  These functions in DateUtils.pas are not accurate. See this of details: http://stackoverflow.com/questions/17109814/why-datetimetomilliseconds-in-dateutils-pas-is-marked-as-internal }
+{ Converts TDateTime to total milliseconds since Delphi epoch.
+  Copied from DateUtils.PAS where it is marked as 'Internal'.
+  Note: The internal DateUtils version has precision issues for very large/small dates.
+  See: stackoverflow.com/questions/17109814/why-datetimetomilliseconds-in-dateutils-pas-is-marked-as-internal }
 function DateTimeToMilliseconds(aDateTime: TDateTime): Int64;
 var
   LTimeStamp: TTimeStamp;
@@ -399,9 +413,11 @@ begin
 end;
 
 
-{ Returns the number of seconds between two specified TDateTime values.
-  The difference between this function and Embarcadero.DateUtils.SecondsBetween is that it returns zero if CurrentDate >= MilestoneDate.
-  These functions in DateUtils.pas are not accurate. See this of details: http://stackoverflow.com/questions/17109814/why-datetimetomilliseconds-in-dateutils-pas-is-marked-as-internal }
+{ Returns the number of seconds remaining until MilestoneDate.
+  Unlike DateUtils.SecondsBetween (which returns absolute difference), this function:
+    - Returns positive value when MilestoneDate is in the future
+    - Returns 0 when CurrentDate >= MilestoneDate (milestone already passed)
+  Useful for countdown timers. }
 function SecondsBetweenEx(CONST MilestoneDate, CurrentDate: TDateTime): Int64;
 begin
   if CurrentDate < MilestoneDate
@@ -412,15 +428,19 @@ end;
 
 
 { Comparing '31 Dec 1999 23:59' and '1 Jan 2000 00:01' (2 minutes difference):
-     DaySpan        returns 0.03  (or something like this)
-     DaysBetween    returns 0
-     NewDaysBetween retunrs 1,03 }
+     DaySpan        returns 0.03  (fractional days)
+     DaysBetween    returns 0     (whole days only)
+     NewDaysBetween returns 1.03  (counts partial days as a full day boundary crossed) }
 function DaysBetweenEx(CONST MilestoneDate, CurrentDate: TdateTime): Double;
 begin
- RAISE exception.Create('DaysBetweenEx is deprecated ');
+ RAISE exception.Create('DaysBetweenEx is deprecated. Use System.DateUtils.DaySpan instead.');
 end;
 
 
+{ Returns the number of days between two dates, counting each calendar day boundary crossed.
+  Unlike DaySpan (which returns only fractional days), this adds 1 when dates differ
+  to account for the calendar day boundary crossing.
+  Example: '31 Dec 23:59' to '1 Jan 00:01' = ~0.03 DaySpan + 1 = 1.03 }
 function NewDaysBetween(CONST MilestoneDate, CurrentDate: TdateTime): Double;
 begin
   if SameDate(MilestoneDate, CurrentDate)

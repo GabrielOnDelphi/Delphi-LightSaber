@@ -50,6 +50,9 @@ type
     [Test]
     procedure TestCorrectFormPositionDesktop_FormOffBottom;
 
+    [Test]
+    procedure TestCorrectFormPositionDesktop_NilRaisesException;
+
     { CenterForm Tests }
     [Test]
     procedure TestCenterForm_CentersOnPrimaryMonitor;
@@ -59,6 +62,15 @@ type
 
     [Test]
     procedure TestCenterForm_SmallForm;
+
+    [Test]
+    procedure TestCenterForm_NilRaisesException;
+
+    [Test]
+    procedure TestCenterForm_WithParent_NilFormRaisesException;
+
+    [Test]
+    procedure TestCenterForm_WithParent_NilParentRaisesException;
 
     { CorrectCtrlPosition Tests }
     [Test]
@@ -79,6 +91,15 @@ type
     [Test]
     procedure TestCorrectCtrlPosition_WithParentControl;
 
+    [Test]
+    procedure TestCorrectCtrlPosition_NilCtrlRaisesException;
+
+    [Test]
+    procedure TestCorrectCtrlPosition_WithParent_NilCtrlRaisesException;
+
+    [Test]
+    procedure TestCorrectCtrlPosition_WithParent_NilParentRaisesException;
+
     { CenterInvalidChild Tests }
     [Test]
     procedure TestCenterInvalidChild_ValidPosition_NoChange;
@@ -95,6 +116,12 @@ type
     [Test]
     procedure TestCenterInvalidChild_OffBottom_Centers;
 
+    [Test]
+    procedure TestCenterInvalidChild_NilCtrlRaisesException;
+
+    [Test]
+    procedure TestCenterInvalidChild_NilParentRaisesException;
+
     { CenterChild Tests }
     [Test]
     procedure TestCenterChild_CentersHorizontally;
@@ -105,6 +132,12 @@ type
     [Test]
     procedure TestCenterChild_ChildBiggerThanParent_SetsToZero;
 
+    [Test]
+    procedure TestCenterChild_NilCtrlRaisesException;
+
+    [Test]
+    procedure TestCenterChild_NilParentRaisesException;
+
     { CenterChildX Tests }
     [Test]
     procedure TestCenterChildX_CentersHorizontallyOnly;
@@ -112,9 +145,21 @@ type
     [Test]
     procedure TestCenterChildX_DoesNotChangeTop;
 
+    [Test]
+    procedure TestCenterChildX_ChildBiggerThanParent_SetsToZero;
+
+    [Test]
+    procedure TestCenterChildX_NilCtrlRaisesException;
+
+    [Test]
+    procedure TestCenterChildX_NilParentRaisesException;
+
     { CorrectMDIFormPosition Tests }
     [Test]
     procedure TestCorrectMDIFormPosition_NoException;
+
+    [Test]
+    procedure TestCorrectMDIFormPosition_NilRaisesException;
   end;
 
 implementation
@@ -227,6 +272,17 @@ begin
 end;
 
 
+procedure TTestCenterControl.TestCorrectFormPositionDesktop_NilRaisesException;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      CorrectFormPositionDesktop(NIL);
+    end,
+    Exception);
+end;
+
+
 { CenterForm Tests }
 
 procedure TTestCenterControl.TestCenterForm_CentersOnPrimaryMonitor;
@@ -284,6 +340,43 @@ begin
   { Small form should still center correctly }
   Assert.IsTrue(FTestForm.Left > 0, 'Small form should have positive Left');
   Assert.IsTrue(FTestForm.Top > 0, 'Small form should have positive Top');
+end;
+
+
+procedure TTestCenterControl.TestCenterForm_NilRaisesException;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      CenterForm(NIL);
+    end,
+    Exception);
+end;
+
+
+procedure TTestCenterControl.TestCenterForm_WithParent_NilFormRaisesException;
+begin
+  FTestForm:= TForm.CreateNew(NIL);
+
+  Assert.WillRaise(
+    procedure
+    begin
+      CenterForm(NIL, FTestForm);
+    end,
+    Exception);
+end;
+
+
+procedure TTestCenterControl.TestCenterForm_WithParent_NilParentRaisesException;
+begin
+  FTestForm:= TForm.CreateNew(NIL);
+
+  Assert.WillRaise(
+    procedure
+    begin
+      CenterForm(FTestForm, NIL);
+    end,
+    Exception);
 end;
 
 
@@ -412,6 +505,45 @@ begin
 end;
 
 
+procedure TTestCenterControl.TestCorrectCtrlPosition_NilCtrlRaisesException;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      CorrectCtrlPosition(NIL, 800, 600);
+    end,
+    Exception);
+end;
+
+
+procedure TTestCenterControl.TestCorrectCtrlPosition_WithParent_NilCtrlRaisesException;
+begin
+  FTestForm:= TForm.CreateNew(NIL);
+
+  Assert.WillRaise(
+    procedure
+    begin
+      CorrectCtrlPosition(NIL, FTestForm);
+    end,
+    Exception);
+end;
+
+
+procedure TTestCenterControl.TestCorrectCtrlPosition_WithParent_NilParentRaisesException;
+begin
+  FTestForm:= TForm.CreateNew(NIL);
+  FButton:= TButton.Create(FTestForm);
+  FButton.Parent:= FTestForm;
+
+  Assert.WillRaise(
+    procedure
+    begin
+      CorrectCtrlPosition(FButton, NIL);
+    end,
+    Exception);
+end;
+
+
 { CenterInvalidChild Tests }
 
 procedure TTestCenterControl.TestCenterInvalidChild_ValidPosition_NoChange;
@@ -515,6 +647,34 @@ begin
 end;
 
 
+procedure TTestCenterControl.TestCenterInvalidChild_NilCtrlRaisesException;
+begin
+  FTestForm:= TForm.CreateNew(NIL);
+
+  Assert.WillRaise(
+    procedure
+    begin
+      CenterInvalidChild(NIL, FTestForm);
+    end,
+    Exception);
+end;
+
+
+procedure TTestCenterControl.TestCenterInvalidChild_NilParentRaisesException;
+begin
+  FTestForm:= TForm.CreateNew(NIL);
+  FButton:= TButton.Create(FTestForm);
+  FButton.Parent:= FTestForm;
+
+  Assert.WillRaise(
+    procedure
+    begin
+      CenterInvalidChild(FButton, NIL);
+    end,
+    Exception);
+end;
+
+
 { CenterChild Tests }
 
 procedure TTestCenterControl.TestCenterChild_CentersHorizontally;
@@ -576,6 +736,34 @@ begin
 end;
 
 
+procedure TTestCenterControl.TestCenterChild_NilCtrlRaisesException;
+begin
+  FTestForm:= TForm.CreateNew(NIL);
+
+  Assert.WillRaise(
+    procedure
+    begin
+      CenterChild(NIL, FTestForm);
+    end,
+    Exception);
+end;
+
+
+procedure TTestCenterControl.TestCenterChild_NilParentRaisesException;
+begin
+  FTestForm:= TForm.CreateNew(NIL);
+  FButton:= TButton.Create(FTestForm);
+  FButton.Parent:= FTestForm;
+
+  Assert.WillRaise(
+    procedure
+    begin
+      CenterChild(FButton, NIL);
+    end,
+    Exception);
+end;
+
+
 { CenterChildX Tests }
 
 procedure TTestCenterControl.TestCenterChildX_CentersHorizontallyOnly;
@@ -621,6 +809,52 @@ begin
 end;
 
 
+procedure TTestCenterControl.TestCenterChildX_ChildBiggerThanParent_SetsToZero;
+begin
+  FTestForm:= TForm.CreateNew(NIL);
+  FTestForm.Width:= 200;
+  FTestForm.Height:= 150;
+
+  FPanel:= TPanel.Create(FTestForm);
+  FPanel.Parent:= FTestForm;
+  FPanel.Width:= 400;
+  FPanel.Height:= 100;
+
+  CenterChildX(FPanel, FTestForm);
+
+  { When child is wider than parent, Left should be 0 }
+  Assert.AreEqual(0, FPanel.Left, 'Left should be 0 when child wider than parent');
+end;
+
+
+procedure TTestCenterControl.TestCenterChildX_NilCtrlRaisesException;
+begin
+  FTestForm:= TForm.CreateNew(NIL);
+
+  Assert.WillRaise(
+    procedure
+    begin
+      CenterChildX(NIL, FTestForm);
+    end,
+    Exception);
+end;
+
+
+procedure TTestCenterControl.TestCenterChildX_NilParentRaisesException;
+begin
+  FTestForm:= TForm.CreateNew(NIL);
+  FButton:= TButton.Create(FTestForm);
+  FButton.Parent:= FTestForm;
+
+  Assert.WillRaise(
+    procedure
+    begin
+      CenterChildX(FButton, NIL);
+    end,
+    Exception);
+end;
+
+
 { CorrectMDIFormPosition Tests }
 
 procedure TTestCenterControl.TestCorrectMDIFormPosition_NoException;
@@ -635,6 +869,17 @@ begin
     begin
       CorrectMDIFormPosition(FTestForm);
     end);
+end;
+
+
+procedure TTestCenterControl.TestCorrectMDIFormPosition_NilRaisesException;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      CorrectMDIFormPosition(NIL);
+    end,
+    Exception);
 end;
 
 

@@ -13,6 +13,7 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.Classes,
+  System.IOUtils,
   LightCore.Pascal;
 
 type
@@ -206,7 +207,25 @@ type
 
     { AddUnitToUses Tests }
     [Test]
+    [ExpectedException(Exception)]
     procedure TestAddUnitToUses_NilList;
+
+    [Test]
+    [ExpectedException(Exception)]
+    procedure TestAddUnitToUses_EmptyList;
+
+    [Test]
+    procedure TestAddUnitToUses_UnitAlreadyInInterface;
+
+    [Test]
+    procedure TestAddUnitToUses_AddToImplementation;
+
+    { CountComments Tests }
+    [Test]
+    procedure TestCountComments_FileNotFound;
+
+    [Test]
+    procedure TestCountComments_EmptyFile;
   end;
 
 implementation
@@ -673,7 +692,82 @@ end;
 
 procedure TTestLightCorePascal.TestAddUnitToUses_NilList;
 begin
-  Assert.IsFalse(AddUnitToUses(NIL, 'SomeUnit'));
+  { Expects exception - NIL list not allowed }
+  AddUnitToUses(NIL, 'SomeUnit');
+end;
+
+
+procedure TTestLightCorePascal.TestAddUnitToUses_EmptyList;
+begin
+  { Expects exception - empty list not allowed }
+  AddUnitToUses(FTestLines, 'SomeUnit');
+end;
+
+
+procedure TTestLightCorePascal.TestAddUnitToUses_UnitAlreadyInInterface;
+begin
+  FTestLines.Add('unit TestUnit;');
+  FTestLines.Add('');
+  FTestLines.Add('INTERFACE');
+  FTestLines.Add('');
+  FTestLines.Add('USES');
+  FTestLines.Add('  System.SysUtils, System.Classes;');
+  FTestLines.Add('');
+  FTestLines.Add('IMPLEMENTATION');
+  FTestLines.Add('');
+  FTestLines.Add('end.');
+
+  { Unit already in INTERFACE uses - should return TRUE without adding }
+  Assert.IsTrue(AddUnitToUses(FTestLines, 'System.SysUtils'));
+end;
+
+
+procedure TTestLightCorePascal.TestAddUnitToUses_AddToImplementation;
+begin
+  FTestLines.Add('unit TestUnit;');
+  FTestLines.Add('');
+  FTestLines.Add('INTERFACE');
+  FTestLines.Add('');
+  FTestLines.Add('USES');
+  FTestLines.Add('  System.SysUtils;');
+  FTestLines.Add('');
+  FTestLines.Add('IMPLEMENTATION');
+  FTestLines.Add('');
+  FTestLines.Add('USES');
+  FTestLines.Add('  System.Classes;');
+  FTestLines.Add('');
+  FTestLines.Add('end.');
+
+  { Should add NewUnit to implementation uses }
+  Assert.IsTrue(AddUnitToUses(FTestLines, 'NewUnit'));
+  { Verify it was added }
+  Assert.IsTrue(FTestLines.Text.Contains('NewUnit'));
+end;
+
+
+{ CountComments Tests }
+
+procedure TTestLightCorePascal.TestCountComments_FileNotFound;
+begin
+  Assert.AreEqual(-1, CountComments('C:\NonExistent\FakeFile.pas'));
+end;
+
+
+procedure TTestLightCorePascal.TestCountComments_EmptyFile;
+var
+  TempFile: string;
+  TSL: TStringList;
+begin
+  TempFile:= System.IOUtils.TPath.GetTempFileName;
+  TSL:= TStringList.Create;
+  try
+    TSL.SaveToFile(TempFile);  { Empty file }
+    Assert.AreEqual(0, CountComments(TempFile));
+  finally
+    FreeAndNil(TSL);
+    if FileExists(TempFile)
+    then DeleteFile(TempFile);
+  end;
 end;
 
 

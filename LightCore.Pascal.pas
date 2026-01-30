@@ -2,7 +2,7 @@ UNIT LightCore.Pascal;
 
 {=============================================================================================================
    Gabriel Moraru
-   2021
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -108,17 +108,21 @@ end;
 
 
 { Returns the approximate number of comment lines.
-  Returns -1 if file does not exist. }
+  Returns -1 if file does not exist or cannot be read. }
 function CountComments(const FileName: string): Integer;
+var TSL: TStringList;
 begin
+  if NOT FileExists(FileName)
+  then EXIT(-1);
+
   Result:= 0;
-  var TSL:= TStringList.Create;
-  Try
+  TSL:= TStringList.Create;
+  try
     TSL.LoadFromFile(FileName);
     for var Line in TSL do
       if LineIsAComment(Line)
       then Inc(Result);
-  Finally
+  finally
     FreeAndNil(TSL);
   end;
 end;
@@ -211,6 +215,8 @@ end;
 
 { Add the specified unit to the "uses" clause.
   Returns True if the unit was added or if it already existed in the Uses.
+  Returns False if no INTERFACE or IMPLEMENTATION section found.
+  Raises exception if PasBody is nil or empty.
   Note: This will add the unit to the IMPLEMENTATION section's uses clause. }
 function AddUnitToUses(PasBody: TStringList; CONST UnitToAdd: string): Boolean;
 var
@@ -220,7 +226,8 @@ var
   Units: string;
 begin
   Result:= FALSE;
-  if (PasBody.Count = 0) then RAISE Exception.Create('AddUnitToUses!');
+  if (PasBody = NIL) OR (PasBody.Count = 0)
+  then RAISE Exception.Create('AddUnitToUses: PasBody cannot be nil or empty.');
 
   { Find the INTERFACE section }
   iPos:= FindSection(PasBody, TRUE);
@@ -295,10 +302,7 @@ end;
     For these parameters the function will return true:
       CodeLine:    B:= True;
       Instruction: b:=true;
-    We need to make sure that the string in the second parameter (Instruction) is correctly formated. }
-
-
-//out
+    We need to make sure that the string in the second parameter (Instruction) is correctly formatted. }
 function RelaxedSearch(CodeLine, Instruction: string): Boolean;
 begin
   // Strip comments from the line

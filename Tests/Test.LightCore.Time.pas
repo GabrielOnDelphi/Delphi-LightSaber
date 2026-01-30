@@ -87,7 +87,10 @@ type
     procedure TestStringToSeconds_HHMMSS;
 
     [Test]
-    procedure TestStringToSeconds_MMSS;
+    procedure TestStringToSeconds_HoursMinutes;
+
+    [Test]
+    procedure TestStringToSeconds_ShortFormat_Invalid;
 
     [Test]
     procedure TestStringToSeconds_Invalid;
@@ -131,6 +134,25 @@ type
 
     [Test]
     procedure TestMiliSecToTimeAuto_Minutes;
+
+    [Test]
+    procedure TestmSecondsToTime;
+
+    [Test]
+    procedure TestShowTimeNice_DateTime;
+
+    [Test]
+    procedure TestDateToTime_;
+
+    { Comparison - Additional Tests }
+    [Test]
+    procedure TestEarlierThan_SameDate;
+
+    [Test]
+    procedure TestSameDateEx_Same;
+
+    [Test]
+    procedure TestSameDateEx_Different;
 
     { Cardinal/Date Conversion Tests }
     [Test]
@@ -358,10 +380,17 @@ begin
   Assert.AreEqual(3661, StringToSeconds('01:01:01'));
 end;
 
-procedure TTestLightCoreTime.TestStringToSeconds_MMSS;
+procedure TTestLightCoreTime.TestStringToSeconds_HoursMinutes;
 begin
-  { 01:30 = 1 hour 30 minutes = 5400 seconds }
+  { 01:30:00 = 1 hour 30 minutes = 5400 seconds }
   Assert.AreEqual(5400, StringToSeconds('01:30:00'));
+end;
+
+procedure TTestLightCoreTime.TestStringToSeconds_ShortFormat_Invalid;
+begin
+  { TTimeSpan.Parse does NOT support 'mm:ss' shorthand format - it requires 'hh:mm:ss' }
+  Assert.AreEqual(-1, StringToSeconds('01:30'));  { This is NOT 1 min 30 sec }
+  Assert.AreEqual(-1, StringToSeconds('1.30'));   { Invalid format }
 end;
 
 procedure TTestLightCoreTime.TestStringToSeconds_Invalid;
@@ -473,6 +502,75 @@ begin
   Result:= MiliSecToTimeAuto(120000);  { 2 minutes }
   Assert.IsTrue(Pos('m', Result) > 0);
 end;
+
+procedure TTestLightCoreTime.TestmSecondsToTime;
+var
+  Result: string;
+begin
+  { mSecondsToTime divides by 1000 and calls ShowTimeNice }
+  Result:= mSecondsToTime(60000);  { 60 seconds }
+  Assert.IsTrue(Pos('m', Result) > 0);
+
+  Result:= mSecondsToTime(5000);   { 5 seconds }
+  Assert.IsTrue(Pos('s', Result) > 0);
+end;
+
+procedure TTestLightCoreTime.TestShowTimeNice_DateTime;
+var
+  T: TDateTime;
+  Result: string;
+begin
+  { Test with TDateTime overload }
+  T:= 1 + EncodeTime(2, 30, 45, 0);  { 1 day, 2h, 30m, 45s }
+  Result:= ShowTimeNice(T);
+  Assert.IsTrue(Pos('day', Result) > 0, 'Should contain "day"');
+  Assert.IsTrue(Pos('h', Result) > 0, 'Should contain hours');
+end;
+
+procedure TTestLightCoreTime.TestDateToTime_;
+var
+  D: TDateTime;
+  Result: string;
+begin
+  D:= 5 + EncodeTime(12, 30, 45, 0);  { 5 days, 12:30:45 }
+  Result:= DateToTime_(D);
+  Assert.IsTrue(Pos('5:', Result) > 0, 'Should start with day count');
+  Assert.IsTrue(Pos(':30:', Result) > 0, 'Should contain minutes');
+end;
+
+{ Comparison - Additional Tests }
+
+procedure TTestLightCoreTime.TestEarlierThan_SameDate;
+var
+  Date1, Date2: TDateTime;
+begin
+  Date1:= EncodeDate(2023, 6, 15);
+  Date2:= EncodeDate(2023, 6, 15);
+  { Same dates should return false (Date1 is NOT earlier than Date2) }
+  Assert.IsFalse(EarlierThan(Date1, Date2));
+end;
+
+{$WARN SYMBOL_DEPRECATED OFF}
+procedure TTestLightCoreTime.TestSameDateEx_Same;
+var
+  Time1, Time2: TDateTime;
+begin
+  { Test that SameDateEx compares FULL datetime including milliseconds }
+  Time1:= EncodeDate(2023, 6, 15) + EncodeTime(14, 30, 45, 123);
+  Time2:= EncodeDate(2023, 6, 15) + EncodeTime(14, 30, 45, 123);
+  Assert.IsTrue(SameDateEx(Time1, Time2));
+end;
+
+procedure TTestLightCoreTime.TestSameDateEx_Different;
+var
+  Time1, Time2: TDateTime;
+begin
+  { Despite the name 'SameDateEx', it compares FULL datetime including time }
+  Time1:= EncodeDate(2023, 6, 15) + EncodeTime(14, 30, 45, 0);
+  Time2:= EncodeDate(2023, 6, 15) + EncodeTime(14, 30, 46, 0);  { 1 second difference }
+  Assert.IsFalse(SameDateEx(Time1, Time2), 'SameDateEx compares full datetime, not just date');
+end;
+{$WARN SYMBOL_DEPRECATED ON}
 
 { Cardinal/Date Conversion Tests }
 

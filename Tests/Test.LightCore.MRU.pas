@@ -1,6 +1,7 @@
 unit Test.LightCore.MRU;
 
 {=============================================================================================================
+   2026.01.30
    Unit tests for LightCore.MRU.pas
    Tests Most Recently Used file list functionality.
 

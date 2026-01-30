@@ -1,7 +1,7 @@
 UNIT LightCore.Platform;
 
 {=============================================================================================================
-   2025.12
+   2026.01.30
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Platform detection utilities for cross-platform applications.
@@ -11,6 +11,13 @@ UNIT LightCore.Platform;
      - Application bitness detection (32/64-bit)
      - Device information (FMX only)
      - Platform reports for diagnostics
+
+   Supported Platforms:
+     - Windows (Desktop, WinRT)
+     - macOS
+     - Linux
+     - iOS
+     - Android
 
    Documentation:
       Conditional compilation: https://docwiki.embarcadero.com/RADStudio/Athens/en/Conditional_compilation
@@ -112,6 +119,7 @@ end;
    OS
 -------------------------------------------------------------------------------------------------------------}
 { Tells us under which platform this program runs }
+{ Returns the OS platform name as a user-friendly string }
 function OsType: string;
 begin
   case TOSVersion.Platform of
@@ -120,7 +128,7 @@ begin
     pfIOS:     Result := 'iOS';
     pfMacOS:   Result := 'macOS';
     pfLinux:   Result := 'Linux';
-    pfWinRT:   Result := 'pfWinRT';
+    pfWinRT:   Result := 'WinRT';
   else
     Result := 'Unknown';
   end;

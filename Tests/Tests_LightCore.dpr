@@ -44,6 +44,7 @@ uses
   Test.LightCore.Core in 'Test.LightCore.Core.pas',
   Test.LightCore.AppData in 'Test.LightCore.AppData.pas',
   Test.LightCore.INIFile in 'Test.LightCore.INIFile.pas',
+  Test.LightCore.INIFileQuick in 'Test.LightCore.INIFileQuick.pas',
   Test.LightCore.IO in 'Test.LightCore.IO.pas',
   Test.LightCore.EncodeMime in 'Test.LightCore.EncodeMime.pas',
   Test.LightCore.Download in 'Test.LightCore.Download.pas',
@@ -51,7 +52,7 @@ uses
   Test.LightCore.LogLinesS in 'Test.LightCore.LogLinesS.pas',
   Test.LightCore.LogLinesM in 'Test.LightCore.LogLinesM.pas',
   Test.LightCore.LogRam in 'Test.LightCore.LogRam.pas',
-  Test.LightCore.Compiler in 'Test.LightCore.Compiler.pas',
+  Test.LightCore.CompilerVersions in 'Test.LightCore.CompilerVersions.pas',
   Test.LightCore.Debugger in 'Test.LightCore.Debugger.pas',
   { Source units }
   LightCore in '..\LightCore.pas',
@@ -73,13 +74,14 @@ uses
   LightCore.StreamBuff in '..\LightCore.StreamBuff.pas',
   LightCore.AppData in '..\LightCore.AppData.pas',
   LightCore.INIFile in '..\LightCore.INIFile.pas',
+  LightCore.INIFileQuick in '..\LightCore.INIFileQuick.pas',
   LightCore.EncodeMime in '..\LightCore.EncodeMime.pas',
   LightCore.LogTypes in '..\LightCore.LogTypes.pas',
   LightCore.LogLinesAbstract in '..\LightCore.LogLinesAbstract.pas',
   LightCore.LogLinesS in '..\LightCore.LogLinesS.pas',
   LightCore.LogLinesM in '..\LightCore.LogLinesM.pas',
   LightCore.LogRam in '..\LightCore.LogRam.pas',
-  LightCore.Compiler in '..\LightCore.Compiler.pas',
+  LightCore.CompilerVersions in '..\LightCore.CompilerVersions.pas',
   LightCore.Debugger in '..\LightCore.Debugger.pas',
   LightCore.Platform in '..\LightCore.Platform.pas';
 

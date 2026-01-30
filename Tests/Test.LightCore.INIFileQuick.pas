@@ -1,6 +1,7 @@
 unit Test.LightCore.INIFileQuick;
 
 {=============================================================================================================
+   2026.01.30
    Unit tests for LightCore.INIFileQuick
    Tests quick INI file read/write functions
 

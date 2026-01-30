@@ -1,6 +1,7 @@
 unit Test.LightCore.LogLinesS;
 
 {=============================================================================================================
+   2026.01.30
    Unit tests for LightCore.LogLinesS.pas
    Tests single-threaded log lines implementation
 =============================================================================================================}
@@ -57,6 +58,9 @@ type
     [Test]
     procedure TestAdd_Pointer;
 
+    [Test]
+    procedure TestAdd_NilPointer;
+
     { Access Tests }
     [Test]
     procedure TestGetItem;
@@ -73,6 +77,18 @@ type
 
     [Test]
     procedure TestRow2FilteredRow_NotFound;
+
+    [Test]
+    procedure TestRow2FilteredRow_EmptyList;
+
+    [Test]
+    procedure TestCountFiltered_All;
+
+    [Test]
+    procedure TestCountFiltered_Partial;
+
+    [Test]
+    procedure TestCountFiltered_None;
 
     { Multiple Items }
     [Test]
@@ -198,6 +214,18 @@ begin
   Assert.AreEqual(2, FLines[0].Indent);
 end;
 
+procedure TTestLogLinesS.TestAdd_NilPointer;
+begin
+  { Adding nil pointer should trigger an assertion }
+  Assert.WillRaise(
+    procedure
+    begin
+      FLines.Add(NIL);
+    end,
+    EAssertionFailed
+  );
+end;
+
 
 { Access Tests }
 
@@ -258,6 +286,49 @@ begin
 
   { No errors in the list, so row 0 of errors filter returns -1 }
   Assert.AreEqual(-1, FLines.Row2FilteredRow(0, lvErrors));
+end;
+
+procedure TTestLogLinesS.TestRow2FilteredRow_EmptyList;
+begin
+  { Empty list should return -1 for any row }
+  Assert.AreEqual(-1, FLines.Row2FilteredRow(0, lvDebug));
+  Assert.AreEqual(-1, FLines.Row2FilteredRow(5, lvDebug));
+end;
+
+
+procedure TTestLogLinesS.TestCountFiltered_All;
+begin
+  FLines.AddNewLine('Error 1', lvErrors);
+  FLines.AddNewLine('Error 2', lvErrors);
+  FLines.AddNewLine('Warning', lvWarnings);
+
+  { All lines pass the Debug filter (lowest level) }
+  Assert.AreEqual(3, FLines.CountFiltered(lvDebug));
+end;
+
+
+procedure TTestLogLinesS.TestCountFiltered_Partial;
+begin
+  FLines.AddNewLine('Debug', lvDebug);
+  FLines.AddNewLine('Info', lvInfos);
+  FLines.AddNewLine('Warning', lvWarnings);
+  FLines.AddNewLine('Error', lvErrors);
+
+  { Only warnings and errors pass the Warnings filter }
+  Assert.AreEqual(2, FLines.CountFiltered(lvWarnings));
+
+  { Only errors pass the Errors filter }
+  Assert.AreEqual(1, FLines.CountFiltered(lvErrors));
+end;
+
+
+procedure TTestLogLinesS.TestCountFiltered_None;
+begin
+  FLines.AddNewLine('Debug', lvDebug);
+  FLines.AddNewLine('Info', lvInfos);
+
+  { No errors in the list }
+  Assert.AreEqual(0, FLines.CountFiltered(lvErrors));
 end;
 
 

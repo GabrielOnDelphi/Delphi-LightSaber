@@ -31,7 +31,15 @@ uses
   Test.LightVcl.Graph.FX.Gradient in 'Test.LightVcl.Graph.FX.Gradient.pas',
   LightVcl.Graph.FX.Gradient in '..\FrameVCL\LightVcl.Graph.FX.Gradient.pas',
   Test.LightVcl.Graph.FX in 'Test.LightVcl.Graph.FX.pas',
-  LightVcl.Graph.FX in '..\FrameVCL\LightVcl.Graph.FX.pas';
+  LightVcl.Graph.FX in '..\FrameVCL\LightVcl.Graph.FX.pas',
+  Test.LightVcl.Graph.Desktop in 'Test.LightVcl.Graph.Desktop.pas',
+  LightVcl.Graph.Desktop in '..\FrameVCL\LightVcl.Graph.Desktop.pas',
+  Test.LightVcl.Graph.UtilGray in 'Test.LightVcl.Graph.UtilGray.pas',
+  LightVcl.Graph.UtilGray in '..\FrameVCL\LightVcl.Graph.UtilGray.pas',
+  Test.LightVcl.Graph.Alpha in 'Test.LightVcl.Graph.Alpha.pas',
+  LightVcl.Graph.Alpha in '..\FrameVCL\LightVcl.Graph.Alpha.pas',
+  Test.LightVcl.Graph.Cache in 'Test.LightVcl.Graph.Cache.pas',
+  LightVcl.Graph.Cache in '..\FrameVCL\LightVcl.Graph.Cache.pas';
 
 {$IFNDEF TESTINSIGHT}
 var

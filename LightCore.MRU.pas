@@ -1,7 +1,7 @@
 UNIT LightCore.MRU;
 
 {=============================================================================================================
-   2025
+   2026.01.30
    www.GabrielMoraru.com
 ==============================================================================================================
 
@@ -9,11 +9,18 @@ UNIT LightCore.MRU;
 
    Maintains a list of recently accessed files, automatically persisted to disk.
    - Duplicate files are moved to the top (not added twice)
-   - List size is capped at MaxItems
+   - Duplicate detection is case-insensitive (Windows behavior)
+   - List size is capped at MaxItems (default 16)
    - OnChanged event fires when list is modified
+   - Only existing files are added (verified via FileExists)
+
+   Usage:
+     MRU:= TMRUList.Create;
+     MRU.FileName:= AppDataFolder + 'RecentFiles.mru';  // Loads existing list if file exists
+     MRU.OnChanged:= UpdateMenu;
+     MRU.AddToMRU(FullPath);  // Add file after user opens it
 
    Also see:
-      \Third party packages\Mru.pas
       AddFile2TaskbarMRU in LightVcl.Common.Shell.pas
 
 =============================================================================================================}
@@ -43,10 +50,10 @@ TYPE
     function Count: Integer;
     function GetItem(Index: Integer): string;
 
-    property FileName: string read FIniFile write SetFileName;      { File path for persistence }
-    property MaxItems: Integer read FMaxItems write SetMaxItems;    { Maximum entries (default 16) }
+    property FileName: string read FIniFile write SetFileName;      { File path for persistence. Setting this loads existing data. }
+    property MaxItems: Integer read FMaxItems write SetMaxItems;    { Maximum entries (default 16). Minimum is 1. }
     property OnChanged: TNotifyEvent read FChanged write FChanged;  { Fires on list modification }
-    property Items: TStringList read FList;                         { Read-only access to list }
+    property Items: TStringList read FList;                         { Direct access for iteration. Treat as read-only - use AddToMRU/Clear to modify. }
   end;
 
 

@@ -50,7 +50,27 @@ uses
   Test.LightVcl.Common.Keyboard in 'Test.LightVcl.Common.Keyboard.pas',
   LightVcl.Common.Keyboard in '..\FrameVCL\LightVcl.Common.Keyboard.pas',
   Test.LightVcl.Common.Clipboard in 'Test.LightVcl.Common.Clipboard.pas',
-  LightVcl.Common.Clipboard in '..\FrameVCL\LightVcl.Common.Clipboard.pas';
+  LightVcl.Common.Clipboard in '..\FrameVCL\LightVcl.Common.Clipboard.pas',
+  Test.LightVcl.Common.Registry in 'Test.LightVcl.Common.Registry.pas',
+  LightVcl.Common.Registry in '..\FrameVCL\LightVcl.Common.Registry.pas',
+  Test.LightVcl.Common.System in 'Test.LightVcl.Common.System.pas',
+  LightVcl.Common.System in '..\FrameVCL\LightVcl.Common.System.pas',
+  Test.LightVcl.Common.PopUp in 'Test.LightVcl.Common.PopUp.pas',
+  LightVcl.Common.PopUp in '..\FrameVCL\LightVcl.Common.PopUp.pas',
+  Test.LightVcl.Common.Window in 'Test.LightVcl.Common.Window.pas',
+  LightVcl.Common.Window in '..\FrameVCL\LightVcl.Common.Window.pas',
+  Test.LightVcl.Common.WinVersion in 'Test.LightVcl.Common.WinVersion.pas',
+  LightVcl.Common.WinVersion in '..\FrameVCL\LightVcl.Common.WinVersion.pas',
+  Test.LightVcl.Common.Translate in 'Test.LightVcl.Common.Translate.pas',
+  LightVcl.Common.Translate in '..\FrameVCL\LightVcl.Common.Translate.pas',
+  Test.LightVcl.Common.VclUtils in 'Test.LightVcl.Common.VclUtils.pas',
+  LightVcl.Common.VclUtils in '..\FrameVCL\LightVcl.Common.VclUtils.pas',
+  Test.LightVcl.Common.PowerUtils in 'Test.LightVcl.Common.PowerUtils.pas',
+  LightVcl.Common.PowerUtils in '..\FrameVCL\LightVcl.Common.PowerUtils.pas',
+  Test.LightVcl.Common.SystemPermissions in 'Test.LightVcl.Common.SystemPermissions.pas',
+  LightVcl.Common.SystemPermissions in '..\FrameVCL\LightVcl.Common.SystemPermissions.pas',
+  Test.LightVcl.Common.Sound in 'Test.LightVcl.Common.Sound.pas',
+  LightVcl.Common.Sound in '..\FrameVCL\LightVcl.Common.Sound.pas';
 
 {$IFNDEF TESTINSIGHT}
 var

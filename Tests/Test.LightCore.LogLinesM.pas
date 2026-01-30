@@ -68,6 +68,12 @@ type
     [Test]
     procedure TestRow2FilteredRow_WithFilter;
 
+    [Test]
+    procedure TestCountFiltered_All;
+
+    [Test]
+    procedure TestCountFiltered_Partial;
+
     { Thread Safety Tests }
     [Test]
     procedure TestConcurrentAdd;
@@ -227,12 +233,37 @@ begin
 end;
 
 
+procedure TTestLogLinesM.TestCountFiltered_All;
+begin
+  FLines.AddNewLine('Error 1', lvErrors);
+  FLines.AddNewLine('Error 2', lvErrors);
+  FLines.AddNewLine('Warning', lvWarnings);
+
+  { All lines pass the Debug filter (lowest level) }
+  Assert.AreEqual(3, FLines.CountFiltered(lvDebug));
+end;
+
+
+procedure TTestLogLinesM.TestCountFiltered_Partial;
+begin
+  FLines.AddNewLine('Debug', lvDebug);
+  FLines.AddNewLine('Info', lvInfos);
+  FLines.AddNewLine('Warning', lvWarnings);
+  FLines.AddNewLine('Error', lvErrors);
+
+  { Only warnings and errors pass the Warnings filter }
+  Assert.AreEqual(2, FLines.CountFiltered(lvWarnings));
+  { Only errors pass the Errors filter }
+  Assert.AreEqual(1, FLines.CountFiltered(lvErrors));
+end;
+
+
 { Thread Safety Tests }
 
 procedure TTestLogLinesM.TestConcurrentAdd;
 var
   Threads: array[0..3] of TThread;
-  i, j: Integer;
+  i: Integer;
 begin
   { Create 4 threads, each adding 100 items }
   for i:= 0 to 3 do

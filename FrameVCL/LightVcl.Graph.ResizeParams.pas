@@ -2,14 +2,21 @@ UNIT LightVcl.Graph.ResizeParams;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Parameters for resamplers in LightVcl.Graph.Resize.pas
-   The record is filled with data from GUI (provoded by LightVcl.Graph.ResizeParamEdt.pas).
+   The record is filled with data from GUI (provided by LightVcl.Graph.ResizeParamEdt.pas).
    It also computes the optimal output width/height size based on user's input.
    Saves itself to a stream.
+
+   Usage:
+     1. Call Reset to initialize with default values
+     2. Set MaxWidth/MaxHeight to target dimensions
+     3. Set ResizeOpp to desired resize mode
+     4. Call ComputeOutputSize(InputWidth, InputHeight)
+     5. Read OutW/OutH for computed output dimensions
 
    External dependencies: None
 
@@ -23,16 +30,20 @@ INTERFACE
 USES
    System.SysUtils, LightVcl.Graph.Bitmap, LightCore.StreamBuff;
 
+CONST
+  UNINITIALIZED_SIZE = -7777;  { Sentinel value indicating OutW/OutH haven't been computed yet }
+
 TYPE
+ { Resize operation modes }
  TResizeOp=
-   (roAutoDetect,   // Auto decide if we use Fill or Fit. Example: if the algorithm has to cut too much from the image then use Fit. If the image is almost the same size as the screen and the algorithm has to cut only a bit from the image, use Fill.
-    roCustom,       // The image will be resized according to the ResizeFactor. Example: 0.9 to decrease image to 90% of its original size. User 1.1 to increase image with 10%
-    roNone,         // No zoom (original img size)
-    roFill,         // Remove black stripes. The parts of img that go out of the screen are cropped.
-    roFit,          // Adds black stripes. Does not cut from image.
-    roForceWidth,   // The image will have the Width  specified by MaxWidth_.  The Width  will be automatically adjusted to match the width  (aspect ratio is kept)
-    roForceHeight,  // The image will have the Height specified by MaxHeight. The Height will be automatically adjusted to match the height (aspect ratio is kept)
-    roStretch       // The image will have the W/H specified by MaxWidth_/MaxHeight. This will distort the aspect ratio!
+   (roAutoDetect,   { Auto-select Fill or Fit based on how much would be cropped. Uses FitTolerance. }
+    roCustom,       { Resize by CustomZoom factor. 1.0 = no change, 1.5 = 150%, 0.5 = 50% }
+    roNone,         { No resize - keep original dimensions }
+    roFill,         { Fill viewport completely, crop edges that overflow (no black bars) }
+    roFit,          { Fit within viewport, add black bars if needed (no cropping) }
+    roForceWidth,   { Force output to ForcedWidth, compute height to maintain aspect ratio }
+    roForceHeight,  { Force output to ForcedHeight, compute width to maintain aspect ratio }
+    roStretch       { Force exact MaxWidth x MaxHeight, distorts aspect ratio! }
     );
 
 { OLD FORMATS!! Do not used them anymore }
@@ -51,33 +62,34 @@ TYPE
                 rsCustom);      // NOT IMPLEMENTED. Example: zoom -80%
 
  PResizeParams = ^RResizeParams;
- RResizeParams= record
+ RResizeParams = record
   private
     procedure computeAutodetect(InpW, InpH: Integer);
-    procedure computeFit       (InpW, InpH: Integer);
-    procedure computeFill      (InpW, InpH: Integer);
+    procedure computeFit(InpW, InpH: Integer);
+    procedure computeFill(InpW, InpH: Integer);
   public
-    { Input }
-    ResizeOpp    : TResizeOp;
-    MaxZoomUse   : Boolean;    // Shows if this feature is enabled/disabled. Only used in roAutoDetect mode
-    MaxZoomVal   : Integer;    // The actual value
-    CustomZoom   : Single;     // 1.0 means no zoom. 1.5 means 50% zoom
-    ForcedWidth  : Integer;    // Applies only when roForceWidth is used
-    ForcedHeight : Integer;
-    ResizePanoram: Boolean;
-    FitTolerance : Byte;       // If we fail to FILL the image, then we have to fall back to FIT which we don't want becauseof the black bars. But we can still try to partially get rid of these bars, by over-fitting (over zooming) the image on the screen, with 10%
-    MaxWidth     : Integer;
-    MaxHeight    : Integer;
-    { Output }
-    OutW         : Integer;
-    OutH         : Integer;
-    procedure Reset;                                           { Reset to default values }
-    procedure ComputeOutputSize(InpW, InpH: Integer);
+    { Input parameters - set these before calling ComputeOutputSize }
+    ResizeOpp    : TResizeOp;   { Resize mode (roFit, roFill, roAutoDetect, etc.) }
+    MaxZoomUse   : Boolean;     { Enable max zoom limit in roAutoDetect mode }
+    MaxZoomVal   : Integer;     { Max zoom percentage (50 = 150% max). Only used with MaxZoomUse. }
+    CustomZoom   : Single;      { Zoom factor for roCustom mode (1.0 = 100%, 1.5 = 150%, 0.5 = 50%) }
+    ForcedWidth  : Integer;     { Target width for roForceWidth mode }
+    ForcedHeight : Integer;     { Target height for roForceHeight mode }
+    ResizePanoram: Boolean;     { If FALSE, panoramic images are not resized }
+    FitTolerance : Byte;        { Percentage to over-zoom when falling back from Fill to Fit (reduces black bars) }
+    MaxWidth     : Integer;     { Target viewport width }
+    MaxHeight    : Integer;     { Target viewport height }
+    { Output - computed by ComputeOutputSize }
+    OutW         : Integer;     { Computed output width (UNINITIALIZED_SIZE if not computed) }
+    OutH         : Integer;     { Computed output height (UNINITIALIZED_SIZE if not computed) }
 
-    procedure WriteToStream (IOStream: TLightStream);
+    procedure Reset;                                      { Initialize all fields to default values }
+    procedure ComputeOutputSize(InpW, InpH: Integer);     { Compute OutW/OutH based on input dimensions }
+
+    procedure WriteToStream(IOStream: TLightStream);
     procedure ReadFromStream(IOStream: TLightStream);
 
-    procedure Convert(Res: TResizeOpp_; FT: TFillType_);        { Used to convert from the old format used by BioniX v12 to the new format }
+    procedure Convert(Res: TResizeOpp_; FT: TFillType_);  { Convert from old BioniX v12 format }
  end;
 
 
@@ -87,67 +99,88 @@ USES
   Math, LightCore.Math;
 
 
+{ Initialize all fields to sensible defaults.
+  Call this before setting custom values. }
 procedure RResizeParams.Reset;
 begin
   ResizeOpp     := roAutoDetect;
-  MaxZoomVal    := 50;
+  MaxZoomVal    := 50;          { 50% max zoom = 1.5x magnification limit }
   MaxZoomUse    := TRUE;
-  CustomZoom    := 1.5;    { times }
-  MaxWidth      := 1920;   { This will be provided by TWallpaperBase.LoadFromFile(MaxWidth, MaxHeight: Integer) }
-  MaxHeight     := 1200;
-  OutW          := -7777;
-  OutH          := -7777;
-  FitTolerance  := 10;     { % }
-  ResizePanoram := FALSE;
-  ForcedWidth   := 800;
-  ForcedHeight  := 600;
+  CustomZoom    := 1.5;         { Default 150% for roCustom mode }
+  MaxWidth      := 1920;        { Default HD width - typically overridden by caller }
+  MaxHeight     := 1200;        { Default height - typically overridden by caller }
+  OutW          := UNINITIALIZED_SIZE;  { Sentinel: not yet computed }
+  OutH          := UNINITIALIZED_SIZE;  { Sentinel: not yet computed }
+  FitTolerance  := 10;          { 10% over-zoom tolerance when falling back to Fit }
+  ResizePanoram := FALSE;       { Don't resize panoramic images by default }
+  ForcedWidth   := 800;         { Default for roForceWidth mode }
+  ForcedHeight  := 600;         { Default for roForceHeight mode }
 end;
 
 
 
 
 {--------------------------------------------------------------------------------------------------
-   Compute output
+   Compute output - Private helper methods
+   These assume validation has been done by ComputeOutputSize
 --------------------------------------------------------------------------------------------------}
 
+{ Fill mode: Scale image to completely fill the viewport.
+  At least one dimension equals the viewport, the other may exceed it (will be cropped).
+  No black bars, but edges may be cut off. }
 procedure RResizeParams.ComputeFill(InpW, InpH: Integer);
 var ZoomRatio, ARi, ARo: Single;
 begin
- ARi:= InpW / InpH;              // Aspect Ratio of Input image
- ARo:= MaxWidth / MaxHeight;     // Aspect Ratio of Output port
+ Assert(InpH > 0, 'ComputeFill: InpH must be > 0');
+ Assert(MaxHeight > 0, 'ComputeFill: MaxHeight must be > 0');
+ Assert(MaxWidth > 0, 'ComputeFill: MaxWidth must be > 0');
+
+ ARi:= InpW / InpH;              { Aspect Ratio of Input image }
+ ARo:= MaxWidth / MaxHeight;     { Aspect Ratio of Output viewport }
 
  if ARi <= ARo
  then
    begin
+    { Image is narrower than viewport - constrain by width }
     ZoomRatio:= InpW / MaxWidth;
     OutW:= MaxWidth;
     OutH:= RoundEx(InpH / ZoomRatio);
    end
  else
-    begin
-     ZoomRatio:= InpH / MaxHeight;
-     OutH:= MaxHeight;
-     OutW:= RoundEx(InpW / ZoomRatio);
-    end
+   begin
+    { Image is wider than viewport - constrain by height }
+    ZoomRatio:= InpH / MaxHeight;
+    OutH:= MaxHeight;
+    OutW:= RoundEx(InpW / ZoomRatio);
+   end;
 end;
 
 
 
+{ Fit mode: Scale image to fit entirely within the viewport.
+  At least one dimension equals the viewport, the other is smaller.
+  No cropping, but may have black bars on sides or top/bottom. }
 procedure RResizeParams.ComputeFit(InpW, InpH: Integer);
 var ZoomRatio, ARi, ARo: Single;
 begin
- ARi:= InpW / InpH;              // Aspect Ratio of Input image
- ARo:= MaxWidth / MaxHeight;     // Aspect Ratio of Output port
+ Assert(InpH > 0, 'ComputeFit: InpH must be > 0');
+ Assert(MaxHeight > 0, 'ComputeFit: MaxHeight must be > 0');
+ Assert(MaxWidth > 0, 'ComputeFit: MaxWidth must be > 0');
+
+ ARi:= InpW / InpH;              { Aspect Ratio of Input image }
+ ARo:= MaxWidth / MaxHeight;     { Aspect Ratio of Output viewport }
 
  if ARi <= ARo
  then
    begin
+    { Image is narrower than viewport - constrain by height }
     ZoomRatio:= InpH / MaxHeight;
     OutH:= MaxHeight;
     OutW:= RoundEx(InpW / ZoomRatio);
    end
  else
    begin
+    { Image is wider than viewport - constrain by width }
     ZoomRatio:= InpW / MaxWidth;
     OutW:= MaxWidth;
     OutH:= RoundEx(InpH / ZoomRatio);
@@ -218,20 +251,31 @@ end;
 
 
 
-{ Calculates which are the output W/H in such way that it fits the requirements of the user without distorting the aspect ratio.
-  InpW/InpH is the size of the input BMP }
+{ Calculates output dimensions (OutW/OutH) based on input dimensions and current settings.
+  InpW/InpH: Size of the input image (must be > 0).
+  After calling, read OutW and OutH for the computed output dimensions.
+  Raises exception if parameters are invalid. }
 procedure RResizeParams.ComputeOutputSize(InpW, InpH: Integer);
 VAR
-   Ratie: Real;
+   Ratio: Real;
 begin
-  if (MaxWidth <= 0)
-  then RAISE Exception.Create('Invalid OutWidth  in TImgResizer');
-  if (MaxHeight <= 0)
-  then RAISE Exception.Create('Invalid OutHeight in TImgResizer');
+  { Validate viewport dimensions }
+  if MaxWidth <= 0
+  then RAISE Exception.Create('ComputeOutputSize: MaxWidth must be > 0');
 
-  { Panoramic images will not be resized (but will still be compressed) }
-  if LightVcl.Graph.Bitmap.IsPanoramic(InpW, InpH)
-  AND NOT ResizePanoram then
+  if MaxHeight <= 0
+  then RAISE Exception.Create('ComputeOutputSize: MaxHeight must be > 0');
+
+  { Validate input dimensions }
+  if InpW <= 0
+  then RAISE Exception.Create('ComputeOutputSize: Input width must be > 0');
+
+  if InpH <= 0
+  then RAISE Exception.Create('ComputeOutputSize: Input height must be > 0');
+
+  { Panoramic images are not resized by default (but may still be compressed) }
+  if LightVcl.Graph.Bitmap.IsPanoramic(InpW, InpH) AND NOT ResizePanoram
+  then
    begin
     OutW:= InpW;
     OutH:= InpH;
@@ -239,57 +283,58 @@ begin
    end;
 
   case ResizeOpp of
-
-    { AUTODETECT }
     roAutoDetect:
       computeAutodetect(InpW, InpH);
 
-    { NO RESIZE }
     roNone:
-     begin
-      OutW:= InpW;
-      OutH:= InpH;
-     end;
+      begin
+       OutW:= InpW;
+       OutH:= InpH;
+      end;
 
-    { CUSTOM ZOOM }
     roCustom:
       begin
-       OutW:= RoundEx(InpW * CustomZoom); { Same zoom for both W and H }
+       if CustomZoom <= 0
+       then RAISE Exception.Create('ComputeOutputSize: CustomZoom must be > 0');
+
+       OutW:= RoundEx(InpW * CustomZoom);
        OutH:= RoundEx(InpH * CustomZoom);
       end;
 
-    { sssss }
     roFit:
-       ComputeFit(InpW, InpH);
+      ComputeFit(InpW, InpH);
 
     roFill:
-       ComputeFill(InpW, InpH);
+      ComputeFill(InpW, InpH);
 
-    { SAME W/H }
     roStretch:
       begin
        OutW:= MaxWidth;
        OutH:= MaxHeight;
       end;
 
-    { SAME WIDTH }
     roForceWidth:
-        begin
-         Ratie:= InpW / InpH;
-         OutW:= ForcedWidth;
-         OutH:= RoundEx(ForcedWidth / Ratie);
-        end;
+      begin
+       if ForcedWidth <= 0
+       then RAISE Exception.Create('ComputeOutputSize: ForcedWidth must be > 0');
 
-    { SAME HEIGHT }
+       Ratio:= InpW / InpH;
+       OutW:= ForcedWidth;
+       OutH:= RoundEx(ForcedWidth / Ratio);
+      end;
+
     roForceHeight:
-        begin
-         Ratie:= InpH / InpW;
-         OutW:= RoundEx(ForcedHeight /Ratie);
-         OutH:= ForcedHeight;
-        end;
+      begin
+       if ForcedHeight <= 0
+       then RAISE Exception.Create('ComputeOutputSize: ForcedHeight must be > 0');
 
-     else
-      RAISE Exception.Create('Unknown case.');
+       Ratio:= InpH / InpW;
+       OutW:= RoundEx(ForcedHeight / Ratio);
+       OutH:= ForcedHeight;
+      end;
+
+    else
+      RAISE Exception.Create('ComputeOutputSize: Unknown resize operation.');
   end;
 end;
 
@@ -321,29 +366,37 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-   Stream
+   Stream I/O
+   Note: MaxWidth, MaxHeight, OutW, OutH are NOT saved - they should be recalculated.
 --------------------------------------------------------------------------------------------------}
 
 procedure RResizeParams.WriteToStream(IOStream: TLightStream);
 begin
-{ These are not saved, because they should be recalculated:
-   MaxWidth, MaxHeight: Integer;
-   OutW, OutH         : Integer;   }
-   IOStream.WriteByte    (Ord(ResizeOpp));
-   IOStream.WriteBoolean (MaxZoomuse);
-   IOStream.WriteInteger (MaxZoomVal);
-   IOStream.WriteSingle  (CustomZoom);
-   IOStream.WriteInteger (ForcedWidth);
-   IOStream.WriteInteger (ForcedHeight);
-   IOStream.WriteBoolean (ResizePanoram);
-   IOStream.WriteByte    (FitTolerance);
+   Assert(IOStream <> NIL, 'WriteToStream: IOStream cannot be nil');
+
+   IOStream.WriteByte(Ord(ResizeOpp));
+   IOStream.WriteBoolean(MaxZoomUse);
+   IOStream.WriteInteger(MaxZoomVal);
+   IOStream.WriteSingle(CustomZoom);
+   IOStream.WriteInteger(ForcedWidth);
+   IOStream.WriteInteger(ForcedHeight);
+   IOStream.WriteBoolean(ResizePanoram);
+   IOStream.WriteByte(FitTolerance);
    IOStream.WritePadding;
 end;
 
 
 procedure RResizeParams.ReadFromStream(IOStream: TLightStream);
+VAR OpByte: Byte;
 begin
-   ResizeOpp    := TResizeOp(IOStream.ReadByte);
+   Assert(IOStream <> NIL, 'ReadFromStream: IOStream cannot be nil');
+
+   { Read and validate enum value }
+   OpByte:= IOStream.ReadByte;
+   if OpByte > Ord(High(TResizeOp))
+   then RAISE Exception.Create('ReadFromStream: Invalid ResizeOp value in stream: ' + IntToStr(OpByte));
+   ResizeOpp:= TResizeOp(OpByte);
+
    MaxZoomUse   := IOStream.ReadBoolean;
    MaxZoomVal   := IOStream.ReadInteger;
    CustomZoom   := IOStream.ReadSingle;

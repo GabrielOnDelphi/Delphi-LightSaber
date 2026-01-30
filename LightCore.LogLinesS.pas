@@ -1,20 +1,26 @@
 UNIT LightCore.LogLinesS;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.10
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Single-Threaded Version of LogLines
-   For the new log (the one based on TStringGrid)
+
+   This is the non-thread-safe implementation of TAbstractLogLines.
+   Use this when all log operations occur on a single thread (typically the main thread).
+   For multi-threaded scenarios, use TLogLinesMultiThreaded from LightCore.LogLinesM.pas.
+
+   The class stores log entries as PLogLine pointers in a TList.
+   Memory for each log line is allocated with New() and freed with Dispose() on Clear/Destroy.
+
+   Inherits ReadFromStream/WriteToStream from TAbstractLogLines (no override needed).
 
    Tester:
      LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE
-{ $I Frameworks.inc}
 
 USES
    System.SysUtils, System.Classes,
@@ -22,7 +28,6 @@ USES
 
 TYPE
   TLogLinesSingleThreaded = class(TAbstractLogLines)
-  private
   protected
     function getItem(Index: Integer): PLogLine; override;
   public
@@ -43,12 +48,12 @@ IMPLEMENTATION
 
 
 {-------------------------------------------------------------------------------------------------------------
-  CTOR
+   CONSTRUCTOR / DESTRUCTOR
 -------------------------------------------------------------------------------------------------------------}
 constructor TLogLinesSingleThreaded.Create;
 begin
   inherited Create;
-  FList := TList.Create;
+  FList:= TList.Create;
 end;
 
 
@@ -62,15 +67,16 @@ end;
 
 function TLogLinesSingleThreaded.getItem(Index: Integer): PLogLine;
 begin
-  Result := PLogLine(FList[Index]);
+  Result:= PLogLine(FList[Index]);
 end;
 
 
+{ Disposes all log line records and clears the list. }
 procedure TLogLinesSingleThreaded.Clear;
 var
   i: Integer;
 begin
-  for i := 0 to FList.Count - 1 do
+  for i:= 0 to FList.Count - 1 do
     Dispose(PLogLine(FList[i]));
   FList.Clear;
 end;
@@ -78,7 +84,7 @@ end;
 
 function TLogLinesSingleThreaded.Count: Integer;
 begin
-  Result := FList.Count;
+  Result:= FList.Count;
 end;
 
 
@@ -86,12 +92,19 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    ADD
 -------------------------------------------------------------------------------------------------------------}
+
+{ Adds an externally-created log line pointer to the list.
+  The caller is responsible for allocating the PLogLine with New().
+  The list takes ownership and will Dispose() it on Clear/Destroy. }
 function TLogLinesSingleThreaded.Add(Value: PLogLine): Integer;
 begin
-  Result := FList.Add(Value);
+  Assert(Value <> NIL, 'TLogLinesSingleThreaded.Add: Value cannot be nil');
+  Result:= FList.Add(Value);
 end;
 
 
+{ Creates a new log line record, populates it, and adds it to the list.
+  Returns the pointer to the newly created line. }
 function TLogLinesSingleThreaded.AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE): PLogLine;
 begin
   New(Result);
@@ -109,26 +122,34 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    ACCESS
 -------------------------------------------------------------------------------------------------------------}
-{ Convert a row number in the filtered view (which only shows rows meeting the verbosity criteria) to the corresponding index in the full list of log lines.
-  For example, if you have 10 log lines but only 5 meet the verbosity criteria, this function allows you to find the actual index of the 3rd visible row in the full list of log lines. }
+
+{ Converts a row number in the filtered view to the actual index in the full list.
+  The filtered view only shows rows meeting the verbosity threshold.
+
+  Example: If you have 10 log lines but only 5 meet the verbosity criteria,
+  this function finds the actual index of the Nth visible row.
+
+  Returns: The actual list index, or -1 if the filtered row doesn't exist. }
 function TLogLinesSingleThreaded.Row2FilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer;
 var
-  i, Total: Integer;
+  i, VisibleCount: Integer;
 begin
-  Result := -1;
-  Total  := -1;
-  for i  := 0 to FList.Count - 1 do
+  Result:= -1;
+  VisibleCount:= -1;
+  for i:= 0 to FList.Count - 1 do
   begin
-    if PLogLine(FList[i]).Level >= Verbosity then
-      begin
-        Inc(Total);
-        Result := i;
-      end;
+    if PLogLine(FList[i]).Level >= Verbosity
+    then begin
+      Inc(VisibleCount);
+      Result:= i;
+    end;
 
-    if Total = Row then Exit;
+    if VisibleCount = Row
+    then EXIT;
   end;
 
-  if Total < Row then Result := -1;
+  if VisibleCount < Row
+  then Result:= -1;
 end;
 
 

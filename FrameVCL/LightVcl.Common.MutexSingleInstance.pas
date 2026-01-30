@@ -1,9 +1,9 @@
 UNIT LightVcl.Common.MutexSingleInstance;
 
 {=============================================================================================================
-   2023.01
+   2026.01.29
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+
 ==============================================================================================================
 
    Only allow one instance of the program to run at a time.

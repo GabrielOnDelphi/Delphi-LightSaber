@@ -1,6 +1,7 @@
 unit Test.LightVcl.Graph.FX.Gradient;
 
 {=============================================================================================================
+   2026.01.30
    Unit tests for LightVcl.Graph.FX.Gradient.pas
    Tests gradient drawing and pattern generation functions.
 
@@ -60,6 +61,18 @@ type
     [Test]
     procedure TestVistaGradient_SameStartEndColor;
 
+    [Test]
+    procedure TestVistaGradient_NilBitmap;
+
+    [Test]
+    procedure TestVistaGradient_BrightnessExtremes;
+
+    [Test]
+    procedure TestVistaGradient_PreservesOutputDimensions;
+
+    [Test]
+    procedure TestVistaGradient_MinimumHeight;
+
     { GradientFillCanvas Tests }
     [Test]
     procedure TestGradientFillCanvas_Horizontal;
@@ -72,6 +85,9 @@ type
 
     [Test]
     procedure TestGradientFillCanvas_SameColors;
+
+    [Test]
+    procedure TestGradientFillCanvas_NilCanvas;
 
     { DrawRedPattern Tests }
     [Test]
@@ -91,6 +107,12 @@ type
 
     [Test]
     procedure TestDrawRedPattern_LargeBitmap;
+
+    [Test]
+    procedure TestDrawRedPattern_NilBitmap;
+
+    [Test]
+    procedure TestDrawRedPattern_VerifyXorPattern;
   end;
 
 implementation
@@ -247,6 +269,65 @@ begin
 end;
 
 
+procedure TTestGradient.TestVistaGradient_NilBitmap;
+begin
+  { Should raise assertion when bitmap is nil }
+  Assert.WillRaise(
+    procedure
+    begin
+      VistaGradient(NIL, 128, clBlue, clRed, False, False);
+    end, EAssertionFailed);
+end;
+
+
+procedure TTestGradient.TestVistaGradient_BrightnessExtremes;
+begin
+  { Test with c1=0 (full brightness) and c1=255 (minimum brightness) }
+  Assert.WillNotRaise(
+    procedure
+    begin
+      VistaGradient(FBitmap, 0, clBlue, clRed, False, False);    { Full brightness }
+      VistaGradient(FBitmap, 255, clBlue, clRed, False, False);  { Minimum brightness }
+    end);
+end;
+
+
+procedure TTestGradient.TestVistaGradient_PreservesOutputDimensions;
+var
+  OrigWidth, OrigHeight: Integer;
+begin
+  OrigWidth:= FBitmap.Width;
+  OrigHeight:= FBitmap.Height;
+
+  VistaGradient(FBitmap, 128, clBlue, clRed, True, True);
+
+  Assert.AreEqual(OrigWidth, FBitmap.Width, 'Width should be preserved');
+  Assert.AreEqual(OrigHeight, FBitmap.Height, 'Height should be preserved');
+end;
+
+
+procedure TTestGradient.TestVistaGradient_MinimumHeight;
+var
+  TinyBmp: TBitmap;
+begin
+  { VistaGradient requires Height > 1 because it calculates scanline stride
+    from consecutive scanlines. Height=1 would cause invalid memory access. }
+  TinyBmp:= TBitmap.Create;
+  TRY
+    TinyBmp.Width:= 10;
+    TinyBmp.Height:= 1;
+
+    Assert.WillRaise(
+      procedure
+      begin
+        VistaGradient(TinyBmp, 128, clBlue, clRed, False, False);
+      end, EAssertionFailed);
+  FINALLY
+    FreeAndNil(TinyBmp);
+  END;
+end;
+
+
 { GradientFillCanvas Tests }
 
 procedure TTestGradient.TestGradientFillCanvas_Horizontal;
@@ -302,6 +383,20 @@ begin
     begin
       Vcl.GraphUtil.GradientFillCanvas(FBitmap.Canvas, clNavy, clNavy, R, gdVertical);
     end);
+end;
+
+
+procedure TTestGradient.TestGradientFillCanvas_NilCanvas;
+var
+  R: TRect;
+begin
+  R:= Rect(0, 0, 100, 100);
+  { The wrapper function should raise assertion when canvas is nil }
+  Assert.WillRaise(
+    procedure
+    begin
+      LightVcl.Graph.FX.Gradient.GradientFillCanvas(NIL, clRed, clBlue, R, gdVertical);
+    end, EAssertionFailed);
 end;
 
 
@@ -398,6 +493,50 @@ begin
       end);
   FINALLY
     FreeAndNil(LargeBmp);
+  END;
+end;
+
+
+procedure TTestGradient.TestDrawRedPattern_NilBitmap;
+begin
+  { Should raise assertion when bitmap is nil }
+  Assert.WillRaise(
+    procedure
+    begin
+      DrawRedPattern(NIL);
+    end, EAssertionFailed);
+end;
+
+
+procedure TTestGradient.TestDrawRedPattern_VerifyXorPattern;
+var
+  TestBmp: TBitmap;
+  X, Y: Integer;
+  ExpectedRed: Byte;
+  ActualColor: TColor;
+  ActualRed: Byte;
+begin
+  { Create a small bitmap to verify the XOR pattern }
+  TestBmp:= TBitmap.Create;
+  TRY
+    TestBmp.Width:= 16;
+    TestBmp.Height:= 16;
+
+    DrawRedPattern(TestBmp);
+
+    { Verify a few specific pixels follow the X xor Y pattern }
+    for Y:= 0 to 15 do
+      for X:= 0 to 15 do
+      begin
+        ExpectedRed:= X xor Y;
+        ActualColor:= TestBmp.Canvas.Pixels[X, Y];
+        ActualRed:= GetRValue(ActualColor);
+
+        Assert.AreEqual(Integer(ExpectedRed), Integer(ActualRed),
+          Format('Red channel at (%d,%d) should be %d (X xor Y)', [X, Y, ExpectedRed]));
+      end;
+  FINALLY
+    FreeAndNil(TestBmp);
   END;
 end;
 

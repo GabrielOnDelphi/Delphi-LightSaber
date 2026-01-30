@@ -114,6 +114,16 @@
         <DCCReference Include="..\FrameVCL\LightVcl.Common.Keyboard.pas"/>
         <DCCReference Include="Test.LightVcl.Common.Clipboard.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Common.Clipboard.pas"/>
+        <DCCReference Include="Test.LightVcl.Common.Registry.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Common.Registry.pas"/>
+        <DCCReference Include="Test.LightVcl.Common.System.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Common.System.pas"/>
+        <DCCReference Include="Test.LightVcl.Common.PopUp.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Common.PopUp.pas"/>
+        <DCCReference Include="Test.LightVcl.Common.Window.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Common.Window.pas"/>
+        <DCCReference Include="Test.LightVcl.Common.WinVersion.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Common.WinVersion.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

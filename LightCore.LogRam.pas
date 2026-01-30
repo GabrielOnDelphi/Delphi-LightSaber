@@ -1,7 +1,7 @@
 UNIT LightCore.LogRam;
 
 {=============================================================================================================
-   2025.05
+   2026.01.30
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -12,8 +12,13 @@ UNIT LightCore.LogRam;
    Verbosity:
      Supports several verbosity levels (verbose, info, warnings, errors, etc)
 
-   Future plans
-     Replaces the TRamLog.
+   Thread Safety:
+     The MultiThreaded parameter in Create determines whether the underlying Lines storage is thread-safe.
+     When MultiThreaded=TRUE:
+       - Individual Add/Clear/Count operations are thread-safe
+       - Observer notifications are synchronized to the main thread via TThread.Queue
+       - GetAsText iteration is NOT atomic (documented TOCTOU issue)
+       - Periodic save checks (CheckAndSaveToDisk) access FLastSaveTime without lock - acceptable for approximate timing
 
    Tester:
      LightSaber\Demo\LightLog\
@@ -104,15 +109,21 @@ CONST CurrentVersion = 5;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   CTOR
+   CONSTRUCTOR / DESTRUCTOR
+
+   Parameters:
+     aShowOnError  - When TRUE, automatically shows the observer window (if registered) when warnings/errors are logged
+     Observer      - Optional GUI observer (like TLogViewer) that displays log entries. Can be NIL.
+     MultiThreaded - When TRUE, uses TLogLinesMultiThreaded with MREWS locking for thread-safe operations.
+                     When FALSE (default), uses TLogLinesSingleThreaded without locking overhead.
 -------------------------------------------------------------------------------------------------------------}
 constructor TRamLog.Create(aShowOnError: Boolean; Observer: ILogObserver; MultiThreaded: Boolean= FALSE);
 begin
   inherited Create;
 
-  ShowOnError := aShowOnError;
-  FSaveInterval := 60;  // Save every 60 seconds
-  FLastSaveTime := Now;
+  ShowOnError:= aShowOnError;
+  FSaveInterval:= 60;  { Auto-save interval in seconds }
+  FLastSaveTime:= Now;
 
   if MultiThreaded
   then Lines:= TLogLinesMultiThreaded.Create
@@ -142,30 +153,29 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    STUFF
 -------------------------------------------------------------------------------------------------------------}
-{ Filtered False: Returns the number of rows
-  Filtered True: Returns the number of rows that we can extract from RamLog after we took into consideration the verbosity filter }
+
+{ Returns the number of log lines.
+  Filtered=False: Returns total count.
+  Filtered=True: Returns count of lines meeting the verbosity threshold.
+  Uses Lines.CountFiltered which is thread-safe (holds lock during iteration). }
 function TRamLog.Count(Filtered: Boolean; Filter: TLogVerbLvl): Integer;
 begin
-  Result := 0;
   if Filtered
-  then
-    for VAR i := 0 to Lines.Count - 1 do
-      begin
-       if Lines[i].Level >= Filter
-       then Inc(Result);
-      end
-  else
-    Result:= Lines.Count;
+  then Result:= Lines.CountFiltered(Filter)
+  else Result:= Lines.Count;
 end;
 
 
 {-------------------------------------------------------------------------------------------------------------
    OBSERVER METHODS
 -------------------------------------------------------------------------------------------------------------}
+{ Registers a GUI observer (like TLogViewer) to receive log updates.
+  Only one observer can be registered at a time. Registering a new observer
+  automatically unregisters any previous observer (interface reference counting
+  handles cleanup automatically). }
 procedure TRamLog.RegisterLogObserver(Observer: ILogObserver);
 begin
-  FLogObserver := NIL; // explicitly set to nil before assigning a new observer to prevent memory leaks or undefined behavior with multiple observers. Ensure proper lifecycle management of observers.
-  FLogObserver := Observer;
+  FLogObserver:= Observer;
 end;
 
 
@@ -306,40 +316,67 @@ end;
 
 {-------------------------------------------------------------------------------------------------------------
    CHECK AND SAVE TO DISK
+
+   Auto-save triggers:
+     1. When log exceeds MaxEntries (1 million) - saves to LargeLogSave.logbin and clears RAM
+     2. When FSaveInterval seconds have passed since last save - saves to PeriodicLogSave.logbin
+
+   Note: FLastSaveTime access is not locked in multi-threaded mode. This is acceptable because:
+     - Worst case is an extra save or a skipped save interval, both harmless
+     - Locking on every message would significantly impact performance
 -------------------------------------------------------------------------------------------------------------}
 procedure TRamLog.CheckAndSaveToDisk;
 begin
+  { Save and clear if we've exceeded the maximum entry count }
   if Lines.Count > MaxEntries then
-  begin
-    SaveToFile(TAppDataCore.AppDataFolder+ 'LargeLogSave.logbin');
-    Lines.Clear;
-  end;
+    TRY
+      SaveToFile(TAppDataCore.AppDataFolder + 'LargeLogSave.logbin');
+      Lines.Clear;
+    EXCEPT
+      { Silently ignore save errors - don't let backup failure crash the application.
+        The log data remains in memory and will be saved on next successful attempt. }
+    END;
 
-  if SecondsBetween(Now, FLastSaveTime) >= FSaveInterval then  // Default 60 sec
-  begin
-    SaveToFile(TAppDataCore.AppDataFolder+ 'PeriodicLogSave.logbin');
-    FLastSaveTime := Now;
-  end;
+  { Periodic save for crash recovery }
+  if SecondsBetween(Now, FLastSaveTime) >= FSaveInterval then
+    TRY
+      SaveToFile(TAppDataCore.AppDataFolder + 'PeriodicLogSave.logbin');
+      FLastSaveTime:= Now;
+    EXCEPT
+      { Silently ignore periodic save errors }
+    END;
 end;
 
 
 {-------------------------------------------------------------------------------------------------------------
    TEXT
 -------------------------------------------------------------------------------------------------------------}
-{ Returns all lines, even if a filter is applied }
-function TRamLog.GetAsText: string;
-VAR i: Integer;
-begin
- Result:= '';
- for i:= 0 to Lines.Count-1
-   DO Result:= Result+ Lines[i].Msg+ CRLF;
 
- {Cut the last enter}
- Result:= LightCore.RemoveLastEnter(Result);
+{ Returns all log lines as a single string, separated by CRLF.
+
+  Thread Safety Warning:
+    In multi-threaded mode, this iteration has a TOCTOU (Time-Of-Check-To-Time-Of-Use) issue.
+    Between reading Lines.Count and accessing Lines[i], another thread could modify the list.
+    This could cause index-out-of-bounds errors or return inconsistent data.
+
+  For thread-safe alternatives:
+    - Use Lines.WriteToStream which holds a lock for the entire operation
+    - Accept that the output may represent a "fuzzy" snapshot of the log }
+function TRamLog.GetAsText: string;
+var
+  i: Integer;
+begin
+  Result:= '';
+  for i:= 0 to Lines.Count-1 do
+    Result:= Result + Lines[i].Msg + CRLF;
+
+  Result:= LightCore.RemoveLastEnter(Result);  { Remove trailing line break }
 end;
 
 
 
+{ Prepares a message string for storage by replacing all line breaks with spaces.
+  This ensures each log entry is a single line, which simplifies display and filtering. }
 function TRamLog.prepareString(CONST Msg: string): string;
 begin
   Result:= ReplaceEnters(Msg , ' ');
@@ -362,11 +399,21 @@ end;
 
 
 
+{ Loads log data from a stream.
+  Returns TRUE if the stream was successfully read (correct signature and version).
+  Returns FALSE if the stream has an incompatible version or invalid signature.
+
+  Stream format (nested structure):
+    TRamLog header ('TRamLog', CurrentVersion)
+      TLogLines header ('TLogLines', CurVer)
+        [Log line records...]
+      TLogLines padding
+    TRamLog padding }
 function TRamLog.LoadFromStream(Stream: TLightStream): Boolean;
 VAR StreamVer: Word;
 begin
   StreamVer:= Stream.ReadHeader(StreamSign);
-  Result:= StreamVer = CurrentVersion;    // Unsupported version?
+  Result:= StreamVer = CurrentVersion;
   if Result then
     begin
       Lines.ReadFromStream(Stream);
@@ -374,6 +421,9 @@ begin
     end;
 end;
 
+
+{ Saves all log data to a stream in binary format.
+  See LoadFromStream for stream format documentation. }
 procedure TRamLog.SaveToStream(Stream: TLightStream);
 begin
   Stream.WriteHeader(StreamSign, CurrentVersion);
@@ -384,6 +434,10 @@ end;
 
 
 
+{ Loads log data from a binary file.
+  Returns TRUE on success, FALSE if file doesn't exist or has incompatible format.
+  Note: Existing log entries are cleared BEFORE loading. If the load fails after Clear,
+  the previous data is lost. This is intentional - a fresh start on load. }
 function TRamLog.LoadFromFile(const FullPath: string): Boolean;
 begin
  if NOT FileExists(FullPath)
@@ -402,6 +456,7 @@ begin
 end;
 
 
+{ Saves all log data to a binary file. Creates the file if it doesn't exist. }
 procedure TRamLog.SaveToFile(const FullPath: string);
 begin
  VAR Stream:= TLightStream.CreateWrite(FullPath);

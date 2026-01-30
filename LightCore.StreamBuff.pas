@@ -1,7 +1,7 @@
 UNIT LightCore.StreamBuff;
 
 {=============================================================================================================
-   2026.01
+   2026.01.30
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Extends TBufferedFileStream.
@@ -337,14 +337,16 @@ begin
   // Check size
   if Count > 64 then
     begin
-      AppDataCore.LogError('ReadSignature: Signature larger than 64 bytes: '+ IntToStr(Count)+' bytes');
+      if AppDataCore <> NIL
+      then AppDataCore.LogError('ReadSignature: Signature larger than 64 bytes: '+ IntToStr(Count)+' bytes');
       EXIT('');
     end;
 
   // Enough data to read?
   if Count > Size- Position then
     begin
-      AppDataCore.LogError('ReadSignature: Signature length > file size!');
+      if AppDataCore <> NIL
+      then AppDataCore.LogError('ReadSignature: Signature length > file size!');
       EXIT('');
     end;
 
@@ -595,14 +597,14 @@ end;
 
 procedure TLightStream.WriteStrings(TSL: TStrings);
 begin
-  Assert(TSL <> NIL, 'TCubicMemStream.WriteStrings: TSL is nil');
+  Assert(TSL <> NIL, 'TLightStream.WriteStrings: TSL is nil');
   WriteString(TSL.Text);
 end;
 
 
 procedure TLightStream.ReadStrings(TSL: TStrings);
 begin
-  Assert(TSL <> NIL, 'TCubicMemStream.ReadStrings: TSL is nil');
+  Assert(TSL <> NIL, 'TLightStream.ReadStrings: TSL is nil');
   TSL.Text:= ReadString;
 end;
 
@@ -926,7 +928,7 @@ end;
 { Read the raw content of the file and return it as string (for debugging) }
 function TLightStream.AsString: AnsiString;
 begin
-  if Size = 0 then RAISE Exception.Create('TCubicMemStream is empty!');
+  if Size = 0 then RAISE Exception.Create('TLightStream is empty!');
   Position:= 0;
   Result:= ReadStringA(Size);
 end;

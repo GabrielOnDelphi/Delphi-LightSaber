@@ -1,7 +1,7 @@
 UNIT LightCore.Math;
 
 {=============================================================================================================
-   2023.01
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
@@ -10,7 +10,7 @@ UNIT LightCore.Math;
      - Min/Max for 3 values
      - Range clamping
      - Percent calculations
-     - Rounding variants
+     - Rounding variants (NOTE: RoundEx/RoundUp designed for positive numbers only)
      - Statistical functions (median, mean, interquartile)
      - Factorial and combinations
 
@@ -71,7 +71,7 @@ USES
 ==================================================================================================}
  function  Median   (MX: TDoubleDynArray): Double;  overload;                                    { Use it like this: Median(TDoubleDynArray.Create(4.1, 5.6, 7.2, 1.7, 9.3, 4.4, 3.2)) }
  function  Median   (MX: System.Types.TIntegerDynArray): Integer;   overload;
- function  Mean     (MX: System.Types.TIntegerDynArray): Integer;                                { Media numerelor }
+ function  Mean     (MX: System.Types.TIntegerDynArray): Integer;                                { Average of numbers }
  function  Interq10 (MX: System.Types.TIntegerDynArray): Integer;
  function  Interq25 (MX: System.Types.TIntegerDynArray): Integer;
  function  Interq75 (MX: System.Types.TIntegerDynArray): Integer;
@@ -81,7 +81,7 @@ USES
 {==================================================================================================
    BASIC MATH
 ==================================================================================================}
- function  Factorial       (CONST n: byte): Int64;                                               { ATENTIE: din cauza numerelor gigantice pe care mi le da, parametrul 'n' nu poate fi mai mare de 20.  Formula n!= n*(n-1)*(n-2)*...*3*2*1 }
+ function  Factorial       (CONST n: byte): Int64;                                               { WARNING: n must be <= 20 to avoid Int64 overflow.  Formula: n! = n*(n-1)*(n-2)*...*3*2*1 }
  function  Combinations    (CONST n, r: integer): Int64;                                         { Combinations of n taken r at the time= n! / (n-r)! * r! }
  {$IFDEF CPUX86}
  function  FastModulo(const X, Y: Integer): Integer; assembler; { https://forum.lazarus.freepascal.org/index.php/topic,36342.15.html }
@@ -262,7 +262,7 @@ end;
 
 function ProcentRepresent(CONST xRepresent, From: Extended): Extended;
 begin
- Assert(From> 0);
+ Assert(From > 0, 'Percent error. Divider must be > 0');
  Result:= (xRepresent* 100) / From;
 end;
 
@@ -278,7 +278,10 @@ end;
    ROUND
 -------------------------------------------------------------------------------------------------------------}
 
-{ If fractional part is >= 0.5 then the number is rounded up, else down. "Bank" algorithm example: Round(25.5) = 26 but Round(26.5) = 26 }
+{ Standard "round half up" for POSITIVE numbers: if fractional part >= 0.5 then rounds up.
+  Avoids "banker's rounding" where Round(25.5)=26 but Round(26.5)=26.
+  NOTE: For negative numbers, Frac() returns negative values, so this function
+  behaves as "round toward positive infinity" (e.g., RoundEx(-2.5) = -2). }
 function RoundEx(CONST X: Extended): LongInt;
 begin
  Result:= Trunc(x);
@@ -301,9 +304,11 @@ begin
 end;
 
 
-{ Rounds a number UP to the specified category. For example RoundTo(72, 5)=75 and RoundTo(72, 10)=80 }
+{ Rounds a number UP to the specified category. For example RoundTo(72, 5)=75 and RoundTo(72, 10)=80
+  ToCategory must be > 0 to avoid division by zero. }
 function RoundTo(CONST X: Extended; ToCategory: Integer): Longint;
 begin
+ Assert(ToCategory > 0, 'RoundTo: ToCategory must be greater than 0');
  Result:= ToCategory * RoundUp(x / ToCategory);
 end;
 
@@ -353,9 +358,16 @@ end;
 {$ENDIF}
 
 
-{ FORMULA:  Combinations of n taken r at the time= n! / (n-r)! * r! }
+{ FORMULA:  Combinations of n taken r at a time = n! / ((n-r)! * r!)
+  Also known as "n choose r" or binomial coefficient C(n,r).
+  Preconditions: n >= r >= 0, and n <= 20 (factorial overflow limit). }
 function Combinations(CONST n, r: integer): Int64;
 begin
+  Assert(n >= 0, 'Combinations: n must be >= 0');
+  Assert(r >= 0, 'Combinations: r must be >= 0');
+  Assert(n >= r, 'Combinations: n must be >= r');
+  Assert(n <= 20, 'Combinations: n must be <= 20 to avoid factorial overflow');
+
   Result:= round(Factorial(n) / ( Factorial(n-r) * Factorial(r)));
 end;
 
@@ -398,10 +410,12 @@ begin
 end;
 
 
-function Mean(MX: System.Types.TIntegerDynArray): Integer;  { Average numbers }
+{ Calculates the arithmetic mean (average) of an integer array.
+  Returns rounded result. Array must not be empty. }
+function Mean(MX: System.Types.TIntegerDynArray): Integer;
 VAR i: Integer;
 begin
- Assert(Length(MX) > 0);
+ Assert(Length(MX) > 0, 'Mean: Array cannot be empty');
 
  Result:= 0;
  for i in MX DO Result:= Result+ i;
@@ -409,77 +423,97 @@ begin
 end;
 
 
+{ Returns the 10th percentile of the array.
+  For small arrays (< 10 elements), returns a reasonable approximation. }
 function Interq10(MX: System.Types.TIntegerDynArray): Integer;
 VAR
    Quarter10: Integer;
 begin
+  Assert(Length(MX) > 0, 'Interq10: Array cannot be empty');
+
   TArray.Sort<Integer>(MX);
 
-  Quarter10 := Length(MX) div 10;
+  Quarter10:= Length(MX) div 10;
   if Odd(Length(MX))
   then Result:= MX[Quarter10]
   else
-    if Quarter10= 0
-    then Result:= MX[0]    { It happens when I have less than 10 elements in the matrix }
+    if Quarter10 = 0
+    then Result:= MX[0]    { Happens when array has fewer than 10 elements }
     else Result:= RoundEx( (MX[Quarter10 - 1] + MX[Quarter10]) / 2 );
 end;
 
 
+{ Returns the 25th percentile (first quartile Q1) of the array.
+  For small arrays (< 4 elements), returns a reasonable approximation. }
 function Interq25(MX: System.Types.TIntegerDynArray): Integer;
 VAR
    Quarter25: Integer;
 begin
+  Assert(Length(MX) > 0, 'Interq25: Array cannot be empty');
+
   TArray.Sort<Integer>(MX);
 
-  Quarter25 := Length(MX) div 4;
+  Quarter25:= Length(MX) div 4;
   if Odd(Length(MX))
-  then Result := MX[Quarter25]
+  then Result:= MX[Quarter25]
   else
-    if Quarter25= 0
-    then Result:= MX[0]                                                                            { It happens when I have less than 4 elements in the matrix }
-    else Result := RoundEx( (MX[Quarter25 - 1] + MX[Quarter25]) / 2 );
+    if Quarter25 = 0
+    then Result:= MX[0]                                                                            { Happens when array has fewer than 4 elements }
+    else Result:= RoundEx( (MX[Quarter25 - 1] + MX[Quarter25]) / 2 );
 end;
 
 
+{ Returns the 75th percentile (third quartile Q3) of the array.
+  For small arrays, returns a reasonable approximation. }
 function Interq75(MX: System.Types.TIntegerDynArray): Integer;
 VAR
    Quarter25, Quarter75: Integer;
 begin
+  Assert(Length(MX) > 0, 'Interq75: Array cannot be empty');
+
   TArray.Sort<Integer>(MX);
 
-  Quarter25 := Length(MX) div 4;
+  Quarter25:= Length(MX) div 4;
   Quarter75:= Length(MX) - Quarter25;
-  if Quarter75> High(MX) then Quarter75:= High(MX);
+  if Quarter75 > High(MX)
+  then Quarter75:= High(MX);
 
-  if Odd(Length(MX))
-  then Result := MX[Quarter75]
-  else Result := RoundEx( (MX[Quarter75 - 1] + MX[Quarter75]) / 2 );
+  if Odd(Length(MX)) OR (Quarter75 = 0)
+  then Result:= MX[Quarter75]
+  else Result:= RoundEx( (MX[Quarter75 - 1] + MX[Quarter75]) / 2 );
 end;
 
 
+{ Returns the 90th percentile of the array.
+  For small arrays (< 10 elements), returns a reasonable approximation. }
 function Interq90(MX: System.Types.TIntegerDynArray): Integer;
 VAR
    Quarter10, Quarter90: Integer;
 begin
+  Assert(Length(MX) > 0, 'Interq90: Array cannot be empty');
+
   TArray.Sort<Integer>(MX);
 
   Quarter10:= Length(MX) div 10;
   Quarter90:= Length(MX) - Quarter10;
-  if Quarter90> High(MX) then Quarter90:= High(MX);
+  if Quarter90 > High(MX)
+  then Quarter90:= High(MX);
 
-  if Odd(Length(MX))
-  then Result := MX[Quarter90]
-  else Result := RoundEx( (MX[Quarter90 - 1] + MX[Quarter90]) / 2 );
+  if Odd(Length(MX)) OR (Quarter90 = 0)
+  then Result:= MX[Quarter90]
+  else Result:= RoundEx( (MX[Quarter90 - 1] + MX[Quarter90]) / 2 );
 end;
 
 
 
 {-------------------------------------------------------------------------------------------------------------
-
+   BYTE BLENDING (x86 only)
 -------------------------------------------------------------------------------------------------------------}
 {$IF Defined(CPUX86)}
-{ This function mixes two bytes According to value of TRANS.
- The value of TRANS is between 0 (result then will be equal to FG) and 255 (result then will be equal to BG) }
+{ Linearly interpolates (blends) two bytes based on BlendPower.
+  BlendPower=0 returns FG (foreground), BlendPower=255 returns BG (background).
+  Formula: Result = (FG * BlendPower + BG * (255 - BlendPower)) / 256
+  Useful for alpha blending single color channel values. }
 function MixBytes(FG, BG, BlendPower: Byte): Byte;
 asm
   push bx      // push some regs

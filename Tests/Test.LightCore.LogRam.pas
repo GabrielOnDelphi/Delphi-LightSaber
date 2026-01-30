@@ -1,6 +1,7 @@
 unit Test.LightCore.LogRam;
 
 {=============================================================================================================
+   2026.01.30
    Unit tests for LightCore.LogRam.pas
    Tests TRamLog - the non-visual log class
 =============================================================================================================}
@@ -104,6 +105,34 @@ type
     { File Not Found Tests }
     [Test]
     procedure TestLoadFromFile_NotExists;
+
+    { Observer Tests }
+    [Test]
+    procedure TestRegisterObserver;
+
+    [Test]
+    procedure TestUnregisterObserver;
+
+    { Timestamp Tests }
+    [Test]
+    procedure TestTimestampRecorded;
+
+    { Verbosity Preservation Tests }
+    [Test]
+    procedure TestVerbosityPreservedOnSaveLoad;
+
+    { Multi-threaded Log Tests }
+    [Test]
+    procedure TestMultiThreadedAddMsg;
+  end;
+
+  { Mock observer for testing }
+  TMockLogObserver = class(TInterfacedObject, ILogObserver)
+  public
+    PopulateCallCount: Integer;
+    PopUpWindowCallCount: Integer;
+    procedure Populate;
+    procedure PopUpWindow;
   end;
 
 implementation
@@ -407,6 +436,139 @@ begin
     Assert.AreEqual(0, NewLog.Lines.Count);
   finally
     FreeAndNil(NewLog);
+  end;
+end;
+
+
+{ Mock Observer Implementation }
+
+procedure TMockLogObserver.Populate;
+begin
+  Inc(PopulateCallCount);
+end;
+
+procedure TMockLogObserver.PopUpWindow;
+begin
+  Inc(PopUpWindowCallCount);
+end;
+
+
+{ Observer Tests }
+
+procedure TTestLogRam.TestRegisterObserver;
+var
+  Observer: TMockLogObserver;
+  LogWithObserver: TRamLog;
+begin
+  Observer:= TMockLogObserver.Create;
+  { Note: Observer is reference counted via ILogObserver, so no manual Free needed }
+  LogWithObserver:= TRamLog.Create(False, Observer, False);
+  try
+    LogWithObserver.AddMsg('Test');
+    { Observer's Populate should be called when message is added }
+    Assert.IsTrue(Observer.PopulateCallCount >= 1, 'Observer.Populate should be called on AddMsg');
+  finally
+    FreeAndNil(LogWithObserver);
+  end;
+end;
+
+procedure TTestLogRam.TestUnregisterObserver;
+var
+  Observer: TMockLogObserver;
+  LogWithObserver: TRamLog;
+  CallCountBefore: Integer;
+begin
+  Observer:= TMockLogObserver.Create;
+  LogWithObserver:= TRamLog.Create(False, Observer, False);
+  try
+    LogWithObserver.AddMsg('Before unregister');
+    CallCountBefore:= Observer.PopulateCallCount;
+
+    LogWithObserver.UnregisterLogObserver;
+    LogWithObserver.AddMsg('After unregister');
+
+    { Populate count should not increase after unregistering }
+    Assert.AreEqual(CallCountBefore, Observer.PopulateCallCount,
+      'Observer should not be notified after unregistering');
+  finally
+    FreeAndNil(LogWithObserver);
+  end;
+end;
+
+
+{ Timestamp Tests }
+
+procedure TTestLogRam.TestTimestampRecorded;
+var
+  TimeBefore, TimeAfter: TDateTime;
+begin
+  TimeBefore:= Now;
+  FLog.AddMsg('Timestamp test');
+  TimeAfter:= Now;
+
+  { Timestamp should be between before and after }
+  Assert.IsTrue(FLog.Lines[0].Time >= TimeBefore, 'Timestamp should be >= time before add');
+  Assert.IsTrue(FLog.Lines[0].Time <= TimeAfter, 'Timestamp should be <= time after add');
+end;
+
+
+{ Verbosity Preservation Tests }
+
+procedure TTestLogRam.TestVerbosityPreservedOnSaveLoad;
+var
+  FilePath: string;
+  NewLog: TRamLog;
+begin
+  { Add messages with different verbosity levels }
+  FLog.AddDebug('Debug msg');
+  FLog.AddVerb('Verbose msg');
+  FLog.AddHint('Hint msg');
+  FLog.AddInfo('Info msg');
+  FLog.AddImpo('Important msg');
+  FLog.AddWarn('Warning msg');
+  FLog.AddError('Error msg');
+
+  FilePath:= TPath.Combine(FTestDir, 'verbosity_test.dat');
+  FLog.SaveToFile(FilePath);
+
+  NewLog:= TRamLog.Create(False, nil, False);
+  try
+    Assert.IsTrue(NewLog.LoadFromFile(FilePath));
+    Assert.AreEqual(7, NewLog.Lines.Count);
+
+    { Verify each verbosity level was preserved }
+    Assert.AreEqual(lvDebug, NewLog.Lines[0].Level);
+    Assert.AreEqual(lvVerbose, NewLog.Lines[1].Level);
+    Assert.AreEqual(lvHints, NewLog.Lines[2].Level);
+    Assert.AreEqual(lvInfos, NewLog.Lines[3].Level);
+    Assert.AreEqual(lvImportant, NewLog.Lines[4].Level);
+    Assert.AreEqual(lvWarnings, NewLog.Lines[5].Level);
+    Assert.AreEqual(lvErrors, NewLog.Lines[6].Level);
+  finally
+    FreeAndNil(NewLog);
+  end;
+end;
+
+
+{ Multi-threaded Log Tests }
+
+procedure TTestLogRam.TestMultiThreadedAddMsg;
+var
+  MTLog: TRamLog;
+begin
+  MTLog:= TRamLog.Create(False, nil, True);  { MultiThreaded = True }
+  try
+    { Basic operations should work the same in multi-threaded mode }
+    MTLog.AddMsg('Message 1');
+    MTLog.AddDebug('Debug 1');
+    MTLog.AddError('Error 1');
+
+    Assert.AreEqual(3, MTLog.Lines.Count);
+    Assert.AreEqual('Message 1', MTLog.Lines[0].Msg);
+    Assert.AreEqual(lvDebug, MTLog.Lines[1].Level);
+    Assert.AreEqual(lvErrors, MTLog.Lines[2].Level);
+  finally
+    FreeAndNil(MTLog);
   end;
 end;
 
