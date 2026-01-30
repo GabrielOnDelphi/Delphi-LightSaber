@@ -709,18 +709,15 @@ begin
 
    if NOT Unique then continue;
 
-   { if unique, add it to the matrix of unique colors }
+   { Expand array BEFORE adding if necessary (prevents index out of bounds) }
    if TotalUniqueColors >= Length(UniqueXM)
-   then raise Exception.Create('GetBorderDominantColor: TotalUniqueColors exceeded array bounds. TotalUniqueColors: '+ IntToStr(TotalUniqueColors)+ '  Length(UniqueXM): '+IntToStr(Length(UniqueXM)));
+   then SetLength(UniqueXM, Length(UniqueXM) + 50);
 
+   { Add unique color to the matrix }
    UniqueXM[TotalUniqueColors].Col  := CurColor;
    UniqueXM[TotalUniqueColors].Count:= 1;
 
    Inc(TotalUniqueColors);
-
-   { Expand array if necessary }
-   if TotalUniqueColors> High(UniqueXM)
-   then SetLength(UniqueXM, TotalUniqueColors+1);
   end;
 
  { Find most used color }
