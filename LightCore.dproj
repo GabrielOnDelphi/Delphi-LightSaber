@@ -154,12 +154,11 @@
         <DCCReference Include="LightCore.pas"/>
         <DCCReference Include="LightCore.Binary.pas"/>
         <DCCReference Include="LightCore.INIFile.pas"/>
-        <DCCReference Include="LightCore.Compiler.pas"/>
+        <DCCReference Include="LightCore.CompilerVersions.pas"/>
         <DCCReference Include="LightCore.StreamMem.pas"/>
         <DCCReference Include="LightCore.StreamBuff.pas"/>
         <DCCReference Include="LightCore.TextFile.pas"/>
         <DCCReference Include="LightCore.StreamFile.pas"/>
-        <DCCReference Include="LightCore.LogUtils.pas"/>
         <DCCReference Include="LightCore.LogTypes.pas"/>
         <DCCReference Include="LightCore.LogRam.pas"/>
         <DCCReference Include="LightCore.LogLinesS.pas"/>
