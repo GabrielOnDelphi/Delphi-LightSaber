@@ -2,7 +2,7 @@ UNIT LightVcl.Graph.Util;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.06
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -185,28 +185,32 @@ begin
 end;
 
 
+{ Draws a red border (3 pixels thick) around the specified control on its parent's canvas.
+  The control must have a valid Parent. }
 procedure DrawBorder(Control: TWinControl);
 VAR
    r: TRect;
    i: Integer;
-   canvas: TCanvas;
+   aCanvas: TCanvas;
    ParentControl: TWinControl;
 begin
+ Assert(Control <> NIL, 'DrawBorder: Control cannot be nil');
  ParentControl:= Control.Parent;
- Canvas:= TCanvas.Create; {!! This could be done also without creating a canvas. Just pass the canvas of a control (if you are "inside" the control }
+ Assert(ParentControl <> NIL, 'DrawBorder: Control.Parent cannot be nil');
+
+ aCanvas:= TCanvas.Create; { This could be done also without creating a canvas. Just pass the canvas of a control (if you are "inside" the control) }
  TRY
-  Canvas.Handle:= GetWindowDC(ParentControl.Handle);
+  aCanvas.Handle:= GetWindowDC(ParentControl.Handle);
   r:= Rect(Control.Left, Control.Top, Control.Left+ Control.Width, Control.Top+ Control.Height);
-  WITH canvas DO
   for i:= 1 to 3 do
     begin
      InflateRect(r, -1, -1);
-     Brush.Color:= clRed;
-     Brush.Style:= bsSolid;
-     FrameRect(r);
+     aCanvas.Brush.Color:= clRed;
+     aCanvas.Brush.Style:= bsSolid;
+     aCanvas.FrameRect(r);
     end;
  FINALLY
-   FreeAndNil(canvas);
+   FreeAndNil(aCanvas);
  END;
 end;
 
@@ -242,7 +246,9 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-   ANTI-ALISED LINE
+   ANTI-ALIASED LINE (Xiaolin Wu's algorithm)
+   Draws a smooth, anti-aliased line by blending pixel colors based on coverage.
+   Uses Canvas.Pixels[] which is slow - for performance-critical code, use ScanLine instead.
    FASTER METHOD HERE: http://stackoverflow.com/questions/3613130/simple-anti-aliasing-function-for-delphi-7
 --------------------------------------------------------------------------------------------------}
 procedure AntialisedLine(Canvas: TCanvas; CONST AX1, AY1, AX2, AY2: Real; Color: TColor);
@@ -355,18 +361,27 @@ end;
   VclGraphUtil.GetHighLightColor
   VclGraphUtil.GetShadowColor  }
 
-function SimilarColor(Color1, Color2: TColor; Tolerance: Integer): Boolean;            { Checks is two colors are similar }
-VAR R1, R2, G1, G2, B1, B2: Byte;        {todo 4: this is a better algorithm https://en.wikipedia.org/wiki/Color_difference }
+{ Checks if two colors are similar within a given tolerance for each RGB channel.
+  Handles system colors (clWindow, clBtnFace, etc.) by converting them to RGB first.
+  ToDo: Use a better perceptual algorithm: https://en.wikipedia.org/wiki/Color_difference }
+function SimilarColor(Color1, Color2: TColor; Tolerance: Integer): Boolean;
+VAR
+   R1, R2, G1, G2, B1, B2: Byte;
+   c1, c2: TColor;
 begin
- R1:= Byte(Color1);
- G1:= Byte(Color1 shr  8);
- B1:= Byte(Color1 shr 16);
+ { Convert system colors to RGB values }
+ c1:= ColorToRGB(Color1);
+ c2:= ColorToRGB(Color2);
 
- R2:= Byte(Color2);
- G2:= Byte(Color2 shr  8);
- B2:= Byte(Color2 shr 16);
+ R1:= Byte(c1);
+ G1:= Byte(c1 shr  8);
+ B1:= Byte(c1 shr 16);
 
- Result:= (abs(R1-R2)< Tolerance) AND (abs(G1-G2)< Tolerance) AND (abs(B1-B2)< Tolerance);
+ R2:= Byte(c2);
+ G2:= Byte(c2 shr  8);
+ B2:= Byte(c2 shr 16);
+
+ Result:= (abs(R1-R2) < Tolerance) AND (abs(G1-G2) < Tolerance) AND (abs(B1-B2) < Tolerance);
 end;
 
 
@@ -457,10 +472,24 @@ end;
 
 
 
-{ Example: HtmlToColor('D1D2D9')  }
-function HtmlToColor(aColor: string): TColor;  { This is total equivalent with Vcl.GraphUtil.WebColorStrToColor}
+{ Converts an HTML color string to TColor.
+  Accepts both '#RRGGBB' and 'RRGGBB' formats (with or without leading #).
+  Example: HtmlToColor('#D1D2D9') or HtmlToColor('D1D2D9')
+  Note: This is equivalent to Vcl.GraphUtil.WebColorStrToColor }
+function HtmlToColor(aColor: string): TColor;
+VAR
+   Offset: Integer;
 begin
-  Result:= StringToColor('$' + system.COPY(aColor, 6, 2) + system.COPY(aColor, 4, 2) + system.COPY(aColor, 2, 2));
+  { Handle optional leading # }
+  if (Length(aColor) > 0) AND (aColor[1] = '#')
+  then Offset:= 1
+  else Offset:= 0;
+
+  { Convert from RGB to BGR (TColor format) }
+  Result:= StringToColor('$' +
+    system.COPY(aColor, Offset + 5, 2) +   { Blue }
+    system.COPY(aColor, Offset + 3, 2) +   { Green }
+    system.COPY(aColor, Offset + 1, 2));   { Red }
 end;
 
 
@@ -555,14 +584,19 @@ end;
 
 
 
-{ Tester: c:\Myprojects\Project Testers\gr cGraphicsTester\Tester.dpr }
+{ Replaces all pixels matching OldColor with NewColor (exact match).
+  Converts bitmap to pf24bit if not already.
+  Tester: c:\Myprojects\Project Testers\gr cGraphicsTester\Tester.dpr }
 procedure ReplaceColor(BMP: TBitmap; OldColor, NewColor: TColor);
 VAR
    x, y: Integer;
    R,G,B: Byte;
    R_,G_,B_: Byte;
    aPixel: PRGBTriple;
+   RowStart: PRGBTriple;
 begin
+ Assert(BMP <> NIL, 'ReplaceColor: Bitmap cannot be nil');
+
  R:= GetRValue(OldColor);
  G:= GetGValue(OldColor);
  B:= GetBValue(OldColor);
@@ -573,29 +607,38 @@ begin
 
  BMP.PixelFormat := pf24bit;
  for y := 0 to BMP.Height - 1 do
-  for x := 0 to BMP.Width - 1 do
-   begin
-     aPixel := BMP.ScanLine[y];
-     Inc(aPixel, x);
-     if  (aPixel^.rgbtRed   = R)
-     AND (aPixel^.rgbtGreen = G)
-     AND (aPixel^.rgbtBlue  = B) then
-      begin
-       aPixel^.rgbtRed   := R_;
-       aPixel^.rgbtGreen := G_;
-       aPixel^.rgbtBlue  := B_;
-      end;
-   end;
+  begin
+   RowStart := BMP.ScanLine[y];  { Get scanline once per row for efficiency }
+   for x := 0 to BMP.Width - 1 do
+    begin
+      aPixel := RowStart;
+      Inc(aPixel, x);
+      if  (aPixel^.rgbtRed   = R)
+      AND (aPixel^.rgbtGreen = G)
+      AND (aPixel^.rgbtBlue  = B) then
+       begin
+        aPixel^.rgbtRed   := R_;
+        aPixel^.rgbtGreen := G_;
+        aPixel^.rgbtBlue  := B_;
+       end;
+    end;
+  end;
 end;
 
 
+{ Replaces all pixels within tolerance of OldColor with NewColor.
+  Each RGB channel has its own tolerance value.
+  Converts bitmap to pf24bit if not already. }
 procedure ReplaceColor(BMP: TBitmap; OldColor, NewColor: TColor; ToleranceR, ToleranceG, ToleranceB: Byte);
 VAR
    x, y: Integer;
    R,G,B: Byte;
    R_,G_,B_: Byte;
    aPixel: PRGBTriple;
+   RowStart: PRGBTriple;
 begin
+ Assert(BMP <> NIL, 'ReplaceColor: Bitmap cannot be nil');
+
  R:= GetRValue(OldColor);
  G:= GetGValue(OldColor);
  B:= GetBValue(OldColor);
@@ -606,46 +649,58 @@ begin
 
  BMP.PixelFormat := pf24bit;
  for y := 0 to BMP.Height - 1 do
-  for x := 0 to BMP.Width - 1 do
-   begin
-     aPixel := BMP.ScanLine[y];
-     Inc(aPixel, x);
-     if  (abs(aPixel^.rgbtRed  - R)< ToleranceR)
-     AND (abs(aPixel^.rgbtGreen- G)< ToleranceG)
-     AND (abs(aPixel^.rgbtBlue - B)< ToleranceB) then
-      begin
-       aPixel^.rgbtRed   := R_;
-       aPixel^.rgbtGreen := G_;
-       aPixel^.rgbtBlue  := B_;
-      end;
-   end;
+  begin
+   RowStart := BMP.ScanLine[y];  { Get scanline once per row for efficiency }
+   for x := 0 to BMP.Width - 1 do
+    begin
+      aPixel := RowStart;
+      Inc(aPixel, x);
+      if  (abs(aPixel^.rgbtRed  - R)< ToleranceR)
+      AND (abs(aPixel^.rgbtGreen- G)< ToleranceG)
+      AND (abs(aPixel^.rgbtBlue - B)< ToleranceB) then
+       begin
+        aPixel^.rgbtRed   := R_;
+        aPixel^.rgbtGreen := G_;
+        aPixel^.rgbtBlue  := B_;
+       end;
+    end;
+  end;
 end;
 
 
 
 {--------------------------------------------------------------------------------------------------
    AVERAGE COLOR
-   If Fast is true, I only read the odd lines, to make it faster.
+   If Fast is true, only odd lines are read (skipping even lines), making it ~2x faster.
 
-   Note: This makes an average between pixels. It does not search for the DOMINANT color!
+   Note: This computes the arithmetic mean of pixel colors. It does NOT find the DOMINANT color!
+   For large white images, we use UInt64 to avoid overflow (255 * 4M pixels would overflow Cardinal).
    Source: http://www.delphigroups.info/2/fd/205241.html
 --------------------------------------------------------------------------------------------------}
 //ToDo: make a function that determines the average color using only the margins of the image, not also the center.
 function GetAverageColor(Bmp: TBitmap; Fast: Boolean): TColor;
 VAR
    X, Y: Integer;
-   pixels: Cardinal;
-   r,g,b: uint64; //We used to use a Cardial (0..4294967295) to store the colors (r,g,b). If the image is bigger than 4M pixles and is totally white than the overflow is expected. White is the worst because its value is 255. As the values accumulates over the entire image, it will reach the max value of 4294967295 much faster.   The darker the color, the higher the resolution supported.   Fixed by upgrading from Cardinal to UInt64
+   PixelCount: Cardinal;
+   RowCount: Integer;
+   r,g,b: uint64;
    Row: PRGB24Array;
 begin
  r:= 0;
  g:= 0;
  b:= 0;
- Assert(Bmp.PixelFormat= pf24bit);
+ Assert(Bmp <> NIL, 'GetAverageColor: Bitmap cannot be nil');
+ Assert(Bmp.PixelFormat = pf24bit, 'GetAverageColor: Bitmap must be pf24bit');
 
+ { Handle empty bitmap }
+ if (Bmp.Width = 0) OR (Bmp.Height = 0)
+ then EXIT(0);
+
+ RowCount:= 0;
  for y := 0 to bmp.Height-1 do
   begin
-   if Fast AND (y mod 2 = 0) then Continue;
+   if Fast AND (y mod 2 = 0) then Continue;  { Skip even rows when Fast mode }
+   Inc(RowCount);
    row := bmp.ScanLine[y];
    for x := 0 to bmp.Width -1 do
     begin
@@ -655,23 +710,35 @@ begin
     end;
   end;
 
- pixels := bmp.Height*bmp.Width;
- r := r div pixels;
- g := g div pixels;
- b := b div pixels;
+ { Calculate actual pixel count based on rows processed }
+ PixelCount := RowCount * Cardinal(bmp.Width);
+ if PixelCount = 0
+ then EXIT(0);
+
+ r := r div PixelCount;
+ g := g div PixelCount;
+ b := b div PixelCount;
  Result:= WinApi.Windows.RGB(r,g,b);
 end;
 
 
+{ Calculates the average grayscale value for an 8-bit grayscale bitmap.
+  Returns 0 for empty bitmaps. }
 function GetAverageColorPf8(Bmp: TBitmap): Byte;
 VAR
    X, Y: Integer;
    Row: PByte;
    Summ: Int64;
+   PixelCount: Int64;
 begin
- Summ:= 0;
- Assert(Bmp.PixelFormat= pf8bit);
+ Assert(Bmp <> NIL, 'GetAverageColorPf8: Bitmap cannot be nil');
+ Assert(Bmp.PixelFormat = pf8bit, 'GetAverageColorPf8: Bitmap must be pf8bit');
 
+ PixelCount:= Int64(bmp.Height) * Int64(bmp.Width);
+ if PixelCount = 0
+ then EXIT(0);
+
+ Summ:= 0;
  for y := 0 to bmp.Height-1 do
   begin
    row := bmp.ScanLine[y];
@@ -679,24 +746,29 @@ begin
      Summ := Summ + row[x];
   end;
 
- Result := Summ div (bmp.Height*bmp.Width);
+ Result := Summ div PixelCount;
 end;
 
 
 
 {$IFDEF CPUx86}
-{does not work. need to retest now }
-{TYPE
-  TRGBTriple - defined in winapi.windows  }
-
-function GetAverageColor_asm(Bmp: TBitmap): TColor;    //http://www.delphigroups.info/2/fd/205241.html
+{ Optimized x86 assembly version of GetAverageColor.
+  Processes 4 pixels per loop iteration for better performance.
+  WARNING: This function has limited testing - use GetAverageColor for production.
+  Source: http://www.delphigroups.info/2/fd/205241.html }
+function GetAverageColor_asm(Bmp: TBitmap): TColor;
 var
   Y, W: Integer;
   P: PRGBTriple;
   r, g, b: Integer;
+  PixelCount: Integer;
 begin
+ Assert(Bmp <> NIL, 'GetAverageColor_asm: Bitmap cannot be nil');
  bmp.pixelformat := pf24bit;
- Result:= clPink;
+
+ { Handle empty bitmap }
+ if (Bmp.Width = 0) OR (Bmp.Height = 0)
+ then EXIT(0);
 
  r := 0;
  g := 0;
@@ -774,6 +846,13 @@ begin
    @end:
   end;
  end;
+
+ { Calculate the average and return the result }
+ PixelCount:= Bmp.Height * Bmp.Width;
+ r := r div PixelCount;
+ g := g div PixelCount;
+ b := b div PixelCount;
+ Result:= WinApi.Windows.RGB(r, g, b);
 end;
 {$ENDIF}
 
@@ -794,15 +873,16 @@ begin
 end;
 
 {$ELSE}
-{The value of BlendPower is between 0 and 255 as described above. }
-function MixColors(FG, BG: TColor; BlendPower: Byte): TColor;                 {Source http://rmklever.com }
+{ Non-x86 version of MixColors.
+  BlendPower: 0 = fully FG, 255 = fully BG.
+  Source: http://rmklever.com }
+function MixColors(FG, BG: TColor; BlendPower: Byte): TColor;
 VAR
   c1, c2: LongInt;
   r, g, b, v1, v2: byte;
 begin
-  BlendPower:= Round(2.55 * BlendPower);
-  c1 := ColorToRGB (FG);
-  c2 := ColorToRGB (BG);
+  c1 := ColorToRGB(FG);
+  c2 := ColorToRGB(BG);
   v1 := Byte(c1);
   v2 := Byte(c2);
   r  := BlendPower * (v1 - v2) shr 8 + v2;

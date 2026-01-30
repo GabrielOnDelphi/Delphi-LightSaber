@@ -2,13 +2,21 @@ UNIT LightVcl.Internet.Common;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2025
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+--------------------------------------------------------------------------------------------------------------
+   Internet and URL utilities for VCL applications.
 
-   URL utils / URL parsing and validation
+   Features:
+     * URL parsing and validation (ParseURL, CheckURLStartMsg)
+     * Local IP address retrieval (GetLocalIP, ResolveAddress)
+     * Internet connectivity testing (PCConnected2Internet, ProgramConnect2Internet)
+     * Port availability checking (IsPortOpened)
+     * Internet Explorer proxy configuration (IE_EnableProxy, IE_DisableProxy, etc.)
+     * URL shortcut file creation (CreateUrlOnDesktop)
 
-   This unit adds 87 kbytes to EXE size
+   This unit adds ~87 KB to EXE size due to WinInet and WinSock dependencies.
 
    Related:
       Internet Status Detector: c:\Projects-3rd_Packages\Third party packages\InternetStatusDetector.pas
@@ -120,7 +128,15 @@ end;
 
 
 
-{ Breaks an URL in all its subcomponents. Example: ParseURL('http://login:password@somehost.somedomain.com/some_path/something_else.html?param1=val&param2=val')   }
+{---------------------------------------------------------------------------------------------------------------
+   ParseURL
+   Breaks a URL into its subcomponents using Windows InternetCrackUrl API.
+   Returns an array of 6 strings: [Scheme, HostName, UserName, Password, UrlPath, ExtraInfo]
+   Returns empty strings for all components if URL is invalid or empty.
+
+   Example: ParseURL('http://login:password@somehost.somedomain.com/some_path/file.html?param1=val')
+            Returns: ['http', 'somehost.somedomain.com', 'login', 'password', '/some_path/file.html', '?param1=val']
+---------------------------------------------------------------------------------------------------------------}
 function ParseURL(const lpszUrl: string): TStringArray;    { Source: http://stackoverflow.com/questions/16703063/how-do-i-parse-a-web-url }
 VAR
   lpszScheme      : array[0..INTERNET_MAX_SCHEME_LENGTH - 1]    of Char;
@@ -131,6 +147,11 @@ VAR
   lpszExtraInfo   : array[0..1024 - 1]                          of Char;
   lpUrlComponents : TURLComponents;
 begin
+  SetLength(Result, 6);
+
+  { Handle empty URL }
+  if lpszUrl = '' then EXIT;
+
   ZeroMemory(@lpszScheme      , SizeOf(lpszScheme));
   ZeroMemory(@lpszHostName    , SizeOf(lpszHostName));
   ZeroMemory(@lpszUserName    , SizeOf(lpszUserName));
@@ -153,9 +174,10 @@ begin
   lpUrlComponents.lpszExtraInfo     := lpszExtraInfo;
   lpUrlComponents.dwExtraInfoLength := SizeOf(lpszExtraInfo);
 
-  InternetCrackUrl(PChar(lpszUrl), Length(lpszUrl), ICU_DECODE or ICU_ESCAPE, lpUrlComponents);
+  { Parse URL - if it fails, arrays remain zeroed (empty strings) }
+  if NOT InternetCrackUrl(PChar(lpszUrl), Length(lpszUrl), ICU_DECODE or ICU_ESCAPE, lpUrlComponents)
+  then EXIT;   { Return empty strings on failure }
 
-  SetLength(Result, 6);
   Result[0]:= lpszScheme;                  { Protocol        (http)              }
   Result[1]:= lpszHostName;                { Host            (www.domain.com)    }
   Result[2]:= lpszUserName;                { User            ('')                }
@@ -216,19 +238,8 @@ begin
 end;
 
 
- {
-function ProgramConnectMsg(CONST Connection: Integer): string;                                     { same as ProgramConnect2Internet but returns a string
-begin
- case Connection of
-  -1: Result:= ComputerCannotAccessInet;
-   0: Result:= CheckYourFirewallMsg;
-  +1: Result:= 'Successfully connected to Internet';
- end;
-end; }
-
-
-
-{ if ShowMsgOnSuccess = fasle then show message ONLY if it cannot connect to Internet }
+{ Shows message based on connection test result.
+  If ShowMsgOnSuccess = FALSE then only shows message when connection fails. }
 function TestProgramConnection(ShowMsgOnSuccess: Boolean= FALSE): Integer;                                        { Old name: ProgramConnectMsg }
 begin
  Result:= ProgramConnect2Internet;
@@ -435,6 +446,8 @@ Better way:
        O metoda mult mai buna e aici:   http://www.naddalim.com/forum/showthread.php?t=1454        }
 
 
+{ Notifies the system that Internet settings have changed.
+  Call this after modifying proxy settings in the registry. }
 procedure IE_ApplySettings;
 VAR HInet: HINTERNET;
 begin
@@ -567,21 +580,29 @@ end;
 
 
 
-procedure setProxy(CONST ProxyIP: string);
+{ Sets the proxy for the current session using UrlMon API.
+  This only affects the current process, not system-wide IE settings. }
+procedure SetProxy(CONST ProxyIP: string);
 VAR
    IP: AnsiString;
    PIInfo: PInternetProxyInfo;
 begin
  IP:= AnsiString(Trim(ProxyIP));
  New(PIInfo);
- PIInfo^.dwAccessType := INTERNET_OPEN_TYPE_PROXY;
- PIInfo^.lpszProxy:= PAnsiChar(IP);
- PIInfo^.lpszProxyBypass := PAnsiChar('');
- Winapi.UrlMon.UrlMkSetSessionOption(INTERNET_OPTION_PROXY, piinfo, SizeOf(Internet_Proxy_Info), 0);
- Dispose(PIInfo);
+ TRY
+   PIInfo^.dwAccessType:= INTERNET_OPEN_TYPE_PROXY;
+   PIInfo^.lpszProxy:= PAnsiChar(IP);
+   PIInfo^.lpszProxyBypass:= PAnsiChar('');
+   Winapi.UrlMon.UrlMkSetSessionOption(INTERNET_OPTION_PROXY, piinfo, SizeOf(Internet_Proxy_Info), 0);
+ FINALLY
+   Dispose(PIInfo);
+ END;
 end;
 
 
+{ Deletes all entries from Internet Explorer's URL cache.
+  Iterates through all cached URLs and removes them one by one.
+  Note: This affects the shared WinInet cache used by IE and other applications. }
 procedure IE_DeleteCache;
 var
   lpEntryInfo: PInternetCacheEntryInfo;
@@ -591,20 +612,28 @@ begin
   dwEntrySize := 0;
   FindFirstUrlCacheEntry(nil, TInternetCacheEntryInfo(nil^), dwEntrySize);
   GetMem(lpEntryInfo, dwEntrySize);
-  if dwEntrySize > 0
-  then lpEntryInfo^.dwStructSize := dwEntrySize;
-  hCacheDir := FindFirstUrlCacheEntry(nil, lpEntryInfo^, dwEntrySize);
-  if hCacheDir <> 0 then
-    REPEAT
-      DeleteUrlCacheEntry(lpEntryInfo^.lpszSourceUrlName);
-      FreeMem(lpEntryInfo, dwEntrySize);
-      dwEntrySize := 0;
-      FindNextUrlCacheEntry(hCacheDir, TInternetCacheEntryInfo(nil^), dwEntrySize);
-      GetMem(lpEntryInfo, dwEntrySize);
-      if dwEntrySize > 0 then lpEntryInfo^.dwStructSize := dwEntrySize;
-    UNTIL NOT FindNextUrlCacheEntry(hCacheDir, lpEntryInfo^, dwEntrySize);
-  FreeMem(lpEntryInfo, dwEntrySize);
-  FindCloseUrlCache(hCacheDir);
+  TRY
+    if dwEntrySize > 0
+    then lpEntryInfo^.dwStructSize := dwEntrySize;
+    hCacheDir := FindFirstUrlCacheEntry(nil, lpEntryInfo^, dwEntrySize);
+    if hCacheDir <> 0 then
+      TRY
+        REPEAT
+          DeleteUrlCacheEntry(lpEntryInfo^.lpszSourceUrlName);
+          FreeMem(lpEntryInfo, dwEntrySize);
+          lpEntryInfo:= NIL;
+          dwEntrySize := 0;
+          FindNextUrlCacheEntry(hCacheDir, TInternetCacheEntryInfo(nil^), dwEntrySize);
+          GetMem(lpEntryInfo, dwEntrySize);
+          if dwEntrySize > 0 then lpEntryInfo^.dwStructSize := dwEntrySize;
+        UNTIL NOT FindNextUrlCacheEntry(hCacheDir, lpEntryInfo^, dwEntrySize);
+      FINALLY
+        FindCloseUrlCache(hCacheDir);
+      END;
+  FINALLY
+    if lpEntryInfo <> NIL
+    then FreeMem(lpEntryInfo, dwEntrySize);
+  END;
 end;
 
 
@@ -739,7 +768,11 @@ else
 
 
 {--------------------------------------------------------------------------------------------------
-                                  GET MAC
+   GetMacAddress
+   WARNING: This function does NOT reliably return the actual MAC address!
+   It uses CoCreateGuid which includes partial MAC address data only on older systems.
+   Modern Windows versions randomize GUID generation for privacy.
+   For reliable MAC address retrieval, use GetAdaptersInfo from Iphlpapi.dll instead.
 --------------------------------------------------------------------------------------------------}
 function GetMacAddress: string;
 var

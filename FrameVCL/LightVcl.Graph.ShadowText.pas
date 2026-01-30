@@ -1,7 +1,6 @@
 unit LightVcl.Graph.ShadowText;
 
 {=============================================================================================================
-   Gabriel Moraru
    2026.01.30
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
@@ -61,7 +60,9 @@ var
   GDrawShadowTextFn: TDrawShadowTextFn = nil;
 
 
-// Lazy-loads the DLL/function pointer when required
+{ Lazy-loads the DrawShadowText function from ComCtl32.dll.
+  Returns nil if the DLL or function is not available (Windows XP without manifest, etc.).
+  Note: Not thread-safe. Call once from main thread if concurrent access is needed. }
 function GetDrawShadowTextFn: TDrawShadowTextFn;
 begin
   if not Assigned(GDrawShadowTextFn) then
@@ -71,14 +72,16 @@ begin
 
     if GComCtl32Handle <> 0
     then @GDrawShadowTextFn := GetProcAddress(GComCtl32Handle, 'DrawShadowText');
-    // if fails, GDrawShadowTextFn remains nil
+    { If GetProcAddress fails, GDrawShadowTextFn remains nil and fallback will be used }
   end;
 
   Result:= GDrawShadowTextFn;
 end;
 
 
-// Simple fallback if DrawShadowText is unavailable
+{ Fallback implementation when Windows DrawShadowText API is unavailable.
+  Draws the shadow by rendering the text twice: first offset for shadow, then at original position.
+  TextRect is VAR because DrawText with certain flags may modify it. }
 function DrawShadowTextFallback(
   Canvas: TCanvas;
   const Text: string;
@@ -90,11 +93,15 @@ var
   OrigFontColor: TColor;
   OrigBkMode: Integer;
   ShadowRect: TRect;
+  SafeFlags: DWORD;
 begin
   OrigBkMode := SetBkMode(Canvas.Handle, TRANSPARENT);
   OrigFontColor := Canvas.Font.Color;
 
-  // Draw Shadow
+  { Remove DT_MODIFYSTRING flag - it modifies the buffer but Text is const }
+  SafeFlags:= DrawFlags AND (NOT DT_MODIFYSTRING);
+
+  { Draw Shadow first (behind the text) }
   ShadowRect := TextRect;
   Inc(ShadowRect.Left,   ShadowOffsetX);
   Inc(ShadowRect.Top,    ShadowOffsetY);
@@ -102,13 +109,13 @@ begin
   Inc(ShadowRect.Bottom, ShadowOffsetY);
 
   Canvas.Font.Color := ShadowColor;
-  DrawText(Canvas.Handle, PChar(Text), Length(Text), ShadowRect, DrawFlags);
+  DrawText(Canvas.Handle, PChar(Text), Length(Text), ShadowRect, SafeFlags);
 
-  // Draw Foreground
+  { Draw Foreground text on top }
   Canvas.Font.Color := TextColor;
-  Result := DrawText(Canvas.Handle, PChar(Text), Length(Text), TextRect, DrawFlags);
+  Result := DrawText(Canvas.Handle, PChar(Text), Length(Text), TextRect, SafeFlags);
 
-  // Restore
+  { Restore original canvas state }
   Canvas.Font.Color := OrigFontColor;
   SetBkMode(Canvas.Handle, OrigBkMode);
 end;
@@ -125,38 +132,42 @@ var
   TextRect: TRect;
   DrawFn: TDrawShadowTextFn;
 begin
+  Assert(Canvas <> NIL, 'DrawShadowText: Canvas cannot be nil');
+
   TextRect := Rect(X, Y, X + Canvas.TextWidth(Text), Y + Canvas.TextHeight(Text));
   DrawFn := GetDrawShadowTextFn(); //  Call as function
 
-  if Assigned(DrawFn) then
-    Result := DrawFn(
+  if Assigned(DrawFn)
+  then Result:= DrawFn(
         Canvas.Handle,
-        PWideChar(WideString(Text)),
+        PWideChar(Text),
         Length(Text),
         @TextRect,
         0,
-        COLORREF(TextColor),
-        COLORREF(ShadowColor),
+        ColorToRGB(TextColor),     { Convert system colors (clBtnFace, etc.) to RGB }
+        ColorToRGB(ShadowColor),
         ShadowDist, ShadowDist)
   else
-    Result := DrawShadowTextFallback(Canvas, Text, TextRect, TextColor, ShadowColor, ShadowDist, ShadowDist, 0);
+    Result:= DrawShadowTextFallback(Canvas, Text, TextRect, TextColor, ShadowColor, ShadowDist, ShadowDist, 0);
 end;
 
 
-function DrawShadowText(Canvas: TCanvas; const Text: string; TextRect: TRect; TextColor, ShadowColor: TColor; ShadowDist: Integer; DrawFlags: DWORD = DT_LEFT or DT_END_ELLIPSIS or DT_MODIFYSTRING): Integer;
+function DrawShadowText(Canvas: TCanvas; const Text: string; TextRect: TRect; TextColor, ShadowColor: TColor; ShadowDist: Integer; DrawFlags: DWORD = DT_LEFT or DT_END_ELLIPSIS): Integer;
 VAR DrawFn: TDrawShadowTextFn;
 begin
+  Assert(Canvas <> NIL, 'DrawShadowText: Canvas cannot be nil');
+
   DrawFn := GetDrawShadowTextFn(); //   Call as function
 
-  if Assigned(DrawFn) then
+  if Assigned(DrawFn) then 
     Result:= DrawFn(
          Canvas.Handle,
-         PWideChar(WideString(Text)),
+         PWideChar(Text),
          Length(Text),
          @TextRect,
          DrawFlags,
-         COLORREF(TextColor),
-         COLORREF(ShadowColor),
+         ColorToRGB(TextColor),     { Convert system colors (clBtnFace, etc.) to RGB }
+         ColorToRGB(ShadowColor),
          ShadowDist, ShadowDist)
   else
     Result:= DrawShadowTextFallback(Canvas, Text, TextRect, TextColor, ShadowColor, ShadowDist, ShadowDist, DrawFlags);
@@ -177,5 +188,5 @@ end;
 
 initialization
 finalization
-  FinalizeShadowText;
+  FinalizeShadowText; // ToDo: try to get rid of this
 end.

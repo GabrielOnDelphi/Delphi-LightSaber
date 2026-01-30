@@ -393,7 +393,7 @@ begin
 
    { Read and validate enum value }
    OpByte:= IOStream.ReadByte;
-   if OpByte > Ord(High(TResizeOp))
+   if Integer(OpByte) > Ord(High(TResizeOp))
    then RAISE Exception.Create('ReadFromStream: Invalid ResizeOp value in stream: ' + IntToStr(OpByte));
    ResizeOpp:= TResizeOp(OpByte);
 

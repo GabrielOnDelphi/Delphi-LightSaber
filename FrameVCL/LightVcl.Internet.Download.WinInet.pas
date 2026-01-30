@@ -1,25 +1,29 @@
 UNIT LightVcl.Internet.Download.WinInet;
 
 {-------------------------------------------------------------------------------------------------------------
-   2025.05
+   2026.01.30
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    DOWNLOADS A FILE FROM THE INTERNET
-   Uses WinINet
---------------------------------------------------------------------------------------------------------------
-    Maturity: A very old and stable Windows API.
-    Control: Offers low-level control if needed.
-    Windows Specific: Not portable.
-    Complexity: More verbose and requires manual management of many aspects (handles, buffers, headers).
-    Reliability: Can be very reliable but is also more susceptible to system-level IE/WinINet configurations or policies affecting its behavior. SSL/TLS capabilities depend on the OS version and its SChannel configuration.
+   Uses WinINet API
+
+   Characteristics:
+     - Maturity: A very old and stable Windows API.
+     - Control: Offers low-level control if needed.
+     - Windows Specific: Not portable.
+     - Complexity: More verbose and requires manual management of many aspects (handles, buffers, headers).
+     - Reliability: Can be very reliable but is also more susceptible to system-level IE/WinINet
+       configurations or policies affecting its behavior.
+       SSL/TLS capabilities depend on the OS version and its SChannel configuration.
 --------------------------------------------------------------------------------------------------------------
 
-   ISSUES
-     - Slow: WinHTTP is much faster than WinINet! More than 10x faster, at least for multiple connections. Here: http://blog.synopse.info/post/2011/07/04/WinINet-vs-WinHTTP
+   KNOWN ISSUES
+     - Slow: WinHTTP is much faster than WinINet! More than 10x faster, at least for multiple connections.
+       See: http://blog.synopse.info/post/2011/07/04/WinINet-vs-WinHTTP
      - CPU: Because of the REPEAT loop the CPU goes to 100%.
      - Freeze: The program does not exit until the download is complete!
 
-   ALSE SEE:
+   ALSO SEE:
        c:\Users\Public\Documents\Embarcadero\Studio\21.0\Samples\Object Pascal\RTL\HttpDownload\HttpDownloadDemo.dpr
        c:\MyProjects\Packages\BSalsa EmbeddedWB\Demos\IEDownload_Simple_Demo\
 
@@ -35,7 +39,7 @@ UNIT LightVcl.Internet.Download.WinInet;
      LightVcl.Internet.Common, LightCore.InternetDIndy.pas - OK
      HTTPGet.pas
      UrlMon  -  UrlMon.UrlDownloadToFile (nil, <url>, <file destination path (PChar)>, 0, nil);  Don't know if it is thread-safe, UrlMon.pas is just an interface for calling UrlMon.dll, a Microsoft API. And yes, is a Borland unit \delphi6\source\rtl\Win\UrlMon.pas
-     mORMot  - TSQLHttpClientWinSock.InternalReques in mORMotHttpClient.pas. But that function is not almost impossible to extract from that library
+     mORMot  - TSQLHttpClientWinSock.InternalRequest in mORMotHttpClient.pas. But that function is almost impossible to extract from that library
 
   Documentation:
      Post Request -  http://stackoverflow.com/questions/2977720/how-to-send-a-http-post-request-in-delphi-2010-using-wininet
@@ -52,12 +56,14 @@ USES
    System.Classes, System.SysUtils; // System.Net.HttpClient;
 
 CONST
+   { User agent strings for HTTP requests. Currently DownloadBytes uses a hardcoded Firefox user agent.
+     These constants are provided for future use or customization. }
    USER_AGENT_APP = 'DelphiApp/1.0 (Compatible; +http://GabrielMoraru.com)';
    USER_AGENT_MOZ = 'Mozilla/5.0 (compatible, MSIE 11, Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko';
 
 
 
-// Silent. Does not raises exceptions on download error
+{ Silent. Does not raise exceptions on download error }
 function DownloadAsString  (CONST URL: string; Referer: string= ''): string;
 
 function DownloadBytes     (CONST Url, Referer: String; OUT Data: TBytes; PostData: String= ''; SSL: Boolean = FALSE): Cardinal;  overload;  { TESTED OK }
@@ -90,21 +96,21 @@ USES
          https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept
 -----------------------------------------------------------------------------------------------------------------------}
 
-//Hint: use TIdURI.URLEncode() in IdURI.pas to encode an URL.
 function DownloadBytes(CONST Url, Referer: String; OUT Data: TBytes; PostData: String= ''; SSL: Boolean = FALSE): Cardinal;   { TESTED OK }
 VAR
-  Buffer     : array[0..High(Word)*4] of Byte; { Buffer of 260KB }
-  TempBytes  : TBytes;
-  sMethod    : string;
-  BytesRead  : Cardinal;
-  pSession   : HINTERNET;
-  pConnection: HINTERNET;
-  pRequest   : HINTERNET;
-  Resource   : string;
-  Root       : string;
-  port       : Integer;
-  flags      : DWord;
-  Header     : string;
+  Buffer       : array[0..High(Word)*4] of Byte; { Buffer of 260KB }
+  TempBytes    : TBytes;
+  PostDataBytes: TBytes;   { UTF-8 encoded POST data for correct byte length }
+  sMethod      : string;
+  BytesRead    : Cardinal;
+  pSession     : HINTERNET;
+  pConnection  : HINTERNET;
+  pRequest     : HINTERNET;
+  Resource     : string;
+  Root         : string;
+  port         : Integer;
+  flags        : DWord;
+  Header       : string;
 begin
   Result := WinApi.Windows.ERROR_SUCCESS;  // 0 indicates success
   SetLength(Data, 0);
@@ -144,9 +150,10 @@ begin
       then sMethod := 'GET'
       else sMethod := 'POST';
 
+      { INTERNET_FLAG_RELOAD: Forces download from origin server, not from cache }
       if SSL
-      then flags := INTERNET_FLAG_SECURE  OR INTERNET_FLAG_KEEP_CONNECTION
-      else flags := INTERNET_SERVICE_HTTP OR INTERNET_FLAG_RELOAD; // INTERNET_FLAG_RELOAD= Forces a download of the requested file, object, or directory listing from the origin server, not from the cache.; *)
+      then flags := INTERNET_FLAG_SECURE OR INTERNET_FLAG_KEEP_CONNECTION
+      else flags := INTERNET_FLAG_RELOAD OR INTERNET_FLAG_KEEP_CONNECTION;
 
       Resource := UrlExtractResourceParams(Url);  { I also need to keep the server parameters (stuff after '?') because in this case it specifies the image resolution: http://cams.sr-online.de/cgi-bin/getImage.php?w=1200 . Without 1200 I will retrieve file at 320x240 resolution }
       if Resource = ''
@@ -171,11 +178,16 @@ begin
         Header := Header + 'Connection: keep-alive' + sLineBreak + sLineBreak;
         HttpAddRequestHeaders(pRequest, PWideChar(Header), Length(Header), HTTP_ADDREQ_FLAG_ADD);
 
-        if not HTTPSendRequest(pRequest, nil, 0, Pointer(PostData), Length(PostData)) then
-         begin
+        { Convert PostData to UTF-8 bytes for correct byte length calculation }
+        if PostData <> ''
+        then PostDataBytes := TEncoding.UTF8.GetBytes(PostData)
+        else SetLength(PostDataBytes, 0);
+
+        if not HTTPSendRequest(pRequest, nil, 0, Pointer(PostDataBytes), Length(PostDataBytes)) then
+        begin
           Result := GetLastError();
           Exit;
-         end;
+        end;
 
         repeat
           ZeroMemory(@Buffer, SizeOf(Buffer));

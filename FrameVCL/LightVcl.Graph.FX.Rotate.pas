@@ -565,7 +565,7 @@ begin
  Flip   := Stream.ReadBoolean;
  Mirror := Stream.ReadBoolean;
  RotByte:= Stream.ReadByte;
- if RotByte > Ord(High(TRotateSense))
+ if Integer(RotByte) > Ord(High(TRotateSense))
  then Rotation:= rtNone   { Invalid value - default to rtNone }
  else Rotation:= TRotateSense(RotByte);
  Stream.ReadPadding;

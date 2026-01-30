@@ -112,11 +112,11 @@ begin
     ColorByte:= IOStream.ReadByte;
 
     { Validate enum ranges before casting }
-    if FillByte > Ord(High(TFillType))
+    if Integer(FillByte) > Ord(High(TFillType))
     then raise Exception.Create('RBkgColorParams.ReadFromStream: Invalid FillType value: ' + IntToStr(FillByte));
-    if ShapeByte > Ord(High(TEffectShape))
+    if Integer(ShapeByte) > Ord(High(TEffectShape))
     then raise Exception.Create('RBkgColorParams.ReadFromStream: Invalid EffectShape value: ' + IntToStr(ShapeByte));
-    if ColorByte > Ord(High(TEffectColor))
+    if Integer(ColorByte) > Ord(High(TEffectColor))
     then raise Exception.Create('RBkgColorParams.ReadFromStream: Invalid EffectColor value: ' + IntToStr(ColorByte));
 
     FillType      := TFillType(FillByte);
@@ -138,11 +138,11 @@ begin
     ColorByte:= IOStream.ReadByte;
 
     { Validate enum ranges before casting }
-    if FillByte > Ord(High(TFillType))
+    if Integer(FillByte) > Ord(High(TFillType))
     then raise Exception.Create('RBkgColorParams.ReadFromStream: Invalid FillType value in legacy format: ' + IntToStr(FillByte));
-    if ShapeByte > Ord(High(TEffectShape))
+    if Integer(ShapeByte) > Ord(High(TEffectShape))
     then raise Exception.Create('RBkgColorParams.ReadFromStream: Invalid EffectShape value in legacy format: ' + IntToStr(ShapeByte));
-    if ColorByte > Ord(High(TEffectColor))
+    if Integer(ColorByte) > Ord(High(TEffectColor))
     then raise Exception.Create('RBkgColorParams.ReadFromStream: Invalid EffectColor value in legacy format: ' + IntToStr(ColorByte));
 
     FillType      := TFillType(FillByte);

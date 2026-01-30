@@ -39,7 +39,9 @@ uses
   Test.LightVcl.Graph.Alpha in 'Test.LightVcl.Graph.Alpha.pas',
   LightVcl.Graph.Alpha in '..\FrameVCL\LightVcl.Graph.Alpha.pas',
   Test.LightVcl.Graph.Cache in 'Test.LightVcl.Graph.Cache.pas',
-  LightVcl.Graph.Cache in '..\FrameVCL\LightVcl.Graph.Cache.pas';
+  LightVcl.Graph.Cache in '..\FrameVCL\LightVcl.Graph.Cache.pas',
+  Test.LightVcl.Graph.Text in 'Test.LightVcl.Graph.Text.pas',
+  LightVcl.Graph.Text in '..\FrameVCL\LightVcl.Graph.Text.pas';
 
 {$IFNDEF TESTINSIGHT}
 var

@@ -84,9 +84,9 @@ contains
 
 end.
 
-Note:
 (*
-  This package uses a few 3rd party libraries (all Free).
+Note:
+  This package uses two 3rd party libraries (all Free).
   It is not mandatory to download AND install these 3rd party libraries.
   My package will continue to work but with some reduced functionality:
     * slower JPG decoding,
@@ -97,5 +97,4 @@ Note:
       2. Go to 'Project Options' and undefine (remove) the following compiler switches:
          {$Jpg2000}
          {$FastJpg}
-
-
+*)

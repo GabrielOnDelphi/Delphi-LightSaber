@@ -2,7 +2,7 @@ UNIT LightVcl.Graph.Text;
 
 {=============================================================================================================
    www.GabrielMoraru.com
-   2025.10
+   2026.01
 --------------------------------------------------------------------------------------------------------------
   Features:
     Text-related routines
@@ -33,7 +33,7 @@ USES
  function  CenterTextX         (Canvas: TCanvas; CONST Text: string; R: TRect): Integer;    overload;
  function  CenterTextY         (Canvas: TCanvas; CONST Text: string; R: TRect): Integer;    overload;
 
- function  GetFontHeight       (aFont : TFont) : integer;                                                  { Get fornt height when we don't have a canvas }
+ function  GetFontHeight       (aFont : TFont) : integer;                                                  { Get font height when we don't have a canvas }
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -57,18 +57,24 @@ CONST
 IMPLEMENTATION
 
 
-function GetFontHeight(aFont : TFont) : integer;     //not tested. ce face?
+{ Returns the height of the specified font in pixels without requiring a Canvas.
+  Uses the desktop DC to measure the font metrics. }
+function GetFontHeight(aFont: TFont): Integer;
 var
-   DC        : HDC;
-   SysMetrics: TTextMetric;
-   Metrics   : TTextMetric;
+   DC     : HDC;
+   Metrics: TTextMetric;
+   OldFont: HFONT;
 begin
- DC := GetDC(0);
- GetTextMetrics(DC, SysMetrics);
- SelectObject  (DC, aFont.Handle);
- GetTextMetrics(DC, Metrics);
- ReleaseDC(0, DC);
- Result := Metrics.tmHeight;
+ Assert(aFont <> NIL, 'GetFontHeight: aFont is NIL');
+ DC:= GetDC(0);
+ TRY
+   OldFont:= SelectObject(DC, aFont.Handle);
+   GetTextMetrics(DC, Metrics);
+   SelectObject(DC, OldFont);
+   Result:= Metrics.tmHeight;
+ FINALLY
+   ReleaseDC(0, DC);
+ END;
 end;
 
 
@@ -85,12 +91,14 @@ procedure DrawTextCentered(Canvas: TCanvas; CONST Text: string; Rect: TRect);
 CONST
    uFormat: Cardinal = DT_CENTER OR DT_VCENTER OR {DT_TOP OR } DT_SINGLELINE OR DT_NOCLIP;
 begin
+ Assert(Canvas <> NIL, 'DrawTextCentered: Canvas is NIL');
  DrawText(Canvas.Handle, Text, Length(Text), Rect, uFormat);
 end;
 
 
-function CenterTextX(BMP: TBitmap; CONST Text: string): Integer;  { Returns the X coordinate where we must drew the text }
+function CenterTextX(BMP: TBitmap; CONST Text: string): Integer;  { Returns the X coordinate where we must draw the text }
 begin
+ Assert(BMP <> NIL, 'CenterTextX: BMP is NIL');
  Result:= BMP.Canvas.TextWidth(Text);
  Result:= (BMP.Width - Result) DIV 2;
 end;
@@ -98,6 +106,7 @@ end;
 
 function CenterTextX(Canvas: TCanvas; CONST Text: string; R: TRect): Integer;
 begin
+ Assert(Canvas <> NIL, 'CenterTextX: Canvas is NIL');
  Result:= Canvas.TextWidth(Text);
  Result:= (R.Width - Result) DIV 2;
 end;
@@ -105,6 +114,7 @@ end;
 
 function CenterTextY(Canvas: TCanvas; CONST Text: string; R: TRect): Integer;
 begin
+ Assert(Canvas <> NIL, 'CenterTextY: Canvas is NIL');
  Result:= Canvas.TextHeight(Text);
  Result:= (R.Height - Result) DIV 2;
 end;
@@ -112,6 +122,7 @@ end;
 
 function CenterTextY(BMP: TBitmap; CONST Text: string): Integer;
 begin
+ Assert(BMP <> NIL, 'CenterTextY: BMP is NIL');
  Result:= BMP.Canvas.TextHeight(Text);
  Result:= (BMP.Height - Result) DIV 2;
 end;
@@ -156,7 +167,8 @@ VAR
    TextWidth, TextHeight: Integer;
    OriginalColor: TColor;
 begin
-  Assert(BMP.PixelFormat= pf24bit, 'Wrong pixel format!!');
+  Assert(BMP <> NIL, 'DrawTextShadowBox: BMP is NIL');
+  Assert(BMP.PixelFormat = pf24bit, 'DrawTextShadowBox: Wrong pixel format! Expected pf24bit.');
   OriginalColor:= bmp.Canvas.Font.Color;
   TextWidth := BMP.Canvas.TextWidth (Text);
   TextHeight:= BMP.Canvas.TextHeight(Text);
@@ -229,8 +241,8 @@ VAR
    H, W: Integer;
    OriginalColor: TColor;
    R, R2: TRect;
-CONST Edge= 5;
 begin
+ Assert(aCanvas <> NIL, 'DrawTextShadowBox: aCanvas is NIL');
  OriginalColor:= aCanvas.Font.Color;
 
  { Write the shadow on a separate bitmap (overlay) }
@@ -295,18 +307,19 @@ end;  }
 
 
 
-{ Draws a (cheap) shadow projected arround the text, by simply drawing the same text shifted by a few pixels
+{ Draws a (cheap) shadow projected around the text, by simply drawing the same text shifted by a few pixels.
   No transparency. }
 procedure DrawTextShadow3DSoft(aCanvas: TCanvas; CONST Text: string; X, Y: Integer; ShadowColor: TColor= clTextShadow);
 VAR OriginalTextColor: TColor;
 begin
+ Assert(aCanvas <> NIL, 'DrawTextShadow3DSoft: aCanvas is NIL');
  OriginalTextColor:= aCanvas.Font.Color;
 
  { Write the shadow first }
  aCanvas.Brush.Style := bsClear;
  aCanvas.Font.Color  := ShadowColor;
- aCanvas.TextOut(x+1, y+1, Text);         { Diagonal left shadow }
- aCanvas.TextOut(x+1, y,   Text);         { Left shadow }
+ aCanvas.TextOut(x+1, y+1, Text);         { Diagonal down-right shadow }
+ aCanvas.TextOut(x+1, y,   Text);         { Right shadow }
 
  { Then put the text on top }
  aCanvas.Brush.Style := bsClear;
@@ -316,7 +329,7 @@ end;
 
 
 
-{ Same as above, but the shadow is more visible }
+{ Same as DrawTextShadow3DSoft, but the shadow is more visible with multiple layers. }
 procedure DrawTextShadow3DHard(aCanvas: TCanvas; CONST Text: string; X, Y: Integer; ShadowColor: TColor= clTextShadow; TopShadow: Boolean= FALSE);
 VAR
    OriginalTextColor, ShadowLight: TColor;
@@ -324,6 +337,7 @@ VAR
 CONST
   ShadowDist= 1;
 begin
+ Assert(aCanvas <> NIL, 'DrawTextShadow3DHard: aCanvas is NIL');
  OriginalTextColor:= aCanvas.Font.Color;
  aCanvas.Brush.Style:= bsClear;   //todo: if FSolidBkg
 
@@ -378,11 +392,13 @@ end;
 
 procedure ShadowDownLeft(BMP: TBitmap);
 begin
+ Assert(BMP <> NIL, 'ShadowDownLeft: BMP is NIL');
  JanFX.ShadowDownLeft(BMP);
 end;
 
 procedure ShadowDownRight(BMP: TBitmap);
 begin
+ Assert(BMP <> NIL, 'ShadowDownRight: BMP is NIL');
  JanFX.ShadowDownRight(BMP);
 end;
 
@@ -401,6 +417,7 @@ end;
 procedure DrawTextOutline(aCanvas: TCanvas; CONST Text: string; X, Y: Integer; SolidMiddle: Boolean= TRUE);
 VAR OldBkMode: Integer;                                     { Stores previous background mode }
 begin
+ Assert(aCanvas <> NIL, 'DrawTextOutline: aCanvas is NIL');
  if SolidMiddle
  then aCanvas.Brush.Style:= bsSolid                         { Hint: Set Canvas.Brush.Style to bsClear to draw only the outline not also the middle, else set it to bsSolid }
  else aCanvas.Brush.Style:= bsClear;
@@ -419,13 +436,16 @@ end;
   Result quality: Very poor
   Source: http://stackoverflow.com/questions/5053282/how-to-draw-a-not-colored-text }
 procedure DrawTextXOR(DC: HDC; Font: TFont; CONST Text: string; X, Y: integer);
-VAR BMP: TBitmap;
+VAR
+   BMP: TBitmap;
+   TextSize: TSize;
 begin
+ Assert(Font <> NIL, 'DrawTextXOR: Font is NIL');
  BMP:= TBitmap.Create;
  TRY
   BMP.Canvas.Font.Assign(Font);
-  WITH BMP.Canvas.TextExtent(Text)
-    DO BMP.SetSize(cx, cy);
+  TextSize:= BMP.Canvas.TextExtent(Text);
+  BMP.SetSize(TextSize.cx, TextSize.cy);
   BMP.Canvas.Brush.Color := clBlack;
   BMP.Canvas.FillRect(Rect(0, 0, BMP.Width, BMP.Height));
   BMP.Canvas.Font.Color := clWhite;

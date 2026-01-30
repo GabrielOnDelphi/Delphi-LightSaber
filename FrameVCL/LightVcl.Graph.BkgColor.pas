@@ -238,8 +238,21 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-  FADE BORDER
-  Fades the borders of BMP to the color specified via BkgClrParams.
+   FadeBorder
+   Fades the borders of the output bitmap to the color specified via BkgClrParams.
+
+   Parameters:
+     InpBmp       - Source image (placed in center of OutBMP)
+     OutBMP       - Destination image (must be larger than InpBmp for border effect)
+     BkgClrParams - Configuration: color source, fade speed, effect shape, etc.
+     Border       - Which borders to process (top, bottom, left, right)
+
+   The function:
+     1. Fills OutBMP with colored shapes (rectangles, triangles, or solid color)
+     2. Draws InpBmp centered on OutBMP
+     3. Optionally applies gradient fade from image edges to border color
+
+   Note: Both bitmaps must be pf24bit format. InpBmp must be at least 12x12 pixels.
 --------------------------------------------------------------------------------------------------}
 
 {todo 1: FillTriangles: choose correct triangle middle !! }
@@ -249,13 +262,14 @@ procedure FadeBorder(InpBmp, OutBMP: TBitmap; BkgClrParams: RBkgColorParams; Bor
 VAR
    iTop, iLeft, iRight, iBott: Integer;
    TopColor, BtmColor, LeftColor, RightColor: TColor;
-   XCenter,  YCenter: Integer;
+   YCenter: Integer;  { Used by FillRectangles }
 
    R_BkgClr, G_BkgClr, B_BkgClr: Byte;
    R1, R2, G1, G2, B1, B2: Byte;
    LNeigbour, MainPixel, RNeigbour: TRGB24;
    Line, NextLine: PRGB24Array;
 
+  { Fills the output bitmap with colored rectangles (top/bottom or left/right halves) }
   procedure FillRectangles;
    begin
     OutBMP.Canvas.Pen.Width := 0;
@@ -283,22 +297,20 @@ VAR
       end
    end;
 
+  { Fills the border areas with triangular shapes pointing toward the image center.
+    Creates 4 triangles: top, right, bottom, left - each filled with the corresponding border color. }
   procedure FillTriangles;
   VAR
-     X1: Integer;
-     Y1: Integer;
-     X2, Y2: Integer;
+     X1, Y1: Integer;   { Top-left corner of the input image position }
+     X2, Y2: Integer;   { Bottom-right corner of the input image position }
   begin
-   X1 := Round((OutBMP.Width  - InpBmp.Width)  / 2)-1;
-   X2 := X1+ InpBmp.Width-1;
+   X1:= Round((OutBMP.Width  - InpBmp.Width)  / 2)-1;
+   X2:= X1+ InpBmp.Width-1;
 
-   Y1 := Round((OutBMP.Height - InpBmp.Height) / 2)-1;
-   Y2 := Y1+ InpBmp.Height-1;
+   Y1:= Round((OutBMP.Height - InpBmp.Height) / 2)-1;
+   Y2:= Y1+ InpBmp.Height-1;
 
    OutBMP.Canvas.Pen.Width := 1;
-
-   { Paint triangles }
-   XCenter:= OutBMP.Width DIV 2;
 
    { Top triangle  }
    OutBMP.Canvas.Brush.Color := TopColor;
@@ -465,6 +477,9 @@ VAR
    end;
 
 
+  { Applies the gradient fade effect from image edges towards the border color.
+    Processes each border (top, bottom, left, right) if specified in the Border set.
+    Works by iteratively blending pixel colors toward the target border color. }
   procedure FadeBorders;
   VAR r, c: Integer;
   begin

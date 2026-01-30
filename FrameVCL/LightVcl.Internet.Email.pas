@@ -2,7 +2,7 @@
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2023.06
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -160,58 +160,56 @@ VAR
   MAPIModule: HModule;
 begin
   FillChar(Message, SizeOf(Message), 0);
-  with Message DO
+
+  if (Subject <> '')
+  then Message.lpszSubject := PAnsiChar(Subject);
+
+  if (Body <> '')
+  then Message.lpszNoteText := PAnsiChar(Body);
+
+  if (SenderEmail <> '') then
    begin
-     if (Subject <> '') then
-       lpszSubject := PAnsiChar(Subject);
+    lpSender.ulRecipClass := MAPI_ORIG;
+    if (SenderName = '')
+    then lpSender.lpszName := PAnsiChar(SenderEMail)
+    else lpSender.lpszName := PAnsiChar(SenderName);
+    lpSender.lpszAddress := PAnsiChar(SenderEmail);
+    lpSender.ulReserved := 0;
+    lpSender.ulEIDSize := 0;
+    lpSender.lpEntryID := nil;
+    Message.lpOriginator := @lpSender;
+   end;
 
-     if (Body <> '') then
-       lpszNoteText := PAnsiChar(Body);
+  if (RecipientEmail <> '') then
+   begin
+    lpRecipient.ulRecipClass := MAPI_TO;
+    if (RecipientName = '')
+    then lpRecipient.lpszName := PAnsiChar(RecipientEMail)
+    else lpRecipient.lpszName := PAnsiChar(RecipientName);
 
-     if (SenderEmail <> '') then
-      begin
-       lpSender.ulRecipClass := MAPI_ORIG;
-       if (SenderName = '')
-       then lpSender.lpszName := PAnsiChar(SenderEMail)
-       else lpSender.lpszName := PAnsiChar(SenderName);
-       lpSender.lpszAddress := PAnsiChar(SenderEmail);
-       lpSender.ulReserved := 0;
-       lpSender.ulEIDSize := 0;
-       lpSender.lpEntryID := nil;
-       lpOriginator := @lpSender;
-      end;
+    lpRecipient.lpszAddress := PAnsiChar(RecipientEmail);
+    lpRecipient.ulReserved := 0;
+    lpRecipient.ulEIDSize := 0;
+    lpRecipient.lpEntryID := nil;
+    Message.nRecipCount := 1;
+    Message.lpRecips := @lpRecipient;
+   end
+  else
+    Message.lpRecips := nil;
 
-     if (RecipientEmail <> '') then
-      begin
-       lpRecipient.ulRecipClass := MAPI_TO;
-       if (RecipientName = '')
-       then lpRecipient.lpszName := PAnsiChar(RecipientEMail)
-       else lpRecipient.lpszName := PAnsiChar(RecipientName);
+  if (FileName = '') then
+   begin
+    Message.nFileCount := 0;
+    Message.lpFiles := nil;
+   end
+  else
+   begin
+    FillChar(FileAttach, SizeOf(FileAttach), 0);
+    FileAttach.nPosition := Cardinal($FFFFFFFF);
+    FileAttach.lpszPathName := PAnsiChar(FileName);
 
-       lpRecipient.lpszAddress := PAnsiChar(RecipientEmail);
-       lpRecipient.ulReserved := 0;
-       lpRecipient.ulEIDSize := 0;
-       lpRecipient.lpEntryID := nil;
-       nRecipCount := 1;
-       lpRecips := @lpRecipient;
-      end
-     else
-       lpRecips := nil;
-
-     if (FileName = '') then
-      begin
-       nFileCount := 0;
-       lpFiles := nil;
-      end
-     else
-      begin
-       FillChar(FileAttach, SizeOf(FileAttach), 0);
-       FileAttach.nPosition := Cardinal($FFFFFFFF);
-       FileAttach.lpszPathName := PAnsiChar(FileName);
-
-       nFileCount := 1;
-       lpFiles := @FileAttach;
-      end;
+    Message.nFileCount := 1;
+    Message.lpFiles := @FileAttach;
    end;
 
   MAPIModule := LoadLibrary(PChar(MAPIDLL));
@@ -285,15 +283,14 @@ CONST
 
 function CorrectEmailAddress (Email : String; OUT Suggestion: String; MaxCorrections : Integer = 5) : Boolean;  { MaxCorrections – The maximum amount of corrections to attempt before stopping (defaults to 5) }
 VAR
-   Itteration, RevITT, i, FailCode, FailPosition, LastAt : Integer;
+   RevPos, CorrectionAttempt, FailCode, FailPosition, LastAt : Integer;
 begin
  Email:= Trim(Email);
  Result := False;
  try
   Suggestion := Email;                                                          // Reset the suggestion
-  Itteration := 1;
-  // Now loop through to the max depth
-  for i := Itteration to MaxCorrections do                                        // Iterate
+  // Loop up to MaxCorrections attempts to correct the email
+  for CorrectionAttempt := 1 to MaxCorrections do
    begin
      if ValidateEmailAddress(Suggestion, FailCode, FailPosition)            // Now try to validate the address
      then Exit(true);
@@ -304,9 +301,9 @@ begin
        flNoSeperator:
         begin
           LastAt := 0;                                                           // This error can possibly be fixed by finding the last 2 (which was most likely transposed for an @)
-          for RevITT := 1 to Length(Suggestion) DO
-            if Suggestion[RevITT] = '2'
-            then LastAt := RevITT;                                               // Look for the 2
+          for RevPos := 1 to Length(Suggestion) DO
+            if Suggestion[RevPos] = '2'
+            then LastAt := RevPos;                                               // Look for the 2
           if LastAt = 0 then exit;                                              // Now see if we found an 2
           Suggestion[LastAt] := '@';                                             // Now convert the 2 to an @ and continue
         end;
@@ -663,6 +660,8 @@ end;
 function ExtractAllEmailAdr (HugeString: string; AdreseExtrase: TStringlist): integer;             {Doesn't clear the log}
 Var StartPos, EndPos: integer; s: string;
 begin
+ Assert(AdreseExtrase <> NIL, 'AdreseExtrase parameter cannot be nil');
+
  { Preprocessing. Replace the "<A title=3D" and "Email=3D" string with space. This is related to a quite often apparition of this string in Thunderbird's email files. I don't know why. }
 {$IFDEF UNICODE}
  HugeString:= ReplaceText(HugeString, '<A title=3D', ' ');
@@ -697,8 +696,9 @@ const
  ctReplyFrom = 'From:';
  ctCc        = 'Cc:';
  ctBcc       = 'BCC:';
- ThunderbirdFile = 'X-Mozilla-Status';
 begin
+ Assert(OutputList <> NIL, 'OutputList parameter cannot be nil');
+
  InputList:= TStringList.Create;
  TRY
   InputList.Text:= HugeText;
