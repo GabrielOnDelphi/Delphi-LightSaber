@@ -2,18 +2,22 @@ UNIT LightVcl.Common.CursorGuard;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
-   Allows you to sets the cursor to crHourglass and then back to crDefault without the need of the classic try-finally block.
-   When the procedure where you use TCursorGuard exits, the cursor is put back automatically.
+   RAII-style cursor guard that sets the cursor to crHourglass and automatically restores it
+   when the interface reference goes out of scope. Eliminates the need for try-finally blocks.
 
-   Example:
-   begin
-     TCursorGuard.CursorBusy;
-     SlowCode;
-   end;                 // The interface is automatically released here, at the end of the procedure
+   Usage:
+     procedure DoSlowWork;
+     begin
+       TCursorGuard.CursorBusy;   // Cursor changes to hourglass
+       SlowCode;
+     end;                         // Cursor automatically restored here when interface is released
+
+   Note: You must capture the result in a local variable or let it be implicitly held by the
+   function result. The cursor is restored when the interface reference count reaches zero.
 
 =============================================================================================================}
 

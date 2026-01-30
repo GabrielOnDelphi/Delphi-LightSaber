@@ -1,8 +1,7 @@
 UNIT FormTranslEditor;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.05
+   2026.01.29
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    TRANSLATION EDITOR FORM
@@ -105,13 +104,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  LightVcl.Common.ExecuteShell,
-  LightVcl.Common.SystemTime,
-  LightVcl.Common.Clipboard,
-  LightCore.IO,
-  LightCore.TextFile,
-  LightVcl.Common.IO;
-
+   LightVcl.Common.ExecuteShell, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO;
 
 
 { Shows the translation editor form }

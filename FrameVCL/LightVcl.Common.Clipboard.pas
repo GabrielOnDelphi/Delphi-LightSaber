@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.Clipboard;
 
 {=============================================================================================================
-   2026.01
+   2026.01.29
    www.GabrielMoraru.com
 
    Robust clipboard string operations with retry logic.

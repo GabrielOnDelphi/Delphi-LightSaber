@@ -1,7 +1,9 @@
 UNIT FormDrawing;
 
 {=============================================================================================================
-   2021-05-05
+   PAINT wallpaper dynamically UNDER DESKTOP ICONS
+   
+   2026.01.29
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    PAINT WALLPAPER DYNAMICALLY UNDER DESKTOP ICONS

@@ -1,7 +1,7 @@
 UNIT FormUniversalEula;
 
 {=============================================================================================================
-   2025.10
+   2026.01.29
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    UNIVERSAL EULA FORM
@@ -27,13 +27,7 @@ INTERFACE
 {$DENYPACKAGEUNIT ON}
 
 USES
-  Winapi.Windows,
-  System.SysUtils,
-  System.Classes,
-  Vcl.Controls,
-  Vcl.Forms,
-  Vcl.StdCtrls,
-  LightVcl.Visual.AppDataForm;
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.StdCtrls;
 
 TYPE
   TfrmEULA = class(TLightForm)
@@ -50,10 +44,7 @@ procedure ShowEulaModal;
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  LightCore.TextFile,
-  LightCore.AppData,
-  LightVcl.Visual.AppData;
-
+   LightCore.TextFile, LightCore.AppData, LightVcl.Visual.AppData;
 
 CONST
   EULA_FILENAME = 'Eula.txt';
@@ -99,8 +90,7 @@ end;
 { Closes the form when user presses Escape or Enter }
 procedure TfrmEULA.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
-  if (Key = VK_ESCAPE) OR (Key = VK_RETURN)
-  then Close;
+  if (Key = VK_ESCAPE) OR (Key = VK_RETURN) then Close;
 end;
 
 

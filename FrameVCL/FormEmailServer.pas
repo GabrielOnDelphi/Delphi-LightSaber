@@ -1,7 +1,7 @@
 UNIT FormEmailServer;
 
 {=============================================================================================================
-   2026.01
+   2026.01.29
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    SMTP SERVER SETTINGS FORM
@@ -27,8 +27,6 @@ UNIT FormEmailServer;
 
    RATE LIMITS:
      Hostinger: max 60 emails/minute, 3000 emails/day
-
-   Used in: Power Email Extractor, PingMail, BioniX Wallpaper, etc.
 =============================================================================================================}
 
 INTERFACE
@@ -180,7 +178,7 @@ end;
   User still needs to enter their own credentials. }
 procedure TfrmSmtpSettings.btnGMailDefClick(Sender: TObject);
 begin
-  ledHost.Text:= DEFAULT_SMTP_HOST;
+  ledHost.Text := DEFAULT_SMTP_HOST;
   spnPort.Value:= DEFAULT_SMTP_PORT;
   edtUserName.Text:= 'YourAddress@Gmail.com';  // Placeholder - user must change
   radTslExpl.Checked:= TRUE;

@@ -1,10 +1,9 @@
 UNIT FormProxyList;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.05
+   2026.01.29
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+
 --------------------------------------------------------------------------------------------------------------
    PROXY LIST CONFIGURATION FORM
 

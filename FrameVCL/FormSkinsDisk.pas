@@ -1,9 +1,9 @@
 UNIT FormSkinsDisk;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.10
+   2026.01.29
    www.GabrielMoraru.com
+
 --------------------------------------------------------------------------------------------------------------
    UNIVERSAL SKIN LOADER
 
@@ -40,6 +40,7 @@ UNIT FormSkinsDisk;
 
 --------------------------------------------------------------------------------------------------------------
    SKIN FOLDERS:
+     c:\Projects\Packages\VCL Styles utils\Styles\
      c:\Users\Public\Documents\Embarcadero\Studio\XX.0\Styles\
 
    TESTER:
@@ -53,8 +54,14 @@ UNIT FormSkinsDisk;
      XE7: TStyleManager.IsValidStyle always fails if Vcl.Styles is not in USES list!
        http://stackoverflow.com/questions/30328644/how-to-check-if-a-style-file-is-already-loaded
 
-     caFree bug (fixed in Delphi 11):
-       https://quality.embarcadero.com/browse/RSP-33140
+     caFree
+       procedure Tfrm.FormClose(Sender: TObject; var Action: TCloseAction);
+       begin
+        Action:= caFree;
+        Delphi bug: Don't use caFree: https://quality.embarcadero.com/browse/RSP-33140
+       end;
+
+     Solution:
        https://stackoverflow.com/questions/70840792/how-to-patch-vcl-forms-pas
 =============================================================================================================}
 

@@ -1,6 +1,6 @@
 UNIT FormReminder;
 {=============================================================================================================
-   2020-02-12
+   2026.01.29
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    REMINDER FORM
@@ -35,12 +35,9 @@ INTERFACE
 {$DENYPACKAGEUNIT ON}  // Prevents unit from being placed in a package
 
 USES
-  System.SysUtils, System.Classes,
-  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Samples.Spin,
-  LightVcl.Visual.AppDataForm, LightVcl.Visual.PathEdit, LightVcl.Visual.Timer,
-  LightVcl.Visual.RadioButton, LightVcl.Visual.CheckBox, LightVcl.Visual.GroupBox,
-  LightVcl.Visual.SpinEdit;
-
+  System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.StdCtrls, Vcl.ExtCtrls,
+  Vcl.Samples.Spin, LightVcl.Visual.PathEdit, LightVcl.Visual.Timer, LightVcl.Visual.RadioButton, LightVcl.Visual.CheckBox, LightVcl.Visual.GroupBox, LightVcl.Visual.SpinEdit;
+  
 CONST
   { Color for active timer state (light green) }
   TIMER_ACTIVE_COLOR = $00C6E7C6;

@@ -1,8 +1,7 @@
 UNIT FormSplashScreen;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.05
+   2026.01.29
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    SPLASH SCREEN
@@ -35,8 +34,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes,
-  Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls,
-  LightVcl.Visual.AppDataForm, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs;
+  Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.ExtCtrls, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs;
 
 TYPE
   TfrmSplash = class(TLightForm)
@@ -52,18 +50,12 @@ TYPE
   end;
 
 { Shows the splash screen with fade-in/fade-out animation.
-  ImgFileSize: Expected size of Splash.png for integrity check.
-               Pass 0 to skip the size check. }
+  ImgFileSize: Expected size of Splash.png for integrity check. Pass 0 to skip the size check. }
 procedure ShowSplashScreen(ImgFileSize: Integer);
 
 
 IMPLEMENTATION {$R *.dfm}
-
-USES
-  LightCore.IO,
-  LightVcl.Common.CenterControl,
-  LightCore.AppData,
-  LightVcl.Visual.AppData;
+USES LightCore.IO, LightVcl.Common.CenterControl, LightCore.AppData, LightVcl.Visual.AppData;
 
 CONST
   { Alpha animation constants }
@@ -143,7 +135,8 @@ begin
   Refresh;
 
   { Check if fade-out is complete - time to close }
-  if (FIncrement < 0) AND (FCurrAlpha < ALPHA_END) then
+  if (FIncrement < 0) 
+  AND (FCurrAlpha < ALPHA_END) then
   begin
     Timer.Enabled:= FALSE;
     Close;
@@ -171,7 +164,6 @@ end;
 
 procedure TfrmSplash.FormDestroy(Sender: TObject);
 begin
-  { Form cleanup - currently no special cleanup needed }
 end;
 
 

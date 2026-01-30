@@ -1,10 +1,8 @@
 UNIT FormSkinsRes;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.05
+   2026.01.29
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    RESOURCE-BASED SKIN LOADER
 
@@ -138,8 +136,6 @@ end;
 
 
 
-
-
 {-----------------------------------------------------------------------------------------------------------------------
    SHOW EDITOR
 -----------------------------------------------------------------------------------------------------------------------}
@@ -233,8 +229,7 @@ end;
 { Handles skin selection - applies the selected style }
 procedure TfrmSkinRes.lBoxClick(Sender: TObject);
 begin
-  if lBox.ItemIndex < 0
-  then EXIT;
+ if lBox.ItemIndex < 0 then EXIT;
 
   { Disable list to prevent double-clicks during style switching }
   lBox.Enabled:= FALSE;
@@ -256,9 +251,9 @@ begin
       Application.ProcessMessages;
       BringToFront;
     end;
-  finally
+  FINALLY
     lBox.Enabled:= TRUE;
-  end;
+  END;
 end;
 
 
@@ -274,10 +269,8 @@ end;
 { Closes form on Enter or Escape key }
 procedure TfrmSkinRes.FormKeyPress(Sender: TObject; var Key: Char);
 begin
-  if Ord(Key) = VK_RETURN
-  then Close;
-  if Ord(Key) = VK_ESCAPE
-  then Close;
+ if Ord(Key) = VK_RETURN then Close;
+ if Ord(Key) = VK_ESCAPE then Close;
 end;
 
 
