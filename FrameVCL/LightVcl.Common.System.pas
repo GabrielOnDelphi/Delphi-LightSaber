@@ -1,35 +1,33 @@
 UNIT LightVcl.Common.System;
 
 {=============================================================================================================
-   SYSTEM
-   2025.01
+   2026.01.30
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+
 ==============================================================================================================
+   System-level Windows API utilities
 
-  System function to access:
-     BIOS
-     Services
-     Clipboard
-     Font
-     Computer name
-     Screen
-     Running processes
+   Provides access to:
+     - BIOS information (date, ID)
+     - Windows Services (start, stop, query status)
+     - Font installation and temporary font loading
+     - Computer/User name retrieval
+     - Screen/display mode enumeration
+     - Mouse cursor control
 
-  See:
-     cmEnvironmentVar.pas for environment variables
-     chHardID.pas
+   See also:
+     - LightVcl.Common.EnvironmentVar.pas for environment variables
+     - chHardID.pas for hardware identification
 
-   In this group:
-     * LightVcl.Common.Shell.pas
-     * csSystem.pas
-     * csWindow.pas
-     * LightVcl.Common.WindowMetrics.pas
-     * LightVcl.Common.ExecuteProc.pas
-     * LightVcl.Common.ExecuteShell.pas
-     * csProcess.pas
-     * LightVcl.Common.SystemTime
-
+   Related units in this group:
+     - LightVcl.Common.Shell.pas
+     - csSystem.pas
+     - csWindow.pas
+     - LightVcl.Common.WindowMetrics.pas
+     - LightVcl.Common.ExecuteProc.pas
+     - LightVcl.Common.ExecuteShell.pas
+     - csProcess.pas
+     - LightVcl.Common.SystemTime
 =============================================================================================================}
 
 INTERFACE
@@ -194,7 +192,10 @@ end;
 
 
 
-{ Works on Win 7 }
+{ Returns the current Windows logon username in UPPERCASE.
+  Example: 'JOHN'
+  Returns empty string on failure.
+  Note: Similar to GetUserName but returns uppercase and is simpler. }
 function GetLogonName: string;
 CONST cnMaxNameLen = 254;
 var
@@ -245,7 +246,11 @@ begin
 end;
 
 
-//See https://msdn.microsoft.com/en-us/library/cc761107.aspx
+{ Returns the current Windows username as-is (preserving case).
+  Example: 'John'
+  AllowExceptions: If TRUE, raises EOS error on failure; if FALSE, returns empty string.
+  Note: Similar to GetLogonName but preserves case and supports exceptions.
+  See https://msdn.microsoft.com/en-us/library/cc761107.aspx }
 function GetUserName(AllowExceptions: Boolean = FALSE): string;
 CONST
   UNLEN = 256;
@@ -325,10 +330,14 @@ end;
   install font                                             http://www.experts-exchange.com/Programming/Languages/Pascal/Delphi/Q_20906162.html?qid=20906162 }
 
 
+{ Installs a font permanently into Windows.
+  Copies the font file to Windows\Fonts folder and registers it in the registry.
+  Requires administrator privileges on modern Windows versions.
+  Returns TRUE if installation was successful. }
 function InstallFont(CONST FontFileName: string): Boolean;
 const
   Win9x= 'Software\Microsoft\Windows\CurrentVersion\Fonts';
-  WinXP= 'SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts';
+  WinNT= 'SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts';
 var
   CopyToWin: string;
   WindowsPath: array[0..MAX_PATH] of char;
@@ -348,7 +357,7 @@ begin
   begin
 
    { COPY FONT TO WINDOWS }
-   TFile.Copy(FontFileName, CopyToWin, FALSE);  { Note: TFile is deprecated but kept for compatibility }
+   TFile.Copy(FontFileName, CopyToWin, FALSE);  { Note: Using TFile for compatibility with older code }
 
    { WRITE TO REGISTRY }
    RegData := TRegistry.Create;
@@ -356,15 +365,15 @@ begin
      RegData.RootKey  := HKEY_LOCAL_MACHINE;
      RegData.LazyWrite:= FALSE;
 
-     Result:= RegData.KeyExists(WinXP) AND RegData.OpenKey(WinXP, FALSE);                          { poate e Windows XP }
+     Result:= RegData.KeyExists(WinNT) AND RegData.OpenKey(WinNT, FALSE);    { Try Windows NT/2000/XP and later first }
      if NOT Result
-     then Result:= RegData.KeyExists(Win9x) AND RegData.OpenKey(Win9x, FALSE);                     { poate e Windows 9x }
+     then Result:= RegData.KeyExists(Win9x) AND RegData.OpenKey(Win9x, FALSE);    { Fallback for Windows 9x }
      if Result then
       TRY
         RegData.WriteString(ExtractOnlyName(FontFileName), ExtractFileName(FontFileName));
       except
-        //todo 1: trap only specific exceptions
-        Result:= FALSE;
+        on E: ERegistryException do
+          Result:= FALSE;
       END;
 
     FINALLY
@@ -376,7 +385,7 @@ begin
    if Result then
     begin
      AddFontResource(PChar(FontFileName));
-     SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);                              //LightCom.Debugger.OutputDebugStr('Preparing to signal new font to the system. Sending message now...');
+     SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
     end;
   end;
 end;
@@ -421,16 +430,20 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    SERVICES
-   aMachine is UNC path or local machine if left empty
+
+   aMachine: UNC path (e.g., '\\ServerName') or empty string for local machine.
+   aServiceName: The short service name (not display name).
+   Source: BlackBox.pas
 --------------------------------------------------------------------------------------------------}
-function ServiceStart(CONST aMachine, aServiceName: string): boolean;  { From BlackBox.pas }
+
+function ServiceStart(CONST aMachine, aServiceName: string): boolean;
 var
    h_manager,h_svc: SC_Handle;
    svc_status: TServiceStatus;
    Temp: PChar;
    dwCheckPoint: DWord;
 begin
-  svc_status.dwCurrentState := 1;
+  svc_status.dwCurrentState := SERVICE_STOPPED;  { Initialize to known state }
   h_manager := OpenSCManager(PChar(aMachine), nil,SC_MANAGER_CONNECT);
 
   if h_manager > 0 then begin
@@ -459,7 +472,9 @@ begin
 end;
 
 
-function ServiceStop(CONST aMachine, aServiceName: string): boolean;    { From BlackBox.pas }
+{ Stops a Windows service and waits for it to reach STOPPED state.
+  Returns TRUE if service is stopped. }
+function ServiceStop(CONST aMachine, aServiceName: string): boolean;
 var h_manager,h_svc   : SC_Handle;
     svc_status     : TServiceStatus;
     dwCheckPoint : DWord;

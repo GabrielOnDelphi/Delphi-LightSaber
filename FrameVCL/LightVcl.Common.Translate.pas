@@ -1,9 +1,9 @@
 unit LightVcl.Common.Translate;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2025.03
+   2026.01.30
    www.GabrielMoraru.com
+
 --------------------------------------------------------------------------------------------------------------
    AUTOMATIC LANGUAGE TRANSLATOR ENGINE FOR DELPHI [LightSaber]
 
@@ -39,7 +39,7 @@ unit LightVcl.Common.Translate;
      RTTI-based
         Supports everything:
           Support for multiple properties (Caption, TextHint, or Hint).
-          Support for ANY classic Delphi control (TButton, TLable, TCheckbox, etc) that implements those properties.
+          Support for ANY classic Delphi control (TButton, TLabel, TCheckbox, etc) that implements those properties.
           Support for ANY classic Delphi component (TMenu, TAction, etc)
           Support for ANY custom-made/3rd party Delphi component
 
@@ -188,7 +188,7 @@ CONST
 TYPE
  TTranslator = class(TObject)
   private
-    FCurLanguage: string;           // The language currently used for translation. Example: FileName.ini (only filename, no folder/path)
+    FCurLanguage: string;           // The language currently used for translation. Full path. Example: c:\AppName\Lang\German.ini
     LastLanguage: string;           // Used to skip translating a form when it is already in the chosen language.  THIS IS A SHORT NAME
     FOnTranslationLoaded: TNotifyEvent;
     FAppData: TAppDataCore;
@@ -199,7 +199,7 @@ TYPE
 
     procedure setCurLanguage(const Value: string);
     function  getCurLanguage: string;
-    procedure saveFormTranlation (Form: TForm; Ini: TMemIniFile);
+    procedure saveFormTranslation (Form: TForm; Ini: TMemIniFile);
     function  ReadString(CONST Identifier, DefaultVal: string): string;
     procedure WriteString(const Identifier, s: string);
   protected
@@ -207,7 +207,7 @@ TYPE
   public
     Authors: string;                // Credits the author of the current translation file
     DontSaveEmpty: Boolean;         // Don't save text properties that are empty
-    ParseCtrlsWithAction: boolean;  // If true, save to ini all controls even if they have an assigned action. If false, we let the associated action to set control's cation/hint
+    ParseCtrlsWithAction: boolean;  // If true, save to ini all controls even if they have an assigned action. If false, we let the associated action to set control's caption/hint
 
     constructor Create(aAppData: TAppDataCore);
     destructor Destroy; override;
@@ -269,6 +269,9 @@ end;
 {--------------------------------------------------------------------------------
   Main functions
 --------------------------------------------------------------------------------}
+
+{ Sets the current language and immediately reloads translations for all live forms.
+  Value must be a full path to the language INI file (e.g., 'C:\App\Lang\German.ini'). }
 procedure TTranslator.setCurLanguage(const Value: string);
 begin
   Assert(Pos(PathDelim, Value) > 0, 'CurLanguage var must contain the full path!');
@@ -278,21 +281,24 @@ begin
 end;
 
 
+{ Returns only the filename portion of the current language (e.g., 'German.ini'). }
 function TTranslator.getCurLanguage: string;
 begin
   Result:= ExtractFileName(FCurLanguage);
 end;
 
 
+{ Returns the default language filename (just the filename, not full path).
+  Used as default value in ReadString when no Last_Language is saved. }
 function TTranslator.DefaultLang: string;
 begin
-  Result:= GetLangFolder + 'English.ini';
+  Result:= 'English.ini';
 end;
 
 
 procedure TTranslator.LoadDefaultTranslation;
 begin
-  CurLanguage:= DefaultLang;
+  CurLanguage:= GetLangFolder + DefaultLang;
 end;
 
 
@@ -315,8 +321,9 @@ begin
  TRY
    Authors:= IniContainer.ReadString('Authors', 'Name', 'CubicDesign');
 
-   // FormCount       = forms currently displayed on the screen
-   // CustomFormCount = forms or property pages currently displayed on the screen
+   // FormCount       = count of TForm descendants currently displayed on the screen
+   // CustomFormCount = count of TCustomForm descendants (includes property pages)
+   // Note: Screen.Forms[] only contains TForm descendants (FormCount items), not TCustomForm descendants.
    for VAR i:= 0 to Screen.FormCount - 1 DO
       LoadTranslation(Screen.Forms[i], ForceLoad);
 
@@ -338,6 +345,8 @@ VAR
    i: Integer;
    Section: string;
 begin
+  Assert(Form <> NIL, 'TTranslator.LoadTranslation: Form parameter cannot be nil');
+
   if NOT FileExists(CurLanguage)
   then EXIT;
 
@@ -345,11 +354,13 @@ begin
   AND NOT ForceLoad
   then EXIT;
 
+  if Form.Tag = DontTranslate
+  then EXIT;  // Check early to avoid unnecessary INI file I/O
+
   VAR IniContainer:= TMemIniFile.Create(CurLanguage);
   TRY
-    Section:= Form.Name;   // Name of the form that hosts all the contols
-    if Form.Tag = DontTranslate then EXIT;
-    ReadComponent(Form, Section, IniContainer);   // Read form
+    Section:= Form.Name;   // Name of the form that hosts all the controls
+    ReadComponent(Form, Section, IniContainer);   // Read form's own properties
 
     // Enumerate children of container
     for i:= 0 to Form.ComponentCount-1 do
@@ -379,7 +390,7 @@ begin
    for i:= 0 to Screen.FormCount - 1 DO
     begin
       CurForm:= Screen.Forms[I];
-      saveFormTranlation(CurForm, IniContainer);
+      saveFormTranslation(CurForm, IniContainer);
     end;
 
     IniContainer.UpdateFile;
@@ -389,15 +400,19 @@ begin
 end;
 
 
-procedure TTranslator.saveFormTranlation(Form: TForm; Ini: TMemIniFile);
+procedure TTranslator.saveFormTranslation(Form: TForm; Ini: TMemIniFile);
 var
    i: Integer;
    Section: string;
 begin
-  Section:= Form.Name;    // Name of the form that hosts all the contols
-  if Form.Tag = DontTranslate then EXIT;
+  Assert(Form <> NIL, 'TTranslator.saveFormTranslation: Form parameter cannot be nil');
+  Assert(Ini <> NIL, 'TTranslator.saveFormTranslation: Ini parameter cannot be nil');
 
-  WriteComponent(Form, Section, Ini);    // Set caption to self (form)
+  if Form.Tag = DontTranslate
+  then EXIT;
+
+  Section:= Form.Name;    // Name of the form that hosts all the controls
+  WriteComponent(Form, Section, Ini);    // Write form's own properties
 
   // Enumerate children of container
   for i:= 0 to Form.ComponentCount-1 do
@@ -444,7 +459,7 @@ VAR
 begin
  if Component.Tag = DontTranslate then EXIT;
 
-  // If an action is assigned, then we don't read this control. We let the action to set its caption/hint.
+  // If an action is assigned, then we don't write this control. We let the action to set the control's caption/hint.
   HasAct:= LightVcl.Common.VclUtils.HasAction(Component);
 
   if NOT HasAct
@@ -482,9 +497,9 @@ begin
     then Ident:=                 Component.Name+ '.'+ PropertyType
     else Ident:= ParentName+'.'+ Component.Name+ '.'+ PropertyType;
 
-    { Read }
+    { Read from INI and convert CRLF markers back to actual line breaks }
     Translation:= Ini.ReadString(Section, Ident, '');
-    Translation:= CRLFToEnter(Translation);  { We cannot write the ENTER character into a INI file }
+    Translation:= CRLFToEnter(Translation);  { Convert 'CRLF' text marker back to actual CR+LF characters }
     if Translation <> ''
     then SetStrProp(Component, PropertyType, Translation);
    end;
@@ -553,9 +568,13 @@ begin
 end;
 
 
+{ Translate a string (placeholder function for future implementation).
+  This function is intended to translate strings embedded in source code (not GUI controls).
+  Currently returns the input string unchanged.
+  Future implementation will lookup the string in a language-specific INI or dictionary. }
 function trs(CONST s: string): string;
 begin
-  Result:= s;  //ToDo: translate this string from a DB or something
+  Result:= s;  //ToDo: Implement translation lookup from language-specific INI file
 end;
 
 

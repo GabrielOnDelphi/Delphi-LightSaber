@@ -1,10 +1,9 @@
 UNIT LightVcl.Common.Shell;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.05
+   2026.01.30
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+
 --------------------------------------------------------------------------------------------------------------
 
    Shell utilities:
@@ -105,7 +104,12 @@ USES
 {--------------------------------------------------------------------------------------------------
                               SHORTCUTS (LNK)
 --------------------------------------------------------------------------------------------------}
-procedure CreateShortcutEx(CONST ShortcutName, ShortcutTo: string; OnDesktop: Boolean);            { OnDesktop:   1=Desktop  0=StartMenu }
+{ Creates a Windows shortcut (.lnk) file.
+  ShortcutName: The name of the shortcut (without .lnk extension).
+  ShortcutTo: The target path that the shortcut will point to.
+  OnDesktop: TRUE places the shortcut on the Desktop, FALSE places it in the Start Menu.
+  Note: CoInitialize must be called before this function. Application.Initialize does this automatically. }
+procedure CreateShortcutEx(CONST ShortcutName, ShortcutTo: string; OnDesktop: Boolean);
 var
   MyObject  : IUnknown;
   MySLink   : IShellLink;
@@ -113,20 +117,16 @@ var
   Directory : String;
   WFileName : WideString;
 begin
- { if not (CoInitialize (nil) = S_OK) then MessageInfo('Failed to initialize the COM layer!')
- IT IS NECESSARY ONLY WHEN I PRESS THIS FUNCTION BEFORE Application.Initialize
- Because Application.Initialize automatically calls CoInitialize.   http://coding.derkeiler.com/Archive/Delphi/borland.public.delphi.database.ado/2005-03/0064.html
- Also see: http://www.google.ro/search?num=100&q=delphi+%22CoInitialize+has+not+been+called }
- MyObject := CreateComObject(CLSID_ShellLink);
- MySLink  := MyObject as IShellLink;
- MyPFile  := MyObject as IPersistFile;
+ Assert(ShortcutName <> '', 'ShortcutName cannot be empty!');
+ Assert(ShortcutTo <> '', 'ShortcutTo cannot be empty!');
 
- WITH MySLink DO
-  begin
-   SetArguments('');                                                                               {exemplu de argument 'C:\AUTOEXEC.BAT'}
-   SetPath(PChar(ShortcutTo));
-   SetWorkingDirectory(PChar(Appdatacore.AppFolder));                                                          { SetWorkingDirectory(PChar(Appdata.AppFolder)) facea probleme foarte urata cand aplicatia ruleaza de pe un mediu ReadOnly. in 2013 am probat pe Win7 si nu face probleme!    Error message: Write Protect Error - The disk cannot be written to because it is write protected. Please remove the write protection from the volume USB_BOOT in drive D:. Cancel TryAgain Continue }
-  end;
+ MyObject:= CreateComObject(CLSID_ShellLink);
+ MySLink := MyObject as IShellLink;
+ MyPFile := MyObject as IPersistFile;
+
+ MySLink.SetArguments('');                                                                          { Example argument: 'C:\AUTOEXEC.BAT' }
+ MySLink.SetPath(PChar(ShortcutTo));
+ MySLink.SetWorkingDirectory(PChar(AppDataCore.AppFolder));                                        { Using AppFolder avoids issues when running from read-only media }
 
  if OnDesktop
  then Directory:= GetDesktopFolder
@@ -148,18 +148,23 @@ begin
 end;
 
 
-function DeleteDesktopShortcut(CONST ShortcutName: string): Boolean;                               { Delete a desktop icon. The user has to provide only the Name. The extension (lnk) is automatically added. }
+{ Deletes a desktop shortcut. Provide only the name (without .lnk extension). }
+function DeleteDesktopShortcut(CONST ShortcutName: string): Boolean;
 begin
+ Assert(ShortcutName <> '', 'ShortcutName cannot be empty!');
  Result:= DeleteFile(GetDesktopFolder+ ShortCutName+ '.lnk');
  {TODO: send a refresh signal to the desktop otherwise the icon is still drawn there }
 end;
 
 
+{ Deletes a Start Menu shortcut. Provide only the name (without .lnk extension). }
 function DeleteStartMenuShortcut(CONST ShortcutName: string): Boolean;
 VAR
   Directory: String;
   MyReg: TRegIniFile;
 begin
+  Assert(ShortcutName <> '', 'ShortcutName cannot be empty!');
+
   MyReg:= TRegIniFile.Create('Software\MicroSoft\Windows\CurrentVersion\Explorer');
   TRY
     Directory:= MyReg.ReadString('Shell Folders', 'Start Menu', '');
@@ -181,7 +186,7 @@ end;
   From:
     http://delphi.about.com/od/adptips2006/qt/app2sendtomenu.htm
 --------------------------------------------------------------------------------------------------}
-procedure CreateShortcut_SendTo(CONST ShortcutName : string);
+procedure CreateShortcut_SendTo(CONST ShortcutName: string);
 CONST
    SentToIDL= CSIDL_SENDTO;
 VAR
@@ -193,17 +198,16 @@ VAR
    TargetName: String;
    LinkName  : WideString;
 begin
- TargetName := ParamStr(0) ;
+ Assert(ShortcutName <> '', 'ShortcutName cannot be empty!');
 
- IObject := CreateComObject(CLSID_ShellLink) ;
+ TargetName:= ParamStr(0);
+
+ IObject:= CreateComObject(CLSID_ShellLink);
  ISLink  := IObject as IShellLink;
  IPFile  := IObject as IPersistFile;
 
- with ISLink DO
-  begin
-   SetPath(pChar(TargetName)) ;
-   SetWorkingDirectory(pChar(ExtractFilePath(TargetName))) ;
-  end;
+ ISLink.SetPath(PChar(TargetName));
+ ISLink.SetWorkingDirectory(PChar(ExtractFilePath(TargetName)));
 
  { Get the location of the "special folder" }
  SHGetSpecialFolderLocation(0, SentToIDL, PIDL) ;
@@ -216,16 +220,22 @@ end;
 
 
 
+{ Extracts the target path from a Windows shortcut (.lnk) file.
+  Returns empty string if the file cannot be loaded or path cannot be extracted. }
 function ExtractPathFromLnkFile(CONST LnkFile: WideString): String;
-VAR ShellLink: IShellLink;
-    Path: array[0..MAX_PATH] of Char;  //ok
+VAR
+  ShellLink: IShellLink;
+  FindData: TWin32FindData;
+  Path: array[0..MAX_PATH] of Char;
 begin
- Result := '';
- ShellLink := CreateComObject(CLSID_ShellLink) as IShellLink;
+ Result:= '';
+ if LnkFile = '' then EXIT;
+
+ ShellLink:= CreateComObject(CLSID_ShellLink) as IShellLink;
  if (ShellLink as IPersistFile).Load(PWideChar(LnkFile), STGM_READ) = 0
  then
-   if ShellLink.GetPath(Path, MAX_PATH, TWin32FindData(nil^), SLGP_SHORTPATH) = 0
-   then Result := Path;
+   if ShellLink.GetPath(Path, MAX_PATH, FindData, SLGP_SHORTPATH) = 0
+   then Result:= Path;
 end;
 
 
@@ -273,7 +283,7 @@ begin
      RegWriteString(RootKey, Path+ FileExtension, '', FName, TRUE) AND
      RegWriteString(RootKey, Path+ FName, '', AsociationName,  TRUE) AND
      RegWriteString(RootKey, Path+ FName+'\shell', '', 'open', TRUE) AND
-     RegWriteString(RootKey, Path+ FName+'\shell\open\command', '', Application.ExeName+ ' "%L"', TRUE) AND  { daca pun %L in loc de %1 imi ia calea in format lung in loc de calea in format 8.3/DOS }
+     RegWriteString(RootKey, Path+ FName+'\shell\open\command', '', Application.ExeName+ ' "%L"', TRUE) AND  { Using %L instead of %1 gives the long path format instead of 8.3/DOS format }
      RegWriteString(RootKey, Path+ FName+'\DefaultIcon'       , '', Application.ExeName+ ',0',    TRUE);
 
    if NOT Result AND ShowError
@@ -303,7 +313,7 @@ begin
  else Result:= RegDeleteKey(HKEY_CURRENT_USER, '\Software\Classes\'+ FileExtension);
 
  if Result
- then AssociationChanged
+ then AssociationChanged;
 end;
 
 
@@ -437,7 +447,11 @@ end;
 {--------------------------------------------------------------------------------------------------
    SHELL EXTENSION
 --------------------------------------------------------------------------------------------------}
-{ Add shell extension to registry }
+{ Registers a shell extension DLL for the specified file type in the Windows context menu.
+  GUID: The COM class GUID for the shell extension.
+  ShellExtDll: Full path to the shell extension DLL.
+  FileExt: The file extension to associate with (e.g., '.txt') or '*' for all files.
+  UtilityName: Display name for the context menu handler. }
 procedure AddContextMenu(CONST GUID: TGUID; CONST ShellExtDll, FileExt, UtilityName: string);
 VAR
     Key: string;
@@ -446,32 +460,31 @@ VAR
     FileType: string;
 begin
  Rg:= TRegistry.Create;
- with Rg DO
  TRY
-   RootKey:= HKEY_CLASSES_ROOT;
+   Rg.RootKey:= HKEY_CLASSES_ROOT;
    StringFromGUID2(GUID, BufGUID, SizeOf(BufGUID));
 
-   if NOT OpenKey(FileExt, False) then EXIT;
+   if NOT Rg.OpenKey(FileExt, False) then EXIT;
 
    if FileExt <> '*' then
    begin
-     FileType := ReadString('');
-     CloseKey;
-     OpenKey(FileType, False);
+     FileType:= Rg.ReadString('');
+     Rg.CloseKey;
+     Rg.OpenKey(FileType, False);
    end;
 
-   Key := Format('shellex\ContextMenuHandlers\%s', [UtilityName]);
-   OpenKey(Key, TRUE);
-   WriteString('', BufGUID);
-   CloseKey;
+   Key:= Format('shellex\ContextMenuHandlers\%s', [UtilityName]);
+   Rg.OpenKey(Key, TRUE);
+   Rg.WriteString('', BufGUID);
+   Rg.CloseKey;
 
-   Key := Format('CLSID\%s', [BufGUID]);
-   OpenKey(Key, True);
-   WriteString('', UtilityName);
-   OpenKey('InprocServer32', True);
-   WriteString('', ShellExtDll);
-   WriteString('ThreadingModel', 'Apartment');
-   CloseKey;
+   Key:= Format('CLSID\%s', [BufGUID]);
+   Rg.OpenKey(Key, True);
+   Rg.WriteString('', UtilityName);
+   Rg.OpenKey('InprocServer32', True);
+   Rg.WriteString('', ShellExtDll);
+   Rg.WriteString('ThreadingModel', 'Apartment');
+   Rg.CloseKey;
  FINALLY
    FreeAndNil(Rg);
  END;
@@ -538,23 +551,26 @@ end; *)
    SHELL INVOKE
 --------------------------------------------------------------------------------------------------}
 
-{ Invoke the standard file properties dialog like in Windows Explorer }
+{ Displays the standard Windows file properties dialog (same as right-click > Properties in Explorer) }
 procedure InvokePropertiesDialog(CONST FileName: string);
 VAR sei: TShellExecuteInfo;
 begin
+  Assert(FileName <> '', 'FileName cannot be empty!');
+
   FillChar(sei, SizeOf(sei), 0);
-  sei.cbSize := SizeOf(sei);
-  sei.lpFile := PChar(FileName);
-  sei.lpVerb := 'properties';
-  sei.fMask  := SEE_MASK_INVOKEIDLIST;
+  sei.cbSize:= SizeOf(sei);
+  sei.lpFile:= PChar(FileName);
+  sei.lpVerb:= 'properties';
+  sei.fMask := SEE_MASK_INVOKEIDLIST;
   ShellExecuteEx(@sei);
 end;
 
 
-{ Invoke Windows Start button from code }
+{ Programmatically opens the Windows Start menu }
 procedure InvokeStartMenu(Form: TForm);
 begin
- SendMessage(Form.Handle, WM_SYSCOMMAND, SC_TASKLIST, 0) ;
+ Assert(Form <> NIL, 'Form cannot be nil!');
+ SendMessage(Form.Handle, WM_SYSCOMMAND, SC_TASKLIST, 0);
 end;
 
 
@@ -587,17 +603,12 @@ end;
    SHELL
 --------------------------------------------------------------------------------------------------}
 
-{ Add the file to 'recent open files' menu that appears when right clicking on program's button in TaskBar }       { From here : http://stackoverflow.com/questions/5806731/how-do-i-add-recent-items-to-my-programs-jump-list-on-the-windows-7-taskbar }
+{ Adds a file to the 'Recent' jump list that appears when right-clicking the program's taskbar button.
+  See: https://stackoverflow.com/questions/5806731 }
 procedure AddFile2TaskbarMRU(FileName: string);
 begin
+ Assert(FileName <> '', 'FileName cannot be empty!');
  SHAddToRecentDocs(SHARD_PATH, PChar(FileName));
-end;
-
-
-
-function GetDesktopListView: HWnd;
-begin
-  Result := GetWindow(GetWindow(FindWindow('Progman', nil), GW_CHILD), GW_CHILD);
 end;
 
 
@@ -609,13 +620,13 @@ end;
 {--------------------------------------------------------------------------------------------------
    SCF 'SHOW DESKTOP' icon
 --------------------------------------------------------------------------------------------------}
-function RestoreOriginalSCF_Association: Boolean;                                                  { Make 'Show Desktop' icon in Quick Launch to work again (to show desktop) }
+{ Restores the .scf file association to make 'Show Desktop' icon work in Quick Launch.
+  Registry path: HKEY_CLASSES_ROOT\.scf = "SHCmdFile" }
+function RestoreOriginalSCF_Association: Boolean;
 begin
  Result:= RegWriteString(HKEY_CLASSES_ROOT, '.scf', '', 'SHCmdFile', TRUE);
- AssociationChanged;
- { Registry path:
-    [HKEY_CLASSES_ROOT\.scf]
-    @="SHCmdFile"                                                              }
+ if Result
+ then AssociationChanged;
 end;
 
 
@@ -666,18 +677,28 @@ VAR h : THandle;
   ShowWindow(h, SW_HIDE);                                                      }
 
 
-function InstallINF(CONST PathName: string; hParent: HWND): Boolean;                                { Example: InstallINF('C:\driver.inf', 0); }   { uses Winapi.ShellAPI }
+{ Installs a Windows INF file using the setup API.
+  PathName: Full path to the .inf file.
+  hParent: Parent window handle (use 0 for no parent).
+  Returns TRUE if installation was initiated successfully. }
+function InstallINF(CONST PathName: string; hParent: HWND): Boolean;
 VAR instance: HINST;
 begin
- instance := ShellExecute(hParent, PChar('open'), PChar('rundll32.exe'), PChar('setupapi,InstallHinfSection DefaultInstall 132 ' + PathName), NIL, SW_HIDE);
- Result := instance > 32;
+ Assert(PathName <> '', 'PathName cannot be empty!');
+
+ instance:= ShellExecute(hParent, PChar('open'), PChar('rundll32.exe'), PChar('setupapi,InstallHinfSection DefaultInstall 132 ' + PathName), NIL, SW_HIDE);
+ Result:= instance > 32;
 end;
 
 
-{ UninstallerExePath= Full path to the uninstaller EXE file.
-  ProductName= the uninstaller will be listed with this name. Keep it simple without special chars like '\'. }
+{ Registers an uninstaller in Windows Programs and Features (Add/Remove Programs).
+  UninstallerExePath: Full path to the uninstaller EXE file.
+  ProductName: Display name in the uninstall list. Avoid special chars like '\'. }
 procedure AddUninstaller(CONST UninstallerExePath, ProductName: string);
 begin
+ Assert(UninstallerExePath <> '', 'UninstallerExePath cannot be empty!');
+ Assert(ProductName <> '', 'ProductName cannot be empty!');
+
  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ ProductName, 'DisplayName', ProductName);
  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ ProductName, 'UninstallString', UninstallerExePath);
 end;
@@ -710,14 +731,24 @@ begin
 end;
 
 
-{ Extract icon from file
-  HOW TO USE IT:
-     VAR MyIcon: TIcon; IF IcoHandle > 0 then begin MyIcon:= TIcon.Create;
-         MyIcon.Handle:= ExtractIconFromFile; BitBtn1.Glyph.Height:= MyIcon.Height; BitBtn1.Glyph.Width := MyIcon.Width; BitBtn1.Glyph.Canvas.Draw(2, 2, MyIcon); Image1.Picture.Icon := MyIcon; Application.Icon := MyIcon;  FreeAndNil(MyIcon) );  end;  }
+{ Extracts the first icon from an executable, DLL, or icon file.
+  IcoFileName: Path to the file containing the icon.
+  Returns: Handle to the icon, or 0 if extraction failed.
+
+  Usage example:
+    var MyIcon: TIcon;
+    if ExtractIconFromFile('app.exe') > 0 then
+    begin
+      MyIcon:= TIcon.Create;
+      MyIcon.Handle:= ExtractIconFromFile('app.exe');
+      Image1.Picture.Icon:= MyIcon;
+      FreeAndNil(MyIcon);
+    end; }
 function ExtractIconFromFile(IcoFileName: String): THandle;
-BEGIN
- Result:= ExtractIcon(Application.Handle, PChar(IcoFilename), Word(0));         // the last parameter is the index of the icon
-END;
+begin
+ Assert(IcoFileName <> '', 'IcoFileName cannot be empty!');
+ Result:= ExtractIcon(Application.Handle, PChar(IcoFilename), Word(0));  { Index 0 = first icon }
+end;
 
 
 

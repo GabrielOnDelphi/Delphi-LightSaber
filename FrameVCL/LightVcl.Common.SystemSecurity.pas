@@ -1,8 +1,9 @@
 UNIT LightVcl.Common.SystemSecurity;
 
 {=============================================================================================================
-   2025.05
+   2026.01.29
    www.GabrielMoraru.com
+
 =============================================================================================================}
 
 INTERFACE
@@ -15,8 +16,6 @@ function  CalculatePasswordStrength(const Password: string): Integer;
 
 
 IMPLEMENTATION
-
-
 
 
 { Disable task switching

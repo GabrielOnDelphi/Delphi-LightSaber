@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.WMIResolution;
 
 {=============================================================================================================
-   2023.01
+   2026.01.30
    www.GabrielMoraru.com
 ==============================================================================================================
 
@@ -35,18 +35,15 @@ UNIT LightVcl.Common.WMIResolution;
 
   How to use it:
     uses ActiveX;
+    CoInitialize(NIL);
     TRY
-      CoInitialize(NIL);
-      TRY
-        MonitorInfo:= GetMonitorInfoWMI;
-        Writeln('Width  ' + IntToStr(MonitorInfo.ScreenWidth));
-        Writeln('Height ' + IntToStr(MonitorInfo.ScreenHeight));
-        Writeln;
-        Readln;
-      FINALLY
-        CoUninitialize;
-      END;
-    except
+      MonitorInfo:= GetMonitorInfoWMI;
+      Writeln('Width  ' + IntToStr(MonitorInfo.Width));
+      Writeln('Height ' + IntToStr(MonitorInfo.Height));
+      Writeln;
+      Readln;
+    FINALLY
+      CoUninitialize;
     END;
 
    In this group:
@@ -85,22 +82,26 @@ IMPLEMENTATION
 
 
 
-function VarStrNull(VarStr: OleVariant): string;   // dummy function to handle null variants
+{ Safely converts OleVariant to string. Returns empty string if variant is null. }
+function VarStrNull(VarStr: OleVariant): string;
 begin
-  Result := '';
+  Result:= '';
   if NOT VarIsNull(VarStr)
-  then Result := VarToStr(VarStr);
+  then Result:= VarToStr(VarStr);
 end;
 
 
-function VarIntNull(VarInt: OleVariant): Integer;   // dummy function to handle null variants
+{ Safely converts OleVariant to Integer. Returns 0 if variant is null (suitable for dimensions). }
+function VarIntNull(VarInt: OleVariant): Integer;
 begin
   if VarIsNull(VarInt)
-  then Result := -1
-  else Result := VarInt;
+  then Result:= 0
+  else Result:= VarInt;
 end;
 
 
+{ Creates a WMI object via moniker binding.
+  Raises EOleSysError if WMI service is not available or objectName is invalid. }
 function GetWMIObject(CONST objectName: String): IDispatch;
 VAR
   chEaten: Integer;
@@ -108,14 +109,21 @@ VAR
   Moniker: IMoniker;
 begin
   OleCheck(CreateBindCtx(0, BindCtx));
-  OleCheck(MkParseDisplayName(BindCtx, StringToOleStr(objectName), chEaten, Moniker));
+  { PWideChar cast avoids memory leak from StringToOleStr which allocates BSTR }
+  OleCheck(MkParseDisplayName(BindCtx, PWideChar(objectName), chEaten, Moniker));
   OleCheck(Moniker.BindToObject(BindCtx, nil, IDispatch, Result));
 end;
 
 
-{ Note: Returns empty/default record if WMI query returns no monitors }
+{ Queries WMI for monitor information.
+  Returns the LAST monitor found if multiple monitors exist (see PROBLEM WITH THIS UNIT in header).
+  Returns zeroed record if WMI query returns no monitors or WMI service is unavailable.
+  Caller MUST call CoInitialize before and CoUninitialize after calling this function.
+
+  Note: Hardware not compatible with WDDM returns inaccurate values.
+  See: https://msdn.microsoft.com/en-us/library/aa394122%28v=vs.85%29.aspx }
 function GetMonitorInfoWMI: TMonitorInfo;
-var
+VAR
   objWMIService: OleVariant;
   colItems: OleVariant;
   colItem: OleVariant;
@@ -123,23 +131,26 @@ var
   iValue: Longword;
 begin
   { Initialize result to avoid undefined return value }
-  Result.Dpi      := 0;
-  Result.Caption  := '';
-  Result.DeviceID := '';
-  Result.Width    := 0;
-  Result.Height   := 0;
+  Result.Dpi     := 0;
+  Result.Caption := '';
+  Result.DeviceID:= '';
+  Result.Width   := 0;
+  Result.Height  := 0;
 
-  objWMIService := GetWMIObject('winmgmts:\\localhost\root\CIMV2');
-  colItems := objWMIService.ExecQuery('SELECT * FROM Win32_DesktopMonitor', 'WQL', 0);  { Hardware that is not compatible with Windows Display Driver Model (WDDM) returns inaccurate property values for instances of this class:       https://msdn.microsoft.com/en-us/library/aa394122%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396  }
-  oEnum    := IUnknown(colItems._NewEnum) as IEnumvariant;
+  objWMIService:= GetWMIObject('winmgmts:\\localhost\root\CIMV2');
+  colItems:= objWMIService.ExecQuery('SELECT * FROM Win32_DesktopMonitor', 'WQL', 0);
+  oEnum:= IUnknown(colItems._NewEnum) as IEnumvariant;
 
-  WHILE oEnum.Next(1, colItem, iValue) = 0 DO    { which monitor no is this? }
+  { Iterate monitors - returns info for the last monitor found }
+  WHILE oEnum.Next(1, colItem, iValue) = 0 DO
    begin
-    Result.Caption     := VarStrNull(colItem.Caption);
-    Result.DeviceID    := VarStrNull(colItem.DeviceID);
-    Result.Width       := VarIntNull(colItem.ScreenWidth);
-    Result.Height      := VarIntNull(colItem.ScreenHeight);
+    Result.Caption := VarStrNull(colItem.Caption);
+    Result.DeviceID:= VarStrNull(colItem.DeviceID);
+    Result.Width   := VarIntNull(colItem.ScreenWidth);
+    Result.Height  := VarIntNull(colItem.ScreenHeight);
+    Result.Dpi     := VarIntNull(colItem.PixelsPerXLogicalInch);
     {
+    Available WMI properties (Win32_DesktopMonitor):
     uint16   Availability;
     uint16   DisplayType;
     string   Description;

@@ -1,10 +1,9 @@
 UNIT LightVcl.Common.Window;
 
 {=============================================================================================================
-   SYSTEM - Window
-   2023.01
+   2026.01.30
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+
 ==============================================================================================================
 
    Locate windows (anywhere in the OS) by
@@ -125,8 +124,11 @@ begin
 end;
 
 
-{ Make form normal or maximized/ontop
-  Delphi help says: It is not advisable to change FormStyle at runtime !!! }
+{ Make form normal or maximized/ontop.
+  Delphi help says: It is not advisable to change FormStyle at runtime!
+  WARNING: Uses a module-level variable to store bounds. If called for multiple forms
+  before restoring any, only the last form's bounds are preserved. Consider storing
+  bounds per-form if this becomes an issue. }
 VAR
    LastBounds: TRect = ();
 procedure MaximizeForm(Form: TForm; Maximize: Boolean);
@@ -191,27 +193,33 @@ begin
 end;
 
 
-{ Brings window on top of other windows. You need to call ForceRestoreWindow first }
+{ Forces a window to the foreground, working around Windows' SetForegroundWindow restrictions.
+  Windows only allows SetForegroundWindow if the calling thread owns the foreground.
+  This function attaches to the foreground thread's input queue to gain permission.
+  Call ForceRestoreWindow first if the window might be minimized.
+  Returns TRUE if the window was successfully brought to foreground. }
 function ForceForegroundWindow(WndHandle: HWnd): Boolean;
 VAR
    CurrThreadID: DWord;
    ForeThreadID: DWord;
 begin
- Result := TRUE;
- if (GetForegroundWindow <> WndHandle) then
+ Result:= TRUE;
+ if GetForegroundWindow <> WndHandle then
   begin
-   CurrThreadID := GetWindowThreadProcessId(WndHandle, nil);
-   ForeThreadID := GetWindowThreadProcessId(GetForegroundWindow, nil);
-   if (ForeThreadID <> CurrThreadID) then
+   CurrThreadID:= GetWindowThreadProcessId(WndHandle, nil);
+   ForeThreadID:= GetWindowThreadProcessId(GetForegroundWindow, nil);
+   if ForeThreadID <> CurrThreadID then
      begin
+       { Attach to foreground thread's input queue to bypass SetForegroundWindow restrictions }
        AttachThreadInput(ForeThreadID, CurrThreadID, TRUE);
-       Result := SetForegroundWindow(WndHandle);
+       Result:= SetForegroundWindow(WndHandle);
        AttachThreadInput(ForeThreadID, CurrThreadID, FALSE);
+       { Call again after detaching for reliability }
        if Result
-       then Result := SetForegroundWindow(WndHandle);
+       then Result:= SetForegroundWindow(WndHandle);
      end
    else
-    Result := SetForegroundWindow(WndHandle);
+    Result:= SetForegroundWindow(WndHandle);
   end;
 end;
 
@@ -220,8 +228,11 @@ end;
    FIND WINDOW
 --------------------------------------------------------------------------------------------------}
 
-{ Returns window's handle if found, else zero.
-  See also: FindComponent }
+{ Searches all top-level windows for one matching the specified title.
+  Returns window handle if found, else 0.
+  PartialSearch: if TRUE, matches if WindowTitle is contained anywhere in the window title.
+  CaseSens: if TRUE, comparison is case-sensitive.
+  Note: Uses GetWindow enumeration which iterates through all windows in Z-order. }
 function FindWindowByTitle(CONST WindowTitle: string; PartialSearch: Boolean= TRUE; CaseSens: Boolean= FALSE): Hwnd;
 var
   NextHandle: Hwnd;
@@ -277,18 +288,14 @@ end;
   For details see the BioniX project.
 -------------------------------------------------------------------------------------------------------------}
 
+{ Returns TRUE if a top-level window with the specified class name exists.
+  Typically used for single-instance application detection via custom window class names. }
 function IsApplicationRunning(CONST ClassName: string): Boolean;
-VAR Wnd: HWND;
 begin
  if ClassName = ''
  then raise Exception.Create('IsApplicationRunning: ClassName parameter cannot be empty');
 
- Result:= FALSE;
- REPEAT
-  Wnd:= FindTopWindowByClass(ClassName);                                 { Check if mutex exists }
-  if Wnd > 0
-  then EXIT(TRUE);
- UNTIL Wnd <= 0;
+ Result:= FindTopWindowByClass(ClassName) <> 0;
 end;
 
 
@@ -332,20 +339,26 @@ begin
 end;
 
 
+{ Minimize all windows by sending a command message to the shell tray.
+  Command 419 = Minimize All, Command 416 = Undo Minimize All }
 procedure MinAllWnd_ByShell2;
-VAR IntHwnd: Integer;
+VAR TrayWnd: HWND;
 begin
- IntHwnd:= FindWindow('Shell_TrayWnd', nil);
- PostMessage(IntHwnd, WM_COMMAND, 419, 0);  { You can change 419 with 416 to restore the window }
+ TrayWnd:= FindWindow('Shell_TrayWnd', nil);
+ if TrayWnd <> 0
+ then PostMessage(TrayWnd, WM_COMMAND, 419, 0);
 end;
 
 
- // Also exists: ForceRestoreWindow - Restore window if it was minimized to taskbar or systray
-procedure MinAllWnd_ByHandle(ApplicationWindow: HWnd);    { Use 'Handle' as parameter }
+{ Minimizes all visible windows except the specified ApplicationWindow.
+  Iterates through all windows in Z-order starting from ApplicationWindow.
+  Uses PostMessage so minimization happens asynchronously.
+  See also: ForceRestoreWindow for restoring minimized windows. }
+procedure MinAllWnd_ByHandle(ApplicationWindow: HWnd);
 VAR h: HWnd;
 begin
   h:= ApplicationWindow;
-  while h> 0 do
+  while h > 0 do
   begin
     if IsWindowVisible(h) AND (h <> ApplicationWindow)
     then PostMessage(h, WM_SYSCOMMAND, SC_MINIMIZE, 0);
@@ -353,7 +366,9 @@ begin
   end;
 end;
 
-procedure MinAllWnd_ByWinMKey;  // Or Simulate Win + M:
+{ Simulates Win+M keyboard shortcut to minimize all windows.
+  Note: Uses legacy Keybd_event API. Consider SendInput for new code. }
+procedure MinAllWnd_ByWinMKey;
 begin
   Keybd_event(VK_LWIN, 0, 0, 0);
   Keybd_event(Byte('M'), 0, 0, 0);
@@ -423,13 +438,14 @@ end;
    SYSTEM HACK
 --------------------------------------------------------------------------------------------------}
 
-{ Example: Remove_X_Button(MainForm.Handle) }
+{ Removes the Close (X) button from a window's system menu.
+  Example: Remove_X_Button(MainForm.Handle) }
 procedure Remove_X_Button(FormHandle: THandle);
-VAR hMenuHandle: Integer;
+VAR SysMenu: HMENU;
 begin
-  hMenuHandle := GetSystemMenu(FormHandle, False);
-  if (hMenuHandle <> 0)
-  then DeleteMenu(hMenuHandle, SC_CLOSE, MF_BYCOMMAND);
+  SysMenu:= GetSystemMenu(FormHandle, False);
+  if SysMenu <> 0
+  then DeleteMenu(SysMenu, SC_CLOSE, MF_BYCOMMAND);
 end;
 
 

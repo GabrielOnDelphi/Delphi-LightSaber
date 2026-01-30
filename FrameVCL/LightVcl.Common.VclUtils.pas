@@ -1,10 +1,16 @@
 UNIT LightVcl.Common.VclUtils;
 
 {=============================================================================================================
-   2025.08
+   2026.01.30
    www.GabrielMoraru.com
-==============================================================================================================
-   Utility functions that we can apply to VCL components
+--------------------------------------------------------------------------------------------------------------
+   Utility functions for VCL components.
+
+   Includes:
+     - Control/Form positioning and focus management
+     - Menu and action visibility control
+     - Control-to-image capture
+     - Design-time debugging helpers (inheritance tree, state inspection)
 
    See also:
       csWindow.pas
@@ -14,7 +20,7 @@ UNIT LightVcl.Common.VclUtils;
 =============================================================================================================}
 
 INTERFACE
-{ $I Frameworks.inc}
+
 USES
    Winapi.Windows,  Winapi.Messages,
    System.TypInfo, System.Classes, System.SysUtils,
@@ -60,7 +66,6 @@ TYPE
  function  CreateControl     (ControlClass: TControlClass; const ControlName: string; Parent: TWinControl; X, Y, W, H: Integer): TControl;
  procedure DoubleBuffer      (Control: TComponent; Enable: Boolean);             { Activate/deactivate double buffering for all controls owned by the specified control. aControl can be a form, panel, box, etc }
  procedure EnableDisable     (Control: TWinControl; Enable: Boolean);            { Enable/disable all controls in the specified control }
- {}
  function  FindControlAtPos  (ScreenPos: TPoint): TControl;
  function  FindSubcontrolAtPos(Control: TControl; ScreenPos, AClientPos: TPoint): TControl;
  procedure PushControlDown   (BottomCtrl, TopControl: TControl);                 { Makes sure that BottomCtrl is under the TopControl control. Useful to set splitters under their conected controls }    { old name: SetCtrlUnder }
@@ -86,7 +91,7 @@ TYPE
  function ShowControlState   (Control: TControl): string;
  function ShowInheritanceTree(Control: TControl): string;
 
- {}
+ { PageControl / CheckBox helpers }
  function  SetActivePage     (PageControl: TPageControl; CONST PageName: string): TTabSheet;   { Set the active tab for the specified PageControl, but instead of using an index we use a string }
  procedure ToggleCheckbox    (CheckBox: TCheckBox; BasedOn: TButtonControl);     { Disable and uncheck CheckBox if BasedOn is checked }
 
@@ -175,38 +180,39 @@ end;
    VCL
 --------------------------------------------------------------------------------------------------}
 
-{ Copy the image of a VCL control (tbutton, tmemo, tcalendar) to a bitmap }
-function CopyControl2Bitmap(Control: TWinControl): TBitmap;    { This will create a BMP object. Don't forget to free it! }
-VAR DC: HDC;
+{ Captures the visual appearance of a TWinControl (TButton, TMemo, TCalendar, etc.) to a bitmap.
+  IMPORTANT: The caller is responsible for freeing the returned TBitmap. }
+function CopyControl2Bitmap(Control: TWinControl): TBitmap;
 begin
  if NOT Assigned(Control)
- then RAISE exception.Create('Cannot copy control image. Control is NIL!');
+ then RAISE exception.Create('CopyControl2Bitmap: Control parameter cannot be nil');
 
  Result:= TBitmap.Create;
  TRY
    Result.SetSize(Control.Width, Control.Height);
- EXCEPT
-   FreeAndNil(Result); { Free result ONLY in case of error }
-   RAISE;
- END;
-
- DC := GetWindowDC(Control.Handle);
- TRY
    Control.PaintTo(Result.Canvas, 0, 0);
- FINALLY
-   ReleaseDC(Control.Handle, DC);
+ EXCEPT
+   FreeAndNil(Result);
+   RAISE;
  END;
 end;
 
 
 
+{ Captures the visual appearance of a TWinControl to a PNG image.
+  IMPORTANT: The caller is responsible for freeing the returned TPngImage. }
 function CopyControl2Png(Control: TWinControl): TPngImage;
 VAR BMP: TBitmap;
 begin
- BMP:= CopyControl2Bitmap(Control);
+ BMP:= CopyControl2Bitmap(Control);  { nil check is performed here }
  TRY
   Result:= TPngImage.Create;
-  Result.Assign(BMP);
+  TRY
+    Result.Assign(BMP);
+  EXCEPT
+    FreeAndNil(Result);
+    RAISE;
+  END;
  FINALLY
   FreeAndNil(BMP);
  END;
@@ -288,15 +294,15 @@ end;
 
 
 
-{-------------------------------------------------------------------------------------------------------------
-
--------------------------------------------------------------------------------------------------------------}
-
-{ Shows the whole inheritance tree, down to TObject, for the specified control }
+{ Returns the complete class inheritance hierarchy for the specified control,
+  from its actual class type down to TObject. Useful for debugging and understanding control types. }
 function ShowInheritanceTree(Control: TControl): string;
 var
   ClassRef: TClass;
 begin
+  if Control = NIL
+  then raise Exception.Create('ShowInheritanceTree: Control parameter cannot be nil');
+
   Result:= '';
   ClassRef := Control.ClassType;
 
@@ -308,8 +314,12 @@ begin
 end;
 
 
+{ Returns a comma-separated list of all active TControlState flags for debugging purposes. }
 function ShowControlState(Control: TControl): string;
 begin
+ if Control = NIL
+ then raise Exception.Create('ShowControlState: Control parameter cannot be nil');
+
  Result:= 'ControlState: ';
  if csLButtonDown      in Control.ControlState then Result:= Result+ 'csLButtonDown, ';
  if csClicked          in Control.ControlState then Result:= Result+ 'csClicked, ';
@@ -331,8 +341,12 @@ begin
 end;
 
 
+{ Returns a comma-separated list of all active TComponentState flags for debugging purposes. }
 function ShowComponentState(Component: TComponent): string;
 begin
+ if Component = NIL
+ then raise Exception.Create('ShowComponentState: Component parameter cannot be nil');
+
  Result:= 'ComponentState: ';
  if csLoading          in Component.ComponentState then Result:= Result+ 'csLoading, ';
  if csReading          in Component.ComponentState then Result:= Result+ 'csReading, ';
@@ -383,15 +397,21 @@ end;
 
 
 
-{ Activate/deactivate double buffering for all controls owned by the specified control. aControl can be a form, panel, box, etc }
-procedure DoubleBuffer(Control: TComponent; Enable: Boolean);   //todo 5: use this instead: http://stackoverflow.com/questions/8058745/tlabel-and-tgroupbox-captions-flicker-on-resize !!!!!!!
+{ Activate/deactivate double buffering for all controls owned by the specified control.
+  Control can be a form, panel, box, etc.
+  Note: TRichEdit and THotKey are excluded as they have issues with double buffering.
+  See also: http://stackoverflow.com/questions/8058745/tlabel-and-tgroupbox-captions-flicker-on-resize }
+procedure DoubleBuffer(Control: TComponent; Enable: Boolean);
 VAR i : integer;
 begin
- {Parent}
+ if Control = NIL
+ then raise Exception.Create('DoubleBuffer: Control parameter cannot be nil');
+
+ { Parent }
  if Control is TWinControl
  then TWinControl(Control).DoubleBuffered:= Enable;
 
- {Childs}
+ { Children }
  for i := 0 to Control.ComponentCount-1 DO
   if (Control.Components[i] is TWinControl)
   AND NOT (Control.Components[i] is Vcl.ComCtrls.TRichEdit)
@@ -446,16 +466,22 @@ begin
 end;
 
 
-{ Disable and uncheck CheckBox if BasedOn is checked. TButtonControl is the base class for a push button, check box, or radio button }
+{ Disable and uncheck CheckBox if BasedOn is checked.
+  TButtonControl is the base class for a push button, check box, or radio button. }
 procedure ToggleCheckbox(CheckBox: TCheckBox; BasedOn: TButtonControl);
 VAR Checked: Boolean;
 begin
-   if BasedOn is TCheckBox
-   then Checked:= TCheckBox(BasedOn).Checked
-   else
-     if BasedOn is TRadioButton
-     then Checked:= TRadioButton(BasedOn).Checked
-     else RAISE Exception.Create('Unknown control in ToggleCheckbox: '+ BasedOn.Name);
+ if CheckBox = NIL
+ then raise Exception.Create('ToggleCheckbox: CheckBox parameter cannot be nil');
+ if BasedOn = NIL
+ then raise Exception.Create('ToggleCheckbox: BasedOn parameter cannot be nil');
+
+ if BasedOn is TCheckBox
+ then Checked:= TCheckBox(BasedOn).Checked
+ else
+   if BasedOn is TRadioButton
+   then Checked:= TRadioButton(BasedOn).Checked
+   else RAISE Exception.Create('ToggleCheckbox: Unknown control type - '+ BasedOn.Name);
 
  CheckBox.Enabled:= NOT Checked;
  if NOT CheckBox.Enabled                 { If disabled, also uncheck it }
@@ -463,9 +489,15 @@ begin
 end;
 
 
-{ Makes sure that BottomCtrl is under the TopControl control. Useful to set splitters under their conected controls }
-procedure PushControlDown(BottomCtrl, TopControl: TControl);      { old name: SetCtrlUnder }
+{ Positions BottomCtrl directly below TopControl (with 1 pixel overlap for splitters).
+  Useful for positioning splitters under their connected controls. }
+procedure PushControlDown(BottomCtrl, TopControl: TControl);
 begin
+ if BottomCtrl = NIL
+ then raise Exception.Create('PushControlDown: BottomCtrl parameter cannot be nil');
+ if TopControl = NIL
+ then raise Exception.Create('PushControlDown: TopControl parameter cannot be nil');
+
  BottomCtrl.Top:= TopControl.Top+ TopControl.Height- 1;
 end;
 
@@ -544,11 +576,15 @@ end;
    See also: LightVcl.Common.KeybShortcuts.pas
 --------------------------------------------------------------------------------------------------}
 
-{ Returns true if this component (TMenuItem, TButton), etc has an action assigned to it. }
+{ Returns True if the component (TMenuItem, TButton, etc) has an Action assigned.
+  Uses RTTI to check for the Action property. }
 function HasAction(Component: TComponent): Boolean;
 VAR Action: TObject;
 begin
-  if  System.TypInfo.IsPublishedProp(Component, 'Action') then
+  if Component = NIL
+  then EXIT(FALSE);
+
+  if System.TypInfo.IsPublishedProp(Component, 'Action') then
     begin
      Action:= GetObjectProp(Component, 'Action');
      Result:= Action <> nil;
@@ -558,19 +594,28 @@ begin
 end;
 
 
+{ Sets both Enabled and Visible properties of an action.
+  Disabling the action will also disable any associated menus/buttons. }
 procedure ActionVisibility(Item: TAction; Show: Boolean);
 begin
- TAction(Item).Enabled:= Show;                                           { Disabling the action will also disabled the menu  }
- TAction(Item).Visible:= Show;
+ if Item = NIL
+ then raise Exception.Create('ActionVisibility: Item parameter cannot be nil');
+
+ Item.Enabled:= Show;
+ Item.Visible:= Show;
 end;
 
 
+{ Sets menu item visibility. If the menu has an associated action, the action is modified instead. }
 procedure MenuVisibility(Item: TMenuItem; Enabled, Visible: Boolean);
 begin
- if Item.Action<> NIL                                                    { This menu has action associated? }
+ if Item = NIL
+ then raise Exception.Create('MenuVisibility: Item parameter cannot be nil');
+
+ if Item.Action <> NIL                                                   { This menu has action associated? }
  then
    begin
-    TAction(Item.Action).Enabled:= Enabled;                              { Disabling the action will also disable the menu  }
+    TAction(Item.Action).Enabled:= Enabled;                              { Disabling the action will also disable the menu }
     TAction(Item.Action).Visible:= Visible;
    end
  else
@@ -581,21 +626,25 @@ begin
 end;
 
 
-procedure SetChildVisibility(ParentMenu: TMenuItem; Enabled, Visible: Boolean);    { Change the visibility for all children of ParentMenu }
+{ Recursively sets visibility for ParentMenu and all its children (submenus). }
+procedure SetChildVisibility(ParentMenu: TMenuItem; Enabled, Visible: Boolean);
 VAR I: Integer;
 
  procedure Parse(SubItem: TMenuItem);
- VAR I: Integer;
+ VAR J: Integer;
  begin
-  if SubItem.Count> 0 then
-   for I:= 0 TO SubItem.Count-1 DO
+  if SubItem.Count > 0 then
+   for J:= 0 TO SubItem.Count-1 DO
     begin
-     MenuVisibility(SubItem.Items[I], Enabled, Visible);
-     Parse(SubItem.Items[I]);
+     MenuVisibility(SubItem.Items[J], Enabled, Visible);
+     Parse(SubItem.Items[J]);
     end;
  end;
 
 begin
+ if ParentMenu = NIL
+ then raise Exception.Create('SetChildVisibility: ParentMenu parameter cannot be nil');
+
  { The parent itself }
  MenuVisibility(ParentMenu, Enabled, Visible);
 
@@ -614,27 +663,36 @@ begin
 end;
 
 
-function AddSubMenu(ParentMenu: TMenuItem; CONST Caption: string; Event: TNotifyEvent): TMenuItem;       { Add a sub-menu item to a menu item. Also returns a pointer to that menu. I don't have to free it. The owner will free it. }
+{ Creates and adds a new submenu item to ParentMenu.
+  Returns the created TMenuItem. Caller does NOT need to free it - the owner (ParentMenu) manages its lifetime. }
+function AddSubMenu(ParentMenu: TMenuItem; CONST Caption: string; Event: TNotifyEvent): TMenuItem;
 begin
+   if ParentMenu = NIL
+   then raise Exception.Create('AddSubMenu: ParentMenu parameter cannot be nil');
+
    Result := TMenuItem.Create(ParentMenu);
-   TRY                                                                                             { This inserts a menu item after  }
+   TRY
      Result.AutoCheck  := FALSE;
      Result.AutoHotkeys:= maManual;
      Result.OnClick    := Event;
      Result.Caption    := Caption;
      ParentMenu.Add(Result);
    EXCEPT
-     FreeAndNil( Result );
+     FreeAndNil(Result);
      RAISE;
    END;
 end;
 
 
-procedure RemoveSubmenus(ParentMenu: TMenuItem);                                                   { Remove all submenus of a menu }
+{ Removes and frees all submenu items from ParentMenu. }
+procedure RemoveSubmenus(ParentMenu: TMenuItem);
 VAR
    i: Integer;
    SubItem: TMenuItem;
 begin
+ if ParentMenu = NIL
+ then raise Exception.Create('RemoveSubmenus: ParentMenu parameter cannot be nil');
+
  for i:= ParentMenu.Count-1 downto 0 DO
   begin
     SubItem:= ParentMenu.Items[i];
@@ -646,18 +704,20 @@ end;
 
 
 
-{-------------------------------------------------------------------------------------------------------------
+{ Creates a control dynamically at runtime.
+  Example: CreateControl(TEdit, 'Edit1', Panel1, 10, 10, 100, 20);
+  The control is owned by Parent, so it will be automatically freed when Parent is destroyed. }
+function CreateControl(ControlClass: TControlClass; const ControlName: string; Parent: TWinControl; X, Y, W, H: Integer): TControl;
+begin
+  if Parent = NIL
+  then raise Exception.Create('CreateControl: Parent parameter cannot be nil');
 
--------------------------------------------------------------------------------------------------------------}
- // Example: CreateControl(TEdit, 'Edit1', 10, 10, 100, 20);
- function CreateControl(ControlClass: TControlClass; const ControlName: string; Parent: TWinControl; X, Y, W, H: Integer): TControl;
- begin
-   Result := ControlClass.Create(Parent);
-   Result.Parent := Parent;
-   Result.Name   := ControlName;
-   Result.SetBounds(X, Y, W, H);
-   Result.Visible:= True;
- end;
+  Result := ControlClass.Create(Parent);
+  Result.Parent := Parent;
+  Result.Name   := ControlName;
+  Result.SetBounds(X, Y, W, H);
+  Result.Visible:= True;
+end;
 
 
 

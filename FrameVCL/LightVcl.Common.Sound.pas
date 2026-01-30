@@ -1,16 +1,22 @@
 UNIT LightVcl.Common.Sound;
 
 {=============================================================================================================
-   2025.05
+   2026.01.30
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-   Beeps AND noises
+   Sound and audio utilities for VCL applications.
+
+   Includes:
+     - Windows system sound playback
+     - WAV file playback
+     - Resource-embedded sound playback
+     - Programmatic tone generation
+     - Various beep patterns for user feedback
 =============================================================================================================}
 
 INTERFACE
 USES
-   Winapi.Windows, Winapi.MMSystem, System.AnsiStrings, System.SysUtils,
-   System.Classes, System.Types;
+   Winapi.Windows, Winapi.MMSystem, System.SysUtils, System.Classes;
 
 {============================================================================================================
    SOUNDS
@@ -42,8 +48,13 @@ USES
   LightCore, LightVcl.Common.Dialogs;
 
 
+{ Plays a Windows system sound by name.
+  See the comment above PlaySoundFile for available system sound names. }
 procedure PlayWinSound(CONST SystemSoundName: string);
 begin
+ if SystemSoundName = ''
+ then EXIT;
+
  Winapi.MMSystem.PlaySound(PChar(SystemSoundName), 0, SND_ASYNC);
 end;
 
@@ -91,71 +102,90 @@ end;
     SND_SYNC  =0 = Start playing, and wait for the sound to finish
     SND_ASYNC =1 = Start playing, and don't wait to return
     SND_LOOP  =8 = Keep looping the sound until another sound is played  }
+
+{ Plays a WAV file asynchronously. Does nothing if the file doesn't exist. }
 procedure PlaySoundFile(CONST FileName: string);
 begin
- if FileExists(FileName)
- then PlaySound(pchar(FileName), 0, SND_ASYNC or SND_FILENAME);    { Also exists sndPlaySound but it is obsolete! } { Why 0 for the second parameter: hmod:  Handle to the Executeble file that contains the resource to be loaded. This parameter must be NULL unless SND_RESOURCE is specified in fdwSound. }
+ if (FileName <> '') AND FileExists(FileName)
+ then PlaySound(PChar(FileName), 0, SND_ASYNC or SND_FILENAME);
 end;
 
 
 
-{How to load a PlaySoundFile in a resource:
-   FileName: 'SOUNDS.RC'
-   Body    : #define WAVE WAVEFILE
-             SOUND1 WAVE "updating.wav"
-   Compiler: BRCC32.EXE -foSOUND32.RES SOUNDS.RC    }
+{ Plays a sound embedded in application resources.
+
+  How to embed a sound in a resource:
+    1. Create file 'SOUNDS.RC' with:
+         #define WAVE WAVEFILE
+         SOUND1 WAVE "updating.wav"
+    2. Compile: BRCC32.EXE -foSOUND32.RES SOUNDS.RC
+
+  Note: UnlockResource and FreeResource are deprecated since Windows 95 and do nothing.
+  Resources are automatically freed when the module is unloaded. }
 procedure PlayResSound(CONST ResName: String; uFlags: Integer);
-VAR hResInfo,hRes: Thandle;
-    lpGlob: Pchar;
-Begin
- hResInfo:= FindResource(HInstance,PChar(RESName),MAKEINTRESOURCE('WAVEFILE'));
+VAR
+  hResInfo, hRes: THandle;
+  lpGlob: PChar;
+begin
+ if ResName = ''
+ then EXIT;
+
+ hResInfo:= FindResource(HInstance, PChar(ResName), MAKEINTRESOURCE('WAVEFILE'));
  if hResInfo = 0 then
   begin
-    MessageError('Could not find resource'+ CRLFw+ RESName);
+    MessageError('Could not find resource' + CRLFw + ResName);
     EXIT;
   end;
 
- hRes:=LoadResource(HInstance,hResinfo);
+ hRes:= LoadResource(HInstance, hResInfo);
  if hRes = 0 then
   begin
-    MessageError('Could not load resource'+ CRLFw+ RESName);
+    MessageError('Could not load resource' + CRLFw + ResName);
     EXIT;
   end;
 
- lpGlob:=LockResource(hRes);
- if lpGlob=Nil then
+ lpGlob:= LockResource(hRes);
+ if lpGlob = NIL then
   begin
-    MessageError('Bad resource'+ CRLFw+ RESName);
+    MessageError('Bad resource' + CRLFw + ResName);
     EXIT;
   end;
 
- uFlags:= snd_Memory or uFlags;
- SndPlaySound(lpGlob,uFlags);
- UnlockResource(hRes);
- FreeResource(hRes);
-End;
+ uFlags:= SND_MEMORY or uFlags;
+ SndPlaySound(lpGlob, uFlags);
+ { Note: UnlockResource/FreeResource are no-ops in 32-bit Windows and later }
+end;
 
 
 
 
 
-{ Writes tone to memory and plays it.   Hz/mSec }
+{ Generates and plays a pure sine wave tone.
+  Parameters:
+    Frequency - Tone frequency in Hz (max ~6600 Hz due to sample rate)
+    Duration  - Duration in milliseconds
+    Volume    - Volume level 0-127 (values > 127 are clamped) }
 procedure PlayTone(Frequency, Duration: Integer; Volume: Byte);
 VAR
   WaveFormatEx: TWaveFormatEx;
   MS: TMemoryStream;
-  i, TempInt, DataCount, RiffCount: integer;
-  SoundValue: byte;
-  w: double;   // omega ( 2 * pi * frequency)
+  i, TempInt, DataCount, RiffCount: Integer;
+  SoundValue: Byte;
+  Omega: Double;   { Angular frequency: 2 * Pi * Frequency }
 CONST
   Mono: Word = $0001;
-  SampleRate: Integer = 11025; // 8000, 11025, 22050, or 44100
+  SampleRate: Integer = 11025;   { Valid: 8000, 11025, 22050, or 44100 }
   RiffId: string = 'RIFF';
   WaveId: string = 'WAVE';
   FmtId: string = 'fmt ';
   DataId: string = 'data';
 begin
-  if Volume> 127
+  if Frequency <= 0
+  then EXIT;
+  if Duration <= 0
+  then EXIT;
+
+  if Volume > 127
   then Volume:= 127;
 
   if Frequency > (0.6 * SampleRate) then
@@ -191,10 +221,10 @@ begin
     MS.Write(DataCount, SizeOf(DWORD));
 
     { Calculate and write tone signal }
-    w:= 2 * Pi * Frequency;
+    Omega:= 2 * Pi * Frequency;
     for i:= 0 to DataCount - 1 do
       begin
-        SoundValue:= 127 + Trunc(Volume * Sin(i * w / SampleRate));
+        SoundValue:= 127 + Trunc(Volume * Sin(i * Omega / SampleRate));
         MS.Write(SoundValue, 1);
       end;
 
@@ -211,12 +241,16 @@ end;
 
 
 
-// Note! The sound is not heard if the time is too short (like 35 ms)
-procedure Bip(Frecv, Timp: integer);
+{ Simple wrapper for Windows.Beep.
+  Frecv - Frequency in Hz
+  Timp  - Duration in milliseconds
+  Note: The sound may not be heard if duration is too short (< ~35 ms) }
+procedure Bip(Frecv, Timp: Integer);
 begin
  WinApi.Windows.Beep(Frecv, Timp);
 end;
 
+{ Error sound - descending tones indicating failure }
 procedure BipError;
 begin
   WinApi.Windows.Beep(700, 70);
@@ -224,6 +258,7 @@ begin
   WinApi.Windows.Beep(300, 300);
 end;
 
+{ Confirmation sound - ascending tones indicating success }
 procedure BipConfirmation;
 begin
   WinApi.Windows.Beep(1100, 120);
@@ -231,6 +266,7 @@ begin
   WinApi.Windows.Beep(1900, 170);
 end;
 
+{ Short confirmation sound - quick ascending tones }
 procedure BipConfirmationShort;
 begin
   WinApi.Windows.Beep(1000, 55);
@@ -238,6 +274,7 @@ begin
   WinApi.Windows.Beep(1900, 135);
 end;
 
+{ Short error sound - quick descending tones }
 procedure BipErrorShort;
 begin
   WinApi.Windows.Beep(700, 50);
@@ -245,32 +282,37 @@ begin
   WinApi.Windows.Beep(400, 110);
 end;
 
+{ Quick beep - 30ms at 800Hz }
 procedure Bip30;
 begin
  WinApi.Windows.Beep(800, 30);
 end;
 
+{ Quick beep - 50ms at 800Hz }
 procedure Bip50;
 begin
  WinApi.Windows.Beep(800, 50);
 end;
 
+{ Standard beep - 100ms at 800Hz }
 procedure Bip100;
 begin
  WinApi.Windows.Beep(800, 100);
 end;
 
+{ Long beep - 300ms at 800Hz }
 procedure Bip300;
 begin
  WinApi.Windows.Beep(800, 300);
 end;
 
+{ Fun coconut-style sound pattern }
 procedure BipCoconuts;
 begin
- bip(1000, 30); bip(1200, 40);
- bip(890 , 25); bip(760 , 40);
- bip(1000, 30); bip(1200, 40);
- bip(890 , 25); bip(760 , 40);
+ Bip(1000, 30); Bip(1200, 40);
+ Bip(890,  25); Bip(760,  40);
+ Bip(1000, 30); Bip(1200, 40);
+ Bip(890,  25); Bip(760,  40);
 end;
 
 

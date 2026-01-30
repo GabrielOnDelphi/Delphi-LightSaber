@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.WinVersion;
 
 {=============================================================================================================
-   2025.03
+   2026.01.30
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Returns Windows OS version.
@@ -84,6 +84,7 @@ function  IsWindows8Up    : Boolean;
 function  IsWindows10     : Boolean;
 function  IsWindows10Up   : Boolean;
 function  IsWindows11     : Boolean;
+function  IsWindows11Up   : Boolean;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -128,8 +129,8 @@ end;
 
 function IsWindowsVistaUp: Boolean;
 begin
- Result:= (TOSVersion.Major = 6) AND (TOSVersion.Minor >= 0)
-       OR (TOSVersion.Major > 6);
+ { Vista or later: Major >= 6 (Minor >= 0 is always true, simplified) }
+ Result:= (TOSVersion.Major >= 6);
 end;
 
 
@@ -142,7 +143,8 @@ end;
 
 function IsWindows7Up: Boolean;
 begin
- Result:= (TOSVersion.Major = 6) AND (TOSVersion.Minor >= 1)
+ { Windows 7 (6.1) or later }
+ Result:= ((TOSVersion.Major = 6) AND (TOSVersion.Minor >= 1))
        OR (TOSVersion.Major > 6);
 end;
 
@@ -157,7 +159,8 @@ end;
 
 function IsWindows8Up: Boolean;
 begin
- Result:= (TOSVersion.Major = 6) AND (TOSVersion.Minor >= 2)
+ { Windows 8 (6.2) or later }
+ Result:= ((TOSVersion.Major = 6) AND (TOSVersion.Minor >= 2))
        OR (TOSVersion.Major > 6);
 end;
 
@@ -172,12 +175,22 @@ end;
 
 function IsWindows10Up: Boolean;
 begin
-  Result:= (TOSVersion.Major = 10) AND (TOSVersion.Build >= Win10FirstRel);
+  { Windows 10 (Major 10, Build >= 10240) or any future Windows with Major > 10 }
+  Result:= ((TOSVersion.Major = 10) AND (TOSVersion.Build >= Win10FirstRel))
+        OR (TOSVersion.Major > 10);
 end;
 
 function IsWindows11: Boolean;
 begin
+  { Windows 11 is Major 10 with Build >= 22000. If Major > 10, it's a future Windows, not 11. }
   Result:= (TOSVersion.Major = 10) AND (TOSVersion.Build >= Win11FirstRel);
+end;
+
+function IsWindows11Up: Boolean;
+begin
+  { Windows 11 (Major 10, Build >= 22000) or any future Windows with Major > 10 }
+  Result:= ((TOSVersion.Major = 10) AND (TOSVersion.Build >= Win11FirstRel))
+        OR (TOSVersion.Major > 10);
 end;
 
 
@@ -233,6 +246,7 @@ begin
  Result:= Result+ Tab+ 'IsWindows7Up: '     + Tab+ BoolToStr(IsWindows7Up, TRUE)+ CRLF;
  Result:= Result+ Tab+ 'IsWindows8Up: '     + Tab+ BoolToStr(IsWindows8Up, TRUE)+ CRLF;
  Result:= Result+ Tab+ 'IsWindows10Up: '    + Tab+ BoolToStr(IsWindows10Up, TRUE)+ CRLF;
+ Result:= Result+ Tab+ 'IsWindows11Up: '    + Tab+ BoolToStr(IsWindows11Up, TRUE)+ CRLF;
  Result:= Result+ CRLF;
 
  Result:= Result+ '[GetOSDetails]'+ CRLF;
@@ -240,26 +254,26 @@ begin
 end;
 
 {-------------------------------------------------------------------------------------------------------------
-  Results for GenerateReport:
+  Example output for GenerateReport (on Windows 10):
 
     [GetWinVersion Is]
-        IsWindowsXP: 	False
-        IsWinVista: 	False
-        IsWindows7: 	False
-        IsWindows8: 	False
-        IsWindows10: 	True
-        IsWindows11: 	False
+        IsWindowsXP:    False
+        IsWinVista:     False
+        IsWindows7:     False
+        IsWindows8:     False
+        IsWindows10:    True
+        IsWindows11:    False
 
-        IsWindowsXPUp: 	True
-        IsWinVistaUp: 	True
-        IsWindows7Up: 	True
-        IsWindows8Up: 	True
-        IsWindows10Up: 	True
+        IsWindowsXPUp:  True
+        IsWinVistaUp:   True
+        IsWindows7Up:   True
+        IsWindows8Up:   True
+        IsWindows10Up:  True
+        IsWindows11Up:  False
 
     [GetOSDetails]
       Windows 10 (Version 10.0, Build 19041, 64-Bit-Edition)
       Major/Minor 10.0  Service Pack (Major/Minor): 0/0
-      Architecture: AMD 64bit
 -------------------------------------------------------------------------------------------------------------}
 
 

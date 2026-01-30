@@ -1,19 +1,21 @@
 UNIT LightVcl.Common.WindowMetrics;
 
 {=============================================================================================================
-   SYSTEM - Window Metrics
-   2023.01
+   2026.01.30
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+
 ==============================================================================================================
 
    Get Window metrics
    Set Scrollbar metrics
 
+   Key functions:
+     Window metrics    - GetCaptionHeight, GetMainMenuHeight, GetFrameSize, GetWinBorderWidth/Height
+     Scrollbar metrics - GetScrollBarWidth, GetNumScrollLines, HorizScrollBarVisible, VertScrollBarVisible
+     Scrollbar control - SetScrollbarWidth (system-wide), SetProportionalThumbV/H (experimental)
+
    In this group:
      * LightVcl.Common.Shell.pas
-     * csSystem.pas
-     * csWindow.pas
      * LightVcl.Common.WindowMetrics.pas
      * LightVcl.Common.ExecuteProc.pas
      * LightVcl.Common.ExecuteShell.pas
@@ -56,12 +58,13 @@ USES
  procedure SetProportionalThumbV (ScrollBar: TScrollBar; OwnerClientHeight: Integer);
  procedure SetProportionalThumbH (ScrollBar: TScrollBar; OwnerClientWidth : Integer);
 
- 
 
 IMPLEMENTATION
 
 
-
+{ All metric functions use GetSystemMetricsForWindow which is DPI-aware.
+  Pass a valid window handle to get metrics scaled to that window's DPI.
+  Pass 0 to get metrics for the primary monitor's DPI. }
 
 function GetCaptionHeight(Handle: HWnd): Integer;
 begin
@@ -117,7 +120,10 @@ end;
 {--------------------------------------------------------------------------------------------------
    VCL SCROLLBAR
 --------------------------------------------------------------------------------------------------}
-function GetScrollbarSize: integer;     { DEPRECATED }
+
+{ DEPRECATED: Uses TNonClientMetrics which is slower than GetSystemMetricsForWindow.
+  Use GetScrollBarWidth instead, which is DPI-aware when passed a valid window handle. }
+function GetScrollbarSize: integer;
 VAR NCMet: TNonClientMetrics;
 begin
  FillChar(NCMet, SizeOf(NCMet), 0);
@@ -127,14 +133,23 @@ begin
 end;
 
 
-{ Apply to the whole system }
+{ Apply to the whole system.
+  WARNING: This modifies a system-wide setting that affects all applications. }
 procedure SetScrollbarWidth(Width: Integer);
 VAR NCMet: TNonClientMetrics;
 begin
+ if Width <= 0
+ then raise Exception.Create('SetScrollbarWidth: Width must be greater than 0');
+
+ { Read existing metrics first, then modify only the scroll width.
+   Setting all other fields to zero would corrupt system settings. }
  FillChar(NCMet, SizeOf(NCMet), 0);
  NCMet.cbSize:= SizeOf(NCMet);
+ SystemParametersInfo(SPI_GETNONCLIENTMETRICS, SizeOf(NCMet), @NCMet, 0);
+
  NCMet.iScrollWidth:= Width;
- SystemParametersInfo(SPI_SETNONCLIENTMETRICS, SizeOf(NCMet), @NCMet, SPIF_SENDCHANGE);   // set the new metrics
+ NCMet.iScrollHeight:= Width;
+ SystemParametersInfo(SPI_SETNONCLIENTMETRICS, SizeOf(NCMet), @NCMet, SPIF_SENDCHANGE);
 end;
 
 
@@ -166,38 +181,48 @@ begin
 end;
 
 
-{ DOESN'T WORK }
+{ DOESN'T WORK - experimental function for setting proportional thumb size }
 { Sets the thumb tab of a vertical scroll bar so that it represents the proportion of the scrolling range that is visible. }
 procedure SetProportionalThumbV(ScrollBar: TScrollBar; OwnerClientHeight: Integer);
 VAR
-  TrackHeight: Integer;                                                                            { The size of the scroll bar track }
+  TrackHeight: Integer;                                                                            { Available track height after subtracting arrow buttons }
   MinHeight: Integer;                                                                              { The default size of the thumb tab }
+  ScrollRange: Integer;                                                                            { The scrollbar range (Max - Min + 1) }
 begin
   if ScrollBar = NIL
   then raise Exception.Create('SetProportionalThumbV: ScrollBar parameter cannot be nil');
 
   MinHeight:= GetSystemMetrics(SM_CYVTHUMB);                                                       { Save the default size. }
-  TrackHeight := OwnerClientHeight - 2 * GetSystemMetrics(SM_CYVSCROLL);
-  ScrollBar.PageSize := TrackHeight DIV (ScrollBar.Max - ScrollBar.Min + 1);
+  TrackHeight:= OwnerClientHeight - 2 * GetSystemMetrics(SM_CYVSCROLL);                            { Subtract both arrow buttons }
+  ScrollRange:= ScrollBar.Max - ScrollBar.Min + 1;
+
+  if ScrollRange <= 0
+  then EXIT;                                                                                       { Avoid division by zero }
+
+  ScrollBar.PageSize:= TrackHeight DIV ScrollRange;
   if ScrollBar.PageSize < MinHeight
   then ScrollBar.PageSize := MinHeight;
 end;
 
 
-{ DOESN'T WORK }
+{ DOESN'T WORK - experimental function for setting proportional thumb size }
 procedure SetProportionalThumbH(ScrollBar: TScrollBar; OwnerClientWidth: Integer);
 VAR
   MinWidth: Integer;                                                                               { The default size of the thumb tab }
-  TotalData: Integer;                                                                              { The size of the scroll bar track }
+  ScrollRange: Integer;                                                                            { The scrollbar range (Max - Min + 1) }
+  TrackWidth: Integer;                                                                             { Available track width after subtracting arrow buttons }
 begin
   if ScrollBar = NIL
   then raise Exception.Create('SetProportionalThumbH: ScrollBar parameter cannot be nil');
 
   MinWidth:= GetSystemMetrics(SM_CXHTHUMB);                                                        { Save the default size. }
-  OwnerClientWidth:= OwnerClientWidth - 2 * GetSystemMetrics(SM_CXVSCROLL);
-  TotalData:= (ScrollBar.Max - ScrollBar.Min + 1);
+  TrackWidth:= OwnerClientWidth - 2 * GetSystemMetrics(SM_CXHSCROLL);                              { Subtract both arrow buttons }
+  ScrollRange:= (ScrollBar.Max - ScrollBar.Min + 1);
 
-  ScrollBar.PageSize:= TotalData DIV OwnerClientWidth;
+  if TrackWidth <= 0
+  then EXIT;                                                                                       { Avoid division by zero }
+
+  ScrollBar.PageSize:= ScrollRange DIV TrackWidth;
   if ScrollBar.PageSize < MinWidth                                                                 { PageSize is the size of the thumb tab, measured in the same units as Position, Min, and Max (not pixels). }
   then ScrollBar.PageSize := MinWidth;
 end;

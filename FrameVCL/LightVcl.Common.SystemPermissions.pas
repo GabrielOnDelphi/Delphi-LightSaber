@@ -1,19 +1,22 @@
 UNIT LightVcl.Common.SystemPermissions;
 
 {=============================================================================================================
-   2025.05
+   2026.01.30
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+
 ==============================================================================================================
 
-   Functions to set/test user permissions and privileges
+   Functions to set/test user permissions and privileges.
+   Includes: Admin rights detection, privilege elevation, token management.
+
+   Note: Some legacy functions are preserved for backward compatibility with older Windows versions.
 
 =============================================================================================================}
 
 INTERFACE
 
 USES
-   Winapi.Windows, System.UITypes, System.SysUtils, Vcl.Dialogs;
+   Winapi.Windows, System.SysUtils;
 
 
  function  AppElevationLevel: Integer;
@@ -104,36 +107,42 @@ end;
 
 
 
-function AppElevationLevel: Integer;  { From: www.experts-exchange.com/Programming/Languages/Pascal/Delphi/Q_23083726.html+delphi+vista+test+if+the+application+has+admin+rights&cd=6&hl=de&ct=clnk&gl=de&client=firefox-a }
+{ Returns the elevation type of the current process token.
+  Returns:
+    1 = TokenElevationTypeDefault (standard user, UAC disabled, or built-in admin)
+    2 = TokenElevationTypeFull (elevated admin)
+    3 = TokenElevationTypeLimited (non-elevated, UAC enabled)
+   -1 = Error (could not query token)
+  Source: experts-exchange.com }
+function AppElevationLevel: Integer;
 {$IF CompilerVersion >= 28}           { http://delphi.wikia.com/wiki/CompilerVersion_Constant }
 CONST
     TokenElevationType = 18;
-VAR Token: nativeuint;
+VAR
+    Token: NativeUInt;
     ElevationType: Integer;
     dwSize: Cardinal;
 {$ELSE}
 CONST
     TokenElevationType = 18;
-VAR token: Cardinal;
+VAR
+    Token: Cardinal;
     ElevationType: Integer;
     dwSize: Cardinal;
 {$ENDIF}
 begin
- if OpenProcessToken(GetCurrentProcess, TOKEN_QUERY, token)
- then
-   TRY
-     if GetTokenInformation(token, TTokenInformationClass(TokenElevationType), @ElevationType, SizeOf(ElevationType), dwSize)
-     then Result:= ElevationType
-     else
-      begin
-       Result:= -1;
-       MessageDlg(SysErrorMessage(GetLastError), mtInformation, [mbOk], 0);
-      end;
-   FINALLY
-     CloseHandle(token);
-   END
- else
-   Result:= -1;  { MessageInfo(SysErrorMessage(GetLastError)) }
+  Result:= -1;
+
+  if NOT OpenProcessToken(GetCurrentProcess, TOKEN_QUERY, Token)
+  then EXIT;
+
+  TRY
+    if GetTokenInformation(Token, TTokenInformationClass(TokenElevationType), @ElevationType, SizeOf(ElevationType), dwSize)
+    then Result:= ElevationType;
+    // On failure, Result remains -1 (no UI shown - caller should handle errors)
+  FINALLY
+    CloseHandle(Token);
+  END;
 end;
 
 
@@ -194,23 +203,13 @@ begin
 end;
 
 
-{ Source https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Customizing_the_Windows_Application_Manifest_File
-  NOT TESTED
-  Unable to write to registry -> The application does NOT have Administrator level privileges.
-  Write to registry permitted -> The application has Administrator level privileges.
- }
-function AppHasAdminRights: boolean;
-var
-  reg: TRegistry;
+{ Returns TRUE if the current application is running with administrator privileges.
+  Uses the modern IsUserAdmin approach which checks token membership in the Administrators group.
+  This is the recommended method for Vista and later (all modern Windows versions). }
+function AppHasAdminRights: Boolean;
 begin
-  reg := TRegistry.Create(KEY_READ);
-  TRY
-    reg.RootKey := HKEY_LOCAL_MACHINE;
-    reg.Access  := KEY_WRITE;
-    Result:= reg.OpenKey('Software\MyCompanyName\MyApplication\', True);
-  FINALLY
-    FreeAndNil(reg);  { Free will call automatically CloseKey }
-  END;
+  // Use CurrentUserHasAdminRights which properly handles all Windows versions
+  Result:= CurrentUserHasAdminRights;
 end;
 
 
@@ -218,16 +217,16 @@ end;
 
 
 
-{ Source: dummzeuch }
+{ Returns TRUE if the OS has NT-based security (Windows NT, 2000, XP, Vista, 7, 8, 10, 11).
+  All modern Windows versions (2000+) are NT-based, so this returns TRUE for any supported OS.
+  Kept for backward compatibility with legacy code.
+  Source: dummzeuch }
 function OsHasNTSecurity: Boolean;
-VAR
-  vi: TOSVersionInfo;
 begin
-  FillChar(vi, SizeOf(vi), 0);
-  vi.dwOSVersionInfoSize := SizeOf(vi);
-  if GetVersionEx(vi)
-  then Result := (vi.dwPlatformId = VER_PLATFORM_WIN32_NT)
-  else Result := TRUE;  { Assume NT security on modern Windows if API fails }
+  // All modern Windows versions (Windows 2000 and later) are NT-based.
+  // TOSVersion.Platform returns pfWindows for all NT-based systems.
+  // Windows 9x/ME (non-NT) are no longer supported by Delphi.
+  Result:= (TOSVersion.Platform = pfWindows);
 end;
 
 
@@ -241,65 +240,59 @@ CONST
   DOMAIN_ALIAS_RID_ADMINS    : DWORD = $00000220;
 
 
-function IsUserAdmin: Boolean;  //source: dummzeuch
-var
+{ Returns TRUE if the current process is running with administrator privileges.
+  In Vista and later with UAC, returns FALSE if not elevated, TRUE if elevated.
+  Uses CheckTokenMembership API (recommended over deprecated Shell32.IsUserAnAdmin).
+  Source: dummzeuch, based on MSDN CheckTokenMembership documentation }
+function IsUserAdmin: Boolean;
+VAR
   b: BOOL;
   AdministratorsGroup: PSID;
   Hdl: HMODULE;
 begin
-  {
-    This function returns true if you are currently running with admin privileges.
-    In Vista and later, if you are non-elevated, this function will return false (you are not running with administrative privileges).
-    If you *are* running elevated, then IsUserAdmin will return true, as you are running with admin privileges.
+  Result:= FALSE;
 
-    Windows provides this similar function in Shell32.IsUserAnAdmin.
-    But the function is deprecated, and this code is lifted from the docs for CheckTokenMembership:
-      http://msdn.microsoft.com/en-us/library/aa376389.aspx
-
-    Routine Description: This routine returns TRUE if the callers process is a member of the Administrators local group. Caller is NOT expected to be impersonating anyone and is expected to be able to open its own process and process token.
-      Arguments: None.
-      Return Value:
-        TRUE - Caller has Administrators local group.
-        FALSE - Caller does not have Administrators local group.
-  }
-  { idea from:
-    http://stackoverflow.com/a/8290384/49925
-    but heavily modified }
-  Result := False;
-  if not AllocateAndInitializeSid(
-    SECURITY_NT_AUTHORITY, 2, //2 sub-authorities
-    SECURITY_BUILTIN_DOMAIN_RID, //sub-authority 0
-    DOMAIN_ALIAS_RID_ADMINS, //sub-authority 1
-    0, 0, 0, 0, 0, 0, //sub-authorities 2-7 not passed
+  if NOT AllocateAndInitializeSid(
+    SECURITY_NT_AUTHORITY, 2,         // 2 sub-authorities
+    SECURITY_BUILTIN_DOMAIN_RID,      // sub-authority 0
+    DOMAIN_ALIAS_RID_ADMINS,          // sub-authority 1
+    0, 0, 0, 0, 0, 0,                 // sub-authorities 2-7 not used
     AdministratorsGroup)
   then EXIT;
-  try
-    if @CheckTokenMembership = nil then
+
+  TRY
+    // Lazy-load CheckTokenMembership from advapi32.dll
+    if @CheckTokenMembership = NIL then
     begin
-      Hdl := LoadLibrary(advapi32);
+      Hdl:= LoadLibrary(advapi32);
       if Hdl = 0
       then EXIT;
-      @CheckTokenMembership := GetProcAddress(Hdl, 'CheckTokenMembership');
-      if @CheckTokenMembership = nil then
+
+      @CheckTokenMembership:= GetProcAddress(Hdl, 'CheckTokenMembership');
+      if @CheckTokenMembership = NIL then
       begin
         FreeLibrary(Hdl);
         EXIT;
       end;
-      { Note: Library handle intentionally not freed - function pointer stored in global var }
+      // Note: Library handle intentionally not freed - function pointer stored in global var for reuse
     end;
+
     if CheckTokenMembership(0, AdministratorsGroup, b)
-    then  Result := b;
-  finally
+    then Result:= b;
+  FINALLY
     FreeSid(AdministratorsGroup);
-  end;
+  END;
 end;
 
 
+{ Returns TRUE if the current user has administrator rights.
+  For NT-based systems (all modern Windows), checks token membership in Administrators group.
+  For legacy non-NT systems (Windows 9x/ME - no longer supported), always returns TRUE. }
 function CurrentUserHasAdminRights: Boolean;
 begin
   if OsHasNTSecurity
-  then Result := IsUserAdmin // CurrentUserIsInAdminGroup
-  else Result := True;
+  then Result:= IsUserAdmin
+  else Result:= TRUE;  // Non-NT systems have no security model
 end;
 
 end.

@@ -1,9 +1,19 @@
 UNIT LightVcl.Common.SystemTime;
 
 {=============================================================================================================
-   SYSTEM TIME
-   2025.01
+   2026.01.30
    www.GabrielMoraru.com
+--------------------------------------------------------------------------------------------------------------
+   System Time Utilities
+
+   Provides functions for:
+   - Windows uptime and user idle time detection
+   - System file time retrieval (anti-tampering for licensing)
+   - Registry-based time validation (detects clock rollback)
+
+   Dependencies: LightVcl.Common.IO, LightVcl.Common.WinVersion, LightVcl.Common.Registry
+
+   Thread safety: These functions are NOT thread-safe.
 =============================================================================================================}
 
 INTERFACE
@@ -36,33 +46,65 @@ USES
 {--------------------------------------------------------------------------------------------------
    SYSTEM  TIME
 --------------------------------------------------------------------------------------------------}
-{ Also see this: http://docwiki.embarcadero.com/Libraries/XE4/en/System.Diagnostics.TStopwatch
-  Time since boot
-  Use it as: ShowTimeNice(WindowsUpTime)  }
+
+{--------------------------------------------------------------------------------------------------
+   Returns the time elapsed since Windows was started.
+   Use with ShowTimeNice() to display as formatted string.
+
+   Uses GetTickCount64 which doesn't overflow (GetTickCount wraps after ~49.7 days).
+   GetTickCount64 requires Windows Vista or later.
+
+   Note: GetTickCount accuracy is ~15ms. See: https://blogs.msdn.microsoft.com/oldnewthing/20050902-00/?p=34333
+   Also see: System.Diagnostics.TStopwatch for high-precision timing.
+--------------------------------------------------------------------------------------------------}
 function WindowsUpTime: TDateTime;
 begin
- Result:= GetTickCount / SecsPerDay / MSecsPerSec;   // GetTickCount accuracy is 15ms+  https://blogs.msdn.microsoft.com/oldnewthing/20050902-00/?p=34333
+ Result:= GetTickCount64 / MSecsPerSec / SecsPerDay;                                               { Convert ms -> seconds -> days }
 end;
 
 
-{ Available only on Win2000 (and up) machines.
-  Details: To track a user's idle time you could hook keyboard and mouse activity.
-  Note, however, that installing a system-wide message hook is a very invasive thing
-  to do and should be avoided if possible, since it will require your hook DLL to be
-  loaded into all processes. }
+{--------------------------------------------------------------------------------------------------
+   Returns how long (in seconds) since the user last interacted with the system.
+   Interaction includes keyboard presses and mouse movements.
+
+   Available on Windows 2000 and later.
+
+   Note: To track user idle time, one could hook keyboard/mouse activity system-wide,
+   but installing a system-wide message hook is invasive and requires a DLL to be
+   loaded into all processes. This API-based approach is much cleaner.
+
+   Returns 0 if GetLastInputInfo fails.
+
+   Note: GetLastInputInfo.dwTime uses GetTickCount (32-bit), which wraps after ~49.7 days.
+   If the system has been running longer, and the last input was before the wrap,
+   the result may be incorrect. This is a Windows API limitation.
+--------------------------------------------------------------------------------------------------}
 function UserIdleTime: Cardinal;
 VAR
    liInfo: TLastInputInfo;
 begin
-   liInfo.cbSize := SizeOf(TLastInputInfo);
+   liInfo.cbSize:= SizeOf(TLastInputInfo);
    if GetLastInputInfo(liInfo)
-   then Result := (GetTickCount - liInfo.dwTime) DIV 1000
-   else Result := 0;
+   then Result:= (GetTickCount - liInfo.dwTime) DIV 1000                                           { GetLastInputInfo.dwTime uses 32-bit tick count }
+   else Result:= 0;
 end;
 
 
 
-{ Gets current date from system file - prevents user from reversing time }
+{--------------------------------------------------------------------------------------------------
+   Gets the last modification time from a system file that changes when Windows runs.
+   Used to detect if the user has rolled back the system clock (anti-tampering for licensing).
+
+   Returns: TDateTime of the system file's last modification time, or 0 if no file was found.
+
+   Note: This function looks for files that are modified during normal Windows operation
+   (pagefile.sys, registry hives, etc.) to get a timestamp that cannot easily be manipulated.
+
+   WARNING: Returns 0 on failure, which is a valid TDateTime (Dec 30, 1899).
+   Callers should handle the 0 case explicitly.
+
+   The Windows 9x code paths are legacy and will never execute on modern systems.
+--------------------------------------------------------------------------------------------------}
 function GetSysFileTime: TDateTime;
 VAR
   strWinDir, strF: string;
@@ -74,7 +116,8 @@ begin
  if LightVcl.Common.WinVersion.IsNTKernel
  then
     begin
-     strF:= strWinDir+ 'system32\config\software';                                                 { fisierul asta exista in Windowsul meu (XP) si arata data can a fost oprit Windows-ul ultima data. NU EXISTA IN WIN7!!! }
+     { This file exists on XP and shows when Windows was last shutdown. Does NOT exist on Win7+! }
+     strF:= strWinDir+ 'system32\config\software';
      if NOT FileExists(strF) then strF:= strWinDir+ 'config\software';
      if NOT FileExists(strF) then strF:= 'c:\pagefile.sys';
      if NOT FileExists(strF) then strF:= 'd:\pagefile.sys';
@@ -95,39 +138,60 @@ begin
     end;
 
  if FileExists(strF)
- then Result:= FileAge(strF);
+ then Result:= LightVcl.Common.IO.FileAge(strF);                                                   { Use IO version - works on system files that can't be opened directly }
 end;
 
 
 
-function SystemTimeIsInvalid: Boolean;                                                              { returns true if the SysFile time is bigger than current clock time }
-VAR SystemTime: TDateTime;
+{--------------------------------------------------------------------------------------------------
+   Returns TRUE if the system clock appears to have been set backwards.
+
+   Works by comparing the current time (Now) with the modification time of a system file
+   that is updated during normal Windows operation. If Now < SystemFileTime, it suggests
+   the user has rolled back the system clock.
+
+   Note: Shows a dialog if no system file could be found (should be rare).
+   Also see Delphi's FileAge function.
+--------------------------------------------------------------------------------------------------}
+function SystemTimeIsInvalid: Boolean;
+VAR SysFileTime: TDateTime;
 begin
- SystemTime:= GetSysFileTime;                                                                      { exista si functia Delphi:  FileAge }
- if SystemTime= 0 then
+ SysFileTime:= GetSysFileTime;
+ if SysFileTime = 0 then
   begin
    MessageDlg('Can''t get system time!', mtInformation, [mbOk], 0);
-   SystemTime:= Now- 0.1;
+   SysFileTime:= Now - 0.1;                                                                        { Fallback: assume valid (slightly in the past) }
   end;
- Result:= (Now < SystemTime);
+ Result:= (Now < SysFileTime);
 end;
 
 
 
-{ Non-blocking sleep/delay.
-  WARNING: This function uses Application.ProcessMessages which is generally discouraged!
-  It can cause reentrancy issues if event handlers trigger during the delay.
-  Consider using TThread or TTask for better alternatives.
-  See: https://blog.dummzeuch.de/2018/09/29/calling-application-processmessages-in-a-delphi-program/ }
+{--------------------------------------------------------------------------------------------------
+   Non-blocking sleep/delay that keeps the UI responsive.
+
+   DEPRECATION WARNING: This function uses Application.ProcessMessages which is
+   generally discouraged! It can cause reentrancy issues if event handlers
+   trigger during the delay (e.g., button click during delay calls button click again).
+
+   Consider using TThread or TTask for better alternatives:
+   - TThread.CreateAnonymousThread for simple background work
+   - TTask.Run for parallel operations
+   - PostMessage with a timer for delayed actions
+
+   See: https://blog.dummzeuch.de/2018/09/29/calling-application-processmessages-in-a-delphi-program/
+
+   Note: GetTickCount accuracy is ~15ms. See: https://blogs.msdn.microsoft.com/oldnewthing/20050902-00/?p=34333
+--------------------------------------------------------------------------------------------------}
 procedure DelayEx(CONST ms: Cardinal);
 VAR
-  Count: Cardinal;
+  StartTime: UInt64;
 begin
- Count:= GetTickCount;                    { Note: GetTickCount accuracy is > 15ms. See https://blogs.msdn.microsoft.com/oldnewthing/20050902-00/?p=34333 }
+ StartTime:= GetTickCount64;
  REPEAT
-  Sleep(1);                               { Without this we get 100% CPU utilization because the loop is too tight }
-  Application.ProcessMessages;            { DISCOURAGED - see function comment }
- UNTIL (GetTickCount - Count) >= ms;
+  Sleep(1);                                                                                        { Prevents 100% CPU utilization }
+  Application.ProcessMessages;                                                                     { DISCOURAGED - see function comment }
+ UNTIL (GetTickCount64 - StartTime) >= ms;
 end;
 
 
@@ -137,6 +201,21 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    TIME-PROTECTION
+
+   These functions provide clock rollback detection for licensing/trial systems.
+   Works by storing the current time in the registry and checking if the clock
+   has been set backwards on subsequent runs.
+--------------------------------------------------------------------------------------------------}
+
+{--------------------------------------------------------------------------------------------------
+   Stores the current system time to a hidden registry key.
+   Call this periodically (e.g., on application startup or shutdown) to update the stored time.
+
+   Parameters:
+     SecretKey - Registry path under HKEY_CURRENT_USER where the time will be stored.
+                 Example: 'Software\MyApp\Security'
+
+   Raises Exception if SecretKey is empty.
 --------------------------------------------------------------------------------------------------}
 procedure CurrentSysTimeStore(CONST SecretKey: string);
 begin
@@ -147,6 +226,22 @@ begin
 end;
 
 
+{--------------------------------------------------------------------------------------------------
+   Checks if the system clock is valid (hasn't been rolled back).
+
+   Returns TRUE if:
+     - The registry key doesn't exist yet (first run)
+     - The current time is >= the last stored time
+     - The system file time is not in the future
+
+   Returns FALSE if the clock appears to have been set backwards.
+
+   Parameters:
+     SecretKey - Registry path to check (same as used in CurrentSysTimeStore).
+
+   Note: RegReadDate returns -1 if the key doesn't exist. This is treated as valid
+   (first run scenario).
+--------------------------------------------------------------------------------------------------}
 function CurrentSysTimeValid(CONST SecretKey: string): Boolean;
 VAR
   LastTime: TDateTime;
@@ -155,15 +250,14 @@ begin
  then raise Exception.Create('CurrentSysTimeValid: SecretKey parameter cannot be empty');
 
  LastTime:= RegReadDate(HKEY_CURRENT_USER, SecretKey, 'System');
+
+ { If registry key doesn't exist (first run), RegReadDate returns -1 }
+ if LastTime < 0
+ then EXIT(TRUE);
+
  Result:= (LastTime <= Now) AND NOT SystemTimeIsInvalid;
 end;
 
 
 
-
-
-
-
 end.
-
-

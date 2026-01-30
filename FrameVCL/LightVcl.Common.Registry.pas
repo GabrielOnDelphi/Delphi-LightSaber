@@ -1,10 +1,23 @@
 UNIT LightVcl.Common.Registry;
 
 {=============================================================================================================
-   2025.03
+   2026.01.30
    www.GabrielMoraru.com
+
 --------------------------------------------------------------------------------------------------------------
-   Allows us to work with registry more easily (without manually creating and destroying a TRegistry object)
+   Registry Helper Functions
+
+   Provides a simplified interface for Windows Registry operations without manually creating
+   and destroying TRegistry objects. Each function handles resource management internally.
+
+   Key concepts:
+     - Root: The registry hive (HKEY_CURRENT_USER, HKEY_LOCAL_MACHINE, etc.)
+     - Key: The path within the hive (e.g., 'Software\MyApp\Settings')
+     - ValueName: The name of the value within a key
+     - ValueData: The actual data stored in the value
+
+   Thread safety: These functions are NOT thread-safe. Each call creates its own TRegistry
+   instance, but concurrent access to the same registry keys may cause issues.
 
    See LightCore.IO.GetProgramFilesDir for example of usage
 =============================================================================================================}
@@ -15,8 +28,7 @@ USES
    Winapi.Windows, System.SysUtils, System.Classes, System.Win.Registry;
 
 CONST
-   LazyWrite = TRUE;
-   RegStartUpKey   = 'Software\Microsoft\Windows\CurrentVersion\Run';
+   RegStartUpKey = 'Software\Microsoft\Windows\CurrentVersion\Run';
 
  function Convert_HKey2Str      (CONST Key: HKEY): string;
  function Convert_Str2HKey      (CONST Key: string): HKEY;
@@ -358,15 +370,21 @@ begin
 end;
 
 
-{ Not tested! }
+{ Writes all name=value pairs from the TStringList to the registry.
+  Returns TRUE only if ALL pairs were written successfully.
+  Returns TRUE for empty list (nothing to write = success). }
 function RegWriteValuePairs (CONST Root: HKEY; CONST Key: string; Pairs: TStringList; CONST Delimiter: char; Lazy: Boolean= TRUE): Boolean;
 VAR s, ValueName, ValueData: string;
 begin
- Result:= FALSE;
+ if Pairs = NIL
+ then raise Exception.Create('Pairs is NIL') at @RegWriteValuePairs;
+
+ Result:= TRUE;
  for s in Pairs DO
   begin
    LightCore.SplitLine(s, Delimiter, ValueName, ValueData);
-   Result:= RegWriteString(Root, Key, ValueName, ValueData, Lazy);
+   if NOT RegWriteString(Root, Key, ValueName, ValueData, Lazy)
+   then Result:= FALSE;   { Continue writing remaining pairs even if one fails }
   end;
 end;
 
@@ -442,9 +460,14 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    REGISTRY - MultiSZ
+   Reads REG_MULTI_SZ values which are stored as null-terminated strings with a final double-null.
+   Source: http://www.swissdelphicenter.ch/torry/showcode.php?id=1431
 --------------------------------------------------------------------------------------------------}
-{ Reads a REG_MULTI_SZ value From the Registry. This will return strings separated by ENTER.  From here: http://www.swissdelphicenter.ch/torry/showcode.php?id=1431 }
-function RegReadMultiSzString;
+
+{ Reads a REG_MULTI_SZ value from the Registry.
+  Returns strings separated by CRLF (Windows line ending).
+  CanCreate: If TRUE, creates the key if it doesn't exist. }
+function RegReadMultiSzString(CONST Root: HKEY; CONST Key, KeyName: string; CanCreate: Boolean= FALSE): string;
 VAR
   regKey: TRegistry;
   vSize: integer;
@@ -454,7 +477,7 @@ begin
  TRY
    regKey.RootKey:= Root;
 
-   if regKey.OpenKey(Key, FALSE) then
+   if regKey.OpenKey(Key, CanCreate) then
     begin
       vSize:= regKey.GetDataSize(KeyName);
 
@@ -464,6 +487,7 @@ begin
         regKey.ReadBinaryData(KeyName, Result[1], vSize);
         ReplaceString(Result, #0, CRLFw);
        end;
+      regKey.CloseKey;
    end;
  FINALLY
    FreeAndNil(regKey);
