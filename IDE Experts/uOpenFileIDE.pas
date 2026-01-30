@@ -33,6 +33,9 @@ TYPE
 
 procedure OpenInIDEEditor(PasRec: RIdePosition);
 
+{ Checks if a file is already open in the IDE and switches to it without changing cursor position.
+  Returns True if file was already open and we switched to it, False otherwise. }
+function SwitchToOpenFile(const FileName: string): Boolean;
 
 
 IMPLEMENTATION
@@ -148,5 +151,44 @@ begin
     FileName:= aFileName;
     Comment:= '';
 end;
+
+
+{ Checks if a file is already open in the IDE and switches to it without changing cursor position.
+  Returns True if file was already open and we switched to it, False otherwise. }
+function SwitchToOpenFile(const FileName: string): Boolean;
+var
+  IModuleServices: IOTAModuleServices;
+  IModule: IOTAModule;
+  IEditor: IOTAEditor;
+  i, j: Integer;
+begin
+  Result:= False;
+
+  if NOT Supports(BorlandIDEServices, IOTAModuleServices, IModuleServices)
+  then Exit;
+
+  // Iterate through all open modules to find if the file is already open
+  for i:= 0 to IModuleServices.ModuleCount - 1 do
+    begin
+      IModule:= IModuleServices.Modules[i];
+      if IModule = nil then Continue;
+
+      // Check each editor in the module
+      for j:= 0 to IModule.ModuleFileCount - 1 do
+        begin
+          IEditor:= IModule.ModuleFileEditors[j];
+          if IEditor = nil then Continue;
+
+          // Compare filenames (case-insensitive)
+          if SameText(IEditor.FileName, FileName) then
+            begin
+              // File is already open - just show it without changing cursor
+              IEditor.Show;
+              Exit(True);
+            end;
+        end;
+    end;
+end;
+
 
 end.
