@@ -1,20 +1,28 @@
 UNIT LightVcl.Graph.GrabAviFrame;
 
 {=============================================================================================================
-   Obtains a frame from the middle of a video file.
-   Replaces the old cFrameServerVFW
+   Gabriel Moraru
+   2026.01.30
+   www.GabrielMoraru.com
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
+   Obtains a frame from the middle of a video file.
+   Replaces the old cFrameServerVFW.
 
-   FFVCL
-     Requires the FFVCL 3rd party library, as decoder.
+   Current implementation:
+     The free FFVCL library does not support frame capture, so instead of extracting
+     a real video frame, we return a placeholder logo (video_player_icon.png).
+
+   FFVCL (commented code below preserved for reference):
+     Requires the FFVCL 3rd party library as decoder.
 
      Advantage:
-        Real-time, onthe fly video decoding.
+        Real-time, on-the-fly video decoding.
         No video frames must be written to disk first.
-        Fast
+        Fast.
      Disadvantage:
         The library (DLLs) is 46MB!
-        Difficult to install
+        Difficult to install.
 
      Documentation:
         delphiffmpeg.com/interface-ffplayer.html
@@ -58,34 +66,48 @@ USES
 
 
 
-{ The free FFVCL library does not support frame capture so we fake it.
-  Instead of a real video frame we show in icon/logo representing a video camera. }
+{ Returns a placeholder logo for video files since the free FFVCL library
+  does not support frame capture. The logo consists of a black background
+  with a centered video camera icon and "Video file" text at the top.
+
+  Dependencies:
+    Requires 'video_player_icon.png' in the AppSysDir folder.
+    If the icon file is missing or corrupted, returns a black bitmap with text only. }
 function GetVideoPlayerLogo: TBitmap;   // Old name: ExtractMiddleFrame
+CONST
+  LogoWidth  = 192;
+  LogoHeight = 128;  // 234x174 is the size of the Preview window in BX
+  Text: string = 'Video file';
+VAR
+  AviLogo: TBitmap;
 begin
- Result:= LightVcl.Graph.Bitmap.CreateBlankBitmap(192, 128, clBlack);   // 234x174 is the size of the Preview window in BX
- VAR AviLogo:= LightVcl.Graph.Loader.LoadGraph(Appdatacore.AppSysDir+ 'video_player_icon.png', FALSE, TRUE);
+ Result:= LightVcl.Graph.Bitmap.CreateBlankBitmap(LogoWidth, LogoHeight, clBlack);
+
+ { Load and center the video icon }
+ AviLogo:= LightVcl.Graph.Loader.LoadGraph(Appdatacore.AppSysDir+ 'video_player_icon.png', FALSE, TRUE);
+ if AviLogo <> NIL then
  TRY
-   //Result.Canvas.Draw(10, 10, AviLogo);
    LightVcl.Graph.Bitmap.CenterBitmap(AviLogo, Result);
  FINALLY
    FreeAndNil(AviLogo);
  END;
 
-
- CONST Text: string= 'Video file';
-
+ { Draw the "Video file" text at the top center }
  Result.Canvas.Brush.Color:= clBlack;
  Result.Canvas.Font.Name  := 'Verdana';
  Result.Canvas.Font.Size  := 9;
- Result.Canvas.Font.Color:= clLime;
- Result.Canvas.TextOut((Result.Width- Result.Canvas.TextWidth(Text)) DIV 2, 4, Text);
-
- //FrameCount:= 2; { Fake it }
+ Result.Canvas.Font.Color := clLime;
+ Result.Canvas.TextOut((Result.Width - Result.Canvas.TextWidth(Text)) DIV 2, 4, Text);
 end;
 
 
-{ All the things below are useless because the lite version will not support frame capture.
-  If you want to see how to open videos see c:\Myprojects\BIONIX\SourceCode\BioniX VCL\cFrameServerAVI.pas }
+{ PRESERVED FOR REFERENCE:
+  The code below is commented out because the free FFVCL lite version does not support frame capture.
+  This code is preserved as reference for implementing video frame extraction with the paid FFVCL version.
+  See also: c:\Myprojects\BIONIX\SourceCode\BioniX VCL\cFrameServerAVI.pas
+
+  Known issue in commented code:
+    In FFPlayerFileOpen, FrameHeight/FrameWidth assignments are swapped (bug). }
 
 (*
 TYPE

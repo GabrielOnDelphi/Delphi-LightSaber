@@ -1,13 +1,14 @@
 UNIT LightVcl.Common.PowerUtils;
 
 {=============================================================================================================
-   2025
+   2026.01.30
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+
 ==============================================================================================================
 
-   Utility functions related to system power.
-   Works on Win 7
+   Utility functions related to system power management.
+   Includes: Sleep, Hibernate, Shutdown, Monitor control, Battery status.
+   Tested on: Windows 7, 10, 11
 
    Parameters for SetSuspendState:
      Hibernate:
@@ -54,7 +55,7 @@ USES
 {==================================================================================================
    POWER STATUS / BATTERY
 ==================================================================================================}
- {$IFDEF msWindows}
+ {$IFDEF MSWINDOWS}
  TYPE
    TPowerType = (pwTypeBat, pwTypeAC, pwUnknown);
  function  PowerStatus: TPowerType;
@@ -95,26 +96,33 @@ begin
 end;
 
 
+{ Shows the Windows shutdown dialog (same as pressing Alt+F4 on desktop).
+  Uses Shell.Application COM object for the standard Windows shutdown UI. }
 procedure WinShutDown;
-VAR shell: Variant;
+VAR
+  Shell: Variant;
 begin
-  shell:= System.Win.ComObj.CreateOleObject('Shell.Application');
-  shell.ShutdownWindows;
+  Shell:= System.Win.ComObj.CreateOleObject('Shell.Application');
+  Shell.ShutdownWindows;
 end;
 
 
-{ Source: dummzeuch }
+{ Programmatically shuts down or reboots Windows.
+  Force: If TRUE, forcefully terminates applications without asking to save.
+  Reboot: If TRUE, reboots instead of powering off.
+  Returns TRUE on success.
+  Source: dummzeuch }
 function WinShutDown(Force, Reboot: Boolean): Boolean;
 VAR
   TokenHandle: THandle;
   pToken: TTokenPrivileges;
   RetLength, Flag: DWORD;
 begin
-  { Note: Win32Platform check removed - Windows 98/Me are obsolete.
-    All modern Windows versions are NT-based and require privilege adjustment. }
+  // All modern Windows versions (NT-based) require privilege adjustment
   Flag:= EWX_POWEROFF;
 
-  if OpenProcessToken(GetCurrentProcess, TOKEN_ADJUST_PRIVILEGES, TokenHandle) then
+  if OpenProcessToken(GetCurrentProcess, TOKEN_ADJUST_PRIVILEGES, TokenHandle)
+  then
     TRY
       LookupPrivilegeValue(NIL, 'SeShutdownPrivilege', pToken.Privileges[0].Luid);
       pToken.PrivilegeCount:= 1;
@@ -221,7 +229,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    POWER STATUS
 -------------------------------------------------------------------------------------------------------------}
-{$IFDEF msWindows}
+{$IFDEF MSWINDOWS}
 {$WARN SYMBOL_PLATFORM OFF}
 function PowerStatus: TPowerType;
 VAR SysPowerStatus: TSystemPowerStatus;                                                          { Details: http://msdn.microsoft.com/en-us/library/aa373232(VS.85).aspx }
@@ -265,21 +273,35 @@ end;
 
 
 
-function BatteryAsText: string;                                                                  { http://74.125.77.132/search?q=cache:bgnnaViy9n0J:www.experts-exchange.com/Programming/Languages/Pascal/Delphi/Q_11011301.html+site:www.experts-exchange.com+delphi+battery+status&cd=1&hl=en&ct=clnk }
-VAR SysPowerStatus : TSystemPowerStatus;
+{ Returns a human-readable string describing battery status flags.
+  BatteryFlag bits: 1=High, 2=Low, 4=Critical, 8=Charging, 128=No battery, 255=Unknown }
+function BatteryAsText: string;
+VAR
+  SysPowerStatus: TSystemPowerStatus;
+  Flag: Byte;
 begin
- if GetSystemPowerStatus(SysPowerStatus)
- then
-  begin
-    Result:= '';
-    if SysPowerStatus.BatteryFlag and 1 = 1 then Result:= Result+'High ';
-    if SysPowerStatus.BatteryFlag and 2 = 2 then Result:= Result+'Low ';
-    if SysPowerStatus.BatteryFlag and 4 = 4 then Result:= Result+'Critical ';
-    if SysPowerStatus.BatteryFlag and 8 = 8 then Result:= Result+'Charging ';
-    if SysPowerStatus.BatteryFlag and 128 = 128 then Result:= Result+'No system battery ';
-    if SysPowerStatus.BatteryFlag and 255 = 255 then Result:= Result+'Unknown status ';
-   end
- else Result:= 'Could not get the SYSTEM POWER STATUS';
+  if NOT GetSystemPowerStatus(SysPowerStatus)
+  then EXIT('Could not get the SYSTEM POWER STATUS');
+
+  Flag:= SysPowerStatus.BatteryFlag;
+
+  // 255 means unknown status - check this first before bitwise tests
+  if Flag = 255
+  then EXIT('Unknown status');
+
+  // 128 means no system battery
+  if (Flag and 128) = 128
+  then EXIT('No system battery');
+
+  Result:= '';
+  if (Flag and 1) = 1 then Result:= Result + 'High ';
+  if (Flag and 2) = 2 then Result:= Result + 'Low ';
+  if (Flag and 4) = 4 then Result:= Result + 'Critical ';
+  if (Flag and 8) = 8 then Result:= Result + 'Charging ';
+
+  Result:= Trim(Result);
+  if Result = ''
+  then Result:= 'Normal';
 end;
 
 
@@ -287,24 +309,36 @@ end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   Enable/Disables a specific privilege in Windows.
+   REMOTE SHUTDOWN
+   Initiates a system shutdown with optional warning message.
+   Can target remote computers if appropriate permissions are granted.
 -------------------------------------------------------------------------------------------------------------}
+
+{ Initiates system shutdown with optional warning message and timeout.
+  ComputerName: Target machine name (empty string = local computer).
+  Reboot: If TRUE, reboots after shutdown.
+  Force: If TRUE, forcefully closes applications.
+  Msg: Warning message displayed to users.
+  TimeOut: Seconds to display the warning before shutdown (0 = immediate). }
 function InitSystemShutdown(const ComputerName: WideString; Reboot, Force: Boolean; const Msg: string; TimeOut: Cardinal=0): Boolean;
 begin
-  Result := False;
-  if SetPrivilege('SeShutdownPrivilege', True) then
-   TRY
-     Result := InitiateSystemShutdown(PChar(ComputerName), //Machine Name
-                                      PChar(Msg),          //Warning message to show
-                                      TimeOut,             //Timeout to show the message
-                                      Force,               //Should force apps to close?
-                                      Reboot);             //Should reboot system?
-   FINALLY
-     SetPrivilege('SeShutdownPrivilege', False);
-   end;
+  Result:= FALSE;
+  if SetPrivilege('SeShutdownPrivilege', TRUE)
+  then
+    TRY
+      Result:= InitiateSystemShutdown(
+        PChar(ComputerName),  // Machine Name (empty = local)
+        PChar(Msg),           // Warning message to show
+        TimeOut,              // Timeout in seconds
+        Force,                // Force apps to close?
+        Reboot);              // Reboot after shutdown?
+    FINALLY
+      SetPrivilege('SeShutdownPrivilege', FALSE);
+    END;
 
   {$IFDEF Debug}
-  if NOT Result then RaiseLastOSError;
+  if NOT Result
+  then RaiseLastOSError;
   {$ENDIF}
 end;
 

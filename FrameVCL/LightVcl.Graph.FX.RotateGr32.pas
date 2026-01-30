@@ -2,27 +2,35 @@ UNIT LightVcl.Graph.FX.RotateGr32;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
-  The best function I have found is RotateBitmapGR32 (antialising, fastest).
-  However, it seems that RotateBitmapGDIP is even better but it doesn't work.
+  High-quality image rotation using Graphics32 library with anti-aliasing support.
+  The best function I have found is RotateBitmapGR32 (antialiasing, fastest).
 
   Functionalities:
-   * Rotate image
-   * Has antialising
+   * Rotate image at arbitrary angles
+   * Has antialiasing via configurable resampler kernels
 
   AdjustSize parameter:
-    True : then the size of BMP will adjusted to hold the entire rotated image.
-    False: then the size of BMP will remain the same, thereofre the rotated image will be cropped.
+    True : The output bitmap will be resized to hold the entire rotated image without cropping.
+    False: The output bitmap keeps original dimensions; the rotated image will be cropped.
+
+  Transparent parameter:
+    Controls whether the output bitmap has transparency enabled after rotation.
+    When True, empty areas (corners) from rotation remain transparent.
+    When False, they are filled with BkColor.
+
+  ResamplerKernel parameter:
+    Controls the resampling quality. Use constants from LightVcl.Graph.ResizeGr32:
+    HermiteKernel (13) is the default - good balance of quality and speed.
+    See LightVcl.Graph.ResizeGr32 for all available kernels.
 
   Tester:
     c:\MyProjects\Projects GRAPHICS\Rotate, flip\RotateTester.dpr
     c:\MyProjects\LightSaber\cGraphRotate.pas conclusions.png
 ==================================================================================================}
-
-//  see: f:\Pas\MMedia Rotate Image Component\
 
 INTERFACE
 { $I GR32.Inc}
@@ -41,29 +49,46 @@ IMPLEMENTATION
 
 
 {--------------------------------------------------------------------------------------------------
-   ROTATE
-   We rotate the Src image and we paste transparently (this means that the empty triangle resulted from rotation are transparent) in Dest at the XY coordinates
+   ROTATE AND COMPOSITE
+
+   Rotates the Source image by the specified Angle (in degrees), then composites it
+   transparently onto the Destination bitmap at coordinates (X, Y).
+   The empty triangular areas from rotation remain transparent during blending.
+
+   Parameters:
+     Source          - Input bitmap to rotate (will be converted to pf24bit)
+     Destination     - Target bitmap where the rotated image will be composited
+     Angle           - Rotation angle in degrees (positive = counter-clockwise)
+     X, Y            - Position on Destination where rotated image will be drawn
+     ResamplerClass  - Resampler type (default: KernelResampler=3 for best quality)
+     ResamplerKernel - Kernel for KernelResampler (default: HermiteKernel)
 --------------------------------------------------------------------------------------------------}
-procedure RotateBitmapGR32(Source, Destination: TBitmap; Angle: Single; X, Y: Integer; ResamplerClass: integer= 3; ResamplerKernel: integer= HermiteKernel);   { Angle in Deg }
+procedure RotateBitmapGR32(Source, Destination: TBitmap; Angle: Single; X, Y: Integer; ResamplerClass: integer= 3; ResamplerKernel: integer= HermiteKernel);
 var
    Src: TBitmap32;
    Dst: TBitmap32;
-   RotCenterX, RotCenterY: Extended;   // rotation center
+   RotCenterX, RotCenterY: Extended;
    AffineTransformation: TAffineTransformation;
 begin
- Source.PixelFormat:= pf24bit; { Doesn't work without this! I tried. }
+ Assert(Source <> NIL, 'RotateBitmapGR32: Source bitmap cannot be nil');
+ Assert(Destination <> NIL, 'RotateBitmapGR32: Destination bitmap cannot be nil');
 
- { Create  }
+ Source.PixelFormat:= pf24bit; { GR32 requires 24-bit or 32-bit pixel format }
+
  Src:= TBitmap32.Create;
  Dst:= TBitmap32.Create;
- AffineTransformation := TAffineTransformation.Create;
+ AffineTransformation:= TAffineTransformation.Create;
  TRY
-  SetBorderTransparent(Src, Src.BoundsRect);                                          { make the Source border pixels transparent while keeping their RGB components }
-  { Resampler }
+  { First assign the source, then configure resampler and transparency }
+  Src.Assign(Source);
+
+  { Configure resampler for quality anti-aliasing }
   TCustomResamplerClass(ResamplerList[ResamplerClass]).Create(Src);
   if Src.Resampler is TKernelResampler
-  then TKernelResampler(Src.Resampler).Kernel:= TCustomKernelClass(KernelList[ResamplerKernel]).Create;   { 5= one of the kernels }
-  Src.Assign(Source);
+  then TKernelResampler(Src.Resampler).Kernel:= TCustomKernelClass(KernelList[ResamplerKernel]).Create;
+
+  { Make border pixels transparent to avoid edge artifacts during rotation }
+  SetBorderTransparent(Src, Src.BoundsRect);
 
   { Rotate image }
   AffineTransformation.Clear;
@@ -102,19 +127,35 @@ end;
 
 
 
+{--------------------------------------------------------------------------------------------------
+   ROTATE IN PLACE (TBitmap32)
+
+   Rotates the input TBitmap32 in place by the specified angle.
+
+   Parameters:
+     Bmp             - Input/output TBitmap32 (modified in place)
+     Angle           - Rotation angle in degrees (positive = clockwise)
+     AdjustSize      - True: resize output to fit rotated image. False: keep original size (crops)
+     BkColor         - Background color for empty areas after rotation
+     Transparent     - Controls transparency mode of output bitmap
+     ResamplerKernel - Kernel for quality anti-aliasing (default: HermiteKernel)
+--------------------------------------------------------------------------------------------------}
 procedure RotateBitmapGR32(Bmp: TBitmap32; Angle: Single; AdjustSize: Boolean= True; BkColor: TColor = clPurple; Transparent: Boolean = FALSE; ResamplerKernel: Integer= HermiteKernel);
 VAR
   Dst: TBitmap32;
   Transformation: TAffineTransformation;
 begin
-  SetBorderTransparent(Bmp, Bmp.BoundsRect);                                                       { Added by me }
+  Assert(Bmp <> NIL, 'RotateBitmapGR32: Bitmap cannot be nil');
 
-  Dst := TBitmap32.Create;
-  Transformation := TAffineTransformation.Create;
+  { Make border pixels transparent to avoid edge artifacts during rotation }
+  SetBorderTransparent(Bmp, Bmp.BoundsRect);
+
+  Dst:= TBitmap32.Create;
+  Transformation:= TAffineTransformation.Create;
   TRY
-    { Setup transformation }
+    { Setup affine transformation: translate to origin, rotate, then translate back }
     Transformation.BeginUpdate;
-    Transformation.SrcRect := FloatRect(0, 0, Bmp.Width, Bmp.Height);
+    Transformation.SrcRect:= FloatRect(0, 0, Bmp.Width, Bmp.Height);
     Transformation.Translate(-0.5 * Bmp.Width, -0.5 * Bmp.Height);
     Transformation.Rotate(0, 0, -Angle);
 
@@ -125,27 +166,31 @@ begin
     Transformation.Translate(0.5 * Dst.Width, 0.5 * Dst.Height);
     Transformation.EndUpdate;
 
-    { Resampler }                                                        { Added by me }
+    { Configure resampler for quality anti-aliasing }
     Bmp.BeginUpdate;
     TCustomResamplerClass(ResamplerList[KernelResampler]).Create(Bmp);
     if Bmp.Resampler is TKernelResampler
-    then TKernelResampler(Bmp.Resampler).Kernel:= TCustomKernelClass(KernelList[ResamplerKernel]).Create;   { 5= one of the kernels }
+    then TKernelResampler(Bmp.Resampler).Kernel:= TCustomKernelClass(KernelList[ResamplerKernel]).Create;
     Bmp.EndUpdate;
 
+    { Fill destination with background color }
     Dst.Clear(Color32(BkColor));
 
+    { When NOT Transparent: use dmTransparent during transform for proper blending,
+      but the final output will have BkColor in empty areas }
     if NOT Transparent
-    then Bmp.DrawMode := dmTransparent;
+    then Bmp.DrawMode:= dmTransparent;
 
-    { Transform }
+    { Perform the rotation transform }
     Transform(Dst, Bmp, Transformation);
 
-    { Output }
-    Bmp.OuterColor := Color32(BkColor);
+    { Copy result back to input bitmap }
+    Bmp.OuterColor:= Color32(BkColor);
     Bmp.Assign(Dst);
 
+    { When Transparent: enable transparent drawing mode on the output }
     if Transparent
-    then Bmp.DrawMode := dmTransparent;
+    then Bmp.DrawMode:= dmTransparent;
   FINALLY
     FreeAndNil(Transformation);
     FreeAndNil(Dst);
@@ -154,17 +199,32 @@ end;
 
 
 
-procedure RotateBitmapGR32 (Bmp: TBitmap; Angle: Single; AdjustSize: Boolean= True; BkColor: TColor = clPurple; Transparent: Boolean = FALSE; ResamplerKernel: Integer= HermiteKernel);
+{--------------------------------------------------------------------------------------------------
+   ROTATE IN PLACE (TBitmap)
+
+   Convenience wrapper that rotates a standard VCL TBitmap in place.
+   Internally converts to TBitmap32, performs rotation, and converts back.
+
+   Parameters:
+     Bmp             - Input/output TBitmap (modified in place)
+     Angle           - Rotation angle in degrees (positive = clockwise)
+     AdjustSize      - True: resize output to fit rotated image. False: keep original size (crops)
+     BkColor         - Background color for empty areas after rotation
+     Transparent     - Controls Transparent property of output TBitmap
+     ResamplerKernel - Kernel for quality anti-aliasing (default: HermiteKernel)
+--------------------------------------------------------------------------------------------------}
+procedure RotateBitmapGR32(Bmp: TBitmap; Angle: Single; AdjustSize: Boolean= True; BkColor: TColor = clPurple; Transparent: Boolean = FALSE; ResamplerKernel: Integer= HermiteKernel);
 VAR
   Dest: TBitmap32;
 begin
-  Dest := TBitmap32.Create;
+  Assert(Bmp <> NIL, 'RotateBitmapGR32: Bitmap cannot be nil');
+
+  Dest:= TBitmap32.Create;
   TRY
-    //Bmp.Transparent;
     Dest.Assign(Bmp);
     RotateBitmapGR32(Dest, Angle, AdjustSize, BkColor, Transparent, ResamplerKernel);
     Bmp.Assign(Dest);
-    Bmp.Transparent := Transparent;
+    Bmp.Transparent:= Transparent;
   FINALLY
     FreeAndNil(Dest);
   end;

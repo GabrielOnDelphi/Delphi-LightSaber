@@ -2,37 +2,45 @@ UNIT LightVcl.Graph.Loader.Thread;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
   Loads multiple images in separate threads.
   Images are automatically resized to Width, Height.
   When the thumbnail of an image is ready, it is put in a Queue by PushPicture which
-    also informs the caller that the thumbnail is ready (via a WM_THUMBNAIL_NOTIFY signal)
-  The caller gets the picture from queue using PopThumb (the image is deleted from queue).
-  The caller is responsible to free the thumbnail.
+    also informs the caller that the thumbnail is ready (via a WM_THUMBNAIL_NOTIFY signal).
+  The caller gets the picture from queue using PopPicture (the image is deleted from queue).
+  The caller is responsible for freeing the thumbnail.
 
   HOW TO USE IT:
 
-     BkgThread            := TBkgImgLoader.Create(Handle);
-     BkgThread.Priority   := tpLower;
-     BkgThread.FileList   := GetFolderContent("c:\images\");
-     BkgThread.Height     := 800;
-     BkgThread.Width      := 600;
-     BkgThread.ResamplerQual:= ResamplerQual;
+     BkgThread:= TBkgImgLoader.Create(Handle);
+     BkgThread.Priority:= tpLower;
+     BkgThread.FileList:= GetFolderContent("c:\images\");  // Thread takes ownership of FileList!
+     BkgThread.Height:= 800;
+     BkgThread.Width := 600;
      BkgThread.Start;
 
   The result is sent back to the application via a WM_THUMBNAIL_NOTIFY message/notification:
 
-     procedure TForm1.WMThumbnailReady(VAR AMessage: TMessage);                                   Receive notifications from worker thread each time a thumbnail is ready
+     procedure TForm1.WMThumbnailReady(VAR AMessage: TMessage);
      begin
        BMP:= BkgThread.PopPicture;
-       Show(BMP);
-       FreeAndNil(BMP);
+       if BMP <> NIL then
+        begin
+         Show(BMP);
+         FreeAndNil(BMP);
+        end;
      end;
 
-  We can put a single file in FileList and process onyl that file.
+  IMPORTANT:
+    - FileList: The thread takes ownership of the TStringList and will free it when done.
+                Do NOT free FileList after assigning it to the thread!
+    - PopPicture: Returns NIL if the queue is empty. Always check the result before using.
+    - The caller is responsible for freeing the bitmaps returned by PopPicture.
+
+  We can put a single file in FileList and process only that file.
 
   Used by: LightVcl.Visual.ThumbViewerM
 --------------------------------------------------------------------------------------------------}
@@ -61,7 +69,7 @@ TYPE
     procedure Execute; override;
     procedure Handleexception; virtual;
   public
-    SilentErrors: Boolean;                        { Silent: don't show errors in case the image cannot beloaded }
+    SilentErrors: Boolean;                        { Silent: don't show errors in case the image cannot be loaded }
     Width: Integer;
     Height: Integer;
     FileList: TStringList;
@@ -83,18 +91,21 @@ USES LightVcl.Graph.Resize, LightVcl.Graph.ResizeVCL;
   THREAD CREATE/DESTROY
 --------------------------------------------------------------------------------------------------}
 
-constructor TBkgImgLoader.Create(CONST AWndHandle: HWND);                                          { Handler to the caller window. The thread will inform the caller that a new thumbnail is ready via this handle }
+{ Creates the background image loader thread (suspended).
+  AWndHandle: Handle to the caller window that will receive WM_THUMBNAIL_NOTIFY messages.
+              The caller must have a valid window handle to receive notifications. }
+constructor TBkgImgLoader.Create(CONST AWndHandle: HWND);
 begin
  inherited Create(TRUE);                                                                           { Create suspended }
+ Assert(IsWindow(AWndHandle), 'TBkgImgLoader.Create: AWndHandle must be a valid window handle');
  FWndHandle      := AWndHandle;
  ReadyThumbs     := TQueue<TBitmap>.Create;
  FQueueLock      := TCriticalSection.Create;
- SilentErrors    := False;    { Silent: don't show errors in case the image cannot beloaded }
+ SilentErrors    := False;    { If True, don't show errors when images fail to load }
  Width           := 256;
  Height          := 128;
- //ResamplerQual   := 1;  // corect ?????????
- FileList        := nil;
- FreeOnTerminate := FALSE;                                                                         { You do not need to clean up after termination. }
+ FileList        := NIL;      { Caller must assign FileList before Start. Thread takes ownership! }
+ FreeOnTerminate := FALSE;
  Priority        := tpLower;
 end;
 
@@ -112,47 +123,53 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    THREAD EXECUTE
+   Main thread loop: iterates through FileList and loads each image.
+   FileList is freed when done (thread owns it).
+   All exceptions are caught to prevent thread crashes - see Delphi documentation on TThread.Execute.
 --------------------------------------------------------------------------------------------------}
 
 procedure TBkgImgLoader.Execute;
 VAR CurFile: string;
 begin
  Fexception := NIL;
- Assert(FileList<> nil, 'TBkgImgLoader - FileList is nil!');
+ Assert(FileList <> NIL, 'TBkgImgLoader.Execute: FileList must be assigned before starting the thread!');
 
  TRY
    for CurFile in FileList DO
     TRY
       if Terminated then EXIT;
       ProcessFile(CurFile);
-    except
-      //todo 1: trap only specific exceptions
-      Handleexception;                                                  { Borland documentation: The Execute method must catch all exceptions that occur in the thread. If you fail to catch an exception in your thread function, your application can cause access violations. This may not be obvious when you are developing your application, because the IDE catches the exception, but when you run your application outside of the debugger, the exception will cause a runtime error and the application will stop running.  }
+    EXCEPT
+      //todo 1: trap only specific exceptions (EFOpenError, EInvalidGraphic, etc.)
+      Handleexception;                                                  { Catch all exceptions to prevent thread crash. Delphi TThread requires this. }
     END;
  FINALLY
-   FreeAndNil(FileList);
+   FreeAndNil(FileList);   { Thread owns FileList - free it when done }
  END;
 end;
 
 
-procedure TBkgImgLoader.ProcessFile(const aFileName: string);
+{ Loads a single image file, resizes it to Width x Height, and pushes it to the queue.
+  Handles exceptions gracefully based on SilentErrors setting. }
+procedure TBkgImgLoader.ProcessFile(CONST AFileName: string);
 VAR BMP: TBitmap;
 begin
- if Terminated then EXIT;                                              { are asta vreun sens aici }
- if NOT FileExists(AFileName) then EXIT;                               { I think I need to push a NIL bmp so the caller will know that is something wrong with this file }
+ if Terminated then EXIT;
+ if NOT FileExists(AFileName) then EXIT;
 
+ BMP:= NIL;
  TRY
   BMP:= LoadAndStretch(AFileName, Width, Height);
 
   { Push thumbnail in queue }
-  if (BMP <> NIL) then
+  if BMP <> NIL then
     if Terminated
-    then FreeAndNil(BMP)                                               { The caller won't receive this bitmap so it cannot free it. We have to free it. }
+    then FreeAndNil(BMP)                                               { Thread terminated - free bitmap since caller won't receive it }
     else PushPicture(BMP);
 
  EXCEPT
-   //todo 1: trap only specific exceptions
-   FreeAndNil(BMP);                                                     { Release the image ONLY in case of an error }
+   //todo 1: trap only specific exceptions (EFOpenError, EInvalidGraphic, etc.)
+   FreeAndNil(BMP);                                                    { Release the image in case of an error }
    if NOT SilentErrors then RAISE;
  END;
 end;
@@ -210,14 +227,18 @@ begin
 end;
 
 
+{ Retrieves the next ready thumbnail from the queue.
+  Returns NIL if the queue is empty. Caller is responsible for freeing the returned bitmap. }
 function TBkgImgLoader.PopPicture: TBitmap;
 begin
  FQueueLock.Enter;
- TRY 
-   Result := ReadyThumbs.Dequeue;
+ TRY
+   if ReadyThumbs.Count > 0
+   then Result:= ReadyThumbs.Dequeue
+   else Result:= NIL;
  FINALLY
    FQueueLock.Leave;
- end;
+ END;
 end;
 
 

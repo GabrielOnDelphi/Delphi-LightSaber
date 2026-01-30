@@ -1,7 +1,7 @@
 UNIT LightVcl.Graph.Desktop;
 
 {=============================================================================================================
-   2023.01
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
@@ -200,8 +200,12 @@ VAR
   MyDc  : HDC;
   MyCanvas: TCanvas;
 begin
-  MyHand  := GetDesktopWindow;
-  MyDc    := GetWindowDC(MyHand);
+  MyHand:= GetDesktopWindow;
+  if MyHand = 0 then Exit;
+
+  MyDc:= GetWindowDC(MyHand);
+  if MyDc = 0 then Exit;
+
   MyCanvas:= TCanvas.Create;
   TRY
    MyCanvas.Handle := MyDC;
@@ -216,6 +220,7 @@ begin
    MyCanvas.TextOut(x, y, Text);
   FINALLY
    FreeAndNil(MyCanvas);
+   ReleaseDC(MyHand, MyDc);
   END;
 end;
 
@@ -227,10 +232,18 @@ end;
 procedure WriteTextOnDesktopOver(x, y: integer; Text: string; FontName: string; Size: integer; Color: TColor);
 VAR
   MyCanvas: TCanvas;
+  Handle: HWND;
+  DC: HDC;
 begin
+  Handle:= GetDesktopHandle;
+  if Handle = 0 then Exit;
+
+  DC:= GetWindowDC(Handle);
+  if DC = 0 then Exit;
+
   MyCanvas:= TCanvas.Create;
   TRY
-   MyCanvas.Handle := GetWindowDC(GetDesktopHandle);
+   MyCanvas.Handle := DC;
    BeginPath(MyCanvas.Handle);
    MyCanvas.Font.Color := Color;
    MyCanvas.Font.Name  := FontName;
@@ -240,6 +253,7 @@ begin
    MyCanvas.TextOut(x, y, Text);
   FINALLY
    FreeAndNil(MyCanvas);
+   ReleaseDC(Handle, DC);
   END;
 end;
 
@@ -247,7 +261,7 @@ end;
 { Win  7: Writes text under desktop icons
   Win 10: Writes text under desktop icons.
   This will paint on the actual desktop window, and not over open windows, so the text could be hidden by any possible open window.
-  The text is delete if I move an icon over it.
+  The text is deleted if the user moves an icon over it.
 
   This works even if BX changed the desktop window order! }
 procedure WriteTextOnDesktopUnder(x, y: integer; Text: string);    //old name: WriteTextOnWallpaper
@@ -256,9 +270,16 @@ VAR Handle: HWND;
     OutString: PChar;
 begin
    Handle:= GetDesktopHandle;
-   DC := GetWindowDC(Handle);
-   OutString := PChar(Text);
-   TextOut(DC, x, y, OutString, Length(OutString));
+   if Handle = 0 then Exit;
+
+   DC:= GetWindowDC(Handle);
+   if DC = 0 then Exit;
+   TRY
+     OutString:= PChar(Text);
+     TextOut(DC, x, y, OutString, Length(OutString));
+   FINALLY
+     ReleaseDC(Handle, DC);
+   END;
 end;
 
 
@@ -303,39 +324,41 @@ begin
 end;
 
 
-function GetDesktopHandleWin7_: THandle;  { Alternative }
+{ Alternative implementation - currently unused. Kept for reference. }
+function GetDesktopHandleWin7_: THandle;
 VAR S: String;
 begin
-  Result := FindWindow('ProgMan', 'Program Manager' {or NIL});
-  Result := GetWindow(Result, GW_CHILD);
-  Result := GetWindow(Result, GW_CHILD);
+  Result:= FindWindow('ProgMan', 'Program Manager' {or NIL});
+  Result:= GetWindow(Result, GW_CHILD);
+  Result:= GetWindow(Result, GW_CHILD);
   SetLength(S, 40);
   GetClassName(Result, PChar(S), 39);
-  if PChar(S) <> 'SysListView32'
-  then Result := 0;
+  S:= PChar(S);  { Trim to actual null-terminated length }
+  if S <> 'SysListView32'
+  then Result:= 0;
 end;
 
 
-{ Source
-  https://stackoverflow.com/questions/34952967/drawing-to-the-desktop-via-injection }
+{ Alternative implementation - currently unused. Kept for reference.
+  Source: https://stackoverflow.com/questions/34952967/drawing-to-the-desktop-via-injection }
 function GetDesktopHandleWin7__: HWND;
 var
    worker, defView, desktop: HWND;
 begin
- Result   := 0;
- defView  := 0;
- worker   := 0;
- desktop  := GetDesktopWindow();
+ Result  := 0;
+ defView := 0;
+ worker  := 0;
+ desktop := GetDesktopWindow();
 
- while defView= 0 do
+ while defView = 0 do
   begin
-     worker := FindWindowEx(desktop, worker, 'WorkerW', nil);
-     if worker = 0 then exit(0);
+     worker:= FindWindowEx(desktop, worker, 'WorkerW', nil);
+     if worker = 0 then EXIT(0);
 
-     defView := FindWindowEx(worker, 0, 'SHELLDLL_DefView', nil);
+     defView:= FindWindowEx(worker, 0, 'SHELLDLL_DefView', nil);
 
      if defView > 0
-     then Result := FindWindowEx(defView, 0, 'SysListView32', nil);   { There is a suggestion to use FolderView instead of NIL: https://stackoverflow.com/questions/8364758/get-handle-to-desktop-shell-window }
+     then Result:= FindWindowEx(defView, 0, 'SysListView32', nil);   { There is a suggestion to use FolderView instead of NIL: https://stackoverflow.com/questions/8364758/get-handle-to-desktop-shell-window }
   end;
 end;
 
@@ -375,7 +398,11 @@ begin
 end;
 
 
-{ Detects if it is Win7 or Win8+ }
+{ Returns a handle to the desktop icon list view (SysListView32 or WorkerW).
+  Automatically detects Windows version and uses the appropriate method:
+    - Windows XP: Uses ShellDll_DefView child of Progman
+    - Windows 7:  Uses EnumWindows to find SHELLDLL_DefView then SysListView32
+    - Windows 8+: Uses EnumWindows to find WorkerW behind SHELLDLL_DefView }
 function GetDesktopHandle: HWND;
 VAR
    MyData: TMyData;
@@ -484,18 +511,16 @@ end;
 
 
 
-{ Old drawing method.
-  Win  7: Paints over icons
-  Win  8: Paints under icons
-  Win 10: Does nothing
+{ Paints a bitmap on the desktop. Behavior varies by Windows version:
+    Win 7:  Paints OVER icons
+    Win 8+: Paints UNDER icons (uses 0x052C message to spawn WorkerW)
+    Win 10: May do nothing (depends on desktop configuration)
 
-  Looks nasty when the user move cursor over icons as only that area of the desktop will get refresh.
-  This is a temporary painting. Lasts until user (or other apps) presses F5 to refresh desktop
+  This is a temporary painting - lasts until user presses F5 to refresh desktop.
+  Note: Moving cursor over icons causes partial refresh which looks inconsistent.
 
-  It is odd that when DreamScene was installed, this function blended the specified color (clBlack in
-  this case) with the original JPG wallpaper set by BioniX instead of blanking the desktop.
-  The image 'normally' visible before calling this function was the last frame from DreamScene WMV movie. Where I paused.
-  So, it looks like it is dependent on the existence of the special hidden window ($052C) }
+  On Win 8+, sends the undocumented 0x052C message to Progman to spawn a WorkerW
+  window behind the desktop icons. This allows painting between the wallpaper and icons. }
 function PaintOverIcons(X, Y: Integer; BMP : TBitmap): Boolean;
 VAR
    Progman, Handle : HWND;
@@ -526,54 +551,53 @@ end;
 
 
 
+{ Draws a bitmap on a window specified by Handle.
+  Returns True on success, False if DC cannot be obtained. }
 function DrawOnWindow(Handle: HWND; X, Y: Integer; BMP : TBitmap): Boolean;
 VAR
    DC: HDC;
    Canvas: TCanvas;
 begin
- Result:= TRUE;
- if Handle <= 0
- then raise Exception.Create('DrawOnWindow: Handle is invalid: ' + IntToStr(Handle));
- if BMP = NIL
- then raise Exception.Create('DrawOnWindow: BMP parameter cannot be nil');
+ Assert(Handle > 0, 'DrawOnWindow: Handle is invalid: ' + IntToStr(Handle));
+ Assert(BMP <> NIL, 'DrawOnWindow: BMP parameter cannot be nil');
 
+ DC:= GetDC(Handle);
+ if DC = 0 then EXIT(FALSE);
+
+ Canvas:= TCanvas.Create;
  TRY
-  DC := GetDC(Handle);
-  Canvas:= TCanvas.Create;                                                  { This is probably slow }
-  TRY
-    Canvas.Handle := DC;
-    Canvas.Draw(x, y, bmp);                                                 { Draw the bitmap }
-  FINALLY
-    FreeAndNil(Canvas);
-  END;
-  ReleaseDC(Handle, DC);
- EXCEPT
-  //todo 1: trap only specific exceptions
-  Result:= FALSE;
+   Canvas.Handle:= DC;
+   Canvas.Draw(x, y, bmp);
+ FINALLY
+   FreeAndNil(Canvas);
+   ReleaseDC(Handle, DC);
  END;
+
+ Result:= TRUE;
 end;
 
 
 
-{ It is not faster than the one above, without bitblt }
-function DrawOnWindowBitBlt(Handle: HWND; X, Y: Integer; BMP : TBitmap): Boolean;  { It is not faster than the one above, without bitblt }  { BitBlt documentation: https://msdn.microsoft.com/en-us/library/windows/desktop/dd183370(v=vs.85).aspx }
+{ Draws a bitmap on a window using BitBlt. Not faster than DrawOnWindow.
+  Returns True on success, False if DC cannot be obtained.
+  BitBlt documentation: https://msdn.microsoft.com/en-us/library/windows/desktop/dd183370(v=vs.85).aspx }
+function DrawOnWindowBitBlt(Handle: HWND; X, Y: Integer; BMP : TBitmap): Boolean;
 VAR
    DC: HDC;
 begin
- Result:= TRUE;
- if Handle <= 0
- then raise Exception.Create('DrawOnWindowBitBlt: Handle is invalid: ' + IntToStr(Handle));
- if BMP = NIL
- then raise Exception.Create('DrawOnWindowBitBlt: BMP parameter cannot be nil');
+ Assert(Handle > 0, 'DrawOnWindowBitBlt: Handle is invalid: ' + IntToStr(Handle));
+ Assert(BMP <> NIL, 'DrawOnWindowBitBlt: BMP parameter cannot be nil');
+
+ DC:= GetDC(Handle);
+ if DC = 0 then EXIT(FALSE);
 
  TRY
-   DC := GetDC(Handle);                                                      { the dc is freed after repainting }
    BitBlt(DC, x, y, BMP.Width, BMP.Height, BMP.Canvas.Handle, 0, 0, SRCCOPY);
+ FINALLY
    ReleaseDC(Handle, DC);
- except
-  //todo 1: trap only specific exceptions
-  Result:= FALSE;
  END;
+
+ Result:= TRUE;
 end;
 
 
@@ -650,8 +674,9 @@ end;
 
 
 
-{ It will blank all monitors.
-  The blank is permanent (cur wallpaper is 'lost') }
+{ Blanks the desktop across all monitors by setting a solid color wallpaper.
+  The operation is PERMANENT - the previous wallpaper is overwritten.
+  Optionally displays centered text (Logo) on the blank background. }
 procedure BlankDesktop(Logo: string= ''; bkgColor: TColor= clBlack);        //old name: BlankMonitors
 VAR
    SaveAs: string;

@@ -2,18 +2,17 @@ UNIT LightVcl.Graph.Loader.RainDrop;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
-  Reads/writes files in RainDrop format (own format).
-  It saves itself to disk to a binaray file that contains:
+  Reads/writes files in RainDrop format (own binary format).
+  It saves itself to disk to a binary file that contains:
     * The original image as a JPG stream
-    * A 2D array of bits (TPixelMap)
+    * A 2D array of bits (TPixelMap) - True bits correspond to pink pixels where water drops appear
 
   See editor:
-     LightVcl.Graph.Loader.RainEditor.pas
-     c:\Myprojects\BIONIX\Projects\Project - Effects RainDrop\RainDropEditor\RainDropEditor.dpr
+     LightVcl.Graph.Loader.RainEditorForm.pas
 -----------------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
@@ -76,21 +75,7 @@ USES
    LightVcl.Graph.Convert, LightVcl.Graph.Loader;
 
 CONST
-   Verification=  $50505050;
-
-
-{
-function DetectRainShelter(CONST FileName: string): Boolean;    Unused
-VAR
-   Stream: TLightStream;
-begin
- Stream:= TLightStream.CreateRead(FileName);
- TRY
-   Result:= stream.TryReadHeader_(RainMagicNo, 1);
- FINALLY
-   FreeAndNil(Stream);
- END;
-end; }
+   Verification= $50505050;   { File integrity marker written after the JPG stream }
 
 
 function IsRainDrop(CONST FileName: string): Boolean;
@@ -101,15 +86,24 @@ begin
 end;
 
 
+{---------------------------------------------------------------------------------------------------------------
+   LoadRainShelter
+   Loads a RainDrop file and returns the original embedded image as a TBitmap.
+   Returns NIL if the file cannot be loaded or is invalid.
+   Caller is responsible for freeing the returned TBitmap.
+---------------------------------------------------------------------------------------------------------------}
 function LoadRainShelter(CONST FileName: string): TBitmap;
 VAR
    Obj: TRainShelter;
 begin
- Result:= TBitmap.Create;
+ Result:= NIL;
  Obj:= TRainShelter.Create;
  TRY
-   Obj.LoadFromFile(FileName);
-   Result.Assign(Obj.OrigImage);
+   if Obj.LoadFromFile(FileName) AND (Obj.OrigImage <> NIL) then
+     begin
+       Result:= TBitmap.Create;
+       Result.Assign(Obj.OrigImage);
+     end;
  FINALLY
   FreeAndNil(Obj);
  END;
@@ -138,6 +132,7 @@ procedure TRainShelter.Clear;
 begin
  FileName:= '';
  FreeAndNil(OrigImage);
+ SetLength(PixelMap, 0);   { Reset pixel map to prevent stale data }
 end;
 
 
@@ -162,14 +157,25 @@ end;
 
 CONST CurrVersion = 3;
 
+{---------------------------------------------------------------------------------------------------------------
+   SaveToFile
+   Saves the RainDrop file containing:
+     1. File header (signature + version)
+     2. Image dimensions (width, height)
+     3. Animation parameters (damping, FPS, wave settings)
+     4. Original image as embedded JPG stream
+     5. Verification marker
+     6. Pixel map (boolean array marking water drop positions - pink pixels)
+   Note: Pink pixels (clFuchsia) in Mask indicate where water drops will appear.
+---------------------------------------------------------------------------------------------------------------}
 procedure TRainShelter.SaveToFile(aFileName: string; Mask: TBitmap);
 VAR
    x, y, w, h: Integer;
    b: Boolean;
    Stream: TLightStream;
 begin
- Assert(Mask <> NIL);
- Assert(OrigImage <> NIL);
+ Assert(Mask <> NIL, 'TRainShelter.SaveToFile: Mask bitmap cannot be nil');
+ Assert(OrigImage <> NIL, 'TRainShelter.SaveToFile: OrigImage cannot be nil');
  FileName:= aFileName;
 
  { Prepare output stream }
@@ -217,6 +223,12 @@ end;
 
 
 
+{---------------------------------------------------------------------------------------------------------------
+   LoadFromFile
+   Loads a RainDrop file and populates OrigImage, PixelMap, and Params.
+   Returns TRUE on success, FALSE if the file signature/version doesn't match.
+   Raises an exception if the file is corrupted (size mismatch or verification failure).
+---------------------------------------------------------------------------------------------------------------}
 function TRainShelter.LoadFromFile(aFileName: string): Boolean;
 VAR
    Count: Integer;
@@ -229,50 +241,48 @@ begin
  Clear;
  FileName:= aFileName;
 
- { Open inp stream }
  Stream:= TLightStream.CreateRead(FileName);
  TRY
    if Stream.ReadHeader(RainMagicNo, CurrVersion) then
      begin
-        { Read size }
+        { Read image dimensions }
         w:= Stream.ReadCardinal;
         h:= Stream.ReadCardinal;
         Params.Load(Stream);
         Stream.ReadPadding;
         Count:= Stream.ReadInteger;
 
+        { Load embedded JPG and convert to bitmap }
         OrigImage:= TBitmap.Create;
         VAR JpgStream:= TMemoryStream.Create;
         JpegImg:= TJpegImage.Create;
         TRY
-          //Assert(Count = 111791);
           JpgStream.CopyFrom(Stream, Count);
-          JpgStream.Position := 0;
+          JpgStream.Position:= 0;
           JpegImg.LoadFromStream(JpgStream);
-          //JpgStream.SaveToFile(Appdata.AppFolder+ '1.jpg');
-          OrigImage.Assign(JpegImg);         { it must be a bitmap otherwise we get "Can only modify an image if it contains a bitmap": https://stackoverflow.com/questions/35703863/why-cant-i-draw-on-my-images-canvas }
+          OrigImage.Assign(JpegImg);   { Must be a bitmap for canvas operations }
 
           if (w <> OrigImage.Width) OR (h <> OrigImage.Height)
-          then RAISE Exception.Create('Invalid BMP size!');
+          then RAISE Exception.Create('RainDrop file corrupted: image dimensions mismatch');
         FINALLY
           FreeAndNil(JpegImg);
           FreeAndNil(JpgStream);
         END;
 
-        // Verification
+        { Verify file integrity }
         if Stream.ReadCardinal <> Verification
-        then RAISE Exception.Create('Invalid verification!');
+        then RAISE Exception.Create('RainDrop file corrupted: verification marker invalid');
 
-        { Read pink pixels }
+        { Load pixel map (water drop positions) }
         SetLength(PixelMap, w, h);
-        for x := 0 to w-1 do
-         for y := 0 to h-1 do
+        for x:= 0 to w-1 do
+         for y:= 0 to h-1 do
            PixelMap[x, y]:= Stream.ReadBoolean;
 
         Result:= TRUE;
      end;
  FINALLY
-   freeAndNil(Stream);
+   FreeAndNil(Stream);
  END;
 end;
 
@@ -322,11 +332,19 @@ begin
 end;
 
 
+{---------------------------------------------------------------------------------------------------------------
+   SetDamping
+   Validates and sets the water damping value. Values outside the valid range (1-99)
+   are clamped to the nearest boundary rather than silently ignored.
+---------------------------------------------------------------------------------------------------------------}
 procedure RRaindropParams.SetDamping(Value: TWaterDamping);
 begin
-  if  (Value >= Low(TWaterDamping))
-  and (Value <= High(TWaterDamping))
-  then FDamping := Value;
+  { Clamp to valid range instead of silently ignoring invalid values }
+  if Value < Low(TWaterDamping)
+  then FDamping:= Low(TWaterDamping)
+  else if Value > High(TWaterDamping)
+  then FDamping:= High(TWaterDamping)
+  else FDamping:= Value;
 end;
 
 

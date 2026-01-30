@@ -2,11 +2,18 @@ UNIT LightVcl.Graph.Bitmap;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
-   Basic BMP functions
+   Basic BMP functions:
+     - Bitmap creation and clearing
+     - Text centering on bitmaps
+     - Canvas manipulation (enlarge, center)
+     - RAM size estimation
+     - Image orientation/aspect ratio detection
+     - Scale classification (tiny/small/large)
+
    External dependencies: None
 ----------------------------------------------------------------------------------------------------
    Also see:
@@ -190,7 +197,7 @@ end;
    TEXT
 -------------------------------------------------------------------------------------------------------------}
 
-{ Uses whatever font was already set for the canvas }
+{ Uses whatever font was already set for the canvas. Text is drawn with transparent background. }
 procedure CenterText(BMP: TBitmap; CONST Text: string);
 begin
  if BMP = NIL
@@ -198,14 +205,13 @@ begin
 
  if Text > '' then
   begin
-   //BMP.Canvas.Brush.Color:= Font.BkgClr;  del
-   BMP.Canvas.Brush.Style:= bsClear;
+   BMP.Canvas.Brush.Style:= bsClear;  { Transparent background }
    BMP.Canvas.TextOut((BMP.Width- BMP.Canvas.TextWidth(Text)) DIV 2, (BMP.Height- BMP.Canvas.TextHeight(Text)) DIV 2, Text);
   end;
 end;
 
 
-{ Uses Font as font }
+{ Draws centered text using the specified RFont settings. Text is drawn with transparent background. }
 procedure CenterText(BMP: TBitmap; CONST Text: string; aFont: RFont);
 begin
  if BMP = NIL
@@ -213,14 +219,14 @@ begin
 
  if Text > '' then
   begin
-   //BMP.Canvas.Brush.Color:= Font.BkgClr;  del
-   BMP.Canvas.Brush.Style:= bsClear;
+   BMP.Canvas.Brush.Style:= bsClear;  { Transparent background }
    aFont.AssignTo(BMP.Canvas.Font);
    BMP.Canvas.TextOut((BMP.Width- BMP.Canvas.TextWidth(Text)) DIV 2, (BMP.Height- BMP.Canvas.TextHeight(Text)) DIV 2, Text);
   end;
 end;
 
 
+{ Draws centered text using specified font parameters. Text is drawn with transparent background. }
 procedure CenterText(BMP: TBitmap; CONST Text: string; CONST FontName: string; FontSize: Integer; FontColor: TColor);
 begin
  if BMP = NIL
@@ -228,7 +234,7 @@ begin
 
  if Text > '' then
   begin
-   BMP.Canvas.Brush.Style:= bsClear;
+   BMP.Canvas.Brush.Style:= bsClear;  { Transparent background }
    BMP.Canvas.Font.Name:= FontName;
    BMP.Canvas.Font.Size:= FontSize;
    BMP.Canvas.Font.Color:= FontColor;
@@ -241,7 +247,8 @@ end;
    GET RAM SIZE
 -------------------------------------------------------------------------------------------------------------}
 
-{ Returns how much RAM this BMP requires }
+{ Returns the serialized BMP file size (not raw pixel data size).
+  Note: This includes BMP headers and may differ from PredictBitmapRamSize which calculates raw pixel memory. }
 function GetBitmapRamSize(BMP: TBitmap): Int64;
 VAR Stream: TMemoryStream;
 begin
@@ -250,7 +257,6 @@ begin
 
  Stream:= TMemoryStream.Create;
  TRY
-  Stream.Seek(0, soFromBeginning);     { Do we really need to do this?????????? }
   BMP.SaveToStream(Stream);            { Save bitmap to stream }
   Result:= Stream.Size;                { Measure stream size }
  FINALLY
@@ -292,8 +298,12 @@ end;
    IMAGE ORIENTATION / ASPECT
 --------------------------------------------------------------------------------------------------}
 
+{ Panoramic images have width much bigger than height (aspect ratio > 4:1). }
 function IsPanoramic(Width, Height: Integer): Boolean;
 begin
+ if Height <= 0
+ then EXIT(FALSE);  { Invalid height cannot be panoramic }
+
  Result:= (Width > 6000) AND             { Cannot be panoramic unless the width is really big }
          ((Width / Height) > 4);         { Panoramic images have width much much bigger than height }
 end;
@@ -309,20 +319,28 @@ begin
 end;
 
 
-{ Compare the aspect ratio of the specified image with the AR of the monitor (for example) }
+{ Compare the aspect ratio of the specified image with the AR of the monitor (for example).
+  Returns True if source aspect ratio is narrower (taller) than the target aspect ratio. }
 function AspectIsSmaller(SrcBMP: TBitmap; CONST Width, Height: Integer): Boolean;
 begin
  if SrcBMP = NIL
  then raise Exception.Create('AspectIsSmaller: SrcBMP parameter cannot be nil');
+
+ if (SrcBMP.Height <= 0) OR (Height <= 0)
+ then raise Exception.Create('AspectIsSmaller: Height parameters must be greater than zero');
 
  Result:= (SrcBMP.Width / SrcBMP.Height) < (Width / Height);
 end;
 
 
 
-{ Compare the aspect ratio of the specified image with the AR of the monitor (for example) }
+{ Compare the aspect ratio of the specified image with the AR of the monitor (for example).
+  Returns True if source aspect ratio is narrower (taller) than the target aspect ratio. }
 function AspectIsSmaller(Width, Height, SrcWidth, SrcHeight: Integer): Boolean;
 begin
+ if (SrcHeight <= 0) OR (Height <= 0)
+ then raise Exception.Create('AspectIsSmaller: Height parameters must be greater than zero');
+
  Result:= (SrcWidth / SrcHeight) < (Width / Height);
 end;
 
@@ -355,8 +373,8 @@ begin
 end;
 
 
-{ Returns False if the image is Landscape.
-  Returns true if the aspect ratio is portrait OR square.  }
+{ Returns True if the image is Landscape or Square (wider than or equal to tall).
+  Returns False only for Portrait orientation. }
 function IsLandscape(Width, Height: Integer): Boolean;
 begin
  var Orientation:= AspectOrientation(Width, Height);
@@ -364,10 +382,15 @@ begin
 end;
 
 
-{ Returns the scale of an input image relative to requiered size.
-   Normal: Images with area = or > desktop area
-   Small : Images with area < desktop and > TinyThresh
-   Tiny  : Images with area < TinyThresh.  Tiny images are considered too small to be stretched. }
+{ Classifies an image's scale relative to a target size (typically desktop).
+
+  Scale classifications:
+    - isLarge: Image area >= 100% of desktop area (normal size, no stretching needed)
+    - isSmall: Image area between TileThreshold% and 100% (can be stretched to fill)
+    - isTiny:  Image area < TileThreshold% (too small to stretch without quality loss)
+
+  Special case: Images with one dimension >= desktop dimension are never classified
+  as isTiny, even if their total area is small (e.g., tall slim wallpapers). }
 function GetImageScale(InputImage, DesktopSize: TBitmap; Tile: RTileParams): TImageScale;
 begin
  if InputImage = NIL
@@ -382,13 +405,18 @@ end;
 
 function GetImageScale(InputImage: TBitmap; DesktopWidth, DesktopHeight: Integer; Tile: RTileParams): TImageScale;
 VAR Percent: Extended;
+    ImageArea, DesktopArea: Int64;
 begin
  if InputImage = NIL
  then raise Exception.Create('GetImageScale: InputImage parameter cannot be nil');
 
  if Tile.TileThreshold >= 100
  then raise Exception.Create('GetImageScale: TileThreshold cannot be >= 100%');
- Percent:= ProcentRepresent(InputImage.Width* InputImage.Height, DesktopWidth* DesktopHeight);    { Percent of desktop area }
+
+ { Use Int64 to prevent overflow with large image dimensions }
+ ImageArea:= Int64(InputImage.Width) * InputImage.Height;
+ DesktopArea:= Int64(DesktopWidth) * DesktopHeight;
+ Percent:= ProcentRepresent(ImageArea, DesktopArea);    { Percent of desktop area }
 
  if Percent < Tile.TileThreshold
  then Result:= isTiny
@@ -404,8 +432,8 @@ begin
      I have a situation when the wallpaper is super tall and slim (W=300, H=1300).
      This is classified as "tiny" because its area is very small.
      This results in the "Auto tile small images" algorithm to kick in. But when this kicks in, the "Resize" algorithm does not kick in anymore (mutually exclusive) so the image remains taller than the desktop. This result in an assertion failure in "FadeBorder":  Assert(iTop  >= 0, 'iTop.  The wallpaper is larger than the desktop!'. }
- if (Result= isTiny) AND
-    (InputImage.Width>= DesktopWidth) OR (InputImage.Height>= DesktopHeight)
+ if (Result = isTiny)
+ AND ((InputImage.Width >= DesktopWidth) OR (InputImage.Height >= DesktopHeight))
  then Result:= isSmall;
 end;
 
@@ -450,7 +478,14 @@ end;
 
 
 
-{ Center Source into Dest, without resizing any of them. The source can be bigger than destination or other way around. }
+{ Centers Source bitmap into InDest bitmap without resizing either.
+  Handles all size combinations:
+    - If Source is smaller than InDest: Source is centered within InDest
+    - If Source is larger than InDest: The center portion of Source is copied to fill InDest
+    - If sizes are equal: Simple assignment
+
+  The InDest bitmap is modified in-place with the centered content.
+  Does not clear/fill the destination first - caller should prefill if needed. }
 procedure CenterBitmap(Source, InDest: TBitmap);
 VAR
    SrcTop, SrcLeft, SrcRight, SrcBottom: Integer;
@@ -462,38 +497,38 @@ begin
  if InDest = NIL
  then raise Exception.Create('CenterBitmap: InDest parameter cannot be nil');
 
+ { Fast path: same size - direct copy }
  if  (Source.Width = InDest.Width)
  AND (Source.Height= InDest.Height)
  then InDest.Assign(Source)
  else
   begin
+    { Calculate vertical (Y) coordinates }
     if Source.Height < InDest.Height
     then
      begin
-      { SRC }
+      { Source is shorter - center it vertically in destination }
       SrcTop:= 0;
       SrcBottom:= Source.Height;
 
-      { DEST }
       DestTop:= (InDest.Height- Source.Height) DIV 2;
       DestBottom:= DestTop+ Source.Height
      end
     else
      begin
-      { SRC }
+      { Source is taller - take center portion of source }
       SrcTop:= (Source.Height- InDest.Height) DIV 2;
       SrcBottom:= SrcTop+ InDest.Height;
 
-      { DEST }
       DestTop:= 0;
       DestBottom:= InDest.Height;
      end;
 
-
+    { Calculate horizontal (X) coordinates }
     if Source.Width < InDest.Width
     then
      begin
-      { SRC }
+      { Source is narrower - center it horizontally in destination }
       SrcLeft := 0;
       SrcRight:= Source.Width;
 
@@ -502,11 +537,10 @@ begin
      end
     else
      begin
-      { SRC }
+      { Source is wider - take center portion of source }
       SrcLeft := (Source.Width - InDest.Width) DIV 2;
       SrcRight:= SrcLeft+ InDest.Width;
 
-      { DEST }
       DestLeft:= 0;
       DestRight:= InDest.Width;
      end;
@@ -523,16 +557,18 @@ end;
 
 
 
-{ RFont }
+{ RFont - Lightweight font record for basic text rendering settings }
+
+{ Resets font to default values (Verdana, 10pt, lime green) }
 procedure RFont.Clear;
 begin
   Name  := 'Verdana';
   Size  := 10;
   Color := clLime;
-  //BkgClr:= clBlack;
 end;
 
 
+{ Initializes font with specified values }
 procedure RFont.Clear(CONST aName: string; aSize: Integer; aColor: TColor);
 begin
   Name  := aName;
@@ -541,6 +577,7 @@ begin
 end;
 
 
+{ Applies this record's settings to a TFont object }
 procedure RFont.AssignTo(Font: TFont);
 begin
    if Font = NIL

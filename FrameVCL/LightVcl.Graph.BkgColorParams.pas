@@ -2,15 +2,23 @@ UNIT LightVcl.Graph.BkgColorParams;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
+   Parameters for background color/fill effects.
+   Used by LightVcl.Graph.BkgColor.pas for applying border fading and color fill effects to images.
+   The DFM editor for these parameters is in: LightVcl.Graph.BkgColorEditor.pas
 
-  Used by LightVcl.Graph.BkgColor.pas
-  The DFM editor for these parameters is in: LightVcl.Graph.BkgColorEditor.pas
+   Features:
+     - Multiple fill types (solid color, gradient fade)
+     - Effect shapes (rectangles, triangles, single color)
+     - Color detection modes (border detection, image average, user-specified)
+     - Configurable fade speed and edge smearing
 
-  Tester:
+   Stream versioning: CurrentVersion=1. Older BioniX v13 format is auto-converted on read.
+
+   Tester:
        c:\MyProjects\Project Testers\gr cGraphBorder.pas tester\TesterFadeBrd.dpr
 --------------------------------------------------------------------------------------------------}
 
@@ -20,18 +28,25 @@ USES
    System.SysUtils, Vcl.Graphics, LightCore.StreamBuff;
 
 TYPE
+   { Border positions for selective edge effects }
    TBorderType = (btTop, btBottom, btLeft, btRight);
 
+   { Set of borders to apply effects to }
    TBorderSet  = set of TBorderType;
 
-   TFillType   = (ftSolid,             { Don't fade. Use color }
-                  ftFade);             { Fade borders to color. Super slow }
+   { Fill/fade mode for background effect }
+   TFillType   = (ftSolid,             { Solid color fill, no fading }
+                  ftFade);             { Gradient fade from image edge to border color. Slower but smoother }
 
-   TEffectShape= (esRectangles, esTriangles, esOneColor);
+   { Shape used when rendering the border effect }
+   TEffectShape= (esRectangles,        { Fill with rectangular blocks }
+                  esTriangles,         { Fill with triangular patterns }
+                  esOneColor);         { Single solid color fill }
 
-   TEffectColor= (ecAutoDetBorder,     { Detect border color }
-                  ecImageAverage,      { Use average image color }
-                  ecUserColor);        { Use user-provided color }
+   { Method to determine the fill color }
+   TEffectColor= (ecAutoDetBorder,     { Auto-detect dominant color from image border pixels }
+                  ecImageAverage,      { Calculate average color of entire image }
+                  ecUserColor);        { Use Color field specified by user }
 
    PBkgColorParams= ^RBkgColorParams;
    RBkgColorParams= record
@@ -56,56 +71,95 @@ TYPE
 IMPLEMENTATION
 
 
+{ Initialize all fields to sensible defaults.
+  Call this before using the record or to restore defaults. }
 procedure RBkgColorParams.Reset;
 begin
   FillType       := ftSolid;
   EffectShape    := esOneColor;
   EffectColor    := ecImageAverage;
-  FadeSpeed      := 200;
-  EdgeSmear      := 0;
-  NeighborWeight := 100;
-  NeighborDist   := 2;
-  Tolerance      := 8;                       { Border detection }
-  Color          := TColor($218F42);         { Blue+gray+black }
+  FadeSpeed      := 200;                     { Default: 2.0x multiplier (stored as percentage * 100) }
+  EdgeSmear      := 0;                       { No smearing by default }
+  NeighborWeight := 100;                     { Default: 1.0x weight (stored as percentage * 100) }
+  NeighborDist   := 2;                       { 2 pixel neighbor distance }
+  Tolerance      := 8;                       { Border detection tolerance }
+  Color          := TColor($218F42);         { Default: Dark green (R=66, G=143, B=33) }
 end;
 
 
+{ Load parameters from stream.
+  Handles both current format (Version=1) and legacy BioniX v13 format.
+  Raises exception if stream is nil or contains invalid enum values. }
 procedure RBkgColorParams.ReadFromStream(IOStream: TLightStream);
+VAR
+  Version: Integer;
+  FillByte, ShapeByte, ColorByte: Byte;
 begin
   if IOStream = NIL
   then raise Exception.Create('RBkgColorParams.ReadFromStream: IOStream parameter cannot be nil');
 
-  VAR Version:= IOStream.ReadInteger;
+  Version:= IOStream.ReadInteger;
+
+  if Version > CurrentVersion
+  then raise Exception.Create('RBkgColorParams.ReadFromStream: Unknown version ' + IntToStr(Version) + '. Expected <= ' + IntToStr(CurrentVersion));
+
   if Version = CurrentVersion then
    begin
-    { Current }
-    Color         :=              IOStream.ReadInteger;
-    FillType      := TFillType   (IOStream.ReadByte);
-    EffectShape   := TEffectShape(IOStream.ReadByte);
-    EffectColor   := TEffectColor(IOStream.ReadByte);
-    EdgeSmear     :=              IOStream.ReadByte;
-    NeighborDist  :=              IOStream.ReadInteger;
-    Tolerance     :=              IOStream.ReadInteger;
-    FadeSpeed     :=              IOStream.ReadInteger;
-    NeighborWeight:=              IOStream.ReadInteger;
+    { Current format (Version 1) }
+    Color    := IOStream.ReadInteger;
+    FillByte := IOStream.ReadByte;
+    ShapeByte:= IOStream.ReadByte;
+    ColorByte:= IOStream.ReadByte;
+
+    { Validate enum ranges before casting }
+    if FillByte > Ord(High(TFillType))
+    then raise Exception.Create('RBkgColorParams.ReadFromStream: Invalid FillType value: ' + IntToStr(FillByte));
+    if ShapeByte > Ord(High(TEffectShape))
+    then raise Exception.Create('RBkgColorParams.ReadFromStream: Invalid EffectShape value: ' + IntToStr(ShapeByte));
+    if ColorByte > Ord(High(TEffectColor))
+    then raise Exception.Create('RBkgColorParams.ReadFromStream: Invalid EffectColor value: ' + IntToStr(ColorByte));
+
+    FillType      := TFillType(FillByte);
+    EffectShape   := TEffectShape(ShapeByte);
+    EffectColor   := TEffectColor(ColorByte);
+    EdgeSmear     := IOStream.ReadByte;
+    NeighborDist  := IOStream.ReadInteger;
+    Tolerance     := IOStream.ReadInteger;
+    FadeSpeed     := IOStream.ReadInteger;
+    NeighborWeight:= IOStream.ReadInteger;
     IOStream.ReadPadding;
    end
   else
    begin
-    { Up to BioniX v13 inclusive }
-    Color         :=              IOStream.ReadInteger;
-    FillType      := TFillType   (IOStream.ReadByte);
-    EffectShape   := TEffectShape(IOStream.ReadByte);
-    EffectColor   := TEffectColor(IOStream.ReadByte);
-    EdgeSmear     :=              IOStream.ReadByte;
-    NeighborDist  :=              Round(IOStream.ReadSingle * 100);
-    Tolerance     :=              IOStream.ReadInteger;
-    FadeSpeed     :=              Round(IOStream.ReadSingle * 100);
-    NeighborWeight:=              IOStream.ReadInteger;
-   end
+    { Legacy format: BioniX v13 and earlier (Version < 1 or Version = 0) }
+    Color    := IOStream.ReadInteger;
+    FillByte := IOStream.ReadByte;
+    ShapeByte:= IOStream.ReadByte;
+    ColorByte:= IOStream.ReadByte;
+
+    { Validate enum ranges before casting }
+    if FillByte > Ord(High(TFillType))
+    then raise Exception.Create('RBkgColorParams.ReadFromStream: Invalid FillType value in legacy format: ' + IntToStr(FillByte));
+    if ShapeByte > Ord(High(TEffectShape))
+    then raise Exception.Create('RBkgColorParams.ReadFromStream: Invalid EffectShape value in legacy format: ' + IntToStr(ShapeByte));
+    if ColorByte > Ord(High(TEffectColor))
+    then raise Exception.Create('RBkgColorParams.ReadFromStream: Invalid EffectColor value in legacy format: ' + IntToStr(ColorByte));
+
+    FillType      := TFillType(FillByte);
+    EffectShape   := TEffectShape(ShapeByte);
+    EffectColor   := TEffectColor(ColorByte);
+    EdgeSmear     := IOStream.ReadByte;
+    NeighborDist  := Round(IOStream.ReadSingle * 100);  { Convert from float to percentage*100 }
+    Tolerance     := IOStream.ReadInteger;
+    FadeSpeed     := Round(IOStream.ReadSingle * 100);  { Convert from float to percentage*100 }
+    NeighborWeight:= IOStream.ReadInteger;
+   end;
 end;
 
 
+{ Save parameters to stream.
+  Always writes current version format. Use ReadFromStream to load.
+  Raises exception if stream is nil. }
 procedure RBkgColorParams.WriteToStream(IOStream: TLightStream);
 begin
   if IOStream = NIL

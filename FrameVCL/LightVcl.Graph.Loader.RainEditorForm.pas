@@ -1,5 +1,16 @@
 UNIT LightVcl.Graph.Loader.RainEditorForm;
 
+{=============================================================================================================
+   Gabriel Moraru
+   2026.01.30
+   www.GabrielMoraru.com
+   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+--------------------------------------------------------------------------------------------------------------
+   Editor dialog for RainDrop animation parameters.
+   Allows users to configure water drop effect settings: damping, wave amplitude, travel distance, etc.
+   Use TfrmRainEditor.ShowEditor(aParams) to display the modal dialog.
+=============================================================================================================}
+
 INTERFACE
 
 USES
@@ -60,22 +71,25 @@ USES
    CREATE/DESTROY
 --------------------------------------------------------------------------------------------------}
 
-{ Show the editor }
+{---------------------------------------------------------------------------------------------------------------
+   ShowEditor
+   Displays the RainDrop parameter editor as a modal dialog.
+   aParams: Pointer to the RRaindropParams record to edit. Must not be NIL.
+   The dialog modifies the parameters in-place when OK is clicked.
+---------------------------------------------------------------------------------------------------------------}
 class procedure TfrmRainEditor.ShowEditor(aParams: PRaindropParams);
 VAR Form: TfrmRainEditor;
 begin
  TAppData.RaiseIfStillInitializing;
- Assert(aParams <> NIL);
+ Assert(aParams <> NIL, 'TfrmRainEditor.ShowEditor: aParams cannot be nil');
 
- AppData.CreateFormHidden(TfrmRainEditor, Form);  { Freed by ShowModal }
- WITH Form DO
- begin
-   if Translator <> NIL
-   then Translator.LoadTranslation(Form);
-   Params:= aParams;
-   GuiFromObject;
- end;
+ AppData.CreateFormHidden(TfrmRainEditor, Form);  { Freed by caFree in FormClose }
 
+ if Translator <> NIL
+ then Translator.LoadTranslation(Form);
+
+ Form.Params:= aParams;
+ Form.GuiFromObject;
  Form.ShowModal;    { Closed by mrOk/mrCancel }
 end;
 
@@ -114,8 +128,13 @@ end;
 
 
 
+{---------------------------------------------------------------------------------------------------------------
+   GuiFromObject / ObjectFromGUI
+   Transfer data between the Params record and the GUI controls.
+---------------------------------------------------------------------------------------------------------------}
 procedure TfrmRainEditor.GuiFromObject;
 begin
+ Assert(Params <> NIL, 'TfrmRainEditor.GuiFromObject: Params not initialized');
  spnTargetFPS.Value     := Params.TargetFPS;
  trkWaveAmp.Position    := Params.WaveAplitude;
  trkTravelDist.Position := Params.WaveTravelDist;
@@ -126,6 +145,7 @@ end;
 
 procedure TfrmRainEditor.ObjectFromGUI;
 begin
+ Assert(Params <> NIL, 'TfrmRainEditor.ObjectFromGUI: Params not initialized');
  Params.TargetFPS      := spnTargetFPS.Value;
  Params.WaveAplitude   := trkWaveAmp.Position;
  Params.WaveTravelDist := trkTravelDist.Position;
@@ -148,51 +168,59 @@ begin
 end;
 
 
+{---------------------------------------------------------------------------------------------------------------
+   trkRainChange
+   Rain intensity presets: adjusts wave amplitude, travel distance, drop interval, and damping
+   based on the selected intensity level (0=Light rain to 4=Flood).
+---------------------------------------------------------------------------------------------------------------}
+CONST
+  { Rain intensity preset indices }
+  RAIN_LIGHT  = 0;
+  RAIN_NORMAL = 1;
+  RAIN_POUR   = 2;
+  RAIN_STORM  = 3;
+  RAIN_FLOOD  = 4;
+
 procedure TfrmRainEditor.trkRainChange(Sender: TObject);
 begin
  case trkRain.Position of
-  0:
+  RAIN_LIGHT:  { Light rain }
    begin
-     //Light rain'
      trkWaveAmp.Position    := 1;
      trkTravelDist.Position := 100;
      trkDropInterv.Position := 200;
      trkDamping.Position    := 18;
    end;
-  1:
+  RAIN_NORMAL: { Normal rain }
    begin
-     //Hmm... It's raining
      trkWaveAmp.Position    := 2;
      trkTravelDist.Position := 400;
      trkDropInterv.Position := 150;
      trkDamping.Position    := 14;
    end;
-  2:
+  RAIN_POUR:   { Heavy rain }
    begin
-     //Let it pour
      trkWaveAmp.Position    := 3;
      trkTravelDist.Position := 700;
      trkDropInterv.Position := 50;
      trkDamping.Position    := 13;
    end;
-  3:
+  RAIN_STORM:  { Storm }
    begin
-     //Big storm
      trkWaveAmp.Position    := 4;
      trkTravelDist.Position := 1000;
      trkDropInterv.Position := 45;
      trkDamping.Position    := 12;
    end;
-  4:
+  RAIN_FLOOD:  { Flood }
    begin
-     //The flood
      trkWaveAmp.Position    := 5;
      trkTravelDist.Position := 1300;
      trkDropInterv.Position := 40;
      trkDamping.Position    := 11;
    end;
   else
-    RAISE Exception.Create('Invalid RainDrop force parameter!');
+    RAISE Exception.Create('Invalid RainDrop intensity: ' + IntToStr(trkRain.Position));
  end;
 end;
 

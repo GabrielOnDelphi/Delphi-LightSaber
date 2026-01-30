@@ -1,24 +1,31 @@
 UNIT LightVcl.Common.Process;
 
 {=============================================================================================================
-   SYSTEM
-   2024.06
+   Process Management
+
+   2026.01.30
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+
 ==============================================================================================================
 
-  System function to access:
-     Running processes
+  System functions to query and control running processes:
+     * ProcessRunning - Check if a process with given name is running
+     * KillProcess    - Terminate all processes matching a given name
 
-  Also:  https://www.experts-exchange.com/questions/20290838/Killing-Exes-running-from-a-delphi-application.html
+  Note:
+     Process.szExeFile from TProcessEntry32 only contains the filename without path,
+     so we cannot distinguish between processes with the same name running from different locations.
 
-   In this group:
+  Also see: https://www.experts-exchange.com/questions/20290838/Killing-Exes-running-from-a-delphi-application.html
+
+  In this group:
      * LightVcl.Common.Shell.pas
      * csSystem.pas
      * csWindow.pas
      * LightVcl.Common.WindowMetrics.pas
      * LightVcl.Common.ExecuteProc.pas
      * LightVcl.Common.ExecuteShell.pas
+     * LightVcl.Common.Process.pas
 
 =============================================================================================================}
 
@@ -31,10 +38,9 @@ USES
  function ProcessRunning   (CONST ExeFileName: string): Boolean;
  function KillProcess      (CONST ExeName: string): Boolean;
 
-{
- https://stackoverflow.com/questions/42637165/bizarre-behaviour-in-simple-delphi-code
- function GetProcessExeFromHandle(hWnd: HWND): string;
- function GetProcessExeFromName  (Caption: string): string; }
+{ Historical note: GetProcessExeFromHandle and GetProcessExeFromName were considered
+  but abandoned due to issues. See: https://stackoverflow.com/questions/42637165
+  The implementations below reference TProcessInfo which is not available. }
 
 IMPLEMENTATION
 
@@ -42,20 +48,26 @@ IMPLEMENTATION
 
 
 { Returns True if the specified process is found running.
-  Drawbacks:
-     The Process.szExeFile name does not contain the full path so in case there are multiple processes with
-     the same file name, but running from different paths we won't be able to differentiate between them! }
+
+  Parameters:
+    ExeFileName - Process name to search for. Can be just the filename (e.g., "notepad.exe")
+                  or a full path (e.g., "C:\Windows\notepad.exe"). Only the filename part is used.
+
+  Limitation:
+    Process.szExeFile only contains the filename without path. If multiple processes with the
+    same name run from different locations, we cannot distinguish between them. }
 function ProcessRunning(CONST ExeFileName: string): Boolean;
 VAR
   SnapshotHandle: THandle;
   Process: TProcessEntry32;
-  LowExeName, LowProcName: string;
+  TargetExeName: string;
 begin
   if ExeFileName = ''
   then raise Exception.Create('ProcessRunning: ExeFileName parameter cannot be empty');
 
   Result:= FALSE;
-  LowExeName:= LowerCase(ExeFileName);
+  { Extract just the filename - szExeFile never contains path information }
+  TargetExeName:= ExtractFileName(ExeFileName);
   Process.dwSize:= SizeOf(Process);
 
   SnapshotHandle:= CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -64,9 +76,7 @@ begin
   TRY
     if Process32First(SnapshotHandle, Process) then
       REPEAT
-        LowProcName:= LowerCase(Process.szExeFile);
-        if (LowProcName = LowExeName)
-        OR (LowProcName = LowerCase(ExtractFileName(ExeFileName)))
+        if SameText(Process.szExeFile, TargetExeName)
         then EXIT(TRUE);
       UNTIL NOT Process32Next(SnapshotHandle, Process);
   FINALLY
@@ -76,8 +86,18 @@ end;
 
 
 { Terminates ALL running processes that match ExeName.
-  Returns True if all matching processes were terminated successfully,
-  or if no matching processes were found. }
+
+  Parameters:
+    ExeName - Process name to kill (e.g., "notepad.exe"). Must be just the filename, not a path.
+
+  Returns:
+    TRUE  - All matching processes were terminated, or no matching processes found.
+    FALSE - At least one matching process could not be terminated (insufficient rights,
+            protected process, etc.), or process enumeration failed.
+
+  Note:
+    This function attempts to kill ALL instances of the named process.
+    Requires PROCESS_TERMINATE right; may fail for elevated/system processes. }
 function KillProcess(CONST ExeName: string): Boolean;
 VAR
   SnapshotHandle: THandle;
@@ -87,55 +107,50 @@ begin
   if ExeName = ''
   then raise Exception.Create('KillProcess: ExeName parameter cannot be empty');
 
-  Result:= TRUE;  { Will be set to FALSE upon any failure }
+  Result:= TRUE;
 
-  SnapshotHandle := CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  SnapshotHandle:= CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   if SnapshotHandle = INVALID_HANDLE_VALUE
-  then EXIT(FALSE);   // or: Log('CreateToolhelp32Snapshot failed with error: ' + SysErrorMessage(GetLastError()));
+  then EXIT(FALSE);
 
-  try
-    ProcEntry.dwSize := SizeOf(ProcEntry);
+  TRY
+    ProcEntry.dwSize:= SizeOf(ProcEntry);
     if Process32First(SnapshotHandle, ProcEntry)
     then
-        repeat
-          // Compare the filename part of ProcEntry.szExeFile (case-insensitive)
+        REPEAT
+          { szExeFile only contains filename, but use ExtractFileName for safety }
           if SameText(ExtractFileName(ProcEntry.szExeFile), ExeName) then
           begin
-            // Try to open the process with rights to terminate it
-            ProcessHandle := OpenProcess(PROCESS_TERMINATE, False, ProcEntry.th32ProcessID);
+            ProcessHandle:= OpenProcess(PROCESS_TERMINATE, False, ProcEntry.th32ProcessID);
             if ProcessHandle <> 0
-            then // Check if OpenProcess succeeded (returns NULL on failure)
+            then
               begin
-                try
-                  // Attempt to terminate the process. The second parameter to TerminateProcess is the desired exit code for the process
+                TRY
+                  { Exit code 0 signals normal termination }
                   if NOT TerminateProcess(ProcessHandle, 0)
-                  then Result:= FALSE;// or: Log('TerminateProcess failed for PID ' + IntToStr(ProcEntry.th32ProcessID) + '. Error: ' + SysErrorMessage(GetLastError()));
-                  // If one termination fails, the function will ultimately return FALSE.
-                  // We could choose to 'Break;' or 'Exit(FALSE);' here if you want to stop on first failure.
-                finally
-                  CloseHandle(ProcessHandle); // Crucial: Always close the handle obtained by OpenProcess
-                end;
+                  then Result:= FALSE;
+                  { Continue trying to kill other matching processes even if one fails }
+                FINALLY
+                  CloseHandle(ProcessHandle);
+                END;
               end
-            else Result:= FALSE; {OpenProcess failed: Log('OpenProcess failed for PID ' + IntToStr(ProcEntry.th32ProcessID) + '. Error: ' + SysErrorMessage(GetLastError())); }
+            else
+              Result:= FALSE; { OpenProcess failed - likely insufficient rights }
           end;
-        until NOT Process32Next(SnapshotHandle, ProcEntry)
-      // If the loop completes and Result is still TRUE, it means either:
-      // 1. No processes matching ExeName were found.
-      // 2. All found matching processes were successfully opened and TerminateProcess succeeded for them.
-      // Both scenarios are considered "success" by the initial Result := TRUE;
+        UNTIL NOT Process32Next(SnapshotHandle, ProcEntry)
     else
-      // Process32First returned False.
-      // This could mean no processes are running at all (GetLastError() would be ERROR_NO_MORE_FILES), or another error occurred.
-      // Any failure of Process32First (even if just no processes) is treated as a failure of this function.
-      // If we want to treat "no processes found by Process32First" as success (Result := TRUE), we add: if GetLastError() <> ERROR_NO_MORE_FILES then Result := FALSE; else Result remains TRUE.
-      Result:= FALSE;  {if LastErrorValue <> ERROR_NO_MORE_FILES then Example: Log('Process32First failed with error: ' + SysErrorMessage(GetLastError())); }
-  finally
-    CloseHandle(SnapshotHandle); // Ensure the snapshot handle is always closed
-  end;
+      { Process32First failed - cannot enumerate processes }
+      Result:= FALSE;
+  FINALLY
+    CloseHandle(SnapshotHandle);
+  END;
 end;
 
 
-{
+{-------------------------------------------------------------------------------------------------------------
+   ARCHIVED CODE - Not functional (references undefined types TProcessInfo/TProcessItem)
+   Kept for historical reference only.
+-------------------------------------------------------------------------------------------------------------
 function GetProcessExeFromHandle(hWnd: HWND): string;
 var
   ProcID: DWORD;
@@ -144,9 +159,9 @@ var
 begin
   Result:= '';
   GetWindowThreadProcessId(hWnd, @ProcID);
-  ProcessInfo := TProcessInfo.Create(nil);
+  ProcessInfo:= TProcessInfo.Create(nil);
   try
-    ProcessItem := ProcessInfo.RunningProcesses.FindByID(ProcID);
+    ProcessItem:= ProcessInfo.RunningProcesses.FindByID(ProcID);
     if Assigned(ProcessItem)
     then Result:= ProcessItem.ExeFile;
   finally
@@ -157,8 +172,9 @@ end;
 
 function GetProcessExeFromName(Caption: string): string;
 begin
-  Result:= GetProcessExeFileFromHandle(FindWindow(NIL, cap));
-end;  }
+  Result:= GetProcessExeFileFromHandle(FindWindow(NIL, Caption));
+end;
+-------------------------------------------------------------------------------------------------------------}
 
 
 

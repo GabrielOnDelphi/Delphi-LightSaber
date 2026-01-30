@@ -2,13 +2,16 @@ UNIT LightVcl.Graph.Loader.Resolution;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
   Retrieve image resolution without decoding the entire image.
   This is done by opening the binary file and reading the file header.
   Super mega fast!
+
+  Supported formats: JPG, PNG, GIF, BMP.
+  Returns -1 for Width/Height when format is not supported or file is corrupted.
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
@@ -131,6 +134,10 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    JPG
+   Parses JPEG stream to find dimensions in SOF (Start Of Frame) marker.
+   JPEG structure: SOI marker ($FFD8) followed by segments.
+   Each segment: $FF + marker type + 2-byte length + data.
+   SOF markers ($FFC0..$FFC3) contain frame dimensions.
 --------------------------------------------------------------------------------------------------}
 
 function GetJpgSize(Stream: TStream; OUT Width, Height: Integer): Boolean;
@@ -168,7 +175,7 @@ begin
 
          { Get Width }
          Stream.Read(w, 2);
-         width := swap(w);                                                         //Stream.Read(b, 1); DO I NEED THIS? Because I call exit after it.
+         width := swap(w);
 
          { Success }
          EXIT(TRUE);
@@ -238,7 +245,11 @@ begin
      EXIT;
     end;
 
- { Read image size }
+ { Read image dimensions from IHDR chunk.
+   PNG structure: 8-byte signature + 4-byte chunk length + 4-byte chunk type ("IHDR") + chunk data.
+   IHDR chunk data starts at byte 16: Width (4 bytes) at offset 16, Height (4 bytes) at offset 20.
+   We read 2-byte (Word) values at offset 18 and 22 because PNG uses big-endian 32-bit integers,
+   and ReadMotorolaWord reads the high 16 bits which contain the value for images < 65536 pixels. }
  Stream.Seek(18, 0);
  Width := LightCore.Binary.ReadMotorolaWord(Stream);
 
@@ -297,12 +308,14 @@ begin
  OR (System.AnsiStrings.StrLComp('GIF', Header.Sig, 3) <> 0)
  then Exit;   { Image file invalid }
 
- { Skip color map, if there is one }
+ { Skip color map, if there is one.
+   Bit 7 of Flags indicates presence of Global Color Table.
+   Bits 0-2 indicate size: 2^(N+1) colors, 3 bytes each (RGB). }
  if (Header.Flags and $80) > 0 then
   begin
    x := 3 * (1 shl ((Header.Flags and 7) + 1));
-   if x >= Stream.Size then EXIT;               { Color map thrashed }
-   Stream.Seek(x, soBeginning);
+   if Stream.Position + x >= Stream.Size then EXIT;  { Color map thrashed }
+   Stream.Seek(x, soFromCurrent);
   end;
 
  DimensionsFound := False;
@@ -376,12 +389,14 @@ end; *)
    BMP
 --------------------------------------------------------------------------------------------------}
 
-procedure GetBmpSize(CONST FullName: string; OUT Width, Height: Integer);   // http://www.delphipages.com/forum/archive/index.php/t-202158.html
+{ Retrieves BMP dimensions from file by reading the BMP header.
+  Source: http://www.delphipages.com/forum/archive/index.php/t-202158.html }
+procedure GetBmpSize(CONST FullName: string; OUT Width, Height: Integer);
 VAR
    H: TBitmapHeader;
-   Stream : TFileStream;
+   Stream: TFileStream;
 begin
- Stream:= TFileStream.Create(FullName, fmOpenRead);
+ Stream:= TFileStream.Create(FullName, fmOpenRead OR fmShareDenyNone);
  TRY
   H:= GetBmpHeader(Stream);
   Width := H.Width;
@@ -403,14 +418,17 @@ end;
 
 
 
-Function GetBmpHeader(Stream : TStream): TBitmapHeader;
+{ Reads and parses a BMP file header from a stream.
+  BMP format: 2-byte signature ("BM") followed by BITMAPFILEHEADER and BITMAPINFOHEADER.
+  Returns a TBitmapHeader record with -1 values if the signature is invalid. }
+function GetBmpHeader(Stream: TStream): TBitmapHeader;
 VAR
-   CTemp : AnsiChar; //Here was char
-   Lng : LongInt;
-   Wrd : Word;
+   CTemp: AnsiChar;
+   Lng: LongInt;
+   Wrd: Word;
 begin
  CTemp := '.';
- Stream.Position:= 0;   { This is mandatory because we don't know who used this object before and if it left it unwinded }
+ Stream.Position:= 0;   { Reset stream position - mandatory because we don't know who used this object before }
 
  Stream.ReadBuffer(CTemp,1);
  Result.Signature[0]:= CTemp;
@@ -463,22 +481,22 @@ begin
    Result.ClrImportant := Lng;
   end
  else
- WITH Result DO
   begin
-   Size          := -1;
-   Reserved      := -1;
-   OffBits       := -1;
-   StructSize    := -1;
-   Width         := -1;
-   Height        := -1;
-   Planes        := 0;
-   BitCount      := 0;
-   Compression   := -1;
-   ImageSize     := -1;
-   XPelsPerMeter := -1;
-   YPelsPerMeter := -1;
-   ClrUsed       := -1;
-   ClrImportant  := -1;
+   { Invalid BMP signature - return -1 for all size-related fields }
+   Result.Size          := -1;
+   Result.Reserved      := -1;
+   Result.OffBits       := -1;
+   Result.StructSize    := -1;
+   Result.Width         := -1;
+   Result.Height        := -1;
+   Result.Planes        := 0;
+   Result.BitCount      := 0;
+   Result.Compression   := -1;
+   Result.ImageSize     := -1;
+   Result.XPelsPerMeter := -1;
+   Result.YPelsPerMeter := -1;
+   Result.ClrUsed       := -1;
+   Result.ClrImportant  := -1;
   end;
 end;
 

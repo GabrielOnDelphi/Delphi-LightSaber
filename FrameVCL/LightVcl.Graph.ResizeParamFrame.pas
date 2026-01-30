@@ -2,13 +2,13 @@ UNIT LightVcl.Graph.ResizeParamFrame;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
-   GUI where the user can edit the paramaters of the resizing algorithm (LightVcl.Graph.Resize.pas).
-   Works on a RResizeParams record (LightVcl.Graph.ResizeParams.pas)
+   GUI frame where the user can edit the parameters of the resizing algorithm (LightVcl.Graph.Resize.pas).
+   Works on a RResizeParams record (LightVcl.Graph.ResizeParams.pas).
 
    !!! Don't add dependencies to LightVisControls.dpk because that package is compiled after this one !!!
 
@@ -23,7 +23,7 @@ UNIT LightVcl.Graph.ResizeParamFrame;
       VAR
          Params: RResizeParams;
       begin
-       Params:= ResizeParams.ObjectFromGUI;
+       ResizeParamsFrame.ObjectFromGUI(@Params);
        Params.MaxWidth := Monitor.Width;
        Params.MaxHeight:= Monitor.Height;
 
@@ -57,7 +57,7 @@ TYPE
     procedure GUIChanged (Sender: TObject);
   public
     procedure GUIFromObject(ResizeParams: PResizeParams);  { Set the GUI according to the values stored in the ResizeParams record }
-    procedure ObjectFromGUI(ResizeParams: PResizeParams);  { Load values from the GUI into the ResizeParams recod }
+    procedure ObjectFromGUI(ResizeParams: PResizeParams);  { Load values from the GUI into the ResizeParams record }
   published
     chkZoomMax: TCheckBox;
     //Also we can add published properties in order to use them in the Object Inspector later.
@@ -72,47 +72,57 @@ IMPLEMENTATION {$R *.dfm}
 
 
 
+{ Reads values from GUI controls into the ResizeParams record.
+  Note: If no radio button is checked (unexpected state), ResizeOpp defaults to roAutoDetect. }
 procedure TResizeParameters.ObjectFromGUI(ResizeParams: PResizeParams);
 begin
- Assert(ResizeParams<>NIL);
- if radZoomNone.Checked    then ResizeParams.ResizeOpp:= roNone else
-  if radZoomAuto.Checked    then ResizeParams.ResizeOpp:= roAutoDetect else
-   if radZoomFit.Checked     then ResizeParams.ResizeOpp:= roFit else
-    if radZoomFill.Checked    then ResizeParams.ResizeOpp:= roFill else
-     if radZoomCustom.Checked  then ResizeParams.ResizeOpp:= roCustom else
-      if radForceWidth.Checked  then ResizeParams.ResizeOpp:= roForceWidth else
-       if radForceHeight.Checked then ResizeParams.ResizeOpp:= roForceHeight else
-        if radStretch.Checked     then ResizeParams.ResizeOpp:= roStretch;
+  Assert(ResizeParams <> NIL, 'ObjectFromGUI: ResizeParams cannot be nil');
 
- ResizeParams.MaxZoomUse  := chkZoomMax.Checked;
- ResizeParams.MaxZoomVal  := spnZoomMax.Value;
- ResizeParams.ForcedWidth := numForceWidth.ValueInt;
- ResizeParams.ForcedHeight:= numForceHeight.ValueInt;
- ResizeParams.CustomZoom  := spnZoomCustom.Value;
+  { Determine resize operation from radio buttons }
+  if radZoomNone.Checked         then ResizeParams.ResizeOpp:= roNone
+  else if radZoomAuto.Checked    then ResizeParams.ResizeOpp:= roAutoDetect
+  else if radZoomFit.Checked     then ResizeParams.ResizeOpp:= roFit
+  else if radZoomFill.Checked    then ResizeParams.ResizeOpp:= roFill
+  else if radZoomCustom.Checked  then ResizeParams.ResizeOpp:= roCustom
+  else if radForceWidth.Checked  then ResizeParams.ResizeOpp:= roForceWidth
+  else if radForceHeight.Checked then ResizeParams.ResizeOpp:= roForceHeight
+  else if radStretch.Checked     then ResizeParams.ResizeOpp:= roStretch
+  else ResizeParams.ResizeOpp:= roAutoDetect;  { Default fallback - should never happen in normal use }
+
+  ResizeParams.MaxZoomUse  := chkZoomMax.Checked;
+  ResizeParams.MaxZoomVal  := spnZoomMax.Value;
+  ResizeParams.ForcedWidth := numForceWidth.ValueInt;
+  ResizeParams.ForcedHeight:= numForceHeight.ValueInt;
+  ResizeParams.CustomZoom  := spnZoomCustom.Value;
 end;
 
 
+{ Sets GUI controls according to the values stored in the ResizeParams record.
+  Warning: Double-buffering on the parent form can cause visual glitches with skins active. }
 procedure TResizeParameters.GuiFromObject(ResizeParams: PResizeParams);
 begin
- Assert(Parent.DoubleBuffered = FALSE, 'TResizeParameters frame does not like when its parent is double buffered and skins are active!');
- Assert(ResizeParams<>NIL);
+  Assert(ResizeParams <> NIL, 'GUIFromObject: ResizeParams cannot be nil');
 
- case ResizeParams.ResizeOpp of
-  roNone       : radZoomNone.Checked   := true;
-  roAutoDetect : radZoomAuto.Checked   := true;
-  roFit        : radZoomFit.Checked    := true;
-  roFill       : radZoomFill.Checked   := true;
-  roCustom     : radZoomCustom.Checked := true;
-  roForceWidth : radForceWidth.Checked := true;
-  roForceHeight: radForceHeight.Checked:= true;
-  roStretch    : radStretch.Checked    := true;
- end;
+  { Warning about double-buffering - only check if parented }
+  Assert((Parent = NIL) OR NOT Parent.DoubleBuffered,
+    'TResizeParameters frame may have visual issues when its parent is double-buffered and skins are active');
 
- chkZoomMax.Checked     := ResizeParams.MaxZoomUse;   { 0 means that we don't want to use the MaxZoom feature }
- spnZoomMax.Value       := ResizeParams.MaxZoomVal;
- numForceWidth.ValueInt := ResizeParams.ForcedWidth;
- numForceHeight.ValueInt:= ResizeParams.ForcedHeight;
- spnZoomCustom.Value    := ResizeParams.CustomZoom;
+  case ResizeParams.ResizeOpp of
+    roNone       : radZoomNone.Checked   := TRUE;
+    roAutoDetect : radZoomAuto.Checked   := TRUE;
+    roFit        : radZoomFit.Checked    := TRUE;
+    roFill       : radZoomFill.Checked   := TRUE;
+    roCustom     : radZoomCustom.Checked := TRUE;
+    roForceWidth : radForceWidth.Checked := TRUE;
+    roForceHeight: radForceHeight.Checked:= TRUE;
+    roStretch    : radStretch.Checked    := TRUE;
+  end;
+
+  chkZoomMax.Checked     := ResizeParams.MaxZoomUse;
+  spnZoomMax.Value       := ResizeParams.MaxZoomVal;
+  numForceWidth.ValueInt := ResizeParams.ForcedWidth;
+  numForceHeight.ValueInt:= ResizeParams.ForcedHeight;
+  spnZoomCustom.Value    := ResizeParams.CustomZoom;
 end;
 
 

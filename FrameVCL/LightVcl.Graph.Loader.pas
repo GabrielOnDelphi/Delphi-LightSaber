@@ -2,7 +2,7 @@ UNIT LightVcl.Graph.Loader;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.12
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -73,10 +73,10 @@ CONST
  function  LoadWB1 (CONST FileName: string): TBitmap;
  function  LoadICO (CONST FileName: string): TBitmap;
  function  LoadEMF (CONST FileName: string): TBitmap;
- function  LoadBMP (CONST FileName: string): TBitmap;                                      { Loads a BMP and supress error messages }
+ function  LoadBMP (CONST FileName: string): TBitmap;                                      { Loads a BMP and suppress error messages }
 
  // JPG THUMBNAIL LOADER
- function  ExtractThumbnailJpg(CONST FileName: string; ThumbWidth, ThumbHeight: integer; OUT ResolutionX, ResolutionY: Integer): TBitmap;                   { Extracts from a JPEG image using scaling. The scale is automatically chousen based on the original image size and required thumb size } { Old name: LoadJpgThumbnail }
+ function  ExtractThumbnailJpg(CONST FileName: string; ThumbWidth, ThumbHeight: integer; OUT ResolutionX, ResolutionY: Integer): TBitmap;                   { Extracts from a JPEG image using scaling. The scale is automatically chosen based on the original image size and required thumb size } { Old name: LoadJpgThumbnail }
  function  ExtractThumbnail   (CONST FileName: string; ThumbWidth: integer; OUT ResolutionX, ResolutionY: Integer; OUT FrameCount: Cardinal): TBitmap; overload; { Extracts the thumbnail from a gif, avi, jpg, png, etc file }
  function  ExtractThumbnail   (CONST FileName: string; ThumbWidth: Integer): TBitmap;   overload;
 
@@ -90,7 +90,7 @@ CONST
 
 
 {-------------------------------------------------------------------------------------------------------------
-   Imgage format utils
+   Image format utils
 -------------------------------------------------------------------------------------------------------------}
  function  DetectGraphSignature(CONST FileName: string): Integer;
  function  CheckValidImage     (CONST FileName: string): Boolean;
@@ -276,7 +276,7 @@ begin
            LightVcl.Graph.FX.Rotate.RotateExif(Result, ExifData);
            FreeAndNil(ExifData);
            {$ELSE}
-             AppDataCore.LogVerb('FastJpg not available!');
+             AppDataCore.LogVerb('CCRExif not available! EXIF rotation skipped.');
            {$ENDIF}
          end;
        end;
@@ -318,9 +318,11 @@ end;
 
 procedure LoadGraphToImg(CONST FileName: string; Image: TImage; ExifRotate: Boolean = True; UseWic: Boolean = TRUE);
 begin
+    Assert(Image <> NIL, 'LoadGraphToImg: Image is NIL');
     VAR BMP:= LoadGraph(FileName, ExifRotate, UseWic);
     TRY
-      Image.Picture.Assign(BMP);
+      if BMP <> NIL
+      then Image.Picture.Assign(BMP);
     FINALLY
       FreeAndNil(BMP);
     END;
@@ -393,11 +395,13 @@ end;
 procedure LoadToTImage(CONST FileName: string; ExifRotate: Boolean; Image: TImage);
 VAR BMP: TBitmap;
 begin
+ Assert(Image <> NIL, 'LoadToTImage: Image is NIL');
  BMP:= LoadGraph(FileName, ExifRotate);
  TRY
-  Image.Picture.Bitmap.Assign(BMP);
+   if BMP <> NIL
+   then Image.Picture.Bitmap.Assign(BMP);
  FINALLY
-  FreeAndNil(BMP);
+   FreeAndNil(BMP);
  end;
 end;
 
@@ -453,14 +457,14 @@ end;
 { Extracts the thumbnail from a gif, avi, jpg, png, etc file. Very fast!
   If the file is animated it extracts the frame from the middle of the animation.
 
-  The scale is automatically chousen based on the original image size and required thumb size.
+  The scale is automatically chosen based on the original image size and required thumb size.
   The higher the scaling factor, the faster the loading time.
 
   Exif:
      The image will be automatically rotated according to the EXIF data
 
   Parameters:
-     ThumbWidth is the desiered size of the tumbnail. Small images will actually resized up if they are smaller than ThumbWidth.
+     ThumbWidth is the desired size of the thumbnail. Small images will actually be resized up if they are smaller than ThumbWidth.
      ResolutionX, ResolutionY returns the ORIGINAL resolution (before thumbnail)
      Log can be NIL
 
@@ -507,7 +511,7 @@ begin
    or (JpgLoader.Height<= 0) or (JpgLoader.Height > 32768)
    then Exit(NIL);
 
-   // We have the thumbnail but it migh not have the EXACT size we specified in the ExtractThumbnailJpg so we resize one more time
+   // We have the thumbnail but it might not have the EXACT size we specified in the ExtractThumbnailJpg so we resize one more time
    Result:= TBitmap.Create;
    TRY
      Result.HandleType:= bmDIB;
@@ -556,9 +560,7 @@ begin
  if IsAnimated(FileName)
  then
    begin
-    if IsGIF(FileName)
-    then Result:= LightVcl.Graph.GrabAviFrame.GetVideoPlayerLogo
-    else Result:= LightVcl.Graph.GrabAviFrame.GetVideoPlayerLogo;
+    Result:= LightVcl.Graph.GrabAviFrame.GetVideoPlayerLogo;  // Returns placeholder for animated files (GIF/AVI)
     FrameCount:= 2;   // 2 for avi/gif
    end
  else
@@ -566,7 +568,7 @@ begin
     then
      begin
       Result:= ExtractThumbnailJpg(FileName, ThumbWidth, -1, ResolutionX, ResolutionY); // This will do "RotateEXIF"
-      EXIT;     // Jpegs are special because a thumbnail was already generated for them by ExtractThumbnailJpg. So, we do no furthure processing
+      EXIT;     // Jpegs are special because a thumbnail was already generated for them by ExtractThumbnailJpg. So, we do no further processing
      end
     else
      Result:= LoadGraph(FileName, TRUE);
@@ -613,7 +615,7 @@ end;
    Speed:
       This function is too slow. Use WIC instead. A 1.44MB jpeg file takes 4.2 seconds to load.
    Thumbnail:
-      The function cal load the JPEG at a reduced scale with 'Scale'
+      The function can load the JPEG at a reduced scale with 'Scale'
    Exif:
        The image is automatically rotated if RotateExif is true.
        The Exif data is output to ExifData. You MUST free the object after using the function!
@@ -860,7 +862,7 @@ end; *)
 {-------------------------------------------------------------------------------------------------------------
    LOAD OTHERS
 -------------------------------------------------------------------------------------------------------------}
-{ Loads a BMP and supress error messages }
+{ Loads a BMP and suppress error messages }
 function LoadBMP(CONST FileName: string): TBitmap;
 begin
   Assert(FileExistsMsg(FileName));
@@ -1078,10 +1080,11 @@ end;
 
 
 { Not tested!
- Also see: http://smatters.com/dcraw/  }
+  Also see: http://smatters.com/dcraw/  }
 function DetectGraphSignatureWIC(const WIC: TWICImage): string;
 begin
-  Result := '';
+  Assert(WIC <> NIL, 'DetectGraphSignatureWIC: WIC is NIL');
+  Result:= '';
 
   case WIC.ImageFormat of
     wifBmp     : Result := 'Bitmap';

@@ -1,9 +1,8 @@
 UNIT LightVcl.Common.MemoInputBox;
 
 {=============================================================================================================
-   2023.01
+   2026.01.29
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
    A box in which the user can enter multiline text.

@@ -2,7 +2,7 @@ UNIT LightVcl.Graph.Resize;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.12
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -81,17 +81,28 @@ USES
 
 {--------------------------------------------------------------------------------------------------
    MAIN FUNCTION
+   SmartStretch: Resizes a bitmap using the parameters specified in RResizeParams.
+   The RResizeParams record handles various resize modes (Fit, Fill, ForceWidth, etc.)
+   and computes the optimal output dimensions while preserving aspect ratio when appropriate.
 --------------------------------------------------------------------------------------------------}
 procedure SmartStretch(BMP: TBitmap; ResizeOpp: RResizeParams);
 begin
+  Assert(BMP <> NIL, 'SmartStretch: BMP parameter cannot be nil');
+
   ResizeOpp.ComputeOutputSize(BMP.Width, BMP.Height);
   Stretch(BMP, ResizeOpp.OutW, ResizeOpp.OutH);
 end;
 
 
+{ Resizes bitmap proportionally to fit within MaxWidth x MaxHeight boundaries.
+  Uses default resize settings (roAutoDetect mode). }
 procedure SmartStretch(BMP: TBitmap; CONST MaxWidth, MaxHeight: Integer);
 VAR ResizeOpp: RResizeParams;
 begin
+  Assert(BMP <> NIL, 'SmartStretch: BMP parameter cannot be nil');
+  Assert(MaxWidth > 0, 'SmartStretch: MaxWidth must be > 0');
+  Assert(MaxHeight > 0, 'SmartStretch: MaxHeight must be > 0');
+
   ResizeOpp.Reset;
   ResizeOpp.MaxWidth := MaxWidth;
   ResizeOpp.MaxHeight:= MaxHeight;
@@ -101,9 +112,18 @@ begin
 end;
 
 
-procedure SmartStretch (BMP: TBitmap; CONST MaxWidth, MaxHeight: Integer; ResizeOp: TResizeOp);
+{ Resizes bitmap using the specified resize operation mode.
+  ResizeOp determines how the image fits within MaxWidth x MaxHeight:
+    roFit  - Adds black bars if needed, never crops
+    roFill - Fills the area completely, may crop edges
+    etc. (see TResizeOp for all modes) }
+procedure SmartStretch(BMP: TBitmap; CONST MaxWidth, MaxHeight: Integer; ResizeOp: TResizeOp);
 VAR ResizeOpp: RResizeParams;
 begin
+  Assert(BMP <> NIL, 'SmartStretch: BMP parameter cannot be nil');
+  Assert(MaxWidth > 0, 'SmartStretch: MaxWidth must be > 0');
+  Assert(MaxHeight > 0, 'SmartStretch: MaxHeight must be > 0');
+
   ResizeOpp.Reset;
   ResizeOpp.MaxWidth  := MaxWidth;
   ResizeOpp.MaxHeight := MaxHeight;
@@ -114,10 +134,16 @@ begin
 end;
 
 
-{ Resizes the image to fill the viewport. Then it crops whatever went out of the viewport }
+{ Resizes the image to completely fill the viewport (no black bars), then crops
+  any portions that extend beyond MaxWidth x MaxHeight. The cropping is centered,
+  removing equal amounts from opposite edges. }
 procedure SmartStretchCrop(BMP: TBitmap; CONST MaxWidth, MaxHeight: Integer);
 VAR ResizeOpp: RResizeParams;
 begin
+  Assert(BMP <> NIL, 'SmartStretchCrop: BMP parameter cannot be nil');
+  Assert(MaxWidth > 0, 'SmartStretchCrop: MaxWidth must be > 0');
+  Assert(MaxHeight > 0, 'SmartStretchCrop: MaxHeight must be > 0');
+
   ResizeOpp.Reset;
   ResizeOpp.MaxWidth  := MaxWidth;
   ResizeOpp.MaxHeight := MaxHeight;
@@ -125,14 +151,22 @@ begin
 
   ResizeOpp.ComputeOutputSize(BMP.Width, BMP.Height);
   Stretch(BMP, ResizeOpp.OutW, ResizeOpp.OutH);
-  CropBitmap(BMP, MaxWidth, MaxHeight)
+  CropBitmap(BMP, MaxWidth, MaxHeight);
 end;
 
 
 
+{ Resizes bitmap with custom FitTolerance percentage.
+  FitTolerance: When falling back from Fill to Fit mode, this percentage determines
+  how much "over-fitting" is allowed to reduce black bars (typically 10%). }
 procedure SmartStretch(BMP: TBitmap; CONST MaxWidth, MaxHeight, FitTolerance: Integer);
 VAR ResizeOpp: RResizeParams;
 begin
+  Assert(BMP <> NIL, 'SmartStretch: BMP parameter cannot be nil');
+  Assert(MaxWidth > 0, 'SmartStretch: MaxWidth must be > 0');
+  Assert(MaxHeight > 0, 'SmartStretch: MaxHeight must be > 0');
+  Assert((FitTolerance >= 0) AND (FitTolerance <= 100), 'SmartStretch: FitTolerance must be 0-100');
+
   ResizeOpp.Reset;
   ResizeOpp.MaxWidth := MaxWidth;
   ResizeOpp.MaxHeight:= MaxHeight;
@@ -143,9 +177,16 @@ begin
 end;
 
 
-function LoadAndStretch(CONST FileName: string; ResizeOpp: RResizeParams; UseWic: Boolean= TRUE): TBitmap;         { Loads image and also stretch the output image to the required dimensions }
+{ Loads an image from disk and resizes it according to ResizeOpp parameters.
+  Returns the loaded and resized bitmap. Caller is responsible for freeing.
+  Returns NIL if the image could not be loaded (corrupted file, unsupported format).
+  UseWic: TRUE for faster WIC-based loading (recommended), FALSE for VCL loaders. }
+function LoadAndStretch(CONST FileName: string; ResizeOpp: RResizeParams; UseWic: Boolean= TRUE): TBitmap;
 begin
  Result:= LightVcl.Graph.Loader.LoadGraph(FileName, UseWic);
+ if Result = NIL
+ then EXIT;  { LoadGraph returns NIL for corrupted images instead of crashing }
+
  TRY
    SmartStretch(Result, ResizeOpp);
  EXCEPT
@@ -155,9 +196,15 @@ begin
 end;
 
 
-function LoadAndStretch(CONST FileName: string; CONST MaxWidth, MaxHeight: Integer; UseWic: Boolean= TRUE): TBitmap;         { Loads image and also stretch the output image to the required dimensions }
+{ Loads an image from disk and resizes it to fit within MaxWidth x MaxHeight.
+  Returns the loaded and resized bitmap. Caller is responsible for freeing.
+  Returns NIL if the image could not be loaded. }
+function LoadAndStretch(CONST FileName: string; CONST MaxWidth, MaxHeight: Integer; UseWic: Boolean= TRUE): TBitmap;
 begin
  Result:= LightVcl.Graph.Loader.LoadGraph(FileName, UseWic);
+ if Result = NIL
+ then EXIT;  { LoadGraph returns NIL for corrupted images instead of crashing }
+
  TRY
    SmartStretch(Result, MaxWidth, MaxHeight);
  EXCEPT
@@ -170,63 +217,83 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
- PURE  FIT
+ PURE FIT (Proportional resize)
 
  Zoom               : In/Out
- Keep aspect ration : Yes
+ Keep aspect ratio  : Yes
  Stretch provided in: pixels
 
- Enlarge image to fit the MaxWidth/MaxHeight size, without changing its aspect ratio.
- The image will be enlarged as much as possible BUT WITHOUT crossing over the MaxWidth or MaxHeight limit.
+ Resizes image to fit within MaxWidth x MaxHeight while preserving aspect ratio.
+ The image will be enlarged/shrunk as much as possible WITHOUT exceeding either limit.
+ Result: At least one dimension equals its max, the other is smaller or equal.
 --------------------------------------------------------------------------------------------------}
 procedure StretchProport(BMP: TBitmap; CONST MaxWidth, MaxHeight: Integer);
 VAR
    NewWidth, NewHeight: Integer;
 begin
- Assert(MaxWidth > 0);
- if MaxWidth/MaxHeight = BMP.Width/BMP.Height
+ Assert(BMP <> NIL, 'StretchProport: BMP parameter cannot be nil');
+ Assert(MaxWidth > 0, 'StretchProport: MaxWidth must be > 0');
+ Assert(MaxHeight > 0, 'StretchProport: MaxHeight must be > 0');
+ Assert(BMP.Width > 0, 'StretchProport: BMP.Width must be > 0');
+ Assert(BMP.Height > 0, 'StretchProport: BMP.Height must be > 0');
+
+ { Compare aspect ratios using cross-multiplication to avoid division by zero }
+ if Int64(MaxWidth) * BMP.Height = Int64(MaxHeight) * BMP.Width
  then
-   { Same ratio }
+   { Same ratio - scale to exact target size }
    begin
     NewWidth := MaxWidth;
-    NewHeight:= MaxHeight;                                        { if display and disk image have the same aspect ratio then just resize }
+    NewHeight:= MaxHeight;
    end
  else
    if AspectIsSmaller(BMP, MaxWidth, MaxHeight)
    then
-    { Landscape (relative to desktop) }
-    BEGIN
-     NewWidth := MulDiv(MaxHeight, BMP.Width, BMP.Height);        { Determine new width of the image }
+    { Image is narrower (portrait-ish) relative to target - constrain by height }
+    begin
+     NewWidth := MulDiv(MaxHeight, BMP.Width, BMP.Height);
      NewHeight:= MaxHeight;
-    END
+    end
    else
-    { Portret (relative to desktop) }
-    BEGIN
+    { Image is wider (landscape-ish) relative to target - constrain by width }
+    begin
      NewHeight:= MulDiv(MaxWidth, BMP.Height, BMP.Width);
      NewWidth := MaxWidth;
-    END;
+    end;
 
-  Stretch(BMP, NewWidth, NewHeight);
+ Stretch(BMP, NewWidth, NewHeight);
 end;
 
 
-{ Proportional. Height will be auto adjusted to match width }
-procedure StretchProport (BMP: TBitmap; CONST OutWidth: Integer);
-VAR
-   Ratio: double;
-   OutHeight: Integer;
+{ Proportional resize to specified width. Height is automatically computed
+  to maintain aspect ratio. }
+procedure StretchProport(BMP: TBitmap; CONST OutWidth: Integer);
+VAR OutHeight: Integer;
 begin
- Ratio:= BMP.Width / BMP.Height;
- OutHeight:= round(OutWidth / Ratio);
+ Assert(BMP <> NIL, 'StretchProport: BMP parameter cannot be nil');
+ Assert(OutWidth > 0, 'StretchProport: OutWidth must be > 0');
+ Assert(BMP.Width > 0, 'StretchProport: BMP.Width must be > 0');
+ Assert(BMP.Height > 0, 'StretchProport: BMP.Height must be > 0');
+
+ { Use MulDiv to avoid floating-point and preserve precision }
+ OutHeight:= MulDiv(OutWidth, BMP.Height, BMP.Width);
  Stretch(BMP, OutWidth, OutHeight);
 end;
 
 
+{ Creates a NEW proportionally resized copy of the input bitmap.
+  Caller is responsible for freeing the returned bitmap. }
 function StretchProportF(BMP: TBitmap; CONST MaxWidth, MaxHeight: Integer): TBitmap;
 begin
+ Assert(BMP <> NIL, 'StretchProportF: BMP parameter cannot be nil');
+
  Result:= TBitmap.Create;
- Result.Assign(BMP);
- StretchProport(Result, MaxWidth, MaxHeight);
+ TRY
+   Result.Assign(BMP);
+   StretchProport(Result, MaxWidth, MaxHeight);
+ EXCEPT
+   FreeAndNil(Result);
+   RAISE;
+ END;
 end;
 
 
@@ -234,41 +301,66 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
- Increases the size of the image with a  percent
+ Resize by delta percentage (positive = enlarge, negative = shrink)
 
  Zoom               : In/out
- Keep aspect ration : Yes
- Stretch provided in: %
+ Keep aspect ratio  : Yes
+ Stretch provided in: % delta
+
+ Examples:
+   ResizePercent = +50  -> Image becomes 150% of original (50% larger)
+   ResizePercent =   0  -> No change
+   ResizePercent = -25  -> Image becomes 75% of original (25% smaller)
+   ResizePercent = -99  -> Image becomes 1% of original
+   ResizePercent <=-100 -> Invalid (would result in zero or negative size)
 --------------------------------------------------------------------------------------------------}
 procedure StretchPercent(BMP: TBitmap; CONST ResizePercent: Integer);
 VAR
    NewWidth, NewHeight: Integer;
 begin
+ Assert(BMP <> NIL, 'StretchPercent: BMP parameter cannot be nil');
+
  if ResizePercent <= -100
- then RAISE Exception.Create('Invalid ResizePercent parameter!');                            { If I set ResizePercent to -100% I will get an image of size 0,0 }
+ then RAISE Exception.Create('StretchPercent: ResizePercent must be > -100 (cannot reduce to zero or negative size)');
 
- if ResizePercent = 0 then EXIT;
+ if ResizePercent = 0
+ then EXIT;  { No resize needed }
 
- { Recalculate width/height }
- NewWidth := BMP.Width + Round(ProcentNormal(ResizePercent, BMP.Width ));
- NewHeight:= BMP.Height+ Round(ProcentNormal(ResizePercent, BMP.Height ));
+ { Recalculate width/height: NewSize = OrigSize + (OrigSize * Percent / 100) }
+ NewWidth := BMP.Width  + Round(ProcentNormal(ResizePercent, BMP.Width));
+ NewHeight:= BMP.Height + Round(ProcentNormal(ResizePercent, BMP.Height));
 
  Stretch(BMP, NewWidth, NewHeight);
 end;
 
 
 {--------------------------------------------------------------------------------------------------
- Increases the size of the image x times
+ Resize by multiplication factor
 
  Zoom               : In/out
- Keep aspect ration : Yes
- Stretch provided in: %
+ Keep aspect ratio  : Yes
+ Stretch provided in: multiplier
+
+ Examples:
+   ResizeTimes = 2.0  -> Image becomes 200% of original (2x larger)
+   ResizeTimes = 1.0  -> No change (1x = original)
+   ResizeTimes = 0.5  -> Image becomes 50% of original (half size)
+   ResizeTimes = 1.5  -> Image becomes 150% of original
+   ResizeTimes <= 0   -> Invalid
 --------------------------------------------------------------------------------------------------}
 procedure StretchPercentX(BMP: TBitmap; CONST ResizeTimes: Single);
 begin
- if ResizeTimes = 1 then EXIT;    { 1x means no resize }
- VAR TimesToPercent:= RoundEx(ResizeTimes * 100);
- StretchPercent(BMP, TimesToPercent);
+ Assert(BMP <> NIL, 'StretchPercentX: BMP parameter cannot be nil');
+
+ if ResizeTimes <= 0
+ then RAISE Exception.Create('StretchPercentX: ResizeTimes must be > 0');
+
+ if SameValue(ResizeTimes, 1.0)
+ then EXIT;  { 1x means no resize }
+
+ { Convert multiplier to delta percentage: 2x -> +100%, 0.5x -> -50% }
+ VAR DeltaPercent:= RoundEx((ResizeTimes - 1.0) * 100);
+ StretchPercent(BMP, DeltaPercent);
 end;
 
 

@@ -2,37 +2,35 @@ UNIT LightVcl.Graph.FX.Rotate;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
   Rotate an image at a specified angle.
 
   I M P O R T A N T
-     This library contains all rotation function I could find.
-     It is for rather for testing than for real use.
-     I decided to use LightVcl.Graph.FX.RotateGr32. However, it seems that RotateBitmapGDIP is even better but it doesn't work.
+     This library contains various rotation functions collected for testing/comparison purposes.
+     For production use, prefer LightVcl.Graph.FX.RotateGr32 (when GR32 is available) or RotateBitmapGDI.
 
 --------------------------------------------------------------------------------------------------------------
 
   Source: http://stackoverflow.com/questions/10633400/rotate-bitmap-by-real-angle
 
   External dependencies:
-      JanFX
-      CCR.Exif
+      JanFX    - Required only when CCRExif is defined
+      CCR.Exif - Optional, for EXIF-based auto-rotation (Github.com/exilon/ccr-exif)
 
   Also see:
      Fastest possible, but quality not so great: c:\MyProjects\Packages\Third party packages\Rotate Image VCL\RotImg.pas
      Fade image to white: https://stackoverflow.com/questions/13701685/fade-an-image-using-gdi-i-e-change-only-the-alpha-channel-of-a-tgpgraphic
-     Hier mal eine Alternative zu GDI+, die ich persönlich übersichtlicher finde: WIC: https://www.delphipraxis.net/199843-gdi-bilddrehung-mit-transparenz.html
+     Alternative using WIC: https://www.delphipraxis.net/199843-gdi-bilddrehung-mit-transparenz.html
 
-  If AdjustSize is:
-    True : then the size of BMP will adjusted to hold the entire rotated image.
-    False: then the size of BMP will remain the same, thereofre the rotated image will be cropped
+  AdjustSize parameter:
+    True : The bitmap size will be adjusted to hold the entire rotated image
+    False: The bitmap size remains the same; the rotated image will be cropped
 
   Tester:
       c:\MyProjects\Project Testers\gr Rotate, flip tester\RotateTester.dpr
-      Put some conclusions here
 ==================================================================================================}
 
 INTERFACE
@@ -60,7 +58,7 @@ TYPE
  {$ENDIF}
  procedure RotateBitmap      (BMP: TBitmap; Degs: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone);
  {}
- procedure RotateBitmapGDI   (BMP: TBitmap; Degs: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone); { Uses GDI+. Doesn't work. It works now. }
+ procedure RotateBitmapGDI   (BMP: TBitmap; Degs: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone); { Uses GDI+ }
  procedure RotateBitmapSWT   (BMP: TBitmap; Rads: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone); deprecated 'Use LightVcl.Graph.FX.RotateBitmap'; { No antialiasing }
  procedure RotateBitmapJanFX (BMP: TBitmap; Degs: Single;                            BkColor: TColor = clNone); deprecated 'Use LightVcl.Graph.FX.RotateBitmap'; { This is slow even if I rotate the image at right angles (90, 180, 270) }
  procedure RotateBitmapPLG   (BMP: TBitmap; Rads: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone); deprecated 'Use LightVcl.Graph.FX.RotateBitmap'; { 39ms. No antialising }
@@ -77,11 +75,12 @@ USES
 
 
 
-{ Autorotate image based on its EXIF }
+{ Autorotate image based on its EXIF orientation tag }
 {$IFDEF CCRExif}
 procedure RotateExif(BMP: TBitmap; Exif: TExifData);
 begin
- Assert(Exif <> NIL, 'RotateExif. Exif cannot be NIL!');
+ Assert(BMP <> NIL, 'RotateExif: BMP cannot be NIL');
+ Assert(Exif <> NIL, 'RotateExif: Exif cannot be NIL');
  if  (Exif.Orientation<> toUndefined)                                    { The image has info about orientation }
  AND (Exif.Orientation<> toTopLeft)                                      { This is the 'normal' orientation }
  AND (Exif.Orientation<> toLeftTop) then                                 { 'Flipped' (left hand in the right side of the picture }
@@ -94,13 +93,11 @@ end;
 {$ENDIF}
 
 
-{ Global function.
-  Best algorithm of all.
-
-  The RotateBitmapGDI is the fastest but I don't know how to center the image in the middle of the view port.
-  RotateBitmapGR32 is super slow but it works without issues. However, I WANT TO GET RID OF Graphics32 }
+{ Main rotation function. Selects the best available algorithm.
+  Uses GR32 when available, otherwise falls back to GDI+. }
 procedure RotateBitmap(BMP: TBitmap; Degs: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone);
 begin
+ Assert(BMP <> NIL, 'RotateBitmap: BMP cannot be NIL');
  if Degs <> 0 then
    {$IFDEF GR32}
      RotateBitmapGR32(Bmp, Degs, AdjustSize, BkColor, TRUE, 13);
@@ -123,8 +120,7 @@ var
   NewSize: TSize;
   Graphs: TGPGraphics;
 begin
-  Assert(Bmp <> NIL);
-  // maybe I need to set pf24 or pf32?
+  Assert(Bmp <> NIL, 'RotateBitmapGDI: BMP cannot be NIL');
   Tmp := TGPBitmap.Create(Bmp.Handle, Bmp.Palette);
   Matrix := TGPMatrix.Create;
   TRY
@@ -148,24 +144,8 @@ begin
         Graphs.SetPixelOffsetMode(PixelOffsetModeHighQuality);
         Graphs.SetSmoothingMode(SmoothingModeHighQuality);  }
       Graphs.SetTransform(Matrix);
-      {
-      then DiffW:= Integer(Tmp.GetWidth) -  Bmp.Width
-      then DiffH:= Integer(Tmp.GetHeight) - Bmp.Height
-      }
-      if AdjustSize
-      then
-       begin
-        //DiffW:= round ((Tmp.GetWidth  - Bmp.Width * C + Bmp.Height * S) / 2);
-        //DiffH:= round ((Tmp.GetHeight - Bmp.Width * S - Bmp.Height * C) / 2);
-       end;
 
-      {if AdjustSize
-      then
-       begin
-        XForm.eDx := (Tmp.Width  - Bmp.Width * C + Bmp.Height * S) / 2;
-        XForm.eDy := (Tmp.Height - Bmp.Width * S - Bmp.Height * C) / 2;
-       end;  }
-
+      { Calculate offset to center the rotated image }
       if AdjustSize
       then
        begin
@@ -258,6 +238,7 @@ end;
 procedure RotateBitmapJanFX(BMP: TBitmap; Degs: Single; BkColor: TColor = clNone);
 VAR BMPOut: TBitmap;
 begin
+ Assert(BMP <> NIL, 'RotateBitmapJanFX: BMP cannot be NIL');
  BMPOut:= TBitmap.Create;
  TRY
   BMP.PixelFormat   := pf24bit;                    { Otherwise SmoothRotate won't work }
@@ -283,14 +264,16 @@ end;
 
 {
   SetWorldTransform
-  SetWorldTransform  doc: https://msdn.microsoft.com/en-us/library/dd145104(v=vs.85).aspx }
-procedure RotateBitmapSWT(Bmp: TBitmap; Rads: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone);   { No antialising }
+  SetWorldTransform doc: https://msdn.microsoft.com/en-us/library/dd145104(v=vs.85).aspx
+  Note: This function uses radians, not degrees. No antialiasing. }
+procedure RotateBitmapSWT(Bmp: TBitmap; Rads: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone);
 VAR
   C: Single;
   S: Single;
   XForm: TXForm;
   Tmp: TBitmap;
 begin
+  Assert(Bmp <> NIL, 'RotateBitmapSWT: BMP cannot be NIL');
   C := Cos(Rads);
   S := Sin(Rads);
   XForm.eM11 := C;
@@ -330,8 +313,8 @@ end;
 
 
 
-{ 39ms
-  No antialising }
+{ Uses PlgBlt for rotation.
+  Note: This function uses radians, not degrees. No antialiasing. }
 procedure RotateBitmapPLG(Bmp: TBitmap; Rads: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone);
 var
   C: Single;
@@ -341,6 +324,7 @@ var
   OffsetY: Single;
   Points: array[0..2] of TPoint;
 begin
+  Assert(Bmp <> NIL, 'RotateBitmapPLG: BMP cannot be NIL');
   C := Cos(Rads);
   S := Sin(Rads);
   Tmp := TBitmap.Create;
@@ -409,92 +393,86 @@ end;
 
 
 
-{ Slow.
-  HORRIBLE quality.
+{ Pixel-by-pixel rotation using BitBlt.
+  Warning: Very slow and produces poor quality results.
+  Note: This function uses radians. lWidth/lHeight are passed but ignored - bitmap dimensions are used.
   Source: http://www.delphi-central.com/tutorials/RotateBitmapBitBlt.aspx }
 procedure RotateBitmapBLT(BMP: TBitmap; Rads: Single; lWidth, lHeight: Longint);
 var
- I: Longint;             // loop counter
- J: Longint;             // loop counter
- hNewBitmapDC: Cardinal; // DC of the new bitmap
- hNewBitmap: Cardinal;   // handle to the new bitmap
- lSine: extended;        // sine used in rotation
- lCosine: extended;      // cosine used in rotation
- X1: Longint;            // used in calculating new
- X2: Longint;            // used in calculating new
- X3: Longint;            // used in calculating new
- Y1: Longint;            // used in calculating new
- Y2: Longint;            // used in calculating new
- Y3: Longint;            // used in calculating new
- lMinX: Longint;
- lMaxX: Longint;
- lMinY: Longint;
- lMaxY: Longint;
- lNewWidth: Longint;     // width of new bitmap
- lNewHeight: Longint;    // height of new bitmap
- lSourceX: Longint;      // x pixel coord we are blitting from the source  image
- lSourceY: Longint;      // y pixel coord we are blitting from the source image
- hBitmapDC: Cardinal;
+ I: Longint;
+ J: Longint;
+ hNewBitmapDC: HDC;
+ hNewBitmap: HBITMAP;
+ hOldBitmap: HBITMAP;
+ lSine: Extended;
+ lCosine: Extended;
+ X1, X2, X3: Longint;
+ Y1, Y2, Y3: Longint;
+ lMinX, lMaxX: Longint;
+ lMinY, lMaxY: Longint;
+ lNewWidth: Longint;
+ lNewHeight: Longint;
+ lSourceX: Longint;
+ lSourceY: Longint;
+ hBitmapDC: HDC;
+ SrcWidth, SrcHeight: Integer;
 begin
- hBitmapDC := BMP.Canvas.Handle;
+ Assert(BMP <> NIL, 'RotateBitmapBLT: BMP cannot be NIL');
 
- // create a compatible DC from the one just brought into this function
- hNewBitmapDC := CreateCompatibleDC(hBitmapDC);
+ { Use actual bitmap dimensions instead of parameters }
+ SrcWidth:= BMP.Width;
+ SrcHeight:= BMP.Height;
 
- // compute the sine/cosinse of the radians used to rotate this image
- lSine := Sin(Rads);
- lCosine := Cos(Rads);
+ hBitmapDC:= BMP.Canvas.Handle;
+ hNewBitmapDC:= CreateCompatibleDC(hBitmapDC);
+ TRY
+   lSine:= Sin(Rads);
+   lCosine:= Cos(Rads);
 
- // compute the size of the new bitmap being created
- X1 := Round(-lHeight * lSine);
- Y1 := Round(lHeight * lCosine);
- X2 := Round(lWidth * lCosine - lHeight * lSine);
- Y2 := Round(lHeight * lCosine + lWidth * lSine);
- X3 := Round(lWidth * lCosine);
- Y3 := Round(lWidth * lSine);
+   { Compute the size of the new bitmap being created }
+   X1:= Round(-SrcHeight * lSine);
+   Y1:= Round(SrcHeight * lCosine);
+   X2:= Round(SrcWidth * lCosine - SrcHeight * lSine);
+   Y2:= Round(SrcHeight * lCosine + SrcWidth * lSine);
+   X3:= Round(SrcWidth * lCosine);
+   Y3:= Round(SrcWidth * lSine);
 
- // figure out the max/min size of the new bitmap
- lMinX := Min(0, Min(X1, Min(X2, X3)));
- lMinY := Min(0, Min(Y1, Min(Y2, Y3)));
- lMaxX := Max(X1, Max(X2, X3));
- lMaxY := Max(Y1, Max(Y2, Y3));
+   { Figure out the max/min size of the new bitmap }
+   lMinX:= Min(0, Min(X1, Min(X2, X3)));
+   lMinY:= Min(0, Min(Y1, Min(Y2, Y3)));
+   lMaxX:= Max(X1, Max(X2, X3));
+   lMaxY:= Max(Y1, Max(Y2, Y3));
 
- // set the new bitmap width/height
- lNewWidth := lMaxX - lMinX;
- lNewHeight := lMaxY - lMinY;
+   lNewWidth:= lMaxX - lMinX;
+   lNewHeight:= lMaxY - lMinY;
 
- // create a new bitmap based upon the new width/height of the rotated bitmap
- hNewBitmap := CreateCompatibleBitmap(hBitmapDC, lNewWidth, lNewHeight);
+   hNewBitmap:= CreateCompatibleBitmap(hBitmapDC, lNewWidth, lNewHeight);
+   TRY
+     hOldBitmap:= SelectObject(hNewBitmapDC, hNewBitmap);
 
- // attach the new bitmap to the new device context created above before constructing the rotated bitmap
- SelectObject(hNewBitmapDC, hNewBitmap);
+     { Loop through and translate each pixel to its new location }
+     for I:= 0 to lNewHeight-1 do
+       for J:= 0 to lNewWidth-1 do
+        begin
+         lSourceX:= Round((J + lMinX) * lCosine + (I + lMinY) * lSine);
+         lSourceY:= Round((I + lMinY) * lCosine - (J + lMinX) * lSine);
+         if (lSourceX >= 0) AND (lSourceX < SrcWidth) AND (lSourceY >= 0) AND (lSourceY < SrcHeight)
+         then BitBlt(hNewBitmapDC, J, I, 1, 1, hBitmapDC, lSourceX, lSourceY, SRCCOPY);
+        end;
 
- // loop through and translate each pixel to its new location. this is using a standard rotation algorithm
- For I := 0 To lNewHeight do
-  begin
-   For J := 0 To lNewWidth do
-    begin
-     lSourceX := Round((J + lMinX) * lCosine + (I + lMinY) * lSine);
-     lSourceY := Round((I + lMinY) * lCosine - (J + lMinX) * lSine);
-     If (lSourceX >= 0) And (lSourceX <= lWidth) And (lSourceY >= 0) And (lSourceY <= lHeight) Then
-      BitBlt(hNewBitmapDC, J, I, 1, 1, hBitmapDC, lSourceX, lSourceY, SRCCOPY);
-    end;
-  end;
+     { Copy result back to input bitmap }
+     BMP.Width:= lNewWidth;
+     BMP.Height:= lNewHeight;
+     BitBlt(BMP.Canvas.Handle, 0, 0, lNewWidth, lNewHeight, hNewBitmapDC, 0, 0, SRCCOPY);
 
- // reset the new bitmap width and height
- lWidth  := lNewWidth;
- lHeight := lNewHeight;
-
- // return the DC to the new bitmap
- hBitmapDC := hNewBitmapDC;
-
- // destroy the bitmap created
- DeleteObject(hNewBitmap);
-
- BMP.Width  := lWidth;
- BMP.Height := lHeight;
- BitBlt(BMP.Canvas.Handle, 0, 0, lWidth, lHeight, hBitmapDC, 0, 0, SRCCOPY);
-End;
+     SelectObject(hNewBitmapDC, hOldBitmap);
+   FINALLY
+     DeleteObject(hNewBitmap);
+   END;
+ FINALLY
+   DeleteDC(hNewBitmapDC);
+ END;
+end;
 
 
 
@@ -582,10 +560,14 @@ end;
 
 
 procedure RSpatialParams.ReadFromStream(Stream: TLightStream);
+VAR RotByte: Byte;
 begin
- Flip    := Stream.ReadBoolean;
- Mirror  := Stream.ReadBoolean;
- Rotation:= TRotateSense(Stream.ReadByte);
+ Flip   := Stream.ReadBoolean;
+ Mirror := Stream.ReadBoolean;
+ RotByte:= Stream.ReadByte;
+ if RotByte > Ord(High(TRotateSense))
+ then Rotation:= rtNone   { Invalid value - default to rtNone }
+ else Rotation:= TRotateSense(RotByte);
  Stream.ReadPadding;
 end;
 

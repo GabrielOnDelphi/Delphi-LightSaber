@@ -2,7 +2,7 @@ UNIT LightVcl.Graph.Gif;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -83,7 +83,7 @@ destructor TGifLoader.Destroy;
 begin
  FreeAndNil(GIFImg);
  FreeAndNil(Renderer);
- inherited Destroy;    { First stop the timer }
+ inherited Destroy;
 end;
 
 
@@ -116,13 +116,13 @@ begin
  { GIF render }
  FreeAndNil(Renderer);                    { Destroy it so we can created it with a new parameter }
  Renderer:= TGIFRenderer.Create(GIFImg);
- Renderer.Animate:= TRUE;  { THIS IS FUCKING IMPORTANT!  Animate must be true!  Details: http://stackoverflow.com/questions/36444024/how-to-extract-frames-from-this-gif-image-access-violation-in-tgifrenderer-dra/36468732#36468732 }
+ Renderer.Animate:= TRUE;  { CRITICAL: Animate must be TRUE or TGIFRenderer.Draw will cause access violations. See: stackoverflow.com/questions/36444024 }
 
  { Obtain frame delay }
  VAR TempBMP:= TBitmap.Create;
  TRY
   TempBMP.SetSize(GIFImg.Width, GIFImg.Height);
-  Renderer.Draw(TempBMP.Canvas, TempBMP.Canvas.ClipRect); { THIS IS FUCKING IMPORTANT! WE NEED TO PAINT FIRST FRAME OTHERWIESE WE DON'T FET A VALID d FrameDelay }
+  Renderer.Draw(TempBMP.Canvas, TempBMP.Canvas.ClipRect); { CRITICAL: Must paint first frame to get valid FrameDelay value }
   Renderer.FrameIndex:= 0;                                { We return to the first frame }
   FFrameDelay:= Renderer.FrameDelay;
  FINALLY
@@ -147,12 +147,14 @@ end;
 
 
 
-function TGifLoader.SaveFrames(OutputFolder: string): Boolean;  { Stand alone function }
+{ Saves all frames of the loaded GIF to individual BMP files in OutputFolder.
+  Returns True if successful, False if no frames to save or Renderer not initialized. }
+function TGifLoader.SaveFrames(OutputFolder: string): Boolean;
 VAR
    i: Integer;
    BMP: TBitmap;
 begin
- Result:= FrameCount > 1;  //del Result:= VideoOpened;
+ Result:= (FrameCount > 1) AND (Renderer <> NIL);
  if Result then
   begin
    BMP:= TBitmap.Create;
@@ -163,18 +165,18 @@ begin
      for i:= 0 to FrameCount-1 DO
       begin
        if Renderer.Frame.Empty then Continue;
-       Renderer.Draw(BMP.Canvas, BMP.Canvas.ClipRect);                      { Todo: do zoom here! }
+       Renderer.Draw(BMP.Canvas, BMP.Canvas.ClipRect);
        Renderer.NextFrame;
-       SaveFrame(BMP, i, OutputFolder);    { Zoom }
+       SaveFrame(BMP, i, OutputFolder);
       end;
 
-      { Check }
+      { Sanity check }
       if FrameCount < 1
-      then AppDataCore.LogWarn('AVI frame count mismatch!');
+      then AppDataCore.LogWarn('GIF frame count mismatch!');
    FINALLY
     FreeAndNil(BMP);
    END;
-  end
+  end;
 end;
 
 
@@ -184,8 +186,17 @@ end;
 
 
 
+{ Extracts a specific frame from the loaded GIF.
+  Returns the frame as TBitmap or NIL if frame is invalid or unavailable.
+  Caller is responsible for freeing the returned bitmap. }
 function TGifLoader.ExtractFrame(FrameNo: Cardinal): TBitmap;
 begin
+ if Renderer = NIL then
+  begin
+   AppDataCore.LogError('ExtractFrame: Renderer not initialized. Call Open() first.');
+   EXIT(NIL);
+  end;
+
  if FrameNo >= FrameCount then
   begin
    MessageWarning('Invalid frame number. Total frames in this GIF: '+ IntToStr(FrameCount));
@@ -199,37 +210,41 @@ begin
  Result:= TBitmap.Create;
  Result.SetSize(GIFImg.Width, GIFImg.Height);
 
- Renderer.FrameIndex:= FrameNo;  { Remember to go back to frame zero if neccessary }
+ Renderer.FrameIndex:= FrameNo;  { Note: Remember to reset to frame zero if necessary }
  Renderer.Draw(Result.Canvas, Result.Canvas.ClipRect);
 end;
 
 
 
 {-------------------------------------------------------------------------------------------------------------
-  Returns true in the input file is a movie or an animated gif (returns false for static GIFs).
-  https://stackoverflow.com/questions/59010649/how-to-detect-animated-gif
-  100mb Animated Elementalist Lux Desktop Background.gif = 4.1s
+  Returns True if the input file is a video or an animated GIF (returns False for static GIFs).
+  Uses IsAnimatedGif from GifProperties for GIF detection.
 
-  Tester:
-     c:\Myprojects\Project Testers\gr GIF frame counter\Tester.dpr
+  Performance: 100MB animated GIF takes ~4.1s to analyze.
+
+  See: stackoverflow.com/questions/59010649/how-to-detect-animated-gif
+  Tester: c:\Myprojects\Project Testers\gr GIF frame counter\Tester.dpr
 -------------------------------------------------------------------------------------------------------------}
 function IsAnimated(CONST AGraphFile: string): Boolean;
-VAR IsAnimGif: Boolean;
 begin
  if IsGIF(AGraphFile)
- then IsAnimGif := IsAnimatedGif(AGraphFile)
- else IsAnimGif := FALSE;
-
- Result:= IsAnimGif OR LightCore.IO.IsVideo(AGraphFile);
+ then Result:= IsAnimatedGif(AGraphFile)
+ else Result:= LightCore.IO.IsVideo(AGraphFile);
 end;
 
 
+{ Extracts the middle frame from an animated GIF file.
+  Returns the frame as TBitmap or NIL if extraction fails.
+  FrameCount is set to the total number of frames, or 0 on failure.
+  Caller is responsible for freeing the returned bitmap. }
 function ExtractMiddleFrame(CONST FileName: string; OUT FrameCount: Cardinal): TBitmap;
 VAR
    MidFrame: Integer;
    Gif: TGifLoader;
 begin
  Result:= NIL;
+ FrameCount:= 0;  { Initialize OUT parameter for failure case }
+
  Gif:= TGifLoader.Create;
  TRY
   if Gif.Open(FileName) then

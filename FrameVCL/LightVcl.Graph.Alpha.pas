@@ -2,12 +2,24 @@ UNIT LightVcl.Graph.Alpha;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2026.01.30
 --------------------------------------------------------------------------------------------------------------
    Alpha Blend
-   For more Alpha tools see c:\MyProjects\Packages\Third party packages\GraphAlpha.pas
 
-   Transparency in TImageList: https://stackoverflow.com/questions/7050683
+   Alpha blending functions for combining bitmaps with transparency effects.
+
+   Key functions:
+     - AlphaBlendBitmaps: Blend SmallBitmap onto MainBitmap with adjustable opacity (0-100%)
+     - TransparencyBlend: Overlay SmallBitmap onto MainBitmap using a specific color as transparent
+     - GetTransparentBitmapFromImagelist: Extract bitmap from TImageList preserving alpha channel
+
+   Notes:
+     - Most functions require pf24bit pixel format for scanline-based operations
+     - Windows bitmaps store pixels in BGR order (Blue, Green, Red), not RGB
+
+   See also:
+     - Vcl.GraphUtil.DrawTransparentBitmap for WinAPI-based alpha blending
+     - TImageList transparency: https://stackoverflow.com/questions/7050683
 ---------------------------------------------------------------------------------------------------}
 
 INTERFACE
@@ -74,24 +86,40 @@ end;
 
 
 TYPE
-  TRGB = record    { this is same as TRGBTriple }    { used by AlphaBlendBitmaps }
-    R: Byte;
-    G: Byte;
+  { Windows DIBs store pixels in BGR order, not RGB.
+    Field order must match TRGBTriple: Blue at offset 0, then Green, then Red.
+    This is critical for correct color channel blending and transparency comparison. }
+  TBGR = record
     B: Byte;
+    G: Byte;
+    R: Byte;
   end;
-  TRGBArray = array[0..32767] of TRGB;
-  pRGBArray = ^TRGBArray;
+  TBGRArray = array[0..32767] of TBGR;
+  pBGRArray = ^TBGRArray;
 
 
-{ Vcl.GraphUtil.DrawTransparentBitmap is WinApi based.
-  This is not.
-  Note: you can shift the x coordinate for R and G pixels to obtain stereoscopic images }
-procedure AlphaBlendBitmaps(MainBitmap, SmallBitmap: TBitmap; CONST Transparency, x, y: Integer);  { Transparency for SmallBitmap is between 0% and 100%. The SmallBitmap image MUST be smaller than MainBitmap. XY are the coordinates where the small image will be blend in the main image }
+{ Pure Pascal alpha blending (no WinAPI).
+  Blends SmallBitmap onto MainBitmap at position (x, y) with specified transparency.
+
+  Parameters:
+    MainBitmap   - The destination bitmap (will be modified in place)
+    SmallBitmap  - The source bitmap to blend onto MainBitmap
+    Transparency - Opacity of MainBitmap: 0% = SmallBitmap fully visible, 100% = MainBitmap fully visible
+    x, y         - Position in MainBitmap where SmallBitmap will be placed
+
+  Constraints:
+    - Both bitmaps must be pf24bit (or MainBitmap will be converted)
+    - SmallBitmap should fit within MainBitmap bounds at position (x, y)
+    - x, y must be non-negative
+
+  Note: You can shift the x coordinate for R and G pixels to obtain stereoscopic images }
+procedure AlphaBlendBitmaps(MainBitmap, SmallBitmap: TBitmap; CONST Transparency, x, y: Integer);
 VAR
-   Col: integer;
-   BlendRatio, BlendRatioMin, Row : integer;
-   ScanLine1, ScanLine2: pRGBArray;
-   ScanlinesOut : array of pRGBArray;
+   Col, DestCol: Integer;
+   BlendRatio, BlendRatioMin, Row: Integer;
+   ScanLine1, ScanLine2: pBGRArray;
+   ScanlinesOut: array of pBGRArray;
+   MaxCol: Integer;
 begin
  if MainBitmap = NIL
  then raise Exception.Create('AlphaBlendBitmaps: MainBitmap parameter cannot be nil');
@@ -102,47 +130,74 @@ begin
  if SmallBitmap.PixelFormat <> pf24bit
  then raise Exception.Create('AlphaBlendBitmaps: SmallBitmap must be pf24bit');
 
+ if (x < 0) OR (y < 0)
+ then raise Exception.Create('AlphaBlendBitmaps: x and y must be non-negative');
+
  MainBitmap.PixelFormat:= pf24bit;
 
- { Output scanline }
+ { Cache scanlines for faster access }
  SetLength(ScanlinesOut, MainBitmap.Height);
  for Row:= 0 to MainBitmap.Height-1
   DO ScanlinesOut[Row]:= MainBitmap.ScanLine[Row];
 
- { Blend ratio }
+ { Blend ratio: 256-based fixed point for fast integer math }
  BlendRatio    := Round((Transparency / 100) * 256);
  BlendRatioMin := 256 - BlendRatio;
 
- { Mix }
+ { Calculate max column to prevent writing beyond MainBitmap width }
+ MaxCol:= MainBitmap.Width - x;
+ if MaxCol > SmallBitmap.Width
+ then MaxCol:= SmallBitmap.Width;
+
+ { Mix scanlines }
  for Row:= y to MainBitmap.Height-1 DO
   begin
+   if Row >= SmallBitmap.Height + y
+   then Break;  { No more rows to blend }
+
    ScanLine1:= MainBitmap.Scanline[Row];
-   if Row>= SmallBitmap.Height+y then Continue;
    ScanLine2:= SmallBitmap.Scanline[Row-y];
 
-   for Col := 0 to MainBitmap.Width-1 DO
+   for Col:= 0 to MaxCol-1 DO
     begin
-     if Col>= SmallBitmap.Width
-     then Continue;
-
-     { Cool trick: shift the x coordinate for R and G pixels to obtain stereoscopic images }
-     ScanlinesOut[Row][Col+ x].R := (BlendRatio * Scanline1[Col+ x].R + BlendRatioMin * Scanline2[Col].R) SHR 8;
-     ScanlinesOut[Row][Col+ x].G := (BlendRatio * Scanline1[Col+ x].G + BlendRatioMin * Scanline2[Col].G) SHR 8;
-     ScanlinesOut[Row][Col+ x].B := (BlendRatio * Scanline1[Col+ x].B + BlendRatioMin * Scanline2[Col].B) SHR 8;
+     DestCol:= Col + x;
+     { Blend each color channel using fixed-point arithmetic }
+     ScanlinesOut[Row][DestCol].R:= (BlendRatio * Scanline1[DestCol].R + BlendRatioMin * Scanline2[Col].R) SHR 8;
+     ScanlinesOut[Row][DestCol].G:= (BlendRatio * Scanline1[DestCol].G + BlendRatioMin * Scanline2[Col].G) SHR 8;
+     ScanlinesOut[Row][DestCol].B:= (BlendRatio * Scanline1[DestCol].B + BlendRatioMin * Scanline2[Col].B) SHR 8;
     end;
   end;
 
+ { Dynamic array is auto-freed when it goes out of scope, but explicit cleanup for clarity }
  SetLength(ScanlinesOut, 0);
 end;
 
 
 
-function TransparencyBlend(MainBitmap, SmallBitmap: TBitmap; CONST TransparentColor: TColor; CONST x, y: Integer): TBitmap; { Mix two images. Pixels of 'TransparentColor' color in the SmallBitmap are 100% transparent. The SmallBitmap image MUST be smaller than MainBitmap. XY are the coordinates where the small image will be blend in the main image }
+{ Color-key transparency blend (similar to "green screen" effect).
+  Overlays SmallBitmap onto MainBitmap, treating pixels of TransparentColor as fully transparent.
+
+  Parameters:
+    MainBitmap       - The background bitmap
+    SmallBitmap      - The foreground bitmap to overlay
+    TransparentColor - Pixels in SmallBitmap matching this color will not be copied
+    x, y             - Position in result where SmallBitmap will be placed
+
+  Returns:
+    A new bitmap containing the blended result (caller must free)
+
+  Constraints:
+    - Both bitmaps must be pf24bit
+    - x, y must be non-negative
+
+  Also see: How to paint on a Canvas with Transparency?
+  http://stackoverflow.com/questions/10342603/how-to-paint-on-a-canvas-with-transparency-and-opacity }
+function TransparencyBlend(MainBitmap, SmallBitmap: TBitmap; CONST TransparentColor: TColor; CONST x, y: Integer): TBitmap;
 VAR
-   Row, Col, MaxWidth, MaxHeight: integer;
-   ScanLine2: pRGBArray;
-   ScanlinesOut: array of pRGBArray;
-   Color: TColor;
+   Row, Col, DestCol, MaxWidth, MaxHeight, MaxCol: Integer;
+   ScanLine2: pBGRArray;
+   ScanlinesOut: array of pBGRArray;
+   PixelColor: TColor;
 begin
  if MainBitmap = NIL
  then raise Exception.Create('TransparencyBlend: MainBitmap parameter cannot be nil');
@@ -156,40 +211,50 @@ begin
  if SmallBitmap.PixelFormat <> pf24bit
  then raise Exception.Create('TransparencyBlend: SmallBitmap must be pf24bit');
 
+ if (x < 0) OR (y < 0)
+ then raise Exception.Create('TransparencyBlend: x and y must be non-negative');
+
  MaxWidth := MainBitmap.Width;
  MaxHeight:= MainBitmap.Height;
 
- { Output image }
+ { Create output image as copy of MainBitmap }
  Result:= CreateBitmap(MaxWidth, MaxHeight, pf24bit);
  Result.Assign(MainBitmap);
 
- { Output scanline }
+ { Cache output scanlines for faster access }
  SetLength(ScanlinesOut, MainBitmap.Height);
  for Row:= 0 to MainBitmap.Height-1
    DO ScanlinesOut[Row]:= Result.ScanLine[Row];
 
- { Mix }
+ { Calculate max column to prevent writing beyond output width }
+ MaxCol:= MaxWidth - x;
+ if MaxCol > SmallBitmap.Width
+ then MaxCol:= SmallBitmap.Width;
+
+ { Overlay non-transparent pixels }
  for Row:= y to MaxHeight-1 DO
   begin
-   if Row>= SmallBitmap.Height+y
-   then Continue;
+   if Row >= SmallBitmap.Height + y
+   then Break;  { No more rows to process }
+
    ScanLine2:= SmallBitmap.Scanline[Row-y];
 
-   for Col := 0 to MaxWidth-1 DO
+   for Col:= 0 to MaxCol-1 DO
     begin
-     if Col>= SmallBitmap.Width
-     then Continue;
+     { Build TColor from BGR scanline data - note: RGB() expects R,G,B order }
+     PixelColor:= RGB(Scanline2[Col].R, Scanline2[Col].G, Scanline2[Col].B);
 
-     Color:= RGB(Scanline2[Col].r, Scanline2[Col].g, Scanline2[Col].b);
-
-     if Color <> TransparentColor
-     then ScanlinesOut[Row][Col+ x]:= Scanline2[Col];
+     if PixelColor <> TransparentColor then
+      begin
+       DestCol:= Col + x;
+       ScanlinesOut[Row][DestCol]:= Scanline2[Col];
+      end;
     end;
   end;
 
- SetLength(ScanlinesOut, 0);  // Why?
+ { Explicit cleanup - dynamic array auto-frees but this documents intent }
+ SetLength(ScanlinesOut, 0);
 end;
-{ Also see: How to paint on a Canvas with Transparency? - http://stackoverflow.com/questions/10342603/how-to-paint-on-a-canvas-with-transparency-and-opacity}
 
 
 

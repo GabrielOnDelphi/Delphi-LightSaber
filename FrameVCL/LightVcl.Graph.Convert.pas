@@ -2,11 +2,15 @@ UNIT LightVcl.Graph.Convert;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
-  Converts between JPG and BMP
+  Image format conversion utilities:
+    - BMP to JPG conversion (to memory, stream, or file)
+    - JPG to BMP conversion
+    - JPG recompression with quality control
+    - TGraphic to JPG conversion
 =============================================================================================================}
 
 INTERFACE
@@ -34,13 +38,13 @@ CONST
  function  Bmp2JpgStream (BMP: TBitmap; CompressFactor: Integer= DelphiJpgQuality): TStream;
  function  CompressBmp   (BMP: TBitmap; CompressFactor: Integer= DelphiJpgQuality): Integer;
 
- function  Recompress    (Input, Outp: TJPEGImage; CompressFactor: Integer= DelphiJpgQuality): Integer;  overload;
+ function  Recompress    (Input: TJPEGImage; OUT Outp: TJPEGImage; CompressFactor: Integer= DelphiJpgQuality): Integer;  overload;
  function  Recompress    (Jpg: TJPEGImage; CompressFactor: Integer= DelphiJpgQuality): Integer;          overload;
 
  IMPLEMENTATION
 
 USES
-   LightCore.IO, LightCore, LightCore.Time;
+   LightCore.IO, LightCore;
 
 
 
@@ -50,16 +54,21 @@ USES
    CONVERT TO JPG
 --------------------------------------------------------------------------------------------------}
 
-{ Compresses a JPG image. The output is also a JPG image.
-  Returns the size of the new compressed JPG image AND the size of the image after it was compressed.
-  This is done without actually saving the image to disk.
-  WARNING: The Outp parameter is created inside this function. Caller is responsible for freeing it. }
-function Recompress(Input, Outp: TJPEGImage; CompressFactor: Integer= DelphiJpgQuality): Integer;    { Old name: CompressJpg2RAM }
+{ Recompresses a JPG image with a new quality factor.
+  Creates a NEW JPG image (Outp) with the specified compression - caller must free Outp.
+  Returns the size in bytes of the resulting compressed image.
+
+  Note: This function modifies the Input image (sets CompressionQuality and calls Compress).
+  If you need to preserve the original, pass a copy. }
+function Recompress(Input: TJPEGImage; OUT Outp: TJPEGImage; CompressFactor: Integer= DelphiJpgQuality): Integer;    { Old name: CompressJpg2RAM }
+VAR
+   Stream: TMemoryStream;
 begin
  if Input = NIL
  then raise Exception.Create('Recompress: Input parameter cannot be nil');
 
- VAR Stream:= TMemoryStream.Create;
+ Outp:= NIL;  { Initialize OUT parameter }
+ Stream:= TMemoryStream.Create;
  TRY
    Input.CompressionQuality:= CompressFactor;
    Input.Compress;
@@ -69,13 +78,21 @@ begin
    { Create the new image }
    Stream.Position := 0;
    Outp:= TJPEGImage.Create;
-   Outp.LoadFromStream(Stream);
+   TRY
+     Outp.LoadFromStream(Stream);
+   EXCEPT
+     FreeAndNil(Outp);
+     RAISE;
+   END;
  FINALLY
    FreeAndNil(Stream);
  END;
 end;
 
 
+{ Recompresses a JPG image in-place with a new quality factor.
+  Modifies the Jpg parameter directly.
+  Returns the size in bytes of the resulting compressed image. }
 function Recompress(Jpg: TJPEGImage; CompressFactor: Integer= DelphiJpgQuality): Integer;
 begin
  if Jpg = NIL
@@ -95,15 +112,19 @@ end;
 
 
 
-{ Compress the specified image to jpg using the specified compression factor.
-  Returns the size of the resulted compressed image }
+{ Calculates what size a BMP would be if converted to JPEG with given compression.
+  Returns the size in bytes of the hypothetical compressed image.
+  Does not modify the input BMP or produce any output file. }
 function CompressBmp(BMP: TBitmap; CompressFactor: Integer= DelphiJpgQuality): Integer;
+VAR
+   Jpg: TJPEGImage;
+   Stream: TMemoryStream;
 begin
   if BMP = NIL
   then raise Exception.Create('CompressBmp: BMP parameter cannot be nil');
 
-  VAR Jpg:= TJPEGImage.Create;
-  VAR Stream:= TMemoryStream.Create;
+  Jpg:= TJPEGImage.Create;
+  Stream:= TMemoryStream.Create;
   try
     Jpg.CompressionQuality:= CompressFactor;
     Jpg.Assign(BMP);
@@ -116,6 +137,9 @@ begin
 end;
 
 
+{ Converts a bitmap to JPEG and returns it as a memory stream.
+  Caller is responsible for freeing the returned stream.
+  Stream position is at the end after return - seek to 0 before reading. }
 function Bmp2JpgStream(BMP: TBitmap; CompressFactor: Integer= DelphiJpgQuality): TStream;
 VAR
    JpegImg: TJpegImage;
@@ -124,14 +148,19 @@ begin
  then raise Exception.Create('Bmp2JpgStream: BMP parameter cannot be nil');
 
  Result:= TMemoryStream.Create;   { TStream is abstract, use TMemoryStream }
- JpegImg := TJpegImage.Create;
  TRY
-  JpegImg.PixelFormat:= jf24Bit;
-  JpegImg.CompressionQuality := CompressFactor;  { Higher values, better results }
-  JpegImg.Assign(BMP);
-  JpegImg.SaveToStream(Result);
- FINALLY
-  FreeAndNil(JpegImg);
+   JpegImg := TJpegImage.Create;
+   TRY
+    JpegImg.PixelFormat:= jf24Bit;
+    JpegImg.CompressionQuality := CompressFactor;  { Higher values, better results }
+    JpegImg.Assign(BMP);
+    JpegImg.SaveToStream(Result);
+   FINALLY
+    FreeAndNil(JpegImg);
+   END;
+ EXCEPT
+   FreeAndNil(Result);  { Free stream on failure }
+   RAISE;
  END;
 end;
 
@@ -143,6 +172,10 @@ end;
 {--------------------------------------------------------------------------------------------------
    CONVERT BETWEEN BMP & JPG
 --------------------------------------------------------------------------------------------------}
+
+{ Converts a JPEG image to a 24-bit DIB bitmap.
+  Caller is responsible for freeing the returned bitmap.
+  Note: This can be slow for large images (several seconds). }
 function Jpeg2Bmp(JPG: TJpegImage): TBitmap;
 begin
    if JPG = NIL
@@ -161,6 +194,9 @@ end;
 
 
 
+{ Converts a bitmap to a JPEG image in memory.
+  Caller is responsible for freeing the returned TJpegImage.
+  CompressFactor: 1=lowest quality/smallest, 100=highest quality/largest. }
 function Bmp2Jpg(BMP: TBitmap; CompressFactor: Integer= DelphiJpgQuality): TJpegImage;
 begin
  if BMP = NIL
@@ -168,19 +204,21 @@ begin
 
  Result:= TJPEGImage.Create;
  TRY
-   Result.CompressionQuality:= CompressFactor; { 100 = best }
-   //Result.PixelFormat:= jf24Bit;
+   Result.CompressionQuality:= CompressFactor; { 100 = best quality }
    Result.Assign(BMP);
-   EXCEPT
-      FreeAndNil(Result);   { We only free the result in case of failure }
-      Raise;
-   END;
+ EXCEPT
+   FreeAndNil(Result);   { We only free the result in case of failure }
+   Raise;
+ END;
 end;
 
 
-{ Save the image directly to disk.
-  JpgOutPath is the full path (incl name) for the output jpeg file. }
+{ Save the bitmap as JPEG directly to disk.
+  OutputFile is the full path (including filename) for the output JPEG file.
+  Creates the output directory if it doesn't exist. }
 procedure Bmp2Jpg(BMP: TBitmap; OutputFile: string; CompressFactor: Integer= DelphiJpgQuality);
+VAR
+   OutFolder: string;
 begin
  if BMP = NIL
  then raise Exception.Create('Bmp2Jpg: BMP parameter cannot be nil');
@@ -189,9 +227,10 @@ begin
 
  var JPG:= Bmp2Jpg(BMP, CompressFactor);
  TRY
-  var OutFolder:= ExtractFilePath(OutputFile);
+  OutFolder:= ExtractFilePath(OutputFile);
 
-  if ForceDirectoriesB(OutFolder)
+  { If no folder specified (just filename), save to current directory }
+  if (OutFolder = '') OR ForceDirectoriesB(OutFolder)
   then JPG.SaveToFile(OutputFile)
   else RAISE Exception.Create('Cannot create output folder!'+ CRLFw+ OutFolder);
  FINALLY
@@ -200,7 +239,9 @@ begin
 end;
 
 
-{ Save the specified TGraphic as Jpg }
+{ Saves any TGraphic (TBitmap, TIcon, TMetafile, etc.) as a JPEG file.
+  OutputFile is the full path including filename for the output JPEG.
+  Note: Does not create parent directories - use Bmp2Jpg for that functionality. }
 procedure Graph2Jpg(Graph: TGraphic; OutputFile: string; CompressFactor: Integer= DelphiJpgQuality);
 VAR JPG: TJpegImage;
 begin
