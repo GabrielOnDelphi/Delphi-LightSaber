@@ -1,10 +1,18 @@
 UNIT LightCore.EncodeCRC;
 
 {=============================================================================================================
-   2024.12
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
+
+   CRC32 checksum implementations.
+
+   CRC32 (AnsiString) - Compatible with Total Commander 9.0a and WIN-SFV32 v1.0.
+   CRC32 (TBytesArray) - Processes raw byte arrays.
+   CRC32_U (Unicode string) - For Unicode strings. Uses UTF-8 encoding internally via TStringStream.
+                              For ASCII-only strings, results match CRC32(AnsiString).
+   CRC32Stream - Processes any TStream in chunks (efficient for large files).
 
 =============================================================================================================}
 
@@ -13,9 +21,10 @@ INTERFACE
 USES
    System.Classes, System.SysUtils, LightCore.Types;
 
- function CRC32_U(CONST s : string)        : Cardinal;               { For UNICODE - does not output the same result as Total Commander! }
- function CRC32  (CONST s: AnsiString)     : Cardinal;  overload;    { Tested: ok }
- function CRC32  (CONST Bytes: TBytesArray): Cardinal;  overload;
+ function CRC32_U    (CONST s: string)        : Cardinal;               { For Unicode strings - uses UTF-8 encoding, does not match Total Commander }
+ function CRC32      (CONST s: AnsiString)     : Cardinal;  overload;    { Compatible with Total Commander 9.0a }
+ function CRC32      (CONST Bytes: TBytesArray): Cardinal;  overload;
+ function CRC32Stream(AStream: TStream)        : Cardinal;               { For streams - processes in 64KB chunks }
 
 IMPLEMENTATION
 
@@ -48,9 +57,11 @@ CONST
 
 
 { CRC32 - WIN-SFV32 v1.0.
-  Compatible with Total Commander 9.0a
-  The parameter must be an ANSI string. It works also with Unicode strings as long they don't contain special characters }
-function CRC32(CONST s: AnsiString): Cardinal;  //Works fine. usage: ShowMessage(IntToHex(crc32(s), 6)
+  Compatible with Total Commander 9.0a.
+  The parameter must be an AnsiString.
+  For Unicode strings, use CRC32_U instead (note: results will differ due to UTF-8 encoding).
+  Usage: ShowMessage(IntToHex(CRC32(s), 8)) }
+function CRC32(CONST s: AnsiString): Cardinal;
 VAR
    i: Integer;
 begin
@@ -72,48 +83,46 @@ begin
 end;
 
 
-function CRC32Stream(AStream : TStream) : Cardinal;     { Does it have the same problem as the above code when it comes to unicode strings? }
-var aMemStream : TMemoryStream;
-    aValue : Byte;
+{ Computes CRC32 for any TStream. Processes data in 64KB chunks for efficiency.
+  Note: This operates on raw bytes from the stream, so the result depends on how the data
+  was written to the stream (e.g., UTF-8 encoding for TStringStream). }
+function CRC32Stream(AStream: TStream): Cardinal;
+CONST
+  BUFFER_SIZE = 64 * 1024;  { 64KB buffer - good balance between memory and I/O efficiency }
+VAR
+  Buffer: TBytes;
+  BytesRead: Integer;
+  i: Integer;
 begin
-  aMemStream := TMemoryStream.Create;
+  Result:= $FFFFFFFF;
+  SetLength(Buffer, BUFFER_SIZE);
   try
-    Result := $FFFFFFFF;
     while AStream.Position < AStream.Size do
-    begin
-      // Read a chunk of data...
-      aMemStream.Seek(0, soFromBeginning);
-      if AStream.Size - AStream.Position >= 1024*1024
-      then aMemStream.CopyFrom(AStream, 1024*1024)
-      else
-        begin
-          aMemStream.Clear;
-          aMemStream.CopyFrom(AStream, AStream.Size-AStream.Position);
-        end;
-
-      //Calculate the CRC for the block ...
-      aMemStream.Seek(0, soFromBeginning);
-      while aMemStream.Position < aMemStream.Size DO
-       begin
-        aMemStream.ReadBuffer(aValue, 1);
-        Result := (Result shr 8) xor CRC32Table[aValue xor (Result and $000000FF)];
-       end;
-    end;
-    Result := NOT Result;
+      begin
+        BytesRead:= AStream.Read(Buffer[0], BUFFER_SIZE);
+        for i:= 0 to BytesRead - 1 do
+          Result:= (Result shr 8) xor CRC32Table[Buffer[i] xor (Result and $000000FF)];
+      end;
+    Result:= NOT Result;
   finally
-    FreeAndNil(aMemStream);
+    SetLength(Buffer, 0);  { Release buffer memory }
   end;
 end;
 
 
-function CRC32_U(CONST s : string) : Cardinal;     { Unicode }  { Does it have the same problem as the above code when it comes to unicode strings? }
-VAR aStringStream : TStringStream;
+{ Computes CRC32 for Unicode strings.
+  Uses TStringStream which defaults to UTF-8 encoding in modern Delphi.
+  For ASCII-only strings, results should match CRC32(AnsiString).
+  For strings with non-ASCII characters, results will differ due to UTF-8 multi-byte encoding. }
+function CRC32_U(CONST s: string): Cardinal;
+VAR
+  StringStream: TStringStream;
 begin
-  aStringStream:= TStringStream.Create(s);
+  StringStream:= TStringStream.Create(s);
   TRY
-    Result:= CRC32Stream(aStringStream);
+    Result:= CRC32Stream(StringStream);
   FINALLY
-    FreeAndNil(aStringStream);
+    FreeAndNil(StringStream);
   END;
 end;
 

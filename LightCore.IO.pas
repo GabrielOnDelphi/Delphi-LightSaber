@@ -2,7 +2,7 @@
 
 {=============================================================================================================
    www.GabrielMoraru.com
-   2026.01
+   2026.01.30
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
@@ -21,7 +21,7 @@
      - Drive manipulation (IsDiskInDrive, etc)
      - etc
 
-    Cross-platform ready: stamped 2025.10
+    Cross-platform ready: stamped 2026.01
 ==============================================================================================================
 
   EXISTS:
@@ -201,7 +201,7 @@ CONST
    CREATE FOLDERS
 --------------------------------------------------------------------------------------------------}
  procedure ForceDirectoriesE    (CONST Folder: string);
- function  ForceDirectoriesB    (CONST Folder: string): Boolean;                                 { Replacement for System.SysUtils.ForceDirectories - elimina problema: " { Do not call ForceDirectories with an empty string. Doing so causes ForceDirectories to raise an exception" }
+ function  ForceDirectoriesB    (CONST Folder: string): Boolean;                                  { Replacement for System.SysUtils.ForceDirectories - elimina problema: " { Do not call ForceDirectories with an empty string. Doing so causes ForceDirectories to raise an exception" }
  function  ForceDirectories     (CONST Folder: string): Integer;
 
 
@@ -210,7 +210,12 @@ CONST
 --------------------------------------------------------------------------------------------------}{ Old name:  RemoveInvalidPathChars  }
  function  CorrectFolder        (CONST Folder  : string; ReplaceWith: char= ' '): string;          { Folder is single folder. Example '\test\' }
  function  CorrectFilename      (CONST FileName: string; ReplaceWith: char= ' '): string;          { Correct invalid characters in a filename. FileName = File name without path }
- function  ShortenText          (CONST LongPath: String; MaxChars: Integer): String;               { Also exists: FileCtrl.MinimizeName, DrawStringEllipsis }
+
+
+{--------------------------------------------------------------------------------------------------
+   TEXT RELATED
+--------------------------------------------------------------------------------------------------}
+ function  ShortenPath          (CONST LongPath: String; MaxChars: Integer): String;               { Also exists: FileCtrl.MinimizeName, DrawStringEllipsis }
 
 
 {--------------------------------------------------------------------------------------------------
@@ -220,13 +225,17 @@ CONST
  function  GetMyDocuments        : string;                                                         { See this for macosx: http://www.malcolmgroves.com/blog/?p=865 }
  function  GetMyPictures         : string;
 
- { New: }
  function  GetHomePath: string;
  function  GetDocumentsPath: string;
  function  GetSharedDocumentsPath: string;
  function  GetMusicPath: string;
  function  GetMoviesPath: string;
  function  GetDownloadsPath: string;
+ function  GetLibraryPath: string;
+ function  GetCachePath: string;
+ function  GetPublicPath: string;
+ function  GetRandomFileName: string;
+ function  GetTempFileName: string;
 
 
 {--------------------------------------------------------------------------------------------------
@@ -447,10 +456,11 @@ begin
 end;
 
 
-{ Converts DOS path to Linux path. Does not handle C: but only the \ separators }
-function Convert2LinuxPath(CONST DosPath: string): string;     // old name: MakeLinuxPath
+{ Converts DOS path to Linux path by replacing backslashes with forward slashes.
+  Does not handle the drive letter (C:), only the path separators. }
+function Convert2LinuxPath(CONST DosPath: string): string;
 begin
- Result:= ReplaceCharF(DosPath, '\', '/');;
+  Result:= ReplaceCharF(DosPath, '\', '/');
 end;
 
 
@@ -472,38 +482,39 @@ end;
    FOLDER
 --------------------------------------------------------------------------------------------------}
 
-{ Returns True if this path seems to be Unicode }
-function IsUnicode (CONST Path: string): boolean;
+{ Returns True if this path uses the extended-length path prefix (\\?\).
+  These paths support paths longer than MAX_PATH (260 chars) in Windows.
+  See: https://docs.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation }
+function IsUnicode(CONST Path: string): boolean;
 begin
- Result:= pos('?', Path)> 0;   {WTF?}
+  Result:= Pos('\\?\', Path) = 1;
 end;
 
 
-{ Tells if FullPath is an EXISTING folder or file. If the FullPath  represents a folder that does not exist, the function will return False!
-  Works with UNC paths
-  https://stackoverflow.com/questions/63606215/how-to-check-if-given-path-is-file-or-folder }
+{ Returns True if FullPath is an EXISTING directory.
+  Returns False if it's a file or doesn't exist.
+  Works with UNC paths.
+  See: stackoverflow.com/questions/63606215 }
 function IsFolder(CONST FullPath: string): boolean;
 begin
- Result:= {NOT FileExists(FullPath) AND} DirectoryExists(FullPath);
- {del
- // We need both checks for the case where FullPath is not a valid file/folder. In other words, we cannot use only Result:= DirectoryExists(FullPath);
- if FileExists(FullPath)
- then Result:= FALSE
- else Result:= DirectoryExists(FullPath);  }
+ Result:= DirectoryExists(FullPath);
 end;
 
 
-{ Appends the 'delimiter' at the ends of the string IF it doesn't already exist there. Works with UNC paths }
+{ Appends the 'Delimiter' at the beginning and/or end of the Path if not already present.
+  Works with UNC paths.
+  Delimiter should be a single character string (e.g., '/' or '\'). }
 function ForcePathDelimiters(CONST Path, Delimiter: string; SetAtBegining, SetAtEnd: Boolean): string;
 begin
-  if Path = ''
-  then EXIT('');
+  if (Path = '') OR (Delimiter = '')
+  then EXIT(Path);
 
   Result:= Path;
-  if SetAtBegining AND (Result[1] <> Delimiter)
+
+  if SetAtBegining AND (Result[1] <> Delimiter[1])
   then Result:= Delimiter + Result;
 
-  if SetAtEnd AND (Result[Length(Result)] <> Delimiter)
+  if SetAtEnd AND (Result[Length(Result)] <> Delimiter[1])
   then Result:= Result + Delimiter;
 end;
 
@@ -567,17 +578,19 @@ begin
 end;
 
 
-{ Returns a path that is not longer than MAX_PATH allowed in Windows
-  It does this by shortening the filename.
-  The caller must make sure that the resulted file name won't be too short (0 chars)!
-  IMPORTANT! We cannot use TPath here because it cannot handle long file names. Details: http://stackoverflow.com/questions/31427260/how-to-handle-very-long-file-names?noredirect=1#comment50831709_31427260
+{ Returns a shortened path that fits within MaxLength characters.
+  Shortens the filename portion while preserving the directory path and extension.
 
-  Also exists:
-       FileCtrl.MinimizeName (if you require pixels)
-       cGraphics.DrawStringEllipsis
-       LightCore.ShortenString
-       LightCore.IO.ShortenFileName
-}
+  WARNING: The caller must ensure the resulting filename has at least 1 character!
+  If the path alone exceeds MaxLength, the result will be invalid.
+
+  IMPORTANT: We cannot use TPath here because it cannot handle long file names.
+  See: stackoverflow.com/questions/31427260
+
+  Related functions:
+    FileCtrl.MinimizeName       - Shortens for pixel width
+    cGraphics.DrawStringEllipsis- Visual ellipsis
+    LightCore.ShortenString     - General string shortening }
 function ShortenFileName(CONST FullPath: String; MaxLength: Integer= MAXPATH): string;
 VAR
    FilePath, ShortenedFileName: string;
@@ -596,16 +609,19 @@ begin
 end;
 
 
+{ Checks if the path length is within the allowed limit.
+  Extended-prefixed paths (\\?\) are not restricted by MaxLength on Windows.
+  On POSIX systems, checks the UTF-8 encoded byte length. }
 function CheckPathLength(const FullPath: string; MaxLength: Integer= MAXPATH): Boolean;
 begin
- {$IFDEF MSWINDOWS}
- Result:= TPath.IsExtendedPrefixed(FullPath)    { Checks whether a given path has an extended prefix. Call IsExtendedPrefixed to check whether the given path contains an extension prefix. Paths prefixed with \\?\ or \\?\UNC\ are Windows-specific and can be of very big lengths and not restricted to 255 characters (MAX_PATH). It is a common case today to manage paths longer than 255 characters. Prefixing those with \\?\ solves the problem. }
-       OR (NOT TPath.IsExtendedPrefixed(FullPath) AND (Length(FullPath) < MaxLength));
- {$ENDIF MSWINDOWS}
+  {$IFDEF MSWINDOWS}
+  { Extended-length paths (\\?\) bypass the MAX_PATH limit }
+  Result:= TPath.IsExtendedPrefixed(FullPath) OR (Length(FullPath) < MaxLength);
+  {$ENDIF MSWINDOWS}
 
- {$IFDEF POSIX}
- Result:= (Length(UTF8Encode(FullPath)) < MaxLength)  // Check the length in bytes on POSIX
- {$ENDIF POSIX}
+  {$IFDEF POSIX}
+  Result:= (Length(UTF8Encode(FullPath)) < MaxLength);
+  {$ENDIF POSIX}
 end;
 
 
@@ -956,19 +972,23 @@ end;
 
 
 
-// MIME TYPE
+{ Determines the MIME type based on file extension.
+  Returns 'application/octet-stream' for unknown extensions. }
 function ExtensionToMimeType(const FileName: string): string;
+VAR
+  Ext: string;
 begin
-  var Ext:= LowerCase(ExtractFileExt(FileName));
+  Ext:= LowerCase(ExtractFileExt(FileName));
 
-  if Ext = '.txt'  then Result := 'text/plain' else
-  if Ext = '.md'   then Result := 'text/markdown' else
-  if Ext = '.pdf'  then Result := 'application/pdf' else
-  if Ext = '.png'  then Result := 'image/png' else
-  if Ext = '.gif'  then Result := 'image/gif' else
-  if IsJpg(Ext)    then Result := 'image/jpeg'
-
-  else Result := 'application/octet-stream'; // Default to octet-stream for unknown types
+  if Ext = '.txt'  then Result:= 'text/plain'   else
+  if Ext = '.md'   then Result:= 'text/markdown' else
+  if Ext = '.pdf'  then Result:= 'application/pdf' else
+  if Ext = '.png'  then Result:= 'image/png' else
+  if Ext = '.gif'  then Result:= 'image/gif' else
+  if Ext = '.webp' then Result:= 'image/webp' else
+  if (Ext = '.jpg') OR (Ext = '.jpeg') OR (Ext = '.jpe') OR (Ext = '.jfif')
+  then Result:= 'image/jpeg'
+  else Result:= 'application/octet-stream';
 end;
 
 
@@ -1244,10 +1264,13 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    INCREMENT FILE NAME
-     Increments the number contained in the file name (at its end).
-     If the file does not contain a number, a 1 is automatically added.
+     Increments the trailing number in a filename.
+     Example: 'File01.txt' -> 'File02.txt', 'Document9.pdf' -> 'Document10.pdf'
+     If no number exists, behavior depends on IncrementStringNoEx (may append 0).
+     Preserves leading zeros: 'File001.txt' -> 'File002.txt'.
+     Works with UNC paths.
 --------------------------------------------------------------------------------------------------}
-function IncrementFileName (CONST FileName: string; AddDash: Boolean = false): string;                      // Works with UNC paths
+function IncrementFileName (CONST FileName: string; AddDash: Boolean = false): string;
 VAR outFileName, outFileNumber: string;
 begin
  SplitNumber_End(ExtractOnlyName(FileName), outFileName, outFileNumber);
@@ -1318,7 +1341,9 @@ begin
 end;
 
 
-{ Create a copy of the specified file in the same folder. }  { Old name:  FileMakeBackup }
+{ Creates a backup copy of FileName in DestFolder.
+  If TimeStamp=True, appends current date/time to the backup filename.
+  Returns True on success, False on failure (e.g., copy error). }
 function BackupFileDate(CONST FileName, DestFolder: string; TimeStamp: Boolean= TRUE; Overwrite: Boolean = TRUE): Boolean;
 VAR BackupName: string;
 begin
@@ -1328,16 +1353,25 @@ begin
  then BackupName:= BackupName+ '  '+ DateTimeToStr_IO(Now)+ ExtractFileExt(FileName)
  else BackupName:= BackupName+ ' - backup'+ ExtractFileExt(FileName);
 
- TFile.Copy(FileName, BackupName, Overwrite);
- result:= TRUE;
+ TRY
+   TFile.Copy(FileName, BackupName, Overwrite);
+   Result:= TFile.Exists(BackupName);
+ EXCEPT
+   Result:= FALSE;
+ END;
 end;
 
 
-{ Create a copy of this file, and appends as file extension. Ex: File.txt -> File.txt.bak }
+{ Creates a backup by appending .bak extension. Ex: File.txt -> File.txt.bak
+  Returns True on success, False on failure. }
 function BackupFileBak(CONST FileName: string): Boolean;
 begin
- Result:= TRUE;
- TFile.Copy(FileName, FileName+'.bak', TRUE);
+ TRY
+   TFile.Copy(FileName, FileName+'.bak', TRUE);
+   Result:= TFile.Exists(FileName+'.bak');
+ EXCEPT
+   Result:= FALSE;
+ END;
 end;
 
 
@@ -1345,8 +1379,8 @@ end;
 
 
 
-{ Returns true if the filename ends with a number.
-  Example: MyFile02.txt returns TRUE.
+{ Returns True if the filename (without extension) ends with a digit.
+  Example: MyFile02.txt returns TRUE; MyFile.txt returns FALSE.
   Works with UNC paths. }
 function FileEndsInNumber(CONST FileName: string): Boolean;
 VAR ShortName: string;
@@ -1354,7 +1388,7 @@ begin
   ShortName:= ExtractOnlyName(FileName);
 
   if ShortName = ''
-  then RAISE Exception.Create('FileEndsInNumber');
+  then RAISE Exception.Create('FileEndsInNumber: Empty filename provided!');
   Result:= CharIsNumber(ShortName[Length(ShortName)]);
 end;
 
@@ -1413,23 +1447,35 @@ end;
    FILE TIME
 --------------------------------------------------------------------------------------------------}
 
-{ The time must be at the end of the file name.
-  Example: 'MyPicture 20-00.jpg'.
-  Returns 0 if the time could not be extracted. }
+{ Extracts time from a filename where time is encoded at the end.
+  The time must be in format 'HH-MM' at the end of the filename (before extension).
+  Example: 'MyPicture 20-00.jpg' returns 20:00:00.
+  Returns 0 if the time could not be extracted or is invalid. }
 function ExtractTimeFromFileName(CONST FileName: string): TTime;
-VAR s: string;
+VAR
+  s: string;
+  LocalFormat: TFormatSettings;
 begin
- s:= ExtractOnlyName(FileName);
- if Length(s) <= 5 then EXIT(-1);    { File name patter is invalid (too short) }
+  Result:= 0;
+  s:= ExtractOnlyName(FileName);
 
- s:= CopyTo(s, Length(s)- 5, MaxInt);
- ReplaceChar(s, '-', ':');
- TRY
-  FormatSettings.TimeSeparator:= ':';
-  Result:= StrToTimeDef(s, 0);   { Don't fail if the string is invalid. Bionix relies on this! }
- EXCEPT //todo 1: trap only specific exceptions
-  Result:= -1;
- END;
+  { File name pattern is invalid (too short for 'HH-MM' format) }
+  if Length(s) < 5
+  then EXIT;
+
+  { Extract last 5 characters (expected: 'HH-MM') }
+  s:= System.Copy(s, Length(s) - 4, 5);
+  ReplaceChar(s, '-', ':');
+
+  TRY
+    { Use local TFormatSettings to avoid modifying global state (thread-safe) }
+    LocalFormat:= TFormatSettings.Create;
+    LocalFormat.TimeSeparator:= ':';
+    Result:= StrToTimeDef(s, 0, LocalFormat);
+  EXCEPT
+    on E: EConvertError do
+      Result:= 0;
+  END;
 end;
 
 
@@ -1845,27 +1891,41 @@ begin
 end;
 
 
-{ In this function you don't have to provide the full path for the second parameter but only the destination folder }
+{ Copies a file to a destination folder (not full path).
+  The filename is preserved from the source.
+  Example: FileCopyQuick('c:\docs\file.txt', 'd:\backup\') copies to 'd:\backup\file.txt' }
 function FileCopyQuick(CONST From_FullPath, To_DestFolder: string): boolean;
 begin
-  Result:= CopyFile(From_FullPath, To_DestFolder+ ExtractFileName(From_FullPath));
+  Result:= CopyFile(From_FullPath, Trail(To_DestFolder) + ExtractFileName(From_FullPath));
 end;
 
 
+{ Moves a file from one location to another.
+  Returns True on success, False on failure. }
 function FileMoveTo(CONST From_FullPath, To_FullPath: string): boolean;
 begin
-  Result:= TRUE;
-  TFile.Move(From_FullPath, To_FullPath);
+  TRY
+    TFile.Move(From_FullPath, To_FullPath);
+    Result:= TFile.Exists(To_FullPath);
+  EXCEPT
+    Result:= FALSE;
+  END;
 end;
 
 
 { Same as FileMoveTo but the user provides a folder for the second parameter instead of a full path.
-  If destination folder does not exist it is created. }
+  The filename is preserved from the source.
+  If destination folder does not exist, it is created.
+  Returns True on success, False on failure. }
 function FileMoveToDir(CONST From_FullPath, To_DestFolder: string): boolean;
 begin
-  Result:= TRUE;
-  ForceDirectories(To_DestFolder);
-  TFile.Move(From_FullPath, Trail(To_DestFolder) + ExtractFileName(From_FullPath));
+  TRY
+    ForceDirectories(To_DestFolder);
+    TFile.Move(From_FullPath, Trail(To_DestFolder) + ExtractFileName(From_FullPath));
+    Result:= NOT TFile.Exists(From_FullPath);  { Success if source no longer exists }
+  EXCEPT
+    Result:= FALSE;
+  END;
 end;
 
 
@@ -1876,21 +1936,25 @@ end;
    FOLDER COPY/MOVE
 --------------------------------------------------------------------------------------------------}
 
-{ Copy its CONTENT, all its files and subfolders.
-  Returns how many files were not copied. So it returns 0 for 'ok'. }
+{ Copies folder content (files and subfolders) from FromFolder to ToFolder.
+  Returns the count of files that FAILED to copy (0 = all succeeded). }
 function CopyFolder(CONST FromFolder, ToFolder : String; Overwrite: Boolean= True; CONST FileType: string= '*.*'): integer;
 VAR
   s, Dst : string;
   TSL: TStringList;
 begin
   Result:= 0;
-  Dst := Trail(ToFolder);
+  Dst:= Trail(ToFolder);
   ForceDirectories(Dst);
 
   TSL:= ListFilesOf(FromFolder, FileType, TRUE, DigSubdirectories);
   TRY
     for s in TSL do
-      TFile.Copy(s, Dst+ ExtractFileName(s), Overwrite);
+      TRY
+        TFile.Copy(s, Dst+ ExtractFileName(s), Overwrite);
+      EXCEPT
+        Inc(Result);  { Count failed copies }
+      END;
    FINALLY
      FreeAndNil(TSL);
    end;
@@ -1928,42 +1992,46 @@ begin
 end;
 
 
-{  Copy only CopyBytes bytes from the begining of the file.
-   If destination exists it is overwriten.
-   We could use also Indy WinApi.CopyFile: https://docs.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-copyfile?redirectedfrom=MSDN }
-procedure CopyFileTop(const SourceName, DestName: string; CopyBytes: Int64);    //NOT TESTED YET!
+{ Copies only the first CopyBytes bytes from SourceName to DestName.
+  If destination exists, it is overwritten.
+  Useful for extracting headers or creating partial copies of large files.
+  Uses a 10MB buffer for efficient copying. }
+procedure CopyFileTop(const SourceName, DestName: string; CopyBytes: Int64);
 const
-  BufferSize = 10 * 1024 * 1024;  // 10 MB buffer
+  BufferSize = 10 * 1024 * 1024;  { 10 MB buffer }
 var
   SrcStream, DestStream: TFileStream;
   Buffer: TBytes;
   NumToCopy, TotalCopied: Int64;
 begin
-  SetLength(Buffer, BufferSize);  // Initialize buffer with the specified size
-  SrcStream := TFileStream.Create(SourceName, fmOpenRead or fmShareDenyWrite);
-  try
-    DestStream := TFileStream.Create(DestName, fmCreate);
-    try
-      TotalCopied := 0;
+  Assert(CopyBytes > 0, 'CopyFileTop: CopyBytes must be positive');
+
+  SetLength(Buffer, BufferSize);
+  SrcStream:= TFileStream.Create(SourceName, fmOpenRead or fmShareDenyWrite);
+  TRY
+    DestStream:= TFileStream.Create(DestName, fmCreate);
+    TRY
+      TotalCopied:= 0;
       while TotalCopied < CopyBytes do
       begin
-        NumToCopy := Min(BufferSize, CopyBytes - TotalCopied);
+        NumToCopy:= Min(BufferSize, CopyBytes - TotalCopied);
         SrcStream.ReadBuffer(Buffer[0], NumToCopy);
         DestStream.WriteBuffer(Buffer[0], NumToCopy);
         Inc(TotalCopied, NumToCopy);
       end;
-    finally
+    FINALLY
       FreeAndNil(DestStream);
-    end;
-  finally
+    END;
+  FINALLY
     FreeAndNil(SrcStream);
-  end;
+  END;
 end;
 
 
 
-{ Append Segment to Master.
-  Separator is a text (ex CRLF) that will be added before Segment files if SeparatorFirst= true }
+{ Appends SegmentFile content to MasterFile.
+  Separator (e.g., CRLF) is written before or after the segment based on SeparatorFirst.
+  Both files must exist. Files are opened with exclusive access during operation. }
 procedure AppendTo(CONST MasterFile, SegmentFile, Separator: string; SeparatorFirst: Boolean= TRUE);
 VAR
    MasterStream, SegmentStream: TFileStream;
@@ -1973,8 +2041,8 @@ VAR
   begin
     if Separator > '' then
      begin
-      UTF := UTF8String(Separator);
-      MasterStream.WriteBuffer(UTF[1], Length(Separator));
+      UTF:= UTF8String(Separator);
+      MasterStream.WriteBuffer(UTF[1], Length(UTF));   { BugFix: Use Length(UTF) for byte count, not Length(Separator) }
      end;
   end;
 
@@ -2052,16 +2120,18 @@ end;
 {--------------------------------------------------------------------------------------------------
    DELETE FOLDER
 --------------------------------------------------------------------------------------------------}
-{ Deletes all files (only files!) in the specified folder and subfolders, but don't delete the folder itself or the subfolders.
+{ Empties a directory by deleting everything inside and recreating the empty folder.
+  Deletes all files AND subfolders, then recreates the empty root folder.
   Works with UNC paths.
 
-  We need a delay here because the TDirectory.Delete is asynchron.
-  The function seems to return before it finished deleting the folder:
-    Details: http://stackoverflow.com/questions/42809389/tdirectory-delete-seems-to-be-asynchronous?noredirect=1#comment72732153_42809389
-    Answer: Perhaps the Remarks section on the msdn page about RemoveDirectory gives us a clue? (msdn.microsoft.com/en-us/library/windows/desktop/�) The RemoveDirectory function marks a directory for deletion on close. Therefore, the directory is not removed until the last handle to the directory is closed. This indicates that the call may return before the directory has actually been deleted }
+  IMPORTANT: TDirectory.Delete is asynchronous on Windows! The RemoveDirectory API
+  marks directories for deletion on close, so the call may return before deletion
+  actually completes. This function polls up to 6 seconds waiting for deletion.
+  Raises exception if deletion times out or directory cannot be recreated.
+  See: stackoverflow.com/questions/42809389 }
 procedure EmptyDirectory(const Path: string);
 CONST
-  MaxWaitTime = 6000; // Maximum time to wait for directory deletion (in milliseconds)
+  MaxWaitTime = 6000;  { Maximum time to wait for directory deletion (ms) }
 VAR
   Stopwatch: TStopwatch;
 begin
@@ -2113,8 +2183,8 @@ begin
 end;
 
 
-{ Delete all empty folders / sub-folders (any sub level) under the provided "rootFolder".
-  Works with UNC paths. }
+{ UNUSED - Alternative implementation of RemoveEmptyFolders using FindFirst/FindNext.
+  Kept for reference. Works with UNC paths. Uses recursive local function approach. }
 procedure RemoveEmptyFolders_Alternative(const RootFolder: string);
 var
   SRec: TSearchRec;
@@ -2226,42 +2296,62 @@ begin
 end;
 
 
+{ Lists both files and folders in aFolder (top-level only).
+  ReturnFullPath=True returns full paths; False returns names only.
+  Folders are trailed with path delimiter for identification.
+  Caller must free the returned TStringList. }
 function ListFilesAndFolderOf(CONST aFolder: string; CONST ReturnFullPath: Boolean): TStringList;
 VAR
    i: Integer;
    s: string;
    List: system.Types.TStringDynArray;
+   DirCount: Integer;
 begin
  if NOT System.IOUtils.TDirectory.Exists (aFolder)
  then RAISE Exception.Create('Folder does not exist! '+ CRLFw+ aFolder);
 
  Result:= TStringList.Create;
 
+ { Add directories }
  List:= TDirectory.GetDirectories(aFolder, TSearchOption.soTopDirectoryOnly, NIL);
  for s in List
   DO Result.Add(Trail(s));  { Trail is mandatory for ExtractLastFolder to work properly }
+ DirCount:= Result.Count;
 
+ { Add files }
  SetLength(List, 0);
  List:= TDirectory.GetFiles (aFolder);
  for s in List DO
   if s <> ''
   then Result.Add(s);
 
- { Remove full path }
+ { Remove full path if requested }
  if NOT ReturnFullPath then
-  for i:= 0 to Result.Count-1 DO
-   Result[i]:= ExtractLastFolder(Result[i]);
+  begin
+   { For directories, use ExtractLastFolder }
+   for i:= 0 to DirCount-1 DO
+     Result[i]:= ExtractLastFolder(Result[i]);
+   { For files, use ExtractFileName }
+   for i:= DirCount to Result.Count-1 DO
+     Result[i]:= ExtractFileName(Result[i]);
+  end;
 end;
 
 
-{ If DigSubdirectories is false, it will return only the top level files,
-  else it will return also the files in subdirectories of subdirectories.
-  If FullPath is true the returned files will have full path.
-  FileType can be something like '*.*' or '*.exe;*.bin'
-  Will show also the Hidden/System files.
-  Based on code from Marco Cantu Delphi 2010 HandBook.
+{ Lists all files in a folder matching specified file type patterns.
 
-  Works with UNC paths. }
+  Parameters:
+    aFolder          - Root folder to search (must exist, raises exception if not)
+    FileType         - File mask(s), e.g., '*.*' or '*.exe;*.bin' (semicolon-separated)
+    ReturnFullPath   - True: return full paths; False: return filenames only
+    DigSubdirectories- True: search all subfolders recursively; False: top-level only
+    ExcludeFolders   - Optional list of folders to exclude from search (nil = exclude none)
+
+  Returns a TStringList that the CALLER MUST FREE.
+  Includes hidden/system files.
+  Works with UNC paths.
+  Skips paths longer than MAXPATH to avoid EPathTooLongException.
+  Based on code from Marco Cantu Delphi 2010 HandBook. }
 function ListFilesOf(CONST aFolder, FileType: string; CONST ReturnFullPath, DigSubdirectories: Boolean; ExcludeFolders: TStrings= nil): TStringList;
 VAR
   i: Integer;
@@ -2356,10 +2446,10 @@ begin
   Predicate:= function(const Path: string; const SearchRec: TSearchRec): Boolean
                begin
                  {$IFDEF MSWINDOWS}
-                 Result := CountHidden or ((SearchRec.Attr and faHidden) = 0);
+                 Result:= CountHidden OR ((SearchRec.Attr and faHidden) = 0);
                  {$ELSE}
-                 // Unix-based systems: Files starting with '.' are considered hidden
-                 Result := CountHidden or (SearchRec.Name[1] <> '.');
+                 { Unix-based systems: Files starting with '.' are considered hidden }
+                 Result:= CountHidden OR (SearchRec.Name = '') OR (SearchRec.Name[1] <> '.');
                  {$ENDIF}
                end;
 
@@ -2452,12 +2542,6 @@ end;
 
 
 
- 
-
-
-
-
-
 
 
 
@@ -2465,20 +2549,22 @@ end;
    SHORTEN TEXT
 --------------------------------------------------------------------------------------------------}
 
-{ Only show the start and the end of the path with ellipses in-between
+{ Shortens a long path/text by showing start and end with ellipsis in-between.
+  Example: ShortenPath('c:\very\long\path\to\file.txt', 20) returns 'c:\very...file.txt'
+
   Also exists:
-       FileCtrl.MinimizeName: Shortens a fully qualified path name so that it can be drawn with a specified length limit.
+       FileCtrl.MinimizeName: Shortens for a given pixel width
        cGraphics.DrawStringEllipsis }
-function ShortenText(CONST LongPath: String; MaxChars: Integer): String;    //ok  Works with UNC paths   //old name ShortenPath
+function ShortenPath(CONST LongPath: String; MaxChars: Integer): String;                                       //Old name: ShortenText
 VAR TotalLength, FLength: Integer;
 begin
   TotalLength:= Length(LongPath);
   if TotalLength > MaxChars then
   begin
    FLength:= (MaxChars Div 2) - 2;
-   Result := system.COPY(LongPath, 0, fLength)
+   Result := system.COPY(LongPath, 1, fLength)      { BugFix: was index 0, should be 1 (1-based strings) }
              + '...'
-             + system.COPY(LongPath, TotalLength-fLength, TotalLength);
+             + system.COPY(LongPath, TotalLength - fLength + 1, fLength);
    end
   else Result:= LongPath;
 end;

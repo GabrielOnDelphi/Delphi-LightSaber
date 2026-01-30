@@ -1,7 +1,7 @@
 UNIT LightCore.Internet;
 
 {-------------------------------------------------------------------------------------------------------------
-   2025
+   2026.01.30
    www.GabrielMoraru.com
 
    URL utils / URL parsing and validation
@@ -218,41 +218,51 @@ end;
 
 
 
-function IsWebPage(CONST URL: string): Boolean;   { Returns true for /1/2/3.html but not for /1/2/ or for /1/2 }
+{ Returns True if the URL appears to point to a web page (HTML/PHP/ASP).
+  Returns True for: /1/2/3.html, domain.com/, domain.com, #
+  Returns False for: /1/2/3.zip (downloadable files) }
+function IsWebPage(CONST URL: string): Boolean;
 VAR
    sURL: string;
    i: Integer;
 begin
- if url= '#' then EXIT(TRUE);
+  if URL = '#' then EXIT(TRUE);
 
- { Some URLs point to a folder (and indirectly to index.html). Example: 'www.test.com/175754/' }
- if LastChar(URL) = '/' then EXIT(TRUE);                      { This also handle this case:  'domain.com/'  }
+  { URLs ending with '/' point to a folder (and implicitly to index.html).
+    Example: 'www.test.com/175754/' }
+  if LastChar(URL) = '/' then EXIT(TRUE);
 
- if UrlExtractProtAndDomain(URL) = URL
- then EXIT(TRUE);  {IMPORTNAT: this comes after:  if LastChar(URL) = '/'    because it cannot handle 'domain.com/' but only 'domain.com'  }
+  { Domain-only URLs are web pages.
+    IMPORTANT: This check must come after the trailing slash check
+    because UrlExtractProtAndDomain cannot handle 'domain.com/' (only 'domain.com'). }
+  if UrlExtractProtAndDomain(URL) = URL
+  then EXIT(TRUE);
 
- { Obtain the last 'thing' in the URL. It could be afile name (ex: /download/setup.zip ) or a folder (ex: /download ) }
- i:= LastPos('/', URL);
- if i > 0
- then sURL:= system.COPY(URL, i+1, MaxInt)
- else sURL:= url;
+  { Extract the last segment of the URL.
+    It could be a filename (e.g., /download/setup.zip) or a folder (e.g., /download). }
+  i:= LastPos('/', URL);
+  if i > 0
+  then sURL:= System.Copy(URL, i + 1, MaxInt)
+  else sURL:= URL;
 
- { If . not found then it isn't a file }
- if Pos('.', sURL) < 1 then EXIT(TRUE);
+  { If no dot found, it's likely a folder path, not a file }
+  if Pos('.', sURL) < 1 then EXIT(TRUE);
 
- Result:= (PosInsensitive('.htm', sURL) > 1)
-       OR (PosInsensitive('.asp', sURL) > 1)
-       OR (PosInsensitive('.php', sURL) > 1);
+  { Check for common web page extensions }
+  Result:= (PosInsensitive('.htm', sURL) > 0)
+        OR (PosInsensitive('.asp', sURL) > 0)
+        OR (PosInsensitive('.php', sURL) > 0);
 end;
 
 
 
-{ All these UrlExtract functions also work with subdomains.   }
-{ Removes everyting after the .com but keeps the protocol.
+{ Removes everything after the domain (TLD) but keeps the protocol.
+  Works with subdomains and both HTTP and HTTPS.
 
+  Examples:
      http://www.stuff.com/img.jpg     -> http://www.stuff.com
-     https://sub.500px.org/photo/m%8  -> https://sub.500px.org  }
-
+     https://sub.500px.org/photo/m%8  -> https://sub.500px.org
+     www.example.com/page             -> www.example.com  }
 function UrlExtractProtAndDomain(CONST URL: string): string;
 VAR StartAt, FirstSlash: integer;
 begin
@@ -363,26 +373,31 @@ end;
 
 
 
-{ Returns a Win-compatible filename for this online file.
-  The filename will have this format: Domain\Resource.ext.
-  The file can be saved to disk under this name.
+{ Generates a Windows-compatible filename from a URL.
+  Format: Domain_ResourceName[_UniqueID].ext
 
-  Example: http://www.bionixwallpaper.com/help/manual/images/day%20and%20night%20wallpaper.png -> }
-function GenerateLocalFilenameFromURL(CONST URL: string; UniqueChars: Integer= 6): string;    // old name: GenerateLocalFilenameFromURL
-VAR s: string;
+  UniqueChars: Number of random characters to append for uniqueness.
+               Set to 0 to disable unique suffix.
+
+  Example:
+    http://www.bionixwallpaper.com/help/images/day%20wallpaper.png
+    -> bionixwallpaper.com_help_images_day wallpaper_A1B2C3.png }
+function GenerateLocalFilenameFromURL(CONST URL: string; UniqueChars: Integer= 6): string;
+VAR
+  Resource: string;
 begin
-  s:= UrlExtractResource(URL);
-  s:= ReplaceString(s, '%20', ' ');
-  s:= RemoveFirstChar(s, '/');
-  s:= ReplaceCharF(s, '/', '_');
+  Resource:= UrlExtractResource(URL);
+  Resource:= ReplaceString(Resource, '%20', ' ');
+  Resource:= RemoveFirstChar(Resource, '/');
+  Resource:= ReplaceCharF(Resource, '/', '_');
 
-  Result:= ExtractonlyName(s);
+  Result:= ExtractonlyName(Resource);
   if UniqueChars > 0
-  then Result:= Result+ '_'+ GenerateUniqueString(6)+ ExtractFileExt(s)      { Add a unique identifier otherwise two online files might have the same file name }
-  else Result:= Result+ ExtractFileExt(s);
+  then Result:= Result + '_' + GenerateUniqueString(UniqueChars) + ExtractFileExt(Resource)
+  else Result:= Result + ExtractFileExt(Resource);
 
-  Result:= UrlExtractDomain(URL) + '_'+ Result;
-  Result:= CorrectFolder(Result, '_');     { Make it compatible with Win }
+  Result:= UrlExtractDomain(URL) + '_' + Result;
+  Result:= CorrectFolder(Result, '_');  { Replace invalid Windows filename chars }
 end;
 
 
@@ -449,23 +464,32 @@ end;
 
 
 
-{ Removes port from URL. Example: www.Domain.com:80 -> www.Domain.com }
+{ Removes port from URL while preserving the path.
+  Example: http://www.Domain.com:8080/path -> http://www.Domain.com/path }
 function UrlRemovePort(CONST URL: string): string;
-VAR iPos: Integer;
+VAR
+  iPortStart, iPortEnd: Integer;
 begin
-  iPos:= Pos(':', URL);
-  if iPos > 0
-  then
-   begin
+  iPortStart:= Pos(':', URL);
+  if iPortStart > 0
+  then begin
     { Skip the colon in 'http://' or 'https://' }
-    if (iPos + 1 <= Length(URL)) AND (URL[iPos + 1] = '/')
-    then iPos:= PosEx(':', URL, iPos + 1);
+    if (iPortStart + 1 <= Length(URL)) AND (URL[iPortStart + 1] = '/')
+    then iPortStart:= PosEx(':', URL, iPortStart + 1);
 
-    if iPos > 0
-    then Result:= System.Copy(URL, 1, iPos - 1)
-    else Result:= URL;  { No port in this URL }
+    if iPortStart > 0
+    then begin
+      { Find the end of port number (first slash or end of string) }
+      iPortEnd:= PosEx('/', URL, iPortStart + 1);
+      if iPortEnd > 0
+      then Result:= System.Copy(URL, 1, iPortStart - 1) + System.Copy(URL, iPortEnd, MaxInt)
+      else Result:= System.Copy(URL, 1, iPortStart - 1);  { No path after port }
+    end
+    else
+      Result:= URL;  { No port in this URL }
   end
-   else Result:= URL;
+  else
+    Result:= URL;
 end;
 
 
@@ -521,24 +545,35 @@ begin
 end;
 
 
-{  Example:
-     htpp://www.server.com/folder1/folder2/file.txt    returns: 'folder1'
-     htpp://www.server.com/folder1/folder2/            returns: 'folder1' }
+{ Extracts the second-to-last folder from a URL path.
+  Example:
+     http://www.server.com/folder1/folder2/file.txt  returns: 'folder1'
+     http://www.server.com/folder1/folder2/          returns: 'folder1'
+     http://www.server.com/folder1/                  returns: '' (no prev folder) }
 function URLExtractPrevFolder(CONST URL: string): string;
 VAR
    Pos0, Pos1, Pos2: Integer;
 begin
- Pos2:= LastPos('/', URL);
- if Pos2 < 1 then EXIT('');
- Result:= CopyTo(URL, 1, Pos2-1);
+  { Find last slash (after filename or trailing slash) }
+  Pos2:= LastPos('/', URL);
+  if Pos2 < 1 then EXIT('');
 
- Pos1:= LastPos('/', Result);
- if Pos1 < 1 then EXIT('');
- Result:= system.COPY(Result, 1, Pos1-1);
+  { Remove everything after last slash }
+  Result:= System.Copy(URL, 1, Pos2 - 1);
 
- Pos0:= LastPos('/', Result);
- if Pos0 < 1 then EXIT('');
- Result:= system.COPY(Result, Pos0+1, Pos1-1);
+  { Find the slash before the last folder }
+  Pos1:= LastPos('/', Result);
+  if Pos1 < 1 then EXIT('');
+
+  { Remove the last folder }
+  Result:= System.Copy(Result, 1, Pos1 - 1);
+
+  { Find the slash before the prev folder }
+  Pos0:= LastPos('/', Result);
+  if Pos0 < 1 then EXIT('');
+
+  { Extract just the prev folder name }
+  Result:= System.Copy(Result, Pos0 + 1, MaxInt);
 end;
 
 
@@ -565,20 +600,19 @@ end;
 
 
 
-{ Returns true if the aFile is located of MainURL or one of its subfolders.
-  Example:
-     MainURL= www.test.com/images\/
-     Returns True if aFile is:
-                        www.test.com/images/1.jpg
-                        www.test.com/images/sub/2.jpg
-     Returns False if aFile is:
-                        www.test.com/art/1.jpg              }
+{ Checks if a file URL is located within a given folder URL (including subfolders).
+  Performs case-sensitive prefix matching on the path.
+
+  Example (MainURL = 'www.test.com/images/'):
+     'www.test.com/images/1.jpg'     -> True
+     'www.test.com/images/sub/2.jpg' -> True
+     'www.test.com/art/1.jpg'        -> False }
 function FileIsInFolder(CONST MainURL, aFile: string): Boolean;
-VAR FilePath, s: string;
+VAR
+  FilePath: string;
 begin
- FilePath:= UrlExtractFilePath(aFile);
- s:= Copy(FilePath, 1, Length(MainURL));
- Result:= s = MainURL;
+  FilePath:= UrlExtractFilePath(aFile);
+  Result:= System.Copy(FilePath, 1, Length(MainURL)) = MainURL;
 end;
 
 
@@ -592,38 +626,43 @@ begin
 end;
 
 
-{ Expand short urls to a full http path.
-  Example: If the MainURL is 'www.dnabaser.com/tools/' then 'download/' is expanded to 'www.dnabaser.com/tools/download/' }
+{ Expands a relative URL to an absolute URL using MainUrl as the base.
+  Handles three cases:
+    1. ShortUrl already has http(s):// - returned as-is
+    2. ShortUrl starts with '/' - appended to domain only
+    3. ShortUrl is relative - appended to full base path
+
+  Examples (MainUrl = 'www.dnabaser.com/tools/'):
+    'download/'       -> 'www.dnabaser.com/tools/download/'
+    '/images/logo.png'-> 'www.dnabaser.com/images/logo.png'
+    'http://other.com'-> 'http://other.com' }
 function ExpandURL(CONST ShortUrl, MainUrl: string): string;
 VAR
    Base: string;
 begin
-  Assert(ShortUrl > '', 'ExpandURL.ShortUrl is empty!');
+  Assert(ShortUrl <> '', 'ExpandURL: ShortUrl is empty');
   Base:= UrlExtractProtAndDomain(MainUrl);
 
-  { Build full URL }
-  if CheckHttpStart(ShortUrl)            { URL is complete? }                //  http://1.bp.blogspot.com/-67xFrZBBFQo/URqHNyxRacI/AAAAAAAABoE/1lliPPXgeIo/s1600/Wallpapers-for-Desktop-.jpg
-  then Result:= ShortUrl
+  if CheckHttpStart(ShortUrl)
+  then Result:= ShortUrl  { Already absolute URL }
   else
-   begin
-     if FirstCharIs(ShortUrl, '/')
-     then Result:= Base + ShortUrl                           { ...no. Add domain in front of the filename }
-     else Result:= TrailLinuxPath(Base)+ ShortUrl;           { ...no. Add domain in front of the filename }
-   end;
+    if FirstCharIs(ShortUrl, '/')
+    then Result:= Base + ShortUrl           { Root-relative: append to domain }
+    else Result:= TrailLinuxPath(Base) + ShortUrl;  { Path-relative: append to base }
 end;
 
 
 
+{ Expands all short URLs in the list to full URLs using MainUrl as base.
+  Modifies the ShortUrls list in place. }
 procedure ExpandURLs(ShortUrls: TStringList; CONST MainUrl: string);
 VAR
    i: Integer;
-   CurURL: string;
 begin
-  for i:= 0 to ShortUrls.Count-1 DO
-   begin
-    CurURL:= ShortUrls[i];
-    ShortUrls[i]:= ExpandURL(CurURL, MainUrl);
-   end;
+  Assert(ShortUrls <> NIL, 'ExpandURLs: ShortUrls is nil');
+
+  for i:= 0 to ShortUrls.Count - 1 DO
+    ShortUrls[i]:= ExpandURL(ShortUrls[i], MainUrl);
 end;
 
 
@@ -635,9 +674,17 @@ end;
 {--------------------------------------------------------------------------------------------------
    IP TEXT MANIPULATION
 --------------------------------------------------------------------------------------------------}
-function SplitIpFromAdr(CONST Address: string): string;  { Extracts the only IP from a full IP text.  Example:  For 192.168.0.1:80 it will return '192.168.0.1' }
+{ Extracts the IP portion from an IP:Port string.
+  Example: '192.168.0.1:80' returns '192.168.0.1'
+  If no port separator (:) is found, returns the entire address. }
+function SplitIpFromAdr(CONST Address: string): string;
+VAR
+  ColonPos: Integer;
 begin
- Result:= CopyTo(Address, 1, Pos(':', Address)-1)
+  ColonPos:= Pos(':', Address);
+  if ColonPos > 0
+  then Result:= System.Copy(Address, 1, ColonPos - 1)
+  else Result:= Address;  { No port specified, return entire address }
 end;
 
 
@@ -658,52 +705,60 @@ end;
 
 
 { Extracts a proxy address (IP:Port) from garbage text.
+  Scans for a valid IPv4 pattern (with 3 dots) followed by a port number.
   Example: "xxxxx1.210.03.23:80xxxx" returns "1.210.03.23:80"
   Returns empty string if no valid proxy found. }
 function ExtractProxyFrom(Line: string): string;
 VAR
   IP, Port: string;
-  i, Total, ColumnPos: Integer;
+  i, DotCount: Integer;
+  ThirdDotPos: Integer;
 begin
-  Result:= '';  { Initialize to prevent undefined return }
+  Result:= '';
 
-  ColumnPos:= Pos(':', Line);
-  if ColumnPos < 1 then EXIT;
+  { Early exit if no port separator }
+  if Pos(':', Line) < 1 then EXIT;
 
   Line:= RemoveFormatings(Line);
   IP:= SplitIpFromAdr(Line);
 
-  { Count the dots - need exactly 3 for IPv4 }
-  Total:= 0;
+  if IP = '' then EXIT;
+
+  { Count the dots - need exactly 3 for IPv4.
+    Scan from end to find position of the third dot (from the right). }
+  DotCount:= 0;
+  ThirdDotPos:= 0;
   for i:= Length(IP) downto 1 do
   begin
-    if IP[i] = '.'
-    then Inc(Total);
-    if Total = 3
-    then Break;
+    if IP[i] = '.' then begin
+      Inc(DotCount);
+      if DotCount = 3 then begin
+        ThirdDotPos:= i;
+        Break;
+      end;
+    end;
   end;
 
- if Total< 3 then EXIT('');
+  if DotCount < 3 then EXIT;
 
-  { Find first char which is not a number (scanning left from the third dot) }
-  i:= i - 1;  { Jump to the left side of the '.' }
-  if i >= 1 then 
+  { Find first non-digit char scanning left from the third dot.
+    This strips garbage characters that precede the IP address. }
+  i:= ThirdDotPos - 1;
+  while (i > 0) AND CharIsNumber(IP[i]) do
+    Dec(i);
 
-    while (i > 0) AND CharIsNumber(IP[i]) do
-      Dec(i);
+  { Extract the clean IP starting after the garbage }
+  IP:= System.Copy(IP, i + 1, MaxInt);
 
-
-  IP:= LightCore.CopyTo(IP, i + 1, High(Integer));
-
-  { Extract port }
+  { Extract port number }
   Port:= IpExtractPort(Line);
   if Port = '' then EXIT;
 
-  { Find end of port number }
+  { Find end of port number (first non-digit) }
   i:= 1;
   while (i <= Length(Port)) AND CharIsNumber(Port[i]) do
     Inc(i);
-  Port:= LightCore.CopyTo(Port, 1, i - 1);
+  Port:= System.Copy(Port, 1, i - 1);
 
   if (IP <> '') AND (Port <> '')
   then Result:= IP + ':' + Port;
@@ -747,53 +802,69 @@ begin
 end;
 
 
+{ Converts HTTP status code to human-readable description.
+  Returns the numeric code as string for unknown status codes. }
 function ServerStatus2String(Status: Integer): string;
 begin
- case Status of
-   // Informational 1xx
-   100: Result:= 'Continue';
-   101: Result:= 'Switching Protocols';
-   // Successful 2xx
-   200: Result:= 'OK';
-   201: Result:= 'Created';
-   202: Result:= 'Accepted';
-   203: Result:= 'Non-Authoritative Information';
-   204: Result:= 'No Content';
-   205: Result:= 'Reset Content';
-   206: Result:= 'Partial Content';
-   // Redirection 3xx
-   300: Result:= 'Multiple Choices';
-   301: Result:= 'Moved Permanently';
-   302: Result:= 'Moved Temporarily';
-   303: Result:= 'See Other';
-   304: Result:= 'Not Modified';
-   305: Result:= 'Use Proxy';
-   // Client Error 4xx
-   400: Result:= 'Bad Request';
-   401: Result:= 'Unauthorized';
-   402: Result:= 'Payment Required';
-   403: Result:= 'Forbidden';
-   404: Result:= 'Not Found';
-   405: Result:= 'Method Not Allowed';
-   406: Result:= 'Not Acceptable';
-   407: Result:= 'Proxy Authentication Required';
-   408: Result:= 'Request Timeout';
-   409: Result:= 'Conflict';
-   410: Result:= 'Gone';
-   411: Result:= 'Length Required';
-   412: Result:= 'Precondition Failed';
-   413: Result:= 'Request Entity Too Large';
-   414: Result:= 'Request-URI Too Long';
-   415: Result:= 'Unsupported Media Type ';
-   // Server Error 5xx
-   500: Result:= 'Internal Server Error';
-   501: Result:= 'Not Implemented';
-   502: Result:= 'Bad Gateway';
-   503: Result:= 'Service Unavailable';
-   504: Result:= 'Gateway Timeout';
-   505: Result:= 'HTTP Version Not Supported';
-  else Result:= IntToStr(Status);
- end;
+  case Status of
+    { Informational 1xx }
+    100: Result:= 'Continue';
+    101: Result:= 'Switching Protocols';
+    102: Result:= 'Processing';
+    103: Result:= 'Early Hints';
+    { Successful 2xx }
+    200: Result:= 'OK';
+    201: Result:= 'Created';
+    202: Result:= 'Accepted';
+    203: Result:= 'Non-Authoritative Information';
+    204: Result:= 'No Content';
+    205: Result:= 'Reset Content';
+    206: Result:= 'Partial Content';
+    207: Result:= 'Multi-Status';
+    { Redirection 3xx }
+    300: Result:= 'Multiple Choices';
+    301: Result:= 'Moved Permanently';
+    302: Result:= 'Found';  { Was 'Moved Temporarily' }
+    303: Result:= 'See Other';
+    304: Result:= 'Not Modified';
+    305: Result:= 'Use Proxy';
+    307: Result:= 'Temporary Redirect';
+    308: Result:= 'Permanent Redirect';
+    { Client Error 4xx }
+    400: Result:= 'Bad Request';
+    401: Result:= 'Unauthorized';
+    402: Result:= 'Payment Required';
+    403: Result:= 'Forbidden';
+    404: Result:= 'Not Found';
+    405: Result:= 'Method Not Allowed';
+    406: Result:= 'Not Acceptable';
+    407: Result:= 'Proxy Authentication Required';
+    408: Result:= 'Request Timeout';
+    409: Result:= 'Conflict';
+    410: Result:= 'Gone';
+    411: Result:= 'Length Required';
+    412: Result:= 'Precondition Failed';
+    413: Result:= 'Payload Too Large';
+    414: Result:= 'URI Too Long';
+    415: Result:= 'Unsupported Media Type';
+    416: Result:= 'Range Not Satisfiable';
+    417: Result:= 'Expectation Failed';
+    418: Result:= 'I''m a teapot';  { RFC 2324 }
+    422: Result:= 'Unprocessable Entity';
+    429: Result:= 'Too Many Requests';
+    451: Result:= 'Unavailable For Legal Reasons';
+    { Server Error 5xx }
+    500: Result:= 'Internal Server Error';
+    501: Result:= 'Not Implemented';
+    502: Result:= 'Bad Gateway';
+    503: Result:= 'Service Unavailable';
+    504: Result:= 'Gateway Timeout';
+    505: Result:= 'HTTP Version Not Supported';
+    507: Result:= 'Insufficient Storage';
+    508: Result:= 'Loop Detected';
+  else
+    Result:= IntToStr(Status);
+  end;
 end;
 
 
@@ -883,19 +954,28 @@ end;
 
 
 
-{ Other IP providers= 'http://support.inmotionhosting.com/ipcheck.php' }
+{ Retrieves the external/public IP address by querying an online service.
+  ScriptAddress: URL of the IP detection service (default: checkip.dyndns.org).
+  Alternative providers: 'http://api.ipify.org', 'http://icanhazip.com'
+  Returns empty string on failure. }
 function GetExternalIp(CONST ScriptAddress: string= 'http://checkip.dyndns.org'): string;
+VAR
+  HtmlResponse: string;
 begin
-  Result:= DownloadAsString(ScriptAddress);
-  if Length(Result) = 0 then EXIT;
+  Result:= '';
 
-  Result:= ExtractIpFrom(GetBodyFromHtml(Result));
-  if Length(Result) = 0 then EXIT;
+  HtmlResponse:= DownloadAsString(ScriptAddress);
+  if HtmlResponse = ''
+  then EXIT;
 
-  { Remove possible garbage }
-  Result:= ReplaceString(Result, CR, '');   // We don't know the type of enter so we need to remove them both
+  Result:= ExtractIpFrom(GetBodyFromHtml(HtmlResponse));
+  if Result = ''
+  then EXIT;
+
+  { Remove line break characters (different services use different line endings) }
+  Result:= ReplaceString(Result, CR, '');
   Result:= ReplaceString(Result, LF, '');
-  Result:= System.SysUtils.Trim(Result);
+  Result:= Trim(Result);
 end;
 
 
@@ -921,19 +1001,23 @@ begin
 end;
 
 
-function UrlEncode(CONST URL: string): string;         { It also fixes the Indy encoding issue.   http://stackoverflow.com/questions/5708863/indy-is-altering-the-binary-data-in-my-url }
+{ Encodes a URL by converting unsafe characters to %XX hex format.
+  Safe characters (ASCII 33-127 except UnsafeChars) are kept as-is.
+  All other characters (control chars, extended ASCII, Unicode) are percent-encoded.
+  Also fixes the Indy encoding issue: stackoverflow.com/questions/5708863 }
+function UrlEncode(CONST URL: string): string;
 VAR
    i: Integer;
 CONST
    UnsafeChars = ['*', '#', '%', '<', '>', ' ', '[', ']', '\', '@'];
 begin
-  Result := '';
-  for i := 1 to Length(URL) DO
-    if  (URL[i]> #32)
-    AND (URL[i]<= #128)       { � = char #128}
+  Result:= '';
+  for i:= 1 to Length(URL) DO
+    if  (URL[i] > #32)
+    AND (URL[i] < #127)  { Only printable ASCII chars (33-126) }
     AND (NOT CharInSet(URL[i], UnsafeChars))
-    then Result := Result + URL[i]
-    else Result := Result + '%' + IntToHex(Ord(URL[i]), 2);
+    then Result:= Result + URL[i]
+    else Result:= Result + '%' + IntToHex(Ord(URL[i]), 2);
 end;
 
 

@@ -1,10 +1,7 @@
 UNIT LightCore.HTML;
 
-{ This should be moved to core }
-
 {-------------------------------------------------------------------------------------------------------------
-   Gabriel Moraru
-   2023.06
+   2026.01.30
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -461,9 +458,7 @@ begin
      if QEnd> 0 then
       begin
         Result:= LightCore.CopyTo(HtmlTag, QStart+1, QEnd-1);               { +1 -1 to remove the quotes }
-        {
-        if Pos('?', Result) > 0
-        then Result:= '';                                         { treat this case: src="http://sstatic1.histats.com/0.gif?2376752&amp;101" }
+        // Note: Previously had code to handle URLs with '?' parameters, removed for simplicity
       end;
     end;
   end;
