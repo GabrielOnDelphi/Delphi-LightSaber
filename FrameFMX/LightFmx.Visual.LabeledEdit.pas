@@ -1,10 +1,11 @@
 unit LightFmx.Visual.LabeledEdit;
 
 {=============================================================================================================
+   2026.01.31
    www.GabrielMoraru.com
-   2024.05
--------------------------------------------------------------------------------------------------------------
-   Exactly like the one in VCL
+--------------------------------------------------------------------------------------------------------------
+   TLabeledEdit for FMX - Combines a TLabel and TEdit, similar to VCL's TLabeledEdit.
+   The label is positioned above the edit control.
 =============================================================================================================}
 
 
@@ -48,30 +49,34 @@ procedure Register;
 
 IMPLEMENTATION
 
+CONST
+  LABEL_EDIT_SPACING = 4;  // Vertical gap between label and edit control
+
 
 constructor TLabeledEdit.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
   // Create Label
-  FLabel := TLabel.Create(Self);
-  FLabel.Parent := Self;
-  FLabel.Stored := False;  // Prevent streaming to FMX file (avoids duplicate children)
-  FLabel.Position.X := 0;
-  FLabel.Position.Y := 0;
-  FLabel.Text := 'Label:';
+  FLabel:= TLabel.Create(Self);
+  FLabel.Parent:= Self;
+  FLabel.Stored:= False;  // Prevent streaming to FMX file (avoids duplicate children)
+  FLabel.Position.X:= 0;
+  FLabel.Position.Y:= 0;
+  FLabel.Text:= 'Label:';
+  FLabel.AutoSize:= True;
 
   // Create Edit
-  FEdit := TEdit.Create(Self);
-  FEdit.Parent := Self;
-  FEdit.Stored := False;  // Prevent streaming to FMX file (avoids duplicate children)
-  FEdit.Position.X := 0;
-  FEdit.Position.Y := FLabel.Height + 4; // Space between label and edit
-  FEdit.Width := 120;
-  FEdit.Text := '';
+  FEdit:= TEdit.Create(Self);
+  FEdit.Parent:= Self;
+  FEdit.Stored:= False;  // Prevent streaming to FMX file (avoids duplicate children)
+  FEdit.Position.X:= 0;
+  FEdit.Position.Y:= FLabel.Height + LABEL_EDIT_SPACING;
+  FEdit.Width:= 120;
+  FEdit.Text:= '';
 
-  Height := FLabel.Height + FEdit.Height + 4;
-  Width  := System.Math.Max(FLabel.Width, FEdit.Width);
+  Height:= FLabel.Height + FEdit.Height + LABEL_EDIT_SPACING;
+  Width:= System.Math.Max(FLabel.Width, FEdit.Width);
 end;
 
 
@@ -86,29 +91,31 @@ end;
 
 function TLabeledEdit.GetEdit: TEdit;
 begin
-  Result := FEdit;
+  Result:= FEdit;
 end;
 
 
+{ Nil check required: During FMX streaming/design-time, properties may be read before children are created }
 function TLabeledEdit.GetEditText: string;
 begin
   if FEdit = NIL
-  then Result := ''
-  else Result := FEdit.Text;
+  then Result:= ''
+  else Result:= FEdit.Text;
 end;
 
 
 function TLabeledEdit.GetLabel: TLabel;
 begin
-  Result := FLabel;
+  Result:= FLabel;
 end;
 
 
+{ Nil check required: During FMX streaming/design-time, properties may be read before children are created }
 function TLabeledEdit.GetLabelText: string;
 begin
   if FLabel = NIL
-  then Result := ''
-  else Result := FLabel.Text;
+  then Result:= ''
+  else Result:= FLabel.Text;
 end;
 
 
@@ -116,31 +123,33 @@ procedure TLabeledEdit.Resize;
 begin
   inherited;
 
-  // Guard - controls might not exist during streaming
+  // Guard: During inherited Create, Resize may be called before children are created
   if (FLabel = NIL) OR (FEdit = NIL) then EXIT;
 
-  // Simple vertical layout: label on top, edit below
-  FLabel.Position.X := 0;
-  FLabel.Position.Y := 0;
-  FLabel.Width := Self.Width;
+  // Vertical layout: label on top, edit below
+  FLabel.Position.X:= 0;
+  FLabel.Position.Y:= 0;
+  FLabel.Width:= Self.Width;
 
-  FEdit.Position.X := 0;
-  FEdit.Position.Y := FLabel.Height + 4;
-  FEdit.Width := Self.Width;
+  FEdit.Position.X:= 0;
+  FEdit.Position.Y:= FLabel.Height + LABEL_EDIT_SPACING;
+  FEdit.Width:= Self.Width;
 end;
 
 
+{ Nil check required: During FMX streaming/design-time, properties may be set before children are created }
 procedure TLabeledEdit.SetEditText(const Value: string);
 begin
   if FEdit <> NIL
-  then FEdit.Text := Value;
+  then FEdit.Text:= Value;
 end;
 
 
+{ Nil check required: During FMX streaming/design-time, properties may be set before children are created }
 procedure TLabeledEdit.SetLabelText(const Value: string);
 begin
   if FLabel <> NIL
-  then FLabel.Text := Value;
+  then FLabel.Text:= Value;
 end;
 
 

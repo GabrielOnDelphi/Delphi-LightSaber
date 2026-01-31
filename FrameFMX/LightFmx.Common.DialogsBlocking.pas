@@ -1,13 +1,15 @@
 unit LightFmx.Common.DialogsBlocking;
+
 {=============================================================================================================
+   2026.01.30
    www.GabrielMoraru.com
-   2025.04
 --------------------------------------------------------------------------------------------------------------
    Easy message boxes (FMX)
-   Type: Synchronous (blocking)
-   Platform: Cross-platform (excluding Android)
+   Type: Asynchronous (non-blocking)
+   Platform: Cross-platform (including Android)
 
-   Note: This will not compile on Android because FMX.DialogService.Sync does not exist there!
+   UNFORTUNATELLY this unit is pointless since TDialogServiceAsync ignores the icon (TMsgDlgType).
+   Should be used anyway because one day I will add support for cool icons.
 =============================================================================================================}
 
 INTERFACE

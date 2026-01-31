@@ -1,10 +1,8 @@
 UNIT LightVcl.Visual.RichEditResize;
 
 {=============================================================================================================
-   Gabriel Moraru
    2026.01
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   This component resizes itself as we add lines to it (instead of showing the vert scrollbars)
@@ -20,7 +18,7 @@ INTERFACE
 
 USES
   Winapi.Windows, Winapi.Messages,
-  System.Classes, System.SysUtils,
+  System.Classes, System.SysUtils, System.UITypes,
   Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.Controls;
 
 
@@ -56,7 +54,7 @@ end;
 procedure TRichEditResize.CreateWnd;
 begin
   inherited CreateWnd;
-  ScrollBars:= ssNone;
+  ScrollBars:= TScrollStyle.ssNone;
 end;
 
 

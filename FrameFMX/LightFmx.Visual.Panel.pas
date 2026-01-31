@@ -1,12 +1,12 @@
 unit LightFmx.Visual.Panel;
 
 {=============================================================================================================
-   2025.04
+   2026.01
    www.GabrielMoraru.com
 ==============================================================================================================
 
    In FMX, unlike the VCL, the Visible property affects both design time and runtime when set in the Object Inspector.
-   That’s why setting Visible:= False in FMX hides components in the Form Designer, which is a big inconvenience.
+   Thatï¿½s why setting Visible:= False in FMX hides components in the Form Designer, which is a big inconvenience.
 
    Solution:
      In the Form Designer, the component is always visible (Visible := True) so you can edit it,
@@ -30,8 +30,6 @@ TYPE
     procedure SetVisibleAtRuntime(const Value: Boolean);
   protected
     procedure Loaded; override;
-    procedure DefineProperties(Filer: TFiler); override;
-    procedure ReadVisibleAtRuntime(Reader: TReader); // Custom streaming method
   public
     constructor Create(AOwner: TComponent); override;
   published
@@ -46,30 +44,17 @@ IMPLEMENTATION
 constructor TLightPanel.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FVisibleAtRuntime := True; // Default: visible at runtime
+  FVisibleAtRuntime:= True; // Default: visible at runtime
   // Ensure visibility in designer
   if csDesigning in ComponentState
-  then Visible := True;
+  then Visible:= True;
 end;
 
 
 procedure TLightPanel.SetVisibleAtRuntime(const Value: Boolean);
 begin
   if FVisibleAtRuntime <> Value
-  then FVisibleAtRuntime := Value; // No immediate visibility change here; handled in Loaded
-end;
-
-
-procedure TLightPanel.ReadVisibleAtRuntime(Reader: TReader);
-begin
-  FVisibleAtRuntime := Reader.ReadBoolean;
-end;
-
-
-procedure TLightPanel.DefineProperties(Filer: TFiler);
-begin
-  inherited;
-  Filer.DefineProperty('VisibleAtRuntime', ReadVisibleAtRuntime, nil, not FVisibleAtRuntime);
+  then FVisibleAtRuntime:= Value; // No immediate visibility change here; handled in Loaded
 end;
 
 
@@ -77,12 +62,8 @@ procedure TLightPanel.Loaded;
 begin
   inherited;
   if not (csDesigning in ComponentState)
-  then Visible := FVisibleAtRuntime; // Set visibility based on VisibleAtRuntime at runtime
+  then Visible:= FVisibleAtRuntime; // Apply VisibleAtRuntime setting at runtime only
 end;
-
-
-
-
 
 
 

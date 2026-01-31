@@ -1,20 +1,32 @@
 UNIT LightFmx.Visual.ScreenCapture;
 
-{-------------------------------------------------------------------------------------------------------------
-   Screen Capture with Rectangle Selection
-   Claude 2026.01
+{=============================================================================================================
+   2026.01.31
+   www.GabrielMoraru.com
+--------------------------------------------------------------------------------------------------------------
+   Screen Capture Manager - Business Logic Layer
 
-   Cross-platform screenshot capture allowing user to select rectangular areas.
+   Handles the core screen capture functionality, separated from the UI layer (FormScreenCapture.pas).
 
    Features:
-   - Full screen capture with semi-transparent overlay
-   - Rectangle selection with TSelection component
-   - Multiple captures (Ctrl+P / Cmd+P)
-   - ESC to finish
-   - Remembers last selection rectangle (saved to INI)
-   - Cross-platform (Windows, macOS, Linux, iOS, Android)
-   - Business logic separated from UI
--------------------------------------------------------------------------------------------------------------}
+   - Full screen capture (Windows implemented, other platforms: stub)
+   - Rectangular area selection and cropping
+   - Multiple captures in a single session
+   - Persists last selection rectangle to INI file
+   - Persists tip display counter to INI file
+
+   Usage:
+     1. Create TScreenCaptureManager
+     2. Call StartCapture to capture the desktop
+     3. Call CaptureSelectedArea with a TRectF to crop and store a region
+     4. Call GetCapturedImages to retrieve all captured regions
+
+   Platform Support:
+   - Windows: Full GDI-based screen capture
+   - macOS/Linux/iOS/Android: Not yet implemented (stubs only)
+
+   See also: FormScreenCapture.pas for the UI layer
+=============================================================================================================}
 
 INTERFACE
 
@@ -24,55 +36,53 @@ USES
   FMX.Controls.Presentation;
 
 TYPE
-  // Business logic class - handles all capture logic
   TScreenCaptureManager = class
   private
-    FScreenshot: TBitmap;
-    FCapturedImages: TObjectList<TBitmap>;
-    FLastSelectionRect: TRectF;
+    FScreenshot: TBitmap;                    // Full screen capture
+    FCapturedImages: TObjectList<TBitmap>;   // User-selected regions (owned)
+    FLastSelectionRect: TRectF;              // Persisted to INI for convenience
+    FCaptureTipShown: Integer;               // Counter: hide instructions after N views
 
     procedure LoadLastSelection;
     procedure SaveLastSelection;
-  private
-    FCaptureTipShown: Integer;
   public
     constructor Create;
     destructor Destroy; override;
 
     procedure StartCapture;
     function CaptureSelectedArea(CONST SelectionRect: TRectF): Boolean;
-    function GetCapturedImages: TObjectList<FMX.Graphics.TBitmap>;
+    function GetCapturedImages: TObjectList<TBitmap>;
 
-    property Screenshot: FMX.Graphics.TBitmap read FScreenshot;
+    property Screenshot: TBitmap read FScreenshot;
     property LastSelectionRect: TRectF read FLastSelectionRect;
     property CaptureTipShown: Integer read FCaptureTipShown write FCaptureTipShown;
   end;
 
 
-  // UI Form - thin layer for user interaction
-  TScreenCaptureCallback = reference to procedure(CapturedImages: TObjectList<FMX.Graphics.TBitmap>);
+  // Callback type for receiving captured images (used by FormScreenCapture.pas)
+  TScreenCaptureCallback = reference to procedure(CapturedImages: TObjectList<TBitmap>);
 
 
 IMPLEMENTATION
 
 USES
   LightFmx.Common.IniFile, LightCore.Types
-  {$IFDEF MSWINDOWS}, Winapi.Windows{$ENDIF}
-  {$IFDEF MACOS}, Macapi.AppKit {$ENDIF};
+  {$IFDEF MSWINDOWS}, Winapi.Windows{$ENDIF};
 
 
 {-------------------------------------------------------------------------------------------------------------
-   TScreenCaptureManager - Business Logic
+   TScreenCaptureManager
 -------------------------------------------------------------------------------------------------------------}
 
 constructor TScreenCaptureManager.Create;
 begin
   inherited Create;
-  FCapturedImages:= TObjectList<FMX.Graphics.TBitmap>.Create(OwnObjects);
-  FScreenshot:= FMX.Graphics.TBitmap.Create;
+  FCapturedImages:= TObjectList<TBitmap>.Create(OwnObjects);
+  FScreenshot:= TBitmap.Create;
   FLastSelectionRect:= TRectF.Empty;
+  FCaptureTipShown:= 0;
 
-  LoadLastSelection;
+  LoadLastSelection;  // Overwrites FCaptureTipShown and FLastSelectionRect if INI exists
 end;
 
 
@@ -86,43 +96,61 @@ begin
 end;
 
 
+{  Captures the entire primary screen/desktop into FScreenshot.
+
+   Windows Implementation:
+     Uses GDI functions to capture the desktop:
+     1. GetDC(0) - Gets device context for the entire screen
+     2. Creates a compatible memory DC and bitmap
+     3. BitBlt copies screen contents to the memory bitmap
+     4. Maps the FMX bitmap for direct pixel access
+     5. GetDIBits transfers pixels from GDI bitmap to FMX bitmap
+
+   Note: Captures only the primary monitor. Multi-monitor support would
+   require EnumDisplayMonitors and combining captures.
+
+   Other Platforms:
+     Not yet implemented - shows a message and leaves FScreenshot empty.  }
 procedure TScreenCaptureManager.StartCapture;
 {$IFDEF MSWINDOWS}
 VAR
-  ScreenDC, MemDC: Winapi.Windows.HDC;
+  ScreenDC, MemDC: HDC;
   ScreenWidth, ScreenHeight: Integer;
-  hBitmap: Winapi.Windows.HBITMAP;
+  hBitmap: HBITMAP;
   BitmapData: TBitmapData;
+  BitmapInfo: TBitmapInfo;
 {$ENDIF}
 begin
-  // Cross-platform screen capture
   {$IFDEF MSWINDOWS}
-  // Windows: Use GDI to capture actual desktop
+  // Get device context for the entire screen (0 = desktop)
   ScreenDC:= GetDC(0);
   try
     ScreenWidth:= GetSystemMetrics(SM_CXSCREEN);
     ScreenHeight:= GetSystemMetrics(SM_CYSCREEN);
 
+    // Resize FMX bitmap to match screen dimensions
     FScreenshot.Width:= ScreenWidth;
     FScreenshot.Height:= ScreenHeight;
 
+    // Create memory DC compatible with screen
     MemDC:= CreateCompatibleDC(ScreenDC);
     try
+      // Create GDI bitmap to hold the screen capture
       hBitmap:= CreateCompatibleBitmap(ScreenDC, ScreenWidth, ScreenHeight);
       try
         SelectObject(MemDC, hBitmap);
+        // Copy screen pixels to memory bitmap
         BitBlt(MemDC, 0, 0, ScreenWidth, ScreenHeight, ScreenDC, 0, 0, SRCCOPY);
 
-        // Copy to FMX bitmap
+        // Transfer pixels from GDI bitmap to FMX bitmap
         if FScreenshot.Map(TMapAccess.Write, BitmapData) then
         try
-          VAR BitmapInfo: TBitmapInfo;
           FillChar(BitmapInfo, SizeOf(BitmapInfo), 0);
-          BitmapInfo.bmiHeader.biSize  := SizeOf(TBitmapInfoHeader);
-          BitmapInfo.bmiHeader.biWidth := ScreenWidth;
-          BitmapInfo.bmiHeader.biHeight:= -ScreenHeight; // Top-down
-          BitmapInfo.bmiHeader.biPlanes:= 1;
-          BitmapInfo.bmiHeader.biBitCount:= 32;
+          BitmapInfo.bmiHeader.biSize       := SizeOf(TBitmapInfoHeader);
+          BitmapInfo.bmiHeader.biWidth      := ScreenWidth;
+          BitmapInfo.bmiHeader.biHeight     := -ScreenHeight;  // Negative = top-down DIB
+          BitmapInfo.bmiHeader.biPlanes     := 1;
+          BitmapInfo.bmiHeader.biBitCount   := 32;
           BitmapInfo.bmiHeader.biCompression:= BI_RGB;
 
           GetDIBits(MemDC, hBitmap, 0, ScreenHeight, BitmapData.Data, BitmapInfo, DIB_RGB_COLORS);
@@ -139,19 +167,39 @@ begin
     ReleaseDC(0, ScreenDC);
   end;
   {$ELSE}
-  // Other platforms: Use platform services or form screenshot
+  // macOS/Linux/iOS/Android: Not yet implemented
   ShowMessage('Screen capture not yet implemented for this platform');
   {$ENDIF}
 end;
 
 
+{  Captures the selected rectangular region from the screenshot.
+
+   Parameters:
+     SelectionRect - The rectangle defining the area to capture (in screen coordinates)
+
+   Returns:
+     TRUE if capture succeeded, FALSE if selection is empty or no screenshot available
+
+   Side Effects:
+     - Adds the cropped image to FCapturedImages list
+     - Updates FLastSelectionRect for persistence
+     - Saves selection to INI file  }
 function TScreenCaptureManager.CaptureSelectedArea(CONST SelectionRect: TRectF): Boolean;
 VAR
-  CroppedBitmap: FMX.Graphics.TBitmap;
+  CroppedBitmap, CapturedCopy: TBitmap;
   SourceRect, DestRect: TRectF;
 begin
   Result:= FALSE;
 
+  // Validate screenshot exists
+  if NOT Assigned(FScreenshot) OR FScreenshot.IsEmpty then
+    begin
+      ShowMessage('No screenshot available. Call StartCapture first.');
+      EXIT;
+    end;
+
+  // Validate selection
   if SelectionRect.IsEmpty then
     begin
       ShowMessage('Please select a screen area first!');
@@ -159,7 +207,7 @@ begin
     end;
 
   // Create cropped bitmap from selection
-  CroppedBitmap:= FMX.Graphics.TBitmap.Create;
+  CroppedBitmap:= TBitmap.Create;
   try
     CroppedBitmap.Width:= Round(SelectionRect.Width);
     CroppedBitmap.Height:= Round(SelectionRect.Height);
@@ -175,8 +223,10 @@ begin
       CroppedBitmap.Canvas.EndScene;
     end;
 
-    // Add to captured images
-    FCapturedImages.Add(CroppedBitmap.CreateThumbnail(Round(CroppedBitmap.Width), Round(CroppedBitmap.Height)));
+    // Create a copy for the captured images list (CroppedBitmap will be freed)
+    CapturedCopy:= TBitmap.Create;
+    CapturedCopy.Assign(CroppedBitmap);
+    FCapturedImages.Add(CapturedCopy);
 
     // Remember this selection for next capture
     FLastSelectionRect:= SelectionRect;
@@ -189,7 +239,9 @@ begin
 end;
 
 
-function TScreenCaptureManager.GetCapturedImages: TObjectList<FMX.Graphics.TBitmap>;
+{  Returns the list of captured images.
+   Note: The caller should NOT free the returned list - it's owned by this manager.  }
+function TScreenCaptureManager.GetCapturedImages: TObjectList<TBitmap>;
 begin
   Result:= FCapturedImages;
 end;
@@ -197,7 +249,9 @@ end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   INI FILE - Save/Load last selection rectangle
+   INI Persistence
+   Saves/loads last selection rectangle and tip counter to user's INI file.
+   Section: 'ScreenCapture'
 -------------------------------------------------------------------------------------------------------------}
 
 procedure TScreenCaptureManager.LoadLastSelection;
@@ -226,15 +280,18 @@ procedure TScreenCaptureManager.SaveLastSelection;
 VAR
   INI: TIniFileApp;
 begin
-  if FLastSelectionRect.IsEmpty then EXIT;
-
   INI:= TIniFileApp.Create('ScreenCapture');
   TRY
-    INI.Write('LastSelection_Left',   FLastSelectionRect.Left);
-    INI.Write('LastSelection_Top',    FLastSelectionRect.Top);
-    INI.Write('LastSelection_Right',  FLastSelectionRect.Right);
-    INI.Write('LastSelection_Bottom', FLastSelectionRect.Bottom);
+    // Save selection rectangle (only if valid)
+    if NOT FLastSelectionRect.IsEmpty then
+      begin
+        INI.Write('LastSelection_Left',   FLastSelectionRect.Left);
+        INI.Write('LastSelection_Top',    FLastSelectionRect.Top);
+        INI.Write('LastSelection_Right',  FLastSelectionRect.Right);
+        INI.Write('LastSelection_Bottom', FLastSelectionRect.Bottom);
+      end;
 
+    // Always save tip counter (independent of selection rectangle)
     INI.Write('CaptureTipShown', FCaptureTipShown);
   FINALLY
     FreeAndNil(INI);

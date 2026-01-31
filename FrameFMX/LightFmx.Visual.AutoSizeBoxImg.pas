@@ -1,15 +1,15 @@
 UNIT LightFmx.Visual.AutosizeBoxImg;
 
-{-------------------------------------------------------------------------------------------------------------
-    GabrielMoraru.com
-    2025.07
+{=============================================================================================================
+   2026.01.31
+   www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-    A TRectangle that automatically adjusts its size to fit its internal image.
-    Derives from TAutoSizeBox.
-    Looks a bit like a TWhatsApp dialog bubble, with a nice shadow effect.
+   Extends TAutoSizeBox with image display capabilities.
+   The box automatically scales and adjusts its size to fit an image while maintaining aspect ratio.
+   Images are cropped from a source file using a bounding box before display.
 
-    Demo: LightSaber\Demo\FMX\Demo AutoHeightRectangle\FMX_Demo_AutoSizeRect.dpr
--------------------------------------------------------------------------------------------------------------}
+   Demo: LightSaber\Demo\FMX\Demo AutoHeightRectangle\FMX_Demo_AutoSizeRect.dpr
+=============================================================================================================}
 
 INTERFACE
 
@@ -17,21 +17,17 @@ USES
   System.SysUtils, System.Types, System.Classes, System.Math,
   FMX.Graphics, FMX.Types, FMX.Controls, FMX.Objects,
   LightFmx.Visual.AutoSizeBox, LightFmx.Graph;
-{
-type
-  TControlHack = class(TControl);   }
 
 TYPE
   TAutosizeBoxImg = class(TAutoSizeBox)
   private
     FImage: TImage;
-    FBoundBox: TRectF;   //used?
     FUpdatingSize: Boolean;
   protected
     CONST MaxImageWidthRatio = 0.95;      // Maximum image width ratio relative to the parent's content box
   public
     constructor Create(AOwner: TComponent); override;
-    procedure LoadImage(FileName: string; aBoundBox: TRectF);
+    procedure LoadImage(const FileName: string; const aBoundBox: TRectF);
     procedure UpdateSize; override;
   end;
 
@@ -56,58 +52,58 @@ begin
 end;
 
 
-// Crop the figure bound box from the input image
-procedure TAutosizeBoxImg.LoadImage(FileName: string; aBoundBox: TRectF);
+{ Loads and crops an image from file using the specified bounding box.
+  Sets BoxType to bxModel (image bubbles always appear on the model/left side).
+  Triggers UpdateSize to recalculate dimensions based on the new image. }
+procedure TAutosizeBoxImg.LoadImage(const FileName: string; const aBoundBox: TRectF);
 begin
-  FBoxType := bxModel;    // Image bubble is always 'Model' side
-  FBoundBox:= aBoundBox;  //used?
+  FBoxType:= bxModel;
   CropBitmap(FileName, aBoundBox, FImage);
-
-  //if (Parent is TControl) then TControlHack(Parent).Realign;
-
-  UpdateSize;             // After loading the image, recalculate the size based on the new image dimensions  // In FMX, setting Text often triggers an internal RGN_Change (Region Change) message which leads to a Resize, so we just set the flag and let the system handle it.
+  UpdateSize;
 end;
 
 
-// Core logic: scale img proportionally and set bubble size.
-// Called whenever the image loads, or when the parent container resizes.
-
+{ Scales image proportionally and sets bubble size.
+  Called when the image loads or when the parent container resizes.
+  Uses FUpdatingSize flag to prevent recursive calls during resize. }
 procedure TAutosizeBoxImg.UpdateSize;
 var
   ParentContentWidth: Single;
   MaxWidth: Single;
+  CurScale: Single;
   NewWidth, NewHeight: Single;
 begin
-  Assert(Parent <> NIL);
+  if Parent = NIL then EXIT;
   if FImage.Bitmap.IsEmpty then EXIT;
+  if FUpdatingSize then EXIT;
 
-  if FUpdatingSize then Exit;
   FUpdatingSize:= True;
   try
     ParentContentWidth:= GetParentContentWidth;
 
-    // Exit if parent is not ready
+    // Fallback size if parent is not ready (width not yet calculated)
     if ParentContentWidth <= 0 then
       begin
-        Width := 200;        // Fallback size if image is missing or parent is not ready
+        Width := 200;
         Height:= 150;
-        Exit;
+        EXIT;
       end;
 
-    // Calculate the actual MaxWidth for the image based on the parent's available content area.
-    MaxWidth := ParentContentWidth * MaxImageWidthRatio;
-    MaxWidth := Max(50, MaxWidth); // Ensure minimum width
+    // Calculate max image width based on parent's available content area
+    MaxWidth:= ParentContentWidth * MaxImageWidthRatio;
+    MaxWidth:= Max(50, MaxWidth);
 
-    // 1. Calculate the scaled dimensions of the image
-    CurScale := Min(1.0, MaxWidth / FImage.Bitmap.Width);
+    // Scale image proportionally (never upscale beyond 100%)
+    CurScale:= Min(1.0, MaxWidth / FImage.Bitmap.Width);
 
-    // Calculate final bubble dimensions
-    NewWidth  := Ceil(FImage.Bitmap.Width  * CurScale) + Padding.Left + Padding.Right;
-    NewHeight := Ceil(FImage.Bitmap.Height * CurScale) + Padding.Top  + Padding.Bottom;
+    // Calculate final bubble dimensions including padding
+    NewWidth := Ceil(FImage.Bitmap.Width  * CurScale) + Padding.Left + Padding.Right;
+    NewHeight:= Ceil(FImage.Bitmap.Height * CurScale) + Padding.Top  + Padding.Bottom;
 
+    // Adjust right margin to keep bubble left-aligned (model side)
     Margins.Right:= ParentContentWidth - NewWidth;
 
-    SetBounds(Position.x, Position.y, NewWidth, NewHeight);
+    SetBounds(Position.X, Position.Y, NewWidth, NewHeight);
   finally
     FUpdatingSize:= False;
   end;

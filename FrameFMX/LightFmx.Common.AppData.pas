@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.AppData;
 
 {=============================================================================================================
-   2026.01
+   2026.01.31
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -123,7 +123,6 @@ TYPE
     function getLogForm: TfrmRamLog;
   protected
     procedure setHintType(const aHintType: THintType); override;
-    procedure setHideHint(const Value: Integer); override;
   public
    {--------------------------------------------------------------------------------------------------
       INIT
@@ -204,7 +203,7 @@ end;
 destructor TAppData.Destroy;
 begin
   FreeAndNil(FPendingAutoStates);
-  //FreeAndNil(FormLog);  Freed by TApplication
+  // Note: FFormLog is destroyed by TApplication (it owns the form)
   inherited Destroy;
 end;
 
@@ -213,7 +212,7 @@ procedure TAppData.Run;
 begin
   Initializing:= FALSE;
 
-  // Later, we ignore the "Show" parameter in CreateMainForm() if "StartMinim" is true. StartMinim remmbers application's last state (it was minimized or not)
+  // StartMinim remembers application's last state (minimized or not) and minimizes on startup if it was minimized before
   // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
   if StartMinim
   then Minimize;
@@ -297,21 +296,25 @@ end;
 function TAppData.GetAutoState(Form: TForm): TAutoState;
 VAR
   i: Integer;
+  {$IFDEF DEBUG}
   WasQueuedBeforeRun: Boolean;
+  {$ENDIF}
 begin
   // Search pending list by class name (for queued forms only)
   for i:= 0 to FPendingAutoStates.Count - 1 do
     if FPendingAutoStates[i].ClassName = Form.ClassName then
     begin
       Result:= FPendingAutoStates[i].AutoState;
+      {$IFDEF DEBUG}
       WasQueuedBeforeRun:= FPendingAutoStates[i].QueuedBeforeRun;
+      {$ENDIF}
       FPendingAutoStates.Delete(i);  // Remove this entry
 
       {$IFDEF DEBUG}
-        // Show if form was created from pending queue (queued in DPR before Run) or created instantly (dynamically during/after Run)
-        if WasQueuedBeforeRun
-        then LogVerb('Form created from pending queue: ' + Form.ClassName)
-        else LogVerb('Form created instantly: ' + Form.ClassName);
+      // Log if form was created from pending queue (queued in DPR before Run) or created instantly (dynamically during/after Run)
+      if WasQueuedBeforeRun
+      then LogVerb('Form created from pending queue: ' + Form.ClassName)
+      else LogVerb('Form created instantly: ' + Form.ClassName);
       {$ENDIF}
 
       EXIT;
@@ -319,27 +322,31 @@ begin
 
   RAISE Exception.Create('Form was not created via AppData.CreateForm()!' + CRLF +
                          'Form: ' + Form.Name + ' (' + Form.ClassName + ')' + CRLF + CRLF +
-                         'Use: AppData.CreateForm(T' + Form.ClassName + ', MyForm, asPosOnly);' + CRLF + 'Or: MyForm := T' + Form.ClassName + '.Create(nil, asPosOnly);');
+                         'Use: AppData.CreateForm(' + Form.ClassName + ', MyForm, asPosOnly);' + CRLF +
+                         'Or: MyForm := ' + Form.ClassName + '.Create(nil, asPosOnly);');
 end;
 
 
-{ Create secondary form }
+{ Create secondary form. The form's visibility depends on its Visible property at design-time. }
 procedure TAppData.CreateFormHidden(aClass: TComponentClass; OUT aReference);
 begin
   CreateForm(aClass, aReference);
 end;
 
 
-{ Create secondary form }
+{ Create secondary form and show it modal.
+  Warning: On Android, modal forms are not supported - falls back to non-modal Show. }
 procedure TAppData.CreateFormModal(aClass: TComponentClass);
 VAR aReference: TForm;
 begin
+  aReference:= NIL;
   CreateForm(aClass, aReference);
-  ShowModal(aReference); // It will not show modal on Android
+  Assert(aReference <> NIL, 'CreateFormModal: Form was not created!');
+  ShowModal(aReference);
 end;
 
 
-// The TfrmRamLog is destroyed by AppData in Finalize
+// TfrmRamLog is destroyed by TApplication (it owns the form)
 function TAppData.getLogForm: TfrmRamLog;
 begin
   Assert(RamLog <> NIL, 'RamLog not created!');
@@ -404,12 +411,12 @@ var
   LaunchAgentPath: string;
   LaunchAgentContent: TStringList;
 begin
-  Result := False;
-  LaunchAgentPath := TPath.Combine(TPath.GetHomePath, 'Library/LaunchAgents/com.myapp.startup.plist');
+  Result:= False;
+  LaunchAgentPath:= TPath.Combine(TPath.GetHomePath, 'Library/LaunchAgents/com.myapp.startup.plist');
 
   if Active then
   begin
-    LaunchAgentContent := TStringList.Create;
+    LaunchAgentContent:= TStringList.Create;
     try
       LaunchAgentContent.Add('<?xml version="1.0" encoding="UTF-8"?>');
       LaunchAgentContent.Add('<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">');
@@ -427,18 +434,18 @@ begin
       LaunchAgentContent.Add('</plist>');
       LaunchAgentContent.SaveToFile(LaunchAgentPath);
       _system(PAnsiChar('launchctl load ' + LaunchAgentPath));
-      Result := True;
+      Result:= True;
     finally
-      LaunchAgentContent.Free;
+      FreeAndNil(LaunchAgentContent);
     end;
   end
   else
   begin
-    if TFile.Exists(LaunchAgentPath) then
+    if FileExists(LaunchAgentPath) then
     begin
       _system(PAnsiChar('launchctl unload ' + LaunchAgentPath));
-      TFile.Delete(LaunchAgentPath);
-      Result := True;
+      DeleteFile(LaunchAgentPath);
+      Result:= True;
     end;
   end;
 end;
@@ -472,20 +479,17 @@ end;
 
 
 {$IFDEF LINUX}
-uses
-  System.IOUtils;
-
 function TAppData.RunFileAtStartup(const FilePath: string; Active: Boolean): Boolean;
 var
   AutostartPath: string;
   DesktopEntry: TStringList;
 begin
-  Result := False;
-  AutostartPath := TPath.Combine(TPath.GetHomePath, '.config/autostart/com.myapp.desktop');
+  Result:= False;
+  AutostartPath:= TPath.Combine(TPath.GetHomePath, '.config/autostart/com.myapp.desktop');
 
   if Active then
   begin
-    DesktopEntry := TStringList.Create;
+    DesktopEntry:= TStringList.Create;
     try
       DesktopEntry.Add('[Desktop Entry]');
       DesktopEntry.Add('Type=Application');
@@ -496,17 +500,17 @@ begin
       DesktopEntry.Add('Name=MyApp');
       DesktopEntry.Add('Comment=Start MyApp at login');
       DesktopEntry.SaveToFile(AutostartPath);
-      Result := True;
+      Result:= True;
     finally
-      DesktopEntry.Free;
+      FreeAndNil(DesktopEntry);
     end;
   end
   else
   begin
-    if TFile.Exists(AutostartPath) then
+    if FileExists(AutostartPath) then
     begin
-      TFile.Delete(AutostartPath);
-      Result := True;
+      DeleteFile(AutostartPath);
+      Result:= True;
     end;
   end;
 end;
@@ -518,6 +522,8 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TAppData.Minimize;
 begin
+  if Application.MainForm = NIL then EXIT;
+
   var WindowService: IFMXWindowService;
   if TPlatformServices.Current.SupportsPlatformService(IFMXWindowService, IInterface(WindowService))
   then WindowService.SetWindowState(Application.MainForm, TWindowState.wsMinimized);
@@ -531,12 +537,6 @@ begin
   {$IFDEF MSWINDOWS}
   SetPriorityClass(GetCurrentProcess, REALTIME_PRIORITY_CLASS); //  https://stackoverflow.com/questions/13631644/setthreadpriority-and-setpriorityclass
   {$ENDIF}
-end;
-
-
-procedure TAppData.setHideHint(const Value: Integer);
-begin
-  inherited;
 end;
 
 
@@ -561,6 +561,9 @@ end;
 
 
 {$IFDEF FullAppData}
+{ TODO: This section uses VCL dialogs (TOpenDialog, TSaveDialog) and Vcl.Consts.
+        If FullAppData is enabled for FMX, this code needs to be rewritten using FMX.Dialogs. }
+
 {-------------------------------------------------------------------------------------------------------------
    Prompt To Save/Load File
    Remembers the last used folder.
@@ -568,7 +571,7 @@ end;
 
    Note:
       These functions are also duplicated in Light_FMX.Common.IO.Win.
-      The difference is that there, those functions cannot read/write the LastUsedFolder var so the app cannot remmeber last use folder.
+      The difference is that there, those functions cannot read/write the LastUsedFolder var so the app cannot remember last use folder.
 
    Note:
       Extensions longer than three characters are not supported! Do not include the dot (.)
@@ -597,44 +600,47 @@ begin
 end;
 
 
+CONST
+  sDefaultFilter = 'All files (*.*)|*.*';  // FMX-compatible default filter
+
 { Based on Vcl.Dialogs.PromptForFileName.
-  AllowMultiSelect cannot be true, because I return a single file name (cannot return a Tstringlist).
-  Once the user selected a folder it is remembered in "LastUsedFolder" var  }
+  AllowMultiSelect cannot be true, because I return a single file name (cannot return a TStringlist).
+  Once the user selected a folder it is remembered in "LastUsedFolder" var }
 Function TAppData.PromptForFileName(VAR FileName: string; SaveDialog: Boolean; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''; CONST InitialDir: string = ''): Boolean;
 VAR
   Dialog: TOpenDialog;
 begin
   if SaveDialog
-  then Dialog := TSaveDialog.Create(NIL)
-  else Dialog := TOpenDialog.Create(NIL);
+  then Dialog:= TSaveDialog.Create(NIL)
+  else Dialog:= TOpenDialog.Create(NIL);
   TRY
     { Options }
-    Dialog.Options := Dialog.Options + [ofEnableSizing, ofForceShowHidden];
+    Dialog.Options:= Dialog.Options + [ofEnableSizing, ofForceShowHidden];
     if SaveDialog
-    then Dialog.Options := Dialog.Options + [ofOverwritePrompt]
-    else Dialog.Options := Dialog.Options + [ofFileMustExist];
+    then Dialog.Options:= Dialog.Options + [ofOverwritePrompt]
+    else Dialog.Options:= Dialog.Options + [ofFileMustExist];
 
-    Dialog.Title := Title;
-    Dialog.DefaultExt := DefaultExt;
+    Dialog.Title:= Title;
+    Dialog.DefaultExt:= DefaultExt;
 
     if Filter = ''
-    then Dialog.Filter := Vcl.Consts.sDefaultFilter
-    else Dialog.Filter := Filter;
+    then Dialog.Filter:= sDefaultFilter
+    else Dialog.Filter:= Filter;
 
-    if InitialDir= ''
+    if InitialDir = ''
     then Dialog.InitialDir:= Self.AppDataFolder  // Customization
     else Dialog.InitialDir:= InitialDir;
 
-    Dialog.FileName := FileName;
+    Dialog.FileName:= FileName;
 
-    Result := Dialog.Execute;
+    Result:= Dialog.Execute;
 
     if Result then
-      begin
-        FileName:= Dialog.FileName;
-        // Remember last used folder
-        Self.LastUsedFolder:= ExtractFilePath(FileName);
-      end;
+    begin
+      FileName:= Dialog.FileName;
+      // Remember last used folder
+      Self.LastUsedFolder:= ExtractFilePath(FileName);
+    end;
   FINALLY
     FreeAndNil(Dialog);
   END;

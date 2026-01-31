@@ -1,6 +1,11 @@
 unit LightFmx.Visual.SpinBox;
 
-// TLabeledSpinBoxFMX combines a TLabel and TSpinBox, similar to TLabeledEdit
+{=============================================================================================================
+   2026.01.30
+   www.GabrielMoraru.com
+--------------------------------------------------------------------------------------------------------------
+TLabeledSpinBoxFMX combines a TLabel and TSpinBox, similar to TLabeledEdit
+=============================================================================================================}
 
 interface
 
@@ -55,37 +60,38 @@ begin
   inherited Create(AOwner);
 
   // Create Label
-  FLabel := TLabel.Create(Self);
-  FLabel.Parent := Self;
-  FLabel.Position.X := 0;
-  FLabel.Position.Y := 0;
-  FLabel.Text := 'Label:';
-  FLabel.AutoSize := True;
+  FLabel:= TLabel.Create(Self);
+  FLabel.Parent:= Self;
+  FLabel.Stored:= False;  // Prevent streaming to FMX file (avoids duplicate children)
+  FLabel.Position.X:= 0;
+  FLabel.Position.Y:= 0;
+  FLabel.Text:= 'Label:';
+  FLabel.AutoSize:= True;
 
   // Create SpinBox
-  FSpinBox := TSpinBox.Create(Self);
-  FSpinBox.Parent := Self;
-  FSpinBox.Position.X := 0;
-  FSpinBox.Position.Y := FLabel.Height + 4;
-  FSpinBox.Width := 108;
-  FSpinBox.Height := 41;
-  FSpinBox.Size.PlatformDefault := False;
-  FSpinBox.Min := 0;
-  FSpinBox.Max := 100;
-  FSpinBox.Value := 1.0;
-  FSpinBox.ValueType := TNumValueType.Float;
-  FSpinBox.Increment := 0.1;
-  FSpinBox.KeyboardType := TVirtualKeyboardType.DecimalNumberPad;
+  FSpinBox:= TSpinBox.Create(Self);
+  FSpinBox.Parent:= Self;
+  FSpinBox.Stored:= False;  // Prevent streaming to FMX file (avoids duplicate children)
+  FSpinBox.Position.X:= 0;
+  FSpinBox.Position.Y:= FLabel.Height + 4;
+  FSpinBox.Width:= 108;
+  FSpinBox.Height:= 41;
+  FSpinBox.Size.PlatformDefault:= False;
+  FSpinBox.Min:= 0;
+  FSpinBox.Max:= 100;
+  FSpinBox.Value:= 1.0;
+  FSpinBox.ValueType:= TNumValueType.Float;
+  FSpinBox.Increment:= 0.1;
+  FSpinBox.KeyboardType:= TVirtualKeyboardType.DecimalNumberPad;
 
-  Height := FLabel.Height + FSpinBox.Height + 4;
-  Width  := System.Math.Max(FLabel.Width, FSpinBox.Width);
+  Height:= FLabel.Height + FSpinBox.Height + 4;
+  Width:= System.Math.Max(FLabel.Width, FSpinBox.Width);
 end;
 
 
 destructor TLabeledSpinBox.Destroy;
 begin
-  FLabel.Free;
-  FSpinBox.Free;
+  // FLabel and FSpinBox are owned by Self, so they're freed automatically
   inherited;
 end;
 
@@ -164,13 +170,17 @@ end;
 procedure TLabeledSpinBox.Resize;
 begin
   inherited;
-  // Vertical layout: label on top, spinbox below
-  FLabel.Position.X := 0;
-  FLabel.Position.Y := 0;
 
-  FSpinBox.Position.X := 0;
-  FSpinBox.Position.Y := FLabel.Height + 4;
-  FSpinBox.Width := Self.Width;
+  // Guard: During inherited Create, Resize may be called before children are created
+  if (FLabel = NIL) OR (FSpinBox = NIL) then EXIT;
+
+  // Vertical layout: label on top, spinbox below
+  FLabel.Position.X:= 0;
+  FLabel.Position.Y:= 0;
+
+  FSpinBox.Position.X:= 0;
+  FSpinBox.Position.Y:= FLabel.Height + 4;
+  FSpinBox.Width:= Self.Width;
 end;
 
 

@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.AppData.Form;
 
 {=============================================================================================================
-   2025.08
+   2026.01.31
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    DESCRIPTION
@@ -123,12 +123,12 @@ procedure TLightForm.AfterConstruction;
 begin
   inherited;
 
-  // Off-screen?
+  // Ensure form is visible on first run (not off-screen from previous session with different monitor setup)
   if AppData.RunningFirstTime
   then EnsureFormVisibleOnScreen(Self);
 
-  // Ignore the "Show" parameter if "StartMinimized" is active
-  // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
+  // Don't show the form if StartMinim is active (app starts minimized)
+  // Note: In FMX, CreateForm does not create forms immediately - it queues them for RealCreateForms
   if NOT AppData.StartMinim
   AND Visible
   then Show;
@@ -166,20 +166,18 @@ begin
 end;
 
 
-// Font, snap, alpha
+// Apply font from MainForm and transparency settings
 procedure TLightForm.SetGuiProperties(Form: TForm);
 begin
   {$IFDEF FullAppData}
-   // Font
-   if Form = Application.MainForm
-   then Self.Font:= Form.Font   // We TAKE the font from the main form. Then we apply it to all existing and all future windows.
-   else
-     if Self.Font <> nil
-     then Form.Font:= Self.Font;  // We set the same font for secondary forms
+   // Font - copy from MainForm to secondary forms
+   if (Form <> Application.MainForm)
+   AND (Application.MainForm <> NIL)
+   then Form.Font:= Application.MainForm.Font;
 
    // Form transparency
-   Form.AlphaBlendValue := Opacity;
-   Form.AlphaBlend:= Opacity< 255;
+   Form.AlphaBlendValue:= AppData.Opacity;
+   Form.AlphaBlend:= AppData.Opacity < 255;
   {$ENDIF}
 end;
 
@@ -204,7 +202,7 @@ begin
 end;
 
 
-function TLightForm.CloseQuery: Boolean;  // Correct method name
+function TLightForm.CloseQuery: Boolean;
 begin
   saveBeforeExit;
   Result:= inherited CloseQuery;
@@ -246,23 +244,29 @@ begin
 end;
 
 
+{ Handles Escape key to close form when CloseOnEscape is True.
+  Note: To use this, connect it to the form's OnKeyDown event in the FMX designer
+  or in code: Self.OnKeyDown := FormKeyPress; }
 procedure TLightForm.FormKeyPress(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
 begin
   if CloseOnEscape
-  and (Key = vkEscape) 
+  AND (Key = vkEscape)
   then Close;
 end;
 
 
+{ Mobile toolbar back button click handler }
 procedure TLightForm.btnOsBackClick(Sender: TObject);
 begin
-  Close;  // This will call saveBeforeExit;
+  Close;  // This will trigger saveBeforeExit
 end;
 
 
+{ Handles hardware back button on Android. Connected via FMX designer. }
 procedure TLightForm.FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
 begin
-  if (Key = vkHardwareBack) then Close;
+  if Key = vkHardwareBack
+  then Close;
 end;
 
 
@@ -270,12 +274,13 @@ end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   Load/Save all controls on this form to their initial state.
-   Parameters:
-         OnlyFormPos=False  ->  Save all supported controls on this form
-         OnlyFormPos=True   ->  It will only save the position of the form (only Left/Top, no width/height/WndState)
+   Load/Save form state to INI file.
+   Behavior is controlled by the AutoState property:
+     asNone    -> Don't save the form
+     asPosOnly -> Save only position (Left/Top, no width/height/WindowState)
+     asFull    -> Save position and all supported controls (checkboxes, radiobuttons, etc.)
 
-   Also see LoadForm/SaveForm in Light_FMX.Visual.INIFile.pas
+   Also see LoadForm/SaveForm in LightFmx.Common.IniFile.pas
 -------------------------------------------------------------------------------------------------------------}
 
 procedure TLightForm.SaveForm;
@@ -335,49 +340,49 @@ begin
 end;
 
 
+{ Creates a mobile toolbar with back/next buttons. Only called on mobile platforms. }
 procedure TLightForm.CreateToolbar;
 begin
   if NOT OsIsMobile then EXIT;
 
-  // Create toolbar - use class field, not local var
-  TopBar := TToolBar.Create(Self);
-  TopBar.Parent := Self;
-  TopBar.Name := 'TopBar';
-  TopBar.Anchors := [];
-  TopBar.Height := 56;  // Standard Material Design header height
-  TopBar.TabOrder := 0;
+  // Create toolbar
+  TopBar:= TToolBar.Create(Self);
+  TopBar.Parent:= Self;
+  TopBar.Name:= 'TopBar';
+  TopBar.Anchors:= [];
+  TopBar.Height:= 56;  // Standard Material Design header height
+  TopBar.TabOrder:= 0;
   {$IFDEF ANDROID}
   TopBar.Align := TAlignLayout.Top; {$ENDIF}
   {$IFDEF IOS}
   TopBar.Align := TAlignLayout.Bottom; {$ENDIF}
 
   // Create caption label
-  lblToolBarCapt := TLabel.Create(Self);
-  lblToolBarCapt.Parent := TopBar;
-  lblToolBarCapt.Name := 'lblToolBarCapt';
-  lblToolBarCapt.Align := TAlignLayout.Contents;
-  lblToolBarCapt.StyleLookup := 'toollabel';
-  lblToolBarCapt.TextSettings.HorzAlign := TTextAlign.Center;
-  lblToolBarCapt.Text := Self.Caption;
-  lblToolBarCapt.Text := Self.Caption; // Automatically grab the Form's caption
+  lblToolBarCapt:= TLabel.Create(Self);
+  lblToolBarCapt.Parent:= TopBar;
+  lblToolBarCapt.Name:= 'lblToolBarCapt';
+  lblToolBarCapt.Align:= TAlignLayout.Contents;
+  lblToolBarCapt.StyleLookup:= 'toollabel';
+  lblToolBarCapt.TextSettings.HorzAlign:= TTextAlign.Center;
+  lblToolBarCapt.Text:= Self.Caption;
 
   // Create back button
-  btnOsBack := TSpeedButton.Create(Self);
-  btnOsBack.Parent := TopBar;
-  btnOsBack.Name := 'btnOsBack';
-  btnOsBack.Align := TAlignLayout.MostLeft;
-  btnOsBack.Width := 48;
-  btnOsBack.StyleLookup := 'backtoolbutton';
-  btnOsBack.OnClick := btnOsBackClick;
+  btnOsBack:= TSpeedButton.Create(Self);
+  btnOsBack.Parent:= TopBar;
+  btnOsBack.Name:= 'btnOsBack';
+  btnOsBack.Align:= TAlignLayout.MostLeft;
+  btnOsBack.Width:= 48;
+  btnOsBack.StyleLookup:= 'backtoolbutton';
+  btnOsBack.OnClick:= btnOsBackClick;
 
-  // Create next button
-  btnOsNext := TSpeedButton.Create(Self);
-  btnOsNext.Parent := TopBar;
-  btnOsNext.Name := 'btnOsNext';
-  btnOsNext.Align := TAlignLayout.MostRight;
-  btnOsNext.Width := 44;
-  btnOsNext.StyleLookup := 'nexttoolbutton';
-  btnOsNext.Visible := False;
+  // Create next button (hidden by default)
+  btnOsNext:= TSpeedButton.Create(Self);
+  btnOsNext.Parent:= TopBar;
+  btnOsNext.Name:= 'btnOsNext';
+  btnOsNext.Align:= TAlignLayout.MostRight;
+  btnOsNext.Width:= 44;
+  btnOsNext.StyleLookup:= 'nexttoolbutton';
+  btnOsNext.Visible:= False;
 end;
 
 
@@ -389,9 +394,9 @@ end;
 // WARNING: FMX: CreateForm does not create the given form immediately. RealCreateForms creates the real forms. So, we cannot access Application.MainForm here.
 procedure TLightForm.MainFormCaption(aCaption: string);
 begin
-  if aCaption= ''
-  then aCaption:= AppData.AppName+ ' '
-  else aCaption:= AppData.AppName+ ' '+ ' - ' + aCaption;
+  if aCaption = ''
+  then aCaption:= AppData.AppName
+  else aCaption:= AppData.AppName + ' - ' + aCaption;
 
   if AppData.RunningHome
   then aCaption:= aCaption+ ' [Running home]';

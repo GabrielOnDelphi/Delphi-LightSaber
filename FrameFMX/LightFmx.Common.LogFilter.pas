@@ -1,10 +1,16 @@
 UNIT LightFmx.Common.LogFilter;
 
 {=============================================================================================================
-   2024.05
+   2026.01.31
    www.GabrielMoraru.com
-==============================================================================================================
-   For the new log (the one based on TStringGrid)
+--------------------------------------------------------------------------------------------------------------
+   Verbosity filter control for TLogViewer.
+   Allows users to adjust the log verbosity level via a trackbar.
+
+   Usage:
+     1. Drop TLogVerbFilter on your form
+     2. Assign the Log property to connect it to a TLogViewer
+     3. The trackbar will control which verbosity levels are displayed
 
    Tester:
      c:\Projects\LightSaber\Demo\Demo LightLog\Demo_Log.dpr
@@ -26,7 +32,7 @@ TYPE
      FTrackBar     : TTrackBar;
      FShowDebugMsg : Boolean;
 
-     function  getVerbosity: TLogVerbLvl;         //Note: The "master" of the verbosity events is the Grid not the trackbar
+     function  getVerbosity: TLogVerbLvl;
      procedure setVerbosity   (Value: TLogVerbLvl);
      procedure setLog         (Value: TLogViewer);
      procedure setShowDebugMsg(Value: Boolean);
@@ -36,8 +42,8 @@ TYPE
   published
      property ShowDebugMsg  : Boolean       read FShowDebugMsg  write setShowDebugMsg default FALSE; { Allow the user to access the lowest (Debug) level }
      property TrackBar      : TTrackBar     read FTrackBar      write FTrackBar;
-     property Verbosity     : TLogVerbLvl   read getVerbosity   write setVerbosity;      //Note: The "master" of the verbosity events is the Grid not the trackbar
-     property Log           : TLogViewer    read FLog           write setLog;
+     property Verbosity     : TLogVerbLvl   read getVerbosity   write setVerbosity;      { Mirrors TrackBar.Value as TLogVerbLvl }
+     property Log           : TLogViewer    read FLog           write setLog;            { The TLogViewer this filter controls }
   end;
 
 procedure Register;
@@ -47,14 +53,13 @@ IMPLEMENTATION
 USES
   LightFmx.Common.Dialogs;
 
-CONST
-  DefaultVerbosity = lvInfos;
+{ Note: DefaultVerbosity constant is defined in LightCore.LogTypes }
 
 constructor TLogVerbFilter.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);                 { Note: Don't set 'Parent:= Owner' in constructor. Details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create }
   FShowDebugMsg:= False;
-  //StyleLookup := 'layoutstyle';  // FMX’s built?in layout style
+  //StyleLookup := 'layoutstyle';  // FMX's built-in layout style
 
   VerboLabel          := TLabel.Create(Self);  { Freed by: Owner }
   VerboLabel.Parent   := Self;                 { Here we can set the parent }
@@ -123,55 +128,32 @@ begin
 end;
 
 
+{ Assigns the TLogViewer that this filter will control.
+  Establishes a bidirectional link: this filter controls the Log's verbosity,
+  and the Log knows about this filter for synchronization. }
 procedure TLogVerbFilter.setLog(Value: TLogViewer);
 begin
   FLog:= Value;
   if FLog <> NIL then
   begin
-    Verbosity := FLog.Verbosity;
-    FLog.RegisterVerbFilter(Self);      // Let the Log know that its verbosity is controlled by this TrackBar
+    Verbosity:= FLog.Verbosity;         { Sync trackbar to current Log verbosity }
+    FLog.RegisterVerbFilter(Self);      { Register for bidirectional updates }
   end;
 end;
 
 
+{ Controls whether the Debug verbosity level (lvDebug=0) is accessible via the trackbar.
+  When False, the trackbar minimum is 1 (lvVerbose), hiding the Debug level from users. }
 procedure TLogVerbFilter.setShowDebugMsg(Value: Boolean);
 begin
-  FShowDebugMsg := Value;
+  FShowDebugMsg:= Value;
 
   if FShowDebugMsg
-  then TrackBar.Min:= 0
-  else TrackBar.Min:= 1;
+  then TrackBar.Min:= 0    { Allow access to lvDebug (ordinal 0) }
+  else TrackBar.Min:= 1;   { Start at lvVerbose (ordinal 1) }
 end;
 
-
-function Verbosity2String(Verbosity: TLogVerbLvl): string;
-begin
-  case Verbosity of
-    lvDebug     : Result := 'Debug';
-    lvVerbose   : Result := 'Verbose';
-    lvHints     : Result := 'Hints';
-    lvInfos     : Result := 'Info';      { This is the default level of verbosity }
-    lvImportant : Result := 'Important';
-    lvWarnings  : Result := 'Warnings';
-    lvErrors    : Result := 'Errors';
-  else
-    RAISE Exception.Create('Invalid verbosity');
-  end;
-end;
-
-
-{
-function TLogVerbFilter.DefinePresentationName: string;
-begin
-  // match FMX’s default TPanel style proxy
-  Result := 'Panel-' + GetPresentationSuffix;
-end;
-
-function TLogVerbFilter.GetDefaultStyleLookupName: string;
-begin
-  // Tell FMX to look for the exactly same style as TLayout
-  Result := 'layoutstyle';
-end;}
+{ Note: Verbosity2String is defined in LightCore.LogTypes }
 
 
 procedure Register;

@@ -206,8 +206,8 @@ VAR                      // ToDo 5: make sure AppData is unique (make it Singlet
 IMPLEMENTATION
 
 USES
-  LightVcl.Common.WinVersion, LightVcl.Common.ExeVersion, LightVcl.Common.Translate,
-  LightCore.IO, LightVcl.Common.CenterControl, LightVcl.Visual.AppDataForm, LightVcl.Common.Registry;
+  LightCore.IO,
+  LightVcl.Common.WinVersion, LightVcl.Common.ExeVersion, LightVcl.Translate, LightVcl.Common.CenterControl, LightVcl.Visual.AppDataForm, LightVcl.Common.Registry;
 
 
 { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }

@@ -1,17 +1,18 @@
 UNIT LightFmx.LogForm;
 
 {=============================================================================================================
-   2025.06
+   2026.01.31
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-   Visual log window.
-   Reads the content of a TRamLog.
+   Visual log window for displaying TRamLog content.
 
-   It is automatically created by TAppDataVCL.pas
-   But can be also created manually if you don't use AppData.
-   User's prefferences are managed via LoadSettings/SaveSettings.
+   Creation:
+     - Automatically created by TAppDataFMX when using AppData
+     - Can be created manually if not using AppData
 
-   TLogViewer tester:
+   User preferences are managed via LoadSettings/SaveSettings and persisted to INI file.
+
+   Tester:
      c:\Projects\LightSaber\Demo\Demo LightLog\Demo_Log.dpr
 =============================================================================================================}
 
@@ -42,9 +43,10 @@ TYPE
     procedure chkScrollDownChange(Sender: TObject);
     procedure FormClose          (Sender: TObject; var Action: TCloseAction);
     procedure FormDestroy        (Sender: TObject);
-    procedure mnuCopyAllClick    (Sender: TObject);
-    procedure mnuCopyClick       (Sender: TObject);
-    procedure chkLogOnErrorChange(Sender: TObject);
+    procedure mnuCopyAllClick     (Sender: TObject);
+    procedure mnuCopyClick        (Sender: TObject);
+    procedure mnuCopyFilteredClick(Sender: TObject);
+    procedure chkLogOnErrorChange (Sender: TObject);
     procedure chkShowTimeChange  (Sender: TObject);
     procedure chkShowDateChange  (Sender: TObject);
     procedure FormCreate         (Sender: TObject);
@@ -71,7 +73,7 @@ begin
 
   LoadSettings;
   chkLogOnError.IsChecked:= AppData.RamLog.ShowOnError;
-  chkShowTime.IsChecked  := LogViewer.ShowTime;
+  chkShowTime.IsChecked:= LogViewer.ShowTime;
 
   Assert(Application.MainForm <> TCommonCustomForm(Self), 'Sanity check! The Log should not be the MainForm!'); { Make sure this is not the first form created }
 end;
@@ -104,14 +106,12 @@ procedure TfrmRamLog.SaveSettings;
 begin
   Assert(AppData <> NIL, 'AppData is gone already!');
 
-  // Save Log verbosity
-  VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);
+  VAR IniFile:= TIniFileEx.Create('Log Settings', AppData.IniFile);
   try
     IniFile.Write('ShowOnError', AppData.RamLog.ShowOnError);
-
-    IniFile.Write('ShowTime'   , LogViewer.ShowTime);
-    IniFile.Write('ShowDate'   , LogViewer.ShowDate);
-    IniFile.Write('Verbosity'  , Ord(LogViewer.Verbosity));
+    IniFile.Write('ShowTime', LogViewer.ShowTime);
+    IniFile.Write('ShowDate', LogViewer.ShowDate);
+    IniFile.Write('Verbosity', Ord(LogViewer.Verbosity));
   finally
     FreeAndNil(IniFile);
   end;
@@ -120,18 +120,16 @@ end;
 
 procedure TfrmRamLog.LoadSettings;
 begin
-
-
-  VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);
+  VAR IniFile:= TIniFileEx.Create('Log Settings', AppData.IniFile);
   try
     AppData.RamLog.ShowOnError:= IniFile.Read('ShowOnError', TRUE);
 
-    LogViewer.ShowTime              := IniFile.Read('ShowTime', TRUE);
-    LogViewer.ShowDate              := IniFile.Read('ShowDate', TRUE);
-    LogViewer.Verbosity             := TLogVerbLvl(IniFile.Read('Verbosity', Ord(lvHints)));
+    LogViewer.ShowTime:= IniFile.Read('ShowTime', TRUE);
+    LogViewer.ShowDate:= IniFile.Read('ShowDate', TRUE);
+    LogViewer.Verbosity:= TLogVerbLvl(IniFile.Read('Verbosity', Ord(lvHints)));
 
-    //chkShowDate.isChecked:= LogViewer.ShowDate;
-    chkShowTime.isChecked:= LogViewer.ShowTime;
+    chkShowDate.IsChecked:= LogViewer.ShowDate;
+    chkShowTime.IsChecked:= LogViewer.ShowTime;
   finally
     FreeAndNil(IniFile);
   end;
@@ -183,6 +181,12 @@ end;
 procedure TfrmRamLog.mnuCopyClick(Sender: TObject);
 begin
   LogViewer.CopyCurLine;
+end;
+
+
+procedure TfrmRamLog.mnuCopyFilteredClick(Sender: TObject);
+begin
+  LogViewer.CopyVisible;
 end;
 
 

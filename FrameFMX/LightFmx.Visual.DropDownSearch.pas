@@ -1,11 +1,10 @@
 unit LightFmx.Visual.DropDownSearch;
 
 {=============================================================================================================
-   2025.03
+   2026.01.31
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-
-  A search box with auto-suggest (VCL)
+  A search box with auto-suggest (FMX).
   When you type some text, a dropdown box similar to the Help Insight in Delphi IDE will appear.
   The list is filtered (gets smaller) as the user types in more characters into the searchbox.
 
@@ -105,26 +104,16 @@ end;
 
 destructor TDropDownSearchBox.Destroy;
 begin
-  FWords.Free;
+  FreeAndNil(FWords);
   inherited Destroy;
 end;
-
-{
-function TDropDownSearchBox.GetItemHeight: Single;
-var
-  StyleObject: TFmxObject;
-begin
-  StyleObject := lbxSearch.FindStyleResource('listitem');
-  if Assigned(StyleObject) then
-    lbxSearch.ItemHeight := StyleObject.Height; // Or calculate based on children
-end; }
-
 
 {-------------------------------------------------------------------------------------------------------------
    Listbox position
 -------------------------------------------------------------------------------------------------------------}
-// Set lbxSearch's Parent to be the top-level form rather than the container (which might be too small).
-// We compute the screen coordinates of Self and convert them into the host form's client coordinates.
+
+{ Set lbxSearch's Parent to be the top-level form rather than the container (which might be too small).
+  We compute the screen coordinates of Self and convert them into the host form's client coordinates. }
 procedure TDropDownSearchBox.SetHost;
 const
   DROPDOWN_OFFSET = 2;
@@ -132,20 +121,19 @@ var
   Host: TCommonCustomForm;
   ScreenPos, HostPos: TPointF;
 begin
-  if (csDesigning in ComponentState) then Exit;
+  if (csDesigning in ComponentState) then EXIT;
 
-  Host := Self.Root.GetObject as TCommonCustomForm;
+  Host:= Self.Root.GetObject as TCommonCustomForm;
   Assert(Host <> NIL, 'Cannot find hosting form!');
-  if Host <> nil then
-  begin
-    ScreenPos := Self.LocalToScreen(PointF(0, Self.Height));
-    HostPos := Host.ScreenToClient(ScreenPos);  // Converts screen coordinates to the form’s client coordinates, positioning the dropdown correctly below the edit box.
 
-    lbxSearch.Parent     := Host;
-    lbxSearch.Position.X := HostPos.X;
-    lbxSearch.Position.Y := HostPos.Y + DROPDOWN_OFFSET;
-    lbxSearch.Width      := Self.Width;
-  end;
+  // Convert screen coordinates to form's client coordinates, positioning the dropdown below the edit box
+  ScreenPos:= Self.LocalToScreen(PointF(0, Self.Height));
+  HostPos:= Host.ScreenToClient(ScreenPos);
+
+  lbxSearch.Parent     := Host;
+  lbxSearch.Position.X := HostPos.X;
+  lbxSearch.Position.Y := HostPos.Y + DROPDOWN_OFFSET;
+  lbxSearch.Width      := Self.Width;
 end;
 
 
@@ -166,33 +154,34 @@ end;
 
 
 //ToDo: move this to its own component!
-{ Resize the height, based on the number of rows in it, but never make it bigger than the x% of the aForm.
-  Note: MaxHeight is relative to the form. In percents. }
+{ Resize the height based on the number of rows, but never bigger than x% of the form.
+  MaxHeightPercent is relative to the form height. }
 procedure TDropDownSearchBox.SetHeightAuto(Box: TListBox; MaxHeightPercent: Integer);
 var
   Form: TCommonCustomForm;
   MaxHeightPx, AvailableSpace, ItemHeightCalc: Single;
   ItemCount: Integer;
 begin
-  Form := Box.Parent as TCommonCustomForm;
-  if Form <> nil then
-  begin
-    // Calculate maximum height based on percentage (e.g., 50%)
-    MaxHeightPx := (Form.ClientHeight * MaxHeightPercent) / 100;
+  if NOT (Box.Parent is TCommonCustomForm) then EXIT;
 
-    // Calculate available space from listbox top to form bottom
-    AvailableSpace := Form.ClientHeight - Box.Position.Y - 4;
+  Form:= Box.Parent as TCommonCustomForm;
 
-    // Calculate height based on item count
-    ItemCount := Min(Box.Items.Count, 10); // Limit to 10 items max
-    ItemHeightCalc := ItemCount * Box.ItemHeight + 6; // Include padding
+  // Calculate maximum height based on percentage (e.g., 50%)
+  MaxHeightPx:= (Form.ClientHeight * MaxHeightPercent) / 100;
 
-    // Set height to the smallest of: item-based height, percentage max, or available space
-    Box.Height := Min(ItemHeightCalc, Min(MaxHeightPx, AvailableSpace));     // AvailableSpace = 140
+  // Calculate available space from listbox top to form bottom
+  AvailableSpace:= Form.ClientHeight - Box.Position.Y - 4;
 
-    // Ensure a minimum height
-    if Box.Height < 50 then Box.Height := 50;
-  end;
+  // Calculate height based on item count (limit to 10 items max for display)
+  ItemCount:= Min(Box.Items.Count, 10);
+  ItemHeightCalc:= ItemCount * Box.ItemHeight + 6; // Include padding
+
+  // Set height to the smallest of: item-based height, percentage max, or available space
+  Box.Height:= Min(ItemHeightCalc, Min(MaxHeightPx, AvailableSpace));
+
+  // Ensure a minimum height
+  if Box.Height < 50
+  then Box.Height:= 50;
 end;
 
 
@@ -257,7 +246,7 @@ begin
   inherited;
   case Key of
 
-    VKESCAPE:   // Cancel search on Escape
+    vkEscape:   // Cancel search on Escape
       begin
         lbxSearch.Visible := False;
         FCurrentFilter := '';
@@ -265,20 +254,20 @@ begin
         Key := 0;  // Consume the key
       end;
 
-    VKRETURN:
+    vkReturn:
       if lbxSearch.Visible and (lbxSearch.ItemIndex >= 0) then
       begin
         EndSearch(Self);
         Key := 0;
       end;
 
-    VKUP, VKDOWN:
+    vkUp, vkDown:
       begin
         HandleArrowKeys(Key);
         Key := 0; // Consume the key
       end;
 
-    VKTAB:  // 'Tab' key
+    vkTab:
       begin
         lbxSearch.Visible := False;
         FCurrentFilter := Text;
@@ -290,35 +279,36 @@ begin
 end;
 
 
-// Navigating only through the filtered list in lbxSearch.Items.
+{ Navigate through the filtered list using arrow keys.
+  Wraps around at the top/bottom of the list. }
 procedure TDropDownSearchBox.HandleArrowKeys(Key: Word);
 var
   ItemCount: Integer;
 begin
-  ItemCount := lbxSearch.Items.Count;
+  ItemCount:= lbxSearch.Items.Count;
   if ItemCount = 0 then EXIT;
 
-  FIsNavigating := True;
+  FIsNavigating:= True;
   try
-    // If no current index, try to use the listbox's current selection.
+    // If no current index, try to use the listbox's current selection
     if FCurrentIndex < 0
-    then FCurrentIndex := max(lbxSearch.ItemIndex, 0);
+    then FCurrentIndex:= Max(lbxSearch.ItemIndex, 0);
 
     case Key of
-      VKUP:   FCurrentIndex := (FCurrentIndex - 1 + ItemCount) mod ItemCount;
-      VKDOWN: FCurrentIndex := (FCurrentIndex + 1) mod ItemCount;
+      vkUp:   FCurrentIndex:= (FCurrentIndex - 1 + ItemCount) mod ItemCount;
+      vkDown: FCurrentIndex:= (FCurrentIndex + 1) mod ItemCount;
     end;
 
-    Text := lbxSearch.Items[FCurrentIndex];
+    Text:= lbxSearch.Items[FCurrentIndex];
     SelectAll;
 
-    // If the dropdown list box was not open open it now
+    // If the dropdown list box was not open, open it now
     showDropDown;
 
-    // Update listbox selection to match new index.
-    lbxSearch.ItemIndex := FCurrentIndex;
+    // Update listbox selection to match new index
+    lbxSearch.ItemIndex:= FCurrentIndex;
   finally
-    FIsNavigating := False;
+    FIsNavigating:= False;
   end;
 end;
 
@@ -336,20 +326,22 @@ var
 begin
   if (lbxSearch = NIL) OR (csDesigning in ComponentState) then EXIT;
 
-  FilterText := LowerCase(FCurrentFilter);
+  FilterText:= FCurrentFilter;
   lbxSearch.Items.BeginUpdate;
   try
     lbxSearch.Items.Clear;
-    for i := 0 to FWords.Count - 1 do
+    for i:= 0 to FWords.Count - 1 do
       if (FilterText = '')
-	  OR (PosInsensitive(FilterText, LowerCase(FWords[i])) > 0)
-	  then lbxSearch.Items.Add(FWords[i]);
+      OR (PosInsensitive(FilterText, FWords[i]) > 0)  // PosInsensitive is already case-insensitive
+      then lbxSearch.Items.Add(FWords[i]);
   finally
     lbxSearch.Items.EndUpdate;
   end;
 
-  if lbxSearch.Items.Count > 0 then lbxSearch.ItemIndex := 0;
-  FCurrentIndex := -1; // Reset current index when filtering
+  if lbxSearch.Items.Count > 0
+  then lbxSearch.ItemIndex:= 0;
+
+  FCurrentIndex:= -1; // Reset current index when filtering
 end;
 
 
@@ -359,12 +351,12 @@ end;
    Population
 -------------------------------------------------------------------------------------------------------------}
 
-{ Note: The TStrings object does not own the objects you add this way. Objects added to the TStrings object still exist even if the TStrings instance is destroyed. They must be explicitly destroyed by the application. }
+{ Populates the search dictionary with the provided words.
+  Note: Assign clears the existing items first, then copies the new ones.
+  Objects attached to strings are NOT owned by FWords - they must be freed by the caller. }
 procedure TDropDownSearchBox.PopulateDictionary(Words: TStringList);
 begin
-  //todo: question: Does this "clear" first ??????????????????????????????????
-
-  FWords.Assign(Words);    // Store all items in FFullItemList
+  FWords.Assign(Words);  // Clears FWords first, then copies all items from Words
 end;
 
 

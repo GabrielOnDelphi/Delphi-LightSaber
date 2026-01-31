@@ -1,17 +1,27 @@
-unit LightFmx.Common.CamUtils;
+UNIT LightFmx.Common.CamUtils;
 
-// Usage Instructions:
-// 1. Add necessary permissions to Android manifest: <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" /> (for Android 13+)
-//    or <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> for older.
-// 2. Before calling PickImageFromGallery, request permission: RequestStorageReadPermission(procedure begin PickImageFromGallery; end);
-// 3. In your form's OnCreate: SetupImagePickerCallback(procedure(const Path: string) begin if not Path.IsEmpty then ProcessImage(Path); end);
-// 4. To save: AddToPhotosAlbum(MyBitmap);
+{=============================================================================================================
+   2026.01.31
+   www.GabrielMoraru.com
+--------------------------------------------------------------------------------------------------------------
+   Android Camera and Gallery Utilities
+
+   Usage Instructions:
+   1. Add necessary permissions to Android manifest:
+        <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" /> (for Android 13+)
+        or <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> for older.
+   2. Before calling PickImageFromGallery, request permission:
+        RequestStorageReadPermission(procedure begin PickImageFromGallery; end);
+   3. In your form's OnCreate:
+        SetupImagePickerCallback(procedure(const Path: string) begin if not Path.IsEmpty then ProcessImage(Path); end);
+   4. To save: AddToPhotosAlbum(MyBitmap);
+==============================================================================================================}
 
 INTERFACE
 
 USES
-  System.SysUtils, System.IOUtils,
-  FMX.Graphics, FMX.MediaLibrary, FMX.Platform;
+  System.SysUtils, System.IOUtils, System.Messaging,
+  FMX.Graphics, FMX.MediaLibrary, FMX.Platform, FMX.DialogService;
 
 
 TYPE
@@ -98,6 +108,7 @@ end;
 procedure AddToPhotosAlbum(const ABitmap: TBitmap);
 VAR PhotoLibrary: IFMXPhotoLibrary;
 begin
+  Assert(ABitmap <> nil, 'AddToPhotosAlbum: ABitmap cannot be nil');
   // No need for ScanMediaFile here, as AddImageToSavedPhotosAlbum handles indexing internally on Android
   if TPlatformServices.Current.SupportsPlatformService(IFMXPhotoLibrary, PhotoLibrary)
   then PhotoLibrary.AddImageToSavedPhotosAlbum(ABitmap);
@@ -129,6 +140,9 @@ end;
 
 
 {$IFDEF ANDROID}
+{ Copies an image from a content:// URI to the app's cache directory.
+  Returns the local file path on success, or empty string on failure.
+  The caller is responsible for deleting the cached file when no longer needed. }
 function CopyUriToCache(const AUri: Jnet_Uri): string;
 var
   InputStream: JInputStream;
@@ -137,64 +151,70 @@ var
   BytesRead: Integer;
   JBuffer: TJavaArray<Byte>;
 begin
-  Result := '';
+  Result:= '';
   OutputStream:= NIL;
   JBuffer:= NIL;
-
-  // 1. Create a safe temp file
-  CacheFile := TJFile.JavaClass.createTempFile(StringToJString('picked_'), StringToJString('.jpg'), TAndroidHelper.Context.getCacheDir);
-  if CacheFile = nil then Exit; // Failed to create file
-
-  // 2. Try to open the source URI
-  InputStream := TAndroidHelper.ContentResolver.openInputStream(AUri);
-  if InputStream = nil then 
-  begin
-    CacheFile.delete; // Clean up empty file
-    Exit; // Return empty string
-  end;
+  CacheFile:= nil;
 
   try
-    OutputStream := TJFileOutputStream.JavaClass.&init(CacheFile);
+    // 1. Create a safe temp file in the cache directory
+    CacheFile:= TJFile.JavaClass.createTempFile(StringToJString('picked_'), StringToJString('.jpg'), TAndroidHelper.Context.getCacheDir);
+    if CacheFile = nil then Exit; // Failed to create file
+
+    // 2. Try to open the source URI
+    InputStream:= TAndroidHelper.ContentResolver.openInputStream(AUri);
+    if InputStream = nil
+    then EXIT;
+
     try
-      // Allocate Java Byte Array ONCE
-      JBuffer := TJavaArray<Byte>.Create(4096);
-      
-      // 3. Loop and copy	  
-      BytesRead := InputStream.read(JBuffer);
-      while BytesRead > 0 do
-      begin
-        OutputStream.write(JBuffer, 0, BytesRead);
-        BytesRead := InputStream.read(JBuffer);
+      OutputStream:= TJFileOutputStream.JavaClass.&init(CacheFile);
+      try
+        // Allocate Java Byte Array ONCE
+        JBuffer:= TJavaArray<Byte>.Create(4096);
+
+        // 3. Loop and copy
+        BytesRead:= InputStream.read(JBuffer);
+        while BytesRead > 0 do
+        begin
+          OutputStream.write(JBuffer, 0, BytesRead);
+          BytesRead:= InputStream.read(JBuffer);
+        end;
+
+        // 4. ONLY set result if we actually wrote something or finished without error
+        Result:= JStringToString(CacheFile.getAbsolutePath);
+      finally
+        OutputStream.close;
+        JBuffer.Free;
       end;
-      
-      // 4. ONLY set result if we actually wrote something or finished without error
-      Result := JStringToString(CacheFile.getAbsolutePath);
     finally
-      OutputStream.close;
-      JBuffer.Free; // Free the wrapper
+      InputStream.close;
     end;
+
+    // 5. Final check: verify file is not 0 bytes
+    if (Result <> '') AND (TJFile.JavaClass.&init(StringToJString(Result)).length = 0)
+    then Result:= '';
   finally
-    InputStream.close;
+    // Clean up the temp file if operation failed
+    if (Result = '') AND (CacheFile <> nil)
+    then CacheFile.delete;
   end;
-  
-  // 5. Final check: verify file is not 0 bytes
-  if  (Result <> '')
-  AND (TJFile.JavaClass.&init(StringToJString(Result)).length = 0)
-  then Result := '';  // File is empty, treat as failure
 end;
 
 
 
-// Call this once (e.g., in FormCreate) to handle the picker result asynchronously
-// Callback receives the full file path or empty if canceled
+{ Call this once (e.g., in FormCreate) to handle the picker result asynchronously.
+  Callback receives the full file path or empty string if canceled.
+  WARNING: This subscribes to a global message and never unsubscribes.
+  Do NOT call multiple times or memory/callback leaks will occur. }
 procedure SetupImagePickerCallback(const AOnImageSelected: TImageSelectedEvent);
 begin
   TMessageManager.DefaultManager.SubscribeToMessage(TMessageResultNotification,
     procedure(const Sender: TObject; const M: TMessage)
     var
-      Msg: TMessageResultNotification absolute M;
+      Msg: TMessageResultNotification;
       Path: string;
     begin
+      Msg:= TMessageResultNotification(M);
       if Msg.RequestCode = REQUEST_PICK_IMAGE then
       begin
         if Msg.ResultCode = TJActivity.JavaClass.RESULT_OK then

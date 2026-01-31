@@ -1,12 +1,16 @@
 ﻿UNIT FormScreenCapture;
 
-{-------------------------------------------------------------------------------------------------------------
+
+{=============================================================================================================
+   2026.01.31
+   www.GabrielMoraru.com
+--------------------------------------------------------------------------------------------------------------
    Screen Capture with Rectangle Selection
-   Claude 2026.01
+
 
    Cross-platform screenshot capture allowing user to select rectangular areas.
    Features glossy overlay effect for non-selected areas.
--------------------------------------------------------------------------------------------------------------}
+=============================================================================================================}
 
 {_done
   1. Added DrawGlossyOverlay procedure that creates a multi-layered glossy effect:
@@ -25,21 +29,21 @@
   - Edges are subtly darkened (vignette) for depth
   - The selected area "pops" with a glowing border effect
 
-  ┌──────────┬────────────┬─────────────┬───────────────────────────────────────┐
-  │ Location │ Parameter  │   Current   │                Effect                 │
-  ├──────────┼────────────┼─────────────┼───────────────────────────────────────┤
-  │ Line 178 │ BlurAmount │ 1.5         │ Blur intensity (was 2.5, now reduced) │
-  ├──────────┼────────────┼─────────────┼───────────────────────────────────────┤
-  │ Line 200 │ Opacity    │ 0.92        │ How visible the blurred background is │
-  ├──────────┼────────────┼─────────────┼───────────────────────────────────────┤
-  │ Line 208 │ $30000000  │ ~19% black  │ Dark overlay to dim background        │
-  ├──────────┼────────────┼─────────────┼───────────────────────────────────────┤
-  │ Line 220 │ $40FFFFFF  │ ~25% white  │ Top shine brightness                  │
-  ├──────────┼────────────┼─────────────┼───────────────────────────────────────┤
-  │ Line 242 │ $0C87CEEB  │ ~5% SkyBlue │ Color tint (Aero signature)           │
-  ├──────────┼────────────┼─────────────┼───────────────────────────────────────┤
-  │ Line 262 │ $25000000  │ ~15% black  │ Edge darkness (vignette)              │
-  └──────────┴────────────┴─────────────┴───────────────────────────────────────┘
+  ┌───────────┬────────────┬─────────────┬───────────────────────────────────────┐
+  │ Location  │ Parameter  │   Current   │                Effect                 │
+  ├───────────┼────────────┼─────────────┼───────────────────────────────────────┤
+  │ Line ~203 │ BlurAmount │ 1.5         │ Blur intensity (was 2.5, now reduced) │
+  ├───────────┼────────────┼─────────────┼───────────────────────────────────────┤
+  │ Line ~225 │ Opacity    │ 0.92        │ How visible the blurred background is │
+  ├───────────┼────────────┼─────────────┼───────────────────────────────────────┤
+  │ Line ~233 │ $30000000  │ ~19% black  │ Dark overlay to dim background        │
+  ├───────────┼────────────┼─────────────┼───────────────────────────────────────┤
+  │ Line ~245 │ $40FFFFFF  │ ~25% white  │ Top shine brightness                  │
+  ├───────────┼────────────┼─────────────┼───────────────────────────────────────┤
+  │ Line ~267 │ $0C87CEEB  │ ~5% SkyBlue │ Color tint (Aero signature)           │
+  ├───────────┼────────────┼─────────────┼───────────────────────────────────────┤
+  │ Line ~287 │ $25000000  │ ~15% black  │ Edge darkness (vignette)              │
+  └───────────┴────────────┴─────────────┴───────────────────────────────────────┘
   Quick adjustments:
   - Less blur: Change 1.5 to 1.0 or 0.5
   - No color tint: Change $0C87CEEB to $00000000
@@ -49,7 +53,7 @@
 INTERFACE
 
 USES
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Generics.Collections,
+  System.SysUtils, System.Types, System.UITypes, System.Classes,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Objects, FMX.Layouts,
   FMX.StdCtrls, FMX.Controls.Presentation, FMX.Filter,
   LightFmx.Visual.ScreenCapture;
@@ -150,14 +154,22 @@ end;
 
 
 procedure TfrmScreenCapture.StartCapture;
+VAR
+  LastRect: TRectF;
 begin
   // Hide form temporarily to capture clean screenshot
+  // Note: ProcessMessages is used here intentionally to ensure the form is fully hidden
+  // before taking the screenshot. Async alternatives would complicate the flow.
   Hide;
   Application.ProcessMessages;
   Sleep(100);
 
   // Capture screen
   FSCManager.StartCapture;
+
+  // Validate screenshot was captured
+  if NOT Assigned(FSCManager.Screenshot) OR FSCManager.Screenshot.IsEmpty
+  then EXIT;
 
   // Display screenshot in image control (hidden, used only as source for painting)
   imgScreenshot.Bitmap.Assign(FSCManager.Screenshot);
@@ -166,9 +178,12 @@ begin
   if FOverlayStyle = osFrostedGlass
   then CreateBlurredScreenshot;
 
-  // Set last selection if available
-  if NOT FSCManager.LastSelectionRect.IsEmpty
-  then SelectionRect.BoundsRect:= FSCManager.LastSelectionRect;
+  // Set last selection if available and within current screen bounds
+  LastRect:= FSCManager.LastSelectionRect;
+  if NOT LastRect.IsEmpty then
+    if (LastRect.Right <= FSCManager.Screenshot.Width) AND
+       (LastRect.Bottom <= FSCManager.Screenshot.Height)
+    then SelectionRect.BoundsRect:= LastRect;
 
   // Show form
   Show;
@@ -430,7 +445,10 @@ begin
     if NOT SelectRect.IsEmpty then
       begin
         DrawRect:= SelectRect;
+        // Clip selection to visible area (handles partial selections at screen edges)
         DrawRect.Intersect(FullRect);
+        if DrawRect.IsEmpty
+        then EXIT;  // Selection is completely outside visible area
 
         // Draw selection with full brightness
         Canvas.DrawBitmap(FSCManager.Screenshot, DrawRect, DrawRect, 1.0, True);
@@ -526,17 +544,19 @@ end;
 
 procedure TfrmScreenCapture.ShowCaptureFlash;
 begin
-  // Visual feedback: briefly highlight the selection
+  // Visual feedback: briefly flash the selection to confirm capture
+  // Note: ProcessMessages is used here for immediate visual feedback during the flash
+  // animation. A timer-based approach would be more complex for this simple effect.
   SelectionRect.Opacity:= 0.3;
   Application.ProcessMessages;
   Sleep(100);
   SelectionRect.Opacity:= 1.0;
-  Application.ProcessMessages;  
+  Application.ProcessMessages;
   Sleep(100);
   SelectionRect.Opacity:= 0.3;
   Application.ProcessMessages;
   Sleep(100);
-  SelectionRect.Opacity:= 1.0;  
+  SelectionRect.Opacity:= 1.0;
 end;
 
 

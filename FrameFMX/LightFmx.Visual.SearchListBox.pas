@@ -1,10 +1,9 @@
 UNIT LightFmx.Visual.SearchListBox;
 
 {=============================================================================================================
-   www.GabrielMoraru.com
    2026.01
+   www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-
    A searchable listbox component with an integrated search filter.
 
    Features:

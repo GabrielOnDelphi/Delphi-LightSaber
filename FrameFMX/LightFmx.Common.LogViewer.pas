@@ -1,7 +1,7 @@
 UNIT LightFmx.Common.LogViewer;
 
 {=============================================================================================================
-   2026.01
+   2026.01.31
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    A log viewer based on TStringGrid.
@@ -18,6 +18,11 @@ UNIT LightFmx.Common.LogViewer;
            Now all messages sent to AppData.RamLog will appear in this viewer:
                 AppData.RamLog.AddError('Something bad happened!');
            The log window will automatically pop-up when an error is received.
+
+   FMX Grid Notes:
+      - In FMX TStringGrid, RowCount does NOT include the header row (unlike VCL)
+      - OnDrawColumnCell Row parameter is 0-based for data rows
+      - Column headers are managed separately via TColumn.Header property
 
    Full demo in:
       c:\Projects\LightSaber\Demo\Demo LightLog\FMX\FMX_Demo_Log.dpr
@@ -116,24 +121,19 @@ begin
   FOwnRamLog:= TRUE;
   FRamLog:= TRamLog.Create(TRUE, Self as ILogObserver);
 
-  FShowTime   := FALSE;
-  FShowDate   := FALSE;
-  FVerbosity  := lvVerbose;
-  FAutoScroll := TRUE;
+  FShowTime:= FALSE;
+  FShowDate:= FALSE;
+  FVerbosity:= lvVerbose;
+  FAutoScroll:= TRUE;
+  FFilteredRowCount:= 0;
 
-  // Apply FMX specific defaults if needed
-  Options := Options + [TGridOption.RowSelect]; // Example: enable row selection
+  // Enable row selection by default
+  Options:= Options + [TGridOption.RowSelect];
 
-  //TStyledGrid.AlternatingBackgroundColor:= True; // Example: make rows easier to see
+  RowHeight:= 22;
+  OnDrawColumnCell:= MyDrawColumnCell;
 
-  // Header settings are often done via Styling in FMX, but basic properties exist
-  //HeaderHeight := 25; // Example
-
-  RowHeight   := 22;
-  OnDrawColumnCell := MyDrawColumnCell;
-
-  // Call setUpRows initially if you want columns defined at creation
-  // setUpRows; // Or call this after RamLog is potentially assigned externally
+  // setUpRows is called via Populate when RamLog notifies us
 end;
 
 
@@ -150,36 +150,37 @@ procedure TLogViewer.Clear;
 begin
   Assert(FRamLog <> NIL, 'RamLog not assigned!');
 
-  RowCount:= 0; // The value of RowCount includes the scrollable rows in the grid, but not the fixed row with the headers.
+  RowCount:= 0;
   FFilteredRowCount:= 0;
-  //InvalidateContent; // Redraw content area
   FRamLog.Clear;
-  // No need to call Populate here, RamLog.Clear triggers NotifyLogObserver which calls Populate.
+  // No need to call Populate - RamLog.Clear triggers NotifyLogObserver which calls Populate
 end;
 
 
+{ Creates and adds a new string column to the grid.
+  The grid takes ownership of the column and will free it on destruction. }
 function TLogViewer.AddColumn(aHeader: string): TStringColumn;
 begin
-  // When we add a column using AddObject, the grid takes ownership of the column, meaning it will manage the column's lifecycle, including freeing it when the grid is destroyed.
   Result:= TStringColumn.Create(Self);
   try
-    Result.Header := aHeader;
-    Result.Width  := 100;       // Set the desired width
-    Result.Parent := Self;     // Important: Set the parent to the grid
-    AddObject(Result);         // Add the column to the grid
+    Result.Header:= aHeader;
+    Result.Width:= 100;
+    Result.Parent:= Self;  // Setting Parent adds the column to the grid
   except
-    Result.Free; // Free the column if there's an error
+    FreeAndNil(Result);
     RAISE;
   end;
 end;
 
 
+{ Removes all columns from the grid.
+  Do not manually free columns before removing - the grid manages their lifecycle. }
 procedure TLogViewer.RemoveAllColumns;
-var i: Integer;
+VAR
+  i: Integer;
 begin
-  if ColumnCount > 0 then
-    for i:= ColumnCount - 1 downto 0 do
-      RemoveObject(Columns[i]);  // We should not manually call Free on the column before removing it from the grid, as this can lead to access violations or other unexpected behavior.
+  for i:= ColumnCount - 1 downto 0 do
+    RemoveObject(Columns[i]);
 end;
 
 
@@ -187,36 +188,37 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    SETUP & DATA HANDLING
 -------------------------------------------------------------------------------------------------------------}
+{ Configures grid rows and columns based on current RamLog content and verbosity filter.
+  In FMX TStringGrid, RowCount only includes data rows - the header row is managed separately. }
 procedure TLogViewer.setUpRows;
-VAR RequiredColumnCount: Integer;
+VAR
+  RequiredColumnCount: Integer;
 begin
-  Assert(FRamLog <> nil, 'RamLog not assigned!');     // 1) Ensure RamLog exists
+  Assert(FRamLog <> NIL, 'RamLog not assigned!');
 
   // Safety check - don't proceed if component isn't fully initialized
-  if (csDestroying in ComponentState) or (csLoading in ComponentState) then Exit;
+  if (csDestroying in ComponentState) OR (csLoading in ComponentState) then EXIT;
 
   // Lock updates for performance and visual stability
   BeginUpdate;
   try
-    // Recompute filtered rows
-    FFilteredRowCount:= FRamLog.Count(FVerbosity > lvDebug, FVerbosity); // Consider caching Filtered flag logic
+    // Recompute filtered row count based on current verbosity level
+    FFilteredRowCount:= FRamLog.Count(FVerbosity > lvDebug, FVerbosity);
 
-    // Set RowCount (reserve row 0 for headers)
-    RowCount:= FFilteredRowCount + 1; // +1 for the header row
+    // Set RowCount - in FMX this is data rows only, header is separate
+    RowCount:= FFilteredRowCount;
 
-    // Determine required column count
-    if FShowDate or FShowTime
-    then RequiredColumnCount := 2
-    else RequiredColumnCount := 1;
+    // Determine required column count based on date/time display settings
+    if FShowDate OR FShowTime
+    then RequiredColumnCount:= 2
+    else RequiredColumnCount:= 1;
 
     // Only recreate columns if the count has changed
-    //ToDo: don't destroy existing columns. Reused them!
+    //ToDo: don't destroy existing columns. Reuse them!
     if ColumnCount <> RequiredColumnCount then
       begin
-        // Clear existing columns BEFORE adding new ones
         RemoveAllColumns;
 
-        // Create new columns
         if RequiredColumnCount = 2
         then
           begin
@@ -224,60 +226,51 @@ begin
             AddColumn('Message').Width:= 150;
           end
         else
-          AddColumn('Message').Width:= 250;  //ToDo: I call this way too often. This will result in serious performance penalty!!!
+          AddColumn('Message').Width:= 250;  //ToDo: Columns recreated too often. Performance penalty!
       end;
 
-    // 5) Populate header row text (optional in FMX if using styled headers, but good practice)
-    // The TColumn.Header property already sets the header text. No need for Cells[i, 0].
-
+    // Column headers are set via TColumn.Header property in AddColumn
     ResizeColumns;
-
-    // 7) Trigger redraw AFTER EndUpdate
-    // Invalidate; // Invalidate is often called implicitly by EndUpdate or RowCount changes
-
   finally
     EndUpdate;
   end;
 
   if FAutoScroll
-  then ScrollToBottom; //needed?
+  then ScrollToBottom;
 end;
 
 
 procedure TLogViewer.setVerbFilter(const Value: TLogVerbLvl);
 begin
   if FVerbosity <> Value then
-   begin
-     FVerbosity := Value;
-     // Recalculate count based on NEW verbosity before potentially calling Populate
-     // Note: Populate calls setUpRows which recalculates FFilteredRowCount anyway.
-     // FFilteredRowCount := RamLog.Count(FVerbosity > lvDebug, FVerbosity);
+    begin
+      FVerbosity:= Value;
 
-     // Update associated UI element if it exists and needs syncing
-     if (FVerbTrackBar <> NIL) then
-       if (FVerbTrackBar as TLogVerbFilter).Verbosity <> Self.Verbosity
-       then (FVerbTrackBar as TLogVerbFilter).Verbosity := Self.Verbosity;
+      // Sync associated verbosity trackbar if it exists
+      if (FVerbTrackBar <> NIL) then
+        if (FVerbTrackBar as TLogVerbFilter).Verbosity <> Self.Verbosity
+        then (FVerbTrackBar as TLogVerbFilter).Verbosity:= Self.Verbosity;
 
-     // Notify listeners that verbosity changed
-     if Assigned(FVerbChanged)
-     then FVerbChanged(Self);
+      // Notify listeners that verbosity changed
+      if Assigned(FVerbChanged)
+      then FVerbChanged(Self);
 
-     // Refresh the grid content based on the new filter
-     Populate; // This will call setUpRows and redraw
-   end;
+      // Refresh grid content with new filter (Populate calls setUpRows)
+      Populate;
+    end;
 end;
 
 
 {-------------------------------------------------------------------------------------------------------------
    RAM LOG
 -------------------------------------------------------------------------------------------------------------}
-{ Creates a new internal RamLog, replacing any existing external log assignment.
-  Use this after AssignExternalRamLog to switch back to an internal log.
+
+{ Creates a new internal RamLog, replacing any existing log assignment.
+  Use after AssignExternalRamLog to switch back to an internal log.
   Note: The constructor already creates an internal log, so this is only needed
   if you previously assigned an external log and want to switch back. }
 procedure TLogViewer.ConstructInternalRamLog;
 begin
-  { Release any existing log if we own it }
   if FOwnRamLog
   then FreeAndNil(FRamLog);
 
@@ -288,28 +281,27 @@ begin
 end;
 
 
-// This assigns a random RamLog to the LogViewer
+{ Assigns an external RamLog to this viewer.
+  The viewer does NOT take ownership - caller is responsible for freeing the log. }
 procedure TLogViewer.AssignExternalRamLog(ExternalLog: TRamLog);
 begin
-  Assert(ExternalLog <> NIL, 'External TRamLog not assigned!!');
+  Assert(ExternalLog <> NIL, 'External TRamLog not assigned!');
 
-  // Release owned log if it exists
   if FOwnRamLog
   then FreeAndNil(FRamLog);
 
-  FOwnRamLog:= FALSE;          // We received the log from an external source. We don't auto release it anymore
+  FOwnRamLog:= FALSE;  // External log - we don't own it
   FRamLog:= ExternalLog;
   FRamLog.RegisterLogObserver(Self as ILogObserver);
 
-  // Populate the grid with the data from the newly assigned log
   Populate;
 end;
 
 
-// This connects the LogViewer to the RamLog
+{ Connects this viewer to AppData's global RamLog for application-wide logging }
 procedure TLogViewer.ObserveAppDataLog;
 begin
-  Assert(AppData.RamLog <> NIL, 'AppData.RamLog not assigned!!');
+  Assert(AppData.RamLog <> NIL, 'AppData.RamLog not assigned!');
   AssignExternalRamLog(AppData.RamLog);
 end;
 
@@ -320,99 +312,88 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    CONTENT & DRAWING
 -------------------------------------------------------------------------------------------------------------}
+
+{ ILogObserver implementation - called when RamLog content changes }
 procedure TLogViewer.Populate;
 begin
-  // Ensure RamLog is assigned before proceeding
-  if not Assigned(FRamLog) then Exit;
+  if NOT Assigned(FRamLog) then EXIT;
 
-  // Reconfigure rows/columns and update row count based on current filter
-  setUpRows;
+  setUpRows;  // Reconfigures rows/columns based on current filter
 
-  // Optional: Force redraw if EndUpdate in setUpRows wasn't sufficient
-  // InvalidateContent; // Usually not needed if RowCount changed
-
-  // Scroll to bottom if auto-scroll is enabled
   if AutoScroll
   then scrollToBottom;
 end;
 
 
-{ Returns the content of the specified line, after the grid has been filtered }
+{ Returns the log line for the specified filtered row index (0-based).
+  Maps the visible row index to the actual index in the unfiltered RamLog.Lines list. }
 function TLogViewer.getLineFiltered(Row: Integer): PLogLine;
 VAR
    actualIndex: Integer;
 begin
-  Result := NIL; // Default to nil
-  if not Assigned(RamLog) or (Row < 0) // Check Row bounds against FILTERED count
-  then Exit;
+  Result:= NIL;
+  if NOT Assigned(RamLog) OR (Row < 0)
+  then EXIT;
 
-  // Find the index in the *original* list corresponding to the visible filtered row
-  actualIndex := RamLog.Lines.Row2FilteredRow(Row, FVerbosity);
+  // Map filtered row index to actual index in the original list
+  actualIndex:= RamLog.Lines.Row2FilteredRow(Row, FVerbosity);
 
-  if (actualIndex >= 0)
-  and (actualIndex < RamLog.Lines.Count) // Check bounds of original list
-  then Result := RamLog.Lines[actualIndex];
+  if (actualIndex >= 0) AND (actualIndex < RamLog.Lines.Count)
+  then Result:= RamLog.Lines[actualIndex];
 end;
 
 
+{ Custom drawing handler for grid cells.
+  In FMX TStringGrid, Row is 0-based and refers to data rows only (header is drawn separately). }
 procedure TLogViewer.MyDrawColumnCell(Sender: TObject; const Canvas: TCanvas; const Column: TColumn;
                                     const Bounds: TRectF; const Row: Integer; const Value: TValue;
                                     const State: TGridDrawStates);
 VAR
    s: string;
    CurLine: PLogLine;
-   DrawRect: TRectF; // Use a slightly padded rect for drawing text
+   DrawRect: TRectF;
 begin
-  // Row index is 0-based, Row 0 is the header. Data rows start at 1.
-  if (Row <= 0)
-  OR (Row > FFilteredRowCount)
+  // In FMX, Row is 0-based for data rows. Valid range is 0 to FFilteredRowCount-1.
+  if (Row < 0)
+  OR (Row >= FFilteredRowCount)
   OR NOT Assigned(RamLog)
   then EXIT;
 
-  // Get the underlying log line for this *visible* row (adjusting for header)
-  CurLine := GetLineFiltered(Row - 1); // Subtract 1 because GetLineFiltered expects 0-based filtered index
+  // Get the underlying log line for this visible row (Row is already 0-based)
+  CurLine:= GetLineFiltered(Row);
   if CurLine = NIL
-  then Exit;
+  then EXIT;
 
-  // Determine text based on column index
+  // Determine text based on column configuration
+  s:= '';
   case ColumnCount of
-   1: if Column.Index = 0 then s:= CurLine.Msg;  // Message column only
-   2: case Column.Index of
-        0:
-          begin                    // Time column
-            s:= '';
-            if FShowDate then s := DateToStr(CurLine.Time);
-            if FShowTime then s := s + ' ' + FormatDateTime('hh:nn', CurLine.Time);
-          end;
-        1: s:= CurLine.Msg;        // Message column
-      end;
+    1: if Column.Index = 0
+       then s:= CurLine.Msg;
 
-    else Exit;   // No columns defined?
+    2: case Column.Index of
+         0: begin  // Time/Date column
+              if FShowDate then s:= DateToStr(CurLine.Time);
+              if FShowTime then s:= s + ' ' + FormatDateTime('hh:nn', CurLine.Time);
+            end;
+         1: s:= CurLine.Msg;
+       end;
+    else EXIT;
   end;
 
-  // --- Custom Drawing ---
-  // 1. Set Fill Color (Background) based on verbosity
-  Canvas.Fill.Color := Verbosity2Color(CurLine.Level);
-  // Optionally fill the background explicitly if default styling doesn't cover it
-  // Canvas.FillRect(Bounds, 0, 0, [], 1); // If needed
+  // Set background color based on verbosity level
+  Canvas.Fill.Color:= Verbosity2Color(CurLine.Level);
 
-  // 2. Set Font Style
+  // Set font style
   if CurLine.Bold
-  then Canvas.Font.Style := [TFontStyle.fsBold]
-  else Canvas.Font.Style := []; // Clear bold style if not bold
+  then Canvas.Font.Style:= [TFontStyle.fsBold]
+  else Canvas.Font.Style:= [];
 
-  // 3. Set Font Color (Foreground) - Consider contrast with background
-  // Example: Use black/white text based on background brightness
-  // if IsColorBright(Canvas.Fill.Color) then Canvas.Font.Color := TAlphaColors.Black else Canvas.Font.Color := TAlphaColors.White;
-  //Canvas.Font.Color := TAlphaColors.Black; // Defaulting to black for now
-
-  // 4. Prepare drawing rectangle (optional padding)
+  // Prepare drawing rectangle with padding
   DrawRect:= Bounds;
-  DrawRect.Inflate(-2, -1); // Small horizontal/vertical padding
+  DrawRect.Inflate(-2, -1);
 
-  // 5. Draw the Text
-  // TTextAlign.taLeading for left-align, TTextAlign.taCenter for vertical center
-  Canvas.FillText(DrawRect, s, FALSE, 1.0, [], TTextAlign.Leading, TTextAlign.Center); // Use DrawRect
+  // Draw the text (left-aligned, vertically centered)
+  Canvas.FillText(DrawRect, s, FALSE, 1.0, [], TTextAlign.Leading, TTextAlign.Center);
 end;
 
 
@@ -426,24 +407,14 @@ end;
 
 
 procedure TLogViewer.scrollToBottom;
-var
+VAR
   TargetY: Single;
 begin
-  // Ensure RowHeight is positive to avoid division by zero or unexpected behavior
-  if (RowCount > 0) and (RowHeight > 0) then
-  begin
-    // Calculate the Y position of the top of the last row
-    TargetY := (RowCount - 1) * RowHeight;
-
-    // Ensure the calculated Y doesn't exceed maximum possible scroll position
-    // MaxScrollY = ContentHeight - ViewportHeight
-    // ContentHeight = RowCount * RowHeight
-    // ViewportHeight = ClientHeight (approximately)
-    // TargetY = Max(0, Min(TargetY, RowCount * RowHeight - ClientHeight)); // More precise scrolling
-
-    // Set the vertical viewport position
-    ViewportPosition := PointF(ViewportPosition.X, TargetY);
-  end;
+  if (RowCount > 0) AND (RowHeight > 0) then
+    begin
+      TargetY:= (RowCount - 1) * RowHeight;
+      ViewportPosition:= PointF(ViewportPosition.X, TargetY);
+    end;
 end;
 
 
@@ -461,7 +432,7 @@ procedure TLogViewer.setShowTime(const Value: Boolean);
 begin
   if FShowTime <> Value then
     begin
-      FShowTime := Value;
+      FShowTime:= Value;
       Populate;
     end;
 end;
@@ -470,69 +441,61 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    WND / Form Interaction
 -------------------------------------------------------------------------------------------------------------}
-{ Show the form that owns this control }
+
+{ ILogObserver implementation - shows the form containing this control }
 procedure TLogViewer.PopUpWindow;
-var
+VAR
   ParentForm: TCommonCustomForm;
 begin
-  ParentForm := GetParentForm(Self);
+  ParentForm:= GetParentForm(Self);
   if Assigned(ParentForm) then
     begin
-      // Show if hidden
       if NOT ParentForm.Visible
       then ParentForm.Show;
 
-      // Restore if minimized
       if ParentForm.WindowState = TWindowState.wsMinimized
-      then ParentForm.WindowState := TWindowState.wsNormal;
+      then ParentForm.WindowState:= TWindowState.wsNormal;
 
-      // Bring to front
       ParentForm.BringToFront;
-
-      // Optionally focus the grid itself?
-      // Self.SetFocus;
     end;
 end;
 
 
-// Helper to estimate scrollbar width (platform dependent)
+{ Returns estimated scrollbar width (platform-dependent approximation) }
 function GetScrollBarWidth: Single;
 begin
-  // This is an approximation. Real width depends on style and platform. A more robust way might involve checking style resources.
-  // Consider platform specifics if necessary: TPlatformServices.Current.GetPlatformService(...)
-  Result:= 18; // Common default width
+  Result:= 18;  // Common default width across platforms
 end;
 
 
 {-------------------------------------------------------------------------------------------------------------
    COLUMNS
 -------------------------------------------------------------------------------------------------------------}
-{ Resize column width when the form is resized }
+
+{ Adjusts column widths when the grid is resized }
 procedure TLogViewer.resizeColumns;
-var
+VAR
   TimeColWidth: Single;
   MsgColWidth: Single;
   TotalWidth: Single;
 begin
-  TotalWidth := Max(Width - GetScrollBarWidth, 1); // Usable width, account for potential scrollbar
+  TotalWidth:= Max(Width - GetScrollBarWidth, 1);
 
   if ColumnCount = 2
   then
     begin
-       // Assign fixed width for time, rest for message
-       TimeColWidth := 120; // Adjust as needed for date/time format
-       MsgColWidth  := TotalWidth - TimeColWidth;
-       if MsgColWidth < 100 then MsgColWidth := 100;  // Ensure message column has a minimum width
+       TimeColWidth:= 120;  // Fixed width for date/time
+       MsgColWidth:= TotalWidth - TimeColWidth;
+       if MsgColWidth < 100
+       then MsgColWidth:= 100;  // Minimum message column width
 
-       // Apply widths (check if columns exist before accessing)
-       if Columns[0] <> nil then Columns[0].Width := TimeColWidth;
-       if Columns[1] <> nil then Columns[1].Width := MsgColWidth;
+       if Columns[0] <> NIL then Columns[0].Width:= TimeColWidth;
+       if Columns[1] <> NIL then Columns[1].Width:= MsgColWidth;
     end
   else
     if ColumnCount = 1 then
-      // Single column takes all available width
       if Columns[0] <> NIL
-      then Columns[0].Width := TotalWidth;
+      then Columns[0].Width:= TotalWidth;
 end;
 
 
@@ -548,50 +511,54 @@ end;
    TEXT UTILITIES / MISC
 -------------------------------------------------------------------------------------------------------------}
 
+{ Copies only the visible (filtered) lines to clipboard }
 procedure TLogViewer.CopyVisible;
 VAR
   i: Integer;
   Lines: TStringList;
   CurLine: PLogLine;
+  ClipboardService: IFMXClipboardService;
 begin
-  Lines := TStringList.Create; // TStringList is a non-visual component
+  Lines:= TStringList.Create;
   try
     Lines.BeginUpdate;
     try
-      // This loop iterates through FILTERED rows currently in the grid
-      for i := 1 to Lines.Count - 1 do // Data rows are 1 to RowCount-1
+      for i:= 0 to FFilteredRowCount - 1 do
         begin
-          CurLine := GetLineFiltered(i - 1); // Get data for the visible row
+          CurLine:= GetLineFiltered(i);
           if CurLine <> NIL
           then Lines.Add(CurLine.Msg);
         end;
     finally
       Lines.EndUpdate;
     end;
+
+    if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, ClipboardService)
+    then ClipboardService.SetClipboard(Lines.Text)
+    else messageError('Clipboard service not available.');
   finally
     FreeAndNil(Lines);
   end;
 end;
 
 
-{ Returns all lines, even if a filter is applied }
+{ Copies all lines to clipboard, even if a filter is applied }
 procedure TLogViewer.CopyAll;
 VAR
    ClipboardService: IFMXClipboardService;
    LogText: string;
 begin
-  // Get text
   if Assigned(FRamLog)
-  then LogText := RamLog.GetAsText
-  else LogText := 'No RAM log assigned!';
+  then LogText:= RamLog.GetAsText
+  else LogText:= 'No RAM log assigned!';
 
-  // Copy to clipboard
   if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, ClipboardService)
   then ClipboardService.SetClipboard(LogText)
-  else messageError('Clipboard service not available.'); // Optional user feedback
+  else messageError('Clipboard service not available.');
 end;
 
 
+{ Copies the currently selected line to clipboard, optionally including timestamp }
 procedure TLogViewer.CopyCurLine;
 VAR
    ClipboardService: IFMXClipboardService;
@@ -599,40 +566,38 @@ VAR
    SelectedRowIndex: Integer;
    LineText: string;
 begin
-  // FMX TStringGrid uses Selected property for the selected cell/row index
-  SelectedRowIndex := Selected; // This is the visual row index (including header)
+  // FMX TStringGrid.Selected is 0-based index for data rows
+  SelectedRowIndex:= Selected;
 
-  // Check if a valid data row is selected (Selected > 0)
-  if  (SelectedRowIndex > 0)
-  AND (SelectedRowIndex <= FFilteredRowCount) // Use FFilteredRowCount
+  // Check if a valid data row is selected (0-based, so >= 0)
+  if (SelectedRowIndex >= 0) AND (SelectedRowIndex < FFilteredRowCount)
   then
-   begin
-      // Get the corresponding log line (adjust for header row)
-     CurLine := GetLineFiltered(SelectedRowIndex - 1);
-     if CurLine <> NIL then
-      begin
-        // Construct the string to copy (maybe include time if shown?)
-        LineText := '';
-        if FShowDate or FShowTime then
-          begin
-            if FShowDate then LineText := FormatDateTime('yyyy-mm-dd', CurLine.Time);
-            if FShowTime then LineText := LineText + ' ' + FormatDateTime('hh:nn:ss.zzz', CurLine.Time);
-            LineText := LineText + ': '; // Separator
-          end;
-        LineText := LineText + CurLine.Msg;
+    begin
+      CurLine:= GetLineFiltered(SelectedRowIndex);
+      if CurLine <> NIL then
+        begin
+          // Build text with optional timestamp
+          LineText:= '';
+          if FShowDate OR FShowTime then
+            begin
+              if FShowDate then LineText:= FormatDateTime('yyyy-mm-dd', CurLine.Time);
+              if FShowTime then LineText:= LineText + ' ' + FormatDateTime('hh:nn:ss.zzz', CurLine.Time);
+              LineText:= LineText + ': ';
+            end;
+          LineText:= LineText + CurLine.Msg;
 
-        // Copy to clipboard
-        if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, ClipboardService)
-        then ClipboardService.SetClipboard(LineText);
-      end;
-   end;
+          // Copy to clipboard
+          if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, ClipboardService)
+          then ClipboardService.SetClipboard(LineText);
+        end;
+    end;
 end;
 
 
+{ Registers a TLogVerbFilter control for bidirectional verbosity synchronization }
 procedure TLogViewer.RegisterVerbFilter(TrackBar: TFmxObject);
 begin
   FVerbTrackBar:= TrackBar as TLogVerbFilter;
-  //Update gui?
 end;
 
 

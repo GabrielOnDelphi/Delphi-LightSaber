@@ -1,15 +1,15 @@
 UNIT LightFmx.Graph;
 
-{-------------------------------------------------------------------------------------------------------------
-    GabrielMoraru.com
-    2025.09
+{=============================================================================================================
+   2026.01.31
+   www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-    Graphics utilities for FMX
+    Graphics utilities for FMX.
+    Supports loading/saving images, cropping, and basic bitmap operations.
 
-
-    AI said: TBitmapCodecManager looks at the file extension you provided (.jpg).
-    It finds the registered JPEG encoder for the specific platform (Windows WIC or Android Bitmap API) and compresses the image data into valid JPEG format before writing it to the disk.
--------------------------------------------------------------------------------------------------------------}
+    Note: TBitmapCodecManager handles encoding/decoding based on file extension (.jpg, .png, etc).
+    It uses platform-specific codecs (Windows WIC, Android Bitmap API) for compression.
+=============================================================================================================}
 
 INTERFACE
 
@@ -37,9 +37,13 @@ USES
 
 
 
+{ Loads a bitmap from file. Returns nil if file doesn't exist or loading fails.
+  Caller is responsible for freeing the returned bitmap. }
 function LoadImage(FileName: string): TBitmap;
 begin
-  if (FileName = '') or (NOT FileExists(FileName)) then EXIT(NIL);
+  Result:= NIL;
+  if (FileName = '') or (NOT FileExists(FileName))
+  then EXIT;
 
   try
     Result:= TBitmap.CreateFromFile(FileName);
@@ -53,119 +57,106 @@ begin
 end;
 
 
-// Load a file into TImage. If file is not found, it returns a pink image.
-// Supports JPG, PNG, BMP
+{ Loads a file into TImage. If file is not found or loading fails, assigns a colored placeholder.
+  Supports JPG, PNG, BMP and other formats supported by TBitmapCodecManager. }
 procedure LoadImage(FileName: string; Image: TImage; Color: TAlphaColor= TAlphaColorRec.DeepPink);
-VAR Bitmap: TBitmap;
+var
+  Bitmap: TBitmap;
 begin
-  // Check file existence first
+  Assert(Assigned(Image), 'LoadImage: Image parameter cannot be nil');
+
   if FileExists(FileName)
-  then
-    Bitmap := LoadImage(FileName) // Use the function above for consistency
+  then Bitmap:= LoadImage(FileName)
+  else Bitmap:= NIL;
 
-  else
-    Bitmap := nil;
+  if Bitmap = NIL
+  then Bitmap:= CreateBitmap(77, 77, Color);  { Create placeholder for debugging }
 
-  if Bitmap = nil then
-    Bitmap := CreateBitmap(77, 77, Color);  // Fake the image for debugging
-
-  TRY
+  try
     Image.Bitmap.Assign(Bitmap);
-  FINALLY
+  finally
     FreeAndNil(Bitmap);
-  END;
+  end;
 end;
 
 
-// NOT TESTED!
-function LoadThumbnail(CONST FileName: string; TargetWidth, TargetHeight: Single): TBitmap;
+{ NOT TESTED! Internal helper - not exported.
+  Loads a thumbnail using hardware-efficient scaling.
+  Returns nil if file doesn't exist or loading fails.
+  Caller is responsible for freeing the returned bitmap. }
+function LoadThumbnail(const FileName: string; TargetWidth, TargetHeight: Single): TBitmap;
 begin
-  Result := TBitmap.Create;
+  Result:= NIL;
+  if NOT FileExists(FileName)
+  then EXIT;
+
   try
-    if FileExists(FileName) then
-    begin
-      // 1. Try to load a thumbnail (Hardware efficient scaling)
-      // This calculates the nearest power-of-2 downsampling to fit the target
-      Result.LoadThumbnailFromFile(FileName, TargetWidth, TargetHeight);
-    end;
+    Result:= TBitmap.Create;
+    { LoadThumbnailFromFile uses nearest power-of-2 downsampling for efficiency }
+    Result.LoadThumbnailFromFile(FileName, TargetWidth, TargetHeight);
   except
     on E: Exception do
     begin
-      // Handle corrupt files gracefully
-      AppData.RamLog.AddError('SafeLoadBitmap failed: ' + E.Message);
-      FreeAndNil(Result); // Return nil if failed
+      AppData.RamLog.AddError('LoadThumbnail failed: ' + E.Message);
+      FreeAndNil(Result);
     end;
   end;
 end;
 
 
-(* original code
-   works on windows with PNGs but not on android. maybe the jpg I try to open is corrupted?
+{ Gets image dimensions without fully decoding the image (fast).
+  Uses TBitmapCodecManager with fallback to full load if that fails.
+  Returns 0,0 if file doesn't exist or cannot be read.
 
-// Supports JPG, PNG, BMP
-procedure GetImageResolution_old(FileName: string; Out Width, Height: Integer);
-VAR
-   Bmp: TBitmap;
-begin
-  Width := 0;
-  Height:= 0;
-  if NOT FileExists(FileName) then EXIT;
-
-  TRY
-    try
-      Bmp:= TBitmap.CreateFromFile(FileName);
-      Width := Bmp.Width;
-      Height:= Bmp.Height;
-    finally
-      FreeAndNil(Bmp);
-    end;
-  EXCEPT
-    AppData.RamLog.AddError('Cannot open image: '+ FileName);
-  END;
-end; *)
-
-
+  Note: Old implementation using TBitmap.CreateFromFile worked on Windows with PNGs
+  but failed on Android with some JPGs (possibly corrupted files). }
 procedure GetImageResolution(FileName: string; out Width, Height: Integer);
 var
   Size: TPointF;
+  Bmp: TBitmap;
 begin
   Width := 0;
-  Height := 0;
-  if not FileExists(FileName) then Exit;
+  Height:= 0;
+  if NOT FileExists(FileName)
+  then EXIT;
 
   try
-    // TBitmapCodecManager is the fastest way to get size without decoding the whole image
-    Size := TBitmapCodecManager.GetImageSize(FileName);
+    { TBitmapCodecManager.GetImageSize is the fastest way - reads header only }
+    Size  := TBitmapCodecManager.GetImageSize(FileName);
     Width := Trunc(Size.X);
-    Height := Trunc(Size.Y);
+    Height:= Trunc(Size.Y);
   except
     on E: Exception do
     begin
       AppData.RamLog.AddError('Cannot get image resolution for ' + FileName + ': ' + E.Message);
-      
-      // Fallback: Try full load if CodecManager fails (rare but possible with some formats)
+
+      { Fallback: Full load if CodecManager fails (rare but possible with some formats) }
+      Bmp:= NIL;
       try
-        var Bmp := TBitmap.CreateFromFile(FileName);
-        try
-          Width := Bmp.Width;
-          Height:= Bmp.Height;
-        finally
-          Bmp.Free;
-        end;
-      except
-         // Give up
+        Bmp:= TBitmap.CreateFromFile(FileName);
+        Width := Bmp.Width;
+        Height:= Bmp.Height;
+      finally
+        FreeAndNil(Bmp);
       end;
+      { Note: If fallback also fails, Width/Height remain 0 }
     end;
   end;
 end;
 
 
-// SaveToFile calls TBitmapCodecManager. The manager looks at the file extension provided in the filename (jpg, png, etc).
+{ Saves bitmap to file. Format is determined by file extension (jpg, png, bmp, etc).
+  Uses TBitmapCodecManager internally for platform-appropriate encoding.
+  Shows error message dialog if save fails. }
 procedure SaveBitmap(BMP: TBitmap; FileName: string);
+var
+  TempBMP: TBitmap;
 begin
-  VAR TempBMP:= TBitmap.Create;
-  TRY
-    // Save
+  Assert(Assigned(BMP), 'SaveBitmap: BMP parameter cannot be nil');
+  Assert(FileName <> '', 'SaveBitmap: FileName cannot be empty');
+
+  TempBMP:= TBitmap.Create;
+  try
     TempBMP.Assign(BMP);
     try
       TempBMP.SaveToFile(FileName);
@@ -173,12 +164,12 @@ begin
       on E: Exception do
       begin
         TDialogService.ShowMessage('Save Failed: ' + E.Message);
-        Exit;
+        EXIT;
       end;
     end;
-  FINALLY
+  finally
     FreeAndNil(TempBMP);
-  END;
+  end;
 end;
 
 
@@ -190,61 +181,74 @@ end;
   TBitmap Cropping (OPTIMIZED using CopyFromBitmap)
 -------------------------------------------------------------------------------}
 
-// We copy the CropRect area from InputBMP to the start of ResultBmp.
+{ Crops a region from InputBMP. Returns a new bitmap containing only the cropped area.
+  Uses CopyFromBitmap for fast, direct pixel copying without canvas operations.
+  Caller is responsible for freeing the returned bitmap. }
 function CropBitmap(InputBMP: TBitmap; CropRect: TRectF): TBitmap;
 begin
-  Assert((CropRect.Width > 0) and (CropRect.Height > 0));
+  Assert(Assigned(InputBMP), 'CropBitmap: InputBMP parameter cannot be nil');
+  Assert((CropRect.Width > 0) and (CropRect.Height > 0), 'CropBitmap: CropRect must have positive dimensions');
+
   Result:= TBitmap.Create;
-  TRY
-    Result.SetSize(Round(CropRect.Width), Round(CropRect.Height));  // Match the area being cropped
-    Result.CopyFromBitmap(InputBMP, CropRect.Round, 0, 0);          // Using CopyFromBitmap for faster, pure pixel copying.
-  EXCEPT
-    Result.Free;
-    RAISE;
-  END;
+  try
+    Result.SetSize(Round(CropRect.Width), Round(CropRect.Height));
+    Result.CopyFromBitmap(InputBMP, CropRect.Round, 0, 0);
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
 end;
 
 
+{ Loads image from file and crops it. Returns nil if file cannot be loaded.
+  Caller is responsible for freeing the returned bitmap. }
 function CropBitmap(FileName: string; CropRect: TRectF): TBitmap;
-VAR SrcBmp: TBitmap;
+var
+  SrcBmp: TBitmap;
 begin
-  SrcBmp := LoadImage(FileName); // Use our safe loader
-  if SrcBmp = nil then Exit(nil);
-  
+  SrcBmp:= LoadImage(FileName);
+  if SrcBmp = NIL
+  then EXIT(NIL);
+
   try
     Result:= CropBitmap(SrcBmp, CropRect);
   finally
-    SrcBmp.Free;
+    FreeAndNil(SrcBmp);
   end;
 end;
 
 
-// Load the image from file, then crops it then assign it to a TImage
+{ Loads image from file, crops it, and assigns the result to a TImage.
+  Clears the Image if file cannot be loaded. }
 procedure CropBitmap(FileName: string; CropRect: TRectF; Image: TImage);
-VAR CropBmp: TBitmap;
+var
+  CropBmp: TBitmap;
 begin
-  Assert(NOT CropRect.IsEmpty, 'BoundBox not defined!');
+  Assert(Assigned(Image), 'CropBitmap: Image parameter cannot be nil');
+  Assert(NOT CropRect.IsEmpty, 'CropBitmap: CropRect not defined!');
 
   CropBmp:= CropBitmap(FileName, CropRect);
   try
-    if CropBmp <> nil then
-      Image.Bitmap.Assign(CropBmp)
-    else
-      Image.Bitmap.Clear(TAlphaColorRec.Null); 
+    if CropBmp <> NIL
+    then Image.Bitmap.Assign(CropBmp)
+    else Image.Bitmap.Clear(TAlphaColorRec.Null);
   finally
-    CropBmp.Free;
+    FreeAndNil(CropBmp);
   end;
 end;
 
 
 
-{ Fill bitmap with the specified color }
+{ Fills the entire bitmap with the specified color. }
 procedure FillBitmap(BMP: TBitmap; Color: TAlphaColor);
-var R: TRectF;
+var
+  R: TRectF;
 begin
+  Assert(Assigned(BMP), 'FillBitmap: BMP parameter cannot be nil');
+
   BMP.Canvas.BeginScene;
   try
-    R := TRectF.Create(0, 0, BMP.Width, BMP.Height);
+    R:= TRectF.Create(0, 0, BMP.Width, BMP.Height);
     BMP.Canvas.Fill.Color:= Color;
     BMP.Canvas.Fill.Kind := TBrushKind.Solid;
     BMP.Canvas.FillRect(R, 0, 0, [], 1);
@@ -254,19 +258,21 @@ begin
 end;
 
 
+{ Creates a new bitmap with the specified dimensions and fills it with the background color.
+  Caller is responsible for freeing the returned bitmap. }
 function CreateBitmap(Width, Height: Integer; BkgClr: TAlphaColor= TAlphaColorRec.Black): TBitmap;
 begin
-  TRY
+  Assert((Width > 0) and (Height > 0), 'CreateBitmap: Width and Height must be positive');
+
+  Result:= NIL;
+  try
     Result:= TBitmap.Create(Width, Height);
-  EXCEPT
-    FreeAndNil(Result); { Free result ONLY in case of error }
-    RAISE;
-  END;
-
-  FillBitmap(Result, BkgClr);
+    FillBitmap(Result, BkgClr);
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
 end;
-
-
 
 
 end.

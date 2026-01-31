@@ -1,18 +1,22 @@
-unit LightFmx.Visual.ComboBox;
+UNIT LightFmx.Visual.ComboBox;
 
 {=============================================================================================================
+   2026.01.31
    www.GabrielMoraru.com
-   2024.05
--------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------
+
+  FMX port of LightVcl.Visual.ComboBox (TCubicComboBox).
+
   Features:
-      + SelectedItem
-      + DualItems
+      + SelectedItem - Get currently selected item
+      + DualItems - Store two strings per item separated by |
 
   DualItems:
     Allows user to add two strings separated by |.
     The format is: 'int_cmd|Nice Screen Name' stored in Items as: Names | Value
     The UI shows the second string (Value).
-    The first string (Name) can be retrieved with: s := TCubicComboBox.SelectedDualItem;
+    The first string (Name) can be retrieved with: s := TLightComboBox.SelectedItem;
+    The screen name (Value) can be retrieved with: s := TLightComboBox.SelectedDualItem;
 
   Tester: c:\MyProjects\Project support\Testers\CubicCombobox tester\Tester.dpr
 =============================================================================================================}
@@ -20,33 +24,32 @@ unit LightFmx.Visual.ComboBox;
 INTERFACE
 
 USES
-  System.SysUtils, System.Classes, System.Types,   // Added System.Types for TRectF
-  FMX.Controls, FMX.ListBox; // FMX.Types;
+  System.SysUtils, System.Classes,
+  FMX.Controls, FMX.ListBox;
 
-type
+TYPE
   TLightComboBox = class(TComboBox)
   private
     FDualItem: Boolean;
-    // Owner-draw event for the internal listbox
-   // procedure DoDrawItem(const Canvas: TCanvas; const Bounds: TRectF; const Index: Integer; const State: TOwnerDrawStates);
   public
     constructor Create(AOwner: TComponent); override;
 
+    { Get selection }
+    function SelectedItem: string;            { Returns the selected item. Raises assertion if no item selected! Use SelectedItemSafe to avoid exceptions. }
+    function SelectedItemSafe: string;        { Returns the selected item. Returns '' if no item selected }
+    function SelectedItemForce: string;       { Returns the selected item. If no item is selected, selects the first item first }
+    function SelectedObject: TObject;         { Returns the object associated with selected item, or NIL }
+
     { Set selection }
-    function SelectedItem: string;            // Returns the selected item's internal command (if DualItem) or full text
-    function SelectedItemSafe: string;        // Safe version, returns '' if no selection or empty
-    function SelectedItemForce: string;       // Returns first item if none selected
-    { Get Selection }
-    function SelectItem(const ItemText: string): Integer;       // Select by text
-    function SelectObject(AObject: TObject): Integer;           // Select by object
+    function SelectItem(const ItemText: string): Integer;         { Select by text. Case insensitive. Returns index or -1 if not found }
+    function SelectFirstItem: Boolean;                            { Select first item. Returns True if list is not empty }
+    function SelectObject(AObject: TObject): Boolean;             { Select by object. Returns True if found }
 
-    function SelectedObject: TObject;         // Returns associated object
-    function SelectedIndex: Integer;         // Returns current ItemIndex
-
-    function SelectDualItem(const DualText: string): Integer;   // Select by dual text
-    function SelectedDualItem: string;        // Returns screen name of selected dual item
+    { Dual items }
+    function SelectDualItem(const ScreenName: string): Integer;   { Select by screen name (Value). Returns index or -1 }
+    function SelectedDualItem: string;                            { Returns screen name (Value) of selected dual item }
   published
-    property IsDualItem: Boolean read FDualItem write FDualItem default False;  // Enables dual item mode
+    property IsDualItem: Boolean read FDualItem write FDualItem default False;  { Indicates if the items contained are 'dual items' (two strings per item, separated by '|' ) }
   end;
 
 procedure Register;
@@ -54,154 +57,159 @@ procedure Register;
 IMPLEMENTATION
 
 
-
 constructor TLightComboBox.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  Items.NameValueSeparator := '|';            // Set separator for dual items
-  //ListBox.OnDrawItem := DoDrawItem;           // Assign custom drawing handler on internal listbox
-  FDualItem := False;                         // Default to single item mode
+  Items.NameValueSeparator:= '|';   // Set separator for dual items
+  FDualItem:= False;                // Default to single item mode
 end;
 
-{-----------------------------------------------------------------------------------------------------------------------
-   DRAW
------------------------------------------------------------------------------------------------------------------------}
-{procedure TCubicComboBox.DoDrawItem(const Canvas: TCanvas; const Bounds: TRectF; const Index: Integer; const State: TOwnerDrawStates);
-var
-  s: string;
-  TextRect: TRectF;
-begin
-  // Determine text to display: screen name if dual, full text otherwise
-  if IsDualItem then
-    s := Items.ValueFromIndex[Index]
-  else
-    s := Items[Index];
 
-  // Set colors based on selection state
-  if odSelected in State
+{-----------------------------------------------------------------------------------------------------------------------
+   SET SELECTION
+-----------------------------------------------------------------------------------------------------------------------}
+
+{ Selects the item matching the specified text. Case insensitive. Returns index or -1 if not found.
+  In IsDualItem mode, searches by Name (internal command), not by Value (screen name). }
+function TLightComboBox.SelectItem(const ItemText: string): Integer;
+var
+  i: Integer;
+begin
+  Result:= -1;
+  if Count = 0 then EXIT;
+
+  if IsDualItem
   then
     begin
-      Canvas.Fill.Color := TAlphaColorRec.Blue;    // Highlight background
-      Canvas.Font.Color := TAlphaColorRec.White;   // Highlight text
+      for i:= 0 to Items.Count-1 do
+        if SameText(Items.Names[i], ItemText) then   // Search by internal command name
+        begin
+          Result:= i;
+          Break;
+        end;
     end
   else
     begin
-      Canvas.Fill.Color := TAlphaColorRec.White;   // Default background
-      Canvas.Font.Color := TAlphaColorRec.Black;   // Default text
+      for i:= 0 to Items.Count-1 do
+        if SameText(Items[i], ItemText) then
+        begin
+          Result:= i;
+          Break;
+        end;
     end;
 
-  Canvas.FillRect(Bounds, 0, 0, AllCorners, 1);   // Draw background (no radius, full opacity)
+  ItemIndex:= Result;  // Set selection, -1 deselects if not found
+end;
 
-  // Draw text with slight padding
-  TextRect := Bounds;
-  TextRect.Left := TextRect.Left + 2;  // Left padding
-  Canvas.FillText(TextRect, s, False, 1, [], TTextAlign.Leading, TTextAlign.Center);  // Draw centered text
-end;  }
 
-{ Set Selection }
+function TLightComboBox.SelectObject(AObject: TObject): Boolean;
+var
+  i: Integer;
+begin
+  for i:= 0 to Items.Count-1 do
+    if Items.Objects[i] = AObject then
+    begin
+      ItemIndex:= i;
+      EXIT(True);
+    end;
+  Result:= False;
+end;
 
+
+function TLightComboBox.SelectFirstItem: Boolean;
+begin
+  Result:= Count > 0;
+  if Result
+  then ItemIndex:= 0;
+end;
+
+
+
+{-----------------------------------------------------------------------------------------------------------------------
+   GET SELECTION
+-----------------------------------------------------------------------------------------------------------------------}
+
+{ Returns the selected item. Raises assertion if no item is selected - use SelectedItemSafe instead.
+  If IsDualItem mode is active, returns the 'internal command' (Name) associated with this item. }
 function TLightComboBox.SelectedItem: string;
 begin
-  if ItemIndex >= 0 then
-    if IsDualItem then
-      Result := Items.Names[ItemIndex] // Internal command
-    else
-      Result := Items[ItemIndex]     // Full text
-  else
-    Result := '';
+  Assert(ItemIndex >= 0, 'No item selected! Use SelectedItemSafe to avoid exceptions.');
+  if IsDualItem
+  then Result:= Items.Names[ItemIndex]
+  else Result:= Items[ItemIndex];
 end;
 
+
+{ Safe version of SelectedItem. Returns '' if no item is selected or list is empty.
+  If IsDualItem mode is active, returns the 'internal command' (Name) associated with this item. }
 function TLightComboBox.SelectedItemSafe: string;
 begin
-  Result := SelectedItem;
-  if Result = '' then
-    Result := '';
+  if (Count <= 0) OR (ItemIndex < 0)
+  then Result:= ''
+  else
+    if IsDualItem
+    then Result:= Items.Names[ItemIndex]
+    else Result:= Items[ItemIndex];
 end;
 
+
+{ Returns the selected item. If no item is selected, selects the first item first.
+  Returns '' if list is empty. }
 function TLightComboBox.SelectedItemForce: string;
 begin
-  if Items.Count = 0 then
-    Result := ''
-  else
-  begin
-    if ItemIndex < 0 then
-      ItemIndex := 0;  // Force select first item
-    Result := SelectedItem;
-  end;
+  if Count = 0 then EXIT('');
+  if ItemIndex < 0
+  then ItemIndex:= 0;
+  Result:= SelectedItem;
 end;
 
 
 function TLightComboBox.SelectedObject: TObject;
 begin
-  if ItemIndex >= 0 then
-    Result := Items.Objects[ItemIndex]
-  else
-    Result := nil;
-end;
-
-function TLightComboBox.SelectedIndex: Integer;
-begin
-  Result := ItemIndex;
-end;
-
-{ Get Selection }
-
-function TLightComboBox.SelectItem(const ItemText: string): Integer;
-var
-  i: Integer;
-begin
-  Result := -1;
-  for i := 0 to Items.Count - 1 do
-    if Items[i] = ItemText then
-    begin
-      Result := i;
-      Break;
-    end;
-  ItemIndex := Result;  // Set selection, -1 if not found
+  if ItemIndex >= 0
+  then Result:= Items.Objects[ItemIndex]
+  else Result:= NIL;
 end;
 
 
-function TLightComboBox.SelectDualItem(const DualText: string): Integer;
-var
-  i: Integer;
-begin
-  Assert(IsDualItem);
-  Result := -1;
-  for i := 0 to Items.Count - 1 do
-    if Items.ValueFromIndex[i] = DualText then
-    begin
-      Result := i;
-      Break;
-    end;
-  ItemIndex := Result;
-end;
 
+{-----------------------------------------------------------------------------------------------------------------------
+   DUAL ITEMS
+-----------------------------------------------------------------------------------------------------------------------}
 
-{ Dual Items }
-function TLightComboBox.SelectObject(AObject: TObject): Integer;
-var
-  i: Integer;
-begin
-  Result := -1;
-  for i := 0 to Items.Count - 1 do
-    if Items.Objects[i] = AObject then
-    begin
-      Result := i;
-      Break;
-    end;
-
-  ItemIndex := Result;  // Set selection, -1 if not found
-end;
-
-
+{ Returns the screen name (Value) of the selected dual item.
+  Raises assertion if IsDualItem mode is not active.
+  Returns '' if no item is selected. }
 function TLightComboBox.SelectedDualItem: string;
 begin
-  Assert(IsDualItem);
-  if ItemIndex >= 0 then
-    Result := Items.ValueFromIndex[ItemIndex]  // Screen name
-  else
-    Result := '';
+  Assert(IsDualItem, 'SelectedDualItem called but IsDualItem is False!');
+  if ItemIndex < 0
+  then Result:= ''
+  else Result:= Items.ValueFromIndex[ItemIndex];
 end;
+
+
+{ Selects an item based on its screen name (Value). Case insensitive.
+  Raises assertion if IsDualItem mode is not active.
+  Returns index or -1 if not found. }
+function TLightComboBox.SelectDualItem(const ScreenName: string): Integer;
+var
+  i: Integer;
+begin
+  Assert(IsDualItem, 'SelectDualItem called but IsDualItem is False!');
+  if Count = 0 then EXIT(-1);
+
+  Result:= -1;
+  for i:= 0 to Items.Count-1 do
+    if SameText(Items.ValueFromIndex[i], ScreenName) then
+    begin
+      Result:= i;
+      Break;
+    end;
+
+  ItemIndex:= Result;  // If no item with this name is found, -1 deselects
+end;
+
 
 
 procedure Register;

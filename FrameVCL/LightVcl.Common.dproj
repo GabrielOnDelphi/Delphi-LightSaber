@@ -114,7 +114,6 @@
         <DCCReference Include="LightVcl.Common.SystemPermissions.pas"/>
         <DCCReference Include="LightVcl.Common.SystemSecurity.pas"/>
         <DCCReference Include="LightVcl.Common.SystemTime.pas"/>
-        <DCCReference Include="LightVcl.Common.Translate.pas"/>
         <DCCReference Include="LightVcl.Common.VclUtils.pas"/>
         <DCCReference Include="LightVcl.Common.Window.pas"/>
         <DCCReference Include="LightVcl.Common.WindowMetrics.pas"/>

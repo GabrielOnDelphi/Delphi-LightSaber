@@ -1,6 +1,9 @@
 UNIT LightFmx.Visual.Animations;
 
-{-------------------------------------------------------------------------------------------------------------
+{=============================================================================================================
+   2026.01.31
+   www.GabrielMoraru.com
+--------------------------------------------------------------------------------------------------------------
    Celebration Confetti Animation
 
    Displays falling confetti animation for celebrating achievements.
@@ -15,7 +18,7 @@ UNIT LightFmx.Visual.Animations;
    Requires Randomize;
 
    ShowConfetti(MyForm, 1.0);
--------------------------------------------------------------------------------------------------------------}
+=============================================================================================================}
 
 INTERFACE
 
@@ -48,8 +51,13 @@ CONST
 
 
 class procedure TConfetti.OnAnimFinish(Sender: TObject);
+VAR
+  Anim: TFloatAnimation;
 begin
-  TThread.ForceQueue(nil, (Sender as TFloatAnimation).Parent.Free);
+  // ForceQueue ensures UI destruction happens on main thread after current event processing
+  Anim:= Sender as TFloatAnimation;
+  if Assigned(Anim.Parent)
+  then TThread.ForceQueue(nil, Anim.Parent.Free);
 end;
 
 
