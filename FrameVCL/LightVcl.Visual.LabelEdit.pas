@@ -2,14 +2,20 @@ UNIT LightVcl.Visual.LabelEdit;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   Features:
-     Added OnPressEnter event - Event is triggered when the user pressed Enter
-     If CheckFileExistence=true then the control gets red if the text entered is not an existent file
+     OnPressEnter event - triggered when the user presses Enter
+     CheckFileExistence - when true, shows green for existing files, red for non-existing files
+     Valid property - allows manual control of validity state (vaNone/vaValid/vaInvalid)
+
+  Note: Unlike TCubicEdit, empty text is treated as invalid when CheckFileExistence is enabled.
+        This component provides positive feedback (green) for valid files, not just red for invalid.
+
+  See also: TCubicEdit (LightVcl.Visual.Edit.pas) for a simpler TEdit-based version.
 
 =============================================================================================================}
 
@@ -32,6 +38,7 @@ TYPE
      procedure Change; override;
      procedure KeyPress (VAR Key: Char); override;
    public
+     constructor Create(AOwner: TComponent); override;
    published
      property OnPressEnter: TNotifyEvent  read FPressEnter  write FPressEnter;
      property CheckFileExistence: Boolean read FCheckFileEx write FCheckFileEx default FALSE;
@@ -116,8 +123,17 @@ USES LightVcl.Common.Colors;
 
 
 
+constructor TCubicLabelEdit.Create(AOwner: TComponent);
+begin
+ inherited Create(AOwner);
+ FCheckFileEx:= FALSE;
+ FValid:= vaNone;
+end;
 
 
+
+{ Updates validity state based on file existence check.
+  Note: Empty text is treated as invalid when CheckFileExistence is enabled. }
 procedure TCubicLabelEdit.Change;
 begin
  if CheckFileExistence
@@ -128,11 +144,12 @@ begin
  else
    Valid:= vaNone;
 
- inherited;  // if you want to run standard handler
+ inherited;  { Run standard OnChange handler }
 end;
 
 
 
+{ Intercepts key presses to detect Enter key and fire OnPressEnter event }
 procedure TCubicLabelEdit.KeyPress(VAR Key: Char);
 begin
  inherited;
@@ -147,10 +164,11 @@ end;
 
 procedure TCubicLabelEdit.setValid(const Value: TValidity);
 begin
+ if FValid = Value then Exit;
  FValid:= Value;
  case FValid of
-   vaNone: Color:= clWindow;
-   vaValid: Color:= clGreenFade;
+   vaNone   : Color:= clWindow;
+   vaValid  : Color:= clGreenFade;
    vaInvalid: Color:= clRedFade;
  end;
 end;

@@ -39,7 +39,8 @@ USES
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Mask,
   LightVcl.Common.Translate, LightVcl.Visual.AppDataForm,
   LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs,
-  LightCore.AppData, LightVcl.Visual.AppData;
+  LightCore.AppData, LightVcl.Visual.AppData,
+  LightVcl.Common.TranslatorAPI;
 
 TYPE
   TfrmTranslEditor = class(TLightForm)
@@ -73,7 +74,12 @@ TYPE
     Splitter1            : TSplitter;
     inetDeepL            : TLabel;
     InternetLabel1       : TLabel;
-    btnCancel: TButton;
+    btnCancel            : TButton;
+    grpAutoTranslate     : TGroupBox;
+    lblTargetLang        : TLabel;
+    cmbTargetLang        : TComboBox;
+    btnAutoTranslate     : TButton;
+    btnDeepLSettings     : TButton;
     procedure btnApplyEditsClick  (Sender: TObject);
     procedure btnCopyClick        (Sender: TObject);
     procedure btnCopyRightClick   (Sender: TObject);
@@ -88,6 +94,8 @@ TYPE
     procedure inetDeepLClick      (Sender: TObject);
     procedure InternetLabel1Click (Sender: TObject);
     procedure btnCancelClick(Sender: TObject);
+    procedure btnAutoTranslateClick(Sender: TObject);
+    procedure btnDeepLSettingsClick(Sender: TObject);
   private
     FCurLangFile: string;  { Full path to currently loaded translation file }
     function GetNewFileName: string;
@@ -104,7 +112,8 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.ExecuteShell, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO;
+   LightVcl.Common.ExecuteShell, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO,
+   FormDeepLSettings;
 
 
 { Shows the translation editor form }
@@ -122,6 +131,13 @@ begin
   inherited FormPostInitialize;
   Assert(Translator <> NIL, 'Translator must be initialized before using translation editor');
   lblLiveFormsClick(Self);  { Populate live forms list }
+
+  { Populate target language combo box }
+  cmbTargetLang.Items.Clear;
+  for var Lang in GetSupportedLanguages do
+    cmbTargetLang.Items.Add(Lang);
+  if cmbTargetLang.Items.Count > 0
+  then cmbTargetLang.ItemIndex:= 0;
 end;
 
 
@@ -349,6 +365,99 @@ begin
   LightVcl.Common.ExecuteShell.ExecuteShell(Translator.GetLangFolder+'How to translate.rtf');
 end;
 
+
+
+
+{-------------------------------------------------------------------------------------------------------------
+   AUTO TRANSLATE (DEEPL)
+-------------------------------------------------------------------------------------------------------------}
+
+procedure TfrmTranslEditor.btnDeepLSettingsClick(Sender: TObject);
+begin
+  TfrmDeepLSettings.ShowSettings;
+end;
+
+
+procedure TfrmTranslEditor.btnAutoTranslateClick(Sender: TObject);
+var
+  DeepL: TDeepLTranslator;
+  TargetLang: string;
+  TargetLangCode: string;
+  TargetFile: string;
+  CharCount: Integer;
+begin
+  { Validate }
+  if FCurLangFile = '' then
+    begin
+      MessageWarning('Please load or create a translation file first.');
+      EXIT;
+    end;
+
+  if cmbTargetLang.ItemIndex < 0 then
+    begin
+      MessageWarning('Please select a target language.');
+      EXIT;
+    end;
+
+  TargetLang:= cmbTargetLang.Items[cmbTargetLang.ItemIndex];
+  TargetLangCode:= LanguageNameToDeepL(TargetLang);
+
+  if TargetLangCode = '' then
+    begin
+      MessageWarning('Unknown language: ' + TargetLang);
+      EXIT;
+    end;
+
+  { Check API key }
+  if DeepL_GetApiKey.Trim.IsEmpty then
+    begin
+      MessageWarning('Please configure your DeepL API key first.');
+      TfrmDeepLSettings.ShowSettings;
+      EXIT;
+    end;
+
+  { Estimate characters }
+  CharCount:= Length(mmoLangEditor.Text);
+  if NOT MessageConfirm(Format(
+    'Translate to %s?'+ CRLF+ CRLF+
+    'Estimated characters: %d'+ CRLF+
+    'This will use your DeepL API quota.', [TargetLang, CharCount]))
+  then EXIT;
+
+  { Create target file path }
+  TargetFile:= Translator.GetLangFolder + TargetLang + '.ini';
+
+  { Warn if file exists }
+  if FileExists(TargetFile) then
+    if NOT MessageConfirm('File already exists: ' + ExtractFileName(TargetFile) + CRLF + 'Overwrite?')
+    then EXIT;
+
+  { Perform translation }
+  Screen.Cursor:= crHourGlass;
+  DeepL:= TDeepLTranslator.Create;
+  try
+    DeepL.ApiKey:= DeepL_GetApiKey;
+    DeepL.UseFreeAPI:= DeepL_GetUseFreeAPI;
+
+    DeepL.TranslateINIFile(FCurLangFile, TargetFile, TargetLangCode, FALSE);
+
+    if DeepL.LastError <> '' then
+      begin
+        MessageError('Translation failed: ' + DeepL.LastError);
+        EXIT;
+      end;
+
+    { Success - load the new file }
+    LoadTranslation(TargetFile);
+    lblInfo.Caption:= 'Translation saved to: ' + TargetFile;
+    lblInfo.Visible:= TRUE;
+    MessageInfo('Translation completed successfully!' + CRLF + 'File: ' + ExtractFileName(TargetFile));
+
+  finally
+    FreeAndNil(DeepL);
+    Screen.Cursor:= crDefault;
+  end;
+end;
 
 
 

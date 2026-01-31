@@ -13,6 +13,7 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.Types,
+  Winapi.Windows,
   Vcl.Graphics,
   Vcl.Controls,
   Vcl.ImgList;
@@ -375,7 +376,7 @@ begin
     procedure
     begin
       AlphaBlendBitmaps(FMainBitmap, FSmallBitmap, 50, 0, 0);
-    end);
+    end, Exception);
 
   { Also test with offset that pushes beyond bounds }
   CreateTestBitmaps(100, 100, 50, 50);
@@ -384,7 +385,7 @@ begin
     procedure
     begin
       AlphaBlendBitmaps(FMainBitmap, FSmallBitmap, 50, 80, 80);
-    end);
+    end, Exception);
 end;
 
 
@@ -600,7 +601,7 @@ begin
       procedure
       begin
         GetTransparentBitmapFromImagelist(ImageList, 0, Bitmap);
-      end);
+      end, Exception);
   FINALLY
     FreeAndNil(TempBmp);
     FreeAndNil(Bitmap);

@@ -191,11 +191,9 @@ end;
 
 
 procedure TTestWindow.Test_FindWindowByTitle_PartialMatch_FindsWindow;
-VAR
-  Handle: HWND;
 begin
   { Search for 'Program Manager' which is the desktop window title }
-  Handle:= FindWindowByTitle('Program Manager', True, False);
+  FindWindowByTitle('Program Manager', True, False);
   { This may or may not find a window depending on Windows version/settings }
   { Just verify it doesn't crash }
   Assert.Pass('FindWindowByTitle executed without error');
@@ -296,6 +294,7 @@ begin
       KeepOnTop(FTestForm, HWND_TOPMOST);
       KeepOnTop(FTestForm, HWND_NOTOPMOST);
     end,
+    Exception,
     'KeepOnTop with valid form should not raise exception'
   );
 end;
@@ -364,6 +363,7 @@ begin
     begin
       SetWindowPosToFront(FTestForm.Handle);
     end,
+    Exception,
     'SetWindowPosToFront with valid handle should not raise exception'
   );
 end;
@@ -376,6 +376,7 @@ begin
     begin
       SetWindowPosToBack(FTestForm.Handle);
     end,
+    Exception,
     'SetWindowPosToBack with valid handle should not raise exception'
   );
 end;

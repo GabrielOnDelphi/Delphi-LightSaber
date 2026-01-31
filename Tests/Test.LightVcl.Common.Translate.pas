@@ -26,8 +26,10 @@ type
     FTestLangFolder: string;
     FTestForm: TForm;
     FTestLabel: TLabel;
+    FEventFired: Boolean;
     procedure CreateTestLanguageFile(const FileName, LabelHint: string);
     procedure CleanupTestFiles;
+    procedure DoEventHandler(Sender: TObject);
   public
     [Setup]
     procedure Setup;
@@ -570,29 +572,26 @@ end;
 
 { OnTranslationLoaded Event Tests }
 
-var
-  EventFired: Boolean;
-
-procedure TestEventHandler(Sender: TObject);
+procedure TTestTranslator.DoEventHandler(Sender: TObject);
 begin
-  EventFired:= TRUE;
+  FEventFired:= TRUE;
 end;
 
 procedure TTestTranslator.TestOnTranslationLoaded_EventFires;
 var
   Trans: TTranslator;
 begin
-  EventFired:= FALSE;
+  FEventFired:= FALSE;
 
   Trans:= TTranslator.Create(AppDataCore);
   TRY
     CreateTestLanguageFile('TestLang.ini', 'Test Hint');
     Trans.CurLanguage:= FTestLangFolder + 'TestLang.ini';
-    Trans.OnTranslationLoaded:= TestEventHandler;
+    Trans.OnTranslationLoaded:= DoEventHandler;
 
     Trans.LoadTranslation(TRUE);
 
-    Assert.IsTrue(EventFired, 'OnTranslationLoaded event should fire after LoadTranslation');
+    Assert.IsTrue(FEventFired, 'OnTranslationLoaded event should fire after LoadTranslation');
   FINALLY
     FreeAndNil(Trans);
   END;

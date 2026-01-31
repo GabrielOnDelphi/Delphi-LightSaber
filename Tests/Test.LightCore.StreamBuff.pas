@@ -1538,17 +1538,17 @@ var
 begin
   WriteStream:= TLightStream.CreateWrite(FTestFile);
   try
-    WriteStream.WriteStringA('TestContent');
+    WriteStream.PushAnsi('TestContent');  { Use PushAnsi for raw content - AsString reads raw bytes }
   finally
-    WriteStream.Free;
+    FreeAndNil(WriteStream);
   end;
 
   ReadStream:= TLightStream.CreateRead(FTestFile);
   try
     Content:= ReadStream.AsString;
-    Assert.IsTrue(Length(Content) > 0);
+    Assert.AreEqual(AnsiString('TestContent'), Content);
   finally
-    ReadStream.Free;
+    FreeAndNil(ReadStream);
   end;
 end;
 

@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.FileListBox;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ TYPE
    private
      FDeleteFile: Boolean;
      FDelConfirm: Boolean;
-     FBeforeDelete: TNotifyEvent;  { UNUSED }
+     FBeforeDelete: TNotifyEvent;
      FAfterDelete: TNotifyEvent;
      FHintItemAu: Boolean;
    protected
@@ -57,7 +57,7 @@ TYPE
      procedure SimulateClickCurItem;                                                                    { Simulate a click on current item }
      procedure SimulateClickCurItemForce;                                                               { Simulate a click on current item. If no item is selected, then select the first on  }
      procedure SelectItem     (CONST ItemPos: Integer);    overload;                                    { Deselect all current items and select specified item }
-     procedure SelectItem     (ItemName: string);          overload;                                    { Select specified item. The name must be incomplete }
+     procedure SelectItem     (ItemName: string);          overload;                                    { Select specified item. Full path accepted (will be stripped) }
      function  SelectionCount: Integer;                                                                 { Returns the number of selected items }
      function  SelectedItem: string;
      { Delete file }
@@ -71,7 +71,7 @@ TYPE
      property OnChangeEx     : TOnSelChanged  read FOnSelChanged  write FOnSelChanged;                  { Takes place when the user selects a new file }
      property OnBeforeDelete : TNotifyEvent   read FBeforeDelete  write FBeforeDelete;
      property OnAfterDelete  : TNotifyEvent   read FAfterDelete   write FAfterDelete;
-     property DelDeletesFile : Boolean        read FDeleteFile    write FDeleteFile default TRUE;       { daca TRUE, apasarea tastei Delete are ca efect stergerea fisierului de pe disk, daca nu, sterge doar itemul de pe ecran }
+     property DelDeletesFile : Boolean        read FDeleteFile    write FDeleteFile default TRUE;       { If TRUE, pressing Delete key deletes file from disk; if FALSE, only removes item from listbox }
      property DelShowConfirm : Boolean        read FDelConfirm    write FDelConfirm default TRUE;       { Shows confirmation box before deleting a file }
   end;
 
@@ -132,7 +132,7 @@ procedure TCubicFileList.SelectItem(CONST ItemPos: Integer);                    
 begin
  Assert(ItemPos> -1);
  Assert(ItemPos< Count, 'TCubicFileList.SelectItem ItemPos< Count');
- //del  nu e bine asa ca la plecare itemindex=itempos: if ItemIndex= ItemPos then EXIT;                                               { If the item is already selected, ignore it }
+ //del  Don't use: if ItemIndex= ItemPos then EXIT; - not reliable because on exit itemindex=itempos
 
  DeselectAll;
  if ItemPos< Count then
@@ -144,7 +144,7 @@ begin
 end;
 
 
-procedure TCubicFileList.SelectItem(ItemName: string);                                       { Select specified item. The name must be incomplete }
+procedure TCubicFileList.SelectItem(ItemName: string);                                       { Select specified item. Full path is accepted (will be stripped to filename) }
 VAR i: Integer;
 begin
  if Count<= 0 then EXIT;                                                                           { No files in list }
@@ -195,7 +195,7 @@ end;
 --------------------------------------------------------------------------------------------------}
 function TCubicFileList.SelectedItem: string;                                                      { Returns the selected item }
 begin
- if (ItemIndex> -1) AND (Count> -1)
+ if (ItemIndex >= 0) AND (ItemIndex < Count)
  then Result:= Items[ItemIndex]
  else Result:= '';
 end;
@@ -235,7 +235,7 @@ end;
 function TCubicFileList.MoveSelectionUp : Boolean;                                                 { Returns true if it succesfully moved the selection }
 VAR temp, PrevItem: Integer;
 begin
- Result:= (Items.Count> 0) AND (ItemIndex> 0);                                                     { daca e deja selectat primul item, nu pot sa ma duc mai sus }
+ Result:= (Items.Count> 0) AND (ItemIndex> 0);                                                     { If first item is already selected, cannot move up }
  if NOT Result then EXIT;
 
  PrevItem:= ItemIndex;
@@ -290,7 +290,7 @@ begin
  PrevItem:= ItemIndex;
  inherited; x
  if (Count> 0)
- AND ( PrevItem<> ItemIndex )                                                                      { am dat click pe un item, altul fata de cel current selectat
+ AND ( PrevItem<> ItemIndex )                                                                      { Clicked on an item different from the currently selected one
  AND Assigned(FOnSelChanged)
  then FOnSelChanged(Self, PrevItem);
 end;
@@ -298,7 +298,7 @@ end;
 procedure TCubicFileList.KeyDown(VAR Key: Word; Shift: TShiftState);
 begin
  inherited KeyDown(Key, Shift);
- if (Count> 0) AND ( (Key= VK_DOWN) OR (Key= VK_UP) )                                              { am apasat tasta Sageata Sus/Jos ? }
+ if (Count> 0) AND ( (Key= VK_DOWN) OR (Key= VK_UP) )                                              { Pressed Up/Down arrow key? }
  then
    if Assigned(FOnSelChanged)
    then FOnSelChanged(Self);
@@ -333,8 +333,8 @@ begin
   begin
     CurItem:= ItemIndex;
 
-    { Event - Delete file }
-    if Assigned(FBeforeDelete)   { UNUSED }
+    { Event - Before delete }
+    if Assigned(FBeforeDelete)
     then FBeforeDelete(Self);
 
     { Delete to recycle }
@@ -347,9 +347,9 @@ begin
     if CurItem>= Count
     then CurItem:= Count-1;
     if Count > 0
-    then Selected[CurItem]:= TRUE;                                             { pune cursorul pe urmatoarea linie }
+    then Selected[CurItem]:= TRUE;                                             { Move cursor to next line }
 
-    { Event - Delete file }
+    { Event - After delete }
     if Assigned(FAfterDelete)
     then FAfterDelete(Self);
   end;
@@ -366,7 +366,7 @@ begin
 
  { Move cursor to next file }
  if CurItem>= Count then CurItem:= Count-1;
- if Count > 0 then Selected[CurItem]:= TRUE;                                             { pune cursorul pe urmatoarea linie }
+ if Count > 0 then Selected[CurItem]:= TRUE;                                             { Move cursor to next line }
 end;
 
 
@@ -400,7 +400,7 @@ begin
       then
        begin
         Hint:= sTextUnderCursor;
-        Application.CancelHint;                                                                    { CEVA ASEMANATOR  http://delphi.newswhat.com/geoxml/forumhistorythread?groupname=borland.public.delphi.vcl.components.writing.win32&messageid=40812beb$1@newsgroups.borland.com     }
+        Application.CancelHint;                                                                    { Similar approach: http://delphi.newswhat.com/geoxml/forumhistorythread?groupname=borland.public.delphi.vcl.components.writing.win32&messageid=40812beb$1@newsgroups.borland.com }
        end;
      end;
   end;

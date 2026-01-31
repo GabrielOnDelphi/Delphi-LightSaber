@@ -83,8 +83,13 @@ end;
 
 
 function DateToTime_(aDate: TDateTime): string;
+VAR
+  Days: Integer;
+  Hour, Min, Sec, MSec: Word;
 begin
- Result:= FormatDateTime('d:hh:nn:ss', aDate);
+  Days:= Trunc(aDate);
+  DecodeTime(aDate, Hour, Min, Sec, MSec);
+  Result:= Format('%d:%.2d:%.2d:%.2d', [Days, Hour, Min, Sec]);
 end;
 
 

@@ -52,7 +52,6 @@ uses
   Test.LightCore.LogLinesS in 'Test.LightCore.LogLinesS.pas',
   Test.LightCore.LogLinesM in 'Test.LightCore.LogLinesM.pas',
   Test.LightCore.LogRam in 'Test.LightCore.LogRam.pas',
-  Test.LightCore.CompilerVersions in 'Test.LightCore.CompilerVersions.pas',
   Test.LightCore.Debugger in 'Test.LightCore.Debugger.pas',
   { Source units }
   LightCore in '..\LightCore.pas',

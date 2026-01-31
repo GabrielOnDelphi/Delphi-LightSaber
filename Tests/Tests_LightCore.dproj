@@ -89,7 +89,7 @@
         <DCC_DcuOutput>$(Platform)_$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\</DCC_ExeOutput>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
-        <DCC_Define>TESTINSIGHT;$(DCC_Define)</DCC_Define>
+        <DCC_Define>TESTINSIGHT_;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Android)'!=''">
         <VerInfo_Keys>package=com.embarcadero.$(MSBuildProjectName);label=$(MSBuildProjectName);versionCode=1;versionName=1.0.0;persistent=False;restoreAnyVersion=False;installLocation=auto;largeHeap=False;theme=TitleBar;hardwareAccelerated=true;apiKey=;minSdkVersion=23;targetSdkVersion=35</VerInfo_Keys>
@@ -175,7 +175,6 @@
         <DCCReference Include="Test.LightCore.LogLinesS.pas"/>
         <DCCReference Include="Test.LightCore.LogLinesM.pas"/>
         <DCCReference Include="Test.LightCore.LogRam.pas"/>
-        <DCCReference Include="Test.LightCore.CompilerVersions.pas"/>
         <DCCReference Include="Test.LightCore.Debugger.pas"/>
         <DCCReference Include="..\LightCore.pas"/>
         <DCCReference Include="..\LightCore.Types.pas"/>
@@ -227,8 +226,8 @@
                     <Source Name="MainSource">Tests_LightCore.dpr</Source>
                 </Source>
                 <Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\LightFmxVisual370.bpl">(untitled)</Excluded_Packages>
                     <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\BionixVCL370.bpl">BioniX VCL</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\LightProteus370.bpl">Proteus</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k370.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp370.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>

@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.SpinEditDelayed;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -97,23 +97,28 @@ end;
 
 procedure TCubicSpinEditD.Change;
 begin
- if (Timer<> NIL)  { Timer is NIL at start up }
+ if (Timer<> NIL)  { Defensive: Timer could be NIL if Change is called during construction before Timer is created }
  AND (Delay> 0) then
   begin
-   Timer.Enabled:= FALSE;
+   Timer.Enabled:= FALSE;   { Reset timer on each keystroke }
    Timer.Enabled:= TRUE;
   end;
  inherited;
 end;
 
 
+{ Clamp value to valid range, then fire OnChanged event.
+  Note: Validation only applies if MinValue/MaxValue are non-zero (standard TSpinEdit convention).
+  A range like [0, 100] won't be validated since MinValue=0. Set MinValue=-1 if needed. }
 procedure TCubicSpinEditD.TimerTimer(Sender: TObject);
 begin
  Timer.Enabled:= FALSE;
 
+ { Clamp to max }
  if (MaxValue<> 0) AND (Value> MaxValue)
  then Value:= MaxValue;
 
+ { Clamp to min }
  if (MinValue<> 0) AND (Value< MinValue)
  then Value:= MinValue;
 

@@ -475,10 +475,12 @@ end;
 procedure TTestLogRam.TestUnregisterObserver;
 var
   Observer: TMockLogObserver;
+  ObserverRef: ILogObserver;  { Keep a strong reference to prevent premature freeing }
   LogWithObserver: TRamLog;
   CallCountBefore: Integer;
 begin
   Observer:= TMockLogObserver.Create;
+  ObserverRef:= Observer;  { This prevents the observer from being freed when UnregisterLogObserver sets FLogObserver:= NIL }
   LogWithObserver:= TRamLog.Create(False, Observer, False);
   try
     LogWithObserver.AddMsg('Before unregister');

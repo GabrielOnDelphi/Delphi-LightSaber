@@ -88,11 +88,30 @@ This library will be expanded if it gets enough stars:
 
 Note: The library cannot be used in Russia! If you are from Russia and want to use this library, we can arrange a price per PAS unit.  
 
-**Installation**  
+**Installation**
 
 Double-click the LightSaber.groupproj to load it in Delphi.
-In Project Manager, right-click on the group (top) and select "Build all" in the popup menu. If you want to install also the visual components, right click on them and choose "Install".   
+In Project Manager, right-click on the group (top) and select "Build all" in the popup menu. If you want to install also the visual components, right click on them and choose "Install".
 That's it.
+
+**Unit Tests**
+
+The `Tests\` folder contains DUnitX-based unit tests for the LightSaber libraries. Test projects are organized by package:
+
+| Test Project | Tests For | Description |
+|--------------|-----------|-------------|
+| Tests_LightCore.dpr | LightCore.dpk | Core library tests (streams, encoding, IO, etc.) |
+| Tests_LightVcl.Visual.dpr | LightVcl.Visual.dpk | Visual controls and TAppData tests |
+| Tests_LightVcl.Internet.dpr | LightVcl.Internet.dpk | Internet functionality (downloads, email, HTML) |
+| Tests_LightVcl.Forms.dpr | FrameVCL forms | Pre-built form components (FormAbout, FormRichLog, etc.) |
+
+**Running Tests**
+
+1. Open the test project in Delphi
+2. With TestInsight (recommended): Define `TESTINSIGHT` in project options, run from IDE
+3. Without TestInsight: Build and run as console application
+
+Tests use the DUnitX framework. TestInsight integration is supported for in-IDE test running.
 _________________
 
 **Structure** 

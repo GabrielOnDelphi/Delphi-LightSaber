@@ -489,7 +489,6 @@ end;
 procedure TTestFormTranslSelector.TestGetSelectedFileName_EmptyWhenNoSelection;
 var
   Form: TfrmTranslSelector;
-  FileName: string;
 begin
   Form:= TfrmTranslSelector.Create(NIL);
   FTestForm:= Form;

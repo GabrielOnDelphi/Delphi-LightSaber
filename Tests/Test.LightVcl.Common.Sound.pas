@@ -119,6 +119,7 @@ begin
     begin
       PlayWinSound('');
     end,
+    Exception,
     'PlayWinSound with empty string should not raise exception');
 end;
 
@@ -131,6 +132,7 @@ begin
     begin
       PlayWinSound('SystemAsterisk');
     end,
+    Exception,
     'PlayWinSound with valid system sound name should not raise exception');
 end;
 
@@ -144,6 +146,7 @@ begin
     begin
       PlaySoundFile('');
     end,
+    Exception,
     'PlaySoundFile with empty string should not raise exception');
 end;
 
@@ -155,6 +158,7 @@ begin
     begin
       PlaySoundFile('C:\NonExistent\File\That\Does\Not\Exist.wav');
     end,
+    Exception,
     'PlaySoundFile with non-existent file should not raise exception');
 end;
 
@@ -168,6 +172,7 @@ begin
     begin
       PlayResSound('', 0);
     end,
+    Exception,
     'PlayResSound with empty string should not raise exception');
 end;
 
@@ -181,6 +186,7 @@ begin
     begin
       PlayTone(0, 100, 50);
     end,
+    Exception,
     'PlayTone with zero frequency should exit without exception');
 end;
 
@@ -192,6 +198,7 @@ begin
     begin
       PlayTone(-100, 100, 50);
     end,
+    Exception,
     'PlayTone with negative frequency should exit without exception');
 end;
 
@@ -203,6 +210,7 @@ begin
     begin
       PlayTone(440, 0, 50);
     end,
+    Exception,
     'PlayTone with zero duration should exit without exception');
 end;
 
@@ -214,6 +222,7 @@ begin
     begin
       PlayTone(440, -100, 50);
     end,
+    Exception,
     'PlayTone with negative duration should exit without exception');
 end;
 
@@ -226,6 +235,7 @@ begin
     begin
       PlayTone(440, 10, 255);  { Volume 255 should be clamped to 127 }
     end,
+    Exception,
     'PlayTone with volume > 127 should clamp value without exception');
 end;
 
@@ -239,6 +249,7 @@ begin
     begin
       Bip(800, 10);  { Very short duration to minimize test time }
     end,
+    Exception,
     'Bip with valid parameters should not raise exception');
 end;
 
@@ -250,6 +261,7 @@ begin
     begin
       BipError;
     end,
+    Exception,
     'BipError should not raise exception');
 end;
 
@@ -261,6 +273,7 @@ begin
     begin
       BipErrorShort;
     end,
+    Exception,
     'BipErrorShort should not raise exception');
 end;
 
@@ -272,6 +285,7 @@ begin
     begin
       BipConfirmation;
     end,
+    Exception,
     'BipConfirmation should not raise exception');
 end;
 
@@ -283,6 +297,7 @@ begin
     begin
       BipConfirmationShort;
     end,
+    Exception,
     'BipConfirmationShort should not raise exception');
 end;
 
@@ -294,6 +309,7 @@ begin
     begin
       Bip30;
     end,
+    Exception,
     'Bip30 should not raise exception');
 end;
 
@@ -305,6 +321,7 @@ begin
     begin
       Bip50;
     end,
+    Exception,
     'Bip50 should not raise exception');
 end;
 
@@ -316,6 +333,7 @@ begin
     begin
       Bip100;
     end,
+    Exception,
     'Bip100 should not raise exception');
 end;
 
@@ -327,6 +345,7 @@ begin
     begin
       Bip300;
     end,
+    Exception,
     'Bip300 should not raise exception');
 end;
 
@@ -338,6 +357,7 @@ begin
     begin
       BipCoconuts;
     end,
+    Exception,
     'BipCoconuts should not raise exception');
 end;
 

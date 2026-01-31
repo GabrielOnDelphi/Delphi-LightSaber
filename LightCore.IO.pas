@@ -1807,7 +1807,7 @@ begin
  then Result:= System.COPY(Folder, iPos+2, MaxInt)
  else Result:= Folder;
 
- Result:= CopyTo(Result, 1, PathDelim, TRUE, TRUE, 2); {  copy until the first \ }
+ Result:= CopyTo(Result, 1, PathDelim, TRUE, FALSE, 2); { Copy until the 2nd backslash; return '' if not found }
 end;
 
 

@@ -529,18 +529,33 @@ end;
   NOTE:
     If the path is a folder (does not ends with a filename) then it MUST end with a '/'
   Example:
-     htpp://www.server.com/folder1/folder2/file.txt    returns: 'folder2'
-     htpp://www.server.com/folder1/folder2/            returns: 'folder2' }
+     http://www.server.com/folder1/folder2/file.txt    returns: 'folder2'
+     http://www.server.com/folder1/folder2/            returns: 'folder2'
+     http://www.server.com/folder1/                    returns: '' (single folder - no "last" folder) }
 function URLExtractLastFolder(CONST URL: string): string;
 VAR
-   iPos: Integer;
+   iPos, iDomainEnd: Integer;
 begin
+ { Find end of domain (first '/' after '://') }
+ iPos:= Pos('://', URL);
+ if iPos > 0
+ then iDomainEnd:= Pos('/', URL, iPos + 3)
+ else iDomainEnd:= Pos('/', URL);
+ if iDomainEnd < 1 then EXIT('');
+
+ { Find last slash }
  iPos:= LastPos('/', URL);
  if iPos < 1 then EXIT('');
+
+ { Remove trailing slash or filename }
  Result:= CopyTo(URL, 1, iPos-1);
 
+ { Find second-to-last slash }
  iPos:= LastPos('/', Result);
- if iPos < 1 then EXIT('');
+
+ { If second-to-last slash is at or before domain end, return empty (only one folder) }
+ if iPos <= iDomainEnd then EXIT('');
+
  Result:= system.COPY(Result, iPos+1, High(Integer));
 end;
 
@@ -552,8 +567,15 @@ end;
      http://www.server.com/folder1/                  returns: '' (no prev folder) }
 function URLExtractPrevFolder(CONST URL: string): string;
 VAR
-   Pos0, Pos1, Pos2: Integer;
+   iDomainEnd, Pos0, Pos1, Pos2: Integer;
 begin
+  { Find end of domain (first '/' after '://') }
+  Pos0:= Pos('://', URL);
+  if Pos0 > 0
+  then iDomainEnd:= Pos('/', URL, Pos0 + 3)
+  else iDomainEnd:= Pos('/', URL);
+  if iDomainEnd < 1 then EXIT('');
+
   { Find last slash (after filename or trailing slash) }
   Pos2:= LastPos('/', URL);
   if Pos2 < 1 then EXIT('');
@@ -564,6 +586,9 @@ begin
   { Find the slash before the last folder }
   Pos1:= LastPos('/', Result);
   if Pos1 < 1 then EXIT('');
+
+  { If this is the domain-end slash, there's only one folder (no prev folder) }
+  if Pos1 <= iDomainEnd then EXIT('');
 
   { Remove the last folder }
   Result:= System.Copy(Result, 1, Pos1 - 1);
@@ -1008,16 +1033,20 @@ end;
 function UrlEncode(CONST URL: string): string;
 VAR
    i: Integer;
+   CharOrd: Integer;
 CONST
    UnsafeChars = ['*', '#', '%', '<', '>', ' ', '[', ']', '\', '@'];
 begin
   Result:= '';
   for i:= 1 to Length(URL) DO
-    if  (URL[i] > #32)
-    AND (URL[i] < #127)  { Only printable ASCII chars (33-126) }
-    AND (NOT CharInSet(URL[i], UnsafeChars))
-    then Result:= Result + URL[i]
-    else Result:= Result + '%' + IntToHex(Ord(URL[i]), 2);
+    begin
+      CharOrd:= Ord(URL[i]);
+      if  (CharOrd > 32)
+      AND (CharOrd < 127)  { Only printable ASCII chars (33-126) }
+      AND (NOT CharInSet(URL[i], UnsafeChars))
+      then Result:= Result + URL[i]
+      else Result:= Result + '%' + IntToHex(CharOrd, 2);
+    end;
 end;
 
 

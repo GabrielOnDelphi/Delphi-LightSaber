@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.CaptionedThumb;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -40,7 +40,6 @@ USES
 TYPE
   TCationedThumbnail = class(TPanel)
   private
-    ThumbStretched: TBitmap;
     FThumbBMP: TBitmap;
     Highlight: Boolean;
     FCaption: string;
@@ -53,7 +52,7 @@ TYPE
     procedure Paint; override;
     procedure Click; override;
   public
-    ShadowBox: Boolean;           // True to draw a fuzzy regrangle/box arround the shadow. False to show a "vista" like shadow under text (no box)
+    ShadowBox: Boolean;           // True to draw a fuzzy rectangle/box around the shadow. False to show a "vista" like shadow under text (no box)
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     property ThumbBMP: TBitmap read FThumbBMP;
@@ -106,8 +105,6 @@ begin
   Width := 141;
   AlignWithMargins:= True;
   ShadowBox:= False;
-  ThumbStretched:= TBitmap.Create;
-  ThumbStretched.SetSize(Width, Height);
 
   FThumbBMP:= TBitmap.Create;
   FThumbBMP.PixelFormat:= pf24bit;
@@ -119,7 +116,6 @@ end;
 
 destructor TCationedThumbnail.Destroy;
 begin
-  FreeAndNil(ThumbStretched);
   FreeAndNil(FThumbBMP);
   inherited;
 end;
@@ -131,9 +127,10 @@ end;
 
 
 CONST
-   BorderSizeV= 8;  // Vertical   (top/btm)    shadow
-   BorderSizeH= 6;  // Horizontal (left/right) shadow
-   Effect= 1;       // How much we enlarge the image on mouse over
+   { Note: Despite the naming, BorderSizeV is used as X offset (left/right) and BorderSizeH as Y offset (top/bottom) }
+   BorderSizeV= 8;  // X offset (left/right margin)
+   BorderSizeH= 6;  // Y offset (top/bottom margin)
+   Effect= 1;       // Reserved: enlargement factor for mouse-over effect (see commented code in Paint)
 
 
 function TCationedThumbnail.GetClientWidth: Integer;  { Returns the size of the thumbnail. The user should resize his thumbnail to fit this size }
@@ -152,13 +149,11 @@ end;
 
 procedure TCationedThumbnail.Paint;
 VAR
-   R: TRect;
    CurColor: TColor;
 begin
   //inherited; // We don't let the control paint itself. We do all the painting!
 
-  { Decide which color }
-  R := Rect(0, 0, Width, Height);
+  { Decide which background color based on state }
   if Selected
   then CurColor:= TStyleManager.ActiveStyle.GetSystemColor(clHotLight)
   else
@@ -170,15 +165,11 @@ begin
   if Highlight
   then CurColor:= LightenColor(CurColor, 80);
 
-  { Fill with bkg color }
+  { Fill with background color }
   Canvas.Brush.Color:= CurColor;
-  Canvas.FillRect(R);
+  Canvas.FillRect(Rect(0, 0, Width, Height));
 
   { Paint the thumbnail }
-  if Highlight
-  then R := Rect(BorderSizeV-Effect, BorderSizeH-Effect, Width-BorderSizeV+Effect, Height-BorderSizeH+Effect)
-  else R := Rect(BorderSizeV, BorderSizeH, Width-BorderSizeV, Height-BorderSizeH);
-
   {
   //ToDo: we need a smoother resizing. See JanFX or use the thumbnails of the same size as the panel so no resize is needed
   //Idea: we could pre-scale the images in an external program, and keep that second image in memory
@@ -186,6 +177,8 @@ begin
   if Highlight
   then
    begin
+    var R: TRect;
+    R := Rect(BorderSizeV-Effect, BorderSizeH-Effect, Width-BorderSizeV+Effect, Height-BorderSizeH+Effect);
     VCL.GraphUtil.ScaleImage(ThumbBMP, ThumbStretched, 1.2);
     Canvas.StretchDraw(R, ThumbStretched);
    end
@@ -217,16 +210,17 @@ VAR
 begin
   inherited;
   Selected:= TRUE;
-  Paint;
 
   { Deselect all other thumbnails }
-  for i:= 0 to Parent.ControlCount-1 DO      { Don't confuse the Controls property with the Components property. The Controls property lists all the controls that are child windows of the control, while the Components property lists all components that it owns. }
-   begin
-     Control:= Parent.Controls[i];
-     if (Control is TCationedThumbnail)
-     AND (Control <> Self)
-     then TCationedThumbnail(Control).Selected:= FALSE;
-   end;
+  { Don't confuse the Controls property with the Components property. The Controls property lists all the controls that are child windows of the control, while the Components property lists all components that it owns. }
+  if Assigned(Parent) then
+    for i:= 0 to Parent.ControlCount-1 DO
+     begin
+       Control:= Parent.Controls[i];
+       if (Control is TCationedThumbnail)
+       AND (Control <> Self)
+       then TCationedThumbnail(Control).Selected:= FALSE;
+     end;
 end;
 
 procedure TCationedThumbnail.CMMouseEnter(var msg: TMessage);
@@ -272,15 +266,15 @@ end;
 procedure TCationedThumbnail.setSelected(const Value: Boolean);
 begin
   FSelected := Value;
-  Paint;
+  Invalidate;
 end;
 
 
 procedure Register;
 begin
-  // This will register the control into the IDE (Tool Palette) so we canuse it at Design time.
+  // This will register the control into the IDE (Tool Palette) so we can use it at Design time.
   // But of course, the component must be installed first.
-  // This is be a bit pointless anyway, because we need to create x tbumnails (x= unknown at design time) dynamically.
+  // This is a bit pointless anyway, because we need to create x thumbnails (x = unknown at design time) dynamically.
   RegisterComponents('LightSaber VCL', [TCationedThumbnail]);
 end;
 

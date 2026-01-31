@@ -1,7 +1,7 @@
 UNIT LightVcl.Visual.ListBox;
 
 {=============================================================================================================
-   2025.05
+   2026.01
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -22,7 +22,7 @@ INTERFACE
 
 USES
    Winapi.Windows, Winapi.Messages,
-   System.SysUtils, System.AnsiStrings, System.Classes, System.Types, System.math,
+   System.SysUtils, System.Classes, System.Types, System.Math,
    Vcl.Controls, Vcl.Graphics, Vcl.StdCtrls, Vcl.Forms;
 
 TYPE
@@ -181,7 +181,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-  LightVcl.Common.VclUtils, LightVcl.Common.Sound, LightCore, LightCore.Time, LightCore.Types, LightCore.Math, LightCore.TextFile;
+  LightVcl.Common.VclUtils, LightVcl.Common.Sound, LightCore, LightCore.Math, LightCore.TextFile;
 
 
 
@@ -204,21 +204,22 @@ end;
 
 
 
-{ Resize the height, based on the number of rows in it, but never make it bigger than the x% of the aForm.
-  Note: MaxHeight is relative to the form. In percents. }
+{ Resize the height based on the number of rows in it, but never exceeds MaxHeight% of aForm.
+  MaxHeight: Maximum height as percentage of aForm's height (e.g., 50 = 50%).
+  aForm: Parent control used to calculate maximum allowed height. }
 procedure TCubicListBox.SetHeightAuto(MaxHeight: Integer; aForm: TControl);
 begin
+  Assert(aForm <> NIL, 'SetHeightAuto requires a valid form reference!');
+  Assert(MaxHeight > 0, 'MaxHeight must be greater than 0!');
+
   VAR MaxHeightPx := (aForm.Height * MaxHeight) DIV 100;
-  VAR ItemCount   := Min(Items.Count, 10); // Limit to 10 items for height calculation
+  VAR ItemCount   := Min(Items.Count, 10);  // Limit to 10 items for height calculation
   VAR iHeight     := ItemCount * ItemHeight;
 
-  // Add some padding for the border and potential scrollbar
-  iHeight := iHeight + 6;
+  iHeight:= iHeight + 6;                    // Padding for border and potential scrollbar
+  iHeight:= Max(Min(iHeight, MaxHeightPx), 100);  // Keep within bounds
 
-  // Ensure the height is within reasonable bounds
-  iHeight := Max(Min(iHeight, MaxHeightPx), 100);
-
-  Height := iHeight;
+  Height:= iHeight;
 end;
 
 
@@ -226,6 +227,10 @@ end;
    Remove
 --------------------------------------------------------------------------------------------------}
 
+{ Removes duplicate entries (case-insensitive comparison).
+  Returns the number of items removed.
+  Uses a temporary TStringList to avoid slow UI refreshes during deletion.
+  Note: O(n²) algorithm - may be slow for very large lists (10000+ items). }
 function TCubicListBox.RemoveDuplicates: Integer;
 VAR i1, i2, IsBreakTime: Integer;
     TSL: TStringList;
@@ -233,21 +238,20 @@ begin
  TSL:= TStringList.Create;
  TRY
   TSL.BeginUpdate;
-  TSL.Assign(Items);     { don't delete directly from SELF because it will refresh and be too slow }
+  TSL.Assign(Items);     { Don't delete directly from Items because it will refresh and be too slow }
   Result:= 0;
   IsBreakTime:= 0;
 
   for i1:= TSL.Count-1 downto 1 DO
    begin
-    { Refresh GUI after a long operation }
+    { Refresh GUI periodically during long operations }
     inc(IsBreakTime);
-    if IsBreakTime> 8000 then
+    if IsBreakTime > 8000 then
      begin
       Update;
       IsBreakTime:= 0;
      end;
 
-    { Real processing takes place here }
     for i2:= i1-1 downto 0 DO
      if SameText(TSL.Strings[i1], TSL.Strings[i2]) then
       begin
@@ -410,11 +414,16 @@ begin
 end;
 
 
-procedure TCubicListBox.DeleteFirst(iCount: Integer);  { Delete first x items }
+{ Deletes the first iCount items from the list.
+  Note: Always delete at index 0 because items shift down after each deletion. }
+procedure TCubicListBox.DeleteFirst(iCount: Integer);
 VAR i: Integer;
 begin
- for I:= 0 to iCount-1 DO
-  Items.Delete(i);
+ if iCount <= 0 then EXIT;
+ if iCount > Count then iCount:= Count;
+
+ for i:= 1 to iCount DO
+  Items.Delete(0);
 end;
 
 
@@ -501,12 +510,13 @@ end;
    GET
 --------------------------------------------------------------------------------------------------}
 
+{ Returns the text of the first selected item, or empty string if nothing is selected. }
 function TCubicListBox.SelectedItem: string;
-VAR Selected: Integer;
+VAR SelIdx: Integer;
 begin
- Selected:= SelectedItemI;
- if Selected > -1
- then Result:= Items[SelectedItemI]
+ SelIdx:= SelectedItemI;
+ if SelIdx > -1
+ then Result:= Items[SelIdx]
  else Result:= '';
 end;
 
@@ -582,12 +592,20 @@ begin
 end;
 
 
+{ Swaps two items including their associated Objects. }
 procedure TCubicListBox.SwapItems(x, y: Integer);
-VAR Temp: string;
+VAR
+  TempStr: string;
+  TempObj: TObject;
 begin
- Temp:= Items[x];
+ TempStr:= Items[x];
+ TempObj:= Items.Objects[x];
+
  Items[x]:= Items[y];
- Items[y]:= Temp;
+ Items.Objects[x]:= Items.Objects[y];
+
+ Items[y]:= TempStr;
+ Items.Objects[y]:= TempObj;
 end;
 
 
@@ -657,9 +675,12 @@ begin
 end;
 
 
+{ Returns the number of fully visible items in the listbox. }
 function TCubicListBox.VisibleItems: Integer;
 begin
- Result := RoundDown (clientHeight / ItemHeight) -1;
+ if ItemHeight <= 0
+ then Result:= 0
+ else Result:= RoundDown(ClientHeight / ItemHeight) - 1;
 end;
 
 
@@ -669,29 +690,37 @@ begin
 end;
 
 
-{ Move the first iCount items from the curent listbox to the bottom of another listbox }
+{ Moves the first iCount items from this listbox to the bottom of another listbox.
+  Note: Always operates on index 0 since items shift down after each deletion. }
 procedure TCubicListBox.MoveItemsTo(ListBox: TCubicListBox; iCount: Integer);
-VAR I: Integer;
+VAR i: Integer;
 begin
- for I := 0 to iCount- 1 DO //ToDo: do it in reverse. For large lists it will be muuuch faster.
+ Assert(ListBox <> NIL, 'Target ListBox cannot be nil!');
+ if iCount <= 0 then EXIT;
+ if iCount > Count then iCount:= Count;
+
+ for i:= 1 to iCount DO
   begin
-   ListBox.Items.Add(Items[0]);
+   ListBox.Items.AddObject(Items[0], Items.Objects[0]);
    Items.Delete(0);
   end;
 end;
 
 
+{ Calculate whether the horizontal ScrollBar is needed based on the widest item.
+  Note: ScrollWidth > ClientWidth shows the scrollbar, ScrollWidth <= ClientWidth hides it. }
 Procedure TCubicListBox.NeedScrollBar;
-VAR i, LastWidth: Integer;
+VAR i, LastWidth, CurWidth: Integer;
 begin
  LastWidth:= 0;
  for i:= 0 to (Items.Count - 1) DO
-  if (Canvas.TextWidth(Items[i]) > LastWidth)
-  then LastWidth:= Canvas.TextWidth(Items[i]);
+  begin
+   CurWidth:= Canvas.TextWidth(Items[i]);
+   if CurWidth > LastWidth
+   then LastWidth:= CurWidth;
+  end;
 
- ScrollWidth:= LastWidth+ 6;     //Use ScrollWidth to get or set the logical width of the list box. When ScrollWidth is greater than the client width of the list box, the list box gets a horizontal scroll bar. When ScrollWidth is less than or equal to ClientWidth, the horizontal scroll bar disappears.
-
- //sendmessage(L.Handle, LB_SetHorizontalExtent, max, 0);    http://www.delphipages.com/forum/showthread.php?t=178321
+ ScrollWidth:= LastWidth + 6;
 end;
 
 

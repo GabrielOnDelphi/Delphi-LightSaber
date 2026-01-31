@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.FloatSpinEdit;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ UNIT LightVcl.Visual.FloatSpinEdit;
       MaxValue   - same as TSpinEdit
       Value      - same as TSpinEdit
       Increment  - same as TSpinEdit
-      Decimals   - number fo decimals to show in control
+      Decimals   - number of decimals to show in control
       Real2Str   - converts real number to 'nice' string
 
   This project:
@@ -258,10 +258,10 @@ begin
    end;
 
   VK_Next:
-    Value := Value + FIncrement * 10;         { Pg Up = Fast increment }
+    Value := Value - FIncrement * 10;         { Pg Down = Fast decrement }
 
   VK_PRIOR:
-    Value := Value - FIncrement * 10;         { Pg Down = Fast decrement }
+    Value := Value + FIncrement * 10;         { Pg Up = Fast increment }
 
   VK_END:
    begin
@@ -327,19 +327,19 @@ end;
 procedure TFloatSpinEdit.EditChanged(Sender: TObject);
 VAR
  r: Real;
- sOut: string;
+ sFiltered: string;
 begin
- sOut := getFilteredText;
+ sFiltered:= getFilteredText;
 
- if  (sOut <> '')
- AND (sOut <> '-') then
+ if  (sFiltered <> '')
+ AND (sFiltered <> '-') then
   begin
-   r := StrToFloatDef(EditBox.Text, 0);
+   r:= StrToFloatDef(sFiltered, 0);  { Use the filtered text, not the raw EditBox.Text }
 
-   { Did the user entered a new value? }
+   { Did the user enter a new value? }
    if r <> FValue then
      begin
-      FValue := r;
+      FValue:= r;
       UpdateEditorValue;
      end;
   end;
@@ -390,9 +390,11 @@ end;
 -----------------------------------}
 
 procedure TFloatSpinEdit.SetValue(aValue: Real);
+VAR ClampedValue: Real;
 begin
- if FValue = checkMinMax(aValue) then EXIT;
- FValue:= checkMinMax(aValue);
+ ClampedValue:= checkMinMax(aValue);
+ if FValue = ClampedValue then EXIT;
+ FValue:= ClampedValue;
  UpdateEditorValue;
 end;
 
@@ -414,7 +416,9 @@ end;
 
 function TFloatSpinEdit.GetEnabled: boolean;
 begin
- Result := EditBox.Enabled;
+ if EditBox = NIL
+ then Result:= inherited  { During construction, EditBox might not exist yet }
+ else Result:= EditBox.Enabled;
 end;
 
 

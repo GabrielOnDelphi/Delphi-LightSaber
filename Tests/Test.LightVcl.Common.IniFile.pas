@@ -171,10 +171,8 @@ procedure TTestIniFileApp.Test_Create_EmptySectionName_ShouldRaise;
 begin
   Assert.WillRaise(
     procedure
-    var
-      Ini: TIniFileApp;
     begin
-      Ini:= TIniFileApp.Create('');
+      TIniFileApp.Create('').Free;
     end,
     Exception);
 end;

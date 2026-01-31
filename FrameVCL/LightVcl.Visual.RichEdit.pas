@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.RichEdit;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.09
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -57,32 +57,33 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   LightCore, LightCore.Time;
+   LightCore;
 
 
-{
-procedure TCubicRichEdit.CreateWindowHandle(const Params: TCreateParams);
-var
-  NewParams: TCreateParams;
-begin
-  NewParams := Params;
-  // Set to use RichEdit50W for Rich Edit 4.1 (which supports images)
-  NewParams.WinClassName := 'RichEdit50W';
-  inherited CreateWindowHandle(NewParams);
-end; }
-
-
+{ DISABLED: CreateWindowHandle override to use RichEdit50W for Rich Edit 4.1 (image support).
+  This was causing compatibility issues. Keep for reference if image embedding is needed later.
+  procedure TCubicRichEdit.CreateWindowHandle(const Params: TCreateParams);
+  var NewParams: TCreateParams;
+  begin
+    NewParams:= Params;
+    NewParams.WinClassName:= 'RichEdit50W';
+    inherited CreateWindowHandle(NewParams);
+  end; }
 
 
 
+
+
+{ Returns the zero-based index of the line containing the caret (SelStart). }
 function TCubicRichEdit.GetCurrentLine: Integer;
 begin
   Result:= SendMessage(Handle, EM_EXLINEFROMCHAR, 0, SelStart);
 end;
 
+{ Returns the zero-based index of the topmost visible line in the control. }
 function TCubicRichEdit.GetFirstVisibleLine: Integer;
 begin
-  Result:= Perform(EM_GETFIRSTVISIBLELINE, 0, 0); // Get the top visible line
+  Result:= Perform(EM_GETFIRSTVISIBLELINE, 0, 0);
 end;
 
 
@@ -96,6 +97,7 @@ begin
 end;
 
 
+{ Adds text as a single line. Line breaks (CR/LF) are replaced with spaces. }
 procedure TCubicRichEdit.Add(s: string);
 begin
   s:= ReplaceEnters(s, ' ');
@@ -103,14 +105,15 @@ begin
 end;
 
 
-procedure TCubicRichEdit.AddFormated(s: string);                                         { Accepts string that contain enters }
+{ Adds text that may contain line breaks (CR/LF). The string is added as-is.
+  Bug fix: #0 characters are replaced with spaces to prevent erratic TRichEdit behavior.
+  References:
+    http://www.experts-exchange.com/Programming/Languages/Pascal/Delphi/Q_26783874.html
+    http://www.experts-exchange.com/Programming/Languages/Pascal/Delphi/Q_26812899.html#a34864849
+  TODO: TRichEdit does not support ENTER at the beginning of the line - needs investigation. }
+procedure TCubicRichEdit.AddFormated(s: string);
 begin
-  ReplaceChar(s, #0, ' ');  { Fix bug in TRichEdit: RichEdit behaves erratically when you try to store the #0 character }
-  { Details:
-           http://www.experts-exchange.com/Programming/Languages/Pascal/Delphi/Q_26783874.html
-           http://www.experts-exchange.com/Programming/Languages/Pascal/Delphi/Q_26812899.html#a34864849 }
-
-  {todo 3: fix tihs: TRichEdit does not support ENTER at the beginning of the line! }
+  ReplaceChar(s, #0, ' ');
   Lines.Add(s);
 end;
 
@@ -121,13 +124,12 @@ begin
 end;
 
 
+{ Scrolls the RichEdit so that the specified line becomes visible.
+  Line: Zero-based line index.
+  Note: Uses relative scrolling from current caret position via EM_LINESCROLL. }
 procedure TCubicRichEdit.ScrollTo(Line: Integer);
 begin
   Perform(EM_LINESCROLL, 0, Line - GetCurrentLine);
-  //del
-  //if Line < 0 then Line:= 0;
-  //SelStart := Perform(EM_LINEINDEX, Line, 0);
-  //Perform(EM_SCROLLCARET, 0, 0);
 end;
 
 

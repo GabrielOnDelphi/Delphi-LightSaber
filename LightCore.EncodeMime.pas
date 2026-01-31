@@ -23,7 +23,7 @@ UNIT LightCore.EncodeMime;
 INTERFACE
 
 USES
-  System.Classes, System.SysUtils, Soap.EncdDecd;
+  System.Classes, System.SysUtils, Soap.EncdDecd, System.NetEncoding;
 
  { Unicode string encoding - handles UTF-8 conversion automatically }
  function MimeString           (CONST Input: string): string;
@@ -149,12 +149,27 @@ end;
 
 
 { Decodes a Base64 AnsiString back to raw bytes.
-  Returns an empty string if Input is empty. }
+  Returns an empty string if Input is empty.
+  Raises exception for invalid Base64 input. }
 function DeMimeStringA(CONST Input: AnsiString): AnsiString;
 var
   InStr, OutStr: TCubicMemStream;
+  i: Integer;
+  c: AnsiChar;
 begin
   if Input = '' then EXIT('');
+
+  { Validate Base64 characters before attempting to decode }
+  for i:= 1 to Length(Input) do
+    begin
+      c:= Input[i];
+      if NOT (((c >= 'A') AND (c <= 'Z')) OR
+              ((c >= 'a') AND (c <= 'z')) OR
+              ((c >= '0') AND (c <= '9')) OR
+              (c = '+') OR (c = '/') OR (c = '=') OR
+              (c = #13) OR (c = #10) OR (c = ' '))  { Allow whitespace }
+      then raise EEncodingError.Create('Invalid Base64 character in input');
+    end;
 
   InStr:= TCubicMemStream.Create;
   try

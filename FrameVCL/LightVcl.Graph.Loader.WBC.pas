@@ -2,7 +2,7 @@ UNIT LightVcl.Graph.Loader.WBC;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -59,10 +59,10 @@ TYPE
    PictureFileSize   : Longint;
    ThumbFileSize     : Longint;
    unknown           : array[1..140] of Byte;
-   DailyDate         : Longint;                                                                    {(Date when the picture was published as the Daily picture  on www.webshots.com) in the form: yyymmdd }
-   Timestamp         : Longint;                                                                    {Picture Addition Time }
-   Fit2Screen        : Longint;                                                                    // 0=default, 1=never, 2=always
-   PictureID         : array[1..128] of Byte;                                                      // the first letter isthe ‘source’ of the picture, see the note)
+   DailyDate         : Longint;                                                                    { Date when published as Daily picture on webshots.com, format: yyyymmdd }
+   Timestamp         : Longint;                                                                    { Picture Addition Time }
+   Fit2Screen        : Longint;                                                                    { 0=default, 1=never, 2=always }
+   PictureID         : array[1..128] of Byte;                                                      { First letter is the 'source' of the picture }
    AlbumTitle        : array[1..128] of Byte;
    CategTitle        : array[1..788] of Byte;
   end;
@@ -78,10 +78,10 @@ TYPE
    FileExt           : String;
    PictureFileSize   : Longint;
    ThumbFileSize     : Longint;
-   DailyDate         : Longint;                                                                    {(Date when the picture was published as the Daily picture  on www.webshots.com) in the form: yyymmdd }
-   Timestamp         : Longint;                                                                    {Picture Addition Time }
-   Fit2Screen        : Longint;                                                                    // 0=default, 1=never, 2=always
-   PictureID         : String;                                                                     // the first letter isthe ‘source’ of the picture, see the note)
+   DailyDate         : Longint;                                                                    { Date when published as Daily picture on webshots.com, format: yyyymmdd }
+   Timestamp         : Longint;                                                                    { Picture Addition Time }
+   Fit2Screen        : Longint;                                                                    { 0=default, 1=never, 2=always }
+   PictureID         : String;                                                                     { First letter is the 'source' of the picture }
    AlbumTitle        : String;
    CategTitle        : String;
    Offset            : Longint;                                                                    //the offset in the file where this Header starts
@@ -278,7 +278,7 @@ begin
    { Decode 100 bytes }
    WBCStream.Read(A100, 100);
    WBCStream.Read(B100, 100);
-   for I:= 1 to Length(A100)                                                                       { Formula: B(n) = (B(n) XOR (NOT A(n)) XOR key  -> key = ‘F2’ (hex) }
+   for I:= 1 to Length(A100)                                                                       { Formula: B(n) = (B(n) XOR (NOT A(n)) XOR key  -> key = ï¿½F2ï¿½ (hex) }
     DO D100[I]:= (B100[I] XOR (NOT A100[I])) XOR Key;
 
    { Build the final JPEG image }

@@ -1,7 +1,7 @@
 UNIT LightVcl.Visual.DropDownSearch;
 
 {=============================================================================================================
-   2025.03
+   2026.01
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -95,21 +95,22 @@ begin
 end;
 
 
+{ Creates the dropdown listbox after the main control is fully constructed.
+  The listbox is created here (not in Create) because we need Self to be fully initialized first. }
 procedure TDropDownSearchBox.AfterConstruction;
 begin
   inherited;
 
-  lbxSearch             := TCubicListBox.Create(Self);
-  lbxSearch.Name        := 'lbxSearch';
-  lbxSearch.MultiSelect := FALSE;
-  lbxSearch.Sorted      := TRUE;
-  //lbxSearch.ItemHeight  := 20;  
-  lbxSearch.IntegralHeight := FALSE;  
-  lbxSearch.Visible     := FALSE;
-  lbxSearch.OnClick     := EndSearch;
-  lbxSearch.OnDblClick  := EndSearch;
+  lbxSearch:= TCubicListBox.Create(Self);
+  lbxSearch.Name:= 'lbxSearch';
+  lbxSearch.MultiSelect:= FALSE;
+  lbxSearch.Sorted:= TRUE;
+  lbxSearch.IntegralHeight:= FALSE;  // Allow partial item visibility at bottom
+  lbxSearch.Visible:= FALSE;
+  lbxSearch.OnClick:= EndSearch;
+  lbxSearch.OnDblClick:= EndSearch;
 
-  Text := '';
+  Text:= '';
 end;
 
 
@@ -124,7 +125,7 @@ end;
 
 destructor TDropDownSearchBox.Destroy;
 begin
-  FWords.Free;
+  FreeAndNil(FWords);
   inherited Destroy;
 end;
 
@@ -133,8 +134,9 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    Listbox position
 -------------------------------------------------------------------------------------------------------------}
-// Set lbxSearch's Parent to be the top-level form rather than the container (which might be too small).
-// We compute the screen coordinates of Self and convert them into the host form's client coordinates.
+
+{ Sets lbxSearch's Parent to be the top-level form rather than the container (which might be too small).
+  Computes the screen coordinates of Self and converts them into the host form's client coordinates. }
 procedure TDropDownSearchBox.SetHost;
 const
   DROPDOWN_OFFSET = 2;
@@ -144,39 +146,40 @@ var
 begin
   if (csDesigning in ComponentState) then EXIT;
 
-  Host := GetParentForm(Self);  // Get the top-level form
+  Host:= GetParentForm(Self);
   Assert(Host <> NIL, 'Cannot find hosting form!');
-  if Host <> nil then
-    begin
-      // Use the bottom left corner of Self (point at 0,Self.Height) to calculate the position.
-      ScreenPos := Self.ClientToScreen(Point(0, Self.Height));
-      HostPos   := Host.ScreenToClient(ScreenPos);  // Converts screen coordinates to the form’s client coordinates, positioning the dropdown correctly below the edit box.
 
-      lbxSearch.Parent := Host;
-      lbxSearch.Left   := HostPos.X;
-	  lbxSearch.Top    := HostPos.Y + DROPDOWN_OFFSET;
-      lbxSearch.Width  := Self.Width;
-    end;
+  // Use the bottom left corner of Self (point at 0,Self.Height) to calculate the position.
+  ScreenPos:= Self.ClientToScreen(Point(0, Self.Height));
+  HostPos:= Host.ScreenToClient(ScreenPos);  // Converts screen coordinates to the form's client coordinates
+
+  lbxSearch.Parent:= Host;
+  lbxSearch.Left:= HostPos.X;
+  lbxSearch.Top:= HostPos.Y + DROPDOWN_OFFSET;
+  lbxSearch.Width:= Self.Width;
 end;
 
 
 {-------------------------------------------------------------------------------------------------------------
    Event Handling
 -------------------------------------------------------------------------------------------------------------}
+{ Called when the text changes. Filters items and shows the dropdown. }
 procedure TDropDownSearchBox.Change;
 begin
   inherited;
   if (csDesigning in ComponentState) then EXIT;
 
-  if NOT FIsNavigating then  // True when the user is navigating through the List with the arrow keys
+  if NOT FIsNavigating then  // Ignore changes caused by arrow key navigation
   begin
-    FCurrentFilter := Text;  // Update filter with current text
-    FilterItems;             // Filter the dropdown items
-    showDropDown;            // Show the dropdown
+    FCurrentFilter:= Text;  // Update filter with current text
+    SetHost;                // Ensure dropdown is parented correctly (needed if user tabs into the control)
+    FilterItems;
+    showDropDown;
   end;
 end;
 
 
+{ Toggles the dropdown visibility. Opens and populates it if closed, closes it if open. }
 procedure TDropDownSearchBox.Click;
 begin
   inherited;
@@ -193,22 +196,29 @@ begin
 end;
 
 
+{ Shows the dropdown list if there are matching items. Hides it otherwise.
+  Adjusts the dropdown height based on item count, limited by MaxDropHeight. }
 procedure TDropDownSearchBox.showDropDown;
+var
+  HostForm: TCustomForm;
 begin
   if lbxSearch.Items.Count > 0
   then
     begin
-      //SetHeightAuto(lbxSearch, MaxDropHeight); //Resize it based on the number of rows in it, but never make it bigger than the 1/2 form
-      lbxSearch.Visible := TRUE;
+      HostForm:= GetParentForm(Self);
+      if HostForm <> NIL
+      then lbxSearch.SetHeightAuto(FMaxDropHeight, HostForm);  // Resize based on item count, limited by MaxDropHeight
+      lbxSearch.Visible:= TRUE;
       lbxSearch.BringToFront;
     end
   else
-    lbxSearch.Visible := FALSE;  // Close the list box if user's text does not match any words.
+    lbxSearch.Visible:= FALSE;  // Close the list box if user's text does not match any words.
 end;
 
 
 
-//todo: Test what happens if the text is not found so the user selects nothing
+{ Completes the search operation: copies selected item to the edit text, fires OnEndSearch event, and closes the dropdown.
+  ToDo: Test what happens if the text is not found so the user selects nothing. }
 procedure TDropDownSearchBox.EndSearch(Sender: TObject);
 begin
   if (lbxSearch.ItemIndex >= 0) then
@@ -227,6 +237,8 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    Key press
 -------------------------------------------------------------------------------------------------------------}
+
+{ Handles special keys: Escape (cancel), Enter (confirm selection), arrows (navigate), Tab (close). }
 procedure TDropDownSearchBox.KeyDown(var Key: Word; Shift: TShiftState);
 begin
   inherited;
@@ -265,7 +277,9 @@ begin
 end;
 
 
-// Navigating only through the filtered list in lbxSearch.Items.
+{ Handles Up/Down arrow navigation through the filtered list.
+  Wraps around at list boundaries (end->start, start->end).
+  Updates the edit text and listbox selection to match. }
 procedure TDropDownSearchBox.HandleArrowKeys(Key: Word);
 var
   ItemCount: Integer;
@@ -303,28 +317,27 @@ end;
    Filtering
 -------------------------------------------------------------------------------------------------------------}
 
-{ Show only the items that match what the user typed }
+{ Show only the items that match what the user typed.
+  Populates lbxSearch with items from FWords that contain FCurrentFilter (case-insensitive). }
 procedure TDropDownSearchBox.FilterItems;
 var
   i: Integer;
-  FilterText: string;
 begin
   if (lbxSearch = NIL) OR (csDesigning in ComponentState) then EXIT;
 
-  FilterText := LowerCase(FCurrentFilter);
   lbxSearch.Items.BeginUpdate;
   try
     lbxSearch.Items.Clear;
-    for i := 0 to FWords.Count - 1 do
-      if (FilterText = '')
-	  OR (PosInsensitive(FilterText, LowerCase(FWords[i])) > 0)
-	  then lbxSearch.Items.Add(FWords[i]);
+    for i:= 0 to FWords.Count - 1 do
+      if (FCurrentFilter = '')
+      OR (PosInsensitive(FCurrentFilter, FWords[i]) > 0)  // PosInsensitive handles case-insensitivity
+      then lbxSearch.Items.Add(FWords[i]);
   finally
     lbxSearch.Items.EndUpdate;
   end;
 
   lbxSearch.SelectFirstItem;
-  FCurrentIndex := -1; // Reset current index when filtering
+  FCurrentIndex:= -1;  // Reset current index when filtering
 end;
 
 
@@ -334,10 +347,12 @@ end;
    Population
 -------------------------------------------------------------------------------------------------------------}
 
-{ Note: The TStrings object does not own the objects you add this way. Objects added to the TStrings object still exist even if the TStrings instance is destroyed. They must be explicitly destroyed by the application. }
+{ Populates the search dictionary with the given words.
+  Note: If the source TStringList has associated Objects, they are copied but not owned.
+  The caller is responsible for managing the lifetime of those objects. }
 procedure TDropDownSearchBox.PopulateDictionary(Words: TStringList);
 begin
-  FWords.Assign(Words);    // Store all items in FFullItemList
+  FWords.Assign(Words);
 end;
 
 

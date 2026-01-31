@@ -3,19 +3,19 @@ UNIT LightVcl.Visual.RichLog;
 // Old log based on RichEdit
 
 {=============================================================================================================
-   2024.05
+   2026.01.31
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
-   A simple but effective visual log.
-     The programmer can send messages to the log that will be shown or not, depending on the chousen verbosity level of the log (see Verbosity property).
+   A simple but effective visual log based on TRichEdit.
+     The programmer can send messages to the log that will be shown or not, depending on the chosen verbosity level of the log (see Verbosity property).
      There is a pre-defined form that holds the log. To show it, call CreateLogForm in FormLog.pas
      The purpose is to have one single log window per application that will receive messages from the entire application.
 
    Verbosity:
      Supports several verbosity levels (verbose, info, warnings, errors, etc)
      Receives only messages that are above the specified verbosity threshold.
-     For example, if the log is set to show only warnings and errors and you send a messages marked as "verbose", then the messages will not be shown.
+     For example, if the log is set to show only warnings and errors and you send a message marked as "verbose", then the message will not be shown.
 
    Internals:
      It creates an internal TRamLog object.
@@ -48,7 +48,7 @@ TYPE
      procedure AddFormated(s: string);
      procedure ScrollDown;
    protected
-     Indent: Integer;    { Indent new added lines x spaces }
+     Indent: Integer;    { Indent each newly added line with this many spaces }
      procedure addColorMsg (CONST Mesaj: string; TextColor: TColor);
    public
      constructor Create(AOwner: TComponent); override;
@@ -109,7 +109,7 @@ begin
  MaxLength   := $7FFFFFF0;                                                    { http://www.delphipages.com/forum/showthread.php?t=166695 }
  WordWrap    := FALSE;
  FAutoScroll := TRUE;
- Indent      := 0;                                                            { Intend new added lines with x spaces }
+ Indent      := 0;                                                            { Indent each newly added line with this many spaces }
  FInsertTime := FALSE;
  FInsertDate := False;
 end;
@@ -180,6 +180,11 @@ end;
    Messages without verbosity
    These are forced messages: always shown regardless on which verbosity level the log is set)
 -------------------------------------------------------------------------------------------------------------}
+
+{ Core method for adding colored messages to the log.
+  Handles multi-line messages by splitting them and adding each line separately.
+  Automatically prepends date/time if InsertDate/InsertTime properties are enabled.
+  Note: TRichEdit has issues with #0 (null) characters, so they are replaced with spaces. }
 procedure TRichLog.addColorMsg(CONST Mesaj: string; TextColor: TColor);
 VAR
    i: Integer;
@@ -187,12 +192,12 @@ VAR
    TSL: TStringList;
    Restore: TFontStyles;
 begin
- Restore:= SelAttributes.Style;           { Font attributes are lost when we call sss (SelStart), so we need to memorize and restore them }
+ Restore:= SelAttributes.Style;           { Font attributes are lost when we set SelStart, so we need to memorize and restore them }
 
  { We split the text in multiple lines if it contains enters }
  TSL:= TStringList.Create;
  try
-   TSL.Text:= ReplaceCharF(Mesaj, #0, ' '); { TSL is not split correctly in multiple lines if the #0 char is present + TrichEdit behave odd if the #0 char is present. Without this we get: "EOutOfResources-RichEdit line insertion error" }
+   TSL.Text:= ReplaceCharF(Mesaj, #0, ' '); { TSL is not split correctly in multiple lines if the #0 char is present + TRichEdit behaves oddly if the #0 char is present. Without this we get: "EOutOfResources-RichEdit line insertion error" }
 
    { We add the lines one by one }
    for i:= 0 to TSL.Count-1 DO
@@ -325,12 +330,19 @@ end;
    ADD MULTIPLE LINES
 -----------------------------------------}
 
-{ Reads lines from the specified file and adds them to the log using the specified color. }
+{ Reads lines from the specified file and adds them to the log using the specified verbosity level.
+  If the file does not exist, logs an error message. }
 procedure TRichLog.AddFromFile(const FileName: string; MsgType: TLogVerb);
 VAR
    s: string;
    TSL: TStringList;
 begin
+ if NOT FileExists(FileName) then
+  begin
+   AddError('File not found: ' + FileName);
+   EXIT;
+  end;
+
  TSL:= StringFromFileTSL(FileName);
  TRY
   for s in TSL

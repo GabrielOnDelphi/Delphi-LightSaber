@@ -1,7 +1,7 @@
 UNIT LightVcl.Visual.MsgDispatcher;
 
 {=============================================================================================================
-   2024.05
+   2026.01
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -53,9 +53,9 @@ TYPE
      procedure SetImageList(Value: TImageList);
    published
      property dSoundFile  : string   read FSound   write FSound;
-     property dTimePerWord: Integer  read FTime    write setTime default 320;                      { How fast can the text disapear from screen (miliseconds per char) }
+     property dTimePerWord: Integer  read FTime    write setTime default 320;                      { How fast can the text disappear from screen (milliseconds per word) }
 
-     property Mute        : Boolean  read FMute    write FMute default FALSE;                      { How fast can the text disapear from screen (miliseconds per char) }
+     property Mute        : Boolean  read FMute    write FMute default FALSE;                      { Mute sound notifications }
      property OnClose     : TOnClose read FOnClose Write FOnClose;                                 { The user pushed the little Close button and the control is not visible on screen anymore }
  end;
 
@@ -200,11 +200,10 @@ end;
 
 destructor TMsgDispatcher.Destroy;
 begin
- Assert(FTimer<> NIL, 'Timer is NIL.');  //this hsould not happen
+ Assert(FTimer <> NIL, 'Timer is NIL.');  // This should not happen
  FreeAndNil(FTimer);
  FreeAndNil(FMessages);
- // asta da un AV cand inchid Delphi, asa ca l-am scos de aici:
- // StopAnimation;
+ // Note: StopAnimation causes AV when closing Delphi IDE, so it was removed
 
  inherited Destroy;
 end;
@@ -275,7 +274,7 @@ end;
 
 
 
-procedure TMsgDispatcher.PlayTopMsg;                                                               { Play message 0 right now. If there are no Winapi.Messages, I stop the timer, else I prepere the timer to trigger after x seconds }
+procedure TMsgDispatcher.PlayTopMsg;                                                               { Play message 0 right now. If there are no messages, stop the timer; else prepare the timer to trigger after x seconds }
 begin
  if FMessages.Count> 0 then
   begin
@@ -322,9 +321,11 @@ end;
 
 procedure TMsgDispatcher.setTime(Value: Integer);
 begin
- if Value< 5
- then MessageWarning('Interval is too small.');
-
+ if Value < 5 then
+  begin
+   MessageWarning('Interval is too small (minimum is 5ms).');
+   EXIT;
+  end;
  FTime:= Value;
 end;
 

@@ -1,8 +1,8 @@
 UNIT LightVcl.Visual.CreationOrderTester;
 
 {-------------------------------------------------------------------------------------------------------------
- 2019-07-02
- 
+ 2026.01.31
+
  Multiple constructors:
    https://stackoverflow.com/questions/1758917/delphi-pascal-overloading-a-constructor-with-a-different-prototype
 
@@ -46,7 +46,7 @@ UNIT LightVcl.Visual.CreationOrderTester;
 
 Results of the experiment (this is shown on screen if you run the following experiments):
 
-   Dropping control on a form:
+   Dropping control on a form (design time):
       Create
       AfterConstruction
       SetParent
@@ -55,7 +55,7 @@ Results of the experiment (this is shown on screen if you run the following expe
        CreateWnd post
       SetParent post
 
-   Executing the program (DFM streaming)
+   Executing the program (DFM streaming):
       Create
       AfterConstruction
       SetParent
@@ -67,19 +67,27 @@ Results of the experiment (this is shown on screen if you run the following expe
         CreateWindowHandle
        CreateWnd post
 
-   Dynamic creation of the control
-     Create
-     AfterConstruction
-     SetParent
-      CreateWnd
-       CreateWindowHandle
-      CreateWnd post
-     SetParent post     // SetParent is called during construction AND also during destruction with aParent=nil
+   Dynamic creation of the control:
+      Create
+      AfterConstruction
+      SetParent
+       CreateWnd
+        CreateWindowHandle
+       CreateWnd post
+      SetParent post
+
+   Destroying the control (FreeAndNil):
+      BeforeDestruction
+      SetParent (AParent=nil)
+       DestroyWnd
+       DestroyWnd post
+      SetParent post
+      Destroy
 
     ----
 
-    Deleting control from form:
-      SetParent
+    Deleting control from form (design time):
+      SetParent (AParent=nil)
       SetParent post
 
     Cutting ctrl from form and pasting it back:
@@ -96,29 +104,55 @@ Results of the experiment (this is shown on screen if you run the following expe
       SetParent post
       Loaded
 
-   Reconstructing the form
-      Not tested yet
+   Control on hidden form (Form.Visible=False at design time):
+      Create
+      AfterConstruction
+      SetParent
+      SetParent post
+      Loaded
+      (CreateWnd NOT called yet - deferred until form is shown!)
+
+   When hidden Form.Show is called:
+       CreateWnd
+        CreateWindowHandle
+       CreateWnd post
+
+   RecreateWnd (triggered by changing properties like DoubleBuffered, Ctl3D, etc.):
+       DestroyWnd
+       DestroyWnd post
+       CreateWnd
+        CreateWindowHandle
+       CreateWnd post
+
+   Reconstructing the form (FormStyle change, etc.):
+      Similar to RecreateWnd - the form and all child controls get their handles destroyed and recreated.
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
 USES
-  System.SysUtils, System.IOUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls;
+  System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls;
 
 TYPE
   TCreationOrderTest = class(TPanel)
     private
       FButton: TButton;
-      Initialized: Boolean;
+      FInitialized: Boolean;
       CONST LogActive= FALSE;
+      CONST LogFile= 'c:\Projects\LightSaber\CreationOrder.txt';
     protected
       procedure Loaded; override;
       procedure CreateWnd; override;
+      procedure DestroyWnd; override;
       procedure CreateWindowHandle(const Params: TCreateParams); override;
-      procedure SetParent(AParent: TWinControl); override;      { SetParent is called during construction AND also during deconstruction with aParent=nil }
+      procedure SetParent(AParent: TWinControl); override;      { SetParent is called during construction AND also during destruction with aParent=nil }
     public
       procedure AfterConstruction; override;
+      procedure BeforeDestruction; override;
       constructor Create(AOwner: TComponent); override;
-      procedure WriteToString(s: string);
+      destructor Destroy; override;
+      procedure WriteLog(CONST s: string);
+      procedure WriteControlState;
+      procedure WriteComponentState;
     published
       property Button: TButton read FButton;
   end;
@@ -130,7 +164,8 @@ procedure Register;
 
 IMPLEMENTATION
 
-
+USES
+  LightCore.TextFile;
 
 
 
@@ -141,7 +176,7 @@ begin
   { Caption }
   Caption:= '';         // Doesn't work if I set caption to '' (in the constructor) but works if I set it to anything else than empty string
   ShowCaption := FALSE; // https://stackoverflow.com/questions/56859524/how-to-initialize-a-custom-control/64974040?noredirect=1#comment114931111_64974040
-  ControlStyle:= ControlStyle - [cssetcaption];
+  ControlStyle:= ControlStyle - [csSetCaption];
 
   { Subcomponent }
   FButton:= TButton.Create(Self);
@@ -153,43 +188,47 @@ begin
   FButton.Caption  := 'SOMETHING';
 
   { LOG }
-  WriteToString(#13#10);
-  WriteToString('_____________________'+ #13#10);
-  WriteToString(TimeToStr(Now)+ #13#10);
-  WriteToString('ComponentState: '+ #13#10);
-  if csLoading          in ComponentState then WriteToString(' csLoading'+ #13#10);
-  if csReading          in ComponentState then WriteToString(' csReading'+ #13#10);
-  if csDesigning        in ComponentState then WriteToString(' csDesigning'+ #13#10);
-  if csAncestor         in ComponentState then WriteToString(' csAncestor'+ #13#10);
-  if csUpdating         in ComponentState then WriteToString(' csUpdating'+ #13#10);
-  if csFixups           in ComponentState then WriteToString(' csFixups'+ #13#10);
-  if csInline           in ComponentState then WriteToString(' csInline'+ #13#10);
-  if csDesignInstance   in ComponentState then WriteToString(' csDesignInstance'+ #13#10);
-  if csWriting          in ComponentState then WriteToString(' csWriting'+ #13#10);               // cannot happen in constructor
-  if csDestroying       in ComponentState then WriteToString(' csDestroying'+ #13#10);            // cannot happen in constructor
-  if csFreeNotification in ComponentState then WriteToString(' csFreeNotification'+ #13#10);      // cannot happen in constructor
-  WriteToString(#13#10);
-  WriteToString('Create'+ #13#10);
+  WriteLog('');
+  WriteLog('_____________________');
+  WriteLog(TimeToStr(Now));
+  WriteComponentState;
+  WriteControlState;
+  WriteLog('Create');
+end;
+
+
+destructor TCreationOrderTest.Destroy;
+begin
+  WriteLog('Destroy');
+  inherited Destroy;
+  WriteLog('Destroy post');
 end;
 
 
 procedure TCreationOrderTest.AfterConstruction;  { This is not different than calling the code at the end of Create constructor. }
 begin
   inherited;
-  WriteToString('AfterConstruction'+ #13#10);
+  WriteLog('AfterConstruction');
+end;
+
+
+procedure TCreationOrderTest.BeforeDestruction;
+begin
+  WriteLog('BeforeDestruction');
+  inherited;
 end;
 
 
 procedure TCreationOrderTest.Loaded;
 begin
   inherited;
-  WriteToString('Loaded'+ #13#10);
+  WriteLog('Loaded');
 end;
 
 
 
 {Important notes:
-    1. CreateWnd could be create much much later, after Create.
+    1. CreateWnd could be created much much later, after Create.
        For example if this control is on a form that is created hidden, CreateWnd will not be called until the form is shown!
 
     2. CreateWnd can be called more than once:
@@ -200,29 +239,40 @@ end;
 }
 procedure TCreationOrderTest.CreateWnd;
 begin
-  WriteToString(' CreateWnd'+ #13#10);
+  WriteLog(' CreateWnd');
   inherited;
-  WriteToString(' CreateWnd post'+ #13#10);
+  WriteLog(' CreateWnd post');
+end;
+
+
+procedure TCreationOrderTest.DestroyWnd;
+begin
+  WriteLog(' DestroyWnd');
+  inherited;
+  WriteLog(' DestroyWnd post');
 end;
 
 
 procedure TCreationOrderTest.CreateWindowHandle(const Params: TCreateParams);
 begin
+  WriteLog('  CreateWindowHandle');
   inherited CreateWindowHandle(Params);
-  WriteToString('  CreateWindowHandle'+ #13#10);
+  WriteLog('  CreateWindowHandle post');
 end;
 
 
-{ SetParent is called during construction AND also during deconstruction (with aParent=Nil) }
+{ SetParent is called during construction AND also during destruction (with aParent=Nil) }
 procedure TCreationOrderTest.SetParent(AParent: TWinControl);
 begin
-  WriteToString('SetParent'+ #13#10);
+  if AParent = NIL
+  then WriteLog('SetParent (AParent=nil)')
+  else WriteLog('SetParent');
   inherited SetParent(AParent);
-  WriteToString('SetParent post'+ #13#10);
+  WriteLog('SetParent post');
 
-  if NOT Initialized then { Make sure we don't call this code twice }
+  if NOT FInitialized then { Make sure we don't call this code twice }
    begin
-     Initialized:= TRUE;
+     FInitialized:= TRUE;
      Caption:= 'SOMETHING';    // Doesn't work if I set caption to '' (in the constructor) but works if I set it to anything else than empty string
    end;
 end;
@@ -232,15 +282,50 @@ end;
 
 
 
-
 {-------------------------------------------------------------------------------------------------------------
-   UTILS
+   LOGGING
 -------------------------------------------------------------------------------------------------------------}
-procedure TCreationOrderTest.WriteToString(s: string);
+procedure TCreationOrderTest.WriteLog(CONST s: string);
 begin
   if LogActive
-  then System.IOUtils.TFile.AppendAllText('c:\MyProjects\LightSaber\CreationOrder.txt', s);
+  then StringToFile(LogFile, s + sLineBreak, woAppend, wpOff);
   { Without a full path, the output will be in Delphi\bin folder when the control is used inside the IDE (dropped on a form) and in app's folder when running inside the EXE file. }
+end;
+
+
+procedure TCreationOrderTest.WriteComponentState;
+begin
+  WriteLog('ComponentState:');
+  if csLoading          in ComponentState then WriteLog('  csLoading');
+  if csReading          in ComponentState then WriteLog('  csReading');
+  if csDesigning        in ComponentState then WriteLog('  csDesigning');
+  if csAncestor         in ComponentState then WriteLog('  csAncestor');
+  if csUpdating         in ComponentState then WriteLog('  csUpdating');
+  if csFixups           in ComponentState then WriteLog('  csFixups');
+  if csInline           in ComponentState then WriteLog('  csInline');
+  if csDesignInstance   in ComponentState then WriteLog('  csDesignInstance');
+  if csWriting          in ComponentState then WriteLog('  csWriting');
+  if csDestroying       in ComponentState then WriteLog('  csDestroying');
+  if csFreeNotification in ComponentState then WriteLog('  csFreeNotification');
+end;
+
+
+procedure TCreationOrderTest.WriteControlState;
+begin
+  WriteLog('ControlState:');
+  if csLButtonDown      in ControlState then WriteLog('  csLButtonDown');
+  if csClicked          in ControlState then WriteLog('  csClicked');
+  if csPalette          in ControlState then WriteLog('  csPalette');
+  if csReadingState     in ControlState then WriteLog('  csReadingState');
+  if csFocusing         in ControlState then WriteLog('  csFocusing');
+  if csCreating         in ControlState then WriteLog('  csCreating');          { Set during CreateWnd }
+  if csPaintCopy        in ControlState then WriteLog('  csPaintCopy');
+  if csCustomPaint      in ControlState then WriteLog('  csCustomPaint');
+  if csDestroyingHandle in ControlState then WriteLog('  csDestroyingHandle');  { Set during DestroyWnd }
+  if csDocking          in ControlState then WriteLog('  csDocking');
+  {$IF CompilerVersion >= 21} { Delphi 2010+ }
+  if csRecreating       in ControlState then WriteLog('  csRecreating');        { Set during RecreateWnd - mentioned in Allen Bauer's comment }
+  {$IFEND}
 end;
 
 
@@ -251,5 +336,3 @@ end;
 
 
 end.
-
-

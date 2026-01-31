@@ -1,7 +1,8 @@
 UNIT LightVcl.Visual.CalendarCanvas;
 {-------------------------------------------------------------------------------------------------------------
+  2026.01.31
   Freeware
-  Calendar descended from TComponent
+  Calendar descended from TComponent (now TObject)
   Draws the calendar on the provided canvas.
 
   Based on Calpnl.pas (freeware) written by Peter Crain, Robert Vivrette, Roland Weinschuetz, Harri Kasulke, Harri.Kasulke@Okay.net
@@ -124,7 +125,6 @@ TYPE
   procedure DrawFocusFrame    (nIndex : Integer);
   procedure LoadDateArray;
   function  GetMonthBegin: Integer;
-  function  IsLeapYear  (AYear: Integer): Boolean;
   function  SetDate     (nDays : Integer): Boolean;
   function  GetRectFromIndex  (nIndex : Integer): TRect;
   function  GetIndexFromDate: Integer;
@@ -135,6 +135,7 @@ TYPE
   destructor Destroy; override;
 
   function DaysInMonth  (nMonth, nYear : Integer): Integer;
+  function IsLeapYear   (AYear: Integer): Boolean;
   function IsValidDate  (yy,mm,dd: Integer): Boolean;
   function WeeksFirstDay(aDate: TDateTime): TDateTime;      { This function helps to Filter/Query a Table by Weeks}
   function WeeksLastDay (aDate: TDateTime): TDateTime;      { This function helps to Filter/Query a Table by Weeks}
@@ -223,8 +224,8 @@ end;
 
 destructor TCalendarCanvas.Destroy;
 begin
-  FHolidays.Free;
-  FMarkdays.Free;
+  FreeAndNil(FHolidays);
+  FreeAndNil(FMarkdays);
   inherited Destroy;
 end;
 
@@ -309,39 +310,37 @@ begin
 end;
 
 
-// Draw the 'MMMMM YYYY' display above the abbreviated day names at the top. The Months or Years can then be changed programmatically by ScrollBars or similar.
+{ Draws the 'MMMMM YYYY' display above the abbreviated day names at the top.
+  The Months or Years can then be changed programmatically by ScrollBars or similar. }
 procedure TCalendarCanvas.DrawDateInHeader;
 var
    iRectHt, iSpaces, iIndent: Integer;
    sMonth : String;
    TempRect : TRect;
 begin
- with FCanvas do
-   begin
-    Font.Color := clBlack;
-    Font.Style := [fsBold];
-    if UseLongDate
-    then sMonth := FormatDateTime( 'dd mmmm yyyy', FCalendarDate )
-    else sMonth := FormatDateTime( 'dd mmm yyyy' , FCalendarDate );
+ FCanvas.Font.Color:= clBlack;
+ FCanvas.Font.Style:= [fsBold];
+ if UseLongDate
+ then sMonth:= FormatDateTime('dd mmmm yyyy', FCalendarDate)
+ else sMonth:= FormatDateTime('dd mmm yyyy' , FCalendarDate);
 
-    TempRect := HeadingRect;
-    iRectHt := HeadingRect.Bottom - HeadingRect.Top;
-    iIndent := (TempRect.Right - TempRect.Left) div 20;
-    iSpaces := (iRectHt div 20) * BORDER;
-    if iSpaces = 0
-    then iSpaces:= 1;
+ TempRect:= HeadingRect;
+ iRectHt := HeadingRect.Bottom - HeadingRect.Top;
+ iIndent := (TempRect.Right - TempRect.Left) div 20;
+ iSpaces := (iRectHt div 20) * BORDER;
+ if iSpaces = 0
+ then iSpaces:= 1;
 
-    TempRect.Top   := TempRect.Top   + iSpaces ;
-    TempRect.Bottom:= TempRect.Top   + CellHeight ;
-    TempRect.Left  := TempRect.Left  + iIndent + BUTTON_WIDTH + 1;
-    TempRect.Right := TempRect.Right - (iIndent + BUTTON_WIDTH + 1);
-    Brush.Color    := clBtnFace;
-    Brush.Style    := bsClear;
-    {todo: if FSolidBkg
-     Brush.Style := bsxxx;
-     FillRect( TempRect ); }
-    DrawText( Handle, sMonth, Length( sMonth ), TempRect,( DT_CENTER or DT_TOP or DT_SINGLELINE ) );
-   end;
+ TempRect.Top   := TempRect.Top   + iSpaces;
+ TempRect.Bottom:= TempRect.Top   + CellHeight;
+ TempRect.Left  := TempRect.Left  + iIndent + BUTTON_WIDTH + 1;
+ TempRect.Right := TempRect.Right - (iIndent + BUTTON_WIDTH + 1);
+ FCanvas.Brush.Color:= clBtnFace;
+ FCanvas.Brush.Style:= bsClear;
+ {todo: if FSolidBkg
+  FCanvas.Brush.Style := bsxxx;
+  FCanvas.FillRect( TempRect ); }
+ DrawText(FCanvas.Handle, sMonth, Length(sMonth), TempRect, DT_CENTER or DT_TOP or DT_SINGLELINE);
 end;
 
 
@@ -411,144 +410,137 @@ begin
    FCanvas.Font.Style := [];  {reset Days <> Bold}
 
    { Draw line below days }
-   with FCanvas do
-      begin
-         ARect.Top := CalendarRect.Top - 4;
-         ARect.Left := HeadingRect.Left;
-         ARect.Right := HeadingRect.Right;
-         Pen.Color := clBtnHighlight;
-         MoveTo( ARect.Left , ARect.Top);
-         LineTo( ARect.Right, ARect.Top );
-         Pen.Color := clBtnShadow;
-         MoveTo( ARect.Left,  ARect.Top + 1 );
-         LineTo( ARect.Right, ARect.Top + 1  );
-      end;
+   ARect.Top  := CalendarRect.Top - 4;
+   ARect.Left := HeadingRect.Left;
+   ARect.Right:= HeadingRect.Right;
+   FCanvas.Pen.Color:= clBtnHighlight;
+   FCanvas.MoveTo(ARect.Left , ARect.Top);
+   FCanvas.LineTo(ARect.Right, ARect.Top);
+   FCanvas.Pen.Color:= clBtnShadow;
+   FCanvas.MoveTo(ARect.Left,  ARect.Top + 1);
+   FCanvas.LineTo(ARect.Right, ARect.Top + 1);
 end;
 
 
+{ Draws all the day numbers in the calendar grid.
+  Days from previous/next month are shown in gray when ShowWeeks is enabled.
+  Holidays and marked days are highlighted in their respective colors. }
 procedure TCalendarCanvas.DrawDates;
 VAR
    nIndex, nWeek, nDay: Integer;
-   pDate1, pDate2, pDate: string;
+   pDate1, pDate: string;
    x,y: Integer;
 CONST
    ShowGridLines: Boolean= FALSE;
 begin
- With FCanvas DO
+ { Define normal font }
+ FCanvas.Font.Style := [];
+ FCanvas.Pen.Color  := clBlack;
+ FCanvas.Brush.Style:= bsClear;   //todo: if FSolidBkg
+
+ { Cycle through the weeks }
+ for nWeek := 1 to 6 do
   begin
-   { Define normal font }
-   Font.Style := [];
-   Pen.Color := clBlack;
-   Brush.Style:= bsClear;   //todo: if FSolidBkg
-
-   { Cycle through the weeks }
-   for nWeek := 1 to 6 do
+   { Cycle through the days }
+   for nDay := 1 to 7 Do
     begin
-     { Cycle through the days }
-     for nDay := 1 to 7 Do
+     nIndex := nDay + ((nWeek - 1) * 7);
+
+     pDate1:= g_DateArray[nIndex];
+     Delete(pDate1, 1, 1);
+     pDate:= pDate1;
+     if pDate = '  '
+     then Break;
+
+     FCanvas.Font.Color:= clBlack;
+     if not FGermanDate
+     then
       begin
-       nIndex := nDay + ( ( nWeek - 1 ) * 7 );
-
-       pDate1:= g_DateArray[nIndex];
-       pDate2:= pDate1;
-       Delete(pDate1, 1, 1);
-       pDate:= pDate1;
-       if pDate= '  ' then Break;
-
-       Font.Color := clBlack;
-       if not FGermanDate
-       then
-        begin
-         if nDay = 1 then Font.Color := ColSunday;
-         if nDay = 7 then Font.Color := ColSaturday;
-        end
-       else
-        begin
-         if nDay = 7 then Font.Color := ColSunday;
-         if nDay = 6 then Font.Color := ColSaturday;
-        end;
-
-        if CheckHoliday(Holidays, pDate, FMonth)
-        then Font.Color := ColHoliday;
-        if CheckHoliday(Markdays, pDate, FMonth)
-        then FCanvas.Font.Color := ColMarked;
-
-        // Write with shadow (a)
-        x:= CalendarRect.Left + (CellWidth  * (nDay - 1));
-        y:= CalendarRect.Top  + (CellHeight * (nWeek -1));
-
-        if ShowGridLines then
-         begin
-          Pen.Color:= clGray;
-          Rectangle(x,y, x+CellWidth, y+ CellHeight);
-         end;
-
-        // Center the text
-        x:= x+ (CellWidth  - TextWidth (pDate)) DIV 2;
-        y:= y+ (CellHeight - TextHeight(pDate)) DIV 2;
-
-        // Write with shadow (b)
-        Font.Color:= clSilver;
-        Font.Style := [];
-        LightVcl.Graph.Text.DrawTextShadow3DSoft(FCanvas, pDate, x, y, clTextShadow);
-
-        // put color back
-        //Font.Color := clBlack; // necessary? no!
+       if nDay = 1 then FCanvas.Font.Color:= ColSunday;
+       if nDay = 7 then FCanvas.Font.Color:= ColSaturday;
+      end
+     else
+      begin
+       if nDay = 7 then FCanvas.Font.Color:= ColSunday;
+       if nDay = 6 then FCanvas.Font.Color:= ColSaturday;
       end;
+
+      if CheckHoliday(Holidays, pDate, FMonth)
+      then FCanvas.Font.Color:= ColHoliday;
+      if CheckHoliday(Markdays, pDate, FMonth)
+      then FCanvas.Font.Color:= ColMarked;
+
+      // Calculate cell position
+      x:= CalendarRect.Left + (CellWidth  * (nDay - 1));
+      y:= CalendarRect.Top  + (CellHeight * (nWeek -1));
+
+      if ShowGridLines then
+       begin
+        FCanvas.Pen.Color:= clGray;
+        FCanvas.Rectangle(x, y, x+CellWidth, y+ CellHeight);
+       end;
+
+      // Center the text within cell
+      x:= x + (CellWidth  - FCanvas.TextWidth (pDate)) DIV 2;
+      y:= y + (CellHeight - FCanvas.TextHeight(pDate)) DIV 2;
+
+      // Draw text with shadow effect
+      FCanvas.Font.Color:= clSilver;
+      FCanvas.Font.Style:= [];
+      LightVcl.Graph.Text.DrawTextShadow3DSoft(FCanvas, pDate, x, y, clTextShadow);
     end;
-   end;
+  end;
 end;
 
 
-{ New procedure to Draw the WeekNo in the Calendar}
+{ Draws the week numbers (CW = calendar week) in the left column of the calendar.
+  Week numbers follow ISO 8601 when WkStartMonday is true (German format). }
 procedure TCalendarCanvas.DrawWeeks;
 var
    nWeek, nDays: Integer;
    pWeek: string;
    TempRect: Trect;
    d       : TDateTime;
-   x,i   : Integer;
-   tWeek, nWeeks :Integer;
-   rtop  : Integer;
+   x, i    : Integer;
+   tWeek, nWeeks: Integer;
+   rtop    : Integer;
 begin
- nDays:=DaysInMonth(FMonth,FYear);
- tWeek:=0;
- i:=0;
- for x:=1 to nDays do
- begin
-  d:=EncodeDate(FYear,FMonth,x);
-  nWeek:=WeekNo(d);
-  if nWeek<>tWeek then
-   begin
-    g_WeekNumbers[i]:= IntToStr(nWeek);
-    i:=i+1;
-    tWeek:=nWeek;
-   end;
- end;
+ nDays:= DaysInMonth(FMonth, FYear);
+ tWeek:= 0;
+ i:= 0;
 
- nWeeks:=i-1;
- TempRect := CalendarRect;
- TempRect.Left:= TempRect.Left-CellWidth;
- rtop:=TempRect.Top;
-
- WITH FCanvas DO
+ { Build array of week numbers that appear in this month }
+ for x:= 1 to nDays do
   begin
-   Font.Style := [];
-   Pen.Color := clBlack;
-   Font.Color := clTeal;
-   for x:=0 to nWeeks do
+   d:= EncodeDate(FYear, FMonth, x);
+   nWeek:= WeekNo(d);
+   if nWeek <> tWeek then
     begin
-     pWeek:= g_WeekNumbers[x];
-     With TempRect Do
-     begin
-      Top := rtop + (CellHeight * (x));
-      Bottom := Top +  CellHeight ;
-      Right := Left + CellWidth;
-     end;
-     DrawText( Handle, pWeek, Length( g_WeekNumbers[x] ), TempRect, ( DT_CENTER or DT_VCENTER or DT_TOP or DT_SINGLELINE ) );
+     g_WeekNumbers[i]:= IntToStr(nWeek);
+     i:= i + 1;
+     tWeek:= nWeek;
     end;
-   Font.Color := clBlack;    {Restore}
   end;
+
+ nWeeks:= i - 1;
+ TempRect:= CalendarRect;
+ TempRect.Left:= TempRect.Left - CellWidth;
+ rtop:= TempRect.Top;
+
+ FCanvas.Font.Style:= [];
+ FCanvas.Pen.Color := clBlack;
+ FCanvas.Font.Color:= clTeal;
+
+ for x:= 0 to nWeeks do
+  begin
+   pWeek:= g_WeekNumbers[x];
+   TempRect.Top   := rtop + (CellHeight * x);
+   TempRect.Bottom:= TempRect.Top + CellHeight;
+   TempRect.Right := TempRect.Left + CellWidth;
+   DrawText(FCanvas.Handle, pWeek, Length(g_WeekNumbers[x]), TempRect, DT_CENTER or DT_VCENTER or DT_TOP or DT_SINGLELINE);
+  end;
+
+ FCanvas.Font.Color:= clBlack;    {Restore}
 end;
 
 
@@ -581,7 +573,7 @@ begin
    setSat := setSat + [6, 13, 20, 27, 34, 41];
   end;
 
- If ( nIndex > 0 ) and ( nIndex < 42 ) then
+ If ( nIndex >= 1 ) and ( nIndex <= 42 ) then
  begin
  //following line works, but may affect DblClick
  //if nIndex = g_PrevDateIndex then exit;
@@ -605,8 +597,8 @@ begin
    if CheckHoliday(Markdays, pDate, FMonth) then
     FCanvas.Font.Color := ColMarked;
 
-   if pDate2[1]='-'
-   then FCanvas.Font.Color:=clBtnShadow;
+   if (Length(pDate2) > 0) AND (pDate2[1] = '-')
+   then FCanvas.Font.Color:= clBtnShadow;
 
    FCanvas.Brush.Color := clBtnFace;
    TempRect := GetRectFromIndex(g_PrevDateIndex);
@@ -634,7 +626,7 @@ begin
   if CheckHoliday(Markdays, pDate, FMonth)
   then FCanvas.Font.Color := ColMarked;
 
-  if pDate2[1]= '-'
+  if (Length(pDate2) > 0) AND (pDate2[1] = '-')
   then FCanvas.Font.Color:= clBtnShadow;
 
   TempRect := GetRectFromIndex(nIndex);
@@ -690,7 +682,10 @@ begin
 end;
 
 
-function TCalendarCanvas.GetIndexFromPoint(nLeft : Integer ; nTop : Integer) : Integer;  // Unused
+{ Converts screen coordinates to a date array index (1..42).
+  Returns -1 if the point is outside the calendar grid.
+  Note: Currently unused. Kept for potential future mouse interaction support. }
+function TCalendarCanvas.GetIndexFromPoint(nLeft: Integer; nTop: Integer): Integer;
 var
   nIndex, nWeek, nDay, iHorizontal, iTopOfCal: Integer;
   TempRect: Trect;
@@ -741,57 +736,67 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    DATE RELATED FUNCTIONS
 -------------------------------------------------------------------------------------------------------------}
+
+{ Populates g_DateArray[1..42] with day numbers for the 6-week calendar grid.
+  Each entry is prefixed with:
+    '+' = day belongs to current month (e.g., '+15' for the 15th)
+    '-' = day belongs to prev/next month (grayed out in display)
+    '   ' = empty cell (3 spaces)
+  When ShowWeeks is true, days from adjacent months are displayed.
+  When false, they are left blank. }
 procedure TCalendarCanvas.LoadDateArray;
 var
   nIndex : Integer;
   nBeginIndex, nEndIndex : Integer;
-  { Added BEGIN}
-  aYear,aMonth,aDay : word;
-  d1,d2,dd1,dd2 : TDateTime;
-  dx1,dx2       : Integer;
-  { Add-END}
+  aYear, aMonth, aDay : word;
+  d1, d2, dd1, dd2 : TDateTime;
+  dx1, dx2         : Integer;
 begin
-  nBeginIndex := GetMonthBegin;
-  nEndIndex := nBeginIndex + DaysInMonth(FMonth, FYear) - 1;
-  { Added BEGIN}
-  d1:=EncodeDate(FYear,FMonth,1);
-  DecodeDate(d1-1,aYear,aMonth,aDay);
-  dd1:=WeeksFirstDay(d1);
-  d2:=EncodeDate(FYear,FMonth,DaysInMonth(FMonth, FYear));
-  dd2:=WeeksLastDay(d2);
-  dx1:=trunc(d1-dd1);
-  dx2:=trunc(dd2-d2);
-  { Add-END}
+  { Calculate the grid position where the current month starts and ends }
+  nBeginIndex:= GetMonthBegin;
+  nEndIndex  := nBeginIndex + DaysInMonth(FMonth, FYear) - 1;
+
+  { Calculate days from previous month to show }
+  d1 := EncodeDate(FYear, FMonth, 1);
+  DecodeDate(d1-1, aYear, aMonth, aDay);  // Last day of previous month
+  dd1:= WeeksFirstDay(d1);                // First day of week containing month start
+  dx1:= trunc(d1 - dd1);                  // Days from prev month in first week
+
+  { Calculate days from next month to show }
+  d2 := EncodeDate(FYear, FMonth, DaysInMonth(FMonth, FYear));
+  dd2:= WeeksLastDay(d2);                 // Last day of week containing month end
+  dx2:= trunc(dd2 - d2);                  // Days from next month in last week
 
   for nIndex := 1 to 42 do
-  begin
-  { Changed BEGIN}
-
-    If ( nIndex < nBeginIndex ) or ( nIndex > nEndIndex )
+   begin
+    If (nIndex < nBeginIndex) or (nIndex > nEndIndex)
     then
-    begin
-     if ( nIndex < nBeginIndex )
-     then
      begin
-      if FShowWeeks    //showing WeekNo (week of the year)
-      then g_DateArray[nIndex] := '-'+IntToStr(aDay-dx1+nIndex)
-      else g_DateArray[nIndex] := '   ';
-     end
-     else
-     begin
-      if nIndex-nEndIndex<dx2+1
+      { Cell is outside current month }
+      if nIndex < nBeginIndex
       then
-       if FShowWeeks     //showing WeekNo (week of the year)
-       then g_DateArray[nIndex] := '-'+IntToStr(nIndex-nEndIndex)
-       else g_DateArray[nIndex] := '   '
+       begin
+        { Days from previous month }
+        if FShowWeeks
+        then g_DateArray[nIndex]:= '-' + IntToStr(aDay - dx1 + nIndex)
+        else g_DateArray[nIndex]:= '   ';
+       end
       else
-        g_DateArray[nIndex] := '   ';
-     end;
-    end
+       begin
+        { Days from next month }
+        if (nIndex - nEndIndex < dx2 + 1)
+        then
+         if FShowWeeks
+         then g_DateArray[nIndex]:= '-' + IntToStr(nIndex - nEndIndex)
+         else g_DateArray[nIndex]:= '   '
+        else
+          g_DateArray[nIndex]:= '   ';
+       end;
+     end
     else
-     g_DateArray[nIndex] := '+'+IntToStr((nIndex-nBeginIndex)+1);
-  { Change-END}
-  end;
+     { Day belongs to current month }
+     g_DateArray[nIndex]:= '+' + IntToStr((nIndex - nBeginIndex) + 1);
+   end;
 end;
 
 
@@ -807,8 +812,10 @@ end;
 
 function TCalendarCanvas.DaysInMonth(nMonth, nYear : Integer): Integer;
 begin
-  Result := DAYS_IN_MONTH[nMonth]; { leap-year Feb is special }
-  if ( nMonth = 2 ) and IsLeapYear(nYear) then Inc( Result );
+  Assert((nMonth >= 1) AND (nMonth <= 12), 'DaysInMonth: Invalid month ' + IntToStr(nMonth));
+  Result:= DAYS_IN_MONTH[nMonth]; { leap-year Feb is special }
+  if (nMonth = 2) and IsLeapYear(nYear)
+  then Inc(Result);
 end;
 
 
@@ -847,21 +854,18 @@ begin
 end;
 
 
+{ Validates a date without raising exceptions.
+  Returns True if the date is valid, False otherwise.
+  Note: DaysInMonth already handles leap year February correctly. }
 Function TCalendarCanvas.ValidDate(aDate: TDateType) : Boolean;
-Begin       {is cool as no exception is generated by invalid date}
- ValidDate := True;
-  With aDate do
-   Begin
-    If (aMonth > 12) Or (aMonth < 1) Or (aDay < 1) or (aYear < 1) or (aYear > 9999) then
-     Begin
-      ValidDate := False;
-      Exit;
-     End;
-    If (aMonth = 2) And IsLeapYear(Integer(aYear))
-    then Dec(aDay);
-    If aDay > DaysInMonth(aMonth, aYear)
-    then ValidDate := False;
-   End;
+Begin
+ Result:= True;
+
+ if (aDate.aMonth > 12) OR (aDate.aMonth < 1) OR (aDate.aDay < 1) OR (aDate.aYear < 1) OR (aDate.aYear > 9999)
+ then EXIT(False);
+
+ if aDate.aDay > DaysInMonth(aDate.aMonth, aDate.aYear)
+ then EXIT(False);
 End;
 
 
@@ -924,12 +928,9 @@ begin {no test for new <> old as that would fail at startup}
  if iDaysInM < FDay
  then FDay := iDaysInM;
 
- with mDate do
-  begin
-   aMonth := wValue;
-   aDay := Word(FDay);
-   aYear := Word(FYear);
-  end;
+ mDate.aMonth:= wValue;
+ mDate.aDay  := Word(FDay);
+ mDate.aYear := Word(FYear);
 
  if ValidDate(mDate) then  {2nd test}
   begin
@@ -959,12 +960,9 @@ begin
    Exit;
   end;
  wValue := Word(Value);
- with dDate do
-  begin
-   aMonth := Word(FMonth);
-   aDay := wValue;
-   aYear := Word(FYear);
-  end;
+ dDate.aMonth:= Word(FMonth);
+ dDate.aDay  := wValue;
+ dDate.aYear := Word(FYear);
  if ValidDate(dDate) then  {2nd test}
   begin
    FCalendarDate := EncodeDate(Word(FYear), Word(FMonth), Value);
@@ -997,12 +995,9 @@ begin
  if iDaysInM < FDay
  then FDay := iDaysInM;
 
- with yDate do
-  begin
-   aMonth := Word(FMonth);
-   aDay := Word(FDay);
-   aYear := wValue;
-  end;
+ yDate.aMonth:= Word(FMonth);
+ yDate.aDay  := Word(FDay);
+ yDate.aYear := wValue;
  if ValidDate(yDate) then  {2nd test}
   begin
    FCalendarDate := EncodeDate(wValue, Word(FMonth), Word(FDay));
@@ -1027,76 +1022,89 @@ begin
 end;
 
 
-{-Return the Date of the first day in the week of Julian Year}
+{ Returns the date of the first day in week 1 of the given year.
+  ISO 8601: Week 1 is the week containing the first Thursday of the year.
+  This means if Jan 1 falls on Fri/Sat/Sun, then week 1 starts the following Monday.
+  Otherwise, week 1 starts on the Monday of the week containing Jan 1. }
 function TCalendarCanvas.JulDate1stWeek(JD : TDateTime) : TDateTime;
 var
   aYear, aMonth, aDay : Word;
   JDate     : TDateTime;
 begin
   DecodeDate(JD, aYear, aMonth, aDay);
-  JDate := EncodeDate(aYear, 1, 1);
+  JDate:= EncodeDate(aYear, 1, 1);
 
   if FGermanDate then
-  begin
-   if rDayOfWeek(JDate) in [5,6,7]  //1.1. ist Fr, Sa, So
-   then JDate:=JDate+(8-rDayOfWeek(JDate))       //Dann gehört diese Woche noch zum letzten Jahr JDate auf nächsten Montag erhöhen
-   else
-     if rDayOfWeek(JDate)>1
-     then JDate:=JDate-(rDayOfWeek(JDate)-1);      //Sonst JDate auf Montag erniedrigen
-  end
- else
-  begin
-   if rDayOfWeek(JDate) in [6,7,1]
-   then           //1.1. ist Fr, Sa, So
+   begin
+    { ISO week (Mon=1): If Jan 1 is Fri(5), Sat(6), or Sun(7), this week belongs to prev year }
+    if rDayOfWeek(JDate) in [5,6,7]
+    then JDate:= JDate + (8 - rDayOfWeek(JDate))  // Move to next Monday
+    else
+      if rDayOfWeek(JDate) > 1
+      then JDate:= JDate - (rDayOfWeek(JDate) - 1);  // Move back to Monday
+   end
+  else
+   begin
+    { US week (Sun=1): If Jan 1 is Fri(6), Sat(7), or Sun(1), this week belongs to prev year }
+    if rDayOfWeek(JDate) in [6,7,1] then
      begin
-      if rDayOfWeek(JDate)>1
-      then JDate:=JDate+(8-rDayOfWeek(JDate));     //Dann gehört diese Woche      //noch zum letzten Jahr
-     end                                           //JDate auf nächsten Montag erhöhen
-   else
-     JDate:=JDate-(rDayOfWeek(JDate)-1);           //Sonst JDate auf Montag erniedrigen
-  end;
-  Result := JDate
+      if rDayOfWeek(JDate) > 1
+      then JDate:= JDate + (8 - rDayOfWeek(JDate));  // Move to next Monday
+     end
+    else
+      JDate:= JDate - (rDayOfWeek(JDate) - 1);  // Move back to week start
+   end;
+
+  Result:= JDate
 end;
 
 
+{ Calculates the ISO week number for a given date.
+  Handles edge cases where dates at year boundaries may belong to:
+  - The previous year's last week (e.g., Dec 31 might be week 1 of next year)
+  - The next year's first week (e.g., Jan 1 might be week 52/53 of prev year) }
 function TCalendarCanvas.WeekNo(JDate : TDateTime) : Integer;
 var
-  W1,W2,W3    : TDatetime;
-  d1,d2,d3    : TDatetime;
-  yy,mm,dd    : word;
+  W1, W2, W3  : TDatetime;
+  d1, d2, d3  : TDatetime;
+  yy, mm, dd  : word;
 begin
-  W1:=JulDate1stWeek(JDate);
-  W2:=W1;
-  W3:=W1; //Vorbelegen
-  DecodeDate(JDate, yy, mm, dd);  // voriges Jahr
-  if yy>0 then
-  begin
-   d2:=EncodeDate(yy-1, 12, 31);
-   W2:=JulDate1stWeek(d2);
-  end;
+  W1:= JulDate1stWeek(JDate);
+  W2:= W1;
+  W3:= W1;  // Initialize all to current year's week 1
+  DecodeDate(JDate, yy, mm, dd);
 
-  if yy< 9999 then
-  begin
-   d3:=EncodeDate(yy+1, 1, 1);     // nächstes Jahr
-   W3:=JulDate1stWeek(d3);
-  end;
+  { Get week 1 start of previous year }
+  if yy > 0 then
+   begin
+    d2:= EncodeDate(yy-1, 12, 31);
+    W2:= JulDate1stWeek(d2);
+   end;
 
-  if W3<=JDate then              //Woche gehört schon zum nächsten Jahr
-  begin
-   d1:=JDate-W3;
-   Result := (trunc(d1)div 7)+1;
-   Exit;
-  end;
+  { Get week 1 start of next year }
+  if yy < 9999 then
+   begin
+    d3:= EncodeDate(yy+1, 1, 1);
+    W3:= JulDate1stWeek(d3);
+   end;
 
-  if W1>JDate then              //Woche gehört noch zum vorigem Jahr
-  begin
-   d1:=JDate-W2;
-   Result := (trunc(d1)div 7)+1;
-   Exit;
-  end;
+  { Check if date belongs to next year's week 1 }
+  if W3 <= JDate then
+   begin
+    d1:= JDate - W3;
+    EXIT((trunc(d1) div 7) + 1);
+   end;
 
-  d1:=JDate-W1;                 //Normalfall
-  Result := (trunc(d1)div 7)+1;
+  { Check if date belongs to previous year's last week }
+  if W1 > JDate then
+   begin
+    d1:= JDate - W2;
+    EXIT((trunc(d1) div 7) + 1);
+   end;
+
+  { Normal case: date is within current year }
+  d1:= JDate - W1;
+  Result:= (trunc(d1) div 7) + 1;
 end;
 
 
@@ -1106,18 +1114,22 @@ begin
 end;
 
 
-function CalculateDayOfYear(y, m, d : Word) : Integer;   { DayOfYear }
+{ Calculates the day of year (1-366) for a given date using an arithmetic formula.
+  This is a compact algorithm that avoids loops by using integer division tricks.
+  The formula accounts for varying month lengths and leap year adjustments.
+  Example: Jan 1 = 1, Feb 1 = 32, Dec 31 = 365 (or 366 in leap year) }
+function CalculateDayOfYear(y, m, d : Word) : Integer;
 VAR
    yy, mm, dd, Tmp1 : LongInt;
 begin
-  yy := y;
-  mm := m;
-  dd := d;
-  Tmp1 := (mm + 10) div 13;
-  result :=  3055 * (mm + 2) div 100 - Tmp1 * 2 - 91 +
-                  (1 - (yy - yy div 4 * 4 + 3) div 4 +
-                  (yy - yy div 100 * 100 + 99) div 100 -
-                  (yy - yy div 400 * 400 + 399) div 400) * Tmp1 + dd
+  yy  := y;
+  mm  := m;
+  dd  := d;
+  Tmp1:= (mm + 10) div 13;  // 0 for Jan, 1 for Feb-Dec (used for leap year adjustment)
+  result:= 3055 * (mm + 2) div 100 - Tmp1 * 2 - 91 +
+           (1 - (yy - yy div 4 * 4 + 3) div 4 +
+           (yy - yy div 100 * 100 + 99) div 100 -
+           (yy - yy div 400 * 400 + 399) div 400) * Tmp1 + dd
 end;
 
 
@@ -1227,12 +1239,14 @@ end;
 
 procedure TCalendarCanvas.SetFont(const Value: TFont);
 begin
+  Assert(FCanvas <> NIL, 'TCalendarCanvas.SetFont: FCanvas is NIL');
   FCanvas.Font:= Value;
 end;
 
 
 function TCalendarCanvas.GetFont: TFont;
 begin
+  Assert(FCanvas <> NIL, 'TCalendarCanvas.GetFont: FCanvas is NIL');
   Result:= FCanvas.Font;
 end;
 

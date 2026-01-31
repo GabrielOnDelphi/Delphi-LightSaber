@@ -926,12 +926,13 @@ begin
 end;
 
 
-{ Read the raw content of the file and return it as string (for debugging) }
+{ Read the raw content of the file and return it as string (for debugging).
+  Note: This reads raw bytes, not a length-prefixed string. Use ReadStringA for that. }
 function TLightFileStream.AsString: AnsiString;
 begin
   if Size = 0 then RAISE Exception.Create('TLightFileStream is empty!');
   Position:= 0;
-  Result:= ReadStringA(Size);
+  Result:= ReadCharsA(Size, Size);
 end;
 
 

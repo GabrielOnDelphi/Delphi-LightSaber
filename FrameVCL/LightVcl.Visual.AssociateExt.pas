@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.AssociateExt;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -44,7 +44,6 @@ TYPE
 
 
 procedure Register;
-{$WARN GARBAGE OFF}   {Silent the: 'W1011 Text after final END' warning }
 
 
 IMPLEMENTATION
@@ -54,7 +53,8 @@ USES
 
 constructor TAssociateFileExt.Create(aOwner: TComponent);
 begin
- inherited Create(aOwner);    // Note: Don't set 'Parent:= Owner' in constructor. See this for details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
+ inherited Create(aOwner);    // Note: Don't set 'Parent:= Owner' in constructor. Details: stackoverflow.com/questions/6403217
+ Initialized:= FALSE;
 
  FFileType:= '.txt';
  FAssocName:= 'Demo Application';
@@ -83,7 +83,7 @@ begin
    Initialized:= TRUE;
    Height:= 129;
    Width := 174;
-   Caption:= 'Associate with...';   // https://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create  // Creatend   CreateParams   CreateindowHandle
+   Caption:= 'Associate with...';   // https://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create  // CreateWnd   CreateParams   CreateWindowHandle
    DoubleBuffered:= True;
 
    FAssociateBtn.Visible:= TRUE;

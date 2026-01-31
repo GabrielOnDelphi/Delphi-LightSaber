@@ -1,7 +1,7 @@
 UNIT LightVcl.Visual.LogForm;
 
 {=============================================================================================================
-   2024.05
+   2026.01.31
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Visual log window.
@@ -41,8 +41,9 @@ TYPE
     procedure chkShowTimeClick   (Sender: TObject);
     procedure FormClose          (Sender: TObject; var Action: TCloseAction);
     procedure FormDestroy        (Sender: TObject);
-    procedure mnuCopyAllClick    (Sender: TObject);
-    procedure mnuCopyClick       (Sender: TObject);
+    procedure mnuCopyAllClick      (Sender: TObject);
+    procedure mnuCopyClick         (Sender: TObject);
+    procedure mnuCopyFilteredClick (Sender: TObject);
     procedure chkScrollDownClick(Sender: TObject);
   private
     procedure LoadSettings;
@@ -50,7 +51,7 @@ TYPE
   public
     Log: TLogViewer;
     LogFilter: TLogVerbFilter;
-    procedure FormPostInitialize; override; // Called after the main form was fully initilized
+    procedure FormPostInitialize; override; // Called after the main form was fully initialized
   end;
 
 
@@ -81,7 +82,7 @@ begin
 
   LoadSettings;
   chkLogOnError.Checked:= AppData.RamLog.ShowOnError;
-  chkShowTime.Checked:= Log.ShowTime;
+  chkScrollDown.Checked:= Log.AutoScroll;
 end;
 
 
@@ -96,9 +97,9 @@ procedure TfrmRamLog.FormDestroy(Sender: TObject);
 begin
   Assert(Owner = NIL); // This form should have no owner. If it has an owner (like Application), it will destroy the form. We want AppData to destroy the form!
 
-  Log.RamLog.UnregisterLogObserver;  //ToDo: do I need this?
+  // Unregister to prevent pending TThread.Queue callbacks from accessing the destroyed form
+  Log.RamLog.UnregisterLogObserver;
   SaveSettings;
-  Container.Parent:= Self;
 end;
 
 
@@ -113,13 +114,13 @@ procedure TfrmRamLog.SaveSettings;
 begin
   Assert(AppData <> NIL, 'AppData is gone already!');
 
-  // Save Log verbosity
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);
   try
     IniFile.Write('ShowOnError', AppData.RamLog.ShowOnError);
 
     IniFile.Write('ShowTime'   , Log.ShowTime);
     IniFile.Write('ShowDate'   , Log.ShowDate);
+    IniFile.Write('AutoScroll' , Log.AutoScroll);
     IniFile.Write('Verbosity'  , Ord(Log.Verbosity));
   finally
     FreeAndNil(IniFile);
@@ -129,14 +130,13 @@ end;
 
 procedure TfrmRamLog.LoadSettings;
 begin
-  //del LightVcl.Visual.INIFile.LoadForm(Self);
-
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);
   try
     AppData.RamLog.ShowOnError:= IniFile.Read('ShowOnError', TRUE);
 
     Log.ShowTime              := IniFile.Read('ShowTime', TRUE);
     Log.ShowDate              := IniFile.Read('ShowDate', TRUE);
+    Log.AutoScroll            := IniFile.Read('AutoScroll', TRUE);
     Log.Verbosity             := TLogVerbLvl(IniFile.Read('Verbosity', Ord(lvHints)));
 
     chkShowDate.Checked:= Log.ShowDate;
@@ -192,6 +192,12 @@ end;
 procedure TfrmRamLog.mnuCopyClick(Sender: TObject);
 begin
   Log.CopyCurLine;
+end;
+
+
+procedure TfrmRamLog.mnuCopyFilteredClick(Sender: TObject);
+begin
+  Log.CopyVisible;
 end;
 
 

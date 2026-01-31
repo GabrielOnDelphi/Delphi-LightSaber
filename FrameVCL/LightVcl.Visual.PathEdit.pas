@@ -2,23 +2,24 @@ UNIT LightVcl.Visual.PathEdit;
 
 {=============================================================================================================
    www.GabrielMoraru.com
-   2024.05
+   2026.01
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
-  An edit box that allows user to choose/enter a file or folder.
+  TCubicPathEdit - An edit box that allows user to choose/enter a file or folder path.
 
   Features:
      OnPressEnter  - Event is triggered when the user pressed Enter
      OnApply       - Event is triggered when the user pressed Apply btn
      InputType     - Type of input that the control accepts: File (not implemented yet) and Folder
      Path          - Path as entered by user
-     FileListBox   - Can automatically update the linked FileListBox to nanivate to the specified folder
+     FileListBox   - Can automatically update the linked FileListBox to navigate to the specified folder
 
   Tester:
      c:\Myprojects\Project Testers\Cubic VCL LightVcl.Visual.PathEdit\LightVcl.Visual.PathEdit_Tester.dpr
 
-  See: What's the difference between CreateWnd and CreateWindowHandle? https://stackoverflow.com/questions/582903/whats-the-difference-between-createwnd-and-createwindowhandle
+  See: What's the difference between CreateWnd and CreateWindowHandle?
+       https://stackoverflow.com/questions/582903/whats-the-difference-between-createwnd-and-createwindowhandle
 -------------------------------------------------------------------------------------------------------------}
 
 //ToDo 1: Let user go one folder up by pressing a shortcut (like backspace maybe)
@@ -62,7 +63,7 @@ TYPE
      procedure btnApplyClick   (Sender: TObject);
      procedure edtPathChange   (Sender: TObject);  //override;
      procedure edtKeyPress     (Sender: TObject; var Key: Char);
-     procedure edtPatchOnClick (Sender: TObject);
+     procedure edtPathOnClick (Sender: TObject);
      procedure setPath         (const Value: string);
      procedure setInputType    (const Value: TInputType);
      procedure setOpenSrc      (const Value: Boolean);
@@ -186,7 +187,7 @@ begin
  ImgList:= TImageList.Create(Self);   { Freed by Self }
  myicon := TIcon.Create;
  TRY
-   myicon.LoadFromResourceName(HInstance, 'xFOLDER');         { I M P O R T N A T:    This must start with X. Reason: Due to a rather messed decision from Embarcadero, icon resources are sorted alphabetically when linked. The Windows rule is that the icon used by the shell for an Executeble is the first icon. Delphi VCL code assumes that the application icon is named 'MAINICON'. Put these requirements together and you deduce the all your icons must have names that appear after 'MAINICON' in alphabetical order. }
+   myicon.LoadFromResourceName(HInstance, 'xFOLDER');         { IMPORTANT: This must start with X. Reason: Icon resources are sorted alphabetically when linked, and the Windows shell uses the first icon for executables. Since VCL assumes 'MAINICON', all other icons must have names that appear after 'MAINICON' in alphabetical order. }
    ImgList.AddIcon(myicon);
    myicon.LoadFromResourceName(HInstance, 'xFOLDER_OPEN');
    ImgList.AddIcon(myicon);
@@ -201,70 +202,61 @@ begin
  edtPath.Images              := imgList;
  edtPath.OnRightButtonClick  := btnBrowseClick;
  edtPath.OnKeyPress          := edtKeyPress;
- edtPath.OnClick             := edtPatchOnClick; { Recompute color (red/gree) on mouse click. This is useful for when the file/folder did not existed (clRed) but meanwhile the user created it (now it has to be clGree) }
+ edtPath.OnClick             := edtPathOnClick; // Recompute validity color on click
  edtPath.OnChange            := edtPathChange;
  edtPath.RightButton.ImageIndex:= 0;
  edtPath.RightButton.HotImageIndex:= 1;
  edtPath.RightButton.Visible := TRUE;
 
  btnApply:= TButton.Create(Self);   { The user will write code for its event handler }
- WITH btnApply DO
-  begin
-   Name             := 'ButtonApply';
-   Parent           := Self;
-   Visible          := FALSE;                         // Invisible until Changed is triggered. The it is put to visible ONLY if the user set so in ObjectInspector
-   Enabled          := FALSE;                         // Not enabled until Changed is triggered (the user changes the path)
-   Width            := 48;
-   Margins.Left     := 1;
-   Margins.Top      := 1;
-   Margins.Right    := 1;
-   Margins.Bottom   := 1;
-   AlignWithMargins := TRUE;
-   Align            := alRight;
-   Hint             := 'Apply changes';
-   Caption          := 'Apply';
-   TabOrder         := 1;
-   OnClick          := btnApplyClick;
- end;
- // btnApply.FreeNotification(Self); Only needed if this controls is parented to a control other than self (for example the Label in TLabeledEdit is parented by the form, not by the Edit
+ btnApply.Name             := 'ButtonApply';
+ btnApply.Parent           := Self;
+ btnApply.Visible          := FALSE;                  // Invisible until Changed is triggered. Then it is put to visible ONLY if the user set ShowApplyBtn in Object Inspector
+ btnApply.Enabled          := FALSE;                  // Not enabled until Changed is triggered (the user changes the path)
+ btnApply.Width            := 48;
+ btnApply.Margins.Left     := 1;
+ btnApply.Margins.Top      := 1;
+ btnApply.Margins.Right    := 1;
+ btnApply.Margins.Bottom   := 1;
+ btnApply.AlignWithMargins := TRUE;
+ btnApply.Align            := alRight;
+ btnApply.Hint             := 'Apply changes';
+ btnApply.Caption          := 'Apply';
+ btnApply.TabOrder         := 1;
+ btnApply.OnClick          := btnApplyClick;
+ // Note: FreeNotification(Self) only needed if control is parented to something other than Self
 
  btnExplore:= TButton.Create(Self);
- WITH btnExplore DO
-  begin
-   Name             := 'ButtonExplore';
-   Parent           := Self;
-   Width            := 28;
-   Margins.Left     := 1;
-   Margins.Top      := 1;
-   Margins.Right    := 1;
-   Margins.Bottom   := 1;
-   AlignWithMargins := TRUE;
-   Align            := alRight;
-   Caption          := '^';
-   TabOrder         := 2;
-   Hint             := 'Locate this file/folder in Windows Explorer';
-   OnClick          := btnExploreClick;
- end;
+ btnExplore.Name             := 'ButtonExplore';
+ btnExplore.Parent           := Self;
+ btnExplore.Width            := 28;
+ btnExplore.Margins.Left     := 1;
+ btnExplore.Margins.Top      := 1;
+ btnExplore.Margins.Right    := 1;
+ btnExplore.Margins.Bottom   := 1;
+ btnExplore.AlignWithMargins := TRUE;
+ btnExplore.Align            := alRight;
+ btnExplore.Caption          := '^';
+ btnExplore.TabOrder         := 2;
+ btnExplore.Hint             := 'Locate this file/folder in Windows Explorer';
+ btnExplore.OnClick          := btnExploreClick;
 
  btnCreate:= TButton.Create(Self);
- WITH btnCreate DO
-  begin
-   Name             := 'ButtonCreate';
-   Parent           := Self;
-   Visible          := FShowCreate;
-   Enabled          := FALSE;       { Not enabled until Changed is triggered }
-   Align            := alRight;
-   Width            := 48;
-   Margins.Left     := 1;
-   Margins.Top      := 1;
-   Margins.Right    := 1;
-   Margins.Bottom   := 1;
-   AlignWithMargins := TRUE;
-   Hint             := 'Create folder';
-   Caption          := 'Create';
-   TabOrder         := 3;
-   OnClick          := btnCreateClick;
- end;
+ btnCreate.Name             := 'ButtonCreate';
+ btnCreate.Parent           := Self;
+ btnCreate.Visible          := FShowCreate;
+ btnCreate.Enabled          := FALSE;                 // Not enabled until Changed is triggered
+ btnCreate.Align            := alRight;
+ btnCreate.Width            := 48;
+ btnCreate.Margins.Left     := 1;
+ btnCreate.Margins.Top      := 1;
+ btnCreate.Margins.Right    := 1;
+ btnCreate.Margins.Bottom   := 1;
+ btnCreate.AlignWithMargins := TRUE;
+ btnCreate.Hint             := 'Create folder';
+ btnCreate.Caption          := 'Create';
+ btnCreate.TabOrder         := 3;
+ btnCreate.OnClick          := btnCreateClick;
 end;
 
 
@@ -308,49 +300,51 @@ end;
    USER INPUT
 -----------------------------------------------------------------------------------------------------------------------}
 
+{ Event handler for edtPath.OnChange.
+  Note: Delphi bug - TEdit.OnChange triggers when Ctrl+A is pressed.
+  See: http://stackoverflow.com/questions/42230077 }
 procedure TCubicPathEdit.edtPathChange(Sender: TObject);
 begin
- PathChanged;    { Delphi bug here: TEdit.OnChange triggers when Ctrl+A is pressed.     http://stackoverflow.com/questions/42230077/why-does-tedit-onchange-trigger-when-ctrla-is-pressed/42231303#42231303 }
- inherited;  // if you want to run standard handler
+ PathChanged;
 end;
 
 
+{ Called when the path changes. Updates button states, linked controls, and triggers events. }
 procedure TCubicPathEdit.PathChanged;
 VAR
    OldEvent: TNotifyEvent;
 begin
- CheckPathValidity;      { Check validity AFTER the folder was created }
+ CheckPathValidity;
 
- btnCreate.Enabled:= PathHasValidChars= '';
- btnApply .Enabled:= {del PathNameIsValid(edtPath.Text) AND }(PathIsValid = '');
+ btnCreate.Enabled:= PathHasValidChars = '';
+ btnApply .Enabled:= PathIsValid = '';
  btnApply .Visible:= ShowApplyBtn;
 
- if Assigned(FOnPathChanged) then
+ { Sync the linked TDirectoryListBox if the path is valid }
+ if DirectoryExists(Path) AND Assigned(Directory) then
   begin
-   if (DirectoryExists(Path))
-   AND Assigned(Directory) then
-    begin
-     OldEvent:= Directory.OnChange;  // Don't let the Directory do its event
-     Directory.OnChange:= NIL;
-     Directory.Directory:= Path;
-     Directory.OnChange:= OldEvent;  // Restore the event.
-    end;
-
-   FOnPathChanged(Self);
+   OldEvent:= Directory.OnChange;    // Temporarily disable event to prevent recursion
+   Directory.OnChange:= NIL;
+   Directory.Directory:= Path;
+   Directory.OnChange:= OldEvent;
   end;
 
- if (FFileList <> NIL)
- AND (InputType= itFolder) then
-   if (PathIsValid= '')
+ { Trigger the OnPathChanged event }
+ if Assigned(FOnPathChanged)
+ then FOnPathChanged(Self);
+
+ { Sync the linked TFileListBox }
+ if (FFileList <> NIL) AND (InputType = itFolder) then
+   if PathIsValid = ''
    then FFileList.Directory:= Path
    else FFileList.Directory:= GetMyDocuments;
 end;
 
 
+{ Event handler for edtPath.OnKeyPress.
+  Handles Enter key to trigger folder creation or OnPressEnter event. }
 procedure TCubicPathEdit.edtKeyPress(Sender: TObject; var Key: Char);
 begin
- inherited KeyPress(Key);
-
  if (Ord(Key) = VK_RETURN) then
   begin
    if btnCreate.Visible AND btnCreate.Enabled
@@ -398,10 +392,8 @@ begin
  { Set caption ONLY if the user has not set something else }
  if (Caption = 'Folder') OR (Caption = 'File') then
    if InputType = itfolder
-   then Caption:= 'Folder'           // https://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
+   then Caption:= 'Folder'
    else Caption:= 'File';
-
-//del if InputType= itFile then ShowCreateBtn:= FALSE;   { We show the 'Create' btn only if we are in itFolder mode }
 end;
 
 
@@ -450,7 +442,7 @@ end;
 
 
 
-{ Worsk in both modes (itFile/itFolder)
+{ Works in both modes (itFile/itFolder).
   Does NOT check if the file/folder exists. }
 function TCubicPathEdit.PathHasValidChars: string;
 begin
@@ -514,14 +506,15 @@ end;
 procedure TCubicPathEdit.Click;
 begin
   inherited Click;
-  CheckPathValidity;   { Recompute color (red/gree) on mouse click. This is useful for when the file/folder did not existed (clRed) but meanwhile the user created it (now it has to be clGree) }
+  CheckPathValidity;   // Recompute color on click - useful when path validity has changed externally
 end;
 
 
-procedure TCubicPathEdit.edtPatchOnClick(Sender: TObject);
+{ Event handler for edtPath.OnClick.
+  Recomputes color (red/green) on mouse click. Useful when path validity has changed externally. }
+procedure TCubicPathEdit.edtPathOnClick(Sender: TObject);
 begin
-  inherited;
-  CheckPathValidity;   { Recompute color (red/gree) on mouse click. This is useful for when the file/folder did not existed (clRed) but meanwhile the user created it (now it has to be clGree) }
+  CheckPathValidity;
 end;
 
 

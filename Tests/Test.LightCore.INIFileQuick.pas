@@ -22,7 +22,7 @@ type
   [TestFixture]
   TTestINIFileQuick = class
   private
-    FTestIniPath: string;
+    //FTestIniPath: string;
   public
     [Setup]
     procedure Setup;

@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.ProxyList;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -308,16 +308,15 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TProxyList.LoadProxyFile(CONST aFileName: string);
 begin
- if FileExists(FileName) then
-  begin
-   mmoProxyList.lines.LoadFromFile(FileName);
-   FileName:= aFileName;
-  end;
+ FileName:= aFileName;
+ if FileExists(aFileName)
+ then mmoProxyList.Lines.LoadFromFile(aFileName);
 end;
 
 
-procedure TProxyList.Save;              { Save content to disk }
+procedure TProxyList.Save;
 begin
+ Assert(FileName <> '', 'FileName not set. Call LoadProxyFile first.');
  mmoProxyList.Lines.SaveToFile(FileName);
 end;
 
@@ -325,12 +324,14 @@ end;
 
 procedure TProxyList.btnLocateClick(Sender: TObject);
 begin
- ExecuteExplorer(ExtractFilePath(FileName))
+ if FileName <> ''
+ then ExecuteExplorer(ExtractFilePath(FileName));
 end;
 
 
 procedure TProxyList.btnSaveProxyClick(Sender: TObject);
 begin
+ if FileName = '' then EXIT;
  CleanList;
  mmoProxyList.Lines.SaveToFile(FileName);
 end;
@@ -348,13 +349,12 @@ begin
 end;
 
 
-procedure TProxyList.CleanList;                                                                    {TODO: Willy: Imi trebuie o functie care verifica daca un string e un valid proxy. de exemplu 192.168.0.1:80 }
+{ Removes empty or whitespace-only lines from the proxy list }
+procedure TProxyList.CleanList;   {TODO: Add validation for proxy format (e.g. 192.168.0.1:80) }
 VAR i: Integer;
 begin
- {TODO: check for invalid proxy lines }
  for i:= mmoProxyList.Lines.Count-1 downto 0 DO
-   if (mmoProxyList.Lines[i]= '')
-   OR (mmoProxyList.Lines[i]= ' ')
+   if Trim(mmoProxyList.Lines[i]) = ''
    then mmoProxyList.Lines.Delete(i);
 end;
 

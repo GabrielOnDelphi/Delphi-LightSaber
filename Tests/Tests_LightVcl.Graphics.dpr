@@ -67,22 +67,22 @@ begin
     TDUnitX.CheckCommandLine;
 
     // Create the test runner
-    runner := TDUnitX.CreateRunner;
+    runner:= TDUnitX.CreateRunner;
 
     // Add loggers
-    logger := TDUnitXConsoleLogger.Create(True);
+    logger:= TDUnitXConsoleLogger.Create(True);
     runner.AddLogger(logger);
 
     // Generate NUnit compatible XML results
-    nunitLogger := TDUnitXXMLNUnitFileLogger.Create(TDUnitX.Options.XMLOutputFile);
+    nunitLogger:= TDUnitXXMLNUnitFileLogger.Create(TDUnitX.Options.XMLOutputFile);
     runner.AddLogger(nunitLogger);
 
-    runner.FailsOnNoAsserts := False;
+    runner.FailsOnNoAsserts:= FALSE;
 
     // Run tests
-    results := runner.Execute;
+    results:= runner.Execute;
     if not results.AllPassed then
-      System.ExitCode := EXIT_ERRORS;
+      System.ExitCode:= EXIT_ERRORS;
 
     {$IFNDEF CI}
     // Wait for input if running interactively

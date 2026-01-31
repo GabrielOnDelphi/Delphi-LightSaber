@@ -1,10 +1,10 @@
 UNIT LightVcl.Visual.Panel;
 {--------------------------------------------------------------------------------------------------
-   2021-05-06
+   2026.01
 
    Features:
       * Multi-line caption (word wrap). Caption:= '12345 67890';
-      * Enummerate through child controls, by their position (left to right)
+      * Enumerate through child controls, by their position (top to bottom)
 
    From:
       https://stackoverflow.com/questions/1274518/make-a-delphi-tpanel-caption-wrap
@@ -21,8 +21,8 @@ TYPE
    private
     FWordWrap: Boolean;
     FGutter: Integer;
+    FPrevCtrl: TControl;  // Used by NextControl enumeration
    protected
-    procedure DoDrawText(var Rect: TRect; Flags: Longint);   { UNUSED }
    public
     constructor Create(AOwner: TComponent); override;
     procedure Paint; override;
@@ -212,46 +212,6 @@ end;
 
 
 
-{ UNUSED / DEL }
-procedure TCubicPanel.DoDrawText(var Rect: TRect; Flags: Longint);
-const
-  EllipsisStr = '...';
-VAR
-  Text, DText: string;
-  NewRect: TRect;
-  Height, Delim: Integer;
-begin
-  Text := Caption;
-
-  if Text <> '' then
-   begin
-    Canvas.Font := Font;
-    DText := Text;
-    if FWordWrap then
-     REPEAT
-       NewRect := Rect;
-       Dec(NewRect.Right, Canvas.TextWidth(EllipsisStr));
-       //FDrawTextProc(Canvas.Handle, DText, NewRect, Flags or DT_CALCRECT);
-       DrawText(Canvas.Handle, DText, -1, NewRect, Flags);
-       Height := NewRect.Bottom - NewRect.Top;
-       if (Height > ClientHeight) and (Height > Canvas.Font.Height)
-       then
-        begin
-         Delim := LastDelimiter(' '#9, Text);
-         if Delim = 0
-         then Delim := Length(Text);
-         Dec(Delim);
-         Text := system.COPY(Text, 1, Delim);
-         DText := Text + EllipsisStr;
-         if Text = '' then Break;
-        end
-       else Break;
-     UNTIL FALSE;
-
-    if Text <> ''
-    then Text := DText;
-   end;
-end;
 
 
 
@@ -263,38 +223,44 @@ end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-  Returns its parented controls exactly as sorted on the screen (sorted by .Top)
-  Returns NIL where there are no more controls.
+  Enumeration helpers: Returns child controls sorted by their vertical position (.Top).
+  Usage:
+    ResetToFirstCtrl;
+    Ctrl:= NextControl;
+    while Ctrl <> nil do begin
+      // Process Ctrl
+      Ctrl:= NextControl;
+    end;
 -------------------------------------------------------------------------------------------------------------}
 
-VAR
-   PrevCtrl: TControl= NIL;
-
-
-{ I have to call this after I use NextControl to enumerate ALL controls and I want to reset the loop, to start over. }
+{ Resets the control enumeration. Call before starting a new enumeration with NextControl. }
 procedure TCubicPanel.ResetToFirstCtrl;
 begin
-  PrevCtrl:= NIL;
+  FPrevCtrl:= NIL;
 end;
 
 
+{ Returns controls in physical order (sorted by .Top).
+  Returns NIL when there are no more controls.
+  Note: The algorithm finds the next control whose top is greater than the previous one
+  and that overlaps or is adjacent to the previous control's bottom edge. }
 function TCubicPanel.NextControl: TControl;
 VAR
    CurCtrl: TControl;
    i, BtmDist: Integer;
    LastBtmDist: Integer;
 begin
- if ControlCount= 0
- then RAISE Exception.Create('No controls!');
+ if ControlCount = 0
+ then RAISE Exception.Create('Panel has no child controls!');
 
- Result:= NIL;     { Return NIL when there are no more controls }
+ Result:= NIL;
  LastBtmDist:= MaxInt;
 
- if PrevCtrl= NIL
+ if FPrevCtrl = NIL
  then
   begin
    Result:= FirstControl;
-   PrevCtrl:= Result;
+   FPrevCtrl:= Result;
   end
  else
    for i:= 0 to ControlCount-1 DO
@@ -302,36 +268,40 @@ begin
      CurCtrl:= Controls[i];
 
      { Don't compare to itself }
-     if PrevCtrl = CurCtrl
+     if FPrevCtrl = CurCtrl
      then Continue;
 
-     { CurCtrl is above PrevCtrl }
-     if CurCtrl.Top <= PrevCtrl.Top
+     { CurCtrl is above FPrevCtrl }
+     if CurCtrl.Top <= FPrevCtrl.Top
      then Continue;
 
-     { Distance between revious returned control and current ctrl }
-     BtmDist:= (PrevCtrl.Top+ PrevCtrl.Height) - CurCtrl.Top;
+     { Distance from bottom of previous control to top of current control }
+     BtmDist:= (FPrevCtrl.Top + FPrevCtrl.Height) - CurCtrl.Top;
 
-     if BtmDist < 0        { Bottom distance is 0 when I have found the next ctrl }
-     then Continue;        { Current control is above PrevCtrl }
+     if BtmDist < 0
+     then Continue;
 
      if BtmDist < LastBtmDist then
       begin
        LastBtmDist:= BtmDist;
        Result:= CurCtrl;
-       PrevCtrl:= CurCtrl;
+       FPrevCtrl:= CurCtrl;
       end;
     end;
 end;
 
 
+{ Returns the topmost control (smallest .Top value). }
 function TCubicPanel.FirstControl: TControl;
 VAR
    LastTop, i: Integer;
 begin
- Assert(PrevCtrl = NIL, 'FirstControl failed!');    { I already know the first control }
+ Assert(FPrevCtrl = NIL, 'FirstControl: ResetToFirstCtrl was not called!');
 
- Result:= Controls[0];         { Pick one randomly }
+ if ControlCount = 0
+ then RAISE Exception.Create('Panel has no child controls!');
+
+ Result:= Controls[0];
  LastTop:= MaxInt;
 
  for i:= 0 to ControlCount-1 DO
@@ -343,11 +313,15 @@ begin
 end;
 
 
-function TCubicPanel.LastControl: TControl;  { Returns the control with the biggest Top }
+{ Returns the bottommost control (largest .Top value). }
+function TCubicPanel.LastControl: TControl;
 VAR
    LastTop, i: Integer;
 begin
- Result:= Controls[0];         { Pick one randomly }
+ if ControlCount = 0
+ then RAISE Exception.Create('Panel has no child controls!');
+
+ Result:= Controls[0];
  LastTop:= 0;
 
  for i:= 0 to ControlCount-1 DO

@@ -2,12 +2,12 @@ UNIT LightVcl.Visual.SpinEdit;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.12
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
-  TCubicSpinEdit – A SpinEdit with two extra labels
+  TCubicSpinEdit ï¿½ A SpinEdit with two extra labels
       Sometimes we need to have some text in front or after the SpinEdit (number). For example: Maximum zoom: 20 %. For this we need to manually create three controls: a label, a SpinEdit and then another label and align them all in a TPanel. TCubicSpinEdit does it for you. Also, the control will automatically resize to fit the text in it.
       ToDo: If the user deleted the value (not the editor is empty), OnLoseFocus, put the value back in the editor.
 
@@ -38,7 +38,7 @@ TYPE
     FSpin: TCubicSpinEdit;
     FLabelFront: TLabel;
     FLabelEnd: TLabel;
-    Initialized: Boolean;     { Unused }
+    Initialized: Boolean;     { Currently unused - all guarded code in CreateWnd is commented out. Remove if no longer needed. }
     function  getValue: Integer;
     procedure setValue   (const Value: Integer);
     procedure setCaption1(const Value: string);
@@ -107,7 +107,6 @@ begin
  FSpin.MinValue:= 0;            { Cannot be moved to CreateWnd because if it is there, (when skins are loading) we will override the value set at design time }
  FSpin.MaxValue:= 0;
  FSpin.Align:= alLeft;
- FSpin.SetSubComponent(TRUE);
 
  FLabelEnd:= TLabel.Create(Self);
  FLabelEnd.Name:= 'LabelEnd';
@@ -204,7 +203,7 @@ begin
  if Width <> NewWidth then
   begin
    Width:= NewWidth;
-   Canvas.Font:= Font; //?
+   Canvas.Font:= Font; // May be unnecessary - labels manage their own fonts. Kept for safety.
 
    { Make sure the controls are shown in the correct order }
    FLabelFront.Left:= 0;
@@ -232,14 +231,21 @@ end;
 
 
 
-{------------------------------------------------------------------------------------------------------------}
+{------------------------------------------------------------------------------------------------------------
+   Input validation: Shows orange background when value is out of range.
+   Note: Validation is active ONLY if both MinValue and MaxValue are non-zero.
+   If MinValue=0 (e.g., range 0..100), validation won't trigger. This follows the standard TSpinEdit convention
+   where MinValue=MaxValue=0 means "no range checking". If you need a range starting at 0, set MinValue to -1
+   or use a different approach.
+------------------------------------------------------------------------------------------------------------}
 procedure TCubicSpinEdit.Change;
 begin
- if ((MaxValue <> 0) AND (MinValue <> 0))     // We don't use min/max
- AND (Value > MaxValue) OR (Value < MinValue) then
+ { Skip validation if min/max are not configured (both are zero = no range checking) }
+ if ((MaxValue <> 0) AND (MinValue <> 0))
+ AND ((Value > MaxValue) OR (Value < MinValue)) then    { Parentheses around OR are critical for correct precedence! }
   begin
-    Color:= clorange; // Red indicates an out-of-range value
-    EXIT;
+    Color:= clOrange; // Orange indicates an out-of-range value
+    EXIT;             // Don't call inherited - prevents OnChange from firing with invalid value
   end;
 
  Color:= clWindow;

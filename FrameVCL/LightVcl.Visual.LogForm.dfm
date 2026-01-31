@@ -114,7 +114,7 @@ object frmRamLog: TfrmRamLog
     end
     object mnuCopyFiltered: TMenuItem
       Caption = 'Copy all (filtered)'
-      Enabled = False
+      OnClick = mnuCopyFilteredClick
     end
     object mnuCopyAll: TMenuItem
       Caption = 'Copy all (unfiltered)'

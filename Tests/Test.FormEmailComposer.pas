@@ -338,7 +338,6 @@ end;
 procedure TTestFormEmailComposer.TestGetEmailBodyPath_ContainsFilename;
 var
   Form: TfrmComposer;
-  Path: string;
 begin
   Form:= TfrmComposer.Create(NIL);
   FTestForm:= Form;
@@ -385,25 +384,18 @@ end;
 procedure TTestFormEmailComposer.TestInitialize_NoExceptionWithoutMainForm;
 var
   Form: TfrmComposer;
-  OldMainForm: TForm;
 begin
   Form:= TfrmComposer.Create(NIL);
   FTestForm:= Form;
 
-  // Temporarily clear MainForm to test nil handling
-  OldMainForm:= Application.MainForm;
-  try
-    // Note: We can't actually set MainForm to nil in a running app,
-    // but Initialize should handle the case gracefully
-    { Initialize should not raise exception }
-    Assert.WillNotRaise(
-      procedure
-      begin
-        Form.Initialize;
-      end);
-  finally
-    // MainForm cannot be changed, test passes if Initialize completes
-  end;
+  // Note: We can't actually set MainForm to nil in a running app,
+  // but Initialize should handle the case gracefully
+  { Initialize should not raise exception }
+  Assert.WillNotRaise(
+    procedure
+    begin
+      Form.Initialize;
+    end);
 end;
 
 

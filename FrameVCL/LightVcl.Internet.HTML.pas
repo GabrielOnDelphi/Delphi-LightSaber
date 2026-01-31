@@ -1,9 +1,9 @@
 UNIT LightVcl.Internet.HTML;
 
-//This hould be moved to core
+// This should be moved to core
 
 {-------------------------------------------------------------------------------------------------------------
-   2023.06
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -16,32 +16,29 @@ INTERFACE
 
 USES
    MsHtml,
-   System.SysUtils, System.AnsiStrings, System.StrUtils, System.Classes, System.Math,
-   LightCore.StringList, LightCore, LightCore.Time;
+   System.SysUtils;
 
 {--------------------------------------------------------------------------------------------------
    HTML MANIPULATION
    Forms & fields
 --------------------------------------------------------------------------------------------------}
- procedure SetFieldValue   (aForm: IHTMLFormElement; const fieldName: string; const newValue: string; CONST Instance: integer=0);
+ procedure SetFieldValue   (aForm: IHTMLFormElement; const fieldName: string; const newValue: string; const Instance: integer= 0);
  function  GetFormByNumber (Document: IHTMLDocument2; formNumber: integer): IHTMLFormElement;
 
 
 IMPLEMENTATION
 
-USES
-  LightCore.IO, LightCore.Internet, LightCore.TextFile;
-
 
 procedure SetFieldValue(aForm: IHTMLFormElement; const fieldName: string; const newValue: string; const instance: integer=0);
-{ Example how to use it:  BML auto login\ }
+{ Example: BML auto login }
 VAR
   field: IHTMLElement;
   inputField: IHTMLInputElement;
   selectField: IHTMLSelectElement;
   textField: IHTMLTextAreaElement;
 begin
-  field := aForm.Item(fieldName,instance) as IHTMLElement;
+  Assert(aForm <> NIL, 'SetFieldValue: aForm is nil');
+  field:= aForm.Item(fieldName, instance) as IHTMLElement;
   if Assigned(field) then
    begin
     if field.tagName = 'INPUT' then
@@ -69,14 +66,17 @@ end;
 
 
 
-function GetFormByNumber(document: IHTMLDocument2; formNumber: integer): IHTMLFormElement;         { Example how to use it: BML auto login\ }
+{ Returns the form at the specified index, or nil if index is out of bounds.
+  Example: BML auto login }
+function GetFormByNumber(document: IHTMLDocument2; formNumber: integer): IHTMLFormElement;
 VAR forms: IHTMLElementCollection;
 begin
-  forms := document.Forms as IHTMLElementCollection;
+  Assert(document <> NIL, 'GetFormByNumber: document is nil');
+  forms:= document.Forms as IHTMLElementCollection;
   if formNumber < forms.Length
-  then result := forms.Item(formNumber,'') as IHTMLFormElement
-  else result := nil;
+  then Result:= forms.Item(formNumber, '') as IHTMLFormElement
+  else Result:= NIL;
 end;
 
 
- end.
+end.

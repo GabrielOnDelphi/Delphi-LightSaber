@@ -1,11 +1,13 @@
 UNIT LightVcl.Visual.StatusBar;
 
-{
-  v1.1
-   allows other controls to be inserted into it.
 
+{=============================================================================================================
+   2026.01
+   www.GabrielMoraru.com
+--------------------------------------------------------------------------------------------------------------
+   Allows other controls to be inserted into it.
+=============================================================================================================}
 // todo: https://zarko-gajic.iz.hr/implementing-custom-hint-for-each-panel-on-a-status-bar/#more-640
-}
 
 INTERFACE
 

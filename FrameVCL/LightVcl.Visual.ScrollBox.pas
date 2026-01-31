@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.ScrollBox;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -16,7 +16,7 @@ UNIT LightVcl.Visual.ScrollBox;
 INTERFACE
 
 USES
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms;      {$WARN GARBAGE OFF}
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms;
 
 TYPE
   TVScrollEventType = (vsLineUp, vsLineDown, vsPageUp, vsPageDown, vsThumbPos, vsThumbTrack, vsTop, vsBottom, vsEndScroll);
@@ -28,6 +28,7 @@ TYPE
     private
       FOnVScroll : TVScrollEvent;
       FOnHScroll : THScrollEvent;
+      FPrevCtrl  : TControl;                                                                           { Used by NextControl enumeration }
       Procedure WMVScroll(Var Message : TWMScroll); message WM_VScroll;
       Procedure WMHScroll(Var Message : TWMScroll); message WM_HScroll;
     protected
@@ -39,7 +40,7 @@ TYPE
       {}
       procedure ResetToFirstCtrl;
       function  FirstControl: TControl;
-      function  NextControl: TControl;   { Returns the controls in phisycal order (sorted by .Top) }
+      function  NextControl: TControl;   { Returns the controls in physical order (sorted by .Top) }
       function  LastControl: TControl;
     published
       Property OnVerticalScroll  : TVScrollEvent read  FOnVScroll Write FOnVScroll;
@@ -56,9 +57,9 @@ Constructor TCubicScrollBox.Create(AOwner : TComponent);
 begin
  inherited Create(AOwner);
  // Note: Don't set 'Parent:= Owner' in constructor. Details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
- //if csCreating in ControlState then exit;
- FOnVScroll := NIL;
- FOnHScroll := NIL;
+ FOnVScroll:= NIL;
+ FOnHScroll:= NIL;
+ FPrevCtrl := NIL;
 end;
 
 
@@ -144,14 +145,9 @@ end;
   Returns the controls sorted in physical order (sorted by .Top)
   Returns NIL where there are no more controls.
 -------------------------------------------------------------------------------------------------------------}
-
-VAR
-   PrevCtrl: TControl= NIL;
-
-
-procedure TCubicScrollBox.ResetToFirstCtrl;  { I have to call this after I use NextControl to enumerate ALL controls and I want to reset the loop, to start over. }
+procedure TCubicScrollBox.ResetToFirstCtrl;  { Call this after using NextControl to enumerate ALL controls if you want to reset the loop and start over }
 begin
-  PrevCtrl:= NIL;
+  FPrevCtrl:= NIL;
 end;
 
 
@@ -167,11 +163,11 @@ begin
  Result:= NIL;     { Return NIL when there are no more controls }
  LastBtmDist:= MaxInt;
 
- if PrevCtrl= NIL
+ if FPrevCtrl= NIL
  then
   begin
    Result:= FirstControl;
-   PrevCtrl:= Result;
+   FPrevCtrl:= Result;
   end
  else
    for i:= 0 to ControlCount-1 DO
@@ -179,24 +175,24 @@ begin
      CurCtrl:= Controls[i];
 
      { Don't compare to itself }
-     if PrevCtrl = CurCtrl
+     if FPrevCtrl = CurCtrl
      then Continue;
 
-     { CurCtrl is above PrevCtrl }
-     if CurCtrl.Top <= PrevCtrl.Top
+     { CurCtrl is above FPrevCtrl }
+     if CurCtrl.Top <= FPrevCtrl.Top
      then Continue;
 
-     { Distance between revious returned control and current ctrl }
-     BtmDist:= (PrevCtrl.Top+ PrevCtrl.Height) - CurCtrl.Top;
+     { Distance between previous returned control's bottom and current ctrl's top }
+     BtmDist:= (FPrevCtrl.Top+ FPrevCtrl.Height) - CurCtrl.Top;
 
-     if BtmDist < 0        { Bottom distance is 0 when I have found the next ctrl }
-     then Continue;        { Current control is above PrevCtrl }
+     if BtmDist < 0        { Negative means CurCtrl starts below FPrevCtrl's bottom }
+     then Continue;        { Skip - looking for overlapping or adjacent controls }
 
      if BtmDist < LastBtmDist then
       begin
        LastBtmDist:= BtmDist;
        Result:= CurCtrl;
-       PrevCtrl:= CurCtrl;
+       FPrevCtrl:= CurCtrl;
       end;
     end;
 end;
@@ -206,7 +202,8 @@ function TCubicScrollBox.FirstControl: TControl;   { Returns the control with th
 VAR
    LastTop, i: Integer;
 begin
- Result:= Controls[0];         { Pick one randomly }
+ Assert(ControlCount > 0, 'TCubicScrollBox.FirstControl: No controls!');
+ Result:= Controls[0];
  LastTop:= MaxInt;
 
  for i:= 0 to ControlCount-1 DO
@@ -222,7 +219,8 @@ function TCubicScrollBox.LastControl: TControl;  { Returns the control with the 
 VAR
    LastTop, i: Integer;
 begin
- Result:= Controls[0];         { Pick one randomly }
+ Assert(ControlCount > 0, 'TCubicScrollBox.LastControl: No controls!');
+ Result:= Controls[0];
  LastTop:= 0;
 
  for i:= 0 to ControlCount-1 DO
@@ -244,8 +242,7 @@ begin
 end;
 
 
-end.===========================================================================                    {
- 
+end.
 
 
 

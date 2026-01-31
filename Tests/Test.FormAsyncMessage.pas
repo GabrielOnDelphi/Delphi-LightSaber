@@ -210,10 +210,7 @@ end;
 procedure TTestFormAsyncMessage.TestMesajAsync_SetsMessage;
 var
   Form: TfrmShowMsgAsync;
-  FormCountBefore: Integer;
 begin
-  FormCountBefore:= Screen.FormCount;
-
   MesajAsync('Hello World Message', 'Title');
 
   Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
@@ -226,10 +223,7 @@ end;
 procedure TTestFormAsyncMessage.TestMesajAsync_SetsBorderStyle;
 var
   Form: TfrmShowMsgAsync;
-  FormCountBefore: Integer;
 begin
-  FormCountBefore:= Screen.FormCount;
-
   MesajAsync('Test', 'Title');
 
   Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
@@ -242,10 +236,7 @@ end;
 procedure TTestFormAsyncMessage.TestMesajAsync_EnablesKeyPreview;
 var
   Form: TfrmShowMsgAsync;
-  FormCountBefore: Integer;
 begin
-  FormCountBefore:= Screen.FormCount;
-
   MesajAsync('Test', 'Title');
 
   Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
@@ -259,12 +250,9 @@ procedure TTestFormAsyncMessage.TestMesajAsync_WithPopupParent;
 var
   ParentForm: TForm;
   MsgForm: TfrmShowMsgAsync;
-  FormCountBefore: Integer;
 begin
   ParentForm:= TForm.Create(NIL);
   TrackForm(ParentForm);
-
-  FormCountBefore:= Screen.FormCount;
 
   MesajAsync('Test', 'Title', ParentForm);
 
@@ -278,10 +266,7 @@ end;
 procedure TTestFormAsyncMessage.TestMesajAsync_WithoutPopupParent;
 var
   Form: TfrmShowMsgAsync;
-  FormCountBefore: Integer;
 begin
-  FormCountBefore:= Screen.FormCount;
-
   MesajAsync('Test', 'Title', NIL);
 
   Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
@@ -298,10 +283,7 @@ end;
 procedure TTestFormAsyncMessage.TestMessageAsync_IsAlias;
 var
   Form: TfrmShowMsgAsync;
-  FormCountBefore: Integer;
 begin
-  FormCountBefore:= Screen.FormCount;
-
   MessageAsync('Alias Test', 'Alias Caption');
 
   Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
@@ -317,10 +299,7 @@ end;
 procedure TTestFormAsyncMessage.TestMessageInfoAsync_SetsInfoCaption;
 var
   Form: TfrmShowMsgAsync;
-  FormCountBefore: Integer;
 begin
-  FormCountBefore:= Screen.FormCount;
-
   MessageInfoAsync('Information message');
 
   Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
@@ -333,10 +312,7 @@ end;
 procedure TTestFormAsyncMessage.TestMessageWarnAsync_SetsWarningCaption;
 var
   Form: TfrmShowMsgAsync;
-  FormCountBefore: Integer;
 begin
-  FormCountBefore:= Screen.FormCount;
-
   MessageWarnAsync('Warning message');
 
   Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
@@ -349,10 +325,7 @@ end;
 procedure TTestFormAsyncMessage.TestMesajWarnAsync_IsLegacyAlias;
 var
   Form: TfrmShowMsgAsync;
-  FormCountBefore: Integer;
 begin
-  FormCountBefore:= Screen.FormCount;
-
   MesajWarnAsync('Legacy warning');
 
   Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
@@ -365,10 +338,7 @@ end;
 procedure TTestFormAsyncMessage.TestMessageErrorAsync_SetsErrorCaption;
 var
   Form: TfrmShowMsgAsync;
-  FormCountBefore: Integer;
 begin
-  FormCountBefore:= Screen.FormCount;
-
   MessageErrorAsync('Error message');
 
   Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
@@ -467,10 +437,7 @@ end;
 procedure TTestFormAsyncMessage.TestMesajAsync_EmptyMessage;
 var
   Form: TfrmShowMsgAsync;
-  FormCountBefore: Integer;
 begin
-  FormCountBefore:= Screen.FormCount;
-
   MesajAsync('', 'Title');
 
   Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
@@ -483,10 +450,7 @@ end;
 procedure TTestFormAsyncMessage.TestMesajAsync_EmptyCaption;
 var
   Form: TfrmShowMsgAsync;
-  FormCountBefore: Integer;
 begin
-  FormCountBefore:= Screen.FormCount;
-
   MesajAsync('Test message', '');
 
   Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
@@ -500,10 +464,8 @@ procedure TTestFormAsyncMessage.TestMesajAsync_LongMessage;
 var
   Form: TfrmShowMsgAsync;
   LongMsg: string;
-  FormCountBefore: Integer;
 begin
   LongMsg:= StringOfChar('A', 1000);
-  FormCountBefore:= Screen.FormCount;
 
   MesajAsync(LongMsg, 'Long Message Test');
 

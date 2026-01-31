@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.TrayIcon;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -25,9 +25,9 @@ UNIT LightVcl.Visual.TrayIcon;
 
 
 IMPORTANT
-  Set Application.ShowMainFormOnTaskbar := False;' to keep the application's button from appearing on the Windows Taskbar.
+  Set Application.ShowMainFormOnTaskbar := False to keep the application's button from appearing on the Windows Taskbar.
 
- Use ballon like this:
+ Use balloon like this:
    BalloonTitle := 'Restoring the window.';
    BalloonHint  := 'Click the system tray icon to restore the window.';
    BalloonFlags := bfInfo;
@@ -45,7 +45,7 @@ TYPE
   public
     procedure PutIconInTaskbar;
     procedure PutIconInSystray;
-    procedure PutIconInSystrayBallon;               { This will also show the ballon IF BalloonHint is not empty. }
+    procedure PutIconInSystrayBalloon;              { This will also show the balloon IF BalloonHint is not empty. }
   end;
 
 procedure Register;
@@ -75,7 +75,7 @@ end;
 
 
 
-procedure TCubicTrayIcon.PutIconInSystrayBallon;    { This will also show the ballon IF BalloonHint is not empty. }
+procedure TCubicTrayIcon.PutIconInSystrayBalloon;   { This will also show the balloon IF BalloonHint is not empty. }
 begin
  PutIconInSystray;
  ShowBalloonHint;
@@ -94,8 +94,6 @@ procedure Register;
 begin
   RegisterComponents('LightSaber VCL', [TCubicTrayIcon]);
 end;
-
-
 
 
 end.

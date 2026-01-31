@@ -4,16 +4,17 @@ UNIT LightVcl.Visual.RichLogTrack;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01.31
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
-   Verbosity controller for TRichLog
-     Min= 1,      lvVerbose
-     Max= 6       lvErrors
+   Verbosity controller for TRichLog.
+   A panel with a trackbar and label that controls the verbosity level of an associated TRichLog.
+     Min= 0 (lvrVerbose)
+     Max= 5 (lvrErrors)
 
    Tester:
-     c:\Myprojects\LightSaber\Demo\LightLog\
+     c:\Projects\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 INTERFACE
@@ -40,7 +41,7 @@ TYPE
      constructor Create(AOwner: TComponent); override;
   published
      property TrackBar      : TTrackBar     read FTrackBar     write FTrackBar;
-     property OnVerbChanged : TNotifyEvent  read FVerbChanged  write FVerbChanged;   { Triggered before deleting the content of a cell }
+     property OnVerbChanged : TNotifyEvent  read FVerbChanged  write FVerbChanged;   { Triggered when the user changes the verbosity level }
      property Verbosity     : TLogVerb      read getVerbosity  write setVerbosity;
      property Log           : TRichLog      read FLog          write setRichLog;
   end;
@@ -58,63 +59,8 @@ begin
  inherited Create(AOwner);             { Note: Don't set 'Parent:= Owner' in constructor. Details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create }
  ControlState:= ControlState+ [csCreating];
 
- if csLoading in ComponentState
- then EmptyDummy;
- if csReading in ComponentState
- then EmptyDummy;
- if csAncestor in ComponentState
- then EmptyDummy;
- if csWriting in ComponentState
- then EmptyDummy;
- if csDestroying in ComponentState
- then EmptyDummy;
- if csDesigning in ComponentState
- then EmptyDummy;
- if csUpdating in ComponentState
- then EmptyDummy;
- if csFixups in ComponentState
- then EmptyDummy;
- if csFreeNotification in ComponentState
- then EmptyDummy;
- if csInline in ComponentState
- then EmptyDummy;
- if csDesignInstance in ComponentState
- then EmptyDummy;
-
-
-
- if csAlignmentNeeded in ControlState
- then EmptyDummy;
- if csCreating in ControlState
- then EmptyDummy;
- if csClicked in ControlState
- then EmptyDummy;
-
- if csCustomPaint in ControlState
- then EmptyDummy;
-
- if csDestroyingHandle in ControlState
- then EmptyDummy;
-
- if csDocking in ControlState
- then EmptyDummy;
-
- if csFocusing in ControlState
- then EmptyDummy;
-
- if csLButtonDown in ControlState
- then EmptyDummy;
- if csPaintCopy in ControlState
- then EmptyDummy;
- if csPalette in ControlState
- then EmptyDummy;
- if csReadingState in ControlState
- then EmptyDummy;
-
-
-
  VerboLabel:= TLabel.Create(Self);     { Freed by: Owner }
- VerboLabel.Parent:= Self;            { Here we can set the parent }
+ VerboLabel.Parent:= Self;             { Here we can set the parent }
 
  TrackBar:= TTrackBar.Create(Self);
  TrackBar.SetSubComponent(True);
@@ -191,10 +137,11 @@ end;
 
 
 
-procedure TRichLogTrckbr.setRichLog(CONST Value: TRichLog);  
+procedure TRichLogTrckbr.setRichLog(CONST Value: TRichLog);
 begin
  FLog:= Value;
- FLog.Verbosity:= Verbosity;
+ if FLog <> NIL
+ then FLog.Verbosity:= Verbosity;
 end;
 
 

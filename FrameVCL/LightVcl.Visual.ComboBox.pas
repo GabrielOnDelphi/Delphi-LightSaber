@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.ComboBox;
 
 {=============================================================================================================
    www.GabrielMoraru.com
-   2024.05
+   2026.01
 --------------------------------------------------------------------------------------------------------------
 
   Features:
@@ -31,13 +31,13 @@ TYPE
    public
     constructor Create(AOwner : TComponent); override;
 
-    { Set selection }
-    function  SelectedItem: string;            { Returns the selected item }
-    function  SelectedItemSafe: string;        { Returns the selected item. No exception if no item selected! }
-    function  SelectedItemForce: string;       { Returns the selected item. If no item is selected the it selects the first item first. }
+    { Get selection }
+    function  SelectedItem: string;            { Returns the selected item. Raises exception if no item selected! }
+    function  SelectedItemSafe: string;        { Returns the selected item. No exception if no item selected }
+    function  SelectedItemForce: string;       { Returns the selected item. If no item is selected, selects the first item first }
     function  SelectedObject: TObject;
 
-    { Get selection }
+    { Set selection }
     function  SelectItem(CONST ItemText: string): Integer;
     function  SelectFirstItem: Boolean;
     function  SelectObject(AObject: TObject): Boolean;
@@ -95,7 +95,9 @@ end;
    SET SELECTION
 -----------------------------------------------------------------------------------------------------------------------}
 
-function TCubicComboBox.SelectItem(CONST ItemText: string): Integer;  { Selects the item containing the specified text. The search is case Insensitive. If IsDualItem mode is active, it returns the 'internal command' associated with this item }
+{ Selects the item matching the specified text. Case insensitive. Returns index or -1 if not found.
+  In IsDualItem mode, searches by Name (internal command), not by Value (screen name). }
+function TCubicComboBox.SelectItem(CONST ItemText: string): Integer;
 VAR
    i: Integer;
 begin
@@ -144,10 +146,11 @@ end;
    GET SELECTION
 -----------------------------------------------------------------------------------------------------------------------}
 
-{ Returns the selected item.
-  If IsDualItem mode is active, it returns the 'internal command' associated with this item. }
+{ Returns the selected item. Raises exception if no item is selected - use SelectedItemSafe instead.
+  If IsDualItem mode is active, it returns the 'internal command' (Name) associated with this item. }
 function TCubicComboBox.SelectedItem: string;
 begin
+ Assert(ItemIndex >= 0, 'No item selected! Use SelectedItemSafe to avoid exceptions.');
  if IsDualItem
  then Result:= Items.Names[ItemIndex]
  else Result:= Items[ItemIndex];

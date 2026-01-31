@@ -2,20 +2,26 @@ UNIT LightVcl.Graph.BkgColorEditor;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2026.01.31
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
-   Properties editor for RBkgColorParams
-   2021-12-29
+   Visual properties editor for RBkgColorParams (background color/fill effects).
+   Provides UI controls for configuring fill type, effect shape, color detection mode, and fade parameters.
 
    DON'T ADD IT TO ANY DPK or Don't add dependencies to VisualControls.bpl because that lib is compiled after this one.
 
    How to use it:
-      Auto create form
-      frmBorderEditor.GuiFromRec(BorderSettings);
-      frmBorderEditor.Show;
+      Auto create form:
+        frmBorderEditor.GuiFromRec(BorderSettings);
+        frmBorderEditor.Show;
 
+      Or use CreateParented for embedding in another control:
+        Editor:= TfrmBorderEditor.CreateParented(ParentPanel, @BkgSettings);
+
+   Related files:
+      LightVcl.Graph.BkgColorParams.pas - The parameter record this editor modifies
+      LightVcl.Graph.BkgColor.pas       - Applies the border fading effects to images
 --------------------------------------------------------------------------------------------------}
 //todo 1: "Background shape": automatically use "rectangle" or "tringle" based on image size. If the image touches with two edges the border of the monitor then use "rectangle". if the image does not touch the border then use "tringle".
 //todo 4: measure time in LightVcl.Graph.FX.Border.pas. FadeBorder
@@ -105,6 +111,10 @@ USES
 
 
 
+{ Creates the editor form and embeds its Container panel into the specified Parent control.
+  The form itself is not visible - only the Container panel is shown.
+  Call GuiFromObject after creation to populate controls from aBkgClrParams.
+  The form is freed when closed (caFree in FormClose). }
 class function TfrmBorderEditor.CreateParented(Parent: TWinControl; aBkgClrParams: PBkgColorParams): TfrmBorderEditor;
 begin
  if Parent = NIL
@@ -112,7 +122,7 @@ begin
  if aBkgClrParams = NIL
  then raise Exception.Create('TfrmBorderEditor.CreateParented: aBkgClrParams parameter cannot be nil');
 
- Application.CreateForm(TfrmBorderEditor, Result);  { Freed by Parent }
+ Application.CreateForm(TfrmBorderEditor, Result);
  Result.Container.Align:= alNone;
  Result.Container.Parent:= Parent;
  CenterChild(Result.Container, Parent);
@@ -160,23 +170,28 @@ end;
 {--------------------------------------------------------------------------------------------------
   GET/SET SETTINGS
 --------------------------------------------------------------------------------------------------}
+
+{ Copies all GUI control values to the BkgClrParams record.
+  Call this to save user changes before closing the form. }
 procedure TfrmBorderEditor.ObjectFromGUI;
 begin
  if BkgClrParams = NIL
  then raise Exception.Create('TfrmBorderEditor.ObjectFromGUI: BkgClrParams is not initialized');
 
-  BkgClrParams.FillType      := GetFillType;
-  BkgClrParams.EffectShape   := GetEffectShape;
-  BkgClrParams.EffectColor   := GetEffectColor;
-  BkgClrParams.Color         := ColorDialog.Color;
-  BkgClrParams.FadeSpeed     := spnFallSpeed.Value;
-  BkgClrParams.EdgeSmear     := spnEdgeSmear.Value;
-  BkgClrParams.NeighborWeight:= spnNeighborWeight.Value;
-  BkgClrParams.NeighborDist  := spnNeighborDistance.Value;
-  BkgClrParams.Tolerance     := spnPixTolerance.Value;
+ BkgClrParams.FillType      := GetFillType;
+ BkgClrParams.EffectShape   := GetEffectShape;
+ BkgClrParams.EffectColor   := GetEffectColor;
+ BkgClrParams.Color         := ColorDialog.Color;
+ BkgClrParams.FadeSpeed     := spnFallSpeed.Value;
+ BkgClrParams.EdgeSmear     := spnEdgeSmear.Value;
+ BkgClrParams.NeighborWeight:= spnNeighborWeight.Value;
+ BkgClrParams.NeighborDist  := spnNeighborDistance.Value;
+ BkgClrParams.Tolerance     := spnPixTolerance.Value;
 end;
 
 
+{ Populates all GUI controls from the BkgClrParams record.
+  Call this after creating the form to display current settings. }
 procedure TfrmBorderEditor.GuiFromObject;
 begin
  if BkgClrParams = NIL
@@ -195,8 +210,8 @@ begin
  end;
 
  ColorDialog.Color         := BkgClrParams.Color;
- radFill.Checked           := BkgClrParams.FillType=ftSolid;
- radfade.Checked           := BkgClrParams.FillType=ftfade;
+ radFill.Checked           := BkgClrParams.FillType = ftSolid;
+ radFade.Checked           := BkgClrParams.FillType = ftFade;
  spnFallSpeed.Value        := BkgClrParams.FadeSpeed;
  spnEdgeSmear.Value        := BkgClrParams.EdgeSmear;
  spnNeighborWeight.Value   := BkgClrParams.NeighborWeight;
@@ -207,16 +222,22 @@ end;
 
 
 
+{ Apply current settings and notify listeners.
+  Note: ObjectFromGUI is commented out - the caller's OnApplySettings handler
+  should call ObjectFromGUI to retrieve the current GUI settings. }
 procedure TfrmBorderEditor.btnApplyClick(Sender: TObject);
 begin
-  ///ObjectFromGUI;
-  if Assigned(FApplySettings) then FApplySettings(Self);  // Let BioniX apply wallpaper now
+  //ObjectFromGUI;  { Caller should do this in OnApplySettings handler }
+  if Assigned(FApplySettings)
+  then FApplySettings(Self);
 end;
 
+{ Close the editor.
+  Note: ObjectFromGUI is not called - caller should handle saving if needed. }
 procedure TfrmBorderEditor.btnOkClick(Sender: TObject);
 begin
- ///ObjectFromGUI;
- Close;
+  //ObjectFromGUI;  { Caller should handle saving if needed }
+  Close;
 end;
 
 procedure TfrmBorderEditor.btnCancelClick(Sender: TObject);

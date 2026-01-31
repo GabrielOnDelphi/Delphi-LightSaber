@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.ToolBox;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -12,7 +12,7 @@ UNIT LightVcl.Visual.ToolBox;
    Also see:
       c:\Myprojects\Packages\Third party packages\FloatingWindow.pas
 =============================================================================================================}
-
+//ToDo: Later: Rename to TToolBoxPanel
 INTERFACE
 
 USES
@@ -24,6 +24,8 @@ TYPE
     Initialized : Boolean;
     FCloseButton: TButton;
     FTopBar: TLabel;
+    FDragging: Boolean;                                                                              { Drag state - TRUE while user is dragging the toolbox }
+    FDragStartPos: TPoint;                                                                           { Cursor position when drag started }
     procedure CloseButtonClick(Sender: TObject);
     procedure TopBarMouseDown (Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure TopBarMouseMove (Sender: TObject; Shift: TShiftState; X, Y: Integer);
@@ -123,12 +125,12 @@ constructor TToolBox.Create(AOwner: TComponent);
 begin
  inherited Create(AOwner);                       { Dont set 'Parent:= Owner' in constructor. See this for details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create }
 
- FCloseButton:= TButton.Create(Self);            { Freed by: self }
+ FCloseButton:= TButton.Create(Self);            { Freed by: Self }
  FCloseButton.Parent := Self;                    // Here I can set the parent
  FCloseButton.SetSubComponent(True);
 
- FTopBar:= TLabel.Create(Self);                   { Freed by: self }
- ftopBar.Name:= 'Caption';
+ FTopBar:= TLabel.Create(Self);                   { Freed by: Self }
+ FTopBar.Name:= 'TopBar';
  FTopBar.Parent := Self;                          // Here I can set the parent
  FTopBar.SetSubComponent(True);
  FTopBar.Caption:= ' Tool box';                   { This line cannot be moved to CreateWnd otherwise this BUG appears: It looses the text set via TopCaption. I think I have to set if before "Loaded()" }
@@ -171,7 +173,7 @@ begin
    FCloseButton.Width  := 22;
    FCloseButton.Height := 20;
    FCloseButton.Top    := 0;
-   FCloseButton.Left   := Self.ClientWidth- CloseButton.Width- 1;
+   FCloseButton.Left   := ClientWidth - FCloseButton.Width - 1;
    FCloseButton.Anchors:= [akRight, akTop];
    FCloseButton.Hint   := 'Close';
    FCloseButton.Caption:= 'X';
@@ -189,14 +191,16 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-   STUFF
+   VISIBILITY
 --------------------------------------------------------------------------------------------------}
-procedure TToolBox.CloseButtonClick(Sender: TObject);  { CLOSE SEARCH BOX }
+
+procedure TToolBox.CloseButtonClick(Sender: TObject);
 begin
- Self.Visible:= FALSE;
+ Visible:= FALSE;
 end;
 
 
+{ Shows the toolbox and ensures it is positioned within the bounds of the specified Parent control. }
 procedure TToolBox.ShowIt(Parent: TControl);
 begin
  Visible:= TRUE;
@@ -209,12 +213,12 @@ end;
 
 function TToolBox.getCaption: string;
 begin
- Result:= TopBar.Caption;
+ Result:= FTopBar.Caption;
 end;
 
-procedure TToolBox.setCaption(const Value: string);
+procedure TToolBox.setCaption(CONST Value: string);
 begin
- TopBar.Caption:= Value;
+ FTopBar.Caption:= Value;
 end;
 
 
@@ -225,40 +229,37 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    DRAG
+   Drag functionality allows the user to move the toolbox by clicking and dragging the top bar.
+   SetCapture ensures we receive all mouse messages even when cursor leaves the control.
 --------------------------------------------------------------------------------------------------}
-VAR
-  Dragged: Boolean;
-  OldPos: TPoint;
-
 
 procedure TToolBox.TopBarMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
- Dragged:= True;
- GetCursorPos(OldPos);
- SetCapture(Self.Handle);
+ FDragging:= TRUE;
+ GetCursorPos(FDragStartPos);
+ SetCapture(Handle);
 end;
 
 
 procedure TToolBox.TopBarMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 VAR NewPos: TPoint;
 begin
-  if Dragged then
-   with Self DO
-    begin
-      GetCursorPos(NewPos);
-      Left:= Left-OldPos.X+NewPos.X;
-      Top := Top -OldPos.Y+NewPos.Y;
-      OldPos:= NewPos;
-    end;
+ if FDragging then
+  begin
+   GetCursorPos(NewPos);
+   Left:= Left - FDragStartPos.X + NewPos.X;
+   Top := Top  - FDragStartPos.Y + NewPos.Y;
+   FDragStartPos:= NewPos;
+  end;
 end;
 
 
 procedure TToolBox.TopBarMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
- if Dragged then
+ if FDragging then
   begin
    ReleaseCapture;
-   Dragged:=False;
+   FDragging:= FALSE;
   end;
 end;
 

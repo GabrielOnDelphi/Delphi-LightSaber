@@ -265,7 +265,7 @@ var
   Result: TColor;
   Alpha: Byte;
 begin
-  Result:= RGB2Gray($80808080);  // 50% alpha, mid gray
+  Result:= RGB2Gray(TColor($80808080));  // 50% alpha, mid gray
   Alpha:= (Result SHR 24) and $FF;
   Assert.AreEqual(Byte($80), Alpha, 'Alpha channel should be preserved');
 end;
@@ -437,7 +437,6 @@ end;
 
 procedure TTestGraphUtilGray.TestHasGrayscalePalette_FalseForColor;
 var
-  ColorTable: array[0..255] of TPaletteEntry;
   i: Integer;
   LogPal: TMaxLogPalette;
 begin

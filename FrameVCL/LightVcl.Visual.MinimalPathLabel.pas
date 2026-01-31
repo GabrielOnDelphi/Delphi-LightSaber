@@ -1,13 +1,22 @@
 UNIT LightVcl.Visual.MinimalPathLabel;
 
 {=============================================================================================================
-   2024.05
+   2026.01
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
-  When displaying a path, truncates the middle of the text if the entire path cannot fit into the visible area of the control.
-  It ONLY works with filenames and paths because of MinimizeName!
-  If ShowFullTextAsHint is true then the entire text will be shown into the Hint.
+  TMinimalPathLabel - A TLabel descendant that truncates the middle of file paths when they don't fit.
+
+  When displaying a path, truncates the middle of the text if the entire path cannot fit into the
+  visible area of the control. Uses Vcl.FileCtrl.MinimizeName internally.
+
+  IMPORTANT: This component ONLY works with filenames and paths because MinimizeName is path-aware!
+  For general text ellipsis, use LightVcl.Common.EllipsisText instead.
+
+  If ShowFullTextAsHint is TRUE then the entire untruncated path will be shown in the Hint.
+
+  Usage:
+    MinimalPathLabel1.CaptionMin:= 'C:\Very\Long\Path\To\Some\File.txt';
 
 --------------------------------------------------------------------------------------------------}
 
@@ -21,14 +30,15 @@ USES
 TYPE
   TMinimalPathLabel = class(TLabel)
    private
-    FFulCaption: string;
+    FFullCaption: string;
     FShowFull: Boolean;
     procedure SetCaption(Value: string);
+    procedure UpdateMinimizedCaption;
    public
     constructor Create(AOwner: TComponent); override;
     procedure Resize; override;
    published
-    property CaptionMin: string read FFulCaption write SetCaption;
+    property CaptionMin: string read FFullCaption write SetCaption;
     property ShowFullTextAsHint: Boolean read FShowFull write FShowFull default TRUE;
   end;
 
@@ -48,14 +58,24 @@ begin
  inherited Create(AOwner);                                                                         // Note: Don't set 'Parent:= Owner' in constructor. Details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
  ShowHint:= TRUE;
  FShowFull:= TRUE;
- FFulCaption:= 'Minimized text';
+ FFullCaption:= 'Minimized text';
+end;
+
+
+{ Updates the minimized caption based on the current width.
+  Called internally after Width changes or when CaptionMin is set. }
+procedure TMinimalPathLabel.UpdateMinimizedCaption;
+begin
+ if Width > 0
+ then Caption:= Vcl.FileCtrl.MinimizeName(FFullCaption, Canvas, Width)
+ else Caption:= FFullCaption;  // Fallback when control not yet sized
 end;
 
 
 procedure TMinimalPathLabel.SetCaption(Value: string);
 begin
- FFulCaption:= Value;
- Caption:= Vcl.FileCtrl.MinimizeName(Value, Canvas, Width);
+ FFullCaption:= Value;
+ UpdateMinimizedCaption;
  if FShowFull
  then Hint:= Value;
 end;
@@ -64,7 +84,7 @@ end;
 procedure TMinimalPathLabel.Resize;
 begin
  inherited;
- Caption:= MinimizeName(FFulCaption, Canvas, Width);
+ UpdateMinimizedCaption;
 end;
 
 

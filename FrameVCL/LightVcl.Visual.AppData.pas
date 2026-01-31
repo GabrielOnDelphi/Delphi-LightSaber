@@ -1,7 +1,7 @@
 UNIT LightVcl.Visual.AppData;
 
 {=============================================================================================================
-   2025.08.01
+   2026.01.31
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -268,7 +268,21 @@ end;
 
 {-------------------------------------------------------------------------------------------------------------
    CREATE FORMS
+
+   Form creation follows this sequence:
+     1. Create log form (hidden) to catch startup errors
+     2. Create main form via Application.CreateForm
+     3. Load form state from INI (position, size, controls)
+     4. Apply global font and GUI properties
+     5. Call FormPostInitialize for user code
+     6. Register with uninstaller (first run only)
+     7. Apply translations
+
+   Note: The "Show" parameter is ignored if StartMinim is true (app starts minimized).
 -------------------------------------------------------------------------------------------------------------}
+
+{ Creates the main form without returning a reference.
+  Use when you don't need to access the form variable directly. }
 procedure TAppData.CreateMainForm(aClass: TFormClass; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly);
 begin
   VAR Reference: TForm;
@@ -276,6 +290,17 @@ begin
 end;
 
 
+{ Creates the application's main form with full initialization.
+
+  Parameters:
+    aClass            - The form class to instantiate (must descend from TForm)
+    Reference         - Output parameter receiving the created form instance
+    MainFormOnTaskbar - If TRUE, taskbar shows main form; if FALSE, shows hidden app window
+    Show              - Whether to show the form immediately (ignored if StartMinim is TRUE)
+    AutoState         - Controls INI file persistence: asNone/asPosOnly/asFull
+
+  The form goes through: creation -> LoadForm -> SetGuiProperties -> Show ->
+  FormPostInitialize -> RegisterUninstaller -> LoadTranslation }
 procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly);
 begin
   Assert(Vcl.Dialogs.UseLatestCommonDialogs= TRUE);      { This is true anyway by default, but I check it to remember myself about it. Details: http://stackoverflow.com/questions/7944416/tfileopendialog-requires-windows-vista-or-later }
@@ -312,13 +337,14 @@ begin
     if Show
     then TForm(Reference).Show;
 
-  // Show app name
-  TLightForm(Reference).MainFormCaption('');      // Must be before FormPostInitialize because the user could put his own caption there.
-
   // Window fully constructed. Now we can let user run its own initialization process.
   // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory [Part 2]" book) for details.
-  if TObject(Reference) is TLightForm
-  then TLightForm(Reference).FormPostInitialize;
+  if TObject(Reference) is TLightForm then
+    begin
+      // Show app name. Must be before FormPostInitialize because the user could put his own caption there.
+      TLightForm(Reference).MainFormCaption('');
+      TLightForm(Reference).FormPostInitialize;
+    end;
 
   // Uninstaller
   if RunningFirstTime
@@ -333,8 +359,19 @@ begin
 end;
 
 
-{ Create secondary form
-  "Loading" indicates if the GUI settings are remembered or not }
+{ Creates a secondary (non-main) form with optional parenting and auto-save.
+
+  Parameters:
+    aClass              - The form class to create
+    Reference           - Output: the created form instance
+    Show                - Show form after creation
+    AutoState           - INI persistence level (asNone/asPosOnly/asFull)
+    Owner               - Owner component (NIL = Application owns it)
+    Parented            - If TRUE, embeds form as child control of Owner
+    CreateBeforeMainForm- Special case for log form; allows creation before main form
+
+  Note: Forms created with Owner <> NIL are owned by that component and will be
+  freed when the owner is freed. }
 procedure TAppData.CreateForm(aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly; Owner: TWinControl= NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
 begin
   if CreateBeforeMainForm
@@ -345,8 +382,8 @@ begin
       then TForm(Reference):= aClass.Create(NIL) // AppData will release the logform on Finalize
       else
         if (Owner = NIL)
-        then TForm(Reference):= TFormClass.Create(Application)  // Owned by Application. But we cannot use Application.CreateForm here because then, this form will be the main form!
-        else TForm(Reference):= TFormClass.Create(Owner);       // Owned by Owner
+        then TForm(Reference):= aClass.Create(Application)  // Owned by Application. But we cannot use Application.CreateForm here because then, this form will be the main form!
+        else TForm(Reference):= aClass.Create(Owner);       // Owned by Owner
       //ToDo 4: For the case where the frmLog is created before the MainForm: copy the frmLog.Font from the MainForm AFTER the main MainForm created.
     end
   else
@@ -356,7 +393,7 @@ begin
 
       if Owner = NIL
       then Application.CreateForm(aClass, Reference)        // Owned by Application
-      else TForm(Reference):= TFormClass.Create(Owner);    // Owned by Owner
+      else TForm(Reference):= aClass.Create(Owner);         // Owned by Owner
     end;
 
   // Center form in the Owner
@@ -409,19 +446,30 @@ procedure TAppData.CreateFormModal(aClass: TFormClass; AutoState: TAutoState= as
 VAR Reference: TForm;
 begin
   CreateForm(aClass, Reference, FALSE, AutoState, ParentWnd);
-  Reference.ShowModal;
+  if NOT TEST_MODE
+  then Reference.ShowModal;
 end;
 
 
-{ Create secondary form }
-//ToDo: Do I need this? Since the form is modal, I should never need the Reference? To be deleted
+{ Create secondary modal form with reference.
+  Useful when you need access to the form after ShowModal returns (e.g., to read result values). }
 procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference; AutoState: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL);
 begin
-  CreateFormModal(aClass, AutoState, ParentWnd);
+  CreateForm(aClass, Reference, FALSE, AutoState, ParentWnd);
+  if NOT TEST_MODE
+  then TForm(Reference).ShowModal;
 end;
 
 
-// The TfrmRamLog is destroyed by AppData in Finalize
+{ Returns the global log form, creating it on first access (lazy initialization).
+
+  The log form is a singleton managed by AppData:
+  - Created hidden on first access
+  - Connected to RamLog for message display
+  - Destroyed in AppData.Destroy (not by Application)
+  - Shows itself on subsequent calls
+
+  Thread safety: This method is NOT thread-safe. Call from main thread only. }
 function TAppData.getGlobalLog: TfrmRamLog;
 begin
   Assert(RamLog <> NIL, 'RamLog not created!');
@@ -568,15 +616,19 @@ begin
 end;
 
 
-{ Bring the application back to screen (if minimized, in background, hidden) }
+{ Bring the application back to screen (if minimized, in background, hidden).
+  Sets Visible to TRUE, restores from minimized state, and brings to front. }
 procedure TAppData.Restore;
 begin
+  Assert(Application.MainForm <> NIL, 'MainForm not created! Call CreateMainForm first.');
+
   Application.MainForm.Visible:= TRUE;
   if Application.MainForm.WindowState = wsMinimized
   then Application.MainForm.WindowState:= TWindowState.wsNormal;
 
-  //Use Restore to restore the application to its previous size before it was minimized. When the user restores the application to normal size, Restore is automatically called.
-  //Note: Don't confuse the Restore method, which restores the entire application, with restoring a form or window to its original size. To minimize, maximize, and restore a window or form, change the value of its WindowState property.
+  // Use Restore to restore the application to its previous size before it was minimized.
+  // Note: Don't confuse the Restore method, which restores the entire application,
+  // with restoring a form or window to its original size.
   Application.Restore;
   SetForegroundWindow(Application.MainForm.Handle);
   Application.BringToFront;
@@ -619,7 +671,9 @@ end;
 
 procedure TAppData.setGuiProperties(Form: TForm);
 begin
-  TLightForm(Form).MainFormCaption('Initializing form '+ Form.Name);
+  // Update caption only for TLightForm descendants
+  if Form is TLightForm
+  then TLightForm(Form).MainFormCaption('Initializing form '+ Form.Name);
 
   Form.ShowHint:= HintType > htOff;
   Form.ParentFont:= TRUE;
@@ -755,13 +809,17 @@ end;
   I would have loved to have all the code in a single procedure but unfortunately this is not possible. Three procedures are required.
 -------------------------------------------------------------------------------------------------------------}
 
-{ Returns True if an instance of this application was found already running }
+{ Returns TRUE if another instance of this application is already running.
+  Detection is based on finding a window with the SingleInstClassName. }
 function TAppData.InstanceRunning: Boolean;
 begin
   Result:= WinApi.Windows.FindWindow(PWideChar(SingleInstClassName), NIL) > 0;
 end;
 
 
+{ Sends command line data to the first (already running) instance via WM_COPYDATA.
+  Call this from the second instance before terminating.
+  The first instance should handle WM_COPYDATA in its main form. }
 procedure TAppData.ResurrectInstance(CONST CommandLine: string);
 VAR
    Window: HWND;
@@ -846,9 +904,21 @@ begin
 end;
 
 
-{ Based on Vcl.Dialogs.PromptForFileName.
-  AllowMultiSelect cannot be true, because I return a single file name (cannot return a Tstringlist).
-  Once the user selected a folder it is remembered in "LastUsedFolder" var  }
+{ Shows a file open/save dialog and returns the selected filename.
+  Based on Vcl.Dialogs.PromptForFileName with these enhancements:
+  - Remembers last used folder in LastUsedFolder property
+  - Uses AppDataFolder as default if no InitialDir specified
+  - Always enables sizing and hidden files
+
+  Parameters:
+    FileName   - Input: initial filename; Output: selected filename
+    SaveDialog - TRUE for save dialog, FALSE for open dialog
+    Filter     - File type filter (e.g., 'Text files|*.txt|All files|*.*')
+    DefaultExt - Extension added if user doesn't specify one (max 3 chars, no dot)
+    Title      - Dialog title
+    InitialDir - Starting directory (empty = use AppDataFolder)
+
+  Returns TRUE if user selected a file, FALSE if cancelled. }
 Function TAppData.PromptForFileName(VAR FileName: string; SaveDialog: Boolean; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''; CONST InitialDir: string = ''): Boolean;
 VAR
   Dialog: TOpenDialog;
@@ -904,11 +974,13 @@ begin
 end;
 
 
+{ Raises an exception if the application is still in initialization phase.
+  Use this to guard code that requires full initialization. }
 class procedure TAppData.RaiseIfStillInitializing;
 CONST
    AppStillInitializingMsg = 'Application not properly initialized.'+sLineBreak + sLineBreak+ 'PLEASE REPORT the steps necessary to reproduce this bug and restart the application.';
 begin
-  if AppData.Initializing
+  if (AppData <> NIL) AND AppData.Initializing
   then RAISE Exception.Create(AppStillInitializingMsg);
 end;
 

@@ -1,7 +1,7 @@
 UNIT LightVcl.Visual.CountDown;
 
 {=============================================================================================================
- 2020.10.30
+ 2026.01
  A control that counts down from 'StartValue' to 0ms.
 
  Every 'Resolution' ms a Tick event is generated.
@@ -51,7 +51,7 @@ TYPE
  published
    property TimeLeft  : Cardinal     read FTimeLeft;
    property StartValue: Cardinal     read FStartValue    write setStartValue default 10000; { The value from which the count down starts. Cannot be zero! }
-   property Resolution: Cardinal     read getResolution  write setResolution default  1000; { How much it should substract from 'TimeLeft' every time 'Tick' is called. Basically it should be equal with the ExternalTimer.Interval }
+   property Resolution: Cardinal     read getResolution  write setResolution default  1000; { How much to subtract from 'TimeLeft' every Tick. Should equal the Timer.Interval }
 
    property OnTimesUp : TNotifyEvent read FOnTimeUpEvent write FOnTimeUpEvent;
    property OnTick    : TNotifyEvent read FOnTick        write FOnTick;
@@ -85,14 +85,17 @@ procedure TCountDown.Tick;
 begin
  if Enabled then
   begin
-   FTimeLeft:= FTimeLeft- Resolution;
+   { Prevent Cardinal underflow: if Resolution >= FTimeLeft, set to 0 }
+   if FTimeLeft <= Resolution
+   then FTimeLeft:= 0
+   else FTimeLeft:= FTimeLeft - Resolution;
 
    if Assigned(OnTick)
    then OnTick(Self);
 
-   if FTimeLeft <= 0 then
+   if FTimeLeft = 0 then
     begin
-     Reset;              { This must be ABOVE the OnTimesUp event! because if OnTimesUp calls a procedure that contains Application.ProcessMessages and the timer will advance without getting the chance to reset TimeLeft, so timeleft may become negative! }
+     Reset;              { This must be ABOVE OnTimesUp! If OnTimesUp contains Application.ProcessMessages, timer may advance before resetting TimeLeft }
      if Assigned(OnTimesUp)
      then OnTimesUp(Self);
     end;
@@ -132,11 +135,12 @@ begin
 end;
 
 
-function TCountDown.Resume: Boolean; { Resume the countdown from where it was left BUT ONLY if when we called Stop, it was enabled/running }
+{ Resume the countdown from where it was left, but only if it was enabled/running when Stop was called }
+function TCountDown.Resume: Boolean;
 begin
  Result:= wasEnabled;
  if Result
- then Start;
+ then Timer.Enabled:= TRUE;  { Continue from current FTimeLeft, don't reset }
  if ActivityIndic <> NIL then ActivityIndic.Animate:= Result;
  if Taskbar       <> NIL then Taskbar.ProgressValue:= 0;
 end;

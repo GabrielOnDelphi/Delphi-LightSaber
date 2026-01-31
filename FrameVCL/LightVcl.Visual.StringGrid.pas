@@ -1,7 +1,7 @@
 UNIT LightVcl.Visual.StringGrid;
 
 {=============================================================================================================
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -472,6 +472,9 @@ begin
    TSL.StrictDelimiter:= TRUE;                                                                     { Fixes Delphi bug in which spaces were considered delimiters: http://jedqc.blogspot.com.es/2005/12/d2006-new-strictdelimiter-property.html }
    TSL.DelimitedText  := TSL.Text;
 
+   { Validate minimum data }
+   if TSL.Count < 2 then EXIT(FALSE);
+
    { Check magic number }
    if TSL[0]<> 'CBC' then EXIT(FALSE);
 
@@ -537,7 +540,8 @@ end;
 
 
 
-function TEnhStrGrid.LoadHeaderWidths(CONST aFileName: string): Boolean;  { It uses 255 as Delimiter instead of Enter }
+{ Loads column widths from a file. File format: Line0=comment, Line1=ColCount, Lines2+=widths }
+function TEnhStrGrid.LoadHeaderWidths(CONST aFileName: string): Boolean;
 VAR
    TSL: TStringList;
    Cl, ColCnt: Integer;
@@ -547,13 +551,15 @@ begin
 
  TSL:= StringFromFileTSL(aFileName);
  TRY
+   if TSL.Count < 2 then EXIT(FALSE);                                { File too short - missing header }
    ColCnt:= StrToIntDef(TSL[1], -1);
-   if ColCnt = -1        then EXIT(FALSE);   { 'ColumnCount' invalid }
-   if ColCount <> ColCnt then EXIT(FALSE);   { 'ColumnCount' from file doesn't match the actual ColumnCount }
+   if ColCnt = -1        then EXIT(FALSE);                           { 'ColumnCount' invalid }
+   if ColCount <> ColCnt then EXIT(FALSE);                           { 'ColumnCount' from file doesn't match the actual ColumnCount }
+   if TSL.Count < ColCount + 2 then EXIT(FALSE);                     { File too short - missing width data }
 
-   { Restore cells width }
-   for Cl:= 2 TO ColCount-1
-    DO ColWidths[Cl-2]:= StrToIntDef(TSL[Cl], 40);
+   { Restore column widths. TSL[2] is width of column 0, TSL[3] is width of column 1, etc. }
+   for Cl:= 0 TO ColCount-1 DO
+    ColWidths[Cl]:= StrToIntDef(TSL[Cl+2], 40);
  FINALLY
    FreeAndNil(TSL);
  END;
@@ -738,10 +744,11 @@ begin
 end;
 
 
-procedure TEnhStrGrid.PasteFromClipboard;                                                          { netestata }
+{ Pastes tab-delimited text from clipboard into the grid starting at current selection. Not tested. }
+procedure TEnhStrGrid.PasteFromClipboard;
 VAR
   Grect: TGridRect;
-  S, CS, F: string;
+  S, CS: string;
   L, R, C: Byte;
 begin
  GRect:= Selection;
@@ -759,7 +766,6 @@ begin
       C:= C + 1;
       if (C <= ColCount - 1) and (R <= RowCount - 1)
       then Cells[C, R] := system.COPY(CS, 1,Pos(Tab, CS) - 1);
-      F := system.COPY(CS, 1,Pos(Tab, CS) - 1);
       System.Delete(CS, 1,Pos(Tab, CS));
     end;
     if (C <= ColCount - 1) and (R <= RowCount - 1)
@@ -861,20 +867,20 @@ end;
 
 
 
-{ This works only for text. It doesn't sort numbers corectly. For example it sorts like this: 15, 150, 16 }
-procedure TEnhStrGrid.FastSort(SortCol: Integer; CaseSensitive: Boolean);                        //////// http://www.delphiforfun.org/Programs/Delphi_Techniques/GridSort.htm
-CONST
-   ctHeaderLine = 1;                                                                               { because we dont want to sort the header}
+{ Sorts the grid by text comparison. This doesn't sort numbers correctly - e.g. sorts as: 15, 150, 16
+  For correct numeric sorting use NaturalSort instead.
+  See: http://www.delphiforfun.org/Programs/Delphi_Techniques/GridSort.htm }
+procedure TEnhStrGrid.FastSort(SortCol: Integer; CaseSensitive: Boolean);
 VAR
    I, J: Integer;
 begin
   if CaseSensitive
   then
    begin
-    for I := FixedRows to RowCount - 2 do                                                          { because we dont want to sort the header, -2 because last row has no next row}
-      for J:= I + 1 to RowCount - 1 do                                                             {from next row to end}
+    for I := FixedRows to RowCount - 2 do                                                          { Skip header row; -2 because last row has no next row }
+      for J:= I + 1 to RowCount - 1 do                                                             { Compare with all subsequent rows }
        if CompareStr(Cells[SortCol, I], Cells[SortCol, J]) > 0
-       then SwapRowText(j, i);                                                                         { swap raws }
+       then SwapRowText(j, i);                                                                     { Swap rows }
    end
   else
     for I := FixedRows to RowCount - 2 do
@@ -884,16 +890,15 @@ begin
 end;
 
 
+{ Natural sort using Windows StrCmpLogicalW - correctly sorts numbers (e.g. 1, 2, 10 instead of 1, 10, 2) }
 procedure TEnhStrGrid.NaturalSort(SortCol: Integer);
-CONST
-   ctHeaderLine = 1;                                                                               { because we dont want to sort the header}
 VAR
    I, J: Integer;
 begin
- for I := FixedRows to RowCount - 2 do                                                             { because we dont want to sort the header, -2 because last row has no next row}
-  for J:= I + 1 to RowCount - 1 do                                                                 {from next row to end}
+ for I := FixedRows to RowCount - 2 do                                                             { Skip header row; -2 because last row has no next row }
+  for J:= I + 1 to RowCount - 1 do                                                                 { Compare with all subsequent rows }
    if StrCmpLogicalW(PChar(Cells[SortCol, I]), PChar(Cells[SortCol, J])) > 0
-   then SwapRowText(j, i);                                                                         { swap raws }
+   then SwapRowText(j, i);                                                                         { Swap rows }
 end;
 
 
@@ -1105,7 +1110,7 @@ begin
       0..2:
         begin
           // Code to be executed...
-          // Programmcode der ausgeführt werden soll
+          // Programmcode der ausgefï¿½hrt werden soll
           ShowMessage('Column ' + IntToStr(acol));
           zelle := stringgrid1.CellRect(1, 1);
         end;

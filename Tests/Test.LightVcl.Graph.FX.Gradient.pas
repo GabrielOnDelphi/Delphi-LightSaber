@@ -395,7 +395,9 @@ begin
   Assert.WillRaise(
     procedure
     begin
+      {$WARN SYMBOL_DEPRECATED OFF}
       LightVcl.Graph.FX.Gradient.GradientFillCanvas(NIL, clRed, clBlue, R, gdVertical);
+      {$WARN SYMBOL_DEPRECATED ON}
     end, EAssertionFailed);
 end;
 
@@ -413,17 +415,13 @@ end;
 
 
 procedure TTestGradient.TestDrawRedPattern_ModifiesBitmap;
-var
-  OriginalPixel, NewPixel: TColor;
 begin
   { Fill with white first }
   FBitmap.PixelFormat:= pf32bit;
   FBitmap.Canvas.Brush.Color:= clWhite;
   FBitmap.Canvas.FillRect(Rect(0, 0, FBitmap.Width, FBitmap.Height));
-  OriginalPixel:= FBitmap.Canvas.Pixels[50, 50];
 
   DrawRedPattern(FBitmap);
-  NewPixel:= FBitmap.Canvas.Pixels[50, 50];
 
   { The pattern creates X xor Y red values, so most pixels will change }
   Assert.Pass('DrawRedPattern executed without error');
@@ -442,14 +440,8 @@ end;
 
 
 procedure TTestGradient.TestDrawRedPattern_CreatesPattern;
-var
-  P1, P2: TColor;
 begin
   DrawRedPattern(FBitmap);
-
-  { Check that different positions have different red values based on X xor Y }
-  P1:= FBitmap.Canvas.Pixels[10, 20];
-  P2:= FBitmap.Canvas.Pixels[30, 40];
 
   { The red component should be (X xor Y) for each pixel }
   { Just verify the pattern was created - actual values depend on XOR result }

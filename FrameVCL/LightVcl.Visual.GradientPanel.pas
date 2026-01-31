@@ -1,7 +1,7 @@
 UNIT LightVcl.Visual.GradientPanel;
 
 {--------------------------------------------------------------------------------------------------
-   2018.02.16
+   2026.01
    TPanel with gradient
    Source: http://embarcadero.newsgroups.archived.at/public.delphi.vcl.components.using/201001/1001154053.html
 
@@ -55,7 +55,7 @@ USES
 
 constructor TGradPanel.Create(AOwner: TComponent);
 begin
-  inherited Create(AOwner);                                                        //del  Parent:= TWinControl(AOwner);  Don't set 'Parent:= Owner' in constructor. Details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
+  inherited Create(AOwner);  { Don't set 'Parent:= Owner' in constructor: stackoverflow.com/questions/6403217 }
   FShowGrad := TRUE;
   FColor1   := $00D6D6D6;
   FColor2   := $00FFA4A4;

@@ -24,6 +24,15 @@
         <Projects Include="Tests\Tests_LightVcl.Common.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="Tests\Tests_LightVcl.Internet.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Tests\Tests_LightVcl.Graphics.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Tests\Tests_LightVcl.Visual.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="Tests\Tests_LightVcl.Forms.dproj">
             <Dependencies/>
         </Projects>
@@ -98,6 +107,33 @@
     <Target Name="Tests_LightVcl_Common:Make">
         <MSBuild Projects="Tests\Tests_LightVcl.Common.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Tests_LightVcl_Internet">
+        <MSBuild Projects="Tests\Tests_LightVcl.Internet.dproj"/>
+    </Target>
+    <Target Name="Tests_LightVcl_Internet:Clean">
+        <MSBuild Projects="Tests\Tests_LightVcl.Internet.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Tests_LightVcl_Internet:Make">
+        <MSBuild Projects="Tests\Tests_LightVcl.Internet.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Tests_LightVcl_Graphics">
+        <MSBuild Projects="Tests\Tests_LightVcl.Graphics.dproj"/>
+    </Target>
+    <Target Name="Tests_LightVcl_Graphics:Clean">
+        <MSBuild Projects="Tests\Tests_LightVcl.Graphics.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Tests_LightVcl_Graphics:Make">
+        <MSBuild Projects="Tests\Tests_LightVcl.Graphics.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Tests_LightVcl_Visual">
+        <MSBuild Projects="Tests\Tests_LightVcl.Visual.dproj"/>
+    </Target>
+    <Target Name="Tests_LightVcl_Visual:Clean">
+        <MSBuild Projects="Tests\Tests_LightVcl.Visual.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Tests_LightVcl_Visual:Make">
+        <MSBuild Projects="Tests\Tests_LightVcl.Visual.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Tests_LightVcl_Forms">
         <MSBuild Projects="Tests\Tests_LightVcl.Forms.dproj"/>
     </Target>
@@ -108,21 +144,27 @@
         <MSBuild Projects="Tests\Tests_LightVcl.Forms.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightVcl_Common;LightVcl_Internet;LightVcl_Graphics;LightVcl_Visual;Tests_LightCore;Tests_LightVcl_Common;Tests_LightVcl_Forms"/>
+        <CallTarget Targets="LightCore;LightVcl_Common;LightVcl_Internet;LightVcl_Graphics;LightVcl_Visual;Tests_LightCore;Tests_LightVcl_Common;Tests_LightVcl_Internet;Tests_LightVcl_Graphics;Tests_LightVcl_Visual;Tests_LightVcl_Forms"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightVcl_Common:Clean;LightVcl_Internet:Clean;LightVcl_Graphics:Clean;LightVcl_Visual:Clean;Tests_LightCore:Clean;Tests_LightVcl_Common:Clean;Tests_LightVcl_Forms:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightVcl_Common:Clean;LightVcl_Internet:Clean;LightVcl_Graphics:Clean;LightVcl_Visual:Clean;Tests_LightCore:Clean;Tests_LightVcl_Common:Clean;Tests_LightVcl_Internet:Clean;Tests_LightVcl_Graphics:Clean;Tests_LightVcl_Visual:Clean;Tests_LightVcl_Forms:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightVcl_Common:Make;LightVcl_Internet:Make;LightVcl_Graphics:Make;LightVcl_Visual:Make;Tests_LightCore:Make;Tests_LightVcl_Common:Make;Tests_LightVcl_Forms:Make"/>
+        <CallTarget Targets="LightCore:Make;LightVcl_Common:Make;LightVcl_Internet:Make;LightVcl_Graphics:Make;LightVcl_Visual:Make;Tests_LightCore:Make;Tests_LightVcl_Common:Make;Tests_LightVcl_Internet:Make;Tests_LightVcl_Graphics:Make;Tests_LightVcl_Visual:Make;Tests_LightVcl_Forms:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
-        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Internet.dproj">
+            <ProjectGuid>{C8D3F1A2-4E5B-6F7A-8A9C-0D1E2F3A4B5C}</ProjectGuid>
             <Configurations>Debug</Configurations>
-            <Platforms>Win64</Platforms>
-            <Enabled>True</Enabled>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Graphics.dproj">
+            <ProjectGuid>{C8D3F1A2-4E5B-6F7A-8B9C-0D1E2F3A4B5C}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="FrameVCL\LightVcl.Common.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
@@ -136,12 +178,6 @@
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVcl.Internet.dproj">
-            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="Tests\Tests_LightVcl.Forms.dproj">
             <ProjectGuid>{4560913D-9812-4328-A5F6-ACB31275D904}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -153,6 +189,24 @@
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Visual.dproj">
+            <ProjectGuid>{A7B3C8D4-E5F6-4728-B9C1-D2E3F4A5B6C7}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="FrameVCL\LightVcl.Internet.dproj">
+            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="FrameVCL\LightVcl.Visual.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
@@ -168,11 +222,17 @@
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Release'">
-        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
-            <Configurations>Release</Configurations>
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Internet.dproj">
+            <ProjectGuid>{C8D3F1A2-4E5B-6F7A-8A9C-0D1E2F3A4B5C}</ProjectGuid>
+            <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Graphics.dproj">
+            <ProjectGuid>{C8D3F1A2-4E5B-6F7A-8B9C-0D1E2F3A4B5C}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="FrameVCL\LightVcl.Common.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
@@ -182,12 +242,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
-            <Configurations>Release</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVcl.Internet.dproj">
-            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
             <Configurations>Release</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
@@ -203,6 +257,24 @@
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Visual.dproj">
+            <ProjectGuid>{A7B3C8D4-E5F6-4728-B9C1-D2E3F4A5B6C7}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="FrameVCL\LightVcl.Internet.dproj">
+            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="FrameVCL\LightVcl.Visual.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
@@ -218,11 +290,17 @@
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Debug'">
-        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Internet.dproj">
+            <ProjectGuid>{C8D3F1A2-4E5B-6F7A-8A9C-0D1E2F3A4B5C}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Graphics.dproj">
+            <ProjectGuid>{C8D3F1A2-4E5B-6F7A-8B9C-0D1E2F3A4B5C}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="FrameVCL\LightVcl.Common.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
@@ -232,12 +310,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVcl.Internet.dproj">
-            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
@@ -253,6 +325,24 @@
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Visual.dproj">
+            <ProjectGuid>{A7B3C8D4-E5F6-4728-B9C1-D2E3F4A5B6C7}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="FrameVCL\LightVcl.Internet.dproj">
+            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="FrameVCL\LightVcl.Visual.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>
@@ -268,11 +358,17 @@
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='All'">
-        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Internet.dproj">
+            <ProjectGuid>{C8D3F1A2-4E5B-6F7A-8A9C-0D1E2F3A4B5C}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Graphics.dproj">
+            <ProjectGuid>{C8D3F1A2-4E5B-6F7A-8B9C-0D1E2F3A4B5C}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="FrameVCL\LightVcl.Common.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
@@ -282,12 +378,6 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
-            <Configurations>Debug;Release</Configurations>
-            <Platforms>Win32;Win64</Platforms>
-            <Enabled>True</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVcl.Internet.dproj">
-            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>
@@ -303,6 +393,24 @@
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="Tests\Tests_LightVcl.Visual.dproj">
+            <ProjectGuid>{A7B3C8D4-E5F6-4728-B9C1-D2E3F4A5B6C7}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="FrameVCL\LightVcl.Internet.dproj">
+            <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
         </BuildGroupProject>
         <BuildGroupProject Include="FrameVCL\LightVcl.Visual.dproj">
             <ProjectGuid>{DB85E32C-F7A5-4578-B561-BDF68891D34F}</ProjectGuid>

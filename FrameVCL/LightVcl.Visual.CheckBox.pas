@@ -2,12 +2,12 @@ UNIT LightVcl.Visual.CheckBox;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
   A checkbox that autoresizes exactly like TLabel
-  It incercepts CMTextChanged where it recomputes the new Width
+  It intercepts CMTextChanged where it recomputes the new Width
 
   Features:
       + property AutoSize ->  Autoresize width to fix the text inside
@@ -19,6 +19,9 @@ UNIT LightVcl.Visual.CheckBox;
   Similar: https://stackoverflow.com/questions/9678029/automatically-resize-a-delphi-button
 
   Tester: c:\Myprojects\Project Testers\cubic VCL controls tester\
+
+  Limitations:
+    SysCheckWidth is hardcoded to 21 pixels. On high-DPI displays, this may need adjustment.
 =============================================================================================================}
 
 INTERFACE
@@ -26,7 +29,9 @@ INTERFACE
 { $DEBUGINFO ON}
 
 USES
-  Winapi.Windows, Winapi.Messages, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls;
+  Winapi.Windows, Winapi.Messages,
+  System.Classes, System.SysUtils,
+  Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls;
 
 TYPE
   TCubicCheckBox = class(TCheckBox)
@@ -68,27 +73,25 @@ VAR
 begin
  if NOT (csReading in ComponentState) AND FAutoSize then
    begin
-    // if HandleAllocated then exit
-    // Don't use HandleAllocated. It will cause the control not to be updated when placed in the inactive tab of a PageControl. https://stackoverflow.com/questions/59107255/autoresizing-tcheckbox-like-tlabel?noredirect=1#comment104450251_59107255
+    // Don't use HandleAllocated. It will cause the control not to be updated when placed in the inactive tab of a PageControl.
+    // https://stackoverflow.com/questions/59107255/autoresizing-tcheckbox-like-tlabel?noredirect=1#comment104450251_59107255
     // We need a canvas but this control has none:
     // TPageControl initializes only the page that is currently selected.
-    // It means that another pages will have no valid handle. Since this, all components that are placed on them have no handle as well. This is a reason for which AdjustBounds method does not work at all.
-    // To fix it: get DeviceContext from DesktopWindow.
+    // Other pages have no valid handle, so components placed on them have no handle either.
+    // To fix: get DeviceContext from DesktopWindow.
     // https://stackoverflow.com/questions/59107255/autoresizing-tcheckbox-like-tlabel
-    Canvas := TCanvas.Create;
-    DC     := GetDC(HWND_DESKTOP);
+    Canvas:= TCanvas.Create;
+    DC:= GetDC(HWND_DESKTOP);
     TRY
-      Canvas.Handle := DC;
-      Canvas.Font   := Font;
-      Width := Canvas.TextWidth(Caption) + SysCheckWidth + 4;
-      Canvas.Handle := 0;
+      Canvas.Handle:= DC;
+      Canvas.Font:= Font;
+      Width:= Canvas.TextWidth(Caption) + SysCheckWidth + 4;
+      Canvas.Handle:= 0;  { Detach handle before releasing DC }
     FINALLY
-      ReleaseDC(Handle, DC);
-      Canvas.Free;
+      ReleaseDC(HWND_DESKTOP, DC);  { Must release to the same window we got it from }
+      FreeAndNil(Canvas);
     END;
    end;
-
-  FAutoSize:= TRUE;
 end;
 
 
@@ -104,9 +107,9 @@ end;
 
 procedure TCubicCheckBox.CMTextChanged(var Message:TMessage);
 begin
+  inherited;  { Call inherited to ensure proper base class behavior }
   Invalidate;
   AdjustBounds;
-  // I NEED TO CALL INHERITED? https://www.delphipraxis.net/100017-message-parameter-fuer-cmtextchanged.html
 end;
 
 

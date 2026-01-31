@@ -6,8 +6,8 @@ object frmTranslEditor: TfrmTranslEditor
   AlphaBlendValue = 250
   BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'Translator'
-  ClientHeight = 661
-  ClientWidth = 824
+  ClientHeight = 660
+  ClientWidth = 820
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -23,8 +23,8 @@ object frmTranslEditor: TfrmTranslEditor
   object lblInfo: TLabel
     AlignWithMargins = True
     Left = 3
-    Top = 648
-    Width = 818
+    Top = 647
+    Width = 814
     Height = 13
     Align = alBottom
     Alignment = taCenter
@@ -36,7 +36,7 @@ object frmTranslEditor: TfrmTranslEditor
     Left = 3
     Top = 3
     Width = 239
-    Height = 639
+    Height = 638
     Align = alLeft
     TabOrder = 0
     object lblLiveForms: TLabel
@@ -130,7 +130,7 @@ object frmTranslEditor: TfrmTranslEditor
     object GroupBox2: TGroupBox
       AlignWithMargins = True
       Left = 5
-      Top = 186
+      Top = 185
       Width = 229
       Height = 133
       Align = alBottom
@@ -189,13 +189,59 @@ object frmTranslEditor: TfrmTranslEditor
       TabOrder = 4
       OnClick = btnLoadClick
     end
+    object grpAutoTranslate: TGroupBox
+      AlignWithMargins = True
+      Left = 5
+      Top = 90
+      Width = 229
+      Height = 89
+      Align = alBottom
+      Caption = ' Auto Translate (DeepL) '
+      TabOrder = 5
+      object lblTargetLang: TLabel
+        Left = 8
+        Top = 20
+        Width = 73
+        Height = 13
+        Caption = 'Target language'
+      end
+      object cmbTargetLang: TComboBox
+        Left = 8
+        Top = 36
+        Width = 130
+        Height = 21
+        Hint = 'Select the target language for translation'
+        Style = csDropDownList
+        TabOrder = 0
+      end
+      object btnAutoTranslate: TButton
+        Left = 8
+        Top = 61
+        Width = 130
+        Height = 23
+        Hint = 'Translate all texts using DeepL API'
+        Caption = 'Translate'
+        TabOrder = 1
+        OnClick = btnAutoTranslateClick
+      end
+      object btnDeepLSettings: TButton
+        Left = 144
+        Top = 36
+        Width = 75
+        Height = 21
+        Hint = 'Configure DeepL API settings'
+        Caption = 'Settings...'
+        TabOrder = 2
+        OnClick = btnDeepLSettingsClick
+      end
+    end
   end
   object CubicGroupBox1: TGroupBox
     AlignWithMargins = True
     Left = 248
     Top = 3
-    Width = 573
-    Height = 639
+    Width = 569
+    Height = 638
     Align = alClient
     Caption = 'Language editor'
     TabOrder = 1

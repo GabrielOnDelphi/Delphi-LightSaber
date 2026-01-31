@@ -2,7 +2,7 @@ UNIT LightVcl.Graph.Loader.WB1;
 
 {=============================================================================================================
    Gabriel Moraru
-   2023.08.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ TYPE
   public
     JpgStream: TCubicMemStream;
     InternalJPG: TJPEGImage;
-    constructor Create;                                                                            { TObject is never directly instantiated. Although it does not use programming language features that prevent instantiation, TObject is an abstract class. }
+    constructor Create;
     destructor  Destroy; override;
     procedure Clear;
     function  LoadFromFile(CONST FullFileName: string): Boolean;
@@ -102,10 +102,10 @@ begin
 
   { Read the encrypted bytes (200 or 100?!?) }
   WB1Stream.ReadBuffer(A100, SizeOf(A100));
-  WB1Stream.ReadBuffer(B100, SizeOf(A100));
+  WB1Stream.ReadBuffer(B100, SizeOf(B100));
 
   { Decode 100 bytes }
-  for I:= 1 to Length(A100) DO                                                                     { Formula: B(n) = (B(n) XOR (NOT A(n)) XOR key  -> key = ‘F2’ (hex) }
+  for I:= 1 to Length(A100) DO                                                                     { Formula: B(n) = (B(n) XOR (NOT A(n)) XOR key  -> key = ï¿½F2ï¿½ (hex) }
    DecryptHeader[I]:= (B100[I] XOR (NOT A100[I])) XOR Key;
 
   { Build the final JPEG image }

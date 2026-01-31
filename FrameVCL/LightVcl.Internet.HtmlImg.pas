@@ -2,7 +2,7 @@ UNIT LightVcl.Internet.HTMLImg;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -27,9 +27,9 @@ USES
 function ExtractIMGTags        (CONST HTMLBody: string): TStringList;            { Extract <IMG> tags images from HTML body }      { Old name: ExtractImage_Img }
 
 { URLs }
-function ExtractImagesFromIMG  (CONST HTMLBody: string): TStringList;            { Extract images from <IMG src> tags }            { Oldname: ExtractImage_Img }
-function ExtractImagesFromAHREF(CONST HtmlBody: string): TStringList;            { Extract images from '<a href>' tags }           { Oldname: ExtractImage_Href }
-function ExtractImages         (CONST HtmlBody: string): TStringList;            { Extract images from '<a href>' and <img>'. }    { Oldname: ExtractImages }
+function ExtractImagesFromIMG  (CONST HTMLBody: string): TStringList;            { Extract images from <IMG src> tags }            { Old name: ExtractImage_Img }
+function ExtractImagesFromAHREF(CONST HtmlBody: string): TStringList;            { Extract images from '<a href>' tags }           { Old name: ExtractImage_Href }
+function ExtractImages         (CONST HtmlBody: string): TStringList;            { Extract images from '<a href>' and <img>'. }    { Old name: ExtractImages }
 
 { RELATIVE PATH }
 function MakeImgRelativePaths(CONST HtmlBody, RelativeTo: string): string; { Locates all IMG tags in a HTML document and converts their SRC (paths) from full path to relative path }
@@ -39,7 +39,7 @@ function ExpandRelativePaths (CONST HtmlBody, Base: string): string;
 
 
 
-IMPLEMENTATION                                                                                                                                   {$WARN GARBAGE OFF}   {Silence the: 'W1011 Text after final END' warning }
+IMPLEMENTATION
 
 USES
    LightCore.IO, LightVcl.Internet.Common, LightCore.Internet, LightCore, LightCore.Time, LightCore.Types,LightVcl.Internet.HTML, LightCore.HTML;
@@ -107,7 +107,6 @@ end;
 
 
 
-
 { Extract URLs of images from all <a href> tags in a HTML file.
   Return a list URLs.
   Example:  <a href="www.tst.com/1.jpg"> returns 'www.tst.com/1.jpg' }
@@ -135,41 +134,25 @@ end;
 
 
 
-
-
 { Extract images from '<a href>' and <img src="">'.
   Returns the URL of the image(s).
   ParentPageURL is the URL of the page from where the link was extracted. }
-function ExtractImages(CONST HtmlBody: string): TStringList;   { use a separate procedure to add ParentPageURL to all urls WHEN necessary }
+function ExtractImages(CONST HtmlBody: string): TStringList;   { Use a separate procedure to add ParentPageURL to all urls when necessary }
 VAR
    Temp: TStringList;
 begin
  Result:= TStringList.Create;
 
- { Extract images from '<href>' }
+ { Extract images from '<a href>' }
  Temp:= ExtractImagesFromAHREF(HtmlBody);
- Result.Add(Temp.Text+ CRLF);
+ Result.AddStrings(Temp);
  FreeAndNil(Temp);
 
  { Extract URLs to images from <img src="URL"> }
  Temp:= ExtractImagesFromIMG(HtmlBody);
- Result.Add(Temp.text);
+ Result.AddStrings(Temp);
  FreeAndNil(Temp);
 end;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -187,7 +170,7 @@ begin
  TSL:= TStringList.Create;
  TRY
    TSL.Text:= HtmlBody;
-   if TSL.Count = 0 then EXIT;
+   if TSL.Count = 0 then EXIT('');
 
    for i:= 0 to TSL.Count-1
     DO TSL[i]:= MakeImgFullPath(TSL[i], Base);
@@ -201,8 +184,6 @@ end;
 
 
 
-
-
 { Locates all IMG tags in a HTML document and converts their SRC (paths) from full path to relative path }
 function MakeImgRelativePaths(CONST HtmlBody, RelativeTo: string): string;
 VAR
@@ -212,7 +193,7 @@ begin
  TSL:= TStringList.Create;
  TRY
    TSL.Text:= HtmlBody;
-   if TSL.Count = 0 then EXIT;
+   if TSL.Count = 0 then EXIT('');
 
    for i:= 0 to TSL.Count-1
     DO TSL[i]:= MakeImgRelativePath(TSL[i], RelativeTo);
@@ -222,7 +203,6 @@ begin
    FreeAndNil (TSL);
  END;
 end;
-
 
 
 
@@ -284,8 +264,6 @@ end;
 
 
 
-
-
 { Locates ONLY THE FIRST <img> tag in a HTML line and converts its SRC (path) from relative path to full path
   DOES NOT WORK if the line has more than one IMG tag }
 function MakeImgFullPath(CONST HtmlLine, Base: string): string;
@@ -317,7 +295,7 @@ begin
  src:= URLDecoder.Decode(src);
  FreeAndNil(URLDecoder);
 
- { Make path relative }
+ { Make path full by combining base with relative path }
  src:= System.IOUtils.TPath.Combine(base, src);
 
  { convert back to Linux paths }
@@ -343,227 +321,4 @@ begin
 end;
 
 
-
-
-
-
-
-
-
-
-end.(*=================================================================================================================
-
-
-
-
-{ Extracts all <IMG> tags from a HTML
-  ISSUE: Does not work if the tag is split on two lines! }
-{
-function ExtractIMGTags(HTMLBody: TStringList): TStringList;
-VAR
-   Tag, s, CurLine: string;
-   iEnd, iStart: Integer;
-begin
- Result:= TStringList.Create;
- for CurLine in HTMLBody DO
-  begin
-   iStart:= PosInsensitive('<img', CurLine);
-   if iStart> 0 then
-    begin
-     s:= Copy(CurLine, iStart, High(integer));
-     iEnd:= Pos('>', s);
-     if iEnd> 0 then
-      begin
-       Tag:= CopyTo(s, 1, iEnd);
-       Result.Add(Tag);
-      end;
-    end;
-  end;
-end;   }
-
-
-
-
-
-
-TESTER:
-
-procedure TForm5.Button1Click(Sender: TObject);
-CONST HtmlFile= 'c:\MyProjects\BX\SourceCode\Tester StripWebPage\testerLightVcl.Internet.HTMLImg\2.html';
-VAR
-   Tags: TStringList;
-   HtmlBody: TStringList;
-   Tag: string;
-   ImgTag: TImgTag;
-begin
- HtmlBody:= ReadFileTSL(HtmlFile);
- Tags:= ExtractImgTags(HtmlBody);
-
- for Tag in Tags DO
-  begin
-   ImgTag:= ExtractImgTagData(Tag);
-   Log.Lines.Add(ImgTag.URL+ '  Width='+ IntToStr(ImgTag.Width)+ '  Height='+ IntToStr(ImgTag.Height));
-  end;
-
- FreeAndNil(Tags);
- FreeAndNil(HtmlBody);
-end;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-{ UNUSED }
-{ Extracts <IMG> tags from a HTML file }  (*
-function extractImgTags(HtmlBody: string): string;
-VAR
-   Tag, LowBody: string;
-   Offset, TextLen, iEnd, iStart1: Integer;
-begin
- Result:= '';
- TextLen:= Length(HtmlBody);
- LowBody:= lowercase(HtmlBody);
- Offset:= 1;
-
- REPEAT
-   iStart1:= PosEx('<img ', LowBody, Offset);
-
-   if iStart1> 0 then
-    begin
-      iEnd:= PosEx('>', HtmlBody, iStart1+7);
-      if (iEnd> 0)
-      then
-       begin
-        Tag:= CopyTo(HtmlBody, iStart1, iEnd);
-        if Tag = ''
-        then EmptyDummy; // raise exception.Create('Empty tag!');
-        Result:= Result+ Tag+ crlf;
-        offset:= iEnd+1;
-       end
-      else
-       Offset:= iStart1+ 3;
-    end
-   else Offset:= textlen;
-  UNTIL Offset>= TextLen;
-
-  RemoveLastEnter(Result);
-end;
-
-
-function ExtractImgTagsTSL(HtmlBody: string): TStringList;  { UNUSED }
-begin
- Result:= TStringList.Create;
- Result.Text:= ExtractImgTags(HtmlBody);
-end;   *)
-
-
-
-
-
-
-
-
-{--------------------------------------------------------------------------------------------------
-  Extract links to images from a list of <a href> tags.
-    Input: a list of <a href> tags.
-    Output: a list URLs pointing to images.
-  Example:  <a href="www.tst.com/1.jpg"> returns 'www.tst.com/1.jpg'
---------------------------------------------------------------------------------------------------}
-(*UNUSED
-
-instead of this, use:LightVcl.Internet.ExtractAttribValue
-
-
-function extractLinkedImges(TagList: TStringList): TStringList;
-VAR
-   URL, CurLine: string;
-   QStart, QEnd: Integer;
-begin
- Result:= TStringList.Create;
-
- for CurLine in TagList DO
-  begin
-   QStart:= PosInsensitive('href', CurLine);
-   if QStart> 0 then
-    begin
-     QStart:= FindQuoteStart(CurLine, QStart+1);                                                       { find first " sign }
-     if QStart> 0 then
-      begin
-       QEnd:= FindQuoteEnd(CurLine, QStart+1);
-       if QEnd> 0 then
-        begin
-         URL:= CopyTo(CurLine, QStart+1, QEnd-1);                                                  { +1 -1 to remove the " signs }
-         if LightCore.IO.IsImage(URL)
-         then Result.Add(URL);
-        end;
-      end;
-    end;
-  end;
-end;
-
-
-
-{--------------------------------------------------------------------------------------------------
-  Extract links to images from all <a href> tags in a HTML file.
-  Output: a list URLs
-
-  Example:  <a href="www.tst.com/1.jpg"> returns 'www.tst.com/1.jpg'
-
-  UNUSED!!!!!!!!!!!!!!!
---------------------------------------------------------------------------------------------------}
-function extractLinkedImges(HtmlBody: string): TStringList;
-VAR AHRefTags: TStringList;
-begin
- raise exception.Create('extractLinkedImges function is obsolete. UseLightVcl.Internet.HTMLImg.ExtractImagesFromAHREF instead.');
-
- AHRefTags:= ExtractAhrefTags(HtmlBody);
- TRY
-   //Result:= extractLinkedImges(AHRefTags);
- FINALLY
-   FreeAndNil(AHRefTags);
- END;
-end;
-
-*)
-
-
-
-
-
-
-{ Extracts <IMG> tags from a HTML file
-  UNUSED
-  Problem: does not work when there are multiple <img tags on the same line!!!
-  }
-function ExtractImgTags_old(HTMLBody: string): TStringList;
-VAR
-   Tag, s, CurLine: string;
-   iEnd, iStart: Integer;
-begin
- Result:= TStringList.Create;
- for CurLine in HTMLBody DO
-  begin
-   iStart:= PosInsensitive('<img', CurLine);
-   if iStart> 0 then
-    begin
-     s:= system.copy(CurLine, iStart, High(integer));
-     iEnd:= Pos('>', s);
-     if iEnd> 0 then
-      begin
-       Tag:= CopyTo(s, 1, iEnd);
-       Result.Add(Tag);
-      end;
-    end;
-  end;
-end;
-
-
+end.

@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.StringGridScrollFix;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -19,9 +19,7 @@ UNIT LightVcl.Visual.StringGridScrollFix;
 -------------------------------------------------------------------------------------------------------------}
 
 
-{$IFNDEF VER320}
-//{$MESSAGE ERROR 'Check that this fix is still applicable for a new version of Delphi. Checked against Delphi 10.2' }
-{$ENDIF}
+{ ToDo: Check that this fix is still applicable when upgrading Delphi. Last checked against Delphi 13. }
 
 
 INTERFACE

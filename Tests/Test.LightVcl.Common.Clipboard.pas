@@ -484,12 +484,10 @@ end;
 { Parameter Validation Tests }
 
 procedure TTestClipboard.TestStringToClipboard_ZeroRetries;
-var
-  Success: Boolean;
 begin
   { With MaxRetries=0, the loop condition is RetryCount >= MaxRetries = 0 >= 0 = TRUE,
     so it should still try once (Inc happens before check) }
-  Success:= StringToClipboard('Test', 0);
+  StringToClipboard('Test', 0);
 
   { Function will attempt at least once before checking retry count }
   Assert.Pass('Function handles zero retries without exception');

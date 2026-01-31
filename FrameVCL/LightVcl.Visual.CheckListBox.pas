@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.CheckListBox;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -22,11 +22,11 @@ TYPE
    protected
    public
     constructor Create(AOwner : TComponent); override;
-    function  SelectedItem: string;            { Returns the selected item }
-    function  SelectedItemForce: string;       { Returns the selected item. If no item is selected the it selects the first item first. }
+    function  SelectedItem: string;            { Returns the selected item text, or empty string if nothing is selected }
+    function  SelectedItemForce: string;       { Returns the selected item. If no item is selected, selects the first item first }
     function  SelectItem(CONST ItemText: string): Integer;
     function  FindItem (const ItemText: string): Integer;
-    function  CheckItem(const ItemText: string; Checked: Boolean): Integer;       { Toggle the checkbox for the specified item }
+    function  CheckItem(const ItemText: string; Checked: Boolean): Integer;       { Sets the checkbox state for the item. Returns -1 if not found }
 //    procedure DrawItem (Index: Integer; Rect: TRect; State: TOwnerDrawState);  override;
    published
    end;
@@ -56,18 +56,21 @@ end;
 
 
 
-function TCubicCheckListBox.SelectItem(CONST ItemText: string): Integer;  { Selects the item containing the specified text. The search is case Insensitive. If IsDualItem mode is active, it returns the 'internal command' associated with this item }
+{ Selects the item matching the specified text. Returns the index or -1 if not found }
+function TCubicCheckListBox.SelectItem(CONST ItemText: string): Integer;
 begin
  if Count = 0 then EXIT(-1);
  Result:= Items.IndexOf(ItemText);
- ItemIndex:= Result;  { If no item with this name is found, the -1 item (no item) is selected }
+ ItemIndex:= Result;  { If no item with this name is found, ItemIndex becomes -1 (no selection) }
 end;
 
 
+{ Sets the checkbox state for the specified item. Returns the item index or -1 if not found }
 function TCubicCheckListBox.CheckItem(const ItemText: string; Checked: Boolean): Integer;
 begin
  Result:= Items.IndexOf(ItemText);
- Self.Checked[Result]:= Checked;
+ if Result >= 0
+ then Self.Checked[Result]:= Checked;
 end;
 
 
@@ -78,18 +81,21 @@ end;
 
 
 
-function TCubicCheckListBox.SelectedItem: string;   { Returns the selected item. If IsDualItem mode is active, it returns the 'internal command' associated with this item }
+{ Returns the selected item text, or empty string if nothing is selected }
+function TCubicCheckListBox.SelectedItem: string;
 begin
- if Count = 0 then EXIT('');
- if Count < 0 then EXIT('');
+ if (Count = 0) OR (ItemIndex < 0)
+ then EXIT('');
  Result:= Items[ItemIndex];
 end;
 
 
-function TCubicCheckListBox.SelectedItemForce: string;   { Returns the selected item. If no item is selected the it selects the first item first. }
+{ Returns the selected item. If no item is selected, selects the first item first }
+function TCubicCheckListBox.SelectedItemForce: string;
 begin
  if Count = 0 then EXIT('');
- if Count < 0 then ItemIndex:= 0;
+ if ItemIndex < 0
+ then ItemIndex:= 0;
  Result:= SelectedItem;
 end;
 

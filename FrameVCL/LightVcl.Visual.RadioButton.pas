@@ -1,13 +1,12 @@
 UNIT LightVcl.Visual.RadioButton;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
   A radio button that autoresizes exactly like TLabel
-  It incercepts CMTextChanged where it recomputes the new Width
+  It intercepts CMTextChanged where it recomputes the new Width
 
   Features:
       + property AutoSize -> Autoresize width to fix the text inside
@@ -19,31 +18,21 @@ UNIT LightVcl.Visual.RadioButton;
   Similar: https://stackoverflow.com/questions/9678029/automatically-resize-a-delphi-button
 
   Tester: c:\Myprojects\Project Testers\Cubic VCL tester GLOBAL\
-  
 
-  
-  
   Issue: 
   https://stackoverflow.com/questions/47476603/major-flaw-radio-buttons-are-randomly-checked-when-showing-their-parent-form
   
 =============================================================================================================}
 
-
-
-
 // issue: Set a huge font: it will not not resize its height to match the font height
-
-
-
-
-
 
 INTERFACE
 
-{$DEBUGINFO ON}
+{.$DEBUGINFO ON}
 
 USES
-  Winapi.Windows, Winapi.Messages, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls;
+  Winapi.Windows, Winapi.Messages,
+  System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls;
 
 TYPE
   TCubicRadioButton = class(TRadioButton)
@@ -78,14 +67,6 @@ begin
 end;
 
 
-
-
-
-
-
-
-
-
 procedure TCubicRadioButton.AdjustBounds;
 VAR
    DC: HDC;
@@ -104,10 +85,9 @@ begin
       Canvas.Handle := 0;
     FINALLY
       ReleaseDC(Handle, DC);
-      Canvas.Free;
+      FreeAndNil(Canvas);
     END;
    end;
- FAutoSize:= TRUE;
 end;
 
 

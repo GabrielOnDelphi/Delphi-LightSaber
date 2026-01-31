@@ -184,7 +184,6 @@ var
   DefView, Worker: HWND;
   Iterations: Integer;
 begin
-  Result:= FALSE;
   DefView:= 0;
   Worker:= 0;
   Iterations:= 0;

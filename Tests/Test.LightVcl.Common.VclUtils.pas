@@ -430,6 +430,7 @@ begin
     begin
       LightVcl.Common.VclUtils.SetFocus(NIL);
     end,
+    Exception,
     'SetFocus(nil) should not raise exception');
 end;
 

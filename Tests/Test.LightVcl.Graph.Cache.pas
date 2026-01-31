@@ -201,10 +201,8 @@ procedure TTestGraphCache.TestCreate_EmptyFolder_RaisesException;
 begin
   Assert.WillRaise(
     procedure
-    var
-      Cache: TCacheObj;
     begin
-      Cache:= TCacheObj.Create('');
+      TCacheObj.Create('').Free;
     end,
     Exception,
     'Empty folder should raise exception');
@@ -381,7 +379,6 @@ end;
 procedure TTestGraphCache.TestThumbPosDB_ExistingThumb_ReturnsPosition;
 var
   Cache: TCacheObj;
-  ThumbPath: string;
   Position: Integer;
   ShortPath: string;
 begin

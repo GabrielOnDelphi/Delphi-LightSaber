@@ -388,9 +388,11 @@ end;
 
 procedure TTestLightCoreTime.TestStringToSeconds_ShortFormat_Invalid;
 begin
-  { TTimeSpan.Parse does NOT support 'mm:ss' shorthand format - it requires 'hh:mm:ss' }
-  Assert.AreEqual(-1, StringToSeconds('01:30'));  { This is NOT 1 min 30 sec }
-  Assert.AreEqual(-1, StringToSeconds('1.30'));   { Invalid format }
+  { TTimeSpan.Parse interprets 'hh:mm' as hours:minutes (not mm:ss) }
+  { '01:30' = 1 hour 30 minutes = 5400 seconds }
+  Assert.AreEqual(5400, StringToSeconds('01:30'));
+  { '1.30' is invalid format for TTimeSpan }
+  Assert.AreEqual(-1, StringToSeconds('1.30'));
 end;
 
 procedure TTestLightCoreTime.TestStringToSeconds_Invalid;

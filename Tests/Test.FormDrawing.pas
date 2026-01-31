@@ -18,6 +18,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.Types,
+  System.UITypes,
   Vcl.Forms,
   Vcl.Graphics,
   Vcl.Controls,
@@ -178,7 +179,7 @@ end;
 procedure TTestFormDrawing.TestConstant_MaxWorkerWSearch;
 begin
   Assert.IsTrue(MAX_WORKERW_SEARCH > 0, 'MAX_WORKERW_SEARCH should be positive');
-  Assert.IsTrue(MAX_WORKERW_SEARCH <= 1000, 'MAX_WORKERW_SEARCH should be reasonable');
+  Assert.AreEqual(100, MAX_WORKERW_SEARCH, 'MAX_WORKERW_SEARCH should be 100');
 end;
 
 

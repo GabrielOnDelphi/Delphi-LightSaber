@@ -164,6 +164,25 @@ type
     { Live Forms Tests }
     [Test]
     procedure TestLiveFormsClick_PopulatesList;
+
+    { Auto Translate (DeepL) Component Tests }
+    [Test]
+    procedure TestFormHasAutoTranslateGroup;
+
+    [Test]
+    procedure TestFormHasTargetLangCombo;
+
+    [Test]
+    procedure TestFormHasAutoTranslateButton;
+
+    [Test]
+    procedure TestFormHasDeepLSettingsButton;
+
+    [Test]
+    procedure TestTargetLangCombo_HasItems;
+
+    [Test]
+    procedure TestDeepLSettingsClick_NoException;
   end;
 
 implementation
@@ -701,6 +720,87 @@ begin
   { Should have at least one form (the test form itself) }
   Assert.IsTrue(Form.lbxForms.Items.Count >= 1,
     'Live forms click should populate the list with at least one form');
+end;
+
+
+{ Auto Translate (DeepL) Component Tests }
+
+procedure TTestFormTranslEditor.TestFormHasAutoTranslateGroup;
+var
+  Form: TfrmTranslEditor;
+begin
+  Form:= TfrmTranslEditor.Create(NIL);
+  FTestForm:= Form;
+
+  Assert.IsNotNull(Form.grpAutoTranslate,
+    'Form should have grpAutoTranslate group box');
+end;
+
+
+procedure TTestFormTranslEditor.TestFormHasTargetLangCombo;
+var
+  Form: TfrmTranslEditor;
+begin
+  Form:= TfrmTranslEditor.Create(NIL);
+  FTestForm:= Form;
+
+  Assert.IsNotNull(Form.cmbTargetLang,
+    'Form should have cmbTargetLang combo box');
+  Assert.IsTrue(Form.cmbTargetLang is TComboBox,
+    'cmbTargetLang should be a TComboBox');
+end;
+
+
+procedure TTestFormTranslEditor.TestFormHasAutoTranslateButton;
+var
+  Form: TfrmTranslEditor;
+begin
+  Form:= TfrmTranslEditor.Create(NIL);
+  FTestForm:= Form;
+
+  Assert.IsNotNull(Form.btnAutoTranslate,
+    'Form should have btnAutoTranslate button');
+end;
+
+
+procedure TTestFormTranslEditor.TestFormHasDeepLSettingsButton;
+var
+  Form: TfrmTranslEditor;
+begin
+  Form:= TfrmTranslEditor.Create(NIL);
+  FTestForm:= Form;
+
+  Assert.IsNotNull(Form.btnDeepLSettings,
+    'Form should have btnDeepLSettings button');
+end;
+
+
+procedure TTestFormTranslEditor.TestTargetLangCombo_HasItems;
+var
+  Form: TfrmTranslEditor;
+begin
+  Form:= TfrmTranslEditor.Create(NIL);
+  FTestForm:= Form;
+
+  { The combo should be populated with supported languages after FormPostInitialize }
+  Assert.IsTrue(Form.cmbTargetLang.Items.Count > 0,
+    'Target language combo should have items after initialization');
+  Assert.IsTrue(Form.cmbTargetLang.Items.Count >= 10,
+    'Should have at least 10 supported languages');
+end;
+
+
+procedure TTestFormTranslEditor.TestDeepLSettingsClick_NoException;
+var
+  Form: TfrmTranslEditor;
+begin
+  Form:= TfrmTranslEditor.Create(NIL);
+  FTestForm:= Form;
+
+  { Note: This test cannot fully test the click because it opens a modal dialog.
+    We just verify the button exists and the event handler is assigned. }
+  Assert.IsNotNull(Form.btnDeepLSettings.OnClick,
+    'btnDeepLSettings should have OnClick event handler assigned');
 end;
 
 

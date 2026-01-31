@@ -2,7 +2,7 @@ UNIT LightVcl.Internet.HTMLWriter;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -50,7 +50,7 @@ TYPE
    property hHavIconLink:   string    read FHavIcon         Write FHavIcon;
    property hExtraHeaders:  string    read FExtraHeaders    Write FExtraHeaders;
    property hBody:          string    read FBody            write FBody;         { this is the content only between the <BODY> tag }
-   property Content:        string    read GetContent;                           { this is the content of the WHOLE html page - obligatoriu trebuie sa apelez 'GenerateContent' inainte de a apela 'Content' }
+   property Content:        string    read GetContent;                           { Content of the WHOLE html page. Must call GenerateContent before accessing this property }
  end;
 
 procedure Register;
@@ -69,13 +69,16 @@ end;
 
 procedure THtmlWriter.Reset;
 begin
- FContent := '';
- FRobots  := '';
- FBody    := '';
- FStyles  := 'style.css';
- FHavIcon := 'favicon.ico';
- FSiteRoot:= 'http://www.dnabaser.com/';
- hExtraHeaders:= ''; 
+ FContent     := '';
+ FTitle       := '';
+ FKeywords    := '';
+ FDescription := '';
+ FRobots      := '';
+ FBody        := '';
+ FExtraHeaders:= '';
+ FStyles      := 'style.css';
+ FHavIcon     := 'favicon.ico';
+ FSiteRoot    := 'http://www.dnabaser.com/';
 end;
 
 
@@ -132,7 +135,7 @@ end;
 
 function THtmlWriter.GetContent: string;
 begin
- Result:= FContent;                                                                                { daca schimb din FContent in Content, se fute si imi prabuseste IDE }
+ Result:= FContent;                                                                                { WARNING: Using Content instead of FContent here causes infinite recursion }
 end;
 
 
@@ -148,9 +151,6 @@ end;
 
 
 
-{--------------------------------------------------------------------------------------------------
-
---------------------------------------------------------------------------------------------------}
 procedure Register;
 begin
   RegisterComponents('LightSaber VCL', [THtmlWriter]);

@@ -2,7 +2,7 @@ unit LightVcl.Visual.GroupBox;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -49,7 +49,6 @@ var
   H: Integer;
   R: TRect;
   Flags: Longint;
-  TextFormat: TTextFormat;
   CaptionRect, OuterRect: TRect; Size: TSize;
   Box: TThemedButton;
   Details: TThemedElementDetails;
@@ -97,7 +96,6 @@ begin
         then
          begin
           Flags := DrawTextBiDiModeFlags(DT_SINGLELINE);
-          TextFormat:= [tfSingleLine];    //new
           LStyle.DrawText(Handle, Details, Text, CaptionRect, Flags, 0);
          end
         else

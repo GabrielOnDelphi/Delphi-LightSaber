@@ -1,7 +1,7 @@
 UNIT LightVcl.Visual.INIFile;
 
 {=============================================================================================================
-   2025.04
+   2026.01
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -47,7 +47,7 @@ USES
 {-----------------------------------------------------------------------------------------------------------------------
    READ/WRITE INDIVIDUAL CTRLS
    We handle here components of LightSaber library.
-   Classic VCL compoents are handled by "inherided"
+   Classic VCL components are handled by "inherited"
 -----------------------------------------------------------------------------------------------------------------------}
 function TIniFileVCL.WriteComp(Comp: TComponent): Boolean;                                    { Write 'any' control to INI file }
 begin
@@ -79,7 +79,7 @@ end;
 
 
 {Important:
-    The LightVcl.Visual.RadioButton/LightVcl.Visual.RadioButton will NOT be automatically resized if you call LoadForm(self) in FormCreate (canvas not ready). You need to call LoadForm(self) in LateInitialize. }
+    The LightVcl.Visual.RadioButton/LightVcl.Visual.CheckBox will NOT be automatically resized if you call LoadForm(self) in FormCreate (canvas not ready). You need to call LoadForm(self) in LateInitialize. }
 function TIniFileVCL.ReadComp(Comp: TComponent): Boolean;
 VAR s: string;
 begin
@@ -90,9 +90,9 @@ begin
   { Read controls }
   if ValueExists(Comp.Owner.Name, Comp.Name) then
    begin
+     { Stop the delayed event from triggering after the value is loaded from INI file }
      if Comp.InheritsFrom(TCubicSpinEditD)
-     then TCubicSpinEditD(Comp).StopTimer   { Stop the event from triggering some seconds later after the value of this spinbox was loaded from the INI file }
-     else
+     then TCubicSpinEditD(Comp).StopTimer;
 
      if Comp.InheritsFrom(TLogViewer)     { This MUST be before InheritsFrom(TTrackBar) }
      then TLogViewer(Comp).Verbosity:= TLogVerbLvl(ReadInteger(Comp.Owner.Name, Comp.Name, 0))
@@ -136,6 +136,7 @@ begin
        OR WinCtrl.InheritsFrom (TCubicPathEdit)
        OR WinCtrl.InheritsFrom (TFloatSpinEdit)
        OR WinCtrl.InheritsFrom (TCubicFileList)
+       OR WinCtrl.InheritsFrom (TCubicListBox)
        OR WinCtrl.InheritsFrom (TCubicSpinEditD)
        OR WinCtrl.InheritsFrom (TLogViewer)  //Note: The "master" of the verbosity events is the Grid not the trackbar
        ;

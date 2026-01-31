@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.Edit;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -49,19 +49,21 @@ USES LightVcl.Common.Colors;
 
 
 
+{---------------------------------------------------------------------------------------------------------------
+  Sets the Text property without triggering the OnChange event.
+  Useful when programmatically changing Text to avoid cascading events.
+---------------------------------------------------------------------------------------------------------------}
 procedure TCubicEdit.SetTextNoEvent(CONST aText: string);
 VAR
    OldOnChange: TNotifyEvent;
 begin
-  begin
-    OldOnChange := OnChange;
-    TRY
-      OnChange := NIL;
-      Text := aText;
-    FINALLY
-      OnChange:= OldOnChange;
-    END;
-  end;
+  OldOnChange:= OnChange;
+  TRY
+    OnChange:= NIL;
+    Text:= aText;
+  FINALLY
+    OnChange:= OldOnChange;
+  END;
 end;
 
 
@@ -77,24 +79,32 @@ end;
 procedure TCubicEdit.Change;
 begin
  UpdateBkgColor;
- inherited;  // if you wont to run standard event handler
+ inherited;  // Call inherited to run the standard event handler
 end;
 
 
+{---------------------------------------------------------------------------------------------------------------
+  Updates the background color based on file/directory existence.
+  Note: Only enable CheckFileExistence OR CheckDirExistence, not both.
+        If both are enabled, CheckDirExistence takes precedence (runs last).
+---------------------------------------------------------------------------------------------------------------}
 procedure TCubicEdit.UpdateBkgColor;
 begin
  if CheckFileExistence then
-  if FileExists(Text)
-  then Color:= clWindow
-  else Color:= clRedFade;
+   if (Text = '') OR FileExists(Text)
+   then Color:= clWindow
+   else Color:= clRedFade;
 
  if CheckDirExistence then
-  if DirectoryExists(Text)
-  then Color:= clWindow
-  else Color:= clRedFade;
+   if (Text = '') OR DirectoryExists(Text)
+   then Color:= clWindow
+   else Color:= clRedFade;
 end;
 
 
+{---------------------------------------------------------------------------------------------------------------
+  Intercepts key presses to detect Enter key and fire OnPressEnter event.
+---------------------------------------------------------------------------------------------------------------}
 procedure TCubicEdit.KeyPress(VAR Key: Char);
 begin
  inherited;
@@ -115,7 +125,3 @@ end;
 
 
 end.
-
-
-
- //if csCreating in ControlState then exit;

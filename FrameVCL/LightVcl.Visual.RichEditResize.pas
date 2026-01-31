@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.RichEditResize;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.09
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -20,8 +20,8 @@ INTERFACE
 
 USES
   Winapi.Windows, Winapi.Messages,
-  System.Classes, System.UITypes,
-  Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.ComCtrls, Vcl.Controls, Vcl.Dialogs;
+  System.Classes, System.SysUtils,
+  Vcl.ExtCtrls, Vcl.ComCtrls, Vcl.Controls;
 
 
 TYPE
@@ -52,10 +52,11 @@ begin
 end;
 
 
+{ Disables scrollbars after window creation since this control auto-resizes to fit content. }
 procedure TRichEditResize.CreateWnd;
 begin
   inherited CreateWnd;
-  ScrollBars := ssNone;  // Now that the handle is created, we can safely set the ScrollBars property
+  ScrollBars:= ssNone;
 end;
 
 
@@ -66,47 +67,47 @@ begin
 end;
 
 
+{ Calculates the required height based on text content and resizes both
+  the control and its parent container accordingly. }
 procedure TRichEditResize.ResizeRichEdit;
+const
+  PADDING = 5;
 var
-  LineHeight, NewHeight: Integer;
+  LineHeight, ContentHeight, ParentHeight: Integer;
   DC: HDC;
   TextMetric: TTextMetric;
   LineCount: Integer;
 begin
   if (csDesigning in ComponentState) then EXIT;
-  if Parent = NIL then
-  begin
-    ShowMessage('TRichEditResize - Parent not assigned'); // Temporary. Take it out later
-    EXIT;
-  end;
+  Assert(Parent <> NIL, 'TRichEditResize.ResizeRichEdit: Parent not assigned');
 
-  // Calc single line height
-  DC := GetDC(Handle);
+  { Calculate single line height from font metrics }
+  DC:= GetDC(Handle);
   try
     GetTextMetrics(DC, TextMetric);
-    LineHeight := TextMetric.tmHeight- TextMetric.tmInternalLeading;
+    LineHeight:= TextMetric.tmHeight - TextMetric.tmInternalLeading;
   finally
     ReleaseDC(Handle, DC);
   end;
 
-  // Calculate number of lines
-  LineCount := Perform(EM_LINEFROMCHAR, WPARAM(MaxInt), 0) + 1;
+  { Calculate number of lines using EM_LINEFROMCHAR with MaxInt to get the last line index }
+  LineCount:= Perform(EM_LINEFROMCHAR, WPARAM(MaxInt), 0) + 1;
 
-  // Calculate heigh
-  NewHeight := LineHeight * LineCount;
-  if NewHeight < FMinHeight
-  then NewHeight:= FMinHeight;
+  { Calculate content height, respecting minimum height }
+  ContentHeight:= LineHeight * LineCount;
+  if ContentHeight < FMinHeight
+  then ContentHeight:= FMinHeight;
 
-  // Prepare the parent
-  if (Parent is TPanel)
-  AND (TPanel(Parent).AutoSize)
-  then ShowMessage('TRichEditResize - Parent panel cannot be set to autosize!');
+  { Warn about incompatible parent configuration }
+  Assert(NOT ((Parent is TPanel) AND TPanel(Parent).AutoSize),
+    'TRichEditResize: Parent panel cannot be set to AutoSize');
 
-  NewHeight:= Top+ NewHeight + 5; // Add padding to the panel
-  Parent.Height := NewHeight;
+  { Set the control height to match content }
+  Height:= ContentHeight;
 
-  // Self height
-  Height := NewHeight;
+  { Resize parent to accommodate control position plus padding }
+  ParentHeight:= Top + ContentHeight + PADDING;
+  Parent.Height:= ParentHeight;
 end;
 
 

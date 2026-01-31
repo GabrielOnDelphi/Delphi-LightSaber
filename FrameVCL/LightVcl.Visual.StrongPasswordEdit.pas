@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.StrongPasswordEdit;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -13,7 +13,7 @@ UNIT LightVcl.Visual.StrongPasswordEdit;
 INTERFACE
 
 USES
-  Winapi.Messages, Winapi.Windows, vcl.Dialogs,
+  Winapi.Messages, Winapi.Windows, vcl.Dialogs,  { vcl.Dialogs appears unused }
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.Graphics;
 
 type
@@ -32,7 +32,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-  System.Math, LightVcl.Common.SystemSecurity, LightVcl.Common.System;
+  System.Math, LightVcl.Common.SystemSecurity, LightVcl.Common.System;  { LightVcl.Common.System appears unused - verify and remove if not needed }
 
 
 
@@ -40,21 +40,24 @@ constructor TStrongPasswordEdit.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   Color := clRed;   // Default background color
-  Hint:= 'It is reccomended to use uppercase, lowercase, numbers & signs.'
+  Hint:= 'It is recommended to use uppercase, lowercase, numbers & signs.';
 end;
 
 
+{ CM_TEXTCHANGED handles programmatic text changes (e.g., Text := 'x') }
 procedure TStrongPasswordEdit.CMTextChanged(var Message: TMessage);
 begin
   inherited;
   UpdateBackgroundColor;
 end;
 
-
+{ Change handles user input (EN_CHANGE notification).
+  Note: Both handlers call UpdateBackgroundColor to ensure coverage of all change scenarios.
+  The function is idempotent, so duplicate calls are harmless. }
 procedure TStrongPasswordEdit.Change;
 begin
   inherited Change;
-  UpdateBackgroundColor;  // Update the background color based on the new text
+  UpdateBackgroundColor;
 end;
 
 
@@ -66,8 +69,8 @@ var
 begin
   Strength := CalculatePasswordStrength(Text);
 
-  // Map strength to a green value (0 to 255)
-  GreenValue := Min(255, Strength * 51);  // 5 levels (0..5), 51 increment each level
+  // Map strength (0-5) to green component (0-255). Each strength level adds 51 to green.
+  GreenValue := Min(255, Strength * 51);
 
   // Set the background color from red to green based on strength
   Color := RGB(255 - GreenValue, GreenValue, 0);

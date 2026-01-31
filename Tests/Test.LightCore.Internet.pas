@@ -338,14 +338,16 @@ end;
 procedure TTestInternet.TestUrlEncode_ExtendedASCII;
 VAR
   Encoded: string;
+  TestChar: Char;
 begin
   { Extended ASCII characters (>= 127) should be encoded }
-  Encoded:= UrlEncode('test'+ #128);
-  Assert.IsTrue(Pos('%80', Encoded) > 0, 'Extended ASCII should be encoded');
+  TestChar:= Char(128);
+  Encoded:= UrlEncode('test' + TestChar);
+  Assert.IsTrue(Pos('%80', Encoded) > 0, 'Extended ASCII should be encoded. Got: ' + Encoded);
 
   { DEL character (#127) should be encoded }
   Encoded:= UrlEncode('test'+ #127);
-  Assert.IsTrue(Pos('%7F', Encoded) > 0, 'DEL character should be encoded');
+  Assert.IsTrue(Pos('%7F', Encoded) > 0, 'DEL character should be encoded. Got: ' + Encoded);
 end;
 
 procedure TTestInternet.TestIsWebPage(const URL: string; Expected: Boolean);

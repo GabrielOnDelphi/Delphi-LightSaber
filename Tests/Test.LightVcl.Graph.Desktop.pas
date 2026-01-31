@@ -178,6 +178,7 @@ begin
     begin
       Handle:= GetDesktopHandle;
     end,
+    Exception,
     'GetDesktopHandle should not raise an exception');
 end;
 

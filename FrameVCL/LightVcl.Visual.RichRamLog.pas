@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.RichRamLog;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01.31
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -12,7 +12,7 @@ UNIT LightVcl.Visual.RichRamLog;
    A simple but effective log (non-visual).
    Its data can be displayed by TRichLog, but it can also work alone without being connected to a TRichLog.
    More details in LightVcl.Visual.RichLogUtils.pas
-   
+
    Verbosity:
      Supports several verbosity levels (verbose, info, warnings, errors, etc)
 
@@ -21,7 +21,7 @@ UNIT LightVcl.Visual.RichRamLog;
      The plan is to be replaced with VisLogRam.
 
    Tester:
-     c:\Myprojects\LightSaber\Demo\LightLog\
+     c:\Projects\LightSaber\Demo\LightLog\
 =============================================================================================================}
 
 //Note: use LightCore.LogRam is you want support for timestamp
@@ -38,7 +38,7 @@ TYPE
      procedure addNewMessage(const Level, Mesaj: string);
      function  getContent(Line: string): string;
    protected
-     Indent: Integer;                                         { Intend each new added line with x spaces }
+     Indent: Integer;                                         { Indent each new added line with x spaces }
      FVerbosity: TLogVerb;
      RawLines: TStringList;                                   { Stores the actual log message and its associated verbosity }
      function  getLog(MsgType: Char): string;                 { UNUSED }
@@ -80,7 +80,7 @@ TYPE
      procedure Append   (RamLog: TRamLog);
      procedure ExportTo (aRichLog: TRichLog);
      procedure SaveAsTextFile(CONST FullPath: string);        { Save plain text to file }
-     property  Verbosity: TLogVerb read FVerbosity write setVerbosity default lvVerbose;
+     property  Verbosity: TLogVerb read FVerbosity write setVerbosity default lvrVerbose;
      property  Text_: string read getText write setText;       { Extract plain text from raw data (RawLines) }
   end;
 
@@ -105,7 +105,7 @@ constructor TRamLog.Create;
 begin
  inherited;
  RawLines:= TStringList.Create;
- FVerbosity:= lvVerbose;   { IMPORTAN: Put all info in RamLog but let the GUI control the verbosity of the RichLog. }
+ FVerbosity:= lvrVerbose;   { IMPORTANT: Put all info in RamLog but let the GUI control the verbosity of the RichLog. }
 end;
 
 
@@ -132,7 +132,7 @@ end;
 
 procedure TRamLog.Update;
 begin
- if RichLog<> NIL
+ if RichLog <> NIL
  then RichLog.Update;
 end;
 
@@ -178,17 +178,20 @@ begin
 end;
 
 
-function GetLevel(CONST Line: string): TLogVerb;        { Extracts the verbosity level from the provided raw (formated) line }
+{ Extracts the verbosity level from the provided raw (formatted) line.
+  Raw line format: #N#message where N is a digit 1-7 or 'b' for bold.
+  Returns the corresponding TLogVerb enum value. }
+function GetLevel(CONST Line: string): TLogVerb;
 begin
    Assert(Length(Line) > 1, 'Line is too short: '+ Line);
    case Line[2] of
-    '1': Result:= lvVerbose;
-    '2': Result:= lvHints;
-    '3': Result:= lvInfos;
-    '4': Result:= lvImportant;
-    '5': Result:= lvWarnings;
-    '6': Result:= lvErrors;
-    else Result:= lvInfos;  { '7' and 'b' }
+    '1': Result:= lvrVerbose;
+    '2': Result:= lvrHints;
+    '3': Result:= lvrInfos;
+    '4': Result:= lvrImportant;
+    '5': Result:= lvrWarnings;
+    '6': Result:= lvrErrors;
+    else Result:= lvrInfos;  { '7' (forced message) and 'b' (bold) }
    end;
 end;
 
@@ -223,12 +226,15 @@ begin
  TSL:= String2TSL(RamLogRawLines);
  TRY
   for s in TSL DO
-   if (s= '')  OR (s= ' ') //fixes some issues I introduced in 2022(?)
-   then Continue
-   else
-     if RichLog <> NIL
-     then RichLog.AddMsg(GetContent(s), getlevel(s));
-  RawLines.Add(s);
+   begin
+    if (s = '') OR (s = ' ')   { Skip empty lines - fixes issues from 2022 }
+    then Continue;
+
+    if RichLog <> NIL
+    then RichLog.AddMsg(GetContent(s), GetLevel(s));
+
+    RawLines.Add(s);
+   end;
  FINALLY
    FreeAndNil(TSL);
  END;
@@ -357,7 +363,7 @@ end;
 
 procedure TRamLog.AddEmptyRow;
 begin
- if RichLog<> NIL
+ if RichLog <> NIL
  then RichLog.AddEmptyRow;
  RawLines.Add(' ');
 end;
@@ -372,19 +378,19 @@ end;
 procedure TRamLog.AddMsgLvl(CONST Mesaj: string; MsgType: TLogVerb);
 begin
  case MsgType of
-   lvVerbose  : AddVerb(Mesaj);
-   lvHints    : AddHint(Mesaj);
-   lvInfos    : AddInfo(Mesaj);
-   lvImportant: AddImpo(Mesaj);
-   lvWarnings : AddWarn(Mesaj);
-   lvErrors   : AddError(Mesaj);
+   lvrVerbose  : AddVerb(Mesaj);
+   lvrHints    : AddHint(Mesaj);
+   lvrInfos    : AddInfo(Mesaj);
+   lvrImportant: AddImpo(Mesaj);
+   lvrWarnings : AddWarn(Mesaj);
+   lvrErrors   : AddError(Mesaj);
  end;
 end;
 
 
 procedure TRamLog.AddBold(CONST Mesaj: string);
 begin
- if RichLog<> NIL
+ if RichLog <> NIL
  then RichLog.AddBold(Mesaj);
  addNewMessage('#b#', Mesaj);
 end;
@@ -399,49 +405,49 @@ end;
 
 procedure TRamLog.AddVerb(CONST Mesaj: string);
 begin
- if RichLog<> NIL
+ if RichLog <> NIL
  then RichLog.AddVerb(Mesaj);
 
- if Verbosity<= lvVerbose
+ if Verbosity <= lvrVerbose
  then addNewMessage('#1#', Mesaj);
 end;
 
 
 procedure TRamLog.AddHint(CONST Mesaj: string);
 begin
- if RichLog<> NIL
+ if RichLog <> NIL
  then RichLog.AddHint(Mesaj);
 
- if Verbosity<= lvHints
+ if Verbosity <= lvrHints
  then addNewMessage('#2#', Mesaj);
 end;
 
 
 procedure TRamLog.AddInfo(CONST Mesaj: string);
 begin
- if RichLog<> NIL
+ if RichLog <> NIL
  then RichLog.AddInfo(Mesaj);
 
- if Verbosity<= lvinfos
+ if Verbosity <= lvrInfos
  then addNewMessage('#3#', Mesaj);
 end;
 
 
 procedure TRamLog.AddImpo(CONST Mesaj: string);
 begin
- if RichLog<> NIL
+ if RichLog <> NIL
  then RichLog.AddImpo(Mesaj);
 
- if Verbosity<= lvImportant
+ if Verbosity <= lvrImportant
  then addNewMessage('#4#', Mesaj);
 end;
 
 
 procedure TRamLog.AddWarn(CONST Mesaj: string);
 begin
- if RichLog<> NIL
+ if RichLog <> NIL
  then RichLog.AddWarn(Mesaj);
- if Verbosity<= lvWarnings
+ if Verbosity <= lvrWarnings
  then addNewMessage('#5#', Mesaj);
 
  HasWarnings:= TRUE;   { Indicates that at least an error/warning was stored in log }
@@ -450,9 +456,9 @@ end;
 
 procedure TRamLog.AddError(CONST Mesaj: string);
 begin
- if RichLog<> NIL
+ if RichLog <> NIL
  then RichLog.AddError(Mesaj);
- if Verbosity<= lvErrors
+ if Verbosity <= lvrErrors
  then addNewMessage('#6#', Mesaj);
 
  HasWarnings:= TRUE;   { Indicates that at least an error/warning was stored in log }
@@ -461,7 +467,7 @@ end;
 
 procedure TRamLog.AddMsg(CONST Mesaj: string);
 begin
- if RichLog<> NIL
+ if RichLog <> NIL
  then RichLog.AddMsg(Mesaj);
  addNewMessage('#7#', Mesaj);
 end;

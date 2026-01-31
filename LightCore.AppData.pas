@@ -13,6 +13,7 @@ UNIT LightCore.AppData;
        - Detect if the application is running for the first time on this computer
        - Application self-restart
        - Application self-delete
+       - TEST_MODE: When TRUE, ShowModal/Show calls are bypassed. Use in unit tests to prevent forms from blocking.
 
     Cross-platform ready: stamped 2025.10
  ____________________________________________________________________________________________________________
@@ -91,6 +92,7 @@ TYPE
     property  SingleInstClassName: string read FSingleInstClassName;
     {}
     class VAR Initializing: Boolean;                 // See documentation at the top of the file
+    class VAR TEST_MODE: Boolean;                    // When TRUE, ShowModal/Show calls are bypassed. Set this in test setup to prevent forms from blocking tests.
 
     constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE); virtual;
     procedure  AfterConstruction; override;

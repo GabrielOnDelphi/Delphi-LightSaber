@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.ThumbViewerM;                                              
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -45,8 +45,8 @@ TYPE
    public
     destructor Destroy;        override;
     procedure  Clear;          override;
-    function  GetRamSize (Phumb: ThumbPtr): Integer;                                               { Returns memory requirements fpr specified record }
-    function  GetTotalRamSize: Integer;
+    function  GetRamSize (Phumb: ThumbPtr): Int64;                                                 { Returns memory requirements for specified record }
+    function  GetTotalRamSize: Int64;
     property  Phumbs[Index: Integer]: ThumbPtr read GetRecord write SetRecord; default;
   end;
 
@@ -128,7 +128,6 @@ begin
  ThumbWidth    := 256;
  ThumbHeight   := round(ThumbWidth / 1.777) + TextHeight;                                          { 16:9 ratio = 1.7.  }
  CellSpacing   := 4;
- //ResamplerQual := rsGoodFilter;
  ResizeOpp     := roAutoDetect;
  ThumbList     := TThumbList.Create;
  Clear;
@@ -151,7 +150,15 @@ end;
 destructor TCubicThumbs.Destroy;
 begin
  FreeAndNil(ThumbList);
- FreeAndNil(FBkgThread);
+
+ { Safely terminate background thread before destroying }
+ if Assigned(FBkgThread) then
+  begin
+   FBkgThread.Terminate;
+   FBkgThread.WaitFor;
+   FreeAndNil(FBkgThread);
+  end;
+
  inherited
 end;
 
@@ -171,6 +178,10 @@ end;
 {--------------------------------------------------------------------------------------------------
    IMPORT FILES
 --------------------------------------------------------------------------------------------------}
+
+{ Loads all images from a folder and generates thumbnails in a background thread.
+  Clears any existing thumbnails first. Progress is reported via the assigned Progress bar.
+  FolderContent is passed to FBkgThread which takes ownership and frees it when done. }
 procedure TCubicThumbs.LoadFolder(CONST Dir: string);
 VAR  FolderContent: TStringList;                                                                   { Freed by: FBkgThread }
      FileName: string;
@@ -182,6 +193,9 @@ begin
 
  if Progress= NIL
  then raise exception.Create('The thumb viewer needs a progress bar');
+
+ { Clear existing thumbnails first }
+ Clear;
 
  { Discover files }
  FolderContent:= ListFilesOf(Dir, AllImg, TRUE, NOT DigSubdirectories);                            { Create records for all files in a folder. The thumbs ARE NOT yet created/ They are created on demand. }     { Freed by: FBkgThread }
@@ -202,10 +216,11 @@ begin
  Progress.Position:= 0;
  Progress.Max:= FolderContent.Count;
 
- { Release previous worker (if any) }
+ { Release previous worker (if any). Must wait for thread to finish before freeing. }
  if Assigned(FBkgThread) then
   begin
    FBkgThread.Terminate;
+   FBkgThread.WaitFor;                                                                               { Wait for thread to finish before freeing }
    FreeAndNil(FBkgThread);
   end;
 
@@ -215,7 +230,6 @@ begin
  FBkgThread.FileList   := FolderContent;
  FBkgThread.Height:= ThumbHeight;
  FBkgThread.Width := ThumbWidth;
- //FBkgThread.ResamplerQual:= ResamplerQual;
  FBkgThread.Start;
 
  { Generate thumbnails }
@@ -224,16 +238,13 @@ end;
 
 
 
-procedure TCubicThumbs.AddPicture(CONST FilePath: string);                                         { Append a single thumbnail at the end of an existing list of thumbnails. Not multithreaded }
+{ Appends a single thumbnail at the end of an existing list of thumbnails.
+  Not multithreaded - the image is loaded and resized synchronously. }
+procedure TCubicThumbs.AddPicture(CONST FilePath: string);
 VAR PThumb: ThumbPtr;
 begin
  if (ThumbWidth <= 0) OR (ThumbHeight<= 0)
- then RAISE exception.Create('Invalid thumb size!');                                               { DEL }
-
- {DEL
- if LoadOrigSize
- then Result:= cGraphics.LoadGraphEx(FileName)
- else Result:= cGraphics.LoadGraphRsmplProp(FileName, ThumbWidth, ThumbHeight, ResamplerQual); }
+ then RAISE exception.Create('Invalid thumb size!');
 
  { Add rec to list }
  New(PThumb);
@@ -250,7 +261,7 @@ begin
  AssignThumbsToCells;                                                                              { Show thumbnail }
 
  { Event }
- if Assigned(FThumbReady)                                                                          { A new thumbnail was generated for an image (by the worker thread) }
+ if Assigned(FThumbReady)
  then FThumbReady(Self);
 end;
 
@@ -261,11 +272,26 @@ end;
    WORKER THREAD
 --------------------------------------------------------------------------------------------------}
 
-procedure TCubicThumbs.WMThumbnailReady(VAR AMessage: TMessage);                                   { Receive notifications from worker thread each time a thumbnail is ready }
+{ Receives notifications from worker thread each time a thumbnail is ready.
+  The bitmap is retrieved from the thread's queue and assigned to the corresponding ThumbList entry.
+  Note: Messages may arrive after thread termination - must check FBkgThread is still valid. }
+procedure TCubicThumbs.WMThumbnailReady(VAR AMessage: TMessage);
 VAR BMP: TBitmap;
     ACol, ARow: Integer;
 begin
+ { Guard against messages arriving after thread was freed }
+ if NOT Assigned(FBkgThread) then EXIT;
+
  BMP:= FBkgThread.PopPicture;
+ if BMP = NIL then EXIT;                                                                            { Queue was empty - nothing to process }
+
+ { Safety check: ensure ThreadProgress is within bounds }
+ if (ThreadProgress < 0) OR (ThreadProgress >= ThumbList.Count) then
+  begin
+   FreeAndNil(BMP);
+   EXIT;
+  end;
+
  ThumbList.Phumbs[ThreadProgress]^.BMP:= BMP;
 
  { Refresh cell for this new thumbnail }
@@ -279,8 +305,8 @@ begin
  Progress.StepIt;
  Progress.Update;
 
- { Event }
- if Assigned(FThumbReady)                                                                          { A new thumbnail was generated for an image (by the worker thread) }
+ { Event: a new thumbnail was generated for an image by the worker thread }
+ if Assigned(FThumbReady)
  then FThumbReady(Self);
 end;
 
@@ -292,7 +318,11 @@ end;
 {--------------------------------------------------------------------------------------------------
    ASSIGN THUMBS
 --------------------------------------------------------------------------------------------------}
-procedure TCubicThumbs.AssignThumbsToCells;                                                        { Refresh images in Grid }
+
+{ Maps ThumbList entries to the grid's Objects array for display.
+  Each cell stores a pointer to its corresponding ThumbPtr record.
+  Empty cells at the end of the grid (when ThumbList.Count < total cells) are set to NIL. }
+procedure TCubicThumbs.AssignThumbsToCells;
 VAR
    Phumb: ThumbPtr;
    CurCell, ACol, ARow: Integer;
@@ -328,8 +358,11 @@ end;
 {--------------------------------------------------------------------------------------------------
    DRAW THUMBS
 --------------------------------------------------------------------------------------------------}
+
+{ Renders a single grid cell with its thumbnail image and filename caption.
+  If thumbnail is not yet loaded, draws a diagonal stripe pattern as placeholder.
+  The image is centered horizontally; the caption is drawn at the bottom of the cell. }
 procedure TCubicThumbs.DrawCell(ACol, ARow: Longint; aRect: TRect; aState: TGridDrawState);
-{HOW TO CENTER TEXT: http://stackoverflow.com/questions/6617058/delphi-canvas-fillrect-in-list-view }
 VAR
    X, Y, TextWidth, TextHeight: Integer;
    Phumb: ThumbPtr;
@@ -340,9 +373,6 @@ begin
  inherited;
  if ThumbList.Count= 0 then EXIT;
  if (ACol>= ColCount) OR (ARow>= RowCount) then EXIT;                                              { This happens while the user resizes the form. The aCol parameter may be for example 10 but meantime the user shrinked the grid and now there are only 5 columns so aCol is invalid. }
-
- Assert(ACol>= 0); {DEL}
- Assert(ARow>= 0); {DEL}
 
  Phumb:= GetPhumb(ACol, ARow);
  if Phumb= NIL then EXIT;                                                                          { This is necessary when the program starts for the first time and the records are empty }
@@ -409,15 +439,12 @@ end; *)
 
 procedure TCubicThumbs.ComputeCellCount;
 begin
- //Assert(ThumbList.Count> 0);    del
-
  ColCount:= Trunc (ClientWidth / (DefaultColWidth + 1));                                           { Thumbs per line. 1 is the width of the line that separates the cells }
  RowCount:= NecessaryRows;
- //ComputeScrollBar;                                                                                 { Call it AFTER ComputeCellCount }
 end;
 
 
-function TCubicThumbs.NecessaryRows: Integer;                                                      { Retunrs the number of rows necessary to display all thumbnails }
+function TCubicThumbs.NecessaryRows: Integer;                                                      { Returns the number of rows necessary to display all thumbnails }
 begin
  if ColCount= 0                                                                                    { Prevent 'Division by zero'. Happens when the grid is small small tiny }
  then Result:= 0
@@ -544,9 +571,11 @@ end;
 
 
 function TCubicThumbs.SelectedFile: string;
+VAR Phumb: ThumbPtr;
 begin
- if GetSelectedPhumb<> NIL
- then Result:= GetSelectedPhumb^.FileName
+ Phumb:= GetSelectedPhumb;
+ if Phumb<> NIL
+ then Result:= Phumb^.FileName
  else Result:= '';
 end;
 
@@ -564,6 +593,12 @@ end;
 
 procedure TCubicThumbs.ListIndex2Cells(Index: Integer; OUT ACol, ARow: Integer);
 begin
+ if ColCount = 0 then                                                                              { Guard against division by zero when grid is very small }
+  begin
+   ACol:= 0;
+   ARow:= 0;
+   EXIT;
+  end;
  ARow:= System.Trunc(Index / ColCount);
  ACol:= Index mod ColCount;
 end;
@@ -583,7 +618,7 @@ begin
 end;
 
 
-function TCubicThumbs.Thumb(CONST Index: Integer): TThumb;
+function TCubicThumbs.Thumb(CONST Index: Integer): TThumb;                                        { UNUSED }
 begin
  Assert(Index>= 0);
  Assert(Index< ThumbList.Count);
@@ -708,21 +743,21 @@ end;
 {--------------------------------------------------------------------------------------------------
    RAM INFO
 --------------------------------------------------------------------------------------------------}
-function TThumbList.GetRamSize(Phumb: ThumbPtr): Integer;                                          { Returns memory requirements for specified record }
+function TThumbList.GetRamSize(Phumb: ThumbPtr): Int64;                                            { Returns memory requirements for specified record }
 begin
  { Add record size }
- Result:= SizeOf(TThumb);                                                                          {INFO: The SizeOf function returns the storage size, in bytes, of either a Variable or Type. }
+ Result:= SizeOf(TThumb);                                                                          { SizeOf returns the storage size, in bytes, of either a Variable or Type. }
 
  { Add strings for filenames }
  Result:= Result+ GetStringRAMSize(Phumb^.FileName);
 
  { Add bitmaps }
  if Phumb^.BMP<> NIL
- then Result:= Result+ Integer(GetBitmapRamSize(Phumb^.BMP));
+ then Result:= Result+ GetBitmapRamSize(Phumb^.BMP);
 end;
 
 
-function TThumbList.GetTotalRamSize: Integer;                                                      { Returns memory requirements. May be a bit slow size I load each image into a string! }
+function TThumbList.GetTotalRamSize: Int64;                                                        { Returns memory requirements. May be a bit slow since it iterates all images. }
 VAR Phumb: ThumbPtr;
 begin
  Result:= 0;

@@ -484,15 +484,17 @@ begin
   { Set alpha to very low value }
   Form.AlphaBlendValue:= 1;
 
-  { After timer, alpha should not go below 0 }
-  Assert.IsTrue(Form.AlphaBlendValue >= 0,
-    'Alpha should never be negative');
+  { AlphaBlendValue is a Byte (0-255), so it cannot be negative by type definition.
+    This test verifies the property can be set to a low value without issue. }
+  Assert.AreEqual(Byte(1), Form.AlphaBlendValue,
+    'Alpha should be set to 1');
 end;
 
 
 procedure TTestFormSplashScreen.TestAlpha_ClampsTo255;
 var
   Form: TfrmSplash;
+  FinalAlpha: Byte;
 begin
   Form:= TfrmSplash.Create(NIL);
   FTestForm:= Form;
@@ -505,9 +507,11 @@ begin
   Form.TimerTimer(NIL);
   Form.TimerTimer(NIL);
 
-  { Alpha should not exceed 255 }
-  Assert.IsTrue(Form.AlphaBlendValue <= 255,
-    'Alpha should never exceed 255');
+  { AlphaBlendValue is a Byte (0-255), so it cannot exceed 255 by type definition.
+    This test verifies the timer can run multiple times without exception. }
+  FinalAlpha:= Form.AlphaBlendValue;
+  Assert.IsTrue(FinalAlpha in [0..255],
+    'Alpha should be a valid Byte value');
 end;
 
 

@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.StringGridBase;
 
 {=============================================================================================================
    Gabriel Moraru
-   2024.05
+   2026.01
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -46,12 +46,15 @@ TYPE
     FColorCursorText   : TColor;
     FColorTextDis      : TColor;
     FColorEnabled      : TColor;
-    FOwnObjects        : Boolean;  
-    FTextSpacing  : Integer;                                                                            { if true, the object will be freed when its row is deleted }    
+    FOwnObjects        : Boolean;                                                                           { If true, the object will be freed when its row is deleted }
+    FTextSpacing  : Integer;    
     FMouseInsert       : Boolean;
     FContentHints      : Boolean;
     FAutoRowHeight     : Boolean;
-    FAllowSort: Boolean;    
+    FAllowSort: Boolean;
+    { Internal state for mouse hint tracking }
+    FLastHintRow: Integer;
+    FLastHintCol: Integer;
     {EVENTS}
     FBeforeDelete      : TNotifyEvent;
     FAfterDelete       : TNotifyEvent;
@@ -214,7 +217,6 @@ begin
  FDelKeyDelContent:= FALSE;
  FOwnObjects      := FALSE;
  FHeaderCellSp    := 7;
- FAutoRowHeight   := TRUE;
 
  {COLORS}
  FColorCursor     := clNavy;
@@ -401,11 +403,16 @@ end;
 {--------------------------------------------------------------------------------------------------
    ITEMS DELETE
 --------------------------------------------------------------------------------------------------}
+{ Frees the object associated with the specified row and clears the reference in the Objects array }
 procedure TBaseStrGrid.FreeObject(const Line: integer);
 VAR Obj: TObject;
 begin
  Obj:= Objects[0, Line];
- FreeAndNil(Obj);
+ if Obj <> NIL then
+  begin
+   Objects[0, Line]:= NIL;  { Clear reference before freeing to avoid dangling pointer }
+   FreeAndNil(Obj);
+  end;
 end;
 
 
@@ -425,19 +432,21 @@ begin
 end;
 
 
+{ Deletes the specified row and its associated object (if OwnObjects is true).
+  Restores cursor position after deletion if possible. }
 procedure TBaseStrGrid.DeleteRow(ARow: Longint);
 var SelRow: Integer;
 begin
  if OwnObjects then FreeObject(ARow);
 
- SelRow := Row;                                                                                    { ca sa pun selectia la loc }
+ SelRow := Row;                                                                                    { Save selection position }
  Rows[ARow].Clear;
 
- if RowCount > FixedRows                                                                           /// if (NOT ForceKeepHeaders)
+ if RowCount > FixedRows                                                                           { Don't delete if only header row remains }
  then inherited DeleteRow(ARow);
 
  if (SelRow < RowCount) AND (SelRow > 0)
- then Row:= SelRow;                                                                                { pun selectia la loc }
+ then Row:= SelRow;                                                                                { Restore selection position }
 
  FixFixedRow;
 end;
@@ -452,22 +461,24 @@ begin                                                                           
 end;
 
 
+{ Deletes the specified column. Cannot delete columns that have objects associated.
+  Restores cursor position after deletion if possible. }
 procedure TBaseStrGrid.DeleteCol(ACol: Longint);
 var SelCol: Integer;
 begin
- if Objects[ACol, Row]<> NIL then                                                                  { This column has an object associated. therefore, cannot be deleted. }
+ if Objects[ACol, Row]<> NIL then                                                                  { This column has an object associated, therefore cannot be deleted }
   begin
    MessageInfo('Cannot delete this column.');
    EXIT;
   end;
 
- SelCol:= Col;                                                                                     { store selection's position }
- Cols[ACol].Clear;                                                                                 { clear text in column before deleting the column }
+ SelCol:= Col;                                                                                     { Store selection position }
+ Cols[ACol].Clear;                                                                                 { Clear text in column before deleting }
 
  inherited DeleteColumn(ACol);
 
  if SelCol < ColCount
- then Col:= SelCol;                                                                                { pun selectia la loc }
+ then Col:= SelCol;                                                                                { Restore selection position }
 end;
 
 
@@ -476,28 +487,30 @@ end;
 {--------------------------------------------------------------------------------------------------
    ITEMS ADD
 --------------------------------------------------------------------------------------------------}
+{ Inserts a new column after the specified column position }
 procedure TBaseStrGrid.InsertColumn(AfterColumn: Integer);
 VAR NewColPos: Integer;
 begin
  NewColPos:= AfterColumn+1;
- Assert(NewColPos > FixedCols-1);                                                                  {-1 pt ca FixedCols e indexat in 1 }
+ Assert(NewColPos > FixedCols-1);                                                                  { -1 because FixedCols is 1-indexed }
  ColCount:= ColCount+ 1;                                                                           { The new column will be created at the end of the grid }
- MoveColumn(ColCount- 1, NewColPos);                                                               { Move the new created column at the specified pos }
+ MoveColumn(ColCount- 1, NewColPos);                                                               { Move the new created column to the specified position }
  Col:= NewColPos;                                                                                  { Select new column }
- Cols[NewColPos].Clear;                                                                            { golesc noua col }
+ Cols[NewColPos].Clear;                                                                            { Clear the new column content }
 end;
 
 
+{ Inserts a new row below the specified row position }
 procedure TBaseStrGrid.InsertRow(BelowRow: Integer);
 VAR NewRowPos: Integer;
 begin
  NewRowPos:= BelowRow+1;
- Assert(NewRowPos > FixedRows-1);                                                                  {-1 pt ca FixedCols e indexat in 1 }
+ Assert(NewRowPos > FixedRows-1);                                                                  { -1 because FixedRows is 1-indexed }
 
  RowCount:= RowCount+ 1;
- MoveRow(RowCount- 1, NewRowPos);                                                                  { mut ultima linie la cursor }
- Row:= NewRowPos;                                                                                  { mut cursorul pe noua linie }
- Rows[NewRowPos].Clear;                                                                            { golesc noua linie - doar de frumusete }
+ MoveRow(RowCount- 1, NewRowPos);                                                                  { Move the last row to the cursor position }
+ Row:= NewRowPos;                                                                                  { Move cursor to the new row }
+ Rows[NewRowPos].Clear;                                                                            { Clear the new row content }
 end;
 
 
@@ -636,6 +649,9 @@ begin
 end;
 
         
+{ Sets the cursor position and triggers OnCurPosChanged event.
+  Note: Without updating the Selection rectangle, a visual bug occurs where
+  clicking the last row displays incorrect text in the first column. }
 procedure TBaseStrGrid.setCursorPos(CONST Value: Integer);
 VAR Sel: TGridRect;
 begin
@@ -644,13 +660,12 @@ begin
 
  if Value<> Row then
   begin
-   { Set the focus rectangle }     { Without this I get a bug: when I add a new item at the bottom and I click the last row, the first column will print the string 'Name' instead of the actual name of the file. }
+   { Update the focus rectangle to prevent display artifacts }
    Sel:= Selection;
    sel.Top:= Row;
    sel.Bottom:= Row;
    Selection:= Sel;
 
-   {}
    Row:= Value;
    if Assigned(FCursorChanged)
    then FCursorChanged(Self);
@@ -683,7 +698,7 @@ end;
 
 procedure TBaseStrGrid.MoveCursorUp;                                                               { Move cursor to the previous row (if the up row is not header or -1 ) }
 begin
- if (Row> 0) AND (Row >= fixedrows)
+ if Row > FixedRows                                                                                 { Ensure we don't move into the fixed header rows }
  then Row:= Row-1;
 end;
 
@@ -694,10 +709,6 @@ end;
 {--------------------------------------------------------------------------------------------------
                                    HINT
 --------------------------------------------------------------------------------------------------}
-VAR
-   LastRow, LastCol : Integer;
-
-
 procedure TBaseStrGrid.MouseMove(Shift: TShiftState; X, Y: Integer);
 begin
  inherited;
@@ -705,6 +716,7 @@ begin
 end;
 
 
+{ Pop-up a hint showing the content of the cell under the mouse cursor }
 procedure TBaseStrGrid.ShowCellHint(X,Y:Integer);
 VAR
    CellText: string;
@@ -712,17 +724,17 @@ VAR
 begin
   MouseToCell(X, Y, ACol, ARow);
   if   (ACol <> -1)     AND (ARow <> -1)
-  AND ((ACol <>LastCol) OR  (ARow <> LastRow)) then
+  AND ((ACol <> FLastHintCol) OR  (ARow <> FLastHintRow)) then
    begin
      CellText := Cells[ACol,ARow];
      if Length(CellText) > MaxTextInCellBug
      then CellText:= system.COPY(CellText, 1, MaxTextInCellBug)+ '...';     { Work around this bug: http://stackoverflow.com/questions/30574585/tstringgrid-cannot-display-very-long-6k-strings }
 
     Hint:= CellText;
-    Application.CancelHint;   // cred ca imi afecteaza cumva DELPHI IDE
+    Application.CancelHint;
 
-    LastCol:= ACol;
-    LastRow:= ARow;
+    FLastHintCol:= ACol;
+    FLastHintRow:= ARow;
    end;
 end;
 
@@ -741,11 +753,9 @@ end;
 {--------------------------------------------------------------------------------------------------
                                      FIND
 --------------------------------------------------------------------------------------------------}
-VAR LastFind: TPoint= (x: 0; y: 0);
-
-function TBaseStrGrid.FindNext(CONST Text: string; CaseSens: boolean): Boolean;     { Search all cells. Highlight the cell where text was found. If the text could not be found anymore, start from the beginning. }
-VAR LastCol, Cl, Rw: Integer;
-//    FoundAt: TPoint;
+{ Search all cells. Highlight the cell where text was found. If the text could not be found anymore, start from the beginning. }
+function TBaseStrGrid.FindNext(CONST Text: string; CaseSens: boolean): Boolean;
+VAR SearchCol, Cl, Rw: Integer;
 
    function SearchIt: Boolean;
    begin
@@ -777,10 +787,10 @@ begin
    Col:= 0;
   end;
 
- LastCol:= Col+1;
+ SearchCol:= Col+1;
 
  for Rw:= Row to RowCount-1 DO
-  for Cl:= LastCol to ColCount-1 DO  { Start the search from the next cell }
+  for Cl:= SearchCol to ColCount-1 DO  { Start the search from the next cell }
    begin
     if SearchIt then
       if SelectCell(Cl, Rw)
@@ -791,63 +801,14 @@ begin
         EXIT(TRUE);
        end
       else Continue;   { If cell cannot be selected, move on }
-    LastCol:= 0;
+    SearchCol:= 0;
    end;
 
-(*
- { I reach the last column? }
- if LastFind.Y= ColCount-1 then
-  begin
-   inc(LastFind.X);
-   LastFind.Y= 0;
-  end;
-
- FoundAt:= FindText( LastFind, Text, CaseSens);
-
-  begin
-   Cl:= FindOnRow(Rw);
-   if Cl > 0 then
-    begin
-     Result.X:= Rw;
-     Result.Y:= Cl;
-
-     EXIT(TRUE);
-    end;
-  end;  *)
 end;
 
-(*
-function TBaseStrGrid.FindText(StartPoint: TPoint; CONST Text: string; CaseSens: Boolean): TPoint;     { Search all cells. Intoarce celula in care a gasit string-ul }
-begin
- Result.X:= -1;
- Result.Y:= -1;
- (*
- for Rw:= StartPoint.X to RowCount-1 DO
-  for cl:= StartPoint.Y to ColCount-1 DO
-   if CaseSens
-   then
-     begin
-      if (Cells[cl, ARow]= Text)
-      then EXIT(cl)
-     end
-   else
-     if SameText(Cells[cl, ARow], Text)
-     then EXIT(x:= 1);
 
- for Rw:= StartRow to RowCount-1 DO
-  begin
-   Cl:= FindOnRow(Rw);
-   if Cl > 0 then
-    begin
-     Result.X:= Rw;
-     Result.Y:= Cl;
-     EXIT;
-    end;
-  end;
-end;   *)
-
-
-function TBaseStrGrid.FindOnRow(ARow: Integer; CONST Text: string; CaseSens: boolean): integer;     { intoarce coloana in care a gasit string-ul }
+{ Returns the column index where the text was found on the specified row, or -1 if not found }
+function TBaseStrGrid.FindOnRow(ARow: Integer; CONST Text: string; CaseSens: boolean): integer;
 VAR cl: Integer;
 begin
  Result:= -1;
@@ -864,7 +825,8 @@ begin
 end;
 
 
-function TBaseStrGrid.FindOnCol(CONST AColumn: Integer; CONST Text: string; CaseSens: boolean): integer;  { intoarce linia in care a gasit string-ul }
+{ Returns the row index where the text was found on the specified column, or -1 if not found }
+function TBaseStrGrid.FindOnCol(CONST AColumn: Integer; CONST Text: string; CaseSens: boolean): integer;
 VAR ln: Integer;
 begin
  Result:= -1;
@@ -990,9 +952,9 @@ end;
 
 procedure TBaseStrGrid.SetClrTextEnabled(const Value: TColor);
 begin
- if FColorTextDis <> Value then
+ if FColorEnabled <> Value then
  begin
-   FColorTextDis := Value;
+   FColorEnabled := Value;
    InvalidateGrid;
  end;
 end;
@@ -1038,20 +1000,16 @@ end;
    SCROLL
 --------------------------------------------------------------------------------------------------}
 
-{ Not tested! }
-{ Getting a TScrollbar control to Show a proportional thumb }
+{ Not tested! Getting a TScrollbar control to show a proportional thumb }
 procedure TBaseStrGrid.SetProportionalScroll;
 VAR info: TScrollInfo;
 begin
   FillChar(info, SizeOf(info), 0);
-  with info do
-  begin
-    cbsize := SizeOf(info);
-    fmask  := SIF_ALL;
-    GetScrollInfo(Handle, SB_VERT, info);
-    fmask := fmask or SIF_PAGE;
-    nPage := 5 * (nmax - nmin) div RowCount;                         // whatever number of cells you consider a "page"
-  end;
+  info.cbsize:= SizeOf(info);
+  info.fmask := SIF_ALL;
+  GetScrollInfo(Handle, SB_VERT, info);
+  info.fmask := info.fmask or SIF_PAGE;
+  info.nPage := 5 * (info.nmax - info.nmin) div RowCount;            { Adjust the page size for proportional scrolling }
   SetScrollInfo(Handle, SB_VERT, info, True);
 end;
 

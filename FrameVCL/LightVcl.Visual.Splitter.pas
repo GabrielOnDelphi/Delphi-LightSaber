@@ -1,8 +1,11 @@
 UNIT LightVcl.Visual.Splitter;
-{
- In acest custom component pot sa setez MinSize la zero
+{=============================================================================================================
+   2026.01
+   www.GabrielMoraru.com
+--------------------------------------------------------------------------------------------------------------
+    In acest custom component pot sa setez MinSize la zero
  Necesar pt DNA Baser
-}
+=============================================================================================================}
 
 {$S-,W-,R-,H+,X+}
 {$DebugInfo OFF}
