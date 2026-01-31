@@ -2,7 +2,6 @@ object frmTranslatorIniEditor: TfrmTranslatorIniEditor
   Left = 0
   Top = 0
   Caption = 'Translation Editor'
-  OnClose = FormClose
   ClientHeight = 441
   ClientWidth = 624
   Color = clBtnFace
@@ -11,6 +10,7 @@ object frmTranslatorIniEditor: TfrmTranslatorIniEditor
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  OnClose = FormClose
   TextHeight = 15
   object CubicGroupBox1: TGroupBox
     AlignWithMargins = True
@@ -61,7 +61,7 @@ object frmTranslatorIniEditor: TfrmTranslatorIniEditor
           Top = 3
           Width = 64
           Height = 28
-          Hint =
+          Hint = 
             'Copy right side (the one that needs to be translated) to the cli' +
             'pboard'
           Align = alRight
@@ -104,7 +104,7 @@ object frmTranslatorIniEditor: TfrmTranslatorIniEditor
           Top = 3
           Width = 76
           Height = 28
-          Hint =
+          Hint = 
             'Save translation to disk.'#13#10'Current selected filename will be use' +
             'd.'
           Align = alLeft

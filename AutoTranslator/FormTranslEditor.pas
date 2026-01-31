@@ -39,16 +39,16 @@ USES
 TYPE
   TfrmTranslEditor = class(TLightForm)
     lblInfo: TLabel;
-    GroupBox1: TGroupBox;
+    grpOptions: TGroupBox;
     btnLoadTranslation: TButton;
-    CubicGroupBox2: TCubicGroupBox;
+    grpLive: TCubicGroupBox;
     lbxForms: TListBox;
-    GroupBox3: TGroupBox;
+    grpHelp: TGroupBox;
     InternetLabel1: TLabel;
     inetDeepL: TLabel;
     btnHelp: TButton;
     chkTranslateTranslator: TCheckBox;
-    CubicGroupBox3: TCubicGroupBox;
+    grpNew: TCubicGroupBox;
     lblTargetLang: TLabel;
     sbxTargetLang: TDropDownSearchBox;
     edtAuthor: TLabeledEdit;
@@ -232,11 +232,11 @@ procedure TfrmTranslEditor.btnLoadTranslationClick(Sender: TObject);
 begin
   VAR sTempFile:= FSourceFile;
 
-  if PromptToLoadFile(sTempFile, FilterTransl, 'Open a source translation file...')
-  then
+  if PromptToLoadFile(sTempFile, FilterTransl, 'Open a source translation file...') then
     begin
       FSourceFile:= sTempFile;
       lblInfo.Caption:= 'Source: ' + ExtractFileName(FSourceFile);
+      TfrmTranslatorIniEditor.ShowEditor(FSourceFile);
     end;
 end;
 

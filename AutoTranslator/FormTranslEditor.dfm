@@ -6,53 +6,54 @@ object frmTranslEditor: TfrmTranslEditor
   AlphaBlendValue = 250
   BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'Translator'
-  ClientHeight = 660
+  ClientHeight = 671
   ClientWidth = 366
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
+  Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
+  Font.Height = -15
+  Font.Name = 'Calibri'
   Font.Style = []
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 3
   OnClose = FormClose
-  TextHeight = 13
+  TextHeight = 18
   object lblInfo: TLabel
     AlignWithMargins = True
     Left = 3
-    Top = 647
+    Top = 653
     Width = 360
-    Height = 13
+    Height = 18
     Align = alBottom
     Alignment = taCenter
     Caption = '@Info'
     Visible = False
   end
-  object CubicGroupBox2: TCubicGroupBox
+  object grpLive: TCubicGroupBox
     Left = 0
-    Top = 410
+    Top = 425
     Width = 366
-    Height = 150
+    Height = 141
     Align = alClient
     Caption = 'Live forms'
     TabOrder = 0
     object lbxForms: TListBox
       AlignWithMargins = True
       Left = 5
-      Top = 18
+      Top = 26
       Width = 356
-      Height = 110
+      Height = 93
       Hint = 'Live forms that available for translation.'
+      Margins.Top = 6
       Align = alClient
-      ItemHeight = 13
+      ItemHeight = 18
       TabOrder = 0
     end
     object chkTranslateTranslator: TCheckBox
       Left = 2
-      Top = 131
+      Top = 122
       Width = 362
       Height = 17
       Align = alBottom
@@ -61,32 +62,32 @@ object frmTranslEditor: TfrmTranslEditor
       OnClick = chkTranslateTranslatorClick
     end
   end
-  object CubicGroupBox3: TCubicGroupBox
+  object grpNew: TCubicGroupBox
     AlignWithMargins = True
     Left = 3
     Top = 3
     Width = 360
-    Height = 191
+    Height = 202
     Align = alTop
     Caption = 'Create Translation'
     TabOrder = 1
     object lblTargetLang: TLabel
       AlignWithMargins = True
       Left = 5
-      Top = 38
+      Top = 28
       Width = 350
-      Height = 13
+      Height = 18
       Align = alBottom
       Caption = 'Target language'
     end
     object sbxTargetLang: TDropDownSearchBox
       AlignWithMargins = True
       Left = 5
-      Top = 54
+      Top = 49
       Width = 350
-      Height = 21
+      Height = 26
       Hint = 'Type or select the target language for translation'
-      Margins.Bottom = 15
+      Margins.Bottom = 21
       Align = alBottom
       TabOrder = 0
       TextHint = 'Type language name...'
@@ -94,26 +95,26 @@ object frmTranslEditor: TfrmTranslEditor
     object edtAuthor: TLabeledEdit
       AlignWithMargins = True
       Left = 5
-      Top = 93
+      Top = 99
       Width = 350
-      Height = 21
+      Height = 26
       Hint = 
         '[Optional]'#13#10'The name of the person that created the translation ' +
         '(your name).'#13#10'If multiple authors, then put them in chronologic ' +
         'order, comma separated.'#13#10'You can enter also your website, facebo' +
         'ok, email, etc.'
       Align = alBottom
-      EditLabel.Width = 62
-      EditLabel.Height = 13
+      EditLabel.Width = 81
+      EditLabel.Height = 18
       EditLabel.Caption = 'Author name'
       TabOrder = 1
       Text = ''
-      TextHint = 'CubicDesign'
+      TextHint = 'GabrielMoraru'
     end
     object btnAutoTranslate: TButton
       AlignWithMargins = True
       Left = 5
-      Top = 120
+      Top = 131
       Width = 350
       Height = 30
       Hint = 'Translate all texts using DeepL API'
@@ -125,7 +126,7 @@ object frmTranslEditor: TfrmTranslEditor
     object btnManualTranslate: TButton
       AlignWithMargins = True
       Left = 5
-      Top = 156
+      Top = 167
       Width = 350
       Height = 30
       Hint = 
@@ -138,30 +139,30 @@ object frmTranslEditor: TfrmTranslEditor
       OnClick = btnManualTranslateClick
     end
   end
-  object GroupBox1: TGroupBox
+  object grpOptions: TGroupBox
     Left = 0
-    Top = 197
+    Top = 208
     Width = 366
-    Height = 213
+    Height = 217
     Align = alTop
     Caption = 'Options'
     TabOrder = 2
     object btnLoadTranslation: TButton
       AlignWithMargins = True
       Left = 5
-      Top = 142
+      Top = 146
       Width = 356
       Height = 30
-      Hint = 'Load an existing translation file'
+      Hint = 'Load an existing translation file for editing'
       Align = alBottom
-      Caption = 'Load translation...'
+      Caption = 'Load exiting translation...'
       TabOrder = 0
       OnClick = btnLoadTranslationClick
     end
     object btnDeepLSettings: TButton
       AlignWithMargins = True
       Left = 5
-      Top = 178
+      Top = 182
       Width = 356
       Height = 30
       Hint = 'Configure DeepL API settings'
@@ -173,7 +174,7 @@ object frmTranslEditor: TfrmTranslEditor
     object GroupBox2: TGroupBox
       AlignWithMargins = True
       Left = 5
-      Top = 23
+      Top = 27
       Width = 356
       Height = 113
       Align = alBottom
@@ -222,9 +223,9 @@ object frmTranslEditor: TfrmTranslEditor
       end
     end
   end
-  object GroupBox3: TGroupBox
+  object grpHelp: TGroupBox
     Left = 0
-    Top = 560
+    Top = 566
     Width = 366
     Height = 84
     Align = alBottom

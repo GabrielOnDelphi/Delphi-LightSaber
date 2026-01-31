@@ -106,6 +106,7 @@ procedure TfrmTranslatorIniEditor.btnApplyEditsClick(Sender: TObject);
 begin
   SaveEditor;
   Translator.CurLanguage:= FCurLangFile;
+  Translator.LoadTranslation(TRUE);  { Force reload even if same language }
 end;
 
 
