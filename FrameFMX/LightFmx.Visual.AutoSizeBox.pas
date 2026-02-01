@@ -74,6 +74,7 @@ begin
   Shadow.Softness  := 0.30;
   Shadow.Opacity   := 0.60;
   Shadow.ShadowColor := TAlphaColorRec.Black;
+  Shadow.Stored:= False;  // Prevent streaming to FMX file (avoids duplicate children)
 
   FBoxType:= bxModel; // Default alignment
 end;

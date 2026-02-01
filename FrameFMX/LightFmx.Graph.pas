@@ -42,8 +42,7 @@ USES
 function LoadImage(FileName: string): TBitmap;
 begin
   Result:= NIL;
-  if (FileName = '') or (NOT FileExists(FileName))
-  then EXIT;
+  if (FileName = '') or (NOT FileExists(FileName)) then EXIT;
 
   try
     Result:= TBitmap.CreateFromFile(FileName);
@@ -60,8 +59,7 @@ end;
 { Loads a file into TImage. If file is not found or loading fails, assigns a colored placeholder.
   Supports JPG, PNG, BMP and other formats supported by TBitmapCodecManager. }
 procedure LoadImage(FileName: string; Image: TImage; Color: TAlphaColor= TAlphaColorRec.DeepPink);
-var
-  Bitmap: TBitmap;
+VAR Bitmap: TBitmap;
 begin
   Assert(Assigned(Image), 'LoadImage: Image parameter cannot be nil');
 
@@ -86,9 +84,7 @@ end;
   Caller is responsible for freeing the returned bitmap. }
 function LoadThumbnail(const FileName: string; TargetWidth, TargetHeight: Single): TBitmap;
 begin
-  Result:= NIL;
-  if NOT FileExists(FileName)
-  then EXIT;
+  if NOT FileExists(FileName) then EXIT(NIL);
 
   try
     Result:= TBitmap.Create;
@@ -117,8 +113,7 @@ var
 begin
   Width := 0;
   Height:= 0;
-  if NOT FileExists(FileName)
-  then EXIT;
+  if NOT FileExists(FileName) then EXIT;
 
   try
     { TBitmapCodecManager.GetImageSize is the fastest way - reads header only }
@@ -149,14 +144,13 @@ end;
   Uses TBitmapCodecManager internally for platform-appropriate encoding.
   Shows error message dialog if save fails. }
 procedure SaveBitmap(BMP: TBitmap; FileName: string);
-var
-  TempBMP: TBitmap;
+var TempBMP: TBitmap;
 begin
   Assert(Assigned(BMP), 'SaveBitmap: BMP parameter cannot be nil');
   Assert(FileName <> '', 'SaveBitmap: FileName cannot be empty');
 
   TempBMP:= TBitmap.Create;
-  try
+  TRY
     TempBMP.Assign(BMP);
     try
       TempBMP.SaveToFile(FileName);
@@ -167,9 +161,9 @@ begin
         EXIT;
       end;
     end;
-  finally
+  FINALLY
     FreeAndNil(TempBMP);
-  end;
+  END;
 end;
 
 
@@ -195,7 +189,7 @@ begin
     Result.CopyFromBitmap(InputBMP, CropRect.Round, 0, 0);
   except
     FreeAndNil(Result);
-    raise;
+    RAISE;
   end;
 end;
 
@@ -203,12 +197,10 @@ end;
 { Loads image from file and crops it. Returns nil if file cannot be loaded.
   Caller is responsible for freeing the returned bitmap. }
 function CropBitmap(FileName: string; CropRect: TRectF): TBitmap;
-var
-  SrcBmp: TBitmap;
+VAR SrcBmp: TBitmap;
 begin
   SrcBmp:= LoadImage(FileName);
-  if SrcBmp = NIL
-  then EXIT(NIL);
+  if SrcBmp = nil then Exit(nil);
 
   try
     Result:= CropBitmap(SrcBmp, CropRect);
@@ -276,5 +268,3 @@ end;
 
 
 end.
-
-

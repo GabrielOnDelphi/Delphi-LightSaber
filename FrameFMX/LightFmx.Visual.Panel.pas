@@ -6,7 +6,7 @@ unit LightFmx.Visual.Panel;
 ==============================================================================================================
 
    In FMX, unlike the VCL, the Visible property affects both design time and runtime when set in the Object Inspector.
-   That�s why setting Visible:= False in FMX hides components in the Form Designer, which is a big inconvenience.
+   That's why setting Visible:= False in FMX hides components in the Form Designer, which is a big inconvenience.
 
    Solution:
      In the Form Designer, the component is always visible (Visible := True) so you can edit it,
@@ -46,8 +46,7 @@ begin
   inherited Create(AOwner);
   FVisibleAtRuntime:= True; // Default: visible at runtime
   // Ensure visibility in designer
-  if csDesigning in ComponentState
-  then Visible:= True;
+  if csDesigning in ComponentState then Visible:= True;
 end;
 
 
@@ -56,6 +55,19 @@ begin
   if FVisibleAtRuntime <> Value
   then FVisibleAtRuntime:= Value; // No immediate visibility change here; handled in Loaded
 end;
+
+{
+procedure TLightPanel.ReadVisibleAtRuntime(Reader: TReader);
+begin
+  FVisibleAtRuntime := Reader.ReadBoolean;
+end;
+
+
+procedure TLightPanel.DefineProperties(Filer: TFiler);
+begin
+  inherited;
+  Filer.DefineProperty('VisibleAtRuntime', ReadVisibleAtRuntime, nil, not FVisibleAtRuntime);
+end;}
 
 
 procedure TLightPanel.Loaded;

@@ -266,19 +266,19 @@ begin
         OR (Form.BorderStyle = TFmxFormBorderStyle.ToolWindow);
 
       if ValueExists(Form.Name, 'Top')
-      then Form.Top := ReadFloat(Form.Name, 'Top', Form.Top)             { For "normal" controls default values are ignored because of ValueExists, therefore the current window 'physical' width/height are used }
+      then Form.Top := ReadInteger(Form.Name, 'Top', Form.Top)             { For "normal" controls default values are ignored because of ValueExists, therefore the current window 'physical' width/height are used }
       else Form.Top := Round((Screen.Height - Form.Height) / 2);         { For forms the top/left position is calculated so that the form is centered on screen, at first startup }
 
       if ValueExists(Form.Name, 'Left')
-      then Form.Left := ReadFloat(Form.Name, 'Left', Form.Left)
+      then Form.Left := ReadInteger(Form.Name, 'Left', Form.Left)
       else Form.Left := Round((Screen.Width - Form.Width) / 2);
 
       { We only read the width/height if it exists. Otherwise we use the design-time value. }
       if (NOT IsNonResizable) AND ValueExists(Form.Name, 'Width')
-      then Form.Width := ReadFloat(Form.Name, 'Width', Form.Width);
+      then Form.Width := ReadInteger(Form.Name, 'Width', Form.Width);
 
       if (NOT IsNonResizable) AND ValueExists(Form.Name, 'Height')
-      then Form.Height:= ReadFloat(Form.Name, 'Height', Form.Height);
+      then Form.Height:= ReadInteger(Form.Name, 'Height', Form.Height);
 
       if ShowPositionWarn
       AND (Form.Position <> TFormPosition.Designed)
@@ -313,13 +313,15 @@ begin
   if Comp.Name = '' then
   begin
     s:= '[TIniFileApp.WriteComp] The control has no name! Class: ' + Comp.ClassName;
-    if (Comp is TControl) and (TControl(Comp).Parent <> nil)
+    if (Comp is TControl) 
+	AND (TControl(Comp).Parent <> nil)
     then s:= s + '. Parent: ' + TControl(Comp).Parent.Name;
     RAISE Exception.Create(s);
   end;
 
   { Most controls need an Owner to determine the INI section name. TForm and TColorBox are exceptions. }
-  if NOT (Comp is TForm) AND NOT (Comp is TColorBox) AND (Comp.Owner = NIL)
+  if NOT (Comp is TForm) 
+  AND NOT (Comp is TColorBox) AND (Comp.Owner = NIL)
   then RAISE Exception.Create('[TIniFileApp.WriteComp] Component has no owner: ' + Comp.Name + ' (' + Comp.ClassName + ')');
 
   Result:= TRUE;
@@ -391,12 +393,11 @@ begin
   { TColorBox uses FSection, not Owner.Name }
   if Comp is TColorBox
   then
-  begin
-    if ValueExists(FSection, Comp.Name)
-    then TColorBox(Comp).Color:= ReadColor(Comp.Name, TColorBox(Comp).Color);
-  end
+     if ValueExists(FSection, Comp.Name)
+     then TColorBox(Comp).Color:= ReadColor(Comp.Name, TColorBox(Comp).Color)
+     else 
   else
-  begin
+   begin
     { All other controls need an Owner }
     if Comp.Owner = NIL
     then RAISE Exception.Create('[TIniFileApp.ReadComp] Component has no owner: ' + Comp.Name + ' (' + Comp.ClassName + ')');
@@ -432,7 +433,7 @@ begin
       end
       else
         Result:= FALSE;
-    end;
+     end;
   end;
 end;
 
@@ -452,6 +453,12 @@ begin
     or (WinCtrl is TMenuItem)
     or (WinCtrl is TSwitch)
     or (WinCtrl is TSplitter);
+    //or (WinCtrl is TPageControl)
+    //or (WinCtrl is TFontDialog)
+    //or (WinCtrl is TOpenDialog)
+    //or (WinCtrl is TSaveDialog)
+    //or (WinCtrl is TColorBox)	
+    //or (WinCtrl is TToggleSwitch);	
 end;
 
 
@@ -506,7 +513,7 @@ begin
   then WriteFloat(Comp.Owner.Name, Comp.Name, TControl(Comp).Position.X)
   else
     if TControl(Comp).Align = TAlignLayout.Top
-	then WriteFloat(Comp.Owner.Name, Comp.Name, TControl(Comp).Position.Y);
+    then WriteFloat(Comp.Owner.Name, Comp.Name, TControl(Comp).Position.Y);
 end;
 
 
@@ -514,10 +521,10 @@ end;
 procedure TIniFileApp.readSplitter(Comp: TComponent);
 begin
   if TControl(Comp).Align = TAlignLayout.Left
-  then TControl(Comp).Position.X := ReadFloat(Comp.Owner.Name, Comp.Name, TControl(Comp).Position.X)
+  then TControl(Comp).Position.X:= ReadFloat(Comp.Owner.Name, Comp.Name, TControl(Comp).Position.X)
   else
     if TControl(Comp).Align = TAlignLayout.Top
-    then TControl(Comp).Position.Y := ReadFloat(Comp.Owner.Name, Comp.Name, TControl(Comp).Position.Y);
+    then TControl(Comp).Position.Y:= ReadFloat(Comp.Owner.Name, Comp.Name, TControl(Comp).Position.Y);
 end;
 
 

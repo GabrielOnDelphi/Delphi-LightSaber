@@ -23,7 +23,8 @@ UNIT LightFmx.Visual.ScreenCapture;
 
    Platform Support:
    - Windows: Full GDI-based screen capture
-   - macOS/Linux/iOS/Android: Not yet implemented (stubs only)
+   - macOS: Core Graphics screen capture (requires Screen Recording permission in 10.15+)
+   - Linux/iOS/Android: Not yet implemented (stubs only)
 
    See also: FormScreenCapture.pas for the UI layer
 =============================================================================================================}
@@ -51,23 +52,24 @@ TYPE
 
     procedure StartCapture;
     function CaptureSelectedArea(CONST SelectionRect: TRectF): Boolean;
-    function GetCapturedImages: TObjectList<TBitmap>;
+    function GetCapturedImages: TObjectList<FMX.Graphics.TBitmap>;
 
-    property Screenshot: TBitmap read FScreenshot;
+    property Screenshot: FMX.Graphics.TBitmap read FScreenshot;
     property LastSelectionRect: TRectF read FLastSelectionRect;
     property CaptureTipShown: Integer read FCaptureTipShown write FCaptureTipShown;
   end;
 
 
   // Callback type for receiving captured images (used by FormScreenCapture.pas)
-  TScreenCaptureCallback = reference to procedure(CapturedImages: TObjectList<TBitmap>);
+  TScreenCaptureCallback = reference to procedure(CapturedImages: TObjectList<FMX.Graphics.TBitmap>);
 
 
 IMPLEMENTATION
 
 USES
   LightFmx.Common.IniFile, LightCore.Types
-  {$IFDEF MSWINDOWS}, Winapi.Windows{$ENDIF};
+  {$IFDEF MSWINDOWS}, Winapi.Windows{$ENDIF}
+  {$IFDEF MACOS}, Macapi.CoreGraphics, Macapi.CoreFoundation, Macapi.CocoaTypes{$ENDIF};
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -77,8 +79,8 @@ USES
 constructor TScreenCaptureManager.Create;
 begin
   inherited Create;
-  FCapturedImages:= TObjectList<TBitmap>.Create(OwnObjects);
-  FScreenshot:= TBitmap.Create;
+  FCapturedImages:= TObjectList<FMX.Graphics.TBitmap>.Create(TRUE);  // Owns objects
+  FScreenshot:= FMX.Graphics.TBitmap.Create;
   FLastSelectionRect:= TRectF.Empty;
   FCaptureTipShown:= 0;
 
@@ -106,23 +108,39 @@ end;
      4. Maps the FMX bitmap for direct pixel access
      5. GetDIBits transfers pixels from GDI bitmap to FMX bitmap
 
+   macOS Implementation:
+     Uses Core Graphics to capture the screen:
+     1. CGWindowListCreateImage captures all on-screen windows
+     2. Maps the FMX bitmap for direct pixel access
+     3. Creates a CGBitmapContext pointing to FMX bitmap data
+     4. CGContextDrawImage renders the screen image into the bitmap
+     Note: Requires Screen Recording permission in macOS 10.15 Catalina and later.
+
    Note: Captures only the primary monitor. Multi-monitor support would
-   require EnumDisplayMonitors and combining captures.
+   require EnumDisplayMonitors (Windows) or multiple display handling (macOS).
 
    Other Platforms:
      Not yet implemented - shows a message and leaves FScreenshot empty.  }
 procedure TScreenCaptureManager.StartCapture;
 {$IFDEF MSWINDOWS}
 VAR
-  ScreenDC, MemDC: HDC;
+  ScreenDC, MemDC: Winapi.Windows.HDC;
   ScreenWidth, ScreenHeight: Integer;
-  hBitmap: HBITMAP;
+  hBitmap: Winapi.Windows.HBITMAP;
   BitmapData: TBitmapData;
-  BitmapInfo: TBitmapInfo;
+{$ENDIF}
+{$IFDEF MACOS}
+VAR
+  ScreenImage: CGImageRef;
+  ScreenWidth, ScreenHeight: Integer;
+  ColorSpace: CGColorSpaceRef;
+  Context: CGContextRef;
+  BitmapData: TBitmapData;
+  ScreenRect: CGRect;
 {$ENDIF}
 begin
   {$IFDEF MSWINDOWS}
-  // Get device context for the entire screen (0 = desktop)
+  // Windows: Use GDI to capture the desktop
   ScreenDC:= GetDC(0);
   try
     ScreenWidth:= GetSystemMetrics(SM_CXSCREEN);
@@ -145,6 +163,7 @@ begin
         // Transfer pixels from GDI bitmap to FMX bitmap
         if FScreenshot.Map(TMapAccess.Write, BitmapData) then
         try
+          VAR BitmapInfo: TBitmapInfo;
           FillChar(BitmapInfo, SizeOf(BitmapInfo), 0);
           BitmapInfo.bmiHeader.biSize       := SizeOf(TBitmapInfoHeader);
           BitmapInfo.bmiHeader.biWidth      := ScreenWidth;
@@ -166,8 +185,59 @@ begin
   finally
     ReleaseDC(0, ScreenDC);
   end;
+
+  {$ELSEIF DEFINED(MACOS)}
+  // macOS: Use Core Graphics to capture the screen
+  // Note: Requires Screen Recording permission in macOS 10.15+
+  ScreenRect:= CGRectInfinite;  // Capture entire screen
+  ScreenImage:= CGWindowListCreateImage(ScreenRect, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault);
+  if ScreenImage <> nil then
+  try
+    ScreenWidth:= CGImageGetWidth(ScreenImage);
+    ScreenHeight:= CGImageGetHeight(ScreenImage);
+
+    // Resize FMX bitmap to match screen dimensions
+    FScreenshot.Width:= ScreenWidth;
+    FScreenshot.Height:= ScreenHeight;
+
+    // Map FMX bitmap for direct pixel access
+    if FScreenshot.Map(TMapAccess.Write, BitmapData) then
+    try
+      // Create color space and bitmap context to draw into FMX bitmap
+      ColorSpace:= CGColorSpaceCreateDeviceRGB;
+      try
+        // Create context pointing directly to FMX bitmap data
+        // FMX uses BGRA format, so we use kCGImageAlphaPremultipliedFirst with kCGBitmapByteOrder32Little
+        Context:= CGBitmapContextCreate(
+          BitmapData.Data,
+          ScreenWidth,
+          ScreenHeight,
+          8,  // bits per component
+          BitmapData.Pitch,
+          ColorSpace,
+          kCGImageAlphaPremultipliedFirst OR kCGBitmapByteOrder32Little
+        );
+        if Context <> nil then
+        try
+          // Draw the screen image into our bitmap context
+          CGContextDrawImage(Context, CGRectMake(0, 0, ScreenWidth, ScreenHeight), ScreenImage);
+        finally
+          CGContextRelease(Context);
+        end;
+      finally
+        CGColorSpaceRelease(ColorSpace);
+      end;
+    finally
+      FScreenshot.Unmap(BitmapData);
+    end;
+  finally
+    CGImageRelease(ScreenImage);
+  end
+  else
+    ShowMessage('Screen capture failed. Please grant Screen Recording permission in System Preferences > Security & Privacy > Privacy.');
+
   {$ELSE}
-  // macOS/Linux/iOS/Android: Not yet implemented
+  // Linux/iOS/Android: Not yet implemented
   ShowMessage('Screen capture not yet implemented for this platform');
   {$ENDIF}
 end;
@@ -187,7 +257,7 @@ end;
      - Saves selection to INI file  }
 function TScreenCaptureManager.CaptureSelectedArea(CONST SelectionRect: TRectF): Boolean;
 VAR
-  CroppedBitmap, CapturedCopy: TBitmap;
+  CroppedBitmap: FMX.Graphics.TBitmap;
   SourceRect, DestRect: TRectF;
 begin
   Result:= FALSE;
@@ -207,7 +277,7 @@ begin
     end;
 
   // Create cropped bitmap from selection
-  CroppedBitmap:= TBitmap.Create;
+  CroppedBitmap:= FMX.Graphics.TBitmap.Create;
   try
     CroppedBitmap.Width:= Round(SelectionRect.Width);
     CroppedBitmap.Height:= Round(SelectionRect.Height);
@@ -223,10 +293,8 @@ begin
       CroppedBitmap.Canvas.EndScene;
     end;
 
-    // Create a copy for the captured images list (CroppedBitmap will be freed)
-    CapturedCopy:= TBitmap.Create;
-    CapturedCopy.Assign(CroppedBitmap);
-    FCapturedImages.Add(CapturedCopy);
+    // Add to captured images (create a copy since CroppedBitmap will be freed)
+    FCapturedImages.Add(CroppedBitmap.CreateThumbnail(Round(CroppedBitmap.Width), Round(CroppedBitmap.Height)));
 
     // Remember this selection for next capture
     FLastSelectionRect:= SelectionRect;
@@ -241,7 +309,7 @@ end;
 
 {  Returns the list of captured images.
    Note: The caller should NOT free the returned list - it's owned by this manager.  }
-function TScreenCaptureManager.GetCapturedImages: TObjectList<TBitmap>;
+function TScreenCaptureManager.GetCapturedImages: TObjectList<FMX.Graphics.TBitmap>;
 begin
   Result:= FCapturedImages;
 end;

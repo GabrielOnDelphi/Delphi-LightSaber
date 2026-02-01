@@ -47,8 +47,7 @@ begin
   FTextLabel.AutoSize:= TRUE;
   FTextLabel.WordWrap:= TRUE;
   FTextLabel.HitTest := FALSE;
-  FTextLabel.Stored  := FALSE;  // Prevents Form Designer from serializing this internal component.
-                                // Without this, loading a form would create duplicate labels (one from FMX, one from constructor).
+  FTextLabel.Stored  := FALSE;  // Prevents Form Designer from serializing this internal component. Without this, loading a form would create duplicate labels (one from FMX, one from constructor).
   FTextLabel.TextSettings.Font.Size:= 20;
 
   // Set initial demo text directly. Do NOT call SetText here to avoid premature UpdateSize.
@@ -67,6 +66,7 @@ begin
     begin
       FText:= Value;
       FTextLabel.Text:= Value;
+      // In FMX, setting Text often triggers an internal RGN_Change (Region Change) message which leads to a Resize
       UpdateSize;
     end;
 end;

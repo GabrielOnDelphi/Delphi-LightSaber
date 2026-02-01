@@ -176,8 +176,7 @@ end;
 { Removes all columns from the grid.
   Do not manually free columns before removing - the grid manages their lifecycle. }
 procedure TLogViewer.RemoveAllColumns;
-VAR
-  i: Integer;
+VAR i: Integer;
 begin
   for i:= ColumnCount - 1 downto 0 do
     RemoveObject(Columns[i]);
@@ -191,8 +190,7 @@ end;
 { Configures grid rows and columns based on current RamLog content and verbosity filter.
   In FMX TStringGrid, RowCount only includes data rows - the header row is managed separately. }
 procedure TLogViewer.setUpRows;
-VAR
-  RequiredColumnCount: Integer;
+VAR RequiredColumnCount: Integer;
 begin
   Assert(FRamLog <> NIL, 'RamLog not assigned!');
 
@@ -245,6 +243,7 @@ begin
   if FVerbosity <> Value then
     begin
       FVerbosity:= Value;
+
 
       // Sync associated verbosity trackbar if it exists
       if (FVerbTrackBar <> NIL) then
@@ -301,7 +300,7 @@ end;
 { Connects this viewer to AppData's global RamLog for application-wide logging }
 procedure TLogViewer.ObserveAppDataLog;
 begin
-  Assert(AppData.RamLog <> NIL, 'AppData.RamLog not assigned!');
+  Assert(AppData.RamLog <> NIL, 'AppData.RamLog not assigned!!');
   AssignExternalRamLog(AppData.RamLog);
 end;
 
@@ -338,7 +337,8 @@ begin
   // Map filtered row index to actual index in the original list
   actualIndex:= RamLog.Lines.Row2FilteredRow(Row, FVerbosity);
 
-  if (actualIndex >= 0) AND (actualIndex < RamLog.Lines.Count)
+  if (actualIndex >= 0) 
+  AND (actualIndex < RamLog.Lines.Count)
   then Result:= RamLog.Lines[actualIndex];
 end;
 
@@ -464,7 +464,9 @@ end;
 { Returns estimated scrollbar width (platform-dependent approximation) }
 function GetScrollBarWidth: Single;
 begin
-  Result:= 18;  // Common default width across platforms
+  // This is an approximation. Real width depends on style and platform. A more robust way might involve checking style resources.
+  // Consider platform specifics if necessary: TPlatformServices.Current.GetPlatformService(...)
+  Result:= 18; // Common default width
 end;
 
 
@@ -523,6 +525,7 @@ begin
   try
     Lines.BeginUpdate;
     try
+      // This loop iterates through FILTERED rows currently in the grid
       for i:= 0 to FFilteredRowCount - 1 do
         begin
           CurLine:= GetLineFiltered(i);
@@ -535,7 +538,7 @@ begin
 
     if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, ClipboardService)
     then ClipboardService.SetClipboard(Lines.Text)
-    else messageError('Clipboard service not available.');
+    else MessageError('Clipboard service not available.');
   finally
     FreeAndNil(Lines);
   end;
@@ -548,10 +551,12 @@ VAR
    ClipboardService: IFMXClipboardService;
    LogText: string;
 begin
+  // Get text
   if Assigned(FRamLog)
   then LogText:= RamLog.GetAsText
   else LogText:= 'No RAM log assigned!';
 
+  // Copy to clipboard
   if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, ClipboardService)
   then ClipboardService.SetClipboard(LogText)
   else messageError('Clipboard service not available.');
@@ -570,7 +575,8 @@ begin
   SelectedRowIndex:= Selected;
 
   // Check if a valid data row is selected (0-based, so >= 0)
-  if (SelectedRowIndex >= 0) AND (SelectedRowIndex < FFilteredRowCount)
+  if (SelectedRowIndex >= 0) 
+  AND (SelectedRowIndex < FFilteredRowCount)
   then
     begin
       CurLine:= GetLineFiltered(SelectedRowIndex);
@@ -673,9 +679,4 @@ begin
 end;
 
 
-
 end.
-
-
-
-

@@ -265,8 +265,7 @@ end;
 { Handles hardware back button on Android. Connected via FMX designer. }
 procedure TLightForm.FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
 begin
-  if Key = vkHardwareBack
-  then Close;
+  if Key = vkHardwareBack then Close;
 end;
 
 
@@ -364,7 +363,7 @@ begin
   lblToolBarCapt.Align:= TAlignLayout.Contents;
   lblToolBarCapt.StyleLookup:= 'toollabel';
   lblToolBarCapt.TextSettings.HorzAlign:= TTextAlign.Center;
-  lblToolBarCapt.Text:= Self.Caption;
+  lblToolBarCapt.Text:= Self.Caption; // Automatically grab the Form's caption
 
   // Create back button
   btnOsBack:= TSpeedButton.Create(Self);

@@ -7,7 +7,7 @@ UNIT LightVcl.TranslatorAPI;
    AUTOMATIC TRANSLATION API CLIENT
 
    Provides automatic translation of text using external APIs (DeepL, Google, etc).
-   Designed for integration with LightVcl.Common.Translate.pas translation system.
+   Designed for integration with LightVcl.Translate.pas translation system.
 
 --------------------------------------------------------------------------------------------------------------
    SUPPORTED PROVIDERS

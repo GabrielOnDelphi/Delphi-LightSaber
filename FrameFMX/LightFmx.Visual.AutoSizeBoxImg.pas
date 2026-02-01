@@ -24,6 +24,7 @@ TYPE
     FImage: TImage;
     FUpdatingSize: Boolean;
   protected
+    FCurScale: Single;
     CONST MaxImageWidthRatio = 0.95;      // Maximum image width ratio relative to the parent's content box
   public
     constructor Create(AOwner: TComponent); override;
@@ -70,7 +71,6 @@ procedure TAutosizeBoxImg.UpdateSize;
 var
   ParentContentWidth: Single;
   MaxWidth: Single;
-  CurScale: Single;
   NewWidth, NewHeight: Single;
 begin
   if Parent = NIL then EXIT;
@@ -94,11 +94,11 @@ begin
     MaxWidth:= Max(50, MaxWidth);
 
     // Scale image proportionally (never upscale beyond 100%)
-    CurScale:= Min(1.0, MaxWidth / FImage.Bitmap.Width);
+    FCurScale:= Min(1.0, MaxWidth / FImage.Bitmap.Width);
 
     // Calculate final bubble dimensions including padding
-    NewWidth := Ceil(FImage.Bitmap.Width  * CurScale) + Padding.Left + Padding.Right;
-    NewHeight:= Ceil(FImage.Bitmap.Height * CurScale) + Padding.Top  + Padding.Bottom;
+    NewWidth := Ceil(FImage.Bitmap.Width  * FCurScale) + Padding.Left + Padding.Right;
+    NewHeight:= Ceil(FImage.Bitmap.Height * FCurScale) + Padding.Top  + Padding.Bottom;
 
     // Adjust right margin to keep bubble left-aligned (model side)
     Margins.Right:= ParentContentWidth - NewWidth;

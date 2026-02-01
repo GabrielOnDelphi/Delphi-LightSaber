@@ -47,8 +47,7 @@ begin
   FVisibleAtRuntime:= True;  // Default: visible at runtime
 
   // Ensure visibility in designer
-  if csDesigning in ComponentState
-  then Visible:= True;
+  if csDesigning in ComponentState then Visible:= True;
 end;
 
 

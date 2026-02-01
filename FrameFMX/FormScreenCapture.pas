@@ -1,6 +1,5 @@
 ﻿UNIT FormScreenCapture;
 
-
 {=============================================================================================================
    2026.01.31
    www.GabrielMoraru.com
@@ -154,8 +153,7 @@ end;
 
 
 procedure TfrmScreenCapture.StartCapture;
-VAR
-  LastRect: TRectF;
+VAR LastRect: TRectF;
 begin
   // Hide form temporarily to capture clean screenshot
   // Note: ProcessMessages is used here intentionally to ensure the form is fully hidden
@@ -447,8 +445,7 @@ begin
         DrawRect:= SelectRect;
         // Clip selection to visible area (handles partial selections at screen edges)
         DrawRect.Intersect(FullRect);
-        if DrawRect.IsEmpty
-        then EXIT;  // Selection is completely outside visible area
+        if DrawRect.IsEmpty then EXIT;  // Selection is completely outside visible area
 
         // Draw selection with full brightness
         Canvas.DrawBitmap(FSCManager.Screenshot, DrawRect, DrawRect, 1.0, True);
@@ -545,8 +542,7 @@ end;
 procedure TfrmScreenCapture.ShowCaptureFlash;
 begin
   // Visual feedback: briefly flash the selection to confirm capture
-  // Note: ProcessMessages is used here for immediate visual feedback during the flash
-  // animation. A timer-based approach would be more complex for this simple effect.
+  // Note: ProcessMessages is used here for immediate visual feedback during the flash animation. A timer-based approach would be more complex for this simple effect.
   SelectionRect.Opacity:= 0.3;
   Application.ProcessMessages;
   Sleep(100);

@@ -51,8 +51,7 @@ CONST
 
 
 class procedure TConfetti.OnAnimFinish(Sender: TObject);
-VAR
-  Anim: TFloatAnimation;
+VAR Anim: TFloatAnimation;
 begin
   // ForceQueue ensures UI destruction happens on main thread after current event processing
   Anim:= Sender as TFloatAnimation;

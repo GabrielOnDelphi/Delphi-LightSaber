@@ -79,9 +79,9 @@ begin
   inherited Create(AOwner);
 
   // Self
-  Text                := '';
-  OnTyping            := EditTyping;
-  OnExit              := EditExit;              // Handle focus loss
+  Text             := '';
+  OnTyping         := EditTyping;
+  OnExit           := EditExit;              // Handle focus loss
 
   // New properties
   FWords           := TStringList.Create;  
@@ -95,6 +95,7 @@ begin
   lbxSearch.Name        := 'lbxSearch';
   lbxSearch.MultiSelect := FALSE;
   lbxSearch.Sorted      := TRUE;
+  lbxSearch.Stored      := FALSE;  // Prevent streaming to FMX file (avoids duplicate children)
   lbxSearch.ItemHeight  := 20;
   lbxSearch.Visible     := FALSE;
   lbxSearch.OnClick     := EndSearch;

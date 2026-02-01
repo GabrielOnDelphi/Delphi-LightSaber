@@ -7,7 +7,7 @@ UNIT FormTranslSelector;
    LANGUAGE SELECTOR FORM
 
    Allows users to choose a language/translation file from available options.
-   Works with LightVcl.Common.Translate.pas translation engine.
+   Works with LightVcl.Translate.pas translation engine.
 
    USAGE:
      Call TfrmTranslSelector.ShowSelector to display the language selection dialog.
@@ -27,7 +27,7 @@ UNIT FormTranslSelector;
      Don't add dependencies to CubicVisualControls here!
 
    RELATED:
-     - LightVcl.Common.Translate.pas - Translation engine
+     - LightVcl.Translate.pas - Translation engine
      - FormTranslEditor.pas - Translation editor form
 =============================================================================================================}
 

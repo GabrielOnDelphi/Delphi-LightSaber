@@ -42,16 +42,14 @@ USES LightCore;
 { Note: FMX.DialogService.ShowMessage exists but doesn't support icons.
   Native dialogs might use the message parameter for the title too. }
 procedure GenericMessage(CONST MessageText: string; CONST Caption: string= ''; DlgType: TMsgDlgType= TMsgDlgType.mtCustom);
-VAR
-  CombinedMsg: string;
+VAR CombinedMsg: string;
 begin
-  if MessageText = ''
-  then EXIT;
+  if MessageText = '' then EXIT;
 
   // Combine caption and message, avoiding leading blank lines when caption is empty
   if Caption = ''
   then CombinedMsg:= MessageText
-  else CombinedMsg:= Caption + LBRK + MessageText;
+  else CombinedMsg:= Caption+ CRLF+ CRLF+ MessageText;
 
   TDialogServiceAsync.MessageDialog(CombinedMsg, DlgType, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, -1, NIL);
 end;
@@ -79,8 +77,7 @@ end;
 
 
 procedure MessageError(CONST MessageText, Where: string; CONST Caption: string);
-VAR
-  FullMsg: string;
+VAR FullMsg: string;
 begin
   FullMsg:= MessageText +
             LBRK + 'Please report this error to us along with the exact steps to reproduce it, and we will fix it.' +
@@ -91,8 +88,7 @@ end;
 
 
 procedure MessageYesNo(CONST MessageText: string; CONST Caption: string; CONST Callback: TProc<Boolean>);
-VAR
-  CombinedMsg: string;
+VAR CombinedMsg: string;
 begin
   if MessageText = ''
   then EXIT;

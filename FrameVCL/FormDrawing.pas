@@ -66,7 +66,7 @@ USES
 
 CONST
   {TODO 1: Move TAG_DONT_TRANSLATE to translator lib }
-  TAG_DONT_TRANSLATE = 128;  // Used by LightVcl.Common.Translate.pas to skip translation
+  TAG_DONT_TRANSLATE = 128;  // Used by LightVcl.Translate.pas to skip translation
   MAX_WORKERW_SEARCH = 100;  // Maximum iterations when searching for WorkerW windows
 
 TYPE
@@ -126,7 +126,7 @@ begin
   DoubleBuffered:= TRUE;
   Caption:= 'frmBxDraw';
   Name:= 'frmBxDraw';
-  Tag:= TAG_DONT_TRANSLATE;  // Skip translation in LightVcl.Common.Translate.pas
+  Tag:= TAG_DONT_TRANSLATE;  // Skip translation in LightVcl.Translate.pas
   StyleElements:= [];        // Disable VCL skins - we need exact color control
 
   // Note: Don't use Align:=alClient - causes issues with multi-monitor setups

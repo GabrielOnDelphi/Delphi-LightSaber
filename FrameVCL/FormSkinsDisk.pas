@@ -114,7 +114,7 @@ procedure LoadLastSkin(const DefaultSkin: string= '');
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.Colors, LightVcl.Common.Translate, LightCore.INIFileQuick, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.ExecuteShell,
+   LightVcl.Common.Colors, LightVcl.Translate, LightCore.INIFileQuick, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.ExecuteShell,
    LightVcl.Visual.INIFile, System.IOUtils, LightCore.IO, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs;
 
 CONST

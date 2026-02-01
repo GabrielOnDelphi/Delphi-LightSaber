@@ -98,7 +98,7 @@ USES
   LightCore.AppData,
   LightVcl.Visual.AppData,
   LightVcl.Visual.INIFile,
-  LightVcl.Common.Translate,
+  LightVcl.Translate,
   LightCore.INIFileQuick;
 
 CONST
