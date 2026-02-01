@@ -39,35 +39,50 @@ object MainForm: TMainForm
     object btnSelector: TButton
       AlignWithMargins = True
       Left = 4
-      Top = 124
+      Top = 70
       Width = 196
       Height = 48
       Align = alBottom
       Caption = 'Select language'
       TabOrder = 0
+      WordWrap = True
       OnClick = btnSelectorClick
     end
-    object btnEditor: TButton
+    object btnEditManual: TButton
       AlignWithMargins = True
       Left = 4
       Top = 232
       Width = 196
       Height = 48
       Align = alBottom
-      Caption = 'Edit current translation'
+      Caption = 'Edit current translation'#13#10'(manual)'
       TabOrder = 1
-      OnClick = btnEditorClick
+      WordWrap = True
+      OnClick = btnEditManualClick
     end
-    object Button1: TButton
+    object btnEditAuto: TButton
       AlignWithMargins = True
       Left = 4
       Top = 178
       Width = 196
       Height = 48
       Align = alBottom
-      Caption = 'Add new translation'
+      Caption = 'Edit current translation'#13#10'(automatic)'
       TabOrder = 2
-      OnClick = btnEditorClick
+      WordWrap = True
+      OnClick = btnEditAutoClick
+    end
+    object btnAddNewAuto: TButton
+      AlignWithMargins = True
+      Left = 4
+      Top = 124
+      Width = 196
+      Height = 48
+      Align = alBottom
+      Caption = 'Add new translation'#13#10'(automatic)'
+      TabOrder = 3
+      WordWrap = True
+      OnClick = btnAddNewAutoClick
     end
   end
   object GroupBox1: TGroupBox

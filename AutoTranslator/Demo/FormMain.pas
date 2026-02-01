@@ -3,23 +3,25 @@ UNIT FormMain;
 INTERFACE
 
 USES
-
-  System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls,
-  LightVcl.Visual.AppDataForm, Vcl.Mask;
+  System.SysUtils, System.Classes, Vcl.StdCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.Mask,
+  LightVcl.Visual.AppDataForm;
 
 TYPE
  TMainForm = class(TLightForm)
-    btnEditor   : TButton;
+    btnEditManual: TButton;
     btnSelector : TButton;
     lblCurLang  : TLabel;
     pnlRight    : TPanel;
-    Button1: TButton;
+    btnEditAuto: TButton;
     GroupBox1: TGroupBox;
     CheckBox1: TCheckBox;
     LabeledEdit: TLabeledEdit;
     Memo: TMemo;
+    btnAddNewAuto: TButton;
     procedure btnSelectorClick(Sender: TObject);
-    procedure btnEditorClick(Sender: TObject);
+    procedure btnEditManualClick(Sender: TObject);
+    procedure btnEditAutoClick(Sender: TObject);
+    procedure btnAddNewAutoClick(Sender: TObject);
   protected
   private
     procedure TranslationLoaded(Sender: TObject);
@@ -35,6 +37,7 @@ IMPLEMENTATION  {$R *.dfm}
 USES
   LightVcl.Translate,
   FormTranslEditor,
+  FormTranslatorIniEditor,
   FormTranslSelector;
 
 
@@ -49,25 +52,46 @@ begin
 
   Translator.OnTranslationLoaded:= TranslationLoaded;  // Event handler
   TranslationLoaded(Self);                             // Show current loaded translation
+  MainFormCaption('');
 end;
 
 
 
 
 {--------------------------------------------------------------------------------------------------
-   STUFF
+   RIGHT PANEL
+   SELECT/ADD/EDIT
 --------------------------------------------------------------------------------------------------}
-procedure TMainForm.btnEditorClick(Sender: TObject);
-begin
-  TfrmTranslEditor.ShowEditor;
-end;
-
 
 procedure TMainForm.btnSelectorClick(Sender: TObject);
 begin
   TfrmTranslSelector.ShowSelector;
 end;
 
+
+procedure TMainForm.btnAddNewAutoClick(Sender: TObject);
+begin
+  TfrmTranslEditor.ShowEditor;
+end;
+
+
+procedure TMainForm.btnEditAutoClick(Sender: TObject);
+begin
+  TfrmTranslEditor.ShowEditor(ChangeFileExt(Translator.CurLanguageName, ''), TRUE);
+end;
+
+
+procedure TMainForm.btnEditManualClick(Sender: TObject);
+begin
+  TfrmTranslatorIniEditor.ShowEditor(Translator.CurLanguage);
+end;
+
+
+
+
+{--------------------------------------------------------------------------------------------------
+   GUI UPDATE
+--------------------------------------------------------------------------------------------------}
 
 // Show current loaded translation
 procedure TMainForm.TranslationLoaded(Sender: TObject);
