@@ -62,7 +62,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  LightVcl.Common.Translate, LightVcl.Common.IniFile, LightCore.AppData, LightVcl.Visual.AppData;
+  LightVcl.Translate, LightVcl.Common.IniFile, LightCore.AppData, LightVcl.Visual.AppData;
    {Don't add dependencies to LightVcl.Visual.INIFile because that package is not available yet}
 
 
