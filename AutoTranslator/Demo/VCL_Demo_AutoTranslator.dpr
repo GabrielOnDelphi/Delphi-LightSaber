@@ -12,7 +12,8 @@ uses
   LightVcl.TranslatorAPI in '..\LightVcl.TranslatorAPI.pas',
   LightCore.AppData in '..\..\LightCore.AppData.pas',
   LightVcl.Visual.AppData in '..\..\FrameVCL\LightVcl.Visual.AppData.pas',
-  FormTranslatorIniEditor in '..\FormTranslatorIniEditor.pas' {frmTranslatorIniEditor};
+  FormTranslatorIniEditor in '..\FormTranslatorIniEditor.pas' {frmTranslatorIniEditor},
+  LightVcl.Visual.AppDataForm in '..\..\FrameVCL\LightVcl.Visual.AppDataForm.pas';
 
 {$R *.res}
 
