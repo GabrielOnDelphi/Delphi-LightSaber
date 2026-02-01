@@ -70,8 +70,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  LightCore.AppData, LightVcl.Visual.AppData
-, LightVcl.Common.Dialogs, LightCore.IO, LightVcl.Common.IO, FormTranslEditor;
+  LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.Dialogs, LightCore.IO, LightVcl.Common.IO, FormTranslEditor;
 
 
 { Shows the language selector form as a modal dialog.

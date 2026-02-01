@@ -23,8 +23,7 @@ USES
 
 TYPE
   TfrmTranslatorIniEditor = class(TForm)
-    CubicGroupBox1: TGroupBox;
-    Splitter1: TSplitter;
+    Splitter: TSplitter;
     pnlRight: TPanel;
     mmoValues: TMemo;
     Panel2: TPanel;

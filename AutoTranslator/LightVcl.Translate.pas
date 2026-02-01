@@ -221,7 +221,7 @@ TYPE
 
     function  GetLangFolder  : string;
     property  CurLanguageName: string read getCurLanguage;                        // Only name. Example: FileName.ini
-    property  CurLanguage    : string read FCurLanguage write setCurLanguage;     // The language currently used for translation. Example: c:\AppName\Lang\FileName.ini (full path)
+    property  CurLanguage    : string read FCurLanguage write setCurLanguage;     // The file currently used for translation. Example: c:\AppName\Lang\FileName.ini (full path)
 
     property  OnTranslationLoaded: TNotifyEvent read FOnTranslationLoaded write FOnTranslationLoaded;
  end;

@@ -6,8 +6,8 @@ object frmTranslEditor: TfrmTranslEditor
   AlphaBlendValue = 250
   BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'Translator'
-  ClientHeight = 671
-  ClientWidth = 366
+  ClientHeight = 690
+  ClientWidth = 364
   Color = clBtnFace
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
@@ -23,8 +23,8 @@ object frmTranslEditor: TfrmTranslEditor
   object lblInfo: TLabel
     AlignWithMargins = True
     Left = 3
-    Top = 653
-    Width = 360
+    Top = 672
+    Width = 358
     Height = 18
     Align = alBottom
     Alignment = taCenter
@@ -33,9 +33,9 @@ object frmTranslEditor: TfrmTranslEditor
   end
   object grpLive: TCubicGroupBox
     Left = 0
-    Top = 425
-    Width = 366
-    Height = 141
+    Top = 343
+    Width = 364
+    Height = 206
     Align = alClient
     Caption = 'Live forms'
     TabOrder = 0
@@ -43,8 +43,8 @@ object frmTranslEditor: TfrmTranslEditor
       AlignWithMargins = True
       Left = 5
       Top = 26
-      Width = 356
-      Height = 93
+      Width = 354
+      Height = 152
       Hint = 'Live forms that available for translation.'
       Margins.Top = 6
       Align = alClient
@@ -52,9 +52,10 @@ object frmTranslEditor: TfrmTranslEditor
       TabOrder = 0
     end
     object chkTranslateTranslator: TCheckBox
-      Left = 2
-      Top = 122
-      Width = 362
+      AlignWithMargins = True
+      Left = 5
+      Top = 184
+      Width = 354
       Height = 17
       Align = alBottom
       Caption = 'Also translate this form'
@@ -66,16 +67,16 @@ object frmTranslEditor: TfrmTranslEditor
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 360
-    Height = 202
+    Width = 358
+    Height = 210
     Align = alTop
-    Caption = 'Create Translation'
+    Caption = 'Create translation'
     TabOrder = 1
     object lblTargetLang: TLabel
       AlignWithMargins = True
       Left = 5
-      Top = 28
-      Width = 350
+      Top = 36
+      Width = 348
       Height = 18
       Align = alBottom
       Caption = 'Target language'
@@ -83,8 +84,8 @@ object frmTranslEditor: TfrmTranslEditor
     object sbxTargetLang: TDropDownSearchBox
       AlignWithMargins = True
       Left = 5
-      Top = 49
-      Width = 350
+      Top = 57
+      Width = 348
       Height = 26
       Hint = 'Type or select the target language for translation'
       Margins.Bottom = 21
@@ -95,8 +96,8 @@ object frmTranslEditor: TfrmTranslEditor
     object edtAuthor: TLabeledEdit
       AlignWithMargins = True
       Left = 5
-      Top = 99
-      Width = 350
+      Top = 107
+      Width = 348
       Height = 26
       Hint = 
         '[Optional]'#13#10'The name of the person that created the translation ' +
@@ -114,8 +115,8 @@ object frmTranslEditor: TfrmTranslEditor
     object btnAutoTranslate: TButton
       AlignWithMargins = True
       Left = 5
-      Top = 131
-      Width = 350
+      Top = 139
+      Width = 348
       Height = 30
       Hint = 'Translate all texts using DeepL API'
       Align = alBottom
@@ -126,8 +127,8 @@ object frmTranslEditor: TfrmTranslEditor
     object btnManualTranslate: TButton
       AlignWithMargins = True
       Left = 5
-      Top = 167
-      Width = 350
+      Top = 175
+      Width = 348
       Height = 30
       Hint = 
         'Start a new translatio file and save all GUI strings to that fil' +
@@ -141,92 +142,71 @@ object frmTranslEditor: TfrmTranslEditor
   end
   object grpOptions: TGroupBox
     Left = 0
-    Top = 208
-    Width = 366
-    Height = 217
+    Top = 216
+    Width = 364
+    Height = 127
     Align = alTop
-    Caption = 'Options'
+    Caption = 'Save options'
     TabOrder = 2
     object btnLoadTranslation: TButton
       AlignWithMargins = True
-      Left = 5
-      Top = 146
-      Width = 356
-      Height = 30
+      Left = 304
+      Top = 31
+      Width = 93
+      Height = 50
       Hint = 'Load an existing translation file for editing'
-      Align = alBottom
       Caption = 'Load exiting translation...'
       TabOrder = 0
+      Visible = False
+      WordWrap = True
       OnClick = btnLoadTranslationClick
     end
-    object btnDeepLSettings: TButton
+    object chkDontSaveEmpty: TCheckBox
       AlignWithMargins = True
-      Left = 5
-      Top = 182
-      Width = 356
-      Height = 30
-      Hint = 'Configure DeepL API settings'
-      Align = alBottom
-      Caption = 'DeepL settings...'
+      Left = 31
+      Top = 63
+      Width = 179
+      Height = 17
+      Hint = 
+        'Don'#39't save properties (text, caption, hint) if their text is emp' +
+        'ty'#13#10
+      Caption = 'Don'#39't save empty'
+      Checked = True
+      State = cbChecked
       TabOrder = 1
-      OnClick = btnDeepLSettingsClick
     end
-    object GroupBox2: TGroupBox
+    object chkOverwrite: TCheckBox
       AlignWithMargins = True
-      Left = 5
-      Top = 27
-      Width = 356
-      Height = 113
-      Align = alBottom
-      Caption = 'Save options'
+      Left = 31
+      Top = 90
+      Width = 179
+      Height = 17
+      Hint = 
+        'Checked: Overwrite existing file.'#13#10'Unchecked: The text is append' +
+        'ed to the existing file.'
+      Caption = 'Overwrite existing file'
+      Checked = True
+      State = cbChecked
       TabOrder = 2
-      object chkParseCtrlsAction: TCheckBox
-        AlignWithMargins = True
-        Left = 29
-        Top = 32
-        Width = 179
-        Height = 17
-        Hint = 
-          'Parse controls that have an action assigned.'#13#10'Usually this shoul' +
-          'd be set to False since we want to let the associated action tak' +
-          'e precedence.'#13#10
-        Caption = 'Parse controls with action'
-        TabOrder = 0
-      end
-      object chkDontSaveEmpty: TCheckBox
-        AlignWithMargins = True
-        Left = 29
-        Top = 59
-        Width = 179
-        Height = 17
-        Hint = 
-          'Don'#39't save properties (text, caption, hint) if their text is emp' +
-          'ty'#13#10
-        Caption = 'Don'#39't save empty'
-        Checked = True
-        State = cbChecked
-        TabOrder = 1
-      end
-      object chkOverwrite: TCheckBox
-        AlignWithMargins = True
-        Left = 29
-        Top = 86
-        Width = 179
-        Height = 17
-        Hint = 
-          'Checked: Overwrite existing file.'#13#10'Unchecked: The text is append' +
-          'ed to the existing file.'
-        Caption = 'Overwrite existing file'
-        Checked = True
-        State = cbChecked
-        TabOrder = 2
-      end
+    end
+    object chkParseCtrlsAction: TCheckBox
+      AlignWithMargins = True
+      Left = 31
+      Top = 36
+      Width = 179
+      Height = 17
+      Hint = 
+        'Parse controls that have an action assigned.'#13#10'Usually this shoul' +
+        'd be set to False since we want to let the associated action tak' +
+        'e precedence.'#13#10
+      Caption = 'Parse controls with action'
+      TabOrder = 3
     end
   end
   object grpHelp: TGroupBox
     Left = 0
-    Top = 566
-    Width = 366
+    Top = 549
+    Width = 364
     Height = 84
     Align = alBottom
     Caption = 'Help'
@@ -235,7 +215,7 @@ object frmTranslEditor: TfrmTranslEditor
       AlignWithMargins = True
       Left = 5
       Top = 21
-      Width = 356
+      Width = 354
       Height = 13
       Cursor = crHandPoint
       Align = alBottom
@@ -254,7 +234,7 @@ object frmTranslEditor: TfrmTranslEditor
       AlignWithMargins = True
       Left = 5
       Top = 37
-      Width = 356
+      Width = 354
       Height = 13
       Cursor = crHandPoint
       Align = alBottom
@@ -273,12 +253,24 @@ object frmTranslEditor: TfrmTranslEditor
       AlignWithMargins = True
       Left = 5
       Top = 53
-      Width = 356
+      Width = 354
       Height = 26
       Align = alBottom
       Caption = 'HELP'
       TabOrder = 0
       OnClick = btnHelpClick
     end
+  end
+  object btnDeepLSettings: TButton
+    AlignWithMargins = True
+    Left = 3
+    Top = 636
+    Width = 358
+    Height = 30
+    Hint = 'Configure DeepL API settings'
+    Align = alBottom
+    Caption = 'DeepL settings...'
+    TabOrder = 4
+    OnClick = btnDeepLSettingsClick
   end
 end

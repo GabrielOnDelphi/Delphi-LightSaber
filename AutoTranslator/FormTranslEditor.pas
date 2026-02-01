@@ -40,7 +40,6 @@ TYPE
   TfrmTranslEditor = class(TLightForm)
     lblInfo: TLabel;
     grpOptions: TGroupBox;
-    btnLoadTranslation: TButton;
     grpLive: TCubicGroupBox;
     lbxForms: TListBox;
     grpHelp: TGroupBox;
@@ -54,11 +53,11 @@ TYPE
     edtAuthor: TLabeledEdit;
     btnAutoTranslate: TButton;
     btnManualTranslate: TButton;
-    btnDeepLSettings: TButton;
-    GroupBox2: TGroupBox;
     chkParseCtrlsAction: TCheckBox;
     chkDontSaveEmpty: TCheckBox;
     chkOverwrite: TCheckBox;
+    btnLoadTranslation: TButton;
+    btnDeepLSettings: TButton;
     procedure btnManualTranslateClick(Sender: TObject);
     procedure btnHelpClick(Sender: TObject);
     procedure btnLoadTranslationClick(Sender: TObject);
@@ -70,13 +69,13 @@ TYPE
     procedure btnDeepLSettingsClick(Sender: TObject);
     procedure chkTranslateTranslatorClick(Sender: TObject);
   private
-    FSourceFile: string;  { Source file for auto-translation }
     procedure PopulateLanguageList;
     function GetTargetFileName: string;
     procedure ApplyOptionsToTranslator;
     procedure ShowIniEditor(const FileName: string);
   public
-    class procedure ShowEditor; static;
+    class procedure ShowEditor; overload; static;
+    class procedure ShowEditor(const TargetLang: string; AutoTranslate: Boolean); overload; static;
     procedure FormPostInitialize; override;
   end;
 
@@ -91,10 +90,25 @@ USES
 
 { Shows the translation manager form }
 class procedure TfrmTranslEditor.ShowEditor;
+begin
+  ShowEditor('', FALSE);
+end;
+
+
+{ Shows the translation manager with preselected language and optional auto-translate }
+class procedure TfrmTranslEditor.ShowEditor(const TargetLang: string; AutoTranslate: Boolean);
 var
   frmEditor: TfrmTranslEditor;
 begin
   AppData.CreateForm(TfrmTranslEditor, frmEditor);
+
+  { Apply preselected language }
+  if TargetLang <> ''
+  then frmEditor.sbxTargetLang.Text:= TargetLang;
+
+  { Trigger auto-translate after form is shown }
+  if AutoTranslate
+  then frmEditor.btnAutoTranslateClick(frmEditor);
 end;
 
 
@@ -105,11 +119,7 @@ begin
   lblLiveFormsClick(Self);  { Populate live forms list }
   PopulateLanguageList;
 
-  { Default source file is the current language }
-  FSourceFile:= Translator.CurLanguage;
-  if FSourceFile <> ''
-  then lblInfo.Caption:= 'Source: ' + ExtractFileName(FSourceFile)
-  else lblInfo.Caption:= 'No source file loaded';
+  lblInfo.Caption:= 'Select target language and click Auto or Manual translate';
   lblInfo.Visible:= TRUE;
 end;
 
@@ -229,15 +239,12 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 
 procedure TfrmTranslEditor.btnLoadTranslationClick(Sender: TObject);
+VAR
+  FileName: string;
 begin
-  VAR sTempFile:= FSourceFile;
-
-  if PromptToLoadFile(sTempFile, FilterTransl, 'Open a source translation file...') then
-    begin
-      FSourceFile:= sTempFile;
-      lblInfo.Caption:= 'Source: ' + ExtractFileName(FSourceFile);
-      TfrmTranslatorIniEditor.ShowEditor(FSourceFile);
-    end;
+  FileName:= Translator.GetLangFolder;
+  if PromptToLoadFile(FileName, FilterTransl, 'Open translation file for editing...')
+  then TfrmTranslatorIniEditor.ShowEditor(FileName);
 end;
 
 
@@ -259,15 +266,10 @@ var
   TargetLang: string;
   TargetLangCode: string;
   TargetFile: string;
-  CharCount: Integer;
+  TempSourceFile: string;
+  TargetExists: Boolean;
+  s: string;
 begin
-  { Validate source file }
-  if (FSourceFile = '') OR NOT FileExists(FSourceFile) then
-    begin
-      MessageWarning('Please load a source translation file first.');
-      EXIT;
-    end;
-
   { Validate target language }
   TargetLang:= Trim(sbxTargetLang.Text);
   if TargetLang = '' then
@@ -280,7 +282,7 @@ begin
   if TargetLangCode = '' then
     begin
       MessageWarning('Language "' + TargetLang + '" is not supported by DeepL.' + CRLF +
-                     'Use "Extract from live forms" for manual translation.');
+                     'Use "Manual translate" for unsupported languages.');
       EXIT;
     end;
 
@@ -292,34 +294,44 @@ begin
       EXIT;
     end;
 
-  { Estimate characters }
-  CharCount:= Length(StringFromFile(FSourceFile));
-  if NOT MesajYesNo(Format(
-    'Translate to %s?'+ CRLF+ CRLF+
-    'Source: %s'+ CRLF+
-    'Estimated characters: %d'+ CRLF+
-    'This will use your DeepL API quota.', [TargetLang, ExtractFileName(FSourceFile), CharCount]))
-  then EXIT;
-
-  { Create target file path }
   TargetFile:= GetTargetFileName;
+  TargetExists:= FileExists(TargetFile);
 
-  { Warn if file exists }
-  if FileExists(TargetFile) then
-    if NOT MesajYesNo('File already exists: ' + ExtractFileName(TargetFile) + CRLF + 'Overwrite?')
-    then EXIT;
+  { Confirm with user }
+  if TargetExists then
+    begin
+      if NOT MesajYesNo(Format(
+        'Update translation to %s?'+ CRLF+ CRLF+
+        'Existing translations will be preserved.'+ CRLF+
+        'Only NEW entries will be translated using DeepL.', [TargetLang]))
+      then EXIT;
+    end
+  else
+    begin
+      if NOT MesajYesNo(Format(
+        'Create new translation to %s?'+ CRLF+ CRLF+
+        'All entries will be translated using DeepL API.', [TargetLang]))
+      then EXIT;
+    end;
+
+  { Backup existing file }
+  if TargetExists
+  then BackupFileIncrement(TargetFile, Translator.GetLangFolder + 'Backups\');
 
   { Apply options }
   ApplyOptionsToTranslator;
 
-  { Perform translation }
   Screen.Cursor:= crHourGlass;
+  TempSourceFile:= Translator.GetLangFolder + '_temp_source_.ini';
   DeepL:= TDeepLTranslator.Create;
   try
+    { Step 1: Extract fresh from live forms to temp file }
+    Translator.SaveTranslation(TempSourceFile, TRUE);
+
+    { Step 2: Translate - only new entries if target exists }
     DeepL.ApiKey:= DeepL_GetApiKey;
     DeepL.UseFreeAPI:= DeepL_GetUseFreeAPI;
-
-    DeepL.TranslateINIFile(FSourceFile, TargetFile, TargetLangCode, FALSE);
+    DeepL.TranslateINIFile(TempSourceFile, TargetFile, TargetLangCode, TargetExists);
 
     if DeepL.LastError <> '' then
       begin
@@ -327,14 +339,24 @@ begin
         EXIT;
       end;
 
+    { Format the file for better readability }
+    s:= StringFromFile(TargetFile);
+    s:= ReplaceString(s, CRLF+'[', CRLF+CRLF+'[');
+    StringToFile(TargetFile, s, woOverwrite, wpOn);
+
     { Success }
     lblInfo.Caption:= 'Translated: ' + ExtractFileName(TargetFile);
-    MessageInfo('Translation completed!' + CRLF + 'File: ' + ExtractFileName(TargetFile));
+    if TargetExists
+    then MessageInfo('Translation updated!' + CRLF + 'New entries have been translated.')
+    else MessageInfo('Translation completed!' + CRLF + 'File: ' + ExtractFileName(TargetFile));
 
     { Open in editor for review }
     ShowIniEditor(TargetFile);
 
   finally
+    { Clean up temp file }
+    if FileExists(TempSourceFile)
+    then DeleteFile(TempSourceFile);
     FreeAndNil(DeepL);
     Screen.Cursor:= crDefault;
   end;
