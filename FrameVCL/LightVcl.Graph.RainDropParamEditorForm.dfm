@@ -2,7 +2,7 @@ object frmRainEditor: TfrmRainEditor
   Left = 0
   Top = 0
   Caption = 'Parameters'
-  ClientHeight = 441
+  ClientHeight = 473
   ClientWidth = 590
   Color = clBtnFace
   ParentFont = True
@@ -19,19 +19,19 @@ object frmRainEditor: TfrmRainEditor
     Left = 3
     Top = 3
     Width = 584
-    Height = 435
+    Height = 467
     Align = alClient
     BevelOuter = bvNone
     ShowCaption = False
     TabOrder = 0
     DesignSize = (
       584
-      435)
+      467)
     object grpAdvanced: TGroupBox
       Left = 87
       Top = 126
       Width = 398
-      Height = 256
+      Height = 300
       Anchors = [akTop]
       Caption = 'Advanced settings'
       TabOrder = 0
@@ -50,7 +50,7 @@ object frmRainEditor: TfrmRainEditor
           Left = 3
           Top = 3
           Width = 49
-          Height = 15
+          Height = 37
           Hint = 'Density of the liquid. How fast the waves are stopped.'
           Align = alLeft
           Caption = 'Damping'
@@ -71,6 +71,7 @@ object frmRainEditor: TfrmRainEditor
           SelStart = 11
           TabOrder = 0
           ThumbLength = 25
+          OnChange = SettingChanged
         end
       end
       object Panel2: TPanel
@@ -87,7 +88,7 @@ object frmRainEditor: TfrmRainEditor
           Left = 3
           Top = 3
           Width = 57
-          Height = 15
+          Height = 35
           Hint = 
             'Desiered FPS. You might not reach this FPS number if your deskto' +
             'p resolution is high and your CPU is slow!'#13#10'Default: 18'
@@ -109,6 +110,7 @@ object frmRainEditor: TfrmRainEditor
           MinValue = 1
           TabOrder = 0
           Value = 24
+          OnChange = SettingChanged
         end
       end
       object Panel3: TPanel
@@ -125,7 +127,7 @@ object frmRainEditor: TfrmRainEditor
           Left = 3
           Top = 3
           Width = 75
-          Height = 15
+          Height = 37
           Align = alLeft
           Caption = 'Wave aplitude'
           Layout = tlCenter
@@ -145,6 +147,7 @@ object frmRainEditor: TfrmRainEditor
           SelStart = 2
           TabOrder = 0
           ThumbLength = 25
+          OnChange = SettingChanged
         end
       end
       object Panel4: TPanel
@@ -161,7 +164,7 @@ object frmRainEditor: TfrmRainEditor
           Left = 3
           Top = 3
           Width = 83
-          Height = 15
+          Height = 37
           Align = alLeft
           Caption = 'Wave travel dist'
           Layout = tlCenter
@@ -181,6 +184,7 @@ object frmRainEditor: TfrmRainEditor
           SelStart = 400
           TabOrder = 0
           ThumbLength = 25
+          OnChange = SettingChanged
         end
       end
       object Panel5: TPanel
@@ -196,14 +200,11 @@ object frmRainEditor: TfrmRainEditor
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 86
-          Height = 15
-          Hint = 
-            '[in miliseconds]'#13#10'Unlike the others, this does not take effect w' +
-            'hen you press Apply.'#13#10'You need to restart the animation in order' +
-            ' to apply it.'#13#10
+          Width = 81
+          Height = 37
+          Hint = '[in miliseconds]'
           Align = alLeft
-          Caption = 'Droplet interval*'
+          Caption = 'Droplet interval'
           Layout = tlCenter
         end
         object trkDropInterv: TTrackBar
@@ -222,6 +223,54 @@ object frmRainEditor: TfrmRainEditor
           SelStart = 50
           TabOrder = 0
           ThumbLength = 25
+          OnChange = SettingChanged
+        end
+      end
+      object pnlMouseDrops: TPanel
+        AlignWithMargins = True
+        Left = 5
+        Top = 248
+        Width = 388
+        Height = 38
+        Align = alTop
+        BevelOuter = bvNone
+        TabOrder = 5
+        DesignSize = (
+          388
+          38)
+        object lblMouseInterv: TLabel
+          Left = 228
+          Top = 10
+          Width = 69
+          Height = 15
+          Hint = 'Time between drops at mouse position (ms)'
+          Anchors = [akRight, akBottom]
+          Caption = 'Interval (ms):'
+        end
+        object chkMouseDrops: TCheckBox
+          Left = 3
+          Top = 10
+          Width = 120
+          Height = 17
+          Hint = 'Create water drops where the mouse cursor is.'
+          Anchors = [akLeft, akBottom]
+          Caption = 'Follow mouse'
+          TabOrder = 0
+          OnClick = SettingChanged
+        end
+        object spnMouseInterv: TSpinEdit
+          Left = 310
+          Top = 7
+          Width = 60
+          Height = 24
+          Hint = 'Time between drops at mouse cursor position'
+          Anchors = [akRight, akBottom]
+          Increment = 10
+          MaxValue = 1000
+          MinValue = 10
+          TabOrder = 1
+          Value = 100
+          OnChange = SettingChanged
         end
       end
     end
@@ -262,50 +311,22 @@ object frmRainEditor: TfrmRainEditor
     end
     object pnlBtm: TPanel
       Left = 0
-      Top = 399
+      Top = 431
       Width = 584
       Height = 36
       Align = alBottom
       TabOrder = 2
-      object btnOK: TButton
+      object btnClose: TButton
         AlignWithMargins = True
-        Left = 406
+        Left = 490
         Top = 4
         Width = 90
         Height = 28
-        Hint = 
-          'Save settings & close the window.'#13#10'Hint: You can also close the ' +
-          'window with <Enter>'
+        Hint = 'Close the window. Settings are applied in real-time.'
         Align = alRight
-        Caption = 'OK'
+        Caption = 'Close'
         ModalResult = 1
         TabOrder = 0
-        OnClick = btnOKClick
-      end
-      object btnCancel: TButton
-        AlignWithMargins = True
-        Left = 502
-        Top = 4
-        Width = 90
-        Height = 28
-        Hint = 
-          'Close the window without saving.'#13#10'Hint: You can also close with ' +
-          'Escape.'
-        Align = alRight
-        Caption = 'Cancel'
-        ModalResult = 2
-        TabOrder = 1
-      end
-      object btnApply: TButton
-        AlignWithMargins = True
-        Left = 4
-        Top = 4
-        Width = 90
-        Height = 28
-        Align = alLeft
-        Caption = 'Apply'
-        TabOrder = 2
-        OnClick = btnOKClick
       end
     end
   end
