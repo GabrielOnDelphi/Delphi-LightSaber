@@ -1,9 +1,8 @@
 ﻿UNIT LightCore.IO;
 
 {=============================================================================================================
-   www.GabrielMoraru.com
    2026.01.30
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+   www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
    Super useful functions for file/folder/disk manipulation:

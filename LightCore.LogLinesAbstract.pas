@@ -120,7 +120,7 @@ begin
   then readFromStream_v5(Stream)
   else RAISE Exception.Create('Unsupported stream version.');
 
-  Stream.ReadPadding;
+  Stream.ReadPaddingValidation;
 end;
 
 
@@ -134,7 +134,7 @@ begin
   for i := 0 to FList.Count - 1 do
     PLogLine(FList[i]).WriteToStream(Stream);
 
-  Stream.WritePadding;
+  Stream.WritePaddingValidation;
 end;
 
 
@@ -152,7 +152,7 @@ begin
   Indent := Stream.ReadInteger;
   Bold   := Stream.ReadBoolean;
   Time   := Stream.ReadDate;
-  Stream.ReadPadding(8);   { Padding }
+  Stream.ReadPaddingValidation(8);   { Padding }
 end;
 
 
@@ -163,7 +163,7 @@ begin
   Stream.WriteInteger(Indent);
   Stream.WriteBoolean(Bold);
   Stream.WriteDate(Time);
-  Stream.WritePadding(8);    { Padding }
+  Stream.WritePaddingValidation(8);    { Padding }
 end;
 
 

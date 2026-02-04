@@ -78,8 +78,6 @@ UNIT LightCore.StreamMem;
 
 =============================================================================================================}
 
-{$WARN DUPLICATE_CTOR_DTOR OFF}                                                                               {Silence the: W1029 Duplicate constructor  with identical parameters will be inacessible from C++ }
-
 INTERFACE
 
 USES
@@ -109,11 +107,10 @@ TYPE
      procedure WriteEnter;
 
      { Padding }
-     procedure WritePadding0(Bytes: Integer= FrozenPaddingSize);
-     procedure ReadPadding0 (Bytes: Integer= FrozenPaddingSize);
-
-     procedure WritePadding (Bytes: Integer= FrozenPaddingSize);
-     procedure ReadPadding  (Bytes: Integer= FrozenPaddingSize);          // Raises an exception if the buffer does not contain the signature
+     procedure ReadPadding0           (Bytes: Integer= FrozenPaddingSize);    // Does not check them for validity
+     procedure ReadPaddingValidation  (Bytes: Integer= FrozenPaddingSize);    // Raises an exception if the buffer does not contain the signature
+     procedure WritePaddingValidation (Bytes: Integer= FrozenPaddingSize);    // Raises an exception if the padding does not match the SafetyPaddingStr string. Usefule to detect file corruption. }
+     procedure WritePadding0          (Bytes: Integer= FrozenPaddingSize);    // Writes zeroes as padding bytes.
 
      { Numeric }
      function  ReadBoolean : Boolean;
@@ -261,7 +258,7 @@ end;
      2 bytes (Word): File version number.
 
      This new file header is more reliable because we check
-       the magic number  - this is fixed for all TCubicMemStream files
+       the magic number  - this is fixed for all files
        the signature
        the file version
 
@@ -291,53 +288,53 @@ begin
   Assert(Signature > '', 'TCubicMemStream - No signature provided!');
 
   // Read "LiSa" magic no
-  try
+  TRY
     MagicNo:= ReadCardinal;
-  except
-    on E: Exception do
-    begin
-      if AppDataCore <> NIL
-      then AppDataCore.LogError('Cannot read magic number for: ' + String(Signature) + ' - ' + E.Message);
-      EXIT(0);
-    end;
-  end;
+  EXCEPT
+    on E: Exception DO
+      begin
+        if AppDataCore <> NIL
+        then AppDataCore.LogError('Cannot read magic number for: ' + String(Signature) + ' - ' + E.Message);
+        EXIT(0);
+      end;
+  END;
   if MagicNo <> LisaMagicNumber then EXIT(0);
 
   // Read signature
-  try
+  TRY
     FileSignature:= ReadSignature;
-  except
-    on E: Exception do
+  EXCEPT
+    on E: Exception DO
     begin
       if AppDataCore <> NIL
       then AppDataCore.LogError('Cannot read stream signature for: ' + String(Signature) + ' - ' + E.Message);
       EXIT(0);
     end;
-  end;
+  END;
   if FileSignature = '' then
-  begin
-    if AppDataCore <> NIL
-    then AppDataCore.LogError('Cannot read file signature: ' + string(Signature));
-    EXIT(0);
-  end;
+    begin
+      if AppDataCore <> NIL
+      then AppDataCore.LogError('Cannot read file signature: ' + string(Signature));
+      EXIT(0);
+    end;
   if FileSignature <> Signature then
-  begin
-    if AppDataCore <> NIL
-    then AppDataCore.LogError('Signature mismatch: ' + string(Signature));
-    EXIT(0);
-  end;
+    begin
+      if AppDataCore <> NIL
+      then AppDataCore.LogError('Signature mismatch: ' + string(Signature));
+      EXIT(0);
+    end;
 
   // Read the version number
-  try
+  TRY
     Result:= ReadWord;
-  except
-    on E: Exception do
+  EXCEPT
+    on E: Exception DO
     begin
       if AppDataCore <> NIL
       then AppDataCore.LogError('Cannot read stream version for: ' + String(Signature) + ' - ' + E.Message);
       EXIT(0);
     end;
-  end;
+  END;
 end;
 
 
@@ -362,19 +359,19 @@ begin
 
   // Check size
   if Count > 64 then
-  begin
-    if AppDataCore <> NIL
-    then AppDataCore.LogError('ReadSignature: Signature larger than 64 bytes: ' + IntToStr(Count) + ' bytes');
-    EXIT('');
-  end;
+    begin
+      if AppDataCore <> NIL
+      then AppDataCore.LogError('ReadSignature: Signature larger than 64 bytes: '+ IntToStr(Count)+' bytes');
+      EXIT('');
+    end;
 
   // Enough data to read?
-  if Count > Size - Position then
-  begin
-    if AppDataCore <> NIL
-    then AppDataCore.LogError('ReadSignature: Signature length > file size!');
-    EXIT('');
-  end;
+  if Count > Size- Position then
+    begin
+      if AppDataCore <> NIL
+      then AppDataCore.LogError('ReadSignature: Signature length > file size!');
+      EXIT('');
+    end;
 
   // Do the actual string reading
   Result:= ReadStringACnt(Count, 128);
@@ -430,12 +427,15 @@ begin
     end;
 end;
 
-// Reads the padding bytes back and does not check them for validity
+
+{ Reads padding bytes. For backwards compatibility, does NOT validate the content.
+  Use ReadPaddingValidation if you need validation. }
 procedure TCubicMemStream.ReadPadding0(Bytes: Integer);
 VAR b: TBytes;
 begin
   if Bytes> 0 then
     begin
+      Assert(Bytes + Position <= Size, 'Read beyond stream!');
       SetLength(b, Bytes);
       ReadBuffer(b[0], Bytes);
     end;
@@ -448,7 +448,7 @@ CONST
 
 { Read/write a string as padding bytes.
   ReadPadding raises an exception if the padding does not match the SafetyPaddingStr string. Usefule to detect file corruption. }
-procedure TCubicMemStream.WritePadding(Bytes: Integer);
+procedure TCubicMemStream.WritePaddingValidation(Bytes: Integer);
 VAR
   b: TBytes;
   i, CheckPointSize: Integer;
@@ -469,7 +469,8 @@ begin
 end;
 
 
-procedure TCubicMemStream.ReadPadding(Bytes: Integer);
+{ Reads padding bytes WITH validation. Raises an exception if the buffer does not contain the signature. }
+procedure TCubicMemStream.ReadPaddingValidation(Bytes: Integer);
 VAR
   b: TBytes;
   CheckPointSize: Integer;
@@ -598,7 +599,12 @@ begin
 end;
 
 
-{ Reads a bunch of chars from the file. Why 'ReadChars' and not 'ReadString'? This function reads C++ strings (the length of the string was not written to disk also) and not real Delphi strings. So, i have to give the number of chars to read as parameter. IMPORTANT: The function will reserve memory for s.}
+{ Reads raw characters from file (without length prefix).
+  Count specifies how many bytes to read.
+  SafetyLimit prevents reading excessively large strings.
+  Returns empty string if Count is 0.
+  
+  Used for reading C++ strings (the length of the string is not written to disk)  }
 function TCubicMemStream.ReadCharsA(Count: Cardinal; SafetyLimit: Cardinal = 1*KB): AnsiString;
 begin
   if Count = 0 then EXIT('');
@@ -617,6 +623,7 @@ end;
 {--------------------------------------------------------------------------------------------------
    STRING LIST
 --------------------------------------------------------------------------------------------------}
+
 procedure TCubicMemStream.WriteStrings(TSL: TStrings);
 begin
   Assert(TSL <> NIL, 'TCubicMemStream.WriteStrings: TSL is nil');
@@ -631,6 +638,8 @@ begin
 end;
 
 
+{ Creates and returns a new TStringList populated from the stream.
+  IMPORTANT: Caller is responsible for freeing the returned TStringList. }
 function TCubicMemStream.ReadStrings: TStringList;
 begin
   Result:= TStringList.Create;
@@ -678,7 +687,7 @@ end;
 
 
 
-{ SHORTINT - Signed 8bit: -128..127 }
+{ SHORTINT - Signed 8-bit: -128..127 }
 procedure TCubicMemStream.WriteShortInt(s: ShortInt);
 begin
   WriteBuffer(s, 1);
@@ -690,7 +699,7 @@ begin
 end;
 
 
-{ SMALLINT - Signed 16bit: -32768..32767 }
+{ SMALLINT - Signed 16-bit: -32768..32767 }
 procedure TCubicMemStream.WriteSmallInt(s: SmallInt);
 begin
   WriteBuffer(s, 2);
@@ -767,6 +776,7 @@ end;
 {--------------------------------------------------------------------------------------------------
    FLOATS
 --------------------------------------------------------------------------------------------------}
+{ SINGLE - 32-bit floating point }
 function TCubicMemStream.ReadSingle: Single;
 begin
   ReadBuffer(Result, 4);
@@ -778,6 +788,7 @@ begin
 end;
 
 
+{ DOUBLE - 64-bit floating point }
 function TCubicMemStream.ReadDouble: Double;
 begin
   ReadBuffer(Result, 8);
@@ -941,7 +952,7 @@ begin
 end;
 
 
-{ Write raw data to file. The length is not written! }
+{ Write raw AnsiString data to file. The length is NOT written! }
 procedure TCubicMemStream.PushAnsi(CONST s: AnsiString);   // old name: WriteStringANoLen
 begin
   if Length(s) > 0
@@ -949,15 +960,13 @@ begin
 end;
 
 
-{ Read the raw content of the file and return it as string (for debugging) }
+{ Read the raw content of the file and return it as string (for debugging).
+  Note: This reads raw bytes, not a length-prefixed string. Use ReadStringA for that. }
 function TCubicMemStream.AsString: AnsiString;
 begin
-   if Size = 0 then RAISE Exception.Create('TCubicMemStream is empty!');
-
-
-      Position:= 0;
-      SetLength(Result, Size);
-      Read(Result[1], Size);
+  if Size = 0 then RAISE Exception.Create('TCubicMemStream is empty!');
+  Position:= 0;
+  Result:= ReadCharsA(Size, Size); // this sets the size
 end;
 
 
@@ -983,7 +992,8 @@ begin
 end;
 
 
-{ Returns the content of the ENTIRE stream }
+{ Returns the content of the ENTIRE stream as a byte array.
+  Returns empty array if stream is empty. }
 function TCubicMemStream.AsBytes: TBytes;          { Put the content of the stream into a string }
 begin
   Position:= 0;            // Reset stream position
@@ -1065,7 +1075,7 @@ begin
   ReadBuffer(Count, SizeOf(Count));  { First, find out how many characters to read }
 
  if Count > Cardinal(Size - Position)
-  then RAISE Exception.Create('TCubicMemStream.ReadStringA: String length > remaining stream size!');
+ then RAISE Exception.CreateFmt('String length (%d) exceeds remaining file size!', [Count]);
 
   if Count > SafetyLimit
   then RAISE Exception.CreateFmt('String too large: %d bytes', [Count]);
@@ -1086,7 +1096,7 @@ end;
    We need to specify the string size from outside.
    This is the relaxed/safe version. It won't raise an error if there is not enough data (Len) to read }
 function TCubicMemStream.TryReadStringA(Count: Cardinal): AnsiString;
-var
+VAR
   ReadBytes: Cardinal;
   AvailableBytes: Int64;
 begin

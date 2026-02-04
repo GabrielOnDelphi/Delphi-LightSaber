@@ -116,11 +116,10 @@ TYPE
      procedure WriteEnter;
 
      { Padding }
-     procedure WritePadding0(Bytes: Integer= FrozenPaddingSize);
-     procedure ReadPadding0 (Bytes: Integer= FrozenPaddingSize);
-
-     procedure WritePadding (Bytes: Integer= FrozenPaddingSize);
-     procedure ReadPadding  (Bytes: Integer= FrozenPaddingSize);          // Raises an exception if the buffer does not contain the signature
+     procedure ReadPadding0           (Bytes: Integer= FrozenPaddingSize);    // Does not check them for validity
+     procedure ReadPaddingValidation  (Bytes: Integer= FrozenPaddingSize);    // Raises an exception if the buffer does not contain the signature
+     procedure WritePaddingValidation (Bytes: Integer= FrozenPaddingSize);    // Raises an exception if the padding does not match the SafetyPaddingStr string. Usefule to detect file corruption. }
+     procedure WritePadding0          (Bytes: Integer= FrozenPaddingSize);    // Writes zeroes as padding bytes.
 
      { Numeric }
      function  ReadBoolean : Boolean;
@@ -235,7 +234,7 @@ end;
      2 bytes (Word): File version number.
 
      This new file header is more reliable because we check
-       the magic number  - this is fixed for all TLightStream files
+       the magic number  - this is fixed for all files
        the signature
        the file version
 
@@ -369,7 +368,7 @@ CONST
 procedure TLightStream.ReadCheckPointE(CONST s: AnsiString= '');
 begin
   if NOT ReadCheckPoint(s)
-  then raise Exception.Create('Checkpoint failure! '+ crlf+ string(s));
+  then RAISE Exception.Create('Checkpoint failure! ' + CRLF + string(s));
 end;
 
 function TLightStream.ReadCheckPoint(CONST s: AnsiString= ''): Boolean;
@@ -404,12 +403,15 @@ begin
     end;
 end;
 
-// Reads the padding bytes back and does not check them for validity
+
+{ Reads padding bytes. For backwards compatibility, does NOT validate the content.
+  Use ReadPaddingValidation if you need validation. }
 procedure TLightStream.ReadPadding0(Bytes: Integer);
 VAR b: TBytes;
 begin
   if Bytes> 0 then
     begin
+      Assert(Bytes + Position <= Size, 'Read beyond stream!');
       SetLength(b, Bytes);
       ReadBuffer(b[0], Bytes);
     end;
@@ -421,8 +423,8 @@ CONST
   SafetyPaddingStr: AnsiString= '<##LightSaber - Pattern of exactly 64 bytes for safety check.##>';   //This string is exactly 64 chars long
 
 { Read/write a string as padding bytes.
-  ReadPadding raises an exception if the padding does not match the SafetyPaddingStr string. Useful to detect file corruption. }
-procedure TLightStream.WritePadding(Bytes: Integer);
+  ReadPadding raises an exception if the padding does not match the SafetyPaddingStr string. Usefule to detect file corruption. }
+procedure TLightStream.WritePaddingValidation(Bytes: Integer);
 VAR
   b: TBytes;
   i, CheckPointSize: Integer;
@@ -443,7 +445,8 @@ begin
 end;
 
 
-procedure TLightStream.ReadPadding(Bytes: Integer);
+{ Reads padding bytes WITH validation. Raises an exception if the buffer does not contain the signature. }
+procedure TLightStream.ReadPaddingValidation(Bytes: Integer);
 VAR
   b: TBytes;
   CheckPointSize: Integer;
@@ -575,7 +578,9 @@ end;
 { Reads raw characters from file (without length prefix).
   Count specifies how many bytes to read.
   SafetyLimit prevents reading excessively large strings.
-  Returns empty string if Count is 0. }
+  Returns empty string if Count is 0.
+  
+  Used for reading C++ strings (the length of the string is not written to disk)  }
 function TLightStream.ReadCharsA(Count: Cardinal; SafetyLimit: Cardinal = 1*KB): AnsiString;
 begin
   if Count = 0 then EXIT('');
@@ -916,8 +921,7 @@ begin
 end;
 
 
-{ Write raw AnsiString data to file. The length is NOT written!
-  Does nothing if string is empty. }
+{ Write raw AnsiString data to file. The length is NOT written! }
 procedure TLightStream.PushAnsi(CONST s: AnsiString);
 begin
   if Length(s) > 0
@@ -1020,7 +1024,7 @@ end;
 function TLightStream.ReadStringA(SafetyLimit: Cardinal = 1*KB): AnsiString;
 VAR Count: Cardinal;
 begin
- ReadBuffer(Count, SizeOf(Count));                     // First, read the string length
+  ReadBuffer(Count, SizeOf(Count));  { First, find out how many characters to read }
 
  if Count > Cardinal(Size - Position)
  then RAISE Exception.CreateFmt('String length (%d) exceeds remaining file size!', [Count]);
@@ -1044,8 +1048,8 @@ end;
   Returns whatever could be read (may be shorter than Count). }
 function TLightStream.TryReadStringA(Count: Cardinal): AnsiString;
 VAR
-   ReadBytes: Cardinal;
-   AvailableBytes: Int64;
+  ReadBytes: Cardinal;
+  AvailableBytes: Int64;
 begin
  if Count = 0 then EXIT('');
 

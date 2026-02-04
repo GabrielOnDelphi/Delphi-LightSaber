@@ -87,7 +87,7 @@ begin
       ShowCounter := Stream.ReadInteger;
       IsBetaVers  := Stream.ReadBoolean;
 
-      Stream.ReadPadding;
+      Stream.ReadPadding0;  // Use Old for backwards compatibility with files created before validation was added
     end;
 
  FINALLY
@@ -113,7 +113,7 @@ begin
    Stream.WriteInteger (ShowCounter);
    Stream.WriteBoolean (IsBetaVers);
 
-   Stream.WritePadding;
+   Stream.WritePadding0;  // Use zeros for backwards compatibility with older program versions
  FINALLY
    FreeAndNil(Stream);
  END;

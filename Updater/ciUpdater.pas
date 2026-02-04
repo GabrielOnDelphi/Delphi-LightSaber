@@ -45,7 +45,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.DateUtils, System.Classes, Vcl.ExtCtrls,
-  ciUpdaterRec, LightCore, LightCore.Time, LightCore.Types;
+  ciUpdaterRec, LightCore.Types;
 
 TYPE
   TCheckWhen = (cwNever,
@@ -111,7 +111,7 @@ VAR
 IMPLEMENTATION
 
 USES
-  FormAsyncMessage, LightCore.Download, LightCore.INIFile, LightCore.Debugger, LightVcl.Common.Debugger, LightCore.AppData;
+  LightCore.Download, LightCore.INIFile, LightVcl.Common.Debugger, LightCore.AppData;
 
 Const
   TooLongNoSeeInterval = 180;    { Force to check for updates every 180 days even if the updater is disabled }
@@ -245,7 +245,7 @@ begin
  if Result
  then
   begin
-   Result:= NewsRec.LoadFrom(UpdaterFileLocation);
+    Result:= NewsRec.LoadFrom(UpdaterFileLocation);
 
    if NOT Result then
     begin

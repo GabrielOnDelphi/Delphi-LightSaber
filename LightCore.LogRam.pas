@@ -417,7 +417,7 @@ begin
   if Result then
     begin
       Lines.ReadFromStream(Stream);
-      Stream.ReadPadding;
+      Stream.ReadPaddingValidation;
     end;
 end;
 
@@ -428,7 +428,7 @@ procedure TRamLog.SaveToStream(Stream: TLightStream);
 begin
   Stream.WriteHeader(StreamSign, CurrentVersion);
   Lines.WriteToStream(Stream);
-  Stream.WritePadding;
+  Stream.WritePaddingValidation;
 end;
 
 
