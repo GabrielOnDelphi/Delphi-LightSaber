@@ -35,7 +35,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, Vcl.Graphics, System.Types,
   GR32, GR32_Transforms, GR32_Resamplers,
-  LightCore, LightCore.Time;
+  LightCore;
 
 CONST
   { Resamplers - determines the interpolation method }

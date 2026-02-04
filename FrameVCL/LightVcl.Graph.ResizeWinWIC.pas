@@ -19,7 +19,7 @@ UNIT LightVcl.Graph.ResizeWinWIC;
 INTERFACE
 
 USES
-   System.Classes, System.SysUtils, VCL.GraphUtil, Vcl.Graphics;
+   System.Classes, System.SysUtils, Vcl.Graphics;
 
 procedure ResizeBitmapWic(const Bitmap: TBitmap; const NewWidth, NewHeight: Integer); // pf32
 

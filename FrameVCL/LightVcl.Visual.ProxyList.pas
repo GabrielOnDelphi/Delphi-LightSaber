@@ -21,7 +21,7 @@ USES
   Winapi.Windows,
   System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls,
-  LightCore.INIFile, LightVcl.Visual.RadioButton, LightCore, LightCore.Time;
+  LightCore.INIFile, LightVcl.Visual.RadioButton, LightCore;
 
 TYPE
   TConType= (ctDirect, ctGateway, ctProxyList);
@@ -73,7 +73,7 @@ IMPLEMENTATION
 {$WARN GARBAGE OFF}                                                                                {Silence the: 'W1011 Text after final END' warning }
 
 USES
-   LightVcl.Internet.Common, LightCore.Internet, IniFiles, LightVcl.Common.ExecuteShell;
+   LightVcl.Internet.Common, IniFiles, LightVcl.Common.ExecuteShell;
 
 
 

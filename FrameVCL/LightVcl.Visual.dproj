@@ -46,7 +46,7 @@
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_Optimize>false</DCC_Optimize>
         <DCC_RangeChecking>true</DCC_RangeChecking>
-        <DCC_UnitSearchPath>c:\Projects\LightSaber\External\Exif\$(ProductVersion)_$(Platform)_Release;..\AutoTranslator\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>c:\Projects\LightSaber\External\Exif\$(ProductVersion)_$(Platform)_Release;..\AutoTranslator\;c:\Projects\LightSaber\External\;C:\Projects\LightSaber\AutoTranslator;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DllSuffix>$(Auto)</DllSuffix>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
@@ -100,7 +100,7 @@
         <DCCReference Include="LightVcl.Visual.FreeDiskSpace.pas"/>
         <DCCReference Include="LightVcl.Visual.GradientPanel.pas"/>
         <DCCReference Include="LightVcl.Visual.GraphChart.pas"/>
-        <DCCReference Include="LightVcl.Visual.GroupBox.pas"/>
+        <DCCReference Include="LightVcl.Visual.Groupbox.pas"/>
         <DCCReference Include="LightVcl.Visual.INIFile.pas"/>
         <DCCReference Include="LightVcl.Visual.LabelEdit.pas"/>
         <DCCReference Include="LightVcl.Visual.ListBox.pas"/>
@@ -135,8 +135,6 @@
         <DCCReference Include="LightVcl.Visual.AppDataForm.pas"/>
         <DCCReference Include="LightVcl.Visual.LogForm.pas"/>
         <DCCReference Include="..\External\AniImg.pas"/>
-        <DCCReference Include="..\AutoTranslator\LightVcl.Translate.pas"/>
-        <DCCReference Include="..\AutoTranslator\LightVcl.TranslatorAPI.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -158,9 +156,10 @@
                     <Source Name="MainSource">LightVcl.Visual.dpk</Source>
                 </Source>
                 <Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\LightVcl.Visual370.bpl">LightSaber - Visual Controls</Excluded_Packages>
-                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\BionixVCL370.bpl">BioniX VCL</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\LightFmxCommon370.bpl">LightSaber - AppData FMX library</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\LightVcl.Common370.bpl">LightSaber - VCL library</Excluded_Packages>
                     <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\LightProteus370.bpl">Proteus</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\LightVcl.Visual370.bpl">LightSaber - Visual Controls</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dcloffice2k370.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
                     <Excluded_Packages Name="$(BDSBIN)\dclofficexp370.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
                 </Excluded_Packages>

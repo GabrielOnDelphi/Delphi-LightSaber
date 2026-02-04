@@ -123,6 +123,7 @@
         <DCCReference Include="LightVcl.Common.Registry.pas"/>
         <DCCReference Include="LightVcl.Common.Reports.pas"/>
         <DCCReference Include="..\External\MonitorHelper.pas"/>
+        <DCCReference Include="..\LightVcl.Common.Translate.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -43,6 +43,9 @@ procedure CenterForm(Form: TForm); overload;
 { Center form within a parent form }
 procedure CenterForm(Form, Parent: TForm); overload;
 
+{ Center form on the monitor where the main form is located }
+procedure CenterFormOnMainFormMonitor(Form: TForm);
+
 { Ensures that the MDI child windows stay within the parent client area }
 procedure CorrectMDIFormPosition(ParentForm: TForm);
 
@@ -135,6 +138,26 @@ begin
 
   Form.Left := Parent.Left + ((Parent.ClientWidth  - Form.Width) div 2);
   Form.Top  := Parent.Top  + ((Parent.ClientHeight - Form.Height) div 2);
+end;
+
+
+{ Centers the form on the monitor where Application.MainForm is located.
+  Falls back to primary monitor if MainForm is not available. }
+procedure CenterFormOnMainFormMonitor(Form: TForm);
+VAR
+  Monitor: TMonitor;
+  WorkArea: TRect;
+begin
+  if Form = NIL
+  then raise Exception.Create('CenterFormOnMainFormMonitor: Form parameter cannot be nil');
+
+  if Application.MainForm <> NIL
+  then Monitor:= Application.MainForm.Monitor
+  else Monitor:= Screen.PrimaryMonitor;
+
+  WorkArea:= Monitor.WorkareaRect;
+  Form.Left:= WorkArea.Left + ((WorkArea.Width  - Form.Width) div 2);
+  Form.Top := WorkArea.Top  + ((WorkArea.Height - Form.Height) div 2);
 end;
 
 

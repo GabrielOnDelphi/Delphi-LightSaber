@@ -17,7 +17,7 @@ INTERFACE
 
 USES
    Winapi.Windows, System.SysUtils, Vcl.Dialogs, Vcl.Graphics,
-   LightVcl.Graph.Bitmap, LightVcl.Graph.ResizeParams;
+   LightVcl.Graph.Bitmap;
 
  { Not proportional }
  function  StretchF         (BMP: TBitmap; OutWidth, OutHeight: Integer): TBitmap;                            { Best of all algorithms. 2019.08 }
@@ -26,8 +26,7 @@ USES
 
 IMPLEMENTATION
 
-USES
-  LightCore.Math, LightVcl.Graph.Loader, LightVcl.Graph.FX;
+
 
 
 {-------------------------------------------------------------------------------------------------------------

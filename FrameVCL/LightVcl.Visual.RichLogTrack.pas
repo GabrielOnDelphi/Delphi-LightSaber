@@ -50,7 +50,7 @@ procedure Register;
 
 
 IMPLEMENTATION
-USES LightCore, LightCore.Time;
+
 
 
 

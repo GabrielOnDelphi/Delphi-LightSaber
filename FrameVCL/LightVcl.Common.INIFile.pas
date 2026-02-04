@@ -213,7 +213,7 @@ begin
   then raise Exception.Create('TIniFileApp.LoadForm: Form parameter cannot be nil');
 
   if AutoState = asNone
-  then raise Exception.Create('TIniFileApp.LoadForm: AutoState = asNone is invalid');
+  then raise Exception.Create('TIniFileApp.LoadForm: AutoState = asNone is invalid');   //todo: explain why
 
   ReadComp(Form);
   if AutoState = asFull

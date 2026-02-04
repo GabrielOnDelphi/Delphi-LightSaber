@@ -125,7 +125,7 @@ function FindMax         (DataPoints: TDataPoints): Integer;                    
 
 IMPLEMENTATION
 
-USES LightCore.Math, LightCore, LightCore.Time;
+USES LightCore.Math, LightCore;
 
 
 

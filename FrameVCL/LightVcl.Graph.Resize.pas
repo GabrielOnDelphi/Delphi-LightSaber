@@ -51,7 +51,7 @@ UNIT LightVcl.Graph.Resize;
 INTERFACE
 
 USES
-   Winapi.Windows, System.SysUtils, Vcl.Dialogs, Vcl.Graphics,
+   Winapi.Windows, System.SysUtils, Vcl.Graphics,
    LightVcl.Graph.Bitmap, LightVcl.Graph.ResizeParams, LightVcl.Graph.ResizeWinBlt;
 
  { Proportional }

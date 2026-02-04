@@ -127,7 +127,7 @@ begin
     Tolerance     := IOStream.ReadInteger;
     FadeSpeed     := IOStream.ReadInteger;
     NeighborWeight:= IOStream.ReadInteger;
-    IOStream.ReadPadding;
+    IOStream.ReadPaddingValidation;
    end
   else
    begin
@@ -175,7 +175,7 @@ begin
   IOStream.WriteInteger (Tolerance);
   IOStream.WriteInteger (FadeSpeed);
   IOStream.WriteInteger (NeighborWeight);
-  IOStream.WritePadding;
+  IOStream.WritePaddingValidation;
 end;
 
 

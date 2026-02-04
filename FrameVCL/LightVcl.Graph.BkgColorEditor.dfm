@@ -346,9 +346,9 @@ object frmBorderEditor: TfrmBorderEditor
       object lblExplain: TLabel
         AlignWithMargins = True
         Left = 5
-        Top = 22
-        Width = 496
-        Height = 45
+        Top = 19
+        Width = 499
+        Height = 118
         Cursor = crHandPoint
         Margins.Top = 0
         Align = alClient
@@ -370,7 +370,7 @@ object frmBorderEditor: TfrmBorderEditor
         AlignWithMargins = True
         Left = 5
         Top = 5
-        Width = 31
+        Width = 499
         Height = 14
         Cursor = crHandPoint
         Align = alTop

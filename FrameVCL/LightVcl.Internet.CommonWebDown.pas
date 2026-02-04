@@ -16,13 +16,13 @@ UNIT LightVcl.Internet.CommonWebDown;
 INTERFACE
 
 USES
-  System.SysUtils, LightCore, LightCore.Time;
+  System.SysUtils, LightCore;
 
 function GetUnsplashImage(CONST URL, LocalFile: string): Boolean;
 
 IMPLEMENTATION
 
-USES LightCore.Download, LightVcl.Internet.common, LightCore.HTML;
+USES LightCore.Download, LightCore.HTML;
 
 
 

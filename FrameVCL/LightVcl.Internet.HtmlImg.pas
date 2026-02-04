@@ -42,7 +42,7 @@ function ExpandRelativePaths (CONST HtmlBody, Base: string): string;
 IMPLEMENTATION
 
 USES
-   LightCore.IO, LightVcl.Internet.Common, LightCore.Internet, LightCore, LightCore.Time, LightCore.Types,LightVcl.Internet.HTML, LightCore.HTML;
+   LightCore.IO, LightCore.Internet, LightCore, LightCore.HTML;
 
 
 

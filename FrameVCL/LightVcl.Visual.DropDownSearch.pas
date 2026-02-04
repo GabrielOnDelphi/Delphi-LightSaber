@@ -25,7 +25,7 @@ INTERFACE
 USES
    Winapi.Windows, Winapi.Messages,
    System.Classes, System.Types, System.SysUtils, System.Math,
-   Vcl.WinXCtrls, Vcl.Controls, Vcl.Dialogs, Vcl.Forms,
+   Vcl.WinXCtrls, Vcl.Controls, Vcl.Forms,
    LightVcl.Visual.ListBox;
 
 TYPE
@@ -71,7 +71,7 @@ procedure Register;
 
 IMPLEMENTATION
 USES
-   LightCore, LightCore.Time;
+   LightCore;
 
 
 

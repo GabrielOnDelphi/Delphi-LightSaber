@@ -49,7 +49,7 @@ function  GetBorderDominantColor(BMP: TBitmap; Border: TBorderType; Tolerance: I
 IMPLEMENTATION
 
 USES
-   LightVcl.Graph.Util, LightCore.Binary, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs, LightVcl.Graph.FX, LightVcl.Graph.Bitmap;
+   LightVcl.Graph.Util, LightCore.Binary, LightCore.Types, LightVcl.Common.Dialogs, LightVcl.Graph.FX, LightVcl.Graph.Bitmap;
 
 
 

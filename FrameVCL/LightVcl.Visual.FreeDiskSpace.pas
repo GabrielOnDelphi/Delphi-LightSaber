@@ -43,7 +43,7 @@ procedure Register;
 IMPLEMENTATION
 {$R LightVcl.Visual.FreeDiskSpace.res}
 
-USES LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.IO;
+USES LightCore, LightCore.Types, LightVcl.Common.IO;
 
 
 

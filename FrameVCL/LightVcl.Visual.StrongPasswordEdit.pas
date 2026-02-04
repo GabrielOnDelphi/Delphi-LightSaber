@@ -13,7 +13,7 @@ UNIT LightVcl.Visual.StrongPasswordEdit;
 INTERFACE
 
 USES
-  Winapi.Messages, Winapi.Windows, vcl.Dialogs,  { vcl.Dialogs appears unused }
+  Winapi.Messages, Winapi.Windows,  { vcl.Dialogs appears unused }
   System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.Graphics;
 
 type
@@ -32,7 +32,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-  System.Math, LightVcl.Common.SystemSecurity, LightVcl.Common.System;  { LightVcl.Common.System appears unused - verify and remove if not needed }
+  System.Math, LightVcl.Common.SystemSecurity;  { LightVcl.Common.System appears unused - verify and remove if not needed }
 
 
 

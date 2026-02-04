@@ -34,7 +34,7 @@ Active selected thumbnail
 
 INTERFACE
 USES
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics,
+  Winapi.Messages, System.SysUtils, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.ExtCtrls, VCL.Themes;
 
 TYPE

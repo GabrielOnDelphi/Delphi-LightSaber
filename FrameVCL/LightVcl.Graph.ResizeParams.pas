@@ -382,7 +382,7 @@ begin
    IOStream.WriteInteger(ForcedHeight);
    IOStream.WriteBoolean(ResizePanoram);
    IOStream.WriteByte(FitTolerance);
-   IOStream.WritePadding;
+   IOStream.WritePaddingValidation;
 end;
 
 
@@ -404,7 +404,7 @@ begin
    ForcedHeight := IOStream.ReadInteger;
    ResizePanoram:= IOStream.ReadBoolean;
    FitTolerance := IOStream.ReadByte;
-   IOStream.ReadPadding;
+   IOStream.ReadPaddingValidation;
 end;
 
 

@@ -101,7 +101,7 @@ begin
     Stream.WriteHeader(Signature, CurrentVersion);
     Stream.WriteBoolean(bUser);
     Stream.WriteInteger(iUser);
-    Stream.WritePadding;
+    Stream.WritePaddingValidation;
   FINALLY
     FreeAndNil(Stream);
   END;
@@ -137,7 +137,7 @@ begin
 
     bUser:= Stream.ReadBoolean;
     iUser:= Stream.ReadInteger;
-    Stream.ReadPadding;
+    Stream.ReadPaddingValidation;
   FINALLY
     FreeAndNil(Stream);
   END;

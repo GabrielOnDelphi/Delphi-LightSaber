@@ -555,7 +555,7 @@ begin
  Stream.WriteBoolean (Flip);
  Stream.WriteBoolean (Mirror);
  Stream.WriteByte    (Ord(Rotation));
- Stream.WritePadding;
+ Stream.WritePaddingValidation;
 end;
 
 
@@ -568,7 +568,7 @@ begin
  if Integer(RotByte) > Ord(High(TRotateSense))
  then Rotation:= rtNone   { Invalid value - default to rtNone }
  else Rotation:= TRotateSense(RotByte);
- Stream.ReadPadding;
+ Stream.ReadPaddingValidation;
 end;
 
 

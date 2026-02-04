@@ -63,7 +63,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES LightCore.Math, LightCore, LightCore.Time;
+USES LightCore.Math, LightCore.Time;
 
 
 

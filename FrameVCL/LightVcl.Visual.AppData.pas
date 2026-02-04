@@ -179,6 +179,7 @@ TYPE
 
     procedure CreateFormModal (aClass: TFormClass; OUT Reference;                      AutoState: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL); overload;   // Do I need this?
     procedure CreateFormModal (aClass: TFormClass;                                     AutoState: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL); overload;
+    procedure CreateFormModalCentered(aClass: TFormClass);
 
     procedure SetMaxPriority;
     procedure HideFromTaskbar;
@@ -207,7 +208,7 @@ IMPLEMENTATION
 
 USES
   LightCore.IO,
-  LightVcl.Common.WinVersion, LightVcl.Common.ExeVersion, LightVcl.Translate, LightVcl.Common.CenterControl, LightVcl.Visual.AppDataForm, LightVcl.Common.Registry;
+  LightVcl.Common.WinVersion, LightVcl.Common.ExeVersion, LightVcl.Common.Translate, LightVcl.Common.CenterControl, LightVcl.Visual.AppDataForm, LightVcl.Common.Registry;
 
 
 { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }
@@ -448,6 +449,17 @@ begin
   CreateForm(aClass, Reference, FALSE, AutoState, ParentWnd);
   if NOT TEST_MODE
   then Reference.ShowModal;
+end;
+
+
+
+{ Centers a form in the middle of the monitor where the main form already is }
+procedure TAppData.CreateFormModalCentered(aClass: TFormClass);
+VAR Reference: TForm;
+begin
+  CreateForm(aClass, Reference, FALSE, asNone);
+  CenterFormOnMainFormMonitor(Reference);
+  Reference.ShowModal;
 end;
 
 

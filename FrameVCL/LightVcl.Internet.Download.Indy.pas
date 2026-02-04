@@ -33,8 +33,8 @@ UNIT LightVcl.Internet.Download.Indy;
 INTERFACE
 
 USES
-   Winapi.Windows, System.SysUtils, System.AnsiStrings, System.StrUtils, Vcl.Forms, System.Classes,
-   IdBaseComponent, IdComponent, IdTCPClient, IdHTTP, vcl.IdAntiFreeze;
+   Winapi.Windows, System.SysUtils, Vcl.Forms, System.Classes,
+   IdBaseComponent, IdTCPClient, IdHTTP, vcl.IdAntiFreeze;
 
 TYPE
   TSendThread = class(TThread)

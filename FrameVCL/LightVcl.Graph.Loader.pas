@@ -1,10 +1,8 @@
 UNIT LightVcl.Graph.Loader;
 
 {=============================================================================================================
-   Gabriel Moraru
    2026.01
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
   Helps you load common file formats (GIF, JPG, BMP, PNG, WB1, RainDrop, JPG2K) from disk.
   LoadGraph is the main function.
@@ -103,10 +101,9 @@ IMPLEMENTATION
 USES
    {$IFDEF Jpg2000}OpenJpeg2000Bitmap,{$ENDIF} // Download OpenJpeg Pas library from: www.github.com/galfar/PasJpeg2000
    {$IFDEF FastJpg}FastJpegDecHelper,{$ENDIF}
-   LightVcl.Graph.Resize, LightVcl.Graph.ResizeVCL, LightVcl.Graph.Loader.Resolution, LightVcl.Graph.UtilGray,
-   LightVcl.Graph.Loader.WB1, LightVcl.Graph.Loader.RainDrop, LightCore.IO, LightVcl.Common.IO, LightVcl.Graph.FX.Rotate,
-   LightCore.AppData, LightCore, LightCore.Time, LightCore.Types, LightVcl.Graph.GrabAviFrame,
-   LightVcl.Graph.Gif;
+   LightVcl.Graph.Resize, LightVcl.Graph.Loader.Resolution, LightVcl.Graph.UtilGray,
+   LightVcl.Graph.Loader.WB1, LightVcl.Graph.RainShelter, LightCore.IO, LightVcl.Common.IO, LightVcl.Graph.FX.Rotate,
+   LightCore.AppData, LightCore, LightVcl.Graph.GrabAviFrame;
 
 
 
@@ -219,85 +216,82 @@ end;
 
 function LoadGraph(CONST FileName: string; ExifRotate: Boolean = True; UseWic: Boolean = TRUE): TBitmap;
 //todo 1: CAN I LOAD THE JPEG WITH WIC AND THEN REOPEN IT AND CHECK IF THERE IS EXIF INSIDE?
-VAR
-   Signature: Integer;
+VAR Signature: Integer;
 begin
- Assert(FileExistsMsg(FileName));
+  Assert(FileExistsMsg(FileName));
 
- TRY
-  { Detect image by signature, not by extension }
-  Signature:= DetectGraphSignature(FileName);
- EXCEPT
-  on E: Exception do
+  TRY
+   { Detect image by signature, not by extension }
+   Signature:= DetectGraphSignature(FileName);
+  EXCEPT
+   on E: Exception do
+    begin
+     AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+     EXIT(NIL);       { Do not crash on failure }
+    end;
+  END;
+
+  { Before loading an image (any image) check if its file extension matches the binary header.
+    Note: No need to do it for jpeg images with png ext. The algorithm already recognizes that and loads the image just fine. }
+  if IsJpg(FileName) AND (Signature= 2) then
    begin
-    AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-    EXIT(NIL);       { Do not crash on failure }
+    AppDataCore.LogWarn(FileName+ CRLF+ ' is a PNG file with invalid file extension (jpg). You can fix this by changing the extension from JPG to PNG.');
+    EXIT(NIL);
    end;
- END;
 
- { Before loading an image (any image) check if its file extension matches the binary header.
-   Note: No need to do it for jpeg images with png ext. The algorithm already recognizes that and loads the image just fine. }
- if IsJpg(FileName) AND (Signature= 2) then
-  begin
-   AppDataCore.LogWarn(FileName+ CRLF+ ' is a PNG file with invalid file extension (jpg). You can fix this by changing the extension from JPG to PNG.');
-   EXIT(NIL);
+  { Create the right type of loader }
+  case Signature of
+    { BMP}
+    1 : Result:= LoadBMP(FileName); { Don't use WIC to load BMP files! For misterious reasons, WIC is terrible slow when loading bmp files! }
+    { PNG}
+    2 : if UseWic
+        then Result:= loadGraphWic(FileName)
+        else Result:= LoadPNG(FileName);
+    { GIF}
+    3 : if UseWic
+        then Result:= loadGraphWic(FileName)
+        else Result:= LoadGIF(FileName);
+    { JPG}
+    4 : begin
+         {$IFDEF FastJpg}
+           Result:= FastJpegDecHelper.FastJpgDecode(FileName);
+           if Result = NIL then { Not all jpegs are supported by JpegDecHelper. In this case we fall back to WIC or the standard LoadGraph loader (WIC). }
+         {$ELSE}
+           AppDataCore.LogWarn('FastJpg not available! Download this library and set the compiler switch.');
+         {$ENDIF}
+         {ToDo 1: is JpegDecHelper indeed faster than WIC? }
+           if UseWic
+           then Result:= loadGraphWic(FileName)
+           else Result:= LoadJpg(FileName);
+
+         { Support for  EXIF Jpegs }
+         if (Result <> NIL) AND ExifRotate then
+          begin
+            {$IFDEF CCRExif}
+            VAR ExifData:= GetExif(FileName);
+            LightVcl.Graph.FX.Rotate.RotateExif(Result, ExifData);
+            FreeAndNil(ExifData);
+            {$ELSE}
+              AppDataCore.LogVerb('CCRExif not available! EXIF rotation skipped.');
+            {$ENDIF}
+          end;
+        end;
+
+    { Jpeg2000 }
+    {$IFDEF Jpg2000}
+      5 : Result:= LoadJ2K(FileName);
+    {$ELSE}
+      5 : RAISE Exception.Create('Jpeg2000 not supported yet on Win 64 bit!');
+    {$ENDIF}
+
+    { WB1}
+    6 : Result:= LoadWB1(FileName);
+
+    { RainDrop }
+    7 : Result:= TRainShelter.LoadBitmap(FileName);
+   else
+     Result:= loadGraphWic(FileName);   { TIF or something else? }
   end;
-
- { Create the right type of loader }
- case Signature of
-   { BMP}
-   1 : Result:= LoadBMP(FileName); { Don't use WIC to load BMP files! For misterious reasons, WIC is terrible slow when loading bmp files! }
-   { PNG}
-   2 : if UseWic
-       then Result:= loadGraphWic(FileName)
-       else Result:= LoadPNG(FileName);
-   { GIF}
-   3 : if UseWic
-       then Result:= loadGraphWic(FileName)
-       else Result:= LoadGIF(FileName);
-   { JPG}
-   4 : begin
-        {$IFDEF FastJpg}
-          Result:= FastJpegDecHelper.FastJpgDecode(FileName);
-          if Result = NIL then { Not all jpegs are supported by JpegDecHelper. In this case we fall back to WIC or the standard LoadGraph loader (WIC). }
-        {$ELSE}
-          AppDataCore.LogWarn('FastJpg not available! Download this library and set the compiler switch.');
-        {$ENDIF}
-        {ToDo 1: is JpegDecHelper indeed faster than WIC? }
-          if UseWic
-          then Result:= loadGraphWic(FileName)
-          else Result:= LoadJpg(FileName);
-
-        { Support for  EXIF Jpegs }
-        if (Result <> NIL) AND ExifRotate then
-         begin
-           {$IFDEF CCRExif}
-           VAR ExifData:= GetExif(FileName);
-           LightVcl.Graph.FX.Rotate.RotateExif(Result, ExifData);
-           FreeAndNil(ExifData);
-           {$ELSE}
-             AppDataCore.LogVerb('CCRExif not available! EXIF rotation skipped.');
-           {$ENDIF}
-         end;
-       end;
-
-   { Jpeg2000 }
-   {$IFDEF Jpg2000}
-     5 : Result:= LoadJ2K(FileName);
-   {$ELSE}
-     5 : RAISE Exception.Create('Jpeg2000 not supported yet on Win 64 bit!');
-   {$ENDIF}
-
-   { WB1}
-   6 : Result:= LoadWB1(FileName);
-
-   { RainDrop }
-   7 : Result:= LoadRainShelter(FileName);
-  else
-
-    { TIF or something else? }
-  Result:= loadGraphWic(FileName);
- end;
 end;
 
 
@@ -556,27 +550,29 @@ begin
  Assert(FileExistsMsg(FileName));
  FrameCount:= 1;   // 1 for: jpeg, png, normal gif, bmp
 
- { TRY TO OPEN STATIC/ANIMATED IMAGE }
- if IsAnimated(FileName)
+ if IsVideo(FileName)    // Show placeholder
  then
    begin
-    Result:= LightVcl.Graph.GrabAviFrame.GetVideoPlayerLogo;  // Returns placeholder for animated files (GIF/AVI)
-    FrameCount:= 2;   // 2 for avi/gif
+    Result:= LightVcl.Graph.GrabAviFrame.GetVideoPlayerLogo;
+    FrameCount:= 2;
    end
  else
-    if IsJpg(FileName)
-    then
-     begin
-      Result:= ExtractThumbnailJpg(FileName, ThumbWidth, -1, ResolutionX, ResolutionY); // This will do "RotateEXIF"
-      EXIT;     // Jpegs are special because a thumbnail was already generated for them by ExtractThumbnailJpg. So, we do no further processing
-     end
-    else
-     Result:= LoadGraph(FileName, TRUE);
+   if IsGIF(FileName)                           // Load first frame (works for both static and animated GIFs)
+   then Result:= LoadGIF(FileName, FrameCount)
+   else
+     if IsJpg(FileName)
+     then
+       begin
+        Result:= ExtractThumbnailJpg(FileName, ThumbWidth, -1, ResolutionX, ResolutionY); // This will do "RotateEXIF"
+        EXIT;     // Jpegs are special because a thumbnail was already generated for them by ExtractThumbnailJpg. So, we do no further processing
+       end
+     else
+       Result:= LoadGraph(FileName, TRUE);
 
  { GET RESOLUTION }
  if  (Result<> NIL)
- and (Result.Height > 0)                                                          { Tratez cazul Ric Koval - totusi nu ar trebuie sa mi sa intample asta niciodata }
- and (Result.Width  > 0)
+ AND (Result.Height > 0)
+ AND (Result.Width  > 0)
  then
    begin
      // Get resolution before we resize !!!
@@ -1025,57 +1021,40 @@ begin
 end;
 
 
-//Source: http://stackoverflow.com/questions/959160/load-jpg-gif-bitmap-and-convert-to-bitmap
 function DetectGraphSignature(CONST FileName: string): Integer;
 VAR
   FS: TFileStream;
   FirstBytes: AnsiString;
 begin
- if IsJp2(FileName)           {ToDo 5: detect J2K and WB1 by signature }
- then Result:= 5
- else
+  Result:= 0;
 
- if IsWB1(FileName)           {ToDo 5: detect J2K and WB1 by signature }
- then Result:= 6
- else
+  if IsJp2(FileName)      then EXIT(5);          {ToDo 5: detect J2K and WB1 by signature }
+  if IsWB1(FileName)      then EXIT(6);
+  if IsRainShelter(FileName) then EXIT(7);
 
-   { Detect by signature }
-   begin
-     Assert(FileExistsMsg(FileName));
-     FS:= TFileStream.Create(FileName, fmOpenRead OR fmShareDenyNone);  { This could fail if the file is locked }
-     TRY
+  { Detect by signature }
+  Assert(FileExistsMsg(FileName));
+  FS:= TFileStream.Create(FileName, fmOpenRead OR fmShareDenyNone);  { This could fail if the file is locked }
+  TRY
+    TRY
+      SetLength(FirstBytes, 8);
+      FS.Read(FirstBytes[1], 8);
 
-       TRY
-         SetLength(FirstBytes, 8);
-         FS.Read(FirstBytes[1], 8);
+      if system.COPY(FirstBytes, 1, 2) = 'BM'     then EXIT(1);  { BMP }
+      if FirstBytes = #137'PNG'#13#10#26#10       then EXIT(2);  { PNG }
+      if system.COPY(FirstBytes, 1, 3) = 'GIF'    then EXIT(3);  { GIF }
+      if system.COPY(FirstBytes, 1, 2) = #$FF#$D8 then EXIT(4);  { JPG }
+    EXCEPT
+      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+       begin
+         Result:= -1;
+         AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       end;
+    END;
 
-         if system.COPY(FirstBytes, 1, 2) = 'BM'                                                    { BMP }
-         then Result:= 1
-         else
-          if FirstBytes = #137'PNG'#13#10#26#10                                                     { PNG }
-          then Result:= 2
-          else
-            if system.COPY(FirstBytes, 1, 3) = 'GIF'                                                { GIF }
-            then Result:= 3
-            else
-              if system.COPY(FirstBytes, 1, 2) = #$FF#$D8                                           { JPG }
-              then Result:= 4
-              else
-                if system.COPY(FirstBytes, 1, 7) = RainMagicNo                                      { RainShelter }
-                then Result:= 7
-                else Result:= 0;
-      EXCEPT
-        on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
-         begin
-          AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-          Result:= -1;   { We only free the result in case of failure }
-         end;
-      END;
-
-     FINALLY
-       FreeAndNil(FS);
-     END;
-   end;
+  FINALLY
+    FreeAndNil(FS);
+  END;
 end;
 
 

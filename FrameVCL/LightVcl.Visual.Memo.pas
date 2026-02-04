@@ -137,7 +137,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   LightCore.TextFile, LightVcl.Common.IO, LightCore, LightCore.Time;
+   LightVcl.Common.IO, LightCore;
 
    {
 How to know when the USER changed the text in a TMemo/TEdit?

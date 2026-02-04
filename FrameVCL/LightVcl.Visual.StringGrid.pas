@@ -1,4 +1,4 @@
-UNIT LightVcl.Visual.StringGrid;
+﻿UNIT LightVcl.Visual.StringGrid;
 
 {=============================================================================================================
    2026.01
@@ -33,7 +33,7 @@ USES
    Winapi.Windows, Winapi.Messages,
    System.SysUtils, System.Classes,
    Vcl.Grids, Vcl.Graphics, Vcl.Controls, Vcl.Clipbrd,
-   LightVcl.Visual.StringGridBase, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs;
+   LightVcl.Visual.StringGridBase, LightCore, LightVcl.Common.Dialogs;
 
 {$WARN GARBAGE OFF}   {Silent the: 'W1011 Text after final END' warning }
 
@@ -129,7 +129,7 @@ procedure Register;
 
 IMPLEMENTATION {$R *.res}
 
-USES LightVcl.Common.Colors, LightCore.TextFile, LightCore.Math, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard;
+USES LightVcl.Common.Colors, LightCore.TextFile, LightCore.Math, LightVcl.Common.Clipboard;
 
 
 

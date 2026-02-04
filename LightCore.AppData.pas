@@ -430,8 +430,6 @@ end;
 
 
 
-
-
 {-----------------------------------------------------------------------------------------------------------------------
    APP UTILS
 -----------------------------------------------------------------------------------------------------------------------}
@@ -440,7 +438,8 @@ end;
 class function TAppDataCore.RunningHome: Boolean;
 begin
   Result:= FileExists(ChangeFileExt(ExeName, '.dpr')) OR FileExists(Trail(AppFolder) + 'RunningHome');
-end;
+
+  end;
 
 
 { Returns true if a file called 'betatester' exists in application's folder or in application's system folder. }

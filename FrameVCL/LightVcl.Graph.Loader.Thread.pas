@@ -82,7 +82,7 @@ TYPE
 
 
 IMPLEMENTATION
-USES LightVcl.Graph.Resize, LightVcl.Graph.ResizeVCL;
+USES LightVcl.Graph.Resize;
 
 
 

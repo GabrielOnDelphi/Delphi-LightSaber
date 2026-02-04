@@ -61,7 +61,6 @@ contains
   LightVcl.Graph.FX.RotateGr32 in 'LightVcl.Graph.FX.RotateGr32.pas',
   LightVcl.Graph.Gif in 'LightVcl.Graph.Gif.pas',
   LightVcl.Graph.Loader in 'LightVcl.Graph.Loader.pas',
-  LightVcl.Graph.Loader.RainDrop in 'LightVcl.Graph.Loader.RainDrop.pas',
   LightVcl.Graph.Loader.Resolution in 'LightVcl.Graph.Loader.Resolution.pas',
   LightVcl.Graph.Loader.Thread in 'LightVcl.Graph.Loader.Thread.pas',
   LightVcl.Graph.Loader.WB1 in 'LightVcl.Graph.Loader.WB1.pas',
@@ -78,6 +77,9 @@ contains
   LightVcl.Graph.Text in 'LightVcl.Graph.Text.pas',
   LightVcl.Graph.Util in 'LightVcl.Graph.Util.pas',
   LightVcl.Graph.UtilGray in 'LightVcl.Graph.UtilGray.pas',
+  LightVcl.Graph.RainDropParams in 'LightVcl.Graph.RainDropParams.pas',
+  LightVcl.Graph.RainDropParamEditorForm in 'LightVcl.Graph.RainDropParamEditorForm.pas',
+  LightVcl.Graph.RainShelter in 'LightVcl.Graph.RainShelter.pas',
   janFxStretch in '..\External\janFxStretch.pas',
   janFX in '..\External\janFX.pas',
   GifProperties in '..\External\GifProperties.pas';
@@ -98,3 +100,4 @@ Note:
          {$Jpg2000}
          {$FastJpg}
 *)
+

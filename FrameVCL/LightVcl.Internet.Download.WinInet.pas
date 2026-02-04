@@ -52,7 +52,7 @@ UNIT LightVcl.Internet.Download.WinInet;
 INTERFACE
 
 USES
-   Winapi.Windows, WinApi.WinInet, Winapi.Messages,
+   Winapi.Windows, WinApi.WinInet,
    System.Classes, System.SysUtils; // System.Net.HttpClient;
 
 CONST
@@ -73,8 +73,8 @@ function DownloadToFile    (CONST URL, Referer, DestinationFile: string): Cardin
 IMPLEMENTATION
 
 USES
-   LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs, LightCore.IO, LightCore.TextFile,
-   LightCore.Internet, LightVcl.Internet.Common;
+   LightCore.IO,
+   LightCore.Internet;
 
 
 //Hint: use TIdURI.URLEncode() in IdURI.pas to encode an URL.

@@ -77,6 +77,7 @@ contains
   LightVcl.Common.WMIResolution in 'LightVcl.Common.WMIResolution.pas',
   LightVcl.Common.Registry in 'LightVcl.Common.Registry.pas',
   LightVcl.Common.Reports in 'LightVcl.Common.Reports.pas',
-  MonitorHelper in '..\External\MonitorHelper.pas';
+  MonitorHelper in '..\External\MonitorHelper.pas',
+  LightVcl.Common.Translate in '..\LightVcl.Common.Translate.pas';
 
 end.

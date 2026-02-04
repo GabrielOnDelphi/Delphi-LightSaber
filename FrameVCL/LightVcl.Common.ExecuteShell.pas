@@ -154,8 +154,7 @@ CONST
    Note: Does not work well with .scr files in config mode.
    See: https://stackoverflow.com/questions/46672282
 ---------------------------------------------------------------------------------------------------------------}
-function ExecuteShell(CONST ExeFile: string; Params: string = '';
-  ShowErrorMsg: Boolean = TRUE; WindowState: Integer = WinApi.Windows.SW_SHOWNORMAL): Boolean;
+function ExecuteShell(CONST ExeFile: string; Params: string = ''; ShowErrorMsg: Boolean = TRUE; WindowState: Integer = WinApi.Windows.SW_SHOWNORMAL): Boolean;
 VAR
    RetCode: Integer;
    WorkingFolder, Msg: string;
@@ -366,7 +365,8 @@ begin
   { Encode special characters that may cause issues }
   URL:= StringReplace(URL, '"', '%22', [rfReplaceAll]);
 
-  ExecuteShell(URL, '', TRUE, SW_SHOWNORMAL);
+  { Use ShellExecute directly - URLs don't pass the FileExists check in ExecuteShell }
+  ShellExecute(0, 'open', PChar(URL), NIL, NIL, SW_SHOWNORMAL);
 end;
 
 

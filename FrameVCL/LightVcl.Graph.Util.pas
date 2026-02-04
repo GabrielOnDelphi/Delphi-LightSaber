@@ -42,7 +42,7 @@ INTERFACE
 USES
    Winapi.Windows,
    System.SysUtils, System.Classes, System.Types, System.Math,
-   Vcl.Graphics, Vcl.Controls, Vcl.Imaging.PngImage, Vcl.Themes, Vcl.GraphUtil;
+   Vcl.Graphics, Vcl.Controls, Vcl.Themes, Vcl.GraphUtil;
 
 TYPE
 
@@ -149,7 +149,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightVcl.Graph.Bitmap, LightVcl.Common.Colors, LightCore.Math;
+   LightVcl.Common.Colors, LightCore.Math;
 
 
 

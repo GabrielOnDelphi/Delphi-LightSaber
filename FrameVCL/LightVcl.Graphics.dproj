@@ -41,7 +41,7 @@
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
         <DCC_Optimize>false</DCC_Optimize>
         <DCC_RangeChecking>true</DCC_RangeChecking>
-        <DCC_UnitSearchPath>c:\Projects\LightSaber\External\Exif\$(ProductVersion)_$(Platform)_Release\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>c:\Projects\LightSaber\External\Exif\$(ProductVersion)_$(Platform)_Release\;c:\Projects\LightSaber\External\;C:\Projects\LightSaber\AutoTranslator;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DllSuffix>$(Auto)</DllSuffix>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
@@ -91,7 +91,6 @@
         <DCCReference Include="LightVcl.Graph.FX.RotateGr32.pas"/>
         <DCCReference Include="LightVcl.Graph.Gif.pas"/>
         <DCCReference Include="LightVcl.Graph.Loader.pas"/>
-        <DCCReference Include="LightVcl.Graph.Loader.RainDrop.pas"/>
         <DCCReference Include="LightVcl.Graph.Loader.Resolution.pas"/>
         <DCCReference Include="LightVcl.Graph.Loader.Thread.pas"/>
         <DCCReference Include="LightVcl.Graph.Loader.WB1.pas"/>
@@ -100,7 +99,6 @@
         <DCCReference Include="LightVcl.Graph.ResizeGr32.pas"/>
         <DCCReference Include="LightVcl.Graph.ResizeParamFrame.pas">
             <Form>ResizeParameters</Form>
-            <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
         <DCCReference Include="LightVcl.Graph.ResizeParams.pas"/>
@@ -112,6 +110,9 @@
         <DCCReference Include="LightVcl.Graph.Text.pas"/>
         <DCCReference Include="LightVcl.Graph.Util.pas"/>
         <DCCReference Include="LightVcl.Graph.UtilGray.pas"/>
+        <DCCReference Include="LightVcl.Graph.RainDropParams.pas"/>
+        <DCCReference Include="LightVcl.Graph.RainDropParamEditorForm.pas"/>
+        <DCCReference Include="LightVcl.Graph.RainShelter.pas"/>
         <DCCReference Include="..\External\janFxStretch.pas"/>
         <DCCReference Include="..\External\janFX.pas"/>
         <DCCReference Include="..\External\GifProperties.pas"/>
@@ -135,7 +136,12 @@
                 <Source>
                     <Source Name="MainSource">LightVcl.Graphics.dpk</Source>
                 </Source>
-                <Excluded_Packages/>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\LightProteus370.bpl">Proteus</Excluded_Packages>
+                    <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\BionixVCL370.bpl">BioniX VCL</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k370.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp370.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                </Excluded_Packages>
             </Delphi.Personality>
             <Deployment Version="5">
                 <DeployFile LocalName="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\LightVcl.Graphics370.bpl" Configuration="Debug" Class="ProjectOutput">

@@ -93,8 +93,6 @@ contains
   LightVcl.Visual.AppData in 'LightVcl.Visual.AppData.pas',
   LightVcl.Visual.AppDataForm in 'LightVcl.Visual.AppDataForm.pas',
   LightVcl.Visual.LogForm in 'LightVcl.Visual.LogForm.pas',
-  AniImg in '..\External\AniImg.pas',
-  LightVcl.Translate in '..\AutoTranslator\LightVcl.Translate.pas',
-  LightVcl.TranslatorAPI in '..\AutoTranslator\LightVcl.TranslatorAPI.pas';
+  AniImg in '..\External\AniImg.pas';
 
 end.

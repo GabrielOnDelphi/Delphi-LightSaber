@@ -73,7 +73,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightCore.Download, LightCore, LightCore.Time;
+   LightCore.Download, LightCore;
 
 
 constructor TWinInetObj.Create;
