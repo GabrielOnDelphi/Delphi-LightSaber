@@ -32,7 +32,7 @@ UNIT LightFmx.Visual.ScreenCapture;
 INTERFACE
 
 USES
-  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Generics.Collections,
+  System.SysUtils, System.Types, System.Classes, System.Generics.Collections,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Layouts,
   FMX.Controls.Presentation;
 
@@ -67,8 +67,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-  LightFmx.Common.IniFile, LightCore.Types
-  {$IFDEF MSWINDOWS}, Winapi.Windows{$ENDIF}
+  LightFmx.Common.IniFile  {$IFDEF MSWINDOWS}, Winapi.Windows{$ENDIF}
   {$IFDEF MACOS}, Macapi.CoreGraphics, Macapi.CoreFoundation, Macapi.CocoaTypes{$ENDIF};
 
 

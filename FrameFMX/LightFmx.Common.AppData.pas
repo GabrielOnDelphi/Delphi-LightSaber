@@ -176,7 +176,7 @@ VAR                      // To-Do: make sure AppData is unique (make it Singleto
 
 
 IMPLEMENTATION
-USES LightCore, LightCore.IO, LightFmx.Common.AppData.Form;
+USES LightCore, LightCore.IO;
 
 
 

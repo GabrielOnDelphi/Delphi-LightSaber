@@ -20,7 +20,7 @@ UNIT LightFmx.Common.CamUtils;
 INTERFACE
 
 USES
-  System.SysUtils, System.IOUtils, System.Messaging,
+  System.SysUtils, System.IOUtils,
   FMX.Graphics, FMX.MediaLibrary, FMX.Platform, FMX.DialogService;
 
 

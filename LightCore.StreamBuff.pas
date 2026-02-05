@@ -392,7 +392,7 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 
 // Writes zeroes as padding bytes.
-procedure TLightStream.WritePadding0(Bytes: Integer);
+procedure TLightStream.WritePadding0(Bytes: Integer= FrozenPaddingSize);
 VAR b: TBytes;
 begin
   if Bytes> 0 then
@@ -406,7 +406,7 @@ end;
 
 { Reads padding bytes. For backwards compatibility, does NOT validate the content.
   Use ReadPaddingValidation if you need validation. }
-procedure TLightStream.ReadPadding0(Bytes: Integer);
+procedure TLightStream.ReadPadding0(Bytes: Integer= FrozenPaddingSize);
 VAR b: TBytes;
 begin
   if Bytes> 0 then
@@ -424,7 +424,7 @@ CONST
 
 { Read/write a string as padding bytes.
   ReadPadding raises an exception if the padding does not match the SafetyPaddingStr string. Usefule to detect file corruption. }
-procedure TLightStream.WritePaddingValidation(Bytes: Integer);
+procedure TLightStream.WritePaddingValidation(Bytes: Integer= FrozenPaddingSize);
 VAR
   b: TBytes;
   i, CheckPointSize: Integer;
@@ -446,7 +446,7 @@ end;
 
 
 { Reads padding bytes WITH validation. Raises an exception if the buffer does not contain the signature. }
-procedure TLightStream.ReadPaddingValidation(Bytes: Integer);
+procedure TLightStream.ReadPaddingValidation(Bytes: Integer= FrozenPaddingSize);
 VAR
   b: TBytes;
   CheckPointSize: Integer;
@@ -1091,3 +1091,4 @@ end;
 
 
 end.
+
