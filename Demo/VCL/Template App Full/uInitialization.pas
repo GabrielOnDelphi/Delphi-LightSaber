@@ -98,7 +98,7 @@ begin
         then LightVcl.Common.ExecuteShell.ExecuteURL(AppData.ProductWelcome);
 
         FormUniversalEula.ShowEulaModal;                      // EULA
-        TfrmSkinDisk.CreateFormModal;                         // Choose skin. There is a bug: Form losses modal attribute after applying skin. So, I can call this ONLY at the end of initialization procedure. Even though I can click the main form, the Skins form is still marked as modal.
+        TfrmSkinDisk.ShowAsModal;                              // Choose skin. There is a bug: Form losses modal attribute after applying skin. So, I can call this ONLY at the end of initialization procedure. Even though I can click the main form, the Skins form is still marked as modal.
       end;
    end;
 

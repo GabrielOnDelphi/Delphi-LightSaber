@@ -75,7 +75,7 @@ begin
 
   // Locate the default Styles folder
   if AppData.RunningFirstTime then
-    if AppData.RunningHome
+    if AppData.BetaTesterMode
     then StylesFolder:= 'c:\Delphi\Styles & resources\FMX Styles\Win\'
     else
       begin

@@ -222,7 +222,7 @@ end;
 
 procedure TfrmSettings.btnSkinsClick(Sender: TObject);
 begin
-  TfrmSkinDisk.CreateFormModal;
+  TfrmSkinDisk.ShowAsModal;
 end;
 
 
