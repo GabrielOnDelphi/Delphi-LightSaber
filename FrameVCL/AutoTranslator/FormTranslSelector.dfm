@@ -21,6 +21,7 @@ object frmTranslSelector: TfrmTranslSelector
   SnapBuffer = 3
   OnActivate = FormActivate
   OnClose = FormClose
+  OnCreate = FormCreate
   TextHeight = 13
   object grpChoose: TGroupBox
     AlignWithMargins = True

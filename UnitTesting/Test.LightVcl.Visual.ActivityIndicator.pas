@@ -260,8 +260,10 @@ end;
 
 procedure TTestActivityIndicatorC.TestHandleAllocatedWithParent;
 begin
-  // Force handle creation by showing the form briefly
+  // VCL only propagates handle creation to children when Showing=True.
+  // Since the form is invisible, we must explicitly request the indicator's handle.
   FForm.HandleNeeded;
+  FIndicator.HandleNeeded;
   Assert.IsTrue(FIndicator.HandleAllocated, 'Handle should be allocated when parent has handle');
 end;
 

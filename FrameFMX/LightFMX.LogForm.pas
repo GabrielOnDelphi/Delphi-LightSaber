@@ -39,17 +39,17 @@ TYPE
     pnlBottom      : TPanel;
     chkShowDate    : TCheckBox;
     LogFilter      : TLogVerbFilter;
-    procedure btnClearClick      (Sender: TObject);
-    procedure chkScrollDownChange(Sender: TObject);
-    procedure FormClose          (Sender: TObject; var Action: TCloseAction);
-    procedure FormDestroy        (Sender: TObject);
+    procedure btnClearClick       (Sender: TObject);
+    procedure chkScrollDownChange (Sender: TObject);
+    procedure FormClose           (Sender: TObject; var Action: TCloseAction);
+    procedure FormDestroy         (Sender: TObject);
     procedure mnuCopyAllClick     (Sender: TObject);
     procedure mnuCopyClick        (Sender: TObject);
     procedure mnuCopyFilteredClick(Sender: TObject);
     procedure chkLogOnErrorChange (Sender: TObject);
-    procedure chkShowTimeChange  (Sender: TObject);
-    procedure chkShowDateChange  (Sender: TObject);
-    procedure FormCreate         (Sender: TObject);
+    procedure chkShowTimeChange   (Sender: TObject);
+    procedure chkShowDateChange   (Sender: TObject);
+    procedure FormCreate          (Sender: TObject);
   private
     procedure LoadSettings;
     procedure SaveSettings;

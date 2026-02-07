@@ -5,15 +5,15 @@ uses
   FastMM4,
   {$ENDIF }
   FormMain in 'FormMain.pas' {MainForm},
+  FormTranslatorIniEditor in '..\FormTranslatorIniEditor.pas',
   FormTranslDeepL in '..\FormTranslDeepL.pas',
   FormTranslEditor in '..\FormTranslEditor.pas',
   FormTranslSelector in '..\FormTranslSelector.pas',
-  LightVcl.Translate in '..\LightVcl.Translate.pas',
   LightVcl.TranslatorAPI in '..\LightVcl.TranslatorAPI.pas',
-  LightCore.AppData in '..\..\LightCore.AppData.pas',
-  LightVcl.Visual.AppData in '..\..\FrameVCL\LightVcl.Visual.AppData.pas',
-  FormTranslatorIniEditor in '..\FormTranslatorIniEditor.pas' {frmTranslatorIniEditor},
-  LightVcl.Visual.AppDataForm in '..\..\FrameVCL\LightVcl.Visual.AppDataForm.pas';
+  LightVcl.Visual.AppData in '..\..\LightVcl.Visual.AppData.pas',
+  LightVcl.Visual.AppDataForm in '..\..\LightVcl.Visual.AppDataForm.pas',
+  LightCore.AppData in '..\..\..\LightCore.AppData.pas',
+  FormUniversalEula in '..\..\FormUniversalEula.pas';
 
 {$R *.res}
 

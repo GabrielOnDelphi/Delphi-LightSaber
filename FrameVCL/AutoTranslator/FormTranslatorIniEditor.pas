@@ -14,6 +14,7 @@ UNIT FormTranslatorIniEditor;
 =============================================================================================================}
 
 INTERFACE
+{$DENYPACKAGEUNIT ON}
 
 USES
   Winapi.Windows, Winapi.Messages,

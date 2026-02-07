@@ -54,6 +54,7 @@ TYPE
     procedure btnTranslateClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure FormActivate(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
   private
     function GetSelectedFileName: string;
     function GetSelectedFilePath: string;
@@ -61,7 +62,7 @@ TYPE
   public
     function IsEnglish: Boolean;
     function PopulateLanguageFiles: Boolean;
-    class procedure ShowSelector; static;
+    class procedure ShowAsModal; static;
   end;
 
 
@@ -73,24 +74,20 @@ USES
   LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.Dialogs, LightCore.IO, LightVcl.Common.IO, FormTranslEditor;
 
 
-{ Shows the language selector form as a modal dialog.
-  Translator must be initialized before calling this method. }
-class procedure TfrmTranslSelector.ShowSelector;
-var
-  frmSelector: TfrmTranslSelector;
+{ Shows the language selector form as a modal dialog }
+class procedure TfrmTranslSelector.ShowAsModal;
 begin
   Assert(Translator <> NIL, 'Translator must be initialized before showing selector');
+  AppData.CreateFormModal(TfrmTranslSelector);
+end;
 
-  AppData.CreateFormHidden(TfrmTranslSelector, frmSelector);
-  try
-    { Hide translation editor button on first run (no settings yet) }
-    frmSelector.btnTranslate.Visible:= NOT AppData.RunningFirstTime;
-    frmSelector.btnRefresh.Visible:= frmSelector.btnTranslate.Visible;
-    frmSelector.PopulateLanguageFiles;
-    frmSelector.ShowModal;
-  finally
-    FreeAndNil(frmSelector);
-  end;
+
+procedure TfrmTranslSelector.FormCreate(Sender: TObject);
+begin
+  { Hide translation editor button on first run (no settings yet) }
+  btnTranslate.Visible:= NOT AppData.RunningFirstTime;
+  btnRefresh.Visible:= btnTranslate.Visible;
+  PopulateLanguageFiles;
 end;
 
 

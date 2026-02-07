@@ -48,7 +48,7 @@ function AppIs64Bit: Boolean;
 // Reports
 function GeneratePlatformRep: string;
 function GenerateAppBitnessRep: string; {$IFDEF FRAMEWORK_FMX}
-function  GenerateDeviceRep: string;  {$ENDIF}
+function GenerateDeviceRep: string;  {$ENDIF}
 
 
 
@@ -163,11 +163,8 @@ end;
 
 function OsIsMobile: Boolean;
 begin
-  case TOSVersion.Platform of
-    pfAndroid, pfiOS: Result := True;
-  else
-    Result := False;
-  end;
+  Result:= (TOSVersion.Platform = pfAndroid)
+        OR (TOSVersion.Platform = pfiOS);
 end;
 
 

@@ -104,8 +104,8 @@ object frmRamLog: TfrmRamLog
       end
       object LogFilter: TLogVerbFilter
         Align = Right
-        Position.X = 480.000000000000000000
-        Size.Width = 251.000000000000000000
+        Position.X = 512.000000000000000000
+        Size.Width = 219.000000000000000000
         Size.Height = 31.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0

@@ -438,11 +438,12 @@ end;
 class function TAppDataCore.RunningHome: Boolean;
 begin
   Result:= FileExists(ChangeFileExt(ExeName, '.dpr')) OR FileExists(Trail(AppFolder) + 'RunningHome');
+end;
 
-  end;
 
-
-{ Returns true if a file called 'betatester' exists in application's folder or in application's system folder. }
+{ Returns true if a file called 'betatester' exists in application's folder or in application's system folder.
+  Windows maintains a directory entry cache (part of the NTFS metadata cache / file system cache).
+  Once a directory has been read, FileExists resolves from cached metadata in memory — no actual disk I/O. The file doesn't even need to exist; the negative lookup ("file not found") is cached too. }
 function TAppDataCore.BetaTesterMode: Boolean;
 begin
   Result:= FileExists(AppSysDir+ 'betatester') OR FileExists(AppFolder+ 'betatester');

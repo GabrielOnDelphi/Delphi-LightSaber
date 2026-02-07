@@ -33,6 +33,7 @@ USES
  function  EncodeDecode_XOR  (CONST s: string         ; Key: Byte): string;      overload;     { Torry Encode/Decode}
  function  EncodeDecode_XOR  (CONST Bytes: TBytesArray; Key: Byte): TBytesArray; overload;
  function  EncodeDecode_XOR  (CONST s: AnsiString     ; Key: Byte): AnsiString;  overload;
+ function  EncodeDecode_XOR  (CONST Bytes: TBytesArray; CONST Key: string): TBytesArray; overload;  { Multi-byte XOR with string key }
 
  function  EncodeXorText     (CONST PlainText: string; Key: Byte): string;
  function  DecodeXorText     (CONST EncodedArr: array of Byte; Key: Byte): string;
@@ -129,6 +130,29 @@ begin
   Result:= s;
   for i:= 1 to Length(s)
     DO Result[i]:= AnsiChar(Key XOR Ord(s[i]));
+end;
+
+
+{ Multi-byte XOR encryption using a string key.
+  Each byte is XORed with a rotating key derived from the string.
+  Self-inverse: applying twice with the same key returns original.
+  Key must be non-empty. ASCII characters only (0-255). }
+function EncodeDecode_XOR(CONST Bytes: TBytesArray; CONST Key: string): TBytesArray;
+VAR
+  i, KeyLen: Integer;
+  KeyBytes: TBytesArray;
+begin
+  if Key = ''
+  then EXIT(Bytes);
+
+  KeyLen:= Length(Key);
+  SetLength(KeyBytes, KeyLen);
+  for i:= 1 to KeyLen DO
+    KeyBytes[i-1]:= Ord(Key[i]) AND $FF;
+
+  Result:= Bytes;
+  for i:= 0 to High(Bytes) DO
+    Result[i]:= Bytes[i] XOR KeyBytes[i MOD KeyLen];
 end;
 
 

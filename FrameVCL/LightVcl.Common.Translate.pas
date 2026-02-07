@@ -271,13 +271,27 @@ end;
 --------------------------------------------------------------------------------}
 
 { Sets the current language and immediately reloads translations for all live forms.
-  Value must be a full path to the language INI file (e.g., 'C:\App\Lang\German.ini'). }
+  Value must be a full path to the language INI file (e.g., 'C:\App\Lang\German.ini').
+
+  When switching languages, first applies English (design-time baseline) to reset all controls, then applies the target language. 
+  This prevents leftover foreign text when the target language INI has fewer entries than the previous one. }
 procedure TTranslator.setCurLanguage(const Value: string);
+VAR EnglishPath: string;
 begin
   Assert(Pos(PathDelim, Value) > 0, 'CurLanguage var must contain the full path!');
 
+  { First reset to English baseline to clear any leftover text from the previous language }
+  EnglishPath:= GetLangFolder + DefaultLang;
+  if NOT SameText(ExtractFileName(Value), DefaultLang)
+  AND FileExists(EnglishPath) then
+   begin
+    FCurLanguage:= EnglishPath;
+    LoadTranslation(TRUE);
+   end;
+
+  { Now apply the target language }
   FCurLanguage:= Value;
-  LoadTranslation;
+  LoadTranslation(TRUE);
 end;
 
 

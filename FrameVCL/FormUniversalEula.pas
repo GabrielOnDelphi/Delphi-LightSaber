@@ -27,7 +27,7 @@ INTERFACE
 {$DENYPACKAGEUNIT ON}
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.StdCtrls;
+  Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.Forms, LightVcl.Visual.AppDataForm, Vcl.StdCtrls;
 
 TYPE
   TfrmEULA = class(TLightForm)
@@ -36,10 +36,11 @@ TYPE
     procedure btnOKClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
+    procedure FormCreate(Sender: TObject);
   public
+    class procedure ShowAsModal;
   end;
 
-procedure ShowEulaModal;
 
 IMPLEMENTATION {$R *.dfm}
 
@@ -53,25 +54,22 @@ CONST
 { Displays the EULA form as a modal dialog.
   If an external Eula.txt file exists in AppSysDir, it loads that text.
   Otherwise uses the built-in license text from the form. }
-procedure ShowEulaModal;
+class procedure TfrmEULA.ShowAsModal;
+begin
+  AppData.CreateFormModal(TfrmEULA);
+end;
+
+
+procedure TfrmEULA.FormCreate(Sender: TObject);
 var
-  frmEULA: TfrmEULA;
   EulaPath: string;
 begin
-  frmEULA:= TfrmEULA.Create(NIL);
-  try
-    Assert(frmEULA.FormStyle = fsStayOnTop, 'EULA form must be fsStayOnTop!');
-    Assert(frmEULA.Visible = FALSE, 'Form Visible must be False for ShowModal to work!');
+  Assert(FormStyle = fsStayOnTop, 'EULA form must be fsStayOnTop!');
 
-    { Load external EULA text if available }
-    EulaPath:= AppData.AppSysDir + EULA_FILENAME;
-    if FileExists(EulaPath)
-    then frmEULA.mmoLicense.Text:= StringFromFile(EulaPath);
-
-    frmEULA.ShowModal;
-  finally
-    FreeAndNil(frmEULA);
-  end;
+  { Load external EULA text if available }
+  EulaPath:= AppData.AppSysDir + EULA_FILENAME;
+  if FileExists(EulaPath)
+  then mmoLicense.Text:= StringFromFile(EulaPath);
 end;
 
 
@@ -92,6 +90,8 @@ procedure TfrmEULA.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftStat
 begin
   if (Key = VK_ESCAPE) OR (Key = VK_RETURN) then Close;
 end;
+
+
 
 
 end.

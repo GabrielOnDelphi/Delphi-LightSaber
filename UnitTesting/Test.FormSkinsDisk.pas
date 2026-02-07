@@ -115,7 +115,7 @@ type
 
     { Static Method Tests }
     [Test]
-    procedure TestCreateFormModal_ClassMethodExists;
+    procedure TestShowAsModal_ClassMethodExists;
 
     [Test]
     procedure TestCreateForm_ClassMethodExists;
@@ -509,11 +509,11 @@ end;
 
 { Static Method Tests }
 
-procedure TTestFormSkinsDisk.TestCreateFormModal_ClassMethodExists;
+procedure TTestFormSkinsDisk.TestShowAsModal_ClassMethodExists;
 begin
   { Just verify the class method exists and is callable (don't actually call it
     as it would show a modal dialog) }
-  Assert.Pass('CreateFormModal class method exists');
+  Assert.Pass('ShowAsModal class method exists');
 end;
 
 

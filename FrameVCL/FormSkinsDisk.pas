@@ -94,7 +94,7 @@ TYPE
     FOnDefaultSkin: TNotifyEvent;
     procedure PopulateSkins;
   public
-    class procedure CreateFormModal; static;
+    class procedure ShowAsModal; static;
     class procedure CreateForm(Notify: TNotifyEvent= NIL); static;
   published
     property OnDefaultSkin: TNotifyEvent read FOnDefaultSkin write FOnDefaultSkin;
@@ -199,13 +199,10 @@ end;
 { Shows skin selector as a modal dialog.
   WARNING: There is a known bug that crashes the program when closing
   this window after applying a skin. Use CreateForm for non-modal display. }
-class procedure TfrmSkinDisk.CreateFormModal;
-var
-  frmEditor: TfrmSkinDisk;
+class procedure TfrmSkinDisk.ShowAsModal;
 begin
-  AppData.CreateFormHidden(TfrmSkinDisk, frmEditor);
+  AppData.CreateFormModal(TfrmSkinDisk);
   { Note: ShowModal has a bug - after applying a skin, the window loses its modal attribute }
-  frmEditor.ShowModal;
 end;
 
 

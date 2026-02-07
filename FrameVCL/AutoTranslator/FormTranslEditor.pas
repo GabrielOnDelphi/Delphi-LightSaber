@@ -256,7 +256,7 @@ end;
 
 procedure TfrmTranslEditor.btnDeepLSettingsClick(Sender: TObject);
 begin
-  TfrmDeepLSettings.ShowSettings;
+  TfrmDeepLSettings.ShowAsModal;
 end;
 
 
@@ -290,7 +290,7 @@ begin
   if DeepL_GetApiKey.Trim.IsEmpty then
     begin
       MessageWarning('Please configure your DeepL API key first.');
-      TfrmDeepLSettings.ShowSettings;
+      TfrmDeepLSettings.ShowAsModal;
       EXIT;
     end;
 

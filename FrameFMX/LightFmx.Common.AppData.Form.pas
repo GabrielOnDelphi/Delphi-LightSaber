@@ -400,6 +400,9 @@ begin
   if AppData.RunningHome
   then aCaption:= aCaption+ ' [Running home]';
 
+  if AppData.BetaTesterMode
+  then aCaption:= aCaption+ ' [BetaTesterMode]';
+
   {$IFDEF DEBUG}
     aCaption:= aCaption+ ' [Debug]';
   {$ENDIF}

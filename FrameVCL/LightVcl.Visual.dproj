@@ -100,7 +100,7 @@
         <DCCReference Include="LightVcl.Visual.FreeDiskSpace.pas"/>
         <DCCReference Include="LightVcl.Visual.GradientPanel.pas"/>
         <DCCReference Include="LightVcl.Visual.GraphChart.pas"/>
-        <DCCReference Include="LightVcl.Visual.Groupbox.pas"/>
+        <DCCReference Include="LightVcl.Visual.GroupBox.pas"/>
         <DCCReference Include="LightVcl.Visual.INIFile.pas"/>
         <DCCReference Include="LightVcl.Visual.LabelEdit.pas"/>
         <DCCReference Include="LightVcl.Visual.ListBox.pas"/>

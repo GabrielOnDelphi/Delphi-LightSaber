@@ -22,6 +22,7 @@ object frmEULA: TfrmEULA
   ScreenSnap = True
   ShowHint = True
   OnClose = FormClose
+  OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   TextHeight = 13
   object btnOK: TButton

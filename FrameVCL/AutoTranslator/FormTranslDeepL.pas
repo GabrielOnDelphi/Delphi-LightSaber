@@ -10,8 +10,7 @@ UNIT FormTranslDeepL;
    Allows setting API key, choosing Free/Pro endpoint, and testing connection.
 
    USAGE:
-     Call TfrmDeepLSettings.ShowSettings to display the settings dialog.
-     Returns True if user clicked OK and settings were saved.
+     Call TfrmDeepLSettings.ShowAsModal to display the settings dialog.
 
    NOTES:
      - API key is stored in the application's INI file
@@ -48,7 +47,7 @@ TYPE
     procedure LoadSettings;
     procedure SaveSettings;
   public
-    class function ShowSettings: Boolean; static;
+    class procedure ShowAsModal; static;
     procedure FormPostInitialize; override;
   end;
 
@@ -127,18 +126,9 @@ end;
    FORM
 -------------------------------------------------------------------------------------------------------------}
 
-class function TfrmDeepLSettings.ShowSettings: Boolean;
-var
-  frmSettings: TfrmDeepLSettings;
+class procedure TfrmDeepLSettings.ShowAsModal;
 begin
-  AppData.CreateFormHidden(TfrmDeepLSettings, frmSettings);
-  try
-    frmSettings.LoadSettings;
-    frmSettings.ShowModal;
-    Result:= frmSettings.FResultOK;
-  finally
-    FreeAndNil(frmSettings);
-  end;
+  AppData.CreateFormModal(TfrmDeepLSettings);
 end;
 
 
@@ -147,6 +137,7 @@ begin
   inherited FormPostInitialize;
   FResultOK:= FALSE;
   lblStatus.Caption:= '';
+  LoadSettings;
 end;
 
 
