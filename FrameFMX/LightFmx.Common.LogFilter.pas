@@ -73,7 +73,7 @@ begin
 
   TrackBar            := TTrackBar.Create(Self);
   TrackBar.Parent     := Self;
-  TrackBar.Align      := TAlignLayout.Right;
+  TrackBar.Align      := TAlignLayout.Client;
   TrackBar.Min        := 1;
   TrackBar.Max        := Ord(High(TLogVerbLvl));               { About enumerations: http://www.delphipages.com/forum/showthread.php?t=58129 }
   TrackBar.Value      := Ord(DefaultVerbosity);                { I need this to synchroniz Log's and track's verbosity. Cannot be moved to CreateWnd if I use LoadForm() }
@@ -81,13 +81,13 @@ begin
   TrackBar.Hint       := 'Hide all messages below this level';
   TrackBar.Name       := 'VerbosityTrackbar';                  { This control MUST have a name so I can save it to INI file }
   TrackBar.OnChange   := TrackBarChange;
-  TrackBar.Width      := 120;
+  //TrackBar.constraints.MinWidth      := 30;
   TrackBar.Locked     := TRUE;
   TrackBar.Stored     := FALSE;
   //ShowText := FALSE;                     { https://stackoverflow.com/questions/56859524/how-to-initialize-a-custom-control/64974040?noredirect=1#comment114931111_64974040 }
 
   // Set panel properties
-  Width := 260;
+  Width := 200;
   Height:= 27;
   //Initialized:= True;
 end;

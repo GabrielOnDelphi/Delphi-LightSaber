@@ -96,8 +96,8 @@ TYPE
 
     procedure MainFormCaption(aCaption: string);
   published
-    property CloseOnEscape: Boolean  read FCloseOnEscape  write FCloseOnEscape;    // Close this form when the Esc key is pressed
-    property OnAfterConstruction: TNotifyEvent read FOnAfterCtur write FOnAfterCtur;
+    property CloseOnEscape: Boolean  read FCloseOnEscape  write FCloseOnEscape;        // Close this form when the Esc key is pressed
+    property OnAfterConstruction: TNotifyEvent read FOnAfterCtur write FOnAfterCtur;   // Unfortunatelly this won't appears in the object inspector
   end;
 
 

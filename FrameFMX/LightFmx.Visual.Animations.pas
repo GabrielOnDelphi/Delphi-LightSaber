@@ -51,12 +51,21 @@ CONST
 
 
 class procedure TConfetti.OnAnimFinish(Sender: TObject);
-VAR Anim: TFloatAnimation;
+VAR
+  Anim: TFloatAnimation;
+  Piece: TFmxObject;
 begin
-  // ForceQueue ensures UI destruction happens on main thread after current event processing
   Anim:= Sender as TFloatAnimation;
-  if Assigned(Anim.Parent)
-  then TThread.ForceQueue(nil, Anim.Parent.Free);
+  Piece:= Anim.Parent;
+  if Assigned(Piece) then
+  begin
+    Piece.Parent:= nil;  // Detach from parent so form's DeleteChildren won't double-free
+    // ForceQueue ensures destruction happens after current animation processing completes
+    TThread.ForceQueue(nil, procedure
+    begin
+      FreeAndNil(Piece);
+    end);
+  end;
 end;
 
 

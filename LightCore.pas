@@ -217,10 +217,11 @@ CONST
  ============================================================================================================}
  function  FileNameNaturalSort (s1, s2: String): Integer;                                                     { Natural compare two filenames }
  {$IFDEF MSWINDOWS}
- function  StrCmpLogicalW      (psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll'; {$ENDIF}    { Natural compare two strings. Digits in the strings are considered as numerical content rather than text. This test is not case-sensitive. Use it like this: StrCmpLogicalW(PChar(s1), PChar(s2));  see: http://stackoverflow.com/questions/1024515/delphi-is-it-necessary-to-convert-string-to-widestring.  }
- function  FuzzyStringCompare  (CONST s1, s2: string): Integer;                                                     { Text similarity. The function checks if any identical characters is in the near of the actual compare position.  }
- function  LevenshteinDistance (CONST s1, s2: string): Integer;                                                     { Returns the minimum number of single-character edits (insert, delete, substitute) to transform s1 into s2. }
- function  LevenshteinSimilarity(CONST s1, s2: string): Integer;                                                    { Returns similarity as percentage (0-100). Based on Levenshtein distance. }
+ function  StrCmpLogicalW      (psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll'; {$ENDIF}   { Natural compare two strings. Digits in the strings are considered as numerical content rather than text. This test is not case-sensitive. Use it like this: StrCmpLogicalW(PChar(s1), PChar(s2));  see: http://stackoverflow.com/questions/1024515/delphi-is-it-necessary-to-convert-string-to-widestring.  }
+ function  FuzzyStringCompare  (CONST s1, s2: string): Integer;                                              { Text similarity. The function checks if any identical characters is in the near of the actual compare position.  }
+ function  LevenshteinDistance (CONST s1, s2: string): Integer;                                              { Returns the minimum number of single-character edits (insert, delete, substitute) to transform s1 into s2. }
+ function  LevenshteinSimilarity    (CONST s1, s2: string): Integer;                                         { Returns similarity as percentage (0-100). Based on Levenshtein distance. }
+ function  LevenshteinSimilarityCase(CONST s1, s2: string): Integer;
 
 
 {=============================================================================================================
@@ -1911,16 +1912,38 @@ end;
    STRING COMPARE
 ============================================================================================================
 
- Levenshtein Distance:
-  - Counts minimum edits (insert, delete, substitute) to transform string A into B
-  - Returns a distance (lower = more similar)
-  - Example: "John" → "Jon" = distance 1 (one deletion)
+   LEVENSHTEIN
 
-  FuzzyStringCompare:
-  - Counts matching characters in approximately similar positions
-  - Uses a tolerance window (about 1/3 of string length)
-  - Returns a percentage (0-100, higher = more similar)
-  - Greedy positional matching, not edit-based
+   - Mathematically exact (dynamic programming), always finds minimum edit distance
+   - Returns raw distance: lower = more similar. LevenshteinSimilarity: wraps Distance into a percentage (0=different, 100=identical)
+   - Minimum single-character edits (insert, delete, substitute) to transform s1 into s2
+   - "John" vs "Jon" = distance 1 (one deletion)
+   - Use case:
+       Best for SHORT strings: labels, titles, names (1-5 words)
+       Matching user input against a known correct label with a threshold.
+       Detects typos precisely: "mitochondria" vs "mitocondria" = 1 edit = high similarity
+       Example: if LevenshteinSimilarity('mitocondria', 'mitochondria') >= 80 then Accept
+
+           - Used in: TSections.FindSectionFuzzy (matching AI-returned section names to real titles)
+
+
+   FUZZY
+   - Greedy positional matching, not edit-based. Counts matching characters in approximately similar positions (tolerance window)
+   - Returns percentage: 0=different, 100=identical
+   - Tolerance window is ~1/3 of string length + length difference
+   - Use case:
+       Best for LONGER strings: sentences, paragraphs, multi-word answers
+       Tolerant of word reordering and extra/missing words in free-text
+       Scoring free-text answers where exact wording varies
+
+            - Used in: TQuestion.EvaluateUserAnswer (offline evaluation without AI)
+
+
+
+
+  For label matching (your use case in EvaluateUserAnswer where Assigned(Figure) and it currently uses SameText),
+  LevenshteinSimilarity is the right choice — labels are short, and typos are the main error type.
+
 
 ============================================================================================================}
 
@@ -2024,6 +2047,7 @@ begin
 end;
 
 
+{ lower = more similar }
 function LevenshteinDistance(const s1, s2: string): Integer;
 var
   Arr: array of array of integer;
@@ -2031,8 +2055,7 @@ var
 begin
   LenS1 := length(s1);
   LenS2 := length(s2);
-  if LenS1 = 0 then Exit(LenS2);
-  if LenS2 = 0 then Exit(LenS1);
+  if (LenS1 = 0) OR (LenS2 = 0) then Exit(0);
 
   SetLength(Arr, LenS1 + 1, LenS2 + 1);
   for i1:= 0 to LenS1 do Arr[i1, 0] := i1;
@@ -2047,18 +2070,23 @@ end;
 
 
 { Returns similarity as percentage (0-100) based on Levenshtein distance.
-  100 = identical strings, 0 = completely different.
+  100% = identical strings, 0% = completely different.
   Case-sensitive. Lowercase your strings before calling if needed. }
 function LevenshteinSimilarity(const s1, s2: string): Integer;
-var
-  MaxLen, Distance: Integer;
+var MaxLen, Distance: Integer;
 begin
   MaxLen:= Max(Length(s1), Length(s2));
-  if MaxLen = 0
-  then EXIT(100);  // Both empty = identical
+  if MaxLen = 0 then EXIT(100);  // Both empty = identical
 
   Distance:= LevenshteinDistance(s1, s2);
   Result:= Round(100 * (1 - Distance / MaxLen));
+end;
+
+
+{ Case insensitive }
+function LevenshteinSimilarityCase(const s1, s2: string): Integer;
+begin
+  Result:= LevenshteinSimilarity(LowerCase(Trim(s1)), LowerCase(Trim(s2)));
 end;
 
 
