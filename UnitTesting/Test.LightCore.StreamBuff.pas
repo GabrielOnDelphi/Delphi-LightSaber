@@ -1166,7 +1166,7 @@ begin
   WriteStream:= TLightStream.CreateWrite(FTestFile);
   try
     WriteStream.WriteInteger(100);
-    WriteStream.WritePadding(64);
+    WriteStream.WritePaddingValidation(64);
     WriteStream.WriteInteger(200);
   finally
     WriteStream.Free;
@@ -1176,7 +1176,7 @@ begin
   try
     Assert.AreEqual(100, ReadStream.ReadInteger);
     { ReadPadding validates the content }
-    ReadStream.ReadPadding(64);
+    ReadStream.ReadPaddingValidation(64);
     Assert.AreEqual(200, ReadStream.ReadInteger);
   finally
     ReadStream.Free;
@@ -1801,7 +1801,7 @@ begin
       WriteStream.WriteRect(Rect(1, 2, 3, 4));
       WriteStream.WriteStrings(TSL);
       WriteStream.WriteCheckPoint('End');
-      WriteStream.WritePadding(64);
+      WriteStream.WritePaddingValidation(64);
     finally
       WriteStream.Free;
     end;
@@ -1828,7 +1828,7 @@ begin
       Assert.AreEqual('Item 2', TSL[1]);
 
       Assert.IsTrue(ReadStream.ReadCheckPoint('End'));
-      ReadStream.ReadPadding(64);
+      ReadStream.ReadPaddingValidation(64);
     finally
       ReadStream.Free;
     end;
