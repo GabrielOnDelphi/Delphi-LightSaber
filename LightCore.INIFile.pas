@@ -2,9 +2,7 @@ UNIT LightCore.INIFile;
 
 {=============================================================================================================
    2026.01.29
-
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   Features:
