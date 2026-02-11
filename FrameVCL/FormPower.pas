@@ -18,8 +18,10 @@ UNIT FormPower;
        - Power type is not battery (when battery check is enabled)
 
    USAGE:
+     var PowerSettings: RPowerSettings;
+     PowerSettings.Reset;
      frmPower:= TfrmPower.Create(Application);
-     frmPower.Initialize(SomeParentPanel);  // REQUIRED - reparents Container and starts timer
+     frmPower.Initialize(SomeParentPanel, @PowerSettings);  // REQUIRED - reparents Container and starts timer
 
    DEPENDENCIES:
      - CpuUsageTotal unit for AverageCpuUsage function
@@ -58,15 +60,21 @@ TYPE
     procedure TimerPwrTimer(Sender: TObject);
     procedure spnMaxCPUChange(Sender: TObject);
   private
+    Settings: PPowerSettings;
+    Initializing: Boolean;            // Prevent OnChange events during initialization
     FLastPowerType: TPowerType;       // Tracks power type for change detection
     procedure CheckSupplyTypeChanged;
     procedure ShowCpuUtilization;
     procedure PaintPowerTypeOnDesktop(const Msg: string);
+    procedure SettingChanged(Sender: TObject);
+    procedure ObjectFromGUI;
   public
+    procedure GuiFromObject;
     function  OkToChangeWallpaper: Boolean;
-    procedure Initialize(Parent: TWinControl);
+    procedure Initialize(Parent: TWinControl; aSettings: PPowerSettings);
   end;
 
+x
 VAR
   { Global form reference - used for singleton access pattern.
     Consider using AppData.GetForm<TfrmPower> instead for better encapsulation. }
@@ -98,13 +106,26 @@ USES
   The Container is reparented to allow embedding this form's controls
   into another form or panel. During FormDestroy, Container is moved back
   to Self to ensure proper INI file saving of child controls. }
-procedure TfrmPower.Initialize(Parent: TWinControl);
+procedure TfrmPower.Initialize(Parent: TWinControl; aSettings: PPowerSettings);
 begin
   Assert(Parent <> NIL, 'TfrmPower.Initialize: Parent cannot be nil');
+  Assert(aSettings <> NIL, 'TfrmPower.Initialize: aSettings cannot be nil');
 
+  Settings:= aSettings;
   FLastPowerType:= pwUnknown;  // Initialize power type tracking
 
-  LightVcl.Visual.INIFile.LoadForm(Self);  // Load INI settings before reparenting
+  Initializing:= TRUE;
+  try
+    LightVcl.Visual.INIFile.LoadForm(Self);  // Load INI settings before reparenting
+    GuiFromObject;
+  finally
+    Initializing:= FALSE;
+  end;
+
+  { Wire settings controls to sync record on change }
+  chkBatteries.OnClick:= SettingChanged;
+  chkOutOfJuice.OnClick:= SettingChanged;
+
   Container.Parent:= Parent;
   TimerPwr.Enabled:= TRUE;  // Start collecting CPU usage data
 
@@ -124,8 +145,41 @@ begin
 
   Assert(ComponentCount > 5, 'TfrmPower.Container already freed?');
 
+  // Final sync from GUI to the settings object
+  if Settings <> NIL
+  then ObjectFromGUI;
+
   // Move Container back for proper INI saving
   Container.Parent:= Self;
+end;
+
+
+
+{--------------------------------------------------------------------------------------------------
+   GUI <-> OBJECT TRANSFER
+--------------------------------------------------------------------------------------------------}
+
+procedure TfrmPower.GuiFromObject;
+begin
+  Assert(Settings <> NIL);
+  chkBatteries.Checked := Settings.CheckBatteries;
+  chkOutOfJuice.Checked:= Settings.NotifyPowerChange;
+  spnMaxCPU.Value      := Settings.MaxCPU;
+end;
+
+
+procedure TfrmPower.ObjectFromGUI;
+begin
+  Assert(Settings <> NIL);
+  Settings.CheckBatteries   := chkBatteries.Checked;
+  Settings.NotifyPowerChange:= chkOutOfJuice.Checked;
+  Settings.MaxCPU           := spnMaxCPU.Value;
+end;
+
+
+procedure TfrmPower.SettingChanged(Sender: TObject);
+begin
+  if NOT Initializing then ObjectFromGUI;
 end;
 
 
@@ -141,7 +195,7 @@ begin
   // Check for power type changes (AC <-> Battery)
   CheckSupplyTypeChanged;
 
-  // Only update display if visible
+ { Only update GUI if the parent panel is visible }
   if (Container.Parent <> NIL) 
   AND Container.Parent.Visible then
     begin
@@ -168,11 +222,10 @@ begin
 end;
 
 
-{ Event handler for spin edit value changes.
-  Currently unused but kept for potential future use or DFM binding. }
+{ Event handler for spin edit value changes. Syncs to Settings object. }
 procedure TfrmPower.spnMaxCPUChange(Sender: TObject);
 begin
-  // Reserved for future use - threshold change handling
+  SettingChanged(Sender);
 end;
 
 
@@ -184,10 +237,10 @@ end;
 { Checks if the power supply type has changed (AC <-> Battery) and notifies the user.
   Paints a message on the desktop and plays alert sounds when switching to battery. }
 procedure TfrmPower.CheckSupplyTypeChanged;
-var
-  CurrentPower: TPowerType;
+var CurrentPower: TPowerType;
 begin
-  if NOT chkOutOfJuice.Checked then EXIT;
+  Assert(Settings <> NIL);
+  if NOT Settings.NotifyPowerChange then EXIT;
 
   CurrentPower:= LightVcl.Common.PowerUtils.PowerStatus;
 
@@ -254,30 +307,18 @@ end;
 function TfrmPower.OkToChangeWallpaper: Boolean;
 var
   CpuUsage: Integer;
-  OnBattery: Boolean;
-  CpuBusy: Boolean;
 begin
-  // Check battery status
-  OnBattery:= chkBatteries.Checked AND (PowerStatus <= pwTypeBat);
-
-  if OnBattery then
-    begin
-      AppData.LogWarn('Wallpaper not changed because the computer is running on batteries.');
-      EXIT(FALSE);
-    end;
-
-  // Check CPU usage
+  Assert(Settings <> NIL);
   CpuUsage:= AverageCpuUsage;
-  CpuBusy:= CpuUsage >= spnMaxCPU.Value;
+  Result:= Settings.OkToChangeWallpaper(CpuUsage);
 
-  if CpuBusy then
+  if NOT Result then
     begin
-      AppData.LogWarn('Wallpaper not changed because the computer is too busy (CPU: ' +
+      if Settings.CheckBatteries AND (PowerStatus <= pwTypeBat)
+      then AppData.LogWarn('Wallpaper not changed because the computer is running on batteries.')
+      else AppData.LogWarn('Wallpaper not changed because the computer is too busy (CPU: ' +
         IntToStr(CpuUsage) + '%). You can change this behaviour in ''Settings''');
-      EXIT(FALSE);
     end;
-
-  Result:= TRUE;
 end;
 
 

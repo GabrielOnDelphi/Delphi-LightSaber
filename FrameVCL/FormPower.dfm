@@ -3,34 +3,32 @@ object frmPower: TfrmPower
   Top = 558
   Caption = 'Power'
   ClientHeight = 446
-  ClientWidth = 567
+  ClientWidth = 488
   Color = clBtnFace
   DoubleBuffered = True
   ParentFont = True
-  OldCreateOrder = False
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
   SnapBuffer = 3
   OnDestroy = FormDestroy
-  PixelsPerInch = 96
-  TextHeight = 13
+  TextHeight = 15
   object Container: TPanel
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 561
+    Width = 482
     Height = 440
     Align = alClient
     BevelOuter = bvNone
     ParentColor = True
     TabOrder = 0
     DesignSize = (
-      561
+      482
       440)
     object grpPowerInfo: TCubicGroupBox
-      Left = 53
-      Top = 53
+      Left = 14
+      Top = 52
       Width = 454
       Height = 150
       Anchors = []
@@ -54,7 +52,7 @@ object frmPower: TfrmPower
         object lblCPU: TLabel
           Left = 2
           Top = 2
-          Width = 137
+          Width = 215
           Height = 14
           Align = alTop
           Alignment = taCenter
@@ -80,21 +78,22 @@ object frmPower: TfrmPower
         AlignWithMargins = True
         Left = 60
         Top = 116
-        Width = 116
+        Width = 359
         Height = 23
         Hint = 
           'Useful when playing games or other CPU-hungry applications.'#13#10'Set' +
           ' it to 101% to disable it.'
         Anchors = [akBottom]
         BevelOuter = bvNone
+        ParentBackground = False
         ParentColor = True
         ShowCaption = False
         TabOrder = 1
         Spin.AlignWithMargins = True
-        Spin.Left = 52
+        Spin.Left = 291
         Spin.Top = 0
         Spin.Width = 50
-        Spin.Height = 23
+        Spin.Height = 24
         Spin.Margins.Top = 0
         Spin.Margins.Bottom = 0
         Spin.Align = alLeft
@@ -108,7 +107,7 @@ object frmPower: TfrmPower
       end
     end
     object grpPowerOpt: TCubicGroupBox
-      Left = 53
+      Left = 14
       Top = 229
       Width = 454
       Height = 158
@@ -118,15 +117,15 @@ object frmPower: TfrmPower
       object lblBatProc: TLabel
         Left = 26
         Top = 56
-        Width = 81
-        Height = 13
+        Width = 82
+        Height = 15
         Caption = 'Battery status: ?'
       end
       object lblPwrType: TLabel
         Left = 26
         Top = 30
-        Width = 75
-        Height = 13
+        Width = 78
+        Height = 15
         Hint = 'Power type'
         Caption = 'Power status: ?'
         Layout = tlCenter
@@ -134,7 +133,7 @@ object frmPower: TfrmPower
       object chkOutOfJuice: TCubicCheckBox
         Left = 26
         Top = 85
-        Width = 299
+        Width = 327
         Height = 17
         Hint = 
           'Print a message directly on the screen to inform you that your l' +
@@ -147,7 +146,7 @@ object frmPower: TfrmPower
       object chkBatteries: TCubicCheckBox
         Left = 26
         Top = 115
-        Width = 289
+        Width = 315
         Height = 17
         Hint = 
           'Check this if battery life is very important to you. Alternative' +
