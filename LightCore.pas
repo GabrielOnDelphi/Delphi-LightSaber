@@ -293,9 +293,7 @@ CONST
 
 
 IMPLEMENTATION
-USES
-  {$IFDEF MSWINDOWS}Winapi.Windows,{$ENDIF}
-  System.SysConst;  // For SUnknown constant
+{$IFDEF MSWINDOWS} USES Winapi.Windows;{$ENDIF}  // System.SysConst For SUnknown constant
 
 { Don't add any dependecies to LightSaber here if possible in order to keep LightCore as single-file library }
 
@@ -2055,7 +2053,8 @@ var
 begin
   LenS1 := length(s1);
   LenS2 := length(s2);
-  if (LenS1 = 0) OR (LenS2 = 0) then Exit(0);
+  if LenS1 = 0 then EXIT(LenS2);
+  if LenS2 = 0 then EXIT(LenS1);
 
   SetLength(Arr, LenS1 + 1, LenS2 + 1);
   for i1:= 0 to LenS1 do Arr[i1, 0] := i1;
