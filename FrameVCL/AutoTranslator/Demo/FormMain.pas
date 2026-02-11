@@ -65,7 +65,7 @@ end;
 
 procedure TMainForm.btnSelectorClick(Sender: TObject);
 begin
-  TfrmTranslSelector.ShowSelector;
+  TfrmTranslSelector.ShowAsModal;
 end;
 
 
