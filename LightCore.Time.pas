@@ -60,6 +60,8 @@ USES
  function  mSecondsToTime        (mSeconds: Cardinal): string;
 
  function  ShowTimeNice          (Seconds: Cardinal): string;  overload;
+ function  ShowTimeNice          (Seconds: Integer): string;   overload;  { Prevents Delphi from resolving Integer to the TDateTime overload }
+ function  ShowTimeNice          (Seconds: Int64): string;     overload;  { Prevents Delphi from resolving Int64 to the TDateTime overload }
  function  ShowTimeNice          (aTime: TDateTime): string;   overload;
 
  function  DateTimeToMilliseconds(aDateTime: TDateTime): Int64;
@@ -136,6 +138,25 @@ begin
   S := Seconds - (D * SecsPerDay) - (H * 3600) - (M * 60);
 
   Result := ShowTimeNiceCommon(D, H, M, S);
+end;
+
+
+{ Overload for Integer arguments.
+  Without this, Delphi resolves Integer to the TDateTime (Double) overload,
+  which interprets the value as days instead of seconds. }
+function ShowTimeNice(Seconds: Integer): string;
+begin
+  Assert(Seconds >= 0, 'ShowTimeNice: Negative seconds not supported');
+  Result:= ShowTimeNice(Cardinal(Seconds));
+end;
+
+
+{ Overload for Int64 arguments (e.g., RCertificate.TimeLeft).
+  Without this, Delphi resolves Int64 to the TDateTime (Double) overload. }
+function ShowTimeNice(Seconds: Int64): string;
+begin
+  Assert(Seconds >= 0, 'ShowTimeNice: Negative seconds not supported');
+  Result:= ShowTimeNice(Cardinal(Seconds));
 end;
 
 
