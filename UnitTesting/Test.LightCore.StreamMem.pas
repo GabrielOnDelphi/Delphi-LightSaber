@@ -365,11 +365,11 @@ var
   PaddingSize: Integer;
 begin
   PaddingSize:= 64;
-  FStream.WritePadding(PaddingSize);
+  FStream.WritePaddingValidation(PaddingSize);
   Assert.AreEqual(Int64(PaddingSize), FStream.Size, 'Size should equal padding size');
 
   FStream.Position:= 0;
-  FStream.ReadPadding(PaddingSize);  // Should not raise exception
+  FStream.ReadPaddingValidation(PaddingSize);  // Should not raise exception if signature matches
   Assert.AreEqual(Int64(PaddingSize), FStream.Position, 'Position should be at end');
 end;
 
