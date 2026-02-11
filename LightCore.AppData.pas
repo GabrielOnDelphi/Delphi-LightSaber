@@ -75,6 +75,7 @@ TYPE
     procedure defaultSettings;  virtual;
     procedure setHintType(const Value: THintType); virtual;
   public
+    LastFile: string;           // Last used file. We do nothig with it here but we save/load its value to INI file. The user can use it later.
     RamLog: TRamLog;
 
     { Product details }
@@ -667,6 +668,7 @@ begin
     IniFileObj.Write('ShowOnError'   , FShowOnError);
     IniFileObj.Write('HintType'      , Ord(HintType));
     IniFileObj.Write('HideHint'      , HideHint);
+    IniFileObj.Write('LastFile'      , LastFile);
   finally
     FreeAndNil(IniFileObj);
   end;
@@ -686,6 +688,7 @@ begin
     FShowOnError  := IniFileObj.Read('ShowOnError'        , True);
     HintType      := THintType(IniFileObj.Read('HintType' , 0));
     HideHint      := IniFileObj.Read('HideHint'           , 2500);
+    LastFile      := IniFileObj.Read('LastFile'           , '');
 
     // Apply loaded setting to RamLog (it was created before LoadSettings)
     if RamLog <> NIL
