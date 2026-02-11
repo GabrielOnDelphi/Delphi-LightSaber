@@ -21,7 +21,8 @@ uses
   Vcl.Controls,
   Vcl.StdCtrls,
   Vcl.ExtCtrls,
-  Vcl.ComCtrls;
+  Vcl.ComCtrls,
+  LightVcl.Common.PowerUtils;
 
 type
   [TestFixture]
@@ -29,6 +30,7 @@ type
   private
     FTestForm: TObject;
     FTestParent: TPanel;
+    FSettings: RPowerSettings;
     procedure CleanupForm;
   public
     [Setup]
@@ -149,7 +151,6 @@ implementation
 uses
   LightCore.AppData,
   LightVcl.Visual.AppData,
-  LightVcl.Common.PowerUtils,
   FormPower;
 
 
@@ -158,6 +159,7 @@ begin
   Assert.IsNotNull(AppData, 'AppData must be initialized before running tests');
   FTestForm:= NIL;
   FTestParent:= NIL;
+  FSettings.Reset;
 end;
 
 
@@ -379,7 +381,7 @@ begin
   FTestForm:= Form;
 
   FTestParent:= TPanel.Create(NIL);
-  Form.Initialize(FTestParent);
+  Form.Initialize(FTestParent, @FSettings);
 
   Assert.IsTrue(Form.TimerPwr.Enabled, 'Timer should be enabled after Initialize');
 end;
@@ -393,7 +395,7 @@ begin
   FTestForm:= Form;
 
   FTestParent:= TPanel.Create(NIL);
-  Form.Initialize(FTestParent);
+  Form.Initialize(FTestParent, @FSettings);
 
   // Simulate FormDestroy
   Form.TimerPwr.Enabled:= TRUE;
@@ -413,7 +415,7 @@ begin
   FTestForm:= Form;
 
   FTestParent:= TPanel.Create(NIL);
-  Form.Initialize(FTestParent);
+  Form.Initialize(FTestParent, @FSettings);
 
   Assert.AreEqual(TComponent(FTestParent), TComponent(Form.Container.Parent),
     'Container should be reparented to provided control');
@@ -430,7 +432,7 @@ begin
   Assert.WillRaise(
     procedure
     begin
-      Form.Initialize(NIL);
+      Form.Initialize(NIL, @FSettings);
     end,
     EAssertionFailed,
     'Initialize should raise assertion when Parent is nil');
@@ -459,7 +461,7 @@ begin
   FTestForm:= Form;
 
   FTestParent:= TPanel.Create(NIL);
-  Form.Initialize(FTestParent);
+  Form.Initialize(FTestParent, @FSettings);
 
   Assert.AreEqual(TComponent(FTestParent), TComponent(Form.Container.Parent),
     'Container should be reparented after Initialize');
@@ -475,13 +477,11 @@ begin
   Form:= TfrmPower.Create(NIL);
   FTestForm:= Form;
 
-  FTestParent:= TPanel.Create(NIL);
-  Form.Initialize(FTestParent);
+  FSettings.CheckBatteries:= FALSE;
+  FSettings.MaxCPU:= 100;
 
-  // Disable battery check
-  Form.chkBatteries.Checked:= FALSE;
-  // Set high CPU threshold
-  Form.spnMaxCPU.Value:= 100;
+  FTestParent:= TPanel.Create(NIL);
+  Form.Initialize(FTestParent, @FSettings);
 
   // Should return True when battery check is disabled and CPU threshold is high
   Assert.IsTrue(Form.OkToChangeWallpaper,
@@ -496,12 +496,11 @@ begin
   Form:= TfrmPower.Create(NIL);
   FTestForm:= Form;
 
-  FTestParent:= TPanel.Create(NIL);
-  Form.Initialize(FTestParent);
+  FSettings.CheckBatteries:= FALSE;
+  FSettings.MaxCPU:= 100;
 
-  // Disable battery check - should pass regardless of actual power status
-  Form.chkBatteries.Checked:= FALSE;
-  Form.spnMaxCPU.Value:= 100;
+  FTestParent:= TPanel.Create(NIL);
+  Form.Initialize(FTestParent, @FSettings);
 
   { OkToChangeWallpaper should not raise exception }
   Assert.WillNotRaise(
@@ -519,12 +518,11 @@ begin
   Form:= TfrmPower.Create(NIL);
   FTestForm:= Form;
 
-  FTestParent:= TPanel.Create(NIL);
-  Form.Initialize(FTestParent);
+  FSettings.CheckBatteries:= FALSE;
+  FSettings.MaxCPU:= 100;
 
-  // Set CPU threshold to maximum
-  Form.chkBatteries.Checked:= FALSE;
-  Form.spnMaxCPU.Value:= 100;
+  FTestParent:= TPanel.Create(NIL);
+  Form.Initialize(FTestParent, @FSettings);
 
   // With threshold at 100%, should always pass CPU check
   Assert.IsTrue(Form.OkToChangeWallpaper,
@@ -591,7 +589,7 @@ begin
 
   FTestParent:= TPanel.Create(NIL);
   FTestParent.Visible:= TRUE;
-  Form.Initialize(FTestParent);
+  Form.Initialize(FTestParent, @FSettings);
 
   { TimerPwrTimer should not raise exception when parent is visible }
   Assert.WillNotRaise(
@@ -611,7 +609,7 @@ begin
 
   FTestParent:= TPanel.Create(NIL);
   FTestParent.Visible:= FALSE;
-  Form.Initialize(FTestParent);
+  Form.Initialize(FTestParent, @FSettings);
 
   { TimerPwrTimer should not raise exception when parent is hidden }
   Assert.WillNotRaise(
