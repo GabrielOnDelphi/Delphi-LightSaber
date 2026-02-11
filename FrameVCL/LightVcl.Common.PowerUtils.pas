@@ -52,16 +52,25 @@ USES
  function InitSystemShutdown(CONST ComputerName: WideString; Reboot, Force: Boolean; const Msg: string; TimeOut: Cardinal=0): Boolean;    // Shut down, restart a machine with showing an optional warning message.
 
  //todo: use the SetThreadExecutionState WinApi function to keep the screen on. It is the function that video players use to keep the screen on while you are watching a film.
+
 {==================================================================================================
    POWER STATUS / BATTERY
 ==================================================================================================}
- {$IFDEF MSWINDOWS}
  TYPE
    TPowerType = (pwTypeBat, pwTypeAC, pwUnknown);
+
+   PPowerSettings = ^RPowerSettings;
+   RPowerSettings = record
+     CheckBatteries   : Boolean;  { Prevent wallpaper changes when on battery }
+     NotifyPowerChange: Boolean;  { Show power change notifications }
+     MaxCPU           : Integer;  { Maximum CPU usage threshold (percentage) }
+     procedure Reset;
+     function OkToChangeWallpaper(CpuUsage: Integer): Boolean;
+   end;
+
  function  PowerStatus: TPowerType;
  function  PowerStatusString: string;
  function  BatteryLeft : Integer;
- {$ENDIF}
  function  BatteryAsText: string;
 
 {==================================================================================================
@@ -223,6 +232,36 @@ end;
 
 
 
+
+
+
+{-------------------------------------------------------------------------------------------------------------
+   POWER SETTINGS
+-------------------------------------------------------------------------------------------------------------}
+{$IFDEF MSWINDOWS}
+
+procedure RPowerSettings.Reset;
+begin
+  CheckBatteries   := TRUE;
+  NotifyPowerChange:= TRUE;
+  MaxCPU           := 90;
+end;
+
+
+{ Returns True if conditions allow wallpaper change.
+  CpuUsage: Current average CPU usage percentage (0-100), or -1 if unavailable. }
+function RPowerSettings.OkToChangeWallpaper(CpuUsage: Integer): Boolean;
+begin
+  if CheckBatteries AND (PowerStatus <= pwTypeBat)
+  then EXIT(FALSE);
+
+  if CpuUsage >= MaxCPU
+  then EXIT(FALSE);
+
+  Result:= TRUE;
+end;
+
+{$ENDIF}
 
 
 
