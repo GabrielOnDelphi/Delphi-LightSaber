@@ -422,7 +422,7 @@ begin
   Stream:= TLightStream.CreateWrite(FilePath);
   try
     Stream.WriteHeader('TLogLines', 99);  { Invalid version }
-    Stream.WritePadding;
+    Stream.WritePaddingValidation;
   finally
     FreeAndNil(Stream);
   end;
