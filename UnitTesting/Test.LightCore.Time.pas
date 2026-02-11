@@ -127,6 +127,12 @@ type
     procedure TestShowTimeNice_Days;
 
     [Test]
+    procedure TestShowTimeNice_Integer;
+
+    [Test]
+    procedure TestShowTimeNice_Int64;
+
+    [Test]
     procedure TestMiliSecToTimeAuto_Milliseconds;
 
     [Test]
@@ -480,6 +486,32 @@ begin
   Result:= ShowTimeNice(Cardinal(90000));  { ~1 day }
   Assert.IsTrue(Pos('day', Result) > 0);
 end;
+
+{ Regression test: Integer arguments must resolve to the Cardinal (seconds) overload,
+  not the TDateTime (days) overload. ShowTimeNice(60) as Integer must show ~1 minute, not 60 days. }
+procedure TTestLightCoreTime.TestShowTimeNice_Integer;
+var
+  Secs: Integer;
+  Result: string;
+begin
+  Secs:= 60;
+  Result:= ShowTimeNice(Secs);
+  Assert.IsTrue(Pos('m', Result) > 0, 'Integer 60 should show minutes, got: ' + Result);
+  Assert.IsFalse(Pos('day', Result) > 0, 'Integer 60 must NOT show days, got: ' + Result);
+end;
+
+
+procedure TTestLightCoreTime.TestShowTimeNice_Int64;
+var
+  Secs: Int64;
+  Result: string;
+begin
+  Secs:= 120;
+  Result:= ShowTimeNice(Secs);
+  Assert.IsTrue(Pos('m', Result) > 0, 'Int64 120 should show minutes, got: ' + Result);
+  Assert.IsFalse(Pos('day', Result) > 0, 'Int64 120 must NOT show days, got: ' + Result);
+end;
+
 
 procedure TTestLightCoreTime.TestMiliSecToTimeAuto_Milliseconds;
 var
