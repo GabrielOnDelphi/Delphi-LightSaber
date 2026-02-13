@@ -51,13 +51,12 @@ object FrmUpdater: TFrmUpdater
     Transparent = False
     Visible = False
     StyleElements = [seBorder]
-    ExplicitWidth = 598
   end
   object PageCtrl: TPageControl
     Left = 0
-    Top = 25
+    Top = 22
     Width = 666
-    Height = 348
+    Height = 351
     ActivePage = tabRecEditor
     Align = alClient
     TabOrder = 0
@@ -76,12 +75,11 @@ object FrmUpdater: TFrmUpdater
         Visible = False
         WordWrap = True
         StyleElements = [seBorder]
-        ExplicitWidth = 47
       end
       object pnlBottom: TPanel
         AlignWithMargins = True
         Left = 3
-        Top = 268
+        Top = 271
         Width = 652
         Height = 45
         Align = alBottom
@@ -201,9 +199,9 @@ object FrmUpdater: TFrmUpdater
       object Log: TRichLog
         AlignWithMargins = True
         Left = 3
-        Top = 26
+        Top = 23
         Width = 652
-        Height = 203
+        Height = 209
         Align = alClient
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
@@ -222,7 +220,7 @@ object FrmUpdater: TFrmUpdater
       object LogVerb: TRichLogTrckbr
         AlignWithMargins = True
         Left = 3
-        Top = 235
+        Top = 238
         Width = 652
         Height = 27
         Hint = 'For beta testers only'
@@ -250,7 +248,7 @@ object FrmUpdater: TFrmUpdater
       ImageIndex = 1
       DesignSize = (
         658
-        316)
+        319)
       object Panel3: TPanel
         AlignWithMargins = True
         Left = 210
@@ -311,7 +309,7 @@ object FrmUpdater: TFrmUpdater
       ImageIndex = 2
       DesignSize = (
         658
-        316)
+        319)
       object Panel2: TPanel
         AlignWithMargins = True
         Left = 188

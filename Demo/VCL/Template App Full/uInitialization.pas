@@ -27,11 +27,11 @@ USES
 
 procedure LateInitialization;
 begin
-  { Add your brand here }
-  {AppData.CompanyName    := 'BuyTime Ltd';
-  AppData.ProductHome    := 'https://YourWebsiteHere.com';
-  AppData.ProductSupport := 'https://YourWebsiteHere.com';
-  AppData.ProductUninstal:= 'https://YourWebsiteHere.com'; }
+  { Add your brand here (optional) }
+  AppData.CompanyName    := 'BuyTime Ltd';
+  AppData.ProductHome    := 'https://GabrielMoraru.com';
+  AppData.ProductSupport := 'https://GabrielMoraru.com';
+  AppData.ProductUninstal:= 'https://GabrielMoraru.com';
 
   { Settings }
   { This object is used to store user's GUI settings. They are editable via the TFormSettings.
@@ -50,12 +50,14 @@ begin
   { Load the log early othewise it will overwrite the existing text }
   chHardID.HDIDValid:= TRUE;
   MainForm.Proteus.VerboseLogActive:= FileExists(Appdata.AppSysDir+ 'ProteusVerboseLog');
-  MainForm.Proteus.ProductName:= AppData.AppName;
-  MainForm.Proteus.DefaultKey := cpCertificate.GenerateTrialCertificate(AppData.AppName, 1, 365).GenerateKeyString;
+  MainForm.Proteus.ProductName  := AppData.AppName;
+  MainForm.Proteus.ProductVers  := AppData.GetVersionInfoMajor;
+  MainForm.Proteus.ProductSecret:= 'LightSaberWillBlowYourMind';
+  MainForm.Proteus.GenerateTrialKey(3, 'TrialEdition');
   MainForm.Proteus.Initialize;
 
   if MainForm.Proteus.CurCertif.Demo
-  then AppData.MainFormCaption('Trial expired!');
+  then MainForm.MainFormCaption('Trial expired!');
 
   { Splash screen }
   if NOT AppData.RunningFirstTime
@@ -80,7 +82,7 @@ begin
   if AppData.RunningFirstTime then
    begin
     // Preparation of the main form
-    AppData.MainFormCaption('Welcome...');
+    MainForm.MainFormCaption('Welcome...');
     CenterForm(MainForm);
     MainForm.pgCtrl.ActivePage:= MainForm.tabMain;            // Default page to show
 
@@ -97,13 +99,13 @@ begin
         if NOT AppData.BetaTesterMode
         then LightVcl.Common.ExecuteShell.ExecuteURL(AppData.ProductWelcome);
 
-        FormUniversalEula.ShowEulaModal;                      // EULA
-        TfrmSkinDisk.ShowAsModal;                              // Choose skin. There is a bug: Form losses modal attribute after applying skin. So, I can call this ONLY at the end of initialization procedure. Even though I can click the main form, the Skins form is still marked as modal.
+        TfrmEULA.ShowAsModal;                     // EULA
+        TfrmSkinDisk.ShowAsModal;                 // Choose skin. There is a bug: Form losses modal attribute after applying skin. So, I can call this ONLY at the end of initialization procedure. Even though I can click the main form, the Skins form is still marked as modal.
       end;
    end;
 
   { Auto updater / Internet news }
-  AppData.MainFormCaption('Starting autoupdater...');
+  MainForm.MainFormCaption('Starting autoupdater...');
   Updater:= TUpdater.Create(UpdaterDemoURL);
   Updater.URLDownload  := AppData.ProductHome;
   Updater.URLRelHistory:= AppData.ProductHome;
@@ -112,7 +114,7 @@ begin
   MainForm.FontSizeChanged;
   Winapi.ShellApi.DragAcceptFiles(MainForm.Handle, True);     // Accept the dropped files from Windows Explorer
   Application.OnHint:= MainForm.CanShowHint;
-  AppData.MainFormCaption('');
+  MainForm.MainFormCaption('');
 end;
 
 

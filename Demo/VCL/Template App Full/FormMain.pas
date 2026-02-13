@@ -184,7 +184,7 @@ begin
   TRY
     Caption:= 'Started...';
     //actShowLogExecute(Sender);
-    Application.DefaultFont.Size:= 20;
+    Application.DefaultFont.Size:= 11;
   FINALLY
     CursorNotBusy;
   END;
@@ -228,7 +228,7 @@ end;
 
 procedure TMainForm.actLanguageExecute(Sender: TObject);
 begin
-  TfrmTranslSelector.ShowSelector;
+  TfrmTranslSelector.ShowAsModal;
 end;
 
 

@@ -497,7 +497,7 @@ procedure TTestFormDrawing.TestGetHiddenWindow_ReturnsForm;
 var
   Form: TDrawingForm;
 begin
-  Form:= GetHiddenWindow(clBlack, FALSE, FALSE);
+  Form:= TDrawingForm.GetHiddenWindow(clBlack, FALSE);
   FTestForm:= Form;
 
   Assert.IsNotNull(Form, 'GetHiddenWindow should return a form');
@@ -509,7 +509,7 @@ procedure TTestFormDrawing.TestGetHiddenWindow_SetsColor;
 var
   Form: TDrawingForm;
 begin
-  Form:= GetHiddenWindow(clNavy, FALSE, FALSE);
+  Form:= TDrawingForm.GetHiddenWindow(clNavy, FALSE);
   FTestForm:= Form;
 
   Assert.AreEqual(clNavy, TColor(Form.Color), 'GetHiddenWindow should set the color');
@@ -520,7 +520,7 @@ procedure TTestFormDrawing.TestGetHiddenWindow_SetsExpandOnAllMon;
 var
   Form1, Form2: TDrawingForm;
 begin
-  Form1:= GetHiddenWindow(clBlack, TRUE, FALSE);
+  Form1:= TDrawingForm.GetHiddenWindow(clBlack, TRUE);
   FTestForm:= Form1;
 
   Assert.IsTrue(Form1.ExpandOnAllMon, 'ExpandOnAllMon should be True when requested');
@@ -529,7 +529,7 @@ begin
   FreeAndNil(Form1);
   FTestForm:= NIL;
 
-  Form2:= GetHiddenWindow(clBlack, FALSE, FALSE);
+  Form2:= TDrawingForm.GetHiddenWindow(clBlack, FALSE);
   FTestForm:= Form2;
 
   Assert.IsFalse(Form2.ExpandOnAllMon, 'ExpandOnAllMon should be False when not requested');

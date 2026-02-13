@@ -28,7 +28,7 @@ object MainForm: TMainForm
     Top = 0
     Width = 668
     Height = 471
-    ActivePage = tabMain
+    ActivePage = tabProgress
     Align = alClient
     TabOrder = 0
     object tabMain: TTabSheet
@@ -434,6 +434,7 @@ object MainForm: TMainForm
     Top = 50
   end
   object Proteus: TProteus
+    ProductSecret = 'MagicIngredient'
     ProductVers = 0
     ProductName = 'My product'
     RegKeyPath = '\SOFTWARE\Microsoft\Windows\CurrentVersion\Defrag64\'

@@ -24,6 +24,7 @@ USES
 CONST
   CResizeTolerance  = 1;               // Use a small, reasonable value for float comparison
   CTextHeightBuffer = 1.0;             // Small buffer to prevent text from being cut (e.g., antialiasing issues)
+  CShadowBottomExtent = 6;             // Shadow vertical extent below bubble: Distance(3)*Sin(45°) + Softness blur ≈ 6px. Used by spacer in scroll containers.
   WhatsAppGreen     = $FFE4F3E2;
   WhatsAppGrey      = $FFEFEFEF;
 

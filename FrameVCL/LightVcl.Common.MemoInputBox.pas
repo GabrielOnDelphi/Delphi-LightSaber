@@ -15,8 +15,7 @@ UNIT LightVcl.Common.MemoInputBox;
 
 INTERFACE
 USES
-  Winapi.Windows,
-  System.SysUtils, System.Types,
+  Winapi.Windows, System.SysUtils, System.Types,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.Consts, Vcl.Graphics;
 
 

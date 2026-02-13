@@ -1,10 +1,8 @@
 UNIT LightVcl.Graph.ResizeGr32;
 
 {=============================================================================================================
-   Gabriel Moraru
    2026.01.30
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
    Image resizers based on Graphics32 (GR32) Transform library.
@@ -27,7 +25,7 @@ UNIT LightVcl.Graph.ResizeGr32;
      http://www.davdata.nl/math/bmresize.html
 
    Tester: c:\MyProjects\Projects GRAPHICS Resamplers\GLOBAL Tester\
---------------------------------------------------------------------------------------------------}
+-------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
 { $I GR32.Inc}

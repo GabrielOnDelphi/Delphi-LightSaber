@@ -417,7 +417,8 @@ begin
      // Repair position on desktop
 
      TLightForm(Reference).AutoState:= AutoState;
-     TLightForm(Reference).LoadForm;
+     if autostate <> asNone
+     then TLightForm(Reference).LoadForm;
     end;
 
   if Show

@@ -75,7 +75,7 @@ procedure SendEmail(CONST sTo, sSubject, sBody: string);
 VAR s: string;
 begin
   s := 'mailto:'+sTo+'?subject=' + sSubject + '&body=' + sBody;
-  ExecuteShell(s);
+  ExecuteURL(s);
 end;
 
 

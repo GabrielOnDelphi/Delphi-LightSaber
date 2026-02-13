@@ -698,26 +698,26 @@ end;
 
 
 
-function FormatNumber(CONST Size: Int64; CONST Decimals: Integer= 1): string;
+function FormatNumber(CONST Size: Int64; CONST Decimals: Integer= 1): string;  // Ex: 3.7 kilo, 3.7 mega, 3.7 giga
 begin
  if Size = 0
  then Result:= '0' else
 
- if Size< 1000
- then Result:= IntToStr(Size) else
+  if Size< 1000
+  then Result:= IntToStr(Size) else
 
- if (Size>= 1000) AND (Size< 1000000)
- then Result:= Real2Str(Size / 1000, Decimals)+ ' K' else
+   if (Size>= 1000) AND (Size< 1000000)
+   then Result:= Real2Str(Size / 1000, Decimals)+ ' K' else
 
- if (Size>= 1000000) AND (Size< 1000000000)
- then Result:= Real2Str(Size / 1000000, Decimals)+ ' M' else
+    if (Size>= 1000000) AND (Size< 1000000000)
+    then Result:= Real2Str(Size / 1000000, Decimals)+ ' M' else
 
- if (Size>= 1000000000) AND (Size< 1000000000000)
- then Result:= Real2Str(Size / 1000000000, Decimals)+ ' G' else
+     if (Size>= 1000000000) AND (Size< 1000000000000)
+     then Result:= Real2Str(Size / 1000000000, Decimals)+ ' G' else
 
- if (Size>= 1000000000000)
- then Result:= Real2Str(Size / 1000000000000, Decimals)+ ' T'
- else raise Exception.Create('Negative file size!');
+      if (Size>= 1000000000000)
+      then Result:= Real2Str(Size / 1000000000000, Decimals)+ ' T'
+      else RAISE Exception.Create('FormatNumber-Negative file size!');
 end;
 
 

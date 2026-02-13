@@ -18,9 +18,9 @@ UNIT LightVcl.Common.ExecuteShell;
                       Use ShellExecuteEx for more information about launched application.
 
    Functions:
-      ExecuteShell         - Launch using ShellExecute with error reporting
-      ExecuteShellEx       - Launch using ShellExecuteEx with process handle
-      ExecuteShellAndWait  - Launch and wait for completion using ShellExecuteEx
+      ExecuteFile          - Launch file using ShellExecute with error reporting
+      ExecuteFileEx        - Launch file using ShellExecuteEx with process handle
+      ExecuteFileAndWait   - Launch file and wait for completion using ShellExecuteEx
       ExecuteAsAdmin       - Launch with administrator elevation (runas verb)
 
    Utility functions:
@@ -79,21 +79,22 @@ USES
 
 { ShellExecute wrappers }
 
-{ Executes file/program using ShellExecute. Supports URLs, .lnk files, document associations.
+{ Executes a local file/program using ShellExecute. Supports .lnk files and document associations.
+  For URLs use ExecuteURL instead. For folders use ExecuteExplorer.
   WindowState: SW_HIDE, SW_SHOWNORMAL, SW_SHOWMINIMIZED, SW_SHOWMAXIMIZED, etc.
   Returns True if successful. }
-function ExecuteShell(CONST ExeFile: string; Params: string = '';
+function ExecuteFile(CONST ExeFile: string; Params: string = '';
   ShowErrorMsg: Boolean = TRUE; WindowState: Integer = SW_SHOWNORMAL): Boolean;
 
 { Executes file using ShellExecuteEx. Provides access to process handle.
   Returns True if successful. }
-function ExecuteShellEx(CONST ExeFile: string; Params: string = '';
+function ExecuteFileEx(CONST ExeFile: string; Params: string = '';
   ShowErrorMsg: Boolean = TRUE; WindowState: Integer = SW_SHOWNORMAL): Boolean;
 
 { Executes file and waits for completion.
   WaitTime: Maximum wait time in milliseconds, or INFINITE.
   Returns True if successful. }
-function ExecuteShellAndWait(CONST ExeFile: string; Params: string = '';
+function ExecuteFileAndWait(CONST ExeFile: string; Params: string = '';
   Hide: Boolean = FALSE; WaitTime: Cardinal = INFINITE): Boolean;
 
 { Executes file with administrator elevation (UAC prompt).
@@ -122,13 +123,14 @@ CONST
 
 
 {---------------------------------------------------------------------------------------------------------------
-   ExecuteShell
+   ExecuteFile
 
-   Executes a file/program using ShellExecute API.
-   Supports file associations, URLs, .lnk files, mailto: links, etc.
+   Executes a local file/program using ShellExecute API.
+   Supports file associations, .lnk files, document associations.
+   For URLs use ExecuteURL. For mailto: use ExecuteSendEmail.
 
    Parameters:
-     ExeFile      - File path, URL, or document to execute
+     ExeFile      - File path or document to execute
      Params       - Command line parameters (use quotes for paths with spaces)
      ShowErrorMsg - If True, displays error message on failure
      WindowState  - Window display state (SW_SHOWNORMAL, SW_HIDE, SW_MINIMIZE, etc.)
@@ -154,12 +156,12 @@ CONST
    Note: Does not work well with .scr files in config mode.
    See: https://stackoverflow.com/questions/46672282
 ---------------------------------------------------------------------------------------------------------------}
-function ExecuteShell(CONST ExeFile: string; Params: string = ''; ShowErrorMsg: Boolean = TRUE; WindowState: Integer = WinApi.Windows.SW_SHOWNORMAL): Boolean;
+function ExecuteFile(CONST ExeFile: string; Params: string = ''; ShowErrorMsg: Boolean = TRUE; WindowState: Integer = WinApi.Windows.SW_SHOWNORMAL): Boolean;
 VAR
    RetCode: Integer;
    WorkingFolder, Msg: string;
 begin
-  if not FileExists(ExeFile) then raise Exception.Create('ExecuteShell no file');
+  if not FileExists(ExeFile) then raise Exception.Create('ExecuteFile: file not found: ' + ExeFile);
 
   WorkingFolder:= ExtractFilePath(ExeFile);
 
@@ -204,10 +206,10 @@ end;
 
 
 {---------------------------------------------------------------------------------------------------------------
-   ExecuteShellEx
+   ExecuteFileEx
 
    Executes a file using ShellExecuteEx API, which provides more control and information
-   than the basic ShellExecute.
+   than the basic ExecuteFile/ShellExecute.
 
    Parameters:
      ExeFile      - File path to execute
@@ -220,12 +222,12 @@ end;
 
    See: http://stackoverflow.com/questions/4295285/how-can-i-wait-for-a-command-line-program-to-finish
 ---------------------------------------------------------------------------------------------------------------}
-function ExecuteShellEx(CONST ExeFile: string; Params: string = '';
+function ExecuteFileEx(CONST ExeFile: string; Params: string = '';
   ShowErrorMsg: Boolean = TRUE; WindowState: Integer = SW_SHOWNORMAL): Boolean;
 VAR
    ShellInfo: TShellExecuteInfo;
 begin
-  if not FileExists(ExeFile) then raise Exception.Create('ExecuteShell no file');
+  if not FileExists(ExeFile) then raise Exception.Create('ExecuteFileEx: file not found: ' + ExeFile);
 
   FillChar(ShellInfo, SizeOf(ShellInfo), 0);
   ShellInfo.cbSize:= SizeOf(ShellInfo);
@@ -270,7 +272,7 @@ function ExecuteAsAdmin(CONST ExeFile: string; Params: string = ''; hWnd: HWND =
 VAR
   ShellInfo: TShellExecuteInfo;
 begin
-  if not FileExists(ExeFile) then raise Exception.Create('ExecuteShell no file');
+  if not FileExists(ExeFile) then raise Exception.Create('ExecuteAsAdmin: file not found: ' + ExeFile);
 
   FillChar(ShellInfo, SizeOf(ShellInfo), 0);
   ShellInfo.cbSize:= SizeOf(ShellInfo);
@@ -286,7 +288,7 @@ end;
 
 
 {---------------------------------------------------------------------------------------------------------------
-   ExecuteShellAndWait
+   ExecuteFileAndWait
 
    Executes a program using ShellExecuteEx and waits for it to finish.
    Keeps UI responsive by processing messages during the wait.
@@ -308,14 +310,14 @@ end;
      http://stackoverflow.com/questions/4295285/how-can-i-wait-for-a-command-line-program-to-finish
      https://blogs.msdn.microsoft.com/larryosterman/2004/06/02/things-you-shouldnt-do-part-4-msgwaitformultipleobjects-is-a-very-tricky-api/
 ---------------------------------------------------------------------------------------------------------------}
-function ExecuteShellAndWait(CONST ExeFile: string; Params: string = '';
+function ExecuteFileAndWait(CONST ExeFile: string; Params: string = '';
   Hide: Boolean = FALSE; WaitTime: Cardinal = INFINITE): Boolean;
 VAR
   ShellInfo: TShellExecuteInfo;
 CONST
   bWaitAll = FALSE;
 begin
-  if not FileExists(ExeFile) then raise Exception.Create('ExecuteShell no file');
+  if not FileExists(ExeFile) then raise Exception.Create('ExecuteFileAndWait: file not found: ' + ExeFile);
 
   FillChar(ShellInfo, SizeOf(ShellInfo), 0);
   ShellInfo.cbSize:= SizeOf(ShellInfo);
@@ -365,7 +367,7 @@ begin
   { Encode special characters that may cause issues }
   URL:= StringReplace(URL, '"', '%22', [rfReplaceAll]);
 
-  { Use ShellExecute directly - URLs don't pass the FileExists check in ExecuteShell }
+  { Use ShellExecute directly - URLs don't pass the FileExists check in ExecuteFile }
   ShellExecute(0, 'open', PChar(URL), NIL, NIL, SW_SHOWNORMAL);
 end;
 
@@ -424,7 +426,7 @@ VAR
   ItemIDList: PItemIDList;
 begin
   Result:= FALSE;
-  if not FileExists(FileName) then RAISE Exception.Create('ExecuteShell no file');
+  if not FileExists(FileName) then RAISE Exception.Create('ExecuteExplorerSelect: file not found: ' + FileName);
 
   ItemIDList:= ILCreateFromPath(PChar(FileName));
   if ItemIDList <> NIL then

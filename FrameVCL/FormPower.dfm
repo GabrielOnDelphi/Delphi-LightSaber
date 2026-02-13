@@ -76,7 +76,7 @@ object frmPower: TfrmPower
       end
       object spnMaxCPU: TCubicSpinEditSplit
         AlignWithMargins = True
-        Left = 60
+        Left = 46
         Top = 116
         Width = 359
         Height = 23
@@ -100,10 +100,10 @@ object frmPower: TfrmPower
         Spin.MaxValue = 101
         Spin.MinValue = 2
         Spin.TabOrder = 0
-        Spin.Value = 95
+        Spin.Value = 90
         Caption1 = 'Don'#39't change the wallpaper if CPU utilization is above'
         Caption2 = '%'
-        Value = 95
+        Value = 90
       end
     end
     object grpPowerOpt: TCubicGroupBox
@@ -161,7 +161,7 @@ object frmPower: TfrmPower
   object TimerPwr: TTimer
     Enabled = False
     OnTimer = TimerPwrTimer
-    Left = 48
+    Left = 136
     Top = 14
   end
 end

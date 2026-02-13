@@ -85,6 +85,14 @@ CONST
    IconSettingsGear  = '⚙';                // U+2699
    IconSettingsKey   = '🔧';                // U+1F527 (WRENCH)
 
+   IconPlay= '▶';         // U+25B6
+   IconPause= '⏸';       // U+23F8
+   IconStop= '⏹';        // U+23F9
+   IconRecord= '⏺';      // U+23FA
+   IconFastForward= '⏩'; // U+23E9
+   IconRewind= '⏪';      // U+23EA
+   IconSkipNext= '⏭';    // U+23ED
+   IconSkipPrev= '⏮';    // U+23EE
 
 
 TYPE

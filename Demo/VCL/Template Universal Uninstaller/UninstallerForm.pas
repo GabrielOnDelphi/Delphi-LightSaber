@@ -112,7 +112,7 @@ begin
    SelfCopy:= GetTempFolder+ ExtractFileName(Application.ExeName);
    FileCopyQuick(Application.ExeName, GetTempFolder);
    if FileExists(SelfCopy)
-   then ExecuteShellEx(SelfCopy, 'uninstall')           { Doesn't matter what I pass to the copy. I just need to pass something. Anything. So the ParamCount gets > 0 }
+   then ExecuteFileEx(SelfCopy, 'uninstall')           { Doesn't matter what I pass to the copy. I just need to pass something. Anything. So the ParamCount gets > 0 }
    else MessageError('Cannot create temporary copy! Most probable cause: your antivirus is blocking it.');
    Application.Terminate;
   end
@@ -266,7 +266,7 @@ begin
     begin
      MessageInfo(AppFolder+ CRLF+ 'This folder is locked by a 3rd party application. Please try to delete it manually.');
      mmoLog.AddMsg('The user will manually delete the folder: '+ AppFolder);
-     ExecuteShell(AppFolder);
+     ExecuteExplorer(AppFolder);
     end;
 
  { Delete app data folder }
@@ -323,7 +323,7 @@ begin
  if NOT FeedbackSent then
   begin
    MessageInfo('Please tell us why you uninstalled the program so we can make it better. CRLF CRLF CONSTRUCTIVE feedback is always appreciated. CRLF CRLF Thank you.');
-   ExecuteShell(AppData.ProductUninstal);
+   ExecuteURL(AppData.ProductUninstal);
   end;
 
  edtPath.Path:= '';
@@ -348,15 +348,15 @@ end;
 
 procedure TfrmMain.btnFeedbackClick(Sender: TObject);
 begin
- ExecuteShell('mailto:'+ AppData.ProductSupport);
- ExecuteShell(AppData.ProductUninstal);
+ ExecuteSendEmail(AppData.ProductSupport);
+ ExecuteURL(AppData.ProductUninstal);
  FeedbackSent:= TRUE;
 end;
 
 
 procedure TfrmMain.btnResetIniClick(Sender: TObject);
 begin
- ///ExecuteShell(BxConstants.wwwResetToFactory);  put it back
+ ///ExecuteURL(BxConstants.wwwResetToFactory);  put it back
 end;
 
 
@@ -368,7 +368,7 @@ end;
 
 procedure TfrmMain.imgLogoClick(Sender: TObject);
 begin
- ExecuteShell(AppData.ProductUninstal);
+ ExecuteURL(AppData.ProductUninstal);
 end;
 
 

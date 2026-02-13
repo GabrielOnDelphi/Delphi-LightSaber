@@ -261,7 +261,7 @@ end;
 procedure TfrmSkinRes.btnSkinEditorClick(Sender: TObject);
 begin
   if FileExists(Appdata.AppSysDir + 'SkinDesigner.exe')
-  then ExecuteShell(Appdata.AppSysDir + 'SkinDesigner.exe')
+  then ExecuteFile(Appdata.AppSysDir + 'SkinDesigner.exe')
   else ExecuteURL(wwwSkinDesinger);
 end;
 

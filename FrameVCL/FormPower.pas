@@ -1,31 +1,21 @@
 UNIT FormPower;
 
 {=============================================================================================================
-   2026.01.29
+   2026.02
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    POWER MANAGEMENT FORM
 
-   Collects and displays:
-     - CPU utilization data (average usage percentage)
+   Displays:
+     - CPU utilization data (from TPowerSettings which collects it automatically)
      - Battery status (AC/battery power, percentage remaining)
 
-   The check is performed automatically every 1 second via TimerPwr.
-
-   OkToChangeWallpaper:
-     Utility function that returns True if:
-       - CPU usage is below the configured threshold
-       - Power type is not battery (when battery check is enabled)
+   The display is refreshed every 1 second via TimerPwr.
+   CPU data collection is handled by TPowerSettings (in LightVcl.Common.CpuMonitor).
 
    USAGE:
-     var PowerSettings: RPowerSettings;
-     PowerSettings.Reset;
-     frmPower:= TfrmPower.Create(Application);
-     frmPower.Initialize(SomeParentPanel, @PowerSettings);  // REQUIRED - reparents Container and starts timer
-
-   DEPENDENCIES:
-     - CpuUsageTotal unit for AverageCpuUsage function
-     - LightVcl.Common.PowerUtils for battery/power status
+     PowerSettings:= TPowerSettings.Create;
+     frmPower:= TfrmPower.CreateParented(SomeParentPanel, PowerSettings);
 
    NOTE:
      The Container panel is reparented to the specified parent control during Initialize,
@@ -39,7 +29,7 @@ USES
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
   Vcl.StdCtrls, LightVcl.Visual.SpinEdit, Vcl.ExtCtrls,
   LightVcl.Visual.CheckBox, LightVcl.Visual.GroupBox,
-  LightVcl.Visual.AppDataForm, LightVcl.Common.PowerUtils,
+  LightVcl.Visual.AppDataForm, LightVcl.Common.PowerUtils, LightVcl.Common.CpuMonitor,
   Vcl.ComCtrls;
 
 TYPE
@@ -60,7 +50,7 @@ TYPE
     procedure TimerPwrTimer(Sender: TObject);
     procedure spnMaxCPUChange(Sender: TObject);
   private
-    Settings: PPowerSettings;
+    Settings: TPowerSettings;
     Initializing: Boolean;            // Prevent OnChange events during initialization
     FLastPowerType: TPowerType;       // Tracks power type for change detection
     procedure CheckSupplyTypeChanged;
@@ -68,23 +58,17 @@ TYPE
     procedure PaintPowerTypeOnDesktop(const Msg: string);
     procedure SettingChanged(Sender: TObject);
     procedure ObjectFromGUI;
+    procedure Initialize(aSettings: TPowerSettings);
   public
     procedure GuiFromObject;
-    function  OkToChangeWallpaper: Boolean;
-    procedure Initialize(Parent: TWinControl; aSettings: PPowerSettings);
+    class function CreateParented(Parent: TWinControl; PowerSettings: TPowerSettings): TfrmPower; static;
   end;
 
-x
-VAR
-  { Global form reference - used for singleton access pattern.
-    Consider using AppData.GetForm<TfrmPower> instead for better encapsulation. }
-  frmPower: TfrmPower = NIL;
 
 
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  CpuUsageTotal,
   LightCore, LightCore.Time, LightCore.Types, LightCore.INIFile, LightCore.AppData,
   LightVcl.Visual.AppData, LightVcl.Visual.INIFile,
   LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs,
@@ -95,6 +79,13 @@ USES
 {--------------------------------------------------------------------------------------------------
    INITIALIZATION
 --------------------------------------------------------------------------------------------------}
+class function TfrmPower.CreateParented(Parent: TWinControl; PowerSettings: TPowerSettings): TfrmPower;
+begin
+  AppData.CreateFormHidden(TfrmPower, Result, asNone, Parent);
+  Result.Parent:= Parent;
+  Result.Initialize(PowerSettings);  { Start collecting CPU usage data }
+end;
+
 
 { Initializes the form by reparenting the Container to the specified parent control.
   IMPORTANT: Must be called after form creation before the form is used.
@@ -106,7 +97,7 @@ USES
   The Container is reparented to allow embedding this form's controls
   into another form or panel. During FormDestroy, Container is moved back
   to Self to ensure proper INI file saving of child controls. }
-procedure TfrmPower.Initialize(Parent: TWinControl; aSettings: PPowerSettings);
+procedure TfrmPower.Initialize(aSettings: TPowerSettings);
 begin
   Assert(Parent <> NIL, 'TfrmPower.Initialize: Parent cannot be nil');
   Assert(aSettings <> NIL, 'TfrmPower.Initialize: aSettings cannot be nil');
@@ -116,7 +107,6 @@ begin
 
   Initializing:= TRUE;
   try
-    LightVcl.Visual.INIFile.LoadForm(Self);  // Load INI settings before reparenting
     GuiFromObject;
   finally
     Initializing:= FALSE;
@@ -146,8 +136,8 @@ begin
   Assert(ComponentCount > 5, 'TfrmPower.Container already freed?');
 
   // Final sync from GUI to the settings object
-  if Settings <> NIL
-  then ObjectFromGUI;
+  Assert(Settings <> NIL);
+  ObjectFromGUI;
 
   // Move Container back for proper INI saving
   Container.Parent:= Self;
@@ -164,7 +154,7 @@ begin
   Assert(Settings <> NIL);
   chkBatteries.Checked := Settings.CheckBatteries;
   chkOutOfJuice.Checked:= Settings.NotifyPowerChange;
-  spnMaxCPU.Value      := Settings.MaxCPU;
+  spnMaxCPU.Value      := Settings.HighCpuThreshold;
 end;
 
 
@@ -173,7 +163,7 @@ begin
   Assert(Settings <> NIL);
   Settings.CheckBatteries   := chkBatteries.Checked;
   Settings.NotifyPowerChange:= chkOutOfJuice.Checked;
-  Settings.MaxCPU           := spnMaxCPU.Value;
+  Settings.HighCpuThreshold := spnMaxCPU.Value;
 end;
 
 
@@ -209,16 +199,12 @@ begin
 end;
 
 
-{ Updates the CPU usage progress bar with the current average CPU usage.
-  Handles the case where AverageCpuUsage returns -1 (error obtaining data). }
+{ Updates the CPU usage progress bar from the TPowerSettings class.
+  CPU data is collected automatically by TPowerSettings' internal timer. }
 procedure TfrmPower.ShowCpuUtilization;
-var TotalUsage: Integer;
 begin
-  TotalUsage:= AverageCpuUsage;  // Get the average CPU usage
-
-  // -1 indicates an error obtaining CPU data
-  if TotalUsage > -1
-  then proCpu.Position:= TotalUsage;
+  Assert(Settings <> NIL);
+  proCpu.Position:= Settings.LastCpuUsage;
 end;
 
 
@@ -291,35 +277,6 @@ begin
   end;
 end;
 
-
-
-{--------------------------------------------------------------------------------------------------
-   WALLPAPER CHANGE DECISION
---------------------------------------------------------------------------------------------------}
-
-{ Determines if it's appropriate to change the wallpaper based on power and CPU status.
-
-  Returns True if:
-    - Computer is not running on batteries (or battery check is disabled)
-    - CPU usage is below the configured maximum threshold
-
-  Logs warnings when wallpaper change is blocked due to battery or CPU conditions. }
-function TfrmPower.OkToChangeWallpaper: Boolean;
-var
-  CpuUsage: Integer;
-begin
-  Assert(Settings <> NIL);
-  CpuUsage:= AverageCpuUsage;
-  Result:= Settings.OkToChangeWallpaper(CpuUsage);
-
-  if NOT Result then
-    begin
-      if Settings.CheckBatteries AND (PowerStatus <= pwTypeBat)
-      then AppData.LogWarn('Wallpaper not changed because the computer is running on batteries.')
-      else AppData.LogWarn('Wallpaper not changed because the computer is too busy (CPU: ' +
-        IntToStr(CpuUsage) + '%). You can change this behaviour in ''Settings''');
-    end;
-end;
 
 
 end.

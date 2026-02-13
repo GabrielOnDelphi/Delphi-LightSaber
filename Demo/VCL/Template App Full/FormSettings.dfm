@@ -29,11 +29,9 @@ object frmSettings: TfrmSettings
     Top = 0
     Width = 600
     Height = 418
-    ActivePage = tabSystem
+    ActivePage = tabInterface
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 762
-    ExplicitHeight = 509
     object tabSystem: TTabSheet
       Caption = 'System'
       DesignSize = (
@@ -66,7 +64,7 @@ object frmSettings: TfrmSettings
           Left = 60
           Top = 39
           Width = 173
-          Height = 17
+          Height = 19
           Caption = 'Start at Windows startup '
           TabOrder = 0
           AutoSize = True
@@ -75,7 +73,7 @@ object frmSettings: TfrmSettings
           Left = 60
           Top = 107
           Width = 119
-          Height = 17
+          Height = 19
           Caption = 'Minimize to tray'
           TabOrder = 2
           AutoSize = True
@@ -84,7 +82,7 @@ object frmSettings: TfrmSettings
           Left = 60
           Top = 73
           Width = 115
-          Height = 17
+          Height = 19
           Caption = 'Start minimized'
           TabOrder = 3
           AutoSize = True
@@ -93,8 +91,8 @@ object frmSettings: TfrmSettings
           AlignWithMargins = True
           Left = 60
           Top = 140
-          Width = 145
-          Height = 17
+          Width = 182
+          Height = 19
           Hint = 'Show the Log window when it receives error or warning messages.'
           Caption = 'Show log on error'
           Checked = True
@@ -154,7 +152,7 @@ object frmSettings: TfrmSettings
           Left = 36
           Top = 63
           Width = 225
-          Height = 15
+          Height = 17
           Hint = 
             'Don'#39't use the embeded help system. No pop-up will appear and no ' +
             'info will be displayed in status bar.'
@@ -166,7 +164,7 @@ object frmSettings: TfrmSettings
           Left = 36
           Top = 92
           Width = 154
-          Height = 15
+          Height = 17
           Hint = 
             'Show a hint when you hold the mouse cursor over an item (button,' +
             ' checkbox, etc)'
@@ -178,7 +176,7 @@ object frmSettings: TfrmSettings
           Left = 36
           Top = 120
           Width = 188
-          Height = 15
+          Height = 17
           Hint = 'Show information about an item in status bar.'
           Caption = 'Show help in status bar also'
           Checked = True
@@ -187,7 +185,7 @@ object frmSettings: TfrmSettings
           AutoSize = True
         end
         object spnHideHint: TSpinEdit
-          Left = 156
+          Left = 159
           Top = 170
           Width = 77
           Height = 27
@@ -219,13 +217,6 @@ object frmSettings: TfrmSettings
         DesignSize = (
           347
           226)
-        object lblOpacity: TLabel
-          Left = 86
-          Top = 51
-          Width = 93
-          Height = 17
-          Caption = 'Window opacity'
-        end
         object btnSkins: TButton
           Left = 115
           Top = 117
@@ -235,7 +226,6 @@ object frmSettings: TfrmSettings
           Caption = 'Skins'
           TabOrder = 0
           OnClick = btnSkinsClick
-          ExplicitLeft = 86
         end
         object btnFont: TButton
           Left = 115
@@ -246,21 +236,34 @@ object frmSettings: TfrmSettings
           Caption = 'Font'
           TabOrder = 1
           OnClick = btnFontClick
-          ExplicitLeft = 86
         end
-        object spnOpacity: TSpinEdit
-          Left = 160
-          Top = 74
-          Width = 50
-          Height = 27
-          Hint = 'miliseconds'
-          Increment = 10
-          MaxValue = 255
-          MinValue = 50
+        object spnOpacity: TCubicSpinEditSplit
+          AlignWithMargins = True
+          Left = 99
+          Top = 64
+          Width = 127
+          Height = 25
+          BevelOuter = bvNone
           ParentColor = True
+          ShowCaption = False
           TabOrder = 2
+          Spin.AlignWithMargins = True
+          Spin.Left = 63
+          Spin.Top = 0
+          Spin.Width = 50
+          Spin.Height = 25
+          Spin.Hint = 'miliseconds'
+          Spin.Margins.Top = 0
+          Spin.Margins.Bottom = 0
+          Spin.Align = alLeft
+          Spin.MaxValue = 255
+          Spin.MinValue = 50
+          Spin.TabOrder = 0
+          Spin.Value = 250
+          Spin.OnChange = spnOpacity2Change
+          Caption1 = 'Window opacity'
+          Caption2 = '%'
           Value = 250
-          OnChange = spnOpacityChange
         end
       end
     end
@@ -280,8 +283,6 @@ object frmSettings: TfrmSettings
         ParentShowHint = False
         ShowHint = True
         TabOrder = 0
-        ExplicitLeft = 184
-        ExplicitTop = 129
         object Label1: TLabel
           Left = 56
           Top = 137
@@ -306,7 +307,7 @@ object frmSettings: TfrmSettings
         object chkUser: TCheckBox
           Left = 56
           Top = 84
-          Width = 97
+          Width = 122
           Height = 17
           Caption = 'User defined'
           TabOrder = 1
@@ -324,7 +325,7 @@ object frmSettings: TfrmSettings
     Font.Style = []
     Options = [fdEffects, fdApplyButton]
     OnApply = FontDialogApply
-    Left = 558
+    Left = 526
     Top = 71
   end
 end

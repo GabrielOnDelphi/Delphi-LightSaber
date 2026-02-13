@@ -19,7 +19,7 @@ uses
 
 type
   [TestFixture]
-  TTestExecuteShell = class
+  TTestExecuteFile = class
   private
     FTestDir: string;
   public
@@ -29,32 +29,32 @@ type
     [TearDown]
     procedure TearDown;
 
-    { ExecuteShell tests }
+    { ExecuteFile tests }
     [Test]
-    procedure Test_ExecuteShell_EmptyPath;
+    procedure Test_ExecuteFile_EmptyPath;
 
     [Test]
-    procedure Test_ExecuteShell_InvalidPath;
+    procedure Test_ExecuteFile_InvalidPath;
 
     [Test]
-    procedure Test_ExecuteShell_ValidPath;
+    procedure Test_ExecuteFile_ValidPath;
 
     [Test]
-    procedure Test_ExecuteShell_NoErrorMsg;
+    procedure Test_ExecuteFile_NoErrorMsg;
 
-    { ExecuteShellEx tests }
+    { ExecuteFileEx tests }
     [Test]
-    procedure Test_ExecuteShellEx_EmptyPath;
-
-    [Test]
-    procedure Test_ExecuteShellEx_ValidPath;
-
-    { ExecuteShellAndWait tests }
-    [Test]
-    procedure Test_ExecuteShellAndWait_EmptyPath;
+    procedure Test_ExecuteFileEx_EmptyPath;
 
     [Test]
-    procedure Test_ExecuteShellAndWait_SimpleCommand;
+    procedure Test_ExecuteFileEx_ValidPath;
+
+    { ExecuteFileAndWait tests }
+    [Test]
+    procedure Test_ExecuteFileAndWait_EmptyPath;
+
+    [Test]
+    procedure Test_ExecuteFileAndWait_SimpleCommand;
 
     { ExecuteAsAdmin tests - limited due to UAC }
     [Test]
@@ -71,91 +71,91 @@ type
 implementation
 
 
-procedure TTestExecuteShell.Setup;
+procedure TTestExecuteFile.Setup;
 begin
-  FTestDir:= TPath.Combine(TPath.GetTempPath, 'ExecuteShellTest_' + TGUID.NewGuid.ToString);
+  FTestDir:= TPath.Combine(TPath.GetTempPath, 'ExecuteFileTest_' + TGUID.NewGuid.ToString);
   TDirectory.CreateDirectory(FTestDir);
 end;
 
 
-procedure TTestExecuteShell.TearDown;
+procedure TTestExecuteFile.TearDown;
 begin
   if TDirectory.Exists(FTestDir)
   then TDirectory.Delete(FTestDir, True);
 end;
 
 
-{ ExecuteShell tests }
+{ ExecuteFile tests }
 
-procedure TTestExecuteShell.Test_ExecuteShell_EmptyPath;
+procedure TTestExecuteFile.Test_ExecuteFile_EmptyPath;
 begin
-  Assert.IsFalse(ExecuteShell(''));
+  Assert.IsFalse(ExecuteFile(''));
 end;
 
 
-procedure TTestExecuteShell.Test_ExecuteShell_InvalidPath;
+procedure TTestExecuteFile.Test_ExecuteFile_InvalidPath;
 begin
   { Invalid path should fail - test with ShowErrorMsg=FALSE to avoid dialog }
-  Assert.IsFalse(ExecuteShell('C:\NonExistent\Invalid.exe', '', FALSE));
+  Assert.IsFalse(ExecuteFile('C:\NonExistent\Invalid.exe', '', FALSE));
 end;
 
 
-procedure TTestExecuteShell.Test_ExecuteShell_ValidPath;
+procedure TTestExecuteFile.Test_ExecuteFile_ValidPath;
 VAR
   Success: Boolean;
 begin
   { Execute cmd.exe with immediate exit }
-  Success:= ExecuteShell('cmd.exe', '/c exit', FALSE, SW_HIDE);
+  Success:= ExecuteFile('cmd.exe', '/c exit', FALSE, SW_HIDE);
   Assert.IsTrue(Success, 'Should successfully execute cmd.exe');
 end;
 
 
-procedure TTestExecuteShell.Test_ExecuteShell_NoErrorMsg;
+procedure TTestExecuteFile.Test_ExecuteFile_NoErrorMsg;
 begin
   { Test that ShowErrorMsg=FALSE doesn't show dialog }
-  Assert.IsFalse(ExecuteShell('C:\Invalid\Path.exe', '', FALSE, SW_HIDE));
+  Assert.IsFalse(ExecuteFile('C:\Invalid\Path.exe', '', FALSE, SW_HIDE));
   Assert.Pass('No dialog was shown');
 end;
 
 
-{ ExecuteShellEx tests }
+{ ExecuteFileEx tests }
 
-procedure TTestExecuteShell.Test_ExecuteShellEx_EmptyPath;
+procedure TTestExecuteFile.Test_ExecuteFileEx_EmptyPath;
 begin
-  Assert.IsFalse(ExecuteShellEx(''));
+  Assert.IsFalse(ExecuteFileEx(''));
 end;
 
 
-procedure TTestExecuteShell.Test_ExecuteShellEx_ValidPath;
+procedure TTestExecuteFile.Test_ExecuteFileEx_ValidPath;
 VAR
   Success: Boolean;
 begin
-  Success:= ExecuteShellEx('cmd.exe', '/c exit', FALSE, SW_HIDE);
+  Success:= ExecuteFileEx('cmd.exe', '/c exit', FALSE, SW_HIDE);
   Assert.IsTrue(Success, 'Should successfully execute cmd.exe via ShellExecuteEx');
 end;
 
 
-{ ExecuteShellAndWait tests }
+{ ExecuteFileAndWait tests }
 
-procedure TTestExecuteShell.Test_ExecuteShellAndWait_EmptyPath;
+procedure TTestExecuteFile.Test_ExecuteFileAndWait_EmptyPath;
 begin
-  Assert.IsFalse(ExecuteShellAndWait(''));
+  Assert.IsFalse(ExecuteFileAndWait(''));
 end;
 
 
-procedure TTestExecuteShell.Test_ExecuteShellAndWait_SimpleCommand;
+procedure TTestExecuteFile.Test_ExecuteFileAndWait_SimpleCommand;
 VAR
   Success: Boolean;
 begin
   { Execute cmd.exe with immediate exit and wait }
-  Success:= ExecuteShellAndWait('cmd.exe', '/c exit', TRUE, 5000);
+  Success:= ExecuteFileAndWait('cmd.exe', '/c exit', TRUE, 5000);
   Assert.IsTrue(Success, 'Should successfully execute and wait for cmd.exe');
 end;
 
 
 { ExecuteAsAdmin tests }
 
-procedure TTestExecuteShell.Test_ExecuteAsAdmin_EmptyPath;
+procedure TTestExecuteFile.Test_ExecuteAsAdmin_EmptyPath;
 begin
   Assert.IsFalse(ExecuteAsAdmin(''));
 end;
@@ -165,13 +165,13 @@ end;
 
 { ExecuteExplorerSelect tests }
 
-procedure TTestExecuteShell.Test_ExecuteExplorerSelect_EmptyPath;
+procedure TTestExecuteFile.Test_ExecuteExplorerSelect_EmptyPath;
 begin
   Assert.IsFalse(ExecuteExplorerSelect(''));
 end;
 
 
-procedure TTestExecuteShell.Test_ExecuteExplorerSelect_ValidFile;
+procedure TTestExecuteFile.Test_ExecuteExplorerSelect_ValidFile;
 VAR
   TestFile: string;
   Success: Boolean;
@@ -190,6 +190,6 @@ end;
 
 
 initialization
-  TDUnitX.RegisterTestFixture(TTestExecuteShell);
+  TDUnitX.RegisterTestFixture(TTestExecuteFile);
 
 end.

@@ -87,21 +87,14 @@ TYPE
     procedure ExecuteTimerAction;
   public
     procedure Initialize(AOnAdvance, AOnTimeUp: TNotifyEvent);
-
-    { Number of seconds left until reminder fires }
-    property TimeLeft: Integer read FTimeLeft write FTimeLeft;
-
-    { Fired when the timer reaches zero }
-    property OnTimeUp: TNotifyEvent read FTimeUp write FTimeUp;
-
-    { Fired every second while timer is running }
-    property OnAdvance: TNotifyEvent read FAdvance write FAdvance;
+    property TimeLeft: Integer read FTimeLeft write FTimeLeft;          { Number of seconds left until reminder fires }
+    property OnTimeUp: TNotifyEvent read FTimeUp write FTimeUp;         { Fired when the timer reaches zero }
+    property OnAdvance: TNotifyEvent read FAdvance write FAdvance;      { Fired every second while timer is running }
   end;
 
 VAR
-  { Global form reference - used for singleton access pattern.
-    Consider using AppData.GetForm<TfrmReminder> instead for better encapsulation. }
-  frmReminder: TfrmReminder = NIL;
+  { Global form reference - used for singleton access pattern. }
+  frmReminder: TfrmReminder = NIL;  //ToDo 3: create this form only when needed
 
 
 IMPLEMENTATION {$R *.dfm}
@@ -116,7 +109,6 @@ USES
   LightVcl.Graph.Desktop,
   LightVcl.Visual.INIFile,
   LightCore.Time;
-
 
 
 {--------------------------------------------------------------------------------------------------
@@ -226,7 +218,7 @@ begin
       if edtPath.Path <> '' then
         begin
           Timer.Enabled:= FALSE;
-          if NOT ExecuteShell(edtPath.Path)
+          if NOT ExecuteFile(edtPath.Path)
           then BipError;
         end
       else
@@ -282,7 +274,7 @@ begin
   btnResetClick(Sender);  // Reset timer first
 
   if edtPath.Path <> ''
-  then ExecuteShell(edtPath.Path)
+  then ExecuteFile(edtPath.Path)
   else MessageWarning('No file path specified.');
 end;
 

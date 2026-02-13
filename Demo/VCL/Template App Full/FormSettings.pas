@@ -1,10 +1,8 @@
 UNIT FormSettings;
 
 {=============================================================================================================
-   Gabriel Moraru
    2024.10
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    A template form that allows the user to change the behavior/settings of an application:
      Skins
@@ -24,7 +22,8 @@ USES
   WinApi.Windows, WinApi.Messages,
   System.SysUtils, System.Classes,
   Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.Samples.Spin, Vcl.Dialogs,
-  LightVcl.Visual.INIFile, LightVcl.Visual.PathEdit, LightVcl.Visual.RadioButton, LightVcl.Visual.CheckBox, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Visual.AppDataForm, LightVcl.Common.GuiSettings;
+  LightVcl.Visual.INIFile, LightVcl.Visual.PathEdit, LightVcl.Visual.RadioButton, LightVcl.Visual.CheckBox, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Visual.AppDataForm, LightVcl.Common.GuiSettings,
+  Vcl.ExtCtrls, LightVcl.Visual.SpinEdit;
 
 TYPE
   TfrmSettings = class(TLightForm)
@@ -46,17 +45,16 @@ TYPE
     grpUser            : TGroupBox;
     Label1             : TLabel;
     lblHintHide        : TLabel;
-    lblOpacity         : TLabel;
     Path               : TCubicPathEdit;
     radHintsOff        : TCubicRadioButton;
     radHintsStatBar    : TCubicRadioButton;
     radHintsTooltips   : TCubicRadioButton;
     spnHideHint        : TSpinEdit;
-    spnOpacity         : TSpinEdit;
     spnUser            : TSpinEdit;
     tabInterface       : TTabSheet;	
     tabUserDefined     : TTabSheet;
     chkLogOnError: TCheckBox;
+    spnOpacity: TCubicSpinEditSplit;
     procedure btnCrashClick           (Sender: TObject);
     procedure btnDesktopShortcutClick (Sender: TObject);
     procedure btnFontClick            (Sender: TObject);
@@ -67,7 +65,7 @@ TYPE
     procedure FormCreate              (Sender: TObject);
     procedure spnHideHintChange       (Sender: TObject);
     procedure FormKeyPress            (Sender: TObject; var Key: Char);
-    procedure spnOpacityChange        (Sender: TObject);
+    procedure spnOpacity2Change        (Sender: TObject);
     procedure FontDialogClose(Sender: TObject);
     procedure FontDialogShow(Sender: TObject);
   protected
@@ -226,7 +224,7 @@ begin
 end;
 
 
-procedure TfrmSettings.spnOpacityChange(Sender: TObject);
+procedure TfrmSettings.spnOpacity2Change(Sender: TObject);
 begin
  AlphaBlend:= spnOpacity.Value< 255;
  AlphaBlendValue:= spnOpacity.Value;

@@ -1,10 +1,8 @@
-UNIT LightVcl.Visual.SpinEdit;
+﻿UNIT LightVcl.Visual.SpinEdit;
 
 {=============================================================================================================
-   Gabriel Moraru
    2026.01
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   TCubicSpinEdit � A SpinEdit with two extra labels
@@ -38,7 +36,6 @@ TYPE
     FSpin: TCubicSpinEdit;
     FLabelFront: TLabel;
     FLabelEnd: TLabel;
-    Initialized: Boolean;     { Currently unused - all guarded code in CreateWnd is commented out. Remove if no longer needed. }
     function  getValue: Integer;
     procedure setValue   (const Value: Integer);
     procedure setCaption1(const Value: string);
@@ -73,51 +70,51 @@ USES LightVcl.Graph.Util, LightVcl.Common.Colors;
 
 constructor TCubicSpinEditSplit.Create(aOwner: TComponent);
 begin
- inherited Create(aOwner);// Note: Don't set 'Parent:= Owner' in constructor. Details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
+  inherited Create(aOwner);// Note: Don't set 'Parent:= Owner' in constructor. Details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
 
- //Width := 134;
- Height:= 22;
+  //Width := 134;
+  Height:= 22;
 
- AutoSize    := FALSE;
- BevelOuter  := bvNone;
- ShowCaption := FALSE;
- ParentFont  := TRUE;
- ParentColor := TRUE;
- ParentBackground:= TRUE; // Mandatory
+  AutoSize    := FALSE;
+  BevelOuter  := bvNone;
+  ShowCaption := FALSE;
+  ParentFont  := TRUE;
+  ParentColor := TRUE;
+  ParentBackground:= TRUE; // Mandatory
 
- FLabelFront:= TLabel.Create(Self);
- FLabelFront.Name:= 'LabelFront';
- FLabelFront.Parent := Self; // Here I can set the parent
- FLabelFront.Caption:= 'Front label';  {  Cannot be moved to CreateWnd because if it is there, (when skins are loading) we will override the text set at design time }
- FLabelFront.Layout := tlCenter;
- FLabelFront.Margins.Left:= 0;
- FLabelFront.Margins.Right:= 6;
- FLabelFront.AlignWithMargins := TRUE;
- FLabelFront.Align  := alLeft;
- FLabelFront.SetSubComponent(TRUE);
+  FLabelFront:= TLabel.Create(Self);
+  FLabelFront.Name   := 'LabelFront';
+  FLabelFront.Parent := Self; // Here I can set the parent
+  FLabelFront.Caption:= 'Front label';  {  Cannot be moved to CreateWnd because if it is there, (when skins are loading) we will override the text set at design time }
+  FLabelFront.Layout := tlCenter;
+  FLabelFront.Margins.Left := 0;
+  FLabelFront.Margins.Right:= 6;
+  FLabelFront.AlignWithMargins := TRUE;
+  FLabelFront.Align  := alLeft;
+  FLabelFront.SetSubComponent(TRUE);
 
- FSpin:= TCubicSpinEdit.Create(Self);
- FSpin.Name:= 'Spin';
- FSpin.SetSubComponent(TRUE);
- FSpin.Parent:= Self;
- FSpin.Width:= 50;
- FSpin.AlignWithMargins := TRUE;
- FSpin.Margins.Top:= 0;
- FSpin.Margins.Bottom:= 0;
- FSpin.MinValue:= 0;            { Cannot be moved to CreateWnd because if it is there, (when skins are loading) we will override the value set at design time }
- FSpin.MaxValue:= 0;
- FSpin.Align:= alLeft;
+  FSpin:= TCubicSpinEdit.Create(Self);
+  FSpin.Name:= 'Spin';
+  FSpin.SetSubComponent(TRUE);
+  FSpin.Parent:= Self;
+  FSpin.Width:= 50;
+  FSpin.AlignWithMargins := TRUE;
+  FSpin.Margins.Top:= 0;
+  FSpin.Margins.Bottom:= 0;
+  FSpin.MinValue:= 0;            { Cannot be moved to CreateWnd because if it is there, (when skins are loading) we will override the value set at design time }
+  FSpin.MaxValue:= 0;
+  FSpin.Align:= alLeft;
 
- FLabelEnd:= TLabel.Create(Self);
- FLabelEnd.Name:= 'LabelEnd';
- FLabelEnd.Parent := Self;
- FLabelEnd.Caption:= '%';
- FLabelEnd.Layout := tlCenter;
- FLabelEnd.AlignWithMargins := TRUE;
- FLabelEnd.Margins.Top:= 0;
- FLabelEnd.Margins.Bottom:= 0;
- FLabelEnd.Align:= alLeft;
- FLabelEnd.SetSubComponent(TRUE);
+  FLabelEnd:= TLabel.Create(Self);
+  FLabelEnd.Name:= 'LabelEnd';
+  FLabelEnd.Parent := Self;
+  FLabelEnd.Caption:= '%';
+  FLabelEnd.Layout := tlCenter;
+  FLabelEnd.AlignWithMargins := TRUE;
+  FLabelEnd.Margins.Top:= 0;
+  FLabelEnd.Margins.Bottom:= 0;
+  FLabelEnd.Align:= alLeft;
+  FLabelEnd.SetSubComponent(TRUE);
 end;
 
 
@@ -138,23 +135,8 @@ end;
 
 procedure TCubicSpinEditSplit.CreateWnd;
 begin
- inherited CreateWnd;
- SetWidth;
-
- if NOT Initialized then
-  begin
-   Initialized:= TRUE;
-   {
-   Caption:= 'Don''t set here!';
-   ShowCaption := FALSE; // https://stackoverflow.com/questions/56859524/how-to-initialize-a-custom-control/64974040?noredirect=1#comment114931111_64974040
-   ParentColor:= FALSE;
-   ParentBackground:= FALSE;
-   BevelOuter:= bvNone;
-   DoubleBuffered:= FALSE;
-   //Height:= SpinEdit.Height;
-
-   //AutoSize:= TRUE;  }
-  end;
+  inherited CreateWnd;
+  SetWidth;
 end;
 
 
@@ -162,60 +144,62 @@ end;
 
 function TCubicSpinEditSplit.getValue: Integer;
 begin
- Result:= FSpin.Value;
+  Result:= FSpin.Value;
 end;
 
 procedure TCubicSpinEditSplit.setValue(const Value: Integer);
 begin
- FSpin.Value:= Value;
+  FSpin.Value:= Value;
 end;
 
 
 
 procedure TCubicSpinEditSplit.setCaption1(const Value: string);
 begin
- FLabelFront.Caption:= Value;
- SetWidth;
+  FLabelFront.Caption:= Value;
+  SetWidth;
 end;
 
 procedure TCubicSpinEditSplit.setCaption2(const Value: string);
 begin
- FLabelEnd.Caption:= Value;
- SetWidth;
+  FLabelEnd.Caption:= Value;
+  SetWidth;
 end;
 
 
 function TCubicSpinEditSplit.getCaption1: string;
 begin
- Result:= FLabelFront.Caption;
+  Result:= FLabelFront.Caption;
 end;
 
 function TCubicSpinEditSplit.getCaption2: string;
 begin
- Result:= FLabelEnd.Caption;
+  Result:= FLabelEnd.Caption;
 end;
 
 
 
 procedure TCubicSpinEditSplit.SetWidth;
 begin
+ if FLabelEnd = NIL then EXIT; // Children not yet created
+
  VAR NewWidth:= FLabelEnd.Left+ FLabelEnd.Width+ 2;
  if Width <> NewWidth then
-  begin
-   Width:= NewWidth;
-   Canvas.Font:= Font; // May be unnecessary - labels manage their own fonts. Kept for safety.
+   begin
+     Width:= NewWidth;
 
-   { Make sure the controls are shown in the correct order }
-   FLabelFront.Left:= 0;
-   FSpin.Left      := FLabelFront.Left+ FLabelFront.Width+ 1;
-   FLabelEnd.Left  := FSpin.Left+ FSpin.Width+ 1;
-  end;
+     { Make sure the controls are shown in the correct order }
+     FLabelFront.Left:= 0;
+     FSpin.Left      := FLabelFront.Left+ FLabelFront.Width+ 1;
+     FLabelEnd.Left  := FSpin.Left+ FSpin.Width+ 1;
+   end;
 end;
 
 
-// Recalculate width when the font was changed!
+// Propagate font changes to children and recalculate width
 procedure TCubicSpinEditSplit.CMFontChanged(var Message: TMessage);
 begin
+  inherited;
   SetWidth;
 end;
 
@@ -240,16 +224,16 @@ end;
 ------------------------------------------------------------------------------------------------------------}
 procedure TCubicSpinEdit.Change;
 begin
- { Skip validation if min/max are not configured (both are zero = no range checking) }
- if ((MaxValue <> 0) AND (MinValue <> 0))
- AND ((Value > MaxValue) OR (Value < MinValue)) then    { Parentheses around OR are critical for correct precedence! }
-  begin
-    Color:= clOrange; // Orange indicates an out-of-range value
-    EXIT;             // Don't call inherited - prevents OnChange from firing with invalid value
-  end;
+  { Skip validation if min/max are not configured (both are zero = no range checking) }
+  if ((MaxValue <> 0) AND (MinValue <> 0))
+  AND ((Value > MaxValue) OR (Value < MinValue)) then    { Parentheses around OR are critical for correct precedence! }
+   begin
+     Color:= clOrange; // Orange indicates an out-of-range value
+     EXIT;             // Don't call inherited - prevents OnChange from firing with invalid value
+   end;
 
- Color:= clWindow;
- inherited;
+  Color:= clWindow;
+  inherited;
 end;
 
 

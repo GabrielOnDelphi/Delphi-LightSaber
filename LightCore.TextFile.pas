@@ -1,4 +1,4 @@
-unit LightCore.TextFile;
+﻿unit LightCore.TextFile;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -374,7 +374,7 @@ begin
   TRY
     WHILE BuffPo < Stream.Size DO
       begin
-        s:= Stream.ReadStringA(1024*KB);
+        s:= Stream.ReadStringA;
         Inc(BuffPo, 1024*KB);
         Result:= Result + Cardinal(LightCore.CountAppearance(c, s));
       end;

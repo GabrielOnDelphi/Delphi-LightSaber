@@ -3,7 +3,7 @@ program VCL_TemplateFull;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF}
+  {$ENDIF }
   Vcl.Themes,
   Vcl.Styles,
   FormMain in 'FormMain.pas' {MainForm},
@@ -12,7 +12,12 @@ uses
   LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas',
   LightCore.AppData in '..\..\..\LightCore.AppData.pas',
   ciUpdater in '..\..\..\Updater\ciUpdater.pas',
-  ciUpdaterRec in '..\..\..\Updater\ciUpdaterRec.pas';
+  ciUpdaterRec in '..\..\..\Updater\ciUpdaterRec.pas',
+  FormTranslSelector in '..\..\..\FrameVCL\AutoTranslator\FormTranslSelector.pas',
+  FormTranslEditor in '..\..\..\FrameVCL\AutoTranslator\FormTranslEditor.pas',
+  LightVcl.TranslatorAPI in '..\..\..\FrameVCL\AutoTranslator\LightVcl.TranslatorAPI.pas',
+  FormTranslDeepL in '..\..\..\FrameVCL\AutoTranslator\FormTranslDeepL.pas',
+  FormTranslatorIniEditor in '..\..\..\FrameVCL\AutoTranslator\FormTranslatorIniEditor.pas';
 
 {$R *.res}
 

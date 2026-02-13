@@ -188,7 +188,7 @@ begin
   then raise Exception.Create('TIniFileApp.SaveForm: Form is nil');
 
   if AutoState = asNone
-  then raise Exception.Create('TIniFileApp.SaveForm: AutoState = asNone is invalid');
+  then raise Exception.Create('TIniFileApp - SaveForm called when AutoState = asNone');
 
   WriteComp(Form);
   if AutoState = asFull
@@ -213,7 +213,7 @@ begin
   then raise Exception.Create('TIniFileApp.LoadForm: Form parameter cannot be nil');
 
   if AutoState = asNone
-  then raise Exception.Create('TIniFileApp.LoadForm: AutoState = asNone is invalid');   //todo: explain why
+  then raise Exception.Create('TIniFileApp - LoadForm called when AutoState = asNone');
 
   ReadComp(Form);
   if AutoState = asFull

@@ -42,7 +42,7 @@ object frmReminder: TfrmReminder
       Left = 268
       Top = 149
       Width = 83
-      Height = 14
+      Height = 15
       Hint = 'Beep when the time is up'
       Caption = 'Make beep'
       Checked = True
@@ -138,7 +138,7 @@ object frmReminder: TfrmReminder
         OnClick = btnResetClick
       end
       object spnTime: TCubicSpinEdit
-        Left = 107
+        Left = 116
         Top = 26
         Width = 53
         Height = 24
@@ -193,10 +193,10 @@ object frmReminder: TfrmReminder
       AutoSize = True
     end
     object chkRunOnce: TCubicCheckBox
-      Left = 21
-      Top = 357
-      Width = 101
-      Height = 14
+      Left = 19
+      Top = 352
+      Width = 118
+      Height = 16
       Hint = 
         'When the time is up run the selected file and'#13#10#13#10'if this check b' +
         'ox is enabled:  stop the timer'#13#10'if this check box is disabled:  ' +
