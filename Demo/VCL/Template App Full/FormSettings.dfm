@@ -38,18 +38,18 @@ object frmSettings: TfrmSettings
         592
         386)
       object grpSystem: TGroupBox
-        Left = 88
-        Top = 53
-        Width = 381
+        Left = 121
+        Top = 52
+        Width = 350
         Height = 246
         Anchors = []
         Caption = 'System'
         TabOrder = 0
         DesignSize = (
-          381
+          350
           246)
         object btnDesktopShortcut: TButton
-          Left = 122
+          Left = 106
           Top = 200
           Width = 145
           Height = 33
@@ -101,10 +101,10 @@ object frmSettings: TfrmSettings
         end
       end
       object Path: TCubicPathEdit
-        Left = 88
-        Top = 306
+        Left = 105
+        Top = 307
         Width = 381
-        Height = 49
+        Height = 52
         Hint = 
           'User defined path where to save (large) files. Useful when the p' +
           'rogram needs to save large amounts of data that we don'#39't want to' +
@@ -132,10 +132,10 @@ object frmSettings: TfrmSettings
         592
         386)
       object GroupHelp: TGroupBox
-        Left = 106
-        Top = 83
-        Width = 345
-        Height = 221
+        Left = 121
+        Top = 78
+        Width = 350
+        Height = 230
         Anchors = []
         Caption = 'Help'
         ParentShowHint = False
@@ -207,19 +207,19 @@ object frmSettings: TfrmSettings
         592
         386)
       object GroupBox1: TGroupBox
-        Left = 123
+        Left = 121
         Top = 80
-        Width = 347
-        Height = 226
+        Width = 350
+        Height = 230
         Anchors = []
         Caption = 'User interface'
         TabOrder = 0
         DesignSize = (
-          347
-          226)
+          350
+          230)
         object btnSkins: TButton
-          Left = 115
-          Top = 117
+          Left = 117
+          Top = 119
           Width = 124
           Height = 33
           Anchors = []
@@ -228,8 +228,8 @@ object frmSettings: TfrmSettings
           OnClick = btnSkinsClick
         end
         object btnFont: TButton
-          Left = 115
-          Top = 156
+          Left = 117
+          Top = 159
           Width = 124
           Height = 33
           Anchors = []
@@ -239,19 +239,20 @@ object frmSettings: TfrmSettings
         end
         object spnOpacity: TCubicSpinEditSplit
           AlignWithMargins = True
-          Left = 99
+          Left = 91
           Top = 64
-          Width = 127
-          Height = 25
+          Width = 171
+          Height = 28
           BevelOuter = bvNone
+          ParentBackground = False
           ParentColor = True
           ShowCaption = False
           TabOrder = 2
           Spin.AlignWithMargins = True
-          Spin.Left = 63
+          Spin.Left = 102
           Spin.Top = 0
           Spin.Width = 50
-          Spin.Height = 25
+          Spin.Height = 28
           Spin.Hint = 'miliseconds'
           Spin.Margins.Top = 0
           Spin.Margins.Bottom = 0
@@ -274,10 +275,10 @@ object frmSettings: TfrmSettings
         592
         386)
       object grpUser: TGroupBox
-        Left = 108
+        Left = 121
         Top = 83
-        Width = 345
-        Height = 221
+        Width = 350
+        Height = 230
         Anchors = []
         Caption = 'User defined'
         ParentShowHint = False
@@ -306,7 +307,7 @@ object frmSettings: TfrmSettings
         end
         object chkUser: TCheckBox
           Left = 56
-          Top = 84
+          Top = 89
           Width = 122
           Height = 17
           Caption = 'User defined'

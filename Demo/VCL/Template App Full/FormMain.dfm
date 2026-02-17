@@ -11,8 +11,8 @@ object MainForm: TMainForm
   DoubleBuffered = True
   Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
-  Font.Height = -13
-  Font.Name = 'Segoe UI'
+  Font.Height = -15
+  Font.Name = 'Calibri'
   Font.Style = []
   GlassFrame.Enabled = True
   Menu = MainMenu
@@ -22,13 +22,13 @@ object MainForm: TMainForm
   SnapBuffer = 5
   OnClose = FormClose
   OnCreate = FormCreate
-  TextHeight = 17
+  TextHeight = 18
   object pgCtrl: TPageControl
     Left = 0
     Top = 0
     Width = 668
     Height = 471
-    ActivePage = tabProgress
+    ActivePage = tabLog
     Align = alClient
     TabOrder = 0
     object tabMain: TTabSheet
@@ -38,7 +38,7 @@ object MainForm: TMainForm
         Left = 3
         Top = 3
         Width = 463
-        Height = 433
+        Height = 432
         Align = alClient
         Lines.Strings = (
           
@@ -51,7 +51,7 @@ object MainForm: TMainForm
         Left = 472
         Top = 3
         Width = 185
-        Height = 433
+        Height = 432
         Align = alRight
         TabOrder = 0
         object btnStart: TButton
@@ -72,7 +72,7 @@ object MainForm: TMainForm
       ImageIndex = 3
       DesignSize = (
         660
-        439)
+        438)
       object btnProgress: TButton
         Left = 233
         Top = 314
@@ -126,11 +126,11 @@ object MainForm: TMainForm
       ImageIndex = 4
       DesignSize = (
         660
-        439)
+        438)
       object btnShowLog: TButton
-        Left = 234
+        Left = 194
         Top = 21
-        Width = 191
+        Width = 272
         Height = 45
         Action = actShowLog
         Anchors = [akTop]
@@ -138,9 +138,9 @@ object MainForm: TMainForm
         TabOrder = 0
       end
       object Button5: TButton
-        Left = 234
+        Left = 194
         Top = 81
-        Width = 191
+        Width = 272
         Height = 34
         Anchors = [akTop]
         Caption = 'Send msg to log (hint)'
@@ -148,9 +148,9 @@ object MainForm: TMainForm
         OnClick = Button5Click
       end
       object Button6: TButton
-        Left = 234
+        Left = 194
         Top = 123
-        Width = 191
+        Width = 272
         Height = 34
         Anchors = [akTop]
         Caption = 'Send msg to log (Info)'
@@ -158,9 +158,9 @@ object MainForm: TMainForm
         OnClick = Button6Click
       end
       object Button7: TButton
-        Left = 234
+        Left = 194
         Top = 164
-        Width = 191
+        Width = 272
         Height = 34
         Anchors = [akTop]
         Caption = 'Send msg to log (Verbose)'
@@ -168,9 +168,9 @@ object MainForm: TMainForm
         OnClick = Button7Click
       end
       object Button8: TButton
-        Left = 234
+        Left = 194
         Top = 206
-        Width = 191
+        Width = 272
         Height = 34
         Anchors = [akTop]
         Caption = 'Send msg to log (Important)'
@@ -178,9 +178,9 @@ object MainForm: TMainForm
         OnClick = Button8Click
       end
       object Button9: TButton
-        Left = 234
+        Left = 194
         Top = 248
-        Width = 191
+        Width = 272
         Height = 34
         Anchors = [akTop]
         Caption = 'Send msg to log (Warning)'
@@ -188,9 +188,9 @@ object MainForm: TMainForm
         OnClick = Button9Click
       end
       object Button11: TButton
-        Left = 234
+        Left = 194
         Top = 289
-        Width = 191
+        Width = 272
         Height = 34
         Anchors = [akTop]
         Caption = 'Send msg to log (Error)'
@@ -198,9 +198,9 @@ object MainForm: TMainForm
         OnClick = Button11Click
       end
       object Button10: TButton
-        Left = 234
+        Left = 194
         Top = 331
-        Width = 191
+        Width = 272
         Height = 34
         Anchors = [akTop]
         Caption = 'Send empty line'
@@ -208,9 +208,9 @@ object MainForm: TMainForm
         OnClick = Button10Click
       end
       object Button12: TButton
-        Left = 234
+        Left = 194
         Top = 373
-        Width = 191
+        Width = 272
         Height = 34
         Anchors = [akTop]
         Caption = 'Send bold text'
