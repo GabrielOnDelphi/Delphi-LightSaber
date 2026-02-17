@@ -5,14 +5,14 @@ object frmTranslatorIniEditor: TfrmTranslatorIniEditor
   ClientHeight = 441
   ClientWidth = 624
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
+  Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
-  Font.Height = -12
-  Font.Name = 'Segoe UI'
+  Font.Height = -15
+  Font.Name = 'Calibri'
   Font.Style = []
   ShowHint = True
   OnClose = FormClose
-  TextHeight = 15
+  TextHeight = 18
   object Splitter: TSplitter
     Left = 384
     Top = 0

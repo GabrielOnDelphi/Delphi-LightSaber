@@ -291,7 +291,7 @@ begin
       //todo: !!!!!!!!!!!!!!!! use Ctrl.width instead of 0 and get rid of ValueExists
 
       if (NOT IsNonResizable) 
-	  //AND ValueExists(Ctrl.Name, 'Height')
+      //AND ValueExists(Ctrl.Name, 'Height')
       then Ctrl.Height:= ReadInteger(Ctrl.Name, 'Height', Ctrl.Height);
 
       { Validate form position setting }

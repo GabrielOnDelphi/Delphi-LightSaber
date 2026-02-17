@@ -854,7 +854,7 @@ begin
 
     Dialog.FileName := FileName;
 
-    Result := Dialog.Execute;
+    Result := Dialog.Execute; //todo 1: bug: nothing happens here
 
     if Result
     then FileName:= Dialog.FileName;

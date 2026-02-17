@@ -8,13 +8,18 @@ object frmSkinDisk: TfrmSkinDisk
   BorderStyle = bsDialog
   Caption = 'Skin selector'
   ClientHeight = 464
-  ClientWidth = 304
+  ClientWidth = 326
   Color = clBtnFace
   Constraints.MinHeight = 300
   Constraints.MinWidth = 200
   DoubleBuffered = True
-  ParentFont = True
+  Font.Charset = ANSI_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -15
+  Font.Name = 'Calibri'
+  Font.Style = []
   KeyPreview = True
+  PopupMode = pmAuto
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
@@ -23,34 +28,26 @@ object frmSkinDisk: TfrmSkinDisk
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnKeyPress = FormKeyPress
-  TextHeight = 15
+  TextHeight = 18
   object lblTop: TLabel
     AlignWithMargins = True
     Left = 3
     Top = 6
-    Width = 298
-    Height = 13
+    Width = 320
+    Height = 18
     Margins.Top = 6
     Margins.Bottom = 1
     Align = alTop
     Caption = 'Click skin to load it'
-    Font.Charset = ANSI_CHARSET
-    Font.Color = clWindowText
-    Font.Height = -11
-    Font.Name = 'Tahoma'
-    Font.Style = []
-    ParentFont = False
-    ParentShowHint = False
-    ShowHint = True
     Layout = tlBottom
     OnClick = lblTopClick
   end
   object lblMoreSkinsTrial: TLabel
     AlignWithMargins = True
     Left = 3
-    Top = 395
-    Width = 298
-    Height = 30
+    Top = 392
+    Width = 320
+    Height = 36
     Align = alBottom
     Alignment = taCenter
     Caption = 'Hint: Registered users can download more skins from our web site'
@@ -60,19 +57,19 @@ object frmSkinDisk: TfrmSkinDisk
   object lBox: TListBox
     AlignWithMargins = True
     Left = 3
-    Top = 23
-    Width = 298
-    Height = 362
+    Top = 28
+    Width = 320
+    Height = 354
     Align = alClient
-    ItemHeight = 15
+    ItemHeight = 18
     ScrollWidth = 6
     TabOrder = 1
     OnClick = lBoxClick
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 388
-    Width = 304
+    Top = 385
+    Width = 326
     Height = 4
     Align = alBottom
     TabOrder = 0
@@ -80,13 +77,13 @@ object frmSkinDisk: TfrmSkinDisk
   object pnlBtm: TPanel
     Left = 0
     Top = 428
-    Width = 304
+    Width = 326
     Height = 36
     Align = alBottom
     TabOrder = 2
     object btnOK: TButton
       AlignWithMargins = True
-      Left = 210
+      Left = 232
       Top = 4
       Width = 90
       Height = 28
@@ -103,7 +100,7 @@ object frmSkinDisk: TfrmSkinDisk
       AlignWithMargins = True
       Left = 4
       Top = 4
-      Width = 129
+      Width = 117
       Height = 28
       Hint = 
         'Do you feel creative?'#13#10'Use this skin editor to create your own s' +
@@ -111,7 +108,7 @@ object frmSkinDisk: TfrmSkinDisk
         'our website together with your name.'#13#10#13#10'Please see the Help menu' +
         ' in the skin editor for details.'
       Align = alLeft
-      Caption = 'Create your own skins'
+      Caption = 'Create own skins'
       TabOrder = 1
       OnClick = btnSkinEditorClick
     end

@@ -44,7 +44,7 @@ object frmTranslEditor: TfrmTranslEditor
       Left = 5
       Top = 26
       Width = 354
-      Height = 152
+      Height = 150
       Hint = 'Live forms that available for translation.'
       Margins.Top = 6
       Align = alClient
@@ -54,9 +54,9 @@ object frmTranslEditor: TfrmTranslEditor
     object chkTranslateTranslator: TCheckBox
       AlignWithMargins = True
       Left = 5
-      Top = 184
+      Top = 182
       Width = 354
-      Height = 17
+      Height = 19
       Align = alBottom
       Caption = 'Also translate this form'
       TabOrder = 1
@@ -150,14 +150,13 @@ object frmTranslEditor: TfrmTranslEditor
     TabOrder = 2
     object btnLoadTranslation: TButton
       AlignWithMargins = True
-      Left = 304
-      Top = 31
+      Left = 263
+      Top = 47
       Width = 93
       Height = 50
       Hint = 'Load an existing translation file for editing'
       Caption = 'Load exiting translation...'
       TabOrder = 0
-      Visible = False
       WordWrap = True
       OnClick = btnLoadTranslationClick
     end
@@ -165,8 +164,8 @@ object frmTranslEditor: TfrmTranslEditor
       AlignWithMargins = True
       Left = 31
       Top = 63
-      Width = 179
-      Height = 17
+      Width = 193
+      Height = 19
       Hint = 
         'Don'#39't save properties (text, caption, hint) if their text is emp' +
         'ty'#13#10
@@ -179,8 +178,8 @@ object frmTranslEditor: TfrmTranslEditor
       AlignWithMargins = True
       Left = 31
       Top = 90
-      Width = 179
-      Height = 17
+      Width = 193
+      Height = 19
       Hint = 
         'Checked: Overwrite existing file.'#13#10'Unchecked: The text is append' +
         'ed to the existing file.'
@@ -193,8 +192,8 @@ object frmTranslEditor: TfrmTranslEditor
       AlignWithMargins = True
       Left = 31
       Top = 36
-      Width = 179
-      Height = 17
+      Width = 193
+      Height = 19
       Hint = 
         'Parse controls that have an action assigned.'#13#10'Usually this shoul' +
         'd be set to False since we want to let the associated action tak' +
@@ -205,7 +204,7 @@ object frmTranslEditor: TfrmTranslEditor
   end
   object grpHelp: TGroupBox
     Left = 0
-    Top = 549
+    Top = 585
     Width = 364
     Height = 84
     Align = alBottom
@@ -264,7 +263,7 @@ object frmTranslEditor: TfrmTranslEditor
   object btnDeepLSettings: TButton
     AlignWithMargins = True
     Left = 3
-    Top = 636
+    Top = 552
     Width = 358
     Height = 30
     Hint = 'Configure DeepL API settings'

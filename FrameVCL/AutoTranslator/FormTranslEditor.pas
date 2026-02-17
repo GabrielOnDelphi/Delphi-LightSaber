@@ -115,6 +115,8 @@ end;
 procedure TfrmTranslEditor.FormPostInitialize;
 begin
   inherited FormPostInitialize;
+  Tag:= DontTranslate;
+
   Assert(Translator <> NIL, 'Translator must be initialized before using translation editor');
   lblLiveFormsClick(Self);  { Populate live forms list }
   PopulateLanguageList;
@@ -239,8 +241,7 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 
 procedure TfrmTranslEditor.btnLoadTranslationClick(Sender: TObject);
-VAR
-  FileName: string;
+VAR FileName: string;
 begin
   FileName:= Translator.GetLangFolder;
   if PromptToLoadFile(FileName, FilterTransl, 'Open translation file for editing...')

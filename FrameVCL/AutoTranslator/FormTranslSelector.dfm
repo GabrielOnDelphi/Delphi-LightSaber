@@ -6,13 +6,13 @@ object frmTranslSelector: TfrmTranslSelector
   AlphaBlendValue = 250
   BorderIcons = [biSystemMenu, biMinimize]
   Caption = 'Language/Sprache/Langue/Limba/Idioma/'#35821#35328'/'#1071#1079#1099#1082
-  ClientHeight = 336
-  ClientWidth = 351
+  ClientHeight = 367
+  ClientWidth = 357
   Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
+  Font.Charset = ANSI_CHARSET
   Font.Color = clWindowText
-  Font.Height = -11
-  Font.Name = 'Tahoma'
+  Font.Height = -15
+  Font.Name = 'Calibri'
   Font.Style = []
   KeyPreview = True
   Position = poDesigned
@@ -22,22 +22,22 @@ object frmTranslSelector: TfrmTranslSelector
   OnActivate = FormActivate
   OnClose = FormClose
   OnCreate = FormCreate
-  TextHeight = 13
+  TextHeight = 18
   object grpChoose: TGroupBox
     AlignWithMargins = True
     Left = 3
     Top = 3
-    Width = 345
-    Height = 330
+    Width = 351
+    Height = 361
     Align = alClient
     Caption = 'Choose language'
     TabOrder = 0
     object lblAuthors: TLabel
       AlignWithMargins = True
       Left = 5
-      Top = 273
-      Width = 335
-      Height = 13
+      Top = 299
+      Width = 341
+      Height = 18
       Align = alBottom
       Caption = '@Authors'
       Visible = False
@@ -45,13 +45,13 @@ object frmTranslSelector: TfrmTranslSelector
     object ListBox: TListBox
       AlignWithMargins = True
       Left = 5
-      Top = 23
-      Width = 335
-      Height = 244
+      Top = 28
+      Width = 341
+      Height = 265
       Hint = 'Click to load it'
       Margins.Top = 8
       Align = alClient
-      ItemHeight = 13
+      ItemHeight = 18
       ScrollWidth = 6
       TabOrder = 0
       OnClick = ListBoxDblClick
@@ -60,17 +60,17 @@ object frmTranslSelector: TfrmTranslSelector
     object Panel2: TPanel
       AlignWithMargins = True
       Left = 5
-      Top = 289
-      Width = 335
+      Top = 320
+      Width = 341
       Height = 36
       Align = alBottom
       BevelOuter = bvNone
       TabOrder = 1
       object btnApplyLang: TButton
         AlignWithMargins = True
-        Left = 246
+        Left = 249
         Top = 3
-        Width = 86
+        Width = 89
         Height = 30
         Align = alRight
         Caption = 'OK'
@@ -79,9 +79,9 @@ object frmTranslSelector: TfrmTranslSelector
       end
       object btnRefresh: TButton
         AlignWithMargins = True
-        Left = 159
+        Left = 158
         Top = 4
-        Width = 81
+        Width = 85
         Height = 28
         Hint = 'Reload the list of available languages'
         Margins.Top = 4
@@ -95,7 +95,7 @@ object frmTranslSelector: TfrmTranslSelector
         AlignWithMargins = True
         Left = 3
         Top = 4
-        Width = 117
+        Width = 121
         Height = 28
         Hint = 
           'Create your own translation or edit an existing translation file' +

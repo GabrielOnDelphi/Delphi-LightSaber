@@ -29,7 +29,7 @@ TYPE
     lblCounter     : TLabel;
     lblVers        : TLabel;
     Memo           : TMemo;
-    Panel1         : TPanel;
+    pnlTop: TPanel;
     Panel3         : TPanel;
     Panel4         : TPanel;
     Panel5         : TPanel;

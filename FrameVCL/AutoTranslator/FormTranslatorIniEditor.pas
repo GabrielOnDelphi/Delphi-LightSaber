@@ -58,8 +58,9 @@ class procedure TfrmTranslatorIniEditor.ShowEditor(const FileName: string);
 var
   Editor: TfrmTranslatorIniEditor;
 begin
-  Editor:= TfrmTranslatorIniEditor.Create(Application);
+  Editor:= TfrmTranslatorIniEditor.Create(Application); //todo 1: use AppData
   Editor.LoadFile(FileName);
+  Editor.Tag:= DontTranslate;
   Editor.Show;
 end;
 

@@ -56,7 +56,7 @@ CONST
   Otherwise uses the built-in license text from the form. }
 class procedure TfrmEULA.ShowAsModal;
 begin
-  AppData.CreateFormModal(TfrmEULA);
+  AppData.CreateFormModalCentered(TfrmEULA);
 end;
 
 

@@ -18,7 +18,7 @@ object frmEULA: TfrmEULA
   Font.Style = []
   FormStyle = fsStayOnTop
   KeyPreview = True
-  Position = poScreenCenter
+  Position = poDesigned
   ScreenSnap = True
   ShowHint = True
   OnClose = FormClose

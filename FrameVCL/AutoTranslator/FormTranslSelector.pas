@@ -88,6 +88,7 @@ begin
   btnTranslate.Visible:= NOT AppData.RunningFirstTime;
   btnRefresh.Visible:= btnTranslate.Visible;
   PopulateLanguageFiles;
+  Tag:= DontTranslate;
 end;
 
 

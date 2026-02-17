@@ -66,10 +66,13 @@ function  DownloadAsString(CONST URL: string;         OUT ErrorMsg: string; Cust
 function  DownloadAsString(CONST URL: string): string; overload;
 
 
+function DownloadImageToFile(CONST URL, LocalPath: string; OUT DownloadedSize: Int64): Boolean;
+
+
 IMPLEMENTATION
 
 USES
-  LightCore.IO;
+  LightCore, LightCore.IO, LightCore.TextFile, LightCore.AppData, LightCore.Types;
 
 
 procedure RHttpOptions.Reset;
@@ -227,6 +230,51 @@ VAR
 begin
   Result:= DownloadAsString(URL, ErrorMsg);
   { ErrorMsg is intentionally ignored - caller doesn't want error details }
+end;
+
+
+{--------------------------------------------------------------------------------------------------
+   Downloads an image file from URL. Validates the result:
+     - Rejects files smaller than 500 bytes
+     - Detects HTML 404 pages disguised as downloadable files
+   Returns TRUE on success. DownloadedSize is set to the file size on success, -1 on failure.
+--------------------------------------------------------------------------------------------------}
+function DownloadImageToFile(CONST URL, LocalPath: string; OUT DownloadedSize: Int64): Boolean;
+VAR
+  ErrorMsg: string;
+begin
+ DownloadedSize:= -1;
+
+ DownloadToFile(URL, LocalPath, ErrorMsg);     { NOTE! If the url is not valid, this will probably download the 404 HTML file}
+ Result:= ErrorMsg = '';
+
+ { Check if the program actually downloaded an image or just a '404 file not found' HTML file }
+ if Result then
+   begin
+     DownloadedSize:= LightCore.IO.GetFileSize(LocalPath);
+
+     { Any file smaller than 500 bytes will be rejected }
+     if DownloadedSize < 500 then
+       begin
+         AppDataCore.LogInfo('File rejected because it is too small: '+ URL);
+         Result:= FALSE;
+       end;
+
+     { Received HTML file from server instead of image file.
+       Some websites return a downloadable 404 page that looks like HTML. }
+     VAR FileContent:= StringFromFile(LocalPath);
+     if (DownloadedSize < 25*KB)
+     AND ( (  (PosInsensitive('<html', FileContent) > 0)
+          AND (PosInsensitive('<body', FileContent) > 0))
+         OR (PosInsensitive('<!doctype ', FileContent) > 0)
+         OR (PosInsensitive('<meta name', FileContent) > 0) ) then
+       begin
+         AppDataCore.LogWarn('Received HTML file from server instead of image file: '+ URL);
+         Result:= FALSE;
+       end;
+   end
+ else
+   AppDataCore.LogWarn('Failed to download: '+ URL);
 end;
 
 

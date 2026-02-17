@@ -13,8 +13,8 @@ UNIT FormSkinsRes;
    styles that are linked directly into the executable via $R *.vsf directives.
 
    WARNING:
+     * Vcl.Styles & VCL.Forms MUST be present in the DPR file BEFORE Forms.pas
      * DON'T ADD THIS UNIT TO ANY DPK! (enforced by $DENYPACKAGEUNIT)
-     * Vcl.Styles must be in the uses list for TStyleManager to work correctly
 
    USAGE:
      1. In DPR file, before creating main form:
@@ -30,31 +30,77 @@ UNIT FormSkinsRes;
 
      4. To show skin selector: TfrmSkinRes.CreateForm(Modal)
 
+   STYLE-AWARE CODE:
+     Use StyleServices.GetStyleColor, StyleServices.GetStyleFontColor,
+     and StyleServices.GetSystemColor from Vcl.Themes unit.
+	  
    LINKING STYLES INTO EXE:
      Add resource directives to your DPR file:
        $R 'Carbon.vsf'
-       $R 'Cobalt.vsf'
 
---------------------------------------------------------------------------------------------------------------
-   MORE INFO:
-     https://subscription.packtpub.com/book/application_development/9781783559589/1/ch01lvl1sec10/changing-the-style-of-your-vcl-application-at-runtime
+
+  KNOWN BUGS - This form loses its modal property
+
+     TStyleManager.SetStyle triggers RecreateWnd on all forms. The modal form's window handle is destroyed and recreated,
+     but the new window lacks the Windows-level owner relationship that enforces z-order. The recreated modal form ends up
+     behind the disabled owner windows — the app appears frozen.
+
+     The old workaround (Application.ProcessMessages + BringToFront) didn't work because BringToFront only calls
+     SetWindowPos(HWND_TOP), which can't overcome broken window ownership.
+
+     Fix 1: PopupMode = pmAuto in DFM (line 22)
+       Tells VCL to set the correct owner window (WndParent) in CreateParams during RecreateWnd. This maintains the
+       Windows-level ownership that enforces z-order. Setting it at design-time in the DFM (rather than at runtime) avoids an extra RecreateWnd that VCL triggers when PopupMode changes at runtime.
+
+     Fix 2: ReassertZOrder method (lines 309-314)
+       Replaces the broken Application.ProcessMessages + BringToFront. Uses the TOPMOST + NOTOPMOST trick: temporarily makes
+       the window topmost, then immediately removes the flag. This forces Windows to recalculate z-order, placing the form at the top of the non-topmost band. SetForegroundWindow gives it input focus.
+
+     Fix 3: DefWinTheme branch (line 333)
+       The DefWinTheme branch (SetStyle('Windows')) also triggers RecreateWnd but had no z-order fix at all — this was a secondary bug. Now fixed with the same ReassertZOrder call.
+
+     Sources:
+     - https://blogs.embarcadero.com/popupmode-and-popupparent/
+     - https://www.experts-exchange.com/questions/26286057/Delphi-7-modal-form-hides-behind-window-on-a-Windows-7-box.html
 
    KNOWN BUGS:
 
      XE7: TStyleManager.IsValidStyle always fails if Vcl.Styles is not in USES list!
        http://stackoverflow.com/questions/30328644/how-to-check-if-a-style-file-is-already-loaded
 
-     caFree bug (fixed in Delphi 11):
-       https://quality.embarcadero.com/browse/RSP-33140
+   KNOWN BUGS:
+     caFree
+       procedure Tfrm.FormClose(Sender: TObject; var Action: TCloseAction);
+       begin
+        Action:= caFree;
+        Delphi bug: Don't use caFree: 
+       end;
+	   
+	 (fixed in Delphi 11):  
+	 https://quality.embarcadero.com/browse/RSP-33140  
+
+     Solution:
        https://stackoverflow.com/questions/70840792/how-to-patch-vcl-forms-pas
+--------------------------------------------------------------------------------------------------------------
+   SKIN FOLDERS:
+     c:\Projects\Packages\VCL Styles utils\Styles\
+     c:\Users\Public\Documents\Embarcadero\Studio\XX.0\Styles\
+
+   TESTER:
+     c:\Projects\Packages\VCL Styles Tools\FrmSkins tester\
+
+   MORE INFO:
+     https://subscription.packtpub.com/book/application_development/9781783559589/1/ch01lvl1sec10/changing-the-style-of-your-vcl-application-at-runtime
+
 =============================================================================================================}
 
 INTERFACE
-{$DENYPACKAGEUNIT ON}
+{$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  Winapi.Windows, System.SysUtils, System.Classes,
-  Vcl.Themes, Vcl.Styles, Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls,
+  Winapi.Windows, System.SysUtils, System.Classes, 
+  Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.Forms,
+  Vcl.Themes, Vcl.Styles,  {Vcl.Themes, Vcl.Styles MUST be present in the DPR file (before the Forms.pas) or at least here }
   LightVcl.Visual.AppDataForm;
 
 TYPE
@@ -66,19 +112,21 @@ TYPE
     btnOK: TButton;
     btnSkinEditor: TButton;
     lblMoreSkinsTrial: TLabel;
-    procedure FormCreate(Sender: TObject);
-    procedure FormDestroy(Sender: TObject);
-    procedure lBoxClick(Sender: TObject);
-    procedure lblTopClick(Sender: TObject);
+    procedure FormCreate  (Sender: TObject);
+    procedure FormDestroy (Sender: TObject);
+    procedure lBoxClick   (Sender: TObject);
+    procedure lblTopClick (Sender: TObject);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure btnSkinEditorClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnOKClick(Sender: TObject);
   private
     procedure PopulateSkins;
+    procedure ReassertZOrder;
   public
+    class procedure ShowAsModal; static;  
     { Shows the skin selector form. Modal=TRUE for modal dialog, FALSE for non-modal. }
-    class procedure CreateForm(Modal: Boolean); static;
+    class procedure CreateForm(Modal: Boolean; Notify: TNotifyEvent= NIL); static;
   end;
 
 CONST
@@ -140,15 +188,25 @@ end;
    SHOW EDITOR
 -----------------------------------------------------------------------------------------------------------------------}
 
+{ Shows skin selector as a modal dialog.
+  SetStyle triggers RecreateWnd which breaks modal z-order.
+  Fix: PopupMode=pmAuto (set in DFM) + ReassertZOrder after each style change.
+  See: http://stackoverflow.com/questions/30328924 }
+class procedure TfrmSkinDisk.ShowAsModal;
+begin
+  AppData.CreateFormModal(TfrmSkinDisk);
+end;
+
 { Shows the skin selector form.
   Modal: TRUE for modal dialog, FALSE for non-modal display.
   WARNING: There is a known bug where closing this window after applying
   a skin may crash or lose modal attribute. Non-modal is safer. }
-class procedure TfrmSkinRes.CreateForm(Modal: Boolean);
+class procedure TfrmSkinRes.CreateForm(Modal: Boolean; Notify: TNotifyEvent= NIL);
 var
-  Form: TfrmSkinRes;
+  frmEditor: TfrmSkinRes;
 begin
-  AppData.CreateFormHidden(TfrmSkinRes, Form);
+  AppData.CreateFormHidden(TfrmSkinRes, frmEditor);
+  frmEditor.OnDefaultSkin:= Notify;  
 
   { Note: ShowModal has a bug - after applying a skin, the window may lose
     its modal attribute or crash on close. Non-modal is recommended. }
@@ -156,6 +214,10 @@ begin
   then Form.ShowModal
   else Form.Show;
 end;
+
+
+
+
 
 
 {-----------------------------------------------------------------------------------------------------------------------
@@ -226,6 +288,18 @@ begin
 end;
 
 
+{ SetStyle triggers RecreateWnd on all forms. The recreated modal window
+  loses its z-order position above the disabled owner.
+  TOPMOST + NOTOPMOST forces Windows to recalculate z-order, placing
+  this form at the top of the non-topmost band. }
+procedure TfrmSkinDisk.ReassertZOrder;
+begin
+  SetWindowPos(Handle, HWND_TOPMOST,    0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE);
+  SetWindowPos(Handle, HWND_NOTOPMOST,  0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE);
+  SetForegroundWindow(Handle);
+end;
+
+
 { Handles skin selection - applies the selected style }
 procedure TfrmSkinRes.lBoxClick(Sender: TObject);
 begin
@@ -236,20 +310,20 @@ begin
   try
     CurrentSkinName:= lBox.Items[lBox.ItemIndex];
 
-    if CurrentSkinName = DefWinTheme then
+    if CurrentSkinName = DefWinTheme
+    then
     begin
       TStyleManager.SetStyle('Windows');
       CurrentSkinName:= DefWinTheme;
+        ReassertZOrder;
+        if Assigned(FOnDefaultSkin)
+        then FOnDefaultSkin(Self);
     end
     else
     begin
       TStyleManager.SetStyle(CurrentSkinName);
+      ReassertZOrder;
 
-      { Bug workaround: Form loses modal attribute after changing app style.
-        ProcessMessages + BringToFront fixes this.
-        See: http://stackoverflow.com/questions/30328924 }
-      Application.ProcessMessages;
-      BringToFront;
     end;
   FINALLY
     lBox.Enabled:= TRUE;
