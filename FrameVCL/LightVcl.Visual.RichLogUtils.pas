@@ -47,6 +47,7 @@ CONST
   DefaultVerbosity= lvrInfos;
 
 function Verbosity2String(Verbosity: TLogVerb): string;
+function Verb2Color(Verb: TLogVerb; IsDark: Boolean = False): TColor;
 
 
 
@@ -68,6 +69,34 @@ begin
 end;
 
 
+{ Returns the display color for a given verbosity level.
+  When IsDark is TRUE, returns lighter colors suitable for dark-background styles. }
+function Verb2Color(Verb: TLogVerb; IsDark: Boolean): TColor;
+begin
+ if IsDark
+ then
+   case Verb of
+     lvrVerbose  : Result:= clSilver;
+     lvrHints    : Result:= TColor($B0B0B0);
+     lvrInfos    : Result:= clWhite;
+     lvrImportant: Result:= clPurpleFaded;
+     lvrWarnings : Result:= clOrange;
+     lvrErrors   : Result:= clRed;
+   else
+     raise Exception.Create('Verb2Color: Invalid verbosity');
+   end
+ else
+   case Verb of
+     lvrVerbose  : Result:= ctLogVerb;
+     lvrHints    : Result:= ctLogHint;
+     lvrInfos    : Result:= ctLogInfo;
+     lvrImportant: Result:= ctLogImprt;
+     lvrWarnings : Result:= ctLogWarn;
+     lvrErrors   : Result:= ctLogError;
+   else
+     raise Exception.Create('Verb2Color: Invalid verbosity');
+   end;
+end;
 
 
 

@@ -47,6 +47,7 @@ TYPE
      procedure Add(s: string);
      procedure AddFormated(s: string);
      procedure ScrollDown;
+     function  IsDark: Boolean;
    protected
      Indent: Integer;    { Indent each newly added line with this many spaces }
      procedure addColorMsg (CONST Mesaj: string; TextColor: TColor);
@@ -94,8 +95,6 @@ IMPLEMENTATION
 
 USES LightCore.TextFile, LightCore;
 
-const
-  LogDefaultColor = clBlack;
 
 
 
@@ -120,37 +119,44 @@ end;
 
 
 
+function TRichLog.IsDark: Boolean;
+begin
+ Result:= NOT IsLightStyleColor(clWindow);
+end;
+
+
+
 {-------------------------------------------------------------------------------------------------------------
    Messages with standard verbosity
 -------------------------------------------------------------------------------------------------------------}
 procedure TRichLog.AddVerb;
 begin
  if (Verbosity<= lvrVerbose) AND (Mesaj> '')
- then addColorMsg(Mesaj, ctLogVerb);
+ then addColorMsg(Mesaj, Verb2Color(lvrVerbose, IsDark));
 end;
 
 procedure TRichLog.AddInfo;
 begin
  if (Verbosity<= lvrInfos) AND (Mesaj> '')
- then addColorMsg(Mesaj, ctLoginfo);
+ then addColorMsg(Mesaj, Verb2Color(lvrInfos, IsDark));
 end;
 
 procedure TRichLog.AddHint;
 begin
  if (Verbosity<= lvrHints) AND (Mesaj> '')
- then addColorMsg(Mesaj, ctLogHint);
+ then addColorMsg(Mesaj, Verb2Color(lvrHints, IsDark));
 end;
 
 procedure TRichLog.AddImpo;
 begin
  if (Verbosity<= lvrImportant) AND (Mesaj> '')
- then addColorMsg(Mesaj, ctLogImprt);
+ then addColorMsg(Mesaj, Verb2Color(lvrImportant, IsDark));
 end;
 
 procedure TRichLog.AddWarn;
 begin
  if (Verbosity<= lvrWarnings) AND (Mesaj> '')
- then addColorMsg(Mesaj, ctLogWarn);
+ then addColorMsg(Mesaj, Verb2Color(lvrWarnings, IsDark));
 
  if Assigned(FLogWarn)
  then FLogWarn(Self);
@@ -159,7 +165,7 @@ end;
 procedure TRichLog.AddError;
 begin
  if (Verbosity<= lvrErrors) AND (Mesaj> '')
- then addColorMsg(Mesaj, ctLogError);
+ then addColorMsg(Mesaj, Verb2Color(lvrErrors, IsDark));
 
  if Assigned(FLogError)
  then FLogError(Self);
@@ -231,7 +237,9 @@ end;
 procedure TRichLog.AddBold;
 begin
  SelAttributes.Style := [fsBold];
- addColorMsg(Mesaj, LogDefaultColor);
+ if IsDark
+ then addColorMsg(Mesaj, clWhite)
+ else addColorMsg(Mesaj, clBlack);
  SelAttributes.Style := [];
 end;
 
@@ -239,7 +247,9 @@ end;
 { Always show this message, no matter the verbosity of the log. Equivalent to Log.AddError but the msg won't be shown in red. }
 procedure TRichLog.AddMsg(CONST Mesaj: string);
 begin
- addColorMsg(Mesaj, LogDefaultColor);
+ if IsDark
+ then addColorMsg(Mesaj, clWhite)
+ else addColorMsg(Mesaj, clBlack);
 end;
 
 
@@ -292,7 +302,9 @@ begin
  InsertTime:= FALSE;
  InsertDate:= FALSE;
 
- addColorMsg(DateToStr(Now), LogDefaultColor);
+ if IsDark
+ then addColorMsg(DateToStr(Now), clWhite)
+ else addColorMsg(DateToStr(Now), clBlack);
 
  InsertTime:= RestoreTime;
  InsertDate:= RestoreDate;

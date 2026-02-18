@@ -75,9 +75,20 @@ end;
 { Calculates and sets the box height based on label height plus padding.
   Uses Ceil to ensure the text is never clipped. }
 procedure TAutosizeBoxText.UpdateSize;
-VAR MinHeight: Single;
+VAR
+  MinHeight: Single;
+  ContentWidth: Single;
 begin
   if Width <= 0 then EXIT;
+
+  // Force label to use current available width before reading its height.
+  // During parent resize, Resize fires before FMX's align system updates children,
+  // so FTextLabel still has its old width and old wrapped height. Setting it
+  // explicitly here ensures text wrapping is recalculated for the new width.
+  ContentWidth:= Width - Self.Padding.Left - Self.Padding.Right;
+  if ContentWidth > 0
+  then FTextLabel.Width:= ContentWidth;
+
   MinHeight:= FTextLabel.Height + Self.Padding.Top + Self.Padding.Bottom + CTextHeightBuffer;
   Self.Height:= Ceil(MinHeight);
 end;

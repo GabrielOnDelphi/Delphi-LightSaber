@@ -1,10 +1,8 @@
 UNIT LightVcl.Graph.ResizeParamFrame;
 
 {=============================================================================================================
-   Gabriel Moraru
    2026.01.30
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
    GUI frame where the user can edit the parameters of the resizing algorithm (LightVcl.Graph.Resize.pas).

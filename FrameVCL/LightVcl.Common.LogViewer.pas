@@ -101,7 +101,7 @@ TYPE
      property OnVerbChanged: TNotifyEvent read FVerbChanged write FVerbChanged;   { Triggered when verbosity filter level changes }
   end;
 
-function Verbosity2Color (Verbosity: TLogVerbLvl): TColor;
+function Verbosity2Color (Verbosity: TLogVerbLvl; IsDark: Boolean = False): TColor;
 
 procedure Register;
 
@@ -419,7 +419,7 @@ begin
     s:= CurLine.Msg;
 
   { Draw with verbosity-based color }
-  FGrid.Canvas.Font.Color:= Verbosity2Color(CurLine.Level);
+  FGrid.Canvas.Font.Color:= Verbosity2Color(CurLine.Level, NOT IsLightStyleColor(clWindow));
   FGrid.Canvas.TextRect(ARect, ARect.Left + 5, ARect.Top + 2, s);
 end;
 
@@ -641,7 +641,7 @@ begin
     for i:= 0 to FRamLog.Lines.Count - 1 do
       begin
         LogLine:= FRamLog.Lines[i];
-        RichEdit.SelAttributes.Color:= Verbosity2Color(LogLine.Level);
+        RichEdit.SelAttributes.Color:= Verbosity2Color(LogLine.Level, NOT IsLightStyleColor(clWindow));
 
         if LogLine.Bold
         then RichEdit.SelAttributes.Style:= [fsBold]
@@ -674,19 +674,32 @@ end;
 
 { Maps a log verbosity level to its display color.
   Higher severity levels use warmer/more alarming colors. }
-function Verbosity2Color(Verbosity: TLogVerbLvl): TColor;
+function Verbosity2Color(Verbosity: TLogVerbLvl; IsDark: Boolean): TColor;
 begin
-  case Verbosity of
-    lvDebug    : Result:= TColor($909090);   { Light gray }
-    lvVerbose  : Result:= TColor($808080);   { Silver }
-    lvHints    : Result:= TColor($707070);   { Gray }
-    lvInfos    : Result:= clBlack;
-    lvImportant: Result:= clOrangeDk;
-    lvWarnings : Result:= clOrange;
-    lvErrors   : Result:= clRed;
+  if IsDark then
+    case Verbosity of
+      lvDebug    : Result:= TColor($909090);   { Medium gray }
+      lvVerbose  : Result:= TColor($B0B0B0);   { Light gray }
+      lvHints    : Result:= TColor($C0C0C0);   { Silver }
+      lvInfos    : Result:= clWhite;
+      lvImportant: Result:= clOrangeLt;
+      lvWarnings : Result:= clOrange;
+      lvErrors   : Result:= clRed;
+    else
+      raise Exception.Create('Verbosity2Color: Invalid log verbosity level');
+    end
   else
-    raise Exception.Create('Verbosity2Color: Invalid log verbosity level');
-  end;
+    case Verbosity of
+      lvDebug    : Result:= TColor($909090);   { Light gray }
+      lvVerbose  : Result:= TColor($808080);   { Silver }
+      lvHints    : Result:= TColor($707070);   { Gray }
+      lvInfos    : Result:= clBlack;
+      lvImportant: Result:= clOrangeDk;
+      lvWarnings : Result:= clOrange;
+      lvErrors   : Result:= clRed;
+    else
+      raise Exception.Create('Verbosity2Color: Invalid log verbosity level');
+    end;
 end;
 
 

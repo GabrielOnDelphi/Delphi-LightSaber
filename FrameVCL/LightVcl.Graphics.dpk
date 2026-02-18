@@ -31,7 +31,6 @@ package LightVcl.Graphics;
 {$ENDIF IMPLICITBUILDING}
 {$DESCRIPTION 'LightSaber - Graphics lib'}
 {$LIBSUFFIX AUTO}
-{$RUNONLY}
 {$IMPLICITBUILD ON}
 
 requires
