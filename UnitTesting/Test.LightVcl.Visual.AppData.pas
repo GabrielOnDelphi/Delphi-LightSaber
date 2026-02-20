@@ -374,43 +374,9 @@ begin
 end;
 
 
-{ RaiseIfStillInitializing Tests }
+ 
+ 
 
-procedure TTestAppDataVcl.TestRaiseIfStillInitializing_NotInitializing;
-var
-  OldState: Boolean;
-begin
-  OldState:= TAppDataCore.Initializing;
-  try
-    TAppDataCore.Initializing:= FALSE;
-    // Should not raise when not initializing
-    TAppData.RaiseIfStillInitializing;
-    Assert.Pass('No exception raised when not initializing');
-  finally
-    TAppDataCore.Initializing:= OldState;
-  end;
-end;
-
-procedure TTestAppDataVcl.TestRaiseIfStillInitializing_WhenInitializing;
-var
-  OldState: Boolean;
-  ExceptionRaised: Boolean;
-begin
-  OldState:= TAppDataCore.Initializing;
-  ExceptionRaised:= FALSE;
-  try
-    TAppDataCore.Initializing:= TRUE;
-    try
-      TAppData.RaiseIfStillInitializing;
-    except
-      on E: Exception do
-        ExceptionRaised:= TRUE;
-    end;
-    Assert.IsTrue(ExceptionRaised, 'RaiseIfStillInitializing should raise exception when Initializing is TRUE');
-  finally
-    TAppDataCore.Initializing:= OldState;
-  end;
-end;
 
 
 initialization

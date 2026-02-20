@@ -77,7 +77,7 @@ USES
 { Shows the language selector form as a modal dialog }
 class procedure TfrmTranslSelector.ShowAsModal;
 begin
-  Assert(Translator <> NIL, 'Translator must be initialized before showing selector');
+  Assert(AppData.Translator <> NIL, 'Translator must be initialized before showing selector');
   AppData.CreateFormModal(TfrmTranslSelector);
 end;
 
@@ -125,8 +125,8 @@ begin
     if FileExistsMsg(GetSelectedFilePath)
     then
       begin
-        Translator.CurLanguage:= Translator.GetLangFolder + GetSelectedFileName;
-        lblAuthors.Caption:= 'Translated by: ' + Translator.Authors;
+        AppData.Translator.CurLanguage:= AppData.Translator.GetLangFolder + GetSelectedFileName;
+        lblAuthors.Caption:= 'Translated by: ' + AppData.Translator.Authors;
         lblAuthors.Visible:= TRUE;
       end
     else
@@ -155,7 +155,7 @@ function TfrmTranslSelector.GetSelectedFilePath: string;
 begin
   if ListBox.ItemIndex < 0
   then Result:= ''
-  else Result:= Translator.GetLangFolder + GetSelectedFileName;
+  else Result:= AppData.Translator.GetLangFolder + GetSelectedFileName;
 end;
 
 
@@ -188,10 +188,10 @@ begin
   ListBox.Clear;
 
   { Read all .ini files in Lang folder }
-  Files:= ListFilesOf(Translator.GetLangFolder, '*.ini', True, FALSE);
+  Files:= ListFilesOf(AppData.Translator.GetLangFolder, '*.ini', True, FALSE);
   try
     if Files.Count = 0
-    then AppData.LogWarn('No language files detected in ' + Translator.GetLangFolder);
+    then AppData.LogWarn('No language files detected in ' + AppData.Translator.GetLangFolder);
 
     { Remove path & extension, then populate the list box }
     for var s in Files do
@@ -203,7 +203,7 @@ begin
   { Pre-select appropriate language }
   if ListBox.Items.Count > 0 then
     begin
-      iLastLang:= ListBox.Items.IndexOf(ExtractOnlyName(Translator.CurLanguageName));
+      iLastLang:= ListBox.Items.IndexOf(ExtractOnlyName(AppData.Translator.CurLanguageName));
       if iLastLang < 0
       then
         begin

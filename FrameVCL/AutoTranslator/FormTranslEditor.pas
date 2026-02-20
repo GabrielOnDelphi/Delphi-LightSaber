@@ -117,7 +117,7 @@ begin
   inherited FormPostInitialize;
   Tag:= DontTranslate;
 
-  Assert(Translator <> NIL, 'Translator must be initialized before using translation editor');
+  Assert(AppData.Translator <> NIL, 'Translator must be initialized before using translation editor');
   lblLiveFormsClick(Self);  { Populate live forms list }
   PopulateLanguageList;
 
@@ -137,9 +137,9 @@ begin
       LangList.Add(Lang);
 
     { Add existing translation files that might have custom language names }
-    if DirectoryExists(Translator.GetLangFolder)
+    if DirectoryExists(AppData.Translator.GetLangFolder)
     then
-      for var FileName in TDirectory.GetFiles(Translator.GetLangFolder, '*.ini') do
+      for var FileName in TDirectory.GetFiles(AppData.Translator.GetLangFolder, '*.ini') do
         begin
           var LangName:= TPath.GetFileNameWithoutExtension(FileName);
           if LangList.IndexOf(LangName) < 0
@@ -162,15 +162,15 @@ end;
 
 procedure TfrmTranslEditor.ApplyOptionsToTranslator;
 begin
-  Translator.ParseCtrlsWithAction:= chkParseCtrlsAction.Checked;
-  Translator.DontSaveEmpty:= chkDontSaveEmpty.Checked;
-  Translator.Authors:= edtAuthor.Text;
+  AppData.Translator.ParseCtrlsWithAction:= chkParseCtrlsAction.Checked;
+  AppData.Translator.DontSaveEmpty:= chkDontSaveEmpty.Checked;
+  AppData.Translator.Authors:= edtAuthor.Text;
 end;
 
 
 function TfrmTranslEditor.GetTargetFileName: string;
 begin
-  Result:= Translator.GetLangFolder + ForceExtension(Trim(sbxTargetLang.Text), '.ini');
+  Result:= AppData.Translator.GetLangFolder + ForceExtension(Trim(sbxTargetLang.Text), '.ini');
 end;
 
 
@@ -213,13 +213,13 @@ begin
 
   { Backup existing file }
   if FileExists(TargetFile)
-  then BackupFileIncrement(TargetFile, Translator.GetLangFolder + 'Backups\');
+  then BackupFileIncrement(TargetFile, AppData.Translator.GetLangFolder + 'Backups\');
 
   { Apply options }
   ApplyOptionsToTranslator;
 
   { Create translation file from live forms }
-  Translator.SaveTranslation(TargetFile, chkOverwrite.Checked);
+  AppData.Translator.SaveTranslation(TargetFile, chkOverwrite.Checked);
 
   { Format the file for better readability }
   s:= StringFromFile(TargetFile);
@@ -243,7 +243,7 @@ end;
 procedure TfrmTranslEditor.btnLoadTranslationClick(Sender: TObject);
 VAR FileName: string;
 begin
-  FileName:= Translator.GetLangFolder;
+  FileName:= AppData.Translator.GetLangFolder;
   if PromptToLoadFile(FileName, FilterTransl, 'Open translation file for editing...')
   then TfrmTranslatorIniEditor.ShowEditor(FileName);
 end;
@@ -317,17 +317,17 @@ begin
 
   { Backup existing file }
   if TargetExists
-  then BackupFileIncrement(TargetFile, Translator.GetLangFolder + 'Backups\');
+  then BackupFileIncrement(TargetFile, AppData.Translator.GetLangFolder + 'Backups\');
 
   { Apply options }
   ApplyOptionsToTranslator;
 
   Screen.Cursor:= crHourGlass;
-  TempSourceFile:= Translator.GetLangFolder + '_temp_source_.ini';
+  TempSourceFile:= AppData.Translator.GetLangFolder + '_temp_source_.ini';
   DeepL:= TDeepLTranslator.Create;
   try
     { Step 1: Extract fresh from live forms to temp file }
-    Translator.SaveTranslation(TempSourceFile, TRUE);
+    AppData.Translator.SaveTranslation(TempSourceFile, TRUE);
 
     { Step 2: Translate - only new entries if target exists }
     DeepL.ApiKey:= DeepL_GetApiKey;

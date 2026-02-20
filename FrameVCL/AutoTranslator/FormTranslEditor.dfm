@@ -76,7 +76,7 @@ object frmTranslEditor: TfrmTranslEditor
       AlignWithMargins = True
       Left = 5
       Top = 36
-      Width = 348
+      Width = 97
       Height = 18
       Align = alBottom
       Caption = 'Target language'
@@ -214,7 +214,7 @@ object frmTranslEditor: TfrmTranslEditor
       AlignWithMargins = True
       Left = 5
       Top = 21
-      Width = 354
+      Width = 83
       Height = 13
       Cursor = crHandPoint
       Align = alBottom
@@ -233,7 +233,7 @@ object frmTranslEditor: TfrmTranslEditor
       AlignWithMargins = True
       Left = 5
       Top = 37
-      Width = 354
+      Width = 80
       Height = 13
       Cursor = crHandPoint
       Align = alBottom

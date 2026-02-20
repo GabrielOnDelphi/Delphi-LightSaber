@@ -52,6 +52,8 @@ TYPE
 
 
 IMPLEMENTATION {$R *.dfm}
+USES
+  LightVcl.Visual.AppData;
 
 
 class procedure TfrmTranslatorIniEditor.ShowEditor(const FileName: string);
@@ -106,8 +108,8 @@ end;
 procedure TfrmTranslatorIniEditor.btnApplyEditsClick(Sender: TObject);
 begin
   SaveEditor;
-  Translator.CurLanguage:= FCurLangFile;
-  Translator.LoadTranslation(TRUE);  { Force reload even if same language }
+  AppData.Translator.CurLanguage:= FCurLangFile;
+  AppData.Translator.LoadTranslation(TRUE);  { Force reload even if same language }
 end;
 
 

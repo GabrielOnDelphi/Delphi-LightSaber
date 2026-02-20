@@ -80,7 +80,6 @@ begin
   Editor.Params:= aParams;
   Editor.Initializing:= TRUE;
   TRY
-    if Translator <> NIL then Translator.LoadTranslation(Editor);
     Editor.GuiFromObject;
   FINALLY
     Editor.Initializing:= FALSE;

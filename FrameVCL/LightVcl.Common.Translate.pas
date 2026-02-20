@@ -229,8 +229,7 @@ TYPE
 
 function trs(CONST s: string): string; //ToDo: For strings use Delphi's built in facility
 
-VAR
-   Translator: TTranslator;
+
 
 IMPLEMENTATION
 
