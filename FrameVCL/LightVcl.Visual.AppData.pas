@@ -1,4 +1,4 @@
-UNIT LightVcl.Visual.AppData;
+﻿UNIT LightVcl.Visual.AppData;
 
 {=============================================================================================================
    2026.01.31
@@ -56,12 +56,9 @@ UNIT LightVcl.Visual.AppData;
         See LightVcl.Visual.AppDataForm.FormPostInitialize()
 
 
-     AppData.Initializing
+     AppData.Initializing (read-only)
         When the application starts, this flag is set to True.
-        Then it is automatically set to False once all the forms are is fully loaded.
-        If you don't want this to happen, set the AutoSignalInitializationEnd variable to False.
-        In this case, you will have to set the Initializing manually, once the program is fully initialized (usually in the LateInitialize of the main form, or in the LateInitialize of the last created form).
-        If you forget it, the AppData will not save the forms to the INI file and you will have a warning on shutdown.
+        It is automatically set to False after the MAIN FORM is fully and completelly loaded.
         Usage:
           Used by SaveForm in LightVcl.Common.IniFile.pas/LightVcl.Visual.INIFile.pas (and a few other places) to signal not to save the form if the application has crashed while still in the initialization phase.
           You can use it also personally, to avoid executing some of your code during the initialization stages.
@@ -104,7 +101,7 @@ USES
   Winapi.Windows, Winapi.Messages, Winapi.ShellAPI,
   System.Win.Registry, System.SysUtils, System.Classes, System.IOUtils, System.UITypes, System.Types,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.Consts,
-  LightCore.AppData, LightVcl.Visual.LogForm;
+  LightCore.AppData, LightVcl.Visual.LogForm, LightVcl.Common.Translate;
 
 
 TYPE
@@ -127,6 +124,7 @@ TYPE
     // Installer
     procedure RegisterUninstaller;
   public
+    Translator: TTranslator;
    {--------------------------------------------------------------------------------------------------
       INIT
    --------------------------------------------------------------------------------------------------}
@@ -208,7 +206,7 @@ IMPLEMENTATION
 
 USES
   LightCore.IO,
-  LightVcl.Common.WinVersion, LightVcl.Common.ExeVersion, LightVcl.Common.Translate, LightVcl.Common.CenterControl, LightVcl.Visual.AppDataForm, LightVcl.Common.Registry;
+  LightVcl.Common.WinVersion, LightVcl.Common.ExeVersion, LightVcl.Common.CenterControl, LightVcl.Visual.AppDataForm, LightVcl.Common.Registry;
 
 
 { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }
@@ -237,7 +235,10 @@ begin
   Application.ShowHint := TRUE;                   // Set later via the HintType property. It is true by default anyway
 
   { Translator }
-  Translator:= TTranslator.Create(Self);         //ToDo: create it only if necessary - If this app uses translations; we could look for the 'Lang' folder. If it exists and it is not empty then we create the object.
+  //ToDo 5: create it only if necessary - If this app uses translations; we could look for the 'Lang' folder. If it exists and it is not empty then we create the object.
+  //ToDo 5: there are no forms here. So LoadLastTranslation won't do much here (but it will choose the current lang). maybe I should do that in the constructor!
+  LogVerb('Starting translator...');
+  Translator:= TTranslator.Create(Self);
   if NOT RunningHome
   then Translator.LoadLastTranslation;           // Load last language and apply it to all existing forms
 
@@ -256,7 +257,7 @@ end;
 
 procedure TAppData.Run;
 begin
-  Initializing:= FALSE;
+  // Initializing stays TRUE until MainForm PostInitialize completes (via deferred WM_POSTINIT message).
 
   // Later, we ignore the "Show" parameter in CreateMainForm() if "StartMinim" is true. StartMinim remmbers application's last state (it was minimized or not)
   if StartMinim
@@ -275,9 +276,10 @@ end;
      2. Create main form via Application.CreateForm
      3. Load form state from INI (position, size, controls)
      4. Apply global font and GUI properties
-     5. Call FormPostInitialize for user code
-     6. Register with uninstaller (first run only)
-     7. Apply translations
+     5. Show form
+     6. Post WM_POSTINIT (deferred until message loop runs)
+     7. FormPostInitialize (user code, via WM_POSTINIT)
+     8. LoadTranslation + EndInitialization (via WM_POSTINIT)
 
    Note: The "Show" parameter is ignored if StartMinim is true (app starts minimized).
 -------------------------------------------------------------------------------------------------------------}
@@ -300,8 +302,16 @@ end;
     Show              - Whether to show the form immediately (ignored if StartMinim is TRUE)
     AutoState         - Controls INI file persistence: asNone/asPosOnly/asFull
 
-  The form goes through: creation -> LoadForm -> SetGuiProperties -> Show ->
-  FormPostInitialize -> RegisterUninstaller -> LoadTranslation }
+  The form goes through: 
+  creation 
+   -> LoadForm
+    -> SetGuiProperties
+     -> Show
+      -> PostMessage(WM_POSTINIT)
+       -> [message loop starts]
+        -> FormPostInitialize
+         -> LoadTranslation
+          -> EndInitialization }
 procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly);
 begin
   Assert(Vcl.Dialogs.UseLatestCommonDialogs= TRUE);      { This is true anyway by default, but I check it to remember myself about it. Details: http://stackoverflow.com/questions/7944416/tfileopendialog-requires-windows-vista-or-later }
@@ -338,25 +348,19 @@ begin
     if Show
     then TForm(Reference).Show;
 
-  // Window fully constructed. Now we can let user run its own initialization process.
-  // This is the ONLY correct place where we can properly initialize the application (see "Delphi in all its glory [Part 2]" book) for details.
+  // Defer initialization until the message loop is running.
+  // This prevents modal dialogs during FormPostInitialize from pumping messages
+  // that resize the form before it has fully settled.
   if TObject(Reference) is TLightForm then
     begin
       // Show app name. Must be before FormPostInitialize because the user could put his own caption there.
       TLightForm(Reference).MainFormCaption('');
-      TLightForm(Reference).FormPostInitialize;
+      PostMessage(TLightForm(Reference).Handle, WM_POSTINIT, 0, 0);
     end;
 
   // Uninstaller
   if RunningFirstTime
-  AND NOT RunningHome
   then RegisterUninstaller;
-
-  // Translate form
-  if Translator <> NIL
-  then Translator.LoadTranslation(TForm(Reference));
-
-  StartMinim:= FALSE;      // We started minimized ONCE. Now (once started) we need to forget this.
 end;
 
 

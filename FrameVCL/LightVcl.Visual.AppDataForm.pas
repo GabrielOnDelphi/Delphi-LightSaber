@@ -68,11 +68,15 @@ USES
   System.SysUtils, System.Classes, System.IniFiles, Vcl.Controls, Vcl.Forms,
   LightCore.AppData, LightVcl.Common.Dialogs, LightVcl.Common.CenterControl, LightVcl.Common.IniFile;
 
+CONST
+  WM_POSTINIT = WM_APP + 745;   // Posted by TAppData.CreateMainForm to defer FormPostInitialize until the message loop is running
+
 TYPE
   TLightForm = class(TForm)
   private
     FCloseOnEscape: Boolean;
     FAutoSaveForm: TAutoState;
+    procedure WMPostInit(var Msg: TMessage); message WM_POSTINIT;
   protected
     Saved: Boolean;
     procedure saveBeforeExit;
@@ -114,6 +118,25 @@ begin
   Saved     := FALSE;
 
   FAutoSaveForm := AutoSaveForm; // Default value. Can be overriden by AppData.CreateForm
+end;
+
+
+{ Handles the deferred post-initialization message posted by TAppData.CreateMainForm.
+  By deferring to PostMessage, the form has fully settled (all pending WM_SIZE/layout messages processed)
+  before we run user initialization code that might pump messages (e.g. modal dialogs). }
+procedure TLightForm.WMPostInit(var Msg: TMessage);
+begin
+  if Self = Application.MainForm then
+    begin
+      AppData.StartMinim:= FALSE;      // Reset after FormPostInitialize has used the value
+      AppData.EndInitialization;
+    end;
+
+  // Run user initialization code
+  FormPostInitialize;
+
+  if AppData.Translator <> NIL
+  then AppData.Translator.LoadTranslation(Self);
 end;
 
 
@@ -280,8 +303,6 @@ begin
   if Self <> Application.MainForm
   then Self.Font:= AppData.Font;  }
 end;
-
-
 
 
 procedure TLightForm.MainFormCaption(CONST Caption: string);

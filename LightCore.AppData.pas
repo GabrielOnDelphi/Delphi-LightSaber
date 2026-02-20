@@ -1,4 +1,4 @@
-UNIT LightCore.AppData;
+ï»¿UNIT LightCore.AppData;
 
 {=============================================================================================================
    2026.01.29
@@ -65,6 +65,7 @@ TYPE
       DefaultHomePage= 'https://www.GabrielMoraru.com';
     class VAR FCreated: Boolean;           // Sanity check. Make sure the user did not created this obj twice
     class VAR FAppName: string;
+    class VAR FInitializing: Boolean;
     function  getLastUsedFolder: string;
     procedure setShowOnError(const Value: Boolean);
   protected
@@ -92,7 +93,8 @@ TYPE
    --------------------------------------------------------------------------------------------------}
     property  SingleInstClassName: string read FSingleInstClassName;
     {}
-    class VAR Initializing: Boolean;                 // See documentation at the top of the file
+    class property Initializing: Boolean read FInitializing;  // See documentation at the top of the file
+    class procedure EndInitialization;
     class VAR TEST_MODE: Boolean;                    // When TRUE, ShowModal/Show calls are bypassed. Set this in test setup to prevent forms from blocking tests.
 
     constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE); virtual;
@@ -200,7 +202,7 @@ USES
 constructor TAppDataCore.Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE);
 begin
   inherited Create;
-  Initializing:= True;                            // Used in cv_IniFile.pas. Set it to false once your app finished initializing.
+  FInitializing:= True;                            // Set to FALSE by EndInitialization, after FormPostInitialize completes.
 
   { Sanity check via class var }
   if FCreated
@@ -260,7 +262,13 @@ begin
 end;
 
 
+class procedure TAppDataCore.EndInitialization;
+begin
+  FInitializing:= FALSE;
+end;
 
+
+ 
 
 
 
@@ -444,7 +452,7 @@ end;
 
 { Returns true if a file called 'betatester' exists in application's folder or in application's system folder.
   Windows maintains a directory entry cache (part of the NTFS metadata cache / file system cache).
-  Once a directory has been read, FileExists resolves from cached metadata in memory — no actual disk I/O. The file doesn't even need to exist; the negative lookup ("file not found") is cached too. }
+  Once a directory has been read, FileExists resolves from cached metadata in memory - no actual disk I/O. The file doesn't even need to exist; the negative lookup ("file not found") is cached too. }
 function TAppDataCore.BetaTesterMode: Boolean;
 begin
   Result:= FileExists(AppSysDir+ 'betatester') OR FileExists(AppFolder+ 'betatester');

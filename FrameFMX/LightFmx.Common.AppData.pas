@@ -210,8 +210,6 @@ end;
 
 procedure TAppData.Run;
 begin
-  Initializing:= FALSE;
-
   // StartMinim remembers application's last state (minimized or not) and minimizes on startup if it was minimized before
   // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
   if StartMinim
