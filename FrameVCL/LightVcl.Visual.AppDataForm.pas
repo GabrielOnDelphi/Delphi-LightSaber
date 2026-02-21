@@ -126,14 +126,14 @@ end;
   before we run user initialization code that might pump messages (e.g. modal dialogs). }
 procedure TLightForm.WMPostInit(var Msg: TMessage);
 begin
+  // Run user initialization code
+  FormPostInitialize;
+
   if Self = Application.MainForm then
     begin
       AppData.StartMinim:= FALSE;      // Reset after FormPostInitialize has used the value
       AppData.EndInitialization;
     end;
-
-  // Run user initialization code
-  FormPostInitialize;
 
   if AppData.Translator <> NIL
   then AppData.Translator.LoadTranslation(Self);

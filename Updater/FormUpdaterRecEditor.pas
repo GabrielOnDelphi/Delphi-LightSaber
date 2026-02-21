@@ -58,7 +58,7 @@ USES
 
 function GetBinFileName: string;
 begin
-  Result:= Appdata.AppFolder+ 'OnlineNews_v3'+ AppData.AppName+'.bin';  // switched to v3 since 2025.10
+  Result:= Appdata.AppFolder+ 'OnlineNews.bin';  // switched to v3 since 2025.10
 end;
 
 
@@ -116,9 +116,14 @@ end;
 
 
 procedure TfrmRecEditor.Button1Click(Sender: TObject);
-VAR News: RNews;
+VAR
+  FName: string;
+  News: RNews;
 begin
-  News.LoadFrom(GetBinFileName);
+  FName:= GetBinFileName;
+  if NOT AppData.PromptToLoadFile(FName, '.bin') then EXIT;
+
+  News.LoadFrom(FName);
 
   edtComment.Text     := News.Comment;
   edtOnlineVer.Text   := News.AppVersion;
