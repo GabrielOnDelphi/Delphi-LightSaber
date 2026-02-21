@@ -1,0 +1,3 @@
+A bunch of external libraries that are not mine but I depend on them.
+See copyright notes inside of each file.
+For some of them it looks like the original author abandoned them but I keep them up to date.
