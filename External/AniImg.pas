@@ -1,13 +1,15 @@
 UNIT AniImg;
 {-------------------------------------------------------------------------------------------------------------
-
   TAnimateImage v1.01
   by Kambiz R. Khojasteh
 
   kambiz@delphiarea.com
   http://www.delphiarea.com
-  18 Nov 2008
   TAnimateImage is a windowed control similar to TImage for displaying images of an image list on a form. You only need to assign a TImageList ...
+  
+  
+  Updated 2026.02.21  
+  Gabriel Moraru
 -------------------------------------------------------------------------------------------------------------}
 
 // used by MsgDispatcher
@@ -104,7 +106,7 @@ begin
   FActive         := FALSE;
   FTimer          := TTimer.Create(NIL);
   FTimer.Enabled  := False;
-  FTimer.Interval := 150;
+  FTimer.Interval := 250;  // Must match published default 250
   FTimer.OnTimer  := TimerExpired;
 
   FTransparent := True;
@@ -183,7 +185,7 @@ procedure TAnimateImage.Paint;
       PaintFrame(B.Canvas);
       Canvas.Draw(0, 0, B);
     finally
-      B.Free;
+      FreeAndNil(B);
     end;
   end;
 
@@ -267,7 +269,7 @@ begin
   if NOT (csLoading in ComponentState) AND (FTimer<> NIL) then
   begin
     WasEnabled := FTimer.Enabled;
-    FTimer.Enabled := FActive and (FStopFrame - StartFrame > 0);
+    FTimer.Enabled := FActive and (FStopFrame - FStartFrame > 0);
     if FTimer.Enabled AND NOT WasEnabled then
      begin
        FLoopCount := 0;
@@ -406,78 +408,8 @@ end;
 
 
 
-(*  moved to: LightVcl.Common.VclUtils.pas
-
-{ This procedure is copied from RxLibrary VCLUtils.
-  It copies the background image of a control's parent, including any overlapping sibling graphic controls,
-  onto a destination canvas—useful for rendering transparent or custom-painted controls in Delphi. }
-TYPE
-  TParentControl = class(TWinControl);
-
-procedure CopyParentImage(Control: TControl; Dest: TCanvas);
-var
-  I, Count, X, Y, SaveIndex: Integer;
-  DC: HDC;
-  R, SelfR, CtlR: TRect;
-begin
-  if (Control = nil) OR (Control.Parent = nil)
-  then Exit;
-
-  Count := Control.Parent.ControlCount;
-  DC    := Dest.Handle;
-  with Control.Parent
-   DO ControlState := ControlState + [csPaintCopy];
-
-  TRY
-    with Control do
-     begin
-      SelfR := Bounds(Left, Top, Width, Height);
-      X := -Left; Y := -Top;
-     end;
-
-    { Copy parent control image }
-    SaveIndex := SaveDC(DC);
-    TRY
-      SetViewportOrgEx(DC, X, Y, nil);
-      IntersectClipRect(DC, 0, 0, Control.Parent.ClientWidth, Control.Parent.ClientHeight);
-      with TParentControl(Control.Parent) DO
-       begin
-        Perform(WM_ERASEBKGND, wParam(DC), 0);         { see: http://stackoverflow.com/questions/4072974/range-check-error-while-painting-the-canvas }
-        PaintWindow(DC);
-       end;
-    FINALLY
-      RestoreDC(DC, SaveIndex);
-    END;
-
-    { Copy images of graphic controls }
-    for I := 0 to Count - 1 do begin
-      if Control.Parent.Controls[I] = Control then Break
-      else if (Control.Parent.Controls[I] <> nil) and
-        (Control.Parent.Controls[I] is TGraphicControl) then
-      begin
-        with TGraphicControl(Control.Parent.Controls[I]) do begin
-          CtlR := Bounds(Left, Top, Width, Height);
-          if Bool(IntersectRect(R, SelfR, CtlR)) and Visible then
-          begin
-            ControlState := ControlState + [csPaintCopy];
-            SaveIndex := SaveDC(DC);
-            try
-              SetViewportOrgEx(DC, Left + X, Top + Y, nil);
-              IntersectClipRect(DC, 0, 0, Width, Height);
-              Perform(WM_PAINT, wParam(DC), 0);                            { see: http://stackoverflow.com/questions/4072974/range-check-error-while-painting-the-canvas }
-            finally
-              RestoreDC(DC, SaveIndex);
-              ControlState := ControlState - [csPaintCopy];
-            end;
-          end;
-        end;
-      end;
-    end;
-  FINALLY
-    with Control.Parent DO
-     ControlState := ControlState - [csPaintCopy];
-  end;
-end;  *)
+{ CopyParentImage was moved to LightVcl.Common.VclUtils.pas (originally from RxLibrary VCLUtils) }
+(*  REMOVED - Old CopyParentImage was here. See LightVcl.Common.VclUtils.pas for the active version. *)
 
 
 

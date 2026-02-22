@@ -36,7 +36,12 @@ uses
   { LightSaber dependencies }
   LightCore.AppData,
   LightVcl.Visual.AppData,
-  LightCore.StreamBuff;
+  LightCore.StreamBuff,
+  { Tests }
+  AniImg,
+  Test.AniImg,
+  janFX,
+  Test.janFX;
 
 {$IFNDEF TESTINSIGHT}
 var

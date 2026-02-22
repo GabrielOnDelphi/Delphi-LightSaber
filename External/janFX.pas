@@ -1,17 +1,21 @@
 UNIT janFX;
 
 {--------------------------------------------------------------------------------------------------
-  JanFX
-  Date    :  2-July-2000
+  JanFX - Image filters and effects library
+  Original:  2-July-2000
   Link    :  jansfreeware.com (offline)
+  
+  Updated 2026-02-22, 
+  Gabriel Moraru
 
+  Requires pf24bit
+    Many functions expect the input image to be in 24 bit (16.7 mil) color depth.
+    Functions that use ScanLine with pbytearray assume BGR byte order (pf24bit).
+    Some functions auto-set pf24bit; others require the caller to ensure it.
 
-  Requires pf24
-    Many functions expect the imput image to be in 24 bit (16.7 mil) color depth
-    Disable USE_SCANLINE if you use non-24 bit images.
-
-  Requires $R-
-    Why: http://stackoverflow.com/questions/628965/delphi-accessing-data-from-dynamic-array-that-is-populated-from-an-untyped-poi
+  Requires {$R-} (range checking off)
+    Why: ScanLine pixel access uses raw byte arrays indexed beyond declared bounds.
+    See: http://stackoverflow.com/questions/628965
 
   Origins
     The original code from JanFX was migrated to Jedi.JVPaintFX.pas
@@ -21,6 +25,9 @@ UNIT janFX;
   Tester:
      c:\Projects\Project Testers\gr JanFx demo\Tester.dpr
      c:\Projects\LightSaber ImageResampler Test\ResamplerTester.dpr
+
+  Unit tests:
+     c:\Projects\LightSaber\External\UnitTesting\Test.janFX.pas
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE                                                                                                     {$WARN GARBAGE OFF}   {Silence the: 'W1011 Text after final END' warning }
@@ -31,6 +38,7 @@ USES
 
 TYPE
  { Type of a filter for use with Stretch }
+ //TODO: TLightBrush mixes two concerns: lb* values used elsewhere and mb* values used by SqueezeHor/SplitRound. Consider splitting into two enums.
  TLightBrush = (lbBrightness, lbContrast, lbSaturation, lbfisheye, lbrotate, lbtwist, lbrimple, mbHor, mbTop, mbBottom, mbDiamond, mbWaste, mbRound, mbround2, mbsplitround, mbsplitwaste);
 
 
@@ -95,7 +103,7 @@ procedure GaussianBlur     (clip: TBitmap; Count: Integer; EffectPower: Integer=
 { AntiAlising }
 procedure AntiAlias        (clip: TBitmap);                    { blurs/smooths the image }
 procedure AntiAliasRect    (clip: TBitmap; XOrigin, YOrigin, XFinal, YFinal: Integer);
-procedure SmoothPoint      (clip: TBitmap; xk, yk: Integer);    { Se pare ca proceseaza doar 4 pixeli. Probabil e subrutina interna, folosita la ceva }
+procedure SmoothPoint      (clip: TBitmap; xk, yk: Integer);    { Averages 4 neighboring pixels to smooth a single point }
 
 { Size }
 procedure SqueezeHor       (src, dst: TBitmap; amount: Integer; style: TLightBrush);
@@ -243,7 +251,7 @@ var
  rg, gg, bg, r, g, b, x, y: Integer;
 begin
  if amount= 0 then EXIT;
- src.PixelFormat := pf24bit; // Added by me. Without this it fucks up when the bitmap is <> of 24bit
+ src.PixelFormat := pf24bit; // Force 24bit - ScanLine assumes BGR byte layout
 
  for y := 0 to src.Height - 1 do
   begin
@@ -283,7 +291,7 @@ var
  r, g, b, x, y: Integer;
 begin
  if amount= 0 then EXIT;
- src.PixelFormat := pf24bit;  // Added by me. Without this it fucks up when the bitmap is <> of 24bit
+ src.PixelFormat := pf24bit;  // Force 24bit - ScanLine assumes BGR byte layout
 
  for y := 0 to src.Height - 1 do begin
    p0 := src.ScanLine[y];
@@ -306,7 +314,7 @@ var
  r, g, b, x, y: Integer;
 begin
  if amount= 0 then EXIT;
- src.PixelFormat := pf24bit; // Added by me. Without this it fucks up when the bitmap is <> of 24bit
+ src.PixelFormat := pf24bit; // Force 24bit - ScanLine assumes BGR byte layout
 
  for y := 0 to src.Height - 1 DO
  begin
@@ -331,14 +339,14 @@ procedure Saturation(src: TBitmap; amount: Integer);
    0= Colorless (gray)
 -255= Negative colors
 
- but it can go way beyond these walues }
+ but it can go way beyond these values }
 VAR
   p0: pbytearray;
   Gray, r, g, b, x, y: Integer;
 begin
  if amount= 255 then EXIT;
 
- src.PixelFormat := pf24bit;   // Added by me. Without this it fucks up when the bitmap is <> of 24bit
+ src.PixelFormat := pf24bit;   // Force 24bit - ScanLine assumes BGR byte layout
 
  for y := 0 to src.Height - 1 do
   begin
@@ -464,7 +472,7 @@ begin
 
    if y + EffectPower < clip.Height
    then p2 := clip.ScanLine[y + EffectPower]
-   else p2 := clip.ScanLine[clip.Height - y];{ y+Amount>=Height }
+   else p2 := clip.ScanLine[clip.Height - 1 - y];  { BUG FIX: was clip.Height - y which is OOB when y=0 }
 
    for x := 0 to clip.Width - 1 DO
     begin
@@ -481,7 +489,7 @@ begin
 
      if x + EffectPower < clip.Width
      then cx := x + EffectPower
-     else cx := clip.Width - x;{ x+Amount>=Width }
+     else cx := clip.Width - 1 - x;  { BUG FIX: was clip.Width - x which is OOB when x=0 }
 
      Buf[2, 0] := p1[cx * 3];
      Buf[2, 1] := p1[cx * 3 + 1];
@@ -500,10 +508,12 @@ end;
 {-------------------------------------------------------------------------------------------------------------
 
 -------------------------------------------------------------------------------------------------------------}
-procedure Spray(clip: TBitmap; amount: Integer);
+//TODO: Spray uses Canvas.Pixels which is extremely slow. Rewrite with ScanLine for orders-of-magnitude speedup.
+procedure Spray(clip: TBitmap; amount: Integer);  { Note: uses Canvas.Pixels which is very slow }
 VAR
    i, j, x, y, w, h, Val: Integer;
 begin
+ if amount <= 0 then EXIT;
  h := clip.Height;
  w := clip.Width;
  for i := 0 to w - 1 do
@@ -524,6 +534,7 @@ var
  p1, p2: pbytearray;
  r, g, b: byte;
 begin
+ if size <= 0 then EXIT;  { Avoid infinite loop }
  y := 0;
  repeat
   p1 := Bm.ScanLine[y];
@@ -709,6 +720,7 @@ var
  fangle: real;
  wavex: Integer;
 begin
+ if amount <= 0 then EXIT;  { Avoid division by zero in fangle and negative loop bounds }
  BitMap := TBitmap.create;
  BitMap.assign(clip);
  wavex := style;
@@ -721,10 +733,10 @@ begin
      p2[x * 3] := p1[x * 3];
      p2[x * 3 + 1] := p1[x * 3 + 1];
      p2[x * 3 + 2] := p1[x * 3 + 2];
-     case wavex of
-      0: b := amount * variant(sin(fangle * x));
-      1: b := amount * variant(sin(fangle * x) * cos(fangle * x));
-      2: b := amount * variant(sin(fangle * x) * sin(inference * fangle * x));
+     case wavex of               { BUG FIX: was variant() which is slow and fragile; use Round() }
+      0: b := Round(amount * sin(fangle * x));
+      1: b := Round(amount * sin(fangle * x) * cos(fangle * x));
+      2: b := Round(amount * sin(fangle * x) * sin(inference * fangle * x));
      end;
     end;
   end;
@@ -738,6 +750,7 @@ var
  h, w, i, j, sv, sh: Integer;
  f0, f1, f2: real;
 begin
+ if seam = 0 then EXIT;  { Avoid division by zero }
  h := clip.Height;
  w := clip.Width;
  sv := h div seam;
@@ -786,7 +799,7 @@ var
 
  function sinpixs(a: Integer): Integer;
  begin
-  Result := variant(sin(a / 255 * Pi / 2) * 255);
+  Result := Round(sin(a / 255 * Pi / 2) * 255);  { BUG FIX: was variant() }
  end;
  begin
   for i := 1 to amount do
@@ -828,7 +841,7 @@ begin
      p0[c + 2] := p1[c + 2];
     end;
 
-   case style of  //ToDo: Warning: Enumerated constant(s) missing in case statement: 'lbBrightness, lbContrast, lbSaturation, lbfisheye, lbrotate, lbtwist, lbrimple, mbsplitRound, mbsplitWaste'
+   case style of  { Only handles horizontal squeeze styles. Other TLightBrush values are handled by SplitRound. }
     mbHor:
      begin
       dx := amount;
@@ -864,6 +877,8 @@ begin
       dx := Round(amount * Abs(sin(y / (src.Height - 1) * Pi * 2)));
       r := rect(cx - dx, y, cx + dx, y + 1);
      end;
+   else
+     r := rect(0, y, src.Width, y + 1);  { Fallback: full-width row for unsupported styles }
    end;
    dst.canvas.StretchDraw(r, Bm);
   end;
@@ -1046,7 +1061,7 @@ var
  hasb: Boolean;
  BitMap: TBitmap;
 begin
- tb := 0; // initializare fortata de mine. habar nu am daca e corect
+ tb := 0; //TODO: Forced initialization suppresses warning but may mask a logic bug - tb could be read before truly set. Review Trace algorithm.
 
  BitMap := TBitmap.create;
  BitMap.Width := src.Width;
@@ -1085,7 +1100,7 @@ begin
            begin
             P3[(x + 1) * 3] := TraceB;
             P3[(x + 1) * 3 + 1] := TraceB;
-            P3[(x + 1) * 3 + 1] := TraceB;
+            P3[(x + 1) * 3 + 2] := TraceB;  { BUG FIX: was +1 (duplicate), should be +2 for blue channel }
            end;
          end;
        end;
@@ -1367,8 +1382,8 @@ var
 begin
  src1.PixelFormat := pf24bit;
  src2.PixelFormat := pf24bit;
- w := src1.Width;
- h := src2.Height;
+ w := Min(src1.Width, src2.Width);    { Use smallest to avoid OOB }
+ h := Min(src1.Height, src2.Height);  { Use smallest to avoid OOB }
  dst.Width := w;
  dst.Height := h;
  dst.PixelFormat := pf24bit;
@@ -1472,7 +1487,7 @@ begin
 end;
 
 
-procedure Plasma(src1, src2, dst: TBitmap; scale, turbulence: extended);
+procedure Plasma(src1, src2, dst: TBitmap; scale, turbulence: extended);  { doesn't work - original comment }
 var
  cval, sval: array [0 .. 255] of Integer;
  i, x, y, w, h, xx, yy: Integer;
@@ -1503,7 +1518,7 @@ begin
        pd[x * 3 + 2] := ps1[xx * 3 + 2];
       end;
     end;
-  end;;
+  end;
 end;
 
 
@@ -1554,9 +1569,8 @@ begin
        mbsplitround: dx := Round(amount * Abs(sin(y / (src.Height - 1) * Pi)));
        mbsplitwaste: dx := Round(amount * Abs(cos(y / (src.Height - 1) * Pi)));
       else
-       // CubicDesign
-       raise Exception.Create('Error in janFX.SplitRound');
-       dx := 0; // CubicDesign
+       raise Exception.Create('Error in janFX.SplitRound: unsupported style');
+       // dx := 0;  -- dead code after raise (removed)
      end;
 
      r := rect(0, y, dx, y + 1);
@@ -1613,6 +1627,7 @@ var
  ix, iy: Integer;
  sli, slo: pbytearray;
 begin
+ if amount = 0 then EXIT;  { Avoid division by zero in rmax calculation }
  xmid := Bmp.Width / 2;
  ymid := Bmp.Height / 2;
  rmax := dst.Width * amount;
@@ -1995,7 +2010,7 @@ var
 
 begin
  clip.PixelFormat := pf24bit;
- // Added by me. Without this it fucks up when the bitmap is <> of 24bit
+ // Force 24bit - ScanLine assumes BGR byte layout
  for y := 0 to clip.Height - 1 do
   begin
    p0 := clip.ScanLine[y];
@@ -2017,7 +2032,7 @@ var
  x, y, a, r, g, b: Integer;
 begin
  clip.PixelFormat := pf24bit;
- // Added by me. Without this it fucks up when the bitmap is <> of 24bit
+ // Force 24bit - ScanLine assumes BGR byte layout
  for y := 0 to clip.Height - 1 do
   begin
    p0 := clip.ScanLine[y];
@@ -2329,7 +2344,7 @@ var
  ps1, ps2, pd: pbytearray;
 begin
  w := src1.Width;
- h := src1.Height;
+ h := Min(src1.Height, src2.Height);  { Use smallest dimension to avoid OOB on src2 }
  dst.Width  := w;
  dst.Height := h;
  src1.PixelFormat := pf24bit;
@@ -2350,7 +2365,7 @@ begin
 end;
 
 
-procedure Solorize(src, dst: TBitmap; amount: Integer);
+procedure Solorize(src, dst: TBitmap; amount: Integer);  { Note: misspelled. Should be 'Solarize'. Kept for backward compatibility. }
 var
  w, h, x, y: Integer;
  ps, pd: pbytearray;
@@ -2359,6 +2374,8 @@ begin
  w := src.Width;
  h := src.Height;
  src.PixelFormat := pf24bit;
+ dst.Width := w;
+ dst.Height := h;
  dst.PixelFormat := pf24bit;
  for y := 0 to h - 1 do begin
    ps := src.ScanLine[y];
@@ -2385,9 +2402,12 @@ VAR
  w, h, x, y: Integer;
  ps, pd: pbytearray;
 begin
+ if amount = 0 then EXIT;  { Avoid division by zero }
  w := src.Width;
  h := src.Height;
  src.PixelFormat := pf24bit;
+ dst.Width := w;
+ dst.Height := h;
  dst.PixelFormat := pf24bit;
  for y := 0 to h - 1 do begin
    ps := src.ScanLine[y];
@@ -2498,6 +2518,7 @@ begin
 end;
 
 
+//TODO: ButtonizeOval uses `with contour.canvas do` which violates coding conventions. Refactor to explicit `contour.canvas.xxx` calls.
 procedure ButtonizeOval(src: TBitmap; depth: byte; weight: Integer; rim: string);
 var
  p0, p1, p2, P3: pbytearray;
@@ -2509,7 +2530,7 @@ var
  // bicdark,bicnone:byte;
  // act:boolean;
 begin
- x3 := 0; // fortata de mine ca sa nu mai imi dea Warning
+ x3 := 0; // Suppresses compiler warning. x3 is always set before use in the loops below.
  a := weight;
  w := src.Width;
  h := src.Height;
@@ -2605,7 +2626,7 @@ begin
      g2 := P3[x * 3 + 1];
      if g2 <> $00 then begin
        p1[x * 3] := (p0[x * 3] + p2[x * 3] + p1[(x - 1) * 3] + p1[(x + 1) * 3]) div 4;
-       p1[x3 + 1] := (p0[x * 3 + 1] + p2[x * 3 + 1] + p1[(x - 1) * 3 + 1] + p1[(x + 1) * 3 + 1]) div 4;
+       p1[x * 3 + 1] := (p0[x * 3 + 1] + p2[x * 3 + 1] + p1[(x - 1) * 3 + 1] + p1[(x + 1) * 3 + 1]) div 4;  { BUG FIX: was x3 (stale from previous loop) instead of x * 3 }
        p1[x * 3 + 2] := (p0[x * 3 + 2] + p2[x * 3 + 2] + p1[(x - 1) * 3 + 2] + p1[(x + 1) * 3 + 2]) div 4;
       end;
     end;
@@ -3027,7 +3048,8 @@ end;
 
 
 
-procedure SmoothPoint(clip: TBitmap; xk, yk: Integer);   { Se pare ca proceseaza doar 4 pixeli. Probabil e subrutina interna, folosita la ceva }
+//TODO: SmoothPoint uses Canvas.Pixels which is extremely slow. Rewrite with ScanLine.
+procedure SmoothPoint(clip: TBitmap; xk, yk: Integer);   { Averages 4 neighboring pixels (up/down/left/right) to smooth a single point. Uses slow Canvas.Pixels. }
 VAR
  Bleu, Vert, Rouge, w, h: Integer;
  acolor: TColor;
@@ -3119,6 +3141,7 @@ end;
 
 
 { MARBLE }
+//TODO: marble1-8 are nearly identical (differ only in trig formula). Refactor into a single parameterized procedure.
 
 procedure marble(src, dst: TBitmap; scale: extended; turbulence: Integer);
 var
@@ -3127,6 +3150,7 @@ var
  p1, p2: pbytearray;
  w, h: Integer;
 begin
+ if (turbulence = 0) or (scale = 0) then EXIT;  { Avoid division by zero in mod/div }
  h := src.Height;
  w := src.Width;
  dst.Width := w;
@@ -3160,6 +3184,7 @@ var
  p1, p2: pbytearray;
  w, h: Integer;
 begin
+ if (turbulence = 0) or (scale = 0) then EXIT;  { Avoid division by zero }
  h := src.Height;
  w := src.Width;
  dst.assign(src);
@@ -3191,6 +3216,7 @@ var
  p1, p2: pbytearray;
  w, h: Integer;
 begin
+ if (turbulence = 0) or (scale = 0) then EXIT;  { Avoid division by zero }
  h := src.Height;
  w := src.Width;
  dst.assign(src);
@@ -3226,6 +3252,7 @@ var
  p1, p2: pbytearray;
  w, h: Integer;
 begin
+ if (turbulence = 0) or (scale = 0) then EXIT;  { Avoid division by zero }
  h := src.Height;
  w := src.Width;
  dst.assign(src);
@@ -3257,6 +3284,7 @@ var
  p1, p2: pbytearray;
  w, h: Integer;
 begin
+ if (turbulence = 0) or (scale = 0) then EXIT;  { Avoid division by zero }
  h := src.Height;
  w := src.Width;
  dst.assign(src);
@@ -3288,6 +3316,7 @@ var
  p1, p2: pbytearray;
  w, h: Integer;
 begin
+ if (turbulence = 0) or (scale = 0) then EXIT;  { Avoid division by zero }
  h := src.Height;
  w := src.Width;
  dst.assign(src);
@@ -3319,6 +3348,7 @@ var
  p1, p2: pbytearray;
  w, h: Integer;
 begin
+ if (turbulence = 0) or (scale = 0) then EXIT;  { Avoid division by zero }
  h := src.Height;
  w := src.Width;
  dst.assign(src);
@@ -3351,6 +3381,7 @@ var
  w, h: Integer;
  ax: extended;
 begin
+ if (turbulence = 0) or (scale = 0) then EXIT;  { Avoid division by zero }
  h := src.Height;
  w := src.Width;
  dst.assign(src);
@@ -3446,7 +3477,7 @@ begin
      i := i - 1;
      if (i = Niter)
      then i := 0
-     else i := Round(i / (Niter / nc));
+     else i := Min(nc - 1, Round(i / (Niter / nc)));  { Clamp to valid cc[] range 0..15 }
      // Canvas.Pixels[PX,PY] :=  ConvertColor(I);
      p0[px * 3] := cc[i].b;
      p0[px * 3 + 1] := cc[i].g;
