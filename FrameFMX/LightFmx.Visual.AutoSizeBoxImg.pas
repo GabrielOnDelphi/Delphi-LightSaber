@@ -54,11 +54,11 @@ end;
 
 
 { Loads and crops an image from file using the specified bounding box.
-  Sets BoxType to bxModel (image bubbles always appear on the model/left side).
+  Sets BoxType to bxContent (light blue, image bubbles appear on the left side).
   Triggers UpdateSize to recalculate dimensions based on the new image. }
 procedure TAutosizeBoxImg.LoadImage(const FileName: string; const aBoundBox: TRectF);
 begin
-  FBoxType:= bxModel;
+  FBoxType:= bxContent;
   CropBitmap(FileName, aBoundBox, FImage);
   UpdateSize;
 end;
@@ -66,10 +66,17 @@ end;
 
 { Scales image proportionally and sets bubble size.
   Called when the image loads or when the parent container resizes.
-  Uses FUpdatingSize flag to prevent recursive calls during resize. }
+  Uses FUpdatingSize flag to prevent recursive calls during resize.
+
+  IMPORTANT: Available width is computed directly from Parent.Width, NOT via
+  GetParentContentWidth. The reason: Margins.Right is set dynamically by this
+  method to left-align the bubble. If we used GetParentContentWidth (which
+  subtracts Margins.Right), a stale large Margins.Right from a previous wide
+  layout would collapse the available width to zero when the window shrinks,
+  causing FCurScale to not update and labels to overflow the bubble. }
 procedure TAutosizeBoxImg.UpdateSize;
 var
-  ParentContentWidth: Single;
+  AvailableWidth: Single;
   MaxWidth: Single;
   NewWidth, NewHeight: Single;
 begin
@@ -79,10 +86,13 @@ begin
 
   FUpdatingSize:= True;
   try
-    ParentContentWidth:= GetParentContentWidth;
+    // Available width = parent width minus our fixed left margin.
+    // We intentionally exclude Margins.Right because it is a dynamic OUTPUT
+    // of this method (set below), not a fixed INPUT.
+    AvailableWidth:= (Parent as TControl).Width - Margins.Left;
 
     // Fallback size if parent is not ready (width not yet calculated)
-    if ParentContentWidth <= 0 then
+    if AvailableWidth <= 0 then
       begin
         Width := 200;
         Height:= 150;
@@ -90,7 +100,7 @@ begin
       end;
 
     // Calculate max image width based on parent's available content area
-    MaxWidth:= ParentContentWidth * MaxImageWidthRatio;
+    MaxWidth:= AvailableWidth * MaxImageWidthRatio;
     MaxWidth:= Max(50, MaxWidth);
 
     // Scale image proportionally (never upscale beyond 100%)
@@ -100,8 +110,8 @@ begin
     NewWidth := Ceil(FImage.Bitmap.Width  * FCurScale) + Padding.Left + Padding.Right;
     NewHeight:= Ceil(FImage.Bitmap.Height * FCurScale) + Padding.Top  + Padding.Bottom;
 
-    // Adjust right margin to keep bubble left-aligned (model side)
-    Margins.Right:= ParentContentWidth - NewWidth;
+    // Adjust right margin to keep bubble left-aligned (content side)
+    Margins.Right:= Max(Margins.Left, AvailableWidth - NewWidth);
 
     SetBounds(Position.X, Position.Y, NewWidth, NewHeight);
   finally
