@@ -27,9 +27,10 @@ CONST
   CShadowBottomExtent = 6;             // Shadow vertical extent below bubble: Distance(3)*Sin(45°) + Softness blur ≈ 6px. Used by spacer in scroll containers.
   WhatsAppGreen     = $FFE4F3E2;
   WhatsAppGrey      = $FFEFEFEF;
+  WhatsAppBlue      = $FFE3F2FD;       // Light blue for lesson content bubbles
 
 TYPE
-  TBoxType = (bxUser, bxModel);
+  TBoxType = (bxUser, bxModel, bxContent);
 
 TYPE
   TAutoSizeBox = class(TRectangle)
@@ -102,6 +103,12 @@ begin
         // Wide RIGHT margin pushes the bubble to the left (Bot side)
         Margins.Rect:= TRectF.Create(5, 5, 40, 5);
         Fill.Color  := WhatsAppGrey;
+      end;
+    bxContent:
+      begin
+        // Left-aligned like bxModel, but light blue for lesson content
+        Margins.Rect:= TRectF.Create(5, 5, 40, 5);
+        Fill.Color  := WhatsAppBlue;
       end;
   end;
 
