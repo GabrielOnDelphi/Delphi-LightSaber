@@ -37,6 +37,10 @@ procedure OpenInIDEEditor(PasRec: RIdePosition);
   Returns True if file was already open and we switched to it, False otherwise. }
 function SwitchToOpenFile(const FileName: string): Boolean;
 
+{ Switches to an already-open file and moves cursor to the specified line.
+  Returns True if successful. }
+function GotoLineInOpenFile(const FileName: string; LineNum: Integer): Boolean;
+
 
 IMPLEMENTATION
 
@@ -188,6 +192,58 @@ begin
             end;
         end;
     end;
+end;
+
+
+
+
+{ Switches to an already-open file and moves cursor to the specified line.
+  Returns True if successful. }
+function GotoLineInOpenFile(const FileName: string; LineNum: Integer): Boolean;
+var
+  ModuleServices: IOTAModuleServices;
+  EditorServices: IOTAEditorServices60;
+  Module: IOTAModule;
+  Editor: IOTAEditor;
+  EditView: IOTAEditView;
+  CursorPos: TOTAEditPos;
+  i, j: Integer;
+begin
+  Result:= False;
+
+  if NOT Supports(BorlandIDEServices, IOTAModuleServices, ModuleServices)
+  then Exit;
+
+  for i:= 0 to ModuleServices.ModuleCount - 1 do
+  begin
+    Module:= ModuleServices.Modules[i];
+    if Module = nil then Continue;
+
+    for j:= 0 to Module.ModuleFileCount - 1 do
+    begin
+      Editor:= Module.ModuleFileEditors[j];
+      if Editor = nil then Continue;
+
+      if SameText(Editor.FileName, FileName) then
+      begin
+        Editor.Show;
+
+        (BorlandIDEServices as IOTAServices).QueryInterface(IOTAEditorServices, EditorServices);
+        if EditorServices <> nil then
+        begin
+          EditView:= EditorServices.TopView;
+          if Assigned(EditView) then
+          begin
+            CursorPos.Line:= LineNum;
+            CursorPos.Col:= 1;
+            EditView.SetCursorPos(CursorPos);
+            EditView.MoveViewToCursor;
+            EXIT(True);
+          end;
+        end;
+      end;
+    end;
+  end;
 end;
 
 
