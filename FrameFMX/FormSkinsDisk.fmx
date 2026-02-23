@@ -1,0 +1,71 @@
+object frmStyleDisk: TfrmStyleDisk
+  Left = 0
+  Top = 0
+  Caption = 'Style selector'
+  ClientHeight = 464
+  ClientWidth = 326
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop, iPhone, iPad]
+  OnCreate = FormCreate
+  OnClose = FormClose
+  OnKeyDown = FormKeyDown
+  DesignerMasterStyle = 0
+  object lblTop: TLabel
+    Align = Top
+    HitTest = True
+    Margins.Left = 3.000000000000000000
+    Margins.Top = 6.000000000000000000
+    Margins.Right = 3.000000000000000000
+    Margins.Bottom = 1.000000000000000000
+    Position.X = 3.000000000000000000
+    Position.Y = 6.000000000000000000
+    Size.Width = 320.000000000000000000
+    Size.Height = 20.000000000000000000
+    Size.PlatformDefault = False
+    Text = 'Click a style to apply it'
+    TabOrder = 0
+    OnClick = lblTopClick
+  end
+  object lBox: TListBox
+    Align = Client
+    Margins.Left = 3.000000000000000000
+    Margins.Top = 3.000000000000000000
+    Margins.Right = 3.000000000000000000
+    Margins.Bottom = 3.000000000000000000
+    Size.Width = 320.000000000000000000
+    Size.Height = 387.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 1
+    DisableFocusEffect = True
+    DefaultItemStyles.ItemStyle = ''
+    DefaultItemStyles.GroupHeaderStyle = ''
+    DefaultItemStyles.GroupFooterStyle = ''
+    OnChange = lBoxChange
+    Viewport.Width = 316.000000000000000000
+    Viewport.Height = 383.000000000000000000
+  end
+  object layBottom: TLayout
+    Align = Bottom
+    Position.Y = 420.000000000000000000
+    Size.Width = 326.000000000000000000
+    Size.Height = 44.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 2
+    object btnOK: TButton
+      Align = Right
+      Margins.Left = 3.000000000000000000
+      Margins.Top = 3.000000000000000000
+      Margins.Right = 3.000000000000000000
+      Margins.Bottom = 3.000000000000000000
+      Position.X = 230.000000000000000000
+      Position.Y = 3.000000000000000000
+      Size.Width = 93.000000000000000000
+      Size.Height = 38.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'OK'
+      OnClick = btnOKClick
+    end
+  end
+end

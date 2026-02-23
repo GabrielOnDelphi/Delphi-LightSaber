@@ -3,7 +3,7 @@ unit DataModule;
 interface
 
 uses
-  System.SysUtils, System.Classes, FMX.Types, FMX.Controls;
+  System.SysUtils, System.Classes, FMX.Types;
 
 type
   TdatMod = class(TDataModule)

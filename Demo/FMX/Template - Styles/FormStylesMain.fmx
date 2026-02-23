@@ -35,9 +35,9 @@ object frmSimpleDemo: TfrmSimpleDemo
       Size.PlatformDefault = False
       StyleLookup = 'checkboxstyle'
       TabOrder = 4
-      Text = 'Some CheckBox'
+      Text = 'Use buggy SetStyleFromFile'
     end
-    object Button1: TButton
+    object btnNext: TButton
       Anchors = [akBottom]
       Position.X = 37.000000000000000000
       Position.Y = 404.000000000000000000
@@ -46,7 +46,7 @@ object frmSimpleDemo: TfrmSimpleDemo
       Size.PlatformDefault = False
       TabOrder = 17
       Text = 'Next'
-      OnClick = Button1Click
+      OnClick = btnNextClick
     end
     object GroupBox1: TGroupBox
       Align = Top
@@ -188,6 +188,7 @@ object frmSimpleDemo: TfrmSimpleDemo
       Size.Width = 275.000000000000000000
       Size.Height = 22.000000000000000000
       Size.PlatformDefault = False
+      OnClick = edtPathClick
     end
     object btnRefresh: TButton
       Anchors = [akTop, akRight]

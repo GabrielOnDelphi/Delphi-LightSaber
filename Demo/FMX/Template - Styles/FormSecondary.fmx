@@ -2,8 +2,8 @@ object frmSecondary: TfrmSecondary
   Left = 0
   Top = 0
   Caption = 'Form2'
-  ClientHeight = 417
-  ClientWidth = 808
+  ClientHeight = 405
+  ClientWidth = 401
   Visible = True
   FormFactor.Width = 320
   FormFactor.Height = 480
@@ -12,21 +12,21 @@ object frmSecondary: TfrmSecondary
   DesignerMasterStyle = 0
   object TabControl1: TTabControl
     Align = Client
-    Size.Width = 808.000000000000000000
-    Size.Height = 417.000000000000000000
+    Size.Width = 401.000000000000000000
+    Size.Height = 405.000000000000000000
     Size.PlatformDefault = False
     TabIndex = 0
     TabOrder = 1
     TabPosition = PlatformDefault
     Sizes = (
-      808s
-      391s
-      808s
-      391s
-      808s
-      391s
-      808s
-      391s)
+      401s
+      379s
+      401s
+      379s
+      401s
+      379s
+      401s
+      379s)
     object TabItem1: TTabItem
       CustomIcon = <
         item
@@ -43,7 +43,7 @@ object frmSecondary: TfrmSecondary
       object Layout1: TLayout
         Align = Left
         Size.Width = 249.000000000000000000
-        Size.Height = 391.000000000000000000
+        Size.Height = 379.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
         object SpinBox1: TSpinBox
@@ -175,28 +175,13 @@ object frmSecondary: TfrmSecondary
           Margins.Right = 3.000000000000000000
           Margins.Bottom = 3.000000000000000000
           Position.X = 3.000000000000000000
-          Position.Y = 3.000000000000000000
-          Size.Width = 243.000000000000000000
-          Size.Height = 22.000000000000000000
-          Size.PlatformDefault = False
-          Text = 'SpeedButton1'
-          OnClick = SpeedButton1Click
-        end
-        object SpeedButton2: TSpeedButton
-          Align = Top
-          Margins.Left = 3.000000000000000000
-          Margins.Top = 3.000000000000000000
-          Margins.Right = 3.000000000000000000
-          Margins.Bottom = 3.000000000000000000
-          Position.X = 3.000000000000000000
           Position.Y = 31.000000000000000000
           Size.Width = 243.000000000000000000
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
           Text = 'SpeedButton1'
-          OnClick = SpeedButton2Click
         end
-        object SpeedButton3: TSpeedButton
+        object SpeedButton2: TSpeedButton
           Align = Top
           Margins.Left = 3.000000000000000000
           Margins.Top = 3.000000000000000000
@@ -207,29 +192,33 @@ object frmSecondary: TfrmSecondary
           Size.Width = 243.000000000000000000
           Size.Height = 22.000000000000000000
           Size.PlatformDefault = False
-          Text = 'SpeedButton1'
+          Text = 'SpeedButton2'
+        end
+        object SpeedButton3: TSpeedButton
+          Align = Top
+          Margins.Left = 3.000000000000000000
+          Margins.Top = 3.000000000000000000
+          Margins.Right = 3.000000000000000000
+          Margins.Bottom = 3.000000000000000000
+          Position.X = 3.000000000000000000
+          Position.Y = 3.000000000000000000
+          Size.Width = 243.000000000000000000
+          Size.Height = 22.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'Clear style'
           OnClick = SpeedButton3Click
         end
       end
       object DropTarget1: TDropTarget
-        Position.X = 296.000000000000000000
-        Position.Y = 248.000000000000000000
+        Position.X = 274.000000000000000000
+        Position.Y = 59.000000000000000000
         TabOrder = 1
         Text = 'DropTarget1'
-      end
-      object PlotGrid1: TPlotGrid
-        Frequency = 5.000000000000000000
-        Marks = 25.000000000000000000
-        Position.X = 288.000000000000000000
-        Position.Y = 31.000000000000000000
-        Size.Width = 169.000000000000000000
-        Size.Height = 98.000000000000000000
-        Size.PlatformDefault = False
       end
       object ArcDial1: TArcDial
         Position.X = 384.000000000000000000
         Position.Y = 224.000000000000000000
-        TabOrder = 3
+        TabOrder = 2
       end
       object Splitter1: TSplitter
         Align = Left
@@ -237,7 +226,7 @@ object frmSecondary: TfrmSecondary
         MinSize = 20.000000000000000000
         Position.X = 249.000000000000000000
         Size.Width = 17.000000000000000000
-        Size.Height = 391.000000000000000000
+        Size.Height = 379.000000000000000000
         Size.PlatformDefault = False
       end
     end
@@ -256,17 +245,17 @@ object frmSecondary: TfrmSecondary
       ExplicitSize.cy = 26.000000000000000000
       object TreeView1: TTreeView
         Align = Top
-        Size.Width = 808.000000000000000000
+        Size.Width = 401.000000000000000000
         Size.Height = 88.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
-        Viewport.Width = 804.000000000000000000
+        Viewport.Width = 397.000000000000000000
         Viewport.Height = 84.000000000000000000
       end
       object ListBox1: TListBox
         Align = Top
         Position.Y = 88.000000000000000000
-        Size.Width = 808.000000000000000000
+        Size.Width = 401.000000000000000000
         Size.Height = 88.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
@@ -274,7 +263,7 @@ object frmSecondary: TfrmSecondary
         DefaultItemStyles.ItemStyle = ''
         DefaultItemStyles.GroupHeaderStyle = ''
         DefaultItemStyles.GroupFooterStyle = ''
-        Viewport.Width = 804.000000000000000000
+        Viewport.Width = 397.000000000000000000
         Viewport.Height = 84.000000000000000000
       end
       object Grid1: TGrid
@@ -282,11 +271,11 @@ object frmSecondary: TfrmSecondary
         CanFocus = True
         ClipChildren = True
         Position.Y = 176.000000000000000000
-        Size.Width = 808.000000000000000000
+        Size.Width = 401.000000000000000000
         Size.Height = 88.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 2
-        Viewport.Width = 804.000000000000000000
+        Viewport.Width = 397.000000000000000000
         Viewport.Height = 63.000000000000000000
       end
       object ListView1: TListView
@@ -296,7 +285,7 @@ object frmSecondary: TfrmSecondary
         FooterAppearanceClassName = 'TListHeaderObjects'
         Align = Top
         Position.Y = 264.000000000000000000
-        Size.Width = 808.000000000000000000
+        Size.Width = 401.000000000000000000
         Size.Height = 73.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 3
@@ -317,12 +306,12 @@ object frmSecondary: TfrmSecondary
       ExplicitSize.cy = 26.000000000000000000
       object ScrollBox1: TScrollBox
         Align = Client
-        Size.Width = 808.000000000000000000
-        Size.Height = 391.000000000000000000
+        Size.Width = 401.000000000000000000
+        Size.Height = 379.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 0
-        Viewport.Width = 808.000000000000000000
-        Viewport.Height = 391.000000000000000000
+        Viewport.Width = 401.000000000000000000
+        Viewport.Height = 379.000000000000000000
         object Rectangle1: TRectangle
           Position.X = 62.000000000000000000
           Position.Y = 6.000000000000000000
@@ -334,7 +323,7 @@ object frmSecondary: TfrmSecondary
           Anchors = [akTop, akRight]
           CanParentFocus = True
           Orientation = Horizontal
-          Position.X = 2269.000000000000000000
+          Position.X = 3378.000000000000000000
           Position.Y = 88.000000000000000000
           TabOrder = 1
         end
@@ -368,8 +357,8 @@ object frmSecondary: TfrmSecondary
     end
   end
   object MainMenu1: TMainMenu
-    Left = 504
-    Top = 144
+    Left = 344
+    Top = 8
     object MenuItem1: TMenuItem
       Text = 'MenuItem1'
     end
@@ -530,7 +519,7 @@ object frmSecondary: TfrmSecondary
       0000000000000000000000000000000000000000000000000000000000000000
       000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF}
     IconIndex = 0
-    Left = 386
-    Top = 46
+    Left = 282
+    Top = 6
   end
 end

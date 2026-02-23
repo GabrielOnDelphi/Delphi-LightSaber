@@ -1,0 +1,60 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{819FB8E5-A8BF-4961-9ED7-B2BDA52964D8}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="FMX_Demo_Styles.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\Template - Styles AI\HeaderFooterApplication.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="..\..\..\..\Project LearnAssist\LearnAssist src\LearnAssist.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="FMX_Demo_Styles">
+        <MSBuild Projects="FMX_Demo_Styles.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_Styles:Clean">
+        <MSBuild Projects="FMX_Demo_Styles.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_Styles:Make">
+        <MSBuild Projects="FMX_Demo_Styles.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="HeaderFooterApplication">
+        <MSBuild Projects="..\Template - Styles AI\HeaderFooterApplication.dproj"/>
+    </Target>
+    <Target Name="HeaderFooterApplication:Clean">
+        <MSBuild Projects="..\Template - Styles AI\HeaderFooterApplication.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="HeaderFooterApplication:Make">
+        <MSBuild Projects="..\Template - Styles AI\HeaderFooterApplication.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="LearnAssist">
+        <MSBuild Projects="..\..\..\..\Project LearnAssist\LearnAssist src\LearnAssist.dproj"/>
+    </Target>
+    <Target Name="LearnAssist:Clean">
+        <MSBuild Projects="..\..\..\..\Project LearnAssist\LearnAssist src\LearnAssist.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LearnAssist:Make">
+        <MSBuild Projects="..\..\..\..\Project LearnAssist\LearnAssist src\LearnAssist.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="FMX_Demo_Styles;HeaderFooterApplication;LearnAssist"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="FMX_Demo_Styles:Clean;HeaderFooterApplication:Clean;LearnAssist:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="FMX_Demo_Styles:Make;HeaderFooterApplication:Make;LearnAssist:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

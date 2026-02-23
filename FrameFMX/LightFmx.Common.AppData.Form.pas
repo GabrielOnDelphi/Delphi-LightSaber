@@ -103,7 +103,7 @@ TYPE
 
 IMPLEMENTATION   {$R *.fmx}
 USES
-  LightFmx.Common.AppData, LightFmx.Common.CenterControl, LightFmx.Common.Dialogs, LightCore;
+  LightFmx.Common.AppData, LightFmx.Common.CenterControl, LightFmx.Common.Dialogs;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -163,6 +163,12 @@ begin
   // Load form if AutoState requests it
   if AutoState <> asNone
   then LoadForm;
+
+  // Mark initialization complete so saveBeforeExit can save form state.
+  // The VCL version calls EndInitialization in LightVcl.Visual.AppDataForm.pas.
+
+  // WARNING: Can't check Self=Application.MainForm here because FMX assigns MainForm AFTER the constructor returns, so it's still nil during Loaded.
+  TAppDataCore.EndInitialization;
 end;
 
 

@@ -1,4 +1,4 @@
-object frmSkinDisk: TfrmSkinDisk
+object frmStyleDisk: TfrmStyleDisk
   Left = 1104
   Top = 300
   AlphaBlend = True
@@ -6,7 +6,7 @@ object frmSkinDisk: TfrmSkinDisk
   Anchors = []
   BorderIcons = [biSystemMenu]
   BorderStyle = bsDialog
-  Caption = 'Skin selector'
+  Caption = 'Style selector'
   ClientHeight = 464
   ClientWidth = 326
   Color = clBtnFace
@@ -26,8 +26,7 @@ object frmSkinDisk: TfrmSkinDisk
   SnapBuffer = 5
   OnClose = FormClose
   OnCreate = FormCreate
-  OnDestroy = FormDestroy
-  OnKeyPress = FormKeyPress
+  OnKeyDown = FormKeyDown
   TextHeight = 18
   object lblTop: TLabel
     AlignWithMargins = True
@@ -45,7 +44,7 @@ object frmSkinDisk: TfrmSkinDisk
   object lblMoreSkinsTrial: TLabel
     AlignWithMargins = True
     Left = 3
-    Top = 392
+    Top = 389
     Width = 320
     Height = 36
     Align = alBottom
@@ -59,7 +58,7 @@ object frmSkinDisk: TfrmSkinDisk
     Left = 3
     Top = 28
     Width = 320
-    Height = 354
+    Height = 351
     Align = alClient
     ItemHeight = 18
     ScrollWidth = 6
@@ -68,7 +67,7 @@ object frmSkinDisk: TfrmSkinDisk
   end
   object pnlBottom: TPanel
     Left = 0
-    Top = 385
+    Top = 382
     Width = 326
     Height = 4
     Align = alBottom
@@ -76,20 +75,24 @@ object frmSkinDisk: TfrmSkinDisk
   end
   object pnlBtm: TPanel
     Left = 0
-    Top = 428
+    Top = 425
     Width = 326
-    Height = 36
+    Height = 39
     Align = alBottom
     TabOrder = 2
     object btnOK: TButton
       AlignWithMargins = True
-      Left = 232
-      Top = 4
-      Width = 90
-      Height = 28
+      Left = 216
+      Top = 3
+      Width = 107
+      Height = 33
       Hint = 
         'Save settings & close the window.'#13#10'Hint: You can also close the ' +
         'window with <Enter>'
+      Margins.Left = 2
+      Margins.Top = 2
+      Margins.Right = 2
+      Margins.Bottom = 2
       Align = alRight
       Caption = 'OK'
       ModalResult = 1
@@ -98,19 +101,22 @@ object frmSkinDisk: TfrmSkinDisk
     end
     object btnSkinEditor: TButton
       AlignWithMargins = True
-      Left = 4
-      Top = 4
-      Width = 117
-      Height = 28
+      Left = 6
+      Top = 6
+      Width = 91
+      Height = 27
       Hint = 
         'Do you feel creative?'#13#10'Use this skin editor to create your own s' +
         'kins. '#13#10'Feel free to share them with us. We will upload them on ' +
         'our website together with your name.'#13#10#13#10'Please see the Help menu' +
         ' in the skin editor for details.'
+      Margins.Left = 5
+      Margins.Top = 5
+      Margins.Right = 5
+      Margins.Bottom = 5
       Align = alLeft
-      Caption = 'Create own skins'
+      Caption = 'Create own'
       TabOrder = 1
-      OnClick = btnSkinEditorClick
     end
   end
 end

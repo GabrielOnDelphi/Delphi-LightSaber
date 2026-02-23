@@ -3,11 +3,6 @@ program VCL_Demo_AutoTranslator;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  madExcept,
-  madLinkDisAsm,
-  madListHardware,
-  madListProcesses,
-  madListModules,
   {$ENDIF }
   FormMain in 'FormMain.pas' {MainForm},
   FormTranslatorIniEditor in '..\FormTranslatorIniEditor.pas',

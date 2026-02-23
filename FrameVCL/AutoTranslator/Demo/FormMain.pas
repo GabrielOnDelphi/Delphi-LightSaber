@@ -35,7 +35,9 @@ VAR
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-  LightVcl.Common. Translate,
+  LightVcl.Common.Translate,
+  LightVcl.Visual.AppData,
+  LightCore.AppData,
   FormTranslEditor,
   FormTranslatorIniEditor,
   FormTranslSelector;
@@ -50,7 +52,7 @@ procedure TMainForm.FormPostInitialize;
 begin
   inherited FormPostInitialize;
 
-  Translator.OnTranslationLoaded:= TranslationLoaded;  // Event handler
+  AppData.Translator.OnTranslationLoaded:= TranslationLoaded;  // Event handler
   TranslationLoaded(Self);                             // Show current loaded translation
   MainFormCaption('');
 end;
@@ -77,13 +79,13 @@ end;
 
 procedure TMainForm.btnEditAutoClick(Sender: TObject);
 begin
-  TfrmTranslEditor.ShowEditor(ChangeFileExt(Translator.CurLanguageName, ''), TRUE);
+  TfrmTranslEditor.ShowEditor(ChangeFileExt(AppData.Translator.CurLanguageName, ''), TRUE);
 end;
 
 
 procedure TMainForm.btnEditManualClick(Sender: TObject);
 begin
-  TfrmTranslatorIniEditor.ShowEditor(Translator.CurLanguage);
+  TfrmTranslatorIniEditor.ShowEditor(AppData.Translator.CurLanguage);
 end;
 
 
@@ -96,7 +98,7 @@ end;
 // Show current loaded translation
 procedure TMainForm.TranslationLoaded(Sender: TObject);
 begin
-  lblCurLang.Caption:= 'Current translation file: '+ Translator.CurLanguageName;
+  lblCurLang.Caption:= 'Current translation file: '+ AppData.Translator.CurLanguageName;
 end;
 
 
