@@ -91,7 +91,6 @@ begin
   inherited;
   // On first run, set default path. On subsequent runs, edtPath.Text is restored by TLightForm state saving.
   if AppData.RunningFirstTime then
-  begin
     if AppData.BetaTesterMode
     then edtPath.Text:= 'c:\Delphi\Styles & resources\FMX Styles\Win\'
     else
@@ -100,14 +99,8 @@ begin
         if NOT TDirectory.Exists(edtPath.Text)
         then edtPath.Text:= TPath.Combine(TPath.GetPublicPath, 'Documents\Embarcadero\Studio\37.0\Styles');
       end;
-  end;
 
   btnRefreshClick(Self);
-end;
-
-
-procedure TfrmSimpleDemo.FormCreate(Sender: TObject);
-begin
 end;
 
 
@@ -168,7 +161,8 @@ begin
 end;
 
 
-{ PROBLEMS IF WE TRY TO LOAD AN INVALID STYLE FILE!
+{ LoadStyle
+  HAS PROBLEMS IF WE TRY TO LOAD AN INVALID STYLE FILE!
   Demonstrates the TStyleManager.SetStyleFromFile bug.
   After loading in invalid styles (e.g. Air.style), the ListView selection highlight is permanently lost and won't come back until the application is restarted.
 
