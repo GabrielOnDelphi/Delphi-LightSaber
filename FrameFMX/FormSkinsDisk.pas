@@ -48,7 +48,7 @@ INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
 USES
-  System.SysUtils, System.Classes, System.UITypes,
+  System.SysUtils, System.Classes, System.UITypes, System.Types,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.StdCtrls, FMX.Layouts, FMX.ListBox, FMX.Controls.Presentation, FMX.Styles,
   LightFmx.Common.AppData.Form;
 
@@ -69,13 +69,11 @@ TYPE
   public
     procedure FormPreRelease; override;
     class procedure ShowAsModal; static;
-    class procedure CreateForm; static;
   end;
 
 
 { Loads the last used style from INI file. Call during app initialization.
-  DefaultStyle: Style filename to use on first run (e.g. 'Jet.style').
-               Pass empty string for default platform style. }
+  DefaultStyle: Style filename to use on first run (e.g. 'Jet.style'). Pass empty string for default platform style. }
 procedure LoadLastStyle(const DefaultStyle: string= '');
 
 { Returns the path to the styles directory (AppSysDir\Styles\) }
@@ -246,7 +244,7 @@ begin
     EXIT;
   end;
 
-  { List *.style files (text format) }
+  { List *.style files (text format) }                    //todo: use LightCore.IO.ListFilesOf()
   Files:= TDirectory.GetFiles(GetStyleDir, '*.style');
   for FullFileName in Files do
     lBox.Items.Add(ExtractFileName(FullFileName));
