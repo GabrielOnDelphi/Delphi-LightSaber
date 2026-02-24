@@ -220,7 +220,7 @@ end;
 
 procedure TfrmSettings.btnSkinsClick(Sender: TObject);
 begin
-  TfrmSkinDisk.ShowAsModal;
+  TfrmStyleDisk.ShowAsModal;
 end;
 
 

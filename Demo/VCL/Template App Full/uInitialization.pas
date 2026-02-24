@@ -43,8 +43,8 @@ begin
   { Skins }
   if AppData.RunningFirstTime
   AND NOT AppData.RunningHome
-  then LoadLastSkin('Light AmethystKamri.vsf') // 'Light AmethystKamri.vsf' has too much blue
-  else LoadLastSkin();
+  then LoadLastStyle('Light AmethystKamri.vsf') // 'Light AmethystKamri.vsf' has too much blue
+  else LoadLastStyle();
 
   { Trial/License }
   { Load the log early othewise it will overwrite the existing text }
@@ -100,7 +100,7 @@ begin
         then LightVcl.Common.ExecuteShell.ExecuteURL(AppData.ProductWelcome);
 
         TfrmEULA.ShowAsModal;                     // EULA
-        TfrmSkinDisk.ShowAsModal;                 // Choose skin. There is a bug: Form losses modal attribute after applying skin. So, I can call this ONLY at the end of initialization procedure. Even though I can click the main form, the Skins form is still marked as modal.
+        TfrmStyleDisk.ShowAsModal;                 // Choose skin. There is a bug: Form losses modal attribute after applying skin. So, I can call this ONLY at the end of initialization procedure. Even though I can click the main form, the Skins form is still marked as modal.
       end;
    end;
 
