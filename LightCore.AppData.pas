@@ -117,14 +117,16 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       App path/name
    --------------------------------------------------------------------------------------------------}
-    class function AppSysDir: string;
     function CheckSysDir: Boolean;
-    class function IniFile: string;
-    class function AppFolder: string;      // The folder where the exe file is located. Old name: ExeFolder/AppDir
-    class function AppDataFolder(ForceDir: Boolean= FALSE): string;
-    class function AppDataFolderAllUsers(ForceDir: Boolean = FALSE): string;
 
-    class function ExeShortName:  string;
+    class function AppSysDir: string;
+    class function IniFile: string;                                          static;
+    class function AppFolder: string;                                        static;    // The folder where the exe file is located. Old name: ExeFolder/AppDir
+    class function AppDataFolder(ForceDir: Boolean= FALSE): string;          static;
+    class function AppDataFolderAllUsers(ForceDir: Boolean = FALSE): string; static;
+    class function GetStyleDir: string;                                      static;
+
+    class function ExeShortName:  string;                                    static;
     property LastUsedFolder: string read getLastUsedFolder write FLastFolder;
 
     class property AppName: string read getAppName;
@@ -409,6 +411,11 @@ begin
   then ForceDirectories(Result);
 end;
 
+
+class function TAppDataCore.GetStyleDir: string;
+begin
+  Result:= AppSysDir+ Trail('Skins');
+end;
 
 { Returns the name of the INI file (where we will write application's settings).
   It is based on the name of the application. Example: c:\Documents and Settings\MyName\Application Data\MyApp\MyApp.ini }
