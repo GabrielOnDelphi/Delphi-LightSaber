@@ -125,6 +125,8 @@ begin
   Assert(Updater = NIL, 'Updater already created!');
   inherited Create;
   URLNewsFile:= aURLNewsFile;
+  URLDownload  := AppDataCore.ProductHome;
+  URLRelHistory:= AppDataCore.ProductHome;
 
   Timer:= TTimer.Create(NIL);
   Timer.Enabled:= FALSE;

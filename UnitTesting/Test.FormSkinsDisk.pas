@@ -2,7 +2,7 @@ unit Test.FormSkinsDisk;
 
 {=============================================================================================================
    Unit tests for FormSkinsDisk.pas
-   Tests TfrmSkinDisk - the VCL skin selector form.
+   Tests TfrmStyleDisk - the VCL skin selector form.
 
    Note: These tests focus on form creation, component existence, and basic behavior.
    Skin loading is tested with mock/existing files where possible.
@@ -165,11 +165,11 @@ end;
 
 procedure TTestFormSkinsDisk.CleanupForm;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
   if FTestForm <> NIL then
   begin
-    Form:= TfrmSkinDisk(FTestForm);
+    Form:= TfrmStyleDisk(FTestForm);
     FreeAndNil(Form);
     FTestForm:= NIL;
   end;
@@ -180,15 +180,15 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormClassExists;
 begin
-  Assert.IsNotNull(TfrmSkinDisk, 'TfrmSkinDisk class should exist');
+  Assert.IsNotNull(TfrmStyleDisk, 'TfrmStyleDisk class should exist');
 end;
 
 
 procedure TTestFormSkinsDisk.TestFormCreate_Succeeds;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Assert.IsNotNull(Form, 'Form creation should succeed');
@@ -197,9 +197,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormCreate_WithNilOwner;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Assert.IsNull(Form.Owner, 'Owner should be nil when created with nil');
@@ -210,9 +210,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormHasListBox;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Assert.IsNotNull(Form.lBox, 'Form should have lBox component');
@@ -222,9 +222,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormHasTopLabel;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Assert.IsNotNull(Form.lblTop, 'Form should have lblTop label');
@@ -233,9 +233,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormHasBottomPanel;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Assert.IsNotNull(Form.pnlBottom, 'Form should have pnlBottom panel');
@@ -244,9 +244,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormHasOKButton;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Assert.IsNotNull(Form.btnOK, 'Form should have btnOK button');
@@ -255,9 +255,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormHasSkinEditorButton;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Assert.IsNotNull(Form.btnSkinEditor, 'Form should have btnSkinEditor button');
@@ -266,9 +266,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormHasMoreSkinsLabel;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Assert.IsNotNull(Form.lblMoreSkinsTrial, 'Form should have lblMoreSkinsTrial label');
@@ -279,9 +279,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestListBox_IsPopulated;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   { ListBox should have at least the default Windows theme entry }
@@ -292,10 +292,10 @@ end;
 
 procedure TTestFormSkinsDisk.TestListBox_HasDefaultTheme;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
   Index: Integer;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Index:= Form.lBox.Items.IndexOf('Windows default theme');
@@ -305,9 +305,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestListBox_ClickDoesNotRaiseException;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   { Select default theme (first item) }
@@ -326,9 +326,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestBtnOKClick_ClosesForm;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Form.Show;
@@ -344,9 +344,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestBtnSkinEditorClick_NoException;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   { btnSkinEditorClick should not raise exception - will open local skin editor or URL }
@@ -362,9 +362,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormCreate_CallsLoadForm;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   { If LoadForm was called, the form should exist without exception }
@@ -374,9 +374,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormCreate_PopulatesSkins;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   { FormCreate calls PopulateSkins, so list should have items }
@@ -387,9 +387,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormDestroy_NoException;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   { FormDestroy should not raise exception }
@@ -403,10 +403,10 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormClose_SetsCaFree;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
   Action: TCloseAction;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Action:= caNone;
@@ -418,10 +418,10 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormKeyPress_EnterClosesForm;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
   Key: Char;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Form.Show;
@@ -438,10 +438,10 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormKeyPress_EscapeClosesForm;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
   Key: Char;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Form.Show;
@@ -460,10 +460,10 @@ end;
 
 procedure TTestFormSkinsDisk.TestLblTopClick_RefreshesSkins;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
   InitialCount: Integer;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   InitialCount:= Form.lBox.Items.Count;
@@ -479,9 +479,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestOnDefaultSkin_CanBeAssigned;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   { Assign nil to test assignment capability }
@@ -495,9 +495,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestOnDefaultSkin_DefaultIsNil;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   { OnDefaultSkin is assigned in FormCreate events if connected in DFM,
@@ -529,9 +529,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestSkinDirHint_IsSet;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Assert.IsTrue(Form.lblTop.Hint <> '',
@@ -543,9 +543,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestDefaultTheme_IsFirstInList;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Assert.AreEqual('Windows default theme', Form.lBox.Items[0],
@@ -555,9 +555,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestDefaultTheme_TextIsCorrect;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Assert.IsTrue(Form.lBox.Items.IndexOf('Windows default theme') >= 0,
@@ -569,9 +569,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormCaption_IsSkinSelector;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Assert.AreEqual('Skin selector', Form.Caption,
@@ -581,9 +581,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormKeyPreview_IsEnabled;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Assert.IsTrue(Form.KeyPreview,
@@ -593,9 +593,9 @@ end;
 
 procedure TTestFormSkinsDisk.TestFormAlphaBlend_IsEnabled;
 var
-  Form: TfrmSkinDisk;
+  Form: TfrmStyleDisk;
 begin
-  Form:= TfrmSkinDisk.Create(NIL);
+  Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Assert.IsTrue(Form.AlphaBlend,

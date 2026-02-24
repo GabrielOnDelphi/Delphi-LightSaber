@@ -32,7 +32,7 @@ object frmRecEditor: TfrmRecEditor
     TabOrder = 0
     object btnSave: TButton
       AlignWithMargins = True
-      Left = 163
+      Left = 100
       Top = 4
       Width = 90
       Height = 28
@@ -46,7 +46,7 @@ object frmRecEditor: TfrmRecEditor
     end
     object Button1: TButton
       AlignWithMargins = True
-      Left = 67
+      Left = 4
       Top = 4
       Width = 90
       Height = 28
@@ -60,7 +60,7 @@ object frmRecEditor: TfrmRecEditor
     end
     object btnCopy: TButton
       AlignWithMargins = True
-      Left = 4
+      Left = 196
       Top = 6
       Width = 57
       Height = 24

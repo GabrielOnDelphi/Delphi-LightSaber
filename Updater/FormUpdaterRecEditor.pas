@@ -29,7 +29,7 @@ TYPE
     lblCounter     : TLabel;
     lblVers        : TLabel;
     Memo           : TMemo;
-    pnlTop: TPanel;
+    pnlTop         : TPanel;
     Panel3         : TPanel;
     Panel4         : TPanel;
     Panel5         : TPanel;
@@ -45,37 +45,34 @@ TYPE
     procedure btnCopyClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
+    FName: string;
   public
+    class function GetBinFileName: string; static;
     class procedure CreateFormModal(ParentForm: TForm= NIL); static;
  end;
 
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common. Translate, ciUpdaterRec, LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Visual.INIFile;
+   LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.Clipboard, ciUpdaterRec, LightVcl.Common.Dialogs;
 
 
-
-function GetBinFileName: string;
-begin
-  Result:= Appdata.AppFolder+ 'OnlineNews.bin';  // switched to v3 since 2025.10
-end;
 
 
 class procedure TfrmRecEditor.CreateFormModal(ParentForm: TForm= NIL);
 VAR Form: TfrmRecEditor;
 begin
- TAppData.RaiseIfStillInitializing;
+  TAppData.RaiseIfStillInitializing;
 
- AppData.CreateFormHidden(TfrmRecEditor, Form, asPosOnly, ParentForm);      { Freed by ShowModal }
- WITH Form DO
- begin
-   PopulateUsers(cmbTarget);
-   if FileExists(GetBinFileName)
-   then Button1Click(NIL);
- end;
+  AppData.CreateFormHidden(TfrmRecEditor, Form, asPosOnly, ParentForm);      { Freed by ShowModal }
+  WITH Form DO
+  begin
+    PopulateUsers(cmbTarget);
+    if FileExists(GetBinFileName)
+    then Button1Click(NIL);
+  end;
 
- Form.ShowModal;  { Closed by mrOk/mrCancel }
+  Form.ShowModal;  { Closed by mrOk/mrCancel }
 end;
 
 
@@ -93,8 +90,20 @@ end;
 
 procedure TfrmRecEditor.btnCopyClick(Sender: TObject);
 begin
- StringToClipboard(GetBinFileName);
+  StringToClipboard(GetBinFileName);
 end;
+
+
+class function TfrmRecEditor.GetBinFileName: string;
+begin
+  Result:= Appdata.AppFolder+ 'OnlineNews.bin';  // switched to v3 since 2025.10
+end;
+
+
+
+
+
+
 
 
 procedure TfrmRecEditor.btnSaveClick(Sender: TObject);
@@ -110,14 +119,15 @@ begin
   News.ShowCounter := spnShowCntr.Value;
   News.IsBetaVers  := chkBetaVer.Checked;
 
-  News.SaveTo(GetBinFileName);
-  MessageInfo('File saved as '+ GetBinFileName);
+  if FName = ''
+  then FName:= GetBinFileName;
+  News.SaveTo(FName);
+  MessageInfo('File saved as '+ FName);
 end;
 
 
 procedure TfrmRecEditor.Button1Click(Sender: TObject);
 VAR
-  FName: string;
   News: RNews;
 begin
   FName:= GetBinFileName;

@@ -25,7 +25,7 @@ INTERFACE
 USES
   System.SysUtils, System.Classes, Vcl.Forms, LightVcl.Visual.AppDataForm,Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.ComCtrls,
   InternetLabel,
-  LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, ciUpdater, LightVcl.Visual.RichLog, LightVcl.Visual.RichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
+  LightCore, ciUpdater, LightVcl.Visual.RichLog, LightVcl.Visual.RichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
 
 CONST
   UpdaterDemoURL = 'https://www.GabrielMoraru.com/uploads/OnlineNews_v2_TemplateApp.bin'; { For demo purposes }
@@ -72,65 +72,16 @@ TYPE
     procedure FormDestroy           (Sender: TObject);
     procedure FormClose             (Sender: TObject; var Action: TCloseAction);
   private
-    Demo: Boolean;
-
     procedure PopulateNews;
   public
-    class procedure CreateForm(Demo: Boolean = FALSE); static;
+    procedure ShowDemoTab;
  end;
 
 
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   LightVcl.Visual.RichLogUtils, LightVcl.Common.Colors, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.CursorGuard, LightVcl.Common.System, LightVcl.Internet.Common, LightCore.Internet;
-
-
-
-
-
-
-{ Show updater form (modal) }
-class procedure TFrmUpdater.CreateForm(Demo: Boolean = FALSE);
-VAR
-   Form: TFrmUpdater;
-begin
-  TAppData.RaiseIfStillInitializing;
-  Assert(Updater <> NIL);
-
-  AppData.CreateFormHidden(TFrmUpdater, Form);   { Freed by ShowModal }
-
-  { Setup updater }
-  Updater.OnUpdateStart := Form.OnUpdateStart;
-  Updater.OnNoNews      := Form.OnNoNews;
-  Updater.OnHasNews     := Form.OnHasNews;
-  Updater.OnConnectError:= Form.OnConnectError;
-  Updater.OnUpdateEnd   := Form.OnUpdateEnd;
-
-  { Demo }
-  Form.Demo:= Demo;
-  Form.tabDemo.TabVisible:= Demo;
-  Form.tabRecEditor.TabVisible:= Demo;
-  Form.LogVerb.Visible:= Demo OR AppData.BetaTesterMode;
-  if Demo
-  then Form.LogVerb.Verbosity:= lvrVerbose;
-
-  { GUI }
-  Form.lblDownload .Link := Updater.URLDownload;
-  Form.inetWhatsNew.Link := Updater.URLRelHistory;
-  Form.lblConnectError.Visible:= Updater.ConnectionError;
-  Form.PopulateNews;
-
-  { Nest the Settings form }
-  //Form.frmSettings:= TfrmUpdaterSettings.Create;
-
-  { Closed by mrOk/mrCancel }
-  if Form.Visible
-  then Form.Show     { Cannot make a visible window modal! }
-  else Form.ShowModal;
-end;
-
-
+   LightVcl.Visual.RichLogUtils, LightVcl.Common.Colors, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.System, LightVcl.Internet.Common;
 
 
 
@@ -143,9 +94,22 @@ end;
 --------------------------------------------------------------------------------------------------}
 procedure TFrmUpdater.FormCreate(Sender: TObject);
 begin
- Demo:= FALSE;
- Assert(lblVersion.Transparent= True);         { Needed for compatibility with VCL skins }
- Font:= Application.MainForm.Font;             { Themes }
+  Assert(Updater <> NIL);
+  Assert(lblVersion.Transparent= True);         { Needed for compatibility with VCL skins }
+
+  { Setup events }
+  Updater.OnUpdateStart  := OnUpdateStart;
+  Updater.OnNoNews       := OnNoNews;
+  Updater.OnHasNews      := OnHasNews;
+  Updater.OnConnectError := OnConnectError;
+  Updater.OnUpdateEnd    := OnUpdateEnd;
+
+  { GUI }
+  lblDownload .Link      := Updater.URLDownload;
+  inetWhatsNew.Link      := Updater.URLRelHistory;
+  lblConnectError.Visible:= Updater.ConnectionError;
+
+  PopulateNews;
 end;
 
 
@@ -157,8 +121,6 @@ begin
  Updater.OnConnectError:= NIL;
  Updater.OnUpdateStart := NIL;
  Updater.OnUpdateEnd   := NIL;
-
- ///SaveForm;
 end;
 
 
@@ -166,6 +128,15 @@ procedure TFrmUpdater.FormClose(Sender: TObject; VAR Action: TCloseAction);
 begin
   Action:= caFree;
   //frmSettings.Container.Parent:= frmSettings;   { We need to move the container back on its original form, in order to let that form to correctly save its children }
+end;
+
+
+procedure TFrmUpdater.ShowDemoTab;
+begin
+  tabDemo.TabVisible:= TRUE;
+  tabRecEditor.TabVisible:= TRUE;
+  LogVerb.Visible:= TRUE;
+  LogVerb.Verbosity:= lvrVerbose;
 end;
 
 

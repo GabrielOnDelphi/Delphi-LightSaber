@@ -6,7 +6,7 @@ object frmUpdaterSettings: TfrmUpdaterSettings
   Anchors = []
   BorderStyle = bsToolWindow
   Caption = 'Updater settings'
-  ClientHeight = 364
+  ClientHeight = 399
   ClientWidth = 488
   Color = clBtnFace
   DoubleBuffered = True
@@ -29,18 +29,18 @@ object frmUpdaterSettings: TfrmUpdaterSettings
     Left = 3
     Top = 3
     Width = 482
-    Height = 358
+    Height = 393
     Align = alClient
     ShowCaption = False
     TabOrder = 0
     DesignSize = (
       482
-      358)
+      393)
     object lblPrivacy: TLabel
       Left = 1
-      Top = 277
+      Top = 304
       Width = 480
-      Height = 34
+      Height = 42
       Align = alBottom
       Alignment = taCenter
       Caption = 
@@ -49,8 +49,8 @@ object frmUpdaterSettings: TfrmUpdaterSettings
       Visible = False
     end
     object GroupBox1: TGroupBox
-      Left = 6
-      Top = 160
+      Left = 27
+      Top = 175
       Width = 428
       Height = 121
       Anchors = []
@@ -96,8 +96,8 @@ object frmUpdaterSettings: TfrmUpdaterSettings
       end
     end
     object grpInterval: TGroupBox
-      Left = 6
-      Top = 4
+      Left = 27
+      Top = 7
       Width = 428
       Height = 161
       Anchors = []
@@ -105,7 +105,7 @@ object frmUpdaterSettings: TfrmUpdaterSettings
       TabOrder = 1
       object lblHours: TLabel
         Left = 221
-        Top = 96
+        Top = 85
         Width = 33
         Height = 17
         Alignment = taRightJustify
@@ -113,7 +113,7 @@ object frmUpdaterSettings: TfrmUpdaterSettings
       end
       object chkEveryStart: TLabel
         Left = 75
-        Top = 34
+        Top = 43
         Width = 88
         Height = 17
         Alignment = taRightJustify
@@ -121,7 +121,7 @@ object frmUpdaterSettings: TfrmUpdaterSettings
       end
       object spnHours: TCubicSpinEdit
         Left = 168
-        Top = 92
+        Top = 81
         Width = 45
         Height = 27
         Hint = 
@@ -144,8 +144,8 @@ object frmUpdaterSettings: TfrmUpdaterSettings
         AutoSize = True
       end
       object cmbWhen: TComboBox
-        Left = 108
-        Top = 56
+        Left = 169
+        Top = 39
         Width = 178
         Height = 25
         Style = csDropDownList
@@ -160,7 +160,7 @@ object frmUpdaterSettings: TfrmUpdaterSettings
     object pnlBtm: TPanel
       AlignWithMargins = True
       Left = 4
-      Top = 314
+      Top = 349
       Width = 474
       Height = 40
       Align = alBottom
@@ -169,7 +169,7 @@ object frmUpdaterSettings: TfrmUpdaterSettings
       TabOrder = 2
       object btnOK: TButton
         AlignWithMargins = True
-        Left = 374
+        Left = 358
         Top = 3
         Width = 113
         Height = 34
@@ -183,7 +183,7 @@ object frmUpdaterSettings: TfrmUpdaterSettings
       end
       object btnApply: TButton
         AlignWithMargins = True
-        Left = 255
+        Left = 239
         Top = 3
         Width = 113
         Height = 34

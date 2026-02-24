@@ -95,11 +95,11 @@ TYPE
     {}
     class property Initializing: Boolean read FInitializing;  // See documentation at the top of the file
     class procedure EndInitialization;
-    class VAR TEST_MODE: Boolean;                    // When TRUE, ShowModal/Show calls are bypassed. Set this in test setup to prevent forms from blocking tests.
+    class VAR TEST_MODE: Boolean;                             // When TRUE, ShowModal/Show calls are bypassed. Set this in test setup to prevent forms from blocking tests.
 
     constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE); virtual;
     procedure  AfterConstruction; override;
-    destructor Destroy; override;                    // This is called automatically by "Finalization" in order to call it as late as possible }
+    destructor Destroy; override;                            // This is called automatically by "Finalization" in order to call it as late as possible }
 
    {--------------------------------------------------------------------------------------------------
       User settings
@@ -204,7 +204,7 @@ USES
 constructor TAppDataCore.Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE);
 begin
   inherited Create;
-  FInitializing:= True;                            // Set to FALSE by EndInitialization, after FormPostInitialize completes.
+  FInitializing:= TRUE;                            // Set to FALSE by EndInitialization, after FormPostInitialize completes.
 
   { Sanity check via class var }
   if FCreated

@@ -13,7 +13,7 @@ UNIT janFX;
     Functions that use ScanLine with pbytearray assume BGR byte order (pf24bit).
     Some functions auto-set pf24bit; others require the caller to ensure it.
 
-  Requires {$R-} (range checking off)
+  Requires $R- (range checking off)
     Why: ScanLine pixel access uses raw byte arrays indexed beyond declared bounds.
     See: http://stackoverflow.com/questions/628965
 

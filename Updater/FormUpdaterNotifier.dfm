@@ -91,7 +91,7 @@ object FrmUpdater: TFrmUpdater
           Left = 129
           Top = 3
           Width = 286
-          Height = 39
+          Height = 42
           Align = alClient
           Alignment = taCenter
           AutoSize = False

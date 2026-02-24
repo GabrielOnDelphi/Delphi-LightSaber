@@ -21,8 +21,8 @@ UNIT FormSkinsRes;
         Application.ShowMainForm:= FALSE;   // Prevents flicker during skin loading
         MainForm.Visible:= FALSE;
 
-     2. Call LoadLastSkin during application initialization:
-        LoadLastSkin('Carbon');  // Default skin on first run (use style NAME, not filename)
+     2. Call LoadLastStyle during application initialization:
+        LoadLastStyle('Carbon');  // Default skin on first run (use style NAME, not filename)
         // Pass empty string for default Windows theme
 
      3. Show main form:
@@ -135,7 +135,7 @@ CONST
 { Loads the last used skin from INI file. Call during app initialization.
   DefaultSkin: Style NAME to use on first run (e.g. 'Carbon', not 'Carbon.vsf').
                Pass empty string for default Windows theme. }
-procedure LoadLastSkin(const DefaultSkin: string= '');
+procedure LoadLastStyle(const DefaultSkin: string= '');
 
 
 
@@ -154,7 +154,7 @@ CONST
 
 VAR
   { Unit-level variable for current skin name.
-    Kept as unit variable (not class var) because LoadLastSkin is called
+    Kept as unit variable (not class var) because LoadLastStyle is called
     before any form instance exists. Stores the style NAME (not filename). }
   CurrentSkinName: string;
 
@@ -164,7 +164,7 @@ VAR
    SKIN LOADING
 -----------------------------------------------------------------------------------------------------------------------}
 
-procedure LoadLastSkin(const DefaultSkin: string= '');
+procedure LoadLastStyle(const DefaultSkin: string= '');
 begin
   { Read from INI using 'LastSkin' key for backward compatibility }
   CurrentSkinName:= LightCore.INIFileQuick.ReadString('LastSkin', DefaultSkin);
@@ -192,9 +192,9 @@ end;
   SetStyle triggers RecreateWnd which breaks modal z-order.
   Fix: PopupMode=pmAuto (set in DFM) + ReassertZOrder after each style change.
   See: http://stackoverflow.com/questions/30328924 }
-class procedure TfrmSkinDisk.ShowAsModal;
+class procedure TfrmStyleDisk.ShowAsModal;
 begin
-  AppData.CreateFormModal(TfrmSkinDisk);
+  AppData.CreateFormModal(TfrmStyleDisk);
 end;
 
 { Shows the skin selector form.
@@ -292,7 +292,7 @@ end;
   loses its z-order position above the disabled owner.
   TOPMOST + NOTOPMOST forces Windows to recalculate z-order, placing
   this form at the top of the non-topmost band. }
-procedure TfrmSkinDisk.ReassertZOrder;
+procedure TfrmStyleDisk.ReassertZOrder;
 begin
   SetWindowPos(Handle, HWND_TOPMOST,    0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE);
   SetWindowPos(Handle, HWND_NOTOPMOST,  0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE);
