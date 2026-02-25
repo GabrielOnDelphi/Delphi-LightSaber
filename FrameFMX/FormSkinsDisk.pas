@@ -271,10 +271,9 @@ begin
   try
     CurrentStyleName:= lBox.Items[lBox.ItemIndex];
 
-    if CurrentStyleName <> DefPlatformStyle
-    then LoadStyleFromFile(CurrentStyleName);
-    { Note: Selecting 'Default platform style' saves the preference.
-      The platform default is restored on next application start. }
+    if CurrentStyleName = DefPlatformStyle
+    then TStyleManager.SetStyle(nil)   { Revert to native platform style }
+    else LoadStyleFromFile(CurrentStyleName);
   FINALLY
     lBox.Enabled:= TRUE;
   END;
