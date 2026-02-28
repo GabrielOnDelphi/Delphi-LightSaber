@@ -1,10 +1,8 @@
 UNIT LightVcl.Graph.FX.Rotate;
 
 {=============================================================================================================
-   Gabriel Moraru
    2026.01.30
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
   Rotate an image at a specified angle.
 
@@ -15,10 +13,6 @@ UNIT LightVcl.Graph.FX.Rotate;
 --------------------------------------------------------------------------------------------------------------
 
   Source: http://stackoverflow.com/questions/10633400/rotate-bitmap-by-real-angle
-
-  External dependencies:
-      JanFX    - Required only when CCRExif is defined
-      CCR.Exif - Optional, for EXIF-based auto-rotation (Github.com/exilon/ccr-exif)
 
   Also see:
      Fastest possible, but quality not so great: c:\MyProjects\Packages\Third party packages\Rotate Image VCL\RotImg.pas
@@ -36,9 +30,8 @@ UNIT LightVcl.Graph.FX.Rotate;
 INTERFACE
 USES
   winapi.Windows, System.Types, system.SysUtils, Vcl.Graphics, System.Math, LightCore.StreamBuff,
-  GDIPAPI, GDIPOBJ //GdiPlus; >= Delphi2009
-  {$IFDEF CCRExif},janFX{$ENDIF}
-  {$IFDEF CCRExif},CCR.Exif{$ENDIF};   { CCR Exif library can be found here: Github.com/exilon/ccr-exif }
+  GDIPAPI, GDIPOBJ,  //GdiPlus; >= Delphi2009
+  janFX, CCR.Exif;   { CCR Exif library can be found here: Github.com/exilon/ccr-exif }
 
 TYPE
  TRotateSense = (rtNone, rtLeft, rtRight, rtExif);
@@ -53,9 +46,7 @@ TYPE
     procedure ReadFromStream (Stream: TLightStream);
  end;
 
- {$IFDEF CCRExif}
  procedure RotateExif        (BMP: TBitmap; Exif: TExifData);
- {$ENDIF}
  procedure RotateBitmap      (BMP: TBitmap; Degs: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone);
  {}
  procedure RotateBitmapGDI   (BMP: TBitmap; Degs: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone); { Uses GDI+ }
@@ -68,7 +59,7 @@ TYPE
 IMPLEMENTATION
 USES
    {$IFDEF GR32}
-   LightVcl.Graph.FX.RotateGr32,   {$ENDIF}
+   LightVcl.Graph.FX.RotateGr32, {$ENDIF}
    LightVcl.Graph.Bitmap;
 
 
@@ -76,7 +67,6 @@ USES
 
 
 { Autorotate image based on its EXIF orientation tag }
-{$IFDEF CCRExif}
 procedure RotateExif(BMP: TBitmap; Exif: TExifData);
 begin
  Assert(BMP <> NIL, 'RotateExif: BMP cannot be NIL');
@@ -90,7 +80,6 @@ begin
     toLeftBottom , toBottomLeft : RotateBitmap(BMP, 270, TRUE);     { TTiffOrientation = (toUndefined, toTopLeft, toTopRight, toBottomRight,  toLeftTop (i.e., rotated), toRightBottom, toLeftBottom);}
    end;
 end;
-{$ENDIF}
 
 
 { Main rotation function. Selects the best available algorithm.
@@ -247,11 +236,7 @@ begin
   SetLargeSize(BMPOut, BMP.Height, BMP.Width);
   LightVcl.Graph.Bitmap.FillBitmap(BMPOut, BkColor);
 
-  {$IFDEF CCRExif}
   janFX.SmoothRotate(BMP, BMPOut, BMPOut.Width div 2, BMPOut.Height div 2, Degs);
-  {$ELSE}
-    RAISE Exception.Create('CCREXIF NOT AVAILABLE');
-  {$ENDIF}
 
   SetLargeSize(BMP, BMPOut.Width, BMPOut.Height);
   BMP.Assign(BMPout);

@@ -705,18 +705,20 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    SHOW/HIDE DESKTOP ICONS
-   Win7: works ok
-   Win10: does nothing
+   Always use the Win7 callback which finds SysListView32 (icon list).
+   GetDesktopHandle is wrong here - on Win8+ it returns WorkerW (wallpaper canvas).
 --------------------------------------------------------------------------------------------------}
 procedure ShowDesktopIcons(CONST Show: Boolean);
+VAR
+  MyData: TMyData;
 begin
-{
- if IsWindowsXP
- then Handle:= FindWindowEx(FindWindow('Progman', NIL), 0,'ShellDll_DefView', NIL)   { Works up to Win XP
- else Handle:= GetDesktopHandle;  }
- if Show
- then ShowWindow(GetDesktopHandle, SW_SHOW)
- else ShowWindow(GetDesktopHandle, SW_HIDE);
+  ZeroMemory(@MyData, SizeOf(MyData));
+  EnumWindows(@getDesktopHandleWin7, NativeInt(@MyData));
+  if MyData.Handle = 0 then EXIT;
+
+  if Show
+  then ShowWindow(MyData.Handle, SW_SHOW)
+  else ShowWindow(MyData.Handle, SW_HIDE);
 end;
 
 

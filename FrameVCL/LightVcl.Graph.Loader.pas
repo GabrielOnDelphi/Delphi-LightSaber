@@ -14,11 +14,8 @@ UNIT LightVcl.Graph.Loader;
     (for example for JPG, WIC is at least 8x faster than Delphi's JPG decoding function).
 
   External dependencies:
-     * CCR Exif lib -> Github.com/exilon/ccr-exif
      * Jpeg2000 lib
-     * FastJpg
-
-     Undefine CCRExif, FastJpg, and Jpg2000 if you don't want to download and compile those libraries. In this case, some functionality will not be available.
+     Undefine Jpg2000 if you don't want to download and compile those libraries. In this case, some functionality will not be available.
 
   TESTER:
      c:\Myprojects\Project Testers\gr LoadGraph\
@@ -32,16 +29,12 @@ INTERFACE
 
 USES
    Winapi.Wincodec, System.SysUtils, System.Math, System.Types, System.Classes,
-   Vcl.Graphics, Vcl.Imaging.Jpeg, Vcl.Imaging.PngImage, Vcl.ExtCtrls, Vcl.Imaging.GIFImg
-   {$IFDEF CCRExif},CCR.Exif{$ENDIF};
+   Vcl.Graphics, Vcl.Imaging.Jpeg, Vcl.Imaging.PngImage, Vcl.ExtCtrls, Vcl.Imaging.GIFImg,
+   CCR.Exif;
 
 CONST
    DelphiJpgQuality = 70; { Average image quality. Seems that 70 is indeed the best value }
 
-   {$IFNDEF CCRExif}
-   TYPE
-    TJpegImageEx= TJpegImage;
-   {$ENDIF}
 
 {-------------------------------------------------------------------------------------------------------------
    MAIN FUNCTION
@@ -92,15 +85,14 @@ CONST
 -------------------------------------------------------------------------------------------------------------}
  function  DetectGraphSignature(CONST FileName: string): Integer;
  function  CheckValidImage     (CONST FileName: string): Boolean;
- {$IFDEF CCRExif}
- function  GetExif             (CONST FileName: string): TExifData; {$ENDIF}
+ function  GetExif             (CONST FileName: string): TExifData;
 
 
 IMPLEMENTATION
 
 USES
    {$IFDEF Jpg2000}OpenJpeg2000Bitmap,{$ENDIF} // Download OpenJpeg Pas library from: www.github.com/galfar/PasJpeg2000
-   {$IFDEF FastJpg}FastJpegDecHelper,{$ENDIF}
+   FastJpegDecHelper,
    LightVcl.Graph.Resize, LightVcl.Graph.Loader.Resolution, LightVcl.Graph.UtilGray,
    LightVcl.Graph.Loader.WB1, LightVcl.Graph.RainShelter, LightCore.IO, LightVcl.Common.IO, LightVcl.Graph.FX.Rotate,
    LightCore.AppData, LightCore, LightVcl.Graph.GrabAviFrame;
@@ -189,7 +181,6 @@ end;
   Warning:
      Looks like WIC will convert all images to pf32. I tried it with a 8bit (grayscale) bitmap and it converted the image to pf32.
 -------------------------------------------------------------------------------------------------------------}
-{$IFDEF CCRExif}
 function GetExif(CONST FileName: string): TExifData;
 begin
  Assert(FileExistsMsg(FileName));
@@ -209,9 +200,6 @@ begin
     end;
  END;
 end;
-{$ELSE}
-  //RAISE Exception.Create('CCREXIF NOT AVAILABLE');
-{$ENDIF}
 
 
 function LoadGraph(CONST FileName: string; ExifRotate: Boolean = True; UseWic: Boolean = TRUE): TBitmap;
@@ -253,12 +241,8 @@ begin
         else Result:= LoadGIF(FileName);
     { JPG}
     4 : begin
-         {$IFDEF FastJpg}
            Result:= FastJpegDecHelper.FastJpgDecode(FileName);
            if Result = NIL then { Not all jpegs are supported by JpegDecHelper. In this case we fall back to WIC or the standard LoadGraph loader (WIC). }
-         {$ELSE}
-           AppDataCore.LogWarn('FastJpg not available! Download this library and set the compiler switch.');
-         {$ENDIF}
          {ToDo 1: is JpegDecHelper indeed faster than WIC? }
            if UseWic
            then Result:= loadGraphWic(FileName)
@@ -267,13 +251,9 @@ begin
          { Support for  EXIF Jpegs }
          if (Result <> NIL) AND ExifRotate then
           begin
-            {$IFDEF CCRExif}
             VAR ExifData:= GetExif(FileName);
             LightVcl.Graph.FX.Rotate.RotateExif(Result, ExifData);
             FreeAndNil(ExifData);
-            {$ELSE}
-              AppDataCore.LogVerb('CCRExif not available! EXIF rotation skipped.');
-            {$ENDIF}
           end;
         end;
 
@@ -511,10 +491,8 @@ begin
      Result.HandleType:= bmDIB;
      Result.Assign(JpgLoader);  // This is where the (decoding) time is actually wasted.
 
-     {$IFDEF CCRExif}
      // Rotate EXIF
      LightVcl.Graph.FX.Rotate.RotateExif(Result, JpgLoader.ExifData);
-     {$ENDIF}
 
      if ThumbHeight= -1 then
       begin

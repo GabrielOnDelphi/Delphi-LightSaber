@@ -28,7 +28,8 @@ TYPE
     CONST MaxImageWidthRatio = 0.95;      // Maximum image width ratio relative to the parent's content box
   public
     constructor Create(AOwner: TComponent); override;
-    procedure LoadImage(const FileName: string; const aBoundBox: TRectF);
+    procedure LoadImage(const FileName: string; const aBoundBox: TRectF); overload;
+    procedure LoadImage(const Bytes: TBytes; const aBoundBox: TRectF); overload;
     procedure UpdateSize; override;
   end;
 
@@ -60,6 +61,16 @@ procedure TAutosizeBoxImg.LoadImage(const FileName: string; const aBoundBox: TRe
 begin
   FBoxType:= bxContent;
   CropBitmap(FileName, aBoundBox, FImage);
+  UpdateSize;
+end;
+
+
+{ Loads and crops an image from raw bytes using the specified bounding box.
+  Used when the image is embedded in the lesson file (lazy loading via ReadBytesOnDemand). }
+procedure TAutosizeBoxImg.LoadImage(const Bytes: TBytes; const aBoundBox: TRectF);
+begin
+  FBoxType:= bxContent;
+  CropBitmap(Bytes, aBoundBox, FImage);
   UpdateSize;
 end;
 

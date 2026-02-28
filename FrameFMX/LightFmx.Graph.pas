@@ -14,11 +14,13 @@ UNIT LightFmx.Graph;
 INTERFACE
 
 USES
-  System.SysUtils, System.Types, System.UITypes, FMX.Graphics, FMX.Types, FMX.Objects;
+  System.SysUtils, System.Types, System.UITypes, System.Classes,
+  FMX.Graphics, FMX.Types, FMX.Objects;
 
 procedure GetImageResolution(FileName: string; Out Width, Height: Integer);
 procedure LoadImage         (FileName: string; Image: TImage; Color: TAlphaColor= TAlphaColorRec.DeepPink);   overload;
 function  LoadImage         (FileName: string): TBitmap;                                                      overload;
+function  LoadImage         (const Bytes: TBytes): TBitmap;                                                   overload;
 procedure SaveBitmap        (BMP: TBitmap; FileName: string);
 
 procedure FillBitmap   (BMP: TBitmap; Color: TAlphaColor);
@@ -27,6 +29,8 @@ function  CreateBitmap (Width, Height: Integer; BkgClr: TAlphaColor= TAlphaColor
 function  CropBitmap   (InputBMP: TBitmap; CropRect: TRectF): TBitmap;        overload;
 function  CropBitmap   (FileName: string;  CropRect: TRectF): TBitmap;        overload;
 procedure CropBitmap   (FileName: string;  CropRect: TRectF; Image: TImage);  overload;
+function  CropBitmap   (const Bytes: TBytes; CropRect: TRectF): TBitmap;      overload;
+procedure CropBitmap   (const Bytes: TBytes; CropRect: TRectF; Image: TImage); overload;
 
 
 
@@ -229,6 +233,69 @@ begin
   end;
 end;
 
+
+
+{ Loads a bitmap from raw bytes (PNG/JPG/BMP). Returns nil if bytes are empty or loading fails.
+  Caller is responsible for freeing the returned bitmap. }
+function LoadImage(const Bytes: TBytes): TBitmap;
+VAR Stream: TMemoryStream;
+begin
+  Result:= NIL;
+  if Length(Bytes) = 0 then EXIT;
+
+  Stream:= TMemoryStream.Create;
+  try
+    Stream.WriteBuffer(Bytes[0], Length(Bytes));
+    Stream.Position:= 0;
+    Result:= TBitmap.Create;
+    try
+      Result.LoadFromStream(Stream);
+    except
+      on E: Exception do
+      begin
+        AppData.RamLog.AddError('LoadImage (bytes) failed: ' + E.Message);
+        FreeAndNil(Result);
+      end;
+    end;
+  finally
+    FreeAndNil(Stream);
+  end;
+end;
+
+
+{ Loads image from raw bytes and crops it. Returns nil if bytes cannot be loaded.
+  Caller is responsible for freeing the returned bitmap. }
+function CropBitmap(const Bytes: TBytes; CropRect: TRectF): TBitmap;
+VAR SrcBmp: TBitmap;
+begin
+  SrcBmp:= LoadImage(Bytes);
+  if SrcBmp = NIL then EXIT(NIL);
+
+  try
+    Result:= CropBitmap(SrcBmp, CropRect);
+  finally
+    FreeAndNil(SrcBmp);
+  end;
+end;
+
+
+{ Loads image from raw bytes, crops it, and assigns the result to a TImage.
+  Clears the Image if bytes cannot be loaded. }
+procedure CropBitmap(const Bytes: TBytes; CropRect: TRectF; Image: TImage);
+VAR CropBmp: TBitmap;
+begin
+  Assert(Assigned(Image), 'CropBitmap: Image parameter cannot be nil');
+  Assert(NOT CropRect.IsEmpty, 'CropBitmap: CropRect not defined!');
+
+  CropBmp:= CropBitmap(Bytes, CropRect);
+  try
+    if CropBmp <> NIL
+    then Image.Bitmap.Assign(CropBmp)
+    else Image.Bitmap.Clear(TAlphaColorRec.Null);
+  finally
+    FreeAndNil(CropBmp);
+  end;
+end;
 
 
 { Fills the entire bitmap with the specified color. }

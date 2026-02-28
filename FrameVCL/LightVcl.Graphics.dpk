@@ -24,8 +24,6 @@ package LightVcl.Graphics;
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
-{$DEFINE CCRExif}
-{$DEFINE FastJpg}
 {$DEFINE GR32}
 {$DEFINE Jpg2000}
 {$ENDIF IMPLICITBUILDING}
@@ -90,13 +88,11 @@ Note:
   This package uses two 3rd party libraries (all Free).
   It is not mandatory to download AND install these 3rd party libraries.
   My package will continue to work but with some reduced functionality:
-    * slower JPG decoding,
     * no support for jpg2000,
 
   To get rid of 3rd party libraries:
-      1. In this file, simply delete any references to 'GR32, ThirdPartyLibs, Jpg2000, FastJpg'.
+      1. In this file, simply delete any references to 'GR32, ThirdPartyLibs, Jpg2000'.
       2. Go to 'Project Options' and undefine (remove) the following compiler switches:
          {$Jpg2000}
-         {$FastJpg}
 *)
 

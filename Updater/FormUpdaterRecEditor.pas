@@ -15,11 +15,10 @@ TYPE
     btnClose       : TButton;
     btnCopy        : TButton;
     btnSave        : TButton;
-    Button1        : TButton;
+    btnLoad        : TButton;
     chkBetaVer     : TCheckBox;
     chkCriticalUpd : TCheckBox;
     cmbTarget      : TComboBox;
-    edtComment     : TEdit;
     edtHeadline    : TEdit;
     edtOnlineVer   : TEdit;
     GroupBox1      : TGroupBox;
@@ -33,21 +32,21 @@ TYPE
     Panel3         : TPanel;
     Panel4         : TPanel;
     Panel5         : TPanel;
-    Panel6         : TPanel;
     Panel7         : TPanel;
     Panel8         : TPanel;
     pnlBtm         : TPanel;
     spnCounter     : TSpinEdit;
     spnShowCntr    : TSpinEdit;
+    edtComment: TEdit;
     procedure FormDestroy (Sender: TObject);
-    procedure Button1Click(Sender: TObject);
+    procedure btnLoadClick(Sender: TObject);
     procedure btnSaveClick(Sender: TObject);
     procedure btnCopyClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
     FName: string;
   public
-    class function GetBinFileName: string; static;
+    class function GetNewsFileName: string; static;
     class procedure CreateFormModal(ParentForm: TForm= NIL); static;
  end;
 
@@ -57,6 +56,15 @@ USES
    LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.Clipboard, ciUpdaterRec, LightVcl.Common.Dialogs;
 
 
+procedure PopulateUsers(Combo: TComboBox);
+begin
+ Combo.Items.Clear;
+ Combo.Items.Add('All users');
+ Combo.Items.Add('Registered users');
+ Combo.Items.Add('Trial users');
+ Combo.Items.Add('Demo users');
+ Combo.ItemIndex:= 0;
+end;
 
 
 class procedure TfrmRecEditor.CreateFormModal(ParentForm: TForm= NIL);
@@ -65,12 +73,9 @@ begin
   TAppData.RaiseIfStillInitializing;
 
   AppData.CreateFormHidden(TfrmRecEditor, Form, asPosOnly, ParentForm);      { Freed by ShowModal }
-  WITH Form DO
-  begin
-    PopulateUsers(cmbTarget);
-    if FileExists(GetBinFileName)
-    then Button1Click(NIL);
-  end;
+  PopulateUsers(Form.cmbTarget);
+  if FileExists(GetNewsFileName)
+  then Form.btnLoadClick(NIL);
 
   Form.ShowModal;  { Closed by mrOk/mrCancel }
 end;
@@ -90,18 +95,14 @@ end;
 
 procedure TfrmRecEditor.btnCopyClick(Sender: TObject);
 begin
-  StringToClipboard(GetBinFileName);
+  StringToClipboard(GetNewsFileName);
 end;
 
 
-class function TfrmRecEditor.GetBinFileName: string;
+class function TfrmRecEditor.GetNewsFileName: string;
 begin
-  Result:= Appdata.AppFolder+ 'OnlineNews.bin';  // switched to v3 since 2025.10
+  Result:= Appdata.AppFolder+ 'OnlineNews.ini';
 end;
-
-
-
-
 
 
 
@@ -112,7 +113,7 @@ begin
   News.Comment     := edtComment.Text;
   News.AppVersion  := edtOnlineVer.Text;
   News.NewsHeadline:= edtHeadline.Text;
-  News.NewsBody    := Memo.Text;               // ToDo: Add support for CRLF and links
+  News.NewsBody    := Memo.Text;
   News.NewsID      := spnCounter.Value;
   News.TargetUser  := TTargetUser(cmbTarget.ItemIndex);
   News.CriticalUpd := chkCriticalUpd.Checked;
@@ -120,25 +121,25 @@ begin
   News.IsBetaVers  := chkBetaVer.Checked;
 
   if FName = ''
-  then FName:= GetBinFileName;
+  then FName:= GetNewsFileName;
   News.SaveTo(FName);
   MessageInfo('File saved as '+ FName);
 end;
 
 
-procedure TfrmRecEditor.Button1Click(Sender: TObject);
+procedure TfrmRecEditor.btnLoadClick(Sender: TObject);
 VAR
   News: RNews;
 begin
-  FName:= GetBinFileName;
-  if NOT AppData.PromptToLoadFile(FName, '.bin') then EXIT;
+  FName:= GetNewsFileName;
+  if NOT AppData.PromptToLoadFile(FName, '.ini') then EXIT;
 
   News.LoadFrom(FName);
 
   edtComment.Text     := News.Comment;
   edtOnlineVer.Text   := News.AppVersion;
   edtHeadline.Text    := News.NewsHeadline;
-  Memo.Text           := News.NewsBody;               // ToDo: Add support for CRLF and links
+  Memo.Text           := News.NewsBody;               // ToDo: Add support for links
   spnCounter.Value    := News.NewsID;
   spnShowCntr.Value   := News.ShowCounter;
   cmbTarget.ItemIndex := Ord(News.TargetUser);

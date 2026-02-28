@@ -79,6 +79,7 @@ contains
   LightVcl.Common.Reports in 'LightVcl.Common.Reports.pas',
   MonitorHelper in '..\External\MonitorHelper.pas',
   LightVcl.Common.Translate in '..\LightVcl.Common.Translate.pas',
-  LightVcl.Common.CpuUsageProcess in 'LightVcl.Common.CpuUsageProcess.pas';
+  LightVcl.Common.CpuUsageProcess in 'LightVcl.Common.CpuUsageProcess.pas',
+  LightVcl.Common.CpuMonitor in 'LightVcl.Common.CpuMonitor.pas';
 
 end.

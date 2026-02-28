@@ -1,21 +1,21 @@
 UNIT ciUpdaterRec;
 
 {-------------------------------------------------------------------------------------------------------------
-   Gabriel Moraru
-   2023.06
+   2026.02
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
    Online data holder for TUpdater.
    Holds: Version info, News Text
---------------------------------------------------------------------------------------------------}
+
+   File format: INI (human-editable). Pipe character (|) encodes line breaks in NewsBody.
+-------------------------------------------------------------------------------------------------------------}
 
 //See: https://stackoverflow.com/questions/64685038/how-to-traverse-the-enums-in-any-given-set
 
 INTERFACE
 
 USES
-  System.SysUtils, System.Classes, Vcl.StdCtrls;
+  System.SysUtils, System.Classes;
 
 TYPE
   TTargetUser = (tuAll, tuRegistered, tuTrial, tuDemo); { For which user category is this annoucement } { Discern between paid/trial/demo license so it can display messages based on the license state (for example, only show PURCHASE NOW to the Demo/expired_trial users)}
@@ -24,7 +24,7 @@ TYPE
   private
     const
       Signature = 'LightUpdater';
-      CurrentVersion = 3;
+      CurrentVersion = 4;
   public
     Comment     : string;
     { News }
@@ -42,15 +42,24 @@ TYPE
     procedure Clear;
   end;
 
-procedure PopulateUsers(Combo: TComboBox);
-
 
 IMPLEMENTATION
 
 USES
-  LightCore.StreamBuff;
+  LightCore.INIFile;
 
 
+{ Encode CRLF as pipe for INI storage }
+function EncodePipe(const S: string): string;
+begin
+  Result:= StringReplace(S, #13#10, '|', [rfReplaceAll]);
+end;
+
+{ Decode pipe back to CRLF }
+function DecodePipe(const S: string): string;
+begin
+  Result:= StringReplace(S, '|', #13#10, [rfReplaceAll]);
+end;
 
 
 
@@ -69,69 +78,71 @@ end;
 
 function RNews.LoadFrom(FileName: string): Boolean;
 VAR
-   Stream: TLightStream;
+   IniHeader: TIniFileEx;
+   IniNews: TIniFileEx;
+   Sig: string;
+   Ver: Integer;
 begin
  Clear;
- Stream:= TLightStream.CreateRead(FileName);
+
+ IniHeader:= TIniFileEx.Create('Header', FileName);
  TRY
-   Result:= Stream.ReadHeader(Signature, CurrentVersion);
-   if Result then
-    begin
-      Comment     := Stream.ReadString;
-      AppVersion  := Stream.ReadString;
-      NewsID      := Stream.ReadInteger;
-      NewsHeadline:= Stream.ReadString;
-      NewsBody    := Stream.ReadString;
-      TargetUser  := TTargetUser(Stream.ReadByte);
-      CriticalUpd := Stream.ReadBoolean;
-      ShowCounter := Stream.ReadInteger;
-      IsBetaVers  := Stream.ReadBoolean;
-
-      Stream.ReadPadding0;  // Use Old for backwards compatibility with files created before validation was added
-    end;
-
+   Sig:= IniHeader.Read('Signature', '');
+   Ver:= IniHeader.Read('Version', 0);
  FINALLY
-   FreeAndNil(Stream);
+   FreeAndNil(IniHeader);
  END;
+
+ if (Sig <> Signature) OR (Ver <> CurrentVersion)
+ then EXIT(FALSE);
+
+ IniNews:= TIniFileEx.Create('News', FileName);
+ TRY
+   Comment     := IniNews.Read('Comment', '');
+   AppVersion  := IniNews.Read('AppVersion', '?');
+   NewsID      := IniNews.Read('NewsID', 0);
+   NewsHeadline:= IniNews.Read('NewsHeadline', '');
+   NewsBody    := DecodePipe(IniNews.Read('NewsBody', ''));
+   TargetUser  := TTargetUser(IniNews.Read('TargetUser', 0));
+   CriticalUpd := IniNews.Read('CriticalUpd', FALSE);
+   ShowCounter := IniNews.Read('ShowCounter', 1);
+   IsBetaVers  := IniNews.Read('IsBetaVers', FALSE);
+ FINALLY
+   FreeAndNil(IniNews);
+ END;
+
+ Result:= TRUE;
 end;
 
 
 procedure RNews.SaveTo(FileName: string);
 VAR
-   Stream: TLightStream;
+   IniHeader: TIniFileEx;
+   IniNews: TIniFileEx;
 begin
- Stream:= TLightStream.CreateWrite(FileName);
+ IniHeader:= TIniFileEx.Create('Header', FileName);
  TRY
-   Stream.WriteHeader(Signature, CurrentVersion);
-   Stream.WriteString  (Comment);
-   Stream.WriteString  (AppVersion);
-   Stream.WriteInteger (NewsID);
-   Stream.WriteString  (NewsHeadline);
-   Stream.WriteString  (NewsBody);
-   Stream.WriteByte    (Ord(TargetUser));
-   Stream.WriteBoolean (CriticalUpd);
-   Stream.WriteInteger (ShowCounter);
-   Stream.WriteBoolean (IsBetaVers);
-
-   Stream.WritePadding0;  // Use zeros for backwards compatibility with older program versions
+   IniHeader.Write('Signature', Signature);
+   IniHeader.Write('Version', CurrentVersion);
  FINALLY
-   FreeAndNil(Stream);
+   FreeAndNil(IniHeader);
+ END;
+
+ IniNews:= TIniFileEx.Create('News', FileName);
+ TRY
+   IniNews.Write('Comment',      Comment);
+   IniNews.Write('AppVersion',   AppVersion);
+   IniNews.Write('NewsID',       NewsID);
+   IniNews.Write('NewsHeadline', NewsHeadline);
+   IniNews.Write('NewsBody',     EncodePipe(NewsBody));
+   IniNews.Write('TargetUser',   Ord(TargetUser));
+   IniNews.Write('CriticalUpd',  CriticalUpd);
+   IniNews.Write('ShowCounter',  ShowCounter);
+   IniNews.Write('IsBetaVers',   IsBetaVers);
+ FINALLY
+   FreeAndNil(IniNews);
  END;
 end;
 
 
-
-procedure PopulateUsers(Combo: TComboBox);
-begin
- Combo.Items.Clear;
- Combo.Items.Add('All users');
- Combo.Items.Add('Registered users');
- Combo.Items.Add('Trial users');
- Combo.Items.Add('Demo users');
- Combo.ItemIndex:= 0;
-end;
-
-
 end.
-
-

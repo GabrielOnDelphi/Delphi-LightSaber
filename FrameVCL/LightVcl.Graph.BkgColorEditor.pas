@@ -86,9 +86,9 @@ TYPE
     procedure btnAdvancedClick      (Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
   private
-    BkgClrParams: PBkgColorParams;
     FApplySettings: TNotifyEvent;
   public
+    BkgClrParams: PBkgColorParams;    { Pointer to the record this editor reads/writes. Public so callers can re-assign it when the underlying wallpaper switches between inherited and own parameters. }
     function GetEffectColor: TEffectColor;
     function GetFillType: TFillType;
     function GetEffectShape: TEffectShape;

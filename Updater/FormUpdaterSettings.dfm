@@ -38,9 +38,9 @@ object frmUpdaterSettings: TfrmUpdaterSettings
       393)
     object lblPrivacy: TLabel
       Left = 1
-      Top = 304
+      Top = 312
       Width = 480
-      Height = 42
+      Height = 34
       Align = alBottom
       Alignment = taCenter
       Caption = 

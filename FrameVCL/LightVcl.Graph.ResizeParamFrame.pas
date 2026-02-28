@@ -98,12 +98,25 @@ end;
 { Sets GUI controls according to the values stored in the ResizeParams record.
   Warning: Double-buffering on the parent form can cause visual glitches with skins active. }
 procedure TResizeParameters.GuiFromObject(ResizeParams: PResizeParams);
+var i: Integer;
 begin
   Assert(ResizeParams <> NIL, 'GUIFromObject: ResizeParams cannot be nil');
 
   { Warning about double-buffering - only check if parented }
   Assert((Parent = NIL) OR NOT Parent.DoubleBuffered,
     'TResizeParameters frame may have visual issues when its parent is double-buffered and skins are active');
+
+  { Ensure Win32 handles are allocated before setting Checked, so that
+    TRadioButton.SetChecked sends BM_SETCHECK directly to Windows.
+    Without this, the VCL style hook may not render the checked state
+    when the property is set before the form is shown (handles not yet created). }
+  if Parent <> NIL then
+  begin
+    HandleNeeded;
+    for i := 0 to ControlCount - 1 do
+      if Controls[i] is TWinControl then
+        TWinControl(Controls[i]).HandleNeeded;
+  end;
 
   case ResizeParams.ResizeOpp of
     roNone       : radZoomNone.Checked   := TRUE;
@@ -121,6 +134,13 @@ begin
   numForceWidth.ValueInt := ResizeParams.ForcedWidth;
   numForceHeight.ValueInt:= ResizeParams.ForcedHeight;
   spnZoomCustom.Value    := ResizeParams.CustomZoom;
+
+  { Force visual repaint of each radio button individually.
+    A single Invalidate on the frame is not sufficient under VCL styles
+    because the style hook may cache the unchecked appearance from CreateWnd. }
+  for i := 0 to ControlCount - 1 do
+    if Controls[i] is TRadioButton then
+      Controls[i].Repaint;
 end;
 
 

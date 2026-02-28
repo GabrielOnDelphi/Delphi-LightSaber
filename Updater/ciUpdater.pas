@@ -1,10 +1,8 @@
 UNIT ciUpdater;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2024.05
+   2026.02
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
    Automatic program Updater & News announcer
@@ -29,8 +27,8 @@ UNIT ciUpdater;
 --------------------------------------------------------------------------------------------------------------
 
    The online file
-      The data is kept in a binary file. A graphic editor is available for this. The file is extensible (it can be easily expanded to accept new features).
-      See the RNews recrod.
+      The data is kept in an INI file. A graphic editor is available for this.
+      See the RNews record.
 
    Example of usage:
 
@@ -66,13 +64,13 @@ TYPE
     procedure Clear;
     function  TooLongNoSee: Boolean;
   protected
-    URLNewsFile    : string;                  { The URL from where we read the bin file containing the RNews record. Mandatory }
+    URLNewsFile    : string;                  { The URL from where we download the news file containing the RNews record. Mandatory }
   public
     { Input parameters }
     Delay          : Integer;                 { In seconds. Set it to zero to get the news right away. }
     When           : TCheckWhen;
     CheckEvery     : Integer;                 { In hours. How often to check for news. Set it to zero to check every time the program starts. }
-    ShowConnectFail: Boolean;                 { If true, the user doesn't want to see an error msg in case the program fails to connect to the internet. }
+    ShowConnectFail: Boolean;                 { If true, show error messages when the program fails to connect to the internet. }
     ForceNewsFound : Boolean;                 { For DEBUGGING. If true, the object will always say that it has found news }
     { URLs }
     URLDownload    : string;                  { URL from where the user can download the new update. Not mandatory }
@@ -108,10 +106,12 @@ TYPE
 VAR
    Updater: TUpdater; { Only one instance per app! }
 
+function CompareVersions(const V1, V2: string): Integer;
+
 IMPLEMENTATION
 
 USES
-  LightCore.Download, LightCore.INIFile, LightVcl.Common.Debugger, LightCore.AppData;
+  LightCore, LightCore.TextFile, LightCore.IO, LightCore.Download, LightCore.INIFile, LightVcl.Common.Debugger, LightCore.AppData;
 
 Const
   TooLongNoSeeInterval = 180;    { Force to check for updates every 180 days even if the updater is disabled }
@@ -160,7 +160,7 @@ begin
   { Parameters }
   CheckEvery      := 12;          { Hours. Default interval for checking updates. }
   ForceNewsFound  := FALSE;
-  ShowConnectFail := TRUE;        { If true, the user doesn't want to see an error msg in case the program fails to connect to the internet. }
+  ShowConnectFail := TRUE;        { If true, show error messages when the program fails to connect to the internet. }
 end;
 
 
@@ -223,7 +223,7 @@ end;
 { Where we store the News file locally }
 function UpdaterFileLocation: string;
 begin
- Result:= AppDataCore.AppDataFolder+ 'Online_v3.News';
+ Result:= AppDataCore.AppDataFolder+ 'Online_v4.News';
 end;
 
 
@@ -239,11 +239,11 @@ begin
  if Assigned(FUpdaterStart)
  then FUpdaterStart(Self);
 
- { Download the Bin file }
+ { Download the news file }
  LightCore.Download.DownloadToFile(URLNewsFile, UpdaterFileLocation, ErrorMsg);    { Returns false if the Internet connection failed. If the URL is invalid, probably it will return the content of the 404 page (if the server automatically returns a 404 page). }
  Result:= ErrorMsg = '';
 
- { Parse the binary file }
+ { Parse the news file }
  if Result
  then
   begin
@@ -251,11 +251,24 @@ begin
 
    if NOT Result then
     begin
+     { Detect if the server returned an HTML page instead of the news file }
+     VAR FileContent:= StringFromFile(UpdaterFileLocation);
+     VAR FileSize:= LightCore.IO.GetFileSize(UpdaterFileLocation);
+     VAR DetailMsg: string;
+
+     if (FileSize < 25*KB)
+     AND ( (  (PosInsensitive('<html', FileContent) > 0)
+          AND (PosInsensitive('<body', FileContent) > 0))
+         OR (PosInsensitive('<!doctype ', FileContent) > 0)
+         OR (PosInsensitive('<meta name', FileContent) > 0))
+     then DetailMsg:= 'Server returned an HTML page instead of the news file. The file URL may be invalid.'
+     else DetailMsg:= 'The news file has an invalid format (version mismatch or corruption).';
+
      if Assigned(FConnectError)
-     then FConnectError(Self, 'Cannot load new record from disk!');
+     then FConnectError(Self, DetailMsg);
 
      if ShowConnectFail
-     then AppDataCore.LogError('The updater file seems to be invalid!'); // This message also appears if the online does not exist and the server returns a 404 page
+     then AppDataCore.LogError(DetailMsg);
 
      EXIT;
     end;
@@ -317,7 +330,7 @@ end;
 { Returns true when the online version is higher than the local version }
 function TUpdater.NewVersionFound(CONST AppVersion: string): boolean;  // Obtain AppVersion via TAppData.GetVersionInfo
 begin
-  Result:= (NewsRec.AppVersion <> '?') AND (NewsRec.AppVersion > AppVersion);
+  Result:= (NewsRec.AppVersion <> '?') AND (CompareVersions(NewsRec.AppVersion, AppVersion) > 0);
 end;
 
 
@@ -367,8 +380,7 @@ begin
  VAR IniFile := TIniFileEx.Create('Updater', FileName);
  try
    { Internal state}
-   LastUpdate      := Now;
-   LastUpdate      := IniFile.ReadDate('LastUpdate__', 0);
+   LastUpdate      := IniFile.ReadDate('LastUpdate__', Now);
    LocalNewsID     := IniFile.Read('LocalCounter', 0);
 
    { User settings }
@@ -380,6 +392,40 @@ begin
    FreeAndNil(IniFile);
  end;
 end;
+
+
+
+{ Compares two version strings segment by segment (e.g. "9.55.0.0" vs "9.9.0.0").
+  Returns: >0 if V1>V2, 0 if equal, <0 if V1<V2.
+  Missing segments are treated as 0. }
+function CompareVersions(const V1, V2: string): Integer;
+VAR
+  Parts1, Parts2: TArray<string>;
+  i, N1, N2: Integer;
+begin
+  Parts1:= V1.Split(['.']);
+  Parts2:= V2.Split(['.']);
+
+  VAR MaxLen:= Length(Parts1);
+  if Length(Parts2) > MaxLen
+  then MaxLen:= Length(Parts2);
+
+  for i:= 0 to MaxLen-1 do
+   begin
+     N1:= 0;
+     N2:= 0;
+     if i < Length(Parts1)
+     then TryStrToInt(Parts1[i], N1);
+     if i < Length(Parts2)
+     then TryStrToInt(Parts2[i], N2);
+
+     if N1 <> N2
+     then EXIT(N1 - N2);
+   end;
+
+  Result:= 0;
+end;
+
 
 
 end.

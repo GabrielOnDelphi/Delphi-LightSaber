@@ -1,7 +1,11 @@
 UNIT FormUpdaterNotifier;
 {-------------------------------------------------------------------------------------------------------------
-   Show info and updates
-   2022-04-10
+   2026.02
+   www.GabrielMoraru.com
+
+   Show info and updates about a commercial program.
+
+-------------------------------------------------------------------------------------------------------------
 
    THIS FORM IS USED BY MULTIPLE PROGRAMS.
    Do not localize it for a specific program!
@@ -28,7 +32,7 @@ USES
   LightCore, ciUpdater, LightVcl.Visual.RichLog, LightVcl.Visual.RichLogTrack, FormUpdaterSettings, FormUpdaterRecEditor;
 
 CONST
-  UpdaterDemoURL = 'https://www.GabrielMoraru.com/uploads/OnlineNews_v2_TemplateApp.bin'; { For demo purposes }
+  UpdaterDemoURL = 'https://www.GabrielMoraru.com/uploads/OnlineNews_Template.ini'; { For demo purposes }
 
 TYPE
   TFrmUpdater = class(TLightForm)
@@ -310,6 +314,7 @@ end;
 
 procedure TFrmUpdater.OnConnectError(Sender: TObject; Msg: string);
 begin
+ lblConnectError.Caption:= Msg;
  lblConnectError.Visible:= TRUE;
  lblStatus.Visible:= FALSE;
  Log.AddError(Msg);

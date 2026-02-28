@@ -17,7 +17,6 @@ object FrmUpdater: TFrmUpdater
   Font.Name = 'Segoe UI'
   Font.Style = []
   Font.Quality = fqProof
-  FormStyle = fsStayOnTop
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
@@ -35,9 +34,6 @@ object FrmUpdater: TFrmUpdater
     Align = alTop
     Alignment = taCenter
     BiDiMode = bdLeftToRight
-    Caption = 
-      'Cannot check for news! Make sure this program is not blocked by ' +
-      'your firewall!'
     Color = 8421631
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
@@ -57,7 +53,7 @@ object FrmUpdater: TFrmUpdater
     Top = 22
     Width = 666
     Height = 351
-    ActivePage = tabRecEditor
+    ActivePage = tabNews
     Align = alClient
     TabOrder = 0
     object tabNews: TTabSheet
@@ -327,7 +323,7 @@ object FrmUpdater: TFrmUpdater
           Width = 277
           Height = 29
           Align = alTop
-          Caption = 'Create BIN file'
+          Caption = 'Create news file'
           TabOrder = 0
           OnClick = btnBinFileClick
         end

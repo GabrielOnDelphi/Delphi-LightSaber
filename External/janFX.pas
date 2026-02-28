@@ -2530,7 +2530,7 @@ var
  // bicdark,bicnone:byte;
  // act:boolean;
 begin
- x3 := 0; // Suppresses compiler warning. x3 is always set before use in the loops below.
+ //x3 := 0; // Suppresses compiler warning. x3 is always set before use in the loops below.
  a := weight;
  w := src.Width;
  h := src.Height;

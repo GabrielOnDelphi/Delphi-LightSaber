@@ -4,8 +4,8 @@ object frmRecEditor: TfrmRecEditor
   AlphaBlendValue = 245
   Anchors = []
   Caption = 'News & Updates Editor'
-  ClientHeight = 321
-  ClientWidth = 679
+  ClientHeight = 387
+  ClientWidth = 488
   Color = clBtnFace
   Constraints.MinHeight = 335
   Constraints.MinWidth = 434
@@ -25,8 +25,8 @@ object frmRecEditor: TfrmRecEditor
   TextHeight = 15
   object pnlBtm: TPanel
     Left = 0
-    Top = 285
-    Width = 679
+    Top = 351
+    Width = 488
     Height = 36
     Align = alBottom
     TabOrder = 0
@@ -44,7 +44,7 @@ object frmRecEditor: TfrmRecEditor
       TabOrder = 0
       OnClick = btnSaveClick
     end
-    object Button1: TButton
+    object btnLoad: TButton
       AlignWithMargins = True
       Left = 4
       Top = 4
@@ -56,7 +56,7 @@ object frmRecEditor: TfrmRecEditor
       Align = alLeft
       Caption = 'Load'
       TabOrder = 1
-      OnClick = Button1Click
+      OnClick = btnLoadClick
     end
     object btnCopy: TButton
       AlignWithMargins = True
@@ -74,7 +74,7 @@ object frmRecEditor: TfrmRecEditor
     end
     object btnClose: TButton
       AlignWithMargins = True
-      Left = 585
+      Left = 394
       Top = 4
       Width = 90
       Height = 28
@@ -91,7 +91,7 @@ object frmRecEditor: TfrmRecEditor
     AlignWithMargins = True
     Left = 4
     Top = 4
-    Width = 671
+    Width = 480
     Height = 34
     Margins.Left = 4
     Margins.Top = 4
@@ -201,7 +201,7 @@ object frmRecEditor: TfrmRecEditor
     AlignWithMargins = True
     Left = 4
     Top = 46
-    Width = 671
+    Width = 480
     Height = 34
     Margins.Left = 4
     Margins.Top = 4
@@ -219,15 +219,6 @@ object frmRecEditor: TfrmRecEditor
       Caption = 'Version:'
       Layout = tlCenter
     end
-    object Panel6: TPanel
-      AlignWithMargins = True
-      Left = 478
-      Top = 4
-      Width = 3
-      Height = 26
-      Align = alLeft
-      TabOrder = 0
-    end
     object Panel7: TPanel
       AlignWithMargins = True
       Left = 198
@@ -235,7 +226,7 @@ object frmRecEditor: TfrmRecEditor
       Width = 3
       Height = 26
       Align = alLeft
-      TabOrder = 1
+      TabOrder = 0
     end
     object Panel8: TPanel
       AlignWithMargins = True
@@ -244,7 +235,7 @@ object frmRecEditor: TfrmRecEditor
       Width = 3
       Height = 26
       Align = alLeft
-      TabOrder = 2
+      TabOrder = 1
     end
     object edtOnlineVer: TEdit
       AlignWithMargins = True
@@ -256,7 +247,7 @@ object frmRecEditor: TfrmRecEditor
       Margins.Top = 5
       Margins.Bottom = 4
       Align = alLeft
-      TabOrder = 3
+      TabOrder = 2
       TextHint = 'Online version (14.4.0)'
     end
     object chkCriticalUpd: TCheckBox
@@ -267,7 +258,7 @@ object frmRecEditor: TfrmRecEditor
       Height = 26
       Align = alLeft
       Caption = 'Critical update'
-      TabOrder = 4
+      TabOrder = 3
     end
     object chkBetaVer: TCheckBox
       AlignWithMargins = True
@@ -277,28 +268,15 @@ object frmRecEditor: TfrmRecEditor
       Height = 26
       Align = alLeft
       Caption = 'Is beta version'
-      TabOrder = 5
-    end
-    object edtComment: TEdit
-      AlignWithMargins = True
-      Left = 487
-      Top = 6
-      Width = 180
-      Height = 23
-      Hint = 'News headline'
-      Margins.Top = 5
-      Margins.Bottom = 4
-      Align = alClient
-      TabOrder = 6
-      TextHint = 'Comments'
+      TabOrder = 4
     end
   end
   object GroupBox1: TGroupBox
     AlignWithMargins = True
     Left = 4
     Top = 88
-    Width = 671
-    Height = 193
+    Width = 480
+    Height = 226
     Margins.Left = 4
     Margins.Top = 4
     Margins.Right = 4
@@ -310,7 +288,7 @@ object frmRecEditor: TfrmRecEditor
       AlignWithMargins = True
       Left = 5
       Top = 20
-      Width = 661
+      Width = 470
       Height = 23
       Hint = 'News headline'
       Align = alTop
@@ -321,8 +299,8 @@ object frmRecEditor: TfrmRecEditor
       AlignWithMargins = True
       Left = 8
       Top = 52
-      Width = 655
-      Height = 133
+      Width = 464
+      Height = 166
       Margins.Left = 6
       Margins.Top = 6
       Margins.Right = 6
@@ -342,5 +320,18 @@ object frmRecEditor: TfrmRecEditor
       TabOrder = 1
       WordWrap = False
     end
+  end
+  object edtComment: TEdit
+    AlignWithMargins = True
+    Left = 3
+    Top = 323
+    Width = 482
+    Height = 24
+    Hint = 'Internal comment'
+    Margins.Top = 5
+    Margins.Bottom = 4
+    Align = alBottom
+    TabOrder = 4
+    TextHint = 'Comments'
   end
 end
