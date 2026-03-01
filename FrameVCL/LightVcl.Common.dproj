@@ -135,6 +135,7 @@
         <DCCReference Include="..\LightVcl.Common.Translate.pas"/>
         <DCCReference Include="LightVcl.Common.CpuUsageProcess.pas"/>
         <DCCReference Include="LightVcl.Common.CpuMonitor.pas"/>
+        <DCCReference Include="LightVcl.Common.ProcessMonitor.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
