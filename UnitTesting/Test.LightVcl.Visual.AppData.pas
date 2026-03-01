@@ -379,6 +379,39 @@ end;
 
 
 
+procedure TTestAppDataVcl.TestRaiseIfStillInitializing_NotInitializing;
+begin
+  { In the test runner, Initializing remains TRUE because the full app startup
+    sequence (which sets Initializing:= FALSE) is never completed.
+    We cannot test the "not initializing" path without RTTI hacking.
+    Verify the property is accessible and consistent with RaiseIfStillInitializing behavior. }
+  if TAppData.Initializing
+  then Assert.WillRaise(
+         procedure
+         begin
+           TAppData.RaiseIfStillInitializing;
+         end, Exception)
+  else Assert.WillNotRaise(
+         procedure
+         begin
+           TAppData.RaiseIfStillInitializing;
+         end);
+end;
+
+
+procedure TTestAppDataVcl.TestRaiseIfStillInitializing_WhenInitializing;
+begin
+  { In the test runner, Initializing is TRUE because we only call TAppData.Create
+    without completing the full app startup. Verify the method raises as expected. }
+  Assert.IsTrue(TAppData.Initializing, 'In test runner, Initializing should be TRUE');
+  Assert.WillRaise(
+    procedure
+    begin
+      TAppData.RaiseIfStillInitializing;
+    end, Exception);
+end;
+
+
 initialization
   TDUnitX.RegisterTestFixture(TTestAppDataVcl);
 
