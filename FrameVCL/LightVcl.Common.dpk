@@ -80,6 +80,7 @@ contains
   MonitorHelper in '..\External\MonitorHelper.pas',
   LightVcl.Common.Translate in '..\LightVcl.Common.Translate.pas',
   LightVcl.Common.CpuUsageProcess in 'LightVcl.Common.CpuUsageProcess.pas',
-  LightVcl.Common.CpuMonitor in 'LightVcl.Common.CpuMonitor.pas';
+  LightVcl.Common.CpuMonitor in 'LightVcl.Common.CpuMonitor.pas',
+  LightVcl.Common.ProcessMonitor in 'LightVcl.Common.ProcessMonitor.pas';
 
 end.
