@@ -327,14 +327,14 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 
 { Returns the full path to the executable.
-  Note: On Android, ParamStr(0) may return empty string. }
+  Note: On Android, ParamStr(0) returns the path to the native .so library, which may be empty on some older devices/Delphi versions. 
+  In that case we construct a synthetic path so that ExtractFilePath / ExtractOnlyName callers still get something usable. On desktop, ParamStr(0) always works. }
 function ExeName: string;
 begin
   Result:= ParamStr(0);
   {$IFDEF ANDROID}
-    {$MESSAGE ERROR 'ExeName not available on Android! Use alternative method.'}
   if Result = ''
-  then Result:= TPath.GetDocumentsPath;  { Fallback to documents path }
+  then Result:= TPath.Combine(TPath.GetDocumentsPath, 'app');  { Synthetic fallback so ExtractOnlyName returns 'app' }
   {$ENDIF}
 end;
 

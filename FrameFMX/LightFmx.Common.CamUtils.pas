@@ -48,8 +48,11 @@ procedure SetupImagePickerCallback(const AOnImageSelected: TImageSelectedEvent);
 IMPLEMENTATION
 
 uses
-  LightCore.IO {$IFDEF ANDROID}
-  , FMX.Platform.Android, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Net, Androidapi.JNI.App, Androidapi.JNI.Media, Androidapi.JNI.Provider, Androidapi.JNIBridge, FMX.Helpers.Android {$ENDIF};
+  System.Types, System.Permissions, System.Messaging,
+  LightCore.IO
+  {$IFDEF ANDROID}
+  , FMX.Platform.Android, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Net, Androidapi.JNI.App, Androidapi.JNI.Media, Androidapi.JNI.Provider, Androidapi.JNIBridge, FMX.Helpers.Android
+  {$ENDIF};
 
 CONST
   REQUEST_PICK_IMAGE = 1;

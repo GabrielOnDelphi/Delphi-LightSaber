@@ -17,7 +17,7 @@ USES
    Winapi.Windows, Vcl.Graphics, system.win.Registry, System.SysUtils, System.Types, Vcl.Forms;
 
 TYPE
-  MSWallStyle = (dsStretch, dsCenter, dsTile);
+  MSWallStyle = (dsStretch, dsCenter, dsTile, dsFit, dsFill, dsSpan);
 
  procedure SysForceTileWallpaper;                                      { Force Windows wallpaper style to Tile if the user has more than one monitor. If the style is not 'Tile' then the wallpaper will not be centered properly on dual monitor systems }
  procedure SetDesktopWallpaperStyle(Style: MSWallStyle; Lazy: Boolean= true);
@@ -173,6 +173,24 @@ begin
       begin
        Rg.WriteString('TileWallpaper' , '0');
        Rg.WriteString('WallpaperStyle', '0');
+      end;
+
+     dsFit:        { Fit (Win7+) }
+      begin
+       Rg.WriteString('TileWallpaper' , '0');
+       Rg.WriteString('WallpaperStyle', '6');
+      end;
+
+     dsFill:       { Fill (Win7+) }
+      begin
+       Rg.WriteString('TileWallpaper' , '0');
+       Rg.WriteString('WallpaperStyle', '10');
+      end;
+
+     dsSpan:       { Span across all monitors (Win8+). Image covers entire virtual desktop without rescaling. }
+      begin
+       Rg.WriteString('TileWallpaper' , '0');
+       Rg.WriteString('WallpaperStyle', '22');
       end;
     end;
  FINALLY

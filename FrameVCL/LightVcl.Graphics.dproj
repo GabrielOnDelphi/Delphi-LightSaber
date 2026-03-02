@@ -96,6 +96,7 @@
         <DCCReference Include="LightVcl.Graph.Desktop.pas"/>
         <DCCReference Include="LightVcl.Graph.FX.pas"/>
         <DCCReference Include="LightVcl.Graph.FX.Gradient.pas"/>
+        <DCCReference Include="LightVcl.Graph.FX.KenBurns.pas"/>
         <DCCReference Include="LightVcl.Graph.FX.Rotate.pas"/>
         <DCCReference Include="LightVcl.Graph.FX.RotateGr32.pas"/>
         <DCCReference Include="LightVcl.Graph.Gif.pas"/>

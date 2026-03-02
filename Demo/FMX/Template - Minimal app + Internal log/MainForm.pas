@@ -14,6 +14,7 @@ TYPE
     RadioButton1: TRadioButton;
     lblIniFile: TLabel;
     Label1: TLabel;
+    Switch1: TSwitch;
     procedure FormCreate  (Sender: TObject);
     procedure btnShowErrClick(Sender: TObject);
   private

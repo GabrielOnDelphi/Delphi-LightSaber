@@ -316,17 +316,15 @@ procedure MinimizeAllExcept(const ExceptApp : HWND);
 var
   Ole : OleVariant;
 begin
-  { This is like pressing WIN + M - it makes use of the Shell. It's much safer for the user. Parameter ExceptApp saves a window from being minimized }
-  ShowWindow(ExceptApp, SW_HIDE);
+  { Minimize all windows via Shell (like WIN+M), then restore ExceptApp.
+    The old approach (hide before MinimizeAll, show after) didn't work because
+    Shell.Application.MinimizeAll operates at the application level and still
+    minimizes the app even when the form handle is hidden. }
   Ole := CreateOleObject('Shell.Application');
   Ole.MinimizeAll;
-  {
-  tmp : DWORD;
-  tmp := GetTickCount;          // GetTickCount accuracy= 15ms+  https://blogs.msdn.microsoft.com/oldnewthing/20050902-00/?p=34333
-  WHILE GetTickCount - tmp < 300
-   DO Application.ProcessMessages;  //Wait for minimization to complete    }
-  Sleep(300);
-  ShowWindow(ExceptApp, SW_SHOW);
+  Sleep(500);
+  ShowWindow(ExceptApp, SW_RESTORE);
+  SetForegroundWindow(ExceptApp);
 end;
 
 

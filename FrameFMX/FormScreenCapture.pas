@@ -94,9 +94,9 @@ procedure ScreenCaptureNow(OnComplete: TScreenCaptureCallback);
 
 IMPLEMENTATION {$R *.fmx}
 
-USES
-  {$IFDEF MSWINDOWS} Winapi.Windows{$ENDIF}
-  {$IFDEF MACOS}, Macapi.AppKit {$ENDIF};
+
+  {$IFDEF MSWINDOWS}USES Winapi.Windows;{$ENDIF}
+  {$IFDEF MACOS}USES Macapi.AppKit; {$ENDIF}
 
 
 

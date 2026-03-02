@@ -296,7 +296,7 @@ begin
 
       { Validate form position setting }
       if ShowPositionWarn 
-	  AND (TForm(Ctrl).Position <> poDesigned)
+      AND (TForm(Ctrl).Position <> poDesigned)
       then raise Exception.Create('Form.Position is not ''poDesigned'' for form ' + Ctrl.Name + '!');
 
       { Restore window state }

@@ -2416,7 +2416,7 @@ begin
    SubFolders:= TDirectory.GetDirectories(aFolder, TSearchOption.soAllDirectories, NIL);
    for s in SubFolders DO
      if IsExcluded(s)
-     then EmptyDummy
+     then
      else
        if LightCore.IO.DirectoryExists(s)  { This solves the problem caused by broken 'Symbolic Link' folders }
        then ListFiles(s);

@@ -72,7 +72,8 @@ contains
   LightCore.Platform in 'LightCore.Platform.pas',
   LightCore.Reports in 'LightCore.Reports.pas',
   LightCore.Debugger in 'LightCore.Debugger.pas',
-  LightCore.INIFileQuick in 'LightCore.INIFileQuick.pas';
+  LightCore.INIFileQuick in 'LightCore.INIFileQuick.pas',
+  LightCore.System in 'LightCore.System.pas';
 
 end.
 

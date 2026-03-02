@@ -59,6 +59,7 @@ USES
 
 IMPLEMENTATION
 USES
+   {$IFDEF POSIX}Posix.Unistd,{$ENDIF}
    LightCore, LightCore.Platform, LightCore.IO, LightCore.TextFile, LightCore.AppData, LightCore.Types;
 
 
