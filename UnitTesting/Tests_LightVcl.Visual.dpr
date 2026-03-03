@@ -103,6 +103,7 @@ begin
 {$ENDIF}
   FINALLY
     FreeAndNil(MainForm);
-    FreeAndNil(AppData);
+    AppData.Free;    // DON'T use FreeAndNil — it nils the variable before the destructor runs, but form destructors (e.g. TfrmRamLog.SaveSettings) still need AppData during teardown. Same pattern as in LightVcl.Visual.AppData.pas finalization.
+    AppData:= NIL;
   END;
 end.

@@ -132,8 +132,10 @@ begin
   // Run user initialization code
   FormPostInitialize;
 
-  if Self = Application.MainForm
-  then AppData.StartMinim:= FALSE;      // Reset after FormPostInitialize has used the value
+  { Note: Do NOT reset StartMinim here. The Minimize/Restore methods manage this flag
+    at runtime, and FormPreRelease re-syncs it before SaveSettings. Resetting it here
+    caused a bug: SaveSettings would persist FALSE even when the user's "Start minimized"
+    checkbox was checked, so the early minimize in CreateMainForm would not fire on next startup. }
 
   if AppData.Translator <> NIL
   then AppData.Translator.LoadTranslation(Self);

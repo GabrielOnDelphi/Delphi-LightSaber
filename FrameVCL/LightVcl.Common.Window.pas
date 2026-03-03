@@ -313,18 +313,18 @@ end;
                               MinimizeAllWindows
 --------------------------------------------------------------------------------------------------}
 procedure MinimizeAllExcept(const ExceptApp : HWND);
-var
-  Ole : OleVariant;
+VAR h: HWND;
 begin
-  { Minimize all windows via Shell (like WIN+M), then restore ExceptApp.
-    The old approach (hide before MinimizeAll, show after) didn't work because
-    Shell.Application.MinimizeAll operates at the application level and still
-    minimizes the app even when the form handle is hidden. }
-  Ole := CreateOleObject('Shell.Application');
-  Ole.MinimizeAll;
-  Sleep(500);
-  ShowWindow(ExceptApp, SW_RESTORE);
-  SetForegroundWindow(ExceptApp);
+  { Minimize all visible top-level windows except ExceptApp.
+    Uses WM_SYSCOMMAND+SC_MINIMIZE per window instead of Shell.Application.MinimizeAll,
+    which minimizes the calling app too (race condition with the restore call). }
+  h:= GetTopWindow(0);  { Topmost Z-order window }
+  while h <> 0 do
+  begin
+    if (h <> ExceptApp) AND IsWindowVisible(h) AND NOT IsIconic(h)
+    then PostMessage(h, WM_SYSCOMMAND, SC_MINIMIZE, 0);
+    h:= GetNextWindow(h, GW_HWNDNEXT);
+  end;
 end;
 
 

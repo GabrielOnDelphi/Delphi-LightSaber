@@ -176,7 +176,7 @@ function  CalculateDayOfYear(y, m, d : Word): Integer;
 
 
 IMPLEMENTATION
-USES LightVcl.Graph.Text;
+USES LightVcl.Graph.ShadowText;
 
 
 
@@ -237,8 +237,11 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    DRAW
 -------------------------------------------------------------------------------------------------------------}
-CONST iInnerSpace= 0;   { iInnerSpace = the border, including bevels, on 1 side }
-//todo: expose this iInnerSpace a property
+CONST
+  iInnerSpace= 0;   { iInnerSpace = the border, including bevels, on 1 side }
+  //todo: expose this iInnerSpace a property
+  ShadowDist= 2;    { Drop shadow offset in pixels for text visibility on dark wallpapers }
+  clCalShadow= TColor($202020);  { Dark shadow color for calendar text }
 
 
 procedure TCalendarCanvas.Paint;
@@ -340,7 +343,7 @@ begin
  {todo: if FSolidBkg
   FCanvas.Brush.Style := bsxxx;
   FCanvas.FillRect( TempRect ); }
- DrawText(FCanvas.Handle, sMonth, Length(sMonth), TempRect, DT_CENTER or DT_TOP or DT_SINGLELINE);
+ LightVcl.Graph.ShadowText.DrawShadowText(FCanvas, sMonth, TempRect, FCanvas.Font.Color, clCalShadow, ShadowDist, DT_CENTER or DT_TOP or DT_SINGLELINE);
 end;
 
 
@@ -374,7 +377,7 @@ begin
     else pCW:= 'CW';
 
     FCanvas.Font.Color := clTeal;
-    DrawText( FCanvas.Handle, pCW, 2, ARect,( DT_CENTER or DT_VCENTER or DT_SINGLELINE ) );
+    LightVcl.Graph.ShadowText.DrawShadowText(FCanvas, pCW, ARect, FCanvas.Font.Color, clCalShadow, ShadowDist, DT_CENTER or DT_VCENTER or DT_SINGLELINE);
 
     ARect.Left := ARect.Right;
     ARect.Right := ARect.Right + CellWidth;
@@ -402,7 +405,7 @@ begin
          //orig code: StrCopy( pDay, Copy(g_DayTitles[i+1], 1, iDayWidth));
        end;
 
-      DrawText( FCanvas.Handle, pDay, iDayWidth, ARect, ( DT_CENTER or DT_VCENTER or DT_SINGLELINE ) );
+      LightVcl.Graph.ShadowText.DrawShadowText(FCanvas, Copy(pDay, 1, iDayWidth), ARect, FCanvas.Font.Color, clCalShadow, ShadowDist, DT_CENTER or DT_VCENTER or DT_SINGLELINE);
       ARect.Left := ARect.Right;
       ARect.Right := ARect.Right + CellWidth;
    end;
@@ -484,10 +487,9 @@ begin
       x:= x + (CellWidth  - FCanvas.TextWidth (pDate)) DIV 2;
       y:= y + (CellHeight - FCanvas.TextHeight(pDate)) DIV 2;
 
-      // Draw text with shadow effect
-      FCanvas.Font.Color:= clSilver;
+      // Draw text with drop shadow for visibility on dark wallpapers
       FCanvas.Font.Style:= [];
-      LightVcl.Graph.Text.DrawTextShadow3DSoft(FCanvas, pDate, x, y, clTextShadow);
+      LightVcl.Graph.ShadowText.DrawShadowText(FCanvas, pDate, x, y, FCanvas.Font.Color, clCalShadow, ShadowDist);
     end;
   end;
 end;
@@ -537,7 +539,7 @@ begin
    TempRect.Top   := rtop + (CellHeight * x);
    TempRect.Bottom:= TempRect.Top + CellHeight;
    TempRect.Right := TempRect.Left + CellWidth;
-   DrawText(FCanvas.Handle, pWeek, Length(g_WeekNumbers[x]), TempRect, DT_CENTER or DT_VCENTER or DT_TOP or DT_SINGLELINE);
+   LightVcl.Graph.ShadowText.DrawShadowText(FCanvas, pWeek, TempRect, FCanvas.Font.Color, clCalShadow, ShadowDist, DT_CENTER or DT_VCENTER or DT_TOP or DT_SINGLELINE);
   end;
 
  FCanvas.Font.Color:= clBlack;    {Restore}
@@ -603,7 +605,7 @@ begin
    FCanvas.Brush.Color := clBtnFace;
    TempRect := GetRectFromIndex(g_PrevDateIndex);
    FCanvas.FillRect(TempRect);
-   DrawText( FCanvas.Handle, pDate, (Length( g_DateArray[g_PrevDateIndex])-1), TempRect, ( DT_CENTER or DT_VCENTER or DT_TOP or DT_SINGLELINE ) );
+   LightVcl.Graph.ShadowText.DrawShadowText(FCanvas, pDate, TempRect, FCanvas.Font.Color, clCalShadow, ShadowDist, DT_CENTER or DT_VCENTER or DT_TOP or DT_SINGLELINE);
   end;
 
   {Draw the Date in Bold font}
@@ -630,7 +632,7 @@ begin
   then FCanvas.Font.Color:= clBtnShadow;
 
   TempRect := GetRectFromIndex(nIndex);
-  DrawText( FCanvas.Handle, pDate, (Length( g_DateArray[nIndex])-1 ), TempRect, ( DT_CENTER or DT_VCENTER or DT_TOP or DT_SINGLELINE ) );
+  LightVcl.Graph.ShadowText.DrawShadowText(FCanvas, pDate, TempRect, FCanvas.Font.Color, clCalShadow, ShadowDist, DT_CENTER or DT_VCENTER or DT_TOP or DT_SINGLELINE);
 
   { Draw frame arround current day }
   { Frame date with Shadow }

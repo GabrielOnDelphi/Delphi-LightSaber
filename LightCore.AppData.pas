@@ -11,6 +11,7 @@
        - Get application's command line parameters
        - Force single instance (allow only one instance of your program to run). Second inst sends its command line to the first inst then shuts down
        - Detect if the application is running for the first time on this computer
+       - Portable mode: place a 'portable.marker' file next to the EXE to store settings in the EXE folder instead of %AppData%
        - Application self-restart
        - Application self-delete
        - TEST_MODE: When TRUE, ShowModal/Show calls are bypassed. Use in unit tests to prevent forms from blocking.
@@ -66,6 +67,7 @@ TYPE
     class VAR FCreated: Boolean;           // Sanity check. Make sure the user did not created this obj twice
     class VAR FAppName: string;
     class VAR FInitializing: Boolean;
+    class VAR FPortableMode: Boolean;    // When TRUE, AppDataFolder returns AppFolder (EXE directory) instead of %AppData%. Activated by placing a 'portable.marker' file next to the EXE.
     function  getLastUsedFolder: string;
     procedure setShowOnError(const Value: Boolean);
   protected
@@ -95,6 +97,7 @@ TYPE
     {}
     class property Initializing: Boolean read FInitializing;  // See documentation at the top of the file
     class procedure EndInitialization;
+    class property PortableMode: Boolean read FPortableMode;  // TRUE when 'portable.marker' exists next to EXE. INI and settings are stored next to the EXE instead of %AppData%.
     class VAR TEST_MODE: Boolean;                             // When TRUE, ShowModal/Show calls are bypassed. Set this in test setup to prevent forms from blocking tests.
 
     constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE); virtual;
@@ -221,7 +224,11 @@ begin
   then FSingleInstClassName:= aAppName
   else FSingleInstClassName:= WindowClassName;    // We use FSingleInstClassName to identify the window/instance (when we check for an existing instance)
 
-  AppDataFolder(TRUE);               // Force the creation of AppData folder.
+  { Portable mode: store settings next to the EXE instead of %AppData%.
+    Activated by placing a 'portable.marker' file in the same folder as the EXE. }
+  FPortableMode:= (NOT OsIsMobile) AND FileExists(AppFolder + 'portable.marker');
+
+  AppDataFolder(TRUE);               // Force the creation of AppData folder (or use AppFolder in portable mode).
 
   { App first run }
   FRunningFirstTime:= NOT FileExists(IniFile);
@@ -386,6 +393,9 @@ class function TAppDataCore.AppDataFolder(ForceDir: Boolean = FALSE): string;
 begin
   Assert(System.IOUtils.TPath.HasValidFileNameChars(AppName, FALSE), 'Invalid chars in AppName: '+ AppName);
 
+  if FPortableMode
+  then Result:= AppFolder                       // Portable mode: store settings next to the EXE
+  else
   if OsIsMobile
   then Result:= Trail(TPath.GetDocumentsPath)   // Android does not have the concept of "per-user". GetDocumentsPath is the path used by the Deployment Manager.
   else Result:= Trail(TPath.Combine(TPath.GetHomePath, AppName));

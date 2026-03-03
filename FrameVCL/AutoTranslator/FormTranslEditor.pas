@@ -221,13 +221,23 @@ begin
   { Create translation file from live forms }
   AppData.Translator.SaveTranslation(TargetFile, chkOverwrite.Checked);
 
+  { Also generate the English baseline if it doesn't exist yet.
+    Without English.ini, language switching cannot reset to English before loading the target language,
+    which causes leftover foreign text from previous languages. }
+  VAR EnglishFile:= AppData.Translator.GetLangFolder + AppData.Translator.DefaultLang;
+  VAR EnglishGenerated:= NOT FileExists(EnglishFile);
+  if EnglishGenerated 
+  then AppData.Translator.SaveTranslation(EnglishFile, TRUE);
+
   { Format the file for better readability }
   s:= StringFromFile(TargetFile);
   s:= ReplaceString(s, CRLF+'[', CRLF+CRLF+'[');
   StringToFile(TargetFile, s, woOverwrite, wpOn);
 
   { GUI feedback }
-  lblInfo.Caption:= 'Created: ' + ExtractFileName(TargetFile);
+  if EnglishGenerated
+  then lblInfo.Caption:= 'Created: ' + ExtractFileName(TargetFile) + ' + ' + AppData.Translator.DefaultLang
+  else lblInfo.Caption:= 'Created: ' + ExtractFileName(TargetFile);
 
   { Open in editor }
   ShowIniEditor(TargetFile);
@@ -328,6 +338,11 @@ begin
   try
     { Step 1: Extract fresh from live forms to temp file }
     AppData.Translator.SaveTranslation(TempSourceFile, TRUE);
+
+    { Also generate the English baseline if it doesn't exist yet }
+    VAR EnglishFile:= AppData.Translator.GetLangFolder + AppData.Translator.DefaultLang;
+    if NOT FileExists(EnglishFile) then
+      AppData.Translator.SaveTranslation(EnglishFile, TRUE);
 
     { Step 2: Translate - only new entries if target exists }
     DeepL.ApiKey:= DeepL_GetApiKey;

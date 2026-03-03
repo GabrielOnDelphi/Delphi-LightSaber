@@ -202,8 +202,6 @@ TYPE
     procedure saveFormTranslation (Form: TForm; Ini: TMemIniFile);
     function  ReadString(CONST Identifier, DefaultVal: string): string;
     procedure WriteString(const Identifier, s: string);
-  protected
-    function  DefaultLang: string;
   public
     Authors: string;                // Credits the author of the current translation file
     DontSaveEmpty: Boolean;         // Don't save text properties that are empty
@@ -219,6 +217,7 @@ TYPE
     procedure LoadTranslation (ForceLoad: Boolean= FALSE);                         overload;
     procedure SaveTranslation (CONST FileName: string; Overwrite: Boolean= TRUE);
 
+    function  DefaultLang    : string;                                            // Returns 'English.ini'
     function  GetLangFolder  : string;
     property  CurLanguageName: string read getCurLanguage;                        // Only name. Example: FileName.ini
     property  CurLanguage    : string read FCurLanguage write setCurLanguage;     // The file currently used for translation. Example: c:\AppName\Lang\FileName.ini (full path)

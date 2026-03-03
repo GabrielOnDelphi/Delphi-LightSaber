@@ -396,9 +396,12 @@ begin
       if Application.MainForm = NIL
       then RAISE Exception.Create('Probably you forgot to create the main form with AppData.CreateMainForm!');
 
-      if Owner = NIL
-      then Application.CreateForm(aClass, Reference)        // Owned by Application
-      else TForm(Reference):= aClass.Create(Owner);         // Owned by Owner
+      if aClass = TfrmRamLog
+      then TForm(Reference):= aClass.Create(NIL)              // Log form: always NIL owner — AppData manages its lifetime
+      else
+        if Owner = NIL
+        then Application.CreateForm(aClass, Reference)        // Owned by Application
+        else TForm(Reference):= aClass.Create(Owner);         // Owned by Owner
     end;
 
   // Center form in the Owner

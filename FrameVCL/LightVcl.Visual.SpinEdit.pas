@@ -199,7 +199,19 @@ end;
 // Propagate font changes to children and recalculate width
 procedure TCubicSpinEditSplit.CMFontChanged(var Message: TMessage);
 begin
-  inherited;
+  inherited;  { Broadcasts CM_PARENTFONTCHANGED to children that have ParentFont=True }
+
+  if FSpin = NIL then EXIT;  { Children not yet created }
+
+  { Force-assign the font to TSpinEdit. The standard CM_PARENTFONTCHANGED chain relies on
+    ParentFont=True, but TSpinEdit can lose that flag during DFM loading or style changes.
+    Restore ParentFont afterward so future propagation still works. }
+  FSpin.Font.Assign(Self.Font);
+  FSpin.ParentFont:= TRUE;
+
+  { Adjust panel height to match the spin edit, which auto-sizes via AdjustHeight }
+  Height:= FSpin.Height;
+
   SetWidth;
 end;
 

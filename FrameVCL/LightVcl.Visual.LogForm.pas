@@ -112,7 +112,7 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 procedure TfrmRamLog.SaveSettings;
 begin
-  Assert(AppData <> NIL, 'AppData is gone already!');
+  if AppData = NIL then EXIT;  // AppData already freed during shutdown (valid lifecycle state — finalization order is non-deterministic)
 
   VAR IniFile := TIniFileEx.Create('Log Settings', AppData.IniFile);
   try

@@ -4,8 +4,8 @@ uses
   {$IF Defined(MSWINDOWS)}
    {$IFDEF DEBUG}
     FastMM4,
-   {$ENDIF }
-  {$ENDIF }
+   {$ENDIF}
+  {$ENDIF}
   System.StartUpCopy,
   FMX.Forms,
   MainForm in 'MainForm.pas' {frmSimpleDemo},

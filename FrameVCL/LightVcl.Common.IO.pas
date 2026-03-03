@@ -300,7 +300,11 @@ begin
      TRY
        Dlg.Options:= Options;
        Dlg.DefaultFolder:= Folder;
-       Dlg.FileName:= Folder;
+       { Note: Do NOT set Dlg.FileName here. Setting FileName to a full directory path
+         puts it in the filename edit box, which can interfere with DefaultFolder navigation
+         in folder-pick mode. DefaultFolder (which maps to IFileDialog.SetFolder) is
+         sufficient to navigate to the initial directory.
+		Dlg.FileName:= Folder;  }
        if Title <> ''
        then Dlg.Title:= Title;
        Result:= Dlg.Execute;

@@ -56,6 +56,7 @@ TYPE
 IMPLEMENTATION
 
 USES
+   Winapi.Messages,
    LightVcl.Graph.Bitmap, LightCore.IO, LightCore, LightVcl.Common.Dialogs, LightVcl.Common.WinVersion;
 
 
@@ -723,20 +724,46 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    SHOW/HIDE DESKTOP ICONS
-   Always use the Win7 callback which finds SysListView32 (icon list).
-   GetDesktopHandle is wrong here - on Win8+ it returns WorkerW (wallpaper canvas).
+
+   Win10+ ignores ShowWindow(SW_HIDE) on SysListView32 due to DWM compositing.
+   Instead we send WM_COMMAND $7402 to SHELLDLL_DefView — the same toggle that
+   Explorer's right-click context menu "Show desktop icons" uses.
+   Works on Win 7, 8, 10, 11 (including 25H2).
 --------------------------------------------------------------------------------------------------}
+
+{ EnumWindows callback: finds SHELLDLL_DefView and stores its handle in MyData.Handle }
+function getDefViewHandle(Handle: HWND; MyData: PMyData): BOOL; stdcall;
+VAR hChild: HWND;
+begin
+  Result:= TRUE; { Continue enumeration }
+  hChild:= FindWindowEx(Handle, 0, 'SHELLDLL_DefView', nil);
+  if hChild <> 0 then
+   begin
+    MyData.Handle:= hChild;
+    Result:= FALSE; { Stop enumeration — found it }
+   end;
+end;
+
 procedure ShowDesktopIcons(CONST Show: Boolean);
 VAR
   MyData: TMyData;
+  hListView: HWND;
+  IconsVisible: Boolean;
 begin
+  { Find SHELLDLL_DefView }
   ZeroMemory(@MyData, SizeOf(MyData));
-  EnumWindows(@getDesktopHandleWin7, NativeInt(@MyData));
+  EnumWindows(@getDefViewHandle, NativeInt(@MyData));
   if MyData.Handle = 0 then EXIT;
 
-  if Show
-  then ShowWindow(MyData.Handle, SW_SHOW)
-  else ShowWindow(MyData.Handle, SW_HIDE);
+  { Check current visibility via the SysListView32 child }
+  hListView:= FindWindowEx(MyData.Handle, 0, 'SysListView32', nil);
+  if hListView = 0 then EXIT;
+
+  IconsVisible:= IsWindowVisible(hListView);
+
+  { Only toggle if current state doesn't match desired state }
+  if IconsVisible <> Show
+  then SendMessage(MyData.Handle, WM_COMMAND, $7402, 0);
 end;
 
 
