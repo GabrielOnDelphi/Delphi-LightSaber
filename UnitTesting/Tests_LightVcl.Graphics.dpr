@@ -41,7 +41,9 @@ uses
   Test.LightVcl.Graph.Cache in 'Test.LightVcl.Graph.Cache.pas',
   LightVcl.Graph.Cache in '..\FrameVCL\LightVcl.Graph.Cache.pas',
   Test.LightVcl.Graph.Text in 'Test.LightVcl.Graph.Text.pas',
-  LightVcl.Graph.Text in '..\FrameVCL\LightVcl.Graph.Text.pas';
+  LightVcl.Graph.Text in '..\FrameVCL\LightVcl.Graph.Text.pas',
+  Test.LightVcl.Graph.FX.KenBurns in 'Test.LightVcl.Graph.FX.KenBurns.pas',
+  LightVcl.Graph.FX.KenBurns in '..\FrameVCL\LightVcl.Graph.FX.KenBurns.pas';
 
 {$IFNDEF TESTINSIGHT}
 var

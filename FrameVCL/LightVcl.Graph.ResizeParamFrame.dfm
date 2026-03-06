@@ -1,14 +1,14 @@
 object ResizeParameters: TResizeParameters
   Left = 0
   Top = 0
-  Width = 371
+  Width = 386
   Height = 255
   Anchors = []
   TabOrder = 0
   object chkZoomMax: TCheckBox
-    Left = 112
+    Left = 111
     Top = 15
-    Width = 252
+    Width = 270
     Height = 16
     Hint = 
       'Very small images will look pixelated if they are enlarged too m' +
@@ -18,7 +18,7 @@ object ResizeParameters: TResizeParameters
     OnClick = GUIChanged
   end
   object numForceHeight: TNumberBox
-    Left = 116
+    Left = 137
     Top = 220
     Width = 85
     Height = 21
@@ -34,7 +34,7 @@ object ResizeParameters: TResizeParameters
     OnChange = GUIChanged
   end
   object numForceWidth: TNumberBox
-    Left = 116
+    Left = 137
     Top = 187
     Width = 85
     Height = 21
@@ -52,7 +52,7 @@ object ResizeParameters: TResizeParameters
   object radForceHeight: TRadioButton
     Left = 15
     Top = 223
-    Width = 97
+    Width = 115
     Height = 16
     Caption = 'Force height to'
     TabOrder = 3
@@ -61,7 +61,7 @@ object ResizeParameters: TResizeParameters
   object radForceWidth: TRadioButton
     Left = 15
     Top = 190
-    Width = 93
+    Width = 111
     Height = 16
     Caption = 'Force width to'
     TabOrder = 4
@@ -152,7 +152,7 @@ object ResizeParameters: TResizeParameters
     OnChange = GUIChanged
   end
   object spnZoomMax: TSpinEdit
-    Left = 315
+    Left = 323
     Top = 12
     Width = 40
     Height = 24

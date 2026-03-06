@@ -111,7 +111,15 @@ end;
 
 
 destructor TBkgImgLoader.Destroy;
+VAR BMP: TBitmap;
 begin
+ { Free any bitmaps still in the queue (caller stopped without draining) }
+ if ReadyThumbs <> NIL then
+   while ReadyThumbs.Count > 0 DO
+    begin
+     BMP:= ReadyThumbs.Dequeue;
+     FreeAndNil(BMP);
+    end;
  FreeAndNil(FQueueLock);
  FreeAndNil(ReadyThumbs);
  inherited Destroy;

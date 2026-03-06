@@ -1,10 +1,8 @@
 UNIT LightVcl.Graph.ResizeParams;
 
 {=============================================================================================================
-   Gabriel Moraru
    2026.01.30
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Parameters for resamplers in LightVcl.Graph.Resize.pas
    The record is filled with data from GUI (provided by LightVcl.Graph.ResizeParamEdt.pas).
@@ -20,9 +18,9 @@ UNIT LightVcl.Graph.ResizeParams;
 
    External dependencies: None
 
+-------------------------------------------------------------------------------------------------------------
    TESTER:
        c:\Projects\LightSaber ImageResampler Test\ResamplerTester.dpr
-       c:\MyProjects\Projects GRAPH Resamplers\Tester for LightVcl.Graph.ResizeParam\
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE

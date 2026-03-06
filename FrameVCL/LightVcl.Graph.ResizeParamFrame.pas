@@ -1,4 +1,4 @@
-UNIT LightVcl.Graph.ResizeParamFrame;
+UNIT LightVcl.Graph.ResizeParamFrame;      //todo 2: rename this to LightVcl.Graph.ResizeParamEditor
 
 {=============================================================================================================
    2026.01.30
@@ -9,11 +9,6 @@ UNIT LightVcl.Graph.ResizeParamFrame;
    Works on a RResizeParams record (LightVcl.Graph.ResizeParams.pas).
 
    !!! Don't add dependencies to LightVisControls.dpk because that package is compiled after this one !!!
-
-   TESTER:
-      c:\Projects\LightSaber ImageResampler Test\ResamplerTester.dpr
-      c:\MyProjects\Projects GRAPH Resamplers\Tester for LightVcl.Graph.ResizeParam\
-
 
    How to make a quick program that resizes an image:
 
@@ -29,12 +24,16 @@ UNIT LightVcl.Graph.ResizeParamFrame;
        if BMP <> NIL
        then Bmp2Jpg(BMP, LightCore.IO.IncrementFileName(FileName), 95);
       end;
+
+-------------------------------------------------------------------------------------------------------------
+   TESTER:
+       c:\Projects\LightSaber ImageResampler Test\ResamplerTester.dpr
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
 
 USES
-  System.Classes,
+  System.Classes, System.SysUtils,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.NumberBox, Vcl.Samples.Spin,
   LightVcl.Graph.ResizeParams;
 
@@ -52,21 +51,18 @@ TYPE
     radZoomNone    : TRadioButton;
     spnZoomCustom  : TNumberBox;
     spnZoomMax     : TSpinEdit;
+    chkZoomMax     : TCheckBox;               // we can add published properties in order to use them in the Object Inspector later.
     procedure GUIChanged (Sender: TObject);
   public
     procedure GUIFromObject(ResizeParams: PResizeParams);  { Set the GUI according to the values stored in the ResizeParams record }
     procedure ObjectFromGUI(ResizeParams: PResizeParams);  { Load values from the GUI into the ResizeParams record }
   published
-    chkZoomMax: TCheckBox;
-    //Also we can add published properties in order to use them in the Object Inspector later.
   end;
 
 
 procedure Register;
 
 IMPLEMENTATION {$R *.dfm}
-
-
 
 
 
@@ -77,15 +73,23 @@ begin
   Assert(ResizeParams <> NIL, 'ObjectFromGUI: ResizeParams cannot be nil');
 
   { Determine resize operation from radio buttons }
-  if radZoomNone.Checked         then ResizeParams.ResizeOpp:= roNone
-  else if radZoomAuto.Checked    then ResizeParams.ResizeOpp:= roAutoDetect
-  else if radZoomFit.Checked     then ResizeParams.ResizeOpp:= roFit
-  else if radZoomFill.Checked    then ResizeParams.ResizeOpp:= roFill
-  else if radZoomCustom.Checked  then ResizeParams.ResizeOpp:= roCustom
-  else if radForceWidth.Checked  then ResizeParams.ResizeOpp:= roForceWidth
-  else if radForceHeight.Checked then ResizeParams.ResizeOpp:= roForceHeight
-  else if radStretch.Checked     then ResizeParams.ResizeOpp:= roStretch
-  else ResizeParams.ResizeOpp:= roAutoDetect;  { Default fallback - should never happen in normal use }
+  if radZoomNone.Checked
+  then ResizeParams.ResizeOpp:= roNone else
+  if radZoomAuto.Checked
+  then ResizeParams.ResizeOpp:= roAutoDetect else
+  if radZoomFit.Checked
+  then ResizeParams.ResizeOpp:= roFit else
+  if radZoomFill.Checked
+  then ResizeParams.ResizeOpp:= roFill else
+  if radZoomCustom.Checked
+  then ResizeParams.ResizeOpp:= roCustom else
+  if radForceWidth.Checked
+  then ResizeParams.ResizeOpp:= roForceWidth else
+  if radForceHeight.Checked
+  then ResizeParams.ResizeOpp:= roForceHeight else
+  if radStretch.Checked
+  then ResizeParams.ResizeOpp:= roStretch
+  else RAISE Exception.Create('TResizeParameters - Unknown GUI parameter!');             { here was a fefault fallback introduced by you! this prevented us to find the bug easily never do this. raise instead }
 
   ResizeParams.MaxZoomUse  := chkZoomMax.Checked;
   ResizeParams.MaxZoomVal  := spnZoomMax.Value;
@@ -114,8 +118,8 @@ begin
   begin
     HandleNeeded;
     for i := 0 to ControlCount - 1 do
-      if Controls[i] is TWinControl then
-        TWinControl(Controls[i]).HandleNeeded;
+      if Controls[i] is TWinControl
+      then TWinControl(Controls[i]).HandleNeeded;
   end;
 
   case ResizeParams.ResizeOpp of
@@ -127,6 +131,7 @@ begin
     roForceWidth : radForceWidth.Checked := TRUE;
     roForceHeight: radForceHeight.Checked:= TRUE;
     roStretch    : radStretch.Checked    := TRUE;
+    else raise Exception.Create('TResizeParameters - Unknown GUI parameter!!!');
   end;
 
   chkZoomMax.Checked     := ResizeParams.MaxZoomUse;
@@ -139,8 +144,8 @@ begin
     A single Invalidate on the frame is not sufficient under VCL styles
     because the style hook may cache the unchecked appearance from CreateWnd. }
   for i := 0 to ControlCount - 1 do
-    if Controls[i] is TRadioButton then
-      Controls[i].Repaint;
+    if Controls[i] is TRadioButton
+    then Controls[i].Repaint;
 end;
 
 

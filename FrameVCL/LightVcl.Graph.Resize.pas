@@ -1,10 +1,8 @@
 UNIT LightVcl.Graph.Resize;
 
 {=============================================================================================================
-   Gabriel Moraru
    2026.01.30
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Image resizers
    They all use Windows StretchBlt in LightVcl.Graph.ResizeWin.pas
@@ -15,10 +13,6 @@ UNIT LightVcl.Graph.Resize;
    ToDo: I should use cGraphStretch32.GR32.Transform to resize down and JanFX to resize up.
    ToDo: Make a program that compares:  cGraphStretchCanvas, janFXStretch.SmoothResize, janFXStretch.Stretch, GR32.Transform
 --------------------------------------------------------------------------------------------------------------
-
- TESTER:
-      c:\Projects\LightSaber ImageResampler Test\ResamplerTester.dpr
-      c:\MyProjects\Projects GRAPH Resamplers\Tester for LightVcl.Graph.ResizeParam\
 
  TEST RESULTS
 
@@ -47,6 +41,9 @@ UNIT LightVcl.Graph.Resize;
      http://www.soft-gems.net/index.php/controls/windows-xp-theme-manager
      http://www.efg2.com/Lab/Library/Delphi/Graphics/Color.htm
      http://www.davdata.nl/math/bmresize.html (A Bitmap Resize Algorithm)
+-------------------------------------------------------------------------------------------------------------
+   TESTER:
+       c:\Projects\LightSaber ImageResampler Test\ResamplerTester.dpr
 -------------------------------------------------------------------------------------------------------------}
 INTERFACE
 

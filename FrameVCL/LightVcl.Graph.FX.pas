@@ -34,6 +34,7 @@ TYPE
     TileType      : RTileType;
     TileAuto      : Boolean;          { False = No tile, True = Auto Tile (small images will be tiled. If wallpaper's height at least 40% of desktop's height, then 'Perfect Tile' effect will be applied (see the manual for details)). }
     TileThreshold : Integer; {%}      { Any image with an area higher or equal with desktop's size is considered 'normal'. Any image with area between 99% and this value is considered 'small' and it will be stretched to fill the desktop. Any image below this value is considered 'tiny' (to small to be stretched). }
+    BlurBackdrop  : Boolean;          { Center image on a blurred enlarged copy of itself (like YouTube vertical video background) }
     procedure Reset;
     procedure WriteToStream (Stream: TLightStream);
     procedure ReadFromStream(Stream: TLightStream);
@@ -331,28 +332,52 @@ begin
  TileType.Horizon  := TRUE;
  TileType.OneRow   := TRUE;
  TileThreshold     := 40;{%}                  { Any image with an area higher or equal with desktop's size is considered 'normal'. Any image with are between 99% and this value is considered 'small' and it will be stretched to fill the desktop. Any image below this value is considered 'tiny' (to small to be stretched). }
+ BlurBackdrop      := FALSE;
 end;
 
 
 procedure RTileParams.WriteToStream(Stream: TLightStream);
+CONST TILE_SENTINEL = -1;           { Version marker: distinguishes new format from old (4 packed booleans can never equal $FFFFFFFF) }
 begin
+ Stream.WriteInteger (TILE_SENTINEL);
  Stream.WriteBoolean (TileAuto);
  Stream.WriteBoolean (TileType.Horizon);
  Stream.WriteBoolean (TileType.OneRow);
  Stream.WriteBoolean (TileType.Vertical);
  Stream.WriteInteger (TileThreshold);
- Stream.WritePaddingValidation;
+ Stream.WriteBoolean (BlurBackdrop);
+ Stream.WritePaddingValidation(59);  { 4+4+4+1+59 = 72 bytes total (same as old format) }
 end;
 
 
 procedure RTileParams.ReadFromStream(Stream: TLightStream);
+CONST TILE_SENTINEL = -1;
+VAR FirstInt: Integer;
 begin
- TileAuto         := Stream.ReadBoolean;
- TileType.Horizon := Stream.ReadBoolean;
- TileType.OneRow  := Stream.ReadBoolean;
- TileType.Vertical:= Stream.ReadBoolean;
- TileThreshold    := Stream.ReadInteger;
-                     Stream.ReadPaddingValidation;
+ FirstInt:= Stream.ReadInteger;
+
+ if FirstInt = TILE_SENTINEL then
+   begin
+     { New versioned format (v2) }
+     TileAuto         := Stream.ReadBoolean;
+     TileType.Horizon := Stream.ReadBoolean;
+     TileType.OneRow  := Stream.ReadBoolean;
+     TileType.Vertical:= Stream.ReadBoolean;
+     TileThreshold    := Stream.ReadInteger;
+     BlurBackdrop     := Stream.ReadBoolean;
+                         Stream.ReadPaddingValidation(59);
+   end
+ else
+   begin
+     { Old format: first 4 bytes were 4 individual booleans (little-endian) }
+     TileAuto         := (FirstInt AND $FF) <> 0;
+     TileType.Horizon := ((FirstInt SHR 8) AND $FF) <> 0;
+     TileType.OneRow  := ((FirstInt SHR 16) AND $FF) <> 0;
+     TileType.Vertical:= ((FirstInt SHR 24) AND $FF) <> 0;
+     TileThreshold    := Stream.ReadInteger;
+     BlurBackdrop     := FALSE;
+                         Stream.ReadPaddingValidation;    { 64 bytes default }
+   end;
 end;
 
 
