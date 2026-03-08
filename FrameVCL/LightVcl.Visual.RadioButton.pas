@@ -17,7 +17,7 @@ UNIT LightVcl.Visual.RadioButton;
 
   Similar: https://stackoverflow.com/questions/9678029/automatically-resize-a-delphi-button
 
-  Tester: c:\Myprojects\Project Testers\Cubic VCL tester GLOBAL\
+  Tester: c:\Projects\Project Testers\Cubic VCL tester GLOBAL\
 
   Issue: 
   https://stackoverflow.com/questions/47476603/major-flaw-radio-buttons-are-randomly-checked-when-showing-their-parent-form

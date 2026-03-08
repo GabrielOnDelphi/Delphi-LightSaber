@@ -54,7 +54,6 @@ contains
   LightVcl.Graph.Desktop in 'LightVcl.Graph.Desktop.pas',
   LightVcl.Graph.FX in 'LightVcl.Graph.FX.pas',
   LightVcl.Graph.FX.Gradient in 'LightVcl.Graph.FX.Gradient.pas',
-  LightVcl.Graph.FX.KenBurns in 'LightVcl.Graph.FX.KenBurns.pas',
   LightVcl.Graph.FX.Rotate in 'LightVcl.Graph.FX.Rotate.pas',
   LightVcl.Graph.FX.RotateGr32 in 'LightVcl.Graph.FX.RotateGr32.pas',
   LightVcl.Graph.Gif in 'LightVcl.Graph.Gif.pas',

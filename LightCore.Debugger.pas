@@ -41,6 +41,7 @@ USES
 
  { CRASH ME }
  procedure GenerateCrashNIL;
+ procedure GenerateCrashException;
  procedure GenerateLeak;
 
  { CODE TIMING }
@@ -262,6 +263,16 @@ begin
   T:= NIL;
   T.ClassName;  { Access Violation: calling virtual method on nil }
 end;
+
+
+TYPE
+  TMyMadsiTestException = class(Exception);
+
+procedure GenerateCrashException;
+begin
+  RAISE TMyMadsiTestException.Create('MadShi test'); // madShi is strongly recommended over EurekaLog!
+end;
+
 
 
 { Intentionally creates a memory leak by allocating an object without freeing it.

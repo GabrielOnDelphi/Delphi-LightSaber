@@ -105,6 +105,7 @@ TYPE
 
 IMPLEMENTATION
 USES
+  Vcl.StdCtrls,
   LightVcl.Visual.AppData, LightVcl.Visual.INIFile;
 
 
@@ -235,6 +236,27 @@ end;
 
 
 
+{$IFDEF DEBUG}
+{ Scan for TRadioButtons with TabStop=True that are not Checked.
+  This is a common source of bugs: when the form is shown, Windows gives focus to the first
+  TabStop control. If that's a radio button, it gets automatically checked, overriding
+  whatever was set in code. See: "The Hidden Dangers of TRadioButton.TabStop" }
+procedure ScanForDangerousTabStops(aParent: TWinControl);
+begin
+  for var i:= 0 to aParent.ControlCount-1 do
+   begin
+     if (aParent.Controls[i] is TRadioButton)
+     AND TRadioButton(aParent.Controls[i]).TabStop
+     AND NOT TRadioButton(aParent.Controls[i]).Checked
+     then AppData.LogWarn(aParent.Controls[i].Name+ ' on '+ aParent.Controls[i].GetParentComponent.Name+ ' has TabStop=True but is not Checked!');
+
+     if aParent.Controls[i] is TWinControl
+     then ScanForDangerousTabStops(TWinControl(aParent.Controls[i]));
+   end;
+end;
+{$ENDIF}
+
+
 {-----------------------------------------------------------------------------------------------------------------------
    MAIN
 
@@ -259,6 +281,10 @@ begin
      then MessageError('Closing application while still initializing!');
      Exit; // We don't save anything if the start up was improper!
    end;
+
+  {$IFDEF DEBUG}
+  ScanForDangerousTabStops(Self);
+  {$ENDIF}
 
   IniFile:= TIniFileVCL.Create(Self.Name);
   TRY
@@ -314,7 +340,6 @@ begin
   else Application.MainForm.Caption:= appData.AppName+ ' '+ appData.GetVersionInfoV+ ' - ' + Caption;
   //todo: show debug release modes as in fmx
 end;
-
 
 
 end.
