@@ -109,7 +109,7 @@ USES
  function  DiskInDrive        (CONST Path: string): Boolean; overload;                { From www.gnomehome.demon.nl/uddf/pages/disk.htm#disk0 . Also see http://community.borland.com/article/0,1410,15921,00.html }
  function  DiskInDrive        (CONST DriveNo: Byte): Boolean; overload;               { THIS IS VERY SLOW IF THE DISK IS NOT IN DRIVE! The GUI will freeze until the drive responds. }
  function  ValidDrive         (CONST Drive: Char): Boolean;                           { Peter Below (TeamB). http://www.codinggroups.com/borland-public-delphi-rtl-win32/7618-windows-no-disk-error.html }
- 
+
  function  PathHasValidColon    (const Path: string): Boolean;
 
  { Free space }
@@ -1221,7 +1221,7 @@ VAR DriveNo: Byte;
 begin
  DriveNo:= Drive2Byte(Drive);
 
- if ValidDrive(Drive) 
+ if ValidDrive(Drive)
  AND DiskInDrive(DriveNo)
  then Result:= DiskFree(DriveNo)
  else Result:= 0;

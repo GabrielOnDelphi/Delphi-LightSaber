@@ -14,7 +14,8 @@ uses
   System.SysUtils,
   System.Classes,
   System.Types,
-  LightCore;
+  LightCore,
+  LightCore.System;
 
 type
   [TestFixture]
@@ -452,6 +453,7 @@ type
     [Test]
     procedure TestInsertCharEvery;
 
+    { Array Tests }
     [Test]
     procedure TestFillZeros;
 
@@ -461,6 +463,7 @@ type
 
     [Test]
     procedure TestGetSystemLanguageNameShort;
+
   end;
 
 implementation
@@ -1425,44 +1428,41 @@ begin
   Assert.AreEqual('12-34-56', InsertCharEvery('-', '123456', 2));
 end;
 
+{ Array Tests }
+
 procedure TTestLightCore.TestFillZeros;
-var
+VAR
   Arr: TIntegerDynArray;
 begin
-  SetLength(Arr, 5);
+  SetLength(Arr, 3);
   Arr[0]:= 10;
   Arr[1]:= 20;
   Arr[2]:= 30;
-  Arr[3]:= 40;
-  Arr[4]:= 50;
-
   FillZeros(Arr);
-
-  Assert.AreEqual(0, Arr[0]);
-  Assert.AreEqual(0, Arr[1]);
-  Assert.AreEqual(0, Arr[2]);
-  Assert.AreEqual(0, Arr[3]);
-  Assert.AreEqual(0, Arr[4]);
+  Assert.AreEqual(0, Arr[0], 'Element 0 should be zero');
+  Assert.AreEqual(0, Arr[1], 'Element 1 should be zero');
+  Assert.AreEqual(0, Arr[2], 'Element 2 should be zero');
 end;
 
 
 { System Tests }
 
 procedure TTestLightCore.TestGetSystemLanguageName;
-var
-  Lang: string;
+VAR
+  Name: string;
 begin
-  Lang:= GetSystemLanguageName;
-  Assert.IsTrue(Length(Lang) > 0, 'Language name should not be empty');
+  Name:= GetSystemLanguageName;
+  Assert.IsNotEmpty(Name, 'System language name should not be empty');
 end;
 
+
 procedure TTestLightCore.TestGetSystemLanguageNameShort;
-var
-  Lang: string;
+VAR
+  ShortName: string;
 begin
-  Lang:= GetSystemLanguageNameShort;
-  Assert.IsTrue(Length(Lang) > 0, 'Short language name should not be empty');
-  Assert.IsFalse(Pos('(', Lang) > 0, 'Short name should not contain parentheses');
+  ShortName:= GetSystemLanguageNameShort;
+  Assert.IsNotEmpty(ShortName, 'Short language name should not be empty');
+  Assert.AreEqual(0, Pos('(', ShortName), 'Short name should not contain parentheses');
 end;
 
 

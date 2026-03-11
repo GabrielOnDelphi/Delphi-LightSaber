@@ -79,6 +79,7 @@ TYPE
     procedure WMPostInit(var Msg: TMessage); message WM_POSTINIT;
   protected
     Saved: Boolean;
+    procedure Loaded; override;
     procedure saveBeforeExit;
 
     procedure DoDestroy; override;
@@ -119,6 +120,18 @@ begin
   Saved     := FALSE;
 
   FAutoSaveForm := AutoSaveForm; // Default value. Can be overriden by AppData.CreateForm
+end;
+
+
+{ Centers the form on the main form's monitor after DFM streaming completes.
+  This provides a sensible default position for all TLightForm descendants.
+  For forms created via AppData.CreateForm, LoadForm will override this with the saved position. }
+procedure TLightForm.Loaded;
+begin
+  inherited;
+  if (Application.MainForm <> NIL) 
+  AND (Self <> Application.MainForm)
+  then CenterFormOnMainFormMonitor(Self);
 end;
 
 

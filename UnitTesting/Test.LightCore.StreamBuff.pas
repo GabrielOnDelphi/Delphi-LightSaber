@@ -868,7 +868,7 @@ begin
     Assert.WillRaise(
       procedure
       begin
-        ReadStream.ReadStringA(50);  // SafetyLimit = 50, but string is 100
+        ReadStream.ReadStringACnt(50);  // SafetyLimit = 50, but string is 100
       end,
       Exception
     );

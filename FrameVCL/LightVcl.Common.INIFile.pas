@@ -94,7 +94,7 @@ UNIT LightVcl.Common.IniFile;
 INTERFACE
 
 USES
-   System.Classes, System.IniFiles, System.SysUtils, System.UITypes,
+   System.Classes, System.IniFiles, System.SysUtils, System.Types, System.UITypes,
    Vcl.Graphics, Vcl.Forms, Vcl.FileCtrl, Vcl.Menus, Vcl.ExtCtrls, Vcl.NumberBox, Vcl.ComCtrls, Vcl.WinXCtrls, Vcl.Samples.Spin, Vcl.ActnList, Vcl.Dialogs, Vcl.Controls, Vcl.StdCtrls,
    LightCore.INIFile, LightCore.AppData;
 
@@ -275,14 +275,28 @@ begin
         OR (TForm(Ctrl).BorderStyle = bsDialog)
         OR (TForm(Ctrl).BorderStyle = bsToolWindow);
 
-      { Read position - center on screen if no saved position }
-      if ValueExists(Ctrl.Name, 'Top')
-      then Ctrl.Top:= ReadInteger (Ctrl.Name, 'Top' , 0)     { For "normal" controls default values are ignored because of ValueExists, therefore the current window 'physical' width/height are used }
-      else Ctrl.Top:= (Screen.Height - Ctrl.Height) DIV 2;   { For forms the top/left position is calculated so that the form is centered on screen, at first startup }
-
-      if ValueExists(Ctrl.Name, 'Left')
-      then Ctrl.Left:= ReadInteger(Ctrl.Name, 'Left', 0)
-      else Ctrl.Left:= (Screen.Width - Ctrl.Width) DIV 2;
+      { Read position - center on main form's monitor if no saved position }
+      if ValueExists(Ctrl.Name, 'Top') 
+	  AND ValueExists(Ctrl.Name, 'Left') then
+        begin
+          Ctrl.Top := ReadInteger(Ctrl.Name, 'Top',  0);  { For "normal" controls default values are ignored because of ValueExists, therefore the current window 'physical' width/height are used }
+          Ctrl.Left:= ReadInteger(Ctrl.Name, 'Left', 0);
+        end
+      else
+        begin
+          { Center on the main form's monitor for multi-monitor support }
+          if Application.MainForm <> NIL then
+            begin
+              VAR WorkArea: TRect:= Application.MainForm.Monitor.WorkareaRect;
+              Ctrl.Top := WorkArea.Top  + ((WorkArea.Height - Ctrl.Height) div 2);  { For forms the top/left position is calculated so that the form is centered on screen, at first startup }
+              Ctrl.Left:= WorkArea.Left + ((WorkArea.Width  - Ctrl.Width)  div 2);
+            end
+          else
+            begin
+              Ctrl.Top := (Screen.Height - Ctrl.Height) DIV 2;
+              Ctrl.Left:= (Screen.Width  - Ctrl.Width)  DIV 2;
+            end;
+        end;
 
       { Read size only for resizable forms and only if value exists.
         Using 0 as default would corrupt the form size. }

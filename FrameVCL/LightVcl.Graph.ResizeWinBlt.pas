@@ -16,7 +16,7 @@ UNIT LightVcl.Graph.ResizeWinBlt;
 INTERFACE
 
 USES
-   Winapi.Windows, System.SysUtils, Vcl.Dialogs, Vcl.Graphics,
+   Winapi.Windows, System.SysUtils, Vcl.Graphics,
    LightVcl.Graph.Bitmap;
 
  { Not proportional }
@@ -43,7 +43,8 @@ IMPLEMENTATION
 
    Note: BitBlt only does copy, NO STRETCH.
 
-   Returns: A NEW bitmap that caller must free, or NIL if source is too small.
+   Returns: A NEW bitmap that caller must free.
+   Asserts if source is too small (< 12 pixels) — caller must validate before calling.
 
    https://msdn.microsoft.com/en-us/library/windows/desktop/dd162950(v=vs.85).aspx
 -------------------------------------------------------------------------------------------------------------}
@@ -53,12 +54,9 @@ begin
  Assert(OutWidth > 0, 'StretchF: OutWidth must be > 0');
  Assert(OutHeight > 0, 'StretchF: OutHeight must be > 0');
 
- { Windows StretchBlt may produce artifacts or crash with very small images }
- if (BMP.Width < 12) OR (BMP.Height < 12) then
-  begin
-   ShowMessage('Cannot stretch images under 12 pixels!');
-   EXIT(NIL);
-  end;
+ { Windows StretchBlt may produce artifacts or crash with very small images.
+   Callers must validate input size before calling. This assert catches programming errors. }
+ Assert((BMP.Width >= 12) AND (BMP.Height >= 12), 'StretchF: Source image too small ('+ IntToStr(BMP.Width)+ 'x'+ IntToStr(BMP.Height)+ '). Caller must validate size >= 12 pixels.');
 
  Result:= TBitmap.Create;
  TRY
@@ -76,17 +74,13 @@ end;
 
 
 { Uses MS Windows StretchBlt.
-  Note: StretchF returns NIL for very small images (< 12 pixels). In this case,
-  the original bitmap is left unchanged. }
+  Asserts if source is too small (< 12 pixels) — caller must validate before calling. }
 procedure Stretch(BMP: TBitmap; OutWidth, OutHeight: Integer);
 VAR Temp: TBitmap;
 begin
   Assert(BMP <> NIL, 'Stretch: BMP parameter cannot be nil');
 
   Temp:= StretchF(BMP, OutWidth, OutHeight);
-  if Temp = NIL
-  then EXIT;  { StretchF returns NIL for images < 12 pixels - leave BMP unchanged }
-
   TRY
     BMP.Assign(Temp);
   FINALLY

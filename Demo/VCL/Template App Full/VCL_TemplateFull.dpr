@@ -37,5 +37,3 @@ begin
 
   AppData.Run;
 end.
-
-
