@@ -92,6 +92,7 @@ IMPLEMENTATION
 
 USES
    {$IFDEF Jpg2000}OpenJpeg2000Bitmap,{$ENDIF} // Download OpenJpeg Pas library from: www.github.com/galfar/PasJpeg2000
+   Winapi.ActiveX,
    FastJpegDecHelper,
    LightVcl.Graph.Resize, LightVcl.Graph.Loader.Resolution, LightVcl.Graph.UtilGray,
    LightVcl.Graph.Loader.WB1, LightVcl.Graph.RainShelter, LightCore.IO, LightVcl.Common.IO, LightVcl.Graph.FX.Rotate,
@@ -126,37 +127,47 @@ USES
 function loadGraphWic(CONST FileName: string): TBitmap;   //Todo: test with BMP
 VAR
    wic: TWICImage;
+   NeedCoUninit: Boolean;
 begin
   Result:= NIL;
   Assert(FileExistsMsg(FileName));
 
-  wic := TWICImage.Create;
+  { TWICImage uses IWICImagingFactory (COM). Worker threads (TParallel.For, TTask.Run)
+    don't have COM initialized, causing silent failures or crashes on PNG/GIF/TIF files.
+    CoInitialize returns S_OK or S_FALSE (both success, both need matching CoUninitialize). }
+  NeedCoUninit:= Succeeded(CoInitialize(NIL));
   TRY
-
+    wic := TWICImage.Create;
     TRY
-      wic.LoadFromFile(FileName);
-    EXCEPT
-      on E: Exception do
-       begin
-        { Don't crash on invalid images. Show the problem in log }
-        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-        EXIT(NIL);
-       end;
-    END;
 
-    Result := TBitmap.Create;
-    TRY
-      Result.Assign(wic);
-    EXCEPT
-      on E: Exception do
-       begin
-        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-        FreeAndNil(Result);
-       end;
-    END;
+      TRY
+        wic.LoadFromFile(FileName);
+      EXCEPT
+        on E: Exception do
+         begin
+          { Don't crash on invalid images. Show the problem in log }
+          AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+          EXIT(NIL);
+         end;
+      END;
 
+      Result := TBitmap.Create;
+      TRY
+        Result.Assign(wic);
+      EXCEPT
+        on E: Exception do
+         begin
+          AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+          FreeAndNil(Result);
+         end;
+      END;
+
+    FINALLY
+      FreeAndNil(wic);
+    END;
   FINALLY
-    FreeAndNil(wic);
+    if NeedCoUninit
+    then CoUninitialize;
   END;
 end;
 
