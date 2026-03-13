@@ -136,6 +136,7 @@ end;
 
 destructor TRamLog.Destroy;
 begin
+  FLogObserver:= NIL;    { Prevent any late TThread.Queue callbacks from accessing observer }
   FreeAndNil(Lines);
   inherited;
 end;
@@ -185,13 +186,18 @@ begin
 end;
 
 
-{ For the multithreaded case: VCL updates must be synchronized to the main thread. }
+{ For the multithreaded case: VCL updates must be synchronized to the main thread.
+  IMPORTANT: Capture FLogObserver into a local variable so the anonymous method
+  does NOT capture Self. If Self (TRamLog) is freed before the queued callback
+  runs, accessing Self.FLogObserver reads freed memory -> AV. }
 procedure TRamLog.NotifyLogObserver;
+VAR LObserver: ILogObserver;
 begin
-  if Assigned(FLogObserver) then
+  LObserver:= FLogObserver;
+  if Assigned(LObserver) then
     if TThread.CurrentThread.ThreadID = MainThreadID
-    then FLogObserver.Populate
-    else TThread.Queue(nil, procedure begin FLogObserver.Populate; end);  // TThread.Queue schedules the call on the main thread without blocking the caller, suitable for frequent log updates from background threads.
+    then LObserver.Populate
+    else TThread.Queue(nil, procedure begin LObserver.Populate; end);  // TThread.Queue schedules the call on the main thread without blocking the caller, suitable for frequent log updates from background threads.
 end;
 
 
@@ -207,11 +213,13 @@ end;
 
 
 procedure TRamLog.PopUpWindow;
+VAR LObserver: ILogObserver;
 begin
-  if Assigned(FLogObserver) then
+  LObserver:= FLogObserver;
+  if Assigned(LObserver) then
     if TThread.CurrentThread.ThreadID = MainThreadID
-      then FLogObserver.PopUpWindow
-      else TThread.Queue(nil, procedure begin FLogObserver.PopUpWindow; end);
+      then LObserver.PopUpWindow
+      else TThread.Queue(nil, procedure begin LObserver.PopUpWindow; end);
 end;
 
 

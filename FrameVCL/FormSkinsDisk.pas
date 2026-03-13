@@ -40,7 +40,7 @@ UNIT FormSkinsDisk;
 
        TStyleManager.SetStyle triggers RecreateWnd on all forms. The modal form's window handle is destroyed and recreated,
        but the new window lacks the Windows-level owner relationship that enforces z-order. The recreated modal form ends up
-       behind the disabled owner windows — the app appears frozen.
+       behind the disabled owner windows â€” the app appears frozen.
 
        The old workaround (Application.ProcessMessages + BringToFront) didn't work because BringToFront only calls
        SetWindowPos(HWND_TOP), which can't overcome broken window ownership.
@@ -54,7 +54,7 @@ UNIT FormSkinsDisk;
          the window topmost, then immediately removes the flag. This forces Windows to recalculate z-order, placing the form at the top of the non-topmost band. SetForegroundWindow gives it input focus.
 
        Fix 3: DefWinTheme branch (line 333)
-         The DefWinTheme branch (SetStyle('Windows')) also triggers RecreateWnd but had no z-order fix at all — this was a secondary bug. Now fixed with the same ReassertZOrder call.
+         The DefWinTheme branch (SetStyle('Windows')) also triggers RecreateWnd but had no z-order fix at all â€” this was a secondary bug. Now fixed with the same ReassertZOrder call.
 
        Sources:
        - https://blogs.embarcadero.com/popupmode-and-popupparent/
@@ -71,6 +71,32 @@ UNIT FormSkinsDisk;
        end;
 
        Fixed in Delphi 11! (quality.embarcadero.com/browse/RSP-33140)
+
+   BUG 4: EAccessViolation in TMainMenuBarStyleHook after closing the skin dialog
+
+       Root cause: TStyleManager.SetStyle posts CM_CUSTOMSTYLECHANGED (via PostMessage) to all
+       visible forms, triggering RecreateWnd which properly rebuilds TFormStyleHook and its nested
+       TMainMenuBarStyleHook with valid references. The ORIGINAL workaround (v1-v3) added a
+       ForceQueue in FormPreRelease that sent a SECOND CM_RECREATEWND to all forms with menus
+       after the dialog closed. This created a deadly timing window: if ProcessMenuLoop (which
+       has its own DispatchMessage loop) was active when the ForceQueue callback fired, the
+       second RecreateWnd destroyed the hooks mid-loop -> use-after-free crash.
+
+       Additionally, the v3 shMenus flag manipulation was ineffective: shMenus controls popup
+       menu window styling (WH_MSGFILTER hook for #32768 windows), NOT the form-level
+       TMainMenuBarStyleHook creation in WMNCCalcSize. It had zero effect on the crash.
+
+       Fix: Remove both the ForceQueue RecreateWnd and the shMenus manipulation. Let the single
+       CM_CUSTOMSTYLECHANGED RecreateWnd (VCL's own mechanism) handle hook recreation naturally.
+       The z-order is maintained by PopupMode=pmAuto (DFM) + ReassertZOrder after each SetStyle.
+
+       VCL bugs remain (Embarcadero should fix):
+         1. TMainMenuBarStyleHook.Destroy does not call UnHookMenus (line 17045 in Vcl.Forms.pas)
+         2. ProcessMenuLoop's internal DispatchMessage loop can dispatch RecreateWnd, destroying Self
+         3. CM_CUSTOMSTYLECHANGED is posted not sent, creating timing issues with modal dialogs
+
+       Related: RSP-38114, RSP-39197 (partially fixed in 11.3, menu bar variant persists in 13.1)
+       HeidiSQL had the same crash (GitHub issue #465) - their "fix" was to require app restart.
 
 --------------------------------------------------------------------------------------------------------------
    STYLE FOLDERS:
@@ -243,11 +269,16 @@ end;
 procedure TfrmStyleDisk.FormPreRelease;
 begin
   inherited;
-  
+
   { Save using 'Laststyle' key for backward compatibility.
     Don't save if startup was improper (Initializing still TRUE). }
   if NOT AppData.Initializing
   then LightCore.INIFileQuick.WriteString(IniKeyStyle, CurrentStyleName);
+
+  { BUG 4 fix: No ForceQueue RecreateWnd here. CM_CUSTOMSTYLECHANGED (posted by
+    SetStyle in lBoxClick) already triggers RecreateWnd with fresh, valid hooks.
+    The previous ForceQueue added a SECOND RecreateWnd that could fire during
+    ProcessMenuLoop's DispatchMessage, destroying hooks mid-loop (use-after-free). }
 end;
 
 
@@ -318,7 +349,10 @@ begin
 end;
 
 
-{ Handles style selection - loads and applies the selected style }
+{ Handles style selection - loads and applies the selected style.
+  SetStyle posts CM_CUSTOMSTYLECHANGED which triggers RecreateWnd on all forms,
+  rebuilding TFormStyleHook and TMainMenuBarStyleHook with valid references.
+  ReassertZOrder fixes z-order after RecreateWnd destroys the modal relationship. }
 procedure TfrmStyleDisk.lBoxClick(Sender: TObject);
 begin
   if lBox.ItemIndex < 0 then EXIT;

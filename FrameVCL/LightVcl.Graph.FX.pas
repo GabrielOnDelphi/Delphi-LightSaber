@@ -327,17 +327,17 @@ end;
 
 procedure RTileParams.Reset;
 begin
- TileAuto          := TRUE;
+ TileAuto          := FALSE;
  TileType.Vertical := FALSE;
  TileType.Horizon  := TRUE;
  TileType.OneRow   := TRUE;
  TileThreshold     := 40;{%}                  { Any image with an area higher or equal with desktop's size is considered 'normal'. Any image with are between 99% and this value is considered 'small' and it will be stretched to fill the desktop. Any image below this value is considered 'tiny' (to small to be stretched). }
- BlurBackdrop      := FALSE;
+ BlurBackdrop      := TRUE;
 end;
 
 
 procedure RTileParams.WriteToStream(Stream: TLightStream);
-CONST TILE_SENTINEL = -1;           { Version marker: distinguishes new format from old (4 packed booleans can never equal $FFFFFFFF) }
+CONST TILE_SENTINEL = -1;                     { Version marker: distinguishes new format from old (4 packed booleans can never equal $FFFFFFFF) }
 begin
  Stream.WriteInteger (TILE_SENTINEL);
  Stream.WriteBoolean (TileAuto);
@@ -346,7 +346,7 @@ begin
  Stream.WriteBoolean (TileType.Vertical);
  Stream.WriteInteger (TileThreshold);
  Stream.WriteBoolean (BlurBackdrop);
- Stream.WritePaddingValidation(59);  { 4+4+4+1+59 = 72 bytes total (same as old format) }
+ Stream.WritePaddingValidation(59);           { 4+4+4+1+59 = 72 bytes total (same as old format) }
 end;
 
 
