@@ -187,9 +187,8 @@ end;
 
 
 { For the multithreaded case: VCL updates must be synchronized to the main thread.
-  IMPORTANT: Capture FLogObserver into a local variable so the anonymous method
-  does NOT capture Self. If Self (TRamLog) is freed before the queued callback
-  runs, accessing Self.FLogObserver reads freed memory -> AV. }
+  IMPORTANT: Capture FLogObserver into a local variable so the anonymous method does NOT capture Self. 
+  If Self (TRamLog) is freed before the queued callback runs, accessing Self.FLogObserver reads freed memory -> AV. }
 procedure TRamLog.NotifyLogObserver;
 VAR LObserver: ILogObserver;
 begin

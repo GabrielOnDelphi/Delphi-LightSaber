@@ -1,11 +1,10 @@
 program VCL_TemplateFull;
 
 uses
-  {$IFDEF DEBUG}
-  FastMM4,
-  {$ENDIF }
+  {$IFDEF DEBUG}FastMM4,{$ENDIF}
   Vcl.Themes,
   Vcl.Styles,
+  Vcl.Forms,
   FormMain in 'FormMain.pas' {MainForm},
   FormSettings in 'FormSettings.pas',
   uInitialization in 'uInitialization.pas',
@@ -22,7 +21,7 @@ uses
 {$R *.res}
 
 begin
-  ReportMemoryLeaksOnShutdown:= TRUE;
+  Application.Initialize;                  // Required by IDE, otherwise the Appearance and Orientation pages do not appear in Project Options.
   
   CONST
      MultiThreaded= FALSE;                 // True => Only if we need to use multithreading in the Log.

@@ -247,6 +247,7 @@ end;
 
 
 
+
 {-----------------------------------------------------------------------------------------------------------------------
    FORM LIFECYCLE
 -----------------------------------------------------------------------------------------------------------------------}
@@ -270,7 +271,7 @@ procedure TfrmStyleDisk.FormPreRelease;
 begin
   inherited;
 
-  { Save using 'Laststyle' key for backward compatibility.
+  { Save using 'LastStyle' key for backward compatibility.
     Don't save if startup was improper (Initializing still TRUE). }
   if NOT AppData.Initializing
   then LightCore.INIFileQuick.WriteString(IniKeyStyle, CurrentStyleName);
@@ -350,8 +351,7 @@ end;
 
 
 { Handles style selection - loads and applies the selected style.
-  SetStyle posts CM_CUSTOMSTYLECHANGED which triggers RecreateWnd on all forms,
-  rebuilding TFormStyleHook and TMainMenuBarStyleHook with valid references.
+  SetStyle posts CM_CUSTOMSTYLECHANGED which triggers RecreateWnd on all forms, rebuilding TFormStyleHook and TMainMenuBarStyleHook with valid references.
   ReassertZOrder fixes z-order after RecreateWnd destroys the modal relationship. }
 procedure TfrmStyleDisk.lBoxClick(Sender: TObject);
 begin
@@ -366,10 +366,10 @@ begin
     then
       begin
         TStyleManager.SetStyle('Windows');
-        CurrentstyleName:= DefWinTheme;
+        CurrentStyleName:= DefWinTheme;
         ReassertZOrder;
-        if Assigned(FOnDefaultstyle)
-        then FOnDefaultstyle(Self);
+        if Assigned(FOnDefaultStyle)
+        then FOnDefaultStyle(Self);
       end
     else
       if LoadStyleFromFile(CurrentStyleName)
@@ -383,8 +383,8 @@ end;
 { Opens local style editor if available, otherwise opens web-based designer }
 procedure TfrmStyleDisk.btnStyleEditorClick(Sender: TObject);
 begin
-  if FileExists(Appdata.AppSysDir + 'styleDesigner.exe')
-  then ExecuteFile(Appdata.AppSysDir + 'styleDesigner.exe')
+  if FileExists(Appdata.AppSysDir + 'StyleDesigner.exe')
+  then ExecuteFile(Appdata.AppSysDir + 'StyleDesigner.exe')
   else ExecuteURL(wwwSkinDesinger);
 end;
 
