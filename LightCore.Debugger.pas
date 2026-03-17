@@ -270,7 +270,7 @@ TYPE
 
 procedure GenerateCrashException;
 begin
-  RAISE TMyMadsiTestException.Create('MadShi test'); // madShi is strongly recommended over EurekaLog!
+  RAISE TMyMadsiTestException.Create('MadShi exception!'); // madShi is strongly recommended over EurekaLog!
 end;
 
 
