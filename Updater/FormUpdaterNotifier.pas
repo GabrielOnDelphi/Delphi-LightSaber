@@ -23,6 +23,8 @@ UNIT FormUpdaterNotifier;
    See "ciUpdater.pas" for details.
 -------------------------------------------------------------------------------------------------------------}
 
+//ToDo: Add the news to a list of news. This way the user will also see previous news, in case he missed them. Also allow me to clear that list.
+
 INTERFACE
 {$DENYPACKAGEUNIT ON} {Prevents unit from being placed in a package. https://docwiki.embarcadero.com/RADStudio/Alexandria/en/Packages_(Delphi)#Naming_packages }
 
@@ -58,7 +60,7 @@ TYPE
     tabDemo          : TTabSheet;
     tabNews          : TTabSheet;
     tabRecEditor     : TTabSheet;
-    LogVerb: TRichLogTrckbr;
+    LogVerb          : TRichLogTrckbr;
     procedure btnBinFileClick       (Sender: TObject);
     procedure btnCheckDelayClick    (Sender: TObject);
     procedure btnCheckManuallyClick (Sender: TObject);

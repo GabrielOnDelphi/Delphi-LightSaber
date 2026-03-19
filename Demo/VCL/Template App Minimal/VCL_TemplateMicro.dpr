@@ -2,9 +2,11 @@ program VCL_TemplateMicro;
 
 uses
   {$IFDEF DEBUG}FastMM4,{$ENDIF}
+  {$IFDEF RELEASE}
+  madExcept, madLinkDisAsm, madListModules, {$ENDIF}
+  
   Vcl.Themes,
   Vcl.Styles,
-  Vcl.Forms,
   MainForm in 'MainForm.pas' {frmMain},
   LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas',
   LightVcl.Visual.AppDataForm in '..\..\..\FrameVCL\LightVcl.Visual.AppDataForm.pas',
@@ -13,14 +15,13 @@ uses
 {$R *.res}
 
 begin
-  Application.Initialize;                  // Required by IDE, otherwise the Appearance and Orientation pages do not appear in Project Options.
-
   CONST
      MultiThreaded= FALSE;                 // True => Only if we need to use multithreading in the Log.
-  AppData:= TAppData.Create('Light Template Micro', '', MultiThreaded);
+  CONST
+     AppName= 'Light Template Micro';       // Absolutelly critical if you use the SaveForm/LoadForm functionality. This string will be used as the name of the INI file.
+
+  AppData:= TAppData.Create(AppName, '', MultiThreaded);
   AppData.CreateMainForm(TfrmMain, TRUE, TRUE, asFull);
-  // Warning: Don't call TrySetStyle until the main form is visible.
-  //TStyleManager.TrySetStyle('Auric');
 
   AppData.Run;
 end.

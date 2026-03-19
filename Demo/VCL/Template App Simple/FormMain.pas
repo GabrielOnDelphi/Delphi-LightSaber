@@ -67,7 +67,7 @@ begin
   then
    begin
     // Preparation of the main form
-    AppData.MainFormCaption('Welcome...');
+    MainFormCaption('Welcome...');
     CenterForm(MainForm);
     MainForm.pgCtrl.ActivePage:= MainForm.tabMain;            // Default page to show
 
@@ -86,7 +86,7 @@ begin
       end;
    end
   else
-    AppData.MainFormCaption('');
+    MainFormCaption('');
 
   btnStartClick(self);
   Show;

@@ -2,6 +2,9 @@ program VCL_TemplateSimple;
 
 uses
   {$IFDEF DEBUG}FastMM4,{$ENDIF}
+  {$IFDEF RELEASE}
+  madExcept, madLinkDisAsm, madListModules, {$ENDIF}
+  
   Vcl.Themes,
   Vcl.Styles,
   Vcl.Forms,
@@ -14,16 +17,17 @@ uses
 
 begin
   Application.Initialize;                  // Required by IDE, otherwise the Appearance and Orientation pages do not appear in Project Options.
-
+  
   CONST
      MultiThreaded= FALSE;                 // True => Only if we need to use multithreading in the Log.
   CONST
      AppName= 'Light Template Simple';  // Absolutelly critical if you use the SaveForm/LoadForm functionality. This string will be used as the name of the INI file.
 
   AppData:= TAppData.Create(AppName, '', MultiThreaded);
-  AppData.CreateMainForm(TMainForm, MainForm, TRUE, TRUE, asFull);
+  AppData.CreateMainForm(TMainForm, TRUE, TRUE, asFull);
+
   // Warning: Don't call TrySetStyle until the main form is visible.
-  //TStyleManager.TrySetStyle('Auric');
+  //TStyleManager.TrySetStyle('Amakrits');
 
   AppData.Run;
 end.

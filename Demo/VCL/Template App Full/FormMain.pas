@@ -241,7 +241,7 @@ end;
 
 procedure TMainForm.actUpdaterExecute(Sender: TObject);
 begin
-  TFrmUpdater.CreateForm(TRUE);
+  AppData.CreateFormModal(TFrmUpdater);
 end;
 
 

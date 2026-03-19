@@ -2,9 +2,12 @@ program VCL_TemplateFull;
 
 uses
   {$IFDEF DEBUG}FastMM4,{$ENDIF}
+  {$IFDEF RELEASE}madExcept, madLinkDisAsm, madListModules, {$ENDIF}
+  
   Vcl.Themes,
   Vcl.Styles,
   Vcl.Forms,
+
   FormMain in 'FormMain.pas' {MainForm},
   FormSettings in 'FormSettings.pas',
   uInitialization in 'uInitialization.pas',

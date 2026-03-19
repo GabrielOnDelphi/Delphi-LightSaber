@@ -244,9 +244,8 @@ end;
 procedure TfrmSettings.FontDialogClose(Sender: TObject);
 begin
   AppData.Font:= FontDialog.Font; // Apply this font to all existing forms.
-  //ToDo: Application.MainForm.FontSizeChanged; Let the form recalculate its GUI stuff when font size changes
-  MainForm.FontSizeChanged;
 end;
+
 
 procedure TfrmSettings.FontDialogShow(Sender: TObject);
 begin
