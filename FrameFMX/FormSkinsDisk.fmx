@@ -11,6 +11,11 @@ object frmStyleDisk: TfrmStyleDisk
   OnClose = FormClose
   OnKeyDown = FormKeyDown
   DesignerMasterStyle = 0
+  object Container: TLayout
+    Align = Client
+    Size.Width = 326.000000000000000000
+    Size.Height = 464.000000000000000000
+    Size.PlatformDefault = False
   object lblTop: TLabel
     Align = Top
     HitTest = True
@@ -67,5 +72,6 @@ object frmStyleDisk: TfrmStyleDisk
       Text = 'OK'
       OnClick = btnOKClick
     end
+  end
   end
 end

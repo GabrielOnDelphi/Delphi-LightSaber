@@ -156,7 +156,7 @@ TYPE
       FORMS
    --------------------------------------------------------------------------------------------------}
     procedure CreateMainForm  (aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly);
-    procedure CreateForm      (aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly);
+    procedure CreateForm      (aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly; AOwner: TComponent = NIL);
     procedure CreateFormHidden(aClass: TComponentClass; OUT aReference);
     procedure CreateFormModal (aClass: TComponentClass);  // Problem in Android with modal forms!
 
@@ -248,8 +248,10 @@ begin
 end;
 
 
-{ Create secondary forms }
-procedure TAppData.CreateForm(aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly);
+{ Create secondary forms.
+  AOwner: when NIL (default), Application owns the form (standard FMX lifetime).
+  Pass a specific owner to control destruction order — e.g. embedded forms owned by their host. }
+procedure TAppData.CreateForm(aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly; AOwner: TComponent = NIL);
 VAR
   Pending: TPendingAutoState;
   i: Integer;
@@ -262,7 +264,9 @@ begin
   Pending.QueuedBeforeRun:= Initializing;  // Track if queued before Run (DPR) or created dynamically
   FPendingAutoStates.Add(Pending);
 
-  Application.CreateForm(aClass, aReference);   // Reference may be NIL if form creation is deferred
+  if AOwner <> NIL
+  then TComponent(aReference):= aClass.Create(AOwner)         // Explicit owner — destruction order guaranteed
+  else Application.CreateForm(aClass, aReference);            // Reference may be NIL if form creation is deferred
 
   // If form was created immediately (reference not nil), AutoState was already
   // set via GetAutoState in Loaded. Clean up any remaining pending entry.

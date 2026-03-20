@@ -69,6 +69,7 @@ TYPE
     FCloseOnEscape: Boolean;
     procedure SetGuiProperties(Form: TForm);
   protected
+    FEmbedded: Boolean;    { TRUE when form's layout is reparented into another form (embedded mode) }
     Saved: Boolean;
     procedure saveBeforeExit;
     procedure CreateToolbar;
@@ -92,6 +93,7 @@ TYPE
 
     procedure LoadForm; virtual;
     procedure SaveForm; virtual;
+    procedure EmbedIn(ALayout: TControl; AParent: TFmxObject);    { Marks form as embedded and reparents ALayout into AParent (Client-aligned). }
     destructor Destroy; override;
 
     procedure MainFormCaption(aCaption: string);
@@ -116,6 +118,16 @@ begin
   Showhint := TRUE;
   Saved    := FALSE;
   AutoState:= aAutoState;
+end;
+
+
+{ Marks this form as embedded and reparents ALayout (e.g. layRoot) into AParent (e.g. a TTabItem).
+  Centralizes the 3 steps that every embedded form needs: FEmbedded flag + reparent + align. }
+procedure TLightForm.EmbedIn(ALayout: TControl; AParent: TFmxObject);
+begin
+  FEmbedded:= TRUE;
+  ALayout.Parent:= AParent;
+  ALayout.Align:= TAlignLayout.Client;
 end;
 
 

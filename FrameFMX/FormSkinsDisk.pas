@@ -54,6 +54,7 @@ USES
 
 TYPE
   TfrmStyleDisk = class(TLightForm)
+    Container: TLayout;
     lblTop: TLabel;
     lBox: TListBox;
     layBottom: TLayout;
@@ -65,10 +66,15 @@ TYPE
     procedure lblTopClick(Sender: TObject);
     procedure btnOKClick (Sender: TObject);
   private
+    FOnEmbeddedClose: TNotifyEvent;
+    class var FInstance: TfrmStyleDisk;
     procedure PopulateStyles;
   public
     procedure FormPreRelease; override;
     class procedure ShowAsModal; static;
+    class function  CreateEmbedded(AOnClose: TNotifyEvent): TfrmStyleDisk;
+    class procedure CloseEmbedded;
+    destructor Destroy; override;
   end;
 
 
@@ -171,7 +177,41 @@ begin
 end;
 
 
- 
+class function TfrmStyleDisk.CreateEmbedded(AOnClose: TNotifyEvent): TfrmStyleDisk;
+begin
+  // Prevent multiple instances (content is already visible in the host)
+  if Assigned(FInstance)
+  then EXIT(NIL);
+
+  AppData.CreateForm(TfrmStyleDisk, FInstance, asNone);
+  FInstance.FEmbedded:= TRUE;
+  FInstance.FOnEmbeddedClose:= AOnClose;
+  Result:= FInstance;
+end;
+
+
+class procedure TfrmStyleDisk.CloseEmbedded;
+begin
+  if Assigned(FInstance)
+  AND FInstance.FEmbedded
+  then FreeAndNil(FInstance);
+end;
+
+
+destructor TfrmStyleDisk.Destroy;
+begin
+  if FEmbedded then
+  begin
+    Container.Parent:= Self;
+    if Assigned(FOnEmbeddedClose)
+    then FOnEmbeddedClose(Self);
+  end;
+  FInstance:= NIL;
+  inherited;
+end;
+
+
+
 
 
 
@@ -202,16 +242,23 @@ begin
 end;
 
 
+{ Embedded: deferred Free via ForceQueue — FreeAndNil inside an OnClick handler would destroy
+  the button while FMX still accesses it (GetAction), causing an AV on freed memory. }
 procedure TfrmStyleDisk.btnOKClick(Sender: TObject);
 begin
-  Close;
+  if FEmbedded
+  then TThread.ForceQueue(NIL, procedure begin CloseEmbedded end)
+  else Close;
 end;
 
 
 { Closes form on Enter or Escape key }
 procedure TfrmStyleDisk.FormKeyDown(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
 begin
-  if (Key = vkEscape) or (Key = vkReturn) then Close;
+  if (Key = vkEscape) or (Key = vkReturn) then
+    if FEmbedded
+    then TThread.ForceQueue(NIL, procedure begin CloseEmbedded end)
+    else Close;
 end;
 
 

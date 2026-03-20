@@ -19,6 +19,7 @@ USES
 
 procedure GetImageResolution(FileName: string; Out Width, Height: Integer);
 procedure LoadImage         (FileName: string; Image: TImage; Color: TAlphaColor= TAlphaColorRec.DeepPink);   overload;
+procedure LoadImage         (const Bytes: TBytes; Image: TImage); overload;
 function  LoadImage         (FileName: string): TBitmap;                                                      overload;
 function  LoadImage         (const Bytes: TBytes): TBitmap;                                                   overload;
 procedure SaveBitmap        (BMP: TBitmap; FileName: string);
@@ -73,6 +74,28 @@ begin
 
   if Bitmap = NIL
   then Bitmap:= CreateBitmap(77, 77, Color);  { Create placeholder for debugging }
+
+  try
+    Image.Bitmap.Assign(Bitmap);
+  finally
+    FreeAndNil(Bitmap);
+  end;
+end;
+
+
+{ Loads raw bytes (PNG/JPG/BMP) into TImage. Raises exception if bytes are empty or corrupt. }
+procedure LoadImage(const Bytes: TBytes; Image: TImage);
+VAR Bitmap: TBitmap;
+begin
+  Assert(Assigned(Image), 'LoadImage: Image parameter cannot be nil');
+
+  if Length(Bytes) = 0
+  then raise Exception.Create('LoadImage: Bytes are empty');
+
+  Bitmap:= LoadImage(Bytes);  // Reuse existing TBytes->TBitmap overload
+
+  if Bitmap = NIL
+  then raise Exception.Create('LoadImage: Failed to decode image from bytes');
 
   try
     Image.Bitmap.Assign(Bitmap);

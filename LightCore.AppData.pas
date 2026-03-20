@@ -1,7 +1,7 @@
 ﻿UNIT LightCore.AppData;
 
 {=============================================================================================================
-   2026.01.29
+   2026.03
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -437,8 +437,8 @@ begin
 end;
 
 
-{ Returns the last folder used when the user opened a LoadFile/SaveFile dialog box }
-//ToDo 4: TAppDataCore.getLastUsedFolder - save this to the INI file
+{ Returns the last folder used when the user opened a LoadFile/SaveFile dialog box.
+  This is auto-saved! }
 function TAppDataCore.getLastUsedFolder: string;
 begin
   if FLastFolder = ''
@@ -694,6 +694,7 @@ begin
     IniFileObj.Write('HintType'      , Ord(HintType));
     IniFileObj.Write('HideHint'      , HideHint);
     IniFileObj.Write('LastFile'      , LastFile);
+    IniFileObj.Write('LastFolder'    , FLastFolder);
   finally
     FreeAndNil(IniFileObj);
   end;
@@ -714,6 +715,7 @@ begin
     HintType      := THintType(IniFileObj.Read('HintType' , 0));
     HideHint      := IniFileObj.Read('HideHint'           , 2500);
     LastFile      := IniFileObj.Read('LastFile'           , '');
+    FLastFolder   := IniFileObj.Read('LastFolder'         , '');
 
     // Apply loaded setting to RamLog (it was created before LoadSettings)
     if RamLog <> NIL
