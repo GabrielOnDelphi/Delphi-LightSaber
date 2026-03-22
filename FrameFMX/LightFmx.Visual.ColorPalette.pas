@@ -1,10 +1,10 @@
 UNIT LightFmx.Visual.ColorPalette;
 
 {=============================================================================================================
-   2026
+   2026.03
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-   TColorPalette
+   TLightColorPalette
 
    A visual component that displays a grid of color swatches.
    The user can click on a swatch to select a color. The OnColorSelected event is fired.
@@ -20,7 +20,7 @@ UNIT LightFmx.Visual.ColorPalette;
      ColorPalette.OnColorSelected := MyHandler;
 
    Tester:
-     c:\Projects\LightSaber\Demo\FMX\Demo TColorPalette\ProjectColorPalette.dpr
+     c:\Projects\LightSaber\Demo\FMX\Demo TLightColorPalette\ProjecTLightColorPalette.dpr
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
@@ -32,7 +32,7 @@ USES
 TYPE
   TColorSelectedEvent = procedure(Sender: TObject; const AColor: TAlphaColor) of object;
 
-  TColorPalette = class(TScrollBox)
+  TLightColorPalette = class(TScrollBox)
   private
     FFlow            : TFlowLayout;
     FColors          : TList<TAlphaColor>;
@@ -93,7 +93,7 @@ CONST
 {-------------------------------------------------------------------------------------------------------------
    CONSTRUCTOR / DESTRUCTOR
 -------------------------------------------------------------------------------------------------------------}
-constructor TColorPalette.Create(AOwner: TComponent);
+constructor TLightColorPalette.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
@@ -120,7 +120,7 @@ begin
 end;
 
 
-destructor TColorPalette.Destroy;
+destructor TLightColorPalette.Destroy;
 begin
   FreeAndNil(FColors);
   inherited;
@@ -130,7 +130,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    INITIALIZATION
 -------------------------------------------------------------------------------------------------------------}
-procedure TColorPalette.Loaded;
+procedure TLightColorPalette.Loaded;
 begin
   inherited;
 
@@ -146,7 +146,7 @@ begin
 end;
 
 
-procedure TColorPalette.Resize;
+procedure TLightColorPalette.Resize;
 begin
   inherited;
 
@@ -159,7 +159,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    COLOR MANAGEMENT
 -------------------------------------------------------------------------------------------------------------}
-procedure TColorPalette.SetColors(const AColors: array of TAlphaColor);
+procedure TLightColorPalette.SetColors(const AColors: array of TAlphaColor);
 begin
   FColors.Clear;
   for VAR i := Low(AColors) to High(AColors) do
@@ -168,14 +168,14 @@ begin
 end;
 
 
-procedure TColorPalette.AddColor(AColor: TAlphaColor);
+procedure TLightColorPalette.AddColor(AColor: TAlphaColor);
 begin
   FColors.Add(AColor);
   Rebuild;
 end;
 
 
-procedure TColorPalette.RemoveColorAt(Index: Integer);
+procedure TLightColorPalette.RemoveColorAt(Index: Integer);
 begin
   if (Index < 0) OR (Index >= FColors.Count) then EXIT;
 
@@ -193,7 +193,7 @@ begin
 end;
 
 
-procedure TColorPalette.ClearColors;
+procedure TLightColorPalette.ClearColors;
 begin
   FColors.Clear;
   ClearSelectionVisual;
@@ -205,7 +205,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    SELECTION
 -------------------------------------------------------------------------------------------------------------}
-procedure TColorPalette.SelectColor(AColor: TAlphaColor);
+procedure TLightColorPalette.SelectColor(AColor: TAlphaColor);
 begin
   // Find the shape with this color and select it
   for VAR i := 0 to FFlow.ChildrenCount - 1 do
@@ -221,13 +221,13 @@ begin
 end;
 
 
-procedure TColorPalette.ClearSelection;
+procedure TLightColorPalette.ClearSelection;
 begin
   ClearSelectionVisual;
 end;
 
 
-procedure TColorPalette.ClearSelectionVisual;
+procedure TLightColorPalette.ClearSelectionVisual;
 begin
   if Assigned(FSelectedShape) then
     begin
@@ -239,7 +239,7 @@ begin
 end;
 
 
-procedure TColorPalette.ApplySelectionVisual(AShape: TShape);
+procedure TLightColorPalette.ApplySelectionVisual(AShape: TShape);
 begin
   // Clear previous selection
   if Assigned(FSelectedShape) AND (FSelectedShape <> AShape) then
@@ -267,12 +267,13 @@ begin
 end;
 
 
-function TColorPalette.CalcLuminance(Color: TAlphaColor): Single;
+function TLightColorPalette.CalcLuminance(Color: TAlphaColor): Single;
 begin
   // Extract RGB components and calculate relative luminance (ITU-R BT.709)
-  VAR r := (Color and $FF) / 255.0;
+  // TAlphaColor format is $AARRGGBB (ARGB byte order)
+  VAR r := ((Color shr 16) and $FF) / 255.0;
   VAR g := ((Color shr 8) and $FF) / 255.0;
-  VAR b := ((Color shr 16) and $FF) / 255.0;
+  VAR b := (Color and $FF) / 255.0;
   Result := 0.2126 * r + 0.7152 * g + 0.0722 * b;
 end;
 
@@ -280,7 +281,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    MOUSE HANDLING
 -------------------------------------------------------------------------------------------------------------}
-procedure TColorPalette.SwatchMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
+procedure TLightColorPalette.SwatchMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 begin
   if NOT (Sender is TShape) then EXIT;
 
@@ -298,7 +299,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    PROPERTY SETTERS
 -------------------------------------------------------------------------------------------------------------}
-procedure TColorPalette.SetItemSize(const Value: Single);
+procedure TLightColorPalette.SetItemSize(const Value: Single);
 begin
   if (Value <= 0) OR (FItemSize = Value) then EXIT;
   FItemSize := Value;
@@ -306,7 +307,7 @@ begin
 end;
 
 
-procedure TColorPalette.SetItemSpacing(const Value: Single);
+procedure TLightColorPalette.SetItemSpacing(const Value: Single);
 begin
   if (Value < 0) OR (FItemSpacing = Value) then EXIT;
   FItemSpacing := Value;
@@ -317,7 +318,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    REBUILD UI
 -------------------------------------------------------------------------------------------------------------}
-procedure TColorPalette.Rebuild;
+procedure TLightColorPalette.Rebuild;
 VAR
   Swatch: TRectangle;
   HalfSpacing: Single;
@@ -385,7 +386,7 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 procedure Register;
 begin
-  RegisterComponents('LightSaber FMX', [TColorPalette]);
+  RegisterComponents('LightSaber FMX', [TLightColorPalette]);
 end;
 
 

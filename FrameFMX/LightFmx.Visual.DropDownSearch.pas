@@ -14,7 +14,7 @@ unit LightFmx.Visual.DropDownSearch;
   Adapted from VCL to FMX, replacing TSearchBox with TEdit and TCubicListBox with TListBox.
 
   Demo:
-    c:\Projects\LightSaber\Demo\FMX\Demo TDropDownSearchBox\FMX_Demo_SearchBoxes.dpr
+    c:\Projects\LightSaber\Demo\FMX\Demo TLightDownSearch\FMX_Demo_SearchBoxes.dpr
 =============================================================================================================}
 
 INTERFACE
@@ -26,7 +26,7 @@ USES
 TYPE
   TSelectNotifyEvent = procedure (Sender: TObject; SelectedItem: TObject) of object;
 
-  TDropDownSearchBox = class(TEdit)
+  TLightDownSearch = class(TEdit)
    private
      FOnEndSearch  : TSelectNotifyEvent;
      FWords        : TStringList;            // Field to store all items
@@ -74,7 +74,7 @@ USES
 {-------------------------------------------------------------------------------------------------------------
    CONSTRUCTOR
 -------------------------------------------------------------------------------------------------------------}
-constructor TDropDownSearchBox.Create(AOwner: TComponent);
+constructor TLightDownSearch.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 
@@ -103,7 +103,7 @@ begin
 end;
 
 
-destructor TDropDownSearchBox.Destroy;
+destructor TLightDownSearch.Destroy;
 begin
   FreeAndNil(FWords);
   inherited Destroy;
@@ -115,7 +115,7 @@ end;
 
 { Set lbxSearch's Parent to be the top-level form rather than the container (which might be too small).
   We compute the screen coordinates of Self and convert them into the host form's client coordinates. }
-procedure TDropDownSearchBox.SetHost;
+procedure TLightDownSearch.SetHost;
 const
   DROPDOWN_OFFSET = 2;
 var
@@ -142,7 +142,7 @@ end;
    Event Handling
 -------------------------------------------------------------------------------------------------------------}
 
-procedure TDropDownSearchBox.EditTyping(Sender: TObject);
+procedure TLightDownSearch.EditTyping(Sender: TObject);
 begin
   if (csDesigning in ComponentState) then EXIT;
   if NOT FIsNavigating then  // True when the user is navigating through the List with the arrow keys
@@ -157,7 +157,7 @@ end;
 //ToDo: move this to its own component!
 { Resize the height based on the number of rows, but never bigger than x% of the form.
   MaxHeightPercent is relative to the form height. }
-procedure TDropDownSearchBox.SetHeightAuto(Box: TListBox; MaxHeightPercent: Integer);
+procedure TLightDownSearch.SetHeightAuto(Box: TListBox; MaxHeightPercent: Integer);
 var
   Form: TCommonCustomForm;
   MaxHeightPx, AvailableSpace, ItemHeightCalc: Single;
@@ -186,7 +186,7 @@ begin
 end;
 
 
-procedure TDropDownSearchBox.Click;
+procedure TLightDownSearch.Click;
 begin
   inherited;
   if (csDesigning in ComponentState) then EXIT;
@@ -202,7 +202,7 @@ begin
 end;
 
 
-procedure TDropDownSearchBox.showDropDown;
+procedure TLightDownSearch.showDropDown;
 begin
   if lbxSearch.Items.Count > 0
   then
@@ -218,7 +218,7 @@ end;
 
 
 //todo: Test what happens if the text is not found so the user selects nothing
-procedure TDropDownSearchBox.EndSearch(Sender: TObject);
+procedure TLightDownSearch.EndSearch(Sender: TObject);
 begin
   if (lbxSearch.ItemIndex >= 0) then
     begin
@@ -233,7 +233,7 @@ begin
 end;
 
 
-procedure TDropDownSearchBox.EditExit(Sender: TObject);
+procedure TLightDownSearch.EditExit(Sender: TObject);
 begin
   lbxSearch.Visible := False;  // Hide dropdown when focus is lost
 end;
@@ -242,7 +242,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    Key press
 -------------------------------------------------------------------------------------------------------------}
-procedure TDropDownSearchBox.KeyDown(var Key: Word; var KeyChar: Char; Shift: TShiftState);
+procedure TLightDownSearch.KeyDown(var Key: Word; var KeyChar: Char; Shift: TShiftState);
 begin
   inherited;
   case Key of
@@ -282,7 +282,7 @@ end;
 
 { Navigate through the filtered list using arrow keys.
   Wraps around at the top/bottom of the list. }
-procedure TDropDownSearchBox.HandleArrowKeys(Key: Word);
+procedure TLightDownSearch.HandleArrowKeys(Key: Word);
 var
   ItemCount: Integer;
 begin
@@ -320,7 +320,7 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 
 { Show only the items that match what the user typed }
-procedure TDropDownSearchBox.FilterItems;
+procedure TLightDownSearch.FilterItems;
 var
   i: Integer;
   FilterText: string;
@@ -355,13 +355,13 @@ end;
 { Populates the search dictionary with the provided words.
   Note: Assign clears the existing items first, then copies the new ones.
   Objects attached to strings are NOT owned by FWords - they must be freed by the caller. }
-procedure TDropDownSearchBox.PopulateDictionary(Words: TStringList);
+procedure TLightDownSearch.PopulateDictionary(Words: TStringList);
 begin
   FWords.Assign(Words);  // Clears FWords first, then copies all items from Words
 end;
 
 
-procedure TDropDownSearchBox.AddDemoStrings;
+procedure TLightDownSearch.AddDemoStrings;
 begin
   VAR TSL:= GetRockBands;
   TRY
@@ -375,7 +375,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    ACCESS
 -------------------------------------------------------------------------------------------------------------}
-function TDropDownSearchBox.SelectedObject: TObject;
+function TLightDownSearch.SelectedObject: TObject;
 begin
   if lbxSearch.ItemIndex >= 0 
   then Result := lbxSearch.Items.Objects[lbxSearch.ItemIndex]
@@ -383,7 +383,7 @@ begin
 end;
 
 
-function TDropDownSearchBox.SelectedString: string;
+function TLightDownSearch.SelectedString: string;
 begin
   if lbxSearch.ItemIndex >= 0
   then Result := lbxSearch.Items[lbxSearch.ItemIndex]
@@ -397,7 +397,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber FMX', [TDropDownSearchBox]);
+  RegisterComponents('LightSaber FMX', [TLightDownSearch]);
 end;
 
 

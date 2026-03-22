@@ -5,7 +5,7 @@ UNIT LightFmx.Visual.ComboBox;
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
-  FMX port of LightVcl.Visual.ComboBox (TCubicComboBox).
+  FMX port of LightVcl.Visual.ComboBox (TLightComboBox).
 
   Features:
       + SelectedItem - Get currently selected item

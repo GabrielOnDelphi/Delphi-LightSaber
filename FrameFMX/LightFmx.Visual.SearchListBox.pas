@@ -1,7 +1,7 @@
 UNIT LightFmx.Visual.SearchListBox;
 
 {=============================================================================================================
-   2026.01
+   2026.03
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    A searchable listbox component with an integrated search filter.
@@ -27,7 +27,7 @@ UNIT LightFmx.Visual.SearchListBox;
      OnSelectionChanged - Triggered when user selects an item
 
    Demo:
-     c:\Projects\LightSaber\Demo\FMX\Demo TDropDownSearchBox\FMX_Demo_SearchBoxes.dpr
+     c:\Projects\LightSaber\Demo\FMX\Demo TLightDownSearch\FMX_Demo_SearchBoxes.dpr
 
 =============================================================================================================}
 
@@ -56,7 +56,6 @@ TYPE
     procedure SearchEditChangeTracking(Sender: TObject);
     procedure ListBoxChange(Sender: TObject);
     procedure FilterItems;
-    procedure CreateChildControls;
   protected
     procedure Resize; override;
     procedure Loaded; override;
@@ -118,6 +117,21 @@ begin
 
   FAllItems:= TStringList.Create;
 
+  // Create child controls in constructor (Stored=False prevents streaming duplication)
+  FSearchEdit:= TSearchBox.Create(Self);
+  FSearchEdit.Parent:= Self;
+  FSearchEdit.Stored:= False;
+  FSearchEdit.Align:= TAlignLayout.Top;
+  FSearchEdit.Height:= SEARCH_EDIT_HEIGHT;
+  FSearchEdit.OnChangeTracking:= SearchEditChangeTracking;
+
+  FListBox:= TListBox.Create(Self);
+  FListBox.Parent:= Self;
+  FListBox.Stored:= False;
+  FListBox.Align:= TAlignLayout.Client;
+  FListBox.Margins.Top:= SPACING;
+  FListBox.OnChange:= ListBoxChange;
+
   // Default size
   Width:= 200;
   Height:= 250;
@@ -131,34 +145,9 @@ begin
 end;
 
 
-{ Create child controls after component is fully loaded (design-time) or when first needed (runtime) }
 procedure TLightSearchListBox.Loaded;
 begin
   inherited;
-  CreateChildControls;
-end;
-
-
-procedure TLightSearchListBox.CreateChildControls;
-begin
-  // Already created?
-  if FSearchEdit <> NIL then EXIT;
-
-  // Create search edit field
-  FSearchEdit:= TSearchBox.Create(Self);
-  FSearchEdit.Parent:= Self;
-  FSearchEdit.Stored:= False;  // Prevent streaming to FMX file (avoids duplicate children)
-  FSearchEdit.Align:= TAlignLayout.Top;
-  FSearchEdit.Height:= SEARCH_EDIT_HEIGHT;
-  FSearchEdit.OnChangeTracking:= SearchEditChangeTracking;
-
-  // Create listbox
-  FListBox:= TListBox.Create(Self);
-  FListBox.Parent:= Self;
-  FListBox.Stored:= False;  // Prevent streaming to FMX file (avoids duplicate children)
-  FListBox.Align:= TAlignLayout.Client;
-  FListBox.Margins.Top:= SPACING;
-  FListBox.OnChange:= ListBoxChange;
 end;
 
 
@@ -170,7 +159,7 @@ procedure TLightSearchListBox.Resize;
 begin
   inherited;
 
-  // Guard against calls during design-time registration when controls aren't created yet
+  // Guard: Resize fires during inherited Create, before child controls exist
   if FSearchEdit = NIL then EXIT;
 
   // Layout is handled by Align properties, but we ensure minimum heights
@@ -187,8 +176,6 @@ end;
 procedure TLightSearchListBox.SetItems(const Items: array of string);
 VAR i: Integer;
 begin
-  //CreateChildControls;  // Ensure controls exist for runtime use
-
   FAllItems.Clear;
   for i:= 0 to High(Items) do
     FAllItems.AddObject(Items[i], TObject(i));  // Store index as Tag
@@ -201,8 +188,6 @@ end;
 { Add a single item with optional tag value }
 procedure TLightSearchListBox.AddItem(const Text: string; Tag: Integer = 0);
 begin
-  //CreateChildControls;  // Ensure controls exist for runtime use
-
   FAllItems.AddObject(Text, TObject(Tag));
   FilterItems;
 end;
@@ -210,8 +195,6 @@ end;
 
 procedure TLightSearchListBox.Clear;
 begin
-  //CreateChildControls;  // Ensure controls exist for runtime use
-
   FAllItems.Clear;
   FListBox.Clear;
   FSearchEdit.Text:= '';
@@ -231,8 +214,8 @@ VAR
   i: Integer;
   Item: TListBoxItem;
 begin
-  // Guard - controls might not exist yet during design-time
-  if (FSearchEdit = NIL) OR (FListBox = NIL) then EXIT;
+  Assert(FSearchEdit <> NIL);
+  Assert(FListBox <> NIL);
 
   SearchText:= LowerCase(FSearchEdit.Text);
 
@@ -303,8 +286,6 @@ function TLightSearchListBox.SelectByTag(Tag: Integer): Boolean;
 VAR i: Integer;
 begin
   Result:= FALSE;
-  //if FListBox = NIL then EXIT;
-
   for i:= 0 to FListBox.Count - 1 do
     if FListBox.ListItems[i].Tag = Tag
     then
@@ -321,15 +302,12 @@ end;
 
 function TLightSearchListBox.GetSearchText: string;
 begin
-  if FSearchEdit = NIL
-  then Result:= ''
-  else Result:= FSearchEdit.Text;
+  Result:= FSearchEdit.Text;
 end;
 
 
 procedure TLightSearchListBox.SetSearchText(const Value: string);
 begin
-  CreateChildControls;
   FSearchEdit.Text:= Value;
   // OnChangeTracking will trigger FilterItems automatically
 end;
@@ -337,22 +315,19 @@ end;
 
 function TLightSearchListBox.GetSelectedIndex: Integer;
 begin
-  if FListBox = NIL
-  then Result:= -1
-  else Result:= FListBox.ItemIndex;
+  Result:= FListBox.ItemIndex;
 end;
 
 
 procedure TLightSearchListBox.SetSelectedIndex(const Value: Integer);
 begin
-  //CreateChildControls;
   FListBox.ItemIndex:= Value;
 end;
 
 
 function TLightSearchListBox.GetSelectedText: string;
 begin
-  if (FListBox = NIL) OR (FListBox.ItemIndex < 0)
+  if FListBox.ItemIndex < 0
   then Result:= ''
   else Result:= FListBox.ListItems[FListBox.ItemIndex].Text;
 end;
@@ -360,7 +335,7 @@ end;
 
 function TLightSearchListBox.GetSelectedTag: Integer;
 begin
-  if (FListBox = NIL) OR (FListBox.ItemIndex < 0)
+  if FListBox.ItemIndex < 0
   then Result:= -1
   else Result:= FListBox.ListItems[FListBox.ItemIndex].Tag;
 end;
@@ -368,9 +343,7 @@ end;
 
 function TLightSearchListBox.GetItemCount: Integer;
 begin
-  if FListBox = NIL
-  then Result:= 0
-  else Result:= FListBox.Count;
+  Result:= FListBox.Count;
 end;
 
 
