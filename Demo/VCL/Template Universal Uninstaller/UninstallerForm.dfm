@@ -2869,7 +2869,7 @@ object frmMain: TfrmMain
       TabOrder = 0
       WordWrap = False
     end
-    object edtPath: TCubicPathEdit
+    object edtPath: TlightPathEdit
       AlignWithMargins = True
       Left = 4
       Top = 236
@@ -2933,7 +2933,7 @@ object frmMain: TfrmMain
       OnClick = btn1Click
     end
   end
-  object CountDown: TCountDown
+  object CountDown: TLightCountDown
     StartValue = 7000
     OnTimesUp = CountDownTimesUp
     Left = 278

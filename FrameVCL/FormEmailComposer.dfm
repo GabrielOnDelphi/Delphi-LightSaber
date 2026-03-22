@@ -139,7 +139,7 @@ object frmComposer: TfrmComposer
         Text = ''
       end
     end
-    object edtAttachment: TCubicPathEdit
+    object edtAttachment: TlightPathEdit
       AlignWithMargins = True
       Left = 9
       Top = 279
@@ -302,7 +302,7 @@ object frmComposer: TfrmComposer
       Text = ''
       Visible = False
     end
-    object chkSendAsHtml: TCubicCheckBox
+    object chkSendAsHtml: TLightCheckBox
       AlignWithMargins = True
       Left = 9
       Top = 303
@@ -317,7 +317,7 @@ object frmComposer: TfrmComposer
       TabOrder = 3
       AutoSize = True
     end
-    object chkInternalSMTP: TCubicCheckBox
+    object chkInternalSMTP: TLightCheckBox
       AlignWithMargins = True
       Left = 9
       Top = 280

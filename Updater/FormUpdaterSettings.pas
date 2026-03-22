@@ -19,8 +19,8 @@ USES
 TYPE
   TfrmUpdaterSettings = class(TLightForm)
     btnTestInternet    : TButton;
-    chkForceNewsFound  : TCubicCheckBox;
-    chkConnectFail     : TCubicCheckBox;
+    chkForceNewsFound  : TLightCheckBox;
+    chkConnectFail     : TLightCheckBox;
     GroupBox1          : TGroupBox;
     grpInterval        : TGroupBox;
     lblHours           : TLabel;

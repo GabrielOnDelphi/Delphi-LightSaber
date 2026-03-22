@@ -12,10 +12,10 @@ UNIT LightVcl.Visual.LabelEdit;
      CheckFileExistence - when true, shows green for existing files, red for non-existing files
      Valid property - allows manual control of validity state (vaNone/vaValid/vaInvalid)
 
-  Note: Unlike TCubicEdit, empty text is treated as invalid when CheckFileExistence is enabled.
+  Note: Unlike TLightEdit, empty text is treated as invalid when CheckFileExistence is enabled.
         This component provides positive feedback (green) for valid files, not just red for invalid.
 
-  See also: TCubicEdit (LightVcl.Visual.Edit.pas) for a simpler TEdit-based version.
+  See also: TLightEdit (LightVcl.Visual.Edit.pas) for a simpler TEdit-based version.
 
 =============================================================================================================}
 

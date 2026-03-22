@@ -4,7 +4,7 @@ UNIT Unit1;
    2026
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-   TDropDownSearchBox
+   TLightDownSearch
    A search box with auto-suggest (VCL)
    When you type some text, a dropdown box similar to the Help Insight in Delphi IDE will appear.
    The list is filtered (gets smaller) as the user types in more characters into the searchbox.
@@ -30,7 +30,7 @@ TYPE
     procedure FormCreate(Sender: TObject);
   private
   public
-    SearchBox: TDropDownSearchBox;
+    SearchBox: TLightDownSearch;
     ListBox: TLightSearchListBox;
   end;
 
@@ -43,7 +43,7 @@ USES LightCore;
 
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  SearchBox:= TDropDownSearchBox.Create(pnlDropDownSearchBox);
+  SearchBox:= TLightDownSearch.Create(pnlDropDownSearchBox);
   SearchBox.Parent    := pnlDropDownSearchBox;
   SearchBox.Visible   := TRUE;
   SearchBox.Position.X:= 10;

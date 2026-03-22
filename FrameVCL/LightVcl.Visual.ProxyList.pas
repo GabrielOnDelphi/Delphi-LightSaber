@@ -30,9 +30,9 @@ TYPE
    private
     Initialized       : Boolean;
     grpInternetType   : TGroupBox;
-    radGateway        : TCubicRadioButton;
-    radDirect         : TCubicRadioButton;
-    radProxyList      : TCubicRadioButton;
+    radGateway        : TLightRadioButton;
+    radDirect         : TLightRadioButton;
+    radProxyList      : TLightRadioButton;
     grpProxyList      : TGroupBox;
     pnlBottom         : TPanel;
     btnSaveProxy      : TButton;
@@ -85,13 +85,13 @@ begin
  grpInternetType:= TGroupBox.Create(Self);
  grpInternetType.Parent:= Self;   // Here I can set the parent
 
-    radGateway:= TCubicRadioButton.Create(Self);
+    radGateway:= TLightRadioButton.Create(Self);
     radGateway.Parent:= grpInternetType;
 
-    radDirect:= TCubicRadioButton.Create(Self);
+    radDirect:= TLightRadioButton.Create(Self);
     radDirect.Parent:= grpInternetType;
 
-    radProxyList:= TCubicRadioButton.Create(Self);
+    radProxyList:= TLightRadioButton.Create(Self);
     radProxyList.Parent:= grpInternetType;
 
     edtGateway:= TEdit.Create(Self);

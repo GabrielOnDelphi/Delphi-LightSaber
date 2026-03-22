@@ -49,7 +49,7 @@ TYPE
     chkTranslateTranslator: TCheckBox;
     grpNew: TCubicGroupBox;
     lblTargetLang: TLabel;
-    sbxTargetLang: TDropDownSearchBox;
+    sbxTargetLang: TLightDownSearch;
     edtAuthor: TLabeledEdit;
     btnAutoTranslate: TButton;
     btnManualTranslate: TButton;

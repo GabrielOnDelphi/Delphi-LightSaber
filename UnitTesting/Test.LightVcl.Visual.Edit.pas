@@ -2,7 +2,7 @@ unit Test.LightVcl.Visual.Edit;
 
 {=============================================================================================================
    Unit tests for LightVcl.Visual.Edit.pas
-   Tests TCubicEdit custom edit control functionality.
+   Tests TLightEdit custom edit control functionality.
 
    Includes TestInsight support: define TESTINSIGHT in project options.
 =============================================================================================================}
@@ -20,9 +20,9 @@ uses
 
 type
   [TestFixture]
-  TTestCubicEdit = class
+  TTesTLightEdit = class
   private
-    FEdit: TCubicEdit;
+    FEdit: TLightEdit;
     FForm: TForm;
     FOnChangeCount: Integer;
     FOnPressEnterCount: Integer;
@@ -97,7 +97,7 @@ type
     procedure TestUpdateBkgColor_BothDisabled_NoColorChange;
 
     [Test]
-    procedure TestUpdateBkgColor_FileCheckTakesPrecedenceIfBothEnabled;
+    procedure TestUpdateBkgColor_DirCheckTakesPrecedenceIfBothEnabled;
   end;
 
 implementation
@@ -106,7 +106,7 @@ uses
   Winapi.Windows;
 
 
-procedure TTestCubicEdit.Setup;
+procedure TTesTLightEdit.Setup;
 begin
   FOnChangeCount:= 0;
   FOnPressEnterCount:= 0;
@@ -115,7 +115,7 @@ begin
   FForm.Width:= 400;
   FForm.Height:= 300;
 
-  FEdit:= TCubicEdit.Create(FForm);
+  FEdit:= TLightEdit.Create(FForm);
   FEdit.Parent:= FForm;
   FEdit.Left:= 10;
   FEdit.Top:= 10;
@@ -123,20 +123,20 @@ begin
 end;
 
 
-procedure TTestCubicEdit.TearDown;
+procedure TTesTLightEdit.TearDown;
 begin
   FreeAndNil(FEdit);
   FreeAndNil(FForm);
 end;
 
 
-procedure TTestCubicEdit.OnChangeHandler(Sender: TObject);
+procedure TTesTLightEdit.OnChangeHandler(Sender: TObject);
 begin
   Inc(FOnChangeCount);
 end;
 
 
-procedure TTestCubicEdit.OnPressEnterHandler(Sender: TObject);
+procedure TTesTLightEdit.OnPressEnterHandler(Sender: TObject);
 begin
   Inc(FOnPressEnterCount);
 end;
@@ -144,7 +144,7 @@ end;
 
 { Constructor Tests }
 
-procedure TTestCubicEdit.TestCreate_DefaultProperties;
+procedure TTesTLightEdit.TestCreate_DefaultProperties;
 begin
   Assert.IsFalse(FEdit.CheckFileExistence, 'CheckFileExistence should default to FALSE');
   Assert.IsFalse(FEdit.CheckDirExistence, 'CheckDirExistence should default to FALSE');
@@ -154,7 +154,7 @@ end;
 
 { SetTextNoEvent Tests }
 
-procedure TTestCubicEdit.TestSetTextNoEvent_DoesNotFireOnChange;
+procedure TTesTLightEdit.TestSetTextNoEvent_DoesNotFireOnChange;
 begin
   FEdit.OnChange:= OnChangeHandler;
   FOnChangeCount:= 0;
@@ -165,7 +165,7 @@ begin
 end;
 
 
-procedure TTestCubicEdit.TestSetTextNoEvent_SetsTextCorrectly;
+procedure TTesTLightEdit.TestSetTextNoEvent_SetsTextCorrectly;
 begin
   FEdit.SetTextNoEvent('Hello World');
 
@@ -173,7 +173,7 @@ begin
 end;
 
 
-procedure TTestCubicEdit.TestSetTextNoEvent_RestoresOnChangeHandler;
+procedure TTesTLightEdit.TestSetTextNoEvent_RestoresOnChangeHandler;
 begin
   FEdit.OnChange:= OnChangeHandler;
 
@@ -189,7 +189,7 @@ end;
 
 { CheckFileExistence Tests }
 
-procedure TTestCubicEdit.TestCheckFileExistence_ExistingFile_WindowColor;
+procedure TTesTLightEdit.TestCheckFileExistence_ExistingFile_WindowColor;
 VAR
   ExistingFile: string;
 begin
@@ -204,7 +204,7 @@ begin
 end;
 
 
-procedure TTestCubicEdit.TestCheckFileExistence_NonExistingFile_RedColor;
+procedure TTesTLightEdit.TestCheckFileExistence_NonExistingFile_RedColor;
 begin
   FEdit.CheckFileExistence:= TRUE;
   FEdit.Text:= 'C:\This\File\Does\Not\Exist\12345.xyz';
@@ -213,7 +213,7 @@ begin
 end;
 
 
-procedure TTestCubicEdit.TestCheckFileExistence_EmptyText_WindowColor;
+procedure TTesTLightEdit.TestCheckFileExistence_EmptyText_WindowColor;
 begin
   FEdit.CheckFileExistence:= TRUE;
   FEdit.Text:= '';
@@ -222,7 +222,7 @@ begin
 end;
 
 
-procedure TTestCubicEdit.TestCheckFileExistence_Disabled_NoColorChange;
+procedure TTesTLightEdit.TestCheckFileExistence_Disabled_NoColorChange;
 VAR
   OriginalColor: TColor;
 begin
@@ -236,7 +236,7 @@ end;
 
 { CheckDirExistence Tests }
 
-procedure TTestCubicEdit.TestCheckDirExistence_ExistingDir_WindowColor;
+procedure TTesTLightEdit.TestCheckDirExistence_ExistingDir_WindowColor;
 VAR
   ExistingDir: string;
 begin
@@ -251,7 +251,7 @@ begin
 end;
 
 
-procedure TTestCubicEdit.TestCheckDirExistence_NonExistingDir_RedColor;
+procedure TTesTLightEdit.TestCheckDirExistence_NonExistingDir_RedColor;
 begin
   FEdit.CheckDirExistence:= TRUE;
   FEdit.Text:= 'C:\This\Directory\Does\Not\Exist\12345';
@@ -260,7 +260,7 @@ begin
 end;
 
 
-procedure TTestCubicEdit.TestCheckDirExistence_EmptyText_WindowColor;
+procedure TTesTLightEdit.TestCheckDirExistence_EmptyText_WindowColor;
 begin
   FEdit.CheckDirExistence:= TRUE;
   FEdit.Text:= '';
@@ -269,7 +269,7 @@ begin
 end;
 
 
-procedure TTestCubicEdit.TestCheckDirExistence_Disabled_NoColorChange;
+procedure TTesTLightEdit.TestCheckDirExistence_Disabled_NoColorChange;
 VAR
   OriginalColor: TColor;
 begin
@@ -283,7 +283,7 @@ end;
 
 { OnPressEnter Tests }
 
-procedure TTestCubicEdit.TestOnPressEnter_EnterKeyFires;
+procedure TTesTLightEdit.TestOnPressEnter_EnterKeyFires;
 VAR
   Key: Char;
 begin
@@ -297,7 +297,7 @@ begin
 end;
 
 
-procedure TTestCubicEdit.TestOnPressEnter_OtherKeyDoesNotFire;
+procedure TTesTLightEdit.TestOnPressEnter_OtherKeyDoesNotFire;
 VAR
   Key: Char;
 begin
@@ -311,7 +311,7 @@ begin
 end;
 
 
-procedure TTestCubicEdit.TestOnPressEnter_NotAssignedDoesNotCrash;
+procedure TTesTLightEdit.TestOnPressEnter_NotAssignedDoesNotCrash;
 VAR
   Key: Char;
 begin
@@ -327,7 +327,7 @@ end;
 
 { Change Tests }
 
-procedure TTestCubicEdit.TestChange_FiresOnChange;
+procedure TTesTLightEdit.TestChange_FiresOnChange;
 begin
   FEdit.OnChange:= OnChangeHandler;
   FOnChangeCount:= 0;
@@ -338,7 +338,7 @@ begin
 end;
 
 
-procedure TTestCubicEdit.TestChange_UpdatesBkgColor;
+procedure TTesTLightEdit.TestChange_UpdatesBkgColor;
 begin
   FEdit.CheckFileExistence:= TRUE;
   FEdit.Text:= 'C:\NonExistent\File.txt';
@@ -349,7 +349,7 @@ end;
 
 { UpdateBkgColor Tests }
 
-procedure TTestCubicEdit.TestUpdateBkgColor_BothDisabled_NoColorChange;
+procedure TTesTLightEdit.TestUpdateBkgColor_BothDisabled_NoColorChange;
 VAR
   OriginalColor: TColor;
 begin
@@ -363,7 +363,7 @@ begin
 end;
 
 
-procedure TTestCubicEdit.TestUpdateBkgColor_FileCheckTakesPrecedenceIfBothEnabled;
+procedure TTesTLightEdit.TestUpdateBkgColor_DirCheckTakesPrecedenceIfBothEnabled;
 VAR
   ExistingFile: string;
 begin
@@ -385,6 +385,6 @@ end;
 
 
 initialization
-  TDUnitX.RegisterTestFixture(TTestCubicEdit);
+  TDUnitX.RegisterTestFixture(TTesTLightEdit);
 
 end.

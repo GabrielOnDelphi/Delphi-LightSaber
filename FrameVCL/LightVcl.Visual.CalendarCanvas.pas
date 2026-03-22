@@ -1,6 +1,6 @@
 UNIT LightVcl.Visual.CalendarCanvas;
 {-------------------------------------------------------------------------------------------------------------
-  2026.01.31
+  2026.03.22
   Freeware
   Calendar descended from TComponent (now TObject)
   Draws the calendar on the provided canvas.
@@ -90,11 +90,12 @@ TYPE
   FHolidays       : TStrings;              // Property for storing holidays and special days as strings format: dd.mm.
   FMarkdays       : TStrings;
   FWidth          : Integer;
-  FColor          : Integer;
+  FColor          : TColor;
   FSolidBkg       : Boolean;
+  FInnerSpace     : Integer;
   FHeight         : Integer;
   FLeft           : Integer;
-  FTop            : Integer;               // Property for storing holidays and special days as strings format: dd.mm.
+  FTop            : Integer;
   procedure SetCalendarDate (aDate: TDateTime);
   procedure SetMonth      (Value: Integer);
   procedure SetDay        (Value: Integer);
@@ -154,7 +155,7 @@ TYPE
   property Height       : Integer      read FHeight       write FHeight         default 350;
   property Width        : Integer      read FWidth        write FWidth          default 300;
 
-  property Color        : Integer      read FColor        write FColor          default clWhite;
+  property Color        : TColor       read FColor        write FColor          default clWhite;
   property Font         : TFont        read GetFont       write SetFont;
   property DateInHeader : Boolean      read FDateInHeader write FDateInHeader   default FALSE;  // Shows\Hides the 'MMMMM YYYY' display above the abbreviated day names at the top. The Months or Years can then be changed programmatically by ScrollBars or similar.
   property UseLongDate  : Boolean      read FUseLongDate  write FUseLongDate    default TRUE;
@@ -169,6 +170,7 @@ TYPE
   property Holidays     : TStrings     read FHolidays     write SetHolidays;    // for storing holidays and special days as strings.
   property Markdays     : TStrings     read FMarkdays     write SetMarkdays;    // for storing holidays and special days as strings.
   property SolidBkg     : Boolean      read FSolidBkg     write FSolidBkg       default FALSE;
+  property InnerSpace   : Integer      read FInnerSpace   write FInnerSpace     default 0;       // Border spacing including bevels, on each side
  end;
 
 
@@ -189,6 +191,7 @@ var
  aY, aM, aD: Word;
  FormatSettings: System.SysUtils.TFormatSettings;
 begin
+ Assert(Canvas <> NIL, 'TCalendarCanvas.Create: Canvas must not be NIL');
  inherited Create;
 
  FColSunday    := $0025289A;
@@ -198,6 +201,7 @@ begin
  FHeight       := 350;
  FWidth        := 300;
  FSolidBkg     := FALSE;                // Fill the calendar with solid color
+ FInnerSpace   := 0;
  FormatSettings:= TFormatSettings.Create;
 
  for iCount:= 0 to 6
@@ -238,8 +242,6 @@ end;
    DRAW
 -------------------------------------------------------------------------------------------------------------}
 CONST
-  iInnerSpace= 0;   { iInnerSpace = the border, including bevels, on 1 side }
-  //todo: expose this iInnerSpace a property
   ShadowDist= 2;    { Drop shadow offset in pixels for text visibility on dark wallpapers }
   clCalShadow= TColor($202020);  { Dark shadow color for calendar text }
 
@@ -251,19 +253,19 @@ VAR
   iInnerW, innerH,
   iLMargin, iLinesH: Integer;
 begin
- if FCanvas= NIL then EXIT;
+ Assert(FCanvas <> NIL, 'TCalendarCanvas.Paint: FCanvas is NIL');
 
  if FShowWeeks
  then dd:=8
  else dd:=7;
 
- iInnerW := Width - (iInnerSpace * 2);
+ iInnerW := Width - (FInnerSpace * 2);
  iWBorder:= iInnerW div 100;
 
  { ClientWidth is a product of useable space, not all space }
  { clear space less a border both sides, makes ClientWidth narrower }
  CellWidth := (iInnerW - (iWBorder * 2)) div dd;
- innerH := Height - (iInnerSpace * 2);
+ innerH := Height - (FInnerSpace * 2);
  iHBorder := innerH div 100;
 
  if DateInHeader                       // Toggle the 'MMMMM YYYY' display above the abbreviated day names at the top. The Months or Years can then be changed programmatically by ScrollBars or similar.
@@ -274,8 +276,8 @@ begin
  CellHeight:= (innerH  - (iHBorder * 2)) div iLinesH;
  iLMargin  := (iInnerW - (CellWidth * dd)) div 2;
 
- HeadingRect.Top   := Top  + iInnerSpace + iHBorder;
- HeadingRect.Left  := Left + iInnerSpace + iLMargin ;
+ HeadingRect.Top   := Top  + FInnerSpace + iHBorder;
+ HeadingRect.Left  := Left + FInnerSpace + iLMargin ;
  HeadingRect.Right := HeadingRect.Left + (CellWidth * dd);
  HeadingRect.Bottom:= Height;
 
@@ -285,7 +287,7 @@ begin
 
  CalendarRect := HeadingRect;  // Copy Left/Right. Recalculate Top/Btm
  CalendarRect.Top := HeadingRect.Bottom;
- CalendarRect.Bottom := CalendarRect.Top + (CellHeight * 6); // THIS IS UNUSED!   //6 is the number of Rows?
+ CalendarRect.Bottom := CalendarRect.Top + (CellHeight * 6); // 6 rows of dates
 
  if FShowWeeks
  then CalendarRect.Left := HeadingRect.Left + CellWidth; //showing WeekNo (week of the year)
@@ -338,11 +340,14 @@ begin
  TempRect.Bottom:= TempRect.Top   + CellHeight;
  TempRect.Left  := TempRect.Left  + iIndent + BUTTON_WIDTH + 1;
  TempRect.Right := TempRect.Right - (iIndent + BUTTON_WIDTH + 1);
- FCanvas.Brush.Color:= clBtnFace;
- FCanvas.Brush.Style:= bsClear;
- {todo: if FSolidBkg
-  FCanvas.Brush.Style := bsxxx;
-  FCanvas.FillRect( TempRect ); }
+ if FSolidBkg then
+  begin
+   FCanvas.Brush.Color:= clBtnFace;
+   FCanvas.Brush.Style:= bsSolid;
+   FCanvas.FillRect(TempRect);
+  end
+ else
+   FCanvas.Brush.Style:= bsClear;
  LightVcl.Graph.ShadowText.DrawShadowText(FCanvas, sMonth, TempRect, FCanvas.Font.Color, clCalShadow, ShadowDist, DT_CENTER or DT_TOP or DT_SINGLELINE);
 end;
 
@@ -439,7 +444,9 @@ begin
  { Define normal font }
  FCanvas.Font.Style := [];
  FCanvas.Pen.Color  := clBlack;
- FCanvas.Brush.Style:= bsClear;   //todo: if FSolidBkg
+ if FSolidBkg
+ then FCanvas.Brush.Style:= bsSolid
+ else FCanvas.Brush.Style:= bsClear;
 
  { Cycle through the weeks }
  for nWeek := 1 to 6 do
@@ -539,7 +546,7 @@ begin
    TempRect.Top   := rtop + (CellHeight * x);
    TempRect.Bottom:= TempRect.Top + CellHeight;
    TempRect.Right := TempRect.Left + CellWidth;
-   LightVcl.Graph.ShadowText.DrawShadowText(FCanvas, pWeek, TempRect, FCanvas.Font.Color, clCalShadow, ShadowDist, DT_CENTER or DT_VCENTER or DT_TOP or DT_SINGLELINE);
+   LightVcl.Graph.ShadowText.DrawShadowText(FCanvas, pWeek, TempRect, FCanvas.Font.Color, clCalShadow, ShadowDist, DT_CENTER or DT_VCENTER or DT_SINGLELINE);
   end;
 
  FCanvas.Font.Color:= clBlack;    {Restore}
@@ -605,7 +612,7 @@ begin
    FCanvas.Brush.Color := clBtnFace;
    TempRect := GetRectFromIndex(g_PrevDateIndex);
    FCanvas.FillRect(TempRect);
-   LightVcl.Graph.ShadowText.DrawShadowText(FCanvas, pDate, TempRect, FCanvas.Font.Color, clCalShadow, ShadowDist, DT_CENTER or DT_VCENTER or DT_TOP or DT_SINGLELINE);
+   LightVcl.Graph.ShadowText.DrawShadowText(FCanvas, pDate, TempRect, FCanvas.Font.Color, clCalShadow, ShadowDist, DT_CENTER or DT_VCENTER or DT_SINGLELINE);
   end;
 
   {Draw the Date in Bold font}
@@ -632,7 +639,7 @@ begin
   then FCanvas.Font.Color:= clBtnShadow;
 
   TempRect := GetRectFromIndex(nIndex);
-  LightVcl.Graph.ShadowText.DrawShadowText(FCanvas, pDate, TempRect, FCanvas.Font.Color, clCalShadow, ShadowDist, DT_CENTER or DT_VCENTER or DT_TOP or DT_SINGLELINE);
+  LightVcl.Graph.ShadowText.DrawShadowText(FCanvas, pDate, TempRect, FCanvas.Font.Color, clCalShadow, ShadowDist, DT_CENTER or DT_VCENTER or DT_SINGLELINE);
 
   { Draw frame arround current day }
   { Frame date with Shadow }
@@ -720,18 +727,6 @@ begin
      end;
   Result := nIndex;
 end;
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -831,28 +826,33 @@ function TCalendarCanvas.SetDate(nDays : Integer): Boolean;
 var
   aY, aM, aD: Word;
   PrevDay: Word;
+  NewDate: TDateTime;
 begin
+ {Validate the resulting date before modifying state}
+ NewDate := FCalendarDate + nDays;
+ DecodeDate(NewDate, aY, aM, aD);
+ if NOT IsValidDate(aY, aM, aD) then
+  begin
+   MessageBeep(MB_ICONEXCLAMATION);
+   EXIT(False);
+  end;
+
  Result := True;
- try
-  {Save current date information}
-  g_PrevDateIndex := g_CurrDateIndex;
-  DecodeDate(FCalendarDate, g_PrevYear, g_PrevMonth, PrevDay);
-  {Change the date and update member variables}
-  FCalendarDate := FCalendarDate + nDays;
-  DecodeDate(FCalendarDate, aY, aM, aD);
-  g_CurrDateIndex := ( aD + GetMonthBegin ) - 1;
-  {Reload Date Array & paint ONLY if month or year changed}
-  If (aM <> g_PrevMonth) or (aY <> g_PrevYear)Then
-   begin
-    FMonth := aM;
-    FYear := aY;
-    LoadDateArray;
-   end;
-  FDay := aD;
- except
-  MessageBeep(MB_ICONEXCLAMATION);
-  Result := False;
- end;
+ {Save current date information}
+ g_PrevDateIndex := g_CurrDateIndex;
+ DecodeDate(FCalendarDate, g_PrevYear, g_PrevMonth, PrevDay);
+ {Change the date and update member variables}
+ FCalendarDate := NewDate;
+ DecodeDate(FCalendarDate, aY, aM, aD);
+ g_CurrDateIndex := ( aD + GetMonthBegin ) - 1;
+ {Reload Date Array & paint ONLY if month or year changed}
+ If (aM <> g_PrevMonth) or (aY <> g_PrevYear)Then
+  begin
+   FMonth := aM;
+   FYear := aY;
+   LoadDateArray;
+  end;
+ FDay := aD;
 end;
 
 
@@ -895,21 +895,24 @@ procedure TCalendarCanvas.SetCalendarDate(aDate: TDateTime);
 var
  aYear, aMonth, aDay: Word;
 begin
-try
+ {Validate input date before processing}
+ DecodeDate(aDate, aYear, aMonth, aDay);
+ if NOT IsValidDate(aYear, aMonth, aDay) then
+  begin
+   MessageBeep(MB_ICONEXCLAMATION);
+   Exit;
+  end;
+
  if FCalendarDate <> aDate then
   begin
-   DecodeDate(aDate, aYear, aMonth, aDay);
    FCalendarDate := aDate;
-   FYear := Integer(aYear);
+   FYear  := Integer(aYear);
    FMonth := Integer(aMonth);
-   FDay := Integer(aDay);
+   FDay   := Integer(aDay);
    LoadDateArray;
    DateChange;
    Paint;
   end;
-except
-  MessageBeep(MB_ICONEXCLAMATION);
- end;
 end;
 
 
@@ -969,10 +972,10 @@ begin
   begin
    FCalendarDate := EncodeDate(Word(FYear), Word(FMonth), Value);
    DecodeDate( FCalendarDate, aY, aM, aD);
-   g_CurrDateIndex := ( FDay + GetMonthBegin ) - 1;
    FYear := Integer(aY);
    FMonth := Integer(aM);
    FDay := Integer(aD);
+   g_CurrDateIndex := ( FDay + GetMonthBegin ) - 1;
    DateChange;
    LoadDateArray;
    Paint;
@@ -1004,10 +1007,10 @@ begin
   begin
    FCalendarDate := EncodeDate(wValue, Word(FMonth), Word(FDay));
    DecodeDate(FCalendarDate, aY, aM, aD);
-   g_CurrDateIndex := ( FDay + GetMonthBegin ) - 1;
    FYear := Integer(aY);
    FMonth := Integer(aM);
    FDay := Integer(aD);
+   g_CurrDateIndex := ( FDay + GetMonthBegin ) - 1;
    DateChange;
    LoadDateArray;
    Paint;

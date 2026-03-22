@@ -67,9 +67,9 @@ TYPE
     Panel1           : TPanel;
     edtSubject       : TLabeledEdit;
     btnSendMail      : TBitBtn;
-    chkSendAsHtml    : TCubicCheckBox;
-    edtAttachment    : TCubicPathEdit;
-    chkInternalSMTP  : TCubicCheckBox;
+    chkSendAsHtml    : TLightCheckBox;
+    edtAttachment    : TlightPathEdit;
+    chkInternalSMTP  : TLightCheckBox;
     lblInfoAttachment: TLabel;
     procedure FormDestroy           (Sender: TObject);
     procedure SMTPConnected         (Sender: TObject);

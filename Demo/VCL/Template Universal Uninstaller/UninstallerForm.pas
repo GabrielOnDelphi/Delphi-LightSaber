@@ -39,14 +39,14 @@ TYPE
     lblVersion   : TLabel;
     Panel1       : TPanel;
     mmoLog       : TRichLog;
-    edtPath      : TCubicPathEdit;
+    edtPath      : TlightPathEdit;
     btnUninstall : TButton;
     btnResetIni  : TButton;
     btnFeedback  : TButton;
     btn1         : TButton;
     lblDiscount  : TLabel;
     inetDiscount : TInternetLabel;
-    CountDown    : TCountDown;
+    CountDown    : TLightCountDown;
     procedure btnUninstallClick (Sender: TObject);
     procedure btnFeedbackClick  (Sender: TObject);
     procedure FormCreate        (Sender: TObject);

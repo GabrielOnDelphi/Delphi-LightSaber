@@ -44,9 +44,9 @@ TYPE
 
   TfrmProxyList = class(TLightForm)
     grpInternetType : TGroupBox;          // Group for connection type selection
-    radGateway      : TCubicRadioButton;  // Use gateway option
-    radDirect       : TCubicRadioButton;  // Direct connection option
-    radProxyList    : TCubicRadioButton;  // Use proxy list option
+    radGateway      : TLightRadioButton;  // Use gateway option
+    radDirect       : TLightRadioButton;  // Direct connection option
+    radProxyList    : TLightRadioButton;  // Use proxy list option
     grpProxyList    : TGroupBox;          // Group containing proxy list controls
     pnlBottom       : TPanel;             // Bottom panel for buttons
     btnSaveProxy    : TButton;            // Save proxy list button

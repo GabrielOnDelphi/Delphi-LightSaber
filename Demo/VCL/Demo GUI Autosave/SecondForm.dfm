@@ -40,7 +40,7 @@ object frmContainer: TfrmContainer
       Caption = 'CheckBox1'
       TabOrder = 0
     end
-    object CubicCheckBox1: TCubicCheckBox
+    object CubicCheckBox1: TLightCheckBox
       Left = 40
       Top = 53
       Width = 104
@@ -60,7 +60,7 @@ object frmContainer: TfrmContainer
     Align = alBottom
     Caption = 'Checkboxes'
     TabOrder = 1
-    object CubicCheckBox2: TCubicCheckBox
+    object CubicCheckBox2: TLightCheckBox
       AlignWithMargins = True
       Left = 40
       Top = 31
@@ -79,7 +79,7 @@ object frmContainer: TfrmContainer
       Caption = 'VCL RadioButton'
       TabOrder = 1
     end
-    object CubicRadioButton1: TCubicRadioButton
+    object CubicRadioButton1: TLightRadioButton
       Left = 40
       Top = 70
       Width = 115

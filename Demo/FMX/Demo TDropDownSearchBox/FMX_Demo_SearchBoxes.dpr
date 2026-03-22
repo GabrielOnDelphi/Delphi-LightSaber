@@ -18,7 +18,7 @@ uses
 {$R *.res}
 
 begin
-  AppData:= TAppData.Create('Light Demo FMX TDropDownSearchBox');
+  AppData:= TAppData.Create('Light Demo FMX TLightDownSearch');
   AppData.CreateMainForm(TForm1, Form1, asFull);  // Change AutoState from asFull to asNone if you don't want to save form's state to disk.
   AppData.Run;
 end.

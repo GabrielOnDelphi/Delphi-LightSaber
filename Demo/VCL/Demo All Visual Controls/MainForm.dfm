@@ -24,7 +24,7 @@ object frmMain: TfrmMain
     TabOrder = 0
     object TabSheet1: TTabSheet
       Caption = 'Basics'
-      object CheckListBox: TCubicCheckListBox
+      object CheckListBox: TLightCheckListBox
         Left = 577
         Top = 213
         Width = 185
@@ -37,7 +37,7 @@ object frmMain: TfrmMain
           ' Item3')
         TabOrder = 0
       end
-      object ComboBox: TCubicComboBox
+      object ComboBox: TLightComboBox
         Left = 133
         Top = 221
         Width = 185
@@ -60,7 +60,7 @@ object frmMain: TfrmMain
         Height = 109
         Alignment = taLeftJustify
         TabOrder = 2
-        object CubicRadioButton1: TCubicRadioButton
+        object CubicRadioButton1: TLightRadioButton
           Left = 20
           Top = 32
           Width = 123
@@ -69,7 +69,7 @@ object frmMain: TfrmMain
           TabOrder = 0
           AutoSize = True
         end
-        object CubicCheckBox1: TCubicCheckBox
+        object CubicCheckBox1: TLightCheckBox
           Left = 20
           Top = 60
           Width = 108
@@ -95,7 +95,7 @@ object frmMain: TfrmMain
         Height = 221
         Caption = 'Spin editors'
         TabOrder = 4
-        object FloatSpinEdit: TFloatSpinEdit
+        object FloatSpinEdit: TLightFloatSpinEdit
           Left = 29
           Top = 39
           Width = 78
@@ -241,7 +241,7 @@ object frmMain: TfrmMain
           MinHeight = 50
         end
       end
-      object Memo: TCubicMemo
+      object Memo: TLightMemo
         Left = 593
         Top = 124
         Width = 185
@@ -263,7 +263,7 @@ object frmMain: TfrmMain
         TabOrder = 3
         Text = ''
       end
-      object CubicEdit: TCubicEdit
+      object CubicEdit: TLightEdit
         Left = 190
         Top = 59
         Width = 121
@@ -277,7 +277,7 @@ object frmMain: TfrmMain
         Width = 396
         Height = 101
         TabOrder = 5
-        object DropDownSearchBox: TDropDownSearchBox
+        object DropDownSearchBox: TLightDownSearch
           AlignWithMargins = True
           Left = 4
           Top = 4
@@ -499,7 +499,7 @@ object frmMain: TfrmMain
         Height = 103
         TabOrder = 0
       end
-      object PathEdit: TCubicPathEdit
+      object PathEdit: TlightPathEdit
         AlignWithMargins = True
         Left = 99
         Top = 9
@@ -520,7 +520,7 @@ object frmMain: TfrmMain
         Height = 329
         Caption = 'Panel2'
         TabOrder = 2
-        object CubicFilterBox1: TCubicFilterBox
+        object CubicFilterBox1: TLightFilterBox
           AlignWithMargins = True
           Left = 4
           Top = 4
@@ -529,7 +529,7 @@ object frmMain: TfrmMain
           Align = alTop
           TabOrder = 0
         end
-        object CubicDirListBox1: TCubicDirListBox
+        object CubicDirListBox1: TLightDirListBox
           AlignWithMargins = True
           Left = 4
           Top = 33
@@ -538,7 +538,7 @@ object frmMain: TfrmMain
           Align = alTop
           TabOrder = 1
         end
-        object CubicFileList1: TCubicFileList
+        object CubicFileList1: TLightFileList
           AlignWithMargins = True
           Left = 4
           Top = 159
@@ -574,7 +574,7 @@ object frmMain: TfrmMain
         Height = 15
         Caption = 'FastQChart'
       end
-      object CationedThumbnail: TCationedThumbnail
+      object CationedThumbnail: TLightCaptionThumbnail
         AlignWithMargins = True
         Left = 28
         Top = 24
@@ -647,7 +647,7 @@ object frmMain: TfrmMain
       end
     end
   end
-  object CountDown: TCountDown
+  object CountDown: TLightCountDown
     Left = 636
     Top = 408
   end

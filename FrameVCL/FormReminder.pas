@@ -54,12 +54,12 @@ TYPE
     btnRun       : TButton;            // Manually run the configured file
     btnStart     : TButton;            // Start the timer
     btnStop      : TButton;            // Stop/pause the timer
-    chkMakeNoise : TCubicCheckBox;     // Play sound when time is up
-    chkRunOnce   : TCubicCheckBox;     // Run action only once (don't repeat)
-    radRunFile   : TCubicRadioButton;  // Execute file when time is up
-    radShutDown  : TCubicRadioButton;  // Shutdown computer when time is up
-    radSleep     : TCubicRadioButton;  // Put system to sleep when time is up
-    edtPath      : TCubicPathEdit;     // Path to file to execute
+    chkMakeNoise : TLightCheckBox;     // Play sound when time is up
+    chkRunOnce   : TLightCheckBox;     // Run action only once (don't repeat)
+    radRunFile   : TLightRadioButton;  // Execute file when time is up
+    radShutDown  : TLightRadioButton;  // Shutdown computer when time is up
+    radSleep     : TLightRadioButton;  // Put system to sleep when time is up
+    edtPath      : TlightPathEdit;     // Path to file to execute
     grpExecute   : TCubicGroupBox;     // Group for file execution settings
     grpTimer     : TCubicGroupBox;     // Group for timer settings
     pnlReminder  : TCubicGroupBox;     // Main reminder panel

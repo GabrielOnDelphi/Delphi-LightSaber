@@ -60,7 +60,7 @@ object frmSettings: TfrmSettings
           WordWrap = True
           OnClick = btnDesktopShortcutClick
         end
-        object chkAutoStartUp: TCubicCheckBox
+        object chkAutoStartUp: TLightCheckBox
           Left = 60
           Top = 39
           Width = 173
@@ -69,7 +69,7 @@ object frmSettings: TfrmSettings
           TabOrder = 0
           AutoSize = True
         end
-        object chkTrayIcon: TCubicCheckBox
+        object chkTrayIcon: TLightCheckBox
           Left = 60
           Top = 107
           Width = 119
@@ -78,7 +78,7 @@ object frmSettings: TfrmSettings
           TabOrder = 2
           AutoSize = True
         end
-        object chkStartMinim: TCubicCheckBox
+        object chkStartMinim: TLightCheckBox
           Left = 60
           Top = 73
           Width = 115
@@ -100,7 +100,7 @@ object frmSettings: TfrmSettings
           TabOrder = 4
         end
       end
-      object Path: TCubicPathEdit
+      object Path: TlightPathEdit
         Left = 105
         Top = 307
         Width = 381
@@ -148,7 +148,7 @@ object frmSettings: TfrmSettings
           Height = 17
           Caption = 'Hide hint after (ms):'
         end
-        object radHintsOff: TCubicRadioButton
+        object radHintsOff: TLightRadioButton
           Left = 36
           Top = 63
           Width = 225
@@ -160,7 +160,7 @@ object frmSettings: TfrmSettings
           TabOrder = 0
           AutoSize = True
         end
-        object radHintsTooltips: TCubicRadioButton
+        object radHintsTooltips: TLightRadioButton
           Left = 36
           Top = 92
           Width = 154
@@ -172,7 +172,7 @@ object frmSettings: TfrmSettings
           TabOrder = 1
           AutoSize = True
         end
-        object radHintsStatBar: TCubicRadioButton
+        object radHintsStatBar: TLightRadioButton
           Left = 36
           Top = 120
           Width = 188

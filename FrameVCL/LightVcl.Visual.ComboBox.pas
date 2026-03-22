@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.ComboBox;
 
 {=============================================================================================================
    www.GabrielMoraru.com
-   2026.01
+   2026.03 FINAL
 --------------------------------------------------------------------------------------------------------------
 
   Features:
@@ -13,9 +13,10 @@ UNIT LightVcl.Visual.ComboBox;
     Allows user to add two strings separated by |.
     The format is: 'int_cmd|Nice Screen Name' stored in Items as: Names | Value
     The UI shows the second string (Value).
-    The first string (Name) can be retrieved with: s := TCubicComboBox.SelectedDualItem;
+    The internal command (Name) is returned by SelectedItem.
+    The screen name (Value) is returned by SelectedDualItem.
 
-  Tester: c:\MyProjects\Project support\Testers\CubicCombobox tester\Tester.dpr
+  Tester: c:\Projects\Project support\Testers\CubicCombobox tester\Tester.dpr
 =============================================================================================================}
 
 INTERFACE
@@ -24,7 +25,7 @@ USES
   Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls;
 
 TYPE
-  TCubicComboBox = class(TComboBox)
+  TLightComboBox = class(TComboBox)
    private
     FDualItem: Boolean;
    protected
@@ -56,7 +57,7 @@ IMPLEMENTATION
 
 
 
-Constructor TCubicComboBox.Create(AOwner : TComponent);
+Constructor TLightComboBox.Create(AOwner : TComponent);
 begin
  inherited Create(AOwner);
  Style := csOwnerDrawFixed;
@@ -70,7 +71,7 @@ end;
 {-----------------------------------------------------------------------------------------------------------------------
    DRAW
 -----------------------------------------------------------------------------------------------------------------------}
-procedure TCubicComboBox.DrawItem(Index: Integer; Rect: TRect; State: TOwnerDrawState);
+procedure TLightComboBox.DrawItem(Index: Integer; Rect: TRect; State: TOwnerDrawState);
 VAR s: string;
 begin
  // if csCreating in ControlState then exit;
@@ -97,7 +98,7 @@ end;
 
 { Selects the item matching the specified text. Case insensitive. Returns index or -1 if not found.
   In IsDualItem mode, searches by Name (internal command), not by Value (screen name). }
-function TCubicComboBox.SelectItem(CONST ItemText: string): Integer;
+function TLightComboBox.SelectItem(CONST ItemText: string): Integer;
 VAR
    i: Integer;
 begin
@@ -121,7 +122,7 @@ begin
 end;
 
 
-function TCubicComboBox.SelectObject(aObject: TObject): Boolean;
+function TLightComboBox.SelectObject(aObject: TObject): Boolean;
 begin
   VAR Index:= Items.IndexOfObject(aObject);
   Result:= Index >= 0;
@@ -130,7 +131,7 @@ begin
 end;
 
 
-function TCubicComboBox.SelectFirstItem: Boolean;
+function TLightComboBox.SelectFirstItem: Boolean;
 begin
   Result:= Items.Count > 0;
   if Result
@@ -148,7 +149,7 @@ end;
 
 { Returns the selected item. Raises exception if no item is selected - use SelectedItemSafe instead.
   If IsDualItem mode is active, it returns the 'internal command' (Name) associated with this item. }
-function TCubicComboBox.SelectedItem: string;
+function TLightComboBox.SelectedItem: string;
 begin
  Assert(ItemIndex >= 0, 'No item selected! Use SelectedItemSafe to avoid exceptions.');
  if IsDualItem
@@ -157,7 +158,7 @@ begin
 end;
 
 
-function TCubicComboBox.SelectedItemSafe: string;
+function TLightComboBox.SelectedItemSafe: string;
 begin
  if (ItemCount <= 0) OR (ItemIndex < 0)
  then Result:= ''
@@ -168,7 +169,7 @@ begin
 end;
 
 
-function TCubicComboBox.SelectedItemForce: string;
+function TLightComboBox.SelectedItemForce: string;
 begin
  if ItemCount = 0 then EXIT('');
  if ItemIndex < 0
@@ -177,7 +178,7 @@ begin
 end;
 
 
-function TCubicComboBox.SelectedObject: TObject;
+function TLightComboBox.SelectedObject: TObject;
 begin
  if ItemIndex >= 0
  then Result:= Items.Objects[ItemIndex]
@@ -185,16 +186,14 @@ begin
 end;
 
 
-
-
-
+ 
 
 
 
 {-----------------------------------------------------------------------------------------------------------------------
    DUAL ITEMS
 -----------------------------------------------------------------------------------------------------------------------}
-function TCubicComboBox.SelectedDualItem: string;
+function TLightComboBox.SelectedDualItem: string;
 begin
  Assert(IsDualItem);
  if ItemIndex < 0
@@ -203,7 +202,7 @@ begin
 end;
 
 
-function TCubicComboBox.SelectDualItem(CONST ScreenName: string): Integer;  { Selects an item, based on its internal name }
+function TLightComboBox.SelectDualItem(CONST ScreenName: string): Integer;  { Selects an item based on its screen name (Value) }
 VAR
    i: Integer;
 begin
@@ -222,13 +221,13 @@ begin
 end;
 
 
-
+ 
 
 
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber VCL', [TCubicComboBox]);
+  RegisterComponents('LightSaber VCL', [TLightComboBox]);
 end;
 
 end.

@@ -1,10 +1,8 @@
 UNIT LightVcl.Visual.FileListBox;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2026.01
-   www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+   2026.03 FINAL
+   www.GabrielMoraru.com 
 --------------------------------------------------------------------------------------------------------------
 
   Improvements:
@@ -27,17 +25,17 @@ UNIT LightVcl.Visual.FileListBox;
 INTERFACE
 
 USES
-   Winapi.Windows,
-   System.SysUtils, System.Classes, System.Types,
+   Winapi.Windows, System.SysUtils, System.Classes, System.Types,
    Vcl.Controls, Vcl.Forms, Vcl.FileCtrl;
 
 TYPE
   TOnSelChanged = procedure (Sender: TObject; OUT CurrentItem, PreviousItem: Integer) of object;
 
-  TCubicFileList= class(TFileListBox)
+  TLightFileList= class(TFileListBox)
    private
      FDeleteFile: Boolean;
      FDelConfirm: Boolean;
+     FLastSel: Integer;
      FBeforeDelete: TNotifyEvent;
      FAfterDelete: TNotifyEvent;
      FHintItemAu: Boolean;
@@ -85,18 +83,19 @@ USES
 
 
 
-constructor TCubicFileList.Create(AOwner: TComponent);
+constructor TLightFileList.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FDeleteFile:= TRUE;
   FDelConfirm:= TRUE;
   FHintItemAu:= TRUE;
+  FLastSel:= -1;
   Hint:= 'Press the "Delete" key to delete the selected file from disk.';
 end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber VCL', [TCubicFileList]);
+  RegisterComponents('LightSaber VCL', [TLightFileList]);
 end;
 
 
@@ -105,7 +104,7 @@ end;
 {--------------------------------------------------------------------------------------------------
    UPDATE
 --------------------------------------------------------------------------------------------------}
-procedure TCubicFileList.ReadFileNames;                                                            { This makes the control to keep the current file selected when updating }
+procedure TLightFileList.ReadFileNames;                                                            { This makes the control to keep the current file selected when updating }
 VAR SelItem: string;
 begin
  SelItem:= SelectedItem;
@@ -121,17 +120,17 @@ end;
    DO SELECT ITEM
 --------------------------------------------------------------------------------------------------}
 
-procedure TCubicFileList.SelectFirstItem;
+procedure TLightFileList.SelectFirstItem;
 begin
  if Count> 0
  then SelectItem(0);
 end;
 
 
-procedure TCubicFileList.SelectItem(CONST ItemPos: Integer);                                       { Deselect all current items and select specified item }
+procedure TLightFileList.SelectItem(CONST ItemPos: Integer);                                       { Deselect all current items and select specified item }
 begin
  Assert(ItemPos> -1);
- Assert(ItemPos< Count, 'TCubicFileList.SelectItem ItemPos< Count');
+ Assert(ItemPos< Count, 'TLightFileList.SelectItem ItemPos< Count');
  //del  Don't use: if ItemIndex= ItemPos then EXIT; - not reliable because on exit itemindex=itempos
 
  DeselectAll;
@@ -144,7 +143,7 @@ begin
 end;
 
 
-procedure TCubicFileList.SelectItem(ItemName: string);                                       { Select specified item. Full path is accepted (will be stripped to filename) }
+procedure TLightFileList.SelectItem(ItemName: string);                                       { Select specified item. Full path is accepted (will be stripped to filename) }
 VAR i: Integer;
 begin
  if Count<= 0 then EXIT;                                                                           { No files in list }
@@ -162,7 +161,7 @@ begin
 end;
 
 
-procedure TCubicFileList.SelectItemClick(CONST ItemPos: Integer);                                  { Deselect all current items, select specified item then simulate a click on it }
+procedure TLightFileList.SelectItemClick(CONST ItemPos: Integer);                                  { Deselect all current items, select specified item then simulate a click on it }
 begin
  if Count> 0 then
   begin
@@ -172,14 +171,14 @@ begin
 end;
 
 
-procedure TCubicFileList.SimulateClickCurItem;                                                     { Simulate a click on current item  }
+procedure TLightFileList.SimulateClickCurItem;                                                     { Simulate a click on current item  }
 begin
  if ItemIndex>= 0
  then Click;
 end;
 
 
-procedure TCubicFileList.SimulateClickCurItemForce;                                                { Simulate a click on current item. If no item is selected, then select the first on  }
+procedure TLightFileList.SimulateClickCurItemForce;                                                { Simulate a click on current item. If no item is selected, then select the first on  }
 begin
  if Count= 0 then EXIT;
 
@@ -193,7 +192,7 @@ end;
 {--------------------------------------------------------------------------------------------------
    SELECTION
 --------------------------------------------------------------------------------------------------}
-function TCubicFileList.SelectedItem: string;                                                      { Returns the selected item }
+function TLightFileList.SelectedItem: string;                                                      { Returns the selected item }
 begin
  if (ItemIndex >= 0) AND (ItemIndex < Count)
  then Result:= Items[ItemIndex]
@@ -201,7 +200,7 @@ begin
 end;
 
 
-procedure TCubicFileList.InvertSelection;
+procedure TLightFileList.InvertSelection;
 VAR i: Integer;
 begin
  for i:= 0 to Count-1 DO
@@ -209,7 +208,7 @@ begin
 end;
 
 
-procedure TCubicFileList.DeselectAll;
+procedure TLightFileList.DeselectAll;
 VAR i: Integer;
 begin
  for i:= 0 to Count-1 DO
@@ -217,7 +216,7 @@ begin
 end;
 
 
-function TCubicFileList.SelectionCount: Integer;                                                   { Returns the number of selected items }
+function TLightFileList.SelectionCount: Integer;                                                   { Returns the number of selected items }
 VAR i: Integer;
 begin
  Result:= 0;
@@ -232,7 +231,7 @@ end;
 {--------------------------------------------------------------------------------------------------
    MOVE SELECTION
 --------------------------------------------------------------------------------------------------}
-function TCubicFileList.MoveSelectionUp : Boolean;                                                 { Returns true if it succesfully moved the selection }
+function TLightFileList.MoveSelectionUp : Boolean;                                                 { Returns true if it succesfully moved the selection }
 VAR temp, PrevItem: Integer;
 begin
  Result:= (Items.Count> 0) AND (ItemIndex> 0);                                                     { If first item is already selected, cannot move up }
@@ -247,7 +246,7 @@ begin
 end;
 
 
-function TCubicFileList.MoveSelectionDwn: Boolean;
+function TLightFileList.MoveSelectionDwn: Boolean;
 VAR temp, PrevItem: Integer;
 begin
  Result:= (Items.Count> 0) AND (ItemIndex< Items.Count-1);                                         { The selection is already on the last row }
@@ -267,7 +266,7 @@ end;
 {--------------------------------------------------------------------------------------------------
    SELECTION CHANGED
 --------------------------------------------------------------------------------------------------}
-procedure TCubicFileList.Change;
+procedure TLightFileList.Change;
 VAR temp: Integer;
 begin
   temp:= ItemIndex;
@@ -276,6 +275,7 @@ begin
   AND (FLastSel<> ItemIndex)
   AND Assigned(FOnSelChanged)
   then FOnSelChanged(Self, temp, FLastSel);
+  FLastSel:= ItemIndex;
   inherited Change;
 end;
 
@@ -284,7 +284,7 @@ end;
 
 
 (*
-procedure TCubicFileList.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TLightFileList.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 VAR PrevItem: Integer;
 begin
  PrevItem:= ItemIndex;
@@ -295,7 +295,7 @@ begin
  then FOnSelChanged(Self, PrevItem);
 end;
 
-procedure TCubicFileList.KeyDown(VAR Key: Word; Shift: TShiftState);
+procedure TLightFileList.KeyDown(VAR Key: Word; Shift: TShiftState);
 begin
  inherited KeyDown(Key, Shift);
  if (Count> 0) AND ( (Key= VK_DOWN) OR (Key= VK_UP) )                                              { Pressed Up/Down arrow key? }
@@ -311,7 +311,7 @@ end; *)
 {--------------------------------------------------------------------------------------------------
    DELETE ITEMS
 --------------------------------------------------------------------------------------------------}
-procedure TCubicFileList.KeyUp(VAR Key: Word; Shift: TShiftState);
+procedure TLightFileList.KeyUp(VAR Key: Word; Shift: TShiftState);
 begin
  if (Key= VK_DELETE)                                                            { User pressed DELETE key ? }
  AND DelDeletesFile
@@ -324,7 +324,7 @@ end;
 { Delete current item from disk without refreshing the listbox.
   This is useful because in case of a large folder, re-reading the files in the folder could take a while.
   Deletes to Recycle Bin }
-procedure TCubicFileList.DeleteCurrentFile;
+procedure TLightFileList.DeleteCurrentFile;
 VAR CurItem: Integer;
 begin
  if (Count < 1) then EXIT;
@@ -356,7 +356,7 @@ begin
 end;
 
 
-procedure TCubicFileList.DeleteSelectedAndFocus;  { Delete selected item (not file) }
+procedure TLightFileList.DeleteSelectedAndFocus;  { Delete selected item (not file) }
 VAR CurItem: Integer;
 begin
  if (Count < 1) then EXIT;
@@ -377,7 +377,7 @@ end;
 
 
 
-procedure TCubicFileList.MouseMove(Shift: TShiftState; X, Y: Integer);
+procedure TLightFileList.MouseMove(Shift: TShiftState; X, Y: Integer);
 VAR sTextUnderCursor: string;
     itm: integer;
 begin

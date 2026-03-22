@@ -17,18 +17,18 @@ TYPE
   TfrmMain = class(TLightForm)
     AssociateFileExt1     : TAssociateFileExt;
     BaseStrGrid1          : TBaseStrGrid;
-    CationedThumbnail     : TCationedThumbnail;
-    CountDown             : TCountDown;
-    CubicCheckBox1        : TCubicCheckBox;
-    CheckListBox          : TCubicCheckListBox;
-    ComboBox              : TCubicComboBox;
-    CubicDirListBox1      : TCubicDirListBox;
-    CubicFileList1        : TCubicFileList;
-    CubicFilterBox1       : TCubicFilterBox;
+    CationedThumbnail     : TLightCaptionThumbnail;
+    CountDown             : TLightCountDown;
+    CubicCheckBox1        : TLightCheckBox;
+    CheckListBox          : TLightCheckListBox;
+    ComboBox              : TLightComboBox;
+    CubicDirListBox1      : TLightDirListBox;
+    CubicFileList1        : TLightFileList;
+    CubicFilterBox1       : TLightFilterBox;
     GroupBox              : TCubicGroupBox;
     ListBox               : TCubicListBox;
     CubicPanel            : TCubicPanel;
-    CubicRadioButton1     : TCubicRadioButton;
+    CubicRadioButton1     : TLightRadioButton;
     ScrollBox             : TCubicScrollBox;
     SpinEdit              : TCubicSpinEdit;
     SpinEditD             : TCubicSpinEditD;
@@ -39,7 +39,7 @@ TYPE
     ValueListEditor       : TCubicValueListEditor;
     EnhStrGrid1           : TEnhStrGrid;
     FastQChart            : TFastQChart;
-    FloatSpinEdit         : TFloatSpinEdit;
+    FloatSpinEdit         : TLightFloatSpinEdit;
     FreeDiskSpace1        : TFreeDiskSpace;
     GradPanel1            : TGradPanel;
     MsgDispatcher         : TMsgDispatcher;
@@ -62,16 +62,16 @@ TYPE
     Label3                : TLabel;
     pnlRichEditResize     : TPanel;
     RichEditResize1       : TRichEditResize;
-    PathEdit              : TCubicPathEdit;
+    PathEdit              : TlightPathEdit;
     lblMinimalLabel       : TMinimalPathLabel;
     Label4                : TLabel;
     Panel2                : TPanel;
-    Memo                  : TCubicMemo;
+    Memo                  : TLightMemo;
     LabelEdit             : TCubicLabelEdit;
-    CubicEdit             : TCubicEdit;
+    CubicEdit             : TLightEdit;
     CMinimalLabel         : TMinimalPathLabel;
     Panel1                : TPanel;
-    DropDownSearchBox     : TDropDownSearchBox;
+    DropDownSearchBox     : TLightDownSearch;
     CubicSplitter         : TCubicSplitter;
     procedure FormShow(Sender: TObject);
     procedure DropDownSearchBoxEndSearch(Sender, SelectedItem: TObject);
@@ -108,9 +108,9 @@ end;
 //del
 procedure TfrmMain.CreateSearchBox; // Dynamically created
 VAR
-   SearchBox: TDropDownSearchBox;
+   SearchBox: TLightDownSearch;
 begin
-  SearchBox:= TDropDownSearchBox.Create(TabSheet5);
+  SearchBox:= TLightDownSearch.Create(TabSheet5);
   SearchBox.Parent:= TabSheet5;
   SearchBox.OnEndSearch:= DropDownSearchBoxEndSearch;
   //SearchBox.SetHostParent(Self);

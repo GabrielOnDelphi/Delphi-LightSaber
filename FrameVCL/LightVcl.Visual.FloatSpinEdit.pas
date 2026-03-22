@@ -1,12 +1,10 @@
 UNIT LightVcl.Visual.FloatSpinEdit;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2026.01
+   2026.03
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
-  FLOAT SPIN EDIT - v1.8
+
   Allows user to enter a float number and increase/decrease its value (via spin buttons) or manually edit it.
 
   !!!!!!!!!!!!!!!!!!!!!!!!
@@ -21,20 +19,9 @@ UNIT LightVcl.Visual.FloatSpinEdit;
       Decimals   - number of decimals to show in control
       Real2Str   - converts real number to 'nice' string
 
-  This project:
-    No dependencies
-    No other external files required
-    Works with all Delphi editions
 
-  Pas file
-    Code & comments
-    506 Lines (12.3KB)
 
-  DCU file
-    18KB
-    + icon file
-
-  //ToDo: Add another up/down spin ctrl in from of the control. This will increment ONLY the integer part, while the "normal" spinedit ctrl will control the decimal part.
+  //ToDo: Add another up/down spin ctrl in front of the control. This will increment ONLY the integer part, while the "normal" spinedit ctrl will control the decimal part.
 
   Tester
      c:\Myprojects\Project Testers\Cubic VCL SpinEdits\Tester.dpr
@@ -52,7 +39,7 @@ TYPE
  end;
 
 
- TFloatSpinEdit = class(TWinControl)
+ TLightFloatSpinEdit = class(TWinControl)
   private
    FValue    : Real;                                            // 8 byte real
    FMinValue : Real;
@@ -148,7 +135,7 @@ USES
    CREATE/DESTROY
 -----------------------------------}
 
-constructor TFloatSpinEdit.Create(aOwner: TComponent);
+constructor TLightFloatSpinEdit.Create(aOwner: TComponent);
 begin
  inherited Create(aOwner);
 
@@ -195,15 +182,16 @@ end;
   CONTROL STATE
 -----------------------------------}
 
-procedure TFloatSpinEdit.WMSetFocus(VAR Message: TWMSetFocus);
+procedure TLightFloatSpinEdit.WMSetFocus(VAR Message: TWMSetFocus);
 begin
  inherited;
- SetFocus;
+ if (EditBox <> NIL) AND EditBox.CanFocus
+ then EditBox.SetFocus;                     { Redirect focus to the edit box }
 end;
 
 
 
-procedure TFloatSpinEdit.ControlEnter(Sender: TObject);
+procedure TLightFloatSpinEdit.ControlEnter(Sender: TObject);
 begin
  if NOT (csDesignInteractive in ControlStyle) then
   begin
@@ -223,7 +211,7 @@ end;
    VALUE CHANGED
 -----------------------------------}
 
-procedure TFloatSpinEdit.UpdateEditorValue;
+procedure TLightFloatSpinEdit.UpdateEditorValue;
 VAR SelStart: Integer;
 begin
  EditBox.OnChange:= NIL;
@@ -238,7 +226,7 @@ begin
 end;
 
 
-procedure TFloatSpinEdit.EditKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure TLightFloatSpinEdit.EditKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
  case Key of
   VK_UP:
@@ -302,7 +290,7 @@ end;
 
 
 { Triggered when the control loses focus }
-procedure TFloatSpinEdit.CMExit(var Message: TCMExit);
+procedure TLightFloatSpinEdit.CMExit(var Message: TCMExit);
 begin
   inherited;
   if checkMinMax (Value) <> Value
@@ -310,21 +298,36 @@ begin
 end;
 
 
-{ Returns the text enterd by user, after all invalid characters have been removed }
-function TFloatSpinEdit.getFilteredText: string;
+{ Returns the text entered by user, after all invalid characters have been removed.
+  Stricter than CharIsValidDecimal: only allows +/- at position 1, and only one decimal separator. }
+function TLightFloatSpinEdit.getFilteredText: string;
 VAR
   i: Integer;
+  c: Char;
+  HasDecSep: Boolean;
 begin
  Result:= '';
- for i := 1 to Length(EditBox.Text) DO
-   if CharIsValidDecimal(EditBox.Text[i])
-   OR ((EditBox.Text[i] = '-') AND (i = 1))  // Keep the minus char (-)
-   then Result := Result + EditBox.Text[i];
+ HasDecSep:= FALSE;
+ for i:= 1 to Length(EditBox.Text) DO
+  begin
+   c:= EditBox.Text[i];
+   if CharInSet(c, ['0'..'9'])
+   then Result:= Result + c
+   else
+     if (c = FormatSettings.DecimalSeparator) AND (NOT HasDecSep) then
+      begin
+       Result:= Result + c;
+       HasDecSep:= TRUE;
+      end
+     else
+       if CharInSet(c, ['+', '-']) AND (i = 1)   { Sign only at first position }
+       then Result:= Result + c;
+  end;
 end;
 
 
 { The user edited the text value }
-procedure TFloatSpinEdit.EditChanged(Sender: TObject);
+procedure TLightFloatSpinEdit.EditChanged(Sender: TObject);
 VAR
  r: Real;
  sFiltered: string;
@@ -347,7 +350,7 @@ end;
 
 
 
-function TFloatSpinEdit.checkMinMax(NewValue: Real): Real;
+function TLightFloatSpinEdit.checkMinMax(NewValue: Real): Real;
 begin
  if NewValue < FMinValue
  then
@@ -362,7 +365,7 @@ begin
 end;
 
 
-procedure TFloatSpinEdit.UpDownChangingEx(Sender: TObject; var AllowChange: Boolean; NewValue: Integer; Direction: TUpDownDirection);  { Increase/decrease value }
+procedure TLightFloatSpinEdit.UpDownChangingEx(Sender: TObject; var AllowChange: Boolean; NewValue: Integer; Direction: TUpDownDirection);  { Increase/decrease value }
 begin
  case Direction of
   updUp:
@@ -389,7 +392,7 @@ end;
    SETTERS/GETTERS
 -----------------------------------}
 
-procedure TFloatSpinEdit.SetValue(aValue: Real);
+procedure TLightFloatSpinEdit.SetValue(aValue: Real);
 VAR ClampedValue: Real;
 begin
  ClampedValue:= checkMinMax(aValue);
@@ -399,13 +402,13 @@ begin
 end;
 
 
-function TFloatSpinEdit.ValueAsString(HowManyDecimals: Byte): string;
+function TLightFloatSpinEdit.ValueAsString(HowManyDecimals: Byte): string;
 begin
  Result:= Real2Str(Value, HowManyDecimals);
 end;
 
 
-function TFloatSpinEdit.ValueAsString: string;
+function TLightFloatSpinEdit.ValueAsString: string;
 begin
  Result:= Real2Str(Value, FDecimals);
 end;
@@ -414,7 +417,7 @@ end;
 
 
 
-function TFloatSpinEdit.GetEnabled: boolean;
+function TLightFloatSpinEdit.GetEnabled: boolean;
 begin
  if EditBox = NIL
  then Result:= inherited  { During construction, EditBox might not exist yet }
@@ -422,8 +425,9 @@ begin
 end;
 
 
-procedure TFloatSpinEdit.SetEnabled(aValue: boolean);
+procedure TLightFloatSpinEdit.SetEnabled(aValue: boolean);
 begin
+ if EditBox = NIL then EXIT;  { During construction, sub-controls might not exist yet }
  EditBox.Enabled:= aValue;
  UpDown.Enabled := aValue;
 end;
@@ -432,13 +436,13 @@ end;
 
 
 
-function TFloatSpinEdit.GetHint: string;
+function TLightFloatSpinEdit.GetHint: string;
 begin
  Result := EditBox.Hint;
 end;
 
 
-procedure TFloatSpinEdit.SetHint(aValue: string);
+procedure TLightFloatSpinEdit.SetHint(aValue: string);
 begin
  EditBox.Hint:= aValue;
  UpDown.Hint := aValue;
@@ -448,14 +452,14 @@ end;
 
 
 
-function TFloatSpinEdit.GetShowHint: boolean;
+function TLightFloatSpinEdit.GetShowHint: boolean;
 begin
  Result := EditBox.ShowHint;
 end;
 
 
 
-procedure TFloatSpinEdit.SetShowHint(aValue: boolean);
+procedure TLightFloatSpinEdit.SetShowHint(aValue: boolean);
 begin
  EditBox.ShowHint:= aValue;
  UpDown.ShowHint := aValue;
@@ -489,6 +493,7 @@ begin
  else
   begin
    Assert(NOT System.Math.IsNaN(ExtValue), 'Float is NAN!');
+   Assert(NOT System.Math.IsInfinite(ExtValue), 'Float is Infinite!');
    Result:= FloatToStrF(ExtValue, ffFixed, 16, Decimals);
 
    ComaPos:= Pos(FormatSettings.DecimalSeparator, Result);
@@ -517,7 +522,7 @@ end;
 
 procedure Register;
 begin
- RegisterComponents('LightSaber VCL', [TFloatSpinEdit]);
+ RegisterComponents('LightSaber VCL', [TLightFloatSpinEdit]);
 end;
 
 end.

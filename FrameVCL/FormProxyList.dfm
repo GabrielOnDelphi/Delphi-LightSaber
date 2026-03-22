@@ -28,7 +28,7 @@ object frmProxyList: TfrmProxyList
     ParentDoubleBuffered = False
     ParentFont = False
     TabOrder = 0
-    object radGateway: TCubicRadioButton
+    object radGateway: TLightRadioButton
       Left = 18
       Top = 86
       Width = 67
@@ -47,7 +47,7 @@ object frmProxyList: TfrmProxyList
       OnClick = ConnectionTypeChanged
       AutoSize = True
     end
-    object radDirect: TCubicRadioButton
+    object radDirect: TLightRadioButton
       Left = 18
       Top = 56
       Width = 120
@@ -66,7 +66,7 @@ object frmProxyList: TfrmProxyList
       OnClick = ConnectionTypeChanged
       AutoSize = True
     end
-    object radProxyList: TCubicRadioButton
+    object radProxyList: TLightRadioButton
       Left = 18
       Top = 115
       Width = 125

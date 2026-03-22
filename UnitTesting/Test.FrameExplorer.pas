@@ -7,7 +7,7 @@ unit Test.FrameExplorer;
    Note: These tests focus on frame creation and component existence.
    Full file browsing testing requires actual file system access.
 
-   The frame uses custom LightSaber components (TCubicFileList, TCubicPathEdit, TCubicFilterBox)
+   The frame uses custom LightSaber components (TLightFileList, TlightPathEdit, TLightFilterBox)
    which must be properly registered for all tests to pass.
 
    Includes TestInsight support: define TESTINSIGHT in project options.

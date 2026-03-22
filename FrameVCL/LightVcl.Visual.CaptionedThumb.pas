@@ -1,16 +1,14 @@
 UNIT LightVcl.Visual.CaptionedThumb;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2026.01
+   2026.03 FINAL
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
    A panel that shows the thumbnail of an image and draws a caption over it
 
    Tester:
-      c:\Myprojects\Project Testers\gr TCationedThumbnail\TCationedThumbnail_Tester.dpr
+      c:\Myprojects\Project Testers\gr TLightCaptionThumbnail\TLightCaptionThumbnail_Tester.dpr
 =============================================================================================================}
 
 {
@@ -24,7 +22,7 @@ Mouse over thumbnail
 
 
 Active selected thumbnail
-  After selecting/loading a scene I would like to have this scene remain highlighted that I can see which scene is selected (Mats, Thomas)
+  After selecting/loading an image I would like to have this image remain highlighted so that I can see which scene is selected.
   The thumbnail should to some visual feedback when the user clicks it.
   Decided: Colored frame around thumbnail from predefined, theme-specific color palette.
   Thomas->Mats: (slightly) lighter and larger.
@@ -38,7 +36,7 @@ USES
   Vcl.Controls, Vcl.ExtCtrls, VCL.Themes;
 
 TYPE
-  TCationedThumbnail = class(TPanel)
+  TLightCaptionThumbnail = class(TPanel)
   private
     FThumbBMP: TBitmap;
     Highlight: Boolean;
@@ -63,7 +61,7 @@ TYPE
   end;
 
 procedure Register;
-function CreateThumbnail(Owner, Parent: TWinControl; FileName: string): TCationedThumbnail;
+function CreateThumbnail(Owner, Parent: TWinControl; CONST FileName: string): TLightCaptionThumbnail;
 
 
 IMPLEMENTATION
@@ -75,9 +73,9 @@ USES
 
 
 
-function CreateThumbnail(Owner, Parent: TWinControl; FileName: string): TCationedThumbnail;
+function CreateThumbnail(Owner, Parent: TWinControl; CONST FileName: string): TLightCaptionThumbnail;
 begin
-  Result:= TCationedThumbnail.Create(Owner);
+  Result:= TLightCaptionThumbnail.Create(Owner);
   Result.Parent:= Parent;
   Result.Width:= 141;
   Result.AlignWithMargins:= True;
@@ -96,9 +94,9 @@ end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   TCationedThumbnail
+   TLightCaptionThumbnail
 -------------------------------------------------------------------------------------------------------------}
-constructor TCationedThumbnail.Create(AOwner: TComponent);
+constructor TLightCaptionThumbnail.Create(AOwner: TComponent);
 begin
   inherited;
   Highlight:= FALSE;
@@ -114,15 +112,11 @@ begin
 end;
 
 
-destructor TCationedThumbnail.Destroy;
+destructor TLightCaptionThumbnail.Destroy;
 begin
   FreeAndNil(FThumbBMP);
   inherited;
 end;
-
-
-
-
 
 
 
@@ -133,12 +127,12 @@ CONST
    Effect= 1;       // Reserved: enlargement factor for mouse-over effect (see commented code in Paint)
 
 
-function TCationedThumbnail.GetClientWidth: Integer;  { Returns the size of the thumbnail. The user should resize his thumbnail to fit this size }
+function TLightCaptionThumbnail.GetClientWidth: Integer;  { Returns the size of the thumbnail. The user should resize his thumbnail to fit this size }
 begin
  Result:= Width - BorderSizeV*2;
 end;
 
-function TCationedThumbnail.GetClientHeight: Integer; { Returns the size of the thumbnail. The user should resize his thumbnail to fit this size }
+function TLightCaptionThumbnail.GetClientHeight: Integer; { Returns the size of the thumbnail. The user should resize his thumbnail to fit this size }
 begin
  Result:= Height - BorderSizeH*2;
 end;
@@ -147,7 +141,7 @@ end;
 
 
 
-procedure TCationedThumbnail.Paint;
+procedure TLightCaptionThumbnail.Paint;
 VAR
    CurColor: TColor;
 begin
@@ -190,20 +184,8 @@ end;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 { MOUSE }
-procedure TCationedThumbnail.Click;
+procedure TLightCaptionThumbnail.Click;
 VAR
    i: Integer;
    Control: TControl;
@@ -217,20 +199,20 @@ begin
     for i:= 0 to Parent.ControlCount-1 DO
      begin
        Control:= Parent.Controls[i];
-       if (Control is TCationedThumbnail)
+       if (Control is TLightCaptionThumbnail)
        AND (Control <> Self)
-       then TCationedThumbnail(Control).Selected:= FALSE;
+       then TLightCaptionThumbnail(Control).Selected:= FALSE;
      end;
 end;
 
-procedure TCationedThumbnail.CMMouseEnter(var msg: TMessage);
+procedure TLightCaptionThumbnail.CMMouseEnter(var msg: TMessage);
 begin
   Cursor:= crHandPoint;
   Highlight:= TRUE;
   Invalidate;
 end;
 
-procedure TCationedThumbnail.CMMouseLeave(var msg: TMessage);
+procedure TLightCaptionThumbnail.CMMouseLeave(var msg: TMessage);
 begin
   Cursor:= crDefault;
   Highlight:= FALSE;
@@ -242,12 +224,12 @@ end;
 
 
 
-procedure TCationedThumbnail.setCaption(const Value: string);
+procedure TLightCaptionThumbnail.setCaption(const Value: string);
 VAR
    iLeft: Integer;
    TextHeight: Integer;
 begin
-  if Value = '' then EXIT; //Vcl.dialogs.ShowMessage('TCationedThumbnail. Caption is empty!');
+  if Value = '' then EXIT; //Vcl.dialogs.ShowMessage('TLightCaptionThumbnail. Caption is empty!');
 
   FCaption := Value;
   if ShadowBox
@@ -263,7 +245,7 @@ begin
 end;
 
 
-procedure TCationedThumbnail.setSelected(const Value: Boolean);
+procedure TLightCaptionThumbnail.setSelected(const Value: Boolean);
 begin
   FSelected := Value;
   Invalidate;
@@ -275,7 +257,7 @@ begin
   // This will register the control into the IDE (Tool Palette) so we can use it at Design time.
   // But of course, the component must be installed first.
   // This is a bit pointless anyway, because we need to create x thumbnails (x = unknown at design time) dynamically.
-  RegisterComponents('LightSaber VCL', [TCationedThumbnail]);
+  RegisterComponents('LightSaber VCL', [TLightCaptionThumbnail]);
 end;
 
 

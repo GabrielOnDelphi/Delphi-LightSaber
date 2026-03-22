@@ -148,7 +148,7 @@ object frmDemoShadow: TfrmDemoShadow
           ExplicitTop = 217
           ExplicitWidth = 171
         end
-        object FileList: TCubicFileList
+        object FileList: TLightFileList
           Left = 1
           Top = 16
           Width = 171

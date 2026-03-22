@@ -2,7 +2,7 @@ unit Test.LightFmx.Visual.DropDownSearch;
 
 {=============================================================================================================
    Unit tests for LightFmx.Visual.DropDownSearch.pas
-   Tests the TDropDownSearchBox auto-suggest search box component.
+   Tests the TLightDownSearch auto-suggest search box component.
 
    Note: FMX tests require platform initialization. Some tests may be skipped on non-GUI environments.
    Includes TestInsight support: define TESTINSIGHT in project options.
@@ -18,7 +18,7 @@ uses
 
 type
   [TestFixture]
-  TTestDropDownSearchBox = class
+  TTesTLightDownSearch = class
   private
     FForm: TForm;
   public
@@ -70,13 +70,13 @@ uses
   LightFmx.Visual.DropDownSearch;
 
 
-procedure TTestDropDownSearchBox.Setup;
+procedure TTesTLightDownSearch.Setup;
 begin
   FForm:= nil;
 end;
 
 
-procedure TTestDropDownSearchBox.TearDown;
+procedure TTesTLightDownSearch.TearDown;
 begin
   FreeAndNil(FForm);
 end;
@@ -84,12 +84,12 @@ end;
 
 { Constructor/Destructor Tests }
 
-procedure TTestDropDownSearchBox.TestCreate;
+procedure TTesTLightDownSearch.TestCreate;
 var
-  SearchBox: TDropDownSearchBox;
+  SearchBox: TLightDownSearch;
 begin
   FForm:= TForm.Create(nil);
-  SearchBox:= TDropDownSearchBox.Create(FForm);
+  SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
     Assert.IsNotNull(SearchBox);
@@ -100,12 +100,12 @@ begin
 end;
 
 
-procedure TTestDropDownSearchBox.TestDestroy_NoMemoryLeak;
+procedure TTesTLightDownSearch.TestDestroy_NoMemoryLeak;
 var
-  SearchBox: TDropDownSearchBox;
+  SearchBox: TLightDownSearch;
 begin
   FForm:= TForm.Create(nil);
-  SearchBox:= TDropDownSearchBox.Create(FForm);
+  SearchBox:= TLightDownSearch.Create(FForm);
   SearchBox.Parent:= FForm;
 
   // Populate with some data
@@ -126,13 +126,13 @@ end;
 
 { PopulateDictionary Tests }
 
-procedure TTestDropDownSearchBox.TestPopulateDictionary_Basic;
+procedure TTesTLightDownSearch.TestPopulateDictionary_Basic;
 var
-  SearchBox: TDropDownSearchBox;
+  SearchBox: TLightDownSearch;
   Words: TStringList;
 begin
   FForm:= TForm.Create(nil);
-  SearchBox:= TDropDownSearchBox.Create(FForm);
+  SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
 
@@ -154,13 +154,13 @@ begin
 end;
 
 
-procedure TTestDropDownSearchBox.TestPopulateDictionary_Empty;
+procedure TTesTLightDownSearch.TestPopulateDictionary_Empty;
 var
-  SearchBox: TDropDownSearchBox;
+  SearchBox: TLightDownSearch;
   Words: TStringList;
 begin
   FForm:= TForm.Create(nil);
-  SearchBox:= TDropDownSearchBox.Create(FForm);
+  SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
 
@@ -179,13 +179,13 @@ begin
 end;
 
 
-procedure TTestDropDownSearchBox.TestPopulateDictionary_ClearsExisting;
+procedure TTesTLightDownSearch.TestPopulateDictionary_ClearsExisting;
 var
-  SearchBox: TDropDownSearchBox;
+  SearchBox: TLightDownSearch;
   Words1, Words2: TStringList;
 begin
   FForm:= TForm.Create(nil);
-  SearchBox:= TDropDownSearchBox.Create(FForm);
+  SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
 
@@ -218,12 +218,12 @@ end;
 
 { SelectedString/SelectedObject Tests }
 
-procedure TTestDropDownSearchBox.TestSelectedString_NoSelection;
+procedure TTesTLightDownSearch.TestSelectedString_NoSelection;
 var
-  SearchBox: TDropDownSearchBox;
+  SearchBox: TLightDownSearch;
 begin
   FForm:= TForm.Create(nil);
-  SearchBox:= TDropDownSearchBox.Create(FForm);
+  SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
 
@@ -235,12 +235,12 @@ begin
 end;
 
 
-procedure TTestDropDownSearchBox.TestSelectedObject_NoSelection;
+procedure TTesTLightDownSearch.TestSelectedObject_NoSelection;
 var
-  SearchBox: TDropDownSearchBox;
+  SearchBox: TLightDownSearch;
 begin
   FForm:= TForm.Create(nil);
-  SearchBox:= TDropDownSearchBox.Create(FForm);
+  SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
 
@@ -254,12 +254,12 @@ end;
 
 { AddDemoStrings Tests }
 
-procedure TTestDropDownSearchBox.TestAddDemoStrings;
+procedure TTesTLightDownSearch.TestAddDemoStrings;
 var
-  SearchBox: TDropDownSearchBox;
+  SearchBox: TLightDownSearch;
 begin
   FForm:= TForm.Create(nil);
-  SearchBox:= TDropDownSearchBox.Create(FForm);
+  SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
 
@@ -274,12 +274,12 @@ end;
 
 { MaxDropHeight Property Tests }
 
-procedure TTestDropDownSearchBox.TestMaxDropHeight_Default;
+procedure TTesTLightDownSearch.TestMaxDropHeight_Default;
 var
-  SearchBox: TDropDownSearchBox;
+  SearchBox: TLightDownSearch;
 begin
   FForm:= TForm.Create(nil);
-  SearchBox:= TDropDownSearchBox.Create(FForm);
+  SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
 
@@ -291,12 +291,12 @@ begin
 end;
 
 
-procedure TTestDropDownSearchBox.TestMaxDropHeight_SetValue;
+procedure TTesTLightDownSearch.TestMaxDropHeight_SetValue;
 var
-  SearchBox: TDropDownSearchBox;
+  SearchBox: TLightDownSearch;
 begin
   FForm:= TForm.Create(nil);
-  SearchBox:= TDropDownSearchBox.Create(FForm);
+  SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
 
@@ -309,6 +309,6 @@ end;
 
 
 initialization
-  TDUnitX.RegisterTestFixture(TTestDropDownSearchBox);
+  TDUnitX.RegisterTestFixture(TTesTLightDownSearch);
 
 end.

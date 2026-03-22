@@ -1,9 +1,8 @@
 ﻿UNIT LightVcl.Visual.StringGrid;
 
 {=============================================================================================================
-   2026.01
+   2026.03
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   See this: http://www.delphiforfun.org/Programs/Delphi_Techniques/GridSort.htm
@@ -30,12 +29,10 @@
 INTERFACE
 
 USES
-   Winapi.Windows, Winapi.Messages,
-   System.SysUtils, System.Classes,
+   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
    Vcl.Grids, Vcl.Graphics, Vcl.Controls, Vcl.Clipbrd,
    LightVcl.Visual.StringGridBase, LightCore, LightVcl.Common.Dialogs;
 
-{$WARN GARBAGE OFF}   {Silent the: 'W1011 Text after final END' warning }
 
 TYPE
   //TSortDirection = (sdUp, sdDown);
@@ -108,9 +105,9 @@ TYPE
     procedure Help;                                                                                     { how to use this grid }
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure ExpandCenteredColumns;
-   published
     { EDITOR }
     procedure EndEdit (ACol, ARow: Longint);                                                                            { NOTA: Nu merge daca AlwaysShowEditro= True }
+   published
     property  ForceKeepHeaders  : Boolean        read FForceKeepHdr   Write FForceKeepHdr        default FALSE;         { If true, Delete key cannot delete grid's header (top line) }
     property  OnEndEdit         : TCellEvent     read FEndEdit        write FEndEdit;
     { MOUSE }
@@ -163,12 +160,7 @@ begin
 end;
 
 
-
-
-
-
-
-
+ 
 
 
 {--------------------------------------------------------------------------------------------------
@@ -190,10 +182,10 @@ begin
  if (aRow= 0) AND (aCol= SortedCol)
  then
    begin
-    Canvas.Font.Color:= clBlack;     {TODO 4: use default color here }
+    Canvas.Font.Color:= ColorTextEnabled;
 
     { Draw text }
-    Canvas.TextRect(ARect, ARect.Left+10, ARect.Top+2, Cells[ACol, ARow]);
+    Canvas.TextRect(ARect, ARect.Left+10, ARect.Top + (ARect.Height - Canvas.TextHeight(Cells[ACol, ARow])) div 2, Cells[ACol, ARow]);
     { Draw box }
     Canvas.Brush.Color:= clOrangeGray;
     Canvas.Rectangle(ARect.Left+1, 2, ARect.Left+8, DefaultRowHeight-2);
@@ -216,7 +208,7 @@ begin
    then Canvas.Brush.Color:= TColor($C0A0A0);
 
    CellText := Cells[ACol, ARow];
-   Canvas.Font.Color:= clBlack;     {TODO 4: use default color here }
+   Canvas.Font.Color:= ColorTextEnabled;
 
    if CellText = ''
    then inherited DrawCell(ACol, ARow, ARect, AState)
@@ -240,25 +232,12 @@ begin
        xStart:= (ARect.Width - Canvas.TextWidth(CellText)) DIV 2;
        if xStart< 0 then xStart:= 0;
 
-       {TODO: Here I use the a magic number 2 to center the text VERTICALLY. It won't work if the row's height will be something else than the default height! }
-       Canvas.TextRect(ARect, ARect.Left+xStart, ARect.Top+2, CellText);                                                 // I tried to use Drawtext but it won't work because it will ignore all Canvas settings (color, font, etc) that I set for this cell: DrawText(Canvas.Handle, PChar(CellText), Length(CellText), TempRect, DT_CENTER);
+       Canvas.TextRect(ARect, ARect.Left+xStart, ARect.Top + (ARect.Height - Canvas.TextHeight(CellText)) div 2, CellText);  // I tried to use Drawtext but it won't work because it will ignore all Canvas settings (color, font, etc) that I set for this cell: DrawText(Canvas.Handle, PChar(CellText), Length(CellText), TempRect, DT_CENTER);
       end
      else
        inherited DrawCell(ACol, ARow, ARect, AState);
   end;
 end;
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -290,26 +269,14 @@ begin
  AND (ssAlt in Shift)                                                                              { ALT key is pressed? }
  then ToggleHeader;                                                                                { Make the top horizontal header visible/invisible }
 
- { The user performed a Control-Click? Then enter a new row }
+ { The user performed a Control-Click? Then duplicate current row }
  if MouseDuplicateLine
  AND (ssCtrl in Shift) then
   begin
-   Assert(1=2, ' Not implemented yet. ');
    InsertRow(Row);
    Rows[Row]:= Rows[Row- 1];
   end;
 end;
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -341,16 +308,7 @@ begin
  EditorPrevMode := EditorMode;
 end;
 
-
-
-
-
-
-
-
-
-
-
+ 
 
 {--------------------------------------------------------------------------------------------------
                               LOAD / SAVE
@@ -502,28 +460,7 @@ begin
  StringToFile(aFileName, CsvContent, woOverwrite, wpAuto);
 end;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+ 
 
 procedure TEnhStrGrid.SaveHeaderWidths(CONST aFileName: string);         { Save content of the entire grid (header & cells) as ANSI. It uses 255 as Delimiter instead of Enter }
 VAR cl: Integer;
@@ -564,34 +501,6 @@ begin
    FreeAndNil(TSL);
  END;
 end;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -715,16 +624,6 @@ end;
 
 
 
-
-
-
-
-
-
-
-
-
-
 procedure TEnhStrGrid.CopyColumn;  { Copy current column to clipboard }
 VAR s: string;
     rw: Integer;
@@ -749,7 +648,7 @@ procedure TEnhStrGrid.PasteFromClipboard;
 VAR
   Grect: TGridRect;
   S, CS: string;
-  L, R, C: Byte;
+  L, R, C: Integer;
 begin
  GRect:= Selection;
  L := GRect.Left;
@@ -775,7 +674,6 @@ begin
     then System.Delete(S, 1,1);
   end;
 end;
-
 
 
 function TEnhStrGrid.GetContentAsHTML(Rectangle: TRect; SplitEvery: Integer): string;              { Truncate= truncate after x character is text too long }
@@ -811,10 +709,6 @@ end;
 
 
 
-
-
-
-
 {--------------------------------------------------------------------------------------------------
                                   SORT
 --------------------------------------------------------------------------------------------------}
@@ -836,7 +730,6 @@ begin
  Result:= (MouseX > CellStart + Trigger)            { Cell start }
       AND (MouseX < CellEnd   - Trigger);           { Cell end }
 end;
-
 
 
 Procedure TEnhStrGrid.SortColumn(CONST ColumnToSort: Integer);
@@ -864,7 +757,6 @@ Begin
   EndUpdate;
  END;
 end;
-
 
 
 { Sorts the grid by text comparison. This doesn't sort numbers correctly - e.g. sorts as: 15, 150, 16
@@ -902,7 +794,6 @@ begin
 end;
 
 
-
 {Slow because it converts text to int. To be used on columns that contain ONLY numbers
 procedure TEnhStrGrid.NaturalSort(iFrom, iTo, SortCol: Integer);                                              { In this procedure the algorithm expects numbers on that colum and not text
 VAR I, J: Integer;
@@ -937,21 +828,16 @@ end; }
 procedure TEnhStrGrid.ReverseOrder;                                                                { Swap ROWS (and data/objects associated with those rows) }
 VAR I, J: Integer;
 begin
- if RowCount= 1 then EXIT; { There is nothing to sort }
- J:= RowCount;                                                                                     { RowCountEx is indexed in 1 because I don't conside the first item }
- for I:= Fixedrows to RoundDown((RowCount-Fixedrows) / 2)
-  DO SwapRowText(I, J - I);
+ if RowCount <= 1 then EXIT;
+ I:= FixedRows;
+ J:= RowCount - 1;
+ while I < J do
+  begin
+   SwapRowText(I, J);
+   Inc(I);
+   Dec(J);
+  end;
 end;
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -979,7 +865,6 @@ begin
  FItems[R1]:= FItems[R2];
  FItems[R2]:= Temp;
 end; }
-
 
 
 procedure TEnhStrGrid.Help;                                                                        { how to use this grid }
@@ -1015,25 +900,9 @@ Begin
 End;
 
 
-{ del
-Procedure TEnhStrGrid.ReverseOrder2;
-VAR i, j: Integer;
-Begin
- i:= Fixedrows;
- j:= RowCount-1;
- While i < j Do
-  begin
-   SwapRowText( I, J );
-   Inc( i );
-   Dec( j );
-  end;
-End; }
 
 
-
-
-
-
+ 
 
 
 
@@ -1043,105 +912,4 @@ begin
 end;
 
 
-end.(*============================================================================
-
-
-
-
-
-{
- There are two routines to implement the OnColumnClick Methods for a TStringGrid.
- Set the first row as fixed and the Defaultdrawing to True.
-
-
-
-
-
-procedure TForm1.StringGrid1MouseDown(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-var
-  Text: string;
-begin
-  with stringgrid1 do
-  begin
-    MouseRoCell(x, y, acol, arow);
-    if (arow = 0) and (button = mbleft) then
-      case acol of
-        0..2:
-          begin
-            // Draws a 3D Effect (Push)
-            // Zeichnet 3D-Effekt (Push)
-            zelle := CellRect(acol, arow);
-            Text := Cells[acol, arow];
-            Canvas.Font := Font;
-            Canvas.Brush.Color := clBtnFace;
-            Canvas.FillRect(zelle);
-            Canvas.TextRect(zelle, zelle.Left + 2, zelle.Top + 2, Text);
-            DrawEdge(Canvas.Handle, zelle, 10, 2 or 4 or 8);
-            DrawEdge(Canvas.Handle, zelle, 2 or 4, 1);
-          end;
-      end;
-  end;
-end;
-
-procedure TForm1.StringGrid1MouseUp(Sender: TObject; Button: TMouseButton;
-  Shift: TShiftState; X, Y: Integer);
-var
-  Text: string;
-begin
-  with StringGrid1 do
-  begin
-    // Draws a 3D-Effect (Up)
-    // Zeichnet 3D-Effekt (Up)
-    Text := Cells[acol, arow];
-    if arow = 0 then
-    begin
-      Canvas.Font := Font;
-      Canvas.Brush.Color := clBtnFace;
-      Canvas.FillRect(zelle);
-      Canvas.TextRect(zelle, zelle.Left + 2, zelle.Top + 2, Text);
-      DrawEdge(Canvas.Handle, zelle, 4, 4 or 8);
-      DrawEdge(Canvas.Handle, zelle, 4, 1 or 2);
-      MouseToCell(zelle.Left, zelle.Top, acol, arow);
-    end;
-  end;
-  if (arow = 0) and (Button = mbleft) then
-    case acol of
-      0..2:
-        begin
-          // Code to be executed...
-          // Programmcode der ausgef�hrt werden soll
-          ShowMessage('Column ' + IntToStr(acol));
-          zelle := stringgrid1.CellRect(1, 1);
-        end;
-    end;
-end;
-
-
-
-
-
-
-
-
-
- goFixedVertLine  Vertical lines are drawn to separate the fixed (nonscrolling) columns in the
- goFixedHorzLine  Horizontal lines are drawn to separate the fixed (nonscrolling) rows in the
- goVertLine          Vertical lines are drawn to separate the scrollable columns in the
- goHorzLine          Horizontal lines are drawn to separate the scrollable rows in the
- goRangeSelect          Users can select ranges of cells at one time. goRangeSelect is ignored if Options includes goEditing.
-
- goDrawFocusSelected  Cells with input focus are drawn with a special highlight color, just like selected cells without input focus. If goDrawFocusSelected is not included, the cell with input focus is distinguished by a focus rectangle, not by a special background color.
- goRowSizing          Scrollable rows can be individually resized.
- goColSizing          Scrollable columns can be individually resized.
- goRowMoving          Scrollable rows can be moved using the mouse.
- goColMoving          Scrollable columns can be moved using the mouse.
-
- goEditing          Users can edit the contents of cells. When goEditing is included in Options, goRangeSelect has no effect.
- goTabs                  Users can navigate through the cells in the grid using Tab and Shift+Tab.
- goRowSelect          Entire rows are selected rather than individual cells. If goRowSelect is included in Options, goAlwaysShowEditor has no effect.
- goAlwaysShowEditor  The grid is locked into edit mode. The user does not need to use Enter or F2 to turn on EditorMode. If Options does not include goEditing, goAlwaysShowEditor has no effect. If Options includes goRowSelect, goAlwaysShowEditor has no effect.
-
- goThumbTracking  The grid image updates while the user is dragging the thumb of the scroll bar. If goThumbTracking is not included, the image does not update until the user releases the thumb in a new Position.
-}
-
+end.

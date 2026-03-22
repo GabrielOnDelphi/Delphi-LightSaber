@@ -59,7 +59,7 @@ object frmUpdaterSettings: TfrmUpdaterSettings
       DesignSize = (
         428
         121)
-      object chkConnectFail: TCubicCheckBox
+      object chkConnectFail: TLightCheckBox
         Left = 63
         Top = 37
         Width = 324
@@ -133,7 +133,7 @@ object frmUpdaterSettings: TfrmUpdaterSettings
         TabOrder = 0
         Value = 24
       end
-      object chkForceNewsFound: TCubicCheckBox
+      object chkForceNewsFound: TLightCheckBox
         Left = 76
         Top = 132
         Width = 183

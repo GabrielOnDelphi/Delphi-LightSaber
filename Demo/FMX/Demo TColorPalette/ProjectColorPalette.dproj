@@ -1,10 +1,10 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{7EF026F6-0F80-4590-90D7-8AC854139F06}</ProjectGuid>
-        <MainSource>ProjectColorPalette.dpr</MainSource>
+        <MainSource>ProjecTLightColorPalette.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Debug</Config>
-        <ProjectName Condition="'$(ProjectName)'==''">ProjectColorPalette</ProjectName>
+        <ProjectName Condition="'$(ProjectName)'==''">ProjecTLightColorPalette</ProjectName>
         <TargetedPlatforms>1</TargetedPlatforms>
         <AppType>Application</AppType>
         <FrameworkType>FMX</FrameworkType>
@@ -92,7 +92,7 @@
         <DCC_N>false</DCC_N>
         <DCC_S>false</DCC_S>
         <DCC_ImageBase>00400000</DCC_ImageBase>
-        <SanitizedProjectName>ProjectColorPalette</SanitizedProjectName>
+        <SanitizedProjectName>ProjecTLightColorPalette</SanitizedProjectName>
         <VerInfo_Locale>1033</VerInfo_Locale>
         <VerInfo_Keys>CompanyName=;FileDescription=;FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProductName=;ProductVersion=1.0.0.0;Comments=;CFBundleName=</VerInfo_Keys>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
@@ -229,7 +229,7 @@
         <BorlandProject>
             <Delphi.Personality>
                 <Source>
-                    <Source Name="MainSource">ProjectColorPalette.dpr</Source>
+                    <Source Name="MainSource">ProjecTLightColorPalette.dpr</Source>
                 </Source>
                 <Excluded_Packages>
                     <Excluded_Packages Name="C:\Users\Public\Documents\Embarcadero\Studio\37.0\Bpl\LightProteus370.bpl">Proteus</Excluded_Packages>

@@ -35,9 +35,9 @@ TYPE
     btnDesktopShortcut : TButton;
     btnFont            : TButton;
     btnSkins           : TButton;
-    chkAutoStartUp     : TCubicCheckBox;
-    chkStartMinim      : TCubicCheckBox;
-    chkTrayIcon        : TCubicCheckBox;
+    chkAutoStartUp     : TLightCheckBox;
+    chkStartMinim      : TLightCheckBox;
+    chkTrayIcon        : TLightCheckBox;
     chkUser            : TCheckBox;
     GroupBox1          : TGroupBox;
     GroupHelp          : TGroupBox;
@@ -45,10 +45,10 @@ TYPE
     grpUser            : TGroupBox;
     Label1             : TLabel;
     lblHintHide        : TLabel;
-    Path               : TCubicPathEdit;
-    radHintsOff        : TCubicRadioButton;
-    radHintsStatBar    : TCubicRadioButton;
-    radHintsTooltips   : TCubicRadioButton;
+    Path               : TlightPathEdit;
+    radHintsOff        : TLightRadioButton;
+    radHintsStatBar    : TLightRadioButton;
+    radHintsTooltips   : TLightRadioButton;
     spnHideHint        : TSpinEdit;
     spnUser            : TSpinEdit;
     tabInterface       : TTabSheet;	

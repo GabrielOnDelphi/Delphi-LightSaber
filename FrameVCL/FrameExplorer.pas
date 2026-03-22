@@ -11,9 +11,9 @@ UNIT FrameExplorer;
 
    COMPONENTS:
      - Directory: TDirectoryListBox - Shows directory tree
-     - FileList: TCubicFileList - Shows files in selected directory
-     - Path: TCubicPathEdit - Shows/edits current path
-     - Filter: TCubicFilterBox - Filter files by extension
+     - FileList: TLightFileList - Shows files in selected directory
+     - Path: TlightPathEdit - Shows/edits current path
+     - Filter: TLightFilterBox - Filter files by extension
 
    USAGE:
      Drop this frame onto a form to add file browsing capability.
@@ -38,11 +38,11 @@ TYPE
   TFrameWinExplorer = class(TFrame)
     btnRefresh : TButton;
     Directory  : TDirectoryListBox;
-    FileList   : TCubicFileList;
-    Filter     : TCubicFilterBox;
+    FileList   : TLightFileList;
+    Filter     : TLightFilterBox;
     lblTop     : TLabel;
     Panel2     : TPanel;
-    Path       : TCubicPathEdit;
+    Path       : TlightPathEdit;
     Splitter   : TSplitter;
     procedure DirectoryChange(Sender: TObject);
     procedure btnRefreshClick(Sender: TObject);

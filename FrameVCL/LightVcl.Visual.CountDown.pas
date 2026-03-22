@@ -1,14 +1,14 @@
 UNIT LightVcl.Visual.CountDown;
 
 {=============================================================================================================
- 2026.01
- A control that counts down from 'StartValue' to 0ms.
+   2026.03 FINAL
+   A control that counts down from 'StartValue' to 0ms.
 
- Every 'Resolution' ms a Tick event is generated.
+   Every 'Resolution' ms a Tick event is generated.
 
- TimeLeft shows how many seconds are left until zero.
- When the time is up, an event is triggered.
- The timer can also be manually decremented from outside, by calling Tick.
+   TimeLeft shows how many milliseconds are left until zero.
+   When the time is up, an event is triggered.
+   The timer can also be manually decremented from outside, by calling Tick.
 =============================================================================================================}
 
 
@@ -20,7 +20,7 @@ USES
 TYPE
  TIntervalChg = procedure(Sender: TObject; NewTime: Cardinal) of object;
 
- TCountDown = class(TComponent)
+ TLighTLightCountDown = class(TComponent)
  private
    wasEnabled     : Boolean;       { Used to resume the countdown }
    Timer          : TCubicTimer;
@@ -33,13 +33,12 @@ TYPE
    procedure TimerTimer(Sender: TObject);
    procedure setResolution(Value: Cardinal);
    function  getResolution: Cardinal;
- protected
-   procedure Tick;                     { Call this to advance the countdown }
  public
    Taskbar      : TTaskbar;            { Associated indicators. Show time progress }
    ActivityIndic: TActivityIndicatorC; { Associated indicators. Show time progress }
 
    constructor Create(AOwner: TComponent); override;
+   procedure Tick;                     { Call this to advance the countdown }
    function  TimeLeftNice: Integer;    { If interval under 15 minutes, show time in seconds (max 3 digits: up to 999 seconds) else show time in minutes }
    procedure Reset;                    { Resets the TimeLeft. Does not start the timer! }
    procedure Restart;                  { Resets the TimeLeft and start the timer }
@@ -68,7 +67,7 @@ USES LightCore.Math, LightCore.Time;
 
 
 
-constructor TCountDown.Create(AOwner: TComponent);
+constructor TLighTLightCountDown.Create(AOwner: TComponent);
 begin
  inherited Create(AOwner);
  FStartValue  := 10000;
@@ -81,7 +80,7 @@ begin
 end;
 
 
-procedure TCountDown.Tick;
+procedure TLighTLightCountDown.Tick;
 begin
  if Enabled then
   begin
@@ -90,12 +89,16 @@ begin
    then FTimeLeft:= 0
    else FTimeLeft:= FTimeLeft - Resolution;
 
+   { Update taskbar progress }
+   if Taskbar <> NIL then Taskbar.ProgressValue:= (StartValue - FTimeLeft) DIV MSecsPerSec;
+
    if Assigned(OnTick)
    then OnTick(Self);
 
    if FTimeLeft = 0 then
     begin
      Reset;              { This must be ABOVE OnTimesUp! If OnTimesUp contains Application.ProcessMessages, timer may advance before resetting TimeLeft }
+     if Taskbar <> NIL then Taskbar.ProgressValue:= 0;
      if Assigned(OnTimesUp)
      then OnTimesUp(Self);
     end;
@@ -103,7 +106,7 @@ begin
 end;
 
 
-procedure TCountDown.Start;
+procedure TLighTLightCountDown.Start;
 begin
  FTimeLeft:= StartValue;     { Reset the time left to its original value }
  Timer.Restart;              { Sets the countdown back to zero and starts the timer }
@@ -112,7 +115,7 @@ begin
 end;
 
 
-procedure TCountDown.Stop;
+procedure TLighTLightCountDown.Stop;
 begin
  wasEnabled:= Timer.Enabled; { Used by ResumeCountdown }
  Timer.Enabled:= FALSE;      { Stop timer }
@@ -121,28 +124,33 @@ begin
 end;
 
 
-procedure TCountDown.Reset;
+procedure TLighTLightCountDown.Reset;
 begin
  FTimeLeft:= StartValue;     { Reset the TimeLeft to its original value and starts timer ONLY if was enabled before }
  Timer.Reset;
 end;
 
 
-procedure TCountDown.Restart;
+procedure TLighTLightCountDown.Restart;
 begin
- Reset;                      { Reset the time left to its original value }
+  Reset;                      { Reset the time left to its original value }
  Timer.Enabled:= TRUE;
+ if ActivityIndic <> NIL then ActivityIndic.Animate:= TRUE;
+ if Taskbar <> NIL then Taskbar.ProgressValue:= 0;
 end;
 
 
 { Resume the countdown from where it was left, but only if it was enabled/running when Stop was called }
-function TCountDown.Resume: Boolean;
+function TLighTLightCountDown.Resume: Boolean;
 begin
  Result:= wasEnabled;
- if Result
- then Timer.Enabled:= TRUE;  { Continue from current FTimeLeft, don't reset }
+ if Result then
+  begin
+   Timer.Enabled:= TRUE;  { Continue from current FTimeLeft, don't reset }
+   if Taskbar <> NIL
+   then Taskbar.ProgressValue:= (StartValue - FTimeLeft) DIV MSecsPerSec;
+  end;
  if ActivityIndic <> NIL then ActivityIndic.Animate:= Result;
- if Taskbar       <> NIL then Taskbar.ProgressValue:= 0;
 end;
 
 
@@ -153,7 +161,7 @@ end;
 
 
 { If interval under 15 minutes, show time in seconds (max 3 digits: up to 999 seconds) else show time in minutes }
-function TCountDown.TimeLeftNice: Integer;        { Used by TrayText.Text }
+function TLighTLightCountDown.TimeLeftNice: Integer;        { Used by TrayText.Text }
 begin
  if StartValue <= 15 * SecsPerMin * MSecsPerSec
  then Result:= RoundEx(TimeLeft/1000)
@@ -161,13 +169,13 @@ begin
 end;
 
 
-function TCountDown.TimeLeftS: string;
+function TLighTLightCountDown.TimeLeftS: string;
 begin
  Result:= MiliSecToTimeAuto(TimeLeft);
 end;
 
 
-procedure TCountDown.TimerTimer(Sender: TObject);
+procedure TLighTLightCountDown.TimerTimer(Sender: TObject);
 begin
  Tick;
 end;
@@ -180,16 +188,17 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    GETTERS/SETTERS
 -------------------------------------------------------------------------------------------------------------}
-function TCountDown.Enabled: Boolean;
+function TLighTLightCountDown.Enabled: Boolean;
 begin
  Result:= Timer.Enabled;
 end;
 
 
 
-procedure TCountDown.setStartValue(Value: Cardinal);
+procedure TLighTLightCountDown.setStartValue(Value: Cardinal);
 VAR iTime: Integer;
 begin
+ Assert(Value > 0, 'TLighTLightCountDown.setStartValue: StartValue cannot be zero');
  if FStartValue <> Value then
   begin
    FStartValue:= Value;
@@ -212,26 +221,26 @@ begin
 end;
 
 
-procedure TCountDown.setResolution(Value: Cardinal);
+procedure TLighTLightCountDown.setResolution(Value: Cardinal);
 begin
+ Assert(Value > 0, 'TLighTLightCountDown.setResolution: Resolution cannot be zero');
  Timer.Interval:= Value;
 end;
 
 
-function TCountDown.getResolution: Cardinal;
+function TLighTLightCountDown.getResolution: Cardinal;
 begin
  Result:= Timer.Interval;
 end;
 
 
 
-
-
+ 
 
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber VCL', [TCountDown]);
+  RegisterComponents('LightSaber VCL', [TLighTLightCountDown]);
 end;
 
 end.

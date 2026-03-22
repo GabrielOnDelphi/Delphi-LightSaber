@@ -38,7 +38,7 @@ object frmReminder: TfrmReminder
       Caption = 'Action:'
       Transparent = True
     end
-    object chkMakeNoise: TCubicCheckBox
+    object chkMakeNoise: TLightCheckBox
       Left = 268
       Top = 149
       Width = 83
@@ -73,7 +73,7 @@ object frmReminder: TfrmReminder
         TabOrder = 1
         OnClick = btnRunClick
       end
-      object edtPath: TCubicPathEdit
+      object edtPath: TlightPathEdit
         Left = 11
         Top = 22
         Width = 320
@@ -153,7 +153,7 @@ object frmReminder: TfrmReminder
         OnChange = spnTimeChange
       end
     end
-    object radRunFile: TCubicRadioButton
+    object radRunFile: TLightRadioButton
       Left = 36
       Top = 197
       Width = 298
@@ -170,7 +170,7 @@ object frmReminder: TfrmReminder
       OnClick = radRunFileClick
       AutoSize = True
     end
-    object radSleep: TCubicRadioButton
+    object radSleep: TLightRadioButton
       Left = 36
       Top = 148
       Width = 141
@@ -182,7 +182,7 @@ object frmReminder: TfrmReminder
       OnClick = radSleepClick
       AutoSize = True
     end
-    object radShutDown: TCubicRadioButton
+    object radShutDown: TLightRadioButton
       Left = 36
       Top = 172
       Width = 133
@@ -192,7 +192,7 @@ object frmReminder: TfrmReminder
       OnClick = radSleepClick
       AutoSize = True
     end
-    object chkRunOnce: TCubicCheckBox
+    object chkRunOnce: TLightCheckBox
       Left = 19
       Top = 352
       Width = 118

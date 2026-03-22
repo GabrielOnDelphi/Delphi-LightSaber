@@ -1,10 +1,8 @@
 UNIT LightVcl.Visual.Memo;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2026.01.31
+   2026.03.21
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   Tester:
@@ -23,18 +21,15 @@ UNIT LightVcl.Visual.Memo;
      CountNonEmptyLines
      FilterLines             - Remove all lines that does not contain this text
      LoadFromFile            - Load text from specified file IF the file exists. Otherwise, don't show an error
+     AutoScrollBars          - Auto show/hide vertical scrollbar based on content (requires ScrollBars = ssVertical or ssBoth)
 
    Note: The 'Text' property is MUCH faster than Assign. Details: https://stackoverflow.com/questions/46990961/tmemo-is-painfuly-slow-when-working-with-large-number-of-lines
 
-   ToDo: 
-     http://stackoverflow.com/questions/10212488/tmemo-with-auto-show-hide-scrollbars
-     http://delphi.xcjc.net/viewthread.php?tid=44882
 
 See: What's the difference between CreateWnd and CreateWindowHandle? https://stackoverflow.com/questions/582903/whats-the-difference-between-createwnd-and-createwindowhandle
 =============================================================================================================}
 
 INTERFACE
-{$WARN GARBAGE OFF}   {Silence the: 'W1011 Text after final END' warning }
 
 USES
   Winapi.Windows, Winapi.Messages,
@@ -47,18 +42,22 @@ TYPE
   TSearchOption = (soIgnoreCase, soFromStart, soWrap);   { soFromStart:  If this is active, the search will start from the top of the memo. But after this, I have to uncheck it so the search can continue, else it will not advance (it will always search from start) }
   TSearchOptions = set of TSearchOption;
 
-  TCubicMemo = class(TMemo)
+  TLightMemo = class(TMemo)
    private
      FCursAfter: Boolean;                                                 { If TRUE, instead of highlighting the found word, place the cursor after the word (no selection) }
      FTypeMode: TTypeMode;
+     FAutoScrollBars: Boolean;                                            { Auto show/hide vertical scrollbar based on content }
+     FUpdatingScrollBars: Boolean;                                        { Recursion guard for UpdateAutoScrollBars }
+     procedure SetAutoScrollBars(Value: Boolean);
+     procedure WMSize(var Message: TWMSize); message WM_SIZE;
    protected
+     procedure Change; override;
      procedure KeyDown   (VAR Key: Word; Shift: TShiftState); override;   { "Select All" (CTRL+A) functionality }
      procedure KeyPress  (VAR Key: Char);                     override;
      procedure CreateWnd; override;
    public
      SearchOptions: TSearchOptions;
      constructor Create  (AOwner: TComponent); override;
-     destructor Destroy; override;
 
      { Selection }
      procedure SelectLine(Line : Integer);   overload;
@@ -95,7 +94,7 @@ TYPE
      procedure RemoveEmptyLines;
      procedure RemoveEmptyLinesEx;                                        { Applies trim before removing empty lines. This way more lines will become empty }
      function  RemoveDuplicates: Integer;
-     function  RemoveLines (const BadWord : string; PartialMatch: Boolean): Integer;             { Remove lines that contain the specified text }
+     function  RemoveLines (const BadWord : string; PartialMatch: Boolean): Integer;   { Remove lines that contain the specified text }
      function  KeepLines   (const KeepText: string): Integer;             { Keep lines that contain the specified text }
      procedure KeepFirstLines(const HowManyLines: Integer);
      procedure Trim;                                                      { Trim empty spaces and control caracters at the begining/end of each line }
@@ -119,17 +118,17 @@ TYPE
      function  CurrentLine: Integer;                                      { Line containing the cursor }
      procedure LineUp;                                                    { Move current line up }
      procedure LineDown;
-     function  LineLenght: Integer;                                      { Returns number of characters that can fit on a line }
-     function  MaxVisLines: Integer;                                     { Returns the number of lines that fits in the TMemo }
+     function  LineLenght: Integer;                                       { Returns number of characters that can fit on a line }
+     function  MaxVisLines: Integer;                                      { Returns the number of lines that fits in the TMemo }
 
      procedure SetMargins(CONST LeftMargin, RightMargin, TopBottomMargin: Integer);               { Set margins }
+     procedure UpdateAutoScrollBars;                                                              { Show/hide vertical scrollbar based on content. Requires ScrollBars = ssVertical or ssBoth }
      function  LoadFromFile(FileName: string): Boolean;        { Loadtext from specified file IF the file exists. Otherwise, don't show an error }
    published
      property CursorAfterSearch: Boolean   read FCursAfter write  FCursAfter default FALSE;       { If TRUE, instead of highlighting the found word, place the cursor after the word (no selection). Used in Matthias Kloss' program }
      property TypeMode         : TTypeMode read FTypeMode  write  FTypeMode;
+     property AutoScrollBars   : Boolean   read FAutoScrollBars write SetAutoScrollBars default FALSE;  { Auto show/hide vertical scrollbar. Set ScrollBars to ssVertical or ssBoth for this to work }
   end;
-
-
 
 
 procedure Register;
@@ -139,55 +138,49 @@ IMPLEMENTATION
 USES
    LightVcl.Common.IO, LightCore;
 
-   {
-How to know when the USER changed the text in a TMemo/TEdit?
+{  How to know when the USER changed the text in a TMemo/TEdit?
    https://stackoverflow.com/questions/41719647/how-to-know-when-the-user-changed-the-text-in-a-tmemo-tedit/56832800#56832800
 
 
-How about using the Modified property?
+  How about using the Modified property?
 
-procedure TForm1.MyEditChange(Sender: TObject);
-begin
+  procedure TForm1.MyEditChange(Sender: TObject);
+  begin
     if MyEdit.Modified then
     begin
         // The user changed the text since it was last reset (i.e. set programmatically)
     end;
-end;}
+  end;}
 
 
 
-Constructor TCubicMemo.Create(AOwner: TComponent);
+Constructor TLightMemo.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);    // Note: Don't set 'Parent:= Owner' in constructor. See this for details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
   FTypeMode:= tmInsert;
   HideSelection:= FALSE;                                                                            { Show the selection even if the memo isn't focussed. }
   SearchOptions:= [soIgnoreCase, soWrap];
   FCursAfter:= FALSE;                                                                               { If TRUE, instead of highlighting the found word, place the cursor after the word (no selection) }
+  FAutoScrollBars:= FALSE;
+  FUpdatingScrollBars:= FALSE;
 
-  {This won't work: it says: TMemoStyleHook is already registered for TMyMemo. }
-  // TCustomStyleEngine.RegisterStyleHook(TCubicMemo, TMemoStyleHook);     { Fix: http://stackoverflow.com/questions/28463556/vcl-styles-breaks-randomly }
+  { Note: RegisterStyleHook is not needed — TMemoStyleHook is inherited from TMemo.
+    Do NOT add UnRegisterStyleHook in Destroy — it would remove the VCL-provided hook,
+    breaking styles for all TLightMemo instances.
+    See: http://stackoverflow.com/questions/28463556/vcl-styles-breaks-randomly }
 end;
 
 
-procedure TCubicMemo.CreateWnd;
+procedure TLightMemo.CreateWnd;
 begin
   inherited CreateWnd;
   //CreateWnd can be called more than once:  http://docs.embarcadero.com/products/rad_studio/delphiAndcpp2009/HelpUpdate2/EN/html/delphivclwin32/Controls_TWinControl_CreateWnd.html
-end;
-
-
-destructor TCubicMemo.Destroy;
-begin
-  { Note: The corresponding RegisterStyleHook is commented out in Create because
-    TMemoStyleHook is already registered by VCL for TMemo ancestors.
-    UnRegister is called here as a precaution but may be redundant. }
-  TCustomStyleEngine.UnRegisterStyleHook(TCubicMemo, TMemoStyleHook);   { Fix: http://stackoverflow.com/questions/28463556/vcl-styles-breaks-randomly }
-  inherited;
+  UpdateAutoScrollBars;
 end;
 
 
 { Load text from specified file IF the file exists. Otherwise, don't show an error }
-function TCubicMemo.LoadFromFile(FileName: string): Boolean;
+function TLightMemo.LoadFromFile(FileName: string): Boolean;
 begin
   Result:= FileExists(FileName) AND NOT FileIsLockedR(FileName);
   if Result
@@ -195,45 +188,94 @@ begin
 end;
 
 
+procedure TLightMemo.Change;
+begin
+ inherited;
+ UpdateAutoScrollBars;
+end;
+
+
+procedure TLightMemo.WMSize(var Message: TWMSize);
+begin
+ inherited;
+ UpdateAutoScrollBars;
+end;
+
+
+procedure TLightMemo.SetAutoScrollBars(Value: Boolean);
+begin
+ if FAutoScrollBars <> Value then
+   begin
+    FAutoScrollBars:= Value;
+    UpdateAutoScrollBars;
+   end;
+end;
+
+
+{---------------------------------------------------------------------------------------------------------------
+  Show/hide vertical scrollbar based on whether content exceeds the visible area.
+  Requires ScrollBars to be ssVertical or ssBoth (the window needs WS_VSCROLL style).
+  If ScrollBars = ssNone, this has no effect.
+---------------------------------------------------------------------------------------------------------------}
+procedure TLightMemo.UpdateAutoScrollBars;
+VAR
+  si: TScrollInfo;
+begin
+ if FUpdatingScrollBars then EXIT;          { Prevent recursion: ShowScrollBar can trigger WM_SIZE }
+ if NOT HandleAllocated then EXIT;
+ if NOT FAutoScrollBars then EXIT;
+
+ FUpdatingScrollBars:= TRUE;
+ TRY
+   FillChar(si, SizeOf(si), 0);
+   si.cbSize:= SizeOf(TScrollInfo);
+   si.fMask:= SIF_RANGE or SIF_PAGE;
+   GetScrollInfo(Handle, SB_VERT, si);
+
+   ShowScrollBar(Handle, SB_VERT, si.nMax >= Integer(si.nPage));
+ FINALLY
+   FUpdatingScrollBars:= FALSE;
+ END;
+end;
 
 
 
 
-function TCubicMemo.LineToCharNo(CONST Line: Integer): Integer;                                    { Gets the character index of the first character of a specified line in a multiline edit control. INDEXED IN ZERO! }
+function TLightMemo.LineToCharNo(CONST Line: Integer): Integer;                                    { Gets the character index of the first character of a specified line in a multiline edit control. INDEXED IN ZERO! }
 begin
  Result:= Perform(EM_LINEINDEX, Line, 0);
 end;
 
-function TCubicMemo.CurLineToCharNo: Integer;                                                      { As above but for current line (line that has the cursor) }
+function TLightMemo.CurLineToCharNo: Integer;                                                      { As above but for current line (line that has the cursor) }
 begin
  Result:= Perform(EM_LINEINDEX, 0, 0)
 end;
 
-function TCubicMemo.CharToLine(CONST CharNo: Integer): Integer;                                    { Gets the index of the line that contains the specified character index in a multiline edit control.  }
+function TLightMemo.CharToLine(CONST CharNo: Integer): Integer;                                    { Gets the index of the line that contains the specified character index in a multiline edit control.  }
 begin
  Result:= Perform(EM_LINEFROMCHAR, CharNo, 0)                                                      { CharNo = The character index of the character contained in the line whose number is to be retrieved. If this parameter is -1, EM_LINEFROMCHAR retrieves either the line number of the current line (the line containing the caret) or, if there is a selection, the line number of the line containing the beginning of the selection.  }
 end;
 
-function TCubicMemo.CursorToChar(CONST MousePosition: TPoint): Integer;                            { Returns the index of the character closest to the [mouse pointer] }
+function TLightMemo.CursorToChar(CONST MousePosition: TPoint): Integer;                            { Returns the index of the character closest to the [mouse pointer] }
 begin
  if (MousePosition.X < 0) OR (MousePosition.Y< 0) then EXIT(0);
  Result:= LoWord(Perform(EM_CHARFROMPOS, 0, MakeLong(MousePosition.x, MousePosition.Y)));
 end;
 
-function TCubicMemo.ConvertCaretToChar: Integer;   { Returns the index of the character under caret }
+function TLightMemo.ConvertCaretToChar: Integer;   { Returns the index of the character under caret }
 VAR  Pt: TPoint;
 begin
  WinApi.Windows.GetCaretPos(Pt);                                                                          { caret coordinates in pixels }
 
- if Pt.x< 0 then EXIT(0); {fix this later}
- if Pt.y< 0 then EXIT(0); {fix this later}
- {imi da RangecheckError in linia de mai jos can cursorul e out of screen si apas o tasta }
+ { Negative coordinates mean the caret is scrolled out of view.
+   EM_CHARFROMPOS raises RangeCheckError with negative coords, so we return 0 (first char). }
+ if (Pt.X < 0) OR (Pt.Y < 0) then EXIT(0);
 
- Result:= LoWord(Perform(EM_CHARFROMPOS, 0, MakeLong(Pt.x, Pt.Y)));
+ Result:= LoWord(Perform(EM_CHARFROMPOS, 0, MakeLong(Pt.X, Pt.Y)));
 end;
 
 
-procedure TCubicMemo.MoveCaretToChar(CharIndex: Integer);   { CharIndex is the index of the specified character in the Text }
+procedure TLightMemo.MoveCaretToChar(CharIndex: Integer);   { CharIndex is the index of the specified character in the Text }
 begin
  SelStart:= CharIndex;
  SelLength:= 0;
@@ -264,7 +306,7 @@ end;
 
   Returns TRUE if the string was found, FALSE otherwise.
   When found, centers the result in view. }
-function TCubicMemo.Search(SrcStr: string): Boolean;      //http://stackoverflow.com/questions/4232709/search-thru-a-memo-in-delphi
+function TLightMemo.Search(SrcStr: string): Boolean;      //http://stackoverflow.com/questions/4232709/search-thru-a-memo-in-delphi
 VAR
   sText: string;
   Index: Integer;
@@ -307,7 +349,7 @@ end;
   Word boundaries are determined by spaces.
   Returns empty string if caret is not on a word. }
 // https://stackoverflow.com/questions/6339446/delphi-get-the-whole-word-where-the-caret-is-in-a-memo
-function TCubicMemo.GetWordUnderCaret: string;
+function TLightMemo.GetWordUnderCaret: string;
 VAR
    Line    : Integer;
    Column  : Integer;
@@ -348,7 +390,7 @@ end;
 { Returns and selects the word under the caret position.
   Word boundaries are determined by spaces.
   Returns empty string if caret is not on a word. }
-function TCubicMemo.SelectWordUnderCaret: string;
+function TLightMemo.SelectWordUnderCaret: string;
 VAR
    Line    : Integer;
    Column  : Integer;
@@ -392,7 +434,7 @@ begin
 end;
 
 
-function TCubicMemo.CountWords: integer;
+function TLightMemo.CountWords: integer;
 VAR
   i: Integer;
   txt: string;
@@ -411,22 +453,22 @@ begin
 end;
 
 
-procedure TCubicMemo.AddInteger(Number: Integer);
+procedure TLightMemo.AddInteger(Number: Integer);
 begin
  Lines.Add(IntToStr(Number));
 end;
 
-procedure TCubicMemo.AddString(CONST aText: string);
+procedure TLightMemo.AddString(CONST aText: string);
 begin
  Lines.Add(aText);
 end;
 
-procedure TCubicMemo.AddEntry(CONST aText: string; Number: Integer);
+procedure TLightMemo.AddEntry(CONST aText: string; Number: Integer);
 begin
  Lines.Add(aText+ IntToStr(Number));
 end;
 
-procedure TCubicMemo.AddSeparator;
+procedure TLightMemo.AddSeparator;
 begin
  Lines.Add(CRLFw+ '____________________'+ CRLFw);
 end;
@@ -440,7 +482,7 @@ end;
 
 
 
-procedure TCubicMemo.KeyDown(VAR Key: Word; Shift: TShiftState);
+procedure TLightMemo.KeyDown(VAR Key: Word; Shift: TShiftState);
 begin
  inherited;
 
@@ -459,7 +501,7 @@ end;
 
 
 { Overwrite capabilities }
-procedure TCubicMemo.KeyPress(VAR Key: Char);
+procedure TLightMemo.KeyPress(VAR Key: Char);
 begin
  inherited;
  if (SelLength = 0) AND (TypeMode= tmOverwrite)
@@ -473,7 +515,7 @@ end;
 
 { Move current line up by swapping with the line above.
   Does nothing if already at the first line. Cursor stays on same line number. }
-procedure TCubicMemo.LineUp;
+procedure TLightMemo.LineUp;
 begin
  if CurrentLine > 0
  then SwapLines(CurrentLine, CurrentLine - 1);
@@ -481,7 +523,7 @@ end;
 
 
 { Move current line down by swapping with the line below, keeping cursor on the moved line }
-procedure TCubicMemo.LineDown;
+procedure TLightMemo.LineDown;
 VAR NewPos: TPoint;
 begin
  if CurrentLine < Lines.Count-1 then
@@ -500,7 +542,7 @@ end;
 { Returns the approximate number of characters that can fit on a single line.
   Uses average character width from text metrics, so actual fit varies with proportional fonts.
   Note: Function name has a typo (LineLenght) preserved for backward compatibility. }
-function TCubicMemo.LineLenght: integer;
+function TLightMemo.LineLenght: integer;
 Var
   Oldfont: HFont;
   DC: THandle;
@@ -525,7 +567,7 @@ end;
 
 { Returns the maximum number of text lines that can be displayed in the memo's visible area.
   Calculated by dividing the client rectangle height by the font's line height. }
-function TCubicMemo.MaxVisLines: integer;
+function TLightMemo.MaxVisLines: integer;
 Var
   Oldfont: HFont;
   DC: THandle;
@@ -550,13 +592,13 @@ end;
 
 
 
-function TCubicMemo.CurrentLine: Integer;      { Line containing the cursor. Indexed in zero }
+function TLightMemo.CurrentLine: Integer;      { Line containing the cursor. Indexed in zero }
 begin
  Result:= CaretPos.Y;
 end;
 
 
-procedure TCubicMemo.MoveCursorAtEOL;                                                              { Move cursor at the end of the current row }
+procedure TLightMemo.MoveCursorAtEOL;                                                              { Move cursor at the end of the current row }
 VAR LineStart, LineLen: Integer;
 begin
  LineStart:= Perform(EM_LINEINDEX, CaretPos.Y, 0);      { Get the index of the first character of the current line }
@@ -567,7 +609,7 @@ end;
 
 
 { Select the specified line by index. Does nothing if line index is out of bounds. }
-procedure TCubicMemo.SelectLine(Line : Integer);                                                   { http://delphi.about.com/od/adptips2005/qt/memoselectline.htm }
+procedure TLightMemo.SelectLine(Line : Integer);                                                   { http://delphi.about.com/od/adptips2005/qt/memoselectline.htm }
 begin
  if (Line < 0) OR (Line >= Lines.Count) then EXIT;
 
@@ -576,14 +618,14 @@ begin
 end;
 
 
-procedure TCubicMemo.RemoveSelection;
+procedure TLightMemo.RemoveSelection;
 begin
  SelStart := 0;
  SelLength:= 0;
 end;
 
 
-procedure TCubicMemo.SelectLine(aText: string);       { Select line containing specified text }
+procedure TLightMemo.SelectLine(aText: string);       { Select line containing specified text }
 VAR iPos: Integer;
 begin
  iPos:= FindLine(aText);
@@ -592,13 +634,13 @@ begin
 end;
 
 
-procedure TCubicMemo.SelectCurrentLine;
+procedure TLightMemo.SelectCurrentLine;
 begin
  SelectLine(Perform(EM_LINEFROMCHAR, SelStart, 0))
 end;
 
 
-function TCubicMemo.FindLine(aText: string): Integer;   { Case insensitive }
+function TLightMemo.FindLine(aText: string): Integer;   { Case insensitive }
 VAR i: Integer;
 begin
  Result:= -1;
@@ -620,7 +662,7 @@ end;
 { Set internal text margins (padding) within the memo control.
   This creates whitespace around the text without changing the control's outer bounds.
   Parameters are in pixels. TopBottomMargin is applied to both top and bottom. }
-procedure TCubicMemo.SetMargins(CONST LeftMargin, RightMargin, TopBottomMargin: Integer);
+procedure TLightMemo.SetMargins(CONST LeftMargin, RightMargin, TopBottomMargin: Integer);
 VAR R : TRect;
 begin
  R       := ClientRect;
@@ -633,7 +675,7 @@ end;
 
 
 { Sort lines }
-procedure TCubicMemo.SortLines;
+procedure TLightMemo.SortLines;
 VAR SortList: TStringList;
 begin
   SortList := TStringList.Create;
@@ -647,7 +689,7 @@ begin
 end;
 
 
-procedure TCubicMemo.Randomize;
+procedure TLightMemo.Randomize;
 VAR
    i, NewLine: Integer;
 begin
@@ -662,7 +704,7 @@ end;
 
 
 { Swap two lines in the memo. Does nothing if indices are equal or out of bounds. }
-procedure TCubicMemo.SwapLines(x, y: Integer);
+procedure TLightMemo.SwapLines(x, y: Integer);
 VAR s: string;
 begin
  if x = y then EXIT;
@@ -675,7 +717,7 @@ begin
 end;
 
 
-procedure TCubicMemo.CopyToClipboardAll;                                                           { CopyToClipboard only copies the text if it is selected }
+procedure TLightMemo.CopyToClipboardAll;                                                           { CopyToClipboard only copies the text if it is selected }
 begin
  selectall;
  CopyToClipboard;
@@ -704,7 +746,7 @@ end;
 
 
 
-procedure TCubicMemo.RemoveEmptyLines;
+procedure TLightMemo.RemoveEmptyLines;
 VAR i: Integer;
 begin
  for i:= Lines.Count-1 downto 0 DO
@@ -714,20 +756,17 @@ end;
 
 
 { Applies trim before removing empty lines. This way more lines will become empty }
-procedure TCubicMemo.RemoveEmptyLinesEx;
+procedure TLightMemo.RemoveEmptyLinesEx;
 VAR i: Integer;
 begin
  Trim;                                               { Trim empty spaces and control caracters at the begining/end of each line }
  for i:= Lines.Count-1 downto 0 DO
-  begin
-   if (Lines[i]= '')
-   OR (System.SysUtils.Trim(Lines[i])= '')
+   if Lines[i]= ''
    then Lines.Delete(i);
-  end;
 end;
 
 
-procedure TCubicMemo.RemoveLastEmptyLine;
+procedure TLightMemo.RemoveLastEmptyLine;
 begin
  Text:= LightCore.RemoveLastEnter(Text);
 end;
@@ -737,7 +776,7 @@ end;
   Returns the number of lines removed.
   Uses a TStringList copy for performance (avoids GUI refresh on each delete).
   Periodically calls Update to keep GUI responsive during large operations. }
-function TCubicMemo.RemoveDuplicates: Integer;
+function TLightMemo.RemoveDuplicates: Integer;
 VAR i1, i2, IsBreakTime: Integer;
     TSL: TStringList;
 begin
@@ -777,7 +816,7 @@ end;
 
 { Remove all lines that contains the specified text.
   The function is case INSENSITIVE }
-function TCubicMemo.RemoveLines(const BadWord: string; PartialMatch: Boolean): Integer;
+function TLightMemo.RemoveLines(const BadWord: string; PartialMatch: Boolean): Integer;
 VAR Before, i: Integer;
 begin
  Before:= Lines.Count;
@@ -798,7 +837,7 @@ end;
 
 
 { Remove all lines that does not contain this text }
-function TCubicMemo.KeepLines(CONST KeepText: string): Integer;
+function TLightMemo.KeepLines(CONST KeepText: string): Integer;
 VAR i: Integer;
 begin
  Result:= 0;
@@ -814,7 +853,7 @@ end;
 
 { Delete all lines except the first 'HowManyLines' ones at the top.
   Does nothing if HowManyLines <= 0 or exceeds line count. }
-procedure TCubicMemo.KeepFirstLines(CONST HowManyLines: Integer);
+procedure TLightMemo.KeepFirstLines(CONST HowManyLines: Integer);
 VAR i: Integer;
 begin
  if HowManyLines <= 0 then EXIT;
@@ -824,7 +863,7 @@ end;
 
 
 { Trim empty spaces and control caracters at the begining/end of each line }
-procedure TCubicMemo.Trim;
+procedure TLightMemo.Trim;
 VAR i: Integer;
     TSL: TStringList;
 begin
@@ -850,7 +889,7 @@ end;
 { Center the specified line in the middle of the visible view.
   LineNum: 0-indexed line number to center.
   Does nothing if LineNum is out of bounds. }
-procedure TCubicMemo.CenterInView(LineNum: Integer);                                               { Source: http://stackoverflow.com/questions/2822471/delphi-center-specific-line-in-trichedit-by-scrolling }
+procedure TLightMemo.CenterInView(LineNum: Integer);                                               { Source: http://stackoverflow.com/questions/2822471/delphi-center-specific-line-in-trichedit-by-scrolling }
 var
   VisibLines: Integer;
   TopLine: Integer;
@@ -870,7 +909,7 @@ begin
 end;
 
 
-procedure TCubicMemo.CenterInView;
+procedure TLightMemo.CenterInView;
 begin
  CenterInView(CaretPos.Y);
 end;
@@ -878,7 +917,7 @@ end;
 
 
 
-procedure TCubicMemo.ScrollAtEnd;
+procedure TLightMemo.ScrollAtEnd;
 begin
  SelStart:= Length(Text);
  SelLength:= 0;
@@ -886,7 +925,7 @@ begin
 end;
 
 
-procedure TCubicMemo.ScrollAtTop;
+procedure TLightMemo.ScrollAtTop;
 begin
  SelStart:= 0;                                          { SelStart is 0-indexed }
  SelLength:= 0;
@@ -894,16 +933,16 @@ begin
 end;
 
 
-function TCubicMemo.VisibleLines: Integer;                                                         { From here: http://stackoverflow.com/questions/2822471/delphi-center-specific-line-in-trichedit-by-scrolling }
-VAR C:Integer;
+function TLightMemo.VisibleLines: Integer;                                                         { From here: http://stackoverflow.com/questions/2822471/delphi-center-specific-line-in-trichedit-by-scrolling }
+VAR C: Integer;
 begin
   C := Font.Height;
-  If C < 0 then C := C-2;             // If - we add a bit for leading
-  Result:= Abs(Height div C);
+  If C < 0 then C := C-2;             // If negative, add a bit for leading
+  Result:= Abs(ClientHeight div C);
 end;
 
 
-function TCubicMemo.CountNonEmptyLines: Integer;                                                         { From here: http://stackoverflow.com/questions/2822471/delphi-center-specific-line-in-trichedit-by-scrolling }
+function TLightMemo.CountNonEmptyLines: Integer;                                                         { From here: http://stackoverflow.com/questions/2822471/delphi-center-specific-line-in-trichedit-by-scrolling }
 VAR s: string;
 begin
  Result:= 0;
@@ -924,7 +963,7 @@ end;
 
 THIS INTORDUCES A BUG: http://stackoverflow.com/questions/28463556/wmsettext-breaks-custom-styles }
 
-procedure TCubicMemo.WMSetText(var Message: TWMSetText);
+procedure TLightMemo.WMSetText(var Message: TWMSetText);
 var
   s: string;
 begin
@@ -934,7 +973,7 @@ begin
   inherited;
 end;
 
-procedure TCubicMemo.WMPaste(var Message: TWMPaste);
+procedure TLightMemo.WMPaste(var Message: TWMPaste);
 var
   s: string;
 begin
@@ -956,27 +995,9 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber VCL', [TCubicMemo]);
- // RegisterComponents('LightSaber VCL', [TCubicMemo2]);
+  RegisterComponents('LightSaber VCL', [TLightMemo]);
+ // RegisterComponents('LightSaber VCL', [TLightMemo2]);
 end;
 
 
-end.{==============================================================================================
-
-
-
-
-
-procedure TCubicMemo.ScrollAtEnd;    Del
-VAR ScrollMessage:TWMVScroll;
-    i:integer;
-begin
- ScrollMessage.Msg:= WM_VScroll;
- for i := 0 to Lines.Count-1 do
-  begin
-   ScrollMessage.ScrollCode:= sb_LineDown;
-   ScrollMessage.Pos:=0;
-   Dispatch(ScrollMessage) ;
-  end;
-end; }
-
+end.

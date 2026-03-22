@@ -34,8 +34,8 @@ USES
 
 TYPE
   TfrmPower = class(TLightForm)
-    chkBatteries  : TCubicCheckBox;   // Check to prevent wallpaper changes on battery
-    chkOutOfJuice : TCubicCheckBox;   // Check to show power change notifications
+    chkBatteries  : TLightCheckBox;   // Check to prevent wallpaper changes on battery
+    chkOutOfJuice : TLightCheckBox;   // Check to show power change notifications
     grpPowerInfo  : TCubicGroupBox;   // Group box for power information display
     grpPowerOpt   : TCubicGroupBox;   // Group box for power options
     lblBatProc    : TLabel;           // Shows battery percentage remaining

@@ -37,7 +37,7 @@ TYPE
     btnXor           : TButton;
     CubicPanel1      : TCubicPanel;
     CubicPanel2      : TCubicPanel;
-    FileList         : TCubicFileList;
+    FileList         : TLightFileList;
     imgShadow        : TImage;
     Label2           : TLabel;
     lblCoord         : TLabel;

@@ -309,7 +309,7 @@ end;
 
 procedure TTestProteus.Test_EnableTimer_ExpiredLicense_ReturnsFalse;
 begin
-  FProteus.CurCertif.CertifType:= ctCountDownExp;
+  FProteus.CurCertif.CertifType:= cTLightCountDownExp;
   Assert.IsFalse(FProteus.Timer.Enabled, 'Timer should not be enabled for expired license');
 end;
 
@@ -325,9 +325,9 @@ end;
 
 procedure TTestProteus.Test_SwitchToDemo_SetsCertifTypeToExpired;
 begin
-  FProteus.CurCertif.CertifType:= ctCountDownActive;
+  FProteus.CurCertif.CertifType:= cTLightCountDownActive;
   FProteus.SwitchToDemo;
-  Assert.AreEqual(ctCountDownExp, FProteus.CurCertif.CertifType);
+  Assert.AreEqual(cTLightCountDownExp, FProteus.CurCertif.CertifType);
 end;
 
 

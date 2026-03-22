@@ -1,4 +1,4 @@
-program ProjectColorPalette;
+program ProjecTLightColorPalette;
 
 uses
   System.StartUpCopy,

@@ -2,7 +2,7 @@ unit Test.LightVcl.Visual.PathEdit;
 
 {=============================================================================================================
    Unit tests for LightVcl.Visual.PathEdit.pas
-   Tests the TCubicPathEdit component - a file/folder path editor with browse functionality.
+   Tests the TlightPathEdit component - a file/folder path editor with browse functionality.
 
    Includes TestInsight support: define TESTINSIGHT in project options.
 =============================================================================================================}
@@ -19,7 +19,7 @@ uses
 
 type
   [TestFixture]
-  TTestCubicPathEdit = class
+  TTesTlightPathEdit = class
   private
     FForm: TForm;
     FTestFolder: string;
@@ -142,7 +142,7 @@ uses
   LightCore.IO;
 
 
-procedure TTestCubicPathEdit.Setup;
+procedure TTesTlightPathEdit.Setup;
 begin
   FForm:= TForm.CreateNew(nil);
   FForm.Width:= 800;
@@ -158,7 +158,7 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TearDown;
+procedure TTesTlightPathEdit.TearDown;
 begin
   { Clean up test files/folders }
   if TFile.Exists(FTestFile)
@@ -173,11 +173,11 @@ end;
 
 { Constructor Tests }
 
-procedure TTestCubicPathEdit.TestCreate_NotNil;
+procedure TTesTlightPathEdit.TestCreate_NotNil;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   try
     Assert.IsNotNull(PathEdit, 'Component should be created');
   finally
@@ -186,11 +186,11 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestCreate_DefaultInputType;
+procedure TTesTlightPathEdit.TestCreate_DefaultInputType;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   try
     Assert.AreEqual(Ord(itFolder), Ord(PathEdit.InputType), 'Default InputType should be itFolder');
   finally
@@ -199,11 +199,11 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestCreate_DefaultShowCreateBtn;
+procedure TTesTlightPathEdit.TestCreate_DefaultShowCreateBtn;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   try
     Assert.IsTrue(PathEdit.ShowCreateBtn, 'ShowCreateBtn should be TRUE by default');
   finally
@@ -212,11 +212,11 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestCreate_DefaultShowOpenSrc;
+procedure TTesTlightPathEdit.TestCreate_DefaultShowOpenSrc;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   try
     Assert.IsTrue(PathEdit.ShowOpenSrc, 'ShowOpenSrc should be TRUE by default');
   finally
@@ -225,11 +225,11 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestCreate_DefaultShowApplyBtn;
+procedure TTesTlightPathEdit.TestCreate_DefaultShowApplyBtn;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   try
     Assert.IsFalse(PathEdit.ShowApplyBtn, 'ShowApplyBtn should be FALSE by default');
   finally
@@ -238,11 +238,11 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestCreate_DefaultDimensions;
+procedure TTesTlightPathEdit.TestCreate_DefaultDimensions;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   try
     Assert.AreEqual(41, PathEdit.Height, 'Default Height should be 41');
     Assert.AreEqual(350, PathEdit.Width, 'Default Width should be 350');
@@ -254,11 +254,11 @@ end;
 
 { Path Property Tests - Folder Mode }
 
-procedure TTestCubicPathEdit.TestPath_SetValidFolder;
+procedure TTesTlightPathEdit.TestPath_SetValidFolder;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.Path:= FTestFolder;
@@ -269,13 +269,13 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestPath_SetInvalidFolder;
+procedure TTesTlightPathEdit.TestPath_SetInvalidFolder;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
   InvalidPath: string;
 begin
   InvalidPath:= 'Z:\NonExistent\Path\That\Does\Not\Exist\';
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.Path:= InvalidPath;
@@ -287,11 +287,11 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestPath_EmptyString;
+procedure TTesTlightPathEdit.TestPath_EmptyString;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.Path:= '';
@@ -302,13 +302,13 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestPath_TrailsFolder;
+procedure TTesTlightPathEdit.TestPath_TrailsFolder;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
   PathWithoutTrail: string;
 begin
   PathWithoutTrail:= 'C:\TestFolder';
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.InputType:= itFolder;
@@ -322,11 +322,11 @@ end;
 
 { Path Property Tests - File Mode }
 
-procedure TTestCubicPathEdit.TestPath_FileMode_SetValidFile;
+procedure TTesTlightPathEdit.TestPath_FileMode_SetValidFile;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.InputType:= itFile;
@@ -338,13 +338,13 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestPath_FileMode_SetInvalidFile;
+procedure TTesTlightPathEdit.TestPath_FileMode_SetInvalidFile;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
   InvalidFile: string;
 begin
   InvalidFile:= 'Z:\NonExistent\File.txt';
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.InputType:= itFile;
@@ -358,12 +358,12 @@ end;
 
 { PathHasValidChars Tests }
 
-procedure TTestCubicPathEdit.TestPathHasValidChars_EmptyPath;
+procedure TTesTlightPathEdit.TestPathHasValidChars_EmptyPath;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
   ErrMsg: string;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.Path:= '';
@@ -375,12 +375,12 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestPathHasValidChars_ValidPath;
+procedure TTesTlightPathEdit.TestPathHasValidChars_ValidPath;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
   ErrMsg: string;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.Path:= FTestFolder;
@@ -392,14 +392,14 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestPathHasValidChars_TooLongPath;
+procedure TTesTlightPathEdit.TestPathHasValidChars_TooLongPath;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
   LongPath: string;
   ErrMsg: string;
 begin
   LongPath:= 'C:\' + StringOfChar('A', 300) + '\';
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.Path:= LongPath;
@@ -413,12 +413,12 @@ end;
 
 { PathIsValid Tests }
 
-procedure TTestCubicPathEdit.TestPathIsValid_ExistingFolder;
+procedure TTesTlightPathEdit.TestPathIsValid_ExistingFolder;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
   ErrMsg: string;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.Path:= FTestFolder;
@@ -430,12 +430,12 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestPathIsValid_NonExistingFolder;
+procedure TTesTlightPathEdit.TestPathIsValid_NonExistingFolder;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
   ErrMsg: string;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.Path:= 'C:\NonExistent_Folder_12345\';
@@ -447,12 +447,12 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestPathIsValid_EmptyPath;
+procedure TTesTlightPathEdit.TestPathIsValid_EmptyPath;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
   ErrMsg: string;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.Path:= '';
@@ -466,11 +466,11 @@ end;
 
 { InputType Tests }
 
-procedure TTestCubicPathEdit.TestInputType_SwitchToFile;
+procedure TTesTlightPathEdit.TestInputType_SwitchToFile;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.InputType:= itFile;
@@ -481,11 +481,11 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestInputType_SwitchToFolder;
+procedure TTesTlightPathEdit.TestInputType_SwitchToFolder;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.InputType:= itFile;
@@ -499,11 +499,11 @@ end;
 
 { Button Visibility Tests }
 
-procedure TTestCubicPathEdit.TestShowCreateBtn_True;
+procedure TTesTlightPathEdit.TestShowCreateBtn_True;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.ShowCreateBtn:= TRUE;
@@ -514,11 +514,11 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestShowCreateBtn_False;
+procedure TTesTlightPathEdit.TestShowCreateBtn_False;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.ShowCreateBtn:= FALSE;
@@ -529,11 +529,11 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestShowOpenSrc_True;
+procedure TTesTlightPathEdit.TestShowOpenSrc_True;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.ShowOpenSrc:= TRUE;
@@ -544,11 +544,11 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestShowOpenSrc_False;
+procedure TTesTlightPathEdit.TestShowOpenSrc_False;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.ShowOpenSrc:= FALSE;
@@ -559,11 +559,11 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestShowApplyBtn_True;
+procedure TTesTlightPathEdit.TestShowApplyBtn_True;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.ShowApplyBtn:= TRUE;
@@ -574,11 +574,11 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestShowApplyBtn_False;
+procedure TTesTlightPathEdit.TestShowApplyBtn_False;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.ShowApplyBtn:= FALSE;
@@ -591,11 +591,11 @@ end;
 
 { IsReadOnly Tests }
 
-procedure TTestCubicPathEdit.TestIsReadOnly_True;
+procedure TTesTlightPathEdit.TestIsReadOnly_True;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.IsReadOnly:= TRUE;
@@ -606,11 +606,11 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestIsReadOnly_False;
+procedure TTesTlightPathEdit.TestIsReadOnly_False;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.IsReadOnly:= FALSE;
@@ -623,11 +623,11 @@ end;
 
 { Enabled Tests }
 
-procedure TTestCubicPathEdit.TestEnabled_False;
+procedure TTesTlightPathEdit.TestEnabled_False;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.Enabled:= FALSE;
@@ -638,11 +638,11 @@ begin
 end;
 
 
-procedure TTestCubicPathEdit.TestEnabled_True;
+procedure TTesTlightPathEdit.TestEnabled_True;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.Enabled:= FALSE;
@@ -656,12 +656,12 @@ end;
 
 { GetFiles Tests }
 
-procedure TTestCubicPathEdit.TestGetFiles_NoException;
+procedure TTesTlightPathEdit.TestGetFiles_NoException;
 var
-  PathEdit: TCubicPathEdit;
+  PathEdit: TlightPathEdit;
   Files: TStringList;
 begin
-  PathEdit:= TCubicPathEdit.Create(FForm);
+  PathEdit:= TlightPathEdit.Create(FForm);
   PathEdit.Parent:= FForm;
   try
     PathEdit.Path:= FTestFolder;
@@ -682,6 +682,6 @@ end;
 
 
 initialization
-  TDUnitX.RegisterTestFixture(TTestCubicPathEdit);
+  TDUnitX.RegisterTestFixture(TTesTlightPathEdit);
 
 end.

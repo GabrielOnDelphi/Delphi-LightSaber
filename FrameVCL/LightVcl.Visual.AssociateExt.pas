@@ -30,7 +30,7 @@ TYPE
     procedure CreateWnd; override;
   public
     btnAssociateDel: TButton;
-    chkAllUsers    : TCubicCheckBox;
+    chkAllUsers    : TLightCheckBox;
     constructor Create(aOwner: TComponent); override;
     procedure CreateWindowHandle(const Params: TCreateParams); override;
 
@@ -66,7 +66,7 @@ begin
  btnAssociateDel:= TButton.Create(Self);
  btnAssociateDel.Parent:= Self;      // Here I can set the parent
 
- chkAllUsers:= TCubicCheckBox.Create(Self);
+ chkAllUsers:= TLightCheckBox.Create(Self);
  chkAllUsers.Parent:= Self;       // Here I can set the parent
 end;
 

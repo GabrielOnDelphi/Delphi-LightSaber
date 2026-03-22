@@ -1,9 +1,9 @@
 unit Test.LightVcl.Visual.Memo;
 
 {=============================================================================================================
-   Unit tests for LightVcl.Visual.Memo.pas (TCubicMemo)
+   Unit tests for LightVcl.Visual.Memo.pas (TLightMemo)
 
-   Note: TCubicMemo is a VCL control that requires a parent window handle for many operations.
+   Note: TLightMemo is a VCL control that requires a parent window handle for many operations.
    Tests that require GUI context are marked with [Category('GUI')].
    These tests create a temporary form to host the memo control.
 
@@ -22,10 +22,10 @@ uses
 
 type
   [TestFixture]
-  TTestCubicMemo = class
+  TTesTLightMemo = class
   private
     FForm: TForm;
-    FMemo: TCubicMemo;
+    FMemo: TLightMemo;
     procedure SetupMemo;
     procedure TeardownMemo;
   public
@@ -196,19 +196,19 @@ type
 
 implementation
 
-{ TTestCubicMemo }
+{ TTesTLightMemo }
 
-procedure TTestCubicMemo.Setup;
+procedure TTesTLightMemo.Setup;
 begin
   // Basic setup - GUI-dependent tests will call SetupMemo
 end;
 
-procedure TTestCubicMemo.TearDown;
+procedure TTesTLightMemo.TearDown;
 begin
   TeardownMemo;
 end;
 
-procedure TTestCubicMemo.SetupMemo;
+procedure TTesTLightMemo.SetupMemo;
 begin
   if FForm = nil then
   begin
@@ -216,7 +216,7 @@ begin
     FForm.Width:= 400;
     FForm.Height:= 300;
 
-    FMemo:= TCubicMemo.Create(FForm);
+    FMemo:= TLightMemo.Create(FForm);
     FMemo.Parent:= FForm;
     FMemo.Align:= alClient;
 
@@ -225,7 +225,7 @@ begin
   end;
 end;
 
-procedure TTestCubicMemo.TeardownMemo;
+procedure TTesTLightMemo.TeardownMemo;
 begin
   if FForm <> nil then
   begin
@@ -237,11 +237,11 @@ end;
 
 { Basic Tests }
 
-procedure TTestCubicMemo.TestCreate;
+procedure TTesTLightMemo.TestCreate;
 var
-  Memo: TCubicMemo;
+  Memo: TLightMemo;
 begin
-  Memo:= TCubicMemo.Create(nil);
+  Memo:= TLightMemo.Create(nil);
   try
     Assert.IsNotNull(Memo);
   finally
@@ -249,11 +249,11 @@ begin
   end;
 end;
 
-procedure TTestCubicMemo.TestDefaultSearchOptions;
+procedure TTesTLightMemo.TestDefaultSearchOptions;
 var
-  Memo: TCubicMemo;
+  Memo: TLightMemo;
 begin
-  Memo:= TCubicMemo.Create(nil);
+  Memo:= TLightMemo.Create(nil);
   try
     Assert.IsTrue(soIgnoreCase in Memo.SearchOptions, 'soIgnoreCase should be default');
     Assert.IsTrue(soWrap in Memo.SearchOptions, 'soWrap should be default');
@@ -263,11 +263,11 @@ begin
   end;
 end;
 
-procedure TTestCubicMemo.TestDefaultTypeMode;
+procedure TTesTLightMemo.TestDefaultTypeMode;
 var
-  Memo: TCubicMemo;
+  Memo: TLightMemo;
 begin
-  Memo:= TCubicMemo.Create(nil);
+  Memo:= TLightMemo.Create(nil);
   try
     Assert.AreEqual(tmInsert, Memo.TypeMode, 'Default TypeMode should be tmInsert');
   finally
@@ -278,7 +278,7 @@ end;
 
 { AddString/AddInteger Tests }
 
-procedure TTestCubicMemo.TestAddString;
+procedure TTesTLightMemo.TestAddString;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -289,7 +289,7 @@ begin
   Assert.AreEqual('World', FMemo.Lines[1]);
 end;
 
-procedure TTestCubicMemo.TestAddInteger;
+procedure TTesTLightMemo.TestAddInteger;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -300,7 +300,7 @@ begin
   Assert.AreEqual('-10', FMemo.Lines[1]);
 end;
 
-procedure TTestCubicMemo.TestAddEntry;
+procedure TTesTLightMemo.TestAddEntry;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -312,7 +312,7 @@ end;
 
 { Line Operations Tests }
 
-procedure TTestCubicMemo.TestSortLines;
+procedure TTesTLightMemo.TestSortLines;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -325,7 +325,7 @@ begin
   Assert.AreEqual('Zebra', FMemo.Lines[2]);
 end;
 
-procedure TTestCubicMemo.TestSwapLines;
+procedure TTesTLightMemo.TestSwapLines;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -338,7 +338,7 @@ begin
   Assert.AreEqual('First', FMemo.Lines[2]);
 end;
 
-procedure TTestCubicMemo.TestSwapLines_SameIndex;
+procedure TTesTLightMemo.TestSwapLines_SameIndex;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -349,7 +349,7 @@ begin
   Assert.AreEqual('Second', FMemo.Lines[1]);
 end;
 
-procedure TTestCubicMemo.TestSwapLines_OutOfBounds;
+procedure TTesTLightMemo.TestSwapLines_OutOfBounds;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -361,7 +361,7 @@ begin
   Assert.AreEqual('Second', FMemo.Lines[1]);
 end;
 
-procedure TTestCubicMemo.TestRemoveEmptyLines;
+procedure TTesTLightMemo.TestRemoveEmptyLines;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -378,7 +378,7 @@ begin
   Assert.AreEqual('Third', FMemo.Lines[2]);
 end;
 
-procedure TTestCubicMemo.TestRemoveEmptyLinesEx;
+procedure TTesTLightMemo.TestRemoveEmptyLinesEx;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -392,7 +392,7 @@ begin
   Assert.AreEqual('Second', FMemo.Lines[1]);
 end;
 
-procedure TTestCubicMemo.TestRemoveDuplicates;
+procedure TTesTLightMemo.TestRemoveDuplicates;
 var
   Removed: Integer;
 begin
@@ -408,7 +408,7 @@ begin
   Assert.AreEqual(3, FMemo.Lines.Count);
 end;
 
-procedure TTestCubicMemo.TestRemoveDuplicates_NoDuplicates;
+procedure TTesTLightMemo.TestRemoveDuplicates_NoDuplicates;
 var
   Removed: Integer;
 begin
@@ -422,7 +422,7 @@ begin
   Assert.AreEqual(3, FMemo.Lines.Count);
 end;
 
-procedure TTestCubicMemo.TestRemoveLines_PartialMatch;
+procedure TTesTLightMemo.TestRemoveLines_PartialMatch;
 var
   Removed: Integer;
 begin
@@ -439,7 +439,7 @@ begin
   Assert.AreEqual('Something Else', FMemo.Lines[1]);
 end;
 
-procedure TTestCubicMemo.TestRemoveLines_ExactMatch;
+procedure TTesTLightMemo.TestRemoveLines_ExactMatch;
 var
   Removed: Integer;
 begin
@@ -454,7 +454,7 @@ begin
   Assert.AreEqual(2, FMemo.Lines.Count);
 end;
 
-procedure TTestCubicMemo.TestKeepLines;
+procedure TTesTLightMemo.TestKeepLines;
 var
   Removed: Integer;
 begin
@@ -471,7 +471,7 @@ begin
   Assert.AreEqual('Apple Crisp', FMemo.Lines[1]);
 end;
 
-procedure TTestCubicMemo.TestKeepFirstLines;
+procedure TTesTLightMemo.TestKeepFirstLines;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -487,7 +487,7 @@ begin
   Assert.AreEqual('Line 3', FMemo.Lines[2]);
 end;
 
-procedure TTestCubicMemo.TestKeepFirstLines_ZeroOrNegative;
+procedure TTesTLightMemo.TestKeepFirstLines_ZeroOrNegative;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -499,7 +499,7 @@ begin
   Assert.AreEqual(2, FMemo.Lines.Count);
 end;
 
-procedure TTestCubicMemo.TestTrim;
+procedure TTesTLightMemo.TestTrim;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -512,7 +512,7 @@ begin
   Assert.AreEqual('Both sides', FMemo.Lines[2]);
 end;
 
-procedure TTestCubicMemo.TestFindLine;
+procedure TTesTLightMemo.TestFindLine;
 var
   Index: Integer;
 begin
@@ -528,7 +528,7 @@ begin
   Assert.AreEqual(2, Index);
 end;
 
-procedure TTestCubicMemo.TestFindLine_NotFound;
+procedure TTesTLightMemo.TestFindLine_NotFound;
 var
   Index: Integer;
 begin
@@ -543,7 +543,7 @@ end;
 
 { Count Tests }
 
-procedure TTestCubicMemo.TestCountNonEmptyLines;
+procedure TTesTLightMemo.TestCountNonEmptyLines;
 var
   Count: Integer;
 begin
@@ -558,7 +558,7 @@ begin
   Assert.AreEqual(3, Count);
 end;
 
-procedure TTestCubicMemo.TestCountWords;
+procedure TTesTLightMemo.TestCountWords;
 var
   Count: Integer;
 begin
@@ -570,7 +570,7 @@ begin
   Assert.AreEqual(6, Count);
 end;
 
-procedure TTestCubicMemo.TestCountWords_Empty;
+procedure TTesTLightMemo.TestCountWords_Empty;
 var
   Count: Integer;
 begin
@@ -583,7 +583,7 @@ end;
 
 { Selection Tests }
 
-procedure TTestCubicMemo.TestSelectLine;
+procedure TTesTLightMemo.TestSelectLine;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -594,7 +594,7 @@ begin
   Assert.AreEqual('Second', FMemo.SelText);
 end;
 
-procedure TTestCubicMemo.TestSelectLine_OutOfBounds;
+procedure TTesTLightMemo.TestSelectLine_OutOfBounds;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -606,7 +606,7 @@ begin
   Assert.AreEqual(0, FMemo.SelLength);
 end;
 
-procedure TTestCubicMemo.TestSelectLine_ByText;
+procedure TTesTLightMemo.TestSelectLine_ByText;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -617,7 +617,7 @@ begin
   Assert.AreEqual('Banana', FMemo.SelText);
 end;
 
-procedure TTestCubicMemo.TestRemoveSelection;
+procedure TTesTLightMemo.TestRemoveSelection;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -632,7 +632,7 @@ end;
 
 { Search Tests }
 
-procedure TTestCubicMemo.TestSearch_Found;
+procedure TTesTLightMemo.TestSearch_Found;
 var
   Found: Boolean;
 begin
@@ -646,7 +646,7 @@ begin
   Assert.AreEqual('World', FMemo.SelText);
 end;
 
-procedure TTestCubicMemo.TestSearch_NotFound;
+procedure TTesTLightMemo.TestSearch_NotFound;
 var
   Found: Boolean;
 begin
@@ -658,7 +658,7 @@ begin
   Assert.IsFalse(Found);
 end;
 
-procedure TTestCubicMemo.TestSearch_CaseInsensitive;
+procedure TTesTLightMemo.TestSearch_CaseInsensitive;
 var
   Found: Boolean;
 begin
@@ -671,7 +671,7 @@ begin
   Assert.AreEqual('World', FMemo.SelText);
 end;
 
-procedure TTestCubicMemo.TestSearch_Wrap;
+procedure TTesTLightMemo.TestSearch_Wrap;
 var
   Found: Boolean;
 begin
@@ -693,7 +693,7 @@ end;
 
 { Scroll Tests }
 
-procedure TTestCubicMemo.TestScrollAtEnd;
+procedure TTesTLightMemo.TestScrollAtEnd;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -704,7 +704,7 @@ begin
   Assert.AreEqual(Length(FMemo.Text), FMemo.SelStart);
 end;
 
-procedure TTestCubicMemo.TestScrollAtTop;
+procedure TTesTLightMemo.TestScrollAtTop;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -719,7 +719,7 @@ end;
 
 { CenterInView Tests }
 
-procedure TTestCubicMemo.TestCenterInView_OutOfBounds;
+procedure TTesTLightMemo.TestCenterInView_OutOfBounds;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -734,7 +734,7 @@ end;
 
 { CurrentLine Tests }
 
-procedure TTestCubicMemo.TestCurrentLine;
+procedure TTesTLightMemo.TestCurrentLine;
 begin
   SetupMemo;
   FMemo.Clear;
@@ -748,7 +748,7 @@ end;
 
 { Randomize Tests }
 
-procedure TTestCubicMemo.TestRandomize;
+procedure TTesTLightMemo.TestRandomize;
 var
   OriginalLines: TStringList;
   i: Integer;
@@ -786,6 +786,6 @@ end;
 
 
 initialization
-  TDUnitX.RegisterTestFixture(TTestCubicMemo);
+  TDUnitX.RegisterTestFixture(TTesTLightMemo);
 
 end.

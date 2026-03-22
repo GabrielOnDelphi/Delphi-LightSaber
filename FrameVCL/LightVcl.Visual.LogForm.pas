@@ -1,7 +1,7 @@
 UNIT LightVcl.Visual.LogForm;
 
 {=============================================================================================================
-   2026.01.31
+   2026.03.22
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Visual log window.
@@ -14,6 +14,8 @@ UNIT LightVcl.Visual.LogForm;
    TLogViewer tester:
      c:\Projects\LightSaber\Demo\Demo LightLog\Demo_Log.dpr
 =============================================================================================================}
+
+//ToDo: bug: it seems that it does not save the position of the trackbar!
 
 INTERFACE
 
@@ -101,8 +103,6 @@ begin
   Log.RamLog.UnregisterLogObserver;
   SaveSettings;
 end;
-
-
 
 
 

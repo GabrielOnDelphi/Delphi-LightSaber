@@ -1,9 +1,9 @@
 UNIT MainForm;
 
 {-------------------------------------------------------------------------------------------------------------
-   TColorPalette Demo
+   TLightColorPalette Demo
 
-   Demonstrates the TColorPalette component:
+   Demonstrates the TLightColorPalette component:
      - Color selection
      - Displaying selected color (hex value and color preview)
      - Dynamic color set changes
@@ -19,7 +19,7 @@ USES
 
 TYPE
   TFormPalette = class(TForm)
-    ColorPalette1  : TColorPalette;
+    ColorPalette1  : TLightColorPalette;
     btnReset       : TButton;
     btnAddColor: TButton;
     lblSelectedHex: TLabel;

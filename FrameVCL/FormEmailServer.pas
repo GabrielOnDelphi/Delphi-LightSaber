@@ -52,10 +52,10 @@ TYPE
     grpTLS        : TGroupBox;  // TLS settings group
     lblPort       : TLabel;
     ledHost       : TLabeledEdit;
-    radTslExpl    : TCubicRadioButton;
-    radTslImplic  : TCubicRadioButton;
-    radTslNone    : TCubicRadioButton;
-    radTslRequire : TCubicRadioButton;
+    radTslExpl    : TLightRadioButton;
+    radTslImplic  : TLightRadioButton;
+    radTslNone    : TLightRadioButton;
+    radTslRequire : TLightRadioButton;
     spnPort       : TSpinEdit;
     inetAllowLessSecure: TInternetLabel;
     procedure btnShowPasswordClick(Sender: TObject);

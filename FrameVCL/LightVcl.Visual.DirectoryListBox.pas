@@ -4,18 +4,17 @@ unit LightVcl.Visual.DirectoryListBox;
 {.$WARN UNIT_PLATFORM OFF}   {Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
 
 {--------------------------------------------------------------------------------------------------
-   Gabriel Moraru
-   2026.01
+   2026.03 FINAL
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
   Features:
    * property ShowHidden - shows/hides hidden folders
    * property ShowSystem - shows/hides system folders
    * property DirectoryTrail - returns Directory with trailing backslash
 
- Note: Don't set 'Parent:= Owner' in constructor.
-       See this for details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
+  Note: 
+     Don't set 'Parent:= Owner' in constructor.
+     See this for details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
 --------------------------------------------------------------------------------------------------}
 
 INTERFACE
@@ -24,7 +23,7 @@ USES
    Winapi.Windows, System.SysUtils, System.Classes, Vcl.Controls, Vcl.FileCtrl;
 
 TYPE
- TCubicDirListBox= class(TDirectoryListBox)
+ TLightDirListBox= class(TDirectoryListBox)
   protected
     FShowHidden : boolean;
     FShowSystem : boolean;
@@ -51,7 +50,7 @@ USES LightCore.IO;
 
 
 
-Constructor TCubicDirListBox.Create(AOwner : TComponent);
+Constructor TLightDirListBox.Create(AOwner : TComponent);
 begin
  inherited Create(AOwner);
  //  Note: Don't set 'Parent:= Owner' in constructor. See this for details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
@@ -62,14 +61,14 @@ end;
 
 
 
-procedure TCubicDirListBox.SetShowSystem(Value: boolean);
+procedure TLightDirListBox.SetShowSystem(Value: boolean);
 begin
  if FShowSystem= Value then Exit;
  FShowSystem:= Value;
  BuildList;   { Must rebuild the list, not just repaint (Update only repaints) }
 end;
 
-procedure TCubicDirListBox.SetShowHidden(Value: boolean);
+procedure TLightDirListBox.SetShowHidden(Value: boolean);
 begin
  if FShowHidden= Value then Exit;
  FShowHidden:= Value;
@@ -93,7 +92,7 @@ end;
 { Reads all directories in ParentDirectory, adds their names to DirectoryList, and returns the number added.
   Note: FindFirst's Attr parameter controls inclusion, not exclusion. To filter out hidden/system folders,
   we must check each found folder's attributes individually after FindFirst/FindNext returns them. }
-function TCubicDirListBox.ReadDirectoryNames(const ParentDirectory: string; DirectoryList: TStringList): Integer;
+function TLightDirListBox.ReadDirectoryNames(const ParentDirectory: string; DirectoryList: TStringList): Integer;
 var
   Status: Integer;
   SearchRec: TSearchRec;
@@ -140,7 +139,7 @@ end;
 
 
 
-procedure TCubicDirListBox.BuildList;                                                              { Modified version of original Borland procedure, to support "Show hidden/system folders" }
+procedure TLightDirListBox.BuildList;                                                              { Modified version of original Borland procedure, to support "Show hidden/system folders" }
 var
   TempPath: string;
   DirName: string;
@@ -153,6 +152,7 @@ var
   Root: string;
   PPreserveCase, PCaseSensitive: PBoolean;                                                         { Pointer workaround to set read-only parent class properties }
 begin
+  VolFlags:= 0;
   TRY
     Items.BeginUpdate;
     Items.Clear;
@@ -213,7 +213,7 @@ begin
 end;
 
 
-function TCubicDirListBox.getDirectory: string;
+function TLightDirListBox.getDirectory: string;
 begin
  Result:= Trail(Directory);
 end;
@@ -226,7 +226,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber VCL', [TCubicDirListBox]);
+  RegisterComponents('LightSaber VCL', [TLightDirListBox]);
 end;
 
 end.

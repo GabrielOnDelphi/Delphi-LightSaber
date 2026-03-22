@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.CheckBox;
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.01
+   2026.03
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -21,7 +21,7 @@ UNIT LightVcl.Visual.CheckBox;
   Tester: c:\Myprojects\Project Testers\cubic VCL controls tester\
 
   Limitations:
-    SysCheckWidth is hardcoded to 21 pixels. On high-DPI displays, this may need adjustment.
+    Glyph width is queried via StyleServices (system DPI), not per-monitor DPI.
 =============================================================================================================}
 
 INTERFACE
@@ -34,7 +34,7 @@ USES
   Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls;
 
 TYPE
-  TCubicCheckBox = class(TCheckBox)
+  TLightCheckBox = class(TCheckBox)
   private
     FAutoSize: Boolean;
     procedure AdjustBounds;
@@ -54,22 +54,57 @@ procedure Register;
 
 IMPLEMENTATION
 
-CONST
-  SysCheckWidth: Integer = 21;  // In theory this should be obtained from the "system"
+USES
+  Vcl.Themes;
+
+const
+  FALLBACK_GLYPH_WIDTH = 13;  // Classic (unthemed) checkbox glyph width at 96 DPI
+  GLYPH_GAP            = 4;   // Gap between glyph and text
 
 
+{ Returns the checkbox glyph width for the given DPI, querying the current VCL style/theme.
+  Same approach used by VCL's own TCheckListBox (Vcl.CheckLst.pas). }
+function GetSysCheckWidth(DPI: Integer): Integer;
+var
+  DC: HDC;
+  LSize: TSize;
+  LStyle: TCustomStyleServices;
+begin
+  LStyle:= StyleServices;
+  if LStyle.Enabled then
+  begin
+    DC:= CreateCompatibleDC(0);
+    try
+      if LStyle.GetElementSize(DC, LStyle.GetElementDetails(tbCheckBoxUncheckedNormal), esActual, LSize, DPI) AND (LSize.Width > 0)
+      then EXIT(LSize.Width);
 
-constructor TCubicCheckBox.Create(AOwner : TComponent);
+      { Fallback to system style if custom style returns zero }
+      LStyle:= TStyleManager.SystemStyle;
+      if LStyle.GetElementSize(DC, LStyle.GetElementDetails(tbCheckBoxUncheckedNormal), esActual, LSize, DPI) AND (LSize.Width > 0)
+      then EXIT(LSize.Width);
+    finally
+      DeleteDC(DC);
+    end;
+  end;
+
+  { Final fallback for classic (unthemed) Windows }
+  Result:= MulDiv(FALLBACK_GLYPH_WIDTH, DPI, 96);
+end;
+
+
+constructor TLightCheckBox.Create(AOwner : TComponent);
 begin
   inherited Create(AOwner);
   FAutoSize:= FALSE;   { This must be false, otherwise AdjustBounds will be executed when we drop the control on a form and we don't have a Parent at that point. }
 end;
 
 
-procedure TCubicCheckBox.AdjustBounds;
+procedure TLightCheckBox.AdjustBounds;
 VAR
    DC: HDC;
    Canvas: TCanvas;
+   DPI: Integer;
+   CheckWidth: Integer;
 begin
  if NOT (csReading in ComponentState) AND FAutoSize then
    begin
@@ -85,9 +120,11 @@ begin
     TRY
       Canvas.Handle:= DC;
       Canvas.Font:= Font;
-      Width:= Canvas.TextWidth(Caption) + SysCheckWidth + 4;
-      Canvas.Handle:= 0;  { Detach handle before releasing DC }
+      DPI:= GetDeviceCaps(DC, LOGPIXELSX);
+      CheckWidth:= GetSysCheckWidth(DPI) + MulDiv(GLYPH_GAP, DPI, 96);
+      Width:= Canvas.TextWidth(Caption) + CheckWidth;
     FINALLY
+      Canvas.Handle:= 0;  { Detach handle before releasing DC }
       ReleaseDC(HWND_DESKTOP, DC);  { Must release to the same window we got it from }
       FreeAndNil(Canvas);
     END;
@@ -95,7 +132,7 @@ begin
 end;
 
 
-procedure TCubicCheckBox.setAutoSize(b: Boolean);
+procedure TLightCheckBox.setAutoSize(b: Boolean);
 begin
   if FAutoSize <> b then
   begin
@@ -105,7 +142,7 @@ begin
 end;
 
 
-procedure TCubicCheckBox.CMTextChanged(var Message:TMessage);
+procedure TLightCheckBox.CMTextChanged(var Message:TMessage);
 begin
   inherited;  { Call inherited to ensure proper base class behavior }
   Invalidate;
@@ -113,7 +150,7 @@ begin
 end;
 
 
-procedure TCubicCheckBox.CMFontChanged(var Message:TMessage);
+procedure TLightCheckBox.CMFontChanged(var Message:TMessage);
 begin
   inherited;
   if AutoSize
@@ -121,7 +158,7 @@ begin
 end;
 
 
-procedure TCubicCheckBox.Loaded;
+procedure TLightCheckBox.Loaded;
 begin
   inherited Loaded;
   AdjustBounds;
@@ -130,7 +167,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber VCL', [TCubicCheckBox]);
+  RegisterComponents('LightSaber VCL', [TLightCheckBox]);
 end;
 
 

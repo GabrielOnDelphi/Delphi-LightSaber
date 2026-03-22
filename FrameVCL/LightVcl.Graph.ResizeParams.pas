@@ -1,7 +1,7 @@
 UNIT LightVcl.Graph.ResizeParams;
 
 {=============================================================================================================
-   2026.01.30
+   2026.03
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Parameters for resamplers in LightVcl.Graph.Resize.pas
@@ -117,7 +117,6 @@ end;
 
 
 
-
 {--------------------------------------------------------------------------------------------------
    Compute output - Private helper methods
    These assume validation has been done by ComputeOutputSize
@@ -224,7 +223,7 @@ begin
 
      { We apply zoom BUT not more that what the user wanted }
      if  (InpW * Multiplicator < MaxWidth)
-     AND (InpH * Multiplicator < Maxheight) then
+     AND (InpH * Multiplicator < MaxHeight) then
       begin
        OutW:= RoundEx(InpW * Multiplicator);
        OutH:= RoundEx(InpH * Multiplicator);
@@ -340,17 +339,16 @@ end;
 { Used to convert from the old format used by BioniX v12 to the new format }
 procedure RResizeParams.Convert(Res: TResizeOpp_; FT: TFillType_);
 begin
+  { Specific resize modes take priority - FillType is irrelevant for these }
   case Res of                                 // THE DOCUMENTATION BELOW IS FOR THE OLD FORMAT!
-    rsAutoDetect : ResizeOpp:= roAutoDetect;
-    rsResizeUp   : ResizeOpp:= roNone;
-    rsResizeDown : ResizeOpp:= roNone;        // The image will be resized according to the ResizeFactor.
-    rsForceWidth : ResizeOpp:= roForceWidth;  // The image will have the Width  specified by MaxWidth_. The height will be automatically adjusted to match the width  (aspect ratio is kept)
-    rsForceHeight: ResizeOpp:= roForceHeight; // The image will have the height specified by MaxWidth_. The Width  will be automatically adjusted to match the height (aspect ratio is kept)
-    rsForceWH    : ResizeOpp:= roStretch;     // The image will have the W/H specified by MaxWidth_/MaxHeight. This will distort the aspect ratio!
-    rsNone       : ResizeOpp:= roNone;        // No zoom (original img size)
-    rsCustom     : ResizeOpp:= roCustom;      // NOT IMPLEMENTED. Example: zoom -80%
+    rsForceWidth : begin ResizeOpp:= roForceWidth;  EXIT; end;  // The image will have the Width  specified by MaxWidth_. The height will be automatically adjusted to match the width  (aspect ratio is kept)
+    rsForceHeight: begin ResizeOpp:= roForceHeight; EXIT; end;  // The image will have the height specified by MaxWidth_. The Width  will be automatically adjusted to match the height (aspect ratio is kept)
+    rsForceWH    : begin ResizeOpp:= roStretch;     EXIT; end;  // The image will have the W/H specified by MaxWidth_/MaxHeight. This will distort the aspect ratio!
+    rsNone       : begin ResizeOpp:= roNone;        EXIT; end;  // No zoom (original img size)
+    rsCustom     : begin ResizeOpp:= roCustom;      EXIT; end;  // NOT IMPLEMENTED. Example: zoom -80%
   end;
 
+  { For AutoDetect/ResizeUp/ResizeDown, use FillType to determine the mode }
   case FT of
     ftAuto: ResizeOpp:= roAutoDetect;
     ftFill: ResizeOpp:= roFill;

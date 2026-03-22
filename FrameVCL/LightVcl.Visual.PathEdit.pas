@@ -2,28 +2,28 @@ UNIT LightVcl.Visual.PathEdit;
 
 {=============================================================================================================
    www.GabrielMoraru.com
-   2026.01
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+   2026.03.21
 --------------------------------------------------------------------------------------------------------------
 
-  TCubicPathEdit - An edit box that allows user to choose/enter a file or folder path.
+  TlightPathEdit - An edit box that allows user to choose/enter a file or folder path.
 
   Features:
      OnPressEnter  - Event is triggered when the user pressed Enter
      OnApply       - Event is triggered when the user pressed Apply btn
-     InputType     - Type of input that the control accepts: File (not implemented yet) and Folder
+     InputType     - Type of input that the control accepts: File and Folder
      Path          - Path as entered by user
      FileListBox   - Can automatically update the linked FileListBox to navigate to the specified folder
 
+     Backspace     - Lets user go one folder up by pressing a shortcut
+     CheckCanWrite - If true, the control will verify if it has write access to the folder selected by the user.
+
+
   Tester:
-     c:\Myprojects\Project Testers\Cubic VCL LightVcl.Visual.PathEdit\LightVcl.Visual.PathEdit_Tester.dpr
+     c:\projects\Project Testers\Cubic VCL LightVcl.Visual.PathEdit\LightVcl.Visual.PathEdit_Tester.dpr
 
   See: What's the difference between CreateWnd and CreateWindowHandle?
        https://stackoverflow.com/questions/582903/whats-the-difference-between-createwnd-and-createwindowhandle
 -------------------------------------------------------------------------------------------------------------}
-
-//ToDo 1: Let user go one folder up by pressing a shortcut (like backspace maybe)
-//ToDo 5: Add property CheckCanWrite: boolean; If true, the control will verify if it has write access to the folder selected by the user.
 
 INTERFACE
 
@@ -37,7 +37,7 @@ TYPE
   TValidity= (vaNone, vaValid, vaInvalid);                   { Normal / Green / Red color }
   TInputType= (itFile, itFolder);                            { What kind of path will the user type in this control: folder or file }
 
-  TCubicPathEdit = class(TCustomGroupBox)
+  TlightPathEdit = class(TCustomGroupBox)
    private
      Initialized     : Boolean;
      btnApply        : TButton;
@@ -53,6 +53,7 @@ TYPE
      FOpenSrc        : Boolean;
      FShowApply      : Boolean;
      FShowCreate     : Boolean;
+     FCheckCanWrite  : Boolean;
      FOnApply        : TNotifyEvent;
      FOnCreateFolder : TNotifyEvent;
      FOnPathChanged  : TNotifyEvent;
@@ -64,6 +65,10 @@ TYPE
      procedure edtPathChange   (Sender: TObject);  //override;
      procedure edtKeyPress     (Sender: TObject; var Key: Char);
      procedure edtPathOnClick (Sender: TObject);
+     procedure edtKeyDown    (Sender: TObject; var Key: Word; Shift: TShiftState);
+     procedure setFileList   (const Value: TFileListBox);
+     procedure setDirListBox (const Value: TDirectoryListBox);
+     function  canWriteToFolder(const Folder: string): Boolean;
      procedure setPath         (const Value: string);
      procedure setInputType    (const Value: TInputType);
      procedure setOpenSrc      (const Value: Boolean);
@@ -80,6 +85,8 @@ TYPE
      procedure Click; override;
      procedure CreateWnd; override;
      procedure SetEnabled(Value: Boolean); override;
+     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
+     procedure NavigateUp;
    public
      constructor Create(aOwner: TComponent);  override;
      function  PathHasValidChars: string;   { Returns '' when the input string (path) is valid and and error msg when it is not valid }
@@ -88,8 +95,8 @@ TYPE
 
      function  GetFiles(CONST FileType: string; CONST ReturnFullPath, DigSubdirectories: Boolean; ExcludeFolders: TStrings= nil): TStringList;
    published
-     property FileListBox   : TFileListBox read FFileList     write FFileList;
-     property Directory     : TDirectoryListBox  read FDirListBox   write FDirListBox;
+     property FileListBox   : TFileListBox read FFileList     write setFileList;
+     property Directory     : TDirectoryListBox  read FDirListBox   write setDirListBox;
      property Path          : string       read getPath       write setPath;
      property FileFilter    : string       read FFileFilter   write FFileFilter     stored IsFilterStored;      { Has meaninng ONLY when InputType is 'itFile' }
      property OpenDlgTitle  : string       read FOpenDlgTitle write FOpenDlgTitle;
@@ -99,6 +106,7 @@ TYPE
      property ShowCreateBtn : Boolean      read FShowCreate   write setShowCreate   default TRUE;
      property ShowOpenSrc   : Boolean      read FOpenSrc      write setOpenSrc      default TRUE;
      property ShowApplyBtn  : Boolean      read FShowApply    write setShowApply    default FALSE;
+     property CheckCanWrite : Boolean      read FCheckCanWrite write FCheckCanWrite   default FALSE;
 
      {EVENTS}
      property OnPressEnter  : TNotifyEvent read FOnPressEnter   write FOnPressEnter;
@@ -162,7 +170,6 @@ TYPE
   end;
 
 
-
 procedure Register;
 
 IMPLEMENTATION {$R LightVcl.Visual.PathEdit.res}
@@ -171,8 +178,7 @@ USES
    LightVcl.Common.Colors, LightVcl.Common.ExecuteShell, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO;
 
 
-
-constructor TCubicPathEdit.Create(aOwner: TComponent);
+constructor TlightPathEdit.Create(aOwner: TComponent);
 VAR myIcon: TIcon;
 begin
  inherited Create(aOwner); // Note: Don't set 'Parent:= Owner' in constructor. Details: http://stackoverflow.com/questions/6403217/how-to-set-a-tcustomcontrols-parent-in-create
@@ -204,6 +210,7 @@ begin
  edtPath.OnKeyPress          := edtKeyPress;
  edtPath.OnClick             := edtPathOnClick; // Recompute validity color on click
  edtPath.OnChange            := edtPathChange;
+ edtPath.OnKeyDown           := edtKeyDown;
  edtPath.RightButton.ImageIndex:= 0;
  edtPath.RightButton.HotImageIndex:= 1;
  edtPath.RightButton.Visible := TRUE;
@@ -260,11 +267,10 @@ begin
 end;
 
 
-
 { CreateWnd is called AFTER TIniFileVCL.LoadForm
   CreateWnd can be called more than once:
   http://docs.embarcadero.com/products/rad_studio/delphiAndcpp2009/HelpUpdate2/EN/html/delphivclwin32/Controls_TWinControl_CreateWnd.html }
-procedure TCubicPathEdit.CreateWnd;
+procedure TlightPathEdit.CreateWnd;
 begin
  inherited CreateWnd;
 
@@ -288,14 +294,6 @@ end;
 
 
 
-
-
-
-
-
-
-
-
 {-----------------------------------------------------------------------------------------------------------------------
    USER INPUT
 -----------------------------------------------------------------------------------------------------------------------}
@@ -303,14 +301,14 @@ end;
 { Event handler for edtPath.OnChange.
   Note: Delphi bug - TEdit.OnChange triggers when Ctrl+A is pressed.
   See: http://stackoverflow.com/questions/42230077 }
-procedure TCubicPathEdit.edtPathChange(Sender: TObject);
+procedure TlightPathEdit.edtPathChange(Sender: TObject);
 begin
  PathChanged;
 end;
 
 
 { Called when the path changes. Updates button states, linked controls, and triggers events. }
-procedure TCubicPathEdit.PathChanged;
+procedure TlightPathEdit.PathChanged;
 VAR
    OldEvent: TNotifyEvent;
 begin
@@ -343,7 +341,7 @@ end;
 
 { Event handler for edtPath.OnKeyPress.
   Handles Enter key to trigger folder creation or OnPressEnter event. }
-procedure TCubicPathEdit.edtKeyPress(Sender: TObject; var Key: Char);
+procedure TlightPathEdit.edtKeyPress(Sender: TObject; var Key: Char);
 begin
  if (Ord(Key) = VK_RETURN) then
   begin
@@ -356,7 +354,7 @@ begin
 end;
 
 
-procedure TCubicPathEdit.btnBrowseClick(Sender: TObject);
+procedure TlightPathEdit.btnBrowseClick(Sender: TObject);
 VAR s: string;
 begin
  s:= Path;
@@ -377,7 +375,7 @@ begin
 end;
 
 
-procedure TCubicPathEdit.InputTypeChanged;
+procedure TlightPathEdit.InputTypeChanged;
 begin
  CheckPathValidity;      { Check validity AFTER the folder was created }
 
@@ -397,7 +395,7 @@ begin
 end;
 
 
-procedure TCubicPathEdit.setInputType(const Value: TInputType);
+procedure TlightPathEdit.setInputType(const Value: TInputType);
 begin
  FInputType := Value;
  InputTypeChanged;
@@ -405,16 +403,10 @@ end;
 
 
 
-function TCubicPathEdit.IsFilterStored: Boolean;
+function TlightPathEdit.IsFilterStored: Boolean;
 begin
   Result:= SDefaultFilter <> FFileFilter;
 end;
-
-
-
-
-
-
 
 
 
@@ -422,9 +414,16 @@ end;
    CHECK VALIDITY
 -----------------------------------------------------------------------------------------------------------------------}
 
-procedure TCubicPathEdit.CheckPathValidity; { Makes the control green when the path exists and red when it doesn't exist }
+procedure TlightPathEdit.CheckPathValidity; { Makes the control green when the path exists and red when it doesn't exist }
 begin
  if csLoading in ComponentState then EXIT;
+
+ { Empty path - neutral color instead of red }
+ if edtPath.Text = '' then
+  begin
+   edtPath.Color:= clWindow;
+   EXIT;
+  end;
 
  case InputType of
   itFile:
@@ -432,11 +431,14 @@ begin
      then edtPath.Color:= clGreenWashed
      else edtPath.Color:= clRedFade;
   itFolder:
-    begin
-     if DirectoryExists(Path)
-     then edtPath.Color:= clGreenWashed
+     if DirectoryExists(Path) then
+      begin
+       if FCheckCanWrite 
+	   AND NOT CanWriteToFolder(Path)
+       then edtPath.Color:= clRedFade
+       else edtPath.Color:= clGreenWashed;
+      end
      else edtPath.Color:= clRedFade;
-    end;
  end;
 end;
 
@@ -444,7 +446,7 @@ end;
 
 { Works in both modes (itFile/itFolder).
   Does NOT check if the file/folder exists. }
-function TCubicPathEdit.PathHasValidChars: string;
+function TlightPathEdit.PathHasValidChars: string;
 begin
  Result:= '';
 
@@ -465,6 +467,11 @@ begin
  AND NOT System.IOUtils.TPath.HasValidFileNameChars(extractfilename(edtPath.Text), FALSE)
  then EXIT('The path has invalid characters!');
 
+ { Valid colon for files }
+ if (InputType= itFile)
+ AND NOT LightVcl.Common.IO.PathHasValidColon(edtPath.Text)
+ then EXIT('The path has invalid characters!');
+
  if (InputType= itFolder) then
   begin
    if NOT PathNameIsValid(edtPath.Text)
@@ -478,20 +485,34 @@ end;
 
 
 
-function TCubicPathEdit.PathIsValid: string;    { Returns '' when the path is valid AND folder exists }
+function TlightPathEdit.PathIsValid: string;    { Returns '' when the path is valid AND exists }
 begin
  Result:= PathHasValidChars;
+
+ { File exists? }
+ if (Result = '')
+ AND (InputType= itFile)
+ AND NOT FileExists(edtPath.Text)
+ then EXIT('File does not exist: '+ edtPath.Text);
 
  { Dir exists? }
  if (Result = '')
  AND (InputType= itFolder)
  AND NOT DirectoryExists(edtPath.Text)
  then EXIT('Folder does not exist: '+ edtPath.Text);
+
+ { Write access? }
+ if (Result = '')
+ AND FCheckCanWrite
+ AND (InputType= itFolder)
+ AND DirectoryExists(edtPath.Text)
+ AND NOT CanWriteToFolder(edtPath.Text)
+ then EXIT('Cannot write to folder: '+ edtPath.Text);
 end;
 
 
 
-function TCubicPathEdit.PathIsValidMsg: boolean;
+function TlightPathEdit.PathIsValidMsg: boolean;
 VAR s: string;
 begin
  s:= PathIsValid;
@@ -502,8 +523,7 @@ end;
 
 
 
-
-procedure TCubicPathEdit.Click;
+procedure TlightPathEdit.Click;
 begin
   inherited Click;
   CheckPathValidity;   // Recompute color on click - useful when path validity has changed externally
@@ -512,37 +532,39 @@ end;
 
 { Event handler for edtPath.OnClick.
   Recomputes color (red/green) on mouse click. Useful when path validity has changed externally. }
-procedure TCubicPathEdit.edtPathOnClick(Sender: TObject);
+procedure TlightPathEdit.edtPathOnClick(Sender: TObject);
 begin
   CheckPathValidity;
 end;
 
 
 
-
-
-procedure TCubicPathEdit.setReadOnly(const Value: Boolean);
+procedure TlightPathEdit.setReadOnly(const Value: Boolean);
 begin
   edtPath.ReadOnly:= Value
 end;
 
-function TCubicPathEdit.getReadOnly: Boolean;
+function TlightPathEdit.getReadOnly: Boolean;
 begin
  Result:= edtPath.ReadOnly;
 end;
 
-procedure TCubicPathEdit.SetEnabled(Value: Boolean);
+procedure TlightPathEdit.SetEnabled(Value: Boolean);
 begin
   inherited;
   edtPath.Enabled:= Value;
-  btnCreate.Enabled:= Value;
+  btnExplore.Enabled:= Value;
+  if Value
+  then PathChanged  { Recompute validity-dependent button states }
+  else
+    begin
+      btnCreate.Enabled:= FALSE;
+      btnApply.Enabled:= FALSE;
+    end;
 end;
 
 
-
-
-
-function TCubicPathEdit.getPath: string;
+function TlightPathEdit.getPath: string;
 begin
  Result:= edtPath.Text;
 
@@ -552,14 +574,14 @@ begin
 end;
 
 
-procedure TCubicPathEdit.setPath(const Value: string);
+procedure TlightPathEdit.setPath(const Value: string);
 begin
  if csLoading in ComponentState
  then
   begin
-   edtPath.OnRightButtonClick := NIL;
+   edtPath.OnChange := NIL;
    edtPath.Text:= Value;
-   edtPath.OnRightButtonClick := btnBrowseClick;
+   edtPath.OnChange := edtPathChange;
   end
  else
    if InputType= itFolder
@@ -569,7 +591,7 @@ end;
 
 
 
-procedure TCubicPathEdit.btnCreateClick(Sender: TObject);  { Creates the folder }
+procedure TlightPathEdit.btnCreateClick(Sender: TObject);  { Creates the folder }
 VAR s: string;
 begin
  s:= PathHasValidChars;
@@ -596,28 +618,28 @@ end;
    BUTTONS
 -----------------------------------------------------------------------------------------------------------------------}
 
-procedure TCubicPathEdit.setShowCreate(const Value: Boolean);
+procedure TlightPathEdit.setShowCreate(const Value: Boolean);
 begin
  FShowCreate := Value;
  btnCreate.Visible:= FShowCreate;
 end;
 
 
-procedure TCubicPathEdit.setOpenSrc(const Value: Boolean);
+procedure TlightPathEdit.setOpenSrc(const Value: Boolean);
 begin
  FOpenSrc := Value;
  btnExplore.Visible:= FOpenSrc;
 end;
 
 
-procedure TCubicPathEdit.setShowApply(const Value: Boolean);
+procedure TlightPathEdit.setShowApply(const Value: Boolean);
 begin
  FShowApply := Value;
  btnApply.Visible:= FShowApply;
 end;
 
 
-procedure TCubicPathEdit.btnApplyClick(Sender: TObject);
+procedure TlightPathEdit.btnApplyClick(Sender: TObject);
 begin
  btnApply.Enabled:= FALSE;  { Don't let the user press Apply multiple times }
  if Assigned(FOnApply)
@@ -625,17 +647,119 @@ begin
 end;
 
 
-procedure TCubicPathEdit.btnExploreClick(Sender: TObject);
+procedure TlightPathEdit.btnExploreClick(Sender: TObject);
 begin
  if Path = ''
  then MessageError('No file/folder selected!')
  else
    case InputType of
-    itFile  : ExecuteExplorerSelect (Path);
-    itFolder: ExecuteExplorer       (Path);
+    itFile:
+       if FileExists(Path)
+       then ExecuteExplorerSelect(Path)
+       else MessageError('File does not exist: '+ Path);
+    itFolder: ExecuteExplorer(Path);
    end;
 end;
 
+
+
+
+{-----------------------------------------------------------------------------------------------------------------------
+   NOTIFICATION / FREE NOTIFICATION
+-----------------------------------------------------------------------------------------------------------------------}
+
+procedure TlightPathEdit.Notification(AComponent: TComponent; Operation: TOperation);
+begin
+ inherited;
+ if Operation = opRemove then
+  begin
+   if AComponent = FFileList
+   then FFileList:= NIL;
+   if AComponent = FDirListBox
+   then FDirListBox:= NIL;
+  end;
+end;
+
+
+procedure TlightPathEdit.setFileList(const Value: TFileListBox);
+begin
+ if FFileList <> Value then
+  begin
+   if Assigned(FFileList)
+   then FFileList.RemoveFreeNotification(Self);
+   FFileList:= Value;
+   if Assigned(FFileList)
+   then FFileList.FreeNotification(Self);
+  end;
+end;
+
+
+procedure TlightPathEdit.setDirListBox(const Value: TDirectoryListBox);
+begin
+ if FDirListBox <> Value then
+  begin
+   if Assigned(FDirListBox)
+   then FDirListBox.RemoveFreeNotification(Self);
+   FDirListBox:= Value;
+   if Assigned(FDirListBox)
+   then FDirListBox.FreeNotification(Self);
+  end;
+end;
+
+
+
+{-----------------------------------------------------------------------------------------------------------------------
+   NAVIGATE UP (Alt+Up - standard Windows Explorer shortcut)
+-----------------------------------------------------------------------------------------------------------------------}
+
+procedure TlightPathEdit.edtKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+ if (Key = VK_UP) AND (Shift = [ssAlt]) AND (InputType = itFolder) then
+  begin
+   NavigateUp;
+   Key:= 0;
+  end;
+end;
+
+
+procedure TlightPathEdit.NavigateUp;
+VAR
+  CurrentDir, ParentDir: string;
+begin
+ if (InputType <> itFolder) OR (edtPath.Text = '') then EXIT;
+
+ CurrentDir:= ExcludeTrailingPathDelimiter(edtPath.Text);
+ ParentDir:= ExtractFileDir(CurrentDir);
+
+ if (ParentDir <> '') AND (ParentDir <> CurrentDir)
+ then Path:= ParentDir;
+end;
+
+
+
+{-----------------------------------------------------------------------------------------------------------------------
+   WRITE ACCESS CHECK
+-----------------------------------------------------------------------------------------------------------------------}
+
+{ Checks write access by creating a temporary file with FILE_FLAG_DELETE_ON_CLOSE.
+  No exception swallowing, no leftover temp files. }
+function TlightPathEdit.CanWriteToFolder(const Folder: string): Boolean;
+VAR
+  TempFile: string;
+  H: THandle;
+begin
+ TempFile:= Trail(Folder) + '~pathEdit_writetest.tmp';
+ H:= CreateFile(PChar(TempFile), GENERIC_WRITE, 0, NIL, CREATE_NEW, FILE_ATTRIBUTE_TEMPORARY or FILE_FLAG_DELETE_ON_CLOSE, 0);
+ Result:= H <> INVALID_HANDLE_VALUE;
+ if Result
+ then CloseHandle(H);
+end;
+
+
+function TlightPathEdit.GetFiles(const FileType: string; const ReturnFullPath, DigSubdirectories: Boolean; ExcludeFolders: TStrings): TStringList;
+begin
+ Result:= ListFilesOf(Path, FileType, ReturnFullPath, DigSubdirectories, ExcludeFolders);
+end;
 
 
 
@@ -643,14 +767,8 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber VCL', [TCubicPathEdit]);
+  RegisterComponents('LightSaber VCL', [TlightPathEdit]);
 end;
 
-
-
-function TCubicPathEdit.GetFiles(const FileType: string; const ReturnFullPath, DigSubdirectories: Boolean; ExcludeFolders: TStrings): TStringList;
-begin
- Result:= ListFilesOf(Path, FileType, ReturnFullPath, DigSubdirectories, ExcludeFolders);
-end;
 
 end.

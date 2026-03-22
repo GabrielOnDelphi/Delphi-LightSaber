@@ -21,7 +21,7 @@ USES
 TYPE
   TMainForm = class(TLightForm)
     pgCtrl             : TPageControl;
-    edtFile2           : TCubicPathEdit;
+    edtFile2           : TlightPathEdit;
     InternetLabel      : TInternetLabel;
     Label1             : TLabel;
     Label2             : TLabel;

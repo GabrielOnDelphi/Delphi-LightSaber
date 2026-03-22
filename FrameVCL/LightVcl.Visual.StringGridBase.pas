@@ -1,10 +1,8 @@
 UNIT LightVcl.Visual.StringGridBase;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2026.01
+   2026.03
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   Capabilities:
@@ -18,7 +16,6 @@ UNIT LightVcl.Visual.StringGridBase;
     Delete Row/Col
     Autoresize all columns to fill all available space
 
-   ToDo: Autoresize row height when the font size is changed
 
 =============================================================================================================}
 
@@ -247,11 +244,7 @@ end;
 //CreateWnd can be called more than once:  http://docs.embarcadero.com/products/rad_studio/delphiAndcpp2009/HelpUpdate2/EN/html/delphivclwin32/Controls_TWinControl_CreateWnd.html
 
 
-
-
-
-
-
+ 
 
 procedure TBaseStrGrid.Clear;
 begin
@@ -620,12 +613,7 @@ Begin
  else Bip50;
 End;
 
-
-
-
-
-
-
+ 
 
 {--------------------------------------------------------------------------------------------------
                                       CURSOR
@@ -702,9 +690,7 @@ begin
  then Row:= Row-1;
 end;
 
-
-
-
+ 
 
 {--------------------------------------------------------------------------------------------------
                                    HINT
@@ -886,14 +872,10 @@ end;
 
 function TBaseStrGrid.SelCount: Integer;
 begin
- Result:= abs(Selection.Bottom- Selection.Top);
+ Result:= abs(Selection.Bottom- Selection.Top) + 1;
 end;
 
-
-
-
-
-
+ 
 
 
 {--------------------------------------------------------------------------------------------------
@@ -971,7 +953,7 @@ begin
 end;
 
 
-
+ 
 
 (*
 // https://stackoverflow.com/questions/2421646/how-to-change-controls-simultaneously-without-repainting-each-one
@@ -1025,9 +1007,7 @@ begin
  Result:= (GetWindowLongPtr(Handle, GWL_STYLE) and WS_HSCROLL) <> 0;
 end;
 
-
-
-
+ 
 
 
 {--------------------------------------------------------------------------------------------------
@@ -1043,7 +1023,9 @@ begin
   for VAR i:= 0 to ColCount-1 DO
     if i <> LargeColumn
     then NewSize:= NewSize+ ColWidths[i];
-                                              //ToDo 1: add support for scrollbar here
+  if IsVerticalScrollVisible
+  then NewSize:= NewSize + GetSystemMetrics(SM_CXVSCROLL);
+
   ColWidths[LargeColumn]:= ClientWidth - NewSize;  // expand this cell so that we fills the whole window
 end;
 
@@ -1143,9 +1125,6 @@ end;
 
 
 
-
-
-
 { Draw text taking into consideration the alignment }
 procedure TBaseStrGrid.DrawCellText(aCol: Longint; aRect: TRect; s: string);
 var
@@ -1224,15 +1203,6 @@ end;
 
 
 
-
-
-
-
-
-
-
-
-
 {--------------------------------------------------------------------------------------------------
    OTHERS
 --------------------------------------------------------------------------------------------------}
@@ -1240,7 +1210,6 @@ function TBaseStrGrid.RowIsVisible(aRow: integer): Boolean;
 begin
  Result:= (aRow>= TopRow) AND (aRow<= TopRow+ VisibleRowCount);  { Check if correct }
 end;
-
 
 
 

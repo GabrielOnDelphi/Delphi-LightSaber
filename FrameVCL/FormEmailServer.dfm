@@ -149,7 +149,7 @@ object frmSmtpSettings: TfrmSmtpSettings
       Anchors = [akTop, akRight]
       Caption = 'Authentification type'
       TabOrder = 4
-      object radTslNone: TCubicRadioButton
+      object radTslNone: TLightRadioButton
         Left = 50
         Top = 37
         Width = 97
@@ -159,7 +159,7 @@ object frmSmtpSettings: TfrmSmtpSettings
         TabOrder = 0
         AutoSize = True
       end
-      object radTslImplic: TCubicRadioButton
+      object radTslImplic: TLightRadioButton
         Left = 50
         Top = 60
         Width = 77
@@ -168,7 +168,7 @@ object frmSmtpSettings: TfrmSmtpSettings
         TabOrder = 1
         AutoSize = True
       end
-      object radTslExpl: TCubicRadioButton
+      object radTslExpl: TLightRadioButton
         Left = 50
         Top = 83
         Width = 77
@@ -178,7 +178,7 @@ object frmSmtpSettings: TfrmSmtpSettings
         TabOrder = 2
         AutoSize = True
       end
-      object radTslRequire: TCubicRadioButton
+      object radTslRequire: TLightRadioButton
         Left = 50
         Top = 106
         Width = 81

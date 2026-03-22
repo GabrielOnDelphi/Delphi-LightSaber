@@ -2,7 +2,7 @@ unit Test.LightVcl.Visual.CheckBox;
 
 {=============================================================================================================
    Unit tests for LightVcl.Visual.CheckBox.pas
-   Tests the TCubicCheckBox component - an auto-resizing checkbox.
+   Tests the TLightCheckBox component - an auto-resizing checkbox.
 
    Includes TestInsight support: define TESTINSIGHT in project options.
 =============================================================================================================}
@@ -21,10 +21,10 @@ uses
 
 type
   [TestFixture]
-  TTestCubicCheckBox = class
+  TTesTLightCheckBox = class
   private
     FTestForm: TForm;
-    FCheckBox: TCheckBox;  { Will be created as TCubicCheckBox }
+    FCheckBox: TCheckBox;  { Will be created as TLightCheckBox }
     FPageControl: TPageControl;
     FTabSheet1: TTabSheet;
     FTabSheet2: TTabSheet;
@@ -92,7 +92,7 @@ uses
   LightVcl.Visual.CheckBox;
 
 
-procedure TTestCubicCheckBox.Setup;
+procedure TTesTLightCheckBox.Setup;
 begin
   FTestForm:= NIL;
   FCheckBox:= NIL;
@@ -102,13 +102,13 @@ begin
 end;
 
 
-procedure TTestCubicCheckBox.TearDown;
+procedure TTesTLightCheckBox.TearDown;
 begin
   CleanupControls;
 end;
 
 
-procedure TTestCubicCheckBox.CleanupControls;
+procedure TTesTLightCheckBox.CleanupControls;
 begin
   { Child controls are freed by their parent }
   FreeAndNil(FTestForm);
@@ -121,12 +121,12 @@ end;
 
 { Constructor Tests }
 
-procedure TTestCubicCheckBox.TestCreate_AutoSizeDefaultFalse;
+procedure TTesTLightCheckBox.TestCreate_AutoSizeDefaultFalse;
 var
-  CubicCheckBox: TCubicCheckBox;
+  CubicCheckBox: TLightCheckBox;
 begin
   FTestForm:= TForm.CreateNew(NIL);
-  CubicCheckBox:= TCubicCheckBox.Create(FTestForm);
+  CubicCheckBox:= TLightCheckBox.Create(FTestForm);
   CubicCheckBox.Parent:= FTestForm;
 
   Assert.IsFalse(CubicCheckBox.AutoSize, 'AutoSize should default to FALSE');
@@ -134,12 +134,12 @@ begin
 end;
 
 
-procedure TTestCubicCheckBox.TestCreate_ValidOwner;
+procedure TTesTLightCheckBox.TestCreate_ValidOwner;
 var
-  CubicCheckBox: TCubicCheckBox;
+  CubicCheckBox: TLightCheckBox;
 begin
   FTestForm:= TForm.CreateNew(NIL);
-  CubicCheckBox:= TCubicCheckBox.Create(FTestForm);
+  CubicCheckBox:= TLightCheckBox.Create(FTestForm);
   CubicCheckBox.Parent:= FTestForm;
 
   Assert.IsNotNull(CubicCheckBox, 'CheckBox should be created');
@@ -148,11 +148,11 @@ begin
 end;
 
 
-procedure TTestCubicCheckBox.TestCreate_NilOwner;
+procedure TTesTLightCheckBox.TestCreate_NilOwner;
 var
-  CubicCheckBox: TCubicCheckBox;
+  CubicCheckBox: TLightCheckBox;
 begin
-  CubicCheckBox:= TCubicCheckBox.Create(NIL);
+  CubicCheckBox:= TLightCheckBox.Create(NIL);
   try
     Assert.IsNotNull(CubicCheckBox, 'CheckBox should be created even with nil owner');
   finally
@@ -163,13 +163,13 @@ end;
 
 { AutoSize Property Tests }
 
-procedure TTestCubicCheckBox.TestAutoSize_SetTrue_AdjustsWidth;
+procedure TTesTLightCheckBox.TestAutoSize_SetTrue_AdjustsWidth;
 var
-  CubicCheckBox: TCubicCheckBox;
+  CubicCheckBox: TLightCheckBox;
   OriginalWidth: Integer;
 begin
   FTestForm:= TForm.CreateNew(NIL);
-  CubicCheckBox:= TCubicCheckBox.Create(FTestForm);
+  CubicCheckBox:= TLightCheckBox.Create(FTestForm);
   CubicCheckBox.Parent:= FTestForm;
   CubicCheckBox.Caption:= 'Test Caption';
   OriginalWidth:= CubicCheckBox.Width;
@@ -183,13 +183,13 @@ begin
 end;
 
 
-procedure TTestCubicCheckBox.TestAutoSize_SetFalse_NoAdjustment;
+procedure TTesTLightCheckBox.TestAutoSize_SetFalse_NoAdjustment;
 var
-  CubicCheckBox: TCubicCheckBox;
+  CubicCheckBox: TLightCheckBox;
   OriginalWidth: Integer;
 begin
   FTestForm:= TForm.CreateNew(NIL);
-  CubicCheckBox:= TCubicCheckBox.Create(FTestForm);
+  CubicCheckBox:= TLightCheckBox.Create(FTestForm);
   CubicCheckBox.Parent:= FTestForm;
   CubicCheckBox.Width:= 200;
   OriginalWidth:= CubicCheckBox.Width;
@@ -203,12 +203,12 @@ begin
 end;
 
 
-procedure TTestCubicCheckBox.TestAutoSize_SetSameValue_NoChange;
+procedure TTesTLightCheckBox.TestAutoSize_SetSameValue_NoChange;
 var
-  CubicCheckBox: TCubicCheckBox;
+  CubicCheckBox: TLightCheckBox;
 begin
   FTestForm:= TForm.CreateNew(NIL);
-  CubicCheckBox:= TCubicCheckBox.Create(FTestForm);
+  CubicCheckBox:= TLightCheckBox.Create(FTestForm);
   CubicCheckBox.Parent:= FTestForm;
   CubicCheckBox.Caption:= 'Test';
   CubicCheckBox.AutoSize:= TRUE;
@@ -224,12 +224,12 @@ end;
 
 { Width Calculation Tests }
 
-procedure TTestCubicCheckBox.TestWidth_ShortCaption;
+procedure TTesTLightCheckBox.TestWidth_ShortCaption;
 var
-  CubicCheckBox: TCubicCheckBox;
+  CubicCheckBox: TLightCheckBox;
 begin
   FTestForm:= TForm.CreateNew(NIL);
-  CubicCheckBox:= TCubicCheckBox.Create(FTestForm);
+  CubicCheckBox:= TLightCheckBox.Create(FTestForm);
   CubicCheckBox.Parent:= FTestForm;
   CubicCheckBox.Caption:= 'OK';
   CubicCheckBox.AutoSize:= TRUE;
@@ -241,12 +241,12 @@ begin
 end;
 
 
-procedure TTestCubicCheckBox.TestWidth_LongCaption;
+procedure TTesTLightCheckBox.TestWidth_LongCaption;
 var
-  CubicCheckBox: TCubicCheckBox;
+  CubicCheckBox: TLightCheckBox;
 begin
   FTestForm:= TForm.CreateNew(NIL);
-  CubicCheckBox:= TCubicCheckBox.Create(FTestForm);
+  CubicCheckBox:= TLightCheckBox.Create(FTestForm);
   CubicCheckBox.Parent:= FTestForm;
   CubicCheckBox.Caption:= 'This is a very long caption that should make the checkbox quite wide';
   CubicCheckBox.AutoSize:= TRUE;
@@ -257,12 +257,12 @@ begin
 end;
 
 
-procedure TTestCubicCheckBox.TestWidth_EmptyCaption;
+procedure TTesTLightCheckBox.TestWidth_EmptyCaption;
 var
-  CubicCheckBox: TCubicCheckBox;
+  CubicCheckBox: TLightCheckBox;
 begin
   FTestForm:= TForm.CreateNew(NIL);
-  CubicCheckBox:= TCubicCheckBox.Create(FTestForm);
+  CubicCheckBox:= TLightCheckBox.Create(FTestForm);
   CubicCheckBox.Parent:= FTestForm;
   CubicCheckBox.Caption:= '';
   CubicCheckBox.AutoSize:= TRUE;
@@ -274,13 +274,13 @@ begin
 end;
 
 
-procedure TTestCubicCheckBox.TestWidth_CaptionChange_WidthAdjusts;
+procedure TTesTLightCheckBox.TestWidth_CaptionChange_WidthAdjusts;
 var
-  CubicCheckBox: TCubicCheckBox;
+  CubicCheckBox: TLightCheckBox;
   ShortCaptionWidth: Integer;
 begin
   FTestForm:= TForm.CreateNew(NIL);
-  CubicCheckBox:= TCubicCheckBox.Create(FTestForm);
+  CubicCheckBox:= TLightCheckBox.Create(FTestForm);
   CubicCheckBox.Parent:= FTestForm;
   CubicCheckBox.Caption:= 'Short';
   CubicCheckBox.AutoSize:= TRUE;
@@ -296,13 +296,13 @@ end;
 
 { Font Change Tests }
 
-procedure TTestCubicCheckBox.TestFontChange_WithAutoSize_AdjustsWidth;
+procedure TTesTLightCheckBox.TestFontChange_WithAutoSize_AdjustsWidth;
 var
-  CubicCheckBox: TCubicCheckBox;
+  CubicCheckBox: TLightCheckBox;
   WidthWithSmallFont: Integer;
 begin
   FTestForm:= TForm.CreateNew(NIL);
-  CubicCheckBox:= TCubicCheckBox.Create(FTestForm);
+  CubicCheckBox:= TLightCheckBox.Create(FTestForm);
   CubicCheckBox.Parent:= FTestForm;
   CubicCheckBox.Caption:= 'Test Caption';
   CubicCheckBox.Font.Size:= 8;
@@ -317,13 +317,13 @@ begin
 end;
 
 
-procedure TTestCubicCheckBox.TestFontChange_WithoutAutoSize_NoWidthChange;
+procedure TTesTLightCheckBox.TestFontChange_WithoutAutoSize_NoWidthChange;
 var
-  CubicCheckBox: TCubicCheckBox;
+  CubicCheckBox: TLightCheckBox;
   OriginalWidth: Integer;
 begin
   FTestForm:= TForm.CreateNew(NIL);
-  CubicCheckBox:= TCubicCheckBox.Create(FTestForm);
+  CubicCheckBox:= TLightCheckBox.Create(FTestForm);
   CubicCheckBox.Parent:= FTestForm;
   CubicCheckBox.Caption:= 'Test Caption';
   CubicCheckBox.Width:= 150;
@@ -340,9 +340,9 @@ end;
 
 { PageControl Inactive Tab Tests }
 
-procedure TTestCubicCheckBox.TestPageControl_InactiveTab_StillWorks;
+procedure TTesTLightCheckBox.TestPageControl_InactiveTab_StillWorks;
 var
-  CubicCheckBox: TCubicCheckBox;
+  CubicCheckBox: TLightCheckBox;
 begin
   FTestForm:= TForm.CreateNew(NIL);
   FTestForm.Width:= 500;
@@ -361,7 +361,7 @@ begin
   FTabSheet2.Caption:= 'Tab 2';
 
   { Place checkbox on the second (inactive) tab }
-  CubicCheckBox:= TCubicCheckBox.Create(FTestForm);
+  CubicCheckBox:= TLightCheckBox.Create(FTestForm);
   CubicCheckBox.Parent:= FTabSheet2;
   CubicCheckBox.Caption:= 'Checkbox on inactive tab';
 
@@ -379,15 +379,15 @@ end;
 
 { Loaded Tests }
 
-procedure TTestCubicCheckBox.TestLoaded_TriggersAdjustBounds;
+procedure TTesTLightCheckBox.TestLoaded_TriggersAdjustBounds;
 var
-  CubicCheckBox: TCubicCheckBox;
+  CubicCheckBox: TLightCheckBox;
 begin
   { This test verifies that the Loaded method triggers AdjustBounds.
     Since we can't easily simulate the streaming process, we verify that
     when AutoSize is TRUE before parent is set, the control still works correctly. }
   FTestForm:= TForm.CreateNew(NIL);
-  CubicCheckBox:= TCubicCheckBox.Create(FTestForm);
+  CubicCheckBox:= TLightCheckBox.Create(FTestForm);
   CubicCheckBox.Caption:= 'Test loaded behavior';
   CubicCheckBox.Parent:= FTestForm;
   CubicCheckBox.AutoSize:= TRUE;
@@ -399,6 +399,6 @@ end;
 
 
 initialization
-  TDUnitX.RegisterTestFixture(TTestCubicCheckBox);
+  TDUnitX.RegisterTestFixture(TTesTLightCheckBox);
 
 end.

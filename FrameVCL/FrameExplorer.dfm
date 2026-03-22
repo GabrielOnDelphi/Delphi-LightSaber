@@ -46,7 +46,7 @@ object FrameWinExplorer: TFrameWinExplorer
     OnChange = DirectoryChange
     ExplicitTop = 73
   end
-  object FileList: TCubicFileList
+  object FileList: TLightFileList
     AlignWithMargins = True
     Left = 3
     Top = 269
@@ -72,7 +72,7 @@ object FrameWinExplorer: TFrameWinExplorer
     ShowHint = True
     TabOrder = 2
     ExplicitTop = 238
-    object Filter: TCubicFilterBox
+    object Filter: TLightFilterBox
       AlignWithMargins = True
       Left = 3
       Top = 3
@@ -96,7 +96,7 @@ object FrameWinExplorer: TFrameWinExplorer
       OnClick = btnRefreshClick
     end
   end
-  object Path: TCubicPathEdit
+  object Path: TlightPathEdit
     AlignWithMargins = True
     Left = 3
     Top = 22

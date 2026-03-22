@@ -1,7 +1,7 @@
 ﻿UNIT LightVcl.Visual.AppData;
 
 {=============================================================================================================
-   2026.01.31
+   2026.03.22
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -198,7 +198,7 @@ TYPE
   end;
 
 
-VAR                      // ToDo 5: make sure AppData is unique (make it Singleton)
+VAR
    AppData: TAppData;    // This obj is automatically freed on app shutdown (via FINALIZATION)
 
 
@@ -212,6 +212,7 @@ USES
 { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }
 constructor TAppData.Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE);
 begin
+  Assert(AppData = NIL, 'AppData already created! Only one instance allowed (Singleton).');
   inherited Create(aAppName, WindowClassName, MultiThreaded);
   AppDataCore:= Self;                             // This sets the other variable to self. The non-visual code uses it.
   Application.Initialize;                         // Note: Emba: Although Initialize is the first method called in the main project source code, it is not the first code that is executed in a GUI application. For example, in Delphi, the application first executes the initialization section of all the units used by the Application. in modern Delphi (non-.NET), you can remove Application.Initialize without breaking your program. The method is almost empty and no longer plays a critical role in setting up the VCL or application environment. Its historical purpose was to initialize COM and CORBA, but since those are no longer used, the method is effectively redundant.
@@ -683,7 +684,7 @@ begin
     begin
       // Note: FormCount also counts invisible forms and forms created TFrom.Create(Nil).
       FFont:= aFont;
-      for VAR i:= 0 to Screen.CustomFormCount - 1 DO    // FormCount => forms currently displayed on the screen. CustomFormCount = as FormCount but also includes the property pages
+      for VAR i:= 0 to Screen.FormCount - 1 DO    // FormCount => forms currently displayed on the screen. CustomFormCount = as FormCount but also includes the property pages
         Screen.Forms[i].Font:= aFont;
     end;
 end;
@@ -846,7 +847,7 @@ VAR
    DataToSend: TCopyDataStruct;
 begin
   { Prepare the data you want to send }
-  DataToSend.dwData := CopyDataID;  // Registered unique ID for LighSaber apps
+  DataToSend.dwData := CopyDataID;  // Registered unique ID for LightSaber apps
   DataToSend.cbData := Length(CommandLine) * SizeOf(Char);
   DataToSend.lpData := PChar(CommandLine);
 

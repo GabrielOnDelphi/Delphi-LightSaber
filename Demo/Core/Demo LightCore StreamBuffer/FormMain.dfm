@@ -88,7 +88,7 @@ object MainForm: TMainForm
         Caption = 'This tests the speed of TBufferedFileStream (RTL)'
         ExplicitWidth = 263
       end
-      object edtFile2: TCubicPathEdit
+      object edtFile2: TlightPathEdit
         Left = 130
         Top = 124
         Width = 449

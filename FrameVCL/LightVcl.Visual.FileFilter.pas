@@ -1,22 +1,20 @@
 UNIT LightVcl.Visual.FileFilter;
 
 {=============================================================================================================
-   Gabriel Moraru
-   2026.01
+   2026.03
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
-  Allows access to Change method which I need to call after I load the controls from IniFile
+   Allows access to Change method which I need to call after I load the controls from IniFile
 -----------------------------------------------------------------------------------------------------------------------}
 
-INTERFACE  {.$WARN UNIT_PLATFORM OFF}
+INTERFACE  {$WARN UNIT_PLATFORM OFF}
 
 USES
    System.Classes, vcl.filectrl;
 
 TYPE
-  TCubicFilterBox = class(TFilterComboBox)
+  TLightFilterBox = class(TFilterComboBox)
   public
     procedure Change; override;
   end;
@@ -25,13 +23,11 @@ procedure Register;
 
 
 
-
 IMPLEMENTATION
 
 
 
-
-procedure TCubicFilterBox.Change;
+procedure TLightFilterBox.Change;
 begin
   inherited;
 end;
@@ -39,7 +35,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber VCL', [TCubicFilterBox]);
+  RegisterComponents('LightSaber VCL', [TLightFilterBox]);
 end;
 
 

@@ -130,7 +130,7 @@ object frmPower: TfrmPower
         Caption = 'Power status: ?'
         Layout = tlCenter
       end
-      object chkOutOfJuice: TCubicCheckBox
+      object chkOutOfJuice: TLightCheckBox
         Left = 26
         Top = 85
         Width = 327
@@ -143,7 +143,7 @@ object frmPower: TfrmPower
         TabOrder = 0
         AutoSize = True
       end
-      object chkBatteries: TCubicCheckBox
+      object chkBatteries: TLightCheckBox
         Left = 26
         Top = 115
         Width = 315

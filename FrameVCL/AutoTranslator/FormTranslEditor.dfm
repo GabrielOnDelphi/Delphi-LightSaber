@@ -81,7 +81,7 @@ object frmTranslEditor: TfrmTranslEditor
       Align = alBottom
       Caption = 'Target language'
     end
-    object sbxTargetLang: TDropDownSearchBox
+    object sbxTargetLang: TLightDownSearch
       AlignWithMargins = True
       Left = 5
       Top = 57

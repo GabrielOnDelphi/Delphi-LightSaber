@@ -1,7 +1,7 @@
 UNIT LightVcl.Visual.CreationOrderTester;
 
 {-------------------------------------------------------------------------------------------------------------
- 2026.01.31
+   2026.03 FINAL
 
  Multiple constructors:
    https://stackoverflow.com/questions/1758917/delphi-pascal-overloading-a-constructor-with-a-different-prototype
@@ -317,14 +317,24 @@ begin
   if csClicked          in ControlState then WriteLog('  csClicked');
   if csPalette          in ControlState then WriteLog('  csPalette');
   if csReadingState     in ControlState then WriteLog('  csReadingState');
+  if csAlignmentNeeded  in ControlState then WriteLog('  csAlignmentNeeded');
   if csFocusing         in ControlState then WriteLog('  csFocusing');
   if csCreating         in ControlState then WriteLog('  csCreating');          { Set during CreateWnd }
   if csPaintCopy        in ControlState then WriteLog('  csPaintCopy');
   if csCustomPaint      in ControlState then WriteLog('  csCustomPaint');
   if csDestroyingHandle in ControlState then WriteLog('  csDestroyingHandle');  { Set during DestroyWnd }
   if csDocking          in ControlState then WriteLog('  csDocking');
-  {$IF CompilerVersion >= 21} { Delphi 2010+ }
+  if csDesignerHide     in ControlState then WriteLog('  csDesignerHide');      { Hidden by IDE designer, e.g. switching TPageControl pages }
+  if csPanning          in ControlState then WriteLog('  csPanning');
   if csRecreating       in ControlState then WriteLog('  csRecreating');        { Set during RecreateWnd - mentioned in Allen Bauer's comment }
+  if csAligning         in ControlState then WriteLog('  csAligning');          { Aligning child controls, prevents recursive alignment }
+  if csGlassPaint       in ControlState then WriteLog('  csGlassPaint');        { Painting on Aero glass surface }
+  {$IF CompilerVersion >= 35} { Delphi 11 Alexandria+ }
+  if csPrintClient      in ControlState then WriteLog('  csPrintClient');       { Responding to WM_PRINTCLIENT }
+  {$IFEND}
+  {$IF CompilerVersion >= 36} { Delphi 12 Athens+ }
+  if csReadingProps     in ControlState then WriteLog('  csReadingProps');
+  if csDPIIsolated      in ControlState then WriteLog('  csDPIIsolated');       { DPI scaling handled independently }
   {$IFEND}
 end;
 

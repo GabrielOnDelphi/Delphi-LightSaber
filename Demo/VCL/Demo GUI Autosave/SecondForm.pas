@@ -11,11 +11,11 @@ TYPE
     Label1           : TLabel;
     CheckBox1        : TCheckBox;
     grpContainer     : TGroupBox;
-    CubicCheckBox1   : TCubicCheckBox;
+    CubicCheckBox1   : TLightCheckBox;
     GroupBox1        : TGroupBox;
-    CubicCheckBox2   : TCubicCheckBox;
+    CubicCheckBox2   : TLightCheckBox;
     RadioButton1     : TRadioButton;
-    CubicRadioButton1: TCubicRadioButton;
+    CubicRadioButton1: TLightRadioButton;
   end;
 
 

@@ -54,14 +54,14 @@ begin
   Result:= inherited WriteComp(Comp);
   if Result then EXIT;                                                                        { We handled this component in the parent class. Nothing to do here. }
 
-  if Comp.InheritsFrom(TCubicPathEdit)
-  then WriteString(Comp.Owner.Name, Comp.Name, TCubicPathEdit(Comp).Path) else
+  if Comp.InheritsFrom(TlightPathEdit)
+  then WriteString(Comp.Owner.Name, Comp.Name, TlightPathEdit(Comp).Path) else
 
   if Comp.InheritsFrom(TCubicSpinEditSplit)
   then WriteInteger (Comp.Owner.Name, Comp.Name, TCubicSpinEditSplit(Comp).Value) else
 
-  if Comp.InheritsFrom(TFloatSpinEdit)
-  then WriteFloat(Comp.Owner.Name, Comp.Name, TFloatSpinEdit(Comp).Value) else
+  if Comp.InheritsFrom(TLightFloatSpinEdit)
+  then WriteFloat(Comp.Owner.Name, Comp.Name, TLightFloatSpinEdit(Comp).Value) else
 
   if Comp.InheritsFrom(TLogViewer)                                                              { This MUST be before InheritsFrom(TTrackBar) }
   then WriteInteger(Comp.Owner.Name, Comp.Name, ord(TLogViewer(Comp).Verbosity)) else
@@ -69,8 +69,8 @@ begin
   if Comp.InheritsFrom(TCubicListBox)
   then WriteInteger (Comp.Owner.Name, Comp.Name, TCubicListBox(Comp).SelectedItemI) else
 
-  if Comp.InheritsFrom(TCubicFileList)
-  then WriteString(Comp.Owner.Name, Comp.Name, TCubicFileList(Comp).SelectedItem)
+  if Comp.InheritsFrom(TLightFileList)
+  then WriteString(Comp.Owner.Name, Comp.Name, TLightFileList(Comp).SelectedItem)
 
   else
     RAISE Exception.Create('Unsupported control: '+ Comp.ClassName+ ', '+ Comp.Name);
@@ -98,29 +98,29 @@ begin
      then TLogViewer(Comp).Verbosity:= TLogVerbLvl(ReadInteger(Comp.Owner.Name, Comp.Name, 0))
      else
 
-     if Comp.InheritsFrom(TFloatSpinEdit)
-     then TFloatSpinEdit (Comp).Value := ReadFloat(Comp.Owner.Name, Comp.Name, 0)
+     if Comp.InheritsFrom(TLightFloatSpinEdit)
+     then TLightFloatSpinEdit (Comp).Value := ReadFloat(Comp.Owner.Name, Comp.Name, 0)
      else
 
      if Comp.InheritsFrom(TCubicSpinEditSplit)
      then TCubicSpinEditSplit (Comp).Value := ReadInteger(Comp.Owner.Name, Comp.Name, 0)
      else
 
-     if Comp.InheritsFrom(TCubicPathEdit)
-     then TCubicPathEdit (Comp).Path := Self.ReadString (Comp.Owner.Name, Comp.Name, Appdata.AppFolder)
+     if Comp.InheritsFrom(TlightPathEdit)
+     then TlightPathEdit (Comp).Path := Self.ReadString (Comp.Owner.Name, Comp.Name, Appdata.AppFolder)
      else
 
      if Comp.InheritsFrom(TCubicListBox)
      then TCubicListBox (Comp).SelectItemSafe(Self.ReadInteger (Comp.Owner.Name, Comp.Name, 0))
      else
 
-     {NOTE! The last item will be selected only if the TCubicPathEdit associated with this component was read from INI before this. For this, make sure that the TCubicPathEdit appears in the DFM before this component. A simply cut and paste for this component (in form designed) is enough. }
-     if Comp.InheritsFrom(TCubicFileList)
+     {NOTE! The last item will be selected only if the TlightPathEdit associated with this component was read from INI before this. For this, make sure that the TlightPathEdit appears in the DFM before this component. A simply cut and paste for this component (in form designed) is enough. }
+     if Comp.InheritsFrom(TLightFileList)
      then
       begin
        s:= ReadString (Comp.Owner.Name, Comp.Name, '');
        if FileExists(s)
-       then TCubicFileList (Comp).SelectItem(s)
+       then TLightFileList (Comp).SelectItem(s)
       end
      else
        RAISE exception.Create('Unsupported control: '+ Comp.ClassName+ ', '+ Comp.Name);
@@ -133,9 +133,9 @@ function TIniFileVCL.IsSupported(WinCtrl: TComponent): Boolean;
 begin
  Result:= inherited IsSupported(WinCtrl)
        OR WinCtrl.InheritsFrom (TCubicSpinEditSplit)
-       OR WinCtrl.InheritsFrom (TCubicPathEdit)
-       OR WinCtrl.InheritsFrom (TFloatSpinEdit)
-       OR WinCtrl.InheritsFrom (TCubicFileList)
+       OR WinCtrl.InheritsFrom (TlightPathEdit)
+       OR WinCtrl.InheritsFrom (TLightFloatSpinEdit)
+       OR WinCtrl.InheritsFrom (TLightFileList)
        OR WinCtrl.InheritsFrom (TCubicListBox)
        OR WinCtrl.InheritsFrom (TCubicSpinEditD)
        OR WinCtrl.InheritsFrom (TLogViewer)  //Note: The "master" of the verbosity events is the Grid not the trackbar
