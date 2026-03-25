@@ -81,6 +81,7 @@
         </DelphiCompile>
         <DCCReference Include="FormMain.pas">
             <Form>MainForm</Form>
+            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="..\..\..\FrameVCL\LightVcl.Visual.AppData.pas"/>
         <DCCReference Include="..\..\..\FrameVCL\LightVcl.Visual.AppDataForm.pas"/>

@@ -18,7 +18,7 @@ UNIT LightVcl.Graph.Loader;
      Undefine Jpg2000 if you don't want to download and compile those libraries. In this case, some functionality will not be available.
 
   TESTER:
-     c:\Myprojects\Project Testers\gr LoadGraph\
+     c:\Projects\Testers\gr LoadGraph\
      c:\MyProjects\Projects GRAPHICS Resamplers\GLOBAL Tester\TEST IMAGES\
 -------------------------------------------------------------------------------------------------------------}
 

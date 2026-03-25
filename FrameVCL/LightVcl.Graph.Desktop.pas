@@ -7,7 +7,7 @@ UNIT LightVcl.Graph.Desktop;
 ==============================================================================================================
 
   Tester:
-     c:\MyProjects\Project Testers\gr cDesktop.pas Tester\cDesktop_Tester.dpr
+     c:\Projects\Testers\gr cDesktop.pas Tester\cDesktop_Tester.dpr
 
 =============================================================================================================}
 

@@ -337,7 +337,7 @@ begin
   // Map filtered row index to actual index in the original list
   actualIndex:= RamLog.Lines.Row2FilteredRow(Row, FVerbosity);
 
-  if (actualIndex >= 0) 
+  if (actualIndex >= 0)
   AND (actualIndex < RamLog.Lines.Count)
   then Result:= RamLog.Lines[actualIndex];
 end;
@@ -575,7 +575,7 @@ begin
   SelectedRowIndex:= Selected;
 
   // Check if a valid data row is selected (0-based, so >= 0)
-  if (SelectedRowIndex >= 0) 
+  if (SelectedRowIndex >= 0)
   AND (SelectedRowIndex < FFilteredRowCount)
   then
     begin
@@ -680,3 +680,4 @@ end;
 
 
 end.
+

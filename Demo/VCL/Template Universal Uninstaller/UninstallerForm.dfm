@@ -5,7 +5,7 @@ object frmMain: TfrmMain
   AlphaBlendValue = 245
   Anchors = [akLeft, akBottom]
   BorderStyle = bsToolWindow
-  ClientHeight = 299
+  ClientHeight = 349
   ClientWidth = 666
   Color = clBtnFace
   DoubleBuffered = True
@@ -21,14 +21,14 @@ object frmMain: TfrmMain
   OnCreate = FormCreate
   DesignSize = (
     666
-    299)
+    349)
   TextHeight = 14
   object imgLogo: TImage
     AlignWithMargins = True
     Left = 3
     Top = 3
     Width = 196
-    Height = 293
+    Height = 343
     Align = alLeft
     Center = True
     Picture.Data = {
@@ -2773,7 +2773,7 @@ object frmMain: TfrmMain
   end
   object lblVersion: TLabel
     Left = 29
-    Top = -24
+    Top = 26
     Width = 122
     Height = 13
     Anchors = [akBottom]
@@ -2789,13 +2789,13 @@ object frmMain: TfrmMain
     Left = 202
     Top = 0
     Width = 464
-    Height = 299
+    Height = 349
     Align = alClient
     Caption = 'Panel1'
     TabOrder = 0
     DesignSize = (
       464
-      299)
+      349)
     object lblDiscount: TLabel
       AlignWithMargins = True
       Left = 4
@@ -2844,7 +2844,7 @@ object frmMain: TfrmMain
       Left = 4
       Top = 50
       Width = 456
-      Height = 180
+      Height = 193
       Align = alTop
       Lines.Strings = (
         ''
@@ -2872,7 +2872,7 @@ object frmMain: TfrmMain
     object edtPath: TlightPathEdit
       AlignWithMargins = True
       Left = 4
-      Top = 236
+      Top = 249
       Width = 456
       Height = 41
       ShowCreateBtn = False
@@ -2883,7 +2883,7 @@ object frmMain: TfrmMain
     end
     object btnUninstall: TButton
       Left = 4
-      Top = 265
+      Top = 315
       Width = 68
       Height = 25
       Hint = 'When possible the application will send the files to RecycleBin'
@@ -2895,7 +2895,7 @@ object frmMain: TfrmMain
     end
     object btnResetIni: TButton
       Left = 80
-      Top = 265
+      Top = 315
       Width = 214
       Height = 25
       Hint = 
@@ -2909,7 +2909,7 @@ object frmMain: TfrmMain
     end
     object btnFeedback: TButton
       Left = 348
-      Top = 257
+      Top = 307
       Width = 94
       Height = 37
       Hint = 
@@ -2923,8 +2923,8 @@ object frmMain: TfrmMain
       OnClick = btnFeedbackClick
     end
     object btn1: TButton
-      Left = 396
-      Top = 162
+      Left = 380
+      Top = 194
       Width = 68
       Height = 26
       Caption = 'btn1'
@@ -2934,9 +2934,7 @@ object frmMain: TfrmMain
     end
   end
   object CountDown: TLightCountDown
-    StartValue = 7000
-    OnTimesUp = CountDownTimesUp
-    Left = 278
-    Top = 102
+    Left = 616
+    Top = 64
   end
 end

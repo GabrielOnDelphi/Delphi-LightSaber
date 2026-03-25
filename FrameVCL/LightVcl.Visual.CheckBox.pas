@@ -18,7 +18,7 @@ UNIT LightVcl.Visual.CheckBox;
 
   Similar: https://stackoverflow.com/questions/9678029/automatically-resize-a-delphi-button
 
-  Tester: c:\Myprojects\Project Testers\cubic VCL controls tester\
+  Tester: c:\Projects\Testers\cubic VCL controls tester\
 
   Limitations:
     Glyph width is queried via StyleServices (system DPI), not per-monitor DPI.

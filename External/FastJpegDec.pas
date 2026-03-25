@@ -18,7 +18,7 @@ UNIT FastJpegDec;
 -------------------------------------------------------------------------------------------------------------  
    Updated: 2026.02.21
    Gabriel Moraru
-   Tester: c:\projects\Project Testers\gr LoadGraph\
+   Tester: c:\Projects\Testers\gr LoadGraph\
 -------------------------------------------------------------------------------------------------------------
    
    Source

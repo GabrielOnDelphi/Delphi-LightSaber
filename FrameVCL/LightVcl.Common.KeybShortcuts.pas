@@ -23,7 +23,7 @@ UNIT LightVcl.Common.KeybShortcuts;
      * LightVcl.Common.ExecuteShell.pas
 
    Tester:
-       c:\MyProjects\Project Testers\Shortcut lister\Tester.dpr
+       c:\Projects\Testers\Shortcut lister\Tester.dpr
 
 =============================================================================================================}
 

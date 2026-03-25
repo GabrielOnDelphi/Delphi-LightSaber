@@ -18,7 +18,7 @@ object FormPalette: TFormPalette
     Text = 'btnReset'
     OnClick = btnResetClick
   end
-  object ColorPalette1: TColorPalette
+  object ColorPalette1: TLightColorPalette
     Align = Left
     Padding.Left = 6.000000000000000000
     Padding.Top = 6.000000000000000000

@@ -7,7 +7,7 @@ unit FastJpegDecHelper;
 
    Used by: cGraphLoader.pas
    Not all jpegs are supported by JpegDecHelper. In this case we fall back to WIC or the standard LoadGraph loader (WIC).
-   Tester: c:\Myprojects\Project Testers\gr LoadGraph\
+   Tester: c:\Projects\Testers\gr LoadGraph\
 -------------------------------------------------------------------------------------------------------------}
  
 INTERFACE

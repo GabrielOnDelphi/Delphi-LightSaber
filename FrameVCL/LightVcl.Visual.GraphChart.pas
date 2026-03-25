@@ -8,7 +8,7 @@ UNIT LightVcl.Visual.GraphChart;
      Assign data points to each serie. The matrix must be indexed in 0 (the first data point should be at index 0) no matter if the axis was indexed in 0 or 1.
      Set LabelSpacing
 
-   Tester: c:\Projects\Project Testers\cChartFastQ\Project3.dpr
+   Tester: c:\Projects\Testers\cChartFastQ\Project3.dpr
 --------------------------------------------------------------------------------------------------}
 
 INTERFACE

@@ -586,7 +586,7 @@ end;
 
 { Replaces all pixels matching OldColor with NewColor (exact match).
   Converts bitmap to pf24bit if not already.
-  Tester: c:\Myprojects\Project Testers\gr cGraphicsTester\Tester.dpr }
+  Tester: c:\Projects\Testers\gr cGraphicsTester\Tester.dpr }
 procedure ReplaceColor(BMP: TBitmap; OldColor, NewColor: TColor);
 VAR
    x, y: Integer;

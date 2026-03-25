@@ -24,7 +24,7 @@ UNIT LightVcl.Graph.FX.Rotate;
     False: The bitmap size remains the same; the rotated image will be cropped
 
   Tester:
-      c:\MyProjects\Project Testers\gr Rotate, flip tester\RotateTester.dpr
+      c:\Projects\Testers\gr Rotate, flip tester\RotateTester.dpr
 ==================================================================================================}
 
 INTERFACE

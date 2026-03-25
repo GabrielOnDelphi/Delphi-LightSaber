@@ -83,6 +83,7 @@
         </DelphiCompile>
         <DCCReference Include="FormMain.pas">
             <Form>MainForm</Form>
+            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="FormSettings.pas"/>
         <DCCReference Include="uInitialization.pas"/>

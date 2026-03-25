@@ -8,7 +8,7 @@ unit LightVcl.Visual.GroupBox;
 --------------------------------------------------------------------------------------------------------------
   A groupbox that has a bold caption
 
-  Tester: c:\Myprojects\Project Testers\cubic VCL controls tester\
+  Tester: c:\Projects\Testers\cubic VCL controls tester\
 =============================================================================================================}
 
 interface

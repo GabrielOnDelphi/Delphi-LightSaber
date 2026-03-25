@@ -19,7 +19,7 @@ UNIT LightVcl.Visual.PathEdit;
 
 
   Tester:
-     c:\projects\Project Testers\Cubic VCL LightVcl.Visual.PathEdit\LightVcl.Visual.PathEdit_Tester.dpr
+     c:\Projects\Testers\Cubic VCL LightVcl.Visual.PathEdit\LightVcl.Visual.PathEdit_Tester.dpr
 
   See: What's the difference between CreateWnd and CreateWindowHandle?
        https://stackoverflow.com/questions/582903/whats-the-difference-between-createwnd-and-createwindowhandle

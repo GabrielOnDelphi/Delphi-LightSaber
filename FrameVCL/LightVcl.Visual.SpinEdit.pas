@@ -15,7 +15,7 @@
       Checks the value entered by the user. If the value is not in the Min/Max range, then the OnChange is NOT called. In the original control, this was called leaning to errors (since the input was invalid/not in range).
 
   Tester
-      c:\Myprojects\Project Testers\Cubic VCL SpinEdits\Tester.dpr
+      c:\Projects\Testers\Cubic VCL SpinEdits\Tester.dpr
 =============================================================================================================}
 
 INTERFACE

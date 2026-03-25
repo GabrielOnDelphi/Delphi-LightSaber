@@ -26,7 +26,7 @@ unit DirectoryWatch;
    FIX: Updated comment accuracy
 
  Tester:
-     c:\Projects\Project Testers\DirectoryWatch tester\
+     c:\Projects\Testers\DirectoryWatch tester\
 ============================================================================================================*)
 
 INTERFACE

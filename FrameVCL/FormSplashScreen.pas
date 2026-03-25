@@ -26,7 +26,7 @@ UNIT FormSplashScreen;
      - Click the image to close the splash immediately
 
    TESTER:
-     c:\MyProjects\Project Testers\SplashScreen.pas\SplashTester.dpr
+     c:\Projects\Testers\SplashScreen.pas\SplashTester.dpr
 =============================================================================================================}
 
 INTERFACE

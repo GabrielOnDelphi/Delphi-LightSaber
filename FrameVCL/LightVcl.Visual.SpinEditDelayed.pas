@@ -26,7 +26,7 @@ UNIT LightVcl.Visual.SpinEditDelayed;
       that was not yet created (because the initialization was halted by that message box). So, use it with care.
 
   Tester
-     c:\Myprojects\Project Testers\Cubic VCL SpinEdits\Tester.dpr
+     c:\Projects\Testers\Cubic VCL SpinEdits\Tester.dpr
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE

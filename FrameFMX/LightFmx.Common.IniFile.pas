@@ -75,7 +75,7 @@ UNIT LightFmx.Common.IniFile;
   ____________
 
   Tester:
-     c:\Myprojects\Project Testers\IniFile tester\Tester.dpr
+     c:\Projects\Testers\IniFile tester\Tester.dpr
      https://github.com/GabrielOnDelphi/Dephi-LightSaber-GUI_AutoSave
 
 =============================================================================================================}
@@ -161,17 +161,25 @@ end;
   Note:
      Components[] just yields the components that are OWNED by the form.
      So, if we are iterating over it will miss any components that are added dynamically, and not owned by the form, or components that are owned by frames.
-     Update 2021: Now frames are supported. All sub-components of a frame are stored to the INI file  }
+     Update 2021: Now frames are supported. All sub-components of a frame are stored to the INI file.
+     Update 2026: Extended recursion to all component containers, not just frames (fixes custom components like TLogVerbFilter).  }
 procedure TIniFileApp.SaveForm(Form: TForm; AutoState: TAutoState= asPosOnly);
 
   procedure WriteComponentsOf(Component: TComponent);
-  VAR i: Integer;
+  VAR
+    i: Integer;
+    Child: TComponent;
   begin
     for i:= 0 to Component.ComponentCount-1 DO
-     if IsSupported(Component.Components[i]) then
-      if Component.Components[i].InheritsFrom(TFrame) //Frames
-      then WriteComponentsOf(Component.Components[i])
-      else WriteComp(Component.Components[i]);
+    begin
+      Child:= Component.Components[i];
+      if IsSupported(Child) AND (Child.Name > '')
+      then WriteComp(Child);
+
+      { Recurse into any component that owns sub-components (frames, custom controls, etc.) }
+      if Child.ComponentCount > 0
+      then WriteComponentsOf(Child);
+    end;
   end;
 
 begin
@@ -193,13 +201,20 @@ end;
 procedure TIniFileApp.LoadForm(Form: TForm; AutoState: TAutoState= asPosOnly);
 
    procedure ReadComponentsOf(Component: TComponent);
-   VAR i: Integer;
+   VAR
+     i: Integer;
+     Child: TComponent;
    begin
      for i:= 0 to Component.ComponentCount-1 DO
-       if IsSupported(Component.Components[i]) then
-         if Component.Components[i].InheritsFrom(TFrame)
-         then ReadComponentsOf(Component.Components[i])
-         else ReadComp(Component.Components[i]);
+     begin
+       Child:= Component.Components[i];
+       if IsSupported(Child) AND (Child.Name > '')
+       then ReadComp(Child);
+
+       { Recurse into any component that owns sub-components (frames, custom controls, etc.) }
+       if Child.ComponentCount > 0
+       then ReadComponentsOf(Child);
+     end;
    end;
 
 begin
@@ -477,7 +492,7 @@ procedure TIniFileApp.WriteGroup(WinCtrl: TControl);  { Save/load all  in a grou
 VAR i: Integer;
 begin
  for i:= 0 to WinCtrl.ControlsCount-1 DO
-   if IsSupported(WinCtrl.Controls[i])
+   if IsSupported(WinCtrl.Controls[i]) AND (WinCtrl.Controls[i].Name > '')
    then WriteComp(WinCtrl.Controls[i]);
 end;
 
@@ -487,7 +502,7 @@ procedure TIniFileApp.ReadGroup(WinCtrl: TControl);
 VAR i: Integer;
 begin
  for i:= 0 to WinCtrl.ControlsCount-1 DO
-   if IsSupported(WinCtrl.Controls[i])
+   if IsSupported(WinCtrl.Controls[i]) AND (WinCtrl.Controls[i].Name > '')
    then ReadComp(WinCtrl.Controls[i]);
 end;
 

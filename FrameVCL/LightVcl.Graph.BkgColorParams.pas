@@ -19,7 +19,7 @@ UNIT LightVcl.Graph.BkgColorParams;
    Stream versioning: CurrentVersion=1. Older BioniX v13 format is auto-converted on read.
 
    Tester:
-       c:\MyProjects\Project Testers\gr cGraphBorder.pas tester\TesterFadeBrd.dpr
+       c:\Projects\Testers\gr cGraphBorder.pas tester\TesterFadeBrd.dpr
 --------------------------------------------------------------------------------------------------}
 
 INTERFACE

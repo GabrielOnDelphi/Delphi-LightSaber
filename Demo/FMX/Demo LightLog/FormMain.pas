@@ -45,6 +45,9 @@ USES LightCore.AppData;
 
 
 
+{ Verbosity persistence: relies on auto-state (asFull) to save/restore the trackbar UI control.
+  On restore, TrackBarChange fires and syncs Log.Verbosity automatically.
+  Compare with TfrmRamLog (VCL) which takes the opposite approach: saving Log.Verbosity directly. }
 procedure TMainForm.FormCreate(Sender: TObject);
 begin
   LogViewer.ObserveAppDataLog;

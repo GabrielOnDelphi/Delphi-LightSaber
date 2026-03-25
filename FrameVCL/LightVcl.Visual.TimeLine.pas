@@ -17,7 +17,7 @@ UNIT LightVcl.Visual.TimeLine;
    C:\Projects\Packages\Third party packages]RangeSelector.pas
 
  Tester:
-   c:\Projects\Project Testers\TimeLine tester\
+   c:\Projects\Testers\TimeLine tester\
 }
 
 INTERFACE

@@ -46,7 +46,7 @@ TYPE
     btn1         : TButton;
     lblDiscount  : TLabel;
     inetDiscount : TInternetLabel;
-    CountDown    : TLightCountDown;
+    CountDown: TLightCountDown;
     procedure btnUninstallClick (Sender: TObject);
     procedure btnFeedbackClick  (Sender: TObject);
     procedure FormCreate        (Sender: TObject);
@@ -373,5 +373,5 @@ end;
 
 
 
-end.     
+end.
 

@@ -6,11 +6,13 @@
 --------------------------------------------------------------------------------------------------------------
    Responsive layout components for FMX.
 
-   TCenteredMaxLayout
+   TLightCenteredLayout
      A layout that centers its content horizontally within the parent, capped at MaxWidth pixels.
      When the parent is narrower than MaxWidth, the layout shrinks to fit.
      Auto-sizes its height to fit children (when Align is Top/Bottom/MostTop/MostBottom).
      LabelWidth and RowHeight propagate to all child TResponsiveRowLayout controls.
+     Children can be any control — centering, max-width capping, and auto-height apply to all.
+     Only LabelWidth/RowHeight propagation is specific to TResponsiveRowLayout children.
      Recommended: set Align=Top. Place inside TVertScrollBox if content may exceed the form height.
      User Margins are fully available (centering is handled via SetBounds, not Margins).
 
@@ -22,12 +24,13 @@
      Auto-sizes its own Height based on current arrangement (grows when stacked).
      Setting Height externally (e.g. in Object Inspector) syncs to RowHeight.
      Respects Padding (children are inset accordingly).
-     Exactly 2 children. First child = label (Align=None). Second child = control (keeps its own width).
+     Exactly 2 children. First child = label (Align=None). Second child = control.
+       Ctrl.Align = Right → right-aligned in its row. Client → fills remaining width. None → after label.
 
    Example hierarchy:
 
      TVertScrollBox (Align=Client)                            <-- optional, for scrolling
-       +-- TCenteredMaxLayout                    (Align=Top, MaxWidth=500)
+       +-- TLightCenteredLayout                    (Align=Top, MaxWidth=500)
              +-- TResponsiveRowLayout            (Align=Top)
              |     +-- TLabel                    (Align=None)
              |     +-- TSpinBox                  (Align=None)
@@ -43,7 +46,7 @@ USES
   FMX.Types, FMX.Controls, FMX.Layouts;
 
 TYPE
-  TCenteredMaxLayout = class(TLayout)
+  TLightCenteredLayout = class(TLayout)
   private
     FMaxWidth: Single;
     FLabelWidth: Single;
@@ -94,10 +97,10 @@ IMPLEMENTATION
 
 
 {-------------------------------------------------------------------------------------------------------------
-   TCenteredMaxLayout
+   TLightCenteredLayout
 -------------------------------------------------------------------------------------------------------------}
 
-constructor TCenteredMaxLayout.Create(AOwner: TComponent);
+constructor TLightCenteredLayout.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FMaxWidth:= 400;
@@ -107,7 +110,7 @@ begin
 end;
 
 
-procedure TCenteredMaxLayout.SetMaxWidth(const Value: Single);
+procedure TLightCenteredLayout.SetMaxWidth(const Value: Single);
 begin
   if FMaxWidth <> Value then
   begin
@@ -117,7 +120,7 @@ begin
 end;
 
 
-procedure TCenteredMaxLayout.SetLabelWidth(const Value: Single);
+procedure TLightCenteredLayout.SetLabelWidth(const Value: Single);
 begin
   if FLabelWidth <> Value then
   begin
@@ -127,7 +130,7 @@ begin
 end;
 
 
-procedure TCenteredMaxLayout.SetRowHeight(const Value: Single);
+procedure TLightCenteredLayout.SetRowHeight(const Value: Single);
 begin
   if FRowHeight <> Value then
   begin
@@ -140,7 +143,7 @@ end;
 { Intercepts positioning by the parent's alignment engine.
   When Align is Top/Bottom, the parent passes the full available width.
   We cap it to MaxWidth and shift X to center ourselves. }
-procedure TCenteredMaxLayout.SetBounds(X, Y, AWidth, AHeight: Single);
+procedure TLightCenteredLayout.SetBounds(X, Y, AWidth, AHeight: Single);
 var
   DesiredW, NewX: Single;
 begin
@@ -156,7 +159,7 @@ begin
 end;
 
 
-procedure TCenteredMaxLayout.DoRealign;
+procedure TLightCenteredLayout.DoRealign;
 var
   NewH, ChildBottom: Single;
   i: Integer;
@@ -164,8 +167,8 @@ begin
   if FRealigning then EXIT;
   FRealigning:= True;
   try
-    { Propagate properties directly to avoid triggering redundant Realign on each row.
-      The subsequent inherited call will give rows their correct Width and trigger DoRealign. }
+    { Propagate properties directly — setters would trigger Realign on each row.
+      We force child re-layout explicitly after inherited (see below). }
     for i:= 0 to ControlsCount - 1 do
       if Controls[i] is TResponsiveRowLayout then
       begin
@@ -175,14 +178,22 @@ begin
 
     inherited;
 
-    { Auto-size height to fit all visible children. Only for stacking alignments;
-      for Align=Client the parent controls our height. }
+    { Force child rows to re-layout — inherited only triggers DoRealign on children
+      whose bounds changed; property-only changes (LabelWidth, RowHeight) need
+      an explicit nudge so they take effect at design time. }
+    for i:= 0 to ControlsCount - 1 do
+      if Controls[i] is TResponsiveRowLayout then
+        TResponsiveRowLayout(Controls[i]).Realign;
+
+    { Auto-size height to fit aligned children only. None-aligned controls are
+      "floating" and don't participate — including them causes progressive drift
+      because the layout doesn't manage their position. }
     if Align in [TAlignLayout.Top, TAlignLayout.Bottom,
                  TAlignLayout.MostTop, TAlignLayout.MostBottom] then
     begin
       NewH:= 0;
       for i:= 0 to ControlsCount - 1 do
-        if Controls[i].Visible then
+        if Controls[i].Visible and (Controls[i].Align <> TAlignLayout.None) then
         begin
           ChildBottom:= Controls[i].Position.Y + Controls[i].Height + Controls[i].Margins.Bottom;
           if ChildBottom > NewH
@@ -204,7 +215,7 @@ end;
 
    Place exactly two children inside: first = label, second = input control.
    Label must have Align = None (we manage its width).
-   Control keeps its own width — set Align = Left or None.
+   Control: Align = None/Left (after label), Right (right edge), Client (fills remaining width).
 
    When enough room:   [Label |Gap| Control    ]   (side by side, control at own width)
    When too narrow:    [Label.......................]   (stacked)
@@ -309,23 +320,38 @@ begin
     StartY:= Padding.Top;
     AvailW:= Max(0, Width - Padding.Left - Padding.Right);
 
-    { BreakWidth > 0: use as explicit threshold. BreakWidth = 0: auto from content. }
+    { BreakWidth > 0: use as explicit threshold. BreakWidth = 0: auto from content.
+      Client-aligned controls fill remaining space, so only require room for label + gap. }
     if FBreakWidth > 0
     then SideBySideOK:= AvailW >= FBreakWidth
+    else if Ctrl.Align = TAlignLayout.Client
+    then SideBySideOK:= AvailW >= FLabelWidth + FGap
     else SideBySideOK:= AvailW >= FLabelWidth + FGap + Ctrl.Width;
 
+    { Note: inherited (AlignObjects) already processed Ctrl based on its Align
+      (Right → repositioned, Client → width stretched). Our SetBounds calls below
+      override those positions/sizes, which is safe because all FMX alignment
+      goes through DoRealign, which we control. }
     if SideBySideOK then
     begin
-      { Side by side: label at fixed width, control after gap keeps its own width }
-      Lbl.SetBounds (StartX, StartY, FLabelWidth, FRowHeight);
-      Ctrl.SetBounds(StartX + FLabelWidth + FGap, StartY, Ctrl.Width, FRowHeight);
+      { Side by side: label at fixed width, control in remaining space }
+      Lbl.SetBounds(StartX, StartY, FLabelWidth, FRowHeight);
+      if Ctrl.Align = TAlignLayout.Right
+      then Ctrl.SetBounds(StartX + AvailW - Ctrl.Width, StartY, Ctrl.Width, FRowHeight)
+      else if Ctrl.Align = TAlignLayout.Client
+      then Ctrl.SetBounds(StartX + FLabelWidth + FGap, StartY, AvailW - FLabelWidth - FGap, FRowHeight)
+      else Ctrl.SetBounds(StartX + FLabelWidth + FGap, StartY, Ctrl.Width, FRowHeight);
       NewH:= StartY + FRowHeight + Padding.Bottom;
     end
     else
     begin
-      { Stacked: label on top at full width, control below keeps its own width }
-      Lbl.SetBounds (StartX, StartY, AvailW, FRowHeight);
-      Ctrl.SetBounds(StartX, StartY + FRowHeight + FGap, Ctrl.Width, FRowHeight);
+      { Stacked: label on top, control below }
+      Lbl.SetBounds(StartX, StartY, AvailW, FRowHeight);
+      if Ctrl.Align = TAlignLayout.Right
+      then Ctrl.SetBounds(StartX + AvailW - Ctrl.Width, StartY + FRowHeight + FGap, Ctrl.Width, FRowHeight)
+      else if Ctrl.Align = TAlignLayout.Client
+      then Ctrl.SetBounds(StartX, StartY + FRowHeight + FGap, AvailW, FRowHeight)
+      else Ctrl.SetBounds(StartX, StartY + FRowHeight + FGap, Ctrl.Width, FRowHeight);
       NewH:= StartY + FRowHeight + FGap + FRowHeight + Padding.Bottom;
     end;
 
@@ -344,7 +370,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber FMX', [TCenteredMaxLayout, TResponsiveRowLayout]);
+  RegisterComponents('LightSaber FMX', [TLightCenteredLayout, TResponsiveRowLayout]);
 end;
 
 

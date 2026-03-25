@@ -16,7 +16,7 @@ UNIT LightVcl.Graph.FX.Gradient;
       See also: Embarcadero's GraphUtil.pas
                 c:\MyProjects\Packages\Third party packages\GradientFill.pas
 
-      Tester: c:\Myprojects\Project Testers\gr cGraphicsTester\Tester.dpr
+      Tester: c:\Projects\Testers\gr cGraphicsTester\Tester.dpr
 ==================================================================================================}
 
 INTERFACE

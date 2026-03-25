@@ -20,7 +20,7 @@ USES
 TYPE
  TIntervalChg = procedure(Sender: TObject; NewTime: Cardinal) of object;
 
- TLighTLightCountDown = class(TComponent)
+ TLightCountDown = class(TComponent)
  private
    wasEnabled     : Boolean;       { Used to resume the countdown }
    Timer          : TCubicTimer;
@@ -67,7 +67,7 @@ USES LightCore.Math, LightCore.Time;
 
 
 
-constructor TLighTLightCountDown.Create(AOwner: TComponent);
+constructor TLightCountDown.Create(AOwner: TComponent);
 begin
  inherited Create(AOwner);
  FStartValue  := 10000;
@@ -80,7 +80,7 @@ begin
 end;
 
 
-procedure TLighTLightCountDown.Tick;
+procedure TLightCountDown.Tick;
 begin
  if Enabled then
   begin
@@ -106,7 +106,7 @@ begin
 end;
 
 
-procedure TLighTLightCountDown.Start;
+procedure TLightCountDown.Start;
 begin
  FTimeLeft:= StartValue;     { Reset the time left to its original value }
  Timer.Restart;              { Sets the countdown back to zero and starts the timer }
@@ -115,7 +115,7 @@ begin
 end;
 
 
-procedure TLighTLightCountDown.Stop;
+procedure TLightCountDown.Stop;
 begin
  wasEnabled:= Timer.Enabled; { Used by ResumeCountdown }
  Timer.Enabled:= FALSE;      { Stop timer }
@@ -124,14 +124,14 @@ begin
 end;
 
 
-procedure TLighTLightCountDown.Reset;
+procedure TLightCountDown.Reset;
 begin
  FTimeLeft:= StartValue;     { Reset the TimeLeft to its original value and starts timer ONLY if was enabled before }
  Timer.Reset;
 end;
 
 
-procedure TLighTLightCountDown.Restart;
+procedure TLightCountDown.Restart;
 begin
   Reset;                      { Reset the time left to its original value }
  Timer.Enabled:= TRUE;
@@ -141,7 +141,7 @@ end;
 
 
 { Resume the countdown from where it was left, but only if it was enabled/running when Stop was called }
-function TLighTLightCountDown.Resume: Boolean;
+function TLightCountDown.Resume: Boolean;
 begin
  Result:= wasEnabled;
  if Result then
@@ -161,7 +161,7 @@ end;
 
 
 { If interval under 15 minutes, show time in seconds (max 3 digits: up to 999 seconds) else show time in minutes }
-function TLighTLightCountDown.TimeLeftNice: Integer;        { Used by TrayText.Text }
+function TLightCountDown.TimeLeftNice: Integer;        { Used by TrayText.Text }
 begin
  if StartValue <= 15 * SecsPerMin * MSecsPerSec
  then Result:= RoundEx(TimeLeft/1000)
@@ -169,13 +169,13 @@ begin
 end;
 
 
-function TLighTLightCountDown.TimeLeftS: string;
+function TLightCountDown.TimeLeftS: string;
 begin
  Result:= MiliSecToTimeAuto(TimeLeft);
 end;
 
 
-procedure TLighTLightCountDown.TimerTimer(Sender: TObject);
+procedure TLightCountDown.TimerTimer(Sender: TObject);
 begin
  Tick;
 end;
@@ -188,17 +188,17 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    GETTERS/SETTERS
 -------------------------------------------------------------------------------------------------------------}
-function TLighTLightCountDown.Enabled: Boolean;
+function TLightCountDown.Enabled: Boolean;
 begin
  Result:= Timer.Enabled;
 end;
 
 
 
-procedure TLighTLightCountDown.setStartValue(Value: Cardinal);
+procedure TLightCountDown.setStartValue(Value: Cardinal);
 VAR iTime: Integer;
 begin
- Assert(Value > 0, 'TLighTLightCountDown.setStartValue: StartValue cannot be zero');
+ Assert(Value > 0, 'TLightCountDown.setStartValue: StartValue cannot be zero');
  if FStartValue <> Value then
   begin
    FStartValue:= Value;
@@ -221,14 +221,14 @@ begin
 end;
 
 
-procedure TLighTLightCountDown.setResolution(Value: Cardinal);
+procedure TLightCountDown.setResolution(Value: Cardinal);
 begin
- Assert(Value > 0, 'TLighTLightCountDown.setResolution: Resolution cannot be zero');
+ Assert(Value > 0, 'TLightCountDown.setResolution: Resolution cannot be zero');
  Timer.Interval:= Value;
 end;
 
 
-function TLighTLightCountDown.getResolution: Cardinal;
+function TLightCountDown.getResolution: Cardinal;
 begin
  Result:= Timer.Interval;
 end;
@@ -240,7 +240,7 @@ end;
 
 procedure Register;
 begin
-  RegisterComponents('LightSaber VCL', [TLighTLightCountDown]);
+  RegisterComponents('LightSaber VCL', [TLightCountDown]);
 end;
 
 end.

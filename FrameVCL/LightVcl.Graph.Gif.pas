@@ -223,7 +223,7 @@ end;
   Performance: 100MB animated GIF takes ~4.1s to analyze.
 
   See: stackoverflow.com/questions/59010649/how-to-detect-animated-gif
-  Tester: c:\Myprojects\Project Testers\gr GIF frame counter\Tester.dpr
+  Tester: c:\Projects\Testers\gr GIF frame counter\Tester.dpr
 -------------------------------------------------------------------------------------------------------------}
 function IsAnimated(CONST AGraphFile: string): Boolean;
 begin

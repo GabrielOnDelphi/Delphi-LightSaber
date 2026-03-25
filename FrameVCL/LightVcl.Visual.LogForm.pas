@@ -15,7 +15,8 @@ UNIT LightVcl.Visual.LogForm;
      c:\Projects\LightSaber\Demo\Demo LightLog\Demo_Log.dpr
 =============================================================================================================}
 
-//ToDo: bug: it seems that it does not save the position of the trackbar!
+// Fixed 2026.03: trackbar persistence was broken because WriteComponentsOf/ReadComponentsOf
+// in IniFile only recursed into TFrame descendants, missing TLogVerbFilter's sub-components.
 
 INTERFACE
 
@@ -109,6 +110,9 @@ end;
 
 {-------------------------------------------------------------------------------------------------------------
    SETTINGS
+   Verbosity persistence: saves Log.Verbosity (the model) directly.
+   On restore, setting Log.Verbosity syncs the trackbar automatically via setVerbFilter.
+   Compare with TMainForm (FMX demo) which takes the opposite approach: saving the trackbar UI control via auto-state.
 -------------------------------------------------------------------------------------------------------------}
 procedure TfrmRamLog.SaveSettings;
 begin

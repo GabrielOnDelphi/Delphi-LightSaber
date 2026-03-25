@@ -23,7 +23,7 @@ UNIT janFX;
     Bug reported to Jedi: http://issuetracker.delphi-jedi.org/view.php?id=6436
 
   Tester:
-     c:\Projects\Project Testers\gr JanFx demo\Tester.dpr
+     c:\Projects\Testers\gr JanFx demo\Tester.dpr
      c:\Projects\LightSaber ImageResampler Test\ResamplerTester.dpr
 
   Unit tests:

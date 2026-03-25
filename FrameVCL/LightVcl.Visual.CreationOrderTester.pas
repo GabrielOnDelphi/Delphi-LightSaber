@@ -37,8 +37,10 @@ UNIT LightVcl.Visual.CreationOrderTester;
             https://stackoverflow.com/questions/582903/whats-the-difference-between-createwnd-and-createwindowhandle
 
  Tester:
-   c:\Myprojects\Project Testers\Custom component creation order\ProjectTester.dpr
+   LightSaber\Demo\VCL\Demo Custom component creation order\Demo_CreationOrder.dpr
 
+ Minimum target: 
+   Delphi Rio
 
   About constructors
     https://stackoverflow.com/questions/19750813/delphi-6-create-new-form-with-constructor
@@ -138,7 +140,7 @@ TYPE
       FButton: TButton;
       FInitialized: Boolean;
       CONST LogActive= FALSE;
-      CONST LogFile= 'c:\Projects\LightSaber\CreationOrder.txt';
+      CONST LogFile= 'CreationOrderTest.txt';
     protected
       procedure Loaded; override;
       procedure CreateWnd; override;
@@ -184,7 +186,7 @@ begin
   FButton.Parent   := Self;         // Typically, this works fine, provided that the sub-control does not require a valid HWND right way. Remy Lebeau
   FButton.Visible  := TRUE;
   FButton.Align    := alLeft;
-  FButton.Font.Size:= 20;
+  FButton.Font.Size:= 14;
   FButton.Caption  := 'SOMETHING';
 
   { LOG }
@@ -201,7 +203,7 @@ destructor TCreationOrderTest.Destroy;
 begin
   WriteLog('Destroy');
   inherited Destroy;
-  WriteLog('Destroy post');
+  WriteLog('Destroy post');   //  Technically risky but safe here since it only accesses class constants and calls a standalone function. The object memory is still allocated at that point (freed later by FreeInstance).
 end;
 
 

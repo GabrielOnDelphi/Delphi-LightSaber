@@ -19,7 +19,7 @@ UNIT LightVcl.Graph.BkgColor;
    Parameters are configured via RBkgColorParams from LightVcl.Graph.BkgColorParams.pas
 
    Tester:
-     c:\MyProjects\Project Testers\gr cGraphBorder.pas tester\TesterFadeBrd.dpr
+     c:\Projects\Testers\gr cGraphBorder.pas tester\TesterFadeBrd.dpr
 --------------------------------------------------------------------------------------------------}
 
 
@@ -60,7 +60,7 @@ USES
    The resulted image size WILL increase with 2*BorderSize pixels. This way the border will not be drawn over the image.
    If DarkenFrame is true, a darkened FrameColor will be used.
 
-   Tester: c:\MyProjects\Project Testers\gr Rotate, flip tester\RotateTester.dpr
+   Tester: c:\Projects\Testers\gr Rotate, flip tester\RotateTester.dpr
 --------------------------------------------------------------------------------------------------}
 procedure ApplyBorderRectOut(BMP: TBitmap; BorderSize: Integer; FrameColor: TColor; DarkenFrame: Boolean= FALSE);
 VAR Temp: TBitmap;

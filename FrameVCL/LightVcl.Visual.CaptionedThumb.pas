@@ -8,7 +8,7 @@ UNIT LightVcl.Visual.CaptionedThumb;
    A panel that shows the thumbnail of an image and draws a caption over it
 
    Tester:
-      c:\Myprojects\Project Testers\gr TLightCaptionThumbnail\TLightCaptionThumbnail_Tester.dpr
+      c:\Projects\Testers\gr TLightCaptionThumbnail\TLightCaptionThumbnail_Tester.dpr
 =============================================================================================================}
 
 {

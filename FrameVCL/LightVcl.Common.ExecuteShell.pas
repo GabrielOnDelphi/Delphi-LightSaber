@@ -67,7 +67,7 @@ UNIT LightVcl.Common.ExecuteShell;
 ----------------------------------------------------------------------------------------------------
 
   Tester:
-     c:\MyProjects\Project Testers\Tester Execute program (ShellExecute, CreateProcess)\
+     c:\Projects\Testers\Tester Execute program (ShellExecute, CreateProcess)\
 
 =============================================================================================================}
 

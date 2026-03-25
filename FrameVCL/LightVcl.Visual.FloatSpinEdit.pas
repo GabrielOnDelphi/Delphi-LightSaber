@@ -24,7 +24,7 @@ UNIT LightVcl.Visual.FloatSpinEdit;
   //ToDo: Add another up/down spin ctrl in front of the control. This will increment ONLY the integer part, while the "normal" spinedit ctrl will control the decimal part.
 
   Tester
-     c:\Myprojects\Project Testers\Cubic VCL SpinEdits\Tester.dpr
+     c:\Projects\Testers\Cubic VCL SpinEdits\Tester.dpr
 =============================================================================================================}
 
 INTERFACE

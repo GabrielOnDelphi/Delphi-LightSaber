@@ -38,7 +38,7 @@ UNIT LightVcl.Visual.CalendarCanvas;
     -Find Bugs and Remove!!!
 
   
-  Tester: c:\Projects\Project Testers\Calendar tester\
+  Tester: c:\Projects\Testers\Calendar tester\
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
