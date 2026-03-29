@@ -376,8 +376,8 @@ CONST
 --------------------------------------------------------------------------------------------------}
  procedure EmptyDirectory     (CONST Path: string);                                                          { Delete all files in the specified folder, but don't delete the folder itself. It will search also in subfolders }
  procedure DeleteFolder       (CONST Path: string);
- procedure RemoveEmptyFolders (CONST RootFolder: string);                                                    { NETESTATA! Delete all empty folders / sub-folders (any sub level) under the provided "rootFolder" }
-
+ procedure RemoveEmptyFolders (CONST RootFolder: string);                                                    { Not tested! Delete all empty folders / sub-folders (any sub level) under the provided "rootFolder" }
+ function  TryDeleteFile      (CONST FileName: string): Boolean;
 
 {--------------------------------------------------------------------------------------------------
    FILE SIZE
@@ -2253,6 +2253,21 @@ begin
 end;
 
 
+{ Same as SystemSysutils.DeleteFile, but works better on FMX (says Gemini) }
+function TryDeleteFile(CONST FileName: string): Boolean;
+begin
+  Result := False;
+  try
+    if TFile.Exists(FileName) then
+    begin
+      TFile.Delete(FileName);
+      Result := True;
+    end;
+  except
+    // Logic for actual errors (like "Access Denied") can go here
+    Result := False;
+  end;
+end;
 
 
 
