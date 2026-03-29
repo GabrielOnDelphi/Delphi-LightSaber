@@ -385,13 +385,14 @@ _________________
 
 Some parts (especially the graphic part) of LightSaber depend on these external libraries:
 
-- https://github.com/esmondb/ccr-exif/
-- https://github.com/galfar/PasJpeg2000
-- http://www.marktg.com/jpegdec/
+- ccr-exif
+- PasJpeg2000
+- jpegdec
+- Graphics32
 
-HOWEVER, those dependencies are disabled by default, so you don't need to install any extra libraries in order to use the LightSaber. But in this case, some functionality (Exif support for JPG images, Fast Jpeg decoder, and support for Jpeg2000) of LightSaber will not be available, but the impact will be minimal.
+Some dependencies are disabled by default others (with more permisive license) are delivered here. 
 
-To enable the support for the above-mentioned features, install the libraries (see links below) and then add these "defines" to your project's settings: `CCRExif;FastJpg;Jpg2000`.
+To enable the support for the above-mentioned features, install the libraries (see links below) and then add these "defines" to your project's settings: `Jpg2000;GR32`.
 The "Conditional defines" field is located in Project Options: Right-click your project, and choose "Project options -> Delphi compiler -> All configurations -> Conditional defines".
 
 _________________
@@ -405,7 +406,7 @@ This library will be expanded if it gets enough stars:
  - Click the 'Star' button (top-right corner) if you like this library.
  - More than 100 files are waiting to be cured and added.
 
-Note: The library cannot be used in Russia! If you are from Russia and want to use this library, we can arrange a price per PAS unit.
+Details in System\Copyright.txt
 
 _________________
 
