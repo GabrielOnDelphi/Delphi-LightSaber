@@ -59,14 +59,14 @@ More about my libraries [here](https://gabrielmoraru.com/publications-citations/
 **Directory Structure**
 
 ```
-/LightCore*.pas          # Core RTL library (38 units)
-/FrameVCL/               # VCL-specific packages and units (154 units)
-/FrameFMX/               # FMX cross-platform packages and units (30 units)
-/Demo/                   # Demo applications (32 projects)
-  /Core/                 # Core library demos (7 projects)
-  /VCL/                  # VCL demos and templates (11 projects)
-  /FMX/                  # FMX demos and templates (14 projects)
-/UnitTesting/            # DUnitX test projects (8 projects, 160 test units)
+/LightCore*.pas          # Core RTL library 
+/FrameVCL/               # VCL-specific packages and units 
+/FrameFMX/               # FMX cross-platform packages and units  
+/Demo/                   # Demo applications  
+  /Core/                 # Core library demos  
+  /VCL/                  # VCL demos and templates  
+  /FMX/                  # FMX demos and templates  
+/UnitTesting/            # DUnitX test projects 
 /External/               # Optional 3rd-party libraries (CCR-Exif, FastJpeg, janFX, etc.)
 /Updater/                # Self-update framework
 /HardwareID/             # Hardware identification utilities
@@ -124,11 +124,6 @@ Unit naming follows the pattern: `Light<Framework>.<Layer>.<Feature>.pas`
 | `LightVcl.Visual.*` | VCL visual components |
 | `LightFmx.Common.*` | FMX utilities |
 | `LightFmx.Visual.*` | FMX visual components |
-
-Legacy naming (still present in some older units):
-- `cc*.pas` = Core, `cv*.pas` = Visual, `cGraph*.pas` = Graphics
-- `cl*.pas` = Log, `ci*.pas` = Internet, `cm*.pas` = Common
-
 _________________
 
 **Key Features**
