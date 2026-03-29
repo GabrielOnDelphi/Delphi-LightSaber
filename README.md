@@ -59,15 +59,15 @@ More about my libraries [here](https://gabrielmoraru.com/publications-citations/
 **Directory Structure**
 
 ```
-/LightCore*.pas          # Core RTL library (37 units)
-/FrameVCL/               # VCL-specific packages and units (161 units)
-/FrameFMX/               # FMX cross-platform packages and units (29 units)
-/Demo/                   # Demo applications (serve as usage examples)
+/LightCore*.pas          # Core RTL library (38 units)
+/FrameVCL/               # VCL-specific packages and units (154 units)
+/FrameFMX/               # FMX cross-platform packages and units (30 units)
+/Demo/                   # Demo applications (32 projects)
   /Core/                 # Core library demos (7 projects)
-  /VCL/                  # VCL demos and templates (10 projects)
+  /VCL/                  # VCL demos and templates (11 projects)
   /FMX/                  # FMX demos and templates (14 projects)
-/UnitTesting/            # DUnitX test projects (8 projects, 159 test units)
-/External/               # Optional 3rd-party libraries (CCR-Exif, FastJpeg, etc.)
+/UnitTesting/            # DUnitX test projects (8 projects, 160 test units)
+/External/               # Optional 3rd-party libraries (CCR-Exif, FastJpeg, janFX, etc.)
 /Updater/                # Self-update framework
 /HardwareID/             # Hardware identification utilities
 /System/                 # Copyright, EULA, credits
@@ -85,6 +85,7 @@ More about my libraries [here](https://gabrielmoraru.com/publications-citations/
 | VCL Visual | `FrameVCL/LightVcl.Visual.dpk` | 80+ visual components, AppData, TrayIcon, StringGrid, etc. |
 | FMX Common | `FrameFMX/LightFmxCommon.dpk` | FMX utilities, AppData, styles, dialogs |
 | FMX Visual | `FrameFMX/LightFmxVisual.dpk` | FMX visual controls (AnimatedMemo, SearchListBox, SpinBox, etc.) |
+| External | `External/LightExternal.dpk` | Optional 3rd-party library wrappers |
 
 Group project files:
  - `LightSaberVCL.groupproj` - All VCL packages
@@ -110,7 +111,7 @@ If the compiler complains about missing libraries like GR32, CcrExif, ThirdParty
 
 _________________
 
-**File naming convention**
+**File Naming Convention**
 
 Unit naming follows the pattern: `Light<Framework>.<Layer>.<Feature>.pas`
 
@@ -170,6 +171,73 @@ uses LightCore.LogRam;
 Log.Write('Message');           // Standard message
 Log.WriteError('Error text');   // Error (triggers log popup)
 ```
+
+_________________
+
+**AppData Architecture (3-layer system)**
+
+The AppData system replaces the standard Delphi application lifecycle with a more powerful, cross-platform alternative.
+
+*Layer 1: TAppDataCore* (`LightCore.AppData.pas`) - Platform-agnostic base
+- Cross-platform path management (AppData folder, Documents, System folders)
+- INI file handling for application settings
+- Logging system (`TRamLog`) with severity levels (Verb, Hint, Info, Warn, Error)
+- Single instance detection via `SingleInstClassName`
+- First-run detection via `RunningFirstTime` property
+- BetaTester mode detection
+- Command-line parameter handling
+- Settings: `AutoStartUp`, `StartMinim`, `Minimize2Tray`, `Opacity`, `HintType`
+
+*Layer 2: TAppData* (`LightFmx.Common.AppData.pas` / `LightVcl.Common.AppData.pas`) - Framework-specific
+- Extends TAppDataCore
+- Form creation management via `CreateMainForm`/`CreateForm`
+- AutoState queue system for form restoration (`asPosOnly`, `asFull`, `asNone`)
+- Visual log window (`TfrmRamLog`) - auto-created on demand
+- Platform-specific startup registration (Windows Registry, macOS LaunchAgents, Linux autostart)
+- Application control: `Run()`, `Minimize()`, `Restart()`, `SelfDelete()`
+- Dialog helpers: `PromptToSaveFile`, `PromptToLoadFile`
+- Global instance: `AppData` (freed in FINALIZATION)
+
+*Layer 3: TLightForm* (`LightFmx.Common.AppData.Form.pas` / `LightVcl.Common.AppData.Form.pas`) - Self-saving forms
+- Base class for all application forms (instead of TForm)
+- Auto-saves form position/size/state to INI file on close
+- Auto-restores position/size/state on load
+- `AutoState` property controls save/restore behavior
+- Mobile toolbar support (back/next buttons for Android/iOS)
+- `FormPreRelease` - guaranteed single-call cleanup event
+- `CloseOnEscape` property
+- Event order: `Loaded` → `FormCreate` → `FormPreRelease` → `SaveForm`
+
+*Initialization Pattern:*
+
+```pascal
+begin
+  AppData:= TAppData.Create('AppName', 'UniqueWindowClassName', MultiThreaded);
+  AppData.CreateMainForm(TMainForm, MainForm, asPosOnly);
+  AppData.CreateForm(TSecondForm, SecondForm, asFull);
+  AppData.Run;  // Sets Initializing:= FALSE
+end.
+```
+
+AppData replaces `Application.Initialize` and `Application.CreateForm` — it manages the entire lifecycle, queuing forms and providing consistent cross-platform behavior with automatic save/restore.
+
+*Key Properties:*
+- `AppData.Initializing`: TRUE during startup, FALSE after `Run()` — prevents saving corrupted state during initialization
+- `AppData.RunningHome`: TRUE if .dpr file exists (development mode)
+- `AppData.RunningFirstTime`: TRUE if INI file doesn't exist yet
+- `AppDataCore.AppName`: Central identifier used for INI filename, AppData folder name, etc.
+
+*Path Helpers:*
+- `AppDataFolder()`: User+App specific (e.g., `C:\Users\Name\AppData\Roaming\AppName\`)
+- `AppFolder()`: Where EXE resides (on mobile: Documents folder)
+- `IniFile()`: `AppDataFolder + AppName + '.ini'`
+- Cross-platform: handles Windows/macOS/iOS/Android differences automatically
+
+*Form AutoState System:*
+- `asNone`: No auto-save/restore
+- `asPosOnly`: Save/restore position only (Left, Top)
+- `asFull`: Save/restore position + all GUI controls (checkboxes, etc.)
+- `asUndefined`: Error — must be set via `CreateForm`
 
 _________________
 
@@ -252,19 +320,27 @@ Demo apps in `/Demo/` serve as both tests and documentation:
 | VCL | VCL_Demo_SaveGUI | GUI state autosave |
 | VCL | VCL_Demo_Log | Logging framework |
 | VCL | VCL_Demo_SystemReport | System information report |
+| VCL | VCL_Demo_WinVers | Windows version detection |
+| VCL | VCL_Demo_CreationOrder | Form creation order demo |
+| VCL | VCL_Demo_cGraphText | Graphics text rendering |
 | VCL | VCL_TemplateFull/Simple/Micro | App templates (full, simple, minimal) |
 | VCL | VCL_Uninstaller | Universal uninstaller template |
 | FMX | FMX_Demo_Log | FMX logging |
 | FMX | FMX_Demo_MessageBoxes | Message box variants |
 | FMX | FMX_Demo_SearchBoxes | Search and filter controls |
 | FMX | FMX_Demo_Styles | FMX styles |
-| FMX | FMX_MinimalApp | FMX app templates |
+| FMX | FMX_Demo_AnimatedTextMemo | Animated text memo control |
+| FMX | FMX_Demo_AutoSizeRect | Auto-sizing rectangle |
+| FMX | FMX_Demo_LightPanel | LightPanel component |
+| FMX | FMX_Demo_SystemReport | FMX system report |
+| FMX | FMX_Demo_ColorPalette | Color palette control |
+| FMX | FMX_MinimalApp | FMX app templates (3 variants) |
 
 _________________
 
 **Unit Tests**
 
-The `UnitTesting/` folder contains DUnitX-based unit tests with TestInsight support (159 test units).
+The `UnitTesting/` folder contains DUnitX-based unit tests with TestInsight support (160 test units across 8 test projects).
 
 | Test Project | Tests Package | Status |
 |--------------|---------------|--------|
@@ -298,7 +374,7 @@ _________________
 
 _________________
 
-**Programming standards**
+**Programming Standards**
 
 This library follows strictly the following programming standards:
  - Zero tolerance for global variables
@@ -310,7 +386,7 @@ This library follows strictly the following programming standards:
 
 _________________
 
-**External dependencies**
+**External Dependencies**
 
 Some parts (especially the graphic part) of LightSaber depend on these external libraries:
 
