@@ -96,3 +96,4 @@ AndroidManifest.template.xml
 Demo/FMX/Template - Minimal app + Internal log/FMX_MinimalApp_WithLog1.res
 Demo/Template - madShi.lnk
 HardwareID/chHardIDNew.pas
+*.style
