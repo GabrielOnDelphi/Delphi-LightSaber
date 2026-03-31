@@ -98,7 +98,7 @@ USES
   {$ENDIF}
 
   {$IFDEF ANDROID}
-   Androidapi.Helpers, Androidapi.JNI.App, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText,
+   Androidapi.Helpers, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText,
   {$ENDIF}
   {$IFDEF MacOS}
    Posix.Stdlib, Posix.Unistd,
@@ -161,7 +161,7 @@ TYPE
     procedure CreateFormModal (aClass: TComponentClass);  // Problem in Android with modal forms!
 
     function  GetAutoState(Form: TForm): TAutoState;  // Called from TLightForm.Loaded
-    procedure ShowModal(aForm: TForm);
+    procedure ShowModal(aForm: TForm);    // !!!
 
    {--------------------------------------------------------------------------------------------------
       Others
@@ -176,7 +176,7 @@ VAR                      // To-Do: make sure AppData is unique (make it Singleto
 
 
 IMPLEMENTATION
-USES LightCore, LightCore.IO;
+USES LightCore;
 
 
 
@@ -281,7 +281,7 @@ begin
 end;
 
 
-// Show this form modal if not running on Android. On Android, we fall back to non-modal
+// Show this form modal. On Android, we fall back to non-modal because Android is crappy.
 procedure TAppData.ShowModal(aForm: TForm);
 begin
   {$IFDEF ANDROID}

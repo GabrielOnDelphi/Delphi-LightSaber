@@ -1,7 +1,7 @@
-UNIT FormSkinsDisk;
+﻿UNIT FormSkinsDisk;
 
 {=============================================================================================================
-   2026.02
+   2026.03
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    UNIVERSAL FMX STYLE LOADER
@@ -16,14 +16,24 @@ UNIT FormSkinsDisk;
         LoadLastStyle('Jet.style');      // Default style on first run
         // Pass empty string for default platform style
 
-     2. Style files must be in 'System\Styles' folder relative to AppData.AppSysDir.
+     2. Style files are organized in platform-specific subfolders under AppData.AppSysDir:
+           System\Skins\Win\       - Windows styles (PlatformTarget = '[MSWINDOWS]')
+           System\Skins\Android\   - Android styles (PlatformTarget = '[ANDROID]...')
+           System\Skins\macOS\     - macOS styles   (PlatformTarget = '[MACOS]')
+           System\Skins\iOS\       - iOS styles     (PlatformTarget = '[IOS7]' or '[IOSALTERNATE]')
+           System\Skins\Linux\     - Linux styles   (PlatformTarget = '[LINUX]')
+        GetStyleDir auto-selects the correct subfolder at compile time via $IFDEF.
+        Falls back to root Skins\ if the platform subfolder doesn't exist.
         Supports both .style (text) and .fsf (binary) format.
 
-     3. To show style selector: TfrmStyleDisk.ShowAsModal or TfrmStyleDisk.CreateForm
+     3. To show style selector: TfrmStyleDisk.CreateEmbedded or AppData.CreateForm(TfrmStyleDisk)
 
    PLATFORM-SPECIFIC STYLE FILES:
-     Each platform (Windows, macOS, Android, iOS) needs its own style files.
+     Each platform needs its own style files (PlatformTarget embedded in the file metadata).
      IsStyleCompatible() checks platform compatibility before loading.
+     On Android/iOS, style files must be added to the Deployment Manager
+     (remote path assets\internal\System\Skins\Android\) so StartUpCopy
+     copies them to TPath.GetDocumentsPath at first launch.
 
    KNOWN LIMITATION:
      TStyleManager.SetStyleFromFile may permanently lose ListView selection highlights
@@ -39,8 +49,8 @@ UNIT FormSkinsDisk;
      c:\Delphi\Styles & resources\FMX Styles\
 
    Also see:
-     c:\Projects\LightSaber\FrameFMX\FormSkinsDisk.pas
-     c:\Projects\LightSaber\Demo\FMX\Template - Styles\FMX_Demo_Styles.dpr
+     c:\Projects\LightSaber\Demo\FMX\Demo Styles\
+     c:\Projects\LightSaber\Demo\FMX\Demo Styles2\
      c:\Delphi\Styles & resources\FMX Styles\ Embarcadero Bug Report\TStyleManager.SetStyleFromFile inconsisten behavior.txt
 =============================================================================================================}
 
@@ -99,8 +109,7 @@ CONST
 
 VAR
   { Unit-level variable for current style name.
-    Kept as unit variable (not class var) because LoadLastStyle is called
-    before any form instance exists. The style name is a short filename (not full path) stored in INI for portability when app folder moves. }
+    Kept as unit variable (not class var) because LoadLastStyle is called before any form instance exists. The style name is a short filename (not full path) stored in INI for portability when app folder moves. }
   CurrentStyleName: string;
 
 
@@ -109,8 +118,24 @@ VAR
    UTILS
 -----------------------------------------------------------------------------------------------------------------------}
 function GetStyleDir: string;
+var
+  PlatformDir: string;
 begin
-  Result:= AppData.AppSysDir+ Trail('Skins');
+  case TOSVersion.Platform of
+    pfWindows: PlatformDir:= 'Win';
+    pfAndroid: PlatformDir:= 'Android';
+    pfMacOS:   PlatformDir:= 'macOS';
+    pfiOS:     PlatformDir:= 'iOS';
+    pfLinux:   PlatformDir:= 'Linux';
+  else
+    RAISE Exception.Create('GetStyleDir - Unsupported platform');
+  end;
+
+  Result:= AppData.AppSysDir + Trail('Skins') + Trail(PlatformDir);
+
+  { Fallback: if platform subfolder doesn't exist, use root Skins\ folder }
+  if NOT DirectoryExists(Result)
+  then Result:= AppData.AppSysDir + Trail('Skins');
 end;
 
 
@@ -242,8 +267,7 @@ begin
 end;
 
 
-{ Embedded: deferred Free via ForceQueue — FreeAndNil inside an OnClick handler would destroy
-  the button while FMX still accesses it (GetAction), causing an AV on freed memory. }
+{ Embedded: deferred Free via ForceQueue — FreeAndNil inside an OnClick handler would destroy the button while FMX still accesses it (GetAction), causing an AV on freed memory. }
 procedure TfrmStyleDisk.btnOKClick(Sender: TObject);
 begin
   if FEmbedded

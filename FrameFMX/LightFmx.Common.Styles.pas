@@ -11,7 +11,7 @@ UNIT LightFmx.Common.Styles;
 INTERFACE
 
 USES
-   System.Classes, System.SysUtils, System.UITypes,
+   System.SysUtils, System.UITypes,
    FMX.Styles, FMX.Types, FMX.Controls, FMX.Graphics;
 
 function IsStyleCompatible(const StylePath: string): Boolean;
@@ -29,8 +29,7 @@ function IsDarkStyle: Boolean;
 IMPLEMENTATION
 
 USES
-   FMX.Objects, FMX.Utils,
-   LightCore.IO, LightCore.TextFile, LightCore, LightFmx.Common.AppData;
+   FMX.Objects, FMX.Utils;
 
 
 { Probes the style file to check if it's compatible with the current platform.
@@ -54,8 +53,25 @@ begin
            OR Description.PlatformTarget.Contains('[ANY]')
            OR (Description.PlatformTarget = '');
         {$ENDIF}
-        {$IFDEF MACOS}
-        Result:= Description.PlatformTarget.Contains('[MACOS]');
+        {$IF DEFINED(MACOS) AND NOT DEFINED(IOS)}
+        Result:= Description.PlatformTarget.Contains('[MACOS]')
+           OR Description.PlatformTarget.Contains('[ANY]')
+           OR (Description.PlatformTarget = '');
+        {$ENDIF}
+        {$IFDEF IOS}
+        Result:= Description.PlatformTarget.Contains('[IOS')      // Matches [IOS7], [IOSALTERNATE]
+           OR Description.PlatformTarget.Contains('[ANY]')
+           OR (Description.PlatformTarget = '');
+        {$ENDIF}
+        {$IFDEF ANDROID}
+        Result:= Description.PlatformTarget.Contains('[ANDROID]')
+           OR Description.PlatformTarget.Contains('[ANY]')
+           OR (Description.PlatformTarget = '');
+        {$ENDIF}
+        {$IFDEF LINUX}
+        Result:= Description.PlatformTarget.Contains('[LINUX]')
+           OR Description.PlatformTarget.Contains('[ANY]')
+           OR (Description.PlatformTarget = '');
         {$ENDIF}
       end
       else

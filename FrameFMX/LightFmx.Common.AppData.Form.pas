@@ -56,7 +56,7 @@
 INTERFACE
 
 USES
-  System.SysUtils, System.Classes, System.UITypes, System.IniFiles,
+  System.SysUtils, System.Classes, System.UITypes, System.IniFiles, System.Math, System.Messaging, System.Types,
   FMX.Forms, FMX.Types, FMX.StdCtrls, FMX.Controls, FMX.Controls.Presentation,
   LightCore.AppData, LightCore.Platform, LightFmx.Common.IniFile;
 
@@ -67,7 +67,9 @@ TYPE
   private
     FOnAfterCtur: TNotifyEvent;
     FCloseOnEscape: Boolean;
+    FVKSubscriptionId: Integer;
     procedure SetGuiProperties(Form: TForm);
+    procedure HandleVKStateChange(const Sender: TObject; const M: TMessage);
   protected
     FEmbedded: Boolean;    { TRUE when form's layout is reparented into another form (embedded mode) }
     Saved: Boolean;
@@ -105,6 +107,10 @@ TYPE
 
 IMPLEMENTATION   {$R *.fmx}
 USES
+  FMX.Platform, FMX.VirtualKeyboard,
+  {$IFDEF ANDROID}
+  Androidapi.Helpers, Androidapi.JNI.App,
+  {$ENDIF}
   LightFmx.Common.AppData, LightFmx.Common.CenterControl, LightFmx.Common.Dialogs;
 
 
@@ -144,6 +150,8 @@ begin
   if NOT AppData.StartMinim
   AND Visible
   then Show;
+
+  FVKSubscriptionId:= TMessageManager.DefaultManager.SubscribeToMessage(TVKStateChangeMessage, HandleVKStateChange);
 
   if Assigned(FOnAfterCtur) then FOnAfterCtur(Self);
 end;
@@ -250,6 +258,7 @@ end;
 { If we close the main application window, secondary forms are often destroyed directly by Application without DoClose being called. }
 destructor TLightForm.Destroy;
 begin
+  TMessageManager.DefaultManager.Unsubscribe(TVKStateChangeMessage, FVKSubscriptionId);
   saveBeforeExit; // Try to save if we haven't already
   inherited;
 end;
@@ -280,13 +289,62 @@ begin
 end;
 
 
-{ Handles hardware back button on Android. Connected via FMX designer. }
+{ Handles hardware back button on Android. Connected via FMX designer.
+  If the virtual keyboard is visible, dismiss it first (standard Android UX).
+  For the main form, move app to background instead of closing (standard Android UX).
+  Only close secondary/non-main forms on a second press when the keyboard is already hidden. }
 procedure TLightForm.FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
+var
+  VKService: IFMXVirtualKeyboardService;
 begin
-  if Key = vkHardwareBack then Close;
+  if Key = vkHardwareBack then
+  begin
+    // Step 1: If virtual keyboard is visible, dismiss it first
+    if TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, VKService)
+    AND (TVirtualKeyboardState.Visible in VKService.VirtualKeyBoardState) then
+      begin
+        VKService.HideVirtualKeyboard;
+        Key:= 0;
+        EXIT;
+      end;
+
+    // Step 2: Main form - move to background instead of closing (prevents activity destruction/restart)
+    {$IFDEF ANDROID}
+    if Self = Application.MainForm then
+      begin
+        TAndroidHelper.Activity.moveTaskToBack(True);
+        Key:= 0;
+        EXIT;
+      end;
+    {$ENDIF}
+
+    // Step 3: Secondary forms - close normally
+    Close;
+    Key:= 0;
+  end;
 end;
 
 
+{ Adjusts form padding when the virtual keyboard appears/disappears.
+  Uses the Bounds from TVKStateChangeMessage (screen coords) converted to form-local coords.
+  Only standalone (non-embedded) forms adjust — embedded forms get the adjustment for free
+  through the layout cascade (parent form's padding shrinks all Client-aligned children). }
+procedure TLightForm.HandleVKStateChange(const Sender: TObject; const M: TMessage);
+var
+  VKMsg: TVKStateChangeMessage;
+  KBTopLeft: TPointF;
+begin
+  if FEmbedded then EXIT;
+
+  VKMsg:= TVKStateChangeMessage(M);
+  if VKMsg.KeyboardVisible AND (VKMsg.KeyboardBounds.Height > 0) then
+  begin
+    KBTopLeft:= ScreenToClient(VKMsg.KeyboardBounds.TopLeft);
+    Self.Padding.Bottom:= Max(0, ClientHeight - KBTopLeft.Y);
+  end
+  else
+    Self.Padding.Bottom:= 0;
+end;
 
 
 
