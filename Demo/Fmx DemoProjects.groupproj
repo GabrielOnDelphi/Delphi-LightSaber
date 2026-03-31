@@ -24,10 +24,19 @@
         <Projects Include="FMX\Demo Message boxes\FMX_Demo_MessageBoxes.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="FMX\Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj">
+        <Projects Include="FMX\Demo SystemReport\FMX_Demo_SystemReport.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="FMX\Demo SystemReport\FMX_Demo_SystemReport.dproj">
+        <Projects Include="FMX\Demo Animated Text TMemo\FMX_Demo_AnimatedTextMemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="FMX\Demo ScreenCapture\FMX_Demo_ScreenCapture.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="FMX\Demo Styles\FMX_Demo_Styles.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="FMX\Demo Styles2\FMX_Demo_Styles2.dproj.dproj">
             <Dependencies/>
         </Projects>
     </ItemGroup>
@@ -101,15 +110,6 @@
     <Target Name="FMX_Demo_MessageBoxes:Make">
         <MSBuild Projects="FMX\Demo Message boxes\FMX_Demo_MessageBoxes.dproj" Targets="Make"/>
     </Target>
-    <Target Name="FMX_Demo_TDropDownSearchBox">
-        <MSBuild Projects="FMX\Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj"/>
-    </Target>
-    <Target Name="FMX_Demo_TDropDownSearchBox:Clean">
-        <MSBuild Projects="FMX\Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="FMX_Demo_TDropDownSearchBox:Make">
-        <MSBuild Projects="FMX\Demo TDropDownSearchBox\FMX_Demo_TDropDownSearchBox.dproj" Targets="Make"/>
-    </Target>
     <Target Name="FMX_Demo_SystemReport">
         <MSBuild Projects="FMX\Demo SystemReport\FMX_Demo_SystemReport.dproj"/>
     </Target>
@@ -119,14 +119,50 @@
     <Target Name="FMX_Demo_SystemReport:Make">
         <MSBuild Projects="FMX\Demo SystemReport\FMX_Demo_SystemReport.dproj" Targets="Make"/>
     </Target>
+    <Target Name="FMX_Demo_AnimatedTextMemo">
+        <MSBuild Projects="FMX\Demo Animated Text TMemo\FMX_Demo_AnimatedTextMemo.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_AnimatedTextMemo:Clean">
+        <MSBuild Projects="FMX\Demo Animated Text TMemo\FMX_Demo_AnimatedTextMemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_AnimatedTextMemo:Make">
+        <MSBuild Projects="FMX\Demo Animated Text TMemo\FMX_Demo_AnimatedTextMemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="FMX_Demo_ScreenCapture">
+        <MSBuild Projects="FMX\Demo ScreenCapture\FMX_Demo_ScreenCapture.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_ScreenCapture:Clean">
+        <MSBuild Projects="FMX\Demo ScreenCapture\FMX_Demo_ScreenCapture.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_ScreenCapture:Make">
+        <MSBuild Projects="FMX\Demo ScreenCapture\FMX_Demo_ScreenCapture.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="FMX_Demo_Styles">
+        <MSBuild Projects="FMX\Demo Styles\FMX_Demo_Styles.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_Styles:Clean">
+        <MSBuild Projects="FMX\Demo Styles\FMX_Demo_Styles.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_Styles:Make">
+        <MSBuild Projects="FMX\Demo Styles\FMX_Demo_Styles.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="FMX_Demo_Styles2_dproj">
+        <MSBuild Projects="FMX\Demo Styles2\FMX_Demo_Styles2.dproj.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_Styles2_dproj:Clean">
+        <MSBuild Projects="FMX\Demo Styles2\FMX_Demo_Styles2.dproj.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_Styles2_dproj:Make">
+        <MSBuild Projects="FMX\Demo Styles2\FMX_Demo_Styles2.dproj.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="FMX_MinimalApp;FMX_MinimalApp_WithLog1;FMX_MinimalApp_WithLog2;FMX_Demo_Log;FMX_Demo_LightPanel;FMX_Demo_AutoSizeRect;FMX_Demo_MessageBoxes;FMX_Demo_TDropDownSearchBox;FMX_Demo_SystemReport"/>
+        <CallTarget Targets="FMX_MinimalApp;FMX_MinimalApp_WithLog1;FMX_MinimalApp_WithLog2;FMX_Demo_Log;FMX_Demo_LightPanel;FMX_Demo_AutoSizeRect;FMX_Demo_MessageBoxes;FMX_Demo_SystemReport;FMX_Demo_AnimatedTextMemo;FMX_Demo_ScreenCapture;FMX_Demo_Styles;FMX_Demo_Styles2_dproj"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="FMX_MinimalApp:Clean;FMX_MinimalApp_WithLog1:Clean;FMX_MinimalApp_WithLog2:Clean;FMX_Demo_Log:Clean;FMX_Demo_LightPanel:Clean;FMX_Demo_AutoSizeRect:Clean;FMX_Demo_MessageBoxes:Clean;FMX_Demo_TDropDownSearchBox:Clean;FMX_Demo_SystemReport:Clean"/>
+        <CallTarget Targets="FMX_MinimalApp:Clean;FMX_MinimalApp_WithLog1:Clean;FMX_MinimalApp_WithLog2:Clean;FMX_Demo_Log:Clean;FMX_Demo_LightPanel:Clean;FMX_Demo_AutoSizeRect:Clean;FMX_Demo_MessageBoxes:Clean;FMX_Demo_SystemReport:Clean;FMX_Demo_AnimatedTextMemo:Clean;FMX_Demo_ScreenCapture:Clean;FMX_Demo_Styles:Clean;FMX_Demo_Styles2_dproj:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="FMX_MinimalApp:Make;FMX_MinimalApp_WithLog1:Make;FMX_MinimalApp_WithLog2:Make;FMX_Demo_Log:Make;FMX_Demo_LightPanel:Make;FMX_Demo_AutoSizeRect:Make;FMX_Demo_MessageBoxes:Make;FMX_Demo_TDropDownSearchBox:Make;FMX_Demo_SystemReport:Make"/>
+        <CallTarget Targets="FMX_MinimalApp:Make;FMX_MinimalApp_WithLog1:Make;FMX_MinimalApp_WithLog2:Make;FMX_Demo_Log:Make;FMX_Demo_LightPanel:Make;FMX_Demo_AutoSizeRect:Make;FMX_Demo_MessageBoxes:Make;FMX_Demo_SystemReport:Make;FMX_Demo_AnimatedTextMemo:Make;FMX_Demo_ScreenCapture:Make;FMX_Demo_Styles:Make;FMX_Demo_Styles2_dproj:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

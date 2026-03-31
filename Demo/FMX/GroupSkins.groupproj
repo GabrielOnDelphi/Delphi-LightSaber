@@ -1,0 +1,60 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{819FB8E5-A8BF-4961-9ED7-B2BDA52964D8}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Demo Styles\FMX_Demo_Styles.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo Styles2\FMX_Demo_Styles2.dproj.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Demo Styles3 Skin Selector\FMX_Demo_SkinSelector.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="FMX_Demo_Styles">
+        <MSBuild Projects="Demo Styles\FMX_Demo_Styles.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_Styles:Clean">
+        <MSBuild Projects="Demo Styles\FMX_Demo_Styles.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_Styles:Make">
+        <MSBuild Projects="Demo Styles\FMX_Demo_Styles.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="FMX_Demo_Styles2_dproj">
+        <MSBuild Projects="Demo Styles2\FMX_Demo_Styles2.dproj.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_Styles2_dproj:Clean">
+        <MSBuild Projects="Demo Styles2\FMX_Demo_Styles2.dproj.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_Styles2_dproj:Make">
+        <MSBuild Projects="Demo Styles2\FMX_Demo_Styles2.dproj.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="FMX_Demo_SkinSelector">
+        <MSBuild Projects="Demo Styles3 Skin Selector\FMX_Demo_SkinSelector.dproj"/>
+    </Target>
+    <Target Name="FMX_Demo_SkinSelector:Clean">
+        <MSBuild Projects="Demo Styles3 Skin Selector\FMX_Demo_SkinSelector.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demo_SkinSelector:Make">
+        <MSBuild Projects="Demo Styles3 Skin Selector\FMX_Demo_SkinSelector.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="FMX_Demo_Styles;FMX_Demo_Styles2_dproj;FMX_Demo_SkinSelector"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="FMX_Demo_Styles:Clean;FMX_Demo_Styles2_dproj:Clean;FMX_Demo_SkinSelector:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="FMX_Demo_Styles:Make;FMX_Demo_Styles2_dproj:Make;FMX_Demo_SkinSelector:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>
