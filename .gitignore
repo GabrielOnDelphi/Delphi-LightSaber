@@ -98,3 +98,5 @@ Demo/Template - madShi.lnk
 HardwareID/chHardIDNew.pas
 *.style
 *.delete_me
+/Demo/FMX/Demo Styles3 Skin Selector/37.0_Android64_Debug
+*.fsf

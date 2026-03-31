@@ -1,7 +1,7 @@
 ﻿UNIT FormStylesMain;
 
 {=============================================================================================================
-   2026.02
+   2026.03
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -59,7 +59,6 @@ TYPE
     StatusBar1   : TStatusBar;
     Timer        : TTimer;
     TrackBar1    : TTrackBar;
-    procedure FormCreate  (Sender: TObject);
     procedure ListViewItemClick(const Sender: TObject; const AItem: TListViewItem);
     procedure TimerTimer(Sender: TObject);
     procedure btnNextClick(Sender: TObject);
