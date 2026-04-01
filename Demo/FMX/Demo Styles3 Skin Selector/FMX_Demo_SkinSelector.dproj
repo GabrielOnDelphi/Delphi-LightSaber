@@ -394,34 +394,6 @@
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>
-                <DeployFile LocalName="System\Skins\Android\AndroidCoralDark.style" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>assets\internal\System\Skins\Android\</RemoteDir>
-                        <RemoteName>AndroidCoralDark.style</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="System\Skins\Android\AndroidCoralDark.style" Configuration="Release" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>assets\internal\System\Skins\Android\</RemoteDir>
-                        <RemoteName>AndroidCoralDark.style</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="System\Skins\Android\AndroidDark.fsf" Configuration="Debug" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>assets\internal\System\Skins\Android\</RemoteDir>
-                        <RemoteName>AndroidDark.fsf</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
-                <DeployFile LocalName="System\Skins\Android\AndroidDark.fsf" Configuration="Release" Class="File">
-                    <Platform Name="Android64">
-                        <RemoteDir>assets\internal\System\Skins\Android\</RemoteDir>
-                        <RemoteName>AndroidDark.fsf</RemoteName>
-                        <Overwrite>true</Overwrite>
-                    </Platform>
-                </DeployFile>
                 <DeployFile LocalName="System\Skins\Android\Alabaster.style" Configuration="Debug" Class="File">
                     <Platform Name="Android64">
                         <RemoteDir>assets\internal\System\Skins\Android\</RemoteDir>
@@ -475,6 +447,34 @@
                     <Platform Name="Android64">
                         <RemoteDir>assets\internal\System\Skins\Android\</RemoteDir>
                         <RemoteName>AndroidCoralCrystal.style</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="System\Skins\Android\AndroidCoralDark.style" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>assets\internal\System\Skins\Android\</RemoteDir>
+                        <RemoteName>AndroidCoralDark.style</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="System\Skins\Android\AndroidCoralDark.style" Configuration="Release" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>assets\internal\System\Skins\Android\</RemoteDir>
+                        <RemoteName>AndroidCoralDark.style</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="System\Skins\Android\AndroidDark.fsf" Configuration="Debug" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>assets\internal\System\Skins\Android\</RemoteDir>
+                        <RemoteName>AndroidDark.fsf</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
+                <DeployFile LocalName="System\Skins\Android\AndroidDark.fsf" Configuration="Release" Class="File">
+                    <Platform Name="Android64">
+                        <RemoteDir>assets\internal\System\Skins\Android\</RemoteDir>
+                        <RemoteName>AndroidDark.fsf</RemoteName>
                         <Overwrite>true</Overwrite>
                     </Platform>
                 </DeployFile>

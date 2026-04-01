@@ -15,7 +15,7 @@ INTERFACE
 USES
   System.Classes, System.SysUtils, System.Types, System.UITypes,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Controls.Presentation, FMX.StdCtrls, FMX.Layouts, FMX.Dialogs, FMX.ScrollBox, FMX.Memo, FMX.Edit,
-  LightFmx.Common.AppData.Form;, FMX.Memo.Types
+  LightFmx.Common.AppData.Form, FMX.Memo.Types;
 
 TYPE
   TfrmSimpleDemo = class(TLightForm)
