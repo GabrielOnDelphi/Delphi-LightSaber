@@ -75,6 +75,10 @@ TYPE
     Saved: Boolean;
     procedure saveBeforeExit;
     procedure CreateToolbar;
+    { Called by FormKeyUp when the user presses Back (Android) or Escape (desktop).
+      Override in the main form to close embedded forms before the default behavior.
+      Return TRUE if handled; FALSE to let the default proceed (moveTaskToBack / Close). }
+    function HandleBackButton: Boolean; virtual;
 
     procedure FormKeyPress(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState); // We can use this later in the destructor to know how to save the form: asPosOnly/asFull
     procedure Loaded; override;
@@ -151,6 +155,7 @@ begin
   AND Visible
   then Show;
 
+  // For virtual keyboard
   FVKSubscriptionId:= TMessageManager.DefaultManager.SubscribeToMessage(TVKStateChangeMessage, HandleVKStateChange);
 
   if Assigned(FOnAfterCtur) then FOnAfterCtur(Self);
@@ -271,6 +276,12 @@ begin
 end;
 
 
+function TLightForm.HandleBackButton: Boolean;
+begin
+  Result:= FALSE;
+end;
+
+
 { Handles Escape key to close form when CloseOnEscape is True.
   Note: To use this, connect it to the form's OnKeyDown event in the FMX designer
   or in code: Self.OnKeyDown := FormKeyPress; }
@@ -289,39 +300,57 @@ begin
 end;
 
 
-{ Handles hardware back button on Android. Connected via FMX designer.
-  If the virtual keyboard is visible, dismiss it first (standard Android UX).
-  For the main form, move app to background instead of closing (standard Android UX).
-  Only close secondary/non-main forms on a second press when the keyboard is already hidden. }
+{ Handles hardware back button on Android and Escape on desktop. Connected via FMX designer.
+  Priority chain:
+    1. Dismiss virtual keyboard if visible (hardware back only)
+    2. Let HandleBackButton handle it (override point for embedded form navigation)
+    3. Main form: move app to background (hardware back only, Android)
+    4. Secondary forms: close form normally (hardware back only) }
 procedure TLightForm.FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
 var
   VKService: IFMXVirtualKeyboardService;
 begin
   if Key = vkHardwareBack then
-  begin
-    // Step 1: If virtual keyboard is visible, dismiss it first
-    if TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, VKService)
-    AND (TVirtualKeyboardState.Visible in VKService.VirtualKeyBoardState) then
-      begin
-        VKService.HideVirtualKeyboard;
-        Key:= 0;
-        EXIT;
-      end;
+    begin
+      // Step 1: If virtual keyboard is visible, dismiss it first
+      if TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, VKService)
+      AND (TVirtualKeyboardState.Visible in VKService.VirtualKeyBoardState) then
+        begin
+          VKService.HideVirtualKeyboard;
+          Key:= 0;
+          EXIT;
+        end;
 
-    // Step 2: Main form - move to background instead of closing (prevents activity destruction/restart)
-    {$IFDEF ANDROID}
-    if Self = Application.MainForm then
-      begin
-        TAndroidHelper.Activity.moveTaskToBack(True);
-        Key:= 0;
-        EXIT;
-      end;
-    {$ENDIF}
+      // Step 2: Let the form handle it (e.g., close embedded forms)
+      if HandleBackButton then
+        begin
+          Key:= 0;
+          EXIT;
+        end;
 
-    // Step 3: Secondary forms - close normally
-    Close;
-    Key:= 0;
-  end;
+      // Step 3: Main form - move to background instead of closing (prevents activity destruction/restart)
+      {$IFDEF ANDROID}
+      if Self = Application.MainForm then
+        begin
+          TAndroidHelper.Activity.moveTaskToBack(True);
+          Key:= 0;
+          EXIT;
+        end;
+      {$ENDIF}
+
+      // Step 4: Secondary forms - close normally
+      Close;
+      Key:= 0;
+    end
+  else
+    // Escape: desktop equivalent of back navigation for embedded forms only.
+    // CloseOnEscape (when no embedded form is active) is handled separately in FormKeyPress.
+    if Key = vkEscape then
+      if HandleBackButton then
+        begin
+          Key:= 0;
+          EXIT;
+        end;
 end;
 
 
@@ -338,10 +367,10 @@ begin
 
   VKMsg:= TVKStateChangeMessage(M);
   if VKMsg.KeyboardVisible AND (VKMsg.KeyboardBounds.Height > 0) then
-  begin
-    KBTopLeft:= ScreenToClient(VKMsg.KeyboardBounds.TopLeft);
-    Self.Padding.Bottom:= Max(0, ClientHeight - KBTopLeft.Y);
-  end
+    begin
+      KBTopLeft:= ScreenToClient(VKMsg.KeyboardBounds.TopLeft);
+      Self.Padding.Bottom:= Max(0, ClientHeight - KBTopLeft.Y);
+    end
   else
     Self.Padding.Bottom:= 0;
 end;

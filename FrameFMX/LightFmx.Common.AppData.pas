@@ -106,7 +106,7 @@ USES
   System.SysUtils, System.Classes, System.UITypes, System.Types, System.Generics.Collections,
   FMX.Forms, FMX.Platform,
   LightFMX.LogForm,
-  LightCore.AppData;
+  LightCore.AppData, LightCore.IO;
 
 TYPE
   TPendingAutoState = record
@@ -161,7 +161,7 @@ TYPE
     procedure CreateFormModal (aClass: TComponentClass);  // Problem in Android with modal forms!
 
     function  GetAutoState(Form: TForm): TAutoState;  // Called from TLightForm.Loaded
-    procedure ShowModal(aForm: TForm);    // !!!
+    procedure ShowModal(aForm: TForm);    // Available everywhere except Android
 
    {--------------------------------------------------------------------------------------------------
       Others
