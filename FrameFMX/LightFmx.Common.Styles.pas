@@ -1,7 +1,7 @@
 UNIT LightFmx.Common.Styles;
 
 {=============================================================================================================
-   2026.02
+   2026.03
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Hint: Under VCL use TControl.IsLightStyleColor
@@ -16,9 +16,7 @@ USES
 
 function IsStyleCompatible(const StylePath: string): Boolean;
 
-{ Returns the foreground text color from the active style.
-  Overload 1: Queries via a control's Scene (use from within a styled control).
-  Overload 2: Queries the global active style (use from anywhere). }
+{ Returns the foreground text color from the active style }
 function GetThemeTextColor(Scene: IScene): TAlphaColor; overload;
 function GetThemeTextColor: TAlphaColor; overload;
 
@@ -81,40 +79,8 @@ begin
     FreeAndNil(StyleObj);
   end;
 end;
+ 
 
-{
-
-:7c61bf1c ; C:\Projects\Project LearnAssist\LearnAssist src\FastMM_FullDebugMode.dll
-:7c61c16c FastMM_FullDebugMode.GetRawStackTrace + 0xc4
-FastMM4.DebugGetMem(???)
-:0069ea6a DebugGetMem + $7E
-:0068734a @GetMem + $A
-:006de46b Format + $13
-:006de450 Format + $20
-:00a426bd TPresentationProxyFactory.GeneratePresentationName + $A9
-:00a53378 TPresentedControl.DefinePresentationName + $1C
-:00a52c39 TPresentedControl.AfterConstruction + $25
-:00a8cb72 TPresentedTextControl.AfterConstruction + $A
-:00a91374 TCheckBox.Create + $68
-:007c6281 TReader.ReadComponent + $8D
-:007c6560 TReader.ReadDataInner + $90
-:007c64ca TReader.ReadData + $6E
-:007d3ef6 TComponent.ReadState + $6
-:007c6560 TReader.ReadDataInner + $90
-:007c6499 TReader.ReadData + $3D
-:007d3ef6 TComponent.ReadState + $6
-:008d6505 TStyleStreaming.LoadFromStream + $1B9
-:008d62fc TStyleStreaming.LoadFromFile + $48
-LightFmx.Common.Styles.IsStyleCompatible('C:\Projects\Project LearnAssist\LearnAssist src\System\Skins\WedgewoodLight.style')
-FormSkinsDisk.LoadStyleFromFile('WedgewoodLight.style')
-FormSkinsDisk.LoadLastStyle('')
-LearnAssist.LearnAssist
-:75d85d49 KERNEL32.BaseThreadInitThunk + 0x19
-:772ad83b ntdll.RtlInitializeExceptionChain + 0x6b
-:772ad7c1 ;
-
-
-}
 
 
 
