@@ -108,6 +108,7 @@
         <DCCReference Include="LightFmx.Visual.ColorPalette.pas"/>
         <DCCReference Include="LightFmx.Visual.SearchListBox.pas"/>
         <DCCReference Include="LightFmx.Visual.ResponsiveLayout.pas"/>
+        <DCCReference Include="LightFmx.Visual.CheckBox.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
