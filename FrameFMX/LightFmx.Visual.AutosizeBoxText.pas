@@ -22,6 +22,8 @@ TYPE
     FTextLabel: TLabel;
     FText: string;
     procedure SetText(const Value: string);
+  protected
+    procedure ApplyTextColor; override;
   public
     constructor Create(AOwner: TComponent); override;
     property Text: string read FText write SetText;
@@ -49,12 +51,19 @@ begin
   FTextLabel.HitTest := FALSE;
   FTextLabel.Stored  := FALSE;  // Prevents Form Designer from serializing this internal component. Without this, loading a form would create duplicate labels (one from FMX, one from constructor).
   FTextLabel.TextSettings.Font.Size:= 20;
+  ApplyTextColor;
 
   // Set initial demo text directly. Do NOT call SetText here to avoid premature UpdateSize.
   FText:= 'Self-sizing WhatsApp-like bubble. '+
     'The TAutosizeBoxText component detects the wrapped height of its internal TLabel and adjusts its own Height accordingly when the parent width changes. '+#13#10+
     'This eliminates manual size calculation from the form unit.';
   FTextLabel.Text:= FText;
+end;
+
+
+procedure TAutosizeBoxText.ApplyTextColor;
+begin
+  FTextLabel.FontColor:= FTextColor;
 end;
 
 
