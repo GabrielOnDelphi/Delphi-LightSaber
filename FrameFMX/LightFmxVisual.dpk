@@ -47,6 +47,8 @@ contains
   LightFmx.Visual.AnimatedMemo in 'LightFmx.Visual.AnimatedMemo.pas',
   LightFmx.Visual.ColorPalette in 'LightFmx.Visual.ColorPalette.pas',
   LightFmx.Visual.SearchListBox in 'LightFmx.Visual.SearchListBox.pas',
-  LightFmx.Visual.ResponsiveLayout in 'LightFmx.Visual.ResponsiveLayout.pas';
+  LightFmx.Visual.ResponsiveLayout in 'LightFmx.Visual.ResponsiveLayout.pas',
+  LightFmx.Visual.CheckBox in 'LightFmx.Visual.CheckBox.pas';
 
 end.
+
