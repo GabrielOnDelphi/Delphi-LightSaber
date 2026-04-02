@@ -1,4 +1,4 @@
-unit LightFmx.Visual.Layout;
+﻿unit LightFmx.Visual.Layout;
 
 {=============================================================================================================
    2026.01.31
@@ -19,9 +19,22 @@ INTERFACE
 
 USES
   System.Classes,
-  FMX.Controls, FMX.Layouts;
+  FMX.Controls, FMX.Layouts, FMX.Types;
 
 TYPE
+  { Invisible layout that fires a callback when its parent resizes.
+    Needed because embedded forms don't receive OnResize — the Container is reparented away from the form.
+    Usage: TResizeSensor.CreateSensor(Container, MyResizeHandler); }
+  TResizeSensor = class(TLayout)
+  private
+    FOnResized: TNotifyEvent;
+  protected
+    procedure Resize; override;
+  public
+    constructor CreateSensor(aParent: TFmxObject; aOnResized: TNotifyEvent);
+  end;
+
+
   TLightLayout = class(TLayout)
   private
     FVisibleAtRuntime: Boolean;
@@ -88,6 +101,26 @@ end;
 
 
 
+
+
+{-------------------------------------------------------------------------------------------------------------
+   TResizeSensor
+-------------------------------------------------------------------------------------------------------------}
+constructor TResizeSensor.CreateSensor(aParent: TFmxObject; aOnResized: TNotifyEvent);
+begin
+  inherited Create(aParent as TComponent);
+  FOnResized:= aOnResized;
+  Parent:= aParent;
+  Align:= TAlignLayout.Contents;  // Matches parent bounds without affecting siblings
+  HitTest:= FALSE;
+end;
+
+procedure TResizeSensor.Resize;
+begin
+  inherited;
+  if Assigned(FOnResized)
+  then FOnResized(Self);
+end;
 
 
 procedure Register;
