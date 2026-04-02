@@ -100,6 +100,12 @@ TYPE
     procedure LoadForm; virtual;
     procedure SaveForm; virtual;
     procedure EmbedIn(ALayout: TControl; AParent: TFmxObject);    { Marks form as embedded and reparents ALayout into AParent (Client-aligned). }
+
+    { Embedded equivalent of FormCloseQuery. Returns TRUE if this form can be closed/navigated away from.
+      Override to block closing (e.g. while an AI task is running or mandatory fields are empty).
+      Default: asserts the form is embedded, then returns TRUE. }
+    function FormCloseQueryEmbedded: Boolean; virtual;
+
     destructor Destroy; override;
 
     procedure MainFormCaption(aCaption: string);
@@ -279,6 +285,13 @@ end;
 function TLightForm.HandleBackButton: Boolean;
 begin
   Result:= FALSE;
+end;
+
+
+function TLightForm.FormCloseQueryEmbedded: Boolean;
+begin
+  Assert(FEmbedded, ClassName + '.FormCloseQueryEmbedded called on a non-embedded form. Use FormCloseQuery for normal forms.');
+  Result:= TRUE;
 end;
 
 
