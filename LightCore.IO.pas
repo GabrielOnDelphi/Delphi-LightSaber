@@ -729,7 +729,7 @@ begin
   TRY
     TDirectory.CreateDirectory(Folder);
   EXCEPT
-    on EInOutError DO EXIT(FALSE);   // Handle I/O errors (e.g., no write permission)
+    on EInOutError DO;  { Thread race: another thread may have created it. Check actual state below. }
     else RAISE;
     {
     For any other exceptions, raise.

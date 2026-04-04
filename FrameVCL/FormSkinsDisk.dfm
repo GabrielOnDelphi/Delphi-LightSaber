@@ -117,6 +117,7 @@ object frmStyleDisk: TfrmStyleDisk
       Align = alLeft
       Caption = 'Create own'
       TabOrder = 1
+      OnClick = btnStyleEditorClick
     end
   end
 end

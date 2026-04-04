@@ -553,10 +553,13 @@ begin
  iTop  := (OutBMP.Height - InpBmp.Height) div 2;
  iLeft := (OutBMP.Width  - InpBmp.Width)  div 2;
 
- if iTop < 0
- then raise Exception.Create('FadeBorder: iTop is invalid. The wallpaper is larger than the desktop! '+ IntToStr(iTop));
- if iLeft < 0
- then raise Exception.Create('FadeBorder: iLeft is invalid. The wallpaper is larger than the desktop! '+ IntToStr(iLeft));
+ { When the wallpaper is larger than the desktop, offsets go negative.
+   Draw centered (Canvas.Draw clips the excess) and exit - no borders to fade. }
+ if (iTop < 0) OR (iLeft < 0) then
+  begin
+   OutBMP.Canvas.Draw(iLeft, iTop, InpBmp);
+   EXIT;
+  end;
 
  iRight:= InpBmp.Width + iLeft;
  iBott := InpBmp.Height+ iTop;
@@ -649,11 +652,18 @@ begin
 
  if  (OutBmp.Width  <= InpBmp.Width)
  AND (OutBmp.Height <= InpBmp.Height)
- then Border:= [btTop, btBottom, btLeft, btRight]
+ then
+  begin
+   { Image covers entire viewport - no borders to fade. Draw centered (Canvas clips excess). }
+   OutBMP.Canvas.Draw(
+     (OutBMP.Width  - InpBmp.Width)  div 2,
+     (OutBMP.Height - InpBmp.Height) div 2,
+     InpBmp);
+   EXIT;
+  end
  else
   begin
    MesajErrDetail('OutBMP < InpBMP', 'FadeBorderAuto');
-   //OutBMP.Canvas.Draw(iLeft, iTop, InpBmp);    { Copy input BMP in the middle of the output BMP }
    EXIT;
   end;
 

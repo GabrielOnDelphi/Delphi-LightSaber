@@ -51,6 +51,24 @@
 
          Using SaveForm/LoadForm, a form can save its size and position to disk.
 
+
+     Embedded forms
+
+         Forms can be embedded into a host form by calling EmbedIn(Container, ParentControl).
+         This reparents the form's Container layout into the host and sets FEmbedded:= TRUE.
+
+         Key rules:
+         - Embedded forms must use AutoState = asNone (enforced by assertion in EmbedIn).
+         - FormCloseQuery does NOT fire for embedded forms (FMX limitation).
+           Override FormCloseQueryEmbedded to block closing (e.g. during AI tasks or validation).
+         - Virtual keyboard padding is handled by the host form; embedded forms skip it (see HandleVKStateChange).
+         - Use TThread.ForceQueue(nil, ...) for deferred destruction after button clicks.
+
+         Known issue (Android):
+           TThread.ForceQueue may silently fail to execute on Android in some call depths.
+           If this occurs, use a TTimer with Interval=0 as a fallback.
+           See: https://en.delphipraxis.net/topic/14705-tthreadforcequeue-inconsistency-on-android/
+
 =============================================================================================================}
 
 INTERFACE
@@ -138,9 +156,11 @@ end;
 
 
 { Marks this form as embedded and reparents ALayout (e.g. layRoot) into AParent (e.g. a TTabItem).
-  Centralizes the 3 steps that every embedded form needs: FEmbedded flag + reparent + align. }
+  Centralizes the 3 steps that every embedded form needs: FEmbedded flag + reparent + align.
+  Embedded forms must use asNone — SaveForm writes position/size which is meaningless for embedded layouts. }
 procedure TLightForm.EmbedIn(ALayout: TControl; AParent: TFmxObject);
 begin
+  Assert(AutoState = asNone, ClassName + '.EmbedIn: embedded forms must use AutoState = asNone (passed to CreateForm)');
   FEmbedded:= TRUE;
   ALayout.Parent:= AParent;
   ALayout.Align:= TAlignLayout.Client;

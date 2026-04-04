@@ -14,6 +14,10 @@ USES
    System.SysUtils, System.UITypes,
    FMX.Styles, FMX.Types, FMX.Controls, FMX.Graphics;
 
+CONST
+  COMPACT_WIDTH = 600;  // Below this width, hide Import/Delete buttons and use popup menu (same as FormMain.BREAKPOINT_PHONE)
+
+
 function IsStyleCompatible(const StylePath: string): Boolean;
 
 { Returns the foreground text color from the active style }
@@ -29,6 +33,7 @@ function IsDarkStyle: Boolean;
   Dark themes: lighter tints (visible on dark backgrounds).
   Falls back to neutral grays if BaseColor is black/near-black. }
 function GenerateThemePalette(BaseColor: TAlphaColor; IsDark: Boolean): TArray<TAlphaColor>;
+
 
 IMPLEMENTATION
 

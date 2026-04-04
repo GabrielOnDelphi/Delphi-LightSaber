@@ -20,7 +20,7 @@ UNIT LightFmx.Visual.ColorPalette;
      ColorPalette.OnColorSelected := MyHandler;
 
    Tester:
-     c:\Projects\LightSaber\Demo\FMX\Demo TLightColorPalette\ProjecTLightColorPalette.dpr
+     Demo\FMX\Demos\FMX_Demos.dpr
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE

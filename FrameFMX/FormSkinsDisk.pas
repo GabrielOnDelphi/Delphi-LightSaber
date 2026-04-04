@@ -209,7 +209,6 @@ begin
   then EXIT(NIL);
 
   AppData.CreateForm(TfrmStyleDisk, FInstance, asNone);
-  FInstance.FEmbedded:= TRUE;
   FInstance.FOnEmbeddedClose:= AOnClose;
   Result:= FInstance;
 end;
