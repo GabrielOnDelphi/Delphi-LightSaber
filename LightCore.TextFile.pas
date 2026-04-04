@@ -98,7 +98,18 @@ IMPLEMENTATION
 USES
    LightCore, LightCore.Types, LightCore.StreamBuff, LightCore.IO;
 
-
+CONST
+  { POSIX file permissions for TFileStream.Create's 3rd parameter (Rights).
+    On Windows, the 3rd parameter is a sharing mode (e.g. fmShareDenyWrite).
+    On POSIX (Android/macOS/Linux), it's passed directly to __open() as the mode_t permission bits.
+    WARNING: Do NOT pass fmShareDenyWrite ($0020) as Rights on POSIX — it maps to
+    octal 0o40 (group-read only), leaving the owner with NO permissions.
+    438 decimal = 0o666 octal = rw-rw-rw- (the process umask will further restrict). }
+  {$IFDEF MSWINDOWS}
+  FILE_RIGHTS = fmShareDenyWrite;
+  {$ELSE}
+  FILE_RIGHTS = 438;  // 0o666 = rw-rw-rw-
+  {$ENDIF}
 
 {--------------------------------------------------------------------------------------------------
    WRITE TEXT
@@ -109,52 +120,67 @@ USES
   FileName must be a full path. If the path does not exist it is created.
   It can also write a preamble.
   Based on: http://stackoverflow.com/questions/35710087/how-to-save-classic-delphi-string-to-disk-and-read-them-back/36106740#36106740  }
-procedure StringToFile(CONST FileName: string; CONST aString: String; WriteOp: TWriteOperation= woOverwrite; WritePreamble: TWritePreamble= wpAuto);
+procedure StringToFile(CONST FileName: string; CONST aString: String; WriteOp: TWriteOperation; WritePreamble: TWritePreamble);
 VAR
    Stream: TFileStream;
    Preamble: TBytes;
    sUTF8: RawByteString;
    aMode: Integer;
    NeedsPreamble: Boolean;
+   Dir: string;
 begin
- ForceDirectories(ExtractFilePath(FileName));
+  Dir:= ExtractFilePath(FileName);
+  if (Dir <> '')
+  AND NOT DirectoryExists(Dir) then
+    begin
+      ForceDirectories(Dir);
+      if NOT DirectoryExists(Dir)
+      then raise Exception.CreateFmt('Cannot create directory: %s', [Dir]);
+    end;
 
- if (WriteOp= woAppend)
- AND FileExists(FileName)
- then aMode := fmOpenReadWrite
- else aMode := fmCreate;
+  if (WriteOp= woAppend)
+  AND FileExists(FileName)
+  then aMode := fmOpenReadWrite
+  else
+    begin
+      aMode := fmCreate;
+      {$IFNDEF MSWINDOWS}
+      // On POSIX, remove existing file before recreating — old files may have wrong permissions.
+      // See FILE_RIGHTS constant for details.
+      if FileExists(FileName)
+      then SysUtils.DeleteFile(FileName);
+      {$ENDIF}
+    end;
 
- TRY
+  TRY
+    Stream := TFileStream.Create(filename, aMode, FILE_RIGHTS);
+    TRY
+     if (WriteOp= woAppend)
+     then Stream.Position:= Stream.Size  // Go to the end, to append
+     else
+       begin
+         // We don't write BOM if we append text
+         if WritePreamble = wpOn
+         then NeedsPreamble:= TRUE
+         else NeedsPreamble:= (WritePreamble = wpAuto) AND ContainsUnicodeChars(aString);
 
-   Stream := TFileStream.Create(filename, aMode, fmShareDenyWrite);   { Allow others to read while we write }
-   TRY
-    if (WriteOp= woAppend)
-    then Stream.Position:= Stream.Size  // Go to the end, to append
-    else
-      begin
-        // We don't write BOM if we append text
-        if WritePreamble = wpOn
-        then NeedsPreamble:= TRUE
-        else NeedsPreamble:= (WritePreamble = wpAuto) AND ContainsUnicodeChars(aString);
+         if NeedsPreamble then
+          begin
+           Preamble := TEncoding.UTF8.GetPreamble;
+           Stream.WriteBuffer(Preamble[0] {PAnsiChar(Preamble)^}, Length(Preamble));
+          end;
+       end;
 
-        if NeedsPreamble then
-         begin
-          Preamble := TEncoding.UTF8.GetPreamble;
-          Stream.WriteBuffer(Preamble[0] {PAnsiChar(Preamble)^}, Length(Preamble));
-         end;
-      end;
+     sUTF8 := UTF8Encode(aString);               { UTF16 to UTF8 encoding conversion. It will convert UnicodeString to WideString }
+     Stream.WriteBuffer(PAnsiChar(sUTF8)^, Length(sUTF8));
+    FINALLY
+      FreeAndNil(Stream);
+    END;
 
-    sUTF8 := UTF8Encode(aString);               { UTF16 to UTF8 encoding conversion. It will convert UnicodeString to WideString }
-    Stream.WriteBuffer(PAnsiChar(sUTF8)^, Length(sUTF8));
-   FINALLY
-     FreeAndNil(Stream);
-   END;
-
- EXCEPT
-   on E: Exception
-    do RAISE Exception.CreateFmt('Error writing to file %s: %s', [FileName, E.Message]);
- end;
-
+  EXCEPT
+    on E: Exception
+     do RAISE Exception.CreateFmt('Error writing to file %s: %s', [FileName, E.Message]);
+  end;
 end;
 
 
@@ -240,15 +266,32 @@ procedure StringToFileA (CONST FileName: string; CONST aString: AnsiString; Writ
 VAR
    aMode: Integer;
    Stream: TFileStream;
+   Dir: string;
 begin
- ForceDirectories(ExtractFilePath(FileName));
+ Dir:= ExtractFilePath(FileName);
+ if (Dir <> '') AND NOT DirectoryExists(Dir) then 
+ begin
+   ForceDirectories(Dir);
+   if NOT DirectoryExists(Dir) then begin
+     raise Exception.CreateFmt('Cannot create directory: %s', [Dir]);
+   end;
+ end;
 
  if (WriteOp= woAppend)
  AND FileExists(FileName)
  then aMode := fmOpenReadWrite
- else aMode := fmCreate;
+ else
+   begin
+     aMode := fmCreate;
+     {$IFNDEF MSWINDOWS}
+     // On POSIX, remove existing file before recreating — old files may have wrong permissions
+     // from the previous fmShareDenyWrite-as-Rights bug (permissions 0o40 instead of 0o666).
+     if FileExists(FileName)
+     then SysUtils.DeleteFile(FileName);
+     {$ENDIF}
+   end;
 
- Stream := TFileStream.Create(filename, aMode, fmShareDenyWrite);   { Allow read during our writes }
+ Stream := TFileStream.Create(filename, aMode, FILE_RIGHTS);
  TRY
   if aMode = fmOpenReadWrite
   then Stream.Position:= Stream.Size; { Go to the end }
