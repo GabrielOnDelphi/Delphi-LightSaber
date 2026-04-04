@@ -102,3 +102,4 @@ HardwareID/chHardIDNew.pas
 *.fsf
 *.lnk
 Demo/FMX/Demos/Build.cmd
+/Demo/FMX/Demos/__recovery
