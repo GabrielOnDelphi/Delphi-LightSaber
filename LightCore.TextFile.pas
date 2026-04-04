@@ -120,7 +120,7 @@ CONST
   FileName must be a full path. If the path does not exist it is created.
   It can also write a preamble.
   Based on: http://stackoverflow.com/questions/35710087/how-to-save-classic-delphi-string-to-disk-and-read-them-back/36106740#36106740  }
-procedure StringToFile(CONST FileName: string; CONST aString: String; WriteOp: TWriteOperation; WritePreamble: TWritePreamble);
+procedure StringToFile(CONST FileName: string; CONST aString: String; WriteOp: TWriteOperation= woOverwrite; WritePreamble: TWritePreamble= wpAuto);
 VAR
    Stream: TFileStream;
    Preamble: TBytes;
