@@ -1,0 +1,186 @@
+object Form2: TForm2
+  Left = 0
+  Top = 0
+  Caption = 'Form2'
+  ClientHeight = 390
+  ClientWidth = 617
+  FormFactor.Width = 320
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  DesignerMasterStyle = 0
+  object TabControl1: TTabControl
+    Align = Client
+    Size.Width = 617.000000000000000000
+    Size.Height = 390.000000000000000000
+    Size.PlatformDefault = False
+    TabIndex = 2
+    TabOrder = 0
+    TabPosition = PlatformDefault
+    Sizes = (
+      617s
+      364s
+      617s
+      364s
+      617s
+      364s)
+    object TabItem1: TTabItem
+      CustomIcon = <
+        item
+        end>
+      IsSelected = False
+      Size.Width = 82.000000000000000000
+      Size.Height = 26.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = ''
+      TabOrder = 0
+      Text = 'TLightPanel'
+      ExplicitSize.cx = 82.000000000000000000
+      ExplicitSize.cy = 26.000000000000000000
+      object Button1: TButton
+        Anchors = [akBottom]
+        Position.X = 242.345245361328100000
+        Position.Y = 324.000000000000000000
+        Size.Width = 147.000000000000000000
+        Size.Height = 33.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        Text = 'Set Visible'
+        OnClick = Button1Click
+      end
+      object LightPanel2: TLightPanel
+        Anchors = [akLeft, akTop, akRight]
+        Position.X = 7.000000000000000000
+        Position.Y = 87.000000000000000000
+        Size.Width = 601.000000000000000000
+        Size.Height = 73.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        VisibleAtRuntime = False
+        object lblVisible: TLabel
+          Align = Top
+          Size.Width = 601.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'VisibleAtRuntime:= False;'
+          TabOrder = 0
+        end
+      end
+      object LightPanel1: TLightPanel
+        Anchors = [akLeft, akTop, akRight]
+        Position.X = 7.000000000000000000
+        Position.Y = 11.000000000000000000
+        Size.Width = 601.000000000000000000
+        Size.Height = 67.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        object Label1: TLabel
+          Align = Top
+          Size.Width = 601.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'VisibleAtRuntime:= True;'
+          TabOrder = 0
+        end
+      end
+    end
+    object TabItem2: TTabItem
+      CustomIcon = <
+        item
+        end>
+      IsSelected = False
+      Size.Width = 91.000000000000000000
+      Size.Height = 26.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = ''
+      TabOrder = 0
+      Text = 'TColorPalette'
+      ExplicitSize.cx = 91.000000000000000000
+      ExplicitSize.cy = 26.000000000000000000
+      object btnAddColor: TButton
+        Position.X = 337.000000000000000000
+        Position.Y = 105.000000000000000000
+        Size.Width = 117.000000000000000000
+        Size.Height = 37.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Text = 'btnAddColor'
+        OnClick = btnAddColorClick
+      end
+      object btnReset: TButton
+        Position.X = 337.000000000000000000
+        Position.Y = 60.000000000000000000
+        Size.Width = 117.000000000000000000
+        Size.Height = 37.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        Text = 'btnReset'
+        OnClick = btnResetClick
+      end
+      object rectSelected: TRectangle
+        Align = Right
+        Margins.Left = 4.000000000000000000
+        Margins.Top = 4.000000000000000000
+        Margins.Right = 4.000000000000000000
+        Margins.Bottom = 4.000000000000000000
+        Position.X = 488.000000000000000000
+        Position.Y = 34.000000000000000000
+        Size.Width = 125.000000000000000000
+        Size.Height = 326.000000000000000000
+        Size.PlatformDefault = False
+      end
+      object ColorPalette1: TLightColorPalette
+        Align = Left
+        Padding.Left = 6.000000000000000000
+        Padding.Top = 6.000000000000000000
+        Padding.Right = 6.000000000000000000
+        Padding.Bottom = 6.000000000000000000
+        Margins.Left = 4.000000000000000000
+        Margins.Top = 4.000000000000000000
+        Margins.Right = 4.000000000000000000
+        Margins.Bottom = 4.000000000000000000
+        Position.X = 4.000000000000000000
+        Position.Y = 34.000000000000000000
+        Size.Width = 289.000000000000000000
+        Size.Height = 326.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+        OnColorSelected = ColorPalette1ColorSelected
+        ItemSize = 28.000000000000000000
+        ItemSpacing = 6.000000000000000000
+        StrokeColorLight = claWhite
+        StrokeColorDark = claBlack
+        Viewport.Width = 289.000000000000000000
+        Viewport.Height = 326.000000000000000000
+      end
+      object lblSelectedHex: TLabel
+        Align = Top
+        Margins.Left = 4.000000000000000000
+        Margins.Top = 4.000000000000000000
+        Margins.Right = 4.000000000000000000
+        Margins.Bottom = 9.000000000000000000
+        Position.X = 4.000000000000000000
+        Position.Y = 4.000000000000000000
+        Size.Width = 609.000000000000000000
+        Size.Height = 17.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'lblSelectedHex'
+        TabOrder = 4
+      end
+    end
+    object TabItem3: TTabItem
+      CustomIcon = <
+        item
+        end>
+      IsSelected = True
+      Size.Width = 81.000000000000000000
+      Size.Height = 26.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = ''
+      TabOrder = 0
+      Text = 'TFlatButton'
+      ExplicitSize.cx = 81.000000000000000000
+      ExplicitSize.cy = 26.000000000000000000
+    end
+  end
+end
