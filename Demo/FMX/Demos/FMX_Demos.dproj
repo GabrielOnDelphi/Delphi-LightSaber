@@ -299,6 +299,7 @@
         </DCCReference>
         <DCCReference Include="..\..\..\FrameFMX\FormSkinsDisk.pas">
             <Form>frmStyleDisk</Form>
+            <FormType>fmx</FormType>
         </DCCReference>
         <DCCReference Include="..\..\..\LightCore.AppData.pas"/>
         <DCCReference Include="..\..\..\FrameFMX\LightFmx.Common.AppData.pas"/>
