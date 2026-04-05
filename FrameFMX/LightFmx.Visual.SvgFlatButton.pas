@@ -1,4 +1,4 @@
-UNIT LightFmx.Visual.SvgFlatButton;
+﻿UNIT LightFmx.Visual.SvgFlatButton;
 
 {-------------------------------------------------------------------------------------------------------------
    2026.04
@@ -40,11 +40,13 @@ UNIT LightFmx.Visual.SvgFlatButton;
 INTERFACE
 
 USES
-  System.UITypes, System.Classes, System.Types,
-  FMX.Types, FMX.Controls, FMX.Objects, FMX.StdCtrls, FMX.Graphics, FMX.Effects;
+  System.UITypes, System.Classes, System.Types, System.Math,
+  FMX.Styles, FMX.Styles.Objects, FMX.Types, FMX.Controls, FMX.Objects, FMX.StdCtrls, FMX.Graphics, FMX.Effects;
 
 TYPE
-  TIconPosition = (ipLeft, ipTop, ipCenter);
+  TIconPosition = (ipLeft,      // Icon of the left, text after
+                   ipTop,       // Icon on top, text under
+                   ipCenter);   // Icon in the middle of the button. No text.
 
   TFlatButton = class(TRectangle)
   private
@@ -57,13 +59,17 @@ TYPE
     FNormalColor: TAlphaColor;      { Icon/text color in normal state (from buttonstyle text NormalColor) }
     FHighlightColor: TAlphaColor;   { Icon/text color on hover/toggle (from skin's accent/selection color) }
     FHoverBgColor: TAlphaColor;     { Background fill on hover/toggle (FHighlightColor at low alpha) }
+    function  GetText: string;
+    procedure SetText(CONST Value: string);
     function  GetSvgData: string;
     procedure SetSvgData(CONST Value: string);
     procedure SetIconPosition(Value: TIconPosition);
     procedure SetIsToggled(Value: Boolean);
     procedure ApplyColors;          { Applies all visual changes based on current hover/toggle state }
+    procedure UpdateIconSize;       { Recalculates icon dimensions from button size and position mode }
   protected
     procedure Loaded; override;
+    procedure Resize; override;
     procedure Paint; override;
     procedure DoMouseEnter; override;   { Triggers highlight on mouse hover }
     procedure DoMouseLeave; override;   { Reverts to normal colors }
@@ -76,13 +82,13 @@ TYPE
     property Icon: TPath read FIconPath;
     property TextLabel: TLabel read FLabel;
   published
-    { SVG path data string (e.g. Tabler Icons). Set in Object Inspector to see the icon at design time. }
+
+    property Text: string read GetText write SetText;         { SVG path data string (e.g. Tabler Icons). Set in Object Inspector to see the icon at design time. }
     property SvgData: string read GetSvgData write SetSvgData;
     property IconPosition: TIconPosition read FIconPosition write SetIconPosition default ipLeft;
     property IsToggled: Boolean read FIsToggled write SetIsToggled default FALSE;
-    { When TRUE (default), hover/toggle tints the background with the accent color.
-      Set to FALSE to keep the background always transparent (icon/text/glow still change). }
-    property HoverBgEnabled: Boolean read FHoverBgEnabled write FHoverBgEnabled default TRUE;
+
+    property HoverBgEnabled: Boolean read FHoverBgEnabled write FHoverBgEnabled default TRUE;      { When TRUE (default), hover/toggle tints the background with the accent color. FALSE = background always transparent (icon/text/glow still change). }
   end;
 
 
@@ -92,20 +98,11 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-  FMX.Styles, FMX.Styles.Objects,
   LightFmx.Common.Styles;
 
 
 CONST
   HOVER_BG_ALPHA = $28;    { ~16% opacity - subtle background tint on hover/toggle }
-
-
-{ Replaces the alpha channel of Color, keeping RGB intact }
-function WithAlpha(Color: TAlphaColor; Alpha: Byte): TAlphaColor; inline;
-begin
-  Result:= Color;
-  TAlphaColorRec(Result).A:= Alpha;
-end;
 
 
 
@@ -220,7 +217,7 @@ begin
   XRadius:= 6;
   YRadius:= 6;
   Cursor:= crHandPoint;
-  Padding.Rect:= TRectF.Create(8, 6, 8, 6);
+  Padding.Rect:= TRectF.Create(1, 1, 1, 1);
 
   { Icon - stroke-based TPath using SVG path data (e.g. Tabler Icons).
     Named 'Icon' so the FMX streaming system reuses it instead of creating a duplicate. }
@@ -229,15 +226,12 @@ begin
   FIconPath.SetSubComponent(TRUE);
   FIconPath.Stored:= FALSE;
   FIconPath.Parent:= Self;
-  FIconPath.HitTest:= FALSE;          { Clicks pass through to the TRectangle }
+  FIconPath.HitTest:= FALSE;          { Runtime: clicks pass through to the TRectangle }
+  FIconPath.Locked:= TRUE;            { Design time: designer skips locked controls during hit-testing, so clicks select the parent TFlatButton }
   FIconPath.Fill.Kind:= TBrushKind.None;
   FIconPath.Stroke.Kind:= TBrushKind.Solid;
   FIconPath.Stroke.Thickness:= 1.5;
   FIconPath.WrapMode:= TPathWrapMode.Fit;
-  FIconPath.Width:= 20;
-  FIconPath.Height:= 20;
-  FIconPath.Align:= TAlignLayout.Left;
-  FIconPath.Margins.Right:= 6;
   FIconPath.Visible:= FALSE;          { Hidden until SvgData is set }
 
   { Glow effect - child of FIconPath, shown on hover/toggle.
@@ -245,7 +239,7 @@ begin
   FGlow:= TGlowEffect.Create(Self);
   FGlow.Parent:= FIconPath;
   FGlow.Softness:= 0.2;
-  FGlow.Opacity:= 0.9;
+  FGlow.Opacity := 0.9;
   FGlow.Enabled:= FALSE;              { Off in normal state }
 
   { Label - font color manually controlled (removed from StyledSettings).
@@ -256,11 +250,12 @@ begin
   FLabel.Stored:= FALSE;
   FLabel.Parent:= Self;
   FLabel.HitTest:= FALSE;
+  FLabel.Locked:= TRUE;
   FLabel.Align:= TAlignLayout.Client;
   FLabel.TextSettings.HorzAlign:= TTextAlign.Leading;
   FLabel.StyledSettings:= FLabel.StyledSettings - [TStyledSetting.FontColor];
 
-  FIconPosition:= ipLeft;
+  SetIconPosition(ipLeft);            { Canonical path — sets FIconPath.Align + margins }
   FIsToggled:= FALSE;
   FHoverBgEnabled:= TRUE;
 
@@ -274,6 +269,34 @@ procedure TFlatButton.Loaded;
 begin
   inherited;
   ApplyThemeColors;
+  UpdateIconSize;
+end;
+
+
+{ Called when button Width or Height changes (runtime resize, alignment, streaming).
+  Recalculates the icon dimensions to match the new button size. }
+procedure TFlatButton.Resize;
+begin
+  inherited;
+  UpdateIconSize;
+end;
+
+
+{ Recalculates icon Width/Height based on button size and current position mode.
+  ipLeft:   icon Width = button inner height (square icon filling vertical space)
+  ipTop:    icon Height = min(inner width, inner height) (square, constrained by smaller dimension)
+  ipCenter: no action — Client alignment fills the button automatically }
+procedure TFlatButton.UpdateIconSize;
+VAR InnerW, InnerH: Single;
+begin
+  InnerW:= Width  - Padding.Left - Padding.Right;
+  InnerH:= Height - Padding.Top  - Padding.Bottom;
+
+  case FIconPosition of
+    ipLeft:   FIconPath.Width := Max(InnerH, 1);
+    ipTop:    FIconPath.Height:= Max(Min(InnerW, InnerH), 1);
+    ipCenter: ;
+  end;
 end;
 
 
@@ -295,6 +318,23 @@ begin
       Canvas.Stroke.Thickness:= 1;
       Canvas.DrawRect(GetShapeRect, XRadius, YRadius, AllCorners, AbsoluteOpacity);
     end;
+end;
+
+
+
+{-------------------------------------------------------------------------------------------------------------
+   TEXT
+-------------------------------------------------------------------------------------------------------------}
+
+function TFlatButton.GetText: string;
+begin
+  Result:= FLabel.Text;
+end;
+
+
+procedure TFlatButton.SetText(CONST Value: string);
+begin
+  FLabel.Text:= Value;
 end;
 
 
@@ -341,8 +381,8 @@ end;
 procedure TFlatButton.ApplyThemeColors;
 begin
   FNormalColor   := GetButtonNormalTextColor;             { e.g. claWhite on dark skins }
-  FHighlightColor:= GetStyleHighlightColor;            { e.g. #0377D0 blue on Nero Dark }
-  FHoverBgColor  := WithAlpha(FHighlightColor, HOVER_BG_ALPHA);  { Same blue at ~16% for background }
+  FHighlightColor:= GetStyleHighlightColor;               { e.g. #0377D0 blue on Nero Dark }
+  FHoverBgColor  := ReplaceColorAlpha(FHighlightColor, HOVER_BG_ALPHA);  { Same blue at ~16% for background }
   FGlow.GlowColor:= GetStyleGlowColor;
   ApplyColors;
 end;
@@ -386,9 +426,9 @@ begin
   FIconPath.Stroke.Color:= GetThemeTextColor;
   Highlight:= GetStyleHighlightColor;
 
-  FHoverColor      := WithAlpha(Highlight, $30);   // ~19% - subtle hover hint
-  FToggleColor     := WithAlpha(Highlight, $48);   // ~28% - visible active state
-  FToggleHoverColor:= WithAlpha(Highlight, $60);   // ~38% - active + hover
+  FHoverColor      := ReplaceColorAlpha(Highlight, $30);   // ~19% - subtle hover hint
+  FToggleColor     := ReplaceColorAlpha(Highlight, $48);   // ~28% - visible active state
+  FToggleHoverColor:= ReplaceColorAlpha(Highlight, $60);   // ~38% - active + hover
 
   UpdateAnimValues;
 
@@ -410,6 +450,7 @@ end;}
 procedure TFlatButton.SetIconPosition(Value: TIconPosition);
 begin
   FIconPosition:= Value;
+
   case Value of
     ipLeft:
       begin
@@ -429,11 +470,13 @@ begin
       end;
     ipCenter:
       begin
-        FIconPath.Align:= TAlignLayout.Center;
+        FIconPath.Align:= TAlignLayout.Client;  { Fill the button; WrapMode=Fit keeps aspect ratio }
         FIconPath.Margins.Rect:= TRectF.Create(0, 0, 0, 0);
         FLabel.Visible:= FALSE;
       end;
   end;
+
+  UpdateIconSize;
 end;
 
 
@@ -463,6 +506,7 @@ end;
 procedure TFlatButton.DoMouseLeave;
 begin
   inherited;
+  Opacity:= 1.0;   { Restore; press feedback is meaningless when mouse has left }
   ApplyColors;
 end;
 
