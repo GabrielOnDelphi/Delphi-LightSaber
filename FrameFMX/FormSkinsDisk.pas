@@ -64,11 +64,11 @@ USES
 
 TYPE
   TfrmStyleDisk = class(TLightForm)
-    Container: TLayout;
-    lblTop: TLabel;
-    lBox: TListBox;
-    layBottom: TLayout;
-    btnOK: TButton;
+    Container : TLayout;
+    lblTop    : TLabel;
+    lBox      : TListBox;
+    layBottom : TLayout;
+    btnOK     : TButton;
     procedure FormCreate (Sender: TObject);
     procedure FormClose  (Sender: TObject; var Action: TCloseAction);
     procedure FormKeyDown(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
@@ -77,7 +77,7 @@ TYPE
     procedure btnOKClick (Sender: TObject);
   private
     FOnEmbeddedClose: TNotifyEvent;
-    class var FInstance: TfrmStyleDisk;
+    class var FInstance: TfrmStyleDisk;    // used by CreateEmbedded
     procedure PopulateStyles;
   public
     procedure FormPreRelease; override;
