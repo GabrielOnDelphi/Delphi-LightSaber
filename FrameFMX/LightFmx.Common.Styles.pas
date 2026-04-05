@@ -18,21 +18,17 @@ CONST
   COMPACT_WIDTH = 600;  // Below this width, hide Import/Delete buttons and use popup menu (same as FormMain.BREAKPOINT_PHONE)
 
 
-function IsStyleCompatible(const StylePath: string): Boolean;
-
-{ Returns the foreground text color from the active style }
-function GetThemeTextColor(Scene: IScene): TAlphaColor; overload;
-function GetThemeTextColor: TAlphaColor; overload;
-
-{ Returns True if the currently active style has a dark background.
-  Uses FMX.Utils.Luminance (ITU-R BT.709) on the style's background color. }
+function IsStyleCompatible(const StyleFile: string): Boolean;
 function IsDarkStyle: Boolean;
 
-{ Generates a palette of colors derived from BaseColor, adjusted for theme visibility.
-  Light themes: darker shades (visible on light backgrounds).
-  Dark themes: lighter tints (visible on dark backgrounds).
-  Falls back to neutral grays if BaseColor is black/near-black. }
+// THEME COLOR
+function GetThemeTextColor(Scene: IScene): TAlphaColor; overload;     { Returns the foreground text color from the active style }
+function GetThemeTextColor: TAlphaColor; overload;
+
 function GenerateThemePalette(BaseColor: TAlphaColor; IsDark: Boolean): TArray<TAlphaColor>;
+
+// COLORS
+function ReplaceColorAlpha(Color: TAlphaColor; NewAlpha: Byte): TAlphaColor; inline;
 
 
 IMPLEMENTATION
@@ -41,16 +37,26 @@ USES
    FMX.Objects, FMX.Utils, System.UIConsts;
 
 
+
+{ Returns a copy of Color with the alpha channel replaced.
+  Used to create semi-transparent variants, e.g. a highlight color at 16% opacity for hover backgrounds. }
+function ReplaceColorAlpha(Color: TAlphaColor; NewAlpha: Byte): TAlphaColor; inline;
+begin
+  Result:= Color;
+  TAlphaColorRec(Result).A:= NewAlpha;
+end;
+
+
 { Probes the style file to check if it's compatible with the current platform.
   Returns True if compatible or if no descriptor exists (older universal styles). }
-function IsStyleCompatible(const StylePath: string): Boolean;
+function IsStyleCompatible(const StyleFile: string): Boolean;
 var
   StyleObj: TFmxObject;
   Description: TStyleDescription;
 begin
   Result:= False;
 
-  StyleObj := TStyleStreaming.LoadFromFile(StylePath);
+  StyleObj := TStyleStreaming.LoadFromFile(StyleFile);
   try
     if StyleObj <> nil then
     begin
@@ -157,6 +163,10 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    PALETTE GENERATION
 -------------------------------------------------------------------------------------------------------------}
+{ Generates a palette of colors derived from BaseColor, adjusted for theme visibility.
+  Light themes: darker shades (visible on light backgrounds).
+  Dark themes: lighter tints (visible on dark backgrounds).
+  Falls back to neutral grays if BaseColor is black/near-black. }
 function GenerateThemePalette(BaseColor: TAlphaColor; IsDark: Boolean): TArray<TAlphaColor>;
 CONST
   STEPS = 10;
