@@ -3,33 +3,61 @@
 
 ![Delphi Library](https://raw.githubusercontent.com/GodModeUser/Delphi-LightSaber/main/Docs/Lightsaber%20logo.png)
 
-**Description**
+## Description 
 
 A comprehensive Delphi library with over 15 years of development, designed as a lightweight replacement for the mammoth Jedi library.
 Simple, crystal clear, non-obfuscated, fully commented and curated code.
 No (direct) external dependencies.
-Supports both **VCL** (Windows) and **FMX** (cross-platform) frameworks.
+Supports both **VCL** and **FMX** frameworks.
 
-**What you can do with this library**
+
+## Important Notice (April 2025): Git History Rewrite 
+
+Due to a Claude "accident" all commit hashes have changed.
+If you cloned or forked this repository before April 5, 2025, Git will report **"Unable to merge unrelated histories"** when you try to pull.
+To fix this, run these commands in your local clone:
+
+```bash
+git fetch origin
+git reset --hard origin/main
+```
+
+**Warning:** This will discard any local commits you made on top of the old history. If you have local changes you want to keep, back them up first:
+
+```bash
+# 1. Back up your local changes (adjust the number to match your local commits)
+git format-patch -N main --stdout > my-local-changes.patch
+
+# 2. Reset to the new history
+git fetch origin
+git reset --hard origin/main
+
+# 3. Re-apply your changes
+git am my-local-changes.patch
+```
+
+_________________
+
+## What you can do with this library 
 
 There are a gazillion of cool things this library can do for you. Here are only a few examples, and all from the Core/Base library (I am not even touching the higher-level libraries):
- - Save your GUI state (checkboxes, radio buttons, edit boxes, etc.) to disk and then restore it when the application starts. All this with only 4 lines of code.
- - Automatically translate your GUI to multiple languages via DeepL (no lines of code).
+ - Save your GUI state (checkboxes, radio buttons, edit boxes, etc.) to disk and then restore it when the application starts. All this with only 3 lines of code.
+ - Automatically translate your GUI to multiple languages via DeepL (no extra lines of code).
  - Logging - Send color-coded messages to a log. The log will automatically pop up on errors, so the user can take action.
  - AppData - A dramatically improved TApplication object that gives you lots and lots and lots of goodies such as "RunningHome", "RunningFirstTime", "BetaTesterMode", "CurrentUserDir", "LastUsedFolder"
- - "SingleInstance" (prevent your program from running as multiple instances in a computer and pass the command line parameters to the already running instance)
+ - "AppData.SingleInstance" - prevent your program from running as multiple instances in a computer and pass the command line parameters to the already running instance.
  - Uninstaller - The application writes itself in Windows "Add remove programs" so the user can uninstall it.
  - App control: Restore, Restart, SelfDelete (useful for the uninstaller), RunSelfAtWinStartUp, HideFromTaskbar...
  - etc etc etc
 
-Most of this functionality can be achieved with maximum 2-3 lines of code. Some of them with zero lines of code!
+Most of this functionality can be achieved with maximum 3 lines of code. 
 
 Click the 'Watch' button if you want to get notified about updates.
 [More libraries like this](https://gabrielmoraru.com/my-delphi-code)
 
 _________________
 
-**Structure**
+## Library structure 
 
 The library is organized into packages grouped by framework and functionality:
 
@@ -93,7 +121,7 @@ Group project files:
 
 _________________
 
-**Installation**
+## Installation 
 
  - **Minimum Delphi version:** 12.3+ (requires the `$(Auto)` compiler directive)
 
@@ -111,65 +139,7 @@ If the compiler complains about missing libraries like GR32, CcrExif, ThirdParty
 
 _________________
 
-**File Naming Convention**
-
-Unit naming follows the pattern: `Light<Framework>.<Layer>.<Feature>.pas`
-
-| Prefix | Description |
-|--------|-------------|
-| `LightCore.*` | Core RTL (cross-platform) |
-| `LightVcl.Common.*` | VCL utilities |
-| `LightVcl.Internet.*` | VCL Internet |
-| `LightVcl.Graphics.*` | VCL image processing |
-| `LightVcl.Visual.*` | VCL visual components |
-| `LightFmx.Common.*` | FMX utilities |
-| `LightFmx.Visual.*` | FMX visual components |
-_________________
-
-**Key Features**
-
-*GUI State Persistence*
-
-Save/restore entire form state with two lines of code:
-```pascal
-// In FormDestroy
-SaveForm(Self);
-
-// After form creation
-LoadForm(Self);
-```
-A full demo app that demonstrates how to save/load the GUI with just two lines of code can be found here: [github.com/GodModeUser/Dephi-LightSaber-GUI_AutoSave ](https://github.com/GodModeUser/Dephi-LightSaber-GUI_AutoSave)
-
-*Auto-Translation*
-
-```pascal
-Translator := TTranslator.Create;
-Translator.LoadLastTranslation;  // Shows language dialog on first run
-```
-Mark controls that shouldn't be translated with `Tag=128`.
-
-*Application Data*
-
-```pascal
-uses LightVcl.Common.AppData;  // or LightFmx.Common.AppData
-
-AppData.RunningFirstTime  // True on first launch
-AppData.AppDataFolder     // User's AppData path
-AppData.LastUsedFolder    // Last folder user selected
-```
-
-*Logging*
-
-```pascal
-uses LightCore.LogRam;
-
-Log.Write('Message');           // Standard message
-Log.WriteError('Error text');   // Error (triggers log popup)
-```
-
-_________________
-
-**AppData Architecture (3-layer system)**
+## AppData Architecture (3-layer system) 
 
 The AppData system replaces the standard Delphi application lifecycle with a more powerful, cross-platform alternative.
 
@@ -234,9 +204,66 @@ AppData replaces `Application.Initialize` and `Application.CreateForm` — it ma
 - `asFull`: Save/restore position + all GUI controls (checkboxes, etc.)
 - `asUndefined`: Error — must be set via `CreateForm`
 
-_________________
 
-**Example of units** (showing only units in the Core library)
+### AppData Key Features 
+
+*GUI State Persistence*
+
+Save/restore entire form state with two lines of code:
+```pascal
+// In FormDestroy
+SaveForm(Self);
+
+// After form creation
+LoadForm(Self);
+```
+A full demo app that demonstrates how to save/load the GUI with just two lines of code can be found here: [github.com/GodModeUser/Dephi-LightSaber-GUI_AutoSave ](https://github.com/GodModeUser/Dephi-LightSaber-GUI_AutoSave)
+
+*Auto-Translation*
+
+```pascal
+Translator := TTranslator.Create;
+Translator.LoadLastTranslation;  // Shows language dialog on first run
+```
+Mark controls that shouldn't be translated with `Tag=128`.
+
+*Application Data*
+
+```pascal
+uses LightVcl.Common.AppData;  // or LightFmx.Common.AppData
+
+AppData.RunningFirstTime  // True on first launch
+AppData.AppDataFolder     // User's AppData path
+AppData.LastUsedFolder    // Last folder user selected
+```
+
+*Logging*
+
+```pascal
+uses LightCore.LogRam;
+
+Log.Write('Message');           // Standard message
+Log.WriteError('Error text');   // Error (triggers log popup)
+```
+
+________________
+
+## File Naming Convention 
+
+Unit naming follows the pattern: `Light<Framework>.<Layer>.<Feature>.pas`
+
+| Prefix | Description |
+|--------|-------------|
+| `LightCore.*` | Core RTL (cross-platform) |
+| `LightVcl.Common.*` | VCL utilities |
+| `LightVcl.Internet.*` | VCL Internet |
+| `LightVcl.Graphics.*` | VCL image processing |
+| `LightVcl.Visual.*` | VCL visual components |
+| `LightFmx.Common.*` | FMX utilities |
+| `LightFmx.Visual.*` | FMX visual components |
+
+
+### Main units (showing only units in the Core library)
 
 **LightCore.pas**
   Over 200 functions for:
@@ -298,9 +325,8 @@ Features:
 - Extends the capabilities of TIniFile
 - Functions for easily accessing the application's default INI file
 
-_________________
 
-**Demo Applications**
+### Demo Applications 
 
 Demo apps in `/Demo/` serve as both tests and documentation:
 
@@ -333,7 +359,7 @@ Demo apps in `/Demo/` serve as both tests and documentation:
 
 _________________
 
-**Unit Tests**
+### Unit Tests 
 
 The `UnitTesting/` folder contains DUnitX-based unit tests with TestInsight support (160 test units across 8 test projects).
 
@@ -358,30 +384,34 @@ Each test project has a corresponding build script (e.g. `Build_Tests_LightCore.
 
 _________________
 
-**Platform Support**
+## Platform Support 
 
 | Platform | VCL | FMX |
 |----------|-----|-----|
 | Win32/Win64 | Full | Full |
-| Android64 | N/A | Partial |
+| Android64 | N/A | Full |
 | macOS/OSXARM64 | N/A | Partial |
 | iOS | N/A | Not tested |
 
 _________________
 
-**Programming Standards**
+## Programming Standards 
 
 This library follows strictly the following programming standards:
  - Zero tolerance for global variables
  - Zero tolerance for compiler hints and warnings
  - Zero tolerance for swallowed exceptions
  - Zero tolerance for memory leaks
+ - Zero tolerance Application.ProcessMessages  
+ - No "use after free" 
+ - Avoid multithreading whenever possible
+ - Avoid "magic values" 
  - Consistent code formatting - most of the formatting respects the Embarcadero recommendations. A noticeable exception is if/then/else.
  - Consistent file naming
 
 _________________
 
-**External Dependencies**
+## External Dependencies 
 
 Some parts (especially the graphic part) of LightSaber depend on these external libraries:
 
@@ -390,14 +420,13 @@ Some parts (especially the graphic part) of LightSaber depend on these external 
 - jpegdec
 - Graphics32
 
-Some dependencies are disabled by default others (with more permisive license) are delivered here. 
-
+The dependencies are not disabled by default but you can disable them. So, in the end you can compile without them.
 To enable the support for the above-mentioned features, install the libraries (see links below) and then add these "defines" to your project's settings: `Jpg2000;GR32`.
 The "Conditional defines" field is located in Project Options: Right-click your project, and choose "Project options -> Delphi compiler -> All configurations -> Conditional defines".
 
 _________________
 
-**Pricing**
+## Pricing 
 
 This library is freeware (see included copyright notice).
 I don't ask for money, not even donations for this library, but you can help me by spreading the word.
@@ -410,7 +439,7 @@ Details in System\Copyright.txt
 
 _________________
 
-**Documentation**
+## Documentation 
 
 The code is nicely documented. Each method has a comment on top of it.
 Some units have FULL documentation at the top and code/usage examples.
