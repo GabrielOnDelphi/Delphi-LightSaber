@@ -206,7 +206,7 @@ object Form2: TForm2
         Position.X = 3.000000000000000000
         Position.Y = 293.000000000000000000
         Size.Width = 644.000000000000000000
-        Size.Height = 84.000000000000000000
+        Size.Height = 100.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
         object btnTopHome: TFlatButton
@@ -218,12 +218,13 @@ object Form2: TForm2
           Padding.Right = 8.000000000000000000
           Padding.Bottom = 6.000000000000000000
           Position.Y = 17.000000000000000000
-          Size.Width = 93.000000000000000000
-          Size.Height = 67.000000000000000000
+          Size.Width = 130.000000000000000000
+          Size.Height = 83.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
           XRadius = 6.000000000000000000
           YRadius = 6.000000000000000000
+          Text = 'Caption'
           SvgData = 
             'M5,12 L3,12 L12,3 L21,12 L19,12 M5,12 L5,19 C5,20.1045703887939 ' +
             '5.89543056488037,21 7,21 L17,21 C18.1045703887939,21 19,20.10457' +
@@ -255,21 +256,22 @@ object Form2: TForm2
           Padding.Top = 6.000000000000000000
           Padding.Right = 8.000000000000000000
           Padding.Bottom = 6.000000000000000000
-          Position.X = 93.000000000000000000
+          Position.X = 130.000000000000000000
           Position.Y = 17.000000000000000000
           Size.Width = 96.000000000000000000
-          Size.Height = 67.000000000000000000
+          Size.Height = 83.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
           XRadius = 6.000000000000000000
           YRadius = 6.000000000000000000
+          Text = 'Caption'
           SvgData = 
             'M5,12 L3,12 L12,3 L21,12 L19,12 M5,12 L5,19 C5,20.1045703887939 ' +
             '5.89543056488037,21 7,21 L17,21 C18.1045703887939,21 19,20.10457' +
             '03887939 19,19 L19,12 M9,21 L9,15 C9,13.8954296112061 9.89543056' +
             '488037,13 11,13 L13,13 C14.1045694351196,13 15,13.8954305648804 ' +
             '15,15 L15,21 '
-          IconPosition = ipTop
+          IconPosition = ipCenter
           object TPath
             Align = Left
             Fill.Kind = None
@@ -294,14 +296,15 @@ object Form2: TForm2
           Padding.Top = 6.000000000000000000
           Padding.Right = 8.000000000000000000
           Padding.Bottom = 6.000000000000000000
-          Position.X = 189.000000000000000000
+          Position.X = 226.000000000000000000
           Position.Y = 17.000000000000000000
           Size.Width = 96.000000000000000000
-          Size.Height = 67.000000000000000000
+          Size.Height = 83.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
           XRadius = 6.000000000000000000
           YRadius = 6.000000000000000000
+          Text = 'Caption'
           SvgData = 
             'M5,12 L3,12 L12,3 L21,12 L19,12 M5,12 L5,19 C5,20.1045703887939 ' +
             '5.89543056488037,21 7,21 L17,21 C18.1045703887939,21 19,20.10457' +
@@ -370,6 +373,7 @@ object Form2: TForm2
           Stroke.Kind = None
           XRadius = 6.000000000000000000
           YRadius = 6.000000000000000000
+          Text = 'Caption'
           SvgData = 
             'M5,12 L3,12 L12,3 L21,12 L19,12 M5,12 L5,19 C5,20.1045703887939 ' +
             '5.89543056488037,21 7,21 L17,21 C18.1045703887939,21 19,20.10457' +
@@ -408,6 +412,7 @@ object Form2: TForm2
           Stroke.Kind = None
           XRadius = 6.000000000000000000
           YRadius = 6.000000000000000000
+          Text = 'Caption'
           SvgData = 
             'M5,12 L3,12 L12,3 L21,12 L19,12 M5,12 L5,19 C5,20.1045703887939 ' +
             '5.89543056488037,21 7,21 L17,21 C18.1045703887939,21 19,20.10457' +
@@ -446,6 +451,7 @@ object Form2: TForm2
           Stroke.Kind = None
           XRadius = 6.000000000000000000
           YRadius = 6.000000000000000000
+          Text = 'Caption'
           SvgData = 
             'M5,12 L3,12 L12,3 L21,12 L19,12 M5,12 L5,19 C5,20.1045703887939 ' +
             '5.89543056488037,21 7,21 L17,21 C18.1045703887939,21 19,20.10457' +
@@ -484,6 +490,7 @@ object Form2: TForm2
           Stroke.Kind = None
           XRadius = 6.000000000000000000
           YRadius = 6.000000000000000000
+          Text = 'Caption'
           SvgData = 
             'M5,12 L3,12 L12,3 L21,12 L19,12 M5,12 L5,19 C5,20.1045703887939 ' +
             '5.89543056488037,21 7,21 L17,21 C18.1045703887939,21 19,20.10457' +
@@ -534,6 +541,7 @@ object Form2: TForm2
           Stroke.Kind = None
           XRadius = 6.000000000000000000
           YRadius = 6.000000000000000000
+          Text = 'Caption'
           SvgData = 
             'M5,12 L3,12 L12,3 L21,12 L19,12 M5,12 L5,19 C5,20.1045703887939 ' +
             '5.89543056488037,21 7,21 L17,21 C18.1045703887939,21 19,20.10457' +
@@ -580,12 +588,14 @@ object Form2: TForm2
           Stroke.Kind = None
           XRadius = 6.000000000000000000
           YRadius = 6.000000000000000000
+          Text = 'Caption'
           SvgData = 
             'M5,12 L3,12 L12,3 L21,12 L19,12 M5,12 L5,19 C5,20.1045703887939 ' +
             '5.89543056488037,21 7,21 L17,21 C18.1045703887939,21 19,20.10457' +
             '03887939 19,19 L19,12 M9,21 L9,15 C9,13.8954296112061 9.89543056' +
             '488037,13 11,13 L13,13 C14.1045694351196,13 15,13.8954305648804 ' +
             '15,15 L15,21 '
+          IconPosition = ipCenter
           object TPath
             Align = Left
             Fill.Kind = None
@@ -618,6 +628,7 @@ object Form2: TForm2
           Stroke.Kind = None
           XRadius = 6.000000000000000000
           YRadius = 6.000000000000000000
+          Text = 'Caption'
           SvgData = 
             'M5,12 L3,12 L12,3 L21,12 L19,12 M5,12 L5,19 C5,20.1045703887939 ' +
             '5.89543056488037,21 7,21 L17,21 C18.1045703887939,21 19,20.10457' +
@@ -669,6 +680,7 @@ object Form2: TForm2
           Stroke.Kind = None
           XRadius = 6.000000000000000000
           YRadius = 6.000000000000000000
+          Text = 'Caption'
           SvgData = 
             'M5,12 L3,12 L12,3 L21,12 L19,12 M5,12 L5,19 C5,20.1045703887939 ' +
             '5.89543056488037,21 7,21 L17,21 C18.1045703887939,21 19,20.10457' +
@@ -706,6 +718,7 @@ object Form2: TForm2
           Stroke.Kind = None
           XRadius = 6.000000000000000000
           YRadius = 6.000000000000000000
+          Text = 'Caption'
           SvgData = 
             'M5,12 L3,12 L12,3 L21,12 L19,12 M5,12 L5,19 C5,20.1045703887939 ' +
             '5.89543056488037,21 7,21 L17,21 C18.1045703887939,21 19,20.10457' +

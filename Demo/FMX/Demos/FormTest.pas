@@ -210,9 +210,11 @@ end;
 procedure TForm2.Button2Click(Sender: TObject);
 VAR dummy: TfrmStyleDisk;
 begin
- // TfrmStyleDisk.ShowAsModal;
-  AppData.CreateForm(TfrmStyleDisk, dummy);
+  // temporary code
+  AppData.CreateForm(TfrmStyleDisk, dummy);     //todo 1: if we want to be able to work with non-modal forms, the modal form needs to inform us when the user changed the style. We need an EVENT or callback in TfrmStyleDisk
   dummy.Show;
+
+  // TfrmStyleDisk.ShowAsModal;
   RefreshAllThemeColors;
 end;
 
@@ -223,7 +225,7 @@ VAR i: Integer;
 begin
   for i:= 0 to ComponentCount - 1 do
     if Components[i] is TFlatButton
-    then TFlatButton(Components[i]).ApplyThemeColors;
+    then TFlatButton(Components[i]).ApplyThemeColors; //todo 1: do I need to manually refresh the buttons after a new skin is applied? This is not "natural". can the button listen or be announce that the skin was changed?
 end;
 
 
