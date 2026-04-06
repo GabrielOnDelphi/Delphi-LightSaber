@@ -26,7 +26,7 @@ INTERFACE
 
 USES
   System.UITypes, System.Classes,
-  FMX.Types, FMX.Graphics, FMX.StdCtrls, FMX.Objects;
+  FMX.Types, FMX.Graphics, FMX.StdCtrls, FMX.Objects, FMX.Styles.Objects;
 
 { Creates a TPath child inside Button with the given SVG path data.
   The icon starts hidden. Call ToggleSvgIcon to show/hide it.
@@ -54,6 +54,8 @@ begin
   if Existing is TPath then
     begin
       TPath(Existing).Data.Data:= SvgPathData;
+      TPath(Existing).Width:= IconSize;
+      TPath(Existing).Height:= IconSize;
       EXIT;
     end;
 
@@ -81,6 +83,7 @@ VAR
   TextObj: TFmxObject;
 begin
   SvgIcon:= Button.FindComponent(Button.Name + '_SvgIcon');
+  Assert(SvgIcon is TPath, 'ToggleSvgIcon: no SVG icon attached to ' + Button.Name);
   if SvgIcon is TPath then
     begin
       TPath(SvgIcon).Visible:= IconOnly;
@@ -91,9 +94,11 @@ begin
           then TPath(SvgIcon).TagString:= Button.Text;
           Button.Text:= '';
 
-          { Match the icon stroke to the theme's text color }
+          { Match the icon stroke to the theme's NormalColor (not the animated/hot color) }
           TextObj:= Button.FindStyleResource('text');
-          if TextObj is TText
+          if TextObj is TButtonStyleTextObject
+          then TPath(SvgIcon).Stroke.Color:= TButtonStyleTextObject(TextObj).NormalColor
+          else if TextObj is TText
           then TPath(SvgIcon).Stroke.Color:= TText(TextObj).Color;
         end
       else
