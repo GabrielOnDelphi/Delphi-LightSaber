@@ -136,27 +136,46 @@ begin
 end;
 
 
-{ Probes the background color of the active style to determine if it is dark.
-  Checks 'backgroundstyle' (TRectangle) and 'background' (TBrushObject) resources.
-  Returns False when no style is loaded or no background resource found. }
+{ Determines if the active FMX style is a dark theme.
+  Uses a three-level detection strategy:
+  1. Style metadata: checks TStyleDescription.PlatformTarget for [DARKSTYLE] tag.
+     This is authoritative and handles image-based skins (e.g. Calypso Dark) where
+     the backgroundstyle is a TStyleObject with no Fill.Color to probe.
+  2. Background probe: reads Fill.Color from 'backgroundstyle' (TRectangle) or
+     Brush.Color from 'background' (TBrushObject) and tests luminance < 0.5.
+  3. Text probe: if text color is light (luminance > 0.5), the theme must be dark.
+  Returns False when no style is loaded or detection fails. }
 function IsDarkStyle: Boolean;
 VAR
   ActiveStyle: TFmxObject;
   BgObj: TFmxObject;
+  Description: TStyleDescription;
 begin
   Result:= False;
   ActiveStyle:= TStyleManager.ActiveStyle(NIL);
   if ActiveStyle = NIL then EXIT;
 
-  // Try 'backgroundstyle' first (TRectangle in most FMX styles)
+  // Primary: check style metadata (handles image-based skins like Calypso Dark)
+  Description:= TStyleManager.FindStyleDescriptor(ActiveStyle);
+  if Description <> NIL then
+    if Description.PlatformTarget.Contains('[DARKSTYLE]')
+    then EXIT(True)
+    else EXIT(False);
+
+  // Fallback 1: probe 'backgroundstyle' rectangle fill color
   BgObj:= ActiveStyle.FindStyleResource('backgroundstyle');
   if (BgObj <> NIL) AND (BgObj is TRectangle)
   then EXIT(Luminance(TRectangle(BgObj).Fill.Color) < 0.5);
 
-  // Fallback: try 'background' (TBrushObject in some styles)
+  // Fallback 2: probe 'background' brush color
   BgObj:= ActiveStyle.FindStyleResource('background');
   if (BgObj <> NIL) AND (BgObj is TBrushObject)
   then EXIT(Luminance(TBrushObject(BgObj).Brush.Color) < 0.5);
+
+  // Safety net: if label text is light, theme must be dark
+  BgObj:= ActiveStyle.FindStyleResource('text');
+  if (BgObj <> NIL) AND (BgObj is TText)
+  then EXIT(Luminance(TText(BgObj).Color) > 0.5);
 end;
 
 
