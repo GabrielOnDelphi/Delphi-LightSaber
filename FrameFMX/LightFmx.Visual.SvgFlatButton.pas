@@ -40,7 +40,7 @@
 INTERFACE
 
 USES
-  System.UITypes, System.Classes, System.Types, System.Math,
+  System.UITypes, System.Classes, System.Types, System.Math, System.Messaging,
   FMX.Styles, FMX.Styles.Objects, FMX.Types, FMX.Controls, FMX.Objects, FMX.StdCtrls, FMX.Graphics, FMX.Effects;
 
 TYPE
@@ -59,14 +59,26 @@ TYPE
     FNormalColor: TAlphaColor;      { Icon/text color in normal state (from buttonstyle text NormalColor) }
     FHighlightColor: TAlphaColor;   { Icon/text color on hover/toggle (from skin's accent/selection color) }
     FHoverBgColor: TAlphaColor;     { Background fill on hover/toggle (FHighlightColor at low alpha) }
+    FAutoCompact     : Boolean;
+    FIsCompacted     : Boolean;
+    FApplyingCompact : Boolean;       { Guard: Resize → EvaluateAutoCompact → ApplyCompact → Width change → Resize }
+    FExpandedWidth   : Single;        { Width before compacting — restored on expand }
+    FExpandedIconPos : TIconPosition; { IconPosition before compacting — restored on expand }
     function  GetText: string;
     procedure SetText(CONST Value: string);
     function  GetSvgData: string;
     procedure SetSvgData(CONST Value: string);
     procedure SetIconPosition(Value: TIconPosition);
     procedure SetIsToggled(Value: Boolean);
+    procedure SetHoverBgEnabled(Value: Boolean);
     procedure ApplyColors;          { Applies all visual changes based on current hover/toggle state }
     procedure UpdateIconSize;       { Recalculates icon dimensions from button size and position mode }
+    procedure HandleStyleChanged(const Sender: TObject; const M: System.Messaging.TMessage);
+    procedure SetCompact(Value: Boolean);
+    procedure SetAutoCompact(Value: Boolean);
+    procedure ApplyCompact(MakeCompact: Boolean);
+    procedure EvaluateAutoCompact;
+    procedure HandleFormResize(const Sender: TObject; const M: System.Messaging.TMessage);
   protected
     procedure Loaded; override;
     procedure Resize; override;
@@ -77,18 +89,21 @@ TYPE
     procedure MouseUp  (Button: TMouseButton; Shift: TShiftState; X, Y: Single); override;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     procedure LoadSvgPath(CONST SvgPathData: string);
     procedure ApplyThemeColors;     { Re-reads colors from the active skin. Call after style changes. }
     property Icon: TPath read FIconPath;
     property TextLabel: TLabel read FLabel;
   published
 
-    property Text: string read GetText write SetText;         { SVG path data string (e.g. Tabler Icons). Set in Object Inspector to see the icon at design time. }
+    property Text: string read GetText write SetText;   { Visible button label text (stored in FLabel). For the icon, use SvgData or LoadSvgPath. }
     property SvgData: string read GetSvgData write SetSvgData;
     property IconPosition: TIconPosition read FIconPosition write SetIconPosition default ipLeft;
     property IsToggled: Boolean read FIsToggled write SetIsToggled default FALSE;
 
-    property HoverBgEnabled: Boolean read FHoverBgEnabled write FHoverBgEnabled default TRUE;      { When TRUE (default), hover/toggle tints the background with the accent color. FALSE = background always transparent (icon/text/glow still change). }
+    property HoverBgEnabled: Boolean read FHoverBgEnabled write SetHoverBgEnabled default TRUE;    { When TRUE (default), hover/toggle tints the background with the accent color. FALSE = background always transparent (icon/text/glow still change). }
+    property Compact: Boolean read FIsCompacted write SetCompact default FALSE;                     { Manual compact toggle. TRUE = icon-only + shrink width. Ignored when AutoCompact is TRUE. }
+    property AutoCompact: Boolean read FAutoCompact write SetAutoCompact default FALSE;             { Self-managing compact. Watches hosting form width and compacts below HIGH_WIDTH (1024px). }
   end;
 
 
@@ -98,6 +113,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
+  FMX.Forms,
   LightFmx.Common.Styles;
 
 
@@ -246,6 +262,7 @@ begin
     Named 'Caption' so the FMX streaming system reuses it. }
   FLabel:= TLabel.Create(Self);
   FLabel.Name:= 'Caption';
+  FLabel.Text:= '';              { TTextControl.SetName auto-sets Text to Name; reset it }
   FLabel.SetSubComponent(TRUE);
   FLabel.Stored:= FALSE;
   FLabel.Parent:= Self;
@@ -260,6 +277,26 @@ begin
   FHoverBgEnabled:= TRUE;
 
   ApplyThemeColors;
+
+  { Auto-refresh colors when the active FMX style changes (no manual RefreshAllThemeColors needed) }
+  TMessageManager.DefaultManager.SubscribeToMessage(TStyleChangedMessage, HandleStyleChanged);
+
+  { AutoCompact: react to hosting form resize — compacts when form width < HIGH_WIDTH }
+  TMessageManager.DefaultManager.SubscribeToMessage(TSizeChangedMessage, HandleFormResize);
+end;
+
+
+destructor TFlatButton.Destroy;
+begin
+  TMessageManager.DefaultManager.Unsubscribe(TStyleChangedMessage, HandleStyleChanged);
+  TMessageManager.DefaultManager.Unsubscribe(TSizeChangedMessage, HandleFormResize);
+  inherited;
+end;
+
+
+procedure TFlatButton.HandleStyleChanged(const Sender: TObject; const M: System.Messaging.TMessage);
+begin
+  ApplyThemeColors;
 end;
 
 
@@ -270,6 +307,7 @@ begin
   inherited;
   ApplyThemeColors;
   UpdateIconSize;
+  EvaluateAutoCompact;
 end;
 
 
@@ -279,23 +317,26 @@ procedure TFlatButton.Resize;
 begin
   inherited;
   UpdateIconSize;
+  if FAutoCompact and not FApplyingCompact then
+    EvaluateAutoCompact;
 end;
 
 
 { Recalculates icon Width/Height based on button size and current position mode.
   ipLeft:   icon Width = button inner height (square icon filling vertical space)
-  ipTop:    icon Height = min(inner width, inner height) (square, constrained by smaller dimension)
+  ipTop:    no action — Client alignment fills the space above the Bottom-aligned label
   ipCenter: no action — Client alignment fills the button automatically }
 procedure TFlatButton.UpdateIconSize;
-VAR InnerW, InnerH: Single;
+VAR InnerH: Single;
 begin
-  InnerW:= Width  - Padding.Left - Padding.Right;
-  InnerH:= Height - Padding.Top  - Padding.Bottom;
-
   case FIconPosition of
-    ipLeft:   FIconPath.Width := Max(InnerH, 1);
-    ipTop:    FIconPath.Height:= Max(Min(InnerW, InnerH), 1);
-    ipCenter: ;
+    ipLeft:
+      begin
+        InnerH:= Height - Padding.Top - Padding.Bottom;
+        FIconPath.Width:= Max(InnerH, 1);
+      end;
+    ipTop:    ;  { Client alignment }
+    ipCenter: ;  { Client alignment }
   end;
 end;
 
@@ -317,6 +358,7 @@ begin
       Canvas.Stroke.Dash:= TStrokeDash.Dot;
       Canvas.Stroke.Thickness:= 1;
       Canvas.DrawRect(GetShapeRect, XRadius, YRadius, AllCorners, AbsoluteOpacity);
+      Canvas.Stroke.Dash:= TStrokeDash.Solid;   { Restore shared canvas state }
     end;
 end;
 
@@ -339,6 +381,7 @@ end;
 
 
 
+
 {-------------------------------------------------------------------------------------------------------------
    SVG DATA
 -------------------------------------------------------------------------------------------------------------}
@@ -354,6 +397,10 @@ procedure TFlatButton.SetSvgData(CONST Value: string);
 begin
   FIconPath.Data.Data:= Value;
   FIconPath.Visible:= Value <> '';
+
+  { In ipCenter mode, label is only shown when there's no icon }
+  if FIconPosition = ipCenter
+  then FLabel.Visible:= NOT FIconPath.Visible;
 end;
 
 
@@ -443,6 +490,14 @@ end;}
    ICON POSITION
 -------------------------------------------------------------------------------------------------------------}
 
+procedure TFlatButton.SetHoverBgEnabled(Value: Boolean);
+begin
+  if FHoverBgEnabled = Value then EXIT;
+  FHoverBgEnabled:= Value;
+  ApplyColors;
+end;
+
+
 { Switches the icon layout relative to the text label.
   ipLeft:   icon on the left, text right-aligned (default - sidebar buttons)
   ipTop:    icon above, text centered below (tile buttons)
@@ -462,21 +517,97 @@ begin
       end;
     ipTop:
       begin
-        FIconPath.Align:= TAlignLayout.Top;
-        FIconPath.Margins.Rect:= TRectF.Create(0, 0, 0, 4);
         FLabel.Visible:= TRUE;
-        FLabel.Align:= TAlignLayout.Client;
+        FLabel.Height:= 20;
+        FLabel.Align:= TAlignLayout.Bottom;  { Label sits at the bottom with fixed height }
         FLabel.TextSettings.HorzAlign:= TTextAlign.Center;
+        FIconPath.Align:= TAlignLayout.Client;  { Icon fills remaining space above the label }
+        FIconPath.Margins.Rect:= TRectF.Create(0, 0, 0, 0);
       end;
     ipCenter:
       begin
         FIconPath.Align:= TAlignLayout.Client;  { Fill the button; WrapMode=Fit keeps aspect ratio }
         FIconPath.Margins.Rect:= TRectF.Create(0, 0, 0, 0);
-        FLabel.Visible:= FALSE;
+        FLabel.Visible:= NOT FIconPath.Visible;  { Show label only when there's no icon }
+        FLabel.Align:= TAlignLayout.Client;
+        FLabel.TextSettings.HorzAlign:= TTextAlign.Center;
       end;
   end;
 
   UpdateIconSize;
+end;
+
+
+
+{-------------------------------------------------------------------------------------------------------------
+   COMPACT / AUTO-COMPACT
+   Compact:     manual toggle — caller controls when to compact (e.g., sidebar buttons responding to MultiView state).
+   AutoCompact: self-managing — button watches hosting form's width via TSizeChangedMessage and
+                compacts when below HIGH_WIDTH (1024). Initial state evaluated in Resize (when first parented).
+   When AutoCompact is TRUE, manual Compact writes are ignored — AutoCompact owns the state.
+-------------------------------------------------------------------------------------------------------------}
+
+procedure TFlatButton.SetCompact(Value: Boolean);
+begin
+  if FAutoCompact then EXIT;  { AutoCompact owns the state — ignore manual writes }
+  ApplyCompact(Value);
+end;
+
+
+procedure TFlatButton.SetAutoCompact(Value: Boolean);
+begin
+  if FAutoCompact = Value then EXIT;
+  FAutoCompact:= Value;
+  EvaluateAutoCompact;
+end;
+
+
+{ Checks hosting form width and compacts/expands accordingly.
+  Called from: Resize (initial parenting), Loaded (streamed), SetAutoCompact, HandleFormResize. }
+procedure TFlatButton.EvaluateAutoCompact;
+begin
+  if not FAutoCompact then EXIT;
+  if (Scene = nil) then EXIT;
+  if not (Scene.GetObject is TCommonCustomForm) then EXIT;
+  ApplyCompact(TCommonCustomForm(Scene.GetObject).ClientWidth < HIGH_WIDTH);
+end;
+
+
+{ Responds to hosting form resize — filters by Scene.GetObject so we ignore other forms' resizes. }
+procedure TFlatButton.HandleFormResize(const Sender: TObject; const M: System.Messaging.TMessage);
+begin
+  if not FAutoCompact then EXIT;
+  if (Scene = nil) or (Sender <> Scene.GetObject) then EXIT;
+  ApplyCompact(TCommonCustomForm(Sender).ClientWidth < HIGH_WIDTH);
+end;
+
+
+{ Switches between expanded (icon+text, original width) and compacted (icon-only, square).
+  Width is only modified when Align allows it (Right, Left, MostRight, MostLeft, None). }
+procedure TFlatButton.ApplyCompact(MakeCompact: Boolean);
+begin
+  if MakeCompact = FIsCompacted then EXIT;
+  FApplyingCompact:= True;
+  TRY
+    if MakeCompact then
+      begin
+        FExpandedWidth:= Width;
+        FExpandedIconPos:= FIconPosition;
+        FIsCompacted:= True;
+        SetIconPosition(ipCenter);
+        if Align in [TAlignLayout.Right, TAlignLayout.Left, TAlignLayout.MostRight, TAlignLayout.MostLeft, TAlignLayout.None]
+        then Width:= Height;
+      end
+    else
+      begin
+        FIsCompacted:= False;
+        SetIconPosition(FExpandedIconPos);
+        if Align in [TAlignLayout.Right, TAlignLayout.Left, TAlignLayout.MostRight, TAlignLayout.MostLeft, TAlignLayout.None]
+        then Width:= FExpandedWidth;
+      end;
+  FINALLY
+    FApplyingCompact:= False;
+  END;
 end;
 
 
