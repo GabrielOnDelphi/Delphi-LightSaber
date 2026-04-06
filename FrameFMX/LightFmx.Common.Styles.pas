@@ -15,7 +15,8 @@ USES
    FMX.Styles, FMX.Types, FMX.Controls, FMX.Graphics;
 
 CONST
-  COMPACT_WIDTH = 600;  // Below this width, hide Import/Delete buttons and use popup menu (same as FormMain.BREAKPOINT_PHONE)
+  COMPACT_WIDTH = 600;  // Below this width, hide most buttons and use popup menu.
+  HiGH_WIDTH    = 1024; // Below this with, show some buttons but some in "Compact" mode (only icon, no text). Over this resolution we show all.
 
 
 function IsStyleCompatible(const StyleFile: string): Boolean;
