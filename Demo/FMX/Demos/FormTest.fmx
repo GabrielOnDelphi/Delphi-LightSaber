@@ -218,7 +218,7 @@ object Form2: TForm2
           Padding.Right = 8.000000000000000000
           Padding.Bottom = 6.000000000000000000
           Position.Y = 17.000000000000000000
-          Size.Width = 130.000000000000000000
+          Size.Width = 161.000000000000000000
           Size.Height = 83.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -256,9 +256,9 @@ object Form2: TForm2
           Padding.Top = 6.000000000000000000
           Padding.Right = 8.000000000000000000
           Padding.Bottom = 6.000000000000000000
-          Position.X = 130.000000000000000000
+          Position.X = 161.000000000000000000
           Position.Y = 17.000000000000000000
-          Size.Width = 96.000000000000000000
+          Size.Width = 88.000000000000000000
           Size.Height = 83.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -271,7 +271,6 @@ object Form2: TForm2
             '03887939 19,19 L19,12 M9,21 L9,15 C9,13.8954296112061 9.89543056' +
             '488037,13 11,13 L13,13 C14.1045694351196,13 15,13.8954305648804 ' +
             '15,15 L15,21 '
-          IconPosition = ipCenter
           object TPath
             Align = Left
             Fill.Kind = None
@@ -296,7 +295,7 @@ object Form2: TForm2
           Padding.Top = 6.000000000000000000
           Padding.Right = 8.000000000000000000
           Padding.Bottom = 6.000000000000000000
-          Position.X = 226.000000000000000000
+          Position.X = 249.000000000000000000
           Position.Y = 17.000000000000000000
           Size.Width = 96.000000000000000000
           Size.Height = 83.000000000000000000
@@ -750,20 +749,10 @@ object Form2: TForm2
           TabOrder = 2
         end
       end
-      object Button3: TButton
-        Position.X = 520.000000000000000000
-        Position.Y = 384.000000000000000000
-        Size.Width = 104.000000000000000000
-        Size.Height = 44.000000000000000000
-        Size.PlatformDefault = False
-        TabOrder = 5
-        Text = 'Refresh after skin'
-        OnClick = Button3Click
-      end
       object chkHover: TLightCheckBox
         Position.X = 27.000000000000000000
         Position.Y = 406.000000000000000000
-        TabOrder = 6
+        TabOrder = 5
         Text = 'chkHover'
         OnChange = chkHoverChange
       end

@@ -63,7 +63,6 @@ TYPE
     Button2: TButton;
     StyleBook1: TStyleBook;
     Label2: TLabel;
-    Button3: TButton;
     chkHover: TLightCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure Button1Click(Sender: TObject);
@@ -128,24 +127,24 @@ procedure TForm2.SetupFlatButtons;
 begin
   { Row 1: Icon + Text }
   btnHome.LoadSvgPath(SVG_HOME);
-  btnHome.TextLabel.Text:= 'Home';
+  btnHome.Text:= 'Home';
   btnHome.OnClick:= DemoButtonClick;
 
   btnSettings.LoadSvgPath(SVG_SETTINGS);
-  btnSettings.TextLabel.Text:= 'Settings';
+  btnSettings.Text:= 'Settings';
   btnSettings.OnClick:= DemoButtonClick;
 
   btnProfile.LoadSvgPath(SVG_USER);
-  btnProfile.TextLabel.Text:= 'Profile';
+  btnProfile.Text:= 'Profile';
   btnProfile.OnClick:= DemoButtonClick;
 
   { Row 2: Toggle mode }
   btnFavorite.LoadSvgPath(SVG_STAR);
-  btnFavorite.TextLabel.Text:= 'Favorite';
+  btnFavorite.Text:= 'Favorite';
   btnFavorite.OnClick:= DemoToggleClick;
 
   btnNotify.LoadSvgPath(SVG_BELL);
-  btnNotify.TextLabel.Text:= 'Notifications';
+  btnNotify.Text:= 'Notifications';
   btnNotify.OnClick:= DemoToggleClick;
 
   { Row 3: Icon only (ipCenter) }
@@ -163,15 +162,15 @@ begin
 
   { Row 4: Label under icon (ipTop) - IconPosition set in .fmx }
   btnTopHome.LoadSvgPath(SVG_HOME);
-  btnTopHome.TextLabel.Text:= 'Home';
+  btnTopHome.Text:= 'Home';
   btnTopHome.OnClick:= DemoButtonClick;
 
   btnTopStar.LoadSvgPath(SVG_STAR);
-  btnTopStar.TextLabel.Text:= 'Star';
+  btnTopStar.Text:= 'Star';
   btnTopStar.OnClick:= DemoButtonClick;
 
   btnTopBell.LoadSvgPath(SVG_BELL);
-  btnTopBell.TextLabel.Text:= 'Alerts';
+  btnTopBell.Text:= 'Alerts';
   btnTopBell.OnClick:= DemoButtonClick;
 end;
 
@@ -180,8 +179,8 @@ procedure TForm2.DemoButtonClick(Sender: TObject);
 VAR btn: TFlatButton;
 begin
   btn:= Sender as TFlatButton;
-  if btn.TextLabel.Text <> ''
-  then lblFeedback.Text:= 'Clicked: ' + btn.TextLabel.Text
+  if btn.Text <> ''
+  then lblFeedback.Text:= 'Clicked: ' + btn.Text
   else lblFeedback.Text:= 'Clicked: (icon-only button)';
 end;
 
@@ -191,14 +190,13 @@ VAR btn: TFlatButton;
 begin
   btn:= Sender as TFlatButton;
   btn.IsToggled:= NOT btn.IsToggled;
-  lblFeedback.Text:= btn.TextLabel.Text + ': toggled ' + BoolToStr(btn.IsToggled, TRUE);
+  lblFeedback.Text:= btn.Text + ': toggled ' + BoolToStr(btn.IsToggled, TRUE);
 end;
 
 
 
 procedure TForm2.Button3Click(Sender: TObject);
 begin
-  RefreshAllThemeColors;
 end;
 
 
@@ -211,11 +209,11 @@ procedure TForm2.Button2Click(Sender: TObject);
 VAR dummy: TfrmStyleDisk;
 begin
   // temporary code
-  AppData.CreateForm(TfrmStyleDisk, dummy);     //todo 1: if we want to be able to work with non-modal forms, the modal form needs to inform us when the user changed the style. We need an EVENT or callback in TfrmStyleDisk
+  AppData.CreateForm(TfrmStyleDisk, dummy);     //del: if we want to be able to work with non-modal forms, the modal form needs to inform us when the user changed the style. We need an EVENT or callback in TfrmStyleDisk
   dummy.Show;
 
   // TfrmStyleDisk.ShowAsModal;
-  RefreshAllThemeColors;
+  //RefreshAllThemeColors;
 end;
 
 
