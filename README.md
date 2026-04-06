@@ -95,7 +95,7 @@ More about my libraries [here](https://gabrielmoraru.com/publications-citations/
   /VCL/                  # VCL demos and templates  
   /FMX/                  # FMX demos and templates  
 /UnitTesting/            # DUnitX test projects 
-/External/               # Optional 3rd-party libraries (CCR-Exif, FastJpeg, janFX, etc.)
+/External/               # Optional 3rd-party libraries  
 /Updater/                # Self-update framework
 /HardwareID/             # Hardware identification utilities
 /System/                 # Copyright, EULA, credits
@@ -135,7 +135,7 @@ That's it.
 By the grace of the `$(Auto)` compiler directive, the madness of "one package per Delphi version" is gone now.
 (If you use an older Delphi edition that does not support the `$(Auto)` directive, just delete it and recompile.)
 
-If the compiler complains about missing libraries like GR32, CcrExif, ThirdPartyLibs, janFX, Jpeg2000: these are 3rd party libraries. You can download them from the Internet OR simply ignore them. LightSaber can include or exclude those 3rd party libraries via conditional defines (see External Dependencies below).
+If the compiler complains about missing libraries like GR32, ThirdPartyLibs, janFX, Jpeg2000: these are 3rd party libraries. You can download them from the Internet OR simply ignore them. LightSaber can include or exclude those 3rd party libraries via conditional defines (see External Dependencies below).
 
 _________________
 
@@ -415,7 +415,6 @@ _________________
 
 Some parts (especially the graphic part) of LightSaber depend on these external libraries:
 
-- ccr-exif
 - PasJpeg2000
 - jpegdec
 - Graphics32
