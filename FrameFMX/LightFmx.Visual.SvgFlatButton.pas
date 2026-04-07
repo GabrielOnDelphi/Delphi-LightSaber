@@ -55,7 +55,7 @@ TYPE
     FLabel: TLabel;
     FIsToggled: Boolean;
     FIconPosition: TIconPosition;
-    FHoverBgEnabled: Boolean;       { When FALSE, background stays transparent on hover/toggle }
+    FHoverBackground: Boolean;       { When FALSE, background stays transparent on hover/toggle }
     FNormalColor: TAlphaColor;      { Icon/text color in normal state (from buttonstyle text NormalColor) }
     FHighlightColor: TAlphaColor;   { Icon/text color on hover/toggle (from skin's accent/selection color) }
     FHoverBgColor: TAlphaColor;     { Background fill on hover/toggle (FHighlightColor at low alpha) }
@@ -70,7 +70,7 @@ TYPE
     procedure SetSvgData(CONST Value: string);
     procedure SetIconPosition(Value: TIconPosition);
     procedure SetIsToggled(Value: Boolean);
-    procedure SetHoverBgEnabled(Value: Boolean);
+    procedure SetHoverBackground(Value: Boolean);
     procedure ApplyColors;          { Applies all visual changes based on current hover/toggle state }
     procedure UpdateIconSize;       { Recalculates icon dimensions from button size and position mode }
     procedure HandleStyleChanged(const Sender: TObject; const M: System.Messaging.TMessage);
@@ -101,8 +101,8 @@ TYPE
     property IconPosition: TIconPosition read FIconPosition write SetIconPosition default ipLeft;
     property IsToggled: Boolean read FIsToggled write SetIsToggled default FALSE;
 
-    property HoverBgEnabled: Boolean read FHoverBgEnabled write SetHoverBgEnabled default TRUE;    { When TRUE (default), hover/toggle tints the background with the accent color. FALSE = background always transparent (icon/text/glow still change). }
-    property Compact: Boolean read FIsCompacted write SetCompact default FALSE;                     { Manual compact toggle. TRUE = icon-only + shrink width. Ignored when AutoCompact is TRUE. }
+    property HoverBackground: Boolean read FHoverBackground write SetHoverBackground default TRUE;    { When TRUE (default), hover/toggle tints the background with the accent color. FALSE = background always transparent (icon/text/glow still change). }
+    property Compact: Boolean read FIsCompacted write SetCompact stored FALSE default FALSE;        { Manual compact toggle. TRUE = icon-only + shrink width. Ignored when AutoCompact is TRUE. Not streamed to DFM — always stores expanded Width. }
     property AutoCompact: Boolean read FAutoCompact write SetAutoCompact default FALSE;             { Self-managing compact. Watches hosting form width and compacts below HIGH_WIDTH (1024px). }
   end;
 
@@ -274,7 +274,7 @@ begin
 
   SetIconPosition(ipLeft);            { Canonical path — sets FIconPath.Align + margins }
   FIsToggled:= FALSE;
-  FHoverBgEnabled:= TRUE;
+  FHoverBackground:= TRUE;
 
   ApplyThemeColors;
 
@@ -442,8 +442,8 @@ VAR Active: Boolean;
 begin
   Active:= FIsToggled or IsMouseOver;
 
-  { 1. Background fill - subtle accent tint or transparent (controlled by HoverBgEnabled) }
-  if Active AND FHoverBgEnabled
+  { 1. Background fill - subtle accent tint or transparent (controlled by HoverBackground) }
+  if Active AND FHoverBackground
   then Fill.Color:= FHoverBgColor
   else Fill.Color:= TAlphaColors.Null;
 
@@ -464,36 +464,15 @@ begin
 end;
 
 
-{KEEP
-Makes a dull background. Is ~30% from hover color.   c:\Projects\LightSaber\FrameFMX\del _ 30 percent hover color.png
-
-procedure TFlatButton.ApplyThemeColors;
-VAR Highlight: TAlphaColor;
-begin
-  FIconPath.Stroke.Color:= GetThemeTextColor;
-  Highlight:= GetStyleHighlightColor;
-
-  FHoverColor      := ReplaceColorAlpha(Highlight, $30);   // ~19% - subtle hover hint
-  FToggleColor     := ReplaceColorAlpha(Highlight, $48);   // ~28% - visible active state
-  FToggleHoverColor:= ReplaceColorAlpha(Highlight, $60);   // ~38% - active + hover
-
-  UpdateAnimValues;
-
-  if FIsToggled
-  then Fill.Color:= FToggleColor
-  else Fill.Color:= TAlphaColors.Null;
-end;}
-
-
 
 {-------------------------------------------------------------------------------------------------------------
    ICON POSITION
 -------------------------------------------------------------------------------------------------------------}
 
-procedure TFlatButton.SetHoverBgEnabled(Value: Boolean);
+procedure TFlatButton.SetHoverBackground(Value: Boolean);
 begin
-  if FHoverBgEnabled = Value then EXIT;
-  FHoverBgEnabled:= Value;
+  if FHoverBackground = Value then EXIT;
+  FHoverBackground:= Value;
   ApplyColors;
 end;
 
@@ -578,6 +557,7 @@ procedure TFlatButton.HandleFormResize(const Sender: TObject; const M: System.Me
 begin
   if not FAutoCompact then EXIT;
   if (Scene = nil) or (Sender <> Scene.GetObject) then EXIT;
+  if not (Sender is TCommonCustomForm) then EXIT;
   ApplyCompact(TCommonCustomForm(Sender).ClientWidth < HIGH_WIDTH);
 end;
 
@@ -620,6 +600,7 @@ end;
   (accent color + glow + background) until untoggled. }
 procedure TFlatButton.SetIsToggled(Value: Boolean);
 begin
+  if FIsToggled = Value then EXIT;
   FIsToggled:= Value;
   ApplyColors;
 end;
