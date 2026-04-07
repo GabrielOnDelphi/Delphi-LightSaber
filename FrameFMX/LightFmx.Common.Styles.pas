@@ -28,6 +28,9 @@ function GetThemeTextColor: TAlphaColor; overload;
 
 function GenerateThemePalette(BaseColor: TAlphaColor; IsDark: Boolean): TArray<TAlphaColor>;
 
+// BACKGROUND
+function GetStyleBackgroundColor(out Color: TAlphaColor): Boolean;  { Returns the form background color from the active style. FALSE if unavailable (image-based skins like Calypso/Jet). }
+
 // COLORS
 function ReplaceColorAlpha(Color: TAlphaColor; NewAlpha: Byte): TAlphaColor; inline;
 
@@ -137,13 +140,11 @@ end;
 
 
 { Determines if the active FMX style is a dark theme.
-  Uses a three-level detection strategy:
-  1. Style metadata: checks TStyleDescription.PlatformTarget for [DARKSTYLE] tag.
+  Checks TStyleDescription.PlatformTarget for [DARKSTYLE] tag.
      This is authoritative and handles image-based skins (e.g. Calypso Dark) where
      the backgroundstyle is a TStyleObject with no Fill.Color to probe.
-  2. Background probe: reads Fill.Color from 'backgroundstyle' (TRectangle) or
-     Brush.Color from 'background' (TBrushObject) and tests luminance < 0.5.
-  3. Text probe: if text color is light (luminance > 0.5), the theme must be dark.
+  Fallback 1. Background probe: reads Fill.Color from 'backgroundstyle' (TRectangle) or Brush.Color from 'background' (TBrushObject) and tests luminance < 0.5.
+  Fallback 2. Text probe: if text color is light (luminance > 0.5), the theme must be dark.
   Returns False when no style is loaded or detection fails. }
 function IsDarkStyle: Boolean;
 VAR
@@ -157,10 +158,8 @@ begin
 
   // Primary: check style metadata (handles image-based skins like Calypso Dark)
   Description:= TStyleManager.FindStyleDescriptor(ActiveStyle);
-  if Description <> NIL then
-    if Description.PlatformTarget.Contains('[DARKSTYLE]')
-    then EXIT(True)
-    else EXIT(False);
+  if Description <> NIL
+  then EXIT(Description.PlatformTarget.Contains('[DARKSTYLE]'));
 
   // Fallback 1: probe 'backgroundstyle' rectangle fill color
   BgObj:= ActiveStyle.FindStyleResource('backgroundstyle');
@@ -176,6 +175,34 @@ begin
   BgObj:= ActiveStyle.FindStyleResource('text');
   if (BgObj <> NIL) AND (BgObj is TText)
   then EXIT(Luminance(TText(BgObj).Color) > 0.5);
+end;
+
+
+
+{ Returns the form background color from the active style.
+  Probes 'backgroundstyle' (TRectangle in most styles) then 'background' (TBrushObject).
+  Returns FALSE for image-based styles (Calypso, Jet, Diamond) where no solid color is available. }
+function GetStyleBackgroundColor(out Color: TAlphaColor): Boolean;
+VAR
+  ActiveStyle, BgObj: TFmxObject;
+begin
+  Result:= False;
+  ActiveStyle:= TStyleManager.ActiveStyle(NIL);
+  if ActiveStyle = NIL then EXIT;
+
+  BgObj:= ActiveStyle.FindStyleResource('backgroundstyle');
+  if (BgObj <> NIL) AND (BgObj is TRectangle) then
+    begin
+      Color:= TRectangle(BgObj).Fill.Color;
+      EXIT(True);
+    end;
+
+  BgObj:= ActiveStyle.FindStyleResource('background');
+  if (BgObj <> NIL) AND (BgObj is TBrushObject) then
+    begin
+      Color:= TBrushObject(BgObj).Brush.Color;
+      EXIT(True);
+    end;
 end;
 
 

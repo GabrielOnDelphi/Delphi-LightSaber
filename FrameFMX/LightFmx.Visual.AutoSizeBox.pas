@@ -61,7 +61,7 @@ TYPE
 
 
 IMPLEMENTATION
-USES FMX.Layouts, LightFmx.Common.Styles;
+USES FMX.Layouts, System.UIConsts, LightFmx.Common.Styles;
 
 
 constructor TAutosizeBox.Create(AOwner: TComponent);
@@ -96,44 +96,87 @@ begin
 end;
 
 
-{ Aligns the bubble to left/right and sets color based on BoxType and current theme.
-  bxUser: Right-aligned (user messages), green background.
-  bxModel: Left-aligned (AI/bot messages), grey background.
-  bxContent: Left-aligned, blue background. }
-procedure TAutoSizeBox.setBoxType(Value: TBoxType);
-VAR Dark: Boolean;
+{ Derives a bubble color from the form background by adjusting lightness and tinting hue.
+  Dark themes: lightens the background so bubbles float above it.
+  Light themes: darkens slightly.
+  User bubbles get a green tint, content bubbles a blue tint, model bubbles stay neutral.
+  This ensures bubbles harmonize with ANY skin color palette (blue, teal, gray, etc.). }
+function DeriveBubbleColor(BaseColor: TAlphaColor; aBoxType: TBoxType; Dark: Boolean): TAlphaColor;
+CONST
+  HueGreen = 120 / 360;   // Green hue in 0..1 range (for user bubbles)
+  HueBlue  = 210 / 360;   // Blue hue in 0..1 range (for content bubbles)
+  HueBlend = 0.3;          // How much to shift toward the target hue (30% = subtle tint)
+  LiftDark = 0.12;         // Lightness increase for dark themes
+  DropLight= 0.08;         // Lightness decrease for light themes
+VAR
+  H, S, L: Single;
 begin
-  //if FBoxType = Value then EXIT; // Allow re-setting to force margin/color update
-  FBoxType:= Value;
-  Stroke.Kind:= TBrushKind.None;
-  Dark:= IsDarkStyle; //todo 1: is this smart? we need to be informed when the style is changed.
+  RGBtoHSL(BaseColor, H, S, L);
 
-  case FBoxType of
+  // Adjust lightness — bubbles should be distinct from the background
+  if Dark then
+    begin
+      L:= L + LiftDark;
+      if L < 0.20 then L:= 0.20;   // Floor: ensure visibility on very dark backgrounds
+      if L > 0.50 then L:= 0.50;   // Cap: keep in dark-theme range
+    end
+  else
+    begin
+      L:= L - DropLight;
+      if L < 0.50 then L:= 0.50;   // Floor: keep in light-theme range
+      if L > 0.90 then L:= 0.90;   // Cap: avoid near-white
+    end;
+
+  // Hue tinting per bubble type
+  case aBoxType of
     bxUser:
       begin
-        // Wide LEFT margin pushes the bubble to the right (User side)
-        Margins.Rect:= TRectF.Create(40, 5, 5, 5);
-        if Dark
-        then Fill.Color:= WhatsAppGreenDark
-        else Fill.Color:= WhatsAppGreen;
-      end;
-    bxModel:
-      begin
-        // Wide RIGHT margin pushes the bubble to the left (Bot side)
-        Margins.Rect:= TRectF.Create(5, 5, 40, 5);
-        if Dark
-        then Fill.Color:= WhatsAppGreyDark
-        else Fill.Color:= WhatsAppGrey;
+        if S < 0.10 then S:= 0.15;                  // Add saturation to grays
+        H:= H + (HueGreen - H) * HueBlend;           // Shift toward green
       end;
     bxContent:
       begin
-        // Left-aligned like bxModel, but blue for lesson content
-        Margins.Rect:= TRectF.Create(5, 5, 40, 5);
-        if Dark
-        then Fill.Color:= WhatsAppBlueDark
-        else Fill.Color:= WhatsAppBlue;
+        if S < 0.10 then S:= 0.15;
+        H:= H + (HueBlue - H) * HueBlend;            // Shift toward blue
       end;
+    bxModel:
+      ;  // No hue shift — neutral variant of the background
   end;
+
+  Result:= HSLtoRGB(H, S, L);
+  TAlphaColorRec(Result).A:= $FF;
+end;
+
+
+{ Aligns the bubble to left/right and sets color based on BoxType and current theme.
+  bxUser: Right-aligned (user messages), green-tinted.
+  bxModel: Left-aligned (AI/bot messages), neutral.
+  bxContent: Left-aligned, blue-tinted.
+  Colors are derived from the active style's background for skin harmony.
+  Falls back to hardcoded WhatsApp-style colors for image-based skins. }
+procedure TAutoSizeBox.setBoxType(Value: TBoxType);
+VAR
+  Dark: Boolean;
+  BgColor: TAlphaColor;
+begin
+  FBoxType:= Value;
+  Stroke.Kind:= TBrushKind.None;
+  Dark:= IsDarkStyle;
+
+  // Margins: user messages right-aligned, others left-aligned
+  if FBoxType = bxUser
+  then Margins.Rect:= TRectF.Create(40, 5, 5, 5)
+  else Margins.Rect:= TRectF.Create(5, 5, 40, 5);
+
+  // Color: derive from style background for skin harmony, fallback to hardcoded
+  if GetStyleBackgroundColor(BgColor)
+  then Fill.Color:= DeriveBubbleColor(BgColor, FBoxType, Dark)
+  else
+    case FBoxType of
+      bxUser:    if Dark then Fill.Color:= WhatsAppGreenDark else Fill.Color:= WhatsAppGreen;
+      bxModel:   if Dark then Fill.Color:= WhatsAppGreyDark  else Fill.Color:= WhatsAppGrey;
+      bxContent: if Dark then Fill.Color:= WhatsAppBlueDark  else Fill.Color:= WhatsAppBlue;
+    end;
 
   // Text color: dark text on light bubbles, light text on dark bubbles
   if Dark
@@ -141,7 +184,6 @@ begin
   else FTextColor:= BubbleTextLight;
   ApplyTextColor;
 
-  // Margins change affects effective width, so recalculate height
   UpdateSize;
 end;
 

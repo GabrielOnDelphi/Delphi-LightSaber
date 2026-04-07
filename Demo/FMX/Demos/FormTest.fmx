@@ -2,7 +2,7 @@ object Form2: TForm2
   Left = 0
   Top = 0
   Caption = 'Form2'
-  ClientHeight = 480
+  ClientHeight = 526
   ClientWidth = 650
   FormFactor.Width = 320
   FormFactor.Height = 480
@@ -12,20 +12,20 @@ object Form2: TForm2
   object TabControl1: TTabControl
     Align = Client
     Size.Width = 650.000000000000000000
-    Size.Height = 480.000000000000000000
+    Size.Height = 526.000000000000000000
     Size.PlatformDefault = False
     TabIndex = 2
     TabOrder = 0
     TabPosition = PlatformDefault
     Sizes = (
       650s
-      454s
+      500s
       650s
-      454s
+      500s
       650s
-      454s
+      500s
       650s
-      454s)
+      500s)
     object TabItem1: TTabItem
       CustomIcon = <
         item
@@ -42,7 +42,7 @@ object Form2: TForm2
       object Button1: TButton
         Anchors = [akBottom]
         Position.X = 242.345245361328100000
-        Position.Y = 324.000000000000000000
+        Position.Y = 370.000000000000000000
         Size.Width = 147.000000000000000000
         Size.Height = 33.000000000000000000
         Size.PlatformDefault = False
@@ -128,7 +128,7 @@ object Form2: TForm2
         Position.X = 521.000000000000000000
         Position.Y = 34.000000000000000000
         Size.Width = 125.000000000000000000
-        Size.Height = 416.000000000000000000
+        Size.Height = 462.000000000000000000
         Size.PlatformDefault = False
       end
       object ColorPalette1: TLightColorPalette
@@ -144,7 +144,7 @@ object Form2: TForm2
         Position.X = 4.000000000000000000
         Position.Y = 34.000000000000000000
         Size.Width = 289.000000000000000000
-        Size.Height = 416.000000000000000000
+        Size.Height = 462.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 3
         OnColorSelected = ColorPalette1ColorSelected
@@ -153,7 +153,7 @@ object Form2: TForm2
         StrokeColorLight = claWhite
         StrokeColorDark = claBlack
         Viewport.Width = 289.000000000000000000
-        Viewport.Height = 416.000000000000000000
+        Viewport.Height = 462.000000000000000000
       end
       object lblSelectedHex: TLabel
         Align = Top
@@ -191,7 +191,7 @@ object Form2: TForm2
         Margins.Bottom = 15.000000000000000000
         Position.X = 5.000000000000000000
         Position.Y = 5.000000000000000000
-        Size.Width = 640.000000000000000000
+        Size.Width = 389.000000000000000000
         Size.Height = 22.000000000000000000
         Size.PlatformDefault = False
         Text = 'Click any button below...'
@@ -205,10 +205,10 @@ object Form2: TForm2
         Margins.Bottom = 25.000000000000000000
         Position.X = 3.000000000000000000
         Position.Y = 293.000000000000000000
-        Size.Width = 644.000000000000000000
-        Size.Height = 100.000000000000000000
+        Size.Width = 393.000000000000000000
+        Size.Height = 83.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 1
+        TabOrder = 2
         object btnTopHome: TFlatButton
           Align = Left
           Cursor = crHandPoint
@@ -218,8 +218,8 @@ object Form2: TForm2
           Padding.Right = 8.000000000000000000
           Padding.Bottom = 6.000000000000000000
           Position.Y = 17.000000000000000000
-          Size.Width = 161.000000000000000000
-          Size.Height = 83.000000000000000000
+          Size.Width = 121.000000000000000000
+          Size.Height = 66.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
           XRadius = 6.000000000000000000
@@ -256,10 +256,10 @@ object Form2: TForm2
           Padding.Top = 6.000000000000000000
           Padding.Right = 8.000000000000000000
           Padding.Bottom = 6.000000000000000000
-          Position.X = 161.000000000000000000
+          Position.X = 217.000000000000000000
           Position.Y = 17.000000000000000000
           Size.Width = 88.000000000000000000
-          Size.Height = 83.000000000000000000
+          Size.Height = 66.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
           XRadius = 6.000000000000000000
@@ -271,6 +271,7 @@ object Form2: TForm2
             '03887939 19,19 L19,12 M9,21 L9,15 C9,13.8954296112061 9.89543056' +
             '488037,13 11,13 L13,13 C14.1045694351196,13 15,13.8954305648804 ' +
             '15,15 L15,21 '
+          IconPosition = ipTop
           object TPath
             Align = Left
             Fill.Kind = None
@@ -295,10 +296,10 @@ object Form2: TForm2
           Padding.Top = 6.000000000000000000
           Padding.Right = 8.000000000000000000
           Padding.Bottom = 6.000000000000000000
-          Position.X = 249.000000000000000000
+          Position.X = 121.000000000000000000
           Position.Y = 17.000000000000000000
           Size.Width = 96.000000000000000000
-          Size.Height = 83.000000000000000000
+          Size.Height = 66.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
           XRadius = 6.000000000000000000
@@ -330,7 +331,7 @@ object Form2: TForm2
         end
         object lblRow4: TLabel
           Align = Top
-          Size.Width = 644.000000000000000000
+          Size.Width = 393.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Label under icon (ipTop):'
@@ -345,13 +346,13 @@ object Form2: TForm2
         Margins.Bottom = 25.000000000000000000
         Position.X = 3.000000000000000000
         Position.Y = 45.000000000000000000
-        Size.Width = 644.000000000000000000
+        Size.Width = 393.000000000000000000
         Size.Height = 51.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 4
+        TabOrder = 5
         object lblRow3: TLabel
           Align = Top
-          Size.Width = 644.000000000000000000
+          Size.Width = 393.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Icon only (no text):'
@@ -521,10 +522,10 @@ object Form2: TForm2
         Margins.Bottom = 25.000000000000000000
         Position.X = 3.000000000000000000
         Position.Y = 124.000000000000000000
-        Size.Width = 644.000000000000000000
+        Size.Width = 393.000000000000000000
         Size.Height = 55.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 3
+        TabOrder = 4
         object btnHome: TFlatButton
           Align = Left
           Cursor = crHandPoint
@@ -565,7 +566,7 @@ object Form2: TForm2
         end
         object lblRow1: TLabel
           Align = Top
-          Size.Width = 644.000000000000000000
+          Size.Width = 393.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Icon + Text (icon left):'
@@ -659,10 +660,10 @@ object Form2: TForm2
         Margins.Bottom = 25.000000000000000000
         Position.X = 3.000000000000000000
         Position.Y = 207.000000000000000000
-        Size.Width = 644.000000000000000000
+        Size.Width = 393.000000000000000000
         Size.Height = 58.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 2
+        TabOrder = 3
         object btnNotify: TFlatButton
           Align = Left
           Cursor = crHandPoint
@@ -742,19 +743,196 @@ object Form2: TForm2
         end
         object lblRow2: TLabel
           Align = Top
-          Size.Width = 644.000000000000000000
+          Size.Width = 393.000000000000000000
           Size.Height = 17.000000000000000000
           Size.PlatformDefault = False
           Text = 'Toggle mode (click to toggle):'
           TabOrder = 2
         end
       end
-      object chkHover: TLightCheckBox
-        Position.X = 27.000000000000000000
-        Position.Y = 406.000000000000000000
-        TabOrder = 5
-        Text = 'chkHover'
-        OnChange = chkHoverChange
+      object Layout5: TLayout
+        Align = MostRight
+        Margins.Left = 5.000000000000000000
+        Margins.Top = 5.000000000000000000
+        Margins.Right = 5.000000000000000000
+        Margins.Bottom = 5.000000000000000000
+        Position.X = 404.000000000000000000
+        Position.Y = 5.000000000000000000
+        Size.Width = 241.000000000000000000
+        Size.Height = 490.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 6
+        object chkHover: TLightCheckBox
+          Align = Top
+          Margins.Left = 3.000000000000000000
+          Margins.Top = 3.000000000000000000
+          Margins.Right = 3.000000000000000000
+          Margins.Bottom = 3.000000000000000000
+          Position.X = 3.000000000000000000
+          Position.Y = 3.000000000000000000
+          Size.Width = 235.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 6
+          Text = 'chkHover'
+          OnChange = chkHoverChange
+        end
+        object chkAutoCompact: TLightCheckBox
+          Align = Top
+          Margins.Left = 3.000000000000000000
+          Margins.Top = 3.000000000000000000
+          Margins.Right = 3.000000000000000000
+          Margins.Bottom = 3.000000000000000000
+          Position.X = 3.000000000000000000
+          Position.Y = 28.000000000000000000
+          Size.Width = 235.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 5
+          Text = 'Auto compact'
+          OnChange = chkAutoCompactChange
+        end
+      end
+      object Layout6: TLayout
+        Align = Top
+        Margins.Left = 3.000000000000000000
+        Margins.Top = 3.000000000000000000
+        Margins.Right = 3.000000000000000000
+        Margins.Bottom = 25.000000000000000000
+        Position.X = 3.000000000000000000
+        Position.Y = 404.000000000000000000
+        Size.Width = 393.000000000000000000
+        Size.Height = 83.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        object FlatButton1: TFlatButton
+          Align = Left
+          Cursor = crHandPoint
+          Fill.Color = claNull
+          Padding.Left = 8.000000000000000000
+          Padding.Top = 6.000000000000000000
+          Padding.Right = 8.000000000000000000
+          Padding.Bottom = 6.000000000000000000
+          Position.Y = 17.000000000000000000
+          Size.Width = 121.000000000000000000
+          Size.Height = 66.000000000000000000
+          Size.PlatformDefault = False
+          Stroke.Kind = None
+          XRadius = 6.000000000000000000
+          YRadius = 6.000000000000000000
+          Text = 'Caption'
+          SvgData = 
+            'M5,12 L3,12 L12,3 L21,12 L19,12 M5,12 L5,19 C5,20.1045703887939 ' +
+            '5.89543056488037,21 7,21 L17,21 C18.1045703887939,21 19,20.10457' +
+            '03887939 19,19 L19,12 M9,21 L9,15 C9,13.8954296112061 9.89543056' +
+            '488037,13 11,13 L13,13 C14.1045694351196,13 15,13.8954305648804 ' +
+            '15,15 L15,21 '
+          IconPosition = ipTop
+          object TPath
+            Align = Left
+            Fill.Kind = None
+            HitTest = False
+            Margins.Right = 6.000000000000000000
+            Position.X = 8.000000000000000000
+            Position.Y = 6.000000000000000000
+            Size.Width = 20.000000000000000000
+            Size.Height = 38.000000000000000000
+            Size.PlatformDefault = False
+            Stroke.Color = claDimgray
+            Stroke.Thickness = 1.500000000000000000
+            Visible = False
+            WrapMode = Fit
+          end
+        end
+        object FlatButton2: TFlatButton
+          Align = Left
+          Cursor = crHandPoint
+          Fill.Color = claNull
+          Padding.Left = 8.000000000000000000
+          Padding.Top = 6.000000000000000000
+          Padding.Right = 8.000000000000000000
+          Padding.Bottom = 6.000000000000000000
+          Position.X = 217.000000000000000000
+          Position.Y = 17.000000000000000000
+          Size.Width = 88.000000000000000000
+          Size.Height = 66.000000000000000000
+          Size.PlatformDefault = False
+          Stroke.Kind = None
+          XRadius = 6.000000000000000000
+          YRadius = 6.000000000000000000
+          Text = 'Caption'
+          SvgData = 
+            'M5,12 L3,12 L12,3 L21,12 L19,12 M5,12 L5,19 C5,20.1045703887939 ' +
+            '5.89543056488037,21 7,21 L17,21 C18.1045703887939,21 19,20.10457' +
+            '03887939 19,19 L19,12 M9,21 L9,15 C9,13.8954296112061 9.89543056' +
+            '488037,13 11,13 L13,13 C14.1045694351196,13 15,13.8954305648804 ' +
+            '15,15 L15,21 '
+          IconPosition = ipTop
+          object TPath
+            Align = Left
+            Fill.Kind = None
+            HitTest = False
+            Margins.Right = 6.000000000000000000
+            Position.X = 8.000000000000000000
+            Position.Y = 6.000000000000000000
+            Size.Width = 20.000000000000000000
+            Size.Height = 38.000000000000000000
+            Size.PlatformDefault = False
+            Stroke.Color = claDimgray
+            Stroke.Thickness = 1.500000000000000000
+            Visible = False
+            WrapMode = Fit
+          end
+        end
+        object FlatButton3: TFlatButton
+          Align = Left
+          Cursor = crHandPoint
+          Fill.Color = claNull
+          Padding.Left = 8.000000000000000000
+          Padding.Top = 6.000000000000000000
+          Padding.Right = 8.000000000000000000
+          Padding.Bottom = 6.000000000000000000
+          Position.X = 121.000000000000000000
+          Position.Y = 17.000000000000000000
+          Size.Width = 96.000000000000000000
+          Size.Height = 66.000000000000000000
+          Size.PlatformDefault = False
+          Stroke.Kind = None
+          XRadius = 6.000000000000000000
+          YRadius = 6.000000000000000000
+          Text = 'Caption'
+          SvgData = 
+            'M5,12 L3,12 L12,3 L21,12 L19,12 M5,12 L5,19 C5,20.1045703887939 ' +
+            '5.89543056488037,21 7,21 L17,21 C18.1045703887939,21 19,20.10457' +
+            '03887939 19,19 L19,12 M9,21 L9,15 C9,13.8954296112061 9.89543056' +
+            '488037,13 11,13 L13,13 C14.1045694351196,13 15,13.8954305648804 ' +
+            '15,15 L15,21 '
+          IconPosition = ipTop
+          HoverBgEnabled = False
+          object TPath
+            Align = Left
+            Fill.Kind = None
+            HitTest = False
+            Margins.Right = 6.000000000000000000
+            Position.X = 8.000000000000000000
+            Position.Y = 6.000000000000000000
+            Size.Width = 20.000000000000000000
+            Size.Height = 38.000000000000000000
+            Size.PlatformDefault = False
+            Stroke.Color = claDimgray
+            Stroke.Thickness = 1.500000000000000000
+            Visible = False
+            WrapMode = Fit
+          end
+        end
+        object Label3: TLabel
+          Align = Top
+          Size.Width = 393.000000000000000000
+          Size.Height = 17.000000000000000000
+          Size.PlatformDefault = False
+          Text = 'Custom'
+          TabOrder = 4
+        end
       end
     end
     object TabItem4: TTabItem

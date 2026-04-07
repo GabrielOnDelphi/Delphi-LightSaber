@@ -1,4 +1,4 @@
-UNIT FormTest;
+﻿UNIT FormTest;
 
 {=============================================================================================================
    2025.04
@@ -63,7 +63,14 @@ TYPE
     Button2: TButton;
     StyleBook1: TStyleBook;
     Label2: TLabel;
+    Layout5: TLayout;
     chkHover: TLightCheckBox;
+    Layout6: TLayout;
+    FlatButton1: TFlatButton;
+    FlatButton2: TFlatButton;
+    FlatButton3: TFlatButton;
+    Label3: TLabel;
+    chkAutoCompact: TLightCheckBox;
     procedure FormCreate(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure btnAddColorClick(Sender: TObject);
@@ -74,11 +81,17 @@ TYPE
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
     procedure chkHoverChange(Sender: TObject);
+    procedure chkAutoCompactChange(Sender: TObject);
   private
+    chkCompact  : TLightCheckBox;
+    chkToggled  : TLightCheckBox;
+    chkShowText : TLightCheckBox;
     procedure SetupFlatButtons;
+    procedure chkCompactChange(Sender: TObject);
+    procedure chkToggledChange(Sender: TObject);
+    procedure chkShowTextChange(Sender: TObject);
     procedure DemoButtonClick(Sender: TObject);
     procedure DemoToggleClick(Sender: TObject);
-    procedure RefreshAllThemeColors;
   public
   end;
 
@@ -172,6 +185,45 @@ begin
   btnTopBell.LoadSvgPath(SVG_BELL);
   btnTopBell.Text:= 'Alerts';
   btnTopBell.OnClick:= DemoButtonClick;
+
+  { Custom row: icon+text buttons for Compact / AutoCompact testing }
+  FlatButton1.LoadSvgPath(SVG_HOME);
+  FlatButton1.Text:= 'Home';
+  FlatButton1.IconPosition:= ipLeft;
+  FlatButton1.OnClick:= DemoButtonClick;
+
+  FlatButton2.LoadSvgPath(SVG_SETTINGS);
+  FlatButton2.Text:= 'Settings';
+  FlatButton2.IconPosition:= ipLeft;
+  FlatButton2.OnClick:= DemoButtonClick;
+
+  FlatButton3.LoadSvgPath(SVG_USER);
+  FlatButton3.Text:= 'Profile';
+  FlatButton3.IconPosition:= ipLeft;
+  FlatButton3.OnClick:= DemoButtonClick;
+
+  { Runtime checkboxes — created alongside the design-time chkHover and chkAutoCompact in Layout5 }
+  chkCompact:= TLightCheckBox.Create(Self);
+  chkCompact.Parent:= Layout5;
+  chkCompact.Align:= TAlignLayout.Top;
+  chkCompact.Text:= 'Compact (manual)';
+  chkCompact.Margins.Rect:= TRectF.Create(3, 3, 3, 3);
+  chkCompact.OnChange:= chkCompactChange;
+
+  chkToggled:= TLightCheckBox.Create(Self);
+  chkToggled.Parent:= Layout5;
+  chkToggled.Align:= TAlignLayout.Top;
+  chkToggled.Text:= 'IsToggled';
+  chkToggled.Margins.Rect:= TRectF.Create(3, 3, 3, 3);
+  chkToggled.OnChange:= chkToggledChange;
+
+  chkShowText:= TLightCheckBox.Create(Self);
+  chkShowText.Parent:= Layout5;
+  chkShowText.Align:= TAlignLayout.Top;
+  chkShowText.Text:= 'Show text';
+  chkShowText.IsChecked:= True;
+  chkShowText.Margins.Rect:= TRectF.Create(3, 3, 3, 3);
+  chkShowText.OnChange:= chkShowTextChange;
 end;
 
 
@@ -206,25 +258,13 @@ end;
 =============================================================================================================}
 
 procedure TForm2.Button2Click(Sender: TObject);
-VAR dummy: TfrmStyleDisk;
-begin
-  // temporary code
-  AppData.CreateForm(TfrmStyleDisk, dummy);     //del: if we want to be able to work with non-modal forms, the modal form needs to inform us when the user changed the style. We need an EVENT or callback in TfrmStyleDisk
-  dummy.Show;
-
-  // TfrmStyleDisk.ShowAsModal;
-  //RefreshAllThemeColors;
+VAR Skins: TfrmStyleDisk;
+begin  //ToDo 5: don't create it again if already exists!
+  AppData.CreateForm(TfrmStyleDisk, Skins);     //del: if we want to be able to work with non-modal forms, the modal form needs to inform us when the user changed the style. We need an EVENT or callback in TfrmStyleDisk
+  Skins.Show;
 end;
 
 
-{ Re-apply theme colors on all TFlatButton children after a style change }
-procedure TForm2.RefreshAllThemeColors;
-VAR i: Integer;
-begin
-  for i:= 0 to ComponentCount - 1 do
-    if Components[i] is TFlatButton
-    then TFlatButton(Components[i]).ApplyThemeColors; //todo 1: do I need to manually refresh the buttons after a new skin is applied? This is not "natural". can the button listen or be announce that the skin was changed?
-end;
 
 
 {=============================================================================================================
@@ -293,9 +333,67 @@ end;
 procedure TForm2.chkHoverChange(Sender: TObject);
 VAR i: Integer;
 begin
-  for i:= 0 to ComponentCount - 1 do
-    if Components[i] is TFlatButton
-    then TFlatButton(Components[i]).HoverBgEnabled:= chkHover.IsChecked;
+  for i:= 0 to Layout6.ControlsCount - 1 do
+    if Layout6.Controls[i] is TFlatButton
+    then TFlatButton(Layout6.Controls[i]).HoverBackground:= chkHover.IsChecked;
+end;
+
+
+procedure TForm2.chkAutoCompactChange(Sender: TObject);
+VAR i: Integer;
+begin
+  for i:= 0 to Layout6.ControlsCount - 1 do
+    if Layout6.Controls[i] is TFlatButton
+    then TFlatButton(Layout6.Controls[i]).AutoCompact:= chkAutoCompact.IsChecked;
+end;
+
+
+procedure TForm2.chkCompactChange(Sender: TObject);
+VAR i: Integer;
+begin
+  for i:= 0 to Layout6.ControlsCount - 1 do
+    if Layout6.Controls[i] is TFlatButton
+    then TFlatButton(Layout6.Controls[i]).Compact:= chkCompact.IsChecked;
+end;
+
+
+procedure TForm2.chkToggledChange(Sender: TObject);
+VAR i: Integer;
+begin
+  for i:= 0 to Layout6.ControlsCount - 1 do
+    if Layout6.Controls[i] is TFlatButton
+    then TFlatButton(Layout6.Controls[i]).IsToggled:= chkToggled.IsChecked;
+end;
+
+
+{ Toggles button text on/off. Saves original text to TagString before clearing. }
+procedure TForm2.chkShowTextChange(Sender: TObject);
+VAR
+  i: Integer;
+  Btn: TFlatButton;
+begin
+  for i:= 0 to Layout6.ControlsCount - 1 do
+    if Layout6.Controls[i] is TFlatButton then
+      begin
+        Btn:= TFlatButton(Layout6.Controls[i]);
+        if chkShowText.IsChecked then
+          begin
+            if Btn.TagString <> ''
+            then Btn.Text:= Btn.TagString;
+          end
+        else
+          begin
+            if Btn.Text <> ''
+            then Btn.TagString:= Btn.Text;
+            Btn.Text:= '';
+          end;
+      end;
 end;
 
 end.
+
+
+
+
+
+

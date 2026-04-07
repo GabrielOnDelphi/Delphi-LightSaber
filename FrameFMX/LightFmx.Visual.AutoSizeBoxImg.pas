@@ -59,7 +59,7 @@ end;
   Triggers UpdateSize to recalculate dimensions based on the new image. }
 procedure TAutosizeBoxImg.LoadImage(const FileName: string; const aBoundBox: TRectF);
 begin
-  FBoxType:= bxContent;
+  BoxType:= bxContent;    // Property setter applies margins + fill color (UpdateSize bails — no bitmap yet)
   CropBitmap(FileName, aBoundBox, FImage);
   UpdateSize;
 end;
@@ -69,7 +69,7 @@ end;
   Used when the image is embedded in the lesson file (lazy loading via ReadBytesOnDemand). }
 procedure TAutosizeBoxImg.LoadImage(const Bytes: TBytes; const aBoundBox: TRectF);
 begin
-  FBoxType:= bxContent;
+  BoxType:= bxContent;    // Property setter applies margins + fill color (UpdateSize bails — no bitmap yet)
   CropBitmap(Bytes, aBoundBox, FImage);
   UpdateSize;
 end;

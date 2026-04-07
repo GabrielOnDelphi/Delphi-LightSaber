@@ -212,6 +212,11 @@ begin
 
   Result:= TBitmap.Create;
   try
+    // Clamp crop rect to source bitmap dimensions to avoid out-of-bounds read
+    if CropRect.Right  > InputBMP.Width  then CropRect.Right := InputBMP.Width;
+    if CropRect.Bottom > InputBMP.Height then CropRect.Bottom:= InputBMP.Height;
+    if CropRect.Left   < 0 then CropRect.Left  := 0;
+    if CropRect.Top    < 0 then CropRect.Top   := 0;
     Result.SetSize(Round(CropRect.Width), Round(CropRect.Height));
     Result.CopyFromBitmap(InputBMP, CropRect.Round, 0, 0);
   except

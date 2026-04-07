@@ -21,6 +21,7 @@ TYPE
   private
     FTextLabel: TLabel;
     FText: string;
+    FUpdatingSize: Boolean;
     procedure SetText(const Value: string);
   protected
     procedure ApplyTextColor; override;
@@ -89,17 +90,25 @@ VAR
   ContentWidth: Single;
 begin
   if Width <= 0 then EXIT;
+  if FUpdatingSize then EXIT;
 
-  // Force label to use current available width before reading its height.
-  // During parent resize, Resize fires before FMX's align system updates children,
-  // so FTextLabel still has its old width and old wrapped height. Setting it
-  // explicitly here ensures text wrapping is recalculated for the new width.
-  ContentWidth:= Width - Self.Padding.Left - Self.Padding.Right;
-  if ContentWidth > 0
-  then FTextLabel.Width:= ContentWidth;
+  FUpdatingSize:= True;
+  TRY
+    // Force label to use current available width before reading its height.
+    // During parent resize, Resize fires before FMX's align system updates children,
+    // so FTextLabel still has its old width and old wrapped height. Setting it
+    // explicitly here ensures text wrapping is recalculated for the new width.
+    ContentWidth:= Width - Self.Padding.Left - Self.Padding.Right;
+    if ContentWidth > 0
+    then FTextLabel.Width:= ContentWidth;
 
-  MinHeight:= FTextLabel.Height + Self.Padding.Top + Self.Padding.Bottom + CTextHeightBuffer;
-  Self.Height:= Ceil(MinHeight);
+    MinHeight:= FTextLabel.Height + Self.Padding.Top + Self.Padding.Bottom + CTextHeightBuffer;
+
+    if Abs(Ceil(MinHeight) - Self.Height) > CResizeTolerance then
+      Self.Height:= Ceil(MinHeight);
+  FINALLY
+    FUpdatingSize:= False;
+  END;
 end;
 
 

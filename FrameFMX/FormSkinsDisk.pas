@@ -209,6 +209,7 @@ begin
   then EXIT(NIL);
 
   AppData.CreateForm(TfrmStyleDisk, FInstance, asNone);
+  Assert(Assigned(FInstance), 'TfrmStyleDisk.CreateEmbedded: CreateForm returned NIL — must be called after AppData.Run');
   FInstance.FOnEmbeddedClose:= AOnClose;
   Result:= FInstance;
 end;
@@ -226,7 +227,8 @@ destructor TfrmStyleDisk.Destroy;
 begin
   if FEmbedded then
   begin
-    Container.Parent:= Self;
+    if Assigned(Container)
+    then Container.Parent:= Self;
     if Assigned(FOnEmbeddedClose)
     then FOnEmbeddedClose(Self);
   end;
@@ -247,7 +249,6 @@ end;
 procedure TfrmStyleDisk.FormCreate(Sender: TObject);
 begin
   PopulateStyles;
-  lblTop.Hint:= 'Style files are located in ' + GetStyleDir;
 end;
 
 
@@ -305,7 +306,7 @@ var
 begin
   lBox.Items.Clear;
   lBox.Items.Add(DefPlatformStyle);  { First item is the default platform style }
-  lblTop.Hint:= GetStyleDir;
+  lblTop.Hint:= 'Style files are located in ' + GetStyleDir;
 
   if NOT DirectoryExists(GetStyleDir) then
   begin
@@ -339,11 +340,15 @@ begin
   { Disable list to prevent double-clicks during style switching }
   lBox.Enabled:= FALSE;
   try
-    CurrentStyleName:= lBox.Items[lBox.ItemIndex];
-
-    if CurrentStyleName = DefPlatformStyle
-    then TStyleManager.SetStyle(nil)   { Revert to native platform style }
-    else LoadStyleFromFile(CurrentStyleName);
+    if lBox.Items[lBox.ItemIndex] = DefPlatformStyle
+    then
+      begin
+        TStyleManager.SetStyle(nil);   { Revert to native platform style }
+        CurrentStyleName:= DefPlatformStyle;
+      end
+    else
+      if LoadStyleFromFile(lBox.Items[lBox.ItemIndex])
+      then CurrentStyleName:= lBox.Items[lBox.ItemIndex];
   FINALLY
     lBox.Enabled:= TRUE;
   END;

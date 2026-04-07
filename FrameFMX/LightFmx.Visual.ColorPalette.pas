@@ -179,14 +179,14 @@ procedure TLightColorPalette.RemoveColorAt(Index: Integer);
 begin
   if (Index < 0) OR (Index >= FColors.Count) then EXIT;
 
-  // Clear selection if removing selected color
-  if FHasSelection
-  AND Assigned(FSelectedShape)
-  AND (FSelectedShape.Fill.Color = FColors[Index]) then
-    begin
-      ClearSelectionVisual;
-      FHasSelection := FALSE;
-    end;
+  // Clear selection if removing the selected swatch (match by identity, not color value)
+  if FHasSelection AND Assigned(FSelectedShape) then
+    for VAR j:= 0 to FFlow.ChildrenCount - 1 do
+      if (FFlow.Children[j] = FSelectedShape) AND (j = Index) then
+        begin
+          ClearSelectionVisual;
+          BREAK;
+        end;
 
   FColors.Delete(Index);
   Rebuild;
@@ -197,7 +197,6 @@ procedure TLightColorPalette.ClearColors;
 begin
   FColors.Clear;
   ClearSelectionVisual;
-  FHasSelection := FALSE;
   Rebuild;
 end;
 
@@ -235,7 +234,8 @@ begin
       FSelectedShape.Stroke.Color     := FStrokeColorDark;
       FSelectedShape := NIL;
     end;
-  FHasSelection := FALSE;
+  FHasSelection  := FALSE;
+  FSelectedColor := 0;
 end;
 
 
@@ -332,6 +332,7 @@ begin
     // Remove existing swatches
     for VAR i := FFlow.ChildrenCount - 1 downto 0 do
       FFlow.Children[i].Free;
+    FSelectedShape := NIL;
 
     // Create new swatches as rectangles (squares)
     for VAR i := 0 to FColors.Count - 1 do

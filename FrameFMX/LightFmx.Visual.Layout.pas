@@ -32,6 +32,7 @@ TYPE
     procedure Resize; override;
   public
     constructor CreateSensor(aParent: TFmxObject; aOnResized: TNotifyEvent);
+    destructor Destroy; override;
   end;
 
 
@@ -41,8 +42,6 @@ TYPE
     procedure SetVisibleAtRuntime(const Value: Boolean);
   protected
     procedure Loaded; override;
-    procedure DefineProperties(Filer: TFiler); override;
-    procedure ReadVisibleAtRuntime(Reader: TReader); // Custom streaming method
   public
     constructor Create(AOwner: TComponent); override;
   published
@@ -66,27 +65,12 @@ end;
 
 procedure TLightLayout.SetVisibleAtRuntime(const Value: Boolean);
 begin
-  if FVisibleAtRuntime <> Value
-  then FVisibleAtRuntime:= Value;  // No immediate visibility change; applied in Loaded
+  if FVisibleAtRuntime = Value then Exit;
+  FVisibleAtRuntime:= Value;
+  if not (csLoading in ComponentState) AND not (csDesigning in ComponentState)
+  then Visible:= Value;
 end;
 
-
-{ Legacy streaming support - may be called when reading older FMX files }
-procedure TLightLayout.ReadVisibleAtRuntime(Reader: TReader);
-begin
-  FVisibleAtRuntime:= Reader.ReadBoolean;
-end;
-
-
-{ Note: The published property handles standard streaming. This custom reader
-  provides backwards compatibility for older FMX files that may have used
-  a different streaming mechanism. WriteProc is nil because writing is
-  handled by the published property's default streaming. }
-procedure TLightLayout.DefineProperties(Filer: TFiler);
-begin
-  inherited;
-  Filer.DefineProperty('VisibleAtRuntime', ReadVisibleAtRuntime, NIL, not FVisibleAtRuntime);
-end;
 
 
 procedure TLightLayout.Loaded;
@@ -113,6 +97,12 @@ begin
   Parent:= aParent;
   Align:= TAlignLayout.Contents;  // Matches parent bounds without affecting siblings
   HitTest:= FALSE;
+end;
+
+destructor TResizeSensor.Destroy;
+begin
+  FOnResized:= nil;  // Clear callback to prevent stale invocation during partial teardown
+  inherited;
 end;
 
 procedure TResizeSensor.Resize;

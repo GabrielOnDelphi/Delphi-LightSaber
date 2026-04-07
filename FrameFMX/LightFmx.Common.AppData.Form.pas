@@ -85,7 +85,7 @@ TYPE
   private
     FOnAfterCtur: TNotifyEvent;
     FCloseOnEscape: Boolean;
-    FVKSubscriptionId: Integer;
+    FVKSubscriptionId: TMessageSubscriptionId;
     procedure SetGuiProperties(Form: TForm);
     procedure HandleVKStateChange(const Sender: TObject; const M: TMessage);
   protected
@@ -113,7 +113,7 @@ TYPE
     function CloseQuery: Boolean; override;
 
     procedure FormPreRelease; virtual;
-    procedure ShowModal;
+    procedure ShowModal; reintroduce;
 
     procedure LoadForm; virtual;
     procedure SaveForm; virtual;
@@ -255,13 +255,13 @@ end;
 procedure TLightForm.DoClose(var Action: TCloseAction);
 begin
   inherited DoClose(Action);
-  if Action = TCloseAction.caFree then saveBeforeExit;
+  if Action <> TCloseAction.caNone
+  then saveBeforeExit;
 end;
 
 
 function TLightForm.CloseQuery: Boolean;
 begin
-  saveBeforeExit;
   Result:= inherited CloseQuery;
 end;
 
@@ -379,11 +379,10 @@ begin
     // Escape: desktop equivalent of back navigation for embedded forms only.
     // CloseOnEscape (when no embedded form is active) is handled separately in FormKeyPress.
     if Key = vkEscape then
-      if HandleBackButton then
-        begin
-          Key:= 0;
-          EXIT;
-        end;
+      begin
+        if HandleBackButton then begin Key:= 0; EXIT; end;
+        if FCloseOnEscape  then begin Close; Key:= 0; end;
+      end;
 end;
 
 
