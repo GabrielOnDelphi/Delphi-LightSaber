@@ -312,7 +312,6 @@ object Form2: TForm2
             '488037,13 11,13 L13,13 C14.1045694351196,13 15,13.8954305648804 ' +
             '15,15 L15,21 '
           IconPosition = ipTop
-          HoverBgEnabled = False
           object TPath
             Align = Left
             Fill.Kind = None
@@ -908,7 +907,6 @@ object Form2: TForm2
             '488037,13 11,13 L13,13 C14.1045694351196,13 15,13.8954305648804 ' +
             '15,15 L15,21 '
           IconPosition = ipTop
-          HoverBgEnabled = False
           object TPath
             Align = Left
             Fill.Kind = None

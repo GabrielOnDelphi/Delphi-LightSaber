@@ -169,7 +169,7 @@ begin
   else Margins.Rect:= TRectF.Create(5, 5, 40, 5);
 
   // Color: derive from style background for skin harmony, fallback to hardcoded
-  if GetStyleBackgroundColor(BgColor)
+  if GetThemeBackgroundColor(BgColor)
   then Fill.Color:= DeriveBubbleColor(BgColor, FBoxType, Dark)
   else
     case FBoxType of

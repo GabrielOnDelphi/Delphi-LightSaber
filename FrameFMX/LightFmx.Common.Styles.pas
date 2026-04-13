@@ -18,18 +18,21 @@ CONST
   COMPACT_WIDTH = 600;  // Below this width, hide most buttons and use popup menu.
   HiGH_WIDTH    = 1024; // Below this with, show some buttons but some in "Compact" mode (only icon, no text). Over this resolution we show all.
 
+// SCREEN SIZE
+function IsCompactScreen: Boolean;
 
+// THEME
 function IsStyleCompatible(const StyleFile: string): Boolean;
-function IsDarkStyle: Boolean;
 
 // THEME COLOR
+function IsDarkStyle: Boolean;
+
 function GetThemeTextColor(Scene: IScene): TAlphaColor; overload;     { Returns the foreground text color from the active style }
 function GetThemeTextColor: TAlphaColor; overload;
+function GetThemeBackgroundColor(OUT Color: TAlphaColor): Boolean;    { Returns the form background color from the active style. FALSE if unavailable (image-based skins like Calypso/Jet). }
 
 function GenerateThemePalette(BaseColor: TAlphaColor; IsDark: Boolean): TArray<TAlphaColor>;
 
-// BACKGROUND
-function GetStyleBackgroundColor(out Color: TAlphaColor): Boolean;  { Returns the form background color from the active style. FALSE if unavailable (image-based skins like Calypso/Jet). }
 
 // COLORS
 function ReplaceColorAlpha(Color: TAlphaColor; NewAlpha: Byte): TAlphaColor; inline;
@@ -38,8 +41,20 @@ function ReplaceColorAlpha(Color: TAlphaColor; NewAlpha: Byte): TAlphaColor; inl
 IMPLEMENTATION
 
 USES
-   FMX.Objects, FMX.Utils, System.UIConsts;
+   FMX.Objects, FMX.Utils, System.UIConsts,
+   FMX.Platform, FMX.Forms;
 
+
+{ IFMXScreenService returns physical screen size on mobile (Android/iOS).
+  Screen.Size can return 0 on mobile if called before the main form is fully created,
+  because FMX populates it lazily from the platform's screen metrics. }
+function IsCompactScreen: Boolean;
+VAR ScreenSvc: IFMXScreenService;
+begin
+  if TPlatformServices.Current.SupportsPlatformService(IFMXScreenService, ScreenSvc)
+  then Result:= ScreenSvc.GetScreenSize.X < COMPACT_WIDTH
+  else Result:= Screen.Size.Width < COMPACT_WIDTH;
+end;
 
 
 { Returns a copy of Color with the alpha channel replaced.
@@ -182,7 +197,7 @@ end;
 { Returns the form background color from the active style.
   Probes 'backgroundstyle' (TRectangle in most styles) then 'background' (TBrushObject).
   Returns FALSE for image-based styles (Calypso, Jet, Diamond) where no solid color is available. }
-function GetStyleBackgroundColor(out Color: TAlphaColor): Boolean;
+function GetThemeBackgroundColor(out Color: TAlphaColor): Boolean;
 VAR
   ActiveStyle, BgObj: TFmxObject;
 begin

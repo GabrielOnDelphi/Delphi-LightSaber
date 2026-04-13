@@ -37,6 +37,8 @@
    For standard buttons with icon overlay, see LightFmx.Visual.SvgButton instead.
 -------------------------------------------------------------------------------------------------------------}
 
+//ToDo: rename to TSvgButton
+
 INTERFACE
 
 USES
