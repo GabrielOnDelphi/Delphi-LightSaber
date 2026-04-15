@@ -55,10 +55,10 @@ begin
   Result:= Result + '  AppName: '          + Tab + Tab + TAppDataCore.AppName + CRLF;
   Result:= Result + '  AppFolder: '        + Tab + Tab + TAppDataCore.AppFolder + CRLF;
   Result:= Result + '  AppSysDir: '        + Tab + Tab + TAppDataCore.AppSysDir + CRLF;
-  Result:= Result + '  AppDataFolder: '    + Tab + TAppDataCore.AppDataFolder + CRLF;
-  Result:= Result + '  AppDataFolderAll: ' + Tab + TAppDataCore.AppDataFolderAllUsers + CRLF;
+  Result:= Result + '  AppDataFolder: '    + Tab +       TAppDataCore.AppDataFolder + CRLF;
+  Result:= Result + '  AppDataFolderAll: ' + Tab +       TAppDataCore.AppDataFolderAllUsers + CRLF;
   Result:= Result + '  IniFile: '          + Tab + Tab + TAppDataCore.IniFile + CRLF;
-  Result:= Result + '  ExeShortName: '     + Tab + TAppDataCore.ExeShortName + CRLF;
+  Result:= Result + '  ExeShortName: '     + Tab +       TAppDataCore.ExeShortName + CRLF;
 
   if AppDataCore <> NIL
   then Result:= Result + '  LastUsedFolder: ' + Tab + AppDataCore.LastUsedFolder

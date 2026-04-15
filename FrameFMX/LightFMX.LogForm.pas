@@ -27,7 +27,6 @@ USES
 
 TYPE
   TfrmRamLog = class(TLightForm)
-    btnClear       : TButton;
     chkLogOnError  : TCheckBox;
     chkScrollDown  : TCheckBox;
     chkShowTime    : TCheckBox;
@@ -36,9 +35,11 @@ TYPE
     mnuCopy        : TMenuItem;
     mnuCopyAll     : TMenuItem;
     mnuCopyFiltered: TMenuItem;
-    pnlBottom      : TPanel;
     chkShowDate    : TCheckBox;
     LogFilter      : TLogVerbFilter;
+    layBottom: TFlowLayout;
+    btnClear: TButton;
+    btnShowReport: TButton;
     procedure btnClearClick       (Sender: TObject);
     procedure chkScrollDownChange (Sender: TObject);
     procedure FormClose           (Sender: TObject; var Action: TCloseAction);
