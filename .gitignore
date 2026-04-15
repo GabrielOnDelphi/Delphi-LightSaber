@@ -104,3 +104,4 @@ HardwareID/chHardIDNew.pas
 Demo/FMX/Demos/Build.cmd
 /Demo/FMX/Demos/__recovery
 FrameFMX/BuildPackages.cmd
+/FrameFMX/__recovery
