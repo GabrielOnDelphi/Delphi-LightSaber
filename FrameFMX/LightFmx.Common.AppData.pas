@@ -156,7 +156,8 @@ TYPE
       FORMS
    --------------------------------------------------------------------------------------------------}
     procedure CreateMainForm  (aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly);
-    procedure CreateForm      (aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly; AOwner: TComponent = NIL);
+    procedure CreateForm      (aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly; AOwner: TComponent = NIL); overload;
+    procedure CreateForm      (aClass: TComponentClass;                 aAutoState: TAutoState = asPosOnly; AOwner: TComponent = NIL); overload;
     procedure CreateFormHidden(aClass: TComponentClass; OUT aReference);
     procedure CreateFormModal (aClass: TComponentClass);  // Problem in Android with modal forms!
 
@@ -176,7 +177,7 @@ VAR                      // To-Do: make sure AppData is unique (make it Singleto
 
 
 IMPLEMENTATION
-USES LightCore;
+USES LightCore, LightFmx.Common.AppData.Form;
 
 
 
@@ -281,9 +282,21 @@ begin
 end;
 
 
+procedure TAppData.CreateForm(aClass: TComponentClass; aAutoState: TAutoState = asPosOnly; AOwner: TComponent = NIL);
+VAR Dummy: TForm;
+begin
+  CreateForm(aClass, Dummy, aAutoState, AOwner);
+  Dummy.Show;
+end;
+
+
 // Show this form modal. On Android, we fall back to non-modal because Android is crappy.
+// Forms with AutoState=asNone have no saved position — center them on screen.
 procedure TAppData.ShowModal(aForm: TForm);
 begin
+  if (aForm is TLightForm) and (TLightForm(aForm).AutoState = asNone)
+  then aForm.Position:= TFormPosition.MainFormCenter;
+
   {$IFDEF ANDROID}
     aForm.Show; // Modal forms not supported on Android!
   {$ELSE}

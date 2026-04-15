@@ -118,6 +118,12 @@ CONST
 
 
 {--------------------------------------------------------------------------------------------------
+   OPEN URL IN BROWSER
+--------------------------------------------------------------------------------------------------}
+ procedure OpenURL(const URL: string);                               { Opens URL in the default browser. Cross-platform (Win/macOS/Android/iOS). }
+
+
+{--------------------------------------------------------------------------------------------------
    CREATE .URL FILES
 --------------------------------------------------------------------------------------------------}
  Procedure CreateUrl    (CONST FullFileName, sFullURL: string);      { Creates an .URL file }
@@ -127,9 +133,21 @@ CONST
 IMPLEMENTATION
 
 USES
-
    //LightVcl.Visual.AppData,
-   LightCore.HTML, LightCore.IO, LightCore.Download;
+   LightCore.HTML, LightCore.IO, LightCore.Download
+   {$IFDEF MSWINDOWS}
+   , Winapi.Windows, Winapi.ShellAPI
+   {$ENDIF}
+   {$IFDEF MACOS}
+   , Macapi.AppKit, Macapi.Helpers, Macapi.Foundation
+   {$ENDIF}
+   {$IFDEF ANDROID}
+   , Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Net
+   , Androidapi.JNI.JavaTypes, Androidapi.Helpers
+   {$ENDIF}
+   {$IFDEF IOS}
+   , iOSapi.UIKit, Macapi.Helpers
+   {$ENDIF};
 
 
 
@@ -1047,6 +1065,42 @@ begin
       then Result:= Result + URL[i]
       else Result:= Result + '%' + IntToHex(CharOrd, 2);
     end;
+end;
+
+
+
+
+{--------------------------------------------------------------------------------------------------
+   OPEN URL IN BROWSER
+--------------------------------------------------------------------------------------------------}
+
+{ Opens URL in the default browser. Cross-platform. }
+procedure OpenURL(const URL: string);
+{$IFDEF MACOS}
+var NSURL_: NSURL;
+{$ENDIF}
+begin
+  if URL.IsEmpty then Exit;
+
+  {$IFDEF MSWINDOWS}
+  ShellExecute(0, 'open', PChar(URL), NIL, NIL, SW_SHOWNORMAL);
+  {$ENDIF}
+
+  {$IFDEF MACOS}
+  NSURL_:= TNSURL.Wrap(TNSURL.OCClass.URLWithString(StrToNSStr(URL)));
+  TNSWorkspace.Wrap(TNSWorkspace.OCClass.sharedWorkspace).openURL(NSURL_);
+  {$ENDIF}
+
+  {$IFDEF ANDROID}
+  TAndroidHelper.Activity.startActivity(
+    TJIntent.JavaClass.init(TJIntent.JavaClass.ACTION_VIEW,
+      TJUri.JavaClass.parse(StringToJString(URL))));
+  {$ENDIF}
+
+  {$IFDEF IOS}
+  TUIApplication.Wrap(TUIApplication.OCClass.sharedApplication)
+    .openURL(TNSURL.Wrap(TNSURL.OCClass.URLWithString(StrToNSStr(URL))));
+  {$ENDIF}
 end;
 
 

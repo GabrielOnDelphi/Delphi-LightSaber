@@ -20,13 +20,13 @@
      - Highlight color: 'selectioncolor' or 'selection' or 'glow' style resource (skin accent)
 
    Architecture:
-     TFlatButton       (TRectangle - transparent background, rounded corners)
+     TSvgButton       (TRectangle - transparent background, rounded corners)
        TPath           (SVG icon, stroke-based, HitTest=False)
          TGlowEffect   (accent-colored glow, enabled on hover/toggle)
        TLabel          (text, HitTest=False)
 
    Usage:
-     btn:= TFlatButton.Create(Self);
+     btn:= TSvgButton.Create(Self);
      btn.Parent:= SomeLayout;
      btn.LoadSvgPath(SVG_NavBar_Settings);   // SVG path data constant
      btn.TextLabel.Text:= 'Settings';
@@ -36,8 +36,6 @@
    Call ApplyThemeColors after loading a new FMX style (must be called from main thread).
    For standard buttons with icon overlay, see LightFmx.Visual.SvgButton instead.
 -------------------------------------------------------------------------------------------------------------}
-
-//ToDo: rename to TSvgButton
 
 INTERFACE
 
@@ -50,7 +48,9 @@ TYPE
                    ipTop,       // Icon on top, text under
                    ipCenter);   // Icon in the middle of the button. No text.
 
-  TFlatButton = class(TRectangle)
+  TCompactChangedEvent = procedure(Sender: TObject; IsCompact: Boolean) of object;
+
+  TSvgButton = class(TRectangle)
   private
     FIconPath: TPath;
     FGlow: TGlowEffect;
@@ -61,11 +61,12 @@ TYPE
     FNormalColor: TAlphaColor;      { Icon/text color in normal state (from buttonstyle text NormalColor) }
     FHighlightColor: TAlphaColor;   { Icon/text color on hover/toggle (from skin's accent/selection color) }
     FHoverBgColor: TAlphaColor;     { Background fill on hover/toggle (FHighlightColor at low alpha) }
-    FAutoCompact     : Boolean;
-    FIsCompacted     : Boolean;
-    FApplyingCompact : Boolean;       { Guard: Resize → EvaluateAutoCompact → ApplyCompact → Width change → Resize }
-    FExpandedWidth   : Single;        { Width before compacting — restored on expand }
-    FExpandedIconPos : TIconPosition; { IconPosition before compacting — restored on expand }
+    FAutoCompact      : Boolean;
+    FIsCompacted      : Boolean;
+    FApplyingCompact  : Boolean;       { Guard: Resize → EvaluateAutoCompact → ApplyCompact → Width change → Resize }
+    FExpandedWidth    : Single;        { Width before compacting — restored on expand }
+    FExpandedIconPos  : TIconPosition; { IconPosition before compacting — restored on expand }
+    FOnCompactChanged : TCompactChangedEvent;
     function  GetText: string;
     procedure SetText(CONST Value: string);
     function  GetSvgData: string;
@@ -101,12 +102,18 @@ TYPE
     property Text: string read GetText write SetText;   { Visible button label text (stored in FLabel). For the icon, use SvgData or LoadSvgPath. }
     property SvgData: string read GetSvgData write SetSvgData;
     property IconPosition: TIconPosition read FIconPosition write SetIconPosition default ipLeft;
-    property IsToggled: Boolean read FIsToggled write SetIsToggled default FALSE;
+    property IsToggled: Boolean read FIsToggled write SetIsToggled default FALSE;  // IsPressed
 
     property HoverBackground: Boolean read FHoverBackground write SetHoverBackground default TRUE;    { When TRUE (default), hover/toggle tints the background with the accent color. FALSE = background always transparent (icon/text/glow still change). }
     property Compact: Boolean read FIsCompacted write SetCompact stored FALSE default FALSE;        { Manual compact toggle. TRUE = icon-only + shrink width. Ignored when AutoCompact is TRUE. Not streamed to DFM — always stores expanded Width. }
     property AutoCompact: Boolean read FAutoCompact write SetAutoCompact default FALSE;             { Self-managing compact. Watches hosting form width and compacts below HIGH_WIDTH (1024px). }
+    property OnCompactChanged: TCompactChangedEvent read FOnCompactChanged write FOnCompactChanged; { Fired after compact state changes — use to sync UI (e.g. checkbox) with auto-compact transitions. }
   end;
+
+
+{ Recursively sets Compact on all TSvgButton descendants of Parent.
+  Use in a FormResize handler to switch sidebar/toolbar buttons between icon+text and icon-only. }
+procedure CompactSvgButtons(Parent: TFmxObject; Compact: Boolean);
 
 
 procedure Register;
@@ -224,7 +231,7 @@ end;
    CONSTRUCTOR / LIFECYCLE
 -------------------------------------------------------------------------------------------------------------}
 
-constructor TFlatButton.Create(AOwner: TComponent);
+constructor TSvgButton.Create(AOwner: TComponent);
 begin
   inherited;
 
@@ -245,7 +252,7 @@ begin
   FIconPath.Stored:= FALSE;
   FIconPath.Parent:= Self;
   FIconPath.HitTest:= FALSE;          { Runtime: clicks pass through to the TRectangle }
-  FIconPath.Locked:= TRUE;            { Design time: designer skips locked controls during hit-testing, so clicks select the parent TFlatButton }
+  FIconPath.Locked:= TRUE;            { Design time: designer skips locked controls during hit-testing, so clicks select the parent TSvgButton }
   FIconPath.Fill.Kind:= TBrushKind.None;
   FIconPath.Stroke.Kind:= TBrushKind.Solid;
   FIconPath.Stroke.Thickness:= 1.5;
@@ -288,7 +295,7 @@ begin
 end;
 
 
-destructor TFlatButton.Destroy;
+destructor TSvgButton.Destroy;
 begin
   TMessageManager.DefaultManager.Unsubscribe(TStyleChangedMessage, HandleStyleChanged);
   TMessageManager.DefaultManager.Unsubscribe(TSizeChangedMessage, HandleFormResize);
@@ -296,7 +303,7 @@ begin
 end;
 
 
-procedure TFlatButton.HandleStyleChanged(const Sender: TObject; const M: System.Messaging.TMessage);
+procedure TSvgButton.HandleStyleChanged(const Sender: TObject; const M: System.Messaging.TMessage);
 begin
   ApplyThemeColors;
 end;
@@ -304,7 +311,7 @@ end;
 
 { Called after FMX streaming finishes (both at design time and runtime).
   Re-reads skin colors because streaming may have overwritten our values. }
-procedure TFlatButton.Loaded;
+procedure TSvgButton.Loaded;
 begin
   inherited;
   ApplyThemeColors;
@@ -315,7 +322,7 @@ end;
 
 { Called when button Width or Height changes (runtime resize, alignment, streaming).
   Recalculates the icon dimensions to match the new button size. }
-procedure TFlatButton.Resize;
+procedure TSvgButton.Resize;
 begin
   inherited;
   UpdateIconSize;
@@ -328,7 +335,7 @@ end;
   ipLeft:   icon Width = button inner height (square icon filling vertical space)
   ipTop:    no action — Client alignment fills the space above the Bottom-aligned label
   ipCenter: no action — Client alignment fills the button automatically }
-procedure TFlatButton.UpdateIconSize;
+procedure TSvgButton.UpdateIconSize;
 VAR InnerH: Single;
 begin
   case FIconPosition of
@@ -337,8 +344,12 @@ begin
         InnerH:= Height - Padding.Top - Padding.Bottom;
         FIconPath.Width:= Max(InnerH, 1);
       end;
-    ipTop:    ;  { Client alignment }
-    ipCenter: ;  { Client alignment }
+    ipTop:
+      begin
+        InnerH:= Height - Padding.Top - Padding.Bottom - FLabel.Height;
+        FIconPath.Height:= Max(InnerH, 1);
+      end;
+    ipCenter: ;  { Client alignment fills button }
   end;
 end;
 
@@ -350,7 +361,7 @@ end;
 
 { Draws a faint dotted border at design time so the button outline is visible in the form designer.
   At runtime this does nothing extra (csDesigning is not set). }
-procedure TFlatButton.Paint;
+procedure TSvgButton.Paint;
 begin
   inherited;
   if csDesigning in ComponentState then
@@ -370,13 +381,13 @@ end;
    TEXT
 -------------------------------------------------------------------------------------------------------------}
 
-function TFlatButton.GetText: string;
+function TSvgButton.GetText: string;
 begin
   Result:= FLabel.Text;
 end;
 
 
-procedure TFlatButton.SetText(CONST Value: string);
+procedure TSvgButton.SetText(CONST Value: string);
 begin
   FLabel.Text:= Value;
 end;
@@ -388,14 +399,14 @@ end;
    SVG DATA
 -------------------------------------------------------------------------------------------------------------}
 
-function TFlatButton.GetSvgData: string;
+function TSvgButton.GetSvgData: string;
 begin
   Result:= FIconPath.Data.Data;
 end;
 
 
 { Sets the SVG path data and shows/hides the icon accordingly }
-procedure TFlatButton.SetSvgData(CONST Value: string);
+procedure TSvgButton.SetSvgData(CONST Value: string);
 begin
   FIconPath.Data.Data:= Value;
   FIconPath.Visible:= Value <> '';
@@ -407,7 +418,7 @@ end;
 
 
 { Convenience wrapper - same as setting SvgData property }
-procedure TFlatButton.LoadSvgPath(CONST SvgPathData: string);
+procedure TSvgButton.LoadSvgPath(CONST SvgPathData: string);
 begin
   SvgData:= SvgPathData;
 end;
@@ -427,7 +438,7 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 
 { Reads colors from the active FMX style. Call after loading a new skin. }
-procedure TFlatButton.ApplyThemeColors;
+procedure TSvgButton.ApplyThemeColors;
 begin
   FNormalColor   := GetButtonNormalTextColor;             { e.g. claWhite on dark skins }
   FHighlightColor:= GetStyleHighlightColor;               { e.g. #0377D0 blue on Nero Dark }
@@ -439,7 +450,7 @@ end;
 
 { Applies all visual changes based on current state.
   Called from: DoMouseEnter, DoMouseLeave, SetIsToggled, ApplyThemeColors. }
-procedure TFlatButton.ApplyColors;
+procedure TSvgButton.ApplyColors;
 VAR Active: Boolean;
 begin
   Active:= FIsToggled or IsMouseOver;
@@ -471,7 +482,7 @@ end;
    ICON POSITION
 -------------------------------------------------------------------------------------------------------------}
 
-procedure TFlatButton.SetHoverBackground(Value: Boolean);
+procedure TSvgButton.SetHoverBackground(Value: Boolean);
 begin
   if FHoverBackground = Value then EXIT;
   FHoverBackground:= Value;
@@ -483,7 +494,7 @@ end;
   ipLeft:   icon on the left, text right-aligned (default - sidebar buttons)
   ipTop:    icon above, text centered below (tile buttons)
   ipCenter: icon centered, label hidden (icon-only square buttons) }
-procedure TFlatButton.SetIconPosition(Value: TIconPosition);
+procedure TSvgButton.SetIconPosition(Value: TIconPosition);
 begin
   FIconPosition:= Value;
 
@@ -499,10 +510,10 @@ begin
     ipTop:
       begin
         FLabel.Visible:= TRUE;
+        FLabel.Align:= TAlignLayout.Bottom;     { Align BEFORE Height — prevents Client layout from overriding the explicit 20 }
         FLabel.Height:= 20;
-        FLabel.Align:= TAlignLayout.Bottom;  { Label sits at the bottom with fixed height }
         FLabel.TextSettings.HorzAlign:= TTextAlign.Center;
-        FIconPath.Align:= TAlignLayout.Client;  { Icon fills remaining space above the label }
+        FIconPath.Align:= TAlignLayout.Top;     { Top + explicit Height avoids Client/Bottom ordering dependency }
         FIconPath.Margins.Rect:= TRectF.Create(0, 0, 0, 0);
       end;
     ipCenter:
@@ -528,14 +539,14 @@ end;
    When AutoCompact is TRUE, manual Compact writes are ignored — AutoCompact owns the state.
 -------------------------------------------------------------------------------------------------------------}
 
-procedure TFlatButton.SetCompact(Value: Boolean);
+procedure TSvgButton.SetCompact(Value: Boolean);
 begin
   if FAutoCompact then EXIT;  { AutoCompact owns the state — ignore manual writes }
   ApplyCompact(Value);
 end;
 
 
-procedure TFlatButton.SetAutoCompact(Value: Boolean);
+procedure TSvgButton.SetAutoCompact(Value: Boolean);
 begin
   if FAutoCompact = Value then EXIT;
   FAutoCompact:= Value;
@@ -545,9 +556,10 @@ end;
 
 { Checks hosting form width and compacts/expands accordingly.
   Called from: Resize (initial parenting), Loaded (streamed), SetAutoCompact, HandleFormResize. }
-procedure TFlatButton.EvaluateAutoCompact;
+procedure TSvgButton.EvaluateAutoCompact;
 begin
   if not FAutoCompact then EXIT;
+  if csDesigning in ComponentState then EXIT;  { Never compact at design time — corrupts saved IconPosition }
   if (Scene = nil) then EXIT;
   if not (Scene.GetObject is TCommonCustomForm) then EXIT;
   ApplyCompact(TCommonCustomForm(Scene.GetObject).ClientWidth < HIGH_WIDTH);
@@ -555,7 +567,7 @@ end;
 
 
 { Responds to hosting form resize — filters by Scene.GetObject so we ignore other forms' resizes. }
-procedure TFlatButton.HandleFormResize(const Sender: TObject; const M: System.Messaging.TMessage);
+procedure TSvgButton.HandleFormResize(const Sender: TObject; const M: System.Messaging.TMessage);
 begin
   if not FAutoCompact then EXIT;
   if (Scene = nil) or (Sender <> Scene.GetObject) then EXIT;
@@ -566,7 +578,7 @@ end;
 
 { Switches between expanded (icon+text, original width) and compacted (icon-only, square).
   Width is only modified when Align allows it (Right, Left, MostRight, MostLeft, None). }
-procedure TFlatButton.ApplyCompact(MakeCompact: Boolean);
+procedure TSvgButton.ApplyCompact(MakeCompact: Boolean);
 begin
   if MakeCompact = FIsCompacted then EXIT;
   FApplyingCompact:= True;
@@ -590,6 +602,8 @@ begin
   FINALLY
     FApplyingCompact:= False;
   END;
+  if Assigned(FOnCompactChanged)
+  then FOnCompactChanged(Self, FIsCompacted);
 end;
 
 
@@ -600,7 +614,7 @@ end;
 
 { Toggles the button's active state. When toggled, the button stays highlighted
   (accent color + glow + background) until untoggled. }
-procedure TFlatButton.SetIsToggled(Value: Boolean);
+procedure TSvgButton.SetIsToggled(Value: Boolean);
 begin
   if FIsToggled = Value then EXIT;
   FIsToggled:= Value;
@@ -609,7 +623,7 @@ end;
 
 
 { Mouse enters the button - switch to highlighted state }
-procedure TFlatButton.DoMouseEnter;
+procedure TSvgButton.DoMouseEnter;
 begin
   inherited;
   ApplyColors;
@@ -617,7 +631,7 @@ end;
 
 
 { Mouse leaves the button - revert to normal (unless toggled) }
-procedure TFlatButton.DoMouseLeave;
+procedure TSvgButton.DoMouseLeave;
 begin
   inherited;
   Opacity:= 1.0;   { Restore; press feedback is meaningless when mouse has left }
@@ -626,7 +640,7 @@ end;
 
 
 { Left mouse down - dim the whole button for press feedback }
-procedure TFlatButton.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Single);
+procedure TSvgButton.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 begin
   inherited;
   if Button = TMouseButton.mbLeft
@@ -635,7 +649,7 @@ end;
 
 
 { Left mouse up - restore full opacity }
-procedure TFlatButton.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Single);
+procedure TSvgButton.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 begin
   inherited;
   if Button = TMouseButton.mbLeft
@@ -645,9 +659,26 @@ end;
 
 
 
+procedure CompactSvgButtons(Parent: TFmxObject; Compact: Boolean);
+VAR
+  i: Integer;
+  Child: TFmxObject;
+begin
+  for i:= 0 to Parent.ChildrenCount-1 do
+    begin
+      Child:= Parent.Children[i];
+      if Child is TSvgButton
+      then TSvgButton(Child).Compact:= Compact
+      else
+        if Child.ChildrenCount > 0
+        then CompactSvgButtons(Child, Compact);
+    end;
+end;
+
+
 procedure Register;
 begin
-  RegisterComponents('LightSaber FMX', [TFlatButton]);
+  RegisterComponents('LightSaber FMX', [TSvgButton]);
 end;
 
 

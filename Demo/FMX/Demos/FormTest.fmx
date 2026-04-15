@@ -180,7 +180,7 @@ object Form2: TForm2
       Size.PlatformDefault = False
       StyleLookup = ''
       TabOrder = 0
-      Text = 'TFlatButton'
+      Text = 'TSvgButton'
       ExplicitSize.cx = 81.000000000000000000
       ExplicitSize.cy = 26.000000000000000000
       object lblFeedback: TLabel
@@ -209,7 +209,7 @@ object Form2: TForm2
         Size.Height = 83.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 2
-        object btnTopHome: TFlatButton
+        object btnTopHome: TSvgButton
           Align = Left
           Cursor = crHandPoint
           Fill.Color = claNull
@@ -248,7 +248,7 @@ object Form2: TForm2
             WrapMode = Fit
           end
         end
-        object btnTopStar: TFlatButton
+        object btnTopStar: TSvgButton
           Align = Left
           Cursor = crHandPoint
           Fill.Color = claNull
@@ -288,7 +288,7 @@ object Form2: TForm2
             WrapMode = Fit
           end
         end
-        object btnTopBell: TFlatButton
+        object btnTopBell: TSvgButton
           Align = Left
           Cursor = crHandPoint
           Fill.Color = claNull
@@ -357,7 +357,7 @@ object Form2: TForm2
           Text = 'Icon only (no text):'
           TabOrder = 3
         end
-        object btnSmall1: TFlatButton
+        object btnSmall1: TSvgButton
           Align = Left
           Cursor = crHandPoint
           Fill.Color = claNull
@@ -395,7 +395,7 @@ object Form2: TForm2
             WrapMode = Fit
           end
         end
-        object btnSmall2: TFlatButton
+        object btnSmall2: TSvgButton
           Align = Left
           Cursor = crHandPoint
           Fill.Color = claNull
@@ -434,7 +434,7 @@ object Form2: TForm2
             WrapMode = Fit
           end
         end
-        object btnSmall3: TFlatButton
+        object btnSmall3: TSvgButton
           Align = Left
           Cursor = crHandPoint
           Fill.Color = claNull
@@ -473,7 +473,7 @@ object Form2: TForm2
             WrapMode = Fit
           end
         end
-        object btnSmall4: TFlatButton
+        object btnSmall4: TSvgButton
           Align = Left
           Cursor = crHandPoint
           Fill.Color = claNull
@@ -525,7 +525,7 @@ object Form2: TForm2
         Size.Height = 55.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 4
-        object btnHome: TFlatButton
+        object btnHome: TSvgButton
           Align = Left
           Cursor = crHandPoint
           Fill.Color = claNull
@@ -571,7 +571,7 @@ object Form2: TForm2
           Text = 'Icon + Text (icon left):'
           TabOrder = 1
         end
-        object btnSettings: TFlatButton
+        object btnSettings: TSvgButton
           Align = Left
           Cursor = crHandPoint
           Fill.Color = claNull
@@ -594,7 +594,6 @@ object Form2: TForm2
             '03887939 19,19 L19,12 M9,21 L9,15 C9,13.8954296112061 9.89543056' +
             '488037,13 11,13 L13,13 C14.1045694351196,13 15,13.8954305648804 ' +
             '15,15 L15,21 '
-          IconPosition = ipCenter
           object TPath
             Align = Left
             Fill.Kind = None
@@ -611,7 +610,7 @@ object Form2: TForm2
             WrapMode = Fit
           end
         end
-        object btnProfile: TFlatButton
+        object btnProfile: TSvgButton
           Align = Left
           Cursor = crHandPoint
           Fill.Color = claNull
@@ -663,7 +662,7 @@ object Form2: TForm2
         Size.Height = 58.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 3
-        object btnNotify: TFlatButton
+        object btnNotify: TSvgButton
           Align = Left
           Cursor = crHandPoint
           Fill.Color = claNull
@@ -702,7 +701,7 @@ object Form2: TForm2
             WrapMode = Fit
           end
         end
-        object btnFavorite: TFlatButton
+        object btnFavorite: TSvgButton
           Align = Left
           Cursor = crHandPoint
           Fill.Color = claNull
@@ -773,10 +772,40 @@ object Form2: TForm2
           Size.Height = 19.000000000000000000
           Size.PlatformDefault = False
           TabOrder = 6
-          Text = 'chkHover'
+          Text = 'Fill bkg on hover'
           OnChange = chkHoverChange
         end
         object chkAutoCompact: TLightCheckBox
+          Align = Top
+          Margins.Left = 3.000000000000000000
+          Margins.Top = 3.000000000000000000
+          Margins.Right = 3.000000000000000000
+          Margins.Bottom = 3.000000000000000000
+          Position.X = 3.000000000000000000
+          Position.Y = 53.000000000000000000
+          Size.Width = 235.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 5
+          Text = 'Auto compact'
+          OnChange = chkAutoCompactChange
+        end
+        object chkCompact: TLightCheckBox
+          Align = Top
+          Margins.Left = 22.000000000000000000
+          Margins.Top = 3.000000000000000000
+          Margins.Right = 3.000000000000000000
+          Margins.Bottom = 3.000000000000000000
+          Position.X = 22.000000000000000000
+          Position.Y = 78.000000000000000000
+          Size.Width = 216.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 4
+          Text = 'Compact (manual)'
+          OnChange = chkCompactChange
+        end
+        object chkToggled: TLightCheckBox
           Align = Top
           Margins.Left = 3.000000000000000000
           Margins.Top = 3.000000000000000000
@@ -787,9 +816,61 @@ object Form2: TForm2
           Size.Width = 235.000000000000000000
           Size.Height = 19.000000000000000000
           Size.PlatformDefault = False
-          TabOrder = 5
-          Text = 'Auto compact'
-          OnChange = chkAutoCompactChange
+          TabOrder = 3
+          Text = 'IsToggled'
+          OnChange = chkToggledChange
+        end
+        object chkShowText: TLightCheckBox
+          Align = Top
+          IsChecked = True
+          Margins.Left = 3.000000000000000000
+          Margins.Top = 3.000000000000000000
+          Margins.Right = 3.000000000000000000
+          Margins.Bottom = 3.000000000000000000
+          Position.X = 3.000000000000000000
+          Position.Y = 103.000000000000000000
+          Size.Width = 235.000000000000000000
+          Size.Height = 19.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 2
+          Text = 'Show text'
+          OnChange = chkShowTextChange
+        end
+        object Layout7: TLayout
+          Align = Top
+          Margins.Left = 3.000000000000000000
+          Margins.Top = 3.000000000000000000
+          Margins.Right = 3.000000000000000000
+          Margins.Bottom = 3.000000000000000000
+          Position.X = 3.000000000000000000
+          Position.Y = 128.000000000000000000
+          Size.Width = 235.000000000000000000
+          Size.Height = 61.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 7
+          object lblIconPos: TLabel
+            Align = Left
+            AutoSize = True
+            Size.Width = 81.000000000000000000
+            Size.Height = 61.000000000000000000
+            Size.PlatformDefault = False
+            Text = 'IconPosition'
+            TabOrder = 0
+          end
+          object lbIconPosition: TListBox
+            Align = Client
+            Size.Width = 154.000000000000000000
+            Size.Height = 61.000000000000000000
+            Size.PlatformDefault = False
+            TabOrder = 1
+            DisableFocusEffect = True
+            DefaultItemStyles.ItemStyle = ''
+            DefaultItemStyles.GroupHeaderStyle = ''
+            DefaultItemStyles.GroupFooterStyle = ''
+            OnChange = lbIconPositionChange
+            Viewport.Width = 150.000000000000000000
+            Viewport.Height = 57.000000000000000000
+          end
         end
       end
       object Layout6: TLayout
@@ -804,7 +885,7 @@ object Form2: TForm2
         Size.Height = 83.000000000000000000
         Size.PlatformDefault = False
         TabOrder = 1
-        object FlatButton1: TFlatButton
+        object FlatButton1: TSvgButton
           Align = Left
           Cursor = crHandPoint
           Fill.Color = claNull
@@ -813,7 +894,7 @@ object Form2: TForm2
           Padding.Right = 8.000000000000000000
           Padding.Bottom = 6.000000000000000000
           Position.Y = 17.000000000000000000
-          Size.Width = 121.000000000000000000
+          Size.Width = 140.000000000000000000
           Size.Height = 66.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -843,7 +924,7 @@ object Form2: TForm2
             WrapMode = Fit
           end
         end
-        object FlatButton2: TFlatButton
+        object FlatButton2: TSvgButton
           Align = Left
           Cursor = crHandPoint
           Fill.Color = claNull
@@ -851,9 +932,9 @@ object Form2: TForm2
           Padding.Top = 6.000000000000000000
           Padding.Right = 8.000000000000000000
           Padding.Bottom = 6.000000000000000000
-          Position.X = 217.000000000000000000
+          Position.X = 255.000000000000000000
           Position.Y = 17.000000000000000000
-          Size.Width = 88.000000000000000000
+          Size.Width = 107.000000000000000000
           Size.Height = 66.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -883,7 +964,7 @@ object Form2: TForm2
             WrapMode = Fit
           end
         end
-        object FlatButton3: TFlatButton
+        object FlatButton3: TSvgButton
           Align = Left
           Cursor = crHandPoint
           Fill.Color = claNull
@@ -891,9 +972,9 @@ object Form2: TForm2
           Padding.Top = 6.000000000000000000
           Padding.Right = 8.000000000000000000
           Padding.Bottom = 6.000000000000000000
-          Position.X = 121.000000000000000000
+          Position.X = 140.000000000000000000
           Position.Y = 17.000000000000000000
-          Size.Width = 96.000000000000000000
+          Size.Width = 115.000000000000000000
           Size.Height = 66.000000000000000000
           Size.PlatformDefault = False
           Stroke.Kind = None
@@ -967,9 +1048,6 @@ object Form2: TForm2
     end
   end
   object StyleBook1: TStyleBook
-    FileName = 
-      'c:\Projects\Project LearnAssist\LearnAssist src\System\Skins\Win' +
-      '\Nero Dark.style'
     Styles = <
       item
         ResourcesBin = {

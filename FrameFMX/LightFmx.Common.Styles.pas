@@ -19,7 +19,9 @@ CONST
   HiGH_WIDTH    = 1024; // Below this with, show some buttons but some in "Compact" mode (only icon, no text). Over this resolution we show all.
 
 // SCREEN SIZE
-function IsCompactScreen: Boolean;
+function IsPhoneScreen  : Boolean;   { Width < COMPACT_WIDTH (600) — phone }
+function IsTabletScreen : Boolean;   { Width in COMPACT_WIDTH..HIGH_WIDTH (600–1024) — tablet }
+function IsDesktopScreen: Boolean;   { Width >= HIGH_WIDTH (1024+) — desktop }
 
 // THEME
 function IsStyleCompatible(const StyleFile: string): Boolean;
@@ -48,13 +50,34 @@ USES
 { IFMXScreenService returns physical screen size on mobile (Android/iOS).
   Screen.Size can return 0 on mobile if called before the main form is fully created,
   because FMX populates it lazily from the platform's screen metrics. }
-function IsCompactScreen: Boolean;
+function GetScreenWidth: Single;
 VAR ScreenSvc: IFMXScreenService;
 begin
   if TPlatformServices.Current.SupportsPlatformService(IFMXScreenService, ScreenSvc)
-  then Result:= ScreenSvc.GetScreenSize.X < COMPACT_WIDTH
-  else Result:= Screen.Size.Width < COMPACT_WIDTH;
+  then Result:= ScreenSvc.GetScreenSize.X
+  else Result:= Screen.Size.Width;
 end;
+
+
+function IsPhoneScreen: Boolean;
+begin
+  Result:= GetScreenWidth < COMPACT_WIDTH;
+end;
+
+
+function IsTabletScreen: Boolean;
+VAR W: Single;
+begin
+  W:= GetScreenWidth;
+  Result:= (W >= COMPACT_WIDTH) AND (W < HiGH_WIDTH);
+end;
+
+
+function IsDesktopScreen: Boolean;
+begin
+  Result:= GetScreenWidth >= HiGH_WIDTH;
+end;
+
 
 
 { Returns a copy of Color with the alpha channel replaced.

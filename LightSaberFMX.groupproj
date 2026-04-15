@@ -15,6 +15,9 @@
         <Projects Include="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="Demo\FMX\Demos\FMX_Demos.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -59,17 +62,32 @@
     <Target Name="FMX_Demo_Log:Make">
         <MSBuild Projects="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj" Targets="Make"/>
     </Target>
+    <Target Name="FMX_Demos">
+        <MSBuild Projects="Demo\FMX\Demos\FMX_Demos.dproj"/>
+    </Target>
+    <Target Name="FMX_Demos:Clean">
+        <MSBuild Projects="Demo\FMX\Demos\FMX_Demos.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="FMX_Demos:Make">
+        <MSBuild Projects="Demo\FMX\Demos\FMX_Demos.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightFmxCommon;LightFmxVisual;FMX_Demo_Log"/>
+        <CallTarget Targets="LightCore;LightFmxCommon;LightFmxVisual;FMX_Demo_Log;FMX_Demos"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightFmxCommon:Clean;LightFmxVisual:Clean;FMX_Demo_Log:Clean"/>
+        <CallTarget Targets="LightCore:Clean;LightFmxCommon:Clean;LightFmxVisual:Clean;FMX_Demo_Log:Clean;FMX_Demos:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightFmxCommon:Make;LightFmxVisual:Make;FMX_Demo_Log:Make"/>
+        <CallTarget Targets="LightCore:Make;LightFmxCommon:Make;LightFmxVisual:Make;FMX_Demo_Log:Make;FMX_Demos:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
+        <BuildGroupProject Include="Demo\FMX\Demos\FMX_Demos.dproj">
+            <ProjectGuid>{818A49A4-9FA8-40E8-948A-A12D284ECDDE}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj">
             <ProjectGuid>{34931AEA-C2A9-4E66-BD5A-76013B543D07}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -96,6 +114,12 @@
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Release'">
+        <BuildGroupProject Include="Demo\FMX\Demos\FMX_Demos.dproj">
+            <ProjectGuid>{818A49A4-9FA8-40E8-948A-A12D284ECDDE}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj">
             <ProjectGuid>{34931AEA-C2A9-4E66-BD5A-76013B543D07}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -122,6 +146,12 @@
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='Win32_Debug'">
+        <BuildGroupProject Include="Demo\FMX\Demos\FMX_Demos.dproj">
+            <ProjectGuid>{818A49A4-9FA8-40E8-948A-A12D284ECDDE}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj">
             <ProjectGuid>{34931AEA-C2A9-4E66-BD5A-76013B543D07}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -148,6 +178,12 @@
         </BuildGroupProject>
     </ItemGroup>
     <ItemGroup Condition="'$(BuildGroup)'=='All'">
+        <BuildGroupProject Include="Demo\FMX\Demos\FMX_Demos.dproj">
+            <ProjectGuid>{818A49A4-9FA8-40E8-948A-A12D284ECDDE}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="Demo\FMX\Demo LightLog\FMX_Demo_Log.dproj">
             <ProjectGuid>{34931AEA-C2A9-4E66-BD5A-76013B543D07}</ProjectGuid>
             <Configurations>Debug</Configurations>

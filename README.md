@@ -161,6 +161,7 @@ The AppData system replaces the standard Delphi application lifecycle with a mor
 - Platform-specific startup registration (Windows Registry, macOS LaunchAgents, Linux autostart)
 - Application control: `Run()`, `Minimize()`, `Restart()`, `SelfDelete()`
 - Dialog helpers: `PromptToSaveFile`, `PromptToLoadFile`
+- `ShowModal(Form)` — shows form modally; auto-centers on main form if `AutoState = asNone`
 - Global instance: `AppData` (freed in FINALIZATION)
 
 *Layer 3: TLightForm* (`LightFmx.Common.AppData.Form.pas` / `LightVcl.Common.AppData.Form.pas`) - Self-saving forms
@@ -199,7 +200,7 @@ AppData replaces `Application.Initialize` and `Application.CreateForm` — it ma
 - Cross-platform: handles Windows/macOS/iOS/Android differences automatically
 
 *Form AutoState System:*
-- `asNone`: No auto-save/restore
+- `asNone`: No auto-save/restore; `ShowModal` auto-centers these forms on the main form
 - `asPosOnly`: Save/restore position only (Left, Top)
 - `asFull`: Save/restore position + all GUI controls (checkboxes, etc.)
 - `asUndefined`: Error — must be set via `CreateForm`

@@ -1,7 +1,7 @@
 ﻿UNIT FormSkinsDisk;
 
 {=============================================================================================================
-   2026.03
+   2026.04
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    UNIVERSAL FMX STYLE LOADER
@@ -10,23 +10,23 @@
    Provides a visual form for users to select and apply styles.
 
    Uses TStyleManager.SetStyleFromFile to apply styles.
-
+--------------------------------------------------------------------------------------------------------------
    USAGE:
-     1. Call LoadLastStyle during application initialization (in DPR, before Run):
-        LoadLastStyle('Jet.style');      // Default style on first run
-        // Pass empty string for default platform style
+     Call LoadLastStyle during application initialization (in DPR, before Run):
+        LoadLastStyle('Jet.style');      // Default style on first run. Pass empty string for default platform style
 
-     2. Style files are organized in platform-specific subfolders under AppData.AppSysDir:
-           System\Skins\Win\       - Windows styles (PlatformTarget = '[MSWINDOWS]')
-           System\Skins\Android\   - Android styles (PlatformTarget = '[ANDROID]...')
-           System\Skins\macOS\     - macOS styles   (PlatformTarget = '[MACOS]')
-           System\Skins\iOS\       - iOS styles     (PlatformTarget = '[IOS7]' or '[IOSALTERNATE]')
-           System\Skins\Linux\     - Linux styles   (PlatformTarget = '[LINUX]')
-        GetStyleDir auto-selects the correct subfolder at compile time via $IFDEF.
-        Falls back to root Skins\ if the platform subfolder doesn't exist.
-        Supports both .style (text) and .fsf (binary) format.
-
-     3. To show style selector: TfrmStyleDisk.CreateEmbedded or AppData.CreateForm(TfrmStyleDisk)
+     To show style selector:
+       Call TfrmStyleDisk.CreateEmbedded or AppData.CreateForm(TfrmStyleDisk)
+       Info:
+         Style files are organized in platform-specific subfolders under AppData.AppSysDir:
+              System\Skins\Win\       - Windows styles (PlatformTarget = '[MSWINDOWS]')
+              System\Skins\Android\   - Android styles (PlatformTarget = '[ANDROID]...')
+              System\Skins\macOS\     - macOS styles   (PlatformTarget = '[MACOS]')
+              System\Skins\iOS\       - iOS styles     (PlatformTarget = '[IOS7]' or '[IOSALTERNATE]')
+              System\Skins\Linux\     - Linux styles   (PlatformTarget = '[LINUX]')
+          GetStyleDir auto-selects the correct subfolder at compile time via $IFDEF.
+          Falls back to root Skins\ if the platform subfolder doesn't exist.
+          Supports both .style (text) and .fsf (binary) format.
 
    PLATFORM-SPECIFIC STYLE FILES:
      Each platform needs its own style files (PlatformTarget embedded in the file metadata).
