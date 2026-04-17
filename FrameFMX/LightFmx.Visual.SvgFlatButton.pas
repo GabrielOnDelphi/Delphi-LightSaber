@@ -20,7 +20,7 @@
      - Highlight color: 'selectioncolor' or 'selection' or 'glow' style resource (skin accent)
 
    Architecture:
-     TSvgButton       (TRectangle - transparent background, rounded corners)
+     TSvgButton        (TRectangle - transparent background, rounded corners)
        TPath           (SVG icon, stroke-based, HitTest=False)
          TGlowEffect   (accent-colored glow, enabled on hover/toggle)
        TLabel          (text, HitTest=False)
@@ -35,13 +35,16 @@
 
    Call ApplyThemeColors after loading a new FMX style (must be called from main thread).
    For standard buttons with icon overlay, see LightFmx.Visual.SvgButton instead.
+
+   Tester: c:\Projects\LightSaber\Demo\FMX\Demos\
+
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
 
 USES
   System.UITypes, System.Classes, System.Types, System.Math, System.Messaging,
-  FMX.Styles, FMX.Styles.Objects, FMX.Types, FMX.Controls, FMX.Objects, FMX.StdCtrls, FMX.Graphics, FMX.Effects;
+  FMX.Forms, FMX.Styles, FMX.Types, FMX.Controls, FMX.Objects, FMX.StdCtrls, FMX.Graphics, FMX.Effects;
 
 TYPE
   TIconPosition = (ipLeft,      // Icon of the left, text after
@@ -122,108 +125,12 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-  FMX.Forms,
   LightFmx.Common.Styles;
 
 
 CONST
   HOVER_BG_ALPHA = $28;    { ~16% opacity - subtle background tint on hover/toggle }
 
-
-
-{-------------------------------------------------------------------------------------------------------------
-   STYLE COLOR EXTRACTION
-   These functions probe the active FMX style to extract colors that match the current skin.
--------------------------------------------------------------------------------------------------------------}
-
-{ Returns the normal text color that TButton uses in the active style.
-  Probes buttonstyle > text > NormalColor (e.g. claWhite on CalypsoSE Dark).
-  Falls back to 'foregroundcolor' resource, then to a theme-based default.
-  This ensures our flat button text matches standard TButton text. }
-function GetButtonNormalTextColor: TAlphaColor;
-VAR
-  ActiveStyle, BtnStyle, TextObj: TFmxObject;
-begin
-  ActiveStyle:= TStyleManager.ActiveStyle(NIL);
-  if ActiveStyle <> NIL then
-    begin
-      { Primary: button style -> text -> NormalColor }
-      BtnStyle:= ActiveStyle.FindStyleResource('buttonstyle');
-      if BtnStyle <> NIL then
-        begin
-          TextObj:= BtnStyle.FindStyleResource('text');
-          if (TextObj <> NIL) AND (TextObj is TButtonStyleTextObject)
-          then EXIT(TButtonStyleTextObject(TextObj).NormalColor);
-        end;
-
-      { Fallback: foregroundcolor resource }
-      TextObj:= ActiveStyle.FindStyleResource('foregroundcolor');
-      if (TextObj <> NIL) AND (TextObj is TColorObject)
-      then EXIT(TColorObject(TextObj).Color);
-    end;
-
-  { No style loaded - use safe defaults }
-  if IsDarkStyle
-  then Result:= TAlphaColors.White
-  else Result:= TAlphaColorRec.Dimgray;
-end;
-
-
-{ Returns the highlight/accent color (fully opaque) from the active style.
-  This is the color used for hover effects (icon, text, glow, background tint).
-  Probes style resources in priority order:
-    1. 'selectioncolor' (TColorObject) - some styles define this
-    2. 'selection' (TBrushObject) - e.g. Nero Dark has Brush.Color = x7F0377D0 (blue)
-    3. 'glow' (TColorObject) - accent/glow color
-    4. 'foregroundcolor' (TColorObject) - text color as last resort
-  Always returns fully opaque (strips embedded alpha from the style resource). }
-function GetStyleHighlightColor: TAlphaColor;   //todo: later: move this in a dedicated file
-VAR
-  ActiveStyle, Obj: TFmxObject;
-begin
-  ActiveStyle:= TStyleManager.ActiveStyle(NIL);
-  if ActiveStyle <> NIL then
-    begin
-      Obj:= ActiveStyle.FindStyleResource('selectioncolor');
-      if (Obj <> NIL) AND (Obj is TColorObject)
-      then EXIT(TColorObject(Obj).Color OR TAlphaColor($FF000000));
-
-      { TBrushObject 'selection' - used by Nero Dark, CalypsoSE, etc. }
-      Obj:= ActiveStyle.FindStyleResource('selection');
-      if (Obj <> NIL) AND (Obj is TBrushObject)
-      then EXIT(TBrushObject(Obj).Brush.Color OR TAlphaColor($FF000000));
-
-      Obj:= ActiveStyle.FindStyleResource('glow');
-      if (Obj <> NIL) AND (Obj is TColorObject)
-      then EXIT(TColorObject(Obj).Color OR TAlphaColor($FF000000));
-
-      Obj:= ActiveStyle.FindStyleResource('foregroundcolor');
-      if (Obj <> NIL) AND (Obj is TColorObject)
-      then EXIT(TColorObject(Obj).Color OR TAlphaColor($FF000000));
-    end;
-
-  Result:= TAlphaColorRec.Gray;
-end;
-
-
-{ Returns the glow color from the active style's 'glow' resource.
-  Falls back to GetStyleHighlightColor if no 'glow' resource exists.
-  The skin may define a different glow color than the selection/accent color. }
-function GetStyleGlowColor: TAlphaColor;
-VAR
-  ActiveStyle, Obj: TFmxObject;
-begin
-  ActiveStyle:= TStyleManager.ActiveStyle(NIL);
-  if ActiveStyle <> NIL then
-    begin
-      Obj:= ActiveStyle.FindStyleResource('glow');
-      if (Obj <> NIL) AND (Obj is TColorObject)
-      then EXIT(TColorObject(Obj).Color OR TAlphaColor($FF000000));
-    end;
-
-  { No 'glow' resource - fall back to the general highlight color }
-  Result:= GetStyleHighlightColor;
-end;
 
 
 
@@ -562,7 +469,7 @@ begin
   if csDesigning in ComponentState then EXIT;  { Never compact at design time — corrupts saved IconPosition }
   if (Scene = nil) then EXIT;
   if not (Scene.GetObject is TCommonCustomForm) then EXIT;
-  ApplyCompact(TCommonCustomForm(Scene.GetObject).ClientWidth < HIGH_WIDTH);
+  ApplyCompact(IsPhoneScreen);
 end;
 
 
@@ -572,7 +479,7 @@ begin
   if not FAutoCompact then EXIT;
   if (Scene = nil) or (Sender <> Scene.GetObject) then EXIT;
   if not (Sender is TCommonCustomForm) then EXIT;
-  ApplyCompact(TCommonCustomForm(Sender).ClientWidth < HIGH_WIDTH);
+  ApplyCompact(IsPhoneScreen);
 end;
 
 

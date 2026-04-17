@@ -1,16 +1,37 @@
-unit LightFmx.Visual.DropDownSearch;
+﻿unit LightFmx.Visual.DropDownSearch;
 
 {=============================================================================================================
-   2026.01.31
+   2026.04
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
   A search box with auto-suggest (FMX).
   When you type some text, a dropdown box similar to the Help Insight in Delphi IDE will appear.
   The list is filtered (gets smaller) as the user types in more characters into the searchbox.
 
-  Can be closed with: click, double-click, escape, tab, and enter.
-  The list can be navigated with arrow up/down.
-  Use PopulateDictionary to add words to your list.
+  Navigation:
+    - Arrow up/down: navigate the list
+    - Enter / click / double-click: confirm selection
+    - Escape: cancel and close dropdown
+    - Tab: close dropdown, keep typed text (no selection)
+
+  Usage:
+    1. Drop TLightDownSearch on a form.
+    2. Call PopulateDictionary(MyStringList) to fill the word list.
+       Attach TObject references to stringlist items to carry payload data (e.g. IDs).
+    3. Handle OnEndSearch to react to a confirmed selection:
+         procedure TForm1.SearchEndSearch(Sender: TObject; SelectedItem: TObject);
+         begin
+           ShowMessage(SearchBox.SelectedString);
+           MyObject := SelectedItem as TMyClass;   // cast payload if attached
+         end;
+
+  IMPORTANT — reading the selection:
+    Always use OnEndSearch or check HasValidSelection first.
+    Do NOT read Text directly — it may contain partial/unmatched typed input.
+    - OnEndSearch   : fired only when user confirms a list item (safest)
+    - HasValidSelection : TRUE after a confirmed pick, FALSE once user starts typing again
+    - SelectedString / SelectedObject : valid only when HasValidSelection is TRUE
+
   Adapted from VCL to FMX, replacing TSearchBox with TEdit and TCubicListBox with TListBox.
 
   Demo:
@@ -33,6 +54,7 @@ TYPE
      FCurrentIndex : Integer;
      FIsNavigating : Boolean;                // True when the user is navigating through the List with the arrow keys
      FCurrentFilter: string;
+     FHasSelection : Boolean;               // TRUE only after user picks from list; reset when user types
      lbxSearch     : TListBox;               // Dropdown list
      FMaxDropHeight: Integer;
      procedure showDropDown;
@@ -50,12 +72,12 @@ TYPE
      constructor Create(AOwner: TComponent); override;
      destructor Destroy; override;
 
-//     procedure ClearDictionary;
      procedure  PopulateDictionary(Words: TStringList);
      procedure  AddDemoStrings;
 
      function   SelectedString: string;
      function   SelectedObject: TObject;
+     property   HasValidSelection: Boolean read FHasSelection;  { TRUE only after user picks from list. Always check before reading SelectedString/SelectedObject — Text may contain unmatched typed input. Reset when user starts typing. }
    published
      property   OnEndSearch: TSelectNotifyEvent read FOnEndSearch write FOnEndSearch;       { Triggered when the user selected an item from the list }
      property   MaxDropHeight: Integer read FMaxDropHeight write FMaxDropHeight default 50; { In percents }
@@ -147,14 +169,14 @@ begin
   if (csDesigning in ComponentState) then EXIT;
   if NOT FIsNavigating then  // True when the user is navigating through the List with the arrow keys
   begin
-    FCurrentFilter := Text;  // Update filter with current text
-    FilterItems;             // Filter the dropdown items
-    showDropDown;            // Show the dropdown
+    FHasSelection  := FALSE;   // Typing invalidates any prior selection
+    FCurrentFilter := Text;    // Update filter with current text
+    FilterItems;               // Filter the dropdown items
+    showDropDown;              // Show the dropdown
   end;
 end;
 
 
-//ToDo: move this to its own component!
 { Resize the height based on the number of rows, but never bigger than x% of the form.
   MaxHeightPercent is relative to the form height. }
 procedure TLightDownSearch.SetHeightAuto(Box: TListBox; MaxHeightPercent: Integer);
@@ -216,14 +238,13 @@ begin
 end;
 
 
-
-//todo: Test what happens if the text is not found so the user selects nothing
 procedure TLightDownSearch.EndSearch(Sender: TObject);
 begin
   if (lbxSearch.ItemIndex >= 0) then
     begin
       // This handles when the user clicks an item in the list
-      Self.Text := lbxSearch.Items[lbxSearch.ItemIndex];
+      Self.Text     := lbxSearch.Items[lbxSearch.ItemIndex];
+      FHasSelection := TRUE;
 
       if Assigned(FOnEndSearch)
       then FOnEndSearch(Self, lbxSearch.Items.Objects[lbxSearch.ItemIndex]);

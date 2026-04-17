@@ -105,7 +105,7 @@ USES
   {$ENDIF}
   System.SysUtils, System.Classes, System.UITypes, System.Types, System.Generics.Collections,
   FMX.Forms, FMX.Platform,
-  LightFMX.LogForm,
+  LightFMX.Common.LogForm,
   LightCore.AppData, LightCore.IO;
 
 TYPE
@@ -242,6 +242,22 @@ end;
        2. GetAutoState (called from TLightForm.Loaded) retrieves and removes the entry
        3. If form was created immediately (aReference <> NIL), cleanup any leftover entry
 -------------------------------------------------------------------------------------------------------------}
+
+{ Caller MUST pass a variable whose storage outlives Application.Run — typically the
+  global FormMain/frmMain declared in the main form's unit.
+
+  Why NOT a local Dummy variable:
+    Untyped OUT/VAR params pass the *address* of the caller's storage slot.
+    On FMX, Application.CreateForm defers real form construction until RealCreateForms
+    runs inside Application.Run. It stores the pointer we hand it and writes the new
+    instance back into that address later. If the slot was a local stack var, the
+    stack frame is already gone by then — the write lands on garbage memory, the
+    global form variable stays NIL, and downstream code (incl. pending-autostate
+    bookkeeping that relies on the eventual write) breaks with a "Form was not
+    created via AppData.CreateForm" exception.
+    Nothing to do with interfaces/refcounting — pure pointer-lifetime issue.
+
+  Therefore: no Dummy-based overload. Always pass the real global var. }
 procedure TAppData.CreateMainForm(aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly);
 begin
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
@@ -427,7 +443,7 @@ var
   LaunchAgentContent: TStringList;
 begin
   Result:= False;
-  LaunchAgentPath:= TPath.Combine(TPath.GetHomePath, 'Library/LaunchAgents/com.myapp.startup.plist');
+  LaunchAgentPath:= TPath.Combine(TPath.GetHomePath, 'Library/LaunchAgents/com.' + AppName + '.startup.plist');
 
   if Active then
   begin
@@ -438,7 +454,7 @@ begin
       LaunchAgentContent.Add('<plist version="1.0">');
       LaunchAgentContent.Add('<dict>');
       LaunchAgentContent.Add('  <key>Label</key>');
-      LaunchAgentContent.Add('  <string>com.myapp.startup</string>');
+      LaunchAgentContent.Add('  <string>com.' + AppName + '.startup</string>');
       LaunchAgentContent.Add('  <key>ProgramArguments</key>');
       LaunchAgentContent.Add('  <array>');
       LaunchAgentContent.Add('    <string>' + FilePath + '</string>');

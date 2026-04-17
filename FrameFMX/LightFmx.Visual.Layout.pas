@@ -48,6 +48,20 @@ TYPE
     property VisibleAtRuntime: Boolean read FVisibleAtRuntime write SetVisibleAtRuntime default True;
   end;
 
+
+  { TFlowLayout subclass that auto-sizes its height to fit wrapped children.
+    TFlowLayout does not auto-resize height when children wrap to new rows (FMX limitation).
+    This override computes the needed height after each layout pass and sets it.
+    Only active when Align is Top/Bottom/MostTop/MostBottom (the layout must be free to change height).
+    Usage: drop in FMX file exactly like TFlowLayout. }
+  TAutoHeightFlowLayout = class(TFlowLayout)
+  private
+    FRealigning: Boolean;
+  protected
+    procedure DoRealign; override;
+  end;
+
+
 procedure Register;
 
 IMPLEMENTATION
@@ -113,9 +127,45 @@ begin
 end;
 
 
+{-------------------------------------------------------------------------------------------------------------
+   TAutoHeightFlowLayout
+-------------------------------------------------------------------------------------------------------------}
+procedure TAutoHeightFlowLayout.DoRealign;
+var
+  NewH, ChildBottom: Single;
+  i: Integer;
+begin
+  if FRealigning then Exit;
+  FRealigning:= True;
+  try
+    inherited;  { Let TFlowLayout position and wrap all children }
+
+    { Only auto-size when we're in a position where height can change freely.
+      If Align=Client or Align=None, changing Height conflicts with the parent layout. }
+    if Align in [TAlignLayout.Top, TAlignLayout.Bottom, TAlignLayout.MostTop, TAlignLayout.MostBottom] then
+    begin
+      NewH:= 0;
+      for i:= 0 to ControlsCount - 1 do
+        if Controls[i].Visible then
+        begin
+          ChildBottom:= Controls[i].Position.Y + Controls[i].Height + Controls[i].Margins.Bottom;
+          if ChildBottom > NewH
+          then NewH:= ChildBottom;
+        end;
+      NewH:= NewH + Padding.Bottom;
+
+      if (NewH > 0) and (Abs(Height - NewH) > 0.1)
+      then Height:= NewH;
+    end;
+  finally
+    FRealigning:= False;
+  end;
+end;
+
+
 procedure Register;
 begin
-  RegisterComponents('LightSaber FMX', [TLightLayout]);
+  RegisterComponents('LightSaber FMX', [TLightLayout, TAutoHeightFlowLayout]);
 end;
 
 

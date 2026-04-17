@@ -1,4 +1,4 @@
-UNIT LightFmx.Visual.AutosizeBoxImg;
+﻿UNIT LightFmx.Visual.AutosizeBoxImg;
 
 {=============================================================================================================
    2026.01.31
@@ -16,7 +16,7 @@ INTERFACE
 USES
   System.SysUtils, System.Types, System.Classes, System.Math,
   FMX.Graphics, FMX.Types, FMX.Controls, FMX.Objects,
-  LightFmx.Visual.AutoSizeBox, LightFmx.Graph;
+  LightFmx.Visual.AutoSizeBox, LightFmx.Common.Graph;
 
 TYPE
   TAutosizeBoxImg = class(TAutoSizeBox)

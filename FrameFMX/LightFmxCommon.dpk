@@ -43,10 +43,14 @@ contains
   LightFmx.Common.Dialogs in 'LightFmx.Common.Dialogs.pas',
   LightFmx.Common.IniFile in 'LightFmx.Common.IniFile.pas',
   LightFmx.Common.Helpers in 'LightFmx.Common.Helpers.pas',
-  LightFmx.LogForm in 'LightFmx.LogForm.pas',
-  LightFmx.Graph in 'LightFmx.Graph.pas',
   LightFmx.Common.CamUtils in 'LightFmx.Common.CamUtils.pas',
-  LightFmx.Common.Styles in 'LightFmx.Common.Styles.pas';
+  LightFmx.Common.Styles in 'LightFmx.Common.Styles.pas',
+  LightFmx.Common.Platform in 'LightFmx.Common.Platform.pas',
+  LightFmx.Common.Graph in 'LightFmx.Common.Graph.pas',
+  LightFmx.Common.LogForm in 'LightFmx.Common.LogForm.pas',
+  FormSystemReport in 'FormSystemReport.pas',
+  LightFmx.Common.SysTray in 'LightFmx.Common.SysTray.pas';
 
 end.
+
 

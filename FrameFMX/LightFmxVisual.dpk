@@ -47,10 +47,11 @@ contains
   LightFmx.Visual.AnimatedMemo in 'LightFmx.Visual.AnimatedMemo.pas',
   LightFmx.Visual.ColorPalette in 'LightFmx.Visual.ColorPalette.pas',
   LightFmx.Visual.SearchListBox in 'LightFmx.Visual.SearchListBox.pas',
-  LightFmx.Visual.ResponsiveLayout in 'LightFmx.Visual.ResponsiveLayout.pas',
+  LightFmx.Visual.LayoutResponsive in 'LightFmx.Visual.LayoutResponsive.pas',
   LightFmx.Visual.CheckBox in 'LightFmx.Visual.CheckBox.pas',
   LightFmx.Visual.SvgButton in 'LightFmx.Visual.SvgButton.pas',
-  LightFmx.Visual.SvgFlatButton in 'LightFmx.Visual.SvgFlatButton.pas';
+  LightFmx.Visual.SvgFlatButton in 'LightFmx.Visual.SvgFlatButton.pas',
+  LightFmx.Visual.PopupList in 'LightFmx.Visual.PopupList.pas';
 
 end.
 

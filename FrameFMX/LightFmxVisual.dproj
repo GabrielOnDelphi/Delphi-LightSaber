@@ -107,10 +107,11 @@
         <DCCReference Include="LightFmx.Visual.AnimatedMemo.pas"/>
         <DCCReference Include="LightFmx.Visual.ColorPalette.pas"/>
         <DCCReference Include="LightFmx.Visual.SearchListBox.pas"/>
-        <DCCReference Include="LightFmx.Visual.ResponsiveLayout.pas"/>
+        <DCCReference Include="LightFmx.Visual.LayoutResponsive.pas"/>
         <DCCReference Include="LightFmx.Visual.CheckBox.pas"/>
         <DCCReference Include="LightFmx.Visual.SvgButton.pas"/>
         <DCCReference Include="LightFmx.Visual.SvgFlatButton.pas"/>
+        <DCCReference Include="LightFmx.Visual.PopupList.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

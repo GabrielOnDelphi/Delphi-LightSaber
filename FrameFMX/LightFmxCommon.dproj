@@ -173,12 +173,13 @@
         <DCCReference Include="LightFmx.Common.Dialogs.pas"/>
         <DCCReference Include="LightFmx.Common.IniFile.pas"/>
         <DCCReference Include="LightFmx.Common.Helpers.pas"/>
-        <DCCReference Include="LightFmx.LogForm.pas">
-            <FormType>fmx</FormType>
-        </DCCReference>
-        <DCCReference Include="LightFmx.Graph.pas"/>
         <DCCReference Include="LightFmx.Common.CamUtils.pas"/>
         <DCCReference Include="LightFmx.Common.Styles.pas"/>
+        <DCCReference Include="LightFmx.Common.Platform.pas"/>
+        <DCCReference Include="LightFmx.Common.Graph.pas"/>
+        <DCCReference Include="LightFmx.Common.LogForm.pas"/>
+        <DCCReference Include="FormSystemReport.pas"/>
+        <DCCReference Include="LightFmx.Common.SysTray.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

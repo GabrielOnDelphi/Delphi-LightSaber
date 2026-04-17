@@ -1,4 +1,4 @@
-UNIT LightFmx.Common.Styles;
+﻿UNIT LightFmx.Common.Styles;
 
 {=============================================================================================================
    2026.03
@@ -13,10 +13,6 @@ INTERFACE
 USES
    System.SysUtils, System.UITypes,
    FMX.Styles, FMX.Types, FMX.Controls, FMX.Graphics;
-
-CONST
-  COMPACT_WIDTH = 600;  // Below this width, hide most buttons and use popup menu.
-  HiGH_WIDTH    = 1024; // Below this with, show some buttons but some in "Compact" mode (only icon, no text). Over this resolution we show all.
 
 // SCREEN SIZE
 function IsPhoneScreen  : Boolean;   { Width < COMPACT_WIDTH (600) — phone }
@@ -33,6 +29,10 @@ function GetThemeTextColor(Scene: IScene): TAlphaColor; overload;     { Returns 
 function GetThemeTextColor: TAlphaColor; overload;
 function GetThemeBackgroundColor(OUT Color: TAlphaColor): Boolean;    { Returns the form background color from the active style. FALSE if unavailable (image-based skins like Calypso/Jet). }
 
+function GetButtonNormalTextColor: TAlphaColor;  { Returns the normal text color that TButton uses — buttonstyle > text > NormalColor. Falls back to foregroundcolor or theme default. }
+function GetStyleHighlightColor: TAlphaColor;    { Returns the highlight/accent color from the active style (selectioncolor → selection → glow → foregroundcolor). Always fully opaque. }
+function GetStyleGlowColor: TAlphaColor;         { Returns the glow color from 'glow' resource. Falls back to GetStyleHighlightColor if not found. }
+
 function GenerateThemePalette(BaseColor: TAlphaColor; IsDark: Boolean): TArray<TAlphaColor>;
 
 
@@ -44,7 +44,13 @@ IMPLEMENTATION
 
 USES
    FMX.Objects, FMX.Utils, System.UIConsts,
-   FMX.Platform, FMX.Forms;
+   FMX.Platform, FMX.Forms,
+   FMX.Styles.Objects;
+
+CONST
+  COMPACT_WIDTH = 600;  // Below this width, hide most buttons and use popup menu.
+  HiGH_WIDTH    = 1024; // Below this with, show some buttons but some in "Compact" mode (only icon, no text). Over this resolution we show all.
+
 
 
 { IFMXScreenService returns physical screen size on mobile (Android/iOS).
@@ -241,6 +247,96 @@ begin
       Color:= TBrushObject(BgObj).Brush.Color;
       EXIT(True);
     end;
+end;
+
+
+
+{ Returns the normal text color that TButton uses in the active style.
+  Probes buttonstyle > text > NormalColor (e.g. claWhite on CalypsoSE Dark).
+  Falls back to 'foregroundcolor' resource, then to a theme-based default.
+  This ensures flat button text matches standard TButton text. }
+function GetButtonNormalTextColor: TAlphaColor;
+VAR
+  ActiveStyle, BtnStyle, TextObj: TFmxObject;
+begin
+  ActiveStyle:= TStyleManager.ActiveStyle(NIL);
+  if ActiveStyle <> NIL then
+    begin
+      { Primary: button style -> text -> NormalColor }
+      BtnStyle:= ActiveStyle.FindStyleResource('buttonstyle');
+      if BtnStyle <> NIL then
+        begin
+          TextObj:= BtnStyle.FindStyleResource('text');
+          if (TextObj <> NIL) AND (TextObj is TButtonStyleTextObject)
+          then EXIT(TButtonStyleTextObject(TextObj).NormalColor);
+        end;
+
+      { Fallback: foregroundcolor resource }
+      TextObj:= ActiveStyle.FindStyleResource('foregroundcolor');
+      if (TextObj <> NIL) AND (TextObj is TColorObject)
+      then EXIT(TColorObject(TextObj).Color);
+    end;
+
+  { No style loaded - use safe defaults }
+  if IsDarkStyle
+  then Result:= TAlphaColors.White
+  else Result:= TAlphaColorRec.Dimgray;
+end;
+
+
+{ Returns the highlight/accent color (fully opaque) from the active style.
+  Probes style resources in priority order:
+    1. 'selectioncolor' (TColorObject) - some styles define this
+    2. 'selection' (TBrushObject) - e.g. Nero Dark has Brush.Color = x7F0377D0 (blue)
+    3. 'glow' (TColorObject) - accent/glow color
+    4. 'foregroundcolor' (TColorObject) - text color as last resort
+  Always returns fully opaque (strips embedded alpha from the style resource). }
+function GetStyleHighlightColor: TAlphaColor;
+VAR
+  ActiveStyle, Obj: TFmxObject;
+begin
+  ActiveStyle:= TStyleManager.ActiveStyle(NIL);
+  if ActiveStyle <> NIL then
+    begin
+      Obj:= ActiveStyle.FindStyleResource('selectioncolor');
+      if (Obj <> NIL) AND (Obj is TColorObject)
+      then EXIT(TColorObject(Obj).Color OR TAlphaColor($FF000000));
+
+      { TBrushObject 'selection' - used by Nero Dark, CalypsoSE, etc. }
+      Obj:= ActiveStyle.FindStyleResource('selection');
+      if (Obj <> NIL) AND (Obj is TBrushObject)
+      then EXIT(TBrushObject(Obj).Brush.Color OR TAlphaColor($FF000000));
+
+      Obj:= ActiveStyle.FindStyleResource('glow');
+      if (Obj <> NIL) AND (Obj is TColorObject)
+      then EXIT(TColorObject(Obj).Color OR TAlphaColor($FF000000));
+
+      Obj:= ActiveStyle.FindStyleResource('foregroundcolor');
+      if (Obj <> NIL) AND (Obj is TColorObject)
+      then EXIT(TColorObject(Obj).Color OR TAlphaColor($FF000000));
+    end;
+
+  Result:= TAlphaColorRec.Gray;
+end;
+
+
+{ Returns the glow color from the active style's 'glow' resource.
+  Falls back to GetStyleHighlightColor if no 'glow' resource exists.
+  The skin may define a different glow color than the selection/accent color. }
+function GetStyleGlowColor: TAlphaColor;
+VAR
+  ActiveStyle, Obj: TFmxObject;
+begin
+  ActiveStyle:= TStyleManager.ActiveStyle(NIL);
+  if ActiveStyle <> NIL then
+    begin
+      Obj:= ActiveStyle.FindStyleResource('glow');
+      if (Obj <> NIL) AND (Obj is TColorObject)
+      then EXIT(TColorObject(Obj).Color OR TAlphaColor($FF000000));
+    end;
+
+  { No 'glow' resource - fall back to the general highlight color }
+  Result:= GetStyleHighlightColor;
 end;
 
 
