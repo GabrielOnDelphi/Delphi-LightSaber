@@ -14,6 +14,8 @@ unit LightFmx.Visual.AnimatedMemo;
    Demo: Demos\Demo_FMX_AnimatedTextMemo.dpr
 =============================================================================================================}
 
+//Todo 6: show also word by word
+
 INTERFACE
 
 USES
@@ -27,9 +29,11 @@ type
     FPendingText: string;              // Buffer holding text waiting to be displayed
     FCharIndex: Integer;               // Current position in FPendingText (1-based)
     FInterval: Integer;                // Delay between characters in milliseconds
+    FCurrentLine: string;              // Accumulation buffer for the current line (avoids O(n²) Text+= Ch)
     procedure TimerTick(Sender: TObject);
     procedure SetAnimatedText(const Value: string);
     procedure SetInterval(const Value: Integer);
+    procedure FlushCurrentLine;        // Appends FCurrentLine to the last visible memo line
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -52,6 +56,7 @@ begin
   FInterval:= 30;
   FCharIndex:= 0;
   FPendingText:= '';
+  FCurrentLine:= '';
 
   FTimer:= TTimer.Create(Self);
   FTimer.Enabled:= False;
@@ -98,6 +103,7 @@ begin
   FTimer.Enabled:= False;
   FPendingText:= '';
   FCharIndex:= 0;
+  FCurrentLine:= '';
 end;
 
 
@@ -107,8 +113,23 @@ begin
 end;
 
 
+{ Writes FCurrentLine content into the last line of the memo.
+  FMX TMemo has no direct "append to last line" API, so we replace the last Lines entry.
+  If there are no lines yet we use Lines.Add. }
+procedure TAnimatedMemo.FlushCurrentLine;
+begin
+  if FCurrentLine = '' then EXIT;
+  if Lines.Count = 0
+  then Lines.Add(FCurrentLine)
+  else Lines[Lines.Count - 1]:= Lines[Lines.Count - 1] + FCurrentLine;
+  FCurrentLine:= '';
+end;
+
+
 procedure TAnimatedMemo.TimerTick(Sender: TObject);
 { Displays one character per timer tick.
+  Characters accumulate in FCurrentLine buffer and are flushed to the memo only on
+  line-break or animation end — avoids O(n²) Text+= Ch cost for long messages.
   Line breaks: FMX TMemo uses LF (#10) internally. CR (#13) is skipped. }
 var
   Ch: Char;
@@ -120,15 +141,20 @@ begin
       if Ch = #13
       then // Skip CR - FMX uses LF only
       else
-        if Ch = #10
-        then Lines.Add('')        // Start new line
-        else Text:= Text + Ch;    // Append character to current line
+        if Ch = #10 then
+          begin
+            FlushCurrentLine;  // Push buffered text to memo before starting a new line
+            Lines.Add('');     // Start a new (empty) line
+          end
+        else
+          FCurrentLine:= FCurrentLine + Ch;  // Accumulate in buffer (O(1) amortised)
 
       Inc(FCharIndex);
     end
   else
     begin
-      // Animation complete - reset state
+      // Animation complete — flush any remaining buffered text, then reset state
+      FlushCurrentLine;
       FPendingText:= '';
       FCharIndex:= 0;
       FTimer.Enabled:= False;

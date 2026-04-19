@@ -194,24 +194,31 @@ begin
 
   ApplyThemeColors;
 
-  { Auto-refresh colors when the active FMX style changes (no manual RefreshAllThemeColors needed) }
-  TMessageManager.DefaultManager.SubscribeToMessage(TStyleChangedMessage, HandleStyleChanged);
+  if NOT (csDesigning in ComponentState) then
+    begin
+      { Auto-refresh colors when the active FMX style changes (no manual RefreshAllThemeColors needed) }
+      TMessageManager.DefaultManager.SubscribeToMessage(TStyleChangedMessage, HandleStyleChanged);
 
-  { AutoCompact: react to hosting form resize — compacts when form width < HIGH_WIDTH }
-  TMessageManager.DefaultManager.SubscribeToMessage(TSizeChangedMessage, HandleFormResize);
+      { AutoCompact: react to hosting form resize — compacts when form width < HIGH_WIDTH }
+      TMessageManager.DefaultManager.SubscribeToMessage(TSizeChangedMessage, HandleFormResize);
+    end;
 end;
 
 
 destructor TSvgButton.Destroy;
 begin
-  TMessageManager.DefaultManager.Unsubscribe(TStyleChangedMessage, HandleStyleChanged);
-  TMessageManager.DefaultManager.Unsubscribe(TSizeChangedMessage, HandleFormResize);
+  if NOT (csDesigning in ComponentState) then
+    begin
+      TMessageManager.DefaultManager.Unsubscribe(TStyleChangedMessage, HandleStyleChanged);
+      TMessageManager.DefaultManager.Unsubscribe(TSizeChangedMessage, HandleFormResize);
+    end;
   inherited;
 end;
 
 
 procedure TSvgButton.HandleStyleChanged(const Sender: TObject; const M: System.Messaging.TMessage);
 begin
+  if csDesigning in ComponentState then EXIT;
   ApplyThemeColors;
 end;
 
@@ -476,6 +483,7 @@ end;
 { Responds to hosting form resize — filters by Scene.GetObject so we ignore other forms' resizes. }
 procedure TSvgButton.HandleFormResize(const Sender: TObject; const M: System.Messaging.TMessage);
 begin
+  if csDesigning in ComponentState then EXIT;
   if not FAutoCompact then EXIT;
   if (Scene = nil) or (Sender <> Scene.GetObject) then EXIT;
   if not (Sender is TCommonCustomForm) then EXIT;

@@ -54,7 +54,7 @@ INTERFACE
 USES
   System.SysUtils, System.Types, System.UITypes, System.Classes,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Objects, FMX.Layouts,
-  FMX.StdCtrls, FMX.Controls.Presentation, FMX.Filter,
+  FMX.StdCtrls, FMX.Controls.Presentation, FMX.Filter, FMX.Ani,
   LightFmx.Visual.ScreenCapture;
 
 TYPE
@@ -155,14 +155,13 @@ end;
 procedure TfrmScreenCapture.StartCapture;
 VAR LastRect: TRectF;
 begin
-  // Hide form temporarily to capture clean screenshot
-  // Note: ProcessMessages is used here intentionally to ensure the form is fully hidden
-  // before taking the screenshot. Async alternatives would complicate the flow.
+  // Hide form temporarily to capture clean screenshot.
+  // Sleep(100) yields to the OS compositor so the window is visually removed before capture. before we used  Application.ProcessMessages;
   Hide;
-  Application.ProcessMessages;
-  Sleep(100);
+
 
   // Capture screen
+  Sleep(100);  
   FSCManager.StartCapture;
 
   // Validate screenshot was captured
@@ -540,19 +539,19 @@ end;
 
 
 procedure TfrmScreenCapture.ShowCaptureFlash;
+VAR Anim: TFloatAnimation;
 begin
-  // Visual feedback: briefly flash the selection to confirm capture
-  // Note: ProcessMessages is used here for immediate visual feedback during the flash animation. A timer-based approach would be more complex for this simple effect.
-  SelectionRect.Opacity:= 0.3;
-  Application.ProcessMessages;
-  Sleep(100);
-  SelectionRect.Opacity:= 1.0;
-  Application.ProcessMessages;
-  Sleep(100);
-  SelectionRect.Opacity:= 0.3;
-  Application.ProcessMessages;
-  Sleep(100);
-  SelectionRect.Opacity:= 1.0;
+  // Visual feedback: pulse SelectionRect opacity using FMX animation engine.
+  // Fire-and-forget — caller does not depend on completion.
+  Anim:= TFloatAnimation.Create(SelectionRect);
+  Anim.Parent:= SelectionRect;
+  Anim.PropertyName:= 'Opacity';
+  Anim.StartValue:= 1.0;
+  Anim.StopValue:= 0.3;
+  Anim.Duration:= 0.1;
+  Anim.AutoReverse:= TRUE;
+  Anim.Loop:= FALSE;
+  Anim.Start;
 end;
 
 

@@ -301,8 +301,11 @@ end;
 procedure TAppData.CreateForm(aClass: TComponentClass; aAutoState: TAutoState = asPosOnly; AOwner: TComponent = NIL);
 VAR Dummy: TForm;
 begin
+  // SAFETY: during initialization FMX defers form creation — Dummy will be NIL after the call returns, so calling Dummy.Show would dereference a dangling stack reference.
+  Assert(NOT Initializing, 'CreateForm (2-param) called during initialization — use the 4-param overload and check for NIL before Show');
   CreateForm(aClass, Dummy, aAutoState, AOwner);
-  Dummy.Show;
+  if Assigned(Dummy)
+  then Dummy.Show; //ToDo 1: Claude: what happens durring app startup? we will never call SHOW!
 end;
 
 
@@ -430,7 +433,10 @@ begin
       FreeAndNil(Reg);
     END;
   except
-    Result:= FALSE;                                                                   { To catch possible issues caused by antivirus programs that won't let the program write to 'autorun' section }
+    on ERegistryException do
+      Result:= FALSE;  { Antivirus or policy blocked the registry write — not fatal }
+    on EOSError do
+      Result:= FALSE;  { OS-level access denied — not fatal }
   END;
 end;
 {$ENDIF}

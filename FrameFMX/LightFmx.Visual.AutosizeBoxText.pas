@@ -64,7 +64,8 @@ end;
 
 procedure TAutosizeBoxText.ApplyTextColor;
 begin
-  FTextLabel.FontColor:= FTextColor;
+  if Assigned(FTextLabel)
+  then FTextLabel.FontColor:= FTextColor;
 end;
 
 

@@ -13,14 +13,15 @@ UNIT LightFmx.Common.CamUtils;
    2. Before calling PickImageFromGallery, request permission:
         RequestStorageReadPermission(procedure begin PickImageFromGallery; end);
    3. In your form's OnCreate:
-        SetupImagePickerCallback(procedure(const Path: string) begin if not Path.IsEmpty then ProcessImage(Path); end);
+        FPickerSubId:= SetupImagePickerCallback(procedure(const Path: string) begin if not Path.IsEmpty then ProcessImage(Path); end);
+        // In FormDestroy: TMessageManager.DefaultManager.Unsubscribe(FPickerSubId);
    4. To save: AddToPhotosAlbum(MyBitmap);
 ==============================================================================================================}
 
 INTERFACE
 
 USES
-  System.SysUtils, System.IOUtils,
+  System.SysUtils, System.IOUtils, System.Messaging,
   FMX.Graphics, FMX.MediaLibrary, FMX.Platform, FMX.DialogService;
 
 
@@ -41,7 +42,9 @@ function  GetPublicPicturesFolder: string;
 
 
 {$IFDEF ANDROID}
-procedure SetupImagePickerCallback(const AOnImageSelected: TImageSelectedEvent);
+// Returns the subscription ID. Caller MUST unsubscribe (TMessageManager.DefaultManager.Unsubscribe)
+// when the subscribing object is destroyed, to prevent callbacks firing on freed memory.
+function SetupImagePickerCallback(const AOnImageSelected: TImageSelectedEvent): TMessageSubscriptionId;
 {$ENDIF}
 
 
@@ -207,11 +210,13 @@ end;
 
 { Call this once (e.g., in FormCreate) to handle the picker result asynchronously.
   Callback receives the full file path or empty string if canceled.
-  WARNING: This subscribes to a global message and never unsubscribes.
-  Do NOT call multiple times or memory/callback leaks will occur. }
-procedure SetupImagePickerCallback(const AOnImageSelected: TImageSelectedEvent);
+  CALLER MUST store the returned TMessageSubscriptionId and call
+  TMessageManager.DefaultManager.Unsubscribe(Id) in FormDestroy (or equivalent),
+  to prevent the callback firing on freed memory.
+  Do NOT call multiple times without unsubscribing — duplicate subscriptions accumulate. }
+function SetupImagePickerCallback(const AOnImageSelected: TImageSelectedEvent): TMessageSubscriptionId;
 begin
-  TMessageManager.DefaultManager.SubscribeToMessage(TMessageResultNotification,
+  Result:= TMessageManager.DefaultManager.SubscribeToMessage(TMessageResultNotification,
     procedure(const Sender: TObject; const M: TMessage)
     var
       Msg: TMessageResultNotification;
@@ -228,9 +233,9 @@ begin
           // TBitmap.LoadFromFile cannot read 'content://' URIs directly.
           Path := CopyUriToCache(Uri);
           {$ELSE}
-          Path := ''; 
+          Path := '';
           {$ENDIF}
-          
+
           if Assigned(AOnImageSelected)
           then AOnImageSelected(Path);
         end

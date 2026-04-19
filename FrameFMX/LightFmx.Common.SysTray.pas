@@ -29,8 +29,6 @@ USES
 {$IFDEF MSWINDOWS}
 const
   WM_TRAYICON = WM_USER + 12;
-var
-  WM_TASKBARCREATED: UINT = 0;   // set in initialization via RegisterWindowMessage
 {$ENDIF}
 
 type
@@ -39,6 +37,8 @@ type
 
   TTrayIcon = class
   {$IFDEF MSWINDOWS}
+  strict private class var
+    FWM_TASKBARCREATED: UINT;   // cached from RegisterWindowMessage('TaskbarCreated'); zero = not yet registered
   strict private
     FHelperHWnd:  THandle;
     FIconGreen:   THandle;
@@ -239,8 +239,8 @@ begin
 
   { Explorer broadcasts this message when taskbar is re-created (crash,
     DPI change, explorer.exe restart). Cache ID for comparison in TrayWndProc. }
-  if WM_TASKBARCREATED = 0
-  then WM_TASKBARCREATED := RegisterWindowMessage('TaskbarCreated');
+  if FWM_TASKBARCREATED = 0
+  then FWM_TASKBARCREATED := RegisterWindowMessage('TaskbarCreated');
 end;
 
 
@@ -621,7 +621,7 @@ begin
 
   { Explorer.exe restarted — re-register tray icon (else icon vanishes forever).
     Broadcast message, so compare against cached ID from RegisterWindowMessage. }
-  if (WM_TASKBARCREATED <> 0) and (Msg.Msg = WM_TASKBARCREATED) then
+  if (FWM_TASKBARCREATED <> 0) and (Msg.Msg = FWM_TASKBARCREATED) then
     begin
     FInstalled := False;      // force Install to re-add
     Install;

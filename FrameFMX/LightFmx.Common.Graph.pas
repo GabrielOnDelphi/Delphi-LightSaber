@@ -178,26 +178,16 @@ end;
   Uses TBitmapCodecManager internally for platform-appropriate encoding.
   Shows error message dialog if save fails. }
 procedure SaveBitmap(BMP: TBitmap; FileName: string);
-var TempBMP: TBitmap;
 begin
   Assert(Assigned(BMP), 'SaveBitmap: BMP parameter cannot be nil');
   Assert(FileName <> '', 'SaveBitmap: FileName cannot be empty');
 
-  TempBMP:= TBitmap.Create;
-  TRY
-    TempBMP.Assign(BMP);
-    try
-      TempBMP.SaveToFile(FileName);
-    except
-      on E: Exception do
-      begin
-        TDialogService.ShowMessage('Save Failed: ' + E.Message);
-        EXIT;
-      end;
-    end;
-  FINALLY
-    FreeAndNil(TempBMP);
-  END;
+  try
+    BMP.SaveToFile(FileName);
+  except
+    on E: Exception do
+      TDialogService.ShowMessage('Save Failed: ' + E.Message);
+  end;
 end;
 
 

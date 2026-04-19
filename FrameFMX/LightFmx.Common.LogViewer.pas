@@ -140,7 +140,11 @@ end;
 destructor TLogViewer.Destroy;
 begin
   if FOwnRamLog
-  then FreeAndNil(FRamLog);
+  then FreeAndNil(FRamLog)
+  else
+    // External log: unregister observer so the log doesn't callback into freed memory
+    if Assigned(FRamLog)
+    then FRamLog.UnregisterLogObserver;
 
   inherited;
 end;
@@ -286,8 +290,13 @@ procedure TLogViewer.AssignExternalRamLog(ExternalLog: TRamLog);
 begin
   Assert(ExternalLog <> NIL, 'External TRamLog not assigned!');
 
-  if FOwnRamLog
-  then FreeAndNil(FRamLog);
+  // Detach from existing log before switching
+  if Assigned(FRamLog) then
+    begin
+      if FOwnRamLog
+      then FreeAndNil(FRamLog)
+      else FRamLog.UnregisterLogObserver;  // External log: just unregister, caller owns it
+    end;
 
   FOwnRamLog:= FALSE;  // External log - we don't own it
   FRamLog:= ExternalLog;

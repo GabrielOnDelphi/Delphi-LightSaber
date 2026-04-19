@@ -281,19 +281,35 @@ begin
     CroppedBitmap.Width:= Round(SelectionRect.Width);
     CroppedBitmap.Height:= Round(SelectionRect.Height);
 
-    // Copy selected area from screenshot
+    // Clamp source rect to screenshot bounds (prevents drawing outside the bitmap)
     SourceRect:= SelectionRect;
-    DestRect:= RectF(0, 0, SelectionRect.Width, SelectionRect.Height);
+    SourceRect.Intersect(FScreenshot.BoundsF);
+    if SourceRect.IsEmpty then
+      begin
+        ShowMessage('Selection is outside the captured screen area.');
+        EXIT;
+      end;
 
-    CroppedBitmap.Canvas.BeginScene;
+    // Destination occupies only the clamped portion
+    DestRect:= RectF(0, 0, SourceRect.Width, SourceRect.Height);
+
+    // BeginScene can fail (GPU context lost, zero-size bitmap, etc.) — guard the return value
+    if CroppedBitmap.Canvas.BeginScene then
     try
       CroppedBitmap.Canvas.DrawBitmap(FScreenshot, SourceRect, DestRect, 1.0, True);
     finally
       CroppedBitmap.Canvas.EndScene;
-    end;
+    end
+    else
+      begin
+        ShowMessage('Failed to begin canvas scene for screen capture.');
+        EXIT;
+      end;
 
-    // Add to captured images (create a copy since CroppedBitmap will be freed)
-    FCapturedImages.Add(CroppedBitmap.CreateThumbnail(Round(CroppedBitmap.Width), Round(CroppedBitmap.Height)));
+    // Add the cropped bitmap directly (no redundant CreateThumbnail copy needed)
+    // Transfer ownership to FCapturedImages — do NOT free CroppedBitmap in the finally.
+    FCapturedImages.Add(CroppedBitmap);
+    CroppedBitmap:= NIL;  // Ownership transferred; prevents double-free in finally block
 
     // Remember this selection for next capture
     FLastSelectionRect:= SelectionRect;
@@ -301,7 +317,7 @@ begin
 
     Result:= TRUE;
   finally
-    FreeAndNil(CroppedBitmap);
+    FreeAndNil(CroppedBitmap);  // Only frees if CroppedBitmap is still assigned (i.e. on error paths)
   end;
 end;
 
