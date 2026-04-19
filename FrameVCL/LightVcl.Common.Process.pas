@@ -27,6 +27,9 @@ UNIT LightVcl.Common.Process;
      * LightVcl.Common.ExecuteShell.pas
      * LightVcl.Common.Process.pas
 
+  Also see:
+     https://github.com/HemulGM/TProcessDelphi - TProcess allows one to capture the output from an executable in a cross platform way without using low level API calls and pipes (this is a wrapper around them).
+
 =============================================================================================================}
 
 INTERFACE
