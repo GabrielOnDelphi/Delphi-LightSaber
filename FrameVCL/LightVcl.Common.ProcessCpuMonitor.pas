@@ -1,4 +1,4 @@
-UNIT LightVcl.Common.ProcessMonitor;
+UNIT LightVcl.Common.ProcessCpuMonitor;
 
 {=============================================================================================================
    2026.02.28
