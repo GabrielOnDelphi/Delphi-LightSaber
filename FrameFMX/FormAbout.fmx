@@ -12,146 +12,203 @@ object frmAboutApp: TfrmAboutApp
   DesignerMasterStyle = 0
   object Container: TLayout
     Align = Client
-    Padding.Left = 15.000000000000000000
-    Padding.Top = 15.000000000000000000
-    Padding.Right = 15.000000000000000000
-    Padding.Bottom = 15.000000000000000000
     Size.Width = 540.000000000000000000
     Size.Height = 440.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 0
-    object lblAppName: TLabel
-      Align = Top
-      StyledSettings = [Family, Style, FontColor]
-      Margins.Bottom = 2.000000000000000000
-      Position.X = 15.000000000000000000
-      Position.Y = 15.000000000000000000
-      Size.Width = 510.000000000000000000
-      Size.Height = 32.000000000000000000
-      Size.PlatformDefault = False
-      TextSettings.Font.Size = 20.000000000000000000
-      TextSettings.HorzAlign = Center
-      Text = '@Application name'
-      TabOrder = 0
-    end
-    object lblVersion: TLabel
-      Align = Top
-      Margins.Bottom = 2.000000000000000000
-      Position.X = 15.000000000000000000
-      Position.Y = 49.000000000000000000
-      Size.Width = 510.000000000000000000
-      Size.Height = 20.000000000000000000
-      Size.PlatformDefault = False
-      TextSettings.HorzAlign = Center
-      Text = 'Version [Runtime]'
-      TabOrder = 1
-    end
-    object lblCompany: TLabel
-      Align = Top
-      Cursor = crHandPoint
-      StyledSettings = [Family, Size, FontColor]
-      HitTest = True
-      Margins.Bottom = 4.000000000000000000
-      Position.X = 15.000000000000000000
-      Position.Y = 71.000000000000000000
-      Size.Width = 510.000000000000000000
-      Size.Height = 20.000000000000000000
-      Size.PlatformDefault = False
-      TextSettings.HorzAlign = Center
-      Text = 'Home page'
-      TabOrder = 2
-      OnClick = lblCompanyClick
-    end
-    object imgLogo: TImage
-      MultiResBitmap = <
-        item
-        end>
+    object TabControl: TTabControl
       Align = Client
-      Margins.Top = 4.000000000000000000
-      Margins.Bottom = 4.000000000000000000
-      Size.Width = 510.000000000000000000
-      Size.Height = 298.000000000000000000
+      Margins.Left = 3.000000000000000000
+      Margins.Top = 3.000000000000000000
+      Margins.Right = 3.000000000000000000
+      Margins.Bottom = 3.000000000000000000
+      Size.Width = 534.000000000000000000
+      Size.Height = 434.000000000000000000
       Size.PlatformDefault = False
-    end
-    object btnOrderNow: TButton
-      Align = Bottom
-      Margins.Bottom = 4.000000000000000000
-      Position.X = 15.000000000000000000
-      Position.Y = 353.000000000000000000
-      Size.Width = 510.000000000000000000
-      Size.Height = 32.000000000000000000
-      Size.PlatformDefault = False
-      TabOrder = 4
-      Text = 'Order now'
-      Visible = False
-      OnClick = btnOrderNowClick
-    end
-    object btnEnterKey: TButton
-      Align = Bottom
-      Margins.Bottom = 4.000000000000000000
-      Position.X = 15.000000000000000000
-      Position.Y = 389.000000000000000000
-      Size.Width = 510.000000000000000000
-      Size.Height = 32.000000000000000000
-      Size.PlatformDefault = False
-      TabOrder = 5
-      Text = 'Enter key'
-      Visible = False
-      OnClick = btnEnterKeyClick
-    end
-    object lblExpire: TLabel
-      Align = Bottom
-      Margins.Bottom = 2.000000000000000000
-      Size.Width = 510.000000000000000000
-      Size.Height = 20.000000000000000000
-      Size.PlatformDefault = False
-      TextSettings.HorzAlign = Center
-      Text = 'Registration info'
-      Visible = False
-      TabOrder = 6
-    end
-    object inetEULA: TLabel
-      Align = Bottom
-      Cursor = crHandPoint
-      StyledSettings = [Family, Size, FontColor]
-      HitTest = True
-      Margins.Bottom = 2.000000000000000000
-      Size.Width = 510.000000000000000000
-      Size.Height = 20.000000000000000000
-      Size.PlatformDefault = False
-      TextSettings.HorzAlign = Center
-      Text = 'Online License Agreement'
-      Visible = False
-      TabOrder = 7
-      OnClick = inetEULAClick
-    end
-    object lblCredits: TLabel
-      Align = Bottom
-      Cursor = crHandPoint
-      StyledSettings = [Family, Size, FontColor]
-      HitTest = True
-      Margins.Bottom = 2.000000000000000000
-      Size.Width = 510.000000000000000000
-      Size.Height = 20.000000000000000000
-      Size.PlatformDefault = False
-      TextSettings.HorzAlign = Center
-      Visible = False
-      TabOrder = 8
-      OnClick = lblCreditsClick
-    end
-    object lblChildren: TLabel
-      Align = Bottom
-      Margins.Bottom = 4.000000000000000000
-      Position.X = 15.000000000000000000
-      Position.Y = 401.000000000000000000
-      Size.Width = 510.000000000000000000
-      Size.Height = 20.000000000000000000
-      Size.PlatformDefault = False
-      TextSettings.HorzAlign = Center
-      Text = 
-        'We have not inherited the earth from our parents, we'#39've borrowed' +
-        ' it from our children'
-      TabOrder = 9
+      TabIndex = 0
+      TabOrder = 1
+      TabPosition = PlatformDefault
+      Sizes = (
+        534s
+        408s
+        534s
+        408s)
+      object TabItem1: TTabItem
+        CustomIcon = <
+          item
+          end>
+        IsSelected = True
+        Size.Width = 53.000000000000000000
+        Size.Height = 26.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = ''
+        TabOrder = 0
+        Text = 'About'
+        ExplicitSize.cx = 53.000000000000000000
+        ExplicitSize.cy = 26.000000000000000000
+        object lblAppName: TLabel
+          Align = Top
+          StyledSettings = [Family, Style, FontColor]
+          Margins.Bottom = 2.000000000000000000
+          Size.Width = 534.000000000000000000
+          Size.Height = 32.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.Font.Size = 20.000000000000000000
+          TextSettings.HorzAlign = Center
+          Text = '@Application name'
+          TabOrder = 0
+        end
+        object btnEnterKey: TButton
+          Align = Bottom
+          Margins.Bottom = 4.000000000000000000
+          Position.X = 15.000000000000000000
+          Position.Y = 183.000000000000000000
+          Size.Width = 510.000000000000000000
+          Size.Height = 32.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 5
+          Text = 'Enter key'
+          Visible = False
+          OnClick = btnEnterKeyClick
+        end
+        object btnOrderNow: TButton
+          Align = Bottom
+          Margins.Bottom = 4.000000000000000000
+          Position.X = 15.000000000000000000
+          Position.Y = 183.000000000000000000
+          Size.Width = 510.000000000000000000
+          Size.Height = 32.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 4
+          Text = 'Order now'
+          Visible = False
+          OnClick = btnOrderNowClick
+        end
+        object imgLogo: TImage
+          MultiResBitmap = <
+            item
+            end>
+          Align = Client
+          Margins.Top = 4.000000000000000000
+          Margins.Bottom = 4.000000000000000000
+          Size.Width = 534.000000000000000000
+          Size.Height = 300.000000000000000000
+          Size.PlatformDefault = False
+        end
+        object inetEULA: TLabel
+          Align = Bottom
+          Cursor = crHandPoint
+          StyledSettings = [Family, Size, FontColor]
+          HitTest = True
+          Margins.Bottom = 2.000000000000000000
+          Size.Width = 510.000000000000000000
+          Size.Height = 20.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.HorzAlign = Center
+          Text = 'Online License Agreement'
+          Visible = False
+          TabOrder = 11
+          OnClick = inetEULAClick
+        end
+        object lblChildren: TLabel
+          Align = Bottom
+          AutoSize = True
+          HitTest = True
+          Margins.Bottom = 4.000000000000000000
+          Position.Y = 388.000000000000000000
+          Size.Width = 534.000000000000000000
+          Size.Height = 16.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.HorzAlign = Center
+          Text = 
+            'We have not inherited the earth from our parents, we'#39've borrowed' +
+            ' it from our children'
+          TabOrder = 13
+          OnClick = lblChildrenClick
+        end
+        object lblCompany: TLabel
+          Align = Top
+          Cursor = crHandPoint
+          StyledSettings = [Family, Size, FontColor]
+          HitTest = True
+          Margins.Bottom = 4.000000000000000000
+          Position.Y = 56.000000000000000000
+          Size.Width = 534.000000000000000000
+          Size.Height = 20.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.HorzAlign = Center
+          Text = 'Home page'
+          TabOrder = 2
+          OnClick = lblCompanyClick
+        end
+        object lblCredits: TLabel
+          Align = Bottom
+          Cursor = crHandPoint
+          StyledSettings = [Family, Size, FontColor]
+          HitTest = True
+          Margins.Bottom = 2.000000000000000000
+          Size.Width = 510.000000000000000000
+          Size.Height = 20.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.HorzAlign = Center
+          Visible = False
+          TabOrder = 12
+          OnClick = lblCreditsClick
+        end
+        object lblExpire: TLabel
+          Align = Bottom
+          Margins.Bottom = 2.000000000000000000
+          Size.Width = 510.000000000000000000
+          Size.Height = 20.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.HorzAlign = Center
+          Text = 'Registration info'
+          Visible = False
+          TabOrder = 6
+        end
+        object lblVersion: TLabel
+          Align = Top
+          Margins.Bottom = 2.000000000000000000
+          Position.Y = 34.000000000000000000
+          Size.Width = 534.000000000000000000
+          Size.Height = 20.000000000000000000
+          Size.PlatformDefault = False
+          TextSettings.HorzAlign = Center
+          Text = 'Version [Runtime]'
+          TabOrder = 1
+        end
+      end
+      object TabItem2: TTabItem
+        CustomIcon = <
+          item
+          end>
+        IsSelected = False
+        Size.Width = 94.000000000000000000
+        Size.Height = 26.000000000000000000
+        Size.PlatformDefault = False
+        StyleLookup = ''
+        TabOrder = 0
+        Text = 'System report'
+        ExplicitSize.cx = 94.000000000000000000
+        ExplicitSize.cy = 26.000000000000000000
+        object Memo: TMemo
+          Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]
+          DataDetectorTypes = []
+          StyledSettings = [Size, Style, FontColor]
+          TextSettings.Font.Family = 'Consolas'
+          Align = Client
+          Margins.Left = 3.000000000000000000
+          Margins.Top = 3.000000000000000000
+          Margins.Right = 3.000000000000000000
+          Margins.Bottom = 3.000000000000000000
+          Size.Width = 528.000000000000000000
+          Size.Height = 402.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 18
+          Viewport.Width = 524.000000000000000000
+          Viewport.Height = 398.000000000000000000
+        end
+      end
     end
   end
 end

@@ -3,7 +3,7 @@ package LightExternal;
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
 {$ALIGN 2}
-{$ASSERTIONS ON}
+{$ASSERTIONS OFF}
 {$BOOLEVAL OFF}
 {$DEBUGINFO OFF}
 {$EXTENDEDSYNTAX ON}
@@ -12,9 +12,9 @@ package LightExternal;
 {$LOCALSYMBOLS ON}
 {$LONGSTRINGS ON}
 {$OPENSTRINGS ON}
-{$OPTIMIZATION OFF}
-{$OVERFLOWCHECKS ON}
-{$RANGECHECKS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
 {$REFERENCEINFO ON}
 {$SAFEDIVIDE OFF}
 {$STACKFRAMES ON}
@@ -23,9 +23,9 @@ package LightExternal;
 {$WRITEABLECONST OFF}
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
-{$DEFINE DEBUG}
+{$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'Third party packages'}
+{$DESCRIPTION 'LightSaber - Expernal code'}
 {$LIBSUFFIX AUTO}
 {$IMPLICITBUILD OFF}
 
@@ -34,28 +34,17 @@ requires
   vcl;
 
 contains
-  BitmapHolder in 'FoldPanel\BitmapHolder.pas',
-  FoldPanel in 'FoldPanel\FoldPanel.pas',
-  Paneles in 'FoldPanel\Paneles.pas',
-  CpuProgress in 'CpuProgress.pas',
- // CpuUsageProcess in 'CpuUsageProcess.pas',
- // CpuUsageTotal in 'CpuUsageTotal.pas', replaced by mine
-  CSV_Parser in 'CSV_Parser.pas',
   DirectoryWatch in 'DirectoryWatch.pas',
   DiskDrives in 'DiskDrives.pas',
-  InternetLabel in 'InternetLabel.pas',
-  MenuPopupHints in 'MenuPopupHints.pas',
-  Mru in 'Mru.pas',
-  ProgressBarAL in 'ProgressBarAL.pas',
-  SetToString_RTTI in 'SetToString_RTTI.pas',
-  uDebugger in 'uDebugger.pas',
-  CoolTrayIcon in 'TrayIcon\CoolTrayIcon.pas',
-  SimpleTimer in 'TrayIcon\SimpleTimer.pas',
-  TextTrayIcon in 'TrayIcon\TextTrayIcon.pas',
-  OpenJpeg2000 in 'OpenJpeg2K\OpenJpeg2000.pas',
-  OpenJpeg2000Bitmap in 'OpenJpeg2K\OpenJpeg2000Bitmap.pas',
-  uLkJSON in 'uLkJSON.pas',
-  FastJpegDec in 'FastJpeg\FastJpegDec.pas',
-  FastJpegDecHelper in 'FastJpeg\FastJpegDecHelper.pas';
+  AniImg in 'AniImg.pas',
+  VclUtilsExt in 'VclUtilsExt.pas',
+  FastJpegDec in 'FastJpegDec.pas',
+  FastJpegDecHelper in 'FastJpegDecHelper.pas',
+  GifProperties in 'GifProperties.pas',
+  MonitorHelper in 'MonitorHelper.pas',
+  HtmlParserEx in 'HtmlParserEx.pas',
+  janFX in 'janFX.pas',
+  janFxStretch in 'janFxStretch.pas';
 
 end.
+

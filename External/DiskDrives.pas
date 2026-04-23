@@ -187,7 +187,7 @@ procedure Register;
 IMPLEMENTATION
 
 VAR
-  Larges,Smalls: TImageList;
+  Larges, Smalls: TImageList;
 
 
 { Returns the required item height for owner-drawn controls based on font metrics }
@@ -254,10 +254,10 @@ end;
 { Maps Windows.GetDriveType result to TDriveType enum.
   The enum values match the Windows constants (DRIVE_UNKNOWN=0..DRIVE_RAMDISK=6).
   Returns dtUnknown for any unexpected value from the OS. }
-function GetDriveType (Drive : char) : TDriveType;
+function GetDriveType (Drive : char): TDriveType;
 VAR WinType: UINT;
 begin
-  WinType:= Windows.GetDriveType(PChar(Drive + ':\'));
+  WinType:= WinApi.Windows.GetDriveType(PChar(Drive + ':\'));    //todo 1: claude fix this: [dcc32 Warning] DiskDrives.pas(262): W1023 Comparing signed and unsigned types - widened both operands
   if WinType <= Ord(High(TDriveType))
   then Result:= TDriveType(WinType)
   else Result:= dtUnknown;
@@ -271,7 +271,7 @@ procedure GetLogicalDriveList (List : TStrings; DrivesType:TViewDrivesType);
    Bits : set of 0..25;
  begin
    List.Clear;
-   integer (Bits) := Windows.GetLogicalDrives;
+   integer (Bits):= WinApi.Windows.GetLogicalDrives;
    for Num := 0 to 25 do
      if Num in Bits then
       if GetDriveType(Char (Num + Ord('A'))) in DrivesType then
@@ -667,9 +667,9 @@ end;
 
 
 
-
+initialization
 finalization
-  FreeAndNil(Larges);
+  FreeAndNil(Larges);     //todo 1: Claude: can we do something about this. I guess we can do better lifetime management
   FreeAndNil(Smalls);
 
 end.

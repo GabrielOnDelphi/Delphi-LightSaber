@@ -19,7 +19,8 @@ USES
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Dialogs, FMX.Controls.Presentation, FMX.StdCtrls,
   LightFmx.Visual.Panel, FMX.TabControl, FMX.Layouts, LightFmx.Visual.ColorPalette,
   FMX.Objects, LightFmx.Visual.SvgFlatButton, FMX.Ani,
-  LightFmx.Common.AppData, FormSkinsDisk, LightFmx.Visual.CheckBox, FMX.ListBox;
+  LightFmx.Common.AppData, FormSkinsDisk, LightFmx.Visual.CheckBox, FMX.ListBox, FMX.Memo.Types,
+  FMX.ScrollBox, FMX.Memo;
 
 TYPE
   TForm2 = class(TForm)
@@ -77,6 +78,8 @@ TYPE
     Layout7: TLayout;
     lblIconPos: TLabel;
     lbIconPosition: TListBox;
+    TabItem5: TTabItem;
+    Memo: TMemo;
     procedure FormCreate(Sender: TObject);
     procedure Button1Click(Sender: TObject);
     procedure btnAddColorClick(Sender: TObject);
@@ -103,8 +106,11 @@ TYPE
 var
   Form2: TForm2;
 
-IMPLEMENTATION
-{$R *.fmx}
+IMPLEMENTATION {$R *.fmx}
+
+USES
+   LightCore.Reports,
+   LightFmx.Common.Screen;
 
 
 CONST
@@ -131,6 +137,14 @@ begin
     ~1 second delay on the first hover. Toggling IsToggled here pays the cost at startup. }
   btnHome.IsToggled:= TRUE;
   btnHome.IsToggled:= FALSE;
+
+  // Reports
+  Memo.Lines.Clear;
+  Memo.Lines.Add('=< CORE REPORT >=');
+  Memo.Lines.Add(GenerateCoreReport);
+  Memo.Lines.Add('');
+  Memo.Lines.Add('=< SCREEN RESOLUTION >=');
+  Memo.Lines.Add(GenerateScreenResolutionRep);   //   Tester: LightSaber\Demo\FMX\Demos\FMX_Demos.dpr
 end;
 
 
@@ -410,6 +424,7 @@ begin
     if Layout6.Controls[i] is TSvgButton
     then TSvgButton(Layout6.Controls[i]).IconPosition:= Positions[lbIconPosition.ItemIndex];
 end;
+
 
 
 end.
