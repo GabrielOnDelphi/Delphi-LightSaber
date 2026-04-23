@@ -87,7 +87,7 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
-USES LightVcl.Common.VclUtils;
+USES VclUtilsExt;
 
 
 
@@ -158,20 +158,18 @@ procedure TAnimateImage.Paint;
 
   procedure PaintFrame(C: TCanvas);
   begin
-    if FTransparent then
-      LightVcl.Common.VclUtils.CopyParentImage(Self, C)
+    if FTransparent
+    then VclUtilsExt.CopyParentImage(Self, C)
     else
-    begin
-      C.Brush.Color := Color;
-      C.FillRect(ClientRect);
-    end;
+      begin
+        C.Brush.Color := Color;
+        C.FillRect(ClientRect);
+      end;
+
     if (FImages <> nil) and (FFrameIndex >= 0) then
-    begin
-      if FCenter then
-        FImages.Draw(C, (Width - FImages.Width) div 2, (Height - FImages.Height) div 2, FFrameIndex)
-      else
-        FImages.Draw(C, 0, 0, FFrameIndex);
-    end;
+      if FCenter
+      then FImages.Draw(C, (Width - FImages.Width) div 2, (Height - FImages.Height) div 2, FFrameIndex)
+      else FImages.Draw(C, 0, 0, FFrameIndex);
   end;
 
   procedure PaintDoubleBuffered;
