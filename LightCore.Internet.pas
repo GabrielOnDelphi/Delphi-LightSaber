@@ -1,7 +1,7 @@
 UNIT LightCore.Internet;
 
 {-------------------------------------------------------------------------------------------------------------
-   2026.01.30
+   2026.04.21
    www.GabrielMoraru.com
 
    URL utils / URL parsing and validation
@@ -1094,7 +1094,7 @@ begin
   {$IFDEF ANDROID}
   TAndroidHelper.Activity.startActivity(
     TJIntent.JavaClass.init(TJIntent.JavaClass.ACTION_VIEW,
-      TJUri.JavaClass.parse(StringToJString(URL))));
+      TJnet_Uri.JavaClass.parse(StringToJString(URL))));
   {$ENDIF}
 
   {$IFDEF IOS}

@@ -180,8 +180,7 @@ end;
 
 procedure TTestVclCommonIO.CleanupTestFiles;
 begin
-  if FileExists(FTestFile) then
-    System.SysUtils.DeleteFile(FTestFile);
+  LightCore.IO.TryDeleteFile(FTestFile);
   if DirectoryExists(FTestFolder) then
     TDirectory.Delete(FTestFolder, True);
 end;
@@ -430,7 +429,7 @@ begin
   Assert.IsTrue(FileExists(DestFile), 'Destination should exist after move');
 
   { Cleanup }
-  if FileExists(DestFile) then System.SysUtils.DeleteFile(DestFile);
+  LightCore.IO.TryDeleteFile(DestFile);
 end;
 
 procedure TTestVclCommonIO.TestFileMoveToDir;
@@ -452,7 +451,7 @@ begin
   Assert.IsTrue(FileExists(DestFile), 'Destination should exist after move');
 
   { Cleanup }
-  if FileExists(DestFile) then System.SysUtils.DeleteFile(DestFile);
+  LightCore.IO.TryDeleteFile(DestFile);
   if DirectoryExists(DestFolder) then RemoveDir(DestFolder);
 end;
 

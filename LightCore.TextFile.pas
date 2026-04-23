@@ -147,8 +147,7 @@ begin
       {$IFNDEF MSWINDOWS}
       // On POSIX, remove existing file before recreating — old files may have wrong permissions.
       // See FILE_RIGHTS constant for details.
-      if FileExists(FileName)
-      then System.SysUtils.DeleteFile(FileName);
+      LightCore.IO.TryDeleteFile(FileName);
       {$ENDIF}
     end;
 
@@ -286,8 +285,7 @@ begin
      {$IFNDEF MSWINDOWS}
      // On POSIX, remove existing file before recreating — old files may have wrong permissions
      // from the previous fmShareDenyWrite-as-Rights bug (permissions 0o40 instead of 0o666).
-     if FileExists(FileName)
-     then System.SysUtils.DeleteFile(FileName);
+     LightCore.IO.TryDeleteFile(FileName);
      {$ENDIF}
    end;
 
