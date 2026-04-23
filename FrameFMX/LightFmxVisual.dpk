@@ -51,7 +51,9 @@ contains
   LightFmx.Visual.CheckBox in 'LightFmx.Visual.CheckBox.pas',
   LightFmx.Visual.SvgButton in 'LightFmx.Visual.SvgButton.pas',
   LightFmx.Visual.SvgFlatButton in 'LightFmx.Visual.SvgFlatButton.pas',
-  LightFmx.Visual.PopupList in 'LightFmx.Visual.PopupList.pas';
+  LightFmx.Visual.PopupList in 'LightFmx.Visual.PopupList.pas',
+  LightFmx.Visual.Animations in 'LightFmx.Visual.Animations.pas',
+  LightFmx.Visual.ScreenCapture in 'LightFmx.Visual.ScreenCapture.pas';
 
 end.
 

@@ -112,6 +112,8 @@
         <DCCReference Include="LightFmx.Visual.SvgButton.pas"/>
         <DCCReference Include="LightFmx.Visual.SvgFlatButton.pas"/>
         <DCCReference Include="LightFmx.Visual.PopupList.pas"/>
+        <DCCReference Include="LightFmx.Visual.Animations.pas"/>
+        <DCCReference Include="LightFmx.Visual.ScreenCapture.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

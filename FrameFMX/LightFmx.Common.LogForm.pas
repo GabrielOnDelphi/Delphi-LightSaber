@@ -64,7 +64,7 @@ IMPLEMENTATION {$R *.FMX}
 
 USES
    LightCore.LogTypes, LightCore.INIFile, LightFMX.Common.AppData, LightFmx.Common.Styles,
-   FormSystemReport;
+   FormSystemReport, LightFmx.Common.Screen;
 
 
 {-------------------------------------------------------------------------------------------------------------

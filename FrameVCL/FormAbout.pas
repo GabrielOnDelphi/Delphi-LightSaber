@@ -1,7 +1,7 @@
 UNIT FormAbout;
 
 {=============================================================================================================
-   2026.01.29
+   2026.04.23
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -41,7 +41,6 @@ TYPE
     inetEULA     : TInternetLabel;
     btnEnterKey  : TButton;
     btnOrderNow  : TButton;
-    lblCredits: TInternetLabel;
     procedure FormCreate       (Sender: TObject);
     procedure FormKeyPress     (Sender: TObject; var Key: Char);
     procedure btnEnterKeyClick (Sender: TObject);
@@ -59,7 +58,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.CenterControl, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.Dialogs, LightVcl.Common.ExecuteShell;
+   System.SysUtils, LightVcl.Common.CenterControl, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.Dialogs, LightVcl.Common.ExecuteShell;
 
 
 
@@ -135,6 +134,11 @@ begin
   lblCompany.Link:= AppData.ProductHome;
   lblAppName.Caption:= AppData.AppName;
   lblVersion.Caption:= TAppData.GetVersionInfoV;
+
+  // Load Logo.png from AppSysDir only if no design-time image present
+  if (imgLogo.Picture.Graphic = NIL)
+  AND FileExists(AppData.AppSysDir+ 'Logo.png')
+  then imgLogo.Picture.LoadFromFile(AppData.AppSysDir+ 'Logo.png');
 end;
 
 

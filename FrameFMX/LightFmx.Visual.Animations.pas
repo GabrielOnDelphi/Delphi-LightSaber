@@ -121,7 +121,7 @@ IMPLEMENTATION
 
 USES
   System.UITypes, System.Types, System.Math, System.Generics.Collections,
-  FMX.Ani, FMX.Graphics, FMX.TreeView;
+  FMX.Ani, FMX.Graphics;
 
 
 { Friend-class access: TControl's Scale / RotationCenter are PROTECTED on the
@@ -454,47 +454,149 @@ begin
 end;
 
 
+{ Fire() is called by FMX.Ani from inside TAnimation.DoFinish, which itself runs
+  inside TAnimationManager's animation-processing loop. We're therefore ON the
+  main-thread call stack of the animation manager when this method executes.
+
+  WHY Done() MUST BE DEFERRED (do not make this synchronous — see crash below):
+
+    Typical caller: TExitAnim.FallDown. Done() closes the form, which triggers
+    form destruction, which destroys all the form's children — including every
+    TControl that hosted a fall-down animation, and the animations themselves
+    (they are owned components of those controls).
+
+    If Done() runs synchronously here:
+      1. Animation.OnFinish fires -> we land in Fire() -> call Done().
+      2. Done() -> Close -> CloseQuery (allowed by FExitAnimating guard)
+         -> form.Destroy -> recursive child destruction.
+      3. One of the destroyed children is the control whose animation we're
+         still inside the OnFinish of. That control's OwnedComponents include
+         the animation itself -> TAnimation.Destroy runs -> BeforeDestruction.
+      4. TFmxObject.BeforeDestruction iterates FFreeNotifies (offset $5C in
+         the 32-bit layout). FMX's AnimationManager is registered there to
+         be notified when observed controls die.
+      5. Execution eventually returns up the stack to TAnimationManager, which
+         still holds a pointer to the just-freed animation in its running list.
+         FastMM has filled that block with $80 -> dereferencing its VMT reads
+         from $80808080, the virtual call hits $8080808C, and we AV inside
+         TFmxObject.BeforeDestruction (the classic "read of address 0x8080808c"
+         crash on shutdown).
+
+    Observed symptom: project raised $C0000005 with 'access violation at
+    <anim_unit_addr>: read of address 0x8080808c' inside TFmxObject.BeforeDestruction,
+    callstack = TFmxObject.BeforeDestruction -> @BeforeDestruction -> TObject.Free.
+
+  FIX: post Done() to the main-thread message queue via TThread.ForceQueue. The
+  current OnFinish/manager-loop call stack unwinds fully first; AnimationManager
+  finishes processing the running list and drops its pointer to this animation.
+  Only then does the queued closure run, close the form, and cascade destruction.
+  No stale pointers, no AV.
+
+  WHY NOT FREE THE BRIDGE: Bridge is owned by OwnerForm (TComponent ownership);
+  it dies with the form. Freeing it here, or queuing a deferred free, causes a
+  use-after-free at finalization time because OwnerForm's component-list walk
+  would then touch a gone-early child. }
 procedure TAnimDoneBridge.Fire(Sender: TObject);
 VAR Done: TProc;
 begin
   Done:= FOnDone;
-  FOnDone:= NIL;                    // prevent double-invocation
+  FOnDone:= NIL;                    // prevent double-invocation if Fire() is reached twice
   if Assigned(Sender)
   AND (Sender is TAnimation)
-  then TAnimation(Sender).OnFinish:= NIL;   // detach so Bridge isn't reused
-  // Do NOT free here. Bridge is owned by OwnerForm (TComponent ownership);
-  // it dies when the form dies. Freeing now (or queuing a deferred free)
-  // causes a use-after-free at finalization time.
-  if Assigned(Done) then Done();
+  then TAnimation(Sender).OnFinish:= NIL;   // detach so Bridge isn't reused by the same animation
+
+  if Assigned(Done)
+  then TThread.ForceQueue(NIL, procedure
+       begin
+         Done();
+       end);
 end;
 
 
 
 {=============================================================================================================
    EXIT FALL-DOWN
+
+   HISTORICAL BUG (FIXED) — READ BEFORE MODIFYING THIS SECTION
+   ---------------------------------------------------------------------------------------------------------
+   Symptom: AV $C0000005 at shutdown, 'read of address 0x8080808c', inside TFmxObject.BeforeDestruction.
+            0x80808080 is FastMM's freed-block fill pattern; +$0C = offset into a vtable that no longer
+            exists because the object was freed. The crashing frame iterates a list at struct offset $5C
+            on TFmxObject (FFreeNotifies) and calls a virtual method on each entry.
+
+   Trigger: TExitAnim.FallDown used to reparent cascade targets (buttons, layouts, TreeViewItems) OUT of
+            their original parents and INTO OwnerForm. The goal was to escape the original parent's clip
+            rect so controls could fall past the bottom edge of a scrollbox.
+
+   Root cause: reparenting breaks mutual FreeNotify relationships between siblings. Most dangerously
+               TTreeView <-> TTreeViewItem: TreeView items register FreeNotify with their TreeView (and
+               vice versa via internal FMX machinery). After FallDown:
+                  - TreeView becomes a direct child of OwnerForm.
+                  - Each TreeViewItem also becomes a direct child of OwnerForm.
+                  - Form.FChildren now lists them as siblings, in some order.
+
+               At program shutdown (NOT at CloseQuery!):
+                  DoneApplication -> TComponent.DestroyComponents -> TLightForm.Destroy ->
+                  TCustomForm.Destroy -> TFmxObject.DoDeleteChildren walks form's FChildren list
+                  freeing each in order. Whichever sibling dies first leaves a dangling pointer in
+                  the other's FFreeNotifies. When the survivor is freed, its BeforeDestruction
+                  iterates FFreeNotifies and dereferences the freed entry -> AV on vmtBeforeDestruction.
+
+               madExcept report for the definitive crash showed:
+                  TFmxObject.BeforeDestruction +$BC  (inside FFreeNotifies iteration)
+                  @BeforeDestruction
+                  TControl.Destroy      <-- Y (freed sibling inside FFreeNotifies)
+                  TFmxObject.DoDeleteChildren
+                  TControl.Destroy      <-- X (X frees Y as its child)
+                  TFmxObject.DoDeleteChildren
+                  TCustomForm.Destroy -> TLightForm.Destroy
+                  TComponent.DestroyComponents
+                  DoneApplication -> @Halt0 -> LearnAssist.dpr initialization
+
+   Fix attempts (chronological):
+     [1] 2026-04-21 — ForceQueue Done() in TAnimDoneBridge.Fire.
+         Addressed reentrancy of Close inside TAnimation.OnFinish.
+         Result: did not eliminate crash. Stack unchanged. Kept anyway —
+         still-correct on its own merits (defers destruction out of the
+         animation-manager callback).
+     [2] 2026-04-21 — Treat TTreeView as a single leaf in CollectFallTargets
+         (stop diving into TTreeViewItems).
+         Rationale: TTreeView/TTreeViewItem hold documented mutual FreeNotify
+         links — reparenting items out breaks destruction.
+         Result: did not eliminate crash on its own, but still correct: other
+         sibling FreeNotify links exist (TMultiView, TSvgButton internals,
+         styled controls) so TTreeView-only handling was insufficient.
+     [3] 2026-04-21 — Remove child reparenting entirely. Animate in place.
+         Rationale: any reparenting flattens form.FChildren and breaks
+         destruction order for FreeNotify-linked siblings we cannot enumerate
+         up front. LearnAssist's main-form layouts have ClipChildren=False,
+         so in-place fall is visually acceptable.
+         Result: FIX CONFIRMED by user on 2026-04-21. Shutdown AV is gone.
+         Current state of the code.
+
+   DO NOT, under any circumstances:
+     * Reintroduce Child.Parent := OwnerForm in FallDown without a paired
+       RestoreParents pass that runs BEFORE Close. Any such change revives
+       the shutdown AV at $8080808C.
+     * Re-add TTreeView item diving (CollectTreeItems) without the same
+       restore-before-close safeguard.
 =============================================================================================================}
-
-{ Recursively collects visible TTreeView items so each row animates separately. }
-procedure CollectTreeItems(aItem: TTreeViewItem; aList: TList<TControl>);
-VAR i: Integer;
-begin
-  if (aItem = NIL) OR (NOT aItem.Visible) then EXIT;
-  aList.Add(aItem);
-  for i:= 0 to aItem.Count - 1 do
-    CollectTreeItems(aItem.Items[i], aList);
-end;
-
 
 { Builds the list of controls that will physically fall.
   Rules:
-    * TTreeView  -> skipped; its TTreeViewItems are collected instead (per-row cascade).
-    * TLayout    -> transparent; descend into its children (layouts have no visual).
-    * anything else visible -> taken as a leaf and added as-is. }
+    * TLayout -> transparent; descend into its children (layouts have no visual).
+    * anything else visible -> taken as a leaf and added as-is.
+
+  DO NOT dive into TTreeView to collect its items. TTreeView and TTreeViewItem
+  hold mutual FreeNotify relationships; reparenting items out of their TreeView
+  breaks destruction ordering at program finalization and triggers an AV at
+  $8080808C inside TFmxObject.BeforeDestruction (freed sibling in FFreeNotifies).
+  Treat TTreeView as a single leaf — it falls as one unit. Other direct children
+  (buttons, panels, labels) still cascade individually. }
 procedure CollectFallTargets(aRoot: TFmxObject; aList: TList<TControl>);
 VAR
   i    : Integer;
   Child: TControl;
-  Tree : TTreeView;
 begin
   if aRoot = NIL then EXIT;
   for i:= 0 to aRoot.ChildrenCount - 1 do
@@ -503,16 +605,9 @@ begin
         Child:= TControl(aRoot.Children[i]);
         if NOT Child.Visible then Continue;
 
-        if Child is TTreeView then
-          begin
-            Tree:= TTreeView(Child);
-            for VAR j:= 0 to Tree.Count - 1 do
-              CollectTreeItems(Tree.Items[j], aList);
-          end
-        else if Child.ClassType = TLayout then
-          CollectFallTargets(Child, aList)   // transparent: descend
-        else
-          aList.Add(Child);
+        if Child.ClassType = TLayout
+        then CollectFallTargets(Child, aList)   // transparent: descend
+        else aList.Add(Child);
       end;
 end;
 
@@ -548,24 +643,26 @@ begin
         EXIT;
       end;
 
-    TargetY     := OwnerForm.ClientHeight + 50;
     MaxDelayIdx := Targets.Count - 1;  // last in list has highest stagger delay
 
     for i:= 0 to Targets.Count - 1 do
       begin
         Child:= Targets[i];
 
-        // Reparent to the form root so items aren't clipped by their original
-        // scrollbox (TreeView items otherwise vanish the instant Y passes the
-        // TreeView bottom). LocalToAbsolute gives us screen-space coords; with
-        // the form as parent, those coords are already in form-client space.
-        if (Child.Parent <> NIL) AND (Child.Parent <> OwnerForm) then
-          begin
-            VAR AbsPos: TPointF := Child.LocalToAbsolute(PointF(0, 0));
-            Child.Parent:= OwnerForm;
-            Child.Position.X:= AbsPos.X;
-            Child.Position.Y:= AbsPos.Y;
-          end;
+        // DO NOT reparent. Reparenting targets into OwnerForm creates a flat
+        // sibling structure under the form; during program finalization
+        // (DoDeleteChildren cascade inside DoneApplication), controls that held
+        // mutual FreeNotify links with their original parent/sibling subtree die
+        // in the wrong order, leaving stale pointers in FFreeNotifies that crash
+        // TFmxObject.BeforeDestruction at $8080808C. Staying in-place accepts
+        // that controls inside a clipping parent may vanish early during the
+        // fall, but avoids the shutdown AV. LearnAssist's main-form layouts
+        // do not clip children (ClipChildren=False by default), so the visual
+        // impact is negligible here.
+
+        // Compute target: fall a full client-height below current position, so
+        // regardless of parent offset the control visibly drops past the bottom.
+        TargetY:= Child.Position.Y + OwnerForm.ClientHeight + 50;
 
         // Break alignment so Position.Y animation is visible. Set rotation pivot to center.
         Child.Align:= TAlignLayout.None;

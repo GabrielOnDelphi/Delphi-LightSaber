@@ -64,7 +64,7 @@ object frmComposer: TfrmComposer
     object lblInfoAttachment: TLabel
       AlignWithMargins = True
       Left = 3
-      Top = 260
+      Top = 263
       Width = 477
       Height = 13
       Align = alBottom
@@ -78,7 +78,7 @@ object frmComposer: TfrmComposer
       Left = 9
       Top = 72
       Width = 465
-      Height = 182
+      Height = 185
       Hint = 'Email body'
       Margins.Left = 9
       Margins.Top = 9
@@ -170,7 +170,7 @@ object frmComposer: TfrmComposer
     TabOrder = 1
     object btnServSett: TButton
       AlignWithMargins = True
-      Left = 560
+      Left = 552
       Top = 5
       Width = 105
       Height = 25
@@ -183,7 +183,7 @@ object frmComposer: TfrmComposer
     end
     object btnSaveIni: TButton
       AlignWithMargins = True
-      Left = 501
+      Left = 493
       Top = 5
       Width = 53
       Height = 25
@@ -283,25 +283,6 @@ object frmComposer: TfrmComposer
       TabOrder = 1
       Text = ''
     end
-    object edtBcc: TLabeledEdit
-      Left = 10
-      Top = 219
-      Width = 153
-      Height = 21
-      Hint = 'You can add more friends here, comma separated'
-      Anchors = [akLeft, akTop, akRight]
-      Color = 15726069
-      DoubleBuffered = True
-      EditLabel.Width = 20
-      EditLabel.Height = 13
-      EditLabel.Caption = 'BCC'
-      ParentDoubleBuffered = False
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 2
-      Text = ''
-      Visible = False
-    end
     object chkSendAsHtml: TLightCheckBox
       AlignWithMargins = True
       Left = 9
@@ -341,6 +322,13 @@ object frmComposer: TfrmComposer
   object SMTP: TIdSMTP
     IOHandler = SSLIOHandler
     OnConnected = SMTPConnected
+    OnDisconnected = SMTPDisconnected
+    OnStatus = SMTPStatus
+    OnTLSNotAvailable = SMTPTLSNotAvailable
+    OnFailedRecipient = SMTPFailedRecipient
+    OnWork = SMTPWork
+    OnWorkBegin = SMTPWorkBegin
+    OnWorkEnd = SMTPWorkEnd
     Host = 'smtp.gmail.com'
     Port = 587
     SASLMechanisms = <>
@@ -354,10 +342,11 @@ object frmComposer: TfrmComposer
     MaxLineAction = maException
     Port = 587
     DefaultPort = 0
-    SSLOptions.Mode = sslmUnassigned
+    SSLOptions.Mode = sslmClient
     SSLOptions.VerifyMode = []
     SSLOptions.VerifyDepth = 0
-    OnStatusInfo = SSLIOHandlerStatusInfo
+    OnStatus = SslIOHandlerStatus
+    OnStatusInfo = SslIOHandlerStatusInfo
     Left = 376
     Top = 228
   end

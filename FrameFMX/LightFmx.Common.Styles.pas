@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.Styles;
 
 {=============================================================================================================
-   2026.03
+   2026.04.21
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Hint: Under VCL use TControl.IsLightStyleColor
@@ -16,11 +16,6 @@ INTERFACE
 USES
    System.SysUtils, System.UITypes,
    FMX.Styles, FMX.Types, FMX.Controls, FMX.Graphics;
-
-// SCREEN SIZE
-function IsPhoneScreen  : Boolean;   { Width < COMPACT_WIDTH (600) — phone }
-function IsTabletScreen : Boolean;   { Width in COMPACT_WIDTH..HIGH_WIDTH (600–1024) — tablet }
-function IsDesktopScreen: Boolean;   { Width >= HIGH_WIDTH (1024+) — desktop }
 
 // THEME
 function IsStyleCompatible(const StyleFile: string): Boolean;
@@ -38,7 +33,6 @@ function GetStyleGlowColor: TAlphaColor;         { Returns the glow color from '
 
 function GenerateThemePalette(BaseColor: TAlphaColor; IsDark: Boolean): TArray<TAlphaColor>;
 
-
 // COLORS
 function ReplaceColorAlpha(Color: TAlphaColor; NewAlpha: Byte): TAlphaColor; inline;
 
@@ -49,44 +43,6 @@ USES
    FMX.Objects, FMX.Utils, System.UIConsts,
    FMX.Platform, FMX.Forms,
    FMX.Styles.Objects;
-
-CONST
-  COMPACT_WIDTH = 600;  // Below this width, hide most buttons and use popup menu.
-  HiGH_WIDTH    = 1024; // Below this with, show some buttons but some in "Compact" mode (only icon, no text). Over this resolution we show all.
-
-
-
-{ IFMXScreenService returns physical screen size on mobile (Android/iOS).
-  Screen.Size can return 0 on mobile if called before the main form is fully created,
-  because FMX populates it lazily from the platform's screen metrics. }
-function GetScreenWidth: Single;
-VAR ScreenSvc: IFMXScreenService;
-begin
-  if TPlatformServices.Current.SupportsPlatformService(IFMXScreenService, ScreenSvc)
-  then Result:= ScreenSvc.GetScreenSize.X
-  else Result:= Screen.Size.Width;
-end;
-
-
-function IsPhoneScreen: Boolean;
-begin
-  Result:= GetScreenWidth < COMPACT_WIDTH;
-end;
-
-
-function IsTabletScreen: Boolean;
-VAR W: Single;
-begin
-  W:= GetScreenWidth;
-  Result:= (W >= COMPACT_WIDTH) AND (W < HiGH_WIDTH);
-end;
-
-
-function IsDesktopScreen: Boolean;
-begin
-  Result:= GetScreenWidth >= HiGH_WIDTH;
-end;
-
 
 
 { Returns a copy of Color with the alpha channel replaced.
@@ -148,7 +104,6 @@ begin
   end;
 end;
  
-
 
 
 

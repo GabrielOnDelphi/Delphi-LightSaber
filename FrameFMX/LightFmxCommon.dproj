@@ -175,7 +175,7 @@
         <DCCReference Include="LightFmx.Common.Helpers.pas"/>
         <DCCReference Include="LightFmx.Common.CamUtils.pas"/>
         <DCCReference Include="LightFmx.Common.Styles.pas"/>
-        <DCCReference Include="LightFmx.Common.Platform.pas"/>
+        <DCCReference Include="LightFmx.Common.Screen.pas"/>
         <DCCReference Include="LightFmx.Common.Graph.pas"/>
         <DCCReference Include="LightFmx.Common.LogForm.pas"/>
         <DCCReference Include="FormSystemReport.pas"/>

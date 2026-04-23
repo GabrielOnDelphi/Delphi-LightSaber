@@ -40,7 +40,7 @@ IMPLEMENTATION
 
 USES
    LightCore.Reports,
-   LightFmx.Common.Platform;
+   LightFmx.Common.Screen;
 
 
 procedure TfrmSystemReport.FormCreate(Sender: TObject);

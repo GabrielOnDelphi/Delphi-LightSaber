@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.AppData.Form;
 
 {=============================================================================================================
-   2026.01.31
+   2026.04.23
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    DESCRIPTION
@@ -107,6 +107,7 @@ TYPE
     lblToolBarCapt : TLabel;
     btnOsBack      : TSpeedButton;
     btnOsNext      : TSpeedButton;
+    AfterClose     : TProc;         { Optional callback fired once in FormPreRelease. Needed on Android where ShowModal is non-blocking, so callers that care about side effects get notified. Cleared after firing. }
 
     constructor Create(AOwner: TComponent; aAutoState: TAutoState); reintroduce; overload; virtual;
     procedure AfterConstruction; override;
@@ -297,8 +298,16 @@ end;
 
 { Called ONLY once, when Saved = False }
 procedure TLightForm.FormPreRelease;
+VAR
+   Cb: TProc;
 begin
   // Give user a chance to call its own finalization code (guaranteed once)
+  if Assigned(AfterClose) then
+    begin
+      Cb:= AfterClose;
+      AfterClose:= NIL;  // clear before firing to avoid dangling refs across lifetimes
+      Cb();
+    end;
 end;
 
 

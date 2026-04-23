@@ -1,4 +1,4 @@
-UNIT LightFmx.Common.CamUtils;
+﻿UNIT LightFmx.Common.CamUtils;
 
 {=============================================================================================================
    2026.01.31
@@ -21,7 +21,7 @@ UNIT LightFmx.Common.CamUtils;
 INTERFACE
 
 USES
-  System.SysUtils, System.IOUtils, System.Messaging,
+  System.SysUtils, System.IOUtils, System.Messaging, System.Types, System.Permissions,
   FMX.Graphics, FMX.MediaLibrary, FMX.Platform, FMX.DialogService;
 
 
@@ -51,7 +51,6 @@ function SetupImagePickerCallback(const AOnImageSelected: TImageSelectedEvent): 
 IMPLEMENTATION
 
 uses
-  System.Types, System.Permissions, System.Messaging,
   LightCore.IO
   {$IFDEF ANDROID}
   , FMX.Platform.Android, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Net, Androidapi.JNI.App, Androidapi.JNI.Media, Androidapi.JNI.Provider, Androidapi.JNIBridge, FMX.Helpers.Android

@@ -125,7 +125,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-  LightFmx.Common.Styles;
+  LightFmx.Common.Styles, LightFmx.Common.Screen;
 
 
 CONST

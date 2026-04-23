@@ -45,7 +45,7 @@ contains
   LightFmx.Common.Helpers in 'LightFmx.Common.Helpers.pas',
   LightFmx.Common.CamUtils in 'LightFmx.Common.CamUtils.pas',
   LightFmx.Common.Styles in 'LightFmx.Common.Styles.pas',
-  LightFmx.Common.Platform in 'LightFmx.Common.Platform.pas',
+  LightFmx.Common.Screen in 'LightFmx.Common.Screen.pas',
   LightFmx.Common.Graph in 'LightFmx.Common.Graph.pas',
   LightFmx.Common.LogForm in 'LightFmx.Common.LogForm.pas',
   FormSystemReport in 'FormSystemReport.pas',

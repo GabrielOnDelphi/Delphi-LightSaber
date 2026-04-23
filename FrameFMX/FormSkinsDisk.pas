@@ -1,7 +1,7 @@
 ﻿UNIT FormSkinsDisk;
 
 {=============================================================================================================
-   2026.04
+   2026.04.21
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    UNIVERSAL FMX STYLE LOADER
@@ -303,32 +303,42 @@ procedure TfrmStyleDisk.PopulateStyles;
 var
   FullFileName: string;
   Files: TStringDynArray;
+  SavedOnChange: TNotifyEvent;
 begin
-  lBox.Items.Clear;
-  lBox.Items.Add(DefPlatformStyle);  { First item is the default platform style }
-  lblTop.Hint:= 'Style files are located in ' + GetStyleDir;
+  { Suppress OnChange while we programmatically set ItemIndex.
+    Android AV fires here: setting ItemIndex during FormCreate triggers lBoxChange → TStyleManager.SetStyle(nil),
+    which re-styles every control while the form is still under construction. Windows tolerates it; Android does not. }
+  SavedOnChange:= lBox.OnChange;
+  lBox.OnChange:= NIL;
+  TRY
+    lBox.Items.Clear;
+    lBox.Items.Add(DefPlatformStyle);  { First item is the default platform style }
+    lblTop.Hint:= 'Style files are located in ' + GetStyleDir;
 
-  if NOT DirectoryExists(GetStyleDir) then
-  begin
-    lblTop.Text:= 'The styles directory could not be located! ' + GetStyleDir + CRLF +
-                   'Add styles then click here to refresh the list.';
-    EXIT;
-  end;
+    if NOT DirectoryExists(GetStyleDir) then
+    begin
+      lblTop.Text:= 'The styles directory could not be located! ' + GetStyleDir + CRLF +
+                     'Add styles then click here to refresh the list.';
+      EXIT;
+    end;
 
-  { List *.style files (text format) }                    //todo: use LightCore.IO.ListFilesOf()
-  Files:= TDirectory.GetFiles(GetStyleDir, '*.style');
-  for FullFileName in Files do
-    lBox.Items.Add(ExtractFileName(FullFileName));
+    { List *.style files (text format) }                    //todo: use LightCore.IO.ListFilesOf()
+    Files:= TDirectory.GetFiles(GetStyleDir, '*.style');
+    for FullFileName in Files do
+      lBox.Items.Add(ExtractFileName(FullFileName));
 
-  { List *.fsf files (binary format) }
-  Files:= TDirectory.GetFiles(GetStyleDir, '*.fsf');
-  for FullFileName in Files do
-    lBox.Items.Add(ExtractFileName(FullFileName));
+    { List *.fsf files (binary format) }
+    Files:= TDirectory.GetFiles(GetStyleDir, '*.fsf');
+    for FullFileName in Files do
+      lBox.Items.Add(ExtractFileName(FullFileName));
 
-  { Select the currently active style in the list }
-  lBox.ItemIndex:= lBox.Items.IndexOf(CurrentStyleName);
-  if lBox.ItemIndex < 0
-  then lBox.ItemIndex:= 0;  { Default platform style }
+    { Select the currently active style in the list }
+    lBox.ItemIndex:= lBox.Items.IndexOf(CurrentStyleName);
+    if lBox.ItemIndex < 0
+    then lBox.ItemIndex:= 0;  { Default platform style }
+  FINALLY
+    lBox.OnChange:= SavedOnChange;
+  END;
 end;
 
 
