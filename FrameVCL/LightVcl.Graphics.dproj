@@ -58,7 +58,7 @@
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <BT_BuildType>Debug</BT_BuildType>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UsePackage>vcl;rtl;vclimg;vclwinx;GR32_R;ThirdPartyLibs;LightCore;LightVcl.Common;CCRExif;$(DCC_UsePackage)</DCC_UsePackage>
+        <DCC_UsePackage>vcl;rtl;vclimg;vclwinx;GR32_R;ThirdPartyLibs;LightCore;LightVcl.Common;CCRExif;LightExternal;$(DCC_UsePackage)</DCC_UsePackage>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
@@ -80,6 +80,7 @@
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="vclimg.dcp"/>
         <DCCReference Include="vclwinx.dcp"/>
+        <DCCReference Include="LightExternal.dcp"/>
         <DCCReference Include="LightCore.dcp"/>
         <DCCReference Include="LightVcl.Common.dcp"/>
         <DCCReference Include="CCRExif.dcp"/>
@@ -123,9 +124,6 @@
         <DCCReference Include="LightVcl.Graph.RainDropParams.pas"/>
         <DCCReference Include="LightVcl.Graph.RainDropParamEditorForm.pas"/>
         <DCCReference Include="LightVcl.Graph.RainShelter.pas"/>
-        <DCCReference Include="..\External\janFxStretch.pas"/>
-        <DCCReference Include="..\External\janFX.pas"/>
-        <DCCReference Include="..\External\GifProperties.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

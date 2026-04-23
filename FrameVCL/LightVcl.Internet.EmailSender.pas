@@ -2,7 +2,7 @@ UNIT LightVcl.Internet.EmailSender;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2026.01.31
+   2026.04.21
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -24,6 +24,12 @@ INTERFACE
 
 USES
   System.SysUtils, IdTCPConnection, IdSMTP, IdMessage;
+
+TYPE
+  { Raised by SendEmail when SMTP connect or send fails. The original Indy exception
+    has already been logged; callers can catch EEmailSendError to differentiate
+    email-send failures from other exceptions. }
+  EEmailSendError = class(Exception);
 
 function SendEmail(SMTP: TIdSMTP; CONST AdrTo, AdrFrom, Subject, Body, HtmlImage, DownloadableAttachment: string; SendAsHtml: Boolean= FALSE): Boolean;
 
@@ -84,34 +90,41 @@ begin
     FreeAndNil(MsgBuilder);
   END;
 
-  { Connect to SMTP server }
   TRY
-    if NOT SMTP.Connected
-    then SMTP.Connect;
-  EXCEPT
-    on E: Exception DO
-     begin
-      AppDataCore.LogError('Cannot connect to the email server.');
-      AppDataCore.LogError(E.Message);
-     end;
+    { Connect to SMTP server }
+    TRY
+      if NOT SMTP.Connected
+      then SMTP.Connect;
+    EXCEPT
+      on E: Exception DO
+       begin
+        AppDataCore.LogError('Cannot connect to the email server: ' + E.Message);
+        raise EEmailSendError.Create('Cannot connect to the email server: ' + E.Message);
+       end;
+    END;
+
+    { Send the email }
+    TRY
+      SMTP.Send(MailMessage);
+      Result:= TRUE;
+    EXCEPT
+      on E: Exception DO
+       begin
+        AppDataCore.LogError('Connected to server but could not send email: ' + E.Message);
+        raise EEmailSendError.Create('Send failed: ' + E.Message);
+       end;
+    END;
+
+  FINALLY
+    { Disconnect. Log disconnect errors but don't propagate - they would mask a real send/connect failure. }
+    if SMTP.Connected then
+     TRY
+      SMTP.Disconnect;
+     EXCEPT
+      on E: Exception DO
+        AppDataCore.LogError('SMTP disconnect error: ' + E.Message);
+     END;
   END;
-
-  { Send the email }
-  if SMTP.Connected then
-   TRY
-     SMTP.Send(MailMessage);
-     Result:= TRUE;
-   EXCEPT
-     on E: Exception DO
-      begin
-       AppDataCore.LogError('Connected to server but could not send email!');
-       AppDataCore.LogError(E.Message);
-      end;
-   END;
-
-  { Disconnect }
-  if SMTP.Connected
-  then SMTP.Disconnect;
 
  FINALLY
   FreeAndNil(MailMessage);

@@ -54,16 +54,19 @@ begin
  Assert(OutWidth > 0, 'StretchF: OutWidth must be > 0');
  Assert(OutHeight > 0, 'StretchF: OutHeight must be > 0');
 
- { Windows StretchBlt may produce artifacts or crash with very small images.
-   Callers must validate input size before calling. This assert catches programming errors. }
- Assert((BMP.Width >= 12) AND (BMP.Height >= 12), 'StretchF: Source image too small ('+ IntToStr(BMP.Width)+ 'x'+ IntToStr(BMP.Height)+ '). Caller must validate size >= 12 pixels.');
-
- Result:= TBitmap.Create;
+  Result:= TBitmap.Create;
  TRY
   Result.PixelFormat:= BMP.PixelFormat;  { Preserve the same pixel format as the original image }
   SetLargeSize(Result, OutWidth, OutHeight);
-  SetStretchBltMode(Result.Canvas.Handle, HALFTONE);
-  SetBrushOrgEx(Result.Canvas.Handle, 0, 0, NIL);
+
+  { Windows StretchBlt may produce artifacts or crash with very small images when HALFTONE is used.
+    We use HALFTONE only for images larger than 12x12. }
+  if (BMP.Width >= 12) AND (BMP.Height >= 12) then
+  begin
+    SetStretchBltMode(Result.Canvas.Handle, HALFTONE);
+    SetBrushOrgEx(Result.Canvas.Handle, 0, 0, NIL);
+  end;
+
   StretchBlt(Result.Canvas.Handle, 0, 0, Result.Width, Result.Height,
              BMP.Canvas.Handle, 0, 0, BMP.Width, BMP.Height, SRCCOPY);
  EXCEPT

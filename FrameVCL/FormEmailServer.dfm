@@ -17,7 +17,6 @@ object frmSmtpSettings: TfrmSmtpSettings
   Font.Style = []
   Position = poDesigned
   OnCreate = FormCreate
-  OnDestroy = FormDestroy
   DesignSize = (
     557
     311)
@@ -189,7 +188,7 @@ object frmSmtpSettings: TfrmSmtpSettings
         AutoSize = True
       end
     end
-    object Button1: TButton
+    object btnShowPassword: TButton
       Left = 185
       Top = 96
       Width = 39
@@ -197,7 +196,7 @@ object frmSmtpSettings: TfrmSmtpSettings
       Hint = 'Show password'
       Caption = 'Show'
       TabOrder = 5
-      OnClick = Button1Click
+      OnClick = btnShowPasswordClick
     end
     object btnGMailDef: TButton
       Left = 428

@@ -33,6 +33,7 @@ package LightVcl.Visual;
 requires
   Vcl,
   CcrExif,
+  LightExternal,
   LightCore,
   LightVcl.Common,
   LightVcl.Graphics,
@@ -90,7 +91,6 @@ contains
   LightVcl.Visual.RichEditResize in 'LightVcl.Visual.RichEditResize.pas',
   LightVcl.Visual.AppData in 'LightVcl.Visual.AppData.pas',
   LightVcl.Visual.AppDataForm in 'LightVcl.Visual.AppDataForm.pas',
-  LightVcl.Visual.LogForm in 'LightVcl.Visual.LogForm.pas',
-  AniImg in '..\External\AniImg.pas';
+  LightVcl.Visual.LogForm in 'LightVcl.Visual.LogForm.pas';
 
 end.

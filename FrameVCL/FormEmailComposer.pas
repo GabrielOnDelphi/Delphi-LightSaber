@@ -1,7 +1,7 @@
 UNIT FormEmailComposer;
 
 {=============================================================================================================
-   2026.01.29
+   2026.04.21
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    EMAIL COMPOSER FORM
@@ -29,7 +29,6 @@ UNIT FormEmailComposer;
 
    TODO:
      - Add proxy support
-     - Add BCC support
      - Encrypt SMTP password using Base64 or better encryption
 =============================================================================================================}
 
@@ -43,7 +42,7 @@ USES
   IdSSL, IdComponent, IdSMTP, IdSSLOpenSSL, IdIOHandler, IdIOHandlerSocket, IdIOHandlerStack,
   IdBaseComponent, IdTCPConnection, IdTCPClient, IdExplicitTLSClientServerBase, IdMessageClient, IdSMTPBase,
   LightVcl.Visual.AppDataForm, LightVcl.Visual.CheckBox, LightVcl.Visual.Splitter, LightVcl.Visual.PathEdit,
-  FormEmailServer;
+  FormEmailServer, IdCTypes, IdSSLOpenSSLHeaders;
 
 CONST
   EMAIL_BODY_FILENAME = 'Email body.txt';  // File used to persist email body text
@@ -54,7 +53,6 @@ TYPE
     btnSaveIni       : TButton;
     btnServSett      : TButton;
     lblWarn          : TLabel;
-    edtBcc           : TLabeledEdit;
     ledFrom          : TLabeledEdit;
     edtTo            : TLabeledEdit;
     mmoEmailBody     : TMemo;
@@ -229,15 +227,21 @@ begin
     then Body:= mmoEmailBody.Text + LBRK + Advert
     else Body:= mmoEmailBody.Text;
 
-    Result:= LightVcl.Internet.EmailSender.SendEmail(
-      SMTP,
-      edtTo.Text,
-      ledFrom.Text,
-      edtSubject.Text,
-      Body,
-      '',  // CC (not implemented)
-      edtAttachment.Path,
-      chkSendAsHtml.Checked);
+    try
+      Result:= LightVcl.Internet.EmailSender.SendEmail(
+        SMTP,
+        edtTo.Text,
+        ledFrom.Text,
+        edtSubject.Text,
+        Body,
+        '',  // CC (not implemented)
+        edtAttachment.Path,
+        chkSendAsHtml.Checked);
+    except
+      // EmailSender already logged the Indy error; surface failure to the caller as Result=False
+      on EEmailSendError do
+        Result:= FALSE;
+    end;
   finally
     CursorNotBusy;
   end;

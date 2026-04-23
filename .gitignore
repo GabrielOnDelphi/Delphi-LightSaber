@@ -106,3 +106,5 @@ Demo/FMX/Demos/Build.cmd
 FrameFMX/BuildPackages.cmd
 /FrameFMX/__recovery
 FrameFMX/LightFmx.Common.SysTray.pas - ALTERNATIVE.url
+/External/_out
+FrameVCL/Vcl.WinXCtrls.pas

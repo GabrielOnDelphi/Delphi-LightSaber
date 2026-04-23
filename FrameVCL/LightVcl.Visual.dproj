@@ -79,6 +79,7 @@
         </DelphiCompile>
         <DCCReference Include="Vcl.dcp"/>
         <DCCReference Include="CcrExif.dcp"/>
+        <DCCReference Include="LightExternal.dcp"/>
         <DCCReference Include="LightCore.dcp"/>
         <DCCReference Include="LightVcl.Common.dcp"/>
         <DCCReference Include="LightVcl.Graphics.dcp"/>
@@ -135,7 +136,6 @@
         <DCCReference Include="LightVcl.Visual.AppData.pas"/>
         <DCCReference Include="LightVcl.Visual.AppDataForm.pas"/>
         <DCCReference Include="LightVcl.Visual.LogForm.pas"/>
-        <DCCReference Include="..\External\AniImg.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

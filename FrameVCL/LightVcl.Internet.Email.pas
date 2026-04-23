@@ -2,7 +2,7 @@
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2026.01
+   2026.04.21
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -23,7 +23,7 @@ INTERFACE
 
 USES
    Winapi.Windows, Winapi.MAPI, Winapi.ShellAPI{ Required by OpenDefaultEmail },
-   System.SysUtils, System.StrUtils, System.Classes, System.Win.Registry,
+   System.SysUtils, System.StrUtils, System.Classes,
    Vcl.Forms,
    LightCore, LightCore.Types, LightVcl.Common.Dialogs;
 
@@ -32,7 +32,6 @@ CONST
 
 
  { SYSTEM }
- function  GetDefaultEmailAddress: String;                                                                  { Works only if the user uses Outlook as email client }
  function  OpenDefaultEmail(CONST Recipient, Subject, Mesaj: String): Cardinal;                             { This will open the default email program in 'Compose' mode }
  function  OpenDefaultEmailEx(CONST Subject, Body, FileName, SenderName, SenderEMail, RecipientName, RecipientEMail: AnsiString): Integer;
 
@@ -63,7 +62,7 @@ CONST
 IMPLEMENTATION
 
 Uses
-   LightCore.Math, LightVcl.Common.ExecuteShell;
+   System.NetEncoding, LightCore.Math, LightCore.AppData, LightVcl.Common.ExecuteShell;
 
 
 
@@ -74,7 +73,10 @@ Uses
 procedure SendEmail(CONST sTo, sSubject, sBody: string);
 VAR s: string;
 begin
-  s := 'mailto:'+sTo+'?subject=' + sSubject + '&body=' + sBody;
+  // URL-encode each segment to prevent CRLF/query-string injection into the user's default mail client
+  s := 'mailto:' + TNetEncoding.URL.Encode(sTo)
+     + '?subject=' + TNetEncoding.URL.Encode(sSubject)
+     + '&body='    + TNetEncoding.URL.Encode(sBody);
   ExecuteURL(s);
 end;
 
@@ -139,7 +141,10 @@ end;
 function OpenDefaultEmail(CONST recipient, subject, mesaj: String): Cardinal;
 VAR MailBody : String;
 begin
- MailBody:= 'mailto:'+ recipient+ '?subject='+ subject+ '&body='+ mesaj;
+ // URL-encode each segment to prevent CRLF/query-string injection into the mail client
+ MailBody:= 'mailto:' + TNetEncoding.URL.Encode(recipient)
+          + '?subject=' + TNetEncoding.URL.Encode(subject)
+          + '&body='    + TNetEncoding.URL.Encode(mesaj);
  Result:= Winapi.ShellAPI.ShellExecute(vcl.Forms.Application.Handle, 'open', PChar(MailBody), NIL, NIL, SW_Normal);
 (*
  Sleep(500);                                                                                       {give mail prog time to open}
@@ -326,10 +331,13 @@ begin
    end;                                                                         // for
   //Result := False; // If we got here fail
  except
-   on E: ERangeError do
-     Result:= False;  { String index out of bounds during correction attempt }
+   on ERangeError do
+     Result:= False;  { String index out of bounds during correction attempt - expected for flMissingDomainSeperator branch when Suggestion is short }
    on E: EStringListError do
-     Result:= False;  { String manipulation error during correction }
+    begin
+     AppDataCore.LogError('CorrectEmailAddress internal error: ' + E.Message);
+     raise;
+    end;
  end;
 end;
 
@@ -393,6 +401,9 @@ VAR
   DataLen, SepPos, Itt, DomainStrLen, UserStrLen, LastSep, SepCount, PrevSep : Integer;
   UserStr, DomainStr, SubDomain : String;
 begin
+ // Initialize OUT params so callers see defined values on every code path
+ FailCode     := flUnknown;
+ FailPosition := 0;
  email:= Trim(email);
  TRY
    DataLen := Length(Email);                                                                       // Get the data length
@@ -486,7 +497,7 @@ begin
      if UserStr[Itt] = '.' then
      begin
        // Check the next char, to make sure it's not a .
-       if UserStr[Itt + 1] = '.' then
+       if (Itt < UserStrLen) AND (UserStr[Itt + 1] = '.') then
        begin
          // Report the error
          FailCode := flInvalidChar;
@@ -531,7 +542,7 @@ begin
      if DomainStr[Itt] = '.' then
      begin
        // Check the next char, to make sure it's not a .
-       if DomainStr[Itt + 1] = '.' then
+       if (Itt < DomainStrLen) AND (DomainStr[Itt + 1] = '.') then
        begin     // Report the error
          FailCode := flInvalidChar;
          Result := False;
@@ -779,24 +790,6 @@ begin
   end;
 
  Result:= ProcentRepresent(Total, Length(user)) > Ratio;
-end;
-
-
-{ Returns the default email address from Windows registry.
-  Works only if the user uses Outlook as email client.
-  Returns empty string if the registry key doesn't exist or cannot be read. }
-function GetDefaultEmailAddress: String;
-VAR Registry: TRegistry;
-begin
- Result:= '';
- Registry:= TRegistry.Create;
- TRY
-   Registry.RootKey:= HKEY_CURRENT_USER;
-   if Registry.OpenKeyReadOnly('Software\Microsoft\Internet Account Manager\Accounts\00000001')
-   then Result:= Registry.ReadString('SMTP Email Address');
- FINALLY
-   FreeAndNil(Registry);
- END;
 end;
 
 

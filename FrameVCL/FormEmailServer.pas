@@ -1,7 +1,7 @@
 UNIT FormEmailServer;
 
 {=============================================================================================================
-   2026.01.29
+   2026.04.21
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    SMTP SERVER SETTINGS FORM
@@ -60,11 +60,12 @@ TYPE
     inetAllowLessSecure: TInternetLabel;
     procedure btnShowPasswordClick(Sender: TObject);
     procedure btnGMailDefClick    (Sender: TObject);
-    procedure FormDestroy         (Sender: TObject);
     procedure FormCreate          (Sender: TObject);
   private
+    FInitialized: Boolean;
     function GetTLSMode: TIdUseTLS;
   public
+    procedure FormPreRelease; override;
     procedure UseExternalMailer(SMTP: TIdSMTP);
     procedure UseInternalMailer(SMTP: TIdSMTP);
     function  IsValid(SMTP: TIdSMTP): Boolean;
@@ -91,14 +92,17 @@ end;
 procedure TfrmSmtpSettings.Initialize;
 begin
   edtPsw.Text:= SimpleDecode(edtPsw.Text);
+  FInitialized:= TRUE;
 end;
 
 
-{ Encrypts password before saving to INI file }
-procedure TfrmSmtpSettings.FormDestroy(Sender: TObject);
+{ Encrypts password BEFORE SaveForm writes the INI (FormPreRelease runs first - see TLightForm.saveBeforeExit).
+  Must not run in FormDestroy: by then SaveForm has already persisted the plaintext. }
+procedure TfrmSmtpSettings.FormPreRelease;
 begin
-  edtPsw.Text:= SimpleEncode(edtPsw.Text);
-  // Note: SaveForm is called automatically by AppData
+  inherited;
+  if FInitialized
+  then edtPsw.Text:= SimpleEncode(edtPsw.Text);
 end;
 
 
@@ -142,6 +146,7 @@ end;
 procedure TfrmSmtpSettings.UseExternalMailer(SMTP: TIdSMTP);
 begin
   Assert(SMTP <> NIL, 'SMTP component cannot be nil');
+  Assert(FInitialized, 'Initialize must be called before UseExternalMailer (password still encoded)');
 
   // Disconnect if already connected
   if SMTP.Connected
@@ -161,6 +166,7 @@ end;
 procedure TfrmSmtpSettings.UseInternalMailer(SMTP: TIdSMTP);
 begin
   Assert(SMTP <> NIL, 'SMTP component cannot be nil');
+  Assert(FInitialized, 'Initialize must be called before UseInternalMailer');
 
   // Disconnect if already connected
   if SMTP.Connected

@@ -25,7 +25,7 @@ package LightVcl.Common;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'LightSaber - VCL library'}
+{$DESCRIPTION 'LightSaber - Common'}
 {$LIBSUFFIX AUTO}
 {$IMPLICITBUILD ON}
 
@@ -33,16 +33,19 @@ requires
   rtl,
   vclimg,
   vcl,
-  vclx,
-  LightCore,
+  vclX,
   vclWinx,
-  VclSmp;
+  vclSmp,
+  LightExternal,
+  LightCore;
 
 contains
   FormAsyncMessage in 'FormAsyncMessage.pas',
   LightVcl.Common.CenterControl in 'LightVcl.Common.CenterControl.pas',
   LightVcl.Common.Clipboard in 'LightVcl.Common.Clipboard.pas',
   LightVcl.Common.Colors in 'LightVcl.Common.Colors.pas',
+  LightVcl.Common.CpuMonitor in 'LightVcl.Common.CpuMonitor.pas',
+  LightVcl.Common.CpuUsageProcess in 'LightVcl.Common.CpuUsageProcess.pas',
   LightVcl.Common.CursorGuard in 'LightVcl.Common.CursorGuard.pas',
   LightVcl.Common.Debugger in 'LightVcl.Common.Debugger.pas',
   LightVcl.Common.Dialogs in 'LightVcl.Common.Dialogs.pas',
@@ -63,24 +66,21 @@ contains
   LightVcl.Common.PopUp in 'LightVcl.Common.PopUp.pas',
   LightVcl.Common.PowerUtils in 'LightVcl.Common.PowerUtils.pas',
   LightVcl.Common.Process in 'LightVcl.Common.Process.pas',
+  LightVcl.Common.ProcessCpuMonitor in 'LightVcl.Common.ProcessCpuMonitor.pas',
+  LightVcl.Common.Registry in 'LightVcl.Common.Registry.pas',
+  LightVcl.Common.Reports in 'LightVcl.Common.Reports.pas',
   LightVcl.Common.Shell in 'LightVcl.Common.Shell.pas',
   LightVcl.Common.Sound in 'LightVcl.Common.Sound.pas',
   LightVcl.Common.System in 'LightVcl.Common.System.pas',
   LightVcl.Common.SystemPermissions in 'LightVcl.Common.SystemPermissions.pas',
   LightVcl.Common.SystemSecurity in 'LightVcl.Common.SystemSecurity.pas',
   LightVcl.Common.SystemTime in 'LightVcl.Common.SystemTime.pas',
+  LightVcl.Common.Translate in '..\LightVcl.Common.Translate.pas',
   LightVcl.Common.VclUtils in 'LightVcl.Common.VclUtils.pas',
   LightVcl.Common.Window in 'LightVcl.Common.Window.pas',
   LightVcl.Common.WindowMetrics in 'LightVcl.Common.WindowMetrics.pas',
   LightVcl.Common.WinVersion in 'LightVcl.Common.WinVersion.pas',
   LightVcl.Common.WinVersionApi in 'LightVcl.Common.WinVersionApi.pas',
-  LightVcl.Common.WMIResolution in 'LightVcl.Common.WMIResolution.pas',
-  LightVcl.Common.Registry in 'LightVcl.Common.Registry.pas',
-  LightVcl.Common.Reports in 'LightVcl.Common.Reports.pas',
-  MonitorHelper in '..\External\MonitorHelper.pas',
-  LightVcl.Common.Translate in '..\LightVcl.Common.Translate.pas',
-  LightVcl.Common.CpuUsageProcess in 'LightVcl.Common.CpuUsageProcess.pas',
-  LightVcl.Common.CpuMonitor in 'LightVcl.Common.CpuMonitor.pas',
-  LightVcl.Common.ProcessMonitor in 'LightVcl.Common.ProcessMonitor.pas';
+  LightVcl.Common.WMIResolution in 'LightVcl.Common.WMIResolution.pas';
 
 end.

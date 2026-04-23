@@ -27,7 +27,7 @@ package LightVcl.Graphics;
 {$DEFINE GR32}
 {$DEFINE Jpg2000}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'LightSaber - Graphics lib'}
+{$DESCRIPTION 'LightSaber - Graphics'}
 {$LIBSUFFIX AUTO}
 {$IMPLICITBUILD ON}
 
@@ -36,6 +36,7 @@ requires
   vcl,
   vclimg,
   vclwinx,
+  LightExternal,
   LightCore,
   LightVcl.Common,
   CCRExif,
@@ -76,10 +77,7 @@ contains
   LightVcl.Graph.UtilGray in 'LightVcl.Graph.UtilGray.pas',
   LightVcl.Graph.RainDropParams in 'LightVcl.Graph.RainDropParams.pas',
   LightVcl.Graph.RainDropParamEditorForm in 'LightVcl.Graph.RainDropParamEditorForm.pas',
-  LightVcl.Graph.RainShelter in 'LightVcl.Graph.RainShelter.pas',
-  janFxStretch in '..\External\janFxStretch.pas',
-  janFX in '..\External\janFX.pas',
-  GifProperties in '..\External\GifProperties.pas';
+  LightVcl.Graph.RainShelter in 'LightVcl.Graph.RainShelter.pas';
 
 end.
 
@@ -95,4 +93,5 @@ Note:
       2. Go to 'Project Options' and undefine (remove) the following compiler switches:
          {$Jpg2000}
 *)
+
 
