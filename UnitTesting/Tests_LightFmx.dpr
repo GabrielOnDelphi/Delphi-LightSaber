@@ -28,9 +28,13 @@ uses
   DUnitX.TestFramework,
   { Test units }
   Test.LightFmx.Common.CamUtils in 'Test.LightFmx.Common.CamUtils.pas',
+  Test.LightFmx.Visual.SvgFlatButton in 'Test.LightFmx.Visual.SvgFlatButton.pas',
   { Source units }
   LightCore.IO in '..\LightCore.IO.pas',
-  LightFmx.Common.CamUtils in '..\FrameFMX\LightFmx.Common.CamUtils.pas';
+  LightFmx.Common.CamUtils in '..\FrameFMX\LightFmx.Common.CamUtils.pas',
+  LightFmx.Common.Styles in '..\FrameFMX\LightFmx.Common.Styles.pas',
+  LightFmx.Common.Screen in '..\FrameFMX\LightFmx.Common.Screen.pas',
+  LightFmx.Visual.SvgFlatButton in '..\FrameFMX\LightFmx.Visual.SvgFlatButton.pas';
 
 {$IFNDEF TESTINSIGHT}
 var
