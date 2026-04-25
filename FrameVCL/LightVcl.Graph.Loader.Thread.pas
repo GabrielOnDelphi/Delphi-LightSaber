@@ -113,7 +113,13 @@ end;
 destructor TBkgImgLoader.Destroy;
 VAR BMP: TBitmap;
 begin
- { Free any bitmaps still in the queue (caller stopped without draining) }
+ { Order matters: signal Terminate, then wait for Execute to finish (via inherited Destroy)
+   BEFORE touching ReadyThumbs/FQueueLock — otherwise a still-running PushPicture
+   would access a freed lock and crash. }
+ Terminate;
+ inherited Destroy;   { Waits for the thread to exit Execute }
+
+ { Now safe — no other thread is touching the queue or the lock }
  if ReadyThumbs <> NIL then
    while ReadyThumbs.Count > 0 DO
     begin
@@ -122,7 +128,6 @@ begin
     end;
  FreeAndNil(FQueueLock);
  FreeAndNil(ReadyThumbs);
- inherited Destroy;
 end;
 
 
