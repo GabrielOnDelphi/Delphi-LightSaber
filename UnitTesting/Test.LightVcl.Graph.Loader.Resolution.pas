@@ -441,6 +441,48 @@ begin
 end;
 
 
+procedure TTestGraphLoaderResolution.TestGetJpgSize_MalformedSegmentLength;
+var
+  Width, Height: Integer;
+  Stream: TMemoryStream;
+  Success: Boolean;
+  Buf: array[0..31] of Byte;
+begin
+  { Build a JPEG-shaped stream whose first non-marker segment has length=0
+    (in big-endian: 00 00). The old code did Seek(swap(w)-2, soFromCurrent) =
+    Seek(-2, soFromCurrent), looping forever on the same bytes. With the guard,
+    GetJpgSize must EXIT(FALSE) and report -1 dimensions. }
+  FillChar(Buf, SizeOf(Buf), 0);
+  Buf[0]:= $FF;  Buf[1]:= $D8;        { SOI }
+  Buf[2]:= $FF;  Buf[3]:= $E0;        { APP0 marker (not a SOF, falls into the 'else' branch) }
+  Buf[4]:= $00;  Buf[5]:= $00;        { Length = 0 (malformed; minimum valid is 2) }
+  { padding bytes 6..31 = $00 }
+
+  Stream:= TMemoryStream.Create;
+  TRY
+    Stream.WriteBuffer(Buf, SizeOf(Buf));
+    Stream.Position:= 0;
+
+    { Wrap in a watchdog: any execution longer than ~2 seconds means we're looping. }
+    Success:= TRUE;
+    Width:= 999; Height:= 999;
+    Assert.WillNotRaise(
+      procedure
+      begin
+        Success:= GetJpgSize(Stream, Width, Height);
+      end,
+      Exception,
+      'GetJpgSize should not raise on malformed segment length');
+
+    Assert.IsFalse(Success, 'GetJpgSize must return False for malformed segment length');
+    Assert.AreEqual(-1, Width, 'Width should be -1 on parse failure');
+    Assert.AreEqual(-1, Height, 'Height should be -1 on parse failure');
+  FINALLY
+    FreeAndNil(Stream);
+  END;
+end;
+
+
 { GetGifSize Tests }
 
 procedure TTestGraphLoaderResolution.TestGetGifSize_ValidFile;
