@@ -123,6 +123,12 @@ type
     [Test]
     procedure TestLoadGraphAsGrayScale_WithBMP_NilBMP;
 
+    [Test]
+    procedure TestLoadGraphAsGrayScale_CorruptFileReturnsNil;     { Regression: must not raise EAssertionFailed when LoadGraph returns NIL }
+
+    [Test]
+    procedure TestLoadGraphAsGrayScale_BMP_CorruptFileLeavesBMPUntouched;  { Regression: must not crash when LoadGraph returns NIL }
+
     { DetectGraphSignature Tests }
     [Test]
     procedure TestDetectGraphSignature_BmpFile;
@@ -164,6 +170,7 @@ uses
   Vcl.Imaging.Jpeg,
   Vcl.Imaging.PngImage,
   Vcl.Imaging.GIFImg,
+  LightCore.Graphics,
   LightVcl.Graph.Loader;
 
 
@@ -669,6 +676,77 @@ begin
       LoadGraphAsGrayScale(FTempBmpFile, NIL);
     end,
     EAssertionFailed);
+end;
+
+
+procedure TTestGraphLoader.TestLoadGraphAsGrayScale_CorruptFileReturnsNil;
+var
+  Bmp: TBitmap;
+  CorruptFile: string;
+  Stream: TFileStream;
+begin
+  { Reproduces the bug: a corrupt file makes LoadGraph return NIL, then
+    HasGrayscalePalette(NIL) used to fire its assertion. Now LoadGraphAsGrayScale
+    must early-out and return NIL without raising. }
+  CorruptFile:= TPath.Combine(FTempDir, 'corrupt.bmp');
+  Stream:= TFileStream.Create(CorruptFile, fmCreate);
+  TRY
+    Stream.WriteBuffer('NOT A REAL BMP', 14);
+  FINALLY
+    FreeAndNil(Stream);
+  END;
+
+  TRY
+    Bmp:= NIL;
+    Assert.WillNotRaise(
+      procedure
+      begin
+        Bmp:= LoadGraphAsGrayScale(CorruptFile);
+      end,
+      Exception,
+      'LoadGraphAsGrayScale must not raise on a corrupt file');
+    Assert.IsNull(Bmp, 'Result should be NIL when input is unreadable');
+  FINALLY
+    FreeAndNil(Bmp);
+    DeleteFile(CorruptFile);
+  END;
+end;
+
+
+procedure TTestGraphLoader.TestLoadGraphAsGrayScale_BMP_CorruptFileLeavesBMPUntouched;
+var
+  BMP: TBitmap;
+  CorruptFile: string;
+  Stream: TFileStream;
+begin
+  { Reproduces the bug: corrupt input made HasGrayscalePalette(NIL) fire,
+    then BMP.Assign(NIL) cleared the destination. Now the destination must be left untouched. }
+  CorruptFile:= TPath.Combine(FTempDir, 'corrupt2.bmp');
+  Stream:= TFileStream.Create(CorruptFile, fmCreate);
+  TRY
+    Stream.WriteBuffer('NOT A REAL BMP', 14);
+  FINALLY
+    FreeAndNil(Stream);
+  END;
+
+  BMP:= TBitmap.Create;
+  TRY
+    BMP.SetSize(50, 50);                { Pre-existing dimensions to verify they survive }
+
+    Assert.WillNotRaise(
+      procedure
+      begin
+        LoadGraphAsGrayScale(CorruptFile, BMP);
+      end,
+      Exception,
+      'LoadGraphAsGrayScale(BMP) must not raise on a corrupt file');
+
+    Assert.AreEqual(50, BMP.Width, 'BMP dimensions should survive a failed load');
+    Assert.AreEqual(50, BMP.Height, 'BMP dimensions should survive a failed load');
+  FINALLY
+    FreeAndNil(BMP);
+    DeleteFile(CorruptFile);
+  END;
 end;
 
 
