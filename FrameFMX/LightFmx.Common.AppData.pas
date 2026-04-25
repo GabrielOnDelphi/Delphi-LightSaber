@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.AppData;
 
 {=============================================================================================================
-   2026.01.31
+   2026.04.24
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -304,8 +304,9 @@ begin
   // SAFETY: during initialization FMX defers form creation — Dummy will be NIL after the call returns, so calling Dummy.Show would dereference a dangling stack reference.
   Assert(NOT Initializing, 'CreateForm (2-param) called during initialization — use the 4-param overload and check for NIL before Show');
   CreateForm(aClass, Dummy, aAutoState, AOwner);
+  // After Run, FMX creates forms synchronously — Dummy is always assigned here. The Assert above guarantees we never reach this in deferred-creation mode.
   if Assigned(Dummy)
-  then Dummy.Show; //ToDo 1: Claude: what happens durring app startup? we will never call SHOW!
+  then Dummy.Show;
 end;
 
 

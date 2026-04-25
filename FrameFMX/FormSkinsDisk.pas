@@ -1,7 +1,7 @@
 ﻿UNIT FormSkinsDisk;
 
 {=============================================================================================================
-   2026.04.21
+   2026.04.24
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    UNIVERSAL FMX STYLE LOADER
@@ -89,7 +89,10 @@ TYPE
 
 
 { Loads the last used style from INI file. Call during app initialization.
-  DefaultStyle: Style filename to use on first run (e.g. 'Jet.style'). Pass empty string for default platform style. }
+  DefaultStyle: Style filename to use on first run (e.g. 'Jet.style'). Pass empty string for default platform style.
+  Poison-marker recovery: before applying a style, writes an INI flag. If form streaming later crashes on an
+  incompatible style, the flag survives; next launch detects it and falls back to platform default. The flag is
+  cleared automatically via TThread.ForceQueue once the main message loop starts pumping. }
 procedure LoadLastStyle(const DefaultStyle: string= '');
 
 { Returns the path to the styles directory (AppSysDir\Styles\) }
@@ -104,8 +107,9 @@ USES
    LightFmx.Common.AppData, LightFmx.Common.Styles, LightFmx.Common.Dialogs;
 
 CONST
-  DefPlatformStyle = 'Default platform style';
-  IniKeyStyle      = 'LastStyle';
+  DefPlatformStyle    = 'Default platform style';
+  IniKeyStyle         = 'LastStyle';
+  IniKeyStyleLoading  = 'StyleLoadInProgress';  // Poison marker: set before applying a style, cleared after MainForm successfully constructs. If still present at next startup, last run crashed on this style.
 
 VAR
   { Unit-level variable for current style name.
@@ -173,7 +177,21 @@ end;
 
 
 procedure LoadLastStyle(const DefaultStyle: string= '');
+VAR PoisonedStyle: string;
 begin
+  { Crash recovery: if the previous run set the poison marker but never cleared it (ConfirmStyleLoaded not reached),
+    the style itself is incompatible (e.g. TBitmapLink format change across Delphi versions causes stream misalignment
+    inside FMX.Styles during form creation). Drop it and fall back to platform default. }
+  PoisonedStyle:= LightCore.INIFileQuick.ReadString(IniKeyStyleLoading, '');
+  if PoisonedStyle <> '' then
+  begin
+    LightCore.INIFileQuick.WriteString(IniKeyStyleLoading, '');
+    LightCore.INIFileQuick.WriteString(IniKeyStyle, DefPlatformStyle);
+    CurrentStyleName:= DefPlatformStyle;
+    MessageError('Previous startup crashed while loading style: ' + PoisonedStyle + CRLF + 'Reverted to platform default.');
+    EXIT;
+  end;
+
   { Read from INI }
   CurrentStyleName:= LightCore.INIFileQuick.ReadString(IniKeyStyle, DefaultStyle);
 
@@ -181,8 +199,20 @@ begin
   then CurrentStyleName:= DefaultStyle;
 
   { DefPlatformStyle = use default FMX platform style (don't load any style file) }
-  if (CurrentStyleName <> '') AND (CurrentStyleName <> DefPlatformStyle)
-  then LoadStyleFromFile(CurrentStyleName);
+  if (CurrentStyleName <> '') AND (CurrentStyleName <> DefPlatformStyle) then
+  begin
+    { Arm poison marker BEFORE loading. If app crashes during style deserialization or later form streaming,
+      marker survives in the INI and triggers fallback on next launch. }
+    LightCore.INIFileQuick.WriteString(IniKeyStyleLoading, CurrentStyleName);
+    LoadStyleFromFile(CurrentStyleName);
+
+    { Auto-clear the marker once the main message loop starts pumping — guaranteed only if all forms finished
+      streaming without crashing. If RealCreateForms AV's, this queued proc never runs and the marker survives. }
+    TThread.ForceQueue(NIL, procedure
+      begin
+        LightCore.INIFileQuick.WriteString(IniKeyStyleLoading, '');
+      end);
+  end;
 end;
 
 

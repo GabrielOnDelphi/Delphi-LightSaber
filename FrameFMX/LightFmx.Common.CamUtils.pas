@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.CamUtils;
 
 {=============================================================================================================
-   2026.01.31
+   2026.04.25
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Android Camera and Gallery Utilities
@@ -16,6 +16,11 @@
         FPickerSubId:= SetupImagePickerCallback(procedure(const Path: string) begin if not Path.IsEmpty then ProcessImage(Path); end);
         // In FormDestroy: TMessageManager.DefaultManager.Unsubscribe(FPickerSubId);
    4. To save: AddToPhotosAlbum(MyBitmap);
+
+   Generic File Picker (ACTION_OPEN_DOCUMENT, Storage Access Framework):
+   - PickAnyFileFromStorage opens the system Documents UI for any file type.
+   - Goes through SAF, so READ_MEDIA_IMAGES / READ_EXTERNAL_STORAGE are NOT required.
+   - Pair with SetupAnyFilePickerCallback (separate request code from image picker).
 ==============================================================================================================}
 
 INTERFACE
@@ -27,6 +32,7 @@ USES
 
 TYPE
   TImageSelectedEvent = procedure(const Path: string) of object;
+  TFileSelectedEvent  = procedure(const Path: string) of object;
 
 procedure RequestCameraPermission(const AOnGranted: TProc);
 procedure RequestStorageReadPermission(const AOnGranted: TProc);       // For image picking on Android 13+
@@ -37,6 +43,8 @@ procedure ScanMediaFile(const AFileName: string);                      // If man
 
 procedure PickImageFromGallery;                                        // Opens the Photos/Gallery picker
 
+procedure PickAnyFileFromStorage(const MimeType: string = '*/*');      // Opens the system Documents UI (SAF) — no permission required
+
 // Paths
 function  GetPublicPicturesFolder: string;
 
@@ -44,20 +52,46 @@ function  GetPublicPicturesFolder: string;
 {$IFDEF ANDROID}
 // Returns the subscription ID. Caller MUST unsubscribe (TMessageManager.DefaultManager.Unsubscribe)
 // when the subscribing object is destroyed, to prevent callbacks firing on freed memory.
-function SetupImagePickerCallback(const AOnImageSelected: TImageSelectedEvent): TMessageSubscriptionId;
+function SetupImagePickerCallback  (const AOnImageSelected: TImageSelectedEvent): TMessageSubscriptionId;
+function SetupAnyFilePickerCallback(const AOnFileSelected : TFileSelectedEvent ): TMessageSubscriptionId;
+
+{ Incoming ACTION_VIEW intent (file shared from another app — WhatsApp, Email, Drive, etc).
+  Subscribes to TMessageReceivedNotification, fires AOnFileReceived(LocalPath) when an
+  ACTION_VIEW intent arrives with a content:// or file:// URI.
+
+  - On WARM start (app already running, user taps file in another app, our manifest
+    intent-filter routes here): TFMXNativeActivityListener.onReceiveNotification fires,
+    which posts TMessageReceivedNotification.
+  - On COLD start (app launched fresh by the intent): the launch intent must be read
+    manually via ProcessLaunchIntent (see below), because the message is not auto-posted
+    on the very first activity creation.
+
+  Caller MUST unsubscribe in destructor.
+
+  Note: subscription is shared across all senders, but we filter by Action = ACTION_VIEW
+  so unrelated TMessageReceivedNotification fires (e.g. push notifications) are ignored. }
+function SubscribeToIncomingFileIntents(const AOnFileReceived: TFileSelectedEvent): TMessageSubscriptionId;
+
+{ Reads the activity's launch intent (the one passed at app start) and, if it's an
+  ACTION_VIEW with a usable URI, copies the bytes to cache and calls AOnFileReceived.
+  Call once from FormCreate AFTER the form is fully built (so the wizard can be shown).
+
+  Idempotent: clears the launch intent's data after processing so repeated calls are safe. }
+procedure ProcessLaunchIntent(const AOnFileReceived: TFileSelectedEvent);
 {$ENDIF}
 
 
 IMPLEMENTATION
 
 uses
-  LightCore.IO
+  LightCore.IO, LightCore.AppData
   {$IFDEF ANDROID}
   , FMX.Platform.Android, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Net, Androidapi.JNI.App, Androidapi.JNI.Media, Androidapi.JNI.Provider, Androidapi.JNIBridge, FMX.Helpers.Android
   {$ENDIF};
 
 CONST
   REQUEST_PICK_IMAGE = 1;
+  REQUEST_PICK_FILE  = 2;
 
 
 
@@ -144,11 +178,26 @@ begin
 end;
 
 
+// Opens the Storage Access Framework document UI. No permission needed — OS grants temporary URI access.
+// MimeType: '*/*' for any file, or a specific MIME like 'application/pdf'. For multi-MIME, use EXTRA_MIME_TYPES.
+procedure PickAnyFileFromStorage(const MimeType: string = '*/*');
+begin
 {$IFDEF ANDROID}
-{ Copies an image from a content:// URI to the app's cache directory.
+  VAR Intent := TJIntent.Create;
+  Intent.setAction(TJIntent.JavaClass.ACTION_OPEN_DOCUMENT);
+  Intent.addCategory(TJIntent.JavaClass.CATEGORY_OPENABLE);
+  Intent.setType(StringToJString(MimeType));
+  MainActivity.startActivityForResult(Intent, REQUEST_PICK_FILE);
+{$ENDIF}
+end;
+
+
+{$IFDEF ANDROID}
+{ Copies a file from a content:// URI to the app's cache directory.
   Returns the local file path on success, or empty string on failure.
+  ASuffix is just the temp filename suffix (e.g. '.jpg', '.dat'); the bytes copied are whatever's in the URI.
   The caller is responsible for deleting the cached file when no longer needed. }
-function CopyUriToCache(const AUri: Jnet_Uri): string;
+function CopyUriToCache(const AUri: Jnet_Uri; const ASuffix: string = '.jpg'): string;
 var
   InputStream: JInputStream;
   OutputStream: JFileOutputStream;
@@ -163,7 +212,7 @@ begin
 
   try
     // 1. Create a safe temp file in the cache directory
-    CacheFile:= TJFile.JavaClass.createTempFile(StringToJString('picked_'), StringToJString('.jpg'), TAndroidHelper.Context.getCacheDir);
+    CacheFile:= TJFile.JavaClass.createTempFile(StringToJString('picked_'), StringToJString(ASuffix), TAndroidHelper.Context.getCacheDir);
     if CacheFile = nil then Exit; // Failed to create file
 
     // 2. Try to open the source URI
@@ -221,28 +270,208 @@ begin
       Msg: TMessageResultNotification;
       Path: string;
     begin
-      Msg:= TMessageResultNotification(M);
-      if Msg.RequestCode = REQUEST_PICK_IMAGE then
-      begin
-        if Msg.ResultCode = TJActivity.JavaClass.RESULT_OK then
+      // Hard try/except: this anonymous proc is dispatched by FMX.Platform.Android
+      // outside any application-level handler. An exception that escapes here
+      // kills the process silently on Android (no madExcept, no dialog).
+      TRY
+        Msg:= TMessageResultNotification(M);
+        if Msg.RequestCode = REQUEST_PICK_IMAGE then
         begin
-          {$IFDEF ANDROID}
-          var Uri := Msg.Value.getData;
-          // We MUST copy the file to a local path (Cache) because
-          // TBitmap.LoadFromFile cannot read 'content://' URIs directly.
-          Path := CopyUriToCache(Uri);
-          {$ELSE}
-          Path := '';
-          {$ENDIF}
+          if Msg.ResultCode = TJActivity.JavaClass.RESULT_OK then
+          begin
+            {$IFDEF ANDROID}
+            var Uri := Msg.Value.getData;
+            // We MUST copy the file to a local path (Cache) because
+            // TBitmap.LoadFromFile cannot read 'content://' URIs directly.
+            Path := CopyUriToCache(Uri, '.jpg');
+            {$ELSE}
+            Path := '';
+            {$ENDIF}
 
-          if Assigned(AOnImageSelected)
-          then AOnImageSelected(Path);
-        end
-        else
-          if Assigned(AOnImageSelected)
-          then AOnImageSelected('');
-      end;
+            if Assigned(AOnImageSelected)
+            then AOnImageSelected(Path);
+          end
+          else
+            if Assigned(AOnImageSelected)
+            then AOnImageSelected('');
+        end;
+      EXCEPT
+        on E: Exception do
+          if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
+          then AppDataCore.RamLog.AddError('SetupImagePickerCallback: '+ E.ClassName +' - '+ E.Message);
+      END;
     end);
+end;
+
+
+{ Generic file picker callback (paired with PickAnyFileFromStorage / REQUEST_PICK_FILE).
+  Same lifetime rules as SetupImagePickerCallback: caller MUST unsubscribe.
+  Bytes are copied to cache as 'picked_xxx.dat'. ImportSharedFile (and similar) read
+  by content header, not by filename, so the suffix is cosmetic. }
+function SetupAnyFilePickerCallback(const AOnFileSelected: TFileSelectedEvent): TMessageSubscriptionId;
+begin
+  Result:= TMessageManager.DefaultManager.SubscribeToMessage(TMessageResultNotification,
+    procedure(const Sender: TObject; const M: TMessage)
+    var
+      Msg : TMessageResultNotification;
+      Path: string;
+    begin
+      // Hard try/except: see comment in SetupImagePickerCallback.
+      TRY
+        Msg:= TMessageResultNotification(M);
+        if Msg.RequestCode = REQUEST_PICK_FILE then
+        begin
+          if Msg.ResultCode = TJActivity.JavaClass.RESULT_OK then
+          begin
+            {$IFDEF ANDROID}
+            var Uri := Msg.Value.getData;
+            Path := CopyUriToCache(Uri, '.dat');
+            {$ELSE}
+            Path := '';
+            {$ENDIF}
+
+            if Assigned(AOnFileSelected)
+            then AOnFileSelected(Path);
+          end
+          else
+            if Assigned(AOnFileSelected)
+            then AOnFileSelected('');
+        end;
+      EXCEPT
+        on E: Exception do
+          if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
+          then AppDataCore.RamLog.AddError('SetupAnyFilePickerCallback: '+ E.ClassName +' - '+ E.Message);
+      END;
+    end);
+end;
+
+
+{-------------------------------------------------------------------------------------------------------------
+   INCOMING ACTION_VIEW INTENT (file shared from another app)
+
+   Both helpers below feed into the same callback: the local cache path of the file
+   delivered by the OS. Caller (typically FormMain) decides what to do with it
+   (e.g. show the import wizard, then call TLesson.ImportSharedFile).
+
+   TEST-ON-DEVICE — items NOT verified on Windows compile, need real Android testing:
+
+     1. pathPattern matching for content:// URIs from FileProviders.
+        AndroidManifest.template.xml has <data pathPattern=".*\\.LSN" /> as a fallback for
+        chat apps that drop MIME (WhatsApp, Telegram). pathPattern matches against the URI
+        PATH component. Some FileProviders expose the original filename in the path
+        (in which case our pattern matches → user sees LearnAssist in the share sheet);
+        other providers obscure it with opaque IDs (in which case the pattern misses).
+        WhatsApp's FileProvider behavior should be tested specifically.
+
+     2. MainActivity.getIntent on cold start.
+        Assumed to return the launch intent reliably (by analogy with native Android).
+        FMX may wrap it differently. If cold start fails to surface the file, ProcessLaunchIntent
+        below will silently no-op — the warm-start path via TMessageReceivedNotification still
+        works, so the bug would manifest as "must launch app first, then re-share" UX.
+
+     3. TMessageReceivedNotification firing for ACTION_VIEW.
+        FMX.Platform.Android.TFMXNativeActivityListener.onReceiveNotification is documented
+        in source but not necessarily exercised for user-share intents on all OEM Android
+        builds (Samsung One UI, MIUI, etc. sometimes route differently). If warm start
+        misses the intent, SubscribeToIncomingFileIntents simply never fires.
+
+   How to verify (3 quick tests on an Android device after deploying):
+     a) Cold start:  app NOT running. From Files app, tap a .LSN. Expect import wizard.
+     b) Warm start:  app running, in TreeView. From WhatsApp, tap a .LSN, pick LearnAssist.
+                     Expect import wizard.
+     c) Cancel path: in wizard, press Cancel. Expect orphan content file at
+                     <AppDataFolder>/Lessons/<GUID>.content.LSN to be DELETED, and the
+                     /cache/picked_*.lsn copy also deleted.
+-------------------------------------------------------------------------------------------------------------}
+
+{ Reads the URI from a JIntent (ACTION_VIEW), copies the bytes to /cache/ as a .dat file,
+  returns the local path. Returns '' on failure (no URI, copy error, etc).
+  Internal helper — used by both warm-intent (TMessageReceivedNotification subscribe) and
+  cold-intent (ProcessLaunchIntent) flows. }
+function ExtractFileFromIntent(const AIntent: JIntent): string;
+var
+  Action: string;
+  Uri   : Jnet_Uri;
+begin
+  Result:= '';
+  if AIntent = nil then EXIT;
+
+  // Filter by action: only ACTION_VIEW carries a file URI we should import.
+  // Push notifications, MAIN launcher events, etc. would also raise TMessageReceivedNotification
+  // and must be ignored here.
+  if AIntent.getAction = nil then EXIT;
+  Action:= JStringToString(AIntent.getAction);
+  if Action <> JStringToString(TJIntent.JavaClass.ACTION_VIEW) then EXIT;
+
+  Uri:= AIntent.getData;
+  if Uri = nil then EXIT;
+
+  // Copy bytes to cache. Suffix '.lsn' is cosmetic — ImportSharedFile reads by header.
+  Result:= CopyUriToCache(Uri, '.lsn');
+end;
+
+
+{ Subscribes to TMessageReceivedNotification — fired when the activity is woken by
+  an intent (onNewIntent). Used for WARM start (app already running, user shares file). }
+function SubscribeToIncomingFileIntents(const AOnFileReceived: TFileSelectedEvent): TMessageSubscriptionId;
+begin
+  Result:= TMessageManager.DefaultManager.SubscribeToMessage(TMessageReceivedNotification,
+    procedure(const Sender: TObject; const M: TMessage)
+    var
+      Msg : TMessageReceivedNotification;
+      Path: string;
+    begin
+      // Hard try/except: this fires on FMX dispatch path; an unhandled exception
+      // would kill the process on Android. Log and swallow.
+      TRY
+        Msg := TMessageReceivedNotification(M);
+        Path:= ExtractFileFromIntent(Msg.Value);
+        if (Path <> '') AND Assigned(AOnFileReceived)
+        then AOnFileReceived(Path);
+      EXCEPT
+        on E: Exception do
+          if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
+          then AppDataCore.RamLog.AddError('SubscribeToIncomingFileIntents: '+ E.ClassName +' - '+ E.Message);
+      END;
+    end);
+end;
+
+
+{ Reads the activity's launch intent (set when Android started us, before any onNewIntent).
+  This is the COLD-start path — user tapped a .LSN file when our app was NOT running.
+
+  After processing we clear the intent's data via setData(nil) so subsequent calls
+  (e.g. if FormCreate runs twice, or if a later code path also peeks at getIntent)
+  see no URI.
+
+  TEST-ON-DEVICE: confirm MainActivity.getIntent returns the actual ACTION_VIEW launch
+  intent (and not e.g. a cached MAIN intent) on cold start. If it returns wrong/empty,
+  cold-start import will silently no-op. Diagnose by adding a temporary
+  AppData.RamLog.AddInfo line below to log getAction/getData on every call. }
+procedure ProcessLaunchIntent(const AOnFileReceived: TFileSelectedEvent);
+var
+  Intent: JIntent;
+  Path  : string;
+begin
+  TRY
+    if MainActivity = nil then EXIT;
+    Intent:= MainActivity.getIntent;
+    if Intent = nil then EXIT;
+
+    Path:= ExtractFileFromIntent(Intent);
+    if Path = '' then EXIT;
+
+    // Clear the URI so we don't re-process it. setAction(MAIN) would also work but
+    // setData(nil) is enough — ExtractFileFromIntent returns '' when getData is nil.
+    Intent.setData(nil);
+
+    if Assigned(AOnFileReceived)
+    then AOnFileReceived(Path);
+  EXCEPT
+    on E: Exception do
+      if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
+      then AppDataCore.RamLog.AddError('ProcessLaunchIntent: '+ E.ClassName +' - '+ E.Message);
+  END;
 end;
 {$ENDIF}
 
