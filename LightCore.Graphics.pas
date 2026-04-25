@@ -43,7 +43,7 @@ begin
   { Extension-based formats first — no reliable magic-byte signature. }
   if IsJp2(FileName) then EXIT('.jp2');
   if IsWB1(FileName) then EXIT('.wb1');
-  if isRainDrop(FileName) then EXIT(RainDropExt);
+  if IsRainDrop(FileName) then EXIT(RainDrop);
 
   { Magic-byte detection for the rest. }
   Read:= 0;
@@ -95,7 +95,7 @@ begin
   if Ext = '.jpg'       then EXIT(4);
   if Ext = '.jp2'       then EXIT(5);
   if Ext = '.wb1'       then EXIT(6);
-  if Ext = RainDropExt  then EXIT(7);
+  if Ext = RainDrop     then EXIT(7);
   Result:= 0;   { PDF/TIFF/WEBP recognized but not in legacy 1..7 codespace — caller falls back to WIC. }
 end;
 
