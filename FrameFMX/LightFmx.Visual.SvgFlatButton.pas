@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Visual.SvgFlatButton;
 
 {-------------------------------------------------------------------------------------------------------------
-   2026.04
+   2026.04.25
    www.GabrielMoraru.com
 -------------------------------------------------------------------------------------------------------------
 
@@ -54,8 +54,6 @@
    Tester: c:\Projects\LightSaber\Demo\FMX\Demos\
 
 -------------------------------------------------------------------------------------------------------------}
-
-//todo 2: DELETE ME :TSvgButton - I want the button to automatically detect the screensize. If it is on Phone (small screen) it should: 1. shrink its width to fit the icon inside, 2. hide the caption and 3. switch to ipCenter. I guess 2. is not necessary when 3 becomes active. I guess we need a new property called DetectPhoneScreen. Propose ideas. I guess we need to store the original size (width) somewhere so we can restore its size.  The ballance is delicate - make sure this new property/behavior does not interfere with the existing behaviors.
 
 INTERFACE
 
@@ -127,7 +125,7 @@ TYPE
   published
 
     property Text: string read GetText write SetText;   { Visible button label text (stored in FLabel). For the icon, use SvgData or LoadSvgPath. }
-    property SvgData: string read GetSvgData write SetSvgData;   //todo 1: let me also enter directly an sgv file. the program will extract the svg path from it.
+    property SvgData: string read GetSvgData write SetSvgData;   //todo 1: let me also enter directly an svg file. the program will extract the svg path from it.
     property IconPosition: TIconPosition read FIconPosition write SetIconPosition default ipLeft;
     property IsToggled: Boolean read FIsToggled write SetIsToggled default FALSE;  // IsPressed
 
@@ -175,7 +173,6 @@ begin
   Stroke.Kind:= TBrushKind.None;      { No border - "flat" look }
   XRadius:= 6;
   YRadius:= 6;
-  Cursor:= crHandPoint;
   Padding.Rect:= TRectF.Create(1, 1, 1, 1);
   ClipChildren:= TRUE;                { Label text that overflows the button is clipped mid-character instead of trimmed at word boundary }
 
@@ -261,17 +258,21 @@ begin
   inherited;
   ApplyThemeColors;
   UpdateIconSize;
-  if Scene <> nil
-  then EvaluateAutoCompact
-  else
-    { Scene may be nil here (e.g., button inside a TFrame parented after streaming).
-      Defer evaluation to the next message loop iteration, by which time the frame is attached to its form. }
-    TThread.ForceQueue(nil,
-      procedure
-      begin
-        if csDestroying in ComponentState then EXIT;
-        EvaluateAutoCompact;
-      end);
+  if Scene <> nil then
+    begin
+      EvaluateAutoCompact;
+      EXIT;
+    end;
+  if csDesigning in ComponentState then EXIT;   { Designer never auto-compacts — skip the deferred queue }
+
+  { Scene may be nil here (e.g., button inside a TFrame parented after streaming).
+    Defer evaluation to the next message loop iteration, by which time the frame is attached to its form. }
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      if csDestroying in ComponentState then EXIT;
+      EvaluateAutoCompact;
+    end);
 end;
 
 
@@ -434,10 +435,6 @@ end;
 
 
 
-{-------------------------------------------------------------------------------------------------------------
-   ICON POSITION
--------------------------------------------------------------------------------------------------------------}
-
 procedure TSvgButton.SetHoverBackground(Value: Boolean);
 begin
   if FHoverBackground = Value then EXIT;
@@ -446,12 +443,26 @@ begin
 end;
 
 
+
+{-------------------------------------------------------------------------------------------------------------
+   ICON POSITION
+-------------------------------------------------------------------------------------------------------------}
+
 { Switches the icon layout relative to the text label.
   ipLeft:   icon on the left, text right-aligned (default - sidebar buttons)
   ipTop:    icon above, text centered below (tile buttons)
-  ipCenter: icon centered, label hidden (icon-only square buttons) }
+  ipCenter: icon centered, label hidden (icon-only square buttons)
+
+  When the button is currently compacted, the new value is remembered as the user's
+  expanded preference and applied on the next expand — visual stays compact for now. }
 procedure TSvgButton.SetIconPosition(Value: TIconPosition);
 begin
+  if not FApplyingCompact then
+    begin
+      FExpandedIconPos:= Value;        { Track user intent — survives compact cycles }
+      if FIsCompacted then EXIT;       { Visual stays compact; queued for next expand }
+    end;
+
   FIconPosition:= Value;
 
   case Value of
@@ -501,7 +512,11 @@ procedure TSvgButton.SetAutoCompact(Value: Boolean);
 begin
   if FAutoCompact = Value then EXIT;
   FAutoCompact:= Value;
-  EvaluateAutoCompact;
+  if FAutoCompact
+  then EvaluateAutoCompact     { Just turned on — react to current form width }
+  else
+    if FIsCompacted            { Just turned off — restore expanded state so manual control is clean }
+    then ApplyCompact(False);
 end;
 
 
@@ -560,7 +575,7 @@ begin
     if MakeCompact then
       begin
         FExpandedWidth:= Width;
-        FExpandedIconPos:= FIconPosition;
+        { FExpandedIconPos is maintained by SetIconPosition — no need to capture here }
         FIsCompacted:= True;
         SetIconPosition(ipCenter);
         if Align in [TAlignLayout.Right, TAlignLayout.Left, TAlignLayout.MostRight, TAlignLayout.MostLeft, TAlignLayout.None]
