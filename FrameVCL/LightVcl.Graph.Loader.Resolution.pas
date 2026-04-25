@@ -102,22 +102,29 @@ end;
 
 procedure GetImageRes(CONST FileName: string; Stream: TStream; OUT Width, Height: Integer);
 begin
- if IsJpg(FileName)
- then GetJPGSize(Stream, Width, Height)
- else
-  if IsPng(FileName)
-  then GetPNGSize(Stream, Width, Height)
-  else
-   if IsGif(FileName)
-   then GetGIFSize(Stream, Width, Height)
+ { Match the file overload: never propagate parse errors to the caller. Any failure -> -1, -1. }
+ TRY
+   if IsJpg(FileName)
+   then GetJPGSize(Stream, Width, Height)
    else
-    if Isbmp(FileName)
-    then GetBmpSize(Stream, Width, Height)
+    if IsPng(FileName)
+    then GetPNGSize(Stream, Width, Height)
     else
-      begin
-        Width := -1;    //CONST  LocalFileSizeUnknown = -2; SEEMS NOT TO BE TRUE ANYMORE       { The file was downloaded but I could not retrive its size } move this to bionix
-        Height:= -1;
-      end;
+     if IsGif(FileName)
+     then GetGIFSize(Stream, Width, Height)
+     else
+      if Isbmp(FileName)
+      then GetBmpSize(Stream, Width, Height)
+      else
+        begin
+          Width := -1;    //CONST  LocalFileSizeUnknown = -2; SEEMS NOT TO BE TRUE ANYMORE       { The file was downloaded but I could not retrive its size } move this to bionix
+          Height:= -1;
+        end;
+ EXCEPT
+   //todo 1: trap only specific exceptions
+   Width := -1;
+   Height:= -1;
+ END;
 end;
 
 
@@ -189,6 +196,9 @@ begin
       else
        begin
          Stream.Read(w, 2);
+         { Guard against malformed JPEGs: a segment length < 2 would cause us to seek backward,
+           creating an infinite loop. Valid JPEG segment lengths include the 2 length bytes themselves. }
+         if swap(w) < 2 then EXIT(FALSE);
          Stream.Seek(swap(w)-2, soFromCurrent);
          Stream.Read(b, 1);
        end;
@@ -247,9 +257,9 @@ begin
 
  { Read image dimensions from IHDR chunk.
    PNG structure: 8-byte signature + 4-byte chunk length + 4-byte chunk type ("IHDR") + chunk data.
-   IHDR chunk data starts at byte 16: Width (4 bytes) at offset 16, Height (4 bytes) at offset 20.
-   We read 2-byte (Word) values at offset 18 and 22 because PNG uses big-endian 32-bit integers,
-   and ReadMotorolaWord reads the high 16 bits which contain the value for images < 65536 pixels. }
+   IHDR layout: Width (4 bytes, big-endian) at file offset 16, Height (4 bytes, big-endian) at offset 20.
+   We seek past the upper 2 bytes (zero for any image <= 65535 px) and read the lower 2 bytes as a
+   big-endian Word. Limitation: returns wrong values for images larger than 65535 px in either axis. }
  Stream.Seek(18, 0);
  Width := LightCore.Binary.ReadMotorolaWord(Stream);
 
