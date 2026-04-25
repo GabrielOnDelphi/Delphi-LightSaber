@@ -72,6 +72,9 @@ type
     [Test]
     procedure TestGetJpgSize_EmptyStream;
 
+    [Test]
+    procedure TestGetJpgSize_MalformedSegmentLength;     { Regression: bad segment length used to seek backward, infinite loop }
+
     { GetGifSize Tests }
     [Test]
     procedure TestGetGifSize_ValidFile;
