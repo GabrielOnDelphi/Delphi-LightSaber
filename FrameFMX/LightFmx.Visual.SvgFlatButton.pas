@@ -3,23 +3,39 @@
 {-------------------------------------------------------------------------------------------------------------
    2026.04
    www.GabrielMoraru.com
+-------------------------------------------------------------------------------------------------------------
 
    Borderless button with SVG icon (TPath).
    Designed for modern UIs (Slack-style sidebar buttons, action tiles, etc.).
 
-   Hover visual feedback (3 effects combined):
-     1. Background fill  - subtle tint of the skin's accent color (Fill.Color)
-     2. Icon + text      - change from normal (skin foreground) to accent color
-     3. Icon glow        - TGlowEffect in accent color appears under the icon
+   HOVER
+     Hover visual feedback (3 effects combined):
+       1. Background fill  - subtle tint of the skin's accent color (Fill.Color)
+       2. Icon + text      - change from normal (skin foreground) to accent color
+       3. Icon glow        - TGlowEffect in accent color appears under the icon
 
-   Toggle mode keeps all 3 effects active until untoggled.
-   Press feedback dims the whole button via Opacity.
+   TOGGLE
+     Toggle mode keeps all 3 effects active until untoggled.
+     Press feedback dims the whole button via Opacity.
 
-   Colors are extracted from the active FMX style:
-     - Normal color:    buttonstyle > text > NormalColor (what TButton uses for text)
-     - Highlight color: 'selectioncolor' or 'selection' or 'glow' style resource (skin accent)
+   COLORS
+     Colors are extracted from the active FMX style:
+       - Normal color:    buttonstyle > text > NormalColor (what TButton uses for text)
+       - Highlight color: 'selectioncolor' or 'selection' or 'glow' style resource (skin accent)
 
-   Architecture:
+     Call ApplyThemeColors after loading a new FMX style (must be called from main thread).
+     For standard buttons with icon overlay, see LightFmx.Visual.SvgButton instead.
+
+   AUTO-COMPACT
+       Compact           -> Manual toggle — caller controls when to compact (e.g., sidebar buttons responding to MultiView state).
+       AutoCompact       -> Self-managing — button watches hosting form's client width via TSizeChangedMessage.
+                            Initial state evaluated in Resize (when first parented).
+       CompactThreshold  -> ctTablet (default): compact below HIGH_WIDTH (1024 px).
+                            ctPhone: compact below COMPACT_WIDTH (600 px).
+
+       When AutoCompact is TRUE, manual Compact is ignored — AutoCompact owns the state.
+
+   COMPOSITS
      TSvgButton        (TRectangle - transparent background, rounded corners)
        TPath           (SVG icon, stroke-based, HitTest=False)
          TGlowEffect   (accent-colored glow, enabled on hover/toggle)
@@ -33,12 +49,13 @@
      btn.IconPosition:= ipTop;             // icon above text
      btn.IsToggled:= True;                 // toggle mode
 
-   Call ApplyThemeColors after loading a new FMX style (must be called from main thread).
-   For standard buttons with icon overlay, see LightFmx.Visual.SvgButton instead.
+
 
    Tester: c:\Projects\LightSaber\Demo\FMX\Demos\
 
 -------------------------------------------------------------------------------------------------------------}
+
+//todo 2: DELETE ME :TSvgButton - I want the button to automatically detect the screensize. If it is on Phone (small screen) it should: 1. shrink its width to fit the icon inside, 2. hide the caption and 3. switch to ipCenter. I guess 2. is not necessary when 3 becomes active. I guess we need a new property called DetectPhoneScreen. Propose ideas. I guess we need to store the original size (width) somewhere so we can restore its size.  The ballance is delicate - make sure this new property/behavior does not interfere with the existing behaviors.
 
 INTERFACE
 
@@ -53,6 +70,11 @@ TYPE
 
   TCompactChangedEvent = procedure(Sender: TObject; IsCompact: Boolean) of object;
 
+  { Do NOT reorder — ordinal values are streamed into DFMs via the default clause on CompactThreshold.
+    Append new values at the end only. }
+  TCompactThreshold = (ctPhone,    // Compact when hosting form client width < COMPACT_WIDTH (600 px)
+                       ctTablet);  // Compact when hosting form client width < HIGH_WIDTH (1024 px)
+
   TSvgButton = class(TRectangle)
   private
     FIconPath: TPath;
@@ -60,11 +82,12 @@ TYPE
     FLabel: TLabel;
     FIsToggled: Boolean;
     FIconPosition: TIconPosition;
-    FHoverBackground: Boolean;       { When FALSE, background stays transparent on hover/toggle }
-    FNormalColor: TAlphaColor;      { Icon/text color in normal state (from buttonstyle text NormalColor) }
-    FHighlightColor: TAlphaColor;   { Icon/text color on hover/toggle (from skin's accent/selection color) }
-    FHoverBgColor: TAlphaColor;     { Background fill on hover/toggle (FHighlightColor at low alpha) }
+    FHoverBackground: Boolean;         { When FALSE, background stays transparent on hover/toggle }
+    FNormalColor: TAlphaColor;         { Icon/text color in normal state (from buttonstyle text NormalColor) }
+    FHighlightColor: TAlphaColor;      { Icon/text color on hover/toggle (from skin's accent/selection color) }
+    FHoverBgColor: TAlphaColor;        { Background fill on hover/toggle (FHighlightColor at low alpha) }
     FAutoCompact      : Boolean;
+    FCompactThreshold : TCompactThreshold;
     FIsCompacted      : Boolean;
     FApplyingCompact  : Boolean;       { Guard: Resize → EvaluateAutoCompact → ApplyCompact → Width change → Resize }
     FExpandedWidth    : Single;        { Width before compacting — restored on expand }
@@ -82,6 +105,7 @@ TYPE
     procedure HandleStyleChanged(const Sender: TObject; const M: System.Messaging.TMessage);
     procedure SetCompact(Value: Boolean);
     procedure SetAutoCompact(Value: Boolean);
+    procedure SetCompactThreshold(Value: TCompactThreshold);
     procedure ApplyCompact(MakeCompact: Boolean);
     procedure EvaluateAutoCompact;
     procedure HandleFormResize(const Sender: TObject; const M: System.Messaging.TMessage);
@@ -103,19 +127,21 @@ TYPE
   published
 
     property Text: string read GetText write SetText;   { Visible button label text (stored in FLabel). For the icon, use SvgData or LoadSvgPath. }
-    property SvgData: string read GetSvgData write SetSvgData;
+    property SvgData: string read GetSvgData write SetSvgData;   //todo 1: let me also enter directly an sgv file. the program will extract the svg path from it.
     property IconPosition: TIconPosition read FIconPosition write SetIconPosition default ipLeft;
     property IsToggled: Boolean read FIsToggled write SetIsToggled default FALSE;  // IsPressed
 
     property HoverBackground: Boolean read FHoverBackground write SetHoverBackground default TRUE;    { When TRUE (default), hover/toggle tints the background with the accent color. FALSE = background always transparent (icon/text/glow still change). }
     property Compact: Boolean read FIsCompacted write SetCompact stored FALSE default FALSE;        { Manual compact toggle. TRUE = icon-only + shrink width. Ignored when AutoCompact is TRUE. Not streamed to DFM — always stores expanded Width. }
-    property AutoCompact: Boolean read FAutoCompact write SetAutoCompact default FALSE;             { Self-managing compact. Watches hosting form width and compacts below HIGH_WIDTH (1024px). }
+    property AutoCompact: Boolean read FAutoCompact write SetAutoCompact default FALSE;             { Self-managing compact. Watches hosting form client width and compacts based on CompactThreshold. }
+    property CompactThreshold: TCompactThreshold read FCompactThreshold write SetCompactThreshold default ctTablet;  { ctTablet = compact below 1024 px, ctPhone = compact below 600 px. Only used when AutoCompact is TRUE. }
     property OnCompactChanged: TCompactChangedEvent read FOnCompactChanged write FOnCompactChanged; { Fired after compact state changes — use to sync UI (e.g. checkbox) with auto-compact transitions. }
   end;
 
 
 { Recursively sets Compact on all TSvgButton descendants of Parent.
-  Use in a FormResize handler to switch sidebar/toolbar buttons between icon+text and icon-only. }
+  Use in a FormResize handler to switch sidebar/toolbar buttons between icon+text and icon-only.
+  NOTE: Buttons with AutoCompact=TRUE are skipped silently — they self-manage via CompactThreshold. }
 procedure CompactSvgButtons(Parent: TFmxObject; Compact: Boolean);
 
 
@@ -125,6 +151,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
+  System.SysUtils,
   LightFmx.Common.Styles, LightFmx.Common.Screen;
 
 
@@ -150,6 +177,7 @@ begin
   YRadius:= 6;
   Cursor:= crHandPoint;
   Padding.Rect:= TRectF.Create(1, 1, 1, 1);
+  ClipChildren:= TRUE;                { Label text that overflows the button is clipped mid-character instead of trimmed at word boundary }
 
   { Icon - stroke-based TPath using SVG path data (e.g. Tabler Icons).
     Named 'Icon' so the FMX streaming system reuses it instead of creating a duplicate. }
@@ -186,11 +214,14 @@ begin
   FLabel.Locked:= TRUE;
   FLabel.Align:= TAlignLayout.Client;
   FLabel.TextSettings.HorzAlign:= TTextAlign.Leading;
-  FLabel.StyledSettings:= FLabel.StyledSettings - [TStyledSetting.FontColor];
+  FLabel.TextSettings.WordWrap:= FALSE;                { Single line — overflow handled by ClipChildren }
+  FLabel.TextSettings.Trimming:= TTextTrimming.None;   { Don't drop trailing words/chars; let the caller see as much text as fits }
+  FLabel.StyledSettings:= FLabel.StyledSettings - [TStyledSetting.FontColor, TStyledSetting.Other];  { Other covers WordWrap/Trimming — exclude so skin changes don't undo them }
 
   SetIconPosition(ipLeft);            { Canonical path — sets FIconPath.Align + margins }
   FIsToggled:= FALSE;
   FHoverBackground:= TRUE;
+  FCompactThreshold:= ctTablet;       { Default: compact below HIGH_WIDTH (1024 px) }
 
   ApplyThemeColors;
 
@@ -230,7 +261,17 @@ begin
   inherited;
   ApplyThemeColors;
   UpdateIconSize;
-  EvaluateAutoCompact;
+  if Scene <> nil
+  then EvaluateAutoCompact
+  else
+    { Scene may be nil here (e.g., button inside a TFrame parented after streaming).
+      Defer evaluation to the next message loop iteration, by which time the frame is attached to its form. }
+    TThread.ForceQueue(nil,
+      procedure
+      begin
+        if csDestroying in ComponentState then EXIT;
+        EvaluateAutoCompact;
+      end);
 end;
 
 
@@ -240,8 +281,9 @@ procedure TSvgButton.Resize;
 begin
   inherited;
   UpdateIconSize;
-  if FAutoCompact and not FApplyingCompact then
-    EvaluateAutoCompact;
+  if FAutoCompact
+  AND NOT FApplyingCompact
+  then EvaluateAutoCompact;
 end;
 
 
@@ -447,12 +489,7 @@ end;
 
 {-------------------------------------------------------------------------------------------------------------
    COMPACT / AUTO-COMPACT
-   Compact:     manual toggle — caller controls when to compact (e.g., sidebar buttons responding to MultiView state).
-   AutoCompact: self-managing — button watches hosting form's width via TSizeChangedMessage and
-                compacts when below HIGH_WIDTH (1024). Initial state evaluated in Resize (when first parented).
-   When AutoCompact is TRUE, manual Compact writes are ignored — AutoCompact owns the state.
 -------------------------------------------------------------------------------------------------------------}
-
 procedure TSvgButton.SetCompact(Value: Boolean);
 begin
   if FAutoCompact then EXIT;  { AutoCompact owns the state — ignore manual writes }
@@ -468,15 +505,37 @@ begin
 end;
 
 
+procedure TSvgButton.SetCompactThreshold(Value: TCompactThreshold);
+begin
+  if FCompactThreshold = Value then EXIT;
+  FCompactThreshold:= Value;
+  EvaluateAutoCompact;
+end;
+
+
+{ Returns TRUE when the hosting form's client width is below the configured threshold. }
+function ShouldCompactFor(ClientWidth: Single; Threshold: TCompactThreshold): Boolean;
+begin
+  case Threshold of
+    ctPhone : Result:= WidthFitsPhone(ClientWidth);       // < COMPACT_WIDTH (600)
+    ctTablet: Result:= NOT WidthFitsDesktop(ClientWidth); // < HIGH_WIDTH (1024)
+  else
+    raise ERangeError.CreateFmt('TCompactThreshold value %d not handled', [Ord(Threshold)]);
+  end;
+end;
+
+
 { Checks hosting form width and compacts/expands accordingly.
   Called from: Resize (initial parenting), Loaded (streamed), SetAutoCompact, HandleFormResize. }
 procedure TSvgButton.EvaluateAutoCompact;
+var Form: TCommonCustomForm;
 begin
   if not FAutoCompact then EXIT;
   if csDesigning in ComponentState then EXIT;  { Never compact at design time — corrupts saved IconPosition }
   if (Scene = nil) then EXIT;
   if not (Scene.GetObject is TCommonCustomForm) then EXIT;
-  ApplyCompact(IsPhoneScreen);
+  Form:= TCommonCustomForm(Scene.GetObject);
+  ApplyCompact(ShouldCompactFor(Form.ClientWidth, FCompactThreshold));
 end;
 
 
@@ -487,7 +546,7 @@ begin
   if not FAutoCompact then EXIT;
   if (Scene = nil) or (Sender <> Scene.GetObject) then EXIT;
   if not (Sender is TCommonCustomForm) then EXIT;
-  ApplyCompact(IsPhoneScreen);
+  ApplyCompact(ShouldCompactFor(TCommonCustomForm(Sender).ClientWidth, FCompactThreshold));
 end;
 
 
