@@ -1,7 +1,7 @@
 unit LightFmx.Common.Dialogs;
 
 {=============================================================================================================
-   2026.01.31
+   2026.04.25
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Easy message boxes (FMX)
@@ -18,7 +18,6 @@ INTERFACE
 USES
   System.SysUtils,
   System.UITypes,
-  System.Classes,
   FMX.DialogService.Async;
 
 { Displays a generic message dialog asynchronously }
@@ -32,8 +31,13 @@ procedure MessageError  (CONST MessageText, Where: string; CONST Caption: string
 
 { Displays a Yes/No confirmation dialog asynchronously.
   Callback receives True if user selects Yes, False otherwise.
-  If Callback is nil, the dialog is shown but no action is taken on result. }
-procedure MessageYesNo(CONST MessageText: string; CONST Caption: string; CONST Callback: TProc<Boolean>);
+  If Callback is nil, the dialog is shown but no action is taken on result.
+  If MessageText is empty, the dialog is NOT shown and Callback (if assigned) is invoked with False. }
+procedure MessageYesNo(CONST MessageText: string; CONST Caption: string= ''; CONST Callback: TProc<Boolean>= NIL);
+
+{ Resolves the caption used by the 3-arg MessageError overload.
+  Exposed for unit testing. }
+function  ResolveErrorCaption(CONST Where, Caption: string): string;
 
 IMPLEMENTATION
 USES LightCore;
@@ -49,11 +53,10 @@ begin
   // Combine caption and message, avoiding leading blank lines when caption is empty
   if Caption = ''
   then CombinedMsg:= MessageText
-  else CombinedMsg:= Caption+ CRLF+ CRLF+ MessageText;
+  else CombinedMsg:= Caption+ LBRK+ MessageText;
 
   TDialogServiceAsync.MessageDialog(CombinedMsg, DlgType, [TMsgDlgBtn.mbOK], TMsgDlgBtn.mbOK, -1, NIL);
 end;
-
 
 
 
@@ -76,6 +79,14 @@ begin
 end;
 
 
+function ResolveErrorCaption(CONST Where, Caption: string): string;
+begin
+  if Caption = ''
+  then Result:= 'Error in ' + Where
+  else Result:= Caption;
+end;
+
+
 procedure MessageError(CONST MessageText, Where: string; CONST Caption: string);
 VAR FullMsg: string;
 begin
@@ -83,15 +94,20 @@ begin
             LBRK + 'Please report this error to us along with the exact steps to reproduce it, and we will fix it.' +
             CRLF + 'Hint: press Control+C to copy this message to clipboard.';
 
-  MessageError(FullMsg, 'Error in ' + Where);
+  MessageError(FullMsg, ResolveErrorCaption(Where, Caption));
 end;
 
 
-procedure MessageYesNo(CONST MessageText: string; CONST Caption: string; CONST Callback: TProc<Boolean>);
+procedure MessageYesNo(CONST MessageText: string; CONST Caption: string= ''; CONST Callback: TProc<Boolean>= NIL);
 VAR CombinedMsg: string;
 begin
-  if MessageText = ''
-  then EXIT;
+  if MessageText = '' then
+    begin
+      // Always notify caller, otherwise a flow waiting on the callback would stall.
+      if Assigned(Callback)
+      then Callback(False);
+      EXIT;
+    end;
 
   // Combine caption and message for consistency with GenericMessage
   if Caption = ''
