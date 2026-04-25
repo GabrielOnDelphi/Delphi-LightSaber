@@ -34,6 +34,14 @@ TYPE
   TImageSelectedEvent = procedure(const Path: string) of object;
   TFileSelectedEvent  = procedure(const Path: string) of object;
 
+{$IFDEF IOS}
+TYPE
+  // iOS picker results — posted by the bridge after a pick/cancel completes.
+  // SetupImagePickerCallback/SetupAnyFilePickerCallback subscribe to these on iOS.
+  TMessageImagePickerResult = class(TMessage<string>);
+  TMessageFilePickerResult  = class(TMessage<string>);
+{$ENDIF}
+
 procedure RequestCameraPermission(const AOnGranted: TProc);
 procedure RequestStorageReadPermission(const AOnGranted: TProc);       // For image picking on Android 13+
 
@@ -41,20 +49,22 @@ procedure AddToPhotosAlbum(const ABitmap: TBitmap);                    // Saves 
 
 procedure ScanMediaFile(const AFileName: string);                      // If manually saving files
 
-procedure PickImageFromGallery;                                        // Opens the Photos/Gallery picker
+procedure PickImageFromGallery;                                        // Opens the Photos/Gallery picker (Android, iOS)
 
-procedure PickAnyFileFromStorage(const MimeType: string = '*/*');      // Opens the system Documents UI (SAF) — no permission required
+procedure PickAnyFileFromStorage(const MimeType: string = '*/*');      // Opens system file UI: SAF on Android, UIDocumentPickerViewController on iOS
 
 // Paths
 function  GetPublicPicturesFolder: string;
 
-
-{$IFDEF ANDROID}
+// Picker result subscription — cross-platform (Android + iOS).
 // Returns the subscription ID. Caller MUST unsubscribe (TMessageManager.DefaultManager.Unsubscribe)
 // when the subscribing object is destroyed, to prevent callbacks firing on freed memory.
+// On Windows/macOS desktop / Linux: returns 0 and never fires (no async picker on those platforms).
 function SetupImagePickerCallback  (const AOnImageSelected: TImageSelectedEvent): TMessageSubscriptionId;
 function SetupAnyFilePickerCallback(const AOnFileSelected : TFileSelectedEvent ): TMessageSubscriptionId;
 
+
+{$IFDEF ANDROID}
 { Incoming ACTION_VIEW intent (file shared from another app — WhatsApp, Email, Drive, etc).
   Subscribes to TMessageReceivedNotification, fires AOnFileReceived(LocalPath) when an
   ACTION_VIEW intent arrives with a content:// or file:// URI.
@@ -87,6 +97,9 @@ uses
   LightCore.IO, LightCore.AppData
   {$IFDEF ANDROID}
   , FMX.Platform.Android, Androidapi.Helpers, Androidapi.JNI.Os, Androidapi.JNI.JavaTypes, Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Net, Androidapi.JNI.App, Androidapi.JNI.Media, Androidapi.JNI.Provider, Androidapi.JNIBridge, FMX.Helpers.Android
+  {$ENDIF}
+  {$IFDEF IOS}
+  , FMX.Helpers.iOS, Macapi.Helpers, Macapi.ObjectiveC, iOSapi.UIKit, iOSapi.Foundation
   {$ENDIF};
 
 CONST
@@ -112,7 +125,11 @@ begin
           TDialogService.ShowMessage('Cannot access the camera because the required permission has not been granted');
       end);
 {$ELSE}
-  if Assigned(AOnGranted) then AOnGranted;  // No permission needed on non-Android platforms
+  // iOS: NSCameraUsageDescription must be in Info.plist. Runtime authorization prompt
+  // is triggered automatically by FMX capture APIs (IFMXCameraService) on first use,
+  // so no preemptive request is required here.
+  // macOS Desktop / Windows: no runtime permission system for these APIs.
+  if Assigned(AOnGranted) then AOnGranted;
 {$ENDIF}
 end;
 
@@ -139,7 +156,11 @@ begin
           TDialogService.ShowMessage('Cannot access storage because the required permission has not been granted');
       end);
 {$ELSE}
-  if Assigned(AOnGranted) then AOnGranted;  // No permission needed on non-Android platforms
+  // iOS: NSPhotoLibraryUsageDescription must be in Info.plist. Runtime authorization
+  // prompt is triggered automatically by IFMXPhotoLibrary on first use, so no
+  // preemptive request is required here.
+  // macOS Desktop / Windows: no runtime permission system for these APIs.
+  if Assigned(AOnGranted) then AOnGranted;
 {$ENDIF}
 end;
 
@@ -157,13 +178,220 @@ end;
 procedure ScanMediaFile(const AFileName: string);
 begin
 {$IFDEF ANDROID}
-  var Intent: JIntent;
-  Intent := TJIntent.Create;
-  Intent.setAction(TJIntent.JavaClass.ACTION_MEDIA_SCANNER_SCAN_FILE);
-  Intent.setData(TJnet_Uri.JavaClass.fromFile(TJFile.JavaClass.&init(StringToJString(AFileName))));
-  TAndroidHelper.Activity.sendBroadcast(Intent);
+  // ACTION_MEDIA_SCANNER_SCAN_FILE was deprecated in API 29 (Android 10) and is silently
+  // ignored on newer devices. Use MediaScannerConnection.scanFile instead on API 29+.
+  if TOSVersion.Check(10) then
+  begin
+    var Paths: TJavaObjectArray<JString>;
+    Paths:= TJavaObjectArray<JString>.Create(1);
+    Paths.Items[0]:= StringToJString(AFileName);
+    TJMediaScannerConnection.JavaClass.scanFile(TAndroidHelper.Context, Paths, nil, nil);
+  end
+  else
+  begin
+    var Intent: JIntent;
+    Intent:= TJIntent.Create;
+    Intent.setAction(TJIntent.JavaClass.ACTION_MEDIA_SCANNER_SCAN_FILE);
+    Intent.setData(TJnet_Uri.JavaClass.fromFile(TJFile.JavaClass.&init(StringToJString(AFileName))));
+    TAndroidHelper.Activity.sendBroadcast(Intent);
+  end;
 {$ENDIF}
 end;
+
+
+{-------------------------------------------------------------------------------------------------------------
+   iOS PICKER BRIDGES
+
+   FMX iOS picker fires a method-callback (not anonymous) carrying a TBitmap that is freed
+   immediately after the callback returns. We must save the bitmap during the callback,
+   then post a TMessage so cross-platform subscribers (SetupImagePickerCallback) get a path.
+
+   File picker uses native UIDocumentPickerViewController via a TOCLocal delegate. Same idea:
+   convert NSURL → file path, post TMessageFilePickerResult.
+
+   Both bridges are unit-private singletons (created lazily, freed in finalization).
+   FINALIZATION is normally avoided per project rule, but here it is the only safe lifetime
+   for these singletons (they outlive any single picker invocation, must be freed at app exit
+   to release the registered Objective-C class for the document delegate).
+-------------------------------------------------------------------------------------------------------------}
+{$IFDEF IOS}
+type
+  // Image picker bridge — receives TBitmap from FMX iOS service, saves to temp, posts result.
+  TIosImagePickerBridge = class
+    procedure OnDidFinishTaking(Image: TBitmap);
+    procedure OnDidCancelTaking;
+  end;
+
+  // File picker delegate — Objective-C delegate for UIDocumentPickerViewController.
+  TIosDocumentPickerDelegate = class(TOCLocal, UIDocumentPickerDelegate)
+  public
+    function GetObjectiveCClass: PTypeInfo; override;
+    procedure documentPicker(controller: UIDocumentPickerViewController; didPickDocumentsAtURLs: NSArray); overload; cdecl;
+    procedure documentPicker(controller: UIDocumentPickerViewController; didPickDocumentAtURL: NSURL); overload; cdecl;
+    procedure documentPickerWasCancelled(controller: UIDocumentPickerViewController); cdecl;
+  end;
+
+var
+  GIosImagePickerBridge   : TIosImagePickerBridge   = NIL;
+  GIosDocumentPickerBridge: TIosDocumentPickerDelegate = NIL;
+  GIosDocumentPicker      : UIDocumentPickerViewController = NIL;  // retained while modal is up
+
+function GenTempPath(const ASuffix: string): string;
+var Guid: string;
+begin
+  // TGUID.ToString format: '{NNNNNNNN-NNNN-NNNN-NNNN-NNNNNNNNNNNN}' (38 chars).
+  // Skip leading '{', take 36 chars (dashes are valid in filenames).
+  Guid:= Copy(TGUID.NewGuid.ToString, 2, 36);
+  Result:= TPath.Combine(TPath.GetTempPath, 'picked_' + Guid + ASuffix);
+end;
+
+{ TIosImagePickerBridge }
+
+procedure TIosImagePickerBridge.OnDidFinishTaking(Image: TBitmap);
+var TempPath: string;
+begin
+  TempPath:= GenTempPath('.jpg');
+  TRY
+    Image.SaveToFile(TempPath);
+    TMessageManager.DefaultManager.SendMessage(NIL, TMessageImagePickerResult.Create(TempPath));
+  EXCEPT
+    on E: Exception do
+      begin
+        if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
+        then AppDataCore.RamLog.AddError('iOS image picker save failed: ' + E.ClassName + ' - ' + E.Message);
+        TMessageManager.DefaultManager.SendMessage(NIL, TMessageImagePickerResult.Create(''));
+      end;
+  END;
+end;
+
+procedure TIosImagePickerBridge.OnDidCancelTaking;
+begin
+  TMessageManager.DefaultManager.SendMessage(NIL, TMessageImagePickerResult.Create(''));
+end;
+
+{ TIosDocumentPickerDelegate }
+
+function TIosDocumentPickerDelegate.GetObjectiveCClass: PTypeInfo;
+begin
+  Result:= TypeInfo(UIDocumentPickerDelegate);
+end;
+
+procedure CopyPickedNSURLAndPost(const AUrl: NSURL);
+var
+  PathStr  : string;
+  TempPath : string;
+  ScopedOK : Boolean;
+begin
+  if AUrl = NIL then
+    begin
+      TMessageManager.DefaultManager.SendMessage(NIL, TMessageFilePickerResult.Create(''));
+      EXIT;
+    end;
+
+  // Security-scoped resource access required for files outside our sandbox (iCloud, other apps).
+  ScopedOK:= AUrl.startAccessingSecurityScopedResource;
+  TRY
+    if AUrl.path = NIL
+    then PathStr:= ''
+    else PathStr:= NSStrToStr(AUrl.path);
+
+    if PathStr = '' then
+      begin
+        TMessageManager.DefaultManager.SendMessage(NIL, TMessageFilePickerResult.Create(''));
+        EXIT;
+      end;
+
+    // Copy to our cache so the path is stable beyond the security scope.
+    TempPath:= GenTempPath(ExtractFileExt(PathStr));
+    if LightCore.IO.CopyFile(PathStr, TempPath)
+    then TMessageManager.DefaultManager.SendMessage(NIL, TMessageFilePickerResult.Create(TempPath))
+    else
+      begin
+        if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
+        then AppDataCore.RamLog.AddError('iOS file picker copy failed: ' + PathStr + ' -> ' + TempPath);
+        TMessageManager.DefaultManager.SendMessage(NIL, TMessageFilePickerResult.Create(''));
+      end;
+  FINALLY
+    if ScopedOK then AUrl.stopAccessingSecurityScopedResource;
+  END;
+end;
+
+procedure TIosDocumentPickerDelegate.documentPicker(controller: UIDocumentPickerViewController; didPickDocumentsAtURLs: NSArray); cdecl;
+begin
+  // Multi-URL variant (iOS 11+) — we take the first URL.
+  if (didPickDocumentsAtURLs <> NIL) AND (didPickDocumentsAtURLs.count > 0)
+  then CopyPickedNSURLAndPost(TNSURL.Wrap(didPickDocumentsAtURLs.objectAtIndex(0)))
+  else TMessageManager.DefaultManager.SendMessage(NIL, TMessageFilePickerResult.Create(''));
+
+  controller.dismissModalViewControllerAnimated(True);
+  GIosDocumentPicker:= NIL;  // released by ARC after dismiss
+end;
+
+procedure TIosDocumentPickerDelegate.documentPicker(controller: UIDocumentPickerViewController; didPickDocumentAtURL: NSURL); cdecl;
+begin
+  // Single-URL variant (iOS &lt; 11). Keeping for compat.
+  CopyPickedNSURLAndPost(didPickDocumentAtURL);
+  controller.dismissModalViewControllerAnimated(True);
+  GIosDocumentPicker:= NIL;
+end;
+
+procedure TIosDocumentPickerDelegate.documentPickerWasCancelled(controller: UIDocumentPickerViewController); cdecl;
+begin
+  TMessageManager.DefaultManager.SendMessage(NIL, TMessageFilePickerResult.Create(''));
+  controller.dismissModalViewControllerAnimated(True);
+  GIosDocumentPicker:= NIL;
+end;
+
+procedure iOSPickImage;
+var
+  Service: IFMXTakenImageService;
+  Params : TParamsPhotoQuery;
+begin
+  if NOT TPlatformServices.Current.SupportsPlatformService(IFMXTakenImageService, Service)
+  then raise ENotSupportedException.Create('PickImageFromGallery: IFMXTakenImageService unavailable on this iOS build');
+
+  if GIosImagePickerBridge = NIL
+  then GIosImagePickerBridge:= TIosImagePickerBridge.Create;
+
+  FillChar(Params, SizeOf(Params), 0);
+  Params.Editable          := False;
+  Params.NeedSaveToAlbum   := False;
+  Params.RequiredResolution:= TSize.Create(0, 0);  // 0 = native resolution
+  Params.OnDidFinishTaking := GIosImagePickerBridge.OnDidFinishTaking;
+  Params.OnDidCancelTaking := GIosImagePickerBridge.OnDidCancelTaking;
+  // AControl is unused by FMX iOS impl (only TakeImage's IsPad branch references it, and ignores it).
+  Service.TakeImageFromLibrary(NIL, Params);
+end;
+
+procedure iOSPickFile;
+var
+  Window     : UIWindow;
+  AllowedUTIs: NSMutableArray;
+begin
+  if GIosDocumentPickerBridge = NIL
+  then GIosDocumentPickerBridge:= TIosDocumentPickerDelegate.Create;
+
+  AllowedUTIs:= TNSMutableArray.Create;
+  AllowedUTIs.addObject(NSObjectToID(StrToNSStr('public.item')));  // any file
+
+  // initWithDocumentTypes is deprecated in iOS 14 (use initForOpeningContentTypes with UTType),
+  // but still functional. UTType bindings not yet stable in Delphi RTL.
+  GIosDocumentPicker:= TUIDocumentPickerViewController.Wrap(
+    TUIDocumentPickerViewController.Alloc.initWithDocumentTypes(AllowedUTIs, UIDocumentPickerModeImport));
+  GIosDocumentPicker.setDelegate(GIosDocumentPickerBridge.GetObjectID);
+
+  Window:= SharedApplication.keyWindow;
+  if (Window <> NIL) AND (Window.rootViewController <> NIL)
+  then Window.rootViewController.presentModalViewController(GIosDocumentPicker, True)
+  else
+    begin
+      if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
+      then AppDataCore.RamLog.AddError('iOSPickFile: keyWindow.rootViewController unavailable');
+      GIosDocumentPicker:= NIL;
+      TMessageManager.DefaultManager.SendMessage(NIL, TMessageFilePickerResult.Create(''));
+    end;
+end;
+{$ENDIF}
 
 
 // Before calling PickImageFromGallery, request permission: RequestStorageReadPermission(procedure begin PickImageFromGallery; end);
@@ -174,6 +402,8 @@ begin
   Intent.setAction(TJIntent.JavaClass.ACTION_PICK);
   Intent.setType(StringToJString('image/*'));
   MainActivity.startActivityForResult(Intent, REQUEST_PICK_IMAGE);
+{$ELSEIF DEFINED(IOS)}
+  iOSPickImage;
 {$ENDIF}
 end;
 
@@ -188,6 +418,10 @@ begin
   Intent.addCategory(TJIntent.JavaClass.CATEGORY_OPENABLE);
   Intent.setType(StringToJString(MimeType));
   MainActivity.startActivityForResult(Intent, REQUEST_PICK_FILE);
+{$ELSEIF DEFINED(IOS)}
+  // MimeType is ignored on iOS — UIDocumentPickerViewController takes UTI strings, not MIME.
+  // We use 'public.item' (any file) which mirrors '*/*'. Specific UTI filtering is a future enhancement.
+  iOSPickFile;
 {$ENDIF}
 end;
 
@@ -226,11 +460,14 @@ begin
         // Allocate Java Byte Array ONCE
         JBuffer:= TJavaArray<Byte>.Create(4096);
 
-        // 3. Loop and copy
+        // 3. Loop and copy. Java InputStream.read returns -1 at EOF; 0 means
+        // "no bytes currently available" on PipeInputStream-backed providers
+        // (some FileProvider impls). Don't treat 0 as EOF — only -1.
         BytesRead:= InputStream.read(JBuffer);
-        while BytesRead > 0 do
+        while BytesRead <> -1 do
         begin
-          OutputStream.write(JBuffer, 0, BytesRead);
+          if BytesRead > 0
+          then OutputStream.write(JBuffer, 0, BytesRead);
           BytesRead:= InputStream.read(JBuffer);
         end;
 
@@ -238,7 +475,7 @@ begin
         Result:= JStringToString(CacheFile.getAbsolutePath);
       finally
         OutputStream.close;
-        JBuffer.Free;
+        FreeAndNil(JBuffer);
       end;
     finally
       InputStream.close;
@@ -253,6 +490,7 @@ begin
     then CacheFile.delete;
   end;
 end;
+{$ENDIF}
 
 
 
@@ -261,9 +499,16 @@ end;
   CALLER MUST store the returned TMessageSubscriptionId and call
   TMessageManager.DefaultManager.Unsubscribe(Id) in FormDestroy (or equivalent),
   to prevent the callback firing on freed memory.
-  Do NOT call multiple times without unsubscribing — duplicate subscriptions accumulate. }
+  Do NOT call multiple times without unsubscribing — duplicate subscriptions accumulate.
+
+  Cross-platform behavior:
+    Android: subscribes to TMessageResultNotification (intent result).
+    iOS    : subscribes to TMessageImagePickerResult (posted by TIosImagePickerBridge).
+    Other  : returns 0; callback never fires (no async picker on Win/macOS desktop). }
 function SetupImagePickerCallback(const AOnImageSelected: TImageSelectedEvent): TMessageSubscriptionId;
 begin
+  Result:= 0;
+{$IFDEF ANDROID}
   Result:= TMessageManager.DefaultManager.SubscribeToMessage(TMessageResultNotification,
     procedure(const Sender: TObject; const M: TMessage)
     var
@@ -279,14 +524,10 @@ begin
         begin
           if Msg.ResultCode = TJActivity.JavaClass.RESULT_OK then
           begin
-            {$IFDEF ANDROID}
             var Uri := Msg.Value.getData;
             // We MUST copy the file to a local path (Cache) because
             // TBitmap.LoadFromFile cannot read 'content://' URIs directly.
             Path := CopyUriToCache(Uri, '.jpg');
-            {$ELSE}
-            Path := '';
-            {$ENDIF}
 
             if Assigned(AOnImageSelected)
             then AOnImageSelected(Path);
@@ -301,15 +542,37 @@ begin
           then AppDataCore.RamLog.AddError('SetupImagePickerCallback: '+ E.ClassName +' - '+ E.Message);
       END;
     end);
+{$ENDIF}
+{$IFDEF IOS}
+  Result:= TMessageManager.DefaultManager.SubscribeToMessage(TMessageImagePickerResult,
+    procedure(const Sender: TObject; const M: TMessage)
+    begin
+      TRY
+        if Assigned(AOnImageSelected)
+        then AOnImageSelected(TMessageImagePickerResult(M).Value);
+      EXCEPT
+        on E: Exception do
+          if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
+          then AppDataCore.RamLog.AddError('SetupImagePickerCallback (iOS): '+ E.ClassName +' - '+ E.Message);
+      END;
+    end);
+{$ENDIF}
 end;
 
 
 { Generic file picker callback (paired with PickAnyFileFromStorage / REQUEST_PICK_FILE).
   Same lifetime rules as SetupImagePickerCallback: caller MUST unsubscribe.
   Bytes are copied to cache as 'picked_xxx.dat'. ImportSharedFile (and similar) read
-  by content header, not by filename, so the suffix is cosmetic. }
+  by content header, not by filename, so the suffix is cosmetic.
+
+  Cross-platform behavior:
+    Android: subscribes to TMessageResultNotification (intent result).
+    iOS    : subscribes to TMessageFilePickerResult (posted by TIosDocumentPickerDelegate).
+    Other  : returns 0; callback never fires. }
 function SetupAnyFilePickerCallback(const AOnFileSelected: TFileSelectedEvent): TMessageSubscriptionId;
 begin
+  Result:= 0;
+{$IFDEF ANDROID}
   Result:= TMessageManager.DefaultManager.SubscribeToMessage(TMessageResultNotification,
     procedure(const Sender: TObject; const M: TMessage)
     var
@@ -323,12 +586,8 @@ begin
         begin
           if Msg.ResultCode = TJActivity.JavaClass.RESULT_OK then
           begin
-            {$IFDEF ANDROID}
             var Uri := Msg.Value.getData;
             Path := CopyUriToCache(Uri, '.dat');
-            {$ELSE}
-            Path := '';
-            {$ENDIF}
 
             if Assigned(AOnFileSelected)
             then AOnFileSelected(Path);
@@ -343,9 +602,25 @@ begin
           then AppDataCore.RamLog.AddError('SetupAnyFilePickerCallback: '+ E.ClassName +' - '+ E.Message);
       END;
     end);
+{$ENDIF}
+{$IFDEF IOS}
+  Result:= TMessageManager.DefaultManager.SubscribeToMessage(TMessageFilePickerResult,
+    procedure(const Sender: TObject; const M: TMessage)
+    begin
+      TRY
+        if Assigned(AOnFileSelected)
+        then AOnFileSelected(TMessageFilePickerResult(M).Value);
+      EXCEPT
+        on E: Exception do
+          if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
+          then AppDataCore.RamLog.AddError('SetupAnyFilePickerCallback (iOS): '+ E.ClassName +' - '+ E.Message);
+      END;
+    end);
+{$ENDIF}
 end;
 
 
+{$IFDEF ANDROID}
 {-------------------------------------------------------------------------------------------------------------
    INCOMING ACTION_VIEW INTENT (file shared from another app)
 
@@ -481,16 +756,32 @@ end;
    PATHS
 -------------------------------------------------------------------------------------------------------------}
 
+{ Returns the public Pictures folder path.
+  ANDROID 10+ (API 29) WARNING: scoped storage prevents direct file writes to this path
+  via TFile/TFileStream — they will silently fail or throw SecurityException.
+  On API 29+, use MediaStore (ContentResolver.insert with MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+  to write images, then call ScanMediaFile if the file was added via direct path on legacy API.
+  This function is safe for DISPLAY only on Android 10+; do NOT pass the result to write APIs. }
 function GetPublicPicturesFolder: string;
 begin
   {$IFDEF MSWINDOWS}
-  Result := Trail(TPath.GetPicturesPath);
+  Result:= Trail(TPath.GetPicturesPath);
   {$ELSEIF DEFINED(ANDROID)}
-  Result := Trail(TPath.GetSharedPicturesPath); // Public folder (Gallery) -  Ensure permissions or use MediaStore API
+  Result:= Trail(TPath.GetSharedPicturesPath);
   {$ELSE}
-  Result := Trail(TPath.GetDocumentsPath);
+  Result:= Trail(TPath.GetDocumentsPath);
   {$ENDIF}
 end;
 
+
+{$IFDEF IOS}
+// Frees iOS picker singletons. FINALIZATION is normally avoided per project rule, but
+// here the singletons (TIosImagePickerBridge + TIosDocumentPickerDelegate) must outlive
+// any single picker invocation AND be released at app exit so the registered Objective-C
+// class for the document delegate is unregistered cleanly.
+finalization
+  FreeAndNil(GIosImagePickerBridge);
+  FreeAndNil(GIosDocumentPickerBridge);
+{$ENDIF}
 
 end.
