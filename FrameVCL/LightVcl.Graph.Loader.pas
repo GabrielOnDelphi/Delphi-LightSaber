@@ -263,8 +263,12 @@ begin
          if (Result <> NIL) AND ExifRotate then
           begin
             VAR ExifData:= GetExif(FileName);
-            LightVcl.Graph.FX.Rotate.RotateExif(Result, ExifData);
-            FreeAndNil(ExifData);
+            if ExifData <> NIL then    { GetExif returns NIL if the file has no EXIF or the parser failed. RotateExif asserts non-NIL. }
+             TRY
+               LightVcl.Graph.FX.Rotate.RotateExif(Result, ExifData);
+             FINALLY
+               FreeAndNil(ExifData);
+             END;
           end;
         end;
 
@@ -287,7 +291,7 @@ end;
 
 
 { Use it for animated files }
-function LoadGraph(CONST FileName: string; OUT FrameCount: Cardinal): TBitmap;                  { FrameCount is -1 in case of error (gif cannot be decoded), 0 if the image is not a gif, 1 for static gifs and >1 for animated gifs }
+function LoadGraph(CONST FileName: string; OUT FrameCount: Cardinal): TBitmap;                  { FrameCount is 0 in case of error (gif cannot be decoded) OR if the image is not a gif, 1 for static gifs, and >1 for animated gifs }
 VAR Signature: Integer;
 begin
  Assert(FileExistsMsg(FileName));
@@ -317,11 +321,17 @@ end;
 function LoadGraphAsGrayScale(FileName: string): TBitmap;
 begin
   Result:= LoadGraph(FileName, FALSE, TRUE);
+  if Result = NIL then EXIT;     { Image was corrupted or unsupported - LoadGraph already logged it }
+
   TRY
     if NOT HasGrayscalePalette(Result)
     then LightVcl.Graph.UtilGray.ConvertToGrayscale(Result);
   EXCEPT
-    FreeAndNil(Result);
+    on E: Exception do
+     begin
+       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+       FreeAndNil(Result);
+     end;
   END;
 end;
 
@@ -330,6 +340,8 @@ procedure LoadGraphAsGrayScale(FileName: string; BMP: TBitmap);
 begin
   Assert(BMP <> NIL);
   VAR Temp:= LoadGraph(FileName, FALSE, TRUE);
+  if Temp = NIL then EXIT;       { Image was corrupted or unsupported - leave BMP untouched }
+
   TRY
     if NOT HasGrayscalePalette(Temp)
     then LightVcl.Graph.UtilGray.ConvertToGrayscale(Temp);
@@ -870,9 +882,8 @@ begin
 end;
 
 
-function LoadEMF(CONST FileName: string): TBitmap;                                          { Converts a Enhanced Metafile (*BMP }
+function LoadEMF(CONST FileName: string): TBitmap;                                          { Converts an Enhanced Metafile (EMF) to BMP }
 VAR Metafile: TMetafile;
-    MetaCanvas: TMetafileCanvas;
 begin
   Assert(FileExistsMsg(FileName));
   Result:= NIL;
@@ -882,37 +893,30 @@ begin
 
     TRY
       Metafile.LoadFromFile(FileName);
-   EXCEPT
-     on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
-      begin
-       AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       FreeAndNil(MetaFile);   { We only free the result in case of failure }
-       EXIT(NIL);
-      end;
-   end;
+    EXCEPT
+      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic, EReadError, etc }                                                                                     //todo: trap only specific exceptions
+       begin
+        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+        EXIT(NIL);
+       end;
+    END;
 
-    MetaCanvas:= TMetafileCanvas.Create(Metafile, 0);
+    Result:= TBitmap.Create;
     TRY
-     Result:= TBitmap.Create;
-     TRY
       Result.Height:= Metafile.Height;
       Result.Width := Metafile.Width;
       Result.Canvas.Draw(0, 0, Metafile);
-     EXCEPT
-       on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
-        begin
-         AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-         FreeAndNil(Result);   { We only free the result in case of failure }
-        end;
-     end;
-
-    FINALLY
-      FreeAndNil(MetaCanvas);   { We only free the result in case of failure }
-    end;
+    EXCEPT
+      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic, EReadError, etc }                                                                                     //todo: trap only specific exceptions
+       begin
+        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
+        FreeAndNil(Result);   { We only free the result in case of failure }
+       end;
+    END;
 
   FINALLY
     FreeAndNil(Metafile);
-  end;
+  END;
 end;
 
 
