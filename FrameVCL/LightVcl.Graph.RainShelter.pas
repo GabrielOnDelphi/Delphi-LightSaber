@@ -25,10 +25,8 @@ TYPE
    TPixelMap= array of array of Boolean;  { Map of bits. True bits correspond to a pink pixel (where we draw water) }
 
 CONST
-   RainDropExt   = '.RainDrop';
    RainDropFlt   = 'RainDrop animations|*.RainDrop';
    RainDropEditor= 'RainDropEditor.exe';
-
 
 TYPE
   TRainShelter = class(TObject)
