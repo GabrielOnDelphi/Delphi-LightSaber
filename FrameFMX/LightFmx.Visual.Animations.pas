@@ -649,19 +649,12 @@ begin
       begin
         Child:= Targets[i];
 
-        // DO NOT reparent. Reparenting targets into OwnerForm creates a flat
-        // sibling structure under the form; during program finalization
-        // (DoDeleteChildren cascade inside DoneApplication), controls that held
-        // mutual FreeNotify links with their original parent/sibling subtree die
-        // in the wrong order, leaving stale pointers in FFreeNotifies that crash
-        // TFmxObject.BeforeDestruction at $8080808C. Staying in-place accepts
-        // that controls inside a clipping parent may vanish early during the
-        // fall, but avoids the shutdown AV. LearnAssist's main-form layouts
-        // do not clip children (ClipChildren=False by default), so the visual
-        // impact is negligible here.
+        // DO NOT reparent. Reparenting targets into OwnerForm creates a flat sibling structure under the form; during program finalization
+        // (DoDeleteChildren cascade inside DoneApplication), controls that held mutual FreeNotify links with their original parent/sibling subtree die in the wrong order, leaving stale pointers in FFreeNotifies that crash
+        // TFmxObject.BeforeDestruction at $8080808C. Staying in-place accepts that controls inside a clipping parent may vanish early during the fall, but avoids the shutdown AV. LearnAssist's main-form layouts
+        // do not clip children (ClipChildren=False by default), so the visual impact is negligible here.
 
-        // Compute target: fall a full client-height below current position, so
-        // regardless of parent offset the control visibly drops past the bottom.
+        // Compute target: fall a full client-height below current position, so regardless of parent offset the control visibly drops past the bottom.
         TargetY:= Child.Position.Y + OwnerForm.ClientHeight + 50;
 
         // Break alignment so Position.Y animation is visible. Set rotation pivot to center.
