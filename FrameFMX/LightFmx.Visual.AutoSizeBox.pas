@@ -1,7 +1,7 @@
 UNIT LightFmx.Visual.AutosizeBox;
 
 {=============================================================================================================
-   2026.01.31
+   2026.04.25
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    A TRectangle that automatically adjusts its height to fit its internal content.
@@ -105,7 +105,7 @@ function DeriveBubbleColor(BaseColor: TAlphaColor; aBoxType: TBoxType; Dark: Boo
 CONST
   HueGreen = 120 / 360;   // Green hue in 0..1 range (for user bubbles)
   HueBlue  = 210 / 360;   // Blue hue in 0..1 range (for content bubbles)
-  HueBlend = 0.3;          // How much to shift toward the target hue (30% = subtle tint)
+  HueBlend = 0.5;          // How much to shift toward the target hue (50% = visible tint)
   LiftDark = 0.12;         // Lightness increase for dark themes
   DropLight= 0.08;         // Lightness decrease for light themes
 VAR
