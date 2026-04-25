@@ -235,36 +235,38 @@ CONST
 VAR
    FileSign: TPNGSig;
    i: integer;
+   W32, H32: LongWord;
 begin
+ Width  := -1;
+ Height := -1;
  Stream.Position:= 0;   { This is mandatory because we don't know who used this object before and if it left it unwinded }
 
  { Transfer data from MemoryStream to FileSign }
- if Stream.Read(FileSign[0], SizeOf(FileSign)) <> 8 then
-    begin
-     Width  := -1;
-     Height := -1;
-     EXIT;
-    end;
+ if Stream.Read(FileSign[0], SizeOf(FileSign)) <> 8 then EXIT;
 
  { Check if the signature is valid }
  for i:= Low(FileSign) to High(FileSign) DO
-   if FileSign[i] <> ValidSig[i] then
-    begin
-     Width  := -1;
-     Height := -1;
-     EXIT;
-    end;
+   if FileSign[i] <> ValidSig[i] then EXIT;
 
  { Read image dimensions from IHDR chunk.
-   PNG structure: 8-byte signature + 4-byte chunk length + 4-byte chunk type ("IHDR") + chunk data.
-   IHDR layout: Width (4 bytes, big-endian) at file offset 16, Height (4 bytes, big-endian) at offset 20.
-   We seek past the upper 2 bytes (zero for any image <= 65535 px) and read the lower 2 bytes as a
-   big-endian Word. Limitation: returns wrong values for images larger than 65535 px in either axis. }
- Stream.Seek(18, 0);
- Width := LightCore.Binary.ReadMotorolaWord(Stream);
+   PNG layout: 8-byte signature + 4-byte chunk length + 4-byte chunk type ("IHDR") + chunk data.
+   IHDR data: Width (4 bytes, big-endian) at file offset 16, Height (4 bytes, big-endian) at offset 20. }
+ TRY
+   Stream.Seek(16, 0);
+   W32:= LightCore.Binary.ReadMotorolaLongWord(Stream);
 
- Stream.Seek(22, 0);
- Height := LightCore.Binary.ReadMotorolaWord(Stream);
+   Stream.Seek(20, 0);
+   H32:= LightCore.Binary.ReadMotorolaLongWord(Stream);
+ EXCEPT
+   { Truncated IHDR - leave Width/Height at -1 }
+   EXIT;
+ END;
+
+ { Result is Integer; clamp absurd values that exceed the spec's 2^31-1 maximum. }
+ if (W32 > MaxInt) OR (H32 > MaxInt) then EXIT;
+
+ Width  := Integer(W32);
+ Height := Integer(H32);
 end;
 
 
