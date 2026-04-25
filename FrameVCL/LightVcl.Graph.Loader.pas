@@ -230,13 +230,9 @@ begin
     end;
   END;
 
-  { Before loading an image (any image) check if its file extension matches the binary header.
-    Note: No need to do it for jpeg images with png ext. The algorithm already recognizes that and loads the image just fine. }
-  if IsJpg(FileName) AND (Signature= 2) then
-   begin
-    AppDataCore.LogWarn(FileName+ CRLF+ ' is a PNG file with invalid file extension (jpg). You can fix this by changing the extension from JPG to PNG.');
-    EXIT(NIL);
-   end;
+  { Format is decided by binary signature, not extension - so a PNG named *.jpg (or any other
+    mismatch) loads correctly via the matching branch below. We used to reject PNG-as-JPG with
+    a warning while accepting JPG-as-PNG silently; the asymmetry was a footgun for callers. }
 
   { Create the right type of loader }
   case Signature of
