@@ -1,7 +1,7 @@
 UNIT LightVcl.Graph.RainShelter;
 
 {=============================================================================================================
-   2026.01.30
+   2026.04.25
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
   Reads/writes files in RainDrop format (own binary format).
@@ -19,7 +19,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes,
-  vcl.Graphics, Vcl.Imaging.Jpeg, LightCore.StreamBuff, LightVcl.Graph.RainDropParams;
+  vcl.Graphics, Vcl.Imaging.Jpeg, LightCore.IO, LightCore.StreamBuff, LightVcl.Graph.RainDropParams;
 
 TYPE
    TPixelMap= array of array of Boolean;  { Map of bits. True bits correspond to a pink pixel (where we draw water) }
@@ -68,7 +68,7 @@ function IsRainShelter(CONST FileName: string): Boolean;
 VAR sExtension: string;
 begin
  sExtension:= ExtractFileExt(FileName);
- Result:= SameText(sExtension, RainDropExt);
+ Result:= SameText(sExtension, RainDrop);
 end;
 
 
@@ -112,7 +112,7 @@ CONST
 procedure TRainShelter.Save(Mask: TBitmap);
 begin
   if NOT IsRainShelter(FileName)
-  then SaveToFile(ChangeFileExt(FileName, RainDropExt), Mask)
+  then SaveToFile(ChangeFileExt(FileName, RainDrop), Mask)
   else SaveToFile(FileName, Mask);
 end;
 
