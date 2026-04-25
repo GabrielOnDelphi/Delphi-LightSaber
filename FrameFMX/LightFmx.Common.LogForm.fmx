@@ -14,12 +14,11 @@ object frmRamLog: TfrmRamLog
   Left = 549
   Top = 450
   DesignerMasterStyle = 0
-  object Container: TPanel
+  object Container: TLayout
     Align = Client
     Size.Width = 712.000000000000000000
     Size.Height = 692.000000000000000000
     Size.PlatformDefault = False
-    TabOrder = 0
     object pnlBottom: TPanel
       Align = Bottom
       Position.Y = 661.000000000000000000
