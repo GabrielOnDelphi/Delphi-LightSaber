@@ -55,7 +55,7 @@ USES
   FMX.Forms;
 
 procedure InstallCrashHandler;                  // Idempotent. Call once early in DPR.
-function  CrashLogPath: string;                 // <AppDataFolder>\crash.log. Returns '' if AppData not ready.
+function  CrashLogPath: string;                 // <AppDataFolder>\crash.log. Returns '' if InstallCrashHandler has not been called yet.
 function  HasPendingCrashLog: Boolean;          // True if a crash.log from a previous session exists.
 function  ReadPendingCrashLog: string;          // File contents, or '' if no file.
 procedure ClearPendingCrashLog;                 // Deletes the file. Safe to call when no file exists.
@@ -75,20 +75,22 @@ TYPE
   // The instance is owned by the global Application object so it is freed cleanly on shutdown.
   TCrashHandlerHook = class(TComponent)
     procedure HandleException(Sender: TObject; E: Exception);
+    destructor Destroy; override;
   end;
 
 VAR
   HookInstance: TCrashHandlerHook = nil;        // Set once in InstallCrashHandler. Owned by Application.
+  CachedPath  : string = '';                    // Set once in InstallCrashHandler. Avoids ForceDirectories on every exception.
 
 
-{ The path to the crash log file. Returns '' if AppData has not been constructed yet
-  (defensive — InstallCrashHandler is called AFTER AppData.Create, so this should not happen
-  in normal flow, but a very-early exception during DPR initialization could hit this path). }
+{ The path to the crash log file. Returns '' if InstallCrashHandler has not been called yet,
+  or if it was called before AppData.Create (a very-early exception during DPR initialization
+  could hit this path). The path is cached at install time so the exception handler does not
+  call ForceDirectories or touch TAppDataCore.AppName (which asserts in debug builds when the
+  app name is empty). }
 function CrashLogPath: string;
 begin
-  if TAppDataCore.AppName = ''
-  then Result:= ''
-  else Result:= TAppDataCore.AppDataFolder(True) + CRASH_LOG_FILENAME;
+  Result:= CachedPath;
 end;
 
 
@@ -121,8 +123,7 @@ begin
   TRY
     // ISO-style timestamp so logs sort and parse the same regardless of user locale
     // (DateTimeToStr would render 'dd/mm/yyyy' or 'mm/dd/yyyy' depending on the OS).
-    Line:= Format('%s | %s: %s',
-                  [FormatDateTime('yyyy-mm-dd hh:nn:ss', Now), E.ClassName, E.Message]);
+    Line:= FormatDateTime('yyyy-mm-dd hh:nn:ss', Now) + ' | ' + E.ClassName + ': ' + E.Message;
 
     // Mirror to RamLog so the in-app log viewer sees it during the current session
     if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
@@ -136,9 +137,29 @@ begin
 end;
 
 
+destructor TCrashHandlerHook.Destroy;
+begin
+  // Clear OnException only if it still points to this hook — don't clobber a handler
+  // installed later by other code. TApplication.Destroy frees owned components but
+  // does not clear FOnException, so without this we would leave a dangling method
+  // reference on Application during the brief window before Application itself dies.
+  if Assigned(Application) AND (TMethod(Application.OnException).Data = Self)
+  then Application.OnException:= nil;
+  HookInstance:= nil;                           // Clear module var so InstallCrashHandler can be called again in a fresh app lifecycle (tests).
+  CachedPath  := '';
+  inherited;
+end;
+
+
 procedure InstallCrashHandler;
 begin
   if Assigned(HookInstance) then EXIT;          // Idempotent
+  // Cache the path now while AppData is healthy. This avoids calling ForceDirectories
+  // and the TAppDataCore.AppName assert (debug builds) from inside the exception handler,
+  // which on Android may already be in a degraded state. If AppData was not constructed
+  // first, the cache stays empty and all logging silently no-ops — safer than asserting.
+  if Assigned(AppDataCore)
+  then CachedPath:= TAppDataCore.AppDataFolder(True) + CRASH_LOG_FILENAME;
   HookInstance:= TCrashHandlerHook.Create(Application);  // Application owns and frees it
   Application.OnException:= HookInstance.HandleException;
 end;
@@ -148,7 +169,11 @@ function HasPendingCrashLog: Boolean;
 VAR Path: string;
 begin
   Path:= CrashLogPath;
-  Result:= (Path <> '') AND FileExists(Path);
+  TRY
+    Result:= (Path <> '') AND FileExists(Path);
+  EXCEPT
+    Result:= FALSE;                             // FileExists may raise on Android with unmounted storage; treat as "no log".
+  END;
 end;
 
 
