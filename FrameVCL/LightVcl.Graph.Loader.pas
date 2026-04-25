@@ -82,8 +82,8 @@ CONST
 
 {-------------------------------------------------------------------------------------------------------------
    Image format utils
+   DetectGraphSignature lives in LightCore.Graphics (RTL-only) — re-export here for back-compat.
 -------------------------------------------------------------------------------------------------------------}
- function  DetectGraphSignature(CONST FileName: string): Integer;
  function  CheckValidImage     (CONST FileName: string): Boolean;
  function  GetExif             (CONST FileName: string): TExifData;
 
@@ -95,7 +95,7 @@ USES
    Winapi.ActiveX,
    FastJpegDecHelper,
    LightVcl.Graph.Resize, LightVcl.Graph.Loader.Resolution, LightVcl.Graph.UtilGray,
-   LightVcl.Graph.Loader.WB1, LightVcl.Graph.RainShelter, LightCore.IO, LightVcl.Common.IO, LightVcl.Graph.FX.Rotate,
+   LightVcl.Graph.Loader.WB1, LightVcl.Graph.RainShelter, LightCore.IO, LightCore.Graphics, LightVcl.Common.IO, LightVcl.Graph.FX.Rotate,
    LightCore.AppData, LightCore, LightVcl.Graph.GrabAviFrame;
 
 
@@ -999,7 +999,8 @@ end;
 
 
 {-------------------------------------------------------------------------------------------------------------
-   DetectGraphSignature
+   CheckValidImage
+   DetectGraphSignature was moved to LightCore.Graphics (RTL-only).
 -------------------------------------------------------------------------------------------------------------}
 function CheckValidImage (CONST FileName: string): Boolean;
 VAR BMP: TBitmap;
@@ -1007,43 +1008,6 @@ begin
   BMP:= LoadGraph(FileName, True);
   Result := BMP <> NIL;
   FreeAndNil(BMP);
-end;
-
-
-function DetectGraphSignature(CONST FileName: string): Integer;
-VAR
-  FS: TFileStream;
-  FirstBytes: AnsiString;
-begin
-  Result:= 0;
-
-  if IsJp2(FileName)      then EXIT(5);          {ToDo 5: detect J2K and WB1 by signature }
-  if IsWB1(FileName)      then EXIT(6);
-  if IsRainShelter(FileName) then EXIT(7);
-
-  { Detect by signature }
-  Assert(FileExistsMsg(FileName));
-  FS:= TFileStream.Create(FileName, fmOpenRead OR fmShareDenyNone);  { This could fail if the file is locked }
-  TRY
-    TRY
-      SetLength(FirstBytes, 8);
-      FS.Read(FirstBytes[1], 8);
-
-      if system.COPY(FirstBytes, 1, 2) = 'BM'     then EXIT(1);  { BMP }
-      if FirstBytes = #137'PNG'#13#10#26#10       then EXIT(2);  { PNG }
-      if system.COPY(FirstBytes, 1, 3) = 'GIF'    then EXIT(3);  { GIF }
-      if system.COPY(FirstBytes, 1, 2) = #$FF#$D8 then EXIT(4);  { JPG }
-    EXCEPT
-      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
-       begin
-         Result:= -1;
-         AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       end;
-    END;
-
-  FINALLY
-    FreeAndNil(FS);
-  END;
 end;
 
 
