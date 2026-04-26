@@ -66,11 +66,17 @@
         </DelphiCompile>
         <DCCReference Include="Test.LightFmx.Common.CamUtils.pas"/>
         <DCCReference Include="Test.LightFmx.Visual.SvgFlatButton.pas"/>
+        <DCCReference Include="Test.LightFmx.Common.Dialogs.pas"/>
+        <DCCReference Include="Test.LightFmx.Visual.AutoSizeBoxImg.pas"/>
         <DCCReference Include="..\LightCore.IO.pas"/>
         <DCCReference Include="..\FrameFMX\LightFmx.Common.CamUtils.pas"/>
         <DCCReference Include="..\FrameFMX\LightFmx.Common.Styles.pas"/>
         <DCCReference Include="..\FrameFMX\LightFmx.Common.Screen.pas"/>
+        <DCCReference Include="..\FrameFMX\LightFmx.Common.Dialogs.pas"/>
+        <DCCReference Include="..\FrameFMX\LightFmx.Common.Graph.pas"/>
         <DCCReference Include="..\FrameFMX\LightFmx.Visual.SvgFlatButton.pas"/>
+        <DCCReference Include="..\FrameFMX\LightFmx.Visual.AutoSizeBox.pas"/>
+        <DCCReference Include="..\FrameFMX\LightFmx.Visual.AutoSizeBoxImg.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -81,7 +81,7 @@ type
 
     { LoadImage Tests }
     [Test]
-    procedure TestLoadImage_SetsBoxTypeToModel;
+    procedure TestLoadImage_SetsBoxTypeToContent;
 
     [Test]
     procedure TestLoadImage_NonExistentFile_DoesNotCrash;
@@ -108,7 +108,7 @@ type
 implementation
 
 uses
-  LightFmx.Graph;
+  LightFmx.Common.Graph;
 
 
 procedure TTestAutoSizeBoxImg.CreateTestImage(const FileName: string; Width, Height: Integer);
@@ -130,7 +130,8 @@ begin
   FParent.Width:= 400;
   FParent.Height:= 600;
 
-  FTestImagePath:= TPath.Combine(TPath.GetTempPath, 'TestAutoSizeBoxImg_TestImage.png');
+  // Fully qualify TPath: FMX.Types defines a TPath class (vector graphics) that shadows System.IOUtils.TPath here.
+  FTestImagePath:= System.IOUtils.TPath.Combine(System.IOUtils.TPath.GetTempPath, 'TestAutoSizeBoxImg_TestImage.png');
 end;
 
 
@@ -152,7 +153,7 @@ begin
   Box:= TAutosizeBoxImg.Create(FParent);
   try
     Assert.IsNotNull(Box, 'Box should be created');
-    Assert.AreEqual(FParent, Box.Owner, 'Owner should be set correctly');
+    Assert.AreEqual(TComponent(FParent), Box.Owner, 'Owner should be set correctly');
   finally
     FreeAndNil(Box);
   end;
@@ -356,7 +357,7 @@ end;
 
 { LoadImage Tests }
 
-procedure TTestAutoSizeBoxImg.TestLoadImage_SetsBoxTypeToModel;
+procedure TTestAutoSizeBoxImg.TestLoadImage_SetsBoxTypeToContent;
 var
   Box: TAutosizeBoxImg;
 begin
@@ -366,7 +367,7 @@ begin
     Box.BoxType:= bxUser;  // Set to something else first
     CreateTestImage(FTestImagePath, 100, 100);
     Box.LoadImage(FTestImagePath, TRectF.Create(0, 0, 100, 100));
-    Assert.AreEqual(bxModel, Box.BoxType, 'BoxType should be bxModel after LoadImage');
+    Assert.AreEqual(bxContent, Box.BoxType, 'BoxType should be bxContent after LoadImage');
   finally
     FreeAndNil(Box);
   end;
@@ -402,8 +403,14 @@ begin
     CreateTestImage(FTestImagePath, 800, 600);
     Box.LoadImage(FTestImagePath, TRectF.Create(0, 0, 800, 600));
 
-    // MaxWidth = (400 - margins) * 0.95
-    MaxAllowedWidth:= (FParent.Width - Box.Margins.Left - Box.Margins.Right) * 0.95 + Box.Padding.Left + Box.Padding.Right;
+    // Compute expected max width from FIXED inputs (do NOT read Box.Margins.Right —
+    // UpdateSize mutates it dynamically as an OUTPUT, so reading it here would
+    // make the assertion vacuous).
+    // setBoxType(bxContent) sets Margins.Left:= 5 (see LightFmx.Visual.AutoSizeBox).
+    // AvailableWidth      = FParent.Width - Margins.Left  = 400 - 5 = 395
+    // MaxImageWidth       = AvailableWidth * 0.95         = 375.25
+    // Final box width     = Ceil(MaxImageWidth) + Padding.Left + Padding.Right
+    MaxAllowedWidth:= Ceil((FParent.Width - 5) * 0.95) + Box.Padding.Left + Box.Padding.Right;
     Assert.IsTrue(Box.Width <= MaxAllowedWidth + 1, 'Width should be scaled down to fit parent');
   finally
     FreeAndNil(Box);
@@ -455,7 +462,6 @@ end;
 procedure TTestAutoSizeBoxImg.TestUpdateSize_AdjustsRightMargin;
 var
   Box: TAutosizeBoxImg;
-  ParentContentWidth: Single;
 begin
   Box:= TAutosizeBoxImg.Create(FParent);
   Box.Parent:= FParent;
@@ -463,8 +469,7 @@ begin
     CreateTestImage(FTestImagePath, 100, 100);
     Box.LoadImage(FTestImagePath, TRectF.Create(0, 0, 100, 100));
 
-    ParentContentWidth:= FParent.Width - Box.Margins.Left - Box.Margins.Right;
-    // Right margin is adjusted to keep bubble left-aligned
+    // UpdateSize adjusts Margins.Right dynamically to keep the bubble left-aligned
     Assert.IsTrue(Box.Margins.Right > 0, 'Right margin should be adjusted');
   finally
     FreeAndNil(Box);

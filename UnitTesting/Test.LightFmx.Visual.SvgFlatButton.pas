@@ -73,6 +73,8 @@ TYPE
     [Test] procedure TestSetCompact_FiresEvent;
     [Test] procedure TestSetCompact_SameValue_DoesNotFireEvent;
     [Test] procedure TestSetCompact_IgnoredWhenAutoCompact;
+    [Test] procedure TestSetIconPosition_WhileCompacted_SurvivesExpand;
+    [Test] procedure TestSetAutoCompact_TurningOffWhileCompacted_RestoresExpanded;
 
     [Test] procedure TestCompactSvgButtons_RecursesIntoChildren;
     [Test] procedure TestCompactSvgButtons_SkipsAutoCompactButtons;
@@ -377,6 +379,35 @@ begin
   FButton.AutoCompact:= True;
   FButton.Compact:= True;     { should be silently ignored }
   Assert.IsFalse(FButton.Compact, 'Manual Compact should be ignored when AutoCompact=True');
+end;
+
+
+procedure TTestSvgButton.TestSetIconPosition_WhileCompacted_SurvivesExpand;
+begin
+  FButton.IconPosition:= ipLeft;
+  FButton.Compact:= True;
+  Assert.AreEqual(Ord(ipCenter), Ord(FButton.IconPosition), 'precondition: visual is ipCenter while compacted');
+
+  { User changes IconPosition while compacted — visual should stay compact, value queued for expand }
+  FButton.IconPosition:= ipTop;
+  Assert.AreEqual(Ord(ipCenter), Ord(FButton.IconPosition), 'Visual should remain ipCenter while compacted');
+
+  FButton.Compact:= False;
+  Assert.AreEqual(Ord(ipTop), Ord(FButton.IconPosition), 'On expand, the value the user set while compacted should win');
+end;
+
+
+procedure TTestSvgButton.TestSetAutoCompact_TurningOffWhileCompacted_RestoresExpanded;
+begin
+  FButton.IconPosition:= ipLeft;
+  FButton.Compact:= True;
+  Assert.IsTrue(FButton.Compact, 'precondition: button compacted manually');
+
+  FButton.AutoCompact:= True;       { takes ownership; no scene attached so it does not flip state }
+  FButton.AutoCompact:= False;      { turning off should auto-expand if currently compacted }
+
+  Assert.IsFalse(FButton.Compact, 'Turning AutoCompact off should restore expanded state');
+  Assert.AreEqual(Ord(ipLeft), Ord(FButton.IconPosition), 'Original IconPosition should be restored');
 end;
 
 

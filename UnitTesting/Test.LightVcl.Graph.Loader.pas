@@ -129,6 +129,9 @@ type
     [Test]
     procedure TestLoadGraphAsGrayScale_BMP_CorruptFileLeavesBMPUntouched;  { Regression: must not crash when LoadGraph returns NIL }
 
+    [Test]
+    procedure TestLoadGraph_PngBytesWithJpgExtension;     { Regression: PNG content named *.jpg must load (was rejected with NIL) }
+
     { DetectGraphSignature Tests }
     [Test]
     procedure TestDetectGraphSignature_BmpFile;
@@ -709,6 +712,40 @@ begin
   FINALLY
     FreeAndNil(Bmp);
     DeleteFile(CorruptFile);
+  END;
+end;
+
+
+procedure TTestGraphLoader.TestLoadGraph_PngBytesWithJpgExtension;
+var
+  Bmp: TBitmap;
+  Png: TPngImage;
+  MislabeledFile: string;
+begin
+  { Save real PNG bytes to a *.jpg path. The old loader rejected this with EXIT(NIL).
+    Now the signature-based dispatch should recognize PNG and load it. }
+  MislabeledFile:= TPath.Combine(FTempDir, 'pretendsToBeJpg.jpg');
+  Png:= TPngImage.Create;
+  TRY
+    Png.CreateBlank(COLOR_RGB, 8, 60, 40);
+    Png.Canvas.Brush.Color:= clLime;
+    Png.Canvas.FillRect(Rect(0, 0, 60, 40));
+    Png.SaveToFile(MislabeledFile);
+  FINALLY
+    FreeAndNil(Png);
+  END;
+
+  TRY
+    Bmp:= LoadGraph(MislabeledFile);
+    TRY
+      Assert.IsNotNull(Bmp, 'PNG bytes with .jpg extension should load (signature wins over extension)');
+      Assert.AreEqual(60, Bmp.Width, 'Width should match the PNG content');
+      Assert.AreEqual(40, Bmp.Height, 'Height should match the PNG content');
+    FINALLY
+      FreeAndNil(Bmp);
+    END;
+  FINALLY
+    DeleteFile(MislabeledFile);
   END;
 end;
 
