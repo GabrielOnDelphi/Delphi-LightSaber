@@ -41,7 +41,6 @@ begin
   if NOT FileExists(FileName) then EXIT;
 
   { Magic-byte detection. }
-  BytesRead:= 0;
   FS:= NIL;
   TRY
     TRY
