@@ -39,6 +39,9 @@ UNIT LightVcl.Graph.Loader.Thread;
                 Do NOT free FileList after assigning it to the thread!
     - PopPicture: Returns NIL if the queue is empty. Always check the result before using.
     - The caller is responsible for freeing the bitmaps returned by PopPicture.
+    - Free MUST be called from the thread that owns the window handle (typically the main
+      UI thread). The destructor drains pending WM_THUMBNAIL_NOTIFY messages from the
+      caller's queue; that drain only works on the calling thread's own queue.
 
   We can put a single file in FileList and process only that file.
 
@@ -53,6 +56,11 @@ USES
   Vcl.Forms, Vcl.Graphics;
 
 CONST
+   { LIMITATION: hardcoded magic number — collides with any other component in the same
+     process that also posts WM_APP+1 to the same window. Proper fix would be
+     RegisterWindowMessage('TBkgImgLoader.WM_THUMBNAIL_NOTIFY') at unit init.
+     Not done because: existing callers reference this constant directly.
+     Ref: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-registerwindowmessagew }
    WM_THUMBNAIL_NOTIFY = WM_APP + 1;
 
 TYPE
@@ -105,19 +113,44 @@ begin
  Width           := 256;
  Height          := 128;
  FileList        := NIL;      { Caller must assign FileList before Start. Thread takes ownership! }
- FreeOnTerminate := FALSE;
  Priority        := tpLower;
 end;
 
 
 destructor TBkgImgLoader.Destroy;
-VAR BMP: TBitmap;
+VAR
+  BMP: TBitmap;
+  Msg: TMsg;
 begin
  { Order matters: signal Terminate, then wait for Execute to finish (via inherited Destroy)
    BEFORE touching ReadyThumbs/FQueueLock — otherwise a still-running PushPicture
    would access a freed lock and crash. }
  Terminate;
  inherited Destroy;   { Waits for the thread to exit Execute }
+
+ { Drain any WM_THUMBNAIL_NOTIFY messages the worker posted before Terminate was observed.
+   Without this, the caller's handler fires later and calls PopPicture on this freed
+   instance → AV.
+
+   MSDN-verified facts (do NOT "optimize" without re-reading these):
+     Ref: https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-peekmessagew
+
+   • Cross-thread requirement — confirmed verbatim in MSDN:
+       "The window must belong to the current thread."
+     → Free MUST run on the thread that owns FWndHandle (typically main UI). See
+       IMPORTANT block in unit header.
+
+   • WM_QUIT is NOT consumed by this drain — confirmed by MSDN + multiple sources.
+     MSDN warns: "PeekMessage always retrieves WM_QUIT messages, no matter which values
+     you specify for wMsgFilterMin and wMsgFilterMax" — but that caveat applies ONLY
+     when hwnd=NULL. With a specific hwnd (as here), WM_QUIT (whose MSG.hwnd is NULL)
+     is filtered out by the hwnd parameter and stays in the queue.
+     → DO NOT change FWndHandle to NULL here — that would eat the app's shutdown signal.
+
+   • Filter range is inclusive; PM_REMOVE removes only messages matching the filter. }
+ if IsWindow(FWndHandle) then
+   while PeekMessage(Msg, FWndHandle, WM_THUMBNAIL_NOTIFY, WM_THUMBNAIL_NOTIFY, PM_REMOVE) do
+     ; { intentionally empty - just drain }
 
  { Now safe — no other thread is touching the queue or the lock }
  if ReadyThumbs <> NIL then
@@ -144,7 +177,6 @@ end;
 procedure TBkgImgLoader.Execute;
 VAR CurFile: string;
 begin
- Fexception := NIL;
  Assert(FileList <> NIL, 'TBkgImgLoader.Execute: FileList must be assigned before starting the thread!');
 
  TRY
@@ -234,9 +266,12 @@ begin
  FINALLY
    FQueueLock.Leave;
  END;
- 
- { Sent a message to the main program to let it know a new thumb is ready/available }
- PostMessage(FWndHandle, WM_THUMBNAIL_NOTIFY, 0, 0);
+
+ { Send a message to the main program to let it know a new thumb is ready/available.
+   Skip if Terminate was already signaled — the destructor will free the bitmap from
+   the queue and drain any in-flight messages anyway. }
+ if NOT Terminated then
+   PostMessage(FWndHandle, WM_THUMBNAIL_NOTIFY, 0, 0);
 end;
 
 
