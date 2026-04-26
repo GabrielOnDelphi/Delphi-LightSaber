@@ -167,9 +167,6 @@ type
     [Test]
     procedure TestBtnAutoDetectClick_NoException;
 
-    { Global Variable Tests }
-    [Test]
-    procedure TestGlobalVariable_Exists;
   end;
 
 implementation
@@ -832,16 +829,6 @@ begin
     begin
       Form.btnAutoDetectClick(Form);
     end);
-end;
-
-
-{ Global Variable Tests }
-
-procedure TTestFormProxyList.TestGlobalVariable_Exists;
-begin
-  // Just verify the global variable exists and is initially nil (or some value)
-  // We can't test much more without affecting other tests
-  Assert.Pass('Global frmProxyList variable exists');
 end;
 
 

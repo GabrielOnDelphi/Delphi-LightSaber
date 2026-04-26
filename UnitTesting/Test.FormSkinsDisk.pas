@@ -113,12 +113,6 @@ type
     [Test]
     procedure TestOnDefaultSkin_DefaultIsNil;
 
-    { Static Method Tests }
-    [Test]
-    procedure TestShowAsModal_ClassMethodExists;
-
-    [Test]
-    procedure TestCreateForm_ClassMethodExists;
 
     { GetSkinDir Tests }
     [Test]
@@ -500,29 +494,10 @@ begin
   Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
-  { OnDefaultSkin is assigned in FormCreate events if connected in DFM,
-    but the FOnDefaultSkin field default should be nil }
-  { This test verifies the form can be created without OnDefaultSkin assigned }
-  Assert.Pass('Form can be created without OnDefaultSkin assigned');
+  Assert.IsNotNull(Form, 'Form should be created without OnDefaultSkin assigned');
 end;
 
 
-{ Static Method Tests }
-
-procedure TTestFormSkinsDisk.TestShowAsModal_ClassMethodExists;
-begin
-  { Just verify the class method exists and is callable (don't actually call it
-    as it would show a modal dialog) }
-  Assert.Pass('ShowAsModal class method exists');
-end;
-
-
-procedure TTestFormSkinsDisk.TestCreateForm_ClassMethodExists;
-begin
-  { Just verify the class method exists and is callable (don't actually call it
-    as it would show a form and require cleanup) }
-  Assert.Pass('CreateForm class method exists');
-end;
 
 
 { GetSkinDir Tests }

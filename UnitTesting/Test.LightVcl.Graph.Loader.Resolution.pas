@@ -139,6 +139,10 @@ type
 
     [Test]
     procedure TestGetGifSize_HandCraftedWithExtensionBlock;
+
+    { Measurement: was the `packed record` fix actually necessary? }
+    [Test]
+    procedure TestRecordAlignment_GIFHeader;
   end;
 
 implementation
@@ -205,12 +209,14 @@ procedure TTestGraphLoaderResolution.CreateTempPngFile(Width, Height: Integer);
 var
   Png: TPngImage;
 begin
+  { Use CreateBlank as a CONSTRUCTOR. The previous pattern
+       Png := TPngImage.Create;
+       Png.CreateBlank(...)
+    leaks because CreateBlank's body calls Create again (Vcl.Imaging.pngimage.pas:4347), which
+    re-runs Create's body and overwrites fCanvas + fChunkList — orphaning the first allocations. }
   FTempPngFile:= TPath.Combine(FTempDir, 'test.png');
-  Png:= TPngImage.Create;
+  Png:= TPngImage.CreateBlank(COLOR_RGB, 8, Width, Height);
   TRY
-    Png.CreateBlank(COLOR_RGB, 8, Width, Height);
-    Png.Canvas.Brush.Color:= clBlue;
-    Png.Canvas.FillRect(Rect(0, 0, Width, Height));
     Png.SaveToFile(FTempPngFile);
   FINALLY
     FreeAndNil(Png);
@@ -969,6 +975,30 @@ begin
   FINALLY
     FreeAndNil(Stream);
   END;
+end;
+
+
+{ Verifies the actual SizeOf for an unpacked record matching TGIFHeader's layout.
+  Compares two equivalent declarations — one packed, one unpacked. If their sizes match,
+  the `packed` fix was unnecessary for correctness (still good practice for stream-read records). }
+procedure TTestGraphLoaderResolution.TestRecordAlignment_GIFHeader;
+type
+  TUnpacked = record
+    Sig: array[0..5] of AnsiChar;
+    ScreenWidth, ScreenHeight: Word;
+    Flags, Background, Aspect: Byte;
+  end;
+  TPacked = packed record
+    Sig: array[0..5] of AnsiChar;
+    ScreenWidth, ScreenHeight: Word;
+    Flags, Background, Aspect: Byte;
+  end;
+begin
+  { Verified by direct measurement on Delphi 13 Win32: unpacked=14, packed=13.
+    Word-aligned fields force the unpacked record's size up to the next multiple of 2.
+    The `packed` keyword on TGIFHeader inside GetGIFSize was therefore a real correctness fix. }
+  Assert.AreEqual(13, SizeOf(TPacked),  'packed record size must equal on-disk GIF header (13)');
+  Assert.AreEqual(14, SizeOf(TUnpacked),'unpacked record gets a trailing alignment byte (14)');
 end;
 
 

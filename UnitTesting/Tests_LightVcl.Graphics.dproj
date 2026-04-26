@@ -103,6 +103,9 @@
         <DCCReference Include="..\FrameVCL\LightVcl.Graph.Cache.pas"/>
         <DCCReference Include="Test.LightVcl.Graph.ResizeWinBlt.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Graph.ResizeWinBlt.pas"/>
+        <DCCReference Include="Test.LightVcl.Graph.Loader.Resolution.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Graph.Loader.Resolution.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Graph.Util.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

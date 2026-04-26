@@ -178,9 +178,6 @@ type
     [Test]
     procedure TestBtnRunClick_NoExceptionWithPath;
 
-    { Global Variable Tests }
-    [Test]
-    procedure TestGlobalVariable_Exists;
   end;
 
 implementation
@@ -776,15 +773,6 @@ begin
     begin
       Form.btnRunClick(Form);
     end);
-end;
-
-
-{ Global Variable Tests }
-
-procedure TTestFormReminder.TestGlobalVariable_Exists;
-begin
-  // Just verify the global variable exists
-  Assert.Pass('Global frmReminder variable exists');
 end;
 
 

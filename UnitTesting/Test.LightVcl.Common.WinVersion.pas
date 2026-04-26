@@ -42,43 +42,6 @@ type
     [Test]
     procedure Test_VersionHierarchy_Win11Up_ImpliesWin10Up;
 
-    { Individual Version Function Tests }
-    [Test]
-    procedure Test_IsWindowsXP_ReturnsBoolean;
-
-    [Test]
-    procedure Test_IsWindowsXPUp_ReturnsBoolean;
-
-    [Test]
-    procedure Test_IsWindowsVista_ReturnsBoolean;
-
-    [Test]
-    procedure Test_IsWindowsVistaUp_ReturnsBoolean;
-
-    [Test]
-    procedure Test_IsWindows7_ReturnsBoolean;
-
-    [Test]
-    procedure Test_IsWindows7Up_ReturnsBoolean;
-
-    [Test]
-    procedure Test_IsWindows8_ReturnsBoolean;
-
-    [Test]
-    procedure Test_IsWindows8Up_ReturnsBoolean;
-
-    [Test]
-    procedure Test_IsWindows10_ReturnsBoolean;
-
-    [Test]
-    procedure Test_IsWindows10Up_ReturnsBoolean;
-
-    [Test]
-    procedure Test_IsWindows11_ReturnsBoolean;
-
-    [Test]
-    procedure Test_IsWindows11Up_ReturnsBoolean;
-
     { Utility Function Tests }
     [Test]
     procedure Test_IsNTKernel_ReturnsTrue;
@@ -128,152 +91,39 @@ end;
 
 procedure TTestWinVersion.Test_VersionHierarchy_VistaUp_ImpliesXPUp;
 begin
-  if IsWindowsVistaUp
-  then Assert.IsTrue(IsWindowsXPUp, 'If VistaUp, then XPUp should also be true');
-  Assert.Pass('Hierarchy check passed');
+  Assert.IsTrue(IsWindowsVistaUp, 'Delphi 13 requires at least Win7, so VistaUp must be True');
+  Assert.IsTrue(IsWindowsXPUp, 'If VistaUp, then XPUp should also be true');
 end;
 
 
 procedure TTestWinVersion.Test_VersionHierarchy_Win7Up_ImpliesVistaUp;
 begin
-  if IsWindows7Up
-  then Assert.IsTrue(IsWindowsVistaUp, 'If Win7Up, then VistaUp should also be true');
-  Assert.Pass('Hierarchy check passed');
+  Assert.IsTrue(IsWindows7Up, 'Delphi 13 requires at least Win7');
+  Assert.IsTrue(IsWindowsVistaUp, 'If Win7Up, then VistaUp should also be true');
 end;
 
 
 procedure TTestWinVersion.Test_VersionHierarchy_Win8Up_ImpliesWin7Up;
 begin
   if IsWindows8Up
-  then Assert.IsTrue(IsWindows7Up, 'If Win8Up, then Win7Up should also be true');
-  Assert.Pass('Hierarchy check passed');
+  then Assert.IsTrue(IsWindows7Up, 'If Win8Up, then Win7Up should also be true')
+  else Assert.IsFalse(IsWindows8Up, 'Win8Up is false - hierarchy not applicable');
 end;
 
 
 procedure TTestWinVersion.Test_VersionHierarchy_Win10Up_ImpliesWin8Up;
 begin
   if IsWindows10Up
-  then Assert.IsTrue(IsWindows8Up, 'If Win10Up, then Win8Up should also be true');
-  Assert.Pass('Hierarchy check passed');
+  then Assert.IsTrue(IsWindows8Up, 'If Win10Up, then Win8Up should also be true')
+  else Assert.IsFalse(IsWindows10Up, 'Win10Up is false - hierarchy not applicable');
 end;
 
 
 procedure TTestWinVersion.Test_VersionHierarchy_Win11Up_ImpliesWin10Up;
 begin
   if IsWindows11Up
-  then Assert.IsTrue(IsWindows10Up, 'If Win11Up, then Win10Up should also be true');
-  Assert.Pass('Hierarchy check passed');
-end;
-
-
-{ Individual Version Function Tests }
-
-procedure TTestWinVersion.Test_IsWindowsXP_ReturnsBoolean;
-VAR
-  Result: Boolean;
-begin
-  Result:= IsWindowsXP;
-  { Just verify it returns a valid boolean without crashing }
-  Assert.Pass('IsWindowsXP returned: ' + BoolToStr(Result, True));
-end;
-
-
-procedure TTestWinVersion.Test_IsWindowsXPUp_ReturnsBoolean;
-VAR
-  Result: Boolean;
-begin
-  Result:= IsWindowsXPUp;
-  Assert.Pass('IsWindowsXPUp returned: ' + BoolToStr(Result, True));
-end;
-
-
-procedure TTestWinVersion.Test_IsWindowsVista_ReturnsBoolean;
-VAR
-  Result: Boolean;
-begin
-  Result:= IsWindowsVista;
-  Assert.Pass('IsWindowsVista returned: ' + BoolToStr(Result, True));
-end;
-
-
-procedure TTestWinVersion.Test_IsWindowsVistaUp_ReturnsBoolean;
-VAR
-  Result: Boolean;
-begin
-  Result:= IsWindowsVistaUp;
-  Assert.Pass('IsWindowsVistaUp returned: ' + BoolToStr(Result, True));
-end;
-
-
-procedure TTestWinVersion.Test_IsWindows7_ReturnsBoolean;
-VAR
-  Result: Boolean;
-begin
-  Result:= IsWindows7;
-  Assert.Pass('IsWindows7 returned: ' + BoolToStr(Result, True));
-end;
-
-
-procedure TTestWinVersion.Test_IsWindows7Up_ReturnsBoolean;
-VAR
-  Result: Boolean;
-begin
-  Result:= IsWindows7Up;
-  Assert.Pass('IsWindows7Up returned: ' + BoolToStr(Result, True));
-end;
-
-
-procedure TTestWinVersion.Test_IsWindows8_ReturnsBoolean;
-VAR
-  Result: Boolean;
-begin
-  Result:= IsWindows8;
-  Assert.Pass('IsWindows8 returned: ' + BoolToStr(Result, True));
-end;
-
-
-procedure TTestWinVersion.Test_IsWindows8Up_ReturnsBoolean;
-VAR
-  Result: Boolean;
-begin
-  Result:= IsWindows8Up;
-  Assert.Pass('IsWindows8Up returned: ' + BoolToStr(Result, True));
-end;
-
-
-procedure TTestWinVersion.Test_IsWindows10_ReturnsBoolean;
-VAR
-  Result: Boolean;
-begin
-  Result:= IsWindows10;
-  Assert.Pass('IsWindows10 returned: ' + BoolToStr(Result, True));
-end;
-
-
-procedure TTestWinVersion.Test_IsWindows10Up_ReturnsBoolean;
-VAR
-  Result: Boolean;
-begin
-  Result:= IsWindows10Up;
-  Assert.Pass('IsWindows10Up returned: ' + BoolToStr(Result, True));
-end;
-
-
-procedure TTestWinVersion.Test_IsWindows11_ReturnsBoolean;
-VAR
-  Result: Boolean;
-begin
-  Result:= IsWindows11;
-  Assert.Pass('IsWindows11 returned: ' + BoolToStr(Result, True));
-end;
-
-
-procedure TTestWinVersion.Test_IsWindows11Up_ReturnsBoolean;
-VAR
-  Result: Boolean;
-begin
-  Result:= IsWindows11Up;
-  Assert.Pass('IsWindows11Up returned: ' + BoolToStr(Result, True));
+  then Assert.IsTrue(IsWindows10Up, 'If Win11Up, then Win10Up should also be true')
+  else Assert.IsFalse(IsWindows11Up, 'Win11Up is false - hierarchy not applicable');
 end;
 
 

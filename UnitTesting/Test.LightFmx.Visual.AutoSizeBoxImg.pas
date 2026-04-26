@@ -99,9 +99,6 @@ type
     [Test]
     procedure TestUpdateSize_AdjustsRightMargin;
 
-    { Constants Tests }
-    [Test]
-    procedure TestMaxImageWidthRatio_Value;
   end;
 
 
@@ -294,7 +291,7 @@ begin
   Box:= TAutosizeBoxImg.Create(nil);
   try
     Box.UpdateSize;
-    Assert.Pass('UpdateSize without parent should not crash');
+    Assert.IsTrue(Box.Height >= 0, 'Height should be non-negative after UpdateSize without parent');
   finally
     FreeAndNil(Box);
   end;
@@ -309,7 +306,7 @@ begin
   Box.Parent:= FParent;
   try
     Box.UpdateSize;
-    Assert.Pass('UpdateSize with empty bitmap should not crash');
+    Assert.IsTrue(Box.Height >= 0, 'Height should be non-negative after UpdateSize with empty bitmap');
   finally
     FreeAndNil(Box);
   end;
@@ -338,17 +335,19 @@ end;
 procedure TTestAutoSizeBoxImg.TestUpdateSize_PreventRecursion;
 var
   Box: TAutosizeBoxImg;
+  W1, W2: Single;
 begin
   Box:= TAutosizeBoxImg.Create(FParent);
   Box.Parent:= FParent;
   try
     CreateTestImage(FTestImagePath, 100, 100);
     Box.LoadImage(FTestImagePath, TRectF.Create(0, 0, 100, 100));
-    // Multiple calls should not cause stack overflow
+    Box.UpdateSize;
+    W1:= Box.Width;
     Box.UpdateSize;
     Box.UpdateSize;
-    Box.UpdateSize;
-    Assert.Pass('Multiple UpdateSize calls should not cause recursion');
+    W2:= Box.Width;
+    Assert.AreEqual(W1, W2, 0.1, 'Width should be stable across repeated UpdateSize calls');
   finally
     FreeAndNil(Box);
   end;
@@ -382,7 +381,7 @@ begin
   Box.Parent:= FParent;
   try
     Box.LoadImage('NonExistentFile12345.png', TRectF.Create(0, 0, 100, 100));
-    Assert.Pass('LoadImage with non-existent file should not crash');
+    Assert.AreEqual(bxContent, Box.BoxType, 'BoxType should still be set to bxContent');
   finally
     FreeAndNil(Box);
   end;
@@ -474,16 +473,6 @@ begin
   finally
     FreeAndNil(Box);
   end;
-end;
-
-
-{ Constants Tests }
-
-procedure TTestAutoSizeBoxImg.TestMaxImageWidthRatio_Value;
-begin
-  // MaxImageWidthRatio is protected const, test indirectly
-  // Value should be 0.95 (95% of parent width)
-  Assert.Pass('MaxImageWidthRatio is 0.95 (95%% of parent width)');
 end;
 
 

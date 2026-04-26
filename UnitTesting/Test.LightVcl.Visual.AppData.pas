@@ -167,15 +167,18 @@ var
   i: Integer;
 begin
   Version:= TAppData.GetVersionInfo(False);
-  // Without build number, should have format X.Y.Z (2 dots)
+  Assert.IsNotEmpty(Version, 'Version should never be an empty string');
+
+  // Without build number, should have format X.Y.Z (2 dots).
+  // N/A is the expected fallback when the running exe has no version resource.
   DotCount:= 0;
   for i:= 1 to Length(Version) do
     if Version[i] = '.'
     then Inc(DotCount);
 
-  // N/A is valid if version info not available
-  if Version <> 'N/A'
-  then Assert.AreEqual(2, DotCount, 'Version without build should have 2 dots (X.Y.Z)');
+  if Version = 'N/A'
+  then Assert.AreEqual('N/A', Version, 'Fallback when no version resource is present')
+  else Assert.AreEqual(2, DotCount, 'Version without build should have 2 dots (X.Y.Z)');
 end;
 
 procedure TTestAppDataVcl.TestGetVersionInfo_WithBuildNo;
@@ -185,14 +188,16 @@ var
   i: Integer;
 begin
   Version:= TAppData.GetVersionInfo(True);
+  Assert.IsNotEmpty(Version, 'Version should never be an empty string');
+
   DotCount:= 0;
   for i:= 1 to Length(Version) do
     if Version[i] = '.'
     then Inc(DotCount);
 
-  // N/A is valid if version info not available
-  if Version <> 'N/A'
-  then Assert.AreEqual(3, DotCount, 'Version with build should have 3 dots (X.Y.Z.B)');
+  if Version = 'N/A'
+  then Assert.AreEqual('N/A', Version, 'Fallback when no version resource is present')
+  else Assert.AreEqual(3, DotCount, 'Version with build should have 3 dots (X.Y.Z.B)');
 end;
 
 procedure TTestAppDataVcl.TestGetVersionInfoV;

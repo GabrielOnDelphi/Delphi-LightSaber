@@ -509,8 +509,8 @@ begin
   Box.Parent:= FParent;
   try
     Box.Width:= 0;
-    Box.UpdateSize;  // Should not crash
-    Assert.Pass('UpdateSize with zero width should not crash');
+    Box.UpdateSize;
+    Assert.IsTrue(Box.Height >= 0, 'Height should be non-negative after UpdateSize with zero width');
   finally
     FreeAndNil(Box);
   end;
@@ -525,8 +525,8 @@ begin
   Box.Parent:= FParent;
   try
     Box.Width:= -10;
-    Box.UpdateSize;  // Should not crash
-    Assert.Pass('UpdateSize with negative width should not crash');
+    Box.UpdateSize;
+    Assert.IsTrue(Box.Height >= 0, 'Height should be non-negative after UpdateSize with negative width');
   finally
     FreeAndNil(Box);
   end;
@@ -542,10 +542,9 @@ begin
   Box:= TAutosizeBoxText.Create(FParent);
   Box.Parent:= FParent;
   try
-    Box.BoxType:= bxUser;  // Margins: Left=40, Right=5
-    // Parent width (400) - Left margin (40) - Right margin (5) = 355
-    // Note: getParentContentWidth is protected, so we test indirectly via behavior
-    Assert.Pass('Parent content width calculation should work');
+    Box.BoxType:= bxUser;
+    Assert.IsTrue(Box.Width > 0, 'Box width should be positive when parented');
+    Assert.IsTrue(Box.Width <= FParent.Width, 'Box width should not exceed parent width');
   finally
     FreeAndNil(Box);
   end;
@@ -558,9 +557,8 @@ var
 begin
   Box:= TAutosizeBoxText.Create(nil);
   try
-    // Without parent, should not crash
     Box.UpdateSize;
-    Assert.Pass('UpdateSize without parent should not crash');
+    Assert.IsTrue(Box.Height >= 0, 'Height should be non-negative after UpdateSize without parent');
   finally
     FreeAndNil(Box);
   end;

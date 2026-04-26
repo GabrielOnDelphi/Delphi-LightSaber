@@ -67,15 +67,15 @@ end;
 procedure TTestConfetti.TestShowConfetti_ValidControl_NoException;
 VAR
   Control: TRectangle;
+  ChildrenBefore: Integer;
 begin
   Control:= TRectangle.Create(nil);
   try
     Control.Width:= 400;
     Control.Height:= 300;
-    // Should not raise exception
+    ChildrenBefore:= Control.ChildrenCount;
     TConfetti.ShowConfetti(Control, 1.0, 5);
-    // Note: Confetti pieces are created as children of Control
-    // They will be freed when Control is freed
+    Assert.AreEqual(ChildrenBefore + 5, Control.ChildrenCount, 'Should create 5 confetti children');
   finally
     FreeAndNil(Control);
   end;
@@ -85,13 +85,15 @@ end;
 procedure TTestConfetti.TestShowConfetti_ValidForm_NoException;
 VAR
   Form: TForm;
+  ChildrenBefore: Integer;
 begin
   Form:= TForm.Create(nil);
   try
     Form.ClientWidth:= 400;
     Form.ClientHeight:= 300;
-    // Should not raise exception
+    ChildrenBefore:= Form.ChildrenCount;
     TConfetti.ShowConfetti(Form, 1.0, 5);
+    Assert.AreEqual(ChildrenBefore + 5, Form.ChildrenCount, 'Should create 5 confetti children on form');
   finally
     FreeAndNil(Form);
   end;
@@ -121,13 +123,15 @@ end;
 procedure TTestConfetti.TestShowConfetti_ZeroConfettiCount_NoException;
 VAR
   Control: TRectangle;
+  ChildrenBefore: Integer;
 begin
   Control:= TRectangle.Create(nil);
   try
     Control.Width:= 400;
     Control.Height:= 300;
-    // Zero confetti should work without error (just creates nothing)
+    ChildrenBefore:= Control.ChildrenCount;
     TConfetti.ShowConfetti(Control, 1.0, 0);
+    Assert.AreEqual(ChildrenBefore, Control.ChildrenCount, 'Zero confetti should add no children');
   finally
     FreeAndNil(Control);
   end;
@@ -137,13 +141,15 @@ end;
 procedure TTestConfetti.TestShowConfetti_LargeSizeMultiplier_NoException;
 VAR
   Control: TRectangle;
+  ChildrenBefore: Integer;
 begin
   Control:= TRectangle.Create(nil);
   try
     Control.Width:= 400;
     Control.Height:= 300;
-    // Large multiplier should work
+    ChildrenBefore:= Control.ChildrenCount;
     TConfetti.ShowConfetti(Control, 5.0, 3);
+    Assert.AreEqual(ChildrenBefore + 3, Control.ChildrenCount, 'Should create 3 confetti with large multiplier');
   finally
     FreeAndNil(Control);
   end;
@@ -153,13 +159,15 @@ end;
 procedure TTestConfetti.TestShowConfetti_SmallSizeMultiplier_NoException;
 VAR
   Control: TRectangle;
+  ChildrenBefore: Integer;
 begin
   Control:= TRectangle.Create(nil);
   try
     Control.Width:= 400;
     Control.Height:= 300;
-    // Small multiplier should work
+    ChildrenBefore:= Control.ChildrenCount;
     TConfetti.ShowConfetti(Control, 0.5, 3);
+    Assert.AreEqual(ChildrenBefore + 3, Control.ChildrenCount, 'Should create 3 confetti with small multiplier');
   finally
     FreeAndNil(Control);
   end;

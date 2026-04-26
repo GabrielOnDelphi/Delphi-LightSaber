@@ -363,7 +363,7 @@ procedure TTestGraphUtilGray.TestConvertToGrayscale_BasicCall;
 begin
   CreateColorBitmap(10, 10, clRed);
   ConvertToGrayscale(FBitmap);
-  Assert.Pass('ConvertToGrayscale should not raise exception');
+  Assert.AreEqual(pf8bit, FBitmap.PixelFormat, 'Result should be 8-bit after grayscale conversion');
 end;
 
 
@@ -413,7 +413,7 @@ begin
   FBitmap.SetSize(10, 10);
   FBitmap.PixelFormat:= pf8bit;
   SetBitmapGrayPalette(FBitmap);
-  Assert.Pass('SetBitmapGrayPalette should not raise exception');
+  Assert.IsTrue(FBitmap.Palette <> 0, 'Palette handle should be non-zero after SetBitmapGrayPalette');
 end;
 
 

@@ -125,9 +125,6 @@ type
 
     { Validation Helper Tests }
     [Test]
-    procedure TestValidateForFileOperation_ValidPath;
-
-    [Test]
     procedure TestValidateForFileOperation_ControlPanel;
 
     [Test]
@@ -456,11 +453,6 @@ begin
 end;
 
 { Validation Helper Tests }
-
-procedure TTestVclCommonIO.TestValidateForFileOperation_ValidPath;
-begin
-  Assert.Pass('Internal function - tested indirectly through FileOperation');
-end;
 
 procedure TTestVclCommonIO.TestValidateForFileOperation_ControlPanel;
 begin

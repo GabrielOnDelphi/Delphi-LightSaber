@@ -408,9 +408,10 @@ begin
 end;
 
 procedure TTestLightCoreTime.TestStringIsDate_Valid;
+VAR DateStr: string;
 begin
-  { Note: This depends on system locale settings }
-  Assert.Pass('Test depends on locale - skipped');
+  DateStr:= DateToStr(EncodeDate(2024, 6, 15));
+  Assert.IsTrue(StringIsDate(DateStr), 'DateToStr output should be recognized as valid date');
 end;
 
 procedure TTestLightCoreTime.TestStringIsDate_Invalid;
@@ -420,9 +421,10 @@ begin
 end;
 
 procedure TTestLightCoreTime.TestStringIsTime_Valid;
+VAR TimeStr: string;
 begin
-  { Note: This depends on system locale settings }
-  Assert.Pass('Test depends on locale - skipped');
+  TimeStr:= TimeToStr(EncodeTime(14, 30, 0, 0));
+  Assert.IsTrue(StringIsTime(TimeStr), 'TimeToStr output should be recognized as valid time');
 end;
 
 procedure TTestLightCoreTime.TestStringIsTime_Invalid;

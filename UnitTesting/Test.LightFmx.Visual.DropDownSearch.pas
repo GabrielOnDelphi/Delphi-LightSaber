@@ -108,7 +108,6 @@ begin
   SearchBox:= TLightDownSearch.Create(FForm);
   SearchBox.Parent:= FForm;
 
-  // Populate with some data
   var Words:= TStringList.Create;
   try
     Words.Add('Test1');
@@ -118,9 +117,9 @@ begin
     FreeAndNil(Words);
   end;
 
-  // Should not leak memory
+  Assert.AreEqual(2, SearchBox.WordCount, 'Should have 2 words before destruction');
   FreeAndNil(SearchBox);
-  Assert.Pass('No exception during destruction');
+  Assert.IsNull(SearchBox, 'SearchBox should be nil after FreeAndNil');
 end;
 
 
@@ -146,8 +145,7 @@ begin
       FreeAndNil(Words);
     end;
 
-    // AddDemoStrings also populates, so we verify population works
-    Assert.Pass('PopulateDictionary completed without error');
+    Assert.AreEqual(3, SearchBox.WordCount, 'Should contain 3 words after populate');
   finally
     FreeAndNil(SearchBox);
   end;
@@ -166,13 +164,12 @@ begin
 
     Words:= TStringList.Create;
     try
-      // Populate with empty list
       SearchBox.PopulateDictionary(Words);
     finally
       FreeAndNil(Words);
     end;
 
-    Assert.Pass('PopulateDictionary with empty list completed without error');
+    Assert.AreEqual(0, SearchBox.WordCount, 'Should contain 0 words after empty populate');
   finally
     FreeAndNil(SearchBox);
   end;
@@ -189,7 +186,6 @@ begin
   try
     SearchBox.Parent:= FForm;
 
-    // First population
     Words1:= TStringList.Create;
     try
       Words1.Add('Old1');
@@ -199,7 +195,8 @@ begin
       FreeAndNil(Words1);
     end;
 
-    // Second population should clear the first
+    Assert.AreEqual(2, SearchBox.WordCount, 'Should have 2 words after first populate');
+
     Words2:= TStringList.Create;
     try
       Words2.Add('New1');
@@ -208,8 +205,7 @@ begin
       FreeAndNil(Words2);
     end;
 
-    // The internal list should only have New1
-    Assert.Pass('Second PopulateDictionary completed - previous items should be cleared');
+    Assert.AreEqual(1, SearchBox.WordCount, 'Second populate should replace, not append');
   finally
     FreeAndNil(SearchBox);
   end;
@@ -263,9 +259,8 @@ begin
   try
     SearchBox.Parent:= FForm;
 
-    // Should not raise exception
     SearchBox.AddDemoStrings;
-    Assert.Pass('AddDemoStrings completed without error');
+    Assert.IsTrue(SearchBox.WordCount > 0, 'AddDemoStrings should populate the word list');
   finally
     FreeAndNil(SearchBox);
   end;

@@ -328,9 +328,11 @@ end;
 { CenterTextX (Bitmap overload) Tests }
 
 procedure TTestGraphText.TestCenterTextX_Bitmap_BasicCall;
+VAR X: Integer;
 begin
-  CenterTextX(FBitmap, 'Test');
-  Assert.Pass('CenterTextX should not raise exception');
+  X:= CenterTextX(FBitmap, 'Test');
+  Assert.IsTrue(X >= 0, 'CenterTextX should return non-negative value');
+  Assert.IsTrue(X < FBitmap.Width, 'CenterTextX should return value within bitmap width');
 end;
 
 
@@ -371,9 +373,11 @@ end;
 { CenterTextY (Bitmap overload) Tests }
 
 procedure TTestGraphText.TestCenterTextY_Bitmap_BasicCall;
+VAR Y: Integer;
 begin
-  CenterTextY(FBitmap, 'Test');
-  Assert.Pass('CenterTextY should not raise exception');
+  Y:= CenterTextY(FBitmap, 'Test');
+  Assert.IsTrue(Y >= 0, 'CenterTextY should return non-negative value');
+  Assert.IsTrue(Y < FBitmap.Height, 'CenterTextY should return value within bitmap height');
 end;
 
 
@@ -404,10 +408,12 @@ end;
 procedure TTestGraphText.TestCenterTextX_Canvas_BasicCall;
 var
   R: TRect;
+  X: Integer;
 begin
   R:= Rect(0, 0, 200, 100);
-  CenterTextX(FCanvas, 'Test', R);
-  Assert.Pass('CenterTextX (Canvas) should not raise exception');
+  X:= CenterTextX(FCanvas, 'Test', R);
+  Assert.IsTrue(X >= 0, 'CenterTextX should return non-negative value');
+  Assert.IsTrue(X < R.Width, 'CenterTextX should return value within rect width');
 end;
 
 
@@ -431,10 +437,12 @@ end;
 procedure TTestGraphText.TestCenterTextY_Canvas_BasicCall;
 var
   R: TRect;
+  Y: Integer;
 begin
   R:= Rect(0, 0, 200, 100);
-  CenterTextY(FCanvas, 'Test', R);
-  Assert.Pass('CenterTextY (Canvas) should not raise exception');
+  Y:= CenterTextY(FCanvas, 'Test', R);
+  Assert.IsTrue(Y >= 0, 'CenterTextY should return non-negative value');
+  Assert.IsTrue(Y < R.Height, 'CenterTextY should return value within rect height');
 end;
 
 

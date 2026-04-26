@@ -109,10 +109,6 @@ type
     [Test]
     procedure TestLblTopClick_RefreshesSkins;
 
-    { Static Method Tests }
-    [Test]
-    procedure TestCreateForm_ClassMethodExists;
-
     { Style Manager Tests }
     [Test]
     procedure TestStyleManager_HasStyles;
@@ -488,16 +484,6 @@ begin
   { After refresh, count should be same (styles don't change at runtime) }
   Assert.AreEqual(InitialCount, Form.lBox.Items.Count,
     'lblTopClick should refresh skins list');
-end;
-
-
-{ Static Method Tests }
-
-procedure TTestFormSkinsRes.TestCreateForm_ClassMethodExists;
-begin
-  { Just verify the class method exists and is callable (don't actually call it
-    as it would show a form and require cleanup) }
-  Assert.Pass('CreateForm class method exists');
 end;
 
 

@@ -64,7 +64,7 @@ TYPE
     { Compact / AutoCompact }
     [Test] procedure TestCompact_DefaultsFalse;
     [Test] procedure TestAutoCompact_DefaultsFalse;
-    [Test] procedure TestCompactThreshold_DefaultsTablet;
+    [Test] procedure TestCompactThreshold_DefaultsPhone;
 
     [Test] procedure TestSetCompact_True_SwitchesToIpCenter;
     [Test] procedure TestSetCompact_False_RestoresPosition;
@@ -131,7 +131,7 @@ begin
   Assert.IsFalse(FButton.Compact,          'Compact should default to FALSE');
   Assert.IsFalse(FButton.AutoCompact,      'AutoCompact should default to FALSE');
   Assert.AreEqual(Ord(ipLeft),  Ord(FButton.IconPosition),     'IconPosition default ipLeft');
-  Assert.AreEqual(Ord(ctTablet),Ord(FButton.CompactThreshold), 'CompactThreshold default ctTablet');
+  Assert.AreEqual(Ord(ctPhone), Ord(FButton.CompactThreshold), 'CompactThreshold default ctPhone');
 end;
 
 
@@ -298,9 +298,9 @@ begin
 end;
 
 
-procedure TTestSvgButton.TestCompactThreshold_DefaultsTablet;
+procedure TTestSvgButton.TestCompactThreshold_DefaultsPhone;
 begin
-  Assert.AreEqual(Ord(ctTablet), Ord(FButton.CompactThreshold));
+  Assert.AreEqual(Ord(ctPhone), Ord(FButton.CompactThreshold));
 end;
 
 

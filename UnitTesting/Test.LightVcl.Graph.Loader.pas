@@ -232,10 +232,11 @@ procedure TTestGraphLoader.CreateTempPngFile;
 var
   Png: TPngImage;
 begin
+  { Use CreateBlank as a CONSTRUCTOR. The pattern  TPngImage.Create + Png.CreateBlank()  leaks
+    because CreateBlank's body re-invokes Create, overwriting fCanvas + fChunkList. }
   FTempPngFile:= TPath.Combine(FTempDir, 'test.png');
-  Png:= TPngImage.Create;
+  Png:= TPngImage.CreateBlank(COLOR_RGB, 8, 100, 100);
   TRY
-    Png.CreateBlank(COLOR_RGB, 8, 100, 100);
     Png.Canvas.Brush.Color:= clBlue;
     Png.Canvas.FillRect(Rect(0, 0, 100, 100));
     Png.SaveToFile(FTempPngFile);
@@ -725,9 +726,8 @@ begin
   { Save real PNG bytes to a *.jpg path. The old loader rejected this with EXIT(NIL).
     Now the signature-based dispatch should recognize PNG and load it. }
   MislabeledFile:= TPath.Combine(FTempDir, 'pretendsToBeJpg.jpg');
-  Png:= TPngImage.Create;
+  Png:= TPngImage.CreateBlank(COLOR_RGB, 8, 60, 40);   { CreateBlank is a constructor — see CreateTempPngFile note }
   TRY
-    Png.CreateBlank(COLOR_RGB, 8, 60, 40);
     Png.Canvas.Brush.Color:= clLime;
     Png.Canvas.FillRect(Rect(0, 0, 60, 40));
     Png.SaveToFile(MislabeledFile);

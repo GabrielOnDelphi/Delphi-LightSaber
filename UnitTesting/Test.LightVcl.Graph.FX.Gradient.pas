@@ -118,7 +118,8 @@ type
 implementation
 
 uses
-  LightVcl.Graph.FX.Gradient;
+  LightVcl.Graph.FX.Gradient,
+  LightVcl.Graph.Util;
 
 
 procedure TTestGradient.Setup;
@@ -415,16 +416,19 @@ end;
 
 
 procedure TTestGradient.TestDrawRedPattern_ModifiesBitmap;
+VAR
+  P: PRGB32Array;
 begin
-  { Fill with white first }
   FBitmap.PixelFormat:= pf32bit;
   FBitmap.Canvas.Brush.Color:= clWhite;
   FBitmap.Canvas.FillRect(Rect(0, 0, FBitmap.Width, FBitmap.Height));
 
   DrawRedPattern(FBitmap);
 
-  { The pattern creates X xor Y red values, so most pixels will change }
-  Assert.Pass('DrawRedPattern executed without error');
+  P:= FBitmap.ScanLine[1];
+  Assert.AreEqual(Byte(1 xor 1), P[1].R, 'Pixel(1,1) red channel should be 1 xor 1 = 0');
+  Assert.AreEqual(Byte(0), P[1].G, 'Green channel should be 0');
+  Assert.AreEqual(Byte(0), P[1].B, 'Blue channel should be 0');
 end;
 
 
@@ -440,12 +444,16 @@ end;
 
 
 procedure TTestGradient.TestDrawRedPattern_CreatesPattern;
+VAR
+  P: PRGB32Array;
 begin
   DrawRedPattern(FBitmap);
 
-  { The red component should be (X xor Y) for each pixel }
-  { Just verify the pattern was created - actual values depend on XOR result }
-  Assert.Pass('Pattern created successfully');
+  P:= FBitmap.ScanLine[0];
+  Assert.AreEqual(Byte(0 xor 0), P[0].R, 'Pixel(0,0) red = 0 xor 0');
+  Assert.AreEqual(Byte(3 xor 0), P[3].R, 'Pixel(3,0) red = 3 xor 0');
+  P:= FBitmap.ScanLine[5];
+  Assert.AreEqual(Byte(2 xor 5), P[2].R, 'Pixel(2,5) red = 2 xor 5');
 end;
 
 

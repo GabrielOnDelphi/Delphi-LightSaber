@@ -43,7 +43,10 @@ uses
   Test.LightVcl.Graph.Text in 'Test.LightVcl.Graph.Text.pas',
   LightVcl.Graph.Text in '..\FrameVCL\LightVcl.Graph.Text.pas',
   Test.LightVcl.Graph.ResizeWinBlt in 'Test.LightVcl.Graph.ResizeWinBlt.pas',
-  LightVcl.Graph.ResizeWinBlt in '..\FrameVCL\LightVcl.Graph.ResizeWinBlt.pas';
+  LightVcl.Graph.ResizeWinBlt in '..\FrameVCL\LightVcl.Graph.ResizeWinBlt.pas',
+  Test.LightVcl.Graph.Loader.Resolution in 'Test.LightVcl.Graph.Loader.Resolution.pas',
+  LightVcl.Graph.Loader.Resolution in '..\FrameVCL\LightVcl.Graph.Loader.Resolution.pas',
+  LightVcl.Graph.Util in '..\FrameVCL\LightVcl.Graph.Util.pas';
 
 {$IFNDEF TESTINSIGHT}
 var
