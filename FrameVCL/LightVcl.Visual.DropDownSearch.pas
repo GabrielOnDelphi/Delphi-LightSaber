@@ -60,6 +60,7 @@ TYPE
 
      function   SelectedString: string;
      function   SelectedObject: TObject;
+     function   WordCount: Integer;
    published
      property   OnEndSearch: TSelectNotifyEvent read FOnEndSearch write FOnEndSearch;       { Triggered when the user selected an item from the list }
      property   MaxDropHeight: Integer read FMaxDropHeight write FMaxDropHeight default 50; { In percents }
@@ -381,6 +382,12 @@ begin
   if lbxSearch.ItemIndex >= 0
   then Result := lbxSearch.Items[lbxSearch.ItemIndex]
   else Result := '';
+end;
+
+
+function TLightDownSearch.WordCount: Integer;
+begin
+  Result:= FWords.Count;
 end;
 
 
