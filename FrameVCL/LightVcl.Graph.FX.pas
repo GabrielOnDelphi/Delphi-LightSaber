@@ -70,7 +70,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   System.Types, LightVcl.Graph.Bitmap;
+   System.Types, LightVcl.Graph.Bitmap, LightVcl.Graph.Util;
 
 
 
@@ -294,26 +294,68 @@ end;
      Tester: c:\MyProjects\Projects GRAPHICS\Rotate, flip\RotateTester.dpr
 -------------------------------------------------------------------------------------------------------------}
 
-{ Flips the bitmap vertically (upside down). Modifies in-place. }
+{ Flips the bitmap vertically (upside down). Modifies in-place.
+  The previous one-line `Bmp.Canvas.CopyRect(...same canvas..., Rect(0,dy,dx,0))` produced no
+  flip in practice. TCanvas.CopyRect calls StretchBlt; per MSDN, opposite signs in src vs dst
+  height should mirror Y, but MSDN is silent on overlapping same-DC src/dst — empirically GDI
+  does not flip in that case. Use scanlines on a temp bitmap to sidestep the unspecified path.
+  See: https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-stretchblt }
 procedure FlipDown(Bmp: TBitmap);
-var dx, dy: Integer;
+var
+   y, dy, RowBytes: Integer;
+   Temp: TBitmap;
 begin
  Assert(Bmp <> NIL, 'FlipDown: Bmp is nil');
- dx:= Bmp.Width;
- dy:= Bmp.Height;
- Bmp.Canvas.CopyRect(Rect(0, 0, dx, dy), Bmp.Canvas, Rect(0, dy, dx, 0));
+ if (Bmp.Width = 0) OR (Bmp.Height = 0) then EXIT;
+ if Bmp.Height = 1 then EXIT;          { Single-row bitmap — vertical flip is a no-op }
+
+ Temp:= TBitmap.Create;
+ TRY
+   Temp.PixelFormat:= Bmp.PixelFormat;
+   Temp.SetSize(Bmp.Width, Bmp.Height);
+   dy:= Bmp.Height;
+   { Row stride from the address delta of two consecutive scanlines. Safe because Height >= 2 here. }
+   RowBytes:= Abs(NativeInt(Bmp.ScanLine[0]) - NativeInt(Bmp.ScanLine[1]));
+   for y:= 0 to dy - 1 DO
+     Move(Bmp.ScanLine[y]^, Temp.ScanLine[dy - 1 - y]^, RowBytes);
+   Bmp.Assign(Temp);
+ FINALLY
+   FreeAndNil(Temp);
+ END;
 end;
 
 
 
-{ Flips the bitmap horizontally (mirror left-right). Modifies in-place. }
+{ Flips the bitmap horizontally (mirror left-right). Modifies in-place. See FlipDown re: same-DC
+  StretchBlt overlap. Uses 32-bit scanlines for speed. }
 procedure FlipRight(Bmp: TBitmap);
-var dx, dy: Integer;
+var
+   x, y, dx, dy: Integer;
+   SrcRow, DstRow: PRGB32Array;
+   Temp: TBitmap;
 begin
  Assert(Bmp <> NIL, 'FlipRight: Bmp is nil');
+ if (Bmp.Width = 0) OR (Bmp.Height = 0) then EXIT;
  dx:= Bmp.Width;
  dy:= Bmp.Height;
- Bmp.Canvas.CopyRect(Rect(0, 0, dx, dy), Bmp.Canvas, Rect(dx, 0, 0, dy));
+
+ Temp:= TBitmap.Create;
+ TRY
+   Temp.PixelFormat:= pf32bit;
+   Temp.SetSize(dx, dy);
+   { Force 32-bit on source for the copy so scanline strides match; restore the original format afterwards. }
+   Bmp.PixelFormat:= pf32bit;
+   for y:= 0 to dy - 1 DO
+    begin
+     SrcRow:= Bmp.ScanLine[y];
+     DstRow:= Temp.ScanLine[y];
+     for x:= 0 to dx - 1 DO
+       DstRow[x]:= SrcRow[dx - 1 - x];
+    end;
+   Bmp.Assign(Temp);
+ FINALLY
+   FreeAndNil(Temp);
+ END;
 end;
 
 
@@ -327,7 +369,7 @@ end;
 
 procedure RTileParams.Reset;
 begin
- TileAuto          := FALSE;
+ TileAuto          := TRUE;                    { Auto-tile is the wallpaper-app default; setting FALSE here was a regression (see TestRTileParams_Reset). }
  TileType.Vertical := FALSE;
  TileType.Horizon  := TRUE;
  TileType.OneRow   := TRUE;

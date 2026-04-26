@@ -300,6 +300,15 @@ end;
 { If we close the main application window, secondary forms are often destroyed directly by Application without DoClose being called. }
 destructor TLightForm.Destroy;
 begin
+  // Catches the Android non-blocking-Show antipattern: caller did `AppData.ShowModal(F); FreeAndNil(F)`
+  // — but on Android ShowModal falls back to non-blocking Show, so FreeAndNil runs before the user
+  // sees the form. Use `Action:= caFree` in OnClose, or wire an AfterClose handler instead.
+  // (The MainForm itself is Visible at app shutdown — exempt it.)
+  Assert(NOT Visible OR (Self = Application.MainForm),
+    ClassName + ' destroyed while still visible. ' +
+    'Likely cause: caller used FreeAndNil after AppData.ShowModal, which is non-blocking on Android. ' +
+    'Use "Action:= caFree" in OnClose, or wire an AfterClose callback.');
+
   TMessageManager.DefaultManager.Unsubscribe(TVKStateChangeMessage, FVKSubscriptionId);
   saveBeforeExit; // Try to save if we haven't already
   inherited;

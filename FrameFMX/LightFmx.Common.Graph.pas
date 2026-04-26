@@ -61,7 +61,8 @@ begin
   except
     on E: Exception do
     begin
-      if Assigned(AppDataCore) then AppDataCore.LogError('LoadImage failed: ' + E.Message);
+      if Assigned(AppDataCore) 
+      then AppDataCore.LogError('LoadImage failed: ' + E.Message);
       FreeAndNil(Result);
     end;
   end;
@@ -127,7 +128,8 @@ begin
   except
     on E: Exception do
     begin
-      if Assigned(AppDataCore) then AppDataCore.LogError('LoadThumbnail failed: ' + E.Message);
+      if Assigned(AppDataCore) 
+      then AppDataCore.LogError('LoadThumbnail failed: ' + E.Message);
       FreeAndNil(Result);
     end;
   end;
@@ -157,7 +159,8 @@ begin
   except
     on E: Exception do
     begin
-      if Assigned(AppDataCore) then AppDataCore.LogError('Cannot get image resolution for ' + FileName + ': ' + E.Message);
+      if Assigned(AppDataCore) 
+      then AppDataCore.LogError('Cannot get image resolution for ' + FileName + ': ' + E.Message);
 
       { Fallback: Full load if CodecManager fails (rare but possible with some formats) }
       Bmp:= NIL;
@@ -279,7 +282,8 @@ begin
     except
       on E: Exception do
       begin
-        if Assigned(AppDataCore) then AppDataCore.LogError('LoadImage (bytes) failed: ' + E.Message);
+        if Assigned(AppDataCore) 
+        then AppDataCore.LogError('LoadImage (bytes) failed: ' + E.Message);
         FreeAndNil(Result);
       end;
     end;

@@ -635,8 +635,9 @@ begin
       // Defer via ForceQueue to match the documented OnDone contract — main path
       // posts via TAnimDoneBridge, fast paths must not invoke synchronously or
       // OnDone callers (typically Close) re-enter the close-query handler.
+      // TProc is not assignment-compatible with TThreadProcedure — wrap.
       if Assigned(OnDone)
-      then TThread.ForceQueue(NIL, OnDone);
+      then TThread.ForceQueue(NIL, procedure begin OnDone(); end);
       EXIT;
     end;
 
@@ -648,7 +649,7 @@ begin
     if Targets.Count = 0 then
       begin
         if Assigned(OnDone)
-        then TThread.ForceQueue(NIL, OnDone);
+        then TThread.ForceQueue(NIL, procedure begin OnDone(); end);
         EXIT;
       end;
 

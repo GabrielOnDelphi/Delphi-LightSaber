@@ -2,7 +2,7 @@ UNIT LightVcl.Graph.Cache;
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.01.30
+   2026.04.26
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -79,7 +79,7 @@ TYPE
 IMPLEMENTATION
 
 uses
-   LightCore.INIFile, LightVcl.Graph.Loader, LightCore, LightVcl.Common.Dialogs, LightCore.AppData, LightCore.IO, LightVcl.Common.IO;
+   LightCore.INIFile, LightVcl.Graph.Loader, LightCore, LightCore.AppData, LightCore.IO, LightVcl.Common.IO;
 
 
 
@@ -96,7 +96,9 @@ function TCacheObj.GetThumbFor (CONST BigPicture: string): string;
 VAR ThumPath: string;
 begin
  Result:= '';
- if NOT FileExistsMsg(BigPicture) then EXIT;
+ { Use silent FileExists here: this function is called from grid draw paths and tests; a
+   missing file is a normal "no thumb" outcome, not a UI-worthy error. Caller decides. }
+ if NOT FileExists(BigPicture) then EXIT;
  if NOT IsImage(BigPicture) then EXIT;
 
  if ImagePosDB(BigPicture, ThumPath) > -1
@@ -160,9 +162,10 @@ function TCacheObj.ThumbPosDB (ShortThumbName: string): Integer;                
 VAR CurEntry: Integer;
 begin
  Result:= -1;
- ShortThumbName:= LowerCase(ShortThumbName);
+ { Case-insensitive: thumb names are stored as FormatName produces them ('.JPG'/'.BMP'),
+   but callers may pass lowercase. SameText handles both. }
  for CurEntry:= 0 to DbThumbs.Count-1 DO
-  if ShortThumbName= DbThumbs[CurEntry] then
+  if SameText(ShortThumbName, DbThumbs[CurEntry]) then
    begin
     Result:= CurEntry;
     Break;
@@ -228,7 +231,10 @@ begin
  ShortThumbName:= FormatName(FLastEntry, 9);                                             { Format thumbnail filename to be 9 chars long (e.g., 000000001.JPG) }
  if MakeThumb(FileName, ShortThumbName) then                                             { Generate and write thumbnail to disk }
   begin
-   DbPicts .Add(FileName);
+   { Store picture path in lowercase so ImagePosDB lookups (which lowercase the input) match.
+     Thumb name stays in FormatName casing ('.JPG'/'.BMP') so it matches the actual file on disk;
+     ThumbPosDB does case-insensitive lookup. }
+   DbPicts .Add(LowerCase(FileName));
    DbThumbs.Add(ShortThumbName);
    Result:= ShortThumbName;
   end;
@@ -297,18 +303,20 @@ end;
 procedure TCacheObj.SaveDB;
 VAR CacheSettings: TIniFileEx;
 begin
+ { Log instead of dialog: SaveDB runs from the destructor (during shutdown) and from grid-draw
+   paths; surfacing a modal dialog there would block the app and is hostile to tests/services. }
  TRY
   DbPicts .SaveToFile(CacheFolder+ 'CacheDBInput');
   DbThumbs.SaveToFile(CacheFolder+ 'CacheDBOutput');
  EXCEPT
   on E: EFCreateError do
-    MessageError('Cannot create cache database file: '+ E.Message);
+    AppDataCore.LogError('TCacheObj.SaveDB: Cannot create cache database file: '+ E.Message);
   on E: EFOpenError do
-    MessageError('Cannot open cache database file: '+ E.Message);
+    AppDataCore.LogError('TCacheObj.SaveDB: Cannot open cache database file: '+ E.Message);
   on E: EWriteError do
-    MessageError('Cannot write to cache database file: '+ E.Message);
+    AppDataCore.LogError('TCacheObj.SaveDB: Cannot write to cache database file: '+ E.Message);
   on E: Exception do
-    MessageError('Cannot save cache database: '+ E.Message);
+    AppDataCore.LogError('TCacheObj.SaveDB: Cannot save cache database: '+ E.Message);
  END;
 
  CacheSettings:= TIniFileEx.Create('Cache', CacheFolder+ 'CacheSettings.ini');
@@ -323,13 +331,19 @@ end;
 
 
 procedure TCacheObj.LoadDB;                                                                        { Load the cache DB from disk }
-VAR CacheSettings: TIniFileEx;
+VAR
+   CacheSettings: TIniFileEx;
+   i: Integer;
 begin
  if FileExists(CacheFolder+ 'CacheDBInput')
  then DbPicts .LoadFromFile(CacheFolder+ 'CacheDBInput');
 
  if FileExists(CacheFolder+ 'CacheDBOutput')
  then DbThumbs.LoadFromFile(CacheFolder+ 'CacheDBOutput');
+
+ { Normalize legacy DbPicts entries that were written before AddToCache lowercased them.
+   DbThumbs deliberately keeps FormatName casing (matches files on disk); ThumbPosDB is case-insensitive. }
+ for i:= 0 to DbPicts.Count-1 DO DbPicts[i]:= LowerCase(DbPicts[i]);
 
  CacheSettings:= TIniFileEx.Create('Cache', CacheFolder+ 'CacheSettings.ini');
  TRY
@@ -343,16 +357,19 @@ end;
 
 
 { Sets the cache folder path after validating write permissions.
-  Creates the directory if it doesn't exist. }
+  Creates the directory if it doesn't exist. Raises on bad input — UI is the caller's problem. }
 procedure TCacheObj.setCacheFolder(Value: string);
 begin
  if Value = ''
  then raise Exception.Create('TCacheObj.setCacheFolder: Value parameter cannot be empty');
 
- ForceDirectoriesMsg(Value);                                                                        { Create folder if needed, show error on failure }
- if CanWriteToFolder(Value) then                                                                    { Check if this folder has write permissions }
-   FCacheFolder:= Trail(Value)
- else MessageError('You don''t have write permissions for this folder.'+ CRLFw+ Value);
+ if LightCore.IO.ForceDirectories(Value) < 0
+ then raise Exception.Create('TCacheObj.setCacheFolder: Cannot create folder: '+ Value);
+
+ if NOT CanWriteToFolder(Value)
+ then raise Exception.Create('TCacheObj.setCacheFolder: No write permissions for folder: '+ Value);
+
+ FCacheFolder:= Trail(Value);
 end;
 
 
@@ -383,7 +400,7 @@ VAR i, DbIndex, CurThumb: Integer;
 begin
  Result:= 0;
  if DbThumbs.Count<> DbPicts.Count                                                                 { check }
- then MessageError('Number of entries in DB does not match! You might fix this by resetting your cache.');
+ then AppDataCore.LogError('TCacheObj.MaintainCache: number of entries in DB does not match. Reset the cache to fix.');
 
  { Delete thumbs for non existing images }
  for i:= DbPicts.Count-1 DOWNTO 0 DO
@@ -401,15 +418,18 @@ begin
 
  AllThumbs:= ListFilesOf(CacheFolder, sFileType, FALSE, FALSE);                                       { Returns all files with the 'Extension' from the current folder }
  TRY
-   if DbThumbs.Count= 0                                                                              { If I have no files in DB }
-   then EmptyDirectory(CacheFolder)                                                                  { Delete all thumbs on disk }
+   if DbThumbs.Count= 0 then                                                                         { No DB entries → every thumb on disk is an orphan }
+    begin
+     EmptyDirectory(CacheFolder);
+     Inc(Result, AllThumbs.Count);                                                                   { EmptyDirectory has no count; bump Result by what we just nuked }
+    end
    else
      { Check each thumbnail file on disk to see if it exists in the DB }
      for CurThumb:= 0 TO AllThumbs.Count-1 DO
       begin
        Exista:= FALSE;
        for DbIndex:= 0 TO DbThumbs.Count-1 DO
-         if AllThumbs[CurThumb]= DbThumbs[DbIndex] then
+         if SameText(AllThumbs[CurThumb], DbThumbs[DbIndex]) then                                    { Case-insensitive: filesystem casing may diverge from DB casing }
            begin
              Exista:= TRUE;
              Break;
@@ -472,7 +492,11 @@ end;
 
 destructor TCacheObj.Destroy;
 begin
- SaveDB;
+ { When the constructor raises early (e.g. empty cache folder), Delphi still calls Destroy
+   with fields uninitialized. Skip SaveDB to avoid a secondary exception that would mask
+   the original constructor failure. }
+ if Assigned(DbPicts) AND Assigned(DbThumbs)
+ then SaveDB;
  FreeAndNil(DbPicts);
  FreeAndNil(DbThumbs);
  inherited;

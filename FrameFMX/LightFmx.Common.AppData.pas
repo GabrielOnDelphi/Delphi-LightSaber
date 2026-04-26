@@ -91,6 +91,9 @@
 
 INTERFACE
 {$I Frameworks.inc}
+{$IMPORTEDDATA ON}   // E2201: TPendingAutoState (record with managed string field) lives in this
+                     // unit's interface, so other units in the same package emit cross-unit
+                     // record-RTTI references that require imported-data ($G+) to resolve.
 
 USES
   {$IFDEF MsWindows}

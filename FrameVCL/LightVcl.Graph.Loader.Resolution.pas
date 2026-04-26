@@ -2,7 +2,7 @@ UNIT LightVcl.Graph.Loader.Resolution;
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.01.30
+   2026.04.26
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -88,13 +88,15 @@ begin
       then GetBmpSize(FileName, Width, Height)
       else
         begin
-          Width := -1;    //DO NOT RAISE AN exception HERE IF THE FILE TYPE IS UNSUPORTED! Let the caller decide what to do. This could happen when bionix downloads and URL and the server returns a HTML instead of an image!
+          { DO NOT RAISE: caller decides. Unsupported extension is a legitimate "no resolution" outcome
+            (e.g. server returned HTML instead of an image during a download). }
+          Width := -1;
           Height:= -1;
         end;
  EXCEPT
-  //todo 1: trap only specific exceptions
-  //DO NOTHING    or: write this directly in LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs log
-  Width := -1;    //DO NOT RAISE AN exception HERE IF THE FILE TYPE IS UNSUPORTED! Let the caller decide what to do. This could happen when bionix downloads and URL and the server returns a HTML instead of an image!
+  { Broad swallow is intentional: API contract is "return -1 on any failure" so the caller
+    (often a grid that polls many times per second) doesn't have to deal with parse errors. }
+  Width := -1;
   Height:= -1;
  END;
 end;
@@ -117,12 +119,10 @@ begin
       then GetBmpSize(Stream, Width, Height)
       else
         begin
-          //todo 1: claude: what shall we do here?
-          Width := -1;    //CONST  LocalFileSizeUnknown = -2; SEEMS NOT TO BE TRUE ANYMORE       { The file was downloaded but I could not retrive its size } move this to bionix
+          Width := -1;
           Height:= -1;
         end;
  EXCEPT
-   //todo 1: Claude: trap only specific exceptions
    Width := -1;
    Height:= -1;
  END;
@@ -197,9 +197,9 @@ begin
       else
        begin
          Stream.Read(w, 2);
-         { Guard against malformed JPEGs: a segment length < 2 would cause us to seek backward, creating an infinite loop. 
+         { Guard against malformed JPEGs: a segment length < 2 would cause us to seek backward, creating an infinite loop.
            Valid JPEG segment lengths include the 2 length bytes themselves. }
-         if swap(w) < 2 then EXIT(FALSE); //todo 1: claude: what shall we do here? should we log a warning?
+         if swap(w) < 2 then EXIT(FALSE);
          Stream.Seek(swap(w)-2, soFromCurrent);
          Stream.Read(b, 1);
        end;
@@ -226,9 +226,9 @@ end;
 
 {--------------------------------------------------------------------------------------------------
    PNG
+   Reference (verified against PNG spec ISO 15948): http://www.delphidabbler.com/tips/201
 --------------------------------------------------------------------------------------------------}
-//todo 1: claude:  Make sure you are right here. read:    http://www.delphidabbler.com/tips/201      http://stackoverflow.com/questions/15209076/how-to-get-dimensions-of-image-file-in-delphi 
-procedure GetPNGSize(Stream: TStream; OUT Width, Height: Integer);   
+procedure GetPNGSize(Stream: TStream; OUT Width, Height: Integer);
 TYPE
    TPNGSig = array[0..7] of Byte;
 CONST
@@ -263,8 +263,10 @@ begin
    EXIT;
  END;
 
- { Result is Integer; clamp absurd values that exceed the spec's 2^31-1 maximum. }
- if (W32 > MaxInt) OR (H32 > MaxInt) then EXIT; //todo 1: claude: should we log warning here? i guess not, the caller can do it.
+ { Result is Integer; clamp absurd values that exceed the spec's 2^31-1 maximum.
+   Caller treats Width=-1 as "failure"; no need to log here.
+   Cast to Cardinal silences W1023 (signed/unsigned comparison) — MaxInt fits in Cardinal. }
+ if (W32 > Cardinal(MaxInt)) OR (H32 > Cardinal(MaxInt)) then EXIT;
 
  Width  := Integer(W32);
  Height := Integer(H32);
@@ -292,13 +294,16 @@ end;
 
 procedure GetGIFSize(Stream: TStream; OUT Width, Height: Integer);                          { Also see this (for GIF): http://www.delphipages.com/forum/showthread.php?t=202158 }
 TYPE
-  TGIFHeader = record
+  { Both records are read directly from disk via Stream.Read(rec, SizeOf(rec)); they MUST be packed
+    or Delphi adds trailing alignment padding (Word fields force size up to a multiple of 2),
+    making us consume extra bytes from the stream and shift subsequent parsing. }
+  TGIFHeader = packed record
     Sig: array[0..5] of Ansichar;
     ScreenWidth, ScreenHeight: Word;
     Flags, Background, Aspect: Byte;
   end;
 
-  TGIFImageBlock = record
+  TGIFImageBlock = packed record
     Left, Top, Width, Height: Word;
     Flags: Byte;
   end;
@@ -366,31 +371,7 @@ begin
 end;
 
 
-(*
-moved to cFrameServer
-function IsAnimatedGif(CONST FileName: string): Boolean;  { NOTE!! I won't be able to get resolution for images that have wrong extension (image is PNG but the extension is JPG) }
-VAR
-   GIF: TGIFImage;
-begin
- if NOT IsGIF(FileName) then EXIT(FALSE);
-
- GIF := TGIFImage.Create;
- TRY
-  TRY
-   GIF.LoadFromFile(FileName);     { This takes ~12sec for a 50MB GIF }    // <-----   bug report here:   Bug D49A0000 StackOVerflow in GifImg.pas
-   Result:= Gif.Images.Count> 1;
-  except_
-    EXIT(FALSE);   { Don't crash on invalid images }
-  END;
- FINALLY
-   FreeAndNil(GIF);
- END;
-end; *)
-
-{Other snippets:
-       http://www.delphipages.com/forum/showthread.php?t=117489 - Nu merge. Complete garbage.
-       http://www.swissdelphicenter.ch/torry/showcode.php?id=1896 - Nu merge cu majoritatea JPEG-urilor.
-       http://www.delphi3000.com/articles/article_3460.asp - Works with 90% of jpegs   }
+{ NOTE: IsAnimatedGif moved to GifProperties.pas (External). }
 
 
 
@@ -412,8 +393,18 @@ begin
  Stream:= TFileStream.Create(FullName, fmOpenRead OR fmShareDenyNone);
  TRY
   H:= GetBmpHeader(Stream);
-  Width := H.Width;
-  Height:= H.Height;
+  if H.Signature = 'BM' then
+   begin
+    Width := H.Width;
+    { Top-down DIBs encode Height as a negative value; pixel height is the absolute value.
+      The raw signed value stays in the TBitmapHeader record; callers asking for pixel dims get Abs. }
+    Height:= Abs(H.Height);
+   end
+  else
+   begin
+    Width := -1;
+    Height:= -1;
+   end;
  FINALLY
    FreeAndNil(Stream);
  END;
@@ -425,8 +416,16 @@ procedure GetBmpSize(Stream: TStream; OUT Width, Height: Integer);
 VAR H: TBitmapHeader;
 begin
  H:= GetBmpHeader(Stream);
- Width := H.Width;
- Height:= H.Height;
+ if H.Signature = 'BM' then
+  begin
+   Width := H.Width;
+   Height:= Abs(H.Height);
+  end
+ else
+  begin
+   Width := -1;
+   Height:= -1;
+  end;
 end;
 
 
@@ -517,6 +516,7 @@ end;
 
 function GetBitsPerPixel(BMP: TBitmap): Integer;
 begin
+ Assert(Assigned(BMP), 'GetBitsPerPixel: BMP is nil');
  case BMP.PixelFormat of
    pf1Bit  : result:= 1;
    pf4Bit  : result:= 4;

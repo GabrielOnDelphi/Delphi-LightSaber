@@ -77,6 +77,7 @@ TYPE
 
      function   SelectedString: string;
      function   SelectedObject: TObject;
+     function   WordCount: Integer;
      property   HasValidSelection: Boolean read FHasSelection;  { TRUE only after user picks from list. Always check before reading SelectedString/SelectedObject — Text may contain unmatched typed input. Reset when user starts typing. }
    published
      property   OnEndSearch: TSelectNotifyEvent read FOnEndSearch write FOnEndSearch;       { Triggered when the user selected an item from the list }
@@ -409,6 +410,12 @@ begin
   if lbxSearch.ItemIndex >= 0
   then Result := lbxSearch.Items[lbxSearch.ItemIndex]
   else Result := '';
+end;
+
+
+function TLightDownSearch.WordCount: Integer;
+begin
+  Result:= FWords.Count;
 end;
 
 

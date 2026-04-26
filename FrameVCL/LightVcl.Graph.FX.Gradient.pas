@@ -242,7 +242,8 @@ begin
    P:= BMP.ScanLine[Y];
    for X:= 0 to BMP.Width - 1 DO
     begin
-     P[X].R:= X xor Y;
+     { Mask to byte: for bitmaps >256px, X xor Y exceeds 255 and ERangeError fires under range checking. }
+     P[X].R:= (X xor Y) AND $FF;
      P[X].G:= 0;
      P[X].B:= 0;
      P[X].A:= 0;

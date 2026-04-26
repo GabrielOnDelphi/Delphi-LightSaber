@@ -74,13 +74,21 @@ TYPE
   // It needs a method, not a standalone procedure — hence this tiny wrapper class.
   // The instance is owned by the global Application object so it is freed cleanly on shutdown.
   TCrashHandlerHook = class(TComponent)
+  private
+    // Class-vars instead of unit globals: project rule "zero tolerance for global vars".
+    // These are conceptually a singleton's state — encapsulating them in the class scope
+    // makes the lifetime contract explicit and keeps the unit's namespace clean.
+    // 'private' (not strict) so InstallCrashHandler in the same unit can write them.
+    class var FInstance  : TCrashHandlerHook;
+    class var FCachedPath: string;
+    FInHandler: Boolean;     // Re-entrance guard: a third-party caller (or future hook chain)
+                             // could invoke HandleException from within the handler itself.
+  public
     procedure HandleException(Sender: TObject; E: Exception);
     destructor Destroy; override;
+    class property Instance  : TCrashHandlerHook read FInstance;
+    class property CachedPath: string            read FCachedPath;
   end;
-
-VAR
-  HookInstance: TCrashHandlerHook = nil;        // Set once in InstallCrashHandler. Owned by Application.
-  CachedPath  : string = '';                    // Set once in InstallCrashHandler. Avoids ForceDirectories on every exception.
 
 
 { The path to the crash log file. Returns '' if InstallCrashHandler has not been called yet,
@@ -90,7 +98,7 @@ VAR
   app name is empty). }
 function CrashLogPath: string;
 begin
-  Result:= CachedPath;
+  Result:= TCrashHandlerHook.CachedPath;
 end;
 
 
@@ -111,11 +119,19 @@ end;
 
 
 procedure TCrashHandlerHook.HandleException(Sender: TObject; E: Exception);
-VAR Line: string;
+VAR
+  Line   : string;
+  LineCap: string;  // captured by value into the deferred closure
 begin
   // Application.OnException always passes a non-nil E, but be defensive — a third
   // party could call HandleException directly.
   if NOT Assigned(E) then EXIT;
+
+  // Re-entrance guard. A future hook chain or third-party caller could re-invoke
+  // this handler from inside itself; without the guard we'd recurse on a
+  // secondary fault from inside the handler.
+  if FInHandler then EXIT;
+  FInHandler:= True;
 
   // Outer try/except: an exception escaping THIS handler would bypass OnException
   // (the dispatcher does not re-enter for handler failures) and on Android would
@@ -125,15 +141,30 @@ begin
     // (DateTimeToStr would render 'dd/mm/yyyy' or 'mm/dd/yyyy' depending on the OS).
     Line:= FormatDateTime('yyyy-mm-dd hh:nn:ss', Now) + ' | ' + E.ClassName + ': ' + E.Message;
 
-    // Mirror to RamLog so the in-app log viewer sees it during the current session
-    if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
-    then AppDataCore.RamLog.AddError('Unhandled: ' + Line);
+    // Mirror to RamLog so the in-app log viewer sees it during the current session.
+    // DEFER via TThread.Queue: AddError can synchronously trigger PopUpWindow on
+    // the log observer (when ShowOnError=TRUE). Opening a modal window with the
+    // faulting call stack still active spins a re-entrant message pump on a
+    // partially-corrupted state. Posting it lets the current handler unwind first.
+    if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog) then
+      begin
+        LineCap:= Line;
+        TThread.Queue(NIL, procedure
+          begin
+            if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
+            then AppDataCore.RamLog.AddError('Unhandled: ' + LineCap);
+          end);
+      end;
 
-    // Persist to disk so the next session can show the user what happened
+    // Persist to disk so the next session can show the user what happened.
+    // Documented intentional deviation from the log+reraise rule (see WriteCrashLog).
     WriteCrashLog(Line);
   EXCEPT
-    // Swallow. We are already in a degraded state; nothing useful to do here.
+    // Swallow. Documented intentional deviation: re-raising bypasses OnException
+    // and silently kills the process on Android. See class-level rationale.
   END;
+
+  FInHandler:= False;
 end;
 
 
@@ -145,23 +176,23 @@ begin
   // reference on Application during the brief window before Application itself dies.
   if Assigned(Application) AND (TMethod(Application.OnException).Data = Self)
   then Application.OnException:= nil;
-  HookInstance:= nil;                           // Clear module var so InstallCrashHandler can be called again in a fresh app lifecycle (tests).
-  CachedPath  := '';
+  FInstance  := nil;        // Clear class var so InstallCrashHandler can be called again in a fresh app lifecycle (tests).
+  FCachedPath:= '';
   inherited;
 end;
 
 
 procedure InstallCrashHandler;
 begin
-  if Assigned(HookInstance) then EXIT;          // Idempotent
+  if Assigned(TCrashHandlerHook.FInstance) then EXIT;          // Idempotent
   // Cache the path now while AppData is healthy. This avoids calling ForceDirectories
   // and the TAppDataCore.AppName assert (debug builds) from inside the exception handler,
   // which on Android may already be in a degraded state. If AppData was not constructed
   // first, the cache stays empty and all logging silently no-ops — safer than asserting.
   if Assigned(AppDataCore)
-  then CachedPath:= TAppDataCore.AppDataFolder(True) + CRASH_LOG_FILENAME;
-  HookInstance:= TCrashHandlerHook.Create(Application);  // Application owns and frees it
-  Application.OnException:= HookInstance.HandleException;
+  then TCrashHandlerHook.FCachedPath:= TAppDataCore.AppDataFolder(True) + CRASH_LOG_FILENAME;
+  TCrashHandlerHook.FInstance:= TCrashHandlerHook.Create(Application);  // Application owns and frees it
+  Application.OnException:= TCrashHandlerHook.FInstance.HandleException;
 end;
 
 

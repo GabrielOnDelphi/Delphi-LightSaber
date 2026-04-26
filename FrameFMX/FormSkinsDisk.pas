@@ -459,8 +459,7 @@ begin
     END;
 
     { List *.fsf files (binary format) }
-    var FsfFiles: TStringList;
-    FsfFiles:= LightCore.IO.ListFilesOf(GetStyleDir, '*.fsf', TRUE, FALSE);
+    var FsfFiles:= LightCore.IO.ListFilesOf(GetStyleDir, '*.fsf', TRUE, FALSE);
     TRY
       for FullFileName in FsfFiles do
         lBox.Items.Add(ExtractFileName(FullFileName));

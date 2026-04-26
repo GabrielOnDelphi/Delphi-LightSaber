@@ -113,7 +113,7 @@ begin
   // has freed it. The form is owned by Application (see TAppData.getLogForm),
   // not by us — Application will run our destructor and then free the
   // component memory. The flag closes the race window.
-  LogViewer.Destroying:= TRUE;
+  LogViewer.FormDestroying:= TRUE;
   LogViewer.RamLog.UnregisterLogObserver;  // Prevent NEW notifications.
   SaveSettings;
 end;

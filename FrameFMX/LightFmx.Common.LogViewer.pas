@@ -55,9 +55,12 @@ TYPE
      FVerbTrackBar: TFmxObject;     // TLogVerbFilter
      FOwnRamLog   : Boolean;        // Frees RamLog if owned
      FFilteredRowCount: Integer;    // Cached count of filtered rows
-     FDestroying  : Boolean;        // Set TRUE in TfrmRamLog.FormDestroy so already-queued
+     FFormDestroying: Boolean;      // Set TRUE in TfrmRamLog.FormDestroy so already-queued
                                     // TThread.Queue closures (posted by background-thread
                                     // log appends) bail out instead of touching a freed viewer.
+                                    // Distinct from TComponent.Destroying (which only flips
+                                    // once we are inside our own destructor — too late for
+                                    // a closure that has already entered Populate).
      procedure setShowDate(const Value: Boolean);
      procedure setShowTime(const Value: Boolean);
      procedure resizeColumns;
@@ -85,7 +88,7 @@ TYPE
 
      procedure Populate;
      procedure PopUpWindow;
-     property  Destroying: Boolean read FDestroying write FDestroying;
+     property  FormDestroying: Boolean read FFormDestroying write FFormDestroying;
 
      function  Count: Integer;
      procedure CopyAll;
@@ -341,11 +344,11 @@ end;
 
 { ILogObserver implementation - called when RamLog content changes.
   Guard against already-queued TThread.Queue closures firing after the host form's
-  FormDestroy has set Destroying:=TRUE — without this guard the closure would
+  FormDestroy has set FormDestroying:=TRUE — without this guard the closure would
   touch a viewer that Application has just freed. }
 procedure TLogViewer.Populate;
 begin
-  if FDestroying OR NOT Assigned(FRamLog) then EXIT;
+  if FFormDestroying OR NOT Assigned(FRamLog) then EXIT;
 
   setUpRows;  // Reconfigures rows/columns based on current filter
 

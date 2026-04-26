@@ -30,8 +30,9 @@
        Compact           -> Manual toggle — caller controls when to compact (e.g., sidebar buttons responding to MultiView state).
        AutoCompact       -> Self-managing — button watches hosting form's client width via TSizeChangedMessage.
                             Initial state evaluated in Resize (when first parented).
-       CompactThreshold  -> ctTablet (default): compact below HIGH_WIDTH (1024 px).
-                            ctPhone: compact below COMPACT_WIDTH (600 px).
+       CompactThreshold  -> Related to AutoCompact:
+                              ctPhone (default): compact below COMPACT_WIDTH (600 px).
+                              ctTablet: compact below HIGH_WIDTH (1024 px).
 
        When AutoCompact is TRUE, manual Compact is ignored — AutoCompact owns the state.
 
@@ -68,6 +69,8 @@ TYPE
 
   TCompactChangedEvent = procedure(Sender: TObject; IsCompact: Boolean) of object;
 
+
+//todo 1: Claude: move TCompactThreshold to a better file. like LightFmx.Common.Screen
   { Do NOT reorder — ordinal values are streamed into DFMs via the default clause on CompactThreshold.
     Append new values at the end only. }
   TCompactThreshold = (ctPhone,    // Compact when hosting form client width < COMPACT_WIDTH (600 px)
@@ -91,6 +94,11 @@ TYPE
     FExpandedWidth    : Single;        { Width before compacting — restored on expand }
     FExpandedIconPos  : TIconPosition; { IconPosition before compacting — restored on expand }
     FOnCompactChanged : TCompactChangedEvent;
+    FDeferTimer       : TTimer;        { One-shot defer for EvaluateAutoCompact when Scene=nil at Loaded.
+                                         Owner=Self so it's freed before the button's memory is reclaimed,
+                                         which means OnTimer cannot fire on a freed instance — unlike
+                                         TThread.ForceQueue which would capture Self by ref and AV. }
+    procedure DeferredEvaluateAutoCompact(Sender: TObject);
     function  GetText: string;
     procedure SetText(CONST Value: string);
     function  GetSvgData: string;
@@ -132,7 +140,7 @@ TYPE
     property HoverBackground: Boolean read FHoverBackground write SetHoverBackground default TRUE;    { When TRUE (default), hover/toggle tints the background with the accent color. FALSE = background always transparent (icon/text/glow still change). }
     property Compact: Boolean read FIsCompacted write SetCompact stored FALSE default FALSE;        { Manual compact toggle. TRUE = icon-only + shrink width. Ignored when AutoCompact is TRUE. Not streamed to DFM — always stores expanded Width. }
     property AutoCompact: Boolean read FAutoCompact write SetAutoCompact default FALSE;             { Self-managing compact. Watches hosting form client width and compacts based on CompactThreshold. }
-    property CompactThreshold: TCompactThreshold read FCompactThreshold write SetCompactThreshold default ctTablet;  { ctTablet = compact below 1024 px, ctPhone = compact below 600 px. Only used when AutoCompact is TRUE. }
+    property CompactThreshold: TCompactThreshold read FCompactThreshold write SetCompactThreshold default ctPhone;  { ctPhone = compact below 600 px (default), ctTablet = compact below 1024 px. Only used when AutoCompact is TRUE. }
     property OnCompactChanged: TCompactChangedEvent read FOnCompactChanged write FOnCompactChanged; { Fired after compact state changes — use to sync UI (e.g. checkbox) with auto-compact transitions. }
   end;
 
@@ -155,6 +163,11 @@ USES
 
 CONST
   HOVER_BG_ALPHA = $28;    { ~16% opacity - subtle background tint on hover/toggle }
+
+
+{ Forward decl: ShouldCompactFor is a free function defined later in this unit
+  but referenced from class methods (EvaluateAutoCompact, HandleFormResize). }
+function ShouldCompactFor(ClientWidth: Single; Threshold: TCompactThreshold): Boolean; forward;
 
 
 
@@ -211,14 +224,14 @@ begin
   FLabel.Locked:= TRUE;
   FLabel.Align:= TAlignLayout.Client;
   FLabel.TextSettings.HorzAlign:= TTextAlign.Leading;
-  FLabel.TextSettings.WordWrap:= FALSE;                { Single line — overflow handled by ClipChildren }
+  //FLabel.TextSettings.WordWrap:= FALSE;                { Single line — overflow handled by ClipChildren }
   FLabel.TextSettings.Trimming:= TTextTrimming.None;   { Don't drop trailing words/chars; let the caller see as much text as fits }
   FLabel.StyledSettings:= FLabel.StyledSettings - [TStyledSetting.FontColor, TStyledSetting.Other];  { Other covers WordWrap/Trimming — exclude so skin changes don't undo them }
 
   SetIconPosition(ipLeft);            { Canonical path — sets FIconPath.Align + margins }
   FIsToggled:= FALSE;
   FHoverBackground:= TRUE;
-  FCompactThreshold:= ctTablet;       { Default: compact below HIGH_WIDTH (1024 px) }
+  FCompactThreshold:= ctPhone;       { Default: compact below COMPACT_WIDTH (600 px) }
 
   ApplyThemeColors;
 
@@ -263,16 +276,29 @@ begin
       EvaluateAutoCompact;
       EXIT;
     end;
+  //todo: should/can I auto-compact at design-time?  
   if csDesigning in ComponentState then EXIT;   { Designer never auto-compacts — skip the deferred queue }
 
   { Scene may be nil here (e.g., button inside a TFrame parented after streaming).
-    Defer evaluation to the next message loop iteration, by which time the frame is attached to its form. }
-  TThread.ForceQueue(nil,
-    procedure
+    Defer via a one-shot TTimer owned by Self — when the button is destroyed,
+    the timer is destroyed with it and OnTimer cannot fire on a freed instance.
+    A TThread.ForceQueue closure here would capture Self by reference and AV
+    if the button is freed before the next message pump iteration. }
+  if FDeferTimer = nil then
     begin
-      if csDestroying in ComponentState then EXIT;
-      EvaluateAutoCompact;
-    end);
+      FDeferTimer:= TTimer.Create(Self);   // Owner=Self, freed in destructor
+      FDeferTimer.Interval:= 1;            // 0 invalid on some FMX platforms; 1ms = next-tick
+      FDeferTimer.OnTimer := DeferredEvaluateAutoCompact;
+    end;
+  FDeferTimer.Enabled:= TRUE;
+end;
+
+
+procedure TSvgButton.DeferredEvaluateAutoCompact(Sender: TObject);
+begin
+  FDeferTimer.Enabled:= FALSE;
+  if csDestroying in ComponentState then EXIT;
+  EvaluateAutoCompact;
 end;
 
 
@@ -289,9 +315,9 @@ end;
 
 
 { Recalculates icon Width/Height based on button size and current position mode.
-  ipLeft:   icon Width = button inner height (square icon filling vertical space)
-  ipTop:    no action — Client alignment fills the space above the Bottom-aligned label
-  ipCenter: no action — Client alignment fills the button automatically }
+  ipLeft:   sets Width = button inner height (square icon filling vertical space). Height filled by Align.
+  ipTop:    sets Height = button inner height minus label. Width filled by Align.
+  ipCenter: no action — Client alignment fills the button automatically. }
 procedure TSvgButton.UpdateIconSize;
 VAR InnerH: Single;
 begin
@@ -303,7 +329,12 @@ begin
       end;
     ipTop:
       begin
-        InnerH:= Height - Padding.Top - Padding.Bottom - FLabel.Height;
+        // Only subtract label height when the label is actually visible — caller may
+        // hide it externally via TextLabel.Visible := False, in which case the icon
+        // should fill the full inner area.
+        if FLabel.Visible
+        then InnerH:= Height - Padding.Top - Padding.Bottom - FLabel.Height
+        else InnerH:= Height - Padding.Top - Padding.Bottom;
         FIconPath.Height:= Max(InnerH, 1);
       end;
     ipCenter: ;  { Client alignment fills button }
@@ -512,6 +543,7 @@ procedure TSvgButton.SetAutoCompact(Value: Boolean);
 begin
   if FAutoCompact = Value then EXIT;
   FAutoCompact:= Value;
+  
   if FAutoCompact
   then EvaluateAutoCompact     { Just turned on — react to current form width }
   else
@@ -525,18 +557,6 @@ begin
   if FCompactThreshold = Value then EXIT;
   FCompactThreshold:= Value;
   EvaluateAutoCompact;
-end;
-
-
-{ Returns TRUE when the hosting form's client width is below the configured threshold. }
-function ShouldCompactFor(ClientWidth: Single; Threshold: TCompactThreshold): Boolean;
-begin
-  case Threshold of
-    ctPhone : Result:= WidthFitsPhone(ClientWidth);       // < COMPACT_WIDTH (600)
-    ctTablet: Result:= NOT WidthFitsDesktop(ClientWidth); // < HIGH_WIDTH (1024)
-  else
-    raise ERangeError.CreateFmt('TCompactThreshold value %d not handled', [Ord(Threshold)]);
-  end;
 end;
 
 
@@ -663,6 +683,20 @@ begin
         then CompactSvgButtons(Child, Compact);
     end;
 end;
+
+
+//todo 1: Claude: move this to a better file? like LightFmx.Common.Screen
+{ Returns TRUE when the hosting form's client width is below the configured threshold. }
+function ShouldCompactFor(ClientWidth: Single; Threshold: TCompactThreshold): Boolean;
+begin
+  case Threshold of
+    ctPhone : Result:= WidthFitsPhone(ClientWidth);       // < COMPACT_WIDTH (600)
+    ctTablet: Result:= NOT WidthFitsDesktop(ClientWidth); // < HIGH_WIDTH (1024)
+  else
+    raise ERangeError.CreateFmt('TCompactThreshold value %d not handled', [Ord(Threshold)]);
+  end;
+end;
+
 
 
 procedure Register;

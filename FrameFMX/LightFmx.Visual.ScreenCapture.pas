@@ -1,4 +1,4 @@
-UNIT LightFmx.Visual.ScreenCapture;
+﻿UNIT LightFmx.Visual.ScreenCapture;
 
 {=============================================================================================================
    2026.01.31
