@@ -45,7 +45,7 @@ function  BitmapToBytes        (BMP: TBitmap; Extension: string = '.png'): TByte
 IMPLEMENTATION
 
 USES
-   LightFmx.Common.AppData, FMX.DialogService;
+   LightCore.AppData, FMX.DialogService;
 
 
 
@@ -61,7 +61,7 @@ begin
   except
     on E: Exception do
     begin
-      AppData.RamLog.AddError('LoadImage failed: ' + E.Message);
+      if Assigned(AppDataCore) then AppDataCore.LogError('LoadImage failed: ' + E.Message);
       FreeAndNil(Result);
     end;
   end;
@@ -127,7 +127,7 @@ begin
   except
     on E: Exception do
     begin
-      AppData.RamLog.AddError('LoadThumbnail failed: ' + E.Message);
+      if Assigned(AppDataCore) then AppDataCore.LogError('LoadThumbnail failed: ' + E.Message);
       FreeAndNil(Result);
     end;
   end;
@@ -157,7 +157,7 @@ begin
   except
     on E: Exception do
     begin
-      AppData.RamLog.AddError('Cannot get image resolution for ' + FileName + ': ' + E.Message);
+      if Assigned(AppDataCore) then AppDataCore.LogError('Cannot get image resolution for ' + FileName + ': ' + E.Message);
 
       { Fallback: Full load if CodecManager fails (rare but possible with some formats) }
       Bmp:= NIL;
@@ -240,7 +240,8 @@ end;
 
 
 { Loads image from file, crops it, and assigns the result to a TImage.
-  Clears the Image if file cannot be loaded. }
+  On failure (missing file, bad format) the Image bitmap is reset to 0x0 so
+  Bitmap.IsEmpty returns TRUE. Callers can rely on IsEmpty as the failure indicator. }
 procedure CropBitmap(FileName: string; CropRect: TRectF; Image: TImage);
 var
   CropBmp: TBitmap;
@@ -252,7 +253,7 @@ begin
   try
     if CropBmp <> NIL
     then Image.Bitmap.Assign(CropBmp)
-    else Image.Bitmap.Clear(TAlphaColorRec.Null);
+    else Image.Bitmap.SetSize(0, 0);   // makes IsEmpty TRUE on failure (Clear keeps stale W/H)
   finally
     FreeAndNil(CropBmp);
   end;
@@ -278,7 +279,7 @@ begin
     except
       on E: Exception do
       begin
-        AppData.RamLog.AddError('LoadImage (bytes) failed: ' + E.Message);
+        if Assigned(AppDataCore) then AppDataCore.LogError('LoadImage (bytes) failed: ' + E.Message);
         FreeAndNil(Result);
       end;
     end;
@@ -305,7 +306,8 @@ end;
 
 
 { Loads image from raw bytes, crops it, and assigns the result to a TImage.
-  Clears the Image if bytes cannot be loaded. }
+  On failure (empty/corrupt bytes) the Image bitmap is reset to 0x0 so
+  Bitmap.IsEmpty returns TRUE. Callers can rely on IsEmpty as the failure indicator. }
 procedure CropBitmap(const Bytes: TBytes; CropRect: TRectF; Image: TImage);
 VAR CropBmp: TBitmap;
 begin
@@ -316,7 +318,7 @@ begin
   try
     if CropBmp <> NIL
     then Image.Bitmap.Assign(CropBmp)
-    else Image.Bitmap.Clear(TAlphaColorRec.Null);
+    else Image.Bitmap.SetSize(0, 0);   // makes IsEmpty TRUE on failure (Clear keeps stale W/H)
   finally
     FreeAndNil(CropBmp);
   end;
@@ -330,7 +332,8 @@ var
 begin
   Assert(Assigned(BMP), 'FillBitmap: BMP parameter cannot be nil');
 
-  BMP.Canvas.BeginScene;
+  // BeginScene returns Boolean — calling FillRect/EndScene when it returns False corrupts canvas internal state. Same bug class as the prior ScreenCapture fix.
+  if NOT BMP.Canvas.BeginScene then EXIT;
   try
     R:= TRectF.Create(0, 0, BMP.Width, BMP.Height);
     BMP.Canvas.Fill.Color:= Color;

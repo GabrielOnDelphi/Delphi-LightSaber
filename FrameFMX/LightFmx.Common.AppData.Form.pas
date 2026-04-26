@@ -220,7 +220,17 @@ begin
   // The VCL version calls EndInitialization in LightVcl.Visual.AppDataForm.pas.
 
   // WARNING: Can't check Self=Application.MainForm here because FMX assigns MainForm AFTER the constructor returns, so it's still nil during Loaded.
-  TAppDataCore.EndInitialization;
+  // Defer via ForceQueue: when several forms are queued (CreateMainForm + CreateForm),
+  // FMX's RealCreateForms constructs them sequentially and each fires Loaded. Calling
+  // EndInitialization synchronously here flips Initializing=FALSE on the FIRST form,
+  // so any LoadForm side-effect raise in a LATER form would let saveBeforeExit persist
+  // half-constructed state. Posting to the message queue defers the flag-flip until
+  // RealCreateForms has returned and all queued forms are fully loaded.
+  // EndInitialization is idempotent (just sets a Boolean), so multiple posts are harmless.
+  TThread.ForceQueue(NIL, procedure
+    begin
+      TAppDataCore.EndInitialization;
+    end);
 end;
 
 

@@ -167,6 +167,7 @@
         <DCCReference Include="Fmx.dcp"/>
         <DCCReference Include="LightFmx.Common.AppData.pas"/>
         <DCCReference Include="LightFmx.Common.AppData.Form.pas"/>
+        <DCCReference Include="LightFmx.Common.CrashHandler.pas"/>
         <DCCReference Include="LightFmx.Common.LogFilter.pas"/>
         <DCCReference Include="LightFmx.Common.LogViewer.pas"/>
         <DCCReference Include="LightFmx.Common.CenterControl.pas"/>

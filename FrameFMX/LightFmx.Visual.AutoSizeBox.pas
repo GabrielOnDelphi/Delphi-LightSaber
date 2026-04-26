@@ -143,8 +143,8 @@ begin
       ;  // No hue shift — neutral variant of the background
   end;
 
+  // HSLtoRGB → MakeColor(R,G,B) which sets A=$FF by default; 
   Result:= HSLtoRGB(H, S, L);
-  TAlphaColorRec(Result).A:= $FF;
 end;
 
 
@@ -206,12 +206,14 @@ end;
 
 
 { Returns the available width for content (parent width minus our margins).
-  Used to determine how much horizontal space we have for text wrapping. }
+  Used to determine how much horizontal space we have for text wrapping.
+  Guards against non-TControl parents (e.g. plain TFmxObject containers). }
 function TAutoSizeBox.getParentContentWidth: Single;
 begin
   Result:= 0;
-  if Parent = NIL then EXIT;
-  Result:= (Parent as TControl).Width - Self.Margins.Left - Self.Margins.Right;
+  if NOT Assigned(Parent) 
+  OR NOT (Parent is TControl) then EXIT;
+  Result:= TControl(Parent).Width - Self.Margins.Left - Self.Margins.Right;
 
   if Result < 0
   then Result:= 0;

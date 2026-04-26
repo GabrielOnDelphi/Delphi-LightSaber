@@ -1,7 +1,7 @@
 UNIT LightCore.Binary;
  
 {=============================================================================================================
-   2026.01.29
+   2026.04.25
 
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
@@ -104,7 +104,8 @@ USES
  function  Ensure100        (i: integer): Byte;                 inline; overload;               { Makes sure that the 'I' is not lower than 0 and not higher than 100 }
  function  Ensure100        (s: Single): Single;                inline; overload;               { Makes sure that the 'S' is not lower than 0 and not higher than 100 }
 
- function  ReadMotorolaWord(Stream: TStream): Word;
+ function  ReadMotorolaWord    (Stream: TStream): Word;
+ function  ReadMotorolaCardinal(Stream: TStream): Cardinal;             { 4-byte big-endian unsigned (e.g. PNG IHDR width/height) }
 
 
 
@@ -790,27 +791,20 @@ end;
 
 
 { Reads a Word from a stream in Motorola (big-endian) format.
-  Raises exception if not enough data available. }
+  Raises EReadError if not enough data available. }
 function ReadMotorolaWord(Stream: TStream): Word;
-TYPE
-  TMotorolaWord = record
-    case Byte of
-      0: (Value: Word);
-      1: (Byte1, Byte2: Byte);
-  end;
-VAR
-   MW: TMotorolaWord;
-   BytesRead: Integer;
 begin
-  BytesRead:= Stream.Read(MW.Byte2, SizeOf(Byte));
-  if BytesRead <> SizeOf(Byte)
-  then RAISE Exception.Create('ReadMotorolaWord: Unexpected end of stream');
+  Stream.ReadBuffer(Result, 2);
+  Result:= Swap(Result);
+end;
 
-  BytesRead:= Stream.Read(MW.Byte1, SizeOf(Byte));
-  if BytesRead <> SizeOf(Byte)
-  then RAISE Exception.Create('ReadMotorolaWord: Unexpected end of stream');
 
-  Result:= MW.Value;
+{ Reads a 4-byte unsigned integer from a stream in Motorola (big-endian) format.
+  Used for PNG IHDR (Width/Height are 32-bit big-endian). Raises EReadError on short read. }
+function ReadMotorolaCardinal(Stream: TStream): Cardinal;
+begin
+  Stream.ReadBuffer(Result, 4);
+  SwapCardinal(Result);
 end;
 
 (*

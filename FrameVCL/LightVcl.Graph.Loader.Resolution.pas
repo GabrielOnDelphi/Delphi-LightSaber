@@ -117,11 +117,12 @@ begin
       then GetBmpSize(Stream, Width, Height)
       else
         begin
+          //todo 1: claude: what shall we do here?
           Width := -1;    //CONST  LocalFileSizeUnknown = -2; SEEMS NOT TO BE TRUE ANYMORE       { The file was downloaded but I could not retrive its size } move this to bionix
           Height:= -1;
         end;
  EXCEPT
-   //todo 1: trap only specific exceptions
+   //todo 1: Claude: trap only specific exceptions
    Width := -1;
    Height:= -1;
  END;
@@ -196,9 +197,9 @@ begin
       else
        begin
          Stream.Read(w, 2);
-         { Guard against malformed JPEGs: a segment length < 2 would cause us to seek backward,
-           creating an infinite loop. Valid JPEG segment lengths include the 2 length bytes themselves. }
-         if swap(w) < 2 then EXIT(FALSE);
+         { Guard against malformed JPEGs: a segment length < 2 would cause us to seek backward, creating an infinite loop. 
+           Valid JPEG segment lengths include the 2 length bytes themselves. }
+         if swap(w) < 2 then EXIT(FALSE); //todo 1: claude: what shall we do here? should we log a warning?
          Stream.Seek(swap(w)-2, soFromCurrent);
          Stream.Read(b, 1);
        end;
@@ -226,8 +227,8 @@ end;
 {--------------------------------------------------------------------------------------------------
    PNG
 --------------------------------------------------------------------------------------------------}
-
-procedure GetPNGSize(Stream: TStream; OUT Width, Height: Integer);   //source   http://www.delphidabbler.com/tips/201      http://stackoverflow.com/questions/15209076/how-to-get-dimensions-of-image-file-in-delphi
+//todo 1: claude:  Make sure you are right here. read:    http://www.delphidabbler.com/tips/201      http://stackoverflow.com/questions/15209076/how-to-get-dimensions-of-image-file-in-delphi 
+procedure GetPNGSize(Stream: TStream; OUT Width, Height: Integer);   
 TYPE
    TPNGSig = array[0..7] of Byte;
 CONST
@@ -235,7 +236,7 @@ CONST
 VAR
    FileSign: TPNGSig;
    i: integer;
-   W32, H32: LongWord;
+   W32, H32: Cardinal;
 begin
  Width  := -1;
  Height := -1;
@@ -253,17 +254,17 @@ begin
    IHDR data: Width (4 bytes, big-endian) at file offset 16, Height (4 bytes, big-endian) at offset 20. }
  TRY
    Stream.Seek(16, 0);
-   W32:= LightCore.Binary.ReadMotorolaLongWord(Stream);
+   W32:= LightCore.Binary.ReadMotorolaCardinal(Stream);
 
    Stream.Seek(20, 0);
-   H32:= LightCore.Binary.ReadMotorolaLongWord(Stream);
+   H32:= LightCore.Binary.ReadMotorolaCardinal(Stream);
  EXCEPT
    { Truncated IHDR - leave Width/Height at -1 }
    EXIT;
  END;
 
  { Result is Integer; clamp absurd values that exceed the spec's 2^31-1 maximum. }
- if (W32 > MaxInt) OR (H32 > MaxInt) then EXIT;
+ if (W32 > MaxInt) OR (H32 > MaxInt) then EXIT; //todo 1: claude: should we log warning here? i guess not, the caller can do it.
 
  Width  := Integer(W32);
  Height := Integer(H32);

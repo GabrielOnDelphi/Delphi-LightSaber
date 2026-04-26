@@ -1,7 +1,7 @@
 ﻿UNIT LightCore.IO;
 
 {=============================================================================================================
-   2026.01.30
+   2026.04.25
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -134,6 +134,8 @@ CONST
 
    GIF           = '*.GIF';
    GIFFtl        = 'GIF|'+ GIF;
+
+   RainDrop      = '.RainDrop';
 
    XMF           = '*.EMF;*.WMF';
    XMFFtl        = 'Microsoft EMF/WMF|'+ XMF;
@@ -305,6 +307,7 @@ CONST
  function IsICO         (CONST AGraphFile: string) : Boolean;
  function IsEMF         (CONST AGraphFile: string) : Boolean;
  function IsWMF         (CONST AGraphFile: string) : Boolean;
+ function IsRainDrop    (CONST AGraphFile: string) : Boolean;
 
  function IsImage       (CONST AGraphFile: string) : Boolean;                                            { Returns TRUE if the file has a good/known extension and it can be converted to BMP }
  function IsImage2Bmp   (CONST AGraphFile: string) : Boolean;
@@ -914,6 +917,12 @@ end;
 function IsWBC(CONST AGraphFile: string): Boolean;
 begin
   Result:= ExtractFileExtUp(AGraphFile)= '.WBC';
+end;
+
+
+function IsRainDrop(CONST AGraphFile: string): Boolean;
+begin
+  Result:= SameText(ExtractFileExt(AGraphFile), RainDrop);
 end;
 
 

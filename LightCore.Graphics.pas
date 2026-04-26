@@ -33,36 +33,40 @@ IMPLEMENTATION
 
 function DetectGraphFormatBySig(CONST FileName: string): string;
 VAR
-  FS  : TFileStream;
-  Buf : array[0..11] of Byte;
-  Read: Integer;
+  FS       : TFileStream;
+  Buf      : array[0..11] of Byte;
+  BytesRead: Integer;
 begin
   Result:= '';
   if NOT FileExists(FileName) then EXIT;
 
-  { Extension-based formats first — no reliable magic-byte signature. }
-  if IsJp2(FileName) then EXIT('.jp2');
-  if IsWB1(FileName) then EXIT('.wb1');
-  if IsRainDrop(FileName) then EXIT(RainDrop);
-
-  { Magic-byte detection for the rest. }
-  Read:= 0;
+  { Magic-byte detection. }
+  BytesRead:= 0;
+  FS:= NIL;
   TRY
-    FS:= TFileStream.Create(FileName, fmOpenRead OR fmShareDenyNone);
     TRY
-      Read:= FS.Read(Buf, SizeOf(Buf));
+      FS:= TFileStream.Create(FileName, fmOpenRead OR fmShareDenyNone);
+      BytesRead:= FS.Read(Buf, SizeOf(Buf));
     FINALLY
       FreeAndNil(FS);
     END;
   EXCEPT
     on E: Exception do
       begin
-        AppDataCore.LogError(E.ClassName + ': ' + E.Message + ' - ' + FileName);
-        EXIT;
+        // AppDataCore can be nil in unit-test/early-startup contexts — guard before use.
+        if Assigned(AppDataCore)
+        then AppDataCore.LogError(E.ClassName + ': ' + E.Message + ' - ' + FileName);
+        RAISE;   // never swallow: caller must distinguish I/O failure from "unknown format"
       end;
   END;
 
-  if Read < 4 then EXIT;
+  if BytesRead < 4 then
+  begin
+    // Too short for any magic — fall through to extension-based formats.
+    if IsWB1(FileName)      then EXIT('.wb1');
+    if IsRainDrop(FileName) then EXIT(RainDrop);
+    EXIT;
+  end;
 
   // BMP: 42 4D ('BM')
   if (Buf[0] = $42) AND (Buf[1] = $4D)                                              then EXIT('.bmp');
@@ -77,10 +81,21 @@ begin
   // TIFF: 49 49 2A 00 (little-endian) or 4D 4D 00 2A (big-endian)
   if ((Buf[0] = $49) AND (Buf[1] = $49) AND (Buf[2] = $2A) AND (Buf[3] = $00))
   OR ((Buf[0] = $4D) AND (Buf[1] = $4D) AND (Buf[2] = $00) AND (Buf[3] = $2A))      then EXIT('.tif');
+  // J2C codestream: FF 4F FF 51
+  if (Buf[0] = $FF) AND (Buf[1] = $4F) AND (Buf[2] = $FF) AND (Buf[3] = $51)        then EXIT('.jp2');
+  // JP2 (ISO 15444-1 box): 00 00 00 0C 6A 50 20 20
+  if (BytesRead >= 8)
+  AND (Buf[0] = $00) AND (Buf[1] = $00) AND (Buf[2] = $00) AND (Buf[3] = $0C)
+  AND (Buf[4] = $6A) AND (Buf[5] = $50) AND (Buf[6] = $20) AND (Buf[7] = $20)       then EXIT('.jp2');
   // WEBP: 'RIFF' .... 'WEBP'
-  if (Read >= 12)
+  if (BytesRead >= 12)
   AND (Buf[0] = $52) AND (Buf[1] = $49) AND (Buf[2] = $46) AND (Buf[3] = $46)
   AND (Buf[8] = $57) AND (Buf[9] = $45) AND (Buf[10]= $42) AND (Buf[11]= $50)       then EXIT('.webp');
+
+  { Extension-based fallback for proprietary formats without a reliable magic. }
+  if IsJp2(FileName)      then EXIT('.jp2');     // .j2k variants without standard box header
+  if IsWB1(FileName)      then EXIT('.wb1');
+  if IsRainDrop(FileName) then EXIT(RainDrop);
 end;
 
 

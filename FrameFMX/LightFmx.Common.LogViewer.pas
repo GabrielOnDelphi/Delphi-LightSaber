@@ -55,6 +55,9 @@ TYPE
      FVerbTrackBar: TFmxObject;     // TLogVerbFilter
      FOwnRamLog   : Boolean;        // Frees RamLog if owned
      FFilteredRowCount: Integer;    // Cached count of filtered rows
+     FDestroying  : Boolean;        // Set TRUE in TfrmRamLog.FormDestroy so already-queued
+                                    // TThread.Queue closures (posted by background-thread
+                                    // log appends) bail out instead of touching a freed viewer.
      procedure setShowDate(const Value: Boolean);
      procedure setShowTime(const Value: Boolean);
      procedure resizeColumns;
@@ -82,6 +85,7 @@ TYPE
 
      procedure Populate;
      procedure PopUpWindow;
+     property  Destroying: Boolean read FDestroying write FDestroying;
 
      function  Count: Integer;
      procedure CopyAll;
@@ -178,12 +182,19 @@ end;
 
 
 { Removes all columns from the grid.
-  Do not manually free columns before removing - the grid manages their lifecycle. }
+  Columns are owned by Self (AddColumn passes Self as Owner), so FreeAndNil is
+  the correct release — RemoveObject only detaches the parent link and leaves
+  the column object alive on the owner list, leaking one column object per
+  filter toggle for the viewer's lifetime. }
 procedure TLogViewer.RemoveAllColumns;
 VAR i: Integer;
 begin
   for i:= ColumnCount - 1 downto 0 do
-    RemoveObject(Columns[i]);
+    begin
+      var Col: TColumn;
+      Col:= Columns[i];
+      FreeAndNil(Col);  // FMX: free auto-detaches from parent list
+    end;
 end;
 
 
@@ -274,8 +285,15 @@ end;
   if you previously assigned an external log and want to switch back. }
 procedure TLogViewer.ConstructInternalRamLog;
 begin
-  if FOwnRamLog
-  then FreeAndNil(FRamLog);
+  // Detach from prior log before allocating the new one. Mirror AssignExternalRamLog:
+  // free if owned, unregister if external. Skipping the unregister branch (the prior
+  // bug) leaves the external log holding a dangling observer pointer to this viewer.
+  if Assigned(FRamLog) then
+    begin
+      if FOwnRamLog
+      then FreeAndNil(FRamLog)
+      else FRamLog.UnregisterLogObserver;
+    end;
 
   FRamLog:= TRamLog.Create(TRUE, Self as ILogObserver);
   FOwnRamLog:= TRUE;
@@ -321,10 +339,13 @@ end;
    CONTENT & DRAWING
 -------------------------------------------------------------------------------------------------------------}
 
-{ ILogObserver implementation - called when RamLog content changes }
+{ ILogObserver implementation - called when RamLog content changes.
+  Guard against already-queued TThread.Queue closures firing after the host form's
+  FormDestroy has set Destroying:=TRUE — without this guard the closure would
+  touch a viewer that Application has just freed. }
 procedure TLogViewer.Populate;
 begin
-  if NOT Assigned(FRamLog) then EXIT;
+  if FDestroying OR NOT Assigned(FRamLog) then EXIT;
 
   setUpRows;  // Reconfigures rows/columns based on current filter
 

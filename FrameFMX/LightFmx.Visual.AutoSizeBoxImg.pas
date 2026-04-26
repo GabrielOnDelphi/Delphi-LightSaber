@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Visual.AutosizeBoxImg;
 
 {=============================================================================================================
-   2026.01.31
+   2026.04.26
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Extends TAutoSizeBox with image display capabilities.
@@ -39,6 +39,8 @@ procedure Register;
 
 IMPLEMENTATION
 
+USES
+  LightCore.AppData;
 
 
 constructor TAutosizeBoxImg.Create(AOwner: TComponent);
@@ -56,20 +58,45 @@ end;
 
 { Loads and crops an image from file using the specified bounding box.
   Sets BoxType to bxContent (light blue, image bubbles appear on the left side).
-  Triggers UpdateSize to recalculate dimensions based on the new image. }
+  Triggers UpdateSize to recalculate dimensions based on the new image.
+  Missing file is logged and produces an empty bubble (degrades gracefully — no exception
+  to avoid tearing down the whole render). Corrupt files are caught inside CropBitmap which
+  resets the bitmap to 0x0 on any failure (see LightFmx.Common.Graph). }
 procedure TAutosizeBoxImg.LoadImage(const FileName: string; const aBoundBox: TRectF);
 begin
   BoxType:= bxContent;    // Property setter applies margins + fill color (UpdateSize bails — no bitmap yet)
+
+  if NOT FileExists(FileName) then
+    begin
+      if Assigned(AppDataCore) then
+        AppDataCore.LogError('AutosizeBoxImg.LoadImage: file not found - ' + FileName);
+      FImage.Bitmap.SetSize(0, 0);
+      UpdateSize;
+      EXIT;
+    end;
+
   CropBitmap(FileName, aBoundBox, FImage);
   UpdateSize;
 end;
 
 
 { Loads and crops an image from raw bytes using the specified bounding box.
-  Used when the image is embedded in the lesson file (lazy loading via ReadBytesOnDemand). }
+  Used when the image is embedded in the lesson file (lazy loading via ReadBytesOnDemand).
+  Empty input is logged and produces an empty bubble. Corrupt bytes are caught inside
+  CropBitmap which resets the bitmap to 0x0 on any failure. }
 procedure TAutosizeBoxImg.LoadImage(const Bytes: TBytes; const aBoundBox: TRectF);
 begin
   BoxType:= bxContent;    // Property setter applies margins + fill color (UpdateSize bails — no bitmap yet)
+
+  if Length(Bytes) = 0 then
+    begin
+      if Assigned(AppDataCore) then
+        AppDataCore.LogError('AutosizeBoxImg.LoadImage: empty bytes input');
+      FImage.Bitmap.SetSize(0, 0);
+      UpdateSize;
+      EXIT;
+    end;
+
   CropBitmap(Bytes, aBoundBox, FImage);
   UpdateSize;
 end;
@@ -91,7 +118,7 @@ var
   MaxWidth: Single;
   NewWidth, NewHeight: Single;
 begin
-  if Parent = NIL then EXIT;
+  if NOT Assigned(Parent) OR NOT (Parent is TControl) then EXIT;
   if FImage.Bitmap.IsEmpty then EXIT;
   if FUpdatingSize then EXIT;
 
@@ -100,7 +127,7 @@ begin
     // Available width = parent width minus our fixed left margin.
     // We intentionally exclude Margins.Right because it is a dynamic OUTPUT
     // of this method (set below), not a fixed INPUT.
-    AvailableWidth:= (Parent as TControl).Width - Margins.Left;
+    AvailableWidth:= TControl(Parent).Width - Margins.Left;
 
     // Fallback size if parent is not ready (width not yet calculated)
     if AvailableWidth <= 0 then

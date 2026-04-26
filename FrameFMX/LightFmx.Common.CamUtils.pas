@@ -8,8 +8,12 @@
 
    Usage Instructions:
    1. Add necessary permissions to Android manifest:
-        <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" /> (for Android 13+)
-        or <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> for older.
+        <uses-permission android:name="android.permission.CAMERA" />                (camera capture)
+        <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />     (gallery, Android 13+)
+        or <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" /> for older devices.
+      iOS Info.plist keys:
+        NSCameraUsageDescription       (camera capture)
+        NSPhotoLibraryUsageDescription (gallery picking / save-to-album)
    2. Before calling PickImageFromGallery, request permission:
         RequestStorageReadPermission(procedure begin PickImageFromGallery; end);
    3. In your form's OnCreate:
@@ -21,6 +25,31 @@
    - PickAnyFileFromStorage opens the system Documents UI for any file type.
    - Goes through SAF, so READ_MEDIA_IMAGES / READ_EXTERNAL_STORAGE are NOT required.
    - Pair with SetupAnyFilePickerCallback (separate request code from image picker).
+
+   References (authoritative sources for the platform claims made in this unit):
+   - MediaScannerConnection.scanFile is fire-and-forget when the listener parameter is null
+     (Android internally creates a self-disconnecting connection):
+        https://developer.android.com/reference/android/media/MediaScannerConnection
+   - ACTION_MEDIA_SCANNER_SCAN_FILE deprecated in API 29 (Android 10), silently ignored on newer:
+        https://developer.android.com/reference/android/content/Intent#ACTION_MEDIA_SCANNER_SCAN_FILE
+   - Android runtime permission model + READ_MEDIA_IMAGES split at API 33 (Android 13+):
+        https://docwiki.embarcadero.com/RADStudio/Athens/en/Android_Permission_Model
+        https://developer.android.com/about/versions/13/behavior-changes-13#granular-media-permissions
+   - IFMXTakenImageService.TakeImageFromLibrary (gallery picker, iOS bridge target):
+        https://docwiki.embarcadero.com/Libraries/Athens/en/FMX.MediaLibrary.IFMXTakenImageService.TakeImageFromLibrary
+   - UIDocumentPickerViewController.initWithDocumentTypes deprecated in iOS 14
+     (use initForOpeningContentTypes with UTType — bindings not yet stable in Delphi RTL):
+        https://developer.apple.com/documentation/uikit/uidocumentpickerviewcontroller/1618678-initwithdocumenttypes
+   - UIApplication.keyWindow deprecated in iOS 13 (still functional on a single-scene app):
+        https://developer.apple.com/documentation/uikit/uiapplication/1622924-keywindow
+   - TJavaObjectArray<T> is a plain TObject (not ARC, not interface) and must be Freed.
+     Hierarchy: TJavaObjectArray<T> → TJavaArray<T> → TJavaBasicArray (TObject).
+     Destructor calls TJNIResolver.DeleteGlobalRef — leaks the JNI global ref if not freed.
+        Local: $(BDS)\source\rtl\android\Androidapi.JNIBridge.pas (declaration ~line 318-373, destructor ~2171)
+        Local: $(BDS)\source\fmx\FMX.AddressBook.Android.pas (~line 390-408 — RTL's own try/finally Free pattern)
+   - TOSVersion.Major on Android is parsed from Build.VERSION.RELEASE (the human "13", "10" string),
+     NOT the API level. So TOSVersion.Check(13) = Android 13 = API 33:
+        Local: $(BDS)\source\rtl\common\System.SysUtils.pas (TOSVersion implementation)
 ==============================================================================================================}
 
 INTERFACE
@@ -117,10 +146,10 @@ begin
       begin
         if (Length(AGrantResults) = 1)
         AND (AGrantResults[0] = TPermissionStatus.Granted)
-        then
+        then begin
           if Assigned(AOnGranted)
-          then AOnGranted
-          else
+          then AOnGranted;
+        end
         else
           TDialogService.ShowMessage('Cannot access the camera because the required permission has not been granted');
       end);
@@ -184,8 +213,12 @@ begin
   begin
     var Paths: TJavaObjectArray<JString>;
     Paths:= TJavaObjectArray<JString>.Create(1);
-    Paths.Items[0]:= StringToJString(AFileName);
-    TJMediaScannerConnection.JavaClass.scanFile(TAndroidHelper.Context, Paths, nil, nil);
+    try
+      Paths.Items[0]:= StringToJString(AFileName);
+      TJMediaScannerConnection.JavaClass.scanFile(TAndroidHelper.Context, Paths, nil, nil);
+    finally
+      FreeAndNil(Paths);
+    end;
   end
   else
   begin

@@ -182,6 +182,7 @@ VAR
   ParentWidth, ParentHeight: Single;
 begin
   Assert(Parent <> NIL, 'ShowConfetti: Parent cannot be nil');
+  Assert(SizeMultiplier > 0, 'ShowConfetti: SizeMultiplier must be > 0 (Random(0) raises EInvalidArgument)');
 
   // Get parent dimensions (forms and controls have different properties)
   if Parent is TControl
@@ -285,7 +286,7 @@ CONST
 VAR
   Fade: TFloatAnimation;
 begin
-  if aBubble = NIL then EXIT;
+  Assert(aBubble <> NIL, 'SlideIn: aBubble cannot be nil');
 
   TControlAccess(aBubble).Opacity:= 0;
 
@@ -329,7 +330,7 @@ VAR
   SX, SY: TFloatAnimation;
   Acc   : TControlAccess;
 begin
-  if aBtn = NIL then EXIT;
+  Assert(aBtn <> NIL, 'Squish: aBtn cannot be nil');
 
   Acc:= TControlAccess(aBtn);
   Acc.RotationCenter.X:= 0.5;
@@ -605,7 +606,10 @@ begin
         Child:= TControl(aRoot.Children[i]);
         if NOT Child.Visible then Continue;
 
-        if Child.ClassType = TLayout
+        // 'is TLayout' (vs strict ClassType=) so TFlowLayout/TGridLayout subclasses are
+        // also treated as transparent containers and descended into; otherwise a flow
+        // layout hosting many buttons falls as a single block instead of per-button.
+        if Child is TLayout
         then CollectFallTargets(Child, aList)   // transparent: descend
         else aList.Add(Child);
       end;
@@ -628,7 +632,11 @@ VAR
 begin
   if (aContainer = NIL) OR (OwnerForm = NIL) then
     begin
-      if Assigned(OnDone) then OnDone();
+      // Defer via ForceQueue to match the documented OnDone contract — main path
+      // posts via TAnimDoneBridge, fast paths must not invoke synchronously or
+      // OnDone callers (typically Close) re-enter the close-query handler.
+      if Assigned(OnDone)
+      then TThread.ForceQueue(NIL, OnDone);
       EXIT;
     end;
 
@@ -636,10 +644,11 @@ begin
   TRY
     CollectFallTargets(aContainer, Targets);
 
-    // No targets found — fire OnDone immediately so the caller still closes.
+    // No targets found — defer OnDone (see comment above).
     if Targets.Count = 0 then
       begin
-        if Assigned(OnDone) then OnDone();
+        if Assigned(OnDone)
+        then TThread.ForceQueue(NIL, OnDone);
         EXIT;
       end;
 

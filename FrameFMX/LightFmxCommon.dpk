@@ -37,6 +37,7 @@ requires
 contains
   LightFmx.Common.AppData in 'LightFmx.Common.AppData.pas',
   LightFmx.Common.AppData.Form in 'LightFmx.Common.AppData.Form.pas',
+  LightFmx.Common.CrashHandler in 'LightFmx.Common.CrashHandler.pas',
   LightFmx.Common.LogFilter in 'LightFmx.Common.LogFilter.pas',
   LightFmx.Common.LogViewer in 'LightFmx.Common.LogViewer.pas',
   LightFmx.Common.CenterControl in 'LightFmx.Common.CenterControl.pas',

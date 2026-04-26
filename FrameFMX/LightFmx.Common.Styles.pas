@@ -18,7 +18,15 @@ USES
    FMX.Styles, FMX.Types, FMX.Controls, FMX.Graphics;
 
 // THEME
-function IsStyleCompatible(const StyleFile: string): Boolean;
+
+// Overload with diagnostic out-param. LoadFailed=TRUE means the file could not be parsed
+// (corrupted, wrong format, access denied) — this is distinct from "loaded but
+// PlatformTarget excludes the current OS". Callers showing user dialogs should
+// surface a different error message for each case.
+function IsStyleCompatible(const StyleFile: string; out LoadFailed: Boolean): Boolean; overload;
+
+// Back-compat thin wrapper: returns FALSE for both incompatible AND load-failed.
+function IsStyleCompatible(const StyleFile: string): Boolean; overload;
 
 // THEME COLOR
 function IsDarkStyle: Boolean;
@@ -54,54 +62,67 @@ begin
 end;
 
 
-{ Probes the style file to check if it's compatible with the current platform.
-  Returns True if compatible or if no descriptor exists (older universal styles). }
-function IsStyleCompatible(const StyleFile: string): Boolean;
+{ Probes the style file. Reports compatibility AND distinguishes load failure
+  (corrupted file, wrong format, access denied) from "loaded but incompatible
+  with current platform" via the LoadFailed out-param. }
+function IsStyleCompatible(const StyleFile: string; out LoadFailed: Boolean): Boolean;
 var
-  StyleObj: TFmxObject;
+  StyleObj   : TFmxObject;
   Description: TStyleDescription;
 begin
   Result:= False;
+  LoadFailed:= False;
 
   StyleObj := TStyleStreaming.LoadFromFile(StyleFile);
-  try
-    if StyleObj <> nil then
+  if StyleObj = nil then
     begin
-      Description := TStyleManager.FindStyleDescriptor(StyleObj);
-      if Description <> nil then
-      begin
-        {$IFDEF MSWINDOWS}
-        Result:= Description.PlatformTarget.Contains('[MSWINDOWS]')
-           OR Description.PlatformTarget.Contains('[ANY]')
-           OR (Description.PlatformTarget = '');
-        {$ENDIF}
-        {$IF DEFINED(MACOS) AND NOT DEFINED(IOS)}
-        Result:= Description.PlatformTarget.Contains('[MACOS]')
-           OR Description.PlatformTarget.Contains('[ANY]')
-           OR (Description.PlatformTarget = '');
-        {$ENDIF}
-        {$IFDEF IOS}
-        Result:= Description.PlatformTarget.Contains('[IOS')      // Matches [IOS7], [IOSALTERNATE]
-           OR Description.PlatformTarget.Contains('[ANY]')
-           OR (Description.PlatformTarget = '');
-        {$ENDIF}
-        {$IFDEF ANDROID}
-        Result:= Description.PlatformTarget.Contains('[ANDROID]')
-           OR Description.PlatformTarget.Contains('[ANY]')
-           OR (Description.PlatformTarget = '');
-        {$ENDIF}
-        {$IFDEF LINUX}
-        Result:= Description.PlatformTarget.Contains('[LINUX]')
-           OR Description.PlatformTarget.Contains('[ANY]')
-           OR (Description.PlatformTarget = '');
-        {$ENDIF}
-      end
-      else
-        Result:= True;   // No descriptor = older universal style
+      LoadFailed:= True;   // file unreadable / corrupted / wrong format
+      EXIT;
     end;
+
+  try
+    Description := TStyleManager.FindStyleDescriptor(StyleObj);
+    if Description = nil then
+
+
+        EXIT(true);  // No descriptor = older universal style — assume compatible
+
+
+    {$IFDEF MSWINDOWS}
+    Result:= Description.PlatformTarget.Contains('[MSWINDOWS]')
+       OR Description.PlatformTarget.Contains('[ANY]')
+       OR (Description.PlatformTarget = '');
+    {$ENDIF}
+    {$IF DEFINED(MACOS) AND NOT DEFINED(IOS)}
+    Result:= Description.PlatformTarget.Contains('[MACOS]')
+       OR Description.PlatformTarget.Contains('[ANY]')
+       OR (Description.PlatformTarget = '');
+    {$ENDIF}
+    {$IFDEF IOS}
+    Result:= Description.PlatformTarget.Contains('[IOS')      // Matches [IOS7], [IOSALTERNATE]
+       OR Description.PlatformTarget.Contains('[ANY]')
+       OR (Description.PlatformTarget = '');
+    {$ENDIF}
+    {$IFDEF ANDROID}
+    Result:= Description.PlatformTarget.Contains('[ANDROID]')
+       OR Description.PlatformTarget.Contains('[ANY]')
+       OR (Description.PlatformTarget = '');
+    {$ENDIF}
+    {$IFDEF LINUX}
+    Result:= Description.PlatformTarget.Contains('[LINUX]')
+       OR Description.PlatformTarget.Contains('[ANY]')
+       OR (Description.PlatformTarget = '');
+    {$ENDIF}
   finally
     FreeAndNil(StyleObj);
   end;
+end;
+
+
+function IsStyleCompatible(const StyleFile: string): Boolean;
+var Discard: Boolean;
+begin
+  Result:= IsStyleCompatible(StyleFile, Discard);
 end;
  
 

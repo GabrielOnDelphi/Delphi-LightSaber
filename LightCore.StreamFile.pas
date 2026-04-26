@@ -1,7 +1,7 @@
 UNIT LightCore.StreamFile;
 
 {=============================================================================================================
-   2026.01.30
+   2026.04.25
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Extends TFileStream.
@@ -878,8 +878,7 @@ end;
   LongWord = Cardinal }
 function TLightFileStream.RevReadCardinal: Cardinal;    // Old name: RevReadLongWord
 begin
-  ReadBuffer(Result, 4);
-  SwapCardinal(Result);        { SwapCardinal will correctly swap the byte order of the 32-bit value regardless whether the number is signed or unsigned }
+  Result:= ReadMotorolaCardinal(Self);
 end;
 
 
@@ -892,9 +891,7 @@ end;
 
 function TLightFileStream.RevReadWord: Word; { REVERSE READ - read 2 bytes and swap their position }
 begin
-  ReadBuffer(Result, 2);
-  Result:= Swap(Result);     { Exchanges high order byte with the low order byte of an integer or word. In Delphi code, Swap exchanges the high-order bytes with the low-order bytes of the argument. X is an expression of type SmallInt, as a 16-bit value, or Word. This is provided for backward compatibility only. }
-  //Also see: LightCore.Binary.SwapWord
+  Result:= ReadMotorolaWord(Self);
 end;
 
 

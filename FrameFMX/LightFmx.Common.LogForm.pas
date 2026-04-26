@@ -76,7 +76,7 @@ begin
 
   LoadSettings;
   chkLogOnError.IsChecked:= AppData.RamLog.ShowOnError;
-  chkShowTime.IsChecked  := LogViewer.ShowTime;
+  // chkShowTime is already synced inside LoadSettings — no second assignment needed.
 
   // Phone Visibility
   btnClear.Visible     := NOT IsPhoneScreen;
@@ -84,11 +84,14 @@ begin
   chkShowTime.Visible  := NOT IsPhoneScreen;
   chkShowDate.Visible  := NOT IsPhoneScreen;
 
-  // Phone: collapse the Time/Date column — narrow screens don't have room for both columns
+  // Phone: collapse the Time/Date column — narrow screens don't have room for both columns.
+  // Sync the (hidden) checkboxes too so their IsChecked state matches LogViewer.ShowDate/ShowTime.
   if IsPhoneScreen then
     begin
       LogViewer.ShowDate:= FALSE;
       LogViewer.ShowTime:= FALSE;
+      chkShowDate.IsChecked:= FALSE;
+      chkShowTime.IsChecked:= FALSE;
     end;
 
   Assert(Application.MainForm <> TCommonCustomForm(Self), 'Sanity check! The Log should not be the MainForm!'); { Make sure this is not the first form created }
@@ -104,9 +107,14 @@ end;
 // Triggered by application shutdown
 procedure TfrmRamLog.FormDestroy(Sender: TObject);
 begin
-  Assert(Owner = NIL); // This form should have no owner. If it has an owner (like Application), it will destroy the form. We want AppData to destroy the form!
-
-  LogViewer.RamLog.UnregisterLogObserver;  // I need this so I don't send messages to the LogViewer.
+  // Mark the viewer as destroying BEFORE we unregister, so any TThread.Queue
+  // closure already in flight (posted by a background-thread log append) sees
+  // the flag and bails out instead of touching this viewer once Application
+  // has freed it. The form is owned by Application (see TAppData.getLogForm),
+  // not by us — Application will run our destructor and then free the
+  // component memory. The flag closes the race window.
+  LogViewer.Destroying:= TRUE;
+  LogViewer.RamLog.UnregisterLogObserver;  // Prevent NEW notifications.
   SaveSettings;
 end;
 

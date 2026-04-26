@@ -18,9 +18,8 @@
                         Tune if the 1-line height looks wrong on the target platform/style.
 =============================================================================================================}
 
-{  One limitation to be aware of: Loaded overwrites OnChange, so if someone sets OnChange on
-  TAutoGrowMemo in the FMX file, it gets silently lost. Not an issue for the current memos (they only
-  have OnKeyDown), but worth knowing for future USES. }
+{  Loaded chains its handler onto the existing OnChangeTracking — any FMX-designer-assigned
+   OnChangeTracking is preserved (called after AdjustParentHeight). OnChange is left alone. }
 
 INTERFACE
 
@@ -31,10 +30,11 @@ USES
 type
   TAutoGrowMemo = class(TMemo)
   private
-    FMinHeight      : Single;
-    FMaxHeight      : Single;
-    FInternalPadding: Single;
-    FUpdating       : Boolean;
+    FMinHeight             : Single;
+    FMaxHeight             : Single;
+    FInternalPadding       : Single;
+    FUpdating              : Boolean;
+    FSavedOnChangeTracking : TNotifyEvent;
     function  ComputeNeededHeight: Single;
     procedure AdjustParentHeight;
     procedure OnChangeHandler(Sender: TObject);
@@ -66,7 +66,10 @@ end;
 procedure TAutoGrowMemo.Loaded;
 begin
   inherited;
-  OnChange := OnChangeHandler;
+  // OnChangeTracking fires per-keystroke; OnChange only fires on focus-loss/Enter
+  // and would mean the memo never grows while typing.
+  FSavedOnChangeTracking:= OnChangeTracking;
+  OnChangeTracking:= OnChangeHandler;
   AdjustParentHeight;
 end;
 
@@ -96,7 +99,7 @@ begin
     Layout.EndUpdate;
     Result := Layout.TextHeight + Margins.Top + Margins.Bottom + FInternalPadding;
   finally
-    Layout.Free;
+    FreeAndNil(Layout);
   end;
 
   Result := Max(FMinHeight, Min(FMaxHeight, Result));
@@ -104,13 +107,21 @@ end;
 
 
 procedure TAutoGrowMemo.AdjustParentHeight;
+var
+  ParentCtrl: TControl;
+  Needed    : Single;
 begin
-  if FUpdating OR NOT Assigned(Parent) then Exit;
-  FUpdating := True;
+  if FUpdating OR NOT Assigned(Parent) OR NOT (Parent is TControl) then Exit;
+  ParentCtrl:= Parent as TControl;
+  Needed:= ComputeNeededHeight;
+  // Short-circuit when no actual change — kills the 2-pass feedback loop
+  // (parent.Height set → realign → child Resize → AdjustParentHeight again).
+  if SameValue(Needed, ParentCtrl.Height, 0.5) then Exit;
+  FUpdating:= True;
   try
-    (Parent as TControl).Height := ComputeNeededHeight;
+    ParentCtrl.Height:= Needed;
   finally
-    FUpdating := False;
+    FUpdating:= False;
   end;
 end;
 
@@ -118,6 +129,8 @@ end;
 procedure TAutoGrowMemo.OnChangeHandler(Sender: TObject);
 begin
   AdjustParentHeight;
+  if Assigned(FSavedOnChangeTracking)
+  then FSavedOnChangeTracking(Sender);
 end;
 
 

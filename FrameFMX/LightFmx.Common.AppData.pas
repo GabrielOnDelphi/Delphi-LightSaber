@@ -103,7 +103,7 @@ USES
   {$IFDEF MacOS}
    Posix.Stdlib, Posix.Unistd,
   {$ENDIF}
-  System.SysUtils, System.Classes, System.UITypes, System.Types, System.Generics.Collections,
+  System.SysUtils, System.Classes, System.UITypes, System.Types, System.IOUtils, System.Generics.Collections,
   FMX.Forms, FMX.Platform,
   LightFMX.Common.LogForm,
   LightCore.AppData, LightCore.IO;
@@ -131,21 +131,6 @@ TYPE
     destructor Destroy; override;     // This is called automatically by the "Finalization" section. We need to call it as late as possible.
     procedure Run;
 
-    {$IFDEF FullAppData}
-   {--------------------------------------------------------------------------------------------------
-      Dialog boxes
-   --------------------------------------------------------------------------------------------------}
-   function PromptToSaveFile (VAR FileName: string; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''): Boolean;
-   function PromptToLoadFile (VAR FileName: string; CONST Filter: string = '';                               CONST Title: string= ''): Boolean;
-   function PromptForFileName(VAR FileName: string; SaveDialog: Boolean; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''; CONST InitialDir: string = ''): Boolean;
-
-   {--------------------------------------------------------------------------------------------------
-      App Control
-   --------------------------------------------------------------------------------------------------}
-    procedure Restore;
-    procedure Restart;
-    procedure SelfDelete;
-    {$ENDIF}
     procedure Minimize; override;
     function  RunFileAtStartup(const FilePath: string; Active: Boolean): Boolean;
     function  RunSelfAtStartUp(Active: Boolean): Boolean;
@@ -471,7 +456,11 @@ begin
       LaunchAgentContent.Add('</dict>');
       LaunchAgentContent.Add('</plist>');
       LaunchAgentContent.SaveToFile(LaunchAgentPath);
-      _system(PAnsiChar('launchctl load ' + LaunchAgentPath));
+      // Path may contain non-ASCII chars (accented username); UnicodeString → PAnsiChar
+      // cast just reinterprets bytes — round-trip via UTF8String for proper encoding.
+      var Cmd: UTF8String;
+      Cmd:= UTF8String('launchctl load "' + LaunchAgentPath + '"');
+      _system(MarshaledAString(Cmd));
       Result:= True;
     finally
       FreeAndNil(LaunchAgentContent);
@@ -481,7 +470,9 @@ begin
   begin
     if FileExists(LaunchAgentPath) then
     begin
-      _system(PAnsiChar('launchctl unload ' + LaunchAgentPath));
+      var Cmd: UTF8String;
+      Cmd:= UTF8String('launchctl unload "' + LaunchAgentPath + '"');
+      _system(MarshaledAString(Cmd));
       DeleteFile(LaunchAgentPath);
       Result:= True;
     end;
@@ -523,7 +514,9 @@ var
   DesktopEntry: TStringList;
 begin
   Result:= False;
-  AutostartPath:= TPath.Combine(TPath.GetHomePath, '.config/autostart/com.myapp.desktop');
+  // Per-app autostart filename — previously hardcoded 'com.myapp.desktop' so every
+  // LightSaber app overwrote the same file. AppName makes each app unique.
+  AutostartPath:= TPath.Combine(TPath.GetHomePath, '.config/autostart/' + AppName + '.desktop');
 
   if Active then
   begin
@@ -535,8 +528,8 @@ begin
       DesktopEntry.Add('Hidden=false');
       DesktopEntry.Add('NoDisplay=false');
       DesktopEntry.Add('X-GNOME-Autostart-enabled=true');
-      DesktopEntry.Add('Name=MyApp');
-      DesktopEntry.Add('Comment=Start MyApp at login');
+      DesktopEntry.Add('Name=' + AppName);
+      DesktopEntry.Add('Comment=Start ' + AppName + ' at login');
       DesktopEntry.SaveToFile(AutostartPath);
       Result:= True;
     finally
@@ -596,95 +589,6 @@ begin
   then Result := AppService.AppVersion
   else Result := '';
 end;
-
-
-{$IFDEF FullAppData}
-{ TODO: This section uses VCL dialogs (TOpenDialog, TSaveDialog) and Vcl.Consts.
-        If FullAppData is enabled for FMX, this code needs to be rewritten using FMX.Dialogs. }
-
-{-------------------------------------------------------------------------------------------------------------
-   Prompt To Save/Load File
-   Remembers the last used folder.
-   Example: PromptToSaveFile(s, Light_FMX.Graph.Util.JPGFtl, 'txt');
-
-   Note:
-      These functions are also duplicated in Light_FMX.Common.IO.Win.
-      The difference is that there, those functions cannot read/write the LastUsedFolder var so the app cannot remember last use folder.
-
-   Note:
-      Extensions longer than three characters are not supported! Do not include the dot (.)
--------------------------------------------------------------------------------------------------------------}
-function TAppData.PromptToSaveFile(VAR FileName: string; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''): Boolean;
-VAR InitialDir: string;
-begin
- if FileName > '' then
-   if IsFolder(FileName)
-   then InitialDir:= FileName
-   else InitialDir:= ExtractFilePath(FileName);
-
- Result:= PromptForFileName(FileName, TRUE, Filter, DefaultExt, Title, InitialDir);
-end;
-
-
-Function TAppData.PromptToLoadFile(VAR FileName: string; CONST Filter: string = ''; CONST Title: string= ''): Boolean;
-VAR InitialDir: string;
-begin
- if FileName > '' then
-   if IsFolder(FileName)
-   then InitialDir:= FileName
-   else InitialDir:= ExtractFilePath(FileName);
-
- Result:= PromptForFileName(FileName, FALSE, Filter, '', Title, InitialDir);
-end;
-
-
-CONST
-  sDefaultFilter = 'All files (*.*)|*.*';  // FMX-compatible default filter
-
-{ Based on Vcl.Dialogs.PromptForFileName.
-  AllowMultiSelect cannot be true, because I return a single file name (cannot return a TStringlist).
-  Once the user selected a folder it is remembered in "LastUsedFolder" var }
-Function TAppData.PromptForFileName(VAR FileName: string; SaveDialog: Boolean; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''; CONST InitialDir: string = ''): Boolean;
-VAR
-  Dialog: TOpenDialog;
-begin
-  if SaveDialog
-  then Dialog:= TSaveDialog.Create(NIL)
-  else Dialog:= TOpenDialog.Create(NIL);
-  TRY
-    { Options }
-    Dialog.Options:= Dialog.Options + [ofEnableSizing, ofForceShowHidden];
-    if SaveDialog
-    then Dialog.Options:= Dialog.Options + [ofOverwritePrompt]
-    else Dialog.Options:= Dialog.Options + [ofFileMustExist];
-
-    Dialog.Title:= Title;
-    Dialog.DefaultExt:= DefaultExt;
-
-    if Filter = ''
-    then Dialog.Filter:= sDefaultFilter
-    else Dialog.Filter:= Filter;
-
-    if InitialDir = ''
-    then Dialog.InitialDir:= Self.AppDataFolder  // Customization
-    else Dialog.InitialDir:= InitialDir;
-
-    Dialog.FileName:= FileName;
-
-    Result:= Dialog.Execute;
-
-    if Result then
-    begin
-      FileName:= Dialog.FileName;
-      // Remember last used folder
-      Self.LastUsedFolder:= ExtractFilePath(FileName);
-    end;
-  FINALLY
-    FreeAndNil(Dialog);
-  END;
-end;
-
-{$ENDIF}
 
 
 INITIALIZATION

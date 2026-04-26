@@ -1,7 +1,7 @@
 ﻿UNIT FormSkinsDisk;
 
 {=============================================================================================================
-   2026.04.24
+   2026.04.25
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    UNIVERSAL FMX STYLE LOADER
@@ -36,13 +36,25 @@
      copies them to TPath.GetDocumentsPath at first launch.
 
    KNOWN LIMITATION:
-     TStyleManager.SetStyleFromFile may permanently lose ListView selection highlights
-     after loading certain incompatible styles (e.g. Air.style).
+     TStyleManager.SetStyleFromFile may permanently lose ListView selection highlights after loading certain incompatible styles (e.g. Air.style).
      See: https://en.delphipraxis.net/topic/14848-inconsistent-behavior-when-loading-styles/
      Workaround: Avoid using known-broken styles, or switch to TStyleBook approach.
 
      Selecting 'Default platform style' saves the preference to INI.
      The platform default is fully restored on next application start.
+
+   POISON-MARKER RECOVERY (why this unit looks bigger than it should):
+     LoadLastStyle runs in the DPR before Application.Run. If a style file crashes form streaming
+     (e.g. TBitmapLink format change between Delphi versions), the app dies before the message
+     loop ever pumps — so we cannot show a dialog or clear state from inside the crash.
+     Solution: write an INI flag BEFORE loading; clear it AFTER forms streamed OK. If the flag
+     survives to the next launch, last run crashed → revert to platform default.
+     The clear was originally a TThread.ForceQueue, but ForceQueue silently no-ops on Android in
+     some call depths (delphipraxis 14705). Replaced with a 1ms TTimer + helper class — TTimer
+     needs a real method (OnTimer is TNotifyEvent, no anonymous overload), and no form exists at
+     LoadLastStyle time, so the helper is a TComponent owned by Application.
+     The same timer also surfaces PendingStartupMsg, deferring the user-visible warning until
+     the message pump is running (FMX dialogs deadlock pre-Run on Android/iOS).
 
    STYLE FOLDERS:
      c:\Users\Public\Documents\Embarcadero\Studio\XX.0\Styles\
@@ -89,10 +101,11 @@ TYPE
 
 
 { Loads the last used style from INI file. Call during app initialization.
-  DefaultStyle: Style filename to use on first run (e.g. 'Jet.style'). Pass empty string for default platform style.
-  Poison-marker recovery: before applying a style, writes an INI flag. If form streaming later crashes on an
-  incompatible style, the flag survives; next launch detects it and falls back to platform default. The flag is
-  cleared automatically via TThread.ForceQueue once the main message loop starts pumping. }
+  DefaultStyle: Style filename to use on first run (e.g. 'Jet.style'). 
+  Pass empty string for default platform style.
+  Poison-marker recovery: before applying a style, writes an INI flag. 
+  If form streaming later crashes on an incompatible style, the flag survives; next launch detects it and falls back to platform default. 
+  The flag is cleared automatically by a one-shot TTimer once Application.Run starts pumping the message loop. }
 procedure LoadLastStyle(const DefaultStyle: string= '');
 
 { Returns the path to the styles directory (AppSysDir\Styles\) }
@@ -111,10 +124,24 @@ CONST
   IniKeyStyle         = 'LastStyle';
   IniKeyStyleLoading  = 'StyleLoadInProgress';  // Poison marker: set before applying a style, cleared after MainForm successfully constructs. If still present at next startup, last run crashed on this style.
 
+TYPE
+  { Tiny owner for the marker-clear timer callback. TTimer.OnTimer is TNotifyEvent
+    (procedure of object), and anonymous procs cannot be assigned to it. We need a real method, but no form instance exists at LoadLastStyle time, so use a
+    standalone TComponent owned by Application — same lifetime as MarkerClearTimer. }
+  TMarkerClearHelper = class(TComponent)
+  public
+    procedure OnTick(Sender: TObject);
+  end;
+
 VAR
   { Unit-level variable for current style name.
     Kept as unit variable (not class var) because LoadLastStyle is called before any form instance exists. The style name is a short filename (not full path) stored in INI for portability when app folder moves. }
-  CurrentStyleName: string;
+  CurrentStyleName  : string;
+  MarkerClearTimer  : TTimer;             // One-shot timer fired by Application.Run pump; clears IniKeyStyleLoading on successful startup. Owned by Application, disabled inside its OnTimer handler.
+  MarkerClearHelper : TMarkerClearHelper; // Holds the TNotifyEvent method for MarkerClearTimer. Owned by Application.
+  PendingStartupMsg : string;             // Recovery message captured pre-Application.Run (poison-marker fallback).
+                                          // Surfaced by ShowPendingStartupMessage once the message loop is pumping —
+                                          // dialogs from pre-Run code silently fail or deadlock on mobile.
 
 
 
@@ -156,23 +183,70 @@ begin
   if NOT FileExists(FullPath)
   then EXIT(FALSE);
 
-  if NOT IsStyleCompatible(FullPath) then
+  var LoadFailed: Boolean;
+  if NOT IsStyleCompatible(FullPath, LoadFailed) then
   begin
-    MessageError('Style is not compatible with this platform: ' + FullPath);
+    if LoadFailed
+    then MessageError('Cannot read style file (corrupted or wrong format): ' + ExtractFileName(FullPath))
+    else MessageError('Style is not compatible with this platform: ' + ExtractFileName(FullPath));
     EXIT(FALSE);
   end;
 
   try
     Result:= TStyleManager.SetStyleFromFile(FullPath);
-    if NOT Result
-    then MessageError('Failed to apply style: ' + ExtractFileName(FullPath));
+    if NOT Result then
+    begin
+      AppDataCore.RamLog.AddError('LoadStyleFromFile: SetStyleFromFile returned FALSE for ' + FullPath);
+      MessageError('Failed to apply style: ' + ExtractFileName(FullPath));
+    end;
   except
     on E: Exception do
     begin
+      { Log+show, then swallow. Cannot reraise: caller (LoadLastStyle) runs in DPR before
+        Application.Run, an uncaught exception there aborts startup. We surface the error to
+        the user via dialog and to the log for post-mortem; app continues with platform default. }
+      AppDataCore.RamLog.AddError('LoadStyleFromFile [' + DiskShortName + ']: ' + E.ClassName + ' - ' + E.Message);
       MessageError('Error loading style: ' + E.Message);
       EXIT(FALSE);
     end;
   end;
+end;
+
+
+{ One-shot deferred clear of the poison marker. Replaces TThread.ForceQueue, which is documented
+  unreliable on Android in some call depths (LightFmx.Common.AppData.Form.pas:69, delphipraxis 14705).
+  TTimer.OnTimer cannot fire until the FMX message loop is pumping — by which point Application.Run
+  has called RealCreateForms, so a streaming-time crash will leave the marker armed for next launch. }
+procedure TMarkerClearHelper.OnTick(Sender: TObject);
+begin
+  LightCore.INIFileQuick.WriteString(IniKeyStyleLoading, '');
+  MarkerClearTimer.Enabled:= FALSE;
+  { Do NOT FreeAndNil here — destroying the timer inside its own OnTimer can leave the
+    platform timer service touching freed memory after we return. Owner = Application
+    ensures the timer is freed during normal app shutdown. }
+
+  // Now that the message loop is running, surface any deferred startup warning
+  // captured during LoadLastStyle (poison-marker recovery path). MessageError is
+  // safe here — dispatched from the timer thread on the message pump.
+  if PendingStartupMsg <> '' then
+    begin
+      var Msg: string;
+      Msg:= PendingStartupMsg;
+      PendingStartupMsg:= '';   // clear before showing so a second tick is a no-op
+      MessageError(Msg);
+    end;
+end;
+
+
+procedure StartMarkerClearTimer;
+begin
+  Assert(MarkerClearTimer = NIL, 'StartMarkerClearTimer: timer already armed — LoadLastStyle called twice?');
+  if MarkerClearHelper = NIL
+  then MarkerClearHelper:= TMarkerClearHelper.Create(Application);   // Owner=Application => freed at shutdown
+  MarkerClearTimer:= TTimer.Create(Application);                     // Owner=Application => freed at shutdown, safe to leak through OnTimer
+  MarkerClearTimer.Interval:= 1;                                     // Fire ASAP after pump starts. 0 is invalid on some FMX platforms; 1ms is the conventional one-shot value.
+  MarkerClearTimer.OnTimer := MarkerClearHelper.OnTick;
+  MarkerClearTimer.Enabled := TRUE;
 end;
 
 
@@ -188,7 +262,13 @@ begin
     LightCore.INIFileQuick.WriteString(IniKeyStyleLoading, '');
     LightCore.INIFileQuick.WriteString(IniKeyStyle, DefPlatformStyle);
     CurrentStyleName:= DefPlatformStyle;
-    MessageError('Previous startup crashed while loading style: ' + PoisonedStyle + CRLF + 'Reverted to platform default.');
+    // CANNOT show a dialog here — LoadLastStyle runs before Application.Run, and on
+    // Android/iOS FMX dialogs require a running message loop (silently fail/deadlock).
+    // Always log; queue the user-visible warning for after Run starts.
+    if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
+    then AppDataCore.RamLog.AddError('Previous startup crashed on style: ' + PoisonedStyle + ' — reverted to platform default.');
+    PendingStartupMsg:= 'Previous startup crashed while loading style: ' + PoisonedStyle + CRLF + 'Reverted to platform default.';
+    StartMarkerClearTimer;   // Arm the timer so OnTick surfaces PendingStartupMsg once the message pump is running. Without this, the user never sees the warning. OnTick safely no-ops on the (already-cleared) INI marker.
     EXIT;
   end;
 
@@ -204,14 +284,24 @@ begin
     { Arm poison marker BEFORE loading. If app crashes during style deserialization or later form streaming,
       marker survives in the INI and triggers fallback on next launch. }
     LightCore.INIFileQuick.WriteString(IniKeyStyleLoading, CurrentStyleName);
-    LoadStyleFromFile(CurrentStyleName);
 
-    { Auto-clear the marker once the main message loop starts pumping — guaranteed only if all forms finished
-      streaming without crashing. If RealCreateForms AV's, this queued proc never runs and the marker survives. }
-    TThread.ForceQueue(NIL, procedure
-      begin
-        LightCore.INIFileQuick.WriteString(IniKeyStyleLoading, '');
-      end);
+    if NOT LoadStyleFromFile(CurrentStyleName) then
+    begin
+      { Non-crash failure (file missing, incompatible, SetStyleFromFile returned FALSE).
+        Without this branch CurrentStyleName would still hold the bad name and FormPreRelease
+        would re-save it to INI, leaving the user permanently stuck on a missing/broken style. }
+      LightCore.INIFileQuick.WriteString(IniKeyStyleLoading, '');     // disarm — no crash, no need to recover next launch
+      LightCore.INIFileQuick.WriteString(IniKeyStyle, DefPlatformStyle);
+      CurrentStyleName:= DefPlatformStyle;
+      EXIT;
+    end;
+
+    { Auto-clear the marker once forms have been realized.
+      Uses TTimer instead of TThread.ForceQueue because ForceQueue may silently fail on Android in
+      some call depths (see LightFmx.Common.AppData.Form.pas:69 + delphipraxis topic 14705).
+      The timer fires only after Application.Run starts pumping, by which point RealCreateForms
+      has already constructed all forms — so a streaming-time crash leaves the marker intact. }
+    StartMarkerClearTimer;
   end;
 end;
 
@@ -262,7 +352,11 @@ begin
     if Assigned(FOnEmbeddedClose)
     then FOnEmbeddedClose(Self);
   end;
-  FInstance:= NIL;
+  // Only nil the singleton guard if we ARE the guarded instance. A modal-shown
+  // TfrmStyleDisk created while an embedded one is alive must NOT clear FInstance,
+  // or the embedded form becomes unreachable from CloseEmbedded and leaks.
+  if Self = FInstance
+  then FInstance:= NIL;
   inherited;
 end;
 
@@ -301,7 +395,10 @@ end;
 procedure TfrmStyleDisk.btnOKClick(Sender: TObject);
 begin
   if FEmbedded
-  then TThread.ForceQueue(NIL, procedure begin CloseEmbedded end)
+  then 
+    begin
+      TThread.ForceQueue(NIL, procedure begin CloseEmbedded end);   // 2-arg overload with TThreadProcedure exists; 2-arg Queue does NOT (only Queue(AThread, AMethod) or single-arg Queue(AProc)).
+    end 
   else Close;
 end;
 
@@ -311,7 +408,7 @@ procedure TfrmStyleDisk.FormKeyDown(Sender: TObject; var Key: Word; var KeyChar:
 begin
   if (Key = vkEscape) or (Key = vkReturn) then
     if FEmbedded
-    then TThread.ForceQueue(NIL, procedure begin CloseEmbedded end)
+    then TThread.ForceQueue(NIL, procedure begin CloseEmbedded end)   // See btnOKClick: 2-arg Queue with anon proc doesn't exist; ForceQueue does.
     else Close;
 end;
 
@@ -331,8 +428,7 @@ end;
 { Fills the listbox with available styles from the styles directory }
 procedure TfrmStyleDisk.PopulateStyles;
 var
-  FullFileName: string;
-  Files: TStringDynArray;
+  FullFileName : string;
   SavedOnChange: TNotifyEvent;
 begin
   { Suppress OnChange while we programmatically set ItemIndex.
@@ -352,15 +448,25 @@ begin
       EXIT;
     end;
 
-    { List *.style files (text format) }                    //todo: use LightCore.IO.ListFilesOf()
-    Files:= TDirectory.GetFiles(GetStyleDir, '*.style');
-    for FullFileName in Files do
-      lBox.Items.Add(ExtractFileName(FullFileName));
+    { List *.style files (text format) }
+    var StyleFiles: TStringList;
+    StyleFiles:= LightCore.IO.ListFilesOf(GetStyleDir, '*.style', TRUE, FALSE);
+    TRY
+      for FullFileName in StyleFiles do
+        lBox.Items.Add(ExtractFileName(FullFileName));
+    FINALLY
+      FreeAndNil(StyleFiles);
+    END;
 
     { List *.fsf files (binary format) }
-    Files:= TDirectory.GetFiles(GetStyleDir, '*.fsf');
-    for FullFileName in Files do
-      lBox.Items.Add(ExtractFileName(FullFileName));
+    var FsfFiles: TStringList;
+    FsfFiles:= LightCore.IO.ListFilesOf(GetStyleDir, '*.fsf', TRUE, FALSE);
+    TRY
+      for FullFileName in FsfFiles do
+        lBox.Items.Add(ExtractFileName(FullFileName));
+    FINALLY
+      FreeAndNil(FsfFiles);
+    END;
 
     { Select the currently active style in the list }
     lBox.ItemIndex:= lBox.Items.IndexOf(CurrentStyleName);
