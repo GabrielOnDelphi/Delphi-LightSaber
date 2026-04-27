@@ -303,8 +303,25 @@ begin
   // Catches the Android non-blocking-Show antipattern: caller did `AppData.ShowModal(F); FreeAndNil(F)`
   // — but on Android ShowModal falls back to non-blocking Show, so FreeAndNil runs before the user
   // sees the form. Use `Action:= caFree` in OnClose, or wire an AfterClose handler instead.
-  // (The MainForm itself is Visible at app shutdown — exempt it.)
-  Assert(NOT Visible OR (Self = Application.MainForm),
+  //
+  // Exempted cases (not the antipattern):
+  //   - FEmbedded — embedded forms (Container reparented into a host); host manages lifetime,
+  //     these are Free'd without Close by design. Most LearnAssist forms default to Visible=TRUE
+  //     in their .fmx, so AfterConstruction Shows them before EmbedIn — Visible stays TRUE.
+  //   - Released in FormState — legitimate caFree close: FMX's ReleaseForm sets this flag and
+  //     queues Free, but DOES NOT set FVisible:=False (only caHide does). So Visible stays TRUE
+  //     across the caFree path. Verified in FMX.Forms.pas:3213-3229 (ReleaseForm) vs :3419-3428 (Hide).
+  //   - Application = NIL — very late shutdown, FMX globals being freed.
+  //   - Application destroying — FMX shutdown destroys secondary forms that weren't closed first.
+  //   - MainForm — always Visible at app shutdown.
+  // Clause order: cheapest checks first (short-circuit). NIL/destroying guards MUST come before
+  // any Application.* deref (Pascal short-circuits left-to-right).
+  Assert(NOT Visible
+      OR FEmbedded
+      OR (TFmxFormState.Released in FormState)
+      OR NOT Assigned(Application)
+      OR (csDestroying in Application.ComponentState)
+      OR (Self = Application.MainForm),
     ClassName + ' destroyed while still visible. ' +
     'Likely cause: caller used FreeAndNil after AppData.ShowModal, which is non-blocking on Android. ' +
     'Use "Action:= caFree" in OnClose, or wire an AfterClose callback.');

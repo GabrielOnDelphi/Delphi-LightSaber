@@ -253,12 +253,18 @@ CONST
 
 procedure TfrmAboutApp.lblChildrenClick(Sender: TObject);
 begin
-  // Activate beta tester mode
   Inc(FChildrenTapCount);
   if FChildrenTapCount < TapsToToggleBetaMode then EXIT;
   FChildrenTapCount:= 0;
-  VAR BetaFile:= AppData.AppSysDir+ 'betatester';
-  stringtofile(BetaFile, 'Beta mode activated via About form!', woOverwrite, wpAuto);
+
+  if AppData.BetaTesterMode then
+    begin
+      DeleteFile(AppData.AppSysDir+ 'betatester');
+      DeleteFile(AppData.AppFolder+ 'betatester');
+    end
+  else
+    stringtofile(AppData.AppSysDir+ 'betatester', 'Beta mode activated via About form!', woOverwrite, wpAuto);
+
   UpdateBetaTesterVisual;
 
   {$IFDEF MSWINDOWS}

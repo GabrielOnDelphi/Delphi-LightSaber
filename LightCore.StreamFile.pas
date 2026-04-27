@@ -93,8 +93,9 @@ TYPE
   TLightFileStream= class(TFileStream)
    private
      CONST LisaMagicNumber: Cardinal= $6153694C;
+     CONST LisaMagicNumberOld: Cardinal= $4C695361;  // Backward compat: byte-swapped version used before 2026
      CONST FrozenPaddingSize = 64;                // NEVER-EVER MODIFY THIS CONSTANT! All files saved with this constant will not work anymore. Enough for 16 Integer variables.
-     function ReadSignature: AnsiString;          // The LiSa string for "Light Saber'.  // Old number: $4C695361
+     function ReadSignature: AnsiString;          // The LiSa string for "Light Saber'.
    public
      constructor CreateRead (CONST FileName: string);
      constructor CreateWrite(CONST FileName: string);
@@ -276,7 +277,7 @@ begin
         EXIT(0);
       end;
   END;
-  if MagicNo <> LisaMagicNumber then EXIT(0);
+  if (MagicNo <> LisaMagicNumber) AND (MagicNo <> LisaMagicNumberOld) then EXIT(0);
 
   // Read signature
   TRY
