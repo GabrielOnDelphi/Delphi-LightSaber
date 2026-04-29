@@ -1,7 +1,7 @@
-UNIT FormSkinsDisk;
+﻿UNIT FormSkinsDisk;
 
 {=============================================================================================================
-   2026.01.29
+   2026.04.29
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    UNIVERSAL VCL STYLE LOADER
@@ -14,18 +14,19 @@ UNIT FormSkinsDisk;
      * DON'T ADD THIS UNIT TO ANY DPK! (enforced by $DENYPACKAGEUNIT)
 
    USAGE:
-     1. In DPR file, before creating main form:
+     1a. In classic DPR file, before creating main form:
         Application.ShowMainForm:= FALSE;   // Prevents flicker during style loading
-        MainForm.Visible:= FALSE;           // Don't show 'vanilla' form until skins are ready
+        MainForm.Visible:= FALSE;           // Don't show unskinned form until skins are ready
 
-     2. Call LoadLaststyle during application initialization:
-        LoadLaststyle('Graphite Green.vsf');  // Default style on first run. Pass empty string for default Windows theme
+     1b. In AppData DPR file:
+        AppData:= TAppData.Create(...);
+        LoadLaststyle('Graphite Green.vsf'); // <-- Call BEFORE CreateMainForm!  Default style on first run. Pass empty string for default Windows theme
+        AppData.CreateMainForm(TMainForm, MainForm, True, True);
+        AppData.Run;
 
-     3. MainForm.Show;
+     3. Styles must be in 'System\Skins' folder relative to AppData.AppSysDir
 
-     4. Styles must be in 'System\Skins' folder relative to AppData.AppSysDir
-
-     5. To show style selector use: TfrmstyleDisk.CreateForm or CreateFormModal
+     4. To show style selector call: TfrmstyleDisk.CreateForm or CreateFormModal
 
    STYLE-AWARE CODE:
      Use StyleServices.GetStyleColor, StyleServices.GetStyleFontColor, and StyleServices.GetSystemColor from Vcl.Themes unit.
@@ -153,7 +154,14 @@ CONST
 
 { Loads the last used style from INI file. Call during app initialization.
   Defaultstyle: Style filename to use on first run (e.g. 'Graphite Green.vsf').
-               Pass empty string for default Windows theme. }
+               Pass empty string for default Windows theme.
+
+  WARNING: Must be called BEFORE AppData.CreateMainForm.
+    SetStyle posts CM_CUSTOMSTYLECHANGED to all existing forms, triggering RecreateWnd.
+    If the main form already exists, RecreateWnd destroys its window handle, and any
+    messages queued to that handle are discarded — including the WM_POSTINIT that
+    CreateMainForm uses to schedule FormPostInitialize. Result: FormPostInitialize
+    never fires, and any state initialized there stays NIL. }
 procedure LoadLastStyle(const DefaultStyle: string= '');
 
 
@@ -219,6 +227,14 @@ end;
 
 procedure LoadLastStyle(const DefaultStyle: string= '');
 begin
+  { Guard against the most common misuse of this routine.
+    If a main form already exists, SetStyle below will RecreateWnd on it and discard the WM_POSTINIT message that AppData.CreateMainForm queued — leaving
+    FormPostInitialize unfired and any state initialized there as NIL.
+    Use Assert (compiled out in Release) AND a hard raise so the check survives Release builds too. }
+  Assert(Application.MainForm = NIL, 'LoadLastStyle must be called BEFORE AppData.CreateMainForm. Calling it after destroys the WM_POSTINIT message and FormPostInitialize never fires.');
+  if Application.MainForm <> NIL
+  then RAISE Exception.Create('LoadLastStyle must be called BEFORE AppData.CreateMainForm. Calling it after destroys the WM_POSTINIT message and FormPostInitialize never fires.');
+
   { Read from INI using 'Laststyle' key for backward compatibility }
   CurrentStyleName:= LightCore.INIFileQuick.ReadString(IniKeyStyle, DefaultStyle);
 
