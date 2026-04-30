@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.AppData;
 
 {=============================================================================================================
-   2026.04.24
+   2026.04.30
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -146,6 +146,7 @@ TYPE
     procedure CreateMainForm  (aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly);
     procedure CreateForm      (aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly; AOwner: TComponent = NIL); overload;
     procedure CreateForm      (aClass: TComponentClass;                 aAutoState: TAutoState = asPosOnly; AOwner: TComponent = NIL); overload;
+    procedure CreateEmbedded  (aClass: TComponentClass; OUT aReference; AOwner: TComponent = NIL);   // For forms whose Container is reparented into a host. See TLightForm.CreateEmbedded.
     procedure CreateFormHidden(aClass: TComponentClass; OUT aReference);
     procedure CreateFormModal (aClass: TComponentClass);  // Problem in Android with modal forms!
 
@@ -295,6 +296,28 @@ begin
   // After Run, FMX creates forms synchronously — Dummy is always assigned here. The Assert above guarantees we never reach this in deferred-creation mode.
   if Assigned(Dummy)
   then Dummy.Show;
+end;
+
+
+{ Companion to TLightForm.CreateEmbedded. Use when the caller will follow up with form.EmbedIn(Container, host). 
+  aClass MUST descend from TLightForm.
+  AOwner: 
+   pass the host form when destruction order matters (e.g. tab-child of another form); 
+   pass NIL for top-level singletons — the form is then owned by Application and freed at app shutdown if CloseEmbedded didn't already free it. }
+procedure TAppData.CreateEmbedded(aClass: TComponentClass; OUT aReference; AOwner: TComponent = NIL);
+VAR EffectiveOwner: TComponent;
+begin
+  Assert(aClass.InheritsFrom(TLightForm), 'CreateEmbedded: aClass must descend from TLightForm. Got: ' + aClass.ClassName);
+
+  // Default to Application as owner — matches the prior `AppData.CreateForm(..., asNone)` (no AOwner) behavior
+  // where the form ended up in Application.Components and was freed at shutdown.
+  if AOwner <> NIL
+  then EffectiveOwner:= AOwner
+  else EffectiveOwner:= Application;
+
+  // Direct construction (synchronous) via TLightForm.CreateEmbedded — bypasses Application.CreateForm's
+  // pending queue. AfterConstruction fires AFTER the constructor chain returns and reads FEmbedded.
+  TLightForm(aReference):= TLightFormClass(aClass).CreateEmbedded(EffectiveOwner);
 end;
 
 
