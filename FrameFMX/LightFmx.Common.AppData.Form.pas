@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.AppData.Form;
 
 {=============================================================================================================
-   2026.04.23
+   2026.04.30
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    DESCRIPTION
@@ -57,8 +57,14 @@
          Forms can be embedded into a host form by calling EmbedIn(Container, ParentControl).
          This reparents the form's Container layout into the host and sets FEmbedded:= TRUE.
 
+         AppData.CreateEmbedded(TFooForm, FInstance, AOwner)
+         This sets FEmbedded and AutoState=asNone BEFORE the inherited constructor runs, so:
+           - AfterConstruction skips its auto-Show (prevents flash of a top-level window before EmbedIn reparents the Container into the host).
+           - Loaded sees AutoState <> asUndefined and skips AppData.GetAutoState (which would raise because CreateEmbedded bypasses CreateForm's pending queue).
+           - The VK subscription still registers.
+
          Key rules:
-         - Embedded forms must use AutoState = asNone (enforced by assertion in EmbedIn).
+         - Embedded forms must use AutoState = asNone (enforced by assertion in EmbedIn). CreateEmbedded sets it for you.
          - FormCloseQuery does NOT fire for embedded forms (FMX limitation).
            Override FormCloseQueryEmbedded to block closing (e.g. during AI tasks or validation).
          - Virtual keyboard padding is handled by the host form; embedded forms skip it (see HandleVKStateChange).
@@ -79,6 +85,9 @@ USES
   LightCore.AppData, LightCore.Platform, LightFmx.Common.IniFile;
 
 TYPE
+  TLightForm = class;
+  TLightFormClass = class of TLightForm; 
+
   TLightForm = class(TForm)
     procedure FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
     procedure btnOsBackClick(Sender: TObject);
@@ -110,6 +119,12 @@ TYPE
     AfterClose     : TProc;         { Optional callback fired once in FormPreRelease. Needed on Android where ShowModal is non-blocking, so callers that care about side effects get notified. Cleared after firing. }
 
     constructor Create(AOwner: TComponent; aAutoState: TAutoState); reintroduce; overload; virtual;
+    { Use this when the caller will reparent Container into a host via EmbedIn.
+      Suppresses the auto-Show in AfterConstruction (which would briefly flash
+      a separate window before the host pulls out the inner layout) and still
+      registers the VK subscription. Equivalent to Create(AOwner, asNone) but
+      with FEmbedded pre-set so AfterConstruction can see it. }
+    constructor CreateEmbedded(AOwner: TComponent); reintroduce; overload; virtual;
     procedure AfterConstruction; override;
     function CloseQuery: Boolean; override;
 
@@ -156,6 +171,24 @@ begin
 end;
 
 
+{ FEmbedded and AutoState MUST be set BEFORE inherited Create.
+  Reason: FMX's TCommonCustomForm.Create reads the .fmx resource inside the
+  inherited chain and fires Loaded before returning. Loaded checks `if AutoState = asUndefined then AutoState:= AppData.GetAutoState(Self)`,
+  and GetAutoState raises if the class is not in the pending queue (which it isn't for CreateEmbedded — we bypass AppData.CreateForm's queueing).
+  Pre-setting AutoState=asNone makes Loaded skip the lookup.
+
+  FEmbedded is set early so AfterConstruction (fired by the runtime AFTER the
+  entire constructor chain returns) sees TRUE and skips its auto-Show. }
+constructor TLightForm.CreateEmbedded(AOwner: TComponent);
+begin
+  FEmbedded:= TRUE;
+  AutoState:= asNone;          // must be set before inherited — see Loaded (the asUndefined branch)
+  inherited Create(AOwner);
+  Showhint := TRUE;
+  Saved    := FALSE;
+end;
+
+
 { Marks this form as embedded and reparents ALayout (e.g. layRoot) into AParent (e.g. a TTabItem).
   Centralizes the 3 steps that every embedded form needs: FEmbedded flag + reparent + align.
   Embedded forms must use asNone — SaveForm writes position/size which is meaningless for embedded layouts. }
@@ -178,8 +211,10 @@ begin
 
   // Don't show the form if StartMinim is active (app starts minimized)
   // Note: In FMX, CreateForm does not create forms immediately - it queues them for RealCreateForms
+  // Skip Show for forms created via CreateEmbedded — the host pulls out Container via EmbedIn, and showing the bare form first would flash an empty window between construction and reparent.
   if NOT AppData.StartMinim
   AND Visible
+  AND NOT FEmbedded
   then Show;
 
   // For virtual keyboard
