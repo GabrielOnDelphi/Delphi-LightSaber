@@ -259,8 +259,8 @@ begin
 
   if AppData.BetaTesterMode then
     begin
-      DeleteFile(AppData.AppSysDir+ 'betatester');
-      DeleteFile(AppData.AppFolder+ 'betatester');
+      TryDeleteFile(AppData.AppSysDir+ 'betatester');
+      TryDeleteFile(AppData.AppFolder+ 'betatester');
     end
   else
     stringtofile(AppData.AppSysDir+ 'betatester', 'Beta mode activated via About form!', woOverwrite, wpAuto);
