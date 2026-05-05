@@ -1,8 +1,10 @@
 UNIT LightCore.StreamBuff;
 
 {=============================================================================================================
-   2026.04.25
+   2026.05.05
    www.GabrielMoraru.com
+   
+   + SafetyLimit parameter to ReadString/ReadStringA/ReadStringACnt/ ReadStringCnt/ReadCharsA. API now matches sibling classes (TLightFileStream, TCubicMemStream).
 --------------------------------------------------------------------------------------------------------------
    Extends TBufferedFileStream.
    Ideal for multiple consecutive small reads or writes.
@@ -168,15 +170,28 @@ TYPE
      function  RevReadInteger : Integer;
      function  RevReadWord    : Word;                                       { REVERSE READ - read 2 bytes and swap their position. For Motorola format. }
 
-     { Unicode }
+     { Unicode
+        SafetyLimit (in bytes) rejects implausibly large length prefixes BEFORE allocating —
+        defends against a corrupted 4-byte length that happens to fit within the actual file
+        size (which CheckSafetyLimit's EOF check alone cannot catch).
+        Default 1*KB matches sibling classes TLightFileStream / TCubicMemStream.
+        Pass an explicit larger value when you legitimately read strings > 1 KB
+        (e.g., LogLines messages, RichRamLog payloads, large text files).
+
+        For the Cnt / Chars variants (ReadStringACnt, ReadStringCnt, ReadCharsA): the
+        check is still `if Count > SafetyLimit then RAISE`. SafetyLimit is intentionally
+        defensive, NOT auto-sized to Count. If you legitimately read a buffer larger than
+        the default, pass an explicit SafetyLimit ≥ Count (e.g. ReadCharsA(N, N) when N
+        is known-trusted, or ReadStringACnt(N, MaxYouEverExpect)). The two-arg form
+        documents the intent at the call site instead of silently relaxing the ceiling. }
      procedure WriteString(CONST s: string);
-     function  ReadString: string;  overload;
+     function  ReadString(SafetyLimit: Cardinal = 1*KB): string;  overload;
 
      { ANSI }
      procedure WriteStringA  (CONST s: AnsiString);
-     function  TryReadStringA(Count: Cardinal): AnsiString;                 { This is the relaxed version. It won't raise an error if there is not enough data (Len) to read }
-     function  ReadStringACnt(Count: Cardinal): AnsiString;                 { It will raise an error if there is not enough data (Len) to read }
-     function  ReadStringA: AnsiString;                                     { It automatically detects the length of the string }
+     function  TryReadStringA(Count: Cardinal): AnsiString;                                 { This is the relaxed version. It won't raise an error if there is not enough data (Len) to read }
+     function  ReadStringACnt(Count: Cardinal; SafetyLimit: Cardinal = 1*KB): AnsiString;   { It will raise an error if there is not enough data (Len) to read }
+     function  ReadStringA   (SafetyLimit: Cardinal = 1*KB): AnsiString;                    { It automatically detects the length of the string }
 
     { TSL }
      function  ReadStrings: TStringList;                       overload;
@@ -186,12 +201,12 @@ TYPE
     { Chars }
      procedure WriteChars   (CONST s: AnsiString);             overload;
      procedure WriteChars   (CONST s: string);                 overload;
-     function  ReadCharsA   (Count: Cardinal): AnsiString;
+     function  ReadCharsA   (Count: Cardinal; SafetyLimit: Cardinal = 1*KB): AnsiString;
      function  ReadChars    (Count: Cardinal): string;
 
      { Strings without length }
      procedure PushString   (CONST s: string);
-     function  ReadStringCnt   (Count: Cardinal): string;     overload;     { Read 'Len' characters }
+     function  ReadStringCnt(Count: Cardinal; SafetyLimit: Cardinal = 1*KB): string;     overload;     { Read 'Len' characters }
 
      { Raw }
      function  AsBytes: TBytes;
@@ -525,12 +540,16 @@ begin
 end;
 
 
-function TLightStream.ReadString: string;   { Works for both Delphi7 and Delphi UNICODE }
+function TLightStream.ReadString(SafetyLimit: Cardinal = 1*KB): string;   { Works for both Delphi7 and Delphi UNICODE }
 VAR
    Count: Cardinal;
    UTF: UTF8String;
 begin
   ReadBuffer(Count, 4);                        { Read length }
+
+  if Count > SafetyLimit
+  then RAISE Exception.CreateFmt('String too large: %d bytes (SafetyLimit: %d)', [Count, SafetyLimit]);
+
   CheckSafetyLimit(Count);
 
   if Count > 0
@@ -583,13 +602,19 @@ end;
 
 { Reads raw characters from file (without length prefix).
   Count specifies how many bytes to read.
-  SafetyLimit prevents reading excessively large strings.
+  SafetyLimit prevents reading excessively large strings — defends against caller-supplied
+  Count values inflated by upstream corruption. Pass an explicit larger value for legitimate
+  bulk reads.
   Returns empty string if Count is 0.
-  
+
   Used for reading C++ strings (the length of the string is not written to disk)  }
-function TLightStream.ReadCharsA(Count: Cardinal): AnsiString;
+function TLightStream.ReadCharsA(Count: Cardinal; SafetyLimit: Cardinal = 1*KB): AnsiString;
 begin
   if Count = 0 then EXIT('');
+
+  if Count > SafetyLimit
+  then RAISE Exception.CreateFmt('String too large: %d bytes (SafetyLimit: %d)', [Count, SafetyLimit]);
+
   CheckSafetyLimit(Count);
   SetLength(Result, Count);
   ReadBuffer(Result[1], Count);
@@ -939,9 +964,12 @@ begin
 end;
 
 
-function TLightStream.ReadStringACnt(Count: Cardinal): AnsiString;  { We need to specify the length of the string }
+function TLightStream.ReadStringACnt(Count: Cardinal; SafetyLimit: Cardinal = 1*KB): AnsiString;  { We need to specify the length of the string }
 VAR TotalBytes: Cardinal;
 begin
+  if Count > SafetyLimit
+  then RAISE Exception.CreateFmt('String too large: %d bytes (SafetyLimit: %d)', [Count, SafetyLimit]);
+
   CheckSafetyLimit(Count);
 
   if Count > 0
@@ -1020,13 +1048,17 @@ end;
 
 { Reads an AnsiString with length prefix (written by WriteStringA).
   SafetyLimit prevents reading excessively large strings. }
-function TLightStream.ReadStringA: AnsiString;
+function TLightStream.ReadStringA(SafetyLimit: Cardinal = 1*KB): AnsiString;
 VAR Count: Cardinal;
 begin
   ReadBuffer(Count, SizeOf(Count));  { First, find out how many characters to read }
+
+  if Count > SafetyLimit
+  then RAISE Exception.CreateFmt('String too large: %d bytes (SafetyLimit: %d)', [Count, SafetyLimit]);
+
   CheckSafetyLimit(Count);
 
-  if Count > 0 
+  if Count > 0
   then
     begin
       SetLength(Result, Count);
@@ -1062,12 +1094,15 @@ end;
 
 
 { Read a string from file. The length of the string will be provided from outside. }
-function TLightStream.ReadStringCnt(Count: Cardinal): string;
+function TLightStream.ReadStringCnt(Count: Cardinal; SafetyLimit: Cardinal = 1*KB): string;
 VAR UTF: UTF8String;
 begin
  if Count > 0
  then
    begin
+     if Count > SafetyLimit
+     then RAISE Exception.CreateFmt('String too large: %d bytes (SafetyLimit: %d)', [Count, SafetyLimit]);
+
      CheckSafetyLimit(Count);
 
      SetLength(UTF, Count);

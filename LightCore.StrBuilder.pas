@@ -48,6 +48,7 @@ TYPE
     constructor Create(InitialBuffSize: Integer= 10000);
     procedure AddChar(Ch: Char);
     procedure AddEnter;
+    procedure AddString(const S: string);   { Bulk append. Uses doubling growth (vs. AddChar's linear growth) so it scales to huge buffers without quadratic SetLength cost. }
 
     function  AsText: string;
     procedure Clear;
@@ -115,6 +116,48 @@ begin
   FBuffer[FPosition]:= CR;
   FBuffer[FPosition + 1]:= LF;
   Inc(FPosition, 2);
+end;
+
+
+{ Bulk-appends an entire string in one Move.
+
+  Why this exists separately from AddChar:
+    AddChar grows the buffer by FBufferGrowth (linear). That's fine for small
+    documents but degrades to O(N^2 / FBufferGrowth) on big ones because every
+    growth step SetLength-copies the existing content.
+    AddString uses doubling growth — amortized O(N) for arbitrarily large output.
+
+  Why Move (not a loop with AddChar):
+    One memmove per call vs. one method call per character. For a 1M-char append
+    that is the difference between sub-millisecond and visibly slow.
+
+  Allocation rule (in priority order):
+    new size = max(FAllocatedLen * 2, Required, FBufferGrowth)
+    - FAllocatedLen * 2 gives amortized O(N) growth on subsequent calls.
+    - Required guarantees the string fits even when doubling is not enough.
+    - FBufferGrowth honors the caller's pre-sizing hint from Create(InitialBuffSize),
+      so the first call can jump straight to the user-provided estimate instead of
+      allocating only Length(S) and re-growing on the next call. }
+procedure TCStringBuilder.AddString(const S: string);
+VAR
+  SLen, Required, NewLen: Integer;
+begin
+  SLen:= Length(S);
+  if SLen = 0 then EXIT;
+
+  Required:= FPosition - 1 + SLen;   { FPosition is 1-based; chars already written = FPosition - 1 }
+  if Required > FAllocatedLen then
+    begin
+      NewLen:= FAllocatedLen * 2;
+      if NewLen < Required      then NewLen:= Required;
+      if NewLen < FBufferGrowth then NewLen:= FBufferGrowth;   { Honor caller's pre-size hint on first growth }
+      SetLength(FBuffer, NewLen);
+      FAllocatedLen:= Length(FBuffer);
+    end;
+
+  { Move SLen Char-elements (i.e. SLen * SizeOf(Char) bytes) from S[1] to FBuffer[FPosition]. }
+  Move(Pointer(S)^, FBuffer[FPosition], SLen * SizeOf(Char));
+  Inc(FPosition, SLen);
 end;
 
 

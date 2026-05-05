@@ -404,23 +404,33 @@ end;
 
 
 
+{ Counts how many times the byte C appears in a file.
+  Reads the file in 64KB chunks via TFileStream.ReadBuffer and scans each chunk byte-by-byte.
+  Treats the file as raw bytes — no encoding interpretation, no length prefix. }
 function CountCharAppearance(CONST FileName: string; C: AnsiChar): Int64;
+CONST
+   BufferSize = 64 * 1024;     // 64KB — same sweet spot as CountLines
 VAR
-   s: AnsiString;
-   BuffPo: Int64;
+   FS: TFileStream;
+   Buffer: array of Byte;
+   i, BytesRead: Integer;
+   Target: Byte;
 begin
   Result:= 0;
-  BuffPo:= 0;
-  VAR Stream:= TLightStream.CreateRead(FileName);
+  Target:= Byte(C);
+  SetLength(Buffer, BufferSize);
+  FS:= TFileStream.Create(FileName, fmOpenRead OR fmShareDenyNone);
   TRY
-    WHILE BuffPo < Stream.Size DO
+    BytesRead:= FS.Read(Buffer[0], BufferSize);
+    WHILE BytesRead > 0 DO
       begin
-        s:= Stream.ReadStringA;
-        Inc(BuffPo, 1024*KB);
-        Result:= Result + Cardinal(LightCore.CountAppearance(c, s));
+        for i:= 0 to BytesRead - 1 do
+          if Buffer[i] = Target
+          then Inc(Result);
+        BytesRead:= FS.Read(Buffer[0], BufferSize);
       end;
   FINALLY
-    FreeAndNil(Stream);
+    FreeAndNil(FS);
   END;
 end;
 
