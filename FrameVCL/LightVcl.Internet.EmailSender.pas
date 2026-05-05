@@ -2,7 +2,7 @@ UNIT LightVcl.Internet.EmailSender;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2026.04.21
+   2026.05.05
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -31,7 +31,12 @@ TYPE
     email-send failures from other exceptions. }
   EEmailSendError = class(Exception);
 
-function SendEmail(SMTP: TIdSMTP; CONST AdrTo, AdrFrom, Subject, Body, HtmlImage, DownloadableAttachment: string; SendAsHtml: Boolean= FALSE): Boolean;
+function SendEmail(
+  SMTP: TIdSMTP;
+  CONST AdrTo, AdrFrom, Subject, Body: string;
+  CONST HtmlImage: string = '';
+  CONST DownloadableAttachment: string = '';
+  SendAsHtml: Boolean = FALSE): Boolean;
 
 IMPLEMENTATION
 
@@ -47,19 +52,27 @@ USES
     AdrFrom                - Sender email address
     Subject                - Email subject line
     Body                   - Email body (plain text or HTML depending on SendAsHtml)
-    HtmlImage              - Path to image file to embed in HTML email (ignored if SendAsHtml=False)
+    HtmlImage              - Path to image file to embed in HTML email (ignored if SendAsHtml=False or empty)
     DownloadableAttachment - Path to file to attach (can be empty)
     SendAsHtml             - True for HTML email, False for plain text
   Returns:
-    True if email was sent successfully, False otherwise.
+    True if email was sent successfully.
+  Raises:
+    EEmailSendError if SMTP connect or send fails. The underlying Indy error is
+    logged via AppDataCore.LogError before the exception is raised, so callers
+    only need to catch EEmailSendError to handle the failure.
   Note:
-    Errors are logged via AppDataCore.LogError, not raised as exceptions. }
-function SendEmail;
+    Result is never False on a normal return path - failures raise EEmailSendError. }
+function SendEmail(
+  SMTP: TIdSMTP;
+  CONST AdrTo, AdrFrom, Subject, Body: string;
+  CONST HtmlImage: string;
+  CONST DownloadableAttachment: string;
+  SendAsHtml: Boolean): Boolean;
 VAR
   MailMessage: TIdMessage;
   MsgBuilder : TIdMessageBuilderHtml;
 begin
- Result:= FALSE;
  Assert(SMTP <> NIL, 'SendEmail: SMTP parameter cannot be nil');
 
  MailMessage:= TIdMessage.Create(NIL);
@@ -78,11 +91,12 @@ begin
     then MsgBuilder.Html.Text:= Body
     else MsgBuilder.PlainText.Text:= Body;
 
-    { Embedded images are visible ONLY in HTML emails }
-    if SendAsHtml AND FileExists(HtmlImage)
+    { Embedded images are visible ONLY in HTML emails. Short-circuit empty path
+      to avoid a useless FileExists call. }
+    if SendAsHtml AND (HtmlImage <> '') AND FileExists(HtmlImage)
     then MsgBuilder.HtmlFiles.Add(HtmlImage);
 
-    if FileExists(DownloadableAttachment)
+    if (DownloadableAttachment <> '') AND FileExists(DownloadableAttachment)
     then MsgBuilder.Attachments.Add(DownloadableAttachment);
 
     MsgBuilder.FillMessage(MailMessage);
