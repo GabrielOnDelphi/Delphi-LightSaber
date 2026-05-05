@@ -241,11 +241,14 @@ AppData.LastUsedFolder    // Last folder user selected
 *Logging*
 
 ```pascal
-uses LightCore.LogRam;
+uses LightCore.AppData;            // VCL: AppDataCore.RamLog
+// or LightFmx.Common.AppData;     // FMX: AppData.RamLog
 
-Log.Write('Message');           // Standard message
-Log.WriteError('Error text');   // Error (triggers log popup)
+AppData.RamLog.AddInfo ('Message');     // Standard message
+AppData.RamLog.AddError('Error text');  // Error (auto-pops the log window)
 ```
+
+Full architecture, threading model, observer lifetime contract, and auto-save behavior: see [Docs/Logging.md](Docs/Logging.md).
 
 ________________
 
