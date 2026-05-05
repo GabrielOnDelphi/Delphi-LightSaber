@@ -1,7 +1,7 @@
 UNIT LightFmx.Common.LogFilter;
 
 {=============================================================================================================
-   2026.01.31
+   2026.05.05
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Verbosity filter control for TLogViewer.
@@ -50,9 +50,6 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES
-  LightFmx.Common.Dialogs;
-
 { Note: DefaultVerbosity constant is defined in LightCore.LogTypes }
 
 constructor TLogVerbFilter.Create(AOwner: TComponent);
@@ -97,18 +94,17 @@ end;
 
 procedure TLogVerbFilter.TrackBarChange(Sender: TObject);
 begin
- if NOT (csLoading in ComponentState) then { This is MANDATORY because when the project loads, the value of the trackbar may change BEFORE the DFM loader assigns the Log to this trackbar. In other words, crash when I load a DFM file that contains this control }
-   begin
-     if Log = NIL then
-       begin
-         MessageError('No log assigned!');
-         EXIT;
-       end;
+ { Skip during DFM loading - trackbar value may change before Log is assigned. }
+ if csLoading in ComponentState then EXIT;
 
-     Log.Verbosity:= Verbosity;
-     Log.Populate;
-     VerboLabel.Text := 'Verbosity: ' + Verbosity2String(Verbosity);
-   end;
+ { Silent EXIT if Log is not yet wired. Showing a modal dialog from a trackbar
+   change handler is intrusive — and the trackbar may legitimately fire before
+   the host code calls SetLog (e.g., during early form construction). }
+ if Log = NIL then EXIT;
+
+ Log.Verbosity:= Verbosity;
+ Log.Populate;
+ VerboLabel.Text := 'Verbosity: ' + Verbosity2String(Verbosity);
 end;
 
 

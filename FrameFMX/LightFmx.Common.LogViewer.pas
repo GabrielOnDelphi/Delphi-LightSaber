@@ -1,7 +1,7 @@
 UNIT LightFmx.Common.LogViewer;
 
 {=============================================================================================================
-   2026.01.31
+   2026.05.05
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    A log viewer based on TStringGrid.
@@ -55,6 +55,19 @@ TYPE
      FVerbTrackBar: TFmxObject;     // TLogVerbFilter
      FOwnRamLog   : Boolean;        // Frees RamLog if owned
      FFilteredRowCount: Integer;    // Cached count of filtered rows
+     FIsDarkCache  : Boolean;       // Cached IsDarkStyle result, refreshed once per setUpRows. Avoids querying TStyleManager per cell during paint.
+     FVisibleLines : TArray<PLogLine>;  // Snapshot of PLogLine pointers for the current filter, populated by setUpRows.
+                                        // Why this exists:
+                                        //   FMX OnDrawColumnCell fires per cell during paint, on the main thread.
+                                        //   The previous implementation called Row2FilteredRow + Lines.Count + Lines[i]
+                                        //   per draw — three separate read-lock acquisitions per cell, plus a TOCTOU
+                                        //   window in MT mode where a worker Add could shift indices between the
+                                        //   Row2FilteredRow lookup and the indexed read.
+                                        //   Snapshotting under one lock in setUpRows lets MyDrawColumnCell run lock-free.
+                                        // Lifetime: pointers are owned by RamLog.Lines. They become dangling if
+                                        //   MaxEntries overflow runs SnapshotAndClear; CheckAndSaveToDisk hands the
+                                        //   snapshot to the queued Populate closure so this array is refreshed
+                                        //   before the snapshot's PLogLine records are disposed (see LightCore.LogRam.pas).
      FFormDestroying: Boolean;      // Set TRUE in TfrmRamLog.FormDestroy so already-queued
                                     // TThread.Queue closures (posted by background-thread
                                     // log appends) bail out instead of touching a freed viewer.
@@ -103,7 +116,7 @@ TYPE
      property OnVerbChanged: TNotifyEvent read FVerbChanged write FVerbChanged;   { Triggered before deleting the content of a cell }
   end;
 
-function Verbosity2Color(Verbosity: TLogVerbLvl): TAlphaColor;
+function Verbosity2Color(Verbosity: TLogVerbLvl; IsDark: Boolean = False): TAlphaColor;
 
 procedure Register;
 
@@ -113,7 +126,7 @@ IMPLEMENTATION
 USES
    LightCore, LightCore.Time, LightCore.Types,
    LightFmx.Common.AppData,
-   LightFmx.Common.Helpers, LightFmx.Common.Dialogs, LightFmx.Common.LogFilter;
+   LightFmx.Common.Helpers, LightFmx.Common.Dialogs, LightFmx.Common.LogFilter, LightFmx.Common.Styles;
 
 
 
@@ -163,6 +176,7 @@ begin
 
   RowCount:= 0;
   FFilteredRowCount:= 0;
+  SetLength(FVisibleLines, 0);   // Drop dangling pointers; will be repopulated by the Populate callback below.
   FRamLog.Clear;
   // No need to call Populate - RamLog.Clear triggers NotifyLogObserver which calls Populate
 end;
@@ -206,9 +220,17 @@ end;
    SETUP & DATA HANDLING
 -------------------------------------------------------------------------------------------------------------}
 { Configures grid rows and columns based on current RamLog content and verbosity filter.
-  In FMX TStringGrid, RowCount only includes data rows - the header row is managed separately. }
+  In FMX TStringGrid, RowCount only includes data rows - the header row is managed separately.
+
+  Thread-safety strategy:
+    Snapshots the filtered PLogLine pointers into FVisibleLines under a single read lock
+    (via GetFilteredSlice). MyDrawColumnCell then reads from the cache without locking.
+    This eliminates the per-cell TOCTOU window between Row2FilteredRow and Lines[i] that
+    the previous implementation had. The cache is refreshed every time Populate runs. }
 procedure TLogViewer.setUpRows;
-VAR RequiredColumnCount: Integer;
+VAR
+  RequiredColumnCount: Integer;
+  Filled: Integer;
 begin
   Assert(FRamLog <> NIL, 'RamLog not assigned!');
 
@@ -218,8 +240,28 @@ begin
   // Lock updates for performance and visual stability
   BeginUpdate;
   try
-    // Recompute filtered row count based on current verbosity level
+    // Refresh the dark-mode flag once per Populate. Style changes between Populates
+    // won't be picked up until the next setUpRows runs — acceptable; users rarely
+    // toggle theme mid-session, and a manual Populate or filter change refreshes it.
+    FIsDarkCache:= IsDarkStyle;
+
+    // Snapshot the filtered slice under a single read lock. GetFilteredSlice fills as
+    // many pointers as the buffer holds; we size the buffer to the current filtered count.
+    // If concurrent Adds arrive between Count and GetFilteredSlice, the snapshot may
+    // include slightly fewer entries than the live count — acceptable; the next Populate
+    // will pick up the late entries.
     FFilteredRowCount:= FRamLog.Count(FVerbosity > lvDebug, FVerbosity);
+    SetLength(FVisibleLines, FFilteredRowCount);
+    if FFilteredRowCount > 0
+    then begin
+      Filled:= FRamLog.Lines.GetFilteredSlice(FVerbosity, 0, FVisibleLines);
+      // Trim if the list shrank between the Count() above and GetFilteredSlice (e.g. a
+      // concurrent Clear or MaxEntries-overflow SnapshotAndClear ran in between).
+      // Filled cannot exceed the buffer length, so we never need to grow.
+      if Filled < FFilteredRowCount
+      then SetLength(FVisibleLines, Filled);
+      FFilteredRowCount:= Filled;
+    end;
 
     // Set RowCount - in FMX this is data rows only, header is separate
     RowCount:= FFilteredRowCount;
@@ -357,27 +399,26 @@ begin
 end;
 
 
-{ Returns the log line for the specified filtered row index (0-based).
-  Maps the visible row index to the actual index in the unfiltered RamLog.Lines list. }
+{ Returns the log line at the specified filtered row index (0-based).
+  Reads from FVisibleLines, the cached PLogLine snapshot populated by setUpRows under
+  one read lock. No lock acquisition here — the cache is owned by the main thread.
+
+  Returns NIL if the row is out of bounds, or if FVisibleLines is empty (e.g. before
+  the first Populate). }
 function TLogViewer.getLineFiltered(Row: Integer): PLogLine;
-VAR
-   actualIndex: Integer;
 begin
-  Result:= NIL;
-  if NOT Assigned(RamLog) OR (Row < 0)
-  then EXIT;
-
-  // Map filtered row index to actual index in the original list
-  actualIndex:= RamLog.Lines.Row2FilteredRow(Row, FVerbosity);
-
-  if (actualIndex >= 0)
-  AND (actualIndex < RamLog.Lines.Count)
-  then Result:= RamLog.Lines[actualIndex];
+  if (Row < 0) OR (Row >= Length(FVisibleLines))
+  then Result:= NIL
+  else Result:= FVisibleLines[Row];
 end;
 
 
 { Custom drawing handler for grid cells.
-  In FMX TStringGrid, Row is 0-based and refers to data rows only (header is drawn separately). }
+  In FMX TStringGrid, Row is 0-based and refers to data rows only (header is drawn separately).
+
+  Note on Canvas.Fill.Color: in FMX, FillText uses the canvas Fill brush as the *text*
+  color. Despite the name, this sets the foreground, not the background — same semantic
+  as VCL's Verbosity2Color. }
 procedure TLogViewer.MyDrawColumnCell(Sender: TObject; const Canvas: TCanvas; const Column: TColumn;
                                     const Bounds: TRectF; const Row: Integer; const Value: TValue;
                                     const State: TGridDrawStates);
@@ -413,8 +454,9 @@ begin
     else EXIT;
   end;
 
-  // Set background color based on verbosity level
-  Canvas.Fill.Color:= Verbosity2Color(CurLine.Level);
+  // Pick the verbosity color appropriate for the active theme. FIsDarkCache is
+  // populated by setUpRows so we don't probe TStyleManager per cell during paint.
+  Canvas.Fill.Color:= Verbosity2Color(CurLine.Level, FIsDarkCache);
 
   // Set font style
   if CurLine.Bold
@@ -475,11 +517,14 @@ end;
    WND / Form Interaction
 -------------------------------------------------------------------------------------------------------------}
 
-{ ILogObserver implementation - shows the form containing this control }
+{ ILogObserver implementation - shows the form containing this control.
+  Bails out if the host form is being destroyed (see FFormDestroying field comment). }
 procedure TLogViewer.PopUpWindow;
 VAR
   ParentForm: TCommonCustomForm;
 begin
+  if FFormDestroying then EXIT;
+
   ParentForm:= GetParentForm(Self);
   if Assigned(ParentForm) then
     begin
@@ -640,25 +685,45 @@ begin
 end;
 
 
-function Verbosity2Color(Verbosity: TLogVerbLvl): TAlphaColor;
+{ Maps a log verbosity level to its display *text* color (used by FillText via Canvas.Fill).
+  Mirror of LightVcl.Common.LogViewer's Verbosity2Color — same scheme, FMX color types.
+
+  IsDark: when TRUE, returns lighter shades suitable for dark-theme backgrounds.
+  Defaults to FALSE so existing call sites without a theme query still compile and
+  produce light-theme colors (the legacy behavior).
+
+  Compiler-checked exhaustive mapping. If a future TLogVerbLvl enum value is added
+  without extending these arrays, the compiler flags the array index at build time
+  rather than at runtime. Mirrors the array-driven pattern used in
+  LightCore.LogTypes.Verbosity2String.
+
+  Raw hex values (not TAlphaColors.X record-constants) keep the typed-const arrays
+  initializable at compile time on every supported Delphi version. The values match
+  TAlphaColors.{White|Black|Orange|Darkorange|Red}. }
+const
+  VerbColorsDark: array[TLogVerbLvl] of TAlphaColor =
+    ($FF909090,                  { lvDebug     — Medium gray (same as light, both themes) }
+     $FFB0B0B0,                  { lvVerbose   — Light gray }
+     $FFC0C0C0,                  { lvHints     — Silver }
+     $FFFFFFFF,                  { lvInfos     — White }
+     $FFFFB060,                  { lvImportant — Light orange }
+     $FFFFA500,                  { lvWarnings  — Orange }
+     $FFFF0000);                 { lvErrors    — Red }
+
+  VerbColorsLight: array[TLogVerbLvl] of TAlphaColor =
+    ($FF909090,                  { lvDebug     — Light gray }
+     $FF808080,                  { lvVerbose   — Silver }
+     $FF707070,                  { lvHints     — Gray }
+     $FF000000,                  { lvInfos     — Black }
+     $FFFF8C00,                  { lvImportant — Darkorange }
+     $FFFFA500,                  { lvWarnings  — Orange }
+     $FFFF0000);                 { lvErrors    — Red }
+
+function Verbosity2Color(Verbosity: TLogVerbLvl; IsDark: Boolean): TAlphaColor;
 begin
-  CASE Verbosity of
-   lvDebug    : Result := TAlphaColors.Lightgray;
-   lvVerbose  : Result := TAlphaColors.Gray;
-   lvHints    : Result := TAlphaColors.Darkgray;
-   lvInfos    : Result := TAlphaColors.Black; // Text color, background should be lighter? Check MyDrawCell
-   lvImportant: Result := TAlphaColors.Orange;
-   lvWarnings : Result := TAlphaColors.Darkorange;
-   lvErrors   : Result := TAlphaColors.Red;
-  else
-    // Provide a default or raise a more specific error
-    RAISE Exception.CreateFmt('Invalid log verbosity level: %d', [Ord(Verbosity)]);
-  end;
-  // Note: These colors are used for BACKGROUND in MyDrawColumnCell.
-  // Ensure text drawn on top is readable. Consider returning lighter backgrounds.
-  // Example Adjustments:
-  // lvInfos: TAlphaColors.White or TAlphaColors.Aliceblue
-  // lvDebug: TAlphaColors.Whitesmoke
+  if IsDark
+  then Result:= VerbColorsDark [Verbosity]
+  else Result:= VerbColorsLight[Verbosity];
 end;
 
 

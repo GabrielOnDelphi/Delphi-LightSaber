@@ -3,7 +3,7 @@ UNIT LightVcl.Common.LogFilter;
 // NEW LOG based on TStringGrid
 
 {=============================================================================================================
-   2026.01.29
+   2026.05.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -50,7 +50,6 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
-USES LightVcl.Common.Dialogs;
 
 
 
@@ -108,14 +107,13 @@ end;
 
 procedure TLogVerbFilter.TrackBarChange(Sender: TObject);
 begin
- { Skip during DFM loading - trackbar value may change before Log is assigned }
+ { Skip during DFM loading - trackbar value may change before Log is assigned. }
  if csLoading in ComponentState then EXIT;
 
- if Log = NIL then
-   begin
-     MessageError('No log assigned!');
-     EXIT;
-   end;
+ { Silent EXIT if Log is not yet wired. Showing a modal dialog from a trackbar
+   change handler is intrusive — and the trackbar may legitimately fire before
+   the host code calls SetLog (e.g., during early form construction). }
+ if Log = NIL then EXIT;
 
  Log.Verbosity:= Verbosity;
  VerboLabel.Caption:= 'Verbosity: '+ Verbosity2String(Verbosity);

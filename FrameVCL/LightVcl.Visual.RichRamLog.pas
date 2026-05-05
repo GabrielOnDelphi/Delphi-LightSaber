@@ -291,6 +291,11 @@ end;
 
 
 
+{ Log lines can legitimately exceed the default 1*KB SafetyLimit (stack traces, JSON, exception messages with payloads). 
+  16 MB is comfortably above any realistic line yet still fails fast on garbage input. 
+  The header itself is short — keep its default. }
+const RichLogMaxLineBytes = 16 * 1024 * 1024;
+
 procedure TRamLog.LoadFromStream(Stream: TLightStream);
 VAR s: string;
 begin
@@ -302,7 +307,7 @@ begin
 
   for VAR i:= 1 to iCount DO
    begin
-    s:= Stream.ReadString;
+    s:= Stream.ReadString(RichLogMaxLineBytes);
     RawLines.Add(s);
    end;
 end;
@@ -319,7 +324,7 @@ begin
 
   for VAR i:= 1 to iCount DO
    begin
-    s:= Stream.ReadString;
+    s:= Stream.ReadString(RichLogMaxLineBytes);
     RawLines.Add(s);
    end;
 end;

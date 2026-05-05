@@ -1,7 +1,7 @@
-UNIT LightVcl.Visual.LogForm;
+﻿UNIT LightVcl.Visual.LogForm;
 
 {=============================================================================================================
-   2026.03.22
+   2026.05.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Visual log window.
@@ -67,6 +67,14 @@ USES
 
 {-------------------------------------------------------------------------------------------------------------
   FORM CREATION
+
+  Wiring contract:
+    TLogViewer.Create assigns Log a private, empty TRamLog (FOwnRamLog=TRUE).
+    To display the application-wide log, the CALLER must invoke
+    Log.AssignExternalRamLog(AppData.RamLog) after CreateForm returns.
+    Today this is done by TAppData.getGlobalLog (LightVcl.Visual.AppData.pas).
+    If anything else creates TfrmRamLog directly without that call, the form
+    will display its private empty log instead of the application's RamLog.
 -------------------------------------------------------------------------------------------------------------}
 procedure TfrmRamLog.FormPostInitialize;
 begin
@@ -100,7 +108,11 @@ procedure TfrmRamLog.FormDestroy(Sender: TObject);
 begin
   Assert(Owner = NIL); // This form should have no owner. If it has an owner (like Application), it will destroy the form. We want AppData to destroy the form!
 
-  // Unregister to prevent pending TThread.Queue callbacks from accessing the destroyed form
+  // Order matters:
+  //   1. FormDestroying:=TRUE so any closures already in TThread.Queue bail out cleanly
+  //   2. UnregisterLogObserver so no NEW notifications get queued
+  // Together these close the late-callback window for background-thread log appends.
+  Log.FormDestroying:= TRUE;
   Log.RamLog.UnregisterLogObserver;
   SaveSettings;
 end;

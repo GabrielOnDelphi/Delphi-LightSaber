@@ -1,7 +1,7 @@
-UNIT LightFmx.Common.LogForm;
+﻿UNIT LightFmx.Common.LogForm;
 
 {=============================================================================================================
-   2026.04.25
+   2026.05.05
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Visual log window for displaying TRamLog content.
@@ -72,10 +72,13 @@ USES
 -------------------------------------------------------------------------------------------------------------}
 procedure TfrmRamLog.FormCreate(Sender: TObject);
 begin
+  Assert(AppData <> NIL, 'FormCreate: AppData must be initialized before the log form is created!');
+
   LogViewer.AssignExternalRamLog(AppData.RamLog);   // FormLog will display data from AppData's RAM log
 
   LoadSettings;
   chkLogOnError.IsChecked:= AppData.RamLog.ShowOnError;
+  chkScrollDown.IsChecked:= LogViewer.AutoScroll;   // Sync visible checkbox with restored AutoScroll state.
   // chkShowTime is already synced inside LoadSettings — no second assignment needed.
 
   // Phone Visibility
@@ -133,6 +136,7 @@ begin
   VAR IniFile:= TIniFileEx.Create('Log Settings', AppData.IniFile);
   try
     IniFile.Write('ShowOnError', AppData.RamLog.ShowOnError);
+    IniFile.Write('AutoScroll' , LogViewer.AutoScroll);
     // Phone forces ShowDate/ShowTime to FALSE — don't persist that, or it would clobber the desktop preference.
     if NOT IsPhoneScreen then
       begin
@@ -148,9 +152,12 @@ end;
 
 procedure TfrmRamLog.LoadSettings;
 begin
+  Assert(AppData <> NIL, 'LoadSettings: AppData must be initialized before reading log settings!');
+
   VAR IniFile:= TIniFileEx.Create('Log Settings', AppData.IniFile);
   try
     AppData.RamLog.ShowOnError:= IniFile.Read('ShowOnError', TRUE);
+    LogViewer.AutoScroll      := IniFile.Read('AutoScroll' , TRUE);
 
     LogViewer.ShowTime:= IniFile.Read('ShowTime', TRUE);
     LogViewer.ShowDate:= IniFile.Read('ShowDate', TRUE);

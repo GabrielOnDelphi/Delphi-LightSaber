@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.LogViewer;
 
 {=============================================================================================================
-   2026.01.29
+   2026.05.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    A log viewer based on TStringGrid.
@@ -33,7 +33,7 @@ INTERFACE
 
 USES
    Winapi.Windows,
-   System.Classes, System.SysUtils, Generics.Collections,
+   System.Classes, System.SysUtils,
    Vcl.Graphics, Vcl.Controls, Vcl.StdCtrls, Vcl.Forms, Vcl.Grids, Vcl.ExtCtrls, VCL.ComCtrls,
    LightCore.LogRam, LightCore.LogTypes, LightCore.LogLinesAbstract;
 
@@ -56,19 +56,21 @@ TYPE
      FRamLog      : TRamLog;
      FVerbTrackBar: TPanel;            // TLogVerbFilter
      FOwnRamLog   : Boolean;           // Frees RamLog if owned
-	 FFilteredIndices: TList<Integer>; // Caching 
-     FFilteredRowCount: Integer;       // Cached count of filtered rows
+     FFilteredRowCount: Integer;       // Cached count of filtered rows (drives scrollbar.Max)
      FScrollBar: TScrollBar;
+     FFormDestroying: Boolean;         // Set TRUE in TfrmRamLog.FormDestroy so already-queued
+                                       // TThread.Queue closures (posted by background-thread log appends) bail out instead of touching a freed viewer.
+                                       // Distinct from TComponent.Destroying (which only flips once we are inside our own destructor — too late for a closure that has already entered Populate).
+                                       // Mirrors the same pattern in LightFmx.Common.LogViewer.
      procedure setShowDate(const Value: Boolean);
      procedure setShowTime(const Value: Boolean);
      procedure FixFixedRow;
      procedure resizeColumns;
      procedure scrollToBottom;
      procedure setVerbFilter(const Value: TLogVerbLvl);
-     function  filteredRow(aRow: Integer): integer;
      function  getLineFiltered(Row: Integer): PLogLine;
      procedure scrollBarChange(Sender: TObject);
-     procedure rebuildFilteredIndices;
+     procedure refreshVisibleSlice;
    protected
      procedure CreateWnd; override;
      procedure Resize; override;
@@ -85,6 +87,7 @@ TYPE
      procedure PopUpWindow;
      procedure ChangeScrollBarVisibility(aVisible: boolean);
      procedure SaveAsRtf(const FullPath: string);
+     property  FormDestroying: Boolean read FFormDestroying write FFormDestroying;
 
      function  Count: Integer;
      procedure CopyAll;
@@ -131,7 +134,6 @@ begin
   FShowDate   := FALSE;
   FVerbosity  := lvVerbose;
   FAutoScroll := TRUE;
-  FFilteredIndices := TList<Integer>.Create;  //Optimize with Caching
 
   FScrollBar         := TScrollBar.Create(Self);
   FScrollBar.Parent  := Self; // Assumes a parent panel
@@ -180,7 +182,6 @@ begin
     if Assigned(FRamLog)
     then FRamLog.UnregisterLogObserver;
 
-  FreeAndNil(FFilteredIndices);
   FreeAndNil(Fgrid);
   FreeAndNil(FScrollBar);
   inherited;
@@ -238,23 +239,38 @@ begin
     else NewColCount:= 1;
     FGrid.ColCount:= NewColCount;
 
-    { Configure scrollbar visibility and range }
-    if FFilteredRowCount > VisibleRows
-    then
-      begin
-        FScrollBar.Max:= FFilteredRowCount - VisibleRows;
-        ChangeScrollBarVisibility(TRUE);
-      end
-    else
-      begin
-        FScrollBar.Max:= 0;
-        FScrollBar.Position:= 0;
-        ChangeScrollBarVisibility(FALSE);
-      end;
-    FScrollBar.LargeChange:= VisibleRows;
+    { Configure scrollbar visibility and range.
+      Suppress FScrollBar.OnChange while we mutate Max/Position so we don't trigger a redundant refreshVisibleSlice — the explicit call after EndUpdate covers it.
+
+      Safe to clobber OnChange unconditionally: FScrollBar is a private TScrollBar
+      created in the constructor and never exposed. No external code can assign a
+      different OnChange handler, so restoring scrollBarChange in FINALLY always
+      reinstates the only legitimate value. If FScrollBar is ever made public or
+      its OnChange is exposed, switch to save-and-restore via a local TNotifyEvent. }
+    FScrollBar.OnChange:= NIL;
+    TRY
+      if FFilteredRowCount > VisibleRows
+      then
+        begin
+          FScrollBar.Max:= FFilteredRowCount - VisibleRows;
+          ChangeScrollBarVisibility(TRUE);
+        end
+      else
+        begin
+          FScrollBar.Max:= 0;
+          FScrollBar.Position:= 0;
+          ChangeScrollBarVisibility(FALSE);
+        end;
+      FScrollBar.LargeChange:= VisibleRows;
+    FINALLY
+      FScrollBar.OnChange:= scrollBarChange;
+    END;
   FINALLY
     FGrid.EndUpdate;
   END;
+
+  { Re-fill the visible PLogLine slice now that RowCount and ScrollBar.Max are correct. }
+  refreshVisibleSlice;
 end;
 
 
@@ -264,7 +280,6 @@ begin
   if FVerbosity <> Value then
     begin
       FVerbosity:= Value;
-      rebuildFilteredIndices;
 
       { Update associated UI element if it exists and needs syncing }
       if (FVerbTrackBar <> NIL)
@@ -276,8 +291,10 @@ begin
       if Assigned(FVerbChanged)
       then FVerbChanged(Self);
 
-      { Refresh the grid content based on the new filter }
+      { Refresh the grid content based on the new filter
+        (setUpRows internally calls refreshVisibleSlice). }
       setUpRows;
+      FGrid.InvalidateGrid;
     end;
 end;
 
@@ -311,41 +328,36 @@ end;
 
 { Refreshes the grid display from the RamLog data.
   Called by the ILogObserver interface when log content changes.
-  Rebuilds the filter cache and scrolls to bottom if AutoScroll is enabled. }
+  setUpRows must run first: it updates FFilteredRowCount and FScrollBar.Max, then calls
+  refreshVisibleSlice. scrollToBottom may then change FScrollBar.Position which fires
+  scrollBarChange (refreshes the slice + repaints). If Position doesn't actually change,
+  the slice from setUpRows is still correct. Either way, no extra work needed here.
+
+  Guard against already-queued TThread.Queue closures firing after the host form's
+  FormDestroy has set FormDestroying:=TRUE — without this guard the closure would
+  touch a viewer that Application has just freed. }
 procedure TLogViewer.Populate;
 begin
-  if NOT Assigned(FRamLog) then EXIT;
+  if FFormDestroying 
+  OR NOT Assigned(FRamLog) then EXIT;
 
-  rebuildFilteredIndices;
-  // Reconfigure rows/columns and update row count based on current filter  
   setUpRows;
 
   if AutoScroll
   then scrollToBottom;
-end;
 
-
-{ Converts a grid row index to the actual log line index after filtering.
-  Accounts for the header row offset (HeaderOverhead). }
-function TLogViewer.filteredRow(aRow: Integer): Integer;
-begin
-  Assert(RamLog <> NIL, 'filteredRow: RamLog not assigned');
-  Assert(RamLog.Lines <> NIL, 'filteredRow: RamLog.Lines not assigned');
-  Result:= RamLog.Lines.Row2FilteredRow(aRow - HeaderOverhead, FVerbosity);
+  FGrid.InvalidateGrid;
 end;
 
 
 { Returns the log line at the specified grid row (after filtering).
-  Returns NIL if the row is invalid or out of bounds. }
+  Reads the cached PLogLine pointer stored in the grid's Objects[0, Row] slot.
+  Returns NIL if the row is invalid, out of bounds, or has no data. }
 function TLogViewer.getLineFiltered(Row: Integer): PLogLine;
-VAR FilteredIdx: Integer;
 begin
   Result:= NIL;
-  if (RamLog = NIL) or (RamLog.Lines = NIL) then EXIT;
-
-  FilteredIdx:= filteredRow(Row);
-  if (FilteredIdx >= 0) and (FilteredIdx < RamLog.Lines.Count)
-  then Result:= RamLog.Lines[FilteredIdx];
+  if (Row < HeaderOverhead) or (Row >= FGrid.RowCount) then EXIT;
+  Result:= PLogLine(FGrid.Objects[0, Row]);
 end;
 
 
@@ -356,12 +368,11 @@ end;
 procedure TLogViewer.GridDrawCell(Sender: TObject; ACol, ARow: Integer; ARect: TRect; AState: TGridDrawState);
 VAR
    s: string;
-   LogIndex, FilteredIndex: Integer;
    CurLine: PLogLine;
 begin
   { Skip drawing in design mode or during component creation }
-  if (csDesigning in ComponentState) 
-  or (csCreating in ControlState) 
+  if (csDesigning in ComponentState)
+  or (csCreating in ControlState)
   or (NOT FGrid.DefaultDrawing)
   then
     begin
@@ -385,30 +396,14 @@ begin
       EXIT;
     end;
 
-  { Data rows - check if we have data to display }
-  if (RamLog = NIL) or (FFilteredRowCount = 0) then
+  { Data rows - read the cached PLogLine pointer.
+    Set by refreshVisibleSlice for every visible row, NIL otherwise. }
+  CurLine:= PLogLine(FGrid.Objects[0, ARow]);
+  if CurLine = NIL then
     begin
       FGrid.Canvas.FillRect(ARect);
       EXIT;
     end;
-
-  { Calculate log index from scrollbar position }
-  LogIndex:= FScrollBar.Position + ARow - HeaderOverhead;
-  if (LogIndex < 0) or (LogIndex >= FFilteredIndices.Count) then
-    begin
-      FGrid.Canvas.FillRect(ARect);
-      EXIT;
-    end;
-
-  { Map to filtered index }
-  FilteredIndex:= FFilteredIndices[LogIndex];
-  if FilteredIndex < 0 then
-    begin
-      FGrid.Canvas.FillRect(ARect);
-      EXIT;
-    end;
-
-  CurLine:= RamLog.Lines[FilteredIndex];
 
   { Build cell text based on column }
   if FGrid.ColCount = 2
@@ -497,11 +492,14 @@ end;
    Shows the parent form containing this log viewer.
    Called via ILogObserver interface when errors occur and ShowOnError is enabled.
    Ensures the form is visible, restored (not minimized), and brought to front.
+   Also bails out if the host form is in the process of being destroyed (see FFormDestroying).
 --------------------------------------------------------------------------------------------------}
 procedure TLogViewer.PopUpWindow;
 VAR
   ParentForm: TCustomForm;
 begin
+  if FFormDestroying then EXIT;
+
   ParentForm:= GetParentForm(Self);
   if Assigned(ParentForm) then
     begin
@@ -559,8 +557,18 @@ end;
 
 procedure TLogViewer.Resize;
 begin
-  inherited Resize;  // Call the inherited method first
-  resizeColumns;     // Then adjust columns based on the new size
+  inherited Resize;
+  resizeColumns;          { Adjust column widths to the new ClientWidth. }
+
+  { ClientHeight changed, so the number of visible rows changed too. 
+    setUpRows reads ClientHeight to recompute FGrid.RowCount and FScrollBar.Max, and ends
+    by calling refreshVisibleSlice. Without this call, growing the panel would
+    leave empty rows at the bottom (RowCount stuck at the old value), and
+    shrinking would orphan filled-but-invisible rows. Skip when not yet wired
+    (Resize can fire before the constructor finishes assigning FRamLog). }
+  if Assigned(FRamLog) 
+  and HandleAllocated
+  then setUpRows;
 end;
 
 
@@ -627,12 +635,39 @@ end;
 
    Note: TRichEdit requires a parent window for certain operations.
          We temporarily parent it to Self (the LogViewer panel).
+
+   Thread Safety — two-phase pattern with VALUE copy (not pointer copy):
+     Phase 1 copies the data we need (Msg, Level, Bold) out of each PLogLine into
+     a local TArray<TRtfLine> under one read lock. The lock is held only for the
+     copy (~microseconds for typical logs).
+     Phase 2 walks the local array doing the slow TRichEdit work (Win32 SendMessage
+     per line). No lock held; the local array owns its data.
+
+   Why we copy values, not pointers:
+     PLogLine pointers are owned by FRamLog.Lines. If a worker hits MaxEntries
+     during Phase 2 and CheckAndSaveToDisk's overflow path runs SnapshotAndClear,
+     it queues a "free the snapshot" closure on the main thread. TRichEdit
+     operations (Lines.Add, SaveToFile) can pump messages — including queued
+     closures — and the snapshot's PLogLine records would be Disposed mid-walk.
+     Copying values up-front decouples Phase 2 from FRamLog's lifetime.
+
+   Cost: ~16 bytes/line struct overhead (string ref + Level + Bold). String content
+     is NOT duplicated (Delphi strings are COW; assignment bumps a refcount).
+     For a 1M-line log: ~16 MB array overhead + zero extra string content.
 --------------------------------------------------------------------------------------------------}
 procedure TLogViewer.SaveAsRtf(const FullPath: string);
+type
+  TRtfLine = record
+    Msg  : string;
+    Level: TLogVerbLvl;
+    Bold : Boolean;
+  end;
 VAR
-  i: Integer;
-  RichEdit: TRichEdit;
-  LogLine: PLogLine;
+  RichEdit : TRichEdit;
+  IsDark   : Boolean;
+  Snapshot : TArray<TRtfLine>;
+  SnapCount: Integer;
+  i        : Integer;
 begin
   if FullPath = ''
   then raise Exception.Create('SaveAsRtf: FullPath parameter cannot be empty');
@@ -640,22 +675,37 @@ begin
   if NOT Assigned(FRamLog)
   then raise Exception.Create('SaveAsRtf: RamLog is not assigned');
 
+  IsDark:= NOT IsLightStyleColor(clWindow);
+
+  { Phase 1 — copy values out of each PLogLine under a single read lock.
+    Buffer starts at 256 and doubles on overflow — amortized O(N) growth. }
+  SnapCount:= 0;
+  SetLength(Snapshot, 256);
+  FRamLog.Lines.ForEachLocked(procedure (Line: PLogLine)
+    begin
+      if SnapCount >= Length(Snapshot)
+      then SetLength(Snapshot, Length(Snapshot) * 2);
+      Snapshot[SnapCount].Msg  := Line.Msg;     { Strings are COW — assignment is a refcount bump, not a copy. }
+      Snapshot[SnapCount].Level:= Line.Level;
+      Snapshot[SnapCount].Bold := Line.Bold;
+      Inc(SnapCount);
+    end);
+
+  { Phase 2 — slow Win32 work, lock-free. The local Snapshot owns its data,
+    so a concurrent overflow + snapshot-dispose during this loop is harmless. }
   RichEdit:= TRichEdit.Create(Self);
   TRY
     RichEdit.Parent:= Self;        { Required for TRichEdit to work properly }
     RichEdit.Visible:= FALSE;      { Keep it hidden }
     RichEdit.PlainText:= FALSE;
 
-    for i:= 0 to FRamLog.Lines.Count - 1 do
+    for i:= 0 to SnapCount - 1 do
       begin
-        LogLine:= FRamLog.Lines[i];
-        RichEdit.SelAttributes.Color:= Verbosity2Color(LogLine.Level, NOT IsLightStyleColor(clWindow));
-
-        if LogLine.Bold
+        RichEdit.SelAttributes.Color:= Verbosity2Color(Snapshot[i].Level, IsDark);
+        if Snapshot[i].Bold
         then RichEdit.SelAttributes.Style:= [fsBold]
         else RichEdit.SelAttributes.Style:= [];
-
-        RichEdit.Lines.Add(LogLine.Msg);
+        RichEdit.Lines.Add(Snapshot[i].Msg);
       end;
 
     RichEdit.Lines.SaveToFile(FullPath);
@@ -673,9 +723,10 @@ begin
 end;
 
 
-{ Handles scrollbar position changes - triggers grid repaint with new visible range. }
+{ Handles scrollbar position changes - re-fills the visible PLogLine slice and repaints. }
 procedure TLogViewer.scrollBarChange(Sender: TObject);
 begin
+  refreshVisibleSlice;
   FGrid.InvalidateGrid;
 end;
 
@@ -712,25 +763,39 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-   Rebuilds the cached list of filtered log line indices.
-   Only lines with verbosity level >= FVerbosity are included.
-   This cache improves performance by avoiding repeated filtering during grid drawing.
+   Refills the grid's visible Object slots with PLogLine pointers from the underlying log.
+
+   Delegates the walk to RamLog.Lines.GetFilteredSlice, which holds a single read lock for the
+   entire scan in multithreaded mode -- no per-element lock-acquire tax. The visible slice lives
+   directly in the grid's per-cell Objects array, so GridDrawCell reads it in O(1).
+
+   Caller contract:
+     - Must run AFTER setUpRows has set FGrid.RowCount and FScrollBar.Max for the current filter.
+     - Must run AFTER any change to FScrollBar.Position.
+     - Safe to call before HandleAllocated (early-exits).
 --------------------------------------------------------------------------------------------------}
-procedure TLogViewer.rebuildFilteredIndices;
+procedure TLogViewer.refreshVisibleSlice;
 VAR
-  i: Integer;
+  Buf: array of PLogLine;
+  i, Filled, MaxRows, SliceLen: Integer;
 begin
-  FFilteredIndices.Clear;
-  FFilteredRowCount:= 0;
+  if NOT HandleAllocated then EXIT;
+  MaxRows:= FGrid.RowCount;
+
+  { Clear all visible Object slots first so any failure (or empty log) leaves a clean state. }
+  for i:= HeaderOverhead to MaxRows - 1 do
+    FGrid.Objects[0, i]:= NIL;
 
   if NOT Assigned(RamLog) then EXIT;
   if NOT Assigned(RamLog.Lines) then EXIT;
 
-  for i:= 0 to RamLog.Lines.Count - 1 do
-    if RamLog.Lines[i].Level >= FVerbosity
-    then FFilteredIndices.Add(i);
+  SliceLen:= MaxRows - HeaderOverhead;
+  if SliceLen <= 0 then EXIT;
 
-  FFilteredRowCount:= FFilteredIndices.Count;
+  SetLength(Buf, SliceLen);
+  Filled:= RamLog.Lines.GetFilteredSlice(FVerbosity, FScrollBar.Position, Buf);
+  for i:= 0 to Filled - 1 do
+    FGrid.Objects[0, HeaderOverhead + i]:= TObject(Buf[i]);
 end;
 
 
