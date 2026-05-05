@@ -15,7 +15,7 @@ UNIT ciUpdaterRec;
 INTERFACE
 
 USES
-  System.SysUtils, System.Classes;
+  System.SysUtils;
 
 TYPE
   TTargetUser = (tuAll, tuRegistered, tuTrial, tuDemo); { For which user category is this annoucement } { Discern between paid/trial/demo license so it can display messages based on the license state (for example, only show PURCHASE NOW to the Demo/expired_trial users)}
