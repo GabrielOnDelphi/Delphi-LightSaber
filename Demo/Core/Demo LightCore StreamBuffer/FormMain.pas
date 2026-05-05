@@ -230,7 +230,7 @@ begin
    {----------------- ANSI STRINGS -----------------}
    Stream.WriteStringA('');  // Empty string
    Stream.WriteStringA('abba');
-   Stream.WriteStringA('Test ANSI with special chars: ÄÖÜ');
+   Stream.WriteStringA('Test ANSI with special chars: Ã„Ã–Ãœ');
    Stream.WriteStringA('A very long string: ' + StringOfChar('X', 1000));
    
    {----------------- UNICODE STRINGS -----------------}
@@ -428,7 +428,7 @@ begin
    if Stream.ReadStringA <> '' then RAISE Exception.Create('ReadStringA empty failure!');
    if Stream.ReadStringA <> 'abba' then RAISE Exception.Create('ReadStringA simple failure!');
    TestAnsi := Stream.ReadStringA;
-   if Pos('ÄÖÜ', string(TestAnsi)) = 0 then RAISE Exception.Create('ReadStringA special chars failure!');
+   if Pos('Ã„Ã–Ãœ', string(TestAnsi)) = 0 then RAISE Exception.Create('ReadStringA special chars failure!');
    TestAnsi := Stream.ReadStringA;
    if Length(TestAnsi) <> 1020 then RAISE Exception.Create('ReadStringA long string failure!');
    
@@ -516,8 +516,11 @@ begin
      if ByteArr[i] <> Byte(i * 25) then RAISE Exception.Create('PushBytes/ReadBuffer failure!');
    
    {----------------- PUSH STRING (no length) -----------------}
-   if Stream.ReadString(10) <> 'RawUnicode' then RAISE Exception.Create('ReadString (fixed len) failure!');
-   if Stream.ReadStringA(7) <> 'RawAnsi' then RAISE Exception.Create('ReadStringA (fixed len) failure!');
+   { PushString / PushAnsi write raw bytes WITHOUT a length prefix, so the matching reads
+     must be the *Cnt variants that take an explicit byte count. ReadString(N) / ReadStringA(N)
+     would interpret N as SafetyLimit and try to read a 4-byte length prefix that isn't there. }
+   if Stream.ReadStringCnt(10) <> 'RawUnicode' then RAISE Exception.Create('ReadStringCnt (fixed len) failure!');
+   if Stream.ReadStringACnt(7) <> 'RawAnsi' then RAISE Exception.Create('ReadStringACnt (fixed len) failure!');
    
    {----------------- PADDING -----------------}
    Stream.ReadPadding0(32);  // Zero padding - no validation
