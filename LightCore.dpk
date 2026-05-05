@@ -25,7 +25,7 @@ package LightCore;
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'LightSaber - Core'}
+{$DESCRIPTION 'LightSaber - Core library'}
 {$LIBSUFFIX AUTO}
 {$RUNONLY}
 {$IMPLICITBUILD ON}
@@ -73,7 +73,8 @@ contains
   LightCore.Reports in 'LightCore.Reports.pas',
   LightCore.Debugger in 'LightCore.Debugger.pas',
   LightCore.INIFileQuick in 'LightCore.INIFileQuick.pas',
-  LightCore.System in 'LightCore.System.pas';
+  LightCore.System in 'LightCore.System.pas',
+  LightCore.Graphics in 'LightCore.Graphics.pas';
 
 end.
 
