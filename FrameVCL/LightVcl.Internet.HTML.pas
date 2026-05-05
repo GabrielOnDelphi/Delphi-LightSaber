@@ -15,8 +15,7 @@ UNIT LightVcl.Internet.HTML;
 INTERFACE
 
 USES
-   MsHtml,
-   System.SysUtils;
+   MsHtml;
 
 {--------------------------------------------------------------------------------------------------
    HTML MANIPULATION

@@ -53,7 +53,7 @@ function RelaxedSearchEx  (Query: string; Haystack: TStringList; StartAt: Intege
 IMPLEMENTATION
 
 USES
-  LightCore, LightCore.Types;
+  LightCore;
 
 {-------------------------------------------------------------------------------------------------------------
     COMMENTS

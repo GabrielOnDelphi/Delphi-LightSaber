@@ -12,7 +12,7 @@ UNIT LightVcl.Graph.RainDropParams;
 INTERFACE
 
 USES
-  System.SysUtils, System.Classes, LightCore.StreamBuff, LightCore.INIFile;
+  System.SysUtils, LightCore.StreamBuff, LightCore.INIFile;
 
 TYPE
   TWaterDamping = 1..99;

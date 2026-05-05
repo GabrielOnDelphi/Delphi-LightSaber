@@ -35,6 +35,7 @@ TYPE
     mnuCopy        : TMenuItem;
     mnuCopyAll     : TMenuItem;
     mnuCopyFiltered: TMenuItem;
+    mnuCopySelected: TMenuItem;
     pnlBottom      : TPanel;
     PopupMenu      : TPopupMenu;
     chkScrollDown: TCheckBox;
@@ -47,6 +48,7 @@ TYPE
     procedure mnuCopyAllClick      (Sender: TObject);
     procedure mnuCopyClick         (Sender: TObject);
     procedure mnuCopyFilteredClick (Sender: TObject);
+    procedure mnuCopySelectedClick (Sender: TObject);
     procedure chkScrollDownClick(Sender: TObject);
   private
     procedure LoadSettings;
@@ -70,11 +72,9 @@ USES
 
   Wiring contract:
     TLogViewer.Create assigns Log a private, empty TRamLog (FOwnRamLog=TRUE).
-    To display the application-wide log, the CALLER must invoke
-    Log.AssignExternalRamLog(AppData.RamLog) after CreateForm returns.
+    To display the application-wide log, the CALLER must invoke Log.AssignExternalRamLog(AppData.RamLog) after CreateForm returns.
     Today this is done by TAppData.getGlobalLog (LightVcl.Visual.AppData.pas).
-    If anything else creates TfrmRamLog directly without that call, the form
-    will display its private empty log instead of the application's RamLog.
+    If anything else creates TfrmRamLog directly without that call, the form will display its private empty log instead of the application's RamLog.
 -------------------------------------------------------------------------------------------------------------}
 procedure TfrmRamLog.FormPostInitialize;
 begin
@@ -214,6 +214,12 @@ end;
 procedure TfrmRamLog.mnuCopyFilteredClick(Sender: TObject);
 begin
   Log.CopyVisible;
+end;
+
+
+procedure TfrmRamLog.mnuCopySelectedClick(Sender: TObject);
+begin
+  ///Log.CopySelected;  //todo: do not delete. put it back later
 end;
 
 

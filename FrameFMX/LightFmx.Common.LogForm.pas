@@ -36,6 +36,7 @@ TYPE
     mnuCopy        : TMenuItem;
     mnuCopyAll     : TMenuItem;
     mnuCopyFiltered: TMenuItem;
+    mnuCopySelected: TMenuItem;
     pnlBottom      : TPanel;
     chkShowDate    : TCheckBox;
     LogFilter      : TLogVerbFilter;
@@ -47,6 +48,7 @@ TYPE
     procedure mnuCopyAllClick     (Sender: TObject);
     procedure mnuCopyClick        (Sender: TObject);
     procedure mnuCopyFilteredClick(Sender: TObject);
+    procedure mnuCopySelectedClick(Sender: TObject);
     procedure chkLogOnErrorChange (Sender: TObject);
     procedure chkShowTimeChange   (Sender: TObject);
     procedure chkShowDateChange   (Sender: TObject);
@@ -222,6 +224,12 @@ end;
 procedure TfrmRamLog.mnuCopyFilteredClick(Sender: TObject);
 begin
   LogViewer.CopyVisible;
+end;
+
+
+procedure TfrmRamLog.mnuCopySelectedClick(Sender: TObject);
+begin
+  ///LogViewer.CopySelected;
 end;
 
 

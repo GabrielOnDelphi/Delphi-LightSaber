@@ -1,4 +1,4 @@
-UNIT LightVcl.Graph.FX;
+﻿UNIT LightVcl.Graph.FX;
 
 {=============================================================================================================
    2026.01.30
@@ -70,7 +70,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   System.Types, LightVcl.Graph.Bitmap, LightVcl.Graph.Util;
+   LightVcl.Graph.Bitmap, LightVcl.Graph.Util;
 
 
 

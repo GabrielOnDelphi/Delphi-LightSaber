@@ -1,4 +1,4 @@
-﻿UNIT LightCore.System;
+UNIT LightCore.System;
 
 {=============================================================================================================
    2026.01.30
@@ -10,8 +10,8 @@
 INTERFACE
 
 USES
-   System.AnsiStrings, System.Character, System.SysUtils, System.Math, System.IOUtils, System.StrUtils,
-   System.Classes, System.Types, LightCore.Types;
+   System.AnsiStrings, System.SysUtils,
+   System.Classes, System.Types;
 
 
 {=============================================================================================================
@@ -36,9 +36,9 @@ USES
 
 
 IMPLEMENTATION
-USES
-  {$IFDEF MSWINDOWS}Winapi.Windows,{$ENDIF}  // GetLocaleInfo, LOCALE_USER_DEFAULT, LOCALE_SLANGUAGE
-  System.SysConst;                            // SUnknown (used in non-Windows GetSystemLanguageName)
+{$IFDEF MSWINDOWS}USES
+    Winapi.Windows;{$ENDIF}                        // GetLocaleInfo, LOCALE_USER_DEFAULT, LOCALE_SLANGUAGE
+ // System.SysConst;                            // SUnknown (used in non-Windows GetSystemLanguageName)
 
 
 

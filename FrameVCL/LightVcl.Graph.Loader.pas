@@ -1,4 +1,4 @@
-UNIT LightVcl.Graph.Loader;
+﻿UNIT LightVcl.Graph.Loader;
 
 {=============================================================================================================
    2026.01
@@ -96,7 +96,7 @@ USES
    FastJpegDecHelper,
    LightVcl.Graph.Resize, LightVcl.Graph.Loader.Resolution, LightVcl.Graph.UtilGray,
    LightVcl.Graph.Loader.WB1, LightVcl.Graph.RainShelter, LightCore.IO, LightCore.Graphics, LightVcl.Common.IO, LightVcl.Graph.FX.Rotate,
-   LightCore.AppData, LightCore, LightVcl.Graph.GrabAviFrame;
+   LightCore.AppData, LightVcl.Graph.GrabAviFrame;
 
 
 

@@ -23,7 +23,7 @@ UNIT LightCore.EncodeMime;
 INTERFACE
 
 USES
-  System.Classes, System.SysUtils, Soap.EncdDecd, System.NetEncoding;
+  System.Classes, System.SysUtils, Soap.EncdDecd;
 
  { Unicode string encoding - handles UTF-8 conversion automatically }
  function MimeString           (CONST Input: string): string;

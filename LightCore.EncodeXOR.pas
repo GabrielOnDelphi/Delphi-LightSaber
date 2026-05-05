@@ -1,4 +1,4 @@
-UNIT LightCore.EncodeXOR;
+﻿UNIT LightCore.EncodeXOR;
 
 {=============================================================================================================
    2026.01.30
@@ -18,7 +18,7 @@ INTERFACE
 
 USES
    System.SysUtils,
-   LightCore, LightCore.Types;
+   LightCore.Types;
 
  { CHAR_SHIFT ENCRYPTION }
  function  SimpleDecode      (CONST s: string): string;

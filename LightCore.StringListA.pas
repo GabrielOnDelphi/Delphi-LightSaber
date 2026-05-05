@@ -13,7 +13,7 @@ UNIT LightCore.StringListA;
 INTERFACE
 
 USES
-   System.SysUtils, System.AnsiStrings, Generics.Collections;
+   System.SysUtils, Generics.Collections;
 
 TYPE
   { ANSI TStringList }

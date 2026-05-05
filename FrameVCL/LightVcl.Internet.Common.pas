@@ -32,7 +32,7 @@ USES
    Winapi.UrlMon,
    Winapi.WinSock,  { Required by GetLocalIP }
    Winapi.WinInet,  { Required by IE_ApplySettings }
-   System.SysUtils, System.Classes, System.Win.Registry,
+   System.SysUtils, System.Win.Registry,
    LightCore, LightCore.Types,
    {LightCore.Internet,} LightVcl.Common.Dialogs;
 

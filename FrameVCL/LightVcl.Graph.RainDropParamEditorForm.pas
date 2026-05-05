@@ -63,8 +63,7 @@ TYPE
 
 IMPLEMENTATION {$R *.dfm}
 
-USES
-  LightVcl.Common.Translate;
+
 
 
 

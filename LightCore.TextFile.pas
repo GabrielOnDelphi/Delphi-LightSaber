@@ -96,7 +96,7 @@ USES
 
 IMPLEMENTATION
 USES
-   LightCore, LightCore.Types, LightCore.StreamBuff, LightCore.IO;
+   LightCore, LightCore.StreamBuff, LightCore.IO;
 
 CONST
   { POSIX file permissions for TFileStream.Create's 3rd parameter (Rights).

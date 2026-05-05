@@ -126,7 +126,7 @@ procedure Register;
 
 IMPLEMENTATION {$R *.res}
 
-USES LightVcl.Common.Colors, LightCore.TextFile, LightCore.Math, LightVcl.Common.Clipboard;
+USES LightVcl.Common.Colors, LightCore.TextFile, LightVcl.Common.Clipboard;
 
 
 
@@ -160,7 +160,7 @@ begin
 end;
 
 
- 
+
 
 
 {--------------------------------------------------------------------------------------------------
@@ -308,7 +308,7 @@ begin
  EditorPrevMode := EditorMode;
 end;
 
- 
+
 
 {--------------------------------------------------------------------------------------------------
                               LOAD / SAVE
@@ -460,7 +460,7 @@ begin
  StringToFile(aFileName, CsvContent, woOverwrite, wpAuto);
 end;
 
- 
+
 
 procedure TEnhStrGrid.SaveHeaderWidths(CONST aFileName: string);         { Save content of the entire grid (header & cells) as ANSI. It uses 255 as Delimiter instead of Enter }
 VAR cl: Integer;
@@ -902,7 +902,7 @@ End;
 
 
 
- 
+
 
 
 

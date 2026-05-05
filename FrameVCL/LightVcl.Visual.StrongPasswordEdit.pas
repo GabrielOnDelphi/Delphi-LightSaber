@@ -14,7 +14,7 @@ INTERFACE
 
 USES
   Winapi.Messages, Winapi.Windows,  { vcl.Dialogs appears unused }
-  System.SysUtils, System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.Graphics;
+  System.Classes, Vcl.Controls, Vcl.StdCtrls, Vcl.Graphics;
 
 type
   TStrongPasswordEdit = class(TEdit)

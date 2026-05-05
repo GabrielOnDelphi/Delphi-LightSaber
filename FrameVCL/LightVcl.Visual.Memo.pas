@@ -1,4 +1,4 @@
-UNIT LightVcl.Visual.Memo;
+﻿UNIT LightVcl.Visual.Memo;
 
 {=============================================================================================================
    2026.03.21
@@ -34,7 +34,7 @@ INTERFACE
 USES
   Winapi.Windows, Winapi.Messages,
   System.SysUtils, System.Classes, System.Math, System.Character, System.StrUtils,
-  Vcl.Clipbrd, Vcl.StdCtrls, Vcl.Controls, VCL.graphics, Vcl.Themes;
+  Vcl.Clipbrd, Vcl.StdCtrls, Vcl.Controls, VCL.graphics;
 
 TYPE
   TTypeMode= (tmInsert, tmOverwrite);

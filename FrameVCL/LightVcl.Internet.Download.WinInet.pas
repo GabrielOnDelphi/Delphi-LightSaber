@@ -53,7 +53,7 @@ INTERFACE
 
 USES
    Winapi.Windows, WinApi.WinInet,
-   System.Classes, System.SysUtils; // System.Net.HttpClient;
+   System.SysUtils; // System.Net.HttpClient;
 
 CONST
    { User agent strings for HTTP requests. Currently DownloadBytes uses a hardcoded Firefox user agent.

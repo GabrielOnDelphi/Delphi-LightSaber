@@ -152,6 +152,10 @@ object frmRamLog: TfrmRamLog
       Text = 'Copy line'
       OnClick = mnuCopyClick
     end
+    object mnuCopySelected: TMenuItem
+      Text = 'Copy selected'
+      OnClick = mnuCopySelectedClick
+    end
     object mnuCopyFiltered: TMenuItem
       Text = 'Copy all (filtered)'
       OnClick = mnuCopyFilteredClick

@@ -111,8 +111,7 @@ begin
  if csLoading in ComponentState then EXIT;
 
  { Silent EXIT if Log is not yet wired. Showing a modal dialog from a trackbar
-   change handler is intrusive — and the trackbar may legitimately fire before
-   the host code calls SetLog (e.g., during early form construction). }
+   change handler is intrusive — and the trackbar may legitimately fire before the host code calls SetLog (e.g., during early form construction). }
  if Log = NIL then EXIT;
 
  Log.Verbosity:= Verbosity;
