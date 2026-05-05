@@ -2,7 +2,7 @@ UNIT LightCore.Pascal;
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.01.30
+   2026.05.05
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -97,18 +97,24 @@ begin
 end;
 
 
+{ Strips comments from a single line of code.
+  Removes //... to end-of-line, and curly-brace or paren-star comments when both
+  delimiters are on the SAME line. Multi-line braced comments that span across lines
+  are NOT detected (caller would need to feed the whole source as one string and
+  use roSingleLine). }
 function StripComments(const Line: string): string;
 var s: string;
 begin
-  s := TRegEx.Replace(Line, '//.*$', '');                     // Remove single line comments
-  s := TRegEx.Replace(s, '\{.*?\}', '', [roMultiLine]);       // Remove curly braces comments
-  s := TRegEx.Replace(s, '\(\*.*?\*\)', '', [roMultiLine]);   // Remove parentheses comments
+  s := TRegEx.Replace(Line, '//.*$', '');           // Remove single line comments
+  s := TRegEx.Replace(s, '\{.*?\}', '');            // Remove curly braces comments
+  s := TRegEx.Replace(s, '\(\*.*?\*\)', '');        // Remove parentheses comments
   Result := s;
 end;
 
 
 { Returns the approximate number of comment lines.
-  Returns -1 if file does not exist or cannot be read. }
+  Returns -1 if the file does not exist.
+  Raises (propagates from TStringList.LoadFromFile) if the file exists but cannot be read. }
 function CountComments(const FileName: string): Integer;
 var TSL: TStringList;
 begin
@@ -181,6 +187,8 @@ begin
    begin
     sLine:= PasBody[i];
     sLine:= StringReplace(sLine, ' ', '', [rfReplaceAll]);
+    { Require the keyword at column 1 (after stripping spaces) so we don't match it
+      inside comments like `// implementation note` or string literals. }
     if PosInsensitive(Section, sLine) = 1
     then EXIT(i);
    end;
@@ -188,89 +196,153 @@ begin
 end;
 
 
-{ Returns True if this unit is already included in the USES }
-function UnitIncluded(PasBody: TStringList; UnitToFind: string; StartAt: integer): Boolean;
+{ Returns True if this unit is already included in the USES clause located at/after StartAt.
+  Searches up to (but not including) StopAt - pass the IMPLEMENTATION line index to avoid
+  leaking from the INTERFACE search into the IMPLEMENTATION uses. Pass MaxInt if no upper bound. }
+function UnitIncluded(PasBody: TStringList; CONST UnitToFind: string; StartAt, StopAt: integer): Boolean;
 VAR
-   iPos, i: Integer;
+   iPos, i, LastLine: Integer;
    sLine: string;
 begin
  iPos:= FindLine('uses', PasBody, StartAt);
- if iPos < 1
+ if (iPos < 0) OR (iPos >= StopAt)
  then EXIT(FALSE);
 
- for i:= iPos to PasBody.Count-1 do
+ { Clamp the loop's upper bound: StopAt is exclusive, the loop is inclusive,
+   so the last index we may visit is min(Count-1, StopAt-1). }
+ LastLine:= PasBody.Count - 1;
+ if StopAt - 1 < LastLine
+ then LastLine:= StopAt - 1;
+
+ for i:= iPos to LastLine do
    begin
      sLine:= PasBody[i];
 
-     if PosInsensitive(UnitToFind, sLine) > 0
+     if WordPos(UnitToFind, sLine) > 0
      then EXIT(TRUE);
 
+     { A semicolon terminates the uses clause - everything after it is no longer in scope. }
      if Pos(';', sLine) > 0
-     then EXIT(FALSE); // Stop when we encounter the ;
+     then EXIT(FALSE);
    end;
 
  Result:= FALSE;
 end;
 
 
-{ Add the specified unit to the "uses" clause.
-  Returns True if the unit was added or if it already existed in the Uses.
-  Returns False if no INTERFACE or IMPLEMENTATION section found.
-  Raises exception if PasBody is nil or empty.
-  Note: This will add the unit to the IMPLEMENTATION section's uses clause. }
+{ True if the line begins a Pascal construct that proves there is no IMPLEMENTATION
+  uses clause (const, var, type, function body, begin, etc.). Used by the scanner in
+  AddUnitToUses to know when to stop looking and fall through to "create uses clause". }
+function StartsNonUsesSection(CONST Line: string): Boolean;
+var
+  TrimmedLow: string;
+begin
+  TrimmedLow:= LowerCase(Trim(Line));
+  Result:= StartsStr('const', TrimmedLow)
+        OR StartsStr('var', TrimmedLow)
+        OR StartsStr('type', TrimmedLow)
+        OR StartsStr('resourcestring', TrimmedLow)
+        OR StartsStr('threadvar', TrimmedLow)
+        OR StartsStr('function', TrimmedLow)
+        OR StartsStr('procedure', TrimmedLow)
+        OR StartsStr('constructor', TrimmedLow)
+        OR StartsStr('destructor', TrimmedLow)
+        OR StartsStr('begin', TrimmedLow)
+        OR StartsStr('initialization', TrimmedLow)
+        OR StartsStr('finalization', TrimmedLow)
+        OR StartsStr('end', TrimmedLow);
+end;
+
+
+{ Add the specified unit to the IMPLEMENTATION section's "uses" clause.
+  Returns True if the unit was added (or already existed in the INTERFACE/IMPLEMENTATION uses).
+  Returns False if no INTERFACE or IMPLEMENTATION section is found.
+  If IMPLEMENTATION exists but has no uses clause, one is created.
+  Raises exception if PasBody is nil or empty. }
 function AddUnitToUses(PasBody: TStringList; CONST UnitToAdd: string): Boolean;
 var
-  sLine: string;
-  iPos, i: Integer;
+  sLine, Units: string;
+  IFacePos, ImplPos, UsesLine, InsertAt, i: Integer;
   MultiLine: Boolean;
-  Units: string;
 begin
-  Result:= FALSE;
-  if (PasBody = NIL) OR (PasBody.Count = 0)
-  then RAISE Exception.Create('AddUnitToUses: PasBody cannot be nil or empty.');
+  if PasBody = NIL
+  then RAISE EArgumentNilException.Create('AddUnitToUses: PasBody is nil.');
+  if PasBody.Count = 0
+  then RAISE EArgumentException.Create('AddUnitToUses: PasBody is empty.');
 
-  { Find the INTERFACE section }
-  iPos:= FindSection(PasBody, TRUE);
-  if iPos < 1 then EXIT(FALSE);
-
-  { Check and don't add the unit if it already exists in interface }
-  if UnitIncluded(PasBody, UnitToAdd, iPos)
-  then EXIT(TRUE);
+  { Find the INTERFACE section (0-based; -1 if missing) }
+  IFacePos:= FindSection(PasBody, TRUE);
+  if IFacePos < 0 then EXIT(FALSE);
 
   { Find the IMPLEMENTATION section }
-  iPos:= FindSection(PasBody, FALSE);
-  if iPos < 1 then EXIT(FALSE);
+  ImplPos:= FindSection(PasBody, FALSE);
+  if ImplPos < 0 then EXIT(FALSE);
 
-  { Check and don't add the unit if it already exists in implementation }
-  if UnitIncluded(PasBody, UnitToAdd, iPos)
+  { Check INTERFACE uses - don't leak past INTERFACE }
+  if UnitIncluded(PasBody, UnitToAdd, IFacePos, ImplPos)
   then EXIT(TRUE);
 
-  for i:= iPos to PasBody.Count - 1 do
+  { Check IMPLEMENTATION uses }
+  if UnitIncluded(PasBody, UnitToAdd, ImplPos, MaxInt)
+  then EXIT(TRUE);
+
+  { Locate the IMPLEMENTATION uses clause: a real Pascal `uses` keyword,
+    not a substring inside a comment, string literal, or identifier. }
+  UsesLine:= -1;
+  for i:= ImplPos + 1 to PasBody.Count - 1 do
   begin
     sLine:= PasBody[i];
-
-    iPos:= PosInsensitive('USES', sLine);
-    if iPos > 0 then
+    if LineIsAComment(sLine) then CONTINUE;
+    if Trim(sLine) = '' then CONTINUE;
+    if WordPos('uses', sLine) > 0 then
     begin
-      { Is the "uses" written as a single line or as multiple lines? }
-      MultiLine:= UpperCase(Trim(sLine)) = 'USES';
-      if MultiLine then
-      begin
-        { Multi-line uses - insert on next line }
-        if i + 1 < PasBody.Count
-        then PasBody[i + 1]:= '  ' + UnitToAdd + ', ' + Trim(PasBody[i + 1])
-        else PasBody.Add('  ' + UnitToAdd + ';');  { Handle malformed file }
-      end
-      else
-      begin
-        { Single-line uses - insert unit at beginning }
-        Units:= CopyfromTo(Trim(PasBody[i]), ' ', ';', TRUE);
-        PasBody[i]:= 'USES ' + UnitToAdd + ', ' + Trim(Units);
-      end;
-
-      EXIT(TRUE);
+      UsesLine:= i;
+      BREAK;
     end;
+    { Stop scanning if we hit non-uses code. The IMPLEMENTATION's uses clause (when present)
+      is always the very first non-blank/non-comment construct after IMPLEMENTATION. So if the
+      first such construct is anything else (const, var, function body, etc.), there is no
+      uses clause at all - fall through to the "create uses clause" branch below. }
+    if StartsNonUsesSection(sLine)
+    then BREAK;
   end;
+
+  if UsesLine < 0 then
+  begin
+    { IMPLEMENTATION exists but has no uses clause - create one right after IMPLEMENTATION }
+    PasBody.Insert(ImplPos + 1, '');
+    PasBody.Insert(ImplPos + 2, 'USES');
+    PasBody.Insert(ImplPos + 3, '  ' + UnitToAdd + ';');
+    PasBody.Insert(ImplPos + 4, '');
+    EXIT(TRUE);
+  end;
+
+  sLine:= PasBody[UsesLine];
+
+  { Multi-line if the line contains ONLY the word `uses` (optionally with trailing comment).
+    Strip comments before testing so `uses // foo` still counts as multi-line. }
+  MultiLine:= UpperCase(Trim(StripComments(sLine))) = 'USES';
+
+  if MultiLine then
+  begin
+    { Multi-line uses - insert before the first real (non-blank, non-comment) unit line }
+    InsertAt:= UsesLine + 1;
+    while (InsertAt < PasBody.Count)
+       AND (LineIsAComment(PasBody[InsertAt]) OR (Trim(PasBody[InsertAt]) = ''))
+       do Inc(InsertAt);
+
+    if InsertAt < PasBody.Count
+    then PasBody[InsertAt]:= '  ' + UnitToAdd + ', ' + Trim(PasBody[InsertAt])
+    else PasBody.Add('  ' + UnitToAdd + ';');  { Malformed file - no unit list found }
+  end
+  else
+  begin
+    { Single-line uses - insert unit at beginning }
+    Units:= CopyFromTo(Trim(sLine), ' ', ';', TRUE);
+    PasBody[UsesLine]:= 'USES ' + UnitToAdd + ', ' + Trim(Units);
+  end;
+
+  Result:= TRUE;
 end;
 
 
@@ -322,6 +394,8 @@ function IsKeyword(CodeLine, Instruction: string): Boolean;
 var
   Regex: string;
 begin
+  if Instruction = '' then EXIT(FALSE);
+
   // Strip comments from the line
   CodeLine := Trim(StripComments(CodeLine));
 
@@ -329,11 +403,11 @@ begin
   CodeLine := LowerCase(CodeLine);
   Instruction := LowerCase(Instruction);
 
-  // Create a regular expression to match the instruction as a word
-  // \b indicates a word boundary, so it will match "except" but not "ExceptObject"
-  Regex := '\b' + Instruction + '\b';
+  // Create a regular expression to match the instruction as a word.
+  // \b indicates a word boundary, so it will match "except" but not "ExceptObject".
+  // TRegEx.Escape protects callers that might pass strings containing regex metachars.
+  Regex := '\b' + TRegEx.Escape(Instruction) + '\b';
 
-  // Use regular expression to check if the instruction appears in the code line
   Result := TRegEx.IsMatch(CodeLine, Regex);
 end;
 
@@ -359,6 +433,7 @@ var
   i, j: Integer;
 begin
   Result := -1;
+  if Instruction = '' then EXIT;
   SubstringLower := LowerCase(Instruction);
   LineLower := LowerCase(CodeLine);
   i := 1;
@@ -389,26 +464,31 @@ end;
 
 
 { Returns the position where Needle was found in the haystack as a whole word.
-  Returns 0 if not found or if found as part of another word.
-  A "whole word" means the characters before and after are non-alphabetic. }
+  Returns 0 if not found or if found as part of another identifier.
+  A "whole word" means the characters before and after are not part of a Pascal identifier
+  (i.e. not in [A-Z, a-z, 0-9, _]). This matches Delphi's identifier rules. }
 function WordPos(const Needle, HayStack: string): Integer;
+const
+  IdentChars = ['a'..'z', 'A'..'Z', '0'..'9', '_'];
 var
   FoundPos, EndPos: Integer;
   CharBefore, CharAfter: Boolean;
 begin
+  if Needle = '' then EXIT(0);
+
   FoundPos:= PosInsensitive(Needle, HayStack);
   if FoundPos < 1 then EXIT(0);  { Not found }
 
   { Check character before the needle }
   if FoundPos = 1
   then CharBefore:= True  { Beginning of string - valid }
-  else CharBefore:= NOT CharInSet(HayStack[FoundPos - 1], Alphabet);
+  else CharBefore:= NOT CharInSet(HayStack[FoundPos - 1], IdentChars);
 
   { Check character after the needle }
   EndPos:= FoundPos + Length(Needle);
   if EndPos > Length(HayStack)
   then CharAfter:= True  { End of string - valid }
-  else CharAfter:= NOT CharInSet(HayStack[EndPos], Alphabet);
+  else CharAfter:= NOT CharInSet(HayStack[EndPos], IdentChars);
 
   if CharBefore AND CharAfter
   then Result:= FoundPos
