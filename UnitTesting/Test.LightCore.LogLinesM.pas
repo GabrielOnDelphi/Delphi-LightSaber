@@ -54,6 +54,9 @@ type
     [Test]
     procedure TestAdd_Pointer;
 
+    [Test]
+    procedure TestAdd_NilPointer;
+
     { Access Tests }
     [Test]
     procedure TestGetItem;
@@ -74,12 +77,40 @@ type
     [Test]
     procedure TestCountFiltered_Partial;
 
+    { GetFilteredSlice Tests }
+    [Test]
+    procedure TestGetFilteredSlice_EmptyList;
+
+    [Test]
+    procedure TestGetFilteredSlice_NoFilter_NoSkip;
+
+    [Test]
+    procedure TestGetFilteredSlice_WithFilter;
+
+    [Test]
+    procedure TestGetFilteredSlice_WithSkip;
+
+    [Test]
+    procedure TestGetFilteredSlice_BufferSmallerThanResult;
+
+    [Test]
+    procedure TestGetFilteredSlice_BufferLargerThanResult;
+
+    [Test]
+    procedure TestGetFilteredSlice_AllFilteredOut;
+
+    [Test]
+    procedure TestGetFilteredSlice_SkipBeyondAvailable;
+
     { Thread Safety Tests }
     [Test]
     procedure TestConcurrentAdd;
 
     [Test]
     procedure TestConcurrentRead;
+
+    [Test]
+    procedure TestGetFilteredSlice_ConcurrentAddDuringSlice;
 
     { Multiple Items }
     [Test]
@@ -183,6 +214,19 @@ begin
 end;
 
 
+procedure TTestLogLinesM.TestAdd_NilPointer;
+begin
+  { Adding nil pointer should trigger an assertion (mirrors TLogLinesSingleThreaded) }
+  Assert.WillRaise(
+    procedure
+    begin
+      FLines.Add(NIL);
+    end,
+    EAssertionFailed
+  );
+end;
+
+
 { Access Tests }
 
 procedure TTestLogLinesM.TestGetItem;
@@ -255,6 +299,128 @@ begin
   Assert.AreEqual(2, FLines.CountFiltered(lvWarnings));
   { Only errors pass the Errors filter }
   Assert.AreEqual(1, FLines.CountFiltered(lvErrors));
+end;
+
+
+{ GetFilteredSlice Tests }
+
+procedure TTestLogLinesM.TestGetFilteredSlice_EmptyList;
+var
+  Buf: array of PLogLine;
+  Filled: Integer;
+begin
+  SetLength(Buf, 10);
+  Filled:= FLines.GetFilteredSlice(lvDebug, 0, Buf);
+  Assert.AreEqual(0, Filled, 'Empty list must return 0');
+end;
+
+procedure TTestLogLinesM.TestGetFilteredSlice_NoFilter_NoSkip;
+var
+  Buf: array of PLogLine;
+  Filled: Integer;
+begin
+  FLines.AddNewLine('Line 0', lvInfos);
+  FLines.AddNewLine('Line 1', lvInfos);
+  FLines.AddNewLine('Line 2', lvInfos);
+
+  SetLength(Buf, 10);
+  Filled:= FLines.GetFilteredSlice(lvDebug, 0, Buf);
+  Assert.AreEqual(3, Filled, 'Three matching lines, no skip');
+  Assert.AreEqual('Line 0', Buf[0].Msg);
+  Assert.AreEqual('Line 1', Buf[1].Msg);
+  Assert.AreEqual('Line 2', Buf[2].Msg);
+end;
+
+procedure TTestLogLinesM.TestGetFilteredSlice_WithFilter;
+var
+  Buf: array of PLogLine;
+  Filled: Integer;
+begin
+  FLines.AddNewLine('Debug',   lvDebug);     { excluded }
+  FLines.AddNewLine('Info',    lvInfos);     { excluded }
+  FLines.AddNewLine('Warning', lvWarnings);  { included, slice[0] }
+  FLines.AddNewLine('Error',   lvErrors);    { included, slice[1] }
+
+  SetLength(Buf, 10);
+  Filled:= FLines.GetFilteredSlice(lvWarnings, 0, Buf);
+  Assert.AreEqual(2, Filled, 'Two lines pass the warnings filter');
+  Assert.AreEqual('Warning', Buf[0].Msg);
+  Assert.AreEqual('Error',   Buf[1].Msg);
+end;
+
+procedure TTestLogLinesM.TestGetFilteredSlice_WithSkip;
+var
+  Buf: array of PLogLine;
+  Filled: Integer;
+begin
+  FLines.AddNewLine('A', lvInfos);
+  FLines.AddNewLine('B', lvInfos);
+  FLines.AddNewLine('C', lvInfos);
+  FLines.AddNewLine('D', lvInfos);
+  FLines.AddNewLine('E', lvInfos);
+
+  SetLength(Buf, 10);
+  Filled:= FLines.GetFilteredSlice(lvDebug, 2, Buf);
+  Assert.AreEqual(3, Filled, 'Skip first 2, return remaining 3');
+  Assert.AreEqual('C', Buf[0].Msg);
+  Assert.AreEqual('D', Buf[1].Msg);
+  Assert.AreEqual('E', Buf[2].Msg);
+end;
+
+procedure TTestLogLinesM.TestGetFilteredSlice_BufferSmallerThanResult;
+var
+  Buf: array of PLogLine;
+  Filled: Integer;
+  i: Integer;
+begin
+  for i:= 0 to 99 do
+    FLines.AddNewLine('Line ' + IntToStr(i), lvInfos);
+
+  SetLength(Buf, 5);
+  Filled:= FLines.GetFilteredSlice(lvDebug, 0, Buf);
+  Assert.AreEqual(5, Filled, 'Buffer of 5 must cap the result');
+  Assert.AreEqual('Line 0', Buf[0].Msg);
+  Assert.AreEqual('Line 4', Buf[4].Msg);
+end;
+
+procedure TTestLogLinesM.TestGetFilteredSlice_BufferLargerThanResult;
+var
+  Buf: array of PLogLine;
+  Filled: Integer;
+begin
+  FLines.AddNewLine('Only', lvInfos);
+
+  SetLength(Buf, 100);
+  Filled:= FLines.GetFilteredSlice(lvDebug, 0, Buf);
+  Assert.AreEqual(1, Filled, 'Only one match, despite 100-slot buffer');
+  Assert.AreEqual('Only', Buf[0].Msg);
+end;
+
+procedure TTestLogLinesM.TestGetFilteredSlice_AllFilteredOut;
+var
+  Buf: array of PLogLine;
+  Filled: Integer;
+begin
+  FLines.AddNewLine('Debug 1', lvDebug);
+  FLines.AddNewLine('Info 1',  lvInfos);
+  FLines.AddNewLine('Hint 1',  lvHints);
+
+  SetLength(Buf, 10);
+  Filled:= FLines.GetFilteredSlice(lvErrors, 0, Buf);
+  Assert.AreEqual(0, Filled, 'No line matches the errors filter');
+end;
+
+procedure TTestLogLinesM.TestGetFilteredSlice_SkipBeyondAvailable;
+var
+  Buf: array of PLogLine;
+  Filled: Integer;
+begin
+  FLines.AddNewLine('A', lvInfos);
+  FLines.AddNewLine('B', lvInfos);
+
+  SetLength(Buf, 10);
+  Filled:= FLines.GetFilteredSlice(lvDebug, 100, Buf);
+  Assert.AreEqual(0, Filled, 'Skip exceeds available; nothing returned');
 end;
 
 
@@ -350,6 +516,83 @@ begin
   { Both operations should complete without deadlock }
   Assert.IsTrue(FLines.Count >= 50);
   Assert.IsTrue(ReadCount > 0);
+end;
+
+
+{ Verifies GetFilteredSlice never returns torn pointers under concurrent Add.
+  Tests the actively-contended region: SliceThread re-reads FLines.Count and uses
+  a SkipCount that targets the tail of the list, where Add is currently writing.
+  This forces the slice walk to scan past entries the writer is still appending.
+
+  Correctness properties under test:
+    - No deadlock between concurrent reader and writer.
+    - Every returned PLogLine is non-nil with a non-empty Msg
+      (proves the pointer wasn't read mid-Dispose -- not that Add disposes,
+      but the assertion catches torn reads if the underlying TList grows
+      its backing array while we index it).
+    - The slice can observe newly-added entries (proves the test actually
+      exercises the contention window, not just the static prefix). }
+procedure TTestLogLinesM.TestGetFilteredSlice_ConcurrentAddDuringSlice;
+var
+  WriteThread, SliceThread: TThread;
+  TotalSlices, ValidSlices, SawNewEntry: Integer;
+begin
+  TotalSlices:= 0;
+  ValidSlices:= 0;
+  SawNewEntry:= 0;
+
+  WriteThread:= TThread.CreateAnonymousThread(
+    procedure
+    var
+      i: Integer;
+    begin
+      for i:= 0 to 4999 do
+        FLines.AddNewLine('Add ' + IntToStr(i), lvInfos);
+    end);
+  WriteThread.FreeOnTerminate:= False;
+
+  SliceThread:= TThread.CreateAnonymousThread(
+    procedure
+    var
+      Buf: array of PLogLine;
+      i, Filled, j, Skip, Total: Integer;
+      AllValid: Boolean;
+    begin
+      SetLength(Buf, 30);
+      for i:= 0 to 999 do
+        begin
+          Total:= FLines.Count;
+          if Total > 30
+          then Skip:= Total - 30  { target the tail, where writer is appending }
+          else Skip:= 0;
+
+          Filled:= FLines.GetFilteredSlice(lvDebug, Skip, Buf);
+          Inc(TotalSlices);
+
+          AllValid:= TRUE;
+          for j:= 0 to Filled - 1 do
+            if (Buf[j] = NIL) or (Buf[j].Msg = '')
+            then begin AllValid:= FALSE; BREAK; end;
+          if AllValid then Inc(ValidSlices);
+
+          { Did we see at least one freshly-added entry? }
+          if (Filled > 0) and (Pos('Add ', Buf[Filled - 1].Msg) = 1)
+          then Inc(SawNewEntry);
+        end;
+    end);
+  SliceThread.FreeOnTerminate:= False;
+
+  WriteThread.Start;
+  SliceThread.Start;
+  WriteThread.WaitFor;
+  SliceThread.WaitFor;
+  FreeAndNil(WriteThread);
+  FreeAndNil(SliceThread);
+
+  Assert.AreEqual(1000, TotalSlices, 'All slice calls completed (no deadlock)');
+  Assert.AreEqual(TotalSlices, ValidSlices, 'Every returned pointer must be valid');
+  Assert.AreEqual(5000, FLines.Count, 'All adds landed');
+  Assert.IsTrue(SawNewEntry > 0, 'Slice must observe at least one Add (proves contention exercised)');
 end;
 
 

@@ -1,7 +1,7 @@
 unit Test.LightFmx.Common.LogFilter;
 
 {=============================================================================================================
-   2026.01.31
+   2026.05.05
    Unit tests for LightFmx.Common.LogFilter.pas
    Tests verbosity filter control functionality
 =============================================================================================================}
@@ -132,8 +132,9 @@ begin
   Filter:= TLogVerbFilter.Create(FTestForm);
   try
     Filter.Parent:= FTestForm;
-    Assert.AreEqual(Single(260), Filter.Width, 'Default width should be 260');
-    Assert.AreEqual(Single(27), Filter.Height, 'Default height should be 27');
+    { Constructor in LightFmx.Common.LogFilter.pas sets Width:=200, Height:=27. }
+    Assert.AreEqual(Single(200), Filter.Width,  'Default width should be 200');
+    Assert.AreEqual(Single(27),  Filter.Height, 'Default height should be 27');
   finally
     FreeAndNil(Filter);
   end;

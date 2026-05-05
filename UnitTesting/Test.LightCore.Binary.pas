@@ -734,12 +734,15 @@ var
 begin
   Stream:= TMemoryStream.Create;
   try
+    { Stream.ReadBuffer raises EReadError on short read.
+      DUnitX Assert.WillRaise uses EXACT type match (E.ClassType = ExceptClass),
+      not polymorphic, so we must name the leaf class, not Exception. }
     Assert.WillRaise(
       procedure
       begin
         ReadMotorolaWord(Stream);
       end,
-      Exception
+      EReadError
     );
   finally
     FreeAndNil(Stream);
@@ -763,7 +766,7 @@ begin
       begin
         ReadMotorolaWord(Stream);
       end,
-      Exception);
+      EReadError);
   finally
     FreeAndNil(Stream);
   end;

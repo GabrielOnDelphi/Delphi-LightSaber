@@ -850,25 +850,41 @@ end;
 procedure TTestLightStream.TestStringA_SafetyLimit;
 var
   WriteStream, ReadStream: TLightStream;
-  LargeString: AnsiString;
+  SmallString: AnsiString;
 begin
-  SetLength(LargeString, 100);
-  FillChar(LargeString[1], 100, 'X');
+  { TLightStream.ReadStringACnt now matches sibling classes (TCubicMemStream /
+    TLightFileStream) — it accepts a SafetyLimit parameter (default 1*KB).
+
+    Setup: write 50 bytes. Then attempt two reads that must raise:
+      (a) Count=100 with default 1*KB limit — fails the EOF check (CheckSafetyLimit)
+          because (Count=100 + Position=4) > Size=54.
+      (b) Count=2000 with explicit SafetyLimit=1024 — fails the SafetyLimit check
+          BEFORE the EOF check, proving the new ceiling is enforced. }
+  SetLength(SmallString, 50);
+  FillChar(SmallString[1], 50, 'X');
 
   WriteStream:= TLightStream.CreateWrite(FTestFile);
   try
-    WriteStream.WriteStringA(LargeString);
+    WriteStream.WriteStringA(SmallString);
   finally
     WriteStream.Free;
   end;
 
   ReadStream:= TLightStream.CreateRead(FTestFile);
   try
-    { Should raise exception when SafetyLimit is exceeded }
     Assert.WillRaise(
       procedure
       begin
-        ReadStream.ReadStringACnt(50);  // SafetyLimit = 50, but string is 100
+        ReadStream.ReadStringACnt(100);  { Asking for more than is available — caught by EOF check }
+      end,
+      Exception
+    );
+
+    ReadStream.Position:= 0;             { Rewind so the SafetyLimit check fires before EOF }
+    Assert.WillRaise(
+      procedure
+      begin
+        ReadStream.ReadStringACnt(2000, 1024);   { Above SafetyLimit — caught before EOF check }
       end,
       Exception
     );

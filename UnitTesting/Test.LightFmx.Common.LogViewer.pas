@@ -1,7 +1,7 @@
 unit Test.LightFmx.Common.LogViewer;
 
 {=============================================================================================================
-   2026.01.31
+   2026.05.05
    Unit tests for LightFmx.Common.LogViewer.pas
    Tests FMX log viewer component functionality, filtering, and clipboard operations
 =============================================================================================================}
@@ -273,13 +273,16 @@ end;
 
 procedure TTestFmxLogViewer.TestVerbosity2Color_Debug;
 begin
-  Assert.AreEqual(TAlphaColors.Lightgray, Verbosity2Color(lvDebug), 'Debug should be light gray');
+  { Light theme: Debug is medium gray $FF909090. Dark theme returns the same. }
+  Assert.AreEqual(TAlphaColor($FF909090), Verbosity2Color(lvDebug, FALSE), 'Light: Debug should be $FF909090');
+  Assert.AreEqual(TAlphaColor($FF909090), Verbosity2Color(lvDebug, TRUE),  'Dark: Debug should be $FF909090');
 end;
 
 
 procedure TTestFmxLogViewer.TestVerbosity2Color_Errors;
 begin
-  Assert.AreEqual(TAlphaColors.Red, Verbosity2Color(lvErrors), 'Errors should be red');
+  Assert.AreEqual(TAlphaColors.Red, Verbosity2Color(lvErrors, FALSE), 'Light: Errors should be red');
+  Assert.AreEqual(TAlphaColors.Red, Verbosity2Color(lvErrors, TRUE),  'Dark: Errors should be red');
 end;
 
 
@@ -287,9 +290,17 @@ procedure TTestFmxLogViewer.TestVerbosity2Color_AllLevels;
 var
   Level: TLogVerbLvl;
 begin
-  { Ensure all verbosity levels return valid colors without raising exceptions }
+  { Every verbosity level must return a fully-opaque color (alpha byte = $FF) for both themes.
+    Verbosity2Color uses array lookup — exhaustive at compile time, so any future enum
+    value forces the arrays to be extended. The runtime check here verifies the alpha
+    channel is set (a transparent color would render invisible text). }
   for Level:= Low(TLogVerbLvl) to High(TLogVerbLvl) do
-    Assert.IsTrue(Verbosity2Color(Level) <> 0, Verbosity2String(Level) + ' should have a color');
+    begin
+      Assert.IsTrue(Verbosity2Color(Level, FALSE) shr 24 = $FF,
+        Verbosity2String(Level) + ' (light) must be fully opaque');
+      Assert.IsTrue(Verbosity2Color(Level, TRUE) shr 24 = $FF,
+        Verbosity2String(Level) + ' (dark) must be fully opaque');
+    end;
 end;
 
 

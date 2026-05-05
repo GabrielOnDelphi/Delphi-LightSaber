@@ -90,6 +90,31 @@ type
     [Test]
     procedure TestCountFiltered_None;
 
+    { GetFilteredSlice Tests }
+    [Test]
+    procedure TestGetFilteredSlice_EmptyList;
+
+    [Test]
+    procedure TestGetFilteredSlice_NoFilter_NoSkip;
+
+    [Test]
+    procedure TestGetFilteredSlice_WithFilter;
+
+    [Test]
+    procedure TestGetFilteredSlice_WithSkip;
+
+    [Test]
+    procedure TestGetFilteredSlice_BufferSmallerThanResult;
+
+    [Test]
+    procedure TestGetFilteredSlice_BufferLargerThanResult;
+
+    [Test]
+    procedure TestGetFilteredSlice_AllFilteredOut;
+
+    [Test]
+    procedure TestGetFilteredSlice_SkipBeyondAvailable;
+
     { Multiple Items }
     [Test]
     procedure TestMultipleItems;
@@ -329,6 +354,128 @@ begin
 
   { No errors in the list }
   Assert.AreEqual(0, FLines.CountFiltered(lvErrors));
+end;
+
+
+{ GetFilteredSlice Tests }
+
+procedure TTestLogLinesS.TestGetFilteredSlice_EmptyList;
+var
+  Buf: array of PLogLine;
+  Filled: Integer;
+begin
+  SetLength(Buf, 10);
+  Filled:= FLines.GetFilteredSlice(lvDebug, 0, Buf);
+  Assert.AreEqual(0, Filled, 'Empty list must return 0');
+end;
+
+procedure TTestLogLinesS.TestGetFilteredSlice_NoFilter_NoSkip;
+var
+  Buf: array of PLogLine;
+  Filled: Integer;
+begin
+  FLines.AddNewLine('Line 0', lvInfos);
+  FLines.AddNewLine('Line 1', lvInfos);
+  FLines.AddNewLine('Line 2', lvInfos);
+
+  SetLength(Buf, 10);
+  Filled:= FLines.GetFilteredSlice(lvDebug, 0, Buf);
+  Assert.AreEqual(3, Filled, 'Three matching lines, no skip');
+  Assert.AreEqual('Line 0', Buf[0].Msg);
+  Assert.AreEqual('Line 1', Buf[1].Msg);
+  Assert.AreEqual('Line 2', Buf[2].Msg);
+end;
+
+procedure TTestLogLinesS.TestGetFilteredSlice_WithFilter;
+var
+  Buf: array of PLogLine;
+  Filled: Integer;
+begin
+  FLines.AddNewLine('Debug',   lvDebug);     { excluded }
+  FLines.AddNewLine('Info',    lvInfos);     { excluded }
+  FLines.AddNewLine('Warning', lvWarnings);  { included, slice[0] }
+  FLines.AddNewLine('Error',   lvErrors);    { included, slice[1] }
+
+  SetLength(Buf, 10);
+  Filled:= FLines.GetFilteredSlice(lvWarnings, 0, Buf);
+  Assert.AreEqual(2, Filled, 'Two lines pass the warnings filter');
+  Assert.AreEqual('Warning', Buf[0].Msg);
+  Assert.AreEqual('Error',   Buf[1].Msg);
+end;
+
+procedure TTestLogLinesS.TestGetFilteredSlice_WithSkip;
+var
+  Buf: array of PLogLine;
+  Filled: Integer;
+begin
+  FLines.AddNewLine('A', lvInfos);
+  FLines.AddNewLine('B', lvInfos);
+  FLines.AddNewLine('C', lvInfos);
+  FLines.AddNewLine('D', lvInfos);
+  FLines.AddNewLine('E', lvInfos);
+
+  SetLength(Buf, 10);
+  Filled:= FLines.GetFilteredSlice(lvDebug, 2, Buf);
+  Assert.AreEqual(3, Filled, 'Skip first 2, return remaining 3');
+  Assert.AreEqual('C', Buf[0].Msg);
+  Assert.AreEqual('D', Buf[1].Msg);
+  Assert.AreEqual('E', Buf[2].Msg);
+end;
+
+procedure TTestLogLinesS.TestGetFilteredSlice_BufferSmallerThanResult;
+var
+  Buf: array of PLogLine;
+  Filled: Integer;
+  i: Integer;
+begin
+  for i:= 0 to 99 do
+    FLines.AddNewLine('Line ' + IntToStr(i), lvInfos);
+
+  SetLength(Buf, 5);
+  Filled:= FLines.GetFilteredSlice(lvDebug, 0, Buf);
+  Assert.AreEqual(5, Filled, 'Buffer of 5 must cap the result');
+  Assert.AreEqual('Line 0', Buf[0].Msg);
+  Assert.AreEqual('Line 4', Buf[4].Msg);
+end;
+
+procedure TTestLogLinesS.TestGetFilteredSlice_BufferLargerThanResult;
+var
+  Buf: array of PLogLine;
+  Filled: Integer;
+begin
+  FLines.AddNewLine('Only', lvInfos);
+
+  SetLength(Buf, 100);
+  Filled:= FLines.GetFilteredSlice(lvDebug, 0, Buf);
+  Assert.AreEqual(1, Filled, 'Only one match, despite 100-slot buffer');
+  Assert.AreEqual('Only', Buf[0].Msg);
+end;
+
+procedure TTestLogLinesS.TestGetFilteredSlice_AllFilteredOut;
+var
+  Buf: array of PLogLine;
+  Filled: Integer;
+begin
+  FLines.AddNewLine('Debug 1', lvDebug);
+  FLines.AddNewLine('Info 1',  lvInfos);
+  FLines.AddNewLine('Hint 1',  lvHints);
+
+  SetLength(Buf, 10);
+  Filled:= FLines.GetFilteredSlice(lvErrors, 0, Buf);
+  Assert.AreEqual(0, Filled, 'No line matches the errors filter');
+end;
+
+procedure TTestLogLinesS.TestGetFilteredSlice_SkipBeyondAvailable;
+var
+  Buf: array of PLogLine;
+  Filled: Integer;
+begin
+  FLines.AddNewLine('A', lvInfos);
+  FLines.AddNewLine('B', lvInfos);
+
+  SetLength(Buf, 10);
+  Filled:= FLines.GetFilteredSlice(lvDebug, 100, Buf);
+  Assert.AreEqual(0, Filled, 'Skip exceeds available; nothing returned');
 end;
 
 
