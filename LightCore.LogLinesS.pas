@@ -1,7 +1,7 @@
 UNIT LightCore.LogLinesS;
 
 {=============================================================================================================
-   2026.01.30
+   2026.05.07
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -27,6 +27,8 @@ USES
    LightCore.LogTypes, LightCore.LogLinesAbstract;
 
 TYPE
+  { Single-threaded log lines store. Inherits CountFiltered, Row2FilteredRow, and
+    GetFilteredSlice from the abstract base — the lock hooks (acquireReadLock / releaseReadLock) stay as no-ops, so iteration runs lock-free. }
   TLogLinesSingleThreaded = class(TAbstractLogLines)
   protected
     function getItem(Index: Integer): PLogLine; override;
@@ -36,10 +38,11 @@ TYPE
 
     procedure Clear; override;
     function Count: Integer; override;
-    function Row2FilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer; override;
 
-    function AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE): PLogLine; override;
+    function AddNewLine(CONST Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Indent: Integer = 0): PLogLine; override;
     function Add       (Value: PLogLine): Integer; override;
+
+    function SnapshotAndClear: TAbstractLogLines; override;
   end;
 
 
@@ -105,14 +108,14 @@ end;
 
 { Creates a new log line record, populates it, and adds it to the list.
   Returns the pointer to the newly created line. }
-function TLogLinesSingleThreaded.AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE): PLogLine;
+function TLogLinesSingleThreaded.AddNewLine(CONST Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Indent: Integer = 0): PLogLine;
 begin
   New(Result);
   Result.Msg   := Msg;
   Result.Level := Level;
   Result.Bold  := Bold;
   Result.Time  := Now;
-  Result.Indent:= 0;
+  Result.Indent:= Indent;
 
   Add(Result);
 end;
@@ -121,37 +124,30 @@ end;
 
 {-------------------------------------------------------------------------------------------------------------
    ACCESS
+
+   Row2FilteredRow / GetFilteredSlice / CountFiltered now live in TAbstractLogLines.
+   The single-threaded path leaves the lock hooks as no-ops, so iteration is lock-free.
 -------------------------------------------------------------------------------------------------------------}
 
-{ Converts a row number in the filtered view to the actual index in the full list.
-  The filtered view only shows rows meeting the verbosity threshold.
-
-  Example: If you have 10 log lines but only 5 meet the verbosity criteria,
-  this function finds the actual index of the Nth visible row.
-
-  Returns: The actual list index, or -1 if the filtered row doesn't exist. }
-function TLogLinesSingleThreaded.Row2FilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer;
-var
-  i, VisibleCount: Integer;
+{ Atomic snapshot+clear: transfers all PLogLine pointers into a new instance and
+  leaves Self empty without disposing them. Caller owns the returned snapshot. }
+function TLogLinesSingleThreaded.SnapshotAndClear: TAbstractLogLines;
+VAR
+  Snapshot: TLogLinesSingleThreaded;
+  i: Integer;
 begin
-  Result:= -1;
-  VisibleCount:= -1;
-  for i:= 0 to FList.Count - 1 do
-  begin
-    if PLogLine(FList[i]).Level >= Verbosity
-    then begin
-      Inc(VisibleCount);
-      Result:= i;
-    end;
-
-    if VisibleCount = Row
-    then EXIT;
-  end;
-
-  if VisibleCount < Row
-  then Result:= -1;
+  Snapshot:= TLogLinesSingleThreaded.Create;
+  TRY
+    Snapshot.FList.Capacity:= FList.Count;
+    for i:= 0 to FList.Count - 1 do
+      Snapshot.FList.Add(FList[i]);
+    FList.Clear;   { Pointers transferred — do NOT Dispose; the snapshot owns them now. }
+  EXCEPT
+    FreeAndNil(Snapshot);
+    RAISE;
+  END;
+  Result:= Snapshot;
 end;
-
 
 
 end.

@@ -1,7 +1,7 @@
 UNIT LightCore.LogLinesM;
 
 {=============================================================================================================
-   2026.01.29
+   2026.05.07
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -42,22 +42,32 @@ USES
    LightCore.LogTypes, LightCore.StreamBuff, LightCore.LogLinesAbstract;
 
 TYPE
+  { Multi-threaded log lines store. Filtered iteration (CountFiltered, Row2FilteredRow,
+    GetFilteredSlice) is inherited from TAbstractLogLines — this subclass overrides only
+    the lock hooks (acquireReadLock / releaseReadLock) to attach the MREWS read lock.
+    That keeps the iteration logic in a single place while preserving the lock-free single-threaded path. }
   TLogLinesMultiThreaded = class(TAbstractLogLines)
   private
     FLock: TMultiReadExclusiveWriteSynchronizer;
   protected
     function getItem(Index: Integer): PLogLine; override;
+
+    { Lock hooks — override base no-ops with MREWS BeginRead / EndRead.
+      No nested-write hazard exists in our code paths anymore; readFromStream_v5
+      uses the non-virtual addInternal so it doesn't dispatch back through Add. }
+    procedure acquireReadLock; override;
+    procedure releaseReadLock; override;
   public
     constructor Create;
     destructor Destroy; override;
 
     procedure Clear; override;
     function Count: Integer; override;
-    function CountFiltered(Verbosity: TLogVerbLvl): Integer; override;
-    function Row2FilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer; override;
 
-    function AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE): PLogLine; override;
+    function AddNewLine(CONST Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Indent: Integer = 0): PLogLine; override;
     function Add(Value: PLogLine): Integer; override;
+
+    function  SnapshotAndClear: TAbstractLogLines; override;
 
     procedure ReadFromStream(Stream: TLightStream); override;
     procedure WriteToStream (Stream: TLightStream); override;
@@ -133,21 +143,16 @@ begin
 end;
 
 
-{ Returns count of lines matching the verbosity filter.
-  Thread-safe: holds lock for the entire iteration, unlike Count + Items[] pattern. }
-function TLogLinesMultiThreaded.CountFiltered(Verbosity: TLogVerbLvl): Integer;
-var
-  i: Integer;
+{ Lock hooks — override the base no-ops to acquire/release the MREWS read lock.
+  Called by the inherited CountFiltered / Row2FilteredRow / GetFilteredSlice. }
+procedure TLogLinesMultiThreaded.acquireReadLock;
 begin
   FLock.BeginRead;
-  try
-    Result:= 0;
-    for i:= 0 to FList.Count - 1 do
-      if PLogLine(FList[i]).Level >= Verbosity
-      then Inc(Result);
-  finally
-    FLock.EndRead;
-  end;
+end;
+
+procedure TLogLinesMultiThreaded.releaseReadLock;
+begin
+  FLock.EndRead;
 end;
 
 
@@ -160,6 +165,7 @@ end;
   The list takes ownership and will Dispose() it on Clear/Destroy. }
 function TLogLinesMultiThreaded.Add(Value: PLogLine): Integer;
 begin
+  Assert(Value <> NIL, 'TLogLinesMultiThreaded.Add: Value cannot be nil');
   FLock.BeginWrite;
   try
     Result:= FList.Add(Value);
@@ -169,18 +175,16 @@ begin
 end;
 
 
-{ Creates a new log line record, populates it, and adds it to the list.
-  The record is created OUTSIDE the lock (New is thread-safe for memory allocation).
-  Only the list operation is protected, minimizing lock contention.
-  Returns the pointer to the newly created line. }
-function TLogLinesMultiThreaded.AddNewLine(Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE): PLogLine;
+{ Creates a new log line record (cheap, lock-free), then inserts the pointer under
+  write lock. The record is private to this thread until FList.Add returns. }
+function TLogLinesMultiThreaded.AddNewLine(CONST Msg: string; Level: TLogVerbLvl; Bold: Boolean = FALSE; Indent: Integer = 0): PLogLine;
 begin
   New(Result);
   Result.Msg   := Msg;
   Result.Level := Level;
   Result.Bold  := Bold;
   Result.Time  := Now;
-  Result.Indent:= 0;
+  Result.Indent:= Indent;
 
   FLock.BeginWrite;
   try
@@ -192,44 +196,11 @@ end;
 
 {-------------------------------------------------------------------------------------------------------------
    FILTERED ACCESS
+
+   Bodies of CountFiltered, Row2FilteredRow, GetFilteredSlice live in TAbstractLogLines.
+   This class only provides the lock hook overrides above, which the inherited
+   bodies call to obtain/release the MREWS read lock.
 -------------------------------------------------------------------------------------------------------------}
-
-{ Converts a row number in the filtered view to the actual index in the full list.
-  The filtered view only shows rows meeting the verbosity threshold.
-
-  Example: If you have 10 log lines but only 5 meet the verbosity criteria,
-  this function finds the actual index of the Nth visible row.
-
-  Thread Safety: This method is FULLY thread-safe for iteration because it holds
-  a single read lock for the entire operation, unlike Count+getItem patterns.
-
-  Returns: The actual list index, or -1 if the filtered row doesn't exist. }
-function TLogLinesMultiThreaded.Row2FilteredRow(Row: Integer; Verbosity: TLogVerbLvl): Integer;
-var
-  i, VisibleCount: Integer;
-begin
-  FLock.BeginRead;
-  try
-    Result:= -1;
-    VisibleCount:= -1;
-    for i:= 0 to FList.Count - 1 do
-    begin
-      if PLogLine(FList[i]).Level >= Verbosity
-      then begin
-        Inc(VisibleCount);
-        Result:= i;
-      end;
-
-      if VisibleCount = Row
-      then EXIT;
-    end;
-
-    if VisibleCount < Row
-    then Result:= -1;
-  finally
-    FLock.EndRead;
-  end;
-end;
 
 
 
@@ -241,10 +212,23 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    STREAM I/O
    These methods hold the lock for the entire operation, ensuring atomic serialization.
+
+   Why these aren't templated through acquireReadLock/releaseReadLock hooks like the
+   filtered methods are: WriteToStream takes a SHARED read lock, ReadFromStream takes
+   an EXCLUSIVE write lock — two different MREWS operations, not one parameterizable
+   variant.
 -------------------------------------------------------------------------------------------------------------}
 
 { Reads log lines from stream. Acquires write lock for the entire operation
-  because it modifies the list (adds items via inherited implementation). }
+  because it modifies the list (adds items via inherited implementation).
+
+  No reentrancy hazard: the inherited body calls readFromStream_v5, which appends
+  via addInternal (non-virtual, non-locking) — not the public virtual Add. This
+  was historically a real concern (the loop went through TLogLinesMultiThreaded.Add
+  → FLock.BeginWrite a second time, relying on RTL MREWS write reentrancy). The
+  addInternal indirection eliminates the dependency, so a future migration to a
+  non-reentrant primitive (TLightweightMREW / SRWLOCK / pthread_rwlock) won't
+  silently break this path. }
 procedure TLogLinesMultiThreaded.ReadFromStream(Stream: TLightStream);
 begin
   FLock.BeginWrite;
@@ -268,6 +252,33 @@ begin
   end;
 end;
 
+
+{ Atomic snapshot+clear under exclusive lock: transfers all PLogLine pointers into
+  a new instance and leaves Self empty without disposing them. No writes can happen
+  between snapshotting and clearing because BeginWrite holds the lock for the entire
+  operation. Caller owns the returned snapshot. }
+function TLogLinesMultiThreaded.SnapshotAndClear: TAbstractLogLines;
+VAR
+  Snapshot: TLogLinesMultiThreaded;
+  i: Integer;
+begin
+  Snapshot:= TLogLinesMultiThreaded.Create;
+  TRY
+    FLock.BeginWrite;
+    try
+      Snapshot.FList.Capacity:= FList.Count;
+      for i:= 0 to FList.Count - 1 do
+        Snapshot.FList.Add(FList[i]);
+      FList.Clear;   { Pointers transferred — do NOT Dispose; the snapshot owns them now. }
+    finally
+      FLock.EndWrite;
+    end;
+  EXCEPT
+    FreeAndNil(Snapshot);
+    RAISE;
+  END;
+  Result:= Snapshot;
+end;
 
 
 end.

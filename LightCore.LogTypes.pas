@@ -30,10 +30,10 @@ USES
    System.SysUtils;
 
 TYPE
-  TLogVerbLvl= (lvDebug, lvVerbose, lvHints {Default}, lvInfos, lvImportant, lvWarnings, lvErrors);  { Exist also 7 which is of type 'Msg' and it is always shown in log }
+  TLogVerbLvl= (lvDebug, lvVerbose, lvHints, lvInfos, lvImportant, lvWarnings, lvErrors);
 
 CONST
-   DefaultVerbosity= lvInfos;
+   DefaultVerbosity= lvInfos;   { Default verbosity threshold for new logs. }
 
 function Verbosity2String(Verbosity: TLogVerbLvl): string;
 
@@ -41,19 +41,18 @@ function Verbosity2String(Verbosity: TLogVerbLvl): string;
 IMPLEMENTATION
 
 
+{ Compiler-checked exhaustive mapping. If a future enum value (e.g. lvCritical) is
+  added to TLogVerbLvl without extending this array, the compiler emits W1023
+  ("Comparing signed and unsigned types") at the array index — caught at build time
+  rather than at runtime. The previous case-with-else version raised at runtime,
+  potentially in a release build. }
+const
+  VerbosityNames: array[TLogVerbLvl] of string =
+    ('Debug', 'Verbose', 'Hints', 'Info', 'Important', 'Warnings', 'Errors');
+
 function Verbosity2String(Verbosity: TLogVerbLvl): string;
 begin
- case Verbosity of
-   lvDebug     : Result := 'Debug';
-   lvVerbose   : Result := 'Verbose';
-   lvHints     : Result := 'Hints';
-   lvInfos     : Result := 'Info';      { This is the default level of verbosity }
-   lvImportant : Result := 'Important';
-   lvWarnings  : Result := 'Warnings';
-   lvErrors    : Result := 'Errors';
- else
-   RAISE Exception.Create('Invalid verbosity');
- end;
+  Result:= VerbosityNames[Verbosity];
 end;
 
 
