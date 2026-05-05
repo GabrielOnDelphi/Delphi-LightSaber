@@ -257,8 +257,8 @@ end;
 function GetDriveType (Drive : char): TDriveType;
 VAR WinType: UINT;
 begin
-  WinType:= WinApi.Windows.GetDriveType(PChar(Drive + ':\'));    //todo 1: claude fix this: [dcc32 Warning] DiskDrives.pas(262): W1023 Comparing signed and unsigned types - widened both operands
-  if WinType <= Ord(High(TDriveType))
+  WinType:= WinApi.Windows.GetDriveType(PChar(Drive + ':\'));
+  if WinType <= UINT(Ord(High(TDriveType)))
   then Result:= TDriveType(WinType)
   else Result:= dtUnknown;
 end;
