@@ -1,5 +1,27 @@
 UNIT FormMain;
 
+{=============================================================================================================
+   2026.05.05
+   www.GabrielMoraru.com
+--------------------------------------------------------------------------------------------------------------
+   Demo for the LightSaber log subsystem.
+
+   Showcases:
+     - TRichLog            (RTF-based log, on left panel)
+     - TRichLogTrckbr      (verbosity filter for the RichLog)
+     - TLogViewer          (TStringGrid-based log, on right panel; can hold 1M+ entries)
+     - TLogVerbFilter      (verbosity filter for the LogViewer)
+     - AssignExternalRamLog: wires the LogViewer to AppData.RamLog so any
+       application-wide log message (Log.AddInfo / AppData.RamLog.AddInfo / etc.)
+       is rendered live in the grid. The window also pops up automatically on
+       warnings/errors when AppData.RamLog.ShowOnError = TRUE.
+
+   The Save/Load buttons demonstrate persisting the log to disk via the binary
+   format (LogFile.log). The "Test 1000000" button stress-tests the grid by
+   appending one million entries with the observer temporarily detached, then
+   reattaching and triggering a single Populate.
+=============================================================================================================}
+
 INTERFACE
 
 USES
@@ -61,11 +83,17 @@ end;
 
 procedure TMainForm.FormPostInitialize;
 begin
-  AutoState:= asFull;  // Must set it before inherited!
-  inherited FormPostInitialize;           // This will load the form's state from disk
+  inherited FormPostInitialize;
+
+  // Wire the grid-based log viewer to the application-wide RamLog.
+  // After this call, any AppData.RamLog.AddXxx (or Log.AddXxx) message lands in GridLog.
+  // Note: LoadForm has already run by this point; the verbosity/ShowDate/ShowTime
+  // settings persisted in the INI are applied by AssignExternalRamLog -> Populate.
+  GridLog.AssignExternalRamLog(AppData.RamLog);
+
   if AppData.RunningHome
-  then LogVis.TrackBar.Min:= 0    // We allow us to see the "Debug" lines
-  else LogVis.TrackBar.Min:= 1;   // We don't let uset see the "Debug" lines;
+  then LogVis.TrackBar.Min:= 0      // Dev/home build: allow viewing the "Debug" level
+  else LogVis.TrackBar.Min:= 1;     // Production build: hide the "Debug" level
 end;
 
 
@@ -143,49 +171,51 @@ end;
 
 {-------------------------------------------------------------------------------------------------------------
    GRID LOG
+   GridLog has been wired to AppData.RamLog (see FormPostInitialize), so
+   logging through AppData.RamLog (or the global Log alias) shows up in the grid.
 -------------------------------------------------------------------------------------------------------------}
 procedure TMainForm.btnTest2Click(Sender: TObject);
 begin
  LogVis.TrackBar.Position:= 0;
 
- GridLog.RamLog.AddImpo('This is TLogViewer based on TStringGrid');
- GridLog.RamLog.AddEmptyRow;
+ AppData.RamLog.AddImpo('This is TLogViewer based on TStringGrid (wired to AppData.RamLog)');
+ AppData.RamLog.AddEmptyRow;
 
- GridLog.RamLog.AddDebug('AddDebug');
- GridLog.RamLog.AddVerb ('AddVerb');
- GridLog.RamLog.AddHint ('AddHint');
- GridLog.RamLog.AddInfo ('AddInfo');
- GridLog.RamLog.AddImpo ('AddImpo');
- GridLog.RamLog.AddWarn ('AddWarn');
- GridLog.RamLog.AddError('AddError');
+ AppData.RamLog.AddDebug('AddDebug');
+ AppData.RamLog.AddVerb ('AddVerb');
+ AppData.RamLog.AddHint ('AddHint');
+ AppData.RamLog.AddInfo ('AddInfo');
+ AppData.RamLog.AddImpo ('AddImpo');
+ AppData.RamLog.AddWarn ('AddWarn');
+ AppData.RamLog.AddError('AddError');
 
- GridLog.RamLog.AddEmptyRow;
+ AppData.RamLog.AddEmptyRow;
 
- GridLog.RamLog.AddBold  ('AddBold');
- GridLog.RamLog.AddMsg   ('AddMsg');
- GridLog.RamLog.AddMsgInt('AddMsgInt', 42);
+ AppData.RamLog.AddBold  ('AddBold');
+ AppData.RamLog.AddMsg   ('AddMsg');
+ AppData.RamLog.AddMsgInt('AddMsgInt', 42);
 end;
 
 
 procedure TMainForm.btnLoopTestClick(Sender: TObject);
 begin
-  GridLog.RamLog.UnregisterLogObserver; // Prevent updating the GUI until all lines are put in the RamLog
+  // Detach the observer so the grid is not refreshed for every single AddInfo call.
+  // We re-attach after the loop and trigger one Populate.
+  AppData.RamLog.UnregisterLogObserver;
 
-  VAR Count:= GridLog.RamLog.Lines.Count;
+  VAR Count:= AppData.RamLog.Lines.Count;
   for VAR i:= 1 to 1000000 DO
-   begin
-     GridLog.RamLog.AddInfo('Item '+ IntToStr(i+Count));
-   end;
+     AppData.RamLog.AddInfo('Item '+ IntToStr(i+Count));
 
-  GridLog.RamLog.RegisterLogObserver(GridLog);
+  AppData.RamLog.RegisterLogObserver(GridLog);
   GridLog.Populate;
-  GridLog.ChangeScrollBarVisibility(True);
+  GridLog.ChangeScrollBarVisibility(TRUE);
 end;
 
 
 procedure TMainForm.btnClearClick(Sender: TObject);
 begin
-  GridLog.RamLog.Clear;
+  AppData.RamLog.Clear;
 end;
 
 
@@ -204,13 +234,13 @@ end;
 
 procedure TMainForm.btnSaveClick(Sender: TObject);
 begin
- GridLog.RamLog.SaveToFile(Appdata.AppFolder+ 'LogFile.log');
+ AppData.RamLog.SaveToFile(AppData.AppFolder+ 'LogFile.log');
 end;
 
 procedure TMainForm.btnLoadClick(Sender: TObject);
 begin
- GridLog.RamLog.Clear;
- GridLog.RamLog.LoadFromFile(Appdata.AppFolder+ 'LogFile.log');
+ AppData.RamLog.Clear;
+ AppData.RamLog.LoadFromFile(AppData.AppFolder+ 'LogFile.log');
 end;
 
 
