@@ -5,42 +5,28 @@
 
 ## Description 
 
-A comprehensive Delphi library with over 15 years of development, designed as a lightweight replacement for the mammoth Jedi library.
-Simple, crystal clear, non-obfuscated, fully commented and curated code.
-No (direct) external dependencies.
-Supports both **VCL** and **FMX** frameworks.
+A comprehensive general-purpose Delphi library with over 15 years of development.
 
+Main purpose: 
+* Designed as a lightweight replacement for the mammoth Jedi library.
+* Designed to eliminate boiler plate code:
 
-## Important Notice (April 2025): Git History Rewrite 
-
-Due to a Claude "accident" all commit hashes have changed.
-If you cloned or forked this repository before April 5, 2025, Git will report **"Unable to merge unrelated histories"** when you try to pull.
-To fix this, run these commands in your local clone:
-
-```bash
-git fetch origin
-git reset --hard origin/main
-```
-
-**Warning:** This will discard any local commits you made on top of the old history. If you have local changes you want to keep, back them up first:
-
-```bash
-# 1. Back up your local changes (adjust the number to match your local commits)
-git format-patch -N main --stdout > my-local-changes.patch
-
-# 2. Reset to the new history
-git fetch origin
-git reset --hard origin/main
-
-# 3. Re-apply your changes
-git am my-local-changes.patch
-```
+Bird-eye view:
+* Mature code, established before the AI-slop era.
+* Simple, crystal clear, non-obfuscated, fully commented and curated code.
+* No (direct) external dependencies.
+* VCL and FMX.
+* Clean architecture.
+* Modernly packaged (DPK).
+* Low bloat, low build time (under 3 seconds).
+* Production-ready. Heavily tested; Used in complex commercial apps.
+* Ready for commercial products (integration with Proteus License Manager).
 
 _________________
 
 ## What you can do with this library 
 
-There are a gazillion of cool things this library can do for you. Here are only a few examples, and all from the Core/Base library (I am not even touching the higher-level libraries):
+There are a gazillion of cool things this library can do for you. Here are only a very few examples, and all from the Core/Base library (I am not even touching the higher-level libraries):
  - Save your GUI state (checkboxes, radio buttons, edit boxes, etc.) to disk and then restore it when the application starts. All this with only 3 lines of code.
  - Automatically translate your GUI to multiple languages via DeepL (no extra lines of code).
  - Logging - Send color-coded messages to a log. The log will automatically pop up on errors, so the user can take action.
@@ -50,10 +36,45 @@ There are a gazillion of cool things this library can do for you. Here are only 
  - App control: Restore, Restart, SelfDelete (useful for the uninstaller), RunSelfAtWinStartUp, HideFromTaskbar...
  - etc etc etc
 
-Most of this functionality can be achieved with maximum 3 lines of code. 
+_________________
 
+## How to start?
+
+With less than 5 lines of code you get: 
+
+* skins, 
+* auto-updater, 
+* uninstaller, 
+* error-logging, 
+* GUI auto-language translator, 
+* GUI self-save/restore, 
+* customizable About box, 
+* etc
+
+Start with: 
+ Demo\VCL\Template App Minimal\VCL_TemplateMicro.dpr
+
+
+## Tip 
 Click the 'Watch' button if you want to get notified about updates.
 [More libraries like this](https://gabrielmoraru.com/my-delphi-code)
+
+_________________
+
+## Quality Standards 
+
+This library follows strictly the following programming standards:
+ - Zero tolerance for global variables
+ - Zero tolerance for compiler hints and warnings
+ - Zero tolerance for swallowed exceptions
+ - Zero tolerance for memory leaks
+ - Zero tolerance Application.ProcessMessages  
+ - No "use after free" 
+ - Avoid multithreading whenever possible
+ - Avoid "magic values" 
+ - Avoid bloatware (generics, for example)  
+ - Consistent code formatting - most of the formatting respects the Embarcadero recommendations. A noticeable exception is if/then/else.
+ - Consistent file naming.
 
 _________________
 
@@ -62,9 +83,9 @@ _________________
 The library is organized into packages grouped by framework and functionality:
 
 ```
-Layer 1: LightCore.dpk              (Foundation - platform agnostic, RTL only)
+Layer 1: LightCore.dpk                           (Foundation - platform agnostic, RTL only)
     |
-    +---> Layer 2: LightVcl.Common       (VCL utilities)
+    +---> LightVcl.Common                        (VCL utilities)
     |         |
     |         +---> Layer 3: LightVcl.Internet   (Downloads, email, HTML)
     |         |
@@ -72,7 +93,7 @@ Layer 1: LightCore.dpk              (Foundation - platform agnostic, RTL only)
     |         |
     |         +---> Layer 5: LightVcl.Visual     (80+ visual components)
     |
-    +---> Layer 2: LightFmxCommon        (FMX utilities)
+    +---> LightFmxCommon                         (FMX utilities)
               |
               +---> Layer 3: LightFmxVisual      (FMX visual components)
 ```
@@ -256,15 +277,15 @@ ________________
 
 Unit naming follows the pattern: `Light<Framework>.<Layer>.<Feature>.pas`
 
-| Prefix | Description |
-|--------|-------------|
-| `LightCore.*` | Core RTL (cross-platform) |
-| `LightVcl.Common.*` | VCL utilities |
+| Prefix                | Description |
+|-----------------------|-------------|
+| `LightCore.*`         | Core RTL (cross-platform) |
+| `LightVcl.Common.*`   | VCL utilities |
 | `LightVcl.Internet.*` | VCL Internet |
 | `LightVcl.Graphics.*` | VCL image processing |
-| `LightVcl.Visual.*` | VCL visual components |
-| `LightFmx.Common.*` | FMX utilities |
-| `LightFmx.Visual.*` | FMX visual components |
+| `LightVcl.Visual.*`   | VCL visual components |
+| `LightFmx.Common.*`   | FMX utilities |
+| `LightFmx.Visual.*`   | FMX visual components |
 
 
 ### Main units (showing only units in the Core library)
@@ -399,22 +420,6 @@ _________________
 
 _________________
 
-## Programming Standards 
-
-This library follows strictly the following programming standards:
- - Zero tolerance for global variables
- - Zero tolerance for compiler hints and warnings
- - Zero tolerance for swallowed exceptions
- - Zero tolerance for memory leaks
- - Zero tolerance Application.ProcessMessages  
- - No "use after free" 
- - Avoid multithreading whenever possible
- - Avoid "magic values" 
- - Consistent code formatting - most of the formatting respects the Embarcadero recommendations. A noticeable exception is if/then/else.
- - Consistent file naming
-
-_________________
-
 ## External Dependencies 
 
 Some parts (especially the graphic part) of LightSaber depend on these external libraries:
@@ -453,5 +458,33 @@ https://www.youtube.com/watch?v=a9nZiDXYmIo
 All documentation is in English.
 
 _________________
+
+
+### Important Notice (April 2025): Git History Rewrite 
+
+Due to a Claude "accident" all commit hashes have changed.
+If you cloned or forked this repository before April 5, 2025, Git will report **"Unable to merge unrelated histories"** when you try to pull.
+To fix this, run these commands in your local clone:
+
+```bash
+git fetch origin
+git reset --hard origin/main
+```
+
+**Warning:** This will discard any local commits you made on top of the old history. If you have local changes you want to keep, back them up first:
+
+```bash
+# 1. Back up your local changes (adjust the number to match your local commits)
+git format-patch -N main --stdout > my-local-changes.patch
+
+# 2. Reset to the new history
+git fetch origin
+git reset --hard origin/main
+
+# 3. Re-apply your changes
+git am my-local-changes.patch
+```
+_________________
+
 
 [More like this](https://gabrielmoraru.com/my-delphi-code)
