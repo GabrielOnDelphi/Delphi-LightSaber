@@ -39,7 +39,7 @@ begin
   Stream.WriteInteger(Ammo);
   Stream.WriteString(Name);
 
-  Stream.WritePadding;
+  Stream.WritePaddingValidation;
 end;
 
 
@@ -51,7 +51,7 @@ begin
   Ammo   := Stream.ReadInteger;
   Name   := Stream.ReadString;
 
-  Stream.ReadPadding;
+  Stream.ReadPaddingValidation;
 end;
 
 

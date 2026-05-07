@@ -1,4 +1,4 @@
-UNIT LightFmx.Common.LogViewer;
+﻿UNIT LightFmx.Common.LogViewer;
 
 {=============================================================================================================
    2026.05.05
@@ -699,7 +699,7 @@ end;
 
   Raw hex values (not TAlphaColors.X record-constants) keep the typed-const arrays
   initializable at compile time on every supported Delphi version. The values match
-  TAlphaColors.{White|Black|Orange|Darkorange|Red}. }
+  TAlphaColors.(White|Black|Orange|Darkorange|Red). }
 const
   VerbColorsDark: array[TLogVerbLvl] of TAlphaColor =
     ($FF909090,                  { lvDebug     — Medium gray (same as light, both themes) }

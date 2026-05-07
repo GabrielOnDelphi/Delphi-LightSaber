@@ -4,13 +4,15 @@ uses
   Vcl.Forms,
   MainForm in 'MainForm.pas' {Form3},
   LightCore.IOPlatformFile in '..\..\..\LightCore.IOPlatformFile.pas',
-  PlatformTest in '..\PlatformTest.pas';
+  PlatformTest in '..\PlatformTest.pas',
+  LightCore.AppData in '..\..\..\LightCore.AppData.pas',
+  LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas',
+  LightVcl.Visual.AppDataForm in '..\..\..\FrameVCL\LightVcl.Visual.AppDataForm.pas';
 
 {$R *.res}
 
 begin
-  Application.Initialize;
-  Application.MainFormOnTaskbar := True;
-  Application.CreateForm(TForm3, Form3);
-  Application.Run;
+  AppData:= TAppData.Create('Light Demo VCL PlatformDetection');
+  AppData.CreateMainForm(TForm3, Form3, TRUE, TRUE, asPosOnly);
+  AppData.Run;
 end.

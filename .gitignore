@@ -110,3 +110,10 @@ FrameFMX/LightFmx.Common.SysTray.pas - ALTERNATIVE.url
 FrameVCL/Vcl.WinXCtrls.pas
 ToDo Log (plan).md
 ToDo Log Selected row (plan).md
+Demo/Core/Demo Binary file 2/Build.cmd
+Demo/Core/Demo Binary file 3/Build.cmd
+Demo/Core/Demo Binary file 1/Build.cmd
+Demo/Conditionals and Platform detection/VCL/Build.cmd
+Demo/Core/Demo LightCore StreamBuffer/Build.cmd
+Demo/FMX/Template - Minimal app + External log/Build.cmd
+Demo/VCL/Demo Custom component creation order/Build.cmd

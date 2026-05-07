@@ -67,7 +67,7 @@ begin
   Ammo := Stream.ReadInteger;
   Name := Stream.ReadString;
 
-  Stream.ReadPadding;
+  Stream.ReadPaddingValidation;
   LoadedVersion:= 1;
 end;
 

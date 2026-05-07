@@ -63,7 +63,7 @@
         <DCC_DcuOutput>.\$(Platform)_$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\</DCC_ExeOutput>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>..\..\..\;..\..\..\FrameVCL\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\..\;..\..\..\FrameVCL\;..\..\..\External\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <VerInfo_Locale>1033</VerInfo_Locale>
     </PropertyGroup>
@@ -117,6 +117,9 @@
         </DCCReference>
         <DCCReference Include="..\..\..\LightCore.IOPlatformFile.pas"/>
         <DCCReference Include="..\PlatformTest.pas"/>
+        <DCCReference Include="..\..\..\LightCore.AppData.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightVcl.Visual.AppData.pas"/>
+        <DCCReference Include="..\..\..\FrameVCL\LightVcl.Visual.AppDataForm.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
