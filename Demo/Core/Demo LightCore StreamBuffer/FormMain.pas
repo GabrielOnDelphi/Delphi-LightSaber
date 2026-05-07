@@ -51,7 +51,7 @@ IMPLEMENTATION {$R *.dfm}
 
 
 USES
-   System.Math, LightCore.Types, LightCore.StreamBuff, LightVcl.Common.Debugger;
+   System.Math, LightCore.Types, LightCore.StreamBuff, LightCore.Debugger, LightVcl.Common.Debugger;
 
 
 
@@ -103,7 +103,7 @@ begin
        if Char = #32
        then Inc(Count);
 
-   Caption:= 'Cache size: ' + IntToStr(spnCacheSize.Value)+ 'KB.  Time: '+ TimerElapsedS+ '.  Count: '+ IntToStr(Count)+ '.  RAM: '+ ProcessPeakMem;
+   Caption:= 'Cache size: ' + IntToStr(spnCacheSize.Value)+ 'KB.  Time: '+ TimerElapsedS+ '.  Count: '+ IntToStr(Count);
 
  FINALLY
    FreeAndNil(DelphiStream);
@@ -134,7 +134,7 @@ begin
    Inc(LineCount2)
   end;
 
- Caption:= 'Cache size: ' + IntToStr(spnCacheSize.Value)+ 'KB.  Time: '+ TimerElapsedS+ '.  Count: '+ IntToStr(LineCount2)+ '.  RAM: '+ ProcessPeakMem;
+ Caption:= 'Cache size: ' + IntToStr(spnCacheSize.Value)+ 'KB.  Time: '+ TimerElapsedS+ '.  Count: '+ IntToStr(LineCount2);
 
  FreeAndNil(DelphiStream);
 end;
@@ -310,8 +310,8 @@ begin
    
    {----------------- PADDING -----------------}
    Stream.WritePadding0(32);  // Zero padding
-   Stream.WritePadding(64);   // Safety padding with signature
-   Stream.WritePadding(128);  // Larger padding
+   Stream.WritePaddingValidation(64);   // Safety padding with signature
+   Stream.WritePaddingValidation(128);  // Larger padding
    
    {----------------- CHECKPOINTS -----------------}
    Stream.WriteCheckPoint;
@@ -354,14 +354,14 @@ begin
   Stream:= TLightStream.CreateRead('TLightStream.bin');
   TRY
    {----------------- HEADER -----------------}
-   if NOT stream.TryReadHeader('MagicNo', 1)
+   if NOT stream.ReadHeader('MagicNo', 1)
    then RAISE Exception.Create('Cannot read header!');
-   
-   // Test alternative header reading
+
+   // Test alternative header reading (single-arg overload returns version)
    SavedPos := Stream.Position;
    Stream.Position := 0;
-   if stream.TryReadHeader('MagicNo') <> 1
-   then RAISE Exception.Create('TryReadHeader (version) failed!');
+   if stream.ReadHeader('MagicNo') <> 1
+   then RAISE Exception.Create('ReadHeader (version) failed!');
    Stream.Position := SavedPos;
    
    {----------------- BOOLEAN -----------------}
@@ -524,8 +524,8 @@ begin
    
    {----------------- PADDING -----------------}
    Stream.ReadPadding0(32);  // Zero padding - no validation
-   Stream.ReadPadding(64);   // Safety padding with validation
-   Stream.ReadPadding(128);  // Larger padding with validation
+   Stream.ReadPaddingValidation(64);   // Safety padding with validation
+   Stream.ReadPaddingValidation(128);  // Larger padding with validation
    
    {----------------- CHECKPOINTS -----------------}
    if NOT Stream.ReadCheckPoint then RAISE Exception.Create('ReadCheckPoint (empty) failure!');

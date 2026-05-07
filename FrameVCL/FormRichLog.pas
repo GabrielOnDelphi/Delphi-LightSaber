@@ -41,7 +41,7 @@ UNIT FormRichLog;
 INTERFACE
 
 USES
-  Winapi.Windows, Winapi.Messages,
+
   System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
   LightVcl.Visual.RichLogTrack, LightVcl.Visual.RichLog, LightVcl.Visual.AppDataForm;
@@ -68,8 +68,8 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  LightVcl.Visual.INIFile,
-  LightCore.AppData,
+
+
   LightVcl.Visual.AppData;
 
 

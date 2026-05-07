@@ -3,12 +3,13 @@ program Demo_Internet;
 uses
   {$IFDEF DEBUG}
   FastMM4,
-  {$ENDIF}
+  {$ENDIF }
   WinApi.Windows,
   VCL.Forms,
   FormMain in 'FormMain.pas' {MainForm},
   LightCore.AppData in '..\..\..\LightCore.AppData.pas',
-  LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas';
+  LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas',
+  VclUtilsExt in '..\..\..\External\VclUtilsExt.pas';
 
 {$R *.res}
 

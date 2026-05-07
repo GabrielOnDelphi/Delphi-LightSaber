@@ -118,7 +118,7 @@ INTERFACE
 
 USES
   Winapi.Windows, System.SysUtils, System.Classes, System.UITypes,
-  Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.Forms, Vcl.Themes, Vcl.Styles,  {Vcl.Themes, Vcl.Styles MUST be present in the DPR file (before the Forms.pas) or at least here }
+  Vcl.StdCtrls, Vcl.Controls, Vcl.ExtCtrls, Vcl.Forms, Vcl.Themes,  {Vcl.Themes, Vcl.Styles MUST be present in the DPR file (before the Forms.pas) or at least here }
   LightVcl.Visual.AppDataForm;
 
 TYPE
@@ -169,8 +169,8 @@ procedure LoadLastStyle(const DefaultStyle: string= '');
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.Colors, LightVcl.Common. Translate, LightCore.INIFileQuick, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.ExecuteShell,
-   LightVcl.Visual.INIFile, System.IOUtils, LightCore.IO, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.Dialogs;
+   LightVcl.Common.Colors, LightCore.INIFileQuick, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.ExecuteShell,
+   System.IOUtils, LightCore.IO, LightCore, LightVcl.Common.Dialogs;
 
 CONST
   DefWinTheme  = 'Windows default theme';

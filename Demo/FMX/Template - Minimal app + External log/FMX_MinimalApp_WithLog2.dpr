@@ -12,7 +12,7 @@ uses
   LightCore.AppData in '..\..\..\LightCore.AppData.pas',
   LightFmx.Common.AppData in '..\..\..\FrameFMX\LightFmx.Common.AppData.pas',
   LightFmx.Common.IniFile in '..\..\..\FrameFMX\LightFmx.Common.IniFile.pas',
-  LightFmx.LogForm in '..\..\..\FrameFMX\LightFmx.LogForm.pas';
+  LightFmx.Common.LogForm in '..\..\..\FrameFMX\LightFmx.Common.LogForm.pas';
 
 {$R *.res}
 
