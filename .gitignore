@@ -117,3 +117,4 @@ Demo/Conditionals and Platform detection/VCL/Build.cmd
 Demo/Core/Demo LightCore StreamBuffer/Build.cmd
 Demo/FMX/Template - Minimal app + External log/Build.cmd
 Demo/VCL/Demo Custom component creation order/Build.cmd
+Demo/Conditionals and Platform detection/FMX/Build.cmd
