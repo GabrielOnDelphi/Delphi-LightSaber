@@ -176,6 +176,8 @@
         <DCCReference Include="Test.LightCore.LogLinesM.pas"/>
         <DCCReference Include="Test.LightCore.LogRam.pas"/>
         <DCCReference Include="Test.LightCore.Debugger.pas"/>
+        <DCCReference Include="Test.ciUpdaterRec.pas"/>
+        <DCCReference Include="..\Updater\ciUpdaterRec.pas"/>
         <DCCReference Include="..\LightCore.pas"/>
         <DCCReference Include="..\LightCore.Types.pas"/>
         <DCCReference Include="..\LightCore.EncodeCRC.pas"/>

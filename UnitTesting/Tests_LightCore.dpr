@@ -53,6 +53,7 @@ uses
   Test.LightCore.LogLinesM in 'Test.LightCore.LogLinesM.pas',
   Test.LightCore.LogRam in 'Test.LightCore.LogRam.pas',
   Test.LightCore.Debugger in 'Test.LightCore.Debugger.pas',
+  Test.ciUpdaterRec in 'Test.ciUpdaterRec.pas',
   { Source units }
   LightCore in '..\LightCore.pas',
   LightCore.Types in '..\LightCore.Types.pas',
@@ -82,7 +83,8 @@ uses
   LightCore.LogRam in '..\LightCore.LogRam.pas',
   LightCore.CompilerVersions in '..\LightCore.CompilerVersions.pas',
   LightCore.Debugger in '..\LightCore.Debugger.pas',
-  LightCore.Platform in '..\LightCore.Platform.pas';
+  LightCore.Platform in '..\LightCore.Platform.pas',
+  ciUpdaterRec in '..\Updater\ciUpdaterRec.pas';
 
 {$IFNDEF TESTINSIGHT}
 var

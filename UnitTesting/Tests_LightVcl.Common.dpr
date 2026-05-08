@@ -61,8 +61,6 @@ uses
   LightVcl.Common.Window in '..\FrameVCL\LightVcl.Common.Window.pas',
   Test.LightVcl.Common.WinVersion in 'Test.LightVcl.Common.WinVersion.pas',
   LightVcl.Common.WinVersion in '..\FrameVCL\LightVcl.Common.WinVersion.pas',
-  Test.LightVcl.Common.Translate in 'Test.LightVcl.Common.Translate.pas',
-  LightVcl.Common.Translate in '..\FrameVCL\LightVcl.Common.Translate.pas',
   Test.LightVcl.Common.VclUtils in 'Test.LightVcl.Common.VclUtils.pas',
   LightVcl.Common.VclUtils in '..\FrameVCL\LightVcl.Common.VclUtils.pas',
   Test.LightVcl.Common.PowerUtils in 'Test.LightVcl.Common.PowerUtils.pas',
