@@ -1,10 +1,8 @@
 UNIT LightVcl.Visual.TrayIcon;
 
 {=============================================================================================================
-   Gabriel Moraru
    2026.01
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
 
   Features:
@@ -24,13 +22,13 @@ UNIT LightVcl.Visual.TrayIcon;
    end;
 
 
-IMPORTANT
-  Set Application.ShowMainFormOnTaskbar := False to keep the application's button from appearing on the Windows Taskbar.
+  IMPORTANT
+    Set Application.ShowMainFormOnTaskbar := False to keep the application's button from appearing on the Windows Taskbar.
 
- Use balloon like this:
-   BalloonTitle := 'Restoring the window.';
-   BalloonHint  := 'Click the system tray icon to restore the window.';
-   BalloonFlags := bfInfo;
+   Use balloon like this:
+     BalloonTitle := 'Restoring the window.';
+     BalloonHint  := 'Click the system tray icon to restore the window.';
+     BalloonFlags := bfInfo;
 =============================================================================================================}
 
 INTERFACE
