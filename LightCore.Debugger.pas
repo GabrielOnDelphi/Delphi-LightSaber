@@ -1,7 +1,7 @@
 UNIT LightCore.Debugger;
 
 {=============================================================================================================
-   2026.01.29
+   2026.05.12
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -9,6 +9,7 @@ UNIT LightCore.Debugger;
      - Code execution timing (using high-resolution TStopwatch)
      - Debugger detection (check if running under Delphi IDE)
      - Compiler optimization status
+     - High-DPI awareness state (Windows)
      - Crash/leak generators for testing error handlers
      - Simple file-based logging
 
@@ -38,6 +39,7 @@ USES
  { COMPILER INFO }
  function CompilerOptimization : Boolean;
  function CompilerOptimizationS: String;
+ function HighDpiAwarenessS    : String;   { Windows: returns the current process's DPI awareness state. See implementation for possible values. }
 
  { CRASH ME }
  procedure GenerateCrashNIL;
@@ -60,6 +62,7 @@ USES
 
 IMPLEMENTATION
 USES
+   {$IFDEF MSWINDOWS}Winapi.Windows, Winapi.ShellScaling,{$ENDIF}
    {$IFDEF POSIX}Posix.Unistd,{$ENDIF}
    LightCore, LightCore.Platform, LightCore.IO, LightCore.TextFile, LightCore.AppData, LightCore.Types;
 
@@ -117,6 +120,76 @@ begin
  'disabled'
  {$EndIf}
 end;
+
+
+//todo 1: move this to the Hardware or Reports unit
+{ Returns the current process's DPI awareness state as a human-readable string.
+
+  This reflects what the application's manifest declared (or what was set at startup via
+  SetProcessDpiAwarenessContext). It is NOT a project-options compile flag — Delphi's
+  $(Auto) high-DPI setting writes the manifest entry that Windows reads here.
+
+  Possible Windows states (see Microsoft "DPI_AWARENESS_CONTEXT"):
+    - "Unaware"              : DPI_AWARENESS_CONTEXT_UNAWARE                  (-1)  System bitmap-scales the app. Blurry on hi-DPI.
+    - "Unaware (GDI-scaled)" : DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED        (-5)  Win10 1703+. System scales GDI primitives crisply.
+    - "System Aware"         : DPI_AWARENESS_CONTEXT_SYSTEM_AWARE             (-2)  Knows primary monitor DPI only. Wrong on secondary monitor with different DPI.
+    - "Per-Monitor Aware"    : DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE        (-3)  Per-monitor DPI but non-client area is system-scaled (V1).
+    - "Per-Monitor Aware V2" : DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2     (-4)  Win10 1703+. Best mode. Non-client area also scales. Delphi 12.3+ $(Auto) default.
+    - "Unknown"              : context did not match any known constant.
+
+  API fallback chain (older OS first to last):
+    - IsProcessDPIAware           — Vista+. Boolean (aware/not).
+    - GetProcessDpiAwareness      — Win 8.1+. Distinguishes Unaware / System / Per-Monitor V1. Cannot see V2 or GDI-scaled.
+    - GetThreadDpiAwarenessContext + AreDpiAwarenessContextsEqual — Win 10 1607+. Full 5-state resolution. }
+function HighDpiAwarenessS: String;
+{$IFDEF MSWINDOWS}
+var
+  Ctx  : DPI_AWARENESS_CONTEXT;
+  Level: TProcessDpiAwareness;
+begin
+  // Best: GetThreadDpiAwarenessContext (Win 10 1607+) resolves all 5 states including V2 and GDI-scaled.
+  if CheckWin32Version(10, 0)
+  AND (TOSVersion.Build >= 14393) then
+   try
+     Ctx:= GetThreadDpiAwarenessContext;
+
+     if AreDpiAwarenessContextsEqual(Ctx, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2) then EXIT('Per-Monitor Aware V2');
+     if AreDpiAwarenessContextsEqual(Ctx, DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE)    then EXIT('Per-Monitor Aware');
+     if AreDpiAwarenessContextsEqual(Ctx, DPI_AWARENESS_CONTEXT_SYSTEM_AWARE)         then EXIT('System Aware');
+     if AreDpiAwarenessContextsEqual(Ctx, DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED)    then EXIT('Unaware (GDI-scaled)');
+     if AreDpiAwarenessContextsEqual(Ctx, DPI_AWARENESS_CONTEXT_UNAWARE)              then EXIT('Unaware');
+     EXIT('Unknown');
+   except
+     // Delayed-load failure on older Win10 — fall through to GetProcessDpiAwareness.
+   end;
+
+  // Mid: GetProcessDpiAwareness (Win 8.1+). No V2 / GDI-scaled distinction.
+  if CheckWin32Version(6, 3) then
+   try
+     if GetProcessDpiAwareness(GetCurrentProcess, Level) = S_OK then
+       case Level of
+         TProcessDpiAwareness.PROCESS_DPI_UNAWARE:           EXIT('Unaware');
+         TProcessDpiAwareness.PROCESS_SYSTEM_DPI_AWARE:      EXIT('System Aware');
+         TProcessDpiAwareness.PROCESS_PER_MONITOR_DPI_AWARE: EXIT('Per-Monitor Aware');
+       else
+         EXIT('Unknown');
+       end;
+   except
+     // Fall through to legacy.
+   end;
+
+  // Legacy: IsProcessDPIAware (Vista+). Boolean only.
+  {$WARN SYMBOL_DEPRECATED OFF}
+  if IsProcessDPIAware
+  then Result:= 'Aware (legacy)'
+  else Result:= 'Unaware';
+  {$WARN SYMBOL_DEPRECATED DEFAULT}
+end;
+{$ELSE}
+begin
+  Result:= 'N/A (non-Windows)';   // FMX on macOS/Linux/Android/iOS handles HiDPI implicitly via the platform.
+end;
+{$ENDIF}
 
 
 
@@ -233,7 +306,7 @@ begin
   ForceDirectories(ExtractFilePath(FullFileName));
 
   if FileExists(LogFile)
-  then DeleteFile(LogFile);
+  then System.SysUtils.DeleteFile(LogFile);
 
   StringToFile(LogFile, LogFile + CRLF + TAppDataCore.AppName + CRLF + DateTimeToStr(Now) + CRLF + LBRK, woAppend);
 end;
@@ -296,6 +369,7 @@ begin
  Result:= Result+'  RunningUnderDelphi: '  + BoolToStrYesNo(IsRunningUnderDelphiDebugger)+ CRLF;
  Result:= Result+'  AppBitnessEx: '        + Tab + AppBitnessEx+ CRLF;
  Result:= Result+'  CompilerOptim: '       + Tab + BoolToStrYesNo(CompilerOptimization)+ CRLF;
+ Result:= Result+'  HighDPI: '             + Tab + Tab + HighDpiAwarenessS+ CRLF;
 end;
 
 
