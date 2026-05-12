@@ -60,6 +60,12 @@ type
     [Test]
     procedure TestCompilerOptimizationSContainsState;
 
+    [Test]
+    procedure TestHighDpiAwarenessSReturnsNonEmpty;
+
+    [Test]
+    procedure TestHighDpiAwarenessSReturnsKnownState;
+
     { Debugger Detection }
     [Test]
     procedure TestIsRunningUnderDelphiDebuggerReturnsBoolean;
@@ -263,6 +269,36 @@ begin
 end;
 
 
+procedure TTestDebugger.TestHighDpiAwarenessSReturnsNonEmpty;
+VAR
+  DpiState: string;
+begin
+  DpiState:= HighDpiAwarenessS;
+  Assert.IsNotEmpty(DpiState, 'HighDpiAwarenessS should return a non-empty description');
+end;
+
+
+procedure TTestDebugger.TestHighDpiAwarenessSReturnsKnownState;
+VAR
+  DpiState: string;
+begin
+  DpiState:= HighDpiAwarenessS;
+
+  { Must be one of the documented states. The exact value depends on the test runner's
+    manifest. With $(Auto) in Delphi 12.3+ this is normally "Per-Monitor Aware V2". }
+  Assert.IsTrue(
+    (DpiState = 'Unaware')
+ OR (DpiState = 'Unaware (GDI-scaled)')
+ OR (DpiState = 'System Aware')
+ OR (DpiState = 'Per-Monitor Aware')
+ OR (DpiState = 'Per-Monitor Aware V2')
+ OR (DpiState = 'Aware (legacy)')
+ OR (DpiState = 'Unknown')
+ OR (DpiState = 'N/A (non-Windows)'),
+    'Unexpected DPI awareness state: ' + DpiState);
+end;
+
+
 { Debugger Detection }
 
 procedure TTestDebugger.TestIsRunningUnderDelphiDebuggerReturnsBoolean;
@@ -306,6 +342,7 @@ begin
   Assert.IsTrue(Pos('RunningUnderDelphi', Report) > 0, 'Report should contain RunningUnderDelphi');
   Assert.IsTrue(Pos('CompilerOptim', Report) > 0, 'Report should contain CompilerOptim');
   Assert.IsTrue(Pos('AppBitnessEx', Report) > 0, 'Report should contain AppBitnessEx');
+  Assert.IsTrue(Pos('HighDPI', Report) > 0, 'Report should contain HighDPI');
 end;
 
 
