@@ -1,7 +1,7 @@
 UNIT FormAbout;
 
 {=============================================================================================================
-   2026.04.23
+   2026.05.12
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -58,7 +58,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   System.SysUtils, LightVcl.Common.CenterControl, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.Dialogs, LightVcl.Common.ExecuteShell;
+   System.SysUtils, LightVcl.Common.CenterControl, LightCore.AppData, LightCore.Debugger, LightVcl.Visual.AppData, LightVcl.Common.Dialogs, LightVcl.Common.ExecuteShell;
 
 
 
@@ -133,7 +133,7 @@ begin
   lblCompany.Caption:= AppData.CompanyName;
   lblCompany.Link:= AppData.ProductHome;
   lblAppName.Caption:= AppData.AppName;
-  lblVersion.Caption:= TAppData.GetVersionInfoV;
+  lblVersion.Caption:= TAppData.GetVersionInfoV + '   |   High-DPI: ' + HighDpiAwarenessS;
 
   // Load Logo.png from AppSysDir only if no design-time image present
   if (imgLogo.Picture.Graphic = NIL)
