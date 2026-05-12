@@ -1,10 +1,18 @@
 UNIT LightVcl.Common.IniFile;
 
 {=============================================================================================================
-   2026.01.29
+   2026.05.12
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
   Same as LightCore.INIFile but adds support for forms to save themselves to disk.
+
+  2026-05-12: DPI normalisation. TIniFileApp.WriteCtrlPos / ReadCtrlPos now store and read positions as
+              96-DPI canonical pixels (via MulDiv against Ctrl.CurrentPPI). Without this, a form saved on a
+              96-DPI machine and re-opened on a 144-DPI PerMonitorV2-aware build came back at 66% of its
+              intended size; the symmetric case (save 144 → load 96) blew the form up by 1.5x and pushed it
+              off-screen. Covers both the form's own Left/Top/Width/Height and the child controls saved by
+              asFull. No file-format change — the INI keys are unchanged, only the unit of measurement is now
+              standardised.
   Ini file name/file path is automatically calculated.
 --------------------------------------------------------------------------------------------------------------
 
@@ -138,7 +146,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightCore.IO, LightCore.TextFile, LightCore;
+   Winapi.Windows, LightCore.IO, LightCore.TextFile, LightCore;
 
 
 {-----------------------------------------------------------------------------------------------------------------------
@@ -237,8 +245,20 @@ end;
 
 {-----------------------------------------------------------------------------------------------------------------------
    WRITE CONTROL POSITION
+
+   DPI normalisation: positions/sizes are stored as 96-DPI canonical pixels so the same INI is portable
+   across machines with different scale factors AND between non-DPI-aware and PerMonitorV2 builds.
 -----------------------------------------------------------------------------------------------------------------------}
 procedure TIniFileApp.WriteCtrlPos(Ctrl: TControl);
+
+  { Convert a current-DPI pixel value to its 96-DPI canonical equivalent for INI storage.
+    MulDiv (Winapi.Windows) does the multiplication in 64-bit and rounds-to-nearest, so a 1px control at 144 PPI saves as 1 (not 0) and the round-trip stays stable. Negative values (legitimate for multi-monitor Left/Top) are handled correctly by MulDiv's signed arithmetic.
+    Ctrl.CurrentPPI is non-zero for any TControl that has been parented to a form, which is always TRUE by the time SaveForm runs (form is fully constructed and laid out before shutdown). For a freshly-created control with no parent CurrentPPI defaults to Screen.PixelsPerInch — still safe, never zero. }
+  function Canonical(Value: Integer): Integer;
+  begin
+    Result:= MulDiv(Value, 96, Ctrl.CurrentPPI);
+  end;
+
 begin
   Assert(Ctrl <> NIL, 'TIniFileApp.WriteCtrlPos: Ctrl is nil');
 
@@ -251,19 +271,19 @@ begin
       { Save window state - MUST be above WindowState:= wsNormal }
       WriteInteger(Ctrl.Name, 'WindowState', Ord(TForm(Ctrl).WindowState));
 
-      { Save form position }
-      WriteInteger(Ctrl.Name, 'Top',    Ctrl.Top);
-      WriteInteger(Ctrl.Name, 'Left',   Ctrl.Left);
-      WriteInteger(Ctrl.Name, 'Width',  Ctrl.Width);
-      WriteInteger(Ctrl.Name, 'Height', Ctrl.Height);
+      { Save form position (DPI-canonical 96) }
+      WriteInteger(Ctrl.Name, 'Top',    Canonical(Ctrl.Top));
+      WriteInteger(Ctrl.Name, 'Left',   Canonical(Ctrl.Left));
+      WriteInteger(Ctrl.Name, 'Width',  Canonical(Ctrl.Width));
+      WriteInteger(Ctrl.Name, 'Height', Canonical(Ctrl.Height));
     end
   else
     begin
-      { Save control position relative to owner }
-      WriteInteger(Ctrl.Owner.Name, Ctrl.Name + '.Top',    Ctrl.Top);
-      WriteInteger(Ctrl.Owner.Name, Ctrl.Name + '.Left',   Ctrl.Left);
-      WriteInteger(Ctrl.Owner.Name, Ctrl.Name + '.Width',  Ctrl.Width);
-      WriteInteger(Ctrl.Owner.Name, Ctrl.Name + '.Height', Ctrl.Height);
+      { Save control position relative to owner (DPI-canonical 96) }
+      WriteInteger(Ctrl.Owner.Name, Ctrl.Name + '.Top',    Canonical(Ctrl.Top));
+      WriteInteger(Ctrl.Owner.Name, Ctrl.Name + '.Left',   Canonical(Ctrl.Left));
+      WriteInteger(Ctrl.Owner.Name, Ctrl.Name + '.Width',  Canonical(Ctrl.Width));
+      WriteInteger(Ctrl.Owner.Name, Ctrl.Name + '.Height', Canonical(Ctrl.Height));
     end;
 end;
 
@@ -277,6 +297,20 @@ end;
 procedure TIniFileApp.ReadCtrlPos(Ctrl: TControl);
 VAR
   IsNonResizable: Boolean;
+
+  { Reverse of Canonical: scale a 96-DPI INI value up to the current DPI for use on the control. }
+  function FromCanonical(Value: Integer): Integer;
+  begin
+    Result:= MulDiv(Value, Ctrl.CurrentPPI, 96);
+  end;
+
+  { Read an INI key whose value is stored as 96-DPI canonical pixels, returning a value in the current DPI.
+    Default is supplied in CURRENT DPI (because all callers pass Ctrl.Top / Ctrl.Width / ... which are already in current DPI). We pre-canonicalise it before handing it to ReadInteger, so the no-key path round-trips back to (numerically) the original Default after FromCanonical. Without this pre-scaling, a missing key on a HiDPI display would silently shrink the control to ~66% of its current size. }
+  function ReadCanonical(CONST Section, Key: string; Default: Integer): Integer;
+  begin
+    Result:= FromCanonical(ReadInteger(Section, Key, MulDiv(Default, 96, Ctrl.CurrentPPI)));
+  end;
+
 begin
   Assert(Ctrl <> NIL, 'TIniFileApp.ReadCtrlPos: Ctrl is nil');
 
@@ -290,11 +324,11 @@ begin
         OR (TForm(Ctrl).BorderStyle = bsToolWindow);
 
       { Read position - center on main form's monitor if no saved position }
-      if ValueExists(Ctrl.Name, 'Top') 
+      if ValueExists(Ctrl.Name, 'Top')
 	  AND ValueExists(Ctrl.Name, 'Left') then
         begin
-          Ctrl.Top := ReadInteger(Ctrl.Name, 'Top',  0);  { For "normal" controls default values are ignored because of ValueExists, therefore the current window 'physical' width/height are used }
-          Ctrl.Left:= ReadInteger(Ctrl.Name, 'Left', 0);
+          Ctrl.Top := FromCanonical(ReadInteger(Ctrl.Name, 'Top',  0));  { For "normal" controls default values are ignored because of ValueExists, therefore the current window 'physical' width/height are used }
+          Ctrl.Left:= FromCanonical(ReadInteger(Ctrl.Name, 'Left', 0));
         end
       else
         begin
@@ -315,15 +349,15 @@ begin
       { Read size only for resizable forms and only if value exists.
         Using 0 as default would corrupt the form size. }
       if (NOT IsNonResizable) AND ValueExists(Ctrl.Name, 'Width')
-      then Ctrl.Width:= ReadInteger(Ctrl.Name, 'Width', Ctrl.Width);
+      then Ctrl.Width:= FromCanonical(ReadInteger(Ctrl.Name, 'Width', Ctrl.Width));
       //todo: !!!!!!!!!!!!!!!! use Ctrl.width instead of 0 and get rid of ValueExists
 
-      if (NOT IsNonResizable) 
+      if (NOT IsNonResizable)
       //AND ValueExists(Ctrl.Name, 'Height')
-      then Ctrl.Height:= ReadInteger(Ctrl.Name, 'Height', Ctrl.Height);
+      then Ctrl.Height:= FromCanonical(ReadInteger(Ctrl.Name, 'Height', Ctrl.Height));
 
       { Validate form position setting }
-      if ShowPositionWarn 
+      if ShowPositionWarn
       AND (TForm(Ctrl).Position <> poDesigned)
       then raise Exception.Create('Form.Position is not ''poDesigned'' for form ' + Ctrl.Name + '!');
 
@@ -333,11 +367,11 @@ begin
     end
   else
     begin
-      { Read control position - use current values as defaults }
-      Ctrl.Top   := ReadInteger(Ctrl.Owner.Name, Ctrl.Name + '.Top',    Ctrl.Top);
-      Ctrl.Left  := ReadInteger(Ctrl.Owner.Name, Ctrl.Name + '.Left',   Ctrl.Left);
-      Ctrl.Width := ReadInteger(Ctrl.Owner.Name, Ctrl.Name + '.Width',  Ctrl.Width);
-      Ctrl.Height:= ReadInteger(Ctrl.Owner.Name, Ctrl.Name + '.Height', Ctrl.Height);
+      { Read control position - use current values as defaults (defaults are passed in current DPI, scaled to canonical so the round-trip works) }
+      Ctrl.Top   := ReadCanonical(Ctrl.Owner.Name, Ctrl.Name + '.Top',    Ctrl.Top);
+      Ctrl.Left  := ReadCanonical(Ctrl.Owner.Name, Ctrl.Name + '.Left',   Ctrl.Left);
+      Ctrl.Width := ReadCanonical(Ctrl.Owner.Name, Ctrl.Name + '.Width',  Ctrl.Width);
+      Ctrl.Height:= ReadCanonical(Ctrl.Owner.Name, Ctrl.Name + '.Height', Ctrl.Height);
     end;
 end;
 
