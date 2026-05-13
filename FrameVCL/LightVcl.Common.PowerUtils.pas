@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.PowerUtils;
 
 {=============================================================================================================
-   2026.01.30
+   2026.05.13
    www.GabrielMoraru.com
 
 ==============================================================================================================
@@ -15,13 +15,22 @@ UNIT LightVcl.Common.PowerUtils;
        TRUE : the system hibernates.
        FALSE: the system is suspended.
 
-     ForceCritical:
-        TRUE : the system suspends operation immediately
-        FALSE: the system broadcasts a PBT_APMQUERYSUSPEND event to each application to request permission to suspend operation.
+     ForceCritical (bForce):
+        Documented by Microsoft as "This parameter has no effect" on modern Windows.
+        Vista and later route suspend requests through the power-policy manager and never
+        broadcast PBT_APMQUERYSUSPEND - applications cannot veto suspend regardless of bForce.
+        Kept in the signature for API compatibility; pass TRUE for forward compatibility.
+        https://learn.microsoft.com/en-us/windows/win32/api/powrprof/nf-powrprof-setsuspendstate
 
      DisableWakeEvent:
         TRUE : the system disables all wake events.
         FALSE: any system wake events remain enabled.
+
+    Privilege:
+      Both Sleep and Hibernate require SE_SHUTDOWN_NAME ('SeShutdownPrivilege') to be enabled
+      on the calling process token. Standard user processes already have this in their
+      disabled privilege set; the OS enables it automatically for SetSuspendState. WinShutDown
+      below enables it explicitly because ExitWindowsEx will reject the call without it.
 
     Related:
       http://www.tek-tips.com/faqs.cfm?fid=6881
@@ -108,38 +117,89 @@ end;
 
 
 { Programmatically shuts down or reboots Windows.
-  Force: If TRUE, forcefully terminates applications without asking to save.
+
+  Force:
+    Switches EWX_FORCEIFHUNG on. The system asks each app via WM_QUERYENDSESSION as
+    normal; only apps that do not respond within the timeout get terminated. This is
+    the right "lights-out" flag - it does not silently destroy unsaved work in apps
+    that simply happened to be open.
+    DO NOT change this to EWX_FORCE: that flag skips WM_QUERYENDSESSION entirely,
+    so no app ever gets the chance to save state. Microsoft documents EWX_FORCE as
+    causing data loss; EWX_FORCEIFHUNG is the documented alternative.
+    https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-exitwindowsex
+
   Reboot: If TRUE, reboots instead of powering off.
-  Returns TRUE on success.
-  Source: dummzeuch }
+
+  Returns:
+    TRUE  - ExitWindowsEx accepted the request (asynchronous; actual shutdown follows).
+    FALSE - call failed. Last-error is preserved up to the caller via SetLastError.
+            Common reasons: SE_SHUTDOWN_NAME could not be enabled (non-admin token
+            without the privilege in its set), or another process is already shutting
+            the system down.
+
+  Note on return semantics: per MS docs, a non-zero return only indicates the request
+  was validated and accepted, NOT that the shutdown will succeed. The asynchronous
+  shutdown can still be vetoed by a driver later. There is no way to wait on it.
+
+  Source: dummzeuch, hardened 2026-05-13. }
 function WinShutDown(Force, Reboot: Boolean): Boolean;
 VAR
   TokenHandle: THandle;
   pToken: TTokenPrivileges;
-  RetLength, Flag: DWORD;
+  RetLength, Flag, PrivResult: DWORD;
+  SavedError: DWORD;
 begin
-  // All modern Windows versions (NT-based) require privilege adjustment
+  Result:= FALSE;
+
+  // Enable SE_SHUTDOWN_NAME on this process token. ExitWindowsEx will reject the
+  // call otherwise. AdjustTokenPrivileges has a peculiar contract: it returns TRUE
+  // even when the privilege could not be enabled - we must inspect GetLastError
+  // for ERROR_NOT_ALL_ASSIGNED to detect that case.
+  if NOT OpenProcessToken(GetCurrentProcess, TOKEN_ADJUST_PRIVILEGES or TOKEN_QUERY, TokenHandle) then
+  begin
+    // Cannot open our own token - extremely unusual, but propagate the error.
+    EXIT;
+  end;
+
+  TRY
+    if NOT LookupPrivilegeValue(NIL, 'SeShutdownPrivilege', pToken.Privileges[0].Luid) then
+      EXIT;   // Privilege does not exist on this system (should never happen on supported Windows).
+
+    pToken.PrivilegeCount             := 1;
+    pToken.Privileges[0].Attributes   := SE_PRIVILEGE_ENABLED;
+    RetLength:= 0;
+
+    // BOOL return: nonzero = call accepted, but does NOT mean the privilege was enabled.
+    // We must SetLastError(0) first so we can trust GetLastError after the call.
+    SetLastError(0);
+    if NOT AdjustTokenPrivileges(TokenHandle, FALSE, pToken, 0, PTokenPrivileges(NIL)^, RetLength)
+    then EXIT;   // Hard failure - call itself rejected.
+
+    PrivResult:= GetLastError;
+    if PrivResult = ERROR_NOT_ALL_ASSIGNED then
+      // Soft failure - the call succeeded but the privilege was NOT in our token's
+      // disabled set, so it could not be enabled. ExitWindowsEx will fail; bail
+      // early so the caller's "WinShutDown failed" log is meaningful.
+      EXIT;
+  FINALLY
+    CloseHandle(TokenHandle);
+  END;
+
   Flag:= EWX_POWEROFF;
-
-  if OpenProcessToken(GetCurrentProcess, TOKEN_ADJUST_PRIVILEGES, TokenHandle)
-  then
-    TRY
-      LookupPrivilegeValue(NIL, 'SeShutdownPrivilege', pToken.Privileges[0].Luid);
-      pToken.PrivilegeCount:= 1;
-      pToken.Privileges[0].Attributes:= SE_PRIVILEGE_ENABLED;
-      RetLength:= 0;
-      AdjustTokenPrivileges(TokenHandle, FALSE, pToken, 0, PTokenPrivileges(NIL)^, RetLength);
-    FINALLY
-      CloseHandle(TokenHandle);
-    END;
-
   if Force
-  then Flag:= Flag or EWX_FORCE;
+  then Flag:= Flag or EWX_FORCEIFHUNG;   // NOT EWX_FORCE - see header comment.
 
   if Reboot
   then Flag:= Flag or EWX_REBOOT;
 
   Result:= ExitWindowsEx(Flag, 0);
+  if NOT Result then
+  begin
+    // Preserve the last-error code across our control-flow noise so the caller
+    // can call SysErrorMessage(GetLastError) and get something meaningful.
+    SavedError:= GetLastError;
+    SetLastError(SavedError);
+  end;
 end;
 
 
