@@ -867,20 +867,34 @@ begin
 end;
 
 
-{ Extract the data (from them Msg) that was sent to us by the second instance.
-  Returns True if the message was indeed for us AND it is not empty.
-  Returns the extracted data in 'FirstInstance'.
-  It will also bring the first instance to foreground. }
+{ Extract the data (from the Msg) that was sent to us by the second instance.
+
+  Returns True if the message was a LightSaber single-instance ping (matching CopyDataID)
+  AND it carried a non-empty payload (so FirstInstance is populated).
+
+  When the message matches CopyDataID:
+    - Always calls Restore (brings the first instance back to foreground).
+    - Always sets Msg.Result:= 2006 (acknowledges per MS WM_COPYDATA contract:
+      a handled message must return a non-zero result). This is done regardless of
+      cbData so a "raise the first instance" ping with no command line still gets
+      a proper ack instead of falling through to DefWindowProc with Result=0.
+    - Populates FirstInstance only when cbData > 0.
+    - Return value distinguishes "ours with payload" (TRUE) from "ours, payload-less"
+      (FALSE). Callers wanting to distinguish "ours" from "foreign" should test
+      Msg.Result <> 0 after the call.
+
+  Foreign WM_COPYDATA (different dwData) is untouched: FirstInstance stays empty,
+  Msg.Result stays 0, callers should call `inherited` so DefWindowProc handles it. }
 function TAppData.ExtractData(VAR Msg: TWMCopyData; OUT FirstInstance: string): Boolean;
 begin
  FirstInstance:= '';
  Result:= FALSE;
- if Msg.CopyDataStruct.dwData = CopyDataID then { Only react on this specific message }
+ if Msg.CopyDataStruct.dwData = CopyDataID then          { Only react on this specific message }
    begin
-    if Msg.CopyDataStruct.cbData > 0 then       { Do we receive an empty string? }
+    Msg.Result:= 2006;                                   { Always acknowledge - even if payload is empty. Required by WM_COPYDATA contract. }
+    if Msg.CopyDataStruct.cbData > 0 then                { Do we receive an empty string? }
       begin
         SetString(FirstInstance, PChar(Msg.CopyDataStruct.lpData), Msg.CopyDataStruct.cbData div SizeOf(Char)); { We need a true copy of the data before it disappear }
-        Msg.Result:= 2006;                      { Send something back as positive answer }
         Result:= TRUE;
       end;
     Restore;
