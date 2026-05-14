@@ -49,7 +49,7 @@ TYPE
   end;
 
 
-  { TFlowLayout subclass that auto-sizes its height to fit wrapped children.
+  { Auto-sizes its height to fit wrapped children.
     TFlowLayout does not auto-resize height when children wrap to new rows (FMX limitation).
     This override computes the needed height after each layout pass and sets it.
     Only active when Align is Top/Bottom/MostTop/MostBottom (the layout must be free to change height).
