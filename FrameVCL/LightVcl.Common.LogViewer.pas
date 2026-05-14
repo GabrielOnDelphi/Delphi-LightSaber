@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.LogViewer;
 
 {=============================================================================================================
-   2026.05.06
+   2026.05.13
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    A log viewer based on TStringGrid.
@@ -380,21 +380,12 @@ begin
       EXIT;
     end;
 
-  { Header row - draw column titles }
+  { Header row - let the grid's default drawing paint the captions from Cells[0,0]/Cells[1,0]
+    (set by resizeColumns). Drawing them again here with Canvas.TextRect at (Left+5, Top+2)
+    produced a visible duplicate/ghost overlapping the default-drawn text, especially with
+    VCL skins that paint a themed header background. }
   if ARow = 0
-  then
-    begin
-      if FGrid.ColCount = 2
-      then
-        case ACol of
-          0: s:= 'Time';
-          1: s:= 'Message';
-        end
-      else
-        s:= 'Message';
-      FGrid.Canvas.TextRect(ARect, ARect.Left + 5, ARect.Top + 2, s);
-      EXIT;
-    end;
+  then EXIT;
 
   { Data rows - read the cached PLogLine pointer.
     Set by refreshVisibleSlice for every visible row, NIL otherwise. }
