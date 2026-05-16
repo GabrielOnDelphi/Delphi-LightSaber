@@ -119,3 +119,4 @@ Demo/Conditionals and Platform detection/FMX/Build.cmd
 HardwareID/chHardID.pas
 HardwareID/chHardIDNew.pas
 HardwareID/Build.cmd
+/Hardware_ID
