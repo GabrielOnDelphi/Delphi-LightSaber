@@ -1,115 +1,85 @@
 ﻿UNIT FormSkinsDisk;
 
 {=============================================================================================================
-   2026.04.29
+   2026.05.15
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    UNIVERSAL VCL STYLE LOADER
 
-   Loads VCL style styles from disk (.vsf files) at runtime.
-   Provides a visual form for users to select and apply styles.
+   Loads VCL style files (.vsf) from disk and provides a visual selector dialog.
 
    WARNING:
-     * Vcl.Styles & VCL.Forms MUST be present in the DPR file BEFORE Forms.pas
-     * DON'T ADD THIS UNIT TO ANY DPK! (enforced by $DENYPACKAGEUNIT)
+     * Vcl.Styles & Vcl.Forms MUST be in the DPR USES list BEFORE Forms.pas
+     * DON'T ADD THIS UNIT TO ANY DPK (enforced by $DENYPACKAGEUNIT)
 
-   USAGE:
-     1a. In classic DPR file, before creating main form:
-        Application.ShowMainForm:= FALSE;   // Prevents flicker during style loading
-        MainForm.Visible:= FALSE;           // Don't show unskinned form until skins are ready
-
-     1b. In AppData DPR file:
+   USAGE (AppData DPR):
         AppData:= TAppData.Create(...);
-        LoadLaststyle('Graphite Green.vsf'); // <-- Call BEFORE CreateMainForm!  Default style on first run. Pass empty string for default Windows theme
+        LoadLastStyle('Graphite Green.vsf'); // BEFORE CreateMainForm. Empty string = default Windows theme.
         AppData.CreateMainForm(TMainForm, MainForm, True, True);
         AppData.Run;
 
-     3. Styles must be in 'System\Skins' folder relative to AppData.AppSysDir
-
-     4. To show style selector call: TfrmstyleDisk.CreateForm or CreateFormModal
+     Styles live in 'System\Skins' relative to AppData.AppSysDir.
+     Show selector via TfrmStyleDisk.ShowAsModal.
 
    STYLE-AWARE CODE:
-     Use StyleServices.GetStyleColor, StyleServices.GetStyleFontColor, and StyleServices.GetSystemColor from Vcl.Themes unit.
+     Use StyleServices.GetStyleColor / GetStyleFontColor / GetSystemColor (Vcl.Themes).
+     See also: TControl.IsLightStyleColor.
 
-    Hint:
-       Use TControl.IsLightStyleColor
 --------------------------------------------------------------------------------------------------------------
 
-  KNOWN BUGS
+  KNOWN BUGS / DESIGN CONSTRAINTS
 
-   BUG 1. TfrmStyleDisk form loses its modal property
+   BUG 1: TStyleManager.SetStyle breaks modal z-order via RecreateWnd
+       Mitigated by PopupMode=pmAuto in the DFM. This dialog never calls SetStyle
+       at runtime (see BUG 5), so the in-dialog z-order problem can no longer
+       arise; LoadLastStyle runs before any form exists.
+       Sources: https://blogs.embarcadero.com/popupmode-and-popupparent/
 
-       TStyleManager.SetStyle triggers RecreateWnd on all forms. The modal form's window handle is destroyed and recreated,
-       but the new window lacks the Windows-level owner relationship that enforces z-order. The recreated modal form ends up
-       behind the disabled owner windows — the app appears frozen.
+   BUG 2: TStyleManager.IsValidStyle requires Vcl.Styles in USES (XE7+).
+       http://stackoverflow.com/questions/30328644
 
-       The old workaround (Application.ProcessMessages + BringToFront) didn't work because BringToFront only calls
-       SetWindowPos(HWND_TOP), which can't overcome broken window ownership.
+   BUG 3: caFree in FormClose. Fixed in Delphi 11 (RSP-33140). Safe to use.
 
-       Fix 1: PopupMode = pmAuto in DFM (line 22)
-         Tells VCL to set the correct owner window (WndParent) in CreateParams during RecreateWnd. This maintains the
-         Windows-level ownership that enforces z-order. Setting it at design-time in the DFM (rather than at runtime) avoids an extra RecreateWnd that VCL triggers when PopupMode changes at runtime.
+   BUG 4: EAV in TMainMenuBarStyleHook on dialog close (historical)
+       A previous workaround posted a second ForceQueue CM_RECREATEWND in
+       FormPreRelease, which could fire inside ProcessMenuLoop's DispatchMessage
+       loop and destroy the menu hook mid-loop. Fix: do not post a second
+       RecreateWnd. The single CM_CUSTOMSTYLECHANGED that SetStyle already
+       posts is enough.
+       Related: RSP-38114, RSP-39197 (partially fixed in 11.3, menu-bar variant
+       persists in 13.1). HeidiSQL #465 hit the same family of bugs.
 
-       Fix 2: ReassertZOrder method (lines 309-314)
-         Replaces the broken Application.ProcessMessages + BringToFront. Uses the TOPMOST + NOTOPMOST trick: temporarily makes
-         the window topmost, then immediately removes the flag. This forces Windows to recalculate z-order, placing the form at the top of the non-topmost band. SetForegroundWindow gives it input focus.
+   BUG 5: TMainMenuBarStyleHook leak on any live SetStyle (Delphi 13.1)
+       Confirmed 2026-05-14/15: once the main form (with a TMainMenu) exists,
+       every SetStyle leaks a TMainMenuBarStyleHook. The leaked hook sits in
+       freed memory; the form's private FMainMenuBarHook still points at it.
+       Crash fires on the next main-menu click — not inside SetStyle itself.
+       Even one live SetStyle is enough.
 
-       Fix 3: DefWinTheme branch (line 333)
-         The DefWinTheme branch (SetStyle('Windows')) also triggers RecreateWnd but had no z-order fix at all — this was a secondary bug. Now fixed with the same ReassertZOrder call.
+       LoadLastStyle runs BEFORE CreateMainForm, so no TMainMenuBarStyleHook
+       exists yet → startup SetStyle is safe. Any later SetStyle leaks.
 
-       Sources:
-       - https://blogs.embarcadero.com/popupmode-and-popupparent/
-       - https://www.experts-exchange.com/questions/26286057/Delphi-7-modal-form-hides-behind-window-on-a-Windows-7-box.html
+       Mitigation: this dialog NEVER calls SetStyle. lBoxClick only persists
+       the choice to INI and tells the user to close & reopen the app. Same
+       UX as HeidiSQL #465.
 
-   BUG 2: XE7
-       TStyleManager.IsValidStyle always fails if Vcl.Styles is not in USES list!
-       http://stackoverflow.com/questions/30328644/how-to-check-if-a-style-file-is-already-loaded
+       Auto-restart via AppData.Restart was rejected: it races the host app's
+       window-based single-instance check (FindWindow on the class name still
+       finds the dying window during finalization; the new instance resurrects
+       the old one and exits).
 
-   BUG 3: caFree
-       procedure Tfrm.FormClose(Sender: TObject; var Action: TCloseAction);
-       begin
-        Action:= caFree; //Delphi bug: Don't use caFree:
-       end;
-
-       Fixed in Delphi 11! (quality.embarcadero.com/browse/RSP-33140)
-
-   BUG 4: EAccessViolation in TMainMenuBarStyleHook after closing the skin dialog
-
-       Root cause: TStyleManager.SetStyle posts CM_CUSTOMSTYLECHANGED (via PostMessage) to all
-       visible forms, triggering RecreateWnd which properly rebuilds TFormStyleHook and its nested
-       TMainMenuBarStyleHook with valid references. The ORIGINAL workaround (v1-v3) added a
-       ForceQueue in FormPreRelease that sent a SECOND CM_RECREATEWND to all forms with menus
-       after the dialog closed. This created a deadly timing window: if ProcessMenuLoop (which
-       has its own DispatchMessage loop) was active when the ForceQueue callback fired, the
-       second RecreateWnd destroyed the hooks mid-loop -> use-after-free crash.
-
-       Additionally, the v3 shMenus flag manipulation was ineffective: shMenus controls popup
-       menu window styling (WH_MSGFILTER hook for #32768 windows), NOT the form-level
-       TMainMenuBarStyleHook creation in WMNCCalcSize. It had zero effect on the crash.
-
-       Fix: Remove both the ForceQueue RecreateWnd and the shMenus manipulation. Let the single
-       CM_CUSTOMSTYLECHANGED RecreateWnd (VCL's own mechanism) handle hook recreation naturally.
-       The z-order is maintained by PopupMode=pmAuto (DFM) + ReassertZOrder after each SetStyle.
-
-       VCL bugs remain (Embarcadero should fix):
-         1. TMainMenuBarStyleHook.Destroy does not call UnHookMenus (line 17045 in Vcl.Forms.pas)
-         2. ProcessMenuLoop's internal DispatchMessage loop can dispatch RecreateWnd, destroying Self
-         3. CM_CUSTOMSTYLECHANGED is posted not sent, creating timing issues with modal dialogs
-
-       Related: RSP-38114, RSP-39197 (partially fixed in 11.3, menu bar variant persists in 13.1)
-       HeidiSQL had the same crash (GitHub issue #465) - their "fix" was to require app restart.
+       Diagnostic notes:
+         c:\Delphi\Styles & resources\Known bugs in VCL styles\
+         02 - TMainMenuBarStyleHook use-after-free.md
 
 --------------------------------------------------------------------------------------------------------------
    STYLE FOLDERS:
      c:\Projects\Packages\VCL Styles utils\Styles\
      c:\Users\Public\Documents\Embarcadero\Studio\XX.0\Styles\
 
-   Also see:
+   See also:
      c:\Projects\LightSaber\FrameFMX\FormSkinsDisk.pas
      c:\Projects-3rd_Packages\VCL Styles Tools\FrmSkins tester\SkinSettingsTemplate.dpr
-
-   MORE INFO:
-     https://subscription.packtpub.com/book/application_development/9781783559589/1/ch01lvl1sec10/changing-the-style-of-your-vcl-application-at-runtime
 
 =============================================================================================================}
 
@@ -140,7 +110,6 @@ TYPE
   private
     FOnDefaultstyle: TNotifyEvent;
     procedure PopulateStyles;
-    procedure ReassertZOrder;
   public
     procedure FormPreRelease; override;
     class procedure ShowAsModal; static;
@@ -252,10 +221,9 @@ end;
    SHOW FORM
 -----------------------------------------------------------------------------------------------------------------------}
 
-{ Shows style selector as a modal dialog.
-  SetStyle triggers RecreateWnd which breaks modal z-order.
-  Fix: PopupMode=pmAuto (set in DFM) + ReassertZOrder after each style change.
-  See: http://stackoverflow.com/questions/30328924 }
+{ Shows style selector as a modal dialog. PopupMode=pmAuto in DFM keeps
+  the modal z-order intact (legacy precaution; the dialog no longer calls
+  SetStyle so the original z-order problem cannot fire from here). }
 class procedure TfrmStyleDisk.ShowAsModal;
 begin
   AppData.CreateFormModal(TfrmStyleDisk);
@@ -270,8 +238,7 @@ end;
 
 procedure TfrmStyleDisk.FormCreate(Sender: TObject);
 begin
-  //OnDefaultStyle:= Notify;
-  PopulateStyles; 
+  PopulateStyles;
   lblTop.Hint:= 'Style files are located in ' + GetStyleDir;
 end;
 
@@ -279,7 +246,6 @@ end;
 procedure TfrmStyleDisk.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action:= TCloseAction.caFree;
-  { Note: caFree bug (RSP-33140) was fixed in Delphi 11 }
 end;
 
 
@@ -287,15 +253,9 @@ procedure TfrmStyleDisk.FormPreRelease;
 begin
   inherited;
 
-  { Save using 'LastStyle' key for backward compatibility.
-    Don't save if startup was improper (Initializing still TRUE). }
+  { Skip save if startup was improper (Initializing still TRUE). }
   if NOT AppData.Initializing
   then LightCore.INIFileQuick.WriteString(IniKeyStyle, CurrentStyleName);
-
-  { BUG 4 fix: No ForceQueue RecreateWnd here. CM_CUSTOMSTYLECHANGED (posted by
-    SetStyle in lBoxClick) already triggers RecreateWnd with fresh, valid hooks.
-    The previous ForceQueue added a SECOND RecreateWnd that could fire during
-    ProcessMenuLoop's DispatchMessage, destroying hooks mid-loop (use-after-free). }
 end;
 
 
@@ -354,45 +314,22 @@ begin
 end;
 
 
-{ SetStyle triggers RecreateWnd on all forms. The recreated modal window
-  loses its z-order position above the disabled owner.
-  TOPMOST + NOTOPMOST forces Windows to recalculate z-order, placing
-  this form at the top of the non-topmost band. }
-procedure TfrmStyleDisk.ReassertZOrder;
-begin
-  SetWindowPos(Handle, HWND_TOPMOST,    0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE);
-  SetWindowPos(Handle, HWND_NOTOPMOST,  0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE);
-  SetForegroundWindow(Handle);
-end;
-
-
-{ Handles style selection - loads and applies the selected style.
-  SetStyle posts CM_CUSTOMSTYLECHANGED which triggers RecreateWnd on all forms, rebuilding TFormStyleHook and TMainMenuBarStyleHook with valid references.
-  ReassertZOrder fixes z-order after RecreateWnd destroys the modal relationship. }
+{ Persists the chosen skin and asks the user to restart. We never call SetStyle
+  at runtime — BUG 5 (see file header) leaks a TMainMenuBarStyleHook on every
+  live SetStyle, crashing on the next main-menu click. }
 procedure TfrmStyleDisk.lBoxClick(Sender: TObject);
+VAR NewStyleName: string;
 begin
   if lBox.ItemIndex < 0 then EXIT;
 
-  { Disable list to prevent double-clicks during style switching }
-  lBox.Enabled:= FALSE;
-  try
-    CurrentStyleName:= lBox.Items[lBox.ItemIndex];
+  NewStyleName:= lBox.Items[lBox.ItemIndex];
+  if NewStyleName = CurrentStyleName
+  then EXIT;
 
-    if CurrentStyleName = DefWinTheme
-    then
-      begin
-        TStyleManager.SetStyle('Windows');
-        CurrentStyleName:= DefWinTheme;
-        ReassertZOrder;
-        if Assigned(FOnDefaultStyle)
-        then FOnDefaultStyle(Self);
-      end
-    else
-      if LoadStyleFromFile(CurrentStyleName)
-      then ReassertZOrder;
-  FINALLY
-    lBox.Enabled:= TRUE;
-  END;
+  CurrentStyleName:= NewStyleName;
+  LightCore.INIFileQuick.WriteString(IniKeyStyle, CurrentStyleName);
+  MesajGeneric('The new skin will be applied the next time you start ' + Application.Title + '.' + CRLF + CRLF +
+               'Close and reopen the application to see the change.');
 end;
 
 
