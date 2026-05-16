@@ -1,8 +1,21 @@
-*.~*
-*.~dsk
+**/__recovery/
+**/__history/
+**/*_Win32_*
+**/Win32_*
+**/*_Android64_Debug
+
+ClaudeBuild.cmd
+Build.cmd
+build.cmd
+desktop.ini
+uLinks.pas
+CLAUDE.md
+
+*.bak
 *.bin
 *.cbk
 *.dcu
+*.delete_me
 *.deployproj
 *.dproj.local
 *.drc
@@ -10,113 +23,81 @@
 *.dsv
 *.exe
 *.ficfg
+*.fsf
 *.identcache
 *.json
+*.lnk
 *.local
 *.map
 *.mes
 *.o
 *.res
+*.res
 *.rsm
 *.so
+*.style
 *.tvsconfig
 *.vsf
 *.xml
-__recovery.ini
-/22.0_Android_Debug
-/22.0_Android64_Debug
-/22.0_Linux_Debug
-/22.0_Linux64_Debug
-/22.0_Win32_Debug
-/22.0_Win32_Release
+*.~*
+*.~dsk
+
 /Demo/FMX/Demo AutoHeightRectangle/37.0_Android64_Debug
 /Demo/FMX/Demo AutoHeightRectangle/Android64
-/Demo/FMX/Demo LightPanel/__recovery
+/Demo/FMX/Demo Styles3 Skin Selector/37.0_Android64_Debug
 /Demo/FMX/Demo SystemReport/37.0_Android64_Debug
-/Demo/FMX/Template - Minimal app + External log/37.0_Android64_Debug
 /Demo/FMX/Template - Minimal app + External log/CompiledResources
 /Demo/FMX/Template - Minimal app + External log/FMX_MinimalApp_WithLog2/library
 /Demo/FMX/Template - Minimal app + External log/FMX_MinimalApp_WithLog2/res
+/Demo/FMX/Template - Minimal app + Internal log/37.0_Android64_Debug
 /Demo/FMX/Template - Minimal app/37.0_Android64_Debug
 /Demo/Template App/FMX Minimal/FmxTemplateMicro/res
-/Demo/Tester All Visual Controls/21.0
 /Demo/VCL/Demo AutoTranslator/competition.url
-/Demo/VCL/Template App Full/__recovery
 /Demo/VCL/Template Universal Uninstaller/icon.ico
+/External/_out
+/HardwareID
+/_Frozen Streams
+AndroidManifest.template.xml
+AutoTranslator/DeepL library.url
+AutoTranslator/Demo/cheie
+AutoTranslator/Demo/competition.url
+CpuUsageProcess.lnk
 Demo/All Visual Controls/22.0/Win32_Debug/DemoAllVisualControls.exe
+Demo/Conditionals and Platform detection/FMX/Build.cmd
+Demo/Conditionals and Platform detection/VCL/Build.cmd
+Demo/Core/Demo LightCore StreamBuffer/Build.cmd
 Demo/Demo Binary file/DemoBinaryFile.exe
 Demo/Demo Binary file/Soldier.bin
 Demo/FMX/Demo LightLog/LogFile.log
-Demo/Template App/FMX Minimal/FMXTemplateMicro.exe
-Demo/Template App/FMX Minimal/TemplateMicro.exe
-Demo/Template App/FMX Minimal/Win32
-Demo/Template App/FMX Minimal2/Project1.exe
-Demo/Template App/FMX Minimal2/Win32/Debug/Project1.exe
+Demo/FMX/Demo ScreenCapture/CLAUDE.md
+Demo/FMX/Demo ScreenCapture/ClaudeBuild.cmd
+Demo/FMX/Demos/Build.cmd
+Demo/FMX/Template - Minimal app + External log/Build.cmd
+Demo/FMX/Template - Minimal app + Internal log/FMX_MinimalApp_WithLog1.res
+Demo/Template - madShi.lnk
 Demo/Template App/TemplateApp.delphilsp.json
 Demo/Template Universal Uninstaller/BUG REPORTS.LNK
 Demo/Tester All Visual Controls/Demo_VisualControls.prjmgc
 Demo/Tester AutoTranslator/competition.url
 Demo/Tester LightCore ccStreamBuff.pas/TCubicBuffStream.bin
 Demo/Tester LightCore ccWinVersion.pas/Tester_WinVers.drc
-desktop.ini
+Demo/VCL/Demo Custom component creation order/Build.cmd
+External/Exif/ bug report
+External/Exif/ last update 2025.11
 External/Exif/Documentation/ FROM EXILON REPOSITORY.URL
 External/Exif/Documentation/dummzeuch_ccr-exif Automatically exported from code.google.com_p_ccr-exif.url
 External/GifParser original.pas
 External/GifParser_original_.pas
 External/GifProperties (orig).pas
 FrameFMX/AI
+FrameFMX/BuildPackages.cmd
+FrameFMX/LightFmx.Common.SysTray.pas - ALTERNATIVE.url
 FrameVCL/AI
+FrameVCL/AutoTranslator/DeepL library.url
+FrameVCL/AutoTranslator/Demo/cheie
+FrameVCL/AutoTranslator/Demo/competition.url
+FrameVCL/Vcl.WinXCtrls.pas
 System/Credits.lnk
 System/Eula.txt
-uLinks.pas
-External/Exif/ bug report
-External/Exif/ last update 2025.11
-/_Frozen Streams
-_AI.pas
-/     CANNOT SET STYLE
-/__recovery
-*.res
-Demo/FMX/Demo ScreenCapture/CLAUDE.md
-Demo/FMX/Demo ScreenCapture/ClaudeBuild.cmd
-CLAUDE.md
-ClaudeBuild.cmd
-AutoTranslator/Demo/cheie
-AutoTranslator/Demo/competition.url
-/AutoTranslator/Demo/__recovery
-*.bak
-AutoTranslator/DeepL library.url
-FrameVCL/AutoTranslator/DeepL library.url
-FrameVCL/AutoTranslator/Demo/competition.url
-FrameVCL/AutoTranslator/Demo/cheie
-CpuUsageProcess.lnk
-/Demo/FMX/Template - Styles/__recovery
-AndroidManifest.template.xml
-/Demo/FMX/Template - Minimal app + Internal log/37.0_Android64_Debug
-Demo/FMX/Template - Minimal app + Internal log/FMX_MinimalApp_WithLog1.res
-Demo/Template - madShi.lnk
-*.style
-*.delete_me
-/Demo/FMX/Demo Styles3 Skin Selector/37.0_Android64_Debug
-*.fsf
-*.lnk
-Demo/FMX/Demos/Build.cmd
-/Demo/FMX/Demos/__recovery
-FrameFMX/BuildPackages.cmd
-/FrameFMX/__recovery
-FrameFMX/LightFmx.Common.SysTray.pas - ALTERNATIVE.url
-/External/_out
-FrameVCL/Vcl.WinXCtrls.pas
 ToDo Log (plan).md
 ToDo Log Selected row (plan).md
-Demo/Core/Demo Binary file 2/Build.cmd
-Demo/Core/Demo Binary file 3/Build.cmd
-Demo/Core/Demo Binary file 1/Build.cmd
-Demo/Conditionals and Platform detection/VCL/Build.cmd
-Demo/Core/Demo LightCore StreamBuffer/Build.cmd
-Demo/FMX/Template - Minimal app + External log/Build.cmd
-Demo/VCL/Demo Custom component creation order/Build.cmd
-Demo/Conditionals and Platform detection/FMX/Build.cmd
-HardwareID/chHardID.pas
-HardwareID/chHardIDNew.pas
-HardwareID/Build.cmd
-/Hardware_ID
