@@ -70,10 +70,11 @@
          - Virtual keyboard padding is handled by the host form; embedded forms skip it (see HandleVKStateChange).
          - Use TThread.ForceQueue(nil, ...) for deferred destruction after button clicks.
 
-         Known issue (Android):
-           TThread.ForceQueue may silently fail to execute on Android in some call depths.
-           If this occurs, use a TTimer with Interval=0 as a fallback.
-           See: https://en.delphipraxis.net/topic/14705-tthreadforcequeue-inconsistency-on-android/
+         TThread.ForceQueue(NIL, ...) on Android:
+           ForceQueue(NIL, ...) is reliable as long as the queuing code does not block the main thread before the message loop resumes. The Android FMX loop drains the sync queue (CheckSynchronize) on every pump, and TThread.ForceQueue has no platform-specific branch — verified in System.Classes.pas / FMX.Platform.Android.pas.
+           One unverified report (delphipraxis.net topic 14705, Delphi 12.3) describes
+           ForceQueue callbacks not firing on Android; it was never reproduced and never root-caused — an Embarcadero MVP on that thread attributed it to the main thread being overloaded by a long synchronous run ("Skipped frames" in logcat), not to a ForceQueue defect. 
+           So: don't do heavy synchronous work between the ForceQueue call and the loop resuming. Passing NIL (not a TThread instance) as the first parameter is required — a TThread arg makes the entry get dropped when that thread is freed.
 
 =============================================================================================================}
 
@@ -99,7 +100,7 @@ TYPE
     procedure HandleVKStateChange(const Sender: TObject; const M: TMessage);
   protected
     FEmbedded: Boolean;    { TRUE when form's layout is reparented into another form (embedded mode) }
-    Saved: Boolean;
+    FFormSaved: Boolean;   { TRUE once saveBeforeExit has run — prevents double-save on shutdown }
     procedure saveBeforeExit;
     procedure CreateToolbar;
     { Called by FormKeyUp when the user presses Back (Android) or Escape (desktop).
@@ -119,16 +120,12 @@ TYPE
     AfterClose     : TProc;         { Optional callback fired once in FormPreRelease. Needed on Android where ShowModal is non-blocking, so callers that care about side effects get notified. Cleared after firing. }
 
     constructor Create(AOwner: TComponent; aAutoState: TAutoState); reintroduce; overload; virtual;
-    { Use this when the caller will reparent Container into a host via EmbedIn.
-      Suppresses the auto-Show in AfterConstruction (which would briefly flash
-      a separate window before the host pulls out the inner layout) and still
-      registers the VK subscription. Equivalent to Create(AOwner, asNone) but
-      with FEmbedded pre-set so AfterConstruction can see it. }
-    constructor CreateEmbedded(AOwner: TComponent); reintroduce; overload; virtual;
+    constructor CreateEmbedded(AOwner: TComponent); reintroduce; overload; virtual;   { Use this when the caller will reparent Container into a host via EmbedIn. Suppresses the auto-Show in AfterConstruction (which would briefly flash a separate window before the host pulls out the inner layout) and still registers the VK subscription. Equivalent to Create(AOwner, asNone) but with FEmbedded pre-set so AfterConstruction can see it. }
     procedure AfterConstruction; override;
     function CloseQuery: Boolean; override;
 
     procedure FormPreRelease; virtual;
+    procedure FormPostInitialize; virtual;   { Runs once after the form is fully loaded AND the message loop is pumping (first paint done). Override for startup work that should not block the window from appearing — e.g. loading a large file. FMX counterpart of the VCL WM_POSTINIT hook. }
     procedure ShowModal; reintroduce;
 
     procedure LoadForm; virtual;
@@ -143,6 +140,7 @@ TYPE
     destructor Destroy; override;
 
     procedure MainFormCaption(aCaption: string);
+    procedure MaximizeVertically;
   published
     property CloseOnEscape: Boolean  read FCloseOnEscape  write FCloseOnEscape;        // Close this form when the Esc key is pressed
     property OnAfterConstruction: TNotifyEvent read FOnAfterCtur write FOnAfterCtur;   // Unfortunatelly this won't appears in the object inspector
@@ -165,15 +163,14 @@ constructor TLightForm.Create(AOwner: TComponent; aAutoState: TAutoState);
 begin
   inherited Create(AOwner);
 
-  Showhint := TRUE;
-  Saved    := FALSE;
-  AutoState:= aAutoState;
+  Showhint   := TRUE;
+  FFormSaved := FALSE;
+  AutoState  := aAutoState;
 end;
 
 
 { FEmbedded and AutoState MUST be set BEFORE inherited Create.
-  Reason: FMX's TCommonCustomForm.Create reads the .fmx resource inside the
-  inherited chain and fires Loaded before returning. Loaded checks `if AutoState = asUndefined then AutoState:= AppData.GetAutoState(Self)`,
+  Reason: FMX's TCommonCustomForm.Create reads the .fmx resource inside the inherited chain and fires Loaded before returning. Loaded checks `if AutoState = asUndefined then AutoState:= AppData.GetAutoState(Self)`,
   and GetAutoState raises if the class is not in the pending queue (which it isn't for CreateEmbedded — we bypass AppData.CreateForm's queueing).
   Pre-setting AutoState=asNone makes Loaded skip the lookup.
 
@@ -184,8 +181,8 @@ begin
   FEmbedded:= TRUE;
   AutoState:= asNone;          // must be set before inherited — see Loaded (the asUndefined branch)
   inherited Create(AOwner);
-  Showhint := TRUE;
-  Saved    := FALSE;
+  Showhint   := TRUE;
+  FFormSaved := FALSE;
 end;
 
 
@@ -229,17 +226,12 @@ procedure TLightForm.Loaded;
 begin
   Position:= TFormPosition.Designed;
 
-  if Self=Application.MainForm
-  then MainFormCaption('Initializing...');
-
   inherited Loaded;
 
   // Font, snap, alpha
   SetGuiProperties(Self);
 
-  // Show app name
-  if Self=Application.MainForm
-  then MainFormCaption('');
+  // Note: we CANNOT set the MainForm caption here. FMX assigns Application.MainForm only AFTER the constructor (and thus Loaded) returns — see RealCreateForms in FMX.Forms.pas. During Loaded, Application.MainForm is still NIL, so any `Self = Application.MainForm` test here is always FALSE. The caption is set in the deferred ForceQueue block at the end of this method, where MainForm is valid.
 
   // Load form
   // Limitation: At this point we can only load "standard" Delphi components. Loading of our Light components can only be done in Light_FMX.Visual.INIFile.pas -> TIniFileVCL
@@ -262,10 +254,34 @@ begin
   // half-constructed state. Posting to the message queue defers the flag-flip until
   // RealCreateForms has returned and all queued forms are fully loaded.
   // EndInitialization is idempotent (just sets a Boolean), so multiple posts are harmless.
+  //
+  // FormPostInitialize runs in the SAME queued callback, AFTER EndInitialization, so
+  // user startup code sees Initializing=FALSE and runs only once the message loop is
+  // pumping (window already painted). One queued block per TLightForm — FIFO ordering
+  // keeps EndInitialization before FormPostInitialize. This is the deferral the VCL
+  // frame gets from PostMessage(WM_POSTINIT); FMX forms have no HWND, so ForceQueue is
+  // the cross-platform equivalent.
   TThread.ForceQueue(NIL, procedure
     begin
       TAppDataCore.EndInitialization;
+      // Set the main-form caption here (not in the synchronous Loaded body): by the
+      // time this queued block runs, RealCreateForms has returned and Application.MainForm
+      // is assigned, so the Self=Application.MainForm test is meaningful.
+      if Self = Application.MainForm
+      then MainFormCaption('');
+      FormPostInitialize;
     end);
+end;
+
+
+{ Empty by default. Override in a descendant form to do startup work that should run
+  after the window is on-screen (see the declaration comment + Loaded). }
+procedure TLightForm.FormPostInitialize;
+begin
+  // Show app name
+  if Self=Application.MainForm then MainFormCaption('');
+  
+  // Overriding point
 end;
 
 
@@ -317,7 +333,7 @@ end;
   Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
 procedure TLightForm.saveBeforeExit;
 begin
-  if NOT Saved
+  if NOT FFormSaved
   AND NOT AppData.Initializing then
   begin
     try
@@ -326,7 +342,7 @@ begin
       if AutoState > asNone     // Give the user the option not to save the form
       then SaveForm;
     finally
-      Saved:= TRUE;             // Make sure it is put to true even on accidents, otherwise we might call it multiple times.
+      FFormSaved:= TRUE;        // Make sure it is put to true even on accidents, otherwise we might call it multiple times.
     end;
   end;
 end;
@@ -367,7 +383,7 @@ begin
 end;
 
 
-{ Called ONLY once, when Saved = False }
+{ Called ONLY once, when FFormSaved = False }
 procedure TLightForm.FormPreRelease;
 VAR
    Cb: TProc;
@@ -517,7 +533,12 @@ begin
      IniFile.SaveForm(Self, AutoState);
    EXCEPT
      ON EIniFileException DO
-       MessageError('Cannot save INI file: '+ IniFile.FileName);
+       begin
+         // Log as well as show: SaveForm runs on the shutdown path; the log gives a post-mortem trail.
+         // We do NOT re-raise — re-raising here would abort form destruction (DoClose/Destroy path).
+         if AppData <> NIL
+         then AppData.LogError('Cannot save INI file: '+ IniFile.FileName);
+       end;
    END;
   FINALLY
     FreeAndNil(IniFile);
@@ -607,6 +628,18 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    OTHERS
 -------------------------------------------------------------------------------------------------------------}
+{ Stretches the form vertically across the current monitor's work area (excludes taskbar).
+  On mobile the form is fullscreen anyway, so the call is a no-op. }
+procedure TLightForm.MaximizeVertically;
+VAR WorkArea: TRectF;
+begin
+  if OsIsMobile then EXIT;
+  WorkArea:= Screen.DisplayFromForm(Self).WorkArea;
+  Top    := Trunc(WorkArea.Top);
+  Height := Trunc(WorkArea.Height);
+end;
+
+
 // WARNING: FMX: CreateForm does not create the given form immediately. RealCreateForms creates the real forms. So, we cannot access Application.MainForm here.
 procedure TLightForm.MainFormCaption(aCaption: string);
 begin
