@@ -1,7 +1,7 @@
 UNIT LightCore.HTML;
 
 {-------------------------------------------------------------------------------------------------------------
-   2026.01.30
+   2026.05.26
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -186,13 +186,24 @@ end;
 {--------------------------------------------------------------------------------------------------
                                 HTML MANIPULATION
 --------------------------------------------------------------------------------------------------}
-function GetBodyFromHtml(CONST AHTML: string): string;                                                   { Get the HTML code contained between the <Body> tags }
-CONST
-  BODY_OPEN_TAG  = '<body>';
-  BODY_CLOSE_TAG = '</body>';
+function GetBodyFromHtml(CONST AHTML: string): string;                                                   { Get the HTML code contained between the <Body> tags. Tolerates attributes on <body ...> and any casing on both open and close tags. Returns '' if either tag is missing. }
+VAR
+   LowHtml: string;
+   OpenStart, OpenEnd, CloseStart: Integer;
 begin
- Result:= system.COPY(AHTML, Pos(BODY_OPEN_TAG, LowerCase(AHTML)) + Length(BODY_OPEN_TAG), Length(AHTML));
- Delete (Result, Pos(BODY_CLOSE_TAG, result), Length(Result));
+ Result:= '';
+ LowHtml:= LowerCase(AHTML);
+
+ OpenStart:= Pos('<body', LowHtml);                                                                       { match <body and <body class="..." alike }
+ if OpenStart= 0 then EXIT;
+
+ OpenEnd:= PosEx('>', LowHtml, OpenStart);                                                                { end of the opening tag }
+ if OpenEnd= 0 then EXIT;
+
+ CloseStart:= PosEx('</body>', LowHtml, OpenEnd+1);
+ if CloseStart= 0 then EXIT;
+
+ Result:= System.Copy(AHTML, OpenEnd+1, CloseStart- OpenEnd- 1);
 end;
 
 
@@ -413,6 +424,52 @@ end;
 
 
 
+{ Boundary-aware lookup for an HTML attribute name.
+
+  Returns the 1-based position where Attrib starts in HtmlTag, or 0 if not found.
+  A match counts only when:
+    (a) the substring "Attrib" (case-insensitive) is followed by '=' or ' =' or ' ' before '='
+    (b) the char immediately before "Attrib" is a word boundary (start-of-string, space, tab, '<', '/' or quote)
+  Without (b) we'd match 'href' inside 'hreflang', or 'target' inside 'data-target'. }
+function FindAttribStart(CONST HtmlTag, Attrib: string): Integer;
+VAR
+   LowTag, LowAttrib: string;
+   Cand, AfterName, TagLen, AttrLen: Integer;
+   PrevCh: Char;
+begin
+ Result:= 0;
+ LowTag:= LowerCase(HtmlTag);
+ LowAttrib:= LowerCase(Attrib);
+ TagLen:= Length(LowTag);
+ AttrLen:= Length(LowAttrib);
+ if (AttrLen= 0) OR (TagLen< AttrLen) then EXIT;
+
+ Cand:= 1;
+ REPEAT
+   Cand:= PosEx(LowAttrib, LowTag, Cand);
+   if Cand= 0 then EXIT;
+
+   { (b) word-boundary check on the char BEFORE the match }
+   if Cand= 1
+   then PrevCh:= ' '
+   else PrevCh:= LowTag[Cand- 1];
+
+   if CharInSet(PrevCh, [' ', #9, '<', '/', '"', ''''])
+   then
+    begin
+     { (a) the next non-space char after the name must be '=' }
+     AfterName:= Cand+ AttrLen;
+     while (AfterName<= TagLen) AND (LowTag[AfterName]= ' ') DO
+       Inc(AfterName);
+     if (AfterName<= TagLen) AND (LowTag[AfterName]= '=')
+     then EXIT(Cand);
+    end;
+
+   Inc(Cand);                                                                                            { advance past this false match and keep scanning }
+ UNTIL Cand> TagLen;
+end;
+
+
 {--------------------------------------------------------------------------------------------------
    EXTRACT Attrib
 
@@ -429,39 +486,21 @@ VAR
 begin
  Result:= '';
 
-  { find 'tag' }
- if (Attrib= 'src') AND (Pos('<img', HtmlTag)> 0)
- then                              {  We treat the case the case where the <img> tag, might have a "scrset" attribute. Example:   <img srcset="https://images.pexels.com/photos/217130/pexels-photo-217130.jpeg?h=350&amp;auto=compress&amp;cs=tinysrgb 1x, https://images.pexels.com/photos/217130/pexels-photo-217130.jpeg?h=350&amp;dpr=2&amp;auto=compress&amp;cs=tinysrgb 2x" width="525" height="350" style="background:rgb(87,87,87)" class="photo-item__img" alt="Kostenloses Stock Foto zu fahrzeug, schwarz, motorrad, nahansicht" data-pin-media="https://images.pexels.com/photos/217130/pexels-photo-217130.jpeg?w=800&amp;h=1200&amp;fit=crop&amp;auto=compress&amp;cs=tinysrgb" src="https://images.pexels.com/photos/217130/pexels-photo-217130.jpeg?h=350&amp;auto=compress&amp;cs=tinysrgb" />     }
-  begin
-    iTag:= PosInsensitive(Attrib+'=', HtmlTag);      { Make sure that we have "src=" or "scr =" and not a "srcset" }
-    if iTag= 0
-    then iTag:= PosInsensitive(Attrib+' =', HtmlTag);
-  end
- else iTag:= PosInsensitive(Attrib, HtmlTag);
-
- { find its corresponding = sign }
+ iTag:= FindAttribStart(HtmlTag, Attrib);
  if iTag= 0 then EXIT;
 
  Equal:= PosEx('=', HtmlTag, iTag+ Length(Attrib));
+ if Equal = 0 then EXIT;
 
- if Equal > 0 then
-  begin
-   { We don't know if ' or " is used so we look for both }
-   QStart := FindQuoteStart(HtmlTag, iTag+1);
+ { We don't know if ' or " is used so we look for both }
+ QStart := FindQuoteStart(HtmlTag, iTag+1);
 
-   {This fixes: IE nu pune quotes arround 'blank'. Example:  target=_blank }
-   if QStart < 1 then QStart:= Equal+1;
+ {This fixes: IE nu pune quotes arround 'blank'. Example:  target=_blank }
+ if QStart < 1 then QStart:= Equal+1;
 
-   if QStart> 0 then
-    begin
-     QEnd := FindQuoteEnd(HtmlTag, QStart+1);
-     if QEnd> 0 then
-      begin
-        Result:= LightCore.CopyTo(HtmlTag, QStart+1, QEnd-1);               { +1 -1 to remove the quotes }
-        // Note: Previously had code to handle URLs with '?' parameters, removed for simplicity
-      end;
-    end;
-  end;
+ QEnd := FindQuoteEnd(HtmlTag, QStart+1);
+ if QEnd> 0
+ then Result:= LightCore.CopyTo(HtmlTag, QStart+1, QEnd-1);               { +1 -1 to remove the quotes }
 end;
 
 
@@ -488,25 +527,20 @@ VAR iTag, QStart, QEnd: Integer;
 begin
  Result:= '';
 
- iTag:= PosInsensitive(Attrib, HtmlTag);               { find 'tag' }
+ iTag:= FindAttribStart(HtmlTag, Attrib);
  if iTag= 0 then EXIT;
 
  iTag:= PosEx('=', HtmlTag, iTag+ Length(Attrib));     { find its corresponding = sign }
+ if iTag= 0 then EXIT;
 
- if iTag> 0 then
-  begin
-   { We don't know if ' or " is used so we look for both }
-   QStart := FindQuoteStart(HtmlTag, iTag+1);
+ { We don't know if ' or " is used so we look for both }
+ QStart := FindQuoteStart(HtmlTag, iTag+1);
 
-   if QStart < 1 then QStart:= iTag;
+ if QStart < 1 then QStart:= iTag;
 
-   if QStart> 0 then
-    begin
-     QEnd := FindQuoteEndIE(HtmlTag, QStart+1);
-     if QEnd> 0
-     then Result:= LightCore.CopyTo(HtmlTag, QStart+1, QEnd-1);               { +1 -1 to remove the quotes }
-    end;
-  end;
+ QEnd := FindQuoteEndIE(HtmlTag, QStart+1);
+ if QEnd> 0
+ then Result:= LightCore.CopyTo(HtmlTag, QStart+1, QEnd-1);               { +1 -1 to remove the quotes }
 end;
 
 
@@ -515,26 +549,22 @@ VAR iTag, QStart, QEnd: Integer;
 begin
  Result:= '';
 
- iTag:= PosInsensitive(Attrib, HtmlTag);               { find 'tag' }
+ iTag:= FindAttribStart(HtmlTag, Attrib);
  if iTag= 0 then EXIT;
 
  iTag:= PosEx('=', HtmlTag, iTag+ Length(Attrib));     { find its corresponding = sign }
+ if iTag= 0 then EXIT;
 
- if iTag> 0 then
-  begin
-   { We don't know if ' or " is used so we look for both }
-   QStart := FindQuoteStart(HtmlTag, iTag+1);
-   if QStart> 0 then
-    begin
-     QEnd := FindQuoteEnd(HtmlTag, QStart+1);
-     if QEnd> 0 then
-      begin
-        Delete(HtmlTag, QStart+1, QEnd- QStart- 1);  { -1 to keep the quotes }
-        insert(NewValue, HtmlTag, QStart+1);               { +1 -1 to remove the quotes }
-        Result:= HtmlTag;
-      end;
-    end;
-  end;
+ { We don't know if ' or " is used so we look for both }
+ QStart := FindQuoteStart(HtmlTag, iTag+1);
+ if QStart= 0 then EXIT;
+
+ QEnd := FindQuoteEnd(HtmlTag, QStart+1);
+ if QEnd= 0 then EXIT;
+
+ Delete(HtmlTag, QStart+1, QEnd- QStart- 1);  { -1 to keep the quotes }
+ insert(NewValue, HtmlTag, QStart+1);               { +1 -1 to remove the quotes }
+ Result:= HtmlTag;
 end;
 
 
