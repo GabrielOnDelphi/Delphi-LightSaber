@@ -24,10 +24,12 @@ package LightVcl.Graphics;
 {$MINENUMSIZE 1}
 {$IMAGEBASE $400000}
 {$DEFINE DEBUG}
+{$DEFINE CCRExif}
+{$DEFINE FastJpg}
 {$DEFINE GR32}
 {$DEFINE Jpg2000}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'LightSaber - Graphics'}
+{$DESCRIPTION 'LightSaber - Graphics lib'}
 {$LIBSUFFIX AUTO}
 {$IMPLICITBUILD ON}
 
