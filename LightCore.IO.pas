@@ -1,7 +1,7 @@
 ﻿UNIT LightCore.IO;
 
 {=============================================================================================================
-   2026.04.25
+   2026.05.26
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -65,14 +65,14 @@
      http://www.malcolmgroves.com/blog/?p=865
 
   TESTER:
-     c:\MyProjects\LightSaber\UNC Tester\
+     UNC Tester
 ==================================================================================================}
-
-//todo 1: check this file to make sure it also works on Android.
 
 INTERFACE
 
 USES
+  {$IFDEF MSWINDOWS} Winapi.Windows, {$ENDIF}
+  {$IFDEF POSIX} Posix.Stdio, {$ENDIF}
   System.Generics.Collections,
   System.Generics.Defaults,
   System.Diagnostics,
@@ -357,6 +357,7 @@ CONST
  {MOVE FILES}
  function  FileMoveTo         (CONST From_FullPath, To_FullPath  : string): Boolean;
  function  FileMoveToDir      (CONST From_FullPath, To_DestFolder: string): Boolean;
+ function  AtomicReplaceFile  (CONST TempName, FinalName: string): Boolean;     { Atomically swap an already-written TempName into FinalName — for crash-safe "write to temp then rename" saves. See body. }
 
  {FOLDERS}
  function  CopyFolder         (CONST FromFolder, ToFolder   : String; Overwrite: Boolean= True; CONST FileType: string= '*.*'): integer;          { copy a folder and all its files and subfolders }
@@ -484,12 +485,18 @@ end;
    FOLDER
 --------------------------------------------------------------------------------------------------}
 
-{ Returns True if this path uses the extended-length path prefix (\\?\).
+{ Returns True if this path uses the Windows extended-length path prefix (\\?\).
   These paths support paths longer than MAX_PATH (260 chars) in Windows.
+  Misleading name kept for backward compat — POSIX paths never carry this prefix,
+  so the function always returns FALSE outside Windows.
   See: https://docs.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation }
 function IsUnicode(CONST Path: string): boolean;
 begin
-  Result:= Pos('\\?\', Path) = 1;
+  {$IFDEF MSWINDOWS}
+  Result:= TPath.IsExtendedPrefixed(Path);
+  {$ELSE}
+  Result:= FALSE;
+  {$ENDIF}
 end;
 
 
@@ -536,18 +543,24 @@ begin
 end;
 
 
-{ Ex: C:\Test1\ and C:\teSt1 will return true }
+{ Ex: C:\Test1\ and C:\teSt1 will return true (Windows — case-insensitive FS).
+  POSIX (Android, Linux, case-sensitive APFS): '/Test1/' and '/test1/' are DIFFERENT folders. }
 function SameFolder(Path1, Path2: string): Boolean;
 begin
  Path1:= Trail(Path1);
  Path2:= Trail(Path2);
 
+ {$IFDEF MSWINDOWS}
  Result:= SameText(Path1, Path2);
+ {$ELSE}
+ Result:= Path1 = Path2;
+ {$ENDIF}
 end;
 
 
 { Receives two partial or complete file names and compare their folders.
-  Ex:  C:\Test1 and C:\teSt1\me.txt will return true }
+  Ex:  C:\Test1 and C:\teSt1\me.txt will return true (Windows).
+  POSIX: case-sensitive comparison — '/Test1' and '/test1/me.txt' return FALSE. }
 function SameFolderFromFile(Path1, Path2: string): Boolean;
 begin
  Path1:= ExtractFilePath(Path1);
@@ -556,27 +569,36 @@ begin
  Path1:= Trail(Path1);
  Path2:= Trail(Path2);
 
+ {$IFDEF MSWINDOWS}
  Result:= SameText(Path1, Path2);
+ {$ELSE}
+ Result:= Path1 = Path2;
+ {$ENDIF}
 end;
 
 
-{ The order of the parameters does not matter: Path1 could be a subfolder or Path2 or the viceversa }
+{ The order of the parameters does not matter: Path1 could be a subfolder or Path2 or the viceversa.
+  POSIX: case-sensitive — '/Data' is NOT a subfolder of '/data/Files'.
+  Equal paths return TRUE (a folder is considered a subfolder of itself).
+  Separator-aware so 'C:\Foo' is NOT reported as a subfolder of 'C:\Foobar'. }
 function IsSubfolder(Path1: String; Path2: String): Boolean;
-var
-  Length1: Integer;
-  Length2: Integer;
 begin
-  Result := False;
-  Length1 := Length(Path1);
-  Length2 := Length(Path2);
-  If (Length1>0) and (Length2>0) then
-   begin
-     Path1 := UpperCase(ExcludeTrailingPathDelimiter(Path1));
-     Path2 := UpperCase(ExcludeTrailingPathDelimiter(Path2));
-     If Length1 > Length2
-     then Result := (Pos(Path2, Path1) = 1)
-     else Result := (Pos(Path1, Path2) = 1)
-   end;
+  if (Path1 = '') OR (Path2 = '') then EXIT(FALSE);
+
+  {$IFDEF MSWINDOWS}
+  Path1 := UpperCase(ExcludeTrailingPathDelimiter(Path1));
+  Path2 := UpperCase(ExcludeTrailingPathDelimiter(Path2));
+  {$ELSE}
+  Path1 := ExcludeTrailingPathDelimiter(Path1);
+  Path2 := ExcludeTrailingPathDelimiter(Path2);
+  {$ENDIF}
+
+  if Path1 = Path2 then EXIT(TRUE);                                    { equal paths }
+
+  { Append PathDelim so 'C:\Foo' does not prefix-match 'C:\Foobar' }
+  if Length(Path1) > Length(Path2)
+  then Result := Pos(Path2 + PathDelim, Path1 + PathDelim) = 1         { Path2 is parent of Path1 }
+  else Result := Pos(Path1 + PathDelim, Path2 + PathDelim) = 1;        { Path1 is parent of Path2 }
 end;
 
 
@@ -1014,27 +1036,43 @@ end;
 
 
 function IsExec(CONST FileName: string) : Boolean;
+VAR Ext: string;
 begin
+  Ext:= ExtractFileExtUp(FileName);
   Result:=
-    (ExtractFileExtUp(FileName)= '.BAT') OR
-    (ExtractFileExtUp(FileName)= '.CMD') OR
-    (ExtractFileExtUp(FileName)= '.COM') OR
-    (ExtractFileExtUp(FileName)= '.CPL') OR
-    (ExtractFileExtUp(FileName)= '.DLL') OR
-    (ExtractFileExtUp(FileName)= '.EXE') OR
-    (ExtractFileExtUp(FileName)= '.JAR') OR
-    (ExtractFileExtUp(FileName)= '.MSI') OR
-    (ExtractFileExtUp(FileName)= '.MSP') OR
-    (ExtractFileExtUp(FileName)= '.PIF') OR
-    (ExtractFileExtUp(FileName)= '.PS1') OR   // A Windows PowerShell script. Runs PowerShell commands in the order specified in the file.
-    (ExtractFileExtUp(FileName)= '.PS2') OR   // A Windows PowerShell script. Runs PowerShell commands in the order specified in the file
-    (ExtractFileExtUp(FileName)= '.SCR') OR
-    (ExtractFileExtUp(FileName)= '.VBE') OR
-    (ExtractFileExtUp(FileName)= '.WS')  OR
-    (ExtractFileExtUp(FileName)= '.WSF') OR
-    (ExtractFileExtUp(FileName)= '.WSC') OR   //Windows Script Component and Windows Script Host control files. Used along with with Windows Script files.
-    (ExtractFileExtUp(FileName)= '.WSH') OR   //Windows Script Component and Windows Script Host control files. Used along with with Windows Script files.
-    (ExtractFileExtUp(FileName)= '.VBS');
+    (Ext = '.BAT') OR
+    (Ext = '.CMD') OR
+    (Ext = '.COM') OR
+    (Ext = '.CPL') OR
+    (Ext = '.DLL') OR
+    (Ext = '.EXE') OR
+    (Ext = '.JAR') OR
+    (Ext = '.MSI') OR
+    (Ext = '.MSP') OR
+    (Ext = '.PIF') OR
+    (Ext = '.PS1') OR   // A Windows PowerShell script. Runs PowerShell commands in the order specified in the file.
+    (Ext = '.PS2') OR   // A Windows PowerShell script. Runs PowerShell commands in the order specified in the file
+    (Ext = '.SCR') OR
+    (Ext = '.VBE') OR
+    (Ext = '.WS')  OR
+    (Ext = '.WSF') OR
+    (Ext = '.WSC') OR   //Windows Script Component and Windows Script Host control files. Used along with with Windows Script files.
+    (Ext = '.WSH') OR   //Windows Script Component and Windows Script Host control files. Used along with with Windows Script files.
+    (Ext = '.VBS') OR
+    {$IFDEF ANDROID}
+    (Ext = '.SO')  OR   // Android shared library
+    (Ext = '.APK') OR   // Android package
+    (Ext = '.DEX') OR   // Dalvik executable
+    {$ENDIF}
+    {$IFDEF MACOS}
+    (Ext = '.APP') OR   // macOS app bundle
+    (Ext = '.DYLIB') OR // macOS dynamic library
+    {$ENDIF}
+    {$IFDEF LINUX}
+    (Ext = '.SH')  OR   // Shell script
+    (Ext = '.RUN') OR   // Linux installer
+    {$ENDIF}
+    FALSE;
 end;
 
 
@@ -1209,25 +1247,32 @@ begin
 end;
 
 
-{ Example: C:\MyDocuments\1.doc  ->  C }
+{ Example: C:\MyDocuments\1.doc  ->  C
+  POSIX has no drive letters — returns ''. }
 function ExtractDrive(CONST FullPath: string): string;
-VAR i: Integer;
 begin
- I:= Pos(':', FullPath);
- if I = 2
+ {$IFDEF MSWINDOWS}
+ if Pos(':', FullPath) = 2
  then Result:= FullPath[1]
  else Result:= '';
+ {$ELSE}
+ Result:= '';
+ {$ENDIF}
 end;
 
 
-{ Example: C:\MyDocuments\1.doc  ->  MyDocuments\1.doc }
+{ Example: C:\MyDocuments\1.doc  ->  MyDocuments\1.doc
+  POSIX has no drive letters — returns the input unchanged. }
 function RemoveDrive(CONST FullPath: string): string;
-VAR i: Integer;
 begin
- I:= Pos(':', FullPath);
+ {$IFDEF MSWINDOWS}
+ VAR I:= Pos(':', FullPath);
  if I > 0
  then Result:= system.copy(FullPath, I + 2, Length(FullPath)) { +1 to jump over ':' and another +1 to jump over '\' }
  else Result:= '';
+ {$ELSE}
+ Result:= FullPath;
+ {$ENDIF}
 end;
 
 
@@ -1336,7 +1381,11 @@ begin
  WHILE FileExists(Result) DO { Increment file name until a file with same name does not exist anymore }
    Result:= IncrementFileNameEx(Result, 1, 3);
 
- TFile.Copy(FileName, Result, TRUE);
+ TRY
+   TFile.Copy(FileName, Result, TRUE);
+ EXCEPT
+   EXIT('');     { Documented contract: return '' on copy failure (matches BackupFileDate / BackupFileBak) }
+ END;
 end;
 
 
@@ -1803,19 +1852,23 @@ end;
 { For 'c:\1\2\3\' returns '1\'.
   For 'c:\1' it returns ''.
   For '\1\' returns the same.
+  POSIX: for '/1/2/3/' returns '1/'.
   http://stackoverflow.com/questions/22640879/how-to-get-path-to-the-parent-folder-of-a-certain-directory }
 function ExtractFirstFolder(CONST Folder: string): string;
-VAR iPos: Integer;
+VAR Start: Integer;
 begin
- {$IFNDEF MSWindows}
- raise Exception.Create('ExtractFirstFolder won''t work on Android!');
- {$ENDIF}
- iPos:= Pos(':' + PathDelim, Folder);
+ Start:= 1;
+ {$IFDEF MSWINDOWS}
+ var iPos:= Pos(':' + PathDelim, Folder);
  if iPos > 0
- then Result:= System.COPY(Folder, iPos+2, MaxInt)
- else Result:= Folder;
+ then Start:= iPos + 2;
+ {$ELSE}
+ if (Folder <> '') AND (Folder[Low(Folder)] = PathDelim)
+ then Start:= Low(Folder) + 1;     { strip leading '/' so the result is 'foo/' not '/foo' }
+ {$ENDIF}
 
- Result:= CopyTo(Result, 1, PathDelim, TRUE, FALSE, 2); { Copy until the 2nd backslash; return '' if not found }
+ Result:= System.COPY(Folder, Start, MaxInt);
+ Result:= CopyTo(Result, 1, PathDelim, TRUE, FALSE, 2); { Copy until the 2nd separator; return '' if not found }
 end;
 
 
@@ -1937,6 +1990,49 @@ begin
 end;
 
 
+{ Atomically replace FinalName with TempName, where TempName is an already-fully-written
+  file sitting in the SAME directory as FinalName. The point: a crash-safe save writes
+  the new content to a temp sibling, then calls this — so a crash mid-write damages only
+  the temp file and FinalName flips to the new content in one indivisible step.
+
+  TempName and FinalName MUST be on the same volume (atomic rename is a same-filesystem
+  operation). On success TempName no longer exists. Returns FALSE if the swap failed,
+  in which case FinalName is left untouched (the caller should keep the old file rather
+  than risk a non-atomic overwrite).
+
+  Platform behaviour (verified against the D13 RTL + measured 2026-05-21):
+    Windows  - MoveFileEx with MOVEFILE_REPLACE_EXISTING. One call; atomically replaces
+               an existing destination AND creates it when absent (first save), so no
+               existence branch is needed. MOVEFILE_WRITE_THROUGH flushes the result to
+               disk before returning, which also closes the power-loss window.
+               NOT used: System.IOUtils.TFile.Replace — it wraps the ReplaceFile API but
+               calls TPath.DoGetFullPath on the backup-file argument FIRST, so passing an
+               empty backup name raises EInOutArgumentException "Path is empty" (measured).
+               TFile.Replace also requires the destination to pre-exist (fails on a first
+               save). Raw ReplaceFile(...,backup=nil,...) works but MoveFileEx is simpler
+               and covers the first-save case in the same call.
+    POSIX    - System.SysUtils.RenameFile delegates to libc rename(2), which atomically
+               replaces an existing destination (or creates it) on the same filesystem.
+               System.SysUtils.RenameFile handles the UTF-8 marshalling for us
+               (System.SysUtils.pas:10907-10912). Do NOT use TFile.Replace here:
+               on POSIX it is a non-atomic copy+copy+delete. }
+function AtomicReplaceFile(CONST TempName, FinalName: string): Boolean;
+begin
+  Result:= FALSE;
+  if NOT TFile.Exists(TempName) then EXIT;     { nothing written — caller bug; refuse }
+  TRY
+    {$IFDEF MSWINDOWS}
+    Winapi.Windows.MoveFileEx(PChar(TempName), PChar(FinalName), MOVEFILE_REPLACE_EXISTING OR MOVEFILE_WRITE_THROUGH);
+    {$ELSE}
+    System.SysUtils.RenameFile(TempName, FinalName);          { POSIX rename(2) — atomic replace-or-create }
+    {$ENDIF}
+    Result:= TFile.Exists(FinalName) AND NOT TFile.Exists(TempName);
+  EXCEPT
+    Result:= FALSE;     { FinalName left as it was — caller keeps the previous good file }
+  END;
+end;
+
+
 
 
 
@@ -1945,21 +2041,36 @@ end;
 --------------------------------------------------------------------------------------------------}
 
 { Copies folder content (files and subfolders) from FromFolder to ToFolder.
+  Preserves the subfolder hierarchy: a file at FromFolder\sub\f.txt is copied to ToFolder\sub\f.txt.
   Returns the count of files that FAILED to copy (0 = all succeeded). }
 function CopyFolder(CONST FromFolder, ToFolder : String; Overwrite: Boolean= True; CONST FileType: string= '*.*'): integer;
 VAR
-  s, Dst : string;
+  s, Dst, SrcRoot, RelPath, DestFile: string;
   TSL: TStringList;
 begin
   Result:= 0;
   Dst:= Trail(ToFolder);
   ForceDirectories(Dst);
+  SrcRoot:= Trail(FromFolder);
 
   TSL:= ListFilesOf(FromFolder, FileType, TRUE, DigSubdirectories);
   TRY
     for s in TSL do
       TRY
-        TFile.Copy(s, Dst+ ExtractFileName(s), Overwrite);
+        { Compute path relative to FromFolder so we preserve the subfolder hierarchy.
+          Case-insensitive prefix match on Windows because the filesystem may report
+          a different case than the caller passed in. }
+        {$IFDEF MSWINDOWS}
+        if StartsText(SrcRoot, s)
+        {$ELSE}
+        if StartsStr(SrcRoot, s)
+        {$ENDIF}
+        then RelPath:= System.COPY(s, Length(SrcRoot) + 1, MaxInt)
+        else RelPath:= ExtractFileName(s);                              { fallback — shouldn't happen in normal use }
+
+        DestFile:= Dst + RelPath;
+        ForceDirectories(ExtractFilePath(DestFile));                    { ensure the target subfolder exists }
+        TFile.Copy(s, DestFile, Overwrite);
       EXCEPT
         Inc(Result);  { Count failed copies }
       END;
@@ -1984,7 +2095,11 @@ end;
  Example:  MoveFolder('c:\Documents\NewDocuments', 'OldDocuments') will move the NewDocuments folder to 'c:\Documents\OldDocuments'}
 function MoveFolderRel(CONST FromFolder, ToRelFolder: string; Overwrite: Boolean): string;
 begin
- if Pos(':', ToRelFolder) > 0
+ {$IFDEF MSWINDOWS}
+ if (Pos(':', ToRelFolder) > 0) OR TPath.IsPathRooted(ToRelFolder)
+ {$ELSE}
+ if TPath.IsPathRooted(ToRelFolder)                            { POSIX: ':' is a legal filename character; only '/' at start denotes absolute }
+ {$ENDIF}
  then Raise Exception.Create('The input folder cannot be a full path!'+ CRLFw+ ToRelFolder);
 
  Result:= TrimLastFolder(FromFolder) + ToRelFolder;
@@ -2151,7 +2266,7 @@ begin
     begin
       Sleep(10);   // Time to wait between checks (in milliseconds)
       if Stopwatch.ElapsedMilliseconds >= MaxWaitTime then
-        RAISE Exception.Create('EmptyDirectory - Directory deletion timed out!'+ IntToStr(MaxWaitTime)+ ' sec');
+        RAISE Exception.Create('EmptyDirectory - Directory deletion timed out after '+ IntToStr(MaxWaitTime)+ ' ms');
     end;
     if ForceDirectories(Path) < 0
     then RAISE Exception.Create('EmptyDirectory - Cannot reconstruct directory!');
@@ -2500,6 +2615,7 @@ end;
    DRIVES
 --------------------------------------------------------------------------------------------------}
 function DriveProtected(CONST Drive: Char):  Boolean;                                               { Attempt to create temporary file on specified drive. If created, the temporary file is deleted. see: http://stackoverflow.com/questions/15312704/gettempfilename-creates-an-empty-file }
+{$IFDEF MSWINDOWS}
 VAR
    Directory: string;
 begin
@@ -2508,6 +2624,11 @@ begin
  if NOT Result
  then RemoveDir(Directory);
 END;
+{$ELSE}
+begin
+ Result:= FALSE;     { No drive-letter concept on POSIX }
+END;
+{$ENDIF}
 
 
 { Returns false if the drive letter is not in ['A'..'Z'] }
@@ -2527,8 +2648,10 @@ end;
    DRIVE - Conversion
 --------------------------------------------------------------------------------------------------}
 
-{ Returns #0 for invalid or network paths }
+{ Returns #0 for invalid or network paths.
+  POSIX has no drive letters — always returns #0. }
 function ExtractDriveLetter(CONST Path: string): char;
+{$IFDEF MSWINDOWS}
 VAR s: string;
 begin
  Result:= #0;
@@ -2537,6 +2660,11 @@ begin
    if CharIsLetter(s[1])                                                                           { We don't accept network paths (\\) }
    then Result:= UpCase(s[1]);
 end;
+{$ELSE}
+begin
+ Result:= #0;
+end;
+{$ENDIF}
 
 
 { Converts the drive letter to the number of that drive. Example drive "A:" is 1 and drive "C:" is 3 }
