@@ -1,7 +1,7 @@
 UNIT LightCore.Math;
 
 {=============================================================================================================
-   2026.01.30
+   2026.05.26
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
@@ -36,12 +36,12 @@ USES
 {==================================================================================================
    RANGE
 ==================================================================================================}
- procedure NotHigherThan   (VAR iInput: Integer; MaxVal: Integer);                               { Clamps iInput to be no greater than MaxVal }
- procedure NotSmallerThan  (VAR iInput: Integer; MinVal: Integer);         overload;             { Clamps iInput to be no less than MinVal }
- procedure NotSmallerThan  (VAR iInput: Real   ; MinVal: Integer);         overload;
+ procedure NotHigherThan   (VAR iInput: Integer; MaxVal: Integer);          inline;              { Clamps iInput to be no greater than MaxVal }
+ procedure NotSmallerThan  (VAR iInput: Integer; MinVal: Integer);          overload; inline;    { Clamps iInput to be no less than MinVal }
+ procedure NotSmallerThan  (VAR iInput: Real   ; MinVal: Integer);          overload; inline;
 
- procedure EnsureZero      (VAR i: Integer);
- procedure EnsureRange     (VAR i: Integer; CONST Min, Max: Integer);
+ procedure EnsureZero      (VAR i: Integer);                                inline;
+ procedure EnsureRange     (VAR i: Integer; CONST Min, Max: Integer);       inline;
 
 
 {==================================================================================================
@@ -68,14 +68,16 @@ USES
 
 {==================================================================================================
    MEDIAN/INTERQ
+   NOTE: Interq10/25/75/90 use a fast index-based approximation (Length div N), not exact
+   textbook percentile interpolation. Use them for rough distribution shape, not statistical reports.
 ==================================================================================================}
  function  Median   (MX: TDoubleDynArray): Double;  overload;                                    { Use it like this: Median(TDoubleDynArray.Create(4.1, 5.6, 7.2, 1.7, 9.3, 4.4, 3.2)) }
  function  Median   (MX: System.Types.TIntegerDynArray): Integer;   overload;
  function  Mean     (MX: System.Types.TIntegerDynArray): Integer;                                { Average of numbers }
- function  Interq10 (MX: System.Types.TIntegerDynArray): Integer;
- function  Interq25 (MX: System.Types.TIntegerDynArray): Integer;
- function  Interq75 (MX: System.Types.TIntegerDynArray): Integer;
- function  Interq90 (MX: System.Types.TIntegerDynArray): Integer;
+ function  Interq10 (MX: System.Types.TIntegerDynArray): Integer;                                { Approximate 10th percentile }
+ function  Interq25 (MX: System.Types.TIntegerDynArray): Integer;                                { Approximate 25th percentile (Q1) }
+ function  Interq75 (MX: System.Types.TIntegerDynArray): Integer;                                { Approximate 75th percentile (Q3) }
+ function  Interq90 (MX: System.Types.TIntegerDynArray): Integer;                                { Approximate 90th percentile }
 
 
 {==================================================================================================
@@ -110,13 +112,13 @@ IMPLEMENTATION
 {-------------------------------------------------------------------------------------------------------------
    ENSURE RANGE
 -------------------------------------------------------------------------------------------------------------}
-procedure EnsureZero(VAR i: Integer);
+procedure EnsureZero(VAR i: Integer); inline;
 begin
  if i < 0 then i:= 0;
 end;
 
 
-procedure EnsureRange(VAR i: Integer; CONST Min, Max: Integer);
+procedure EnsureRange(VAR i: Integer; CONST Min, Max: Integer); inline;
 begin
  if i < Min then i:= Min;
  if i > Max then i:= Max;
@@ -126,21 +128,21 @@ end;
 
 
 
-procedure NotHigherThan(VAR iInput: Integer; MaxVal: Integer);  { Makes sure that the value of iInput is not bigger MaxVal }
+procedure NotHigherThan(VAR iInput: Integer; MaxVal: Integer); inline;  { Makes sure that the value of iInput is not bigger MaxVal }
 begin
  if iInput > MaxVal
  then iInput:= MaxVal;
 end;
 
 
-procedure NotSmallerThan(VAR iInput: Integer; MinVal: Integer); { Makes sure that the value of iInput is not < than MinVal }
+procedure NotSmallerThan(VAR iInput: Integer; MinVal: Integer); inline; { Makes sure that the value of iInput is not < than MinVal }
 begin
  if iInput < MinVal
  then iInput:= MinVal;
 end;
 
 
-procedure NotSmallerThan(VAR iInput: Real; MinVal: Integer);
+procedure NotSmallerThan(VAR iInput: Real; MinVal: Integer); inline;
 begin
  if iInput < MinVal
  then iInput:= MinVal;
@@ -183,52 +185,40 @@ end;
 
 
 function Find_Max(CONST a, b, c: Integer): Integer;
-{$IFDEF CPUx86}                      { See this for details: http://docwiki.embarcadero.com/RADStudio/XE8/en/Conditional_compilation_%28Delphi%29 }
- // eax : first param & Result
- // ecx : second param
- // edx : third param
+{$IFDEF CPUx86}
+ { Win32 register convention: 1st param -> EAX, 2nd -> EDX, 3rd -> ECX. Integer Result -> EAX.
+   See https://docwiki.embarcadero.com/RADStudio/en/Program_Control
+       https://docwiki.embarcadero.com/RADStudio/en/Assembly_Procedures_and_Functions }
  asm                                                { Does not work on 64 bit platforms! }
-    cmp eax, ecx
-    jl @less       // ecx > eax
     cmp eax, edx
-    jl @less2      // eax > ecx but less than edx. edx is max.  2 compares, 1, assignment, 1 jump
+    jl @less       // edx > eax
+    cmp eax, ecx
+    jl @less2      // eax > edx but less than ecx. ecx is max.  2 compares, 1 assignment, 1 jump
     ret            // eax is max.  2 compares, 0 assignments, 0 jumps
 
-    @less:         // ecx > eax.. Is ecx greater than edx?
-    cmp ecx, edx
-    jl  @less2     // edx is max.  2 compares, 1 assignment,  2 jumps
-    mov eax, ecx   // ecx is max.  2 compares, 1 assignment, 1 jump
+    @less:         // edx > eax.. Is edx greater than ecx?
+    cmp edx, ecx
+    jl  @less2     // ecx is max.  2 compares, 1 assignment, 2 jumps
+    mov eax, edx   // edx is max.  2 compares, 1 assignment, 1 jump
     ret
 
     @less2:
-    mov eax, edx   // edx is max
+    mov eax, ecx   // ecx is max
  end;
-{$ELSE }
- begin   { Also see:  http://www.mail-archive.com/delphi@elists.org/msg03076.html }
-  if A > B
-  then
-    if A > C
-    then Result := A
-    else Result := C
-  else
-    if B > C
-    then Result := B
-    else Result := C;
+{$ELSE}
+ begin
+  Result:= a;
+  if b > Result then Result:= b;
+  if c > Result then Result:= c;
  end;
 {$ENDIF}
 
 
 function Find_Max(CONST a, b, c: Cardinal): Cardinal;
 begin
- if A > B
- then
-   if A > C
-   then Result := A
-   else Result := C
- else
-   if B > C
-   then Result := B
-   else Result := C;
+ Result:= a;
+ if b > Result then Result:= b;
+ if c > Result then Result:= c;
 end;
 
 
@@ -279,7 +269,9 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 
 { Standard "round half up" for POSITIVE numbers: if fractional part >= 0.5 then rounds up.
-  Avoids "banker's rounding" where Round(25.5)=26 but Round(26.5)=26.
+  Avoids System.Round's "banker's rounding" (round half to even), where Round(2.5)=2 and Round(3.5)=4.
+  RoundEx(2.5)=3 and RoundEx(3.5)=4 — both round up at exactly 0.5.
+  Source: https://docwiki.embarcadero.com/Libraries/en/System.Round
   NOTE: For negative numbers, Frac() returns negative values, so this function
   behaves as "round toward positive infinity" (e.g., RoundEx(-2.5) = -2). }
 function RoundEx(CONST X: Extended): LongInt;
@@ -313,10 +305,12 @@ begin
 end;
 
 
-{ Rounds price to a "pretty" value ending in .9 (e.g., 341 -> 344.9, 346 -> 349.9) }
+{ Rounds price UP to the next multiple of 5, then subtracts 0.1 to give a "pretty" value ending in .9.
+  Examples: 341 -> 345 - 0.1 = 344.9 ; 346 -> 350 - 0.1 = 349.9
+  NOTE: Always rounds UP (uses RoundTo which is RoundUp-based), never to nearest. }
 function BeautifyPrice(Total: Extended): Extended;
 begin
-  Result:= RoundTo(Total, 5) - 0.1;  { Rounds to nearest 5 then subtracts 0.1 }
+  Result:= RoundTo(Total, 5) - 0.1;
 end;
 
 
@@ -345,15 +339,17 @@ begin
 end;
 
 
-{ Source: https://forum.lazarus.freepascal.org/index.php/topic,36342.15.html }
+{ Win32 register convention: X -> EAX, Y -> EDX, Integer Result -> EAX.
+  Algorithm: sign-extend EAX into EDX:EAX via CDQ (which destroys EDX),
+  then IDIV by ECX (copy of Y), then move remainder (EDX) into EAX.
+  See https://docwiki.embarcadero.com/RADStudio/en/Program_Control }
 {$IFDEF CPUX86}
 function FastModulo(const X, Y: Integer): Integer; assembler;
 asm
-  mov eax, ecx
-  mov ecx, edx
-  cdq
-  idiv ecx
-  mov eax, edx
+  mov ecx, edx   // ECX := Y (preserve before CDQ clobbers EDX)
+  cdq            // sign-extend EAX into EDX:EAX
+  idiv ecx       // EAX := quotient, EDX := remainder
+  mov eax, edx   // Result (EAX) := remainder
 end;
 {$ENDIF}
 
@@ -423,7 +419,7 @@ begin
 end;
 
 
-{ Returns the 10th percentile of the array.
+{ Approximate 10th percentile of the array (uses Length div 10 as the index — not exact textbook percentile).
   For small arrays (< 10 elements), returns a reasonable approximation. }
 function Interq10(MX: System.Types.TIntegerDynArray): Integer;
 VAR
@@ -443,7 +439,7 @@ begin
 end;
 
 
-{ Returns the 25th percentile (first quartile Q1) of the array.
+{ Approximate 25th percentile / Q1 (uses Length div 4 as the index — not exact textbook quartile).
   For small arrays (< 4 elements), returns a reasonable approximation. }
 function Interq25(MX: System.Types.TIntegerDynArray): Integer;
 VAR
@@ -463,7 +459,7 @@ begin
 end;
 
 
-{ Returns the 75th percentile (third quartile Q3) of the array.
+{ Approximate 75th percentile / Q3 (uses Length - Length div 4 as the index — not exact textbook quartile).
   For small arrays, returns a reasonable approximation. }
 function Interq75(MX: System.Types.TIntegerDynArray): Integer;
 VAR
@@ -484,7 +480,7 @@ begin
 end;
 
 
-{ Returns the 90th percentile of the array.
+{ Approximate 90th percentile (uses Length - Length div 10 as the index — not exact textbook percentile).
   For small arrays (< 10 elements), returns a reasonable approximation. }
 function Interq90(MX: System.Types.TIntegerDynArray): Integer;
 VAR
@@ -512,8 +508,10 @@ end;
 {$IF Defined(CPUX86)}
 { Linearly interpolates (blends) two bytes based on BlendPower.
   BlendPower=0 returns FG (foreground), BlendPower=255 returns BG (background).
-  Formula: Result = (FG * BlendPower + BG * (255 - BlendPower)) / 256
-  Useful for alpha blending single color channel values. }
+  Formula (fast approximation): Result = (FG * BlendPower + BG * (255 - BlendPower)) shr 8
+  NOTE: Uses shr 8 (divide by 256) instead of the exact divide-by-255. This is the standard
+  fast alpha-blend approximation — one instruction instead of a costly DIV, with negligible
+  visual error (max ~0.4% off). Useful for alpha blending single color channel values. }
 function MixBytes(FG, BG, BlendPower: Byte): Byte;
 asm
   push bx      // push some regs
