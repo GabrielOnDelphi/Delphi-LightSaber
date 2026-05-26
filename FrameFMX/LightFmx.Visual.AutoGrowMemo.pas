@@ -38,15 +38,18 @@ type
     function  ComputeNeededHeight: Single;
     procedure AdjustParentHeight;
     procedure OnChangeHandler(Sender: TObject);
+    procedure SetMinHeight      (const Value: Single);
+    procedure SetMaxHeight      (const Value: Single);
+    procedure SetInternalPadding(const Value: Single);
   protected
     procedure Resize; override;
     procedure Loaded; override;
   public
     constructor Create(AOwner: TComponent); override;
   published
-    property MinHeight       : Single read FMinHeight       write FMinHeight;
-    property MaxHeight       : Single read FMaxHeight       write FMaxHeight;
-    property InternalPadding : Single read FInternalPadding write FInternalPadding;
+    property MinHeight       : Single read FMinHeight       write SetMinHeight;
+    property MaxHeight       : Single read FMaxHeight       write SetMaxHeight;
+    property InternalPadding : Single read FInternalPadding write SetInternalPadding;
   end;
 
 procedure Register;
@@ -97,6 +100,12 @@ begin
     Layout.HorizontalAlign := TTextAlign.Leading;
     Layout.VerticalAlign   := TTextAlign.Leading;
     Layout.EndUpdate;
+    // Result is assigned to Parent.Height (see AdjustParentHeight). The parent slot must fit
+    // the memo PLUS its Margins: FMX ArrangeControl sizes an aligned child to Parent.Height
+    // minus the child's own Margins (FMX.Types.ArrangeControl -> PaddingRect). So the memo's
+    // exterior Margins ARE part of the height the parent must provide.
+    // The memo's own interior Padding is NOT added separately: FInternalPadding is calibrated
+    // for the default Padding=0, and is the single knob meant to absorb interior style insets.
     Result := Layout.TextHeight + Margins.Top + Margins.Bottom + FInternalPadding;
   finally
     FreeAndNil(Layout);
@@ -138,6 +147,33 @@ procedure TAutoGrowMemo.Resize;
 begin
   inherited;
   AdjustParentHeight;  // width change → text reflows → re-measure
+end;
+
+
+{ Re-measure when a sizing property changes at run or design time.
+  Skipped while csLoading: during streaming the setters fire before Loaded,
+  and Loaded does the first AdjustParentHeight once the form is fully built. }
+procedure TAutoGrowMemo.SetMinHeight(const Value: Single);
+begin
+  if SameValue(FMinHeight, Value) then Exit;
+  FMinHeight := Value;
+  if not (csLoading in ComponentState) then AdjustParentHeight;
+end;
+
+
+procedure TAutoGrowMemo.SetMaxHeight(const Value: Single);
+begin
+  if SameValue(FMaxHeight, Value) then Exit;
+  FMaxHeight := Value;
+  if not (csLoading in ComponentState) then AdjustParentHeight;
+end;
+
+
+procedure TAutoGrowMemo.SetInternalPadding(const Value: Single);
+begin
+  if SameValue(FInternalPadding, Value) then Exit;
+  FInternalPadding := Value;
+  if not (csLoading in ComponentState) then AdjustParentHeight;
 end;
 
 
