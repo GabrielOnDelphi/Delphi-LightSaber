@@ -1,4 +1,4 @@
-unit LightFmx.Common.DialogsBlocking;
+﻿unit LightFmx.Common.DialogsBlocking;
 
 {=============================================================================================================
    2026.05.16
