@@ -26,6 +26,15 @@ type
     [Test]
     procedure TestGetBodyFromHtml_Empty;
 
+    [Test]
+    procedure TestGetBodyFromHtml_WithAttributes;            { Regression: <body class="..."> must still parse. }
+
+    [Test]
+    procedure TestGetBodyFromHtml_Missing;                   { Regression: missing <body> tag must return '' instead of garbage. }
+
+    [Test]
+    procedure TestGetBodyFromHtml_UppercaseTags;             { Regression: </BODY> must match (was case-sensitive on close tag). }
+
     { Tag Stripping Tests }
     [Test]
     procedure TestStripAllTags;
@@ -64,7 +73,13 @@ type
     procedure TestExtractAttribValue_NotFound;
 
     [Test]
+    procedure TestExtractAttribValue_HrefBesideHreflang;     { Regression: substring-match bug. 'href' must not match 'hreflang'. }
+
+    [Test]
     procedure TestExtractAttribValueIE;
+
+    [Test]
+    procedure TestExtractAttribValueIE_TargetBesideDataTarget; { Regression: 'target' must not match 'data-target'. }
 
     { Attribute Replacement Tests }
     [Test]
@@ -158,6 +173,31 @@ begin
   HTML:= '<html><head></head><body></body></html>';
   Body:= GetBodyFromHtml(HTML);
   Assert.AreEqual('', Body);
+end;
+
+procedure TTestLightCoreHTML.TestGetBodyFromHtml_WithAttributes;
+var
+  HTML, Body: string;
+begin
+  HTML:= '<html><body class="dark" id="main">Content</body></html>';
+  Body:= GetBodyFromHtml(HTML);
+  Assert.AreEqual('Content', Body);
+end;
+
+procedure TTestLightCoreHTML.TestGetBodyFromHtml_Missing;
+var
+  Body: string;
+begin
+  Body:= GetBodyFromHtml('<html><head></head></html>');
+  Assert.AreEqual('', Body);
+end;
+
+procedure TTestLightCoreHTML.TestGetBodyFromHtml_UppercaseTags;
+var
+  Body: string;
+begin
+  Body:= GetBodyFromHtml('<HTML><BODY>Mixed Case</BODY></HTML>');
+  Assert.AreEqual('Mixed Case', Body);
 end;
 
 { Tag Stripping Tests }
@@ -257,12 +297,30 @@ begin
   Assert.AreEqual('', Value);
 end;
 
+procedure TTestLightCoreHTML.TestExtractAttribValue_HrefBesideHreflang;
+var
+  Value: string;
+begin
+  { Regression: the bare-name lookup used to match 'hreflang' when asked for 'href'. }
+  Value:= ExtractAttribValue('<a hreflang="en" href="http://example.com">', 'href');
+  Assert.AreEqual('http://example.com', Value);
+end;
+
 procedure TTestLightCoreHTML.TestExtractAttribValueIE;
 var
   Value: string;
 begin
   { IE doesn't always put quotes around attribute values }
   Value:= ExtractAttribValueIE('<a target=_blank>', 'target');
+  Assert.AreEqual('_blank', Value);
+end;
+
+procedure TTestLightCoreHTML.TestExtractAttribValueIE_TargetBesideDataTarget;
+var
+  Value: string;
+begin
+  { Regression: the bare-name lookup used to match 'data-target' when asked for 'target'. }
+  Value:= ExtractAttribValueIE('<a data-target="x" target="_blank">', 'target');
   Assert.AreEqual('_blank', Value);
 end;
 

@@ -163,6 +163,18 @@ type
     [Test]
     procedure TestFactorial_20;
 
+    [Test]
+    procedure TestFactorial_Overflow_Asserts;
+
+    { x86 ASM Tests }
+    {$IFDEF CPUX86}
+    [Test]
+    procedure TestFastModulo;
+
+    [Test]
+    procedure TestMixBytes;
+    {$ENDIF}
+
     { Other Tests }
     [Test]
     procedure TestGenerateRandomBoolean;
@@ -201,10 +213,17 @@ end;
 
 procedure TTestLightCoreMath.TestFind_Max_Integer;
 begin
-  Assert.AreEqual(3, Find_Max(1, 2, 3));
-  Assert.AreEqual(3, Find_Max(3, 2, 1));
-  Assert.AreEqual(3, Find_Max(2, 3, 1));
-  Assert.AreEqual(5, Find_Max(5, 5, 5));
+  { All 6 permutations of (1,2,3) — exercises every branch in the ASM/Pascal flow.
+    These caught the historic x86 ASM bug where param 2/3 register order was swapped. }
+  Assert.AreEqual(3, Find_Max(1, 2, 3), 'Find_Max(1,2,3)');
+  Assert.AreEqual(3, Find_Max(1, 3, 2), 'Find_Max(1,3,2)');
+  Assert.AreEqual(3, Find_Max(2, 1, 3), 'Find_Max(2,1,3)');
+  Assert.AreEqual(3, Find_Max(2, 3, 1), 'Find_Max(2,3,1)');
+  Assert.AreEqual(3, Find_Max(3, 1, 2), 'Find_Max(3,1,2)');
+  Assert.AreEqual(3, Find_Max(3, 2, 1), 'Find_Max(3,2,1)');
+  Assert.AreEqual(5, Find_Max(5, 5, 5), 'Find_Max(5,5,5)');
+  Assert.AreEqual(-1, Find_Max(-5, -3, -1), 'Find_Max(-5,-3,-1)');
+  Assert.AreEqual(0, Find_Max(-5, 0, -1), 'Find_Max(-5,0,-1)');
 end;
 
 procedure TTestLightCoreMath.TestFind_Max_Cardinal;
@@ -563,6 +582,42 @@ begin
   { 20! = 2432902008176640000 (maximum value before Int64 overflow) }
   Assert.AreEqual(Int64(2432902008176640000), Factorial(20));
 end;
+
+procedure TTestLightCoreMath.TestFactorial_Overflow_Asserts;
+begin
+  { 21! overflows Int64. The function asserts n <= 20. }
+  Assert.WillRaise(
+    procedure
+    begin
+      Factorial(21);
+    end,
+    EAssertionFailed);
+end;
+
+{ x86 ASM Tests }
+{$IFDEF CPUX86}
+procedure TTestLightCoreMath.TestFastModulo;
+begin
+  { Verify register convention is correct for FastModulo(X, Y) := X mod Y }
+  Assert.AreEqual(2, FastModulo(7, 5));          { 7 mod 5 = 2 }
+  Assert.AreEqual(0, FastModulo(10, 5));         { 10 mod 5 = 0 }
+  Assert.AreEqual(1, FastModulo(13, 4));         { 13 mod 4 = 1 }
+  Assert.AreEqual(-2, FastModulo(-7, 5));        { signed: -7 mod 5 = -2 (Delphi truncated div) }
+  Assert.AreEqual(7, FastModulo(7, 100));        { dividend < divisor }
+end;
+
+procedure TTestLightCoreMath.TestMixBytes;
+begin
+  { BlendPower = 0 -> pure FG }
+  Assert.AreEqual(Byte(100), MixBytes(100, 200, 0));
+  { BlendPower = 255 -> very close to pure BG (formula uses shr 8 so it's not exactly BG) }
+  Assert.IsTrue(MixBytes(100, 200, 255) >= 199);
+  { Symmetric midpoint blend: FG=BG -> result = FG (regardless of BlendPower) }
+  Assert.AreEqual(Byte(50), MixBytes(50, 50, 128));
+  Assert.AreEqual(Byte(50), MixBytes(50, 50, 0));
+  Assert.AreEqual(Byte(50), MixBytes(50, 50, 255));
+end;
+{$ENDIF}
 
 { Other Tests }
 

@@ -41,7 +41,7 @@ type
     [Test]
     procedure TestCloseOnEscape_DefaultValue;
 
-    { Saved Flag Tests }
+    { FFormSaved Flag Tests }
     [Test]
     procedure TestSaved_InitialValue;
 
@@ -137,7 +137,7 @@ begin
 end;
 
 
-{ Saved Flag Tests }
+{ FFormSaved Flag Tests }
 
 procedure TTestLightForm.TestSaved_InitialValue;
 var
@@ -151,7 +151,7 @@ begin
 
   Form:= TLightForm.Create(NIL, asNone);
   try
-    Assert.IsFalse(Form.Saved, 'Saved should be False after creation');
+    Assert.IsFalse(Form.FFormSaved, 'FFormSaved should be False after creation');
   finally
     Form.Free;
   end;
