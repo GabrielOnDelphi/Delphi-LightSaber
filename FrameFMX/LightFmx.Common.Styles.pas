@@ -163,41 +163,56 @@ end;
 
 
 { Determines if the active FMX style is a dark theme.
-  Checks TStyleDescription.PlatformTarget for [DARKSTYLE] tag.
-     This is authoritative and handles image-based skins (e.g. Calypso Dark) where
-     the backgroundstyle is a TStyleObject with no Fill.Color to probe.
-  Fallback 1. Background probe: reads Fill.Color from 'backgroundstyle' (TRectangle) or Brush.Color from 'background' (TBrushObject) and tests luminance < 0.5.
-  Fallback 2. Text probe: if text color is light (luminance > 0.5), the theme must be dark.
-  Returns False when no style is loaded or detection fails. }
+  Tries four signals in order; first one that yields a usable answer wins.
+    1. Background-rectangle probe: 'backgroundstyle' TRectangle.Fill.Color luminance < 0.5.
+       Catches most real-world solid-background dark styles (CalypsoSE Dark, Nero Dark, custom dark styles).
+    2. Background-brush probe: 'background' TBrushObject.Brush.Color luminance < 0.5.
+       Catches older styles that use TBrushObject instead of TRectangle.
+    3. Text-color probe: 'text' TText.Color luminance > 0.5 (light text ⇒ dark theme).
+       Catches IMAGE-based skins (Jet, Calypso, Diamond) — these have a TStyleObject for 'backgroundstyle' (bitmap fill, not a probe-able solid color) but their 'text' resource is still a TText whose Color is set to claWhite (or similar light tone) on dark variants.
+    4. PlatformTarget '[DARKSTYLE]' tag.
+       Last-resort: relies on the style author having opted into the Sydney-era metadata tag. Many older dark styles omit it.
+  Returns False when no style is loaded or none of the four signals fire.
+
+  Why probes come before the tag: the [DARKSTYLE] PlatformTarget marker is opt-in (Sydney-era metadata) and most third-party dark styles ship without it. Trusting the tag first would misclassify them as light. Reading the actual visible color is authoritative — the tag is only useful when there is nothing else to read.
+
+  Why three probes instead of one: different style file vintages encode the chrome background differently. Modern styles paint it with a TRectangle, older styles with a TBrushObject, and image-based skins (Jet, Calypso, Diamond) paint it with a tiled bitmap that has no probe-able solid color at all. The TText probe is the fallback that catches image-based skins, because even when the background is a bitmap the label text color is still a plain TAlphaColor that reveals the theme. }
 function IsDarkStyle: Boolean;
 VAR
   ActiveStyle: TFmxObject;
-  BgObj: TFmxObject;
+  Obj: TFmxObject;
   Description: TStyleDescription;
 begin
   Result:= False;
   ActiveStyle:= TStyleManager.ActiveStyle(NIL);
   if ActiveStyle = NIL then EXIT;
 
-  // Primary: check style metadata (handles image-based skins like Calypso Dark)
+  // 1. Probe 'backgroundstyle' rectangle fill color
+  Obj:= ActiveStyle.FindStyleResource('backgroundstyle');
+  if (Obj <> NIL) AND (Obj is TRectangle)
+  then EXIT(Luminance(TRectangle(Obj).Fill.Color) < 0.5);
+
+  // 2. Probe 'background' brush color
+  Obj:= ActiveStyle.FindStyleResource('background');
+  if (Obj <> NIL) AND (Obj is TBrushObject)
+  then EXIT(Luminance(TBrushObject(Obj).Brush.Color) < 0.5);
+
+  // 3. Image-based skin: 'backgroundstyle' is a TStyleObject (bitmap) — no solid color to probe.
+  //    Image-based skins (Jet, Calypso, Diamond, ...) DO have a top-level 'labelstyle' that is a
+  //    TLayout with a single TText child whose FontColor IS the chrome's foreground text color.
+  //    Walk the layout's children one level for the TText. Light text (Luminance > 0.5) on an
+  //    image-based skin ⇒ the chrome bitmaps are dark.
+  //    Note: FindStyleResource second arg is Clone, not Recurse — pass nothing / False.
+  Obj:= ActiveStyle.FindStyleResource('labelstyle');
+  if Obj <> NIL then
+   for VAR i:= 0 to Obj.ChildrenCount - 1 do
+    if Obj.Children[i] is TText
+    then EXIT(Luminance(TText(Obj.Children[i]).Color) > 0.5);
+
+  // 4. No usable color probe — fall back to the [DARKSTYLE] tag in the style metadata
   Description:= TStyleManager.FindStyleDescriptor(ActiveStyle);
   if Description <> NIL
   then EXIT(Description.PlatformTarget.Contains('[DARKSTYLE]'));
-
-  // Fallback 1: probe 'backgroundstyle' rectangle fill color
-  BgObj:= ActiveStyle.FindStyleResource('backgroundstyle');
-  if (BgObj <> NIL) AND (BgObj is TRectangle)
-  then EXIT(Luminance(TRectangle(BgObj).Fill.Color) < 0.5);
-
-  // Fallback 2: probe 'background' brush color
-  BgObj:= ActiveStyle.FindStyleResource('background');
-  if (BgObj <> NIL) AND (BgObj is TBrushObject)
-  then EXIT(Luminance(TBrushObject(BgObj).Brush.Color) < 0.5);
-
-  // Safety net: if label text is light, theme must be dark
-  BgObj:= ActiveStyle.FindStyleResource('text');
-  if (BgObj <> NIL) AND (BgObj is TText)
-  then EXIT(Luminance(TText(BgObj).Color) > 0.5);
 end;
 
 
