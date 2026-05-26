@@ -84,6 +84,7 @@ CONST
    IconUndo          = #$21BA;              // ANTICLOCKWISE OPEN CIRCLE ARROW— good for "reverse direction / undo order"
    IconSettingsGear  = '⚙';                // U+2699
    IconSettingsKey   = '🔧';                // U+1F527 (WRENCH)
+   IconOrderBuy      = '🛒';                // U+1F6D2 (CART)
 
    IconPlay        = '▶';    // U+25B6
    IconPause       = '⏸';   // U+23F8
@@ -98,9 +99,6 @@ CONST
    IconAlarm       = '⏰';   // U+23F0: Alarm Clock
    IconHourglass   = '⏳';   // U+23F3: Hourglass with Flowing Sand
    IconWatch       = '⌚';   // U+231A: Watch
-
-
-
 
 
 TYPE
