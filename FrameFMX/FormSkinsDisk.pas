@@ -227,7 +227,9 @@ begin
 
   // Now that the message loop is running, surface any deferred startup warning
   // captured during LoadLastStyle (poison-marker recovery path). MessageError is
-  // safe here — dispatched from the timer thread on the message pump.
+  // safe here — FMX TTimer.OnTimer runs on the main thread (Windows: WM_TIMER on
+  // the main message loop; Android: posted to MainHandler), and the message pump
+  // is now active, so the async dialog can display.
   if PendingStartupMsg <> '' then
     begin
       var Msg: string;
@@ -240,7 +242,19 @@ end;
 
 procedure StartMarkerClearTimer;
 begin
+  { LoadLastStyle is a once-per-process DPR call. A second call would orphan the first timer
+    (still Application-owned, but its OnTick disables only the new instance — the old one keeps
+    firing). The Assert catches the contract breach in debug; the guard below stops the orphan
+    in release builds. A hard raise is wrong here: this runs pre-Application.Run, where an
+    unhandled exception aborts startup with no dialog. }
   Assert(MarkerClearTimer = NIL, 'StartMarkerClearTimer: timer already armed — LoadLastStyle called twice?');
+  if MarkerClearTimer <> NIL then
+  begin
+    if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
+    then AppDataCore.RamLog.AddError('StartMarkerClearTimer: timer already armed — LoadLastStyle called more than once. Ignoring.');
+    EXIT;
+  end;
+
   if MarkerClearHelper = NIL
   then MarkerClearHelper:= TMarkerClearHelper.Create(Application);   // Owner=Application => freed at shutdown
   MarkerClearTimer:= TTimer.Create(Application);                     // Owner=Application => freed at shutdown, safe to leak through OnTimer
@@ -328,8 +342,14 @@ begin
   if Assigned(FInstance)
   then EXIT(NIL);
 
-  AppData.CreateForm(TfrmStyleDisk, FInstance, asNone);
-  Assert(Assigned(FInstance), 'TfrmStyleDisk.CreateEmbedded: CreateForm returned NIL — must be called after AppData.Run');
+  { Must use AppData.CreateEmbedded (not CreateForm): only that path runs
+    TLightForm.CreateEmbedded, which sets FEmbedded:=TRUE before the inherited
+    constructor. Without it FEmbedded stays FALSE, so AfterConstruction flashes a
+    top-level window and CloseEmbedded / FOnEmbeddedClose / the btnOK+KeyDown
+    embedded branches all silently no-op (the host never gets its close callback
+    and the form leaks). CreateEmbedded constructs synchronously and sets AutoState:=asNone. }
+  AppData.CreateEmbedded(TfrmStyleDisk, FInstance);
+  Assert(Assigned(FInstance), 'TfrmStyleDisk.CreateEmbedded: form was not created');
   FInstance.FOnEmbeddedClose:= AOnClose;
   Result:= FInstance;
 end;
@@ -395,10 +415,10 @@ end;
 procedure TfrmStyleDisk.btnOKClick(Sender: TObject);
 begin
   if FEmbedded
-  then 
+  then
     begin
-      TThread.ForceQueue(NIL, procedure begin CloseEmbedded end);   // 2-arg overload with TThreadProcedure exists; 2-arg Queue does NOT (only Queue(AThread, AMethod) or single-arg Queue(AProc)).
-    end 
+      TThread.ForceQueue(NIL, procedure begin CloseEmbedded end);   // ForceQueue's (AThread; AThreadProc: TThreadProcedure) class overload accepts an anonymous method; passing NIL as AThread is required so the entry is not dropped when a worker thread is freed.
+    end
   else Close;
 end;
 
@@ -408,7 +428,7 @@ procedure TfrmStyleDisk.FormKeyDown(Sender: TObject; var Key: Word; var KeyChar:
 begin
   if (Key = vkEscape) or (Key = vkReturn) then
     if FEmbedded
-    then TThread.ForceQueue(NIL, procedure begin CloseEmbedded end)   // See btnOKClick: 2-arg Queue with anon proc doesn't exist; ForceQueue does.
+    then TThread.ForceQueue(NIL, procedure begin CloseEmbedded end)   // See btnOKClick.
     else Close;
 end;
 
@@ -477,7 +497,8 @@ begin
 end;
 
 
-{ Handles style selection - loads and applies the selected style }
+{ Handles style selection - loads and applies the selected style.
+  Persists immediately to INI on success so the choice survives even if the host app is killed before TfrmStyleDisk.FormPreRelease runs (Android backgrounding, swipe-from-Recents, crash). The matching FormPreRelease save is kept as belt-and-braces. }
 procedure TfrmStyleDisk.lBoxChange(Sender: TObject);
 begin
   if lBox.ItemIndex < 0 then EXIT;
@@ -490,10 +511,18 @@ begin
       begin
         TStyleManager.SetStyle(nil);   { Revert to native platform style }
         CurrentStyleName:= DefPlatformStyle;
+        
+        //todo 2: use the real (appdate) INI file
+        LightCore.INIFileQuick.WriteString(IniKeyStyle, CurrentStyleName);
       end
     else
-      if LoadStyleFromFile(lBox.Items[lBox.ItemIndex])
-      then CurrentStyleName:= lBox.Items[lBox.ItemIndex];
+      if LoadStyleFromFile(lBox.Items[lBox.ItemIndex]) then
+       begin
+         CurrentStyleName:= lBox.Items[lBox.ItemIndex];
+         
+        //todo 2: use the real INI file         
+         LightCore.INIFileQuick.WriteString(IniKeyStyle, CurrentStyleName);
+       end;
   FINALLY
     lBox.Enabled:= TRUE;
   END;

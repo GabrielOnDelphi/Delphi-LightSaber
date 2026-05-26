@@ -1,0 +1,146 @@
+object frmUpdaterSettings: TfrmUpdaterSettings
+  Left = 0
+  Top = 0
+  Caption = 'Updater Settings'
+  ClientHeight = 380
+  ClientWidth = 460
+  FormFactor.Width = 460
+  FormFactor.Height = 380
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  OnClose = FormClose
+  DesignerMasterStyle = 0
+  object Container: TLayout
+    Align = Client
+    Size.Width = 460.000000000000000000
+    Size.Height = 380.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object grpInterval: TGroupBox
+      Align = Top
+      Margins.Left = 8.000000000000000000
+      Margins.Top = 8.000000000000000000
+      Margins.Right = 8.000000000000000000
+      Margins.Bottom = 4.000000000000000000
+      Size.Width = 444.000000000000000000
+      Size.Height = 140.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      Text = 'Check for news'
+      object cmbWhen: TComboBox
+        Items.Strings = (
+          'Never'
+          'At startup'
+          'Every N hours')
+        Position.X = 16.000000000000000000
+        Position.Y = 32.000000000000000000
+        Size.Width = 200.000000000000000000
+        Size.Height = 28.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        OnChange = cmbWhenChange
+      end
+      object lblHours: TLabel
+        StyledSettings = [Family, Size, Style, FontColor]
+        Position.X = 16.000000000000000000
+        Position.Y = 72.000000000000000000
+        Size.Width = 130.000000000000000000
+        Size.Height = 18.000000000000000000
+        Size.PlatformDefault = False
+        Text = 'Hours between checks:'
+        TabOrder = 1
+      end
+      object spnHours: TSpinBox
+        Position.X = 152.000000000000000000
+        Position.Y = 68.000000000000000000
+        Size.Width = 96.000000000000000000
+        Size.Height = 28.000000000000000000
+        Size.PlatformDefault = False
+        Min = 1.000000000000000000
+        Max = 168.000000000000000000
+        Value = 12.000000000000000000
+        Increment = 1.000000000000000000
+        TabOrder = 2
+      end
+      object lblPrivacy: TLabel
+        StyledSettings = [Family, Size, Style]
+        Position.X = 16.000000000000000000
+        Position.Y = 104.000000000000000000
+        Size.Width = 412.000000000000000000
+        Size.Height = 24.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.FontColor = claGray
+        Text = 'Updater disabled. The program will still check every 180 days.'
+        Visible = False
+        TabOrder = 3
+      end
+    end
+    object GroupBox1: TGroupBox
+      Align = Top
+      Margins.Left = 8.000000000000000000
+      Margins.Top = 4.000000000000000000
+      Margins.Right = 8.000000000000000000
+      Margins.Bottom = 4.000000000000000000
+      Position.Y = 148.000000000000000000
+      Size.Width = 444.000000000000000000
+      Size.Height = 132.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      Text = 'General'
+      object chkConnectFail: TLightCheckBox
+        Position.X = 16.000000000000000000
+        Position.Y = 32.000000000000000000
+        Size.Width = 412.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Text = 'Show error messages when the program cannot connect to the internet'
+      end
+      object chkForceNewsFound: TLightCheckBox
+        Position.X = 16.000000000000000000
+        Position.Y = 64.000000000000000000
+        Size.Width = 412.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        Text = 'Force "news found" (BetaTester mode — debugging only)'
+        Visible = False
+      end
+    end
+    object pnlBtm: TLayout
+      Align = Bottom
+      Size.Width = 460.000000000000000000
+      Size.Height = 56.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      object btnOK: TButton
+        Align = Right
+        Margins.Top = 12.000000000000000000
+        Margins.Right = 8.000000000000000000
+        Margins.Bottom = 12.000000000000000000
+        Position.X = 332.000000000000000000
+        Position.Y = 12.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 32.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Text = 'OK'
+        OnClick = btnOKClick
+      end
+      object btnApply: TButton
+        Align = Right
+        Margins.Top = 12.000000000000000000
+        Margins.Right = 8.000000000000000000
+        Margins.Bottom = 12.000000000000000000
+        Position.X = 204.000000000000000000
+        Position.Y = 12.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 32.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 1
+        Text = 'Apply'
+        OnClick = btnApplyClick
+      end
+    end
+  end
+end

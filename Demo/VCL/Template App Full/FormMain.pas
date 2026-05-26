@@ -164,7 +164,7 @@ end;
 procedure TMainForm.FormPreRelease;
 begin
   inherited FormPreRelease;
-  if NOT Saved then
+  if NOT FFormSaved then
    begin
      GuiSettings.Save;
      FreeAndNil(GuiSettings);
