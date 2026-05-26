@@ -1,0 +1,156 @@
+object frmUpdater: TfrmUpdater
+  Left = 0
+  Top = 0
+  Caption = 'Updates and News'
+  ClientHeight = 480
+  ClientWidth = 560
+  FormFactor.Width = 560
+  FormFactor.Height = 480
+  FormFactor.Devices = [Desktop]
+  OnCreate = FormCreate
+  OnClose = FormClose
+  DesignerMasterStyle = 0
+  object Container: TLayout
+    Align = Client
+    Size.Width = 560.000000000000000000
+    Size.Height = 480.000000000000000000
+    Size.PlatformDefault = False
+    TabOrder = 0
+    object pnlTop: TLayout
+      Align = Top
+      Size.Width = 560.000000000000000000
+      Size.Height = 110.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 0
+      object lblVersion: TLabel
+        Align = Top
+        StyledSettings = [Family, Style]
+        Margins.Left = 8.000000000000000000
+        Margins.Top = 8.000000000000000000
+        Margins.Right = 8.000000000000000000
+        Margins.Bottom = 4.000000000000000000
+        Size.Width = 544.000000000000000000
+        Size.Height = 48.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.Font.Size = 13.000000000000000000
+        TextSettings.HorzAlign = Center
+        Text = '@Version info'
+        TabOrder = 0
+      end
+      object lblStatus: TLabel
+        Align = Top
+        StyledSettings = [Family, Style]
+        Margins.Left = 8.000000000000000000
+        Margins.Right = 8.000000000000000000
+        Margins.Bottom = 4.000000000000000000
+        Size.Width = 544.000000000000000000
+        Size.Height = 24.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.Font.Size = 14.000000000000000000
+        TextSettings.HorzAlign = Center
+        Text = ''
+        TabOrder = 1
+      end
+      object lblConnectError: TLabel
+        Align = Top
+        StyledSettings = [Family, Style]
+        Margins.Left = 8.000000000000000000
+        Margins.Right = 8.000000000000000000
+        Margins.Bottom = 4.000000000000000000
+        Size.Width = 544.000000000000000000
+        Size.Height = 22.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.FontColor = claRed
+        TextSettings.HorzAlign = Center
+        Text = ''
+        Visible = False
+        TabOrder = 2
+      end
+    end
+    object Memo: TMemo
+      Touch.InteractiveGestures = [LongTap, DoubleTap]
+      DataDetectorTypes = []
+      Align = Client
+      Margins.Left = 8.000000000000000000
+      Margins.Top = 4.000000000000000000
+      Margins.Right = 8.000000000000000000
+      Margins.Bottom = 4.000000000000000000
+      ReadOnly = True
+      Size.Width = 544.000000000000000000
+      Size.Height = 270.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      Viewport.Width = 540.000000000000000000
+      Viewport.Height = 266.000000000000000000
+    end
+    object pnlBottom: TLayout
+      Align = Bottom
+      Size.Width = 560.000000000000000000
+      Size.Height = 96.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
+      object lblDownload: TLabel
+        Align = Top
+        Cursor = crHandPoint
+        StyledSettings = [Family, Size, Style]
+        HitTest = True
+        Margins.Left = 8.000000000000000000
+        Margins.Top = 4.000000000000000000
+        Margins.Right = 8.000000000000000000
+        Margins.Bottom = 2.000000000000000000
+        Size.Width = 544.000000000000000000
+        Size.Height = 20.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.FontColor = claBlue
+        TextSettings.HorzAlign = Center
+        Text = 'Download the new version'
+        TabOrder = 0
+        OnClick = lblDownloadClick
+      end
+      object lblRelHistory: TLabel
+        Align = Top
+        Cursor = crHandPoint
+        StyledSettings = [Family, Size, Style]
+        HitTest = True
+        Margins.Left = 8.000000000000000000
+        Margins.Right = 8.000000000000000000
+        Margins.Bottom = 4.000000000000000000
+        Size.Width = 544.000000000000000000
+        Size.Height = 20.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.FontColor = claBlue
+        TextSettings.HorzAlign = Center
+        Text = 'See the release history'
+        TabOrder = 1
+        OnClick = lblRelHistoryClick
+      end
+      object btnSettings: TButton
+        Align = Left
+        Margins.Left = 8.000000000000000000
+        Margins.Top = 4.000000000000000000
+        Margins.Bottom = 8.000000000000000000
+        Position.Y = 48.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 36.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 2
+        Text = 'Settings...'
+        OnClick = btnSettingsClick
+      end
+      object btnClose: TButton
+        Align = Right
+        Margins.Top = 4.000000000000000000
+        Margins.Right = 8.000000000000000000
+        Margins.Bottom = 8.000000000000000000
+        Position.X = 432.000000000000000000
+        Position.Y = 48.000000000000000000
+        Size.Width = 120.000000000000000000
+        Size.Height = 36.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 3
+        Text = 'Close'
+        OnClick = btnCloseClick
+      end
+    end
+  end
+end
