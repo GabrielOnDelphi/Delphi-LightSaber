@@ -78,7 +78,7 @@ TYPE
     FAutoSaveForm: TAutoState;
     procedure WMPostInit(var Msg: TMessage); message WM_POSTINIT;
   protected
-    Saved: Boolean;
+    FFormSaved: Boolean;   { TRUE once saveBeforeExit has run — prevents double-save on shutdown }
     procedure Loaded; override;
     procedure saveBeforeExit;
 
@@ -117,7 +117,7 @@ begin
   ScreenSnap:= TRUE;
   Position  := poDesigned;  // Without this we cannot restore form's position on screen!
   Showhint  := TRUE;
-  Saved     := FALSE;
+  FFormSaved:= FALSE;
 
   FAutoSaveForm := AutoSaveForm; // Default value. Can be overriden by AppData.CreateForm
 end;
@@ -194,7 +194,7 @@ end;
   Details: https://groups.google.com/forum/#!msg/borland.public.delphi.objectpascal/82AG0_kHonU/ft53lAjxWRMJ }
 procedure TLightForm.saveBeforeExit;
 begin
-  if NOT Saved
+  if NOT FFormSaved
   AND NOT AppData.Initializing then
   begin
     try
@@ -203,13 +203,13 @@ begin
       if AutoState > asNone  // Give the user the option not to save the form
       then SaveForm;
     finally
-      Saved:= TRUE;             // Make sure it is put to true even on accidents, otherwise we might call it multiple times.
+      FFormSaved:= TRUE;        // Make sure it is put to true even on accidents, otherwise we might call it multiple times.
     end;
   end;
 end;
 
 
-{ Called ONLY once, when Saved = False }
+{ Called ONLY once, when FFormSaved = False }
 procedure TLightForm.FormPreRelease;
 begin
   // Give user a chance to call its own finalization code (guaranteed once)
