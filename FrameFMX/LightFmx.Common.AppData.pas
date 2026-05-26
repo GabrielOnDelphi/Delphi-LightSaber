@@ -108,7 +108,7 @@ USES
   {$ENDIF}
   System.SysUtils, System.Classes, System.UITypes, System.Types, System.IOUtils, System.Generics.Collections,
   FMX.Forms, FMX.Platform,
-  LightFMX.Common.LogForm,
+  LightFmx.Common.LogForm,
   LightCore.AppData, LightCore.IO;
 
 TYPE
@@ -200,10 +200,15 @@ end;
 
 procedure TAppData.Run;
 begin
-  // StartMinim remembers application's last state (minimized or not) and minimizes on startup if it was minimized before
-  // Note: FMX: CreateForm does not create the given form immediately. It just adds a request to the pending list. RealCreateForms creates the real forms.
+  // StartMinim remembers application's last state (minimized or not) and minimizes on startup if it was minimized before.
+  // Note: FMX defers form creation — Application.MainForm is NIL until RealCreateForms runs INSIDE Application.Run.
+  // Calling Minimize here would hit its 'MainForm = NIL' early-exit and silently do nothing.
+  // So we defer the Minimize to the message queue: by the time the queued block runs, RealCreateForms has created the main form and Application.MainForm is assigned.
   if StartMinim
-  then Minimize;
+  then TThread.ForceQueue(NIL, procedure
+       begin
+         Minimize;
+       end);
 
   Application.Run;
 end;
@@ -276,8 +281,11 @@ begin
 
   // If form was created immediately (reference not nil), AutoState was already
   // set via GetAutoState in Loaded. Clean up any remaining pending entry.
+  // Delete the OLDEST matching entry (lowest index) — GetAutoState also consumes the oldest entry first. 
+  // Both loops MUST agree on FIFO order, otherwise with two queued forms of the same class GetAutoState consumes one entry and this
+  // cleanup deletes the other, leaving a desynced list (one form gets the wrong AutoState, the other raises 'Form was not created via AppData.CreateForm').
   if TObject(aReference) <> NIL then
-    for i := FPendingAutoStates.Count - 1 downto 0 do
+    for i := 0 to FPendingAutoStates.Count - 1 do
       if FPendingAutoStates[i].ClassName = aClass.ClassName then
       begin
         FPendingAutoStates.Delete(i);
@@ -292,6 +300,7 @@ VAR Dummy: TForm;
 begin
   // SAFETY: during initialization FMX defers form creation — Dummy will be NIL after the call returns, so calling Dummy.Show would dereference a dangling stack reference.
   Assert(NOT Initializing, 'CreateForm (2-param) called during initialization — use the 4-param overload and check for NIL before Show');
+  Dummy:= NIL;   // Must init: FMX defers creation during startup and never writes the reference. Without this, the 'if TObject(aReference)<>NIL' test in the 4-param overload reads an uninitialized stack slot when Asserts are off (release build).
   CreateForm(aClass, Dummy, aAutoState, AOwner);
   // After Run, FMX creates forms synchronously — Dummy is always assigned here. The Assert above guarantees we never reach this in deferred-creation mode.
   if Assigned(Dummy)
