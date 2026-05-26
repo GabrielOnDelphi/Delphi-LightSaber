@@ -42,6 +42,7 @@
         <DCC_DcuOutput>..\$(ProductVersion)_$(Platform)_$(Config)</DCC_DcuOutput>
         <DCC_Define>CCRExif;FastJpg;GR32;Jpg2000;$(DCC_Define)</DCC_Define>
         <DCC_Description>LightSaber - Graphics lib</DCC_Description>
+        <DCC_GARBAGE>false</DCC_GARBAGE>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>
