@@ -142,8 +142,7 @@ USES
    , Macapi.AppKit, Macapi.Helpers, Macapi.Foundation
    {$ENDIF}
    {$IFDEF ANDROID}
-   , Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Net
-   , Androidapi.JNI.JavaTypes, Androidapi.Helpers
+   , Androidapi.JNI.GraphicsContentViewText, Androidapi.JNI.Net, Androidapi.JNI.JavaTypes, Androidapi.Helpers, Androidapi.JNI.App
    {$ENDIF}
    {$IFDEF IOS}
    , iOSapi.UIKit, Macapi.Helpers
@@ -157,17 +156,17 @@ USES
 --------------------------------------------------------------------------------------------------}
 function UrlForceHttp(CONST URL: string): string;                  { Add 'HTTP' in from of the URL if it isn't there already }
 begin
- if CheckHttpStart(URL)
- then Result:= URL
- else Result:= 'http://'+ URL;
+  if CheckHttpStart(URL)
+  then Result:= URL
+  else Result:= 'http://'+ URL;
 end;
 
 
 
 function CheckHttpStart(CONST URL: string): Boolean;               { Check if the URL starts with 'HTTP/HTTPS' }
 begin
- Result:= (PosInsensitive('http://' , URL) = 1)
-       OR (PosInsensitive('https://', URL) = 1);
+  Result:= (PosInsensitive('http://' , URL) = 1)
+        OR (PosInsensitive('https://', URL) = 1);
 end;    // https://lh4.googleusercontent.com/2gVoGQ6mMbQuscGho92xw-oL-UvrpqfAYX3a9eCqJkzyNwJNZD5Jdm1a2irS6xV0s_xvXUsxnzq_Qho=w1190-h559
 
 
@@ -175,25 +174,25 @@ end;    // https://lh4.googleusercontent.com/2gVoGQ6mMbQuscGho92xw-oL-UvrpqfAYX3
 function CheckWwwStart(CONST URL: string): Boolean;                { Check if the URL starts with 'WWW' }
 VAR Start: Integer;
 begin
- Start:= PosInsensitive('www.' , URL);
- Result:= (Start > 0)
-      AND (Start < 10);                                            { this is the case where the URL has 'HTTP(s)://' at the beginning }
+  Start:= PosInsensitive('www.' , URL);
+  Result:= (Start > 0)
+       AND (Start < 10);                                            { this is the case where the URL has 'HTTP(s)://' at the beginning }
 end;
 
 
 
 function CheckURLStart(CONST URL: string): Boolean;                { Check if the URL starts with 'HTTPs' or 'www' }
 begin
- Result:= CheckHttpStart(URL)
-       OR CheckWwwStart (URL);
+  Result:= CheckHttpStart(URL)
+        OR CheckWwwStart (URL);
 end;
 
 
 
 function isUrl (CONST s: string): Boolean;  { DEPREACTED USE CheckURLStart }       { Returns True if text starts wit http/www/ftp }
 begin
- Result:= CheckHttpStart(s)
-       OR CheckWwwStart (s);
+  Result:= CheckHttpStart(s)
+        OR CheckWwwStart (s);
 end;
 
 
@@ -201,14 +200,12 @@ end;
 function UrlCorrectInvalidChars_(CONST URL, ReplaceWith: string): string;
 VAR i: Integer;
 begin
- Result:= '';
- for i:= 1 to Length(URL) DO
-  begin
-   if  CharInSet(URL[I], SeparatorsHTTP)
-   OR  (URL[i] < ' ')                                                            { tot ce e sub SPACE }
-   then Result:= Result+ ReplaceWith
-   else Result:= Result+ URL[i];
-  end;
+  Result:= '';
+  for i:= 1 to Length(URL) DO
+     if  CharInSet(URL[I], SeparatorsHTTP)
+     OR  (URL[i] < ' ')                                                            { tot ce e sub SPACE }
+     then Result:= Result+ ReplaceWith
+     else Result:= Result+ URL[i];
 end;
 
 
@@ -217,21 +214,21 @@ function ValidUrlChars (CONST URL: string): Boolean;                            
 VAR
    i: Integer;
 begin
- Result:= TRUE;
+  Result:= TRUE;
 
- { Check for other invalid chars }
- for i:= 1 to Length(URL) DO
-   if CharInSet(URL[I], InvalidUrlChars)
-   then EXIT(FALSE);
+  { Check for other invalid chars }
+  for i:= 1 to Length(URL) DO
+    if CharInSet(URL[I], InvalidUrlChars)
+    then EXIT(FALSE);
 end;
 
 
 
 function ValidURL (CONST URL: string): Boolean;                                   { Returns True if string contain only valid chars AND strats with www or http }
 begin
- Result:= ValidUrlChars(URL);
- if Result
- then Result:= CheckURLStart(URL);                                                     { Force http becasue PathIsURLW requires this }
+  Result:= ValidUrlChars(URL);
+  if Result
+  then Result:= CheckURLStart(URL);                                                     { Force http becasue PathIsURLW requires this }
 end;
 
 
@@ -284,24 +281,24 @@ end;
 function UrlExtractProtAndDomain(CONST URL: string): string;
 VAR StartAt, FirstSlash: integer;
 begin
- if URL= ''
- then raise exception.Create('Empty URL.');
- Result:= URL;
+  if URL= ''
+  then raise exception.Create('Empty URL.');
+  Result:= URL;
 
- StartAt:= PosInsensitive('http://', Result);
- if StartAt > 0
- then StartAt:= 8
- else
-  begin
-    StartAt:= PosInsensitive('https://', Result);
-    if StartAt > 0
-    then StartAt:= 9
-    else StartAt:= 1;
-  end;
+  StartAt:= PosInsensitive('http://', Result);
+  if StartAt > 0
+  then StartAt:= 8
+  else
+   begin
+     StartAt:= PosInsensitive('https://', Result);
+     if StartAt > 0
+     then StartAt:= 9
+     else StartAt:= 1;
+   end;
 
- FirstSlash:= PosEx('/', URL, StartAt);
- if FirstSlash> 0
- then Result:= system.COPY(URL, 1, FirstSlash-1);
+  FirstSlash:= PosEx('/', URL, StartAt);
+  if FirstSlash> 0
+  then Result:= system.COPY(URL, 1, FirstSlash-1);
 end;
 
 
@@ -310,16 +307,16 @@ end;
   Example:  http://www.stuff.com/img.jpg -> www.stuff.com }
 function UrlExtractDomainWWW(CONST URL: string): string;
 begin
- Result:= UrlExtractProtAndDomain(URL);
+  Result:= UrlExtractProtAndDomain(URL);
 
- { Remove http/https }
- if PosInsensitive('http://', Result) > 0
- then Delete(Result, 1, 7)
- else
-   if PosInsensitive('https://', Result) > 0
-   then Delete(Result, 1, 8);
+  { Remove http/https }
+  if PosInsensitive('http://', Result) > 0
+  then Delete(Result, 1, 7)
+  else
+    if PosInsensitive('https://', Result) > 0
+    then Delete(Result, 1, 8);
 
- Result:= urlRemovePort(Result);  // remove port. Example www.Domain.com:80 -> www.Domain.com
+  Result:= urlRemovePort(Result);  // remove port. Example www.Domain.com:80 -> www.Domain.com
 end;
 
 
@@ -332,30 +329,30 @@ end;
        http://www.syb.stuff.com/img.jpg -> stuff.com }
 function UrlExtractDomain(CONST URL: string): string;
 begin
- Result:= UrlExtractDomainRelaxed(URL);
- Result:= Urlremoveport(Result);
+  Result:= UrlExtractDomainRelaxed(URL);
+  Result:= Urlremoveport(Result);
 
- { Remove www }
- if CountAppearance('.', Result) > 1
- then Result:= LightCore.CopyFrom(Result, '.', maxint, FALSE);
+  { Remove www }
+  if CountAppearance('.', Result) > 1
+  then Result:= LightCore.CopyFrom(Result, '.', maxint, FALSE);
 end;
 
 
 
 function UrlRemoveStart(CONST URL: string): string;         { http://www.stuff.com/img.jpg  ->  stuff.com/img.jpg }
 begin
- Result:= URL;
+  Result:= URL;
 
- if CheckWwwStart(Result)
- then Result:= LightCore.CopyFrom(Result, 'www.', MaxInt, FALSE)
- else
-   if (PosInsensitive('http://' , Result) = 1)
-   then Result:= LightCore.CopyFrom(Result, 'http://', MaxInt, FALSE)
-   else
-     if (PosInsensitive('https://' , Result) = 1)
-     then Result:= LightCore.CopyFrom(Result, 'https://', MaxInt, FALSE);
+  if CheckWwwStart(Result)
+  then Result:= LightCore.CopyFrom(Result, 'www.', MaxInt, FALSE)
+  else
+    if (PosInsensitive('http://' , Result) = 1)
+    then Result:= LightCore.CopyFrom(Result, 'http://', MaxInt, FALSE)
+    else
+      if (PosInsensitive('https://' , Result) = 1)
+      then Result:= LightCore.CopyFrom(Result, 'https://', MaxInt, FALSE);
 
- Assert(Result<> '', 'Empty in UrlRemoveStart');
+  Assert(Result<> '', 'Empty in UrlRemoveStart');
 end;
 
 
@@ -368,25 +365,25 @@ end;
        http://www.syb.stuff.com/img.jpg -> sub.stuff.com }
 function UrlExtractDomainRelaxed(CONST URL: string): string;
 begin
- Result:= UrlExtractDomainWWW(URL);
+  Result:= UrlExtractDomainWWW(URL);
 
- { Remove www }
- if PosInsensitive('www.', Result) > 0
- then Delete(Result, 1, 4);
+  { Remove www }
+  if PosInsensitive('www.', Result) > 0
+  then Delete(Result, 1, 4);
 end;
 
 
 
 function UrlRemoveHttp(CONST URL: string): string;    { http://www.domain/image.jpg  ->  www.domain/image.jp  }
 begin
- Result:= URL;
+  Result:= URL;
 
- { Remove http/https }
- if PosInsensitive('http://', Result) > 0
- then Delete(Result, 1, 7)
- else
-   if PosInsensitive('https://', Result) > 0
-   then Delete(Result, 1, 8);
+  { Remove http/https }
+  if PosInsensitive('http://', Result) > 0
+  then Delete(Result, 1, 7)
+  else
+    if PosInsensitive('https://', Result) > 0
+    then Delete(Result, 1, 8);
 end;
 
 
@@ -422,20 +419,20 @@ end;
 
 function GetReferer(CONST URL: string): string;             { www.cams.de:80/down/Image.php?w=1200 -> www.cams.de/down/ }
 begin
- Result:= UrlExtractFilePath(URL);
- Result:= urlremoveport(Result);
+  Result:= UrlExtractFilePath(URL);
+  Result:= urlremoveport(Result);
 end;
 
 
 
 function UrlExtractResource(CONST URL: string): string;             { www.cams.de/getImage.php?w=1200 -> /getImage.php }
 begin
- Result:= LightCore.CopyTo(URL, Length(UrlExtractProtAndDomain(URL))+ 1, '?', FALSE, TRUE, 1);
+  Result:= LightCore.CopyTo(URL, Length(UrlExtractProtAndDomain(URL))+ 1, '?', FALSE, TRUE, 1);
 end;
 
 function UrlExtractResourceParams(CONST URL: string): string;       { www.cams.de/getImage.php?w=1200 -> /getImage.php?w=1200 }
 begin
- Result:= System.COPY(URL, Length(UrlExtractProtAndDomain(URL))+ 1, MaxInt);
+  Result:= System.COPY(URL, Length(UrlExtractProtAndDomain(URL))+ 1, MaxInt);
 end;
 
 
@@ -453,9 +450,9 @@ end;
 
 function ExtractFilePath_FromURL(CONST Url: string): string; { This function is compatible with Windows - can be used to write local files }
 begin
- Result:= CleanServerCommands(Url);      { FILTER: Remove server commands (everything after '?') from URL  }
- Result:= UrlExtractFilePath(Result);
- Result:= urlRemovePort(Result);     //  remove www.Text.com:80/folder/img.jpg&600
+  Result:= CleanServerCommands(Url);      { FILTER: Remove server commands (everything after '?') from URL  }
+  Result:= UrlExtractFilePath(Result);
+  Result:= urlRemovePort(Result);     //  remove www.Text.com:80/folder/img.jpg&600
 end;
 
 
@@ -463,21 +460,21 @@ end;
 function UrlExtractFileName(CONST URL: string; CleanServerCommands: Boolean= TRUE): string;   { Ex: www.stuff.com/test/img.jpg?uniq=0 -> 'img.jpg' }
 VAR I: Integer;
 begin
- I := LastDelimiter('/:', URL);
- Result := system.COPY(URL, I + 1, MaxInt);
+  I := LastDelimiter('/:', URL);
+  Result := system.COPY(URL, I + 1, MaxInt);
 
- if CleanServerCommands
- AND (Pos('?', Result) > 0)
- then Result:= LightCore.CopyTo(Result, 1, '?', FALSE);   { This fixes this case: worldnow.com/7day_web.jpg?7439232   or   cam_1.jpg?uniq=0.63  }
+  if CleanServerCommands
+  AND (Pos('?', Result) > 0)
+  then Result:= LightCore.CopyTo(Result, 1, '?', FALSE);   { This fixes this case: worldnow.com/7day_web.jpg?7439232   or   cam_1.jpg?uniq=0.63  }
 end;
 
 
 
 function CleanServerCommands(CONST URL: string): string;    { FILTER: Remove server commands (everything after '?') from URL  }           { Example: www.pexels.com/1.jpeg?h=350&amp; -> www.pexels.com/1.jpeg }
 begin
- if Pos('?', URL) > 0
- then Result:= LightCore.CopyTo(url, 1, '?', FALSE)
- else Result:= url;
+  if Pos('?', URL) > 0
+  then Result:= LightCore.CopyTo(url, 1, '?', FALSE)
+  else Result:= url;
 end;
 
 
@@ -522,23 +519,25 @@ begin
   iPos:= Pos(':', URL);
   if iPos > 0
   then 
-   begin
-    { Skip the colon in 'http://' or 'https://' }
-    if (iPos + 1 <= Length(URL)) AND (URL[iPos + 1] = '/')
-    then iPos:= PosEx(':', URL, iPos + 1);
+    begin
+     { Skip the colon in 'http://' or 'https://' }
+     if (iPos + 1 <= Length(URL)) AND (URL[iPos + 1] = '/')
+     then iPos:= PosEx(':', URL, iPos + 1);
 
-    if iPos > 0
-    then 
-	 begin
-      sURL:= System.Copy(URL, iPos + 1, MaxInt);
-      iPos:= Pos('/', sURL);
-      if iPos > 0
-      then sURL:= Copy(sURL, 1, iPos - 1);
-      Result:= StrToIntDef(sURL, 0);
-     end
-    else Result:= 0;  { No port in this URL }
-   end
-  else Result:= 0;
+     if iPos > 0
+     then
+       begin
+         sURL:= System.Copy(URL, iPos + 1, MaxInt);
+         iPos:= Pos('/', sURL);
+         if iPos > 0
+         then sURL:= Copy(sURL, 1, iPos - 1);
+         Result:= StrToIntDef(sURL, 0);
+       end
+     else
+       Result:= 0;  { No port in this URL }
+    end
+  else
+    Result:= 0;
 end;
 
 
@@ -554,27 +553,27 @@ function URLExtractLastFolder(CONST URL: string): string;
 VAR
    iPos, iDomainEnd: Integer;
 begin
- { Find end of domain (first '/' after '://') }
- iPos:= Pos('://', URL);
- if iPos > 0
- then iDomainEnd:= Pos('/', URL, iPos + 3)
- else iDomainEnd:= Pos('/', URL);
- if iDomainEnd < 1 then EXIT('');
+  { Find end of domain (first '/' after '://') }
+  iPos:= Pos('://', URL);
+  if iPos > 0
+  then iDomainEnd:= Pos('/', URL, iPos + 3)
+  else iDomainEnd:= Pos('/', URL);
+  if iDomainEnd < 1 then EXIT('');
 
- { Find last slash }
- iPos:= LastPos('/', URL);
- if iPos < 1 then EXIT('');
+  { Find last slash }
+  iPos:= LastPos('/', URL);
+  if iPos < 1 then EXIT('');
 
- { Remove trailing slash or filename }
- Result:= CopyTo(URL, 1, iPos-1);
+  { Remove trailing slash or filename }
+  Result:= CopyTo(URL, 1, iPos-1);
 
- { Find second-to-last slash }
- iPos:= LastPos('/', Result);
+  { Find second-to-last slash }
+  iPos:= LastPos('/', Result);
 
- { If second-to-last slash is at or before domain end, return empty (only one folder) }
- if iPos <= iDomainEnd then EXIT('');
+  { If second-to-last slash is at or before domain end, return empty (only one folder) }
+  if iPos <= iDomainEnd then EXIT('');
 
- Result:= system.COPY(Result, iPos+1, High(Integer));
+  Result:= system.COPY(Result, iPos+1, High(Integer));
 end;
 
 
@@ -623,22 +622,22 @@ end;
 
 function UrlToLocalPath(CONST URL: string): string;   { Converts  http://www.Domain.com/download/setup.exe to Domain.com\download\setup.exe }
 begin
- Result:= UrlExtractDomain(URL) + UrlExtractResource(URL);
- Result:= ReplaceCharF(Result, '/', '\');
+  Result:= UrlExtractDomain(URL) + UrlExtractResource(URL);
+  Result:= ReplaceCharF(Result, '/', '\');
 end;
 
 
 
 function SameWebSite(CONST URL1, URL2: string): Boolean;    { Returns true if the two URLs belong to the same website }
 begin
- Result:= SameText(UrlExtractDomain (URL1), UrlExtractDomain (URL2));
+  Result:= SameText(UrlExtractDomain (URL1), UrlExtractDomain (URL2));
 end;
 
 
 
 function SameSubWebSite(CONST URL1, URL2: string): Boolean;    { Returns true if the URL1 belongs to URL2 or one of its subdomains }
 begin
- Result:= SameText(UrlExtractDomainRelaxed (URL1), UrlExtractDomainRelaxed (URL2));
+  Result:= SameText(UrlExtractDomainRelaxed (URL1), UrlExtractDomainRelaxed (URL2));
 end;
 
 
@@ -663,9 +662,9 @@ end;
  { Convert from Protocol-Relative to http }      { http://stackoverflow.com/questions/9646407/two-forward-slashes-in-a-url-src-href-attribute }
 function URLMakeNonRelativeProtocol(CONST URL: string): string;
 begin
- if Pos('//', url) = 1
- then Result:= 'http://'+ system.COPY(url, 3, MaxInt)
- else Result:= url;
+  if Pos('//', url) = 1
+  then Result:= 'http://'+ system.COPY(url, 3, MaxInt)
+  else Result:= url;
 end;
 
 
@@ -740,10 +739,10 @@ end;
 function ExtractIpFrom(CONST aString: string): string;                                             { finds a IP address in a random string. The IP must be like this 192.168.12.234 }
 var I: Integer;
 begin
- Result := '';
- for I := 1 to Length(AString) DO
-   if ((AString[I]>= '0') AND (AString[I]<='9')) OR (AString[I]='.')
-   then Result := Result + AString[I];
+  Result := '';
+  for I := 1 to Length(AString) DO
+    if ((AString[I]>= '0') AND (AString[I]<='9')) OR (AString[I]='.')
+    then Result := Result + AString[I];
 end;
 
 
@@ -773,9 +772,11 @@ begin
   ThirdDotPos:= 0;
   for i:= Length(IP) downto 1 do
   begin
-    if IP[i] = '.' then begin
+    if IP[i] = '.' then
+    begin
       Inc(DotCount);
-      if DotCount = 3 then begin
+      if DotCount = 3 then
+      begin
         ThirdDotPos:= i;
         Break;
       end;
@@ -814,20 +815,20 @@ VAR
    Line: string;
    TSL: TStringList;
 begin
- Result:= '';
- TSL:= TStringList.Create;
- TRY
-  TSL.Text:= Text;
-  for i:= 0 to TSL.Count-1 DO
-   begin
-    Line:= TSL[i];
-    Line:= ExtractProxyFrom(Line);
-    if Line > ''
-    then Result:= Result+ Line+ CRLF;
-   end;
- FINALLY
-  FreeAndNil(TSL);
- END;
+  Result:= '';
+  TSL:= TStringList.Create;
+  TRY
+   TSL.Text:= Text;
+   for i:= 0 to TSL.Count-1 DO
+    begin
+     Line:= TSL[i];
+     Line:= ExtractProxyFrom(Line);
+     if Line > ''
+     then Result:= Result+ Line+ CRLF;
+    end;
+  FINALLY
+   FreeAndNil(TSL);
+  END;
 end;
 
 
@@ -978,8 +979,8 @@ end;
 function ValidatePort(CONST Port: string): Boolean;
 VAR iPort: Integer;
 begin
- iPort:= StrToIntDef(Port, -1);
- Result:= (iPort>= 0) AND (iPort < 65536);
+  iPort:= StrToIntDef(Port, -1);
+  Result:= (iPort>= 0) AND (iPort < 65536);
 end;
 
 
@@ -987,10 +988,10 @@ end;
 function ValidateProxyAdr(CONST Address: string): Boolean;
 VAR IP, Port: string;
 begin
- IP  := SplitIpFromAdr  (Address);
- Port:= IpExtractPort(Address);
+  IP  := SplitIpFromAdr  (Address);
+  Port:= IpExtractPort(Address);
 
- Result:= ValidateIpAddress(IP) AND ValidatePort(Port);
+  Result:= ValidateIpAddress(IP) AND ValidatePort(Port);
 end;
 
 
