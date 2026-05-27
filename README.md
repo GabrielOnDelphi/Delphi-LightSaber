@@ -271,6 +271,20 @@ AppData.RamLog.AddError('Error text');  // Error (auto-pops the log window)
 
 Full architecture, threading model, observer lifetime contract, and auto-save behavior: see [Docs/Logging.md](Docs/Logging.md).
 
+*Exception logger (every-raise capture for post-mortem diagnostics)*
+
+```pascal
+uses LightCore.ExceptionLogger;
+
+begin
+  InstallExceptionLogger('MyApp-Exceptions.log');     // very first line in begin..end, before AppData.Create
+  AppData:= TAppData.Create(...);
+  ...
+end.
+```
+
+Hooks `System.RaiseExceptObjProc` and appends one tab-separated line per Pascal raise (UTC timestamp + thread ID + class name + message) to `TPath.GetDocumentsPath \ <filename>`. Captures even caught-and-rethrown exceptions because it fires *before* `try/except` matches. Cross-platform; especially useful on Android where logcat often shows nothing app-side. Pull on Android with `adb shell run-as <package> cat files/<filename>`.
+
 ________________
 
 ## File Naming Convention 
