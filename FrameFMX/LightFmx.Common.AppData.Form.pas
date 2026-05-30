@@ -141,6 +141,16 @@ TYPE
 
     procedure MainFormCaption(aCaption: string);
     procedure MaximizeVertically;
+
+    { Android only: reserve the system status-bar and navigation-bar safe-area as form Padding so
+      child controls (Align=Top/Bottom/Client) flow naturally inside the visible window instead of
+      drawing under the clock/battery (top) or the gesture pill / navigation buttons (bottom).
+      Necessary because Android 16 (targetSdkVersion=36) ignores `windowOptOutEdgeToEdgeEnforcement`
+      — see https://developer.android.com/about/versions/16/behavior-changes-16. Called automatically
+      from AfterConstruction, so every TLightForm-descended form (main + secondaries) gets it for
+      free. No-op on non-Android platforms (Windows has native window decorations, iOS handles
+      safe-area via SystemStatusBar.Visibility). }
+    procedure ApplyAndroidWindowInsets;
   published
     property CloseOnEscape: Boolean  read FCloseOnEscape  write FCloseOnEscape;        // Close this form when the Esc key is pressed
     property OnAfterConstruction: TNotifyEvent read FOnAfterCtur write FOnAfterCtur;   // Unfortunatelly this won't appears in the object inspector
@@ -152,6 +162,9 @@ USES
   FMX.Platform, FMX.VirtualKeyboard,
   {$IFDEF ANDROID}
   Androidapi.Helpers, Androidapi.JNI.App,
+  FMX.Platform.Android,                         // MainActivity (for getWindowInsets) — used by ApplyAndroidWindowInsets
+  Androidapi.JNI.Embarcadero,                   // JFMXNativeActivity.getWindowInsets / isWindowInsetsDefined
+  Androidapi.JNI.GraphicsContentViewText,       // JRect
   {$ENDIF}
   LightFmx.Common.AppData, LightFmx.Common.CenterControl, LightFmx.Common.Dialogs;
 
@@ -205,6 +218,24 @@ begin
   // Ensure form is visible on first run (not off-screen from previous session with different monitor setup)
   if AppData.RunningFirstTime
   then EnsureFormVisibleOnScreen(Self);
+
+  // Android: reserve system-bar safe-area. Two calls deliberately:
+  //   1. Synchronous (cheap, usually no-ops): if the activity's onApplyWindowInsets has already fired
+  //      by the time this form is constructed (e.g. secondary forms opened after the app is running),
+  //      this captures the insets BEFORE the first paint so there is no flash of edge-to-edge.
+  //   2. Deferred via TThread.ForceQueue: on app startup, the very first form constructs BEFORE
+  //      Android's onApplyWindowInsets fires (onApplyWindowInsets runs after onResume/onWindowFocusChanged,
+  //      which are after Pascal construction). isWindowInsetsDefined is FALSE at construction
+  //      → the synchronous call early-exits → padding stays 0 → user sees edge-to-edge.
+  //      The ForceQueue defers the second poll until the message loop has pumped at least once,
+  //      by which time the activity has published its insets and the JNI getWindowInsets returns
+  //      the real values. This is the quick-and-reliable fix; the cleaner long-term path is an
+  //      OnActivityInsetsChangedListener JNI hookup.
+  //  No-op on non-Android. See ApplyAndroidWindowInsets declaration comment for the rationale.
+  ApplyAndroidWindowInsets;
+  {$IFDEF ANDROID}
+  TThread.ForceQueue(NIL, procedure begin ApplyAndroidWindowInsets; end);
+  {$ENDIF}
 
   // Don't show the form if StartMinim is active (app starts minimized)
   // Note: In FMX, CreateForm does not create forms immediately - it queues them for RealCreateForms
@@ -637,6 +668,53 @@ begin
   WorkArea:= Screen.DisplayFromForm(Self).WorkArea;
   Top    := Trunc(WorkArea.Top);
   Height := Trunc(WorkArea.Height);
+end;
+
+
+{ Android only — reserve the system status-bar (top) and navigation-bar (bottom) safe-area
+  as form Padding. See the declaration comment in the INTERFACE section for the full story.
+  Reads MainActivity.getWindowInsets (Rect of physical pixels set by Android via
+  onApplyWindowInsets), converts to DP via IFMXScreenService.GetScreenScale, applies to
+  Padding.Top + Padding.Bottom. Padding cascades to every Align=Top/Bottom/Client child, so
+  the content reflows naturally inside the visible window. SameValue skip avoids needless
+  re-layout when the insets haven't changed. Early-exit on isWindowInsetsDefined=False:
+  AfterConstruction can land before onApplyWindowInsets has fired, in which case the
+  caller's BecameActive re-application picks it up. }
+procedure TLightForm.ApplyAndroidWindowInsets;
+{$IFDEF ANDROID}
+VAR
+  Insets       : JRect;
+  TopPx, BotPx : Integer;
+  TopDp, BotDp : Single;
+  ScreenService: IFMXScreenService;
+  ScreenScale  : Single;
+{$ENDIF}
+begin
+  {$IFDEF ANDROID}
+  if (MainActivity = NIL) OR (NOT MainActivity.isWindowInsetsDefined) then EXIT;
+  Insets:= MainActivity.getWindowInsets;
+  if Insets = NIL then EXIT;
+  TopPx:= Insets.top;
+  BotPx:= Insets.bottom;
+  if (TopPx <= 0) AND (BotPx <= 0) then EXIT;     // device with no system bars (TV box / kiosk) — leave Padding untouched
+
+  if TPlatformServices.Current.SupportsPlatformService(IFMXScreenService, ScreenService)
+  then ScreenScale:= ScreenService.GetScreenScale
+  else ScreenScale:= 1.0;
+  if ScreenScale <= 0 then ScreenScale:= 1.0;
+
+  TopDp:= TopPx / ScreenScale;
+  BotDp:= BotPx / ScreenScale;
+
+  // TEMPORARY measurement log — capture via Logcat-Android.cmd, compare Nord vs Tab S11.
+  // See "Bug - Android system-bar safe-area.md" -> REGRESSION (2026-05-29). Remove after the
+  // deprecated-API vs stale-value question is settled and the JNI rewrite lands.
+  Log.d('[Insets] %s  TopPx=%d  BotPx=%d  Scale=%.3f  TopDp=%.2f  BotDp=%.2f',
+        [ClassName, TopPx, BotPx, ScreenScale, TopDp, BotDp]);
+
+  if NOT SameValue(Padding.Top,    TopDp, 0.5) then Padding.Top    := TopDp;
+  if NOT SameValue(Padding.Bottom, BotDp, 0.5) then Padding.Bottom := BotDp;
+  {$ENDIF}
 end;
 
 
