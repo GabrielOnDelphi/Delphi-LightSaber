@@ -39,8 +39,10 @@ uses
   LightVcl.Internet.EmailSender in '..\FrameVCL\LightVcl.Internet.EmailSender.pas',
   LightVcl.Internet.HTML in '..\FrameVCL\LightVcl.Internet.HTML.pas',
   LightVcl.Internet.HTMLImg in '..\FrameVCL\LightVcl.Internet.HTMLImg.pas',
-  LightVcl.Internet.HtmlWriter in '..\FrameVCL\LightVcl.Internet.HtmlWriter.pas';
+  LightVcl.Internet.HtmlWriter in '..\FrameVCL\LightVcl.Internet.HtmlWriter.pas',
+  LightCore.Internet.Ftp in '..\LightCore.Internet.Ftp.pas',
   { Test units - add here as tests are created }
+  Test.LightCore.Internet.Ftp in 'Test.LightCore.Internet.Ftp.pas';
   // Test.LightVcl.Internet.Common in 'Test.LightVcl.Internet.Common.pas';
 
 {$IFNDEF TESTINSIGHT}
