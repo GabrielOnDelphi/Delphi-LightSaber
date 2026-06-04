@@ -98,6 +98,9 @@ TYPE
     FVKSubscriptionId: TMessageSubscriptionId;
     procedure SetGuiProperties(Form: TForm);
     procedure HandleVKStateChange(const Sender: TObject; const M: TMessage);
+    {$IFDEF ANDROID}
+    procedure RegisterInsetsListener;   { Subscribe (once, app-wide) to FMX's inset-changed callback so padding is re-applied the moment insets arrive and on every later change. See ApplyAndroidWindowInsets. }
+    {$ENDIF}
   protected
     FEmbedded: Boolean;    { TRUE when form's layout is reparented into another form (embedded mode) }
     FFormSaved: Boolean;   { TRUE once saveBeforeExit has run — prevents double-save on shutdown }
@@ -161,10 +164,12 @@ IMPLEMENTATION   {$R *.fmx}
 USES
   FMX.Platform, FMX.VirtualKeyboard,
   {$IFDEF ANDROID}
+  Androidapi.JNIBridge,                         // TJavaLocal — base for TInsetsChangedListener
   Androidapi.Helpers, Androidapi.JNI.App,
-  FMX.Platform.Android,                         // MainActivity (for getWindowInsets) — used by ApplyAndroidWindowInsets
-  Androidapi.JNI.Embarcadero,                   // JFMXNativeActivity.getWindowInsets / isWindowInsetsDefined
+  FMX.Platform.Android,                         // MainActivity (JFMXNativeActivity) — getWindowInsets + setOnActivityInsetsChangedListener
+  Androidapi.JNI.Embarcadero,                   // JFMXNativeActivity, JOnActivityInsetsChangedListener (FMX's inset-changed callback)
   Androidapi.JNI.GraphicsContentViewText,       // JRect
+  Androidapi.JNI.Os,                            // TJBuild_VERSION.SDK_INT — edge-to-edge enforcement gate (see ApplyAndroidWindowInsets)
   {$ENDIF}
   LightFmx.Common.AppData, LightFmx.Common.CenterControl, LightFmx.Common.Dialogs;
 
@@ -219,22 +224,25 @@ begin
   if AppData.RunningFirstTime
   then EnsureFormVisibleOnScreen(Self);
 
-  // Android: reserve system-bar safe-area. Two calls deliberately:
-  //   1. Synchronous (cheap, usually no-ops): if the activity's onApplyWindowInsets has already fired
-  //      by the time this form is constructed (e.g. secondary forms opened after the app is running),
-  //      this captures the insets BEFORE the first paint so there is no flash of edge-to-edge.
-  //   2. Deferred via TThread.ForceQueue: on app startup, the very first form constructs BEFORE
-  //      Android's onApplyWindowInsets fires (onApplyWindowInsets runs after onResume/onWindowFocusChanged,
-  //      which are after Pascal construction). isWindowInsetsDefined is FALSE at construction
-  //      → the synchronous call early-exits → padding stays 0 → user sees edge-to-edge.
-  //      The ForceQueue defers the second poll until the message loop has pumped at least once,
-  //      by which time the activity has published its insets and the JNI getWindowInsets returns
-  //      the real values. This is the quick-and-reliable fix; the cleaner long-term path is an
-  //      OnActivityInsetsChangedListener JNI hookup.
+  // Android: reserve system-bar safe-area. Two complementary mechanisms:
+  //   1. Synchronous call (here): if the activity's onApplyWindowInsets has ALREADY fired by the time
+  //      this form is constructed (any form opened after the app's first layout — every secondary form,
+  //      and the main form on a warm restart), the insets are known, so this captures them BEFORE the
+  //      first paint and there is no flash of edge-to-edge.
+  //   2. RegisterInsetsListener (below): on a COLD start the very first form constructs BEFORE Android
+  //      dispatches its first onApplyWindowInsets — that dispatch runs after onResume + the first layout
+  //      traversal, which is strictly after Pascal construction (Android lifecycle contract). At this
+  //      point isWindowInsetsDefined is FALSE and the synchronous call above necessarily early-exits.
+  //      Rather than poll-and-guess how many message-loop pumps until the dispatch lands (it is
+  //      device-dependent — 1 on a OnePlus Nord, more on a Samsung Tab S11 Ultra), we subscribe to the
+  //      callback FMX already fires from inside its own decor-view listener (FMXNativeActivity ->
+  //      onActivityInsetsChangedListener.insetsChanged). It fires exactly when insets become available
+  //      and again on every later change (rotation, multi-window resize), re-applying padding to every
+  //      live TLightForm. Event-driven, no polling. See RegisterInsetsListener + TInsetsChangedListener.
   //  No-op on non-Android. See ApplyAndroidWindowInsets declaration comment for the rationale.
   ApplyAndroidWindowInsets;
   {$IFDEF ANDROID}
-  TThread.ForceQueue(NIL, procedure begin ApplyAndroidWindowInsets; end);
+  RegisterInsetsListener;
   {$ENDIF}
 
   // Don't show the form if StartMinim is active (app starts minimized)
@@ -671,17 +679,100 @@ begin
 end;
 
 
+{$IFDEF ANDROID}
+{ One app-wide listener that FMX calls whenever the activity's decor-view insets change.
+
+  WHY THIS EXISTS — the cold-start timing problem it solves:
+  Android does not publish window insets until the first onApplyWindowInsets dispatch, which the
+  framework runs after onResume + the first layout traversal — strictly AFTER Pascal form construction.
+  So on a cold start the main form's AfterConstruction sees isWindowInsetsDefined=FALSE and cannot set
+  its safe-area padding yet; the toolbar would draw under the status bar until something re-triggered the
+  apply. The number of message-loop pumps until that first dispatch is device-dependent (observed: 1 on a
+  OnePlus Nord, MORE on a Samsung Tab S11 Ultra — on the Tab the toolbar overlapped the status bar on
+  first show and only corrected after a manual minimize→restore, which re-fired BecameActive). Polling a
+  fixed number of times is therefore guesswork.
+
+  THE CLEAN FIX: subscribe to the callback FMX ALREADY fires from inside its own decor-view listener.
+  FMXNativeActivity.onApplyWindowInsets calls onActivityInsetsChangedListener.insetsChanged(...) on every
+  inset change (FMXNativeActivity.java). We register one TInsetsChangedListener via
+  MainActivity.setOnActivityInsetsChangedListener; FMX invokes insetsChanged the instant the first
+  dispatch lands (and again on rotation / multi-window resize), and we re-apply padding to every live
+  TLightForm. Event-driven, no polling, no stolen listener slot (FMX keeps its own decor-view listener;
+  we hook the callback it exposes).
+
+  Single-slot discipline: setOnActivityInsetsChangedListener has ONE slot on the singleton activity, so
+  exactly ONE listener is registered process-wide (guarded by GInsetsListener), not one per form. The
+  callback walks Screen.Forms so all TLightForm instances — main + any visible secondary — get re-applied. }
+TYPE
+  TInsetsChangedListener = class(TJavaLocal, JOnActivityInsetsChangedListener)
+  public
+    procedure insetsChanged(newInsets: JRect); cdecl;
+  end;
+
+VAR
+  GInsetsListener: JOnActivityInsetsChangedListener;   { app-wide singleton; held alive for the whole process by this reference }
+
+procedure TInsetsChangedListener.insetsChanged(newInsets: JRect);
+VAR I: Integer;
+begin
+  // FMX calls this on the UI thread from its decor-view onApplyWindowInsets. Re-apply to every
+  // self-saving form; ApplyAndroidWindowInsets is cheap and SameValue-guards against needless re-layout.
+  // Screen.Forms is an indexed property (no enumerator), so iterate by FormCount.
+  for I := 0 to Screen.FormCount - 1 do
+    if Screen.Forms[I] is TLightForm
+    then TLightForm(Screen.Forms[I]).ApplyAndroidWindowInsets;
+end;
+{$ENDIF}
+
+
+{$IFDEF ANDROID}
+{ Registers the single app-wide insets listener on first call; later calls are no-ops.
+  Called from every TLightForm.AfterConstruction, but only the first one that runs actually
+  registers (GInsetsListener guard). See TInsetsChangedListener for the full rationale. }
+procedure TLightForm.RegisterInsetsListener;
+begin
+  if GInsetsListener <> NIL then EXIT;                 // already registered for this process
+  if MainActivity = NIL then EXIT;                     // activity not up yet — a later form's AfterConstruction will register
+  GInsetsListener:= TInsetsChangedListener.Create;
+  MainActivity.setOnActivityInsetsChangedListener(GInsetsListener);
+end;
+{$ENDIF}
+
+
 { Android only — reserve the system status-bar (top) and navigation-bar (bottom) safe-area
-  as form Padding. See the declaration comment in the INTERFACE section for the full story.
-  Reads MainActivity.getWindowInsets (Rect of physical pixels set by Android via
-  onApplyWindowInsets), converts to DP via IFMXScreenService.GetScreenScale, applies to
-  Padding.Top + Padding.Bottom. Padding cascades to every Align=Top/Bottom/Client child, so
-  the content reflows naturally inside the visible window. SameValue skip avoids needless
-  re-layout when the insets haven't changed. Early-exit on isWindowInsetsDefined=False:
-  AfterConstruction can land before onApplyWindowInsets has fired, in which case the
-  caller's BecameActive re-application picks it up. }
+  as form Padding, but ONLY when the window is actually drawing edge-to-edge. See the
+  declaration comment in the INTERFACE section for the full story.
+
+  WHEN this padding is needed (and when it must NOT be applied):
+  Edge-to-edge enforcement happens iff the device runs Android 15+ (SDK_INT >= 35) AND the
+  app targets SDK >= 35 (Orinoco targets 36). Under enforcement the form is drawn at y=0,
+  behind the opaque-but-transparent system bars, so the bar height has to be re-added as
+  Padding or the toolbar sits under the clock/battery. On Android 14 and older the OS does
+  the opposite: it keeps the bars opaque and lays the content out BELOW them already
+  ("System bars remain opaque with reserved space below them" — Android 15 behavior-changes
+  doc). On those devices the content is ALREADY inset, so adding Padding here double-counts
+  the status bar and leaves an empty gap above the toolbar (the OnePlus-Nord regression,
+  2026-05-29..06-03). The fix is therefore not a different inset *value* — it is to apply
+  the padding only when edge-to-edge is in force, and to zero it otherwise.
+
+  WHY the inset value can't be trusted to self-zero: FMXNativeActivity installs an
+  OnApplyWindowInsetsListener and reads getSystemWindowInsetTop() BEFORE the decor view
+  consumes the insets, so it captures the real bar height even on a legacy below-the-bars
+  window (per AOSP, the deprecated getter returns the height until the insets are consumed).
+  Hence MainActivity.getWindowInsets reports a non-zero top on the Nord too — the only
+  reliable discriminator is the OS version gate below.
+
+  Mechanics: reads MainActivity.getWindowInsets (physical px), converts to DP via
+  IFMXScreenService.GetScreenScale, assigns Padding.Top/Bottom. Padding cascades to every
+  Align=Top/Bottom/Client child, so content reflows inside the visible window. SameValue
+  skip avoids needless re-layout. Early-exit on isWindowInsetsDefined=False: on a cold start
+  AfterConstruction lands before the first onApplyWindowInsets dispatch — the app-wide
+  TInsetsChangedListener (see RegisterInsetsListener) re-fires this method the moment FMX
+  publishes the insets, and again on every later change (rotation / multi-window). }
 procedure TLightForm.ApplyAndroidWindowInsets;
 {$IFDEF ANDROID}
+const
+  API_ANDROID_15 = 35;                            // edge-to-edge enforced from this API level up (when targetSdk >= 35)
 VAR
   Insets       : JRect;
   TopPx, BotPx : Integer;
@@ -691,6 +782,17 @@ VAR
 {$ENDIF}
 begin
   {$IFDEF ANDROID}
+  { # Edge-to-edge gate }
+  // Pre-Android-15 (or any non-edge-to-edge window): the OS already reserves space below the
+  // bars, so any Padding we add here is double-counting. Reset to zero and leave.
+  if TJBuild_VERSION.JavaClass.SDK_INT < API_ANDROID_15 then
+    begin
+      if NOT SameValue(Padding.Top,    0, 0.5) then Padding.Top    := 0;
+      if NOT SameValue(Padding.Bottom, 0, 0.5) then Padding.Bottom := 0;
+      EXIT;
+    end;
+
+  { # Edge-to-edge: re-add the bar safe-area }
   if (MainActivity = NIL) OR (NOT MainActivity.isWindowInsetsDefined) then EXIT;
   Insets:= MainActivity.getWindowInsets;
   if Insets = NIL then EXIT;
@@ -705,12 +807,6 @@ begin
 
   TopDp:= TopPx / ScreenScale;
   BotDp:= BotPx / ScreenScale;
-
-  // TEMPORARY measurement log — capture via Logcat-Android.cmd, compare Nord vs Tab S11.
-  // See "Bug - Android system-bar safe-area.md" -> REGRESSION (2026-05-29). Remove after the
-  // deprecated-API vs stale-value question is settled and the JNI rewrite lands.
-  Log.d('[Insets] %s  TopPx=%d  BotPx=%d  Scale=%.3f  TopDp=%.2f  BotDp=%.2f',
-        [ClassName, TopPx, BotPx, ScreenScale, TopDp, BotDp]);
 
   if NOT SameValue(Padding.Top,    TopDp, 0.5) then Padding.Top    := TopDp;
   if NOT SameValue(Padding.Bottom, BotDp, 0.5) then Padding.Bottom := BotDp;
