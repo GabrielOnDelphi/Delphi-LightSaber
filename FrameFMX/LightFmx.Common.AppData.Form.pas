@@ -100,6 +100,7 @@ TYPE
     procedure HandleVKStateChange(const Sender: TObject; const M: TMessage);
     {$IFDEF ANDROID}
     procedure RegisterInsetsListener;   { Subscribe (once, app-wide) to FMX's inset-changed callback so padding is re-applied the moment insets arrive and on every later change. See ApplyAndroidWindowInsets. }
+    function CloseTopmostSecondary: Boolean;   { Closes the top-most visible non-embedded secondary TLightForm, if any. Used by the Back handler so a non-modally-shown form is dismissed instead of backgrounding the app. }
     {$ENDIF}
   protected
     FEmbedded: Boolean;    { TRUE when form's layout is reparented into another form (embedded mode) }
@@ -172,6 +173,41 @@ USES
   Androidapi.JNI.Os,                            // TJBuild_VERSION.SDK_INT — edge-to-edge enforcement gate (see ApplyAndroidWindowInsets)
   {$ENDIF}
   LightFmx.Common.AppData, LightFmx.Common.CenterControl, LightFmx.Common.Dialogs;
+
+
+{-------------------------------------------------------------------------------------------------------------
+   SHUTDOWN SENTINEL
+   GAppShuttingDown flips TRUE the moment FMX/OS signals app teardown, so the destructor assert
+   (TLightForm.Destroy) can tell legitimate shutdown — where Application.DestroyComponents frees a
+   still-visible secondary form — apart from the FreeAndNil-after-ShowModal antipattern it guards.
+   Necessary because at that instant NONE of Application.Terminated, IFMXApplicationService.Terminating,
+   or csDestroying(Application) is set yet: the OS Destroy path fires only TApplicationEvent.WillTerminate
+   then Halt -> DoneApplication -> DestroyComponents (Androidapi.AppGlue.pas:381, FMX.Platform.Android.pas:546,
+   FMX.Forms.pas:1526). We subscribe to BOTH the WillTerminate event (OS destroy) and
+   TApplicationTerminatingMessage (programmatic Application.Terminate), so both teardown paths set the flag.
+-------------------------------------------------------------------------------------------------------------}
+VAR
+  GAppShuttingDown   : Boolean = FALSE;     { read by TLightForm.Destroy's assert }
+  GShutdownSubscribed: Boolean = FALSE;     { one-shot guard — subscribe app-wide only once }
+
+procedure SubscribeShutdownSentinel;
+begin
+  if GShutdownSubscribed then EXIT;
+  GShutdownSubscribed:= TRUE;
+
+  TMessageManager.DefaultManager.SubscribeToMessage(TApplicationTerminatingMessage,
+    procedure(const Sender: TObject; const M: TMessage)
+    begin
+      GAppShuttingDown:= TRUE;
+    end);
+
+  TMessageManager.DefaultManager.SubscribeToMessage(TApplicationEventMessage,
+    procedure(const Sender: TObject; const M: TMessage)
+    begin
+      if TApplicationEventMessage(M).Value.Event = TApplicationEvent.WillTerminate
+      then GAppShuttingDown:= TRUE;
+    end);
+end;
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -255,6 +291,17 @@ begin
 
   // For virtual keyboard
   FVKSubscriptionId:= TMessageManager.DefaultManager.SubscribeToMessage(TVKStateChangeMessage, HandleVKStateChange);
+
+  SubscribeShutdownSentinel;     // once, app-wide — lets the destructor assert recognise shutdown teardown
+
+  { # Hardware Back / Esc }
+  { Descendant .fmx files are streamed as `object` (not `inherited`), so they do NOT inherit
+    OnKeyUp=FormKeyUp from LightForm.fmx — each loads only its own resource by class name. Without
+    wiring it here the Back/Esc ladder in FormKeyUp never runs, and FMX's default KeyUp closes the
+    active form (and on the main form that calls Application.Terminate). NOT Assigned guards a form
+    that wired its own OnKeyUp. }
+  if NOT Assigned(OnKeyUp)
+  then OnKeyUp:= FormKeyUp;
 
   if Assigned(FOnAfterCtur) then FOnAfterCtur(Self);
 end;
@@ -363,6 +410,25 @@ end;
 
 function TLightForm.CloseQuery: Boolean;
 begin
+  {$IFDEF ANDROID}
+  begin     // TEMP diagnostic (logcat tag info:I) — remove once the Samsung Back path is confirmed
+    VAR ActiveName: string:= 'nil';
+    if Screen.ActiveForm <> NIL then ActiveName:= Screen.ActiveForm.ClassName;
+    FMX.Types.Log.d('[Back] CloseQuery on '+ ClassName+ ' | IsMainForm='+ BoolToStr(Self = Application.MainForm, TRUE)+ ' | ActiveForm='+ ActiveName);
+  end;
+
+  { # Android: veto main-form close while a real secondary is up }
+  { A secondary shown non-modally (AppData.ShowModal -> Show) may not be Screen.ActiveForm on some
+    devices (observed: Samsung Tab S11), so FMX routes hardware Back's default Close to the MAIN form.
+    TCommonCustomForm.Close then calls Application.Terminate on the main form (FMX.Forms.pas:3295),
+    tearing the app down while the secondary is still open. Close only terminates if CloseQuery returns
+    True, so: if the main form is asked to close while a secondary TLightForm is open, close that
+    secondary and VETO the close. Independent of which form FMX deems active. }
+  if (Self = Application.MainForm)
+  AND CloseTopmostSecondary
+  then EXIT(FALSE);
+  {$ENDIF}
+
   Result:= inherited CloseQuery;
 end;
 
@@ -403,10 +469,14 @@ begin
   //     across the caFree path. Verified in FMX.Forms.pas:3213-3229 (ReleaseForm) vs :3419-3428 (Hide).
   //   - Application = NIL — very late shutdown, FMX globals being freed.
   //   - Application destroying — FMX shutdown destroys secondary forms that weren't closed first.
+  //   - GAppShuttingDown — set on WillTerminate / TApplicationTerminatingMessage. Covers the window
+  //     where DoneApplication->DestroyComponents frees a still-visible secondary during Halt, when
+  //     none of Terminated / Terminating / csDestroying(Application) is set yet (see SHUTDOWN SENTINEL).
   //   - MainForm — always Visible at app shutdown.
   // Clause order: cheapest checks first (short-circuit). NIL/destroying guards MUST come before
   // any Application.* deref (Pascal short-circuits left-to-right).
   Assert(NOT Visible
+      OR GAppShuttingDown
       OR FEmbedded
       OR (TFmxFormState.Released in FormState)
       OR NOT Assigned(Application)
@@ -480,6 +550,8 @@ var
 begin
   if Key = vkHardwareBack then
     begin
+      FMX.Types.Log.d('[Back] FormKeyUp on '+ ClassName+ ' | IsMainForm='+ BoolToStr(Self = Application.MainForm, TRUE));     // TEMP diagnostic (logcat tag info:I) — remove once the Samsung Back path is confirmed
+
       // Step 1: If virtual keyboard is visible, dismiss it first
       if TPlatformServices.Current.SupportsPlatformService(IFMXVirtualKeyboardService, VKService)
       AND (TVirtualKeyboardState.Visible in VKService.VirtualKeyBoardState) then
@@ -500,6 +572,11 @@ begin
       {$IFDEF ANDROID}
       if Self = Application.MainForm then
         begin
+          { A secondary form shown non-modally (AppData.ShowModal -> Show on Android) sits on top of
+            the main form, but FMX may deliver Back to the main form (Screen.ActiveForm). Backgrounding
+            here would leave that form open underneath. Close the top-most secondary first; only
+            background when the main form is truly alone. }
+          if CloseTopmostSecondary then begin Key:= 0; EXIT; end;
           TAndroidHelper.Activity.moveTaskToBack(True);
           Key:= 0;
           EXIT;
@@ -735,6 +812,36 @@ begin
   if MainActivity = NIL then EXIT;                     // activity not up yet — a later form's AfterConstruction will register
   GInsetsListener:= TInsetsChangedListener.Create;
   MainActivity.setOnActivityInsetsChangedListener(GInsetsListener);
+end;
+{$ENDIF}
+
+
+{$IFDEF ANDROID}
+{ Closes the top-most visible secondary TLightForm (not the main form, not an embedded form) and
+  returns TRUE if one was closed. Screen.AddForm inserts new forms at index 0 (FMX.Forms.pas), so
+  scanning index 0 upward visits the most-recently-shown (top-most) form first — for the nested
+  Library Manager -> Edit Book case this closes only Edit Book, leaving Library Manager open.
+  EXIT the moment one is closed: Close may free the form and mutate Screen.Forms, so we must not
+  keep indexing into it. Embedded forms are skipped — their Container is reparented into a host,
+  and closing one would orphan that host. A form already mid-Free (Released in FormState) is also
+  skipped: ReleaseForm does NOT clear FVisible, so a released-but-not-yet-freed form is still
+  Visible and would otherwise shadow a real secondary behind it (and re-Close returns caNone). }
+function TLightForm.CloseTopmostSecondary: Boolean;
+VAR
+  I  : Integer;
+  Frm: TCommonCustomForm;
+begin
+  Result:= FALSE;
+  for I:= 0 to Screen.FormCount - 1 do
+    begin
+      Frm:= Screen.Forms[I];
+      if (Frm <> Self)
+      AND Frm.Visible
+      AND (Frm is TLightForm)
+      AND NOT TLightForm(Frm).FEmbedded
+      AND NOT (TFmxFormState.Released in Frm.FormState)
+      then EXIT(Frm.Close <> TCloseAction.caNone);
+    end;
 end;
 {$ENDIF}
 
