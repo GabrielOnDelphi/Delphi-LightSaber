@@ -55,6 +55,15 @@ IMPLEMENTATION
 CONST
   FALLBACK_INDICATOR_WIDTH = 24;  // Used when FindStyleResource('background') fails
 
+{$IF NOT DECLARED(VerticalStackAlignments)}
+CONST
+  { FMX.Types in Delphi 12 and older has neither these constants nor the nine-way TAlignLayout
+    members (TopLeft, LeftTop, ...). Mirror the Delphi 13 sets, restricted to the members that
+    exist down to Rio. GitHub issue #5. }
+  VerticalStackAlignments   = [TAlignLayout.Top,  TAlignLayout.MostTop,  TAlignLayout.Bottom, TAlignLayout.MostBottom];
+  HorizontalStackAlignments = [TAlignLayout.Left, TAlignLayout.MostLeft, TAlignLayout.Right,  TAlignLayout.MostRight, TAlignLayout.FitLeft, TAlignLayout.FitRight];
+{$IFEND}
+
 
 constructor TLightCheckBox.Create(AOwner: TComponent);
 begin
