@@ -1189,13 +1189,14 @@ procedure MaximizeVertically;
 procedure ApplyAndroidWindowInsets;
 ```
 
-## LightFmx.Common.AppData (16)
+## LightFmx.Common.AppData (17)
 
 ```pascal
 function getLogForm: TfrmRamLog;
 procedure setHintType(const aHintType: THintType); override;
 procedure Run;
 procedure Minimize; override;
+procedure Restore; // Counterpart of Minimize (mirrors the VCL TAppData.Restore). Also clears StartMinim — without it, one Minimize would latch StartMinim=TRUE in the INI forever and the app would start minimized on every subsequent launch.
 function RunFileAtStartup(const FilePath: string; Active: Boolean): Boolean;
 function RunSelfAtStartUp(Active: Boolean): Boolean;
 function GetAppVersion: string;
@@ -1433,13 +1434,12 @@ procedure UseFormIcon(const AForm: TCommonCustomForm); // grab form's GCL_HICONS
 procedure ShowBalloonHint(const Title, Text: string; Icon: TBalloonIconType = biInfo);
 ```
 
-## LightFmx.Visual.AnimatedMemo (7)
+## LightFmx.Visual.AnimatedMemo (6)
 
 ```pascal
 procedure TimerTick(Sender: TObject);
 procedure SetAnimatedText(const Value: string);
 procedure SetInterval(const Value: Integer);
-procedure FlushCurrentLine; // Appends FCurrentLine to the last visible memo line
 procedure ClearAnimation; // Clears pending text and stops animation
 function IsAnimating: Boolean; // Returns True if animation is in progress
 procedure Register;
@@ -1631,7 +1631,7 @@ procedure Open;
 procedure LoadLastSelection;
 procedure SaveLastSelection;
 procedure StartCapture;
-function CaptureSelectedArea(CONST SelectionRect: TRectF): Boolean;
+function CaptureSelectedArea(CONST SelectionRect: TRectF; ScaleX: Single = 1.0; ScaleY: Single = 1.0): Boolean;
 function GetCapturedImages: TObjectList<FMX.Graphics.TBitmap>;
 ```
 
