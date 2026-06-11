@@ -180,7 +180,7 @@ The AppData system replaces the standard Delphi application lifecycle with a mor
 - AutoState queue system for form restoration (`asPosOnly`, `asFull`, `asNone`)
 - Visual log window (`TfrmRamLog`) - auto-created on demand
 - Platform-specific startup registration (Windows Registry, macOS LaunchAgents, Linux autostart)
-- Application control: `Run()`, `Minimize()`, `Restart()`, `SelfDelete()`
+- Application control: `Run()`, `Minimize()`, `Restore()`, `Restart()`, `SelfDelete()`
 - Dialog helpers: `PromptToSaveFile`, `PromptToLoadFile`
 - `ShowModal(Form)` — shows form modally; auto-centers on main form if `AutoState = asNone`
 - Global instance: `AppData` (freed in FINALIZATION)
