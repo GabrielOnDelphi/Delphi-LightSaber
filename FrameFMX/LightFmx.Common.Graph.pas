@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.Graph;
 
 {=============================================================================================================
-   2026.01.31
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
     Graphics utilities for FMX.
@@ -119,7 +119,8 @@ end;
   Caller is responsible for freeing the returned bitmap. }
 function LoadThumbnail(const FileName: string; TargetWidth, TargetHeight: Single): TBitmap;
 begin
-  if NOT FileExists(FileName) then EXIT(NIL);
+  Result:= NIL;   // Must init before the TRY: if TBitmap.Create itself raised, the EXCEPT branch would FreeAndNil an uninitialized Result
+  if NOT FileExists(FileName) then EXIT;
 
   try
     Result:= TBitmap.Create;
@@ -158,22 +159,40 @@ begin
     Height:= Trunc(Size.Y);
   except
     on E: Exception do
+      begin
+        if Assigned(AppDataCore)
+        then AppDataCore.LogError('Cannot get image resolution for ' + FileName + ': ' + E.Message);
+        Width := 0;
+        Height:= 0;
+      end;
+  end;
+
+  { The codecs report most failures WITHOUT raising: TBitmapCodecManager/WIC/Skia return (0,0) for
+    unrecognized or corrupt content, and the Android codec passes through BitmapFactory's failure
+    sentinel (-1,-1). So the fallback must trigger on a non-positive size, not only on an exception. }
+  if (Width <= 0) OR (Height <= 0) then
     begin
-      if Assigned(AppDataCore) 
-      then AppDataCore.LogError('Cannot get image resolution for ' + FileName + ': ' + E.Message);
+      Width := 0;
+      Height:= 0;
 
       { Fallback: Full load if CodecManager fails (rare but possible with some formats) }
       Bmp:= NIL;
       try
-        Bmp:= TBitmap.CreateFromFile(FileName);
-        Width := Bmp.Width;
-        Height:= Bmp.Height;
+        try
+          Bmp:= TBitmap.CreateFromFile(FileName);
+          Width := Bmp.Width;
+          Height:= Bmp.Height;
+        except
+          { Soft-fail per function contract ("Returns 0,0 if file cannot be read") }
+          on E2: Exception do
+            if Assigned(AppDataCore)
+            then AppDataCore.LogError('GetImageResolution fallback failed for ' + FileName + ': ' + E2.Message);
+        end;
       finally
         FreeAndNil(Bmp);
       end;
       { Note: If fallback also fails, Width/Height remain 0 }
     end;
-  end;
 end;
 
 

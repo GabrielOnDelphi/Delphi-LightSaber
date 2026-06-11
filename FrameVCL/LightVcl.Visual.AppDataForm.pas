@@ -85,7 +85,7 @@ TYPE
     procedure DoDestroy; override;
     procedure DoClose(VAR Action: TCloseAction); override;
     procedure FormKeyPress(Sender: TObject; var Key: Char);  // We can use this later in the destructor to know how to save the form: asPosOnly/asFull
-    procedure WMEndSession(VAR Msg: TWMEndSession);
+    procedure WMEndSession(VAR Msg: TWMEndSession); message WM_ENDSESSION;  { Save form state on Windows logoff/shutdown. Without the message directive this handler was never dispatched (dead code). The FFormSaved guard in saveBeforeExit prevents a double-save when CloseQuery already ran via WM_QUERYENDSESSION. }
     procedure WMDropFiles (VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Accept the dropped files from Windows Explorer }
   public
     constructor Create(AOwner: TComponent; AutoSaveForm: TAutoState); reintroduce; overload; virtual;

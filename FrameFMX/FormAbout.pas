@@ -1,7 +1,7 @@
 ﻿UNIT FormAbout;
 
 {=============================================================================================================
-   2026.05.12
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -69,6 +69,7 @@ TYPE
     lblAppName: TLabel;
     Memo: TMemo;
     procedure FormCreate       (Sender: TObject);
+    procedure FormClose        (Sender: TObject; var Action: TCloseAction);
     procedure FormKeyDown      (Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
     procedure btnEnterKeyClick (Sender: TObject);
     procedure btnOrderNowClick (Sender: TObject);
@@ -83,6 +84,8 @@ TYPE
     FCreditsURL        : string;
     FChildrenTapCount  : Integer;
     procedure UpdateBetaTesterVisual;
+  protected
+    procedure DoShow; override;
   public
     {$IFDEF USEPROTEUS}
     Proteus: TProteus;
@@ -188,6 +191,38 @@ begin
   Memo.Lines.Add('');
   Memo.Lines.Add('=< SCREEN RESOLUTION >=');
   Memo.Lines.Add(GenerateScreenResolutionRep);   //   Tester: LightSaber\Demo\FMX\Demos\FMX_Demos.dpr
+end;
+
+
+{ EULAURL/CreditsURL/CreditsText are public fields meant to be set AFTER AppData.CreateForm returns
+  (see the usage notes in the unit header). But FormCreate has ALREADY run inside CreateForm — FMX
+  fires OnCreate from AfterConstruction — so values assigned after creation were never applied.
+  Re-evaluate them here: DoShow runs on every Show/ShowModal, after the caller had a chance to set them. }
+procedure TfrmAboutApp.DoShow;
+begin
+  inherited;
+
+  FEULAURL   := EULAURL;
+  FCreditsURL:= CreditsURL;
+
+  inetEULA.Visible:= FEULAURL <> '';
+
+  if FCreditsURL <> '' then
+    begin
+      lblCredits.Text   := CreditsText;
+      lblCredits.Visible:= TRUE;
+    end
+  else
+    lblCredits.Visible:= FALSE;
+end;
+
+
+{ Free the form on close so reopening creates a fresh instance.
+  Default FMX close action is caHide — without this, every CreateFormModal call would pile up
+  another hidden (auto-renamed) instance until app shutdown. Same pattern as TfrmUpdaterSettings. }
+procedure TfrmAboutApp.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Action:= TCloseAction.caFree;
 end;
 
 

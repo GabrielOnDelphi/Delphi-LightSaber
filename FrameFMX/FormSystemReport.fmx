@@ -8,6 +8,7 @@ object frmSystemReport: TfrmSystemReport
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
   OnCreate = FormCreate
+  OnClose = FormClose
   DesignerMasterStyle = 0
   object Memo: TMemo
     Touch.InteractiveGestures = [Pan, LongTap, DoubleTap]

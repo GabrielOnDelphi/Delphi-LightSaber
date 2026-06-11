@@ -692,8 +692,13 @@ end;
 
 procedure TAppData.setGuiProperties(Form: TForm);
 begin
-  // Update caption only for TLightForm descendants
-  if Form is TLightForm
+  // Show the "Initializing form X" progress ONLY on the main form (and only it).
+  // MainFormCaption always targets Application.MainForm, so calling it for any OTHER form
+  // is wrong: for a secondary form created at runtime it permanently clobbers the main
+  // window title (never restored), and for the Log form (created BEFORE the main form in
+  // CreateMainForm) Application.MainForm is still NIL -> Access Violation.
+  if (Form is TLightForm)
+  AND (Form = Application.MainForm)
   then TLightForm(Form).MainFormCaption('Initializing form '+ Form.Name);
 
   Form.ShowHint:= HintType > htOff;

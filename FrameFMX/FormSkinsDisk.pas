@@ -1,7 +1,7 @@
 ﻿UNIT FormSkinsDisk;
 
 {=============================================================================================================
-   2026.04.25
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    UNIVERSAL FMX STYLE LOADER
@@ -187,7 +187,11 @@ begin
   if NOT IsStyleCompatible(FullPath, LoadFailed) then
   begin
     if LoadFailed
-    then MessageError('Cannot read style file (corrupted or wrong format): ' + ExtractFileName(FullPath))
+    then
+      begin
+        AppDataCore.RamLog.AddError('LoadStyleFromFile: cannot read style file (corrupted/locked/wrong format): ' + FullPath);
+        MessageError('Cannot read style file (corrupted or wrong format): ' + ExtractFileName(FullPath));
+      end
     else MessageError('Style is not compatible with this platform: ' + ExtractFileName(FullPath));
     EXIT(FALSE);
   end;

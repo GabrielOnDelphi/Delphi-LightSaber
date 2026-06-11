@@ -460,7 +460,7 @@ begin
      Delete(pDate1, 1, 1);
      pDate:= pDate1;
      if pDate = '  '
-     then Break;
+     then Continue;   { Empty cell (leading/trailing day of an adjacent month, when ShowWeeks=FALSE). Skip it. Must NOT Break: an empty cell at the START of a week (any month not starting on the first column) would otherwise abort the row and the real days that follow would never be drawn. }
 
      FCanvas.Font.Color:= clBlack;
      if not FGermanDate

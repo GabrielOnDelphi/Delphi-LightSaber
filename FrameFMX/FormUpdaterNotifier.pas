@@ -1,7 +1,7 @@
 UNIT FormUpdaterNotifier;
 
 {=============================================================================================================
-   2026.05.18
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -72,6 +72,7 @@ TYPE
     procedure OnConnectError  (Sender: TObject; Msg: string);
     procedure PopulateNews;
     procedure SetStatusColor  (AColor: TAlphaColor);
+    procedure ResetStatusColor;
   public
     procedure FormPreRelease; override;
     class procedure CreateFormModal(AAfterClose: TProc = NIL); static;
@@ -113,9 +114,6 @@ begin
   Updater.OnNoNews       := OnNoNews;
   Updater.OnConnectError := OnConnectError;
   Updater.OnUpdateEnd    := OnUpdateEnd;
-
-  { Strip FontColor from styled settings so we can paint status text manually later }
-  lblStatus.StyledSettings:= lblStatus.StyledSettings - [TStyledSetting.FontColor];
 
   { Initial GUI state. lblConnectError is shown ONLY when we have a real message
     to display — OnConnectError populates Text and Visible together. }
@@ -183,10 +181,19 @@ begin
 end;
 
 
-{ FMX labels don't have a Color property like VCL — we change FontColor instead. }
+{ FMX labels don't have a Color property like VCL — we change FontColor instead.
+  Strips FontColor from StyledSettings so the manual color wins over the active style. }
 procedure TfrmUpdater.SetStatusColor(AColor: TAlphaColor);
 begin
+  lblStatus.StyledSettings:= lblStatus.StyledSettings - [TStyledSetting.FontColor];
   lblStatus.TextSettings.FontColor:= AColor;
+end;
+
+
+{ Neutral status: hand FontColor back to the active style so the text stays readable on dark skins too. }
+procedure TfrmUpdater.ResetStatusColor;
+begin
+  lblStatus.StyledSettings:= lblStatus.StyledSettings + [TStyledSetting.FontColor];
 end;
 
 
@@ -224,7 +231,7 @@ end;
 procedure TfrmUpdater.OnNoNews(Sender: TObject);
 begin
   lblStatus.Text:= 'No news today.';
-  SetStatusColor(TAlphaColors.Black);
+  ResetStatusColor;
   lblStatus.Visible:= TRUE;
 end;
 

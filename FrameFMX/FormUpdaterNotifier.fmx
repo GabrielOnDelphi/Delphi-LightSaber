@@ -24,7 +24,7 @@ object frmUpdater: TfrmUpdater
       TabOrder = 0
       object lblVersion: TLabel
         Align = Top
-        StyledSettings = [Family, Style]
+        StyledSettings = [Family, Style, FontColor]
         Margins.Left = 8.000000000000000000
         Margins.Top = 8.000000000000000000
         Margins.Right = 8.000000000000000000
@@ -39,7 +39,7 @@ object frmUpdater: TfrmUpdater
       end
       object lblStatus: TLabel
         Align = Top
-        StyledSettings = [Family, Style]
+        StyledSettings = [Family, Style, FontColor]
         Margins.Left = 8.000000000000000000
         Margins.Right = 8.000000000000000000
         Margins.Bottom = 4.000000000000000000

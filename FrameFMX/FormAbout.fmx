@@ -8,6 +8,7 @@ object frmAboutApp: TfrmAboutApp
   FormFactor.Height = 440
   FormFactor.Devices = [Desktop]
   OnCreate = FormCreate
+  OnClose = FormClose
   OnKeyDown = FormKeyDown
   DesignerMasterStyle = 0
   object Container: TLayout

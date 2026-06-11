@@ -690,7 +690,7 @@ end;
 --------------------------------------------------------------------------------------------------}
 function FindNonZeroPoint(DataPoints: TDataPoints): Cardinal;                                      { Stop on the first non-empty cell }
 VAR
-   i: Cardinal;
+   i: Integer;   { Must be Integer, not Cardinal: for an empty array High()=-1; as a Cardinal that wraps to $FFFFFFFF and the 'downto 0' loop would run ~4 billion times, dereferencing DataPoints[$FFFFFFFF] on the first pass (AV / range error). }
 begin
   Result:= 0;
   for i:= High(DataPoints) downto 0 DO
@@ -700,7 +700,7 @@ end;
 
 
 function FindMax(DataPoints: TDataPoints): Integer;                                                { Stop on the first non-empty cell }
-VAR i: Cardinal;
+VAR i: Integer;   { Must be Integer, not Cardinal: for an empty array High()=-1; as a Cardinal the 'to High()' upper bound becomes $FFFFFFFF and the loop dereferences DataPoints[0] out of bounds. }
 begin
   Result:= 0;
   for i:= 0 to High(DataPoints) DO

@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.AppData;
 
 {=============================================================================================================
-   2026.04.30
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -135,6 +135,7 @@ TYPE
     procedure Run;
 
     procedure Minimize; override;
+    procedure Restore;   // Counterpart of Minimize (mirrors the VCL TAppData.Restore). Also clears StartMinim — without it, one Minimize would latch StartMinim=TRUE in the INI forever and the app would start minimized on every subsequent launch.
     function  RunFileAtStartup(const FilePath: string; Active: Boolean): Boolean;
     function  RunSelfAtStartUp(Active: Boolean): Boolean;
     function  GetAppVersion: string;
@@ -594,6 +595,21 @@ begin
   if TPlatformServices.Current.SupportsPlatformService(IFMXWindowService, IInterface(WindowService))
   then WindowService.SetWindowState(Application.MainForm, TWindowState.wsMinimized);
   StartMinim:= TRUE;
+end;
+
+
+{ Bring the application back to screen (counterpart of Minimize — call it from tray/restore handlers).
+  Clears StartMinim so the app does not auto-minimize at the next startup (same contract as the VCL TAppData.Restore). }
+procedure TAppData.Restore;
+begin
+  if Application.MainForm = NIL then EXIT;
+
+  var WindowService: IFMXWindowService;
+  if TPlatformServices.Current.SupportsPlatformService(IFMXWindowService, IInterface(WindowService))
+  then WindowService.SetWindowState(Application.MainForm, TWindowState.wsNormal);
+  Application.MainForm.Show;
+  Application.MainForm.BringToFront;
+  StartMinim:= FALSE;
 end;
 
 

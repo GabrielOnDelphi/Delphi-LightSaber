@@ -1,7 +1,7 @@
 UNIT LightFmx.Common.IniFile;
 
 {=============================================================================================================
-   2026.01.31
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
   Same as LightCore.INIFile but adds support for forms to save themselves to disk.
@@ -239,9 +239,9 @@ begin
  then
   begin
    VAR Form:= TForm(Ctrl);
+   WriteInteger(Ctrl.Name,'WindowState', Ord(Form.WindowState));     { ATENTION! This MUST be above WindowState:= wsNormal, otherwise we always save wsNormal and a maximized form is never restored as maximized }
    if Form.WindowState = TWindowState.wsMaximized                    { Unmaximize form in order to save form position correctly }
    then Form.WindowState:= TWindowState.wsNormal;
-   WriteInteger(Ctrl.Name,'WindowState', Ord(Form.WindowState));     { ATENTION! This MUST be above Window:= wsNormal }
 
    Assert(Assigned(Form.Handle));
    Assert(Form.IsHandleAllocated);
@@ -567,7 +567,7 @@ begin
   if Result then
   begin
     Font.Family := ReadString  (FSection, Ident+ 'Name',  'Arial');
-    Font.Size   := ReadInteger (FSection, Ident+ 'Size',  8);
+    Font.Size   := ReadFloat   (FSection, Ident+ 'Size',  8);       { Write() stores Size with WriteFloat (FMX TFont.Size is Single). ReadInteger would fail on fractional sizes (e.g. '10.5') and silently fall back to 8. }
     Font.Style  := TFontStyles(BYTE(ReadInteger(FSection, Ident+ 'Style', 0)));
   end;
 end;

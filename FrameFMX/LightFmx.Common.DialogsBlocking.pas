@@ -1,7 +1,7 @@
 ﻿unit LightFmx.Common.DialogsBlocking;
 
 {=============================================================================================================
-   2026.05.16
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Easy message boxes (FMX)
@@ -108,7 +108,9 @@ begin
   {$IFDEF ANDROID}
   Result:= FALSE;
   {$ELSE}
-  Result:= TDialogServiceSync.MessageDialog(MessageText, TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], TMsgDlgBtn.mbYes, -1) = ord(TMsgDlgBtn.mbYes);
+  // MessageDialog returns a TModalResult (mrYes=6, mrNo=7 — on Windows the raw MessageBoxIndirect IDYES/IDNO),
+  // NOT a TMsgDlgBtn ordinal. Comparing with Ord(TMsgDlgBtn.mbYes)=0 made this function always return FALSE.
+  Result:= TDialogServiceSync.MessageDialog(MessageText, TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo], TMsgDlgBtn.mbYes, -1) = mrYes;
   {$ENDIF}
 end;
 

@@ -1,7 +1,7 @@
 ﻿UNIT FormScreenCapture;
 
 {=============================================================================================================
-   2026.01.31
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Screen Capture with Rectangle Selection
@@ -116,7 +116,7 @@ begin
     if Assigned(OnComplete)
     then OnComplete(FOverlay.FSCManager.GetCapturedImages);
   finally
-    FOverlay.Free;
+    FreeAndNil(FOverlay);
   end;
 end;
 
@@ -175,15 +175,18 @@ begin
   if FOverlayStyle = osFrostedGlass
   then CreateBlurredScreenshot;
 
-  // Set last selection if available and within current screen bounds
+  // Show form. The form is wsMaximized, so pbOverlay gets its real screen-sized bounds only now.
+  Show;
+
+  // Restore last selection if it fits the current screen. Validate in logical units (dp vs dp):
+  // LastSelectionRect is stored in overlay coords, while Screenshot.Width/Height are physical pixels —
+  // on HiDPI displays those are larger than the overlay, so a stale rect could land partially off-screen.
   LastRect:= FSCManager.LastSelectionRect;
   if NOT LastRect.IsEmpty then
-    if (LastRect.Right <= FSCManager.Screenshot.Width) AND
-       (LastRect.Bottom <= FSCManager.Screenshot.Height)
+    if (LastRect.Right <= pbOverlay.Width) AND
+       (LastRect.Bottom <= pbOverlay.Height)
     then SelectionRect.BoundsRect:= LastRect;
 
-  // Show form
-  Show;
   UpdateInstructions;
 end;
 
@@ -264,7 +267,7 @@ begin
     Canvas.Fill.Assign(GradientBrush);
     Canvas.FillRect(FullRect, 0, 0, [], 1.0);
   finally
-    GradientBrush.Free;
+    FreeAndNil(GradientBrush);
   end;
 
   // 4. Color tint (Aero's signature blue color)
@@ -306,7 +309,7 @@ begin
       1.0
     );
   finally
-    GradientBrush.Free;
+    FreeAndNil(GradientBrush);
   end;
 end;
 
@@ -345,7 +348,7 @@ begin
     Canvas.Fill.Assign(GradientBrush);
     Canvas.FillRect(FullRect, 0, 0, [], 1.0);
   finally
-    GradientBrush.Free;
+    FreeAndNil(GradientBrush);
   end;
 
   // 2. Subtle horizontal light streaks (glass reflection effect)
@@ -400,7 +403,7 @@ begin
       1.0
     );
   finally
-    GradientBrush.Free;
+    FreeAndNil(GradientBrush);
   end;
 
   // 4. Subtle cool tint for modern look (RoyalBlue with ~4% alpha)
@@ -412,11 +415,13 @@ end;
 
 procedure TfrmScreenCapture.pbOverlayPaint(Sender: TObject; Canvas: TCanvas);
 VAR
-  FullRect, SelectRect, DrawRect: TRectF;
+  FullRect, SelectRect, DrawRect, SrcRect: TRectF;
+  ScaleX, ScaleY: Single;
 begin
   if NOT Assigned(FSCManager) OR NOT Assigned(FSCManager.Screenshot) then EXIT;
 
   FullRect:= pbOverlay.LocalRect;
+  if (FullRect.Width <= 0) OR (FullRect.Height <= 0) then EXIT;
   SelectRect:= SelectionRect.BoundsRect;
 
   Canvas.BeginScene;
@@ -446,8 +451,16 @@ begin
         DrawRect.Intersect(FullRect);
         if DrawRect.IsEmpty then EXIT;  // Selection is completely outside visible area
 
+        // Map overlay-local (logical) coords to screenshot PIXEL coords. The screenshot is captured
+        // in physical pixels; on HiDPI displays (DPI scale > 100%) a 1:1 SrcRect would lift the wrong
+        // (top-left, shrunken) region. At 100% scale the ratios are 1.0 and this is a no-op.
+        ScaleX:= FSCManager.Screenshot.Width  / FullRect.Width;
+        ScaleY:= FSCManager.Screenshot.Height / FullRect.Height;
+        SrcRect:= TRectF.Create(DrawRect.Left  * ScaleX, DrawRect.Top    * ScaleY,
+                                DrawRect.Right * ScaleX, DrawRect.Bottom * ScaleY);
+
         // Draw selection with full brightness
-        Canvas.DrawBitmap(FSCManager.Screenshot, DrawRect, DrawRect, 1.0, True);
+        Canvas.DrawBitmap(FSCManager.Screenshot, SrcRect, DrawRect, 1.0, True);
 
         // Add subtle glow around selection (inner white border, ~70% alpha)
         Canvas.Stroke.Kind := TBrushKind.Solid;
@@ -528,7 +541,11 @@ begin
   // Ctrl+P / Cmd+P - capture selected area
   if IsCaptureKeyPressed(Key, Shift) then
     begin
-      if FSCManager.CaptureSelectedArea(SelectionRect.BoundsRect) then
+      // SelectionRect is in logical (overlay) coords; the screenshot is in physical pixels.
+      // Pass the logical->pixel ratios so the manager crops the correct region on HiDPI displays.
+      if FSCManager.CaptureSelectedArea(SelectionRect.BoundsRect,
+           FSCManager.Screenshot.Width  / pbOverlay.Width,
+           FSCManager.Screenshot.Height / pbOverlay.Height) then
         begin
           ShowCaptureFlash;  // Visual feedback
           UpdateInstructions;

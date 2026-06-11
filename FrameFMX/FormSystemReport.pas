@@ -1,7 +1,7 @@
 UNIT FormSystemReport;
 
 {=============================================================================================================
-   2025.12
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -20,7 +20,7 @@ UNIT FormSystemReport;
 INTERFACE
 
 USES
-  System.Classes,
+  System.Classes, System.UITypes,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Controls.Presentation, FMX.ScrollBox, FMX.Memo, FMX.Memo.Types,
   LightFmx.Common.AppData.Form;
 
@@ -28,6 +28,7 @@ TYPE
   TfrmSystemReport = class(TLightForm)
     Memo: TMemo;
     procedure FormCreate(Sender: TObject);
+    procedure FormClose (Sender: TObject; var Action: TCloseAction);
   private
   public
   end;
@@ -51,6 +52,15 @@ begin
   Memo.Lines.Add('');
   Memo.Lines.Add('=< SCREEN RESOLUTION >=');
   Memo.Lines.Add(GenerateScreenResolutionRep);
+end;
+
+
+{ Free the form on close so reopening creates a fresh instance.
+  Default FMX close action is caHide — without this, every AppData.CreateFormModal call (btnReport
+  in the log form) would pile up another hidden (auto-renamed) instance until app shutdown. }
+procedure TfrmSystemReport.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+  Action:= TCloseAction.caFree;
 end;
 
 end.
