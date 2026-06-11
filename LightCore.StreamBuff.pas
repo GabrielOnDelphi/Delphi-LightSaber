@@ -1,10 +1,11 @@
 UNIT LightCore.StreamBuff;
 
 {=============================================================================================================
-   2026.05.05
+   2026.06.10
    www.GabrielMoraru.com
-   
+
    + SafetyLimit parameter to ReadString/ReadStringA/ReadStringACnt/ ReadStringCnt/ReadCharsA. API now matches sibling classes (TLightFileStream, TCubicMemStream).
+   + ReadIntegers/ReadDoubles validate the element count against the remaining stream bytes before SetLength.
 --------------------------------------------------------------------------------------------------------------
    Extends TBufferedFileStream.
    Ideal for multiple consecutive small reads or writes.
@@ -866,6 +867,9 @@ VAR
   Count: Integer;
 begin
   Count:= ReadInteger;
+  // Reject corrupt counts (negative or past EOF) BEFORE SetLength allocates
+  if (Count < 0) OR (Position + Int64(Count) * SizeOf(Integer) > Size)
+  then RAISE Exception.CreateFmt('ReadIntegers: invalid count %d. File corrupted?', [Count]);
   SetLength(List, Count);
   for i:= 0 to High(List) DO
     List[i]:= ReadInteger;
@@ -887,6 +891,9 @@ VAR
   Count: Integer;
 begin
   Count:= ReadInteger;
+  // Reject corrupt counts (negative or past EOF) BEFORE SetLength allocates
+  if (Count < 0) OR (Position + Int64(Count) * SizeOf(Double) > Size)
+  then RAISE Exception.CreateFmt('ReadDoubles: invalid count %d. File corrupted?', [Count]);
   SetLength(List, Count);
   for i:= 0 to High(List) DO
     List[i]:= ReadDouble;
