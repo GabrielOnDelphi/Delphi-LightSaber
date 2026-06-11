@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.CenterControl;
 
 {=============================================================================================================
-   2026.01.30
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Functions for centering and positioning controls and forms.
@@ -87,7 +87,13 @@ begin
  if Form = NIL
  then raise Exception.Create('CorrectFormPositionDesktop: Form parameter cannot be nil');
 
- CorrectCtrlPosition(Form, Screen.DesktopWidth, Screen.DesktopHeight);
+ { The virtual desktop does NOT start at (0,0) when a secondary monitor sits left of/above the primary:
+   Screen.DesktopLeft/DesktopTop (SM_XVIRTUALSCREEN) are negative then. Clamping to [0..DesktopWidth]
+   would yank forms off such monitors onto the primary, so clamp to the real desktop rectangle instead. }
+ Form.Width := Min(Form.Width,  Screen.DesktopWidth);
+ Form.Height:= Min(Form.Height, Screen.DesktopHeight);
+ Form.Left  := EnsureRange(Form.Left, Screen.DesktopLeft, Screen.DesktopLeft + Screen.DesktopWidth  - Form.Width);
+ Form.Top   := EnsureRange(Form.Top,  Screen.DesktopTop,  Screen.DesktopTop  + Screen.DesktopHeight - Form.Height);
 end;
 
 
@@ -240,7 +246,7 @@ begin
 
  if (Ctrl.Top < -5)
  OR (Ctrl.Left < -5)
- OR (Ctrl.Left > Parent.Width)
+ OR (Ctrl.Left > Parent.ClientWidth)
  OR (Ctrl.Top > Parent.ClientHeight) then
   begin
     Ctrl.Left := (Parent.ClientWidth  - Ctrl.Width) div 2;

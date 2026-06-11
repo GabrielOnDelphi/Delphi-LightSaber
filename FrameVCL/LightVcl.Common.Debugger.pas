@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.Debugger;
 
 {=============================================================================================================
-   2026.01.29
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -228,7 +228,11 @@ function LastErrorMsgStr: string;
 VAR
   szError: array[0..255] of Char;
 begin
-  FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NIL, GetLastError(), 0, szError, SizeOf(szError), NIL);
+  szError[0]:= #0;   { FormatMessage leaves the buffer untouched on failure - guarantee a valid empty string then }
+
+  { nSize is in TCHARs, not bytes (MSDN) - SizeOf would claim 512 chars for this 256-char buffer and allow a stack overrun on long messages.
+    FORMAT_MESSAGE_IGNORE_INSERTS is required for system messages (MSDN security remark): without it a message containing %1 inserts reads garbage arguments. }
+  FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM or FORMAT_MESSAGE_IGNORE_INSERTS, NIL, GetLastError(), 0, szError, Length(szError), NIL);
   Result:= string(szError);
 end;
 

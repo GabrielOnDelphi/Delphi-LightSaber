@@ -2,8 +2,8 @@ UNIT LightVcl.Common.EnvironmentVar;
 
 {=============================================================================================================
    SYSTEM - Environment Variables
-   
-   2026.01.29
+
+   2026.06.10
 
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
@@ -208,6 +208,7 @@ function SetEnvironmentVars(CONST Name, Value: string; User: Boolean = TRUE): Bo
 VAR
   Reg: TRegistry;
   RegLocation: string;
+  MsgResult: DWORD_PTR;
 begin
   Result:= FALSE;
   if Name = '' then EXIT;
@@ -234,13 +235,19 @@ begin
       SetEnvironmentVariable(PChar(Name), PChar(Value));
 
       { Broadcast to all top-level windows to refresh their environment.
-        Use the correct registry location for the broadcast. }
-      SendMessage(HWND_BROADCAST, WM_SETTINGCHANGE, 0, LPARAM(PChar(RegLocation)));
+        MSDN (Environment Variables): broadcast WM_SETTINGCHANGE with lParam set to the string
+        "Environment" - for BOTH user and machine scope. Receivers (Explorer etc.) compare lParam
+        against "Environment", so passing the machine registry path here would be ignored.
+        SendMessageTimeout + SMTO_ABORTIFHUNG instead of SendMessage: a single hung top-level window
+        must not block us forever (MSDN, WM_SETTINGCHANGE). }
+      SendMessageTimeout(HWND_BROADCAST, WM_SETTINGCHANGE, 0, LPARAM(PChar('Environment')), SMTO_ABORTIFHUNG, 5000, @MsgResult);
 
       Result:= TRUE;
     EXCEPT
-      { WriteString can raise exception if access denied or other registry error }
-      Result:= FALSE;
+      { WriteString raises ERegistryException on access denied or other registry errors.
+        Converted to FALSE because the documented contract of this function is a Boolean result. }
+      on E: ERegistryException do
+        Result:= FALSE;
     END;
   FINALLY
     FreeAndNil(Reg);

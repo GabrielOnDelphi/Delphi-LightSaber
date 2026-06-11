@@ -2,8 +2,8 @@ UNIT LightVcl.Common.ExecuteProc;
 
 {=============================================================================================================
    Execute Process
-   
-   2026.01.29
+
+   2026.06.10
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
@@ -221,6 +221,7 @@ begin
     Important: there may be asynchronously-sent messages still queued
     if MWFMO saw the process terminate before checking for messages. }
   Application.ProcessMessages;
+  ExitCode:= 0;   { Defined result if GetExitCodeProcess fails - otherwise stack garbage would be returned }
   GetExitCodeProcess(ProcessInfo.hProcess, ExitCode);
 
   CloseHandle(ProcessInfo.hProcess);
@@ -264,6 +265,7 @@ VAR
   Buffer: array[0..255] of AnsiChar;
   BytesRead: Cardinal;
   ProcessCreated: Boolean;
+  LastErr: DWORD;
 begin
   if CmdLine = ''
   then raise Exception.Create('ExecuteAndGetOut: CmdLine parameter cannot be empty');
@@ -276,7 +278,7 @@ begin
   SecAtrrs.lpSecurityDescriptor:= NIL;
 
   { Create pipe for stdout redirection }
-  CreatePipe(StdOutPipeRead, StdOutPipeWrite, @SecAtrrs, 0);
+  Win32Check(CreatePipe(StdOutPipeRead, StdOutPipeWrite, @SecAtrrs, 0));
   TRY
     { Configure startup info for hidden window with redirected output }
     FillChar(StartupInfo, SizeOf(StartupInfo), 0);
@@ -289,27 +291,32 @@ begin
 
     { Create the process. /C flag closes cmd.exe when command completes }
     ProcessCreated:= CreateProcess(NIL, PChar('cmd.exe /C ' + CmdLine), NIL, NIL, TRUE, 0, NIL, PChar(Work), StartupInfo, ProcessInfo);
+    LastErr:= GetLastError;   { Capture now - the CloseHandle below may overwrite it }
 
     { Close write end of pipe - child process has its own handle now.
       We must close our handle so ReadFile will see EOF when child exits. }
     CloseHandle(StdOutPipeWrite);
 
-    if ProcessCreated then
-      TRY
-        { Read all output from the pipe }
-        REPEAT
-          WasOK:= WinApi.Windows.ReadFile(StdOutPipeRead, Buffer, SizeOf(Buffer) - 1, BytesRead, NIL);
-          if BytesRead > 0 then
-            begin
-              Buffer[BytesRead]:= #0;
-              Result:= Result + string(Buffer);
-            end;
-        UNTIL NOT WasOK or (BytesRead = 0);
-        WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
-      FINALLY
-        CloseHandle(ProcessInfo.hThread);
-        CloseHandle(ProcessInfo.hProcess);
-      END;
+    { Raise instead of silently returning '' - a failure (e.g. invalid Work folder) must not be indistinguishable from empty output }
+    if NOT ProcessCreated
+    then RaiseLastOSError(Integer(LastErr));
+
+    TRY
+      { Read all output from the pipe }
+      REPEAT
+        WasOK:= WinApi.Windows.ReadFile(StdOutPipeRead, Buffer, SizeOf(Buffer) - 1, BytesRead, NIL);
+        if BytesRead > 0 then
+          begin
+            Buffer[BytesRead]:= #0;
+            OemToAnsi(Buffer, Buffer);   { Console output is in the OEM code page - same conversion as ExecuteAndGetOutDyn }
+            Result:= Result + string(Buffer);
+          end;
+      UNTIL NOT WasOK or (BytesRead = 0);
+      WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
+    FINALLY
+      CloseHandle(ProcessInfo.hThread);
+      CloseHandle(ProcessInfo.hProcess);
+    END;
   FINALLY
     CloseHandle(StdOutPipeRead);
   END;

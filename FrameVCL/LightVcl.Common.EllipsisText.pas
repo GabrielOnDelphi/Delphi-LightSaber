@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.EllipsisText;
 
 {=============================================================================================================
-   2025.10
+   2026.06.10
    www.GabrielMoraru.com
 ==============================================================================================================
 
@@ -50,16 +50,23 @@ function GetEllipsisText(CONST S: String; Canvas: TCanvas; MaxWidth, MaxHeight: 
 var
   R: TRect;
   TempCanvas: TCanvas;
+  ScratchBmp: TBitmap;
 begin
-  TempCanvas:= nil; //not necessary
+  ScratchBmp:= nil;
 
   Result := S;
   UniqueString(Result);
 
-  // Use our own canvas if "Canvas" was nil
+  // Use our own canvas if "Canvas" was nil.
+  // Note: a raw TCanvas.Create has NO handle (base TCanvas.CreateHandle is a no-op), so TextRect on it
+  // raises EInvalidOperation 'Canvas does not allow drawing'. A scratch TBitmap provides a valid memory DC.
   if Assigned(Canvas)
   then TempCanvas := Canvas
-  else TempCanvas := TCanvas.Create;
+  else
+    begin
+      ScratchBmp:= TBitmap.Create;
+      TempCanvas:= ScratchBmp.Canvas;
+    end;
   try
     if Assigned(Font)
     then TempCanvas.Font.Assign(Font);
@@ -75,8 +82,7 @@ begin
     R := Rect(1, 1, MaxWidth, MaxHeight);
     TempCanvas.TextRect(R, Result, TextFormat);
   finally
-    if Canvas = NIL
-    then FreeAndNil(TempCanvas);  // New canvas object ws created ONLY if aCanvas was nil
+    FreeAndNil(ScratchBmp);  // Scratch bitmap (and its canvas) was created ONLY if Canvas was nil
   end;
 end;
 
@@ -87,8 +93,10 @@ function GetEllipsisText(CONST S: String; Handle: HDC; MaxWidth, MaxHeight: Inte
 var
   R: TRect;
 begin
-  Result := S;
-  UniqueString(Result);
+  { DT_MODIFYSTRING may add up to 4 characters to the buffer (MSDN, DrawText) - without this slack
+    DrawTextEx could write past the end of the string's heap block. The #0 padding also guarantees
+    that the final StrLen trim stops right after the original text when DrawTextEx does not modify it. }
+  Result := S + #0#0#0#0;
 
   TextFormat := TextFormat or DT_CALCRECT or DT_MODIFYSTRING;
   if PathEllipsis
@@ -97,7 +105,7 @@ begin
   then TextFormat := TextFormat or DT_END_ELLIPSIS;
 
   R := Rect(1, 1, MaxWidth, MaxHeight);
-  DrawTextEx(Handle, PChar(Result), Length(Result), R, TextFormat, nil);
+  DrawTextEx(Handle, PChar(Result), Length(S), R, TextFormat, nil);
   SetLength(Result, StrLen(PChar(Result)));
 end;
 
@@ -154,8 +162,10 @@ begin
   // copy original text into the buffer (StrPLCopy writes a terminating #0)
   StrPLCopy(PChar(Buf), s, BufLen);
 
-  // Pass buffer and buffer length (not the original string length) to DrawText.
-  Result:= DrawText(Canvas.Handle, PChar(Buf), BufLen, aRect,
+  // cchText is the LENGTH OF THE STRING, not the buffer capacity (MSDN, DrawText). Passing BufLen made
+  // DrawText render the trailing #0 fillers as real characters (.notdef boxes in some fonts) and feed
+  // them into the ellipsis-fitting logic. The extra buffer space is still required for DT_MODIFYSTRING.
+  Result:= DrawText(Canvas.Handle, PChar(Buf), Length(s), aRect,
                     DT_LEFT or DT_END_ELLIPSIS or DT_MODIFYSTRING {or DT_CALCRECT});
 end;
 
