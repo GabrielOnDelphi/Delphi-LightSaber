@@ -1,7 +1,7 @@
 unit LightFmx.Visual.AnimatedMemo;
 
 {=============================================================================================================
-   2026.01.31
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FMX memo component that displays animated text (character by character).
@@ -29,11 +29,11 @@ type
     FPendingText: string;              // Buffer holding text waiting to be displayed
     FCharIndex: Integer;               // Current position in FPendingText (1-based)
     FInterval: Integer;                // Delay between characters in milliseconds
-    FCurrentLine: string;              // Accumulation buffer for the current line (avoids O(n²) Text+= Ch)
+    FCurrentLine: string;              // Chars of the currently animated line typed so far (avoids O(n²) Text+= Ch)
+    FLineStart: string;                // Content the last memo line already had when the current animated line began (animation can append to pre-existing text)
     procedure TimerTick(Sender: TObject);
     procedure SetAnimatedText(const Value: string);
     procedure SetInterval(const Value: Integer);
-    procedure FlushCurrentLine;        // Appends FCurrentLine to the last visible memo line
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -104,6 +104,7 @@ begin
   FPendingText:= '';
   FCharIndex:= 0;
   FCurrentLine:= '';
+  FLineStart:= '';
 end;
 
 
@@ -113,23 +114,11 @@ begin
 end;
 
 
-{ Writes FCurrentLine content into the last line of the memo.
-  FMX TMemo has no direct "append to last line" API, so we replace the last Lines entry.
-  If there are no lines yet we use Lines.Add. }
-procedure TAnimatedMemo.FlushCurrentLine;
-begin
-  if FCurrentLine = '' then EXIT;
-  if Lines.Count = 0
-  then Lines.Add(FCurrentLine)
-  else Lines[Lines.Count - 1]:= Lines[Lines.Count - 1] + FCurrentLine;
-  FCurrentLine:= '';
-end;
-
-
 procedure TAnimatedMemo.TimerTick(Sender: TObject);
-{ Displays one character per timer tick.
-  Characters accumulate in FCurrentLine buffer and are flushed to the memo only on
-  line-break or animation end — avoids O(n²) Text+= Ch cost for long messages.
+{ Displays one character per timer tick (the typewriter effect this component exists for).
+  FMX TMemo has no "append char to last line" API, so each tick replaces the LAST line with
+  FLineStart + FCurrentLine. Cost per tick is O(current line length) — not the O(total²) of
+  the old Text:= Text + Ch approach.
   Line breaks: FMX TMemo uses LF (#10) internally. CR (#13) is skipped. }
 var
   Ch: Char;
@@ -143,20 +132,32 @@ begin
       else
         if Ch = #10 then
           begin
-            FlushCurrentLine;  // Push buffered text to memo before starting a new line
-            Lines.Add('');     // Start a new (empty) line
+            Lines.Add('');     // Start a new (empty) line; the previous line is already fully displayed
+            FLineStart:= '';
+            FCurrentLine:= '';
           end
         else
-          FCurrentLine:= FCurrentLine + Ch;  // Accumulate in buffer (O(1) amortised)
+          begin
+            // First char of a new animated line: capture what the last memo line already contains,
+            // so the animation appends to pre-existing text instead of overwriting it.
+            if FCurrentLine = '' then
+              if Lines.Count = 0
+              then begin Lines.Add(''); FLineStart:= ''; end
+              else FLineStart:= Lines[Lines.Count - 1];
+
+            FCurrentLine:= FCurrentLine + Ch;
+            Lines[Lines.Count - 1]:= FLineStart + FCurrentLine;  // Show the character NOW
+          end;
 
       Inc(FCharIndex);
     end
   else
     begin
-      // Animation complete — flush any remaining buffered text, then reset state
-      FlushCurrentLine;
+      // Animation complete — everything is already displayed; just reset state
       FPendingText:= '';
       FCharIndex:= 0;
+      FCurrentLine:= '';
+      FLineStart:= '';
       FTimer.Enabled:= False;
     end;
 end;

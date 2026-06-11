@@ -1,7 +1,7 @@
 unit LightFmx.Visual.Panel;
 
 {=============================================================================================================
-   2026.03
+   2026.06.10
    www.GabrielMoraru.com
 ==============================================================================================================
 
@@ -52,8 +52,12 @@ end;
 
 procedure TLightPanel.SetVisibleAtRuntime(const Value: Boolean);
 begin
-  if FVisibleAtRuntime <> Value
-  then FVisibleAtRuntime:= Value; // No immediate visibility change here; handled in Loaded
+  if FVisibleAtRuntime = Value then EXIT;
+  FVisibleAtRuntime:= Value;
+  // Apply immediately at runtime (matches TLightLayout). During loading, Loaded applies it;
+  // at design time the panel must stay visible so it can be edited.
+  if NOT (csLoading in ComponentState) AND NOT (csDesigning in ComponentState)
+  then Visible:= Value;
 end;
 
 {

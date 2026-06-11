@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.Screen;
 
 {=============================================================================================================
-   2026.04.21
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FMX-specific screen and platform utilities.
@@ -87,9 +87,10 @@ CONST
 
 
 
-{ IFMXScreenService returns physical screen size on mobile (Android/iOS).
-  Screen.Size can return 0 on mobile if called before the main form is fully created,
-  because FMX populates it lazily from the platform's screen metrics. }
+{ IFMXScreenService.GetScreenSize returns the screen size in LOGICAL units (dp/points) — that is
+  what the COMPACT_WIDTH/HIGH_WIDTH breakpoints expect (see the dp table in the unit header).
+  Preferred over Screen.Size because Screen.Size can return 0 on mobile if called before the main
+  form is fully created (FMX populates it lazily from the platform's screen metrics). }
 function GetScreenWidth: Single;
 VAR ScreenSvc: IFMXScreenService;
 begin

@@ -1,7 +1,7 @@
 unit LightFmx.Visual.SpinBox;
 
 {=============================================================================================================
-   2026.01.30
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 TLabeledSpinBoxFMX combines a TLabel and TSpinBox, similar to TLabeledEdit
@@ -39,10 +39,14 @@ type
     property LabelControl: TLabel read GetLabel;
   published
     property LabelText: string read GetLabelText write SetLabelText;
-    property Value: Double read GetValue write SetValue;
+    { Min/Max/Increment MUST be declared BEFORE Value: the FMX streamer writes/reads properties in
+      declaration order, and the internal TSpinBox clamps Value to Min..Max immediately on assignment
+      (it is not in csLoading). With Value first, a design-time Value above the default Max (100)
+      would be clamped on load (e.g. Max=500, Value=250 loaded back as 100). }
     property Min: Double read GetMin write SetMin;
     property Max: Double read GetMax write SetMax;
     property Increment: Double read GetIncrement write SetIncrement;
+    property Value: Double read GetValue write SetValue;
     property Align;
     property Position;
     property Size;

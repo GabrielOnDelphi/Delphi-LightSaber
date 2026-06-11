@@ -1,7 +1,7 @@
 ﻿unit LightFmx.Visual.DropDownSearch;
 
 {=============================================================================================================
-   2026.04
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
   A search box with auto-suggest (FMX).
@@ -146,6 +146,7 @@ var
   ScreenPos, HostPos: TPointF;
 begin
   if (csDesigning in ComponentState) then EXIT;
+  if Self.Root = NIL then EXIT;   // Not yet parented to a form — nothing can host the dropdown
 
   Host:= Self.Root.GetObject as TCommonCustomForm;
   Assert(Host <> NIL, 'Cannot find hosting form!');
@@ -218,7 +219,6 @@ begin
   then lbxSearch.Visible:= FALSE
   else
     begin
-      SetHost;
       FilterItems;
       showDropDown;
     end;
@@ -230,6 +230,7 @@ begin
   if lbxSearch.Items.Count > 0
   then
     begin
+      SetHost;  // (Re)parent + position the dropdown. Must be done here (not only in Click): keyboard-only flows (Tab into the edit, then type or press arrows) never go through Click, and without a parent the listbox can never become visible.
       SetHeightAuto(lbxSearch, MaxDropHeight); //Resize it based on the number of rows in it, but never make it bigger than the 1/2 form
       lbxSearch.Visible := TRUE;
       lbxSearch.BringToFront;
@@ -356,7 +357,7 @@ begin
     for i:= 0 to FWords.Count - 1 do
       if (FilterText = '')
       OR (PosInsensitive(FilterText, FWords[i]) > 0)  // PosInsensitive is already case-insensitive
-      then lbxSearch.Items.Add(FWords[i]);
+      then lbxSearch.Items.AddObject(FWords[i], FWords.Objects[i]);   // Carry the payload object! Otherwise SelectedObject and OnEndSearch's SelectedItem are always NIL.
   finally
     lbxSearch.Items.EndUpdate;
   end;

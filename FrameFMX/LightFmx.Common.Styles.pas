@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.Styles;
 
 {=============================================================================================================
-   2026.04.21
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Hint: Under VCL use TControl.IsLightStyleColor
@@ -73,7 +73,21 @@ begin
   Result:= False;
   LoadFailed:= False;
 
-  StyleObj := TStyleStreaming.LoadFromFile(StyleFile);
+  TRY
+    StyleObj := TStyleStreaming.LoadFromFile(StyleFile);
+  EXCEPT
+    // TStyleStreaming.LoadFromFile RAISES (EStyleException for bad format, EFOpenError for
+    // locked/inaccessible files) — it does not return nil for unreadable files. Convert the
+    // raise into the documented LoadFailed contract: this probe is called from LoadLastStyle
+    // in the DPR BEFORE Application.Run, where an escaping exception aborts startup with no UI.
+    // The failure is surfaced to the user and the log by the caller (see FormSkinsDisk.LoadStyleFromFile).
+    on E: Exception do
+      begin
+        LoadFailed:= True;
+        EXIT;
+      end;
+  END;
+
   if StyleObj = nil then
     begin
       LoadFailed:= True;   // file unreadable / corrupted / wrong format

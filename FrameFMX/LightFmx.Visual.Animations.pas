@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Visual.Animations;
 
 {=============================================================================================================
-   2026.04
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FMX micro-animations.
@@ -703,7 +703,7 @@ begin
         RotAnim.Start;
       end;
   FINALLY
-    Targets.Free;
+    FreeAndNil(Targets);
   END;
 end;
 

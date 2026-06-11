@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Visual.ScreenCapture;
 
 {=============================================================================================================
-   2026.01.31
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Screen Capture Manager - Business Logic Layer
@@ -51,7 +51,7 @@ TYPE
     destructor Destroy; override;
 
     procedure StartCapture;
-    function CaptureSelectedArea(CONST SelectionRect: TRectF): Boolean;
+    function CaptureSelectedArea(CONST SelectionRect: TRectF; ScaleX: Single = 1.0; ScaleY: Single = 1.0): Boolean;
     function GetCapturedImages: TObjectList<FMX.Graphics.TBitmap>;
 
     property Screenshot: FMX.Graphics.TBitmap read FScreenshot;
@@ -245,19 +245,24 @@ end;
 {  Captures the selected rectangular region from the screenshot.
 
    Parameters:
-     SelectionRect - The rectangle defining the area to capture (in screen coordinates)
+     SelectionRect  - The rectangle defining the area to capture, in the CALLER's (logical/UI) coordinates
+     ScaleX, ScaleY - Map SelectionRect into screenshot PIXEL coordinates. The screenshot is captured in
+                      physical pixels; on HiDPI displays (scale > 100%) the overlay UI works in logical
+                      units, so the caller passes Screenshot.Width/Overlay.Width (and the Y counterpart).
+                      Default 1.0 keeps the old 1:1 behavior.
 
    Returns:
      TRUE if capture succeeded, FALSE if selection is empty or no screenshot available
 
    Side Effects:
      - Adds the cropped image to FCapturedImages list
-     - Updates FLastSelectionRect for persistence
+     - Updates FLastSelectionRect for persistence (stores the UNSCALED SelectionRect, i.e. UI units,
+       because it is restored into the UI selection control next session)
      - Saves selection to INI file  }
-function TScreenCaptureManager.CaptureSelectedArea(CONST SelectionRect: TRectF): Boolean;
+function TScreenCaptureManager.CaptureSelectedArea(CONST SelectionRect: TRectF; ScaleX: Single = 1.0; ScaleY: Single = 1.0): Boolean;
 VAR
   CroppedBitmap: FMX.Graphics.TBitmap;
-  SourceRect, DestRect: TRectF;
+  ScaledRect, SourceRect, DestRect: TRectF;
 begin
   Result:= FALSE;
 
@@ -275,14 +280,18 @@ begin
       EXIT;
     end;
 
+  // Map the UI-space selection into screenshot pixel space
+  ScaledRect:= TRectF.Create(SelectionRect.Left  * ScaleX, SelectionRect.Top    * ScaleY,
+                             SelectionRect.Right * ScaleX, SelectionRect.Bottom * ScaleY);
+
   // Create cropped bitmap from selection
   CroppedBitmap:= FMX.Graphics.TBitmap.Create;
   try
-    CroppedBitmap.Width:= Round(SelectionRect.Width);
-    CroppedBitmap.Height:= Round(SelectionRect.Height);
+    CroppedBitmap.Width:= Round(ScaledRect.Width);
+    CroppedBitmap.Height:= Round(ScaledRect.Height);
 
     // Clamp source rect to screenshot bounds (prevents drawing outside the bitmap)
-    SourceRect:= SelectionRect;
+    SourceRect:= ScaledRect;
     SourceRect.Intersect(FScreenshot.BoundsF);
     if SourceRect.IsEmpty then
       begin
