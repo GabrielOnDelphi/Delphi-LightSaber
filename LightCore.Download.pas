@@ -87,8 +87,8 @@ end;
 
 
 { Returns a new TMemoryStream instance if HTTP status is 200 OK. Caller must free the returned stream.
-  Returns nil otherwise. HttpRetCode contains the HTTP status or a negative error code on client exception.
-  Raises ENetHTTPClientException or other exceptions on network/client errors.
+  Returns nil otherwise. ErrorMsg contains a textual error description ('HTTP error 404: Not Found',
+  'Download error: ...'); empty = success. Network/HTTP errors do not raise - they are reported via ErrorMsg.
 
 You can pass Referers like this:
   var Headers: System.Net.URLClient.TNetHeaders;
