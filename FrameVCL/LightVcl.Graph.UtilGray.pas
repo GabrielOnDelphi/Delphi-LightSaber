@@ -1,7 +1,7 @@
 UNIT LightVcl.Graph.UtilGray;
 
 {=============================================================================================================
-   2026.01.30
+   2026.06.10
    Gabriel Moraru
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
@@ -117,17 +117,25 @@ end;
 --------------------------------------------------------------------------------------------------}
 
 { Returns true if the image has a grayscale palette.
-  A grayscale palette has R=G=B for all 256 palette entries. }
+  A grayscale palette has R=G=B for all palette entries.
+  Returns FALSE for bitmaps without a palette (pf24bit/pf32bit images have Palette=0). }
 function HasGrayscalePalette(BMP: TBitmap): Boolean;
 var
   ColorTable: array[0..255] of TPaletteEntry;
+  Retrieved: UINT;
   I: Integer;
 begin
   Assert(BMP <> NIL, 'HasGrayscalePalette: BMP parameter cannot be nil');
 
+  { GetPaletteEntries returns the number of entries actually retrieved - 0 when the bitmap has no
+    palette. The old code ignored this and compared UNINITIALIZED stack memory, returning a random
+    verdict for pf24bit/pf32bit images (an all-zero stack reads as "grayscale"!). }
+  Retrieved:= GetPaletteEntries(BMP.Palette, 0 {Start}, 256 {Entry count}, ColorTable);
+  if Retrieved = 0
+  then EXIT(FALSE);
+
   Result:= TRUE;
-  GetPaletteEntries(BMP.Palette, 0 {Start}, 256 {Entry count}, ColorTable);
-  for I:= 0 to 255 do
+  for I:= 0 to Integer(Retrieved)-1 do
     if (ColorTable[I].peRed <> ColorTable[I].peGreen)
     OR (ColorTable[I].peRed <> ColorTable[I].peBlue)
     then EXIT(FALSE);
@@ -227,7 +235,11 @@ end; }
 --------------------------------------------------------------------------------------------------}
 
 { Convert one color pixel to gray pixel using luminance weights.
+  WARNING: The input is a raw 32-bit DIB pixel (memory order B,G,R,A = $AARRGGBB as a DWORD),
+  NOT a TColor (which is $00BBGGRR)! Bits 16-23 are weighted as Red, bits 0-7 as Blue.
+  Passing a real TColor swaps the R/B luminance weights - ColorToRGB does NOT fix the byte order.
   Range checking is disabled for performance in pixel-level operations. }
+{$IFOPT R+}{$DEFINE GRAY_RANGECHECKS_ON}{$ENDIF}
 {$R-}
 function RGB2Gray(Color: TColor): TColor;
 CONST
@@ -290,7 +302,7 @@ begin
   // Note: This may cause banding/dithering artifacts (like converting high-color to 256-color GIF)
   BMP.PixelFormat:= pf8bit;
 end;
-{$R+}
+{$IFDEF GRAY_RANGECHECKS_ON}{$R+}{$ENDIF}
 
 
 
