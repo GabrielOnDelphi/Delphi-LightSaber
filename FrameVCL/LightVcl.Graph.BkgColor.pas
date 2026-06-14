@@ -2,7 +2,7 @@ UNIT LightVcl.Graph.BkgColor;
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.01.30
+   2026.06.10
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -197,6 +197,9 @@ begin
  if bmp.pixelformat <> pf24bit
  then raise Exception.Create('HasBlackBorder: BMP must be pf24bit');
 
+ { Height < 4: LineIsBlack samples rows 3 and Height-4, which do not exist -> out-of-range raise. Width < 4: no interior left of the 1px borders (Width=0 would even div-by-zero in LineIsBlack), and a TRUE here would let RemoveBorder crop 2px off a <=3px-wide image. A tiny image simply has no detectable border. }
+ if (Bmp.Width < 4) OR (Bmp.Height < 4)
+ then EXIT(FALSE);
 
  { Top line }
  Result:= LineIsBlack(Bmp, 0, Tolerance)
@@ -514,14 +517,15 @@ VAR
      ComputeColorRange(LeftColor);
      for c:= iLeft downto 1                                                  { go towards left edge of the screen }
        DO ProcessColumn(c, c-1);                                             { Read this column and put the modified pixels in the adjacent column }
+    end;
 
-    { Right }
-    if (btRight in Border) AND (RightColor > -1)  then
-     begin
-      ComputeColorRange(RightColor);
-      for c:= iRight-1 to OutBMP.Width-IndexDiff-1
-       DO ProcessColumn(c, c+1);                                             { Read this column and put the modified pixels in the adjacent column }
-     end;
+   { Right }
+   { This block was nested INSIDE the Left block, so btRight was silently skipped whenever btLeft was not requested. The four borders are independent. }
+   if (btRight in Border) AND (RightColor > -1)  then
+    begin
+     ComputeColorRange(RightColor);
+     for c:= iRight-1 to OutBMP.Width-IndexDiff-1
+      DO ProcessColumn(c, c+1);                                              { Read this column and put the modified pixels in the adjacent column }
     end;
   end;
 
