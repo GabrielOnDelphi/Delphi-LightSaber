@@ -20,10 +20,10 @@ UNIT LightVcl.Common.ProcessCpuMonitor;
         Mon.Sample;   // Now TopCpu is populated
 
         for i:= 0 to Mon.TopCpuCount-1 do
-          WriteLn(Mon.TopCpu[i].Name, ' ', Mon.TopCpu[i].CpuPercent:5:1, '%');
+          WriteLn(Mon.GetTopCpu(i).Name, ' ', Mon.GetTopCpu(i).CpuPercent:5:1, '%');
 
         for i:= 0 to Mon.TopRamCount-1 do
-          WriteLn(Mon.TopRam[i].Name, ' ', Mon.TopRam[i].WorkingSetBytes);
+          WriteLn(Mon.GetTopRam(i).Name, ' ', Mon.GetTopRam(i).WorkingSetBytes);
       finally
         FreeAndNil(Mon);
       end;
