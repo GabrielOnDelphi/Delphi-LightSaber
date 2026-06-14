@@ -141,10 +141,13 @@ begin
 end;
 
 
-{ Saves settings when the form is destroyed }
+{ Saves settings when the form is destroyed.
+  Guard: if Initialize was never called, the saved email body was never LOADED into mmoEmailBody.
+  Saving in that state would overwrite the user's saved body file with the DFM default text. }
 procedure TfrmComposer.FormDestroy(Sender: TObject);
 begin
-  SaveSettings;
+  if frmSmtpSettings <> NIL    // frmSmtpSettings is created in Initialize - it doubles as the 'Initialize ran' marker
+  then SaveSettings;
 end;
 
 
@@ -234,7 +237,7 @@ begin
         ledFrom.Text,
         edtSubject.Text,
         Body,
-        '',  // CC (not implemented)
+        '',  // HtmlImage - image to embed in HTML emails (not used here)
         edtAttachment.Path,
         chkSendAsHtml.Checked);
     except
@@ -258,6 +261,8 @@ procedure TfrmComposer.btnSendMailClick(Sender: TObject);
 var
   Success: Boolean;
 begin
+  Assert(frmSmtpSettings <> NIL, 'Initialize must be called before sending emails');
+
   // If using external SMTP but no host configured, show settings
   if (NOT chkInternalSMTP.Checked) and (frmSmtpSettings.ledHost.Text = '') then
     begin
