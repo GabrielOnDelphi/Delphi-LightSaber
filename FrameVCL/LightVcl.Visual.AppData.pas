@@ -468,7 +468,8 @@ VAR Reference: TForm;
 begin
   CreateForm(aClass, Reference, FALSE, asNone);
   CenterFormOnMainFormMonitor(Reference);
-  Reference.ShowModal;
+  if NOT TEST_MODE                 { Same bypass as the CreateFormModal overloads - without it a unit test touching this path blocks forever }
+  then Reference.ShowModal;
 end;
 
 
@@ -693,10 +694,8 @@ end;
 procedure TAppData.setGuiProperties(Form: TForm);
 begin
   // Show the "Initializing form X" progress ONLY on the main form (and only it).
-  // MainFormCaption always targets Application.MainForm, so calling it for any OTHER form
-  // is wrong: for a secondary form created at runtime it permanently clobbers the main
-  // window title (never restored), and for the Log form (created BEFORE the main form in
-  // CreateMainForm) Application.MainForm is still NIL -> Access Violation.
+  // MainFormCaption always targets Application.MainForm, so calling it for any other form is wrong: for a secondary form created at runtime it permanently clobbered the main window title (never restored).
+  // For the Log form (created in CreateMainForm BEFORE the main form) Application.MainForm is still NIL - not a crash (VCL Caption writes route through TControl.Perform, which is nil-guarded, so the write was a silent no-op) but pointless. The guard skips it.
   if (Form is TLightForm)
   AND (Form = Application.MainForm)
   then TLightForm(Form).MainFormCaption('Initializing form '+ Form.Name);
