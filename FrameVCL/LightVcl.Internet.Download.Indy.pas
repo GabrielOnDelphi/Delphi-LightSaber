@@ -2,7 +2,7 @@ UNIT LightVcl.Internet.Download.Indy;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2026.01
+   2026.06.11
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -95,11 +95,19 @@ begin
   Assert(DestinationFile <> '', 'DownloadFile: DestinationFile is empty');
 
   ErrorMsg:= '';
-  Indy:= TIDHTTP.Create(NIL);
-  IOHandler:= TIdSSLIOHandlerSocketOpenSSL.Create(NIL);
-  IDAntiFreeze:= TIDAntiFreeze.Create(NIL);
-  Stream:= TFileStream.Create(DestinationFile, fmCreate);
+  { NIL-init + create inside TRY: TFileStream.Create (locked file/bad path) and TIdAntiFreeze.Create
+    (raises EIdException if the app already has an antifreeze - e.g. on reentrant call) would otherwise
+    leak the objects created before them. }
+  Indy:= NIL;
+  IOHandler:= NIL;
+  IDAntiFreeze:= NIL;
+  Stream:= NIL;
   TRY
+    Indy:= TIDHTTP.Create(NIL);
+    IOHandler:= TIdSSLIOHandlerSocketOpenSSL.Create(NIL);
+    IDAntiFreeze:= TIDAntiFreeze.Create(NIL);
+    Stream:= TFileStream.Create(DestinationFile, fmCreate);
+
     IOHandler.MaxLineAction := maException;
     IOHandler.SSLOptions.SSLVersions := [sslvTLSv1, sslvTLSv1_1, sslvTLSv1_2];
 
@@ -165,18 +173,19 @@ begin
   Assert(DestinationFile <> '', 'DownloadThread: DestinationFile is empty');
 
   ErrorMsg:= '';
+  Stream:= NIL;
   Indy:= TIDHTTP.Create(NIL);
-  Indy.ConnectTimeout          := 0;                                      { Indy default value: 0 }
-  Indy.ReadTimeout             := -1;                                     { Indy default value: -1 }
-  Indy.HandleRedirects         := TRUE;                                   { http://stackoverflow.com/questions/4549809/indy-idhttp-how-to-handle-page-redirects }
-  Indy.AllowCookies            := FALSE;
-  Indy.Request.UserAgent       := 'Mozilla/4.0';
-  Indy.Request.Connection      := 'Keep-Alive';
-  Indy.Request.ProxyConnection := 'Keep-Alive';
-  Indy.Request.CacheControl    := 'no-cache';
-
-  Stream:= TMemoryStream.Create;
   TRY
+    Indy.ConnectTimeout          := 0;                                      { Indy default value: 0 }
+    Indy.ReadTimeout             := -1;                                     { Indy default value: -1 }
+    Indy.HandleRedirects         := TRUE;                                   { http://stackoverflow.com/questions/4549809/indy-idhttp-how-to-handle-page-redirects }
+    Indy.AllowCookies            := FALSE;
+    Indy.Request.UserAgent       := 'Mozilla/4.0';
+    Indy.Request.Connection      := 'Keep-Alive';
+    Indy.Request.ProxyConnection := 'Keep-Alive';
+    Indy.Request.CacheControl    := 'no-cache';
+
+    Stream:= TMemoryStream.Create;
     TRY
       Indy.Get(URL, Stream);
       Stream.SaveToFile(DestinationFile);
