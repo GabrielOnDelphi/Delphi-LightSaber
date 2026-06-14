@@ -85,15 +85,20 @@ VAR s: string;
 begin
   Assert(Comp.Name > '', 'TIniFileVCL-The control has no name! Class: '+ Comp.ClassName);
   Result:= inherited ReadComp(Comp);
-  if Result then EXIT; { We handled this component in the parent class. Nothing to do here. }
+  if Result then
+   begin
+     { We handled this component in the parent class. Nothing to do here...
+       ...except for TCubicSpinEditD: it descends from TSpinEdit, so the PARENT class loaded its Value.
+       Setting Value fired Change, which started the delayed-event timer. Stop the timer here, otherwise
+       OnChanged fires ~Delay ms after the value was loaded from the INI file (see warning in LightVcl.Visual.SpinEditDelayed). }
+     if Comp.InheritsFrom(TCubicSpinEditD)
+     then TCubicSpinEditD(Comp).StopTimer;
+     EXIT;
+   end;
 
   { Read controls }
   if ValueExists(Comp.Owner.Name, Comp.Name) then
    begin
-     { Stop the delayed event from triggering after the value is loaded from INI file }
-     if Comp.InheritsFrom(TCubicSpinEditD)
-     then TCubicSpinEditD(Comp).StopTimer;
-
      if Comp.InheritsFrom(TLogViewer)     { This MUST be before InheritsFrom(TTrackBar) }
      then TLogViewer(Comp).Verbosity:= TLogVerbLvl(ReadInteger(Comp.Owner.Name, Comp.Name, 0))
      else
