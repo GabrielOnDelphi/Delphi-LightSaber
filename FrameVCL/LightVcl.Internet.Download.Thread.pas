@@ -21,7 +21,7 @@ UNIT LightVcl.Internet.Download.Thread;
      Downloader.URL:= 'https://example.com/file.zip';
      Downloader.Start;
      // When done, Data property contains the downloaded content
-     // Remember to free Data and Downloader when finished
+     // Remember to free the Downloader when finished. Do NOT free Data - it is owned and freed by the Downloader!
 
    Note: UserAgent, Header, Referer, SSL properties are reserved for future use.
 --------------------------------------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ TYPE
   private
    FUrl: String;                                                                                                        { URL that we are downloading }
    FData: TMemoryStream;                                                                                                { The downloaded content will be stored here }
-   FHttpRetCode: string;                                                                                                { HTTP response code after download }
+   FHttpRetCode: string;                                                                                                { Error message from the download engine. Empty = success }
    FOnDownloadDone: TNotifyEvent;
    procedure SetURL(CONST Value: string);
    procedure DoDownloadDone;                                                                                            { Thread-safe event trigger }
@@ -65,7 +65,7 @@ TYPE
 
    property URL: String read FUrl write SetUrl;
    property Data: TMemoryStream read FData;
-   property HttpRetCode: string read FHttpRetCode;                                                                      { HTTP response code (e.g., '200', '404') }
+   property HttpRetCode: string read FHttpRetCode;                                                                      { Error message from LightCore.Download.DownloadToStream (e.g., 'HTTP error 404: Not Found'). Empty = success. NOT a bare numeric code! }
    property OnDownloadDone: TNotifyEvent read FOnDownloadDone write FOnDownloadDone;
  end;
 
