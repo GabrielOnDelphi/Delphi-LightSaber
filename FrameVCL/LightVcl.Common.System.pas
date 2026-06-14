@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.System;
 
 {=============================================================================================================
-   2026.01.30
+   2026.06.10
    www.GabrielMoraru.com
 
 ==============================================================================================================
@@ -121,7 +121,7 @@ begin
                        ErrorCode,
                        LangID,
                        Buffer,
-                       SizeOf(Buffer) - 1, // -1 for null terminator space
+                       Length(Buffer) - 1, // nSize is in TCHARs, not bytes! SizeOf(Buffer) would declare 2048 chars for a 1024-char buffer and let FormatMessage overrun the stack. -1 for null terminator space.
                        nil) = 0
       then
         Result := 'Windows Error Code ' + IntToStr(ErrorCode) + ' (No system description available).'  // FormatMessage failed
@@ -384,7 +384,7 @@ begin
    { NOTIFY THE SYSTEM }
    if Result then
     begin
-     AddFontResource(PChar(FontFileName));
+     AddFontResource(PChar(CopyToWin));   { Register the copy in Windows\Fonts (the registry entry points there) - registering the original path would break the font for this session once the source file (USB stick, temp folder) disappears }
      SendMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
     end;
   end;
@@ -452,17 +452,25 @@ begin
     if h_svc > 0 then begin
       temp := nil;
       if (StartService(h_svc,0,temp)) then
-        if (QueryServiceStatus(h_svc,svc_status)) then begin
-          while (SERVICE_RUNNING <> svc_status.dwCurrentState) do begin
-            dwCheckPoint := svc_status.dwCheckPoint;
-            Sleep(svc_status.dwWaitHint);
-            if (not QueryServiceStatus(h_svc,svc_status)) then break;
-            if (svc_status.dwCheckPoint < dwCheckPoint) then begin
-              // QueryServiceStatus didn't increment dwCheckPoint
-              break;
+        begin
+          if (QueryServiceStatus(h_svc,svc_status)) then begin
+            { Poll only while START_PENDING (MSDN pattern). The previous condition
+              'while SERVICE_RUNNING <> state' looped forever when the service failed
+              to start and fell back to STOPPED with a non-incrementing checkpoint
+              (0 < 0 never breaks) - an infinite Sleep(0) spin. }
+            while (SERVICE_START_PENDING = svc_status.dwCurrentState) do begin
+              dwCheckPoint := svc_status.dwCheckPoint;
+              Sleep(svc_status.dwWaitHint);
+              if (not QueryServiceStatus(h_svc,svc_status)) then break;
+              if (svc_status.dwCheckPoint < dwCheckPoint) then begin
+                // QueryServiceStatus didn't increment dwCheckPoint
+                break;
+              end;
             end;
           end;
-        end;
+        end
+      else
+        QueryServiceStatus(h_svc, svc_status);  { StartService failed (e.g. service already running) - read the real state so the Result check below is meaningful }
       CloseServiceHandle(h_svc);
     end;
     CloseServiceHandle(h_manager);
@@ -479,6 +487,7 @@ var h_manager,h_svc   : SC_Handle;
     svc_status     : TServiceStatus;
     dwCheckPoint : DWord;
 begin
+  svc_status.dwCurrentState := SERVICE_RUNNING;  { Initialize to known state ('not stopped'). Without this, every failure path below (manager/service cannot be opened) made the final Result check read an UNINITIALIZED stack record - random TRUE/FALSE. }
   h_manager:=OpenSCManager(PChar(aMachine),nil,SC_MANAGER_CONNECT);
 
   if h_manager > 0 then begin
@@ -487,15 +496,22 @@ begin
     if h_svc > 0 then
      begin
        if(ControlService(h_svc,SERVICE_CONTROL_STOP,svc_status)) then
-         if(QueryServiceStatus(h_svc,svc_status))then
-           while(SERVICE_STOPPED <> svc_status.dwCurrentState) do
-           begin
-             dwCheckPoint := svc_status.dwCheckPoint;
-             Sleep(svc_status.dwWaitHint);
+         begin
+           if(QueryServiceStatus(h_svc,svc_status))then
+             { Poll only while STOP_PENDING (MSDN pattern). The previous condition
+               'while SERVICE_STOPPED <> state' looped forever when the service refused
+               to stop and stayed RUNNING with a non-incrementing checkpoint. }
+             while(SERVICE_STOP_PENDING = svc_status.dwCurrentState) do
+             begin
+               dwCheckPoint := svc_status.dwCheckPoint;
+               Sleep(svc_status.dwWaitHint);
 
-             if NOT QueryServiceStatus(h_svc,svc_status) then break;    // couldn't check status
-             if (svc_status.dwCheckPoint < dwCheckPoint) then break;
-           end;
+               if NOT QueryServiceStatus(h_svc,svc_status) then break;    // couldn't check status
+               if (svc_status.dwCheckPoint < dwCheckPoint) then break;
+             end;
+         end
+       else
+         QueryServiceStatus(h_svc, svc_status);  { ControlService failed (e.g. service already stopped) - read the real state so an already-stopped service correctly returns TRUE }
        CloseServiceHandle(h_svc);
      end;
     CloseServiceHandle(h_manager);
