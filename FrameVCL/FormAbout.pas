@@ -13,9 +13,11 @@ UNIT FormAbout;
    The form can be closed with Escape or Enter.
 
    USAGE:
-     Set the Proteus property BEFORE showing the form if you have license protection:
-       Form.Proteus:= MainForm.Proteus;
-     If Proteus is nil, the license-related UI elements will be hidden/disabled.
+     If you have license protection, pass Proteus to CreateFormModal:
+       TfrmAboutApp.CreateFormModal(TRUE, TRUE, MainForm.Proteus);
+     Or, when you hold a form reference (CreateFormParented), assign it before showing:
+       Form.Proteus:= MainForm.Proteus;   // The setter updates the license UI
+     If Proteus is nil, the license-related UI elements are hidden/disabled.
 
    DON'T ADD IT TO ANY DPK!
 
@@ -46,9 +48,13 @@ TYPE
     procedure btnEnterKeyClick (Sender: TObject);
     procedure btnOrderNowClick (Sender: TObject);
   private
+    FProteus: TProteus;
+    procedure setProteus(aProteus: TProteus);
   public
-    Proteus: TProteus;
-    class procedure CreateFormModal(ShowOrderNow, ShowEnterKey: Boolean); static;
+    { License system. FormCreate always runs with Proteus=NIL (the form is instantiated inside
+      CreateFormModal/CreateFormParented), so the license UI is applied by the SETTER, not by FormCreate. }
+    property Proteus: TProteus read FProteus write setProteus;
+    class procedure CreateFormModal(ShowOrderNow, ShowEnterKey: Boolean; aProteus: TProteus= NIL); static;
     class function CreateFormParented(Parent: TWinControl): TfrmAboutApp; static;
   end;
 
@@ -68,12 +74,15 @@ USES
   Parameters:
     ShowOrderNow - Show the "Order Now" button for unregistered users
     ShowEnterKey - Show the "Enter Key" button for license entry
-  Note: Set Form.Proteus before calling if license features are needed. }
-class procedure TfrmAboutApp.CreateFormModal(ShowOrderNow, ShowEnterKey: Boolean);
+    aProteus     - Pass MainForm.Proteus if license features are needed. The form variable is local
+                   to this method, so this parameter is the ONLY way to deliver Proteus on this path.
+  Note: The explicit ShowOrderNow/ShowEnterKey parameters win over the Proteus-derived defaults. }
+class procedure TfrmAboutApp.CreateFormModal(ShowOrderNow, ShowEnterKey: Boolean; aProteus: TProteus= NIL);
 var
   Form: TfrmAboutApp;
 begin
   AppData.CreateForm(TfrmAboutApp, Form, FALSE, asFull);
+  Form.Proteus:= aProteus;                  // Setter applies the license UI (expire label, button defaults)
   Form.btnOrderNow.Visible:= ShowOrderNow;
   Form.btnEnterKey.Visible:= ShowEnterKey;
   Form.ShowModal;
@@ -104,30 +113,20 @@ begin
 end;
 
 
-{ Initializes the About form with application and license information.
-  Note: Proteus must be assigned by the caller BEFORE showing the form (via CreateFormModal)
-  if license features are needed. If Proteus is nil, license UI is hidden. }
+{ Initializes the About form with application information.
+  Proteus is ALWAYS nil here: the form is instantiated inside CreateFormModal/CreateFormParented,
+  so no caller can assign Proteus before this event fires. We set the no-license defaults here;
+  setProteus applies the license UI when (and if) Proteus is assigned later. }
 procedure TfrmAboutApp.FormCreate(Sender: TObject);
 begin
   // Prevent DFM resource conflict with other forms named 'TfrmAbout'
   // See: https://stackoverflow.com/questions/71518287/h2161-warning-duplicate-resource-type-10-rcdata-id-tfrmabout
   Assert(ClassName <> 'TfrmAbout', 'This form cannot be named TfrmAbout because of DFM resource conflict');
 
-  // Configure license-related UI if Proteus is available
-  if Proteus <> NIL then
-    begin
-      btnOrderNow.Visible:= NOT Proteus.CurCertif.Platit;
-      if Proteus.CurCertif.Trial
-      then lblExpire.Caption:= 'Lite edition'
-      else lblExpire.Caption:= 'Registered';
-    end
-  else
-    begin
-      // Hide license UI when Proteus not available
-      btnOrderNow.Visible:= FALSE;
-      btnEnterKey.Visible:= FALSE;
-      lblExpire.Caption:= '';
-    end;
+  // Hide license UI. setProteus shows it when a license system is provided.
+  btnOrderNow.Visible:= FALSE;
+  btnEnterKey.Visible:= FALSE;
+  lblExpire.Caption:= '';
 
   // Populate application info from AppData
   lblCompany.Caption:= AppData.CompanyName;
@@ -139,6 +138,23 @@ begin
   if (imgLogo.Picture.Graphic = NIL)
   AND FileExists(AppData.AppSysDir+ 'Logo.png')
   then imgLogo.Picture.LoadFromFile(AppData.AppSysDir+ 'Logo.png');
+end;
+
+
+{ Applies the license-related UI. Mirrors the FMX twin (FrameFMX\FormAbout.pas):
+  lblExpire is Visible=FALSE in the DFM, so it must be shown here, otherwise the
+  'Lite edition'/'Registered' caption is painted on an invisible label. }
+procedure TfrmAboutApp.setProteus(aProteus: TProteus);
+begin
+  FProteus:= aProteus;
+  if FProteus = NIL then EXIT;   // Keep the no-license defaults set in FormCreate
+
+  btnOrderNow.Visible:= NOT FProteus.CurCertif.Platit;
+  btnEnterKey.Visible:= TRUE;
+  lblExpire.Visible  := TRUE;
+  if FProteus.CurCertif.Trial
+  then lblExpire.Caption:= 'Lite edition'
+  else lblExpire.Caption:= 'Registered';
 end;
 
 
@@ -156,7 +172,11 @@ end;
   Requires Proteus to be assigned before calling. }
 procedure TfrmAboutApp.btnEnterKeyClick(Sender: TObject);
 begin
-  Assert(Proteus <> NIL, 'Proteus not assigned! Set TfrmAboutApp.Proteus before showing the form.');
+  { Hard raise (not Assert) so the failure is also clear in Release builds. Reachable when a caller
+    passes ShowEnterKey=TRUE to CreateFormModal without supplying Proteus - previously this was a
+    nil-dereference (access violation) in Release. }
+  if Proteus = NIL
+  then raise Exception.Create('Proteus not assigned! Pass it to TfrmAboutApp.CreateFormModal or set Form.Proteus before showing the form.');
 
   if Proteus.ShowEnterKeyBox
   then MessageInfo('Key accepted. Please restart the program.')
