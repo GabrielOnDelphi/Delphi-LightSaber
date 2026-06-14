@@ -248,7 +248,7 @@ end;
 
 function TLightMemo.CurLineToCharNo: Integer;                                                      { As above but for current line (line that has the cursor) }
 begin
- Result:= Perform(EM_LINEINDEX, 0, 0)
+ Result:= Perform(EM_LINEINDEX, WPARAM(-1), 0)    { wParam -1 = the line containing the caret. With 0 it always returned the index of line 0 (i.e. always 0) }
 end;
 
 function TLightMemo.CharToLine(CONST CharNo: Integer): Integer;                                    { Gets the index of the line that contains the specified character index in a multiline edit control.  }
@@ -694,12 +694,15 @@ VAR
    i, NewLine: Integer;
 begin
  Lines.BeginUpdate;
- for i:= 0 to Lines.Count-1 DO
-  begin
-   NewLine:= Random(Lines.Count);
-   SwapLines(i, NewLine);
-  end;
- Lines.EndUpdate;
+ TRY
+   for i:= 0 to Lines.Count-1 DO
+    begin
+     NewLine:= Random(Lines.Count);
+     SwapLines(i, NewLine);
+    end;
+ FINALLY
+   Lines.EndUpdate;
+ END;
 end;
 
 
