@@ -1,10 +1,15 @@
 UNIT LightVcl.Common.IniFile;
 
 {=============================================================================================================
-   2026.05.12
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
   Same as LightCore.INIFile but adds support for forms to save themselves to disk.
+
+  2026-06-10: Fixed: WindowState was written AFTER the form was unmaximized, so wsMaximized was never
+              persisted. Fixed: missing 'Height' key inflated the form height by CurrentPPI/96 on HiDPI.
+              Fixed: TFrame removed from IsSupported (asFull save of a form holding a frame raised
+              'Unsupported control' in TIniFileVCL.WriteComp).
 
   2026-05-12: DPI normalisation. TIniFileApp.WriteCtrlPos / ReadCtrlPos now store and read positions as
               96-DPI canonical pixels (via MulDiv against Ctrl.CurrentPPI). Without this, a form saved on a
@@ -250,6 +255,8 @@ end;
    across machines with different scale factors AND between non-DPI-aware and PerMonitorV2 builds.
 -----------------------------------------------------------------------------------------------------------------------}
 procedure TIniFileApp.WriteCtrlPos(Ctrl: TControl);
+VAR
+  SavedState: TWindowState;
 
   { Convert a current-DPI pixel value to its 96-DPI canonical equivalent for INI storage.
     MulDiv (Winapi.Windows) does the multiplication in 64-bit and rounds-to-nearest, so a 1px control at 144 PPI saves as 1 (not 0) and the round-trip stays stable. Negative values (legitimate for multi-monitor Left/Top) are handled correctly by MulDiv's signed arithmetic.
@@ -264,12 +271,14 @@ begin
 
   if Ctrl.InheritsFrom(TForm) then
     begin
+      { Capture window state BEFORE unmaximizing, otherwise wsMaximized is never persisted }
+      SavedState:= TForm(Ctrl).WindowState;
+
       { Unmaximize form in order to save form position correctly }
       if TForm(Ctrl).WindowState = wsMaximized
       then TForm(Ctrl).WindowState:= wsNormal;
 
-      { Save window state - MUST be above WindowState:= wsNormal }
-      WriteInteger(Ctrl.Name, 'WindowState', Ord(TForm(Ctrl).WindowState));
+      WriteInteger(Ctrl.Name, 'WindowState', Ord(SavedState));
 
       { Save form position (DPI-canonical 96) }
       WriteInteger(Ctrl.Name, 'Top',    Canonical(Ctrl.Top));
@@ -354,7 +363,7 @@ begin
 
       if (NOT IsNonResizable)
       //AND ValueExists(Ctrl.Name, 'Height')
-      then Ctrl.Height:= FromCanonical(ReadInteger(Ctrl.Name, 'Height', Ctrl.Height));
+      then Ctrl.Height:= ReadCanonical(Ctrl.Name, 'Height', Ctrl.Height);   { ReadCanonical (not FromCanonical(ReadInteger)) - the default is in CURRENT DPI and must be pre-canonicalised, otherwise a missing key on a HiDPI display inflates the height by CurrentPPI/96 }
 
       { Validate form position setting }
       if ShowPositionWarn
@@ -737,7 +746,7 @@ begin
         OR WinCtrl.InheritsFrom(TOpenDialog)
         OR WinCtrl.InheritsFrom(TSaveDialog)
         OR WinCtrl.InheritsFrom(TColorDialog)
-        OR WinCtrl.InheritsFrom(TFrame)
+        { TFrame must NOT be listed here: WriteComp/ReadComp have no TFrame branch, so a whitelisted frame would fall through to TIniFileVCL.WriteComp's 'Unsupported control' raise on every asFull save. Frame CHILDREN are persisted by the ComponentCount recursion in SaveForm/LoadForm, which does not depend on IsSupported. }
         OR WinCtrl.InheritsFrom(THotKey)
         OR WinCtrl.InheritsFrom(TShape)
         OR WinCtrl.InheritsFrom(TToggleSwitch);
