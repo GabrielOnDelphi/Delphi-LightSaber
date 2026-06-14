@@ -113,7 +113,8 @@ begin
 
   JpgStream.WriteBuffer(DecryptHeader, SizeOf(DecryptHeader));
   JpgStream.WriteBuffer(B100, SizeOf(B100));
-  JpgStream.CopyFrom(WB1Stream, Count);                                                            { Copy the rest of the image }
+  if Count > 0                                                                                     { Truncated-file guard: TStream.CopyFrom with Count = 0 rewinds the source and copies the WHOLE file (incl. magic) }
+  then JpgStream.CopyFrom(WB1Stream, Count);                                                       { Copy the rest of the image }
 
   JpegNeeded;
  FINALLY
