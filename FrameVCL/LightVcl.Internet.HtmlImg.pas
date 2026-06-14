@@ -2,7 +2,7 @@ UNIT LightVcl.Internet.HTMLImg;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2026.01
+   2026.06.11
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -93,15 +93,19 @@ VAR
    Tags: TStringList;
 begin
  Tags:= ExtractIMGTags(HTMLBody);
- Result:= TStringList.Create;
- for i:= 0 to Tags.Count-1 DO
-  begin
-   CurTag:= Tags[i];
-   ImgURL:= ExtractAttribValue(CurTag, 'src');
-   ImgURL:= CleanServerCommands(ImgURL);
-   Result.Add(ImgURL);
-  end;
- FreeAndNil(Tags);
+ TRY
+   Result:= TStringList.Create;
+   for i:= 0 to Tags.Count-1 DO
+    begin
+     CurTag:= Tags[i];
+     ImgURL:= ExtractAttribValue(CurTag, 'src');
+     ImgURL:= CleanServerCommands(ImgURL);
+     if ImgURL <> ''                                                   { Tags without src (or with unquoted src) would pollute the list with empty entries }
+     then Result.Add(ImgURL);
+    end;
+ FINALLY
+   FreeAndNil(Tags);
+ END;
 end;
 
 
@@ -145,13 +149,19 @@ begin
 
  { Extract images from '<a href>' }
  Temp:= ExtractImagesFromAHREF(HtmlBody);
- Result.AddStrings(Temp);
- FreeAndNil(Temp);
+ TRY
+   Result.AddStrings(Temp);
+ FINALLY
+   FreeAndNil(Temp);
+ END;
 
  { Extract URLs to images from <img src="URL"> }
  Temp:= ExtractImagesFromIMG(HtmlBody);
- Result.AddStrings(Temp);
- FreeAndNil(Temp);
+ TRY
+   Result.AddStrings(Temp);
+ FINALLY
+   FreeAndNil(Temp);
+ END;
 end;
 
 
@@ -225,6 +235,7 @@ begin
 
  { Extract path }
  src:= ExtractAttribValue(Tag, 'src');     {example: <IMG src="file:///c:/!Joongle%20CMS/Joongle%20SC/My%20web%20site%20(template)/resources/R_screenshot__8556B707__B73E9467.PNG">&nbsp;</P> }
+ if Src = '' then EXIT(HtmlLine);          { No (quoted) src attribute -> leave the line untouched. Without this guard the tag would be silently DELETED below (ReplaceAttribValue returns '') }
 
  { Remove 'file:///' }
  Src:= ReplaceString(Src, 'file:///', '');
@@ -234,8 +245,11 @@ begin
 
  { Convert encoded URL to human URL - convert %20 to space, etc }
  URLDecoder:= TURLEncoding.Create;
- src:= URLDecoder.Decode(src);
- FreeAndNil(URLDecoder);
+ TRY
+   src:= URLDecoder.Decode(src);           { Raises EConvertError on malformed % sequences }
+ FINALLY
+   FreeAndNil(URLDecoder);
+ END;
 
  { Make path relative }
  src:= System.SysUtils.ExtractRelativePath(RelativeTo, src);
@@ -248,6 +262,7 @@ begin
 
  { put path back in tag }
  NewTag:= ReplaceAttribValue(Tag, 'src', src);
+ if NewTag = '' then EXIT(HtmlLine);       { Replace failed (unquoted attribute) -> keep the original line instead of deleting the tag }
 
  { Put tag back in HtmlLine }
  if iStart > 1
@@ -283,6 +298,7 @@ begin
 
  { Extract path }
  src:= ExtractAttribValue(Tag, 'src');     {example: <IMG src="file:///c:/!Joongle%20CMS/Joongle%20SC/My%20web%20site%20(template)/resources/R_screenshot__8556B707__B73E9467.PNG">&nbsp;</P> }
+ if Src = '' then EXIT(HtmlLine);          { No (quoted) src attribute -> leave the line untouched. Without this guard the tag would be silently DELETED below (ReplaceAttribValue returns '') }
 
  { Remove 'file:///' }
  Src:= ReplaceString(Src, 'file:///', '');
@@ -292,8 +308,11 @@ begin
 
  { Convert encoded URL to human URL - convert %20 to space, etc }
  URLDecoder:= TURLEncoding.Create;
- src:= URLDecoder.Decode(src);
- FreeAndNil(URLDecoder);
+ TRY
+   src:= URLDecoder.Decode(src);           { Raises EConvertError on malformed % sequences }
+ FINALLY
+   FreeAndNil(URLDecoder);
+ END;
 
  { Make path full by combining base with relative path }
  src:= System.IOUtils.TPath.Combine(base, src);
@@ -307,6 +326,7 @@ begin
 
  { put path back in tag }
  NewTag:= ReplaceAttribValue(Tag, 'src', src);
+ if NewTag = '' then EXIT(HtmlLine);       { Replace failed (unquoted attribute) -> keep the original line instead of deleting the tag }
 
  { Put tag back in HtmlLine }
  if iStart > 1
