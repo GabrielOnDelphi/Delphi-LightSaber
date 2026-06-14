@@ -1,7 +1,7 @@
 unit LightVcl.Common.Translate;
 
 {=============================================================================================================
-   2026.01.30
+   2026.06.12
    www.GabrielMoraru.com
 
 --------------------------------------------------------------------------------------------------------------
@@ -85,9 +85,9 @@ unit LightVcl.Common.Translate;
 
          procedure TForm1.FormCreate;
          begin
-          Translator:= TTranslator.Create;
+          Translator:= TTranslator.Create(AppData);
           Translator.LoadTranslation(Form1);
-          Translator.Free;
+          FreeAndNil(Translator);
          end;
 
     * To save all live forms to the INI file to be translated:
@@ -329,6 +329,11 @@ end;
 { Load translation for ALL live forms }
 procedure TTranslator.LoadTranslation(ForceLoad: Boolean= FALSE);
 begin
+ // Skip if the live forms are already in this language
+ if (LastLanguage = CurLanguageName)
+ AND NOT ForceLoad
+ then EXIT;
+
  VAR IniContainer:= TMemIniFile.Create(CurLanguage);
  TRY
    Authors:= IniContainer.ReadString('Authors', 'Name', 'CubicDesign');
@@ -351,7 +356,12 @@ end;
 
 
 { Load translation for specified form.
-   Call this for forms that were not alive when the translation was applied (during the initialization of the app) }
+   Call this for forms that were not alive when the translation was applied (during the initialization of the app).
+   Always applies the translation (idempotent). The "already in this language" optimization lives in the
+   parameterless overload: LastLanguage is a whole-app flag and cannot tell whether THIS form was translated.
+   Bug history: AppData.Create called LoadLastTranslation when zero forms existed, which set LastLanguage;
+   the old skip here then ignored every form created later, so deployed apps never applied the saved language.
+   ForceLoad is kept for signature backward compatibility. }
 procedure TTranslator.LoadTranslation(Form: TForm; ForceLoad: Boolean= FALSE);
 VAR
    i: Integer;
@@ -360,10 +370,6 @@ begin
   Assert(Form <> NIL, 'TTranslator.LoadTranslation: Form parameter cannot be nil');
 
   if NOT FileExists(CurLanguage)
-  then EXIT;
-
-  if (LastLanguage = CurLanguageName)
-  AND NOT ForceLoad
   then EXIT;
 
   if Form.Tag = DontTranslate
