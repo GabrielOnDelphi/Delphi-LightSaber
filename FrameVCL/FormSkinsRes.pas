@@ -46,7 +46,7 @@ UNIT FormSkinsRes;
 
        TStyleManager.SetStyle triggers RecreateWnd on all forms. The modal form's window handle is destroyed and recreated,
        but the new window lacks the Windows-level owner relationship that enforces z-order. The recreated modal form ends up
-       behind the disabled owner windows — the app appears frozen.
+       behind the disabled owner windows ï¿½ the app appears frozen.
 
        The old workaround (Application.ProcessMessages + BringToFront) didn't work because BringToFront only calls
        SetWindowPos(HWND_TOP), which can't overcome broken window ownership.
@@ -60,7 +60,7 @@ UNIT FormSkinsRes;
          the window topmost, then immediately removes the flag. This forces Windows to recalculate z-order, placing the form at the top of the non-topmost band. SetForegroundWindow gives it input focus.
 
        Fix 3: DefWinTheme branch (line 333)
-         The DefWinTheme branch (SetStyle('Windows')) also triggers RecreateWnd but had no z-order fix at all — this was a secondary bug. Now fixed with the same ReassertZOrder call.
+         The DefWinTheme branch (SetStyle('Windows')) also triggers RecreateWnd but had no z-order fix at all ï¿½ this was a secondary bug. Now fixed with the same ReassertZOrder call.
 
        Sources:
        - https://blogs.embarcadero.com/popupmode-and-popupparent/
@@ -116,20 +116,24 @@ TYPE
     btnSkinEditor: TButton;
     lblMoreSkinsTrial: TLabel;
     procedure FormCreate  (Sender: TObject);
+    procedure FormDestroy (Sender: TObject);
     procedure lBoxClick   (Sender: TObject);
     procedure lblTopClick (Sender: TObject);
     procedure btnSkinEditorClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var Action: TCloseAction);
     procedure btnOKClick(Sender: TObject);
-    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure FormKeyPress(Sender: TObject; var Key: Char);
   private
+    FOnDefaultStyle: TNotifyEvent;
     procedure PopulateStyles;
     procedure ReassertZOrder;
   public
     procedure FormPreRelease; override;
-    class procedure ShowAsModal; static;  
+    class procedure ShowAsModal; static;
     { Shows the skin selector form. Modal=TRUE for modal dialog, FALSE for non-modal. }
     class procedure CreateForm(Modal: Boolean; Notify: TNotifyEvent= NIL); static;
+  published
+    property OnDefaultStyle: TNotifyEvent read FOnDefaultStyle write FOnDefaultStyle;    { Event handler called when default Windows theme is selected. }
   end;
 
 CONST
@@ -154,6 +158,7 @@ USES
 
 CONST
   DefWinTheme = 'Windows default theme';
+  IniKeySkin  = 'LastSkin';   { Key name kept for backward compatibility with INI files written by older versions. Used by BOTH LoadLastStyle and FormPreRelease - they must match or the saved choice is never read back. }
 
 VAR
   { Unit-level variable for current skin name.
@@ -170,14 +175,17 @@ VAR
 procedure LoadLastStyle(const DefaultStyle: string= '');
 begin
   { Read from INI using 'LastSkin' key for backward compatibility }
-  CurrentStyleName:= LightCore.INIFileQuick.ReadString('LastSkin', DefaultStyle);
+  CurrentStyleName:= LightCore.INIFileQuick.ReadString(IniKeySkin, DefaultStyle);
 
   if CurrentStyleName = ''
   then CurrentStyleName:= DefaultStyle;
 
-  { DefWinTheme = use default Windows theme (don't apply any style) }
+  { DefWinTheme = use default Windows theme (don't apply any style).
+    TrySetStyle (not SetStyle): SetStyle raises ECustomStyleException ('Style not found') at startup
+    if the INI-saved style is not linked into this build of the EXE anymore - the app would crash
+    before any form is created. TrySetStyle silently keeps the default theme instead (ShowErrorDialog=FALSE). }
   if (CurrentStyleName <> '') AND (CurrentStyleName <> DefWinTheme)
-  then TStyleManager.SetStyle(CurrentStyleName);
+  then TStyleManager.TrySetStyle(CurrentStyleName, FALSE);
 end;
 
 
@@ -190,9 +198,9 @@ end;
   SetStyle triggers RecreateWnd which breaks modal z-order.
   Fix: PopupMode=pmAuto (set in DFM) + ReassertZOrder after each style change.
   See: http://stackoverflow.com/questions/30328924 }
-class procedure TfrmStyleDisk.ShowAsModal;
+class procedure TfrmSkinRes.ShowAsModal;
 begin
-  AppData.CreateFormModal(TfrmStyleDisk);
+  AppData.CreateFormModal(TfrmSkinRes);
 end;
 
 { Shows the skin selector form.
@@ -209,8 +217,8 @@ begin
   { Note: ShowModal has a bug - after applying a skin, the window may lose
     its modal attribute or crash on close. Non-modal is recommended. }
   if Modal
-  then Form.ShowModal
-  else Form.Show;
+  then frmEditor.ShowModal
+  else frmEditor.Show;
 end;
 
 
@@ -220,7 +228,14 @@ end;
 
 procedure TfrmSkinRes.FormCreate(Sender: TObject);
 begin
-  PopulateStyles; 
+  PopulateStyles;
+end;
+
+
+procedure TfrmSkinRes.FormDestroy(Sender: TObject);
+begin
+  { The chosen skin is persisted in FormPreRelease (guaranteed single call, see TLightForm.saveBeforeExit).
+    The form layout is saved automatically by TLightForm. Nothing else to clean up here. }
 end;
 
 
@@ -235,10 +250,10 @@ procedure TfrmSkinRes.FormPreRelease;
 begin
   inherited;
 
-  { Save using 'LastStyle' key for backward compatibility.
+  { Save using the 'LastSkin' key for backward compatibility (same key LoadLastStyle reads).
     Don't save if startup was improper (Initializing still TRUE). }
   if NOT AppData.Initializing
-  then LightCore.INIFileQuick.WriteString(IniKeyStyle, CurrentStyleName);
+  then LightCore.INIFileQuick.WriteString(IniKeySkin, CurrentStyleName);
 end;
 
 
@@ -251,7 +266,8 @@ end;
 { Closes form on Enter or Escape key }
 procedure TfrmSkinRes.FormKeyPress(Sender: TObject; var Key: Char);
 begin
-  if (Key = vkEscape) or (Key = vkReturn) then Close;
+  if Key = #13 then Close;  // Enter
+  if Key = #27 then Close;  // Escape
 end;
 
 
@@ -291,7 +307,7 @@ end;
   loses its z-order position above the disabled owner.
   TOPMOST + NOTOPMOST forces Windows to recalculate z-order, placing
   this form at the top of the non-topmost band. }
-procedure TfrmStyleDisk.ReassertZOrder;
+procedure TfrmSkinRes.ReassertZOrder;
 begin
   SetWindowPos(Handle, HWND_TOPMOST,    0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE);
   SetWindowPos(Handle, HWND_NOTOPMOST,  0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE);

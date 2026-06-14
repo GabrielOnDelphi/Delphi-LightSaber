@@ -76,7 +76,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-  LightCore.EncodeXOR, LightVcl.Visual.INIFile;
+  LightCore.AppData, LightCore.EncodeXOR, LightVcl.Visual.INIFile;
 
 
 { Form creation - initialization is deferred to Initialize method }
@@ -86,11 +86,22 @@ begin
 end;
 
 
-{ Initializes the form after creation and INI loading.
-  IMPORTANT: Must be called after the form is created and INI settings are loaded.
-  Decrypts the password that was stored encrypted in the INI file. }
+{ Initializes the form after creation: loads the saved settings, then decrypts the password.
+  IMPORTANT: Must be called after the form is created (see USAGE in the unit header).
+
+  Persistence: this form is documented to be created MANUALLY (TfrmSmtpSettings.Create), not via
+  AppData.CreateForm. A manually-created TLightForm has AutoState=asUndefined, so AppData never calls
+  LoadForm and saveBeforeExit never calls SaveForm - the SMTP settings were silently NOT persisted.
+  Fix: when AutoState is still asUndefined we self-manage persistence (asFull + LoadForm). Instances
+  created via AppData.CreateForm keep their AppData-assigned AutoState and are not loaded twice. }
 procedure TfrmSmtpSettings.Initialize;
 begin
+  if AutoState = asUndefined then
+    begin
+      AutoState:= asFull;
+      LoadForm;               // Loads host/port/user + the ENCODED password from the INI file
+    end;
+
   edtPsw.Text:= SimpleDecode(edtPsw.Text);
   FInitialized:= TRUE;
 end;

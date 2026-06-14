@@ -137,14 +137,14 @@ object frmSmtpSettings: TfrmSmtpSettings
       Text = ''
       TextHint = 'JohnLennon@Gmail.com'
     end
-    object grpTSL: TGroupBox
+    object grpTLS: TGroupBox
       Left = 308
       Top = 70
       Width = 196
       Height = 147
-      Hint = 
-        'Check your server documentation to see if it uses TSL or not.'#13#10'M' +
-        'odern servers are using TSL now.'
+      Hint =
+        'Check your server documentation to see if it uses TLS or not.'#13#10'M' +
+        'odern servers are using TLS now.'
       Anchors = [akTop, akRight]
       Caption = 'Authentification type'
       TabOrder = 4

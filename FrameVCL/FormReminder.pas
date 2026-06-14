@@ -210,23 +210,26 @@ begin
 end;
 
 
-{ Executes the action selected by the user (run file, sleep, or shutdown) }
+{ Executes the action selected by the user (run file, sleep, or shutdown).
+  Stop/repeat policy lives in TimesUp (chkRunOnce / radSleep) - do NOT stop the timer here.
+  The unconditional Timer.Enabled:=FALSE that used to be in the run-file branch made
+  chkRunOnce dead: 'repeat mode' (chkRunOnce unchecked, promised by the checkbox hint
+  'restart the timer - run the file multiple times') never repeated. }
 procedure TfrmReminder.ExecuteTimerAction;
 begin
   if radRunFile.Checked then
     begin
       if edtPath.Path <> '' then
         begin
-          Timer.Enabled:= FALSE;
           if NOT ExecuteFile(edtPath.Path)
           then BipError;
         end
       else
         MessageError('Reminder time is up!' + sLineBreak + 'No file to execute!');
     end
-  else 
+  else
   if radSleep.Checked then LightVcl.Common.PowerUtils.SystemSleep
-  else 
+  else
   if radShutDown.Checked then LightVcl.Common.PowerUtils.WinShutDown(TRUE, FALSE);
 end;
 

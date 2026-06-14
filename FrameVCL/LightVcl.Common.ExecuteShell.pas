@@ -2,8 +2,8 @@ UNIT LightVcl.Common.ExecuteShell;
 
 {=============================================================================================================
    SYSTEM - Execute Process (ShellExecute)
-   
-   2026.01.29
+
+   2026.06.10
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
@@ -314,6 +314,7 @@ function ExecuteFileAndWait(CONST ExeFile: string; Params: string = '';
   Hide: Boolean = FALSE; WaitTime: Cardinal = INFINITE): Boolean;
 VAR
   ShellInfo: TShellExecuteInfo;
+  WaitRes: DWORD;
 CONST
   bWaitAll = FALSE;
 begin
@@ -337,11 +338,23 @@ begin
       EXIT(FALSE);
     end;
 
-  { Wait for process while keeping UI responsive }
-  WHILE MsgWaitForMultipleObjects(1, ShellInfo.hProcess, bWaitAll, WaitTime, QS_POSTMESSAGE Or QS_SENDMESSAGE) <> WAIT_OBJECT_0 
-   DO Application.ProcessMessages; // is this wise?
+  { hProcess can be 0 even on success - "hProcess will be NULL if no process was launched", e.g. the
+    document was handed to an already-running application (MSDN, SHELLEXECUTEINFO.hProcess).
+    Waiting on a 0 handle makes MsgWaitForMultipleObjects return WAIT_FAILED instantly, which the old
+    'WHILE <> WAIT_OBJECT_0' loop turned into a 100%-CPU ProcessMessages spin. Same for WAIT_TIMEOUT:
+    the old loop ignored it, so the WaitTime parameter never took effect. }
+  if ShellInfo.hProcess <> 0 then
+    begin
+      { Wait for process while keeping UI responsive }
+      REPEAT
+        WaitRes:= MsgWaitForMultipleObjects(1, ShellInfo.hProcess, bWaitAll, WaitTime, QS_ALLINPUT);
+        if WaitRes = WAIT_OBJECT_0 + 1
+        then Application.ProcessMessages;
+      UNTIL WaitRes <> WAIT_OBJECT_0 + 1;   { Exit on: process finished (WAIT_OBJECT_0), WAIT_TIMEOUT or WAIT_FAILED }
 
-  CloseHandle(ShellInfo.hProcess);
+      CloseHandle(ShellInfo.hProcess);
+    end;
+
   Result:= TRUE;
 end;
 

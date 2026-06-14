@@ -126,7 +126,10 @@ begin
 end;
 
 
-{ Auto-detects system proxy settings from Internet Explorer/Windows configuration }
+{ Auto-detects system proxy settings from Internet Explorer/Windows configuration.
+  IE_GetProxySettings has OUT parameters (cleared on entry), so on failure - or when Windows has no
+  proxy configured - ProxyAddress/ProxyPort come back empty. The unconditional assignment used to
+  overwrite the user's typed gateway with ':' in that case. }
 procedure TfrmProxyList.btnAutoDetectClick(Sender: TObject);
 var
   ProxyAddress: string;
@@ -137,9 +140,10 @@ begin
     begin
       radGateway.Checked:= UseProxy;
       radDirect.Checked:= NOT UseProxy;
-    end;
 
-  edtGateway.Text:= ProxyAddress + ':' + ProxyPort;
+      if ProxyAddress <> ''
+      then edtGateway.Text:= ProxyAddress + ':' + ProxyPort;
+    end;
 end;
 
 

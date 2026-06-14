@@ -85,6 +85,8 @@ end;
 
 procedure TfrmUpdaterSettings.FormCreate(Sender: TObject);
 begin
+  Assert(Updater <> NIL, 'Updater not created! Create the global Updater before showing this form.');
+
   chkForceNewsFound.Visible:= AppData.BetaTesterMode;   { BT }
   if NOT chkForceNewsFound.Visible
   then chkForceNewsFound.Checked:= FALSE;       { Uncheck it if we are not in HomeMode }
@@ -106,7 +108,11 @@ begin
     happen before Apply so the form's saved children still belong to it on destroy. }
   if Container.Parent <> Self
   then Container.Parent:= Self;
-  Apply;
+
+  { Guard against the host app freeing Updater before this form (shutdown-order hazard) -
+    same protection as TFrmUpdater.FormDestroy in FormUpdaterNotifier. }
+  if Updater <> NIL
+  then Apply;
   //SaveForm(Self); now called automatically
 end;
 
@@ -161,7 +167,9 @@ begin
     lblPrivacy.Visible:= TRUE;
     if spnHours.Value> 24
     then spnHours.Value:= 24;    { We set the standard value (if the user disabled the updater) }
-  end;
+  end
+ else
+   lblPrivacy.Visible:= FALSE;   { FMX twin parity: without this the privacy label stayed visible forever once cwNever had been selected }
 end;
 
 

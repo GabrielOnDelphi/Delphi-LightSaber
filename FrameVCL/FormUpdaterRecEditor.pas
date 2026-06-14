@@ -90,7 +90,8 @@ end;
 
 procedure TfrmRecEditor.FormDestroy(Sender: TObject);
 begin
-  SaveForm;
+  { SaveForm is called automatically by TLightForm.saveBeforeExit (AutoState=asPosOnly).
+    Calling it here again wrote the INI a second time, bypassing the FFormSaved single-call guard. }
 end;
 
 
@@ -132,7 +133,7 @@ end;
 procedure TfrmRecEditor.btnLoadClick(Sender: TObject);
 begin
   FName:= GetNewsFileName;
-  if NOT AppData.PromptToLoadFile(FName, '.ini') then EXIT;
+  if NOT AppData.PromptToLoadFile(FName, 'INI file|*.ini') then EXIT;   { The parameter is a dialog FILTER ('Descr|*.ext'), not an extension - '.ini' produced a broken filter }
   LoadFromFile(FName);
 end;
 

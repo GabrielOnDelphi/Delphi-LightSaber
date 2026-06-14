@@ -101,6 +101,7 @@ object frmPower: TfrmPower
         Spin.MinValue = 2
         Spin.TabOrder = 0
         Spin.Value = 90
+        Spin.OnChange = spnMaxCPUChange
         Caption1 = 'Don'#39't change the wallpaper if CPU utilization is above'
         Caption2 = '%'
         Value = 90
