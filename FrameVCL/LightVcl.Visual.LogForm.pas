@@ -8,7 +8,8 @@
    Reads the content of a TRamLog.
 
    It is automatically created by TAppDataVCL.pas
-   But can be also created manually if you don't use AppData.
+   Manual creation is possible BUT AppData must exist (LoadSettings/FormPostInitialize read AppData.RamLog)
+   and you must call FormPostInitialize yourself - it is what creates the Log viewer.
    User's prefferences are managed via LoadSettings/SaveSettings.
 
    TLogViewer tester:
@@ -107,6 +108,11 @@ end;
 procedure TfrmRamLog.FormDestroy(Sender: TObject);
 begin
   Assert(Owner = NIL); // This form should have no owner. If it has an owner (like Application), it will destroy the form. We want AppData to destroy the form!
+
+  // Log is created in FormPostInitialize. If the form is destroyed before that ran (startup failed
+  // mid-initialization, or the form was created manually without calling FormPostInitialize),
+  // there is nothing to unhook and nothing to save. Dereferencing Log here would AV and mask the original error.
+  if Log = NIL then EXIT;
 
   // Order matters:
   //   1. FormDestroying:=TRUE so any closures already in TThread.Queue bail out cleanly
