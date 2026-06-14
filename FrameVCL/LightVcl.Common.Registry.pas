@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.Registry;
 
 {=============================================================================================================
-   2026.01.30
+   2026.06.10
    www.GabrielMoraru.com
 
 --------------------------------------------------------------------------------------------------------------
@@ -479,13 +479,20 @@ begin
 
    if regKey.OpenKey(Key, CanCreate) then
     begin
-      vSize:= regKey.GetDataSize(KeyName);
+      vSize:= regKey.GetDataSize(KeyName);                      { Size in BYTES (-1 on failure) }
 
       if vSize > 0 then
        begin
-        SetLength(Result, vSize);
-        regKey.ReadBinaryData(KeyName, Result[1], vSize);
-        ReplaceString(Result, #0, CRLFw);
+        { REG_MULTI_SZ data is UTF-16: vSize bytes = vSize div 2 characters.
+          The original code did SetLength(Result, vSize) - correct only for the pre-Unicode AnsiString era; on UnicodeString it left the upper half of the buffer as uninitialized heap garbage. }
+        SetLength(Result, (vSize + SizeOf(Char) - 1) div SizeOf(Char));
+        regKey.ReadBinaryData(KeyName, Result[1], Length(Result) * SizeOf(Char));
+
+        { Strip the MULTI_SZ terminators (each string is #0-terminated + final extra #0) }
+        while (Length(Result) > 0) AND (Result[Length(Result)] = #0)
+          do SetLength(Result, Length(Result) - 1);
+
+        Result:= ReplaceString(Result, #0, CRLFw);              { ReplaceString is a function - its result was previously discarded, so the #0 separators were never converted }
        end;
       regKey.CloseKey;
    end;
