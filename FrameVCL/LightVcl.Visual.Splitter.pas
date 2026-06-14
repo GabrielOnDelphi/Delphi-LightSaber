@@ -76,7 +76,7 @@ TYPE
     property Constraints;
     property MinSize: NaturalNumber read FMinSize write FMinSize default 1;
     property ParentColor;
-    property ResizeStyle: TResizeStyle read FResizeStyle write FResizeStyle default rsPattern;
+    property ResizeStyle: TResizeStyle read FResizeStyle write FResizeStyle default rsUpdate;   { Default MUST match the ctor value (rsUpdate), otherwise a designer-set rsPattern is not streamed to DFM and silently reverts to rsUpdate at runtime }
     property Visible;
     property Width default 3;
     property OnCanResize: TCanResizeEvent read FOnCanResize write FOnCanResize;
