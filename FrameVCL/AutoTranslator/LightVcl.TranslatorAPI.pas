@@ -1,7 +1,7 @@
 UNIT LightVcl.TranslatorAPI;
 
 {=============================================================================================================
-   2026.01.31
+   2026.06.12
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    AUTOMATIC TRANSLATION API CLIENT
@@ -325,6 +325,14 @@ begin
             if SourceValue.Trim.IsEmpty
             then CONTINUE;
 
+            { Don't machine-translate the [Authors] credits. Copy verbatim, but keep an existing value in the target. }
+            if SameText(Section, 'Authors') then
+              begin
+                if TargetIni.ReadString(Section, Key, '').Trim.IsEmpty
+                then TargetIni.WriteString(Section, Key, SourceValue);
+                CONTINUE;
+              end;
+
             { If TranslateEmptyOnly, check if target already has a value }
             if TranslateEmptyOnly then
               begin
@@ -348,6 +356,9 @@ begin
 
     { Translate in batches }
     Translations:= TranslateBatch(TextsToTranslate.ToArray, TargetLang);
+
+    if FLastError <> ''
+    then EXIT;  // Translation failed. Don't write empty/partial results to the target file. (TranslateBatch pre-sizes its result, so a length check alone cannot detect the failure.)
 
     if Length(Translations) <> TextsToTranslate.Count then
       begin
@@ -459,13 +470,12 @@ end;
 { Parses DeepL JSON response and extracts translated texts }
 function TDeepLTranslator.ParseTranslationResponse(const JSONResponse: string): TArray<string>;
 var
-  RootObj: TJSONObject;
+  Root: TJSONValue;        { TJSONValue (not TJSONObject): an "as TJSONObject" cast would raise EInvalidCast AND leak the parsed value if the server ever returns a non-object root }
   TransArr: TJSONArray;
-  TransObj: TJSONObject;
   i: Integer;
 begin
   SetLength(Result, 0);
-  RootObj:= nil;
+  Root:= nil;
 
   if JSONResponse.IsEmpty then
     begin
@@ -474,15 +484,15 @@ begin
     end;
 
   try
-    RootObj:= TJSONObject.ParseJSONValue(JSONResponse) as TJSONObject;
+    Root:= TJSONObject.ParseJSONValue(JSONResponse);
 
-    if NOT Assigned(RootObj) then
+    if NOT Assigned(Root) then
       begin
         FLastError:= 'Invalid JSON response';
         EXIT;
       end;
 
-    if NOT RootObj.TryGetValue<TJSONArray>('translations', TransArr) then
+    if NOT Root.TryGetValue<TJSONArray>('translations', TransArr) then
       begin
         FLastError:= 'No translations found in response';
         EXIT;
@@ -490,13 +500,10 @@ begin
 
     SetLength(Result, TransArr.Count);
     for i:= 0 to TransArr.Count - 1 do
-      begin
-        TransObj:= TransArr.Items[i] as TJSONObject;
-        Result[i]:= TransObj.GetValue<string>('text', '');
-      end;
+      Result[i]:= TransArr.Items[i].GetValue<string>('text', '');  { GetValue with default: no raise if 'text' is missing }
 
   finally
-    FreeAndNil(RootObj);
+    FreeAndNil(Root);
   end;
 end;
 
@@ -563,7 +570,7 @@ begin
         if NOT SourceLang.IsEmpty
         then RequestJSON.AddPair('source_lang', SourceLang.ToUpper);
 
-        RequestBody:= TStringStream.Create(RequestJSON.ToString, TEncoding.UTF8);
+        RequestBody:= TStringStream.Create(RequestJSON.ToJSON, TEncoding.UTF8);  { ToJSON (not ToString): escapes control chars below 32, which ToString emits raw (invalid JSON) }
 
         { Send request }
         Response:= DoHttpPost(GetAPIURL, RequestBody);
@@ -617,10 +624,7 @@ begin
     end;
 
   TestResult:= TranslateText('Hello', 'DE');
-  Result:= (FLastError = '') AND (TestResult <> '');
-
-  if Result AND (NOT SameText(TestResult, 'Hallo'))
-  then Result:= TRUE; { Translation worked, even if result differs slightly }
+  Result:= (FLastError = '') AND (TestResult <> '');  { Any non-empty result counts. We don't require exactly 'Hallo' }
 end;
 
 

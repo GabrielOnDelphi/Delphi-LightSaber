@@ -36,9 +36,6 @@ type
 
     { Class Existence Tests }
     [Test]
-    procedure TestTDeepLTranslatorClassExists;
-
-    [Test]
     procedure TestTDeepLTranslatorCreate_Succeeds;
 
     { Property Tests }
@@ -196,12 +193,6 @@ end;
 
 
 { Class Existence Tests }
-
-procedure TTestTranslatorAPI.TestTDeepLTranslatorClassExists;
-begin
-  Assert.IsNotNull(TDeepLTranslator, 'TDeepLTranslator class should exist');
-end;
-
 
 procedure TTestTranslatorAPI.TestTDeepLTranslatorCreate_Succeeds;
 var

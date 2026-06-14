@@ -172,7 +172,7 @@ var
 begin
   lblStatus.Caption:= 'Testing connection...';
   lblStatus.Font.Color:= clWindowText;
-  Application.ProcessMessages;
+  lblStatus.Repaint;   // Paint the status label now; the HTTP call below blocks the main thread
 
   DeepL:= TDeepLTranslator.Create;
   try

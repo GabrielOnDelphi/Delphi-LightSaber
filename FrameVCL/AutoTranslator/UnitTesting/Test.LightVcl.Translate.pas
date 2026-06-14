@@ -17,7 +17,7 @@ uses
   Vcl.Forms,
   Vcl.StdCtrls,
   LightCore.AppData,
-  LightVcl.Translate;
+  LightVcl.Common.Translate;
 
 type
   [TestFixture]
@@ -255,7 +255,7 @@ var
 begin
   Trans:= TTranslator.Create(AppDataCore);
   TRY
-    Assert.IsNotEmpty(Trans.GetLangFolder, 'DefaultLang should return non-empty string');
+    Assert.AreEqual('English.ini', Trans.DefaultLang, 'DefaultLang should return English.ini');
   FINALLY
     FreeAndNil(Trans);
   END;
@@ -268,8 +268,7 @@ var
 begin
   Trans:= TTranslator.Create(AppDataCore);
   TRY
-    // We can only test GetLangFolder since DefaultLang is protected
-    Assert.IsTrue(Trans.GetLangFolder.EndsWith('Lang\'), 'Lang folder should end with Lang\');
+    Assert.Contains(Trans.DefaultLang, 'English', 'DefaultLang should contain English');
   FINALLY
     FreeAndNil(Trans);
   END;
@@ -341,7 +340,7 @@ end;
 procedure TTestTranslator.TestDontTranslateConstant_IsBitwise;
 begin
   // 128 is binary 10000000, which is suitable for bitwise operations
-  Assert.AreEqual(128, 1 shl 7, 'DontTranslate should be bit 7 (128)');
+  Assert.AreEqual(1 shl 7, DontTranslate, 'DontTranslate should be bit 7 (128)');
 end;
 
 
@@ -413,9 +412,12 @@ begin
   TRY
     // Set a non-existent language file path
     Trans.CurLanguage:= FTestLangFolder + 'NonExistent.ini';
-    // LoadTranslation should handle non-existent file gracefully
+    FTestLabel.Hint:= 'Original Hint';
+
+    // LoadTranslation should handle non-existent file gracefully and leave properties unchanged
     Trans.LoadTranslation(FTestForm, TRUE);
-    Assert.Pass('LoadTranslation should handle non-existent files gracefully');
+
+    Assert.AreEqual('Original Hint', FTestLabel.Hint, 'A non-existent translation file must leave properties unchanged');
   FINALLY
     FreeAndNil(Trans);
   END;

@@ -55,11 +55,11 @@
         <DCC_Define>TESTINSIGHT_;$(DCC_Define)</DCC_Define>
         <DCC_DcuOutput>$(Platform)_$(Config)</DCC_DcuOutput>
         <DCC_ExeOutput>.\</DCC_ExeOutput>
-        <DCC_UnitSearchPath>..\;..\FrameVcl;..\..\FrameVcl;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\;..\..\;..\..\..\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>..\FrameVCL;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\..\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <BT_BuildType>Debug</BT_BuildType>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
@@ -93,9 +93,9 @@
         </DelphiCompile>
         <DCCReference Include="Test.LightVcl.Translate.pas"/>
         <DCCReference Include="Test.LightVcl.TranslatorAPI.pas"/>
-        <DCCReference Include="..\LightVcl.Translate.pas"/>
+        <DCCReference Include="..\..\LightVcl.Common.Translate.pas"/>
         <DCCReference Include="..\LightVcl.TranslatorAPI.pas"/>
-        <DCCReference Include="..\..\FrameVCL\LightVcl.Visual.AppData.pas"/>
+        <DCCReference Include="..\..\LightVcl.Visual.AppData.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

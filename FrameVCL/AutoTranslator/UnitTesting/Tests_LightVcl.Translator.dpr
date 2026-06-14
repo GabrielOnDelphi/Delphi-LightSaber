@@ -29,9 +29,9 @@ uses
   LightCore.AppData,
   Test.LightVcl.Translate in 'Test.LightVcl.Translate.pas',
   Test.LightVcl.TranslatorAPI in 'Test.LightVcl.TranslatorAPI.pas',
-  LightVcl.Translate in '..\LightVcl.Translate.pas',
+  LightVcl.Common.Translate in '..\..\LightVcl.Common.Translate.pas',
   LightVcl.TranslatorAPI in '..\LightVcl.TranslatorAPI.pas',
-  LightVcl.Visual.AppData in '..\..\FrameVCL\LightVcl.Visual.AppData.pas';
+  LightVcl.Visual.AppData in '..\..\LightVcl.Visual.AppData.pas';
 
 {$IFNDEF TESTINSIGHT}
 var
