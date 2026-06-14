@@ -16,6 +16,7 @@ UNIT LightVcl.Graph.ResizeParamFrame;      //todo 2: rename this to LightVcl.Gra
       VAR
          Params: RResizeParams;
       begin
+       Params.Reset;                            // MANDATORY for local records: ObjectFromGUI fills ONLY the GUI-edited fields - FitTolerance/ResizePanoram would stay uninitialized stack garbage
        ResizeParamsFrame.ObjectFromGUI(@Params);
        Params.MaxWidth := Monitor.Width;
        Params.MaxHeight:= Monitor.Height;
