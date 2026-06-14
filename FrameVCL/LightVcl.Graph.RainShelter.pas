@@ -195,6 +195,8 @@ begin
         Params.Load(Stream);
         Stream.ReadPaddingValidation;
         Count:= Stream.ReadInteger;
+        if Count <= 0
+        then RAISE Exception.Create('RainDrop file corrupted: invalid JPG stream size');  { TStream.CopyFrom(Count<=0) would rewind and copy the WHOLE file into JpgStream }
 
         { Load embedded JPG and convert to bitmap }
         OrigImage:= TBitmap.Create;
@@ -246,7 +248,12 @@ begin
     AND (Obj.OrigImage <> NIL) then
       begin
         Result:= TBitmap.Create;
-        Result.Assign(Obj.OrigImage);
+        TRY
+          Result.Assign(Obj.OrigImage);
+        EXCEPT
+          FreeAndNil(Result);   { Don't leak the half-built bitmap if Assign fails (OOM) }
+          RAISE;
+        END;
       end;
   FINALLY
     FreeAndNil(Obj);
