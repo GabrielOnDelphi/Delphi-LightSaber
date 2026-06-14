@@ -219,41 +219,46 @@ begin
 
  { Create output image as copy of MainBitmap }
  Result:= CreateBitmap(MaxWidth, MaxHeight, pf24bit);
- Result.Assign(MainBitmap);
+ TRY
+   Result.Assign(MainBitmap);
 
- { Cache output scanlines for faster access }
- SetLength(ScanlinesOut, MainBitmap.Height);
- for Row:= 0 to MainBitmap.Height-1
-   DO ScanlinesOut[Row]:= Result.ScanLine[Row];
+   { Cache output scanlines for faster access }
+   SetLength(ScanlinesOut, MainBitmap.Height);
+   for Row:= 0 to MainBitmap.Height-1
+     DO ScanlinesOut[Row]:= Result.ScanLine[Row];
 
- { Calculate max column to prevent writing beyond output width }
- MaxCol:= MaxWidth - x;
- if MaxCol > SmallBitmap.Width
- then MaxCol:= SmallBitmap.Width;
+   { Calculate max column to prevent writing beyond output width }
+   MaxCol:= MaxWidth - x;
+   if MaxCol > SmallBitmap.Width
+   then MaxCol:= SmallBitmap.Width;
 
- { Overlay non-transparent pixels }
- for Row:= y to MaxHeight-1 DO
-  begin
-   if Row >= SmallBitmap.Height + y
-   then Break;  { No more rows to process }
-
-   ScanLine2:= SmallBitmap.Scanline[Row-y];
-
-   for Col:= 0 to MaxCol-1 DO
+   { Overlay non-transparent pixels }
+   for Row:= y to MaxHeight-1 DO
     begin
-     { Build TColor from BGR scanline data - note: RGB() expects R,G,B order }
-     PixelColor:= RGB(Scanline2[Col].R, Scanline2[Col].G, Scanline2[Col].B);
+     if Row >= SmallBitmap.Height + y
+     then Break;  { No more rows to process }
 
-     if PixelColor <> TransparentColor then
+     ScanLine2:= SmallBitmap.Scanline[Row-y];
+
+     for Col:= 0 to MaxCol-1 DO
       begin
-       DestCol:= Col + x;
-       ScanlinesOut[Row][DestCol]:= Scanline2[Col];
+       { Build TColor from BGR scanline data - note: RGB() expects R,G,B order }
+       PixelColor:= RGB(Scanline2[Col].R, Scanline2[Col].G, Scanline2[Col].B);
+
+       if PixelColor <> TransparentColor then
+        begin
+         DestCol:= Col + x;
+         ScanlinesOut[Row][DestCol]:= Scanline2[Col];
+        end;
       end;
     end;
-  end;
 
- { Explicit cleanup - dynamic array auto-frees but this documents intent }
- SetLength(ScanlinesOut, 0);
+   { Explicit cleanup - dynamic array auto-frees but this documents intent }
+   SetLength(ScanlinesOut, 0);
+ EXCEPT
+   FreeAndNil(Result);   { We only free the result in case of failure }
+   RAISE;
+ END;
 end;
 
 
