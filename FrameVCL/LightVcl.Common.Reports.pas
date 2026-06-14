@@ -1,7 +1,7 @@
 UNIT LightVCL.Common.Reports;
 
 {=============================================================================================================
-   2026.01.29
+   2026.06.10
    www.GabrielMoraru.com
 
 --------------------------------------------------------------------------------------------------------------
@@ -48,7 +48,7 @@ USES
 
 function GenerateVCLReport: string;
 begin
- Result:= Result+ '=< CORE REPORT >='+ CRLF+ CRLF;
+ Result:= '=< CORE REPORT >='+ CRLF+ CRLF;   { Result must be ASSIGNED here, not appended: a managed function Result aliases the caller's destination variable, so 'Result:= Result+...' would prepend the caller's previous string content }
  Result:= Result+ LightCore.Reports.GenerateCoreReport+ CRLF;
  Result:= Result+ CRLF;
  
