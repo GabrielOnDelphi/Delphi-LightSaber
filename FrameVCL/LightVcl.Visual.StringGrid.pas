@@ -1,7 +1,7 @@
 ﻿UNIT LightVcl.Visual.StringGrid;
 
 {=============================================================================================================
-   2026.03
+   2026.06.12
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -216,7 +216,7 @@ begin
      if CenterAllColumns                                                                                                 { There are 2 options to center the text: set CenterAllColumns to true to center ALL cells or use the CenteredColumns matrix to define specific cells that will be centered }
      OR
        (NOT CenterAllColumns                                                                                             { CenteText is not in use but... }
-        AND (Length(CenteredColumns) > 0)                                                                                { ...but the CenteredColumns is }
+        AND (ACol < Length(CenteredColumns))                                                                             { ...but the CenteredColumns is. Bounds check: the array is documented to match ColCount but the user may have set it shorter }
         AND CenteredColumns[ACol] )                                                                                      { If this column was marked for centering }
      then
       { Center text }
@@ -363,6 +363,7 @@ VAR
   VAR Cl, CurRow: Integer;
   begin
    Result:= TRUE;
+   if TSL.Count < MetaSize then EXIT(FALSE);                                                       { Truncated file - header incomplete }
 
    { Restore number of cells }
    RowCount:= StrToInt(TSL[3]);
@@ -370,6 +371,7 @@ VAR
    FixFixedRow;
 
    { Restore cells width }
+   if TSL.Count < MetaSize+ ColCount then EXIT(FALSE);                                             { Truncated file - width data incomplete }
    for Cl:= 0 TO ColCount-1
     DO ColWidths[Cl]:= StrToIntDef(TSL[Cl+MetaSize], 40);                                          { +MetaSize because I want to skip the first 3 lines (comments, rowcount, colcount) }
 
@@ -388,6 +390,7 @@ VAR
   VAR Cl, CurRow: Integer;
   begin
    Result:= TRUE;
+   if TSL.Count < MetaSize then EXIT(FALSE);                                                       { Truncated file - header incomplete }
 
    { Restore number of cells }
    Tag1:= TSL[2];
@@ -401,6 +404,7 @@ VAR
    FixFixedRow;
 
    { Restore cells width }
+   if TSL.Count < MetaSize+ ColCount then EXIT(FALSE);                                             { Truncated file - width data incomplete }
    for Cl:= 0 TO ColCount-1
     DO ColWidths[Cl]:= StrToIntDef(TSL[Cl+MetaSize], 40);                                          { +MetaSize because I want to skip the first 3 lines (comments, rowcount, colcount) }
 
@@ -428,6 +432,7 @@ begin
    { Convert delimiter to ENTER in order to have multiple lines in TSL }
    TSL.Delimiter      := Delimiter;
    TSL.StrictDelimiter:= TRUE;                                                                     { Fixes Delphi bug in which spaces were considered delimiters: http://jedqc.blogspot.com.es/2005/12/d2006-new-strictdelimiter-property.html }
+   TSL.QuoteChar      := #0;                                                                       { SaveToFile never quotes, so disable quote processing. Otherwise a cell starting with a double-quote derails the parser (TStrings.SetDelimitedText only skips quote handling when QuoteChar=#0) }
    TSL.DelimitedText  := TSL.Text;
 
    { Validate minimum data }
@@ -562,9 +567,9 @@ begin
  TRY
   TSL.Text:= StringFromClipboard;
 
-  { Make sure I have enough rows in Grid }
-  if RowCount- FixedRows- Row < TSL.Count
-  then RowCount:= TSL.Count + FixedRows;
+  { Make sure I have enough rows in Grid. The paste loop below writes rows Row..Row+TSL.Count-1 }
+  if RowCount < Row+ TSL.Count
+  then RowCount:= Row+ TSL.Count;
 
   { Store cell content }
   for CurRow:= 0 to TSL.Count-1
