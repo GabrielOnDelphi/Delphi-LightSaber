@@ -1,7 +1,7 @@
 UNIT LightVcl.Visual.StringGridBase;
 
 {=============================================================================================================
-   2026.03
+   2026.06.12
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -150,10 +150,10 @@ TYPE
     property MouseContentHints  : Boolean        read FContentHints   Write SetContentHints      default FALSE;   { pop-up a hint with the cell's content }
     property MouseDuplicateLine : Boolean        read FMouseInsert    Write FMouseInsert         default FALSE;   {TODO: implement this: duplicate active line (create a new row) when the user Control+Click a grid row }
     { COLORS }
-    property CursorTextColor    : TColor         read FColorCursorText Write setCursorTextColor  default clHighlightText;
+    property CursorTextColor    : TColor         read FColorCursorText Write setCursorTextColor  default clYellow;   { Default MUST match the ctor value, otherwise a designer-set clHighlightText is not streamed to DFM and silently reverts to the ctor value at runtime }
     property ColorTextDisabled  : TColor         read FColorTextDis   Write setClrTextDisabled   default clGrayText;
     property ColorTextEnabled   : TColor         read FColorEnabled   Write setClrTextEnabled    default clBlack;
-    property ColorCursor        : TColor         read FColorCursor    Write setSelColor          default clHighlight;
+    property ColorCursor        : TColor         read FColorCursor    Write setSelColor          default clNavy;     { Default MUST match the ctor value (see CursorTextColor) }
     {}
     property Count              : Integer        read getCount;                                                    { Returns number of valid items (we don't consider the first item which is the header) }
     property DelKeyDeleteRows   : Boolean        read FDelKeyDeleteRows write FDelKeyDeleteRows  default FALSE;    { If true, Del key will delete selected rows. If false it will delete the content of the current cell (but not also if the cell is in header) }
@@ -167,7 +167,7 @@ TYPE
     property AllowSort          : Boolean        read FAllowSort      write FAllowSort     default FALSE;
     property TextSpacing        : Integer        read FTextSpacing    write FTextSpacing   default 7;         { Amount of extra pixels to add to the left AND to the right of the header text }
     
-    property AutoRowHeight      : Boolean        read FAutoRowHeight  write setAutoRowHgt        default TRUE;     { This will allow the grid to automatically update the row height in order to fit the new font size (when font is updated) }
+    property AutoRowHeight      : Boolean        read FAutoRowHeight  write setAutoRowHgt        default FALSE;    { This will allow the grid to automatically update the row height in order to fit the new font size (when font is updated) }  { Default MUST match the ctor value (FALSE), otherwise a designer-set TRUE is not streamed to DFM and silently reverts to FALSE at runtime }
 
     property LargeColumn        : Integer        read FLargeColumn    write FLargeColumn;                     { The largest column, from where we "steal" space for the other columns, on autoresize }
     
@@ -531,11 +531,15 @@ end;
 
 {  Scroll the rows in the grid so that the specified row is at the top (the first row after the fixed rows) }
 procedure TBaseStrGrid.ScrollTo(aRow: Integer);
-VAR NewTopRow: Integer;
+VAR NewTopRow, MaxTopRow: Integer;
 begin
-  NewTopRow:= aRow- VisibleRowCount -HeaderOverhead;
-  if NewTopRow < VisibleRowCount
-  then NewTopRow := VisibleRowCount;
+  MaxTopRow:= RowCount- VisibleRowCount;       { Don't scroll past the point where the last row is fully visible }
+  if MaxTopRow > RowCount-1 then MaxTopRow:= RowCount-1;
+  if MaxTopRow < FixedRows  then MaxTopRow:= FixedRows;
+
+  NewTopRow:= aRow;
+  if NewTopRow > MaxTopRow then NewTopRow:= MaxTopRow;
+  if NewTopRow < FixedRows then NewTopRow:= FixedRows;
 
   TopRow:= NewTopRow;
 end;
@@ -584,6 +588,7 @@ begin
     case Key of
       86: Cells[Col, Row]:= StringFromClipboard;
       67: StringToClipboard(Cells[Col, Row]);
+      else inherited KeyDown(Key, Shift);    { Let the grid handle Ctrl+Home/End/PgUp/PgDn navigation }
     end
    else
       inherited KeyDown(Key, Shift);
