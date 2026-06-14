@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.ThumbViewerM;                                              
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.01
+   2026.06.12
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -149,16 +149,17 @@ end;
 
 destructor TCubicThumbs.Destroy;
 begin
- FreeAndNil(ThumbList);
-
- { Safely terminate background thread before destroying }
+ { Safely terminate background thread FIRST, while ThumbList is still alive.
+   WaitFor can pump a Synchronize callback (worker error dialog) which dispatches a pending
+   WM_THUMBNAIL_NOTIFY -> WMThumbnailReady -> ThumbList access. Freeing ThumbList first would AV there. }
  if Assigned(FBkgThread) then
   begin
    FBkgThread.Terminate;
    FBkgThread.WaitFor;
-   FreeAndNil(FBkgThread);
+   FreeAndNil(FBkgThread);    { Its destructor also drains pending WM_THUMBNAIL_NOTIFY messages }
   end;
 
+ FreeAndNil(ThumbList);
  inherited
 end;
 
@@ -194,6 +195,16 @@ begin
  if Progress= NIL
  then raise exception.Create('The thumb viewer needs a progress bar');
 
+ { Release previous worker (if any) BEFORE clearing/repopulating ThumbList.
+   Otherwise the old thread could still deliver thumbnails (via a pumped WM_THUMBNAIL_NOTIFY)
+   into the NEW list. The thread destructor drains its pending notify messages. }
+ if Assigned(FBkgThread) then
+  begin
+   FBkgThread.Terminate;
+   FBkgThread.WaitFor;                                                                               { Wait for thread to finish before freeing }
+   FreeAndNil(FBkgThread);
+  end;
+
  { Clear existing thumbnails first }
  Clear;
 
@@ -215,14 +226,6 @@ begin
  { Progress }
  Progress.Position:= 0;
  Progress.Max:= FolderContent.Count;
-
- { Release previous worker (if any). Must wait for thread to finish before freeing. }
- if Assigned(FBkgThread) then
-  begin
-   FBkgThread.Terminate;
-   FBkgThread.WaitFor;                                                                               { Wait for thread to finish before freeing }
-   FreeAndNil(FBkgThread);
-  end;
 
  { START WORKER THREAD }
  FBkgThread            := TBkgImgLoader.Create(Handle);
@@ -249,13 +252,15 @@ begin
  { Add rec to list }
  New(PThumb);
  PThumb^.FileName:= FilePath;
+ PThumb^.BMP:= NIL;                                                                                { New() does NOT zero non-managed fields! Without this, if LoadAndStretch raises, the record sits in the list with a garbage BMP pointer -> AV in TThumbList.Clear }
  ThumbList.Add(PThumb);
 
  { Generate thumbnail }
- PThumb^.BMP:= LoadAndStretch(FilePath, ThumbWidth, ThumbHeight);
+ PThumb^.BMP:= LoadAndStretch(FilePath, ThumbWidth, ThumbHeight);                                  { Returns NIL for unloadable images (placeholder is drawn) }
 
- { Increment progress }
- Inc(ThreadProgress);
+ { Note: do NOT touch ThreadProgress here. It is the worker thread's queue cursor;
+   incrementing it for a synchronously-added picture shifts all subsequent
+   worker thumbnails by one slot when AddPicture is called while the worker runs. }
 
  ComputeCellCount;                                                                                 { Recompute cells }
  AssignThumbsToCells;                                                                              { Show thumbnail }
@@ -281,6 +286,10 @@ VAR BMP: TBitmap;
 begin
  { Guard against messages arriving after thread was freed }
  if NOT Assigned(FBkgThread) then EXIT;
+
+ { During owner-form teardown, Destroy's WaitFor can pump this message while sibling controls
+   (Progress) are already freed. Skip - the thread destructor frees the queued bitmaps. }
+ if csDestroying in ComponentState then EXIT;
 
  BMP:= FBkgThread.PopPicture;
  if BMP = NIL then EXIT;                                                                            { Queue was empty - nothing to process }
@@ -725,8 +734,11 @@ begin
  aThumb:= Phumbs[index];                                                                            { get the pointer currently in slot index }
  if aThumb <> Pointer then
   begin
-    if aThumb <> NIL
-    then Dispose(aThumb);                                                                           { if it is different from the one we are asked to put into this slot, check if it is <> Nil. If so, dispose of the memory it points at! }
+    if aThumb <> NIL then
+     begin
+      FreeAndNil(aThumb^.BMP);                                                                      { Dispose only finalizes managed fields (the string); the bitmap must be freed explicitly or it leaks }
+      Dispose(aThumb);                                                                              { if it is different from the one we are asked to put into this slot, check if it is <> Nil. If so, dispose of the memory it points at! }
+     end;
     Items[index] := Pointer;                                                                       { store the passed pointer into the slot }
   end;
 end;
