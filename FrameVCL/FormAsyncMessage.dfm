@@ -20,6 +20,7 @@ object frmShowMsgAsync: TfrmShowMsgAsync
   FormStyle = fsStayOnTop
   Position = poOwnerFormCenter
   OnClose = FormClose
+  OnKeyPress = FormKeyPress
   TextHeight = 13
   object lblMessage: TLabel
     AlignWithMargins = True
