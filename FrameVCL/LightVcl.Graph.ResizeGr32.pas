@@ -1,7 +1,7 @@
 UNIT LightVcl.Graph.ResizeGr32;
 
 {=============================================================================================================
-   2026.01.30
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -179,7 +179,10 @@ begin
 
   { Configure transformation }
   AffineTransformation.Clear;
-  AffineTransformation.SrcRect:= FloatRect(0, 0, Src.Width - 1, Src.Height - 1);
+  { Full-edge convention (GR32's FullEdge=TRUE default): SrcRect is (0,0,W,H).
+    The old (W-1,H-1) made GetTransformedBounds return (W-1)*Scale, so the final BMP.SetSize below
+    CROPPED the result: a 100px image at 2x came out 198px instead of 200px (and 1x lost 1px). }
+  AffineTransformation.SrcRect:= FloatRect(0, 0, Src.Width, Src.Height);
 
   { Apply scaling if needed }
   if (ScaleX <> 1) OR (ScaleY <> 1)
