@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.Sound;
 
 {=============================================================================================================
-   2026.01.30
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Sound and audio utilities for VCL applications.
@@ -175,10 +175,13 @@ VAR
 CONST
   Mono: Word = $0001;
   SampleRate: Integer = 11025;   { Valid: 8000, 11025, 22050, or 44100 }
-  RiffId: string = 'RIFF';
-  WaveId: string = 'WAVE';
-  FmtId: string = 'fmt ';
-  DataId: string = 'data';
+  { AnsiString, NOT string: these are written as raw bytes into the RIFF header.
+    As UnicodeString, MS.Write(RiffId[1], 4) would emit 'R'#0'I'#0 (UTF-16) and corrupt
+    the WAV magic numbers - PlaySound then fails silently and no tone is ever heard. }
+  RiffId: AnsiString = 'RIFF';
+  WaveId: AnsiString = 'WAVE';
+  FmtId: AnsiString = 'fmt ';
+  DataId: AnsiString = 'data';
 begin
   if Frequency <= 0
   then EXIT;
