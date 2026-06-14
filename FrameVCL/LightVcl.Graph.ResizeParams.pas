@@ -231,7 +231,10 @@ begin
    end;
 
   { Overshoot! }                             { If after zoom, we loose more than 10% of the image, we go back to Fit }
-  Overshoot:= LightCore.Math.ProcentRepresent(OutW*OutH, OutputArea);
+  { Int64 cast: for very TALL images (IsPanoramic only catches WIDE ones) ComputeFill can yield
+    OutH in the millions, so OutW*OutH overflows Integer: EIntOverflow in Debug ($Q+), a negative
+    Overshoot in Release (skipping the Fit fallback -> gigantic bitmap allocation). }
+  Overshoot:= LightCore.Math.ProcentRepresent(Int64(OutW)*Int64(OutH), OutputArea);
   if Overshoot > 105 then
    begin
     ComputeFit(InpW, InpH);
