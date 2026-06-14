@@ -72,7 +72,8 @@ begin
     Graphics.DrawImage(GpSrc, 0, 0, GpDst.GetWidth, GpDst.GetHeight);
 
     { Convert back to VCL bitmap }
-    GpDst.GetHBITMAP(0, HBmp);
+    if GpDst.GetHBITMAP(0, HBmp) <> Ok
+    then RAISE Exception.Create('ResizeBitmapGDI: GDI+ GetHBITMAP failed.');  { On failure HBmp stays uninitialized - assigning that garbage to Dest.Handle would be undefined behavior }
     Dest.Handle:= HBmp;
   FINALLY
     FreeAndNil(Graphics);
