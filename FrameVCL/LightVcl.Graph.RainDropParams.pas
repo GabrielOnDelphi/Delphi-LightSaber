@@ -1,7 +1,7 @@
 UNIT LightVcl.Graph.RainDropParams;
 
 {=============================================================================================================
-   2026.01.30
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
   Parameters for TRainShelter animation
@@ -42,6 +42,7 @@ TYPE
 
 IMPLEMENTATION
 
+USES System.Math;
 
 
 
@@ -74,10 +75,13 @@ begin
 end;
 
 
+{ Damping/TargetFPS are clamped on load (same pattern as BioniX PluginGravity): Damping is a 1..99
+  subrange (an out-of-range value raises ERangeError under $R+), and consumers compute
+  '1000 DIV TargetFPS' (zero would crash with EDivByZero). Corrupt files stay loadable. }
 procedure RRaindropParams.Load(Stream: TLightStream);
 begin
-  Damping        := Stream.ReadInteger;
-  TargetFPS      := Stream.ReadInteger;
+  Damping        := EnsureRange(Stream.ReadInteger, 1, 99);
+  TargetFPS      := EnsureRange(Stream.ReadInteger, 1, 100);
   WaveAplitude   := Stream.ReadInteger;
   WaveTravelDist := Stream.ReadInteger;
   DropInterval   := Stream.ReadInteger;
@@ -108,8 +112,9 @@ end;
 // The TIniFileEx looks like this: 'C:\Users\trei\AppData\Roaming\BioniX Wallpaper Changer\BioniX Wallpaper Changer.ini', 'MONITOR\LEN61DB\{4d36e96e-e325-11ce-bfc1-08002be10318}\0005'
 procedure RRaindropParams.Load(IniFile: TIniFileEx);
 begin
-   TargetFPS      := IniFile.Read('RainDropParams.TargetFPS'      , 24);
-   Damping        := IniFile.Read('RainDropParams.Damping'        , 15);
+   { Clamped: the INI is user-editable. Damping is a 1..99 subrange; TargetFPS is a divisor in BioniX (1000 DIV TargetFPS). }
+   TargetFPS      := EnsureRange(IniFile.Read('RainDropParams.TargetFPS', 24), 1, 100);
+   Damping        := EnsureRange(IniFile.Read('RainDropParams.Damping'  , 15), 1, 99);
    WaveAplitude   := IniFile.Read('RainDropParams.WaveAplitude'   , 1);
    WaveTravelDist := IniFile.Read('RainDropParams.WaveTravelDist' , 50);
    DropInterval   := IniFile.Read('RainDropParams.DropInterval'   , 150);
