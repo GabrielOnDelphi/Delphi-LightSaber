@@ -1,7 +1,7 @@
 UNIT LightVcl.Internet.Download.WinInet;
 
 {-------------------------------------------------------------------------------------------------------------
-   2026.01.30
+   2026.06.11
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    DOWNLOADS A FILE FROM THE INTERNET
@@ -115,6 +115,14 @@ begin
   Result := WinApi.Windows.ERROR_SUCCESS;  // 0 indicates success
   SetLength(Data, 0);
 
+  { Guard: UrlExtractDomainRelaxed raises on empty URL. Return an error code instead - this function must not raise. }
+  if Trim(Url) = ''
+  then EXIT(ERROR_INTERNET_UNRECOGNIZED_SCHEME);
+
+  { An https:// URL requires the SECURE flag and port 443, even when the caller did not set the SSL parameter }
+  if NOT SSL
+  then SSL := SameText(System.Copy(Url, 1, 8), 'https://');
+
   pSession := InternetOpen(nil {USER_AGENT}, INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
   if not Assigned(pSession) then
   begin
@@ -152,7 +160,7 @@ begin
 
       { INTERNET_FLAG_RELOAD: Forces download from origin server, not from cache }
       if SSL
-      then flags := INTERNET_FLAG_SECURE OR INTERNET_FLAG_KEEP_CONNECTION
+      then flags := INTERNET_FLAG_SECURE OR INTERNET_FLAG_RELOAD OR INTERNET_FLAG_KEEP_CONNECTION
       else flags := INTERNET_FLAG_RELOAD OR INTERNET_FLAG_KEEP_CONNECTION;
 
       Resource := UrlExtractResourceParams(Url);  { I also need to keep the server parameters (stuff after '?') because in this case it specifies the image resolution: http://cams.sr-online.de/cgi-bin/getImage.php?w=1200 . Without 1200 I will retrieve file at 320x240 resolution }
