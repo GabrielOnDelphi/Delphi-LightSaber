@@ -73,17 +73,24 @@ const
 var
   LineHeight, ContentHeight, ParentHeight: Integer;
   DC: HDC;
+  OldFont: HFONT;
   TextMetric: TTextMetric;
   LineCount: Integer;
 begin
   if (csDesigning in ComponentState) then EXIT;
   Assert(Parent <> NIL, 'TRichEditResize.ResizeRichEdit: Parent not assigned');
 
-  { Calculate single line height from font metrics }
+  { Calculate single line height from font metrics.
+    The control's font must be selected into the DC, otherwise GetTextMetrics measures the stock system font and the computed height is wrong for any other font/size. }
   DC:= GetDC(Handle);
   try
-    GetTextMetrics(DC, TextMetric);
-    LineHeight:= TextMetric.tmHeight - TextMetric.tmInternalLeading;
+    OldFont:= SelectObject(DC, Font.Handle);
+    try
+      GetTextMetrics(DC, TextMetric);
+      LineHeight:= TextMetric.tmHeight - TextMetric.tmInternalLeading;
+    finally
+      SelectObject(DC, OldFont);
+    end;
   finally
     ReleaseDC(Handle, DC);
   end;
