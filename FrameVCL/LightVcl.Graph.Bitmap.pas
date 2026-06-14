@@ -271,7 +271,8 @@ begin
  if BMP = NIL
  then raise Exception.Create('PredictBitmapRamSize: BMP parameter cannot be nil');
 
- Result:= (NewWidth * NewHeight) * (LightVcl.Graph.Loader.Resolution.GetBitsPerPixel(BMP) DIV 8);
+ { Int64 intermediate: Width*Height*BytesPerPix overflows Integer for images over ~26000x26000 }
+ Result:= Cardinal(Int64(NewWidth) * Int64(NewHeight) * (LightVcl.Graph.Loader.Resolution.GetBitsPerPixel(BMP) DIV 8));
 end;
 
 
@@ -281,7 +282,8 @@ end;
   The result is in bytes } //old name: BmpRequiredRAM
 function PredictBitmapRamSize(NewWidth, NewHeight: Integer): Cardinal;
 begin
- Result:= (NewWidth * NewHeight) * 3;  { pf24 = 3 bytes}
+ { Int64 intermediate: Width*Height*3 overflows Integer for images over ~26000x26000 }
+ Result:= Cardinal(Int64(NewWidth) * Int64(NewHeight) * 3);  { pf24 = 3 bytes}
 end;
 
 
