@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.PowerUtils;
 
 {=============================================================================================================
-   2026.05.13
+   2026.06.10
    www.GabrielMoraru.com
 
 ==============================================================================================================
@@ -185,12 +185,16 @@ begin
     CloseHandle(TokenHandle);
   END;
 
-  Flag:= EWX_POWEROFF;
+  { EWX_POWEROFF and EWX_REBOOT are mutually exclusive shutdown types - MSDN: the uFlags
+    parameter "must include ONE of the following values". The previous code OR-ed both
+    flags together for Reboot=TRUE, an undefined combination that can power off instead
+    of rebooting. https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-exitwindowsex }
+  if Reboot
+  then Flag:= EWX_REBOOT
+  else Flag:= EWX_POWEROFF;
+
   if Force
   then Flag:= Flag or EWX_FORCEIFHUNG;   // NOT EWX_FORCE - see header comment.
-
-  if Reboot
-  then Flag:= Flag or EWX_REBOOT;
 
   Result:= ExitWindowsEx(Flag, 0);
   if NOT Result then
