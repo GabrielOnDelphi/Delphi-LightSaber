@@ -394,7 +394,7 @@ begin
          begin
            Current:= i;                      { Remember the last item selected }
            VAR Obj:= Items.Objects[i];
-           if FreeObject and (Obj <> nil) then Obj.Free;
+           if FreeObject and (Obj <> nil) then FreeAndNil(Obj);
            Items.Delete(i);
          end;
 
