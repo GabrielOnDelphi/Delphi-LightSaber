@@ -180,7 +180,8 @@ end;
   UseWic: TRUE for faster WIC-based loading (recommended), FALSE for VCL loaders. }
 function LoadAndStretch(CONST FileName: string; ResizeOpp: RResizeParams; UseWic: Boolean= TRUE): TBitmap;
 begin
- Result:= LightVcl.Graph.Loader.LoadGraph(FileName, UseWic);
+ { LoadGraph signature is (FileName, ExifRotate, UseWic) - UseWic must go into the THIRD slot, not into ExifRotate }
+ Result:= LightVcl.Graph.Loader.LoadGraph(FileName, TRUE, UseWic);
  if Result = NIL
  then EXIT;  { LoadGraph returns NIL for corrupted images instead of crashing }
 
@@ -198,7 +199,8 @@ end;
   Returns NIL if the image could not be loaded. }
 function LoadAndStretch(CONST FileName: string; CONST MaxWidth, MaxHeight: Integer; UseWic: Boolean= TRUE): TBitmap;
 begin
- Result:= LightVcl.Graph.Loader.LoadGraph(FileName, UseWic);
+ { LoadGraph signature is (FileName, ExifRotate, UseWic) - UseWic must go into the THIRD slot, not into ExifRotate }
+ Result:= LightVcl.Graph.Loader.LoadGraph(FileName, TRUE, UseWic);
  if Result = NIL
  then EXIT;  { LoadGraph returns NIL for corrupted images instead of crashing }
 
