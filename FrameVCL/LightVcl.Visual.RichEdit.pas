@@ -124,12 +124,13 @@ begin
 end;
 
 
-{ Scrolls the RichEdit so that the specified line becomes visible.
+{ Scrolls the RichEdit so that the specified line becomes the top visible line (when possible).
   Line: Zero-based line index.
-  Note: Uses relative scrolling from current caret position via EM_LINESCROLL. }
+  Note: EM_LINESCROLL scrolls relative to the CURRENT SCROLL POSITION (first visible line), not the caret.
+  The old code subtracted the caret line, so it scrolled to the wrong place whenever the caret was not on the first visible line. }
 procedure TCubicRichEdit.ScrollTo(Line: Integer);
 begin
-  Perform(EM_LINESCROLL, 0, Line - GetCurrentLine);
+  Perform(EM_LINESCROLL, 0, Line - GetFirstVisibleLine);
 end;
 
 
