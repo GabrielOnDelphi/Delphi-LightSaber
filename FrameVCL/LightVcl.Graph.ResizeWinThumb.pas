@@ -33,7 +33,7 @@ USES
 TYPE
   TFileThumb = class
   private
-    FhImageList48: Cardinal;
+    FhImageList48: NativeUInt;    { HIMAGELIST is pointer-sized - Cardinal would truncate it on Win64 }
     FWidth: Integer;
     FIconSize: Integer;
     FBmp: TBitmap;
@@ -63,7 +63,7 @@ const
 
 constructor TFileThumb.Create;
 var
-  hImagList16, hImagList32: Cardinal;
+  hImagList16, hImagList32: NativeUInt;   { SHGetFileInfo returns DWORD_PTR (the image-list handle when SHGFI_SYSICONINDEX is used) }
   ShInfo: TShFileInfo;
   IconHeight, IconWidth: Integer;
 begin
@@ -187,8 +187,9 @@ begin
 
   if DesktopISF.ParseDisplayName(0, nil, PWideChar(Path), Eaten, PItemIDL, Attrib) <> S_OK then Exit;
 
-  DesktopISF.BindToObject(PItemIDL, nil, IShellFolder, FolderISF);
+  GLResult := DesktopISF.BindToObject(PItemIDL, nil, IShellFolder, FolderISF);
   MemAlloc.Free(PItemIDL);
+  if (GLResult <> S_OK) or not Assigned(FolderISF) then Exit;   { Folder vanished (unplugged drive/share)? Calling ParseDisplayName on a nil interface would AV }
 
   if FolderISF.ParseDisplayName(0, nil, PWideChar(Name), Eaten, PItemIDL, Attrib) <> S_OK then Exit;
 
