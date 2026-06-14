@@ -2,7 +2,7 @@ UNIT LightVcl.Graph.Util;
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.01.30
+   2026.06.10
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -95,12 +95,11 @@ TYPE
  function  Integer2Color       (i: Integer): TColor;                                              { Tries to make a color from an integer. The color are 'lighted' in this order: BGR.   }
 
  { Color blend }
- function  BlendColors         (Color1, Color2: TColor; A: Byte): TColor;                         { Mixing two colors.     Usage  NewColor:= Blend(Color1, Color2, blending level 0 to 100);    Source: http://rmklever.com/?cat=6 }
+ function  BlendColors         (Color1, Color2: TColor; A: Byte): TColor;                         { Mixing two colors.     Usage  NewColor:= Blend(Color1, Color2, blending level 0 to 100). 0 = fully Color2, 100 = fully Color1.    Source: http://rmklever.com/?cat=6 }
  {$IF Defined(CPUX86)}
  function  CombinePixels       (Pixels: PByte; Weights: PInteger; Size: Cardinal): Integer;       { NOT TESTED UNDER WIN64. IT MIGHT WORK! }
- function  MixColors           (FG, BG: TColor; BlendPower: Byte): TColor;
- {$ELSE}
- function  MixColors           (FG, BG: TColor; BlendPower: Byte): TColor; {$ENDIF}
+ {$ENDIF}
+ function  MixColors           (FG, BG: TColor; BlendPower: Byte): TColor;                        { 0 = fully BG, 255 = fully FG }
 
  procedure ReplaceColor        (BMP: TBitmap; OldColor, NewColor: TColor);  overload;
  procedure ReplaceColor        (BMP: TBitmap; OldColor, NewColor: TColor; ToleranceR, ToleranceG, ToleranceB: Byte);  overload;
@@ -149,7 +148,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightVcl.Common.Colors, LightCore.Math;
+   LightVcl.Common.Colors;
 
 
 
@@ -254,6 +253,9 @@ end;
 procedure AntialisedLine(Canvas: TCanvas; CONST AX1, AY1, AX2, AY2: Real; Color: TColor);
 VAR Swapped: boolean;
 
+  { Save/restore the range-check state instead of blindly switching it back ON:
+    the old unconditional $R+ directive here forced range checking on the REST of this unit even in Release builds where the project compiles with $R- }
+  {$IFOPT R+}{$DEFINE UTIL_RANGECHECKS_ON}{$ENDIF}
   {$R-}
   procedure plot(const x, y, c: real);
   VAR resclr: TColor;
@@ -268,7 +270,7 @@ VAR Swapped: boolean;
     then Canvas.Pixels[round(y), round(x)] := resclr
     else Canvas.Pixels[round(x), round(y)] := resclr;
   end;
-  {$R+}
+  {$IFDEF UTIL_RANGECHECKS_ON}{$R+}{$ENDIF}
 
   function rfrac(const x: real): real; inline;
   begin
@@ -408,9 +410,12 @@ begin
   R := GetRValue(aColor);
   G := GetGValue(aColor);
   B := GetBValue(aColor);
-  R := Round(R*Percent/100) + Round(255 - Percent/100*255);
-  G := Round(G*Percent/100) + Round(255 - Percent/100*255);
-  B := Round(B*Percent/100) + Round(255 - Percent/100*255);
+  { One Round per channel. The old code rounded the two terms SEPARATELY - for a 255 channel both
+    halves could round up (e.g. Percent=50: Round(127.5)+Round(127.5)=256), overflowing the Byte:
+    ERangeError under $R+, channel wrapped to 0 (black) under $R-. The exact sum never exceeds 255. }
+  R := Round((R*Percent + 255*(100-Percent)) / 100);
+  G := Round((G*Percent + 255*(100-Percent)) / 100);
+  B := Round((B*Percent + 255*(100-Percent)) / 100);
   Result := RGB(R, G, B);
 end;
 
@@ -466,6 +471,7 @@ end;
 
 function ColorToHtml(aColor: TColor): string;  { This is total equivalent with Vcl.GraphUtil.ColorToWebColorStr. But they use a different approach }
 begin
+  aColor := ColorToRGB(aColor);                { System colors (clBtnFace etc.) are negative; IntToHex of a negative value yields 8 digits and the Copy positions below would slice the wrong bytes }
   Result := IntToHex(aColor, 6);
   Result := system.COPY(Result, 5, 2) + system.COPY(Result, 3, 2) + system.COPY(Result, 1, 2);     { The caler will have to add '#' in from of it to get a valid HTML color }
 end;
@@ -501,7 +507,13 @@ end;
 
 
 
-function BlendColors(Color1, Color2: TColor; A: Byte): TColor;     { Mixing two colors.  Usage  NewColor:= BlendColors(Color1, Color2, blending level 0 to 100);    Source: http://rmklever.com/?cat=6 }
+{ Mixing two colors. Usage: NewColor:= BlendColors(Color1, Color2, blending level 0 to 100).
+  A=0 returns Color2, A=100 returns Color1.    Source: http://rmklever.com/?cat=6
+  Note: 'x div 255' replaces the original 'x shr 8'. Delphi SHR is a LOGICAL shift, so for v1 < v2
+  the negative intermediate became a huge positive number: ERangeError under $R+ (this unit used to
+  force $R+ from AntialisedLine onward), garbage-then-truncate under $R-. DIV is exact and also
+  reaches the endpoints (the shr-256 approximation could never return pure Color1). }
+function BlendColors(Color1, Color2: TColor; A: Byte): TColor;
 var
   c1, c2: LongInt;
   r, g, b, v1, v2: byte;
@@ -511,13 +523,13 @@ begin
   c2 := ColorToRGB(Color2);
   v1:= Byte(c1);
   v2:= Byte(c2);
-  r:= A * (v1 - v2) shr 8 + v2;
+  r:= v2 + A * (v1 - v2) div 255;
   v1:= Byte(c1 shr 8);
   v2:= Byte(c2 shr 8);
-  g:= A * (v1 - v2) shr 8 + v2;
+  g:= v2 + A * (v1 - v2) div 255;
   v1:= Byte(c1 shr 16);
   v2:= Byte(c2 shr 16);
-  b:= A * (v1 - v2) shr 8 + v2;
+  b:= v2 + A * (v1 - v2) div 255;
   Result := (b shl 16) + (g shl 8) + r;
 end;
 
@@ -860,22 +872,12 @@ end;
 
 
 
-{$IF Defined(CPUX86)}
-{ Mix R,G and B channels of our colors separately.
-  The value of BlendPower is between 0 and 255 as described above.  }
-function MixColors(FG, BG: TColor; BlendPower: byte): TColor;
-var r,g,b:byte;                                                                       { As you know, TColor value is 4 bytes length integer value where low byte is red channel, 2nd byte is green and 3rd byte is blue }
-begin
-  R := LightCore.Math.MixBytes( FG and 255,BG and 255, BlendPower);                                  // extracting and mixing Red
-  G := LightCore.Math.MixBytes((FG shr 8 ) and 255, (BG shr 8 ) and 255, BlendPower);                // the same with green
-  B := LightCore.Math.MixBytes((FG shr 16) and 255, (BG shr 16) and 255, BlendPower);                // and blue, of course
-  Result:= r+ g* 256+ b* 65536;                                                       // finishing with combining all channels together
-end;
-
-{$ELSE}
-{ Non-x86 version of MixColors.
-  BlendPower: 0 = fully FG, 255 = fully BG.
-  Source: http://rmklever.com }
+{ Mix the R, G and B channels of two colors separately.
+  BlendPower: 0 = fully BG, 255 = fully FG.
+  Source: http://rmklever.com
+  Single implementation for all platforms. The former x86 variant (LightCore.Math.MixBytes asm) and
+  this one both used the shr-8 approximation, which never reached the FG endpoint (255 gave 254) and,
+  because Delphi SHR is a logical shift, blew up on negative intermediates under $R+. DIV 255 is exact. }
 function MixColors(FG, BG: TColor; BlendPower: Byte): TColor;
 VAR
   c1, c2: LongInt;
@@ -885,16 +887,15 @@ begin
   c2 := ColorToRGB(BG);
   v1 := Byte(c1);
   v2 := Byte(c2);
-  r  := BlendPower * (v1 - v2) shr 8 + v2;
+  r  := v2 + BlendPower * (v1 - v2) div 255;
   v1 := Byte(c1 shr 8);
   v2 := Byte(c2 shr 8);
-  g  := BlendPower * (v1 - v2) shr 8 + v2;
+  g  := v2 + BlendPower * (v1 - v2) div 255;
   v1 := Byte(c1 shr 16);
   v2 := Byte(c2 shr 16);
-  b  := BlendPower * (v1 - v2) shr 8 + v2;
+  b  := v2 + BlendPower * (v1 - v2) div 255;
   Result := (b shl 16) + (g shl 8) + r;
 end;
-{$ENDIF}
 
 
 
