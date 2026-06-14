@@ -594,7 +594,8 @@ begin
 
    // Now do some extended work on the final domain the most general (.com)
    // Verify that the lowest level is at least 2 chars
-   SubDomain := system.COPY(DomainStr, LastSep, DomainStrLen);
+   // LastSep+1: skip the dot itself. With LastSep the dot was counted, so the check could never fire (domain cannot end with a dot at this point).
+   SubDomain := system.COPY(DomainStr, LastSep + 1, DomainStrLen);
    if Length(SubDomain) < 2 then
    begin
      FailCode := flMissingGeneralDomain;
@@ -754,7 +755,7 @@ end;
 function CheckIfThunderbirdFile(CONST HugeText: String): Boolean;
 CONST ThunderbirdFile= 'X-Mozilla-Status';                                                         { Search string to know if is a Thunderbird file. Which is found on the 4th line of each mail }
 begin
- Result:= Pos(ThunderbirdFile, HugeText)> 1;
+ Result:= Pos(ThunderbirdFile, HugeText)> 0;                                                       { > 0, not > 1: a file fragment may START with the header (position 1) }
 end;
 
 
