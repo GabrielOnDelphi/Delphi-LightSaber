@@ -393,7 +393,7 @@ end;
 
 
 function TCacheObj.MaintainCache: Integer;                                                         { Delete all thumbnails from cache for which the original image does not exist anymore. Returns the number of deleted thumbnails }
-VAR i, DbIndex, CurThumb: Integer;
+VAR i, DbIndex, CurThumb, PairedCount: Integer;
     AllThumbs: TStringList;
     Exista: Boolean;
     sFileType: string;
@@ -402,8 +402,13 @@ begin
  if DbThumbs.Count<> DbPicts.Count                                                                 { check }
  then AppDataCore.LogError('TCacheObj.MaintainCache: number of entries in DB does not match. Reset the cache to fix.');
 
+ { Iterate only the paired range: on a count mismatch (logged above), indexing DbThumbs[i] with DbPicts' count would raise instead of cleaning up }
+ PairedCount:= DbPicts.Count;
+ if DbThumbs.Count < PairedCount
+ then PairedCount:= DbThumbs.Count;
+
  { Delete thumbs for non existing images }
- for i:= DbPicts.Count-1 DOWNTO 0 DO
+ for i:= PairedCount-1 DOWNTO 0 DO
   if NOT (FileExists(DbPicts[i]) AND FileExists(CacheFolder+ DbThumbs[i]))
   then
    begin
