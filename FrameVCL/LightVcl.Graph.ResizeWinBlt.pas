@@ -2,7 +2,7 @@ UNIT LightVcl.Graph.ResizeWinBlt;
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.01.30
+   2026.06.10
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -60,7 +60,12 @@ begin
 
   Result:= TBitmap.Create;
  TRY
-  Result.PixelFormat:= BMP.PixelFormat;  { Preserve the same pixel format as the original image }
+  { Preserve the pixel format only for direct-color formats. A FRESH pf1/4/8bit target gets the
+    default halftone palette (NOT the source's palette), so StretchBlt would remap every color
+    through the wrong color table -> posterized output. Same whitelist as FlipRight (LightVcl.Graph.FX). }
+  if BMP.PixelFormat in [pf15bit, pf16bit, pf24bit, pf32bit]
+  then Result.PixelFormat:= BMP.PixelFormat
+  else Result.PixelFormat:= pf24bit;
   SetLargeSize(Result, OutWidth, OutHeight);
 
   SetStretchBltMode(Result.Canvas.Handle, HALFTONE);
