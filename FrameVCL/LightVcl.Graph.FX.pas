@@ -1,7 +1,7 @@
 ﻿UNIT LightVcl.Graph.FX;
 
 {=============================================================================================================
-   2026.01.30
+   2026.06.10
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -333,11 +333,13 @@ var
    x, y, dx, dy: Integer;
    SrcRow, DstRow: PRGB32Array;
    Temp: TBitmap;
+   OrigFormat: TPixelFormat;
 begin
  Assert(Bmp <> NIL, 'FlipRight: Bmp is nil');
  if (Bmp.Width = 0) OR (Bmp.Height = 0) then EXIT;
  dx:= Bmp.Width;
  dy:= Bmp.Height;
+ OrigFormat:= Bmp.PixelFormat;
 
  Temp:= TBitmap.Create;
  TRY
@@ -353,6 +355,11 @@ begin
        DstRow[x]:= SrcRow[dx - 1 - x];
     end;
    Bmp.Assign(Temp);
+   { Restore the caller's pixel format (Assign made it pf32bit), but only where the 32-bit round-trip is lossless (pf32bit needs no restore).
+     Paletted formats (pf1/4/8bit) stay pf32bit: TBitmap.SetPixelFormat re-quantizes them through a system/halftone palette (Vcl.Graphics.pas), degrading colors.
+     pfCustom raises EInvalidGraphic on assignment; pfDevice would convert the DIB to a DDB. }
+   if OrigFormat in [pf15bit, pf16bit, pf24bit]
+   then Bmp.PixelFormat:= OrigFormat;
  FINALLY
    FreeAndNil(Temp);
  END;
