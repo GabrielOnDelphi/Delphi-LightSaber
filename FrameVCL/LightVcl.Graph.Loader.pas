@@ -1,7 +1,7 @@
 ﻿UNIT LightVcl.Graph.Loader;
 
 {=============================================================================================================
-   2026.01
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
   Helps you load common file formats (GIF, JPG, BMP, PNG, WB1, RainDrop, JPG2K) from disk.
@@ -272,7 +272,11 @@ begin
     {$IFDEF Jpg2000}
       5 : Result:= LoadJ2K(FileName);
     {$ELSE}
-      5 : RAISE Exception.Create('Jpeg2000 not supported yet on Win 64 bit!');
+      5 : begin
+            { Unit contract: never crash a batch operation. Log and return NIL like every other unsupported/corrupted-image path. }
+            AppDataCore.LogError('Jpeg2000 not supported in this build (Jpg2000 not defined) - '+ FileName);
+            Result:= NIL;
+          end;
     {$ENDIF}
 
     { WB1}
@@ -561,6 +565,8 @@ begin
      then
        begin
         Result:= ExtractThumbnailJpg(FileName, ThumbWidth, -1, ResolutionX, ResolutionY); // This will do "RotateEXIF"
+        if Result = NIL
+        then FrameCount:= 0;   { Keep the contract consistent with the other branches: 0 = extraction error }
         EXIT;     // Jpegs are special because a thumbnail was already generated for them by ExtractThumbnailJpg. So, we do no further processing
        end
      else
