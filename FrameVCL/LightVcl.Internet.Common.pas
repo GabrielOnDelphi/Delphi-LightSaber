@@ -2,7 +2,7 @@ UNIT LightVcl.Internet.Common;
 
 {-------------------------------------------------------------------------------------------------------------
    Gabriel Moraru
-   2026.01.30
+   2026.06.11
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -160,19 +160,21 @@ begin
   ZeroMemory(@lpszExtraInfo   , SizeOf(lpszExtraInfo));
   ZeroMemory(@lpUrlComponents , SizeOf(TURLComponents));
 
+  { The dwXxxLength fields are buffer sizes in TCHARs, NOT bytes (MSDN URL_COMPONENTSW: "Size of the scheme name, in TCHARs").
+    SizeOf would report 2x the real capacity (WideChar = 2 bytes) and let InternetCrackUrlW overflow the stack buffers. }
   lpUrlComponents.dwStructSize      := SizeOf(TURLComponents);
   lpUrlComponents.lpszScheme        := lpszScheme;
-  lpUrlComponents.dwSchemeLength    := SizeOf(lpszScheme);
+  lpUrlComponents.dwSchemeLength    := Length(lpszScheme);
   lpUrlComponents.lpszHostName      := lpszHostName;
-  lpUrlComponents.dwHostNameLength  := SizeOf(lpszHostName);
+  lpUrlComponents.dwHostNameLength  := Length(lpszHostName);
   lpUrlComponents.lpszUserName      := lpszUserName;
-  lpUrlComponents.dwUserNameLength  := SizeOf(lpszUserName);
+  lpUrlComponents.dwUserNameLength  := Length(lpszUserName);
   lpUrlComponents.lpszPassword      := lpszPassword;
-  lpUrlComponents.dwPasswordLength  := SizeOf(lpszPassword);
+  lpUrlComponents.dwPasswordLength  := Length(lpszPassword);
   lpUrlComponents.lpszUrlPath       := lpszUrlPath;
-  lpUrlComponents.dwUrlPathLength   := SizeOf(lpszUrlPath);
+  lpUrlComponents.dwUrlPathLength   := Length(lpszUrlPath);
   lpUrlComponents.lpszExtraInfo     := lpszExtraInfo;
-  lpUrlComponents.dwExtraInfoLength := SizeOf(lpszExtraInfo);
+  lpUrlComponents.dwExtraInfoLength := Length(lpszExtraInfo);
 
   { Parse URL - if it fails, arrays remain zeroed (empty strings) }
   if NOT InternetCrackUrl(PChar(lpszUrl), Length(lpszUrl), ICU_DECODE or ICU_ESCAPE, lpUrlComponents)
@@ -395,8 +397,11 @@ VAR sDesktop: string;
 begin
  { Get desktop folder }
  MyReg:= TRegIniFile.Create('Software\MicroSoft\Windows\CurrentVersion\Explorer');
- sDesktop:= MyReg.ReadString('Shell Folders','Desktop','');
- FreeAndNil(MyReg);
+ TRY
+   sDesktop:= MyReg.ReadString('Shell Folders','Desktop','');
+ FINALLY
+   FreeAndNil(MyReg);
+ END;
 
  { Write URL file }
  CreateUrl(Trail(sDesktop)+ ShortFileName, sFullURL);
@@ -729,12 +734,10 @@ begin
     // set the port
     Address.sin_port := Winapi.WinSock.htons(Port);
     // attempt remote connection to Host on Port
-    if Winapi.WinSock.Connect(Socket, Address, szSockAddr) = 0 then
-     begin
-      Result := True;
-      // close the socket
-      Winapi.WinSock.closesocket(Socket);
-     end;// if WinSock.Connect(Socket, Address, szSockAddr) = 0 then begin
+    if Winapi.WinSock.Connect(Socket, Address, szSockAddr) = 0
+    then Result := True;
+    // close the socket (also on failed connect - WSACleanup only deallocates it when the process-wide refcount drops to zero)
+    Winapi.WinSock.closesocket(Socket);
   end;// if WinSock.WSAStartup(MakeWord(1, 1), WinSocketData) = 0 then begin
   // label to which we jump to clean up
   lClean:
