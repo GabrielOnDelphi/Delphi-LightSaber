@@ -159,6 +159,7 @@ begin
      BMP:= ReadyThumbs.Dequeue;
      FreeAndNil(BMP);
     end;
+ FreeAndNil(FileList);   { No-op for Started threads (Execute's FINALLY freed+niled it). REQUIRED for never-Started threads: TThread.ShutdownThread calls Terminate BEFORE Resume, and ThreadProc then skips Execute entirely ('if not Thread.Terminated' - System.Classes), so Execute's FINALLY never runs for them. }
  FreeAndNil(FQueueLock);
  FreeAndNil(ReadyThumbs);
 end;
