@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.PopUp;
 
 {=============================================================================================================
-   2026.01.30
+   2026.06.10
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
@@ -32,7 +32,7 @@ UNIT LightVcl.Common.PopUp;
 INTERFACE
 
 USES
-  Winapi.Windows, Winapi.Messages, System.Classes, Vcl.Menus;
+  Winapi.Windows, Winapi.Messages, System.Types, System.Classes, Vcl.Menus;
 
 TYPE
   TPopupUpMenu = class(Vcl.Menus.TPopupMenu)
@@ -57,6 +57,7 @@ CONST
 VAR
   AFlags: Integer;
 begin
+  SetPopupPoint(Point(X, Y));   { Keep the TPopupMenu.PopupPoint contract - OnClick handlers commonly read it; without this it stays at (0,0) }
   DoPopup(Self);   { Fire OnPopup event - same as inherited would do }
   PostMessage(PopupList.Window, WM_CANCELMODE, 0, 0);
   AdjustBiDiBehavior;   { Handle right-to-left alignment if needed }
@@ -67,6 +68,7 @@ begin
          OR (Byte(MenuAnimation) shl 10);
 
   TrackPopupMenu(Items.Handle, AFlags, X, Y, 0 { reserved }, PopupList.Window, nil);
+  DoClose;   { Fire OnClose event - same as inherited would do (TrackPopupMenu without TPM_RETURNCMD returns after the menu is dismissed) }
 end;
 
 
