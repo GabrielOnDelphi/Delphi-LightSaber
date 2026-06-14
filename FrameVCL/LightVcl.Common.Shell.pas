@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.Shell;
 
 {=============================================================================================================
-   2026.01.30
+   2026.06.10
    www.GabrielMoraru.com
 
 --------------------------------------------------------------------------------------------------------------
@@ -209,9 +209,15 @@ begin
  ISLink.SetPath(PChar(TargetName));
  ISLink.SetWorkingDirectory(PChar(ExtractFilePath(TargetName)));
 
- { Get the location of the "special folder" }
- SHGetSpecialFolderLocation(0, SentToIDL, PIDL) ;
- SHGetPathFromIDList(PIDL, InFolder) ;
+ { Get the location of the "special folder".
+   The returned PIDL is allocated by the shell and must be released with CoTaskMemFree, otherwise it leaks. }
+ OleCheck(SHGetSpecialFolderLocation(0, SentToIDL, PIDL));
+ TRY
+   if NOT SHGetPathFromIDList(PIDL, InFolder)
+   then raise Exception.Create('CreateShortcut_SendTo: Cannot resolve the SendTo folder path!');
+ FINALLY
+   CoTaskMemFree(PIDL);
+ END;
 
  LinkName := Format('%s\%s.lnk',[InFolder, shortcutName]) ;
 
@@ -272,8 +278,12 @@ begin
  Assert(FileExtension[1] = '.', 'FileExtension should start with dot!');
  Assert(Pos('*', FileExtension) = 0, 'Invalid file extension in AssociateWith!');
 
+ { Both roots are combined with Path='\Software\Classes\' below.
+   HKLM\Software\Classes  = per-machine associations (visible in the HKCR merged view).
+   HKCU\Software\Classes  = per-user associations.
+   Do NOT use HKEY_CLASSES_ROOT here: HKCR is itself the merged view of the two keys above, so HKCR + '\Software\Classes\.ext' would physically land in HKLM\Software\Classes\Software\Classes\.ext - a bogus nested path the shell never reads. }
  if ForAllUsers                      { On Windows 7 and up, you need admin rights to register a file type for all the machine users }
- then RootKey:= HKEY_CLASSES_ROOT
+ then RootKey:= HKEY_LOCAL_MACHINE
  else RootKey:= HKEY_CURRENT_USER;
 
  FName:= System.Copy(FileExtension+ '_file', 2, MaxInt);
@@ -633,8 +643,9 @@ end;
 function RemoveShowDesktopFile: Boolean;
 VAR ShowDesktopFilePath: string;
 begin
+ { GetSpecialFolder returns the path WITHOUT a trailing backslash (Trail is applied only when ForceFolder=TRUE) - without Trail the path would read '...\RoamingMicrosoft\...' }
  ShowDesktopFilePath:=
-      GetSpecialFolder(CSIDL_APPDATA)
+      Trail(GetSpecialFolder(CSIDL_APPDATA))
       +'Microsoft\Internet Explorer\Quick Launch\Show Desktop.scf';
  Result:= FALSE;
  if FileExists(ShowDesktopFilePath)
@@ -653,7 +664,8 @@ CONST
        '[Taskbar]'              + CRLFw+
        'Command=ToggleDesktop';
 begin
- ShowDesktopFilePath:= GetSpecialFolder(CSIDL_APPDATA)+'Microsoft\Internet Explorer\Quick Launch\Show Desktop.scf';
+ { Trail needed: GetSpecialFolder returns the path WITHOUT a trailing backslash }
+ ShowDesktopFilePath:= Trail(GetSpecialFolder(CSIDL_APPDATA))+'Microsoft\Internet Explorer\Quick Launch\Show Desktop.scf';
  StringToFileA(ShowDesktopFilePath, ShowDesktopContent, woOverwrite);
 end;
 
