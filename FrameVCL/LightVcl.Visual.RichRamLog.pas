@@ -2,7 +2,7 @@ UNIT LightVcl.Visual.RichRamLog;
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.01.31
+   2026.06.12
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -249,7 +249,7 @@ procedure TRamLog.ExportTo(aRichLog: TRichLog);
 begin
  for VAR s in RawLines DO
    if Length(s) < 2      { This is for compatibility with old DNA Baser projects in which the log was saved to disk directly as TXT }
-   then AddMsg(s)
+   then aRichLog.AddMsg(s)   { Was Self.AddMsg(s) - that re-appended a '#7#' copy to RawLines WHILE iterating it and sent the line to Self.RichLog instead of aRichLog }
    else aRichLog.AddMsg(GetContent(s), GetLevel(s));
 end;
 
@@ -271,7 +271,7 @@ procedure TRamLog.SaveToStream(Stream: TLightStream);
 begin
   Stream.WriteStringA(LogHeader);
   Stream.WriteInteger(RawLines.Count);
-  Stream.WritePadding(16);
+  Stream.WritePaddingValidation(16);   { WritePaddingValidation writes the same signature bytes as the old WritePadding - wire format unchanged }
 
   for VAR s in RawLines DO
     Stream.WriteString(s);
@@ -281,7 +281,7 @@ procedure TRamLog.SaveToStream(Stream: TCubicMemStream);  { For compatibility }
 begin
   Stream.WriteStringA(LogHeader);
   Stream.WriteInteger(RawLines.Count);
-  Stream.WritePadding(16);
+  Stream.WritePaddingValidation(16);   { WritePaddingValidation writes the same signature bytes as the old WritePadding - wire format unchanged }
 
   for VAR s in RawLines DO
     Stream.WriteString(s);
@@ -303,7 +303,7 @@ begin
   if s <> LogHeader
   then RAISE Exception.Create('Invalid log header!');
   VAR iCount:= Stream.ReadInteger;
-  Stream.ReadPadding(16);
+  Stream.ReadPaddingValidation(16);   { Same signature check as the old ReadPadding - reads files written by older app versions }
 
   for VAR i:= 1 to iCount DO
    begin
@@ -320,7 +320,7 @@ begin
   if s <> LogHeader
   then RAISE Exception.Create('Invalid log header!');
   VAR iCount:= Stream.ReadInteger;
-  Stream.ReadPadding(16);
+  Stream.ReadPaddingValidation(16);   { Same signature check as the old ReadPadding - reads files written by older app versions }
 
   for VAR i:= 1 to iCount DO
    begin
@@ -494,7 +494,7 @@ begin
  for i:= 0 to RawLines.Count-1 DO
   begin
    s:= RawLines[i];
-   if s= ''
+   if Length(s) < 2          { Covers '' and the ' ' lines stored by AddEmptyRow - s[2] would be out of bounds }
    then Result:= Result+ CRLF
    else
       if s[2]= MsgType
