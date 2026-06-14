@@ -164,7 +164,11 @@ begin
      { Save each frame to disk }
      for i:= 0 to FrameCount-1 DO
       begin
-       if Renderer.Frame.Empty then Continue;
+       if Renderer.Frame.Empty then
+        begin
+         Renderer.NextFrame;   { Advance past the empty frame. Without this, every remaining iteration re-tests the same empty frame and saves nothing more. }
+         Continue;
+        end;
        Renderer.Draw(BMP.Canvas, BMP.Canvas.ClipRect);
        Renderer.NextFrame;
        SaveFrame(BMP, i, OutputFolder);
