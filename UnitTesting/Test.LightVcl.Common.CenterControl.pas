@@ -220,8 +220,9 @@ begin
 
   CorrectFormPositionDesktop(FTestForm);
 
-  { Form should be moved to Left = 0 }
-  Assert.IsTrue(FTestForm.Left >= 0, 'Left should be >= 0 after correction');
+  { Form should be moved back onto the virtual desktop. Note: the virtual desktop can start at a
+    NEGATIVE coordinate (secondary monitor left of primary), so compare against Screen.DesktopLeft, not 0. }
+  Assert.IsTrue(FTestForm.Left >= Screen.DesktopLeft, 'Left should be >= Screen.DesktopLeft after correction');
 end;
 
 
@@ -235,8 +236,8 @@ begin
 
   CorrectFormPositionDesktop(FTestForm);
 
-  { Form should be moved to Top = 0 }
-  Assert.IsTrue(FTestForm.Top >= 0, 'Top should be >= 0 after correction');
+  { Form should be moved back onto the virtual desktop (origin can be negative on multi-monitor) }
+  Assert.IsTrue(FTestForm.Top >= Screen.DesktopTop, 'Top should be >= Screen.DesktopTop after correction');
 end;
 
 
@@ -250,8 +251,8 @@ begin
 
   CorrectFormPositionDesktop(FTestForm);
 
-  { Form should be moved back into desktop }
-  Assert.IsTrue(FTestForm.Left + FTestForm.Width <= Screen.DesktopWidth,
+  { Form should be moved back into desktop (right edge of the virtual desktop is DesktopLeft+DesktopWidth) }
+  Assert.IsTrue(FTestForm.Left + FTestForm.Width <= Screen.DesktopLeft + Screen.DesktopWidth,
     'Form right edge should be within desktop');
 end;
 
@@ -266,8 +267,8 @@ begin
 
   CorrectFormPositionDesktop(FTestForm);
 
-  { Form should be moved back into desktop }
-  Assert.IsTrue(FTestForm.Top + FTestForm.Height <= Screen.DesktopHeight,
+  { Form should be moved back into desktop (bottom edge of the virtual desktop is DesktopTop+DesktopHeight) }
+  Assert.IsTrue(FTestForm.Top + FTestForm.Height <= Screen.DesktopTop + Screen.DesktopHeight,
     'Form bottom edge should be within desktop');
 end;
 

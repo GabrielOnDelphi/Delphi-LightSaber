@@ -413,19 +413,22 @@ end;
 procedure TTestFormSkinsDisk.TestFormKeyPress_EnterClosesForm;
 var
   Form: TfrmStyleDisk;
-  Key: Char;
+  Key: Word;
+  Shift: TShiftState;
 begin
   Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Form.Show;
-  Key:= Chr(VK_RETURN);
+  Key:= VK_RETURN;
+  Shift:= [];
 
-  { FormKeyPress with Enter should not raise exception }
+  { FormKeyDown with Enter should not raise exception.
+    Note: TfrmStyleDisk handles keys via FormKeyDown (wired in DFM as OnKeyDown), not FormKeyPress. }
   Assert.WillNotRaise(
     procedure
     begin
-      Form.FormKeyPress(Form, Key);
+      Form.FormKeyDown(Form, Key, Shift);
     end);
 end;
 
@@ -433,19 +436,22 @@ end;
 procedure TTestFormSkinsDisk.TestFormKeyPress_EscapeClosesForm;
 var
   Form: TfrmStyleDisk;
-  Key: Char;
+  Key: Word;
+  Shift: TShiftState;
 begin
   Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
   Form.Show;
-  Key:= Chr(VK_ESCAPE);
+  Key:= VK_ESCAPE;
+  Shift:= [];
 
-  { FormKeyPress with Escape should not raise exception }
+  { FormKeyDown with Escape should not raise exception.
+    Note: TfrmStyleDisk handles keys via FormKeyDown (wired in DFM as OnKeyDown), not FormKeyPress. }
   Assert.WillNotRaise(
     procedure
     begin
-      Form.FormKeyPress(Form, Key);
+      Form.FormKeyDown(Form, Key, Shift);
     end);
 end;
 

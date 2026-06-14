@@ -78,7 +78,13 @@ implementation
 
 procedure TTestExecuteProc.Test_ExecuteProc_EmptyPath;
 begin
-  Assert.IsFalse(ExecuteProc(''));
+  { ExecuteProc raises on empty ExeFile (guard added in the 2026.01 hardening) }
+  Assert.WillRaise(
+    procedure
+    begin
+      ExecuteProc('');
+    end,
+    Exception);
 end;
 
 
@@ -103,7 +109,13 @@ end;
 
 procedure TTestExecuteProc.Test_ExecuteAndWait_EmptyPath;
 begin
-  Assert.AreEqual(Cardinal(0), ExecuteAndWait(''));
+  { ExecuteAndWait raises on empty ExeFile (guard added in the 2026.01 hardening) }
+  Assert.WillRaise(
+    procedure
+    begin
+      ExecuteAndWait('');
+    end,
+    Exception);
 end;
 
 
@@ -141,7 +153,13 @@ end;
 
 procedure TTestExecuteProc.Test_ExecuteAndGetOut_EmptyCommand;
 begin
-  Assert.AreEqual('', ExecuteAndGetOut(''));
+  { ExecuteAndGetOut raises on empty CmdLine (guard added in the 2026.01 hardening) }
+  Assert.WillRaise(
+    procedure
+    begin
+      ExecuteAndGetOut('');
+    end,
+    Exception);
 end;
 
 
@@ -195,9 +213,13 @@ end;
 
 procedure TTestExecuteProc.Test_ExecuteAndGetOutDyn_EmptyCommand;
 begin
-  { Should not crash with empty command }
-  ExecuteAndGetOutDyn('', NIL, FALSE, TRUE, 100);
-  Assert.Pass('Did not crash with empty command');
+  { ExecuteAndGetOutDyn raises on empty CmdLine (guard added in the 2026.01 hardening) }
+  Assert.WillRaise(
+    procedure
+    begin
+      ExecuteAndGetOutDyn('', NIL, FALSE, TRUE, 100);
+    end,
+    Exception);
 end;
 
 

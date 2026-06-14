@@ -85,18 +85,36 @@ begin
 end;
 
 
+{ Full path to cmd.exe. The Execute* functions raise when the file does not exist,
+  so the relative 'cmd.exe' (resolved by the shell, not by FileExists) cannot be used anymore. }
+function CmdExePath: string;
+begin
+  Result:= System.SysUtils.GetEnvironmentVariable('ComSpec');   { Qualified: Winapi.Windows also exports GetEnvironmentVariable }
+end;
+
+
 { ExecuteFile tests }
 
 procedure TTestExecuteFile.Test_ExecuteFile_EmptyPath;
 begin
-  Assert.IsFalse(ExecuteFile(''));
+  { ExecuteFile raises on a non-existing file (guard added in the 2026.01 hardening) }
+  Assert.WillRaise(
+    procedure
+    begin
+      ExecuteFile('');
+    end,
+    Exception);
 end;
 
 
 procedure TTestExecuteFile.Test_ExecuteFile_InvalidPath;
 begin
-  { Invalid path should fail - test with ShowErrorMsg=FALSE to avoid dialog }
-  Assert.IsFalse(ExecuteFile('C:\NonExistent\Invalid.exe', '', FALSE));
+  Assert.WillRaise(
+    procedure
+    begin
+      ExecuteFile('C:\NonExistent\Invalid.exe', '', FALSE);
+    end,
+    Exception);
 end;
 
 
@@ -105,16 +123,20 @@ VAR
   Success: Boolean;
 begin
   { Execute cmd.exe with immediate exit }
-  Success:= ExecuteFile('cmd.exe', '/c exit', FALSE, SW_HIDE);
+  Success:= ExecuteFile(CmdExePath, '/c exit', FALSE, SW_HIDE);
   Assert.IsTrue(Success, 'Should successfully execute cmd.exe');
 end;
 
 
 procedure TTestExecuteFile.Test_ExecuteFile_NoErrorMsg;
 begin
-  { Test that ShowErrorMsg=FALSE doesn't show dialog }
-  Assert.IsFalse(ExecuteFile('C:\Invalid\Path.exe', '', FALSE, SW_HIDE));
-  Assert.Pass('No dialog was shown');
+  { Non-existing file raises BEFORE any dialog could be shown }
+  Assert.WillRaise(
+    procedure
+    begin
+      ExecuteFile('C:\Invalid\Path.exe', '', FALSE, SW_HIDE);
+    end,
+    Exception);
 end;
 
 
@@ -122,7 +144,12 @@ end;
 
 procedure TTestExecuteFile.Test_ExecuteFileEx_EmptyPath;
 begin
-  Assert.IsFalse(ExecuteFileEx(''));
+  Assert.WillRaise(
+    procedure
+    begin
+      ExecuteFileEx('');
+    end,
+    Exception);
 end;
 
 
@@ -130,7 +157,7 @@ procedure TTestExecuteFile.Test_ExecuteFileEx_ValidPath;
 VAR
   Success: Boolean;
 begin
-  Success:= ExecuteFileEx('cmd.exe', '/c exit', FALSE, SW_HIDE);
+  Success:= ExecuteFileEx(CmdExePath, '/c exit', FALSE, SW_HIDE);
   Assert.IsTrue(Success, 'Should successfully execute cmd.exe via ShellExecuteEx');
 end;
 
@@ -139,7 +166,12 @@ end;
 
 procedure TTestExecuteFile.Test_ExecuteFileAndWait_EmptyPath;
 begin
-  Assert.IsFalse(ExecuteFileAndWait(''));
+  Assert.WillRaise(
+    procedure
+    begin
+      ExecuteFileAndWait('');
+    end,
+    Exception);
 end;
 
 
@@ -148,7 +180,7 @@ VAR
   Success: Boolean;
 begin
   { Execute cmd.exe with immediate exit and wait }
-  Success:= ExecuteFileAndWait('cmd.exe', '/c exit', TRUE, 5000);
+  Success:= ExecuteFileAndWait(CmdExePath, '/c exit', TRUE, 5000);
   Assert.IsTrue(Success, 'Should successfully execute and wait for cmd.exe');
 end;
 
@@ -157,7 +189,12 @@ end;
 
 procedure TTestExecuteFile.Test_ExecuteAsAdmin_EmptyPath;
 begin
-  Assert.IsFalse(ExecuteAsAdmin(''));
+  Assert.WillRaise(
+    procedure
+    begin
+      ExecuteAsAdmin('');
+    end,
+    Exception);
 end;
 
 { Note: Cannot test ExecuteAsAdmin with valid path as it triggers UAC dialog }
@@ -167,7 +204,12 @@ end;
 
 procedure TTestExecuteFile.Test_ExecuteExplorerSelect_EmptyPath;
 begin
-  Assert.IsFalse(ExecuteExplorerSelect(''));
+  Assert.WillRaise(
+    procedure
+    begin
+      ExecuteExplorerSelect('');
+    end,
+    Exception);
 end;
 
 
