@@ -2,7 +2,7 @@ UNIT LightVcl.Graph.Loader.WBC;
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.01
+   2026.06.10
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -234,11 +234,16 @@ end;
 function TWbcObj.GetJpeg(CONST Index: Integer): TJpegImage;
 VAR Stream: TMemoryStream;
 begin
- Result:= TJpegImage.Create;
  Stream:= GetJpgStream(Index);
  TRY
-  Stream.Position:= 0;
-  Result.LoadFromStream(stream);
+  Result:= TJpegImage.Create;
+  TRY
+    Stream.Position:= 0;
+    Result.LoadFromStream(stream);
+  EXCEPT
+    FreeAndNil(Result);   { Don't leak the result when the stream contains a broken JPEG }
+    RAISE;
+  END;
  FINALLY
   FreeAndNil(Stream);
  END;
@@ -260,34 +265,42 @@ begin
  Assert(Index < Count);
 
  Result := TMemoryStream.Create;
- WBCStream.Position := HeaderVec[index].Offset + HeaderVec[index].HeaderSize;
+ TRY
+   WBCStream.Position := HeaderVec[index].Offset + HeaderVec[index].HeaderSize;
 
- key := 0;                                                                                         { Zero means no encryption }
- WBCStream.ReadBuffer(tempBuff, 8);                                                                { Read the WWBB... header }
- SetString(WBBHeader, tempBuff, 8);
+   key := 0;                                                                                        { Zero means no encryption }
+   WBCStream.ReadBuffer(tempBuff, 8);                                                               { Read the WWBB... header }
+   SetString(WBBHeader, tempBuff, 8);
 
- if AnsiSameStr(WBBHeader, WB0Hdr)
- then key := $A4
- else
-    if AnsiSameStr(WBBHeader, WB1Hdr)
-    then key := $F2;
+   if AnsiSameStr(WBBHeader, WB0Hdr)
+   then key := $A4
+   else
+      if AnsiSameStr(WBBHeader, WB1Hdr)
+      then key := $F2;
 
- { Decode encrypted JPEG }
- if key <> 0 then
-  begin
-   { Decode 100 bytes }
-   WBCStream.Read(A100, 100);
-   WBCStream.Read(B100, 100);
-   for I:= 1 to Length(A100)                                                                       { Formula: B(n) = (B(n) XOR (NOT A(n)) XOR key  -> key = �F2� (hex) }
-    DO D100[I]:= (B100[I] XOR (NOT A100[I])) XOR Key;
+   { Decode encrypted JPEG }
+   if key <> 0 then
+    begin
+     { Decode 100 bytes }
+     WBCStream.Read(A100, 100);
+     WBCStream.Read(B100, 100);
+     for I:= 1 to Length(A100)                                                                      { Formula: B(n) = (B(n) XOR (NOT A(n)) XOR key  -> key = �F2� (hex) }
+      DO D100[I]:= (B100[I] XOR (NOT A100[I])) XOR Key;
 
-   { Build the final JPEG image }
-   Result.WriteBuffer(D100, Sizeof(D100));
-   Result.WriteBuffer(B100, Sizeof(B100));
-   Result.CopyFrom(WBCStream, HeaderVec[index].PictureFileSize - 200);
-  end
- else
-   Result.CopyFrom(WBCStream, HeaderVec[index].PictureFileSize);
+     { Build the final JPEG image }
+     Result.WriteBuffer(D100, Sizeof(D100));
+     Result.WriteBuffer(B100, Sizeof(B100));
+     { Corrupt-header guard: TStream.CopyFrom with Count <= 0 rewinds the source and copies the WHOLE file }
+     if HeaderVec[index].PictureFileSize > 200
+     then Result.CopyFrom(WBCStream, HeaderVec[index].PictureFileSize - 200);
+    end
+   else
+     if HeaderVec[index].PictureFileSize > 0
+     then Result.CopyFrom(WBCStream, HeaderVec[index].PictureFileSize);
+ EXCEPT
+   FreeAndNil(Result);   { Don't leak the stream when the WBC file is truncated (ReadBuffer raises) }
+   RAISE;
+ END;
 end;
 
 
@@ -298,6 +311,7 @@ VAR
 begin
  if NOT DirectoryExists(OutputFolder, TRUE) then EXIT;
 
+ JpgStream:= NIL;       { GetJpgStream can raise BEFORE the assignment; the FINALLY below must not free a garbage pointer on the first iteration }
  for i:= 0 to Count-1 DO
   TRY
     JpgStream:= GetJpgStream(i);
