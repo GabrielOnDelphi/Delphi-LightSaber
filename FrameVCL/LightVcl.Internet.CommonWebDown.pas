@@ -60,8 +60,9 @@ begin
  if HighResImg = ''
  then EXIT(FALSE);
 
- // Remove URL parameters (everything after '?') to get the clean image URL
- HighResImg:= CopyTo(HighResImg, 1, '?', FALSE);
+ // Remove URL parameters (everything after '?') to get the clean image URL.
+ // CopyAllMarkerNotFound=TRUE: keep the whole URL when it has no '?' (otherwise CopyTo returns '')
+ HighResImg:= CopyTo(HighResImg, 1, '?', FALSE, TRUE);
 
  DownloadToFile(HighResImg, LocalFile, ErrorMsg);
  Result:= ErrorMsg = '';
