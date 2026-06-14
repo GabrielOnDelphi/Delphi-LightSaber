@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.IO;
 
 {=============================================================================================================
-   2026.01.29
+   2026.06.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Extension for LightCore.IO.pas
@@ -210,20 +210,25 @@ begin
  then raise Exception.Create('MoveFolderMsg: ToFolder parameter cannot be empty');
 
  if DirectoryExists(ToFolder) then
-   if SilentOverwrite
-   then
-     begin
-       CopyFolder(FromFolder, ToFolder, True);
-       Deletefolder(FromFolder);
-     end
-   else
-     { Move raises an exception if the destination folder already exists, so we have to delete the Destination folder first. But for this we need to ask the user. }
-     if MesajYesNo('Cannot move '+ FromFolder +'. Destination folder already exists:'+ ToFolder+ CRLFw+
-                   'Press Yes to delete Destination folder. Press No to cancel the opperation.') then
+   begin
+     if SilentOverwrite
+     then
        begin
-         DeleteFolder(ToFolder);
-         TDirectory.Move(FromFolder, ToFolder);
-       end;
+         CopyFolder(FromFolder, ToFolder, True);
+         Deletefolder(FromFolder);
+       end
+     else
+       { Move raises an exception if the destination folder already exists, so we have to delete the Destination folder first. But for this we need to ask the user. }
+       if MesajYesNo('Cannot move '+ FromFolder +'. Destination folder already exists:'+ ToFolder+ CRLFw+
+                     'Press Yes to delete Destination folder. Press No to cancel the opperation.') then
+         begin
+           DeleteFolder(ToFolder);
+           TDirectory.Move(FromFolder, ToFolder);
+         end;
+   end
+ else
+   { Destination does not exist - the plain move. Without this branch the function silently did NOTHING in the most common case. }
+   TDirectory.Move(FromFolder, ToFolder);
 end;
 
 
@@ -440,6 +445,7 @@ end;
 function GetSpecialFolder(CSIDL: Integer; ForceFolder: Boolean = False): string;
 var
   Buffer: array[0..MAX_PATH - 1] of Char; // Use a fixed-size buffer.
+  Res: HRESULT;
 begin
   case CSIDL of
    { Some IDs like CSIDL_NETWORK represents special folder differs from standard filesystem folders and lacks a physical path.
@@ -455,9 +461,13 @@ begin
     CSIDL_COMMON_OEM_LINKS: EXIT('');  // Links to All Users OEM specific apps
   end;
 
+  Buffer[0]:= #0;   { ShGetFolderPath leaves the buffer undefined on failure - StrPas on stack garbage could over-read }
+
   if ForceFolder
-  then ShGetFolderPath(0, CSIDL or CSIDL_FLAG_CREATE, 0, 0, Buffer)
-  else ShGetFolderPath(0, CSIDL, 0, 0, Buffer);
+  then Res:= ShGetFolderPath(0, CSIDL or CSIDL_FLAG_CREATE, 0, 0, Buffer)
+  else Res:= ShGetFolderPath(0, CSIDL, 0, 0, Buffer);
+
+  if Failed(Res) then EXIT('');   { E.g. CSIDL not available on this system (some entries of GetSpecialFolders) }
 
   // Convert null-terminated buffer to string.
   Result := StrPas(Buffer);
@@ -1156,7 +1166,7 @@ begin
   OldErrorMode:= SetErrorMode(SEM_FAILCRITICALERRORS);
   TRY
     Buf[0]:= #0;
-    if GetVolumeInformation(PChar(Drive + ':\'), Buf, DWORD(SizeOf(Buf)), nil, NotUsed, VolFlags, nil, 0)
+    if GetVolumeInformation(PChar(Drive + ':\'), Buf, DWORD(Length(Buf)), nil, NotUsed, VolFlags, nil, 0)   { Buffer size is in TCHARs, not bytes }
     then SetString(Result, Buf, StrLen(Buf))
     else Result:= '';
 
