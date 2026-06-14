@@ -112,8 +112,6 @@ end;
   A range like [0, 100] won't be validated since MinValue=0. Set MinValue=-1 if needed. }
 procedure TCubicSpinEditD.TimerTimer(Sender: TObject);
 begin
- Timer.Enabled:= FALSE;
-
  { Clamp to max }
  if (MaxValue<> 0) AND (Value> MaxValue)
  then Value:= MaxValue;
@@ -121,6 +119,10 @@ begin
  { Clamp to min }
  if (MinValue<> 0) AND (Value< MinValue)
  then Value:= MinValue;
+
+ { Disable AFTER clamping: assigning Value fires Change which re-arms the timer,
+   so disabling first would make OnChanged fire a second time one Delay later }
+ Timer.Enabled:= FALSE;
 
  if Assigned(FOnChanged)
  then FOnChanged(Self);
