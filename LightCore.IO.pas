@@ -1262,14 +1262,14 @@ end;
 
 
 { Example: C:\MyDocuments\1.doc  ->  MyDocuments\1.doc
-  POSIX has no drive letters — returns the input unchanged. }
+  A path with no drive letter (UNC, relative, or POSIX) is returned unchanged. }
 function RemoveDrive(CONST FullPath: string): string;
 begin
  {$IFDEF MSWINDOWS}
  VAR I:= Pos(':', FullPath);
  if I > 0
  then Result:= system.copy(FullPath, I + 2, Length(FullPath)) { +1 to jump over ':' and another +1 to jump over '\' }
- else Result:= '';
+ else Result:= FullPath;
  {$ELSE}
  Result:= FullPath;
  {$ENDIF}
@@ -1321,16 +1321,16 @@ end;
      Example: 'File01.txt' -> 'File02.txt', 'Document9.pdf' -> 'Document10.pdf'
      If no number exists, behavior depends on IncrementStringNoEx (may append 0).
      Preserves leading zeros: 'File001.txt' -> 'File002.txt'.
+     AddDash=TRUE inserts a dash before the number: 'File01.txt' -> 'File-02.txt'.
      Works with UNC paths.
 --------------------------------------------------------------------------------------------------}
 function IncrementFileName (CONST FileName: string; AddDash: Boolean = false): string;
 VAR outFileName, outFileNumber: string;
 begin
  SplitNumber_End(ExtractOnlyName(FileName), outFileName, outFileNumber);
- Result:= ExtractFilePath(FileName)+ outFileName+ IncrementStringNoEx(outFileNumber);
  if AddDash
- then Result:= Result+ '-'+ ExtractFileExt(FileName)
- else Result:= Result+ ExtractFileExt(FileName);
+ then Result:= ExtractFilePath(FileName)+ outFileName+ '-'+ IncrementStringNoEx(outFileNumber)+ ExtractFileExt(FileName)
+ else Result:= ExtractFilePath(FileName)+ outFileName+        IncrementStringNoEx(outFileNumber)+ ExtractFileExt(FileName);
 end;
 
 
