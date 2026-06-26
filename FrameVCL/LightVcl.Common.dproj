@@ -52,6 +52,7 @@
         <DCC_Optimize>false</DCC_Optimize>
         <DCC_RangeChecking>true</DCC_RangeChecking>
         <DCC_UnitSearchPath>..\External\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
         <DllSuffix>$(Auto)</DllSuffix>
         <GenDll>true</GenDll>
         <GenPackage>true</GenPackage>
