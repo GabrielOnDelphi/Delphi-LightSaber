@@ -92,6 +92,7 @@ TYPE
      function ReadSignature: AnsiString;          // The LiSa string for "Light Saber'.
    public
      StringListSafetyLimit: Cardinal;             // Don't try to read more than this
+     procedure AfterConstruction; override;       // Sets StringListSafetyLimit default for ALL construction paths (incl. plain Create), so ReadStrings works out of the box
      constructor CreateFromStream(Stream: TMemoryStream; FromPos: Int64 = 0);
 
      { Header }
@@ -218,6 +219,16 @@ USES
    CTOR
 --------------------------------------------------------------------------------------------------}
 
+{ Runs after EVERY constructor (plain Create, CreateFromStream, any future ctor).
+  Without this, a stream built with the inherited TMemoryStream.Create has StringListSafetyLimit=0
+  (fields zero-init), which makes ReadStrings raise 'String too large' for any non-empty list. }
+procedure TCubicMemStream.AfterConstruction;
+begin
+  inherited AfterConstruction;
+  StringListSafetyLimit:= 1 * MB;
+end;
+
+
 { Creates the object and copies data from the specified stream.
   FromPos = 0 (default): copy entire stream
   FromPos > 0: copy from that position to end
@@ -229,7 +240,6 @@ var
 begin
   inherited Create;
   Assert(Stream <> NIL);
-  StringListSafetyLimit:= 1 * MB;
 
   if FromPos < 0 then RAISE Exception.Create('TCubicMemStream!');
 
