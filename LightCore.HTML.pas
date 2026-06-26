@@ -1,7 +1,7 @@
 UNIT LightCore.HTML;
 
 {-------------------------------------------------------------------------------------------------------------
-   2026.05.26
+   2026.06.24
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -21,6 +21,7 @@ USES
 --------------------------------------------------------------------------------------------------}
  function  GetBodyFromHtml      (CONST AHTML: string): string;                                      { Get the HTML code contained between the <Body> tags }
  function  GenerateHTMLHeader   (CONST Title, MetaDescription, Keywords, CssFile: string): string;  { Old name: GenerateStandardHTMLHeader }
+ function  HtmlEscape           (CONST S: string): string;                                          { Escape &<>" so plain text is safe inside HTML markup and double-quoted attribute values }
 
  { Tags }
  function  FindQuoteStart       (CONST HtmlTag: string; StartAt: Integer): Integer;
@@ -234,6 +235,19 @@ begin
  Result:= Result+ ' <link rel="shortcut icon"         HREF ="favicon.ico" />'+ CRLF
                 + '</HEAD>'+ CRLF
                 + '<body>' + CRLF;
+end;
+
+
+{ Escapes the characters that are unsafe in HTML text or in a double-quoted attribute value.
+  '&' is replaced first, so the entities introduced afterwards are not escaped a second time.
+  The single quote (') is intentionally left alone: this output only lands in text nodes and in
+  double-quoted attributes (e.g. src="..."), never in single-quoted attributes. }
+function HtmlEscape(CONST S: string): string;
+begin
+  Result := StringReplace(S,      '&', '&amp;',  [rfReplaceAll]);
+  Result := StringReplace(Result, '<', '&lt;',   [rfReplaceAll]);
+  Result := StringReplace(Result, '>', '&gt;',   [rfReplaceAll]);
+  Result := StringReplace(Result, '"', '&quot;', [rfReplaceAll]);
 end;
 
 
