@@ -173,11 +173,13 @@ function DetectGraphFormatBySig(CONST FileName: string): string; { Returns canon
 function DetectGraphSignature (CONST FileName: string): Integer; { Legacy integer code. 0=unknown (incl. PDF/TIFF/WEBP not in legacy range), 1=BMP, 2=PNG, 3=GIF, 4=JPG, 5=JP2, 6=WB1, 7=RainDrop. }
 ```
 
-## LightCore.HTML (24)
+## LightCore.HTML (26)
 
 ```pascal
 function GetBodyFromHtml (CONST AHTML: string): string; { Get the HTML code contained between the <Body> tags }
 function GenerateHTMLHeader (CONST Title, MetaDescription, Keywords, CssFile: string): string; { Old name: GenerateStandardHTMLHeader }
+function HtmlEscape (CONST S: string): string; { Escape &<>" so plain text is safe inside HTML markup and double-quoted attribute values }
+function HtmlUnescape (CONST S: string): string; { Reverse of HtmlEscape: decode ONLY the four entities it emits (&amp; &lt; &gt; &quot;); &amp; last }
 function FindQuoteStart (CONST HtmlTag: string; StartAt: Integer): Integer;
 function FindQuoteEnd (CONST HtmlTag: string; StartAt: Integer): Integer;
 function ExtractLine (CONST HtmlBody, LineStart: string): string;
@@ -952,10 +954,11 @@ procedure PushAnsi (CONST s: AnsiString);
 procedure PushBytes(CONST Bytes: TBytes);
 ```
 
-## LightCore.StreamMem (77)
+## LightCore.StreamMem (78)
 
 ```pascal
 function ReadSignature: AnsiString; // The LiSa string for "Light Saber'.
+procedure AfterConstruction; override; // Sets StringListSafetyLimit default for ALL construction paths (incl. plain Create), so ReadStrings works out of the box
 procedure WriteHeader (CONST Signature: AnsiString; Version: Word);
 function ReadHeader (CONST Signature: AnsiString; Version: Word): Boolean; overload;
 function ReadHeader (CONST Signature: AnsiString): Word; overload;
@@ -2779,7 +2782,7 @@ procedure ShadowDownLeft (BMP: TBitmap); deprecated 'Use JanFX directly';
 procedure ShadowDownRight (BMP: TBitmap); deprecated 'Use JanFX directly';
 ```
 
-## LightVcl.Graph.Util (33)
+## LightVcl.Graph.Util (32)
 
 ```pascal
 function DarkenColor (aColor: TColor; Percent: Byte): TColor; { make a color more dark or light. Percent arata la cat la suta din luminozitate sa pun noua valoare. O= totally dark, 100= unchanged }
@@ -2793,10 +2796,9 @@ function HtmlToColor (aColor: string): TColor;
 function RGB2Color (R,G,B: Integer): Cardinal; deprecated 'Use WinApi.Windows.RGB instead.' { !!!!! uses WinApi.Windows.RGB(R,G,B) }
 procedure SplitColor2RGB (aColor: TColor; OUT R,G,B: Byte);
 function Integer2Color (i: Integer): TColor; { Tries to make a color from an integer. The color are 'lighted' in this order: BGR. }
-function BlendColors (Color1, Color2: TColor; A: Byte): TColor; { Mixing two colors. Usage NewColor:= Blend(Color1, Color2, blending level 0 to 100); Source: http://rmklever.com/?cat=6 }
+function BlendColors (Color1, Color2: TColor; A: Byte): TColor; { Mixing two colors. Usage NewColor:= Blend(Color1, Color2, blending level 0 to 100). 0 = fully Color2, 100 = fully Color1. Source: http://rmklever.com/?cat=6 }
 function CombinePixels (Pixels: PByte; Weights: PInteger; Size: Cardinal): Integer; { NOT TESTED UNDER WIN64. IT MIGHT WORK! }
-function MixColors (FG, BG: TColor; BlendPower: Byte): TColor;
-function MixColors (FG, BG: TColor; BlendPower: Byte): TColor; {$ENDIF}
+function MixColors (FG, BG: TColor; BlendPower: Byte): TColor; { 0 = fully BG, 255 = fully FG }
 procedure ReplaceColor (BMP: TBitmap; OldColor, NewColor: TColor); overload;
 procedure ReplaceColor (BMP: TBitmap; OldColor, NewColor: TColor; ToleranceR, ToleranceG, ToleranceB: Byte); overload;
 function GetAverageColor (BMP: TBitmap; Fast: Boolean): TColor;
@@ -3027,7 +3029,7 @@ procedure saveBeforeExit;
 procedure DoDestroy; override;
 procedure DoClose(VAR Action: TCloseAction); override;
 procedure FormKeyPress(Sender: TObject; var Key: Char); // We can use this later in the destructor to know how to save the form: asPosOnly/asFull
-procedure WMEndSession(VAR Msg: TWMEndSession);
+procedure WMEndSession(VAR Msg: TWMEndSession); message WM_ENDSESSION; { Save form state on Windows logoff/shutdown. Without the message directive this handler was never dispatched (dead code). The FFormSaved guard in saveBeforeExit prevents a double-save when CloseQuery already ran via WM_QUERYENDSESSION. }
 procedure WMDropFiles (VAR Msg: TWMDropFiles); message WM_DROPFILES; { Accept the dropped files from Windows Explorer }
 function CloseQuery: boolean; override;
 procedure FormPostInitialize; virtual; // Takes place after the form was fully created
@@ -3975,4 +3977,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2886 public routines across 216 units._
+_2888 public routines across 216 units._
