@@ -1,7 +1,7 @@
 UNIT LightCore.HTML;
 
 {-------------------------------------------------------------------------------------------------------------
-   2026.06.24
+   2026.06.28
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -22,6 +22,7 @@ USES
  function  GetBodyFromHtml      (CONST AHTML: string): string;                                      { Get the HTML code contained between the <Body> tags }
  function  GenerateHTMLHeader   (CONST Title, MetaDescription, Keywords, CssFile: string): string;  { Old name: GenerateStandardHTMLHeader }
  function  HtmlEscape           (CONST S: string): string;                                          { Escape &<>" so plain text is safe inside HTML markup and double-quoted attribute values }
+ function  HtmlUnescape         (CONST S: string): string;                                          { Reverse of HtmlEscape: decode ONLY the four entities it emits (&amp; &lt; &gt; &quot;); &amp; last }
 
  { Tags }
  function  FindQuoteStart       (CONST HtmlTag: string; StartAt: Integer): Integer;
@@ -248,6 +249,18 @@ begin
   Result := StringReplace(Result, '<', '&lt;',   [rfReplaceAll]);
   Result := StringReplace(Result, '>', '&gt;',   [rfReplaceAll]);
   Result := StringReplace(Result, '"', '&quot;', [rfReplaceAll]);
+end;
+
+
+{ The exact inverse of HtmlEscape. Decodes ONLY the four entities HtmlEscape emits - it is NOT a general
+  HTML entity decoder (it must not turn an author's literal &nbsp; into a space). '&amp;' is decoded LAST so
+  an escaped "&lt;" (held on disk as "&amp;lt;") does not collapse one step too far. }
+function HtmlUnescape(CONST S: string): string;
+begin
+  Result := StringReplace(S,      '&lt;',   '<', [rfReplaceAll]);
+  Result := StringReplace(Result, '&gt;',   '>', [rfReplaceAll]);
+  Result := StringReplace(Result, '&quot;', '"', [rfReplaceAll]);
+  Result := StringReplace(Result, '&amp;',  '&', [rfReplaceAll]);
 end;
 
 
