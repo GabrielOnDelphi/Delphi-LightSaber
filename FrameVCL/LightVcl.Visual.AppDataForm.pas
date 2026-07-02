@@ -85,7 +85,7 @@ TYPE
     procedure DoDestroy; override;
     procedure DoClose(VAR Action: TCloseAction); override;
     procedure FormKeyPress(Sender: TObject; var Key: Char);  // We can use this later in the destructor to know how to save the form: asPosOnly/asFull
-    procedure WMEndSession(VAR Msg: TWMEndSession); message WM_ENDSESSION;  { Save form state on Windows logoff/shutdown. Without the message directive this handler was never dispatched (dead code). The FFormSaved guard in saveBeforeExit prevents a double-save when CloseQuery already ran via WM_QUERYENDSESSION. }
+    procedure WMEndSession(VAR Msg: TWMEndSession); message WM_ENDSESSION;  { Save form state on Windows logoff/shutdown, but only when Msg.EndSession is TRUE (a canceled logoff must not save). The FFormSaved guard in saveBeforeExit prevents a double-save when CloseQuery already ran via WM_QUERYENDSESSION. }
     procedure WMDropFiles (VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Accept the dropped files from Windows Explorer }
   public
     constructor Create(AOwner: TComponent; AutoSaveForm: TAutoState); reintroduce; overload; virtual;
@@ -164,7 +164,8 @@ end;
 
 procedure TLightForm.WMEndSession(var Msg: TWMEndSession);
 begin
-  saveBeforeExit;
+  if Msg.EndSession                { Only save when the session is really ending. On a canceled logoff (EndSession=FALSE) saveBeforeExit would set FFormSaved=TRUE and suppress the real save on the later close. }
+  then saveBeforeExit;
   inherited;
 end;
 
