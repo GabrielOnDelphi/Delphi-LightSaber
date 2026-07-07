@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.AppData.Form;
 
 {=============================================================================================================
-   2026.04.30
+   2026.07.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    DESCRIPTION
@@ -96,16 +96,19 @@ TYPE
     FOnAfterCtur: TNotifyEvent;
     FCloseOnEscape: Boolean;
     FVKSubscriptionId: TMessageSubscriptionId;
+    FVKPaddingApplied: Boolean;   { TRUE while HandleVKStateChange holds Padding.Bottom raised above the virtual keyboard }
+    FVKSavedPadding: Single;      { Padding.Bottom as it was before the keyboard raised it (e.g. the Android nav-bar inset) — restored on keyboard hide }
     procedure SetGuiProperties(Form: TForm);
     procedure HandleVKStateChange(const Sender: TObject; const M: TMessage);
+    procedure QueuedPostInitialize;   { Deferred from Loaded via ForceQueue. A NAMED method (not an anonymous block) so Destroy can cancel the pending entry with TThread.RemoveQueuedEvents — an anonymous TThreadProcedure cannot be removed, and a form freed before the queue drains would be dereferenced (use-after-free) when the block finally runs. }
     {$IFDEF ANDROID}
     procedure RegisterInsetsListener;   { Subscribe (once, app-wide) to FMX's inset-changed callback so padding is re-applied the moment insets arrive and on every later change. See ApplyAndroidWindowInsets. }
     function CloseTopmostSecondary: Boolean;   { Closes the top-most visible non-embedded secondary TLightForm, if any. Used by the Back handler so a non-modally-shown form is dismissed instead of backgrounding the app. }
     {$ENDIF}
   protected
     FEmbedded: Boolean;    { TRUE when form's layout is reparented into another form (embedded mode) }
-    FFormSaved: Boolean;   { TRUE once saveBeforeExit has run — prevents double-save on shutdown }
-    procedure saveBeforeExit;
+    FFormSaved: Boolean;         { TRUE once saveBeforeExit has FULLY run (set in the finally, AFTER FormPreRelease/SaveForm) — prevents double-save on shutdown. FormPreRelease's contract (see its declaration comment) is to observe this as FALSE during its own call, so descendants can gate one-time cleanup on "if NOT FFormSaved then ...", mirroring the VCL frame (Demo\VCL\Template App Full\FormMain.FormPreRelease). }
+    FSavingInProgress: Boolean; { TRUE from the moment saveBeforeExit starts working — separate reentrancy guard so a second Close arriving while FormPreRelease/SaveForm pump messages (e.g. a confirmation dialog) cannot re-enter and run FormPreRelease twice. Cannot reuse FFormSaved for this: it must stay FALSE until FormPreRelease returns (see above). }
     procedure CreateToolbar;
     { Called by FormKeyUp when the user presses Back (Android) or Escape (desktop).
       Override in the main form to close embedded forms before the default behavior.
@@ -130,6 +133,7 @@ TYPE
 
     procedure FormPreRelease; virtual;
     procedure FormPostInitialize; virtual;   { Runs once after the form is fully loaded AND the message loop is pumping (first paint done). Override for startup work that should not block the window from appearing — e.g. loading a large file. FMX counterpart of the VCL WM_POSTINIT hook. }
+    procedure saveBeforeExit;                { Idempotent (FFormSaved guard). Public so TAppData.Destroy can save all still-open forms while AppData is alive — Application-owned forms are otherwise destroyed AFTER AppData's finalization. }
     procedure ShowModal; reintroduce;
 
     procedure LoadForm; virtual;
@@ -215,11 +219,17 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 constructor TLightForm.Create(AOwner: TComponent; aAutoState: TAutoState);
 begin
+  // AutoState MUST be set BEFORE inherited Create — same reason as in CreateEmbedded below:
+  // the inherited chain streams the .fmx and fires Loaded before returning. Loaded's
+  // 'if AutoState = asUndefined then AutoState:= AppData.GetAutoState(Self)' would otherwise
+  // still see asUndefined and raise 'Form was not created via AppData.CreateForm()!' for every
+  // direct call of this constructor (there is no pending-queue entry for direct creation).
+  AutoState:= aAutoState;
   inherited Create(AOwner);
 
   Showhint   := TRUE;
   FFormSaved := FALSE;
-  AutoState  := aAutoState;
+  FSavingInProgress := FALSE;
 end;
 
 
@@ -237,6 +247,7 @@ begin
   inherited Create(AOwner);
   Showhint   := TRUE;
   FFormSaved := FALSE;
+  FSavingInProgress := FALSE;
 end;
 
 
@@ -347,16 +358,26 @@ begin
   // keeps EndInitialization before FormPostInitialize. This is the deferral the VCL
   // frame gets from PostMessage(WM_POSTINIT); FMX forms have no HWND, so ForceQueue is
   // the cross-platform equivalent.
-  TThread.ForceQueue(NIL, procedure
-    begin
-      TAppDataCore.EndInitialization;
-      // Set the main-form caption here (not in the synchronous Loaded body): by the
-      // time this queued block runs, RealCreateForms has returned and Application.MainForm
-      // is assigned, so the Self=Application.MainForm test is meaningful.
-      if Self = Application.MainForm
-      then MainFormCaption('');
-      FormPostInitialize;
-    end);
+  //
+  // NAMED method (TThreadMethod overload), NOT an anonymous block: Destroy cancels the
+  // pending entry via TThread.RemoveQueuedEvents(QueuedPostInitialize), which matches on
+  // Code+Data. An anonymous TThreadProcedure capturing Self cannot be removed — if the
+  // form were freed before the queue drains (form created+freed in one message cycle),
+  // the block would later run on a dangling Self.
+  TThread.ForceQueue(NIL, QueuedPostInitialize);
+end;
+
+
+{ Runs once, queued from Loaded, when the message loop is already pumping. }
+procedure TLightForm.QueuedPostInitialize;
+begin
+  TAppDataCore.EndInitialization;
+  // Set the main-form caption here (not in the synchronous Loaded body): by the
+  // time this queued block runs, RealCreateForms has returned and Application.MainForm
+  // is assigned, so the Self=Application.MainForm test is meaningful.
+  if Self = Application.MainForm
+  then MainFormCaption('');
+  FormPostInitialize;
 end;
 
 
@@ -439,8 +460,10 @@ end;
 procedure TLightForm.saveBeforeExit;
 begin
   if NOT FFormSaved
+  AND NOT FSavingInProgress   // Reentrancy guard - see the field's declaration comment.
   AND NOT AppData.Initializing then
   begin
+    FSavingInProgress:= TRUE;
     try
       FormPreRelease;
 
@@ -486,6 +509,7 @@ begin
     'Likely cause: caller used FreeAndNil after AppData.ShowModal, which is non-blocking on Android. ' +
     'Use "Action:= caFree" in OnClose, or wire an AfterClose callback.');
 
+  TThread.RemoveQueuedEvents(QueuedPostInitialize);  // Cancel the post-init block queued in Loaded, if it did not run yet (form freed before the message queue drained) — it captures Self.
   TMessageManager.DefaultManager.Unsubscribe(TVKStateChangeMessage, FVKSubscriptionId);
   saveBeforeExit; // Try to save if we haven't already
   inherited;
@@ -601,7 +625,9 @@ end;
 { Adjusts form padding when the virtual keyboard appears/disappears.
   Uses the Bounds from TVKStateChangeMessage (screen coords) converted to form-local coords.
   Only standalone (non-embedded) forms adjust — embedded forms get the adjustment for free
-  through the layout cascade (parent form's padding shrinks all Client-aligned children). }
+  through the layout cascade (parent form's padding shrinks all Client-aligned children).
+  The pre-keyboard Padding.Bottom (e.g. the Android nav-bar inset set by ApplyAndroidWindowInsets)
+  is captured on show and RESTORED on hide — zeroing it would clobber the inset. }
 procedure TLightForm.HandleVKStateChange(const Sender: TObject; const M: TMessage);
 var
   VKMsg: TVKStateChangeMessage;
@@ -612,11 +638,20 @@ begin
   VKMsg:= TVKStateChangeMessage(M);
   if VKMsg.KeyboardVisible AND (VKMsg.KeyboardBounds.Height > 0) then
     begin
+      if NOT FVKPaddingApplied then
+        begin
+          FVKSavedPadding  := Padding.Bottom;  // Capture once, at the first show — a later message while visible would capture our own raised value
+          FVKPaddingApplied:= TRUE;
+        end;
       KBTopLeft:= ScreenToClient(VKMsg.KeyboardBounds.TopLeft);
-      Self.Padding.Bottom:= Max(0, ClientHeight - KBTopLeft.Y);
+      Self.Padding.Bottom:= Max(FVKSavedPadding, ClientHeight - KBTopLeft.Y);
     end
   else
-    Self.Padding.Bottom:= 0;
+    if FVKPaddingApplied then
+      begin
+        Self.Padding.Bottom:= FVKSavedPadding;
+        FVKPaddingApplied  := FALSE;
+      end;
 end;
 
 
@@ -895,7 +930,9 @@ begin
   if TJBuild_VERSION.JavaClass.SDK_INT < API_ANDROID_15 then
     begin
       if NOT SameValue(Padding.Top,    0, 0.5) then Padding.Top    := 0;
-      if NOT SameValue(Padding.Bottom, 0, 0.5) then Padding.Bottom := 0;
+      if FVKPaddingApplied
+      then FVKSavedPadding:= 0  // Keyboard owns Padding.Bottom right now; 0 becomes the value HandleVKStateChange restores
+      else if NOT SameValue(Padding.Bottom, 0, 0.5) then Padding.Bottom := 0;
       EXIT;
     end;
 
@@ -916,7 +953,9 @@ begin
   BotDp:= BotPx / ScreenScale;
 
   if NOT SameValue(Padding.Top,    TopDp, 0.5) then Padding.Top    := TopDp;
-  if NOT SameValue(Padding.Bottom, BotDp, 0.5) then Padding.Bottom := BotDp;
+  if FVKPaddingApplied
+  then FVKSavedPadding:= BotDp  // Keyboard owns Padding.Bottom right now; the fresh inset becomes the restore value
+  else if NOT SameValue(Padding.Bottom, BotDp, 0.5) then Padding.Bottom := BotDp;
   {$ENDIF}
 end;
 
