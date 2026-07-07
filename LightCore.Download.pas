@@ -1,7 +1,7 @@
 UNIT LightCore.Download;
 
 {-------------------------------------------------------------------------------------------------------------
-   2026.01.29
+   2026.07.07
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    DOWNLOADS A FILE FROM THE INTERNET
@@ -258,19 +258,27 @@ begin
        begin
          AppDataCore.LogInfo('File rejected because it is too small: '+ URL);
          Result:= FALSE;
+       end
+     else
+       begin
+         { Received HTML file from server instead of image file.
+           Some websites return a downloadable 404 page that looks like HTML. }
+         VAR FileContent:= StringFromFile(LocalPath);
+         if (DownloadedSize < 25*KB)
+         AND ( (  (PosInsensitive('<html', FileContent) > 0)
+              AND (PosInsensitive('<body', FileContent) > 0))
+             OR (PosInsensitive('<!doctype ', FileContent) > 0)
+             OR (PosInsensitive('<meta name', FileContent) > 0) ) then
+           begin
+             AppDataCore.LogWarn('Received HTML file from server instead of image file: '+ URL);
+             Result:= FALSE;
+           end;
        end;
 
-     { Received HTML file from server instead of image file.
-       Some websites return a downloadable 404 page that looks like HTML. }
-     VAR FileContent:= StringFromFile(LocalPath);
-     if (DownloadedSize < 25*KB)
-     AND ( (  (PosInsensitive('<html', FileContent) > 0)
-          AND (PosInsensitive('<body', FileContent) > 0))
-         OR (PosInsensitive('<!doctype ', FileContent) > 0)
-         OR (PosInsensitive('<meta name', FileContent) > 0) ) then
+     if NOT Result then
        begin
-         AppDataCore.LogWarn('Received HTML file from server instead of image file: '+ URL);
-         Result:= FALSE;
+         DownloadedSize:= -1;             { Documented contract: DownloadedSize is -1 on failure }
+         TryDeleteFile(LocalPath);        { Don't leave the rejected junk file on disk (callers treat failure as 'no file') }
        end;
    end
  else
