@@ -142,9 +142,10 @@ begin
   while EnumName <> '' do
   begin
     EnumValue:= GetEnumValue(EnumInfo, EnumName);
-    if EnumValue < 0 then
+    if (EnumValue < 0) OR (EnumValue > 31) then
     begin
-      { Invalid enum name - return empty set }
+      { Invalid enum name, or ordinal beyond this unit's documented 32-element limit - return empty set.
+        Without the upper bound, Include() past bit 31 would write OUTSIDE the 32-bit SetValue (stack corruption under $R-). }
       SetOrdValue(Info, SetParam, 0);
       EXIT;
     end;
