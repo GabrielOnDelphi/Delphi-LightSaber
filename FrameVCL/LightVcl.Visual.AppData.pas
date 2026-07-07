@@ -1,7 +1,7 @@
 ﻿UNIT LightVcl.Visual.AppData;
 
 {=============================================================================================================
-   2026.03.22
+   2026.07.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -28,8 +28,8 @@
          FastMM4,
          LightCore.INIFile,
          LightVcl.Visual.AppData,
-         LightVcl.Visual.AppDataForm in 'LightCom.AppDataForm.pas';
-         MainForm in 'MainForm.pas' {frmMain);
+         LightVcl.Visual.AppDataForm in 'LightVcl.Visual.AppDataForm.pas',
+         MainForm in 'MainForm.pas' {frmMain);   // Deliberately closed with a round paren, not a curly brace - see the warning further down, right before this comment block's real closing line.
        begin
          AppData:= TAppData.Create('MyAppName', '', MultiThreaded);
          AppData.CreateMainForm(TMainForm, MainForm, TRUE, TRUE, asFull);
@@ -90,6 +90,14 @@
      Known issues
            If you are creating copies of the same form, the second, third, etc will get a dynamic name.
            This means that they will not be stored/loaded properly from the INI file (because of the dynamic name).
+
+   WARNING ABOUT THIS COMMENT BLOCK
+      Curly-brace comments do not nest in Delphi. This whole block is one comment, opened at the
+      top of the file and closed by the line right below this paragraph. The sample 'uses' clause
+      above intentionally writes MainForm's IDE hint as an unmatched open-paren pair, not a matched
+      curly-brace pair - a real closing brace there would end this comment early, and everything
+      from that point down to the real closing line below would be handed to the compiler as code.
+      Do not "correct" that pair to use a curly brace on both sides.
 
 =============================================================================================================}
 
@@ -249,7 +257,32 @@ end;
 
 
 destructor TAppData.Destroy;
+VAR i: Integer;
 begin
+  // Save all still-alive TLightForms NOW, while AppData (and its RamLog) are fully functional.
+  // Reason: this destructor runs from this unit's FINALIZATION, but Application-owned forms are
+  // destroyed LATER (Vcl.Forms finalization -> DoneApplication -> Application.Destroy). A form that
+  // was never closed (e.g. created via CreateFormHidden) would otherwise run its
+  // FormPreRelease/SaveForm at that point, in a dead context: the AppData var is already NIL and
+  // AppDataCore is nilled by our finalization — TIniFileApp.WriteComp asserts/derefs it.
+  // Saving here makes the late destruction a no-op (FFormSaved=TRUE guard).
+  // 'AppData = Self' guard: Destroy also runs when a constructor RAISES (e.g. erroneous second
+  // TAppData creation). The global var does not point to that half-built instance, so we must not
+  // let it prematurely save/pre-release the forms of the healthy running instance.
+  if (AppData = Self) AND (Screen <> NIL) then
+    for i:= Screen.FormCount - 1 downto 0 do
+      if Screen.Forms[i] is TLightForm then
+        try
+          TLightForm(Screen.Forms[i]).saveBeforeExit;
+        except
+          // Isolate one bad form's FormPreRelease/SaveForm from the REST of this loop and from the
+          // code below (FreeAndNil(FFormLog/Translator), inherited Destroy -> SaveSettings/FreeAndNil
+          // (RamLog)) - an unguarded raise here would skip all of that for a reason unrelated to this
+          // one form. RamLog is still alive at this point, so logging (not reraising) is the correct boundary.
+          on E: Exception
+          do LogError('TAppData.Destroy: saveBeforeExit failed for '+ Screen.Forms[i].Name+ ' ('+ Screen.Forms[i].ClassName+ '): '+ E.ClassName+ ' - '+ E.Message);
+        end;
+
   FreeAndNil(FFormLog);
   FreeAndNil(Translator);
   inherited Destroy;
@@ -610,7 +643,10 @@ begin
   SI.dwFlags := STARTF_USESHOWWINDOW;
   SI.wShowWindow := SW_HIDE;
 
-  if CreateProcess( NIL, PChar(BatPath), NIL, NIL, False, IDLE_PRIORITY_CLASS, NIL, NIL, SI, PI) then
+  // Batch files must be run through the command interpreter (CreateProcess doc), and BatPath must be
+  // quoted: the temp path contains the user name, and an unquoted 'C:\Users\John Smith\...\App.BAT'
+  // is split at the space — CreateProcess fails silently and the EXE is never deleted.
+  if CreateProcess( NIL, PChar('cmd.exe /c "'+ BatPath+ '"'), NIL, NIL, False, IDLE_PRIORITY_CLASS, NIL, NIL, SI, PI) then
    begin
      CloseHandle(PI.hThread);
      CloseHandle(PI.hProcess);
@@ -865,8 +901,10 @@ end;
   We need to call this in TMainForm.CreateParams(var Params: TCreateParams)  }
 procedure TAppData.SetSingleInstanceName(VAR Params: TCreateParams);
 begin
-  // Copies a null-terminated string. StrCopy is designed to copy up to 255 characters from the source buffer into the destination buffer. If the source buffer contains more than 255 characters, the procedure will copy only the first 255 characters.
-  System.SysUtils.StrCopy(Params.WinClassName, PChar(SingleInstClassName));
+  // Params.WinClassName is array[0..255] of Char (Vcl.Controls). StrLCopy copies at most 255 chars
+  // + the null terminator, so an over-long SingleInstClassName is truncated instead of overflowing
+  // the record. (The old StrCopy has NO length limit — it copies until the source's #0.)
+  System.SysUtils.StrLCopy(Params.WinClassName, PChar(SingleInstClassName), High(Params.WinClassName));
   //Hint: This would work if WindowClassName would be a constant: Params.WinClassName:= WindowClassName
 end;
 
@@ -946,7 +984,7 @@ end;
 { Shows a file open/save dialog and returns the selected filename.
   Based on Vcl.Dialogs.PromptForFileName with these enhancements:
   - Remembers last used folder in LastUsedFolder property
-  - Uses AppDataFolder as default if no InitialDir specified
+  - Opens in LastUsedFolder when no InitialDir is specified
   - Always enables sizing and hidden files
 
   Parameters:
@@ -955,7 +993,7 @@ end;
     Filter     - File type filter (e.g., 'Text files|*.txt|All files|*.*')
     DefaultExt - Extension added if user doesn't specify one (max 3 chars, no dot)
     Title      - Dialog title
-    InitialDir - Starting directory (empty = use AppDataFolder)
+    InitialDir - Starting directory (empty = use LastUsedFolder)
 
   Returns TRUE if user selected a file, FALSE if cancelled. }
 Function TAppData.PromptForFileName(VAR FileName: string; SaveDialog: Boolean; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''; CONST InitialDir: string = ''): Boolean;
@@ -980,7 +1018,7 @@ begin
     else Dialog.Filter := Filter;
 
     if InitialDir= ''
-    then Dialog.InitialDir:= Self.AppDataFolder  // Customization
+    then Dialog.InitialDir:= Self.LastUsedFolder  // Falls back to My Documents when never set (getLastUsedFolder)
     else Dialog.InitialDir:= InitialDir;
 
     Dialog.FileName := FileName;
@@ -1090,6 +1128,7 @@ FINALIZATION
 begin
   AppData.Free;   // DON'T use FreeAndNil here because it will set the AppData variable to Nil too early. We still need the variable in the destructors of the forms.
   AppData:= NIL;
+  AppDataCore:= NIL;  // SAME object as AppData (assigned in TAppData.Create). Without this, every 'if AppDataCore <> NIL' guard in LightCore (StreamBuff, Download, IniFile, ...) passes on a DANGLING pointer during late shutdown (forms owned by Application are destroyed later, in Vcl.Forms' finalization).
 end;
 
 

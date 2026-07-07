@@ -27,8 +27,8 @@ TYPE
   TTSL= class helper for TStringList
   private
     public
-     procedure RemoveDuplicateString(CONST s: string);            { Removes the first occurrence of the specified string (case-insensitive) }
-     procedure RemoveDuplicateFile(CONST FileName: string);       { Removes the first occurrence of the specified filename (case-insensitive) }
+     procedure RemoveDuplicateString(CONST s: string);            { Removes ONE occurrence of the specified string (the last one, scanning from the end; case-insensitive) }
+     procedure RemoveDuplicateFile(CONST FileName: string);       { Removes ONE occurrence of the specified filename (the last one, scanning from the end; case-insensitive) }
      procedure RemoveDuplicates;                                  { THIS WILL SORT THE LIST !!! }
      procedure RemoveEmptyLines;
      function  RemoveLines   (const BadWord: string): Integer;
@@ -167,7 +167,8 @@ begin
 end;
 
 
-{ Removes the first occurrence of the specified string (case-insensitive). }
+{ Removes ONE occurrence of the specified string (case-insensitive).
+  Note: the list is scanned from the END, so if the string appears more than once, the LAST occurrence is removed. }
 procedure TTSL.RemoveDuplicateString(const s: string);
 VAR i: Integer;
 begin
@@ -194,13 +195,19 @@ begin
 end;
 
 
-{ Removes duplicate entries from the list.
+{ Removes duplicate entries from the list (case-insensitive).
   WARNING: This will SORT the list! }
 procedure TTSL.RemoveDuplicates;
 var
   Buffer: TStringList;
   i: Integer;
+  WasCaseSensitive: Boolean;
+  WasDuplicates: TDuplicates;
 begin
+  { TStringList.Assign below also clones Sorted/Duplicates/CaseSensitive from Buffer, clobbering ours. Save them }
+  WasCaseSensitive:= CaseSensitive;
+  WasDuplicates   := Duplicates;
+
   Buffer:= TStringList.Create;
   try
     Buffer.Sorted:= True;
@@ -216,6 +223,8 @@ begin
 
   { Cancel Sorted flag to allow editing, otherwise "Operation not allowed on sorted list" }
   Sorted:= FALSE;
+  CaseSensitive:= WasCaseSensitive;
+  Duplicates   := WasDuplicates;
 end;
 
 

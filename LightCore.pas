@@ -1,7 +1,7 @@
 ﻿UNIT LightCore;
 
 {=============================================================================================================
-   2026.07.03
+   2026.07.07
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    - String manipulation (string conversions, sub-string detection, word manipulation, cut, copy, split, wrap, etc)
@@ -154,7 +154,7 @@ CONST
  function  LastPos             (CONST Niddle, S: string): Integer;                                 overload;  { Return the position of the last occurence of a substring in String. Not tested. Also see 'EndsStr' }
  function  LastPos             (CONST Niddle: Char; CONST S: String): Integer;                     overload;
 
- function  PosAtLeast          (CONST Niddle, S: string; AtLeast: Integer): Boolean;                          { Returns true if the specified string appears at least x times }
+ function  PosAtLeast          (CONST Niddle, S: string; AtLeast: Integer): Boolean;                          { Returns true if Niddle appears MORE than AtLeast times (strictly >, not >=). Overlapping matches count. Callers (CubicDNA) rely on the strict > semantics - do not change! }
  function  PosInsensitive      (CONST Niddle, Haystack: string): Integer;                          overload;
  function  PosInsensitive      (CONST Niddle, Haystack: AnsiString): Integer;                      overload;
 
@@ -338,6 +338,8 @@ end;
 procedure SplitNumber_Start(CONST s: string; OUT Text, Number: string);
 VAR i: Integer;
 begin
+ Number:= s;                                                                   { If the whole string is a number, it all goes into Number (mirrors SplitNumber_End) }
+ Text:= '';
  for i:= 1 TO Length(s) DO                                                     { Search from end to front. I need to see where the strings ends and where the digits start. Ex: 'Monkey 13' }
    if NOT CharIsNumber(s[i]) then
     begin                                                                      { Letter found. Split text in two. }
@@ -374,7 +376,7 @@ begin
 
  { Keep 0s }
  Zeros:= 0;
- for i:= 1 TO Length(s) DO
+ for i:= 1 TO Length(s)-1 DO                                                   { -1: the last digit is the value itself, never a padding zero. Otherwise '0' incremented to '01' and '00' to '001' }
    if s[i]= '0'                                                                { Check if user put zeros in front of the number }
    then inc(Zeros)                                                             { If so, count them }
    else Break;
@@ -1281,8 +1283,9 @@ begin
   else Result:= Result+ s[i];
 
  { Check the last char }
- if NOT s.EndsWith(CR)
- then Result:= Result+ LastChar(s);
+ if s.EndsWith(CR)
+ then Result:= Result+ ReplaceWith    { A trailing CR has nothing after it, so it is lonely -> replace it (it was silently dropped before 2026.07) }
+ else Result:= Result+ LastChar(s);
 end;
 
 
@@ -1293,8 +1296,9 @@ begin
  Result:= '';
 
  { Check the first char }
- if s[1]<> LF
- then Result:= s[1];
+ if s[1]= LF
+ then Result:= ReplaceWith            { A leading LF has nothing before it, so it is lonely -> replace it (it was silently dropped before 2026.07) }
+ else Result:= s[1];
 
  for i:= 2 to Length(s) DO
   if  (s[i]= LF{A}) AND (s[i-1]<> CR{D})
@@ -1310,6 +1314,12 @@ function LinuxEnter2Win(CONST s: string): string;
 VAR i: integer;
 begin
  if s= '' then EXIT('');
+
+ { Single char: handle directly. The code below assumes Length >= 2 and would duplicate a single char }
+ if Length(s) = 1 then
+   if s = LF
+   then EXIT(CRLFw)
+   else EXIT(s);
 
  { Check the first char }
  Result:= s[1];
@@ -2102,7 +2112,7 @@ end;
   If the ending (sTo) is not found, we copy until the end of the string.
 
   Example:
-     CopyFromTo('abcdX1234Ydcba', 'X', 'Y') will return '12345' }
+     CopyFromTo('abcdX1234Ydcba', 'X', 'Y') will return '1234' }
 function CopyFromTo(CONST s, sFrom, sTo: string; IncludeMarkers: Boolean= FALSE): string;
 VAR iFrom, iTo: Integer;
 begin
@@ -2113,13 +2123,15 @@ begin
    if NOT IncludeMarkers
    then iFrom:= iFrom+ Length(sFrom);
 
-   iTo:= Pos(sTo, s, iFrom+1)-1;
+   iTo:= Pos(sTo, s, iFrom+1);
 
-   if IncludeMarkers
-   then iTo:= iTo+ Length(sTo);
+   if iTo < 1
+   then iTo:= maxint       { The ending marker (sTo) was not found -> copy until the end of the string. Before 2026.07 this test ran AFTER the length adjustment below, so a multi-char sTo that was not found returned garbage instead of the tail }
+   else
+     if IncludeMarkers
+     then iTo:= iTo+ Length(sTo)- 1   { Last char OF the marker }
+     else Dec(iTo);                   { Last char BEFORE the marker }
 
-   if iTo < 1              { If the ending marker (sTo) was not found, copy until the end of the string }
-   then iTo:= maxint;
    Result:= system.COPY(s, iFrom, iTo-iFrom+1)
   end
  else Result:= '';
@@ -2148,15 +2160,17 @@ begin
 
  iTo:= Pos(sTo, s, MarkerOffset);
 
- if NOT IncludeMarker
- then iTo:= iTo- Length(sTo);
-
- if iTo < 1
+ if iTo < 1                             { The marker was not found. Before 2026.07 this test ran on the length-adjusted value, so multi-char markers were mishandled (IncludeMarker copied only the first char of the marker; a found-at-start marker was treated as "not found") }
  then
    if CopyAllMarkerNotFound
-   then Result:= system.COPY(s, iFrom, maxint)
-   else EXIT('')
- else Result:= system.COPY(s, iFrom, iTo- ifrom+ 1);
+   then EXIT(system.COPY(s, iFrom, maxint))
+   else EXIT('');
+
+ if IncludeMarker
+ then iTo:= iTo+ Length(sTo)- 1         { Last char OF the marker }
+ else Dec(iTo);                         { Last char BEFORE the marker }
+
+ Result:= system.COPY(s, iFrom, iTo- ifrom+ 1);
 end;
 
 
@@ -2257,6 +2271,7 @@ begin
       Delete(Result, StartPos, OldWordLength);
       Insert(NewWord, Result, StartPos);
       StartPos := StartPos + Length(NewWord);
+      InputLength := Length(Result);   // Keep in sync: NewWord may be shorter/longer than OldWord. Otherwise the end-of-string boundary test reads past the string and tail matches are skipped.
     end
     else
       // Move the start position after the current match
@@ -2545,7 +2560,9 @@ end;
 
 
 
-{ Returns true if the specified string appears at least x times }
+{ Returns true if Niddle appears MORE than AtLeast times (strictly >, not >=).
+  Example: PosAtLeast('a', 'banana', 3) = FALSE because 'a' appears exactly 3 times (3 > 3 fails).
+  Overlapping matches are counted. Callers (CubicDNA GetFastaItemCount) rely on the strict > semantics - do not "fix" to >= ! }
 function PosAtLeast(CONST Niddle, S: string; AtLeast: Integer): Boolean;
 VAR Found, Total: Integer;
 begin

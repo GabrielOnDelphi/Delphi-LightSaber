@@ -91,10 +91,14 @@ end;
 
 { Appends a single character to the buffer, growing if needed. }
 procedure TCStringBuilder.AddChar(Ch: Char);
+VAR NewLen: Integer;
 begin
   if FPosition > FAllocatedLen then
   begin
-    SetLength(FBuffer, FAllocatedLen + FBufferGrowth);
+    NewLen:= FAllocatedLen + FBufferGrowth;
+    if NewLen < FPosition
+    then NewLen:= FPosition;     { Guard for degenerate FBufferGrowth (0): the grown buffer must cover the write }
+    SetLength(FBuffer, NewLen);
     FAllocatedLen:= Length(FBuffer);
   end;
 
@@ -105,11 +109,15 @@ end;
 
 { Appends a line break (CRLF) to the buffer. }
 procedure TCStringBuilder.AddEnter;
+VAR NewLen: Integer;
 begin
   { +1 because we write two characters }
   if FPosition + 1 > FAllocatedLen then
   begin
-    SetLength(FBuffer, FAllocatedLen + FBufferGrowth);
+    NewLen:= FAllocatedLen + FBufferGrowth;
+    if NewLen < FPosition + 1
+    then NewLen:= FPosition + 1; { Guard for degenerate FBufferGrowth (0 or 1): the grown buffer must cover BOTH chars. WrapStringForced on a 1-char string creates the builder with FBufferGrowth=1 }
+    SetLength(FBuffer, NewLen);
     FAllocatedLen:= Length(FBuffer);
   end;
 

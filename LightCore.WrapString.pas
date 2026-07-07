@@ -1,7 +1,7 @@
 UNIT LightCore.WrapString;
 
 {=============================================================================================================
-   2026.01.30
+   2026.07.07
    www.GabrielMoraru.com
 ==============================================================================================================
 
@@ -203,7 +203,7 @@ begin
   x:= 3;
   Result:= s[1] + s[2];
   repeat
-    if (s[x] = #13) AND (s[x+1] = #10) then
+    if (s[x] = #13) AND (x < Length(s)) AND (s[x+1] = #10) then
     begin
       IsSepa:= PreviousCharIsSeparator;
       if IsSepa then
@@ -225,7 +225,7 @@ begin
       Result:= Result + s[x];
       Inc(x);
     end;
-  until x >= Length(s);
+  until x > Length(s);   { > (not >=): with >= the loop stopped one char early and the LAST character of any text not ending in a line break was silently dropped (fixed 2026.07) }
 end;
 
 
