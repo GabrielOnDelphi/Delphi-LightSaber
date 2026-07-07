@@ -695,7 +695,7 @@ begin
      begin
       s:= Cells[cl, lin];
       if Length(s) > SplitEvery
-      then InsertCharEvery(' ', s, SplitEvery);                                                  { Truncate the string if it is too long }
+      then s:= InsertCharEvery(' ', s, SplitEvery);                                              { If the string is too long, add spaces so the browser can wrap it. Fixed 2026.07: the function result was discarded, so long cells were never split }
 
       if lin = 0
       then Result:= Result + '  <th width="'+IntToStr(ColWidths[cl])+'" scope="col">'+ s + '</th>' + CRLFw
