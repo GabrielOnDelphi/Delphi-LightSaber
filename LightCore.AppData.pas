@@ -445,9 +445,9 @@ end;
   This is auto-saved! }
 function TAppDataCore.getLastUsedFolder: string;
 begin
-  if FLastFolder = ''
-  then Result:= GetMyDocuments
-  else Result:= FLastFolder;
+  if (FLastFolder <> '') and DirectoryExists(FLastFolder)
+  then Result:= FLastFolder
+  else Result:= GetMyDocuments;   // Empty (never set) or stale path (deleted folder / removed drive) -> My Documents
 end;
 
 
