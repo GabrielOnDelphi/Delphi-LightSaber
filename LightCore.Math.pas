@@ -1,4 +1,4 @@
-UNIT LightCore.Math;
+﻿UNIT LightCore.Math;
 
 {=============================================================================================================
    2026.05.26
@@ -505,38 +505,17 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    BYTE BLENDING (x86 only)
 -------------------------------------------------------------------------------------------------------------}
-{$IF Defined(CPUX86)}
 { Linearly interpolates (blends) two bytes based on BlendPower.
   BlendPower=0 returns FG (foreground), BlendPower=255 returns BG (background).
-  Formula (fast approximation): Result = (FG * BlendPower + BG * (255 - BlendPower)) shr 8
-  NOTE: Uses shr 8 (divide by 256) instead of the exact divide-by-255. This is the standard
-  fast alpha-blend approximation — one instruction instead of a costly DIV, with negligible
-  visual error (max ~0.4% off). Useful for alpha blending single color channel values. }
+  Formula (exact, rounded): Result = (FG * (255 - BlendPower) + BG * BlendPower + 127) div 255
+  Fixed 2026.07.06: the old ASM computed (FG*Blend + BG*(255-Blend)) shr 8, which INVERTED the
+  documented BlendPower direction (0 gave ~BG) and, because the weights sum to 255 but shr 8
+  divides by 256, returned 49 even for MixBytes(50,50,anything).
+  TestMixBytes pinned the documented contract and failed. }
 function MixBytes(FG, BG, BlendPower: Byte): Byte;
-asm
-  push bx      // push some regs
-  push cx
-  push dx
-  mov DH,BlendPower // remembering Transparency value (or Opacity - as you like)
-  mov BL,FG    // filling registers with our values
-  mov AL,DH    // BL = ForeGround (FG)
-  mov CL,BG    // CL = BackGround (BG)
-  xor AH,AH    // Clear High-order parts of regs
-  xor BH,BH
-  xor CH,CH
-  mul BL       // AL=AL*BL
-  mov BX,AX    // BX=AX
-  xor AH,AH
-  mov AL,DH
-  xor AL,$FF   // AX=(255-TRANS)
-  mul CL       // AL=AL*CL
-  add AX,BX    // AX=AX+BX
-  shr AX,8     // Fine! Here we have mixed value in AL
-  pop dx       // Hm... No rubbish after us, ok?
-  pop cx
-  pop bx       // Bye, dear Assembler - we go home to Delphi!
+begin
+  Result:= (FG * (255 - BlendPower) + BG * BlendPower + 127) DIV 255;   // +127 = round to nearest; max intermediate 65152 fits easily in Integer
 end;
-{$ENDIF}
 
 
 
