@@ -1,7 +1,7 @@
 unit LightFmx.Common.Dialogs;
 
 {=============================================================================================================
-   2026.04.25
+   2026.07.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Easy message boxes (FMX)
@@ -10,6 +10,9 @@ unit LightFmx.Common.Dialogs;
 
    Limitation: TDialogServiceAsync ignores the icon (TMsgDlgType) on most platforms.
    Using this unit anyway for future icon support and API consistency with VCL version.
+
+   TEST_MODE: when TAppDataCore.TEST_MODE is TRUE, no dialog is created — a headless test run never
+   closes an async dialog, so it would leak. MessageYesNo still invokes its callback (with FALSE).
 =============================================================================================================}
 
 INTERFACE
@@ -18,7 +21,8 @@ INTERFACE
 USES
   System.SysUtils,
   System.UITypes,
-  FMX.DialogService.Async;
+  FMX.DialogService.Async,
+  LightCore.AppData;
 
 { Displays a generic message dialog asynchronously }
 procedure GenericMessage(CONST MessageText: string; CONST Caption: string= ''; DlgType: TMsgDlgType= TMsgDlgType.mtCustom);
@@ -32,7 +36,7 @@ procedure MessageError  (CONST MessageText, Where: string; CONST Caption: string
 { Displays a Yes/No confirmation dialog asynchronously.
   Callback receives True if user selects Yes, False otherwise.
   If Callback is nil, the dialog is shown but no action is taken on result.
-  If MessageText is empty, the dialog is NOT shown and Callback (if assigned) is invoked with False. }
+  If MessageText is empty (or TEST_MODE is on), the dialog is NOT shown and Callback (if assigned) is invoked with False. }
 procedure MessageYesNo(CONST MessageText: string; CONST Caption: string= ''; CONST Callback: TProc<Boolean>= NIL);
 
 { Resolves the caption used by the 3-arg MessageError overload.
@@ -49,6 +53,7 @@ procedure GenericMessage(CONST MessageText: string; CONST Caption: string= ''; D
 VAR CombinedMsg: string;
 begin
   if MessageText = '' then EXIT;
+  if TAppDataCore.TEST_MODE then EXIT;   // See the TEST_MODE note in the unit header
 
   // Combine caption and message, avoiding leading blank lines when caption is empty
   if Caption = ''
@@ -101,9 +106,10 @@ end;
 procedure MessageYesNo(CONST MessageText: string; CONST Caption: string= ''; CONST Callback: TProc<Boolean>= NIL);
 VAR CombinedMsg: string;
 begin
-  if MessageText = '' then
+  if (MessageText = '') OR TAppDataCore.TEST_MODE then
     begin
-      // Always notify caller, otherwise a flow waiting on the callback would stall.
+      // Always notify the caller, otherwise a flow waiting on the callback would stall.
+      // TEST_MODE (see unit header): no dialog; FALSE = the safe "No" answer.
       if Assigned(Callback)
       then Callback(False);
       EXIT;
