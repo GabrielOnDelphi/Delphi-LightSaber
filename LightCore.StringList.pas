@@ -120,7 +120,9 @@ begin
 end;
 
 
-{ Trim whitespace (spaces, tabs, line breaks) from each line. }
+{ Trim whitespace (spaces, tabs, line breaks) from both ends of each line.
+  WARNING: the RemoveFormatings pass also removes control chars (Tab, CR, LF) from INSIDE each line,
+  so this is NOT a pure trim - do not use on tab-separated data! }
 procedure TTSL.Trim;
 VAR i: Integer;
 begin
