@@ -33,7 +33,7 @@ TYPE
      procedure RemoveEmptyLines;
      function  RemoveLines   (const BadWord: string): Integer;
      function  KeepLines     (const KeepText: string): Integer;
-     procedure Trim;                                              { Trim empty spaces, tab, enters, etc on each line }
+     procedure Trim;                                              { Trim whitespace at both ends of each line. WARNING: also removes control chars (Tab, CR, LF) from INSIDE the line - do not use on tab-separated data! }
      procedure Shuffle;
      function  FindLine(const Needle: string): Integer;           { Find line that contains the specified text }
      procedure SortReverse;
@@ -181,7 +181,8 @@ begin
 end;
 
 
-{ Removes the first occurrence of the specified filename (case-insensitive). }
+{ Removes ONE occurrence of the specified filename (case-insensitive).
+  Note: the list is scanned from the END, so if the filename appears more than once, the LAST occurrence is removed. }
 procedure TTSL.RemoveDuplicateFile(const FileName: string);
 var
    i: Integer;
