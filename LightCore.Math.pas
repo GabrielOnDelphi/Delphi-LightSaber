@@ -70,6 +70,8 @@ USES
    MEDIAN/INTERQ
    NOTE: Interq10/25/75/90 use a fast index-based approximation (Length div N), not exact
    textbook percentile interpolation. Use them for rough distribution shape, not statistical reports.
+   NOTE: All these functions SORT the input array IN PLACE (dynamic arrays are reference types,
+   so the caller's array is reordered). Pass a copy if the original order matters.
 ==================================================================================================}
  function  Median   (MX: TDoubleDynArray): Double;  overload;                                    { Use it like this: Median(TDoubleDynArray.Create(4.1, 5.6, 7.2, 1.7, 9.3, 4.4, 3.2)) }
  function  Median   (MX: System.Types.TIntegerDynArray): Integer;   overload;
