@@ -1,7 +1,7 @@
 UNIT LightCore.HTML;
 
 {-------------------------------------------------------------------------------------------------------------
-   2026.06.28
+   2026.07.07
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
@@ -131,7 +131,13 @@ begin
   FreeAndNil(Text);
  END;
 
- StringToFile(BackupFileIncrement(FileName), s, woOverwrite);
+ { BackupFileIncrement COPIES the file to an incremented '.bak' name and returns THAT name.
+   So: back up the original first, then write the fixed text back into the original file.
+   (The old code wrote the fixed text into the .bak file, leaving the original untouched.) }
+ if BackupFileIncrement(FileName) = ''
+ then RAISE Exception.Create('FixHtmlFormatings: Cannot back up '+ FileName);
+
+ StringToFile(FileName, s, woOverwrite);
 end;
 
 
@@ -341,13 +347,18 @@ begin
           Tag:= LightCore.CopyTo(Result, iStart1, iEnd);
 
           URL:= ExtractAttribValue(Tag, 'href');
-          URL:= MakeLinkRelativeToRoot(HtmlUrl, URL);
+          if URL = ''
+          then Offset:= iEnd+ 1                    { No (quoted) href value -> leave the tag untouched. Without this guard ReplaceAttribValue returns '' and the whole tag would be silently DELETED from the page (same guard as LightVcl.Internet.HTMLImg) }
+          else
+           begin
+            URL:= MakeLinkRelativeToRoot(HtmlUrl, URL);
 
-          { Put the new URL back into the tag }
-          Tag:= ReplaceAttribValue(Tag, 'href', URL);
-          offset:= iEnd+1;  {todo-optimization: here instead of 1 I should use the number of extra characters added (for example '../../../' means that I inserted 9 extra chars }
+            { Put the new URL back into the tag }
+            Tag:= ReplaceAttribValue(Tag, 'href', URL);
+            offset:= iEnd+1;  {todo-optimization: here instead of 1 I should use the number of extra characters added (for example '../../../' means that I inserted 9 extra chars }
 
-          Result:= System.Copy(Result, 1, iStart1-1) + Tag + Copy(Result, iEnd+1, MaxInt);
+            Result:= System.Copy(Result, 1, iStart1-1) + Tag + Copy(Result, iEnd+1, MaxInt);
+           end;
          end
         else
          Offset:= iStart1+ 3;
@@ -377,13 +388,18 @@ begin
           Tag:= LightCore.CopyTo(Result, iStart1, iEnd);
 
           URL:= ExtractAttribValue(Tag, 'src');
-          URL:= MakeLinkRelativeToRoot(HtmlUrl, URL);
+          if URL = ''
+          then Offset:= iEnd+ 1                    { No (quoted) src value -> leave the tag untouched. Without this guard ReplaceAttribValue returns '' and the whole tag would be silently DELETED from the page (same guard as LightVcl.Internet.HTMLImg) }
+          else
+           begin
+            URL:= MakeLinkRelativeToRoot(HtmlUrl, URL);
 
-          { Put the new URL back into the tag }
-          Tag:= ReplaceAttribValue(Tag, 'src', URL);
-          offset:= iEnd+1;  {todo-optimization: here instead of 1 I should use the number of extra characters added (for example '../../../' means that I inserted 9 extra chars }
+            { Put the new URL back into the tag }
+            Tag:= ReplaceAttribValue(Tag, 'src', URL);
+            offset:= iEnd+1;  {todo-optimization: here instead of 1 I should use the number of extra characters added (for example '../../../' means that I inserted 9 extra chars }
 
-          Result:= System.Copy(Result, 1, iStart1-1) + Tag + Copy(Result, iEnd+1, MaxInt);
+            Result:= System.Copy(Result, 1, iStart1-1) + Tag + Copy(Result, iEnd+1, MaxInt);
+           end;
          end
         else
          Offset:= iStart1+ 3;
@@ -613,31 +629,36 @@ VAR
 begin
  Offset   := 1;
  Result   := TStringList.Create;  { The caller must free the result }
- TextLen  := Length(HtmlBody);
- LowBody  := LowerCase(HtmlBody);
- TagName  := LowerCase(TagName);
- OpenTag  := '<'+ TagName+ '>';
- CloseTag := '</'+ TagName+ '>';
+ TRY
+   TextLen  := Length(HtmlBody);
+   LowBody  := LowerCase(HtmlBody);
+   TagName  := LowerCase(TagName);
+   OpenTag  := '<'+ TagName+ '>';
+   CloseTag := '</'+ TagName+ '>';
 
- REPEAT
-   Tag1Start:= PosEx(OpenTag, LowBody, Offset);
-   if Tag1Start> 0
-   then
-    begin
-      Tag1End:= Tag1Start+ Length(OpenTag);    { This is the first char AFTER the tag }
-      Tag2Start:= PosEx(CloseTag, LowBody, Tag1End);
-      if (Tag2Start> 0)
-      then
-       begin
-        Tag:= LightCore.CopyTo(HtmlBody, Tag1End, Tag2Start-1);
-        Result.Add(Tag);
-        Offset:= Tag1End;
-       end
-      else Break;
-    end
-   else
-     Break;
- UNTIL (Offset>= TextLen);
+   REPEAT
+     Tag1Start:= PosEx(OpenTag, LowBody, Offset);
+     if Tag1Start> 0
+     then
+      begin
+        Tag1End:= Tag1Start+ Length(OpenTag);    { This is the first char AFTER the tag }
+        Tag2Start:= PosEx(CloseTag, LowBody, Tag1End);
+        if (Tag2Start> 0)
+        then
+         begin
+          Tag:= LightCore.CopyTo(HtmlBody, Tag1End, Tag2Start-1);
+          Result.Add(Tag);
+          Offset:= Tag1End;
+         end
+        else Break;
+      end
+     else
+       Break;
+   UNTIL (Offset>= TextLen);
+ EXCEPT
+   FreeAndNil(Result);   { Don't leak the list if anything raises before we return it }
+   RAISE;
+ END;
 end;
 
 
@@ -669,35 +690,40 @@ VAR
    Offset, TextLen, iEnd, iStart1, iStart2: Integer;
 begin
  Result:= TStringList.Create;
- TextLen:= Length(HtmlBody);
- LowBody:= lowercase(HtmlBody);
- Offset:= 1;
+ TRY
+   TextLen:= Length(HtmlBody);
+   LowBody:= lowercase(HtmlBody);
+   Offset:= 1;
 
- REPEAT
-   iStart1:= PosEx('<a ', LowBody, Offset);
+   REPEAT
+     iStart1:= PosEx('<a ', LowBody, Offset);
 
-   if iStart1> 0 then
-    begin
-     iStart2:= PosEx(' href', LowBody, iStart1+2);
-     if iStart2> 0
-     then
+     if iStart1> 0 then
       begin
-        iEnd:= PosEx('>', HtmlBody, iStart1+7);
-        if (iEnd> 0) AND (iStart2< iend)
-        then
-         begin
-          Tag:= LightCore.CopyTo(HtmlBody, iStart1, iEnd);
-          if Tag <> ''
-          then Result.Add(Tag);
-          offset:= iEnd+1;
-         end
-        else
-         Offset:= iStart1+ 3;
+       iStart2:= PosEx(' href', LowBody, iStart1+2);
+       if iStart2> 0
+       then
+        begin
+          iEnd:= PosEx('>', HtmlBody, iStart1+7);
+          if (iEnd> 0) AND (iStart2< iend)
+          then
+           begin
+            Tag:= LightCore.CopyTo(HtmlBody, iStart1, iEnd);
+            if Tag <> ''
+            then Result.Add(Tag);
+            offset:= iEnd+1;
+           end
+          else
+           Offset:= iStart1+ 3;
+        end
+       else Offset:= iStart1+ 3;
       end
-     else Offset:= iStart1+ 3;
-    end
-   else Offset:= textlen;
-  UNTIL Offset>= TextLen;
+     else Offset:= textlen;
+    UNTIL Offset>= TextLen;
+ EXCEPT
+   FreeAndNil(Result);   { Don't leak the list if anything raises before we return it }
+   RAISE;
+ END;
 end;
 
 
@@ -707,9 +733,14 @@ VAR
    i: Integer;
 begin
  Result:= ExtractAhrefTags(HtmlBody);
- for i:= 0 to Result.Count-1
-   DO Result[i]:= ExtractAttribValue(Result[i], 'href');
- Result.RemoveEmptyLines;       { Empty lines are added when the 'href' cannot parsed correctly because of malformed tags. Example of thing that I encountered: <a href=\"https://www.instagram.com/minimalsetups/\">Instagram<\/a>  }
+ TRY
+   for i:= 0 to Result.Count-1
+     DO Result[i]:= ExtractAttribValue(Result[i], 'href');
+   Result.RemoveEmptyLines;       { Empty lines are added when the 'href' cannot parsed correctly because of malformed tags. Example of thing that I encountered: <a href=\"https://www.instagram.com/minimalsetups/\">Instagram<\/a>  }
+ EXCEPT
+   FreeAndNil(Result);   { Don't leak the list if anything raises before we return it }
+   RAISE;
+ END;
 end;
 
 
@@ -736,7 +767,8 @@ VAR
    cnt, Pad: integer;
    StartPos, PosHttp, PosWww, EndPos: integer;
 begin
- Text:= LowerCase(Text);
+ { Do NOT lowercase the text: PosInsensitive already searches case-insensitively, and lowercasing
+   would return mangled URLs (paths are case-sensitive on most web servers). }
  Result:= 0;
  StartPos:= 1;
 
@@ -768,22 +800,27 @@ begin
     end;
 
    if StartPos> 0 then                                                             { daca e o adrese web valida, atunci}
-    for cnt:= (StartPos+ Pad) to length(Text) DO
-      if CharInSet(Text[cnt], SeparatorsHTTP)                                      { Look for separators }
-      OR (cnt= length(Text))                                                       { OR end of file }
-      then
-       begin
-         { I have found also its end }
-         EndPos:= cnt-1;
+    if StartPos+ Pad > Length(Text)
+    then StartPos:= 0                                                              { Bare 'www.'/'http://' prefix at the very END of the text (no URL body follows). Stop here: the FOR below would not execute at all and the WHILE would re-scan the same slice forever (infinite loop) }
+    else
+     for cnt:= (StartPos+ Pad) to length(Text) DO
+       if CharInSet(Text[cnt], SeparatorsHTTP)                                     { Look for separators }
+       OR (cnt= length(Text))                                                      { OR end of file }
+       then
+        begin
+          { I have found also its end }
+          if CharInSet(Text[cnt], SeparatorsHTTP)
+          then EndPos:= cnt-1                                                      { Stop before the separator }
+          else EndPos:= cnt;                                                       { URL runs to the very end of the text - keep its last char }
 
-         { Add it to list }
-         Inc(Result);
-         AdreseExtrase.Add(LightCore.CopyTo(Text, StartPos, EndPos) );
+          { Add it to list }
+          Inc(Result);
+          AdreseExtrase.Add(LightCore.CopyTo(Text, StartPos, EndPos) );
 
-         { Prepare for the next loop }
-         StartPos:= EndPos+1;
-         Break;
-       end;
+          { Prepare for the next loop }
+          StartPos:= EndPos+1;
+          Break;
+        end;
 
    end;
 end;
