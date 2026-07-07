@@ -1,7 +1,7 @@
 UNIT LightVcl.Visual.AppDataForm;
 
 {=============================================================================================================
-   2026.01.31
+   2026.07.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Motivation - Where to initialize own code?
@@ -64,7 +64,7 @@ UNIT LightVcl.Visual.AppDataForm;
 INTERFACE
 
 USES
-  Winapi.Windows, Winapi.Messages, Winapi.ShellAPI,
+  Winapi.Windows, Winapi.Messages,
   System.SysUtils, System.Classes, System.IniFiles, Vcl.Controls, Vcl.Forms,
   LightCore.AppData, LightVcl.Common.Dialogs, LightVcl.Common.CenterControl, LightVcl.Common.IniFile;
 
@@ -78,21 +78,21 @@ TYPE
     FAutoSaveForm: TAutoState;
     procedure WMPostInit(var Msg: TMessage); message WM_POSTINIT;
   protected
-    FFormSaved: Boolean;   { TRUE once saveBeforeExit has run — prevents double-save on shutdown }
+    FFormSaved: Boolean;         { TRUE once saveBeforeExit has FULLY run (set in the finally, AFTER FormPreRelease/SaveForm) — prevents double-save on shutdown. FormPreRelease's contract (see its declaration comment) is to observe this as FALSE during its own call, so descendants can gate one-time cleanup on "if NOT FFormSaved then ..." (see Demo\VCL\Template App Full\FormMain.FormPreRelease). }
+    FSavingInProgress: Boolean; { TRUE from the moment saveBeforeExit starts working — separate reentrancy guard so a second Close arriving while FormPreRelease/SaveForm pump messages (e.g. a confirmation dialog) cannot re-enter and run FormPreRelease twice. Cannot reuse FFormSaved for this: it must stay FALSE until FormPreRelease returns (see above). }
     procedure Loaded; override;
-    procedure saveBeforeExit;
 
     procedure DoDestroy; override;
     procedure DoClose(VAR Action: TCloseAction); override;
     procedure FormKeyPress(Sender: TObject; var Key: Char);  // We can use this later in the destructor to know how to save the form: asPosOnly/asFull
     procedure WMEndSession(VAR Msg: TWMEndSession); message WM_ENDSESSION;  { Save form state on Windows logoff/shutdown, but only when Msg.EndSession is TRUE (a canceled logoff must not save). The FFormSaved guard in saveBeforeExit prevents a double-save when CloseQuery already ran via WM_QUERYENDSESSION. }
-    procedure WMDropFiles (VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Accept the dropped files from Windows Explorer }
   public
     constructor Create(AOwner: TComponent; AutoSaveForm: TAutoState); reintroduce; overload; virtual;
     function  CloseQuery: boolean; override;
 
     procedure FormPostInitialize; virtual;   // Takes place after the form was fully created
     procedure FormPreRelease; virtual;       // Takes place before the form is destroyed. It is guaranteed to be called excetly once.
+    procedure saveBeforeExit;                // Idempotent (FFormSaved guard). Public so TAppData.Destroy can save all still-open forms while AppData is alive — Application-owned forms are otherwise destroyed AFTER AppData's finalization (in Vcl.Forms' finalization).
 
     procedure LoadForm; virtual;
     procedure SaveForm; virtual;
@@ -118,6 +118,7 @@ begin
   Position  := poDesigned;  // Without this we cannot restore form's position on screen!
   Showhint  := TRUE;
   FFormSaved:= FALSE;
+  FSavingInProgress:= FALSE;
 
   FAutoSaveForm := AutoSaveForm; // Default value. Can be overriden by AppData.CreateForm
 end;
@@ -182,10 +183,16 @@ begin
 end;
 
 
-function TLightForm.CloseQuery: Boolean;  // Correct method name
+function TLightForm.CloseQuery: Boolean;
 begin
-  saveBeforeExit;
+  // Ask FIRST (inherited fires OnCloseQuery), save only if the close is allowed.
+  // The old order (save first) broke vetoed closes: OnCloseQuery returning CanClose=FALSE left
+  // FFormSaved=TRUE and FormPreRelease already executed on a still-live form — so the user kept
+  // working, but the LATER real close saved nothing (stale INI) and the "guaranteed once,
+  // before release" contract of FormPreRelease was violated.
   Result:= inherited CloseQuery;
+  if Result
+  then saveBeforeExit;
 end;
 
 
@@ -196,8 +203,10 @@ end;
 procedure TLightForm.saveBeforeExit;
 begin
   if NOT FFormSaved
+  AND NOT FSavingInProgress   // Reentrancy guard - see the field's declaration comment.
   AND NOT AppData.Initializing then
   begin
+    FSavingInProgress:= TRUE;
     try
       FormPreRelease;
 
@@ -222,25 +231,6 @@ begin
   if CloseOnEscape
   AND (Ord(Key) = VK_ESCAPE)
   then Close;
-end;
-
-
-procedure TLightForm.WMDROPFILES(var Msg: TWMDropFiles);  { Accept the dropped files from Windows Explorer }
-var
-  i, amount: Integer;
-  FileName: array[0..MAX_PATH] of Char;
-begin
-  inherited;
-  TRY
-    Amount := DragQueryFile(Msg.Drop, $FFFFFFFF, FileName, MAX_PATH);
-    for i := 0 to (Amount - 1) do
-     begin
-      DragQueryFile(Msg.Drop, i, FileName, MAX_PATH);
-      Caption:= FileName;
-     end;
-  FINALLY
-    DragFinish(Msg.Drop);
-  END;
 end;
 
 
