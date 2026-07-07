@@ -57,6 +57,7 @@ type
     FOnLeftClick: TProc;
     FOnSettings:  TProc;
     FOnExit:      TProc;
+    FLastLeftClickTick: UInt64;   // GetTickCount64 of last actioned left-click; debounces a double-click's 2nd WM_LBUTTONUP
     FInstalled:   Boolean;
     FHookedHWnd:  HWND;
     FOldFormProc: Pointer;
@@ -68,6 +69,7 @@ type
     procedure TrayWndProc(var Msg: TMessage);
     procedure FormWndProc(var Msg: TMessage);
     procedure AppWndProc (var Msg: TMessage);
+    procedure HandleLeftClick;   // debounced FOnLeftClick (swallows a double-click's 2nd up)
     procedure ShowContextMenu;
     procedure ApplyToShell;   // NIM_MODIFY with current icon + tip
   {$ENDIF}
@@ -400,7 +402,14 @@ begin
       Otherwise if HWND alive: only free stub if we're still top of chain
       (SetWindowLongPtr successfully restores). If another subclass sits
       on top, we CANNOT free — Windows would call freed trampoline. Leak
-      it instead (one-shot at shutdown, better than AV). }
+      it instead (one-shot at shutdown, better than AV).
+
+      DEFERRED (2026-07-07): migrating this manual GWL_WNDPROC subclass to
+      comctl32 SetWindowSubclass/RemoveWindowSubclass would remove the
+      dangling-trampoline hazard entirely (the OS owns the chain). Not done:
+      in this app only ONE subclass is installed and no foreign code layers
+      on top, so the leak branch is unreachable. Revisit if this base is
+      reused where third-party subclassing is possible. }
     if (not FUnhooked) and IsWindow(FHookedHWnd) then
       begin
         Current := Pointer(GetWindowLongPtr(FHookedHWnd, GWL_WNDPROC));
@@ -652,7 +661,7 @@ begin
   if Msg.Msg = WM_TRAYICON then
     begin
       case Msg.LParam of
-        WM_LBUTTONUP: if Assigned(FOnLeftClick) then FOnLeftClick();
+        WM_LBUTTONUP: HandleLeftClick;
         WM_RBUTTONUP: ShowContextMenu;
       end;
       Msg.Result := 0;
@@ -660,6 +669,24 @@ begin
   else
     Msg.Result := DefWindowProc(FHelperHWnd, Msg.Msg, Msg.WParam, Msg.LParam);
 end;
+
+
+procedure TTrayIcon.HandleLeftClick;
+{ The classic tray callback sends WM_LBUTTONUP once per physical click, so a
+  double-click arrives as TWO ups. FOnLeftClick toggles the form show/hide, so a
+  double-click would toggle twice (show+hide) = a visible flash. Swallow a 2nd
+  click that lands within the system double-click time; the first click still
+  fires instantly, so single-click feel is unchanged. GetDoubleClickTime is the
+  user's own single-vs-double boundary, so this matches OS-wide semantics. }
+var
+  Now64: UInt64;
+begin
+  Now64 := GetTickCount64;
+  if (Now64 - FLastLeftClickTick) < GetDoubleClickTime then Exit;   // 2nd up of a double-click — ignore
+  FLastLeftClickTick := Now64;
+  if Assigned(FOnLeftClick) then FOnLeftClick();
+end;
+
 
 procedure TTrayIcon.ShowContextMenu;
 var
