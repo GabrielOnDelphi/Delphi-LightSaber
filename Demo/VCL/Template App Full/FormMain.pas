@@ -102,6 +102,7 @@ TYPE
     procedure FormCreate         (Sender: TObject);
   protected
   private
+    procedure WMDropFiles(VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Demo: shows the dropped file in the title bar. Dropping is enabled in uInitialization via DragAcceptFiles. }
   public
     procedure FormPostInitialize; override;  { Called after the main form was fully created }
     procedure FormPreRelease; override;
@@ -115,6 +116,7 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
+   WinApi.ShellApi,
    ciUpdater,
    LightVcl.Common.Translate,
    LightVcl.Visual.INIFile,
@@ -156,6 +158,27 @@ end;
 procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   Action:= caFree;
+end;
+
+
+{ Demo: accept files dropped from Windows Explorer.
+  Dropping is enabled in uInitialization: DragAcceptFiles(MainForm.Handle, True). }
+procedure TMainForm.WMDropFiles(VAR Msg: TWMDropFiles);
+VAR
+  i, Amount: Integer;
+  FileName: array[0..MAX_PATH] of Char;
+begin
+  inherited;
+  TRY
+    Amount:= DragQueryFile(Msg.Drop, $FFFFFFFF, FileName, MAX_PATH);
+    for i:= 0 to Amount-1 do
+     begin
+       DragQueryFile(Msg.Drop, i, FileName, MAX_PATH);
+       Caption:= FileName;   // Demo: show the last dropped file in the title bar
+     end;
+  FINALLY
+    DragFinish(Msg.Drop);
+  END;
 end;
 
 

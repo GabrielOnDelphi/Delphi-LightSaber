@@ -8,7 +8,7 @@ The Minimal example shows you what you can achieve with the minimal amount of co
 
 [Simple]
 Additional to the above example, this example has only a few lines of extra code:
- * Proper code initialization (in FormInitialize instead of FormCreate)
+ * Proper code initialization (in FormPostInitialize instead of FormCreate)
  * Create a desktop shortcut for your application 
  * Associate your application with a file type/file extension, so your application starts automatically when someone double-clicks that file type in Explorer
  * Shows the BetaTesterMode capabilities
