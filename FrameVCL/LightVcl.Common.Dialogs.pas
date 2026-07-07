@@ -1,10 +1,13 @@
 UNIT LightVcl.Common.Dialogs;
 
 {=============================================================================================================
-   2026.01.30
+   2026.07.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Easy message boxes (for VCL only)
+
+   TEST_MODE: when TAppDataCore.TEST_MODE is TRUE, no dialog is shown — a headless test run would
+   block forever on the modal MessageBox. MesajGeneric returns 0, so MesajYesNo returns FALSE (the safe "No").
 
    Provides simple wrapper functions for displaying message dialogs with appropriate icons.
    All functions use Application.MessageBox internally except MesajTaskDlg which uses TTaskDialog.
@@ -60,7 +63,7 @@ USES
 IMPLEMENTATION
 
 USES
-   LightCore;
+   LightCore, LightCore.AppData;
 
 CONST
    { MessageBox constants - defined here to avoid including Windows.pas }
@@ -80,11 +83,14 @@ CONST
   MessageText: The message to display (CRLF sequences are normalized)
   Title: Optional caption suffix (prepended with Application.Title)
   Icon: MB_ICON* constant combined with MB_OK or MB_YESNO. Use -1 for default info icon.
-  Returns: Dialog result (mrYes, mrNo, mrOk, etc.) or 0 if message was empty }
+  Returns: Dialog result (mrYes, mrNo, mrOk, etc.) or 0 if the message was empty or TEST_MODE is on }
 function MesajGeneric(CONST MessageText: string; Title: string = ''; Icon: Integer = -1): Integer;
 begin
   if MessageText = ''
   then EXIT(0);
+
+  if TAppDataCore.TEST_MODE
+  then EXIT(0);   // See the TEST_MODE note in the unit header. 0 <> mrYes, so MesajYesNo yields FALSE.
 
   if Icon < 0
   then Icon:= MB_ICONINFORMATION or MB_OK;
@@ -193,6 +199,9 @@ var
 begin
   if MessageText = ''
   then EXIT;
+
+  if TAppDataCore.TEST_MODE
+  then EXIT;   // See the TEST_MODE note in the unit header
 
   { Check if TTaskDialog is available and visual styles are enabled }
   if (Win32MajorVersion >= 6)
