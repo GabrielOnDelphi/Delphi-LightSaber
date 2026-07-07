@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.AppData;
 
 {=============================================================================================================
-   2026.06.10
+   2026.07.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -28,12 +28,12 @@
          FastMM4,
          LightCore.INIFile,
          LightFmx.Common.AppData,
-         LightFmx.Common.AppData.Form in 'LightFmx.Common.AppData.Form.pas';
-         MainForm in 'MainForm.pas' {frmMain);
+         LightFmx.Common.AppData.Form in 'LightFmx.Common.AppData.Form.pas',
+         MainForm in 'MainForm.pas' {frmMain);   // Deliberately closed with a round paren, not a curly brace - see the warning further down, right before this comment block's real closing line.
        begin
          AppData:= TAppData.Create('MyAppName', '', MultiThreaded);
-         AppData.CreateMainForm(TMainForm, MainForm, TRUE, TRUE);
-         AppData.CreateForm(TSecondFrom, frmSecond);                 // Secondary form (optional)
+         AppData.CreateMainForm(TMainForm, frmMain, asPosOnly);
+         AppData.CreateForm(TSecondForm, frmSecond);                 // Secondary form (optional)
          AppData.Run;
        end.
 
@@ -54,10 +54,8 @@
 
      AppData.Initializing
         When the application starts, this flag is set to True.
-        Then it is automatically set to False once all the forms are is fully loaded.
-        If you don't want this to happen, set the AutoSignalInitializationEnd variable to False.
-        In this case, you will have to set the Initializing manually, once the program is fully initialized (usually in the LateInitialize of the main form, or in the LateInitialize of the last created form).
-        If you forget it, the AppData will not save the forms to the INI file and you will have a warning on shutdown.
+        Then it is automatically set to False once all the forms are fully loaded (TLightForm.Loaded defers TAppDataCore.EndInitialization to the message queue).
+        Note: this happens only for TLightForm descendants. If your app has no TLightForm at all, call TAppDataCore.EndInitialization yourself once the program is fully initialized, otherwise the forms will not be saved to the INI file.
         Usage:
           Used by SaveForm in Light_FMX.Common.IniFile.pas/Light_FMX.Visual.INIFile.pas (and a few other places) to signal not to save the form if the application has crashed while still in the initialization phase.
           You can use it also personally, to avoid executing some of your code during the initialization stages.
@@ -86,6 +84,14 @@
       Known issues
            If you are creating copies of the same form, the second, third, etc will get a dynamic name.
            This means that they will not be stored/loaded properly from the INI file (because of the dynamic name).
+
+   WARNING ABOUT THIS COMMENT BLOCK
+      Curly-brace comments do not nest in Delphi. This whole block is one comment, opened at the
+      top of the file and closed by the line right below this paragraph. The sample 'uses' clause
+      above intentionally writes MainForm's IDE hint as an unmatched open-paren pair, not a matched
+      curly-brace pair - a real closing brace there would end this comment early, and everything
+      from that point down to the real closing line below would be handed to the compiler as code.
+      Do not "correct" that pair to use a curly brace on both sides.
 
 =============================================================================================================}
 
@@ -122,7 +128,7 @@ TYPE
   TAppData= class(TAppDataCore)
   private
     FPendingAutoStates: TList<TPendingAutoState>;  // Stores AutoState by class name for queued forms (aReference = NIL)
-    FFormLog: TfrmRamLog;       // Create the Log form (to be used by the entire program). It is released by TApplication
+    FFormLog: TfrmRamLog;       // The Log form (to be used by the entire program). Owned by TApplication, but explicitly freed in TAppData.Destroy — see the comment there (Application itself dies only AFTER this unit's finalization).
     function getLogForm: TfrmRamLog;
   protected
     procedure setHintType(const aHintType: THintType); override;
@@ -192,9 +198,40 @@ end;
 
 
 destructor TAppData.Destroy;
+VAR i: Integer;
 begin
+  // Save all still-alive TLightForms NOW, while AppData (and its RamLog) are fully functional.
+  // Reason: this destructor runs from this unit's FINALIZATION, but Application-owned forms are
+  // destroyed LATER (TPlatformWin.Destroy -> FreeAndNil(Application), in the platform unit's
+  // finalization). A never-closed form saved at that point runs FormPreRelease/SaveForm in a dead
+  // context: AppData var is already NIL (TIniFileApp.WriteComp asserts on it) and RamLog is freed.
+  // Saving here makes the late destruction a no-op (FFormSaved=TRUE guard).
+  // 'AppData = Self' guard: Destroy also runs when a constructor RAISES (e.g. erroneous second
+  // TAppData creation). The global var does not point to that half-built instance, so we must not
+  // let it prematurely save/pre-release the forms of the healthy running instance.
+  if (AppData = Self) AND (Screen <> NIL) then
+    for i:= Screen.FormCount - 1 downto 0 do
+      if Screen.Forms[i] is TLightForm then
+        try
+          TLightForm(Screen.Forms[i]).saveBeforeExit;
+        except
+          // Isolate one bad form's FormPreRelease/SaveForm from the REST of this loop and from the
+          // code below (FreeAndNil(FFormLog), inherited Destroy -> SaveSettings/FreeAndNil(RamLog)) -
+          // an unguarded raise here would skip all of that for a reason unrelated to this one form.
+          // RamLog is still alive at this point, so logging (not reraising) is the correct boundary.
+          on E: Exception
+          do LogError('TAppData.Destroy: saveBeforeExit failed for '+ Screen.Forms[i].Name+ ' ('+ Screen.Forms[i].ClassName+ '): '+ E.ClassName+ ' - '+ E.Message);
+        end;
+
+  // Destroy the log form NOW, while RamLog is still alive. Although TApplication owns the form,
+  // Application itself is destroyed only in the platform unit's finalization — AFTER this one.
+  // If we left the log form to die there, its FormDestroy/TLogViewer.Destroy would call
+  // UnregisterLogObserver on the ALREADY FREED RamLog (freed below, in TAppDataCore.Destroy)
+  // and TfrmRamLog.SaveSettings would hit a NIL AppData. Freeing it here keeps the whole
+  // teardown inside a live-AppData context. TComponent.Destroy unhooks it from Application.
+  FreeAndNil(FFormLog);
+
   FreeAndNil(FPendingAutoStates);
-  // Note: FFormLog is destroyed by TApplication (it owns the form)
   inherited Destroy;
 end;
 
@@ -299,11 +336,15 @@ end;
 procedure TAppData.CreateForm(aClass: TComponentClass; aAutoState: TAutoState = asPosOnly; AOwner: TComponent = NIL);
 VAR Dummy: TForm;
 begin
-  // SAFETY: during initialization FMX defers form creation — Dummy will be NIL after the call returns, so calling Dummy.Show would dereference a dangling stack reference.
-  Assert(NOT Initializing, 'CreateForm (2-param) called during initialization — use the 4-param overload and check for NIL before Show');
-  Dummy:= NIL;   // Must init: FMX defers creation during startup and never writes the reference. Without this, the 'if TObject(aReference)<>NIL' test in the 4-param overload reads an uninitialized stack slot when Asserts are off (release build).
+  // SAFETY: during initialization FMX defers form creation — Application.CreateForm stores the ADDRESS
+  // of the local Dummy and RealCreateForms writes the new instance into that dead stack slot later,
+  // corrupting whatever occupies the stack by then. A debug-only Assert is not enough for silent
+  // memory corruption, so this must be a hard raise that also survives release builds.
+  if Initializing
+  then RAISE Exception.Create('CreateForm (2-param) called during initialization — use the 4-param overload with a GLOBAL form variable and check for NIL before Show');
+  Dummy:= NIL;   // Must init: the 'if TObject(aReference)<>NIL' test in the 4-param overload must not read an uninitialized stack slot.
   CreateForm(aClass, Dummy, aAutoState, AOwner);
-  // After Run, FMX creates forms synchronously — Dummy is always assigned here. The Assert above guarantees we never reach this in deferred-creation mode.
+  // After Run, FMX creates forms synchronously — Dummy is always assigned here. The raise above guarantees we never reach this in deferred-creation mode.
   if Assigned(Dummy)
   then Dummy.Show;
 end;
@@ -337,6 +378,8 @@ procedure TAppData.ShowModal(aForm: TForm);
 begin
   if (aForm is TLightForm) and (TLightForm(aForm).AutoState = asNone)
   then aForm.Position:= TFormPosition.MainFormCenter;
+
+  if TEST_MODE then EXIT;  // Unit tests: bypass the (blocking) modal display — same contract as the VCL CreateFormModal overloads. See TAppDataCore.TEST_MODE.
 
   {$IFDEF ANDROID}
     aForm.Show; // Modal forms not supported on Android!
@@ -395,6 +438,10 @@ end;
 procedure TAppData.CreateFormModal(aClass: TComponentClass);
 VAR aReference: TForm;
 begin
+  // Same deferred-creation hazard as the 2-param CreateForm: during initialization the form is only
+  // queued (aReference stays NIL, and RealCreateForms would later write into this dead stack slot).
+  if Initializing
+  then RAISE Exception.Create('CreateFormModal called during initialization — create the form after AppData.Run started the message loop');
   aReference:= NIL;
   CreateForm(aClass, aReference);
   Assert(aReference <> NIL, 'CreateFormModal: Form was not created!');
@@ -402,7 +449,9 @@ begin
 end;
 
 
-// TfrmRamLog is destroyed by TApplication (it owns the form)
+// TfrmRamLog is owned by TApplication but freed early, in TAppData.Destroy (see comment there).
+// Warning: during Initializing (before Run), FMX defers form creation — FFormLog stays NIL until
+// RealCreateForms runs, so this returns NIL if accessed that early.
 function TAppData.getLogForm: TfrmRamLog;
 begin
   Assert(RamLog <> NIL, 'RamLog not created!');
@@ -649,6 +698,7 @@ FINALIZATION
 begin
   AppData.Free;   // DON'T use FreeAndNil here because it will set the AppData variable to Nil too early. We still need the variable in the destructors of the forms.
   AppData:= NIL;
+  AppDataCore:= NIL;  // SAME object as AppData (assigned in TAppData.Create). Without this, every 'if AppDataCore <> NIL' guard in LightCore (StreamBuff, Download, Graph, ...) passes on a DANGLING pointer during late shutdown (forms owned by Application are destroyed after this finalization).
 end;
 
 
