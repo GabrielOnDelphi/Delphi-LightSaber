@@ -30,7 +30,7 @@ There are a gazillion of cool things this library can do for you. Here are only 
  - Save your GUI state (checkboxes, radio buttons, edit boxes, etc.) to disk and then restore it when the application starts. All this with only 3 lines of code.
  - Automatically translate your GUI to multiple languages via DeepL (no extra lines of code).
  - Logging - Send color-coded messages to a log. The log will automatically pop up on errors, so the user can take action.
- - AppData - A dramatically improved TApplication object that gives you lots and lots and lots of goodies such as "RunningHome", "RunningFirstTime", "BetaTesterMode", "CurrentUserDir", "LastUsedFolder"
+ - AppData - A dramatically improved TApplication object that gives you lots and lots and lots of goodies such as "RunningHome", "RunningFirstTime", "BetaTesterMode", "UserPath", "LastUsedFolder"
  - "AppData.SingleInstance" - prevent your program from running as multiple instances in a computer and pass the command line parameters to the already running instance.
  - Uninstaller - The application writes itself in Windows "Add remove programs" so the user can uninstall it.
  - App control: Restore, Restart, SelfDelete (useful for the uninstaller), RunSelfAtWinStartUp, HideFromTaskbar...
@@ -174,7 +174,7 @@ The AppData system replaces the standard Delphi application lifecycle with a mor
 - Command-line parameter handling
 - Settings: `AutoStartUp`, `StartMinim`, `Minimize2Tray`, `Opacity`, `HintType`
 
-*Layer 2: TAppData* (`LightFmx.Common.AppData.pas` / `LightVcl.Common.AppData.pas`) - Framework-specific
+*Layer 2: TAppData* (`LightFmx.Common.AppData.pas` / `LightVcl.Visual.AppData.pas`) - Framework-specific
 - Extends TAppDataCore
 - Form creation management via `CreateMainForm`/`CreateForm`
 - AutoState queue system for form restoration (`asPosOnly`, `asFull`, `asNone`)
@@ -185,7 +185,7 @@ The AppData system replaces the standard Delphi application lifecycle with a mor
 - `ShowModal(Form)` — shows form modally; auto-centers on main form if `AutoState = asNone`
 - Global instance: `AppData` (freed in FINALIZATION)
 
-*Layer 3: TLightForm* (`LightFmx.Common.AppData.Form.pas` / `LightVcl.Common.AppData.Form.pas`) - Self-saving forms
+*Layer 3: TLightForm* (`LightFmx.Common.AppData.Form.pas` / `LightVcl.Visual.AppDataForm.pas`) - Self-saving forms
 - Base class for all application forms (instead of TForm)
 - Auto-saves form position/size/state to INI file on close
 - Auto-restores position/size/state on load
@@ -202,14 +202,14 @@ begin
   AppData:= TAppData.Create('AppName', 'UniqueWindowClassName', MultiThreaded);
   AppData.CreateMainForm(TMainForm, MainForm, asPosOnly);
   AppData.CreateForm(TSecondForm, SecondForm, asFull);
-  AppData.Run;  // Sets Initializing:= FALSE
+  AppData.Run;  // Starts the message loop; Initializing flips FALSE once the forms finish loading
 end.
 ```
 
 AppData replaces `Application.Initialize` and `Application.CreateForm` — it manages the entire lifecycle, queuing forms and providing consistent cross-platform behavior with automatic save/restore.
 
 *Key Properties:*
-- `AppData.Initializing`: TRUE during startup, FALSE after `Run()` — prevents saving corrupted state during initialization
+- `AppData.Initializing`: TRUE during startup, set to FALSE by `TAppDataCore.EndInitialization` once the forms are fully loaded (deferred via the message queue; `Run()` only starts the message loop) — prevents saving corrupted state during initialization
 - `AppData.RunningHome`: TRUE if .dpr file exists (development mode)
 - `AppData.RunningFirstTime`: TRUE if INI file doesn't exist yet
 - `AppDataCore.AppName`: Central identifier used for INI filename, AppData folder name, etc.
@@ -224,7 +224,7 @@ AppData replaces `Application.Initialize` and `Application.CreateForm` — it ma
 - `asNone`: No auto-save/restore; `ShowModal` auto-centers these forms on the main form
 - `asPosOnly`: Save/restore position only (Left, Top)
 - `asFull`: Save/restore position + all GUI controls (checkboxes, etc.)
-- `asUndefined`: Error — must be set via `CreateForm`
+- `asUndefined`: Error — must be set via `CreateForm` (or the `Create(AOwner, aAutoState)` constructor)
 
 
 ### AppData Key Features 
@@ -252,7 +252,7 @@ Mark controls that shouldn't be translated with `Tag=128`.
 *Application Data*
 
 ```pascal
-uses LightVcl.Common.AppData;  // or LightFmx.Common.AppData
+uses LightVcl.Visual.AppData;  // or LightFmx.Common.AppData
 
 AppData.RunningFirstTime  // True on first launch
 AppData.AppDataFolder     // User's AppData path
