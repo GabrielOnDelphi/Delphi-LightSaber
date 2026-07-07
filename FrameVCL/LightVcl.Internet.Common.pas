@@ -88,7 +88,17 @@ USES
 --------------------------------------------------------------------------------------------------}
  function  PCConnected2Internet: Boolean;                                       { From here: http://www.delphipages.com/forum/showthread.php?t=198159 }
 
- function  ProgramConnect2Internet: Integer;                                   { Function returns: -1 if computer is not connected to internet, 0 if local system is connected to internet but application is blocked by firewall, 1 if application can connect to internet}
+ { A lightweight endpoint for the connectivity check below: it answers HTTP 200 with the tiny
+   fixed body 'Microsoft Connect Test'. It is Windows' own NCSI probe target, so it is almost never
+   blocked and transfers only a few bytes - ideal for a fast startup 'am I online / is my exe
+   firewalled' check, instead of downloading a whole homepage. }
+ CONST
+   ConnectivityProbeURL     = 'http://www.msftconnecttest.com/connecttest.txt';
+   ConnectivityProbeBody    = 'Microsoft Connect Test';   { The exact body ConnectivityProbeURL returns. Pass it as ExpectBody so a captive portal (which answers 200 with its own login HTML) is reported as state 2 (intercepted), not as a firewall block. }
+   ConnectivityProbeTimeout = 8000;                        { Milliseconds. A startup canary needs a quick verdict, not the 60 s download default. }
+
+ function  ProgramConnect2Internet: Integer;                                                                       overload;   { Legacy: google.com + the 60 s download default. Returns: -1 = PC not connected, 0 = connected but this app is blocked by the firewall, 1 = this app can reach the Internet}
+ function  ProgramConnect2Internet(const TestURL: string; TimeoutMs: Integer= ConnectivityProbeTimeout; const ExpectBody: string= ''): Integer;  overload;   { Caller-set endpoint + timeout, so a startup check gets a verdict in seconds instead of the 60 s download default. Returns: -1 = PC not connected (WinInet); 0 = PC online but NO reply came back (this exe is firewall-blocked, or the endpoint is down); 1 = reached the endpoint and the body matched (genuinely online); 2 = reached the endpoint (HTTP 200) but the body was NOT ExpectBody -> a captive portal or a content-rewriting proxy is in the path, which is NOT a firewall block. Pass ConnectivityProbeURL for a fast, light default. ExpectBody='' = any HTTP 200 counts as 1 (state 2 never occurs); set it (e.g. ConnectivityProbeBody) to tell a genuine reply apart from a portal/proxy interception.}
  function  ProgramConnect2InternetS: string;
  function  TestProgramConnection(ShowMsgOnSuccess: Boolean= FALSE): Integer;
  function  IsPortOpened(const Host: string; Port: Integer): Boolean;            { Here's something very simple with which you can check a port status(opened/closed) on remote host. Add WinSock to uses clause}
@@ -227,16 +237,51 @@ end;
 { Returns:
            -1 if computer is not connected to internet,
             0 if local system is connected to internet but application is blocked by firewall,
-            1 if application can connect to internet}
+            1 if application can connect to internet.
+  Legacy overload - kept for backward compatibility: google.com with the 60 s download default.
+  For a fast startup check use the (TestURL, TimeoutMs) overload with ConnectivityProbeURL. }
 function ProgramConnect2Internet: Integer;
 begin
- if PCConnected2Internet
- then
-   if LightCore.Download.DownloadAsString('http://www.google.com/') > ''                                   { 1 = Can connect to internet, 0 = blocked by firewall, -1 = PC not connected to Internet }
-   then Result := 1
-   else Result := 0
- else
-   Result := -1;
+ Result:= ProgramConnect2Internet('http://www.google.com/', 60000);
+end;
+
+
+{ As above, but the caller chooses the test endpoint and the timeout, so a startup canary gets a
+  verdict in TimeoutMs (default ConnectivityProbeTimeout) instead of the 60 s download default.
+  ConnectivityProbeURL is such an endpoint. The PCConnected2Internet gate is instant and does no
+  traffic, so an offline PC returns -1 without waiting on the timeout.
+
+  The verdict keys off whether an HTTP 200 came back, NOT off the body alone. DownloadAsString
+  (LightCore.Download.pas) leaves ErrorMsg empty ONLY on HTTP 200; a non-200, a timeout, a DNS/TLS
+  failure, or the firewall blocking this exe all set ErrorMsg. So:
+    ErrorMsg <> '' -> the request never completed        -> 0 (blocked / endpoint down)
+    ErrorMsg =  '' -> an HTTP 200 returned, so the exe DID reach the Internet -> NOT a firewall block.
+  Only then does the body decide between 1 (the expected content) and 2 (a reply, but not the
+  marker: a captive portal serving its own login HTML, or a proxy rewriting the content). Reporting
+  that as 2 - not 0 - is the point: it stops a portal/proxy being mislabelled a firewall block.
+  ExpectBody='' skips the content test, so any HTTP 200 is 1 and state 2 never occurs (this keeps
+  the legacy google.com overload a strict -1/0/1). }
+function ProgramConnect2Internet(const TestURL: string; TimeoutMs: Integer; const ExpectBody: string): Integer;
+VAR
+  Options  : RHttpOptions;
+  ErrorMsg : string;
+  Body     : string;
+begin
+ if NOT PCConnected2Internet then EXIT(-1);      { WinInet: the PC has no network at all }
+
+ Options.Reset;
+ Options.ConnectionTimeout := TimeoutMs;
+ Options.ResponseTimeout   := TimeoutMs;
+ Body:= LightCore.Download.DownloadAsString(TestURL, ErrorMsg, NIL, @Options);   { ErrorMsg='' ONLY on HTTP 200; '' body + reason on any failure }
+
+ if ErrorMsg <> ''
+ then EXIT(0);                                   { no HTTP 200 came back -> this exe is blocked / the endpoint is down }
+
+ { An HTTP 200 returned, so the request reached the Internet and came back - the firewall is NOT
+   blocking this exe. Judge the CONTENT to tell a real reply from a portal/proxy interception. }
+ if (ExpectBody = '') or (Pos(ExpectBody, Body) > 0)
+ then Result := 1                                { expected content -> genuinely online }
+ else Result := 2;                               { a 200, but not the marker -> captive portal / rewriting proxy (not a firewall block) }
 end;
 
 
