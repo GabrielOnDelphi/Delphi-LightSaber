@@ -358,7 +358,7 @@ end;
 
 
 { Returns today as date AND time. Example: 31.12.2021 - 16:50
-  Format: DD.MM.YYYY - HH:MM }
+  Format: D.M.YYYY - HH:MM (day and month have NO leading zeros; the time part does) }
 function CurrentDateToString: string;
 VAR
   Present: TDateTime;
