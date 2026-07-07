@@ -1,7 +1,7 @@
 UNIT LightCore.Internet;
 
 {-------------------------------------------------------------------------------------------------------------
-   2026.04.21
+   2026.07.07
    www.GabrielMoraru.com
 
    URL utils / URL parsing and validation
@@ -309,11 +309,11 @@ function UrlExtractDomainWWW(CONST URL: string): string;
 begin
   Result:= UrlExtractProtAndDomain(URL);
 
-  { Remove http/https }
-  if PosInsensitive('http://', Result) > 0
+  { Remove http/https. Test '= 1' (prefix), not '> 0': Delete(1, N) must only fire when the protocol is actually AT THE START }
+  if PosInsensitive('http://', Result) = 1
   then Delete(Result, 1, 7)
   else
-    if PosInsensitive('https://', Result) > 0
+    if PosInsensitive('https://', Result) = 1
     then Delete(Result, 1, 8);
 
   Result:= urlRemovePort(Result);  // remove port. Example www.Domain.com:80 -> www.Domain.com
@@ -367,8 +367,8 @@ function UrlExtractDomainRelaxed(CONST URL: string): string;
 begin
   Result:= UrlExtractDomainWWW(URL);
 
-  { Remove www }
-  if PosInsensitive('www.', Result) > 0
+  { Remove www. Test '= 1' (prefix), not '> 0': a domain that merely CONTAINS 'www.' (e.g. 'x.www.example.com') must not lose its first 4 chars }
+  if PosInsensitive('www.', Result) = 1
   then Delete(Result, 1, 4);
 end;
 
@@ -378,11 +378,11 @@ function UrlRemoveHttp(CONST URL: string): string;    { http://www.domain/image.
 begin
   Result:= URL;
 
-  { Remove http/https }
-  if PosInsensitive('http://', Result) > 0
+  { Remove http/https. Test '= 1' (prefix), not '> 0': URLs with an EMBEDDED protocol (e.g. 'www.a.com/redir?to=http://b.com') must not lose their first 7 chars }
+  if PosInsensitive('http://', Result) = 1
   then Delete(Result, 1, 7)
   else
-    if PosInsensitive('https://', Result) > 0
+    if PosInsensitive('https://', Result) = 1
     then Delete(Result, 1, 8);
 end;
 
@@ -1004,7 +1004,7 @@ end;
   Returns empty string on failure. }
 function GetExternalIp(CONST ScriptAddress: string= 'http://checkip.dyndns.org'): string;
 VAR
-  HtmlResponse: string;
+  HtmlResponse, Body: string;
 begin
   Result:= '';
 
@@ -1012,7 +1012,11 @@ begin
   if HtmlResponse = ''
   then EXIT;
 
-  Result:= ExtractIpFrom(GetBodyFromHtml(HtmlResponse));
+  Body:= GetBodyFromHtml(HtmlResponse);
+  if Body = ''
+  then Body:= HtmlResponse;   { Services like api.ipify.org / icanhazip.com return the IP as PLAIN text (no <body> tag). GetBodyFromHtml returns '' for those }
+
+  Result:= ExtractIpFrom(Body);
   if Result = ''
   then EXIT;
 
@@ -1020,6 +1024,10 @@ begin
   Result:= ReplaceString(Result, CR, '');
   Result:= ReplaceString(Result, LF, '');
   Result:= Trim(Result);
+
+  { ExtractIpFrom collects ALL digits/dots from the text, so a non-IP response (error page, IPv6 answer) yields garbage. Honor the 'empty string on failure' contract instead }
+  if NOT ValidateIpAddress(Result)
+  then Result:= '';
 end;
 
 
@@ -1046,25 +1054,30 @@ end;
 
 
 { Encodes a URL by converting unsafe characters to %XX hex format.
-  Safe characters (ASCII 33-127 except UnsafeChars) are kept as-is.
-  All other characters (control chars, extended ASCII, Unicode) are percent-encoded.
+  Safe characters (ASCII 33-126 except UnsafeChars) are kept as-is.
+  All other characters (control chars, non-ASCII) are percent-encoded as their UTF-8 BYTES
+  (e.g. 'é' -> %C3%A9), as required by RFC 3987 and expected by modern web servers.
+  Encoding the Char ordinal directly would produce Latin-1 escapes for #128..#255 and
+  MALFORMED escapes like %263A (4 hex digits) for chars above #255.
   Also fixes the Indy encoding issue: stackoverflow.com/questions/5708863 }
 function UrlEncode(CONST URL: string): string;
 VAR
    i: Integer;
-   CharOrd: Integer;
+   ByteOrd: Integer;
+   Utf8: UTF8String;
 CONST
    UnsafeChars = ['*', '#', '%', '<', '>', ' ', '[', ']', '\', '@'];
 begin
   Result:= '';
-  for i:= 1 to Length(URL) DO
+  Utf8:= UTF8Encode(URL);
+  for i:= 1 to Length(Utf8) DO
     begin
-      CharOrd:= Ord(URL[i]);
-      if  (CharOrd > 32)
-      AND (CharOrd < 127)  { Only printable ASCII chars (33-126) }
-      AND (NOT CharInSet(URL[i], UnsafeChars))
-      then Result:= Result + URL[i]
-      else Result:= Result + '%' + IntToHex(CharOrd, 2);
+      ByteOrd:= Ord(Utf8[i]);
+      if  (ByteOrd > 32)
+      AND (ByteOrd < 127)  { Only printable ASCII chars (33-126) }
+      AND (NOT CharInSet(Utf8[i], UnsafeChars))
+      then Result:= Result + Char(Utf8[i])
+      else Result:= Result + '%' + IntToHex(ByteOrd, 2);
     end;
 end;
 
