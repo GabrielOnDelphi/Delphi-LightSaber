@@ -77,6 +77,9 @@ uses
   LightFmx.Common.AppData,
   LightFmx.Common.AppData.Form;
 
+type
+  TLightFormCracker = class(TLightForm);   { Protected-member access for the tests (FFormSaved) }
+
 
 { TTestLightForm }
 
@@ -151,7 +154,7 @@ begin
 
   Form:= TLightForm.Create(NIL, asNone);
   try
-    Assert.IsFalse(Form.FFormSaved, 'FFormSaved should be False after creation');
+    Assert.IsFalse(TLightFormCracker(Form).FFormSaved, 'FFormSaved should be False after creation');
   finally
     Form.Free;
   end;
@@ -169,7 +172,6 @@ end;
 procedure TTestLightForm.TestMainFormCaption_EmptyCaption;
 var
   Form: TLightForm;
-  ExpectedCaption: string;
 begin
   if AppData = NIL then
   begin

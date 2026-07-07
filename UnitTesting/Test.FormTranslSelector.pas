@@ -77,7 +77,7 @@ type
     procedure TestListBox_HasDblClickHandler;
 
     [Test]
-    procedure TestListBox_InitiallyEmpty;
+    procedure TestListBox_PopulatedOnCreate;
 
     { Button Tests }
     [Test]
@@ -148,6 +148,7 @@ implementation
 
 uses
   LightCore.AppData,
+  LightCore.IO,
   LightVcl.Visual.AppData,
   LightVcl.Common.Translate,
   FormTranslSelector;
@@ -329,15 +330,22 @@ begin
 end;
 
 
-procedure TTestFormTranslSelector.TestListBox_InitiallyEmpty;
+procedure TTestFormTranslSelector.TestListBox_PopulatedOnCreate;
 var
   Form: TfrmTranslSelector;
+  Files: TStringList;
 begin
   Form:= TfrmTranslSelector.Create(NIL);
   FTestForm:= Form;
 
-  Assert.AreEqual(0, Form.ListBox.Items.Count,
-    'ListBox should be initially empty');
+  { FormCreate calls PopulateLanguageFiles: one entry per .ini file in the Lang folder }
+  Files:= ListFilesOf(AppData.Translator.GetLangFolder, '*.ini', TRUE, FALSE);
+  TRY
+    Assert.AreEqual(Files.Count, Form.ListBox.Items.Count,
+      'ListBox should hold one entry per language file');
+  FINALLY
+    FreeAndNil(Files);
+  END;
 end;
 
 
@@ -554,6 +562,7 @@ begin
   Form:= TfrmTranslSelector.Create(NIL);
   FTestForm:= Form;
 
+  Form.ListBox.Items.Clear;   // FormCreate pre-populated it from the Lang folder
   Form.ListBox.Items.Add('German');
   Form.ListBox.ItemIndex:= 0;
 
@@ -571,22 +580,23 @@ begin
   Form:= TfrmTranslSelector.Create(NIL);
   FTestForm:= Form;
 
-  { Add some items first }
+  { Start from a known state, then add marker items }
+  Form.ListBox.Items.Clear;   // FormCreate pre-populated it from the Lang folder
   Form.ListBox.Items.Add('TestItem1');
   Form.ListBox.Items.Add('TestItem2');
 
   Assert.AreEqual(2, Form.ListBox.Items.Count,
     'ListBox should have 2 items before test');
 
-  { PopulateLanguageFiles requires Translator - skip if not available }
-  if Translator = NIL
+  { PopulateLanguageFiles requires the Translator (a TAppData field) - skip if not available }
+  if AppData.Translator = NIL
   then Assert.Pass('Translator not initialized - skipping full test')
   else
     begin
       Form.PopulateLanguageFiles;
-      { After populate, items should be cleared and repopulated }
-      { Just verify it doesn't crash and clears old items }
-      Assert.IsTrue(True, 'PopulateLanguageFiles executed without exception');
+      { After populate, the old items must be gone (list cleared and repopulated) }
+      Assert.IsTrue(Form.ListBox.Items.IndexOf('TestItem1') < 0,
+        'PopulateLanguageFiles should clear the old items');
     end;
 end;
 
@@ -600,6 +610,7 @@ begin
   Form:= TfrmTranslSelector.Create(NIL);
   FTestForm:= Form;
 
+  Form.ListBox.Items.Clear;   // FormCreate pre-populated it from the Lang folder
   Form.ListBox.Items.Add('German');
   Form.ListBox.ItemIndex:= 0;
 
@@ -619,6 +630,7 @@ begin
   Form:= TfrmTranslSelector.Create(NIL);
   FTestForm:= Form;
 
+  Form.ListBox.Items.Clear;   // FormCreate pre-populated it from the Lang folder
   Form.ListBox.Items.Add('English');
   Form.ListBox.Items.Add('German');
   Form.ListBox.Items.Add('French');

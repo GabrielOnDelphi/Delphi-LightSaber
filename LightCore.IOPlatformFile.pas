@@ -95,7 +95,7 @@ begin
  if NOT FileExists(InputFile)
  then raise exception.Create('Input file does not exist!');
 
- InpStream:= TBufferedFileStream.Create(InputFile, fmOpenRead);
+ InpStream:= TBufferedFileStream.Create(InputFile, fmOpenRead OR fmShareDenyWrite);   { Plain fmOpenRead is fmShareCompat which acts as EXCLUSIVE on Windows }
  TRY
   case GetEnterType(InpStream) of
     etWin: result:= 'Win';
@@ -258,7 +258,7 @@ begin
   if NOT FileExists(InputFile)
   then raise Exception.Create('WinToUnix: Input file does not exist: ' + InputFile);
 
-  InpStream:= TBufferedFileStream.Create(InputFile, fmOpenRead, 1*mb);
+  InpStream:= TBufferedFileStream.Create(InputFile, fmOpenRead OR fmShareDenyWrite, 1*mb);
   TRY
     OutStream:= TBufferedFileStream.Create(OutputFile, fmCreate OR fmOpenWrite, 1*mb);
     TRY
@@ -284,7 +284,7 @@ begin
   InpStream:= nil;
   OutStream:= nil;  
   TRY
-    InpStream:= TBufferedFileStream.Create(InputFile, fmOpenRead, 1*mb);
+    InpStream:= TBufferedFileStream.Create(InputFile, fmOpenRead OR fmShareDenyWrite, 1*mb);
     OutStream:= TBufferedFileStream.Create(OutputFile, fmCreate OR fmOpenWrite, 1*mb);
     UnixToWin(InpStream, OutStream, Notify);
   FINALLY
@@ -305,7 +305,7 @@ begin
   if NOT FileExists(InputFile)
   then raise Exception.Create('MacToWin: Input file does not exist: ' + InputFile);
 
-  InpStream:= TBufferedFileStream.Create(InputFile, fmOpenRead, 1*mb);
+  InpStream:= TBufferedFileStream.Create(InputFile, fmOpenRead OR fmShareDenyWrite, 1*mb);
   TRY
     Result:= IsMacFile(InpStream);
     if Result then 

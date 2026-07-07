@@ -1,8 +1,12 @@
 UNIT LightCore.StreamFile;
 
 {=============================================================================================================
-   2026.04.25
+   2026.07.06
    www.GabrielMoraru.com
+
+   + CreateRead now uses fmShareDenyWrite (concurrent readers no longer fail with a sharing violation).
+   + ReadStrings no longer hits the 1 KB ReadString default limit.
+   + ReadIntegers/ReadDoubles validate the element count against the remaining stream bytes before SetLength.
 --------------------------------------------------------------------------------------------------------------
    Extends TFileStream.
    May be used as a drop-in replacement for TFileStream.
@@ -217,7 +221,10 @@ USES
 --------------------------------------------------------------------------------------------------}
 constructor TLightFileStream.CreateRead(CONST FileName: string);
 begin
-  inherited Create(FileName, fmOpenRead);
+  // fmShareDenyWrite: allow other handles to READ the same file while ours is open. The default
+  // fmShareCompat maps to an exclusive open on Windows, so any concurrent open (even read-only)
+  // fails with ERROR_SHARING_VIOLATION. Same rationale as TLightStream.CreateRead (StreamBuff).
+  inherited Create(FileName, fmOpenRead OR fmShareDenyWrite);
 end;
 
 
@@ -607,7 +614,9 @@ end;
 procedure TLightFileStream.ReadStrings(TSL: TStrings);
 begin
   Assert(TSL <> NIL, 'TLightFileStream.ReadStrings: TSL is nil');
-  TSL.Text:= ReadString;
+  // SafetyLimit = remaining stream bytes: a string list legitimately exceeds the 1 KB ReadString default
+  // (playlists, file lists). Anything that physically fits in the stream is accepted.
+  TSL.Text:= ReadString(Cardinal(Size - Position));
 end;
 
 
@@ -617,7 +626,7 @@ function TLightFileStream.ReadStrings: TStringList;
 begin
   Result:= TStringList.Create;
   try
-    Result.Text:= ReadString;
+    Result.Text:= ReadString(Cardinal(Size - Position));   // No 1 KB cap for string lists. See ReadStrings(TSL) above.
   except
     FreeAndNil(Result);
     raise;
@@ -835,6 +844,9 @@ VAR
   Count: Integer;
 begin
   Count:= ReadInteger;
+  // Reject corrupt counts (negative or past EOF) BEFORE SetLength allocates
+  if (Count < 0) OR (Position + Int64(Count) * SizeOf(Integer) > Size)
+  then RAISE Exception.CreateFmt('ReadIntegers: invalid count %d. File corrupted?', [Count]);
   SetLength(List, Count);
   for i:= 0 to High(List) DO
     List[i]:= ReadInteger;
@@ -856,6 +868,9 @@ VAR
   Count: Integer;
 begin
   Count:= ReadInteger;
+  // Reject corrupt counts (negative or past EOF) BEFORE SetLength allocates
+  if (Count < 0) OR (Position + Int64(Count) * SizeOf(Double) > Size)
+  then RAISE Exception.CreateFmt('ReadDoubles: invalid count %d. File corrupted?', [Count]);
   SetLength(List, Count);
   for i:= 0 to High(List) DO
     List[i]:= ReadDouble;

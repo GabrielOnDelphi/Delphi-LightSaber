@@ -18,7 +18,8 @@ uses
   System.Classes,
   Vcl.Forms,
   Vcl.Controls,
-  Vcl.StdCtrls;
+  Vcl.StdCtrls,
+  FormAsyncMessage;
 
 type
   [TestFixture]
@@ -27,6 +28,7 @@ type
     FCreatedForms: TList;
     procedure TrackForm(Form: TForm);
     procedure CleanupForms;
+    function GrabNewMsgForm: TfrmShowMsgAsync;
   public
     [Setup]
     procedure Setup;
@@ -109,9 +111,6 @@ type
 
 implementation
 
-uses
-  FormAsyncMessage;
-
 
 procedure TTestFormAsyncMessage.Setup;
 begin
@@ -149,6 +148,27 @@ begin
 end;
 
 
+{ Finds the TfrmShowMsgAsync just created by the tested routine and registers it for TearDown cleanup.
+  Screen.Forms is ordered by activation (the active form moves to the front), so
+  'Screen.Forms[FormCount-1] = newest' does NOT hold — scan for the one instance not yet tracked. }
+function TTestFormAsyncMessage.GrabNewMsgForm: TfrmShowMsgAsync;
+var
+  i: Integer;
+begin
+  Result:= NIL;
+  for i:= Screen.FormCount - 1 downto 0 do
+    if (Screen.Forms[i] is TfrmShowMsgAsync)
+    AND (FCreatedForms.IndexOf(Screen.Forms[i]) < 0) then
+      begin
+        Result:= TfrmShowMsgAsync(Screen.Forms[i]);
+        BREAK;
+      end;
+
+  Assert.IsNotNull(Result, 'A newly created TfrmShowMsgAsync should exist on Screen');
+  TrackForm(Result);
+end;
+
+
 { Form Creation Tests }
 
 procedure TTestFormAsyncMessage.TestFormClassExists;
@@ -183,9 +203,8 @@ begin
   // A new form should have been created
   Assert.IsTrue(Screen.FormCount > FormCount, 'MesajAsync should create a new form');
 
-  // Track the created form for cleanup
-  if Screen.FormCount > 0
-  then TrackForm(Screen.Forms[Screen.FormCount - 1]);
+  // Find and track the created form for cleanup (also asserts it is a TfrmShowMsgAsync)
+  GrabNewMsgForm;
 end;
 
 
@@ -200,8 +219,7 @@ begin
 
   // Get the newly created form
   Assert.IsTrue(Screen.FormCount > FormCountBefore, 'Form should be created');
-  Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
-  TrackForm(Form);
+  Form:= GrabNewMsgForm;
 
   Assert.AreEqual('My Custom Caption', Form.Caption, 'Caption should be set correctly');
 end;
@@ -213,8 +231,7 @@ var
 begin
   MesajAsync('Hello World Message', 'Title');
 
-  Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
-  TrackForm(Form);
+  Form:= GrabNewMsgForm;
 
   Assert.AreEqual('Hello World Message', Form.lblMessage.Caption, 'Message should be set correctly');
 end;
@@ -226,8 +243,7 @@ var
 begin
   MesajAsync('Test', 'Title');
 
-  Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
-  TrackForm(Form);
+  Form:= GrabNewMsgForm;
 
   Assert.AreEqual(bsDialog, Form.BorderStyle, 'BorderStyle should be bsDialog');
 end;
@@ -239,8 +255,7 @@ var
 begin
   MesajAsync('Test', 'Title');
 
-  Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
-  TrackForm(Form);
+  Form:= GrabNewMsgForm;
 
   Assert.IsTrue(Form.KeyPreview, 'KeyPreview should be enabled');
 end;
@@ -256,8 +271,7 @@ begin
 
   MesajAsync('Test', 'Title', ParentForm);
 
-  MsgForm:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
-  TrackForm(MsgForm);
+  MsgForm:= GrabNewMsgForm;
 
   Assert.IsTrue(MsgForm.PopupParent = ParentForm, 'PopupParent should be set to provided parent');
 end;
@@ -269,8 +283,7 @@ var
 begin
   MesajAsync('Test', 'Title', NIL);
 
-  Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
-  TrackForm(Form);
+  Form:= GrabNewMsgForm;
 
   // PopupParent should be Application.MainForm if available, or nil
   // We just verify no exception was raised
@@ -286,8 +299,7 @@ var
 begin
   MessageAsync('Alias Test', 'Alias Caption');
 
-  Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
-  TrackForm(Form);
+  Form:= GrabNewMsgForm;
 
   Assert.AreEqual('Alias Caption', Form.Caption, 'MessageAsync should work as alias');
   Assert.AreEqual('Alias Test', Form.lblMessage.Caption, 'MessageAsync should set message');
@@ -302,8 +314,7 @@ var
 begin
   MessageInfoAsync('Information message');
 
-  Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
-  TrackForm(Form);
+  Form:= GrabNewMsgForm;
 
   Assert.AreEqual('Info', Form.Caption, 'Caption should be "Info"');
 end;
@@ -315,8 +326,7 @@ var
 begin
   MessageWarnAsync('Warning message');
 
-  Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
-  TrackForm(Form);
+  Form:= GrabNewMsgForm;
 
   Assert.AreEqual('Warning', Form.Caption, 'Caption should be "Warning"');
 end;
@@ -328,8 +338,7 @@ var
 begin
   MesajWarnAsync('Legacy warning');
 
-  Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
-  TrackForm(Form);
+  Form:= GrabNewMsgForm;
 
   Assert.AreEqual('Warning', Form.Caption, 'MesajWarnAsync should work as legacy alias');
 end;
@@ -341,8 +350,7 @@ var
 begin
   MessageErrorAsync('Error message');
 
-  Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
-  TrackForm(Form);
+  Form:= GrabNewMsgForm;
 
   Assert.AreEqual('Error', Form.Caption, 'Caption should be "Error"');
 end;
@@ -440,8 +448,7 @@ var
 begin
   MesajAsync('', 'Title');
 
-  Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
-  TrackForm(Form);
+  Form:= GrabNewMsgForm;
 
   Assert.AreEqual('', Form.lblMessage.Caption, 'Empty message should be allowed');
 end;
@@ -453,8 +460,7 @@ var
 begin
   MesajAsync('Test message', '');
 
-  Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
-  TrackForm(Form);
+  Form:= GrabNewMsgForm;
 
   Assert.AreEqual('', Form.Caption, 'Empty caption should be allowed');
 end;
@@ -469,8 +475,7 @@ begin
 
   MesajAsync(LongMsg, 'Long Message Test');
 
-  Form:= Screen.Forms[Screen.FormCount - 1] as TfrmShowMsgAsync;
-  TrackForm(Form);
+  Form:= GrabNewMsgForm;
 
   Assert.AreEqual(LongMsg, Form.lblMessage.Caption, 'Long message should be handled');
 end;

@@ -1,7 +1,7 @@
 ﻿UNIT LightCore.IO;
 
 {=============================================================================================================
-   2026.05.26
+   2026.07.07
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -1310,7 +1310,7 @@ begin
   WHILE DirectoryExists(Result) DO
    begin      { check if dir exists and if so add a number and try again }
     inc(i);
-    Result:= Trail( Trail(RootPath) + FolderName + ' ' + IntToStr(i) );
+    Result:= Trail(RootPath) + FolderName + ' ' + IntToStr(i);   { No trailing delimiter — keep the result format identical to the non-incremented branch }
    end;
 end;
 
@@ -2084,8 +2084,11 @@ end;
   It will overwrite all files in 'ToFolder' without asking.
   If you want feedback from user use LightVcl.Common.IO.Win.MoveFolderMsg }
 procedure MoveFolder(CONST FromFolder, ToFolder: String; SilentOverwrite: Boolean);
+VAR FailedCount: Integer;
 begin
-  CopyFolder(FromFolder, ToFolder, SilentOverwrite);
+  FailedCount:= CopyFolder(FromFolder, ToFolder, SilentOverwrite);
+  if FailedCount > 0
+  then RAISE Exception.Create('MoveFolder: '+ IntToStr(FailedCount)+ ' file(s) could not be copied to '+ ToFolder+ CRLFw+ 'The source folder was NOT deleted: '+ FromFolder);  { Deleting the source here would destroy the files that were never copied! }
   DeleteFolder(FromFolder);
 end;
 
@@ -2111,7 +2114,8 @@ end;
 function MoveFolderSlow(CONST FromFolder, ToFolder: String; Overwrite: boolean): integer;
 begin
  Result:= CopyFolder(FromFolder, ToFolder, Overwrite);
- DeleteFolder(FromFolder);
+ if Result = 0
+ then DeleteFolder(FromFolder);   { Keep the source if anything failed to copy — deleting it would destroy the files that were never copied }
 end;
 
 
@@ -2420,17 +2424,21 @@ begin
  then RAISE Exception.Create('Folder does not exist! '+ CRLFw+ aFolder);
 
  Result:= TStringList.Create;
+ TRY
+   if DigSubdirectories
+   then pathList:= TDirectory.GetDirectories(aFolder, TSearchOption.soAllDirectories, NIL)
+   else pathList:= TDirectory.GetDirectories(aFolder, TSearchOption.soTopDirectoryOnly, NIL);
+   for strPath in pathList
+    DO Result.Add(Trail(strPath));  { Trail is mandatory for ExtractLastFolder to work properly }
 
- if DigSubdirectories
- then pathList:= TDirectory.GetDirectories(aFolder, TSearchOption.soAllDirectories, NIL)
- else pathList:= TDirectory.GetDirectories(aFolder, TSearchOption.soTopDirectoryOnly, NIL);
- for strPath in pathList
-  DO Result.Add(Trail(strPath));  { Trail is mandatory for ExtractLastFolder to work properly }
-
- { Remove full path }
- if NOT ReturnFullPath then
-  for i:= 0 to Result.Count-1 DO
-   Result[i]:= ExtractLastFolder(Result[i]);
+   { Remove full path }
+   if NOT ReturnFullPath then
+    for i:= 0 to Result.Count-1 DO
+     Result[i]:= ExtractLastFolder(Result[i]);
+ EXCEPT
+   FreeAndNil(Result);   { Don't leak the list if GetDirectories raises (folder deleted mid-scan) }
+   RAISE;
+ END;
 end;
 
 
@@ -2449,30 +2457,34 @@ begin
  then RAISE Exception.Create('Folder does not exist! '+ CRLFw+ aFolder);
 
  Result:= TStringList.Create;
+ TRY
+   { Add directories }
+   List:= TDirectory.GetDirectories(aFolder, TSearchOption.soTopDirectoryOnly, NIL);
+   for s in List
+    DO Result.Add(Trail(s));  { Trail is mandatory for ExtractLastFolder to work properly }
+   DirCount:= Result.Count;
 
- { Add directories }
- List:= TDirectory.GetDirectories(aFolder, TSearchOption.soTopDirectoryOnly, NIL);
- for s in List
-  DO Result.Add(Trail(s));  { Trail is mandatory for ExtractLastFolder to work properly }
- DirCount:= Result.Count;
+   { Add files }
+   SetLength(List, 0);
+   List:= TDirectory.GetFiles (aFolder);
+   for s in List DO
+    if s <> ''
+    then Result.Add(s);
 
- { Add files }
- SetLength(List, 0);
- List:= TDirectory.GetFiles (aFolder);
- for s in List DO
-  if s <> ''
-  then Result.Add(s);
-
- { Remove full path if requested }
- if NOT ReturnFullPath then
-  begin
-   { For directories, use ExtractLastFolder }
-   for i:= 0 to DirCount-1 DO
-     Result[i]:= ExtractLastFolder(Result[i]);
-   { For files, use ExtractFileName }
-   for i:= DirCount to Result.Count-1 DO
-     Result[i]:= ExtractFileName(Result[i]);
-  end;
+   { Remove full path if requested }
+   if NOT ReturnFullPath then
+    begin
+     { For directories, use ExtractLastFolder }
+     for i:= 0 to DirCount-1 DO
+       Result[i]:= ExtractLastFolder(Result[i]);
+     { For files, use ExtractFileName }
+     for i:= DirCount to Result.Count-1 DO
+       Result[i]:= ExtractFileName(Result[i]);
+    end;
+ EXCEPT
+   FreeAndNil(Result);   { Don't leak the list if GetDirectories/GetFiles raises (folder deleted mid-scan) }
+   RAISE;
+ END;
 end;
 
 
@@ -2506,7 +2518,8 @@ VAR
           VAR Mask: string;
           begin
             for Mask in MaskArray DO
-              if System.Masks.MatchesMask(SearchRec.Name, Mask)
+              if (Mask = '*') OR (Mask = '*.*')                     { Windows convention: '*.*' means ALL files. System.Masks would require a literal dot, silently skipping extensionless files (README, Makefile, .git\HEAD...) — that made CopyFolder/MoveFolder lose such files! }
+              OR System.Masks.MatchesMask(SearchRec.Name, Mask)
               then EXIT(TRUE);
             EXIT(FALSE);
           end;
@@ -2542,29 +2555,33 @@ begin
  then RAISE exception.Create('Folder does not exist! '+ CRLFw+ aFolder);
 
  Result:= TStringList.Create;
+ TRY
+   { Split FileType in subcomponents }
+   MaskArray:= System.StrUtils.SplitString(FileType, ';');
 
- { Split FileType in subcomponents }
- MaskArray:= System.StrUtils.SplitString(FileType, ';');
+   { Search the parent folder }
+   ListFiles(aFolder);
 
- { Search the parent folder }
- ListFiles(aFolder);
+   { Search in all subfolders }
+   if DigSubdirectories then
+    begin
+     SubFolders:= TDirectory.GetDirectories(aFolder, TSearchOption.soAllDirectories, NIL);
+     for s in SubFolders DO
+       if IsExcluded(s)
+       then
+       else
+         if LightCore.IO.DirectoryExists(s)  { This solves the problem caused by broken 'Symbolic Link' folders }
+         then ListFiles(s);
+    end;
 
- { Search in all subfolders }
- if DigSubdirectories then
-  begin
-   SubFolders:= TDirectory.GetDirectories(aFolder, TSearchOption.soAllDirectories, NIL);
-   for s in SubFolders DO
-     if IsExcluded(s)
-     then
-     else
-       if LightCore.IO.DirectoryExists(s)  { This solves the problem caused by broken 'Symbolic Link' folders }
-       then ListFiles(s);
-  end;
-
- { Remove full path }
- if NOT ReturnFullPath then
-   for i:= 0 to Result.Count-1 DO
-     Result[i]:= TPath.GetFileName(Result[i]);
+   { Remove full path }
+   if NOT ReturnFullPath then
+     for i:= 0 to Result.Count-1 DO
+       Result[i]:= TPath.GetFileName(Result[i]);
+ EXCEPT
+   FreeAndNil(Result);   { Don't leak the list if the folder vanishes mid-scan (GetDirectories/GetFiles can raise) }
+   RAISE;
+ END;
 end;
 
 

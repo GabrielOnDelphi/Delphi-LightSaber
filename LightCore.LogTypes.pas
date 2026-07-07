@@ -42,8 +42,8 @@ IMPLEMENTATION
 
 
 { Compiler-checked exhaustive mapping. If a future enum value (e.g. lvCritical) is
-  added to TLogVerbLvl without extending this array, the compiler emits W1023
-  ("Comparing signed and unsigned types") at the array index — caught at build time
+  added to TLogVerbLvl without extending this array, the compiler fails with
+  E2072 ("Number of elements differs from declaration") — caught at build time
   rather than at runtime. The previous case-with-else version raised at runtime,
   potentially in a release build. }
 const

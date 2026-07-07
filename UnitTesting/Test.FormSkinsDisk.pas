@@ -81,7 +81,7 @@ type
     procedure TestBtnOKClick_ClosesForm;
 
     [Test]
-    procedure TestBtnSkinEditorClick_NoException;
+    procedure TestBtnSkinEditor_HandlerWired;
 
     { Form Events Tests }
     [Test]
@@ -91,7 +91,7 @@ type
     procedure TestFormCreate_PopulatesSkins;
 
     [Test]
-    procedure TestFormDestroy_NoException;
+    procedure TestFormPreRelease_NoException;
 
     [Test]
     procedure TestFormClose_SetsCaFree;
@@ -108,10 +108,10 @@ type
 
     { Property Tests }
     [Test]
-    procedure TestOnDefaultSkin_CanBeAssigned;
+    procedure TestOnDefaultStyle_CanBeAssigned;
 
     [Test]
-    procedure TestOnDefaultSkin_DefaultIsNil;
+    procedure TestOnDefaultStyle_DefaultIsNil;
 
 
     { GetSkinDir Tests }
@@ -127,7 +127,7 @@ type
 
     { Form Attribute Tests }
     [Test]
-    procedure TestFormCaption_IsSkinSelector;
+    procedure TestFormCaption_IsStyleSelector;
 
     [Test]
     procedure TestFormKeyPreview_IsEnabled;
@@ -336,19 +336,17 @@ begin
 end;
 
 
-procedure TTestFormSkinsDisk.TestBtnSkinEditorClick_NoException;
+procedure TTestFormSkinsDisk.TestBtnSkinEditor_HandlerWired;
 var
   Form: TfrmStyleDisk;
 begin
   Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
-  { btnSkinEditorClick should not raise exception - will open local skin editor or URL }
-  Assert.WillNotRaise(
-    procedure
-    begin
-      Form.btnSkinEditorClick(Form);
-    end);
+  { NOT executed: btnStyleEditorClick launches StyleDesigner.exe or opens a browser URL —
+    side effects a test run must not trigger. Verify the DFM wiring instead. }
+  Assert.IsTrue(Assigned(Form.btnSkinEditor.OnClick),
+    'btnSkinEditor must have OnClick wired in the DFM (btnStyleEditorClick)');
 end;
 
 
@@ -379,18 +377,19 @@ begin
 end;
 
 
-procedure TTestFormSkinsDisk.TestFormDestroy_NoException;
+procedure TTestFormSkinsDisk.TestFormPreRelease_NoException;
 var
   Form: TfrmStyleDisk;
 begin
   Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
-  { FormDestroy should not raise exception }
+  { FormPreRelease (the TLightForm cleanup event; this form has no FormDestroy) should not raise.
+    While Initializing is TRUE it must skip the INI write and return quietly. }
   Assert.WillNotRaise(
     procedure
     begin
-      Form.FormDestroy(Form);
+      Form.FormPreRelease;
     end);
 end;
 
@@ -477,7 +476,7 @@ end;
 
 { Property Tests }
 
-procedure TTestFormSkinsDisk.TestOnDefaultSkin_CanBeAssigned;
+procedure TTestFormSkinsDisk.TestOnDefaultStyle_CanBeAssigned;
 var
   Form: TfrmStyleDisk;
 begin
@@ -485,22 +484,22 @@ begin
   FTestForm:= Form;
 
   { Assign nil to test assignment capability }
-  Form.OnDefaultSkin:= NIL;
+  Form.OnDefaultstyle:= NIL;
 
   { Should not raise exception on assignment }
-  Assert.IsFalse(Assigned(Form.OnDefaultSkin),
-    'OnDefaultSkin should be assignable (nil was assigned)');
+  Assert.IsFalse(Assigned(Form.OnDefaultstyle),
+    'OnDefaultstyle should be assignable (nil was assigned)');
 end;
 
 
-procedure TTestFormSkinsDisk.TestOnDefaultSkin_DefaultIsNil;
+procedure TTestFormSkinsDisk.TestOnDefaultStyle_DefaultIsNil;
 var
   Form: TfrmStyleDisk;
 begin
   Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
-  Assert.IsNotNull(Form, 'Form should be created without OnDefaultSkin assigned');
+  Assert.IsFalse(Assigned(Form.OnDefaultstyle), 'OnDefaultstyle must be NIL after creation');
 end;
 
 
@@ -548,15 +547,15 @@ end;
 
 { Form Attribute Tests }
 
-procedure TTestFormSkinsDisk.TestFormCaption_IsSkinSelector;
+procedure TTestFormSkinsDisk.TestFormCaption_IsStyleSelector;
 var
   Form: TfrmStyleDisk;
 begin
   Form:= TfrmStyleDisk.Create(NIL);
   FTestForm:= Form;
 
-  Assert.AreEqual('Skin selector', Form.Caption,
-    'Form caption should be "Skin selector"');
+  Assert.AreEqual('Style selector', Form.Caption,
+    'Form caption should be "Style selector" (as set in the DFM)');
 end;
 
 

@@ -27,12 +27,17 @@ uses
   {$ENDIF }
   DUnitX.TestFramework,
   { Test units }
+  Test.LightFmx.Common.AppData        in 'Test.LightFmx.Common.AppData.pas',
+  Test.LightFmx.Common.AppData.Form   in 'Test.LightFmx.Common.AppData.Form.pas',
   Test.LightFmx.Common.CamUtils       in 'Test.LightFmx.Common.CamUtils.pas',
   Test.LightFmx.Visual.SvgFlatButton  in 'Test.LightFmx.Visual.SvgFlatButton.pas',
   Test.LightFmx.Common.Dialogs        in 'Test.LightFmx.Common.Dialogs.pas',
   Test.LightFmx.Visual.AutoSizeBoxImg in 'Test.LightFmx.Visual.AutoSizeBoxImg.pas',
   { Source units }
+  LightCore.AppData                   in '..\LightCore.AppData.pas',
   LightCore.IO                        in '..\LightCore.IO.pas',
+  LightFmx.Common.AppData             in '..\FrameFMX\LightFmx.Common.AppData.pas',
+  LightFmx.Common.AppData.Form        in '..\FrameFMX\LightFmx.Common.AppData.Form.pas',
   LightFmx.Common.CamUtils            in '..\FrameFMX\LightFmx.Common.CamUtils.pas',
   LightFmx.Common.Styles              in '..\FrameFMX\LightFmx.Common.Styles.pas',
   LightFmx.Common.Screen              in '..\FrameFMX\LightFmx.Common.Screen.pas',
@@ -52,6 +57,10 @@ var
 
 begin
   ReportMemoryLeaksOnShutdown:= True;
+
+  // AppData is required by the TAppData/TLightForm tests. Freed in LightFmx.Common.AppData's FINALIZATION.
+  AppData:= TAppData.Create('LightFmxTests');
+  TAppDataCore.TEST_MODE:= TRUE;   // Bypass ShowModal/Show in tests
 
 {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX.RunRegisteredTests;

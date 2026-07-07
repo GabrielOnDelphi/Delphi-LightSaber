@@ -27,6 +27,7 @@ type
   private
     FCallbackInvoked: Boolean;
     FCallbackResult: Boolean;
+    FOldTestMode: Boolean;
   public
     [Setup]
     procedure Setup;
@@ -99,6 +100,7 @@ type
 implementation
 
 uses
+  LightCore.AppData,
   LightFmx.Common.Dialogs;
 
 
@@ -106,12 +108,14 @@ procedure TTestFmxDialogs.Setup;
 begin
   FCallbackInvoked:= False;
   FCallbackResult:= False;
+  FOldTestMode:= TAppDataCore.TEST_MODE;
+  TAppDataCore.TEST_MODE:= TRUE;   // Dialog routines must not create async dialogs in tests (never closed -> leak)
 end;
 
 
 procedure TTestFmxDialogs.TearDown;
 begin
-  // No teardown needed
+  TAppDataCore.TEST_MODE:= FOldTestMode;
 end;
 
 

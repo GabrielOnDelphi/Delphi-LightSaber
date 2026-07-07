@@ -470,16 +470,15 @@ begin
   FilePath:= CreateTestFile('CaseSensitive.txt');
   UpperPath:= UpperCase(FilePath);
 
+  { NOTE: no TFile.Copy(FilePath, UpperPath) here - on Windows (case-insensitive NTFS),
+    UpperPath already denotes the SAME physical file as FilePath, so FileExists(UpperPath)
+    is already True. A real second file is neither possible nor needed to test this. }
   FMRU.AddToMRU(FilePath);
-
-  { Create a copy with uppercase path }
-  TFile.Copy(FilePath, UpperPath);
-
   FMRU.AddToMRU(UpperPath);
 
-  { On Windows, these are the same file, so count should be 1 }
-  { This test verifies case-insensitive duplicate detection }
-  Assert.IsTrue(FMRU.Count <= 2, 'Case-insensitive matching should prevent excessive duplicates');
+  { On Windows, these are the same file (case-insensitive), so the second AddToMRU
+    must be recognized as a duplicate and collapse to a single entry. }
+  Assert.AreEqual(1, FMRU.Count, 'Case-insensitive matching should treat both paths as the same file');
 end;
 
 

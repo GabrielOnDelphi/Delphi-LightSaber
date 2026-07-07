@@ -2,7 +2,7 @@
 
 {=============================================================================================================
    Gabriel Moraru
-   2022
+   2026.07.07
 --------------------------------------------------------------------------------------------------------------
    Features:
 
@@ -195,7 +195,7 @@ end;
 function StringFromFileStart(CONST FileName: string; Count: Cardinal): AnsiString;
 VAR StreamFile: TLightStream;
 begin
-  StreamFile:= TLightStream.Create(FileName, fmOpenRead);
+  StreamFile:= TLightStream.CreateRead(FileName);   { CreateRead = fmOpenRead OR fmShareDenyWrite. Plain fmOpenRead is fmShareCompat which acts as EXCLUSIVE on Windows }
   TRY
     Result:= StreamFile.TryReadStringA(Count);
   FINALLY
@@ -305,7 +305,12 @@ end;
 function StringFromFileTSL(CONST FileName: string; Enc: TEncoding= NIL): TStringList;    // Works with UNC paths
 begin
  Result:= TStringList.Create;
- Result.Text:= StringFromFile(FileName, Enc);
+ TRY
+   Result.Text:= StringFromFile(FileName, Enc);
+ EXCEPT
+   FreeAndNil(Result);   { Don't leak the list when the file is missing/unreadable }
+   RAISE;
+ END;
 end;
 
 
@@ -496,20 +501,27 @@ begin
               then SequenceLen := 4
               else Exit(False);             // Invalid first byte
 
+        // Sequence extends beyond this chunk?
+        if I + SequenceLen > BytesRead then
+          if BytesRead < BufferSize
+          then Exit(False)                  // Last chunk: file really ends with an incomplete sequence
+          else
+            begin                           // Chunk boundary: rewind to the sequence start and validate it in the next chunk
+              Stream.Position := Stream.Position - (BytesRead - I);
+              Break;
+            end;
+
         // Check continuation bytes
         for j := 1 to SequenceLen - 1 do
-          if (I + j >= BytesRead)
-          OR ((Buffer[I + j] and $C0) <> $80)
+          if (Buffer[I + j] and $C0) <> $80
           then Exit(False);                 // Invalid continuation byte
 
         Inc(I, SequenceLen);
       end;
     until BytesRead < BufferSize;
-
-    // Check if the file ended with an incomplete sequence
-    if (BytesRead > 0)
-    AND ((Buffer[BytesRead -1] AND $C0) = $80)
-    then Result := False;
+    // NOTE: no "last byte is a continuation byte" check here! A valid file ENDS with continuation
+    // bytes whenever its last character is multi-byte (e.g. 'café' ends with $A9). Incomplete
+    // sequences are already rejected by the I + SequenceLen > BytesRead check above.
   finally
     FreeAndNil(Stream);
   end;
@@ -555,8 +567,15 @@ begin
       else
         Exit(False);
 
+      // Sequence extends beyond this chunk?
       if I + SequenceLen > BytesRead then
-        Exit(False);
+        if BytesRead < BufferSize
+        then Exit(False)                  // Last chunk: stream really ends with an incomplete sequence
+        else
+          begin                           // Chunk boundary: rewind to the sequence start and validate it in the next chunk
+            Stream.Position := Stream.Position - (BytesRead - I);
+            Break;
+          end;
 
       for var J := 1 to SequenceLen - 1 do
         if (Buffer[I + J] and $C0) <> $80 then
@@ -565,9 +584,8 @@ begin
       Inc(I, SequenceLen);
     end;
   until BytesRead < BufferSize;
-
-  if (BytesRead > 0) and ((Buffer[BytesRead - 1] and $C0) = $80) then
-    Result := False;
+  // NOTE: no "last byte is a continuation byte" check here! A valid stream ENDS with continuation
+  // bytes whenever its last character is multi-byte. Incomplete sequences are already rejected above.
 end;
 
 {
@@ -647,7 +665,10 @@ begin
       try
         UTF8String.CopyFrom(InputFile, InputFile.Size);
 
-        AnsiStr    := AnsiString(UTF8String.DataString);
+        VAR Decoded:= UTF8String.DataString;
+        if (Decoded <> '') AND (Decoded[1] = #$FEFF)
+        then Delete(Decoded, 1, 1);        { A UTF8 BOM decodes to U+FEFF; without stripping it, the ANSI output would start with a '?' }
+        AnsiStr    := AnsiString(Decoded);
         OutputFile := TFileStream.Create(OutFileName, fmCreate);
         try
           if Length(AnsiStr) > 0
@@ -732,7 +753,9 @@ begin
 
     OutStream:= TFileStream.Create(OutFileName, fmCreate);
     try
-      OutStream.CopyFrom(InpStream, InpStream.Size - 3);
+      if InpStream.Size > 3
+      then OutStream.CopyFrom(InpStream, InpStream.Size - 3);
+      { Size = 3 means BOM-only file -> output stays empty. Calling CopyFrom with Count=0 would copy the WHOLE stream (BOM included) because TStream.CopyFrom treats Count<=0 as "copy everything from position 0"! }
     finally
       FreeAndNil(OutStream);
     end;

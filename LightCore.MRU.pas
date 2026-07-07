@@ -1,7 +1,7 @@
 UNIT LightCore.MRU;
 
 {=============================================================================================================
-   2026.01.30
+   2026.07.07
    www.GabrielMoraru.com
 ==============================================================================================================
 
@@ -123,10 +123,10 @@ begin
   WasChanged:= FList.Count > FMaxItems;
   TrimToMaxItems;
 
-  if WasChanged then 
+  if WasChanged then
   begin
     if FIniFile <> ''
-    then FList.SaveToFile(FIniFile);
+    then FList.SaveToFile(FIniFile, TEncoding.UTF8);
     DoChanged;
   end;
 end;
@@ -162,9 +162,12 @@ begin
   { Enforce max items limit }
   TrimToMaxItems;
 
-  { Persist to file }
+  { Persist to file.
+    UTF8 (with BOM) so paths with characters outside the system codepage survive the roundtrip.
+    Backward compatible: old ANSI files (no BOM) still load — LoadFromFile auto-detects the BOM
+    and falls back to TEncoding.Default when absent. }
   if FIniFile <> ''
-  then FList.SaveToFile(FIniFile);
+  then FList.SaveToFile(FIniFile, TEncoding.UTF8);
 
   DoChanged;
 end;
@@ -175,7 +178,7 @@ begin
   FList.Clear;
 
   if FIniFile <> ''
-  then FList.SaveToFile(FIniFile);
+  then FList.SaveToFile(FIniFile, TEncoding.UTF8);
 
   DoChanged;
 end;

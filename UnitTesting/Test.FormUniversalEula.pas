@@ -100,7 +100,7 @@ type
     procedure TestFormKeyPreview_IsEnabled;
 
     [Test]
-    procedure TestFormPosition_IsScreenCenter;
+    procedure TestFormPosition_IsPoDesigned;
 
     [Test]
     procedure TestFormCaption_IsLicenseAgreement;
@@ -405,15 +405,17 @@ begin
 end;
 
 
-procedure TTestFormUniversalEula.TestFormPosition_IsScreenCenter;
+procedure TTestFormUniversalEula.TestFormPosition_IsPoDesigned;
 var
   Form: TfrmEULA;
 begin
   Form:= TfrmEULA.Create(NIL);
   FTestForm:= Form;
 
-  Assert.AreEqual(poScreenCenter, Form.Position,
-    'Form position should be screen center');
+  { TLightForm needs poDesigned so a saved position can be restored;
+    centering happens in code (TLightForm.Loaded), not via poScreenCenter }
+  Assert.AreEqual(poDesigned, Form.Position,
+    'Form position should be poDesigned (TLightForm restores/centers in code)');
 end;
 
 

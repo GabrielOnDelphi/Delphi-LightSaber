@@ -1,11 +1,12 @@
 UNIT LightCore.StreamBuff;
 
 {=============================================================================================================
-   2026.06.10
+   2026.07.06
    www.GabrielMoraru.com
 
    + SafetyLimit parameter to ReadString/ReadStringA/ReadStringACnt/ ReadStringCnt/ReadCharsA. API now matches sibling classes (TLightFileStream, TCubicMemStream).
    + ReadIntegers/ReadDoubles validate the element count against the remaining stream bytes before SetLength.
+   + Fixed: AsString and ReadStrings no longer hit the 1 KB ReadString default limit (regression from the SafetyLimit change; data > 1 KB failed to load).
 --------------------------------------------------------------------------------------------------------------
    Extends TBufferedFileStream.
    Ideal for multiple consecutive small reads or writes.
@@ -639,7 +640,10 @@ end;
 procedure TLightStream.ReadStrings(TSL: TStrings);
 begin
   Assert(TSL <> NIL, 'TLightStream.ReadStrings: TSL is nil');
-  TSL.Text:= ReadString;
+  // SafetyLimit = remaining stream bytes: a string list legitimately exceeds the 1 KB ReadString default
+  // (playlists, file lists). Anything that physically fits in the stream is accepted; corrupt counts
+  // beyond EOF still raise (same behavior as before SafetyLimit was introduced in 2026.06).
+  TSL.Text:= ReadString(Cardinal(Size - Position));
 end;
 
 
@@ -649,7 +653,7 @@ function TLightStream.ReadStrings: TStringList;
 begin
   Result:= TStringList.Create;
   try
-    Result.Text:= ReadString;
+    Result.Text:= ReadString(Cardinal(Size - Position));   // No 1 KB cap for string lists. See ReadStrings(TSL) above.
   except
     FreeAndNil(Result);
     raise;
@@ -967,7 +971,7 @@ function TLightStream.AsString: AnsiString;
 begin
   if Size = 0 then RAISE Exception.Create('TLightStream is empty!');
   Position:= 0;
-  Result:= ReadCharsA(Size);
+  Result:= ReadCharsA(Size, Size);   // Pass Size also as SafetyLimit, otherwise the 1 KB default rejects any stream > 1 KB. Same as the sibling classes.
 end;
 
 

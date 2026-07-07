@@ -168,6 +168,7 @@
         <DCCReference Include="Test.LightCore.AppData.pas"/>
         <DCCReference Include="Test.LightCore.INIFile.pas"/>
         <DCCReference Include="Test.LightCore.INIFileQuick.pas"/>
+        <DCCReference Include="Test.LightCore.MRU.pas"/>
         <DCCReference Include="Test.LightCore.IO.pas"/>
         <DCCReference Include="Test.LightCore.EncodeMime.pas"/>
         <DCCReference Include="Test.LightCore.Download.pas"/>
@@ -198,6 +199,7 @@
         <DCCReference Include="..\LightCore.AppData.pas"/>
         <DCCReference Include="..\LightCore.INIFile.pas"/>
         <DCCReference Include="..\LightCore.INIFileQuick.pas"/>
+        <DCCReference Include="..\LightCore.MRU.pas"/>
         <DCCReference Include="..\LightCore.EncodeMime.pas"/>
         <DCCReference Include="..\LightCore.LogTypes.pas"/>
         <DCCReference Include="..\LightCore.LogLinesAbstract.pas"/>

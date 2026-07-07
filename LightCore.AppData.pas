@@ -1,7 +1,7 @@
 ﻿UNIT LightCore.AppData;
 
 {=============================================================================================================
-   2026.03
+   2026.07.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -28,8 +28,9 @@
          FastMM4,
          LightCore.AppData;
        begin
-         AppDataCore:= TAppDataCore.Create('MyCollApp');
-         AppDataCore.Run;
+         AppDataCore:= TAppDataCore.Create('MyCoolApp');
+         // ... your code ...
+         FreeAndNil(AppDataCore);  // Console apps must free it themselves (saves the settings). Only the VCL/FMX descendants are freed automatically (FINALIZATION of LightVcl.Visual.AppData / LightFmx.Common.AppData).
        end.
 
      For GUI projects see LightVcl.Visual.AppData.pas
@@ -60,6 +61,7 @@ TYPE
     FLastFolder : string;
     FSingleInstClassName: string;          // Used by the Single Instance mechanism.   {Old name: AppWinClassName }
     FRunningFirstTime: Boolean;
+    FSettingsLoaded: Boolean;              // TRUE once Create reached the LoadSettings/defaultSettings point. Destroy saves settings ONLY then — a constructor that raised early (e.g. double-create) must not let the auto-called destructor overwrite the INI with zeroed fields.
     class function getAppName: string; static;
     CONST
       Signature: AnsiString= 'AppDataSettings'; { Do not change it! }
@@ -181,7 +183,7 @@ function  FindCmdLineSwitch(const Switch: string; IgnoreCase: Boolean): Boolean;
 function ExeName: string;
 
 VAR
-  AppDataCore: TAppDataCore;    // The global var "AppData" takes over this one in TAppData.Create. This obj is automatically freed on app shutdown (via FINALIZATION)
+  AppDataCore: TAppDataCore;    // The global var "AppData" takes over this one in TAppData.Create (both point to the SAME object). GUI apps: freed automatically by the FINALIZATION of LightVcl.Visual.AppData/LightFmx.Common.AppData (which also nils this var). Console apps (no VCL/FMX layer): free it yourself.
 
 
 
@@ -242,6 +244,7 @@ begin
   if FileExists(IniFile)
   then LoadSettings
   else defaultSettings; // Hint: Use LightSaber\Demo\Template App\Full\FormSettings.pas to give user access to these settings }
+  FSettingsLoaded:= TRUE;  // From here on, Destroy is allowed to save the settings back
 
   { Product details }
   CompanyName    := 'SciVance';
@@ -265,7 +268,8 @@ end;
     So we need to destroy the Log form here, and not in the Finalization section! }
 destructor TAppDataCore.Destroy;
 begin
-  SaveSettings;
+  if FSettingsLoaded            // FALSE when the constructor raised before loading the settings (e.g. 'already constructed'). Saving then would overwrite the INI with zeroed fields.
+  then SaveSettings;
   FreeAndNil(RamLog); // Call this as late as possible
   inherited;
 end;
@@ -695,6 +699,7 @@ begin
     IniFileObj.Write('HideHint'      , HideHint);
     IniFileObj.Write('LastFile'      , LastFile);
     IniFileObj.Write('LastFolder'    , FLastFolder);
+    IniFileObj.Write('UserPath'      , UserPath);
   finally
     FreeAndNil(IniFileObj);
   end;
@@ -716,6 +721,7 @@ begin
     HideHint      := IniFileObj.Read('HideHint'           , 2500);
     LastFile      := IniFileObj.Read('LastFile'           , '');
     FLastFolder   := IniFileObj.Read('LastFolder'         , '');
+    UserPath      := IniFileObj.Read('UserPath'           , AppDataFolder);  // Key missing in INIs written before 2026.07 -> fall back to the defaultSettings value
 
     // Apply loaded setting to RamLog (it was created before LoadSettings)
     if RamLog <> NIL
@@ -735,8 +741,9 @@ begin
   StartMinim   := FALSE;
   Minimize2Tray:= TRUE;                      // Minimize to tray
   HintType     := htTooltips;                // Turn off the embedded help system
-  Opacity      := 250;
+  Opacity      := 250;                       
   UserPath     := AppDataFolder;
+  ShowLogOnError:= TRUE;                     // Same default as LoadSettings' fallback. Property setter also syncs RamLog (already created at this point).
 end;
 
 

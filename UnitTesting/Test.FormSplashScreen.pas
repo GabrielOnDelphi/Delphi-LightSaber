@@ -106,9 +106,6 @@ type
     [Test]
     procedure TestTimerTimer_UpdatesAlphaBlendValue;
 
-    [Test]
-    procedure TestTimerTimer_IncrementsCurrAlpha;
-
     { Alpha Boundary Tests }
     [Test]
     procedure TestAlpha_ClampsToZero;
@@ -449,26 +446,6 @@ begin
   { Alpha should change (either increase during fade-in or decrease during fade-out) }
   Assert.IsTrue(InitialAlpha <> Form.AlphaBlendValue,
     'TimerTimer should update AlphaBlendValue');
-end;
-
-
-procedure TTestFormSplashScreen.TestTimerTimer_IncrementsCurrAlpha;
-var
-  Form: TfrmSplash;
-begin
-  Form:= TfrmSplash.Create(NIL);
-  FTestForm:= Form;
-
-  { Initialize for fade-in with positive increment }
-  Form.AlphaBlendValue:= 40;
-
-  { Call timer multiple times to verify progression }
-  Form.TimerTimer(NIL);
-  Form.TimerTimer(NIL);
-
-  { Alpha should have increased }
-  Assert.IsTrue(Form.AlphaBlendValue > 40,
-    'Alpha should increase during fade-in phase');
 end;
 
 

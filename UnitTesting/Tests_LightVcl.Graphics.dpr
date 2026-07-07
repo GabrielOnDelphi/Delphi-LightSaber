@@ -32,6 +32,8 @@ uses
   LightVcl.Graph.FX.Gradient in '..\FrameVCL\LightVcl.Graph.FX.Gradient.pas',
   Test.LightVcl.Graph.FX in 'Test.LightVcl.Graph.FX.pas',
   LightVcl.Graph.FX in '..\FrameVCL\LightVcl.Graph.FX.pas',
+  Test.LightVcl.Graph.FX.Rotate in 'Test.LightVcl.Graph.FX.Rotate.pas',
+  LightVcl.Graph.FX.Rotate in '..\FrameVCL\LightVcl.Graph.FX.Rotate.pas',
   Test.LightVcl.Graph.Desktop in 'Test.LightVcl.Graph.Desktop.pas',
   LightVcl.Graph.Desktop in '..\FrameVCL\LightVcl.Graph.Desktop.pas',
   Test.LightVcl.Graph.UtilGray in 'Test.LightVcl.Graph.UtilGray.pas',

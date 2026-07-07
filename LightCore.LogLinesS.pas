@@ -62,7 +62,8 @@ end;
 
 destructor TLogLinesSingleThreaded.Destroy;
 begin
-  Clear;             { Free the allocated memory for lines }
+  if FList <> NIL    { NIL when the constructor raised before TList.Create finished (partially-constructed object) }
+  then Clear;        { Free the allocated memory for lines }
   FreeAndNil(FList);
   inherited;
 end;

@@ -1,16 +1,19 @@
 ﻿UNIT LightCore.EncodeXOR;
 
 {=============================================================================================================
-   2026.01.30
+   2026.07.06
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
    RUDIMENTARY XOR STRING ENCRYPTION
    Don't use it to protect sensitive data!
+   For password hashing use SHA-256 (a one-way hash): System.Hash.THashSHA2.GetHashString(Salt+ Password). Do NOT use this reversible XOR for passwords.
 
-   Warning: SimpleDecode/SimpleEncode and EncodeDecode_NOT only work correctly with ASCII characters (0-255).
+   Warning: SimpleDecode/SimpleEncode, EncodeDecode_NOT and BetterEncode/BetterDecode only work correctly with ASCII characters (0-255).
    Unicode characters above 255 will be truncated. Use the XOR functions with AnsiString for binary-safe operations.
+
+   Fixed 2026.07.06: the TBytesArray overloads of EncodeDecode_XOR no longer encode the caller's input array in place (dyn-array aliasing).
 
 =============================================================================================================}
 
@@ -118,9 +121,11 @@ end;
 function EncodeDecode_XOR(CONST Bytes: TBytesArray; Key: Byte): TBytesArray;
 VAR i: Integer;
 begin
-  Result:= Bytes;
-  for i:= 0 to High(Bytes)    { indexed in 0 }
-    DO Result[i]:= Key XOR Bytes[i];
+  // Copy is mandatory: dynamic arrays have no copy-on-write, so "Result:= Bytes" would alias the
+  // caller's array and the loop below would encode the (CONST) input in place.
+  Result:= Copy(Bytes);
+  for i:= 0 to High(Result)    { indexed in 0 }
+    DO Result[i]:= Key XOR Result[i];
 end;
 
 
@@ -143,16 +148,18 @@ VAR
   KeyBytes: TBytesArray;
 begin
   if Key = ''
-  then EXIT(Bytes);
+  then EXIT(Copy(Bytes));
 
   KeyLen:= Length(Key);
   SetLength(KeyBytes, KeyLen);
   for i:= 1 to KeyLen DO
     KeyBytes[i-1]:= Ord(Key[i]) AND $FF;
 
-  Result:= Bytes;
-  for i:= 0 to High(Bytes) DO
-    Result[i]:= Bytes[i] XOR KeyBytes[i MOD KeyLen];
+  // Copy is mandatory: dynamic arrays have no copy-on-write, so "Result:= Bytes" would alias the
+  // caller's array and the loop below would encode the (CONST) input in place.
+  Result:= Copy(Bytes);
+  for i:= 0 to High(Result) DO
+    Result[i]:= Result[i] XOR KeyBytes[i MOD KeyLen];
 end;
 
 

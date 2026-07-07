@@ -1349,6 +1349,12 @@ begin
   Assert.IsTrue(FileNameNaturalSort('pic2', 'pic10') < 0);
   Assert.IsTrue(FileNameNaturalSort('pic10', 'pic2') > 0);
   Assert.AreEqual(0, FileNameNaturalSort('pic1', 'pic1'));
+
+  // Regression: the character right after an equal number must be compared, not skipped
+  Assert.IsTrue(FileNameNaturalSort('pic2a.jpg', 'pic2b.jpg') < 0);
+  Assert.IsTrue(FileNameNaturalSort('pic2b.jpg', 'pic2a.jpg') > 0);
+  Assert.IsTrue(FileNameNaturalSort('img12ax', 'img12bx') < 0);
+  Assert.IsTrue(FileNameNaturalSort('2ac', '2b') < 0);
 end;
 
 

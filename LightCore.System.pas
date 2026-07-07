@@ -36,9 +36,12 @@ USES
 
 
 IMPLEMENTATION
-{$IFDEF MSWINDOWS}USES
-    Winapi.Windows;{$ENDIF}                        // GetLocaleInfo, LOCALE_USER_DEFAULT, LOCALE_SLANGUAGE
- // System.SysConst;                            // SUnknown (used in non-Windows GetSystemLanguageName)
+
+USES
+   {$IFDEF MSWINDOWS}
+   Winapi.Windows,                                 // GetLocaleInfo, LOCALE_USER_DEFAULT, LOCALE_SLANGUAGE
+   {$ENDIF}
+   System.SysConst;                                // SUnknown (used in the non-Windows GetSystemLanguageName branch)
 
 
 

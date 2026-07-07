@@ -1,8 +1,14 @@
 unit Test.LightVcl.Graph.FX.Rotate;
 
 {=============================================================================================================
+   2026.07.03
    Unit tests for LightVcl.Graph.FX.Rotate.pas
    Tests bitmap rotation functions and RSpatialParams record.
+   The direction tests pin the contract: positive degrees = CLOCKWISE (GDI+ convention).
+
+   Only the production angles (90, 180, 270) get direction tests. Negative angles are deliberately NOT
+   tested: RotateBitmapGDI mis-centers them (its AdjustSize offset branch assumes 0..360) - callers must
+   pass the positive equivalent (270 instead of -90).
 
    Includes TestInsight support: define TESTINSIGHT in project options.
 
@@ -15,7 +21,9 @@ interface
 uses
   DUnitX.TestFramework,
   System.SysUtils,
+  System.Types,
   System.Math,
+  WinApi.Windows,
   Vcl.Graphics;
 
 type
@@ -25,12 +33,31 @@ type
     FBitmap: TBitmap;
     procedure FillBitmapWithColor(BMP: TBitmap; Color: TColor);
     function GetPixelAt(BMP: TBitmap; X, Y: Integer): TColor;
+    procedure PrepareMarkedBitmap;
+    procedure AssertPixelIsRed (X, Y: Integer; CONST Msg: string);
+    procedure AssertPixelIsBlue(X, Y: Integer; CONST Msg: string);
   public
     [Setup]
     procedure Setup;
 
     [TearDown]
     procedure TearDown;
+
+    { Direction tests: positive degrees = CLOCKWISE. Red band on TOP, blue band on LEFT before the rotation. }
+    [Test]
+    procedure TestRotateGDI_90_IsClockwise;
+
+    [Test]
+    procedure TestRotateGDI_270_IsCounterClockwise;
+
+    [Test]
+    procedure TestRotateGDI_180_FlipsBothEdges;
+
+    [Test]
+    procedure TestRotateDispatcher_90_IsClockwise;
+
+    [Test]
+    procedure TestRotateDispatcher_270_IsCounterClockwise;
 
     { RotateBitmap Tests - Main function }
     [Test]
@@ -170,6 +197,111 @@ end;
 function TTestGraphRotate.GetPixelAt(BMP: TBitmap; X, Y: Integer): TColor;
 begin
   Result:= BMP.Canvas.Pixels[X, Y];
+end;
+
+
+{ 100x80, white. 10px red band on the TOP edge, 10px blue band on the LEFT edge.
+  The blue band paints over the red band in the shared corner - all samples stay far from corners. }
+procedure TTestGraphRotate.PrepareMarkedBitmap;
+begin
+  FillBitmapWithColor(FBitmap, clWhite);
+
+  FBitmap.Canvas.Brush.Color:= clRed;
+  FBitmap.Canvas.FillRect(Rect(0, 0, 100, 10));
+
+  FBitmap.Canvas.Brush.Color:= clBlue;
+  FBitmap.Canvas.FillRect(Rect(0, 0, 10, 80));
+end;
+
+
+CONST
+  ChannelTolerance = 60;   { GDI+/GR32 interpolation shifts band-center colors slightly; the direction check only needs "clearly red/blue" }
+
+procedure TTestGraphRotate.AssertPixelIsRed(X, Y: Integer; CONST Msg: string);
+VAR RGB: Cardinal;
+begin
+  RGB:= ColorToRGB(GetPixelAt(FBitmap, X, Y));
+  Assert.IsTrue((GetRValue(RGB) > 255 - ChannelTolerance)
+            AND (GetGValue(RGB) < ChannelTolerance)
+            AND (GetBValue(RGB) < ChannelTolerance),
+    Msg+ ' - pixel at '+ IntToStr(X)+ ','+ IntToStr(Y)+ ' is not red (RGB='+ IntToHex(RGB, 6)+ ')');
+end;
+
+
+procedure TTestGraphRotate.AssertPixelIsBlue(X, Y: Integer; CONST Msg: string);
+VAR RGB: Cardinal;
+begin
+  RGB:= ColorToRGB(GetPixelAt(FBitmap, X, Y));
+  Assert.IsTrue((GetBValue(RGB) > 255 - ChannelTolerance)
+            AND (GetRValue(RGB) < ChannelTolerance)
+            AND (GetGValue(RGB) < ChannelTolerance),
+    Msg+ ' - pixel at '+ IntToStr(X)+ ','+ IntToStr(Y)+ ' is not blue (RGB='+ IntToHex(RGB, 6)+ ')');
+end;
+
+
+{ Direction tests }
+
+{ 90 clockwise: TOP band -> RIGHT edge, LEFT band -> TOP edge. 100x80 -> 80x100. }
+procedure TTestGraphRotate.TestRotateGDI_90_IsClockwise;
+begin
+  PrepareMarkedBitmap;
+  RotateBitmapGDI(FBitmap, 90, TRUE, clWhite);
+
+  Assert.AreEqual(80,  FBitmap.Width,  'AdjustSize: width must become the old height');
+  Assert.AreEqual(100, FBitmap.Height, 'AdjustSize: height must become the old width');
+  AssertPixelIsRed (75, 50, '90 CW: old TOP band must be on the RIGHT edge');
+  AssertPixelIsBlue(40,  5, '90 CW: old LEFT band must be on the TOP edge');
+end;
+
+
+{ 270 clockwise = 90 counterclockwise: TOP band -> LEFT edge, LEFT band -> BOTTOM edge. }
+procedure TTestGraphRotate.TestRotateGDI_270_IsCounterClockwise;
+begin
+  PrepareMarkedBitmap;
+  RotateBitmapGDI(FBitmap, 270, TRUE, clWhite);
+
+  Assert.AreEqual(80,  FBitmap.Width,  'AdjustSize: width must become the old height');
+  Assert.AreEqual(100, FBitmap.Height, 'AdjustSize: height must become the old width');
+  AssertPixelIsRed ( 5, 50, '270 (90 CCW): old TOP band must be on the LEFT edge');
+  AssertPixelIsBlue(40, 95, '270 (90 CCW): old LEFT band must be on the BOTTOM edge');
+end;
+
+
+{ 180: TOP band -> BOTTOM edge, LEFT band -> RIGHT edge. Size unchanged. }
+procedure TTestGraphRotate.TestRotateGDI_180_FlipsBothEdges;
+begin
+  PrepareMarkedBitmap;
+  RotateBitmapGDI(FBitmap, 180, TRUE, clWhite);
+
+  Assert.AreEqual(100, FBitmap.Width,  '180: width must stay');
+  Assert.AreEqual(80,  FBitmap.Height, '180: height must stay');
+  AssertPixelIsRed (50, 75, '180: old TOP band must be on the BOTTOM edge');
+  AssertPixelIsBlue(95, 40, '180: old LEFT band must be on the RIGHT edge');
+end;
+
+
+{ The dispatcher (GR32 when available, otherwise GDI) must honor the same direction contract. }
+procedure TTestGraphRotate.TestRotateDispatcher_90_IsClockwise;
+begin
+  PrepareMarkedBitmap;
+  RotateBitmap(FBitmap, 90, TRUE, clWhite);
+
+  Assert.AreEqual(80,  FBitmap.Width,  'AdjustSize: width must become the old height');
+  Assert.AreEqual(100, FBitmap.Height, 'AdjustSize: height must become the old width');
+  AssertPixelIsRed (75, 50, 'Dispatcher 90 CW: old TOP band must be on the RIGHT edge');
+  AssertPixelIsBlue(40,  5, 'Dispatcher 90 CW: old LEFT band must be on the TOP edge');
+end;
+
+
+procedure TTestGraphRotate.TestRotateDispatcher_270_IsCounterClockwise;
+begin
+  PrepareMarkedBitmap;
+  RotateBitmap(FBitmap, 270, TRUE, clWhite);
+
+  Assert.AreEqual(80,  FBitmap.Width,  'AdjustSize: width must become the old height');
+  Assert.AreEqual(100, FBitmap.Height, 'AdjustSize: height must become the old width');
+  AssertPixelIsRed ( 5, 50, 'Dispatcher 270 (90 CCW): old TOP band must be on the LEFT edge');
+  AssertPixelIsBlue(40, 95, 'Dispatcher 270 (90 CCW): old LEFT band must be on the BOTTOM edge');
 end;
 
 
@@ -526,7 +658,7 @@ begin
 
   { Cleanup }
   if FileExists(TempFile)
-  then DeleteFile(TempFile);
+  then System.SysUtils.DeleteFile(TempFile);   { Qualified: WinApi.Windows.DeleteFile(PWideChar) shadows it }
 end;
 
 
@@ -564,7 +696,7 @@ begin
 
   { Cleanup }
   if FileExists(TempFile)
-  then DeleteFile(TempFile);
+  then System.SysUtils.DeleteFile(TempFile);   { Qualified: WinApi.Windows.DeleteFile(PWideChar) shadows it }
 end;
 
 
@@ -582,7 +714,7 @@ begin
     Stream.WriteBoolean(FALSE);  { Flip }
     Stream.WriteBoolean(FALSE);  { Mirror }
     Stream.WriteByte(255);       { Invalid rotation value }
-    Stream.WritePadding;
+    Stream.WritePaddingValidation;   { ReadFromStream ends with ReadPaddingValidation, so the padding must carry the signature }
   FINALLY
     FreeAndNil(Stream);
   END;
@@ -600,7 +732,7 @@ begin
 
   { Cleanup }
   if FileExists(TempFile)
-  then DeleteFile(TempFile);
+  then System.SysUtils.DeleteFile(TempFile);   { Qualified: WinApi.Windows.DeleteFile(PWideChar) shadows it }
 end;
 
 

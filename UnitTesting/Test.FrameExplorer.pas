@@ -552,6 +552,7 @@ var
 begin
   FParentForm:= TForm.Create(NIL);
   Frame:= TFrameWinExplorer.Create(FParentForm);
+  Frame.Parent:= FParentForm;   // The frame's windowed controls need a parent window to create their handles
   FTestFrame:= Frame;
 
   { DirectoryChange should not raise exception }
@@ -569,6 +570,7 @@ var
 begin
   FParentForm:= TForm.Create(NIL);
   Frame:= TFrameWinExplorer.Create(FParentForm);
+  Frame.Parent:= FParentForm;   // The frame's windowed controls need a parent window to create their handles
   FTestFrame:= Frame;
 
   { btnRefreshClick should not raise exception }

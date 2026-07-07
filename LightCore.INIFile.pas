@@ -92,7 +92,9 @@ USES
 -------------------------------------------------------------------------------------------------------------}
 constructor TIniFileEx.Create(CONST SectionName, FileName: string);
 begin
- TDirectory.CreateDirectory(ExtractFilePath(FileName));  // Make sure the path exists otherwise we get an error.
+ VAR Dir:= ExtractFilePath(FileName);
+ if Dir <> ''
+ then TDirectory.CreateDirectory(Dir);  // Make sure the path exists otherwise we get an error. Empty Dir = relative filename (current dir) — nothing to create; CreateDirectory('') would raise.
  inherited Create(FileName);
  FSection:= SectionName;
 end;

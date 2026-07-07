@@ -11,6 +11,9 @@ UNIT LightCore.EncodeMime;
    Provides functions for MIME (Base64) encoding/decoding of strings.
    This unit wraps Soap.EncdDecd to provide simpler, safer string-based operations.
 
+   NOTE: Base64 is ENCODING, not encryption or hashing - it is fully reversible and provides NO security.
+         For password hashing use SHA-256: System.Hash.THashSHA2.GetHashString(Salt+ Password).
+
    Two variants are provided:
      - MimeString/DeMimeString: For Unicode strings (uses UTF-8 encoding internally)
      - MimeStringA/DeMimeStringA: For AnsiString (raw byte operations)

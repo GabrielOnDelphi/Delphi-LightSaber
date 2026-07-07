@@ -1,7 +1,7 @@
 ﻿UNIT LightCore;
 
 {=============================================================================================================
-   2026.01.30
+   2026.07.03
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    - String manipulation (string conversions, sub-string detection, word manipulation, cut, copy, split, wrap, etc)
@@ -1763,14 +1763,23 @@ begin
      begin
       if  CharIsNumber(s1[1])
       AND CharIsNumber(s2[1])
-      then Result:= Sign(ExtractNr(1, s1) - ExtractNr(1, s2))
-      else Result:= Sign(Integer(s1[1])   - Integer(s2[1]));
-
-      b:= (Result <> 0) OR (Min(Length(s1), Length(s2)) <  2);
-      if not b then
+      then
        begin
-        Delete(s1,1,1);
-        Delete(s2,1,1);
+        Result:= Sign(ExtractNr(1, s1) - ExtractNr(1, s2));
+        { ExtractNr already consumed the digits from BOTH strings, so on a tie continue with the
+          character right after the number. The old shared Delete below ate that character without
+          comparing it, so 'pic2a' = 'pic2b' and '2b' sorted before '2ac'. }
+        b:= (Result <> 0) OR (s1 = '') OR (s2 = '');
+       end
+      else
+       begin
+        Result:= Sign(Integer(s1[1]) - Integer(s2[1]));
+        b:= (Result <> 0) OR (Min(Length(s1), Length(s2)) <  2);
+        if not b then
+         begin
+          Delete(s1,1,1);
+          Delete(s2,1,1);
+         end;
        end;
     end;
   end;

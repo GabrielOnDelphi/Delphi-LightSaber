@@ -1,4 +1,4 @@
-UNIT LightCore.ExceptionLogger;
+﻿UNIT LightCore.ExceptionLogger;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -38,9 +38,7 @@ UNIT LightCore.ExceptionLogger;
    even a startup-time raise is captured. The unit's `finalization` is intentionally minimal — the hook
    stays active until the OS reaps the process.
 
-   Typical wiring (FMX project, in the .dpr's `uses` clause and `begin..end`):
-       uses
-         ..., LightCore.ExceptionLogger;
+   Typical wiring (FMX DPR):
        begin
          InstallExceptionLogger('MyApp-Exceptions.log');   // first line — before AppData.Create
          AppData:= TAppData.Create(...);

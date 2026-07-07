@@ -163,7 +163,7 @@ function DecodeXorText (CONST EncodedArr: array of Byte; Key: Byte): string;
 
 ```pascal
 procedure InstallExceptionLogger(CONST LogFileName: string = 'Exceptions.log');
-function ExceptionLogPath: string; { exposed for diagnostics â€” read the value from outside if you want to surface it in the UI / About box }
+function ExceptionLogPath: string; { exposed for diagnostics — read the value from outside if you want to surface it in the UI / About box }
 ```
 
 ## LightCore.Graphics (2)
@@ -1163,16 +1163,16 @@ function UnwrapText ( s: string; Separators: string; RemoveExtraEnters, AddExtra
 function TruncateToWord (CONST s: string; MaxChars: Integer): string;
 ```
 
-## LightFmx.Common.AppData.Form (24)
+## LightFmx.Common.AppData.Form (25)
 
 ```pascal
 procedure FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
 procedure btnOsBackClick(Sender: TObject);
 procedure SetGuiProperties(Form: TForm);
 procedure HandleVKStateChange(const Sender: TObject; const M: TMessage);
+procedure QueuedPostInitialize; { Deferred from Loaded via ForceQueue. A NAMED method (not an anonymous block) so Destroy can cancel the pending entry with TThread.RemoveQueuedEvents — an anonymous TThreadProcedure cannot be removed, and a form freed before the queue drains would be dereferenced (use-after-free) when the block finally runs. }
 procedure RegisterInsetsListener; { Subscribe (once, app-wide) to FMX's inset-changed callback so padding is re-applied the moment insets arrive and on every later change. See ApplyAndroidWindowInsets. }
 function CloseTopmostSecondary: Boolean; { Closes the top-most visible non-embedded secondary TLightForm, if any. Used by the Back handler so a non-modally-shown form is dismissed instead of backgrounding the app. }
-procedure saveBeforeExit;
 procedure CreateToolbar;
 function HandleBackButton: Boolean; virtual;
 procedure FormKeyPress(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState); // We can use this later in the destructor to know how to save the form: asPosOnly/asFull
@@ -1182,6 +1182,7 @@ procedure AfterConstruction; override;
 function CloseQuery: Boolean; override;
 procedure FormPreRelease; virtual;
 procedure FormPostInitialize; virtual; { Runs once after the form is fully loaded AND the message loop is pumping (first paint done). Override for startup work that should not block the window from appearing — e.g. loading a large file. FMX counterpart of the VCL WM_POSTINIT hook. }
+procedure saveBeforeExit; { Idempotent (FFormSaved guard). Public so TAppData.Destroy can save all still-open forms while AppData is alive — Application-owned forms are otherwise destroyed AFTER AppData's finalization. }
 procedure ShowModal; reintroduce;
 procedure LoadForm; virtual;
 procedure SaveForm; virtual;
@@ -2831,7 +2832,7 @@ function HasGrayscalePalette(const FileName: string): Boolean; overload;
 function HasGrayscalePalette(BMP: TBitmap): Boolean; overload;
 ```
 
-## LightVcl.Internet.Common (21)
+## LightVcl.Internet.Common (22)
 
 ```pascal
 function ParseURL (CONST lpszUrl: string): TStringArray; { Breaks an URL in all its subcomponents. Example: ParseURL('http://login:password@somehost.somedomain.com/some_path/something_else.html?param1=val&param2=val') }
@@ -2850,7 +2851,8 @@ procedure IE_DeleteCache;
 procedure IE_EndSession;
 procedure IE_SetProxy(CONST Proxy: string); { Change IE proxy settings globally }
 function PCConnected2Internet: Boolean; { From here: http://www.delphipages.com/forum/showthread.php?t=198159 }
-function ProgramConnect2Internet: Integer; { Function returns: -1 if computer is not connected to internet, 0 if local system is connected to internet but application is blocked by firewall, 1 if application can connect to internet}
+function ProgramConnect2Internet: Integer; overload; { Legacy: google.com + the 60 s download default. Returns: -1 = PC not connected, 0 = connected but this app is blocked by the firewall, 1 = this app can reach the Internet}
+function ProgramConnect2Internet(const TestURL: string; TimeoutMs: Integer= ConnectivityProbeTimeout; const ExpectBody: string= ''): Integer; overload; { Caller-set endpoint + timeout, so a startup check gets a verdict in seconds instead of the 60 s download default. Returns: -1 = PC not connected (WinInet); 0 = PC online but NO reply came back (this exe is firewall-blocked, or the endpoint is down); 1 = reached the endpoint and the body matched (genuinely online); 2 = reached the endpoint (HTTP 200) but the body was NOT ExpectBody -> a captive portal or a content-rewriting proxy is in the path, which is NOT a firewall block. Pass ConnectivityProbeURL for a fast, light default. ExpectBody='' = any HTTP 200 counts as 1 (state 2 never occurs); set it (e.g. ConnectivityProbeBody) to tell a genuine reply apart from a portal/proxy interception.}
 function ProgramConnect2InternetS: string;
 function TestProgramConnection(ShowMsgOnSuccess: Boolean= FALSE): Integer;
 function IsPortOpened(const Host: string; Port: Integer): Boolean; { Here's something very simple with which you can check a port status(opened/closed) on remote host. Add WinSock to uses clause}
@@ -3020,20 +3022,19 @@ function GetVersionInfoMajor: Word;
 function GetVersionInfoMinor: Word;
 ```
 
-## LightVcl.Visual.AppDataForm (14)
+## LightVcl.Visual.AppDataForm (13)
 
 ```pascal
 procedure WMPostInit(var Msg: TMessage); message WM_POSTINIT;
 procedure Loaded; override;
-procedure saveBeforeExit;
 procedure DoDestroy; override;
 procedure DoClose(VAR Action: TCloseAction); override;
 procedure FormKeyPress(Sender: TObject; var Key: Char); // We can use this later in the destructor to know how to save the form: asPosOnly/asFull
-procedure WMEndSession(VAR Msg: TWMEndSession); message WM_ENDSESSION; { Save form state on Windows logoff/shutdown. Without the message directive this handler was never dispatched (dead code). The FFormSaved guard in saveBeforeExit prevents a double-save when CloseQuery already ran via WM_QUERYENDSESSION. }
-procedure WMDropFiles (VAR Msg: TWMDropFiles); message WM_DROPFILES; { Accept the dropped files from Windows Explorer }
+procedure WMEndSession(VAR Msg: TWMEndSession); message WM_ENDSESSION; { Save form state on Windows logoff/shutdown, but only when Msg.EndSession is TRUE (a canceled logoff must not save). The FFormSaved guard in saveBeforeExit prevents a double-save when CloseQuery already ran via WM_QUERYENDSESSION. }
 function CloseQuery: boolean; override;
 procedure FormPostInitialize; virtual; // Takes place after the form was fully created
 procedure FormPreRelease; virtual; // Takes place before the form is destroyed. It is guaranteed to be called excetly once.
+procedure saveBeforeExit; // Idempotent (FFormSaved guard). Public so TAppData.Destroy can save all still-open forms while AppData is alive â€” Application-owned forms are otherwise destroyed AFTER AppData's finalization (in Vcl.Forms' finalization).
 procedure LoadForm; virtual;
 procedure SaveForm; virtual;
 procedure MainFormCaption(const Caption: string);
@@ -3977,4 +3978,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2888 public routines across 216 units._
+_2889 public routines across 216 units._

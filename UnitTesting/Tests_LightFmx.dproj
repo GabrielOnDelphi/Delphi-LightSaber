@@ -44,6 +44,7 @@
         <DCC_ExeOutput>.\</DCC_ExeOutput>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_Define>TESTINSIGHT_;$(DCC_Define)</DCC_Define>
+        <DCC_UnitSearchPath>..\;..\FrameFMX\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;FMX;$(DCC_Namespace)</DCC_Namespace>
@@ -64,16 +65,24 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="Test.LightFmx.Common.AppData.pas"/>
+        <DCCReference Include="Test.LightFmx.Common.AppData.Form.pas"/>
         <DCCReference Include="Test.LightFmx.Common.CamUtils.pas"/>
         <DCCReference Include="Test.LightFmx.Visual.SvgFlatButton.pas"/>
         <DCCReference Include="Test.LightFmx.Common.Dialogs.pas"/>
         <DCCReference Include="Test.LightFmx.Visual.AutoSizeBoxImg.pas"/>
+        <DCCReference Include="..\LightCore.AppData.pas"/>
         <DCCReference Include="..\LightCore.IO.pas"/>
+        <DCCReference Include="..\FrameFMX\LightFmx.Common.AppData.pas"/>
+        <DCCReference Include="..\FrameFMX\LightFmx.Common.AppData.Form.pas"/>
         <DCCReference Include="..\FrameFMX\LightFmx.Common.CamUtils.pas"/>
         <DCCReference Include="..\FrameFMX\LightFmx.Common.Styles.pas"/>
         <DCCReference Include="..\FrameFMX\LightFmx.Common.Screen.pas"/>
         <DCCReference Include="..\FrameFMX\LightFmx.Common.Dialogs.pas"/>
         <DCCReference Include="..\FrameFMX\LightFmx.Common.Graph.pas"/>
+        <DCCReference Include="..\FrameFMX\LightFmx.Common.LogFilter.pas"/>
+        <DCCReference Include="..\FrameFMX\LightFmx.Common.LogViewer.pas"/>
+        <DCCReference Include="..\FrameFMX\LightFmx.Common.LogForm.pas"/>
         <DCCReference Include="..\FrameFMX\LightFmx.Visual.SvgFlatButton.pas"/>
         <DCCReference Include="..\FrameFMX\LightFmx.Visual.AutoSizeBox.pas"/>
         <DCCReference Include="..\FrameFMX\LightFmx.Visual.AutoSizeBoxImg.pas"/>

@@ -176,7 +176,7 @@ type
     procedure TestBtnRunClick_NoExceptionWithEmptyPath;
 
     [Test]
-    procedure TestBtnRunClick_NoExceptionWithPath;
+    procedure TestBtnRunClick_RaisesOnMissingFile;
 
   end;
 
@@ -757,22 +757,22 @@ begin
 end;
 
 
-procedure TTestFormReminder.TestBtnRunClick_NoExceptionWithPath;
+procedure TTestFormReminder.TestBtnRunClick_RaisesOnMissingFile;
 var
   Form: TfrmReminder;
 begin
   Form:= TfrmReminder.Create(NIL);
   FTestForm:= Form;
 
-  // Use a path that likely doesn't exist but won't cause an exception
   Form.edtPath.Path:= 'C:\NonExistent\File.txt';
 
-  { btnRunClick should not raise exception with non-existent path }
-  Assert.WillNotRaise(
+  { btnRunClick delegates to ExecuteFile, which raises on a missing file (LightVcl.Common.ExecuteShell) }
+  Assert.WillRaise(
     procedure
     begin
       Form.btnRunClick(Form);
-    end);
+    end,
+    Exception);
 end;
 
 

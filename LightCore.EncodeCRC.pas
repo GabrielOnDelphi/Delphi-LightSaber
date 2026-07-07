@@ -1,7 +1,7 @@
 UNIT LightCore.EncodeCRC;
 
 {=============================================================================================================
-   2026.01.30
+   2026.07.06
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
@@ -10,9 +10,13 @@ UNIT LightCore.EncodeCRC;
 
    CRC32 (AnsiString) - Compatible with Total Commander 9.0a and WIN-SFV32 v1.0.
    CRC32 (TBytesArray) - Processes raw byte arrays.
-   CRC32_U (Unicode string) - For Unicode strings. Uses UTF-8 encoding internally via TStringStream.
-                              For ASCII-only strings, results match CRC32(AnsiString).
-   CRC32Stream - Processes any TStream in chunks (efficient for large files).
+   CRC32_U (Unicode string) - For Unicode strings. Encodes via TEncoding.Default: ANSI codepage on
+                              Windows, UTF-8 on POSIX (verified D13 System.SysUtils TEncoding.GetDefault).
+                              So for NON-ASCII strings the checksum is platform- and codepage-dependent!
+                              For ASCII-only strings, results match CRC32(AnsiString) on all platforms.
+                              Do not change the encoding: BioniX BxAICache persists cache file names
+                              derived from CRC32_U - changing it invalidates existing caches.
+   CRC32Stream - Processes a seekable TStream in chunks, from the CURRENT Position to the end.
 
 =============================================================================================================}
 
@@ -21,7 +25,7 @@ INTERFACE
 USES
    System.Classes, System.SysUtils, LightCore.Types;
 
- function CRC32_U    (CONST s: string)        : Cardinal;               { For Unicode strings - uses UTF-8 encoding, does not match Total Commander }
+ function CRC32_U    (CONST s: string)        : Cardinal;               { For Unicode strings - encoding is TEncoding.Default (ANSI on Windows, UTF-8 on POSIX), so non-ASCII checksums are platform-dependent. Does not match Total Commander }
  function CRC32      (CONST s: AnsiString)     : Cardinal;  overload;    { Compatible with Total Commander 9.0a }
  function CRC32      (CONST Bytes: TBytesArray): Cardinal;  overload;
  function CRC32Stream(AStream: TStream)        : Cardinal;               { For streams - processes in 64KB chunks }
@@ -83,9 +87,10 @@ begin
 end;
 
 
-{ Computes CRC32 for any TStream. Processes data in 64KB chunks for efficiency.
+{ Computes CRC32 for a seekable TStream. Processes data in 64KB chunks for efficiency.
+  Starts at the CURRENT Position and reads to the end (set Position:=0 first for a whole-stream CRC).
   Note: This operates on raw bytes from the stream, so the result depends on how the data
-  was written to the stream (e.g., UTF-8 encoding for TStringStream). }
+  was written to the stream (e.g., the encoding chosen for a TStringStream). }
 function CRC32Stream(AStream: TStream): Cardinal;
 CONST
   BUFFER_SIZE = 64 * 1024;  { 64KB buffer - good balance between memory and I/O efficiency }
@@ -100,6 +105,8 @@ begin
     while AStream.Position < AStream.Size do
       begin
         BytesRead:= AStream.Read(Buffer[0], BUFFER_SIZE);
+        if BytesRead <= 0
+        then RAISE EReadError.Create('CRC32Stream: stream read failed before reaching Size!');  { Without this, a stream that stops delivering data (e.g. file truncated by another process) loops forever }
         for i:= 0 to BytesRead - 1 do
           Result:= (Result shr 8) xor CRC32Table[Buffer[i] xor (Result and $000000FF)];
       end;
@@ -111,9 +118,13 @@ end;
 
 
 { Computes CRC32 for Unicode strings.
-  Uses TStringStream which defaults to UTF-8 encoding in modern Delphi.
-  For ASCII-only strings, results should match CRC32(AnsiString).
-  For strings with non-ASCII characters, results will differ due to UTF-8 multi-byte encoding. }
+  TStringStream.Create(s) uses TEncoding.Default: the ANSI codepage on Windows, UTF-8 on POSIX
+  (verified D13 System.Classes.pas:10285 + System.SysUtils TEncoding.GetDefault). Consequently,
+  for NON-ASCII strings the checksum is platform- and codepage-dependent, and the lossy ANSI
+  conversion can map distinct strings to the same checksum.
+  For ASCII-only strings, results match CRC32(AnsiString) on all platforms.
+  DO NOT switch this to an explicit encoding: BioniX (BxAICache.pas) persists cache file names
+  derived from CRC32_U values - changing the encoding orphans existing cache entries. }
 function CRC32_U(CONST s: string): Cardinal;
 VAR
   StringStream: TStringStream;

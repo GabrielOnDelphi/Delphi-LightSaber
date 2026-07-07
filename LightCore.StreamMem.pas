@@ -1,8 +1,11 @@
 UNIT LightCore.StreamMem;
 
 {=============================================================================================================
-   2026.04.25
+   2026.07.06
    www.GabrielMoraru.com
+
+   + LoadFromFile now uses fmShareDenyWrite (loading a file already open elsewhere no longer fails).
+   + ReadIntegers/ReadDoubles validate the element count against the remaining stream bytes before SetLength.
 --------------------------------------------------------------------------------------------------------------
    Extends TMemoryStream.
    Allows you to read and write data directly into a memory stream.
@@ -873,6 +876,9 @@ VAR
   Count: Integer;
 begin
   Count:= ReadInteger;
+  // Reject corrupt counts (negative or past EOF) BEFORE SetLength allocates
+  if (Count < 0) OR (Position + Int64(Count) * SizeOf(Integer) > Size)
+  then RAISE Exception.CreateFmt('ReadIntegers: invalid count %d. File corrupted?', [Count]);
   SetLength(List, Count);
   for i:= 0 to High(List) DO
     List[i]:= ReadInteger;
@@ -894,6 +900,9 @@ VAR
   Count: Integer;
 begin
   Count:= ReadInteger;
+  // Reject corrupt counts (negative or past EOF) BEFORE SetLength allocates
+  if (Count < 0) OR (Position + Int64(Count) * SizeOf(Double) > Size)
+  then RAISE Exception.CreateFmt('ReadDoubles: invalid count %d. File corrupted?', [Count]);
   SetLength(List, Count);
   for i:= 0 to High(List) DO
     List[i]:= ReadDouble;
@@ -1171,7 +1180,9 @@ procedure TCubicMemStream.LoadFromFile(CONST FileName: string);
 var
   FileStream: TLightStream;
 begin
-  FileStream:= TLightStream.Create(FileName, fmOpenRead);
+  // fmShareDenyWrite: the default fmShareCompat maps to an exclusive open on Windows, so loading a
+  // file that is already open elsewhere (even read-only) fails with ERROR_SHARING_VIOLATION.
+  FileStream:= TLightStream.Create(FileName, fmOpenRead OR fmShareDenyWrite);
   try
     LoadFromStream(FileStream);
   finally

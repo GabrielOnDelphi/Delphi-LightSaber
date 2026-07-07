@@ -62,7 +62,7 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>..\FrameVCL;..\FrameVCL\AutoTranslator;c:\Projects\LightProteus\ProteusSource;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\FrameVCL;..\External;..\FrameVCL\AutoTranslator;c:\Projects\LightProteus\ProteusSource;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <BT_BuildType>Debug</BT_BuildType>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
@@ -97,7 +97,6 @@
         <DCCReference Include="..\FrameVCL\LightVcl.Visual.AppData.pas"/>
         <DCCReference Include="Test.FormAbout.pas"/>
         <DCCReference Include="Test.FormAsyncMessage.pas"/>
-        <DCCReference Include="Test.FormDrawing.pas"/>
         <DCCReference Include="Test.FormEmailComposer.pas"/>
         <DCCReference Include="Test.FormEmailServer.pas"/>
         <DCCReference Include="Test.FormPower.pas"/>
@@ -113,7 +112,6 @@
         <DCCReference Include="..\FrameVCL\LightVcl.Common.IO.pas"/>
         <DCCReference Include="..\FrameVCL\FormAbout.pas"/>
         <DCCReference Include="..\FrameVCL\FormAsyncMessage.pas"/>
-        <DCCReference Include="..\FrameVCL\FormDrawing.pas"/>
         <DCCReference Include="..\FrameVCL\FormEmailComposer.pas"/>
         <DCCReference Include="..\FrameVCL\FormEmailServer.pas"/>
         <DCCReference Include="..\FrameVCL\FormPower.pas"/>

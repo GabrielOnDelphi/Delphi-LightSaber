@@ -59,18 +59,11 @@ type
 
     { TEST_MODE Tests }
     [Test]
-    procedure TestTEST_MODE_Exists;
-
-    [Test]
     procedure TestTEST_MODE_SetGet;
 
     { Log Form Tests (without actual form creation) }
     [Test]
     procedure TestRamLogExists;
-
-    { Initializing Flag Tests }
-    [Test]
-    procedure TestInitializing_AfterCreate;
   end;
 
   { Tests for TPendingAutoState record }
@@ -158,9 +151,10 @@ procedure TTestFmxAppData.TestGetAppVersion;
 var
   Version: string;
 begin
-  Version:= AppData.GetAppVersion;
-  // Version may be empty if not running as a packaged app
-  Assert.IsTrue(Length(Version) >= 0, 'GetAppVersion should not raise exception');
+  Version:= AppData.GetAppVersion;   // The real claim: must not raise, even when the exe has no version resource
+  if Version = ''
+  then Assert.Pass('No version resource in the test exe — GetAppVersion returned empty without raising')
+  else Assert.IsTrue(Pos('.', Version) > 0, 'Version should be dotted (n.n.n.n) but was: ' + Version);
 end;
 
 
@@ -205,12 +199,6 @@ end;
 
 { TEST_MODE Tests }
 
-procedure TTestFmxAppData.TestTEST_MODE_Exists;
-begin
-  // Just verify the class var exists and is accessible
-  Assert.IsTrue(TAppDataCore.TEST_MODE OR (NOT TAppDataCore.TEST_MODE));
-end;
-
 procedure TTestFmxAppData.TestTEST_MODE_SetGet;
 begin
   TAppDataCore.TEST_MODE:= True;
@@ -226,17 +214,6 @@ end;
 procedure TTestFmxAppData.TestRamLogExists;
 begin
   Assert.IsNotNull(AppData.RamLog, 'RamLog should be created with AppData');
-end;
-
-
-{ Initializing Flag Tests }
-
-procedure TTestFmxAppData.TestInitializing_AfterCreate;
-begin
-  // After Run(), Initializing should be False
-  // In test environment, we can't call Run(), so we test the class var directly
-  Assert.IsTrue(TAppDataCore.Initializing OR (NOT TAppDataCore.Initializing),
-    'Initializing flag should be accessible');
 end;
 
 

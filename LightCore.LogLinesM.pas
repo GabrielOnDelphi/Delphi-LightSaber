@@ -53,8 +53,8 @@ TYPE
     function getItem(Index: Integer): PLogLine; override;
 
     { Lock hooks — override base no-ops with MREWS BeginRead / EndRead.
-      No nested-write hazard exists in our code paths anymore; readFromStream_v5
-      uses the non-virtual addInternal so it doesn't dispatch back through Add. }
+      readFromStream_v5 uses the non-virtual addInternal so it doesn't dispatch back
+      through Add. One reentrant path REMAINS — see the ReadFromStream comment below. }
     procedure acquireReadLock; override;
     procedure releaseReadLock; override;
   public
@@ -91,7 +91,8 @@ end;
 
 destructor TLogLinesMultiThreaded.Destroy;
 begin
-  Clear;              { Free the allocated memory for lines }
+  if (FList <> NIL) AND (FLock <> NIL)   { NIL when the constructor raised mid-way (partially-constructed object) — Clear would deref them }
+  then Clear;                            { Free the allocated memory for lines }
   FreeAndNil(FList);
   FreeAndNil(FLock);
   inherited;
@@ -222,13 +223,21 @@ end;
 { Reads log lines from stream. Acquires write lock for the entire operation
   because it modifies the list (adds items via inherited implementation).
 
-  No reentrancy hazard: the inherited body calls readFromStream_v5, which appends
-  via addInternal (non-virtual, non-locking) — not the public virtual Add. This
+  Reentrancy: the inherited body calls readFromStream_v5, which appends via
+  addInternal (non-virtual, non-locking) — not the public virtual Add. This
   was historically a real concern (the loop went through TLogLinesMultiThreaded.Add
-  → FLock.BeginWrite a second time, relying on RTL MREWS write reentrancy). The
-  addInternal indirection eliminates the dependency, so a future migration to a
-  non-reentrant primitive (TLightweightMREW / SRWLOCK / pthread_rwlock) won't
-  silently break this path. }
+  → FLock.BeginWrite a second time, relying on RTL MREWS write reentrancy).
+
+  WARNING — one reentrant path REMAINS, so migrating to a non-reentrant primitive
+  (TLightweightMREW / SRWLOCK / pthread_rwlock) is still NOT safe: on a corrupt/
+  truncated stream, the nested TLightStream.ReadHeader call (inherited ReadFromStream)
+  reports the failure via AppDataCore.LogError → RamLog.AddError. When the list being
+  loaded IS the app's own log (AppData.RamLog.LoadFromFile — the demo pattern), that
+  AddError re-enters AddNewLine → FLock.BeginWrite while THIS write lock is held, and
+  its CheckAndSaveToDisk can nest SaveToFile → WriteToStream → FLock.BeginRead under
+  the write lock. Both nestings are safe with TMultiReadExclusiveWriteSynchronizer
+  (write is recursion-counted; BeginRead by the write-holder doesn't block — verified
+  D13 System.SysUtils) but would deadlock on SRWLOCK-style primitives. }
 procedure TLogLinesMultiThreaded.ReadFromStream(Stream: TLightStream);
 begin
   FLock.BeginWrite;

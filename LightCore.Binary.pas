@@ -1,7 +1,7 @@
 UNIT LightCore.Binary;
  
 {=============================================================================================================
-   2026.04.25
+   2026.07.06
 
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
@@ -140,7 +140,7 @@ end;
 
 { Returns TRUE if the input parameter is a valid hex number.
   Accepts formats: '$0123ABCDEF' or '0123ABCDEF'.
-  Returns FALSE for empty strings or invalid characters. }
+  Raises an exception for empty strings (test-pinned behavior). Returns FALSE for invalid characters. }
 function StringIsHexNumber(CONST s: string): Boolean;
 VAR
    Start, i: Integer;
@@ -195,13 +195,13 @@ begin
 end;
 
 
-{ Shows which bits are enabled in IntegerNumber. The endianness is irrelevant. The bits are shown exactly in the order found: b0, b1, b2... }
+{ Shows which bits are enabled in IntegerNumber. Output is MSB first: Result[1] is bit (Digits-1), the last char is bit 0. Example: IntToBin(5, 8) = '00000101' }
 function IntToBin(CONST IntNumber, Digits: Integer): string;
 begin
  if Digits= 0
  then Result:= ''
  else
-   if  (IntNumber AND (1 SHL (Digits-1)))>0
+   if  (IntNumber AND (1 SHL (Digits-1))) <> 0                             { <> 0, not > 0: for Digits=32 the mask is $80000000 which is a NEGATIVE Integer, so '> 0' reported bit 31 as always clear }
    then result:='1'+IntToBin(IntNumber, Digits-1)
    else result:='0'+IntToBin(IntNumber, Digits-1)
 end;
@@ -633,24 +633,34 @@ end;
 
 -------------------------------------------------------------------------------------------------------------}
 
-{ ROTATE }
+{ ROTATE
+  N is masked to the operand width. Without the mask/guard, N=0 (or N=width) computed
+  'Value shl 64' whose result depends on the CPU's shift-count masking -> Result was 2*Value instead of Value. }
 function RotateRight64(Value: int64 ; N : Integer): int64;   { Source: http://www.merlyn.demon.co.uk/del-bits.htm }
 begin
+ N:= N AND 63;
+ if N = 0 then EXIT(Value);
  Result := (Value shr N) + (Value shl (64-N))
 end;
 
 function RotateLeft64(Value: int64 ; N : Integer): int64;
 begin
+ N:= N AND 63;
+ if N = 0 then EXIT(Value);
  Result := (Value shl N) + (Value shr (64-N))
 end;
 
 function RotateRight32(Value : dword ; N : Integer): dword;
 begin
+ N:= N AND 31;
+ if N = 0 then EXIT(Value);
  Result := (Value shr N) + (Value shl (32-N))
 end;
 
 function RotateLeft32(Value : dword ; N : Integer): dword;
 begin
+ N:= N AND 31;
+ if N = 0 then EXIT(Value);
  Result := (Value shl N) + (Value shr (32-N))
 end;
 
@@ -742,9 +752,9 @@ begin
 end;  {$ENDIF}
 
 
-{ Converts the bytes that form this number into their ASCII equivalent.
-  The result is in 'big endian' order. Note that Intel uses 'lil endian'!
-  Exemple: for number 65280 (1111111100000000) the function will return #255 + #0. }
+{ Converts the number to a HEX text representation, MSB first (big endian order).
+  Example: SerializeCardinal($FF332211) returns 'FF332211'.
+  Unlike SerializeWord (which returns raw chars), this returns hex TEXT. Inverse: MakeCardinal(Hex). }
 function SerializeCardinal(C: Cardinal): string;
 begin
  Result:=         IntToHex(CardinalRec(c).Bytes[4], 2);

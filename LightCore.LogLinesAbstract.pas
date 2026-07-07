@@ -1,8 +1,10 @@
 UNIT LightCore.LogLinesAbstract;
 
 {=============================================================================================================
-   2026.05.07
+   2026.07.07
    www.GabrielMoraru.com
+   Last update: 2026.07.07 - RLogLine.ReadFromStream_v5 validates the Level enum range (corrupt values
+                             previously loaded silently and raised later inside the viewers' paint code).
 --------------------------------------------------------------------------------------------------------------
    Abstract base class for log line storage.
 
@@ -334,9 +336,19 @@ end;
    Instead, the parent (TRamLog) is responsible to do this.
 -------------------------------------------------------------------------------------------------------------}
 procedure RLogLine.ReadFromStream_v5(Stream: TLightStream);
+VAR RawLevel: Integer;
 begin
   Msg    := Stream.ReadString(MaxLogMsgBytes);   { Override default 1*KB ceiling — log messages can be very large. }
-  Level  := TLogVerbLvl(Stream.ReadInteger);
+
+  { Validate the enum range. The padding checks between records catch most corruption, but a
+    corrupted Level value alone would pass them and later blow up far away (Verbosity2Color
+    raises inside the viewer's paint handler; VerbosityNames indexes out of bounds).
+    Valid v5 writers only ever emit Ord(lvDebug)..Ord(lvErrors), so this rejects corruption only. }
+  RawLevel:= Stream.ReadInteger;
+  if (RawLevel < Ord(Low(TLogVerbLvl))) or (RawLevel > Ord(High(TLogVerbLvl)))
+  then raise EReadError.Create('Invalid log verbosity level: ' + IntToStr(RawLevel) + '. Stream corrupted?');
+  Level  := TLogVerbLvl(RawLevel);
+
   Indent := Stream.ReadInteger;
   Bold   := Stream.ReadBoolean;
   Time   := Stream.ReadDate;

@@ -20,6 +20,7 @@ uses
   Vcl.Controls,
   Vcl.StdCtrls,
   IdSMTP,
+  IdSSLOpenSSL,
   IdExplicitTLSClientServerBase;
 
 type
@@ -195,6 +196,9 @@ begin
   Assert.IsNotNull(AppData, 'AppData must be initialized before running tests');
   FTestForm:= NIL;
   FSMTP:= TIdSMTP.Create(NIL);
+  // Setting UseTLS to anything but utNoTLSSupport requires an SSL-capable IOHandler,
+  // else Indy raises 'SSL IOHandler is required for this setting'. Owned by FSMTP.
+  FSMTP.IOHandler:= TIdSSLIOHandlerSocketOpenSSL.Create(FSMTP);
 end;
 
 
@@ -544,6 +548,7 @@ var
 begin
   Form:= TfrmSmtpSettings.Create(NIL);
   FTestForm:= Form;
+  Form.Initialize;   // The form's contract: Initialize must run before UseExternal/InternalMailer (decodes the password)
 
   Form.ledHost.Text:= 'mail.example.com';
   Form.UseExternalMailer(FSMTP);
@@ -559,6 +564,7 @@ var
 begin
   Form:= TfrmSmtpSettings.Create(NIL);
   FTestForm:= Form;
+  Form.Initialize;
 
   Form.spnPort.Value:= 465;
   Form.UseExternalMailer(FSMTP);
@@ -574,6 +580,7 @@ var
 begin
   Form:= TfrmSmtpSettings.Create(NIL);
   FTestForm:= Form;
+  Form.Initialize;
 
   Form.edtUserName.Text:= 'testuser@example.com';
   Form.UseExternalMailer(FSMTP);
@@ -589,6 +596,7 @@ var
 begin
   Form:= TfrmSmtpSettings.Create(NIL);
   FTestForm:= Form;
+  Form.Initialize;
 
   Form.edtPsw.Text:= 'secretpassword';
   Form.UseExternalMailer(FSMTP);
@@ -604,6 +612,7 @@ var
 begin
   Form:= TfrmSmtpSettings.Create(NIL);
   FTestForm:= Form;
+  Form.Initialize;
 
   Form.radTslImplic.Checked:= TRUE;
   Form.UseExternalMailer(FSMTP);
@@ -619,6 +628,7 @@ var
 begin
   Form:= TfrmSmtpSettings.Create(NIL);
   FTestForm:= Form;
+  Form.Initialize;
 
   // We can't actually connect without a server, but we can verify
   // the method doesn't crash when SMTP is not connected
@@ -639,6 +649,7 @@ var
 begin
   Form:= TfrmSmtpSettings.Create(NIL);
   FTestForm:= Form;
+  Form.Initialize;
 
   Form.UseInternalMailer(FSMTP);
 
@@ -653,6 +664,7 @@ var
 begin
   Form:= TfrmSmtpSettings.Create(NIL);
   FTestForm:= Form;
+  Form.Initialize;
 
   Form.UseInternalMailer(FSMTP);
 
@@ -667,6 +679,7 @@ var
 begin
   Form:= TfrmSmtpSettings.Create(NIL);
   FTestForm:= Form;
+  Form.Initialize;
 
   FSMTP.Username:= 'olduser';
   FSMTP.Password:= 'oldpass';
@@ -686,6 +699,7 @@ var
 begin
   Form:= TfrmSmtpSettings.Create(NIL);
   FTestForm:= Form;
+  Form.Initialize;
 
   Form.UseInternalMailer(FSMTP);
 
@@ -812,6 +826,7 @@ var
 begin
   Form:= TfrmSmtpSettings.Create(NIL);
   FTestForm:= Form;
+  Form.Initialize;
 
   Form.radTslNone.Checked:= TRUE;
   Form.radTslImplic.Checked:= FALSE;
@@ -831,6 +846,7 @@ var
 begin
   Form:= TfrmSmtpSettings.Create(NIL);
   FTestForm:= Form;
+  Form.Initialize;
 
   Form.radTslNone.Checked:= FALSE;
   Form.radTslImplic.Checked:= TRUE;
@@ -850,6 +866,7 @@ var
 begin
   Form:= TfrmSmtpSettings.Create(NIL);
   FTestForm:= Form;
+  Form.Initialize;
 
   Form.radTslNone.Checked:= FALSE;
   Form.radTslImplic.Checked:= FALSE;
@@ -869,6 +886,7 @@ var
 begin
   Form:= TfrmSmtpSettings.Create(NIL);
   FTestForm:= Form;
+  Form.Initialize;
 
   Form.radTslNone.Checked:= FALSE;
   Form.radTslImplic.Checked:= FALSE;

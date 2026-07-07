@@ -1,9 +1,14 @@
 UNIT LightCore.LogRam;
 
 {=============================================================================================================
-   2026.05.07
+   2026.07.07
    www.GabrielMoraru.com
-   Last update: 2026.05.07 - Bold parameter added to all AddXxx (default FALSE for back-compat; AddBold
+   Last update: 2026.07.07 - Overflow path: the "lost the coalesce race" closure now runs Populate itself
+                             before freeing the snapshot (the previous free-only closure could run before
+                             the race winner's Populate was even queued -> use-after-free on cached
+                             PLogLine pointers). prepareString caps messages at MaxLogMsgChars so saved
+                             .logbin files always stay below the reader's 16 MB per-message ceiling.
+                2026.05.07 - Bold parameter added to all AddXxx (default FALSE for back-compat; AddBold
                              is now a thin shim over AddInfo(Msg, TRUE)). CheckAndSaveToDisk split into
                              tryOverflowSave + tryPeriodicSave helper procedures (both assume the caller
                              holds FAutoSaveLock; the public CheckAndSaveToDisk is the single entry
@@ -195,11 +200,21 @@ USES
   {$IFDEF MSWINDOWS} Winapi.Windows, {$ENDIF}
   LightCore, LightCore.TextFile, LightCore.AppData, LightCore.StrBuilder;
 
-CONST CurrentVersion = 5;
+CONST
+  CurrentVersion = 5;
+
+  { Hard ceiling on a single stored message, in UTF-16 chars.
+    The binary READER (RLogLine.ReadFromStream_v5 in LightCore.LogLinesAbstract) rejects any
+    message whose UTF-8 length exceeds MaxLogMsgBytes = 16 MB, but WriteString is unbounded —
+    a longer message would produce a .logbin that can never be loaded back (every LoadFromFile
+    raises 'String too large'), silently poisoning the crash-recovery files.
+    Worst-case UTF-16 -> UTF-8 expansion is 3 bytes per code unit, so 4M chars <= 12 MB —
+    comfortably under the reader's 16 MB ceiling. }
+  MaxLogMsgChars = 4*1024*1024;
 
 
 { Trace channel for save-path failures.
-  Cannot use Log.WriteError here -- that recurses through TRamLog.AddXxx, potentially
+  Cannot use AppDataCore.LogError here -- that recurses through TRamLog.AddXxx, potentially
   re-entering CheckAndSaveToDisk and causing infinite recursion if disk I/O is failing.
 
   Platform routing:
@@ -744,21 +759,27 @@ begin
         end
         else
           begin
-            { Lost the coalesce race: another Populate closure is already pending
-              (or just ran). That closure refreshes the observer's pointer cache
-              too, so we only need to free our snapshot AFTER it runs. The queue
-              is FIFO, so a no-op closure queued now will fire after any earlier
-              closure has completed — by then the cache no longer references our
-              snapshot's pointers and we can dispose them safely.
+            { Lost the coalesce race: the flag is 1, so another repaint closure was
+              ACQUIRED — but we cannot assume it is already IN the queue. The winner
+              sets the flag and only then calls TThread.Queue (two separate steps in
+              NotifyLogObserver); it can be preempted between them for the entire
+              duration of our SnapshotAndClear + disk save. A bare "free the snapshot"
+              closure queued now could therefore run BEFORE the winner's Populate lands,
+              disposing records the observer still caches (FGrid.Objects / FVisibleLines)
+              — use-after-free on the next paint.
 
-              Edge case: if the earlier closure has ALREADY run by the time we
-              enqueue this one, our free is still safe — the cache was refreshed
-              by that completed Populate, and our queued free runs on the main
-              thread without racing anything. }
+              So this closure refreshes the observer's pointer cache ITSELF, then frees —
+              same pattern as the winning branch, minus the flag Release (we do not own
+              the flag; the winner will Release it). The extra Populate is harmless:
+              overflow fires once per MaxEntries adds, so coalescing it buys nothing. }
             HandedOff:= TRUE;
             TThread.Queue(NIL, procedure
               begin
-                FreeAndNil(Snapshot);
+                TRY
+                  LObserver.Populate;
+                FINALLY
+                  FreeAndNil(Snapshot);   { Free AFTER our own Populate refreshed the observer's pointer cache. }
+                END;
               end);
           end;
       end;
@@ -858,6 +879,16 @@ begin
   if (Pos(#10, Msg) = 0) and (Pos(#13, Msg) = 0)
   then Result:= Msg                         { No line breaks — return verbatim, no allocation }
   else Result:= ReplaceEnters(Msg, ' ');    { Has line breaks — use the full replacement path }
+
+  { Cap the stored length so the binary save stays loadable — see MaxLogMsgChars. }
+  if Length(Result) > MaxLogMsgChars then
+    begin
+      SetLength(Result, MaxLogMsgChars);
+      { Don't cut a surrogate pair in half — drop a trailing lone high surrogate. }
+      if (Result[MaxLogMsgChars] >= #$D800) and (Result[MaxLogMsgChars] <= #$DBFF)
+      then SetLength(Result, MaxLogMsgChars-1);
+      Result:= Result + ' [truncated]';
+    end;
 end;
 
 
