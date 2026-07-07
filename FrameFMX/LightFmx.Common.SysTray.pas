@@ -1,7 +1,7 @@
 ﻿unit LightFmx.Common.SysTray;
 
 {======================================================================================================
-   2026.04
+   2026.07
    www.GabrielMoraru.com
 
    System tray icon via Win32 Shell_NotifyIcon + AllocateHWnd message window.
@@ -32,10 +32,15 @@ const
 {$ENDIF}
 
 type
-  TTrayColor       = (tcGreen, tcYellow, tcOrange, tcRed);
+  TTrayColor       = (tcGreen, tcYellow, tcOrange, tcRed, tcGray);   // tcGray = neutral/idle (no data to color-code)
   TBalloonIconType = (biNone, biInfo, biWarning, biError);   // maps to NIIF_* constants
 
   TTrayIcon = class
+  strict private
+    { Platform-independent: the public AppName property reads FAppName, so these two
+      must exist on non-Windows too (the unit compiles there as a no-op stub). }
+    FAppName:     string;     // used for default tooltip
+    FTooltip:     string;     // current tip
   {$IFDEF MSWINDOWS}
   strict private class var
     FWM_TASKBARCREATED: UINT;   // cached from RegisterWindowMessage('TaskbarCreated'); zero = not yet registered
@@ -45,6 +50,7 @@ type
     FIconYellow:  THandle;
     FIconOrange:  THandle;
     FIconRed:     THandle;
+    FIconGray:    THandle;
     FSparkIcon:   THandle;   // dynamic 16x16 sparkline icon (regenerated on SetSparklineIcon)
     FCustomIcon:  THandle;   // user-supplied via SetIcon/LoadIconFromResource (owned, destroyed in Destroy)
     FCurrentIcon: THandle;
@@ -59,8 +65,6 @@ type
     FAppHWnd:     HWND;
     FOldAppProc:  Pointer;
     FNewAppProc:  Pointer;
-    FAppName:     string;     // used for default tooltip
-    FTooltip:     string;     // current tip
     procedure TrayWndProc(var Msg: TMessage);
     procedure FormWndProc(var Msg: TMessage);
     procedure AppWndProc (var Msg: TMessage);
@@ -233,6 +237,7 @@ begin
   FIconYellow := MakeColorIcon16(230, 200, 20);
   FIconOrange := MakeColorIcon16(230, 120, 20);
   FIconRed    := MakeColorIcon16(210, 40,  40);
+  FIconGray   := MakeColorIcon16(128, 128, 128);
   FCurrentIcon := FIconGreen;
 
   FHelperHWnd := AllocateHWnd(TrayWndProc);
@@ -252,6 +257,7 @@ begin
     if FIconYellow <> 0 then DestroyIcon(FIconYellow);
     if FIconOrange <> 0 then DestroyIcon(FIconOrange);
     if FIconRed    <> 0 then DestroyIcon(FIconRed);
+    if FIconGray   <> 0 then DestroyIcon(FIconGray);
     if FSparkIcon  <> 0 then DestroyIcon(FSparkIcon);
     if FCustomIcon <> 0 then DestroyIcon(FCustomIcon);
   finally
@@ -283,7 +289,7 @@ begin
   if AForm = nil then Exit;
   Wnd := FormToHWND(AForm);
   if Wnd = 0 then Exit;                             // HWND not realized yet
-  if Wnd = FHookedHWnd then Exit;                   // already hooked to same HWND
+  if (Wnd = FHookedHWnd) and not FUnhooked then Exit;   // already hooked to same live HWND. FUnhooked=TRUE means that HWND died (WM_NCDESTROY) — an equal value now is a RECYCLED handle belonging to a new window, so fall through and re-hook.
 
   if FHookedHWnd <> 0 then UnhookForm;
 
@@ -466,6 +472,14 @@ begin
   StrPLCopy(Nid.szTip, FTooltip, SizeOf(Nid.szTip) div SizeOf(Char) - 1);
   // Track actual result — silent failure leaves us in inconsistent state otherwise
   FInstalled := Shell_NotifyIcon(NIM_ADD, @Nid);
+
+  { NIM_ADD talks to Explorer via SendMessageTimeout (4-7s). During a logon storm it can
+    return FALSE (ERROR_TIMEOUT) even though the shell DID add the icon. A successful
+    NIM_MODIFY proves the icon exists; if the icon is genuinely absent, MODIFY fails too
+    and FInstalled stays FALSE so the caller may retry Install later (it is idempotent).
+    https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shell_notifyiconw }
+  if NOT FInstalled
+  then FInstalled := Shell_NotifyIcon(NIM_MODIFY, @Nid);
 end;
 
 
@@ -515,6 +529,7 @@ begin
     tcGreen:  NewIcon := FIconGreen;
     tcYellow: NewIcon := FIconYellow;
     tcOrange: NewIcon := FIconOrange;
+    tcGray:   NewIcon := FIconGray;
   else        NewIcon := FIconRed;
   end;
   if NewIcon = FCurrentIcon then Exit;
@@ -563,6 +578,11 @@ var
   H: HICON;
 begin
   H := LoadIcon(hInstance, PChar(ResName));
+  { LoadIcon returns a SHARED icon — DestroyIcon must never be called on those, but
+    SetIcon takes ownership and destroys. Hand SetIcon its own private copy instead.
+    https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-destroyicon }
+  if H <> 0
+  then H := CopyIcon(H);
   SetIcon(H);   // SetIcon handles H=0 (revert to default)
 end;
 
@@ -675,7 +695,7 @@ end;
 {$ELSE}
 
 { Stub: no-op tray for non-Windows platforms }
-constructor TTrayIcon.Create(const AAppName: string; const AOnLeftClick, AOnSettings, AOnExit: TProc); begin inherited Create; end;
+constructor TTrayIcon.Create(const AAppName: string; const AOnLeftClick, AOnSettings, AOnExit: TProc); begin inherited Create; FAppName:= AAppName; FTooltip:= AAppName; end;
 destructor  TTrayIcon.Destroy;                                                                         begin inherited Destroy; end;
 procedure   TTrayIcon.Install;                                                                         begin end;
 procedure   TTrayIcon.Uninstall;                                                                       begin end;
