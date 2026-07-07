@@ -340,7 +340,7 @@ VAR i: Integer;
 begin
  Number:= s;                                                                   { If the whole string is a number, it all goes into Number (mirrors SplitNumber_End) }
  Text:= '';
- for i:= 1 TO Length(s) DO                                                     { Search from end to front. I need to see where the strings ends and where the digits start. Ex: 'Monkey 13' }
+ for i:= 1 TO Length(s) DO                                                     { Search from front to back: find where the leading digits end. Ex: '01_Render' -> Number='01' + Text='_Render' }
    if NOT CharIsNumber(s[i]) then
     begin                                                                      { Letter found. Split text in two. }
      Number:= system.COPY(s, 1, i-1);
