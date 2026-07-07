@@ -29,6 +29,10 @@
      * Animations on FMX native-presentation controls (TEdit, TMemo,
        TAutoSizeBoxText) must be stopped BEFORE the control enters BeforeDestruction;
        otherwise a property write during TPresentedTextControl.FreeStyle crashes.
+     * Never reparent children into the owner form inside TExitAnim.FallDown: it
+       flattens the form's children and breaks FreeNotify destruction order
+       (shutdown AV at $8080808C, fixed 2026-04-21 by animating in place). See the
+       EXIT FALL-DOWN post-mortem later in this unit.
      * TConfetti/TExitAnim use Random; caller must have Randomize called once at startup.
 
    Example usage:
