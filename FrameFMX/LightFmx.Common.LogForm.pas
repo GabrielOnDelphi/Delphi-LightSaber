@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.LogForm;
 
 {=============================================================================================================
-   2026.05.05
+   2026.07.07
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Visual log window for displaying TRamLog content.
@@ -163,7 +163,14 @@ begin
 
     LogViewer.ShowTime:= IniFile.Read('ShowTime', TRUE);
     LogViewer.ShowDate:= IniFile.Read('ShowDate', TRUE);
-    LogViewer.Verbosity:= TLogVerbLvl(IniFile.Read('Verbosity', Ord(lvHints)));
+
+    { Validate before casting: a corrupt/hand-edited INI value outside the enumeration
+      would produce an out-of-range TLogVerbLvl that filters out every line (log looks empty)
+      and gets re-persisted on close. }
+    VAR VerbOrd:= IniFile.Read('Verbosity', Ord(lvHints));
+    if (VerbOrd < Ord(Low(TLogVerbLvl))) OR (VerbOrd > Ord(High(TLogVerbLvl)))
+    then VerbOrd:= Ord(lvHints);
+    LogViewer.Verbosity:= TLogVerbLvl(VerbOrd);
 
     chkShowDate.IsChecked:= LogViewer.ShowDate;
     chkShowTime.IsChecked:= LogViewer.ShowTime;
