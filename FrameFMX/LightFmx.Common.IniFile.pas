@@ -1,11 +1,17 @@
 UNIT LightFmx.Common.IniFile;
 
 {=============================================================================================================
-   2026.06.10
+   2026.07.07
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
   Same as LightCore.INIFile but adds support for forms to save themselves to disk.
   INI file name/file path is automatically calculated.
+
+  2026-07-07: Fixed: a form saved while minimized persisted the OS park position (-32000,-32000)
+              and WindowState=wsMinimized, so it was restored off-screen and invisible.
+              Save now skips position keys and stores wsNormal for minimized forms; load never
+              restores wsMinimized, validates the WindowState value, and recenters forms whose
+              stored position is the park position (heals INIs written by older versions).
 --------------------------------------------------------------------------------------------------------------
 
   Self saving forms:
@@ -239,6 +245,19 @@ begin
  then
   begin
    VAR Form:= TForm(Ctrl);
+
+   { Minimized form? Don't persist its position!
+     On Windows the OS parks a minimized window at -32000,-32000 and FMX mirrors that into
+     Form.Left/Top (TWinWindowHandle.WMWindowPosChanged -> Form.SetBoundsF). Persisting those
+     values would restore the form off-screen (invisible) on next start. Keep the previous
+     session's position keys untouched (they hold the last good position) and store wsNormal —
+     restoring an app minimized is never what the user wants (StartMinim covers that use case). }
+   if Form.WindowState = TWindowState.wsMinimized then
+     begin
+       WriteInteger(Ctrl.Name, 'WindowState', Ord(TWindowState.wsNormal));
+       EXIT;
+     end;
+
    WriteInteger(Ctrl.Name,'WindowState', Ord(Form.WindowState));     { ATENTION! This MUST be above WindowState:= wsNormal, otherwise we always save wsNormal and a maximized form is never restored as maximized }
    if Form.WindowState = TWindowState.wsMaximized                    { Unmaximize form in order to save form position correctly }
    then Form.WindowState:= TWindowState.wsNormal;
@@ -295,12 +314,28 @@ begin
       if (NOT IsNonResizable) AND ValueExists(Form.Name, 'Height')
       then Form.Height:= ReadInteger(Form.Name, 'Height', Form.Height);
 
+      { Heal INI files poisoned by versions before 2026.07 (form saved while minimized:
+        the OS park position -32000,-32000 was persisted). Both coordinates that negative
+        cannot be a real multi-monitor position — recenter on the primary screen.
+        Checked on BOTH axes: legitimate setups (monitors left of/above primary) never
+        push both Left AND Top below -8000 dp simultaneously; the park position does. }
+      if (Form.Left <= -8000) AND (Form.Top <= -8000) then
+        begin
+          Form.Top := Round((Screen.Height - Form.Height) / 2);
+          Form.Left:= Round((Screen.Width  - Form.Width ) / 2);
+        end;
+
       if ShowPositionWarn
       AND (Form.Position <> TFormPosition.Designed)
       then RAISE Exception.Create('Position is not ''poDesigned'' for form '+ Form.Name +'!');
 
-      if ValueExists(Form.Name, 'WindowState')
-      then Form.WindowState:= TWindowState(ReadInteger (Form.Name, 'WindowState', 0));      //  TWindowState = (wsNormal, wsMinimized, wsMaximized);
+      { Restore window state. Validated: never restore wsMinimized (an app restored minimized
+        looks like it did not start; old INIs may contain it) and map corrupt/out-of-range
+        values to wsNormal instead of casting them blindly into the enumeration. }
+      if ValueExists(Form.Name, 'WindowState') then                                          //  TWindowState = (wsNormal, wsMinimized, wsMaximized);
+        if ReadInteger(Form.Name, 'WindowState', 0) = Ord(TWindowState.wsMaximized)
+        then Form.WindowState:= TWindowState.wsMaximized
+        else Form.WindowState:= TWindowState.wsNormal;
     end
   else
     begin
