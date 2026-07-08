@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Common.LogViewer;
 
 {=============================================================================================================
-   2026.05.05
+   2026.07.07
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    A log viewer based on TStringGrid.
@@ -147,8 +147,11 @@ begin
   FAutoScroll:= TRUE;
   FFilteredRowCount:= 0;
 
-  // Enable row selection by default
-  Options:= Options + [TGridOption.RowSelect];
+  // Enable row selection by default. Also remove Editing: FMX's DefaultGridOptions
+  // includes TGridOption.Editing (unlike VCL, where TStringGrid is read-only by default),
+  // and a log viewer must not accept in-place cell edits — the editor would open EMPTY
+  // over the custom-painted text because this control never stores cell Values.
+  Options:= Options + [TGridOption.RowSelect] - [TGridOption.Editing];
 
   RowHeight:= 22;
   OnDrawColumnCell:= MyDrawColumnCell;
@@ -372,6 +375,7 @@ end;
 { Connects this viewer to AppData's global RamLog for application-wide logging }
 procedure TLogViewer.ObserveAppDataLog;
 begin
+  Assert(AppData <> NIL, 'AppData not initialized!');   // Check AppData itself first — dereferencing it below would AV instead of giving a clear message
   Assert(AppData.RamLog <> NIL, 'AppData.RamLog not assigned!!');
   AssignExternalRamLog(AppData.RamLog);
 end;
