@@ -1,7 +1,7 @@
 UNIT LightFmx.Common.CrashHandler;
 
 {=============================================================================================================
-   2026.04.25
+   2026.07.07
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Minimal cross-platform crash logger.
@@ -142,14 +142,18 @@ begin
     Line:= FormatDateTime('yyyy-mm-dd hh:nn:ss', Now) + ' | ' + E.ClassName + ': ' + E.Message;
 
     // Mirror to RamLog so the in-app log viewer sees it during the current session.
-    // DEFER via TThread.Queue: AddError can synchronously trigger PopUpWindow on
-    // the log observer (when ShowOnError=TRUE). Opening a modal window with the
-    // faulting call stack still active spins a re-entrant message pump on a
-    // partially-corrupted state. Posting it lets the current handler unwind first.
+    // DEFER via TThread.ForceQueue: AddError can synchronously trigger PopUpWindow on
+    // the log observer (when ShowOnError=TRUE), plus grid repaint and the periodic
+    // disk save — heavy work to run with the faulting call stack still active.
+    // Posting it lets the current handler unwind first.
+    // MUST be ForceQueue, not Queue: OnException fires on the MAIN thread, and
+    // TThread.Queue called from the main thread executes the closure IMMEDIATELY
+    // (System.Classes TThread.Synchronize runs it inline unless ForceQueue is set),
+    // which would defeat the deferral entirely.
     if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog) then
       begin
         LineCap:= Line;
-        TThread.Queue(NIL, procedure
+        TThread.ForceQueue(NIL, procedure
           begin
             if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
             then AppDataCore.RamLog.AddError('Unhandled: ' + LineCap);
