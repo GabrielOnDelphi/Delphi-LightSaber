@@ -128,7 +128,7 @@ function DownloadImageToFile(CONST URL, LocalPath: string; OUT DownloadedSize: I
 ## LightCore.EncodeCRC (4)
 
 ```pascal
-function CRC32_U (CONST s: string) : Cardinal; { For Unicode strings - uses UTF-8 encoding, does not match Total Commander }
+function CRC32_U (CONST s: string) : Cardinal; { For Unicode strings - encoding is TEncoding.Default (ANSI on Windows, UTF-8 on POSIX), so non-ASCII checksums are platform-dependent. Does not match Total Commander }
 function CRC32 (CONST s: AnsiString) : Cardinal; overload; { Compatible with Total Commander 9.0a }
 function CRC32 (CONST Bytes: TBytesArray): Cardinal; overload;
 function CRC32Stream(AStream: TStream) : Cardinal; { For streams - processes in 64KB chunks }
@@ -668,7 +668,7 @@ function CountAppearance (CONST Niddle: Char; CONST Haystack: string) : Integer;
 function CountAppearance (CONST Niddle: AnsiChar; CONST Haystack: AnsiString): Integer; overload;
 function LastPos (CONST Niddle, S: string): Integer; overload; { Return the position of the last occurence of a substring in String. Not tested. Also see 'EndsStr' }
 function LastPos (CONST Niddle: Char; CONST S: String): Integer; overload;
-function PosAtLeast (CONST Niddle, S: string; AtLeast: Integer): Boolean; { Returns true if the specified string appears at least x times }
+function PosAtLeast (CONST Niddle, S: string; AtLeast: Integer): Boolean; { Returns true if Niddle appears MORE than AtLeast times (strictly >, not >=). Overlapping matches count. Callers (CubicDNA) rely on the strict > semantics - do not change! }
 function PosInsensitive (CONST Niddle, Haystack: string): Integer; overload;
 function PosInsensitive (CONST Niddle, Haystack: AnsiString): Integer; overload;
 function LastChar (CONST s: string): string; { Returns the last char in the string but checks first if the string is empty (so it won't crash). Returns '' if the string is empty }
@@ -1040,13 +1040,13 @@ function StringFromStream(MemStream: TMemoryStream; Count: Integer= 0; Pos: Inte
 ## LightCore.StringList (17)
 
 ```pascal
-procedure RemoveDuplicateString(CONST s: string); { Removes the first occurrence of the specified string (case-insensitive) }
-procedure RemoveDuplicateFile(CONST FileName: string); { Removes the first occurrence of the specified filename (case-insensitive) }
+procedure RemoveDuplicateString(CONST s: string); { Removes ONE occurrence of the specified string (the last one, scanning from the end; case-insensitive) }
+procedure RemoveDuplicateFile(CONST FileName: string); { Removes ONE occurrence of the specified filename (the last one, scanning from the end; case-insensitive) }
 procedure RemoveDuplicates; { THIS WILL SORT THE LIST !!! }
 procedure RemoveEmptyLines;
 function RemoveLines (const BadWord: string): Integer;
 function KeepLines (const KeepText: string): Integer;
-procedure Trim; { Trim empty spaces, tab, enters, etc on each line }
+procedure Trim; { Trim whitespace at both ends of each line. WARNING: also removes control chars (Tab, CR, LF) from INSIDE the line - do not use on tab-separated data! }
 procedure Shuffle;
 function FindLine(const Needle: string): Integer; { Find line that contains the specified text }
 procedure SortReverse;
@@ -1417,12 +1417,13 @@ function GenerateThemePalette(BaseColor: TAlphaColor; IsDark: Boolean): TArray<T
 function ReplaceColorAlpha(Color: TAlphaColor; NewAlpha: Byte): TAlphaColor; inline;
 ```
 
-## LightFmx.Common.SysTray (16)
+## LightFmx.Common.SysTray (17)
 
 ```pascal
 procedure TrayWndProc(var Msg: TMessage);
 procedure FormWndProc(var Msg: TMessage);
 procedure AppWndProc (var Msg: TMessage);
+procedure HandleLeftClick; // debounced FOnLeftClick (swallows a double-click's 2nd up)
 procedure ShowContextMenu;
 procedure ApplyToShell; // NIM_MODIFY with current icon + tip
 procedure Install;
@@ -3978,4 +3979,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2889 public routines across 216 units._
+_2890 public routines across 216 units._
