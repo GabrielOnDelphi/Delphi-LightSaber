@@ -1,7 +1,7 @@
 UNIT LightFmx.Common.LogFilter;
 
 {=============================================================================================================
-   2026.05.05
+   2026.07.07
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Verbosity filter control for TLogViewer.
@@ -97,6 +97,10 @@ begin
  { Skip during DFM loading - trackbar value may change before Log is assigned. }
  if csLoading in ComponentState then EXIT;
 
+ { Update the label even when no Log is wired yet — otherwise the label text
+   desyncs from the thumb position for standalone (Log-less) filters. }
+ VerboLabel.Text := 'Verbosity: ' + Verbosity2String(Verbosity);
+
  { Silent EXIT if Log is not yet wired. Showing a modal dialog from a trackbar
    change handler is intrusive — and the trackbar may legitimately fire before
    the host code calls SetLog (e.g., during early form construction). }
@@ -104,7 +108,6 @@ begin
 
  Log.Verbosity:= Verbosity;
  Log.Populate;
- VerboLabel.Text := 'Verbosity: ' + Verbosity2String(Verbosity);
 end;
 
 
@@ -134,6 +137,11 @@ begin
   begin
     Verbosity:= FLog.Verbosity;         { Sync trackbar to current Log verbosity }
     FLog.RegisterVerbFilter(Self);      { Register for bidirectional updates }
+
+    { Refresh the label here too: when the Log's verbosity equals the thumb position,
+      the assignment above fires no OnChange (and during .fmx streaming TrackBarChange
+      is suppressed by csLoading anyway), leaving the construction-time label text. }
+    VerboLabel.Text:= 'Verbosity: ' + Verbosity2String(Verbosity);
   end;
 end;
 
