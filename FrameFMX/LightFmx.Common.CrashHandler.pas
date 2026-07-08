@@ -155,8 +155,19 @@ begin
         LineCap:= Line;
         TThread.ForceQueue(NIL, procedure
           begin
-            if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
-            then AppDataCore.RamLog.AddError('Unhandled: ' + LineCap);
+            // Swallow any failure of the deferred mirror. This closure runs on a LATER
+            // message-loop turn (via CheckSynchronize), OUTSIDE the outer try/except above
+            // and with FInHandler already cleared. AddError CAN raise (CheckAndSaveToDisk
+            // re-raises AV/EOutOfMemory; PopUpWindow can fault): CheckSynchronize would then
+            // route the exception to Application.OnException -> back into THIS handler,
+            // unguarded, scheduling yet another failing closure = repeating error storm.
+            // The crash is already persisted by WriteCrashLog below; a failed in-session
+            // mirror to the viewer has nothing useful to add.
+            TRY
+              if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
+              then AppDataCore.RamLog.AddError('Unhandled: ' + LineCap);
+            EXCEPT
+            END;
           end);
       end;
 
