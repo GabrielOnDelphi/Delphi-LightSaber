@@ -11,8 +11,6 @@ object frmRamLog: TfrmRamLog
   OnCreate = FormCreate
   OnClose = FormClose
   OnDestroy = FormDestroy
-  Left = 549
-  Top = 450
   DesignerMasterStyle = 0
   object Container: TLayout
     Align = Client
@@ -140,7 +138,7 @@ object frmRamLog: TfrmRamLog
       Size.PlatformDefault = False
       TabOrder = 0
       RowHeight = 22.000000000000000000
-      Options = [Editing, ColumnResize, ColumnMove, ColLines, RowLines, RowSelect, Tabs, Header, HeaderClick, AutoDisplacement]
+      Options = [ColumnResize, ColumnMove, ColLines, RowLines, RowSelect, Tabs, Header, HeaderClick, AutoDisplacement]
       Viewport.Width = 708.000000000000000000
       Viewport.Height = 636.000000000000000000
     end
