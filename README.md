@@ -404,7 +404,7 @@ The `UnitTesting/` folder contains DUnitX-based unit tests with TestInsight supp
 
 | Test Project | Tests Package | Status |
 |--------------|---------------|--------|
-| `Tests_LightCore.dpr` | `LightCore.dpk` | 876 tests |
+| `Tests_LightCore.dpr` | `LightCore.dpk` | 1110 tests |
 | `Tests_LightVcl.Common.dpr` | `LightVcl.Common.dpk` | 68 tests |
 | `Tests_LightVcl.Forms.dpr` | `LightVcl.Visual.dpk` (forms) | 161 tests |
 | `Tests_LightVcl.Graphics.dpr` | `LightVcl.Graphics.dpk` | Available |
