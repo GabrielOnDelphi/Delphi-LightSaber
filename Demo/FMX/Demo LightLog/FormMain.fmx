@@ -151,7 +151,7 @@ object MainForm: TMainForm
     TabOrder = 2
     RowHeight = 22.000000000000000000
     RowCount = 1
-    Options = [Editing, ColumnResize, ColumnMove, ColLines, RowLines, RowSelect, Tabs, Header, HeaderClick, AutoDisplacement]
+    Options = [ColumnResize, ColumnMove, ColLines, RowLines, RowSelect, Tabs, Header, HeaderClick, AutoDisplacement]
     Viewport.Width = 670.000000000000000000
     Viewport.Height = 313.000000000000000000
     object TStringColumn
