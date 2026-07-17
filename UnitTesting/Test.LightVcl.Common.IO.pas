@@ -88,6 +88,12 @@ type
     procedure TestCanCreateFile;
 
     [Test]
+    procedure TestCanCreateFile_ExistingFile_NotDestroyed;
+
+    [Test]
+    procedure TestCanCreateFile_ReadOnlyFile_ReturnsFalse;
+
+    [Test]
     procedure TestCanWriteToFolder;
 
     { Drive Tests }
@@ -337,6 +343,25 @@ begin
     'Should be able to create file in temp folder');
 end;
 
+procedure TTestVclCommonIO.TestCanCreateFile_ExistingFile_NotDestroyed;
+begin
+  { The old implementation probed existing files via CanWriteToFolder (CREATE_ALWAYS + FILE_FLAG_DELETE_ON_CLOSE), which truncated the file to 0 bytes and then deleted it }
+  Assert.IsTrue(CanCreateFile(FTestFile), 'Existing writable file should be overwritable');
+  Assert.IsTrue(FileExists(FTestFile), 'The probe must NOT delete the existing file');
+  Assert.AreEqual('Test content', TFile.ReadAllText(FTestFile), 'The probe must NOT modify the file content');
+end;
+
+procedure TTestVclCommonIO.TestCanCreateFile_ReadOnlyFile_ReturnsFalse;
+begin
+  FileSetReadOnly(FTestFile, TRUE);
+  try
+    Assert.IsFalse(CanCreateFile(FTestFile), 'Read-only file cannot be overwritten');
+    Assert.IsTrue(FileExists(FTestFile), 'The probe must NOT delete the file');
+  finally
+    FileSetReadOnly(FTestFile, FALSE);
+  end;
+end;
+
 procedure TTestVclCommonIO.TestCanWriteToFolder;
 begin
   Assert.IsTrue(CanWriteToFolder(FTestFolder), 'Should be able to write to temp folder');
@@ -419,7 +444,10 @@ begin
 
   TFile.WriteAllText(SourceFile, 'Move test');
 
-  Result := FileMoveTo(SourceFile, DestFile);
+  { Explicitly qualified: LightCore.IO also declares a FileMoveTo with the identical
+    signature: unqualified, Delphi's "last unit in uses wins" rule would silently resolve
+    to LightCore.IO.FileMoveTo instead of the unit under test. }
+  Result := LightVcl.Common.IO.FileMoveTo(SourceFile, DestFile);
 
   Assert.IsTrue(Result, 'FileMoveTo should succeed');
   Assert.IsFalse(FileExists(SourceFile), 'Source should not exist after move');
@@ -473,10 +501,13 @@ end;
 
 procedure TTestVclCommonIO.TestFileMoveTo_EmptyFrom_ShouldRaise;
 begin
+  { Explicitly qualified: see comment in TestFileMoveTo. LightCore.IO.FileMoveTo swallows
+    exceptions and returns False instead of raising, so an unqualified call here would
+    silently test the wrong unit and never raise. }
   Assert.WillRaise(
     procedure
     begin
-      FileMoveTo('', 'C:\Temp\Test.txt');
+      LightVcl.Common.IO.FileMoveTo('', 'C:\Temp\Test.txt');
     end,
     Exception);
 end;
@@ -487,7 +518,7 @@ begin
   Assert.WillRaise(
     procedure
     begin
-      FileMoveTo('C:\Temp\Test.txt', '');
+      LightVcl.Common.IO.FileMoveTo('C:\Temp\Test.txt', '');
     end,
     Exception);
 end;
