@@ -1908,8 +1908,8 @@ procedure SetCompressionAtr (CONST FileName: string; const CompressionFormat: by
 function GetFileSizeEx (hFile: THandle; VAR FileSize: Int64): BOOL; stdcall; external kernel32;
 function FileIsLockedR (CONST FileName: string): Boolean;
 function FileIsLockedRW (CONST FileName: string): Boolean; { Returns true if the file cannot be open for reading and writing } { old name: FileInUse }
-function CanCreateFile (CONST FileName: string): Boolean;
-function CanWriteToFolder (CONST Folder: string; const FileName: String = 'TempFile.Delete.Me'): Boolean; { Tests folder write access by creating a temporary file. The temp file is auto-deleted on close. WARNING: If FileName already exists, it WILL be overwritten! }
+function CanCreateFile (CONST FileName: string): Boolean; { Tests if FileName can be created (or overwritten if it already exists). Existing files are NOT modified by the test. }
+function CanWriteToFolder (CONST Folder: string; const FileName: String = 'TempFile.Delete.Me'): Boolean; { Tests folder write access by creating a temporary file. The temp file is auto-deleted on close. WARNING: If FileName already exists, it will be OVERWRITTEN and then DELETED! }
 function CanWriteToFolderMsg (CONST Folder: string): Boolean;
 function GetDriveType (CONST Path: string): Integer;
 function GetDriveTypeS (CONST Path: string): string; { Returns drive type asstring }
