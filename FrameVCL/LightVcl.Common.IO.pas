@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.IO;
 
 {=============================================================================================================
-   2026.06.10
+   2026.07.14
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Extension for LightCore.IO.pas
@@ -92,9 +92,9 @@ USES
 --------------------------------------------------------------------------------------------------}
  function  FileIsLockedR        (CONST FileName: string): Boolean;
  function  FileIsLockedRW       (CONST FileName: string): Boolean;                    { Returns true if the file cannot be open for reading and writing } { old name: FileInUse }
- function  CanCreateFile        (CONST FileName: string): Boolean;
+ function  CanCreateFile        (CONST FileName: string): Boolean;                    { Tests if FileName can be created (or overwritten if it already exists). Existing files are NOT modified by the test. }
 
- function  CanWriteToFolder     (CONST Folder: string; const FileName: String = 'TempFile.Delete.Me'): Boolean;    { Tests folder write access by creating a temporary file. The temp file is auto-deleted on close. WARNING: If FileName already exists, it WILL be overwritten! }
+ function  CanWriteToFolder     (CONST Folder: string; const FileName: String = 'TempFile.Delete.Me'): Boolean;    { Tests folder write access by creating a temporary file. The temp file is auto-deleted on close. WARNING: If FileName already exists, it will be OVERWRITTEN and then DELETED! }
  function  CanWriteToFolderMsg  (CONST Folder: string): Boolean;
 
 
@@ -122,6 +122,7 @@ USES
 IMPLEMENTATION
 
 USES
+  Winapi.ActiveX,
   LightCore, LightVcl.Common.Registry, LightCore.IO, LightVcl.Common.Dialogs, LightVcl.Common.WinVersion;
 
 
@@ -159,7 +160,7 @@ begin
     if Path= ''
     then MessageError('DirectoryExistMsg: No folder specified!')
     else
-      if Pos(':', Path)< 1                                                                             { check if the user has given a full path as c:\xxx }
+      if (Pos(':', Path) < 1) AND (Pos('\\', Path) <> 1)                                               { full paths start with a drive ('c:\xxx') or are UNC ('\\server\share') }
       then MessageError('A relative path was provided instead of a full path!'+ CRLFw+ Path)
       else MessageError('Folder does not exist:'+ CRLFw+ Path);
 end;
@@ -198,10 +199,12 @@ end;
 
 { Moves FromFolder to ToFolder using TDirectory.Move.
   If ToFolder already exists:
-    - SilentOverwrite=True: copies all contents to ToFolder and deletes FromFolder
+    - SilentOverwrite=True: copies all contents to ToFolder and deletes FromFolder.
+      If some files could not be copied, FromFolder is KEPT and an error dialog is shown.
     - SilentOverwrite=False: prompts user to confirm deletion of ToFolder before moving
   Example: MoveFolderMsg('c:\Documents', 'C:\Backups', True) }
 procedure MoveFolderMsg(CONST FromFolder, ToFolder: String; SilentOverwrite: Boolean);
+VAR FailedCount: Integer;
 begin
  if FromFolder = ''
  then raise Exception.Create('MoveFolderMsg: FromFolder parameter cannot be empty');
@@ -214,8 +217,10 @@ begin
      if SilentOverwrite
      then
        begin
-         CopyFolder(FromFolder, ToFolder, True);
-         Deletefolder(FromFolder);
+         FailedCount:= CopyFolder(FromFolder, ToFolder, True);
+         if FailedCount > 0
+         then MessageError(IntToStr(FailedCount)+ ' file(s) could not be copied to '+ ToFolder+ CRLFw+ 'The source folder was NOT deleted: '+ FromFolder)   { Deleting the source would destroy the files that were never copied }
+         else DeleteFolder(FromFolder);
        end
      else
        { Move raises an exception if the destination folder already exists, so we have to delete the Destination folder first. But for this we need to ask the user. }
@@ -485,6 +490,7 @@ end;
 function GetSpecialFolders: TStringList;
 begin
  Result:= TStringList.Create;
+ TRY
  Result.Add(GetSpecialFolder(CSIDL_DESKTOP                 , FALSE));                  // <desktop>
  Result.Add(GetSpecialFolder(CSIDL_PROGRAMS                , FALSE));                  // Start Menu\Programs
  Result.Add(GetSpecialFolder(CSIDL_PERSONAL                , FALSE));                  // My Documents
@@ -533,6 +539,10 @@ begin
  Result.Add(GetSpecialFolder(CSIDL_RESOURCES               , FALSE));                  // Resource Direcotry
  Result.Add(GetSpecialFolder(CSIDL_RESOURCES_LOCALIZED     , FALSE));                  // Localized Resource Direcotry
  Result.Add(GetSpecialFolder(CSIDL_CDBURN_AREA             , FALSE));                  // USERPROFILE\Local Settings\Application Data\Microsoft\CD Burning
+ EXCEPT
+   FreeAndNil(Result);   { Don't leak the list if an Add raises before the caller receives it }
+   RAISE;
+ END;
 end;
 
 
@@ -612,7 +622,9 @@ begin
    if NOT ShowConfirm
    then SHFileOpStruct.fFlags:= SHFileOpStruct.fFlags OR FOF_NOCONFIRMATION;
 
- Result:= SHFileOperation(SHFileOpStruct) = 0;
+ { SHFileOperation returns 0 (success) even when the user pressed 'No' in the confirmation dialog.
+   The abort is reported separately in fAnyOperationsAborted. See learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shfileoperationa }
+ Result:= (SHFileOperation(SHFileOpStruct) = 0) AND NOT SHFileOpStruct.fAnyOperationsAborted;
 end;
 
 
@@ -672,7 +684,9 @@ begin
     FO_RENAME: SHFileOpStruct.lpszProgressTitle:= 'Renaming...';
   end;
 
-  Result:= SHFileOperation(SHFileOpStruct) = 0;
+  { SHFileOperation returns 0 (success) even when the user aborted (confirmation or progress dialog).
+    The abort is reported separately in fAnyOperationsAborted. See learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-shfileoperationa }
+  Result:= (SHFileOperation(SHFileOpStruct) = 0) AND NOT SHFileOpStruct.fAnyOperationsAborted;
 end;
 
 
@@ -838,6 +852,36 @@ begin
 end;
 
 
+{ On Vista+ the VCL shows TOpenDialog/TSaveDialog through the IFileDialog COM object.
+  When that COM object cannot be created - COM not initialized on the calling thread, or initialized as MTA (the shell dialog is STA-only) -
+  the VCL swallows the CoCreateInstance failure and Execute returns FALSE without showing any dialog
+  (Vcl.Dialogs.TCustomFileDialog.Execute ignores the failed CreateFileDialog).
+  That was the old 'nothing happens' bug: no dialog, no exception - it looked like the user pressed Cancel.
+  Fix: probe the COM object first; if it cannot be created, show the classic dialog instead - that one is plain WinAPI (GetOpenFileName), no COM involved. }
+function ExecuteDialogSafe(Dialog: TOpenDialog): Boolean;
+VAR
+   Probe: IFileDialog;
+   SavedLatest: Boolean;
+begin
+  if Succeeded(CoCreateInstance(CLSID_FileOpenDialog, NIL, CLSCTX_INPROC_SERVER, IID_IFileDialog, Probe))
+  then
+    begin
+      Probe:= NIL;
+      Result:= Dialog.Execute;
+    end
+  else
+    begin
+      SavedLatest:= UseLatestCommonDialogs;
+      UseLatestCommonDialogs:= FALSE;      { Routes Execute to the classic GetOpenFileName dialog }
+      TRY
+        Result:= Dialog.Execute;
+      FINALLY
+        UseLatestCommonDialogs:= SavedLatest;
+      END;
+    end;
+end;
+
+
 { Core implementation for Open/Save file dialogs.
   Based on Vcl.Dialogs.PromptForFileName but with added options (ofEnableSizing, ofForceShowHidden).
   Does not support multi-select because it returns a single filename. }
@@ -845,6 +889,8 @@ function PromptForFileName(VAR FileName: string; SaveDialog: Boolean; CONST Filt
 VAR
   Dialog: TOpenDialog;
 begin
+  Assert(GetCurrentThreadId = MainThreadID, 'PromptForFileName must be called from the main thread!');
+
   if SaveDialog
   then Dialog := TSaveDialog.Create(NIL)
   else Dialog := TOpenDialog.Create(NIL);
@@ -868,7 +914,7 @@ begin
 
     Dialog.FileName := FileName;
 
-    Result := Dialog.Execute; //todo 1: bug: nothing happens here
+    Result := ExecuteDialogSafe(Dialog);
 
     if Result
     then FileName:= Dialog.FileName;
@@ -892,16 +938,21 @@ end;
 Function GetOpenDialog(CONST FileName, Filter, DefaultExt: string; CONST Caption: string= ''): TOpenDialog;
 begin
  Result:= TOpenDialog.Create(NIL);
- Result.Filter:= Filter;
- Result.FilterIndex:= 0;
- Result.Options:= [ofFileMustExist, ofEnableSizing, ofForceShowHidden];
- Result.DefaultExt:= DefaultExt;
- Result.FileName:= FileName;
- Result.Title:= Caption;
+ TRY
+   Result.Filter:= Filter;
+   Result.FilterIndex:= 0;
+   Result.Options:= [ofFileMustExist, ofEnableSizing, ofForceShowHidden];
+   Result.DefaultExt:= DefaultExt;
+   Result.FileName:= FileName;
+   Result.Title:= Caption;
 
- if FileName= ''
- then Result.InitialDir:= GetMyDocuments
- else Result.InitialDir:= ExtractFilePath(FileName);
+   if FileName= ''
+   then Result.InitialDir:= GetMyDocuments
+   else Result.InitialDir:= ExtractFilePath(FileName);
+ EXCEPT
+   FreeAndNil(Result);   { Don't leak the dialog if a setup step raises before the caller receives it }
+   RAISE;
+ END;
 end;
 
 
@@ -909,16 +960,22 @@ end;
 Function GetSaveDialog(CONST FileName, Filter, DefaultExt: string; CONST Caption: string= ''): TSaveDialog;
 begin
  Result:= TSaveDialog.Create(NIL);
- Result.Filter:= Filter;
- Result.FilterIndex:= 0;
- Result.Options:= [ofOverwritePrompt, ofHideReadOnly, ofFileMustExist, ofEnableSizing];  //  - ofNoChangeDir  { When a user displays the open dialog, whether InitialDir is used or not, the dialog alters the program's current working directory while the user is changing directories before clicking on the Ok/Open button. Upon closing the dialog, the current working directly is not reset to its original value unless the ofNoChangeDir option is specified.  }
- Result.DefaultExt:= DefaultExt;
- Result.FileName:= FileName;
- Result.Title:= Caption;
+ TRY
+   Result.Filter:= Filter;
+   Result.FilterIndex:= 0;
+   { No ofFileMustExist here: it demands an EXISTING file, which contradicts saving under a new name. OPENFILENAME docs: "It cannot be used with a Save As dialog box." }
+   Result.Options:= [ofOverwritePrompt, ofHideReadOnly, ofEnableSizing];  //  - ofNoChangeDir  { When a user displays the open dialog, whether InitialDir is used or not, the dialog alters the program's current working directory while the user is changing directories before clicking on the Ok/Open button. Upon closing the dialog, the current working directly is not reset to its original value unless the ofNoChangeDir option is specified.  }
+   Result.DefaultExt:= DefaultExt;
+   Result.FileName:= FileName;
+   Result.Title:= Caption;
 
- if FileName= ''
- then Result.InitialDir:= GetMyDocuments
- else Result.InitialDir:= ExtractFilePath(FileName);
+   if FileName= ''
+   then Result.InitialDir:= GetMyDocuments
+   else Result.InitialDir:= ExtractFilePath(FileName);
+ EXCEPT
+   FreeAndNil(Result);   { Don't leak the dialog if a setup step raises before the caller receives it }
+   RAISE;
+ END;
 end;
 
 
@@ -963,9 +1020,20 @@ begin
 end;
 
 
+{ Tests if FileName can be created, or overwritten if it already exists.
+  Existing files are probed by opening them for write access WITHOUT modifying them. }
 function CanCreateFile(const FileName: String): Boolean;
+VAR Handle: THandle;
 begin
-  Result := CanWriteToFolder(ExtractFilePath(FileName), ExtractFileName(FileName));
+  if FileExists(FileName)
+  then
+    begin
+      { Do NOT probe an existing file via CanWriteToFolder: its CREATE_ALWAYS + FILE_FLAG_DELETE_ON_CLOSE would truncate the file and then delete it! }
+      Handle:= CreateFile(PChar(FileName), GENERIC_WRITE, 0, NIL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+      Result:= Handle <> INVALID_HANDLE_VALUE;
+      if Result then CloseHandle(Handle);
+    end
+  else Result:= CanWriteToFolder(ExtractFilePath(FileName), ExtractFileName(FileName));
 end;
 
 
@@ -1010,7 +1078,7 @@ end;
    Parameters:
      Folder   - The folder path to test. Trailing backslash is added automatically.
      FileName - Name for the temporary test file. Default is 'TempFile.Delete.Me'.
-                WARNING: If a file with this name exists, it will be overwritten!
+                WARNING: If a file with this name exists, it will be OVERWRITTEN and then DELETED on close!
 
    Returns: True if file creation succeeded (folder is writable), False otherwise.
 --------------------------------------------------------------------------------------------------}
