@@ -8,12 +8,17 @@ unit FastJpegDecHelper;
    Used by: cGraphLoader.pas
    Not all jpegs are supported by JpegDecHelper. In this case we fall back to WIC or the standard LoadGraph loader (WIC).
    Tester: c:\Projects\Testers\gr LoadGraph\
+
+   WIN64: FastJpegDec is x86-32 SSE2 assembly and has no 64-bit build, so here FastJpgDecode always
+   returns NIL with an explanatory ErrorType. That is the SAME contract as an unsupported jpeg, so
+   LightVcl.Graph.Loader takes its existing WIC / LoadJpg fallback and JPEG loading keeps working -
+   it just loses the SSE2 speed-up.
 -------------------------------------------------------------------------------------------------------------}
- 
+
 INTERFACE
 
 USES
-  Winapi.Windows, System.Classes, SysUtils, VCL.Graphics, FastJpegDec;
+  Winapi.Windows, System.Classes, SysUtils, VCL.Graphics{$IFDEF CPUX86}, FastJpegDec{$ENDIF};
 
 function FastJpgDecode(FileName: string; OUT ErrorType: string): TBitmap;  overload;
 function FastJpgDecode(FileName: string): TBitmap;                         overload;
@@ -22,6 +27,7 @@ function FastJpgDecode(FileName: string): TBitmap;                         overl
 
 IMPLEMENTATION
 
+{$IFDEF CPUX86}
 
 function FastJpgDecode(FileName: string; OUT ErrorType: string): TBitmap;
 VAR
@@ -88,6 +94,21 @@ begin
     FreeAndNil(Stream);
   END;
 end;
+
+
+{$ELSE}
+
+{ Win64 - see the unit header. Returning NIL is the documented "this decoder cannot handle it"
+  answer, so every caller already has a fallback path for it. }
+function FastJpgDecode(FileName: string; OUT ErrorType: string): TBitmap;
+begin
+  Result:= NIL;
+  if FileName = ''
+  then ErrorType:= 'File name is empty!'
+  else ErrorType:= 'JPEG_CPUNOTSUPPORTED! FastJpegDec is x86-32 only; use the WIC/VCL loader on Win64.';
+end;
+
+{$ENDIF}
 
 
 function FastJpgDecode(FileName: string): TBitmap;
