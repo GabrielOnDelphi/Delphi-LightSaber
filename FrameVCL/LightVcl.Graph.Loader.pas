@@ -25,6 +25,13 @@
 {PNG: see this: http://talkdelphi.blogspot.com/2009_03_01_archive.html }
 {todo: is it possible to extract the EXIF information from a jpeg file without loading the file in memory? }
 
+{ OpenJpeg2000 statically links 32-bit COFF objects and has no 64-bit build, so JPEG 2000 is
+  unavailable on Win64. The Jpg2000-conditional branches below already degrade gracefully:
+  LoadGraph logs the reason and returns NIL, exactly as for any unsupported image. }
+{$IFNDEF CPUX86}
+  {$UNDEF Jpg2000}
+{$ENDIF}
+
 INTERFACE
 
 USES

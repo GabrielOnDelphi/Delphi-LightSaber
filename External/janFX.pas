@@ -220,6 +220,7 @@ end;
 
 
 { This just forces a value to be 0 - 255 for rgb purposes.  I used asm in an attempt at speed, but I don't think it helps much. }
+{$IFDEF CPUX86}
 function Set255(Clr: Integer): Integer;
 asm
  MOV  EAX,Clr  // store value in EAX register (32-bit register)
@@ -234,6 +235,17 @@ asm
 @SETLO:        // Set value to 0
  MOV  EAX,0    // Move 0 into EAX register
 end; // Result is in EAX
+{$ELSE}
+function Set255(Clr: Integer): Integer;                                                            { Win64 twin of the x86 asm above, which is: >254 -> 255, <1 -> 0, otherwise unchanged. Signed compares, so negatives clamp to 0. }
+begin
+ if Clr > 254
+ then Result:= 255
+ else
+   if Clr < 1
+   then Result:= 0
+   else Result:= Clr;
+end;
+{$ENDIF}
 
 
 

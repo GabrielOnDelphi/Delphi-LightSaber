@@ -96,9 +96,7 @@ TYPE
 
  { Color blend }
  function  BlendColors         (Color1, Color2: TColor; A: Byte): TColor;                         { Mixing two colors.     Usage  NewColor:= Blend(Color1, Color2, blending level 0 to 100). 0 = fully Color2, 100 = fully Color1.    Source: http://rmklever.com/?cat=6 }
- {$IF Defined(CPUX86)}
- function  CombinePixels       (Pixels: PByte; Weights: PInteger; Size: Cardinal): Integer;       { NOT TESTED UNDER WIN64. IT MIGHT WORK! }
- {$ENDIF}
+ function  CombinePixels       (Pixels: PByte; Weights: PInteger; Size: Cardinal): Integer;       { x86: SSE2 assembly. Win64: pure Pascal twin - same result, not vectorised. }
  function  MixColors           (FG, BG: TColor; BlendPower: Byte): TColor;                        { 0 = fully BG, 255 = fully FG }
 
  procedure ReplaceColor        (BMP: TBitmap; OldColor, NewColor: TColor);  overload;
@@ -937,6 +935,47 @@ asm
   packuswb XMM2, XMM2       // ShortInts to bytes
 
   movd eax, XMM2            // result
+end;
+{$ELSE}
+{ Win64 twin of the SSE2 routine above. Same contract: for each of the 4 byte channels accumulate
+  Sum(channel[i] * Weights[i]) over Size pixels, round, clamp to a byte, pack the 4 bytes into the
+  Integer result.
+  Two deliberate differences from the x86 version:
+    - The asm divides the accumulator by Precision = 1.0, which is arithmetically a no-op. Dropped.
+    - The asm loops with LOOP, so Size = 0 would decrement ECX past zero and run 2^32 times.
+      The Pascal FOR simply does nothing, which is what a caller passing 0 expects. }
+function CombinePixels(Pixels: PByte; Weights: PInteger; Size: Cardinal): Integer;
+VAR
+  Accum: array[0..3] of Single;
+  Bytes: array[0..3] of Byte;
+  Pixel: PByte;
+  Weight: PInteger;
+  W: Single;
+  i: Cardinal;
+  c, V: Integer;
+begin
+ for c:= 0 to 3 DO Accum[c]:= 0;
+
+ Pixel := Pixels;
+ Weight:= Weights;
+ for i:= 1 to Size DO
+  begin
+   W:= Weight^;                                                                                    { Widen to float BEFORE multiplying, exactly as the asm's cvtdq2ps does. Multiplying Byte*Integer first would differ from the asm on large weights, and would raise EIntOverflow under integer-overflow checking, which the Debug configs enable. }
+   for c:= 0 to 3 DO
+     Accum[c]:= Accum[c] + Pixel[c] * W;                                                           { PByte has POINTERMATH on, so Pixel[c] indexes the 4 channel bytes }
+   Inc(Pixel, 4);
+   Inc(Weight);
+  end;
+
+ for c:= 0 to 3 DO
+  begin
+   V:= Round(Accum[c]);                                                                            { Round is round-half-to-even, matching SSE cvtps2dq's default rounding mode }
+   if V < 0   then V:= 0;
+   if V > 255 then V:= 255;                                                                        { packssdw + packuswb saturate; for in-range data this clamp is equivalent }
+   Bytes[c]:= V;
+  end;
+
+ Result:= PInteger(@Bytes)^;
 end;
 {$ENDIF}
 

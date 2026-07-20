@@ -86,7 +86,7 @@ object frmSkinRes: TfrmSkinRes
     TabOrder = 2
     object btnOK: TButton
       AlignWithMargins = True
-      Left = 238
+      Left = 226
       Top = 4
       Width = 90
       Height = 28

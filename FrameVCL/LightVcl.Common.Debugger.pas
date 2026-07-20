@@ -11,6 +11,10 @@ UNIT LightVcl.Common.Debugger;
      - Anti-debugging protection routines (32-bit assembly)
      - Windows API error message retrieval
 
+   WIN64: the two anti-* routines are x86 assembly and are NOT ported - on Win64 they compile
+   to deliberate no-ops (see their implementation for why). Debugger DETECTION is unaffected:
+   IsDebuggerPresent/ExitIfUnderDebugger are pure Pascal and work on both platforms.
+
    Tester: c:\Projects\LightSaber\Demo\VCL\Demo SystemReport\VCL_Demo_SystemReport.dpr
    Also see: QuickImageFX\Quick.Chrono.pas
 
@@ -23,8 +27,13 @@ USES
    System.SysUtils, Vcl.Forms, Vcl.Dialogs;
 
  { ANTI-DEBUGGER PROTECTION }
+ {$IFDEF CPUX86}
  procedure AntiDebug; assembler;
  procedure AntiProcDump; assembler;
+ {$ELSE}
+ procedure AntiDebug;                                                                              { Win64: deliberate no-op }
+ procedure AntiProcDump;                                                                           { Win64: deliberate no-op }
+ {$ENDIF}
  procedure ExitIfUnderDebugger (ProjectFileName: string);
  procedure HaltApplication(UserMessage : string);
 
@@ -77,7 +86,7 @@ begin
     begin
       { Fallback for Windows versions below Windows 98 }
       Ptr:= GetProcAddress(KernelHandle, 'GetProcAddress');
-      Result:= LongWord(Ptr) < KernelHandle;
+      Result:= NativeUInt(Ptr) < KernelHandle;                                                     { NativeUInt, not LongWord: a 64-bit address truncates to 32 bits and the comparison becomes nonsense. Identical on Win32, where NativeUInt IS LongWord. }
     end;
 end;
 
@@ -120,6 +129,7 @@ begin
 end;
 
 
+{$IFDEF CPUX86}
 {--------------------------------------------------------------------------------------------------
    Anti-process dump protection (32-bit x86 assembly).
    Attempts to confuse process dumping tools by modifying the reported image size
@@ -177,6 +187,34 @@ asm
    jmp @fake1
   @ende:
 end;
+
+{$ELSE}
+
+{--------------------------------------------------------------------------------------------------
+   WIN64 - both anti-* routines are deliberate no-ops.
+
+   AntiProcDump reaches the PEB through fs:[30h]. On x64 the PEB is at gs:[60h] and the structure
+   offsets differ, so the constants above are not merely unassemblable - they are wrong. Writing to
+   the wrong PEB offset in a 64-bit process corrupts loader state for a protection the unit itself
+   calls "basic ... can be bypassed by skilled attackers". Not worth the risk; left unimplemented.
+
+   AntiDebug is an opaque predicate - it only confuses a disassembler reading the 32-bit image. It
+   has no effect on program behaviour, so there is nothing to preserve on x64.
+
+   Callers keep compiling and Win32 keeps its protection unchanged. Debugger DETECTION
+   (IsDebuggerPresent / ExitIfUnderDebugger) is pure Pascal and still works here.
+--------------------------------------------------------------------------------------------------}
+procedure AntiProcDump;
+begin
+  { Intentionally empty - see comment above }
+end;
+
+procedure AntiDebug;
+begin
+  { Intentionally empty - see comment above }
+end;
+
+{$ENDIF}
 
 
 

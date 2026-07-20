@@ -87,7 +87,7 @@ object frmRainEditor: TfrmRainEditor
           AlignWithMargins = True
           Left = 3
           Top = 3
-          Width = 57
+          Width = 58
           Height = 35
           Hint = 
             'Desiered FPS. You might not reach this FPS number if your deskto' +

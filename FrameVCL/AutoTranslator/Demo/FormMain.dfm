@@ -31,7 +31,7 @@ object MainForm: TMainForm
       AlignWithMargins = True
       Left = 4
       Top = 4
-      Width = 196
+      Width = 106
       Height = 18
       Align = alTop
       Caption = 'Current language'
