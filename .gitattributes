@@ -1,0 +1,48 @@
+# =============================================================================
+#  Line endings — this is a Windows-only Delphi project, so every text file is
+#  CRLF in the working tree (what you and the Delphi IDE actually edit).
+#
+#  Git normalizes its internal blob to LF; that normalization is exactly what
+#  keeps `git diff` clean. Without this file a CRLF working tree diffed against
+#  an LF blob shows EVERY line as changed (the .dproj "whole-file rewrite" noise).
+#  Ref: https://git-scm.com/docs/gitattributes  (see the `text` and `eol` attrs)
+#
+#  Bottom line: your files on disk are CRLF; the noise-free diff is the payoff.
+# =============================================================================
+
+# Default: auto-detect text, and check every text file out as CRLF.
+* text=auto eol=crlf
+
+# Delphi source & project files are always text — force CRLF explicitly.
+*.pas       text eol=crlf
+*.dpr       text eol=crlf
+*.dpk       text eol=crlf
+*.inc       text eol=crlf
+*.dproj     text eol=crlf
+*.groupproj text eol=crlf
+
+# Docs / scripts that live in this repo — Windows tooling, keep CRLF.
+*.md        text eol=crlf
+*.txt       text eol=crlf
+*.cmd       text eol=crlf
+*.bat       text eol=crlf
+
+# .dfm / .fmx can be saved as text OR binary form — let auto-detect decide,
+# so a binary-form form file is never line-ending mangled.
+
+# Known-binary types — never apply any end-of-line conversion.
+*.res    binary
+*.dcu    binary
+*.dcp    binary
+*.bpl    binary
+*.exe    binary
+*.dll    binary
+*.obj    binary
+*.lib    binary
+*.ico    binary
+*.bmp    binary
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.zip    binary
