@@ -9,14 +9,16 @@
    Purpose. Captures the class name + message + thread ID + UTC timestamp of every Pascal raise to a flat text
    file under the per-app private storage. The intent is post-mortem diagnostics on platforms where the usual
    IDE / logcat / tombstone signal is unreliable — notably Android, where `logcat` often shows no app-side
-   output from an FMX build and the IDE shows only a numeric signal code with no class name. If the file is
-   empty after a crash, that itself is a useful signal — it means the trigger was NOT a Pascal exception
-   (e.g. a raw Unix signal like SIGUSR1 from the Android Runtime).
+   output from an FMX build and the IDE shows only a numeric signal code with no class name.
 
    Mechanism. Hooks `System.RaiseExceptObjProc` — fires on EVERY raise, BEFORE try/except matches. This is the
    only RTL layer that catches a swallowed-and-rethrown cycle (where the exception is caught upstream so
    `ExceptProc`'s "unhandled" tail hook never fires). The previous hook is chained so we don't break other
    tooling.
+
+   LIMITATION — hardware faults are NOT logged. An access violation produces no line here, and neither does any other OS-level fault (division by zero, stack overflow). Only exceptions that go through the Pascal `raise` machinery are seen. Reason: every call site of `RaiseExceptObjProc` in the RTL sits in the explicit-raise path — `_RaiseExcept` (`System.pas:22597,22615`), its asm twin (`:22675`) and `_InternalRaiseAtExcept` (`:22725`) — all tagged `cDelphiException`. A hardware fault instead arrives as an OS/SEH exception record and is turned into a Delphi object by a DIFFERENT hook, `ExceptObjProc` ("Map an OS Exception to a Delphi class instance", `System.pas:2040`); `TExceptionRecord` even switches on `IsOsException` (`:3472`). Verified 2026-07-24 on Windows: two deliberate access violations produced only the "Session start" banner in the log, while ordinary Pascal raises in the same sessions were recorded normally.
+
+   Consequence for triage: an empty log after a crash does NOT prove "no Pascal exception was involved" — an `EAccessViolation` looks exactly like this. Read it as "no Pascal *raise* happened", which still usefully rules in a hardware fault or a raw Unix signal (e.g. SIGUSR1 from the Android Runtime). On Windows, pair this unit with madExcept, which covers precisely the hardware-fault case this hook cannot see; the two are complementary, not redundant.
 
    Re-entrancy. A threadvar (`InHook`) short-circuits recursive raises that happen INSIDE our hook (e.g.
    `EFCreateError` if the log file path itself is unwritable). The body is also wrapped in a try/except that
