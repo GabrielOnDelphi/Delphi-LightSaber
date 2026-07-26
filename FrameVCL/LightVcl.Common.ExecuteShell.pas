@@ -158,7 +158,7 @@ CONST
 ---------------------------------------------------------------------------------------------------------------}
 function ExecuteFile(CONST ExeFile: string; Params: string = ''; ShowErrorMsg: Boolean = TRUE; WindowState: Integer = WinApi.Windows.SW_SHOWNORMAL): Boolean;
 VAR
-   RetCode: Integer;
+   RetCode: HINST;   { ShellExecute returns HINST - pointer-width on Win64 (Winapi.ShellAPI). Integer here would truncate. }
    WorkingFolder, Msg: string;
 begin
   if not FileExists(ExeFile) then raise Exception.Create('ExecuteFile: file not found: ' + ExeFile);

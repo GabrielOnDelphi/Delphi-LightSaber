@@ -324,7 +324,7 @@ end;
 
 { Align caption of the specified control to left. Example of usage: AlignCaptionToLeft(Button1.Handle)) }
 procedure AlignCaptionToLeft(Handle: HWND);
-VAR Style: DWORD;
+VAR Style: NativeInt;   { GetWindowLongPtr returns LONG_PTR (= NativeInt). A DWORD here truncates on Win64. }
 begin
  Style := GetWindowLongPtr(Handle, GWL_STYLE);                { getWindowLong_ was replaced with getWindowLongPtr for 64 bit compatibility. Details: http://docwiki.embarcadero.com/RADStudio/Seattle/en/Converting_32-bit_Delphi_Applications_to_64-bit_Windows }
  SetLastError(0);

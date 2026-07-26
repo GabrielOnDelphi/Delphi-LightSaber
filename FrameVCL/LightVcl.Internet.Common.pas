@@ -656,7 +656,7 @@ end;
 procedure IE_DeleteCache;
 var
   lpEntryInfo: PInternetCacheEntryInfo;
-  hCacheDir: LongWord;
+  hCacheDir: THandle;   { FindFirstUrlCacheEntry returns THandle - 64-bit on Win64. A LongWord truncated the handle that is passed back to FindNext/FindCloseUrlCache. }
   dwEntrySize: LongWord;
 begin
   dwEntrySize := 0;

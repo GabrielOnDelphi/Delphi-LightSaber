@@ -213,7 +213,7 @@ end;
 procedure EnsureImageListsCreated;
 var
   SFI: TSHFileInfo;
-  SysIL: UInt;
+  SysIL: DWORD_PTR;   { SHGetFileInfo returns DWORD_PTR: with SHGFI_SYSICONINDEX it is the system image-list HANDLE - a 64-bit pointer on Win64. A 32-bit UInt here raises ERangeError on Win64 (range checking on). }
 begin
   if Smalls <> nil then Exit;
 
