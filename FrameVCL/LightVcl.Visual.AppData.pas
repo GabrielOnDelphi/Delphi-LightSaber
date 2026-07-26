@@ -357,7 +357,8 @@ begin
 
   // Create form
   Application.MainFormOnTaskbar := MainFormOnTaskbar;
-  Application.ShowMainForm      := Show;      // Must be false if we want to prevent form flicker during skin loading at startup
+  Application.ShowMainForm      := Show;      // FALSE prevents form flicker during skin loading, and lets a TCoolTrayIcon app start minimized to the systray.
+  { WARNING: ShowMainForm=FALSE can make a STARTUP crash INVISIBLE. An unhandled exception before Application.Run shows its error box owned by the still-hidden main form, so the box never appears and the app freezes in a modal loop while LOOKING alive (window up, process Responding=TRUE). Bit DnaBaser on Win64 2026-07 (a DWORD_PTR range-check error). If startup hangs with no visible dialog, enumerate the process #32770 windows INCLUDING invisible ones and read their Static text. }
   Application.CreateForm(aClass, Reference);
 
   // Load form size and position
