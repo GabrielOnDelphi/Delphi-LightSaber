@@ -419,7 +419,7 @@ The `UnitTesting/` folder contains DUnitX-based unit tests with TestInsight supp
 2. With TestInsight (recommended): Define `TESTINSIGHT` in project options, run from IDE
 3. Without TestInsight: Build and run as console application
 
-Each test project has a corresponding build script (e.g. `Build_Tests_LightCore.cmd`).
+Build each `UnitTesting\Tests_*.dproj` via the light-compiler agent, then run the test EXE. (The old `Build_Tests_*.cmd` wrappers were deleted 2026-07-26.)
 
 _________________
 
