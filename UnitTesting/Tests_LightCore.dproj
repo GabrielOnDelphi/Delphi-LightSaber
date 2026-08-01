@@ -177,6 +177,7 @@
         <DCCReference Include="Test.LightCore.LogLinesM.pas"/>
         <DCCReference Include="Test.LightCore.LogRam.pas"/>
         <DCCReference Include="Test.LightCore.Debugger.pas"/>
+        <DCCReference Include="Test.LightCore.CmdLine.pas"/>
         <DCCReference Include="Test.ciUpdaterRec.pas"/>
         <DCCReference Include="..\Updater\ciUpdaterRec.pas"/>
         <DCCReference Include="..\LightCore.pas"/>
@@ -208,6 +209,7 @@
         <DCCReference Include="..\LightCore.LogRam.pas"/>
         <DCCReference Include="..\LightCore.CompilerVersions.pas"/>
         <DCCReference Include="..\LightCore.Debugger.pas"/>
+        <DCCReference Include="..\LightCore.CmdLine.pas"/>
         <DCCReference Include="..\LightCore.Platform.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
