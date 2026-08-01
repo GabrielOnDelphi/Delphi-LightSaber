@@ -53,6 +53,10 @@ TYPE
   public
     constructor Create (CONST SectionName, FileName: string);                    virtual;
 
+    {$IFDEF MSWINDOWS}
+    function  ReadString (CONST Section, Ident, Default: string): string;        override;   // Repairs the RTL's silent 2047-char cut. See implementation.
+    {$ENDIF}
+
     function  ValueExists(CONST Ident: string): Boolean;                         reintroduce; overload;
 
     { Data/Time }
@@ -83,6 +87,7 @@ TYPE
 IMPLEMENTATION
 
 USES
+   {$IFDEF MSWINDOWS} Winapi.Windows, {$ENDIF}
    LightCore.IO;
 
 
@@ -98,6 +103,41 @@ begin
  inherited Create(FileName);
  FSection:= SectionName;
 end;
+
+
+{$IFDEF MSWINDOWS}
+{ Repairs a silent data-loss bug in the RTL.
+  TIniFile.ReadString reads into a fixed 'Buffer: array[0..2047] of Char' (C:\Delphi\Delphi 13\source\rtl\common\System.IniFiles.pas, TIniFile.ReadString),
+  so any value longer than 2047 characters comes back CUT - and the next save writes the cut value back over the good one, so the loss is permanent.
+  The API reports the truncation: it returns nSize-1 when the buffer was too small
+  (learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getprivateprofilestringw), so we simply grow the buffer and read again.
+  A value under 2047 chars still costs exactly one API call, as before.
+  Only TIniFile on Windows has the cut; on the other platforms TIniFile descends from TMemIniFile, which reads whole lines. }
+function TIniFileEx.ReadString(CONST Section, Ident, Default: string): string;
+CONST
+   InitialSize = 2048;         { Same size the RTL uses, so the common (short) value is read in a single call }
+   MaxSize     = 1024*1024;    { Safety stop. A single INI value of one million chars is a bug, not a setting }
+VAR
+   Buffer  : string;
+   Size    : Integer;
+   Returned: Integer;
+begin
+ Size:= InitialSize;
+ REPEAT
+   SetLength(Buffer, Size);
+   Returned:= Integer(GetPrivateProfileString(PChar(Section), PChar(Ident), PChar(Default), PChar(Buffer), Size, PChar(FileName)));
+   { A returned length that fills the buffer means it was probably truncated -> read again into a bigger one.
+     Size-2 (not just Size-1) because with an empty Ident the API returns nSize-2 when it truncates the key-name list. }
+   if (Returned < Size-2)
+   or (Size >= MaxSize)
+   then BREAK;
+   Size:= Size * 4;
+ UNTIL FALSE;
+
+ SetLength(Buffer, Returned);
+ Result:= Buffer;
+end;
+{$ENDIF}
 
 
 
