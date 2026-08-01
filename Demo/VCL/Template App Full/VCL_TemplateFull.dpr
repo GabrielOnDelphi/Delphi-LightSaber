@@ -1,8 +1,7 @@
 program VCL_TemplateFull;
 
 uses
-  {$IFDEF DEBUG}FastMM4,{$ENDIF}
-  {$IFDEF RELEASE}madExcept, madLinkDisAsm, madListModules, {$ENDIF}
+  {$IFDEF DEBUG}FastMM4, {$ENDIF}
   
   Vcl.Themes,
   Vcl.Styles,
