@@ -29,6 +29,9 @@ procedure CenterFormOnDesktop(Form: TForm);
 // Ensures the given form remains entirely within the visible work area of the primary monitor.
 procedure EnsureFormVisibleOnScreen(Form: TForm);
 
+// TRUE when the form's rectangle overlaps at least one connected display's work area.
+function FormIsOnSomeDisplay(Form: TForm): Boolean;
+
 // Centers a child form relative to a parent form's current position and size. Ideal for dialog-style forms: it calculates offsets based on the parent form's absolute Position and dimensions.
 procedure CenterFormOnParent(Form: TForm; AParent: TForm);
 
@@ -67,8 +70,11 @@ end;
 
 
 
-{ Ensures the given form remains entirely within the visible work area of the primary monitor.
-  Uses Screen.WorkAreaRect to get the usable desktop area (excludes taskbar). }
+{ Ensures the given form remains entirely within the visible work area of the PRIMARY monitor.
+  Screen.WorkAreaRect is the primary display's usable area, excluding the taskbar — on Windows it
+  resolves to SystemParametersInfo(SPI_GETWORKAREA) (FMX.Platform.Screen.Win.pas). It is therefore
+  NOT the whole virtual desktop: calling this unconditionally on a multi-monitor machine would drag
+  a form off the secondary monitor back onto the primary one. Gate it with FormIsOnSomeDisplay. }
 procedure EnsureFormVisibleOnScreen(Form: TForm);
 var
   WorkArea: TRectF;
@@ -78,6 +84,33 @@ begin
   WorkArea  := Screen.WorkAreaRect;
   Form.Left:= Round(EnsureRange(Form.Left, WorkArea.Left, WorkArea.Right  - Form.Width));
   Form.Top := Round(EnsureRange(Form.Top,  WorkArea.Top,  WorkArea.Bottom - Form.Height));
+end;
+
+
+{ TRUE when the form overlaps the work area of at least one connected display.
+
+  The case this exists for: a form whose position was saved while a second monitor was attached,
+  restored after that monitor is gone. The saved Left lands beyond the remaining desktop, the
+  window is created off-screen, and the user sees a running process with no visible window —
+  indistinguishable from a hang.
+
+  Overlap, not containment: a form the user deliberately parked half off the right edge is still
+  reachable and must not be moved. Only a form with NO intersection anywhere is unreachable. }
+function FormIsOnSomeDisplay(Form: TForm): Boolean;
+var
+  i:        Integer;
+  FormRect: TRectF;
+begin
+  Assert(Assigned(Form), 'FormIsOnSomeDisplay: Form parameter cannot be nil');
+
+  FormRect := TRectF.Create(Form.Left, Form.Top, Form.Left + Form.Width, Form.Top + Form.Height);
+
+  for i := 0 to Screen.DisplayCount - 1 do
+    if Screen.Displays[i].WorkArea.IntersectsWith(FormRect) then Exit(TRUE);
+
+  // DisplayCount of 0 means the display service is unavailable (headless / mobile). Nothing
+  // useful to compare against, so claim the form is fine and leave its position untouched.
+  Result := Screen.DisplayCount = 0;
 end;
 
 
