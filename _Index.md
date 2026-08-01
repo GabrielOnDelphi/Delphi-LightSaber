@@ -95,6 +95,28 @@ function ReadMotorolaWord (Stream: TStream): Word;
 function ReadMotorolaCardinal(Stream: TStream): Cardinal; { 4-byte big-endian unsigned (e.g. PNG IHDR width/height) }
 ```
 
+## LightCore.CmdLine (17)
+
+```pascal
+function IndexOf(CONST Name: string): Integer;
+function MustFind(CONST Name: string; Kind: TSwitchKind): Integer;
+procedure AddSwitch(CONST Name, Help: string; Kind: TSwitchKind; CONST StrDefault: string; IntDefault: Integer; CONST ValueName: string);
+function MissingPositionalError: string;
+procedure AddFlag(CONST Name, Help: string);
+procedure AddStr (CONST Name, Help: string; CONST Default: string= ''; CONST ValueName: string= '<value>');
+procedure AddInt (CONST Name, Help: string; Default: Integer= 0; CONST ValueName: string= '<n>');
+procedure SetPositionals(MinCount, MaxCount: Integer; CONST Names: string);
+function Parse: Boolean; overload; { the real command line }
+function Parse(CONST Params: array of string): Boolean; overload; { for unit tests }
+function Flag (CONST Name: string): Boolean;
+function Str (CONST Name: string): string;
+function Int (CONST Name: string): Integer;
+function Given(CONST Name: string): Boolean; { Distinguishes 'absent' from 'explicitly set to the default' }
+function PositionalCount: Integer;
+function Positional(Index: Integer): string; { 1-based like ParamStr. Beyond PositionalCount returns '' (optional positionals).
+function UsageText: string; { 'Switches:' + one aligned line per registered switch }
+```
+
 ## LightCore.Debugger (14)
 
 ```pascal
@@ -204,11 +226,12 @@ function FixHtmlFormatings(Body: TStringList): string; overload;
 procedure FixHtmlFormatings(CONST FileName: string); overload;
 ```
 
-## LightCore.INIFile (15)
+## LightCore.INIFile (16)
 
 ```pascal
 function ReadDate (CONST Section, Ident: string; Default: TDateTime): TDateTime; reintroduce;
 procedure WriteDate(CONST Section, Ident: string; Value : TDateTime); reintroduce;
+function ReadString (CONST Section, Ident, Default: string): string; override; // Repairs the RTL's silent 2047-char cut. See implementation.
 function ValueExists(CONST Ident: string): Boolean; reintroduce; overload;
 function ReadDate (CONST Ident: string; Default: TDateTime): TDateTime; reintroduce; overload;
 procedure WriteDate (CONST Ident: string; Value: TDateTime); reintroduce; overload;
@@ -1231,11 +1254,12 @@ function SubscribeToIncomingFileIntents(const AOnFileReceived: TFileSelectedEven
 procedure ProcessLaunchIntent(const AOnFileReceived: TFileSelectedEvent);
 ```
 
-## LightFmx.Common.CenterControl (7)
+## LightFmx.Common.CenterControl (8)
 
 ```pascal
 procedure CenterFormOnDesktop(Form: TForm);
 procedure EnsureFormVisibleOnScreen(Form: TForm);
+function FormIsOnSomeDisplay(Form: TForm): Boolean;
 procedure CenterFormOnParent(Form: TForm; AParent: TForm);
 procedure CenterControl(Ctrl: TControl); overload;
 procedure CenterControl(Ctrl: TControl; const AParentWidth, AParentHeight: Single); overload;
@@ -1764,11 +1788,13 @@ function CoreUsage: Single; { Per-core usage (0..100). One core at max on 4-core
 function CpuUsage: Single; { Total CPU usage (0..100). One core at max on 4-core CPU returns 25% }
 ```
 
-## LightVcl.Common.Debugger (10)
+## LightVcl.Common.Debugger (12)
 
 ```pascal
 procedure AntiDebug; assembler;
 procedure AntiProcDump; assembler;
+procedure AntiDebug; { Win64: deliberate no-op }
+procedure AntiProcDump; { Win64: deliberate no-op }
 procedure ExitIfUnderDebugger (ProjectFileName: string);
 procedure HaltApplication(UserMessage : string);
 function IsDebuggerPresent: Boolean;
@@ -2799,7 +2825,7 @@ function RGB2Color (R,G,B: Integer): Cardinal; deprecated 'Use WinApi.Windows.RG
 procedure SplitColor2RGB (aColor: TColor; OUT R,G,B: Byte);
 function Integer2Color (i: Integer): TColor; { Tries to make a color from an integer. The color are 'lighted' in this order: BGR. }
 function BlendColors (Color1, Color2: TColor; A: Byte): TColor; { Mixing two colors. Usage NewColor:= Blend(Color1, Color2, blending level 0 to 100). 0 = fully Color2, 100 = fully Color1. Source: http://rmklever.com/?cat=6 }
-function CombinePixels (Pixels: PByte; Weights: PInteger; Size: Cardinal): Integer; { NOT TESTED UNDER WIN64. IT MIGHT WORK! }
+function CombinePixels (Pixels: PByte; Weights: PInteger; Size: Cardinal): Integer; { x86: SSE2 assembly. Win64: pure Pascal twin - same result, not vectorised. }
 function MixColors (FG, BG: TColor; BlendPower: Byte): TColor; { 0 = fully BG, 255 = fully FG }
 procedure ReplaceColor (BMP: TBitmap; OldColor, NewColor: TColor); overload;
 procedure ReplaceColor (BMP: TBitmap; OldColor, NewColor: TColor; ToleranceR, ToleranceG, ToleranceB: Byte); overload;
@@ -2831,6 +2857,20 @@ function GetAverageColorPf32(GrayBmp: TBitmap): Byte; overload;
 procedure SetBitmapGrayPalette(BMP: TBitmap);
 function HasGrayscalePalette(const FileName: string): Boolean; overload;
 function HasGrayscalePalette(BMP: TBitmap): Boolean; overload;
+```
+
+## LightVcl.Internet.Browser (9)
+
+```pascal
+procedure BrowserCreated (Sender: TCustomEdgeBrowser; AResult: HResult);
+procedure NavigationCompleted(Sender: TCustomEdgeBrowser; IsSuccess: Boolean; WebErrorStatus: COREWEBVIEW2_WEB_ERROR_STATUS);
+procedure ScriptCompleted (Sender: TCustomEdgeBrowser; AResult: HResult; CONST AResultObjectAsJson: string);
+procedure SettleFire(Sender: TObject);
+procedure GuardFire (Sender: TObject);
+procedure StopTimers;
+procedure Succeed(CONST Text: string);
+procedure Fail(Outcome: TPageOutcome; CONST Info: string);
+procedure ReadPage(CONST Url, JavaScript: string);
 ```
 
 ## LightVcl.Internet.Common (22)
@@ -3979,4 +4019,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2890 public routines across 216 units._
+_2920 public routines across 218 units._
