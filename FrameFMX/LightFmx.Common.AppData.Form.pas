@@ -267,8 +267,17 @@ procedure TLightForm.AfterConstruction;
 begin
   inherited;
 
-  // Ensure form is visible on first run (not off-screen from previous session with different monitor setup)
-  if AppData.RunningFirstTime
+  { Ensure the form is reachable.
+
+    First run: no saved position yet, so clamp whatever the DFM/FMX designer left behind.
+
+    Every other run: the position comes from the INI and is normally correct — but it was saved
+    under whatever monitor layout existed at the time. Unplug a second monitor (or plug into a
+    smaller one) and the restored Left/Top can land entirely outside the remaining desktop. The
+    app then runs perfectly with a window nobody can see, which reads as a freeze; the tray icon
+    still toggles a window that is drawn off-screen. Clamp only when the rectangle intersects no
+    display at all, so a form deliberately parked on a secondary monitor is left alone. }
+  if AppData.RunningFirstTime or not FormIsOnSomeDisplay(Self)
   then EnsureFormVisibleOnScreen(Self);
 
   // Android: reserve system-bar safe-area. Two complementary mechanisms:
