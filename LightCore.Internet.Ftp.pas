@@ -2,7 +2,7 @@ UNIT LightCore.Internet.Ftp;
 
 {-------------------------------------------------------------------------------------------------------------
    FTP support (platform-agnostic).
-   Date: 2026-06-03
+   Date: 2026-07-26
 
    This unit is deliberately NOT part of any LightSaber package: it pulls in Indy (IdFTP), and LightSaber stays
    Indy-free. It lives in the LightSaber folder only so projects on the LightSaber search path can reach it.
@@ -138,8 +138,11 @@ begin
  Dir := Convert2LinuxPath(RemotePath);
  if Dir <> '' then
   begin
-   if Dir[1] = '/'                                       { Dir is non-empty here (guarded above). Drop the leading '/' so the first Copy() below grabs a folder name, not '' }
-   then Delete(Dir, 1, 1);
+   if Dir[1] = '/' then                                  { Dir is non-empty here (guarded above) }
+    begin
+     FFtp.ChangeDir('/');                                { ABSOLUTE path: anchor at the server root first. The segment walk below is relative to the CURRENT dir - on hosts whose FTP login dir is not '/' (e.g. Hostinger lands in /domains/<a-site>/public_html) it would otherwise rebuild the whole chain via MakeDir inside the wrong folder. ChangeDir raises on refusal, so no folder is ever created in the wrong place. }
+     Delete(Dir, 1, 1);                                  { Drop the leading '/' so the first Copy() below grabs a folder name, not '' }
+    end;
 
    Dir:= TrailLinuxPath(Dir);
 
