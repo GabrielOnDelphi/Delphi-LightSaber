@@ -1,13 +1,15 @@
 unit Test.FormSkinsRes;
 
 {=============================================================================================================
-   Unit tests for FormSkinsRes.pas
-   Tests TfrmSkinRes - the resource-based VCL skin selector form.
+   Regression tests for FrameVCL\FormSkinsRes.pas - the resource-based VCL skin loader.
 
-   Note: These tests focus on form creation, component existence, and basic behavior.
-   Unlike FormSkinsDisk tests, these tests work with styles linked into the executable.
-
-   Includes TestInsight support: define TESTINSIGHT in project options.
+   This unit's contract is DELIBERATELY different from FormSkinsDisk's (full reasoning in Docs\Skins-VCL.md):
+     * NO "before CreateMainForm" guard. Its consumers call LoadLastStyle from inside the main form,
+       one of them from FormPostInitialize. A guard here would raise at startup - invisibly, because
+       those apps set Application.ShowMainForm := FALSE.
+     * INI key is 'LastSkin' and it stores a style NAME, not a .vsf filename.
+     * TrySetStyle, not SetStyle: a style that is no longer linked into the EXE must not kill startup.
+     * It DOES apply styles live (that is what FormSkinsDisk was moved away from).
 =============================================================================================================}
 
 interface
@@ -20,7 +22,6 @@ uses
   Vcl.Forms,
   Vcl.Controls,
   Vcl.StdCtrls,
-  Vcl.ExtCtrls,
   Vcl.Themes,
   Vcl.Styles;
 
@@ -28,115 +29,34 @@ type
   [TestFixture]
   TTestFormSkinsRes = class
   private
-    FTestForm: TObject;
-    procedure CleanupForm;
+    procedure RestoreWindowsStyle;
   public
-    [Setup]
-    procedure Setup;
+    [Setup]    procedure Setup;
+    [TearDown] procedure TearDown;
 
-    [TearDown]
-    procedure TearDown;
+    { The contract difference from FormSkinsDisk }
+    [Test] procedure LoadLastStyle_DoesNotRaiseWithMainFormAlive;
+    [Test] procedure LoadLastStyle_UnknownStyleNameDoesNotRaiseAndKeepsCurrentStyle;
 
-    { Form Creation Tests }
-    [Test]
-    procedure TestFormClassExists;
+    { INI }
+    [Test] procedure Ini_ReadsTheLastSkinKey;
+    [Test] procedure Ini_DefaultUsedWhenKeyIsEmpty;
+    [Test] procedure Ini_DefWinThemeAppliesNoStyle;
 
-    [Test]
-    procedure TestFormCreate_Succeeds;
+    { The style is really applied }
+    [Test] procedure ActiveStyleMatchesTheLoadedName;
 
-    [Test]
-    procedure TestFormCreate_WithNilOwner;
-
-    { Component Tests }
-    [Test]
-    procedure TestFormHasListBox;
-
-    [Test]
-    procedure TestFormHasTopLabel;
-
-    [Test]
-    procedure TestFormHasBottomPanel;
-
-    [Test]
-    procedure TestFormHasOKButton;
-
-    [Test]
-    procedure TestFormHasSkinEditorButton;
-
-    [Test]
-    procedure TestFormHasMoreSkinsLabel;
-
-    { ListBox Tests }
-    [Test]
-    procedure TestListBox_IsPopulated;
-
-    [Test]
-    procedure TestListBox_HasWindowsStyle;
-
-    [Test]
-    procedure TestListBox_ClickDoesNotRaiseException;
-
-    [Test]
-    procedure TestListBox_CountMatchesStyleNames;
-
-    { Button Tests }
-    [Test]
-    procedure TestBtnOKClick_NoException;
-
-    [Test]
-    procedure TestBtnSkinEditorClick_NoException;
-
-    { Form Events Tests }
-    [Test]
-    procedure TestFormCreate_CallsLoadForm;
-
-    [Test]
-    procedure TestFormCreate_PopulatesSkins;
-
-    [Test]
-    procedure TestFormDestroy_NoException;
-
-    [Test]
-    procedure TestFormClose_SetsCaFree;
-
-    [Test]
-    procedure TestFormKeyPress_EnterNoException;
-
-    [Test]
-    procedure TestFormKeyPress_EscapeNoException;
-
-    { Label Click Tests }
-    [Test]
-    procedure TestLblTopClick_RefreshesSkins;
-
-    { Style Manager Tests }
-    [Test]
-    procedure TestStyleManager_HasStyles;
-
-    [Test]
-    procedure TestStyleManager_ActiveStyleNotNil;
-
-    { Form Attribute Tests }
-    [Test]
-    procedure TestFormCaption_IsSkinSelector;
-
-    [Test]
-    procedure TestFormKeyPreview_IsEnabled;
-
-    [Test]
-    procedure TestFormAlphaBlend_IsEnabled;
-
-    [Test]
-    procedure TestFormBorderStyle_IsDialog;
-
-    { Selected Item Tests }
-    [Test]
-    procedure TestSelectedItem_MatchesActiveStyle;
+    { The selector }
+    [Test] procedure Selector_ListsExactlyTheStylesLinkedInTheExe;
+    [Test] procedure Selector_PreselectsTheActiveStyle;
+    [Test] procedure Selector_ClickRecordsTheChoiceAndReEnablesTheList;
+    [Test] procedure Selector_ClosingSetsCaFree;
   end;
 
 implementation
 
 uses
+  LightCore.INIFileQuick,
   LightCore.AppData,
   LightVcl.Visual.AppData,
   FormSkinsRes;
@@ -145,437 +65,189 @@ uses
 procedure TTestFormSkinsRes.Setup;
 begin
   Assert.IsNotNull(AppData, 'AppData must be initialized before running tests');
-  FTestForm:= NIL;
+  AppData.RamLog.ShowOnError:= FALSE;
 end;
 
 
 procedure TTestFormSkinsRes.TearDown;
 begin
-  CleanupForm;
+  RestoreWindowsStyle;
+  LightCore.INIFileQuick.WriteString(IniKeySkin, '');
 end;
 
 
-procedure TTestFormSkinsRes.CleanupForm;
+procedure TTestFormSkinsRes.RestoreWindowsStyle;
+begin
+  if TStyleManager.ActiveStyle.Name <> TStyleManager.SystemStyleName
+  then TStyleManager.SetStyle(TStyleManager.SystemStyleName);
+end;
+
+
+
+{-----------------------------------------------------------------------------------------------------------------------
+   THE CONTRACT DIFFERENCE
+-----------------------------------------------------------------------------------------------------------------------}
+
+{ FormSkinsDisk.LoadLastStyle raises here; this one must not. Do not "unify" the two units. }
+procedure TTestFormSkinsRes.LoadLastStyle_DoesNotRaiseWithMainFormAlive;
+begin
+  Assert.IsNotNull(Application.MainForm, 'Precondition: a main form must exist for this test to mean anything');
+  LightCore.INIFileQuick.WriteString(IniKeySkin, '');
+
+  Assert.WillNotRaise(
+    procedure
+    begin
+      FormSkinsRes.LoadLastStyle('');
+    end,
+    Exception,
+    'FormSkinsRes must have NO before-CreateMainForm guard: QuickSilver JpgCompressor calls it from FormPostInitialize, where the main form already exists');
+end;
+
+
+{ Proves the TrySetStyle choice: SetStyle would raise ECustomStyleException and kill startup as soon as
+  a build stops linking a .vsf that a user had already selected. }
+procedure TTestFormSkinsRes.LoadLastStyle_UnknownStyleNameDoesNotRaiseAndKeepsCurrentStyle;
+var
+  Before: string;
+begin
+  Before:= TStyleManager.ActiveStyle.Name;
+  LightCore.INIFileQuick.WriteString(IniKeySkin, 'Style that is not linked into this exe');
+
+  FormSkinsRes.LoadLastStyle('');
+
+  Assert.AreEqual(Before, TStyleManager.ActiveStyle.Name, 'An unknown style name must leave the active style untouched');
+  Assert.AreEqual('Style that is not linked into this exe', FormSkinsRes.CurrentStyle, 'The name is still remembered, so the user sees his own choice in the selector');
+end;
+
+
+
+{-----------------------------------------------------------------------------------------------------------------------
+   INI
+-----------------------------------------------------------------------------------------------------------------------}
+
+procedure TTestFormSkinsRes.Ini_ReadsTheLastSkinKey;
+begin
+  LightCore.INIFileQuick.WriteString(IniKeySkin, TStyleManager.SystemStyleName);
+
+  FormSkinsRes.LoadLastStyle('Some other default');
+
+  Assert.AreEqual(TStyleManager.SystemStyleName, FormSkinsRes.CurrentStyle, 'The INI value must win over the caller''s default');
+end;
+
+
+procedure TTestFormSkinsRes.Ini_DefaultUsedWhenKeyIsEmpty;
+begin
+  LightCore.INIFileQuick.WriteString(IniKeySkin, '');
+
+  FormSkinsRes.LoadLastStyle(TStyleManager.SystemStyleName);
+
+  Assert.AreEqual(TStyleManager.SystemStyleName, FormSkinsRes.CurrentStyle, 'With no INI value the caller''s default must be used (first run)');
+end;
+
+
+procedure TTestFormSkinsRes.Ini_DefWinThemeAppliesNoStyle;
+var
+  Before: string;
+begin
+  Before:= TStyleManager.ActiveStyle.Name;
+  LightCore.INIFileQuick.WriteString(IniKeySkin, DefWinTheme);
+
+  FormSkinsRes.LoadLastStyle('');
+
+  Assert.AreEqual(Before, TStyleManager.ActiveStyle.Name, 'DefWinTheme means "apply nothing" - it must not reach TStyleManager');
+  Assert.AreEqual(DefWinTheme, FormSkinsRes.CurrentStyle, 'DefWinTheme must be remembered as the current choice');
+end;
+
+
+
+{-----------------------------------------------------------------------------------------------------------------------
+   THE STYLE IS REALLY APPLIED
+-----------------------------------------------------------------------------------------------------------------------}
+
+{ The test EXE links no .vsf resources, so the only guaranteed style is the system one. Assert on the
+  real observable anyway: after LoadLastStyle the active style IS the one that was asked for. }
+procedure TTestFormSkinsRes.ActiveStyleMatchesTheLoadedName;
+begin
+  LightCore.INIFileQuick.WriteString(IniKeySkin, TStyleManager.SystemStyleName);
+
+  FormSkinsRes.LoadLastStyle('');
+
+  Assert.AreEqual(FormSkinsRes.CurrentStyle, TStyleManager.ActiveStyle.Name, 'The remembered style and the style TStyleManager actually applied must be the same');
+end;
+
+
+
+{-----------------------------------------------------------------------------------------------------------------------
+   THE SELECTOR
+-----------------------------------------------------------------------------------------------------------------------}
+
+procedure TTestFormSkinsRes.Selector_ListsExactlyTheStylesLinkedInTheExe;
 var
   Form: TfrmSkinRes;
+  StyleName: string;
+  Expected: Integer;
 begin
-  if FTestForm <> NIL then
-  begin
-    Form:= TfrmSkinRes(FTestForm);
+  Expected:= 0;
+  for StyleName in TStyleManager.StyleNames do
+    Inc(Expected);
+
+  Form:= TfrmSkinRes.Create(NIL);
+  try
+    Assert.AreEqual(Expected, Form.lBox.Items.Count, 'The list must show every style linked into the EXE and nothing else');
+    Assert.IsTrue(Form.lBox.Items.IndexOf(TStyleManager.SystemStyleName) >= 0, 'The system style is always linked, so it must always be listed');
+  finally
     FreeAndNil(Form);
-    FTestForm:= NIL;
   end;
 end;
 
 
-{ Form Creation Tests }
-
-procedure TTestFormSkinsRes.TestFormClassExists;
-begin
-  Assert.IsNotNull(TfrmSkinRes, 'TfrmSkinRes class should exist');
-end;
-
-
-procedure TTestFormSkinsRes.TestFormCreate_Succeeds;
+procedure TTestFormSkinsRes.Selector_PreselectsTheActiveStyle;
 var
   Form: TfrmSkinRes;
 begin
   Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsNotNull(Form, 'Form creation should succeed');
+  try
+    Assert.IsTrue(Form.lBox.ItemIndex >= 0, 'The active style must be preselected, otherwise the user cannot see what he is running');
+    Assert.AreEqual(TStyleManager.ActiveStyle.Name, Form.lBox.Items[Form.lBox.ItemIndex], 'The preselected entry must be the active style');
+  finally
+    FreeAndNil(Form);
+  end;
 end;
 
 
-procedure TTestFormSkinsRes.TestFormCreate_WithNilOwner;
+procedure TTestFormSkinsRes.Selector_ClickRecordsTheChoiceAndReEnablesTheList;
 var
   Form: TfrmSkinRes;
 begin
   Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
+  try
+    Form.lBox.ItemIndex:= Form.lBox.Items.IndexOf(TStyleManager.SystemStyleName);
+    Assert.IsTrue(Form.lBox.ItemIndex >= 0, 'Precondition: the system style must be in the list');
 
-  Assert.IsNull(Form.Owner, 'Owner should be nil when created with nil');
+    Form.lBoxClick(Form);
+
+    Assert.AreEqual(TStyleManager.SystemStyleName, FormSkinsRes.CurrentStyle, 'Clicking an entry must record it as the current choice');
+    Assert.AreEqual(TStyleManager.SystemStyleName, TStyleManager.ActiveStyle.Name, 'This unit applies the style LIVE - the active style must follow the click');
+    Assert.IsTrue(Form.lBox.Enabled, 'The list is disabled during the switch and MUST be re-enabled by the finally block');
+  finally
+    FreeAndNil(Form);
+  end;
 end;
 
 
-{ Component Tests }
-
-procedure TTestFormSkinsRes.TestFormHasListBox;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsNotNull(Form.lBox, 'Form should have lBox component');
-  Assert.IsTrue(Form.lBox is TListBox, 'lBox should be a TListBox');
-end;
-
-
-procedure TTestFormSkinsRes.TestFormHasTopLabel;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsNotNull(Form.lblTop, 'Form should have lblTop label');
-end;
-
-
-procedure TTestFormSkinsRes.TestFormHasBottomPanel;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsNotNull(Form.pnlBottom, 'Form should have pnlBottom panel');
-end;
-
-
-procedure TTestFormSkinsRes.TestFormHasOKButton;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsNotNull(Form.btnOK, 'Form should have btnOK button');
-end;
-
-
-procedure TTestFormSkinsRes.TestFormHasSkinEditorButton;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsNotNull(Form.btnSkinEditor, 'Form should have btnSkinEditor button');
-end;
-
-
-procedure TTestFormSkinsRes.TestFormHasMoreSkinsLabel;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsNotNull(Form.lblMoreSkinsTrial, 'Form should have lblMoreSkinsTrial label');
-end;
-
-
-{ ListBox Tests }
-
-procedure TTestFormSkinsRes.TestListBox_IsPopulated;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  { ListBox should have at least the Windows style entry }
-  Assert.IsTrue(Form.lBox.Items.Count >= 1,
-    'ListBox should have at least one style entry');
-end;
-
-
-procedure TTestFormSkinsRes.TestListBox_HasWindowsStyle;
-var
-  Form: TfrmSkinRes;
-  Index: Integer;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  Index:= Form.lBox.Items.IndexOf('Windows');
-  Assert.IsTrue(Index >= 0, 'ListBox should contain "Windows" style');
-end;
-
-
-procedure TTestFormSkinsRes.TestListBox_ClickDoesNotRaiseException;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  { Select first style (usually Windows) }
-  if Form.lBox.Items.Count > 0
-  then Form.lBox.ItemIndex:= 0;
-
-  { lBoxClick should not raise exception }
-  Assert.WillNotRaise(
-    procedure
-    begin
-      Form.lBoxClick(Form);
-    end);
-end;
-
-
-procedure TTestFormSkinsRes.TestListBox_CountMatchesStyleNames;
-var
-  Form: TfrmSkinRes;
-  StyleCount: Integer;
-  StyleName: string;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  { Count available styles }
-  StyleCount:= 0;
-  for StyleName in TStyleManager.StyleNames do
-    Inc(StyleCount);
-
-  Assert.AreEqual(StyleCount, Form.lBox.Items.Count,
-    'ListBox count should match TStyleManager.StyleNames count');
-end;
-
-
-{ Button Tests }
-
-procedure TTestFormSkinsRes.TestBtnOKClick_NoException;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  Form.Show;
-
-  { btnOKClick should not raise exception }
-  Assert.WillNotRaise(
-    procedure
-    begin
-      Form.btnOKClick(Form);
-    end);
-end;
-
-
-procedure TTestFormSkinsRes.TestBtnSkinEditorClick_NoException;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  { btnSkinEditorClick should not raise exception - will open local skin editor or URL }
-  Assert.WillNotRaise(
-    procedure
-    begin
-      Form.btnSkinEditorClick(Form);
-    end);
-end;
-
-
-{ Form Events Tests }
-
-procedure TTestFormSkinsRes.TestFormCreate_CallsLoadForm;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  { If LoadForm was called, the form should exist without exception }
-  Assert.IsNotNull(Form, 'FormCreate should call LoadForm successfully');
-end;
-
-
-procedure TTestFormSkinsRes.TestFormCreate_PopulatesSkins;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  { FormCreate calls PopulateSkins, so list should have items }
-  Assert.IsTrue(Form.lBox.Items.Count > 0,
-    'FormCreate should populate skins list');
-end;
-
-
-procedure TTestFormSkinsRes.TestFormDestroy_NoException;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  { FormDestroy should not raise exception }
-  Assert.WillNotRaise(
-    procedure
-    begin
-      Form.FormDestroy(Form);
-    end);
-end;
-
-
-procedure TTestFormSkinsRes.TestFormClose_SetsCaFree;
+procedure TTestFormSkinsRes.Selector_ClosingSetsCaFree;
 var
   Form: TfrmSkinRes;
   Action: TCloseAction;
 begin
   Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  Action:= caNone;
-  Form.FormClose(Form, Action);
-
-  Assert.AreEqual(caFree, Action, 'FormClose should set Action to caFree');
-end;
-
-
-procedure TTestFormSkinsRes.TestFormKeyPress_EnterNoException;
-var
-  Form: TfrmSkinRes;
-  Key: Char;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  Form.Show;
-  Key:= Chr(VK_RETURN);
-
-  { FormKeyPress with Enter should not raise exception }
-  Assert.WillNotRaise(
-    procedure
-    begin
-      Form.FormKeyPress(Form, Key);
-    end);
-end;
-
-
-procedure TTestFormSkinsRes.TestFormKeyPress_EscapeNoException;
-var
-  Form: TfrmSkinRes;
-  Key: Char;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  Form.Show;
-  Key:= Chr(VK_ESCAPE);
-
-  { FormKeyPress with Escape should not raise exception }
-  Assert.WillNotRaise(
-    procedure
-    begin
-      Form.FormKeyPress(Form, Key);
-    end);
-end;
-
-
-{ Label Click Tests }
-
-procedure TTestFormSkinsRes.TestLblTopClick_RefreshesSkins;
-var
-  Form: TfrmSkinRes;
-  InitialCount: Integer;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  InitialCount:= Form.lBox.Items.Count;
-  Form.lblTopClick(Form);
-
-  { After refresh, count should be same (styles don't change at runtime) }
-  Assert.AreEqual(InitialCount, Form.lBox.Items.Count,
-    'lblTopClick should refresh skins list');
-end;
-
-
-{ Style Manager Tests }
-
-procedure TTestFormSkinsRes.TestStyleManager_HasStyles;
-var
-  StyleCount: Integer;
-  StyleName: string;
-begin
-  StyleCount:= 0;
-  for StyleName in TStyleManager.StyleNames do
-    Inc(StyleCount);
-
-  Assert.IsTrue(StyleCount >= 1,
-    'TStyleManager should have at least one style (Windows)');
-end;
-
-
-procedure TTestFormSkinsRes.TestStyleManager_ActiveStyleNotNil;
-begin
-  Assert.IsNotNull(TStyleManager.ActiveStyle,
-    'TStyleManager.ActiveStyle should not be nil');
-end;
-
-
-{ Form Attribute Tests }
-
-procedure TTestFormSkinsRes.TestFormCaption_IsSkinSelector;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.AreEqual('Skin selector', Form.Caption,
-    'Form caption should be "Skin selector"');
-end;
-
-
-procedure TTestFormSkinsRes.TestFormKeyPreview_IsEnabled;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsTrue(Form.KeyPreview,
-    'KeyPreview should be enabled for keyboard shortcuts');
-end;
-
-
-procedure TTestFormSkinsRes.TestFormAlphaBlend_IsEnabled;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsTrue(Form.AlphaBlend,
-    'AlphaBlend should be enabled per DFM');
-end;
-
-
-procedure TTestFormSkinsRes.TestFormBorderStyle_IsDialog;
-var
-  Form: TfrmSkinRes;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.AreEqual(bsDialog, Form.BorderStyle,
-    'BorderStyle should be bsDialog');
-end;
-
-
-{ Selected Item Tests }
-
-procedure TTestFormSkinsRes.TestSelectedItem_MatchesActiveStyle;
-var
-  Form: TfrmSkinRes;
-  ActiveStyleName: string;
-begin
-  Form:= TfrmSkinRes.Create(NIL);
-  FTestForm:= Form;
-
-  ActiveStyleName:= TStyleManager.ActiveStyle.Name;
-
-  { The selected item should match the active style }
-  if Form.lBox.ItemIndex >= 0
-  then Assert.AreEqual(ActiveStyleName, Form.lBox.Items[Form.lBox.ItemIndex],
-    'Selected item should match active style name');
+  try
+    Action:= caNone;
+    Form.FormClose(Form, Action);
+    Assert.AreEqual(caFree, Action, 'The dialog must free itself on close, otherwise every open leaks a form');
+  finally
+    FreeAndNil(Form);
+  end;
 end;
 
 
