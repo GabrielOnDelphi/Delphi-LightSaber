@@ -471,6 +471,7 @@ begin
                      'Add styles then click here to refresh the list.';
       EXIT;
     end;
+    lblTop.Text:= 'Click a style to apply it';  { Restore the default text (matches the .fmx) — a previous refresh may have replaced it with the directory-missing error above }
 
     { List *.style files (text format) }
     var StyleFiles: TStringList;

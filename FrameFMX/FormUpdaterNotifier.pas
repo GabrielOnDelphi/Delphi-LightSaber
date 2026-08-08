@@ -27,7 +27,9 @@ UNIT FormUpdaterNotifier;
             end);
 
    Note:
-     The TUpdater object can construct this form on demand when news/connection errors arrive.
+     TUpdater does NOT construct this form (ciUpdater has no reference to this unit).
+     The host app must create it (CreateFormModal); until then TUpdater's events fire into
+     unassigned handlers and are silently dropped.
      Mobile: TUpdater.GetNews runs THTTPClient synchronously and will freeze the UI for the
      duration of the download. A future improvement is to wrap it in a TTask.
 

@@ -94,10 +94,15 @@ begin
   Assert(cmbWhen.Items.Count = Ord(High(TCheckWhen)) + 1, 'cmbWhen item count <> TCheckWhen size');
 
   chkForceNewsFound.Visible:= AppData.BetaTesterMode;
-  if NOT chkForceNewsFound.Visible
-  then chkForceNewsFound.IsChecked:= FALSE;
 
   GuiFromObject;
+
+  { Clear the debug flag for non-BetaTesters. Must run AFTER GuiFromObject, otherwise
+    GuiFromObject immediately overwrites IsChecked with the persisted Updater.ForceNewsFound —
+    a TRUE left over from a beta session would then survive invisibly and ObjectFromGUI would
+    write it back on Apply, making the updater permanently claim "news found". }
+  if NOT chkForceNewsFound.Visible
+  then chkForceNewsFound.IsChecked:= FALSE;
 end;
 
 
@@ -105,13 +110,24 @@ end;
    GUI <-> OBJECT
 --------------------------------------------------------------------------------------------------}
 procedure TfrmUpdaterSettings.GuiFromObject;
+VAR SavedOnChange: TNotifyEvent;
 begin
-  cmbWhen.ItemIndex          := Ord(Updater.When);
-  spnHours.Value             := Updater.CheckEvery;
-  chkForceNewsFound.IsChecked:= Updater.ForceNewsFound;
-  chkConnectFail.IsChecked   := Updater.ShowConnectFail;
+  { Suppress OnChange while we programmatically set ItemIndex. Unlike VCL, FMX TComboBox fires
+    OnChange on PROGRAMMATIC ItemIndex writes too (TCustomComboBox.SetItemIndex -> DoChange,
+    FMX.ListBox.pas) — without this, opening the dialog with When=cwNever pops the
+    'disable the updater?' warning every time. Same pattern as FormSkinsDisk.PopulateStyles. }
+  SavedOnChange:= cmbWhen.OnChange;
+  cmbWhen.OnChange:= NIL;
+  TRY
+    cmbWhen.ItemIndex          := Ord(Updater.When);
+    spnHours.Value             := Updater.CheckEvery;
+    chkForceNewsFound.IsChecked:= Updater.ForceNewsFound;
+    chkConnectFail.IsChecked   := Updater.ShowConnectFail;
 
-  UpdateVisibility;
+    UpdateVisibility;
+  FINALLY
+    cmbWhen.OnChange:= SavedOnChange;
+  END;
 end;
 
 

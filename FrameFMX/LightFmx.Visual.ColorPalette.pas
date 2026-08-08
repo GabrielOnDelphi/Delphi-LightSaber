@@ -369,16 +369,24 @@ begin
 
   // Restore selection if it was previously set
   if FHasSelection then
-    for VAR i := 0 to FFlow.ChildrenCount - 1 do
-      if FFlow.Children[i] is TShape then
-        begin
-          VAR Shape := TShape(FFlow.Children[i]);
-          if Shape.Fill.Color = FSelectedColor then
-            begin
-              ApplySelectionVisual(Shape);
-              BREAK;
-            end;
-        end;
+    begin
+      VAR Found:= FALSE;
+      for VAR i := 0 to FFlow.ChildrenCount - 1 do
+        if FFlow.Children[i] is TShape then
+          begin
+            VAR Shape := TShape(FFlow.Children[i]);
+            if Shape.Fill.Color = FSelectedColor then
+              begin
+                ApplySelectionVisual(Shape);
+                Found:= TRUE;
+                BREAK;
+              end;
+          end;
+      // Selected color no longer in the palette (e.g. SetColors with a new set):
+      // without this, HasSelection stays TRUE and SelectedColor returns a color that is not in the palette.
+      if NOT Found
+      then ClearSelectionVisual;
+    end;
 end;
 
 

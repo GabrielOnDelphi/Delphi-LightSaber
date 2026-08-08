@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Visual.Animations;
 
 {=============================================================================================================
-   2026.06.10
+   2026.08.07
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FMX micro-animations.
@@ -186,7 +186,7 @@ VAR
   ParentWidth, ParentHeight: Single;
 begin
   Assert(Parent <> NIL, 'ShowConfetti: Parent cannot be nil');
-  Assert(SizeMultiplier > 0, 'ShowConfetti: SizeMultiplier must be > 0 (Random(0) raises EInvalidArgument)');
+  Assert(SizeMultiplier > 0, 'ShowConfetti: SizeMultiplier must be > 0 (zero/negative would produce invisible confetti)');
 
   // Get parent dimensions (forms and controls have different properties)
   if Parent is TControl
@@ -308,16 +308,27 @@ end;
   a subtree that contains animated children. A still-ticking TFloatAnimation
   that fires while a control is in BeforeDestruction crashes FMX presentation. }
 class procedure TBubbleAnim.StopAnimationsIn(Root: TFmxObject);
-VAR i: Integer;
+VAR
+  i    : Integer;
+  Child: TFmxObject;
 begin
   if Root = NIL then EXIT;
-  for i:= 0 to Root.ChildrenCount - 1 do
+  // Iterate DOWNWARDS: Enabled:=FALSE on a running animation calls TAnimation.Stop
+  // (FMX.Ani.pas:1519), and Stop ends with DoFinish (FMX.Ani.pas:1749). An OnFinish handler
+  // that detaches a control from Root (e.g. TConfetti.OnAnimFinish does Piece.Parent:=nil)
+  // shrinks the child list mid-loop; an ascending loop would then index past the end.
+  // Descending stays in range. Child is read ONCE per iteration, so the recursion below
+  // cannot re-index a list the handler has just shifted underneath us.
+  for i:= Root.ChildrenCount - 1 downto 0 do
     begin
-      if Root.Children[i] is TAnimation
-      then TAnimation(Root.Children[i]).Enabled:= FALSE;
+      if i >= Root.ChildrenCount then Continue;   // A handler removed more than one child
+
+      Child:= Root.Children[i];
+      if Child is TAnimation
+      then TAnimation(Child).Enabled:= FALSE;
 
       // Recurse: some controls wrap their animations deeper in the tree.
-      StopAnimationsIn(Root.Children[i]);
+      StopAnimationsIn(Child);
     end;
 end;
 
@@ -330,6 +341,34 @@ end;
 class procedure TBtnAnim.Squish(aBtn: TControl);
 CONST
   Dur = 0.2;
+
+  { Reuse one animation pair per button instead of creating a new pair on every press.
+    The animations are owned by the button (found again via FindComponent by name), so a
+    frequently-pressed button no longer accumulates finished TFloatAnimation instances
+    until the form closes. TAnimation.Start (FMX.Ani.pas:1676) restarts an already-running
+    instance cleanly: it has no early-exit on Running, it resets FTime/FDelayTime and
+    re-subscribes to the display link. (Its one early-exit is an invisible parent control —
+    same on a fresh instance, so reuse changes nothing there.)
+    If the button is torn down via DeleteChildren the pair dies with it and is simply
+    re-created on the next press — FindComponent then returns NIL again. }
+  function ObtainAnim(aBtn: TControl; CONST AnimName, PropName: string): TFloatAnimation;
+  begin
+    Result:= aBtn.FindComponent(AnimName) as TFloatAnimation;
+    if Result = NIL then
+      begin
+        Result:= TFloatAnimation.Create(aBtn);
+        Result.Name         := AnimName;
+        Result.Stored       := FALSE;
+        Result.Parent       := aBtn;
+        Result.PropertyName := PropName;
+        Result.StartValue   := 0.92;
+        Result.StopValue    := 1.0;
+        Result.Duration     := Dur;
+        Result.AnimationType:= TAnimationType.Out;
+        Result.Interpolation:= TInterpolationType.Back;
+      end;
+  end;
+
 VAR
   SX, SY: TFloatAnimation;
   Acc   : TControlAccess;
@@ -342,23 +381,8 @@ begin
   Acc.Scale.X:= 0.92;
   Acc.Scale.Y:= 0.92;
 
-  SX:= TFloatAnimation.Create(aBtn);
-  SX.Parent       := aBtn;
-  SX.PropertyName := 'Scale.X';
-  SX.StartValue   := 0.92;
-  SX.StopValue    := 1.0;
-  SX.Duration     := Dur;
-  SX.AnimationType:= TAnimationType.Out;
-  SX.Interpolation:= TInterpolationType.Back;
-
-  SY:= TFloatAnimation.Create(aBtn);
-  SY.Parent       := aBtn;
-  SY.PropertyName := 'Scale.Y';
-  SY.StartValue   := 0.92;
-  SY.StopValue    := 1.0;
-  SY.Duration     := Dur;
-  SY.AnimationType:= TAnimationType.Out;
-  SY.Interpolation:= TInterpolationType.Back;
+  SX:= ObtainAnim(aBtn, 'LightSquishX', 'Scale.X');
+  SY:= ObtainAnim(aBtn, 'LightSquishY', 'Scale.Y');
 
   SX.Start;
   SY.Start;

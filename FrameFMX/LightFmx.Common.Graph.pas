@@ -208,7 +208,11 @@ begin
     BMP.SaveToFile(FileName);
   except
     on E: Exception do
-      TDialogService.ShowMessage('Save Failed: ' + E.Message);
+      begin
+        if Assigned(AppDataCore)
+        then AppDataCore.LogError('SaveBitmap failed for ' + FileName + ': ' + E.Message);
+        TDialogService.ShowMessage('Save Failed: ' + E.Message);
+      end;
   end;
 end;
 
@@ -498,7 +502,7 @@ begin
   try
     Surface.Assign(BMP);
     if NOT TBitmapCodecManager.SaveToStream(Stream, Surface, Extension)
-    then raise Exception.CreateFmt('BitmapToBytes: Failed to encode bitmap as %s', [Extension]);
+    then raise Exception.Create('BitmapToBytes: Failed to encode bitmap as ' + Extension);
     SetLength(Result, Stream.Size);
     if Stream.Size > 0
     then Move(Stream.Memory^, Result[0], Stream.Size);

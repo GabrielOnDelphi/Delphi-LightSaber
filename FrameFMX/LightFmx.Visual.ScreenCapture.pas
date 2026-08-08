@@ -1,7 +1,7 @@
 ﻿UNIT LightFmx.Visual.ScreenCapture;
 
 {=============================================================================================================
-   2026.06.10
+   2026.08.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Screen Capture Manager - Business Logic Layer
@@ -32,7 +32,7 @@
 INTERFACE
 
 USES
-  System.SysUtils, System.Types, System.Classes, System.Generics.Collections,
+  System.SysUtils, System.Types, System.UITypes, System.Classes, System.Generics.Collections,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.Graphics, FMX.Dialogs, FMX.Layouts,
   FMX.Controls.Presentation;
 
@@ -126,6 +126,7 @@ VAR
   ScreenDC, MemDC: Winapi.Windows.HDC;
   ScreenWidth, ScreenHeight: Integer;
   hBitmap: Winapi.Windows.HBITMAP;
+  OldBmp: Winapi.Windows.HGDIOBJ;
   BitmapData: TBitmapData;
 {$ENDIF}
 {$IFDEF MACOS}
@@ -155,9 +156,14 @@ begin
       // Create GDI bitmap to hold the screen capture
       hBitmap:= CreateCompatibleBitmap(ScreenDC, ScreenWidth, ScreenHeight);
       try
-        SelectObject(MemDC, hBitmap);
+        OldBmp:= SelectObject(MemDC, hBitmap);
         // Copy screen pixels to memory bitmap
         BitBlt(MemDC, 0, 0, ScreenWidth, ScreenHeight, ScreenDC, 0, 0, SRCCOPY);
+
+        // Deselect hBitmap BEFORE GetDIBits/DeleteObject. Per MSDN, GetDIBits requires that the
+        // bitmap is "not selected into a device context", and DeleteObject FAILS on a bitmap that
+        // is still selected into a DC — which leaked one screen-size DDB per capture.
+        SelectObject(MemDC, OldBmp);
 
         // Transfer pixels from GDI bitmap to FMX bitmap
         if FScreenshot.Map(TMapAccess.Write, BitmapData) then
@@ -289,6 +295,7 @@ begin
   try
     CroppedBitmap.Width:= Round(ScaledRect.Width);
     CroppedBitmap.Height:= Round(ScaledRect.Height);
+    CroppedBitmap.Clear(TAlphaColorRec.Black);   // A fresh bitmap's pixel content is undefined; clear so the unclamped border (partially off-screen selection) is not garbage
 
     // Clamp source rect to screenshot bounds (prevents drawing outside the bitmap)
     SourceRect:= ScaledRect;
@@ -299,8 +306,10 @@ begin
         EXIT;
       end;
 
-    // Destination occupies only the clamped portion
-    DestRect:= RectF(0, 0, SourceRect.Width, SourceRect.Height);
+    // Destination = the clamped portion, at its own position WITHIN the selection
+    // (identical to (0,0,W,H) when the selection is fully on-screen)
+    DestRect:= SourceRect;
+    DestRect.Offset(-ScaledRect.Left, -ScaledRect.Top);
 
     // BeginScene can fail (GPU context lost, zero-size bitmap, etc.) — guard the return value
     if CroppedBitmap.Canvas.BeginScene then

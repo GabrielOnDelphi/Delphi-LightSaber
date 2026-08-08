@@ -115,7 +115,9 @@ class procedure TfrmAboutApp.CreateFormModal(AAfterClose: TProc);
 var
   Form: TfrmAboutApp;
 begin
+  Form:= NIL;   // Must init: if creation is deferred (called before Application.Run), CreateForm leaves the reference untouched — an uninitialized stack local would then be dereferenced below.
   AppData.CreateForm(TfrmAboutApp, Form, asNone);
+  Assert(Form <> NIL, 'CreateFormModal: Form was not created (called during initialization?).');
   Form.AfterClose:= AAfterClose;
   {$IFDEF USEPROTEUS}
   Form.btnOrderNow.Visible:= TRUE;
@@ -270,13 +272,20 @@ end;
 
 
 { Paints lblChildren red when BetaTester mode is active — visual cue that survives form reopen.
-  FontColor must be removed from StyledSettings so the style does not override our color. }
+  Beta: FontColor removed from StyledSettings so our red wins over the style.
+  Non-beta: FontColor handed BACK to StyledSettings so the active style paints the label again
+  (same idiom as TfrmUpdater.ResetStatusColor). Setting FontColor:=claNull instead would render
+  the text fully transparent: with FontColor unstyled, FMX uses TextSettings.FontColor verbatim —
+  no claNull special-casing (TTextSettings.AssignNotStyled, FMX.Graphics.pas). }
 procedure TfrmAboutApp.UpdateBetaTesterVisual;
 begin
-  lblChildren.StyledSettings:= lblChildren.StyledSettings - [TStyledSetting.FontColor];
-  if AppData.BetaTesterMode
-  then lblChildren.TextSettings.FontColor:= claRed
-  else lblChildren.TextSettings.FontColor:= claNull;   // claNull lets the style default paint it
+  if AppData.BetaTesterMode then
+    begin
+      lblChildren.StyledSettings:= lblChildren.StyledSettings - [TStyledSetting.FontColor];
+      lblChildren.TextSettings.FontColor:= claRed;
+    end
+  else
+    lblChildren.StyledSettings:= lblChildren.StyledSettings + [TStyledSetting.FontColor];
 end;
 
 

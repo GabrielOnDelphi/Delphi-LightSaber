@@ -1,7 +1,7 @@
 ﻿unit LightFmx.Visual.AutoGrowMemo;
 
 {=============================================================================================================
-   2026-04-24
+   2026.08.08
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FMX TMemo that auto-grows (and shrinks) its parent layout height as the user types.
@@ -19,7 +19,10 @@
 =============================================================================================================}
 
 {  Loaded chains its handler onto the existing OnChangeTracking — any FMX-designer-assigned
-   OnChangeTracking is preserved (called after AdjustParentHeight). OnChange is left alone. }
+   OnChangeTracking is preserved (called after AdjustParentHeight). OnChange is left alone.
+   Runtime only: at design time the event is not touched, so the IDE streams the user's handler.
+   Limitation: Loaded runs only for STREAMED components. An instance built in code
+   (TAutoGrowMemo.Create) never chains the handler, so it re-measures on Resize but not on typing. }
 
 INTERFACE
 
@@ -67,12 +70,32 @@ end;
 
 
 procedure TAutoGrowMemo.Loaded;
+var
+  Cur, Hook: TNotifyEvent;
 begin
   inherited;
   // OnChangeTracking fires per-keystroke; OnChange only fires on focus-loss/Enter
   // and would mean the memo never grows while typing.
-  FSavedOnChangeTracking:= OnChangeTracking;
-  OnChangeTracking:= OnChangeHandler;
+  // Design time: leave the event untouched. OnChangeHandler is a PRIVATE method of this component,
+  // so the form cannot name it. TWriter.IsDefaultMethodProp (System.Classes.pas, D13) reads
+  // "(Value.Code <> nil) and (FindMethodName(Value) = '')" as "this is the default value" and then
+  // WriteProperty SKIPS the property entirely -> a designer-assigned OnChangeTracking silently
+  // disappears from the .fmx on the next save.
+  if NOT (csDesigning in ComponentState) then
+    begin
+      Cur := OnChangeTracking;
+      Hook:= OnChangeHandler;
+      // Chain the hook at most once. Embarcadero documents that Loaded "may be called multiple times
+      // on inherited forms ... every time a level of inheritance is streamed in" (docwiki
+      // System.Classes.TComponent.Loaded). Delphi 13's TReader does de-duplicate its Loaded list
+      // (System.Classes.pas: "if FLoaded.IndexOf(Result) < 0" in ReadComponent), so a second pass is
+      // not expected on this version - but saving our own hook into FSavedOnChangeTracking would
+      // recurse forever on the first keystroke, so the identity test stays as cheap insurance.
+      if (TMethod(Cur).Code <> TMethod(Hook).Code)
+      OR (TMethod(Cur).Data <> TMethod(Hook).Data)
+      then FSavedOnChangeTracking:= Cur;
+      OnChangeTracking:= Hook;
+    end;
   AdjustParentHeight;
 end;
 

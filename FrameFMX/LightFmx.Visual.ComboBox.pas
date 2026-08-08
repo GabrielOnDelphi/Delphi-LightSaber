@@ -14,9 +14,14 @@ UNIT LightFmx.Visual.ComboBox;
   DualItems:
     Allows user to add two strings separated by |.
     The format is: 'int_cmd|Nice Screen Name' stored in Items as: Names | Value
-    The UI shows the second string (Value).
     The first string (Name) can be retrieved with: s := TLightComboBox.SelectedItem;
     The screen name (Value) can be retrieved with: s := TLightComboBox.SelectedDualItem;
+
+    DISPLAY DIFFERENCE vs the VCL twin: the VCL TLightComboBox owner-draws the item and paints
+    only the Value, so the user never sees the pipe. This FMX port has no equivalent: FMX
+    TListBoxStrings.Add assigns Item.Text := S verbatim and TListBoxItem renders Text as-is,
+    so the dropdown AND the closed combo show the RAW 'int_cmd|Nice Screen Name'.
+    Until that is addressed, use DualItems only where the raw string is acceptable on screen.
 
   Tester: c:\MyProjects\Project support\Testers\CubicCombobox tester\Tester.dpr
 =============================================================================================================}

@@ -15,6 +15,27 @@ UNIT LightFmx.Common.CrashHandler;
      application can read the file, show it to the user (or upload it),
      then clear it.
 
+   *** NEVER LINK THIS UNIT INTO A BINARY THAT ALSO LINKS madExcept ***  (verified 2026-08-02)
+
+   An armed madExcept kills Application.OnException outright, so THIS UNIT GOES
+   SILENT with no warning at all. madExcept replaces the whole method
+   TApplication.HandleException with a jump (madExcept.pas:19623-19634), and its
+   interceptor InterceptAHandleExcept (madExcept.pas:16930-16936) calls madExcept's
+   own handler and RETURNS -- it never calls through to the original method body,
+   which is the only thing that dispatches OnException. This applies to FMX as well
+   as VCL: madExcept patches FMX.Forms.TApplication.HandleException by exactly the
+   same route.
+
+   So do NOT stack the two. Split them at compile time on the MSWINDOWS symbol --
+   madExcept on Windows, this unit everywhere else -- and they can never coexist.
+   To run your own code alongside madExcept, use its RegisterExceptionHandler.
+
+   Consider LightCore.ExceptionLogger instead of this unit where it fits: it hooks
+   RaiseExceptObjProc rather than Application.OnException, so it also sees the
+   exceptions that limit 2 below loses.
+
+   Background: c:\Delphi\IDE madShi 510\CLAUDE.md, c:\Projects\LightSaber\CLAUDE.md
+
    Known limits (Phase B baseline):
    1. NO STACK TRACE. Captures only Exception class name + message + timestamp.
       One-line summary, nothing more. Phase C: pull in Grijjy.ErrorReporting.pas

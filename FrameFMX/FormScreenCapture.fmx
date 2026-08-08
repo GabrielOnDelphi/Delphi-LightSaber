@@ -29,7 +29,7 @@ object frmScreenCapture: TfrmScreenCapture
       Visible = False
     end
     object pbOverlay: TPaintBox
-      Align = Client
+      Align = Contents
       HitTest = False
       Size.Width = 800.000000000000000000
       Size.Height = 520.000000000000000000

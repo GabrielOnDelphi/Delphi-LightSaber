@@ -1,7 +1,7 @@
 ﻿UNIT FormScreenCapture;
 
 {=============================================================================================================
-   2026.06.10
+   2026.08.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Screen Capture with Rectangle Selection
@@ -76,6 +76,7 @@ TYPE
     FSCManager: TScreenCaptureManager;
     FBlurredScreenshot: TBitmap;
     FOverlayStyle: TOverlayStyle;
+    FFlashAnim: TFloatAnimation;     // Reusable capture-feedback animation (owned by SelectionRect)
     procedure UpdateInstructions;
     function  IsCaptureKeyPressed(Key: Word; Shift: TShiftState): Boolean;
     procedure ShowCaptureFlash;
@@ -94,9 +95,9 @@ procedure ScreenCaptureNow(OnComplete: TScreenCaptureCallback);
 
 IMPLEMENTATION {$R *.fmx}
 
-
-  {$IFDEF MSWINDOWS}USES Winapi.Windows;{$ENDIF}
-  {$IFDEF MACOS}USES Macapi.AppKit; {$ENDIF}
+// No platform USES needed here: Sleep comes from System.SysUtils, vkEscape from System.UITypes.
+// The previous {$IFDEF MACOS}USES Macapi.AppKit{$ENDIF} broke the iOS build: MACOS is also defined
+// when compiling for iOS, but Macapi.AppKit does not exist for the iOS target (AppKit is macOS-only).
 
 
 
@@ -498,12 +499,15 @@ VAR Msg: string;
 begin
   Msg:= '1. Select a rectangle on your screen' + #13#10;
 
-  {$IFDEF MSWINDOWS}
-  Msg:= Msg + '2. Press Ctrl+P to capture the selected area' + #13#10; {$ENDIF}
-  {$IFDEF MACOS}
-  Msg:= Msg + '2. Press Cmd+P to capture the selected area' + #13#10; {$ENDIF}
-  {$IF DEFINED(IOS) OR DEFINED(ANDROID)}
-  Msg:= Msg + '2. Tap to capture the selected area' + #13#10; {$ENDIF}
+  // MACOS is ALSO defined on iOS, so the branches must be mutually exclusive
+  // (plain {$IFDEF MACOS} emitted BOTH the Cmd+P and the Tap line on iOS).
+  {$IF DEFINED(MSWINDOWS)}
+  Msg:= Msg + '2. Press Ctrl+P to capture the selected area' + #13#10;
+  {$ELSEIF DEFINED(MACOS) AND NOT DEFINED(IOS)}
+  Msg:= Msg + '2. Press Cmd+P to capture the selected area' + #13#10;
+  {$ELSEIF DEFINED(IOS) OR DEFINED(ANDROID)}
+  Msg:= Msg + '2. Tap to capture the selected area' + #13#10;
+  {$ENDIF}
 
   Msg:= Msg + '3. Press ESC when done';
 
@@ -513,12 +517,15 @@ end;
 
 function TfrmScreenCapture.IsCaptureKeyPressed(Key: Word; Shift: TShiftState): Boolean;
 begin
-  {$IFDEF MSWINDOWS}
-  Result:= (Key = Ord('P')) AND (ssCtrl in Shift); {$ENDIF}
-  {$IFDEF MACOS}
-  Result:= (Key = Ord('P')) AND (ssCommand in Shift);  {$ENDIF}
-  {$IF DEFINED(IOS) OR DEFINED(ANDROID)}
-  Result:= FALSE; {$ENDIF}
+  // Mutually exclusive branches (MACOS is also defined on iOS); the ELSE covers
+  // iOS/Android/Linux so Result is defined on every platform.
+  {$IF DEFINED(MSWINDOWS)}
+  Result:= (Key = Ord('P')) AND (ssCtrl in Shift);
+  {$ELSEIF DEFINED(MACOS) AND NOT DEFINED(IOS)}
+  Result:= (Key = Ord('P')) AND (ssCommand in Shift);
+  {$ELSE}
+  Result:= FALSE;
+  {$ENDIF}
 end;
 
 
@@ -556,19 +563,22 @@ end;
 
 
 procedure TfrmScreenCapture.ShowCaptureFlash;
-VAR Anim: TFloatAnimation;
 begin
   // Visual feedback: pulse SelectionRect opacity using FMX animation engine.
-  // Fire-and-forget — caller does not depend on completion.
-  Anim:= TFloatAnimation.Create(SelectionRect);
-  Anim.Parent:= SelectionRect;
-  Anim.PropertyName:= 'Opacity';
-  Anim.StartValue:= 1.0;
-  Anim.StopValue:= 0.3;
-  Anim.Duration:= 0.1;
-  Anim.AutoReverse:= TRUE;
-  Anim.Loop:= FALSE;
-  Anim.Start;
+  // One reusable animation instance: creating a new TFloatAnimation per capture accumulated
+  // owner-managed instances on SelectionRect until the form closed.
+  if FFlashAnim = NIL then
+    begin
+      FFlashAnim:= TFloatAnimation.Create(SelectionRect);
+      FFlashAnim.Parent:= SelectionRect;
+      FFlashAnim.PropertyName:= 'Opacity';
+      FFlashAnim.StartValue:= 1.0;
+      FFlashAnim.StopValue:= 0.3;
+      FFlashAnim.Duration:= 0.1;
+      FFlashAnim.AutoReverse:= TRUE;
+      FFlashAnim.Loop:= FALSE;
+    end;
+  FFlashAnim.Start;   // Start on an already-running animation restarts it (TAnimation.Start re-inits FTime and, for AutoReverse, restores FInverse from FSavedInverse)
 end;
 
 

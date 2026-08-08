@@ -35,7 +35,7 @@
   Adapted from VCL to FMX, replacing TSearchBox with TEdit and TCubicListBox with TListBox.
 
   Demo:
-    c:\Projects\LightSaber\Demo\FMX\Demo TLightDownSearch\FMX_Demo_SearchBoxes.dpr
+    c:\Projects\LightSaber\Demo\FMX\Demo TDropDownSearchBox\FMX_Demo_SearchBoxes.dpr
 =============================================================================================================}
 
 INTERFACE

@@ -148,7 +148,13 @@ function GetThemeTextColor(Scene: IScene): TAlphaColor;
 VAR StyleObj: TFmxObject;
 begin
   StyleObj:= NIL;
-  if Assigned(Scene) AND Assigned(Scene.StyleBook)
+  // TStyleBook.Style CAN be NIL and FindStyleResource is virtual, so an unguarded call would AV.
+  // The NIL window: TStyleCollectionItem.LoadFromFile/LoadFromStream (FMX.Controls.pas:6854/6879)
+  // run FreeAndNil(FStyle) BEFORE re-assigning it, so a raise inside TStyleStreaming.LoadFromXxx
+  // (corrupt file, unregistered style class) leaves that item with FStyle=NIL permanently.
+  // An assigned-but-EMPTY StyleBook is NOT the danger: TStyleCollectionItem.Create always builds a
+  // TStyleContainer, so Style is non-NIL there and simply finds no resource.
+  if Assigned(Scene) AND Assigned(Scene.StyleBook) AND Assigned(Scene.StyleBook.Style)
   then StyleObj:= Scene.StyleBook.Style.FindStyleResource('foregroundcolor');
 
   if Assigned(StyleObj)
