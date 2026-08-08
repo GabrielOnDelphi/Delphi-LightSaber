@@ -2,7 +2,14 @@ program VCL_TemplateSimple;
 
 uses
   {$IFDEF DEBUG}FastMM4,{$ENDIF}
-  {$IFDEF RELEASE}
+
+  // madExcept is a commercial third-party library that does NOT ship with LightSaber.
+  // The gate is a FEATURE symbol, not a build-configuration name, so that anyone who
+  // downloads LightSaber can still build this template in Release: ($IFDEF madshi) is
+  // false unless you own madExcept and add "madshi" to DCC_Define in your own .dproj.
+  // Gated on ($IFDEF RELEASE) instead - as it was until 2026-08-01 - Release fails to
+  // compile for everybody else with "File not found: madExcept.dcu".
+  {$IFDEF madshi}
   madExcept, madLinkDisAsm, madListModules, {$ENDIF}
   
   Vcl.Themes,
@@ -24,10 +31,12 @@ begin
      AppName= 'Light Template Simple';  // Absolutelly critical if you use the SaveForm/LoadForm functionality. This string will be used as the name of the INI file.
 
   AppData:= TAppData.Create(AppName, '', MultiThreaded);
-  AppData.CreateMainForm(TMainForm, TRUE, TRUE, asFull);
 
-  // Warning: Don't call TrySetStyle until the main form is visible.
+  // Warning: set the style HERE, before CreateMainForm. Once the main form exists, SetStyle/TrySetStyle
+  // leaks its TMainMenuBarStyleHook (AV on the next menu click) and replaces the form handle. See FormSkinsDisk.pas.
   //TStyleManager.TrySetStyle('Amakrits');
+
+  AppData.CreateMainForm(TMainForm, TRUE, TRUE, asFull);
 
   AppData.Run;
 end.

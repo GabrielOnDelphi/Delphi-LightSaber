@@ -15,8 +15,11 @@ begin
   Application.Initialize;                  // Required by IDE, otherwise the Appearance and Orientation pages do not appear in Project Options.
 
   AppData:= TAppData.Create('Light VCL Log Demo');
-  AppData.CreateMainForm(TMainForm, MainForm, TRUE, TRUE, asFull);
-  // Warning: Don't call TrySetStyle until the main form is visible.
+
+  // Warning: set the style HERE, before CreateMainForm. Once the main form exists, SetStyle/TrySetStyle
+  // leaks its TMainMenuBarStyleHook (AV on the next menu click) and replaces the form handle. See FormSkinsDisk.pas.
   //TStyleManager.TrySetStyle('Auric');
+
+  AppData.CreateMainForm(TMainForm, MainForm, TRUE, TRUE, asFull);
   AppData.Run;
 end.

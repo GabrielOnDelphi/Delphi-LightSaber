@@ -40,11 +40,7 @@ begin
   GuiSettings:= TGuiSettings.Create;
   GuiSettings.Load;
 
-  { Skins }
-  if AppData.RunningFirstTime
-  AND NOT AppData.RunningHome
-  then LoadLastStyle('Light AmethystKamri.vsf') // 'Light AmethystKamri.vsf' has too much blue
-  else LoadLastStyle();
+  { Skins are NOT loaded here! LoadLastStyle must run BEFORE AppData.CreateMainForm, so it lives in the DPR. See VCL_TemplateFull.dpr and FormSkinsDisk.pas. }
 
   { Trial/License }
   { Load the log early othewise it will overwrite the existing text }
