@@ -1,13 +1,18 @@
 unit Test.FormSkinsDisk;
 
 {=============================================================================================================
-   Unit tests for FormSkinsDisk.pas
-   Tests TfrmStyleDisk - the VCL skin selector form.
+   Regression tests for FrameVCL\FormSkinsDisk.pas - the disk-based VCL style loader.
 
-   Note: These tests focus on form creation, component existence, and basic behavior.
-   Skin loading is tested with mock/existing files where possible.
+   Contract under test (full reasoning in Docs\Skins-VCL.md):
+     * LoadLastStyle RAISES if Application.MainForm is already assigned. This is the regression that
+       kept coming back and that leaks the main form's TMainMenuBarStyleHook (AV on the next menu click).
+     * INI: reads 'LastStyle', falls back to the pre-2026-02-23 'LastSkin', writes ONLY 'LastStyle'.
+     * Degrades gracefully: missing file, invalid file, DefWinTheme, empty INI + empty default.
+     * TStyleManager.ActiveStyle.Name really changes after a successful load.
+     * The selector NEVER applies a style live - it only saves the choice.
 
-   Includes TestInsight support: define TESTINSIGHT in project options.
+   The fixture frees the process' main form to reach the "MainForm = NIL" state and recreates it
+   afterwards; TApplication.ControlDestroyed clears FMainForm on destruction (Vcl.Forms.pas:12477-12479).
 =============================================================================================================}
 
 interface
@@ -20,7 +25,6 @@ uses
   Vcl.Forms,
   Vcl.Controls,
   Vcl.StdCtrls,
-  Vcl.ExtCtrls,
   Vcl.Themes,
   Vcl.Styles;
 
@@ -28,558 +32,485 @@ type
   [TestFixture]
   TTestFormSkinsDisk = class
   private
-    FTestForm: TObject;
-    procedure CleanupForm;
+    FStyleFile: string;    { Short name of a real .vsf copied into the app's Skins folder by Setup }
+    FStyleName: string;    { The style NAME declared inside FStyleFile (what ActiveStyle.Name becomes) }
+    FBrokenFile: string;   { Short name of the deliberately-corrupt .vsf }
+    procedure WithoutMainForm(Proc: TProc);
+    procedure RestoreWindowsStyle;
+    procedure ClearIniKeys;
+    function  StylesFolder: string;
+    function  FindShippedStyle: string;
   public
-    [Setup]
-    procedure Setup;
+    [Setup]    procedure Setup;
+    [TearDown] procedure TearDown;
 
-    [TearDown]
-    procedure TearDown;
+    { 1. The ordering contract }
+    [Test] procedure LoadLastStyle_RaisesWhenMainFormExists;
+    [Test] procedure LoadLastStyle_ErrorMessageNamesCreateMainForm;
+    [Test] procedure LoadLastStyle_DoesNotRaiseWhenMainFormIsNil;
 
-    { Form Creation Tests }
-    [Test]
-    procedure TestFormClassExists;
+    { 2. INI round-trip and backward compatibility }
+    [Test] procedure Ini_RoundTripsLastStyle;
+    [Test] procedure Ini_FallsBackToLastSkinWhenLastStyleEmpty;
+    [Test] procedure Ini_LastStyleWinsOverLastSkin;
+    [Test] procedure Ini_OnlyTheNewKeyIsEverWritten;
 
-    [Test]
-    procedure TestFormCreate_Succeeds;
+    { 3. Graceful degradation }
+    [Test] procedure Degrade_MissingFileDoesNotChangeStyle;
+    [Test] procedure Degrade_InvalidFileLogsErrorAndDoesNotRaise;
+    [Test] procedure Degrade_DefWinThemeAppliesNoStyle;
+    [Test] procedure Degrade_EmptyIniAndEmptyDefaultDoNothing;
 
-    [Test]
-    procedure TestFormCreate_WithNilOwner;
+    { 4. The style is really applied }
+    [Test] procedure ActiveStyleChangesAfterSuccessfulLoad;
 
-    { Component Tests }
-    [Test]
-    procedure TestFormHasListBox;
-
-    [Test]
-    procedure TestFormHasTopLabel;
-
-    [Test]
-    procedure TestFormHasBottomPanel;
-
-    [Test]
-    procedure TestFormHasOKButton;
-
-    [Test]
-    procedure TestFormHasSkinEditorButton;
-
-    [Test]
-    procedure TestFormHasMoreSkinsLabel;
-
-    { ListBox Tests }
-    [Test]
-    procedure TestListBox_IsPopulated;
-
-    [Test]
-    procedure TestListBox_HasDefaultTheme;
-
-    [Test]
-    procedure TestListBox_ClickDoesNotRaiseException;
-
-    { Button Tests }
-    [Test]
-    procedure TestBtnOKClick_ClosesForm;
-
-    [Test]
-    procedure TestBtnSkinEditor_HandlerWired;
-
-    { Form Events Tests }
-    [Test]
-    procedure TestFormCreate_CallsLoadForm;
-
-    [Test]
-    procedure TestFormCreate_PopulatesSkins;
-
-    [Test]
-    procedure TestFormPreRelease_NoException;
-
-    [Test]
-    procedure TestFormClose_SetsCaFree;
-
-    [Test]
-    procedure TestFormKeyPress_EnterClosesForm;
-
-    [Test]
-    procedure TestFormKeyPress_EscapeClosesForm;
-
-    { Label Click Tests }
-    [Test]
-    procedure TestLblTopClick_RefreshesSkins;
-
-    { Property Tests }
-    [Test]
-    procedure TestOnDefaultStyle_CanBeAssigned;
-
-    [Test]
-    procedure TestOnDefaultStyle_DefaultIsNil;
-
-
-    { GetSkinDir Tests }
-    [Test]
-    procedure TestSkinDirHint_IsSet;
-
-    { Default Windows Theme Tests }
-    [Test]
-    procedure TestDefaultTheme_IsFirstInList;
-
-    [Test]
-    procedure TestDefaultTheme_TextIsCorrect;
-
-    { Form Attribute Tests }
-    [Test]
-    procedure TestFormCaption_IsStyleSelector;
-
-    [Test]
-    procedure TestFormKeyPreview_IsEnabled;
-
-    [Test]
-    procedure TestFormAlphaBlend_IsEnabled;
+    { 5. The selector }
+    [Test] procedure Selector_ListsDefaultThemeFirstAndTheVsfFiles;
+    [Test] procedure Selector_PreselectsTheConfiguredStyle;
+    [Test] procedure Selector_PreselectsDefaultThemeWhenNothingConfigured;
+    [Test] procedure Selector_ClickSavesToIniButDoesNotApplyStyleLive;
+    [Test] procedure Selector_ClosingSetsCaFree;
   end;
 
 implementation
 
 uses
+  LightCore.IO,
+  LightCore.TextFile,
+  LightCore.LogTypes,
+  LightCore.INIFileQuick,
   LightCore.AppData,
   LightVcl.Visual.AppData,
   FormSkinsDisk;
 
+CONST
+  BrokenStyleName = 'ZZ Broken (test).vsf';
+
+
+{-----------------------------------------------------------------------------------------------------------------------
+   FIXTURE
+-----------------------------------------------------------------------------------------------------------------------}
+
+function TTestFormSkinsDisk.StylesFolder: string;
+begin
+  Result:= AppData.AppSysDir + 'Skins\';
+end;
+
+
+{ The repo ships real .vsf files with the Full template. Walk up from the EXE to find one, so the
+  test works whatever output folder the compiler used. }
+function TTestFormSkinsDisk.FindShippedStyle: string;
+CONST
+  RelPath = 'Demo\VCL\Template App Full\System\Skins\CyanDusk.vsf';
+var
+  Folder: string;
+  i: Integer;
+begin
+  Folder:= ExtractFilePath(ParamStr(0));
+  for i:= 0 to 5 do
+  begin
+    if FileExists(Folder + RelPath)
+    then EXIT(Folder + RelPath);
+    Folder:= ExtractFilePath(ExcludeTrailingPathDelimiter(Folder));
+    if Folder = '' then BREAK;
+  end;
+  Result:= '';
+end;
+
 
 procedure TTestFormSkinsDisk.Setup;
+var
+  Source: string;
+  Info: TStyleInfo;
 begin
   Assert.IsNotNull(AppData, 'AppData must be initialized before running tests');
-  FTestForm:= NIL;
+  AppData.RamLog.ShowOnError:= FALSE;   { A popped-up log window would block a headless run }
+
+  LightCore.IO.ForceDirectoriesB(StylesFolder);
+
+  Source:= FindShippedStyle;
+  Assert.IsTrue(Source <> '', 'Test asset not found: Demo\VCL\Template App Full\System\Skins\CyanDusk.vsf. The style tests cannot verify anything without a real .vsf.');
+
+  FStyleFile:= ExtractFileName(Source);
+  Assert.IsTrue(LightCore.IO.CopyFile(Source, StylesFolder + FStyleFile), 'Could not copy the test style into ' + StylesFolder);
+
+  Assert.IsTrue(TStyleManager.IsValidStyle(StylesFolder + FStyleFile, Info), 'The shipped test style is not a valid .vsf: ' + Source);
+  FStyleName:= Info.Name;
+
+  { A file that has the right extension but is not a style at all }
+  FBrokenFile:= BrokenStyleName;
+  LightCore.TextFile.StringToFile(StylesFolder + FBrokenFile, 'This is not a VCL style file.');
 end;
 
 
 procedure TTestFormSkinsDisk.TearDown;
 begin
-  CleanupForm;
+  RestoreWindowsStyle;
+  ClearIniKeys;
+  if FBrokenFile <> ''
+  then System.SysUtils.DeleteFile(StylesFolder + FBrokenFile);
 end;
 
 
-procedure TTestFormSkinsDisk.CleanupForm;
-var
-  Form: TfrmStyleDisk;
+procedure TTestFormSkinsDisk.ClearIniKeys;
 begin
-  if FTestForm <> NIL then
-  begin
-    Form:= TfrmStyleDisk(FTestForm);
-    FreeAndNil(Form);
-    FTestForm:= NIL;
+  LightCore.INIFileQuick.WriteString(IniKeyStyle,    '');
+  LightCore.INIFileQuick.WriteString(IniKeyStyleOld, '');
+end;
+
+
+{ Only ever called while no form exists (see WithoutMainForm): a live SetStyle is exactly what BUG 5 forbids. }
+procedure TTestFormSkinsDisk.RestoreWindowsStyle;
+begin
+  if TStyleManager.ActiveStyle.Name <> TStyleManager.SystemStyleName
+  then TStyleManager.SetStyle(TStyleManager.SystemStyleName);
+end;
+
+
+{ Runs Proc with Application.MainForm = NIL, then puts a fresh hidden main form back.
+  The test project deliberately does NOT free its main form itself, so nothing dangles here. }
+procedure TTestFormSkinsDisk.WithoutMainForm(Proc: TProc);
+var
+  Form: TForm;
+begin
+  Form:= Application.MainForm;
+  Assert.IsNotNull(Form, 'Precondition: the test app must have a main form');
+  FreeAndNil(Form);
+  try
+    Assert.IsNull(Application.MainForm, 'Freeing the main form must clear Application.MainForm');
+    Proc();
+    RestoreWindowsStyle;    { revert while no form is alive to receive CM_CUSTOMSTYLECHANGED }
+  finally
+    Application.CreateForm(TForm, Form);
+    Form.Visible:= FALSE;
   end;
 end;
 
 
-{ Form Creation Tests }
 
-procedure TTestFormSkinsDisk.TestFormClassExists;
+{-----------------------------------------------------------------------------------------------------------------------
+   1. THE ORDERING CONTRACT
+-----------------------------------------------------------------------------------------------------------------------}
+
+procedure TTestFormSkinsDisk.LoadLastStyle_RaisesWhenMainFormExists;
 begin
-  Assert.IsNotNull(TfrmStyleDisk, 'TfrmStyleDisk class should exist');
-end;
+  Assert.IsNotNull(Application.MainForm, 'Precondition: a main form must exist for this test to mean anything');
 
-
-procedure TTestFormSkinsDisk.TestFormCreate_Succeeds;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsNotNull(Form, 'Form creation should succeed');
-end;
-
-
-procedure TTestFormSkinsDisk.TestFormCreate_WithNilOwner;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsNull(Form.Owner, 'Owner should be nil when created with nil');
-end;
-
-
-{ Component Tests }
-
-procedure TTestFormSkinsDisk.TestFormHasListBox;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsNotNull(Form.lBox, 'Form should have lBox component');
-  Assert.IsTrue(Form.lBox is TListBox, 'lBox should be a TListBox');
-end;
-
-
-procedure TTestFormSkinsDisk.TestFormHasTopLabel;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsNotNull(Form.lblTop, 'Form should have lblTop label');
-end;
-
-
-procedure TTestFormSkinsDisk.TestFormHasBottomPanel;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsNotNull(Form.pnlBottom, 'Form should have pnlBottom panel');
-end;
-
-
-procedure TTestFormSkinsDisk.TestFormHasOKButton;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsNotNull(Form.btnOK, 'Form should have btnOK button');
-end;
-
-
-procedure TTestFormSkinsDisk.TestFormHasSkinEditorButton;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsNotNull(Form.btnSkinEditor, 'Form should have btnSkinEditor button');
-end;
-
-
-procedure TTestFormSkinsDisk.TestFormHasMoreSkinsLabel;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsNotNull(Form.lblMoreSkinsTrial, 'Form should have lblMoreSkinsTrial label');
-end;
-
-
-{ ListBox Tests }
-
-procedure TTestFormSkinsDisk.TestListBox_IsPopulated;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  { ListBox should have at least the default Windows theme entry }
-  Assert.IsTrue(Form.lBox.Items.Count >= 1,
-    'ListBox should have at least the default theme entry');
-end;
-
-
-procedure TTestFormSkinsDisk.TestListBox_HasDefaultTheme;
-var
-  Form: TfrmStyleDisk;
-  Index: Integer;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Index:= Form.lBox.Items.IndexOf('Windows default theme');
-  Assert.IsTrue(Index >= 0, 'ListBox should contain "Windows default theme"');
-end;
-
-
-procedure TTestFormSkinsDisk.TestListBox_ClickDoesNotRaiseException;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  { Select default theme (first item) }
-  Form.lBox.ItemIndex:= 0;
-
-  { lBoxClick should not raise exception }
-  Assert.WillNotRaise(
+  Assert.WillRaise(
     procedure
     begin
-      Form.lBoxClick(Form);
+      FormSkinsDisk.LoadLastStyle('');
+    end,
+    Exception,
+    'LoadLastStyle MUST raise when Application.MainForm is already assigned. Without this guard a late style change leaks TMainMenuBarStyleHook and AVs on the next menu click.');
+end;
+
+
+procedure TTestFormSkinsDisk.LoadLastStyle_ErrorMessageNamesCreateMainForm;
+var
+  Msg: string;
+begin
+  Msg:= '';
+  try
+    FormSkinsDisk.LoadLastStyle('');
+  except
+    on E: Exception do Msg:= E.Message;
+  end;
+
+  Assert.IsTrue(Pos('CreateMainForm', Msg) > 0, 'The guard must tell the developer what to do. Got: "' + Msg + '"');
+end;
+
+
+procedure TTestFormSkinsDisk.LoadLastStyle_DoesNotRaiseWhenMainFormIsNil;
+begin
+  ClearIniKeys;
+  WithoutMainForm(
+    procedure
+    begin
+      FormSkinsDisk.LoadLastStyle('');       { must not raise }
+      Assert.AreEqual('', FormSkinsDisk.CurrentStyle, 'Empty INI + empty default must leave the style unset');
     end);
 end;
 
 
-{ Button Tests }
 
-procedure TTestFormSkinsDisk.TestBtnOKClick_ClosesForm;
-var
-  Form: TfrmStyleDisk;
+{-----------------------------------------------------------------------------------------------------------------------
+   2. INI ROUND-TRIP AND BACKWARD COMPATIBILITY
+-----------------------------------------------------------------------------------------------------------------------}
+
+procedure TTestFormSkinsDisk.Ini_RoundTripsLastStyle;
 begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
+  LightCore.INIFileQuick.WriteString(IniKeyStyle, FStyleFile);
+  Assert.AreEqual(FStyleFile, LightCore.INIFileQuick.ReadString(IniKeyStyle, ''), 'LastStyle must survive a write/read round-trip');
+end;
 
-  Form.Show;
 
-  { btnOKClick should not raise exception - this will try to close the form }
-  Assert.WillNotRaise(
+procedure TTestFormSkinsDisk.Ini_FallsBackToLastSkinWhenLastStyleEmpty;
+begin
+  LightCore.INIFileQuick.WriteString(IniKeyStyle,    '');
+  LightCore.INIFileQuick.WriteString(IniKeyStyleOld, FStyleFile);
+
+  WithoutMainForm(
     procedure
     begin
-      Form.btnOKClick(Form);
+      FormSkinsDisk.LoadLastStyle('');
+      Assert.AreEqual(FStyleFile, FormSkinsDisk.CurrentStyle, 'An INI written before the 2026-02-23 rename must still be honoured');
+      Assert.AreEqual(FStyleName, TStyleManager.ActiveStyle.Name, 'The style read from the legacy key must be really applied, not just remembered');
     end);
 end;
 
 
-procedure TTestFormSkinsDisk.TestBtnSkinEditor_HandlerWired;
-var
-  Form: TfrmStyleDisk;
+procedure TTestFormSkinsDisk.Ini_LastStyleWinsOverLastSkin;
 begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
+  LightCore.INIFileQuick.WriteString(IniKeyStyle,    'Current choice.vsf');
+  LightCore.INIFileQuick.WriteString(IniKeyStyleOld, 'Legacy choice.vsf');
 
-  { NOT executed: btnStyleEditorClick launches StyleDesigner.exe or opens a browser URL —
-    side effects a test run must not trigger. Verify the DFM wiring instead. }
-  Assert.IsTrue(Assigned(Form.btnSkinEditor.OnClick),
-    'btnSkinEditor must have OnClick wired in the DFM (btnStyleEditorClick)');
-end;
-
-
-{ Form Events Tests }
-
-procedure TTestFormSkinsDisk.TestFormCreate_CallsLoadForm;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  { If LoadForm was called, the form should exist without exception }
-  Assert.IsNotNull(Form, 'FormCreate should call LoadForm successfully');
-end;
-
-
-procedure TTestFormSkinsDisk.TestFormCreate_PopulatesSkins;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  { FormCreate calls PopulateSkins, so list should have items }
-  Assert.IsTrue(Form.lBox.Items.Count > 0,
-    'FormCreate should populate skins list');
-end;
-
-
-procedure TTestFormSkinsDisk.TestFormPreRelease_NoException;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  { FormPreRelease (the TLightForm cleanup event; this form has no FormDestroy) should not raise.
-    While Initializing is TRUE it must skip the INI write and return quietly. }
-  Assert.WillNotRaise(
+  WithoutMainForm(
     procedure
     begin
-      Form.FormPreRelease;
+      FormSkinsDisk.LoadLastStyle('Default.vsf');
+      Assert.AreEqual('Current choice.vsf', FormSkinsDisk.CurrentStyle, 'The current key must win over the legacy one and over the default');
     end);
 end;
 
 
-procedure TTestFormSkinsDisk.TestFormClose_SetsCaFree;
+procedure TTestFormSkinsDisk.Ini_OnlyTheNewKeyIsEverWritten;
+CONST
+  Sentinel = 'Legacy value.vsf';
+var
+  Form: TfrmStyleDisk;
+begin
+  LightCore.INIFileQuick.WriteString(IniKeyStyle,    '');
+  LightCore.INIFileQuick.WriteString(IniKeyStyleOld, Sentinel);
+
+  WithoutMainForm(
+    procedure
+    begin
+      FormSkinsDisk.LoadLastStyle('');
+      Assert.AreEqual(Sentinel, FormSkinsDisk.CurrentStyle, 'Precondition: the legacy key must have been read');
+    end);
+
+  { Save path. FormPreRelease is gated on AppData.Initializing (still TRUE in a test run), so drive
+    the other writer - the same one the user triggers by picking a skin. }
+  Form:= TfrmStyleDisk.Create(NIL);
+  try
+    Form.lBox.ItemIndex:= Form.lBox.Items.IndexOf(FStyleFile);
+    Form.lBoxClick(Form);
+  finally
+    FreeAndNil(Form);
+  end;
+
+  Assert.AreEqual(FStyleFile, LightCore.INIFileQuick.ReadString(IniKeyStyle,    ''), 'The new choice must be written to LastStyle');
+  Assert.AreEqual(Sentinel,   LightCore.INIFileQuick.ReadString(IniKeyStyleOld, ''), 'The legacy key must never be written - it stays exactly as the old version left it');
+end;
+
+
+
+{-----------------------------------------------------------------------------------------------------------------------
+   3. GRACEFUL DEGRADATION
+-----------------------------------------------------------------------------------------------------------------------}
+
+procedure TTestFormSkinsDisk.Degrade_MissingFileDoesNotChangeStyle;
+var
+  Before: string;
+begin
+  ClearIniKeys;
+  Before:= TStyleManager.ActiveStyle.Name;
+
+  WithoutMainForm(
+    procedure
+    begin
+      FormSkinsDisk.LoadLastStyle('No such style on disk.vsf');
+      Assert.AreEqual(Before, TStyleManager.ActiveStyle.Name, 'A missing .vsf must leave the active style untouched');
+      Assert.AreEqual('No such style on disk.vsf', FormSkinsDisk.CurrentStyle, 'The requested name is still remembered so the user sees his own choice in the selector');
+    end);
+end;
+
+
+procedure TTestFormSkinsDisk.Degrade_InvalidFileLogsErrorAndDoesNotRaise;
+var
+  ErrorsBefore: Integer;
+  Before: string;
+begin
+  ClearIniKeys;
+  ErrorsBefore:= AppData.RamLog.Count(TRUE, lvErrors);
+  Before:= TStyleManager.ActiveStyle.Name;
+
+  WithoutMainForm(
+    procedure
+    begin
+      FormSkinsDisk.LoadLastStyle(BrokenStyleName);      { must not raise: it runs before Application.Run, where an exception kills startup }
+      Assert.AreEqual(Before, TStyleManager.ActiveStyle.Name, 'A corrupt .vsf must leave the active style untouched');
+    end);
+
+  Assert.IsTrue(AppData.RamLog.Count(TRUE, lvErrors) > ErrorsBefore, 'A corrupt .vsf must surface an error in the log. Silence here is how a broken skin ships unnoticed.');
+end;
+
+
+procedure TTestFormSkinsDisk.Degrade_DefWinThemeAppliesNoStyle;
+var
+  Before: string;
+begin
+  ClearIniKeys;
+  Before:= TStyleManager.ActiveStyle.Name;
+
+  WithoutMainForm(
+    procedure
+    begin
+      FormSkinsDisk.LoadLastStyle(DefWinTheme);
+      Assert.AreEqual(Before, TStyleManager.ActiveStyle.Name, 'DefWinTheme means "load nothing" - it must not touch TStyleManager');
+      Assert.AreEqual(DefWinTheme, FormSkinsDisk.CurrentStyle, 'DefWinTheme must be remembered as the current choice');
+    end);
+end;
+
+
+procedure TTestFormSkinsDisk.Degrade_EmptyIniAndEmptyDefaultDoNothing;
+var
+  Before: string;
+begin
+  ClearIniKeys;
+  Before:= TStyleManager.ActiveStyle.Name;
+
+  WithoutMainForm(
+    procedure
+    begin
+      FormSkinsDisk.LoadLastStyle('');
+      Assert.AreEqual(Before, TStyleManager.ActiveStyle.Name, 'Nothing configured => nothing applied');
+      Assert.AreEqual('', FormSkinsDisk.CurrentStyle, 'Nothing configured => nothing remembered');
+    end);
+end;
+
+
+
+{-----------------------------------------------------------------------------------------------------------------------
+   4. THE STYLE IS REALLY APPLIED
+-----------------------------------------------------------------------------------------------------------------------}
+
+procedure TTestFormSkinsDisk.ActiveStyleChangesAfterSuccessfulLoad;
+begin
+  LightCore.INIFileQuick.WriteString(IniKeyStyle, FStyleFile);
+
+  WithoutMainForm(
+    procedure
+    begin
+      Assert.AreEqual(TStyleManager.SystemStyleName, TStyleManager.ActiveStyle.Name, 'Precondition: the run must start on the system style');
+
+      FormSkinsDisk.LoadLastStyle('');
+
+      Assert.AreEqual(FStyleName, TStyleManager.ActiveStyle.Name, 'After a successful load TStyleManager must really be on the new style - not merely free of exceptions');
+      Assert.AreNotEqual(TStyleManager.SystemStyleName, TStyleManager.ActiveStyle.Name, 'The style must no longer be the Windows default');
+    end);
+end;
+
+
+
+{-----------------------------------------------------------------------------------------------------------------------
+   5. THE SELECTOR
+-----------------------------------------------------------------------------------------------------------------------}
+
+procedure TTestFormSkinsDisk.Selector_ListsDefaultThemeFirstAndTheVsfFiles;
+var
+  Form: TfrmStyleDisk;
+begin
+  Form:= TfrmStyleDisk.Create(NIL);
+  try
+    Assert.AreEqual(DefWinTheme, Form.lBox.Items[0], 'The first entry must be the default Windows theme');
+    Assert.IsTrue(Form.lBox.Items.IndexOf(FStyleFile) > 0, 'The .vsf files found in ' + StylesFolder + ' must be listed. Missing: ' + FStyleFile);
+    Assert.IsTrue(Form.lBox.Items.IndexOf(FBrokenFile) > 0, 'PopulateStyles lists by extension, so even an unreadable .vsf shows up');
+  finally
+    FreeAndNil(Form);
+  end;
+end;
+
+
+{ The list holds .vsf FILENAMES while TStyleManager.ActiveStyle.Name is the style's INTERNAL name,
+  so preselecting by ActiveStyle.Name silently matched nothing. Found by driving the real app. }
+procedure TTestFormSkinsDisk.Selector_PreselectsTheConfiguredStyle;
+var
+  Form: TfrmStyleDisk;
+begin
+  LightCore.INIFileQuick.WriteString(IniKeyStyle, FStyleFile);
+  WithoutMainForm(
+    procedure
+    begin
+      FormSkinsDisk.LoadLastStyle('');
+    end);
+
+  Form:= TfrmStyleDisk.Create(NIL);
+  try
+    Assert.IsTrue(Form.lBox.ItemIndex >= 0, 'The configured skin must be preselected, otherwise the user cannot see which one he is running');
+    Assert.AreEqual(FStyleFile, Form.lBox.Items[Form.lBox.ItemIndex], 'The preselected entry must be the configured skin, matched by FILENAME (not by TStyleManager.ActiveStyle.Name, which is the internal style name)');
+  finally
+    FreeAndNil(Form);
+  end;
+end;
+
+
+procedure TTestFormSkinsDisk.Selector_PreselectsDefaultThemeWhenNothingConfigured;
+var
+  Form: TfrmStyleDisk;
+begin
+  ClearIniKeys;
+  WithoutMainForm(
+    procedure
+    begin
+      FormSkinsDisk.LoadLastStyle('');
+    end);
+
+  Form:= TfrmStyleDisk.Create(NIL);
+  try
+    Assert.AreEqual(0, Form.lBox.ItemIndex, 'With no skin configured the list must fall back to the first entry (the Windows default theme), never to "nothing selected"');
+  finally
+    FreeAndNil(Form);
+  end;
+end;
+
+
+{ The BUG 5 regression net: picking a skin must ONLY write the INI. The moment this dialog calls
+  SetStyle again, the main form's TMainMenuBarStyleHook leaks and the app AVs on the next menu click. }
+procedure TTestFormSkinsDisk.Selector_ClickSavesToIniButDoesNotApplyStyleLive;
+var
+  Form: TfrmStyleDisk;
+  StyleBefore: string;
+begin
+  ClearIniKeys;
+  WithoutMainForm(
+    procedure
+    begin
+      FormSkinsDisk.LoadLastStyle('');    { CurrentStyle := '' so the click below is a real change }
+    end);
+
+  StyleBefore:= TStyleManager.ActiveStyle.Name;
+
+  Form:= TfrmStyleDisk.Create(NIL);
+  try
+    Form.lBox.ItemIndex:= Form.lBox.Items.IndexOf(FStyleFile);
+    Assert.IsTrue(Form.lBox.ItemIndex >= 0, 'Precondition: the test style must be in the list');
+
+    Form.lBoxClick(Form);
+
+    Assert.AreEqual(FStyleFile, LightCore.INIFileQuick.ReadString(IniKeyStyle, ''), 'Picking a skin must persist it to the INI');
+    Assert.AreEqual(FStyleFile, FormSkinsDisk.CurrentStyle, 'Picking a skin must update the remembered choice');
+    Assert.AreEqual(StyleBefore, TStyleManager.ActiveStyle.Name, 'The selector must NOT apply the style live - that is what leaks TMainMenuBarStyleHook and crashes on the next menu click');
+  finally
+    FreeAndNil(Form);
+  end;
+end;
+
+
+procedure TTestFormSkinsDisk.Selector_ClosingSetsCaFree;
 var
   Form: TfrmStyleDisk;
   Action: TCloseAction;
 begin
   Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Action:= caNone;
-  Form.FormClose(Form, Action);
-
-  Assert.AreEqual(caFree, Action, 'FormClose should set Action to caFree');
-end;
-
-
-procedure TTestFormSkinsDisk.TestFormKeyPress_EnterClosesForm;
-var
-  Form: TfrmStyleDisk;
-  Key: Word;
-  Shift: TShiftState;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Form.Show;
-  Key:= VK_RETURN;
-  Shift:= [];
-
-  { FormKeyDown with Enter should not raise exception.
-    Note: TfrmStyleDisk handles keys via FormKeyDown (wired in DFM as OnKeyDown), not FormKeyPress. }
-  Assert.WillNotRaise(
-    procedure
-    begin
-      Form.FormKeyDown(Form, Key, Shift);
-    end);
-end;
-
-
-procedure TTestFormSkinsDisk.TestFormKeyPress_EscapeClosesForm;
-var
-  Form: TfrmStyleDisk;
-  Key: Word;
-  Shift: TShiftState;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Form.Show;
-  Key:= VK_ESCAPE;
-  Shift:= [];
-
-  { FormKeyDown with Escape should not raise exception.
-    Note: TfrmStyleDisk handles keys via FormKeyDown (wired in DFM as OnKeyDown), not FormKeyPress. }
-  Assert.WillNotRaise(
-    procedure
-    begin
-      Form.FormKeyDown(Form, Key, Shift);
-    end);
-end;
-
-
-{ Label Click Tests }
-
-procedure TTestFormSkinsDisk.TestLblTopClick_RefreshesSkins;
-var
-  Form: TfrmStyleDisk;
-  InitialCount: Integer;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  InitialCount:= Form.lBox.Items.Count;
-  Form.lblTopClick(Form);
-
-  { After refresh, count should be same (no new skins added dynamically) }
-  Assert.AreEqual(InitialCount, Form.lBox.Items.Count,
-    'lblTopClick should refresh skins list');
-end;
-
-
-{ Property Tests }
-
-procedure TTestFormSkinsDisk.TestOnDefaultStyle_CanBeAssigned;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  { Assign nil to test assignment capability }
-  Form.OnDefaultstyle:= NIL;
-
-  { Should not raise exception on assignment }
-  Assert.IsFalse(Assigned(Form.OnDefaultstyle),
-    'OnDefaultstyle should be assignable (nil was assigned)');
-end;
-
-
-procedure TTestFormSkinsDisk.TestOnDefaultStyle_DefaultIsNil;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsFalse(Assigned(Form.OnDefaultstyle), 'OnDefaultstyle must be NIL after creation');
-end;
-
-
-
-
-{ GetSkinDir Tests }
-
-procedure TTestFormSkinsDisk.TestSkinDirHint_IsSet;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsTrue(Form.lblTop.Hint <> '',
-    'lblTop.Hint should be set with skin directory path');
-end;
-
-
-{ Default Windows Theme Tests }
-
-procedure TTestFormSkinsDisk.TestDefaultTheme_IsFirstInList;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.AreEqual('Windows default theme', Form.lBox.Items[0],
-    'First item should be "Windows default theme"');
-end;
-
-
-procedure TTestFormSkinsDisk.TestDefaultTheme_TextIsCorrect;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsTrue(Form.lBox.Items.IndexOf('Windows default theme') >= 0,
-    'List should contain "Windows default theme" text');
-end;
-
-
-{ Form Attribute Tests }
-
-procedure TTestFormSkinsDisk.TestFormCaption_IsStyleSelector;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.AreEqual('Style selector', Form.Caption,
-    'Form caption should be "Style selector" (as set in the DFM)');
-end;
-
-
-procedure TTestFormSkinsDisk.TestFormKeyPreview_IsEnabled;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsTrue(Form.KeyPreview,
-    'KeyPreview should be enabled for keyboard shortcuts');
-end;
-
-
-procedure TTestFormSkinsDisk.TestFormAlphaBlend_IsEnabled;
-var
-  Form: TfrmStyleDisk;
-begin
-  Form:= TfrmStyleDisk.Create(NIL);
-  FTestForm:= Form;
-
-  Assert.IsTrue(Form.AlphaBlend,
-    'AlphaBlend should be enabled per DFM');
+  try
+    Action:= caNone;
+    Form.FormClose(Form, Action);
+    Assert.AreEqual(caFree, Action, 'The dialog must free itself on close, otherwise every open leaks a form');
+  finally
+    FreeAndNil(Form);
+  end;
 end;
 
 
