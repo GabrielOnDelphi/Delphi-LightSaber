@@ -79,7 +79,10 @@ begin
   TAppData.TEST_MODE:= TRUE;  // Bypass ShowModal/Show calls in tests
   TRY
 
-  // Create a dummy main form - required by AppData.CreateFormHidden
+  // Create a dummy main form - required by AppData.CreateFormHidden.
+  // Owned by Application, which frees it at shutdown. Do NOT free it here: Test.FormSkinsDisk frees
+  // and recreates the main form to reach the "Application.MainForm = NIL" state that the skin
+  // ordering guard needs, which would leave this variable dangling.
   Application.CreateForm(TForm, MainForm);
   MainForm.Visible:= FALSE;
 
@@ -122,7 +125,6 @@ begin
   end;
 {$ENDIF}
   FINALLY
-    FreeAndNil(MainForm);
     FreeAndNil(AppData);
   END;
 end.
