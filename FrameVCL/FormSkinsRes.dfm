@@ -15,6 +15,7 @@ object frmSkinRes: TfrmSkinRes
   DoubleBuffered = True
   ParentFont = True
   KeyPreview = True
+  PopupMode = pmAuto
   Position = poDesigned
   ScreenSnap = True
   ShowHint = True
