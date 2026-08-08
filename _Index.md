@@ -1664,7 +1664,7 @@ function CaptureSelectedArea(CONST SelectionRect: TRectF; ScaleX: Single = 1.0; 
 function GetCapturedImages: TObjectList<FMX.Graphics.TBitmap>;
 ```
 
-## LightFmx.Visual.SearchListBox (17)
+## LightFmx.Visual.SearchListBox (16)
 
 ```pascal
 function GetSearchText: string;
@@ -1678,7 +1678,6 @@ procedure SearchEditChangeTracking(Sender: TObject);
 procedure ListBoxChange(Sender: TObject);
 procedure FilterItems;
 procedure Resize; override;
-procedure Loaded; override;
 procedure SetItems(const Items: array of string);
 procedure AddItem(const Text: string; Tag: Integer = 0);
 procedure Clear;
@@ -1686,7 +1685,7 @@ function SelectByTag(Tag: Integer): Boolean;
 procedure Register;
 ```
 
-## LightFmx.Visual.SpinBox (14)
+## LightFmx.Visual.SpinBox (16)
 
 ```pascal
 function GetLabelText: string;
@@ -1699,6 +1698,8 @@ function GetMin: Double;
 procedure SetMin(const Value: Double);
 function GetIncrement: Double;
 procedure SetIncrement(const Value: Double);
+function GetValueType: TNumValueType;
+procedure SetValueType(const AValue: TNumValueType);
 function GetSpinBox: TSpinBox;
 function GetLabel: TLabel;
 procedure Resize; override;
@@ -4019,4 +4020,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2920 public routines across 218 units._
+_2921 public routines across 218 units._
