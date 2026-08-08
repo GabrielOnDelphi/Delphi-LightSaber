@@ -15,9 +15,9 @@ UNIT LightFmx.Visual.SearchListBox;
      - Auto-selects first match when searching
 
    Usage:
-     SearchListBox.Items.Add('Item 1');
-     SearchListBox.Items.Add('Item 2');
-     SearchListBox.SetItems(MyStringArray);  // Or use SetItems for bulk loading with tags
+     SearchListBox.AddItem('Item 1');
+     SearchListBox.AddItem('Item 2', 7);     // Optional Tag payload
+     SearchListBox.SetItems(MyStringArray);  // Or use SetItems for bulk loading (Tag = array index)
 
      // Get selected item
      SelectedText := SearchListBox.SelectedText;
@@ -27,7 +27,7 @@ UNIT LightFmx.Visual.SearchListBox;
      OnSelectionChanged - Triggered when user selects an item
 
    Demo:
-     c:\Projects\LightSaber\Demo\FMX\Demo TLightDownSearch\FMX_Demo_SearchBoxes.dpr
+     c:\Projects\LightSaber\Demo\FMX\Demo TDropDownSearchBox\FMX_Demo_SearchBoxes.dpr
 
 =============================================================================================================}
 
@@ -58,7 +58,6 @@ TYPE
     procedure FilterItems;
   protected
     procedure Resize; override;
-    procedure Loaded; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor  Destroy; override;
@@ -141,12 +140,6 @@ end;
 destructor TLightSearchListBox.Destroy;
 begin
   FreeAndNil(FAllItems);
-  inherited;
-end;
-
-
-procedure TLightSearchListBox.Loaded;
-begin
   inherited;
 end;
 
