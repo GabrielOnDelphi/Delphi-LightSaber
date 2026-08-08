@@ -1,86 +1,17 @@
-﻿UNIT FormSkinsDisk;
+UNIT FormSkinsDisk;
 
 {=============================================================================================================
-   2026.05.15
+   2026.08.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-   UNIVERSAL VCL STYLE LOADER
+   UNIVERSAL VCL STYLE LOADER (from disk)
 
-   Loads VCL style files (.vsf) from disk and provides a visual selector dialog.
+   Loads VCL style files (.vsf) from AppSysDir\Skins\ and shows a visual selector dialog.
+   LoadLastStyle MUST run before AppData.CreateMainForm - it RAISES otherwise.
+   This dialog never applies a style live; it saves the choice and asks the user to restart.
 
-   WARNING:
-     * Vcl.Styles & Vcl.Forms MUST be in the DPR USES list BEFORE Forms.pas
-     * DON'T ADD THIS UNIT TO ANY DPK (enforced by $DENYPACKAGEUNIT)
-
-   USAGE (AppData DPR):
-        AppData:= TAppData.Create(...);
-        LoadLastStyle('Graphite Green.vsf'); // BEFORE CreateMainForm. Empty string = default Windows theme.
-        AppData.CreateMainForm(TMainForm, MainForm, True, True);
-        AppData.Run;
-
-     Styles live in 'System\Skins' relative to AppData.AppSysDir.
-     Show selector via TfrmStyleDisk.ShowAsModal.
-
-   STYLE-AWARE CODE:
-     Use StyleServices.GetStyleColor / GetStyleFontColor / GetSystemColor (Vcl.Themes).
-     See also: TControl.IsLightStyleColor.
-
---------------------------------------------------------------------------------------------------------------
-
-  KNOWN BUGS / DESIGN CONSTRAINTS
-
-   BUG 1: TStyleManager.SetStyle breaks modal z-order via RecreateWnd
-       Mitigated by PopupMode=pmAuto in the DFM. This dialog never calls SetStyle
-       at runtime (see BUG 5), so the in-dialog z-order problem can no longer
-       arise; LoadLastStyle runs before any form exists.
-       Sources: https://blogs.embarcadero.com/popupmode-and-popupparent/
-
-   BUG 2: TStyleManager.IsValidStyle requires Vcl.Styles in USES (XE7+).
-       http://stackoverflow.com/questions/30328644
-
-   BUG 3: caFree in FormClose. Fixed in Delphi 11 (RSP-33140). Safe to use.
-
-   BUG 4: EAV in TMainMenuBarStyleHook on dialog close (historical)
-       A previous workaround posted a second ForceQueue CM_RECREATEWND in
-       FormPreRelease, which could fire inside ProcessMenuLoop's DispatchMessage
-       loop and destroy the menu hook mid-loop. Fix: do not post a second
-       RecreateWnd. The single CM_CUSTOMSTYLECHANGED that SetStyle already
-       posts is enough.
-       Related: RSP-38114, RSP-39197 (partially fixed in 11.3, menu-bar variant
-       persists in 13.1). HeidiSQL #465 hit the same family of bugs.
-
-   BUG 5: TMainMenuBarStyleHook leak on any live SetStyle (Delphi 13.1)
-       Confirmed 2026-05-14/15: once the main form (with a TMainMenu) exists,
-       every SetStyle leaks a TMainMenuBarStyleHook. The leaked hook sits in
-       freed memory; the form's private FMainMenuBarHook still points at it.
-       Crash fires on the next main-menu click — not inside SetStyle itself.
-       Even one live SetStyle is enough.
-
-       LoadLastStyle runs BEFORE CreateMainForm, so no TMainMenuBarStyleHook
-       exists yet → startup SetStyle is safe. Any later SetStyle leaks.
-
-       Mitigation: this dialog NEVER calls SetStyle. lBoxClick only persists
-       the choice to INI and tells the user to close & reopen the app. Same
-       UX as HeidiSQL #465.
-
-       Auto-restart via AppData.Restart was rejected: it races the host app's
-       window-based single-instance check (FindWindow on the class name still
-       finds the dying window during finalization; the new instance resurrects
-       the old one and exits).
-
-       Diagnostic notes:
-         c:\Delphi\Styles & resources\Known bugs in VCL styles\
-         02 - TMainMenuBarStyleHook use-after-free.md
-
---------------------------------------------------------------------------------------------------------------
-   STYLE FOLDERS:
-     c:\Projects\Packages\VCL Styles utils\Styles\
-     c:\Users\Public\Documents\Embarcadero\Studio\XX.0\Styles\
-
-   See also:
-     c:\Projects\LightSaber\FrameFMX\FormSkinsDisk.pas
-     c:\Projects-3rd_Packages\VCL Styles Tools\FrmSkins tester\SkinSettingsTemplate.dpr
-
+   Ordering contract, the RTL trace behind it, the 5 known VCL bugs, INI key history and the consumer list:
+     Docs\Skins-VCL.md
 =============================================================================================================}
 
 INTERFACE
@@ -120,18 +51,17 @@ TYPE
 
 CONST
    wwwSkinDesinger = 'https://www.bionixwallpaper.com/downloads/Skin_Designer/index.html';
+   DefWinTheme     = 'Windows default theme';
+   IniKeyStyle     = 'LastStyle';
+   IniKeyStyleOld  = 'LastSkin';   { Pre-2026-02-23 key. Read-only fallback so INIs written before the rename still migrate forward. Docs\Skins-VCL.md }
 
-{ Loads the last used style from INI file. Call during app initialization.
-  Defaultstyle: Style filename to use on first run (e.g. 'Graphite Green.vsf').
-               Pass empty string for default Windows theme.
-
-  WARNING: Must be called BEFORE AppData.CreateMainForm.
-    SetStyle posts CM_CUSTOMSTYLECHANGED to all existing forms, triggering RecreateWnd.
-    If the main form already exists, RecreateWnd destroys its window handle, and any
-    messages queued to that handle are discarded — including the WM_POSTINIT that
-    CreateMainForm uses to schedule FormPostInitialize. Result: FormPostInitialize
-    never fires, and any state initialized there stays NIL. }
+{ Loads the last used style from INI. Call during app initialization.
+  DefaultStyle: style filename used on first run (e.g. 'Graphite Green.vsf'). Empty string = default Windows theme.
+  WARNING: must be called BEFORE AppData.CreateMainForm - it RAISES otherwise, in every build config. Docs\Skins-VCL.md }
 procedure LoadLastStyle(const DefaultStyle: string= '');
+
+{ The style the app is currently configured to use (filename, or DefWinTheme). Read-only view of the unit state. }
+function CurrentStyle: string;
 
 
 
@@ -141,14 +71,9 @@ USES
    LightVcl.Common.Colors, LightCore.INIFileQuick, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.ExecuteShell,
    System.IOUtils, LightCore.IO, LightCore, LightVcl.Common.Dialogs;
 
-CONST
-  DefWinTheme  = 'Windows default theme';
-  IniKeyStyle  = 'LastStyle';
-
 VAR
-  { Unit-level variable for current style name.
-    Kept as unit variable (not class var) because LoadLastStyle is called
-    before any form instance exists. The style name is a short filename (not full path) stored in INI for portability when app folder moves. }
+  { Unit variable, not a class var: LoadLastStyle runs before any form instance exists.
+    Holds a short filename (not a full path) so the INI survives the app folder being moved. }
   CurrentStyleName: string;
 
 
@@ -156,6 +81,12 @@ VAR
 {-----------------------------------------------------------------------------------------------------------------------
    UTILS
 -----------------------------------------------------------------------------------------------------------------------}
+function CurrentStyle: string;
+begin
+  Result:= CurrentStyleName;
+end;
+
+
 function GetStyleDir: string;
 begin
   Result:= AppData.AppSysDir+ 'Skins\';
@@ -163,8 +94,8 @@ end;
 
 
 { Loads and applies a style from the styles directory.
-  DiskShortName: Style filename without path (e.g. 'MyStyle.vsf')
-  Returns: TRUE if style was loaded and applied successfully }
+  DiskShortName: style filename without path (e.g. 'MyStyle.vsf').
+  Returns TRUE if the style was loaded and applied. }
 function LoadstyleFromFile(const DiskShortName: string): Boolean;
 var
   FullPath: string;
@@ -175,42 +106,56 @@ begin
   if NOT FileExists(FullPath)
   then EXIT(FALSE);
 
-  if NOT TStyleManager.IsValidStyle(FullPath, Style) then
-  begin
-    MessageError('Style is not valid: ' + FullPath);
-    EXIT(FALSE);
-  end;
+  try
+    if NOT TStyleManager.IsValidStyle(FullPath, Style) then
+    begin
+      AppDataCore.RamLog.AddError('LoadStyleFromFile: not a valid VCL style: ' + FullPath);
+      MessageError('Style is not valid: ' + FullPath);
+      EXIT(FALSE);
+    end;
 
-  { TrySetStyle returns TRUE if the style is already loaded and was set.
-    If FALSE, we need to load it first from file. }
-  if TStyleManager.TrySetStyle(Style.Name, FALSE)
-  then Result:= TRUE
-  else
-  begin
-    TStyleManager.LoadFromFile(FullPath);
-    TStyleManager.SetStyle(Style.Name);
+    { TrySetStyle succeeds if the style is already loaded. If not, load it from file first. }
+    if NOT TStyleManager.TrySetStyle(Style.Name, FALSE) then
+    begin
+      TStyleManager.LoadFromFile(FullPath);
+      TStyleManager.SetStyle(Style.Name);
+    end;
     Result:= TRUE;
+  except
+    { Log+show, then swallow. Cannot reraise: the caller (LoadLastStyle) runs in the DPR before
+      Application.Run, where an unhandled exception aborts startup - and with ShowMainForm=FALSE
+      its error box is invisible (Docs\Skins-VCL.md). IsValidStyle opens a TFileStream, so a locked
+      or truncated file raises here. The app continues with the default Windows theme. }
+    on E: Exception do
+    begin
+      AppDataCore.RamLog.AddError('LoadStyleFromFile [' + DiskShortName + ']: ' + E.ClassName + ' - ' + E.Message);
+      MessageError('Error loading style: ' + E.Message);
+      EXIT(FALSE);
+    end;
   end;
 end;
 
 
 procedure LoadLastStyle(const DefaultStyle: string= '');
 begin
-  { Guard against the most common misuse of this routine.
-    If a main form already exists, SetStyle below will RecreateWnd on it and discard the WM_POSTINIT message that AppData.CreateMainForm queued — leaving
-    FormPostInitialize unfired and any state initialized there as NIL.
-    Use Assert (compiled out in Release) AND a hard raise so the check survives Release builds too. }
-  Assert(Application.MainForm = NIL, 'LoadLastStyle must be called BEFORE AppData.CreateMainForm. Calling it after destroys the WM_POSTINIT message and FormPostInitialize never fires.');
+  { Ordering guard. Applying a style with a live main form leaks its TMainMenuBarStyleHook (AV on the
+    next menu click), replaces the window handle, and can swallow the queued WM_POSTINIT so
+    FormPostInitialize never fires. Unconditional on purpose - the contract is "before CreateMainForm",
+    not "before CreateMainForm if a style happens to be configured". RAISE, not Assert: assertions are
+    compiled out in Release. Full reasoning: Docs\Skins-VCL.md }
   if Application.MainForm <> NIL
-  then RAISE Exception.Create('LoadLastStyle must be called BEFORE AppData.CreateMainForm. Calling it after destroys the WM_POSTINIT message and FormPostInitialize never fires.');
+  then RAISE Exception.Create('LoadLastStyle must be called BEFORE AppData.CreateMainForm. Calling it later leaks the main menu style hook, replaces the form handle, and can suppress FormPostInitialize.');
 
-  { Read from INI using 'Laststyle' key for backward compatibility }
-  CurrentStyleName:= LightCore.INIFileQuick.ReadString(IniKeyStyle, DefaultStyle);
+  { Current key first, then the pre-2026-02-23 one, then the caller's default. We only ever WRITE
+    IniKeyStyle, so an old INI migrates forward on the first save. }
+  CurrentStyleName:= LightCore.INIFileQuick.ReadString(IniKeyStyle, '');
 
   if CurrentStyleName = ''
-  then CurrentStyleName:= Defaultstyle;
+  then CurrentStyleName:= LightCore.INIFileQuick.ReadString(IniKeyStyleOld, '');
 
-  { DefWinTheme = use default Windows theme (don't load any style file) }
+  if CurrentStyleName = ''
+  then CurrentStyleName:= DefaultStyle;
+
   if (CurrentStyleName <> '') AND (CurrentStyleName <> DefWinTheme)
   then LoadStyleFromFile(CurrentStyleName);
 end;
@@ -221,9 +166,6 @@ end;
    SHOW FORM
 -----------------------------------------------------------------------------------------------------------------------}
 
-{ Shows style selector as a modal dialog. PopupMode=pmAuto in DFM keeps
-  the modal z-order intact (legacy precaution; the dialog no longer calls
-  SetStyle so the original z-order problem cannot fire from here). }
 class procedure TfrmStyleDisk.ShowAsModal;
 begin
   AppData.CreateFormModal(TfrmStyleDisk);
@@ -309,14 +251,18 @@ begin
     lBox.Items.Add(s);
   end;
 
-  { Select the currently active style in the list }
-  lBox.ItemIndex:= lBox.Items.IndexOf(TStyleManager.ActiveStyle.Name);
+  { Select the user's current choice. Match on CurrentStyleName, NOT on TStyleManager.ActiveStyle.Name:
+    the list holds .vsf FILENAMES ('CyanDusk.vsf') while ActiveStyle.Name is the style's internal name
+    ('Cyan Dusk'), so the old lookup never matched and nothing was ever preselected.
+    Assigning ItemIndex does not fire OnClick - it only sends LB_SETCURSEL (Vcl.StdCtrls.pas:7564-7573). }
+  lBox.ItemIndex:= lBox.Items.IndexOf(CurrentStyleName);
+  if lBox.ItemIndex < 0
+  then lBox.ItemIndex:= 0;   { Windows default theme }
 end;
 
 
-{ Persists the chosen skin and asks the user to restart. We never call SetStyle
-  at runtime — BUG 5 (see file header) leaks a TMainMenuBarStyleHook on every
-  live SetStyle, crashing on the next main-menu click. }
+{ Persists the chosen skin and asks for a restart. Deliberately NEVER calls SetStyle: every live
+  SetStyle leaks the main form's TMainMenuBarStyleHook, which AVs on the next menu click (BUG 5 in Docs\Skins-VCL.md). }
 procedure TfrmStyleDisk.lBoxClick(Sender: TObject);
 VAR NewStyleName: string;
 begin
