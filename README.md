@@ -117,7 +117,6 @@ More about my libraries [here](https://gabrielmoraru.com/publications-citations/
   /FMX/                  # FMX demos and templates  
 /UnitTesting/            # DUnitX test projects 
 /External/               # Optional 3rd-party libraries  
-/Updater/                # Self-update framework
 /HardwareID/             # Hardware identification utilities
 /System/                 # Copyright, EULA, credits
 /Docs/                   # Architecture diagrams, logo
@@ -180,8 +179,8 @@ The AppData system replaces the standard Delphi application lifecycle with a mor
 - AutoState queue system for form restoration (`asPosOnly`, `asFull`, `asNone`)
 - Visual log window (`TfrmRamLog`) - auto-created on demand
 - Platform-specific startup registration (Windows Registry, macOS LaunchAgents, Linux autostart)
-- Application control: `Run()`, `Minimize()`, `Restore()`, `Restart()`, `SelfDelete()`
-- Dialog helpers: `PromptToSaveFile`, `PromptToLoadFile`
+- Application control: `Run()`, `Minimize()`, `Restore()` (both frameworks); `Restart()`, `SelfDelete()` (VCL only)
+- Dialog helpers: `PromptToSaveFile`, `PromptToLoadFile` (VCL only)
 - `ShowModal(Form)` — shows form modally; auto-centers on main form if `AutoState = asNone`
 - Global instance: `AppData` (freed in FINALIZATION)
 
@@ -391,27 +390,29 @@ Demo apps in `/Demo/` serve as both tests and documentation:
 | FMX | FMX_Demo_Styles | FMX styles |
 | FMX | FMX_Demo_AnimatedTextMemo | Animated text memo control |
 | FMX | FMX_Demo_AutoSizeRect | Auto-sizing rectangle |
-| FMX | FMX_Demo_LightPanel | LightPanel component |
-| FMX | FMX_Demo_SystemReport | FMX system report |
-| FMX | FMX_Demo_ColorPalette | Color palette control |
+| FMX | FMX_Demo_ScreenCapture | Screen capture (TfrmScreenCapture) |
+| FMX | FMX_Demo_SkinSelector | Skin selector dialog |
+| FMX | FMX_Demos | Mixed control showcase (LightPanel, ColorPalette, etc.) |
 | FMX | FMX_MinimalApp | FMX app templates (3 variants) |
 
 _________________
 
 ### Unit Tests 
 
-The `UnitTesting/` folder contains DUnitX-based unit tests with TestInsight support (160 test units across 8 test projects).
+The `UnitTesting/` folder contains DUnitX-based unit tests with TestInsight support (163 test units across 8 test projects). Not every test unit on disk is linked into a project — see the FMX note below.
 
 | Test Project | Tests Package | Status |
 |--------------|---------------|--------|
 | `Tests_LightCore.dpr` | `LightCore.dpk` | 1110 tests |
 | `Tests_LightVcl.Common.dpr` | `LightVcl.Common.dpk` | 68 tests |
-| `Tests_LightVcl.Forms.dpr` | `LightVcl.Visual.dpk` (forms) | 161 tests |
+| `Tests_LightVcl.Forms.dpr` | `LightVcl.Visual.dpk` (forms) | 376 tests |
 | `Tests_LightVcl.Graphics.dpr` | `LightVcl.Graphics.dpk` | Available |
 | `Tests_LightVcl.Internet.dpr` | `LightVcl.Internet.dpk` | Available |
 | `Tests_LightVcl.Visual.dpr` | `LightVcl.Visual.dpk` (components) | Available |
 | `Tests_LightVcl.Translator.dpr` | Translator | Available |
-| `Tests_LightFmx.dpr` | FMX packages | Available |
+| `Tests_LightFmx.dpr` | FMX packages | 100 tests |
+
+The FMX project links only 6 of the 21 `Test.LightFmx*.pas` units that exist in `UnitTesting/`. The other 15 (254 tests) are written but belong to no project, so they never run.
 
 **Running Tests**
 
