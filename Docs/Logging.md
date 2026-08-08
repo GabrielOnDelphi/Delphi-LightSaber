@@ -201,6 +201,14 @@ After 2026-05-05, `TLightStream.ReadString` accepts an optional `SafetyLimit` pa
 
 When loading binary log files, log messages can be very long (stack traces, JSON payloads). The log loader passes `MaxLogMsgBytes = 16 MB` explicitly to `ReadString` — don't lower it unless you also re-encode existing `.logbin` files.
 
+### Messages longer than 4M chars are truncated on the way in
+
+`TRamLog.prepareString` caps every stored message at `MaxLogMsgChars` = 4M UTF-16 chars, then appends ` [truncated]`. If the cut would split a surrogate pair, the trailing lone high surrogate is dropped first.
+
+The cap exists because the two sides of the binary format disagree: `WriteString` is unbounded, but the reader (`RLogLine.ReadFromStream_v5`) rejects any message whose UTF-8 length exceeds `MaxLogMsgBytes` = 16 MB. One oversized message would therefore produce a `.logbin` that raises *'String too large'* on every `LoadFromFile` — silently poisoning the crash-recovery files. Worst-case UTF-16 to UTF-8 expansion is 3 bytes per code unit, so 4M chars is at most 12 MB, comfortably under the reader's ceiling.
+
+Consequence for callers: a log entry is not always byte-identical to the string you passed to `AddInfo`. Never use `RamLog` as a transport for data you need back verbatim.
+
 ### Observer "Populate" can fire after the observer is freed
 
 If you implement a custom `ILogObserver` and forget the destruction guard described above, expect a hard-to-reproduce AV during shutdown. The framework provides hooks (`UnregisterLogObserver`, `FormDestroying`); use them.
