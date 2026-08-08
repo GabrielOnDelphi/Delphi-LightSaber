@@ -37,7 +37,7 @@ object frmStyleDisk: TfrmStyleDisk
     Margins.Top = 6
     Margins.Bottom = 1
     Align = alTop
-    Caption = 'Click skin to load it'
+    Caption = 'Click a skin to choose it (applied at next start)'
     Layout = tlBottom
     OnClick = lblTopClick
   end
