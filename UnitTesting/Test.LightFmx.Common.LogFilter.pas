@@ -82,7 +82,7 @@ uses
 
 procedure TTestLogVerbFilter.Setup;
 begin
-  FTestForm:= TForm.Create(NIL);
+  FTestForm:= TForm.CreateNew(NIL);
   FTestForm.ClientWidth:= 400;
   FTestForm.ClientHeight:= 300;
 end;
@@ -194,7 +194,7 @@ begin
   try
     Filter.Parent:= FTestForm;
     Assert.IsFalse(Filter.ShowDebugMsg, 'ShowDebugMsg should default to False');
-    Assert.AreEqual(Single(1), Filter.TrackBar.Min, 'TrackBar.Min should be 1 when ShowDebugMsg is False');
+    Assert.AreEqual(Double(1), Filter.TrackBar.Min, 'TrackBar.Min should be 1 when ShowDebugMsg is False');
   finally
     FreeAndNil(Filter);
   end;
@@ -212,7 +212,7 @@ begin
     Filter.ShowDebugMsg:= TRUE;
 
     Assert.IsTrue(Filter.ShowDebugMsg, 'ShowDebugMsg should be True');
-    Assert.AreEqual(Single(0), Filter.TrackBar.Min, 'TrackBar.Min should be 0 when ShowDebugMsg is True');
+    Assert.AreEqual(Double(0), Filter.TrackBar.Min, 'TrackBar.Min should be 0 when ShowDebugMsg is True');
   finally
     FreeAndNil(Filter);
   end;
@@ -231,7 +231,7 @@ begin
     Filter.ShowDebugMsg:= FALSE;
 
     Assert.IsFalse(Filter.ShowDebugMsg, 'ShowDebugMsg should be False');
-    Assert.AreEqual(Single(1), Filter.TrackBar.Min, 'TrackBar.Min should be 1 when ShowDebugMsg is False');
+    Assert.AreEqual(Double(1), Filter.TrackBar.Min, 'TrackBar.Min should be 1 when ShowDebugMsg is False');
   finally
     FreeAndNil(Filter);
   end;
@@ -248,8 +248,8 @@ begin
   try
     Filter.Parent:= FTestForm;
 
-    Assert.AreEqual(Single(1), Filter.TrackBar.Min, 'TrackBar.Min should be 1 by default');
-    Assert.AreEqual(Single(Ord(High(TLogVerbLvl))), Filter.TrackBar.Max, 'TrackBar.Max should match highest verbosity level');
+    Assert.AreEqual(Double(1), Filter.TrackBar.Min, 'TrackBar.Min should be 1 by default');
+    Assert.AreEqual(Double(Ord(High(TLogVerbLvl))), Filter.TrackBar.Max, 'TrackBar.Max should match highest verbosity level');
   finally
     FreeAndNil(Filter);
   end;
