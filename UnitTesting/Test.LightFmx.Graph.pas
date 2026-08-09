@@ -19,7 +19,7 @@ uses
   System.UITypes,
   System.IOUtils,
   FMX.Graphics,
-  FMX.Objects,
+  FMX.Objects,       { Declares its own TPath (FMX.Objects.pas:483), which shadows System.IOUtils.TPath. Every TPath call below is therefore fully qualified. }
   FMX.Forms;
 
 type
@@ -127,7 +127,7 @@ type
 implementation
 
 uses
-  LightFmx.Graph;
+  LightFmx.Common.Graph;
 
 
 procedure TTestLightFmxGraph.Setup;
@@ -137,11 +137,11 @@ begin
   FBitmap:= NIL;
 
   { Create scratch directory for test files }
-  FScratchDir:= TPath.Combine(TPath.GetTempPath, 'LightFmxGraphTests');
+  FScratchDir:= System.IOUtils.TPath.Combine(System.IOUtils.TPath.GetTempPath, 'LightFmxGraphTests');
   if NOT TDirectory.Exists(FScratchDir)
   then TDirectory.CreateDirectory(FScratchDir);
 
-  FTestImagePath:= TPath.Combine(FScratchDir, 'test_image.png');
+  FTestImagePath:= System.IOUtils.TPath.Combine(FScratchDir, 'test_image.png');
 end;
 
 
@@ -348,7 +348,7 @@ procedure TTestLightFmxGraph.TestSaveBitmap_SavesValidFile;
 var
   SavePath: string;
 begin
-  SavePath:= TPath.Combine(FScratchDir, 'saved_test.png');
+  SavePath:= System.IOUtils.TPath.Combine(FScratchDir, 'saved_test.png');
 
   FBitmap:= CreateBitmap(50, 50, TAlphaColorRec.Green);
   try

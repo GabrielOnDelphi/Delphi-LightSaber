@@ -2,7 +2,7 @@ unit Test.LightFmx.LogForm;
 
 {=============================================================================================================
    2026.01.31
-   Unit tests for LightFmx.LogForm.pas
+   Unit tests for LightFmx.Common.LogForm.pas
    Tests the FMX log form window functionality.
 
    Note: Full GUI testing requires FMX application context.
@@ -15,6 +15,7 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.Classes,
+  System.UITypes,        { TCloseAction (System.UITypes.pas:109) — FMX does not redeclare it the way Vcl.Forms does. }
   FMX.Forms,
   LightCore.LogTypes;
 
@@ -43,7 +44,7 @@ type
 implementation
 
 uses
-  LightFmx.LogForm,
+  LightFmx.Common.LogForm,
   LightFmx.Common.AppData;
 
 

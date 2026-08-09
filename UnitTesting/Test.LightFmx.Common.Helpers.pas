@@ -14,7 +14,7 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.Classes,
-  FMX.Types, FMX.Forms, FMX.Controls, FMX.Platform;
+  FMX.Types, FMX.Forms, FMX.Controls, FMX.StdCtrls, FMX.Platform;
 
 type
   [TestFixture]
@@ -105,7 +105,7 @@ end;
 
 procedure TTestLightFmxCommonHelpers.TestFindImmediateParentForm_FormReturnsItself;
 begin
-  FForm:= TForm.Create(nil);
+  FForm:= TForm.CreateNew(nil);
   // A form passed to FindImmediateParentForm should return itself
   Assert.AreSame(FForm, FindImmediateParentForm(FForm));
 end;
@@ -135,7 +135,7 @@ end;
 
 procedure TTestLightFmxCommonHelpers.TestGetParentForm_ControlOnForm;
 begin
-  FForm:= TForm.Create(nil);
+  FForm:= TForm.CreateNew(nil);
   FButton:= TButton.Create(FForm);
   FButton.Parent:= FForm;
 
@@ -147,10 +147,10 @@ end;
 procedure TTestLightFmxCommonHelpers.TestGetParentForm_TopFormTrue;
 begin
   // Create parent form
-  FForm:= TForm.Create(nil);
+  FForm:= TForm.CreateNew(nil);
 
   // Create child form with parent form as parent
-  FChildForm:= TForm.Create(FForm);
+  FChildForm:= TForm.CreateNew(FForm);
   FChildForm.Parent:= FForm;
 
   // Create button on child form
@@ -165,10 +165,10 @@ end;
 procedure TTestLightFmxCommonHelpers.TestGetParentForm_TopFormFalse;
 begin
   // Create parent form
-  FForm:= TForm.Create(nil);
+  FForm:= TForm.CreateNew(nil);
 
   // Create child form with parent form as parent
-  FChildForm:= TForm.Create(FForm);
+  FChildForm:= TForm.CreateNew(FForm);
   FChildForm.Parent:= FForm;
 
   // Create button on child form

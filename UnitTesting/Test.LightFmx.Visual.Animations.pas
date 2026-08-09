@@ -87,7 +87,7 @@ VAR
   Form: TForm;
   ChildrenBefore: Integer;
 begin
-  Form:= TForm.Create(nil);
+  Form:= TForm.CreateNew(nil);
   try
     Form.ClientWidth:= 400;
     Form.ClientHeight:= 300;

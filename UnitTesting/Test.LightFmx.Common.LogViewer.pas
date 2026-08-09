@@ -111,7 +111,7 @@ uses
 
 procedure TTestFmxLogViewer.Setup;
 begin
-  FTestForm:= TForm.Create(NIL);
+  FTestForm:= TForm.CreateNew(NIL);
   FTestForm.ClientWidth:= 800;
   FTestForm.ClientHeight:= 600;
 end;

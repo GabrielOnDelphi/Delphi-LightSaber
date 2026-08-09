@@ -257,8 +257,10 @@ begin
   ExpectedLeft:= FTestForm.Left + (FTestForm.Width - FChildForm.Width) / 2;
   ExpectedTop:= FTestForm.Top + (FTestForm.Height - FChildForm.Height) / 2;
 
-  Assert.AreEqual(Round(ExpectedLeft), FChildForm.Left, 'Child should be centered horizontally in parent');
-  Assert.AreEqual(Round(ExpectedTop), FChildForm.Top, 'Child should be centered vertically in parent');
+  { Integer cast: Round returns Int64, but FMX TCommonCustomForm.Left/Top are Integer (FMX.Forms.pas:1066).
+    Without it Assert.AreEqual<T> cannot infer T from two different types -> E2532. }
+  Assert.AreEqual(Integer(Round(ExpectedLeft)), FChildForm.Left, 'Child should be centered horizontally in parent');
+  Assert.AreEqual(Integer(Round(ExpectedTop)), FChildForm.Top, 'Child should be centered vertically in parent');
 end;
 
 

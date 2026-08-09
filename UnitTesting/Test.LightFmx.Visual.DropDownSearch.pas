@@ -88,7 +88,7 @@ procedure TTesTLightDownSearch.TestCreate;
 var
   SearchBox: TLightDownSearch;
 begin
-  FForm:= TForm.Create(nil);
+  FForm:= TForm.CreateNew(nil);
   SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
@@ -104,7 +104,7 @@ procedure TTesTLightDownSearch.TestDestroy_NoMemoryLeak;
 var
   SearchBox: TLightDownSearch;
 begin
-  FForm:= TForm.Create(nil);
+  FForm:= TForm.CreateNew(nil);
   SearchBox:= TLightDownSearch.Create(FForm);
   SearchBox.Parent:= FForm;
 
@@ -130,7 +130,7 @@ var
   SearchBox: TLightDownSearch;
   Words: TStringList;
 begin
-  FForm:= TForm.Create(nil);
+  FForm:= TForm.CreateNew(nil);
   SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
@@ -157,7 +157,7 @@ var
   SearchBox: TLightDownSearch;
   Words: TStringList;
 begin
-  FForm:= TForm.Create(nil);
+  FForm:= TForm.CreateNew(nil);
   SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
@@ -181,7 +181,7 @@ var
   SearchBox: TLightDownSearch;
   Words1, Words2: TStringList;
 begin
-  FForm:= TForm.Create(nil);
+  FForm:= TForm.CreateNew(nil);
   SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
@@ -218,7 +218,7 @@ procedure TTesTLightDownSearch.TestSelectedString_NoSelection;
 var
   SearchBox: TLightDownSearch;
 begin
-  FForm:= TForm.Create(nil);
+  FForm:= TForm.CreateNew(nil);
   SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
@@ -235,7 +235,7 @@ procedure TTesTLightDownSearch.TestSelectedObject_NoSelection;
 var
   SearchBox: TLightDownSearch;
 begin
-  FForm:= TForm.Create(nil);
+  FForm:= TForm.CreateNew(nil);
   SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
@@ -254,7 +254,7 @@ procedure TTesTLightDownSearch.TestAddDemoStrings;
 var
   SearchBox: TLightDownSearch;
 begin
-  FForm:= TForm.Create(nil);
+  FForm:= TForm.CreateNew(nil);
   SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
@@ -273,7 +273,7 @@ procedure TTesTLightDownSearch.TestMaxDropHeight_Default;
 var
   SearchBox: TLightDownSearch;
 begin
-  FForm:= TForm.Create(nil);
+  FForm:= TForm.CreateNew(nil);
   SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;
@@ -290,7 +290,7 @@ procedure TTesTLightDownSearch.TestMaxDropHeight_SetValue;
 var
   SearchBox: TLightDownSearch;
 begin
-  FForm:= TForm.Create(nil);
+  FForm:= TForm.CreateNew(nil);
   SearchBox:= TLightDownSearch.Create(FForm);
   try
     SearchBox.Parent:= FForm;

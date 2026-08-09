@@ -75,7 +75,7 @@ uses
 
 procedure TTestLightPanel.Setup;
 begin
-  FForm:= TForm.Create(nil);
+  FForm:= TForm.CreateNew(nil);
   FForm.Width:= 400;
   FForm.Height:= 400;
 
