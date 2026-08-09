@@ -926,7 +926,7 @@ begin
     Assert.WillRaise(
       procedure
       begin
-        Ini.WriteColor('', TAlphaColorRec.Red);
+        Ini.WriteColor('', TColors.Red);
       end,
       Exception);
   FINALLY
@@ -944,7 +944,7 @@ begin
     Assert.WillRaise(
       procedure
       begin
-        Ini.ReadColor('', TAlphaColorRec.Black);
+        Ini.ReadColor('', TColors.Black);
       end,
       Exception);
   FINALLY
@@ -961,12 +961,12 @@ begin
   Ini:= TIniFileApp.Create('TestSection', FTestIniPath);
   TRY
     { Write color }
-    Ini.WriteColor('TestColor', TAlphaColorRec.Navy);
+    Ini.WriteColor('TestColor', TColors.Navy);
 
     { Read color back }
-    ReadColor:= Ini.ReadColor('TestColor', TAlphaColorRec.Black);
+    ReadColor:= Ini.ReadColor('TestColor', TColors.Black);
 
-    Assert.AreEqual(Integer(TAlphaColorRec.Navy), Integer(ReadColor));
+    Assert.AreEqual(Integer(TColors.Navy), Integer(ReadColor));
   FINALLY
     FreeAndNil(Ini);
   END;
