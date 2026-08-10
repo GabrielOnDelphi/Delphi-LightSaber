@@ -1,11 +1,16 @@
 UNIT LightFmx.Common.IniFile;
 
 {=============================================================================================================
-   2026.07.07
+   2026.08.10
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
   Same as LightCore.INIFile but adds support for forms to save themselves to disk.
   INI file name/file path is automatically calculated.
+
+  2026-08-10: ReadColor/WriteColor now take TAlphaColor instead of TColor. TColorBox.Color is a TAlphaColor,
+              and TColor is a signed subrange, so every opaque colour raised ERangeError with range checking
+              on - which the Debug and the PreRelease configuration both enable. Colours are now stored via
+              AlphaColorToString; ReadColor still parses both legacy forms.
 
   2026-07-07: Fixed: a form saved while minimized persisted the OS park position (-32000,-32000)
               and WindowState=wsMinimized, so it was restored off-screen and invisible.
@@ -124,9 +129,10 @@ TYPE
     function  Read       (CONST Ident: string; Font: TFont): Boolean;  overload;
     procedure Write      (CONST Ident: string; Font: TFont);           overload;
 
-    { Color - this requires VCL framework so it cannot be moved to LightCore.INIFile }
-    function  ReadColor  (CONST Ident: string; Default: TColor): TColor;
-    procedure WriteColor (CONST Ident: string; Value: TColor);
+    { Color - TAlphaColor, because that is what FMX controls use. Kept out of LightCore.INIFile because
+      the string conversion pair lives in the UI layer. }
+    function  ReadColor  (CONST Ident: string; Default: TAlphaColor): TAlphaColor;
+    procedure WriteColor (CONST Ident: string; Value: TAlphaColor);
 
     { Read/write controls directly }
     function  WriteComp  (Comp: TComponent): Boolean; virtual;
@@ -625,17 +631,40 @@ end;
 {---------------
    COLORS
 ----------------}
-function TIniFileApp.ReadColor(CONST Ident: string; Default: TColor): TColor;
+{ TAlphaColor, not TColor. The only caller inside this unit is WriteComp/ReadComp for TColorBox, whose
+  Color property is a TAlphaColor (FMX.Colors.pas:86). TColor is the signed subrange -$7FFFFFFF-1..$7FFFFFFF,
+  so every OPAQUE colour ($FF......) sat outside it: passing one raised ERangeError with range checking on,
+  which the Debug and the PreRelease build configuration both enable. The conversion is gone now, not
+  merely silenced. }
+function TIniFileApp.ReadColor(CONST Ident: string; Default: TAlphaColor): TAlphaColor;
+VAR
+  Stored: string;
 begin
   Assert(Ident <> '', '[TIniFileApp.ReadColor] Ident cannot be empty');
-  Result:= StringToColor(ReadString(FSection, Ident, ColorToString(Default)));
+
+  Stored:= ReadString(FSection, Ident, '');
+  if Stored = '' then EXIT(Default);
+
+  { A leading 'cl' means the file predates the TAlphaColor change: those values went through ColorToString,
+    whose names all carry the VCL 'cl' prefix. AlphaColorToString never emits one - it strips the 'cla'
+    prefix and writes 'Black', 'Red', ... or '#AARRGGBB' - and no FMX colour name starts with 'Cl', so the
+    prefix identifies the old format unambiguously.
+    Such a name MUST go through the old parser. StringToAlphaColor does not fail on 'clBlack': the RTL
+    deliberately rewrites 'clXxxx' into 'claXxxx' (System.UIConsts.pas, IdentToAlphaColor), which returns
+    opaque black $FF000000 where $00000000 was what actually got stored. A name only ever reached the file
+    with its alpha byte at 0, so reloading the stored bits beats adopting the RTL's convention.
+    Plain '$xxxxxxxx' values from the old code need no special case - StringToAlphaColor falls through to
+    StrToInt64 for them (System.UIConsts.pas:776-777). }
+  if SameText(Copy(Stored, 1, 2), 'cl')
+  then Result:= TAlphaColor(StringToColor(Stored))
+  else Result:= StringToAlphaColor(Stored);
 end;
 
 
-procedure TIniFileApp.WriteColor(CONST Ident: string; Value: TColor);
+procedure TIniFileApp.WriteColor(CONST Ident: string; Value: TAlphaColor);
 begin
   Assert(Ident <> '', '[TIniFileApp.WriteColor] Ident cannot be empty');
-  WriteString(FSection, Ident, ColorToString(Value));
+  WriteString(FSection, Ident, AlphaColorToString(Value));
 end;
 
 
