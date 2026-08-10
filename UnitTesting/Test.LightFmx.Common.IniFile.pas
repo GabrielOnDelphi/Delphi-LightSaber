@@ -11,6 +11,7 @@ uses
   DUnitX.TestFramework,
   System.SysUtils, System.IOUtils, System.UITypes,
   FMX.Forms, FMX.Controls, FMX.StdCtrls, FMX.Edit, FMX.SpinBox, FMX.NumberBox,
+  FMX.Text,              { TNumValueType (FMX.Text.pas:360) }
   FMX.Graphics, FMX.Dialogs, FMX.ActnList, FMX.Menus, FMX.ListBox, FMX.Colors,
   FMX.Types,
   LightFmx.Common.IniFile;
@@ -138,6 +139,12 @@ type
 
     [Test]
     procedure Test_WriteReadColor;
+
+    [Test]
+    procedure Test_WriteReadColor_OpaqueColorDoesNotRangeError;
+
+    [Test]
+    procedure Test_ReadColor_ParsesLegacyFormats;
   end;
 
 implementation
@@ -207,7 +214,7 @@ begin
       begin
         Ini.SaveForm(NIL);
       end,
-      Exception);
+      EAssertionFailed);   { Assert.WillRaise matches the class EXACTLY (DUnitX.Assert.pas:1165 -> CheckExceptionClass), so the guard's real class must be named. The guard is a Delphi Assert(), which raises EAssertionFailed. }
   FINALLY
     FreeAndNil(Ini);
   END;
@@ -228,7 +235,7 @@ begin
       begin
         Ini.SaveForm(Form, asNone);
       end,
-      Exception);
+      EAssertionFailed);
   FINALLY
     FreeAndNil(Form);
     FreeAndNil(Ini);
@@ -249,7 +256,7 @@ begin
       begin
         Ini.LoadForm(NIL);
       end,
-      Exception);
+      EAssertionFailed);
   FINALLY
     FreeAndNil(Ini);
   END;
@@ -270,7 +277,7 @@ begin
       begin
         Ini.LoadForm(Form, asNone);
       end,
-      Exception);
+      EAssertionFailed);
   FINALLY
     FreeAndNil(Form);
     FreeAndNil(Ini);
@@ -497,7 +504,7 @@ begin
       begin
         Ini.ReadComp(CheckBox);
       end,
-      Exception);
+      EAssertionFailed);
   FINALLY
     FreeAndNil(Form);
     FreeAndNil(Ini);
@@ -690,6 +697,7 @@ begin
     NumberBox.Name:= 'TestNumberBox';
     NumberBox.Parent:= Form;
     NumberBox.Max:= 1000;
+    NumberBox.ValueType:= TNumValueType.Float;   { Defaults to Integer (FMX.EditBox.pas:127), which would round 123.45 to 123 on assignment — before the INI is ever involved }
 
     { Write value }
     NumberBox.Value:= 123.45;
@@ -816,7 +824,7 @@ begin
       begin
         Ini.Write('', Font);
       end,
-      Exception);
+      EAssertionFailed);
   FINALLY
     FreeAndNil(Font);
     FreeAndNil(Ini);
@@ -835,7 +843,7 @@ begin
       begin
         Ini.Write('TestFont', NIL);
       end,
-      Exception);
+      EAssertionFailed);
   FINALLY
     FreeAndNil(Ini);
   END;
@@ -855,7 +863,7 @@ begin
       begin
         Ini.Read('', Font);
       end,
-      Exception);
+      EAssertionFailed);
   FINALLY
     FreeAndNil(Font);
     FreeAndNil(Ini);
@@ -874,7 +882,7 @@ begin
       begin
         Ini.Read('TestFont', NIL);
       end,
-      Exception);
+      EAssertionFailed);
   FINALLY
     FreeAndNil(Ini);
   END;
@@ -926,9 +934,9 @@ begin
     Assert.WillRaise(
       procedure
       begin
-        Ini.WriteColor('', TColors.Red);
+        Ini.WriteColor('', TAlphaColorRec.Red);
       end,
-      Exception);
+      EAssertionFailed);
   FINALLY
     FreeAndNil(Ini);
   END;
@@ -944,9 +952,9 @@ begin
     Assert.WillRaise(
       procedure
       begin
-        Ini.ReadColor('', TColors.Black);
+        Ini.ReadColor('', TAlphaColorRec.Black);
       end,
-      Exception);
+      EAssertionFailed);
   FINALLY
     FreeAndNil(Ini);
   END;
@@ -956,17 +964,55 @@ end;
 procedure TTestFmxIniFileApp.Test_WriteReadColor;
 VAR
   Ini: TIniFileApp;
-  ReadColor: TColor;
+  ReadBack: TAlphaColor;
 begin
   Ini:= TIniFileApp.Create('TestSection', FTestIniPath);
   TRY
-    { Write color }
-    Ini.WriteColor('TestColor', TColors.Navy);
+    Ini.WriteColor('TestColor', TAlphaColorRec.Navy);
+    ReadBack:= Ini.ReadColor('TestColor', TAlphaColorRec.Black);
 
-    { Read color back }
-    ReadColor:= Ini.ReadColor('TestColor', TColors.Black);
+    Assert.AreEqual(Cardinal(TAlphaColorRec.Navy), Cardinal(ReadBack), 'Colour must survive the INI round-trip');
+  FINALLY
+    FreeAndNil(Ini);
+  END;
+end;
 
-    Assert.AreEqual(Integer(TColors.Navy), Integer(ReadColor));
+
+{ Pins the ERangeError fix. ReadColor/WriteColor used to take a TColor (-$7FFFFFFF-1..$7FFFFFFF), so an
+  OPAQUE colour - every colour a user actually picks, alpha $FF - was outside the subrange and raised
+  ERangeError. Range checking is ON in the Debug and PreRelease configurations, so this was reachable in a
+  shipped build. Revert the parameter type to TColor and this test fails. }
+procedure TTestFmxIniFileApp.Test_WriteReadColor_OpaqueColorDoesNotRangeError;
+VAR
+  Ini: TIniFileApp;
+  ReadBack: TAlphaColor;
+begin
+  Ini:= TIniFileApp.Create('TestSection', FTestIniPath);
+  TRY
+    Ini.WriteColor('OpaqueColor', TAlphaColorRec.Red);
+    ReadBack:= Ini.ReadColor('OpaqueColor', TAlphaColorRec.Black);
+
+    Assert.AreEqual(Cardinal(TAlphaColorRec.Red), Cardinal(ReadBack), 'An opaque colour must round-trip unchanged');
+  FINALLY
+    FreeAndNil(Ini);
+  END;
+end;
+
+
+{ Files written before the type change stored ColorToString output. StringToAlphaColor parses the plain
+  '$xxxxxxxx' form through its StrToInt64 fallback; a VCL colour NAME needs the StringToColor fallback in
+  ReadColor. Both legacy forms must still load. }
+procedure TTestFmxIniFileApp.Test_ReadColor_ParsesLegacyFormats;
+VAR
+  Ini: TIniFileApp;
+begin
+  Ini:= TIniFileApp.Create('TestSection', FTestIniPath);
+  TRY
+    Ini.WriteString('TestSection', 'LegacyHex',  '$FFE4F3E2');
+    Ini.WriteString('TestSection', 'LegacyName', 'clBlack');
+
+    Assert.AreEqual(Cardinal($FFE4F3E2), Cardinal(Ini.ReadColor('LegacyHex', TAlphaColorRec.Black)), 'Legacy hex colour must still load');
+    Assert.AreEqual(Cardinal($00000000), Cardinal(Ini.ReadColor('LegacyName', TAlphaColorRec.Red)), 'Legacy VCL colour name must still load');
   FINALLY
     FreeAndNil(Ini);
   END;

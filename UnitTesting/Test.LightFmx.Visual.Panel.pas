@@ -48,7 +48,7 @@ type
     procedure TestVisibleAtRuntime_SetFalse;
 
     [Test]
-    procedure TestVisibleAtRuntime_NoImmediateVisibilityChange;
+    procedure TestVisibleAtRuntime_AppliesImmediatelyAtRuntime;
 
     { Loaded Behavior Tests }
     [Test]
@@ -69,6 +69,11 @@ implementation
 
 uses
   System.Rtti;
+
+type
+  { Cracker class: Loaded is protected in TComponent, so a test cannot call it on a TLightPanel reference.
+    The tests below call it to simulate the end of FMX streaming without a real .fmx resource. }
+  TLightPanelAccess = class(TLightPanel);
 
 
 { TTestLightPanel }
@@ -136,15 +141,18 @@ begin
 end;
 
 
-procedure TTestLightPanel.TestVisibleAtRuntime_NoImmediateVisibilityChange;
+procedure TTestLightPanel.TestVisibleAtRuntime_AppliesImmediatelyAtRuntime;
 begin
-  // Setting VisibleAtRuntime should NOT immediately change Visible
-  // (Visible is only affected in Loaded at runtime)
+  { The test previously asserted the opposite — that Visible changes only in Loaded. SetVisibleAtRuntime
+    (LightFmx.Visual.Panel.pas:53-61) deliberately applies the value at once outside csLoading/csDesigning,
+    "matches TLightLayout" per its own comment. Loaded exists for the streaming path, not for this one. }
   FPanel.Visible:= True;
-  FPanel.VisibleAtRuntime:= False;
 
-  // Visible should still be True (change only applies after Loaded)
-  Assert.IsTrue(FPanel.Visible, 'Visible should not change immediately when VisibleAtRuntime is set');
+  FPanel.VisibleAtRuntime:= False;
+  Assert.IsFalse(FPanel.Visible, 'Visible must follow VisibleAtRuntime immediately at runtime');
+
+  FPanel.VisibleAtRuntime:= True;
+  Assert.IsTrue(FPanel.Visible, 'Setting VisibleAtRuntime back to True must show the panel again');
 end;
 
 
@@ -162,7 +170,7 @@ begin
 
     // Call Loaded to simulate form loading at runtime
     // Note: In real runtime, csDesigning would not be set
-    TestPanel.Loaded;
+    TLightPanelAccess(TestPanel).Loaded;
 
     Assert.IsTrue(TestPanel.Visible, 'Panel should be visible when VisibleAtRuntime is True');
   finally
@@ -183,7 +191,7 @@ begin
 
     // At runtime (not design time), Loaded should set Visible to False
     // We're calling Loaded directly to simulate this
-    TestPanel.Loaded;
+    TLightPanelAccess(TestPanel).Loaded;
 
     // Note: Since we're running tests, csDesigning is not set,
     // so Loaded should apply VisibleAtRuntime
@@ -200,9 +208,12 @@ procedure TTestLightPanel.TestStreaming_DefaultValueNotWritten;
 var
   Stream: TMemoryStream;
   Writer: TWriter;
-  StreamContent: string;
+  StreamContent: AnsiString;
 begin
-  // When VisibleAtRuntime = True (default), it should NOT be written to stream
+  { StreamContent MUST be AnsiString. The DFM/FMX binary stream stores property names as length-prefixed
+    single-byte text; reading Stream.Size BYTES into a UnicodeString of Stream.Size CHARACTERS pairs those
+    bytes into garbage WideChars, so Pos() can never find the name. That made this test pass for the wrong
+    reason (it asserts absence) while its twin below always failed. }
   FPanel.VisibleAtRuntime:= True;
 
   Stream:= TMemoryStream.Create;
@@ -214,14 +225,14 @@ begin
       FreeAndNil(Writer);
     end;
 
-    // Convert stream to string to check contents
     SetLength(StreamContent, Stream.Size);
     Stream.Position:= 0;
-    Stream.Read(StreamContent[1], Stream.Size);
+    if Stream.Size > 0
+    then Stream.Read(StreamContent[1], Stream.Size);
 
-    // The default value True should NOT appear in stream
-    // (Delphi optimizes by not writing default values)
-    Assert.IsFalse(Pos('VisibleAtRuntime', StreamContent) > 0,
+    { The default value True should NOT appear in the stream — Delphi skips properties still at their default. }
+    Assert.IsTrue(Stream.Size > 0, 'WriteComponent must produce a stream, otherwise the check below is vacuous');
+    Assert.IsFalse(Pos(AnsiString('VisibleAtRuntime'), StreamContent) > 0,
       'Default VisibleAtRuntime value should not be written to stream');
   finally
     FreeAndNil(Stream);
@@ -233,7 +244,7 @@ procedure TTestLightPanel.TestStreaming_NonDefaultValueWritten;
 var
   Stream: TMemoryStream;
   Writer: TWriter;
-  StreamContent: string;
+  StreamContent: AnsiString;      { see the note in TestStreaming_DefaultValueNotWritten }
 begin
   // When VisibleAtRuntime = False (non-default), it SHOULD be written to stream
   FPanel.VisibleAtRuntime:= False;
@@ -247,13 +258,13 @@ begin
       FreeAndNil(Writer);
     end;
 
-    // Convert stream to string to check contents
     SetLength(StreamContent, Stream.Size);
     Stream.Position:= 0;
-    Stream.Read(StreamContent[1], Stream.Size);
+    if Stream.Size > 0
+    then Stream.Read(StreamContent[1], Stream.Size);
 
     // The non-default value False SHOULD appear in stream
-    Assert.IsTrue(Pos('VisibleAtRuntime', StreamContent) > 0,
+    Assert.IsTrue(Pos(AnsiString('VisibleAtRuntime'), StreamContent) > 0,
       'Non-default VisibleAtRuntime value should be written to stream');
   finally
     FreeAndNil(Stream);

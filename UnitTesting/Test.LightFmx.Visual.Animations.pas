@@ -66,18 +66,25 @@ end;
 
 procedure TTestConfetti.TestShowConfetti_ValidControl_NoException;
 VAR
+  Form: TForm;
   Control: TRectangle;
   ChildrenBefore: Integer;
 begin
-  Control:= TRectangle.Create(nil);
+  { The control MUST hang off a form. A parentless control has Root = NIL, and TAnimation.Start then treats
+    the animation as "immediate": it runs it to completion and fires DoFinish synchronously (FMX.Ani.pas,
+    the 'if (Abs(FDuration) < 0.001) or (Root = nil)' branch). TConfetti.OnAnimFinish detaches the piece,
+    so every confetti would be gone again before this test could count it. }
+  Form:= TForm.CreateNew(nil);
   try
+    Control:= TRectangle.Create(Form);
+    Control.Parent:= Form;
     Control.Width:= 400;
     Control.Height:= 300;
     ChildrenBefore:= Control.ChildrenCount;
     TConfetti.ShowConfetti(Control, 1.0, 5);
     Assert.AreEqual(ChildrenBefore + 5, Control.ChildrenCount, 'Should create 5 confetti children');
   finally
-    FreeAndNil(Control);
+    FreeAndNil(Form);
   end;
 end;
 
@@ -122,54 +129,63 @@ end;
 
 procedure TTestConfetti.TestShowConfetti_ZeroConfettiCount_NoException;
 VAR
+  Form: TForm;
   Control: TRectangle;
   ChildrenBefore: Integer;
 begin
-  Control:= TRectangle.Create(nil);
+  Form:= TForm.CreateNew(nil);
   try
+    Control:= TRectangle.Create(Form);
+    Control.Parent:= Form;
     Control.Width:= 400;
     Control.Height:= 300;
     ChildrenBefore:= Control.ChildrenCount;
     TConfetti.ShowConfetti(Control, 1.0, 0);
     Assert.AreEqual(ChildrenBefore, Control.ChildrenCount, 'Zero confetti should add no children');
   finally
-    FreeAndNil(Control);
+    FreeAndNil(Form);
   end;
 end;
 
 
 procedure TTestConfetti.TestShowConfetti_LargeSizeMultiplier_NoException;
 VAR
+  Form: TForm;
   Control: TRectangle;
   ChildrenBefore: Integer;
 begin
-  Control:= TRectangle.Create(nil);
+  Form:= TForm.CreateNew(nil);
   try
+    Control:= TRectangle.Create(Form);
+    Control.Parent:= Form;
     Control.Width:= 400;
     Control.Height:= 300;
     ChildrenBefore:= Control.ChildrenCount;
     TConfetti.ShowConfetti(Control, 5.0, 3);
     Assert.AreEqual(ChildrenBefore + 3, Control.ChildrenCount, 'Should create 3 confetti with large multiplier');
   finally
-    FreeAndNil(Control);
+    FreeAndNil(Form);
   end;
 end;
 
 
 procedure TTestConfetti.TestShowConfetti_SmallSizeMultiplier_NoException;
 VAR
+  Form: TForm;
   Control: TRectangle;
   ChildrenBefore: Integer;
 begin
-  Control:= TRectangle.Create(nil);
+  Form:= TForm.CreateNew(nil);
   try
+    Control:= TRectangle.Create(Form);
+    Control.Parent:= Form;
     Control.Width:= 400;
     Control.Height:= 300;
     ChildrenBefore:= Control.ChildrenCount;
     TConfetti.ShowConfetti(Control, 0.5, 3);
     Assert.AreEqual(ChildrenBefore + 3, Control.ChildrenCount, 'Should create 3 confetti with small multiplier');
   finally
-    FreeAndNil(Control);
+    FreeAndNil(Form);
   end;
 end;
 

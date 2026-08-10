@@ -18,6 +18,7 @@ uses
   System.Classes,
   System.Types,
   System.Math,
+  System.UITypes,        { TAlphaColor, TAlphaColorRec }
   FMX.Types,
   FMX.Controls,
   FMX.Objects,
@@ -159,7 +160,7 @@ begin
   Box:= TAutosizeBoxText.Create(FParent);
   try
     Assert.IsNotNull(Box, 'Box should be created');
-    Assert.AreEqual(FParent, Box.Owner, 'Owner should be set correctly');
+    Assert.AreSame(FParent, Box.Owner, 'Owner should be set correctly');   { AreSame, not AreEqual: TLayout vs TComponent are different types, so AreEqual<T> cannot infer T }
   finally
     FreeAndNil(Box);
   end;
@@ -295,12 +296,24 @@ end;
 procedure TTestAutoSizeBox.TestSetBoxType_UserColor;
 var
   Box: TAutosizeBoxText;
+  UserColor, ModelColor: TAlphaColor;
 begin
+  { setBoxType DERIVES the fill from the active style's background (GetThemeBackgroundColor ->
+    DeriveBubbleColor) and falls back to WhatsAppGreen/WhatsAppGrey only when no style background is
+    available. A test process always has a style loaded, so asserting the fallback constant here would
+    check the branch that does NOT run. What the component promises in both branches is that the user
+    and model bubbles stay visually distinct and fully opaque. }
   Box:= TAutosizeBoxText.Create(FParent);
   Box.Parent:= FParent;
   try
     Box.BoxType:= bxUser;
-    Assert.AreEqual(WhatsAppGreen, Box.Fill.Color, 'User color should be WhatsAppGreen');
+    UserColor:= Box.Fill.Color;
+
+    Box.BoxType:= bxModel;
+    ModelColor:= Box.Fill.Color;
+
+    Assert.AreNotEqual(Integer(UserColor), Integer(ModelColor), 'User and model bubbles must not share a colour');
+    Assert.AreEqual(Integer($FF), Integer(TAlphaColorRec(UserColor).A), 'User bubble must be fully opaque');
   finally
     FreeAndNil(Box);
   end;
@@ -310,12 +323,24 @@ end;
 procedure TTestAutoSizeBox.TestSetBoxType_ModelColor;
 var
   Box: TAutosizeBoxText;
+  DefaultColor, ModelColor, ContentColor: TAlphaColor;
 begin
+  { Same reason as TestSetBoxType_UserColor: the fill is style-derived, so only the relationships between
+    the three box types are stable enough to assert. }
   Box:= TAutosizeBoxText.Create(FParent);
   Box.Parent:= FParent;
   try
+    DefaultColor:= Box.Fill.Color;          { the constructor sets WhatsAppGreen before any BoxType is applied }
+
     Box.BoxType:= bxModel;
-    Assert.AreEqual(WhatsAppGrey, Box.Fill.Color, 'Model color should be WhatsAppGrey');
+    ModelColor:= Box.Fill.Color;
+
+    Box.BoxType:= bxContent;
+    ContentColor:= Box.Fill.Color;
+
+    Assert.AreNotEqual(Integer(DefaultColor), Integer(ModelColor), 'Setting bxModel must repaint the bubble');
+    Assert.AreNotEqual(Integer(ModelColor), Integer(ContentColor), 'Model and content bubbles must not share a colour');
+    Assert.AreEqual(Integer($FF), Integer(TAlphaColorRec(ModelColor).A), 'Model bubble must be fully opaque');
   finally
     FreeAndNil(Box);
   end;
@@ -407,7 +432,7 @@ var
 begin
   Bubble:= MakeTextBubble(FParent, 'Test', bxUser);
   try
-    Assert.AreEqual(FParent, Bubble.Parent, 'Parent should be set');
+    Assert.AreSame(FParent, Bubble.Parent, 'Parent should be set');        { AreSame, not AreEqual: TLayout vs TFmxObject are different types }
   finally
     FreeAndNil(Bubble);
   end;
@@ -462,13 +487,21 @@ end;
 
 procedure TTestAutoSizeBox.TestMakeTextBubble_HighPositionY;
 var
-  Bubble: TAutosizeBoxText;
+  First, Second: TAutosizeBoxText;
 begin
-  Bubble:= MakeTextBubble(FParent, 'Test', bxUser);
+  { MakeTextBubble sets Position.Y := 99999999 so the new bubble sorts LAST among the parent's children.
+    That number is a sort key, not a final coordinate: TAutoSizeBox is created with Align = TAlignLayout.Top
+    (LightFmx.Visual.AutoSizeBox.pas:73), so the parent's Realign immediately replaces Y with the real
+    stacked position. Asserting Y > 1000000 therefore tested a value that never survives. The observable
+    contract is the ORDER — a bubble made later sits below one made earlier. }
+  First := MakeTextBubble(FParent, 'First bubble', bxUser);
+  Second:= MakeTextBubble(FParent, 'Second bubble', bxUser);
   try
-    Assert.IsTrue(Bubble.Position.Y > 1000000, 'Position.Y should be very high');
+    Assert.IsTrue(First.Height > 0, 'Bubble must have a real height, otherwise the order check below is vacuous');
+    Assert.IsTrue(Second.Position.Y > First.Position.Y, 'A newly made bubble must stack below the previous one');
   finally
-    FreeAndNil(Bubble);
+    FreeAndNil(Second);
+    FreeAndNil(First);
   end;
 end;
 
