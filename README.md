@@ -399,7 +399,7 @@ _________________
 
 ### Unit Tests 
 
-The `UnitTesting/` folder contains DUnitX-based unit tests with TestInsight support (163 test units across 8 test projects). Not every test unit on disk is linked into a project — see the FMX note below.
+The `UnitTesting/` folder contains DUnitX-based unit tests with TestInsight support (163 test units across 8 test projects).
 
 | Test Project | Tests Package | Status |
 |--------------|---------------|--------|
@@ -410,9 +410,9 @@ The `UnitTesting/` folder contains DUnitX-based unit tests with TestInsight supp
 | `Tests_LightVcl.Internet.dpr` | `LightVcl.Internet.dpk` | Available |
 | `Tests_LightVcl.Visual.dpr` | `LightVcl.Visual.dpk` (components) | Available |
 | `Tests_LightVcl.Translator.dpr` | Translator | Available |
-| `Tests_LightFmx.dpr` | FMX packages | 100 tests |
+| `Tests_LightFmx.dpr` | FMX packages | 356 tests |
 
-The FMX project links only 6 of the 21 `Test.LightFmx*.pas` units that exist in `UnitTesting/`. The other 15 (254 tests) are written but belong to no project, so they never run.
+`Tests_LightFmx.dpr` links all 21 `Test.LightFmx*.pas` units on disk. It linked only 6 of them until 2026-08-09; wiring the other 15 added 254 tests that had never executed.
 
 **Running Tests**
 
