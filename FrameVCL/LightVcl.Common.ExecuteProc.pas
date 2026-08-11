@@ -3,9 +3,14 @@ UNIT LightVcl.Common.ExecuteProc;
 {=============================================================================================================
    Execute Process
 
-   2026.06.10
+   2026.08.11
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
+==============================================================================================================
+
+   2026-08-11: Fixed: ExecuteAndGetOutDyn crashed with an access violation on ANY literal command line.
+               It handed PChar() of its CONST parameter to CreateProcessW, which writes into that buffer.
+               It now passes a UniqueString'd copy, the same protection ExecuteProc already had.
 ==============================================================================================================
 
    Execute external processes using the CreateProcess API (recommended over ShellExecute).
@@ -255,6 +260,7 @@ end;
    See:
      http://stackoverflow.com/questions/9119999/getting-output-from-a-shell-dos-app-into-a-delphi-app
 ---------------------------------------------------------------------------------------------------------------}
+{$WARN SYMBOL_PLATFORM OFF}    { Win32Check is marked 'platform' (System.SysUtils). This whole unit is Windows-only, so W1002 carries no information here - same suppression ExecuteAndGetOutDyn already uses. }
 function ExecuteAndGetOut(CONST CmdLine: string; Work: string = 'C:\'): string;
 VAR
   SecAtrrs: TSecurityAttributes;
@@ -321,6 +327,7 @@ begin
     CloseHandle(StdOutPipeRead);
   END;
 end;
+{$WARN SYMBOL_PLATFORM ON}
 
 
 {---------------------------------------------------------------------------------------------------------------
@@ -367,10 +374,23 @@ VAR
   WaitRes, BytesRead: DWORD;
   ProcCreationFlags: Cardinal;
   hReadStdout, hWriteStdout: THandle;
+  WritableCmd: string;
   AnsiBuffer: array[0..1023] of AnsiChar;
 begin
   if CmdLine = ''
   then raise Exception.Create('ExecuteAndGetOutDyn: CmdLine parameter cannot be empty');
+
+  { CreateProcessW WRITES into lpCommandLine - it inserts a null to split the module name from the
+    arguments - so that pointer must never address read-only memory. Microsoft: "this parameter cannot
+    be a pointer to read-only memory (such as a const variable or a literal string). If this parameter
+    is a constant string, the function may cause an access violation."
+    https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw
+    CmdLine is a CONST parameter, so a caller passing a literal gives us a pointer into the EXE's
+    read-only data and PChar() hands that straight to the API. UniqueString forces a heap copy with a
+    refcount of 1. ExecuteProc has carried the same protection since 2026.01; this routine did not, and
+    it crashed on every literal command line. }
+  WritableCmd:= CmdLine;
+  UniqueString(WritableCmd);
 
   Win32Check(CreatePipe(hReadStdout, hWriteStdout, @InheritHandleSecurityAttributes, 0));
   TRY
@@ -384,7 +404,7 @@ begin
     then ProcCreationFlags:= CREATE_NO_WINDOW + NORMAL_PRIORITY_CLASS
     else ProcCreationFlags:= CREATE_NEW_PROCESS_GROUP + NORMAL_PRIORITY_CLASS;
 
-    Win32Check(CreateProcess(NIL, PChar(CmdLine), NIL, NIL, True, ProcCreationFlags, NIL, NIL, SI, PI));
+    Win32Check(CreateProcess(NIL, PChar(WritableCmd), NIL, NIL, True, ProcCreationFlags, NIL, NIL, SI, PI));
 
     TRY
       WHILE True DO
