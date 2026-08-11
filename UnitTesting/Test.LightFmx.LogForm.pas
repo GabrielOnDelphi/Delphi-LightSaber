@@ -72,8 +72,9 @@ begin
   if AppData = NIL then
     Assert.Pass('Test skipped: AppData not initialized');
 
-  { TfrmRamLog descends from TLightForm, whose Loaded raises unless AutoState was set before streaming.
-    The plain TComponent constructor leaves it asUndefined -> "Form was not created via AppData.CreateForm()!" }
+  { asNone, and never the plain TComponent constructor: TfrmRamLog descends from TLightForm, whose Loaded
+    raises unless AutoState was set BEFORE streaming - "Form was not created via AppData.CreateForm()!".
+    Applies to every TfrmRamLog.Create below too. }
   Form:= TfrmRamLog.Create(NIL, asNone);
   try
     Assert.IsNotNull(Form.LogViewer, 'LogViewer should be assigned');
@@ -91,8 +92,6 @@ begin
   if AppData = NIL then
     Assert.Pass('Test skipped: AppData not initialized');
 
-  { TfrmRamLog descends from TLightForm, whose Loaded raises unless AutoState was set before streaming.
-    The plain TComponent constructor leaves it asUndefined -> "Form was not created via AppData.CreateForm()!" }
   Form:= TfrmRamLog.Create(NIL, asNone);
   try
     Assert.IsNotNull(Form.LogFilter, 'LogFilter should be assigned');
@@ -112,8 +111,6 @@ begin
   if AppData = NIL then
     Assert.Pass('Test skipped: AppData not initialized');
 
-  { TfrmRamLog descends from TLightForm, whose Loaded raises unless AutoState was set before streaming.
-    The plain TComponent constructor leaves it asUndefined -> "Form was not created via AppData.CreateForm()!" }
   Form:= TfrmRamLog.Create(NIL, asNone);
   try
     CloseAction:= TCloseAction.caNone;

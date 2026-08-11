@@ -40,6 +40,7 @@ uses
   Test.FormSkinsRes in 'Test.FormSkinsRes.pas',
   Test.FormSplashScreen in 'Test.FormSplashScreen.pas',
   Test.FormTranslSelector in 'Test.FormTranslSelector.pas',
+  Test.FormUpdaterSettings in 'Test.FormUpdaterSettings.pas',
   Test.FormUniversalEula in 'Test.FormUniversalEula.pas',
   Test.FrameExplorer in 'Test.FrameExplorer.pas',
   LightVcl.Common.IO in '..\FrameVCL\LightVcl.Common.IO.pas',
@@ -55,6 +56,9 @@ uses
   FormSkinsRes in '..\FrameVCL\FormSkinsRes.pas',
   FormSplashScreen in '..\FrameVCL\FormSplashScreen.pas',
   FormTranslSelector in '..\FrameVCL\FormTranslSelector.pas',
+  FormUpdaterSettings in '..\FrameVCL\FormUpdaterSettings.pas' {frmUpdaterSettings},
+  ciUpdater in '..\ciUpdater.pas',
+  ciUpdaterRec in '..\ciUpdaterRec.pas',
   FormUniversalEula in '..\FrameVCL\FormUniversalEula.pas',
   FrameExplorer in '..\FrameVCL\FrameExplorer.pas',
   LightVcl.Common.Translate in '..\FrameVCL\LightVcl.Common.Translate.pas';

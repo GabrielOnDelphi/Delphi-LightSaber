@@ -134,6 +134,22 @@ type
     [Test]
     procedure Test_WriteReadColor;
 
+    { Form WindowState round-trip tests }
+    [Test]
+    procedure Test_SaveForm_Minimized_PersistsNormalNotMinimized;
+
+    [Test]
+    procedure Test_SaveForm_Maximized_PersistsMaximized;
+
+    [Test]
+    procedure Test_LoadForm_LegacyMinimizedValue_RestoresNormal;
+
+    [Test]
+    procedure Test_LoadForm_CorruptValue_RestoresNormal;
+
+    [Test]
+    procedure Test_LoadForm_MaximizedValue_RestoresMaximized;
+
     { AsString tests }
     [Test]
     procedure Test_AsString_FileNotExists_ShouldRaise;
@@ -891,6 +907,138 @@ begin
 
     Assert.AreEqual(Integer(clNavy), Integer(ReadColor));
   FINALLY
+    FreeAndNil(Ini);
+  END;
+end;
+
+
+{ Form WindowState round-trip tests
+
+  A form saved while minimized used to persist WindowState=wsMinimized, so the next run restored the
+  application minimized - it looked like it had not started at all. And the load side used to cast
+  whatever integer the INI held straight into TWindowState.
+  The forms below are never shown, so they have no window handle: SetWindowState then only stores the
+  value in FWindowState (Vcl.Forms.pas:7477-7491), which is exactly what these tests read back. }
+
+procedure TTestIniFileApp.Test_SaveForm_Minimized_PersistsNormalNotMinimized;
+VAR
+  Ini   : TIniFileApp;
+  Form  : TForm;
+  Stored: Integer;
+begin
+  Ini := TIniFileApp.Create('TestSection', FTestIniPath);
+  Form:= TForm.CreateNew(NIL);
+  TRY
+    Form.Name       := 'TestFormMinimized';
+    Form.WindowState:= wsMinimized;
+
+    Ini.SaveForm(Form, asPosOnly);
+
+    Stored:= Ini.ReadInteger(Form.Name, 'WindowState', -1);
+    Assert.AreEqual(Integer(Ord(wsNormal)), Stored, 'A form saved while minimized must never persist wsMinimized - the next run would come up invisible');
+  FINALLY
+    FreeAndNil(Form);
+    FreeAndNil(Ini);
+  END;
+end;
+
+
+{ Guards the 2026-06-10 fix (state captured BEFORE unmaximizing) against the minimized fix above. }
+procedure TTestIniFileApp.Test_SaveForm_Maximized_PersistsMaximized;
+VAR
+  Ini   : TIniFileApp;
+  Form  : TForm;
+  Stored: Integer;
+begin
+  Ini := TIniFileApp.Create('TestSection', FTestIniPath);
+  Form:= TForm.CreateNew(NIL);
+  TRY
+    Form.Name       := 'TestFormMaximized';
+    Form.WindowState:= wsMaximized;
+
+    Ini.SaveForm(Form, asPosOnly);
+
+    Stored:= Ini.ReadInteger(Form.Name, 'WindowState', -1);
+    Assert.AreEqual(Integer(Ord(wsMaximized)), Stored, 'A maximized form must still come back maximized');
+  FINALLY
+    FreeAndNil(Form);
+    FreeAndNil(Ini);
+  END;
+end;
+
+
+{ INI files written by earlier versions still hold wsMinimized, so the guard is needed on read too. }
+procedure TTestIniFileApp.Test_LoadForm_LegacyMinimizedValue_RestoresNormal;
+VAR
+  Ini : TIniFileApp;
+  Form: TForm;
+begin
+  Ini := TIniFileApp.Create('TestSection', FTestIniPath);
+  Form:= TForm.CreateNew(NIL);
+  TRY
+    Ini.ShowPositionWarn:= FALSE;             { CreateNew gives no design-time Position to validate }
+    Form.Name:= 'TestFormLegacyMin';
+    Ini.WriteInteger(Form.Name, 'Top' , 100);
+    Ini.WriteInteger(Form.Name, 'Left', 100);
+    Ini.WriteInteger(Form.Name, 'WindowState', Ord(wsMinimized));
+
+    Form.WindowState:= wsMaximized;           { Start away from wsNormal so the assert proves a real write }
+    Ini.LoadForm(Form, asPosOnly);
+
+    Assert.IsTrue(Form.WindowState = wsNormal, 'A stored wsMinimized must be downgraded to wsNormal on load');
+  FINALLY
+    FreeAndNil(Form);
+    FreeAndNil(Ini);
+  END;
+end;
+
+
+{ A hand-edited or truncated INI can hold anything. The old blind cast let that value reach
+  SetWindowState, which indexes ShowCommands: array[TWindowState] with it. }
+procedure TTestIniFileApp.Test_LoadForm_CorruptValue_RestoresNormal;
+VAR
+  Ini : TIniFileApp;
+  Form: TForm;
+begin
+  Ini := TIniFileApp.Create('TestSection', FTestIniPath);
+  Form:= TForm.CreateNew(NIL);
+  TRY
+    Ini.ShowPositionWarn:= FALSE;
+    Form.Name:= 'TestFormCorrupt';
+    Ini.WriteInteger(Form.Name, 'Top' , 100);
+    Ini.WriteInteger(Form.Name, 'Left', 100);
+    Ini.WriteInteger(Form.Name, 'WindowState', 99);
+
+    Form.WindowState:= wsMaximized;
+    Ini.LoadForm(Form, asPosOnly);
+
+    Assert.IsTrue(Form.WindowState = wsNormal, 'An out-of-range WindowState must fall back to wsNormal, not enter the enumeration');
+  FINALLY
+    FreeAndNil(Form);
+    FreeAndNil(Ini);
+  END;
+end;
+
+
+procedure TTestIniFileApp.Test_LoadForm_MaximizedValue_RestoresMaximized;
+VAR
+  Ini : TIniFileApp;
+  Form: TForm;
+begin
+  Ini := TIniFileApp.Create('TestSection', FTestIniPath);
+  Form:= TForm.CreateNew(NIL);
+  TRY
+    Ini.ShowPositionWarn:= FALSE;
+    Form.Name:= 'TestFormMax';
+    Ini.WriteInteger(Form.Name, 'Top' , 100);
+    Ini.WriteInteger(Form.Name, 'Left', 100);
+    Ini.WriteInteger(Form.Name, 'WindowState', Ord(wsMaximized));
+
+    Ini.LoadForm(Form, asPosOnly);
+
+    Assert.IsTrue(Form.WindowState = wsMaximized, 'wsMaximized must survive the round-trip');
+  FINALLY
+    FreeAndNil(Form);
     FreeAndNil(Ini);
   END;
 end;
