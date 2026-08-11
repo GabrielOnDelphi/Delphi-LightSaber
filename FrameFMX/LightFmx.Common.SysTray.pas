@@ -66,6 +66,8 @@ type
     FAppHWnd:     HWND;
     FOldAppProc:  Pointer;
     FNewAppProc:  Pointer;
+    FHidingAppWnd: Boolean;   // reentrancy guard for HideAppWindow — SW_HIDE re-enters AppWndProc (WM_SHOWWINDOW arrives while the window still reads as visible)
+    procedure HideAppWindow;  // re-assert "ApplicationHWND is never on screen"
     procedure TrayWndProc(var Msg: TMessage);
     procedure FormWndProc(var Msg: TMessage);
     procedure AppWndProc (var Msg: TMessage);
@@ -334,6 +336,67 @@ begin
 end;
 
 
+procedure TTrayIcon.HideAppWindow;
+{ Re-assert the invariant "ApplicationHWND is never on screen".
+
+  In a tray app the FMX application window is an owner-only window: HookForm hides it and marks
+  it WS_EX_TOOLWINDOW so Explorer shows no taskbar button. A tool window that is visible AND
+  minimized has nowhere to go, so Windows draws it as the legacy caption-bar stub in the
+  bottom-left corner of the desktop — the "Windows 3.1 window" the user sees.
+
+  Hiding it ONCE in HookForm is not enough: FMX un-hides it behind our back whenever the MAIN
+  form is minimized, through calls that never pass through this window's procedure, so there is
+  no single message to intercept —
+    TPlatformWin.SetWindowState -> ShowWindow(ApplicationHWND, SW_MINIMIZE)              FMX.Platform.Win.pas:3560
+    TPlatformWin.MinimizeApp    -> SetWindowPos(ApplicationHWND, ..., SWP_SHOWWINDOW)    FMX.Platform.Win.pas:3291
+                                -> DefWindowProc(ApplicationHWND, WM_SYSCOMMAND, SC_MINIMIZE, 0)   :3294
+  (that last one is called DIRECTLY on the handle, which is why a subclass cannot see it).
+  Hence AppWndProc calls this on every message rather than enumerating the paths.
+
+  VISIBLE **AND MINIMIZED** is the minimize signal, and the window must be left hidden AND
+  NON-minimized. All three points below were measured on the running app (2026-08-11); each one
+  was a separate failed attempt, so do not "simplify" them away:
+
+    * Why not the WM_SIZE branch alone: if this window is left minimized, the SECOND minimize
+      finds it already WS_MINIMIZED and changes only visibility. Windows then sends NO WM_SIZE
+      (the size did not change), so a WM_SIZE-driven intercept silently stops working from the
+      2nd minimize onwards — the form simply stayed on screen.
+
+    * Why the minimized state MUST be cleared: Windows refuses to display an owned window while
+      its owner is minimized. Leaving this window iconic left the tray icon unable to bring the
+      form back at all — Show ran, and nothing appeared. Proven by clearing it from outside the
+      process: the very next tray click restored the form.
+
+    * Why SW_SHOWNOACTIVATE and why the form is hidden LAST: un-minimizing makes Windows re-show
+      the owned windows it hid, so the form pops back up unless it is hidden after that step.
+      SW_SHOWNOACTIVATE un-minimizes without taking focus, and this window is 0x0
+      (CreateAppHandle, FMX.Platform.Win.pas:2982), so nothing is ever drawn. }
+VAR Minimizing: Boolean;
+begin
+  if FHidingAppWnd then Exit;                      // already inside the ShowWindow calls below
+  if (FAppHWnd = 0) or not IsWindow(FAppHWnd) then Exit;
+  if not IsWindowVisible(FAppHWnd) then Exit;      // invariant already holds — the common case
+
+  Minimizing := IsIconic(FAppHWnd);
+
+  FHidingAppWnd := True;
+  try
+    if Minimizing
+    then ShowWindow(FAppHWnd, SW_SHOWNOACTIVATE);  // leave it restorable for the next tray click
+
+    ShowWindow(FAppHWnd, SW_HIDE);                 // kill the stub
+
+    if Minimizing
+    and (FHookedHWnd <> 0)
+    and not FUnhooked                              // FUnhooked=TRUE: that HWND died (WM_NCDESTROY); an IsWindow hit now is a RECYCLED handle owned by another window — do not hide it
+    and IsWindow(FHookedHWnd)
+    then ShowWindow(FHookedHWnd, SW_HIDE);         // complete the minimize-to-tray — must be last
+  finally
+    FHidingAppWnd := False;
+  end;
+end;
+
+
 procedure TTrayIcon.AppWndProc(var Msg: TMessage);
 { ApplicationHWND subclass — catches minimize that FMX routes through the
   owner window. Hide the form HWND instead of allowing default minimize
@@ -344,14 +407,64 @@ var
 begin
   LocalHWnd := FAppHWnd;   // capture before potential WM_NCDESTROY zero-out
 
+  HideAppWindow;   // see there: FMX re-shows this window behind our back on every minimize
+
   IsMinimize :=
     ((Msg.Msg = WM_SYSCOMMAND) and ((Msg.WParam and $FFF0) = SC_MINIMIZE)) or
     ((Msg.Msg = WM_SIZE)       and  (Msg.WParam = SIZE_MINIMIZED));
 
-  if IsMinimize and (FHookedHWnd <> 0) and IsWindow(FHookedHWnd) then
+  { Swallow the minimize whether or not the form is still around: letting it reach FMX would run
+    TPlatformWin.MinimizeApp, which re-shows this window (see HideAppWindow) and re-creates the stub. }
+  if IsMinimize then
     begin
-      ShowWindow(FHookedHWnd, SW_HIDE);
+      if (FHookedHWnd <> 0) and not FUnhooked and IsWindow(FHookedHWnd)   // not FUnhooked: dead form HWND may be recycled for a foreign window — never hide that
+      then ShowWindow(FHookedHWnd, SW_HIDE);
       Msg.Result := 0;
+      Exit;
+    end;
+
+  { Guard against FMX un-hiding the form behind our back.
+
+    WHAT IT DOES: while the hooked form window is hidden, answer WM_ACTIVATEAPP(TRUE) with plain
+    DefWindowProc instead of forwarding to FMX. FMX's handler for this message is DefWindowProc +
+    TPlatformWin.RestoreApp and nothing else (FMX.Platform.Win.pas:2923-2928), so this skips exactly
+    the RestoreApp and changes nothing else.
+
+    WHY RestoreApp is dangerous here: it ends in TCommonCustomForm.Activate, whose guard
+    (FMX.Forms.pas:5082) tests the FMX Visible FLAG — still TRUE after our raw-ShowWindow hide — and
+    TPlatformWin.Activate (:3538) then finds the window invisible and calls ShowWindow(SW_RESTORE).
+    That chain puts a tray-hidden form back on screen. It was seen live on 2026-08-10, while the
+    owner window's iconic state was being cleared from outside the process.
+
+    WHICH branch of RestoreApp (:3678-3721) runs is decided at the moment the message arrives:
+      - Screen.ActiveForm is COMPUTED, not stored — first form with Visible AND Active
+        (FMX.Forms.pas:8042-58). A tray-hidden form is Visible-flag TRUE but Active FALSE (the raw
+        hide made Windows send WM_ACTIVATE(WA_INACTIVE) -> Deactivate -> FActive:=False, :5157), so
+        it reads NIL and RestoreApp falls to the GetActiveWindow branch.
+      - GetActiveWindow <> 0 and <> ApplicationHWND -> the ACTIVE window is activated (:3709-3712),
+        not the main form.  GetActiveWindow = 0 or ApplicationHWND -> Application.MainForm.Activate
+        (:3716-17) — the resurrecting branch.
+    Measured 2026-08-11 with a Win32 probe reproducing this window topology: on a tray RIGHT-click
+    (ShowContextMenu's SetForegroundWindow(FHelperHWnd)) and when a secondary form is shown while
+    the main form is hidden, GetActiveWindow already returns the helper / that form by the time
+    WM_ACTIVATEAPP is dispatched — so those two routes take the SAFE branch. The resurrecting branch
+    was NOT reproduced from inside the process. Same probe also confirmed the two preconditions this
+    block assumes: a hidden WS_EX_TOOLWINDOW top-level window DOES receive WM_ACTIVATEAPP, and
+    SetForegroundWindow on a hidden window succeeds.
+    So this is a cheap guard on the residual branch, not a fix for a reproduced in-app path. Keep it
+    unless you can show the resurrecting branch is unreachable for every caller of this base class.
+
+    It cannot fire during a restore: ShowWindow sets WS_VISIBLE BEFORE the activation that dispatches
+    WM_ACTIVATEAPP (same probe — the owner saw wParam=1 with IsWindowVisible(form) already TRUE), so
+    the test below is FALSE by then. And even if it did fire, the restore does not depend on
+    RestoreApp: TCommonCustomForm.Show calls Activate itself (FMX.Forms.pas:3389) and OnTrayLeftClick
+    then calls SetForegroundWindow. With the form hidden FMX-side too (Visible flag FALSE, e.g. after
+    the tray-click Hide) RestoreApp is a no-op anyway — Activate's guard fails. }
+  if (Msg.Msg = WM_ACTIVATEAPP) and (Msg.WParam <> 0)
+  and (FHookedHWnd <> 0) and not FUnhooked and IsWindow(FHookedHWnd)
+  and not IsWindowVisible(FHookedHWnd) then
+    begin
+      Msg.Result := DefWindowProc(LocalHWnd, Msg.Msg, Msg.WParam, Msg.LParam);
       Exit;
     end;
 
