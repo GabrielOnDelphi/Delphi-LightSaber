@@ -6,6 +6,9 @@ unit Test.LightVcl.Common.ExecuteShell;
 
    Note: These tests execute real processes.
    Some functions (ExecuteURL, ExecuteSendEmail) are not tested as they open external apps.
+   Everything launched by default is hidden (cmd.exe with SW_HIDE) or is a raise-path, so
+   the suite can run unattended. The one test that would open a VISIBLE window
+   (Test_ExecuteExplorerSelect_ValidFile) is behind the INTERACTIVE_TESTS define.
 =============================================================================================================}
 
 interface
@@ -63,6 +66,9 @@ type
     { ExecuteExplorerSelect tests }
     [Test]
     procedure Test_ExecuteExplorerSelect_EmptyPath;
+
+    [Test]
+    procedure Test_ExecuteExplorerSelect_NonExistentFile;
 
     [Test]
     procedure Test_ExecuteExplorerSelect_ValidFile;
@@ -213,21 +219,48 @@ begin
 end;
 
 
+procedure TTestExecuteFile.Test_ExecuteExplorerSelect_NonExistentFile;
+begin
+  { Covers the FileExists guard with a NON-empty path. Test_..._EmptyPath alone does not:
+    '' would be rejected by ILCreateFromPath further down even if the guard were removed,
+    so only a well-formed path to a missing file proves the guard itself still fires. }
+  Assert.WillRaise(
+    procedure
+    begin
+      ExecuteExplorerSelect(TPath.Combine(FTestDir, 'no-such-file.txt'));
+    end,
+    Exception);
+end;
+
+
 procedure TTestExecuteFile.Test_ExecuteExplorerSelect_ValidFile;
+{$IFDEF INTERACTIVE_TESTS}
 VAR
   TestFile: string;
   Success: Boolean;
+{$ENDIF}
 begin
-  { Create a test file }
+  { OPT-IN: this one opens a real Explorer window.
+
+    ExecuteExplorerSelect ends in SHOpenFolderAndSelectItems, so there is no way to reach
+    its success path without a window appearing - and that window ACTIVATES itself. During
+    an unattended run it steals the keyboard focus from whatever is being typed elsewhere,
+    and TearDown then deletes the very folder it is left showing. Same reasoning as the
+    ExecuteAsAdmin note above (UAC dialog), which is already excluded for its side effect.
+
+    The raise-path is still covered unconditionally by the two tests above.
+
+    To run it deliberately, compile the test project with the define:
+      delphi-compiler.exe Tests_LightVcl.Common.dproj --define=INTERACTIVE_TESTS }
+  {$IFDEF INTERACTIVE_TESTS}
   TestFile:= TPath.Combine(FTestDir, 'testfile.txt');
   TFile.WriteAllText(TestFile, 'test');
 
-  { This will open Explorer - just verify it doesn't crash }
   Success:= ExecuteExplorerSelect(TestFile);
-
-  { Note: We can't easily verify Explorer opened, just that function returned }
-  { The function should succeed if file exists }
   Assert.IsTrue(Success, 'Should successfully select file in Explorer');
+  {$ELSE}
+  Assert.Pass('Skipped: opens a real Explorer window and steals keyboard focus. Compile with INTERACTIVE_TESTS to run it.');
+  {$ENDIF}
 end;
 
 

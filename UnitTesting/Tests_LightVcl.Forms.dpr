@@ -108,7 +108,11 @@ begin
     nunitLogger := TDUnitXXMLNUnitFileLogger.Create(TDUnitX.Options.XMLOutputFile);
     runner.AddLogger(nunitLogger);
 
-    runner.FailsOnNoAsserts := False;
+    { A [Test] with zero Assert calls is a fake test per CLAUDE.md "Fake Test Prevention", so let the
+      runner enforce it instead of trusting review. Measured 2026-08-11: flipping this to TRUE adds
+      zero failures here, so it costs nothing today and catches the next assertion-less test.
+      The other 6 test projects still set FALSE - not measured, so not flipped. }
+    runner.FailsOnNoAsserts := TRUE;
 
     // Run tests
     results := runner.Execute;

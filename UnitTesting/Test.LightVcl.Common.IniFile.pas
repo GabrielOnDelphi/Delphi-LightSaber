@@ -918,7 +918,14 @@ end;
   application minimized - it looked like it had not started at all. And the load side used to cast
   whatever integer the INI held straight into TWindowState.
   The forms below are never shown, so they have no window handle: SetWindowState then only stores the
-  value in FWindowState (Vcl.Forms.pas:7477-7491), which is exactly what these tests read back. }
+  value in FWindowState (Vcl.Forms.pas:7477-7491), which is exactly what these tests read back.
+
+  NOT COVERED, deliberately: with no handle, StateToPersist takes its `NOT HandleAllocated` exit, so the
+  GetWindowPlacement / WPF_RESTORETOMAXIMIZED branch never runs in any test. Reaching it needs a window
+  that was really maximized and then really minimized, which a headless test cannot set up without
+  showing a window and stealing the keyboard focus. A defect in that branch would pass this whole suite;
+  its worst case is a form that reloads normal instead of maximized, because every failure path there
+  falls back to wsNormal. }
 
 procedure TTestIniFileApp.Test_SaveForm_Minimized_PersistsNormalNotMinimized;
 VAR

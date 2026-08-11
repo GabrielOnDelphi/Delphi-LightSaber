@@ -31,7 +31,7 @@ TYPE
     procedure Test_FormCreate_NotBetaTester_ClearsForceNewsFound;
 
     [Test]
-    procedure Test_Apply_NotBetaTester_WritesClearedFlagBack;
+    procedure Test_Apply_NotBetaTester_ClearsFlagInUpdaterObject;
 
     [Test]
     procedure Test_FormCreate_BetaTester_KeepsForceNewsFound;
@@ -86,9 +86,11 @@ begin
 end;
 
 
-{ The consequence the user actually feels: the flag is written back cleared, so the updater stops
-  claiming it found news. }
-procedure TTestFormUpdaterSettings.Test_Apply_NotBetaTester_WritesClearedFlagBack;
+{ The consequence the user actually feels: Apply pushes the cleared flag into the Updater object, so
+  GetNews stops OR-ing ForceNewsFound into HasNews (ciUpdater.pas:305).
+  Scope: this asserts the in-memory field only. Whether Updater.Save then gets it onto disk is
+  TUpdater's business, not this form's. }
+procedure TTestFormUpdaterSettings.Test_Apply_NotBetaTester_ClearsFlagInUpdaterObject;
 VAR
   Form: TfrmUpdaterSettings;
 begin
