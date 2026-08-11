@@ -40,6 +40,7 @@ USES
 IMPLEMENTATION
 
 USES
+   System.NetEncoding,     { Not called directly. Soap.EncdDecd's EncodeStream/DecodeStream are INLINE forwarders to TNetEncoding (Soap.EncdDecd.pas:16-17); without this unit in scope the compiler cannot expand them and emits 4x H2443. }
    LightCore.StreamMem;
 
 
