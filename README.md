@@ -401,16 +401,20 @@ _________________
 
 The `UnitTesting/` folder contains DUnitX-based unit tests with TestInsight support (163 test units across 8 test projects).
 
+Whole-suite run, 2026-08-11 (Win32 Debug, every project built and executed): **2703 of 2715 pass, 0 leaked.**
+
 | Test Project | Tests Package | Status |
 |--------------|---------------|--------|
-| `Tests_LightCore.dpr` | `LightCore.dpk` | 1110 tests |
-| `Tests_LightVcl.Common.dpr` | `LightVcl.Common.dpk` | 452 tests |
-| `Tests_LightVcl.Forms.dpr` | `LightVcl.Visual.dpk` (forms) | 379 tests |
-| `Tests_LightVcl.Graphics.dpr` | `LightVcl.Graphics.dpk` | Available |
-| `Tests_LightVcl.Internet.dpr` | `LightVcl.Internet.dpk` | Available |
-| `Tests_LightVcl.Visual.dpr` | `LightVcl.Visual.dpk` (components) | Available |
-| `Tests_LightVcl.Translator.dpr` | Translator | Available |
-| `Tests_LightFmx.dpr` | FMX packages | 356 tests |
+| `Tests_LightCore.dpr` | `LightCore.dpk` | 1138/1138 |
+| `Tests_LightVcl.Common.dpr` | `LightVcl.Common.dpk` | 441/453 — 12 environment-dependent, see CLAUDE.md |
+| `Tests_LightVcl.Forms.dpr` | `LightVcl.Visual.dpk` (forms) | 379/379 |
+| `Tests_LightVcl.Graphics.dpr` | `LightVcl.Graphics.dpk` | 277/277 |
+| `Tests_LightVcl.Internet.dpr` | `LightVcl.Internet.dpk` | 5/5 |
+| `Tests_LightVcl.Visual.dpr` | `LightVcl.Visual.dpk` (components) | 48/48 |
+| `Tests_LightVcl.Translator.dpr` | Translator | 59/59 — the LIVE one is `FrameVCL\AutoTranslator\UnitTesting\` |
+| `Tests_LightFmx.dpr` | FMX packages | 356/356 |
+
+⚠ **There are TWO `Tests_LightVcl.Translator` projects.** The live one is `FrameVCL\AutoTranslator\UnitTesting\`. The copy in `UnitTesting\` is a stale leftover from the AutoTranslator move: it still points at `..\FrameVCL\LightVcl.Common.TranslatorAPI.pas` and other paths that no longer exist, so it cannot build. Build the AutoTranslator one.
 
 `Tests_LightFmx.dpr` links all 21 `Test.LightFmx*.pas` units on disk. It linked only 6 of them until 2026-08-09; wiring the other 15 added 254 tests that had never executed.
 
