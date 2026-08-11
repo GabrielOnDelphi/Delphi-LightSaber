@@ -1,10 +1,18 @@
 UNIT LightVcl.Common.IniFile;
 
 {=============================================================================================================
-   2026.06.10
+   2026.08.11
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
   Same as LightCore.INIFile but adds support for forms to save themselves to disk.
+
+  2026-08-11: Fixed: a form saved while minimized persisted WindowState=wsMinimized, so the next run
+              restored the application minimized (invisible). Save now stores what the window would
+              restore TO (wsMaximized when WPF_RESTORETOMAXIMIZED is set, wsNormal otherwise), and load
+              never restores wsMinimized. Load also stopped blind-casting the stored integer into
+              TWindowState: an explicit typecast is NOT range-checked (measured), so a corrupt INI
+              value entered the enumeration and then indexed SetWindowState's ShowCommands array.
+              Unlike the FMX twin, the POSITION keys were never affected - see the comment in WriteCtrlPos.
 
   2026-06-10: Fixed: WindowState was written AFTER the form was unmaximized, so wsMaximized was never
               persisted. Fixed: missing 'Height' key inflated the form height by CurrentPPI/96 on HiDPI.
@@ -266,13 +274,37 @@ VAR
     Result:= MulDiv(Value, 96, Ctrl.CurrentPPI);
   end;
 
+  { The state the form should come back in. Never wsMinimized: an application that restores itself
+    minimized looks like it did not start at all, and AppData.StartMinim is the setting for that -
+    not an accident of how the user happened to close the program.
+    Behind a minimized window there is still a real state, and GetWindowPlacement reports it:
+    WPF_RESTORETOMAXIMIZED means the window goes back to maximized when restored (Winapi.Windows.pas:26937).
+    Position and size need no extra care here (unlike the FMX twin, which had to skip them):
+    TWinControl.UpdateBounds reads rcNormalPosition, not GetWindowRect, while the window is iconic
+    (Vcl.Controls.pas:13734-13744), so Left/Top/Width/Height already hold the last normal position
+    and never the -32000,-32000 position where Windows parks a minimized window. }
+  function StateToPersist: TWindowState;
+  VAR Placement: TWindowPlacement;
+  begin
+    Result:= TForm(Ctrl).WindowState;
+    if Result <> wsMinimized then EXIT;
+
+    Result:= wsNormal;
+    if NOT TForm(Ctrl).HandleAllocated then EXIT;   { No handle -> nothing to ask the OS about }
+
+    Placement.length:= SizeOf(Placement);
+    if GetWindowPlacement(TForm(Ctrl).Handle, Placement)
+    AND ((Placement.flags AND WPF_RESTORETOMAXIMIZED) <> 0)
+    then Result:= wsMaximized;
+  end;
+
 begin
   Assert(Ctrl <> NIL, 'TIniFileApp.WriteCtrlPos: Ctrl is nil');
 
   if Ctrl.InheritsFrom(TForm) then
     begin
       { Capture window state BEFORE unmaximizing, otherwise wsMaximized is never persisted }
-      SavedState:= TForm(Ctrl).WindowState;
+      SavedState:= StateToPersist;
 
       { Unmaximize form in order to save form position correctly }
       if TForm(Ctrl).WindowState = wsMaximized
@@ -370,9 +402,18 @@ begin
       AND (TForm(Ctrl).Position <> poDesigned)
       then raise Exception.Create('Form.Position is not ''poDesigned'' for form ' + Ctrl.Name + '!');
 
-      { Restore window state }
-      if ValueExists(Ctrl.Name, 'WindowState')
-      then TForm(Ctrl).WindowState:= TWindowState(ReadInteger(Ctrl.Name, 'WindowState', 0));
+      { Restore window state. The old blind cast got two things wrong:
+          - it happily restored wsMinimized, so the application started invisible. INIs written by
+            earlier versions still hold that value, which is why the guard has to live on the READ
+            side as well as on the write side;
+          - TWindowState(<any integer>) let a corrupt INI value straight into the enumeration.
+            Measured: a stored 99 arrives as WindowState=99 even with range checking ON - an explicit
+            value typecast is not checked. SetWindowState stores it and then indexes
+            ShowCommands: array[TWindowState] of Integer with it (Vcl.Forms.pas:7477-7484). }
+      if ValueExists(Ctrl.Name, 'WindowState') then
+        if ReadInteger(Ctrl.Name, 'WindowState', 0) = Ord(wsMaximized)
+        then TForm(Ctrl).WindowState:= wsMaximized
+        else TForm(Ctrl).WindowState:= wsNormal;
     end
   else
     begin
