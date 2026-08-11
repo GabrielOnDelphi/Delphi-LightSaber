@@ -95,7 +95,14 @@ begin
   { Clear the debug flag for non-BetaTesters. Must run AFTER GuiFromObject, otherwise GuiFromObject
     immediately overwrites Checked with the persisted Updater.ForceNewsFound - a TRUE left over from
     a beta session would then survive invisibly (the checkbox is hidden) and ObjectFromGUI would write
-    it straight back on Apply, so the updater would claim "news found" forever. }
+    it straight back on Apply, so the updater would claim "news found" forever.
+
+    LIMIT worth knowing before you add a call site: this only holds while the form is created with
+    asPosOnly. LoadForm runs AFTER FormCreate (LightVcl.Visual.AppData.pas:461-463), so creating this
+    form with asFull would restore chkForceNewsFound from the INI right over the reset below and the
+    bug would be back. Every current call site - CreateParented, CreateModal, FormUpdaterNotifier:353
+    and the tests - uses the asPosOnly default. If that ever has to change, move this reset into
+    FormPostInitialize, which runs after LoadForm. }
   if NOT chkForceNewsFound.Visible
   then chkForceNewsFound.Checked:= FALSE;
 end;
