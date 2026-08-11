@@ -278,11 +278,19 @@ VAR
     minimized looks like it did not start at all, and AppData.StartMinim is the setting for that -
     not an accident of how the user happened to close the program.
     Behind a minimized window there is still a real state, and GetWindowPlacement reports it:
-    WPF_RESTORETOMAXIMIZED means the window goes back to maximized when restored (Winapi.Windows.pas:26937).
-    Position and size need no extra care here (unlike the FMX twin, which had to skip them):
-    TWinControl.UpdateBounds reads rcNormalPosition, not GetWindowRect, while the window is iconic
-    (Vcl.Controls.pas:13734-13744), so Left/Top/Width/Height already hold the last normal position
-    and never the -32000,-32000 position where Windows parks a minimized window. }
+    WPF_RESTORETOMAXIMIZED means the window goes back to maximized when restored (Winapi.Windows.pas:26938).
+    Position and size need no extra care against the FMX bug (there the OS park position was mirrored
+    straight into Form.Left/Top): TWinControl.UpdateBounds reads rcNormalPosition, not GetWindowRect,
+    while the window is iconic (Vcl.Controls.pas:13734-13744), so Left/Top/Width/Height hold the last
+    normal position, never the -32000,-32000 park position.
+
+    KNOWN LIMIT, pre-existing and NOT fixed here: rcNormalPosition is in WORKSPACE coordinates for a
+    top-level window without WS_EX_TOOLWINDOW - origin is the top-left of the work area, not of the
+    screen. With the taskbar docked at the TOP or LEFT edge those differ, and UpdateBounds copies the
+    value into FLeft/FTop verbatim, so a form saved while minimized reloads shifted by the taskbar size
+    and creeps a little further each time. Microsoft describes exactly this failure:
+    https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-windowplacement
+    It does not occur with the default bottom taskbar, and it predates this routine. }
   function StateToPersist: TWindowState;
   VAR Placement: TWindowPlacement;
   begin
@@ -292,10 +300,12 @@ VAR
     Result:= wsNormal;
     if NOT TForm(Ctrl).HandleAllocated then EXIT;   { No handle -> nothing to ask the OS about }
 
+    { Nested ifs, not a single AND: Placement.flags must not be read unless the call actually
+      succeeded, and nesting guarantees that no matter what $BOOLEVAL is set to in this unit. }
     Placement.length:= SizeOf(Placement);
-    if GetWindowPlacement(TForm(Ctrl).Handle, Placement)
-    AND ((Placement.flags AND WPF_RESTORETOMAXIMIZED) <> 0)
-    then Result:= wsMaximized;
+    if GetWindowPlacement(TForm(Ctrl).Handle, Placement) then
+      if (Placement.flags AND WPF_RESTORETOMAXIMIZED) <> 0
+      then Result:= wsMaximized;
   end;
 
 begin
@@ -409,7 +419,8 @@ begin
           - TWindowState(<any integer>) let a corrupt INI value straight into the enumeration.
             Measured: a stored 99 arrives as WindowState=99 even with range checking ON - an explicit
             value typecast is not checked. SetWindowState stores it and then indexes
-            ShowCommands: array[TWindowState] of Integer with it (Vcl.Forms.pas:7477-7484). }
+            ShowCommands: array[TWindowState] of Integer with it - declared at Vcl.Forms.pas:7479,
+            indexed at :7490. }
       if ValueExists(Ctrl.Name, 'WindowState') then
         if ReadInteger(Ctrl.Name, 'WindowState', 0) = Ord(wsMaximized)
         then TForm(Ctrl).WindowState:= wsMaximized
