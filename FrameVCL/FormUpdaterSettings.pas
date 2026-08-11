@@ -88,10 +88,16 @@ begin
   Assert(Updater <> NIL, 'Updater not created! Create the global Updater before showing this form.');
 
   chkForceNewsFound.Visible:= AppData.BetaTesterMode;   { BT }
-  if NOT chkForceNewsFound.Visible
-  then chkForceNewsFound.Checked:= FALSE;       { Uncheck it if we are not in HomeMode }
   Assert(cmbWhen.Items.Count = Ord(High(TCheckWhen))+1, 'cmbWhen.Count <> TCheckWhen');
+
   GuiFromObject;
+
+  { Clear the debug flag for non-BetaTesters. Must run AFTER GuiFromObject, otherwise GuiFromObject
+    immediately overwrites Checked with the persisted Updater.ForceNewsFound - a TRUE left over from
+    a beta session would then survive invisibly (the checkbox is hidden) and ObjectFromGUI would write
+    it straight back on Apply, so the updater would claim "news found" forever. }
+  if NOT chkForceNewsFound.Visible
+  then chkForceNewsFound.Checked:= FALSE;
 end;
 
 
