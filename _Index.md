@@ -1343,8 +1343,8 @@ procedure SaveForm (Form: TForm; AutoState: TAutoState= asPosOnly); { Save ALL s
 procedure LoadForm (Form: TForm; AutoState: TAutoState= asPosOnly);
 function Read (CONST Ident: string; Font: TFont): Boolean; overload;
 procedure Write (CONST Ident: string; Font: TFont); overload;
-function ReadColor (CONST Ident: string; Default: TColor): TColor;
-procedure WriteColor (CONST Ident: string; Value: TColor);
+function ReadColor (CONST Ident: string; Default: TAlphaColor): TAlphaColor;
+procedure WriteColor (CONST Ident: string; Value: TAlphaColor);
 function WriteComp (Comp: TComponent): Boolean; virtual;
 function ReadComp (Comp: TComponent): Boolean; virtual;
 procedure ReadGroup (WinCtrl: TControl);
@@ -1441,9 +1441,10 @@ function GenerateThemePalette(BaseColor: TAlphaColor; IsDark: Boolean): TArray<T
 function ReplaceColorAlpha(Color: TAlphaColor; NewAlpha: Byte): TAlphaColor; inline;
 ```
 
-## LightFmx.Common.SysTray (17)
+## LightFmx.Common.SysTray (18)
 
 ```pascal
+procedure HideAppWindow; // re-assert "ApplicationHWND is never on screen"
 procedure TrayWndProc(var Msg: TMessage);
 procedure FormWndProc(var Msg: TMessage);
 procedure AppWndProc (var Msg: TMessage);
@@ -3051,8 +3052,8 @@ function RunFileAtStartUp(CONST FilePath: string; Active: Boolean): Boolean;
 function RunSelfAtStartUp(Active: Boolean): Boolean;
 function ReadAppDataFolder(CONST UninstalledApp: string): string; //used by Uninstaller App
 function ReadInstallationFolder(CONST UninstalledApp: string): string;
-procedure CreateMainForm (aClass: TFormClass; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly); overload;
-procedure CreateMainForm (aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly); overload;
+procedure CreateMainForm (aClass: TFormClass; AutoState: TAutoState= asPosOnly); overload;
+procedure CreateMainForm (aClass: TFormClass; OUT Reference; AutoState: TAutoState= asPosOnly); overload;
 procedure CreateForm (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly; Owner: TWinControl = NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
 procedure CreateFormHidden(aClass: TFormClass; OUT Reference; AutoState: TAutoState= asPosOnly; ParentWnd: TWinControl = NIL);
 procedure CreateFormModal (aClass: TFormClass; OUT Reference; AutoState: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL); overload; // Do I need this?
@@ -4020,4 +4021,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2921 public routines across 218 units._
+_2922 public routines across 218 units._
