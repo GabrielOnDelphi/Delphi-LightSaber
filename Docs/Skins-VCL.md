@@ -17,7 +17,7 @@ Correct DPR shape:
 ```delphi
 AppData:= TAppData.Create(AppName, '', MultiThreaded);
 LoadLastStyle('Light AmethystKamri.vsf');    // <-- here. Empty string = default Windows theme
-AppData.CreateMainForm(TMainForm, MainForm, FALSE, TRUE, asFull);
+AppData.CreateMainForm(TMainForm, MainForm, asFull);
 AppData.Run;
 ```
 
