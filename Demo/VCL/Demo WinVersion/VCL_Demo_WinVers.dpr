@@ -6,7 +6,8 @@ uses
   {$ENDIF}
   FormMain in 'FormMain.pas' {frmTester},
   LightCore.AppData in '..\..\..\LightCore.AppData.pas',
-  LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas';
+  LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas',
+  Vcl.Forms;
 
 {$R *.res}
 
@@ -14,6 +15,7 @@ begin
   ReportMemoryLeaksOnShutdown:= TRUE;
 
   AppData:= TAppData.Create('Light Tester WinVer');
-  AppData.CreateMainForm(TfrmTester, TRUE, TRUE, asFull);
+  Application.MainFormOnTaskbar:= TRUE;
+  AppData.CreateMainForm(TfrmTester, asFull);
   AppData.Run;
 end.

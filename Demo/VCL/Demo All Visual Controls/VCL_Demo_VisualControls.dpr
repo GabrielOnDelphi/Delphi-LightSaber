@@ -5,7 +5,8 @@ uses
   MainForm in 'MainForm.pas' {frmMain},
   LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas',
   LightVcl.Visual.AppDataForm in '..\..\..\FrameVCL\LightVcl.Visual.AppDataForm.pas',
-  LightCore.AppData in '..\..\..\LightCore.AppData.pas';
+  LightCore.AppData in '..\..\..\LightCore.AppData.pas',
+  Vcl.Forms;
 
 {$R *.res}
 
@@ -13,6 +14,7 @@ begin
   ReportMemoryLeaksOnShutdown:= TRUE;
 
   AppData:= TAppData.Create('Light Demo Visual Controls');
-  AppData.CreateMainForm(TfrmMain, frmMain, TRUE, TRUE, asFull);
+  Application.MainFormOnTaskbar:= TRUE;
+  AppData.CreateMainForm(TfrmMain, frmMain, asFull);
   AppData.Run;
 end.

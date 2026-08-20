@@ -9,7 +9,8 @@ uses
   SecondForm in 'SecondForm.pas' {frmContainer},
   LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas',
   LightVcl.Visual.AppDataForm in '..\..\..\FrameVCL\LightVcl.Visual.AppDataForm.pas',
-  LightCore.AppData in '..\..\..\LightCore.AppData.pas';
+  LightCore.AppData in '..\..\..\LightCore.AppData.pas',
+  Vcl.Forms;
 
 {$R *.res}
 
@@ -24,7 +25,8 @@ procedure Main;
     AppData.ResurrectInstance(Trim(ParamStr(1))) //ToDo: I need to send the URestore message because I need to call RestoreBioniX (to remove icon fromsystray) on that side (BX first instance)
   else
    begin
-     AppData.CreateMainForm(TfrmTester, frmTester, TRUE, TRUE, asFull);
+     Application.MainFormOnTaskbar:= TRUE;
+     AppData.CreateMainForm(TfrmTester, frmTester, asFull);
      AppData.Run;
    end;
  end;

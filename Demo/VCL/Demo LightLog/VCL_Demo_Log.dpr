@@ -20,6 +20,7 @@ begin
   // leaks its TMainMenuBarStyleHook (AV on the next menu click) and replaces the form handle. See FormSkinsDisk.pas.
   //TStyleManager.TrySetStyle('Auric');
 
-  AppData.CreateMainForm(TMainForm, MainForm, TRUE, TRUE, asFull);
+  Application.MainFormOnTaskbar:= TRUE;
+  AppData.CreateMainForm(TMainForm, MainForm, asFull);
   AppData.Run;
 end.

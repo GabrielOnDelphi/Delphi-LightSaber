@@ -17,6 +17,7 @@ begin
   ReportMemoryLeaksOnShutdown:= TRUE;
 
   AppData:= TAppData.Create('Light Demo Internet'); // This name is absolutelly critical if you use the SaveForm/LoadForm functionality. This string will be used as the name of the INI file.
-  AppData.CreateMainForm(TMainForm, MainForm, True, True, asFull);
+  Application.MainFormOnTaskbar:= TRUE;
+  AppData.CreateMainForm(TMainForm, MainForm, asFull);
   AppData.Run;
 end.

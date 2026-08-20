@@ -13,6 +13,7 @@ uses
 
 begin
   AppData:= TAppData.Create('Light Demo VCL PlatformDetection');
-  AppData.CreateMainForm(TForm3, Form3, TRUE, TRUE, asPosOnly);
+  Application.MainFormOnTaskbar:= TRUE;
+  AppData.CreateMainForm(TForm3, Form3, asPosOnly);
   AppData.Run;
 end.

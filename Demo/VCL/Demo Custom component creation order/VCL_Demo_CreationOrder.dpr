@@ -12,6 +12,7 @@ uses
 
 begin
   AppData:= TAppData.Create('Light Demo Creation Order');
-  AppData.CreateMainForm(TForm1, Form1, TRUE, TRUE, asPosOnly);
+  Application.MainFormOnTaskbar:= TRUE;
+  AppData.CreateMainForm(TForm1, Form1, asPosOnly);
   AppData.Run;
 end.

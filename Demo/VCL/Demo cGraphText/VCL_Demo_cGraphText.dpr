@@ -7,7 +7,8 @@ uses
   LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas',
   LightVcl.Visual.AppDataForm in '..\..\..\FrameVCL\LightVcl.Visual.AppDataForm.pas',
   LightCore.AppData in '..\..\..\LightCore.AppData.pas',
-  FormDemo in 'FormDemo.pas' {frmDemoShadow};
+  FormDemo in 'FormDemo.pas' {frmDemoShadow},
+  Vcl.Forms;
 
 {$R *.res}
 
@@ -15,6 +16,7 @@ begin
   ReportMemoryLeaksOnShutdown:= TRUE;
   
   AppData:= TAppData.Create('Light Demo cGraphText');
-  AppData.CreateMainForm(TfrmDemoShadow, TRUE, TRUE, asFull);
+  Application.MainFormOnTaskbar:= TRUE;
+  AppData.CreateMainForm(TfrmDemoShadow, asFull);
   AppData.Run;
 end.

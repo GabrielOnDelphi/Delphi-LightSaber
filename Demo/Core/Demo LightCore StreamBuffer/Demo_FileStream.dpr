@@ -6,7 +6,8 @@ uses
   {$ENDIF}
   FormMain in 'FormMain.pas' {MainForm},
   LightCore.AppData in '..\..\..\LightCore.AppData.pas',
-  LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas';
+  LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas',
+  Vcl.Forms;
 
 {$R *.res}
 
@@ -14,7 +15,8 @@ begin
   ReportMemoryLeaksOnShutdown:= TRUE;
 
   AppData:= TAppData.Create('LightStream Demo');
-  AppData.CreateMainForm(TMainForm, True, True, asFull);    // Main form
+  Application.MainFormOnTaskbar:= TRUE;
+  AppData.CreateMainForm(TMainForm, asFull);    // Main form
   AppData.Run;
 end.
 

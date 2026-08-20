@@ -36,7 +36,8 @@ begin
   // leaks its TMainMenuBarStyleHook (AV on the next menu click) and replaces the form handle. See FormSkinsDisk.pas.
   //TStyleManager.TrySetStyle('Amakrits');
 
-  AppData.CreateMainForm(TMainForm, TRUE, TRUE, asFull);
+  Application.MainFormOnTaskbar:= TRUE;
+  AppData.CreateMainForm(TMainForm, asFull);
 
   AppData.Run;
 end.

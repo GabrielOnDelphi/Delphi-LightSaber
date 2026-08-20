@@ -17,7 +17,8 @@ uses
   MainForm in 'MainForm.pas' {frmMain},
   LightVcl.Visual.AppData in '..\..\..\FrameVCL\LightVcl.Visual.AppData.pas',
   LightVcl.Visual.AppDataForm in '..\..\..\FrameVCL\LightVcl.Visual.AppDataForm.pas',
-  LightCore.AppData in '..\..\..\LightCore.AppData.pas';
+  LightCore.AppData in '..\..\..\LightCore.AppData.pas',
+  Vcl.Forms;
 
 {$R *.res}
 
@@ -28,7 +29,8 @@ begin
      AppName= 'Light Template Micro';       // Absolutelly critical if you use the SaveForm/LoadForm functionality. This string will be used as the name of the INI file.
 
   AppData:= TAppData.Create(AppName, '', MultiThreaded);
-  AppData.CreateMainForm(TfrmMain, TRUE, TRUE, asFull);
+  Application.MainFormOnTaskbar:= TRUE;
+  AppData.CreateMainForm(TfrmMain, asFull);
 
   AppData.Run;
 end.

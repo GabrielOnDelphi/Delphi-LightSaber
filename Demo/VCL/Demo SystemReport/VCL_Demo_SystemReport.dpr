@@ -16,6 +16,7 @@ uses
 
 begin
   AppData:= TAppData.Create('Light Demo System Report');
-  AppData.CreateMainForm(TfrmMain, True, True, asFull);
+  Application.MainFormOnTaskbar:= TRUE;
+  AppData.CreateMainForm(TfrmMain, asFull);
   AppData.Run;
 end.

@@ -11,7 +11,8 @@ uses
   LightVcl.Visual.AppDataForm in '..\..\..\FrameVCL\LightVcl.Visual.AppDataForm.pas',
   ciUpdater in '..\..\..\ciUpdater.pas',
   ciUpdaterRec in '..\..\..\ciUpdaterRec.pas',
-  FormUpdaterNotifier in '..\..\..\FrameVCL\FormUpdaterNotifier.pas';
+  FormUpdaterNotifier in '..\..\..\FrameVCL\FormUpdaterNotifier.pas',
+  Vcl.Forms;
 
 {$R *.res}
 
@@ -24,7 +25,8 @@ begin
   AppData:= TAppData.Create(AppName, '', MultiThreaded);
 
   Updater:= TUpdater.Create(UpdaterDemoURL);
-  AppData.CreateMainForm(TFrmUpdater, TRUE, TRUE, asFull);
+  Application.MainFormOnTaskbar:= TRUE;
+  AppData.CreateMainForm(TFrmUpdater, asFull);
   Updater.CheckForNews;
 
   AppData.Run;
