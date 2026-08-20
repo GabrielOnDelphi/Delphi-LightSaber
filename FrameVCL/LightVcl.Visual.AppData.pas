@@ -1,7 +1,7 @@
 ﻿UNIT LightVcl.Visual.AppData;
 
 {=============================================================================================================
-   2026.07.06
+   2026.08.20
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -32,7 +32,8 @@
          MainForm in 'MainForm.pas' {frmMain);   // Deliberately closed with a round paren, not a curly brace - see the warning further down, right before this comment block's real closing line.
        begin
          AppData:= TAppData.Create('MyAppName', '', MultiThreaded);
-         AppData.CreateMainForm(TMainForm, MainForm, TRUE, TRUE, asFull);
+         Application.MainFormOnTaskbar:= TRUE;                       // Optional. Standard Delphi flag. See below.
+         AppData.CreateMainForm(TMainForm, MainForm, asFull);
          AppData.CreateForm(TSecondFrom, frmSecond);                 // Secondary form (optional)
          AppData.Run;
        end.
@@ -40,8 +41,20 @@
      DPR file
         In the DPR file these lines of code are not necessary anymore and you MUST remove them.
            Application.Title := 'x';
-           Application.ShowMainForm:= True;
            MainForm.Show;
+
+     The two standard VCL flags
+        CreateMainForm does NOT take them as parameters - they are Application-wide settings, not per-form
+        settings, so you set them in the DPR BEFORE calling CreateMainForm, exactly like the IDE-generated DPR does:
+
+           Application.MainFormOnTaskbar:= TRUE;   // RTL default is FALSE. TRUE = the taskbar button belongs to the main form.
+           Application.ShowMainForm     := FALSE;  // RTL default is TRUE.  FALSE = start hidden (systray apps, splash, skin loading).
+
+        CreateMainForm READS Application.ShowMainForm to decide whether to show the form. It is ignored if
+        StartMinim is TRUE, in which case the app starts minimized.
+        Until 2026.08.20 these two were parameters 3 and 4 of CreateMainForm. They were removed because a
+        third positional argument meant AutoState in the FMX TAppData but MainFormOnTaskbar here, so a DPR line
+        copied between the two frameworks compiled clean and silently lost the AutoState.
 
  ____________________________________________________________________________________________________________
 
@@ -65,6 +78,8 @@
 
 
      MainFormOnTaskbar
+        Set it in the DPR - "Application.MainFormOnTaskbar:= TRUE;" - BEFORE AppData.CreateMainForm.
+
         [TASKBAR]
            if TRUE = A taskbar button represents the application's main form & displays its caption.
            if FALSE= A taskbar button represents the application's (hidden) main window & displays the application's Title.
@@ -177,8 +192,9 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       FORMS
    --------------------------------------------------------------------------------------------------}
-    procedure CreateMainForm  (aClass: TFormClass;                MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly); overload;
-    procedure CreateMainForm  (aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly); overload;
+    { Set Application.MainFormOnTaskbar / Application.ShowMainForm in the DPR BEFORE these - see the unit header }
+    procedure CreateMainForm  (aClass: TFormClass;                AutoState: TAutoState= asPosOnly); overload;
+    procedure CreateMainForm  (aClass: TFormClass; OUT Reference; AutoState: TAutoState= asPosOnly); overload;
 
     procedure CreateForm      (aClass: TFormClass; OUT Reference; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly; Owner: TWinControl = NIL; Parented: Boolean= FALSE; CreateBeforeMainForm: Boolean= FALSE);
     procedure CreateFormHidden(aClass: TFormClass; OUT Reference;                      AutoState: TAutoState= asPosOnly; ParentWnd: TWinControl = NIL);
@@ -315,15 +331,15 @@ end;
      7. FormPostInitialize (user code, via WM_POSTINIT)
      8. LoadTranslation + EndInitialization (via WM_POSTINIT)
 
-   Note: The "Show" parameter is ignored if StartMinim is true (app starts minimized).
+   Note: Application.ShowMainForm is ignored if StartMinim is true (app starts minimized).
 -------------------------------------------------------------------------------------------------------------}
 
 { Creates the main form without returning a reference.
   Use when you don't need to access the form variable directly. }
-procedure TAppData.CreateMainForm(aClass: TFormClass; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly);
+procedure TAppData.CreateMainForm(aClass: TFormClass; AutoState: TAutoState= asPosOnly);
 begin
   VAR Reference: TForm;
-  CreateMainForm(aClass, Reference, MainFormOnTaskbar, Show, AutoState);
+  CreateMainForm(aClass, Reference, AutoState);
 end;
 
 
@@ -332,9 +348,12 @@ end;
   Parameters:
     aClass            - The form class to instantiate (must descend from TForm)
     Reference         - Output parameter receiving the created form instance
-    MainFormOnTaskbar - If TRUE, taskbar shows main form; if FALSE, shows hidden app window
-    Show              - Whether to show the form immediately (ignored if StartMinim is TRUE)
     AutoState         - Controls INI file persistence: asNone/asPosOnly/asFull
+
+  Two settings that used to be parameters here are now plain VCL flags you set in the DPR before this call.
+  They are Application-wide, not per-form:
+    Application.MainFormOnTaskbar - TRUE: the taskbar button belongs to the main form. RTL default: FALSE
+    Application.ShowMainForm      - FALSE: do not show the form now. RTL default: TRUE. Read (not written) below
 
   The form goes through: 
   creation 
@@ -346,7 +365,7 @@ end;
         -> FormPostInitialize
          -> LoadTranslation
           -> EndInitialization }
-procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; MainFormOnTaskbar: Boolean= FALSE; Show: Boolean= TRUE; AutoState: TAutoState= asPosOnly);
+procedure TAppData.CreateMainForm(aClass: TFormClass; OUT Reference; AutoState: TAutoState= asPosOnly);
 begin
   Assert(Vcl.Dialogs.UseLatestCommonDialogs= TRUE);      { This is true anyway by default, but I check it to remember myself about it. Details: http://stackoverflow.com/questions/7944416/tfileopendialog-requires-windows-vista-or-later }
   Assert(Application.MainForm = NIL, 'MainForm already exists!');
@@ -355,9 +374,10 @@ begin
   // Create the log BEFORE we create the main form so we can log possible problems.
   getGlobalLog;
 
-  // Create form
-  Application.MainFormOnTaskbar := MainFormOnTaskbar;
-  Application.ShowMainForm      := Show;      // FALSE prevents form flicker during skin loading, and lets a TCoolTrayIcon app start minimized to the systray.
+  // Create form.
+  // Application.MainFormOnTaskbar and Application.ShowMainForm are deliberately NOT written here - the DPR owns
+  // them, like in an IDE-generated DPR. ShowMainForm=FALSE prevents form flicker during skin loading, and lets a
+  // TCoolTrayIcon app start minimized to the systray.
   { WARNING: ShowMainForm=FALSE can make a STARTUP crash INVISIBLE. An unhandled exception before Application.Run shows its error box owned by the still-hidden main form, so the box never appears and the app freezes in a modal loop while LOOKING alive (window up, process Responding=TRUE). Bit DnaBaser on Win64 2026-07 (a DWORD_PTR range-check error). If startup hangs with no visible dialog, enumerate the process #32770 windows INCLUDING invisible ones and read their Static text. }
   Application.CreateForm(aClass, Reference);
 
@@ -376,11 +396,11 @@ begin
   // Font
   SetGuiProperties(TForm(Reference));
 
-  // Ignore the "Show" parameter if "StartMinim" is active
+  // Ignore Application.ShowMainForm if "StartMinim" is active
   if StartMinim
   then Application.Minimize
   else
-    if Show
+    if Application.ShowMainForm
     then TForm(Reference).Show;
 
   // Defer initialization until the message loop is running.
