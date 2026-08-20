@@ -13,7 +13,8 @@ uses
   LightVcl.Visual.AppData in '..\..\LightVcl.Visual.AppData.pas',
   LightVcl.Visual.AppDataForm in '..\..\LightVcl.Visual.AppDataForm.pas',
   LightCore.AppData in '..\..\..\LightCore.AppData.pas',
-  FormUniversalEula in '..\..\FormUniversalEula.pas';
+  FormUniversalEula in '..\..\FormUniversalEula.pas',
+  Vcl.Forms;
 
 {$R *.res}
 
@@ -21,6 +22,7 @@ begin
   ReportMemoryLeaksOnShutdown:= TRUE;
 
   AppData:= TAppData.Create('Light Demo Translator');
-  AppData.CreateMainForm(TMainForm, MainForm, TRUE, TRUE, asFull);
+  Application.MainFormOnTaskbar:= TRUE;
+  AppData.CreateMainForm(TMainForm, MainForm, asFull);
   AppData.Run;
 end.
