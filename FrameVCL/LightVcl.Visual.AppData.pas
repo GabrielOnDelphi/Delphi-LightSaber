@@ -52,6 +52,14 @@
 
         CreateMainForm READS Application.ShowMainForm to decide whether to show the form. It is ignored if
         StartMinim is TRUE, in which case the app starts minimized.
+
+        BEFORE, still - but it is now a style rule, not a correctness rule. Setting MainFormOnTaskbar late makes
+        TApplication.SetMainFormOnTaskBar recreate the main form's window handle (FMainForm.Perform(CM_RECREATEWND)
+        - Vcl.Forms.pas:14758): visible flicker and a focus dance, nothing worse. It used to be worse: the new
+        handle DISCARDED the queued WM_POSTINIT, so FormPostInitialize - where your real startup code lives -
+        never ran, and nothing raised. That is fixed at the source: the post-init step is queued with
+        TThread.ForceQueue, which belongs to no window. See TLightForm.SchedulePostInitialize.
+
         Until 2026.08.20 these two were parameters 3 and 4 of CreateMainForm. They were removed because a
         third positional argument meant AutoState in the FMX TAppData but MainFormOnTaskbar here, so a DPR line
         copied between the two frameworks compiled clean and silently lost the AutoState.
@@ -307,7 +315,7 @@ end;
 
 procedure TAppData.Run;
 begin
-  // Initializing stays TRUE until MainForm PostInitialize completes (via deferred WM_POSTINIT message).
+  // Initializing stays TRUE until MainForm PostInitialize completes (via the queued post-init step).
 
   // Later, we ignore the "Show" parameter in CreateMainForm() if "StartMinim" is true. StartMinim remmbers application's last state (it was minimized or not)
   if StartMinim
@@ -327,9 +335,9 @@ end;
      3. Load form state from INI (position, size, controls)
      4. Apply global font and GUI properties
      5. Show form
-     6. Post WM_POSTINIT (deferred until message loop runs)
-     7. FormPostInitialize (user code, via WM_POSTINIT)
-     8. LoadTranslation + EndInitialization (via WM_POSTINIT)
+     6. SchedulePostInitialize (TThread.ForceQueue - deferred until the message loop runs)
+     7. FormPostInitialize (user code, via the queued entry)
+     8. LoadTranslation + EndInitialization (same queued entry)
 
    Note: Application.ShowMainForm is ignored if StartMinim is true (app starts minimized).
 -------------------------------------------------------------------------------------------------------------}
@@ -360,7 +368,7 @@ end;
    -> LoadForm
     -> SetGuiProperties
      -> Show
-      -> PostMessage(WM_POSTINIT)
+      -> SchedulePostInitialize
        -> [message loop starts]
         -> FormPostInitialize
          -> LoadTranslation
@@ -410,7 +418,7 @@ begin
     begin
       // Show app name. Must be before FormPostInitialize because the user could put his own caption there.
       TLightForm(Reference).MainFormCaption('');
-      PostMessage(TLightForm(Reference).Handle, WM_POSTINIT, 0, 0);
+      TLightForm(Reference).SchedulePostInitialize;
     end;
 
   // Uninstaller
