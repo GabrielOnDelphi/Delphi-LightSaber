@@ -3065,16 +3065,22 @@ function GetVersionInfoMajor: Word;
 function GetVersionInfoMinor: Word;
 ```
 
-## LightVcl.Visual.AppDataForm (13)
+## LightVcl.Visual.AppDataForm (19)
 
 ```pascal
 procedure WMPostInit(var Msg: TMessage); message WM_POSTINIT;
+procedure QueuedPostInitialize; { Deferred from SchedulePostInitialize via ForceQueue. A NAMED method (not an anonymous block) so DoDestroy can cancel the pending entry with TThread.RemoveQueuedEvents - which matches on the method. An anonymous TThreadProcedure cannot be removed, and the entry holds Self, so a form freed before the queue drains would be dereferenced (use-after-free). }
+procedure RunPostInitialize;
 procedure Loaded; override;
+procedure CreateParams(VAR Params: TCreateParams); override; // Autopilot builds only: bring the startup window up WITHOUT taking the keyboard focus. See the implementation.
+procedure DoShow; override;
+procedure WMAutopilotUnGate(VAR Msg: TMessage); message WM_AUTOPILOT_UNGATE;
 procedure DoDestroy; override;
 procedure DoClose(VAR Action: TCloseAction); override;
 procedure FormKeyPress(Sender: TObject; var Key: Char); // We can use this later in the destructor to know how to save the form: asPosOnly/asFull
 procedure WMEndSession(VAR Msg: TWMEndSession); message WM_ENDSESSION; { Save form state on Windows logoff/shutdown, but only when Msg.EndSession is TRUE (a canceled logoff must not save). The FFormSaved guard in saveBeforeExit prevents a double-save when CloseQuery already ran via WM_QUERYENDSESSION. }
 function CloseQuery: boolean; override;
+procedure SchedulePostInitialize; // Queue FormPostInitialize to run once the message loop is pumping. Called by TAppData.CreateMainForm. See the implementation for why this is NOT a posted window message.
 procedure FormPostInitialize; virtual; // Takes place after the form was fully created
 procedure FormPreRelease; virtual; // Takes place before the form is destroyed. It is guaranteed to be called excetly once.
 procedure saveBeforeExit; // Idempotent (FFormSaved guard). Public so TAppData.Destroy can save all still-open forms while AppData is alive â€” Application-owned forms are otherwise destroyed AFTER AppData's finalization (in Vcl.Forms' finalization).
@@ -4021,4 +4027,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2922 public routines across 218 units._
+_2928 public routines across 218 units._
