@@ -139,8 +139,10 @@ end;
 procedure LoadLastStyle(const DefaultStyle: string= '');
 begin
   { Ordering guard. Applying a style with a live main form leaks its TMainMenuBarStyleHook (AV on the
-    next menu click), replaces the window handle, and can swallow the queued WM_POSTINIT so
-    FormPostInitialize never fires. Unconditional on purpose - the contract is "before CreateMainForm",
+    next menu click) and replaces the window handle, which silently unregisters DragAcceptFiles.
+    (It also used to swallow the queued WM_POSTINIT; that one is fixed at the source since 2026-08-20 -
+    see TLightForm.SchedulePostInitialize - but the two reasons above still stand.)
+    Unconditional on purpose - the contract is "before CreateMainForm",
     not "before CreateMainForm if a style happens to be configured". RAISE, not Assert: assertions are
     compiled out in Release. Full reasoning: Docs\Skins-VCL.md }
   if Application.MainForm <> NIL

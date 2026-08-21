@@ -42,6 +42,7 @@ begin
   then LoadLastStyle('Light AmethystKamri.vsf') // 'Light AmethystKamri.vsf' has too much blue
   else LoadLastStyle();
 
+  Application.MainFormOnTaskbar:= FALSE;   { Explicit: this app must NOT own a taskbar button }
   AppData.CreateMainForm(TMainForm, MainForm, asFull);
 
   Autopilot.Bridge.Vcl.StartBridge;   // Lets Claude drive this app over MCP. No-op unless AUTOPILOT is defined (Debug only).
