@@ -136,6 +136,16 @@ procedure TMainForm.FormCreate(Sender: TObject);
 begin
   // Too early to do initialization here!
   // Initialization code is better done in LateInitialize which takes place AFTER the form was properly constructed!
+
+  {$IFDEF AUTOPILOT}
+  { The ONE exception to the rule above: this must be set before the form is shown for the first time, and
+    the first show happens inside AppData.CreateMainForm - long before LateInitialization runs.
+    TCoolTrayIcon calls SetForegroundWindow on every show of its owner form. Windows documents that call as
+    the way to activate even a WS_EX_NOACTIVATE window, so it walks straight through the Autopilot startup
+    gate in TLightForm and takes the keyboard away from whatever the user is typing in.
+    Debug/Autopilot builds only - a Release build never reaches this line, so the shipped app is unchanged. }
+  TrayIcon.FocusFormOnShow:= FALSE;
+  {$ENDIF}
 end;
 
 

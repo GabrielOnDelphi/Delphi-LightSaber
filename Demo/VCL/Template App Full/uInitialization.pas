@@ -72,28 +72,9 @@ begin
      MainForm.Show;
      MainForm.Update;                       // Let form refresh. Else I get nasty black stripes in playlist
 
-     {$IFDEF AUTOPILOT}
-     { Same effect as PutIconOnlyInTask, minus the one call inside it that we cannot live with.
-       PutIconOnlyInTask ends in ShowMainForm, whose last line is SetForegroundWindow(Application.Handle)
-       (CoolTrayIcon.pas:1344). Microsoft documents SetForegroundWindow as the way to activate even a
-       WS_EX_NOACTIVATE window, so it walks straight through Autopilot's startup gate and takes the
-       keyboard focus off whatever the user is typing in. Measured: removing it deleted ONE of the two
-       thefts this app was doing - it was A cause, not THE cause.
-       The two halves kept here are the useful ones. The Application.Restore that ShowMainForm also does
-       is a no-op at startup - it acts only "if IsIconic(Handle)".
-
-       The OTHER theft is the same component and cannot be fixed from here: TCoolTrayIcon.HookFormProc
-       subclasses this form's WndProc in its constructor and, on the FIRST WM_SHOWWINDOW, calls
-       SetForegroundWindow TWICE - the Application window, then this form (CoolTrayIcon.pas:829-830).
-       That handler cannot tell "restoring from the tray" from "the app is starting up". PROVEN by
-       measurement: FreeAndNil(TrayIcon) before the first Show turns this app from STOLEN 4/4 into
-       KEPT 4/4. The fix belongs in CoolTrayIcon.pas, an installed package - see the issue file. }
-     MainForm.TrayIcon.ShowTaskbarIcon;
-     MainForm.TrayIcon.IconVisible:= FALSE;
-     MainForm.Visible:= TRUE;
-     {$ELSE}
+     { Both SetForegroundWindow calls inside this are already disabled in Autopilot builds - see
+       TMainForm.FormCreate, which clears TrayIcon.FocusFormOnShow before the first show. }
      MainForm.TrayIcon.PutIconOnlyInTask;   // Restore the app, but don't automatically show its taskbar icon
-     {$ENDIF}
    end;
 
   { First run }

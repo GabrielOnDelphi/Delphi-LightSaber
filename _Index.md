@@ -1764,9 +1764,13 @@ procedure CenterChild(Ctrl, Parent: TControl);
 procedure CenterChildX(Ctrl, Parent: TControl);
 ```
 
-## LightVcl.Common.Clipboard (3)
+## LightVcl.Common.Clipboard (7)
 
 ```pascal
+procedure WndProc(VAR Msg: TMessage);
+procedure SetActive(CONST Value: Boolean);
+procedure DoError (CONST Msg: string);
+procedure DoChange;
 function StringToClipboard (CONST Str: string; CONST MaxRetries: Integer= 20): Boolean; { Returns True if it succeeded in writing to the clipboard }
 function StringFromClipboard (CONST MaxWaitTime: Cardinal= 5000): string; { Returns clipboard text or empty string if unavailable/timeout }
 function StringFromClipboardTSL(CONST MaxWaitTime: Cardinal= 5000): TStringList; { Returns NIL if clipboard has no text; caller must free result }
@@ -2092,7 +2096,7 @@ function Convert_Str2HKey (CONST Key: string): HKEY;
 function RegKeyExist (CONST Root: HKEY; CONST Key: string): Boolean;
 function RegValueExist (CONST Root: HKEY; CONST Key, ValueName: string) : Boolean;
 function RegHasSubKeys (CONST Root: HKEY; CONST Key: string): Boolean;
-function RegDeleteKey (CONST Root: HKEY; CONST Key: string): Boolean;
+function RegDeleteKey (CONST Root: HKEY; CONST Key: string): Boolean; { Deletes the key, everything inside it, and all its sub-keys (recursive) }
 function RegClearKey (CONST Root: HKEY; CONST Key: string): Boolean; { Deletes all value/name pairs inside the key but don't delete the key }
 function RegDeleteValue (CONST Root: HKEY; CONST Key, ValueName: string): Boolean;
 function RegWriteString (CONST Root: HKEY; CONST Key, ValueName, ValueData: string; Lazy: Boolean= TRUE): Boolean; { Writes a string to the specified key in the registry }
@@ -2196,8 +2200,8 @@ procedure JiggleMouse;
 procedure CursorBusy;
 procedure CursorNotBusy;
 function GetWin32ErrorString(ErrorCode: DWORD): string;
-function BiosDate: string;
-function BiosID: string;
+function BiosDate: string; { Never returns an empty string. Returns BiosUnknown when the BIOS date is not published }
+function BiosID : string; { Never returns an empty string. Returns BiosUnknown when the BIOS identifier is not published }
 ```
 
 ## LightVcl.Common.SystemConsole (1)
@@ -2258,7 +2262,7 @@ function GetLangFolder : string;
 function trs(CONST s: string): string; //ToDo: For strings use Delphi's built in facility
 ```
 
-## LightVcl.Common.VclUtils (28)
+## LightVcl.Common.VclUtils (27)
 
 ```pascal
 procedure MenuVisibility (Item: TMenuItem; Enabled, Visible: Boolean);
@@ -2273,7 +2277,6 @@ procedure ScrollAppTitle (DirectionLeft: Boolean); { use it in a timer set it at
 procedure ScrollFormCaption (Form: TForm); { use it in a timer set it at 250ms }
 procedure BlinkControl (Control: TControl); { Makes the specified control to blink 5 times, to attract user's attention }
 function CreateControl (ControlClass: TControlClass; const ControlName: string; Parent: TWinControl; X, Y, W, H: Integer): TControl;
-procedure DoubleBuffer (Control: TComponent; Enable: Boolean); { Activate/deactivate double buffering for all controls owned by the specified control. aControl can be a form, panel, box, etc }
 procedure EnableDisable (Control: TWinControl; Enable: Boolean); { Enable/disable all controls in the specified control }
 function FindControlAtPos (ScreenPos: TPoint): TControl;
 function FindSubcontrolAtPos(Control: TControl; ScreenPos, AClientPos: TPoint): TControl;
@@ -3065,7 +3068,7 @@ function GetVersionInfoMajor: Word;
 function GetVersionInfoMinor: Word;
 ```
 
-## LightVcl.Visual.AppDataForm (19)
+## LightVcl.Visual.AppDataForm (20)
 
 ```pascal
 procedure WMPostInit(var Msg: TMessage); message WM_POSTINIT;
@@ -3074,6 +3077,7 @@ procedure RunPostInitialize;
 procedure Loaded; override;
 procedure CreateParams(VAR Params: TCreateParams); override; // Autopilot builds only: bring the startup window up WITHOUT taking the keyboard focus. See the implementation.
 procedure DoShow; override;
+procedure SetZOrder(TopMost: Boolean); override; // Autopilot builds only: BringToFront must not activate while the startup gate is up
 procedure WMAutopilotUnGate(VAR Msg: TMessage); message WM_AUTOPILOT_UNGATE;
 procedure DoDestroy; override;
 procedure DoClose(VAR Action: TCloseAction); override;
@@ -4027,4 +4031,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2928 public routines across 218 units._
+_2932 public routines across 218 units._
