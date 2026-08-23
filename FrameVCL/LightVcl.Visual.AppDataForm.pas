@@ -290,7 +290,12 @@ end;
 
 procedure TLightForm.WMAutopilotUnGate(var Msg: TMessage);
 begin
-  SetWindowLong(Handle, GWL_EXSTYLE, GetWindowLong(Handle, GWL_EXSTYLE) AND NOT WS_EX_NOACTIVATE);
+  { Clears the WHOLE gate, not just this window's own flag. DoShow posts this message only once startup
+    is over, so anything still carrying the flag at this point is a leftover - the TApplication proxy
+    included. CreateParams gates that proxy, but the normal path that clears it (RunPostInitialize)
+    requires the MAIN form to be a TLightForm. An application whose main form is a plain TForm would
+    never reach that path, and a proxy left with WS_EX_NOACTIVATE has a dead taskbar button. }
+  UnGateStartupWindows;
 end;
 {$ENDIF}
 
@@ -551,6 +556,8 @@ end;
 
 procedure TLightForm.MainFormCaption(CONST Caption: string);
 begin
+  Assert(Application.MainForm <> NIL, 'MainFormCaption called before the main form exists!');
+
   if Caption= ''
   then Application.MainForm.Caption:= appData.AppName+ ' '+ appData.GetVersionInfoV
   else Application.MainForm.Caption:= appData.AppName+ ' '+ appData.GetVersionInfoV+ ' - ' + Caption;

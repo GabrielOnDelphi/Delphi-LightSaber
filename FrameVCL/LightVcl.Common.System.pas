@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.System;
 
 {=============================================================================================================
-   2026.06.10
+   2026.08.22
    www.GabrielMoraru.com
 
 ==============================================================================================================
@@ -94,8 +94,11 @@ USES
 {==================================================================================================
    HARDWARE BIOS
 ==================================================================================================}
- function BiosDate: string;
- function BiosID: string;
+CONST
+   BiosUnknown = '????????';    { What BiosDate and BiosID return when the machine publishes no BIOS information }
+
+ function BiosDate: string;                                                                                                              { Never returns an empty string. Returns BiosUnknown when the BIOS date is not published }
+ function BiosID  : string;                                                                                                              { Never returns an empty string. Returns BiosUnknown when the BIOS identifier is not published }
 
 
 
@@ -580,52 +583,82 @@ end;
 // ================================================
 // Bios Information: Win2000/NT compatible
 // ================================================
+{ Returns BiosUnknown when the machine does not publish a BIOS date.
+  ValueExists is not optional: on this UEFI machine (measured 2026-08-22) the System key exists and holds
+  SystemBiosVersion, but no SystemBiosDate at all. ReadString then returns '', which used to overwrite the
+  '????????' sentinel and make the function return an empty string - the one thing it was written not to do. }
 function BiosDate: string;   { From BlackBox.pas }
 var
-  Cmd: string;
   WinReg: TRegistry;
 begin
-  Cmd := '????????';
+  Result:= BiosUnknown;
 
   WinReg := TRegistry.Create;
   TRY
     WinReg.RootKey := HKEY_LOCAL_MACHINE;
     if WinReg.OpenKeyReadOnly('\HARDWARE\DESCRIPTION\System')
-    then Cmd := WinReg.ReadString('SystemBiosDate');
+    AND WinReg.ValueExists('SystemBiosDate')
+    then Result := WinReg.ReadString('SystemBiosDate');
   FINALLY
      FreeAndNil(WinReg);
   END;
 
-  Result := Cmd;
+  if Result = ''
+  then Result:= BiosUnknown;
 end;
 
 
+{ Returns BiosUnknown when the machine publishes no BIOS identifier.
+
+  The OUTPUT FORMAT is deliberately unchanged: the Identifier value, one space, then the FIRST string of the
+  REG_MULTI_SZ SystemBiosVersion. Three defects were fixed underneath it (2026-08-22):
+
+  1. The '????????' sentinel was overwritten as soon as the key opened, whether or not anything was read.
+
+  2. The buffer was never zeroed, and ReadBinaryData does NOT raise when the value is missing - it returns 0 and
+     leaves the buffer untouched (System.Win.Registry.pas:ReadBinaryData -> GetDataInfo fails -> Result := 0).
+     The old code ignored that result and concatenated the buffer as a PChar regardless, so a machine without
+     SystemBiosVersion produced whatever uninitialised heap bytes happened to sit there, up to the first #0.
+
+  3. ReadBinaryData calls ReadError (which raises) when the value is bigger than the buffer or has an unexpected
+     type. That exception escaped instead of yielding the sentinel. It is now impossible rather than caught:
+     the size and type are checked first, mirroring ReadBinaryData's own guard, so nothing has to be swallowed. }
 function BiosID: string;  { From BlackBox.pas }
+CONST
+   BufferBytes = $2000;
 var
-  Cmd: string;
-  Buffer: PChar;
   WinReg: TRegistry;
+  Buffer: TBytes;
+  DataSize: Integer;
+  Identifier, Version: string;
 begin
-  Cmd := '????????';
+  Result:= BiosUnknown;
+  Version:= '';
 
   WinReg := TRegistry.Create;
   TRY
     WinReg.RootKey := HKEY_LOCAL_MACHINE;
-    if WinReg.OpenKeyReadOnly('\HARDWARE\DESCRIPTION\System') then
-    begin
-       GetMem(Buffer, $2000);
-       TRY
-         WinReg.ReadBinaryData('SystemBiosVersion', Buffer^, $2000);
-         Cmd := WinReg.ReadString('Identifier') + ' ' + Buffer;
-       FINALLY
-         FreeMem(Buffer);
-       END;
-    end;
+    if NOT WinReg.OpenKeyReadOnly('\HARDWARE\DESCRIPTION\System') then EXIT;
+
+    Identifier:= WinReg.ReadString('Identifier');                { Returns '' when the value does not exist }
+
+    DataSize:= WinReg.GetDataSize('SystemBiosVersion');          { -1 when the value does not exist }
+    if  (DataSize > 0)
+    AND (DataSize <= BufferBytes - SizeOf(Char))
+    AND (WinReg.GetDataType('SystemBiosVersion') in [rdBinary, rdUnknown, rdMultiString]) then
+      begin
+        SetLength(Buffer, BufferBytes);
+        FillChar(Buffer[0], BufferBytes, 0);                     { The zeroed tail is what guarantees a terminator }
+        if WinReg.ReadBinaryData('SystemBiosVersion', Buffer[0], BufferBytes - SizeOf(Char)) > 0
+        then Version:= PChar(@Buffer[0]);                        { REG_MULTI_SZ: this takes the first string, as it always did }
+      end;
   FINALLY
      FreeAndNil(WinReg);
   END;
 
-  Result := Cmd;
+  Identifier:= Trim(Identifier + ' ' + Version);
+  if Identifier <> ''
+  then Result:= Identifier;
 end;
 
 

@@ -23,9 +23,7 @@ type
   TTestTranslatorAPI = class
   private
     FTestFolder: string;
-    FSourceINI: string;
     FTargetINI: string;
-    procedure CreateTestINI;
     procedure CleanupTestFiles;
   public
     [Setup]
@@ -157,7 +155,6 @@ procedure TTestTranslatorAPI.Setup;
 begin
   FTestFolder:= TPath.Combine(TPath.GetTempPath, 'TranslatorAPITest_' + IntToStr(Random(100000)));
   ForceDirectories(FTestFolder);
-  FSourceINI:= TPath.Combine(FTestFolder, 'English.ini');
   FTargetINI:= TPath.Combine(FTestFolder, 'German.ini');
 end;
 
@@ -175,21 +172,8 @@ begin
 end;
 
 
-procedure TTestTranslatorAPI.CreateTestINI;
-var
-  Content: string;
-begin
-  Content:=
-    '[Authors]' + sLineBreak +
-    'Name=Test' + sLineBreak +
-    sLineBreak +
-    '[MainForm]' + sLineBreak +
-    'btnOK.Caption=OK' + sLineBreak +
-    'btnCancel.Caption=Cancel' + sLineBreak +
-    'lblTitle.Caption=Hello World' + sLineBreak;
-
-  StringToFile(FSourceINI, Content, woOverwrite);
-end;
+{ The positive "translate a real INI" test that CreateTestINI used to prepare now lives in its own project,
+  Tests_LightVcl.TranslatorLive - it needs a DeepL key and a network call, so it cannot run here (2026-08-22). }
 
 
 { Class Existence Tests }

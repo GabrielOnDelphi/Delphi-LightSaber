@@ -1,7 +1,7 @@
 ﻿UNIT LightVcl.Common.VclUtils;
 
 {=============================================================================================================
-   2026.01.30
+   2026.08.23
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Utility functions for VCL components.
@@ -64,7 +64,6 @@ TYPE
 =============================================================================================================}
  procedure BlinkControl      (Control: TControl);                                { Makes the specified control to blink 5 times, to attract user's attention }
  function  CreateControl     (ControlClass: TControlClass; const ControlName: string; Parent: TWinControl; X, Y, W, H: Integer): TControl;
- procedure DoubleBuffer      (Control: TComponent; Enable: Boolean);             { Activate/deactivate double buffering for all controls owned by the specified control. aControl can be a form, panel, box, etc }
  procedure EnableDisable     (Control: TWinControl; Enable: Boolean);            { Enable/disable all controls in the specified control }
  function  FindControlAtPos  (ScreenPos: TPoint): TControl;
  function  FindSubcontrolAtPos(Control: TControl; ScreenPos, AClientPos: TPoint): TControl;
@@ -331,32 +330,6 @@ begin
  if SetWindowLongptr(Handle, GWL_STYLE, Style OR bs_left)= 0  { setWindowLong_ was replaced with getWindowLongPtr for 64 bit compatibility. Details: http://docwiki.embarcadero.com/RADStudio/Seattle/en/Converting_32-bit_Delphi_Applications_to_64-bit_Windows }
  then MessageWarning('Cannot align caption!');
 end;
-
-
-
-{ Activate/deactivate double buffering for all controls owned by the specified control.
-  Control can be a form, panel, box, etc.
-  Note: TRichEdit and THotKey are excluded as they have issues with double buffering.
-  See also: http://stackoverflow.com/questions/8058745/tlabel-and-tgroupbox-captions-flicker-on-resize }
-procedure DoubleBuffer(Control: TComponent; Enable: Boolean);
-VAR i : integer;
-begin
- if Control = NIL
- then raise Exception.Create('DoubleBuffer: Control parameter cannot be nil');
-
- { Parent }
- if Control is TWinControl
- then TWinControl(Control).DoubleBuffered:= Enable;
-
- { Children }
- for i := 0 to Control.ComponentCount-1 DO
-  if (Control.Components[i] is TWinControl)
-  AND NOT (Control.Components[i] is Vcl.ComCtrls.TRichEdit)
-  AND NOT (Control.Components[i] is THotKey)
-  then TWinControl(Control.Components[i]).DoubleBuffered:= Enable;
-end;
-
-
 
 
 

@@ -1,7 +1,7 @@
 UNIT LightVcl.Common.Registry;
 
 {=============================================================================================================
-   2026.06.10
+   2026.08.22
    www.GabrielMoraru.com
 
 --------------------------------------------------------------------------------------------------------------
@@ -38,7 +38,7 @@ CONST
  function RegValueExist         (CONST Root: HKEY; CONST Key, ValueName: string) : Boolean;
  function RegHasSubKeys         (CONST Root: HKEY; CONST Key: string): Boolean;
 
- function RegDeleteKey          (CONST Root: HKEY; CONST Key: string): Boolean;
+ function RegDeleteKey          (CONST Root: HKEY; CONST Key: string): Boolean;                                                           { Deletes the key, everything inside it, and all its sub-keys (recursive) }
  function RegClearKey           (CONST Root: HKEY; CONST Key: string): Boolean;                                                           { Deletes all value/name pairs inside the key but don't delete the key }
  function RegDeleteValue        (CONST Root: HKEY; CONST Key, ValueName: string): Boolean;
 
@@ -119,11 +119,18 @@ end;
    REGISTRY - DELETE
 --------------------------------------------------------------------------------------------------}
 
-{ Delete the entire key with all values inside }
+{ Delete the entire key, with all values AND all sub-keys inside }
 function RegDeleteKey(CONST Root: HKEY; CONST Key: string): Boolean;
 VAR Rg: TRegistry;
 begin
- Rg:= TRegistry.Create(KEY_WRITE);
+ { KEY_READ is mandatory here, not an optimization.
+   Windows RegDeleteKeyEx refuses a key that still has sub-keys ("The subkey to be deleted must not have subkeys" -
+   https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regdeletekeyexw), so TRegistry.DeleteKey first
+   enumerates the sub-keys and deletes them one by one (System.Win.Registry.pas:434). That enumeration goes through
+   GetKeyInfo -> RegQueryInfoKey, which needs KEY_QUERY_VALUE. KEY_WRITE does not carry it
+   (Winapi.Windows.pas:3702 = STANDARD_RIGHTS_WRITE or KEY_SET_VALUE or KEY_CREATE_SUB_KEY), so with KEY_WRITE alone
+   GetKeyInfo failed silently, the recursion was skipped, and deleting any key that had sub-keys returned FALSE. }
+ Rg:= TRegistry.Create(KEY_READ or KEY_WRITE);
  TRY
   Rg.RootKey:= Root;
   Result:= Rg.DeleteKey(Key);
