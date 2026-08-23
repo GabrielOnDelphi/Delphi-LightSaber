@@ -141,15 +141,9 @@ type
     [Test]
     procedure TestRefreshNow_NilRaisesException;
 
-    { DoubleBuffer Tests }
+    { Double buffering }
     [Test]
-    procedure TestDoubleBuffer_EnablesDoubleBuffering;
-
-    [Test]
-    procedure TestDoubleBuffer_DisablesDoubleBuffering;
-
-    [Test]
-    procedure TestDoubleBuffer_NilRaisesException;
+    procedure TestVclPropagatesDoubleBufferedToChildren;
 
     { CreateControl Tests }
     [Test]
@@ -709,45 +703,57 @@ begin
 end;
 
 
-{ DoubleBuffer Tests }
+{ Double buffering }
 
-procedure TTestVclUtils.TestDoubleBuffer_EnablesDoubleBuffering;
+{ There is no DoubleBuffer routine to test any more - it was deleted on 2026.08.23 because the VCL already does
+  the whole job. This test stays as the proof of that, so nobody re-adds the routine.
+
+  A control copies DoubleBuffered from its parent as long as ParentDoubleBuffered is TRUE, which is the default
+  (Vcl.Controls.pas:9367). Writing the property re-broadcasts down the tree:
+     SetDoubleBuffered:12224 -> CMDoubleBufferedChanged:12710 -> NotifyControls(CM_PARENTDOUBLEBUFFEREDCHANGED):12713
+  and every child then runs CMParentDoubleBufferedChanged:12880, which sets its own property - so the walk recurses.
+  It also fires on DFM load (TControl.ReadState:6224) and on re-parenting (TWinControl.InsertControl:10191).
+
+  The two controls the old routine excluded by hand exclude themselves, in their own constructors:
+     TCustomRichEdit.Create - DoubleBuffered:= False; ParentDoubleBuffered:= False   (Vcl.ComCtrls.pas:15804)
+     TCustomHotKey.Create   - the same two lines                                     (Vcl.ComCtrls.pas:17099)
+  ParentDoubleBuffered:= False is what makes the RTL leave them alone. The old routine walked Components[] and wrote
+  the property directly, which ignores that flag - that is why it needed an exclusion list and the RTL does not. }
+procedure TTestVclUtils.TestVclPropagatesDoubleBufferedToChildren;
+var
+  NestedEdit: TEdit;
+  RichEd    : TRichEdit;
 begin
   FTestForm:= TForm.CreateNew(NIL);
+
   FPanel:= TPanel.Create(FTestForm);
   FPanel.Parent:= FTestForm;
+
+  NestedEdit:= TEdit.Create(FPanel);            { a grandchild of the form, to prove the walk recurses }
+  NestedEdit.Parent:= FPanel;
+
+  RichEd:= TRichEdit.Create(FTestForm);
+  RichEd.Parent:= FTestForm;
 
   FButton:= TButton.Create(FTestForm);
   FButton.Parent:= FTestForm;
 
-  DoubleBuffer(FTestForm, TRUE);
+  Assert.IsFalse(TWinControl(FPanel).DoubleBuffered, 'Nothing is buffered before the form asks for it');
 
-  Assert.IsTrue(TWinControl(FPanel).DoubleBuffered, 'Panel should be double buffered');
-  Assert.IsTrue(TWinControl(FButton).DoubleBuffered, 'Button should be double buffered');
-end;
+  { The single line that replaced the whole loop }
+  TWinControl(FTestForm).DoubleBuffered:= TRUE;
 
+  Assert.IsTrue(TWinControl(FPanel).DoubleBuffered,     'The panel must inherit it from the form');
+  Assert.IsTrue(TWinControl(NestedEdit).DoubleBuffered, 'It must reach a grandchild too, not only direct children');
 
-procedure TTestVclUtils.TestDoubleBuffer_DisablesDoubleBuffering;
-begin
-  FTestForm:= TForm.CreateNew(NIL);
-  FPanel:= TPanel.Create(FTestForm);
-  FPanel.Parent:= FTestForm;
-  TWinControl(FPanel).DoubleBuffered:= TRUE;
+  Assert.IsFalse(TWinControl(RichEd).DoubleBuffered, 'TRichEdit opts out in its own constructor and must stay out');
 
-  DoubleBuffer(FTestForm, FALSE);
-
-  Assert.IsFalse(TWinControl(FPanel).DoubleBuffered, 'Panel should not be double buffered');
-end;
-
-
-procedure TTestVclUtils.TestDoubleBuffer_NilRaisesException;
-begin
-  Assert.WillRaise(
-    procedure
-    begin
-      DoubleBuffer(NIL, TRUE);
-    end,
-    Exception);
+  { A TButton keeps REPORTING FALSE: its CanUseDoubleBuffering override demands DoubleBufferedMode = dbmRequested
+    (Vcl.StdCtrls.pas:5748) where TWinControl only offers it as an alternative (Vcl.Controls.pas:12222). The VCL
+    keeps OS-themed buttons single-buffered on purpose. Flipping the mode proves the flag was propagated anyway. }
+  Assert.IsFalse(TWinControl(FButton).DoubleBuffered, 'A TButton stays out while DoubleBufferedMode is dbmDefault');
+  FButton.DoubleBufferedMode:= dbmRequested;
+  Assert.IsTrue (TWinControl(FButton).DoubleBuffered, 'dbmRequested must reveal the flag the form already propagated');
 end;
 
 

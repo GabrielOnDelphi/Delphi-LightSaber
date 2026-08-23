@@ -93,6 +93,9 @@ type
     procedure TestRegDeleteKey;
 
     [Test]
+    procedure TestRegDeleteKey_WithSubKeys;
+
+    [Test]
     procedure TestRegClearKey;
 
     { SubKeys tests }
@@ -300,6 +303,23 @@ begin
 
   Assert.IsTrue(RegDeleteKey(TestRootKey, TestKeyPath + '\SubKey'));
   Assert.IsFalse(RegKeyExist(TestRootKey, TestKeyPath + '\SubKey'));
+end;
+
+
+{ The test above only ever deletes a LEAF key, so it passed even while RegDeleteKey could not delete anything that
+  had sub-keys. Windows RegDeleteKeyEx refuses such a key outright, so this needs a real nested tree. }
+procedure TTestRegistry.TestRegDeleteKey_WithSubKeys;
+begin
+  RegWriteString(TestRootKey, TestKeyPath + '\Parent',              'V', 'D');
+  RegWriteString(TestRootKey, TestKeyPath + '\Parent\Child1',       'V', 'D');
+  RegWriteString(TestRootKey, TestKeyPath + '\Parent\Child2',       'V', 'D');
+  RegWriteString(TestRootKey, TestKeyPath + '\Parent\Child2\Deep',  'V', 'D');
+  Assert.IsTrue(RegKeyExist(TestRootKey, TestKeyPath + '\Parent\Child2\Deep'), 'Setup failed: the nested tree was not created');
+
+  Assert.IsTrue (RegDeleteKey(TestRootKey, TestKeyPath + '\Parent'), 'RegDeleteKey must report success on a key that has sub-keys');
+  Assert.IsFalse(RegKeyExist (TestRootKey, TestKeyPath + '\Parent'), 'The parent key survived the delete');
+  Assert.IsFalse(RegKeyExist (TestRootKey, TestKeyPath + '\Parent\Child1'), 'Child1 survived the delete');
+  Assert.IsFalse(RegKeyExist (TestRootKey, TestKeyPath + '\Parent\Child2\Deep'), 'The deepest sub-key survived the delete');
 end;
 
 

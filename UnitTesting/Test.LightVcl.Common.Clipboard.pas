@@ -14,7 +14,8 @@ interface
 
 uses
   DUnitX.TestFramework, WinApi.Windows,
-  System.SysUtils, System.Classes, Vcl.ClipBrd;
+  System.SysUtils, System.Classes, Vcl.ClipBrd,
+  LightVcl.Common.Clipboard;
 
 type
   [TestFixture]
@@ -22,12 +23,18 @@ type
   private
     FSavedClipboardText: string;
     FSavedHasText: Boolean;
+    FMonitor  : TClipboardMonitor;
+    FFireCount: Integer;
     procedure SaveClipboard;
     procedure RestoreClipboard;
     { Helper functions with retry logic for clipboard access }
     procedure SetClipboardText(const Text: string);
     function  GetClipboardText: string;
     procedure ClearClipboard;
+    { TClipboardMonitor helpers }
+    procedure MonitorChanged(Sender: TObject);
+    procedure MonitorChangedThatWrites(Sender: TObject);
+    procedure PumpMessages(TimeoutMs: Cardinal);
   public
     [Setup]
     procedure Setup;
@@ -105,12 +112,28 @@ type
 
     [Test]
     procedure TestStringFromClipboard_ZeroTimeout;
+
+    { TClipboardMonitor Tests }
+    [Test]
+    procedure TestMonitor_RegistersOnOwnWindow;
+
+    [Test]
+    procedure TestMonitor_FiresOnClipboardChange;
+
+    [Test]
+    procedure TestMonitor_DebounceCollapsesBurst;
+
+    [Test]
+    procedure TestMonitor_InactiveDoesNotFire;
+
+    [Test]
+    procedure TestMonitor_HandlerWriteEchoesOnce;
+
+    [Test]
+    procedure TestMonitor_SecondInstanceWorks;
   end;
 
 implementation
-
-uses
-  LightVcl.Common.Clipboard;
 
 
 { Helper functions with retry logic to avoid 'Access is denied' errors }
@@ -505,6 +528,187 @@ begin
 
   { If clipboard access succeeds on first try, should return text }
   Assert.Pass('Function handles zero timeout without exception');
+end;
+
+
+{-------------------------------------------------------------------------------------------------------------
+   TClipboardMonitor
+-------------------------------------------------------------------------------------------------------------}
+
+{ Drains this thread message queue for TimeoutMs milliseconds.
+  Deliberately NOT Application.ProcessMessages: it is banned by CLAUDE.md, and a DUnitX test EXE is
+  not running a VCL message loop anyway. WM_CLIPBOARDUPDATE is POSTED, so it only ever reaches
+  TClipboardMonitor.WndProc if we dispatch it ourselves. }
+procedure TTestClipboard.PumpMessages(TimeoutMs: Cardinal);
+VAR
+   StartTime: Cardinal;
+   Msg: TMsg;
+begin
+  StartTime:= GetTickCount;
+  REPEAT
+    while PeekMessage(Msg, 0, 0, 0, PM_REMOVE) DO
+      begin
+        TranslateMessage(Msg);
+        DispatchMessage(Msg);
+      end;
+    Sleep(5);
+  UNTIL GetTickCount - StartTime > TimeoutMs;
+end;
+
+
+procedure TTestClipboard.MonitorChanged(Sender: TObject);
+begin
+  Inc(FFireCount);
+end;
+
+
+{ A handler that writes to the clipboard. Writes only ONCE, so the echo terminates - see
+  TestMonitor_HandlerWriteEchoesOnce. The count cap is a safety net: if the echo ever became a real
+  loop, this stops the test EXE from hanging instead of failing. }
+procedure TTestClipboard.MonitorChangedThatWrites(Sender: TObject);
+begin
+  Inc(FFireCount);
+  if FFireCount = 1
+  then SetClipboardText('echo from inside the handler');
+end;
+
+
+procedure TTestClipboard.TestMonitor_RegistersOnOwnWindow;
+begin
+  FMonitor:= TClipboardMonitor.Create(0);
+  TRY
+    { This is the load-bearing fact behind the whole design: AllocateHWnd makes a hidden top-level
+      window, and the OS accepts a clipboard format listener on it. If this ever fails, the class
+      must go back to borrowing the caller form handle. }
+    Assert.IsTrue(FMonitor.Registered, 'AddClipboardFormatListener refused an AllocateHWnd window');
+    Assert.IsTrue(FMonitor.Active,     'A freshly created monitor must be Active');
+  FINALLY
+    FreeAndNil(FMonitor);
+  END;
+end;
+
+
+procedure TTestClipboard.TestMonitor_DebounceCollapsesBurst;
+begin
+  FMonitor:= TClipboardMonitor.Create(150);
+  TRY
+    FMonitor.OnChange:= MonitorChanged;
+    PumpMessages(60);
+    FFireCount:= 0;
+
+    { Three writes with NO pump in between, so all three notifications queue up. This is what
+      Thunderbird does for one copy: plain text, then HTML, each firing its own message. }
+    SetClipboardText('burst one');
+    SetClipboardText('burst two');
+    SetClipboardText('burst three');
+    PumpMessages(500);
+
+    Assert.AreEqual(1, FFireCount, 'Three clipboard writes inside the debounce window must collapse into ONE OnChange');
+  FINALLY
+    FreeAndNil(FMonitor);
+  END;
+end;
+
+
+procedure TTestClipboard.TestMonitor_InactiveDoesNotFire;
+begin
+  FMonitor:= TClipboardMonitor.Create(0);
+  TRY
+    FMonitor.OnChange:= MonitorChanged;
+    FMonitor.Active:= FALSE;
+    Assert.IsFalse(FMonitor.Registered, 'Active:= FALSE must unregister the clipboard listener');
+
+    PumpMessages(60);
+    FFireCount:= 0;
+
+    SetClipboardText('this must not be collected');
+    PumpMessages(300);
+    Assert.AreEqual(0, FFireCount, 'A deactivated monitor must not raise OnChange');
+
+    { and back on again }
+    FMonitor.Active:= TRUE;
+    Assert.IsTrue(FMonitor.Registered, 'Active:= TRUE must re-register the listener');
+    PumpMessages(60);
+    FFireCount:= 0;
+
+    SetClipboardText('this one must be collected');
+    PumpMessages(300);
+    Assert.AreEqual(1, FFireCount, 'A reactivated monitor must raise OnChange again');
+  FINALLY
+    FreeAndNil(FMonitor);
+  END;
+end;
+
+
+{ Pins down real, documented behaviour rather than wishful behaviour. WM_CLIPBOARDUPDATE is POSTED,
+  not sent, so a handler that writes to the clipboard does NOT re-enter synchronously - it queues a
+  fresh notification that arrives after the handler returned. The FInNotify guard cannot catch that
+  one. So the write is echoed back exactly once, and a handler that keeps writing would keep going:
+  any handler that writes to the clipboard must be idempotent. }
+procedure TTestClipboard.TestMonitor_HandlerWriteEchoesOnce;
+begin
+  FMonitor:= TClipboardMonitor.Create(0);
+  TRY
+    FMonitor.OnChange:= MonitorChangedThatWrites;
+    PumpMessages(60);
+    FFireCount:= 0;
+
+    SetClipboardText('trigger');
+    PumpMessages(400);
+
+    Assert.AreEqual(2, FFireCount, 'Expected the original change plus exactly one echo of the handler own write');
+  FINALLY
+    FreeAndNil(FMonitor);
+  END;
+end;
+
+
+{ AllocateHWnd registers one window class for the whole process. Creating a monitor, freeing it and
+  creating another must work - otherwise no program could ever restart monitoring. }
+procedure TTestClipboard.TestMonitor_SecondInstanceWorks;
+VAR FirstOne: TClipboardMonitor;
+begin
+  FirstOne:= TClipboardMonitor.Create(0);
+  TRY
+    Assert.IsTrue(FirstOne.Registered, 'First monitor did not register');
+  FINALLY
+    FreeAndNil(FirstOne);
+  END;
+
+  FMonitor:= TClipboardMonitor.Create(0);
+  TRY
+    FMonitor.OnChange:= MonitorChanged;
+    Assert.IsTrue(FMonitor.Registered, 'Second monitor did not register after the first was freed');
+
+    PumpMessages(60);
+    FFireCount:= 0;
+
+    SetClipboardText('after recreate');
+    PumpMessages(300);
+    Assert.AreEqual(1, FFireCount, 'The second monitor must still receive clipboard notifications');
+  FINALLY
+    FreeAndNil(FMonitor);
+  END;
+end;
+
+
+procedure TTestClipboard.TestMonitor_FiresOnClipboardChange;
+begin
+  FMonitor:= TClipboardMonitor.Create(0);                  { 0 = no debounce, so this test is deterministic }
+  TRY
+    FMonitor.OnChange:= MonitorChanged;
+    Assert.IsTrue(FMonitor.Registered, 'AddClipboardFormatListener refused our own window - nothing else in this class can work');
+
+    PumpMessages(60);                                      { drain whatever Setup left in the queue }
+    FFireCount:= 0;
+
+    SetClipboardText('LightSaber TClipboardMonitor test');
+    PumpMessages(300);
+
+    Assert.AreEqual(1, FFireCount, 'OnChange must fire exactly once for one clipboard write');
+  FINALLY
+    FreeAndNil(FMonitor);
+  END;
 end;
 
 

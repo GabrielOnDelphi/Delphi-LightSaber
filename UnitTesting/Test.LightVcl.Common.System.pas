@@ -166,22 +166,45 @@ begin
 end;
 
 
+{ BiosDate is machine-dependent, so this asserts the CONTRACT, not a value: it never returns an empty string, and
+  what it returns is either the BiosUnknown sentinel or a real date (which always carries at least one digit).
+  Not all machines publish SystemBiosDate - this one does not - so demanding a real date here would test the
+  hardware rather than the code. }
 procedure TTestSystem.TestBiosDate;
 var
   DateStr: string;
+  i: Integer;
+  HasDigit: Boolean;
 begin
   DateStr:= BiosDate;
-  Assert.IsNotEmpty(DateStr, 'BIOS date should not be empty');
-  { BIOS date is typically in format MM/DD/YY or similar }
+  Assert.IsNotEmpty(DateStr, 'BIOS date should never be empty - BiosUnknown is the fallback');
+
+  if DateStr <> BiosUnknown then
+    begin
+      HasDigit:= FALSE;
+      for i:= 1 to Length(DateStr) do
+        if CharInSet(DateStr[i], ['0'..'9'])
+        then HasDigit:= TRUE;
+
+      Assert.IsTrue(HasDigit, 'A real BIOS date must contain at least one digit, got: ' + DateStr);
+    end;
 end;
 
 
+{ Machine-dependent, so this asserts the CONTRACT, not a value: never empty, and never carrying the raw
+  uninitialised heap bytes the old version could hand back when SystemBiosVersion was absent. Any control
+  character in the result is the signature of that bug. }
 procedure TTestSystem.TestBiosID;
 var
   ID: string;
+  i: Integer;
 begin
   ID:= BiosID;
-  Assert.IsNotEmpty(ID, 'BIOS ID should not be empty');
+  Assert.IsNotEmpty(ID, 'BIOS ID should never be empty - BiosUnknown is the fallback');
+
+  for i:= 1 to Length(ID) do
+    Assert.IsTrue(Ord(ID[i]) >= 32,
+                  'BIOS ID holds a control character at position '+ IntToStr(i)+ ' - that is uninitialised buffer memory: ['+ ID+ ']');
 end;
 
 

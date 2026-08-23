@@ -12,6 +12,7 @@ uses
   System.SysUtils, System.IOUtils, System.UITypes,
   Vcl.Forms, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
   Vcl.Graphics, Vcl.Dialogs, Vcl.ActnList, Vcl.Menus,
+  LightCore.IO,
   LightVcl.Common.IniFile;
 
 type
@@ -1053,22 +1054,44 @@ end;
 
 { AsString tests }
 
+{ This test used to guard the call with "if NOT FileExists(TAppDataCore.IniFile)", so on any machine where the
+  AppData INI existed the anonymous method did nothing at all and Assert.WillRaise failed with "Method did not
+  throw any exceptions" - it passed or failed by luck, which its own comment admitted.
+  AsString reads TAppDataCore.IniFile, a path the test cannot redirect, so the file is moved aside for the
+  duration of the check and put back in the FINALLY. Nothing is left changed either way. }
 procedure TTestIniFileApp.Test_AsString_FileNotExists_ShouldRaise;
+VAR
+  IniPath, Backup: string;
+  Existed: Boolean;
 begin
-  { Delete any existing ini file first }
-  CleanupTestIni;
+  IniPath:= TAppDataCore.IniFile;
+  Assert.IsNotEmpty(IniPath, 'AppData reports no INI path - cannot test AsString');
 
-  { AsString uses the default AppData ini file, not our test file.
-    We test this by verifying it raises when file doesn't exist.
-    Note: This test may pass/fail depending on AppData state. }
-  Assert.WillRaise(
-    procedure
+  Backup := IniPath + '.unittest-backup';
+  Existed:= FileExists(IniPath);
+
+  if Existed then
     begin
-      { Force a non-existent path scenario }
-      if NOT FileExists(TAppDataCore.IniFile)
-      then TIniFileApp.AsString;
-    end,
-    Exception);
+      if FileExists(Backup)
+      then DeleteFile(Backup);
+      Assert.IsTrue(FileMoveTo(IniPath, Backup), 'Could not move the AppData INI out of the way: ' + IniPath);
+    end;
+
+  TRY
+    Assert.WillRaise(
+      procedure
+      begin
+        TIniFileApp.AsString;
+      end,
+      Exception);
+  FINALLY
+    if Existed then
+      begin
+        if FileExists(IniPath)
+        then DeleteFile(IniPath);
+        FileMoveTo(Backup, IniPath);
+      end;
+  END;
 end;
 
 
