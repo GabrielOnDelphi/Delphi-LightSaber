@@ -24,6 +24,20 @@ type
     [Setup]
     procedure Setup;
 
+    { Whole-word search }
+    [Test]
+    procedure TestPosWholeWord_SkipsPartialMatch;
+    [Test]
+    procedure TestPosWholeWord_FindsAtStartAndEnd;
+    [Test]
+    procedure TestPosWholeWord_HonoursOffset;
+    [Test]
+    procedure TestPosWholeWord_PunctuationIsABoundary;
+    [Test]
+    procedure TestPosWholeWord_DigitsAreWordChars;
+    [Test]
+    procedure TestPosWholeWord_NotFoundAndEmpty;
+
     { Enter/Line Break Tests }
     [Test]
     procedure TestRemoveEnters;
@@ -1469,6 +1483,60 @@ begin
   ShortName:= GetSystemLanguageNameShort;
   Assert.IsNotEmpty(ShortName, 'Short language name should not be empty');
   Assert.AreEqual(0, Pos('(', ShortName), 'Short name should not contain parentheses');
+end;
+
+
+{-------------------------------------------------------------------------------------------------
+   WHOLE-WORD SEARCH
+   PosWholeWord is the find-side companion of ReplaceWholeWords: a hit only counts when the
+   characters touching it are not letters or digits.
+-------------------------------------------------------------------------------------------------}
+
+procedure TTestLightCore.TestPosWholeWord_SkipsPartialMatch;
+begin
+  { 'cat' appears at 1 inside 'catalog' and as a real word at 13 }
+  Assert.AreEqual(15, PosWholeWord('cat', 'catalog and a cat'), 'Must skip the match inside catalog');   { c=15: catalog(7) + 10 more chars }
+  Assert.AreEqual(0,  PosWholeWord('cat', 'catalog concatenate'), 'Neither occurrence is a whole word');
+end;
+
+
+procedure TTestLightCore.TestPosWholeWord_FindsAtStartAndEnd;
+begin
+  Assert.AreEqual(1, PosWholeWord('cat', 'cat sat'),  'A word at position 1 has no char before it');
+  Assert.AreEqual(5, PosWholeWord('sat', 'cat sat'),  'A word touching the end of the string counts');
+  Assert.AreEqual(1, PosWholeWord('cat', 'cat'),      'The whole string is one word');
+end;
+
+
+procedure TTestLightCore.TestPosWholeWord_HonoursOffset;
+begin
+  { Two whole-word hits: 1 and 9. Searching from 2 must find the second one. }
+  Assert.AreEqual(1, PosWholeWord('cat', 'cat and cat', 1), 'From 1 finds the first');
+  Assert.AreEqual(9, PosWholeWord('cat', 'cat and cat', 2), 'From 2 must skip the first');
+  Assert.AreEqual(0, PosWholeWord('cat', 'cat and cat', 10), 'Past the last hit finds nothing');
+end;
+
+
+procedure TTestLightCore.TestPosWholeWord_PunctuationIsABoundary;
+begin
+  Assert.AreEqual(6, PosWholeWord('cat', 'The (cat), sitting'), 'Brackets and commas separate words');
+  Assert.AreEqual(5, PosWholeWord('cat', 'the.cat.sat'),        'Dots separate words');
+end;
+
+
+procedure TTestLightCore.TestPosWholeWord_DigitsAreWordChars;
+begin
+  { Same rule as ReplaceWholeWords: a digit is part of a word, so cat9 is not the word cat }
+  Assert.AreEqual(0, PosWholeWord('cat', 'cat9'), 'A trailing digit means it is not a whole word');
+  Assert.AreEqual(0, PosWholeWord('cat', '9cat'), 'A leading digit means it is not a whole word');
+end;
+
+
+procedure TTestLightCore.TestPosWholeWord_NotFoundAndEmpty;
+begin
+  Assert.AreEqual(0, PosWholeWord('dog', 'cat sat'), 'Absent word returns 0');
+  Assert.AreEqual(0, PosWholeWord('',    'cat sat'), 'Empty needle returns 0');
+  Assert.AreEqual(0, PosWholeWord('cat', ''),        'Empty haystack returns 0');
 end;
 
 
