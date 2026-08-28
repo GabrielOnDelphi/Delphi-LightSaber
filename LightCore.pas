@@ -103,6 +103,7 @@ CONST
  procedure ReplaceShortWords   (var   s: string; MinLength: Integer; FilterIfNoWovels: Boolean);                  { This procedure will replace short words (length < MinLength) with spaces.   It also filters words that only contain consonants }
  function  ReplaceWholeWords   (const InputStr, OldWord, NewWord: string; const Delimiters: array of Char): string; overload;
  function  ReplaceWholeWords   (const InputStr, OldWord, NewWord: string): string;                                  overload;
+ function  PosWholeWord        (CONST SubStr, S: string; Offset: Integer= 1): Integer;                              { Like PosEx, but the hit must be a WHOLE word. Returns 0 if not found. }
  function  WordCountStrict     (CONST s: string): Integer;
  function  WordCount           (CONST s: string): Integer;
 
@@ -2277,6 +2278,42 @@ begin
       // Move the start position after the current match
       Inc(StartPos);
   end;
+end;
+
+
+{ The find-side companion of ReplaceWholeWords.
+  Works like System.StrUtils.PosEx - 1-based, returns 0 when not found - except that a hit only
+  counts when the characters touching it on both sides are not letters or digits. So 'cat' is
+  found in 'a cat sat' but not in 'catalog', 'concat' or 'cat9'.
+
+  Case SENSITIVE, like PosEx. Uppercase both strings first if you need case-insensitive matching;
+  that is what TLightVcl.Visual.Memo's Search does for its soIgnoreCase option.
+
+  Boundary rule: anything that is not a letter or a digit separates words - the same rule
+  ReplaceWholeWords builds its delimiter array from. It is applied here with Char.IsLetterOrDigit
+  rather than a 0..255 array, which behaves identically for ASCII and is additionally correct for
+  characters above 255. }
+function PosWholeWord(CONST SubStr, S: string; Offset: Integer= 1): Integer;
+VAR
+  Hit, SubLen, StrLen: Integer;
+begin
+  SubLen:= Length(SubStr);
+  StrLen:= Length(S);
+  if (SubLen = 0) OR (StrLen = 0) then EXIT(0);
+
+  if Offset < 1 then Offset:= 1;
+
+  Hit:= PosEx(SubStr, S, Offset);
+  while Hit > 0 DO
+   begin
+     if ( (Hit = 1)                OR NOT S[Hit-1].IsLetterOrDigit )
+     AND ( (Hit + SubLen > StrLen) OR NOT S[Hit+SubLen].IsLetterOrDigit )
+     then EXIT(Hit);                       { Both sides are boundaries - a real word }
+
+     Hit:= PosEx(SubStr, S, Hit+1);        { Part of a longer word - keep looking }
+   end;
+
+  Result:= 0;
 end;
 
 
