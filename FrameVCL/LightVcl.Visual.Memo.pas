@@ -39,7 +39,12 @@ USES
 TYPE
   TTypeMode= (tmInsert, tmOverwrite);
 
-  TSearchOption = (soIgnoreCase, soFromStart, soWrap);   { soFromStart:  If this is active, the search will start from the top of the memo. But after this, I have to uncheck it so the search can continue, else it will not advance (it will always search from start) }
+  { soFromStart: the search starts from the top of the memo. Untick it afterwards or every search
+    finds the same first hit again.
+    soWholeWord was APPENDED on purpose (2026-08-24): adding a value at the END leaves the
+    existing ordinals unchanged, so a set streamed to disk by an older build still reads back
+    correctly. }
+  TSearchOption = (soIgnoreCase, soFromStart, soWrap, soWholeWord);
   TSearchOptions = set of TSearchOption;
 
   TLightMemo = class(TMemo)
@@ -299,6 +304,9 @@ end;
     soIgnoreCase: Case-insensitive search
     soFromStart:  Always start searching from the beginning (use once, then disable to continue)
     soWrap:       Wrap to beginning if not found from current position
+    soWholeWord:  Only match complete words. 'cat' then hits 'a cat' but not 'catalog' or 'cat9'.
+                  The boundary rule lives in LightCore.PosWholeWord: anything that is not a letter
+                  or a digit separates words.
 
   CursorAfterSearch property:
     FALSE (default): Highlights/selects the found text
@@ -306,6 +314,15 @@ end;
 
   Returns TRUE if the string was found, FALSE otherwise.
   When found, centers the result in view. }
+{ One place decides which matcher is used, so the two search calls below cannot drift apart. }
+function FindFrom(CONST SrcStr, sText: string; Start: Integer; Options: TSearchOptions): Integer;
+begin
+  if soWholeWord in Options
+  then Result:= PosWholeWord(SrcStr, sText, Start)
+  else Result:= PosEx       (SrcStr, sText, Start);
+end;
+
+
 function TLightMemo.Search(SrcStr: string): Boolean;      //http://stackoverflow.com/questions/4232709/search-thru-a-memo-in-delphi
 VAR
   sText: string;
@@ -322,11 +339,11 @@ begin
   Index := 0;
   { First, try searching from current position (after current selection) }
   if NOT (soFromStart in SearchOptions)
-  then Index := PosEx(SrcStr, sText, SelStart + SelLength + 1);
+  then Index := FindFrom(SrcStr, sText, SelStart + SelLength + 1, SearchOptions);
 
   { If not found, and wrap or from-start is enabled, search from beginning }
   if (Index = 0) AND ((soFromStart in SearchOptions) OR (soWrap in SearchOptions))
-  then Index := PosEx(SrcStr, sText, 1);
+  then Index := FindFrom(SrcStr, sText, 1, SearchOptions);
 
   Result:= Index > 0;
   if Result then
