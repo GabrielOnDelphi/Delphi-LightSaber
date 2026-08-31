@@ -18,7 +18,9 @@
         RequestStorageReadPermission(procedure begin PickImageFromGallery; end);
    3. In your form's OnCreate:
         FPickerSubId:= SetupImagePickerCallback(procedure(const Path: string) begin if not Path.IsEmpty then ProcessImage(Path); end);
-        // In FormDestroy: TMessageManager.DefaultManager.Unsubscribe(FPickerSubId);
+        // In FormDestroy: TMessageManager.DefaultManager.Unsubscribe(TMessageResultNotification, FPickerSubId);   // Android
+        //   Unsubscribe always takes the message class first (there is no single-argument overload),
+        //   and it must be the class that was subscribed — on iOS that is TMessageImagePickerResult.
    4. To save: AddToPhotosAlbum(MyBitmap);
 
    Generic File Picker (ACTION_OPEN_DOCUMENT, Storage Access Framework):
@@ -60,6 +62,16 @@ USES
 
 
 TYPE
+  { System.Messaging only names this type TMessageSubscriptionId from Delphi 12 Athens on.
+    Before that, TMessageManager.SubscribeToMessage returned a plain Integer, and the width
+    changed with the rename (Integer -> Int64), so an older compiler cannot just be handed the
+    new name. Use TSubscriptionId everywhere in this unit instead of the RTL name. }
+  {$IF CompilerVersion >= 36}
+  TSubscriptionId = System.Messaging.TMessageSubscriptionId;
+  {$ELSE}
+  TSubscriptionId = Integer;
+  {$IFEND}
+
   TImageSelectedEvent = procedure(const Path: string) of object;
   TFileSelectedEvent  = procedure(const Path: string) of object;
 
@@ -89,8 +101,8 @@ function  GetPublicPicturesFolder: string;
 // Returns the subscription ID. Caller MUST unsubscribe (TMessageManager.DefaultManager.Unsubscribe)
 // when the subscribing object is destroyed, to prevent callbacks firing on freed memory.
 // On Windows/macOS desktop / Linux: returns 0 and never fires (no async picker on those platforms).
-function SetupImagePickerCallback  (const AOnImageSelected: TImageSelectedEvent): TMessageSubscriptionId;
-function SetupAnyFilePickerCallback(const AOnFileSelected : TFileSelectedEvent ): TMessageSubscriptionId;
+function SetupImagePickerCallback  (const AOnImageSelected: TImageSelectedEvent): TSubscriptionId;
+function SetupAnyFilePickerCallback(const AOnFileSelected : TFileSelectedEvent ): TSubscriptionId;
 
 
 {$IFDEF ANDROID}
@@ -109,7 +121,7 @@ function SetupAnyFilePickerCallback(const AOnFileSelected : TFileSelectedEvent )
 
   Note: subscription is shared across all senders, but we filter by Action = ACTION_VIEW
   so unrelated TMessageReceivedNotification fires (e.g. push notifications) are ignored. }
-function SubscribeToIncomingFileIntents(const AOnFileReceived: TFileSelectedEvent): TMessageSubscriptionId;
+function SubscribeToIncomingFileIntents(const AOnFileReceived: TFileSelectedEvent): TSubscriptionId;
 
 { Reads the activity's launch intent (the one passed at app start) and, if it's an
   ACTION_VIEW with a usable URI, copies the bytes to cache and calls AOnFileReceived.
@@ -529,16 +541,19 @@ end;
 
 { Call this once (e.g., in FormCreate) to handle the picker result asynchronously.
   Callback receives the full file path or empty string if canceled.
-  CALLER MUST store the returned TMessageSubscriptionId and call
-  TMessageManager.DefaultManager.Unsubscribe(Id) in FormDestroy (or equivalent),
-  to prevent the callback firing on freed memory.
+  CALLER MUST store the returned TSubscriptionId and unsubscribe in FormDestroy (or
+  equivalent), to prevent the callback firing on freed memory. Unsubscribe always takes the
+  message class first (there is no single-argument overload on TMessageManager), and it must
+  be the class that was subscribed, which differs per platform:
+    Android: TMessageManager.DefaultManager.Unsubscribe(TMessageResultNotification, Id);
+    iOS    : TMessageManager.DefaultManager.Unsubscribe(TMessageImagePickerResult, Id);
   Do NOT call multiple times without unsubscribing — duplicate subscriptions accumulate.
 
   Cross-platform behavior:
     Android: subscribes to TMessageResultNotification (intent result).
     iOS    : subscribes to TMessageImagePickerResult (posted by TIosImagePickerBridge).
     Other  : returns 0; callback never fires (no async picker on Win/macOS desktop). }
-function SetupImagePickerCallback(const AOnImageSelected: TImageSelectedEvent): TMessageSubscriptionId;
+function SetupImagePickerCallback(const AOnImageSelected: TImageSelectedEvent): TSubscriptionId;
 begin
   Result:= 0;
 {$IFDEF ANDROID}
@@ -602,7 +617,7 @@ end;
     Android: subscribes to TMessageResultNotification (intent result).
     iOS    : subscribes to TMessageFilePickerResult (posted by TIosDocumentPickerDelegate).
     Other  : returns 0; callback never fires. }
-function SetupAnyFilePickerCallback(const AOnFileSelected: TFileSelectedEvent): TMessageSubscriptionId;
+function SetupAnyFilePickerCallback(const AOnFileSelected: TFileSelectedEvent): TSubscriptionId;
 begin
   Result:= 0;
 {$IFDEF ANDROID}
@@ -721,7 +736,7 @@ end;
 
 { Subscribes to TMessageReceivedNotification — fired when the activity is woken by
   an intent (onNewIntent). Used for WARM start (app already running, user shares file). }
-function SubscribeToIncomingFileIntents(const AOnFileReceived: TFileSelectedEvent): TMessageSubscriptionId;
+function SubscribeToIncomingFileIntents(const AOnFileReceived: TFileSelectedEvent): TSubscriptionId;
 begin
   Result:= TMessageManager.DefaultManager.SubscribeToMessage(TMessageReceivedNotification,
     procedure(const Sender: TObject; const M: TMessage)

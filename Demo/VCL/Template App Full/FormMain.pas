@@ -156,7 +156,10 @@ begin
   uInitialization.LateInitialization;
   //btnStartClick(self);
   //actShowLogExecute(Self);    //temp
-  Show;
+  // No Show here, deliberately. AppData.CreateMainForm already shows the main form
+  // (LightVcl.Visual.AppData.pas:407-411), and the header of that same unit states the rule:
+  // "In the DPR file these lines of code are not necessary anymore and you MUST remove them.
+  // Application.Title := 'x'; MainForm.Show;". Template App Minimal already follows it.
 end;
 
 

@@ -86,8 +86,18 @@ USES
   LightCore.AppData, LightCore.Platform, LightFmx.Common.IniFile;
 
 TYPE
+  { System.Messaging only names this type TMessageSubscriptionId from Delphi 12 Athens on.
+    Before that, TMessageManager.SubscribeToMessage returned a plain Integer, and the width
+    changed with the rename (Integer -> Int64), so an older compiler cannot just be handed the
+    new name. Use TSubscriptionId everywhere in this unit instead of the RTL name. }
+  {$IF CompilerVersion >= 36}
+  TSubscriptionId = System.Messaging.TMessageSubscriptionId;
+  {$ELSE}
+  TSubscriptionId = Integer;
+  {$IFEND}
+
   TLightForm = class;
-  TLightFormClass = class of TLightForm; 
+  TLightFormClass = class of TLightForm;
 
   TLightForm = class(TForm)
     procedure FormKeyUp(Sender: TObject; var Key: Word; var KeyChar: WideChar; Shift: TShiftState);
@@ -95,7 +105,7 @@ TYPE
   private
     FOnAfterCtur: TNotifyEvent;
     FCloseOnEscape: Boolean;
-    FVKSubscriptionId: TMessageSubscriptionId;
+    FVKSubscriptionId: TSubscriptionId;
     FVKPaddingApplied: Boolean;   { TRUE while HandleVKStateChange holds Padding.Bottom raised above the virtual keyboard }
     FVKSavedPadding: Single;      { Padding.Bottom as it was before the keyboard raised it (e.g. the Android nav-bar inset) — restored on keyboard hide }
     procedure SetGuiProperties(Form: TForm);
