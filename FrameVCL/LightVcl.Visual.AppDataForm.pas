@@ -271,6 +271,85 @@ begin
 end;
 
 
+{ Put the startup window directly BELOW the window the user is working in, without activating it.
+
+  WHY THIS EXISTS. Nothing else decides where the window goes. TWinControl.CMShowingChanged shows it
+  with SWP_NOZORDER (Vcl.Controls.pas:12809-12812), so the show does not touch the z-order at all, and
+  the SetZOrder override above deliberately does not raise while the gate is up. What is left is the
+  position CreateWindowEx handed out, which is the top of the non-topmost stack. So the window comes up
+  OVER whatever the user was working in - it just does not take the keyboard.
+
+  Measured 2026-09-01 on Demo\VCL\Template App Full, with charmap.exe freshly launched and holding the
+  foreground: the window landed TWO positions ABOVE the active window on 5 of 5 launches, with the
+  foreground correctly left alone every time. Harness: Autopilot for Delphi\_Local info\Issues\
+  No focus steal\Measure-LaunchPlacement.ps1.
+
+  That is the whole reported complaint, and it also explains the "and it STAYS on top" half: clicking a
+  window that is ALREADY active moves nothing in the z-order, so the user cannot get their own window
+  back above ours without first clicking ours and then clicking back.
+
+  SetWindowPos's hWndInsertAfter is documented as "a handle to the window to PRECEDE the positioned
+  window in the Z order", so passing the foreground window puts us directly beneath it. SWP_NOACTIVATE
+  leaves the keyboard where it is, which is the entire point of the gate.
+  https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowpos }
+{ Is this window the desktop or the taskbar? Those are the two anchors that must never be used - see the
+  comment at the call site in PlaceBeneathForegroundWindow. }
+function IsDesktopOrTaskbar(AWnd: HWND): Boolean;
+VAR
+  Buf: array[0..63] of Char;   // not named ClassName: that would shadow TObject.ClassName
+  Cls: String;
+begin
+  if GetClassName(AWnd, Buf, Length(Buf)) <= 0 then EXIT(FALSE);
+
+  Cls:= PChar(@Buf[0]);   // GetClassName null-terminates, so the PChar assignment stops at the null
+
+  Result:= SameText(Cls, 'Progman')          // the desktop
+        OR SameText(Cls, 'WorkerW')          // the desktop again, when a wallpaper host is present
+        OR SameText(Cls, 'Shell_TrayWnd');   // the taskbar
+end;
+
+
+procedure PlaceBeneathForegroundWindow(AForm: TCustomForm);
+VAR
+  Fg: HWND;
+  FgProcId: DWORD;
+begin
+  if (AForm = NIL) OR NOT AForm.HandleAllocated then EXIT;
+
+  Fg:= GetForegroundWindow;
+  if (Fg = 0) OR (Fg = AForm.Handle) then EXIT;      // nothing to anchor to, or it is already us
+
+  { Never anchor to one of our OWN windows. A splash screen, a first-run wizard or a second form of this
+    same application is not "the window the user was working in"; inserting beneath one would push the
+    main form under our own startup furniture. }
+  FgProcId:= 0;
+  GetWindowThreadProcessId(Fg, FgProcId);
+  if FgProcId = GetCurrentProcessId then EXIT;
+
+  { Never anchor to a TOPMOST window. Microsoft says a window becomes topmost either through
+    HWND_TOPMOST or "by setting a window's position in the Z order so that it is above any existing
+    topmost windows" - and slotting in directly beneath ONE topmost window does place us above every
+    other topmost window. That would pin the application over everything, the exact opposite of what
+    this procedure is for. }
+  if (GetWindowLong(Fg, GWL_EXSTYLE) AND WS_EX_TOPMOST) <> 0 then EXIT;
+
+  { Never anchor to the DESKTOP or the TASKBAR. This is the guard that keeps the cure from becoming the
+    other half of the disease. The desktop sits at the very bottom of the z-order, so inserting beneath
+    it would bury the application behind every open window - which is the SECOND defect recorded in
+    "No focus steal.md": the same unchanged exe once came up at z=22 of 25, hidden behind everything.
+    Trading "on top of the user's window" for "invisible" is not a fix.
+
+    It is not a hypothetical case either: with no other program in front - the app started from a bare
+    desktop, or from a shortcut after the user clicked the wallpaper - GetForegroundWindow returns the
+    desktop, and that was observed during this investigation. 'Progman' and 'WorkerW' are the two
+    desktop window classes; 'Shell_TrayWnd' is the taskbar. When the anchor is one of these there is no
+    "user window" to sit under, so leaving the placement alone is the right answer. }
+  if IsDesktopOrTaskbar(Fg) then EXIT;
+
+  SetWindowPos(AForm.Handle, Fg, 0, 0, 0, 0, SWP_NOMOVE OR SWP_NOSIZE OR SWP_NOACTIVATE);
+end;
+
+
 { Safety net for a window still carrying the gate after startup is over - a form whose handle was made
   during startup but which is first shown much later. TfrmRamLog is exactly that: created by
   getGlobalLog, shown only when someone asks for the log.
@@ -366,8 +445,11 @@ begin
 
   {$IFDEF AUTOPILOT}
   finally
-    if Self = Application.MainForm
-    then UnGateStartupWindows;   // startup is over - hand the windows back to the mouse
+    if Self = Application.MainForm then
+      begin
+        UnGateStartupWindows;                  // startup is over - hand the windows back to the mouse
+        PlaceBeneathForegroundWindow(Self);    // ...and put it where it belongs: under the user's window
+      end;
   end;
   {$ENDIF}
 end;
