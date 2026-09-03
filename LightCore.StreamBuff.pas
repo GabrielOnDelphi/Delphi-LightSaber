@@ -1,4 +1,5 @@
 UNIT LightCore.StreamBuff;
+{$WARN DUPLICATE_CTOR_DTOR OFF}   { W1029: CreateRead and CreateWrite have identical parameters, so a C++Builder HPP could not tell them apart (both map to the class name). We ship no C++ code. Same directive the RTL uses in System.Rtti.pas:18. }
 
 {=============================================================================================================
    2026.07.06
