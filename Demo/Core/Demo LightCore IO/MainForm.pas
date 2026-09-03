@@ -56,25 +56,25 @@ begin
 
 
  // Test invalid path
- // This should crash with "Exception: Invalid characters in path"
+ // Returns False. The try..except is here only to catch a broken promise: ForceDirectoriesB must never raise.
  Memo.Lines.Add('ForceDirectoriesB(''C:\?'')');
  TRY
    Memo.Lines.Add(' '+ BoolToStr(ForceDirectoriesB('C:\?'), TRUE));
  EXCEPT
    on E: Exception DO
-    Memo.Lines.Add('Exception: '+ E.Message);
+    Memo.Lines.Add(' FAILED - ForceDirectoriesB must never raise, but it raised: '+ E.Message);
  END;
  Memo.Lines.Add('');
 
 
  // Test invalid parameters
- // This should crash with "Exception: Path is empty"
+ // Returns False. Same as above: a raise here would be a bug.
  Memo.Lines.Add('ForceDirectoriesB('''')');
  TRY
    Memo.Lines.Add(' '+ BoolToStr(ForceDirectoriesB(''), TRUE));
  EXCEPT
    on E: Exception DO
-    Memo.Lines.Add('Exception: '+ E.Message);
+    Memo.Lines.Add(' FAILED - ForceDirectoriesB must never raise, but it raised: '+ E.Message);
  END;
  Memo.Lines.Add('');
 
