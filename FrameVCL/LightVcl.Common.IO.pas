@@ -1,4 +1,4 @@
-UNIT LightVcl.Common.IO;
+﻿UNIT LightVcl.Common.IO;
 
 {=============================================================================================================
    2026.07.14
@@ -23,7 +23,7 @@ USES
 --------------------------------------------------------------------------------------------------}
  function  DirectoryExistMsg    (CONST Path: string): Boolean;
  function  FileExistsMsg        (CONST FileName: string): Boolean;
- function  ForceDirectoriesMsg  (CONST FullPath: string): Boolean;                                 { Wrapper around LightCore.IO.ForceDirectories. Returns True if directory exists or was created, False on failure. Shows error dialog on failure. }
+ function  ForceDirectoriesMsg  (CONST FullPath: string): Boolean;                                 { Wrapper around LightCore.IO.ForceDirectoriesB. Returns True if directory exists or was created, False on failure. Shows error dialog on failure. }
 
  procedure MoveFolderMsg        (CONST FromFolder, ToFolder: String; SilentOverwrite: Boolean);
  function  DeleteFileWithMsg    (CONST FileName: string): Boolean;
@@ -169,7 +169,7 @@ end;
 { Shows an error message if the folder cannot be created. }
 function ForceDirectoriesMsg(CONST FullPath: string): Boolean;
 begin
-  Result:= LightCore.IO.ForceDirectories(FullPath) >= 0;
+  Result:= LightCore.IO.ForceDirectoriesB(FullPath);
   if NOT Result
   then MessageError('Cannot create folder: '+ FullPath+ CRLFw+ 'Probably you are trying to write to a folder to which you don''t have write permissions, or, the folder you want to create is invalid.');
 end;
@@ -1150,7 +1150,7 @@ begin
  then Flags:= MOVEFILE_REPLACE_EXISTING
  else Flags:= 0;
 
- if NOT System.SysUtils.ForceDirectories(To_DestFolder)
+ if NOT LightCore.IO.ForceDirectoriesB(To_DestFolder)
  then raise Exception.Create('FileMoveToDir: Cannot create destination folder: ' + To_DestFolder);
 
  Result:= MoveFileEx(PChar(From_FullPath), PChar(Trail(To_DestFolder) + ExtractFileName(From_FullPath)), Flags);
