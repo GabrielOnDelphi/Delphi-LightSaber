@@ -1,4 +1,4 @@
-UNIT LightVcl.Common.Dialogs;
+﻿UNIT LightVcl.Common.Dialogs;
 
 {=============================================================================================================
    2026.07.06
@@ -17,6 +17,7 @@ UNIT LightVcl.Common.Dialogs;
      - MessageInfo     : Information message (blue 'i' icon)
      - MessageWarning  : Warning message (yellow triangle icon)
      - MessageError    : Error message (red 'X' icon)
+     - MessageErrorLog : Error message AND a line in the log (AppDataCore.LogError)
      - MesajYesNo      : Yes/No question dialog, returns Boolean
      - MesajErrDetail  : Error with "report this bug" text
      - MesajTaskDlg    : Uses modern TTaskDialog (Vista+)
@@ -50,6 +51,9 @@ USES
  procedure MessageInfo    (CONST MessageText: string; CONST Title: string= '');
  procedure MessageWarning (CONST MessageText: string; CONST Title: string= '');
  procedure MessageError   (CONST MessageText: string; CONST Title: string= '');
+
+ { Same as MessageError, but ALSO writes the error into the log. See the note above the body. }
+ procedure MessageErrorLog(CONST MessageText: string; CONST LogText: string= ''; CONST Title: string= '');
 
  { Extended error dialog with "report this bug" message }
  procedure MesajErrDetail (CONST MessageText, Where: string);
@@ -133,6 +137,33 @@ begin
   if Title = ''
   then MesajGeneric(MessageText, 'Error', MB_ICONERROR or MB_OK)
   else MesajGeneric(MessageText, Title, MB_ICONERROR or MB_OK);
+end;
+
+
+{ Shows the error to the user AND writes it into the log.
+
+  Why both: the message box is gone the moment the user clicks OK. The log survives - TRamLog saves
+  itself to disk on its own (PeriodicLogSave.logbin, in the AppData folder), so the line is still there
+  when the user complains weeks later. Worth logging even a failure that is NOT our fault (read-only
+  folder, full disk, dropped network share): it gives context to the next real crash report below it.
+
+  LogText: a short one-line version, for when the dialog text is long and multi-line.
+           Left empty, the dialog text itself is logged.
+
+  AppDataCore is checked for NIL: an application creates it by hand in its DPR, and the finalization
+  of LightVcl.Visual.AppData sets it back to NIL during shutdown.
+
+  In TEST_MODE no dialog appears (MesajGeneric returns immediately) but the log line is still written. }
+procedure MessageErrorLog(CONST MessageText: string; CONST LogText: string = ''; CONST Title: string = '');
+begin
+  if AppDataCore <> NIL then
+   begin
+     if LogText = ''
+     then AppDataCore.LogError(MessageText)
+     else AppDataCore.LogError(LogText);
+   end;
+
+  MessageError(MessageText, Title);
 end;
 
 
