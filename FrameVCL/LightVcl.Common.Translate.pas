@@ -395,7 +395,7 @@ VAR
    i: Integer;
    CurForm: TForm;
 begin
-  ForceDirectories(GetLangFolder); // Ensure the folder exists. But don't do it sooner than necessary.
+  ForceDirectoriesE(GetLangFolder); // Ensure the folder exists. But don't do it sooner than necessary. Raises: we are about to write the translation file into it.
 
   if Overwrite
   then DeleteFile(FileName);
