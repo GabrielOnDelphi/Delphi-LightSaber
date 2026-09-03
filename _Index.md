@@ -328,7 +328,7 @@ procedure OpenURL(const URL: string); { Opens URL in the default browser. Cross-
 Procedure CreateUrl (CONST FullFileName, sFullURL: string); { Creates an .URL file }
 ```
 
-## LightCore.IO (130)
+## LightCore.IO (129)
 
 ```pascal
 function TrailLinuxPathEx (CONST Path: string): string; { Adds / in front and at the end of the path }
@@ -353,9 +353,8 @@ function Trail (CONST Path: string): string; { Replacement for includeTrailingPa
 function SameFolder(Path1, Path2: string): Boolean; { Receives two folders. Ex: C:\Test1\ and C:\teSt1 will return true }
 function SameFolderFromFile(Path1, Path2: string): Boolean; { Receives two partial or complete file names and compare their folders. Ex: C:\Test1 and C:\teSt1\me.txt will return true }
 function IsSubfolder(Path1: String; Path2: String): Boolean;
-procedure ForceDirectoriesE (CONST Folder: string);
-function ForceDirectoriesB (CONST Folder: string): Boolean; { Replacement for System.SysUtils.ForceDirectories - elimina problema: " { Do not call ForceDirectories with an empty string. Doing so causes ForceDirectories to raise an exception" }
-function ForceDirectories (CONST Folder: string): Integer;
+procedure ForceDirectoriesE (CONST Folder: string); { RAISES on failure, with the RTL's own exception carrying the Windows reason text. Use it for "I am about to write a file in here" }
+function ForceDirectoriesB (CONST Folder: string): Boolean; { NEVER raises. TRUE = the folder is there now (created, or already existed). FALSE = it is not: empty or invalid path, path over MAX_PATH, missing or write-protected drive, no write permission. Unlike System.SysUtils.ForceDirectories it also answers correctly when another thread creates the same folder at the same moment }
 function CorrectFolder (CONST Folder : string; ReplaceWith: char= ' '): string; { Folder is single folder. Example '\test\' }
 function CorrectFilename (CONST FileName: string; ReplaceWith: char= ' '): string; { Correct invalid characters in a filename. FileName = File name without path }
 function ShortenPath (CONST LongPath: String; MaxChars: Integer): String; { Also exists: FileCtrl.MinimizeName, DrawStringEllipsis }
@@ -463,7 +462,7 @@ function Drive2Char (CONST DriveNumber: Byte): Char; { Converts the drive number
 function GetLogicalDrives: TStringDynArray; inline;
 ```
 
-## LightCore.IOPlatformFile (9)
+## LightCore.IOPlatformFile (12)
 
 ```pascal
 function IsMacFile (InStream: TStream): Boolean; { Returns true if the Enter is format from a single CR character }
@@ -472,9 +471,12 @@ function GetEnterTypeS (CONST InputFile: string): string;
 procedure WinToUnix (InStream: TStream; OutStream: TStream; Notify: TConvertNotify); overload;
 procedure UnixToWin (InStream: TStream; OutStream: TStream; Notify: TConvertNotify); overload;
 procedure MacToWin (InStream: TStream; OutStream: TStream); overload;
+procedure AnyToWin (InStream: TStream; OutStream: TStream; Notify: TConvertNotify); overload; { Any mix of CR / LF / CRLF to CRLF }
 procedure WinToUnix (CONST InputFile, OutputFile: String; Notify: TConvertNotify); overload;
 procedure UnixToWin (CONST InputFile, OutputFile: String; Notify: TConvertNotify); overload;
 function MacToWin (CONST InputFile, OutputFile: string): Boolean; overload; { CR to CRLF }
+procedure AnyToWin (CONST InputFile, OutputFile: String; Notify: TConvertNotify); overload;
+function FixEntersInPlace (CONST FileName: string): Boolean; { Rewrites the file to CRLF only if it is not already CRLF-only. TRUE = the file was changed }
 ```
 
 ## LightCore.LogLinesAbstract (18)
@@ -621,7 +623,7 @@ function Count: Integer;
 function GetItem(Index: Integer): string;
 ```
 
-## LightCore (130)
+## LightCore (131)
 
 ```pascal
 function CRLFToEnter (CONST s: string): string; // old name: FixCRLF
@@ -666,6 +668,7 @@ function CopyWords (CONST s: string; MaxChars: Integer): string; { Copy from s a
 procedure ReplaceShortWords (var s: string; MinLength: Integer; FilterIfNoWovels: Boolean); { This procedure will replace short words (length < MinLength) with spaces. It also filters words that only contain consonants }
 function ReplaceWholeWords (const InputStr, OldWord, NewWord: string; const Delimiters: array of Char): string; overload;
 function ReplaceWholeWords (const InputStr, OldWord, NewWord: string): string; overload;
+function PosWholeWord (CONST SubStr, S: string; Offset: Integer= 1): Integer; { Like PosEx, but the hit must be a WHOLE word. Returns 0 if not found. }
 function WordCountStrict (CONST s: string): Integer;
 function WordCount (CONST s: string): Integer;
 function CutInclude2Left (CONST s, SearchFor: string): string; { Delete all chars from end of MATCH to Left - including the match }
@@ -1248,9 +1251,9 @@ procedure ScanMediaFile(const AFileName: string); // If manually saving files
 procedure PickImageFromGallery; // Opens the Photos/Gallery picker (Android, iOS)
 procedure PickAnyFileFromStorage(const MimeType: string = '*/*'); // Opens system file UI: SAF on Android, UIDocumentPickerViewController on iOS
 function GetPublicPicturesFolder: string;
-function SetupImagePickerCallback (const AOnImageSelected: TImageSelectedEvent): TMessageSubscriptionId;
-function SetupAnyFilePickerCallback(const AOnFileSelected : TFileSelectedEvent ): TMessageSubscriptionId;
-function SubscribeToIncomingFileIntents(const AOnFileReceived: TFileSelectedEvent): TMessageSubscriptionId;
+function SetupImagePickerCallback (const AOnImageSelected: TImageSelectedEvent): TSubscriptionId;
+function SetupAnyFilePickerCallback(const AOnFileSelected : TFileSelectedEvent ): TSubscriptionId;
+function SubscribeToIncomingFileIntents(const AOnFileReceived: TFileSelectedEvent): TSubscriptionId;
 procedure ProcessLaunchIntent(const AOnFileReceived: TFileSelectedEvent);
 ```
 
@@ -1277,7 +1280,7 @@ function ReadPendingCrashLog: string; // File contents, or '' if no file.
 procedure ClearPendingCrashLog; // Deletes the file. Safe to call when no file exists.
 ```
 
-## LightFmx.Common.Dialogs (7)
+## LightFmx.Common.Dialogs (8)
 
 ```pascal
 procedure GenericMessage(CONST MessageText: string; CONST Caption: string= ''; DlgType: TMsgDlgType= TMsgDlgType.mtCustom);
@@ -1285,6 +1288,7 @@ procedure MessageInfo (CONST MessageText: string; CONST Caption: string= '');
 procedure MessageWarning(CONST MessageText: string; CONST Caption: string= '');
 procedure MessageError (CONST MessageText: string; CONST Caption: string= ''); overload;
 procedure MessageError (CONST MessageText, Where: string; CONST Caption: string); overload;
+procedure MessageErrorLog(CONST MessageText: string; CONST LogText: string= ''; CONST Caption: string= '');
 procedure MessageYesNo(CONST MessageText: string; CONST Caption: string= ''; CONST Callback: TProc<Boolean>= NIL);
 function ResolveErrorCaption(CONST Where, Caption: string): string;
 ```
@@ -1811,13 +1815,14 @@ function LastErrorMsgStr: string;
 function FixEmbarcaderoAtomTableMemLeak: Boolean; Deprecated 'Use in-program leak fixing: 3rdPartyPkg.AtomGarbageCollector.pas.GarbageCollectAtoms(Log)'
 ```
 
-## LightVcl.Common.Dialogs (7)
+## LightVcl.Common.Dialogs (8)
 
 ```pascal
 function MesajGeneric (CONST MessageText: string; Title: string= ''; Icon: Integer= -1): Integer;
 procedure MessageInfo (CONST MessageText: string; CONST Title: string= '');
 procedure MessageWarning (CONST MessageText: string; CONST Title: string= '');
 procedure MessageError (CONST MessageText: string; CONST Title: string= '');
+procedure MessageErrorLog(CONST MessageText: string; CONST LogText: string= ''; CONST Title: string= '');
 procedure MesajErrDetail (CONST MessageText, Where: string);
 function MesajYesNo (CONST MessageText: string; CONST Title: string= ''): Boolean;
 procedure MesajTaskDlg (CONST MessageText, Title: string);
@@ -1908,7 +1913,7 @@ procedure WriteGroup (WinCtrl: TWinControl);
 ```pascal
 function DirectoryExistMsg (CONST Path: string): Boolean;
 function FileExistsMsg (CONST FileName: string): Boolean;
-function ForceDirectoriesMsg (CONST FullPath: string): Boolean; { Wrapper around LightCore.IO.ForceDirectories. Returns True if directory exists or was created, False on failure. Shows error dialog on failure. }
+function ForceDirectoriesMsg (CONST FullPath: string): Boolean; { Wrapper around LightCore.IO.ForceDirectoriesB. Returns True if directory exists or was created, False on failure. Shows error dialog on failure. }
 procedure MoveFolderMsg (CONST FromFolder, ToFolder: String; SilentOverwrite: Boolean);
 function DeleteFileWithMsg (CONST FileName: string): Boolean;
 function GetProgramFilesDir : string;
@@ -4031,4 +4036,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2932 public routines across 218 units._
+_2937 public routines across 218 units._
