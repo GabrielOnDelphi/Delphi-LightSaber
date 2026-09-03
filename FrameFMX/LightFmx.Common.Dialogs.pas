@@ -1,4 +1,4 @@
-unit LightFmx.Common.Dialogs;
+﻿unit LightFmx.Common.Dialogs;
 
 {=============================================================================================================
    2026.07.06
@@ -32,6 +32,9 @@ procedure MessageInfo   (CONST MessageText: string; CONST Caption: string= '');
 procedure MessageWarning(CONST MessageText: string; CONST Caption: string= '');
 procedure MessageError  (CONST MessageText: string; CONST Caption: string= '');    overload;
 procedure MessageError  (CONST MessageText, Where: string; CONST Caption: string); overload;
+
+{ Same as MessageError, but ALSO writes the error into the log. See the note above the body. }
+procedure MessageErrorLog(CONST MessageText: string; CONST LogText: string= ''; CONST Caption: string= '');
 
 { Displays a Yes/No confirmation dialog asynchronously.
   Callback receives True if user selects Yes, False otherwise.
@@ -100,6 +103,35 @@ begin
             CRLF + 'Hint: press Control+C to copy this message to clipboard.';
 
   MessageError(FullMsg, ResolveErrorCaption(Where, Caption));
+end;
+
+
+{ Shows the error to the user AND writes it into the log.
+
+  Why both, and why it matters MORE here than in the VCL version:
+    - There is no madExcept on Android or iOS, so nothing else records that this failed.
+    - These dialogs are asynchronous. The code does not wait, and on a phone the box can be missed
+      entirely when the app goes to background. The log line is what survives.
+    - TRamLog saves itself to disk on its own (PeriodicLogSave.logbin, in the AppData folder), so
+      the line is still there when the user complains weeks later.
+
+  LogText: a short one-line version, for when the dialog text is long and multi-line.
+           Left empty, the dialog text itself is logged.
+
+  AppDataCore is checked for NIL: an application creates it by hand in its DPR, and the finalization
+  of LightFmx.Common.AppData sets it back to NIL during shutdown.
+
+  In TEST_MODE no dialog is created (GenericMessage returns immediately) but the log line is still written. }
+procedure MessageErrorLog(CONST MessageText: string; CONST LogText: string = ''; CONST Caption: string = '');
+begin
+  if AppDataCore <> NIL then
+   begin
+     if LogText = ''
+     then AppDataCore.LogError(MessageText)
+     else AppDataCore.LogError(LogText);
+   end;
+
+  MessageError(MessageText, Caption);
 end;
 
 
