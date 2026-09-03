@@ -145,7 +145,7 @@ begin
   FTestLabel.Hint:= 'Original Hint';
 
   FTestLangFolder:= TAppDataCore.AppDataFolder(TRUE) + 'Lang\';
-  ForceDirectories(FTestLangFolder);
+  ForceDirectoriesE(FTestLangFolder);
 end;
 
 
@@ -160,7 +160,7 @@ procedure TTestTranslator.CreateTestLanguageFile(const FileName, LabelHint: stri
 var
   Ini: TMemIniFile;
 begin
-  ForceDirectories(FTestLangFolder);
+  ForceDirectoriesE(FTestLangFolder);
   Ini:= TMemIniFile.Create(FTestLangFolder + FileName, TEncoding.UTF8);
   TRY
     Ini.WriteString('Authors', 'Name', 'TestAuthor');

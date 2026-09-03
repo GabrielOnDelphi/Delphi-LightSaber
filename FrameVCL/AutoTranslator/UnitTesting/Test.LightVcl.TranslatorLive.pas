@@ -96,7 +96,7 @@ begin
   FApiKey:= ReadApiKey;
 
   FTestFolder:= TPath.Combine(TPath.GetTempPath, 'LightSaber_TranslatorLive');
-  ForceDirectories(FTestFolder);
+  ForceDirectoriesE(FTestFolder);
   FSourceINI:= TPath.Combine(FTestFolder, 'English.ini');
   FTargetINI:= TPath.Combine(FTestFolder, 'German.ini');
 end;

@@ -13,6 +13,7 @@ unit Test.LightVcl.TranslatorAPI;
 interface
 
 uses
+  LightCore.IO,
   DUnitX.TestFramework,
   System.SysUtils,
   System.Classes,
@@ -154,7 +155,7 @@ uses
 procedure TTestTranslatorAPI.Setup;
 begin
   FTestFolder:= TPath.Combine(TPath.GetTempPath, 'TranslatorAPITest_' + IntToStr(Random(100000)));
-  ForceDirectories(FTestFolder);
+  ForceDirectoriesE(FTestFolder);
   FTargetINI:= TPath.Combine(FTestFolder, 'German.ini');
 end;
 
