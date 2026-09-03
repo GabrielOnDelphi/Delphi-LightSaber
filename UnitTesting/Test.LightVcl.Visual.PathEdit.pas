@@ -150,7 +150,7 @@ begin
 
   { Create a temp folder for testing }
   FTestFolder:= TPath.Combine(TPath.GetTempPath, 'TestPathEdit_' + TGUID.NewGuid.ToString);
-  ForceDirectories(FTestFolder);
+  ForceDirectoriesE(FTestFolder);
 
   { Create a temp file for testing }
   FTestFile:= TPath.Combine(FTestFolder, 'TestFile.txt');

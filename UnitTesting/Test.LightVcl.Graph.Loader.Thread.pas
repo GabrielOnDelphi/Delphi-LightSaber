@@ -13,6 +13,7 @@ unit Test.LightVcl.Graph.Loader.Thread;
 interface
 
 uses
+  LightCore.IO,
   DUnitX.TestFramework,
   Winapi.Windows,
   Winapi.Messages,
@@ -110,7 +111,7 @@ end;
 procedure TTestBkgImgLoader.Setup;
 begin
   FTempDir:= TPath.Combine(TPath.GetTempPath, 'TestBkgImgLoader_' + TGUID.NewGuid.ToString);
-  ForceDirectories(FTempDir);
+  ForceDirectoriesE(FTempDir);
   FTestBmpFiles:= TStringList.Create;
   FReceivedThumbs:= 0;
   FEvent:= TEvent.Create(NIL, True, False, '');

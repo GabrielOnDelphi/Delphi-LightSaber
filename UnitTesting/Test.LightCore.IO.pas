@@ -125,7 +125,10 @@ type
     procedure TestForceDirectoriesB;
 
     [Test]
-    procedure TestForceDirectories;
+    procedure TestForceDirectoriesB_NeverRaises;
+
+    [Test]
+    procedure TestForceDirectoriesE;
 
     [Test]
     procedure TestListFilesOf;
@@ -532,13 +535,37 @@ begin
   Assert.IsTrue(TDirectory.Exists(TestPath));
 end;
 
-procedure TTestLightCoreIO.TestForceDirectories;
+
+{ ForceDirectoriesB promises that FALSE is the only way it reports a failure. Both inputs below
+  make System.SysUtils.ForceDirectories or TDirectory.CreateDirectory raise, so if the guard or the
+  choice of RTL routine inside ForceDirectoriesB is ever changed back, one of these fails. }
+procedure TTestLightCoreIO.TestForceDirectoriesB_NeverRaises;
+begin
+  Assert.IsFalse(ForceDirectoriesB(''), 'Empty path must return FALSE, not raise');
+  Assert.IsFalse(ForceDirectoriesB('C:\?'), 'Invalid characters must return FALSE, not raise');
+end;
+
+{ ForceDirectoriesE carries the opposite promise: it reports a failure ONLY by raising. It must also
+  stay silent when the folder is already there, because most callers run it before every save. }
+procedure TTestLightCoreIO.TestForceDirectoriesE;
 var
   TestPath: string;
 begin
-  TestPath:= TPath.Combine(FTestDir, 'newdir');
-  Assert.AreEqual(1, ForceDirectories(TestPath));  { 1 = created successfully }
-  Assert.AreEqual(0, ForceDirectories(TestPath));  { 0 = already exists }
+  TestPath:= TPath.Combine(FTestDir, 'edir1\edir2');
+
+  ForceDirectoriesE(TestPath);
+  Assert.IsTrue(TDirectory.Exists(TestPath), 'The folder must exist after ForceDirectoriesE');
+
+  ForceDirectoriesE(TestPath);                          { second call, folder already there }
+  Assert.IsTrue(TDirectory.Exists(TestPath), 'A second call on an existing folder must not raise and must not remove it');
+
+  Assert.WillRaise(
+    procedure
+    begin
+      ForceDirectoriesE('');
+    end,
+    NIL,
+    'An empty path must RAISE');
 end;
 
 procedure TTestLightCoreIO.TestListFilesOf;

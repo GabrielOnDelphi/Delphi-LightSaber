@@ -8,6 +8,7 @@ unit Test.LightCore.TextFile;
 interface
 
 uses
+  LightCore.IO,
   DUnitX.TestFramework,
   System.SysUtils,
   System.IOUtils,
@@ -108,7 +109,7 @@ uses
 procedure TTestLightCoreTextFile.Setup;
 begin
   FTestFolder:= TPath.Combine(TPath.GetTempPath, 'LightTextFileTest_' + IntToStr(Random(100000)));
-  ForceDirectories(FTestFolder);
+  ForceDirectoriesE(FTestFolder);
   FTestFile:= TPath.Combine(FTestFolder, 'TestFile.txt');
 end;
 

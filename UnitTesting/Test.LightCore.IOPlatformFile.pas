@@ -100,6 +100,33 @@ type
     [Test]
     procedure TestMacToWin_MultipleLines;
 
+    { Mixed-file Tests - a file that holds BOTH kinds of line ending inside it }
+    [Test]
+    procedure TestUnixToWin_Mixed_NoDoubleCR;
+
+    [Test]
+    procedure TestMacToWin_Mixed_NoDoubleLF;
+
+    [Test]
+    procedure TestMacToWin_CRAtEndOfFile;
+
+    { AnyToWin Tests }
+    [Test]
+    procedure TestAnyToWin_AllThreeKinds;
+
+    [Test]
+    procedure TestAnyToWin_AlreadyWindows_Unchanged;
+
+    [Test]
+    procedure TestAnyToWin_CRAtEndOfFile;
+
+    { FixEntersInPlace Tests }
+    [Test]
+    procedure TestFixEntersInPlace_Converts;
+
+    [Test]
+    procedure TestFixEntersInPlace_LeavesCorrectFileAlone;
+
     { Round-trip Tests }
     [Test]
     procedure TestRoundTrip_WinToUnixToWin;
@@ -678,6 +705,222 @@ begin
 
   Assert.IsFalse(WasConverted, 'Should return False for non-Mac file');
   Assert.IsFalse(FileExists(OutPath), 'Output file should NOT exist when not converted');
+end;
+
+
+{ Mixed-file Tests }
+
+{ A file where SOME lines already end in CRLF and some end in a solitary LF.
+  The old code wrote a CR in front of every LF, so the already-correct lines came out as CR CR LF. }
+procedure TTestIOPlatformFile.TestUnixToWin_Mixed_NoDoubleCR;
+VAR
+  InStream, OutStream: TMemoryStream;
+  ResultBytes: TBytes;
+  i: Integer;
+begin
+  { Input: A<CRLF>B<LF>C  ->  Output: A<CRLF>B<CRLF>C }
+  InStream:= CreateTestStream(TBytes.Create($41, $0D, $0A, $42, $0A, $43));
+  OutStream:= TMemoryStream.Create;
+  TRY
+    UnixToWin(InStream, OutStream, nil);
+    ResultBytes:= StreamToBytes(OutStream);
+
+    Assert.AreEqual(7, Length(ResultBytes), 'One CR must be added, not two');
+    Assert.AreEqual(Byte($41), ResultBytes[0]);  { A }
+    Assert.AreEqual(Byte($0D), ResultBytes[1]);  { CR }
+    Assert.AreEqual(Byte($0A), ResultBytes[2]);  { LF }
+    Assert.AreEqual(Byte($42), ResultBytes[3]);  { B }
+    Assert.AreEqual(Byte($0D), ResultBytes[4]);  { CR }
+    Assert.AreEqual(Byte($0A), ResultBytes[5]);  { LF }
+    Assert.AreEqual(Byte($43), ResultBytes[6]);  { C }
+
+    for i:= 1 to High(ResultBytes) DO
+      Assert.IsFalse((ResultBytes[i] = $0D) AND (ResultBytes[i-1] = $0D), 'Doubled CR at byte '+ IntToStr(i));
+  FINALLY
+    FreeAndNil(InStream);
+    FreeAndNil(OutStream);
+  END;
+end;
+
+
+{ The mirror case: SOME lines already end in CRLF and some end in a solitary CR.
+  The old code wrote a LF after every CR, so the already-correct lines came out as CR LF LF. }
+procedure TTestIOPlatformFile.TestMacToWin_Mixed_NoDoubleLF;
+VAR
+  InStream, OutStream: TMemoryStream;
+  ResultBytes: TBytes;
+  i: Integer;
+begin
+  { Input: A<CRLF>B<CR>C  ->  Output: A<CRLF>B<CRLF>C }
+  InStream:= CreateTestStream(TBytes.Create($41, $0D, $0A, $42, $0D, $43));
+  OutStream:= TMemoryStream.Create;
+  TRY
+    MacToWin(InStream, OutStream);
+    ResultBytes:= StreamToBytes(OutStream);
+
+    Assert.AreEqual(7, Length(ResultBytes), 'One LF must be added, not two');
+    Assert.AreEqual(Byte($41), ResultBytes[0]);  { A }
+    Assert.AreEqual(Byte($0D), ResultBytes[1]);  { CR }
+    Assert.AreEqual(Byte($0A), ResultBytes[2]);  { LF }
+    Assert.AreEqual(Byte($42), ResultBytes[3]);  { B }
+    Assert.AreEqual(Byte($0D), ResultBytes[4]);  { CR }
+    Assert.AreEqual(Byte($0A), ResultBytes[5]);  { LF }
+    Assert.AreEqual(Byte($43), ResultBytes[6]);  { C }
+
+    for i:= 1 to High(ResultBytes) DO
+      Assert.IsFalse((ResultBytes[i] = $0A) AND (ResultBytes[i-1] = $0A), 'Doubled LF at byte '+ IntToStr(i));
+  FINALLY
+    FreeAndNil(InStream);
+    FreeAndNil(OutStream);
+  END;
+end;
+
+
+{ A CR as the very last byte has no byte after it to decide on. It must still come out as CRLF. }
+procedure TTestIOPlatformFile.TestMacToWin_CRAtEndOfFile;
+VAR
+  InStream, OutStream: TMemoryStream;
+  ResultBytes: TBytes;
+begin
+  { Input: A<CR>  ->  Output: A<CRLF> }
+  InStream:= CreateTestStream(TBytes.Create($41, $0D));
+  OutStream:= TMemoryStream.Create;
+  TRY
+    MacToWin(InStream, OutStream);
+    ResultBytes:= StreamToBytes(OutStream);
+
+    Assert.AreEqual(3, Length(ResultBytes), 'A trailing CR must not be dropped');
+    Assert.AreEqual(Byte($41), ResultBytes[0]);  { A }
+    Assert.AreEqual(Byte($0D), ResultBytes[1]);  { CR }
+    Assert.AreEqual(Byte($0A), ResultBytes[2]);  { LF }
+  FINALLY
+    FreeAndNil(InStream);
+    FreeAndNil(OutStream);
+  END;
+end;
+
+
+{ AnyToWin Tests }
+
+procedure TTestIOPlatformFile.TestAnyToWin_AllThreeKinds;
+VAR
+  InStream, OutStream: TMemoryStream;
+  ResultBytes: TBytes;
+  i: Integer;
+begin
+  { Input: A<LF>B<CR>C<CRLF>D  ->  Output: A<CRLF>B<CRLF>C<CRLF>D }
+  InStream:= CreateTestStream(TBytes.Create($41, $0A, $42, $0D, $43, $0D, $0A, $44));
+  OutStream:= TMemoryStream.Create;
+  TRY
+    AnyToWin(InStream, OutStream, nil);
+    ResultBytes:= StreamToBytes(OutStream);
+
+    Assert.AreEqual(10, Length(ResultBytes), '4 chars + 3 CRLF pairs');
+    Assert.AreEqual(Byte($41), ResultBytes[0]);  { A }
+    Assert.AreEqual(Byte($0D), ResultBytes[1]);
+    Assert.AreEqual(Byte($0A), ResultBytes[2]);
+    Assert.AreEqual(Byte($42), ResultBytes[3]);  { B }
+    Assert.AreEqual(Byte($0D), ResultBytes[4]);
+    Assert.AreEqual(Byte($0A), ResultBytes[5]);
+    Assert.AreEqual(Byte($43), ResultBytes[6]);  { C }
+    Assert.AreEqual(Byte($0D), ResultBytes[7]);
+    Assert.AreEqual(Byte($0A), ResultBytes[8]);
+    Assert.AreEqual(Byte($44), ResultBytes[9]);  { D }
+
+    for i:= 1 to High(ResultBytes) DO
+     begin
+      Assert.IsFalse((ResultBytes[i] = $0D) AND (ResultBytes[i-1] = $0D), 'Doubled CR at byte '+ IntToStr(i));
+      Assert.IsFalse((ResultBytes[i] = $0A) AND (ResultBytes[i-1] = $0A), 'Doubled LF at byte '+ IntToStr(i));
+     end;
+  FINALLY
+    FreeAndNil(InStream);
+    FreeAndNil(OutStream);
+  END;
+end;
+
+
+procedure TTestIOPlatformFile.TestAnyToWin_AlreadyWindows_Unchanged;
+VAR
+  InStream, OutStream: TMemoryStream;
+  OrigBytes, ResultBytes: TBytes;
+begin
+  InStream:= CreateTestStream(TBytes.Create($41, $0D, $0A, $42, $0D, $0A, $43));
+  OutStream:= TMemoryStream.Create;
+  TRY
+    OrigBytes:= StreamToBytes(InStream);
+    InStream.Position:= 0;
+
+    AnyToWin(InStream, OutStream, nil);
+    ResultBytes:= StreamToBytes(OutStream);
+
+    Assert.AreEqual(Length(OrigBytes), Length(ResultBytes), 'A correct file must come out byte for byte the same');
+    Assert.IsTrue(CompareMem(@OrigBytes[0], @ResultBytes[0], Length(OrigBytes)), 'Content changed');
+  FINALLY
+    FreeAndNil(InStream);
+    FreeAndNil(OutStream);
+  END;
+end;
+
+
+procedure TTestIOPlatformFile.TestAnyToWin_CRAtEndOfFile;
+VAR
+  InStream, OutStream: TMemoryStream;
+  ResultBytes: TBytes;
+begin
+  { Input: A<CR>  ->  Output: A<CRLF> }
+  InStream:= CreateTestStream(TBytes.Create($41, $0D));
+  OutStream:= TMemoryStream.Create;
+  TRY
+    AnyToWin(InStream, OutStream, nil);
+    ResultBytes:= StreamToBytes(OutStream);
+
+    Assert.AreEqual(3, Length(ResultBytes), 'A trailing CR must not be dropped');
+    Assert.AreEqual(Byte($0D), ResultBytes[1]);
+    Assert.AreEqual(Byte($0A), ResultBytes[2]);
+  FINALLY
+    FreeAndNil(InStream);
+    FreeAndNil(OutStream);
+  END;
+end;
+
+
+{ FixEntersInPlace Tests }
+
+procedure TTestIOPlatformFile.TestFixEntersInPlace_Converts;
+VAR
+  FilePath: string;
+  Changed: Boolean;
+  ResultBytes: TBytes;
+begin
+  FilePath:= TPath.Combine(FTestDir, 'mixed.txt');
+  TFile.WriteAllBytes(FilePath, TBytes.Create($41, $0D, $0A, $42, $0A, $43));  { A<CRLF>B<LF>C }
+
+  Changed:= FixEntersInPlace(FilePath);
+
+  Assert.IsTrue(Changed, 'The file held a solitary LF, so it had to be changed');
+  ResultBytes:= TFile.ReadAllBytes(FilePath);
+  Assert.AreEqual(7, Length(ResultBytes));
+  Assert.AreEqual(Byte($0D), ResultBytes[4]);
+  Assert.AreEqual(Byte($0A), ResultBytes[5]);
+end;
+
+
+procedure TTestIOPlatformFile.TestFixEntersInPlace_LeavesCorrectFileAlone;
+VAR
+  FilePath: string;
+  Changed: Boolean;
+  ResultBytes: TBytes;
+begin
+  FilePath:= TPath.Combine(FTestDir, 'already_win.txt');
+  TFile.WriteAllBytes(FilePath, TBytes.Create($41, $0D, $0A, $42));  { A<CRLF>B }
+
+  Changed:= FixEntersInPlace(FilePath);
+
+  Assert.IsFalse(Changed, 'A file that is already CRLF must not be rewritten');
+  ResultBytes:= TFile.ReadAllBytes(FilePath);
+  Assert.AreEqual(4, Length(ResultBytes));
+  Assert.AreEqual(Byte($0D), ResultBytes[1]);
+  Assert.AreEqual(Byte($0A), ResultBytes[2]);
 end;
 
 

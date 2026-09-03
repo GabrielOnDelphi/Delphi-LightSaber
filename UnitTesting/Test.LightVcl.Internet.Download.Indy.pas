@@ -15,6 +15,7 @@ unit Test.LightVcl.Internet.Download.Indy;
 interface
 
 uses
+  LightCore.IO,
   DUnitX.TestFramework,
   System.SysUtils,
   System.IOUtils,
@@ -81,7 +82,7 @@ uses
 procedure TTestDownloadIndy.Setup;
 begin
   FTempDir:= TPath.Combine(TPath.GetTempPath, 'TestDownloadIndy_' + TGUID.NewGuid.ToString);
-  ForceDirectories(FTempDir);
+  ForceDirectoriesE(FTempDir);
 end;
 
 

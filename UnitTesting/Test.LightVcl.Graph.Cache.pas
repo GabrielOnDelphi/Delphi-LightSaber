@@ -146,8 +146,8 @@ begin
   FTestImagePath:= TPath.Combine(FTestFolder, 'TestImage1.bmp');
   FTestImagePath2:= TPath.Combine(FTestFolder, 'TestImage2.bmp');
 
-  ForceDirectories(FTestFolder);
-  ForceDirectories(FCacheFolder);
+  ForceDirectoriesE(FTestFolder);
+  ForceDirectoriesE(FCacheFolder);
 
   { Create test images }
   CreateTestImage(FTestImagePath, 800, 600);

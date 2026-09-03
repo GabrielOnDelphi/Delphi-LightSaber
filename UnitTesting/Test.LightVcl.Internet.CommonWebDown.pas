@@ -13,6 +13,7 @@ unit Test.LightVcl.Internet.CommonWebDown;
 interface
 
 uses
+  LightCore.IO,
   DUnitX.TestFramework,
   System.SysUtils,
   System.IOUtils;
@@ -56,7 +57,7 @@ uses
 procedure TTestCommonWebDown.Setup;
 begin
   FTempDir:= TPath.Combine(TPath.GetTempPath, 'TestCommonWebDown_' + TGUID.NewGuid.ToString);
-  ForceDirectories(FTempDir);
+  ForceDirectoriesE(FTempDir);
 end;
 
 

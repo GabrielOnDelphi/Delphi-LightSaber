@@ -56,6 +56,7 @@ uses
   Test.LightCore.Debugger in 'Test.LightCore.Debugger.pas',
   Test.LightCore.CmdLine in 'Test.LightCore.CmdLine.pas',
   Test.ciUpdaterRec in 'Test.ciUpdaterRec.pas',
+  Test.LightCore.IOPlatformFile in 'Test.LightCore.IOPlatformFile.pas',
   { Source units }
   LightCore in '..\LightCore.pas',
   LightCore.Types in '..\LightCore.Types.pas',
@@ -88,6 +89,7 @@ uses
   LightCore.Debugger in '..\LightCore.Debugger.pas',
   LightCore.CmdLine in '..\LightCore.CmdLine.pas',
   LightCore.Platform in '..\LightCore.Platform.pas',
+  LightCore.IOPlatformFile in '..\LightCore.IOPlatformFile.pas',
   ciUpdaterRec in '..\Updater\ciUpdaterRec.pas';
 
 {$IFNDEF TESTINSIGHT}

@@ -12,6 +12,7 @@ unit Test.LightVcl.Graph.Loader.Resolution;
 interface
 
 uses
+  LightCore.IO,
   DUnitX.TestFramework,
   System.SysUtils,
   System.IOUtils,
@@ -157,7 +158,7 @@ uses
 procedure TTestGraphLoaderResolution.Setup;
 begin
   FTempDir:= TPath.Combine(TPath.GetTempPath, 'TestGraphResolution_' + TGUID.NewGuid.ToString);
-  ForceDirectories(FTempDir);
+  ForceDirectoriesE(FTempDir);
   FTempBmpFile:= '';
   FTempPngFile:= '';
   FTempJpgFile:= '';

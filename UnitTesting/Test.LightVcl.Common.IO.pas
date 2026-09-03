@@ -171,7 +171,7 @@ uses
 procedure TTestVclCommonIO.Setup;
 begin
   FTestFolder := TPath.Combine(TPath.GetTempPath, 'LightVclIOTest_' + IntToStr(Random(100000)));
-  ForceDirectories(FTestFolder);
+  ForceDirectoriesE(FTestFolder);
   FTestFile := TPath.Combine(FTestFolder, 'TestFile.txt');
   TFile.WriteAllText(FTestFile, 'Test content');
 end;
@@ -467,7 +467,7 @@ begin
   DestFile := TPath.Combine(DestFolder, 'MoveToDirSource.txt');
 
   TFile.WriteAllText(SourceFile, 'Move to dir test');
-  ForceDirectories(DestFolder);
+  ForceDirectoriesE(DestFolder);
 
   Result := LightVcl.Common.IO.FileMoveToDir(SourceFile, DestFolder, True);
 

@@ -13,6 +13,7 @@ unit Test.LightVcl.Graph.Loader;
 interface
 
 uses
+  LightCore.IO,
   DUnitX.TestFramework,
   System.SysUtils,
   System.IOUtils,
@@ -180,7 +181,7 @@ uses
 procedure TTestGraphLoader.Setup;
 begin
   FTempDir:= TPath.Combine(TPath.GetTempPath, 'TestGraphLoader_' + TGUID.NewGuid.ToString);
-  ForceDirectories(FTempDir);
+  ForceDirectoriesE(FTempDir);
   FTempBmpFile:= '';
   FTempPngFile:= '';
   FTempJpgFile:= '';
