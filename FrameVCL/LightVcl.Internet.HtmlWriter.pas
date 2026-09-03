@@ -143,8 +143,8 @@ procedure THtmlWriter.SaveToFile(CONST FileName: string);
 VAR Folder: string;
 begin
  Folder:= ExtractFilePath(FileName);
- if (Folder<>'') AND NOT DirectoryExists(Folder)
- then ForceDirectories(Folder);
+ if Folder <> ''
+ then ForceDirectoriesE(Folder);       { Raises: StringToFile below is about to write into this folder }
  GenerateContent;
  StringToFile(FileName, Content, woOverwrite, wpOff);
 end;
