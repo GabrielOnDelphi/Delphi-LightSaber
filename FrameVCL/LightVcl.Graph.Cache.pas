@@ -363,7 +363,7 @@ begin
  if Value = ''
  then raise Exception.Create('TCacheObj.setCacheFolder: Value parameter cannot be empty');
 
- if LightCore.IO.ForceDirectories(Value) < 0
+ if NOT LightCore.IO.ForceDirectoriesB(Value)
  then raise Exception.Create('TCacheObj.setCacheFolder: Cannot create folder: '+ Value);
 
  if NOT CanWriteToFolder(Value)
