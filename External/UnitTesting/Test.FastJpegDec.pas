@@ -12,6 +12,7 @@ UNIT Test.FastJpegDec;
 INTERFACE
 
 USES
+  LightCore.IO,
   System.SysUtils, System.Classes, System.IOUtils,
   Vcl.Graphics,
   DUnitX.TestFramework,
@@ -137,7 +138,7 @@ end;
 procedure TTestFastJpgDecHelper.Setup;
 begin
   FTestDir:= TPath.Combine(TPath.GetTempPath, 'FastJpegTest_' + TGUID.NewGuid.ToString);
-  ForceDirectories(FTestDir);
+  ForceDirectoriesE(FTestDir);
 end;
 
 
