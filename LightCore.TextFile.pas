@@ -130,13 +130,8 @@ VAR
    Dir: string;
 begin
   Dir:= ExtractFilePath(FileName);
-  if (Dir <> '')
-  AND NOT DirectoryExists(Dir) then
-    begin
-      ForceDirectories(Dir);
-      if NOT DirectoryExists(Dir)
-      then raise Exception.CreateFmt('Cannot create directory: %s', [Dir]);
-    end;
+  if Dir <> ''
+  then ForceDirectoriesE(Dir);      { Raises if the folder cannot be created. The exception carries the Windows reason text. }
 
   if (WriteOp= woAppend)
   AND FileExists(FileName)
@@ -268,13 +263,8 @@ VAR
    Dir: string;
 begin
  Dir:= ExtractFilePath(FileName);
- if (Dir <> '') AND NOT DirectoryExists(Dir) then 
- begin
-   ForceDirectories(Dir);
-   if NOT DirectoryExists(Dir) then begin
-     raise Exception.CreateFmt('Cannot create directory: %s', [Dir]);
-   end;
- end;
+ if Dir <> ''
+ then ForceDirectoriesE(Dir);       { Raises if the folder cannot be created. The exception carries the Windows reason text. }
 
  if (WriteOp= woAppend)
  AND FileExists(FileName)

@@ -303,7 +303,7 @@ begin
   Assert(FullFileName <> '', 'LogFile_Init: FullFileName cannot be empty');
 
   LogFile:= FullFileName;
-  ForceDirectories(ExtractFilePath(FullFileName));
+  ForceDirectoriesE(ExtractFilePath(FullFileName));   { Raises: StringToFile below would raise anyway, but with a worse message }
 
   if FileExists(LogFile)
   then System.SysUtils.DeleteFile(LogFile);

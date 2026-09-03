@@ -404,8 +404,12 @@ begin
   then Result:= Trail(TPath.GetDocumentsPath)   // Android does not have the concept of "per-user". GetDocumentsPath is the path used by the Deployment Manager.
   else Result:= Trail(TPath.Combine(TPath.GetHomePath, AppName));
 
+  { The failure is deliberately NOT reported. This runs from TAppDataCore.Create before RamLog exists
+    and before any form exists, so an exception here would surface as a raw unhandled-exception box
+    with no application name and nothing to log it to. Returning a path that could not be created is
+    the lesser evil: the write that follows fails with a message the caller can show. }
   if ForceDir
-  then ForceDirectories(Result);
+  then ForceDirectoriesB(Result);
 end;
 
 
@@ -421,8 +425,9 @@ begin
     Result := Trail(TPath.Combine(TPath.GetPublicPath, AppName));
   {$ENDIF}
 
+  { Failure deliberately not reported - see AppDataFolder above for why. }
   if ForceDir
-  then ForceDirectories(Result);
+  then ForceDirectoriesB(Result);
 end;
 
 

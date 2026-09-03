@@ -1,7 +1,7 @@
 ﻿UNIT LightCore.IO;
 
 {=============================================================================================================
-   2026.07.07
+   2026.09.02
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -201,9 +201,8 @@ CONST
 {--------------------------------------------------------------------------------------------------
    CREATE FOLDERS
 --------------------------------------------------------------------------------------------------}
- procedure ForceDirectoriesE    (CONST Folder: string);
- function  ForceDirectoriesB    (CONST Folder: string): Boolean;                                  { Replacement for System.SysUtils.ForceDirectories - elimina problema: " { Do not call ForceDirectories with an empty string. Doing so causes ForceDirectories to raise an exception" }
- function  ForceDirectories     (CONST Folder: string): Integer;
+ procedure ForceDirectoriesE    (CONST Folder: string);                                           { RAISES on failure, with the RTL's own exception carrying the Windows reason text. Use it for "I am about to write a file in here" }
+ function  ForceDirectoriesB    (CONST Folder: string): Boolean;                                  { NEVER raises. TRUE = the folder is there now (created, or already existed). FALSE = it is not: empty or invalid path, path over MAX_PATH, missing or write-protected drive, no write permission. Unlike System.SysUtils.ForceDirectories it also answers correctly when another thread creates the same folder at the same moment }
 
 
 {--------------------------------------------------------------------------------------------------
@@ -741,62 +740,56 @@ end;
 {--------------------------------------------------------------------------------------------------
    CREATE FOLDER
 
-   Tries to create the specified folder. Does not crashes if
-   Works with UNC paths.
-   Writing on a readonly folder: It ignores the ReadOnly attribute (same for H and S attributes)
+   Creates the specified folder plus every missing parent folder above it. Works with UNC paths.
 
-   Returns:
-     False if the path is invalid.
-     False if the drive is readonly.
+   NEVER raises. The result is the whole answer:
+     TRUE  = the folder is there now (we created it, or it already existed).
+     FALSE = it is not. Empty path, invalid characters, path over MAX_PATH, missing drive,
+             write-protected drive, no write permission - every one of them returns FALSE.
+
+   The ReadOnly attribute on a FOLDER does not stop Windows from creating children inside it,
+   so a ReadOnly parent still returns TRUE. A write-protected DRIVE returns FALSE.
+
+   Why the result of System.SysUtils.ForceDirectories is thrown away:
+     its last line is  Result:= ForceDirectories(ExtractFilePath(Dir)) AND CreateDir(Dir)
+     (System.SysUtils.pas:10396). When another thread creates the folder between that routine's
+     own existence check and its CreateDir call, CreateDir fails and the RTL answers FALSE for a
+     folder that DOES exist. Asking the file system afterwards is the only answer immune to that
+     race, and BioniX depends on it: several background threads create thumbnail shard folders.
+
+   DirectoryExists below is the one declared in THIS unit, not the RTL one. It additionally
+   rejects a path ending in a space, so ForceDirectoriesB('c:\test ') answers FALSE even though
+   Windows silently created 'c:\test'. That is the correct answer: the caller did not get the
+   folder it asked for.
 --------------------------------------------------------------------------------------------------}
 function ForceDirectoriesB(CONST Folder: string): Boolean;
 begin
-  TRY
-    TDirectory.CreateDirectory(Folder);
-  EXCEPT
-    on EInOutError DO;  { Thread race: another thread may have created it. Check actual state below. }
-    else RAISE;
-    {
-    For any other exceptions, raise.
-    Example:
-      on EArgumentException DO RAISE;  // Re-raise exception for invalid characters in path
-      on EInOutArgumentException DO RAISE;  //   'Path is empty'.    }
-  END;
+  if Folder = ''
+  then EXIT(FALSE);                            { System.SysUtils.ForceDirectories RAISES on an empty string (System.SysUtils.pas:10368). This guard is what lets us promise never to raise. }
+
+  System.SysUtils.ForceDirectories(Folder);    { Result deliberately ignored - see the race described above }
   Result:= DirectoryExists(Folder);
 end;
 
-//
-//Project Tester_LightCore.IO.exe raised exception class  with message
 
 {--------------------------------------------------------------------------------------------------
-   Raises exception if parameter is invalid
-   Raises exception if parameter is empty
-   Raises exception if drive is invalid
+   The raising twin of ForceDirectoriesB. Same job, opposite way of reporting a failure:
+   it returns nothing and raises instead - and the exception carries the Windows reason text.
+   A thin wrapper around TDirectory.CreateDirectory.
+
+   Use it for "I am about to write a file in here", where carrying on after a failure is pointless.
+   Use ForceDirectoriesB when the caller wants to decide what to do next.
+
+   What it raises (all of these come out of TDirectory.CreateDirectory):
+     EInOutArgumentException     - path is empty, or holds characters invalid in a path
+     EPathTooLongException       - path is longer than MAX_PATH
+     EDirectoryNotFoundException - the drive does not exist
+     EInOutError                 - anything else. Message = SysErrorMessage(GetLastError)
 --------------------------------------------------------------------------------------------------}
 procedure ForceDirectoriesE(CONST Folder: string);
 begin
   TDirectory.CreateDirectory(Folder);
 end;
-
-
-// Works with UNC paths
-function ForceDirectories(CONST Folder: string): Integer;
-{RETURNS:
-  -1 = Error creating the directory
-   0 = Directory already exists
-  +1 = Directory created succesfully  }
-begin
-  Assert(Folder> '', 'ForceDirectories - Parameter is empty!');
-  if TDirectory.Exists(Folder)
-  then Result:= 0
-  else
-    if ForceDirectoriesB(Folder)
-    then Result:= +1
-    else Result:= -1;
-end;
-
-
-
 
 
 
@@ -1346,8 +1339,7 @@ end;
 // The extension must have a DOT.
 function GetTimestampFileName(const Folder, Prefix, Extension: string): string;
 begin
-  if not DirectoryExists(Folder)
-  then ForceDirectories(Folder);
+  ForceDirectoriesE(Folder);       { The caller is about to write this file, so a folder we cannot create must raise here. Does not raise when the folder already exists. }
   Result:= TPath.Combine(Folder, Prefix+ FormatDateTime('yyyy.mm.dd_hh.nn.ss_zzz', Now) + Extension);
 end;
 
@@ -1981,7 +1973,7 @@ end;
 function FileMoveToDir(CONST From_FullPath, To_DestFolder: string): boolean;
 begin
   TRY
-    ForceDirectories(To_DestFolder);
+    ForceDirectoriesE(To_DestFolder);
     TFile.Move(From_FullPath, Trail(To_DestFolder) + ExtractFileName(From_FullPath));
     Result:= NOT TFile.Exists(From_FullPath);  { Success if source no longer exists }
   EXCEPT
@@ -2050,11 +2042,16 @@ VAR
 begin
   Result:= 0;
   Dst:= Trail(ToFolder);
-  ForceDirectories(Dst);
   SrcRoot:= Trail(FromFolder);
 
   TSL:= ListFilesOf(FromFolder, FileType, TRUE, DigSubdirectories);
   TRY
+    { When the destination root cannot be created, every file we found fails. Returning that count
+      keeps the documented contract (the result is a count of failed files) and is faster than
+      letting the loop below raise once per file to reach the same number. }
+    if NOT ForceDirectoriesB(Dst)
+    then EXIT(TSL.Count);
+
     for s in TSL do
       TRY
         { Compute path relative to FromFolder so we preserve the subfolder hierarchy.
@@ -2069,7 +2066,7 @@ begin
         else RelPath:= ExtractFileName(s);                              { fallback — shouldn't happen in normal use }
 
         DestFile:= Dst + RelPath;
-        ForceDirectories(ExtractFilePath(DestFile));                    { ensure the target subfolder exists }
+        ForceDirectoriesE(ExtractFilePath(DestFile));                   { ensure the target subfolder exists. A raise here is caught below and counted as one failed file }
         TFile.Copy(s, DestFile, Overwrite);
       EXCEPT
         Inc(Result);  { Count failed copies }
@@ -2272,7 +2269,7 @@ begin
       if Stopwatch.ElapsedMilliseconds >= MaxWaitTime then
         RAISE Exception.Create('EmptyDirectory - Directory deletion timed out after '+ IntToStr(MaxWaitTime)+ ' ms');
     end;
-    if ForceDirectories(Path) < 0
+    if NOT ForceDirectoriesB(Path)
     then RAISE Exception.Create('EmptyDirectory - Cannot reconstruct directory!');
   end;
 end;
