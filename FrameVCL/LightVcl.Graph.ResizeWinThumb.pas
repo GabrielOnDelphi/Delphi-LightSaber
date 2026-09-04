@@ -1,4 +1,4 @@
-unit LightVcl.Graph.ResizeWinThumb;
+﻿unit LightVcl.Graph.ResizeWinThumb;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -56,7 +56,12 @@ implementation
 
 const
   MinSize = 52;
-  MaxSize = 65535;
+  { 8192, not 65535. SetSize clamps to this value and then calls FBmp.SetSize(MaxSize, MaxSize).
+    At 65535 that is a 65535x65535 bitmap - 12.9 GB - which Windows refuses with "The handle is
+    invalid.", so the clamp protected nothing: every size big enough to reach it still failed.
+    8192x8192 at 32 bits is 256 MB, which Windows allocates, and it is wider than any thumbnail a
+    real display needs. Chosen by Gabriel, 2026-09-04. }
+  MaxSize = 8192;
   ColorFormat: DWORD = 24;
   IEIFLAG_OFFLINE = 8;
   IEIFLAG_SCREEN = $20;
@@ -83,7 +88,14 @@ begin
     'file.txt', FILE_ATTRIBUTE_NORMAL, ShInfo, SizeOf(ShInfo),
     SHGFI_SMALLICON or SHGFI_SYSICONINDEX or SHGFI_USEFILEATTRIBUTES);
 
-  FhImageList48 := hImagList16 + (hImagList16 - hImagList32);
+  { The arithmetic must run SIGNED. All three are NativeUInt, so when hImagList16 is smaller than
+    hImagList32 the subtraction wraps below zero and a build with overflow checking on - which is
+    what the Debug configuration uses - raises EIntOverflow. It did, in 21 tests of this unit on
+    2026-09-03. Going through NativeInt gives exactly the same bit pattern the unsigned version
+    produced with checking off, so a Release build is unchanged.
+    Worth knowing: guessing the handle of the 48 pixel image list from the numeric values of two
+    other handles is a trick, not an API. The line below only stops it raising. }
+  FhImageList48 := NativeUInt(NativeInt(hImagList16) + (NativeInt(hImagList16) - NativeInt(hImagList32)));
   if ImageList_GetIconSize(FhImageList48, IconHeight, IconWidth) and (IconHeight = 48) then
     FIconSize := 48
   else
