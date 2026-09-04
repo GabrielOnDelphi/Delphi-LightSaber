@@ -91,6 +91,7 @@ contains
   LightVcl.Visual.RichEditResize in 'LightVcl.Visual.RichEditResize.pas',
   LightVcl.Visual.AppData in 'LightVcl.Visual.AppData.pas',
   LightVcl.Visual.AppDataForm in 'LightVcl.Visual.AppDataForm.pas',
-  LightVcl.Visual.LogForm in 'LightVcl.Visual.LogForm.pas';
+  LightVcl.Visual.LogForm in 'LightVcl.Visual.LogForm.pas',
+  LightVcl.Visual.RichRamLog in 'LightVcl.Visual.RichRamLog.pas';
 
 end.

@@ -25,7 +25,7 @@ USES
    Winapi.Windows, Winapi.MAPI, Winapi.ShellAPI{ Required by OpenDefaultEmail },
    System.SysUtils, System.StrUtils, System.Classes,
    Vcl.Forms,
-   LightCore, LightCore.Types, LightVcl.Common.Dialogs;
+   LightCore, LightCore.Types;
 
 CONST
   SeparatorsEmail= [' ', '~', '`', '!', '#', '$', '%', '^', '&', '*', '(', ')', '+', '=', '[', ']', '{', '}', ';', ':', '''', '"', '<', '>', ',', '/', '?', '\', '|', #10, #13, #9];
@@ -237,7 +237,8 @@ begin
     END;
 
   if Result <> 0
-  then MessageError('Error sending mail (' + IntToStr(Result) + ').');
+  then
+    AppDataCore.LogError('OpenDefaultEmailEx: MAPISendMail failed with code '+ IntToStr(Result));
 end;
 
 

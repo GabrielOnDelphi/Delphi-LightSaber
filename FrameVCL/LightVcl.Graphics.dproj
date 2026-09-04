@@ -135,6 +135,7 @@
         <DCCReference Include="LightVcl.Graph.RainDropParams.pas"/>
         <DCCReference Include="LightVcl.Graph.RainDropParamEditorForm.pas"/>
         <DCCReference Include="LightVcl.Graph.RainShelter.pas"/>
+        <DCCReference Include="LightVcl.Graph.ResizeWinGDI.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

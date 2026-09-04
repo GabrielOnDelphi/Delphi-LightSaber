@@ -1,4 +1,4 @@
-UNIT LightVcl.Graph.Cache;
+﻿UNIT LightVcl.Graph.Cache;
 
 {=============================================================================================================
    Gabriel Moraru

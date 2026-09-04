@@ -270,13 +270,13 @@ begin
   { Translator }
   //ToDo 5: create it only if necessary - If this app uses translations; we could look for the 'Lang' folder. If it exists and it is not empty then we create the object.
   //ToDo 5: there are no forms here. So LoadLastTranslation won't do much here (but it will choose the current lang). maybe I should do that in the constructor!
-  LogVerb('Starting translator...');
+  doLogVerb('Starting translator...');
   Translator:= TTranslator.Create(Self);
   if NOT RunningHome
   then Translator.LoadLastTranslation;           // Load last language and apply it to all existing forms
 
   { All done }
-  LogVerb(AppName+ GetVersionInfoV+ ' started.');
+  doLogVerb(AppName+ GetVersionInfoV+ ' started.');
 end;
 
 
@@ -284,11 +284,15 @@ destructor TAppData.Destroy;
 VAR i: Integer;
 begin
   // Save all still-alive TLightForms NOW, while AppData (and its RamLog) are fully functional.
-  // Reason: this destructor runs from this unit's FINALIZATION, but Application-owned forms are
-  // destroyed LATER (Vcl.Forms finalization -> DoneApplication -> Application.Destroy). A form that
-  // was never closed (e.g. created via CreateFormHidden) would otherwise run its
-  // FormPreRelease/SaveForm at that point, in a dead context: the AppData var is already NIL and
-  // AppDataCore is nilled by our finalization — TIniFileApp.WriteComp asserts/derefs it.
+  // Reason: this destructor runs from this unit's FINALIZATION, and in ONE of the two shutdown paths the
+  // Application-owned forms are destroyed LATER than that. The two paths are written out in full in the
+  // SHUTDOWN ORDER comment at the FINALIZATION of this unit; short version: an app that called
+  // Application.Run has already lost its forms by now, because DoneApplication runs as an exit procedure
+  // and the RTL runs those before it finalizes any unit. But a DUnitX test runner, a console tool or a DLL
+  // never calls Application.Run, so its forms are destroyed after us, in the finalization of Vcl.Forms.
+  // In that second path a form that was never closed (e.g. created via CreateFormHidden) would run its
+  // FormPreRelease/SaveForm in a dead context: the AppData var is already NIL and AppDataCore was nilled
+  // by our finalization - TIniFileApp.WriteComp asserts on it.
   // Saving here makes the late destruction a no-op (FFormSaved=TRUE guard).
   // 'AppData = Self' guard: Destroy also runs when a constructor RAISES (e.g. erroneous second
   // TAppData creation). The global var does not point to that half-built instance, so we must not
@@ -304,7 +308,7 @@ begin
           // (RamLog)) - an unguarded raise here would skip all of that for a reason unrelated to this
           // one form. RamLog is still alive at this point, so logging (not reraising) is the correct boundary.
           on E: Exception
-          do LogError('TAppData.Destroy: saveBeforeExit failed for '+ Screen.Forms[i].Name+ ' ('+ Screen.Forms[i].ClassName+ '): '+ E.ClassName+ ' - '+ E.Message);
+          do doLogError('TAppData.Destroy: saveBeforeExit failed for '+ Screen.Forms[i].Name+ ' ('+ Screen.Forms[i].ClassName+ '): '+ E.ClassName+ ' - '+ E.Message);
         end;
 
   FreeAndNil(FFormLog);
@@ -518,7 +522,7 @@ procedure TAppData.CreateFormModal(aClass: TFormClass; AutoState: TAutoState= as
 VAR Reference: TForm;
 begin
   CreateForm(aClass, Reference, FALSE, AutoState, ParentWnd);
-  if NOT TEST_MODE
+  if NOT Unattended
   then Reference.ShowModal;
 end;
 
@@ -530,7 +534,7 @@ VAR Reference: TForm;
 begin
   CreateForm(aClass, Reference, FALSE, asNone);
   CenterFormOnMainFormMonitor(Reference);
-  if NOT TEST_MODE                 { Same bypass as the CreateFormModal overloads - without it a unit test touching this path blocks forever }
+  if NOT Unattended                { Same bypass as the CreateFormModal overloads - with nobody at the keyboard, ShowModal blocks for ever }
   then Reference.ShowModal;
 end;
 
@@ -540,7 +544,7 @@ end;
 procedure TAppData.CreateFormModal(aClass: TFormClass; OUT Reference; AutoState: TAutoState= asPosOnly; ParentWnd: TWinControl= NIL);
 begin
   CreateForm(aClass, Reference, FALSE, AutoState, ParentWnd);
-  if NOT TEST_MODE
+  if NOT Unattended
   then TForm(Reference).ShowModal;
 end;
 
@@ -1154,10 +1158,44 @@ INITIALIZATION
 // Hint: We could create AppData here but the Initialization sections are executed in random order.
 
 FINALIZATION
+{ SHUTDOWN ORDER - are the Application-owned forms destroyed before or after this finalization?
+  It depends on ONE thing: whether the project called Application.Run.
+
+  CASE 1 - a normal GUI app, Application.Run was called: the forms die BEFORE we get here.
+    TApplication.Run registers the shutdown procedure as an EXIT PROCEDURE - AddExitProc(DoneApplication),
+    Vcl.Forms.pas:13598. The RTL runs the whole exit-procedure chain BEFORE it finalizes any unit:
+    _Halt0 in System.pas:25722 has the 'while ExitProc <> nil do P;' loop first and reaches FinalizeUnits
+    only after it. DoneApplication (Vcl.Forms.pas:2523) calls Application.DestroyComponents (line 2536),
+    which frees every component Application owns - all the forms. AppData is still fully alive at that moment.
+
+  CASE 2 - Application.Run was NEVER called (a DUnitX test runner, a console tool, a DLL, or an app that
+  aborts during startup): the forms die AFTER we get here.
+    AddExitProc never ran, so the only remaining call to DoneApplication is the one in the finalization of
+    Vcl.Forms (Vcl.Forms.pas:21203). That finalization runs after ours, because this unit USES Vcl.Forms:
+    a unit is initialized after everything it uses, and finalized in the reverse order. Those forms then run
+    their destructors with AppData already freed.
+
+  Case 2 is what TAppData.Destroy saves the forms for, and what the AppDataCore:= NIL below protects against.
+
+  Both cases were MEASURED, not reasoned about, with a test program that creates a hidden form owned by
+  Application and traces the order (c:\AI\Claude Code\Temp\ShutdownOrder\, 2026-09-04). Case 1: the form
+  is destroyed before this finalization and sees AppData alive. Case 2: it is destroyed after, and sees
+  AppData = NIL.
+
+  Do NOT try to repair case 2 by calling Application.DestroyComponents here to kill the forms early. It
+  was tried and measured: it destroys them at the right moment, but the program then dies at the end of
+  shutdown with runtime error 217. In a case-1 app it does nothing at all, because Application owns
+  nothing by the time we get here.
+  The reason it crashes: Application owns a THintWindow, created by Application.ShowHint:= TRUE, which
+  this very unit sets in TAppData.Create (Vcl.Forms.pas:13965 does FHintWindow:= HintWindowClass.Create(Self)).
+  DestroyComponents frees it, but the TApplication.FHintWindow field is not cleared by that and is left
+  dangling. Later DoneApplication runs ShowHint:= FALSE, and TApplication.SetShowHint frees the same
+  object a second time (Vcl.Forms.pas:13971). In case 1 the order is reversed - DoneApplication clears
+  the field first - which is why the same call is harmless there. }
 begin
-  AppData.Free;   // DON'T use FreeAndNil here because it will set the AppData variable to Nil too early. We still need the variable in the destructors of the forms.
+  AppData.Free;   // DON'T use FreeAndNil here: FreeAndNil nils the variable BEFORE it runs the destructor, and TAppData.Destroy reads it - the 'AppData = Self' guard, plus saveBeforeExit -> TIniFileApp.WriteComp, which needs AppDataCore.
   AppData:= NIL;
-  AppDataCore:= NIL;  // SAME object as AppData (assigned in TAppData.Create). Without this, every 'if AppDataCore <> NIL' guard in LightCore (StreamBuff, Download, IniFile, ...) passes on a DANGLING pointer during late shutdown (forms owned by Application are destroyed later, in Vcl.Forms' finalization).
+  AppDataCore:= NIL;  // SAME object as AppData (assigned in TAppData.Create). The Free above left both variables pointing at a DEAD object, so without this line every 'if AppDataCore <> NIL' guard in LightCore (StreamBuff, Download, IniFile, ...) passes on a DANGLING pointer - for anything that still runs after this point: the finalizations of the units below us, and the late form destructors of case 2.
 end;
 
 

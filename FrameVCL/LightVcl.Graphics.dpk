@@ -79,7 +79,8 @@ contains
   LightVcl.Graph.UtilGray in 'LightVcl.Graph.UtilGray.pas',
   LightVcl.Graph.RainDropParams in 'LightVcl.Graph.RainDropParams.pas',
   LightVcl.Graph.RainDropParamEditorForm in 'LightVcl.Graph.RainDropParamEditorForm.pas',
-  LightVcl.Graph.RainShelter in 'LightVcl.Graph.RainShelter.pas';
+  LightVcl.Graph.RainShelter in 'LightVcl.Graph.RainShelter.pas',
+  LightVcl.Graph.ResizeWinGDI in 'LightVcl.Graph.ResizeWinGDI.pas';
 
 (*
 Note:

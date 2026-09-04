@@ -35,9 +35,9 @@ USES
    FILE ASSOCIATION
 ==================================================================================================}
  function  GetAssociatedApp    (const FileExtension: string): string;                               // Old name: AplicatieAsociata
- function  AssociateWith       (CONST FileExtension, AsociationName: string; CONST ForAllUsers: Boolean= FALSE; ShowError: Boolean= FALSE; Notify: Boolean= TRUE): Boolean; { Associate a application with an extension. EXAMPLE: FileExtension:= '.txt' /  AsociationName:= 'Metapad' }  { EXAMPLE: FileExtension:= '.txt' /  AsociationName:= 'Metapad' / ShowError show an error messajge is the program cannot write to registry }
+ function  AssociateWith       (CONST FileExtension, AsociationName: string; CONST ForAllUsers: Boolean= FALSE; {LogErrors: Boolean= FALSE; we always log} Notify: Boolean= TRUE): Boolean; { Associate a application with an extension. EXAMPLE: FileExtension:= '.txt' /  AsociationName:= 'Metapad'. A registry failure goes into AppDataCore's log. Nothing appears on screen }
  function  AssociationReset    (CONST FileExtension: string; CONST ForAllUsers: Boolean): Boolean;
- procedure AssociateSelf_ShellMenu  (CONST ShowError: Boolean);                                     //Old name: AssociateWithShell
+ procedure AssociateSelf_ShellMenu;                                                                 { A registry failure goes into AppDataCore's log. Nothing appears on screen }
 
 
 {--------------------------------------------------------------------------------------------------
@@ -95,7 +95,7 @@ USES
  
 IMPLEMENTATION
 USES
-   LightVcl.Common.IO, LightCore.IO, LightCore.TextFile, LightCore.AppData, LightVcl.Common.Registry, LightCore, LightVcl.Common.Dialogs;
+   LightVcl.Common.IO, LightCore.IO, LightCore.TextFile, LightCore.AppData, LightVcl.Common.Registry, LightCore;
 
  
 
@@ -296,13 +296,14 @@ begin
      RegWriteString(RootKey, Path+ FName+'\shell\open\command', '', Application.ExeName+ ' "%L"', TRUE) AND  { Using %L instead of %1 gives the long path format instead of 8.3/DOS format }
      RegWriteString(RootKey, Path+ FName+'\DefaultIcon'       , '', Application.ExeName+ ',0',    TRUE);
 
-   if NOT Result AND ShowError
-   then MessageWarning('Cannot associate application with '+FileExtension);
+   if NOT Result 
+   AND (AppDataCore <> NIL)
+   then AppDataCore.LogWarn('AssociateWith: cannot associate application with '+ FileExtension);
  EXCEPT
    on E: ERegistryException DO
      begin
-       if ShowError    //todo: trap only specific exceptions
-       then MessageWarning('Cannot associate application with '+FileExtension);
+       if (AppDataCore <> NIL)
+       then AppDataCore.LogWarn('AssociateWith: cannot associate application with '+ FileExtension+ '. '+ E.Message);
      end;
    else RAISE;
  END;
@@ -328,7 +329,7 @@ end;
 
 
 { Add current application in the 'Open with' section of the 'File Properties' popup menu that appears when we right click a file in Explorer }
-procedure AssociateSelf_ShellMenu(CONST ShowError: Boolean);
+procedure AssociateSelf_ShellMenu;
 begin
  TRY
   VAR Reg:= TRegistry.Create;
@@ -343,8 +344,8 @@ begin
  EXCEPT
    on E: ERegistryException DO
      begin
-       if ShowError    //todo: trap only specific exceptions
-       then MessageError('Cannot associate application!');
+       if (AppDataCore <> NIL)
+       then AppDataCore.LogError('AssociateSelf_ShellMenu: cannot associate application. '+ E.Message);
      end;
    else RAISE;
  END;

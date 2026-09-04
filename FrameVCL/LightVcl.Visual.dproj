@@ -146,6 +146,7 @@
         <DCCReference Include="LightVcl.Visual.AppData.pas"/>
         <DCCReference Include="LightVcl.Visual.AppDataForm.pas"/>
         <DCCReference Include="LightVcl.Visual.LogForm.pas"/>
+        <DCCReference Include="LightVcl.Visual.RichRamLog.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

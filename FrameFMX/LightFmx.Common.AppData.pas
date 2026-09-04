@@ -97,9 +97,7 @@
 
 INTERFACE
 {$I Frameworks.inc}
-{$IMPORTEDDATA ON}   // E2201: TPendingAutoState (record with managed string field) lives in this
-                     // unit's interface, so other units in the same package emit cross-unit
-                     // record-RTTI references that require imported-data ($G+) to resolve.
+{$IMPORTEDDATA ON}   // E2201: TPendingAutoState (record with managed string field) lives in this unit's interface, so other units in the same package emit cross-unit record-RTTI references that require imported-data ($G+) to resolve.
 
 USES
   {$IFDEF MsWindows}
@@ -200,40 +198,31 @@ end;
 destructor TAppData.Destroy;
 VAR i: Integer;
 begin
-  // Save all still-alive TLightForms NOW, while AppData (and its RamLog) are fully functional.
-  // Reason: this destructor runs from this unit's FINALIZATION, and in ONE of the two shutdown paths the
-  // Application-owned forms are destroyed LATER than that. The two paths are written out in full in the
-  // SHUTDOWN ORDER comment at the FINALIZATION of this unit; short version: an app that called
-  // Application.Run has already lost its forms by now, because DoneApplication runs as an exit procedure
-  // and the RTL runs those before it finalizes any unit. But a DUnitX test runner, a console tool or a
-  // library never calls Application.Run, so its forms survive until TPlatformWin.Destroy frees Application
-  // (FMX.Platform.Win.pas:736) - after us.
-  // In that second path a never-closed form runs FormPreRelease/SaveForm in a dead context: the AppData var
-  // is already NIL (TIniFileApp.WriteComp asserts on it) and RamLog is freed.
-  // Saving here makes the late destruction a no-op (FFormSaved=TRUE guard).
-  // 'AppData = Self' guard: Destroy also runs when a constructor RAISES (e.g. erroneous second
-  // TAppData creation). The global var does not point to that half-built instance, so we must not
-  // let it prematurely save/pre-release the forms of the healthy running instance.
+  { Save all still-alive TLightForms NOW, while AppData (and its RamLog) are fully functional.
+    Reason: this destructor runs from this unit's FINALIZATION, and in ONE of the two shutdown paths the Application-owned forms are destroyed LATER than that.
+    The two paths are written out in full in the SHUTDOWN ORDER comment at the FINALIZATION of this unit; short version: an app that called Application.Run has already lost its forms by now, because DoneApplication runs as an exit procedure and the RTL runs those before it finalizes any unit.
+    But a DUnitX test runner, a console tool or a library never calls Application.Run, so its forms survive until TPlatformWin.Destroy frees Application (in FMX.Platform.Win.pas) - after us.
+    In that second path a never-closed form runs FormPreRelease/SaveForm in a dead context: the AppData var is already NIL (TIniFileApp.WriteComp asserts on it) and RamLog is freed.
+    Saving here makes the late destruction a no-op (FFormSaved=TRUE guard).
+    'AppData = Self' guard: Destroy also runs when a constructor RAISES (e.g. erroneous second TAppData creation).
+    The global var does not point to that half-built instance, so we must not let it prematurely save/pre-release the forms of the healthy running instance. }
   if (AppData = Self) AND (Screen <> NIL) then
     for i:= Screen.FormCount - 1 downto 0 do
       if Screen.Forms[i] is TLightForm then
         try
           TLightForm(Screen.Forms[i]).saveBeforeExit;
         except
-          // Isolate one bad form's FormPreRelease/SaveForm from the REST of this loop and from the
-          // code below (FreeAndNil(FFormLog), inherited Destroy -> SaveSettings/FreeAndNil(RamLog)) -
-          // an unguarded raise here would skip all of that for a reason unrelated to this one form.
-          // RamLog is still alive at this point, so logging (not reraising) is the correct boundary.
+          { Isolate one bad form's FormPreRelease/SaveForm from the REST of this loop and from the code below (FreeAndNil(FFormLog), inherited Destroy -> SaveSettings/FreeAndNil(RamLog)) - an unguarded raise here would skip all of that for a reason unrelated to this one form.
+            RamLog is still alive at this point, so logging (not reraising) is the correct boundary. }
           on E: Exception
           do doLogError('TAppData.Destroy: saveBeforeExit failed for '+ Screen.Forms[i].Name+ ' ('+ Screen.Forms[i].ClassName+ '): '+ E.ClassName+ ' - '+ E.Message);
         end;
 
-  // Destroy the log form NOW, while RamLog is still alive. Although TApplication owns the form,
-  // Application itself is destroyed only in the platform unit's finalization — AFTER this one.
-  // If we left the log form to die there, its FormDestroy/TLogViewer.Destroy would call
-  // UnregisterLogObserver on the ALREADY FREED RamLog (freed below, in TAppDataCore.Destroy)
-  // and TfrmRamLog.SaveSettings would hit a NIL AppData. Freeing it here keeps the whole
-  // teardown inside a live-AppData context. TComponent.Destroy unhooks it from Application.
+  { Destroy the log form NOW, while RamLog is still alive.
+    Although TApplication owns the form, Application itself is destroyed only in the platform unit's finalization — AFTER this one.
+    If we left the log form to die there, its FormDestroy/TLogViewer.Destroy would call UnregisterLogObserver on the ALREADY FREED RamLog (freed below, in TAppDataCore.Destroy) and TfrmRamLog.SaveSettings would hit a NIL AppData.
+    Freeing it here keeps the whole teardown inside a live-AppData context.
+    TComponent.Destroy unhooks it from Application. }
   FreeAndNil(FFormLog);
 
   FreeAndNil(FPendingAutoStates);
@@ -243,10 +232,10 @@ end;
 
 procedure TAppData.Run;
 begin
-  // StartMinim remembers application's last state (minimized or not) and minimizes on startup if it was minimized before.
-  // Note: FMX defers form creation — Application.MainForm is NIL until RealCreateForms runs INSIDE Application.Run.
-  // Calling Minimize here would hit its 'MainForm = NIL' early-exit and silently do nothing.
-  // So we defer the Minimize to the message queue: by the time the queued block runs, RealCreateForms has created the main form and Application.MainForm is assigned.
+  { StartMinim remembers application's last state (minimized or not) and minimizes on startup if it was minimized before.
+    Note: FMX defers form creation — Application.MainForm is NIL until RealCreateForms runs INSIDE Application.Run.
+    Calling Minimize here would hit its 'MainForm = NIL' early-exit and silently do nothing.
+    So we defer the Minimize to the message queue: by the time the queued block runs, RealCreateForms has created the main form and Application.MainForm is assigned. }
   if StartMinim
   then TThread.ForceQueue(NIL, procedure
        begin
@@ -280,18 +269,13 @@ end;
        3. If form was created immediately (aReference <> NIL), cleanup any leftover entry
 -------------------------------------------------------------------------------------------------------------}
 
-{ Caller MUST pass a variable whose storage outlives Application.Run — typically the
-  global FormMain/frmMain declared in the main form's unit.
+{ Caller MUST pass a variable whose storage outlives Application.Run — typically the global FormMain/frmMain declared in the main form's unit.
 
   Why NOT a local Dummy variable:
     Untyped OUT/VAR params pass the *address* of the caller's storage slot.
-    On FMX, Application.CreateForm defers real form construction until RealCreateForms
-    runs inside Application.Run. It stores the pointer we hand it and writes the new
-    instance back into that address later. If the slot was a local stack var, the
-    stack frame is already gone by then — the write lands on garbage memory, the
-    global form variable stays NIL, and downstream code (incl. pending-autostate
-    bookkeeping that relies on the eventual write) breaks with a "Form was not
-    created via AppData.CreateForm" exception.
+    On FMX, Application.CreateForm defers real form construction until RealCreateForms runs inside Application.Run.
+    It stores the pointer we hand it and writes the new instance back into that address later.
+    If the slot was a local stack var, the stack frame is already gone by then — the write lands on garbage memory, the global form variable stays NIL, and downstream code (incl. pending-autostate bookkeeping that relies on the eventual write) breaks with a "Form was not created via AppData.CreateForm" exception.
     Nothing to do with interfaces/refcounting — pure pointer-lifetime issue.
 
   Therefore: no Dummy-based overload. Always pass the real global var. }
@@ -303,16 +287,15 @@ end;
 
 
 { Create secondary forms.
-  AOwner: when NIL (default), Application owns the form (standard FMX lifetime).
-  Pass a specific owner to control destruction order — e.g. embedded forms owned by their host. }
+  AOwner: when NIL (default), Application owns the form (standard FMX lifetime). Pass a specific owner to control destruction order — e.g. embedded forms owned by their host. }
 procedure TAppData.CreateForm(aClass: TComponentClass; OUT aReference; aAutoState: TAutoState = asPosOnly; AOwner: TComponent = NIL);
 VAR
   Pending: TPendingAutoState;
   i: Integer;
 begin
-  // Add to pending list BEFORE creating form.
-  // This ensures GetAutoState can find it when Loaded is called during form creation.
-  // (Application.CreateForm may trigger Loaded synchronously before returning)
+  { Add to pending list BEFORE creating form.
+    This ensures GetAutoState can find it when Loaded is called during form creation.
+    (Application.CreateForm may trigger Loaded synchronously before returning) }
   Pending.ClassName:= aClass.ClassName;
   Pending.AutoState:= aAutoState;
   Pending.QueuedBeforeRun:= Initializing;  // Track if queued before Run (DPR) or created dynamically
@@ -322,11 +305,10 @@ begin
   then TComponent(aReference):= aClass.Create(AOwner)         // Explicit owner — destruction order guaranteed
   else Application.CreateForm(aClass, aReference);            // Reference may be NIL if form creation is deferred
 
-  // If form was created immediately (reference not nil), AutoState was already
-  // set via GetAutoState in Loaded. Clean up any remaining pending entry.
-  // Delete the OLDEST matching entry (lowest index) — GetAutoState also consumes the oldest entry first. 
-  // Both loops MUST agree on FIFO order, otherwise with two queued forms of the same class GetAutoState consumes one entry and this
-  // cleanup deletes the other, leaving a desynced list (one form gets the wrong AutoState, the other raises 'Form was not created via AppData.CreateForm').
+  { If form was created immediately (reference not nil), AutoState was already set via GetAutoState in Loaded.
+    Clean up any remaining pending entry.
+    Delete the OLDEST matching entry (lowest index) — GetAutoState also consumes the oldest entry first.
+    Both loops MUST agree on FIFO order, otherwise with two queued forms of the same class GetAutoState consumes one entry and this cleanup deletes the other, leaving a desynced list (one form gets the wrong AutoState, the other raises 'Form was not created via AppData.CreateForm'). }
   if TObject(aReference) <> NIL then
     for i := 0 to FPendingAutoStates.Count - 1 do
       if FPendingAutoStates[i].ClassName = aClass.ClassName then
@@ -341,10 +323,8 @@ end;
 procedure TAppData.CreateForm(aClass: TComponentClass; aAutoState: TAutoState = asPosOnly; AOwner: TComponent = NIL);
 VAR Dummy: TForm;
 begin
-  // SAFETY: during initialization FMX defers form creation — Application.CreateForm stores the ADDRESS
-  // of the local Dummy and RealCreateForms writes the new instance into that dead stack slot later,
-  // corrupting whatever occupies the stack by then. A debug-only Assert is not enough for silent
-  // memory corruption, so this must be a hard raise that also survives release builds.
+  { SAFETY: during initialization FMX defers form creation — Application.CreateForm stores the ADDRESS of the local Dummy and RealCreateForms writes the new instance into that dead stack slot later, corrupting whatever occupies the stack by then.
+    A debug-only Assert is not enough for silent memory corruption, so this must be a hard raise that also survives release builds. }
   if Initializing
   then RAISE Exception.Create('CreateForm (2-param) called during initialization — use the 4-param overload with a GLOBAL form variable and check for NIL before Show');
   Dummy:= NIL;   // Must init: the 'if TObject(aReference)<>NIL' test in the 4-param overload must not read an uninitialized stack slot.
@@ -355,30 +335,30 @@ begin
 end;
 
 
-{ Companion to TLightForm.CreateEmbedded. Use when the caller will follow up with form.EmbedIn(Container, host). 
+{ Companion to TLightForm.CreateEmbedded.
+  Use when the caller will follow up with form.EmbedIn(Container, host).
   aClass MUST descend from TLightForm.
-  AOwner: 
-   pass the host form when destruction order matters (e.g. tab-child of another form); 
+  AOwner:
+   pass the host form when destruction order matters (e.g. tab-child of another form);
    pass NIL for top-level singletons — the form is then owned by Application and freed at app shutdown if CloseEmbedded didn't already free it. }
 procedure TAppData.CreateEmbedded(aClass: TComponentClass; OUT aReference; AOwner: TComponent = NIL);
 VAR EffectiveOwner: TComponent;
 begin
   Assert(aClass.InheritsFrom(TLightForm), 'CreateEmbedded: aClass must descend from TLightForm. Got: ' + aClass.ClassName);
 
-  // Default to Application as owner — matches the prior `AppData.CreateForm(..., asNone)` (no AOwner) behavior
-  // where the form ended up in Application.Components and was freed at shutdown.
+  { Default to Application as owner — matches the prior `AppData.CreateForm(..., asNone)` (no AOwner) behavior where the form ended up in Application.Components and was freed at shutdown. }
   if AOwner <> NIL
   then EffectiveOwner:= AOwner
   else EffectiveOwner:= Application;
 
-  // Direct construction (synchronous) via TLightForm.CreateEmbedded — bypasses Application.CreateForm's
-  // pending queue. AfterConstruction fires AFTER the constructor chain returns and reads FEmbedded.
+  { Direct construction (synchronous) via TLightForm.CreateEmbedded — bypasses Application.CreateForm's pending queue.
+    AfterConstruction fires AFTER the constructor chain returns and reads FEmbedded. }
   TLightForm(aReference):= TLightFormClass(aClass).CreateEmbedded(EffectiveOwner);
 end;
 
 
-// Show this form modal. On Android, we fall back to non-modal because Android is crappy.
-// Forms with AutoState=asNone have no saved position — center them on screen.
+{ Show this form modal. On Android, we fall back to non-modal because Android is crappy.
+  Forms with AutoState=asNone have no saved position — center them on screen. }
 procedure TAppData.ShowModal(aForm: TForm);
 begin
   if (aForm is TLightForm) and (TLightForm(aForm).AutoState = asNone)
@@ -443,8 +423,7 @@ end;
 procedure TAppData.CreateFormModal(aClass: TComponentClass);
 VAR aReference: TForm;
 begin
-  // Same deferred-creation hazard as the 2-param CreateForm: during initialization the form is only
-  // queued (aReference stays NIL, and RealCreateForms would later write into this dead stack slot).
+  { Same deferred-creation hazard as the 2-param CreateForm: during initialization the form is only queued (aReference stays NIL, and RealCreateForms would later write into this dead stack slot). }
   if Initializing
   then RAISE Exception.Create('CreateFormModal called during initialization — create the form after AppData.Run started the message loop');
   aReference:= NIL;
@@ -454,9 +433,8 @@ begin
 end;
 
 
-// TfrmRamLog is owned by TApplication but freed early, in TAppData.Destroy (see comment there).
-// Warning: during Initializing (before Run), FMX defers form creation — FFormLog stays NIL until
-// RealCreateForms runs, so this returns NIL if accessed that early.
+{ TfrmRamLog is owned by TApplication but freed early, in TAppData.Destroy (see comment there).
+  Warning: during Initializing (before Run), FMX defers form creation — FFormLog stays NIL until RealCreateForms runs, so this returns NIL if accessed that early. }
 function TAppData.getLogForm: TfrmRamLog;
 begin
   Assert(RamLog <> NIL, 'RamLog not created!');
@@ -546,8 +524,7 @@ begin
       LaunchAgentContent.Add('</dict>');
       LaunchAgentContent.Add('</plist>');
       LaunchAgentContent.SaveToFile(LaunchAgentPath);
-      // Path may contain non-ASCII chars (accented username); UnicodeString → PAnsiChar
-      // cast just reinterprets bytes — round-trip via UTF8String for proper encoding.
+      { Path may contain non-ASCII chars (accented username); UnicodeString → PAnsiChar cast just reinterprets bytes — round-trip via UTF8String for proper encoding. }
       var Cmd: UTF8String;
       Cmd:= UTF8String('launchctl load "' + LaunchAgentPath + '"');
       _system(MarshaledAString(Cmd));
@@ -604,8 +581,7 @@ var
   DesktopEntry: TStringList;
 begin
   Result:= False;
-  // Per-app autostart filename — previously hardcoded 'com.myapp.desktop' so every
-  // LightSaber app overwrote the same file. AppName makes each app unique.
+  { Per-app autostart filename — previously hardcoded 'com.myapp.desktop' so every LightSaber app overwrote the same file. AppName makes each app unique. }
   AutostartPath:= TPath.Combine(TPath.GetHomePath, '.config/autostart/' + AppName + '.desktop');
 
   if Active then
@@ -704,32 +680,23 @@ FINALIZATION
   It depends on ONE thing: whether the project called Application.Run.
 
   CASE 1 - a normal GUI app, Application.Run was called: the forms die BEFORE we get here.
-    TApplication.Run registers the shutdown procedure as an EXIT PROCEDURE - AddExitProc(DoneApplication),
-    FMX.Forms.pas:2306. The RTL runs the whole exit-procedure chain BEFORE it finalizes any unit:
-    _Halt0 in System.pas:25722 has the 'while ExitProc <> nil do P;' loop first and reaches FinalizeUnits
-    only after it. DoneApplication (FMX.Forms.pas:1526) calls Application.DestroyComponents (line 1530),
-    which frees every component Application owns - all the forms. AppData is still fully alive at that moment.
+    TApplication.Run registers the shutdown procedure as an EXIT PROCEDURE - AddExitProc(DoneApplication), in FMX.Forms.pas.
+    The RTL runs the whole exit-procedure chain BEFORE it finalizes any unit: _Halt0 in System.pas has the 'while ExitProc <> nil do P;' loop first and reaches FinalizeUnits only after it.
+    DoneApplication (in FMX.Forms.pas) calls Application.DestroyComponents, which frees every component Application owns - all the forms.
+    AppData is still fully alive at that moment.
 
-  CASE 2 - Application.Run was NEVER called (a DUnitX test runner, a console tool, a library, or an app that
-  aborts during startup): the forms die AFTER we get here.
-    AddExitProc never ran, and the finalization of FMX.Forms (FMX.Forms.pas:9097) does NOT destroy them -
-    it only calls FinalizeForms, which frees the style cache and the popup list (FMX.Controls.pas:9090).
-    The forms survive until the platform object goes down and frees Application itself: TPlatformWin.Destroy,
-    FMX.Platform.Win.pas:736 (the Android and macOS platform units do the same), so they run their
-    destructors with AppData already freed.
-    Measured on the VCL twin (LightVcl.Visual.AppData.pas) with a test program, not on FMX: there, case 2
-    really does destroy the form after this finalization, and the form sees AppData = NIL.
+  CASE 2 - Application.Run was NEVER called (a DUnitX test runner, a console tool, a library, or an app that aborts during startup): the forms die AFTER we get here.
+    AddExitProc never ran, and the finalization of FMX.Forms does NOT destroy them - it only calls FinalizeForms, which frees the style cache and the popup list (FinalizeForms is in FMX.Controls.pas).
+    The forms survive until the platform object goes down and frees Application itself: TPlatformWin.Destroy in FMX.Platform.Win.pas (the Android and macOS platform units do the same), so they run their destructors with AppData already freed.
+    Measured on the VCL twin (LightVcl.Visual.AppData.pas) with a test program, not on FMX: there, case 2 really does destroy the form after this finalization, and the form sees AppData = NIL.
 
   Case 2 is what TAppData.Destroy saves the forms for, and what the AppDataCore:= NIL below protects against.
 
-  Do NOT try to repair case 2 by calling Application.DestroyComponents here to kill the forms early. It was
-  tried and measured on the VCL twin (c:\AI\Claude Code\Temp\ShutdownOrder\, 2026-09-04): it does destroy
-  them at the right moment, but the program then dies at the end of shutdown with runtime error 217. In a
-  case-1 app it does nothing at all, because Application owns nothing by the time we get here.
-  On the VCL side the cause is a second free of the THintWindow that Application owns: DestroyComponents
-  frees it while TApplication.FHintWindow still points at it, and DoneApplication frees it again through
-  ShowHint:= FALSE. FMX has no such hint window, but the shape of the trap - an owned component whose
-  owner keeps a raw field pointing at it - is the same, so do not assume FMX is safe either. }
+  Do NOT try to repair case 2 by calling Application.DestroyComponents here to kill the forms early.
+  It was tried and measured on the VCL twin (c:\AI\Claude Code\Temp\ShutdownOrder\, 2026-09-04): it does destroy them at the right moment, but the program then dies at the end of shutdown with runtime error 217.
+  In a case-1 app it does nothing at all, because Application owns nothing by the time we get here.
+  On the VCL side the cause is a second free of the THintWindow that Application owns: DestroyComponents frees it while TApplication.FHintWindow still points at it, and DoneApplication frees it again through ShowHint:= FALSE.
+  FMX has no such hint window, but the shape of the trap - an owned component whose owner keeps a raw field pointing at it - is the same, so do not assume FMX is safe either. }
 begin
   AppData.Free;   // DON'T use FreeAndNil here: FreeAndNil nils the variable BEFORE it runs the destructor, and TAppData.Destroy reads it - the 'AppData = Self' guard, plus saveBeforeExit -> TIniFileApp.WriteComp, which needs AppDataCore.
   AppData:= NIL;

@@ -142,7 +142,7 @@ begin
  if AssocName= ''
  then AssocName:= Application.ExeName;
 
- if AssociateWith(FileType, AssocName, chkAllUsers.Checked, TRUE, TRUE)
+ if AssociateWith(FileType, AssocName, chkAllUsers.Checked, TRUE)
  then MessageInfo('The program will now automatically start when you double click a '+ FileType+ ' file.')
  else
     if chkAllUsers.Checked AND NOT AppHasAdminRights
