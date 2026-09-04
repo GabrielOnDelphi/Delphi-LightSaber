@@ -181,6 +181,7 @@
         <DCCReference Include="LightFmx.Common.LogForm.pas"/>
         <DCCReference Include="FormSystemReport.pas"/>
         <DCCReference Include="LightFmx.Common.SysTray.pas"/>
+        <DCCReference Include="LightFmx.Common.DialogsBlocking.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
