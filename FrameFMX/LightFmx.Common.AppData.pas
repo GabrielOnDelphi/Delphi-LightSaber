@@ -193,7 +193,7 @@ begin
   AppDataCore:= Self;                             // This sets the other global variable to self. So we can use both variables. The first one is for non-visual code. The second one (this one) is for visual (GUI) code.
 
   { All done }
-  LogVerb(AppName+ ' started.');
+  doLogVerb(AppName+ ' started.');
 end;
 
 
@@ -201,10 +201,15 @@ destructor TAppData.Destroy;
 VAR i: Integer;
 begin
   // Save all still-alive TLightForms NOW, while AppData (and its RamLog) are fully functional.
-  // Reason: this destructor runs from this unit's FINALIZATION, but Application-owned forms are
-  // destroyed LATER (TPlatformWin.Destroy -> FreeAndNil(Application), in the platform unit's
-  // finalization). A never-closed form saved at that point runs FormPreRelease/SaveForm in a dead
-  // context: AppData var is already NIL (TIniFileApp.WriteComp asserts on it) and RamLog is freed.
+  // Reason: this destructor runs from this unit's FINALIZATION, and in ONE of the two shutdown paths the
+  // Application-owned forms are destroyed LATER than that. The two paths are written out in full in the
+  // SHUTDOWN ORDER comment at the FINALIZATION of this unit; short version: an app that called
+  // Application.Run has already lost its forms by now, because DoneApplication runs as an exit procedure
+  // and the RTL runs those before it finalizes any unit. But a DUnitX test runner, a console tool or a
+  // library never calls Application.Run, so its forms survive until TPlatformWin.Destroy frees Application
+  // (FMX.Platform.Win.pas:736) - after us.
+  // In that second path a never-closed form runs FormPreRelease/SaveForm in a dead context: the AppData var
+  // is already NIL (TIniFileApp.WriteComp asserts on it) and RamLog is freed.
   // Saving here makes the late destruction a no-op (FFormSaved=TRUE guard).
   // 'AppData = Self' guard: Destroy also runs when a constructor RAISES (e.g. erroneous second
   // TAppData creation). The global var does not point to that half-built instance, so we must not
@@ -220,7 +225,7 @@ begin
           // an unguarded raise here would skip all of that for a reason unrelated to this one form.
           // RamLog is still alive at this point, so logging (not reraising) is the correct boundary.
           on E: Exception
-          do LogError('TAppData.Destroy: saveBeforeExit failed for '+ Screen.Forms[i].Name+ ' ('+ Screen.Forms[i].ClassName+ '): '+ E.ClassName+ ' - '+ E.Message);
+          do doLogError('TAppData.Destroy: saveBeforeExit failed for '+ Screen.Forms[i].Name+ ' ('+ Screen.Forms[i].ClassName+ '): '+ E.ClassName+ ' - '+ E.Message);
         end;
 
   // Destroy the log form NOW, while RamLog is still alive. Although TApplication owns the form,
@@ -379,7 +384,7 @@ begin
   if (aForm is TLightForm) and (TLightForm(aForm).AutoState = asNone)
   then aForm.Position:= TFormPosition.MainFormCenter;
 
-  if TEST_MODE then EXIT;  // Unit tests: bypass the (blocking) modal display — same contract as the VCL CreateFormModal overloads. See TAppDataCore.TEST_MODE.
+  if Unattended then EXIT;  // Nobody at the keyboard: bypass the (blocking) modal display — same contract as the VCL CreateFormModal overloads. See TAppDataCore.Unattended.
 
   {$IFDEF ANDROID}
     aForm.Show; // Modal forms not supported on Android!
@@ -412,8 +417,8 @@ begin
       {$IFDEF DEBUG}
       // Log if form was created from pending queue (queued in DPR before Run) or created instantly (dynamically during/after Run)
       if WasQueuedBeforeRun
-      then LogVerb('Form created from pending queue: ' + Form.ClassName)
-      else LogVerb('Form created instantly: ' + Form.ClassName);
+      then doLogVerb('Form created from pending queue: ' + Form.ClassName)
+      else doLogVerb('Form created instantly: ' + Form.ClassName);
       {$ENDIF}
 
       EXIT;
@@ -695,10 +700,40 @@ INITIALIZATION
 // Hint: We could create AppData here but the Initialization sections are executed in random order.
 
 FINALIZATION
+{ SHUTDOWN ORDER - are the Application-owned forms destroyed before or after this finalization?
+  It depends on ONE thing: whether the project called Application.Run.
+
+  CASE 1 - a normal GUI app, Application.Run was called: the forms die BEFORE we get here.
+    TApplication.Run registers the shutdown procedure as an EXIT PROCEDURE - AddExitProc(DoneApplication),
+    FMX.Forms.pas:2306. The RTL runs the whole exit-procedure chain BEFORE it finalizes any unit:
+    _Halt0 in System.pas:25722 has the 'while ExitProc <> nil do P;' loop first and reaches FinalizeUnits
+    only after it. DoneApplication (FMX.Forms.pas:1526) calls Application.DestroyComponents (line 1530),
+    which frees every component Application owns - all the forms. AppData is still fully alive at that moment.
+
+  CASE 2 - Application.Run was NEVER called (a DUnitX test runner, a console tool, a library, or an app that
+  aborts during startup): the forms die AFTER we get here.
+    AddExitProc never ran, and the finalization of FMX.Forms (FMX.Forms.pas:9097) does NOT destroy them -
+    it only calls FinalizeForms, which frees the style cache and the popup list (FMX.Controls.pas:9090).
+    The forms survive until the platform object goes down and frees Application itself: TPlatformWin.Destroy,
+    FMX.Platform.Win.pas:736 (the Android and macOS platform units do the same), so they run their
+    destructors with AppData already freed.
+    Measured on the VCL twin (LightVcl.Visual.AppData.pas) with a test program, not on FMX: there, case 2
+    really does destroy the form after this finalization, and the form sees AppData = NIL.
+
+  Case 2 is what TAppData.Destroy saves the forms for, and what the AppDataCore:= NIL below protects against.
+
+  Do NOT try to repair case 2 by calling Application.DestroyComponents here to kill the forms early. It was
+  tried and measured on the VCL twin (c:\AI\Claude Code\Temp\ShutdownOrder\, 2026-09-04): it does destroy
+  them at the right moment, but the program then dies at the end of shutdown with runtime error 217. In a
+  case-1 app it does nothing at all, because Application owns nothing by the time we get here.
+  On the VCL side the cause is a second free of the THintWindow that Application owns: DestroyComponents
+  frees it while TApplication.FHintWindow still points at it, and DoneApplication frees it again through
+  ShowHint:= FALSE. FMX has no such hint window, but the shape of the trap - an owned component whose
+  owner keeps a raw field pointing at it - is the same, so do not assume FMX is safe either. }
 begin
-  AppData.Free;   // DON'T use FreeAndNil here because it will set the AppData variable to Nil too early. We still need the variable in the destructors of the forms.
+  AppData.Free;   // DON'T use FreeAndNil here: FreeAndNil nils the variable BEFORE it runs the destructor, and TAppData.Destroy reads it - the 'AppData = Self' guard, plus saveBeforeExit -> TIniFileApp.WriteComp, which needs AppDataCore.
   AppData:= NIL;
-  AppDataCore:= NIL;  // SAME object as AppData (assigned in TAppData.Create). Without this, every 'if AppDataCore <> NIL' guard in LightCore (StreamBuff, Download, Graph, ...) passes on a DANGLING pointer during late shutdown (forms owned by Application are destroyed after this finalization).
+  AppDataCore:= NIL;  // SAME object as AppData (assigned in TAppData.Create). The Free above left both variables pointing at a DEAD object, so without this line every 'if AppDataCore <> NIL' guard in LightCore (StreamBuff, Download, Graph, ...) passes on a DANGLING pointer - for anything that still runs after this point: the finalizations of the units below us, and the late form destructors of case 2.
 end;
 
 
