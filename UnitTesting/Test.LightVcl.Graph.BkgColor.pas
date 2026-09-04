@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.BkgColor;
+﻿unit Test.LightVcl.Graph.BkgColor;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.BkgColor
@@ -14,6 +14,7 @@ uses
   System.SysUtils,
   System.Classes,
   System.IOUtils,
+  Winapi.Windows,      { RGB }
   Vcl.Graphics;
 
 type
@@ -23,7 +24,9 @@ type
     FTestBitmap: TBitmap;
     function CreateSolidColorBitmap(Width, Height: Integer; Color: TColor): TBitmap;
     function CreateBitmapWithBlackBorder(Width, Height: Integer; BorderWidth: Integer; InnerColor: TColor): TBitmap;
-    function CreateGradientBitmap(Width, Height: Integer): TBitmap;
+    /// No test needs a gradient yet, and an uncalled private method is compiler hint H2219.
+    /// Bring both halves back when a test for a non-uniform background is written.
+    /// function CreateGradientBitmap(Width, Height: Integer): TBitmap;
   public
     [Setup]
     procedure Setup;
@@ -134,23 +137,23 @@ begin
 end;
 
 
-function TTestBkgColor.CreateGradientBitmap(Width, Height: Integer): TBitmap;
-VAR
-  x, y: Integer;
-begin
-  Result:= TBitmap.Create;
-  Result.SetSize(Width, Height);
-  Result.PixelFormat:= pf24bit;
-
-  { Create a simple gradient from black at top to white at bottom }
-  for y:= 0 to Height - 1 do
-    for x:= 0 to Width - 1 do
-      Result.Canvas.Pixels[x, y]:= RGB(
-        (y * 255) div Height,
-        (y * 255) div Height,
-        (y * 255) div Height
-      );
-end;
+/// function TTestBkgColor.CreateGradientBitmap(Width, Height: Integer): TBitmap;
+/// VAR
+///   x, y: Integer;
+/// begin
+///   Result:= TBitmap.Create;
+///   Result.SetSize(Width, Height);
+///   Result.PixelFormat:= pf24bit;
+///
+///   { Create a simple gradient from black at top to white at bottom }
+///   for y:= 0 to Height - 1 do
+///     for x:= 0 to Width - 1 do
+///       Result.Canvas.Pixels[x, y]:= RGB(
+///         (y * 255) div Height,
+///         (y * 255) div Height,
+///         (y * 255) div Height
+///       );
+/// end;
 
 
 procedure TTestBkgColor.Setup;

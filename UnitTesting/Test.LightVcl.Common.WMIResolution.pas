@@ -1,4 +1,4 @@
-unit Test.LightVcl.Common.WMIResolution;
+﻿unit Test.LightVcl.Common.WMIResolution;
 
 {=============================================================================================================
    Unit tests for LightVcl.Common.WMIResolution.pas
@@ -16,6 +16,7 @@ interface
 uses
   DUnitX.TestFramework,
   System.SysUtils,
+  System.Classes,
   ActiveX,
   System.Win.ComObj,
   LightVcl.Common.WMIResolution;
@@ -57,6 +58,7 @@ type
 
     { WMI Requirement Tests }
     [Test]
+    [Ignore('Measured 2026-09-03: the call does NOT raise on a thread that never called CoInitialize, not even on a brand new thread, so there is nothing here that Windows guarantees. See the body for the measurement.')]
     procedure Test_GetMonitorInfoWMI_WithoutCoInitialize_RaisesException;
 
     { Resolution Sanity Tests - When WMI returns valid data }
@@ -115,7 +117,10 @@ VAR
   Info: TMonitorInfo;
 begin
   { Test that the function executes without exception when COM is initialized }
-  Assert.WillNotRaise(
+  { DUnitX declares WillNotRaise(AMethod, exceptionClass, msg) - the second argument is an
+    exception CLASS, not the message. The "any exception at all" version is WillNotRaiseAny.
+    DUnitX.Assert.pas:198 and :229 }
+  Assert.WillNotRaiseAny(
     procedure
     begin
       Info:= GetMonitorInfoWMI;
@@ -175,24 +180,42 @@ end;
 { WMI Requirement Tests }
 
 procedure TTestWMIResolution.Test_GetMonitorInfoWMI_WithoutCoInitialize_RaisesException;
+VAR
+  Worker: TThread;
+  Raised: string;
 begin
-  { Temporarily uninitialize COM to test the requirement }
-  if FCoInitialized then
-  begin
-    CoUninitialize;
-    FCoInitialized:= FALSE;
-  end;
+  { This test is marked [Ignore]. Two versions of it were measured on 2026-09-03 and BOTH found
+    that GetMonitorInfoWMI returns normally with no exception:
+      1. CoUninitialize on this thread, then call. CoInitialize keeps a per-thread reference count
+         and returns S_FALSE when COM was already up, so one CoUninitialize does not tear COM down.
+      2. The call on a brand new thread that never called CoInitialize - the code below. Windows
+         still let the call through. A thread that never initialised COM joins the process MTA
+         when another thread already created one; Microsoft calls this the implicit MTA
+         (https://devblogs.microsoft.com/oldnewthing/20130419-00/?p=4613).
 
-  { Without CoInitialize, calling WMI functions should raise an exception.
-    This demonstrates the CoInitialize requirement documented in the unit. }
-  Assert.WillRaise(
+    So there is no exception to assert. The unit header of LightVcl.Common.WMIResolution.pas says
+    the caller MUST call CoInitialize - that is a rule for the caller, not something the function
+    enforces, and GetWMIObject (the routine that would raise) is not in the INTERFACE section, so
+    no test can reach it directly. Delete this test or keep it as a note - Gabriel's call. }
+  Raised:= '';
+  Worker:= TThread.CreateAnonymousThread(
     procedure
     begin
-      GetMonitorInfoWMI;
-    end,
-    EOleSysError,
-    'GetMonitorInfoWMI should raise EOleSysError without CoInitialize'
-  );
+      try
+        GetMonitorInfoWMI;
+      except
+        on E: Exception do Raised:= E.ClassName;
+      end;
+    end);
+  Worker.FreeOnTerminate:= FALSE;
+  try
+    Worker.Start;
+    Worker.WaitFor;
+  finally
+    FreeAndNil(Worker);
+  end;
+
+  Assert.AreEqual('EOleSysError', Raised, 'GetMonitorInfoWMI must raise EOleSysError on a thread that never called CoInitialize');
 end;
 
 

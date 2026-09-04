@@ -1,7 +1,11 @@
-unit Test.LightVcl.Graph.Loader.RainDrop;
+﻿unit Test.LightVcl.Graph.RainShelter;
 
 {=============================================================================================================
-   Unit tests for LightVcl.Graph.Loader.RainDrop
+   Unit tests for LightVcl.Graph.RainShelter.pas + LightVcl.Graph.RainDropParams.pas
+   The unit these tests were written against, LightVcl.Graph.Loader.RainDrop.pas, no longer
+   exists: it was split into those two. The routine IsRainDrop is now called IsRainShelter
+   (LightVcl.Graph.RainShelter.pas:67) and does the same thing - it compares the file
+   extension against the constant RainDrop.
    Tests the RainDrop file format, TRainShelter class, and RRaindropParams record.
 
    Includes TestInsight support: define TESTINSIGHT in project options.
@@ -24,6 +28,7 @@ type
     FTestFile: string;
     FTestBitmap: TBitmap;
     procedure CleanupTestFile;
+    procedure WriteRawParams(CONST FileName: string; CONST RawDamping: Integer);
     function CreateTestBitmap(Width, Height: Integer): TBitmap;
     function CreateTestMaskBitmap(Width, Height: Integer): TBitmap;
   public
@@ -33,18 +38,18 @@ type
     [TearDown]
     procedure TearDown;
 
-    { IsRainDrop Tests }
+    { IsRainShelter Tests }
     [Test]
-    procedure TestIsRainDrop_ValidExtension;
+    procedure TestIsRainShelter_ValidExtension;
 
     [Test]
-    procedure TestIsRainDrop_InvalidExtension;
+    procedure TestIsRainShelter_InvalidExtension;
 
     [Test]
-    procedure TestIsRainDrop_CaseInsensitive;
+    procedure TestIsRainShelter_CaseInsensitive;
 
     [Test]
-    procedure TestIsRainDrop_EmptyString;
+    procedure TestIsRainShelter_EmptyString;
 
     { RRaindropParams Tests }
     [Test]
@@ -84,7 +89,7 @@ type
     [Test]
     procedure TestRainShelter_Clear_ResetsPixelMap;
 
-    { LoadRainShelter Tests }
+    { TRainShelter.LoadBitmap Tests - this class method replaced the standalone LoadRainShelter routine when the unit was split }
     [Test]
     procedure TestLoadRainShelter_ValidFile;
 
@@ -96,7 +101,9 @@ type
 implementation
 
 uses
-  LightVcl.Graph.Loader.RainDrop,
+  LightVcl.Graph.RainShelter,
+  LightVcl.Graph.RainDropParams,
+  LightCore.IO,              { RainDrop - the '.RainDrop' file extension constant, LightCore.IO.pas:138 }
   LightCore.StreamBuff;
 
 
@@ -140,7 +147,7 @@ end;
 procedure TTestRainDrop.Setup;
 begin
   FTestDir:= TPath.GetTempPath;
-  FTestFile:= TPath.Combine(FTestDir, 'RainDropTest_' + IntToStr(Random(MaxInt)) + RainDropExt);
+  FTestFile:= TPath.Combine(FTestDir, 'RainDropTest_' + IntToStr(Random(MaxInt)) + RainDrop);
   FTestBitmap:= NIL;
 end;
 
@@ -152,35 +159,35 @@ begin
 end;
 
 
-{ IsRainDrop Tests }
+{ IsRainShelter Tests }
 
-procedure TTestRainDrop.TestIsRainDrop_ValidExtension;
+procedure TTestRainDrop.TestIsRainShelter_ValidExtension;
 begin
-  Assert.IsTrue(IsRainDrop('test.RainDrop'), 'Should recognize .RainDrop extension');
-  Assert.IsTrue(IsRainDrop('c:\path\to\file.RainDrop'), 'Should recognize full path with .RainDrop');
+  Assert.IsTrue(IsRainShelter('test.RainDrop'), 'Should recognize .RainDrop extension');
+  Assert.IsTrue(IsRainShelter('c:\path\to\file.RainDrop'), 'Should recognize full path with .RainDrop');
 end;
 
 
-procedure TTestRainDrop.TestIsRainDrop_InvalidExtension;
+procedure TTestRainDrop.TestIsRainShelter_InvalidExtension;
 begin
-  Assert.IsFalse(IsRainDrop('test.jpg'), 'Should not recognize .jpg');
-  Assert.IsFalse(IsRainDrop('test.png'), 'Should not recognize .png');
-  Assert.IsFalse(IsRainDrop('test.bmp'), 'Should not recognize .bmp');
-  Assert.IsFalse(IsRainDrop('test.txt'), 'Should not recognize .txt');
+  Assert.IsFalse(IsRainShelter('test.jpg'), 'Should not recognize .jpg');
+  Assert.IsFalse(IsRainShelter('test.png'), 'Should not recognize .png');
+  Assert.IsFalse(IsRainShelter('test.bmp'), 'Should not recognize .bmp');
+  Assert.IsFalse(IsRainShelter('test.txt'), 'Should not recognize .txt');
 end;
 
 
-procedure TTestRainDrop.TestIsRainDrop_CaseInsensitive;
+procedure TTestRainDrop.TestIsRainShelter_CaseInsensitive;
 begin
-  Assert.IsTrue(IsRainDrop('test.RAINDROP'), 'Should be case-insensitive (upper)');
-  Assert.IsTrue(IsRainDrop('test.raindrop'), 'Should be case-insensitive (lower)');
-  Assert.IsTrue(IsRainDrop('test.RaInDrOp'), 'Should be case-insensitive (mixed)');
+  Assert.IsTrue(IsRainShelter('test.RAINDROP'), 'Should be case-insensitive (upper)');
+  Assert.IsTrue(IsRainShelter('test.raindrop'), 'Should be case-insensitive (lower)');
+  Assert.IsTrue(IsRainShelter('test.RaInDrOp'), 'Should be case-insensitive (mixed)');
 end;
 
 
-procedure TTestRainDrop.TestIsRainDrop_EmptyString;
+procedure TTestRainDrop.TestIsRainShelter_EmptyString;
 begin
-  Assert.IsFalse(IsRainDrop(''), 'Empty string should return false');
+  Assert.IsFalse(IsRainShelter(''), 'Empty string should return false');
 end;
 
 
@@ -199,7 +206,7 @@ begin
   Params.Reset;
 
   Assert.AreEqual(24, Params.TargetFPS, 'TargetFPS should reset to 24');
-  Assert.AreEqual(15, Params.Damping, 'Damping should reset to 15');
+  Assert.AreEqual(15, Integer(Params.Damping), 'Damping should reset to 15');
   Assert.AreEqual(1, Params.WaveAplitude, 'WaveAplitude should reset to 1');
   Assert.AreEqual(50, Params.WaveTravelDist, 'WaveTravelDist should reset to 50');
   Assert.AreEqual(150, Params.DropInterval, 'DropInterval should reset to 150');
@@ -214,6 +221,7 @@ VAR
 begin
   TempFile:= TPath.Combine(FTestDir, 'ParamsTest_' + IntToStr(Random(MaxInt)) + '.dat');
 
+  WriteParams.Reset;   { without this, AdvancedMode / MouseDrops / MouseDropInterv are whatever was on the stack }
   WriteParams.TargetFPS:= 30;
   WriteParams.Damping:= 25;
   WriteParams.WaveAplitude:= 5;
@@ -247,25 +255,83 @@ begin
 end;
 
 
+{ Writes one RRaindropParams record to a stream field by field, so a test can put a value in it
+  that the record's own Save could never produce. Damping is the FIRST integer Save writes
+  (LightVcl.Graph.RainDropParams.pas, RRaindropParams.Save), so the field order below must stay
+  exactly as it is or Load reads the wrong field. }
+procedure TTestRainDrop.WriteRawParams(CONST FileName: string; CONST RawDamping: Integer);
+VAR Stream: TLightStream;
+begin
+  Stream:= TLightStream.CreateWrite(FileName);
+  TRY
+    Stream.WriteInteger(RawDamping);      { Damping }
+    Stream.WriteInteger(30);              { TargetFPS }
+    Stream.WriteInteger(5);               { WaveAplitude }
+    Stream.WriteInteger(500);             { WaveTravelDist }
+    Stream.WriteInteger(100);             { DropInterval }
+    Stream.WriteBoolean(FALSE);           { AdvancedMode }
+    Stream.WriteBoolean(FALSE);           { MouseDrops }
+    Stream.WriteInteger(500);             { MouseDropInterv }
+    Stream.WritePaddingValidation;
+  FINALLY
+    FreeAndNil(Stream);
+  END;
+end;
+
+
+{ Damping is a plain FIELD of type TWaterDamping = 1..99, not a property, so writing 0 into it
+  clamps nothing - the compiler refuses the out-of-range constant outright. The only clamp in the
+  record is in Load: "Damping := EnsureRange(Stream.ReadInteger, 1, 99)"
+  (LightVcl.Graph.RainDropParams.pas). So the value has to arrive from a stream. }
 procedure TTestRainDrop.TestParams_DampingClamping_Low;
 VAR
   Params: RRaindropParams;
+  Stream: TLightStream;
+  TempFile: string;
 begin
-  Params.Reset;
-  { Attempt to set damping below minimum (1) }
-  Params.Damping:= 0;
-  Assert.AreEqual(1, Params.Damping, 'Damping should clamp to minimum (1)');
+  TempFile:= TPath.Combine(FTestDir, 'DampingLow_' + IntToStr(Random(MaxInt)) + '.dat');
+  TRY
+    WriteRawParams(TempFile, 0);          { below the 1..99 range }
+
+    Params.Reset;
+    Stream:= TLightStream.CreateRead(TempFile);
+    TRY
+      Params.Load(Stream);
+    FINALLY
+      FreeAndNil(Stream);
+    END;
+
+    Assert.AreEqual(1, Integer(Params.Damping), 'Damping should clamp to minimum (1)');
+  FINALLY
+    if TFile.Exists(TempFile)
+    then TFile.Delete(TempFile);
+  END;
 end;
 
 
 procedure TTestRainDrop.TestParams_DampingClamping_High;
 VAR
   Params: RRaindropParams;
+  Stream: TLightStream;
+  TempFile: string;
 begin
-  Params.Reset;
-  { Attempt to set damping above maximum (99) }
-  Params.Damping:= 100;
-  Assert.AreEqual(99, Params.Damping, 'Damping should clamp to maximum (99)');
+  TempFile:= TPath.Combine(FTestDir, 'DampingHigh_' + IntToStr(Random(MaxInt)) + '.dat');
+  TRY
+    WriteRawParams(TempFile, 100);        { above the 1..99 range }
+
+    Params.Reset;
+    Stream:= TLightStream.CreateRead(TempFile);
+    TRY
+      Params.Load(Stream);
+    FINALLY
+      FreeAndNil(Stream);
+    END;
+
+    Assert.AreEqual(99, Integer(Params.Damping), 'Damping should clamp to maximum (99)');
+  FINALLY
+    if TFile.Exists(TempFile)
+    then TFile.Delete(TempFile);
+  END;
 end;
 
 
@@ -276,13 +342,13 @@ begin
   Params.Reset;
 
   Params.Damping:= 1;
-  Assert.AreEqual(1, Params.Damping, 'Minimum damping (1) should be accepted');
+  Assert.AreEqual(1, Integer(Params.Damping), 'Minimum damping (1) should be accepted');
 
   Params.Damping:= 50;
-  Assert.AreEqual(50, Params.Damping, 'Mid-range damping (50) should be accepted');
+  Assert.AreEqual(50, Integer(Params.Damping), 'Mid-range damping (50) should be accepted');
 
   Params.Damping:= 99;
-  Assert.AreEqual(99, Params.Damping, 'Maximum damping (99) should be accepted');
+  Assert.AreEqual(99, Integer(Params.Damping), 'Maximum damping (99) should be accepted');
 end;
 
 
@@ -418,7 +484,7 @@ VAR
   Stream: TFileStream;
 begin
   Shelter:= TRainShelter.Create;
-  TempFile:= TPath.Combine(FTestDir, 'InvalidRainDrop_' + IntToStr(Random(MaxInt)) + RainDropExt);
+  TempFile:= TPath.Combine(FTestDir, 'InvalidRainDrop_' + IntToStr(Random(MaxInt)) + RainDrop);
   TRY
     { Create an invalid file (just random data) }
     Stream:= TFileStream.Create(TempFile, fmCreate);
@@ -449,7 +515,7 @@ begin
   Shelter:= TRainShelter.Create;
   Mask:= NIL;
   JpgFileName:= TPath.Combine(FTestDir, 'TestImage_' + IntToStr(Random(MaxInt)) + '.jpg');
-  ExpectedRainDropFile:= ChangeFileExt(JpgFileName, RainDropExt);
+  ExpectedRainDropFile:= ChangeFileExt(JpgFileName, RainDrop);
   TRY
     { Setup shelter with a .jpg filename }
     Shelter.OrigImage:= CreateTestBitmap(50, 50);
@@ -513,7 +579,7 @@ begin
 end;
 
 
-{ LoadRainShelter Tests }
+{ TRainShelter.LoadBitmap Tests - this class method replaced the standalone LoadRainShelter routine when the unit was split }
 
 procedure TTestRainDrop.TestLoadRainShelter_ValidFile;
 VAR
@@ -532,10 +598,10 @@ begin
     Shelter.SaveToFile(FTestFile, Mask);
     FreeAndNil(Shelter);
 
-    { Use LoadRainShelter function }
-    LoadedBitmap:= LoadRainShelter(FTestFile);
+    { Use the TRainShelter.LoadBitmap class method }
+    LoadedBitmap:= TRainShelter.LoadBitmap(FTestFile);
 
-    Assert.IsNotNull(LoadedBitmap, 'LoadRainShelter should return a bitmap');
+    Assert.IsNotNull(LoadedBitmap, 'TRainShelter.LoadBitmap should return a bitmap');
     Assert.AreEqual(80, LoadedBitmap.Width, 'Width mismatch');
     Assert.AreEqual(60, LoadedBitmap.Height, 'Height mismatch');
   FINALLY
@@ -552,7 +618,7 @@ VAR
   TempFile: string;
   Stream: TFileStream;
 begin
-  TempFile:= TPath.Combine(FTestDir, 'InvalidRainDrop2_' + IntToStr(Random(MaxInt)) + RainDropExt);
+  TempFile:= TPath.Combine(FTestDir, 'InvalidRainDrop2_' + IntToStr(Random(MaxInt)) + RainDrop);
   LoadedBitmap:= NIL;
   TRY
     { Create an invalid file }
@@ -563,9 +629,9 @@ begin
       FreeAndNil(Stream);
     END;
 
-    { LoadRainShelter should return NIL for invalid files }
-    LoadedBitmap:= LoadRainShelter(TempFile);
-    Assert.IsTrue(LoadedBitmap = NIL, 'LoadRainShelter should return NIL for invalid file');
+    { LoadBitmap should return NIL for invalid files }
+    LoadedBitmap:= TRainShelter.LoadBitmap(TempFile);
+    Assert.IsTrue(LoadedBitmap = NIL, 'TRainShelter.LoadBitmap should return NIL for invalid file');
   FINALLY
     FreeAndNil(LoadedBitmap);
     if TFile.Exists(TempFile)

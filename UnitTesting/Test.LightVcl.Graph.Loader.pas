@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.Loader;
+﻿unit Test.LightVcl.Graph.Loader;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.Loader.pas
@@ -274,21 +274,36 @@ begin
 end;
 
 
+{ Paint the bitmap BEFORE handing it to the GIF, and free it afterwards.
+
+  The old body did "Gif.Add(TBitmap.Create)" and then painted through Gif.Images[0].Bitmap. Both
+  halves were wrong, and both were proven against the Delphi 13 RTL source
+  (c:\Delphi\Delphi 13\source\vcl\Vcl.Imaging.GIFImg.pas):
+    - TGIFImage.Add (line 11337) COPIES its source - its TGraphic branch is "Result.Assign(Source)"
+      - so it never takes ownership and the bitmap was leaked. One TBitmap per call, 3 calls.
+    - the bitmap passed in had no size, so the new frame was Empty, and TGIFFrame.GetBitmap returns
+      NIL for an empty frame (line 7290: "if (Result <> nil) or (Empty) then Exit"). Writing
+      Images[0].Bitmap.Width was therefore a read of address 0.
+  Measured 2026-09-04: 3 tests errored with an access violation and the run leaked 3 TBitmap +
+  3 TBitmapImage. }
 procedure TTestGraphLoader.CreateTempGifFile;
 var
   Gif: TGIFImage;
+  Bmp: TBitmap;
 begin
   FTempGifFile:= TPath.Combine(FTempDir, 'test.gif');
   Gif:= TGIFImage.Create;
   TRY
-    Gif.Width:= 100;
-    Gif.Height:= 100;
-    // Add a frame
-    Gif.Add(TBitmap.Create);
-    Gif.Images[0].Bitmap.Width:= 100;
-    Gif.Images[0].Bitmap.Height:= 100;
-    Gif.Images[0].Bitmap.Canvas.Brush.Color:= clYellow;
-    Gif.Images[0].Bitmap.Canvas.FillRect(Rect(0, 0, 100, 100));
+    Bmp:= TBitmap.Create;
+    TRY
+      Bmp.SetSize(100, 100);
+      Bmp.PixelFormat:= pf24bit;
+      Bmp.Canvas.Brush.Color:= clYellow;
+      Bmp.Canvas.FillRect(Rect(0, 0, 100, 100));
+      Gif.Add(Bmp);              { copies Bmp - we still own it }
+    FINALLY
+      FreeAndNil(Bmp);
+    END;
     Gif.SaveToFile(FTempGifFile);
   FINALLY
     FreeAndNil(Gif);
@@ -305,7 +320,7 @@ begin
     begin
       LoadGraph('C:\NonExistent\Path\file.bmp');
     end,
-    EAssertionFailed);
+    EFileNotFoundException);
 end;
 
 
@@ -400,7 +415,7 @@ begin
     begin
       LoadGraph('C:\NonExistent\Path\file.gif', FrameCount);
     end,
-    EAssertionFailed);
+    EFileNotFoundException);
 end;
 
 
@@ -481,7 +496,7 @@ begin
     begin
       LoadBMP('C:\NonExistent\Path\file.bmp');
     end,
-    EAssertionFailed);
+    EFileNotFoundException);
 end;
 
 
@@ -511,7 +526,7 @@ begin
     begin
       LoadPNG('C:\NonExistent\Path\file.png');
     end,
-    EAssertionFailed);
+    EFileNotFoundException);
 end;
 
 
@@ -541,7 +556,7 @@ begin
     begin
       LoadJpg('C:\NonExistent\Path\file.jpg');
     end,
-    EAssertionFailed);
+    EFileNotFoundException);
 end;
 
 
@@ -588,7 +603,7 @@ begin
     begin
       LoadGIF('C:\NonExistent\Path\file.gif');
     end,
-    EAssertionFailed);
+    EFileNotFoundException);
 end;
 
 
@@ -633,7 +648,7 @@ begin
     begin
       loadGraphWic('C:\NonExistent\Path\file.png');
     end,
-    EAssertionFailed);
+    EFileNotFoundException);
 end;
 
 
@@ -884,7 +899,7 @@ begin
     begin
       LoadTPicture('C:\NonExistent\Path\file.bmp');
     end,
-    EAssertionFailed);
+    EFileNotFoundException);
 end;
 
 
@@ -913,7 +928,7 @@ begin
     begin
       ExtractThumbnail('C:\NonExistent\Path\file.jpg', 100);
     end,
-    EAssertionFailed);
+    EFileNotFoundException);
 end;
 
 

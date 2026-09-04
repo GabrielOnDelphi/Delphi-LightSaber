@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.BkgColorParams;
+﻿unit Test.LightVcl.Graph.BkgColorParams;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.BkgColorParams.pas
@@ -210,7 +210,8 @@ begin
     begin
       FParams.WriteToStream(NIL);
     end,
-    Exception);
+    Exception,
+    'FParams.WriteToStream(NIL) must raise Exception');
 end;
 
 
@@ -222,11 +223,12 @@ begin
 
   Stream:= TLightStream.CreateWrite(FTempFile);
   TRY
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         FParams.WriteToStream(Stream);
-      end);
+      end,
+      'FParams.WriteToStream(Stream) must not raise');
   FINALLY
     FreeAndNil(Stream);
   END;
@@ -245,7 +247,8 @@ begin
     begin
       FParams.ReadFromStream(NIL);
     end,
-    Exception);
+    Exception,
+    'FParams.ReadFromStream(NIL) must raise Exception');
 end;
 
 
@@ -344,7 +347,8 @@ begin
       begin
         FParams.ReadFromStream(Stream);
       end,
-      Exception);
+      Exception,
+      'FParams.ReadFromStream(Stream) must raise Exception');
   FINALLY
     FreeAndNil(Stream);
   END;
@@ -380,7 +384,8 @@ begin
       begin
         FParams.ReadFromStream(Stream);
       end,
-      Exception);
+      Exception,
+      'FParams.ReadFromStream(Stream) must raise Exception');
   FINALLY
     FreeAndNil(Stream);
   END;
@@ -416,7 +421,8 @@ begin
       begin
         FParams.ReadFromStream(Stream);
       end,
-      Exception);
+      Exception,
+      'FParams.ReadFromStream(Stream) must raise Exception');
   FINALLY
     FreeAndNil(Stream);
   END;
@@ -443,7 +449,8 @@ begin
       begin
         FParams.ReadFromStream(Stream);
       end,
-      Exception);
+      Exception,
+      'FParams.ReadFromStream(Stream) must raise Exception');
   FINALLY
     FreeAndNil(Stream);
   END;

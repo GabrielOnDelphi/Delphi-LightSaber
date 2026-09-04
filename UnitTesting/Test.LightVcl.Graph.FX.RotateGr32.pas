@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.FX.RotateGr32;
+﻿unit Test.LightVcl.Graph.FX.RotateGr32;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.FX.RotateGr32.pas
@@ -175,11 +175,12 @@ end;
 
 procedure TTestRotateGr32.TestRotateBitmap_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RotateBitmapGR32(FBitmap, 45);
-    end);
+    end,
+    'RotateBitmapGR32(FBitmap, 45) must not raise');
 end;
 
 
@@ -200,11 +201,12 @@ end;
 
 procedure TTestRotateGr32.TestRotateBitmap_90Degrees;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RotateBitmapGR32(FBitmap, 90, True);
-    end);
+    end,
+    'RotateBitmapGR32(FBitmap, 90, True) must not raise');
 
   { After 90 degree rotation with AdjustSize, dimensions should swap (approximately) }
   Assert.IsTrue(FBitmap.Width > 0, 'Bitmap should have valid width');
@@ -229,11 +231,12 @@ end;
 
 procedure TTestRotateGr32.TestRotateBitmap_270Degrees;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RotateBitmapGR32(FBitmap, 270, True);
-    end);
+    end,
+    'RotateBitmapGR32(FBitmap, 270, True) must not raise');
 
   Assert.IsTrue(FBitmap.Width > 0, 'Bitmap should have valid width');
   Assert.IsTrue(FBitmap.Height > 0, 'Bitmap should have valid height');
@@ -242,11 +245,12 @@ end;
 
 procedure TTestRotateGr32.TestRotateBitmap_ArbitraryAngle;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RotateBitmapGR32(FBitmap, 37.5, True);
-    end);
+    end,
+    'RotateBitmapGR32(FBitmap, 37.5, True) must not raise');
 
   Assert.IsTrue(FBitmap.Width > 0, 'Bitmap should have valid width');
   Assert.IsTrue(FBitmap.Height > 0, 'Bitmap should have valid height');
@@ -307,11 +311,12 @@ end;
 
 procedure TTestRotateGr32.TestRotateBitmap32_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RotateBitmapGR32(FBitmap32, 45);
-    end);
+    end,
+    'RotateBitmapGR32(FBitmap32, 45) must not raise');
 end;
 
 
@@ -331,11 +336,12 @@ end;
 
 procedure TTestRotateGr32.TestRotateBitmap32_90Degrees;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RotateBitmapGR32(FBitmap32, 90, True);
-    end);
+    end,
+    'RotateBitmapGR32(FBitmap32, 90, True) must not raise');
 
   Assert.IsTrue(FBitmap32.Width > 0, 'Bitmap32 should have valid width');
   Assert.IsTrue(FBitmap32.Height > 0, 'Bitmap32 should have valid height');
@@ -389,11 +395,12 @@ begin
     Destination.PixelFormat:= pf24bit;
     FillBitmapWithColor(Destination, clBlue);
 
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         RotateBitmapGR32(Source, Destination, 30, 50, 50);
-      end);
+      end,
+      'RotateBitmapGR32(Source, Destination, 30, 50, 50) must not raise');
   FINALLY
     FreeAndNil(Source);
     FreeAndNil(Destination);
@@ -446,11 +453,12 @@ begin
     Destination.Height:= 200;
     Destination.PixelFormat:= pf24bit;
 
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         RotateBitmapGR32(Source, Destination, 0, 0, 0);
-      end);
+      end,
+      'RotateBitmapGR32(Source, Destination, 0, 0, 0) must not raise');
   FINALLY
     FreeAndNil(Source);
     FreeAndNil(Destination);
@@ -553,11 +561,12 @@ begin
     SmallBmp.Height:= 5;
     SmallBmp.PixelFormat:= pf24bit;
 
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         RotateBitmapGR32(SmallBmp, 45);
-      end);
+      end,
+      'RotateBitmapGR32(SmallBmp, 45) must not raise');
 
     Assert.IsTrue(SmallBmp.Width > 0, 'Small bitmap should remain valid');
     Assert.IsTrue(SmallBmp.Height > 0, 'Small bitmap should remain valid');
@@ -592,11 +601,12 @@ end;
 
 procedure TTestRotateGr32.TestRotateBitmap_NegativeAngle;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RotateBitmapGR32(FBitmap, -45);
-    end);
+    end,
+    'RotateBitmapGR32(FBitmap, -45) must not raise');
 
   Assert.IsTrue(FBitmap.Width > 0, 'Bitmap should be valid after negative angle rotation');
 end;
@@ -605,11 +615,12 @@ end;
 procedure TTestRotateGr32.TestRotateBitmap_LargeAngle;
 begin
   { Test angle > 360 degrees }
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RotateBitmapGR32(FBitmap, 405);  { 405 = 360 + 45 }
-    end);
+    end,
+    'RotateBitmapGR32(FBitmap, 405) must not raise');
 
   Assert.IsTrue(FBitmap.Width > 0, 'Bitmap should be valid after large angle rotation');
 end;
@@ -620,33 +631,36 @@ end;
 procedure TTestRotateGr32.TestRotateBitmap_DifferentKernels;
 begin
   { Test with different kernel types }
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RotateBitmapGR32(FBitmap, 30, True, clPurple, False, BoxKernel);
-    end);
+    end,
+    'RotateBitmapGR32(FBitmap, 30, True, clPurple, False, BoxKern must not raise');
 
   { Reset for next test }
   FBitmap.Width:= 100;
   FBitmap.Height:= 80;
   FillBitmapWithColor(FBitmap, clWhite);
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RotateBitmapGR32(FBitmap, 30, True, clPurple, False, LanczosKernel);
-    end);
+    end,
+    'RotateBitmapGR32(FBitmap, 30, True, clPurple, False, Lanczos must not raise');
 
   { Reset for next test }
   FBitmap.Width:= 100;
   FBitmap.Height:= 80;
   FillBitmapWithColor(FBitmap, clWhite);
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RotateBitmapGR32(FBitmap, 30, True, clPurple, False, HermiteKernel);
-    end);
+    end,
+    'RotateBitmapGR32(FBitmap, 30, True, clPurple, False, Hermite must not raise');
 end;
 
 

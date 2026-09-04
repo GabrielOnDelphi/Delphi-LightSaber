@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.Resize;
+﻿unit Test.LightVcl.Graph.Resize;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.Resize.pas
@@ -12,6 +12,7 @@ interface
 uses
   DUnitX.TestFramework,
   System.SysUtils,
+  System.Types,           { Rect() - used by Canvas.FillRect }
   Vcl.Graphics;
 
 type
@@ -248,7 +249,8 @@ begin
     begin
       SmartStretch(NIL, Params);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -260,11 +262,11 @@ begin
   Params.MaxWidth:= 100;
   Params.MaxHeight:= 50;
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       SmartStretch(FBitmap, Params);
-    end);
+    end, 'Should not raise any exception');
 end;
 
 
@@ -277,7 +279,8 @@ begin
     begin
       SmartStretch(NIL, 100, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -288,7 +291,8 @@ begin
     begin
       SmartStretch(FBitmap, 0, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -299,29 +303,50 @@ begin
     begin
       SmartStretch(FBitmap, 100, -1);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
 procedure TTestGraphResize.TestSmartStretch_WithDimensions_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       SmartStretch(FBitmap, 100, 100);
-    end);
+    end, 'Should not raise any exception');
 end;
 
 
+{ The 3-argument SmartStretch uses AUTO-DETECT, which is allowed to overshoot the box by
+  FitTolerance percent (10 by default) - see the warning on the routine in LightVcl.Graph.Resize.pas.
+  So <= 200 is the wrong expectation here; it fails on a real, deliberate 220x165 result.
+  What auto-detect DOES promise, and what this test now checks:
+    - the image really shrank (it was 400x300),
+    - neither side exceeds the box plus the 10% tolerance,
+    - the aspect ratio survives.
+  The strict "must fit inside the box" case is covered by TestSmartStretch_WithResizeOp_Fit, which
+  passes roFit explicitly. }
 procedure TTestGraphResize.TestSmartStretch_WithDimensions_ResizesDown;
+CONST
+  Box       = 200;
+  MaxAllowed= 220;   { Box + FitTolerance (10%) }
+VAR
+  AspectIn, AspectOut: Double;
 begin
   CreateTestBitmap(400, 300);
+  AspectIn:= 400 / 300;
 
-  SmartStretch(FBitmap, 200, 200);
+  SmartStretch(FBitmap, Box, Box);
 
-  { Image should be smaller but aspect ratio maintained }
-  Assert.IsTrue(FBitmap.Width <= 200, 'Width should be <= 200');
-  Assert.IsTrue(FBitmap.Height <= 200, 'Height should be <= 200');
+  Assert.IsTrue(FBitmap.Width  < 400, 'Width should have shrunk below 400, is '  + IntToStr(FBitmap.Width));
+  Assert.IsTrue(FBitmap.Height < 300, 'Height should have shrunk below 300, is ' + IntToStr(FBitmap.Height));
+
+  Assert.IsTrue(FBitmap.Width  <= MaxAllowed, 'Width must not exceed the box plus the 10% tolerance (220), is '  + IntToStr(FBitmap.Width));
+  Assert.IsTrue(FBitmap.Height <= MaxAllowed, 'Height must not exceed the box plus the 10% tolerance (220), is ' + IntToStr(FBitmap.Height));
+
+  AspectOut:= FBitmap.Width / FBitmap.Height;
+  Assert.IsTrue(Abs(AspectOut - AspectIn) < 0.02, 'Aspect ratio should be preserved. In: ' + FloatToStr(AspectIn) + ' Out: ' + FloatToStr(AspectOut));
 end;
 
 
@@ -345,7 +370,8 @@ begin
     begin
       SmartStretch(NIL, 100, 100, roFit);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -382,7 +408,8 @@ begin
     begin
       SmartStretch(NIL, 100, 100, 10);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -393,7 +420,8 @@ begin
     begin
       SmartStretch(FBitmap, 100, 100, -1);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -404,17 +432,18 @@ begin
     begin
       SmartStretch(FBitmap, 100, 100, 101);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
 procedure TTestGraphResize.TestSmartStretch_WithTolerance_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       SmartStretch(FBitmap, 100, 100, 10);
-    end);
+    end, 'Should not raise any exception');
 end;
 
 
@@ -427,7 +456,8 @@ begin
     begin
       SmartStretchCrop(NIL, 100, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -438,7 +468,8 @@ begin
     begin
       SmartStretchCrop(FBitmap, 0, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -449,17 +480,18 @@ begin
     begin
       SmartStretchCrop(FBitmap, 100, 0);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
 procedure TTestGraphResize.TestSmartStretchCrop_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       SmartStretchCrop(FBitmap, 100, 80);
-    end);
+    end, 'Should not raise any exception');
 end;
 
 
@@ -484,7 +516,8 @@ begin
     begin
       StretchProport(TBitmap(NIL), 100, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -495,7 +528,8 @@ begin
     begin
       StretchProport(FBitmap, 0, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -506,7 +540,8 @@ begin
     begin
       StretchProport(FBitmap, 100, 0);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -524,7 +559,8 @@ begin
       begin
         StretchProport(BMP, 100, 100);
       end,
-      EAssertionFailed);
+      EAssertionFailed,
+      'Should raise EAssertionFailed');
   FINALLY
     FreeAndNil(BMP);
   END;
@@ -545,7 +581,8 @@ begin
       begin
         StretchProport(BMP, 100, 100);
       end,
-      EAssertionFailed);
+      EAssertionFailed,
+      'Should raise EAssertionFailed');
   FINALLY
     FreeAndNil(BMP);
   END;
@@ -612,7 +649,8 @@ begin
     begin
       StretchProport(TBitmap(NIL), 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -623,17 +661,18 @@ begin
     begin
       StretchProport(FBitmap, 0);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
 procedure TTestGraphResize.TestStretchProport_WithWidth_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       StretchProport(FBitmap, 100);
-    end);
+    end, 'Should not raise any exception');
 end;
 
 
@@ -662,7 +701,8 @@ begin
     begin
       StretchProportF(NIL, 100, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -724,7 +764,8 @@ begin
     begin
       StretchPercent(NIL, 50);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -735,7 +776,8 @@ begin
     begin
       StretchPercent(FBitmap, -101);
     end,
-    Exception);
+    Exception,
+    'Should raise Exception');
 end;
 
 
@@ -746,7 +788,8 @@ begin
     begin
       StretchPercent(FBitmap, -100);
     end,
-    Exception);
+    Exception,
+    'Should raise Exception');
 end;
 
 
@@ -819,7 +862,8 @@ begin
     begin
       StretchPercentX(NIL, 2.0);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -830,7 +874,8 @@ begin
     begin
       StretchPercentX(FBitmap, 0);
     end,
-    Exception);
+    Exception,
+    'Should raise Exception');
 end;
 
 
@@ -841,7 +886,8 @@ begin
     begin
       StretchPercentX(FBitmap, -1.0);
     end,
-    Exception);
+    Exception,
+    'Should raise Exception');
 end;
 
 

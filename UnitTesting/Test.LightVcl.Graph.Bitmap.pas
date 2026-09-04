@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.Bitmap;
+﻿unit Test.LightVcl.Graph.Bitmap;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.Bitmap.pas
@@ -372,11 +372,12 @@ end;
 
 procedure TTestGraphBitmap.TestSetLargeSize_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       SetLargeSize(FBitmap, 200, 200);
-    end);
+    end,
+    'SetLargeSize(FBitmap, 200, 200) must not raise');
 
   Assert.AreEqual(200, FBitmap.Width, 'Width should be 200');
   Assert.AreEqual(200, FBitmap.Height, 'Height should be 200');
@@ -390,7 +391,8 @@ begin
     begin
       SetLargeSize(NIL, 100, 100);
     end,
-    Exception);
+    Exception,
+    'SetLargeSize(NIL, 100, 100) must raise Exception');
 end;
 
 
@@ -401,7 +403,8 @@ begin
     begin
       SetLargeSize(FBitmap, 0, 100);
     end,
-    Exception);
+    Exception,
+    'SetLargeSize(FBitmap, 0, 100) must raise Exception');
 end;
 
 
@@ -412,7 +415,8 @@ begin
     begin
       SetLargeSize(FBitmap, 100, -1);
     end,
-    Exception);
+    Exception,
+    'SetLargeSize(FBitmap, 100, -1) must raise Exception');
 end;
 
 
@@ -425,7 +429,8 @@ begin
     begin
       ClearImage(NIL);
     end,
-    Exception);
+    Exception,
+    'ClearImage(NIL) must raise Exception');
 end;
 
 
@@ -433,11 +438,12 @@ end;
 
 procedure TTestGraphBitmap.TestClearBitmap_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       ClearBitmap(FBitmap);
-    end);
+    end,
+    'ClearBitmap(FBitmap) must not raise');
 end;
 
 
@@ -448,7 +454,8 @@ begin
     begin
       ClearBitmap(NIL);
     end,
-    Exception);
+    Exception,
+    'ClearBitmap(NIL) must raise Exception');
 end;
 
 
@@ -456,11 +463,12 @@ end;
 
 procedure TTestGraphBitmap.TestFillBitmap_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       FillBitmap(FBitmap, clBlue);
-    end);
+    end,
+    'FillBitmap(FBitmap, clBlue) must not raise');
 end;
 
 
@@ -471,7 +479,8 @@ begin
     begin
       FillBitmap(NIL, clBlue);
     end,
-    Exception);
+    Exception,
+    'FillBitmap(NIL, clBlue) must raise Exception');
 end;
 
 
@@ -493,11 +502,12 @@ end;
 
 procedure TTestGraphBitmap.TestCenterText_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       CenterText(FBitmap, 'Test');
-    end);
+    end,
+    'CenterText(FBitmap, Test) must not raise');
 end;
 
 
@@ -508,18 +518,20 @@ begin
     begin
       CenterText(NIL, 'Test');
     end,
-    Exception);
+    Exception,
+    'CenterText(NIL, Test) must raise Exception');
 end;
 
 
 procedure TTestGraphBitmap.TestCenterText_EmptyString;
 begin
   { Should not crash with empty string }
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       CenterText(FBitmap, '');
-    end);
+    end,
+    'CenterText(FBitmap, ) must not raise');
 end;
 
 
@@ -529,21 +541,23 @@ var
 begin
   Font.Clear;
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       CenterText(FBitmap, 'Test', Font);
-    end);
+    end,
+    'CenterText(FBitmap, Test, Font) must not raise');
 end;
 
 
 procedure TTestGraphBitmap.TestCenterText_WithFontParams;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       CenterText(FBitmap, 'Test', 'Arial', 12, clBlack);
-    end);
+    end,
+    'CenterText(FBitmap, Test, Arial, 12, clBlack) must not raise');
 end;
 
 
@@ -565,7 +579,8 @@ begin
     begin
       GetBitmapRamSize(NIL);
     end,
-    Exception);
+    Exception,
+    'GetBitmapRamSize(NIL) must raise Exception');
 end;
 
 
@@ -611,7 +626,8 @@ begin
     begin
       PredictBitmapRamSize(NIL, 100, 100);
     end,
-    Exception);
+    Exception,
+    'PredictBitmapRamSize(NIL, 100, 100) must raise Exception');
 end;
 
 
@@ -629,11 +645,12 @@ end;
 
 procedure TTestGraphBitmap.TestIsPanoramic_WithBitmap_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       IsPanoramic(FBitmap);
-    end);
+    end,
+    'IsPanoramic(FBitmap) must not raise');
 end;
 
 
@@ -644,7 +661,8 @@ begin
     begin
       IsPanoramic(TBitmap(NIL));
     end,
-    Exception);
+    Exception,
+    'IsPanoramic(TBitmap(NIL)) must raise Exception');
 end;
 
 
@@ -673,11 +691,12 @@ end;
 
 procedure TTestGraphBitmap.TestAspectIsSmaller_WithBitmap_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       AspectIsSmaller(FBitmap, 1920, 1080);
-    end);
+    end,
+    'AspectIsSmaller(FBitmap, 1920, 1080) must not raise');
 end;
 
 
@@ -688,7 +707,8 @@ begin
     begin
       AspectIsSmaller(NIL, 1920, 1080);
     end,
-    Exception);
+    Exception,
+    'AspectIsSmaller(NIL, 1920, 1080) must raise Exception');
 end;
 
 
@@ -715,7 +735,8 @@ begin
     begin
       AspectIsSmaller(1920, 0, 100, 100);
     end,
-    Exception);
+    Exception,
+    'AspectIsSmaller(1920, 0, 100, 100) must raise Exception');
 end;
 
 
@@ -776,7 +797,8 @@ begin
     begin
       AspectOrientation(TBitmap(NIL));
     end,
-    Exception);
+    Exception,
+    'AspectOrientation(TBitmap(NIL)) must raise Exception');
 end;
 
 
@@ -836,7 +858,8 @@ begin
       begin
         GetImageScale(NIL, Desktop, Tile);
       end,
-      Exception);
+      Exception,
+      'GetImageScale(NIL, Desktop, Tile) must raise Exception');
   FINALLY
     FreeAndNil(Desktop);
   END;
@@ -854,7 +877,8 @@ begin
     begin
       GetImageScale(FBitmap, TBitmap(NIL), Tile);
     end,
-    Exception);
+    Exception,
+    'GetImageScale(FBitmap, TBitmap(NIL), Tile) must raise Exception');
 end;
 
 
@@ -958,7 +982,8 @@ begin
     begin
       GetImageScale(FBitmap, 1920, 1080, Tile);
     end,
-    Exception);
+    Exception,
+    'GetImageScale(FBitmap, 1920, 1080, Tile) must raise Exception');
 end;
 
 
@@ -966,11 +991,12 @@ end;
 
 procedure TTestGraphBitmap.TestEnlargeCanvas_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       EnlargeCanvas(FBitmap, 200, 200, clBlack);
-    end);
+    end,
+    'EnlargeCanvas(FBitmap, 200, 200, clBlack) must not raise');
 end;
 
 
@@ -981,7 +1007,8 @@ begin
     begin
       EnlargeCanvas(NIL, 200, 200, clBlack);
     end,
-    Exception);
+    Exception,
+    'EnlargeCanvas(NIL, 200, 200, clBlack) must raise Exception');
 end;
 
 
@@ -1005,11 +1032,12 @@ begin
     Dest.Width:= 200;
     Dest.Height:= 160;
 
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         CenterBitmap(FBitmap, Dest);
-      end);
+      end,
+      'CenterBitmap(FBitmap, Dest) must not raise');
   FINALLY
     FreeAndNil(Dest);
   END;
@@ -1030,7 +1058,8 @@ begin
       begin
         CenterBitmap(NIL, Dest);
       end,
-      Exception);
+      Exception,
+      'CenterBitmap(NIL, Dest) must raise Exception');
   FINALLY
     FreeAndNil(Dest);
   END;
@@ -1044,7 +1073,8 @@ begin
     begin
       CenterBitmap(FBitmap, NIL);
     end,
-    Exception);
+    Exception,
+    'CenterBitmap(FBitmap, NIL) must raise Exception');
 end;
 
 
@@ -1163,11 +1193,12 @@ begin
   TRY
     RFont_.Clear;
 
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         RFont_.AssignTo(Font);
-      end);
+      end,
+      'RFont_.AssignTo(Font) must not raise');
   FINALLY
     FreeAndNil(Font);
   END;
@@ -1185,7 +1216,8 @@ begin
     begin
       Font.AssignTo(NIL);
     end,
-    Exception);
+    Exception,
+    'Font.AssignTo(NIL) must raise Exception');
 end;
 
 

@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.ResizeFMX;
+﻿unit Test.LightVcl.Graph.ResizeFMX;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.ResizeFMX.pas
@@ -13,6 +13,7 @@ interface
 uses
   DUnitX.TestFramework,
   System.SysUtils,
+  System.Types,        { Rect }
   Vcl.Graphics;
 
 type
@@ -117,7 +118,8 @@ begin
     begin
       ResizeFMX(NIL, 100, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ResizeFMX(NIL, 100, 100) must raise EAssertionFailed');
 end;
 
 
@@ -128,7 +130,8 @@ begin
     begin
       ResizeFMX(FBitmap, 0, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ResizeFMX(FBitmap, 0, 100) must raise EAssertionFailed');
 end;
 
 
@@ -139,17 +142,19 @@ begin
     begin
       ResizeFMX(FBitmap, 100, -1);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ResizeFMX(FBitmap, 100, -1) must raise EAssertionFailed');
 end;
 
 
 procedure TTestGraphResizeFMX.TestResizeFMX_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       ResizeFMX(FBitmap, 100, 50);
-    end);
+    end,
+    'ResizeFMX(FBitmap, 100, 50) must not raise');
 end;
 
 
@@ -196,7 +201,8 @@ begin
     begin
       ResizeFmxF(NIL, 100, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ResizeFmxF(NIL, 100, 100) must raise EAssertionFailed');
 end;
 
 
@@ -207,7 +213,8 @@ begin
     begin
       ResizeFmxF(FBitmap, 0, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ResizeFmxF(FBitmap, 0, 100) must raise EAssertionFailed');
 end;
 
 
@@ -218,7 +225,8 @@ begin
     begin
       ResizeFmxF(FBitmap, 100, 0);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ResizeFmxF(FBitmap, 100, 0) must raise EAssertionFailed');
 end;
 
 

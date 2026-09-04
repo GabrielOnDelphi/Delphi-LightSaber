@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.Gif;
+﻿unit Test.LightVcl.Graph.Gif;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.Gif.pas
@@ -27,7 +27,9 @@ type
     FTestFolder: string;
     FAnimatedGifPath: string;
     FStaticGifPath: string;
-    function HasTestFiles: Boolean;
+    /// No test calls this, and an uncalled private method is compiler hint H2219.
+    /// Bring both halves back when a test needs to skip because the sample GIF files are absent.
+    /// function HasTestFiles: Boolean;
   public
     [Setup]
     procedure Setup;
@@ -127,10 +129,10 @@ begin
 end;
 
 
-function TTestGraphGif.HasTestFiles: Boolean;
-begin
-  Result:= FileExists(FAnimatedGifPath) OR FileExists(FStaticGifPath);
-end;
+/// function TTestGraphGif.HasTestFiles: Boolean;
+/// begin
+///   Result:= FileExists(FAnimatedGifPath) OR FileExists(FStaticGifPath);
+/// end;
 
 
 { TGifLoader - Constructor/Destructor Tests }
@@ -165,12 +167,13 @@ procedure TTestGraphGif.TestGifLoader_Destroy_NoException;
 var
   Loader: TGifLoader;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       Loader:= TGifLoader.Create;
       FreeAndNil(Loader);
-    end);
+    end,
+    'Loader:= TGifLoader.Create must not raise');
 end;
 
 

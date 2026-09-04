@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.Loader.Thread;
+﻿unit Test.LightVcl.Graph.Loader.Thread;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.Loader.Thread.pas
@@ -35,7 +35,9 @@ type
     FEvent: TEvent;
     procedure CreateTestBmpFiles(Count: Integer);
     procedure CleanupTempFiles;
-    procedure HandleThumbnailMessage(var Message: TMessage);
+    { TTestFormHelper.OnThumbnail is a TNotifyEvent, and the implementation below already takes a
+      Sender. The declaration said (var Message: TMessage), which matched neither. }
+    procedure HandleThumbnailMessage(Sender: TObject);
   public
     [Setup]
     procedure Setup;
@@ -117,7 +119,10 @@ begin
   FEvent:= TEvent.Create(NIL, True, False, '');
 
   { Create a test form to receive messages }
-  FTestForm:= TTestFormHelper.Create(NIL);
+  { CreateNew, not Create. TForm.Create looks for a form resource named after the class, and a
+    form class declared in code has none - the run reported "Resource TTestFormHelper not found"
+    for all 10 tests in this fixture. }
+  FTestForm:= TTestFormHelper.CreateNew(NIL);
   FTestForm.HandleNeeded;  { Ensure handle is created }
   TTestFormHelper(FTestForm).OnThumbnail:= HandleThumbnailMessage;
 end;
@@ -187,8 +192,12 @@ begin
   TRY
     Assert.IsNotNull(Loader, 'Loader should be created');
   FINALLY
-    Loader.Terminate;
-    Loader.WaitFor;
+    { FreeAndNil alone, and nothing before it. TBkgImgLoader is created SUSPENDED
+      (LightVcl.Graph.Loader.Thread.pas:107, "inherited Create(TRUE)"), and TThread.WaitFor waits on
+      the thread handle, which a thread that was never started never signals - so a hand-written
+      Terminate + WaitFor here hangs the whole test run for ever. It did, on 2026-09-03.
+      TThread.Destroy is the safe route: it calls ShutdownThread, which does Terminate, then RESUMES
+      a suspended thread, and only then WaitFor (System.Classes.pas:16596-16612). }
     FreeAndNil(Loader);
   END;
 end;
@@ -225,8 +234,12 @@ begin
     Assert.IsNull(Loader.FileList, 'Default FileList should be NIL');
     Assert.IsFalse(Loader.FreeOnTerminate, 'FreeOnTerminate should be False');
   FINALLY
-    Loader.Terminate;
-    Loader.WaitFor;
+    { FreeAndNil alone, and nothing before it. TBkgImgLoader is created SUSPENDED
+      (LightVcl.Graph.Loader.Thread.pas:107, "inherited Create(TRUE)"), and TThread.WaitFor waits on
+      the thread handle, which a thread that was never started never signals - so a hand-written
+      Terminate + WaitFor here hangs the whole test run for ever. It did, on 2026-09-03.
+      TThread.Destroy is the safe route: it calls ShutdownThread, which does Terminate, then RESUMES
+      a suspended thread, and only then WaitFor (System.Classes.pas:16596-16612). }
     FreeAndNil(Loader);
   END;
 end;
@@ -245,8 +258,12 @@ begin
     Bmp:= Loader.PopPicture;
     Assert.IsNull(Bmp, 'PopPicture should return NIL for empty queue');
   FINALLY
-    Loader.Terminate;
-    Loader.WaitFor;
+    { FreeAndNil alone, and nothing before it. TBkgImgLoader is created SUSPENDED
+      (LightVcl.Graph.Loader.Thread.pas:107, "inherited Create(TRUE)"), and TThread.WaitFor waits on
+      the thread handle, which a thread that was never started never signals - so a hand-written
+      Terminate + WaitFor here hangs the whole test run for ever. It did, on 2026-09-03.
+      TThread.Destroy is the safe route: it calls ShutdownThread, which does Terminate, then RESUMES
+      a suspended thread, and only then WaitFor (System.Classes.pas:16596-16612). }
     FreeAndNil(Loader);
   END;
 end;
@@ -259,7 +276,6 @@ var
   Loader: TBkgImgLoader;
   FileList: TStringList;
   Bmp: TBitmap;
-  WaitResult: TWaitResult;
 begin
   CreateTestBmpFiles(1);
   FReceivedThumbs:= 0;
@@ -285,14 +301,18 @@ begin
     Bmp:= Loader.PopPicture;
     TRY
       Assert.IsNotNull(Bmp, 'Should have loaded one thumbnail');
-      Assert.IsTrue(Bmp.Width <= 100, 'Thumbnail width should be <= 100');
-      Assert.IsTrue(Bmp.Height <= 100, 'Thumbnail height should be <= 100');
+      Assert.IsTrue(Bmp.Width  <= 100, 'Thumbnail width should be <= 100 but is '  + IntToStr(Bmp.Width));
+      Assert.IsTrue(Bmp.Height <= 100, 'Thumbnail height should be <= 100 but is ' + IntToStr(Bmp.Height));
     FINALLY
       FreeAndNil(Bmp);
     END;
   FINALLY
-    Loader.Terminate;
-    Loader.WaitFor;
+    { FreeAndNil alone, and nothing before it. TBkgImgLoader is created SUSPENDED
+      (LightVcl.Graph.Loader.Thread.pas:107, "inherited Create(TRUE)"), and TThread.WaitFor waits on
+      the thread handle, which a thread that was never started never signals - so a hand-written
+      Terminate + WaitFor here hangs the whole test run for ever. It did, on 2026-09-03.
+      TThread.Destroy is the safe route: it calls ShutdownThread, which does Terminate, then RESUMES
+      a suspended thread, and only then WaitFor (System.Classes.pas:16596-16612). }
     FreeAndNil(Loader);
   END;
 end;
@@ -320,21 +340,26 @@ begin
 
     Application.ProcessMessages;
 
-    { Count loaded thumbnails }
+    { Count loaded thumbnails.
+      Do NOT go back to a 'repeat ... until Bmp = NIL' loop: FreeAndNil sets Bmp to NIL, so the
+      exit condition was true right after the FIRST thumbnail and the count was always 1. }
     LoadedCount:= 0;
-    repeat
+    Bmp:= Loader.PopPicture;
+    WHILE Bmp <> NIL DO
+     begin
+      Inc(LoadedCount);
+      FreeAndNil(Bmp);
       Bmp:= Loader.PopPicture;
-      if Bmp <> NIL then
-      begin
-        Inc(LoadedCount);
-        FreeAndNil(Bmp);
-      end;
-    until Bmp = NIL;
+     end;
 
     Assert.AreEqual(5, LoadedCount, 'Should have loaded 5 thumbnails');
   FINALLY
-    Loader.Terminate;
-    Loader.WaitFor;
+    { FreeAndNil alone, and nothing before it. TBkgImgLoader is created SUSPENDED
+      (LightVcl.Graph.Loader.Thread.pas:107, "inherited Create(TRUE)"), and TThread.WaitFor waits on
+      the thread handle, which a thread that was never started never signals - so a hand-written
+      Terminate + WaitFor here hangs the whole test run for ever. It did, on 2026-09-03.
+      TThread.Destroy is the safe route: it calls ShutdownThread, which does Terminate, then RESUMES
+      a suspended thread, and only then WaitFor (System.Classes.pas:16596-16612). }
     FreeAndNil(Loader);
   END;
 end;
@@ -362,8 +387,12 @@ begin
     Bmp:= Loader.PopPicture;
     Assert.IsNull(Bmp, 'PopPicture should return NIL for non-existent file');
   FINALLY
-    Loader.Terminate;
-    Loader.WaitFor;
+    { FreeAndNil alone, and nothing before it. TBkgImgLoader is created SUSPENDED
+      (LightVcl.Graph.Loader.Thread.pas:107, "inherited Create(TRUE)"), and TThread.WaitFor waits on
+      the thread handle, which a thread that was never started never signals - so a hand-written
+      Terminate + WaitFor here hangs the whole test run for ever. It did, on 2026-09-03.
+      TThread.Destroy is the safe route: it calls ShutdownThread, which does Terminate, then RESUMES
+      a suspended thread, and only then WaitFor (System.Classes.pas:16596-16612). }
     FreeAndNil(Loader);
   END;
 end;
@@ -428,8 +457,12 @@ begin
     { Thread should complete without raising exception }
     Assert.Pass('Thread handled invalid file silently');
   FINALLY
-    Loader.Terminate;
-    Loader.WaitFor;
+    { FreeAndNil alone, and nothing before it. TBkgImgLoader is created SUSPENDED
+      (LightVcl.Graph.Loader.Thread.pas:107, "inherited Create(TRUE)"), and TThread.WaitFor waits on
+      the thread handle, which a thread that was never started never signals - so a hand-written
+      Terminate + WaitFor here hangs the whole test run for ever. It did, on 2026-09-03.
+      TThread.Destroy is the safe route: it calls ShutdownThread, which does Terminate, then RESUMES
+      a suspended thread, and only then WaitFor (System.Classes.pas:16596-16612). }
     FreeAndNil(Loader);
   END;
 end;
@@ -455,8 +488,12 @@ begin
     { We can't directly test this, but ensure thread completes without error }
     Assert.Pass('Thread completed and freed FileList');
   FINALLY
-    Loader.Terminate;
-    Loader.WaitFor;
+    { FreeAndNil alone, and nothing before it. TBkgImgLoader is created SUSPENDED
+      (LightVcl.Graph.Loader.Thread.pas:107, "inherited Create(TRUE)"), and TThread.WaitFor waits on
+      the thread handle, which a thread that was never started never signals - so a hand-written
+      Terminate + WaitFor here hangs the whole test run for ever. It did, on 2026-09-03.
+      TThread.Destroy is the safe route: it calls ShutdownThread, which does Terminate, then RESUMES
+      a suspended thread, and only then WaitFor (System.Classes.pas:16596-16612). }
     FreeAndNil(Loader);
   END;
 

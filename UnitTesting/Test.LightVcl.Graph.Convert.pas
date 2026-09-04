@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.Convert;
+﻿unit Test.LightVcl.Graph.Convert;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.Convert.pas
@@ -215,7 +215,8 @@ begin
     begin
       Bmp2Jpg(TBitmap(NIL));
     end,
-    Exception);
+    Exception,
+    'Bmp2Jpg(TBitmap(NIL)) must raise Exception');
 end;
 
 
@@ -238,7 +239,10 @@ var
 begin
   Jpg:= Bmp2Jpg(FBitmap);
   TRY
-    Assert.AreEqual(DelphiJpgQuality, Jpg.CompressionQuality,
+    { AreEqual is generic. DelphiJpgQuality is an untyped integer constant and CompressionQuality is
+      TJPEGQualityRange, a 1..100 subrange, so no single type can be inferred (E2532). Both sides
+      are cast to Integer. }
+    Assert.AreEqual(Integer(DelphiJpgQuality), Integer(Jpg.CompressionQuality),
       'Default compression should be DelphiJpgQuality');
   FINALLY
     FreeAndNil(Jpg);
@@ -252,7 +256,7 @@ var
 begin
   Jpg:= Bmp2Jpg(FBitmap, 90);
   TRY
-    Assert.AreEqual(90, Jpg.CompressionQuality, 'Compression should be 90');
+    Assert.AreEqual(90, Integer(Jpg.CompressionQuality), 'Compression should be 90');
   FINALLY
     FreeAndNil(Jpg);
   END;
@@ -268,11 +272,12 @@ begin
   TDirectory.CreateDirectory(FTempDir);
   OutputFile:= TPath.Combine(FTempDir, 'test.jpg');
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       Bmp2Jpg(FBitmap, OutputFile);
-    end);
+    end,
+    'Bmp2Jpg(FBitmap, OutputFile) must not raise');
 end;
 
 
@@ -283,7 +288,8 @@ begin
     begin
       Bmp2Jpg(TBitmap(NIL), 'test.jpg');
     end,
-    Exception);
+    Exception,
+    'Bmp2Jpg(TBitmap(NIL), test.jpg) must raise Exception');
 end;
 
 
@@ -294,7 +300,8 @@ begin
     begin
       Bmp2Jpg(FBitmap, '');
     end,
-    Exception);
+    Exception,
+    'Bmp2Jpg(FBitmap, ) must raise Exception');
 end;
 
 
@@ -354,7 +361,8 @@ begin
     begin
       Jpeg2Bmp(NIL);
     end,
-    Exception);
+    Exception,
+    'Jpeg2Bmp(NIL) must raise Exception');
 end;
 
 
@@ -405,11 +413,12 @@ begin
   TDirectory.CreateDirectory(FTempDir);
   OutputFile:= TPath.Combine(FTempDir, 'graph.jpg');
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       Graph2Jpg(FBitmap, OutputFile);
-    end);
+    end,
+    'Graph2Jpg(FBitmap, OutputFile) must not raise');
 end;
 
 
@@ -420,7 +429,8 @@ begin
     begin
       Graph2Jpg(NIL, 'test.jpg');
     end,
-    Exception);
+    Exception,
+    'Graph2Jpg(NIL, test.jpg) must raise Exception');
 end;
 
 
@@ -431,7 +441,8 @@ begin
     begin
       Graph2Jpg(FBitmap, '');
     end,
-    Exception);
+    Exception,
+    'Graph2Jpg(FBitmap, ) must raise Exception');
 end;
 
 
@@ -470,7 +481,8 @@ begin
     begin
       Bmp2JpgStream(NIL);
     end,
-    Exception);
+    Exception,
+    'Bmp2JpgStream(NIL) must raise Exception');
 end;
 
 
@@ -510,7 +522,7 @@ begin
     Stream.Position:= 0;
     Jpg:= TJpegImage.Create;
     TRY
-      Assert.WillNotRaise(
+      Assert.WillNotRaiseAny(
         procedure
         begin
           Jpg.LoadFromStream(Stream);
@@ -543,7 +555,8 @@ begin
     begin
       CompressBmp(NIL);
     end,
-    Exception);
+    Exception,
+    'CompressBmp(NIL) must raise Exception');
 end;
 
 
@@ -592,7 +605,8 @@ begin
     begin
       Recompress(TJpegImage(NIL));
     end,
-    Exception);
+    Exception,
+    'Recompress(TJpegImage(NIL)) must raise Exception');
 end;
 
 
@@ -639,7 +653,8 @@ begin
     begin
       Recompress(NIL, OutputJpg);
     end,
-    Exception);
+    Exception,
+    'Recompress(NIL, OutputJpg) must raise Exception');
 end;
 
 
@@ -672,7 +687,7 @@ begin
     { Verify output is a valid JPEG by assigning to bitmap }
     Bmp:= TBitmap.Create;
     TRY
-      Assert.WillNotRaise(
+      Assert.WillNotRaiseAny(
         procedure
         begin
           Bmp.Assign(OutputJpg);
