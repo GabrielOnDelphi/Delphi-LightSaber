@@ -10,7 +10,7 @@ UNIT FormUpdaterNotifier;
    Shows news/updates from the online updater (TUpdater in ciUpdater.pas) to the end user.
 
    CROSS-PLATFORM: Yes (Windows, macOS, iOS, Android)
-   SCOPE: End-user notifier only. Demo/record-editor tabs and TestProgramConnection
+   SCOPE: End-user notifier only. Demo/record-editor tabs and TestProgramConnectionMsg
           are intentionally omitted from this port — they live only in the VCL version.
 
    THIS FORM IS USED BY MULTIPLE PROGRAMS. Do not localize it for a specific program.
