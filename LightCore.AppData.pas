@@ -14,7 +14,7 @@
        - Portable mode: place a 'portable.marker' file next to the EXE to store settings in the EXE folder instead of %AppData%
        - Application self-restart
        - Application self-delete
-       - TEST_MODE: When TRUE, ShowModal/Show calls are bypassed. Use in unit tests to prevent forms from blocking.
+       - Unattended: When TRUE, nothing is put on screen and no modal call blocks. Set it in a unit test, a console tool, a Windows service or a scheduled job.
 
     Cross-platform ready: stamped 2025.10
  ____________________________________________________________________________________________________________
@@ -74,6 +74,22 @@ TYPE
     procedure setShowOnError(const Value: Boolean);
   protected
     FHintType: THintType;                // Turn off the embedded help system
+
+    { The real logging work. Protected, not private: the TAppData descendants live in other units
+      (LightVcl.Visual.AppData, LightFmx.Common.AppData) and call these from inside their own methods,
+      where Self is a live object and the global AppDataCore may not be assigned yet - during Create -
+      or may already be NIL - during Destroy. }
+    procedure doLogEmptyRow;
+    procedure doLogBold  (CONST Msg: string);
+    procedure doLogError (CONST Msg: string);
+    procedure doLogHint  (CONST Msg: string);
+    procedure doLogImpo  (CONST Msg: string);
+    procedure doLogInfo  (CONST Msg: string);
+    procedure doLogMsg   (CONST Msg: string);
+    procedure doLogVerb  (CONST Msg: string);
+    procedure doLogWarn  (CONST Msg: string);
+    procedure doLogClear;
+
     procedure setHideHint(const Value: Integer); virtual;
     procedure loadSettings;     virtual;
     procedure saveSettings;     virtual;
@@ -100,7 +116,12 @@ TYPE
     class property Initializing: Boolean read FInitializing;  // See documentation at the top of the file
     class procedure EndInitialization;
     class property PortableMode: Boolean read FPortableMode;  // TRUE when 'portable.marker' exists next to EXE. INI and settings are stored next to the EXE instead of %AppData%.
-    class VAR TEST_MODE: Boolean;                             // When TRUE, ShowModal/Show calls are bypassed. Set this in test setup to prevent forms from blocking tests.
+    { TRUE = nobody is at the keyboard, so nothing may be put on screen and nothing may block waiting for a click.
+      The message-box routines return their "safe" answer at once and ShowModal is skipped.
+      Who should set it: a unit test, a console tool, a Windows service (session 0 - a message box there is
+      invisible AND blocks for ever) and a scheduled job. A normal desktop application leaves it FALSE.
+      Old name: TEST_MODE. }
+    class VAR Unattended: Boolean;
 
     constructor Create(CONST aAppName: string; CONST WindowClassName: string= ''; MultiThreaded: Boolean= FALSE); virtual;
     procedure  AfterConstruction; override;
@@ -154,16 +175,26 @@ TYPE
    {--------------------------------------------------------------------------------------------------
       App Log
    --------------------------------------------------------------------------------------------------}
-    procedure LogEmptyRow;
-    procedure LogBold  (CONST Msg: string);
-    procedure LogError (CONST Msg: string);
-    procedure LogHint  (CONST Msg: string);
-    procedure LogImpo  (CONST Msg: string);
-    procedure LogInfo  (CONST Msg: string);
-    procedure LogMsg   (CONST Msg: string);
-    procedure LogVerb  (CONST Msg: string);
-    procedure LogWarn  (CONST Msg: string);
-    procedure LogClear;
+    { Nobody needs an object to log: TAppDataCore.LogWarn('x') and AppDataCore.LogWarn('x') both work.
+      Each one tests the global AppDataCore for NIL itself, so a library routine logs without a guard and
+      a call during shutdown - when the finalization of LightVcl.Visual.AppData / LightFmx.Common.AppData
+      has already set AppDataCore to NIL - does nothing instead of raising.
+
+      STATIC is load-bearing, not decoration. Measured on Delphi 13 (compiler version 37.0), Win32 and
+      Win64: a class method WITHOUT static, called through a NIL object reference, reads the class pointer
+      out of that object and raises EAccessViolation at address 0. With static there is no hidden Self, so
+      nothing is read and AppDataCore.LogWarn('x') is safe even when AppDataCore is NIL.
+      The cost of static is that these can never be virtual. None of them ever was. }
+    class procedure LogEmptyRow;                   static;
+    class procedure LogBold  (CONST Msg: string);  static;
+    class procedure LogError (CONST Msg: string);  static;
+    class procedure LogHint  (CONST Msg: string);  static;
+    class procedure LogImpo  (CONST Msg: string);  static;
+    class procedure LogInfo  (CONST Msg: string);  static;
+    class procedure LogMsg   (CONST Msg: string);  static;
+    class procedure LogVerb  (CONST Msg: string);  static;
+    class procedure LogWarn  (CONST Msg: string);  static;
+    class procedure LogClear;                      static;
 
     procedure PopUpLogWindow;
 
@@ -371,7 +402,7 @@ begin
   Result:= DirectoryExists(AppSysDir);
 
   if NOT Result
-  then LogError('The program was not properly installed! The "System" folder is missing. Checked in: '+ AppSysDir);
+  then doLogError('The program was not properly installed! The "System" folder is missing. Checked in: '+ AppSysDir);
 end;
 
 
@@ -570,73 +601,126 @@ end;
    LOG - Send messages directly to log window
 -------------------------------------------------------------------------------------------------------------}
 
-procedure TAppDataCore.LogVerb(CONST Msg: string);
+procedure TAppDataCore.doLogVerb(CONST Msg: string);
 begin
   if RamLog <> NIL
   then RamLog.AddVerb(Msg);
 end;
 
 
-procedure TAppDataCore.LogHint(CONST Msg: string);
+procedure TAppDataCore.doLogHint(CONST Msg: string);
 begin
   if RamLog <> NIL
   then RamLog.AddHint(Msg);
 end;
 
 
-procedure TAppDataCore.LogInfo(CONST Msg: string);
+procedure TAppDataCore.doLogInfo(CONST Msg: string);
 begin
   if RamLog <> NIL
   then RamLog.AddInfo(Msg);
 end;
 
 
-procedure TAppDataCore.LogImpo(CONST Msg: string);
+procedure TAppDataCore.doLogImpo(CONST Msg: string);
 begin
   if RamLog <> NIL
   then RamLog.AddImpo(Msg);
 end;
 
 
-procedure TAppDataCore.LogWarn(CONST Msg: string);
+procedure TAppDataCore.doLogWarn(CONST Msg: string);
 begin
   if RamLog <> NIL
   then RamLog.AddWarn(Msg);
 end;
 
 
-procedure TAppDataCore.LogError(CONST Msg: string);
+procedure TAppDataCore.doLogError(CONST Msg: string);
 begin
   if RamLog <> NIL
   then RamLog.AddError(Msg);
 end;
 
 
-procedure TAppDataCore.LogMsg(CONST Msg: string);
+procedure TAppDataCore.doLogMsg(CONST Msg: string);
 begin
   if RamLog <> NIL
   then RamLog.AddMsg(Msg);
 end;
 
 
-procedure TAppDataCore.LogBold(CONST Msg: string);
+procedure TAppDataCore.doLogBold(CONST Msg: string);
 begin
   if RamLog <> NIL
   then RamLog.AddBold(Msg);
 end;
 
 
-procedure TAppDataCore.LogClear;
+procedure TAppDataCore.doLogClear;
 begin
   if RamLog <> NIL
   then RamLog.Clear;
 end;
 
 
-procedure TAppDataCore.LogEmptyRow;
+procedure TAppDataCore.doLogEmptyRow;
 begin
   if RamLog <> NIL
   then RamLog.AddEmptyRow;
+end;
+
+
+{ The public face of the log. See the comment on the declarations: each one tests the global for NIL,
+  and each one is static so that a call through a NIL object reference cannot raise. }
+class procedure TAppDataCore.LogEmptyRow;
+begin
+  if AppDataCore <> NIL then AppDataCore.doLogEmptyRow;
+end;
+
+class procedure TAppDataCore.LogBold(CONST Msg: string);
+begin
+  if AppDataCore <> NIL then AppDataCore.doLogBold(Msg);
+end;
+
+class procedure TAppDataCore.LogError(CONST Msg: string);
+begin
+  if AppDataCore <> NIL then AppDataCore.doLogError(Msg);
+end;
+
+class procedure TAppDataCore.LogHint(CONST Msg: string);
+begin
+  if AppDataCore <> NIL then AppDataCore.doLogHint(Msg);
+end;
+
+class procedure TAppDataCore.LogImpo(CONST Msg: string);
+begin
+  if AppDataCore <> NIL then AppDataCore.doLogImpo(Msg);
+end;
+
+class procedure TAppDataCore.LogInfo(CONST Msg: string);
+begin
+  if AppDataCore <> NIL then AppDataCore.doLogInfo(Msg);
+end;
+
+class procedure TAppDataCore.LogMsg(CONST Msg: string);
+begin
+  if AppDataCore <> NIL then AppDataCore.doLogMsg(Msg);
+end;
+
+class procedure TAppDataCore.LogVerb(CONST Msg: string);
+begin
+  if AppDataCore <> NIL then AppDataCore.doLogVerb(Msg);
+end;
+
+class procedure TAppDataCore.LogWarn(CONST Msg: string);
+begin
+  if AppDataCore <> NIL then AppDataCore.doLogWarn(Msg);
+end;
+
+class procedure TAppDataCore.LogClear;
+begin
+  if AppDataCore <> NIL then AppDataCore.doLogClear;
 end;
 
 
