@@ -11,8 +11,9 @@
    Limitation: TDialogServiceAsync ignores the icon (TMsgDlgType) on most platforms.
    Using this unit anyway for future icon support and API consistency with VCL version.
 
-   TEST_MODE: when TAppDataCore.TEST_MODE is TRUE, no dialog is created — a headless test run never
-   closes an async dialog, so it would leak. MessageYesNo still invokes its callback (with FALSE).
+   Unattended: when TAppDataCore.Unattended is TRUE, no dialogbox is created. With nobody at the keyboard -
+   a unit test, a console tool, a Windows service, a scheduled job - an async dialog is never closed, so
+   it would leak. MessageYesNo still invokes its callback (with FALSE).
 =============================================================================================================}
 
 INTERFACE
@@ -39,7 +40,7 @@ procedure MessageErrorLog(CONST MessageText: string; CONST LogText: string= ''; 
 { Displays a Yes/No confirmation dialog asynchronously.
   Callback receives True if user selects Yes, False otherwise.
   If Callback is nil, the dialog is shown but no action is taken on result.
-  If MessageText is empty (or TEST_MODE is on), the dialog is NOT shown and Callback (if assigned) is invoked with False. }
+  If MessageText is empty (or Unattended is on), the dialog is NOT shown and Callback (if assigned) is invoked with False. }
 procedure MessageYesNo(CONST MessageText: string; CONST Caption: string= ''; CONST Callback: TProc<Boolean>= NIL);
 
 { Resolves the caption used by the 3-arg MessageError overload.
@@ -56,7 +57,7 @@ procedure GenericMessage(CONST MessageText: string; CONST Caption: string= ''; D
 VAR CombinedMsg: string;
 begin
   if MessageText = '' then EXIT;
-  if TAppDataCore.TEST_MODE then EXIT;   // See the TEST_MODE note in the unit header
+  if TAppDataCore.Unattended then EXIT;   // See the Unattended note in the unit header
 
   // Combine caption and message, avoiding leading blank lines when caption is empty
   if Caption = ''
@@ -121,7 +122,7 @@ end;
   AppDataCore is checked for NIL: an application creates it by hand in its DPR, and the finalization
   of LightFmx.Common.AppData sets it back to NIL during shutdown.
 
-  In TEST_MODE no dialog is created (GenericMessage returns immediately) but the log line is still written. }
+  When Unattended is on, no dialog is created (GenericMessage returns immediately) but the log line is still written. }
 procedure MessageErrorLog(CONST MessageText: string; CONST LogText: string = ''; CONST Caption: string = '');
 begin
   if AppDataCore <> NIL then
@@ -138,10 +139,10 @@ end;
 procedure MessageYesNo(CONST MessageText: string; CONST Caption: string= ''; CONST Callback: TProc<Boolean>= NIL);
 VAR CombinedMsg: string;
 begin
-  if (MessageText = '') OR TAppDataCore.TEST_MODE then
+  if (MessageText = '') OR TAppDataCore.Unattended then
     begin
       // Always notify the caller, otherwise a flow waiting on the callback would stall.
-      // TEST_MODE (see unit header): no dialog; FALSE = the safe "No" answer.
+      // Unattended (see unit header): no dialog; FALSE = the safe "No" answer.
       if Assigned(Callback)
       then Callback(False);
       EXIT;
