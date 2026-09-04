@@ -67,7 +67,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-  LightFmx.Common.IniFile  {$IFDEF MSWINDOWS}, Winapi.Windows{$ENDIF}
+  LightCore.AppData, LightFmx.Common.IniFile  {$IFDEF MSWINDOWS}, Winapi.Windows{$ENDIF}
   {$IFDEF MACOS}, Macapi.CoreGraphics, Macapi.CoreFoundation, Macapi.CocoaTypes{$ENDIF};
 
 
@@ -239,11 +239,11 @@ begin
     CGImageRelease(ScreenImage);
   end
   else
-    ShowMessage('Screen capture failed. Please grant Screen Recording permission in System Preferences > Security & Privacy > Privacy.');
+    AppDataCore.LogError('StartCapture: screen capture failed. Grant Screen Recording permission in System Preferences > Security & Privacy > Privacy.');
 
   {$ELSE}
   // Linux/iOS/Android: Not yet implemented
-  ShowMessage('Screen capture not yet implemented for this platform');
+  AppDataCore.LogError('StartCapture: screen capture is not implemented for this platform.');
   {$ENDIF}
 end;
 
@@ -275,14 +275,14 @@ begin
   // Validate screenshot exists
   if NOT Assigned(FScreenshot) OR FScreenshot.IsEmpty then
     begin
-      ShowMessage('No screenshot available. Call StartCapture first.');
+      AppDataCore.LogWarn('CaptureSelectedArea: no screenshot available. Call StartCapture first.');
       EXIT;
     end;
 
   // Validate selection
   if SelectionRect.IsEmpty then
     begin
-      ShowMessage('Please select a screen area first!');
+      AppDataCore.LogWarn('CaptureSelectedArea: no screen area was selected.');
       EXIT;
     end;
 
@@ -302,7 +302,7 @@ begin
     SourceRect.Intersect(FScreenshot.BoundsF);
     if SourceRect.IsEmpty then
       begin
-        ShowMessage('Selection is outside the captured screen area.');
+        AppDataCore.LogWarn('CaptureSelectedArea: the selection is outside the captured screen area.');
         EXIT;
       end;
 
@@ -320,7 +320,7 @@ begin
     end
     else
       begin
-        ShowMessage('Failed to begin canvas scene for screen capture.');
+        AppDataCore.LogError('CaptureSelectedArea: Canvas.BeginScene failed.');
         EXIT;
       end;
 
