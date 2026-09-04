@@ -14,6 +14,16 @@
 ```pascal
 function getLastUsedFolder: string;
 procedure setShowOnError(const Value: Boolean);
+procedure doLogEmptyRow;
+procedure doLogBold (CONST Msg: string);
+procedure doLogError (CONST Msg: string);
+procedure doLogHint (CONST Msg: string);
+procedure doLogImpo (CONST Msg: string);
+procedure doLogInfo (CONST Msg: string);
+procedure doLogMsg (CONST Msg: string);
+procedure doLogVerb (CONST Msg: string);
+procedure doLogWarn (CONST Msg: string);
+procedure doLogClear;
 procedure setHideHint(const Value: Integer); virtual;
 procedure loadSettings; virtual;
 procedure saveSettings; virtual;
@@ -24,16 +34,6 @@ function CheckSysDir: Boolean;
 procedure Minimize; virtual;
 function BetaTesterMode: Boolean;
 function IsHardCodedExp(Year, Month, Day: word): Boolean;
-procedure LogEmptyRow;
-procedure LogBold (CONST Msg: string);
-procedure LogError (CONST Msg: string);
-procedure LogHint (CONST Msg: string);
-procedure LogImpo (CONST Msg: string);
-procedure LogInfo (CONST Msg: string);
-procedure LogMsg (CONST Msg: string);
-procedure LogVerb (CONST Msg: string);
-procedure LogWarn (CONST Msg: string);
-procedure LogClear;
 procedure PopUpLogWindow;
 function CommandLinePath: string;
 procedure ExtractPathFromCmdLine(MixedInput: string; OUT Path, Parameters: string);
@@ -1244,8 +1244,8 @@ procedure SetMaxPriority;
 ## LightFmx.Common.CamUtils (11)
 
 ```pascal
-procedure RequestCameraPermission(const AOnGranted: TProc);
-procedure RequestStorageReadPermission(const AOnGranted: TProc); // For image picking on Android 13+
+procedure RequestCameraPermission(const AOnGranted: TProc; const AOnDenied: TProc= NIL);
+procedure RequestStorageReadPermission(const AOnGranted: TProc; const AOnDenied: TProc= NIL); // For image picking on Android 13+
 procedure AddToPhotosAlbum(const ABitmap: TBitmap); // Saves to gallery, handles indexing
 procedure ScanMediaFile(const AFileName: string); // If manually saving files
 procedure PickImageFromGallery; // Opens the Photos/Gallery picker (Android, iOS)
@@ -1312,7 +1312,7 @@ procedure LoadImage (FileName: string; Image: TImage; Color: TAlphaColor= TAlpha
 procedure LoadImage (const Bytes: TBytes; Image: TImage); overload;
 function LoadImage (FileName: string): TBitmap; overload;
 function LoadImage (const Bytes: TBytes): TBitmap; overload;
-procedure SaveBitmap (BMP: TBitmap; FileName: string);
+procedure SaveBitmap (BMP: TBitmap; FileName: string); { Logs and re-raises when the file cannot be written }
 procedure FillBitmap (BMP: TBitmap; Color: TAlphaColor);
 function CreateBitmap (Width, Height: Integer; BkgClr: TAlphaColor= TAlphaColorRec.Black): TBitmap;
 function CropBitmap (InputBMP: TBitmap; CropRect: TRectF): TBitmap; overload;
@@ -2137,9 +2137,9 @@ function ScreenResApi: string;
 
 ```pascal
 function GetAssociatedApp (const FileExtension: string): string; // Old name: AplicatieAsociata
-function AssociateWith (CONST FileExtension, AsociationName: string; CONST ForAllUsers: Boolean= FALSE; ShowError: Boolean= FALSE; Notify: Boolean= TRUE): Boolean; { Associate a application with an extension. EXAMPLE: FileExtension:= '.txt' / AsociationName:= 'Metapad' } { EXAMPLE: FileExtension:= '.txt' / AsociationName:= 'Metapad' / ShowError show an error messajge is the program cannot write to registry }
+function AssociateWith (CONST FileExtension, AsociationName: string; CONST ForAllUsers: Boolean= FALSE; {LogErrors: Boolean= FALSE; we always log} Notify: Boolean= TRUE): Boolean; { Associate a application with an extension. EXAMPLE: FileExtension:= '.txt' / AsociationName:= 'Metapad'. A registry failure goes into AppDataCore's log. Nothing appears on screen }
 function AssociationReset (CONST FileExtension: string; CONST ForAllUsers: Boolean): Boolean;
-procedure AssociateSelf_ShellMenu (CONST ShowError: Boolean); //Old name: AssociateWithShell
+procedure AssociateSelf_ShellMenu; { A registry failure goes into AppDataCore's log. Nothing appears on screen }
 function AddContextMenu (CONST CommandName, Extensions: string): Boolean; overload;
 procedure AddContextMenu (CONST GUID: TGUID; CONST ShellExtDll, FileExt, UtilityName: string); overload;
 procedure RemoveContextMenu(CONST GUID: TGUID; CONST FileExt, UtilityName: string);
@@ -2401,7 +2401,7 @@ procedure Clear(CONST aName: string; aSize: Integer; aColor: TColor); overload;
 procedure AssignTo(Font: TFont);
 function CreateBitmap (Width, Height: Integer; PixelFormat: TPixelFormat= pf24bit): TBitmap;
 function CreateBlankBitmap (Width, Height: Integer; BkgClr: TColor= clBlack; PixelFormat: TPixelFormat= pf24bit): TBitmap; // old name: GetBlankImage
-procedure SetLargeSize (BMP: TBitmap; CONST Width, Height: Integer);
+procedure SetLargeSize (BMP: TBitmap; CONST Width, Height: Integer); { Raises EOutOfMemory when the bitmap cannot be grown. The bitmap then still holds its old size }
 procedure ClearImage (Img: TImage);
 procedure ClearBitmap (BMP: TBitmap);
 procedure FillBitmap (BMP: TBitmap; Color: TColor);
@@ -2905,7 +2905,7 @@ function PCConnected2Internet: Boolean; { From here: http://www.delphipages.com/
 function ProgramConnect2Internet: Integer; overload; { Legacy: google.com + the 60 s download default. Returns: -1 = PC not connected, 0 = connected but this app is blocked by the firewall, 1 = this app can reach the Internet}
 function ProgramConnect2Internet(const TestURL: string; TimeoutMs: Integer= ConnectivityProbeTimeout; const ExpectBody: string= ''): Integer; overload; { Caller-set endpoint + timeout, so a startup check gets a verdict in seconds instead of the 60 s download default. Returns: -1 = PC not connected (WinInet); 0 = PC online but NO reply came back (this exe is firewall-blocked, or the endpoint is down); 1 = reached the endpoint and the body matched (genuinely online); 2 = reached the endpoint (HTTP 200) but the body was NOT ExpectBody -> a captive portal or a content-rewriting proxy is in the path, which is NOT a firewall block. Pass ConnectivityProbeURL for a fast, light default. ExpectBody='' = any HTTP 200 counts as 1 (state 2 never occurs); set it (e.g. ConnectivityProbeBody) to tell a genuine reply apart from a portal/proxy interception.}
 function ProgramConnect2InternetS: string;
-function TestProgramConnection(ShowMsgOnSuccess: Boolean= FALSE): Integer;
+function TestProgramConnectionMsg(ShowMsgOnSuccess: Boolean= FALSE): Integer; { The Msg suffix means: this one puts a modal box on screen. For a silent verdict call ProgramConnect2Internet }
 function IsPortOpened(const Host: string; Port: Integer): Boolean; { Here's something very simple with which you can check a port status(opened/closed) on remote host. Add WinSock to uses clause}
 Procedure CreateUrlOnDesktop (CONST ShortFileName, sFullURL: string);
 ```
