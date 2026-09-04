@@ -1,4 +1,4 @@
-unit Test.LightVcl.Common.Shell;
+﻿unit Test.LightVcl.Common.Shell;
 
 {=============================================================================================================
    Unit tests for LightVcl.Common.Shell.pas
@@ -393,12 +393,22 @@ end;
 procedure TTestShell.Test_ExtractIconFromFile_ValidExe;
 VAR
   IconHandle: THandle;
+  WinDir, Probe: string;
 begin
-  { Extract icon from a system executable that should always exist }
-  IconHandle:= ExtractIconFromFile(GetEnvironmentVariable('WINDIR') + '\notepad.exe');
-  Assert.IsTrue(IconHandle > 0, 'Should extract icon from notepad.exe');
-  if IconHandle > 0
-  then DestroyIcon(IconHandle);
+  { notepad.exe is NOT on Windows 11 - it ships as a Store app, and neither c:\Windows nor
+    c:\Windows\System32 holds it. explorer.exe is the file that is always there. }
+  WinDir:= GetEnvironmentVariable('WINDIR');
+  Probe:= WinDir + '\explorer.exe';
+  if NOT FileExists(Probe)
+  then Probe:= WinDir + '\System32\shell32.dll';
+  Assert.IsTrue(FileExists(Probe), 'No system file to extract an icon from: ' + Probe);
+
+  IconHandle:= ExtractIconFromFile(Probe);
+  { ExtractIcon returns 1 when the file is not an executable, DLL or icon file, and NULL when the
+    file holds no icon at all. Only a value above 1 is a real icon handle.
+    https://learn.microsoft.com/en-us/windows/win32/api/shellapi/nf-shellapi-extracticonw }
+  Assert.IsTrue(IconHandle > 1, 'Should extract an icon from ' + Probe);
+  DestroyIcon(IconHandle);
 end;
 
 

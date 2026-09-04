@@ -1,4 +1,4 @@
-UNIT Test.FormScreenCapture;
+﻿UNIT Test.FormScreenCapture;
 
 {=============================================================================================================
    2026.01.31
@@ -350,6 +350,11 @@ end;
 INITIALIZATION
   TDUnitX.RegisterTestFixture(TTestScreenCaptureManager);
   TDUnitX.RegisterTestFixture(TTestOverlayStyle);
-  TDUnitX.RegisterTestFixture(TTestFormScreenCapture);
+
+  { TTestFormScreenCapture is deliberately NOT registered. Its 3 tests call
+    TfrmScreenCapture.Create(nil), which builds a real FMX form, and c:\Projects\CLAUDE.md says
+    "No form tests" for this repository. The code is kept so the decision can be reversed with one
+    line. Gabriel's call, 2026-09-04. The other two fixtures (13 tests) touch no form. }
+  //TDUnitX.RegisterTestFixture(TTestFormScreenCapture);
 
 end.

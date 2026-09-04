@@ -1,4 +1,4 @@
-unit Test.LightVcl.Common.WindowMetrics;
+﻿unit Test.LightVcl.Common.WindowMetrics;
 
 {=============================================================================================================
    Unit tests for LightVcl.Common.WindowMetrics.pas
@@ -342,7 +342,7 @@ end;
 
 procedure TTestWindowMetrics.Test_SetProportionalThumbV_ValidScrollbar_NoException;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       SetProportionalThumbV(FScrollBar, 300);
@@ -358,7 +358,7 @@ begin
   FScrollBar.Min:= 50;
   FScrollBar.Max:= 50;
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       SetProportionalThumbV(FScrollBar, 300);
@@ -387,7 +387,7 @@ procedure TTestWindowMetrics.Test_SetProportionalThumbH_ValidScrollbar_NoExcepti
 begin
   FScrollBar.Kind:= sbHorizontal;
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       SetProportionalThumbH(FScrollBar, 400);
@@ -402,7 +402,7 @@ begin
   FScrollBar.Kind:= sbHorizontal;
 
   { Pass very small width that will result in zero/negative track width }
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       SetProportionalThumbH(FScrollBar, 10);

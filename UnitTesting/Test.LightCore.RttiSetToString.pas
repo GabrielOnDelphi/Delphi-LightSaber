@@ -1,4 +1,4 @@
-unit Test.LightCore.RttiSetToString;
+﻿unit Test.LightCore.RttiSetToString;
 
 {=============================================================================================================
    Unit tests for LightCore.RttiSetToString
@@ -184,7 +184,7 @@ var
 begin
   TestSet:= [teFirst]; { Pre-fill to verify it gets cleared }
   StringToSet(TypeInfo(TTestSet), TestSet, '');
-  Assert.AreEqual(0, Byte(TestSet));
+  Assert.AreEqual(Byte(0), Byte(TestSet));
 end;
 
 
@@ -255,7 +255,7 @@ var
 begin
   TestSet:= [teFirst]; { Pre-fill }
   StringToSet(TypeInfo(TTestSet), TestSet, 'InvalidElement');
-  Assert.AreEqual(0, Byte(TestSet), 'Invalid element should result in empty set');
+  Assert.AreEqual(Byte(0), Byte(TestSet), 'Invalid element should result in empty set');
 end;
 
 
@@ -265,7 +265,7 @@ var
 begin
   TestSet:= [teFirst]; { Pre-fill }
   StringToSet(TypeInfo(TTestSet), TestSet, 'teFirst,InvalidElement,teSecond');
-  Assert.AreEqual(0, Byte(TestSet), 'Partially invalid should result in empty set');
+  Assert.AreEqual(Byte(0), Byte(TestSet), 'Partially invalid should result in empty set');
 end;
 
 
@@ -368,10 +368,23 @@ procedure TTestRttiSetToString.TestCaseSensitivity;
 var
   TestSet: TTestSet;
 begin
-  TestSet:= [teFirst];
-  { Enum names are case-sensitive in RTTI }
+  { Enumeration names are matched IGNORING case, not case-sensitively as this test used to claim.
+    StringToSet calls System.TypInfo.GetEnumValue, which ends in UTF8IdentStringCompare; that
+    routine compares each character as "CS or $20 = CD or $20", and OR-ing $20 into an ASCII letter
+    forces it lower case (c:\Delphi\Delphi 13\source\rtl\sys\System.pas, UTF8IdentStringCompare).
+    So 'TEFIRST' does find teFirst. }
+  TestSet:= [];
   StringToSet(TypeInfo(TTestSet), TestSet, 'TEFIRST');
-  Assert.AreEqual(0, Byte(TestSet), 'Wrong case should result in empty set');
+  Assert.AreEqual(Byte(1), Byte(TestSet), 'TEFIRST must match teFirst - the RTL ignores case');
+
+  TestSet:= [];
+  StringToSet(TypeInfo(TTestSet), TestSet, 'tefirst');
+  Assert.AreEqual(Byte(1), Byte(TestSet), 'tefirst must match teFirst - the RTL ignores case');
+
+  { A name that is not an element of the enumeration still gives the empty set }
+  TestSet:= [teFirst];
+  StringToSet(TypeInfo(TTestSet), TestSet, 'teFIRSTX');
+  Assert.AreEqual(Byte(0), Byte(TestSet), 'An unknown name must give the empty set');
 end;
 
 

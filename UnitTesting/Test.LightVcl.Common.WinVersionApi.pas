@@ -1,4 +1,4 @@
-unit Test.LightVcl.Common.WinVersionApi;
+﻿unit Test.LightVcl.Common.WinVersionApi;
 
 {=============================================================================================================
    Unit tests for LightVcl.Common.WinVersionApi.pas
@@ -319,9 +319,13 @@ VAR
 begin
   Report:= GenerateReport;
 
-  { Report should have substantial content - at least 200 chars with all 4 sections }
-  Assert.IsTrue(Length(Report) > 200,
-    'GenerateReport should return substantial content. Got length: ' + IntToStr(Length(Report)));
+  { The old test demanded more than 200 characters. That number was a guess: the four sections
+    together are only 122 characters on Windows 11, because the values in them are short.
+    What the report must really contain is one heading per detection method. }
+  Assert.IsTrue(Pos('[SysUtils.Win32MajorVersion]', Report) > 0, 'Report must hold the SysUtils.Win32MajorVersion section');
+  Assert.IsTrue(Pos('[GetWinVerNetServer]'       , Report) > 0, 'Report must hold the GetWinVerNetServer section');
+  Assert.IsTrue(Pos('[GetWinVersion]'            , Report) > 0, 'Report must hold the GetWinVersion section');
+  Assert.IsTrue(Pos('[GetWinVersionEx]'          , Report) > 0, 'Report must hold the GetWinVersionEx section');
 end;
 
 

@@ -1,4 +1,4 @@
-unit Test.LightCore.Pascal;
+﻿unit Test.LightCore.Pascal;
 
 {=============================================================================================================
    Unit tests for LightCore.Pascal
@@ -207,11 +207,9 @@ type
 
     { AddUnitToUses Tests }
     [Test]
-    [ExpectedException(Exception)]
     procedure TestAddUnitToUses_NilList;
 
     [Test]
-    [ExpectedException(Exception)]
     procedure TestAddUnitToUses_EmptyList;
 
     [Test]
@@ -692,15 +690,28 @@ end;
 
 procedure TTestLightCorePascal.TestAddUnitToUses_NilList;
 begin
-  { Expects exception - NIL list not allowed }
-  AddUnitToUses(NIL, 'SomeUnit');
+  { The attribute form, [WillRaise(...)], is avoided on purpose: it makes DUnitX build a
+    TDUnitXExceptionTest, and a run that holds one of those leaks its whole fixture tree at
+    shutdown (measured 2026-09-03). Assert.WillRaise inside the body does the same job. }
+  Assert.WillRaise(
+    procedure
+    begin
+      AddUnitToUses(NIL, 'SomeUnit');
+    end,
+    EArgumentNilException,
+    'A NIL list must be refused');
 end;
 
 
 procedure TTestLightCorePascal.TestAddUnitToUses_EmptyList;
 begin
-  { Expects exception - empty list not allowed }
-  AddUnitToUses(FTestLines, 'SomeUnit');
+  Assert.WillRaise(
+    procedure
+    begin
+      AddUnitToUses(FTestLines, 'SomeUnit');
+    end,
+    EArgumentException,
+    'An empty list must be refused');
 end;
 
 

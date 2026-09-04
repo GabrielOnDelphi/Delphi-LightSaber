@@ -1,4 +1,4 @@
-unit Test.LightCore.StringListA;
+﻿unit Test.LightCore.StringListA;
 
 {=============================================================================================================
    Unit tests for LightCore.StringListA
@@ -12,6 +12,7 @@ interface
 uses
   DUnitX.TestFramework,
   System.SysUtils,
+  System.Classes,
   LightCore.StringListA;
 
 type
@@ -236,13 +237,26 @@ end;
 
 
 procedure TTestAnsiStringList.TestSetText_TrailingLineBreak;
+VAR
+  Rtl: TStringList;
 begin
+  { A trailing line break does NOT create an empty item - this test used to expect 3 items.
+    TAnsiTSL.SetTextStr walks the text exactly the way the RTL does: read up to CR or LF, add the
+    line, then step over CR and over LF; when the text ends right after that pair the loop simply
+    stops (LightCore.StringListA.pas:50-59 against System.Classes.pas:7462-7470).
+    The check below runs the same text through the RTL TStringList so the two can never drift. }
   FASL.Text:= 'Line1'#13#10'Line2'#13#10;
-  { Trailing line break creates an empty item }
-  Assert.AreEqual(3, FASL.Count);
+  Assert.AreEqual(2, FASL.Count);
   Assert.AreEqual(AnsiString('Line1'), FASL[0]);
   Assert.AreEqual(AnsiString('Line2'), FASL[1]);
-  Assert.AreEqual(AnsiString(''), FASL[2]);
+
+  Rtl:= TStringList.Create;
+  try
+    Rtl.Text:= 'Line1'#13#10'Line2'#13#10;
+    Assert.AreEqual(Rtl.Count, FASL.Count, 'TAnsiTSL must split text exactly like the RTL TStringList');
+  finally
+    FreeAndNil(Rtl);
+  end;
 end;
 
 

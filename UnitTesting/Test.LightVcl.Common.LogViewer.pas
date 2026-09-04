@@ -1,4 +1,4 @@
-unit Test.LightVcl.Common.LogViewer;
+﻿unit Test.LightVcl.Common.LogViewer;
 
 {=============================================================================================================
    Unit tests for LightVcl.Common.LogViewer
@@ -197,15 +197,24 @@ begin
 end;
 
 procedure TTestLogViewer.TestVerbosity2Color_AllLevels;
+VAR
+  i, j: Integer;
 begin
-  { Ensure all verbosity levels return valid colors without raising exceptions }
-  Assert.IsTrue(Verbosity2Color(lvDebug) <> 0, 'Debug should have a color');
-  Assert.IsTrue(Verbosity2Color(lvVerbose) <> 0, 'Verbose should have a color');
-  Assert.IsTrue(Verbosity2Color(lvHints) <> 0, 'Hints should have a color');
-  Assert.IsTrue(Verbosity2Color(lvInfos) <> 0, 'Infos should have a color');
-  Assert.IsTrue(Verbosity2Color(lvImportant) <> 0, 'Important should have a color');
-  Assert.IsTrue(Verbosity2Color(lvWarnings) <> 0, 'Warnings should have a color');
-  Assert.IsTrue(Verbosity2Color(lvErrors) <> 0, 'Errors should have a color');
+  { A color of 0 is clBlack, which lvInfos legitimately uses in light mode, so "not zero" proves
+    nothing. What the mapping must guarantee is that every level gets its OWN color.
+    The loops run over Integer, not over TLogVerbLvl: Succ() on the last enumeration member is a
+    range check error in a build that has range checking on. }
+  for i:= Ord(Low(TLogVerbLvl)) to Ord(High(TLogVerbLvl)) do
+    for j:= i+1 to Ord(High(TLogVerbLvl)) do
+      begin
+        Assert.AreNotEqual(Integer(Verbosity2Color(TLogVerbLvl(i), FALSE)), Integer(Verbosity2Color(TLogVerbLvl(j), FALSE)), 'Light mode: two levels share one color');
+        Assert.AreNotEqual(Integer(Verbosity2Color(TLogVerbLvl(i), TRUE )), Integer(Verbosity2Color(TLogVerbLvl(j), TRUE )), 'Dark mode: two levels share one color');
+      end;
+
+  { Anchor the three levels a user actually recognises by color }
+  Assert.AreEqual(Integer(clBlack), Integer(Verbosity2Color(lvInfos , FALSE)), 'lvInfos should be black in light mode');
+  Assert.AreEqual(Integer(clWhite), Integer(Verbosity2Color(lvInfos , TRUE )), 'lvInfos should be white in dark mode');
+  Assert.AreEqual(Integer(clRed)  , Integer(Verbosity2Color(lvErrors, FALSE)), 'lvErrors should be red');
 end;
 
 { Count Tests }
