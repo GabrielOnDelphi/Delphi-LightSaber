@@ -1,4 +1,4 @@
-UNIT LightVcl.Visual.RichRamLog;
+﻿UNIT LightVcl.Visual.RichRamLog;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -88,7 +88,7 @@ TYPE
 IMPLEMENTATION
 
 Uses
-   LightCore.IO, LightCore.TextFile, LightCore, LightCore.Time;
+   LightCore.IO, LightCore.TextFile, LightCore, LightCore.Time, LightCore.StringList;   { String2TSL }
 
 
 
