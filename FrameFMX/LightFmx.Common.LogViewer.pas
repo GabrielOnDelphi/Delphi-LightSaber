@@ -124,9 +124,9 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   LightCore, LightCore.Time, LightCore.Types,
+   LightCore, LightCore.Time, LightCore.Types, LightCore.AppData,
    LightFmx.Common.AppData,
-   LightFmx.Common.Helpers, LightFmx.Common.Dialogs, LightFmx.Common.LogFilter, LightFmx.Common.Styles;
+   LightFmx.Common.Helpers, LightFmx.Common.LogFilter, LightFmx.Common.Styles;
 
 
 
@@ -620,7 +620,8 @@ begin
 
     if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, ClipboardService)
     then ClipboardService.SetClipboard(Lines.Text)
-    else MessageError('Clipboard service not available.');
+    else
+      AppDataCore.LogError('TLogViewer.CopyVisible: the clipboard service is not available on this platform.');
   finally
     FreeAndNil(Lines);
   end;
@@ -641,7 +642,8 @@ begin
   // Copy to clipboard
   if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, ClipboardService)
   then ClipboardService.SetClipboard(LogText)
-  else messageError('Clipboard service not available.');
+  else
+    AppDataCore.LogError('TLogViewer.CopyAll: the clipboard service is not available on this platform.');
 end;
 
 
