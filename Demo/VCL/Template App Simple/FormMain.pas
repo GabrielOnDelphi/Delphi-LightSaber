@@ -78,7 +78,7 @@ begin
         LightVcl.Common.Shell.CreateShortcut(AppData.AppName, FALSE);       // OnStartMenu
 
         // File association
-        AssociateWith('.LightSaber', AppData.AppName, FALSE, FALSE, TRUE);
+        AssociateWith('.LightSaber', AppData.AppName, FALSE, TRUE);
 
         // Welcome page
         if NOT AppData.BetaTesterMode  // The program is in BetaTester mode if a file called "betatester" is found in the "System" folder.
