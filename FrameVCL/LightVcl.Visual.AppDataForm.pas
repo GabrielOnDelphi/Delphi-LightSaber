@@ -208,15 +208,12 @@ end;
 
 { The gate has a hole that WS_EX_NOACTIVATE cannot plug on its own, so this closes it.
 
-  TCustomForm.Show ends in BringToFront, and TWinControl.SetZOrder raises the window with
-  SetWindowPos(WindowHandle, HWND_TOP, 0,0,0,0, SWP_NOMOVE + SWP_NOSIZE) - note the MISSING
-  SWP_NOACTIVATE (Vcl.Controls.pas:13355). That is a request to ACTIVATE, and measurement says it goes
-  straight through WS_EX_NOACTIVATE: startup code that calls MainForm.Show a SECOND time - the LightSaber
-  template does, from LateInitialization - took the foreground with every window correctly gated.
+  TCustomForm.Show ends in BringToFront, and TWinControl.SetZOrder raises the window with SetWindowPos(WindowHandle, HWND_TOP, 0,0,0,0, SWP_NOMOVE + SWP_NOSIZE) - note the MISSING SWP_NOACTIVATE (TWinControl.SetZOrder in Vcl.Controls.pas).
+  That is a request to ACTIVATE, and measurement says it goes straight through WS_EX_NOACTIVATE: startup code that calls MainForm.Show a SECOND time - the LightSaber template does, from LateInitialization - took the foreground with every window correctly gated.
 
-  While the gate is up we simply do not raise. Nothing is lost: the window is already on top from its own
-  show, and the raise is restored the moment startup ends. Only the TopMost direction is skipped;
-  SendToBack still works. }
+  While the gate is up we simply do not raise.
+  Nothing is lost: the window is already on top from its own show, and the raise is restored the moment startup ends.
+  Only the TopMost direction is skipped; SendToBack still works. }
 procedure TLightForm.SetZOrder(TopMost: Boolean);
 begin
   if TopMost
@@ -228,19 +225,17 @@ end;
 
 { Lifts the gate off every window that could be carrying it, and off the TApplication proxy.
 
-  The gate lasts for the WHOLE initialization, not just until the first show, and that is a measured
-  requirement rather than caution. Demo\VCL\Template App Full calls MainForm.Show a second time from
-  LateInitialization (uInitialization.pas), and TCustomForm.Show ends in BringToFront -> SetZOrder ->
-  SetWindowPos WITHOUT SWP_NOACTIVATE (Vcl.Controls.pas:13355), which activates. Ungating at the first
-  show let exactly that call steal the focus back - measured, FOCUS: STOLEN, with the harness naming
-  TMainForm as the thief. The SetZOrder override above is the other half of that answer.
+  The gate lasts for the WHOLE initialization, not just until the first show, and that is a measured requirement rather than caution.
+  Demo\VCL\Template App Full calls MainForm.Show a second time from LateInitialization (uInitialization.pas), and TCustomForm.Show ends in BringToFront -> SetZOrder -> SetWindowPos WITHOUT SWP_NOACTIVATE (TWinControl.SetZOrder in Vcl.Controls.pas), which activates.
+  Ungating at the first show let exactly that call steal the focus back - measured, FOCUS: STOLEN, with the harness naming TMainForm as the thief.
+  The SetZOrder override above is the other half of that answer.
 
-  Only TLightForm instances are touched - they are the only ones CreateParams gates. A form that
-  deliberately wants WS_EX_NOACTIVATE for its own reasons is left alone.
+  Only TLightForm instances are touched - they are the only ones CreateParams gates.
+  A form that deliberately wants WS_EX_NOACTIVATE for its own reasons is left alone.
 
-  Nothing here can rescue an app that calls SetForegroundWindow (TApplication.BringToFront does,
-  Vcl.Forms.pas:13208). Microsoft documents that as the sanctioned way to activate a WS_EX_NOACTIVATE
-  window, so it wins over any ex-style. That is an app-level decision, not something the gate can undo. }
+  Nothing here can rescue an app that calls SetForegroundWindow (TApplication.BringToFront does, in Vcl.Forms.pas).
+  Microsoft documents that as the sanctioned way to activate a WS_EX_NOACTIVATE window, so it wins over any ex-style.
+  That is an app-level decision, not something the gate can undo. }
 procedure UnGateStartupWindows;
 VAR i: Integer;
 begin
@@ -249,10 +244,8 @@ begin
     AND Screen.Forms[i].HandleAllocated
     then SetWindowLong(Screen.Forms[i].Handle, GWL_EXSTYLE, GetWindowLong(Screen.Forms[i].Handle, GWL_EXSTYLE) AND NOT WS_EX_NOACTIVATE);
 
-  { Undo the TApplication half under exactly the condition that added it, and never otherwise: with
-    MainFormOnTaskbar=TRUE the flag on that window belongs to the RTL, which puts it there on purpose
-    and expects it to stay. With FALSE the taskbar button IS that window, and a WS_EX_NOACTIVATE window
-    does not come to the front when clicked - leaving it on would kill the taskbar button. }
+  { Undo the TApplication half under exactly the condition that added it, and never otherwise: with MainFormOnTaskbar=TRUE the flag on that window belongs to the RTL, which puts it there on purpose and expects it to stay.
+    With FALSE the taskbar button IS that window, and a WS_EX_NOACTIVATE window does not come to the front when clicked - leaving it on would kill the taskbar button. }
   if NOT Application.MainFormOnTaskbar
   AND (Application.Handle <> 0)
   then SetWindowLong(Application.Handle, GWL_EXSTYLE, GetWindowLong(Application.Handle, GWL_EXSTYLE) AND NOT WS_EX_NOACTIVATE);
