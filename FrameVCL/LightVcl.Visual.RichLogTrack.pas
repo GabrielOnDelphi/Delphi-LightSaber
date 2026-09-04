@@ -1,4 +1,4 @@
-UNIT LightVcl.Visual.RichLogTrack;
+﻿UNIT LightVcl.Visual.RichLogTrack;
 
 // OLD LOG based on RichEdit
 
@@ -110,8 +110,13 @@ begin
  if NOT (csLoading in ComponentState)
  AND NOT (csCreating in ControlState) then { This is MANDATORY because when the project loads, the value of the trackbar may change BEFORE the DFM loader assigns the Log to this trackbar. In other words, crash when I load a DFM file that contains this control }
   begin
-   Assert(Log <> NIL, 'No log assigned!');
-   Log.Verbosity:= Verbosity;
+   { Log is allowed to be NIL here. setRichLog copies the current Verbosity into the log at the
+     moment the log is finally attached, so the order "set Verbosity first, attach Log after" is
+     one this component supports on purpose - the old Assert forbade exactly that order. And with
+     assertions switched off, which is what the Release build does, the next line was an access
+     violation on a NIL log rather than a message. }
+   if Log <> NIL
+   then Log.Verbosity:= Verbosity;
    VerboLabel.Caption:= 'Log verbosity: '+ Verbosity2String(Verbosity);
 
    if Assigned(FVerbChanged)
