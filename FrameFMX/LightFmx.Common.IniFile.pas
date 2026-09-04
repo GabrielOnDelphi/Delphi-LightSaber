@@ -6,17 +6,6 @@ UNIT LightFmx.Common.IniFile;
 --------------------------------------------------------------------------------------------------------------
   Same as LightCore.INIFile but adds support for forms to save themselves to disk.
   INI file name/file path is automatically calculated.
-
-  2026-08-10: ReadColor/WriteColor now take TAlphaColor instead of TColor. TColorBox.Color is a TAlphaColor,
-              and TColor is a signed subrange, so every opaque colour raised ERangeError with range checking
-              on - which the Debug and the PreRelease configuration both enable. Colours are now stored via
-              AlphaColorToString; ReadColor still parses both legacy forms.
-
-  2026-07-07: Fixed: a form saved while minimized persisted the OS park position (-32000,-32000)
-              and WindowState=wsMinimized, so it was restored off-screen and invisible.
-              Save now skips position keys and stores wsNormal for minimized forms; load never
-              restores wsMinimized, validates the WindowState value, and recenters forms whose
-              stored position is the park position (heals INIs written by older versions).
 --------------------------------------------------------------------------------------------------------------
 
   Self saving forms:
@@ -125,7 +114,7 @@ TYPE
     procedure SaveForm (Form: TForm; AutoState: TAutoState= asPosOnly);      { Save ALL supported controls on this form }
     procedure LoadForm (Form: TForm; AutoState: TAutoState= asPosOnly);
 
-    { Font - this requires VCL framework so it cannot be moved to LightCore.INIFile }
+    { Font - TFont comes from FMX.Graphics, so this pair cannot be moved down to LightCore.INIFile, which is framework-free. }
     function  Read       (CONST Ident: string; Font: TFont): Boolean;  overload;
     procedure Write      (CONST Ident: string; Font: TFont);           overload;
 
@@ -168,13 +157,8 @@ end;
 {-----------------------------------------------------------------------------------------------------------------------
    SAVE/LOAD FORM
 -----------------------------------------------------------------------------------------------------------------------}
-{ Save ALL supported controls on this form
-
-  Note:
-     Components[] just yields the components that are OWNED by the form.
-     So, if we are iterating over it will miss any components that are added dynamically, and not owned by the form, or components that are owned by frames.
-     Update 2021: Now frames are supported. All sub-components of a frame are stored to the INI file.
-     Update 2026: Extended recursion to all component containers, not just frames (fixes custom components like TLogVerbFilter).  }
+{ Components[] yields only what the form itself OWNS, so a component created at runtime under a different owner is never saved.
+  The recursion below covers anything owned further down - a frame, a custom container such as TLogVerbFilter, and their children. }
 procedure TIniFileApp.SaveForm(Form: TForm; AutoState: TAutoState= asPosOnly);
 
   procedure WriteComponentsOf(Component: TComponent);
@@ -253,11 +237,9 @@ begin
    VAR Form:= TForm(Ctrl);
 
    { Minimized form? Don't persist its position!
-     On Windows the OS parks a minimized window at -32000,-32000 and FMX mirrors that into
-     Form.Left/Top (TWinWindowHandle.WMWindowPosChanged -> Form.SetBoundsF). Persisting those
-     values would restore the form off-screen (invisible) on next start. Keep the previous
-     session's position keys untouched (they hold the last good position) and store wsNormal —
-     restoring an app minimized is never what the user wants (StartMinim covers that use case). }
+     On Windows the OS parks a minimized window at -32000,-32000 and FMX mirrors that into Form.Left/Top (TWinWindowHandle.WMWindowPosChanged -> Form.SetBoundsF).
+     Persisting those values would restore the form off-screen, so invisible, on next start.
+     Keep the previous session's position keys untouched - they hold the last good position - and store wsNormal, because restoring an app minimized is never what the user wants (StartMinim covers that case). }
    if Form.WindowState = TWindowState.wsMinimized then
      begin
        WriteInteger(Ctrl.Name, 'WindowState', Ord(TWindowState.wsNormal));
@@ -289,7 +271,7 @@ end;
 
 
 
-{ For strange reasons, for Vcl.Forms, Light_FMX.Common.AppDataForm, I cannot read/write the ClientWidth. I need to use Width. }
+{ ClientWidth cannot be read or written reliably here, so the form's Width is used instead. The reason was never established. }
 procedure TIniFileApp.ReadCtrlPos(Ctrl: TControl);
 var
   IsNonResizable: Boolean;
@@ -320,11 +302,9 @@ begin
       if (NOT IsNonResizable) AND ValueExists(Form.Name, 'Height')
       then Form.Height:= ReadInteger(Form.Name, 'Height', Form.Height);
 
-      { Heal INI files poisoned by versions before 2026.07 (form saved while minimized:
-        the OS park position -32000,-32000 was persisted). Both coordinates that negative
-        cannot be a real multi-monitor position — recenter on the primary screen.
-        Checked on BOTH axes: legitimate setups (monitors left of/above primary) never
-        push both Left AND Top below -8000 dp simultaneously; the park position does. }
+      { Heals an INI file written before 2026.07, when a form saved while minimized persisted the OS park position -32000,-32000.
+        Both coordinates that negative cannot be a real multi-monitor position, so recenter on the primary screen.
+        Checked on BOTH axes: a legitimate setup with monitors left of or above the primary one never pushes Left AND Top below -8000 dp at the same time; the park position does. }
       if (Form.Left <= -8000) AND (Form.Top <= -8000) then
         begin
           Form.Top := Round((Screen.Height - Form.Height) / 2);
@@ -335,9 +315,8 @@ begin
       AND (Form.Position <> TFormPosition.Designed)
       then RAISE Exception.Create('Position is not ''poDesigned'' for form '+ Form.Name +'!');
 
-      { Restore window state. Validated: never restore wsMinimized (an app restored minimized
-        looks like it did not start; old INIs may contain it) and map corrupt/out-of-range
-        values to wsNormal instead of casting them blindly into the enumeration. }
+      { Restore the window state, but never wsMinimized - an app restored minimized looks like it did not start, and an old INI file may still hold that value.
+        A corrupt or out-of-range number becomes wsNormal instead of being cast blindly into the enumeration. }
       if ValueExists(Form.Name, 'WindowState') then                                          //  TWindowState = (wsNormal, wsMinimized, wsMaximized);
         if ReadInteger(Form.Name, 'WindowState', 0) = Ord(TWindowState.wsMaximized)
         then Form.WindowState:= TWindowState.wsMaximized
@@ -409,7 +388,7 @@ begin
   if Comp is TOpenDialog
   then
     begin
-     s:= TOpenDialog(Comp).FileName;     { NOTE: INI file does not support unicode chars. The unicode chars are replaced by '?' so we better replace this with a ' ' or something that is not '?'. This way if the filename is fucked up, we at least could 'recover' the folder name - which will be used for InitialDir! }
+     s:= TOpenDialog(Comp).FileName;     { An INI file cannot hold unicode characters - the RTL turns them into '?'. Swapping them for '_' first keeps the folder name readable, and the folder is what InitialDir needs. }
      s:= ReplaceUnicodeChars(s, '_');
      if s > ''
      then WriteString (Comp.Owner.Name, Comp.Name, s);
@@ -418,7 +397,7 @@ begin
   if Comp.InheritsFrom(TSaveDialog)
   then
     begin
-     s:= TSaveDialog(Comp).FileName;     { NOTE: INI file does not support unicode chars. The unicode chars are replaced by '?' so we better replace this with a ' ' or something that is not '?'. This way if the filename is fucked up, we at least could 'recover' the folder name - which will be used for InitialDir! }
+     s:= TSaveDialog(Comp).FileName;     { An INI file cannot hold unicode characters - the RTL turns them into '?'. Swapping them for '_' first keeps the folder name readable, and the folder is what InitialDir needs. }
      s:= ReplaceUnicodeChars(s, '_');
      if s > ''
      then WriteString (Comp.Owner.Name, Comp.Name, s);
@@ -429,9 +408,8 @@ end;
 
 
 
-{ Important:
-    The Light_FMX.Visual.RadioButton will NOT be automatically resized if you call LoadForm(self) in FormCreate (canvas not ready).
-    You need to call LoadForm(self) in LateInitialize. }
+{ Important: call LoadForm(self) from LateInitialize, never from FormCreate.
+  In FormCreate the canvas is not ready, so a control that sizes itself is not resized. }
 function TIniFileApp.ReadComp(Comp: TComponent): Boolean;
 VAR s: string;
 begin
@@ -528,8 +506,8 @@ end;
 {---------------
    CHILDREN
 ----------------}
-{ Read/write all supported items (checkboxes, radioboxes, etc) found in a panel/groupbox/etc }
-procedure TIniFileApp.WriteGroup(WinCtrl: TControl);  { Save/load all  in a groupbox/panel }
+{ Writes every supported control (checkbox, radio button, ...) found in a panel, group box or other container. }
+procedure TIniFileApp.WriteGroup(WinCtrl: TControl);
 VAR i: Integer;
 begin
  for i:= 0 to WinCtrl.ControlsCount-1 DO
@@ -596,9 +574,7 @@ end;
 
 
 
-{ Result:
-    If the INI file does not contain information about font then this function will return FALSE
-    and no modification will be done to the 'Font' object passed as parameter. }
+{ Returns FALSE when the INI file holds no font - and then the Font object passed in is left untouched. }
 function TIniFileApp.Read(CONST Ident: string; Font: TFont): Boolean;
 begin
   Assert(Ident <> '', '[TIniFileApp.Read] Ident cannot be empty');
@@ -631,11 +607,7 @@ end;
 {---------------
    COLORS
 ----------------}
-{ TAlphaColor, not TColor. The only caller inside this unit is WriteComp/ReadComp for TColorBox, whose
-  Color property is a TAlphaColor (FMX.Colors.pas:86). TColor is the signed subrange -$7FFFFFFF-1..$7FFFFFFF,
-  so every OPAQUE colour ($FF......) sat outside it: passing one raised ERangeError with range checking on,
-  which the Debug and the PreRelease build configuration both enable. The conversion is gone now, not
-  merely silenced. }
+{ The only caller inside this unit is WriteComp/ReadComp for TColorBox, whose Color property is a TAlphaColor - in FMX.Colors.pas. }
 function TIniFileApp.ReadColor(CONST Ident: string; Default: TAlphaColor): TAlphaColor;
 VAR
   Stored: string;
@@ -645,16 +617,12 @@ begin
   Stored:= ReadString(FSection, Ident, '');
   if Stored = '' then EXIT(Default);
 
-  { A leading 'cl' means the file predates the TAlphaColor change: those values went through ColorToString,
-    whose names all carry the VCL 'cl' prefix. AlphaColorToString never emits one - it strips the 'cla'
-    prefix and writes 'Black', 'Red', ... or '#AARRGGBB' - and no FMX colour name starts with 'Cl', so the
-    prefix identifies the old format unambiguously.
-    Such a name MUST go through the old parser. StringToAlphaColor does not fail on 'clBlack': the RTL
-    deliberately rewrites 'clXxxx' into 'claXxxx' (System.UIConsts.pas, IdentToAlphaColor), which returns
-    opaque black $FF000000 where $00000000 was what actually got stored. A name only ever reached the file
-    with its alpha byte at 0, so reloading the stored bits beats adopting the RTL's convention.
-    Plain '$xxxxxxxx' values from the old code need no special case - StringToAlphaColor falls through to
-    StrToInt64 for them (System.UIConsts.pas:776-777). }
+  { A leading 'cl' means the file was written back when colours were stored as TColor: those values went through ColorToString, whose names all carry the VCL 'cl' prefix.
+    AlphaColorToString never emits one - it strips the 'cla' prefix and writes 'Black', 'Red', ... or '#AARRGGBB' - and no FMX colour name starts with 'Cl', so the prefix identifies the old format with no ambiguity.
+    Such a name MUST go through the old parser.
+    StringToAlphaColor does not fail on 'clBlack': IdentToAlphaColor in System.UIConsts.pas deliberately rewrites 'clXxxx' into 'claXxxx', which returns opaque black $FF000000 where $00000000 was what actually got stored.
+    A name only ever reached the file with its alpha byte at 0, so reloading the stored bits beats adopting the RTL's convention.
+    Plain '$xxxxxxxx' values from the old code need no special case - StringToAlphaColor falls through to StrToInt64 for them, in System.UIConsts.pas. }
   if SameText(Copy(Stored, 1, 2), 'cl')
   then Result:= TAlphaColor(StringToColor(Stored))
   else Result:= StringToAlphaColor(Stored);
