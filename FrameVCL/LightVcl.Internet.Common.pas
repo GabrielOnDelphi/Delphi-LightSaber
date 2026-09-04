@@ -100,7 +100,7 @@ USES
  function  ProgramConnect2Internet: Integer;                                                                       overload;   { Legacy: google.com + the 60 s download default. Returns: -1 = PC not connected, 0 = connected but this app is blocked by the firewall, 1 = this app can reach the Internet}
  function  ProgramConnect2Internet(const TestURL: string; TimeoutMs: Integer= ConnectivityProbeTimeout; const ExpectBody: string= ''): Integer;  overload;   { Caller-set endpoint + timeout, so a startup check gets a verdict in seconds instead of the 60 s download default. Returns: -1 = PC not connected (WinInet); 0 = PC online but NO reply came back (this exe is firewall-blocked, or the endpoint is down); 1 = reached the endpoint and the body matched (genuinely online); 2 = reached the endpoint (HTTP 200) but the body was NOT ExpectBody -> a captive portal or a content-rewriting proxy is in the path, which is NOT a firewall block. Pass ConnectivityProbeURL for a fast, light default. ExpectBody='' = any HTTP 200 counts as 1 (state 2 never occurs); set it (e.g. ConnectivityProbeBody) to tell a genuine reply apart from a portal/proxy interception.}
  function  ProgramConnect2InternetS: string;
- function  TestProgramConnection(ShowMsgOnSuccess: Boolean= FALSE): Integer;
+ function  TestProgramConnectionMsg(ShowMsgOnSuccess: Boolean= FALSE): Integer;   { The Msg suffix means: this one puts a modal box on screen. For a silent verdict call ProgramConnect2Internet }
  function  IsPortOpened(const Host: string; Port: Integer): Boolean;            { Here's something very simple with which you can check a port status(opened/closed) on remote host. Add WinSock to uses clause}
  //see: c:\MyProjects\Projects INTERNET\Test Internet is connected\LightVcl.Internet.Common, LightCore.Internet-is_connected.dpr
 
@@ -286,8 +286,10 @@ end;
 
 
 { Shows message based on connection test result.
-  If ShowMsgOnSuccess = FALSE then only shows message when connection fails. }
-function TestProgramConnection(ShowMsgOnSuccess: Boolean= FALSE): Integer;                                        { Old name: ProgramConnectMsg }
+  If ShowMsgOnSuccess = FALSE then only shows message when connection fails.
+  The Msg suffix is the library convention for "this routine puts a modal box on screen", so it must
+  never be called from a thread, a service or a batch. ProgramConnect2Internet returns the same verdict silently. }
+function TestProgramConnectionMsg(ShowMsgOnSuccess: Boolean= FALSE): Integer;
 begin
  Result:= ProgramConnect2Internet;
  case Result of

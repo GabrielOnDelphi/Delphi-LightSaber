@@ -91,7 +91,7 @@ begin
   LightVcl.Common.System.CursorBusy;
   TRY
     Caption:= 'Connecting...';
-    LightVcl.Internet.TestProgramConnection(TRUE);
+    LightVcl.Internet.Common.TestProgramConnectionMsg(TRUE);
   FINALLY
     CursorNotBusy;
   END;
