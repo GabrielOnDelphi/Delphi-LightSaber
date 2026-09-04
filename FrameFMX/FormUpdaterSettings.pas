@@ -11,7 +11,7 @@ UNIT FormUpdaterSettings;
 
    CROSS-PLATFORM: Yes (Windows, macOS, iOS, Android)
    SCOPE: End-user settings only. The VCL CreateParented (embedded) path and the
-          TestProgramConnection button are intentionally omitted.
+          TestProgramConnectionMsg button are intentionally omitted.
 
    THIS FORM IS USED BY MULTIPLE PROGRAMS. Do not localize it for a specific program.
 
