@@ -78,7 +78,7 @@ begin
 
   // AppData is required by the TAppData/TLightForm tests. Freed in LightFmx.Common.AppData's FINALIZATION.
   AppData:= TAppData.Create('LightFmxTests');
-  TAppDataCore.TEST_MODE:= TRUE;   // Bypass ShowModal/Show in tests
+  TAppDataCore.Unattended:= TRUE;   // Nobody at the keyboard: bypass ShowModal/Show
 
 {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX.RunRegisteredTests;

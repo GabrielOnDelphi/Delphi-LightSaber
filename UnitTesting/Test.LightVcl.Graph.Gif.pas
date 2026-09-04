@@ -262,20 +262,24 @@ end;
 { IsAnimated Tests }
 
 procedure TTestGraphGif.TestIsAnimated_NonExistentFile;
-var
-  Result: Boolean;
 begin
-  Result:= IsAnimated('C:\NonExistent\FakeFile.gif');
-  Assert.IsFalse(Result, 'IsAnimated should return False for non-existent file');
+  Assert.WillRaise(
+    procedure
+    begin
+      IsAnimated('C:\NonExistent\FakeFile.gif');
+    end,
+    EFileNotFoundException, 'IsAnimated must raise for a non-existent file');
 end;
 
 
 procedure TTestGraphGif.TestIsAnimated_EmptyPath;
-var
-  Result: Boolean;
 begin
-  Result:= IsAnimated('');
-  Assert.IsFalse(Result, 'IsAnimated should return False for empty path');
+  Assert.WillRaise(
+    procedure
+    begin
+      IsAnimated('');
+    end,
+    EFileNotFoundException, 'IsAnimated must raise for an empty path');
 end;
 
 

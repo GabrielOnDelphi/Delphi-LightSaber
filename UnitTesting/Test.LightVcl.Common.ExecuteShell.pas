@@ -118,7 +118,7 @@ begin
   Assert.WillRaise(
     procedure
     begin
-      ExecuteFile('C:\NonExistent\Invalid.exe', '', FALSE);
+      ExecuteFile('C:\NonExistent\Invalid.exe', '');
     end,
     Exception);
 end;
@@ -129,18 +129,19 @@ VAR
   Success: Boolean;
 begin
   { Execute cmd.exe with immediate exit }
-  Success:= ExecuteFile(CmdExePath, '/c exit', FALSE, SW_HIDE);
+  Success:= ExecuteFile(CmdExePath, '/c exit', SW_HIDE);
   Assert.IsTrue(Success, 'Should successfully execute cmd.exe');
 end;
 
 
 procedure TTestExecuteFile.Test_ExecuteFile_NoErrorMsg;
 begin
-  { Non-existing file raises BEFORE any dialog could be shown }
+  { Same as Test_ExecuteFile_InvalidPath, but with an explicit WindowState: the FileExists guard
+    raises before ShellExecute is reached, whatever the window state asks for. }
   Assert.WillRaise(
     procedure
     begin
-      ExecuteFile('C:\Invalid\Path.exe', '', FALSE, SW_HIDE);
+      ExecuteFile('C:\Invalid\Path.exe', '', SW_HIDE);
     end,
     Exception);
 end;
@@ -163,7 +164,7 @@ procedure TTestExecuteFile.Test_ExecuteFileEx_ValidPath;
 VAR
   Success: Boolean;
 begin
-  Success:= ExecuteFileEx(CmdExePath, '/c exit', FALSE, SW_HIDE);
+  Success:= ExecuteFileEx(CmdExePath, '/c exit', SW_HIDE);
   Assert.IsTrue(Success, 'Should successfully execute cmd.exe via ShellExecuteEx');
 end;
 

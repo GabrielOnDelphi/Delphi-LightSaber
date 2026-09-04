@@ -80,7 +80,7 @@ begin
 
   // Initialize AppData for tests that require it (e.g., FormAbout tests)
   AppData:= TAppData.Create('LightVclFormsTests');
-  TAppData.TEST_MODE:= TRUE;  // Bypass ShowModal/Show calls in tests
+  TAppData.Unattended:= TRUE;  // Nobody at the keyboard: bypass ShowModal/Show
   TRY
 
   // Create a dummy main form - required by AppData.CreateFormHidden.

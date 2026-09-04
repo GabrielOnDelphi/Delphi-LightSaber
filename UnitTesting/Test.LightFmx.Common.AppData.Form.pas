@@ -22,7 +22,7 @@ type
   [TestFixture]
   TTestLightForm = class
   private
-    FOldTESTMODE: Boolean;
+    FOldUnattended: Boolean;
   public
     [Setup]
     procedure Setup;
@@ -85,13 +85,13 @@ type
 
 procedure TTestLightForm.Setup;
 begin
-  FOldTESTMODE:= TAppDataCore.TEST_MODE;
-  TAppDataCore.TEST_MODE:= True;  // Prevent modal dialogs during tests
+  FOldUnattended:= TAppDataCore.Unattended;
+  TAppDataCore.Unattended:= True;  // Prevent modal dialogs during tests
 end;
 
 procedure TTestLightForm.TearDown;
 begin
-  TAppDataCore.TEST_MODE:= FOldTESTMODE;
+  TAppDataCore.Unattended:= FOldUnattended;
 end;
 
 

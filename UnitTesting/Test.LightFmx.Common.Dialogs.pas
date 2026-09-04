@@ -108,14 +108,14 @@ procedure TTestFmxDialogs.Setup;
 begin
   FCallbackInvoked:= False;
   FCallbackResult:= False;
-  FOldTestMode:= TAppDataCore.TEST_MODE;
-  TAppDataCore.TEST_MODE:= TRUE;   // Dialog routines must not create async dialogs in tests (never closed -> leak)
+  FOldTestMode:= TAppDataCore.Unattended;
+  TAppDataCore.Unattended:= TRUE;   // Dialog routines must not create async dialogs in tests (never closed -> leak)
 end;
 
 
 procedure TTestFmxDialogs.TearDown;
 begin
-  TAppDataCore.TEST_MODE:= FOldTestMode;
+  TAppDataCore.Unattended:= FOldTestMode;
 end;
 
 

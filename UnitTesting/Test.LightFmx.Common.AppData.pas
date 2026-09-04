@@ -22,7 +22,7 @@ type
   [TestFixture]
   TTestFmxAppData = class
   private
-    FOldTESTMODE: Boolean;
+    FOldUnattended: Boolean;
   public
     [Setup]
     procedure Setup;
@@ -57,9 +57,9 @@ type
     [Test]
     procedure TestStartMinim_SetGet;
 
-    { TEST_MODE Tests }
+    { Unattended Tests }
     [Test]
-    procedure TestTEST_MODE_SetGet;
+    procedure TestUnattended_SetGet;
 
     { Log Form Tests (without actual form creation) }
     [Test]
@@ -91,12 +91,12 @@ uses
 
 procedure TTestFmxAppData.Setup;
 begin
-  FOldTESTMODE:= TAppDataCore.TEST_MODE;
+  FOldUnattended:= TAppDataCore.Unattended;
 end;
 
 procedure TTestFmxAppData.TearDown;
 begin
-  TAppDataCore.TEST_MODE:= FOldTESTMODE;
+  TAppDataCore.Unattended:= FOldUnattended;
 end;
 
 
@@ -197,15 +197,15 @@ begin
 end;
 
 
-{ TEST_MODE Tests }
+{ Unattended Tests }
 
-procedure TTestFmxAppData.TestTEST_MODE_SetGet;
+procedure TTestFmxAppData.TestUnattended_SetGet;
 begin
-  TAppDataCore.TEST_MODE:= True;
-  Assert.IsTrue(TAppDataCore.TEST_MODE);
+  TAppDataCore.Unattended:= True;
+  Assert.IsTrue(TAppDataCore.Unattended);
 
-  TAppDataCore.TEST_MODE:= False;
-  Assert.IsFalse(TAppDataCore.TEST_MODE);
+  TAppDataCore.Unattended:= False;
+  Assert.IsFalse(TAppDataCore.Unattended);
 end;
 
 

@@ -170,7 +170,7 @@ end;
 procedure TTestShell.Test_AssociateWith_EmptyExtension;
 begin
   Assert.WillRaise(
-    procedure begin AssociateWith('', 'TestApp', FALSE, FALSE, FALSE); end,
+    procedure begin AssociateWith('', 'TestApp', FALSE, FALSE); end,
     EAssertionFailed,
     'Empty extension should raise assertion'
   );
@@ -180,7 +180,7 @@ end;
 procedure TTestShell.Test_AssociateWith_InvalidExtension_NoDot;
 begin
   Assert.WillRaise(
-    procedure begin AssociateWith('txt', 'TestApp', FALSE, FALSE, FALSE); end,
+    procedure begin AssociateWith('txt', 'TestApp', FALSE, FALSE); end,
     EAssertionFailed,
     'Extension without dot should raise assertion'
   );
@@ -190,7 +190,7 @@ end;
 procedure TTestShell.Test_AssociateWith_InvalidExtension_Wildcard;
 begin
   Assert.WillRaise(
-    procedure begin AssociateWith('.*', 'TestApp', FALSE, FALSE, FALSE); end,
+    procedure begin AssociateWith('.*', 'TestApp', FALSE, FALSE); end,
     EAssertionFailed,
     'Extension with wildcard should raise assertion'
   );

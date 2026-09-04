@@ -106,14 +106,10 @@ begin
 
   // Initialize AppData for tests that require it
   AppData:= TAppData.Create('LightVclGraphicsTests');
-  TAppDataCore.TEST_MODE:= TRUE;   { Headless run: MesajGeneric returns 0 at once instead of putting a
-                                     modal box on screen (LightVcl.Common.Dialogs.pas:96), and
-                                     ShowModal/Show are bypassed. Without it a library routine that
-                                     reports a missing file - there are 16 Assert(FileExistsMsg(..))
-                                     calls in LightVcl.Graph.Loader.pas alone - stops the whole run
-                                     dead until somebody clicks the box. Measured 2026-09-03: 15
-                                     minutes frozen. Tests_LightFmx.dpr and Tests_LightVcl.Forms.dpr
-                                     already did this; these five did not. }
+  TAppDataCore.Unattended:= TRUE;  { Nobody is at the keyboard: MesajGeneric returns 0 at once instead
+                                     of putting a modal box on screen, and ShowModal/Show are bypassed.
+                                     Without it one library routine that reports a failure with a box
+                                     stops the whole run dead until somebody clicks it. }
   TRY
 
 {$IFDEF TESTINSIGHT}
