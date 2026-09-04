@@ -22,7 +22,7 @@ procedure LoadImage         (FileName: string; Image: TImage; Color: TAlphaColor
 procedure LoadImage         (const Bytes: TBytes; Image: TImage); overload;
 function  LoadImage         (FileName: string): TBitmap;                                                      overload;
 function  LoadImage         (const Bytes: TBytes): TBitmap;                                                   overload;
-procedure SaveBitmap        (BMP: TBitmap; FileName: string);
+procedure SaveBitmap        (BMP: TBitmap; FileName: string);   { Logs and re-raises when the file cannot be written }
 
 procedure FillBitmap   (BMP: TBitmap; Color: TAlphaColor);
 function  CreateBitmap (Width, Height: Integer; BkgClr: TAlphaColor= TAlphaColorRec.Black): TBitmap;
@@ -45,7 +45,7 @@ function  BitmapToBytes        (BMP: TBitmap; Extension: string = '.png'): TByte
 IMPLEMENTATION
 
 USES
-   LightCore.AppData, FMX.DialogService;
+   LightCore.AppData;
 
 
 
@@ -198,7 +198,8 @@ end;
 
 { Saves bitmap to file. Format is determined by file extension (jpg, png, bmp, etc).
   Uses TBitmapCodecManager internally for platform-appropriate encoding.
-  Shows error message dialog if save fails. }
+  A failure is logged and then re-raised: the file does not exist afterwards, so a caller that
+  carried on would work with a missing file. Nothing appears on screen - the caller decides that. }
 procedure SaveBitmap(BMP: TBitmap; FileName: string);
 begin
   Assert(Assigned(BMP), 'SaveBitmap: BMP parameter cannot be nil');
@@ -211,7 +212,7 @@ begin
       begin
         if Assigned(AppDataCore)
         then AppDataCore.LogError('SaveBitmap failed for ' + FileName + ': ' + E.Message);
-        TDialogService.ShowMessage('Save Failed: ' + E.Message);
+        RAISE;
       end;
   end;
 end;
