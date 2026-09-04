@@ -1,4 +1,4 @@
-UNIT LightVcl.Visual.MinimalPathLabel;
+﻿UNIT LightVcl.Visual.MinimalPathLabel;
 
 {=============================================================================================================
    2026.01
@@ -66,9 +66,13 @@ end;
   Called internally after Width changes or when CaptionMin is set. }
 procedure TMinimalPathLabel.UpdateMinimizedCaption;
 begin
- if Width > 0
+ { Parent must be tested BEFORE Canvas is touched. A label with no parent window cannot create its
+   canvas - TControlCanvas.CreateHandle raises EInvalidOperation, 'Control has no parent window' -
+   so setting CaptionMin before the control was parented used to crash. Show the full text until
+   then; Resize runs this again as soon as the control has a parent and a width. }
+ if (Width > 0) AND (Parent <> NIL)
  then Caption:= Vcl.FileCtrl.MinimizeName(FFullCaption, Canvas, Width)
- else Caption:= FFullCaption;  // Fallback when control not yet sized
+ else Caption:= FFullCaption;  // Fallback when control not yet sized or not yet parented
 end;
 
 
