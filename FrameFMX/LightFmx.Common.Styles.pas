@@ -154,7 +154,8 @@ begin
   // (corrupt file, unregistered style class) leaves that item with FStyle=NIL permanently.
   // An assigned-but-EMPTY StyleBook is NOT the danger: TStyleCollectionItem.Create always builds a
   // TStyleContainer, so Style is non-NIL there and simply finds no resource.
-  if Assigned(Scene) AND Assigned(Scene.StyleBook) AND Assigned(Scene.StyleBook.Style)
+  if Assigned(Scene) AND Assigned(Scene.StyleBook) 
+  AND Assigned(Scene.StyleBook.Style)
   then StyleObj:= Scene.StyleBook.Style.FindStyleResource('foregroundcolor');
 
   if Assigned(StyleObj)
