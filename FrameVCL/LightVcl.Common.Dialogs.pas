@@ -6,8 +6,9 @@
 --------------------------------------------------------------------------------------------------------------
    Easy message boxes (for VCL only)
 
-   TEST_MODE: when TAppDataCore.TEST_MODE is TRUE, no dialog is shown — a headless test run would
-   block forever on the modal MessageBox. MesajGeneric returns 0, so MesajYesNo returns FALSE (the safe "No").
+   Unattended: when TAppDataCore.Unattended is TRUE, no dialog is shown. A modal MessageBox waits for a
+   click, so with nobody at the keyboard - a unit test, a console tool, a Windows service, a scheduled job -
+   it blocks for ever. MesajGeneric returns 0, so MesajYesNo returns FALSE (the safe "No").
 
    Provides simple wrapper functions for displaying message dialogs with appropriate icons.
    All functions use Application.MessageBox internally except MesajTaskDlg which uses TTaskDialog.
@@ -87,14 +88,14 @@ CONST
   MessageText: The message to display (CRLF sequences are normalized)
   Title: Optional caption suffix (prepended with Application.Title)
   Icon: MB_ICON* constant combined with MB_OK or MB_YESNO. Use -1 for default info icon.
-  Returns: Dialog result (mrYes, mrNo, mrOk, etc.) or 0 if the message was empty or TEST_MODE is on }
+  Returns: Dialog result (mrYes, mrNo, mrOk, etc.) or 0 if the message was empty or Unattended is on }
 function MesajGeneric(CONST MessageText: string; Title: string = ''; Icon: Integer = -1): Integer;
 begin
   if MessageText = ''
   then EXIT(0);
 
-  if TAppDataCore.TEST_MODE
-  then EXIT(0);   // See the TEST_MODE note in the unit header. 0 <> mrYes, so MesajYesNo yields FALSE.
+  if TAppDataCore.Unattended
+  then EXIT(0);   // See the Unattended note in the unit header. 0 <> mrYes, so MesajYesNo yields FALSE.
 
   if Icon < 0
   then Icon:= MB_ICONINFORMATION or MB_OK;
@@ -153,7 +154,7 @@ end;
   AppDataCore is checked for NIL: an application creates it by hand in its DPR, and the finalization
   of LightVcl.Visual.AppData sets it back to NIL during shutdown.
 
-  In TEST_MODE no dialog appears (MesajGeneric returns immediately) but the log line is still written. }
+  When Unattended is on, no dialog appears (MesajGeneric returns immediately) but the log line is still written. }
 procedure MessageErrorLog(CONST MessageText: string; CONST LogText: string = ''; CONST Title: string = '');
 begin
   if AppDataCore <> NIL then
@@ -231,8 +232,8 @@ begin
   if MessageText = ''
   then EXIT;
 
-  if TAppDataCore.TEST_MODE
-  then EXIT;   // See the TEST_MODE note in the unit header
+  if TAppDataCore.Unattended
+  then EXIT;   // See the Unattended note in the unit header
 
   { Check if TTaskDialog is available and visual styles are enabled }
   if (Win32MajorVersion >= 6)
