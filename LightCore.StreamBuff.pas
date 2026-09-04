@@ -1,5 +1,4 @@
 UNIT LightCore.StreamBuff;
-{$WARN DUPLICATE_CTOR_DTOR OFF}   { W1029: CreateRead and CreateWrite have identical parameters, so a C++Builder HPP could not tell them apart (both map to the class name). We ship no C++ code. Same directive the RTL uses in System.Rtti.pas:18. }
 
 {=============================================================================================================
    2026.07.06
@@ -91,6 +90,7 @@ UNIT LightCore.StreamBuff;
       LightSaber\Demo\Core\Demo LightCore StreamBuffer\Demo_FileStream.dpr
 
 =============================================================================================================}
+{$WARN DUPLICATE_CTOR_DTOR OFF}   { W1029: CreateRead and CreateWrite have identical parameters, so a C++Builder HPP could not tell them apart (both map to the class name). We ship no C++ code. Same directive the RTL uses in System.Rtti.pas:18. }
 
 INTERFACE
 
@@ -295,8 +295,7 @@ begin
   EXCEPT
     on E: Exception DO
       begin
-        if AppDataCore <> NIL
-        then AppDataCore.LogError('Cannot read magic number for: ' + String(Signature) + ' - ' + E.Message);
+        AppDataCore.LogError('Cannot read magic number for: ' + String(Signature) + ' - ' + E.Message);
         EXIT(0);
       end;
   END;
@@ -308,21 +307,18 @@ begin
   EXCEPT
     on E: Exception DO
     begin
-      if AppDataCore <> NIL
-      then AppDataCore.LogError('Cannot read stream signature for: ' + String(Signature) + ' - ' + E.Message);
+      AppDataCore.LogError('Cannot read stream signature for: ' + String(Signature) + ' - ' + E.Message);
       EXIT(0);
     end;
   END;
   if FileSignature = '' then
     begin
-      if AppDataCore <> NIL
-      then AppDataCore.LogError('Cannot read file signature: ' + string(Signature));
+      AppDataCore.LogError('Cannot read file signature: ' + string(Signature));
       EXIT(0);
     end;
   if FileSignature <> Signature then
     begin
-      if AppDataCore <> NIL
-      then AppDataCore.LogError('Signature mismatch: ' + string(Signature));
+      AppDataCore.LogError('Signature mismatch: ' + string(Signature));
       EXIT(0);
     end;
 
@@ -332,8 +328,7 @@ begin
   EXCEPT
     on E: Exception DO
     begin
-      if AppDataCore <> NIL
-      then AppDataCore.LogError('Cannot read stream version for: ' + String(Signature) + ' - ' + E.Message);
+      AppDataCore.LogError('Cannot read stream version for: ' + String(Signature) + ' - ' + E.Message);
       EXIT(0);
     end;
   END;
@@ -362,16 +357,14 @@ begin
   // Check size
   if Count > 64 then
     begin
-      if AppDataCore <> NIL
-      then AppDataCore.LogError('ReadSignature: Signature larger than 64 bytes: '+ IntToStr(Count)+' bytes');
+      AppDataCore.LogError('ReadSignature: Signature larger than 64 bytes: '+ IntToStr(Count)+' bytes');
       EXIT('');
     end;
 
   // Enough data to read?
   if Count > Size- Position then
     begin
-      if AppDataCore <> NIL
-      then AppDataCore.LogError('ReadSignature: Signature length > file size!');
+      AppDataCore.LogError('ReadSignature: Signature length > file size!');
       EXIT('');
     end;
 
