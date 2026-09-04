@@ -1,4 +1,4 @@
-UNIT LightVcl.Graph.Resize;
+﻿UNIT LightVcl.Graph.Resize;
 
 {=============================================================================================================
    2026.03 FINAL
@@ -91,8 +91,16 @@ begin
 end;
 
 
-{ Resizes bitmap proportionally to fit within MaxWidth x MaxHeight boundaries.
-  Uses default resize settings (roAutoDetect mode). }
+{ Resizes bitmap proportionally using AUTO-DETECT (roAutoDetect), the default of RResizeParams.Reset.
+
+  WARNING - the result can be up to FitTolerance percent (10 by default) WIDER and TALLER than
+  MaxWidth x MaxHeight. Auto-detect first tries to FILL the box; if that would crop more than 5% it
+  falls back to Fit and then deliberately enlarges the result by FitTolerance to remove the black
+  bars (see RResizeParams.computeAutodetect in LightVcl.Graph.ResizeParams.pas). Measured: a 400x300
+  bitmap given a 200x200 box comes out 220x165.
+  That overshoot is what a WALLPAPER wants - BioniX calls this routine exactly that way. If you need
+  the result to stay INSIDE the box (a thumbnail in a grid cell, for instance), do NOT call this
+  overload - call SmartStretch(BMP, MaxWidth, MaxHeight, roFit). }
 procedure SmartStretch(BMP: TBitmap; CONST MaxWidth, MaxHeight: Integer);
 VAR ResizeOpp: RResizeParams;
 begin
@@ -194,9 +202,13 @@ begin
 end;
 
 
-{ Loads an image from disk and resizes it to fit within MaxWidth x MaxHeight.
+{ Loads an image from disk and resizes it with AUTO-DETECT to roughly MaxWidth x MaxHeight.
   Returns the loaded and resized bitmap. Caller is responsible for freeing.
-  Returns NIL if the image could not be loaded. }
+  Returns NIL if the image could not be loaded.
+
+  WARNING - the result can exceed MaxWidth x MaxHeight by up to FitTolerance percent (10 by
+  default). See the warning on SmartStretch(BMP, MaxWidth, MaxHeight) above. To stay inside the
+  box, build an RResizeParams with ResizeOpp = roFit and call the other overload. }
 function LoadAndStretch(CONST FileName: string; CONST MaxWidth, MaxHeight: Integer; UseWic: Boolean= TRUE): TBitmap;
 begin
  { LoadGraph signature is (FileName, ExifRotate, UseWic) - UseWic must go into the THIRD slot, not into ExifRotate }
