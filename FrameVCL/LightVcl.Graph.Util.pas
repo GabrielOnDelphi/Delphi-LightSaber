@@ -1,4 +1,4 @@
-UNIT LightVcl.Graph.Util;
+﻿UNIT LightVcl.Graph.Util;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -381,7 +381,13 @@ begin
  G2:= Byte(c2 shr  8);
  B2:= Byte(c2 shr 16);
 
- Result:= (abs(R1-R2) < Tolerance) AND (abs(G1-G2) < Tolerance) AND (abs(B1-B2) < Tolerance);
+ { <= and not <. With the strict < the routine returned FALSE for EVERY pair when Tolerance is 0,
+   because abs(0) < 0 is false - so a colour was not even similar to itself. Found 2026-09-04 by
+   Test.LightVcl.Graph.Util.TestSimilarColor_ExactMatch, a test no project had ever run.
+   Tolerance now means "a difference of at most this much is still similar", which is how its
+   one caller reads it - GetBorderDominantColor (LightVcl.Graph.BkgColor.pas:732) groups border
+   pixels into buckets of similar colour and its default Tolerance is 8. }
+ Result:= (abs(R1-R2) <= Tolerance) AND (abs(G1-G2) <= Tolerance) AND (abs(B1-B2) <= Tolerance);
 end;
 
 
