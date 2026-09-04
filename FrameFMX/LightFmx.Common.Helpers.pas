@@ -23,7 +23,7 @@ function CopyToClipboard(CONST s: string): Boolean;
 IMPLEMENTATION
 
 USES
-  LightFmx.Common.Dialogs;
+  LightCore.AppData;
 
 
 { Traverses up the parent hierarchy to find the closest TCommonCustomForm.
@@ -69,7 +69,7 @@ end;
 
 { Copies text to clipboard using FMX platform services.
   Returns True if successful, False if clipboard service is unavailable.
-  Shows an error message to the user if the service is not available. }
+  A failure is written to AppDataCore's log. Nothing appears on screen - the caller decides that. }
 function CopyToClipboard(CONST s: string): Boolean;
 VAR
    ClipboardService: IFMXClipboardService;
@@ -77,7 +77,8 @@ begin
   Result:= TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, ClipboardService);
   if Result
   then ClipboardService.SetClipboard(s)
-  else messageError('Clipboard service not available.');
+  else
+    AppDataCore.LogError('CopyToClipboard: the clipboard service is not available on this platform.');
 end;
 
 
