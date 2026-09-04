@@ -40,13 +40,11 @@ type
     property LabelControl: TLabel read GetLabel;
   published
     property LabelText: string read GetLabelText write SetLabelText;
-    { Declared BEFORE Value on purpose (same reason as the Min/Max note below), and routed through a
-      setter that repairs an FMX defect - see SetValueType. }
+    { Declared BEFORE Value on purpose: the FMX streamer reads properties in declaration order, and setting ValueType after Value would corrupt Value.
+      Routed through a setter that repairs an FMX defect - see SetValueType. }
     property ValueType: TNumValueType read GetValueType write SetValueType default TNumValueType.Float;
-    { Min/Max/Increment MUST be declared BEFORE Value: the FMX streamer writes/reads properties in
-      declaration order, and the internal TSpinBox clamps Value to Min..Max immediately on assignment
-      (it is not in csLoading). With Value first, a design-time Value above the default Max (100)
-      would be clamped on load (e.g. Max=500, Value=250 loaded back as 100). }
+    { Min/Max/Increment MUST be declared BEFORE Value: the FMX streamer writes and reads properties in declaration order, and the internal TSpinBox clamps Value to Min..Max immediately on assignment (it is not in csLoading).
+      With Value first, a design-time Value above the default Max (100) would be clamped on load - Max=500, Value=250 loaded back as 100. }
     property Min: Double read GetMin write SetMin;
     property Max: Double read GetMax write SetMax;
     property Increment: Double read GetIncrement write SetIncrement;
@@ -173,38 +171,13 @@ begin
 end;
 
 
-{ Changing ValueType MUST NOT change Value - but in FMX it does. Switching Float -> Integer
-  multiplies the value by 10^DecimalDigits (x100 with the default 2 digits), then clamps it to Max.
-
-  Traced through the Delphi 13 RTL:
-     TEditBoxModel.SetValueType    FMX.EditBox.pas:577  FilterChar := '0123456789-+'   (no '.' , no ',')
-     TCustomEditModel.SetFilterChar FMX.Edit.pas:2148    re-filters the EXISTING TEXT
-                                                         -> '20.00' becomes '2000'
-                                    FMX.Edit.pas:2153    text changed -> Change
-     TCustomEditModel.Change        FMX.Edit.pas:1714    -> Validate -> DoValidate
-     TEditBoxModel.DoValidate       FMX.EditBox.pas:516  ValueRange.Value := 2000  (Value re-read FROM the text)
-     TCustomValueRange.IntChanged   FMX.StdActns.pas:979 clamps into Min..Max -> 200
-
-  Measured 2026-08-01: a box left at the constructor defaults (Float, DecimalDigits=2) holding 20 with
-  Max=200 came out as 200 the instant ValueType was set to Integer. It is not a streaming bug - a plain
-  runtime assignment triggers it just as hard.
-
-  Scope, stated precisely: the switch scales Value by 10^DecimalDigits (the decimals of the rendered
-  text are promoted to units), then clamps the result into Min..Max - so it ends up ON Max for a large
-  positive value, on Min for a large negative one, and at Value*10^DecimalDigits when the scaled number
-  still fits. The switch is harmless only when that scaling is a no-op: Value=0 ('0.00' filters down to
-  '000') or DecimalDigits=0 (the text then carries no separator, so the filter finds nothing to strip
-  and no Change fires at all). Whether the caller NOTICES
-  depends on whether it assigns Value afterwards - a later assignment repairs it by accident. The pattern
-  that leaves the damage visible is "design-time Value in the .fmx, ValueType set in code afterwards",
-  which used to be the ONLY possible pattern because ValueType was not published.
-
-  The repair saves Value across the switch. Assigning it afterwards is enough: by then FilterChar is the
-  integer set, so the text round-trip cannot fire a second time. Events are muted for the duration
-  because changing the DISPLAY type is not a value change - without that, a consumer's OnChange would
-  see the bogus 200 before the restore lands. The one case where the value legitimately DOES move is
-  Float -> Integer over a fraction; that is rounded deliberately and reported with a single OnChange
-  after the handlers are restored. See the two comments inside the procedure. }
+{ Changing ValueType MUST NOT change Value - but in FMX it does.
+  Switching Float -> Integer multiplies Value by 10^DecimalDigits (x100 with the default 2 digits), then clamps the result into Min..Max: a box holding 20 with Max=200 comes back as 200.
+  This routine saves Value across the switch and puts it back, with OnChange and OnChangeTracking muted so no consumer sees the wrong number in between.
+  Float -> Integer over a fraction really does change the value; that one is rounded on purpose and reported with a single OnChange after the handlers are restored.
+  Whether a caller notices the raw defect at all depends on whether it assigns Value afterwards - a later assignment repairs it by accident.
+  The call trace through the FMX RTL, the measurement, and the two cases where the switch is harmless:
+  c:\Projects\LightSaber\Docs\FMX SpinBox ValueType defect.md }
 procedure TLabeledSpinBox.SetValueType(const AValue: TNumValueType);
 var
   SavedValue:    Double;
@@ -218,11 +191,9 @@ begin
   SavedChange   := FSpinBox.OnChange;
   SavedTracking := FSpinBox.OnChangeTracking;
 
-  { An Integer box cannot hold a fraction, so drop it HERE instead of letting the model drop it behind
-    our back. TEditBoxModel.GetValue rounds on the way OUT (FMX.EditBox.pas:531-537) while ValueRange
-    keeps the fraction - so the box would report 12 while still holding 12.5, and switching back to
-    Float would resurrect the 12.5 the caller was told had been discarded.
-    Round (not Trunc) because that is what FMX itself uses everywhere (FMX.EditBox.pas:443,510,515,534). }
+  { An Integer box cannot hold a fraction, so drop it HERE instead of letting the model drop it behind our back.
+    TEditBoxModel.GetValue in FMX.EditBox.pas rounds on the way OUT while ValueRange keeps the fraction - so the box would report 12 while still holding 12.5, and switching back to Float would resurrect the 12.5 the caller was told had been discarded.
+    Round (not Trunc) because that is what FMX itself uses everywhere in FMX.EditBox.pas. }
   if AValue = TNumValueType.Integer
   then NewValue:= Round(SavedValue)
   else NewValue:= SavedValue;
@@ -237,10 +208,9 @@ begin
     FSpinBox.OnChangeTracking:= SavedTracking;
   end;
 
-  { Fired AFTER the handlers are back, so a consumer sees the settled value and never the bogus
-    intermediate - and ONLY when the value really moved (Float 12.5 -> Integer 12). A switch that
-    changes nothing but the display type stays silent, which is the contract. Sender is FSpinBox
-    because that is what FMX passes: TCustomEditModel.DoChange calls FOnChange(Owner), FMX.Edit.pas:1871. }
+  { Fired AFTER the handlers are back, so a consumer sees the settled value and never the bogus intermediate - and ONLY when the value really moved (Float 12.5 -> Integer 12).
+    A switch that changes nothing but the display type stays silent, which is the contract.
+    Sender is FSpinBox because that is what FMX passes: TCustomEditModel.DoChange calls FOnChange(Owner), in FMX.Edit.pas. }
   if (NOT SameValue(SavedValue, NewValue)) AND Assigned(SavedChange)
   then SavedChange(FSpinBox);
 end;
