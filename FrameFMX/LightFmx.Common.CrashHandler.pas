@@ -1,4 +1,4 @@
-UNIT LightFmx.Common.CrashHandler;
+﻿UNIT LightFmx.Common.CrashHandler;
 
 {=============================================================================================================
    2026.07.07
@@ -15,26 +15,16 @@ UNIT LightFmx.Common.CrashHandler;
      application can read the file, show it to the user (or upload it),
      then clear it.
 
-   *** NEVER LINK THIS UNIT INTO A BINARY THAT ALSO LINKS madExcept ***  (verified 2026-08-02)
-
-   An armed madExcept kills Application.OnException outright, so THIS UNIT GOES
-   SILENT with no warning at all. madExcept replaces the whole method
-   TApplication.HandleException with a jump (madExcept.pas:19623-19634), and its
-   interceptor InterceptAHandleExcept (madExcept.pas:16930-16936) calls madExcept's
-   own handler and RETURNS -- it never calls through to the original method body,
-   which is the only thing that dispatches OnException. This applies to FMX as well
-   as VCL: madExcept patches FMX.Forms.TApplication.HandleException by exactly the
-   same route.
-
-   So do NOT stack the two. Split them at compile time on the MSWINDOWS symbol --
-   madExcept on Windows, this unit everywhere else -- and they can never coexist.
-   To run your own code alongside madExcept, use its RegisterExceptionHandler.
+   *** NEVER LINK THIS UNIT INTO A BINARY THAT ALSO LINKS madExcept ***
+   The compile-time guard below the header enforces it and explains why.
 
    Consider LightCore.ExceptionLogger instead of this unit where it fits: it hooks
    RaiseExceptObjProc rather than Application.OnException, so it also sees the
    exceptions that limit 2 below loses.
 
-   Background: c:\Delphi\IDE madShi 510\CLAUDE.md, c:\Projects\LightSaber\CLAUDE.md
+   Background: 
+     c:\Delphi\IDE madShi 510\CLAUDE.md 
+     c:\Projects\LightSaber\CLAUDE.md
 
    Known limits (Phase B baseline):
    1. NO STACK TRACE. Captures only Exception class name + message + timestamp.
@@ -68,6 +58,32 @@ UNIT LightFmx.Common.CrashHandler;
             ClearPendingCrashLog;
           end;
 ==============================================================================================================}
+
+{-------------------------------------------------------------------------------------------------------------
+   GUARD: this unit and madExcept must never end up in the same binary.   (verified 2026-08-02)
+
+   An armed madExcept kills Application.OnException outright, so THIS UNIT GOES SILENT with no warning at
+   all. madExcept replaces the whole method TApplication.HandleException with a jump (madExcept.pas:19623-19634),
+   and its interceptor InterceptAHandleExcept (madExcept.pas:16930-16936) calls madExcept's own handler and
+   RETURNS -- it never calls through to the original method body, which is the only thing that dispatches
+   OnException. This applies to FMX as well as VCL: madExcept patches FMX.Forms.TApplication.HandleException
+   by exactly the same route.
+
+   So do NOT stack the two. Split them at compile time on the MSWINDOWS symbol -- madExcept on Windows, this
+   unit everywhere else -- and they can never coexist. To run your own code alongside madExcept, use its
+   RegisterExceptionHandler.
+
+   'madshi' is OUR OWN symbol, not something madExcept defines by itself. It is the feature symbol our projects
+   define in the .dproj and gate the "uses madExcept" line on -- the convention written in
+   c:\Delphi\IDE madShi 510\CLAUDE.md. A project that links madExcept without defining it slips through this
+   guard, so the header rule still has to be read by a human.
+
+   Do NOT also test a symbol named 'madExcept'. Some .dproj files define that one in configurations where
+   madExcept is not linked at all, so it would fire on a build that has no madExcept.
+-------------------------------------------------------------------------------------------------------------}
+{$IFDEF madshi}
+  {$MESSAGE ERROR 'LightFmx.Common.CrashHandler cannot be linked into a binary that also links madExcept: madExcept replaces TApplication.HandleException, so Application.OnException never fires and this unit is silently dead. Use madExcept.RegisterExceptionHandler, or LightCore.ExceptionLogger.'}
+{$ENDIF}
 
 INTERFACE
 
