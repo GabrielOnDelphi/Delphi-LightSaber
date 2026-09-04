@@ -198,6 +198,8 @@
         <DCCReference Include="LightCore.INIFileQuick.pas"/>
         <DCCReference Include="LightCore.System.pas"/>
         <DCCReference Include="LightCore.Graphics.pas"/>
+        <DCCReference Include="LightCore.CmdLine.pas"/>
+        <DCCReference Include="LightCore.ExceptionLogger.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
