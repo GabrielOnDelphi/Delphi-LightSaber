@@ -1,4 +1,4 @@
-program Tests_LightVcl.Internet;
+﻿program Tests_LightVcl.Internet;
 
 {=====================================================
    Tests for units in the LightVcl.Internet.dpk package.
@@ -29,6 +29,7 @@ uses
   DUnitX.Loggers.Xml.NUnit,
   {$ENDIF }
   DUnitX.TestFramework,
+  LightCore.AppData,              { TAppDataCore.TEST_MODE }
   { Source units }
   LightVcl.Internet.Common in '..\FrameVCL\LightVcl.Internet.Common.pas',
   LightVcl.Internet.CommonWebDown in '..\FrameVCL\LightVcl.Internet.CommonWebDown.pas',
@@ -42,7 +43,12 @@ uses
   LightVcl.Internet.HtmlWriter in '..\FrameVCL\LightVcl.Internet.HtmlWriter.pas',
   LightCore.Internet.Ftp in '..\LightCore.Internet.Ftp.pas',
   { Test units - add here as tests are created }
-  Test.LightCore.Internet.Ftp in 'Test.LightCore.Internet.Ftp.pas';
+  Test.LightCore.Internet.Ftp in 'Test.LightCore.Internet.Ftp.pas',
+  Test.LightVcl.Internet.CommonWebDown in 'Test.LightVcl.Internet.CommonWebDown.pas',
+  Test.LightVcl.Internet.Download.Indy in 'Test.LightVcl.Internet.Download.Indy.pas',
+  Test.LightVcl.Internet.Download.Thread in 'Test.LightVcl.Internet.Download.Thread.pas',
+  Test.LightVcl.Internet.Download.WinInet in 'Test.LightVcl.Internet.Download.WinInet.pas',
+  Test.LightVcl.Internet.Email in 'Test.LightVcl.Internet.Email.pas';
   // Test.LightVcl.Internet.Common in 'Test.LightVcl.Internet.Common.pas';
 
 {$IFNDEF TESTINSIGHT}
@@ -55,6 +61,14 @@ var
 
 begin
   ReportMemoryLeaksOnShutdown:= True;
+  TAppDataCore.TEST_MODE:= TRUE;   { Headless run: MesajGeneric returns 0 at once instead of putting a
+                                     modal box on screen (LightVcl.Common.Dialogs.pas:96), and
+                                     ShowModal/Show are bypassed. Without it a library routine that
+                                     reports a missing file - there are 16 Assert(FileExistsMsg(..))
+                                     calls in LightVcl.Graph.Loader.pas alone - stops the whole run
+                                     dead until somebody clicks the box. Measured 2026-09-03: 15
+                                     minutes frozen. Tests_LightFmx.dpr and Tests_LightVcl.Forms.dpr
+                                     already did this; these five did not. }
 
 {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX.RunRegisteredTests;

@@ -1,4 +1,4 @@
-unit Test.LightVcl.Visual.CheckBox;
+﻿unit Test.LightVcl.Visual.CheckBox;
 
 {=============================================================================================================
    Unit tests for LightVcl.Visual.CheckBox.pas
@@ -143,7 +143,9 @@ begin
   CubicCheckBox.Parent:= FTestForm;
 
   Assert.IsNotNull(CubicCheckBox, 'CheckBox should be created');
-  Assert.AreEqual(FTestForm, CubicCheckBox.Owner, 'Owner should be set correctly');
+  { AreEqual is generic and cannot reconcile a TForm with a TComponent (E2532). AreSame takes
+    two TObject and is the right question anyway: is the owner THIS form? }
+  Assert.AreSame(TObject(FTestForm), TObject(CubicCheckBox.Owner), 'Owner should be set correctly');
   FCheckBox:= CubicCheckBox;
 end;
 
@@ -267,8 +269,11 @@ begin
   CubicCheckBox.Caption:= '';
   CubicCheckBox.AutoSize:= TRUE;
 
-  { Width should be minimal (just checkbox indicator + padding) }
-  Assert.IsTrue(CubicCheckBox.Width >= 21, 'Width should include checkbox indicator width');
+  { An empty caption gives Width = TextWidth('') + glyph + gap = 0 + glyph + 4
+    (LightVcl.Visual.CheckBox.pas, AdjustBounds). The old lower bound of 21 was a guess and is
+    above what the themed glyph actually measures here. The real floor is FALLBACK_GLYPH_WIDTH,
+    which that unit documents as 13 at 96 dots per inch. }
+  Assert.IsTrue(CubicCheckBox.Width >= 13, 'Width should include the checkbox glyph');
   Assert.IsTrue(CubicCheckBox.Width < 50, 'Width should be minimal for empty caption');
   FCheckBox:= CubicCheckBox;
 end;

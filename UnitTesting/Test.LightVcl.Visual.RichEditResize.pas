@@ -1,4 +1,4 @@
-unit Test.LightVcl.Visual.RichEditResize;
+﻿unit Test.LightVcl.Visual.RichEditResize;
 
 {=============================================================================================================
    Unit tests for LightVcl.Visual.RichEditResize.pas
@@ -16,6 +16,7 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.Classes,
+  System.UITypes,      { TScrollStyle }
   Winapi.Windows,
   Winapi.Messages,
   Vcl.Forms,

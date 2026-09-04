@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.ResizeWinWIC;
+﻿unit Test.LightVcl.Graph.ResizeWinWIC;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.ResizeWinWIC.pas
@@ -12,6 +12,7 @@ interface
 uses
   DUnitX.TestFramework,
   System.SysUtils,
+  System.Types,        { Rect }
   Vcl.Graphics;
 
 type
@@ -128,7 +129,8 @@ begin
     begin
       ResizeBitmapWic(NIL, 100, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ResizeBitmapWic(NIL, 100, 100) must raise EAssertionFailed');
 end;
 
 
@@ -139,7 +141,8 @@ begin
     begin
       ResizeBitmapWic(FBitmap, 0, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ResizeBitmapWic(FBitmap, 0, 100) must raise EAssertionFailed');
 end;
 
 
@@ -150,7 +153,8 @@ begin
     begin
       ResizeBitmapWic(FBitmap, -10, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ResizeBitmapWic(FBitmap, -10, 100) must raise EAssertionFailed');
 end;
 
 
@@ -161,7 +165,8 @@ begin
     begin
       ResizeBitmapWic(FBitmap, 100, 0);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ResizeBitmapWic(FBitmap, 100, 0) must raise EAssertionFailed');
 end;
 
 
@@ -172,7 +177,8 @@ begin
     begin
       ResizeBitmapWic(FBitmap, 100, -10);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ResizeBitmapWic(FBitmap, 100, -10) must raise EAssertionFailed');
 end;
 
 
@@ -180,11 +186,12 @@ end;
 
 procedure TTestGraphResizeWinWIC.TestResizeBitmapWic_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       ResizeBitmapWic(FBitmap, 100, 50);
-    end);
+    end,
+    'ResizeBitmapWic(FBitmap, 100, 50) must not raise');
 end;
 
 

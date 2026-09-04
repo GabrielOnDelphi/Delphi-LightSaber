@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.Util;
+﻿unit Test.LightVcl.Graph.Util;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.Util.pas
@@ -13,6 +13,7 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   Winapi.Windows,
+  System.Types,           { Rect() - used by Canvas.FillRect }
   Vcl.Graphics;
 
 type
@@ -268,8 +269,6 @@ end;
 
 
 procedure TTestGraphUtil.CreateColorBitmap(Width, Height: Integer; Color: TColor);
-var
-  Row, Col: Integer;
 begin
   FBitmap.SetSize(Width, Height);
   FBitmap.PixelFormat:= pf24bit;
@@ -778,11 +777,11 @@ end;
 procedure TTestGraphUtil.TestReplaceColor_BasicCall;
 begin
   CreateColorBitmap(10, 10, clRed);
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       ReplaceColor(FBitmap, clRed, clBlue);
-    end);
+    end, 'Should not raise any exception');
 end;
 
 
@@ -793,7 +792,8 @@ begin
     begin
       ReplaceColor(NIL, clRed, clBlue);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -824,11 +824,11 @@ end;
 procedure TTestGraphUtil.TestReplaceColorTolerance_BasicCall;
 begin
   CreateColorBitmap(10, 10, clRed);
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       ReplaceColor(FBitmap, clRed, clBlue, 10, 10, 10);
-    end);
+    end, 'Should not raise any exception');
 end;
 
 
@@ -839,7 +839,8 @@ begin
     begin
       ReplaceColor(NIL, clRed, clBlue, 10, 10, 10);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -895,7 +896,8 @@ begin
     begin
       GetAverageColor(NIL, False);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -971,7 +973,8 @@ begin
     begin
       GetAverageColorPf8(NIL);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Should raise EAssertionFailed');
 end;
 
 
@@ -1002,57 +1005,60 @@ end;
 
 procedure TTestGraphUtil.TestWindowsThemesEnabled_NoCrash;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       WindowsThemesEnabled;
-    end);
+    end, 'Should not raise any exception');
 end;
 
 
 procedure TTestGraphUtil.TestVclStylesEnabled_NoCrash;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       VclStylesEnabled;
-    end);
+    end, 'Should not raise any exception');
 end;
 
 
 procedure TTestGraphUtil.TestThemeColorBkg_NoCrash;
+VAR C: TColor;
 begin
-  Assert.WillNotRaise(
+  C:= clNone;
+  Assert.WillNotRaiseAny(
     procedure
-    var
-      C: TColor;
     begin
       C:= ThemeColorBkg;
-    end);
+    end, 'ThemeColorBkg should not raise');
+  Assert.AreNotEqual(clNone, C, 'ThemeColorBkg should return a real colour, not clNone');
 end;
 
 
 procedure TTestGraphUtil.TestThemeColorHilight_NoCrash;
+VAR C: TColor;
 begin
-  Assert.WillNotRaise(
+  C:= clNone;
+  Assert.WillNotRaiseAny(
     procedure
-    var
-      C: TColor;
     begin
       C:= ThemeColorHilight;
-    end);
+    end, 'ThemeColorHilight should not raise');
+  Assert.AreNotEqual(clNone, C, 'ThemeColorHilight should return a real colour, not clNone');
 end;
 
 
 procedure TTestGraphUtil.TestThemeColorButtonFace_NoCrash;
+VAR C: TColor;
 begin
-  Assert.WillNotRaise(
+  C:= clNone;
+  Assert.WillNotRaiseAny(
     procedure
-    var
-      C: TColor;
     begin
       C:= ThemeColorButtonFace;
-    end);
+    end, 'ThemeColorButtonFace should not raise');
+  Assert.AreNotEqual(clNone, C, 'ThemeColorButtonFace should return a real colour, not clNone');
 end;
 
 

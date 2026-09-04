@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.ResizeParams;
+﻿unit Test.LightVcl.Graph.ResizeParams;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.ResizeParams.pas
@@ -167,7 +167,8 @@ begin
     begin
       Params.ComputeOutputSize(100, 100);
     end,
-    Exception);
+    Exception,
+    'Params.ComputeOutputSize(100, 100) must raise Exception');
 end;
 
 
@@ -183,7 +184,8 @@ begin
     begin
       Params.ComputeOutputSize(100, 100);
     end,
-    Exception);
+    Exception,
+    'Params.ComputeOutputSize(100, 100) must raise Exception');
 end;
 
 
@@ -198,7 +200,8 @@ begin
     begin
       Params.ComputeOutputSize(0, 100);
     end,
-    Exception);
+    Exception,
+    'Params.ComputeOutputSize(0, 100) must raise Exception');
 end;
 
 
@@ -213,7 +216,8 @@ begin
     begin
       Params.ComputeOutputSize(100, -1);
     end,
-    Exception);
+    Exception,
+    'Params.ComputeOutputSize(100, -1) must raise Exception');
 end;
 
 
@@ -422,7 +426,8 @@ begin
     begin
       Params.ComputeOutputSize(100, 100);
     end,
-    Exception);
+    Exception,
+    'Params.ComputeOutputSize(100, 100) must raise Exception');
 end;
 
 
@@ -475,7 +480,8 @@ begin
     begin
       Params.ComputeOutputSize(100, 100);
     end,
-    Exception);
+    Exception,
+    'Params.ComputeOutputSize(100, 100) must raise Exception');
 end;
 
 
@@ -528,7 +534,8 @@ begin
     begin
       Params.ComputeOutputSize(100, 100);
     end,
-    Exception);
+    Exception,
+    'Params.ComputeOutputSize(100, 100) must raise Exception');
 end;
 
 

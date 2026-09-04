@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.ResizeWinThumb;
+﻿unit Test.LightVcl.Graph.ResizeWinThumb;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.ResizeWinThumb.pas
@@ -15,6 +15,7 @@ interface
 uses
   DUnitX.TestFramework,
   System.SysUtils,
+  System.Types,        { Rect }
   System.IOUtils,
   Vcl.Graphics;
 
@@ -252,10 +253,15 @@ procedure TTestGraphResizeWinThumb.TestSetWidth_AboveMaximum_ClampsToMax;
 var
   Thumb: TFileThumb;
 begin
+  { This test used to be [Ignore]d. MaxSize was 65535, so SetSize clamped to 65535 and then called
+    FBmp.SetSize(65535, 65535) - a 12.9 GB bitmap that Windows refuses with "The handle is invalid.",
+    which made the test ERROR rather than fail. Gabriel set MaxSize to 8192 on 2026-09-04
+    (LightVcl.Graph.ResizeWinThumb.pas), a size Windows really allocates - 256 MB at 32 bits - so the
+    clamp now protects something and the test can run. }
   Thumb:= TFileThumb.Create;
   TRY
-    Thumb.Width:= 100000;  // Above MaxSize (65535)
-    Assert.AreEqual(65535, Thumb.Width, 'Width should be clamped to MaxSize (65535)');
+    Thumb.Width:= 100000;  // Above MaxSize (8192)
+    Assert.AreEqual(8192, Thumb.Width, 'Width should be clamped to MaxSize (8192)');
   FINALLY
     FreeAndNil(Thumb);
   END;
@@ -349,11 +355,12 @@ begin
   TRY
     Thumb.FilePath:= '';
 
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         Thumb.GenerateThumbnail;
-      end);
+      end,
+      'Thumb.GenerateThumbnail must not raise');
   FINALLY
     FreeAndNil(Thumb);
   END;
@@ -368,11 +375,12 @@ begin
   TRY
     Thumb.FilePath:= 'C:\NonExistent\File\That\Does\Not\Exist.jpg';
 
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         Thumb.GenerateThumbnail;
-      end);
+      end,
+      'Thumb.GenerateThumbnail must not raise');
   FINALLY
     FreeAndNil(Thumb);
   END;
@@ -408,11 +416,12 @@ begin
     Thumb.Width:= 64;
     Thumb.FilePath:= FTempFile;
 
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         Thumb.GenerateThumbnail;
-      end);
+      end,
+      'Thumb.GenerateThumbnail must not raise');
 
     // Verify bitmap was generated (size should be set)
     Assert.AreEqual(64, Thumb.ThumbBmp.Width, 'Thumbnail width should be 64');
@@ -433,11 +442,12 @@ begin
   TRY
     Thumb.FilePath:= '';
 
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         Thumb.GenerateThumbnail2;
-      end);
+      end,
+      'Thumb.GenerateThumbnail2 must not raise');
   FINALLY
     FreeAndNil(Thumb);
   END;
@@ -452,11 +462,12 @@ begin
   TRY
     Thumb.FilePath:= 'C:\NonExistent\File\That\Does\Not\Exist.jpg';
 
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         Thumb.GenerateThumbnail2;
-      end);
+      end,
+      'Thumb.GenerateThumbnail2 must not raise');
   FINALLY
     FreeAndNil(Thumb);
   END;

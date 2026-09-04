@@ -180,6 +180,19 @@
         <DCCReference Include="Test.LightCore.CmdLine.pas"/>
         <DCCReference Include="Test.ciUpdaterRec.pas"/>
         <DCCReference Include="Test.LightCore.IOPlatformFile.pas"/>
+        <DCCReference Include="Test.LightCore.Pascal.pas"/>
+        <DCCReference Include="Test.LightCore.Platform.pas"/>
+        <DCCReference Include="Test.LightCore.Reports.pas"/>
+        <DCCReference Include="Test.LightCore.RttiSetToString.pas"/>
+        <DCCReference Include="..\LightCore.Pascal.pas"/>
+        <DCCReference Include="..\LightCore.Reports.pas"/>
+        <DCCReference Include="..\LightCore.RttiSetToString.pas"/>
+        <DCCReference Include="Test.LightCore.SearchResult.pas"/>
+        <DCCReference Include="Test.LightCore.StringListA.pas"/>
+        <DCCReference Include="Test.LightCore.WrapString.pas"/>
+        <DCCReference Include="..\LightCore.SearchResult.pas"/>
+        <DCCReference Include="..\LightCore.StringListA.pas"/>
+        <DCCReference Include="..\LightCore.WrapString.pas"/>
         <DCCReference Include="..\Updater\ciUpdaterRec.pas"/>
         <DCCReference Include="..\LightCore.pas"/>
         <DCCReference Include="..\LightCore.Types.pas"/>
@@ -213,6 +226,7 @@
         <DCCReference Include="..\LightCore.CmdLine.pas"/>
         <DCCReference Include="..\LightCore.Platform.pas"/>
         <DCCReference Include="..\LightCore.IOPlatformFile.pas"/>
+        <DCCReference Include="Test.LightCore.CompilerVersions.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

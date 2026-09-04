@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.ShadowText;
+﻿unit Test.LightVcl.Graph.ShadowText;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.ShadowText.pas
@@ -144,16 +144,23 @@ end;
 
 procedure TTestShadowText.TestDrawShadowText_XY_EmptyText;
 var
-  Result: Integer;
+  Before: TColor;
 begin
-  Result:= DrawShadowText(FBitmap.Canvas, '', 10, 10, clBlack, clGray);
-  Assert.AreEqual(0, Result, 'DrawShadowText with empty text should return 0');
+  { See TestDrawShadowText_ReturnsZeroForEmptyText: the return of 0 was a guess about Windows.
+    Windows 11 gives 1 for an empty string. What must hold is that nothing is painted. }
+  FBitmap.Canvas.Brush.Color:= clWhite;
+  FBitmap.Canvas.FillRect(Rect(0, 0, FBitmap.Width, FBitmap.Height));
+  Before:= FBitmap.Canvas.Pixels[12, 12];
+
+  DrawShadowText(FBitmap.Canvas, '', 10, 10, clBlack, clGray);
+
+  Assert.AreEqual(Integer(Before), Integer(FBitmap.Canvas.Pixels[12, 12]), 'Empty text must paint nothing');
 end;
 
 
 procedure TTestShadowText.TestDrawShadowText_XY_SystemColors;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       DrawShadowText(FBitmap.Canvas, 'Test', 10, 10, clBtnFace, clBtnShadow);
@@ -164,7 +171,7 @@ end;
 
 procedure TTestShadowText.TestDrawShadowText_XY_NegativeShadowDist;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       DrawShadowText(FBitmap.Canvas, 'Test', 10, 10, clBlack, clGray, -2);
@@ -175,7 +182,7 @@ end;
 
 procedure TTestShadowText.TestDrawShadowText_XY_ZeroShadowDist;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       DrawShadowText(FBitmap.Canvas, 'Test', 10, 10, clBlack, clGray, 0);
@@ -186,7 +193,7 @@ end;
 
 procedure TTestShadowText.TestDrawShadowText_XY_LargeShadowDist;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       DrawShadowText(FBitmap.Canvas, 'Test', 10, 10, clBlack, clGray, 50);
@@ -222,12 +229,19 @@ end;
 
 procedure TTestShadowText.TestDrawShadowText_Rect_EmptyText;
 var
-  Result: Integer;
   TextRect: TRect;
+  Before: TColor;
 begin
+  { See TestDrawShadowText_ReturnsZeroForEmptyText: the return of 0 was a guess about Windows.
+    Windows 11 gives 1 for an empty string. What must hold is that nothing is painted. }
+  FBitmap.Canvas.Brush.Color:= clWhite;
+  FBitmap.Canvas.FillRect(Rect(0, 0, FBitmap.Width, FBitmap.Height));
+  Before:= FBitmap.Canvas.Pixels[12, 12];
+
   TextRect:= Rect(10, 10, 300, 100);
-  Result:= DrawShadowText(FBitmap.Canvas, '', TextRect, clBlack, clGray, 2);
-  Assert.AreEqual(0, Result, 'DrawShadowText with empty text should return 0');
+  DrawShadowText(FBitmap.Canvas, '', TextRect, clBlack, clGray, 2);
+
+  Assert.AreEqual(Integer(Before), Integer(FBitmap.Canvas.Pixels[12, 12]), 'Empty text must paint nothing');
 end;
 
 
@@ -236,7 +250,7 @@ var
   TextRect: TRect;
 begin
   TextRect:= Rect(10, 10, 300, 100);
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       DrawShadowText(FBitmap.Canvas, 'Test', TextRect, clBtnFace, clBtnShadow, 2);
@@ -250,7 +264,7 @@ var
   TextRect: TRect;
 begin
   TextRect:= Rect(10, 10, 300, 100);
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       DrawShadowText(FBitmap.Canvas, 'Centered Text', TextRect, clBlack, clGray, 2, DT_CENTER);
@@ -264,7 +278,7 @@ var
   TextRect: TRect;
 begin
   TextRect:= Rect(10, 10, 300, 100);
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       DrawShadowText(FBitmap.Canvas, 'Right Aligned', TextRect, clBlack, clGray, 2, DT_RIGHT);
@@ -278,7 +292,7 @@ var
   TextRect: TRect;
 begin
   TextRect:= Rect(10, 10, 100, 100);  { Narrow rect to force word break }
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       DrawShadowText(FBitmap.Canvas, 'This is a long text that should wrap', TextRect, clBlack, clGray, 2, DT_WORDBREAK);
@@ -306,7 +320,7 @@ end;
 
 procedure TTestShadowText.TestDrawShadowText_RGBColors;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       DrawShadowText(FBitmap.Canvas, 'RGB Test', 10, 10, RGB(255, 0, 0), RGB(128, 128, 128));
@@ -317,7 +331,7 @@ end;
 
 procedure TTestShadowText.TestDrawShadowText_SystemColorClBtnFace;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       DrawShadowText(FBitmap.Canvas, 'BtnFace Test', 10, 10, clBtnFace, clBtnShadow);
@@ -328,7 +342,7 @@ end;
 
 procedure TTestShadowText.TestDrawShadowText_SystemColorClWindow;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       DrawShadowText(FBitmap.Canvas, 'Window Test', 10, 10, clWindowText, clWindow);
@@ -339,7 +353,7 @@ end;
 
 procedure TTestShadowText.TestDrawShadowText_SystemColorClHighlight;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       DrawShadowText(FBitmap.Canvas, 'Highlight Test', 10, 10, clHighlightText, clHighlight);
@@ -361,10 +375,19 @@ end;
 
 procedure TTestShadowText.TestDrawShadowText_ReturnsZeroForEmptyText;
 var
-  Result: Integer;
+  Before: TColor;
 begin
-  Result:= DrawShadowText(FBitmap.Canvas, '', 10, 10, clBlack, clGray);
-  Assert.AreEqual(0, Result, 'DrawShadowText should return 0 for empty text');
+  { The old test demanded a return of 0. That was a guess about Windows, not a LightSaber promise:
+    DrawShadowText passes the string to the DrawShadowText in ComCtl32 and returns what that
+    returns, and on Windows 11 an empty string gives 1. What an empty string must really do is
+    change nothing on the canvas, so that is what is checked. }
+  FBitmap.Canvas.Brush.Color:= clWhite;
+  FBitmap.Canvas.FillRect(Rect(0, 0, FBitmap.Width, FBitmap.Height));
+  Before:= FBitmap.Canvas.Pixels[10, 10];
+
+  DrawShadowText(FBitmap.Canvas, '', 10, 10, clBlack, clGray);
+
+  Assert.AreEqual(Integer(Before), Integer(FBitmap.Canvas.Pixels[10, 10]), 'Empty text must paint nothing');
 end;
 
 
@@ -375,7 +398,7 @@ var
   LongText: string;
 begin
   LongText:= StringOfChar('A', 1000);
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       DrawShadowText(FBitmap.Canvas, LongText, 10, 10, clBlack, clGray);
@@ -389,7 +412,7 @@ var
   TextRect: TRect;
 begin
   TextRect:= Rect(10, 10, 300, 200);
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       DrawShadowText(FBitmap.Canvas, 'Line 1'#13#10'Line 2'#13#10'Line 3', TextRect, clBlack, clGray, 2, DT_LEFT);

@@ -132,6 +132,22 @@
         <DCCReference Include="..\FrameVCL\LightVcl.Common.SystemPermissions.pas"/>
         <DCCReference Include="Test.LightVcl.Common.Sound.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Common.Sound.pas"/>
+        <DCCReference Include="Test.LightVcl.Common.CursorGuard.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Common.CursorGuard.pas"/>
+        <DCCReference Include="Test.LightVcl.Common.LogViewer.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Common.LogViewer.pas"/>
+        <DCCReference Include="Test.LightVcl.Common.Process.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Common.Process.pas"/>
+        <DCCReference Include="Test.LightVcl.Common.Shell.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Common.Shell.pas"/>
+        <DCCReference Include="Test.LightVcl.Common.SystemTime.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Common.SystemTime.pas"/>
+        <DCCReference Include="Test.LightVcl.Common.WMIResolution.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Common.WMIResolution.pas"/>
+        <DCCReference Include="Test.LightVcl.Common.WinVersionApi.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Common.WinVersionApi.pas"/>
+        <DCCReference Include="Test.LightVcl.Common.WindowMetrics.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Common.WindowMetrics.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

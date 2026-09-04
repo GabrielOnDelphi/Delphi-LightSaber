@@ -1,4 +1,4 @@
-program Tests_LightFmx;
+﻿program Tests_LightFmx;
 
 {=====================================================
    Unit tests for LightFmx units
@@ -60,7 +60,10 @@ uses
   LightFmx.Common.Graph               in '..\FrameFMX\LightFmx.Common.Graph.pas',
   LightFmx.Visual.SvgFlatButton       in '..\FrameFMX\LightFmx.Visual.SvgFlatButton.pas',
   LightFmx.Visual.AutoSizeBox         in '..\FrameFMX\LightFmx.Visual.AutoSizeBox.pas',
-  LightFmx.Visual.AutoSizeBoxImg      in '..\FrameFMX\LightFmx.Visual.AutoSizeBoxImg.pas';
+  LightFmx.Visual.AutoSizeBoxImg      in '..\FrameFMX\LightFmx.Visual.AutoSizeBoxImg.pas',
+  LightFmx.Visual.ScreenCapture       in '..\FrameFMX\LightFmx.Visual.ScreenCapture.pas',
+  FormScreenCapture                   in '..\FrameFMX\FormScreenCapture.pas',
+  Test.FormScreenCapture              in 'Test.FormScreenCapture.pas';
 
 {$IFNDEF TESTINSIGHT}
 var

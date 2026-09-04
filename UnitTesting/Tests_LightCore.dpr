@@ -1,4 +1,4 @@
-program Tests_LightCore;
+﻿program Tests_LightCore;
 
 {=====================================================
 When TESTINSIGHT is defined:
@@ -57,6 +57,14 @@ uses
   Test.LightCore.CmdLine in 'Test.LightCore.CmdLine.pas',
   Test.ciUpdaterRec in 'Test.ciUpdaterRec.pas',
   Test.LightCore.IOPlatformFile in 'Test.LightCore.IOPlatformFile.pas',
+  Test.LightCore.Pascal in 'Test.LightCore.Pascal.pas',
+  Test.LightCore.Platform in 'Test.LightCore.Platform.pas',
+  Test.LightCore.Reports in 'Test.LightCore.Reports.pas',
+  Test.LightCore.RttiSetToString in 'Test.LightCore.RttiSetToString.pas',
+  Test.LightCore.SearchResult in 'Test.LightCore.SearchResult.pas',
+  Test.LightCore.StringListA in 'Test.LightCore.StringListA.pas',
+  Test.LightCore.WrapString in 'Test.LightCore.WrapString.pas',
+  Test.LightCore.CompilerVersions in 'Test.LightCore.CompilerVersions.pas',
   { Source units }
   LightCore in '..\LightCore.pas',
   LightCore.Types in '..\LightCore.Types.pas',
@@ -90,6 +98,12 @@ uses
   LightCore.CmdLine in '..\LightCore.CmdLine.pas',
   LightCore.Platform in '..\LightCore.Platform.pas',
   LightCore.IOPlatformFile in '..\LightCore.IOPlatformFile.pas',
+  LightCore.Pascal in '..\LightCore.Pascal.pas',
+  LightCore.Reports in '..\LightCore.Reports.pas',
+  LightCore.RttiSetToString in '..\LightCore.RttiSetToString.pas',
+  LightCore.SearchResult in '..\LightCore.SearchResult.pas',
+  LightCore.StringListA in '..\LightCore.StringListA.pas',
+  LightCore.WrapString in '..\LightCore.WrapString.pas',
   ciUpdaterRec in '..\Updater\ciUpdaterRec.pas';
 
 {$IFNDEF TESTINSIGHT}
@@ -105,6 +119,14 @@ begin
 
   { Initialize AppDataCore - required by TLightStream and other units that use logging }
   AppDataCore:= TAppDataCore.Create('LightCoreTests');
+  TAppDataCore.TEST_MODE:= TRUE;   { Headless run: MesajGeneric returns 0 at once instead of putting a
+                                     modal box on screen (LightVcl.Common.Dialogs.pas:96), and
+                                     ShowModal/Show are bypassed. Without it a library routine that
+                                     reports a missing file - there are 16 Assert(FileExistsMsg(..))
+                                     calls in LightVcl.Graph.Loader.pas alone - stops the whole run
+                                     dead until somebody clicks the box. Measured 2026-09-03: 15
+                                     minutes frozen. Tests_LightFmx.dpr and Tests_LightVcl.Forms.dpr
+                                     already did this; these five did not. }
   TRY
 
 {$IFDEF TESTINSIGHT}

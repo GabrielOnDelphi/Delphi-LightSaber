@@ -1,4 +1,4 @@
-unit Test.LightVcl.Internet.Email;
+﻿unit Test.LightVcl.Internet.Email;
 
 {=============================================================================================================
    2026.01.30
@@ -126,7 +126,8 @@ type
 
     { EmailHasManyNumbers Tests }
     [Test]
-    [TestCase('FewNumbers_30', 'user123@example.com,30,False')]
+    [TestCase('FewNumbers_30', 'usernamelong1@example.com,30,False')]
+    [TestCase('Digits43Pct_Over30', 'user123@example.com,30,True')]
     [TestCase('ManyNumbers_30', '12345678@example.com,30,True')]
     [TestCase('AllNumbers_30', '123456789012@example.com,30,True')]
     [TestCase('NoNumbers_30', 'username@example.com,30,False')]
@@ -143,7 +144,7 @@ type
     [TestCase('InvalidChar', '5,Invalid character!')]
     [TestCase('MissingUser', '6,Missing user name!')]
     [TestCase('MissingDomain', '7,Missing domain name!')]
-    [TestCase('MissingDomainDot', '8,Missing domain portion (.com,.net,etc)')]
+    [TestCase('MissingDomainDot', '8|Missing domain portion (.com,.net,etc)', '|')]
     [TestCase('InvalidGenDomain', '9,Invalid general domain!')]
     [TestCase('TooManyAt', '10,To many @ symbols!')]
     procedure TestFailCode2Str(Code: Integer; const Expected: string);

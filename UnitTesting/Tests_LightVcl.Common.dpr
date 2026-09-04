@@ -1,4 +1,4 @@
-program Tests_LightVcl.Common;
+﻿program Tests_LightVcl.Common;
 
 {=====================================================
 When TESTINSIGHT is defined:
@@ -68,7 +68,23 @@ uses
   Test.LightVcl.Common.SystemPermissions in 'Test.LightVcl.Common.SystemPermissions.pas',
   LightVcl.Common.SystemPermissions in '..\FrameVCL\LightVcl.Common.SystemPermissions.pas',
   Test.LightVcl.Common.Sound in 'Test.LightVcl.Common.Sound.pas',
-  LightVcl.Common.Sound in '..\FrameVCL\LightVcl.Common.Sound.pas';
+  LightVcl.Common.Sound in '..\FrameVCL\LightVcl.Common.Sound.pas',
+  Test.LightVcl.Common.CursorGuard in 'Test.LightVcl.Common.CursorGuard.pas',
+  LightVcl.Common.CursorGuard in '..\FrameVCL\LightVcl.Common.CursorGuard.pas',
+  Test.LightVcl.Common.LogViewer in 'Test.LightVcl.Common.LogViewer.pas',
+  LightVcl.Common.LogViewer in '..\FrameVCL\LightVcl.Common.LogViewer.pas',
+  Test.LightVcl.Common.Process in 'Test.LightVcl.Common.Process.pas',
+  LightVcl.Common.Process in '..\FrameVCL\LightVcl.Common.Process.pas',
+  Test.LightVcl.Common.Shell in 'Test.LightVcl.Common.Shell.pas',
+  LightVcl.Common.Shell in '..\FrameVCL\LightVcl.Common.Shell.pas',
+  Test.LightVcl.Common.SystemTime in 'Test.LightVcl.Common.SystemTime.pas',
+  LightVcl.Common.SystemTime in '..\FrameVCL\LightVcl.Common.SystemTime.pas',
+  Test.LightVcl.Common.WMIResolution in 'Test.LightVcl.Common.WMIResolution.pas',
+  LightVcl.Common.WMIResolution in '..\FrameVCL\LightVcl.Common.WMIResolution.pas',
+  Test.LightVcl.Common.WinVersionApi in 'Test.LightVcl.Common.WinVersionApi.pas',
+  LightVcl.Common.WinVersionApi in '..\FrameVCL\LightVcl.Common.WinVersionApi.pas',
+  Test.LightVcl.Common.WindowMetrics in 'Test.LightVcl.Common.WindowMetrics.pas',
+  LightVcl.Common.WindowMetrics in '..\FrameVCL\LightVcl.Common.WindowMetrics.pas';
 
 {$IFNDEF TESTINSIGHT}
 var
@@ -84,6 +100,14 @@ begin
 
   // Initialize AppData for tests that require it
   AppData:= TAppData.Create('LightVclCommonTests');
+  TAppDataCore.TEST_MODE:= TRUE;   { Headless run: MesajGeneric returns 0 at once instead of putting a
+                                     modal box on screen (LightVcl.Common.Dialogs.pas:96), and
+                                     ShowModal/Show are bypassed. Without it a library routine that
+                                     reports a missing file - there are 16 Assert(FileExistsMsg(..))
+                                     calls in LightVcl.Graph.Loader.pas alone - stops the whole run
+                                     dead until somebody clicks the box. Measured 2026-09-03: 15
+                                     minutes frozen. Tests_LightFmx.dpr and Tests_LightVcl.Forms.dpr
+                                     already did this; these five did not. }
   TRY
 
 {$IFDEF TESTINSIGHT}

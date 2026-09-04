@@ -1,4 +1,4 @@
-unit Test.LightVcl.Visual.RichLogTrack;
+﻿unit Test.LightVcl.Visual.RichLogTrack;
 
 {=============================================================================================================
    Unit tests for LightVcl.Visual.RichLogTrack.pas
@@ -142,6 +142,7 @@ begin
   Trackbar:= TRichLogTrckbr.Create(FTestForm);
   Trackbar.Parent:= FTestForm;
   FTrackbar:= Trackbar;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
   Assert.IsNotNull(Trackbar, 'TRichLogTrckbr creation should succeed');
 end;
@@ -154,6 +155,7 @@ begin
   Trackbar:= TRichLogTrckbr.Create(FTestForm);
   Trackbar.Parent:= FTestForm;
   FTrackbar:= Trackbar;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
   Assert.IsNotNull(Trackbar.TrackBar, 'Should have internal TrackBar component');
 end;
@@ -168,6 +170,7 @@ begin
   Trackbar:= TRichLogTrckbr.Create(FTestForm);
   Trackbar.Parent:= FTestForm;
   FTrackbar:= Trackbar;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
   HasLabel:= FALSE;
   for i:= 0 to Trackbar.ControlCount - 1 do
@@ -188,6 +191,7 @@ begin
   Trackbar:= TRichLogTrckbr.Create(FTestForm);
   Trackbar.Parent:= FTestForm;
   FTrackbar:= Trackbar;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
   Assert.IsTrue(Trackbar.Width > 0, 'Width should be positive');
   Assert.IsTrue(Trackbar.Height > 0, 'Height should be positive');
@@ -203,6 +207,7 @@ begin
   Trackbar:= TRichLogTrckbr.Create(FTestForm);
   Trackbar.Parent:= FTestForm;
   FTrackbar:= Trackbar;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
   Assert.AreEqual(0, Trackbar.TrackBar.Min, 'TrackBar.Min should be 0');
 end;
@@ -215,6 +220,7 @@ begin
   Trackbar:= TRichLogTrckbr.Create(FTestForm);
   Trackbar.Parent:= FTestForm;
   FTrackbar:= Trackbar;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
   Assert.AreEqual(Ord(lvrErrors), Trackbar.TrackBar.Max, 'TrackBar.Max should be Ord(lvrErrors)');
 end;
@@ -227,6 +233,7 @@ begin
   Trackbar:= TRichLogTrckbr.Create(FTestForm);
   Trackbar.Parent:= FTestForm;
   FTrackbar:= Trackbar;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
   Assert.AreEqual(Ord(DefaultVerbosity), Trackbar.TrackBar.Position, 'TrackBar.Position should default to DefaultVerbosity');
 end;
@@ -241,6 +248,7 @@ begin
   Trackbar:= TRichLogTrckbr.Create(FTestForm);
   Trackbar.Parent:= FTestForm;
   FTrackbar:= Trackbar;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
   Assert.AreEqual(TLogVerb(Trackbar.TrackBar.Position), Trackbar.Verbosity, 'Verbosity should match TrackBar position');
 end;
@@ -253,6 +261,7 @@ begin
   Trackbar:= TRichLogTrckbr.Create(FTestForm);
   Trackbar.Parent:= FTestForm;
   FTrackbar:= Trackbar;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
   Trackbar.Verbosity:= lvrVerbose;
   Assert.AreEqual(lvrVerbose, Trackbar.Verbosity, 'Should be able to set lvrVerbose');
@@ -275,6 +284,7 @@ begin
   Trackbar:= TRichLogTrckbr.Create(FTestForm);
   Trackbar.Parent:= FTestForm;
   FTrackbar:= Trackbar;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
   RichLog:= TRichLog.Create(FTestForm);
   RichLog.Parent:= FTestForm;
@@ -293,12 +303,14 @@ begin
   Trackbar:= TRichLogTrckbr.Create(FTestForm);
   Trackbar.Parent:= FTestForm;
   FTrackbar:= Trackbar;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       Trackbar.Log:= NIL;
-    end);
+    end,
+    'Trackbar.Log:= NIL must not raise');
 end;
 
 
@@ -310,6 +322,7 @@ begin
   Trackbar:= TRichLogTrckbr.Create(FTestForm);
   Trackbar.Parent:= FTestForm;
   FTrackbar:= Trackbar;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
   RichLog:= TRichLog.Create(FTestForm);
   RichLog.Parent:= FTestForm;
@@ -331,6 +344,7 @@ begin
   Trackbar:= TRichLogTrckbr.Create(FTestForm);
   Trackbar.Parent:= FTestForm;
   FTrackbar:= Trackbar;
+  Assert.IsTrue(Trackbar.Handle <> 0, 'The control needs a window handle: CreateWnd is what fills in Min, Max and Position');
 
   Trackbar.OnVerbChanged:= OnVerbChangedHandler;
 

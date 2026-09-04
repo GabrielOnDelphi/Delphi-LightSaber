@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.ResizeVCL;
+﻿unit Test.LightVcl.Graph.ResizeVCL;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.ResizeVCL.pas
@@ -12,6 +12,7 @@ interface
 uses
   DUnitX.TestFramework,
   System.SysUtils,
+  System.Types,        { Rect }
   System.Classes,
   Vcl.Graphics;
 
@@ -148,7 +149,8 @@ begin
     begin
       ScaleImage(nil, FDestBMP, 1.0);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ScaleImage(nil, FDestBMP, 1.0) must raise EAssertionFailed');
 end;
 
 
@@ -159,7 +161,8 @@ begin
     begin
       ScaleImage(FSourceBMP, nil, 1.0);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ScaleImage(FSourceBMP, nil, 1.0) must raise EAssertionFailed');
 end;
 
 
@@ -177,7 +180,8 @@ begin
       begin
         ScaleImage(EmptyBMP, FDestBMP, 1.0);
       end,
-      EAssertionFailed);
+      EAssertionFailed,
+      'ScaleImage(EmptyBMP, FDestBMP, 1.0) must raise EAssertionFailed');
   finally
     FreeAndNil(EmptyBMP);
   end;
@@ -198,7 +202,8 @@ begin
       begin
         ScaleImage(EmptyBMP, FDestBMP, 1.0);
       end,
-      EAssertionFailed);
+      EAssertionFailed,
+      'ScaleImage(EmptyBMP, FDestBMP, 1.0) must raise EAssertionFailed');
   finally
     FreeAndNil(EmptyBMP);
   end;
@@ -212,7 +217,8 @@ begin
     begin
       ScaleImage(FSourceBMP, FDestBMP, 0.0);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ScaleImage(FSourceBMP, FDestBMP, 0.0) must raise EAssertionFailed');
 end;
 
 
@@ -223,7 +229,8 @@ begin
     begin
       ScaleImage(FSourceBMP, FDestBMP, -1.0);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ScaleImage(FSourceBMP, FDestBMP, -1.0) must raise EAssertionFailed');
 end;
 
 
@@ -263,7 +270,8 @@ begin
     begin
       CanvasStretch(nil, FDestBMP);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'CanvasStretch(nil, FDestBMP) must raise EAssertionFailed');
 end;
 
 
@@ -274,7 +282,8 @@ begin
     begin
       CanvasStretch(FSourceBMP, nil);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'CanvasStretch(FSourceBMP, nil) must raise EAssertionFailed');
 end;
 
 
@@ -292,7 +301,8 @@ begin
       begin
         CanvasStretch(EmptyBMP, FDestBMP);
       end,
-      EAssertionFailed);
+      EAssertionFailed,
+      'CanvasStretch(EmptyBMP, FDestBMP) must raise EAssertionFailed');
   finally
     FreeAndNil(EmptyBMP);
   end;
@@ -313,7 +323,8 @@ begin
       begin
         CanvasStretch(FSourceBMP, EmptyBMP);
       end,
-      EAssertionFailed);
+      EAssertionFailed,
+      'CanvasStretch(FSourceBMP, EmptyBMP) must raise EAssertionFailed');
   finally
     FreeAndNil(EmptyBMP);
   end;
@@ -341,7 +352,8 @@ begin
     begin
       CanvasStretch(nil, 200, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'CanvasStretch(nil, 200, 100) must raise EAssertionFailed');
 end;
 
 
@@ -359,7 +371,8 @@ begin
       begin
         CanvasStretch(EmptyBMP, 200, 100);
       end,
-      EAssertionFailed);
+      EAssertionFailed,
+      'CanvasStretch(EmptyBMP, 200, 100) must raise EAssertionFailed');
   finally
     FreeAndNil(EmptyBMP);
   end;
@@ -380,7 +393,8 @@ begin
       begin
         CanvasStretch(EmptyBMP, 200, 100);
       end,
-      EAssertionFailed);
+      EAssertionFailed,
+      'CanvasStretch(EmptyBMP, 200, 100) must raise EAssertionFailed');
   finally
     FreeAndNil(EmptyBMP);
   end;
@@ -394,7 +408,8 @@ begin
     begin
       CanvasStretch(FSourceBMP, 0, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'CanvasStretch(FSourceBMP, 0, 100) must raise EAssertionFailed');
 end;
 
 
@@ -405,7 +420,8 @@ begin
     begin
       CanvasStretch(FSourceBMP, 200, 0);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'CanvasStretch(FSourceBMP, 200, 0) must raise EAssertionFailed');
 end;
 
 
@@ -436,7 +452,8 @@ begin
     begin
       CanvasStretch(nil, 200);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'CanvasStretch(nil, 200) must raise EAssertionFailed');
 end;
 
 
@@ -454,7 +471,8 @@ begin
       begin
         CanvasStretch(EmptyBMP, 200);
       end,
-      EAssertionFailed);
+      EAssertionFailed,
+      'CanvasStretch(EmptyBMP, 200) must raise EAssertionFailed');
   finally
     FreeAndNil(EmptyBMP);
   end;
@@ -468,7 +486,8 @@ begin
     begin
       CanvasStretch(FSourceBMP, 0);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'CanvasStretch(FSourceBMP, 0) must raise EAssertionFailed');
 end;
 
 

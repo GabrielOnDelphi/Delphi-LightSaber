@@ -1,4 +1,4 @@
-unit Test.LightVcl.Visual.Edit;
+﻿unit Test.LightVcl.Visual.Edit;
 
 {=============================================================================================================
    Unit tests for LightVcl.Visual.Edit.pas
@@ -103,7 +103,8 @@ type
 implementation
 
 uses
-  Winapi.Windows;
+  Winapi.Windows,      { VK_RETURN }
+  Winapi.Messages;     { WM_CHAR }
 
 
 procedure TTesTLightEdit.Setup;

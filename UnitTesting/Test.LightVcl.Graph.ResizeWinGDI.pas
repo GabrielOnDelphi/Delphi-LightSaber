@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.ResizeWinGDI;
+﻿unit Test.LightVcl.Graph.ResizeWinGDI;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.ResizeWinGDI.pas
@@ -13,6 +13,7 @@ interface
 uses
   DUnitX.TestFramework,
   System.SysUtils,
+  System.Types,        { Rect }
   Vcl.Graphics;
 
 type
@@ -109,7 +110,8 @@ begin
     begin
       ResizeBitmapGDI(NIL, FDest, 100, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ResizeBitmapGDI(NIL, FDest, 100, 100) must raise EAssertionFailed');
 end;
 
 
@@ -120,7 +122,8 @@ begin
     begin
       ResizeBitmapGDI(FSource, NIL, 100, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ResizeBitmapGDI(FSource, NIL, 100, 100) must raise EAssertionFailed');
 end;
 
 
@@ -131,7 +134,8 @@ begin
     begin
       ResizeBitmapGDI(FSource, FDest, 0, 100);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ResizeBitmapGDI(FSource, FDest, 0, 100) must raise EAssertionFailed');
 end;
 
 
@@ -142,7 +146,8 @@ begin
     begin
       ResizeBitmapGDI(FSource, FDest, 100, -1);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'ResizeBitmapGDI(FSource, FDest, 100, -1) must raise EAssertionFailed');
 end;
 
 
@@ -150,11 +155,12 @@ end;
 
 procedure TTestResizeWinGDI.TestResizeBitmapGDI_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       ResizeBitmapGDI(FSource, FDest, 100, 50);
-    end);
+    end,
+    'ResizeBitmapGDI(FSource, FDest, 100, 50) must not raise');
 end;
 
 

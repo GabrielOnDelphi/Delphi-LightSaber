@@ -1,4 +1,4 @@
-unit Test.LightVcl.Visual.MinimalPathLabel;
+﻿unit Test.LightVcl.Visual.MinimalPathLabel;
 
 {=============================================================================================================
    Unit tests for LightVcl.Visual.MinimalPathLabel.pas
@@ -187,6 +187,9 @@ begin
   ShortPath:= 'C:\Test.txt';
   Lbl:= TMinimalPathLabel.Create(FForm);
   Lbl.Parent:= FForm;
+  { AutoSize must go off FIRST. TLabel autosizes by default, so TCustomLabel.AdjustBounds would
+    shrink the label back to the width of its text and the 400 below would never take effect. }
+  Lbl.AutoSize:= FALSE;
   Lbl.Width:= 400;
   try
     Lbl.CaptionMin:= ShortPath;
@@ -352,6 +355,7 @@ begin
   ShortPath:= 'C:\Test.txt';
   Lbl:= TMinimalPathLabel.Create(FForm);
   Lbl.Parent:= FForm;
+  Lbl.AutoSize:= FALSE;   { otherwise AdjustBounds throws the 500 away }
   try
     Lbl.CaptionMin:= ShortPath;
     Lbl.Width:= 500; // Very wide
@@ -511,7 +515,7 @@ begin
   Lbl.Parent:= FForm;
   Lbl.Width:= 0; // Zero width edge case
   try
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         Lbl.CaptionMin:= 'C:\Some\Path\File.txt';
@@ -531,7 +535,7 @@ begin
   Lbl:= TMinimalPathLabel.Create(FForm);
   // Note: NOT setting Parent here
   try
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         Lbl.CaptionMin:= TestPath;

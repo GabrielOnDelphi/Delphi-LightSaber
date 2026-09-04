@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.ResizeGr32;
+﻿unit Test.LightVcl.Graph.ResizeGr32;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.ResizeGr32.pas
@@ -13,6 +13,7 @@ interface
 uses
   DUnitX.TestFramework,
   System.SysUtils,
+  System.Types,        { Rect }
   Vcl.Graphics;
 
 type
@@ -155,12 +156,13 @@ procedure TTestGraphResizeGr32.TestCreate_WithKernelResampler;
 var
   Gr32: TGr32Stretch;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       Gr32:= TGr32Stretch.Create(KernelResampler, LanczosKernel);
       FreeAndNil(Gr32);
-    end);
+    end,
+    'Gr32:= TGr32Stretch.Create(KernelResampler, LanczosKernel) must not raise');
 end;
 
 
@@ -168,12 +170,13 @@ procedure TTestGraphResizeGr32.TestCreate_WithLinearResampler;
 var
   Gr32: TGr32Stretch;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       Gr32:= TGr32Stretch.Create(LinearResampler, BoxKernel);
       FreeAndNil(Gr32);
-    end);
+    end,
+    'Gr32:= TGr32Stretch.Create(LinearResampler, BoxKernel) must not raise');
 end;
 
 
@@ -190,7 +193,8 @@ begin
       begin
         Gr32.StretchImage(TBitmap(NIL));
       end,
-      EAssertionFailed);
+      EAssertionFailed,
+      'Gr32.StretchImage(TBitmap(NIL)) must raise EAssertionFailed');
   FINALLY
     FreeAndNil(Gr32);
   END;
@@ -210,7 +214,8 @@ begin
       begin
         Gr32.StretchImage(FBitmap);
       end,
-      Exception);
+      Exception,
+      'Gr32.StretchImage(FBitmap) must raise Exception');
   FINALLY
     FreeAndNil(Gr32);
   END;
@@ -231,7 +236,8 @@ begin
       begin
         Gr32.StretchImage(FBitmap);
       end,
-      Exception);
+      Exception,
+      'Gr32.StretchImage(FBitmap) must raise Exception');
   FINALLY
     FreeAndNil(Gr32);
   END;
@@ -252,7 +258,8 @@ begin
       begin
         Gr32.StretchImage(FBitmap);
       end,
-      Exception);
+      Exception,
+      'Gr32.StretchImage(FBitmap) must raise Exception');
   FINALLY
     FreeAndNil(Gr32);
   END;
@@ -354,7 +361,8 @@ begin
       begin
         Gr32.StretchImage('', True);
       end,
-      EAssertionFailed);
+      EAssertionFailed,
+      'Gr32.StretchImage(, True) must raise EAssertionFailed');
   FINALLY
     FreeAndNil(Gr32);
   END;
@@ -370,17 +378,19 @@ begin
     begin
       StretchGr32(NIL, 1.0, 1.0);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'StretchGr32(NIL, 1.0, 1.0) must raise EAssertionFailed');
 end;
 
 
 procedure TTestGraphResizeGr32.TestStretchGr32_BasicCall;
 begin
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       StretchGr32(FBitmap, 1.0, 1.0);
-    end);
+    end,
+    'StretchGr32(FBitmap, 1.0, 1.0) must not raise');
 end;
 
 
@@ -410,11 +420,12 @@ procedure TTestGraphResizeGr32.TestStretchGr32_WithNearestResampler;
 begin
   CreateTestBitmap(100, 100);
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       StretchGr32(FBitmap, 2.0, 2.0, NearestResampler, BoxKernel);
-    end);
+    end,
+    'StretchGr32(FBitmap, 2.0, 2.0, NearestResampler, BoxKernel) must not raise');
 
   Assert.AreEqual(200, FBitmap.Width, 'Width should double');
 end;
@@ -424,11 +435,12 @@ procedure TTestGraphResizeGr32.TestStretchGr32_WithLanczosKernel;
 begin
   CreateTestBitmap(100, 100);
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       StretchGr32(FBitmap, 1.5, 1.5, KernelResampler, LanczosKernel);
-    end);
+    end,
+    'StretchGr32(FBitmap, 1.5, 1.5, KernelResampler, LanczosKerne must not raise');
 
   Assert.AreEqual(150, FBitmap.Width, 'Width should be 150');
 end;
@@ -438,11 +450,12 @@ procedure TTestGraphResizeGr32.TestStretchGr32_WithMitchellKernel;
 begin
   CreateTestBitmap(100, 100);
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       StretchGr32(FBitmap, 1.5, 1.5, KernelResampler, MitchellKernel);
-    end);
+    end,
+    'StretchGr32(FBitmap, 1.5, 1.5, KernelResampler, MitchellKern must not raise');
 
   Assert.AreEqual(150, FBitmap.Width, 'Width should be 150');
 end;

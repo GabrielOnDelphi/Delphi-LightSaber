@@ -1,4 +1,4 @@
-unit Test.LightVcl.Visual.RichRamLog;
+﻿unit Test.LightVcl.Visual.RichRamLog;
 
 {=============================================================================================================
    Unit tests for LightVcl.Visual.RichRamLog.pas
@@ -426,11 +426,12 @@ begin
   RamLog:= TRamLog.Create;
   FRamLog:= RamLog;
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RamLog.Clear(FALSE);
-    end);
+    end,
+    'RamLog.Clear(FALSE) must not raise');
 end;
 
 

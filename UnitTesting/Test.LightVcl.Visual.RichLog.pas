@@ -1,4 +1,4 @@
-unit Test.LightVcl.Visual.RichLog;
+﻿unit Test.LightVcl.Visual.RichLog;
 
 {=============================================================================================================
    Unit tests for LightVcl.Visual.RichLog.pas
@@ -13,6 +13,7 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.Classes,
+  System.UITypes,      { TScrollStyle: ssNone, ssBoth }
   Vcl.Forms,
   Vcl.Controls,
   Vcl.Graphics,
@@ -152,6 +153,7 @@ type
 implementation
 
 uses
+  System.IOUtils,
   LightCore.AppData,
   LightVcl.Visual.AppData,
   LightVcl.Visual.RichLog,
@@ -233,7 +235,11 @@ begin
   RichLog.Parent:= FTestForm;
   FRichLog:= RichLog;
 
-  Assert.AreEqual(ssBoth, RichLog.ScrollBars, 'ScrollBars should be ssBoth');
+  { TScrollStyle sits inside a SCOPEDENUMS ON region of System.UITypes - that unit switches scoped
+    enumerations on at line 19 and off again at line 940, and TScrollStyle is declared at line 938 -
+    so the value must carry its type in front. Vcl.StdCtrls does publish a bare ssBoth constant at
+    line 451, but it is marked deprecated there. }
+  Assert.AreEqual(TScrollStyle.ssBoth, RichLog.ScrollBars, 'ScrollBars should be ssBoth');
 end;
 
 
@@ -453,11 +459,12 @@ begin
 
   RichLog.Clear;
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RichLog.AddBold('Bold message');
-    end);
+    end,
+    'RichLog.AddBold(Bold message) must not raise');
 end;
 
 
@@ -489,11 +496,12 @@ begin
 
   RichLog.Clear;
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RichLog.AddDateStamp;
-    end);
+    end,
+    'RichLog.AddDateStamp must not raise');
 
   Assert.IsTrue(RichLog.Lines.Count > 0, 'AddDateStamp should add a line');
 end;
@@ -694,11 +702,12 @@ begin
 
   RichLog.AddMsg('Test content');
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RichLog.CopyAll;
-    end);
+    end,
+    'RichLog.CopyAll must not raise');
 end;
 
 
@@ -715,11 +724,12 @@ begin
   RichLog.Clear;
   RichLog.AddMsg('Test line');
 
-  Assert.WillNotRaise(
+  Assert.WillNotRaiseAny(
     procedure
     begin
       RichLog.RemoveLastEmptyRows;
-    end);
+    end,
+    'RichLog.RemoveLastEmptyRows must not raise');
 end;
 
 
@@ -735,14 +745,17 @@ begin
   FRichLog:= RichLog;
 
   RichLog.AddMsg('Test content');
-  TempFile:= AppData.ScratchDir + 'test_richlog.rtf';
+  { There is no AppData.ScratchDir in LightSaber - the whole repository has no such property.
+    The system temporary folder is what this test actually needs. }
+  TempFile:= System.IOUtils.TPath.Combine(System.IOUtils.TPath.GetTempPath, 'test_richlog.rtf');
 
   try
-    Assert.WillNotRaise(
+    Assert.WillNotRaiseAny(
       procedure
       begin
         RichLog.SaveAsRtf(TempFile);
-      end);
+      end,
+      'RichLog.SaveAsRtf(TempFile) must not raise');
   finally
     if FileExists(TempFile)
     then DeleteFile(TempFile);

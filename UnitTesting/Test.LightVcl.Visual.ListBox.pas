@@ -1,4 +1,4 @@
-unit Test.LightVcl.Visual.ListBox;
+﻿unit Test.LightVcl.Visual.ListBox;
 
 {=============================================================================================================
    Unit tests for LightVcl.Visual.ListBox.pas
@@ -841,10 +841,21 @@ end;
 { VisibleItems Tests }
 
 procedure TTestCubicListBox.TestVisibleItems_ZeroItemHeight;
+VAR
+  Before: Integer;
 begin
+  { This test used to expect VisibleItems = 0 after setting ItemHeight to 0. It cannot happen:
+    TCustomListBox.SetItemHeight only stores a value that is GREATER than zero
+    (Vcl.StdCtrls.pas:7620 - "if (FItemHeight <> Value) and (Value > 0)"), so writing 0 is simply
+    dropped and the item height keeps its old value. The guard "if ItemHeight <= 0 then 0" inside
+    TCubicListBox.VisibleItems is therefore unreachable through the property. }
+  Before:= FListBox.ItemHeight;
+  Assert.IsTrue(Before > 0, 'A listbox always starts with a positive ItemHeight');
+
   FListBox.ItemHeight:= 0;
 
-  Assert.AreEqual(0, FListBox.VisibleItems);
+  Assert.AreEqual(Before, FListBox.ItemHeight, 'The VCL refuses an ItemHeight of 0');
+  Assert.IsTrue(FListBox.VisibleItems >= 0, 'VisibleItems must never go negative');
 end;
 
 

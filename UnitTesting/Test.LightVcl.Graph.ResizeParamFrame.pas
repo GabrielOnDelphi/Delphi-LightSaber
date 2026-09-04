@@ -1,4 +1,4 @@
-unit Test.LightVcl.Graph.ResizeParamFrame;
+﻿unit Test.LightVcl.Graph.ResizeParamFrame;
 
 {=============================================================================================================
    Unit tests for LightVcl.Graph.ResizeParamFrame.pas
@@ -145,7 +145,8 @@ begin
     begin
       Frame.ObjectFromGUI(nil);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Frame.ObjectFromGUI(nil) must raise EAssertionFailed');
 end;
 
 
@@ -311,7 +312,8 @@ begin
     begin
       Frame.GUIFromObject(nil);
     end,
-    EAssertionFailed);
+    EAssertionFailed,
+    'Frame.GUIFromObject(nil) must raise EAssertionFailed');
 end;
 
 

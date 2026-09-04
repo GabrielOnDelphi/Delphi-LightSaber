@@ -1,4 +1,4 @@
-unit Test.LightVcl.Visual.Panel;
+﻿unit Test.LightVcl.Visual.Panel;
 
 {=============================================================================================================
    Unit tests for LightVcl.Visual.Panel.pas
@@ -249,20 +249,28 @@ var
   Order: TArray<TControl>;
 begin
   // Create labels with overlapping positions to test the enumeration algorithm
+  { AutoSize must go off on every label. TLabel autosizes by default, so TCustomLabel.AdjustBounds
+    would shrink each one back to the height of its text (about 15 pixels) and the Height of 30
+    below would never take effect. NextControl only walks to a control that starts at or above the
+    previous control's bottom edge, so with 15-pixel labels at Top 10, 35 and 60 the walk stopped
+    after the first one and the test found 1 control instead of 3. }
   Lbl1:= TLabel.Create(FPanel);
   Lbl1.Parent:= FPanel;
+  Lbl1.AutoSize:= FALSE;
   Lbl1.Top:= 10;
   Lbl1.Height:= 30;
   Lbl1.Caption:= 'First';
 
   Lbl2:= TLabel.Create(FPanel);
   Lbl2.Parent:= FPanel;
+  Lbl2.AutoSize:= FALSE;
   Lbl2.Top:= 35;  // Overlaps with Lbl1 (within its bottom edge)
   Lbl2.Height:= 30;
   Lbl2.Caption:= 'Second';
 
   Lbl3:= TLabel.Create(FPanel);
   Lbl3.Parent:= FPanel;
+  Lbl3.AutoSize:= FALSE;
   Lbl3.Top:= 60;  // Overlaps with Lbl2
   Lbl3.Height:= 30;
   Lbl3.Caption:= 'Third';

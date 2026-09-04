@@ -1,4 +1,4 @@
-unit Test.LightVcl.Visual.Memo;
+﻿unit Test.LightVcl.Visual.Memo;
 
 {=============================================================================================================
    Unit tests for LightVcl.Visual.Memo.pas (TLightMemo)
@@ -16,6 +16,7 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.Classes,
+  Vcl.Controls,        { alClient }
   Vcl.Forms,
   Vcl.StdCtrls,
   LightVcl.Visual.Memo;
