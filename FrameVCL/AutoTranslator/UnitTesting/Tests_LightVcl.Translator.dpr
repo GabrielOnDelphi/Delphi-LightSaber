@@ -47,6 +47,7 @@ begin
 
   // Initialize AppData for tests that require it
   AppData:= TAppData.Create('LightVclTranslatorTests');
+  TAppDataCore.Unattended:= TRUE;  // Nobody at the keyboard: bypass ShowModal/Show
   TRY
 
 {$IFDEF TESTINSIGHT}
