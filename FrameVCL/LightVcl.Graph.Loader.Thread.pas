@@ -1,8 +1,8 @@
-UNIT LightVcl.Graph.Loader.Thread;
+﻿UNIT LightVcl.Graph.Loader.Thread;
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.01.30
+   2026.09.04
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -90,7 +90,7 @@ TYPE
 
 
 IMPLEMENTATION
-USES LightVcl.Graph.Resize;
+USES LightVcl.Graph.Resize, LightVcl.Graph.ResizeParams;
 
 
 
@@ -198,14 +198,32 @@ end;
 { Loads a single image file, resizes it to Width x Height, and pushes it to the queue.
   Handles exceptions gracefully based on SilentErrors setting. }
 procedure TBkgImgLoader.ProcessFile(CONST AFileName: string);
-VAR BMP: TBitmap;
+VAR
+   BMP: TBitmap;
+   Resize: RResizeParams;
 begin
  if Terminated then EXIT;
  if NOT FileExists(AFileName) then EXIT;
 
+ { roFit, and NOT the roAutoDetect that RResizeParams.Reset chooses by default.
+   roAutoDetect is written for a WALLPAPER: when it cannot Fill and has to fall back to Fit, it
+   deliberately adds FitTolerance (10%) back on top to crop away the black bars - see the comment
+   "we can still try to increase the size of the image with 10%" in
+   RResizeParams.computeAutodetect (LightVcl.Graph.ResizeParams.pas).
+   A THUMBNAIL must stay inside the Width x Height box it was asked for. Measured 2026-09-04: a
+   200x150 bitmap asked to fit a 100x100 box came back 110 pixels wide. TCubicThumbs.DrawCell
+   (LightVcl.Visual.ThumbViewerM.pas) centers the bitmap with
+   x:= aRect.Left + (DefaultColWidth - BMP.Width) DIV 2, and DefaultColWidth is only
+   ThumbWidth + 2*CellSpacing - so a 10% overshoot puts x left of the cell and the thumbnail
+   paints over its neighbour. }
+ Resize.Reset;
+ Resize.ResizeOpp:= roFit;
+ Resize.MaxWidth := Width;
+ Resize.MaxHeight:= Height;
+
  BMP:= NIL;
  TRY
-  BMP:= LoadAndStretch(AFileName, Width, Height);
+  BMP:= LoadAndStretch(AFileName, Resize);
 
   { Push thumbnail in queue }
   if BMP <> NIL then
