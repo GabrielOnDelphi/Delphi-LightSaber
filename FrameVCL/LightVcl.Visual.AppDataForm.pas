@@ -151,38 +151,30 @@ end;
 
 
 {$IFDEF AUTOPILOT}
-{ AUTOPILOT builds only. Not reachable in Release - the symbol is set in the Debug configuration only.
+{ AUTOPILOT builds only.
+  Not reachable in Release - the symbol is set in the Debug configuration only.
 
-  Problem: Claude launches the app and drives it over the Autopilot bridge while the user keeps typing
-  somewhere else. A normal startup ACTIVATES the new window, so his next keystrokes land in our app.
+  Problem: Claude launches the app and drives it over the Autopilot bridge while the user keeps typing somewhere else.
+  A normal startup ACTIVATES the new window, so his next keystrokes land in our app.
 
-  WS_EX_NOACTIVATE is the only thing that stops it, and it must be present on the handle BEFORE the
-  window is first shown - which is why this sits in CreateParams and not in the bridge: TAppData.
-  CreateMainForm shows the form itself, and StartBridge only runs after CreateMainForm returns, when
-  the focus is already gone.
+  WS_EX_NOACTIVATE is the only thing that stops it, and it must be present on the handle BEFORE the window is first shown - which is why this sits in CreateParams and not in the bridge: TAppData.CreateMainForm shows the form itself, and StartBridge only runs after CreateMainForm returns, when the focus is already gone.
 
-  The flag makes the window unusable BY HAND (Microsoft: "does not become the foreground window when
-  the user clicks it"), so UnGateStartupWindows takes it back off at the very end of the post-init
-  step. That is the whole add/remove dance: set at handle creation, cleared when startup is over.
+  The flag makes the window unusable BY HAND (Microsoft: "does not become the foreground window when the user clicks it"), so UnGateStartupWindows takes it back off at the very end of the post-init step.
+  That is the whole add/remove dance: set at handle creation, cleared when startup is over.
 
-  Deliberately NOT adding WS_EX_APPWINDOW next to it. Microsoft says a WS_EX_NOACTIVATE window stays
-  off the taskbar "by default", but TCustomForm.CreateParams already sets WS_EX_APPWINDOW when the
-  form owns the taskbar button; forcing it here would give a MainFormOnTaskbar=FALSE app a SECOND
-  taskbar button beside the TApplication one.
+  Deliberately NOT adding WS_EX_APPWINDOW next to it.
+  Microsoft says a WS_EX_NOACTIVATE window stays off the taskbar "by default", but TCustomForm.CreateParams already sets WS_EX_APPWINDOW when the form owns the taskbar button; forcing it here would give a MainFormOnTaskbar=FALSE app a SECOND taskbar button beside the TApplication one.
   https://learn.microsoft.com/en-us/windows/win32/winmsg/extended-window-styles }
 
 
 { Is the startup gate still up?
 
-  NOT simply AppData.Initializing. RunPostInitialize calls EndInitialization BEFORE FormPostInitialize,
-  so any window a form opens from its own startup code is created with Initializing already FALSE and
-  would be left ungated - a splash screen, a first-run wizard, an EULA box. (Not measured on a real
-  splash: the template's never showed during these runs. The reasoning is from the call order, which
-  IS verified - see RunPostInitialize below.)
+  NOT simply AppData.Initializing.
+  RunPostInitialize calls EndInitialization BEFORE FormPostInitialize, so any window a form opens from its own startup code is created with Initializing already FALSE and would be left ungated - a splash screen, a first-run wizard, an EULA box.
+  (Not measured on a real splash: the template's never showed during these runs. The reasoning is from the call order, which IS verified - see RunPostInitialize below.)
 
-  So the gate's lifetime is read off the main form's own window instead: it carries WS_EX_NOACTIVATE
-  from its CreateParams until UnGateStartupWindows clears it, which is the exact span we want. No flag
-  variable to keep in sync, and nothing global. }
+  So the gate's lifetime is read off the main form's own window instead: it carries WS_EX_NOACTIVATE from its CreateParams until UnGateStartupWindows clears it, which is the exact span we want.
+  No flag variable to keep in sync, and nothing global. }
 function StartupGateActive: Boolean;
 begin
   if (AppData <> NIL) AND AppData.Initializing
@@ -202,16 +194,12 @@ begin
 
   Params.ExStyle:= Params.ExStyle OR WS_EX_NOACTIVATE;
 
-  { The forms are not the whole story. With MainFormOnTaskbar=FALSE the TApplication proxy window owns
-    the taskbar button, and TCustomForm.CreateParams has just stripped WS_EX_TOOLWINDOW off it
-    (Vcl.Forms.pas:7646) - so it is a plain, activatable window, and THAT is what takes the foreground.
-    Measured on Demo\VCL\Template App Full: both forms came up with WS_EX_NOACTIVATE and the app still
-    stole the focus, through TApplication (exstyle 0x00040100).
+  { The forms are not the whole story.
+    With MainFormOnTaskbar=FALSE the TApplication proxy window owns the taskbar button, and TCustomForm.CreateParams has just stripped WS_EX_TOOLWINDOW off it (Vcl.Forms.pas) - so it is a plain, activatable window, and THAT is what takes the foreground.
+    Measured on Demo\VCL\Template App Full: both forms came up with WS_EX_NOACTIVATE and the app still stole the focus, through TApplication (exstyle 0x00040100).
 
-    The RTL only protects that window in the OTHER configuration: TApplication.CreateForm and
-    TApplication.UpdateVisible both add WS_EX_NOACTIVATE to it, but each guards on MainFormOnTaskBar
-    (Vcl.Forms.pas:13584 and :14173). So we add it exactly where the RTL does not, and
-    UnGateStartupWindows clears it again under the same condition - never touching the flag the RTL owns. }
+    The RTL only protects that window in the OTHER configuration: TApplication.CreateForm and TApplication.UpdateVisible both add WS_EX_NOACTIVATE to it, but each guards on MainFormOnTaskBar (both in Vcl.Forms.pas).
+    So we add it exactly where the RTL does not, and UnGateStartupWindows clears it again under the same condition - never touching the flag the RTL owns. }
   if NOT Application.MainFormOnTaskbar
   AND (Application.Handle <> 0)
   then SetWindowLong(Application.Handle, GWL_EXSTYLE, GetWindowLong(Application.Handle, GWL_EXSTYLE) OR WS_EX_NOACTIVATE);
