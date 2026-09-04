@@ -58,7 +58,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.IOUtils, System.Messaging, System.Types, System.Permissions,
-  FMX.Graphics, FMX.MediaLibrary, FMX.Platform, FMX.DialogService;
+  FMX.Graphics, FMX.MediaLibrary, FMX.Platform;
 
 
 TYPE
@@ -83,8 +83,10 @@ TYPE
   TMessageFilePickerResult  = class(TMessage<string>);
 {$ENDIF}
 
-procedure RequestCameraPermission(const AOnGranted: TProc);
-procedure RequestStorageReadPermission(const AOnGranted: TProc);       // For image picking on Android 13+
+{ A refusal is written to AppDataCore's log and AOnDenied is called if the caller supplied one.
+  Nothing appears on screen: only the caller knows whether a refusal deserves a message. }
+procedure RequestCameraPermission(const AOnGranted: TProc; const AOnDenied: TProc= NIL);
+procedure RequestStorageReadPermission(const AOnGranted: TProc; const AOnDenied: TProc= NIL);       // For image picking on Android 13+
 
 procedure AddToPhotosAlbum(const ABitmap: TBitmap);                    // Saves to gallery, handles indexing
 
@@ -149,7 +151,7 @@ CONST
 
 
 
-procedure RequestCameraPermission(const AOnGranted: TProc);
+procedure RequestCameraPermission(const AOnGranted: TProc; const AOnDenied: TProc= NIL);
 begin
 {$IFDEF ANDROID}
   var CameraPermission := JStringToString(TJManifest_permission.JavaClass.CAMERA);
@@ -163,7 +165,11 @@ begin
           then AOnGranted;
         end
         else
-          TDialogService.ShowMessage('Cannot access the camera because the required permission has not been granted');
+          begin
+            AppDataCore.LogWarn('RequestCameraPermission: the user did not grant the CAMERA permission.');
+            if Assigned(AOnDenied)
+            then AOnDenied;
+          end;
       end);
 {$ELSE}
   // iOS: NSCameraUsageDescription must be in Info.plist. Runtime authorization prompt
@@ -175,7 +181,7 @@ begin
 end;
 
 
-procedure RequestStorageReadPermission(const AOnGranted: TProc);
+procedure RequestStorageReadPermission(const AOnGranted: TProc; const AOnDenied: TProc= NIL);
 begin
 {$IFDEF ANDROID}
   // Android 13+ (API 33) uses READ_MEDIA_IMAGES, older uses READ_EXTERNAL_STORAGE
@@ -194,7 +200,11 @@ begin
           then AOnGranted;
         end
         else
-          TDialogService.ShowMessage('Cannot access storage because the required permission has not been granted');
+          begin
+            AppDataCore.LogWarn('RequestStorageReadPermission: the user did not grant the storage-read permission.');
+            if Assigned(AOnDenied)
+            then AOnDenied;
+          end;
       end);
 {$ELSE}
   // iOS: NSPhotoLibraryUsageDescription must be in Info.plist. Runtime authorization
