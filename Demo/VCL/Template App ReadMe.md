@@ -35,3 +35,13 @@ Therefore, automatically saving and restoring the GUI (checkboxes, radio boxes, 
 
 This is not a problem of the LightSaber library - this has to do with proper application architecture. 
 
+
+
+Programs with nobody at the keyboard (console tool, Windows service, scheduled job)
+Set TAppDataCore.Unattended:= TRUE right after AppData is created, before the first form.
+With it TRUE, the LightSaber message-box routines return their safe answer at once and ShowModal is
+skipped, so nothing can block waiting for a click. Without it, a modal box in a Windows service is
+invisible - a service runs in session 0 - and blocks for ever.
+
+  AppData:= TAppData.Create('MyService', 'MyServiceWndClass');
+  TAppDataCore.Unattended:= TRUE;
