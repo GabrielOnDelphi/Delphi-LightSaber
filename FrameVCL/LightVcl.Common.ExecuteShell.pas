@@ -82,14 +82,16 @@ USES
 { Executes a local file/program using ShellExecute. Supports .lnk files and document associations.
   For URLs use ExecuteURL instead. For folders use ExecuteExplorer.
   WindowState: SW_HIDE, SW_SHOWNORMAL, SW_SHOWMINIMIZED, SW_SHOWMAXIMIZED, etc.
+  A failure goes into AppDataCore's log. Nothing appears on screen.
   Returns True if successful. }
 function ExecuteFile(CONST ExeFile: string; Params: string = '';
-  ShowErrorMsg: Boolean = TRUE; WindowState: Integer = SW_SHOWNORMAL): Boolean;
+  WindowState: Integer = SW_SHOWNORMAL): Boolean;
 
 { Executes file using ShellExecuteEx. Provides access to process handle.
+  A failure goes into AppDataCore's log. Nothing appears on screen.
   Returns True if successful. }
 function ExecuteFileEx(CONST ExeFile: string; Params: string = '';
-  ShowErrorMsg: Boolean = TRUE; WindowState: Integer = SW_SHOWNORMAL): Boolean;
+  WindowState: Integer = SW_SHOWNORMAL): Boolean;
 
 { Executes file and waits for completion.
   WaitTime: Maximum wait time in milliseconds, or INFINITE.
@@ -114,7 +116,7 @@ procedure ExecuteControlPanel_ScreenRes;
 IMPLEMENTATION
 
 USES
-   LightCore.IO, LightVcl.Common.IO, LightVcl.Common.Dialogs;
+   LightCore.IO, LightCore.AppData, LightVcl.Common.IO;
 
 
 CONST
@@ -132,7 +134,6 @@ CONST
    Parameters:
      ExeFile      - File path or document to execute
      Params       - Command line parameters (use quotes for paths with spaces)
-     ShowErrorMsg - If True, displays error message on failure
      WindowState  - Window display state (SW_SHOWNORMAL, SW_HIDE, SW_MINIMIZE, etc.)
                     See: http://msdn.microsoft.com/en-us/library/windows/desktop/ms633548
 
@@ -156,7 +157,7 @@ CONST
    Note: Does not work well with .scr files in config mode.
    See: https://stackoverflow.com/questions/46672282
 ---------------------------------------------------------------------------------------------------------------}
-function ExecuteFile(CONST ExeFile: string; Params: string = ''; ShowErrorMsg: Boolean = TRUE; WindowState: Integer = WinApi.Windows.SW_SHOWNORMAL): Boolean;
+function ExecuteFile(CONST ExeFile: string; Params: string = ''; WindowState: Integer = WinApi.Windows.SW_SHOWNORMAL): Boolean;
 VAR
    RetCode: HINST;   { ShellExecute returns HINST - pointer-width on Win64 (Winapi.ShellAPI). Integer here would truncate. }
    WorkingFolder, Msg: string;
@@ -170,7 +171,7 @@ begin
   RetCode:= ShellExecute(0, 'open', PChar(ExeFile), Pointer(Params), PChar(WorkingFolder), WindowState);
   Result:= RetCode > SE_SUCCESS_THRESHOLD;
 
-  if NOT Result AND ShowErrorMsg then
+  if NOT Result then
     begin
       case RetCode of
         { Legacy error codes }
@@ -200,7 +201,7 @@ begin
         Msg:= 'ShellExecute error ' + IntToStr(RetCode);
       end;
 
-      MessageError(Msg);
+      AppDataCore.LogError('ExecuteFile: '+ Msg);
     end;
 end;
 
@@ -214,7 +215,6 @@ end;
    Parameters:
      ExeFile      - File path to execute
      Params       - Command line parameters
-     ShowErrorMsg - If True, displays error message on failure
      WindowState  - Window display state
 
    Returns:
@@ -223,7 +223,7 @@ end;
    See: http://stackoverflow.com/questions/4295285/how-can-i-wait-for-a-command-line-program-to-finish
 ---------------------------------------------------------------------------------------------------------------}
 function ExecuteFileEx(CONST ExeFile: string; Params: string = '';
-  ShowErrorMsg: Boolean = TRUE; WindowState: Integer = SW_SHOWNORMAL): Boolean;
+  WindowState: Integer = SW_SHOWNORMAL): Boolean;
 VAR
    ShellInfo: TShellExecuteInfo;
 begin
@@ -246,8 +246,9 @@ begin
       if ShellInfo.hProcess <> 0
       then CloseHandle(ShellInfo.hProcess);
     end
-  else if ShowErrorMsg then
-    MessageError(SysErrorMessage(GetLastError));
+  else
+    if (AppDataCore <> NIL)
+    then AppDataCore.LogError('ExecuteFileEx: '+ SysErrorMessage(GetLastError));
 end;
 
 
@@ -334,7 +335,7 @@ begin
 
   if NOT ShellExecuteEx(@ShellInfo) then
     begin
-      MessageError(SysErrorMessage(GetLastError));
+      AppDataCore.LogError('ExecuteFileAndWait: '+ SysErrorMessage(GetLastError));
       EXIT(FALSE);
     end;
 
@@ -415,8 +416,10 @@ procedure ExecuteExplorer(Path: string);
 begin
   if Path = '' then EXIT;
 
-  if DirectoryExistMsg(Path)
-  then ShellExecute(0, 'explore', PChar(Path), NIL, NIL, SW_SHOW);
+  if DirectoryExists(Path)
+  then ShellExecute(0, 'explore', PChar(Path), NIL, NIL, SW_SHOW)
+  else
+    AppDataCore.LogError('ExecuteExplorer: folder not found: '+ Path);
 end;
 
 
@@ -470,7 +473,11 @@ VAR
   ProcessInfo: TProcessInformation;
 begin
   App:= GetWinDir + 'system32\control.exe';
-  if NOT FileExistsMsg(App) then EXIT;
+  if NOT FileExists(App) then
+    begin
+      AppDataCore.LogError('ExecuteControlPanel_ScreenRes: file not found: '+ App);
+      EXIT;
+    end;
 
   CmdLine:= App + ' desk.cpl,Settings@Settings';
 

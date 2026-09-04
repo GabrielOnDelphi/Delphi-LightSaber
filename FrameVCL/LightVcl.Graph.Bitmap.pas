@@ -44,7 +44,7 @@ TYPE
 -------------------------------------------------------------------------------------------------------------}
  function  CreateBitmap      (Width, Height: Integer; PixelFormat: TPixelFormat= pf24bit): TBitmap;
  function  CreateBlankBitmap (Width, Height: Integer; BkgClr: TColor= clBlack; PixelFormat: TPixelFormat= pf24bit): TBitmap; // old name: GetBlankImage
- procedure SetLargeSize      (BMP: TBitmap; CONST Width, Height: Integer);
+ procedure SetLargeSize      (BMP: TBitmap; CONST Width, Height: Integer);   { Raises EOutOfMemory when the bitmap cannot be grown. The bitmap then still holds its old size }
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightCore, LightVcl.Common.Dialogs, LightCore.Math, LightVcl.Graph.Loader.Resolution;
+   LightCore, LightCore.AppData, LightCore.Math, LightVcl.Graph.Loader.Resolution;
 
 
 
@@ -131,9 +131,11 @@ begin
    BMP.SetSize(Width, Height);
  EXCEPT
    On EOutOfMemory DO
-      { With size over 1GB it might start to fail in some computers because of 32 bit mem limit/fragmentation limit }
-      MessageWarning('Cannot set bitmap size to: '+ IntToStr(Width)+ ' x '+ IntToStr(Height)+ 'pixels.'
-             +CRLFw+'Required RAM: '+ FormatBytes(RequiredRam, 2));
+     begin
+      { Over 1 GB the allocation starts failing on some computers because of the 32 bit address space / fragmentation }
+      AppDataCore.LogError('SetLargeSize: cannot set bitmap size to '+ IntToStr(Width)+ ' x '+ IntToStr(Height)+ ' pixels. Required RAM: '+ FormatBytes(RequiredRam, 2));
+      RAISE;   { The bitmap kept its old size. Swallowing this would hand the caller a wrongly-sized bitmap }
+     end;
  END;
 end;
 

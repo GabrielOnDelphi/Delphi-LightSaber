@@ -19,8 +19,8 @@ UNIT LightVcl.Common.SystemTime;
 INTERFACE
 USES
    Winapi.Windows,
-   System.SysUtils, System.UITypes,
-   Vcl.Forms, Vcl.Dialogs;
+   System.SysUtils,
+   Vcl.Forms;
 
 
  procedure DelayEx(CONST ms : cardinal);
@@ -39,7 +39,7 @@ USES
 IMPLEMENTATION
 
 USES
-   LightVcl.Common.IO, LightVcl.Common.WinVersion, LightVcl.Common.Registry;
+   LightCore.AppData, LightVcl.Common.IO, LightVcl.Common.WinVersion, LightVcl.Common.Registry;
 
 
 
@@ -111,7 +111,7 @@ VAR
 begin
  Result:= 0;
  strWinDir:= GetWinDir;
- Assert(DirectoryExistMsg(strWinDir));
+ Assert(DirectoryExists(strWinDir), 'GetSysFileTime: the Windows folder does not exist: '+ strWinDir);
 
  if LightVcl.Common.WinVersion.IsNTKernel
  then
@@ -150,7 +150,7 @@ end;
    that is updated during normal Windows operation. If Now < SystemFileTime, it suggests
    the user has rolled back the system clock.
 
-   Note: Shows a dialog if no system file could be found (should be rare).
+   Note: Logs a warning if no system file could be found (should be rare).
    Also see Delphi's FileAge function.
 --------------------------------------------------------------------------------------------------}
 function SystemTimeIsInvalid: Boolean;
@@ -159,7 +159,7 @@ begin
  SysFileTime:= GetSysFileTime;
  if SysFileTime = 0 then
   begin
-   MessageDlg('Can''t get system time!', mtInformation, [mbOk], 0);
+   AppDataCore.LogWarn('SystemTimeIsInvalid: cannot read the time of any system file.');
    SysFileTime:= Now - 0.1;                                                                        { Fallback: assume valid (slightly in the past) }
   end;
  Result:= (Now < SysFileTime);

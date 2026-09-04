@@ -1,4 +1,4 @@
-UNIT LightVcl.Graph.Gif;
+﻿UNIT LightVcl.Graph.Gif;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -69,7 +69,7 @@ IMPLEMENTATION
 
 USES
   GifProperties {External lib},
-  LightCore, LightVcl.Common.Dialogs, LightCore.AppData, LightCore.IO;
+  LightCore, LightCore.AppData, LightCore.IO;
 
 
 constructor TGifLoader.Create;
@@ -203,7 +203,7 @@ begin
 
  if FrameNo >= FrameCount then
   begin
-   MessageWarning('Invalid frame number. Total frames in this GIF: '+ IntToStr(FrameCount));
+   AppDataCore.LogError('ExtractFrame: invalid frame number '+ IntToStr(FrameNo)+ '. Total frames in this GIF: '+ IntToStr(FrameCount));
    EXIT(NIL);
   end;
 
@@ -222,6 +222,7 @@ end;
 
 {-------------------------------------------------------------------------------------------------------------
   Returns True if the input file is a video or an animated GIF (returns False for static GIFs).
+  Raises EFileNotFoundException if the file does not exist.
   Uses IsAnimatedGif from GifProperties for GIF detection.
 
   Performance: 100MB animated GIF takes ~4.1s to analyze.
@@ -231,6 +232,12 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 function IsAnimated(CONST AGraphFile: string): Boolean;
 begin
+ { Both branches must behave the same for a missing file. IsAnimatedGif opens the file with a
+   TFileStream and lets the "file not found" exception out (GifProperties.pas:155), while
+   LightCore.IO.IsVideo only reads the extension and would answer FALSE. }
+ if NOT System.SysUtils.FileExists(AGraphFile)
+ then raise EFileNotFoundException.Create('Cannot check if animated. File not found: ' + AGraphFile);
+
  if IsGIF(AGraphFile)
  then Result:= IsAnimatedGif(AGraphFile)
  else Result:= LightCore.IO.IsVideo(AGraphFile);

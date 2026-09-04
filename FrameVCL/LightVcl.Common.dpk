@@ -81,6 +81,7 @@ contains
   LightVcl.Common.WindowMetrics in 'LightVcl.Common.WindowMetrics.pas',
   LightVcl.Common.WinVersion in 'LightVcl.Common.WinVersion.pas',
   LightVcl.Common.WinVersionApi in 'LightVcl.Common.WinVersionApi.pas',
-  LightVcl.Common.WMIResolution in 'LightVcl.Common.WMIResolution.pas';
+  LightVcl.Common.WMIResolution in 'LightVcl.Common.WMIResolution.pas',
+  LightVcl.Common.SystemConsole in 'LightVcl.Common.SystemConsole.pas';
 
 end.

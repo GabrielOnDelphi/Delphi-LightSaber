@@ -113,10 +113,13 @@ USES
 
   Load image based on signature and not on file extension.
   Supported formats: GIF, JPG (+Exif), BMP, PNG, J2K, WB1
-  Guarantees not to crash if the image is bad.
+
+  Missing file and corrupt file are two different scenarios and the loaders answer them differently:
+    * File NOT THERE   -> raises EFileNotFoundException. The caller asked for something that does not exist.
+    * File there but BAD -> returns NIL and writes a line in the log. Guaranteed not to crash.
+  A caller that prefers NIL to an exception must test FileExists itself first. TBkgImgLoader.ProcessFile
+  (LightVcl.Graph.Loader.Thread.pas) does exactly that.
 -------------------------------------------------------------------------------------------------------------}
-
-
 
 
 
@@ -137,7 +140,8 @@ VAR
    NeedCoUninit: Boolean;
 begin
   Result:= NIL;
-  Assert(FileExistsMsg(FileName));
+  if NOT FileExists(FileName)
+  then raise EFileNotFoundException.Create('Cannot load image. File not found: ' + FileName);
 
   { TWICImage uses IWICImagingFactory (COM). Worker threads (TParallel.For, TTask.Run)
     don't have COM initialized, causing silent failures or crashes on PNG/GIF/TIF files.
@@ -201,7 +205,8 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 function GetExif(CONST FileName: string): TExifData;
 begin
- Assert(FileExistsMsg(FileName));
+ if NOT FileExists(FileName)
+ then raise EFileNotFoundException.Create('Cannot load image. File not found: ' + FileName);
 
  // Prevents this issue: Cannot open file "D:\FTP\imageWilkinDriveway.jpg". The process cannot access the file because it is being used by another process.
  // The check is better to be done in LoadGraph: if (Result <> NIL) AND ExifRotate then
@@ -224,7 +229,8 @@ function LoadGraph(CONST FileName: string; ExifRotate: Boolean = True; UseWic: B
 //todo 1: CAN I LOAD THE JPEG WITH WIC AND THEN REOPEN IT AND CHECK IF THERE IS EXIF INSIDE?
 VAR Signature: Integer;
 begin
-  Assert(FileExistsMsg(FileName));
+  if NOT FileExists(FileName)
+  then raise EFileNotFoundException.Create('Cannot load image. File not found: ' + FileName);
 
   TRY
    { Detect image by signature, not by extension }
@@ -301,7 +307,8 @@ end;
 function LoadGraph(CONST FileName: string; OUT FrameCount: Cardinal): TBitmap;                  { FrameCount is 0 in case of error (gif cannot be decoded) OR if the image is not a gif, 1 for static gifs, and >1 for animated gifs }
 VAR Signature: Integer;
 begin
- Assert(FileExistsMsg(FileName));
+ if NOT FileExists(FileName)
+ then raise EFileNotFoundException.Create('Cannot load image. File not found: ' + FileName);
  Signature:= DetectGraphSignature(FileName);                                                          { Detect image by signature, not by extension }
  FrameCount:= 0;
 
@@ -366,7 +373,8 @@ end;
 function LoadGraph(CONST FileName: string; OUT ExifData: TExifData): TBitmap;
 VAR Signature: Integer;
 begin
- Assert(FileExistsMsg(FileName));
+ if NOT FileExists(FileName)
+ then raise EFileNotFoundException.Create('Cannot load image. File not found: ' + FileName);
  Signature:= DetectGraphSignature(FileName);                                     { Detect image by signature, not by extension }
 
  if Signature = 4
@@ -416,7 +424,8 @@ end;
   Takes less RAM than LoadGraph but it is slower. }
 function LoadTPicture(CONST FileName: string): TPicture;
 begin
- Assert(FileExistsMsg(FileName));
+ if NOT FileExists(FileName)
+ then raise EFileNotFoundException.Create('Cannot load image. File not found: ' + FileName);
  Result:= TPicture.Create;
  TRY
    Result.LoadFromFile(FileName);
@@ -481,7 +490,8 @@ VAR
    JpgLoader: TJpegImageEx;
    SizeDecrease: Integer;
 begin
- Assert(FileExistsMsg(FileName));
+ if NOT FileExists(FileName)
+ then raise EFileNotFoundException.Create('Cannot load image. File not found: ' + FileName);
 
  JpgLoader:= TJpegImageEx.Create;
  TRY
@@ -555,7 +565,8 @@ end;
 -------------------------------------------------------------------------------}
 function ExtractThumbnail(const FileName: string; ThumbWidth: integer; OUT ResolutionX, ResolutionY: Integer; OUT FrameCount: Cardinal): TBitmap;
 begin
- Assert(FileExistsMsg(FileName));
+ if NOT FileExists(FileName)
+ then raise EFileNotFoundException.Create('Cannot load image. File not found: ' + FileName);
  FrameCount:= 1;   // 1 for: jpeg, png, normal gif, bmp
 
  if IsVideo(FileName)    // Show placeholder
@@ -631,7 +642,8 @@ function LoadJpg(CONST FileName: string; Scale: TJPEGScale = jsFullSize): TBitma
 VAR
    JPG: TJpegImage;
 begin
- Assert(FileExistsMsg(FileName));
+ if NOT FileExists(FileName)
+ then raise EFileNotFoundException.Create('Cannot load image. File not found: ' + FileName);
 
  JPG:= TJpegImage.Create;
  TRY
@@ -680,7 +692,8 @@ end;
 function LoadJ2K(CONST FileName: string): TBitmap;
 VAR JP2: TJpeg2000Bitmap;
 begin
- Assert(FileExistsMsg(FileName));
+ if NOT FileExists(FileName)
+ then raise EFileNotFoundException.Create('Cannot load image. File not found: ' + FileName);
 
  JP2:= TJpeg2000Bitmap.Create;
  TRY
@@ -738,7 +751,8 @@ end;
 function LoadGIF(CONST FileName: string; OUT FrameCount: Cardinal): TBitmap;
 VAR GIF: TGIFImage;
 begin
- Assert(FileExistsMsg(FileName));
+ if NOT FileExists(FileName)
+ then raise EFileNotFoundException.Create('Cannot load image. File not found: ' + FileName);
 
  Result:= NIL;
  FrameCount:= 0;   { 0 means error. Do not change this value. bxWallpaper relies on it to detect if the frame count was extracted (FrameCount>0) or not (FrameCount= 0) }
@@ -793,7 +807,8 @@ TYPE
 function LoadPNG(CONST FileName: string): TBitmap;
 VAR PNG: TPNGObject;
 begin
- Assert(FileExistsMsg(FileName));
+ if NOT FileExists(FileName)
+ then raise EFileNotFoundException.Create('Cannot load image. File not found: ' + FileName);
 
  PNG:= TPNGObject.Create;
  TRY
@@ -871,7 +886,8 @@ end; *)
 { Loads a BMP and suppress error messages }
 function LoadBMP(CONST FileName: string): TBitmap;
 begin
-  Assert(FileExistsMsg(FileName));
+  if NOT FileExists(FileName)
+  then raise EFileNotFoundException.Create('Cannot load image. File not found: ' + FileName);
 
   Result:= TBitmap.Create;
   TRY
@@ -894,7 +910,8 @@ end;
 function LoadEMF(CONST FileName: string): TBitmap;                                          { Converts an Enhanced Metafile (EMF) to BMP }
 VAR Metafile: TMetafile;
 begin
-  Assert(FileExistsMsg(FileName));
+  if NOT FileExists(FileName)
+  then raise EFileNotFoundException.Create('Cannot load image. File not found: ' + FileName);
   Result:= NIL;
 
   Metafile := TMetaFile.Create;
@@ -932,7 +949,8 @@ end;
 function LoadWB1(CONST FileName: string): TBitmap;
 VAR WB1: LightVcl.Graph.Loader.WB1.TWb1Obj;
 begin
- Assert(FileExistsMsg(FileName));
+ if NOT FileExists(FileName)
+ then raise EFileNotFoundException.Create('Cannot load image. File not found: ' + FileName);
 
  WB1:= TWb1Obj.Create;
  TRY
@@ -973,7 +991,8 @@ end;
 function LoadICO(CONST FileName: string): TBitmap;
 VAR ICO1: TIcon;
 begin
- Assert(FileExistsMsg(FileName));
+ if NOT FileExists(FileName)
+ then raise EFileNotFoundException.Create('Cannot load image. File not found: ' + FileName);
  Result:= NIL;
 
  ICO1:= TIcon.Create;

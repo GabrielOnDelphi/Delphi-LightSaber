@@ -45,7 +45,7 @@ USES
 
 IMPLEMENTATION
 USES
-  LightCore, LightVcl.Common.Dialogs;
+  LightCore.AppData;
 
 
 { Plays a Windows system sound by name.
@@ -133,22 +133,22 @@ begin
  hResInfo:= FindResource(HInstance, PChar(ResName), MAKEINTRESOURCE('WAVEFILE'));
  if hResInfo = 0 then
   begin
-    MessageError('Could not find resource' + CRLFw + ResName);
-    EXIT;
+    { The WAV is compiled into our own EXE, so this is a build error and no user can cause it.
+      It RAISES rather than asserting: an Assert is stripped from the Release build, which is exactly
+      the build where a missing resource would then fail with no trace at all. }
+    raise EResNotFound.Create('PlayResSound: resource not found: '+ ResName);
   end;
 
  hRes:= LoadResource(HInstance, hResInfo);
  if hRes = 0 then
   begin
-    MessageError('Could not load resource' + CRLFw + ResName);
-    EXIT;
+    raise EResNotFound.Create('PlayResSound: cannot load resource: '+ ResName);
   end;
 
  lpGlob:= LockResource(hRes);
  if lpGlob = NIL then
   begin
-    MessageError('Bad resource' + CRLFw + ResName);
-    EXIT;
+    raise EResNotFound.Create('PlayResSound: cannot lock resource: '+ ResName);
   end;
 
  uFlags:= SND_MEMORY or uFlags;
@@ -193,7 +193,7 @@ begin
 
   if Frequency > (0.6 * SampleRate) then
   begin
-    MessageWarning(Format('Sample rate of %d is too low to play a tone of %dHz', [SampleRate, Frequency]));
+    AppDataCore.LogWarn('PlayTone: sample rate of '+ IntToStr(SampleRate)+ ' is too low to play a tone of '+ IntToStr(Frequency)+ 'Hz');
     EXIT;
   end;
 

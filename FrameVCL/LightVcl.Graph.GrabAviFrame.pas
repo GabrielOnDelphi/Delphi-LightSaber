@@ -1,4 +1,4 @@
-UNIT LightVcl.Graph.GrabAviFrame;
+﻿UNIT LightVcl.Graph.GrabAviFrame;
 
 {=============================================================================================================
    Gabriel Moraru
@@ -80,11 +80,22 @@ CONST
   Text: string = 'Video file';
 VAR
   AviLogo: TBitmap;
+  IconFile: string;
 begin
  Result:= LightVcl.Graph.Bitmap.CreateBlankBitmap(LogoWidth, LogoHeight, clBlack);
 
- { Load and center the video icon }
- AviLogo:= LightVcl.Graph.Loader.LoadGraph(Appdatacore.AppSysDir+ 'video_player_icon.png', FALSE, TRUE);
+ { Load and center the video icon.
+   The file is tested here, not left to LoadGraph: LoadGraph raises EFileNotFoundException for a file
+   that is not there, while this routine promises a black bitmap with the text instead. }
+ IconFile:= Appdatacore.AppSysDir+ 'video_player_icon.png';
+ if System.SysUtils.FileExists(IconFile)
+ then AviLogo:= LightVcl.Graph.Loader.LoadGraph(IconFile, FALSE, TRUE)
+ else
+  begin
+   AviLogo:= NIL;
+   AppDataCore.LogWarn('GetVideoPlayerLogo: icon not found. '+ IconFile);
+  end;
+
  if AviLogo <> NIL then
  TRY
    LightVcl.Graph.Bitmap.CenterBitmap(AviLogo, Result);

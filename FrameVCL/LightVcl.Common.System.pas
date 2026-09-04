@@ -95,7 +95,7 @@ USES
    HARDWARE BIOS
 ==================================================================================================}
 CONST
-   BiosUnknown = '????????';    { What BiosDate and BiosID return when the machine publishes no BIOS information }
+   BiosUnknown = '????????';    { What BiosDate and BiosID return when the machine publishes no BIOS information. Exported so a caller can tell the sentinel from a real value without hard-coding the string }
 
  function BiosDate: string;                                                                                                              { Never returns an empty string. Returns BiosUnknown when the BIOS date is not published }
  function BiosID  : string;                                                                                                              { Never returns an empty string. Returns BiosUnknown when the BIOS identifier is not published }
@@ -587,25 +587,25 @@ end;
   ValueExists is not optional: on this UEFI machine (measured 2026-08-22) the System key exists and holds
   SystemBiosVersion, but no SystemBiosDate at all. ReadString then returns '', which used to overwrite the
   '????????' sentinel and make the function return an empty string - the one thing it was written not to do. }
-function BiosDate: string;   { From BlackBox.pas }
+function BiosDate: string;
 var
-  WinReg: TRegistry;
+  Reg: TRegistry;
 begin
   Result:= BiosUnknown;
 
-  WinReg := TRegistry.Create;
+  Reg := TRegistry.Create;
   TRY
-    WinReg.RootKey := HKEY_LOCAL_MACHINE;
-    if WinReg.OpenKeyReadOnly('\HARDWARE\DESCRIPTION\System')
-    AND WinReg.ValueExists('SystemBiosDate')
-    then Result := WinReg.ReadString('SystemBiosDate');
+    Reg.RootKey := HKEY_LOCAL_MACHINE;
+    if Reg.OpenKeyReadOnly('\HARDWARE\DESCRIPTION\System')
+    AND Reg.ValueExists('SystemBiosDate')
+    then Result := Reg.ReadString('SystemBiosDate');
   FINALLY
-     FreeAndNil(WinReg);
+     FreeAndNil(Reg);
   END;
 
   if Result = ''
   then Result:= BiosUnknown;
-end;
+end; //todo 5: isn't better if we return an empty string?
 
 
 { Returns BiosUnknown when the machine publishes no BIOS identifier.

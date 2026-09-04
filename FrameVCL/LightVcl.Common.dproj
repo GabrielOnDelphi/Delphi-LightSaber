@@ -137,6 +137,7 @@
         <DCCReference Include="LightVcl.Common.WinVersion.pas"/>
         <DCCReference Include="LightVcl.Common.WinVersionApi.pas"/>
         <DCCReference Include="LightVcl.Common.WMIResolution.pas"/>
+        <DCCReference Include="LightVcl.Common.SystemConsole.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

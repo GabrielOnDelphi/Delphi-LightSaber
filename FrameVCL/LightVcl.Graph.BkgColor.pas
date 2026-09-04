@@ -49,7 +49,7 @@ function  GetBorderDominantColor(BMP: TBitmap; Border: TBorderType; Tolerance: I
 IMPLEMENTATION
 
 USES
-   LightVcl.Graph.Util, LightCore.Binary, LightCore.Types, LightVcl.Common.Dialogs, LightVcl.Graph.FX, LightVcl.Graph.Bitmap;
+   LightVcl.Graph.Util, LightCore.Binary, LightCore.Types, LightCore.AppData, LightVcl.Graph.FX, LightVcl.Graph.Bitmap;
 
 
 
@@ -667,7 +667,10 @@ begin
   end
  else
   begin
-   MesajErrDetail('OutBMP < InpBMP', 'FadeBorderAuto');
+   { One side of the output is bigger and the other is smaller. No border set fits, so nothing is drawn }
+   if AppDataCore <> NIL
+   then AppDataCore.LogError('FadeBorderAuto: output '+ IntToStr(OutBmp.Width)+ 'x'+ IntToStr(OutBmp.Height)
+                           + ' does not fully contain or fit inside input '+ IntToStr(InpBmp.Width)+ 'x'+ IntToStr(InpBmp.Height));
    EXIT;
   end;
 

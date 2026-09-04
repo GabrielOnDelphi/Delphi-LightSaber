@@ -606,7 +606,8 @@ begin
       { Warning: Main menu is not shown if form is set to bsDialog }
       if (TForm(Comp).Menu <> NIL) 
 	  AND (TForm(Comp).BorderStyle = bsDialog)
-      then ShowMessage(Comp.Name + CRLFw + 'The main menu will not appear because the form is set to bsDialog!');
+      AND (AppDataCore <> NIL)
+      then AppDataCore.LogWarn('TIniFileApp.ReadComp: '+ Comp.Name+ ': the main menu will not appear because the form is set to bsDialog.');
 
       ReadCtrlPos(TControl(Comp));
 
