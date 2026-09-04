@@ -1,4 +1,4 @@
-package LightVcl.Graphics;
+﻿package LightVcl.Graphics;
 
 {$R *.res}
 {$IFDEF IMPLICITBUILDING This IFDEF should not be used by users}
@@ -81,8 +81,6 @@ contains
   LightVcl.Graph.RainDropParamEditorForm in 'LightVcl.Graph.RainDropParamEditorForm.pas',
   LightVcl.Graph.RainShelter in 'LightVcl.Graph.RainShelter.pas';
 
-end.
-
 (*
 Note:
   This package uses two 3rd party libraries (all Free).
@@ -97,3 +95,4 @@ Note:
 *)
 
 
+end.
