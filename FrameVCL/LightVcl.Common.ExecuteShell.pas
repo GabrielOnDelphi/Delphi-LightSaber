@@ -44,9 +44,9 @@ UNIT LightVcl.Common.ExecuteShell;
 ----------------------------------------------------------------------------------------------------
    NOTES:
      PARAMS needs to be in quotes: "c:\Test.doc". Use DoubleQuoteStr to quote the "Params" string.
-     It can execute LNK files: "C:\Delphi3.lnk"
-     This function will open the "CPU assembly window" if the "Debug spawned processes" is
-     active and OS is Win7.
+     These routines can execute LNK files: "C:\Delphi3.lnk"
+     Launching a process while the IDE option "Debug spawned processes" is active opens the
+     "CPU assembly window" (seen on Win7).
 
    Object Verbs:
      The verbs available for an object are essentially the items that you find on an object's
@@ -82,25 +82,24 @@ USES
 { Executes a local file/program using ShellExecute. Supports .lnk files and document associations.
   For URLs use ExecuteURL instead. For folders use ExecuteExplorer.
   WindowState: SW_HIDE, SW_SHOWNORMAL, SW_SHOWMINIMIZED, SW_SHOWMAXIMIZED, etc.
-  A failure goes into AppDataCore's log. Nothing appears on screen.
-  Returns True if successful. }
+  A missing file RAISES. Any other failure goes into AppDataCore's log, with nothing on screen. }
 function ExecuteFile(CONST ExeFile: string; Params: string = '';
   WindowState: Integer = SW_SHOWNORMAL): Boolean;
 
-{ Executes file using ShellExecuteEx. Provides access to process handle.
-  A failure goes into AppDataCore's log. Nothing appears on screen.
-  Returns True if successful. }
+{ Executes file using ShellExecuteEx.
+  The process handle it opens is closed here, so the caller never sees it. To wait for the process use ExecuteFileAndWait.
+  A missing file RAISES. Any other failure goes into AppDataCore's log, with nothing on screen. }
 function ExecuteFileEx(CONST ExeFile: string; Params: string = '';
   WindowState: Integer = SW_SHOWNORMAL): Boolean;
 
 { Executes file and waits for completion.
   WaitTime: Maximum wait time in milliseconds, or INFINITE.
-  Returns True if successful. }
+  A missing file RAISES. Returns FALSE only when ShellExecuteEx itself could not launch; a wait that times out still returns TRUE. }
 function ExecuteFileAndWait(CONST ExeFile: string; Params: string = '';
   Hide: Boolean = FALSE; WaitTime: Cardinal = INFINITE): Boolean;
 
 { Executes file with administrator elevation (UAC prompt).
-  Returns True if user granted elevation and process started. }
+  A missing file RAISES. Returns TRUE if the user granted elevation and the process started, FALSE if the user cancelled the UAC prompt. }
 function ExecuteAsAdmin(CONST ExeFile: string; Params: string = ''; hWnd: HWND = 0): Boolean;
 
 
@@ -127,13 +126,8 @@ CONST
 {---------------------------------------------------------------------------------------------------------------
    ExecuteFile
 
-   Executes a local file/program using ShellExecute API.
-   Supports file associations, .lnk files, document associations.
-   For URLs use ExecuteURL. For mailto: use ExecuteSendEmail.
-
    Parameters:
-     ExeFile      - File path or document to execute
-     Params       - Command line parameters (use quotes for paths with spaces)
+     Params       - Command line parameters. Put a path that contains spaces in quotes.
      WindowState  - Window display state (SW_SHOWNORMAL, SW_HIDE, SW_MINIMIZE, etc.)
                     See: http://msdn.microsoft.com/en-us/library/windows/desktop/ms633548
 
@@ -212,14 +206,6 @@ end;
    Executes a file using ShellExecuteEx API, which provides more control and information
    than the basic ExecuteFile/ShellExecute.
 
-   Parameters:
-     ExeFile      - File path to execute
-     Params       - Command line parameters
-     WindowState  - Window display state
-
-   Returns:
-     True if execution succeeded
-
    See: http://stackoverflow.com/questions/4295285/how-can-i-wait-for-a-command-line-program-to-finish
 ---------------------------------------------------------------------------------------------------------------}
 function ExecuteFileEx(CONST ExeFile: string; Params: string = '';
@@ -259,13 +245,7 @@ end;
    This will trigger a UAC (User Account Control) prompt on Vista and later.
 
    Parameters:
-     ExeFile - Full path to executable
-     Params  - Command line parameters
-     hWnd    - Owner window handle for UAC dialog (0 for no owner)
-
-   Returns:
-     True if user granted elevation and process started successfully.
-     False if user cancelled UAC prompt or execution failed.
+     hWnd    - Owner window handle for the UAC dialog (0 for no owner)
 
    See: learn.microsoft.com/en-us/windows/win32/api/shellapi/ns-shellapi-shellexecuteinfow
 ---------------------------------------------------------------------------------------------------------------}
@@ -292,20 +272,17 @@ end;
    ExecuteFileAndWait
 
    Executes a program using ShellExecuteEx and waits for it to finish.
-   Keeps UI responsive by processing messages during the wait.
 
    Parameters:
-     ExeFile  - Full path to executable
-     Params   - Command line parameters
      Hide     - If True, launches with SW_HIDE (for console apps)
      WaitTime - Maximum time to wait in milliseconds, or INFINITE
 
    Returns:
-     True if execution and wait succeeded
+     FALSE only when ShellExecuteEx itself could not launch. A wait that times out, or fails, still returns TRUE.
 
    Note:
-     Uses Application.ProcessMessages to keep UI responsive during wait.
-     This is intentional for UI responsiveness but be aware of reentrancy issues.
+     Application.ProcessMessages runs during the wait, so the GUI stays alive.
+     That also means this code can be re-entered: the user can start a second launch before the first one finishes.
 
    See:
      http://stackoverflow.com/questions/4295285/how-can-i-wait-for-a-command-line-program-to-finish
@@ -341,9 +318,8 @@ begin
 
   { hProcess can be 0 even on success - "hProcess will be NULL if no process was launched", e.g. the
     document was handed to an already-running application (MSDN, SHELLEXECUTEINFO.hProcess).
-    Waiting on a 0 handle makes MsgWaitForMultipleObjects return WAIT_FAILED instantly, which the old
-    'WHILE <> WAIT_OBJECT_0' loop turned into a 100%-CPU ProcessMessages spin. Same for WAIT_TIMEOUT:
-    the old loop ignored it, so the WaitTime parameter never took effect. }
+    Do NOT turn the loop below into 'WHILE WaitRes <> WAIT_OBJECT_0'. Waiting on a 0 handle makes MsgWaitForMultipleObjects return WAIT_FAILED at once, and such a loop would spin at 100% CPU inside ProcessMessages.
+    It would also ignore WAIT_TIMEOUT, so the WaitTime parameter would never take effect. }
   if ShellInfo.hProcess <> 0 then
     begin
       { Wait for process while keeping UI responsive }
@@ -368,17 +344,14 @@ end;
 {---------------------------------------------------------------------------------------------------------------
    ExecuteURL
 
-   Opens a URL in the default web browser.
-   Encodes special characters that may cause issues in URLs.
-
-   Parameters:
-     URL - The URL to open (http://, https://, etc.)
+   Opens a URL (http://, https://, ...) in the default web browser.
+   The double quote is the one character it encodes; nothing else is touched.
 ---------------------------------------------------------------------------------------------------------------}
 procedure ExecuteURL(URL: string);
 begin
   if URL = '' then EXIT;
 
-  { Encode special characters that may cause issues }
+  { Encode the double-quote character }
   URL:= StringReplace(URL, '"', '%22', [rfReplaceAll]);
 
   { Use ShellExecute directly - URLs don't pass the FileExists check in ExecuteFile }
@@ -392,7 +365,7 @@ end;
    Opens the default email client with a new message to the specified address.
 
    Parameters:
-     EmailAddress - Email address to send to (without mailto: prefix)
+     EmailAddress - do NOT include the 'mailto:' prefix. This routine adds it.
 ---------------------------------------------------------------------------------------------------------------}
 procedure ExecuteSendEmail(EmailAddress: string);
 begin
@@ -408,9 +381,6 @@ end;
 
    Opens Windows Explorer at the specified path.
    Uses 'explore' verb to open Explorer view (not just browse).
-
-   Parameters:
-     Path - Directory path to explore
 ---------------------------------------------------------------------------------------------------------------}
 procedure ExecuteExplorer(Path: string);
 begin
@@ -429,11 +399,8 @@ end;
    Opens Windows Explorer at the file's location and selects the file.
    Uses SHOpenFolderAndSelectItems API for proper selection behavior.
 
-   Parameters:
-     FileName - Full path to file to select
-
    Returns:
-     True if Explorer was opened and file selected successfully
+     A missing file RAISES. Returns FALSE when the shell could not build an item id list for the file.
 
    See: http://stackoverflow.com/questions/15300999/open-windows-explorer-directory-select-a-specific-file-in-delphi
 ---------------------------------------------------------------------------------------------------------------}

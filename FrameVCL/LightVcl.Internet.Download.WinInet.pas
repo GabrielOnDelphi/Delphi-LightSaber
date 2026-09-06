@@ -12,15 +12,14 @@ UNIT LightVcl.Internet.Download.WinInet;
      - Control: Offers low-level control if needed.
      - Windows Specific: Not portable.
      - Complexity: More verbose and requires manual management of many aspects (handles, buffers, headers).
-     - Reliability: Can be very reliable but is also more susceptible to system-level IE/WinINet
-       configurations or policies affecting its behavior.
+     - Reliability: Can be very reliable but is also more susceptible to system-level IE/WinINet configurations or policies affecting its behavior.
        SSL/TLS capabilities depend on the OS version and its SChannel configuration.
 --------------------------------------------------------------------------------------------------------------
 
    KNOWN ISSUES
      - Slow: WinHTTP is much faster than WinINet! More than 10x faster, at least for multiple connections.
        See: http://blog.synopse.info/post/2011/07/04/WinINet-vs-WinHTTP
-     - CPU: Because of the REPEAT loop the CPU goes to 100%.
+     - CPU: Because of the REPEAT loop in DownloadBytes the CPU goes to 100%.
      - Freeze: The program does not exit until the download is complete!
 
    ALSO SEE:
@@ -56,7 +55,8 @@ USES
    System.SysUtils; // System.Net.HttpClient;
 
 CONST
-   { User agent strings for HTTP requests. Currently DownloadBytes uses a hardcoded Firefox user agent.
+   { User agent strings for HTTP requests.
+     Currently DownloadBytes uses a hardcoded Firefox user agent.
      These constants are provided for future use or customization. }
    USER_AGENT_APP = 'DelphiApp/1.0 (Compatible; +http://GabrielMoraru.com)';
    USER_AGENT_MOZ = 'Mozilla/5.0 (compatible, MSIE 11, Windows NT 6.3; Trident/7.0; rv:11.0) like Gecko';

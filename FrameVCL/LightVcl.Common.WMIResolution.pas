@@ -7,15 +7,12 @@ UNIT LightVcl.Common.WMIResolution;
 
  If the program is not DPI aware, Windows will lie about the real screen resolution.
  This unit bypasses this problem by reading the resolution (and other info) from the WMI system.
- However, WMI is a service and it could be disabled on some systems.
- Even more, the Screen WMI service is only supported starting with Win Vista AND in newer version of Windows has broken compatibility
-
- PROBLEM WITH THIS UNIT:
-   It returns the real resolution, but it returns resolution per monitor not per desktop
 
  PROBLEMS:
-   The code does not work on Win8
-   WMI service might be disabled!
+   It returns the real resolution, but per monitor, not per desktop.
+   WMI is a service and it can be disabled on some systems.
+   The Screen WMI service exists only from Windows Vista on, and newer Windows versions broke its compatibility.
+   The code does not work on Win8.
 
  Source:
    https://stackoverflow.com/questions/26100182/how-to-obtain-the-real-screen-resolution-in-a-high-dpi-system
@@ -82,7 +79,7 @@ IMPLEMENTATION
 
 
 
-{ Safely converts OleVariant to string. Returns empty string if variant is null. }
+{ Returns an empty string if the variant is null. }
 function VarStrNull(VarStr: OleVariant): string;
 begin
   Result:= '';
@@ -91,7 +88,7 @@ begin
 end;
 
 
-{ Safely converts OleVariant to Integer. Returns 0 if variant is null (suitable for dimensions). }
+{ Returns 0 if the variant is null (suitable for dimensions). }
 function VarIntNull(VarInt: OleVariant): Integer;
 begin
   if VarIsNull(VarInt)
@@ -100,8 +97,7 @@ begin
 end;
 
 
-{ Creates a WMI object via moniker binding.
-  Raises EOleSysError if WMI service is not available or objectName is invalid. }
+{ Raises EOleSysError if WMI service is not available or objectName is invalid. }
 function GetWMIObject(CONST objectName: String): IDispatch;
 VAR
   chEaten: Integer;
@@ -115,13 +111,13 @@ begin
 end;
 
 
-{ Queries WMI for monitor information.
-  Returns the LAST monitor found if multiple monitors exist (see PROBLEM WITH THIS UNIT in header).
-  Returns zeroed record if WMI query returns no monitors or WMI service is unavailable.
+{ Returns the LAST monitor found when several monitors exist.
+  Returns a zeroed record when WMI reports no monitor at all.
+  Raises EOleSysError when the WMI service is not available - GetWMIObject checks every COM step with OleCheck.
   Caller MUST call CoInitialize before and CoUninitialize after calling this function.
 
-  Note: Hardware not compatible with WDDM returns inaccurate values.
-  See: https://msdn.microsoft.com/en-us/library/aa394122%28v=vs.85%29.aspx }
+  Hardware not compatible with WDDM returns inaccurate values.
+  https://msdn.microsoft.com/en-us/library/aa394122%28v=vs.85%29.aspx }
 function GetMonitorInfoWMI: TMonitorInfo;
 VAR
   objWMIService: OleVariant;
@@ -141,7 +137,7 @@ begin
   colItems:= objWMIService.ExecQuery('SELECT * FROM Win32_DesktopMonitor', 'WQL', 0);
   oEnum:= IUnknown(colItems._NewEnum) as IEnumvariant;
 
-  { Iterate monitors - returns info for the last monitor found }
+  { The loop keeps the last monitor found }
   WHILE oEnum.Next(1, colItem, iValue) = 0 DO
    begin
     Result.Caption := VarStrNull(colItem.Caption);

@@ -10,18 +10,18 @@
        - Get application's version.
        - Log error messages to a special window that pops up when you send warnings and errors to it.
          The Log window (TfrmRamLog) is automatically created (hidden) and destroyed.
-       - Easily create new forms and set its font to be the same as main forms' font.
+       - Create new forms and give them the main form's font.
        - Change the font for all running forms.
-       - Basic support for Uninstaller (The Uninstaller can find out where the app was installed).
+       - Basic support for an uninstaller: it can find out where the app was installed.
        - Basic support for licensing (trial period) system. See Proteus for details.
-       - Translation engine (multi-language GUI) (Not ready yet, under FMX)
+       - Translation engine (multi-language GUI). Not ready yet under FMX.
        - etc, etc
  ____________________________________________________________________________________________________________
 
    HOW TO USE IT
 
      Use the template:
-         c:\Projects\LightSaber\Demo\Template App\VCL Simple\TemplateSimple.dpr
+         c:\Projects\LightSaber\Demo\FMX\Template - Minimal app\FMX_MinimalApp.dpr
 
      Or use something like this:
        uses
@@ -55,10 +55,10 @@
      AppData.Initializing
         When the application starts, this flag is set to True.
         Then it is automatically set to False once all the forms are fully loaded (TLightForm.Loaded defers TAppDataCore.EndInitialization to the message queue).
-        Note: this happens only for TLightForm descendants. If your app has no TLightForm at all, call TAppDataCore.EndInitialization yourself once the program is fully initialized, otherwise the forms will not be saved to the INI file.
+        This happens only for TLightForm descendants. If your app has no TLightForm at all, call TAppDataCore.EndInitialization yourself once the program is fully initialized, otherwise the forms will not be saved to the INI file.
         Usage:
-          Used by SaveForm in Light_FMX.Common.IniFile.pas/Light_FMX.Visual.INIFile.pas (and a few other places) to signal not to save the form if the application has crashed while still in the initialization phase.
-          You can use it also personally, to avoid executing some of your code during the initialization stages.
+          Used by TIniFileApp.SaveForm in c:\Projects\LightSaber\FrameFMX\LightFmx.Common.IniFile.pas (and a few other places) to signal not to save the form if the application has crashed while still in the initialization phase.
+          You can also use it in your own code, to skip work during the initialization stages.
 
 
      MainFormOnTaskbar
@@ -80,10 +80,9 @@
            https://stackoverflow.com/questions/66720721/
            https://stackoverflow.com/questions/14587456/how-can-i-stop-my-application-showing-on-the-taskbar
 
-
       Known issues
            If you are creating copies of the same form, the second, third, etc will get a dynamic name.
-           This means that they will not be stored/loaded properly from the INI file (because of the dynamic name).
+           They are then not stored or loaded properly from the INI file, because of that dynamic name.
 
    WARNING ABOUT THIS COMMENT BLOCK
       Curly-brace comments do not nest in Delphi. This whole block is one comment, opened at the
@@ -346,7 +345,7 @@ VAR EffectiveOwner: TComponent;
 begin
   Assert(aClass.InheritsFrom(TLightForm), 'CreateEmbedded: aClass must descend from TLightForm. Got: ' + aClass.ClassName);
 
-  { Default to Application as owner — matches the prior `AppData.CreateForm(..., asNone)` (no AOwner) behavior where the form ended up in Application.Components and was freed at shutdown. }
+  { Default to Application as owner — the form then ends up in Application.Components and is freed at shutdown. }
   if AOwner <> NIL
   then EffectiveOwner:= AOwner
   else EffectiveOwner:= Application;
@@ -566,8 +565,8 @@ begin
   end
   else
   begin
-    // Unregister the receiver (implementation depends on how you registered it)
-    // This is just a placeholder for the actual implementation
+    { Unregister the receiver (implementation depends on how you registered it).
+      This is just a placeholder for the actual implementation. }
     Result := True;
   end;
 end;
@@ -581,7 +580,7 @@ var
   DesktopEntry: TStringList;
 begin
   Result:= False;
-  { Per-app autostart filename — previously hardcoded 'com.myapp.desktop' so every LightSaber app overwrote the same file. AppName makes each app unique. }
+  { Per-app autostart filename. AppName makes each app unique, so two LightSaber apps do not overwrite each other's file. }
   AutostartPath:= TPath.Combine(TPath.GetHomePath, '.config/autostart/' + AppName + '.desktop');
 
   if Active then

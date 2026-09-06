@@ -63,7 +63,7 @@ USES
   FMX.Forms, FMX.Styles, FMX.Types, FMX.Controls, FMX.Objects, FMX.StdCtrls, FMX.Graphics, FMX.Effects;
 
 TYPE
-  TIconPosition = (ipLeft,      // Icon of the left, text after
+  TIconPosition = (ipLeft,      // Icon on the left, text after it
                    ipTop,       // Icon on top, text under
                    ipCenter);   // Icon in the middle of the button. No text.
 
@@ -147,7 +147,7 @@ TYPE
 
 { Recursively sets Compact on all TSvgButton descendants of Parent.
   Use in a FormResize handler to switch sidebar/toolbar buttons between icon+text and icon-only.
-  NOTE: Buttons with AutoCompact=TRUE are skipped silently — they self-manage via CompactThreshold. }
+  Buttons with AutoCompact=TRUE are skipped silently — they self-manage via CompactThreshold. }
 procedure CompactSvgButtons(Parent: TFmxObject; Compact: Boolean);
 
 
@@ -165,8 +165,7 @@ CONST
   HOVER_BG_ALPHA = $28;    { ~16% opacity - subtle background tint on hover/toggle }
 
 
-{ Forward decl: ShouldCompactFor is a free function defined later in this unit
-  but referenced from class methods (EvaluateAutoCompact, HandleFormResize). }
+{ ShouldCompactFor is defined at the end of this unit but called from EvaluateAutoCompact and HandleFormResize. }
 function ShouldCompactFor(ClientWidth: Single; Threshold: TCompactThreshold): Boolean; forward;
 
 
@@ -228,7 +227,7 @@ begin
   FLabel.TextSettings.Trimming:= TTextTrimming.None;   { Don't drop trailing words/chars; let the caller see as much text as fits }
   FLabel.StyledSettings:= FLabel.StyledSettings - [TStyledSetting.FontColor, TStyledSetting.Other];  { Other covers WordWrap/Trimming — exclude so skin changes don't undo them }
 
-  SetIconPosition(ipLeft);            { Canonical path — sets FIconPath.Align + margins }
+  SetIconPosition(ipLeft);            { Call the setter, not the field — the setter is what sets FIconPath.Align and the margins }
   FIsToggled:= FALSE;
   FHoverBackground:= TRUE;
   FCompactThreshold:= ctPhone;       { Default: compact below COMPACT_WIDTH (600 px) }
@@ -240,7 +239,7 @@ begin
       { Auto-refresh colors when the active FMX style changes (no manual RefreshAllThemeColors needed) }
       TMessageManager.DefaultManager.SubscribeToMessage(TStyleChangedMessage, HandleStyleChanged);
 
-      { AutoCompact: react to hosting form resize — compacts when form width < HIGH_WIDTH }
+      { AutoCompact: react to hosting form resize — compacts when the form width falls under the CompactThreshold breakpoint }
       TMessageManager.DefaultManager.SubscribeToMessage(TSizeChangedMessage, HandleFormResize);
     end;
 end;
@@ -302,8 +301,7 @@ begin
 end;
 
 
-{ Called when button Width or Height changes (runtime resize, alignment, streaming).
-  Recalculates the icon dimensions to match the new button size. }
+{ Called when button Width or Height changes (runtime resize, alignment, streaming). }
 procedure TSvgButton.Resize;
 begin
   inherited;
@@ -329,9 +327,7 @@ begin
       end;
     ipTop:
       begin
-        // Only subtract label height when the label is actually visible — caller may
-        // hide it externally via TextLabel.Visible := False, in which case the icon
-        // should fill the full inner area.
+        { Only subtract label height when the label is actually visible — caller may hide it externally via TextLabel.Visible := False, in which case the icon should fill the full inner area. }
         if FLabel.Visible
         then InnerH:= Height - Padding.Top - Padding.Bottom - FLabel.Height
         else InnerH:= Height - Padding.Top - Padding.Bottom;
@@ -347,8 +343,7 @@ end;
    PAINTING
 -------------------------------------------------------------------------------------------------------------}
 
-{ Draws a faint dotted border at design time so the button outline is visible in the form designer.
-  At runtime this does nothing extra (csDesigning is not set). }
+{ Draws a faint dotted border at design time so the button outline is visible in the form designer. }
 procedure TSvgButton.Paint;
 begin
   inherited;
@@ -393,7 +388,6 @@ begin
 end;
 
 
-{ Sets the SVG path data and shows/hides the icon accordingly }
 procedure TSvgButton.SetSvgData(CONST Value: string);
 begin
   FIconPath.Data.Data:= Value;
@@ -405,7 +399,6 @@ begin
 end;
 
 
-{ Convenience wrapper - same as setting SvgData property }
 procedure TSvgButton.LoadSvgPath(CONST SvgPathData: string);
 begin
   SvgData:= SvgPathData;
@@ -480,7 +473,7 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 
 { Switches the icon layout relative to the text label.
-  ipLeft:   icon on the left, text right-aligned (default - sidebar buttons)
+  ipLeft:   icon on the left, text to the right of it (default - sidebar buttons)
   ipTop:    icon above, text centered below (tile buttons)
   ipCenter: icon centered, label hidden (icon-only square buttons)
 
@@ -648,7 +641,7 @@ begin
 end;
 
 
-{ Left mouse down - dim the whole button for press feedback }
+{ Dims the whole button for press feedback }
 procedure TSvgButton.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 begin
   inherited;
@@ -657,7 +650,6 @@ begin
 end;
 
 
-{ Left mouse up - restore full opacity }
 procedure TSvgButton.MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Single);
 begin
   inherited;

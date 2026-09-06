@@ -21,7 +21,7 @@
    HOW TO USE IT
 
      Use the template:
-         c:\Projects\LightSaber\Demo\Template App\VCL Simple\TemplateSimple.dpr
+         c:\Projects\LightSaber\Demo\VCL\Template App Simple\VCL_TemplateSimple.dpr
 
      Or use something like this:
        uses
@@ -53,16 +53,11 @@
         CreateMainForm READS Application.ShowMainForm to decide whether to show the form. It is ignored if
         StartMinim is TRUE, in which case the app starts minimized.
 
-        BEFORE, still - but it is now a style rule, not a correctness rule. Setting MainFormOnTaskbar late makes
-        TApplication.SetMainFormOnTaskBar recreate the main form's window handle (FMainForm.Perform(CM_RECREATEWND)
-        - Vcl.Forms.pas:14758): visible flicker and a focus dance, nothing worse. It used to be worse: the new
-        handle DISCARDED the queued WM_POSTINIT, so FormPostInitialize - where your real startup code lives -
-        never ran, and nothing raised. That is fixed at the source: the post-init step is queued with
-        TThread.ForceQueue, which belongs to no window. See TLightForm.SchedulePostInitialize.
-
-        Until 2026.08.20 these two were parameters 3 and 4 of CreateMainForm. They were removed because a
-        third positional argument meant AutoState in the FMX TAppData but MainFormOnTaskbar here, so a DPR line
-        copied between the two frameworks compiled clean and silently lost the AutoState.
+        BEFORE, still - but this is a style rule, not a correctness rule. Setting MainFormOnTaskbar late makes
+        TApplication.SetMainFormOnTaskBar recreate the main form's window handle (FMainForm.Perform(CM_RECREATEWND),
+        in Vcl.Forms.pas): visible flicker and a focus dance, nothing worse. The recreated handle cannot lose your
+        startup code, because TLightForm.SchedulePostInitialize queues the post-init step with TThread.ForceQueue,
+        which belongs to no window.
 
  ____________________________________________________________________________________________________________
 
@@ -79,7 +74,7 @@
 
      AppData.Initializing (read-only)
         When the application starts, this flag is set to True.
-        It is automatically set to False after the MAIN FORM is fully and completelly loaded.
+        It is automatically set to False after the MAIN FORM is fully loaded.
         Usage:
           Used by SaveForm in LightVcl.Common.IniFile.pas/LightVcl.Visual.INIFile.pas (and a few other places) to signal not to save the form if the application has crashed while still in the initialization phase.
           You can use it also personally, to avoid executing some of your code during the initialization stages.
@@ -99,8 +94,8 @@
 
         [AERO]
            Windows Aero effects (Live taskbar thumbnails, Dynamic Windows, Windows Flip, Windows Flip 3D)
-                if False = Aero effects work
-                if False = Aero effects do not work
+                if TRUE  = Aero effects work
+                if FALSE = Aero effects do not work
 
         [TCoolTrayIcon]
            This must be FALSE in order to make 'Start minimized' option work
@@ -258,11 +253,11 @@ begin
   Application.HintShortPause      := 40;         // Specifies the time period to wait before bringing up a hint if another hint has already been shown. Windows' default is 50 ms
   Application.UpdateFormatSettings:= FALSE;      // more http://www.delphi3000.com/articles/article_4462.asp?SK=
 
-  // VCL: DefaultFont specifies the default font used by the application. All newly created forms use DefaultFont if the ParentFont property is set to True.
-  // Changing DefaultFont later at run-time will trigger an update for all forms that use the parent font.
-  // However, we cannot use it becuase it applies only to forms that are controlled by TApplication. But TFormLoglog is not controlled by TApplication (we want to manually release it as late as possible).
-  // Now we take the font from the main form (whatwever the user sets there). So Application.DefaultFont isn't doing anything here!
-  // The font of the MainForm is saved in TIniFileVCL.WriteComp
+  { VCL: DefaultFont specifies the default font used by the application. All newly created forms use DefaultFont if the ParentFont property is set to True.
+    Changing DefaultFont later at run-time will trigger an update for all forms that use the parent font.
+    However, we cannot use it becuase it applies only to forms that are controlled by TApplication. But TFormLoglog is not controlled by TApplication (we want to manually release it as late as possible).
+    Now we take the font from the main form (whatwever the user sets there). So Application.DefaultFont isn't doing anything here!
+    The font of the MainForm is saved in TIniFileVCL.WriteComp }
   Application.DefaultFont.Name    := 'Segoe UI';
   Application.DefaultFont.Size    := 10;
   Application.ShowHint := TRUE;                   // Set later via the HintType property. It is true by default anyway
@@ -283,30 +278,30 @@ end;
 destructor TAppData.Destroy;
 VAR i: Integer;
 begin
-  // Save all still-alive TLightForms NOW, while AppData (and its RamLog) are fully functional.
-  // Reason: this destructor runs from this unit's FINALIZATION, and in ONE of the two shutdown paths the
-  // Application-owned forms are destroyed LATER than that. The two paths are written out in full in the
-  // SHUTDOWN ORDER comment at the FINALIZATION of this unit; short version: an app that called
-  // Application.Run has already lost its forms by now, because DoneApplication runs as an exit procedure
-  // and the RTL runs those before it finalizes any unit. But a DUnitX test runner, a console tool or a DLL
-  // never calls Application.Run, so its forms are destroyed after us, in the finalization of Vcl.Forms.
-  // In that second path a form that was never closed (e.g. created via CreateFormHidden) would run its
-  // FormPreRelease/SaveForm in a dead context: the AppData var is already NIL and AppDataCore was nilled
-  // by our finalization - TIniFileApp.WriteComp asserts on it.
-  // Saving here makes the late destruction a no-op (FFormSaved=TRUE guard).
-  // 'AppData = Self' guard: Destroy also runs when a constructor RAISES (e.g. erroneous second
-  // TAppData creation). The global var does not point to that half-built instance, so we must not
-  // let it prematurely save/pre-release the forms of the healthy running instance.
+  { Save all still-alive TLightForms NOW, while AppData (and its RamLog) are fully functional.
+    Reason: this destructor runs from this unit's FINALIZATION, and in ONE of the two shutdown paths the
+    Application-owned forms are destroyed LATER than that. The two paths are written out in full in the
+    SHUTDOWN ORDER comment at the FINALIZATION of this unit; short version: an app that called
+    Application.Run has already lost its forms by now, because DoneApplication runs as an exit procedure
+    and the RTL runs those before it finalizes any unit. But a DUnitX test runner, a console tool or a DLL
+    never calls Application.Run, so its forms are destroyed after us, in the finalization of Vcl.Forms.
+    In that second path a form that was never closed (e.g. created via CreateFormHidden) would run its
+    FormPreRelease/SaveForm in a dead context: the AppData var is already NIL and AppDataCore was nilled
+    by our finalization - TIniFileApp.WriteComp asserts on it.
+    Saving here makes the late destruction a no-op (FFormSaved=TRUE guard).
+    'AppData = Self' guard: Destroy also runs when a constructor RAISES (e.g. erroneous second
+    TAppData creation). The global var does not point to that half-built instance, so we must not
+    let it prematurely save/pre-release the forms of the healthy running instance. }
   if (AppData = Self) AND (Screen <> NIL) then
     for i:= Screen.FormCount - 1 downto 0 do
       if Screen.Forms[i] is TLightForm then
         try
           TLightForm(Screen.Forms[i]).saveBeforeExit;
         except
-          // Isolate one bad form's FormPreRelease/SaveForm from the REST of this loop and from the
-          // code below (FreeAndNil(FFormLog/Translator), inherited Destroy -> SaveSettings/FreeAndNil
-          // (RamLog)) - an unguarded raise here would skip all of that for a reason unrelated to this
-          // one form. RamLog is still alive at this point, so logging (not reraising) is the correct boundary.
+          { Isolate one bad form's FormPreRelease/SaveForm from the REST of this loop and from the
+            code below (FreeAndNil(FFormLog/Translator), inherited Destroy -> SaveSettings/FreeAndNil
+            (RamLog)) - an unguarded raise here would skip all of that for a reason unrelated to this
+            one form. RamLog is still alive at this point, so logging (not reraising) is the correct boundary. }
           on E: Exception
           do doLogError('TAppData.Destroy: saveBeforeExit failed for '+ Screen.Forms[i].Name+ ' ('+ Screen.Forms[i].ClassName+ '): '+ E.ClassName+ ' - '+ E.Message);
         end;
@@ -321,7 +316,7 @@ procedure TAppData.Run;
 begin
   // Initializing stays TRUE until MainForm PostInitialize completes (via the queued post-init step).
 
-  // Later, we ignore the "Show" parameter in CreateMainForm() if "StartMinim" is true. StartMinim remmbers application's last state (it was minimized or not)
+  // Later, we ignore Application.ShowMainForm in CreateMainForm() if "StartMinim" is true. StartMinim remmbers application's last state (it was minimized or not)
   if StartMinim
   then Minimize;
 
@@ -362,7 +357,7 @@ end;
     Reference         - Output parameter receiving the created form instance
     AutoState         - Controls INI file persistence: asNone/asPosOnly/asFull
 
-  Two settings that used to be parameters here are now plain VCL flags you set in the DPR before this call.
+  Two plain VCL flags belong in the DPR, set BEFORE this call.
   They are Application-wide, not per-form:
     Application.MainFormOnTaskbar - TRUE: the taskbar button belongs to the main form. RTL default: FALSE
     Application.ShowMainForm      - FALSE: do not show the form now. RTL default: TRUE. Read (not written) below
@@ -386,18 +381,18 @@ begin
   // Create the log BEFORE we create the main form so we can log possible problems.
   getGlobalLog;
 
-  // Create form.
-  // Application.MainFormOnTaskbar and Application.ShowMainForm are deliberately NOT written here - the DPR owns
-  // them, like in an IDE-generated DPR. ShowMainForm=FALSE prevents form flicker during skin loading, and lets a
-  // TCoolTrayIcon app start minimized to the systray.
+  { Create form.
+    Application.MainFormOnTaskbar and Application.ShowMainForm are deliberately NOT written here - the DPR owns
+    them, like in an IDE-generated DPR. ShowMainForm=FALSE prevents form flicker during skin loading, and lets a
+    TCoolTrayIcon app start minimized to the systray. }
   { WARNING: ShowMainForm=FALSE can make a STARTUP crash INVISIBLE. An unhandled exception before Application.Run shows its error box owned by the still-hidden main form, so the box never appears and the app freezes in a modal loop while LOOKING alive (window up, process Responding=TRUE). Bit DnaBaser on Win64 2026-07 (a DWORD_PTR range-check error). If startup hangs with no visible dialog, enumerate the process #32770 windows INCLUDING invisible ones and read their Static text. }
   Application.CreateForm(aClass, Reference);
 
-  // Load form size and position
-  // Load form font
-  // Repair position on desktop
-  //
-  // Limitation: At this point we can only load "standard" Delphi components. Loading of Light components can only be done in LightVcl.Visual.INIFile.pas -> TIniFileVCL. Work around: The user can override the TLightForm.FormPostInitialize and use the OnBeforeRelease event to insert his own code.
+  { Load form size and position
+    Load form font
+    Repair position on desktop
+
+    Limitation: At this point we can only load "standard" Delphi components. Loading of Light components can only be done in LightVcl.Visual.INIFile.pas -> TIniFileVCL. Work around: The user can override the TLightForm.FormPostInitialize and use the OnBeforeRelease event to insert his own code. }
   if TForm(Reference) is TLightForm then
     begin
       TLightForm(Reference).AutoState:= AutoState;
@@ -415,9 +410,8 @@ begin
     if Application.ShowMainForm
     then TForm(Reference).Show;
 
-  // Defer initialization until the message loop is running.
-  // This prevents modal dialogs during FormPostInitialize from pumping messages
-  // that resize the form before it has fully settled.
+  { Defer initialization until the message loop is running.
+    This prevents modal dialogs during FormPostInitialize from pumping messages that resize the form before it has fully settled. }
   if TObject(Reference) is TLightForm then
     begin
       // Show app name. Must be before FormPostInitialize because the user could put his own caption there.
@@ -486,9 +480,9 @@ begin
   if TForm(Reference) is TLightForm then
     begin
 
-     // Load form size and position
-     // Load form font
-     // Repair position on desktop
+     { Load form size and position
+       Load form font
+       Repair position on desktop }
 
      TLightForm(Reference).AutoState:= AutoState;
      if autostate <> asNone
@@ -498,8 +492,7 @@ begin
   if Show
   then TForm(Reference).Show;
 
-  // Window fully constructed.
-  // Now we can let user run its own initialization process.
+  { Window fully constructed. Now we can let user run its own initialization process. }
   if TComponent(Reference).InheritsFrom(TLightForm)
   then TLightForm(Reference).FormPostInitialize;
 
@@ -582,12 +575,12 @@ begin
 end;
 
 
-// Note:
-// In FMX the forms don't have a hint.
-// Hints are supported on Windows and macOS only.
-// Info: Setting ShowHint for the application to False disables all Help Hints, regardless of the value of the ShowHint properties for individual controls.
-// Application.ShowHint = Global setting. Applies also to actions.
-// https://docwiki.embarcadero.com/RADStudio/Athens/en/Using_Hints_to_Show_Contextual_Help_in_a_FireMonkey_Application
+{ Note:
+  In FMX the forms don't have a hint.
+  Hints are supported on Windows and macOS only.
+  Info: Setting ShowHint for the application to False disables all Help Hints, regardless of the value of the ShowHint properties for individual controls.
+  Application.ShowHint = Global setting. Applies also to actions.
+  https://docwiki.embarcadero.com/RADStudio/Athens/en/Using_Hints_to_Show_Contextual_Help_in_a_FireMonkey_Application }
 procedure TAppData.setHintType(const aHintType: THintType);
 begin
   FHintType:= aHintType;
@@ -648,7 +641,7 @@ end;
 procedure TAppData.Restart;
 begin
   VAR PAppName:= PChar(Application.ExeName);
-  Winapi.ShellAPI.ShellExecute({Handle} 0, 'open', PAppName, nil, nil, SW_SHOWNORMAL);   { Handle does not work. Replaced with 0. }
+  Winapi.ShellAPI.ShellExecute({Handle} 0, 'open', PAppName, nil, nil, SW_SHOWNORMAL);   { Handle does not work here. It must be 0. }
   Application.Terminate;
 end;
 
@@ -717,9 +710,8 @@ begin
   if Application.MainForm.WindowState = wsMinimized
   then Application.MainForm.WindowState:= TWindowState.wsNormal;
 
-  // Use Restore to restore the application to its previous size before it was minimized.
-  // Note: Don't confuse the Restore method, which restores the entire application,
-  // with restoring a form or window to its original size.
+  { Use Restore to restore the application to its previous size before it was minimized.
+    Note: Don't confuse the Restore method, which restores the entire application, with restoring a form or window to its original size. }
   Application.Restore;
   SetForegroundWindow(Application.MainForm.Handle);
   Application.BringToFront;
@@ -737,7 +729,7 @@ begin
  //ShowWindow(MainForm.Handle, SW_HIDE);     //this also hides the form from the screen
 { Code below not working in Win7 !!!
   ShowWindow(Application.Handle, SW_HIDE);
-  SetWindowLongPtr(Application.Handle, GWL_EXSTYLE, GetWindowLongPtr(Application.Handle, GWL_EXSTYLE) OR WS_EX_TOOLWINDOW);}      { getWindowLong_ was replaced with getWindowLongPtr for 64 bit compatibility. Details: http://docwiki.embarcadero.com/RADStudio/Seattle/en/Converting_32-bit_Delphi_Applications_to_64-bit_Windows }
+  SetWindowLongPtr(Application.Handle, GWL_EXSTYLE, GetWindowLongPtr(Application.Handle, GWL_EXSTYLE) OR WS_EX_TOOLWINDOW);}      { getWindowLongPtr, not getWindowLong_, for 64 bit compatibility. Details: http://docwiki.embarcadero.com/RADStudio/Seattle/en/Converting_32-bit_Delphi_Applications_to_64-bit_Windows }
 end;
 
 
@@ -762,9 +754,9 @@ end;
 
 procedure TAppData.setGuiProperties(Form: TForm);
 begin
-  // Show the "Initializing form X" progress ONLY on the main form (and only it).
-  // MainFormCaption always targets Application.MainForm, so calling it for any other form is wrong: for a secondary form created at runtime it permanently clobbered the main window title (never restored).
-  // For the Log form (created in CreateMainForm BEFORE the main form) Application.MainForm is still NIL - not a crash (VCL Caption writes route through TControl.Perform, which is nil-guarded, so the write was a silent no-op) but pointless. The guard skips it.
+  { Show the "Initializing form X" progress ONLY on the main form (and only it).
+    MainFormCaption always targets Application.MainForm, so calling it for any other form is wrong: for a secondary form created at runtime it permanently clobbered the main window title (never restored).
+    For the Log form (created in CreateMainForm BEFORE the main form) Application.MainForm is still NIL - not a crash (VCL Caption writes route through TControl.Perform, which is nil-guarded, so the write was a silent no-op) but pointless. The guard skips it. }
   if (Form is TLightForm)
   AND (Form = Application.MainForm)
   then TLightForm(Form).MainFormCaption('Initializing form '+ Form.Name);
@@ -924,7 +916,7 @@ begin
   DataToSend.cbData := Length(CommandLine) * SizeOf(Char);
   DataToSend.lpData := PChar(CommandLine);
 
-  Window:= WinApi.Windows.FindWindow(PWideChar(SingleInstClassName), NIL);    // This is a copy of csWindow.FindTopWindowByClass
+  Window:= WinApi.Windows.FindWindow(PWideChar(SingleInstClassName), NIL);    // This is a copy of FindTopWindowByClass in LightVcl.Common.Window.pas
   SendMessage(Window, WM_COPYDATA, 0, LPARAM(@DataToSend));
   { Winapi.Windows.ShowWindow(Window, SW_SHOWNORMAL); Winapi.Windows.SetForegroundWindow(Window);   }
 end;
@@ -934,9 +926,9 @@ end;
   We need to call this in TMainForm.CreateParams(var Params: TCreateParams)  }
 procedure TAppData.SetSingleInstanceName(VAR Params: TCreateParams);
 begin
-  // Params.WinClassName is array[0..255] of Char (Vcl.Controls). StrLCopy copies at most 255 chars
-  // + the null terminator, so an over-long SingleInstClassName is truncated instead of overflowing
-  // the record. (The old StrCopy has NO length limit — it copies until the source's #0.)
+  { Params.WinClassName is array[0..255] of Char (Vcl.Controls). StrLCopy copies at most 255 chars
+    + the null terminator, so an over-long SingleInstClassName is truncated instead of overflowing
+    the record. (StrCopy has NO length limit — it copies until the source's #0.) }
   System.SysUtils.StrLCopy(Params.WinClassName, PChar(SingleInstClassName), High(Params.WinClassName));
   //Hint: This would work if WindowClassName would be a constant: Params.WinClassName:= WindowClassName
 end;
@@ -981,10 +973,10 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    Prompt To Save/Load File
    Remembers the last used folder.
-   Example: PromptToSaveFile(s, LightVcl.Graph.Util.JPGFtl, 'txt');
+   Example: PromptToSaveFile(s, LightCore.IO.JPGFtl, 'txt');
 
    Note:
-      These functions are also duplicated in LightVcl.Common.IO.Win.
+      These functions are also duplicated in LightVcl.Common.IO.pas.
       The difference is that there, those functions cannot read/write the LastUsedFolder var so the app cannot remmeber last use folder.
 
    Note:
@@ -1163,15 +1155,15 @@ FINALIZATION
 
   CASE 1 - a normal GUI app, Application.Run was called: the forms die BEFORE we get here.
     TApplication.Run registers the shutdown procedure as an EXIT PROCEDURE - AddExitProc(DoneApplication),
-    Vcl.Forms.pas:13598. The RTL runs the whole exit-procedure chain BEFORE it finalizes any unit:
-    _Halt0 in System.pas:25722 has the 'while ExitProc <> nil do P;' loop first and reaches FinalizeUnits
-    only after it. DoneApplication (Vcl.Forms.pas:2523) calls Application.DestroyComponents (line 2536),
+    in Vcl.Forms.pas. The RTL runs the whole exit-procedure chain BEFORE it finalizes any unit:
+    _Halt0 in System.pas has the 'while ExitProc <> nil do P;' loop first and reaches FinalizeUnits
+    only after it. DoneApplication (Vcl.Forms.pas) calls Application.DestroyComponents,
     which frees every component Application owns - all the forms. AppData is still fully alive at that moment.
 
   CASE 2 - Application.Run was NEVER called (a DUnitX test runner, a console tool, a DLL, or an app that
   aborts during startup): the forms die AFTER we get here.
     AddExitProc never ran, so the only remaining call to DoneApplication is the one in the finalization of
-    Vcl.Forms (Vcl.Forms.pas:21203). That finalization runs after ours, because this unit USES Vcl.Forms:
+    Vcl.Forms. That finalization runs after ours, because this unit USES Vcl.Forms:
     a unit is initialized after everything it uses, and finalized in the reverse order. Those forms then run
     their destructors with AppData already freed.
 
@@ -1187,10 +1179,10 @@ FINALIZATION
   shutdown with runtime error 217. In a case-1 app it does nothing at all, because Application owns
   nothing by the time we get here.
   The reason it crashes: Application owns a THintWindow, created by Application.ShowHint:= TRUE, which
-  this very unit sets in TAppData.Create (Vcl.Forms.pas:13965 does FHintWindow:= HintWindowClass.Create(Self)).
+  this very unit sets in TAppData.Create (TApplication.SetShowHint in Vcl.Forms.pas does FHintWindow:= HintWindowClass.Create(Self)).
   DestroyComponents frees it, but the TApplication.FHintWindow field is not cleared by that and is left
   dangling. Later DoneApplication runs ShowHint:= FALSE, and TApplication.SetShowHint frees the same
-  object a second time (Vcl.Forms.pas:13971). In case 1 the order is reversed - DoneApplication clears
+  object a second time. In case 1 the order is reversed - DoneApplication clears
   the field first - which is why the same call is harmless there. }
 begin
   AppData.Free;   // DON'T use FreeAndNil here: FreeAndNil nils the variable BEFORE it runs the destructor, and TAppData.Destroy reads it - the 'AppData = Self' guard, plus saveBeforeExit -> TIniFileApp.WriteComp, which needs AppDataCore.

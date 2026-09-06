@@ -44,15 +44,16 @@ UNIT LightVcl.Common.WinVersion;
     ---------------------------------------------
 
    Manifest barrier (from dummzeuch):
-      Starting with Windows 8 the GerVersionEx function is lying. Quote ( https://docs.microsoft.com/en-us/windows/desktop/api/sysinfoapi/nf-sysinfoapi-getversionexa )
+      Starting with Windows 8 the GetVersionEx function is lying. Quote ( https://docs.microsoft.com/en-us/windows/desktop/api/sysinfoapi/nf-sysinfoapi-getversionexa )
       "With the release of Windows 8.1, the behavior of the GetVersionEx API has changed in the value it will return for the operating system version.
       The value returned by the GetVersionEx function now depends on how the application is manifested.
       Applications not manifested for Windows 8.1 or Windows 10 will return the Windows 8 OS version value (6.2).
       Once an application is manifested for a given operating system version, GetVersionEx will always return the version that the application is manifested for in future releases. To manifest your applications  for Windows 8.1 or Windows 10"
 
       So, we can only get the correct version, if the Delphi IDE has a manifest telling Windows that it supports the version installed.
-      This of course will not work if the Delphi version is older than the Windows version (e.g. Delphi 2007 won't know about anything newer than Windows XP).
-      Instead we now use GetFileVersionInfo on kernel32.dll.
+      This will not work if the Delphi version is older than the Windows version (e.g. Delphi 2007 won't know about anything newer than Windows XP).
+      dummzeuch's answer to that is to read the version out of kernel32.dll with GetFileVersionInfo.
+      This unit does NOT do it - it reads Delphi's TOSVersion, and so inherits the same limit.
       https://docs.microsoft.com/en-us/windows/desktop/sysinfo/getting-the-system-version
 
    Also see:
@@ -129,7 +130,7 @@ end;
 
 function IsWindowsVistaUp: Boolean;
 begin
- { Vista or later: Major >= 6 (Minor >= 0 is always true, simplified) }
+ { No Minor test needed: Vista is 6.0, so Minor >= 0 is always true. }
  Result:= (TOSVersion.Major >= 6);
 end;
 
@@ -143,7 +144,6 @@ end;
 
 function IsWindows7Up: Boolean;
 begin
- { Windows 7 (6.1) or later }
  Result:= ((TOSVersion.Major = 6) AND (TOSVersion.Minor >= 1))
        OR (TOSVersion.Major > 6);
 end;
@@ -159,7 +159,6 @@ end;
 
 function IsWindows8Up: Boolean;
 begin
- { Windows 8 (6.2) or later }
  Result:= ((TOSVersion.Major = 6) AND (TOSVersion.Minor >= 2))
        OR (TOSVersion.Major > 6);
 end;
@@ -175,7 +174,6 @@ end;
 
 function IsWindows10Up: Boolean;
 begin
-  { Windows 10 (Major 10, Build >= 10240) or any future Windows with Major > 10 }
   Result:= ((TOSVersion.Major = 10) AND (TOSVersion.Build >= Win10FirstRel))
         OR (TOSVersion.Major > 10);
 end;
@@ -188,7 +186,6 @@ end;
 
 function IsWindows11Up: Boolean;
 begin
-  { Windows 11 (Major 10, Build >= 22000) or any future Windows with Major > 10 }
   Result:= ((TOSVersion.Major = 10) AND (TOSVersion.Build >= Win11FirstRel))
         OR (TOSVersion.Major > 10);
 end;

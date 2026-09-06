@@ -6,7 +6,7 @@
 --------------------------------------------------------------------------------------------------------------
    Responsive layout components for FMX.
 
-   What is does?
+   What does it do?
      Put a label on the left side and a button on the right side.
      When the screen width gets too small the button will jump under the label instead of overlapping it.
 
@@ -16,7 +16,6 @@
      Auto-sizes its height to fit children (when Align is Top/Bottom/MostTop/MostBottom).
      LabelWidth and RowHeight propagate to all child TResponsiveRowLayout controls.
      Children can be any control — centering, max-width capping, and auto-height apply to all.
-     Only LabelWidth/RowHeight propagation is specific to TResponsiveRowLayout children.
      Recommended: set Align=Top. Place inside TVertScrollBox if content may exceed the form height.
      User Margins are fully available (centering is handled via SetBounds, not Margins).
 
@@ -145,7 +144,7 @@ end;
 
 
 { Intercepts positioning by the parent's alignment engine.
-  When Align is Top/Bottom, the parent passes the full available width.
+  When Align is Top, Bottom, MostTop or MostBottom, the parent passes the full available width.
   We cap it to MaxWidth and shift X to center ourselves. }
 procedure TLightCenteredLayout.SetBounds(X, Y, AWidth, AHeight: Single);
 var
@@ -171,8 +170,8 @@ begin
   if FRealigning then EXIT;
   FRealigning:= True;
   try
-    { Propagate properties directly — setters would trigger Realign on each row.
-      We force child re-layout explicitly after inherited (see below). }
+    { Propagate properties directly — the setters would trigger Realign on each row.
+      The explicit Realign loop after inherited does that re-layout instead. }
     for i:= 0 to ControlsCount - 1 do
       if Controls[i] is TResponsiveRowLayout then
       begin
@@ -182,16 +181,13 @@ begin
 
     inherited;
 
-    { Force child rows to re-layout — inherited only triggers DoRealign on children
-      whose bounds changed; property-only changes (LabelWidth, RowHeight) need
-      an explicit nudge so they take effect at design time. }
+    { Force child rows to re-layout — inherited only triggers DoRealign on children whose bounds changed; property-only changes (LabelWidth, RowHeight) need an explicit call so they take effect at design time. }
     for i:= 0 to ControlsCount - 1 do
       if Controls[i] is TResponsiveRowLayout then
         TResponsiveRowLayout(Controls[i]).Realign;
 
-    { Auto-size height to fit aligned children only. None-aligned controls are
-      "floating" and don't participate — including them causes progressive drift
-      because the layout doesn't manage their position. }
+    { Auto-size height to fit aligned children only.
+      None-aligned controls are "floating" and don't participate — including them causes progressive drift because the layout doesn't manage their position. }
     if Align in [TAlignLayout.Top, TAlignLayout.Bottom,
                  TAlignLayout.MostTop, TAlignLayout.MostBottom] then
     begin
@@ -279,10 +275,8 @@ begin
 end;
 
 
-{ When Height is changed externally (user in Object Inspector, code),
-  sync it to RowHeight. We compare AHeight against FExpectedHeight (the last
-  value DoRealign computed) rather than against current Height, because FMX
-  updates Size.Height before calling SetBounds. }
+{ When Height is changed externally (user in Object Inspector, code), sync it to RowHeight.
+  We compare AHeight against FExpectedHeight (the last value DoRealign computed) rather than against current Height, because FMX updates Size.Height before calling SetBounds. }
 procedure TResponsiveRowLayout.SetBounds(X, Y, AWidth, AHeight: Single);
 var
   NewRowH: Single;
@@ -332,10 +326,8 @@ begin
     then SideBySideOK:= AvailW >= FLabelWidth + FGap
     else SideBySideOK:= AvailW >= FLabelWidth + FGap + Ctrl.Width;
 
-    { Note: inherited (AlignObjects) already processed Ctrl based on its Align
-      (Right → repositioned, Client → width stretched). Our SetBounds calls below
-      override those positions/sizes, which is safe because all FMX alignment
-      goes through DoRealign, which we control. }
+    { The inherited call (AlignObjects) already processed Ctrl based on its Align (Right → repositioned, Client → width stretched).
+      Our SetBounds calls below override those positions and sizes, which is safe because all FMX alignment goes through DoRealign, which we control. }
     if SideBySideOK then
     begin
       { Side by side: label at fixed width, control in remaining space }

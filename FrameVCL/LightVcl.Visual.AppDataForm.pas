@@ -9,11 +9,11 @@ UNIT LightVcl.Visual.AppDataForm;
       VCL forms offer no good place where to execute your initialization/finalization code.
       OnCreate is too early, and OnShow may never be called (or called too late) or called multiple times.
 
-      The TLightForm provides two places that (in conjunction with TAppData) offer you two methods that are guaranteed to be executed:
+      TLightForm, in conjunction with TAppData, gives you two methods that are guaranteed to run:
       TMyForm = class(TLightForm)
           protected
             procedure FormPostInitialize; override; // Called after the main form was fully initialized.
-            procedure FormPreRelease;
+            procedure FormPreRelease;     override;
          end;
 
 
@@ -21,7 +21,7 @@ UNIT LightVcl.Visual.AppDataForm;
    How to use it
 
       Change the declaration of your form from TForm to TLightForm.
-      Optionally, if you want to execute your own initialization code, override the LateInitialize (don't forget to call inherited).
+      Optionally, if you want to execute your own initialization code, override FormPostInitialize (don't forget to call inherited).
 
       uses LightVcl.Visual.AppDataForm;
       Type
@@ -45,14 +45,13 @@ UNIT LightVcl.Visual.AppDataForm;
       FormPreRelease
 
          Optionally you can use the FormPreRelease event to execute your code on application shutdown.
-         Unlike other events, FormPreRelease is always called, and it is guaranteed to be called once and only once!
+         Unlike other events, FormPreRelease is guaranteed to be called once and only once!
 
          Execution order: FormPreRelease -> FormClose -> FormDestroy
 
       Self saving forms
 
-         Using SaveForm/LoadForm, a form can save its status (including checkboxes/radio buttons/etc on it))
-         to disk on shutdown and resume exaclty from where it left on application startup.
+         Using SaveForm/LoadForm, a form can save its status (including checkboxes/radio buttons/etc on it) to disk on shutdown and resume exactly from where it left on application startup.
 
          LoadForm is automatically called by TAppData.CreateForm(). Therefore, you must create all your forms with this method.
          The TLightForm.SaveForm is called automatically when the form closes.
@@ -254,27 +253,21 @@ end;
 
 { Put the startup window directly BELOW the window the user is working in, without activating it.
 
-  WHY THIS EXISTS. Nothing else decides where the window goes. TWinControl.CMShowingChanged shows it
-  with SWP_NOZORDER (Vcl.Controls.pas:12809-12812), so the show does not touch the z-order at all, and
-  the SetZOrder override above deliberately does not raise while the gate is up. What is left is the
-  position CreateWindowEx handed out, which is the top of the non-topmost stack. So the window comes up
-  OVER whatever the user was working in - it just does not take the keyboard.
+  WHY THIS EXISTS. Nothing else decides where the window goes.
+  TWinControl.CMShowingChanged shows it with SWP_NOZORDER (Vcl.Controls.pas), so the show does not touch the z-order at all, and the SetZOrder override above deliberately does not raise while the gate is up.
+  What is left is the position CreateWindowEx handed out, which is the top of the non-topmost stack.
+  So the window comes up OVER whatever the user was working in - it just does not take the keyboard.
 
-  Measured 2026-09-01 on Demo\VCL\Template App Full, with charmap.exe freshly launched and holding the
-  foreground: the window landed TWO positions ABOVE the active window on 5 of 5 launches, with the
-  foreground correctly left alone every time. Harness: Autopilot for Delphi\_Local info\Issues\
-  No focus steal\Measure-LaunchPlacement.ps1.
+  Measured 2026-09-01 on Demo\VCL\Template App Full, with charmap.exe freshly launched and holding the foreground: the window landed TWO positions ABOVE the active window on 5 of 5 launches, with the foreground correctly left alone every time.
+  Harness: Autopilot for Delphi\_Local info\Issues\No focus steal\Measure-LaunchPlacement.ps1.
 
-  That is the whole reported complaint, and it also explains the "and it STAYS on top" half: clicking a
-  window that is ALREADY active moves nothing in the z-order, so the user cannot get their own window
-  back above ours without first clicking ours and then clicking back.
+  That is the whole reported complaint, and it also explains the "and it STAYS on top" half: clicking a window that is ALREADY active moves nothing in the z-order, so the user cannot get their own window back above ours without first clicking ours and then clicking back.
 
-  SetWindowPos's hWndInsertAfter is documented as "a handle to the window to PRECEDE the positioned
-  window in the Z order", so passing the foreground window puts us directly beneath it. SWP_NOACTIVATE
-  leaves the keyboard where it is, which is the entire point of the gate.
+  SetWindowPos's hWndInsertAfter is documented as "a handle to the window to PRECEDE the positioned window in the Z order", so passing the foreground window puts us directly beneath it.
+  SWP_NOACTIVATE leaves the keyboard where it is, which is the entire point of the gate.
   https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowpos }
-{ Is this window the desktop or the taskbar? Those are the two anchors that must never be used - see the
-  comment at the call site in PlaceBeneathForegroundWindow. }
+{ Is this window the desktop or the taskbar?
+  Those are the two anchors that must never be used - see the comment at the call site in PlaceBeneathForegroundWindow. }
 function IsDesktopOrTaskbar(AWnd: HWND): Boolean;
 VAR
   Buf: array[0..63] of Char;   // not named ClassName: that would shadow TObject.ClassName
@@ -300,43 +293,36 @@ begin
   Fg:= GetForegroundWindow;
   if (Fg = 0) OR (Fg = AForm.Handle) then EXIT;      // nothing to anchor to, or it is already us
 
-  { Never anchor to one of our OWN windows. A splash screen, a first-run wizard or a second form of this
-    same application is not "the window the user was working in"; inserting beneath one would push the
-    main form under our own startup furniture. }
+  { Never anchor to one of our OWN windows.
+    A splash screen, a first-run wizard or a second form of this same application is not "the window the user was working in"; inserting beneath one would push the main form under our own startup furniture. }
   FgProcId:= 0;
   GetWindowThreadProcessId(Fg, FgProcId);
   if FgProcId = GetCurrentProcessId then EXIT;
 
-  { Never anchor to a TOPMOST window. Microsoft says a window becomes topmost either through
-    HWND_TOPMOST or "by setting a window's position in the Z order so that it is above any existing
-    topmost windows" - and slotting in directly beneath ONE topmost window does place us above every
-    other topmost window. That would pin the application over everything, the exact opposite of what
-    this procedure is for. }
+  { Never anchor to a TOPMOST window.
+    Microsoft says a window becomes topmost either through HWND_TOPMOST or "by setting a window's position in the Z order so that it is above any existing topmost windows" - and slotting in directly beneath ONE topmost window does place us above every other topmost window.
+    That would pin the application over everything, the exact opposite of what this procedure is for. }
   if (GetWindowLong(Fg, GWL_EXSTYLE) AND WS_EX_TOPMOST) <> 0 then EXIT;
 
-  { Never anchor to the DESKTOP or the TASKBAR. This is the guard that keeps the cure from becoming the
-    other half of the disease. The desktop sits at the very bottom of the z-order, so inserting beneath
-    it would bury the application behind every open window - which is the SECOND defect recorded in
-    "No focus steal.md": the same unchanged exe once came up at z=22 of 25, hidden behind everything.
+  { Never anchor to the DESKTOP or the TASKBAR.
+    This is the guard that keeps the cure from becoming the other half of the disease.
+    The desktop sits at the very bottom of the z-order, so inserting beneath it would bury the application behind every open window - which is the SECOND defect recorded in "No focus steal.md": the same unchanged exe once came up at z=22 of 25, hidden behind everything.
     Trading "on top of the user's window" for "invisible" is not a fix.
 
-    It is not a hypothetical case either: with no other program in front - the app started from a bare
-    desktop, or from a shortcut after the user clicked the wallpaper - GetForegroundWindow returns the
-    desktop, and that was observed during this investigation. 'Progman' and 'WorkerW' are the two
-    desktop window classes; 'Shell_TrayWnd' is the taskbar. When the anchor is one of these there is no
-    "user window" to sit under, so leaving the placement alone is the right answer. }
+    It is not a hypothetical case either: with no other program in front - the app started from a bare desktop, or from a shortcut after the user clicked the wallpaper - GetForegroundWindow returns the desktop, and that was observed during this investigation.
+    'Progman' and 'WorkerW' are the two desktop window classes; 'Shell_TrayWnd' is the taskbar.
+    When the anchor is one of these there is no "user window" to sit under, so leaving the placement alone is the right answer. }
   if IsDesktopOrTaskbar(Fg) then EXIT;
 
   SetWindowPos(AForm.Handle, Fg, 0, 0, 0, 0, SWP_NOMOVE OR SWP_NOSIZE OR SWP_NOACTIVATE);
 end;
 
 
-{ Safety net for a window still carrying the gate after startup is over - a form whose handle was made
-  during startup but which is first shown much later. TfrmRamLog is exactly that: created by
-  getGlobalLog, shown only when someone asks for the log.
+{ Safety net for a window still carrying the gate after startup is over - a form whose handle was made during startup but which is first shown much later.
+  TfrmRamLog is exactly that: created by getGlobalLog, shown only when someone asks for the log.
 
-  Silent while the gate is up: during startup the flag must stay, and UnGateStartupWindows is what
-  lifts it. The posted message lands one pass of the message loop later, when the window is already up. }
+  Silent while the gate is up: during startup the flag must stay, and UnGateStartupWindows is what lifts it.
+  The posted message lands one pass of the message loop later, when the window is already up. }
 procedure TLightForm.DoShow;
 begin
   inherited DoShow;
@@ -350,31 +336,25 @@ end;
 
 procedure TLightForm.WMAutopilotUnGate(var Msg: TMessage);
 begin
-  { Clears the WHOLE gate, not just this window's own flag. DoShow posts this message only once startup
-    is over, so anything still carrying the flag at this point is a leftover - the TApplication proxy
-    included. CreateParams gates that proxy, but the normal path that clears it (RunPostInitialize)
-    requires the MAIN form to be a TLightForm. An application whose main form is a plain TForm would
-    never reach that path, and a proxy left with WS_EX_NOACTIVATE has a dead taskbar button. }
+  { Clears the WHOLE gate, not just this window's own flag.
+    DoShow posts this message only once startup is over, so anything still carrying the flag at this point is a leftover - the TApplication proxy included.
+    CreateParams gates that proxy, but the normal path that clears it (RunPostInitialize) requires the MAIN form to be a TLightForm.
+    An application whose main form is a plain TForm would never reach that path, and a proxy left with WS_EX_NOACTIVATE has a dead taskbar button. }
   UnGateStartupWindows;
 end;
 {$ENDIF}
 
 
-{ Queue the post-init step so it runs once the message loop is pumping. Called by TAppData.CreateMainForm.
+{ Queue the post-init step so it runs once the message loop is pumping.
+  Called by TAppData.CreateMainForm.
 
-  TThread.ForceQueue - NOT PostMessage(WM_POSTINIT), which is what this did until 2026.08.20. A posted
-  message belongs to a window HANDLE, and the VCL recreates the main form's handle for several ordinary
-  reasons: applying a VCL style, Application.MainFormOnTaskbar changing (TApplication.SetMainFormOnTaskBar
-  does FMainForm.Perform(CM_RECREATEWND) - Vcl.Forms.pas:14758), or any other RecreateWnd. The recreation
-  DISCARDS the queued message, so FormPostInitialize never fired and the app came up half-initialized with
-  nothing raised. Four separate triggers of that one root cause were documented in this repo, each patched
-  with its own comment or guard; this removes the root cause instead.
+  TThread.ForceQueue - NOT PostMessage(WM_POSTINIT).
+  A posted message belongs to a window HANDLE, and the VCL recreates the main form's handle for several ordinary reasons: applying a VCL style, Application.MainFormOnTaskbar changing (TApplication.SetMainFormOnTaskBar does FMainForm.Perform(CM_RECREATEWND) - Vcl.Forms.pas), or any other RecreateWnd.
+  The recreation DISCARDS the queued message, so FormPostInitialize never fired and the app came up half-initialized with nothing raised.
 
-  A ForceQueue entry lives in the RTL queue, which no window owns, so no handle change can lose it. It is
-  drained by CheckSynchronize, which TApplication pumps two independent ways: WM_NULL in
-  TApplication.WndProc (Vcl.Forms.pas:13086, woken by TApplication.WakeMainThread :14669) and again in
-  TApplication.Idle (:14067). This is also what the FMX twin already does - see
-  LightFmx.Common.AppData.Form.pas, TLightForm.Loaded. }
+  A ForceQueue entry lives in the RTL queue, which no window owns, so no handle change can lose it.
+  It is drained by CheckSynchronize, which TApplication pumps two independent ways: WM_NULL in TApplication.WndProc (Vcl.Forms.pas, woken by TApplication.WakeMainThread) and again in TApplication.Idle.
+  This is also what the FMX twin already does - see LightFmx.Common.AppData.Form.pas, TLightForm.Loaded. }
 procedure TLightForm.SchedulePostInitialize;
 begin
   TThread.ForceQueue(NIL, QueuedPostInitialize);
@@ -394,19 +374,15 @@ begin
 end;
 
 
-{ Runs the user initialization code, deferred until the message loop pumps: by now the form has fully
-  settled (all pending WM_SIZE/layout messages processed) before user code that might itself pump
-  messages (e.g. a modal dialog). }
+{ Runs the user initialization code, deferred until the message loop pumps: by now the form has fully settled (all pending WM_SIZE/layout messages processed) before user code that might itself pump messages (e.g. a modal dialog). }
 procedure TLightForm.RunPostInitialize;
 begin
   if FPostInitDone then EXIT;   // Two triggers exist (queued entry + legacy WM_POSTINIT). EndInitialization and the user's code must run once.
   FPostInitDone:= TRUE;
 
   {$IFDEF AUTOPILOT}
-  // try..finally, not a posted message: FormPostInitialize is allowed to pump (a modal dialog), and a
-  // posted ungate would then be handled in the MIDDLE of it - lifting the gate while startup is still
-  // running, which is the bug this whole block exists to avoid. The finally also guarantees that a
-  // raise inside FormPostInitialize cannot leave the windows unclickable.
+  { try..finally, not a posted message: FormPostInitialize is allowed to pump (a modal dialog), and a posted ungate would then be handled in the MIDDLE of it - lifting the gate while startup is still running, which is the bug this whole block exists to avoid.
+    The finally also guarantees that a raise inside FormPostInitialize cannot leave the windows unclickable. }
   try
   {$ENDIF}
 
@@ -416,10 +392,9 @@ begin
   // Run user initialization code
   FormPostInitialize;
 
-  { Note: Do NOT reset StartMinim here. The Minimize/Restore methods manage this flag
-    at runtime, and FormPreRelease re-syncs it before SaveSettings. Resetting it here
-    caused a bug: SaveSettings would persist FALSE even when the user's "Start minimized"
-    checkbox was checked, so the early minimize in CreateMainForm would not fire on next startup. }
+  { Note: Do NOT reset StartMinim here.
+    The Minimize/Restore methods manage this flag at runtime, and FormPreRelease re-syncs it before SaveSettings.
+    Resetting it here caused a bug: SaveSettings would persist FALSE even when the user's "Start minimized" checkbox was checked, so the early minimize in CreateMainForm would not fire on next startup. }
 
   if AppData.Translator <> NIL
   then AppData.Translator.LoadTranslation(Self);
@@ -465,11 +440,8 @@ end;
 
 function TLightForm.CloseQuery: Boolean;
 begin
-  // Ask FIRST (inherited fires OnCloseQuery), save only if the close is allowed.
-  // The old order (save first) broke vetoed closes: OnCloseQuery returning CanClose=FALSE left
-  // FFormSaved=TRUE and FormPreRelease already executed on a still-live form — so the user kept
-  // working, but the LATER real close saved nothing (stale INI) and the "guaranteed once,
-  // before release" contract of FormPreRelease was violated.
+  { Ask FIRST (inherited fires OnCloseQuery), save only if the close is allowed.
+    The old order (save first) broke vetoed closes: OnCloseQuery returning CanClose=FALSE left FFormSaved=TRUE and FormPreRelease already executed on a still-live form — so the user kept working, but the LATER real close saved nothing (stale INI) and the "guaranteed once, before release" contract of FormPreRelease was violated. }
   Result:= inherited CloseQuery;
   if Result
   then saveBeforeExit;
@@ -522,9 +494,9 @@ end;
 
 {$IFDEF DEBUG}
 { Scan for TRadioButtons with TabStop=True that are not Checked.
-  This is a common source of bugs: when the form is shown, Windows gives focus to the first
-  TabStop control. If that's a radio button, it gets automatically checked, overriding
-  whatever was set in code. See: "The Hidden Dangers of TRadioButton.TabStop" }
+  This is a common source of bugs: when the form is shown, Windows gives focus to the first TabStop control.
+  If that's a radio button, it gets automatically checked, overriding whatever was set in code.
+  See: "The Hidden Dangers of TRadioButton.TabStop" }
 procedure ScanForDangerousTabStops(aParent: TWinControl);
 begin
   for var i:= 0 to aParent.ControlCount-1 do

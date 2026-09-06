@@ -11,8 +11,8 @@
    Icon:         16×16 GDI bitmap (solid color or sparkline).
    Context menu: Win32 TrackPopupMenu (avoids FMX thread/modal issues).
 
-   Generic base class — no app-specific types. Derive for app-specific
-   UpdateXxx methods that call SetTooltip / SetColorIcon / SetSparklineIcon.
+   Generic base class — no app-specific types.
+   Derive for app-specific UpdateXxx methods that call SetTooltip / SetColorIcon / SetSparklineIcon.
 
 
 ======================================================================================================}
@@ -113,10 +113,9 @@ USES
   Winapi.ShellAPI,
   FMX.Platform.Win;
 
-// TrackPopupMenu with TPM_RETURNCMD returns the command ID as an integer,
-// not a boolean. Delphi declares the return as BOOL (LongBool), causing
-// the compiler to normalize any nonzero result to 1 — losing the actual
-// command ID. Re-declare with UINT return to get the raw value.
+{ TrackPopupMenu with TPM_RETURNCMD returns the command ID as an integer, not a boolean.
+  Delphi declares the return as BOOL (LongBool), causing the compiler to normalize any nonzero result to 1 — losing the actual command ID.
+  Re-declare with UINT return to get the raw value. }
 function TrackPopupMenuCmd(hMenu: HMENU; uFlags: UINT; x, y, nReserved: Integer; hWnd: HWND; prcRect: PRect): UINT; stdcall; external user32 name 'TrackPopupMenu';
 
 
@@ -347,9 +346,9 @@ procedure TTrayIcon.HideAppWindow;
   Hiding it ONCE in HookForm is not enough: FMX un-hides it behind our back whenever the MAIN
   form is minimized, through calls that never pass through this window's procedure, so there is
   no single message to intercept —
-    TPlatformWin.SetWindowState -> ShowWindow(ApplicationHWND, SW_MINIMIZE)              FMX.Platform.Win.pas:3560
-    TPlatformWin.MinimizeApp    -> SetWindowPos(ApplicationHWND, ..., SWP_SHOWWINDOW)    FMX.Platform.Win.pas:3291
-                                -> DefWindowProc(ApplicationHWND, WM_SYSCOMMAND, SC_MINIMIZE, 0)   :3294
+    TPlatformWin.SetWindowState -> ShowWindow(ApplicationHWND, SW_MINIMIZE)              FMX.Platform.Win.pas
+    TPlatformWin.MinimizeApp    -> SetWindowPos(ApplicationHWND, ..., SWP_SHOWWINDOW)    FMX.Platform.Win.pas
+                                -> DefWindowProc(ApplicationHWND, WM_SYSCOMMAND, SC_MINIMIZE, 0)
   (that last one is called DIRECTLY on the handle, which is why a subclass cannot see it).
   Hence AppWndProc calls this on every message rather than enumerating the paths.
 
@@ -427,23 +426,23 @@ begin
 
     WHAT IT DOES: while the hooked form window is hidden, answer WM_ACTIVATEAPP(TRUE) with plain
     DefWindowProc instead of forwarding to FMX. FMX's handler for this message is DefWindowProc +
-    TPlatformWin.RestoreApp and nothing else (FMX.Platform.Win.pas:2923-2928), so this skips exactly
+    TPlatformWin.RestoreApp and nothing else (FMX.Platform.Win.pas), so this skips exactly
     the RestoreApp and changes nothing else.
 
     WHY RestoreApp is dangerous here: it ends in TCommonCustomForm.Activate, whose guard
-    (FMX.Forms.pas:5082) tests the FMX Visible FLAG — still TRUE after our raw-ShowWindow hide — and
-    TPlatformWin.Activate (:3538) then finds the window invisible and calls ShowWindow(SW_RESTORE).
+    (FMX.Forms.pas) tests the FMX Visible FLAG — still TRUE after our raw-ShowWindow hide — and
+    TPlatformWin.Activate then finds the window invisible and calls ShowWindow(SW_RESTORE).
     That chain puts a tray-hidden form back on screen. It was seen live on 2026-08-10, while the
     owner window's iconic state was being cleared from outside the process.
 
-    WHICH branch of RestoreApp (:3678-3721) runs is decided at the moment the message arrives:
+    WHICH branch of RestoreApp runs is decided at the moment the message arrives:
       - Screen.ActiveForm is COMPUTED, not stored — first form with Visible AND Active
-        (FMX.Forms.pas:8042-58). A tray-hidden form is Visible-flag TRUE but Active FALSE (the raw
-        hide made Windows send WM_ACTIVATE(WA_INACTIVE) -> Deactivate -> FActive:=False, :5157), so
+        (FMX.Forms.pas). A tray-hidden form is Visible-flag TRUE but Active FALSE (the raw
+        hide made Windows send WM_ACTIVATE(WA_INACTIVE) -> Deactivate -> FActive:=False), so
         it reads NIL and RestoreApp falls to the GetActiveWindow branch.
-      - GetActiveWindow <> 0 and <> ApplicationHWND -> the ACTIVE window is activated (:3709-3712),
+      - GetActiveWindow <> 0 and <> ApplicationHWND -> the ACTIVE window is activated,
         not the main form.  GetActiveWindow = 0 or ApplicationHWND -> Application.MainForm.Activate
-        (:3716-17) — the resurrecting branch.
+        — the resurrecting branch.
     Measured 2026-08-11 with a Win32 probe reproducing this window topology: on a tray RIGHT-click
     (ShowContextMenu's SetForegroundWindow(FHelperHWnd)) and when a secondary form is shown while
     the main form is hidden, GetActiveWindow already returns the helper / that form by the time
@@ -457,7 +456,7 @@ begin
     It cannot fire during a restore: ShowWindow sets WS_VISIBLE BEFORE the activation that dispatches
     WM_ACTIVATEAPP (same probe — the owner saw wParam=1 with IsWindowVisible(form) already TRUE), so
     the test below is FALSE by then. And even if it did fire, the restore does not depend on
-    RestoreApp: TCommonCustomForm.Show calls Activate itself (FMX.Forms.pas:3389) and OnTrayLeftClick
+    RestoreApp: TCommonCustomForm.Show calls Activate itself (FMX.Forms.pas) and OnTrayLeftClick
     then calls SetForegroundWindow. With the form hidden FMX-side too (Visible flag FALSE, e.g. after
     the tray-click Hide) RestoreApp is a no-op anyway — Activate's guard fails. }
   if (Msg.Msg = WM_ACTIVATEAPP) and (Msg.WParam <> 0)

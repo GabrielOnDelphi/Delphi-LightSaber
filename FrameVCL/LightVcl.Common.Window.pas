@@ -274,7 +274,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
   How to use a mutex? (Allow only one single application instance)
 
-  Window := csWindow.FindTopWindowByClass(ctAppWinClassName);
+  Window := FindTopWindowByClass(ctAppWinClassName);
   if Window = 0
   then Application.Initialize + etc
   else (Send ParamStr to the other running instance);

@@ -83,14 +83,12 @@ end;
 
 CONST
   COMPACT_WIDTH = 600;  // Below this width, hide most buttons and use popup menu.
-  HiGH_WIDTH    = 1024; // Below this with, show some buttons but some in "Compact" mode (only icon, no text). Over this resolution we show all.
+  HiGH_WIDTH    = 1024; // Below this width, show some buttons but some in "Compact" mode (only icon, no text). Over this resolution we show all.
 
 
 
-{ IFMXScreenService.GetScreenSize returns the screen size in LOGICAL units (dp/points) — that is
-  what the COMPACT_WIDTH/HIGH_WIDTH breakpoints expect (see the dp table in the unit header).
-  Preferred over Screen.Size because Screen.Size can return 0 on mobile if called before the main
-  form is fully created (FMX populates it lazily from the platform's screen metrics). }
+{ IFMXScreenService.GetScreenSize returns the screen size in LOGICAL units (dp/points) — that is what the COMPACT_WIDTH/HIGH_WIDTH breakpoints expect (see the dp table in the unit header).
+  Preferred over Screen.Size because Screen.Size can return 0 on mobile if called before the main form is fully created (FMX populates it lazily from the platform's screen metrics). }
 function GetScreenWidth: Single;
 VAR ScreenSvc: IFMXScreenService;
 begin

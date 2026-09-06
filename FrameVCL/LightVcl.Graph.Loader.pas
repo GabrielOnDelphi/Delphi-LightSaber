@@ -117,6 +117,7 @@ USES
   Missing file and corrupt file are two different scenarios and the loaders answer them differently:
     * File NOT THERE   -> raises EFileNotFoundException. The caller asked for something that does not exist.
     * File there but BAD -> returns NIL and writes a line in the log. Guaranteed not to crash.
+      The errors seen most often are EInvalidGraphic (JPEG error #53) and EReadError (Stream read error).
   A caller that prefers NIL to an exception must test FileExists itself first. TBkgImgLoader.ProcessFile
   (LightVcl.Graph.Loader.Thread.pas) does exactly that.
 -------------------------------------------------------------------------------------------------------------}
@@ -185,24 +186,6 @@ end;
 
 
 //ToDo: open JPG in Wic and in JpegDecHelper. which one is faster?
-{-------------------------------------------------------------------------------------------------------------
-  MAIN LOADER
-
-  Supports:
-     GIF, PNG, JPG, JPEG2K, BMP, WB1, TIF and Windows Media Photo
-
-  Speed:
-     Fast
-     The only library better is \Third party packages\JpegTurbo\ but I have to deliver a DLL.
-
-  Decoders:
-     JPG: via AsmJpegDec wich is VERY fast compared with Delphi and WIC but it is not working with all jpeg images. In this case we fall back to WIC or the standard LoadGraph loader (WIC).
-     GIF: via WIC
-     PNG: via WIC
-
-  Warning:
-     Looks like WIC will convert all images to pf32. I tried it with a 8bit (grayscale) bitmap and it converted the image to pf32.
--------------------------------------------------------------------------------------------------------------}
 function GetExif(CONST FileName: string): TExifData;
 begin
  if NOT FileExists(FileName)
@@ -225,6 +208,24 @@ begin
 end;
 
 
+{-------------------------------------------------------------------------------------------------------------
+  MAIN LOADER
+
+  Supports:
+     GIF, PNG, JPG, JPEG2K, BMP, WB1, TIF and Windows Media Photo
+
+  Speed:
+     Fast
+     The only library better is \Third party packages\JpegTurbo\ but I have to deliver a DLL.
+
+  Decoders:
+     JPG: via AsmJpegDec wich is VERY fast compared with Delphi and WIC but it is not working with all jpeg images. In this case we fall back to WIC or the standard LoadGraph loader (WIC).
+     GIF: via WIC
+     PNG: via WIC
+
+  Warning:
+     Looks like WIC will convert all images to pf32. I tried it with a 8bit (grayscale) bitmap and it converted the image to pf32.
+-------------------------------------------------------------------------------------------------------------}
 function LoadGraph(CONST FileName: string; ExifRotate: Boolean = True; UseWic: Boolean = TRUE): TBitmap;
 //todo 1: CAN I LOAD THE JPEG WITH WIC AND THEN REOPEN IT AND CHECK IF THERE IS EXIF INSIDE?
 VAR Signature: Integer;
@@ -242,10 +243,6 @@ begin
      EXIT(NIL);       { Do not crash on failure }
     end;
   END;
-
-  { Format is decided by binary signature, not extension - so a PNG named *.jpg (or any other
-    mismatch) loads correctly via the matching branch below. We used to reject PNG-as-JPG with
-    a warning while accepting JPG-as-PNG silently; the asymmetry was a footgun for callers. }
 
   { Create the right type of loader }
   case Signature of
@@ -513,7 +510,7 @@ begin
    TRY
      JpgLoader.LoadFromFile(FileName);
    EXCEPT
-     on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+     on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin
        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
        EXIT(NIL);
@@ -542,10 +539,10 @@ begin
 
      SmartStretch(Result, ThumbWidth, ThumbHeight);
    EXCEPT
-     on E: Exception do      { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+     on E: Exception do      { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin
        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       FreeAndNil(Result);   { We only free the result in case of failure }
+       FreeAndNil(Result);
       end;
    END;
 
@@ -556,10 +553,8 @@ end;
 
 
 {-------------------------------------------------------------------------------
-   Same as above
-     BUT In this function, the Height will be ignored. The thumbnail will be proportionally stretched to fit into the size specified by ThumbWidth
-     If you set ThumbHeight to -1 then the Height will be ignored.
-     The thumbnail will be proportionally stretched to fit into the size specified by ThumbWidth
+   Like ExtractThumbnailJpg, but for any format, and the Height is ignored:
+   the thumbnail is proportionally stretched to fit the size given by ThumbWidth.
 
    Called on Playlist.DrawCell or Playlist.Click
 -------------------------------------------------------------------------------}
@@ -612,7 +607,7 @@ begin
 end;
 
 
-{ Save as above but it does not return the original image resolution }
+{ Like the ExtractThumbnail overload above, but it does not return the original image resolution }
 function ExtractThumbnail(CONST FileName: string; ThumbWidth: Integer): TBitmap;
 VAR ResolutionX, ResolutionY: Integer;
     FrameCount: Cardinal;
@@ -651,10 +646,10 @@ begin
      JPG.Scale:= Scale;           // jsFullSize, jsHalf, jsQuarter, jsEighth
      JPG.LoadFromFile(FileName);
    EXCEPT
-     on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+     on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin
        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       FreeAndNil(JPG);   { We only free the result in case of failure }
+       FreeAndNil(JPG);
        EXIT(NIL);
       end;
    END;
@@ -670,10 +665,10 @@ begin
      Result.HandleType := bmDIB;
      Result.Assign(JPG);  // This takes 4 sec
    EXCEPT
-     on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+     on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin
        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       FreeAndNil(Result);   { We only free the result in case of failure }
+       FreeAndNil(Result);
       end;
    end;
 
@@ -702,10 +697,10 @@ begin
      // JP2.Scale:= Scale;           // jsFullSize, jsHalf, jsQuarter, jsEighth
      JP2.LoadFromFile(FileName);
    EXCEPT
-     on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+     on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin
        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       FreeAndNil(JP2);   { We only free the result in case of failure }
+       FreeAndNil(JP2);
        EXIT(NIL);
       end;
    end;
@@ -718,10 +713,10 @@ begin
    TRY
      Result.Assign(JP2)
    EXCEPT
-     on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+     on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin
        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       FreeAndNil(Result);   { We only free the result in case of failure }
+       FreeAndNil(Result);
       end;
    end;
 
@@ -763,10 +758,10 @@ begin
    TRY
      GIF.LoadFromFile(FileName);    { This takes ~12sec for a 50MB GIF }
    EXCEPT
-     on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+     on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin
        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       FreeAndNil(GIF);   { We only free the result in case of failure }
+       FreeAndNil(GIF);
        EXIT(NIL);
       end;
    END;
@@ -781,10 +776,10 @@ begin
      Result.Assign(GIF);
      FrameCount:= Gif.Images.Count; { This returns 1 for static images }
    EXCEPT
-     on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+     on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin
        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       FreeAndNil(Result);   { We only free the result in case of failure }
+       FreeAndNil(Result);
       end;
    end;
 
@@ -816,10 +811,10 @@ begin
    TRY
      PNG.LoadFromFile(FileName);
    EXCEPT
-     on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+     on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin
        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       FreeAndNil(PNG);   { We only free the result in case of failure }
+       FreeAndNil(PNG);
        EXIT(NIL);
       end;
    end;
@@ -833,10 +828,10 @@ begin
    TRY
      Result.Assign(PNG)
    EXCEPT
-     on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+     on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin
        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       FreeAndNil(Result);   { We only free the result in case of failure }
+       FreeAndNil(Result);
       end;
    end;
 
@@ -866,10 +861,10 @@ begin
    BMP.Assign(PNG)
 
    EXCEPT
-     on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+     on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin
        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       FreeAndNil(Result_);   { We only free the result in case of failure }
+       FreeAndNil(Result_);
       end;
    END;
  FINALLY
@@ -893,10 +888,10 @@ begin
   TRY
     Result.LoadFromFile(FileName);
    EXCEPT
-     on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+     on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin
        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       FreeAndNil(Result);   { We only free the result in case of failure }
+       FreeAndNil(Result);
        EXIT(NIL);
       end;
    end;
@@ -920,7 +915,7 @@ begin
     TRY
       Metafile.LoadFromFile(FileName);
     EXCEPT
-      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic, EReadError, etc }                                                                                     //todo: trap only specific exceptions
+      on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
        begin
         AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
         EXIT(NIL);
@@ -933,10 +928,10 @@ begin
       Result.Width := Metafile.Width;
       Result.Canvas.Draw(0, 0, Metafile);
     EXCEPT
-      on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic, EReadError, etc }                                                                                     //todo: trap only specific exceptions
+      on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
        begin
         AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-        FreeAndNil(Result);   { We only free the result in case of failure }
+        FreeAndNil(Result);
        end;
     END;
 
@@ -958,10 +953,10 @@ begin
    TRY
      WB1.LoadFromFile(FileName);
    EXCEPT
-     on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+     on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin
        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       FreeAndNil(WB1);   { We only free the result in case of failure }
+       FreeAndNil(WB1);
        EXIT(NIL);
       end;
    end;
@@ -975,10 +970,10 @@ begin
    TRY
      Result.Assign(WB1.InternalJPG)
    EXCEPT
-     on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+     on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin
        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       FreeAndNil(Result);   { We only free the result in case of failure }
+       FreeAndNil(Result);
       end;
    end;
 
@@ -1001,10 +996,10 @@ begin
    TRY
      ICO1.LoadFromFile(FileName);
    EXCEPT
-     on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+     on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin
        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       FreeAndNil(ICO1);   { We only free the result in case of failure }
+       FreeAndNil(ICO1);
        EXIT(NIL);
       end;
    end;
@@ -1013,10 +1008,10 @@ begin
    TRY
      Result.Assign(ICO1);
    EXCEPT
-     on E: Exception do  { Don't crash on invalid images. Common encountered errors: EInvalidGraphic (JPEG error #53), EReadError (Stream read error), etc }                                                                                     //todo: trap only specific exceptions
+     on E: Exception do  { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin
        AppDataCore.LogError(E.ClassName+': '+ E.Message + ' - '+ FileName);
-       FreeAndNil(Result);   { We only free the result in case of failure }
+       FreeAndNil(Result);
       end;
    end;
 
@@ -1032,7 +1027,6 @@ end;
 
 {-------------------------------------------------------------------------------------------------------------
    CheckValidImage
-   DetectGraphSignature was moved to LightCore.Graphics (RTL-only).
 -------------------------------------------------------------------------------------------------------------}
 function CheckValidImage (CONST FileName: string): Boolean;
 VAR BMP: TBitmap;

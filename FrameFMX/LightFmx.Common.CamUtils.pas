@@ -19,8 +19,6 @@
    3. In your form's OnCreate:
         FPickerSubId:= SetupImagePickerCallback(procedure(const Path: string) begin if not Path.IsEmpty then ProcessImage(Path); end);
         // In FormDestroy: TMessageManager.DefaultManager.Unsubscribe(TMessageResultNotification, FPickerSubId);   // Android
-        //   Unsubscribe always takes the message class first (there is no single-argument overload),
-        //   and it must be the class that was subscribed — on iOS that is TMessageImagePickerResult.
    4. To save: AddToPhotosAlbum(MyBitmap);
 
    Generic File Picker (ACTION_OPEN_DOCUMENT, Storage Access Framework):
@@ -47,8 +45,8 @@
    - TJavaObjectArray<T> is a plain TObject (not ARC, not interface) and must be Freed.
      Hierarchy: TJavaObjectArray<T> → TJavaArray<T> → TJavaBasicArray (TObject).
      Destructor calls TJNIResolver.DeleteGlobalRef — leaks the JNI global ref if not freed.
-        Local: $(BDS)\source\rtl\android\Androidapi.JNIBridge.pas (declaration ~line 318-373, destructor ~2171)
-        Local: $(BDS)\source\fmx\FMX.AddressBook.Android.pas (~line 390-408 — RTL's own try/finally Free pattern)
+        Local: $(BDS)\source\rtl\android\Androidapi.JNIBridge.pas (the TJavaObjectArray declaration; the destructor is TJavaArray<T>.Destroy)
+        Local: $(BDS)\source\fmx\FMX.AddressBook.Android.pas (the RTL's own try..finally Free pattern)
    - TOSVersion.Major on Android is parsed from Build.VERSION.RELEASE (the human "13", "10" string),
      NOT the API level. So TOSVersion.Check(13) = Android 13 = API 33:
         Local: $(BDS)\source\rtl\common\System.SysUtils.pas (TOSVersion implementation)
@@ -77,8 +75,8 @@ TYPE
 
 {$IFDEF IOS}
 TYPE
-  // iOS picker results — posted by the bridge after a pick/cancel completes.
-  // SetupImagePickerCallback/SetupAnyFilePickerCallback subscribe to these on iOS.
+  { iOS picker results — posted by the bridge after a pick/cancel completes.
+    SetupImagePickerCallback/SetupAnyFilePickerCallback subscribe to these on iOS. }
   TMessageImagePickerResult = class(TMessage<string>);
   TMessageFilePickerResult  = class(TMessage<string>);
 {$ENDIF}
@@ -99,10 +97,10 @@ procedure PickAnyFileFromStorage(const MimeType: string = '*/*');      // Opens 
 // Paths
 function  GetPublicPicturesFolder: string;
 
-// Picker result subscription — cross-platform (Android + iOS).
-// Returns the subscription ID. Caller MUST unsubscribe (TMessageManager.DefaultManager.Unsubscribe)
-// when the subscribing object is destroyed, to prevent callbacks firing on freed memory.
-// On Windows/macOS desktop / Linux: returns 0 and never fires (no async picker on those platforms).
+{ Picker result subscription — cross-platform (Android + iOS).
+  Returns the subscription ID.
+  Caller MUST unsubscribe (TMessageManager.DefaultManager.Unsubscribe) when the subscribing object is destroyed, to prevent callbacks firing on freed memory.
+  On Windows/macOS desktop / Linux: returns 0 and never fires (no async picker on those platforms). }
 function SetupImagePickerCallback  (const AOnImageSelected: TImageSelectedEvent): TSubscriptionId;
 function SetupAnyFilePickerCallback(const AOnFileSelected : TFileSelectedEvent ): TSubscriptionId;
 
@@ -172,10 +170,9 @@ begin
           end;
       end);
 {$ELSE}
-  // iOS: NSCameraUsageDescription must be in Info.plist. Runtime authorization prompt
-  // is triggered automatically by FMX capture APIs (IFMXCameraService) on first use,
-  // so no preemptive request is required here.
-  // macOS Desktop / Windows: no runtime permission system for these APIs.
+  { iOS: NSCameraUsageDescription must be in Info.plist.
+    The runtime authorization prompt is triggered automatically by FMX capture APIs (IFMXCameraService) on first use, so no preemptive request is required here.
+    macOS Desktop / Windows: no runtime permission system for these APIs. }
   if Assigned(AOnGranted) then AOnGranted;
 {$ENDIF}
 end;
@@ -207,10 +204,9 @@ begin
           end;
       end);
 {$ELSE}
-  // iOS: NSPhotoLibraryUsageDescription must be in Info.plist. Runtime authorization
-  // prompt is triggered automatically by IFMXPhotoLibrary on first use, so no
-  // preemptive request is required here.
-  // macOS Desktop / Windows: no runtime permission system for these APIs.
+  { iOS: NSPhotoLibraryUsageDescription must be in Info.plist.
+    The runtime authorization prompt is triggered automatically by IFMXPhotoLibrary on first use, so no preemptive request is required here.
+    macOS Desktop / Windows: no runtime permission system for these APIs. }
   if Assigned(AOnGranted) then AOnGranted;
 {$ENDIF}
 end;
@@ -229,8 +225,8 @@ end;
 procedure ScanMediaFile(const AFileName: string);
 begin
 {$IFDEF ANDROID}
-  // ACTION_MEDIA_SCANNER_SCAN_FILE was deprecated in API 29 (Android 10) and is silently
-  // ignored on newer devices. Use MediaScannerConnection.scanFile instead on API 29+.
+  { ACTION_MEDIA_SCANNER_SCAN_FILE was deprecated in API 29 (Android 10) and is silently ignored on newer devices.
+    Use MediaScannerConnection.scanFile instead on API 29+. }
   if TOSVersion.Check(10) then
   begin
     var Paths: TJavaObjectArray<JString>;
@@ -429,8 +425,8 @@ begin
   AllowedUTIs:= TNSMutableArray.Create;
   AllowedUTIs.addObject(NSObjectToID(StrToNSStr('public.item')));  // any file
 
-  // initWithDocumentTypes is deprecated in iOS 14 (use initForOpeningContentTypes with UTType),
-  // but still functional. UTType bindings not yet stable in Delphi RTL.
+  { initWithDocumentTypes is deprecated in iOS 14 (use initForOpeningContentTypes with UTType), but still functional.
+    UTType bindings not yet stable in Delphi RTL. }
   GIosDocumentPicker:= TUIDocumentPickerViewController.Wrap(
     TUIDocumentPickerViewController.Alloc.initWithDocumentTypes(AllowedUTIs, UIDocumentPickerModeImport));
   GIosDocumentPicker.setDelegate(GIosDocumentPickerBridge.GetObjectID);
@@ -463,8 +459,8 @@ begin
 end;
 
 
-// Opens the Storage Access Framework document UI. No permission needed — OS grants temporary URI access.
-// MimeType: '*/*' for any file, or a specific MIME like 'application/pdf'. For multi-MIME, use EXTRA_MIME_TYPES.
+{ Opens the Storage Access Framework document UI. No permission needed — OS grants temporary URI access.
+  MimeType: '*/*' for any file, or a specific MIME like 'application/pdf'. For multi-MIME, use EXTRA_MIME_TYPES. }
 procedure PickAnyFileFromStorage(const MimeType: string = '*/*');
 begin
 {$IFDEF ANDROID}
@@ -474,8 +470,8 @@ begin
   Intent.setType(StringToJString(MimeType));
   MainActivity.startActivityForResult(Intent, REQUEST_PICK_FILE);
 {$ELSEIF DEFINED(IOS)}
-  // MimeType is ignored on iOS — UIDocumentPickerViewController takes UTI strings, not MIME.
-  // We use 'public.item' (any file) which mirrors '*/*'. Specific UTI filtering is a future enhancement.
+  { MimeType is ignored on iOS — UIDocumentPickerViewController takes UTI strings, not MIME.
+    We use 'public.item' (any file) which mirrors '*/*'. Specific UTI filtering is a future enhancement. }
   iOSPickFile;
 {$ENDIF}
 end;
@@ -515,9 +511,8 @@ begin
         // Allocate Java Byte Array ONCE
         JBuffer:= TJavaArray<Byte>.Create(4096);
 
-        // 3. Loop and copy. Java InputStream.read returns -1 at EOF; 0 means
-        // "no bytes currently available" on PipeInputStream-backed providers
-        // (some FileProvider impls). Don't treat 0 as EOF — only -1.
+        { 3. Loop and copy. Java InputStream.read returns -1 at EOF; 0 means "no bytes currently available" on PipeInputStream-backed providers (some FileProvider impls).
+          Don't treat 0 as EOF — only -1. }
         BytesRead:= InputStream.read(JBuffer);
         while BytesRead <> -1 do
         begin
@@ -573,9 +568,8 @@ begin
       Msg: TMessageResultNotification;
       Path: string;
     begin
-      // Hard try/except: this anonymous proc is dispatched by FMX.Platform.Android
-      // outside any application-level handler. An exception that escapes here
-      // kills the process silently on Android (no madExcept, no dialog).
+      { Hard try/except: this anonymous proc is dispatched by FMX.Platform.Android outside any application-level handler.
+        An exception that escapes here kills the process silently on Android (no madExcept, no dialog). }
       TRY
         Msg:= TMessageResultNotification(M);
         if Msg.RequestCode = REQUEST_PICK_IMAGE then
@@ -583,8 +577,7 @@ begin
           if Msg.ResultCode = TJActivity.JavaClass.RESULT_OK then
           begin
             var Uri := Msg.Value.getData;
-            // We MUST copy the file to a local path (Cache) because
-            // TBitmap.LoadFromFile cannot read 'content://' URIs directly.
+            { We MUST copy the file to a local path (Cache) because TBitmap.LoadFromFile cannot read 'content://' URIs directly. }
             Path := CopyUriToCache(Uri, '.jpg');
 
             if Assigned(AOnImageSelected)
@@ -729,9 +722,8 @@ begin
   Result:= '';
   if AIntent = nil then EXIT;
 
-  // Filter by action: only ACTION_VIEW carries a file URI we should import.
-  // Push notifications, MAIN launcher events, etc. would also raise TMessageReceivedNotification
-  // and must be ignored here.
+  { Filter by action: only ACTION_VIEW carries a file URI we should import.
+    Push notifications, MAIN launcher events, etc. would also raise TMessageReceivedNotification and must be ignored here. }
   if AIntent.getAction = nil then EXIT;
   Action:= JStringToString(AIntent.getAction);
   if Action <> JStringToString(TJIntent.JavaClass.ACTION_VIEW) then EXIT;
@@ -754,8 +746,8 @@ begin
       Msg : TMessageReceivedNotification;
       Path: string;
     begin
-      // Hard try/except: this fires on FMX dispatch path; an unhandled exception
-      // would kill the process on Android. Log and swallow.
+      { Hard try/except: this fires on FMX dispatch path; an unhandled exception would kill the process on Android.
+        Log and swallow. }
       TRY
         Msg := TMessageReceivedNotification(M);
         Path:= ExtractFileFromIntent(Msg.Value);
@@ -794,8 +786,8 @@ begin
     Path:= ExtractFileFromIntent(Intent);
     if Path = '' then EXIT;
 
-    // Clear the URI so we don't re-process it. setAction(MAIN) would also work but
-    // setData(nil) is enough — ExtractFileFromIntent returns '' when getData is nil.
+    { Clear the URI so we don't re-process it.
+      setAction(MAIN) would also work but setData(nil) is enough — ExtractFileFromIntent returns '' when getData is nil. }
     Intent.setData(nil);
 
     if Assigned(AOnFileReceived)
@@ -833,10 +825,8 @@ end;
 
 
 {$IFDEF IOS}
-// Frees iOS picker singletons. FINALIZATION is normally avoided per project rule, but
-// here the singletons (TIosImagePickerBridge + TIosDocumentPickerDelegate) must outlive
-// any single picker invocation AND be released at app exit so the registered Objective-C
-// class for the document delegate is unregistered cleanly.
+{ Frees iOS picker singletons.
+  FINALIZATION is normally avoided per project rule, but here the singletons (TIosImagePickerBridge + TIosDocumentPickerDelegate) must outlive any single picker invocation AND be released at app exit so the registered Objective-C class for the document delegate is unregistered cleanly. }
 finalization
   FreeAndNil(GIosImagePickerBridge);
   FreeAndNil(GIosDocumentPickerBridge);

@@ -8,11 +8,6 @@ UNIT LightVcl.Common.ExecuteProc;
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
 
-   2026-08-11: Fixed: ExecuteAndGetOutDyn crashed with an access violation on ANY literal command line.
-               It handed PChar() of its CONST parameter to CreateProcessW, which writes into that buffer.
-               It now passes a UniqueString'd copy, the same protection ExecuteProc already had.
-==============================================================================================================
-
    Execute external processes using the CreateProcess API (recommended over ShellExecute).
 
    ShellExecute vs CreateProcess:
@@ -31,7 +26,8 @@ UNIT LightVcl.Common.ExecuteProc;
    Notes:
       - ExecuteProc cannot run programs requiring admin rights (UAC elevation)
       - For elevated execution, use ShellExecute with 'runas' verb
-      - All functions accept command line parameters in ExeFile string
+      - ExecuteProc and ExecuteProcMsg accept command line parameters inside the ExeFile string.
+        ExecuteAndWait does not: it wraps ExeFile in quotes as one path, so its parameters go in the separate Params argument.
 
    For cross-platform see:
       Jedi.Execute - www.delphicorner.f9.co.uk/articles/wapi4.htm
@@ -138,8 +134,7 @@ begin
   if ExeFile = ''
   then raise Exception.Create('ExecuteProc: ExeFile parameter cannot be empty');
 
-  { UniqueString ensures ExeFile has unique reference - required because
-    CreateProcess may modify the command line buffer }
+  { UniqueString ensures ExeFile has unique reference - required because CreateProcess may modify the command line buffer }
   UniqueString(ExeFile);
 
   ZeroMemory(@SI, SizeOf(SI));
@@ -223,8 +218,7 @@ begin
   UNTIL MsgWaitForMultipleObjects(1, ProcessInfo.hProcess, FALSE, WaitTime, QS_ALLINPUT) <> WAIT_OBJECT_0 + 1;
 
   { Process any remaining messages after process exits.
-    Important: there may be asynchronously-sent messages still queued
-    if MWFMO saw the process terminate before checking for messages. }
+    Important: there may be asynchronously-sent messages still queued if MWFMO saw the process terminate before checking for messages. }
   Application.ProcessMessages;
   ExitCode:= 0;   { Defined result if GetExitCodeProcess fails - otherwise stack garbage would be returned }
   GetExitCodeProcess(ProcessInfo.hProcess, ExitCode);
@@ -380,15 +374,11 @@ begin
   if CmdLine = ''
   then raise Exception.Create('ExecuteAndGetOutDyn: CmdLine parameter cannot be empty');
 
-  { CreateProcessW WRITES into lpCommandLine - it inserts a null to split the module name from the
-    arguments - so that pointer must never address read-only memory. Microsoft: "this parameter cannot
-    be a pointer to read-only memory (such as a const variable or a literal string). If this parameter
-    is a constant string, the function may cause an access violation."
+  { CreateProcessW WRITES into lpCommandLine - it inserts a null to split the module name from the arguments - so that pointer must never address read-only memory.
+    Microsoft: "this parameter cannot be a pointer to read-only memory (such as a const variable or a literal string). If this parameter is a constant string, the function may cause an access violation."
     https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-createprocessw
-    CmdLine is a CONST parameter, so a caller passing a literal gives us a pointer into the EXE's
-    read-only data and PChar() hands that straight to the API. UniqueString forces a heap copy with a
-    refcount of 1. ExecuteProc has carried the same protection since 2026.01; this routine did not, and
-    it crashed on every literal command line. }
+    CmdLine is a CONST parameter, so a caller passing a literal gives us a pointer into the EXE's read-only data and PChar() hands that straight to the API.
+    UniqueString forces a heap copy with a refcount of 1. }
   WritableCmd:= CmdLine;
   UniqueString(WritableCmd);
 

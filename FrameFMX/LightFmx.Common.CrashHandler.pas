@@ -8,45 +8,34 @@
 
    Why this exists:
    - madExcept and EurekaLog are Windows-only.
-   - On Android/iOS an unhandled exception silently kills the process: no
-     dialog, no stack trace, no clue what happened.
-   - This unit installs Application.OnException and writes one line per
-     uncaught exception to <AppDataFolder>\crash.log. On next launch the
-     application can read the file, show it to the user (or upload it),
-     then clear it.
+   - On Android/iOS an unhandled exception silently kills the process: no dialog, no stack trace, no clue what happened.
+   - This unit installs Application.OnException and writes one line per uncaught exception to <AppDataFolder>\crash.log.
+     On next launch the application can read the file, show it to the user (or upload it), then clear it.
 
    *** NEVER LINK THIS UNIT INTO A BINARY THAT ALSO LINKS madExcept ***
    The compile-time guard below the header enforces it and explains why.
 
-   Consider LightCore.ExceptionLogger instead of this unit where it fits: it hooks
-   RaiseExceptObjProc rather than Application.OnException, so it also sees the
-   exceptions that limit 2 below loses.
+   Consider LightCore.ExceptionLogger instead of this unit where it fits: it hooks RaiseExceptObjProc rather than Application.OnException, so it also sees exceptions raised off the main thread, which this unit misses.
 
-   Background: 
-     c:\Delphi\IDE madShi 510\CLAUDE.md 
+   Background:
+     c:\Delphi\IDE madShi 510\CLAUDE.md
      c:\Projects\LightSaber\CLAUDE.md
 
    Known limits (Phase B baseline):
    1. NO STACK TRACE. Captures only Exception class name + message + timestamp.
-      One-line summary, nothing more. Phase C: pull in Grijjy.ErrorReporting.pas
-      and append the symbolicated stack to crash.log.
+      Phase C: pull in Grijjy.ErrorReporting.pas and append the symbolicated stack to crash.log.
       Source: github.com/grijjy/JustAddCode/tree/master/ErrorReporting
       Research: c:\Delphi\FMX\Bug reporter FMX\Crash Reporting Tools for Delphi FMX Android.md
 
-   2. MAIN-THREAD ONLY. Application.OnException catches exceptions only on the
-      UI thread. Anything that escapes TTask.Run / TThread.Execute past the
-      thread's own try/except dies silently — same Android symptom as Issue 14.
-      Phase C: also hook ExceptionAcquired (per-thread) and ExceptProc (global
-      runtime fallback). Both are documented in Grijjy.ErrorReporting.pas.
+   2. MAIN-THREAD ONLY. Application.OnException catches exceptions only on the UI thread.
+      Anything that escapes TTask.Run / TThread.Execute past the thread's own try..except dies silently — same Android symptom as Issue 14.
+      Phase C: also hook ExceptionAcquired (per-thread) and ExceptProc (global runtime fallback). Both are documented in Grijjy.ErrorReporting.pas.
 
-   3. NO USER-FACING REPORT FLOW. crash.log is shown via ShowMessage on next
-      launch. No upload, no email. Phase C: replace ShowMessage with
-      Intent.ACTION_SEND (Android) / mailto: (desktop) prompt that attaches
-      crash.log.
+   3. NO USER-FACING REPORT FLOW. crash.log is shown via ShowMessage on next launch. No upload, no email.
+      Phase C: replace ShowMessage with an Intent.ACTION_SEND (Android) or mailto: (desktop) prompt that attaches crash.log.
 
-   4. SHOWMESSAGE FROM FORMCREATE may cause focus / dialog-ordering glitches
-      on Android. If observed, defer the prompt with TThread.ForceQueue
-      (same pattern used by FormLessonChat.btnDoneSessionClick).
+   4. SHOWMESSAGE FROM FORMCREATE may cause focus / dialog-ordering glitches on Android.
+      If observed, defer the prompt with TThread.ForceQueue (same pattern used by FormLessonChat.btnDoneSessionClick).
 
    Usage:
    - In the DPR, after AppData.Create, before AppData.Run:
@@ -107,19 +96,17 @@ CONST
   CRASH_LOG_FILENAME = 'crash.log';
 
 TYPE
-  // Application.OnException is TExceptionEvent = procedure(Sender: TObject; E: Exception) OF OBJECT.
-  // It needs a method, not a standalone procedure — hence this tiny wrapper class.
-  // The instance is owned by the global Application object so it is freed cleanly on shutdown.
+  { Application.OnException is TExceptionEvent = procedure(Sender: TObject; E: Exception) OF OBJECT.
+    It needs a method, not a standalone procedure — hence this tiny wrapper class.
+    The instance is owned by the global Application object so it is freed cleanly on shutdown. }
   TCrashHandlerHook = class(TComponent)
   private
-    // Class-vars instead of unit globals: project rule "zero tolerance for global vars".
-    // These are conceptually a singleton's state — encapsulating them in the class scope
-    // makes the lifetime contract explicit and keeps the unit's namespace clean.
-    // 'private' (not strict) so InstallCrashHandler in the same unit can write them.
+    { Class-vars instead of unit globals: project rule "zero tolerance for global vars".
+      They are one singleton's state.
+      'private' (not strict) so InstallCrashHandler in the same unit can write them. }
     class var FInstance  : TCrashHandlerHook;
     class var FCachedPath: string;
-    FInHandler: Boolean;     // Re-entrance guard: a third-party caller (or future hook chain)
-                             // could invoke HandleException from within the handler itself.
+    FInHandler: Boolean;     // Re-entrance guard: a third-party caller (or future hook chain) could invoke HandleException from within the handler itself.
   public
     procedure HandleException(Sender: TObject; E: Exception);
     destructor Destroy; override;
@@ -128,20 +115,16 @@ TYPE
   end;
 
 
-{ The path to the crash log file. Returns '' if InstallCrashHandler has not been called yet,
-  or if it was called before AppData.Create (a very-early exception during DPR initialization
-  could hit this path). The path is cached at install time so the exception handler does not
-  call ForceDirectories or touch TAppDataCore.AppName (which asserts in debug builds when the
-  app name is empty). }
+{ Returns '' if InstallCrashHandler has not been called yet, or if it was called before AppData.Create (a very-early exception during DPR initialization could hit this path).
+  The path is cached at install time so the exception handler does not call ForceDirectories or touch TAppDataCore.AppName (which asserts in debug builds when the app name is empty). }
 function CrashLogPath: string;
 begin
   Result:= TCrashHandlerHook.CachedPath;
 end;
 
 
-{ Append one line to crash.log. Wrapped in TRY/EXCEPT because the crash handler must
-  never raise — that would mask the original exception or, on Android, recurse into
-  another silent kill. }
+{ Append one line to crash.log.
+  Wrapped in try..except because the crash handler must never raise — that would mask the original exception or, on Android, recurse into another silent kill. }
 procedure WriteCrashLog(CONST Text: string);
 VAR Path: string;
 begin
@@ -160,22 +143,16 @@ VAR
   Line   : string;
   LineCap: string;  // captured by value into the deferred closure
 begin
-  // Application.OnException always passes a non-nil E, but be defensive — a third
-  // party could call HandleException directly.
+  { Application.OnException always passes a non-nil E, but be defensive — a third party could call HandleException directly. }
   if NOT Assigned(E) then EXIT;
 
-  // Re-entrance guard. A future hook chain or third-party caller could re-invoke
-  // this handler from inside itself; without the guard we'd recurse on a
-  // secondary fault from inside the handler.
+  { Re-entrance guard. A future hook chain or third-party caller could re-invoke this handler from inside itself; without the guard we'd recurse on a secondary fault from inside the handler. }
   if FInHandler then EXIT;
   FInHandler:= True;
 
-  // Outer try/except: an exception escaping THIS handler would bypass OnException
-  // (the dispatcher does not re-enter for handler failures) and on Android would
-  // silently kill the process — exactly what we are trying to prevent.
+  { Outer try..except: an exception escaping THIS handler would bypass OnException (the dispatcher does not re-enter for handler failures) and on Android would silently kill the process — exactly what we are trying to prevent. }
   TRY
-    // ISO-style timestamp so logs sort and parse the same regardless of user locale
-    // (DateTimeToStr would render 'dd/mm/yyyy' or 'mm/dd/yyyy' depending on the OS).
+    { ISO-style timestamp so logs sort and parse the same regardless of user locale (DateTimeToStr would render 'dd/mm/yyyy' or 'mm/dd/yyyy' depending on the OS). }
     Line:= FormatDateTime('yyyy-mm-dd hh:nn:ss', Now) + ' | ' + E.ClassName + ': ' + E.Message;
 
     // Mirror to RamLog so the in-app log viewer sees it during the current session.
@@ -192,14 +169,10 @@ begin
         LineCap:= Line;
         TThread.ForceQueue(NIL, procedure
           begin
-            // Swallow any failure of the deferred mirror. This closure runs on a LATER
-            // message-loop turn (via CheckSynchronize), OUTSIDE the outer try/except above
-            // and with FInHandler already cleared. AddError CAN raise (CheckAndSaveToDisk
-            // re-raises AV/EOutOfMemory; PopUpWindow can fault): CheckSynchronize would then
-            // route the exception to Application.OnException -> back into THIS handler,
-            // unguarded, scheduling yet another failing closure = repeating error storm.
-            // The crash is already persisted by WriteCrashLog below; a failed in-session
-            // mirror to the viewer has nothing useful to add.
+            { Swallow any failure of the deferred mirror.
+              This closure runs on a LATER message-loop turn (via CheckSynchronize), OUTSIDE the outer try..except above and with FInHandler already cleared.
+              AddError CAN raise (CheckAndSaveToDisk re-raises AV/EOutOfMemory; PopUpWindow can fault): CheckSynchronize would then route the exception to Application.OnException -> back into THIS handler, unguarded, scheduling yet another failing closure = repeating error storm.
+              The crash is already persisted by WriteCrashLog below; a failed in-session mirror to the viewer has nothing useful to add. }
             TRY
               if Assigned(AppDataCore) AND Assigned(AppDataCore.RamLog)
               then AppDataCore.RamLog.AddError('Unhandled: ' + LineCap);
@@ -208,12 +181,11 @@ begin
           end);
       end;
 
-    // Persist to disk so the next session can show the user what happened.
-    // Documented intentional deviation from the log+reraise rule (see WriteCrashLog).
+    { Persist to disk so the next session can show the user what happened.
+      Documented intentional deviation from the log+reraise rule (see WriteCrashLog). }
     WriteCrashLog(Line);
   EXCEPT
-    // Swallow. Documented intentional deviation: re-raising bypasses OnException
-    // and silently kills the process on Android. See class-level rationale.
+    { Swallow. Documented intentional deviation: re-raising bypasses OnException and silently kills the process on Android. }
   END;
 
   FInHandler:= False;
@@ -222,10 +194,8 @@ end;
 
 destructor TCrashHandlerHook.Destroy;
 begin
-  // Clear OnException only if it still points to this hook — don't clobber a handler
-  // installed later by other code. TApplication.Destroy frees owned components but
-  // does not clear FOnException, so without this we would leave a dangling method
-  // reference on Application during the brief window before Application itself dies.
+  { Clear OnException only if it still points to this hook — don't clobber a handler installed later by other code.
+    TApplication.Destroy frees owned components but does not clear FOnException, so without this we would leave a dangling method reference on Application during the brief window before Application itself dies. }
   if Assigned(Application) AND (TMethod(Application.OnException).Data = Self)
   then Application.OnException:= nil;
   FInstance  := nil;        // Clear class var so InstallCrashHandler can be called again in a fresh app lifecycle (tests).
@@ -237,10 +207,8 @@ end;
 procedure InstallCrashHandler;
 begin
   if Assigned(TCrashHandlerHook.FInstance) then EXIT;          // Idempotent
-  // Cache the path now while AppData is healthy. This avoids calling ForceDirectories
-  // and the TAppDataCore.AppName assert (debug builds) from inside the exception handler,
-  // which on Android may already be in a degraded state. If AppData was not constructed
-  // first, the cache stays empty and all logging silently no-ops — safer than asserting.
+  { Cache the path now while AppData is healthy. This avoids calling ForceDirectories and the TAppDataCore.AppName assert (debug builds) from inside the exception handler, which on Android may already be in a degraded state.
+    If AppData was not constructed first, the cache stays empty and all logging silently no-ops — safer than asserting. }
   if Assigned(AppDataCore)
   then TCrashHandlerHook.FCachedPath:= TAppDataCore.AppDataFolder(True) + CRASH_LOG_FILENAME;
   TCrashHandlerHook.FInstance:= TCrashHandlerHook.Create(Application);  // Application owns and frees it

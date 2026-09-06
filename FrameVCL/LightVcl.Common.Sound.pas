@@ -48,8 +48,7 @@ USES
   LightCore.AppData;
 
 
-{ Plays a Windows system sound by name.
-  See the comment above PlaySoundFile for available system sound names. }
+{ The system sound names this accepts are listed in the block above PlaySoundFile. }
 procedure PlayWinSound(CONST SystemSoundName: string);
 begin
  if SystemSoundName = ''
@@ -59,7 +58,8 @@ begin
 end;
 
 
-{ All available constants are defined in the registry under the path HKEY_CURRENT_USER -> AppEvents -> Schemes -> Apps -> .Default. Here, depending on the installed applications and your Windows version, you can surely find the one or another sound file and the associated constant.
+{ All the names below are registry values under HKEY_CURRENT_USER -> AppEvents -> Schemes -> Apps -> .Default.
+  Which ones exist depends on the Windows version and on the installed applications.
   System sounds:
     SystemEXCLAMATION        - Note
     SystemHAND               - Critical Stop
@@ -70,12 +70,12 @@ end;
     RESTOREUP                - Enlarge
     RESTOREDOWN              - Shrink
     MENUCOMMAND              - Menu
-    MENUPOPUP                - Pop-Up)
-    MAXIMIZE                 - Maximize)
-    MINIMIZE                 - Minimize)
-    MAILBEEP                 - New Mail)
-    OPEN                     - Open Application)
-    CLOSE                    - Close Application)
+    MENUPOPUP                - Pop-Up
+    MAXIMIZE                 - Maximize
+    MINIMIZE                 - Minimize
+    MAILBEEP                 - New Mail
+    OPEN                     - Open Application
+    CLOSE                    - Close Application
     AppGPFAULT               - Program Error
     Notification             - played when a default notification from a program or app is displayed.
     -----
@@ -134,8 +134,7 @@ begin
  if hResInfo = 0 then
   begin
     { The WAV is compiled into our own EXE, so this is a build error and no user can cause it.
-      It RAISES rather than asserting: an Assert is stripped from the Release build, which is exactly
-      the build where a missing resource would then fail with no trace at all. }
+      It RAISES rather than asserting: an Assert is stripped from the Release build, which is exactly the build where a missing resource would then fail with no trace at all. }
     raise EResNotFound.Create('PlayResSound: resource not found: '+ ResName);
   end;
 
@@ -153,7 +152,6 @@ begin
 
  uFlags:= SND_MEMORY or uFlags;
  SndPlaySound(lpGlob, uFlags);
- { Note: UnlockResource/FreeResource are no-ops in 32-bit Windows and later }
 end;
 
 
@@ -161,10 +159,9 @@ end;
 
 
 { Generates and plays a pure sine wave tone.
-  Parameters:
-    Frequency - Tone frequency in Hz (max ~6600 Hz due to sample rate)
-    Duration  - Duration in milliseconds
-    Volume    - Volume level 0-127 (values > 127 are clamped) }
+    Frequency - Hz. Max ~6600 Hz, because the sample rate is 11025 Hz.
+    Duration  - milliseconds.
+    Volume    - 0 to 127. Anything higher is clamped to 127. }
 procedure PlayTone(Frequency, Duration: Integer; Volume: Byte);
 VAR
   WaveFormatEx: TWaveFormatEx;
@@ -244,10 +241,9 @@ end;
 
 
 
-{ Simple wrapper for Windows.Beep.
-  Frecv - Frequency in Hz
+{ Frecv - Frequency in Hz
   Timp  - Duration in milliseconds
-  Note: The sound may not be heard if duration is too short (< ~35 ms) }
+  The sound may not be heard if the duration is under ~35 ms. }
 procedure Bip(Frecv, Timp: Integer);
 begin
  WinApi.Windows.Beep(Frecv, Timp);
@@ -285,25 +281,21 @@ begin
   WinApi.Windows.Beep(400, 110);
 end;
 
-{ Quick beep - 30ms at 800Hz }
 procedure Bip30;
 begin
  WinApi.Windows.Beep(800, 30);
 end;
 
-{ Quick beep - 50ms at 800Hz }
 procedure Bip50;
 begin
  WinApi.Windows.Beep(800, 50);
 end;
 
-{ Standard beep - 100ms at 800Hz }
 procedure Bip100;
 begin
  WinApi.Windows.Beep(800, 100);
 end;
 
-{ Long beep - 300ms at 800Hz }
 procedure Bip300;
 begin
  WinApi.Windows.Beep(800, 300);

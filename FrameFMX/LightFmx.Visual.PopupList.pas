@@ -7,11 +7,9 @@ UNIT LightFmx.Visual.PopupList;
    TPopupList — a lightweight FMX popup menu built on TPopup + TListBox.
 
    Why not TPopupMenu?
-     TPopupMenu has an unfixed FMX bug (present since early XE versions, still broken in Delphi 13.1):
-     when menu items have Visible=False, FMX temporarily reparents only the VISIBLE items to the
-     popup window on open, then fails to restore hidden items to their original index positions on
-     close. Hidden items get pushed to the top of the list, so items silently reorder on every
-     open/close cycle. There is also no OnPopup event, and TPopupMenu doesn't work on Android/iOS.
+     TPopupMenu has an unfixed FMX bug (present since early XE versions, still broken in Delphi 13.1): when menu items have Visible=False, FMX temporarily reparents only the VISIBLE items to the popup window on open, then fails to restore hidden items to their original index positions on close.
+     Hidden items get pushed to the top of the list, so items silently reorder on every open/close cycle.
+     There is also no OnPopup event, and TPopupMenu doesn't work on Android/iOS.
 
    Usage:
      FMenu := TPopupList.Create(Self, btnTrigger);
@@ -100,14 +98,13 @@ begin
   FListBox.ItemIndex      := -1;
   FListBox.OnMouseMove    := ListBoxMouseMove;
   FListBox.OnMouseLeave   := ListBoxMouseLeave;
-  FListBox.OnChange       := ListBoxChange;        // Assigned AFTER items (added via AddItem) to prevent construction-time firing
+  FListBox.OnChange       := ListBoxChange;        // Assigned last: the ItemIndex := -1 above would otherwise fire it during construction
 end;
 
 
 destructor TPopupList.Destroy;
 begin
-  // Clear event handlers before freeing — prevents FMX from calling back into freed Self
-  // during any deferred destruction steps
+  { Clear event handlers before freeing — prevents FMX from calling back into freed Self during any deferred destruction steps }
   if Assigned(FListBox) then
     begin
       FListBox.OnChange     := NIL;
@@ -120,7 +117,7 @@ begin
 end;
 
 
-{ Creates a TListBoxItem and adds a transparent TRectangle behind its text.
+{ Adds a transparent TRectangle behind the item's text.
   The rect is stored in TagObject for fast access during hover. }
 function TPopupList.AddItem(const Text: string): TListBoxItem;
 VAR Bg: TRectangle;
@@ -200,14 +197,14 @@ begin
   if NOT FPopup.IsOpen then EXIT;       // Ignore spurious OnChange when popup isn't shown
   if FListBox.ItemIndex < 0 then EXIT;
   Item     := FListBox.ListItems[FListBox.ItemIndex];
-  Callback := FOnItemSelected;          // Capture value (not Self) — keeps the anon-method ref-counted independently
+  Callback := FOnItemSelected;          // Capture value (not Self) — keeps the anonymous method ref-counted independently
   FPopup.IsOpen := FALSE;
 
-  // Defer to next message loop — FMX popup teardown interferes with modal forms if called inline.
-  // Safety contract: Item is a raw TListBoxItem* owned by this TPopupList. The caller must ensure
-  // TPopupList outlives the queued proc — i.e. do not call FreeAndNil(FMenu) synchronously in
-  // a path that can run before the next message loop tick. In practice this holds because any
-  // Free of the containing object is itself queued via ForceQueue, which is FIFO after this one.
+  { Defer to next message loop — FMX popup teardown interferes with modal forms if called inline.
+    Safety contract: Item is a raw TListBoxItem* owned by this TPopupList. The caller must ensure
+    TPopupList outlives the queued proc — i.e. do not call FreeAndNil(FMenu) synchronously in
+    a path that can run before the next message loop tick. In practice this holds because any
+    Free of the containing object is itself queued via ForceQueue, which is FIFO after this one. }
   if Assigned(Callback) then
     TThread.ForceQueue(NIL, procedure
       begin

@@ -21,7 +21,7 @@ UNIT LightVcl.Visual.CreationOrderTester;
    It does also allow to conserve resources by freeing the handle when it is not needed, and recreating it later.
    https://stackoverflow.com/questions/582721/why-shouldnt-you-use-a-handle-during-component-creation-or-streaming
 
-   BUT I need to make sure I don't create objects twice! So I need a boolean var.
+   BUT I need to make sure I don't create objects twice! So I need a boolean var (FInitialized).
 
  Discussions:
        Why shouldn't you use a handle during component creation or streaming?
@@ -37,7 +37,7 @@ UNIT LightVcl.Visual.CreationOrderTester;
             https://stackoverflow.com/questions/582903/whats-the-difference-between-createwnd-and-createwindowhandle
 
  Tester:
-   LightSaber\Demo\VCL\Demo Custom component creation order\Demo_CreationOrder.dpr
+   LightSaber\Demo\VCL\Demo Custom component creation order\VCL_Demo_CreationOrder.dpr
 
  Minimum target: 
    Delphi Rio
@@ -46,7 +46,8 @@ UNIT LightVcl.Visual.CreationOrderTester;
     https://stackoverflow.com/questions/19750813/delphi-6-create-new-form-with-constructor
 --------------------------------------------------------------------------------------------------------------
 
-Results of the experiment (this is shown on screen if you run the following experiments):
+Results of the experiment.
+WriteLog writes them to CreationOrderTest.txt, and only when the LogActive constant is TRUE - it ships as FALSE.
 
    Dropping control on a form (design time):
       Create

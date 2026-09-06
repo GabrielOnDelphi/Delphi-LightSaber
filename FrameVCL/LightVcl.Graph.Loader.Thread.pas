@@ -8,8 +8,7 @@
 --------------------------------------------------------------------------------------------------------------
   Loads multiple images in separate threads.
   Images are automatically resized to Width, Height.
-  When the thumbnail of an image is ready, it is put in a Queue by PushPicture which
-    also informs the caller that the thumbnail is ready (via a WM_THUMBNAIL_NOTIFY signal).
+  When the thumbnail of an image is ready, it is put in a Queue by PushPicture which also informs the caller that the thumbnail is ready (via a WM_THUMBNAIL_NOTIFY signal).
   The caller gets the picture from queue using PopPicture (the image is deleted from queue).
   The caller is responsible for freeing the thumbnail.
 
@@ -39,9 +38,8 @@
                 Do NOT free FileList after assigning it to the thread!
     - PopPicture: Returns NIL if the queue is empty. Always check the result before using.
     - The caller is responsible for freeing the bitmaps returned by PopPicture.
-    - Free MUST be called from the thread that owns the window handle (typically the main
-      UI thread). The destructor drains pending WM_THUMBNAIL_NOTIFY messages from the
-      caller's queue; that drain only works on the calling thread's own queue.
+    - Free MUST be called from the thread that owns the window handle (typically the main UI thread).
+      The destructor drains pending WM_THUMBNAIL_NOTIFY messages from the caller's queue; that drain only works on the calling thread's own queue.
 
   We can put a single file in FileList and process only that file.
 
@@ -122,9 +120,7 @@ VAR
   BMP: TBitmap;
   Msg: TMsg;
 begin
- { Order matters: signal Terminate, then wait for Execute to finish (via inherited Destroy)
-   BEFORE touching ReadyThumbs/FQueueLock — otherwise a still-running PushPicture
-   would access a freed lock and crash. }
+ { Order matters: signal Terminate, then wait for Execute to finish (via inherited Destroy) BEFORE touching ReadyThumbs/FQueueLock — otherwise a still-running PushPicture would access a freed lock and crash. }
  Terminate;
  inherited Destroy;   { Waits for the thread to exit Execute }
 
@@ -206,16 +202,10 @@ begin
  if NOT FileExists(AFileName) then EXIT;
 
  { roFit, and NOT the roAutoDetect that RResizeParams.Reset chooses by default.
-   roAutoDetect is written for a WALLPAPER: when it cannot Fill and has to fall back to Fit, it
-   deliberately adds FitTolerance (10%) back on top to crop away the black bars - see the comment
-   "we can still try to increase the size of the image with 10%" in
-   RResizeParams.computeAutodetect (LightVcl.Graph.ResizeParams.pas).
-   A THUMBNAIL must stay inside the Width x Height box it was asked for. Measured 2026-09-04: a
-   200x150 bitmap asked to fit a 100x100 box came back 110 pixels wide. TCubicThumbs.DrawCell
-   (LightVcl.Visual.ThumbViewerM.pas) centers the bitmap with
-   x:= aRect.Left + (DefaultColWidth - BMP.Width) DIV 2, and DefaultColWidth is only
-   ThumbWidth + 2*CellSpacing - so a 10% overshoot puts x left of the cell and the thumbnail
-   paints over its neighbour. }
+   roAutoDetect is written for a WALLPAPER: when it cannot Fill and has to fall back to Fit, it deliberately adds FitTolerance (10%) back on top to crop away the black bars - see the comment "we can still try to increase the size of the image with 10%" in RResizeParams.computeAutodetect (LightVcl.Graph.ResizeParams.pas).
+   A THUMBNAIL must stay inside the Width x Height box it was asked for.
+   A 200x150 bitmap asked to fit a 100x100 box came back 110 pixels wide.
+   TCubicThumbs.DrawCell (LightVcl.Visual.ThumbViewerM.pas) centers the bitmap with x:= aRect.Left + (DefaultColWidth - BMP.Width) DIV 2, and DefaultColWidth is only ThumbWidth + 2*CellSpacing - so a 10% overshoot puts x left of the cell and the thumbnail paints over its neighbour. }
  Resize.Reset;
  Resize.ResizeOpp:= roFit;
  Resize.MaxWidth := Width;
@@ -287,8 +277,7 @@ begin
  END;
 
  { Send a message to the main program to let it know a new thumb is ready/available.
-   Skip if Terminate was already signaled — the destructor will free the bitmap from
-   the queue and drain any in-flight messages anyway. }
+   Skip if Terminate was already signaled — the destructor will free the bitmap from the queue and drain any in-flight messages anyway. }
  if NOT Terminated then
    PostMessage(FWndHandle, WM_THUMBNAIL_NOTIFY, 0, 0);
 end;

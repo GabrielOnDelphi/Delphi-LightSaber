@@ -6,12 +6,9 @@
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
-   Obtains a frame from the middle of a video file.
+   Should obtain a frame from the middle of a video file - but it does not.
+   The free FFVCL library cannot capture frames, so GetVideoPlayerLogo returns a placeholder logo (video_player_icon.png) instead of a real video frame.
    Replaces the old cFrameServerVFW.
-
-   Current implementation:
-     The free FFVCL library does not support frame capture, so instead of extracting
-     a real video frame, we return a placeholder logo (video_player_icon.png).
 
    FFVCL (commented code below preserved for reference):
      Requires the FFVCL 3rd party library as decoder.
@@ -66,9 +63,8 @@ USES
 
 
 
-{ Returns a placeholder logo for video files since the free FFVCL library
-  does not support frame capture. The logo consists of a black background
-  with a centered video camera icon and "Video file" text at the top.
+{ Returns a placeholder logo for video files since the free FFVCL library does not support frame capture.
+  The logo consists of a black background with a centered video camera icon and "Video file" text at the top.
 
   Dependencies:
     Requires 'video_player_icon.png' in the AppSysDir folder.
@@ -85,8 +81,7 @@ begin
  Result:= LightVcl.Graph.Bitmap.CreateBlankBitmap(LogoWidth, LogoHeight, clBlack);
 
  { Load and center the video icon.
-   The file is tested here, not left to LoadGraph: LoadGraph raises EFileNotFoundException for a file
-   that is not there, while this routine promises a black bitmap with the text instead. }
+   The file is tested here, not left to LoadGraph: LoadGraph raises EFileNotFoundException for a file that is not there, while this routine promises a black bitmap with the text instead. }
  IconFile:= Appdatacore.AppSysDir+ 'video_player_icon.png';
  if System.SysUtils.FileExists(IconFile)
  then AviLogo:= LightVcl.Graph.Loader.LoadGraph(IconFile, FALSE, TRUE)

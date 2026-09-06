@@ -11,13 +11,13 @@
      TBubbleAnim     - chat bubble fade-in + StopAnimationsIn helper
      TBtnAnim        - button press squish (Scale 0.92 -> 1.0, Back interpolation)
      TTypingDots     - three pulsing dots "AI is thinking" indicator
-     TExitAnim       - cascade UI elements off-screen on form close (drops TreeView items individually)
+     TExitAnim       - cascade UI elements off-screen on form close (a TTreeView drops as one block)
      TAnimDoneBridge - internal helper to route anonymous TProc into TFloatAnimation.OnFinish
 
-   All helpers are short (150-400ms for entry, ~550ms for exit drop), non-blocking,
-   self-cleaning via parent-ownership. Pure FMX.Ani, no Skia dependency.
+   All helpers are short (150-400ms for entry, ~550ms for exit drop), non-blocking, self-cleaning via parent-ownership.
+   Pure FMX.Ani, no Skia dependency.
 
-   Friend-class hack inside implementation: TControlAccess = class(TControl)
+   Protected-member access inside implementation: TControlAccess = class(TControl)
      TControl's Scale / RotationCenter are PROTECTED; generic code that touches
      arbitrary TControls uses this cast to reach them.
 
@@ -61,10 +61,8 @@ TYPE
   { Bubble entry: Opacity-only fade (0 -> 1, 220 ms). Layout-neutral.
     FromRight kept for API compatibility; currently unused.
 
-    IMPORTANT: a TFloatAnimation that is still ticking when its parent enters
-    BeforeDestruction crashes inside TPresentedTextControl.FreeStyle. Before
-    calling DeleteChildren on a container that holds animated bubbles, call
-    TBubbleAnim.StopAnimationsIn(Container). }
+    IMPORTANT: a TFloatAnimation that is still ticking when its parent enters BeforeDestruction crashes inside TPresentedTextControl.FreeStyle.
+    Before calling DeleteChildren on a container that holds animated bubbles, call TBubbleAnim.StopAnimationsIn(Container). }
   TBubbleAnim = class
     class procedure SlideIn(aBubble: TControl; FromRight: Boolean);
     class procedure StopAnimationsIn(Root: TFmxObject);
@@ -79,9 +77,9 @@ TYPE
 
 
   { Three pulsing dots shown while waiting for an AI response.
-    NOTE: animations only advance when the main thread is idle. If the caller
-    blocks the UI thread during the AI call, the dots will freeze until control
-    returns to the message loop. Convert AI call to async for full effect. }
+    NOTE: animations only advance when the main thread is idle.
+    If the caller blocks the UI thread during the AI call, the dots will freeze until control returns to the message loop.
+    Convert the AI call to async for full effect. }
   TTypingDots = class(TComponent)
   strict private
     FLayout: TLayout;
@@ -96,8 +94,7 @@ TYPE
   end;
 
 
-  { Internal helper: holds an anonymous OnDone callback and exposes it as a TNotifyEvent
-    so it can be wired to TFloatAnimation.OnFinish (which is of-object). }
+  { Internal helper: holds an anonymous OnDone callback and exposes it as a TNotifyEvent so it can be wired to TFloatAnimation.OnFinish (which is of-object). }
   TAnimDoneBridge = class(TComponent)
   strict private
     FOnDone: TProc;
@@ -109,13 +106,11 @@ TYPE
 
   { Exit drop-out: cascade individual UI elements off the bottom edge, then fire OnDone.
 
-    Rather than dropping aContainer as one big block (which hides per-element motion),
-    we iterate aContainer's direct children. For any TTreeView encountered, we dive
-    into its items so each category/lesson row falls separately. Each target gets a
-    staggered Position.Y + RotationAngle animation; OnDone fires after the last one.
+    Rather than dropping aContainer as one big block (which hides per-element motion), we iterate aContainer's direct children.
+    Each target gets a staggered Position.Y + RotationAngle animation; OnDone fires after the last one.
 
-    Use from an OnCloseQuery handler: set CanClose=FALSE, trigger FallDown, and inside
-    OnDone call Close to actually dismiss the form. Skip on mobile. }
+    Use from an OnCloseQuery handler: set CanClose=FALSE, trigger FallDown, and inside OnDone call Close to actually dismiss the form.
+    Skip on mobile. }
   TExitAnim = class
     class procedure FallDown(aContainer: TControl; OwnerForm: TCommonCustomForm; OnDone: TProc);
   end;
@@ -128,9 +123,8 @@ USES
   FMX.Ani, FMX.Graphics;
 
 
-{ Friend-class access: TControl's Scale / RotationCenter are PROTECTED on the
-  base class but made published by subclasses (TRectangle, TButton, TCircle, ...).
-  Going through a descendant alias lets us touch them generically. }
+{ Protected-member access: TControl's Scale / RotationCenter are PROTECTED on the base class but made published by subclasses (TRectangle, TButton, TCircle, ...).
+  Going through a descendant declared in this unit lets us touch them generically. }
 TYPE
   TControlAccess = class(TControl);
 
@@ -204,13 +198,11 @@ begin
   else
     raise Exception.Create('ShowConfetti: Parent must be TControl or TForm');
 
-  // Base sizes scaled by multiplier
   BaseWidth:= 8 * SizeMultiplier;
   BaseHeight:= 6 * SizeMultiplier;
 
   for i:= 0 to ConfettiCount - 1 do
   begin
-    // Create confetti piece
     Confetti:= TRectangle.Create(Parent);
     Confetti.Parent:= Parent;
     Confetti.Width:= BaseWidth + Random(Round(8 * SizeMultiplier));
@@ -245,7 +237,7 @@ begin
     DriftAnim.Parent:= Confetti;
     DriftAnim.PropertyName:= 'Position.X';
     DriftAnim.StartValue:= StartX;
-    DriftAnim.StopValue:= StartX + (Random(100) - 50);  // Drift -50 to +50
+    DriftAnim.StopValue:= StartX + (Random(100) - 50);  // Drift -50 to +49. Random(N) returns 0..N-1.
     DriftAnim.Duration:= Duration;
     DriftAnim.AutoReverse:= TRUE;
     DriftAnim.Loop:= TRUE;
@@ -270,7 +262,6 @@ begin
     // Clean up confetti when fall animation finishes
     FallAnim.OnFinish:= TConfetti.OnAnimFinish;
 
-    // Start all animations
     FallAnim.Start;
     DriftAnim.Start;
     RotateAnim.Start;
@@ -304,21 +295,19 @@ begin
 end;
 
 
-{ Walk Root's children and disable any TAnimation found. Call BEFORE freeing
-  a subtree that contains animated children. A still-ticking TFloatAnimation
-  that fires while a control is in BeforeDestruction crashes FMX presentation. }
+{ Walk Root's children and disable any TAnimation found.
+  Call BEFORE freeing a subtree that contains animated children.
+  A still-ticking TFloatAnimation that fires while a control is in BeforeDestruction crashes FMX presentation. }
 class procedure TBubbleAnim.StopAnimationsIn(Root: TFmxObject);
 VAR
   i    : Integer;
   Child: TFmxObject;
 begin
   if Root = NIL then EXIT;
-  // Iterate DOWNWARDS: Enabled:=FALSE on a running animation calls TAnimation.Stop
-  // (FMX.Ani.pas:1519), and Stop ends with DoFinish (FMX.Ani.pas:1749). An OnFinish handler
-  // that detaches a control from Root (e.g. TConfetti.OnAnimFinish does Piece.Parent:=nil)
-  // shrinks the child list mid-loop; an ascending loop would then index past the end.
-  // Descending stays in range. Child is read ONCE per iteration, so the recursion below
-  // cannot re-index a list the handler has just shifted underneath us.
+  { Iterate DOWNWARDS: Enabled:=FALSE on a running animation calls TAnimation.Stop, and Stop ends with DoFinish (both in FMX.Ani.pas).
+    An OnFinish handler that detaches a control from Root (e.g. TConfetti.OnAnimFinish does Piece.Parent:=nil) shrinks the child list mid-loop; an ascending loop would then index past the end.
+    Descending stays in range.
+    Child is read ONCE per iteration, so the recursion below cannot re-index a list the handler has just shifted underneath us. }
   for i:= Root.ChildrenCount - 1 downto 0 do
     begin
       if i >= Root.ChildrenCount then Continue;   // A handler removed more than one child
@@ -343,14 +332,9 @@ CONST
   Dur = 0.2;
 
   { Reuse one animation pair per button instead of creating a new pair on every press.
-    The animations are owned by the button (found again via FindComponent by name), so a
-    frequently-pressed button no longer accumulates finished TFloatAnimation instances
-    until the form closes. TAnimation.Start (FMX.Ani.pas:1676) restarts an already-running
-    instance cleanly: it has no early-exit on Running, it resets FTime/FDelayTime and
-    re-subscribes to the display link. (Its one early-exit is an invisible parent control —
-    same on a fresh instance, so reuse changes nothing there.)
-    If the button is torn down via DeleteChildren the pair dies with it and is simply
-    re-created on the next press — FindComponent then returns NIL again. }
+    The animations are owned by the button (found again via FindComponent by name), so a frequently-pressed button does not accumulate finished TFloatAnimation instances until the form closes.
+    TAnimation.Start (in FMX.Ani.pas) restarts an already-running instance cleanly: it has no early-exit on Running, it resets FTime/FDelayTime and re-subscribes to the display link. (Its one early-exit is an invisible parent control — same on a fresh instance, so reuse changes nothing there.)
+    If the button is torn down via DeleteChildren the pair dies with it and is simply re-created on the next press — FindComponent then returns NIL again. }
   function ObtainAnim(aBtn: TControl; CONST AnimName, PropName: string): TFloatAnimation;
   begin
     Result:= aBtn.FindComponent(AnimName) as TFloatAnimation;
@@ -415,9 +399,9 @@ destructor TTypingDots.Destroy;
 begin
   if Assigned(FLayout) then
     begin
-      // Stop the looping dot animations BEFORE freeing. Otherwise a still-ticking
-      // TFloatAnimation fires a property write on a TCircle in BeforeDestruction,
-      // crashing inside TStyledControl.InternalFreeStyle. Same crash class as bubbles.
+      { Stop the looping dot animations BEFORE freeing.
+        Otherwise a still-ticking TFloatAnimation fires a property write on a TCircle in BeforeDestruction, crashing inside TStyledControl.InternalFreeStyle.
+        Same crash class as bubbles. }
       TBubbleAnim.StopAnimationsIn(FLayout);
       FLayout.RemoveFreeNotification(Self);
       FreeAndNil(FLayout);
@@ -429,8 +413,7 @@ end;
 procedure TTypingDots.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited;
-  // If our layout got freed externally (e.g. ClearBubbles -> DeleteChildren),
-  // drop the reference so our own destructor won't double-free.
+  { If our layout got freed externally (e.g. ClearBubbles -> DeleteChildren), drop the reference so our own destructor won't double-free. }
   if (Operation = opRemove)
   AND (AComponent = FLayout)
   then FLayout:= NIL;
@@ -483,48 +466,22 @@ begin
 end;
 
 
-{ Fire() is called by FMX.Ani from inside TAnimation.DoFinish, which itself runs
-  inside TAnimationManager's animation-processing loop. We're therefore ON the
-  main-thread call stack of the animation manager when this method executes.
+{ Fire() is called by FMX.Ani from inside TAnimation.DoFinish, which itself runs inside TAnimationManager's animation-processing loop.
+  So this method executes ON the main-thread call stack of the animation manager.
 
-  WHY Done() MUST BE DEFERRED (do not make this synchronous — see crash below):
+  Done() MUST BE DEFERRED. Do not make this synchronous.
+  The typical caller is TExitAnim.FallDown, whose Done() closes the form. That destroys the form's children, including the control whose OnFinish we are still inside and the animation itself (an owned component of that control).
+  TAnimationManager is left holding a pointer to the freed animation in its running list, and the virtual call on it hits $8080808C - the classic "read of address 0x8080808c" access violation on shutdown.
 
-    Typical caller: TExitAnim.FallDown. Done() closes the form, which triggers
-    form destruction, which destroys all the form's children — including every
-    TControl that hosted a fall-down animation, and the animations themselves
-    (they are owned components of those controls).
-
-    If Done() runs synchronously here:
-      1. Animation.OnFinish fires -> we land in Fire() -> call Done().
-      2. Done() -> Close -> CloseQuery (allowed by FExitAnimating guard)
-         -> form.Destroy -> recursive child destruction.
-      3. One of the destroyed children is the control whose animation we're
-         still inside the OnFinish of. That control's OwnedComponents include
-         the animation itself -> TAnimation.Destroy runs -> BeforeDestruction.
-      4. TFmxObject.BeforeDestruction iterates FFreeNotifies (offset $5C in
-         the 32-bit layout). FMX's AnimationManager is registered there to
-         be notified when observed controls die.
-      5. Execution eventually returns up the stack to TAnimationManager, which
-         still holds a pointer to the just-freed animation in its running list.
-         FastMM has filled that block with $80 -> dereferencing its VMT reads
-         from $80808080, the virtual call hits $8080808C, and we AV inside
-         TFmxObject.BeforeDestruction (the classic "read of address 0x8080808c"
-         crash on shutdown).
-
-    Observed symptom: project raised $C0000005 with 'access violation at
-    <anim_unit_addr>: read of address 0x8080808c' inside TFmxObject.BeforeDestruction,
-    callstack = TFmxObject.BeforeDestruction -> @BeforeDestruction -> TObject.Free.
-
-  FIX: post Done() to the main-thread message queue via TThread.ForceQueue. The
-  current OnFinish/manager-loop call stack unwinds fully first; AnimationManager
-  finishes processing the running list and drops its pointer to this animation.
+  FIX: post Done() to the main-thread message queue via TThread.ForceQueue.
+  The current OnFinish/manager-loop call stack unwinds fully first, and AnimationManager finishes processing the running list and drops its pointer to this animation.
   Only then does the queued closure run, close the form, and cascade destruction.
-  No stale pointers, no AV.
 
-  WHY NOT FREE THE BRIDGE: Bridge is owned by OwnerForm (TComponent ownership);
-  it dies with the form. Freeing it here, or queuing a deferred free, causes a
-  use-after-free at finalization time because OwnerForm's component-list walk
-  would then touch a gone-early child. }
+  WHY NOT FREE THE BRIDGE: Bridge is owned by OwnerForm (TComponent ownership), so it dies with the form.
+  Freeing it here, or queuing a deferred free, causes a use-after-free at finalization time because OwnerForm's component-list walk would then touch a gone-early child.
+
+  The five destruction steps in full, and the madExcept call stack:
+  c:\Projects\LightSaber\Docs\FMX animation shutdown AV.md }
 procedure TAnimDoneBridge.Fire(Sender: TObject);
 VAR Done: TProc;
 begin
@@ -571,37 +528,9 @@ end;
                   the other's FFreeNotifies. When the survivor is freed, its BeforeDestruction
                   iterates FFreeNotifies and dereferences the freed entry -> AV on vmtBeforeDestruction.
 
-               madExcept report for the definitive crash showed:
-                  TFmxObject.BeforeDestruction +$BC  (inside FFreeNotifies iteration)
-                  @BeforeDestruction
-                  TControl.Destroy      <-- Y (freed sibling inside FFreeNotifies)
-                  TFmxObject.DoDeleteChildren
-                  TControl.Destroy      <-- X (X frees Y as its child)
-                  TFmxObject.DoDeleteChildren
-                  TCustomForm.Destroy -> TLightForm.Destroy
-                  TComponent.DestroyComponents
-                  DoneApplication -> @Halt0 -> LearnAssist.dpr initialization
-
-   Fix attempts (chronological):
-     [1] 2026-04-21 — ForceQueue Done() in TAnimDoneBridge.Fire.
-         Addressed reentrancy of Close inside TAnimation.OnFinish.
-         Result: did not eliminate crash. Stack unchanged. Kept anyway —
-         still-correct on its own merits (defers destruction out of the
-         animation-manager callback).
-     [2] 2026-04-21 — Treat TTreeView as a single leaf in CollectFallTargets
-         (stop diving into TTreeViewItems).
-         Rationale: TTreeView/TTreeViewItem hold documented mutual FreeNotify
-         links — reparenting items out breaks destruction.
-         Result: did not eliminate crash on its own, but still correct: other
-         sibling FreeNotify links exist (TMultiView, TSvgButton internals,
-         styled controls) so TTreeView-only handling was insufficient.
-     [3] 2026-04-21 — Remove child reparenting entirely. Animate in place.
-         Rationale: any reparenting flattens form.FChildren and breaks
-         destruction order for FreeNotify-linked siblings we cannot enumerate
-         up front. LearnAssist's main-form layouts have ClipChildren=False,
-         so in-place fall is visually acceptable.
-         Result: FIX CONFIRMED by user on 2026-04-21. Shutdown AV is gone.
-         Current state of the code.
+   The madExcept call stack, and the three fixes tried in order (only the third one worked - the code
+   animates in place and reparents nothing), are in:
+   c:\Projects\LightSaber\Docs\FMX animation shutdown AV.md
 
    DO NOT, under any circumstances:
      * Reintroduce Child.Parent := OwnerForm in FallDown without a paired
@@ -634,9 +563,7 @@ begin
         Child:= TControl(aRoot.Children[i]);
         if NOT Child.Visible then Continue;
 
-        // 'is TLayout' (vs strict ClassType=) so TFlowLayout/TGridLayout subclasses are
-        // also treated as transparent containers and descended into; otherwise a flow
-        // layout hosting many buttons falls as a single block instead of per-button.
+        { 'is TLayout' (vs strict ClassType=) so TFlowLayout/TGridLayout subclasses are also treated as transparent containers and descended into; otherwise a flow layout hosting many buttons falls as a single block instead of per-button. }
         if Child is TLayout
         then CollectFallTargets(Child, aList)   // transparent: descend
         else aList.Add(Child);
@@ -660,10 +587,8 @@ VAR
 begin
   if (aContainer = NIL) OR (OwnerForm = NIL) then
     begin
-      // Defer via ForceQueue to match the documented OnDone contract — main path
-      // posts via TAnimDoneBridge, fast paths must not invoke synchronously or
-      // OnDone callers (typically Close) re-enter the close-query handler.
-      // TProc is not assignment-compatible with TThreadProcedure — wrap.
+      { Defer via ForceQueue to match the documented OnDone contract — the main path posts via TAnimDoneBridge, and the fast paths must not invoke synchronously, or an OnDone caller (typically Close) re-enters the close-query handler.
+        TProc is not assignment-compatible with TThreadProcedure — wrap. }
       if Assigned(OnDone)
       then TThread.ForceQueue(NIL, procedure begin OnDone(); end);
       EXIT;
@@ -673,7 +598,7 @@ begin
   TRY
     CollectFallTargets(aContainer, Targets);
 
-    // No targets found — defer OnDone (see comment above).
+    // No targets found — defer OnDone, or a caller whose OnDone is Close re-enters the close-query handler.
     if Targets.Count = 0 then
       begin
         if Assigned(OnDone)
@@ -714,7 +639,7 @@ begin
         RotAnim.Parent       := Child;
         RotAnim.PropertyName := 'RotationAngle';
         RotAnim.StartValue   := 0;
-        RotAnim.StopValue    := Random(24) - 12;   // -12..+12 degrees
+        RotAnim.StopValue    := Random(24) - 12;   // -12..+11 degrees. Random(N) returns 0..N-1.
         RotAnim.Duration     := Dur;
         RotAnim.Delay        := i * Stagger;
         RotAnim.AnimationType:= TAnimationType.In;

@@ -5,27 +5,6 @@ UNIT LightVcl.Common.IniFile;
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
   Same as LightCore.INIFile but adds support for forms to save themselves to disk.
-
-  2026-08-11: Fixed: a form saved while minimized persisted WindowState=wsMinimized, so the next run
-              restored the application minimized (invisible). Save now stores what the window would
-              restore TO (wsMaximized when WPF_RESTORETOMAXIMIZED is set, wsNormal otherwise), and load
-              never restores wsMinimized. Load also stopped blind-casting the stored integer into
-              TWindowState: an explicit typecast is NOT range-checked (measured), so a corrupt INI
-              value entered the enumeration and then indexed SetWindowState's ShowCommands array.
-              Unlike the FMX twin, the POSITION keys were never affected - see the comment in WriteCtrlPos.
-
-  2026-06-10: Fixed: WindowState was written AFTER the form was unmaximized, so wsMaximized was never
-              persisted. Fixed: missing 'Height' key inflated the form height by CurrentPPI/96 on HiDPI.
-              Fixed: TFrame removed from IsSupported (asFull save of a form holding a frame raised
-              'Unsupported control' in TIniFileVCL.WriteComp).
-
-  2026-05-12: DPI normalisation. TIniFileApp.WriteCtrlPos / ReadCtrlPos now store and read positions as
-              96-DPI canonical pixels (via MulDiv against Ctrl.CurrentPPI). Without this, a form saved on a
-              96-DPI machine and re-opened on a 144-DPI PerMonitorV2-aware build came back at 66% of its
-              intended size; the symmetric case (save 144 → load 96) blew the form up by 1.5x and pushed it
-              off-screen. Covers both the form's own Left/Top/Width/Height and the child controls saved by
-              asFull. No file-format change — the INI keys are unchanged, only the unit of measurement is now
-              standardised.
   Ini file name/file path is automatically calculated.
 --------------------------------------------------------------------------------------------------------------
 
@@ -50,10 +29,8 @@ UNIT LightVcl.Common.IniFile;
      Support for more controls can be easily added with just an 'if/then'.
 
   OnClick execution:
-     The events are executed when the component status is changed when it is
-     read from the ini file ONLY IF its INI status is different than its DFM status!
-     In other words, if you want to autoexecute some OnClick event, you
-     will have to call the ControlOnClick(sender) after the program loaded.
+     Reading a control from the INI file fires its OnClick only when the INI value differs from the DFM value.
+     So if you need an OnClick to run every time, call ControlOnClick(Sender) yourself after the program has loaded.
 
      The TAction.OnExecute is NEVER executed.
 
@@ -187,10 +164,8 @@ end;
    Save ALL supported controls on this form.
 
    Note:
-     Components[] just yields the components that are OWNED by the form.
-     So, if we are iterating over it will miss any components that are added dynamically, and not owned by the form, or components that are owned by frames.
-     Update 2021: Now frames are supported. All sub-components of a frame are stored to the INI file.
-     Update 2026: Extended recursion to all component containers, not just frames (fixes custom components like TLogVerbFilter).
+     Components[] yields only the components that are OWNED by the form, so a component created at run time and given some other owner is never saved.
+     Components owned by a CHILD are saved: WriteComponentsOf recurses into anything that owns sub-components - frames, and custom controls such as TLogVerbFilter.
 -----------------------------------------------------------------------------------------------------------------------}
 procedure TIniFileApp.SaveForm(Form: TForm; AutoState: TAutoState = asPosOnly);
 
@@ -267,30 +242,22 @@ VAR
   SavedState: TWindowState;
 
   { Convert a current-DPI pixel value to its 96-DPI canonical equivalent for INI storage.
-    MulDiv (Winapi.Windows) does the multiplication in 64-bit and rounds-to-nearest, so a 1px control at 144 PPI saves as 1 (not 0) and the round-trip stays stable. Negative values (legitimate for multi-monitor Left/Top) are handled correctly by MulDiv's signed arithmetic.
-    Ctrl.CurrentPPI is non-zero for any TControl that has been parented to a form, which is always TRUE by the time SaveForm runs (form is fully constructed and laid out before shutdown). For a freshly-created control with no parent CurrentPPI defaults to Screen.PixelsPerInch — still safe, never zero. }
+    MulDiv (Winapi.Windows) multiplies in 64-bit and rounds to nearest, so a 1px control at 144 PPI saves as 1 (not 0) and the round-trip stays stable.
+    Negative values are legitimate for multi-monitor Left/Top, and MulDiv's signed arithmetic handles them.
+    Ctrl.CurrentPPI is never zero: it is set for any TControl parented to a form, which is always the case by the time SaveForm runs, and a freshly-created control with no parent falls back to Screen.PixelsPerInch. }
   function Canonical(Value: Integer): Integer;
   begin
     Result:= MulDiv(Value, 96, Ctrl.CurrentPPI);
   end;
 
-  { The state the form should come back in. Never wsMinimized: an application that restores itself
-    minimized looks like it did not start at all, and AppData.StartMinim is the setting for that -
-    not an accident of how the user happened to close the program.
-    Behind a minimized window there is still a real state, and GetWindowPlacement reports it:
-    WPF_RESTORETOMAXIMIZED means the window goes back to maximized when restored (Winapi.Windows.pas:26938).
-    Position and size need no extra care against the FMX bug (there the OS park position was mirrored
-    straight into Form.Left/Top): TWinControl.UpdateBounds reads rcNormalPosition, not GetWindowRect,
-    while the window is iconic (Vcl.Controls.pas:13734-13744), so Left/Top/Width/Height hold the last
-    normal position, never the -32000,-32000 park position.
+  { The state the form should come back in. Never wsMinimized: an application that restores itself minimized looks like it did not start at all, and AppData.StartMinim is the setting for that - not an accident of how the user happened to close the program.
+    GetWindowPlacement reports the state that is still there behind a minimized window: WPF_RESTORETOMAXIMIZED (Winapi.Windows) means the window goes back to maximized when restored.
+    Position and size need no extra care: TWinControl.UpdateBounds (Vcl.Controls.pas) reads rcNormalPosition and not GetWindowRect while the window is iconic, so Left/Top/Width/Height hold the last normal position and never the -32000,-32000 park position. In FMX the OS park position IS mirrored straight into Form.Left/Top - that bug does not exist here.
 
-    KNOWN LIMIT, pre-existing and NOT fixed here: rcNormalPosition is in WORKSPACE coordinates for a
-    top-level window without WS_EX_TOOLWINDOW - origin is the top-left of the work area, not of the
-    screen. With the taskbar docked at the TOP or LEFT edge those differ, and UpdateBounds copies the
-    value into FLeft/FTop verbatim, so a form saved while minimized reloads shifted by the taskbar size
-    and creeps a little further each time. Microsoft describes exactly this failure:
-    https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-windowplacement
-    It does not occur with the default bottom taskbar, and it predates this routine. }
+    KNOWN LIMIT, pre-existing and NOT fixed here: rcNormalPosition is in WORKSPACE coordinates for a top-level window without WS_EX_TOOLWINDOW - its origin is the top-left of the work area, not of the screen.
+    With the taskbar docked at the TOP or LEFT edge those two origins differ, and UpdateBounds copies the value into FLeft/FTop verbatim, so a form saved while minimized reloads shifted by the taskbar size and creeps a little further each time.
+    It does not happen with the default bottom taskbar. Microsoft describes exactly this failure:
+    https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-windowplacement }
   function StateToPersist: TWindowState;
   VAR Placement: TWindowPlacement;
   begin
@@ -356,7 +323,9 @@ VAR
   end;
 
   { Read an INI key whose value is stored as 96-DPI canonical pixels, returning a value in the current DPI.
-    Default is supplied in CURRENT DPI (because all callers pass Ctrl.Top / Ctrl.Width / ... which are already in current DPI). We pre-canonicalise it before handing it to ReadInteger, so the no-key path round-trips back to (numerically) the original Default after FromCanonical. Without this pre-scaling, a missing key on a HiDPI display would silently shrink the control to ~66% of its current size. }
+    Default is supplied in CURRENT DPI, because every caller passes Ctrl.Top / Ctrl.Width / ... and those are already in current DPI.
+    We pre-canonicalise the default before handing it to ReadInteger, so that when the key is missing FromCanonical scales it straight back to the original Default.
+    Without that pre-scaling a missing key would INFLATE the control by CurrentPPI/96 - by 1.5x on a 144 PPI display. }
   function ReadCanonical(CONST Section, Key: string; Default: Integer): Integer;
   begin
     Result:= FromCanonical(ReadInteger(Section, Key, MulDiv(Default, 96, Ctrl.CurrentPPI)));
@@ -367,14 +336,13 @@ begin
 
   if Ctrl.InheritsFrom(TForm) then
     begin
-      { Check if form is non-resizable.
-        Don't read the size of the form if it's not resizable - use design-time size. }
+      { Don't read the size of a form that is not resizable - keep its design-time size. }
       IsNonResizable:=
            (TForm(Ctrl).BorderStyle = bsNone)
         OR (TForm(Ctrl).BorderStyle = bsDialog)
         OR (TForm(Ctrl).BorderStyle = bsToolWindow);
 
-      { Read position - center on main form's monitor if no saved position }
+      { Read position. With no position in the INI, center the form on the main form's monitor (multi-monitor safe) }
       if ValueExists(Ctrl.Name, 'Top')
 	  AND ValueExists(Ctrl.Name, 'Left') then
         begin
@@ -383,11 +351,10 @@ begin
         end
       else
         begin
-          { Center on the main form's monitor for multi-monitor support }
           if Application.MainForm <> NIL then
             begin
               VAR WorkArea: TRect:= Application.MainForm.Monitor.WorkareaRect;
-              Ctrl.Top := WorkArea.Top  + ((WorkArea.Height - Ctrl.Height) div 2);  { For forms the top/left position is calculated so that the form is centered on screen, at first startup }
+              Ctrl.Top := WorkArea.Top  + ((WorkArea.Height - Ctrl.Height) div 2);
               Ctrl.Left:= WorkArea.Left + ((WorkArea.Width  - Ctrl.Width)  div 2);
             end
           else
@@ -412,15 +379,9 @@ begin
       AND (TForm(Ctrl).Position <> poDesigned)
       then raise Exception.Create('Form.Position is not ''poDesigned'' for form ' + Ctrl.Name + '!');
 
-      { Restore window state. The old blind cast got two things wrong:
-          - it happily restored wsMinimized, so the application started invisible. INIs written by
-            earlier versions still hold that value, which is why the guard has to live on the READ
-            side as well as on the write side;
-          - TWindowState(<any integer>) let a corrupt INI value straight into the enumeration.
-            Measured: a stored 99 arrives as WindowState=99 even with range checking ON - an explicit
-            value typecast is not checked. SetWindowState stores it and then indexes
-            ShowCommands: array[TWindowState] of Integer with it - declared at Vcl.Forms.pas:7479,
-            indexed at :7490. }
+      { Restore the window state, but never wsMinimized - that would start the application invisible. INI files written by earlier versions still hold that value, which is why the guard has to live on the READ side as well as on the write side.
+        Do NOT cast the stored integer straight into TWindowState. An explicit value typecast is not range-checked - measured: a stored 99 arrives as WindowState=99 even with range checking ON.
+        TCustomForm.SetWindowState (Vcl.Forms.pas) then indexes ShowCommands: array[TWindowState] of Integer with that value. }
       if ValueExists(Ctrl.Name, 'WindowState') then
         if ReadInteger(Ctrl.Name, 'WindowState', 0) = Ord(wsMaximized)
         then TForm(Ctrl).WindowState:= wsMaximized
@@ -428,7 +389,7 @@ begin
     end
   else
     begin
-      { Read control position - use current values as defaults (defaults are passed in current DPI, scaled to canonical so the round-trip works) }
+      { Read control position - the control's current value is the default }
       Ctrl.Top   := ReadCanonical(Ctrl.Owner.Name, Ctrl.Name + '.Top',    Ctrl.Top);
       Ctrl.Left  := ReadCanonical(Ctrl.Owner.Name, Ctrl.Name + '.Left',   Ctrl.Left);
       Ctrl.Width := ReadCanonical(Ctrl.Owner.Name, Ctrl.Name + '.Width',  Ctrl.Width);
@@ -553,7 +514,7 @@ begin
   { Open dialogs - handle unicode limitation }
   else if Comp.InheritsFrom(TOpenDialog) then
     begin
-      s:= TOpenDialog(Comp).FileName;     { NOTE: INI file does not support unicode chars. The unicode chars are replaced by '?' so we better replace this with a ' ' or something that is not '?'. This way if the filename is fucked up, we at least could 'recover' the folder name - which will be used for InitialDir! }
+      s:= TOpenDialog(Comp).FileName;     { NOTE: an INI file cannot hold unicode chars - they come back as '?'. Any other character is better, so we substitute '_': if the file name is mangled we can at least recover the FOLDER name, which ReadComp uses for InitialDir. }
       s:= ReplaceUnicodeChars(s, '_');
       if s <> ''
       then WriteString(Comp.Owner.Name, Comp.Name, s);
@@ -562,7 +523,7 @@ begin
   { Save dialogs - handle unicode limitation }
   else if Comp.InheritsFrom(TSaveDialog) then
     begin
-      s:= TSaveDialog(Comp).FileName;     { NOTE: INI file does not support unicode chars. The unicode chars are replaced by '?' so we better replace this with a ' ' or something that is not '?'. This way if the filename is fucked up, we at least could 'recover' the folder name - which will be used for InitialDir! }
+      s:= TSaveDialog(Comp).FileName;     { NOTE: an INI file cannot hold unicode chars - they come back as '?'. Any other character is better, so we substitute '_': if the file name is mangled we can at least recover the FOLDER name, which ReadComp uses for InitialDir. }
       s:= ReplaceUnicodeChars(s, '_');
       if s <> ''
       then WriteString(Comp.Owner.Name, Comp.Name, s);
@@ -840,8 +801,6 @@ end;
    SPLITTER
 
    Note: TSplitter is a TGraphicControl, not TWinControl.
-   For horizontal splitters (alLeft/alRight), save Left position.
-   For vertical splitters (alTop/alBottom), save Top position.
 -----------------------------------------------------------------------------------------------------------------------}
 procedure TIniFileApp.WriteSplitter(Comp: TComponent);
 begin

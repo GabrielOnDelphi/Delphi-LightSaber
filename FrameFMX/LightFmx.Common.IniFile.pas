@@ -408,7 +408,7 @@ end;
 
 
 
-{ Important: call LoadForm(self) from LateInitialize, never from FormCreate.
+{ Important: call LoadForm(self) from FormPostInitialize, never from FormCreate.
   In FormCreate the canvas is not ready, so a control that sizes itself is not resized. }
 function TIniFileApp.ReadComp(Comp: TComponent): Boolean;
 VAR s: string;

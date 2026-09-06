@@ -65,7 +65,7 @@ unit LightVcl.Common.Translate;
           When a new form is created it will check the flag.
           If the flag is true, the form will save itself to the English INI file.
   
-       2. Strings into the source code will not be translated automatically (naturally)  
+       2. Strings inside the source code will not be translated automatically (naturally)
           Proposed solution: Add a function that can read strings from the INI file. Add support for something similar to the Format(%s %f Fd) Delphi function.  
           Proposed solution: If the strings are embedded as resources, we can translate them live.  
   
@@ -78,8 +78,7 @@ unit LightVcl.Common.Translate;
          AppData will automatically create the Translator object.
          Create a new form with AppData.CreateForm(). This will take care of everything. Seriously!
 
-         Check the LightCore.AppData, LightVcl.Visual.AppData
-.pas for more info.
+         Check LightCore.AppData.pas and LightVcl.Visual.AppData.pas for more info.
 
     * Manually
 
@@ -268,11 +267,9 @@ end;
   Main functions
 --------------------------------------------------------------------------------}
 
-{ Sets the current language and immediately reloads translations for all live forms.
-  Value must be a full path to the language INI file (e.g., 'C:\App\Lang\German.ini').
-
-  When switching languages, first applies English (design-time baseline) to reset all controls, then applies the target language. 
-  This prevents leftover foreign text when the target language INI has fewer entries than the previous one. }
+{ Sets the current language and immediately reloads the translation of every live form.
+  Value must be the FULL path to the language INI file, for example c:\App\Lang\German.ini
+  English is applied first as the design-time baseline, then the target language: without that reset, a control whose text is missing from the target INI would keep the text of the PREVIOUS language. }
 procedure TTranslator.setCurLanguage(const Value: string);
 VAR EnglishPath: string;
 begin
@@ -293,15 +290,13 @@ begin
 end;
 
 
-{ Returns only the filename portion of the current language (e.g., 'German.ini'). }
 function TTranslator.getCurLanguage: string;
 begin
   Result:= ExtractFileName(FCurLanguage);
 end;
 
 
-{ Returns the default language filename (just the filename, not full path).
-  Used as default value in ReadString when no Last_Language is saved. }
+{ Used as the default in ReadString when the INI holds no Last_Language. }
 function TTranslator.DefaultLang: string;
 begin
   Result:= 'English.ini';
@@ -338,9 +333,9 @@ begin
  TRY
    Authors:= IniContainer.ReadString('Authors', 'Name', 'CubicDesign');
 
-   // FormCount       = count of TForm descendants currently displayed on the screen
-   // CustomFormCount = count of TCustomForm descendants (includes property pages)
-   // Note: Screen.Forms[] only contains TForm descendants (FormCount items), not TCustomForm descendants.
+   { FormCount       = count of TForm descendants currently displayed on the screen
+     CustomFormCount = count of TCustomForm descendants (includes property pages)
+     Screen.Forms[] holds only the TForm descendants (FormCount items), never the TCustomForm ones. }
    for VAR i:= 0 to Screen.FormCount - 1 DO
       LoadTranslation(Screen.Forms[i], ForceLoad);
 
@@ -355,13 +350,10 @@ end;
 
 
 
-{ Load translation for specified form.
-   Call this for forms that were not alive when the translation was applied (during the initialization of the app).
-   Always applies the translation (idempotent). The "already in this language" optimization lives in the
-   parameterless overload: LastLanguage is a whole-app flag and cannot tell whether THIS form was translated.
-   Bug history: AppData.Create called LoadLastTranslation when zero forms existed, which set LastLanguage;
-   the old skip here then ignored every form created later, so deployed apps never applied the saved language.
-   ForceLoad is kept for signature backward compatibility. }
+{ Load the translation for ONE form.
+  Call it for a form that was not alive when the translation was applied, which is the normal case during application startup.
+  This overload always applies the translation, even when the form is already in that language: LastLanguage is a whole-application flag and cannot tell whether THIS form was translated.
+  ForceLoad is ignored here. It is kept only so that the signature does not change. }
 procedure TTranslator.LoadTranslation(Form: TForm; ForceLoad: Boolean= FALSE);
 VAR
    i: Integer;
@@ -395,7 +387,7 @@ VAR
    i: Integer;
    CurForm: TForm;
 begin
-  ForceDirectoriesE(GetLangFolder); // Ensure the folder exists. But don't do it sooner than necessary. Raises: we are about to write the translation file into it.
+  ForceDirectoriesE(GetLangFolder); // Create the Lang folder if it is missing, and not one moment sooner. ForceDirectoriesE raises when it cannot, which is right here: the translation file is about to be written into that folder.
 
   if Overwrite
   then DeleteFile(FileName);
@@ -509,7 +501,7 @@ end;
 {-------------------------------------------------------------------------------
    Read/write strings to disk
    A "property" is a Caption, hint or text hint
-//------------------------------------------------------------------------------}
+-------------------------------------------------------------------------------}
 procedure TTranslator.ReadProperty(Component: TComponent; CONST ParentName, PropertyType, Section: string; Ini: TMemIniFile);
 VAR
   Translation: string;
@@ -522,7 +514,7 @@ begin
     then Ident:=                 Component.Name+ '.'+ PropertyType
     else Ident:= ParentName+'.'+ Component.Name+ '.'+ PropertyType;
 
-    { Read from INI and convert CRLF markers back to actual line breaks }
+    { Read from INI }
     Translation:= Ini.ReadString(Section, Ident, '');
     Translation:= CRLFToEnter(Translation);  { Convert 'CRLF' text marker back to actual CR+LF characters }
     if Translation <> ''
@@ -593,10 +585,7 @@ begin
 end;
 
 
-{ Translate a string (placeholder function for future implementation).
-  This function is intended to translate strings embedded in source code (not GUI controls).
-  Currently returns the input string unchanged.
-  Future implementation will lookup the string in a language-specific INI or dictionary. }
+{ Placeholder. Intended to translate strings embedded in the source code, not the text of GUI controls. }
 function trs(CONST s: string): string;
 begin
   Result:= s;  //ToDo: Implement translation lookup from language-specific INI file
@@ -604,7 +593,7 @@ end;
 
 
 
-// Remember the last used language
+// Read and write the last used language, in the [Translator] section of the application's own INI file.
 function TTranslator.ReadString(CONST Identifier, DefaultVal: string): string;
 begin
   VAR IniFile:= TIniFileApp.Create(FAppData.AppName, FAppData.IniFile);

@@ -4,8 +4,7 @@ UNIT LightVcl.Internet.Browser;
    2026.07.24
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
-   Reads ONE web page with a REAL browser (WebView2) and hands back whatever a JavaScript snippet extracts
-   from the live DOM.
+   Reads ONE web page with a REAL browser (WebView2) and hands back whatever a JavaScript snippet extracts from the live DOM.
 
    Why a real browser instead of an HTTP download:
      - It runs the site's JavaScript, so client-rendered pages (SPAs) actually have text to read.
@@ -14,7 +13,7 @@ UNIT LightVcl.Internet.Browser;
 
    HOW TO USE
      1. Drop a TEdgeBrowser on your form (do NOT create it in code - it needs a parent window).
-     2. Set Browser.UserDataFolder BEFORE the first navigation. See the warning below.
+     2. Set Browser.UserDataFolder BEFORE the first navigation. See trap 2 below.
      3. Reader:= TWebPageReader.Create(Browser);  Reader.OnPageText:= ...;  Reader.OnFailed:= ...;
      4. Reader.ReadPage(Url, TWebPageReader.BuildExtractScript('', ''));
 
@@ -24,20 +23,20 @@ UNIT LightVcl.Internet.Browser;
    THREE TRAPS, all verified in C:\Delphi\Delphi 13\source\internet\Vcl.Edge.pas (Delphi 13)
    ------------------------------------------------------------------------------------------------------
    1. ExecuteScript has three overloads and TWO of them busy-spin the UI thread at 100% CPU:
-        ExecuteScript(JS, AFinishedProc)      -> repeat..until around PeekMessage   (line 1667-1674)
-        ExecuteScript(JS, AJsonPath): string  -> calls the one above                (line 1677)
-        ExecuteScript(JS)                     -> asynchronous, raises OnExecuteScript (line ~1630)
+        ExecuteScript(JS, AFinishedProc)      -> repeat..until around PeekMessage
+        ExecuteScript(JS, AJsonPath): string  -> calls the one above
+        ExecuteScript(JS)                     -> asynchronous, raises OnExecuteScript
       This unit uses ONLY the last one.
 
    2. UserDataFolder defaults to a folder named after the EXE:
-        TPath.Combine(CLocalAppData, TPath.GetFileName(ParamStr(0) + '.WebView2'))   (line 967)
+        TPath.Combine(CLocalAppData, TPath.GetFileName(ParamStr(0) + '.WebView2'))   in TCustomEdgeBrowser.Create
       So renaming the exe silently points it at a NEW, EMPTY profile and the logged-in session is gone.
       Always set UserDataFolder explicitly.
 
-   3. Never hide or minimize the window that hosts the browser. Vcl.Edge maps the VCL Visible onto
-      WebView2 IsVisible (line 2215) and SC_MINIMIZE forces IsVisible False (line 2223). Chromium
-      throttles a non-visible page (reported ~1 s task intervals, requestAnimationFrame stopped), so
-      the settle delay below can end up reading an unfinished page. Park the window OFF-SCREEN instead.
+   3. Never hide or minimize the window that hosts the browser.
+      Vcl.Edge maps the VCL Visible onto WebView2 IsVisible in TCustomEdgeBrowser.CMParentVisibleChanged, and SC_MINIMIZE forces IsVisible False in TCustomEdgeBrowser.CMSysCommand.
+      Chromium throttles a non-visible page (reported ~1 s task intervals, requestAnimationFrame stopped), so the SettleDelay wait can end up reading an unfinished page.
+      Park the window OFF-SCREEN instead.
 =============================================================================================================}
 
 INTERFACE
@@ -169,8 +168,8 @@ begin
   FGuardTimer.Interval:= TimeOut;
   FGuardTimer.Enabled := TRUE;
 
-  { The very first navigation only kicks off the (asynchronous) creation of the WebView. We do not rely on
-    Vcl.Edge replaying the URL afterwards - BrowserCreated navigates explicitly instead. }
+  { The very first navigation only kicks off the (asynchronous) creation of the WebView.
+    We do not rely on Vcl.Edge replaying the URL afterwards - BrowserCreated navigates explicitly instead. }
   if FBrowser.BrowserControlState = TCustomEdgeBrowser.TBrowserControlState.Created
   then
     begin
@@ -201,12 +200,11 @@ begin
 end;
 
 
-{ WebView2 fires this several times for ONE logical page: a redirect replaces the first navigation, and the
-  replaced one completes as FAILED with status UNKNOWN (Chromium's ERR_ABORTED). Measured 2026-07-24 on
-  old.reddit.com, which reports exactly that and then loads fine.
-  So a failure is NEVER final here - it is only remembered. The job ends when a navigation SUCCEEDS and the
-  page settles, or when the guard timer runs out. The guard then reports the last remembered failure, which
-  is a far more useful message than "timed out". }
+{ WebView2 fires this several times for ONE logical page: a redirect replaces the first navigation, and the replaced one completes as FAILED with status UNKNOWN (Chromium's ERR_ABORTED).
+  Measured 2026-07-24 on old.reddit.com, which reports exactly that and then loads fine.
+  So a failure is NEVER final here - it is only remembered.
+  The job ends when a navigation SUCCEEDS and the page settles, or when the guard timer runs out.
+  The guard then reports the last remembered failure, which is a far more useful message than "timed out". }
 procedure TWebPageReader.NavigationCompleted(Sender: TCustomEdgeBrowser; IsSuccess: Boolean; WebErrorStatus: COREWEBVIEW2_WEB_ERROR_STATUS);
 begin
   if NOT FBusy then EXIT;
@@ -218,8 +216,7 @@ begin
     end;
 
   { Let the page finish its deferred scripts before reading it. See the header note about window visibility.
-    A later navigation (a redirect that really landed somewhere else) simply restarts the settle, so the page
-    we read is always the LAST one that loaded. }
+    A later navigation (a redirect that really landed somewhere else) simply restarts the settle, so the page we read is always the LAST one that loaded. }
   FSettleTimer.Enabled := FALSE;
   FSettleTimer.Interval:= SettleDelay;
   FSettleTimer.Enabled := TRUE;
@@ -305,8 +302,7 @@ begin
   else Root:= '(document.querySelector("' + ContentSelector + '") || document.body)';
 
   { We delete the chrome from the LIVE document instead of from a clone. Two reasons:
-      - innerText on a DETACHED node gets no layout, so Chromium degrades it to textContent - the line
-        breaks and the hidden-element filtering that make innerText worth using are both lost.
+      - innerText on a DETACHED node gets no layout, so Chromium degrades it to textContent - the line breaks and the hidden-element filtering that make innerText worth using are both lost.
       - This reader opens one page and then the process exits, so mutating the page costs nothing. }
   Result:=
     '(function(){'+

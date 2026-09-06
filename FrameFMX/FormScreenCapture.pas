@@ -11,44 +11,6 @@
    Features glossy overlay effect for non-selected areas.
 =============================================================================================================}
 
-{_done
-  1. Added DrawGlossyOverlay procedure that creates a multi-layered glossy effect:
-    - Top-down gradient: Simulates light coming from above with a white highlight at the top fading to transparent
-    - Horizontal light streaks: 3 subtle horizontal bands simulating glass reflections
-    - Vignette effect: Radial gradient that darkens the edges for depth
-    - Cool tint: Subtle RoyalBlue overlay for a modern look
-  2. Updated pbOverlayPaint:
-    - Increased base dimming opacity from 0.3 to 0.35 for better visibility
-    - Calls DrawGlossyOverlay after drawing the dimmed screenshot
-    - Added selection glow effect: White inner border + blue outer glow around the selected area
-
-  Visual effect breakdown:
-  - The covered (non-selected) areas now have a polished, glass-like appearance
-  - Light appears to come from the top of the screen
-  - Edges are subtly darkened (vignette) for depth
-  - The selected area "pops" with a glowing border effect
-
-  ┌───────────┬────────────┬─────────────┬───────────────────────────────────────┐
-  │ Location  │ Parameter  │   Current   │                Effect                 │
-  ├───────────┼────────────┼─────────────┼───────────────────────────────────────┤
-  │ Line ~203 │ BlurAmount │ 1.5         │ Blur intensity (was 2.5, now reduced) │
-  ├───────────┼────────────┼─────────────┼───────────────────────────────────────┤
-  │ Line ~225 │ Opacity    │ 0.92        │ How visible the blurred background is │
-  ├───────────┼────────────┼─────────────┼───────────────────────────────────────┤
-  │ Line ~233 │ $30000000  │ ~19% black  │ Dark overlay to dim background        │
-  ├───────────┼────────────┼─────────────┼───────────────────────────────────────┤
-  │ Line ~245 │ $40FFFFFF  │ ~25% white  │ Top shine brightness                  │
-  ├───────────┼────────────┼─────────────┼───────────────────────────────────────┤
-  │ Line ~267 │ $0C87CEEB  │ ~5% SkyBlue │ Color tint (Aero signature)           │
-  ├───────────┼────────────┼─────────────┼───────────────────────────────────────┤
-  │ Line ~287 │ $25000000  │ ~15% black  │ Edge darkness (vignette)              │
-  └───────────┴────────────┴─────────────┴───────────────────────────────────────┘
-  Quick adjustments:
-  - Less blur: Change 1.5 to 1.0 or 0.5
-  - No color tint: Change $0C87CEEB to $00000000
-  - No vignette: Change $25000000 to $00000000
-  - Stronger top shine: Change $40FFFFFF to $60FFFFFF   }
-
 INTERFACE
 
 USES
@@ -132,7 +94,7 @@ procedure TfrmScreenCapture.FormCreate(Sender: TObject);
 begin
   FSCManager:= TScreenCaptureManager.Create;
   FBlurredScreenshot:= NIL;
-  FOverlayStyle:= osFrostedGlass;  // Default to frosted glass
+  FOverlayStyle:= osFrostedGlass;
   layInstructions.Visible:= FSCManager.CaptureTipShown < 3;
 end;
 
@@ -156,32 +118,27 @@ end;
 procedure TfrmScreenCapture.StartCapture;
 VAR LastRect: TRectF;
 begin
-  // Hide form temporarily to capture clean screenshot.
-  // Sleep(100) yields to the OS compositor so the window is visually removed before capture. before we used  Application.ProcessMessages;
+  { Hide form temporarily to capture clean screenshot.
+    Sleep(100) yields to the OS compositor so the window is visually removed before capture. }
   Hide;
 
-
-  // Capture screen
-  Sleep(100);  
+  Sleep(100);
   FSCManager.StartCapture;
 
-  // Validate screenshot was captured
   if NOT Assigned(FSCManager.Screenshot) OR FSCManager.Screenshot.IsEmpty
   then EXIT;
 
-  // Display screenshot in image control (hidden, used only as source for painting)
+  // imgScreenshot is hidden - it is only the source for painting.
   imgScreenshot.Bitmap.Assign(FSCManager.Screenshot);
 
-  // Create blurred version for frosted glass effect
   if FOverlayStyle = osFrostedGlass
   then CreateBlurredScreenshot;
 
-  // Show form. The form is wsMaximized, so pbOverlay gets its real screen-sized bounds only now.
+  // The form is wsMaximized, so pbOverlay gets its real screen-sized bounds only after Show.
   Show;
 
-  // Restore last selection if it fits the current screen. Validate in logical units (dp vs dp):
-  // LastSelectionRect is stored in overlay coords, while Screenshot.Width/Height are physical pixels —
-  // on HiDPI displays those are larger than the overlay, so a stale rect could land partially off-screen.
+  { Restore last selection if it fits the current screen. Validate in logical units (dp vs dp):
+    LastSelectionRect is stored in overlay coords, while Screenshot.Width/Height are physical pixels — on HiDPI displays those are larger than the overlay, so a stale rect could land partially off-screen. }
   LastRect:= FSCManager.LastSelectionRect;
   if NOT LastRect.IsEmpty then
     if (LastRect.Right <= pbOverlay.Width) AND
@@ -204,19 +161,16 @@ begin
   if Assigned(Filter) then
   begin
     Filter.ValuesAsBitmap['Input'] := FSCManager.Screenshot;
-    // ═══════════════════════════════════════════════════════════════════════
-    // BLUR INTENSITY: Adjust this value to control blur strength
-    //   0.5 = very subtle blur (almost sharp)
-    //   1.0 = light blur
-    //   1.5 = moderate blur (recommended for subtle frosted glass)
-    //   2.5 = strong blur (original Vista/7 style)
-    //   4.0 = very strong blur
-    // ═══════════════════════════════════════════════════════════════════════
+    { BLUR INTENSITY: adjust to control blur strength.
+        0.5 = very subtle blur (almost sharp)
+        1.0 = light blur
+        1.5 = moderate blur (recommended for subtle frosted glass)
+        2.5 = strong blur (original Vista/7 style)
+        4.0 = very strong blur }
     Filter.ValuesAsFloat['BlurAmount'] := 1.5;
     FBlurredScreenshot.Assign(Filter.ValuesAsBitmap['Output']);
   end
   else
-    // Fallback if filter not available
     FBlurredScreenshot.Assign(FSCManager.Screenshot);
 end;
 
@@ -227,27 +181,24 @@ var
   GradientBrush: TBrush;
   GradientPoint: TGradientPoint;
 begin
-  // ═══════════════════════════════════════════════════════════════════════════
   // FROSTED GLASS TUNING PARAMETERS
-  // ═══════════════════════════════════════════════════════════════════════════
 
-  // 1. Draw blurred screenshot as base (the key frosted glass element)
-  //    OPACITY: 0.0=invisible, 1.0=fully visible. Lower = more faded/dimmed
+  { 1. Draw blurred screenshot as base (the key frosted glass element).
+       OPACITY: 0.0=invisible, 1.0=fully visible. Lower = more faded/dimmed. }
   if Assigned(FBlurredScreenshot) then
     Canvas.DrawBitmap(FBlurredScreenshot, FBlurredScreenshot.BoundsF, FullRect, 0.92, True)
   else
     Canvas.DrawBitmap(FSCManager.Screenshot, FSCManager.Screenshot.BoundsF, FullRect, 0.4, True);
 
-  // 2. Dark tint overlay - dims the background
-  //    Format: $AARRGGBB where AA=alpha (00-FF), higher alpha = darker
-  //    $20000000 = very subtle, $30000000 = subtle, $50000000 = noticeable
+  { 2. Dark tint overlay - dims the background.
+       Format: $AARRGGBB where AA=alpha (00-FF), higher alpha = darker.
+       $20000000 = very subtle. $30000000 = subtle (~19% black, the value used here). $50000000 = noticeable. }
   Canvas.Fill.Kind := TBrushKind.Solid;
   Canvas.Fill.Color := $30000000;
   Canvas.FillRect(FullRect, 0, 0, [], 1.0);
 
-  // 3. Top highlight reflection (characteristic Aero shine)
-  //    TOP SHINE: $40FFFFFF = ~25% white at top, fades down
-  //    Set to $00FFFFFF to disable shine entirely
+  { 3. Top highlight reflection (characteristic Aero shine).
+       TOP SHINE: $40FFFFFF = ~25% white at top, fades down. Set to $00FFFFFF to disable the shine entirely. }
   GradientBrush := TBrush.Create(TBrushKind.Gradient, TAlphaColorRec.White);
   try
     GradientBrush.Gradient.Style := TGradientStyle.Linear;
@@ -271,17 +222,15 @@ begin
     FreeAndNil(GradientBrush);
   end;
 
-  // 4. Color tint (Aero's signature blue color)
-  //    TINT COLOR: $0C87CEEB = SkyBlue at ~5% alpha
-  //    Change color: $0C4169E1 = RoyalBlue, $0C00CED1 = DarkTurquoise
-  //    Set to $00000000 to disable tint
+  { 4. Color tint (Aero's signature blue color).
+       TINT COLOR: $0C87CEEB = SkyBlue at ~5% alpha. $0C4169E1 = RoyalBlue, $0C00CED1 = DarkTurquoise.
+       Set to $00000000 to disable the tint. }
   Canvas.Fill.Kind := TBrushKind.Solid;
   Canvas.Fill.Color := $0C87CEEB;
   Canvas.FillRect(FullRect, 0, 0, [], 1.0);
 
-  // 5. Vignette effect (darker at edges for depth)
-  //    EDGE DARKNESS: $25000000 = ~15% black at edges
-  //    Set to $00000000 to disable vignette
+  { 5. Vignette effect (darker at edges for depth).
+       EDGE DARKNESS: $25000000 = ~15% black at edges. Set to $00000000 to disable the vignette. }
   GradientBrush := TBrush.Create(TBrushKind.Gradient, TAlphaColorRec.Black);
   try
     GradientBrush.Gradient.Style := TGradientStyle.Radial;
@@ -427,7 +376,6 @@ begin
 
   Canvas.BeginScene;
   try
-    // Apply selected overlay style
     case FOverlayStyle of
       osFrostedGlass:
         DrawFrostedGlassOverlay(Canvas, FullRect);
@@ -452,9 +400,9 @@ begin
         DrawRect.Intersect(FullRect);
         if DrawRect.IsEmpty then EXIT;  // Selection is completely outside visible area
 
-        // Map overlay-local (logical) coords to screenshot PIXEL coords. The screenshot is captured
-        // in physical pixels; on HiDPI displays (DPI scale > 100%) a 1:1 SrcRect would lift the wrong
-        // (top-left, shrunken) region. At 100% scale the ratios are 1.0 and this is a no-op.
+        { Map overlay-local (logical) coords to screenshot PIXEL coords.
+          The screenshot is captured in physical pixels; on HiDPI displays (DPI scale > 100%) a 1:1 SrcRect would lift the wrong (top-left, shrunken) region.
+          At 100% scale the ratios are 1.0 and this is a no-op. }
         ScaleX:= FSCManager.Screenshot.Width  / FullRect.Width;
         ScaleY:= FSCManager.Screenshot.Height / FullRect.Height;
         SrcRect:= TRectF.Create(DrawRect.Left  * ScaleX, DrawRect.Top    * ScaleY,
@@ -488,7 +436,6 @@ end;
 
 procedure TfrmScreenCapture.SelectionRectChange(Sender: TObject);
 begin
-  // Repaint overlay when selection changes
   if Assigned(pbOverlay)
   then pbOverlay.Repaint;
 end;
@@ -531,7 +478,7 @@ end;
 
 procedure TfrmScreenCapture.FormKeyDown(Sender: TObject; var Key: Word; var KeyChar: Char; Shift: TShiftState);
 begin
-  // Hide instructions after first keypress
+  // Count one more viewing of the tip. It disappears for good after 3 (the count is saved to the INI file).
   if layInstructions.Visible then
     begin
       FSCManager.CaptureTipShown:= FSCManager.CaptureTipShown+1;
@@ -548,8 +495,8 @@ begin
   // Ctrl+P / Cmd+P - capture selected area
   if IsCaptureKeyPressed(Key, Shift) then
     begin
-      // SelectionRect is in logical (overlay) coords; the screenshot is in physical pixels.
-      // Pass the logical->pixel ratios so the manager crops the correct region on HiDPI displays.
+      { SelectionRect is in logical (overlay) coords; the screenshot is in physical pixels.
+        Pass the logical->pixel ratios so the manager crops the correct region on HiDPI displays. }
       if FSCManager.CaptureSelectedArea(SelectionRect.BoundsRect,
            FSCManager.Screenshot.Width  / pbOverlay.Width,
            FSCManager.Screenshot.Height / pbOverlay.Height) then
@@ -564,9 +511,8 @@ end;
 
 procedure TfrmScreenCapture.ShowCaptureFlash;
 begin
-  // Visual feedback: pulse SelectionRect opacity using FMX animation engine.
-  // One reusable animation instance: creating a new TFloatAnimation per capture accumulated
-  // owner-managed instances on SelectionRect until the form closed.
+  { Visual feedback: pulse SelectionRect opacity using FMX animation engine.
+    One reusable animation instance: creating a new TFloatAnimation per capture accumulated owner-managed instances on SelectionRect until the form closed. }
   if FFlashAnim = NIL then
     begin
       FFlashAnim:= TFloatAnimation.Create(SelectionRect);

@@ -5,7 +5,7 @@
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Image resizers
-   They all use Windows StretchBlt in LightVcl.Graph.ResizeWin.pas
+   They all use Windows StretchBlt, via the Stretch routine in LightVcl.Graph.ResizeWinBlt.pas
 
    Parameters of the resize operation are stored in a LightVcl.Graph.ResizeParams.RResizeParams record.
    The record is filled with data from GUI in LightVcl.Graph.ResizeParamEdt.pas.
@@ -77,10 +77,8 @@ USES
 
 
 {--------------------------------------------------------------------------------------------------
-   MAIN FUNCTION
-   SmartStretch: Resizes a bitmap using the parameters specified in RResizeParams.
-   The RResizeParams record handles various resize modes (Fit, Fill, ForceWidth, etc.)
-   and computes the optimal output dimensions while preserving aspect ratio when appropriate.
+   MAIN FUNCTION - SmartStretch
+   The RResizeParams record handles various resize modes (Fit, Fill, ForceWidth, etc.) and computes the optimal output dimensions while preserving aspect ratio when appropriate.
 --------------------------------------------------------------------------------------------------}
 procedure SmartStretch(BMP: TBitmap; ResizeOpp: RResizeParams);
 begin
@@ -93,14 +91,11 @@ end;
 
 { Resizes bitmap proportionally using AUTO-DETECT (roAutoDetect), the default of RResizeParams.Reset.
 
-  WARNING - the result can be up to FitTolerance percent (10 by default) WIDER and TALLER than
-  MaxWidth x MaxHeight. Auto-detect first tries to FILL the box; if that would crop more than 5% it
-  falls back to Fit and then deliberately enlarges the result by FitTolerance to remove the black
-  bars (see RResizeParams.computeAutodetect in LightVcl.Graph.ResizeParams.pas). Measured: a 400x300
-  bitmap given a 200x200 box comes out 220x165.
-  That overshoot is what a WALLPAPER wants - BioniX calls this routine exactly that way. If you need
-  the result to stay INSIDE the box (a thumbnail in a grid cell, for instance), do NOT call this
-  overload - call SmartStretch(BMP, MaxWidth, MaxHeight, roFit). }
+  WARNING - the result can be up to FitTolerance percent (10 by default) WIDER and TALLER than MaxWidth x MaxHeight.
+  Auto-detect first tries to FILL the box; if that would crop more than 5% it falls back to Fit and then deliberately enlarges the result by FitTolerance to remove the black bars (see RResizeParams.computeAutodetect in LightVcl.Graph.ResizeParams.pas).
+  Measured: a 400x300 bitmap given a 200x200 box comes out 220x165.
+  That overshoot is what a WALLPAPER wants - BioniX calls this routine exactly that way.
+  If you need the result to stay INSIDE the box (a thumbnail in a grid cell, for instance), do NOT call this overload - call SmartStretch(BMP, MaxWidth, MaxHeight, roFit). }
 procedure SmartStretch(BMP: TBitmap; CONST MaxWidth, MaxHeight: Integer);
 VAR ResizeOpp: RResizeParams;
 begin
@@ -117,8 +112,7 @@ begin
 end;
 
 
-{ Resizes bitmap using the specified resize operation mode.
-  ResizeOp determines how the image fits within MaxWidth x MaxHeight:
+{ ResizeOp determines how the image fits within MaxWidth x MaxHeight:
     roFit  - Adds black bars if needed, never crops
     roFill - Fills the area completely, may crop edges
     etc. (see TResizeOp for all modes) }
@@ -139,9 +133,8 @@ begin
 end;
 
 
-{ Resizes the image to completely fill the viewport (no black bars), then crops
-  any portions that extend beyond MaxWidth x MaxHeight. The cropping is centered,
-  removing equal amounts from opposite edges. }
+{ Resizes the image to completely fill the viewport (no black bars), then crops any portions that extend beyond MaxWidth x MaxHeight.
+  The cropping is centered, removing equal amounts from opposite edges. }
 procedure SmartStretchCrop(BMP: TBitmap; CONST MaxWidth, MaxHeight: Integer);
 VAR ResizeOpp: RResizeParams;
 begin
@@ -161,9 +154,7 @@ end;
 
 
 
-{ Resizes bitmap with custom FitTolerance percentage.
-  FitTolerance: When falling back from Fill to Fit mode, this percentage determines
-  how much "over-fitting" is allowed to reduce black bars (typically 10%). }
+{ FitTolerance: when falling back from Fill to Fit mode, this percentage determines how much "over-fitting" is allowed to reduce black bars (typically 10%). }
 procedure SmartStretch(BMP: TBitmap; CONST MaxWidth, MaxHeight, FitTolerance: Integer);
 VAR ResizeOpp: RResizeParams;
 begin
@@ -182,8 +173,7 @@ begin
 end;
 
 
-{ Loads an image from disk and resizes it according to ResizeOpp parameters.
-  Returns the loaded and resized bitmap. Caller is responsible for freeing.
+{ Caller is responsible for freeing the returned bitmap.
   Returns NIL if the image could not be loaded (corrupted file, unsupported format).
   UseWic: TRUE for faster WIC-based loading (recommended), FALSE for VCL loaders. }
 function LoadAndStretch(CONST FileName: string; ResizeOpp: RResizeParams; UseWic: Boolean= TRUE): TBitmap;
@@ -203,12 +193,12 @@ end;
 
 
 { Loads an image from disk and resizes it with AUTO-DETECT to roughly MaxWidth x MaxHeight.
-  Returns the loaded and resized bitmap. Caller is responsible for freeing.
+  Caller is responsible for freeing the returned bitmap.
   Returns NIL if the image could not be loaded.
 
-  WARNING - the result can exceed MaxWidth x MaxHeight by up to FitTolerance percent (10 by
-  default). See the warning on SmartStretch(BMP, MaxWidth, MaxHeight) above. To stay inside the
-  box, build an RResizeParams with ResizeOpp = roFit and call the other overload. }
+  WARNING - the result can exceed MaxWidth x MaxHeight by up to FitTolerance percent (10 by default).
+  See the warning on SmartStretch(BMP, MaxWidth, MaxHeight) above.
+  To stay inside the box, build an RResizeParams with ResizeOpp = roFit and call the other overload. }
 function LoadAndStretch(CONST FileName: string; CONST MaxWidth, MaxHeight: Integer; UseWic: Boolean= TRUE): TBitmap;
 begin
  { LoadGraph signature is (FileName, ExifRotate, UseWic) - UseWic must go into the THIRD slot, not into ExifRotate }
@@ -234,7 +224,6 @@ end;
  Keep aspect ratio  : Yes
  Stretch provided in: pixels
 
- Resizes image to fit within MaxWidth x MaxHeight while preserving aspect ratio.
  The image will be enlarged/shrunk as much as possible WITHOUT exceeding either limit.
  Result: At least one dimension equals its max, the other is smaller or equal.
 --------------------------------------------------------------------------------------------------}
@@ -275,8 +264,7 @@ begin
 end;
 
 
-{ Proportional resize to specified width. Height is automatically computed
-  to maintain aspect ratio. }
+{ Height is automatically computed to maintain aspect ratio. }
 procedure StretchProport(BMP: TBitmap; CONST OutWidth: Integer);
 VAR OutHeight: Integer;
 begin
