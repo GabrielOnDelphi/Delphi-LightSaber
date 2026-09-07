@@ -558,12 +558,40 @@ procedure TTestLightCore.TestReplaceLonellyCR;
 begin
   Assert.AreEqual('A B', ReplaceLonellyCR('A'#13'B', ' '));
   Assert.AreEqual('A'#13#10'B', ReplaceLonellyCR('A'#13#10'B', ' ')); // CRLF not touched
+
+  { Edges. A CR is lonely when no LF follows it - the last character included }
+  Assert.AreEqual('', ReplaceLonellyCR('', ' '));
+  Assert.AreEqual(' ', ReplaceLonellyCR(#13, ' '));                    // the whole string is one lonely CR
+  Assert.AreEqual('A ', ReplaceLonellyCR('A'#13, ' '));                // trailing CR: nothing follows it, so it is lonely
+  Assert.AreEqual(' A', ReplaceLonellyCR(#13'A', ' '));
+  Assert.AreEqual('  ', ReplaceLonellyCR(#13#13, ' '));                // neither CR is followed by an LF
+  Assert.AreEqual('A'#13#10, ReplaceLonellyCR('A'#13#10, ' '));        // CRLF at the very end is still a pair
+  Assert.AreEqual('ABC', ReplaceLonellyCR('ABC', ' '));                // nothing to replace: input comes back unchanged
+
+  { A replacement of a length other than 1 - the sizing of the result depends on it }
+  Assert.AreEqual('AB', ReplaceLonellyCR('A'#13'B', ''));              // empty replacement DELETES the lonely CR (LightVcl.Common.Translate does this)
+  Assert.AreEqual('A'#13#10'B', ReplaceLonellyCR('A'#13'B', #13#10));  // lonely CR promoted to a full CRLF
+  Assert.AreEqual('A<>B<>', ReplaceLonellyCR('A'#13'B'#13, '<>'));     // two hits, one of them trailing
 end;
 
 procedure TTestLightCore.TestReplaceLonellyLF;
 begin
   Assert.AreEqual('A B', ReplaceLonellyLF('A'#10'B', ' '));
   Assert.AreEqual('A'#13#10'B', ReplaceLonellyLF('A'#13#10'B', ' ')); // CRLF not touched
+
+  { Edges. An LF is lonely when no CR comes before it - the first character included }
+  Assert.AreEqual('', ReplaceLonellyLF('', ' '));
+  Assert.AreEqual(' ', ReplaceLonellyLF(#10, ' '));                    // the whole string is one lonely LF
+  Assert.AreEqual(' A', ReplaceLonellyLF(#10'A', ' '));                // leading LF: nothing precedes it, so it is lonely
+  Assert.AreEqual('A ', ReplaceLonellyLF('A'#10, ' '));
+  Assert.AreEqual('  ', ReplaceLonellyLF(#10#10, ' '));                // neither LF is preceded by a CR
+  Assert.AreEqual(#13#10'A', ReplaceLonellyLF(#13#10'A', ' '));        // CRLF at the very start is still a pair
+  Assert.AreEqual('ABC', ReplaceLonellyLF('ABC', ' '));                // nothing to replace: input comes back unchanged
+
+  { A replacement of a length other than 1 - the sizing of the result depends on it }
+  Assert.AreEqual('AB', ReplaceLonellyLF('A'#10'B', ''));              // empty replacement DELETES the lonely LF (LightVcl.Common.Translate does this)
+  Assert.AreEqual('A'#13#10'B', ReplaceLonellyLF('A'#10'B', #13#10));  // lonely LF promoted to a full CRLF
+  Assert.AreEqual('<>A<>B', ReplaceLonellyLF(#10'A'#10'B', '<>'));     // two hits, one of them leading
 end;
 
 
@@ -708,6 +736,17 @@ end;
 procedure TTestLightCore.TestReplaceNbsp;
 begin
   Assert.AreEqual('Hello World', ReplaceNbsp('Hello'#160'World', ' '));
+
+  Assert.AreEqual('', ReplaceNbsp('', ' '));
+  Assert.AreEqual(' ', ReplaceNbsp(#160, ' '));                        // the whole string is one non-breaking space
+  Assert.AreEqual(' A', ReplaceNbsp(#160'A', ' '));                    // first character
+  Assert.AreEqual('A ', ReplaceNbsp('A'#160, ' '));                    // last character
+  Assert.AreEqual('A  B', ReplaceNbsp('A'#160#160'B', ' '));           // two in a row
+  Assert.AreEqual('ABC', ReplaceNbsp('ABC', ' '));                     // nothing to replace: input comes back unchanged
+
+  { A replacement of a length other than 1 - the sizing of the result depends on it }
+  Assert.AreEqual('AB', ReplaceNbsp('A'#160'B', ''));                  // empty replacement DELETES the character
+  Assert.AreEqual('A<>B<>C', ReplaceNbsp('A'#160'B'#160'C', '<>'));    // two hits, multi-character replacement
 end;
 
 
