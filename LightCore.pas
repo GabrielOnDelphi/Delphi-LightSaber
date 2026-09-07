@@ -1,7 +1,7 @@
 ﻿UNIT LightCore;
 
 {=============================================================================================================
-   2026.07.07
+   2026.09.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    - String manipulation (string conversions, sub-string detection, word manipulation, cut, copy, split, wrap, etc)
@@ -1243,16 +1243,14 @@ end;
 
 
 // Replace character #160 (A0) with space
+{ StringReplace without rfIgnoreCase collects the hit positions into an array first, then fills one
+  pre-sized string with pointer copies - one allocation for the whole job.
+  Verified in c:\Delphi\Delphi 13\source\rtl\sys\System.SysUtils.pas, line 26648.
+  The loop that stood here appended one character at a time, so the string was reallocated on every
+  character: a 1 MB file cost a million reallocations. }
 function ReplaceNbsp(CONST s, ReplaceWith: string): string;
-VAR i: integer;
 begin
- if s= '' then EXIT('');
- Result:= '';
-
- for i:= 1 to Length(s) DO
-  if (s[i]= #160 {A0})
-  then Result:= Result+ ReplaceWith
-  else Result:= Result+ s[i];
+ Result:= System.SysUtils.StringReplace(s, #160 {A0}, ReplaceWith, [rfReplaceAll]);
 end;
 
 
@@ -1271,40 +1269,80 @@ end;
     Nix: 0A
 ============================================================================================================}
 
+{ A CR is lonely when no LF follows it. The last character counts as lonely when it is a CR, because it
+  has nothing after it (such a trailing CR was silently dropped before 2026.07).
+  Counts first, then fills one pre-sized string: the earlier version appended one character at a time, so
+  the string was reallocated on every character - a 1 MB file cost a million reallocations. }
 function ReplaceLonellyCR(CONST s, ReplaceWith: string): string;
-VAR i: integer;
+VAR
+   i, Src, Dst, Lonely, LenS, LenRepl: Integer;
 begin
- if s= '' then EXIT('');
- Result:= '';
+ LenS:= Length(s);
+ if LenS = 0 then EXIT('');
 
- { Check all chars except the last }
- for i:= 1 to Length(s)-1 DO
-  if (s[i]= CR) AND (s[i+1]<> LF)
-  then Result:= Result+ ReplaceWith
-  else Result:= Result+ s[i];
+ { Pass 1: how many lonely CRs are there? }
+ Lonely:= 0;
+ for i:= 1 to LenS DO
+   if (s[i] = CR) AND ((i = LenS) OR (s[i+1] <> LF))
+   then Inc(Lonely);
 
- { Check the last char }
- if s.EndsWith(CR)
- then Result:= Result+ ReplaceWith    { A trailing CR has nothing after it, so it is lonely -> replace it (it was silently dropped before 2026.07) }
- else Result:= Result+ LastChar(s);
+ if Lonely = 0 then EXIT(s);
+
+ { Pass 2: one allocation, then fill it }
+ LenRepl:= Length(ReplaceWith);
+ SetLength(Result, LenS - Lonely + Lonely*LenRepl);
+ Dst:= 1;
+ for Src:= 1 to LenS DO
+   if (s[Src] = CR) AND ((Src = LenS) OR (s[Src+1] <> LF))
+   then
+     for i:= 1 to LenRepl DO
+      begin
+        Result[Dst]:= ReplaceWith[i];
+        Inc(Dst);
+      end
+   else
+    begin
+      Result[Dst]:= s[Src];
+      Inc(Dst);
+    end;
 end;
 
 
+{ An LF is lonely when no CR comes before it. The first character counts as lonely when it is an LF, because
+  it has nothing before it (such a leading LF was silently dropped before 2026.07).
+  Counts first, then fills one pre-sized string - see the note on ReplaceLonellyCR above. }
 function ReplaceLonellyLF(CONST s, ReplaceWith: string): string;
-VAR i: integer;
+VAR
+   i, Src, Dst, Lonely, LenS, LenRepl: Integer;
 begin
- if s= '' then EXIT('');
- Result:= '';
+ LenS:= Length(s);
+ if LenS = 0 then EXIT('');
 
- { Check the first char }
- if s[1]= LF
- then Result:= ReplaceWith            { A leading LF has nothing before it, so it is lonely -> replace it (it was silently dropped before 2026.07) }
- else Result:= s[1];
+ { Pass 1: how many lonely LFs are there? }
+ Lonely:= 0;
+ for i:= 1 to LenS DO
+   if (s[i] = LF{A}) AND ((i = 1) OR (s[i-1] <> CR{D}))
+   then Inc(Lonely);
 
- for i:= 2 to Length(s) DO
-  if  (s[i]= LF{A}) AND (s[i-1]<> CR{D})
-  then Result:= Result+ ReplaceWith
-  else Result:= Result+ s[i];
+ if Lonely = 0 then EXIT(s);
+
+ { Pass 2: one allocation, then fill it }
+ LenRepl:= Length(ReplaceWith);
+ SetLength(Result, LenS - Lonely + Lonely*LenRepl);
+ Dst:= 1;
+ for Src:= 1 to LenS DO
+   if (s[Src] = LF) AND ((Src = 1) OR (s[Src-1] <> CR))
+   then
+     for i:= 1 to LenRepl DO
+      begin
+        Result[Dst]:= ReplaceWith[i];
+        Inc(Dst);
+      end
+   else
+    begin
+      Result[Dst]:= s[Src];
+      Inc(Dst);
+    end;
 end;
 
 
