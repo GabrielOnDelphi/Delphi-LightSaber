@@ -6,7 +6,7 @@
 --------------------------------------------------------------------------------------------------------------
    A log viewer based on TStringGrid.
    It can easily show up to 1 million entries.
-   Being a good citizen, when it reaches this number it saves existing data to disk and then clears it from RAM.
+   When it reaches this number it saves the existing data to disk and then clears it from RAM.
 
    How to use it
       1. Standalone: Drop a TLogViewer on your form and use it to log messages:
@@ -19,13 +19,8 @@
                 AppData.RamLog.AddError('Something bad happened!');
            The log window will automatically pop-up when an error is received.
 
-   FMX Grid Notes:
-      - In FMX TStringGrid, RowCount does NOT include the header row (unlike VCL)
-      - OnDrawColumnCell Row parameter is 0-based for data rows
-      - Column headers are managed separately via TColumn.Header property
-
    Full demo in:
-      c:\Projects\LightSaber\Demo\Demo LightLog\FMX\FMX_Demo_Log.dpr
+      c:\Projects\LightSaber\Demo\FMX\Demo LightLog\FMX_Demo_Log.dpr
 
 =============================================================================================================}
 
@@ -59,10 +54,9 @@ TYPE
      FVisibleLines : TArray<PLogLine>;  // Snapshot of PLogLine pointers for the current filter, populated by setUpRows.
                                         // Why this exists:
                                         //   FMX OnDrawColumnCell fires per cell during paint, on the main thread.
-                                        //   The previous implementation called Row2FilteredRow + Lines.Count + Lines[i]
-                                        //   per draw — three separate read-lock acquisitions per cell, plus a TOCTOU
-                                        //   window in MT mode where a worker Add could shift indices between the
-                                        //   Row2FilteredRow lookup and the indexed read.
+                                        //   Reading the line per draw takes three read locks per cell, and in
+                                        //   multi-threaded mode a worker Add can shift the indices between the
+                                        //   row lookup and the indexed read.
                                         //   Snapshotting under one lock in setUpRows lets MyDrawColumnCell run lock-free.
                                         // Lifetime: pointers are owned by RamLog.Lines. They become dangling if
                                         //   MaxEntries overflow runs SnapshotAndClear; CheckAndSaveToDisk hands the
@@ -113,7 +107,7 @@ TYPE
      property AutoScroll   : Boolean      read FAutoScroll  write FAutoScroll default TRUE;
 
      property Verbosity    : TLogVerbLvl  read FVerbosity   write SetVerbFilter default lvVerbose;
-     property OnVerbChanged: TNotifyEvent read FVerbChanged write FVerbChanged;   { Triggered before deleting the content of a cell }
+     property OnVerbChanged: TNotifyEvent read FVerbChanged write FVerbChanged;   { Triggered after the verbosity filter changed }
   end;
 
 function Verbosity2Color(Verbosity: TLogVerbLvl; IsDark: Boolean = False): TAlphaColor;
@@ -223,7 +217,7 @@ end;
    SETUP & DATA HANDLING
 -------------------------------------------------------------------------------------------------------------}
 { Configures grid rows and columns based on current RamLog content and verbosity filter.
-  In FMX TStringGrid, RowCount only includes data rows - the header row is managed separately.
+  In FMX TStringGrid, RowCount only includes data rows - the header row is managed separately (unlike VCL).
 
   Thread-safety strategy:
     Snapshots the filtered PLogLine pointers into FVisibleLines under a single read lock
@@ -237,10 +231,8 @@ VAR
 begin
   Assert(FRamLog <> NIL, 'RamLog not assigned!');
 
-  // Safety check - don't proceed if component isn't fully initialized
   if (csDestroying in ComponentState) OR (csLoading in ComponentState) then EXIT;
 
-  // Lock updates for performance and visual stability
   BeginUpdate;
   try
     // Refresh the dark-mode flag once per Populate. Style changes between Populates
@@ -266,15 +258,12 @@ begin
       FFilteredRowCount:= Filled;
     end;
 
-    // Set RowCount - in FMX this is data rows only, header is separate
     RowCount:= FFilteredRowCount;
 
-    // Determine required column count based on date/time display settings
     if FShowDate OR FShowTime
     then RequiredColumnCount:= 2
     else RequiredColumnCount:= 1;
 
-    // Only recreate columns if the count has changed
     //ToDo: don't destroy existing columns. Reuse them!
     if ColumnCount <> RequiredColumnCount then
       begin
@@ -307,17 +296,13 @@ begin
     begin
       FVerbosity:= Value;
 
-
-      // Sync associated verbosity trackbar if it exists
       if (FVerbTrackBar <> NIL) then
         if (FVerbTrackBar as TLogVerbFilter).Verbosity <> Self.Verbosity
         then (FVerbTrackBar as TLogVerbFilter).Verbosity:= Self.Verbosity;
 
-      // Notify listeners that verbosity changed
       if Assigned(FVerbChanged)
       then FVerbChanged(Self);
 
-      // Refresh grid content with new filter (Populate calls setUpRows)
       Populate;
     end;
 end;
@@ -328,14 +313,12 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 
 { Creates a new internal RamLog, replacing any existing log assignment.
-  Use after AssignExternalRamLog to switch back to an internal log.
-  Note: The constructor already creates an internal log, so this is only needed
-  if you previously assigned an external log and want to switch back. }
+  The constructor already creates an internal log, so this is only needed after AssignExternalRamLog, to switch back to an internal one. }
 procedure TLogViewer.ConstructInternalRamLog;
 begin
   // Detach from prior log before allocating the new one. Mirror AssignExternalRamLog:
-  // free if owned, unregister if external. Skipping the unregister branch (the prior
-  // bug) leaves the external log holding a dangling observer pointer to this viewer.
+  // free if owned, unregister if external. Skipping the unregister branch would leave
+  // the external log holding a dangling observer pointer to this viewer.
   if Assigned(FRamLog) then
     begin
       if FOwnRamLog
@@ -364,7 +347,7 @@ begin
       else FRamLog.UnregisterLogObserver;  // External log: just unregister, caller owns it
     end;
 
-  FOwnRamLog:= FALSE;  // External log - we don't own it
+  FOwnRamLog:= FALSE;
   FRamLog:= ExternalLog;
   FRamLog.RegisterLogObserver(Self as ILogObserver);
 
@@ -431,18 +414,16 @@ VAR
    CurLine: PLogLine;
    DrawRect: TRectF;
 begin
-  // In FMX, Row is 0-based for data rows. Valid range is 0 to FFilteredRowCount-1.
+  // Valid range is 0 to FFilteredRowCount-1.
   if (Row < 0)
   OR (Row >= FFilteredRowCount)
   OR NOT Assigned(RamLog)
   then EXIT;
 
-  // Get the underlying log line for this visible row (Row is already 0-based)
   CurLine:= GetLineFiltered(Row);
   if CurLine = NIL
   then EXIT;
 
-  // Determine text based on column configuration
   s:= '';
   case ColumnCount of
     1: if Column.Index = 0
@@ -462,16 +443,13 @@ begin
   // populated by setUpRows so we don't probe TStyleManager per cell during paint.
   Canvas.Fill.Color:= Verbosity2Color(CurLine.Level, FIsDarkCache);
 
-  // Set font style
   if CurLine.Bold
   then Canvas.Font.Style:= [TFontStyle.fsBold]
   else Canvas.Font.Style:= [];
 
-  // Prepare drawing rectangle with padding
   DrawRect:= Bounds;
-  DrawRect.Inflate(-2, -1);
+  DrawRect.Inflate(-2, -1);   { Padding }
 
-  // Draw the text (left-aligned, vertically centered)
   Canvas.FillText(DrawRect, s, FALSE, 1.0, [], TTextAlign.Leading, TTextAlign.Center);
 end;
 
@@ -481,7 +459,7 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 function TLogViewer.Count: Integer;
 begin
-  Result:= FFilteredRowCount; // Return the count of currently visible data rows
+  Result:= FFilteredRowCount;
 end;
 
 
@@ -546,8 +524,7 @@ end;
 { Returns estimated scrollbar width (platform-dependent approximation) }
 function GetScrollBarWidth: Single;
 begin
-  // This is an approximation. Real width depends on style and platform. A more robust way might involve checking style resources.
-  // Consider platform specifics if necessary: TPlatformServices.Current.GetPlatformService(...)
+  { A better implementation would read the style resources, or ask TPlatformServices.Current.GetPlatformService }
   Result:= 18; // Common default width
 end;
 
@@ -568,10 +545,10 @@ begin
   if ColumnCount = 2
   then
     begin
-       TimeColWidth:= 120;  // Fixed width for date/time
+       TimeColWidth:= 120;
        MsgColWidth:= TotalWidth - TimeColWidth;
        if MsgColWidth < 100
-       then MsgColWidth:= 100;  // Minimum message column width
+       then MsgColWidth:= 100;
 
        if Columns[0] <> NIL then Columns[0].Width:= TimeColWidth;
        if Columns[1] <> NIL then Columns[1].Width:= MsgColWidth;
@@ -586,8 +563,8 @@ end;
 
 procedure TLogViewer.Resize;
 begin
-  inherited Resize;  // Call the inherited method first
-  resizeColumns;     // Then adjust columns based on the new size
+  inherited Resize;
+  resizeColumns;
 end;
 
 
@@ -607,7 +584,6 @@ begin
   try
     Lines.BeginUpdate;
     try
-      // This loop iterates through FILTERED rows currently in the grid
       for i:= 0 to FFilteredRowCount - 1 do
         begin
           CurLine:= GetLineFiltered(i);
@@ -634,12 +610,10 @@ VAR
    ClipboardService: IFMXClipboardService;
    LogText: string;
 begin
-  // Get text
   if Assigned(FRamLog)
   then LogText:= RamLog.GetAsText
   else LogText:= 'No RAM log assigned!';
 
-  // Copy to clipboard
   if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, ClipboardService)
   then ClipboardService.SetClipboard(LogText)
   else
@@ -658,7 +632,6 @@ begin
   // FMX TStringGrid.Selected is 0-based index for data rows
   SelectedRowIndex:= Selected;
 
-  // Check if a valid data row is selected (0-based, so >= 0)
   if (SelectedRowIndex >= 0)
   AND (SelectedRowIndex < FFilteredRowCount)
   then
@@ -666,7 +639,6 @@ begin
       CurLine:= GetLineFiltered(SelectedRowIndex);
       if CurLine <> NIL then
         begin
-          // Build text with optional timestamp
           LineText:= '';
           if FShowDate OR FShowTime then
             begin
@@ -676,7 +648,6 @@ begin
             end;
           LineText:= LineText + CurLine.Msg;
 
-          // Copy to clipboard
           if TPlatformServices.Current.SupportsPlatformService(IFMXClipboardService, ClipboardService)
           then ClipboardService.SetClipboard(LineText);
         end;
@@ -694,11 +665,9 @@ end;
 { Maps a log verbosity level to its display *text* color (used by FillText via Canvas.Fill).
   Mirror of LightVcl.Common.LogViewer's Verbosity2Color — same scheme, FMX color types.
 
-  IsDark: when TRUE, returns lighter shades suitable for dark-theme backgrounds.
-  Defaults to FALSE so existing call sites without a theme query still compile and
-  produce light-theme colors (the legacy behavior).
+  IsDark: when TRUE, returns lighter shades suitable for dark-theme backgrounds. Defaults to FALSE, which gives the light-theme colors.
 
-  Compiler-checked exhaustive mapping. If a future TLogVerbLvl enum value is added
+  Compiler-checked exhaustive mapping. If a future TLogVerbLvl enumeration value is added
   without extending these arrays, the compiler flags the array index at build time
   rather than at runtime. Mirrors the array-driven pattern used in
   LightCore.LogTypes.Verbosity2String.
