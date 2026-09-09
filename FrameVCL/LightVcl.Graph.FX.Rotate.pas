@@ -7,7 +7,7 @@ UNIT LightVcl.Graph.FX.Rotate;
   Rotate an image at a specified angle.
 
   I M P O R T A N T
-     This library contains various rotation functions collected for testing/comparison purposes.
+     This unit holds several rotation functions, collected for testing and comparison.
      For production use, prefer LightVcl.Graph.FX.RotateGr32 (when GR32 is available) or RotateBitmapGDI.
 
 --------------------------------------------------------------------------------------------------------------
@@ -15,7 +15,7 @@ UNIT LightVcl.Graph.FX.Rotate;
   Source: http://stackoverflow.com/questions/10633400/rotate-bitmap-by-real-angle
 
   Also see:
-     Fastest possible, but quality not so great: c:\MyProjects\Packages\Third party packages\Rotate Image VCL\RotImg.pas
+     Fastest possible, but quality not so great: c:\Projects-3rd_Packages\Third party packages\_Out\_TEMPORARY EXCLUDED (Don't delete them yet!)\Rotate Image VCL - COOL\RotImg.pas
      Fade image to white: https://stackoverflow.com/questions/13701685/fade-an-image-using-gdi-i-e-change-only-the-alpha-channel-of-a-tgpgraphic
      Alternative using WIC: https://www.delphipraxis.net/199843-gdi-bilddrehung-mit-transparenz.html
 
@@ -52,7 +52,7 @@ TYPE
  procedure RotateBitmapGDI   (BMP: TBitmap; Degs: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone); { Uses GDI+ }
  procedure RotateBitmapSWT   (BMP: TBitmap; Rads: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone); deprecated 'Use LightVcl.Graph.FX.RotateBitmap'; { No antialiasing }
  procedure RotateBitmapJanFX (BMP: TBitmap; Degs: Single;                            BkColor: TColor = clNone); deprecated 'Use LightVcl.Graph.FX.RotateBitmap'; { This is slow even if I rotate the image at right angles (90, 180, 270) }
- procedure RotateBitmapPLG   (BMP: TBitmap; Rads: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone); deprecated 'Use LightVcl.Graph.FX.RotateBitmap'; { 39ms. No antialising }
+ procedure RotateBitmapPLG   (BMP: TBitmap; Rads: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone); deprecated 'Use LightVcl.Graph.FX.RotateBitmap'; { 39ms. No antialiasing }
  procedure RotateBitmapBLT   (BMP: TBitmap; Rads: Single; lWidth, lHeight: Longint);  // Worst!
 
 
@@ -77,13 +77,12 @@ begin
    case Exif.Orientation of                                              { The normal orientation is toTopLeft }
     toRightBottom, toBottomRight: RotateBitmap(BMP, 180);
     toRightTop   , toTopRight   : RotateBitmap(BMP, 90, TRUE);
-    toLeftBottom , toBottomLeft : RotateBitmap(BMP, 270, TRUE);     { TTiffOrientation = (toUndefined, toTopLeft, toTopRight, toBottomRight,  toLeftTop (i.e., rotated), toRightBottom, toLeftBottom);}
+    toLeftBottom , toBottomLeft : RotateBitmap(BMP, 270, TRUE);     { TTiffOrientation = (toUndefined, toTopLeft, toTopRight, toBottomRight, toBottomLeft, toLeftTop (i.e. rotated), toRightTop, toRightBottom, toLeftBottom); }
    end;
 end;
 
 
-{ Main rotation function. Selects the best available algorithm.
-  Uses GR32 when available, otherwise falls back to GDI+. }
+{ Main rotation function. Selects the best available algorithm. }
 procedure RotateBitmap(BMP: TBitmap; Degs: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone);
 begin
  Assert(BMP <> NIL, 'RotateBitmap: BMP cannot be NIL');
@@ -223,7 +222,6 @@ end;
 
 
 
-{ This is slow even if we rotate the image at right angles (90, 180, 270) }
 procedure RotateBitmapJanFX(BMP: TBitmap; Degs: Single; BkColor: TColor = clNone);
 VAR BMPOut: TBitmap;
 begin
@@ -247,10 +245,8 @@ end;
 
 
 
-{
-  SetWorldTransform
-  SetWorldTransform doc: https://msdn.microsoft.com/en-us/library/dd145104(v=vs.85).aspx
-  Note: This function uses radians, not degrees. No antialiasing. }
+{ SetWorldTransform doc: https://msdn.microsoft.com/en-us/library/dd145104(v=vs.85).aspx
+  This function uses radians, not degrees. No antialiasing. }
 procedure RotateBitmapSWT(Bmp: TBitmap; Rads: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone);
 VAR
   C: Single;
@@ -288,8 +284,8 @@ begin
     SetGraphicsMode(Tmp.Canvas.Handle, GM_ADVANCED);
     SetWorldTransform(Tmp.Canvas.Handle, XForm);
 
-    BitBlt(Tmp.Canvas.Handle, 0, 0, Tmp.Width, Tmp.Height, Bmp.Canvas.Handle, 0, 0, SRCCOPY); // this was thw original code, but jramos said is buggy: the fix is below:
-    //BitBlt(Tmp.Canvas.Handle, 0, 0, Bmp.Width, Bmp.Height, Bmp.Canvas.Handle, 0, 0, SRCCOPY);
+    { The size must be Bmp's, not Tmp's. BitBlt clips on the destination DC only (https://learn.microsoft.com/en-us/windows/win32/api/wingdi/nf-wingdi-bitblt), so a rectangle larger than the source bitmap is read past its edge instead of being cut down. With AdjustSize Tmp is the larger of the two. }
+    BitBlt(Tmp.Canvas.Handle, 0, 0, Bmp.Width, Bmp.Height, Bmp.Canvas.Handle, 0, 0, SRCCOPY);
     Bmp.Assign(Tmp);
   finally
     FreeAndNil(Tmp);
@@ -299,7 +295,7 @@ end;
 
 
 { Uses PlgBlt for rotation.
-  Note: This function uses radians, not degrees. No antialiasing. }
+  This function uses radians, not degrees. No antialiasing. }
 procedure RotateBitmapPLG(Bmp: TBitmap; Rads: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone);
 var
   C: Single;
@@ -380,7 +376,7 @@ end;
 
 { Pixel-by-pixel rotation using BitBlt.
   Warning: Very slow and produces poor quality results.
-  Note: This function uses radians. lWidth/lHeight are passed but ignored - bitmap dimensions are used.
+  This function uses radians. lWidth and lHeight are passed but ignored - the bitmap dimensions are used.
   Source: http://www.delphi-central.com/tutorials/RotateBitmapBitBlt.aspx }
 procedure RotateBitmapBLT(BMP: TBitmap; Rads: Single; lWidth, lHeight: Longint);
 var
@@ -526,7 +522,7 @@ end;
 
 
 
-{ TSpatialParams }
+{ RSpatialParams }
 procedure RSpatialParams.Reset;
 begin
  Flip    := FALSE;     { Flip the wallpaper. Useful when the image is "concentrated" on the left side and hidden by desktop icons, while the right side of the desktop is free of icons. }

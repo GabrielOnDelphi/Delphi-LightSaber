@@ -6,14 +6,13 @@
 --------------------------------------------------------------------------------------------------------------
    Screen Capture Manager - Business Logic Layer
 
-   Handles the core screen capture functionality, separated from the UI layer (FormScreenCapture.pas).
+   Handles the core screen capture functionality, separated from the UI layer, which is c:\Projects\LightSaber\FrameFMX\FormScreenCapture.pas
 
    Features:
-   - Full screen capture (Windows implemented, other platforms: stub)
+   - Full screen capture
    - Rectangular area selection and cropping
    - Multiple captures in a single session
-   - Persists last selection rectangle to INI file
-   - Persists tip display counter to INI file
+   - Persists the last selection rectangle and the tip display counter to the INI file
 
    Usage:
      1. Create TScreenCaptureManager
@@ -23,10 +22,8 @@
 
    Platform Support:
    - Windows: Full GDI-based screen capture
-   - macOS: Core Graphics screen capture (requires Screen Recording permission in 10.15+)
+   - macOS: Core Graphics screen capture
    - Linux/iOS/Android: Not yet implemented (stubs only)
-
-   See also: FormScreenCapture.pas for the UI layer
 =============================================================================================================}
 
 INTERFACE
@@ -99,27 +96,11 @@ end;
 
 {  Captures the entire primary screen/desktop into FScreenshot.
 
-   Windows Implementation:
-     Uses GDI functions to capture the desktop:
-     1. GetDC(0) - Gets device context for the entire screen
-     2. Creates a compatible memory DC and bitmap
-     3. BitBlt copies screen contents to the memory bitmap
-     4. Maps the FMX bitmap for direct pixel access
-     5. GetDIBits transfers pixels from GDI bitmap to FMX bitmap
+   Windows uses GDI. macOS uses Core Graphics, and needs the Screen Recording permission in macOS 10.15 Catalina and later.
 
-   macOS Implementation:
-     Uses Core Graphics to capture the screen:
-     1. CGWindowListCreateImage captures all on-screen windows
-     2. Maps the FMX bitmap for direct pixel access
-     3. Creates a CGBitmapContext pointing to FMX bitmap data
-     4. CGContextDrawImage renders the screen image into the bitmap
-     Note: Requires Screen Recording permission in macOS 10.15 Catalina and later.
+   Captures only the primary monitor. Multi-monitor support would require EnumDisplayMonitors (Windows) or multiple display handling (macOS).
 
-   Note: Captures only the primary monitor. Multi-monitor support would
-   require EnumDisplayMonitors (Windows) or multiple display handling (macOS).
-
-   Other Platforms:
-     Not yet implemented - shows a message and leaves FScreenshot empty.  }
+   On every other platform this is not implemented: it logs an error and leaves FScreenshot empty.  }
 procedure TScreenCaptureManager.StartCapture;
 {$IFDEF MSWINDOWS}
 VAR
@@ -146,18 +127,14 @@ begin
     ScreenWidth:= GetSystemMetrics(SM_CXSCREEN);
     ScreenHeight:= GetSystemMetrics(SM_CYSCREEN);
 
-    // Resize FMX bitmap to match screen dimensions
     FScreenshot.Width:= ScreenWidth;
     FScreenshot.Height:= ScreenHeight;
 
-    // Create memory DC compatible with screen
     MemDC:= CreateCompatibleDC(ScreenDC);
     try
-      // Create GDI bitmap to hold the screen capture
       hBitmap:= CreateCompatibleBitmap(ScreenDC, ScreenWidth, ScreenHeight);
       try
         OldBmp:= SelectObject(MemDC, hBitmap);
-        // Copy screen pixels to memory bitmap
         BitBlt(MemDC, 0, 0, ScreenWidth, ScreenHeight, ScreenDC, 0, 0, SRCCOPY);
 
         // Deselect hBitmap BEFORE GetDIBits/DeleteObject. Per MSDN, GetDIBits requires that the
@@ -193,7 +170,6 @@ begin
 
   {$ELSEIF DEFINED(MACOS)}
   // macOS: Use Core Graphics to capture the screen
-  // Note: Requires Screen Recording permission in macOS 10.15+
   ScreenRect:= CGRectInfinite;  // Capture entire screen
   ScreenImage:= CGWindowListCreateImage(ScreenRect, kCGWindowListOptionOnScreenOnly, kCGNullWindowID, kCGWindowImageDefault);
   if ScreenImage <> nil then
@@ -201,17 +177,13 @@ begin
     ScreenWidth:= CGImageGetWidth(ScreenImage);
     ScreenHeight:= CGImageGetHeight(ScreenImage);
 
-    // Resize FMX bitmap to match screen dimensions
     FScreenshot.Width:= ScreenWidth;
     FScreenshot.Height:= ScreenHeight;
 
-    // Map FMX bitmap for direct pixel access
     if FScreenshot.Map(TMapAccess.Write, BitmapData) then
     try
-      // Create color space and bitmap context to draw into FMX bitmap
       ColorSpace:= CGColorSpaceCreateDeviceRGB;
       try
-        // Create context pointing directly to FMX bitmap data
         // FMX uses BGRA format, so we use kCGImageAlphaPremultipliedFirst with kCGBitmapByteOrder32Little
         Context:= CGBitmapContextCreate(
           BitmapData.Data,
@@ -224,7 +196,6 @@ begin
         );
         if Context <> nil then
         try
-          // Draw the screen image into our bitmap context
           CGContextDrawImage(Context, CGRectMake(0, 0, ScreenWidth, ScreenHeight), ScreenImage);
         finally
           CGContextRelease(Context);
@@ -242,7 +213,6 @@ begin
     AppDataCore.LogError('StartCapture: screen capture failed. Grant Screen Recording permission in System Preferences > Security & Privacy > Privacy.');
 
   {$ELSE}
-  // Linux/iOS/Android: Not yet implemented
   AppDataCore.LogError('StartCapture: screen capture is not implemented for this platform.');
   {$ENDIF}
 end;
@@ -255,10 +225,10 @@ end;
      ScaleX, ScaleY - Map SelectionRect into screenshot PIXEL coordinates. The screenshot is captured in
                       physical pixels; on HiDPI displays (scale > 100%) the overlay UI works in logical
                       units, so the caller passes Screenshot.Width/Overlay.Width (and the Y counterpart).
-                      Default 1.0 keeps the old 1:1 behavior.
+                      Default 1.0 means no scaling.
 
    Returns:
-     TRUE if capture succeeded, FALSE if selection is empty or no screenshot available
+     FALSE if there is no screenshot, if the selection is empty, or if it falls outside the screenshot
 
    Side Effects:
      - Adds the cropped image to FCapturedImages list
@@ -272,14 +242,12 @@ VAR
 begin
   Result:= FALSE;
 
-  // Validate screenshot exists
   if NOT Assigned(FScreenshot) OR FScreenshot.IsEmpty then
     begin
       AppDataCore.LogWarn('CaptureSelectedArea: no screenshot available. Call StartCapture first.');
       EXIT;
     end;
 
-  // Validate selection
   if SelectionRect.IsEmpty then
     begin
       AppDataCore.LogWarn('CaptureSelectedArea: no screen area was selected.');
@@ -290,7 +258,6 @@ begin
   ScaledRect:= TRectF.Create(SelectionRect.Left  * ScaleX, SelectionRect.Top    * ScaleY,
                              SelectionRect.Right * ScaleX, SelectionRect.Bottom * ScaleY);
 
-  // Create cropped bitmap from selection
   CroppedBitmap:= FMX.Graphics.TBitmap.Create;
   try
     CroppedBitmap.Width:= Round(ScaledRect.Width);
@@ -306,8 +273,8 @@ begin
         EXIT;
       end;
 
-    // Destination = the clamped portion, at its own position WITHIN the selection
-    // (identical to (0,0,W,H) when the selection is fully on-screen)
+    { Destination = the clamped portion, at its own position WITHIN the selection.
+      It is identical to (0,0,W,H) when the selection is fully on-screen. }
     DestRect:= SourceRect;
     DestRect.Offset(-ScaledRect.Left, -ScaledRect.Top);
 
@@ -324,7 +291,6 @@ begin
         EXIT;
       end;
 
-    // Add the cropped bitmap directly (no redundant CreateThumbnail copy needed)
     // Transfer ownership to FCapturedImages — do NOT free CroppedBitmap in the finally.
     FCapturedImages.Add(CroppedBitmap);
     CroppedBitmap:= NIL;  // Ownership transferred; prevents double-free in finally block
@@ -340,8 +306,7 @@ begin
 end;
 
 
-{  Returns the list of captured images.
-   Note: The caller should NOT free the returned list - it's owned by this manager.  }
+{  The caller must NOT free the returned list - it is owned by this manager.  }
 function TScreenCaptureManager.GetCapturedImages: TObjectList<FMX.Graphics.TBitmap>;
 begin
   Result:= FCapturedImages;
@@ -368,7 +333,6 @@ begin
 
     FCaptureTipShown:= INI.Read('CaptureTipShown', 0);
 
-    // Validate loaded rectangle
     if (FLastSelectionRect.Width <= 0) OR (FLastSelectionRect.Height <= 0) then
       FLastSelectionRect:= TRectF.Empty;
   FINALLY
@@ -383,7 +347,6 @@ VAR
 begin
   INI:= TIniFileApp.Create('ScreenCapture');
   TRY
-    // Save selection rectangle (only if valid)
     if NOT FLastSelectionRect.IsEmpty then
       begin
         INI.Write('LastSelection_Left',   FLastSelectionRect.Left);

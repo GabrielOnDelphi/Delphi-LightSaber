@@ -13,11 +13,10 @@ UNIT LightVcl.Common.ExeVersion;
      GetVersionInfo     - High-level function returning formatted version string
 
    Tester:
-       c:\Projects\LightSaber\Demo\Demo Detect WinVer\
+       c:\Projects\LightSaber\Demo\VCL\Demo WinVersion\
 
    Also see:
        LightVcl.Common.WinVersion
-       LightVcl.Common.ExeVersion
        LightVcl.Common.WinVersionApi
 =============================================================================================================}
 
@@ -28,8 +27,7 @@ USES
 
 
 { Retrieves version info structure from an executable file.
-  Returns True if successful.
-  Raises exception if FileName is empty. }
+  Raises an exception if FileName is empty. }
 function GetVersionInfoFile(CONST FileName: string; OUT FixedInfo: TVSFixedFileInfo): Boolean;
 
 { Returns formatted version string from executable file.
@@ -43,19 +41,6 @@ IMPLEMENTATION
 
 {---------------------------------------------------------------------------------------------------------------
    GetVersionInfoFile
-
-   Retrieves the fixed version information structure from an executable file.
-   This is the low-level function that accesses the Windows version info API.
-
-   Parameters:
-     FileName  - Full path to the executable file
-     FixedInfo - (OUT) Receives the TVSFixedFileInfo structure with version data
-
-   Returns:
-     True if version info was successfully retrieved, False otherwise
-
-   Raises:
-     Exception if FileName is empty
 
    The TVSFixedFileInfo structure contains:
      dwFileVersionMS - High 32 bits: Major (high word), Minor (low word)
@@ -96,22 +81,9 @@ end;
 {---------------------------------------------------------------------------------------------------------------
    GetVersionInfo
 
-   Returns a formatted version string from an executable file.
-
-   Parameters:
-     FileName    - Full path to the executable file
-     ShowBuildNo - If True, includes the build number in the result
-
-   Returns:
-     Version string in format "Major.Minor.Release" or "Major.Minor.Release.Build"
-
-   Raises:
-     Exception if FileName is empty
-     Exception if file has no version information
-
    Examples:
-     GetVersionInfo('C:\Windows\notepad.exe')       -> "10.0.19041"
-     GetVersionInfo('C:\Windows\notepad.exe', True) -> "10.0.19041.1"
+     GetVersionInfo('C:\Windows\explorer.exe')       -> "10.0.26100"
+     GetVersionInfo('C:\Windows\explorer.exe', True) -> "10.0.26100.8655"
 ---------------------------------------------------------------------------------------------------------------}
 function GetVersionInfo(CONST FileName: string; ShowBuildNo: Boolean = False): string;
 VAR

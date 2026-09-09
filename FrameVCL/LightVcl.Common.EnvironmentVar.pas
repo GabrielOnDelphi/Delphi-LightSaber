@@ -20,12 +20,11 @@ UNIT LightVcl.Common.EnvironmentVar;
   Notes:
     - Machine-level operations (User=False) require administrator privileges
     - Changes are broadcast to all top-level windows via WM_SETTINGCHANGE
-    - System.SysUtils.GetEnvironmentVariable only reads process environment, not registry
 
    In this group:
      * LightVcl.Common.Shell.pas
-     * csSystem.pas
-     * csWindow.pas
+     * LightVcl.Common.System.pas
+     * LightVcl.Common.Window.pas
      * LightVcl.Common.WindowMetrics.pas
      * LightVcl.Common.ExecuteProc.pas
      * LightVcl.Common.ExecuteShell.pas
@@ -75,16 +74,6 @@ CONST
 
 {---------------------------------------------------------------------------------------------------------------
    GetEnvironmentVars (TStrings overload)
-
-   Retrieves all environment variables from the current process environment block.
-   The environment block is a sequence of null-terminated strings, with a final null terminator.
-   Format: "VAR1=Value1\0VAR2=Value2\0\0"
-
-   Parameters:
-     TSL - TStrings to populate with environment variables. Must not be nil.
-
-   Returns:
-     True if GetEnvironmentStrings succeeded, False otherwise.
 ---------------------------------------------------------------------------------------------------------------}
 function GetEnvironmentVars(TSL: TStrings): Boolean;
 VAR
@@ -101,7 +90,7 @@ begin
     if Result then
       TRY
         pS:= Vars;
-        { Environment block: sequence of null-terminated strings ending with double null }
+        { Environment block: a sequence of null-terminated strings, ending with a double null. Format: VAR1=Value1#0VAR2=Value2#0#0 }
         while pS^ <> #0 do
           begin
             TSL.Add(pS);
@@ -120,22 +109,9 @@ end;
 {---------------------------------------------------------------------------------------------------------------
    GetEnvironmentVars (single variable)
 
-   Reads a single environment variable from the Windows registry.
-   Unlike System.SysUtils.GetEnvironmentVariable which only reads from the process environment,
-   this function reads directly from the registry where persistent environment variables are stored.
-
+   Unlike System.SysUtils.GetEnvironmentVariable, which only reads the process environment, this function reads directly from the registry, where persistent environment variables are stored.
    For Win32 apps on Win64 systems, KEY_WOW64_64KEY may be needed for registry access.
-
-   Parameters:
-     Name - The name of the environment variable to read
-     User - True for current user variables (HKCU), False for machine variables (HKLM)
-
-   Returns:
-     The expanded value of the variable, or empty string if not found.
-
-   Notes:
-     - Machine-level access (User=False) may require admin rights
-     - Tested on Windows 7 and later
+   Tested on Windows 7 and later.
 ---------------------------------------------------------------------------------------------------------------}
 function GetEnvironmentVars(CONST Name: string; User: Boolean = True): string;
 VAR
@@ -183,26 +159,9 @@ end;
 {---------------------------------------------------------------------------------------------------------------
    SetEnvironmentVars
 
-   Writes an environment variable to the Windows registry and notifies the system.
-   This makes the change persistent across reboots and available to newly started processes.
-
-   The function performs three operations:
-     1. Writes the value to the registry
-     2. Updates the current process environment (so changes are immediately visible)
-     3. Broadcasts WM_SETTINGCHANGE to notify other applications
-
-   Parameters:
-     Name  - The name of the environment variable
-     Value - The value to set
-     User  - True for current user (HKCU), False for machine-level (HKLM)
-
-   Returns:
-     True if the registry key was opened and value written successfully.
-
-   Notes:
-     - Machine-level access (User=False) requires administrator privileges
-     - The broadcast message may take some time to be processed by all applications
-     - Tested on Windows 7
+   Writing to the registry makes the change persistent across reboots and available to newly started processes.
+   The broadcast message may take some time to be processed by all applications.
+   Tested on Windows 7.
 ---------------------------------------------------------------------------------------------------------------}
 function SetEnvironmentVars(CONST Name, Value: string; User: Boolean = TRUE): Boolean;
 VAR
@@ -213,7 +172,6 @@ begin
   Result:= FALSE;
   if Name = '' then EXIT;
 
-  { Determine registry location based on scope }
   if User
   then RegLocation:= REG_USER_LOCATION
   else RegLocation:= REG_MACHINE_LOCATION;
@@ -258,24 +216,8 @@ end;
 {---------------------------------------------------------------------------------------------------------------
    ExpandEnvironmentStrings
 
-   Expands environment variable references in a string.
-   For example, "%USERPROFILE%\Documents" becomes "C:\Users\John\Documents".
-
-   This is a wrapper around the Windows API ExpandEnvironmentStrings that handles
-   buffer sizing automatically for strings of any length.
-
-   Parameters:
-     Vars - String containing environment variable references to expand
-
-   Returns:
-     The string with all environment variables expanded.
-
-   Raises:
-     EOSError if the Windows API call fails.
-
-   Example:
-     ExpandEnvironmentStrings('%PATH%') returns the full PATH value
-     ExpandEnvironmentStrings('%TEMP%\myfile.txt') returns 'C:\Users\...\AppData\Local\Temp\myfile.txt'
+   A wrapper around the Windows API ExpandEnvironmentStrings that handles buffer sizing automatically, for strings of any length.
+   Example: ExpandEnvironmentStrings('%TEMP%\myfile.txt') returns 'C:\Users\...\AppData\Local\Temp\myfile.txt'
 ---------------------------------------------------------------------------------------------------------------}
 function ExpandEnvironmentStrings(CONST Vars: string): string;
 VAR
@@ -284,7 +226,6 @@ VAR
 begin
   if Vars = '' then EXIT('');
 
-  { Start with input length plus 32KB buffer for expanded values }
   MaxLen:= Length(Vars) + 32*KB;
   SetLength(Result, MaxLen);
 

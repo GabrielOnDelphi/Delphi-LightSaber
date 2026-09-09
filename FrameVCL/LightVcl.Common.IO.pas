@@ -931,7 +931,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    TFileOpenDlg
 
-   Example: PromptToSaveFile(s, LightCore.FilterTxt, 'txt')
+   Example: PromptToSaveFile(s, LightCore.IO.FilterTxt, 'txt')
    Note: You might want to use PromptForFileName instead
 -------------------------------------------------------------------------------------------------------------}
 

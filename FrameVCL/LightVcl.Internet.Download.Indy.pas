@@ -18,16 +18,15 @@ UNIT LightVcl.Internet.Download.Indy;
   Issues:
     - For HTTPS connections it needs 2 external DLLs: libeay32.dll & ssleay32.dll
     - Size: DON'T ADD IT TO CUBIC-PACKAGE because it will add Indy to all projects and the compilation will be slow !!!!!
-    - The program does not exit until the download is complete?
 
   Alternatives:
      LightCore.Download.pas
      HTTPGet.pas
-     UrlMon       -  UrlMon.UrlDownloadToFile (nil, <url>, <file destination path (PChar)>, 0, nil);  Don't know if it is thread-safe, UrlMon.pas is just an interface for calling UrlMon.dll, a Microsoft API. And yes, is a Borland unit \delphi6\source\rtl\Win\UrlMon.pas
-     Indy.TDownloadURL.ExecuteTarget   it can also be threaded -> https://stackoverflow.com/questions/3187446/the-connection-does-not-timeout-while-using-indy
+     UrlMon       -  UrlMon.UrlDownloadToFile (nil, <url>, <file destination path (PChar)>, 0, nil);  UrlMon.pas is only an interface to the Microsoft UrlMon.dll and it ships with Delphi (\delphi6\source\rtl\Win\UrlMon.pas). Thread safety unknown.
+     TDownLoadURL.ExecuteTarget in Vcl.ExtActns.pas   it can also be threaded -> https://stackoverflow.com/questions/3187446/the-connection-does-not-timeout-while-using-indy
 
   Documentation:
-    I ALREADY HAVE CODE THAT MAKES IT THREADED:  SEE:  TPhastTask.Start
+    A threaded download is already written in TPhastTask.Start, in c:\Projects\Biology\!BioControl Lib\Pipe\Phast.pas
 
 -------------------------------------------------------------------------------------------------------------}
 INTERFACE

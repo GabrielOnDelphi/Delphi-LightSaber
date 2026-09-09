@@ -2,9 +2,7 @@ UNIT LightVcl.Graph.UtilGray;
 
 {=============================================================================================================
    2026.06.10
-   Gabriel Moraru
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Functions for converting color images to gray-scale.
    Includes palette manipulation and average color calculation for grayscale bitmaps.
@@ -39,8 +37,8 @@ IMPLEMENTATION
 
 {--------------------------------------------------------------------------------------------------
    GET AVERAGE COLOR from a gray-scale image.
-   Note: This calculates the arithmetic mean of all pixel values.
-         It does NOT search for the DOMINANT (most frequent) color!
+   This is the arithmetic mean of all pixel values.
+   It does NOT search for the DOMINANT (most frequent) color!
 --------------------------------------------------------------------------------------------------}
 function GetAverageColorPf8(GrayBmp: TBitmap): Byte;
 VAR
@@ -89,15 +87,15 @@ begin
     Pixel:= GrayBmp.ScanLine[Row];
     for Col:= 0 to GrayBmp.Width - 1 do
     begin
-      // Extracting blue channel from the pixel value (BGRA format in memory).
-      // For a grayscale image, R=G=B so we only need one channel.
+      { Extract the blue channel. In memory the byte order is BGRA.
+        For a grayscale image R=G=B, so one channel is enough. }
       Blue:= Pixel^ and $FF;
       { Green := (Pixel^ shr 8) and $FF;
         Red := (Pixel^ shr 16) and $FF;
         Alpha := (Pixel^ shr 24) and $FF; }
 
       Summ:= Summ + Blue;
-      Inc(Pixel);  // Pointer arithmetic
+      Inc(Pixel);
     end;
   end;
 
@@ -116,8 +114,7 @@ end;
    Gray-scale palette
 --------------------------------------------------------------------------------------------------}
 
-{ Returns true if the image has a grayscale palette.
-  A grayscale palette has R=G=B for all palette entries.
+{ A grayscale palette has R=G=B for all palette entries.
   Returns FALSE for bitmaps without a palette (pf24bit/pf32bit images have Palette=0). }
 function HasGrayscalePalette(BMP: TBitmap): Boolean;
 var
@@ -127,9 +124,8 @@ var
 begin
   Assert(BMP <> NIL, 'HasGrayscalePalette: BMP parameter cannot be nil');
 
-  { GetPaletteEntries returns the number of entries actually retrieved - 0 when the bitmap has no
-    palette. The old code ignored this and compared UNINITIALIZED stack memory, returning a random
-    verdict for pf24bit/pf32bit images (an all-zero stack reads as "grayscale"!). }
+  { GetPaletteEntries returns the number of entries actually retrieved - 0 when the bitmap has no palette.
+    Without the test below, ColorTable is uninitialized stack memory, and an all-zero stack reads as grayscale. }
   Retrieved:= GetPaletteEntries(BMP.Palette, 0 {Start}, 256 {Entry count}, ColorTable);
   if Retrieved = 0
   then EXIT(FALSE);
@@ -158,8 +154,7 @@ end;
 
 
 
-{ Creates a grayscale palette with the specified number of colors (default 256).
-  The palette entries range from black (0) to white (255).
+{ The palette entries range from black (0) to white (255).
   Source: en.delphipraxis.net/topic/6656-palette-for-8-bit-greyscale-bitmap/ }
 function CreateGrayPalette(NumColors: Integer= 256): HPALETTE;
 VAR
@@ -259,11 +254,11 @@ end;
 
 
 { UNUSED!
-  Slower (probably) than the other one. }
+  Probably slower than RGB2Gray. }
 function RGB2Gray_(Color: TColor): TColor;
 var Target: Byte;
 begin
-  Color:= ColorToRGB(Color);    {  GetRValue which accepts cardinals. However, TColor is integer. So I need a conversion else I get e RangeCheckError one line below.       See this: http://stackoverflow.com/questions/9809687/windows-getrvalue-accepts-cardinals-but-tcolor-is-integer}
+  Color:= ColorToRGB(Color);    {  GetRValue which accepts cardinals. However, TColor is integer. So I need a conversion else I get a RangeCheckError one line below.       See this: http://stackoverflow.com/questions/9809687/windows-getrvalue-accepts-cardinals-but-tcolor-is-integer}
   Target := Round(
           (0.30 * GetRValue(Color)) +
           (0.59 * GetGValue(Color)) +
@@ -273,7 +268,6 @@ end;
 
 
 { Converts a color bitmap to 8-bit grayscale.
-  The process: 1) Convert to 32-bit, 2) Desaturate pixels, 3) Set gray palette, 4) Convert to 8-bit.
   Warning: Converting to pf8bit may cause banding artifacts (similar to GIF color reduction). }
 procedure ConvertToGrayscale(BMP: TBitmap);
 begin
@@ -298,8 +292,8 @@ begin
   // Step 3: Set the grayscale palette
   SetBitmapGrayPalette(BMP);
 
-  // Step 4: Reduce to 8-bit
-  // Note: This may cause banding/dithering artifacts (like converting high-color to 256-color GIF)
+  { Step 4: Reduce to 8-bit.
+    This may cause banding/dithering artifacts (like converting high-color to 256-color GIF) }
   BMP.PixelFormat:= pf8bit;
 end;
 {$IFDEF GRAY_RANGECHECKS_ON}{$R+}{$ENDIF}

@@ -1,14 +1,12 @@
 ﻿UNIT LightVcl.Internet.Email;
 
 {-------------------------------------------------------------------------------------------------------------
-   Gabriel Moraru
    2026.04.21
    www.GabrielMoraru.com
-   Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
    Functions for working with email addresses (email validation, etc)
 
-   Resurse utile:
+   Useful resources:
       Send email:                  http://www.experts-exchange.com/Programming/Languages/Pascal/Delphi/Q_22095910.html?sfQueryTermInfo=1+address+email#a18190296
       Find Current Email Program:  http://www.experts-exchange.com/Programming/Languages/Pascal/Delphi/Q_10106205.html?sfQueryTermInfo=1+address+email
 
@@ -42,7 +40,7 @@ CONST
  function  ExtractEmailFromThunderbirdFile(CONST HugeText: string; CONST ToField, FromField, CcField, BccField: Boolean; OutputList: TStringList): Integer;
 
  { VALIDATION }
- function  ValidateEmailAddress (      Email: String; OUT FailCode, FailPosition: Integer) : Boolean; overload;   { Returns nothing if the email is valid else return the reason. SuggestCorrection=TRUE, the program will try to suggest a corrected version of this address }
+ function  ValidateEmailAddress (      Email: String; OUT FailCode, FailPosition: Integer) : Boolean; overload;
  function  ValidateEmailAddress (CONST Email : string; SuggestCorrection: boolean): string;             overload;   { Returns nothing if the email is valid else return the reason. SuggestCorrection=TRUE, the program will try to suggest a corrected version of this address }
  function  ValidateEmailAddress (CONST Email : string): Boolean;                                        overload;
  function  CorrectEmailAddress  (      Email : String; OUT Suggestion: String; MaxCorrections : Integer = 5) : Boolean;
@@ -58,12 +56,10 @@ CONST
 
 
 
-
 IMPLEMENTATION
 
 Uses
    System.NetEncoding, LightCore.Math, LightCore.AppData, LightVcl.Common.ExecuteShell;
-
 
 
 
@@ -84,7 +80,7 @@ end;
 
 { Sorts a list of email addresses alphabetically by domain name.
   Uses selection sort algorithm - finds the smallest domain and moves it to result.
-  Note: Caller is responsible for freeing the returned TStringList. }
+  The caller is responsible for freeing the returned TStringList. }
 function EmailSortByDomain(CONST InptList: TStrings): TStringList;
 VAR TmpList: TStringList;
     CurAddr, xPozition: integer;
@@ -102,20 +98,20 @@ begin
     xDomain:= 'ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ';
     xPozition:= TmpList.Count-1;
 
-    for CurAddr:= TmpList.Count-1 downto 0 DO                                                     { pick an element from the end of the TMP list and compare it with items in the Output list }
+    for CurAddr:= TmpList.Count-1 downto 0 DO                                                     { walk the TMP list from the end, keeping the alphabetically first domain seen so far }
      begin
       { Get current addreess }
       SplitEmailAddress(TmpList.Strings[CurAddr], CurUser, CurDomain);
 
-      if CompareText(CurDomain, xDomain) < 0 then                                                     { Compares two strings by ordinal value without case sensitivity. CompareText compares S1 and S2 and returns 0 if they are equal. If S1 is greater than S2, CompareText returns an integer greater than 0. If S1 is less than S2, CompareText returns an integer less than 0. CompareText is not case sensitive and is not affected by the current Locate }
+      if CompareText(CurDomain, xDomain) < 0 then
        begin
         xDomain  := CurDomain;
         xUserName:= CurUser;
-        xPozition:= CurAddr;                                                                        { adresa la care a fost gasit cel mai scurt sir }
+        xPozition:= CurAddr;                                                                        { position of the alphabetically first domain found so far }
        end;
      end;
 
-    Result.Add(xUserName+'@'+xDomain);                                                             { recunstruct the email address and add it to NewTSL }
+    Result.Add(xUserName+'@'+xDomain);                                                             { rebuild the email address and add it to the result }
     TmpList.Delete(xPozition);
    end;
 
@@ -129,7 +125,7 @@ end;
 
 
 
-procedure SplitEmailAddress(CONST EmailAddress: string; OUT user, domain: string);                 { Returns the 'user' and 'domain' part of an email address - the @ charecter is not included }
+procedure SplitEmailAddress(CONST EmailAddress: string; OUT user, domain: string);
 VAR Poz: Integer;
 begin
  Poz:= Pos('@', EmailAddress);
@@ -160,7 +156,7 @@ function OpenDefaultEmailEx(CONST Subject, Body, FileName, SenderName, SenderEMa
 {
   This allows you to also add attachments
   You must add the MAPI unit in USES-clause
-  Use it like this: SendMail('Re: mailing from Delphi', 'Welcome to www.test.com'#13#10'Dany', 'c:\autoexec.bat', 'your name', 'your@address.com', 'Dany', 'test@test.com')
+  Use it like this: OpenDefaultEmailEx('Re: mailing from Delphi', 'Welcome to www.test.com'#13#10'Dany', 'c:\autoexec.bat', 'your name', 'your@address.com', 'Dany', 'test@test.com')
 }
 VAR
   Message: TMapiMessage;
@@ -257,31 +253,19 @@ end;
                                EMAIL - CORRECT ADDRESS
 --------------------------------------------------------------------------------
 
- The CorrectEmailAddress function:
- The function takes three parameters:
- Email – The e-mail address to check and correct
- Suggestion – This string passed by reference contains the functions result
- MaxCorrections – The maximum amount of corrections to attempt before stopping (defaults to 5)
+ CorrectEmailAddress loops up to MaxCorrections times: it validates the address, uses the FailCode to decide what correction to make, and repeats until the address is valid, until it cannot be fixed, or until the loop count runs out.
 
- This function simply loops up to MaxCorrection times, validating the e-mail address then using the FailCode to decide what kind of correction to make, and repeating this until it find a match, determines the address can’t be fixed, or has looped more than MaxCorrection times.
- The following corrections are performed, based on the FailCode (see description above):
-   flUnknown                – Simply stops corrections, as there is no generic way to correct this problem.
-   flNoSeperator            – When this error is encountered the system performs a simple but powerful function, it will navigate the e-mail address until it finds the last 2, and then convert it to an @ symbol. This will correct most genuine transposition errors. If it converts a 2 that was not really an @ chances are it has completely invalidated the e-mail address.
-   flToSmall                - Simply stops corrections, as there is no generic way to correct this problem.
-   flUserNameToLong         – Simply stops corrections, as there is no generic way to correct this problem.
-   flDomainNameToLong       – Simply stops corrections, as there is no generic way to correct this problem.
-   flInvalidChar            – In this case the offending character is simply deleted.
-   flMissingUser            – Simply stops corrections, as there is no generic way to correct this problem.
-   flMissingDomain          – Simply stops corrections, as there is no generic way to correct this problem.
-   flMissingDomainSeperator – Simply stops corrections, as there is no generic way to correct this problem.
-   flMissingGeneralDomain   – Simply stops corrections, as there is no generic way to correct this problem.
-   flToManyAtSymbols        – Simply stops corrections, as there is no generic way to correct this problem.
+ Only three fail codes can be corrected:
+   flNoSeperator            - Walks the address to the last 2 and turns it into an @. This repairs most genuine transposition errors. When the 2 was not really an @, the address is completely invalid afterwards.
+   flInvalidChar            - The offending character is deleted.
+   flMissingDomainSeperator - Goes back three characters and inserts a dot.
+ Every other fail code stops the corrections, because there is no generic way to repair it.
 
- While only a small portion of errors can be corrected the function can correct the most common errors encountered when working with list of e-mail addresses, specifically when the data is entered by the actual e-mail address account holder.
+ Only a small portion of errors can be corrected, but these are the most common ones in a list of e-mail addresses typed by the account holder.
  -David Lederman InterentToolsCorp.com }
 
 CONST
-  flUnknown               = 0;     // These constants represent the various errors validation errors (known) that can occur.
+  flUnknown               = 0;     // The known validation error codes.
   flNoSeperator           = 1;
   flToSmall               = 2;
   flUserNameToLong        = 3;
@@ -293,7 +277,7 @@ CONST
   flMissingGeneralDomain  = 9;
   flToManyAtSymbols       = 10;
 
-function CorrectEmailAddress (Email : String; OUT Suggestion: String; MaxCorrections : Integer = 5) : Boolean;  { MaxCorrections – The maximum amount of corrections to attempt before stopping (defaults to 5) }
+function CorrectEmailAddress (Email : String; OUT Suggestion: String; MaxCorrections : Integer = 5) : Boolean;
 VAR
    RevPos, CorrectionAttempt, FailCode, FailPosition, LastAt : Integer;
 begin
@@ -301,7 +285,6 @@ begin
  Result := False;
  try
   Suggestion := Email;                                                          // Reset the suggestion
-  // Loop up to MaxCorrections attempts to correct the email
   for CorrectionAttempt := 1 to MaxCorrections do
    begin
      if ValidateEmailAddress(Suggestion, FailCode, FailPosition)            // Now try to validate the address
@@ -347,7 +330,7 @@ end;
 {--------------------------------------------------------------------------------------------------
                                EMAIL - VALIDATE
 --------------------------------------------------------------------------------------------------}
-CONST                                                                           // This is a list of error descriptions, it's kept in the implementation section as it's not needed directlly from outside this unit, and can be accessed using the ValidationErrorString which does range checking.
+CONST                                                                           // The error descriptions. Kept in the implementation section because nothing outside this unit needs them: FailCode2Str reads them and does the range checking.
   ErrorDescriptions : array[0..10] of String =
   ('Unknown error occured!', 'Missing @ symbol!',  'Data to small!',
    'User name to long!', 'Domain name to long!',   'Invalid character!',
@@ -358,7 +341,7 @@ CONST                                                                           
   MaxDomainPortion   = 256;                                                     // Per RFC 821
 
 
-function FailCode2Str(Code : Integer) : String;                                 // This function returns the error string from the constant array, and makes sure that the error code is valid, if not it returns an invalid error code string.
+function FailCode2Str(Code : Integer) : String;                                 // Returns 'Invalid error code!' when Code is outside the ErrorDescriptions array.
 begin
  Result:= '';
  if (Code < Low(ErrorDescriptions))
@@ -469,12 +452,11 @@ begin
      exit;
    end;
 
-   // Now verify the user portion of the email address
-   // Ensure that the period is neither the first or last char (or the only char)
-   // Check first char
+   { Now verify the user portion of the email address.
+     Ensure that the period is neither the first nor the last char (or the only char).
+     Check first char. }
    if (UserStr[1] = '.') then
    begin
-     // Report a missing section and exit
      FailCode := flInvalidChar;
      Result := False;
      FailPosition := 1;
@@ -484,15 +466,14 @@ begin
    // Check end char
    if (UserStr[UserStrLen] = '.') then
    begin
-     FailCode := flInvalidChar;      // Report a missing section and exit
+     FailCode := flInvalidChar;
      Result := False;
      FailPosition := UserStrLen;
      EXIT;
    end;
 
-   // No direct checking for a single char is needed since the previous two
-   // checks would have detected it.
-   // Ensure no subsequent periods
+   { No direct checking for a single char is needed since the previous two checks would have detected it.
+     Ensure no subsequent periods. }
    for Itt := 1 to UserStrLen do    // Iterate
    begin
      if UserStr[Itt] = '.' then
@@ -510,26 +491,23 @@ begin
    end;    // for
 
    { At this point, we've validated the user name, and will now move into the domain.}
-   // Ensure that the period is neither the first or last char (or the only char)
-   // Check first char
+   { Ensure that the period is neither the first nor the last char (or the only char).
+     Check first char. }
    if (DomainStr[1] = '.') then
    begin
-     // Report a missing section and exit
      FailCode := flInvalidChar;
      Result := False;
-     // The position here needs to have the user name portion added to it
-     // to get the right number, + 1 for the now missing @
+     { The position needs the user name portion added to it to get the right number, + 1 for the now missing @ }
      FailPosition := UserStrLen + 2;
      exit;
    end;
 
    // Check end char
    if (DomainStr[DomainStrLen] = '.') then
-   begin    // Report a missing section and exit
+   begin
      FailCode := flInvalidChar;
      Result := False;
-     // The position here needs to have the user name portion added to it
-     // to get the right number, + 1 for the now missing @
+     { The position needs the user name portion added to it to get the right number, + 1 for the now missing @ }
      FailPosition := UserStrLen + 1 + DomainStrLen;
      exit;
    end;
@@ -593,9 +571,9 @@ begin
      exit;
    end;
 
-   // Now do some extended work on the final domain the most general (.com)
-   // Verify that the lowest level is at least 2 chars
-   // LastSep+1: skip the dot itself. With LastSep the dot was counted, so the check could never fire (domain cannot end with a dot at this point).
+   { Now do some extended work on the final domain, the most general one (.com).
+     Verify that the lowest level is at least 2 chars.
+     LastSep+1: skip the dot itself. With LastSep the dot was counted, so the check could never fire (domain cannot end with a dot at this point). }
    SubDomain := system.COPY(DomainStr, LastSep + 1, DomainStrLen);
    if Length(SubDomain) < 2 then
    begin
@@ -625,18 +603,12 @@ end;
 ===============================================================================}
 
 { Core engine for extracting email addresses from text.
-  Algorithm:
-    1. Find the @ symbol starting from StartPos
-    2. Scan backwards from @ to find the start of the email (stop at separators)
-    3. Scan forwards from @ to find the end of the email (stop at separators)
-    4. Extract and return the substring
 
   Parameters:
-    SmallText - The text to search for email addresses
     StartPos  - Position to start searching from (1-based)
     EndPos    - Returns the position where the email ends (for chained calls)
 
-  Returns: The extracted email address, or empty string if not found }
+  Returns: The extracted email address, or an empty string if not found }
 function ExtractEmailEngine (CONST SmallText : string; StartPos: integer; var EndPos: integer): string;
 var
   AtPos: integer;
@@ -668,7 +640,7 @@ begin
 end;
 
 
-function ExtractFirstEmailAdr (CONST SmallText : string): string;                                  { extract the first email address encountered from a string  }
+function ExtractFirstEmailAdr (CONST SmallText : string): string;
 Var EndPos: integer;
 begin
  EndPos:= length(SmallText);
@@ -676,12 +648,12 @@ begin
 end;
 
 
-function ExtractAllEmailAdr (HugeString: string; AdreseExtrase: TStringlist): integer;             {Doesn't clear the log}
+function ExtractAllEmailAdr (HugeString: string; AdreseExtrase: TStringlist): integer;             { Does not clear the output list }
 Var StartPos, EndPos: integer; s: string;
 begin
  Assert(AdreseExtrase <> NIL, 'AdreseExtrase parameter cannot be nil');
 
- { Preprocessing. Replace the "<A title=3D" and "Email=3D" string with space. This is related to a quite often apparition of this string in Thunderbird's email files. I don't know why. }
+ { Preprocessing. Replace the "<A title=3D" and "Email=3D" strings with a space. They appear very often in Thunderbird's email files. I don't know why. }
 {$IFDEF UNICODE}
  HugeString:= ReplaceText(HugeString, '<A title=3D', ' ');
  HugeString:= ReplaceText(HugeString, 'Email=3D', ' ');
@@ -706,7 +678,7 @@ begin
 end;
 
 
-function ExtractEmailFromThunderbirdFile(CONST HugeText: string; CONST ToField, FromField, CcField, BccField: Boolean; OutputList: TStringList): Integer;  {Returns the total number of vaild addresses}
+function ExtractEmailFromThunderbirdFile(CONST HugeText: string; CONST ToField, FromField, CcField, BccField: Boolean; OutputList: TStringList): Integer;  { Returns the total number of valid addresses }
 VAR I: Integer;
 TextLine: string;
 InputList: TStringList;
@@ -723,7 +695,7 @@ begin
   InputList.Text:= HugeText;
   Result:= 0;
 
-  if CheckIfThunderbirdFile(HugeText) then                                                         { Verify if the file is a Thunderbird file }
+  if CheckIfThunderbirdFile(HugeText) then
    for I := 0 to InputList.count-1 do
     begin
      TextLine:= InputList[i];
@@ -754,14 +726,14 @@ end;
 
 
 function CheckIfThunderbirdFile(CONST HugeText: String): Boolean;
-CONST ThunderbirdFile= 'X-Mozilla-Status';                                                         { Search string to know if is a Thunderbird file. Which is found on the 4th line of each mail }
+CONST ThunderbirdFile= 'X-Mozilla-Status';                                                         { This header marks a Thunderbird file. It is found on the 4th line of each mail. }
 begin
  Result:= Pos(ThunderbirdFile, HugeText)> 0;                                                       { > 0, not > 1: a file fragment may START with the header (position 1) }
 end;
 
 
-{ Remove emails that contains too many numbers
-  Ration parameter is the propostion of invalid characters (numbers) I need to consider the email invalid. For example 30 means that if more than 30% of the chars are numbers, then the email is declared invalid.
+{ TRUE when the user name of the address holds too many digits.
+  Ratio is the percentage of digits above which the address is declared invalid. For example 30 means: more than 30% of the user-name characters are digits.
 
   Example:
 
@@ -782,7 +754,7 @@ begin
 
  { Extract user name }
  at:= Pos('@', Email);
- if at< 8 then EXIT;                                                                               { ingnor short usernames }
+ if at< 8 then EXIT;                                                                               { ignore short user names }
  user:= system.COPY(Email, 1, at-1);
 
  for i:= 1 to Length(user) DO

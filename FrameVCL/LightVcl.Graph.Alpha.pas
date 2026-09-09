@@ -99,20 +99,17 @@ TYPE
 
 
 { Pure Pascal alpha blending (no WinAPI).
-  Blends SmallBitmap onto MainBitmap at position (x, y) with specified transparency.
 
   Parameters:
-    MainBitmap   - The destination bitmap (will be modified in place)
-    SmallBitmap  - The source bitmap to blend onto MainBitmap
+    MainBitmap   - Modified in place
     Transparency - Opacity of MainBitmap: 0% = SmallBitmap fully visible, 100% = MainBitmap fully visible
-    x, y         - Position in MainBitmap where SmallBitmap will be placed
 
   Constraints:
     - Both bitmaps must be pf24bit (or MainBitmap will be converted)
     - SmallBitmap should fit within MainBitmap bounds at position (x, y)
     - x, y must be non-negative
 
-  Note: You can shift the x coordinate for R and G pixels to obtain stereoscopic images }
+  You can shift the x coordinate for R and G pixels to obtain stereoscopic images }
 procedure AlphaBlendBitmaps(MainBitmap, SmallBitmap: TBitmap; CONST Transparency, x, y: Integer);
 VAR
    Col, DestCol: Integer;
@@ -161,7 +158,6 @@ begin
    for Col:= 0 to MaxCol-1 DO
     begin
      DestCol:= Col + x;
-     { Blend each color channel using fixed-point arithmetic }
      ScanlinesOut[Row][DestCol].R:= (BlendRatio * Scanline1[DestCol].R + BlendRatioMin * Scanline2[Col].R) SHR 8;
      ScanlinesOut[Row][DestCol].G:= (BlendRatio * Scanline1[DestCol].G + BlendRatioMin * Scanline2[Col].G) SHR 8;
      ScanlinesOut[Row][DestCol].B:= (BlendRatio * Scanline1[DestCol].B + BlendRatioMin * Scanline2[Col].B) SHR 8;
@@ -175,16 +171,8 @@ end;
 
 
 { Color-key transparency blend (similar to "green screen" effect).
-  Overlays SmallBitmap onto MainBitmap, treating pixels of TransparentColor as fully transparent.
 
-  Parameters:
-    MainBitmap       - The background bitmap
-    SmallBitmap      - The foreground bitmap to overlay
-    TransparentColor - Pixels in SmallBitmap matching this color will not be copied
-    x, y             - Position in result where SmallBitmap will be placed
-
-  Returns:
-    A new bitmap containing the blended result (caller must free)
+  Returns a new bitmap containing the blended result. The caller must free it.
 
   Constraints:
     - Both bitmaps must be pf24bit
@@ -290,10 +278,7 @@ begin
 end;   *)
 
 
-{Clearing with Transparency: I fixed the clearing logic by using the correct scanline for each row and filling the memory with zeros (for full transparency in 32-bit RGBA mode). The fill size is calculated as Bitmap.Width * 4, as each pixel is represented by 4 bytes in 32-bit mode (RGBA).
-Memory Safety: The memory of each scanline is cleared separately to avoid overwriting unintended parts of the bitmap.
-AlphaChannel Handling: The AlphaFormat := afDefined ensures that the bitmap is treated as having a defined alpha channel when the ImageList has 32-bit color depth.
-Use of ImageList_Draw: The function ImageList_Draw is used to draw the image into the canvas, respecting the transparency if the ILD_TRANSPARENT flag is passed.}
+{ The memory of each scanline is cleared separately, to avoid overwriting unintended parts of the bitmap. }
 procedure GetTransparentBitmapFromImagelist(ImageList: TImageList; Index: Integer; Bitmap: TBitmap);
 var
   i: Integer;
@@ -310,13 +295,13 @@ begin
 
   { Set bitmap size and format }
   Bitmap.SetSize(ImageList.Width, ImageList.Height);
-  Bitmap.PixelFormat := pf32bit;  // Ensure 32-bit format
+  Bitmap.PixelFormat := pf32bit;
 
   if ImageList.ColorDepth = cd32Bit
   then
     begin
       Bitmap.Transparent := False;
-      Bitmap.AlphaFormat := afDefined;  // Define alpha format
+      Bitmap.AlphaFormat := afDefined;
     end
   else
     Bitmap.Transparent := True;
@@ -325,10 +310,9 @@ begin
   for i := 0 to Bitmap.Height - 1 do
   begin
     ScanLinePtr := Bitmap.ScanLine[i];
-    FillChar(ScanLinePtr^, Bitmap.Width * 4, 0);  // 4 bytes per pixel (RGBA)
+    FillChar(ScanLinePtr^, Bitmap.Width * 4, 0);  // 4 bytes per pixel (BGRA)
   end;
 
-  // Draw the image from ImageList onto the bitmap's canvas
   ImageList_Draw(ImageList.Handle, Index, Bitmap.Canvas.Handle, 0, 0, ILD_TRANSPARENT);
 end;
 

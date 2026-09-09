@@ -76,44 +76,11 @@ begin
 end;
 
 
-{ Temporary alters Windows color scheme (caption ,desktop, etc)
-
-  API details
-    The SetSysColors function sends a WM_SYSCOLORCHANGE message to all windows to inform them of the change in color.
-    It also directs Windows to repaint. It changes the current Windows session only!!! The new colors are not saved when Windows terminates!!!
-
-  PropertyToChange
-    COLOR_3DDKSHADOW             Dark shadow for three-dimensional display elements.
-    COLOR_3DFACE,
-    COLOR_BTNFACE                Face color for three-dimensional display elements.
-    COLOR_3DHILIGHT,
-    COLOR_3DHIGHLIGHT,
-    COLOR_BTNHILIGHT,
-    COLOR_BTNHIGHLIGHT           Highlight color for three-dimensional display elements (for edges facing the light source.)
-    COLOR_3DLIGHT                Light color for three-dimensional display elements (for edges facing the light source.)
-    COLOR_3DSHADOW,              Shadow color
-    COLOR_BTNSHADOW              Shadow color for three-dimensional display elements (for edges facing away from the light source).
-    COLOR_ACTIVEBORDER           Active window border.
-    COLOR_ACTIVECAPTION          Active window caption.
-    COLOR_APPWORKSPACE           Background color of multiple document interface (MDI) applications.
-    COLOR_BACKGROUND,
-    COLOR_DESKTOP
-    COLOR_BTNTEXT                Text on push buttons.
-    COLOR_CAPTIONTEXT            Text in caption, size box, and scroll bar arrow box.
-    COLOR_GRAYTEXT               Grayed (disabled) text. This color is set to 0 if the current display driver does not support a solid gray color.
-    COLOR_HIGHLIGHT              Item(s) selected in a control.
-    COLOR_HIGHLIGHTTEXT          Text of item(s) selected in a control.
-    COLOR_INACTIVEBORDER         Inactive window border.
-    COLOR_INACTIVECAPTION        Inactive window caption.
-    COLOR_INACTIVECAPTIONTEXT    Color of text in an inactive caption.
-    COLOR_INFOBK                 Background color for tooltip controls.
-    COLOR_INFOTEXT               Text color for tooltip controls.
-    COLOR_MENU                   Menu background.
-    COLOR_MENUTEXT               Text in Vcl.Menus.
-    COLOR_SCROLLBAR              Scroll bar gray area.
-    COLOR_WINDOW                 Window background.
-    COLOR_WINDOWFRAME            Window frame.
-    COLOR_WINDOWTEXT             Text in windows.  }
+{ Temporarily alters the Windows color scheme (caption, desktop, etc).
+  SetSysColors sends WM_SYSCOLORCHANGE to every window and makes Windows repaint.
+  It changes the current Windows session only. The new colors are NOT saved when Windows terminates.
+  PropertyToChange is one of the Winapi.Windows COLOR_* constants. What each one colors:
+  c:\Projects\LightSaber\Docs\SetSystemColor - COLOR constants.md }
 
 { IMPORTANT! If I call this, I lose the DrawingForm in BioniX }
 procedure SetSystemColor(PropertyToChange: Integer; Color: TColor);
@@ -338,7 +305,7 @@ begin
   begin
    hChild := FindWindowEx(hChild, 0, 'SysListView32', nil);    { There is a suggestion to use FolderView instead of NIL: https://stackoverflow.com/questions/8364758/get-handle-to-desktop-shell-window }
    if hChild <> 0
-   then MyData.Handle := hChild;   {TODO 4: _getDesktopWin7. Return the DeskHandle as specified here: http://stackoverflow.com/questions/36717308/how-to-use-the-enumwindows-call-back-function }
+   then MyData.Handle := hChild;   {TODO 4: getDesktopHandleWin7. Return the DeskHandle as specified here: http://stackoverflow.com/questions/36717308/how-to-use-the-enumwindows-call-back-function }
   end;
 end;
 
@@ -385,7 +352,7 @@ end;
 
 { Since there is more than one window with title "" and class 'WorkerW', we have
      to go through the window tree sequentially. This can be done using the EnumWindows function.
-     EnumWindows used the _getDesktopWinX callback function for every top level window.
+     EnumWindows calls the getDesktopHandleWin7 or getDesktopHandleWin8 callback function for every top level window.
      From there, we can check if the current window contains a child named 'SHELLDLL_DefView',
      which indicates that the current window represents the desktop icons.
      We then take the next sibling of that window.
@@ -410,8 +377,8 @@ begin
    if hChild <> 0 then
     begin
      MyData.Handle := hChild;      { http://stackoverflow.com/questions/36717308/how-to-use-the-enumwindows-call-back-function/36722139#36722139 }
-     //todo 4: _getDesktopWin8 MyData.Caption  := Caption;
-     //todo 4: _getDesktopWin8 MyData.ClassName:= ClassName;
+     //todo 4: getDesktopHandleWin8 MyData.Caption  := Caption;
+     //todo 4: getDesktopHandleWin8 MyData.ClassName:= ClassName;
     end  { return the DeskHandle as specified here: http://stackoverflow.com/questions/36717308/how-to-use-the-enumwindows-call-back-function }
   end;
 end;
