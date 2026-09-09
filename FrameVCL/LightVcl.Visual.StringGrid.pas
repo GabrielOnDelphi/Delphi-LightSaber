@@ -8,13 +8,13 @@
   See this: http://www.delphiforfun.org/Programs/Delphi_Techniques/GridSort.htm
 
   IMPORTANT. BUG:
-    There is a bug in TStringGrid. The first line is fucked when goRowSelect and goEditing are both true. Details: http://stackoverflow.com/questions/24163773/very-odd-behavior-with-tstringgrid-how-to-fix-it
+    There is a bug in TStringGrid. The first line is broken when goRowSelect and goEditing are both true. Details: http://stackoverflow.com/questions/24163773/very-odd-behavior-with-tstringgrid-how-to-fix-it
 
 
   Capabilities:
 
-    OnEndEdit             Allows the user to easily implement a custom grid editor. NOTA: Nu merge daca AlwaysShowEditror= True
-    Highlight string      Highlight in Bleo all cell that contains the specified string
+    OnEndEdit             Allows the user to easily implement a custom grid editor
+    Highlight string      Highlight all cells that contain the specified string
     Sort
     Mouse sort             Sort by column when the user Shift+Click on grid's header
     MouseEditHeader       Toggle action. make to top row fixed or normal row every time the user Alt+Click on grid
@@ -50,28 +50,29 @@ TYPE
     EditorPrevMode     : Boolean;
     EditorPrevRow      : LongInt;
     EditorPrevCol      : LongInt;
-    FHighlight         : string;                                                                        { Highlight in Bleo all cell that contains the specified string }
+    FHighlight         : string;
     FCenterCols        : Boolean;
     {EVENTS}
     FOnSort            : TCellEvent;
     FEndEdit           : TCellEvent;
     FOnUserChangedCell : TSetEditEvent;
-    FOnLinkClick       : TCellEvent;
     procedure setHighlight       (CONST Value: string);
    protected
     procedure WndProc(VAR Message: TMessage); override;
     procedure DrawCell(ACol, ARow: Longint; ARect: TRect; AState: TGridDrawState); override;
     { SORT }
-    function  MouseOnSortPos     (MouseX, MouseColumn: Integer): Boolean;                               { This is a helper function for Sort. It checks if the mouse has the right coordinates. If the mouse is between two cells it means the user wants to resize the cell not to sort it }
-    procedure NaturalSort        (SortCol: Integer);                                                    { In this procedure the algorithm expects numbers on that colum and not text }
+    function  MouseOnSortPos     (MouseX, MouseColumn: Integer): Boolean;                               { Helper for Sort. If the mouse is between two cells the user wants to resize the cell, not to sort it }
+    procedure NaturalSort        (SortCol: Integer);                                                    { Sorts numbers the way a human reads them: 1, 2, 10 - not 1, 10, 2 }
     procedure FastSort           (SortCol: Integer; CaseSensitive: Boolean);
    public
     Delimiter: Char;                                                                                    { Delimiter between fields. Used when saving the file to disk }
     Tag1,Tag2,Tag3,Tag4,Tag5: string;                                                                   { User defined data to be stored when the grid is saved to disk }
-    CenteredColumns: array of Boolean;                                                                  { There are 2 options to center the text: set CenterAllColumns to true to center ALL cells or use the CenteredColumns matrix to define specific cells that will be centered } { Indexed in 0. Set its length to 0 to disable this feature. If enabled, the length of this matrix MUST be identical with the number of columns. Set an element to true, to center the text in the coresponding column. Has no effect if CenterAllColumns is true. }
+    CenteredColumns: array of Boolean;                                                                  { Indexed in 0. Set its length to 0 to disable this feature. If enabled, the length of this matrix MUST be identical with the number of columns. Set an element to true, to center the text in the corresponding column. Has no effect if CenterAllColumns is true. }
 
     constructor Create (AOwner: TComponent);     override;
     procedure   CreateWnd;                       override;
+    procedure   DeleteRow (ARow: Longint);       override;
+    procedure   KeyDown (VAR Key: Word; Shift: TShiftState); override;
 
     { SORT }
     procedure SortColumn   (CONST ColumnToSort: Integer);
@@ -80,7 +81,7 @@ TYPE
 
     { LOAD/SAVE }
     procedure Save;
-    procedure SaveAsCsv          (CONST aFileName: string; CONST Delimiter: Char= ',');                 { Save the entire content to disk (including headers). The difference between this and SaveToFile is that SaveToFile also save the size of }
+    procedure SaveAsCsv          (CONST aFileName: string; CONST Delimiter: Char= ',');                 { Save the entire content to disk (including header cells) as CSV. The difference between this and SaveToFile is that SaveToFile also saves binary info (the size of the grid) }
     procedure SaveToFile         (CONST aFileName: string);
     function  LoadFromFile       (CONST aFileName: string): Boolean;
     function  LoadHeaderWidths   (CONST aFileName: string): Boolean;
@@ -91,7 +92,7 @@ TYPE
     function  GetContentAsHTML   (Rectangle: TRect; SplitEvery: Integer) : string;  overload;
     function  GetContent         (Rectangle: TRect; Delimiter: Char= ','): string;
     function  GetAllContent      (Delimiter: Char= ','): string;
-    function  GetSelectionContent(Delimiter: Char= ','): string;                                        { Returns the content of cell in the specified rectangle. The cells are separated by 'Delimiter' }
+    function  GetSelectionContent(Delimiter: Char= ','): string;                                        { Returns the content of the selected cells. The cells are separated by 'Delimiter' }
     procedure CopySel2Clipboard  (Delimiter: Char= Tab);
     procedure CopyColumn;
     procedure PasteFromClipboard;                                                                       { untested }
@@ -106,19 +107,18 @@ TYPE
     procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure ExpandCenteredColumns;
     { EDITOR }
-    procedure EndEdit (ACol, ARow: Longint);                                                                            { NOTA: Nu merge daca AlwaysShowEditro= True }
+    procedure EndEdit (ACol, ARow: Longint);                                                                            { Does not fire if goAlwaysShowEditor is in Options: EditorMode never goes back to FALSE, and WndProc only calls EndEdit when it does }
    published
-    property  ForceKeepHeaders  : Boolean        read FForceKeepHdr   Write FForceKeepHdr        default FALSE;         { If true, Delete key cannot delete grid's header (top line) }
+    property  ForceKeepHeaders  : Boolean        read FForceKeepHdr   Write FForceKeepHdr        default FALSE;         { If true, row 0 is protected: neither the Delete key nor DeleteRow/DeleteSelectedRows/DeleteCurrentRow can empty or remove it. Meant for a grid whose FixedRows ToggleHeader can set to 0 }
     property  OnEndEdit         : TCellEvent     read FEndEdit        write FEndEdit;
     { MOUSE }
     property MouseEditHeader    : Boolean        read FMouseSwitch    Write FMouseSwitch         default FALSE;         { [toggle action] make to top row fixed or normal row every time the user Alt+Click on grid }
     { TEXT }
-    property HighlightString    : string         read FHighlight      Write SetHighlight;                               { Highlight in Bleo all cell that contains the specified string }
+    property HighlightString    : string         read FHighlight      Write SetHighlight;                               { Highlight all cells that contain the specified string }
     property CenterAllColumns   : Boolean        read FCenterCols     Write FCenterCols          default TRUE;          { There are 2 options to center the text: set CenterAllColumns to true to center ALL cells or use the CenteredColumns matrix to define specific cells that will be centered }
     { SORT }
     property MouseSort          : TMouseSortType read FMouseSort      Write FMouseSort           default msNoSort;      { msSortClick: Allows sort by column when the user clicks on grid's header.  msSortShiftClick: The user needs to press Shift in order to sort. MouseSort needs to be enabled also. }
     property OnSort             : TCellEvent     read FOnSort         write FOnSort;
-    property OnLinkClick        : TCellEvent     read FOnLinkClick    write FOnLinkClick;                               { The user clicked a cell that has a link in it. Has meaning ONLY if an Avalanche Table is assigned to the grid }
    end;
 
 
@@ -144,10 +144,10 @@ begin
  Delimiter        := chr(255);
  {COLORS}
  FCenterCols      := TRUE;
- DrawingStyle     := gdsGradient;                                                                  { gdsGradient looks better than gdThemed }
+ DrawingStyle     := gdsGradient;                                                                  { gdsGradient looks better than gdsThemed }
  {EDITOR}
- EditorPrevMode   := FALSE;                                                                        { are legatura cu OnEndEdit }
- EditorPrevRow    := Row;                                                                          { are legatura cu OnEndEdit }
+ EditorPrevMode   := FALSE;                                                                        { Related to OnEndEdit }
+ EditorPrevRow    := Row;                                                                          { Related to OnEndEdit }
  EditorPrevCol    := Col;
  SetLength(CenteredColumns, 0);
 end;
@@ -157,6 +157,25 @@ end;
 procedure TEnhStrGrid.CreateWnd;
 begin
   inherited CreateWnd;
+end;
+
+
+{ ToggleHeader (and MouseEditHeader, which calls it on Alt+Click) sets FixedRows to 0. The top row then becomes an ordinary row: it can be selected, and every FixedRows test in the ancestor stops protecting it.
+  ForceKeepHeaders is the switch for "row 0 is my header whatever FixedRows says", so it is guarded here, on the one routine every delete path goes through.
+  The ancestor clears Rows[ARow] before it tests RowCount, so without this the row would lose its text even where it survives as a row. }
+procedure TEnhStrGrid.DeleteRow(ARow: Longint);
+begin
+  if FForceKeepHdr AND (ARow = 0) then EXIT;
+  inherited DeleteRow(ARow);
+end;
+
+
+{ The other half of ForceKeepHeaders. With DelKeyDeleteRows FALSE the ancestor's Delete key handler does not call DeleteRow at all - it writes '' into the current cell, and it only skips a row below FixedRows, which is no protection once ToggleHeader has set FixedRows to 0.
+  Only that one branch is blocked: a Delete that deletes whole rows still runs, and DeleteRow above drops row 0 out of it. }
+procedure TEnhStrGrid.KeyDown(VAR Key: Word; Shift: TShiftState);
+begin
+  if FForceKeepHdr AND (Key = VK_DELETE) AND NOT DelKeyDeleteRows AND (Row = 0) then EXIT;
+  inherited KeyDown(Key, Shift);
 end;
 
 
@@ -178,7 +197,7 @@ begin
    EXIT;
   end;
 
- { SHOW 'SORTED' GLYPH }                                                                                                { Draw a small glyph if the grid is sorted by this column }
+ { SHOW 'SORTED' GLYPH }
  if (aRow= 0) AND (aCol= SortedCol)
  then
    begin
@@ -202,7 +221,7 @@ begin
      else Canvas.Font.Color:= ColorTextEnabled
    else Canvas.Font.Color:= ColorTextDisabled; }
 
-   { HIGHLIGHT TEXT }                                                                                                   { Highlight the cell in BLEO if it contains this text }
+   { HIGHLIGHT TEXT }                                                                                                   { Highlight the cell if it contains this text }
    if  (FHighlight<> '')
    AND (Cells[ACol,ARow]= FHighlight)
    then Canvas.Brush.Color:= TColor($C0A0A0);
@@ -213,9 +232,9 @@ begin
    if CellText = ''
    then inherited DrawCell(ACol, ARow, ARect, AState)
    else
-     if CenterAllColumns                                                                                                 { There are 2 options to center the text: set CenterAllColumns to true to center ALL cells or use the CenteredColumns matrix to define specific cells that will be centered }
+     if CenterAllColumns
      OR
-       (NOT CenterAllColumns                                                                                             { CenteText is not in use but... }
+       (NOT CenterAllColumns                                                                                             { CenterAllColumns is not in use but... }
         AND (ACol < Length(CenteredColumns))                                                                             { ...but the CenteredColumns is. Bounds check: the array is documented to match ColCount but the user may have set it shorter }
         AND CenteredColumns[ACol] )                                                                                      { If this column was marked for centering }
      then
@@ -253,7 +272,7 @@ begin
  { Check sort conditions }
  if  (ARow= 0)
  AND (FixedRows> 0)
- AND MouseOnSortPos(x, ACol)                                                                       { This is a helper function for Sort. It checks if the mouse has the right coordinates. If the mouse is between two cells it means the user wants to resize the cell not to sort it }
+ AND MouseOnSortPos(x, ACol)
  then
   begin
    { Sort Event }
@@ -266,8 +285,8 @@ begin
 
  { Toggle header }
  if MouseEditHeader
- AND (ssAlt in Shift)                                                                              { ALT key is pressed? }
- then ToggleHeader;                                                                                { Make the top horizontal header visible/invisible }
+ AND (ssAlt in Shift)
+ then ToggleHeader;
 
  { The user performed a Control-Click? Then duplicate current row }
  if MouseDuplicateLine
@@ -283,16 +302,16 @@ end;
 {--------------------------------------------------------------------------------------------------
                                     ON END EDIT
 --------------------------------------------------------------------------------------------------}
-procedure TEnhStrGrid.EndEdit(ACol, ARow: Integer);                                                { NOTA: Nu merge daca AlwaysShowEditror= True }
+procedure TEnhStrGrid.EndEdit(ACol, ARow: Integer);
 begin
- Cells[ACol, ARow]:= StringReplace(Cells[ACol, ARow], CRLFw, ' ', [rfReplaceAll]);                  { Replace ENTERs with space - This Grid cannot draw a text on multiple rows so enter character will he rndered as 2 squares. }
+ Cells[ACol, ARow]:= StringReplace(Cells[ACol, ARow], CRLFw, ' ', [rfReplaceAll]);                  { Replace ENTERs with space - This Grid cannot draw a text on multiple rows so the enter character will be rendered as 2 squares. }
  if Assigned(FEndEdit)
  then FEndEdit(Self, EditorPrevCol, EditorPrevRow);
 end;
 
 
 
-procedure TEnhStrGrid.WndProc(var Message: TMessage);                                              { are legatura cu OnEndEdit  }
+procedure TEnhStrGrid.WndProc(var Message: TMessage);                                              { Related to OnEndEdit }
 begin
  inherited;
  If EditorPrevMode Then
@@ -328,7 +347,7 @@ begin
  FileName:= aFileName;
 
  { Write magic no, version, comment }
- Body:= Body+ 'CBC' + Delimiter;                                                                   { Magic numner (Cubic) }
+ Body:= Body+ 'CBC' + Delimiter;                                                                   { Magic number (Cubic) }
  Body:= Body+ '0003'+ Delimiter;                                                                   {  File version }
  Body:= Body+ Tag1  + Delimiter;                                                                   { store user defined data }
  Body:= Body+ Tag2  + Delimiter;                                                                   { store user defined data }
@@ -373,7 +392,7 @@ VAR
    { Restore cells width }
    if TSL.Count < MetaSize+ ColCount then EXIT(FALSE);                                             { Truncated file - width data incomplete }
    for Cl:= 0 TO ColCount-1
-    DO ColWidths[Cl]:= StrToIntDef(TSL[Cl+MetaSize], 40);                                          { +MetaSize because I want to skip the first 3 lines (comments, rowcount, colcount) }
+    DO ColWidths[Cl]:= StrToIntDef(TSL[Cl+MetaSize], 40);                                          { +MetaSize because the first MetaSize lines are the file header, not column widths }
 
    { Restore cell content }
    for CurRow:= 0 to RowCount-1 DO
@@ -406,7 +425,7 @@ VAR
    { Restore cells width }
    if TSL.Count < MetaSize+ ColCount then EXIT(FALSE);                                             { Truncated file - width data incomplete }
    for Cl:= 0 TO ColCount-1
-    DO ColWidths[Cl]:= StrToIntDef(TSL[Cl+MetaSize], 40);                                          { +MetaSize because I want to skip the first 3 lines (comments, rowcount, colcount) }
+    DO ColWidths[Cl]:= StrToIntDef(TSL[Cl+MetaSize], 40);                                          { +MetaSize because the first 9 lines are the file header (magic number, version, Tag1..Tag5, RowCount, ColCount), not column widths }
 
    { Restore cell content }
    for CurRow:= 0 to RowCount-1 DO
@@ -457,7 +476,7 @@ end;
 
 
 
-procedure TEnhStrGrid.SaveAsCsv (CONST aFileName: string; CONST Delimiter: Char= ',');      { Save the entire content to disk (including header cells) as CSV. The difference between this and SaveToFile is that SaveToFile also saves binary info (the size of grid) }
+procedure TEnhStrGrid.SaveAsCsv (CONST aFileName: string; CONST Delimiter: Char= ',');
 VAR
    CsvContent: string;
 begin
@@ -467,7 +486,7 @@ end;
 
 
 
-procedure TEnhStrGrid.SaveHeaderWidths(CONST aFileName: string);         { Save content of the entire grid (header & cells) as ANSI. It uses 255 as Delimiter instead of Enter }
+procedure TEnhStrGrid.SaveHeaderWidths(CONST aFileName: string);         { Save only the column widths. The first row holds the text 'Column widths', the second holds ColCount, then comes one width per row }
 VAR cl: Integer;
     Body: string;
 begin
@@ -521,15 +540,15 @@ begin
 end;
 
 
-function TEnhStrGrid.GetContent (Rectangle: TRect; Delimiter: Char= ','): string;                  { Returns the content of all cells. The cells are separated by 'Delimiter' }
+function TEnhStrGrid.GetContent (Rectangle: TRect; Delimiter: Char= ','): string;                  { Returns the content of the cells inside Rectangle. The cells are separated by 'Delimiter' }
 VAR
    cl, rw: Integer;
 
   function GetCellSafe: string;
   begin
     Result:= Cells[cl, rw];
-    { If the chousen Delimiter already exists in our text it will fuck up the CSV format so we need to replace it with semi column (;) }
-    if Delimiter= ';'                                  { Make sure we won't replace semicol  }
+    { If the chosen Delimiter already exists in our text it breaks the CSV format, so replace it with a semicolon (;) }
+    if Delimiter= ';'                                  { If the delimiter IS the semicolon, swap to a comma instead }
     then ReplaceChar(Result, Delimiter, ',')
     else ReplaceChar(Result, Delimiter, ';');
   end;
@@ -539,27 +558,27 @@ begin
   for rw := Rectangle.Top to Rectangle.Bottom DO
     for cl:= Rectangle.Left to Rectangle.Right DO
       if cl = Rectangle.Right
-      then Result:= Result + GetCellSafe + CRLFw               { Don't put a comma after the last column. Put an ENTER instead }
+      then Result:= Result + GetCellSafe + CRLFw               { Don't put a delimiter after the last column. Put an ENTER instead }
       else Result:= Result + GetCellSafe + Delimiter;
 end;
 
 
 
-function TEnhStrGrid.GetSelectionContent(Delimiter: Char= ','): string;                            { Returns the content of cells in the specified rectangle. The cells are separated by 'Delimiter' }
+function TEnhStrGrid.GetSelectionContent(Delimiter: Char= ','): string;
 begin
   Result:= GetContent(Rect(Selection.Left, Selection.Top, Selection.Right, Selection.Bottom), Delimiter);
 end;
 
 
 
-function TEnhStrGrid.GetAllContent(Delimiter: Char= ','): string;                                  { Returns the content of cells in the specified rectangle. The cells are separated by 'Delimiter' }
+function TEnhStrGrid.GetAllContent(Delimiter: Char= ','): string;                                  { Returns the content of the whole grid. The cells are separated by 'Delimiter' }
 begin
  Result:= GetContent(WholeGridRect, Delimiter);
 end;
 
 
 
-procedure TEnhStrGrid.ImportColumnFromClpbrd;                                                      { Put the clipboard content into the grid, starting at the current cell. }
+procedure TEnhStrGrid.ImportColumnFromClpbrd;
 VAR CurRow: Integer;
     TSL: TStringList;
 begin
@@ -681,7 +700,7 @@ begin
 end;
 
 
-function TEnhStrGrid.GetContentAsHTML(Rectangle: TRect; SplitEvery: Integer): string;              { Truncate= truncate after x character is text too long }
+function TEnhStrGrid.GetContentAsHTML(Rectangle: TRect; SplitEvery: Integer): string;              { SplitEvery = insert a space every N characters, so the browser can wrap a long cell }
 VAR
    s: string;
    cl, lin: Integer;
@@ -695,7 +714,7 @@ begin
      begin
       s:= Cells[cl, lin];
       if Length(s) > SplitEvery
-      then s:= InsertCharEvery(' ', s, SplitEvery);                                              { If the string is too long, add spaces so the browser can wrap it. Fixed 2026.07: the function result was discarded, so long cells were never split }
+      then s:= InsertCharEvery(' ', s, SplitEvery);                                              { If the string is too long, add spaces so the browser can wrap it }
 
       if lin = 0
       then Result:= Result + '  <th width="'+IntToStr(ColWidths[cl])+'" scope="col">'+ s + '</th>' + CRLFw
@@ -718,17 +737,17 @@ end;
                                   SORT
 --------------------------------------------------------------------------------------------------}
 
-{ This is a helper function for Sort. It checks wether the mouse has the right coordinates.
-  If the mouse is between two cells it means the user wants to resize the cell not to sort it. }
+{ This is a helper function for Sort. It checks whether the mouse has the right coordinates.
+  If the mouse is between two cells it means the user wants to resize the cell, not to sort it. }
 function TEnhStrGrid.MouseOnSortPos(MouseX, MouseColumn: Integer): Boolean;
 CONST
-   Trigger= 8;                                                                                                 { The user has toclick 8 pixels inside the header (left/right) in order to sort the grid. Otherwise the click will be ignored (no sorting will take place). This is needed in order to prevent conflict between the 'Resize column' function and 'Sort' function }
+   Trigger= 8;                                                                                                 { The user has to click 8 pixels inside the header (left/right) in order to sort the grid. Otherwise the click will be ignored (no sorting will take place). This is needed in order to prevent conflict between the 'Resize column' function and 'Sort' function }
 VAR
    cl, CellStart, CellEnd: Integer;
 begin
  CellStart:= 0;
  for cl:= 0 to MouseColumn-1
-  DO CellStart:= CellStart+ ColWidths[cl];                                                                   { Add the width of previous columns to the with of current column }
+  DO CellStart:= CellStart+ ColWidths[cl];                                                                   { Sum the widths of the columns before this one }
 
  CellEnd:= CellStart+ ColWidths[MouseColumn];
 
@@ -830,7 +849,7 @@ end; }
 
 
 
-procedure TEnhStrGrid.ReverseOrder;                                                                { Swap ROWS (and data/objects associated with those rows) }
+procedure TEnhStrGrid.ReverseOrder;
 VAR I, J: Integer;
 begin
  if RowCount <= 1 then EXIT;
@@ -850,7 +869,7 @@ end;
 {--------------------------------------------------------------------------------------------------
    OTHER
 --------------------------------------------------------------------------------------------------}
-procedure TEnhStrGrid.SwapRowText(i, j: Integer);                                                  { Swap the TEXT in row i with the text in row j }
+procedure TEnhStrGrid.SwapRowText(i, j: Integer);                                                  { Swap row i with row j: the cell text AND the objects attached to those cells. TStrings.Exchange swaps Strings and Objects together, and TStringGridStrings in Vcl.Grids does not override it. }
 VAR k: Integer;
 Begin
  for k:= 0 to ColCount-1
@@ -872,7 +891,7 @@ begin
 end; }
 
 
-procedure TEnhStrGrid.Help;                                                                        { how to use this grid }
+procedure TEnhStrGrid.Help;
 begin
  if Assigned(FOnSort)
  AND (MouseSort= msSortShiftClick)
@@ -880,7 +899,7 @@ begin
 end;
 
 
-procedure TEnhStrGrid.ToggleHeader;                                                                { Make the top horizontal header visible/invisible }
+procedure TEnhStrGrid.ToggleHeader;
 begin
  if FixedRows= 0
  then FixedRows:= 1
