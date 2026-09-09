@@ -22,15 +22,13 @@ UNIT LightVcl.Internet.Download.Thread;
      Downloader.Start;
      // When done, Data property contains the downloaded content
      // Remember to free the Downloader when finished. Do NOT free Data - it is owned and freed by the Downloader!
-
-   Note: UserAgent, Header, Referer, SSL properties are reserved for future use.
 --------------------------------------------------------------------------------------------------------------
 
    Also see:
-       c:\Users\Public\Documents\Embarcadero\Studio\21.0\Samples\Object Pascal\RTL\HttpAsyncDownload\HttpAsyncDownloadDemo.dpr
+       c:\Users\Public\Documents\Embarcadero\Studio\37.0\Samples\Object Pascal\RTL\HttpAsyncDownload\HttpAsyncDownloadDemo.dpr
 
    Tester:
-       c:\Projects\LightSaber\Demo\Demo Internet\
+       c:\Projects\LightSaber\Demo\Core\Demo Internet\
        c:\Projects\Testers\Internet download tester images\
 -------------------------------------------------------------------------------------------------------------}
 
@@ -44,12 +42,12 @@ USES
 TYPE
  TWinInetObj = class(TThread)
   private
-   FUrl: String;                                                                                                        { URL that we are downloading }
+   FUrl: String;
    FData: TMemoryStream;                                                                                                { The downloaded content will be stored here }
    FHttpRetCode: string;                                                                                                { Error message from the download engine. Empty = success }
    FOnDownloadDone: TNotifyEvent;
    procedure SetURL(CONST Value: string);
-   procedure DoDownloadDone;                                                                                            { Thread-safe event trigger }
+   procedure DoDownloadDone;
   protected
    procedure Execute; override;
   public
@@ -61,7 +59,7 @@ TYPE
    constructor Create;
    destructor Destroy; override;
 
-   function DownloadSuccess: Boolean;                                                                                   { Returns True if download completed successfully }
+   function DownloadSuccess: Boolean;                                                                                   { TRUE when Data is not NIL and holds at least one byte }
 
    property URL: String read FUrl write SetUrl;
    property Data: TMemoryStream read FData;
@@ -104,13 +102,13 @@ begin
 
   FData:= LightCore.Download.DownloadToStream(URL, FHttpRetCode);
 
-  // Fire event via Synchronize for thread safety (allows VCL access in handler)
+  // Synchronize, so the OnDownloadDone handler may touch the VCL
   if Assigned(FOnDownloadDone)
   then Synchronize(DoDownloadDone);
 end;
 
 
-{ Thread-safe wrapper to fire the OnDownloadDone event }
+{ Fires the OnDownloadDone event. Execute calls it through Synchronize, so it runs in the main thread. }
 procedure TWinInetObj.DoDownloadDone;
 begin
   if Assigned(FOnDownloadDone)
@@ -118,7 +116,6 @@ begin
 end;
 
 
-{ Returns True if download completed successfully (Data is not NIL and has content) }
 function TWinInetObj.DownloadSuccess: Boolean;
 begin
   Result:= (FData <> NIL) AND (FData.Size > 0);
@@ -129,7 +126,6 @@ procedure TWinInetObj.SetURL(const Value: string);
 begin
   Assert(Value <> '', 'TWinInetObj.SetURL: URL is empty');
 
-  // URL must start with http:// or https://
   if (Length(Value) < 10)  // Minimum: http://x.co
   OR (PosInsensitive('http', Value) <> 1)
   then raise Exception.Create('Invalid URL address. The URL must start with ''http://'' or ''https://''.')
