@@ -2,18 +2,13 @@ UNIT LightVcl.Visual.CalendarCanvas;
 {-------------------------------------------------------------------------------------------------------------
   2026.03.22
   Freeware
-  Calendar descended from TComponent (now TObject)
+  Calendar descended from TObject.
   Draws the calendar on the provided canvas.
 
   Based on Calpnl.pas (freeware) written by Peter Crain, Robert Vivrette, Roland Weinschuetz, Harri Kasulke, Harri.Kasulke@Okay.net
 --------------------------------------------------------------------------------------------------------------
 
-  -Calendar-Header-Buttons now are BitBtns and support hints (If you want other Hint-Texted, Change the Procedure ShowButtons)
-  -ColWeekend splitted to ColSaturday,ColSunday
-  -property ShowWeeks added (Shows the Weeknumbers!)
-  -property ShowButtonHints added
-  -DblClick works now only in the Calendar-Area
-  -Functions for Weekhandling (This functions should help building Querys for filtering/searching WeekNo)
+  -WeeksFirstDay and WeeksLastDay help build a query that filters or searches by week number.
    Example:
     I would like to query all custumers of LastWeek:
      -Take the now-TDateTime and sub 7 (7 Days)
@@ -27,8 +22,8 @@ UNIT LightVcl.Visual.CalendarCanvas;
   Font: Big deal! Actually, the point is that the Font can be changed (typically the size would be changed) when TCalendarCanvas is Resized (OnResize).
 
   Reset date:
-    The code, as it has been written to prevent a user entering an invalid date, which can happen with a ScrollBar.
-    If the date highlighted is 31 August, and the user scrolls to September, the CalendarDate.Day is reset to the DaysInMonth (ie, 30), to prevent an error.
+    The code prevents the user entering an invalid date, which can happen with a ScrollBar.
+    If the date highlighted is 31 August, and the user scrolls to September, the Day property is reset to DaysInMonth (ie, 30), to prevent an error.
     If you use 'MMMM DD YYYY' format in your Win International settings, ie US users, then the example above would use August 31. In other words, the code is 'Internationalized', to that extent.
 
   TODO-Section:
@@ -105,8 +100,8 @@ TYPE
   function  GetWeekNumber:Integer;
   function  GetDayOfYear: Integer;
   function  GetDaysInYear:Integer;
-  procedure SetGermanDate (Value: Boolean);     // RW: this one sets the german date
-  procedure SetShowWeeks  (Value: Boolean);    // RW: adapted DayOfWeek-function to fit german date
+  procedure SetGermanDate (Value: Boolean);
+  procedure SetShowWeeks  (Value: Boolean);
   function  rDayOfWeek    (vDate: TDateTime) : Integer;
   procedure SetColHoliday (Value: TColor);
   procedure SetColSunday  (Value: TColor);
@@ -132,7 +127,7 @@ TYPE
   function  GetIndexFromPoint (nLeft : Integer ; nTop : Integer) : Integer;
   function  ValidDate   (aDate: TDateType) : Boolean;
  public
-  constructor Create(Canvas : TCanvas);  { We don't use 'overload' because we want to hide the original Create(AOwner) constructor. We always want to pass the second parameter.  http://docwiki.embarcadero.com/RADStudio/Sydney/en/Methods_(Delphi). c:\MyProjects\My books\Building cross-platform applications\Demo projects\Methods and polymorphism\PolyTest.dpr }
+  constructor Create(Canvas : TCanvas);  { No 'overload', so this hides the parameterless TObject.Create and the caller must pass a Canvas. http://docwiki.embarcadero.com/RADStudio/Sydney/en/Methods_(Delphi). c:\GabrielMoraru\My books\OTHER BOOKS\Book - Building cross-platform GUI applications in no time\Resources\Demo projects\Methods and polymorphism\PolyTest.dpr }
   destructor Destroy; override;
 
   function DaysInMonth  (nMonth, nYear : Integer): Integer;
@@ -145,9 +140,9 @@ TYPE
   property Month        : Integer      read FMonth write SetMonth;
   property Year         : Integer      read FYear  write SetYear;
   property CalendarDate : TDateTime    read FCalendarDate write SetCalendarDate; // A TDateTime property that you can read or write to programmatically. The fractional part of CalendarDate, i.e. the time, is not stored.
-  property WeekNumber   : Integer      read GetWeekNumber;                       // An integer representing the... Week number of the TCalendarCanvas.Year.
-  property DayOfYear    : Integer      read GetDayOfYear;                        // value for days that have passed, in the current (CalendarDate) year.
-  property DaysInYear   : Integer      read GetDaysInYear;                       // can be either 365 or 366. It could have just as easily been Boolean (it calls the Boolean IsLeapYear protected Function), but it suited my project.
+  property WeekNumber   : Integer      read GetWeekNumber;                       // Week number, in the year of CalendarDate.
+  property DayOfYear    : Integer      read GetDayOfYear;                        // Day of the year, 1 to 366, for CalendarDate.
+  property DaysInYear   : Integer      read GetDaysInYear;                       // 365 or 366.
   procedure Paint;
  public
   property Left         : Integer      read FLeft         write FLeft           default 0;
@@ -196,7 +191,7 @@ begin
 
  FColSunday    := $0025289A;
  FColSaturday  := $0025289A;
- FHolidays     := TStringList.Create;   // Create the stringlists for special days
+ FHolidays     := TStringList.Create;
  FMarkdays     := TStringList.Create;
  FHeight       := 350;
  FWidth        := 300;
@@ -211,7 +206,7 @@ begin
  DayWidth       := dw2Char;
  g_DayTitles[7] := FormatSettings.ShortDayNames[1];   // Copy sunday to index 7 for german date
  FCalendarDate  := Date;
- FDateInHeader      := FALSE;  // Toggle the 'MMMMM YYYY' display above the abbreviated day names at the top. The Months or Years can then be changed programmatically by ScrollBars or similar.
+ FDateInHeader      := FALSE;
  DecodeDate(FCalendarDate, aY, aM, aD );
  FMonth         := Integer(aM);
  FDay           := Integer(aD);
@@ -262,13 +257,12 @@ begin
  iInnerW := Width - (FInnerSpace * 2);
  iWBorder:= iInnerW div 100;
 
- { ClientWidth is a product of useable space, not all space }
- { clear space less a border both sides, makes ClientWidth narrower }
+ { The usable space is Width less InnerSpace and a border on each side }
  CellWidth := (iInnerW - (iWBorder * 2)) div dd;
  innerH := Height - (FInnerSpace * 2);
  iHBorder := innerH div 100;
 
- if DateInHeader                       // Toggle the 'MMMMM YYYY' display above the abbreviated day names at the top. The Months or Years can then be changed programmatically by ScrollBars or similar.
+ if DateInHeader
  then iLinesH := 8
  else iLinesH := 7;
 
@@ -281,7 +275,7 @@ begin
  HeadingRect.Right := HeadingRect.Left + (CellWidth * dd);
  HeadingRect.Bottom:= Height;
 
- if DateInHeader            // Toggle the 'MMMMM YYYY' display above the abbreviated day names at the top. The Months or Years can then be changed programmatically by ScrollBars or similar.
+ if DateInHeader
  then HeadingRect.Bottom := HeadingRect.Top + (CellHeight * 2)
  else HeadingRect.Bottom := HeadingRect.Top + CellHeight;
 
@@ -290,7 +284,7 @@ begin
  CalendarRect.Bottom := CalendarRect.Top + (CellHeight * 6); // 6 rows of dates
 
  if FShowWeeks
- then CalendarRect.Left := HeadingRect.Left + CellWidth; //showing WeekNo (week of the year)
+ then CalendarRect.Left := HeadingRect.Left + CellWidth;   { Leave the first column free. DrawWeeks puts the week numbers there }
 
  if SolidBkg then
   begin
@@ -301,14 +295,14 @@ begin
  g_CurrDateIndex := FDay + GetMonthBegin - 1;
 
  if DateInHeader
- then DrawDateInHeader;    // Toggle the 'MMMMM YYYY' display above the abbreviated day names at the top. The Months or Years can then be changed programmatically by ScrollBars or similar.
+ then DrawDateInHeader;
 
  DrawDaysHeader;
 
  // Draw the actual day numbers
  DrawDates;
 
- if FShowWeeks    //showing WeekNo (week of the year)
+ if FShowWeeks
  then DrawWeeks;
 
  DrawFocusFrame(g_CurrDateIndex);
@@ -370,11 +364,10 @@ begin
   ARect := HeadingRect;
   ARect.Right := ARect.Left + CellWidth;
 
-  if DateInHeader        // Toggle the 'MMMMM YYYY' display above the abbreviated day names at the top. The Months or Years can then be changed programmatically by ScrollBars or similar.
+  if DateInHeader
   then ARect.Top := ARect.Top + CellHeight ;
   { Cycle through the days }
 
-  {  Showing WeekNo (week of the year) }
   if fShowWeeks then
    begin
     if FGermanDate
@@ -436,7 +429,7 @@ end;
 procedure TCalendarCanvas.DrawDates;
 VAR
    nIndex, nWeek, nDay: Integer;
-   pDate1, pDate: string;
+   pDate1, pDate2, pDate: string;
    x,y: Integer;
 CONST
    ShowGridLines: Boolean= FALSE;
@@ -457,6 +450,7 @@ begin
      nIndex := nDay + ((nWeek - 1) * 7);
 
      pDate1:= g_DateArray[nIndex];
+     pDate2:= pDate1;                                                                              { Keep the prefix. LoadDateArray writes '-' for a day of the previous or next month, '+' for a day of this month }
      Delete(pDate1, 1, 1);
      pDate:= pDate1;
      if pDate = '  '
@@ -479,6 +473,9 @@ begin
       then FCanvas.Font.Color:= ColHoliday;
       if CheckHoliday(Markdays, pDate, FMonth)
       then FCanvas.Font.Color:= ColMarked;
+
+      if (Length(pDate2) > 0) AND (pDate2[1] = '-')                                                { Grey wins over the weekend and holiday colors, exactly as in DrawFocusFrame }
+      then FCanvas.Font.Color:= clBtnShadow;
 
       // Calculate cell position
       x:= CalendarRect.Left + (CellWidth  * (nDay - 1));
@@ -857,8 +854,7 @@ end;
 
 
 { Validates a date without raising exceptions.
-  Returns True if the date is valid, False otherwise.
-  Note: DaysInMonth already handles leap year February correctly. }
+  DaysInMonth already handles leap-year February. }
 Function TCalendarCanvas.ValidDate(aDate: TDateType) : Boolean;
 Begin
  Result:= True;
@@ -1121,7 +1117,6 @@ end;
 
 { Calculates the day of year (1-366) for a given date using an arithmetic formula.
   This is a compact algorithm that avoids loops by using integer division tricks.
-  The formula accounts for varying month lengths and leap year adjustments.
   Example: Jan 1 = 1, Feb 1 = 32, Dec 31 = 365 (or 366 in leap year) }
 function CalculateDayOfYear(y, m, d : Word) : Integer;
 VAR
@@ -1163,7 +1158,7 @@ begin
   end;
 end;
 
-procedure TCalendarCanvas.SetShowWeeks(Value: Boolean);   //showing WeekNo (week of the year)
+procedure TCalendarCanvas.SetShowWeeks(Value: Boolean);
 begin
   if Value <> FShowWeeks then
   begin
@@ -1262,7 +1257,6 @@ var
   i, z: integer;
   scmp, sm: string;
 begin
-  // Determine number of list entries
   z := Datelist.Count - 1;
   Result := False;
   scmp := '';
