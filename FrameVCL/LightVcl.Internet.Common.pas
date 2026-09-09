@@ -19,10 +19,10 @@ UNIT LightVcl.Internet.Common;
    This unit adds ~87 KB to EXE size due to WinInet and WinSock dependencies.
 
    Related:
-      Internet Status Detector: c:\Projects-3rd_Packages\Third party packages\InternetStatusDetector.pas
+      Internet Status Detector: c:\Projects-3rd_Packages\Third party packages\_Out\_TEMPORARY EXCLUDED (Don't delete them yet!)\InternetStatusDetector.pas
 
    Tester:
-      LightSaber\Demo\Tester Internet\
+      c:\Projects\LightSaber\Demo\Core\Demo Internet\
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
@@ -66,7 +66,7 @@ USES
 
  function  ResolveAddress (CONST HostName: String; out Address: DWORD): Boolean;
 
- function  GenerateInternetRep: string;  // Generate report
+ function  GenerateInternetRep: string;
 
  function  CoCreateGuid(var guid: TGUID): HResult; stdcall; far external 'ole32.dll';
 
@@ -80,7 +80,7 @@ USES
  procedure IE_DeleteCache;
  procedure IE_EndSession;
  procedure IE_SetProxy(CONST Proxy: string);   { Change IE proxy settings globally }
- //How to abort TWeBrowser navigation progress?    http://stackoverflow.com/questions/8976933/how-to-abort-twebrowser-navigation-progress
+ //How to abort TWebBrowser navigation progress?    http://stackoverflow.com/questions/8976933/how-to-abort-twebrowser-navigation-progress
 
 
  {--------------------------------------------------------------------------------------------------
@@ -88,14 +88,12 @@ USES
 --------------------------------------------------------------------------------------------------}
  function  PCConnected2Internet: Boolean;                                       { From here: http://www.delphipages.com/forum/showthread.php?t=198159 }
 
- { A lightweight endpoint for the connectivity check below: it answers HTTP 200 with the tiny
-   fixed body 'Microsoft Connect Test'. It is Windows' own NCSI probe target, so it is almost never
-   blocked and transfers only a few bytes - ideal for a fast startup 'am I online / is my exe
-   firewalled' check, instead of downloading a whole homepage. }
+ { A lightweight endpoint for ProgramConnect2Internet: it answers HTTP 200 with the tiny fixed body 'Microsoft Connect Test'.
+   It is Windows' own NCSI probe target, so it is almost never blocked and transfers only a few bytes - ideal for a fast startup 'am I online / is my exe firewalled' check, instead of downloading a whole homepage. }
  CONST
    ConnectivityProbeURL     = 'http://www.msftconnecttest.com/connecttest.txt';
    ConnectivityProbeBody    = 'Microsoft Connect Test';   { The exact body ConnectivityProbeURL returns. Pass it as ExpectBody so a captive portal (which answers 200 with its own login HTML) is reported as state 2 (intercepted), not as a firewall block. }
-   ConnectivityProbeTimeout = 8000;                        { Milliseconds. A startup canary needs a quick verdict, not the 60 s download default. }
+   ConnectivityProbeTimeout = 8000;                        { Milliseconds. A check at startup must answer quickly, so it does not use the 60 s download default. }
 
  function  ProgramConnect2Internet: Integer;                                                                       overload;   { Legacy: google.com + the 60 s download default. Returns: -1 = PC not connected, 0 = connected but this app is blocked by the firewall, 1 = this app can reach the Internet}
  function  ProgramConnect2Internet(const TestURL: string; TimeoutMs: Integer= ConnectivityProbeTimeout; const ExpectBody: string= ''): Integer;  overload;   { Caller-set endpoint + timeout, so a startup check gets a verdict in seconds instead of the 60 s download default. Returns: -1 = PC not connected (WinInet); 0 = PC online but NO reply came back (this exe is firewall-blocked, or the endpoint is down); 1 = reached the endpoint and the body matched (genuinely online); 2 = reached the endpoint (HTTP 200) but the body was NOT ExpectBody -> a captive portal or a content-rewriting proxy is in the path, which is NOT a firewall block. Pass ConnectivityProbeURL for a fast, light default. ExpectBody='' = any HTTP 200 counts as 1 (state 2 never occurs); set it (e.g. ConnectivityProbeBody) to tell a genuine reply apart from a portal/proxy interception.}
@@ -127,7 +125,7 @@ USES
 
 
 
-function CheckURLStartMsg(CONST URL: string): Boolean;             { Check if the URL starts with HTTP or with www }
+function CheckURLStartMsg(CONST URL: string): Boolean;
 begin
  Result:= CheckURLStart(URL);
 
@@ -159,7 +157,6 @@ VAR
 begin
   SetLength(Result, 6);
 
-  { Handle empty URL }
   if lpszUrl = '' then EXIT;
 
   ZeroMemory(@lpszScheme      , SizeOf(lpszScheme));
@@ -246,21 +243,13 @@ begin
 end;
 
 
-{ As above, but the caller chooses the test endpoint and the timeout, so a startup canary gets a
-  verdict in TimeoutMs (default ConnectivityProbeTimeout) instead of the 60 s download default.
-  ConnectivityProbeURL is such an endpoint. The PCConnected2Internet gate is instant and does no
-  traffic, so an offline PC returns -1 without waiting on the timeout.
-
-  The verdict keys off whether an HTTP 200 came back, NOT off the body alone. DownloadAsString
-  (LightCore.Download.pas) leaves ErrorMsg empty ONLY on HTTP 200; a non-200, a timeout, a DNS/TLS
-  failure, or the firewall blocking this exe all set ErrorMsg. So:
-    ErrorMsg <> '' -> the request never completed        -> 0 (blocked / endpoint down)
-    ErrorMsg =  '' -> an HTTP 200 returned, so the exe DID reach the Internet -> NOT a firewall block.
-  Only then does the body decide between 1 (the expected content) and 2 (a reply, but not the
-  marker: a captive portal serving its own login HTML, or a proxy rewriting the content). Reporting
-  that as 2 - not 0 - is the point: it stops a portal/proxy being mislabelled a firewall block.
-  ExpectBody='' skips the content test, so any HTTP 200 is 1 and state 2 never occurs (this keeps
-  the legacy google.com overload a strict -1/0/1). }
+{ As above, but the caller chooses the test endpoint and the timeout, so a check at startup gets a verdict in TimeoutMs (default ConnectivityProbeTimeout) instead of the 60 s download default.
+  ConnectivityProbeURL is such an endpoint.
+  The PCConnected2Internet gate is instant and does no traffic, so an offline PC returns -1 without waiting on the timeout.
+  The verdict keys off whether an HTTP 200 came back, NOT off the body alone.
+  DownloadAsString (LightCore.Download.pas) leaves ErrorMsg empty ONLY on HTTP 200; a non-200, a timeout, a DNS/TLS failure, or the firewall blocking this exe all set ErrorMsg.
+  Only then does the body decide between 1 (the expected content) and 2 (a reply, but not the marker: a captive portal serving its own login HTML, or a proxy rewriting the content).
+  ExpectBody='' skips the content test, so any HTTP 200 is 1 and state 2 never occurs (this keeps the legacy google.com overload a strict -1/0/1). }
 function ProgramConnect2Internet(const TestURL: string; TimeoutMs: Integer; const ExpectBody: string): Integer;
 VAR
   Options  : RHttpOptions;
@@ -285,10 +274,9 @@ begin
 end;
 
 
-{ Shows message based on connection test result.
-  If ShowMsgOnSuccess = FALSE then only shows message when connection fails.
-  The Msg suffix is the library convention for "this routine puts a modal box on screen", so it must
-  never be called from a thread, a service or a batch. ProgramConnect2Internet returns the same verdict silently. }
+{ Shows a message based on the connection test result.
+  The Msg suffix is the library convention for "this routine puts a modal box on screen", so it must never be called from a thread, a service or a batch.
+  ProgramConnect2Internet returns the same verdict silently. }
 function TestProgramConnectionMsg(ShowMsgOnSuccess: Boolean= FALSE): Integer;
 begin
  Result:= ProgramConnect2Internet;
@@ -404,7 +392,7 @@ begin
 
     Result:= True;
   finally
-    WSACleanup; // Ensure cleanup happens
+    WSACleanup;
   end;
 end;
 
@@ -478,24 +466,19 @@ end;
                                   Internet EXPLORER
 ---------------------------------------------------------------------------------------------------
 
-Question:
-        How do I set the proxy settings in Internet Explorer without having to restart IE to make it load the settings
-Answer:
-        It's not the best solution, this I know, but it worked for me, and I couldn't get the BEST solution to work.
+Sets the proxy settings in Internet Explorer without having to restart IE to load them.
+This is not the best solution, but it works.
 
 How to use it:
-   You can simply execute EnableProxy('proxyserver:8080') to set a global proxy
-   or you can execute EnableProxy('ftp=ftpproxyserver:2121;gopher=goproxyserver:3333;http=httpproxyserver:8080;https=httpsproxyserver:8080');
-   you can of course only fill in one of the options like this EnableProxy('http=httpproxyserver:8080');
-
-Required units:
-               WinInet, Registry
+   IE_EnableProxy('proxyserver:8080') sets one global proxy.
+   IE_EnableProxy('ftp=ftpproxyserver:2121;gopher=goproxyserver:3333;http=httpproxyserver:8080;https=httpsproxyserver:8080') sets one proxy per protocol.
+   Only one protocol is allowed too: IE_EnableProxy('http=httpproxyserver:8080').
 
 Source:
        http://www.delphi3000.com/articles/article_3138.asp
 
 Better way:
-       O metoda mult mai buna e aici:   http://www.naddalim.com/forum/showthread.php?t=1454        }
+       http://www.naddalim.com/forum/showthread.php?t=1454        }
 
 
 { Notifies the system that Internet settings have changed.
@@ -528,13 +511,13 @@ begin
   FINALLY
    FreeAndNil(Reg);
   END;
- except                                                                                            { pe unele sisteme nu pot sa deschid cheia asta si imi ridica o eroare, asa ca folosesc un except }
+ except                                                                                            { On some systems this key cannot be opened and an exception is raised, hence the try..except }
   //todo 1: trap only specific exceptions
   Result:= FALSE;
  END;
 
- { InternetSetOption(NIL, INTERNET_OPTION_SETTINGS_CHANGED, NIL, 0);           <--  asa era original insa se pare... }
- if Result then IE_ApplySettings;                                                                  { ...ca metoda asta jos e mai buna }
+ { InternetSetOption(NIL, INTERNET_OPTION_SETTINGS_CHANGED, NIL, 0);           <--  this is how it was originally, but it seems... }
+ if Result then IE_ApplySettings;                                                                  { ...that IE_ApplySettings is better }
 end;
 
 
@@ -551,29 +534,23 @@ begin
   FINALLY
    FreeAndNil(Reg);
   END;
- except                                                                                            { pe unele sisteme nu pot sa deschid cheia asta si imi ridica o eroare, asa ca folosesc un except_ }
+ except                                                                                            { On some systems this key cannot be opened and an exception is raised, hence the try..except }
   //todo 1: trap only specific exceptions
   Result:= FALSE;
  END;
 
- { InternetSetOption(NIL, INTERNET_OPTION_SETTINGS_CHANGED, NIL, 0);            <-- asa era original insa se pare... }
- if Result then IE_ApplySettings;                                                                  { ...ca metoda asta jos e mai buna }
+ { InternetSetOption(NIL, INTERNET_OPTION_SETTINGS_CHANGED, NIL, 0);            <-- this is how it was originally, but it seems... }
+ if Result then IE_ApplySettings;                                                                  { ...that IE_ApplySettings is better }
 end;
 
 
 
 
 
-{
- READ IE PROXY SETTINGS
-
- DOCS:
-      This is easy and fast way but note that if in future the Microsoft will
-      change a key where proxy stored, you must change your code too. For a more
-      complicated way, see the link below (solution based on WinInet library).
-
- Sursa:
-      http://www.scalabium.com/faq/dct0161.htm                                  }
+{ READ IE PROXY SETTINGS
+  Easy and fast, but if Microsoft ever moves the registry key where the proxy is stored, this code must change too.
+  A more complicated way is a solution based on the WinInet library.
+  Source: http://www.scalabium.com/faq/dct0161.htm }
 
 function IE_GetProxySettings(out ProxyAdr, ProxyPort: string; out IsEnabled: boolean): Boolean;
 VAR Reg : TRegistry;
@@ -622,7 +599,7 @@ begin
   FINALLY
    FreeAndNil(Reg);
   END;
- except                                                                                            { pe unele sisteme nu pot sa deschid cheia asta si imi ridica o eroare, asa ca folosesc un except }
+ except                                                                                            { On some systems this key cannot be opened and an exception is raised, hence the try..except }
   //todo 1: trap only specific exceptions
   ProxyAdr:= 'Cannot auto-detect proxy settings.';
   Result:= FALSE;
@@ -653,8 +630,7 @@ end;
 
 
 { Deletes all entries from Internet Explorer's URL cache.
-  Iterates through all cached URLs and removes them one by one.
-  Note: This affects the shared WinInet cache used by IE and other applications. }
+  This affects the shared WinInet cache used by IE and other applications. }
 procedure IE_DeleteCache;
 var
   lpEntryInfo: PInternetCacheEntryInfo;
@@ -729,7 +705,7 @@ begin
   TRY
     if Length(AnsiHostName) > 0 then                                // Check host name length
      begin
-      Address:= inet_addr(PAnsiChar(AnsiHostName));                  // Try converting the hostname  // In D7 aici a fost PChar
+      Address:= inet_addr(PAnsiChar(AnsiHostName));                  // Try converting the hostname. In Delphi 7 this was PChar
       if (DWORD(Address) = DWORD(INADDR_NONE)) then                  // Check address
        begin
         lpHost := gethostbyname(PAnsiChar(AnsiHostName));            // Attempt to get host by name
@@ -759,34 +735,22 @@ var
 label
   lClean;
 begin
-  // initialize result
   Result := False;
-  // create WinSocketData
   if Winapi.WinSock.WSAStartup(MakeWord(1, 1), WinSocketData) = 0 then
   begin
-    // set address family
     Address.sin_family := AF_INET;
-    // try to translate Host to IP address
     if NOT ResolveAddress(Host, dwAddress) then
-      // faild! go to lClean label
       goto lClean;
-    // set the address
     Address.sin_addr.S_addr := dwAddress;
-    // create a socket
     Socket := Winapi.WinSock.Socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
-    // if faild to create socket
     if Socket = INVALID_SOCKET then
-      // go to lClean label
       goto lClean;
-    // set the port
     Address.sin_port := Winapi.WinSock.htons(Port);
-    // attempt remote connection to Host on Port
     if Winapi.WinSock.Connect(Socket, Address, szSockAddr) = 0
     then Result := True;
     // close the socket (also on failed connect - WSACleanup only deallocates it when the process-wide refcount drops to zero)
     Winapi.WinSock.closesocket(Socket);
   end;// if WinSock.WSAStartup(MakeWord(1, 1), WinSocketData) = 0 then begin
-  // label to which we jump to clean up
   lClean:
     Winapi.WinSock.WSACleanup;
 end;
