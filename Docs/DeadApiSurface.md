@@ -178,7 +178,7 @@ Six were re-checked by an independent `grep` over the same tree, and all six con
 
 - **test only** (4): `CenterFormOnDesktop`, `CenterFormOnParent`, `EnsureControlVisible`, `EnsureControlVisible`
 
-### LightVcl.Internet.HTMLImg.pas  -  3
+### LightCore.Internet.HTMLImg.pas  -  3
 
 - **never referenced** (3): `ExtractImagesFromAHREF`, `MakeImgFullPath`, `MakeImgRelativePath`
 
