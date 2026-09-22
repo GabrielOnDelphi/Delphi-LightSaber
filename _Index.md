@@ -95,6 +95,19 @@ function ReadMotorolaWord (Stream: TStream): Word;
 function ReadMotorolaCardinal(Stream: TStream): Cardinal; { 4-byte big-endian unsigned (e.g. PNG IHDR width/height) }
 ```
 
+## LightCore.CamUtils (8)
+
+```pascal
+procedure RequestCameraPermission(const AOnGranted: TProc; const AOnDenied: TProc= NIL);
+procedure RequestStorageReadPermission(const AOnGranted: TProc; const AOnDenied: TProc= NIL); // For image picking on Android 13+
+procedure ScanMediaFile(const AFileName: string); // If manually saving files
+function GetPublicPicturesFolder: string;
+function SetupImagePickerCallback (const AOnImageSelected: TImageSelectedEvent): TSubscriptionId;
+function SetupAnyFilePickerCallback(const AOnFileSelected : TFileSelectedEvent ): TSubscriptionId;
+function SubscribeToIncomingFileIntents(const AOnFileReceived: TFileSelectedEvent): TSubscriptionId;
+function ExtractFileFromIntent(const AIntent: JIntent): string;
+```
+
 ## LightCore.CmdLine (17)
 
 ```pascal
@@ -115,6 +128,14 @@ function Given(CONST Name: string): Boolean; { Distinguishes 'absent' from 'expl
 function PositionalCount: Integer;
 function Positional(Index: Integer): string; { 1-based like ParamStr. Beyond PositionalCount returns '' (optional positionals).
 function UsageText: string; { 'Switches:' + one aligned line per registered switch }
+```
+
+## LightCore.CpuUsageProcess (3)
+
+```pascal
+function FileTimeToInt64(CONST FT: TFileTime): Int64;
+function CoreUsage: Single; { Per-core usage (0..100). One core at max on 4-core CPU returns 100% }
+function CpuUsage: Single; { Total CPU usage (0..100). One core at max on 4-core CPU returns 25% }
 ```
 
 ## LightCore.Debugger (14)
@@ -145,6 +166,15 @@ function DownloadToStream(CONST URL: string; OUT ErrorMsg: string; CustomHeaders
 function DownloadAsString(CONST URL: string; OUT ErrorMsg: string; CustomHeaders: TNetHeaders = nil; HttpOptions: PHttpOptions = NIL): string; overload;
 function DownloadAsString(CONST URL: string): string; overload;
 function DownloadImageToFile(CONST URL, LocalPath: string; OUT DownloadedSize: Int64): Boolean;
+```
+
+## LightCore.Download.Thread (4)
+
+```pascal
+procedure SetURL(CONST Value: string);
+procedure DoDownloadDone;
+procedure Execute; override;
+function DownloadSuccess: Boolean; { TRUE when Data is not NIL and holds at least one byte }
 ```
 
 ## LightCore.EncodeCRC (4)
@@ -181,6 +211,12 @@ function EncodeXorText (CONST PlainText: string; Key: Byte): string;
 function DecodeXorText (CONST EncodedArr: array of Byte; Key: Byte): string;
 ```
 
+## LightCore.EnvironmentVar (1)
+
+```pascal
+function ListEnvironmentVars(TSL: TStrings): Boolean; overload;
+```
+
 ## LightCore.ExceptionLogger (2)
 
 ```pascal
@@ -188,11 +224,82 @@ procedure InstallExceptionLogger(CONST LogFileName: string = 'Exceptions.log');
 function ExceptionLogPath: string; { exposed for diagnostics — read the value from outside if you want to surface it in the UI / About box }
 ```
 
+## LightCore.ExeVersion (2)
+
+```pascal
+function GetVersionInfoFile(CONST FileName: string; OUT Version: TFileVersion): Boolean;
+function GetVersionInfo(CONST FileName: string; ShowBuildNo: Boolean = False): string;
+```
+
+## LightCore.Graph.BkgColorParams (3)
+
+```pascal
+procedure Reset;
+procedure ReadFromStream(IOStream: TLightStream);
+procedure WriteToStream (IOStream: TLightStream);
+```
+
+## LightCore.Graph.Loader.Resolution (11)
+
+```pascal
+procedure GetImageRes(CONST FileName: string; OUT Width, Height: Integer); overload;
+procedure GetImageRes(CONST FileName: string; Stream: TStream; OUT Width, Height: Integer); overload;
+function GetJpgSize (Stream: TStream; OUT Width, Height: Integer): Boolean; overload;
+procedure GetPNGSize (Stream: TStream; OUT Width, Height: Integer); overload;
+procedure GetGIFSize (Stream: TStream; OUT Width, Height: Integer); overload;
+procedure GetBmpSize (Stream: TStream; OUT Width, Height: Integer); overload;
+function GetJPGSize (CONST Filename: string; OUT Width, Height: Integer): Boolean; overload;
+procedure GetPNGSize (CONST FullName: string; OUT Width, Height: Integer); overload;
+procedure GetGIFSize (CONST FullName: string; OUT Width, Height: Integer); overload;
+procedure GetBmpSize (CONST FullName: string; OUT Width, Height: Integer); overload;
+function GetBmpHeader (Stream: TStream): TBitmapHeader; // Used by GetBmpSize
+```
+
+## LightCore.Graph.Loader.WBC (4)
+
+```pascal
+procedure Clear;
+function LoadFromFile(CONST FullFileName: string): Boolean;
+procedure ExtractJpegs(CONST OutputFolder: string);
+function GetJpgStream(CONST Index: Integer): TMemoryStream; { Public because the GetJpeg class helper (LightVcl.Graph.Loader.WBC.pas) lives in another unit and Delphi's private is unit-scoped }
+```
+
+## LightCore.Graph.RainDropParams (5)
+
+```pascal
+procedure Reset;
+procedure Load(IniFile: TIniFileEx); overload; // For BioniX
+procedure Save(IniFile: TIniFileEx); overload;
+procedure Load(Stream: TLightStream); overload; // for RainDrop binary files
+procedure Save(Stream: TLightStream); overload;
+```
+
+## LightCore.Graph.ResizeParams (8)
+
+```pascal
+procedure computeAutodetect(InpW, InpH: Integer);
+procedure computeFit(InpW, InpH: Integer);
+procedure computeFill(InpW, InpH: Integer);
+procedure Reset; { Initialize all fields to default values }
+procedure ComputeOutputSize(InpW, InpH: Integer); { Compute OutW/OutH based on input dimensions }
+procedure WriteToStream(IOStream: TLightStream);
+procedure ReadFromStream(IOStream: TLightStream);
+procedure Convert(Res: TResizeOpp_; FT: TFillType_); { Convert from old BioniX v12 format }
+```
+
 ## LightCore.Graphics (2)
 
 ```pascal
 function DetectGraphFormatBySig(CONST FileName: string): string; { Returns canonical extension ('.jpg', '.png', '.gif', '.bmp', '.pdf', '.tif', '.webp', '.jp2', '.wb1', '.RainDrop') or '' on unknown/error. }
 function DetectGraphSignature (CONST FileName: string): Integer; { Legacy integer code. 0=unknown (incl. PDF/TIFF/WEBP not in legacy range), 1=BMP, 2=PNG, 3=GIF, 4=JPG, 5=JP2, 6=WB1, 7=RainDrop. }
+```
+
+## LightCore.GuiSettings (3)
+
+```pascal
+procedure Load;
+procedure Save;
+function GetSettingsPath: string;
 ```
 
 ## LightCore.HTML (26)
@@ -262,6 +369,36 @@ procedure WriteDate (CONST Identifier: string; d: TDateTime);
 function ReadDate (CONST Identifier: string; DefaultVal: TDateTime): TDateTime;
 ```
 
+## LightCore.Internet.CommonWebDown (1)
+
+```pascal
+function GetUnsplashImage(CONST URL, LocalFile: string): Boolean;
+```
+
+## LightCore.Internet.Email (13)
+
+```pascal
+function ExtractEmailEngine (CONST SmallText : string; StartPos: integer; var EndPos: integer): string; { extract the first email address encountered from a string }
+function ExtractFirstEmailAdr (CONST SmallText : string): string; { extract the first email address encountered from a string }
+function ExtractAllEmailAdr (HugeString: string; AdreseExtrase: TStringlist): Integer;
+function ExtractEmailFromThunderbirdFile(CONST HugeText: string; CONST ToField, FromField, CcField, BccField: Boolean; OutputList: TStringList): Integer;
+function ValidateEmailAddress ( Email: String; OUT FailCode, FailPosition: Integer) : Boolean; overload;
+function ValidateEmailAddress (CONST Email : string; SuggestCorrection: boolean): string; overload; { Returns nothing if the email is valid else return the reason. SuggestCorrection=TRUE, the program will try to suggest a corrected version of this address }
+function ValidateEmailAddress (CONST Email : string): Boolean; overload;
+function CorrectEmailAddress ( Email : String; OUT Suggestion: String; MaxCorrections : Integer = 5) : Boolean;
+function EmailHasManyNumbers (CONST Email : string; CONST Ratio: integer): Boolean;
+function FailCode2Str (Code : Integer) : string; { convert the integer fail codes to understandeble message strings }
+function CheckIfThunderbirdFile(CONST HugeText: String): Boolean;
+procedure SplitEmailAddress (CONST EmailAddress: string; out user, domain: string); { Returns the 'user' and 'domain' part of an email address - the @ charecter is not included }
+function EmailSortByDomain (CONST InptList: TStrings): TStringList; { SORT }
+```
+
+## LightCore.Internet.EmailSender (1)
+
+```pascal
+function SendEmail( SMTP: TIdSMTP;
+```
+
 ## LightCore.Internet.Ftp (8)
 
 ```pascal
@@ -273,6 +410,33 @@ procedure UploadFolder (const LocalDir, RemoteDir, Filter: string); {todo 1: rep
 procedure ChangeDirForce (const SubDir: string);
 procedure NavigateTo (const RemotePath: string);
 function DirectoryExists (const Dir: string): Boolean;
+```
+
+## LightCore.Internet.HTMLImg (8)
+
+```pascal
+function ExtractIMGTags (CONST HTMLBody: string): TStringList; { Extract <IMG> tags images from HTML body } { Old name: ExtractImage_Img }
+function ExtractImagesFromIMG (CONST HTMLBody: string): TStringList; { Extract images from <IMG src> tags } { Old name: ExtractImage_Img }
+function ExtractImagesFromAHREF(CONST HtmlBody: string): TStringList; { Extract images from '<a href>' tags } { Old name: ExtractImage_Href }
+function ExtractImages (CONST HtmlBody: string): TStringList; { Extract images from '<a href>' and <img>'. } { Old name: ExtractImages }
+function MakeImgRelativePaths(CONST HtmlBody, RelativeTo: string): string; { Locates all IMG tags in a HTML document and converts their SRC (paths) from full path to relative path }
+function MakeImgRelativePath (CONST HtmlLine, RelativeTo: string): string;
+function MakeImgFullPath (CONST HtmlLine, Base: string): string;
+function ExpandRelativePaths (CONST HtmlBody, Base: string): string;
+```
+
+## LightCore.Internet.HtmlWriter (9)
+
+```pascal
+function GetContent: string;
+procedure AddContent(CONST s: string); { append 's' to the current content without inserting a ENTER }
+procedure AddContentNewLine(CONST s: string);
+procedure SaveToFile(CONST FileName: string);
+procedure GenerateContent;
+procedure Reset;
+procedure AddBodyLine(CONST s: string); { add 's' in a new line to the current Body }
+procedure AddBodyLineB(CONST s: string); { add 's' in a new line to the current Body. Also add a <BR> tag }
+procedure Register;
 ```
 
 ## LightCore.Internet (48)
@@ -479,6 +643,21 @@ procedure AnyToWin (CONST InputFile, OutputFile: String; Notify: TConvertNotify)
 function FixEntersInPlace (CONST FileName: string): Boolean; { Rewrites the file to CRLF only if it is not already CRLF-only. TRUE = the file was changed }
 ```
 
+## LightCore.Keyboard (10)
+
+```pascal
+procedure SimulateKeyDown (Key : byte);
+procedure SimulateKeyUp (Key : byte);
+procedure SimulateKeystroke(Key: byte; extra: Cardinal);
+procedure SendKeys(s: string);
+procedure SendText(text: string); { Set the focus to a control and send it a string}
+procedure CapsLock; { Toggle the 'CAP Lock'}
+function GetModifierKeyState: TShiftState;
+function IsCtrlDown : Boolean;
+function IsShiftDown: Boolean;
+function IsAltDown : Boolean;
+```
+
 ## LightCore.LogLinesAbstract (18)
 
 ```pascal
@@ -574,7 +753,7 @@ procedure PopUpWindow;
 function Verbosity2String(Verbosity: TLogVerbLvl): string;
 ```
 
-## LightCore.Math (31)
+## LightCore.Math (32)
 
 ```pascal
 function Min3 (CONST a, b, c: integer): Integer;
@@ -607,6 +786,7 @@ function Factorial (CONST n: byte): Int64; { WARNING: n must be <= 20 to avoid I
 function Combinations (CONST n, r: integer): Int64; { Combinations of n taken r at the time= n! / (n-r)! * r! }
 function FastModulo(const X, Y: Integer): Integer; assembler; { https://forum.lazarus.freepascal.org/index.php/topic,36342.15.html }
 function MixBytes(FG, BG, BlendPower: byte): Byte; { This function mixes two bytes According to value of TRANS. The value of TRANS is between 0 (result then will be equal to FG) and 255 (result then will be equal to BG) }
+function IsPanoramic (Width, Height: Integer): Boolean; overload;
 function GenerateRandomBoolean: Boolean;
 ```
 
@@ -778,7 +958,7 @@ function WordPos (CONST Needle, HayStack: string): Integer; // Returns the posit
 function RelaxedSearchEx (Query: string; Haystack: TStringList; StartAt: Integer = 0): Integer;
 ```
 
-## LightCore.Platform (10)
+## LightCore.Platform (9)
 
 ```pascal
 function OsType: string;
@@ -789,8 +969,14 @@ function AppBitness: string;
 function AppBitnessEx: string;
 function AppIs64Bit: Boolean;
 function GeneratePlatformRep: string;
-function GenerateAppBitnessRep: string; {$IFDEF FRAMEWORK_FMX}
-function GenerateDeviceRep: string; {$ENDIF}
+function GenerateAppBitnessRep: string;
+```
+
+## LightCore.Process (2)
+
+```pascal
+function ProcessRunning (CONST ExeFileName: string): Boolean;
+function KillProcess (CONST ExeName: string): Boolean;
 ```
 
 ## LightCore.Reports (2)
@@ -819,6 +1005,24 @@ function Found: Boolean; { True if any positions recorded }
 function Count: Integer;
 procedure Clear;
 function Last: TSearchResult;
+```
+
+## LightCore.Sound (13)
+
+```pascal
+procedure PlaySoundFile(CONST FileName: string);
+procedure PlayResSound (CONST ResName: string; Async: Boolean= TRUE);
+procedure PlayTone(Frequency, Duration: Integer; Volume: Byte); { Writes tone to memory and plays it } // Old name: MakeSound
+procedure Bip(Frecv, Timp: integer);
+procedure BipConfirmation;
+procedure BipConfirmationShort;
+procedure BipError;
+procedure BipErrorShort;
+procedure Bip30;
+procedure Bip50;
+procedure Bip100;
+procedure Bip300;
+procedure BipCoconuts;
 ```
 
 ## LightCore.StrBuilder (5)
@@ -1104,6 +1308,20 @@ function GetSystemLanguageName: string;
 function GetSystemLanguageNameShort: string;
 ```
 
+## LightCore.SystemConsole (1)
+
+```pascal
+procedure SetConsoleColor(AColor: TColor);
+```
+
+## LightCore.SystemPermissions (3)
+
+```pascal
+function AppHasAdminRights: Boolean;
+function IsUserAdmin: Boolean; { UNUSED - TO BE DELETED. Same answer as AppHasAdminRights. }
+function CurrentUserHasAdminRights: Boolean; { UNUSED - TO BE DELETED. Same answer as AppHasAdminRights. }
+```
+
 ## LightCore.TextFile (21)
 
 ```pascal
@@ -1117,7 +1335,7 @@ procedure StringToFileA (CONST FileName: string; CONST aString: String; WriteOp:
 function StringFromFileStart (CONST FileName: string; Count: Cardinal): AnsiString;
 function FirstLineFromFile (CONST FileName: string): string;
 function CountLines (CONST Filename: string; CONST BufferSize: Cardinal= 128000): Int64; { Opens a LARGE text file and counts how many lines it has. It does this by loading a small portion of the file in a RAM buffer }
-function CountCharAppearance (CONST FileName: string; C: AnsiChar): Int64;
+function CountCharAppearance (CONST FileName: string; C: AnsiChar; CONST StopAt: Int64= 0): Int64; { Reads the file in chunks, so it works on files of any size. StopAt > 0: stop reading once the count reaches StopAt }
 procedure GenerateRandomTextFile(CONST Filename: string; NoOfLines: Integer);
 function FileHasBOM (CONST FileName: string): Boolean;
 function DetectFileEncoding (CONST FileName: string): TEncoding;
@@ -1177,6 +1395,83 @@ function Average: Single;
 procedure Add(const Element: Integer);
 function NextDay: TWeekDays;
 function ToString: string;
+```
+
+## LightCore.Win.Download (3)
+
+```pascal
+function DownloadAsString (CONST URL: string; Referer: string= ''): string;
+function DownloadBytes (CONST Url, Referer: String; OUT Data: TBytes; PostData: String= ''; SSL: Boolean = FALSE): Cardinal; overload; { TESTED OK }
+function DownloadToFile (CONST URL, Referer, DestinationFile: string): Cardinal; overload; { It can be used with text or binary files }
+```
+
+## LightCore.Win.EnvironmentVar (3)
+
+```pascal
+function ExpandEnvironmentStrings(CONST Vars: string): string;
+function SetEnvironmentVars(CONST Name, Value: string; User: Boolean = True): Boolean;
+function GetEnvironmentVars(CONST Name: string; User: Boolean = True): string; overload;
+```
+
+## LightCore.Win.Registry (23)
+
+```pascal
+function Convert_HKey2Str (CONST Key: HKEY): string;
+function Convert_Str2HKey (CONST Key: string): HKEY;
+function RegKeyExist (CONST Root: HKEY; CONST Key: string): Boolean;
+function RegValueExist (CONST Root: HKEY; CONST Key, ValueName: string) : Boolean;
+function RegHasSubKeys (CONST Root: HKEY; CONST Key: string): Boolean;
+function RegDeleteKey (CONST Root: HKEY; CONST Key: string): Boolean; { Deletes the key, everything inside it, and all its sub-keys (recursive) }
+function RegClearKey (CONST Root: HKEY; CONST Key: string): Boolean; { Deletes all value/name pairs inside the key but don't delete the key }
+function RegDeleteValue (CONST Root: HKEY; CONST Key, ValueName: string): Boolean;
+function RegWriteString (CONST Root: HKEY; CONST Key, ValueName, ValueData: string; Lazy: Boolean= TRUE): Boolean; { Writes a string to the specified key in the registry }
+function RegWriteInteger (CONST Root: HKEY; CONST Key, ValueName: string; ValueData: Integer; Lazy: Boolean= TRUE): Boolean; { Writes a integer to the specified key in the registry }
+function RegWriteBool (CONST Root: HKEY; CONST Key, ValueName: string; ValueData: Boolean; Lazy: Boolean= TRUE): Boolean;
+function RegWriteDate (CONST Root: HKEY; CONST Key, ValueName: string; ValueData: TDate; Lazy: Boolean= TRUE): Boolean;
+function RegReadDate (CONST Root: HKEY; CONST Key, ValueName: string; CanCreate: Boolean= FALSE): TDateTime;
+function RegReadBool (CONST Root: HKEY; CONST Key, ValueName: string; DefValData: Boolean= FALSE): Boolean;
+function RegReadInteger (CONST Root: HKEY; CONST Key, ValueName: string; DefValData: Integer= 0): Integer;
+function RegReadString (CONST Root: HKEY; CONST Key, ValueName: string; CONST DefValData: string= ''): string;
+function RegEnumSubKeys (CONST Root: HKEY; const Key: string): TStringList; { ! }
+function RegWriteValuePairs (CONST Root: HKEY; CONST Key: string; Pairs : TStringList; CONST Delimiter: char; Lazy : Boolean= TRUE) : Boolean;
+function RegReadValuePairs (CONST Root: HKEY; CONST Key: string; Pairs : TStringList; CanCreate: Boolean= FALSE): Boolean; { Enumerate all name/values pairs contained in the specified key }
+function RegReadValueNames (CONST Root: HKEY; CONST Key: string; ValueNames: TStringList; CanCreate: Boolean= FALSE): Boolean; { Returns all values contained in the specified key } //I think the old name was RegReadNames
+function RegReadValueDatas (CONST Root: HKEY; CONST Key: string; ValueDatas: TStringList; CanCreate: Boolean= FALSE): Boolean; { Returns all keys contained in the specified path }
+function RegReadMultiSzString (CONST Root: HKEY; CONST Key, KeyName: string; CanCreate: Boolean= FALSE): string; { Reads a REG_MULTI_SZ value From the Registry. This will return strings separated by ENTER }
+function RegReadMultiSzStringSP(CONST Root: HKEY; CONST Key, KeyName: string; CanCreate: Boolean= FALSE): string; { This will return strings separated by SPACE }
+```
+
+## LightCore.Win.Sound (1)
+
+```pascal
+procedure PlayWinSound (CONST SystemSoundName: string);
+```
+
+## LightCore.Win.SystemPermissions (2)
+
+```pascal
+function AppElevationLevel: Integer;
+function SetPrivilege(CONST PrivilegeName: string; bEnabled : Boolean): Boolean;
+```
+
+## LightCore.WinVersion (15)
+
+```pascal
+function IsWindowsXP : Boolean;
+function IsWindowsXPUp : Boolean;
+function IsWindowsVista : Boolean;
+function IsWindowsVistaUp: Boolean;
+function IsWindows7 : Boolean;
+function IsWindows7Up : Boolean;
+function IsWindows8 : Boolean;
+function IsWindows8Up : Boolean;
+function IsWindows10 : Boolean;
+function IsWindows10Up : Boolean;
+function IsWindows11 : Boolean;
+function IsWindows11Up : Boolean;
+function GetOSName: string;
+function GetOSDetails: string;
+function GenerateReport: string; { For testing }
 ```
 
 ## LightCore.WrapString (5)
@@ -1241,19 +1536,12 @@ procedure ShowModal(aForm: TForm); // Available everywhere except Android
 procedure SetMaxPriority;
 ```
 
-## LightFmx.Common.CamUtils (11)
+## LightFmx.Common.CamUtils (4)
 
 ```pascal
-procedure RequestCameraPermission(const AOnGranted: TProc; const AOnDenied: TProc= NIL);
-procedure RequestStorageReadPermission(const AOnGranted: TProc; const AOnDenied: TProc= NIL); // For image picking on Android 13+
 procedure AddToPhotosAlbum(const ABitmap: TBitmap); // Saves to gallery, handles indexing
-procedure ScanMediaFile(const AFileName: string); // If manually saving files
 procedure PickImageFromGallery; // Opens the Photos/Gallery picker (Android, iOS)
 procedure PickAnyFileFromStorage(const MimeType: string = '*/*'); // Opens system file UI: SAF on Android, UIDocumentPickerViewController on iOS
-function GetPublicPicturesFolder: string;
-function SetupImagePickerCallback (const AOnImageSelected: TImageSelectedEvent): TSubscriptionId;
-function SetupAnyFilePickerCallback(const AOnFileSelected : TFileSelectedEvent ): TSubscriptionId;
-function SubscribeToIncomingFileIntents(const AOnFileReceived: TFileSelectedEvent): TSubscriptionId;
 procedure ProcessLaunchIntent(const AOnFileReceived: TFileSelectedEvent);
 ```
 
@@ -1416,7 +1704,7 @@ function Verbosity2Color(Verbosity: TLogVerbLvl; IsDark: Boolean = False): TAlph
 procedure Register;
 ```
 
-## LightFmx.Common.Screen (8)
+## LightFmx.Common.Screen (9)
 
 ```pascal
 function ScreenScale: Single;
@@ -1427,6 +1715,7 @@ function WidthFitsPhone (W: Single): Boolean; { W < COMPACT_WIDTH (600) }
 function WidthFitsTablet (W: Single): Boolean; { COMPACT_WIDTH ≤ W < HIGH_WIDTH }
 function WidthFitsDesktop(W: Single): Boolean; { W ≥ HIGH_WIDTH (1024) }
 function GenerateScreenResolutionRep: string;
+function GenerateDeviceRep: string;
 ```
 
 ## LightFmx.Common.Styles (11)
@@ -1790,14 +2079,6 @@ procedure Reset;
 function CpuIsBusy: Boolean; { Returns TRUE when CPU >= HighCpuThreshold or on battery. Meaning: wallpaper change should be skipped. }
 ```
 
-## LightVcl.Common.CpuUsageProcess (3)
-
-```pascal
-function FileTimeToInt64(CONST FT: TFileTime): Int64;
-function CoreUsage: Single; { Per-core usage (0..100). One core at max on 4-core CPU returns 100% }
-function CpuUsage: Single; { Total CPU usage (0..100). One core at max on 4-core CPU returns 25% }
-```
-
 ## LightVcl.Common.Debugger (12)
 
 ```pascal
@@ -1840,15 +2121,6 @@ function GetEllipsisText (CONST s: String; Handle: HDC; MaxWidth, MaxHeight: Int
 function GetEllipsisText (CONST s: string; Canvas: TCanvas; MaxWidth: Integer): string; overload;
 ```
 
-## LightVcl.Common.EnvironmentVar (4)
-
-```pascal
-function ExpandEnvironmentStrings(CONST Vars: string): string;
-function SetEnvironmentVars(CONST Name, Value: string; User: Boolean = True): Boolean;
-function GetEnvironmentVars(CONST Name: string; User: Boolean = True): string; overload;
-function GetEnvironmentVars(TSL: TStrings): Boolean; overload;
-```
-
 ## LightVcl.Common.ExecuteProc (5)
 
 ```pascal
@@ -1871,21 +2143,6 @@ procedure ExecuteSendEmail(EmailAddress: string);
 procedure ExecuteExplorer(Path: string);
 function ExecuteExplorerSelect(FileName: string): Boolean;
 procedure ExecuteControlPanel_ScreenRes;
-```
-
-## LightVcl.Common.ExeVersion (2)
-
-```pascal
-function GetVersionInfoFile(CONST FileName: string; OUT FixedInfo: TVSFixedFileInfo): Boolean;
-function GetVersionInfo(CONST FileName: string; ShowBuildNo: Boolean = False): string;
-```
-
-## LightVcl.Common.GuiSettings (3)
-
-```pascal
-procedure Load;
-procedure Save;
-function GetSettingsPath: string;
 ```
 
 ## LightVcl.Common.IniFile (15)
@@ -1958,21 +2215,6 @@ function PathHasValidColon (const Path: string): Boolean;
 function DriveFreeSpace (CONST Drive: Char): Int64;
 function DriveFreeSpaceS (CONST Drive: Char): string;
 function DriveFreeSpaceF (CONST FullPath: string): Int64; { Same as DriveFreeSpace but this accepts a full filename/directory path. It will automatically extract the drive }
-```
-
-## LightVcl.Common.Keyboard (10)
-
-```pascal
-procedure SimulateKeyDown (Key : byte);
-procedure SimulateKeyUp (Key : byte);
-procedure SimulateKeystroke(Key: byte; extra: Cardinal);
-procedure SendKeys(s: string);
-procedure SendText(text: string); { Set the focus to a control and send it a string}
-procedure CapsLock; { Toggle the 'CAP Lock'}
-function GetModifierKeyState: TShiftState;
-function IsCtrlDown : Boolean;
-function IsShiftDown: Boolean;
-function IsAltDown : Boolean;
 ```
 
 ## LightVcl.Common.KeybShortcuts (6)
@@ -2073,13 +2315,6 @@ function TurnScreenSaverOn: Boolean;
 function IsScreenSaverOn: Boolean;
 ```
 
-## LightVcl.Common.Process (2)
-
-```pascal
-function ProcessRunning (CONST ExeFileName: string): Boolean;
-function KillProcess (CONST ExeName: string): Boolean;
-```
-
 ## LightVcl.Common.ProcessCpuMonitor (8)
 
 ```pascal
@@ -2091,34 +2326,6 @@ procedure PruneSmoothed;
 procedure Sample;
 function GetTopCpu(Index: Integer): RProcessInfo;
 function GetTopRam(Index: Integer): RProcessInfo;
-```
-
-## LightVcl.Common.Registry (23)
-
-```pascal
-function Convert_HKey2Str (CONST Key: HKEY): string;
-function Convert_Str2HKey (CONST Key: string): HKEY;
-function RegKeyExist (CONST Root: HKEY; CONST Key: string): Boolean;
-function RegValueExist (CONST Root: HKEY; CONST Key, ValueName: string) : Boolean;
-function RegHasSubKeys (CONST Root: HKEY; CONST Key: string): Boolean;
-function RegDeleteKey (CONST Root: HKEY; CONST Key: string): Boolean; { Deletes the key, everything inside it, and all its sub-keys (recursive) }
-function RegClearKey (CONST Root: HKEY; CONST Key: string): Boolean; { Deletes all value/name pairs inside the key but don't delete the key }
-function RegDeleteValue (CONST Root: HKEY; CONST Key, ValueName: string): Boolean;
-function RegWriteString (CONST Root: HKEY; CONST Key, ValueName, ValueData: string; Lazy: Boolean= TRUE): Boolean; { Writes a string to the specified key in the registry }
-function RegWriteInteger (CONST Root: HKEY; CONST Key, ValueName: string; ValueData: Integer; Lazy: Boolean= TRUE): Boolean; { Writes a integer to the specified key in the registry }
-function RegWriteBool (CONST Root: HKEY; CONST Key, ValueName: string; ValueData: Boolean; Lazy: Boolean= TRUE): Boolean;
-function RegWriteDate (CONST Root: HKEY; CONST Key, ValueName: string; ValueData: TDate; Lazy: Boolean= TRUE): Boolean;
-function RegReadDate (CONST Root: HKEY; CONST Key, ValueName: string; CanCreate: Boolean= FALSE): TDateTime;
-function RegReadBool (CONST Root: HKEY; CONST Key, ValueName: string; DefValData: Boolean= FALSE): Boolean;
-function RegReadInteger (CONST Root: HKEY; CONST Key, ValueName: string; DefValData: Integer= 0): Integer;
-function RegReadString (CONST Root: HKEY; CONST Key, ValueName: string; CONST DefValData: string= ''): string;
-function RegEnumSubKeys (CONST Root: HKEY; const Key: string): TStringList; { ! }
-function RegWriteValuePairs (CONST Root: HKEY; CONST Key: string; Pairs : TStringList; CONST Delimiter: char; Lazy : Boolean= TRUE) : Boolean;
-function RegReadValuePairs (CONST Root: HKEY; CONST Key: string; Pairs : TStringList; CanCreate: Boolean= FALSE): Boolean; { Enumerate all name/values pairs contained in the specified key }
-function RegReadValueNames (CONST Root: HKEY; CONST Key: string; ValueNames: TStringList; CanCreate: Boolean= FALSE): Boolean; { Returns all values contained in the specified key } //I think the old name was RegReadNames
-function RegReadValueDatas (CONST Root: HKEY; CONST Key: string; ValueDatas: TStringList; CanCreate: Boolean= FALSE): Boolean; { Returns all keys contained in the specified path }
-function RegReadMultiSzString (CONST Root: HKEY; CONST Key, KeyName: string; CanCreate: Boolean= FALSE): string; { Reads a REG_MULTI_SZ value From the Registry. This will return strings separated by ENTER }
-function RegReadMultiSzStringSP(CONST Root: HKEY; CONST Key, KeyName: string; CanCreate: Boolean= FALSE): string; { This will return strings separated by SPACE }
 ```
 
 ## LightVcl.Common.Reports (7)
@@ -2163,25 +2370,6 @@ function IsApiFunctionAvailable(const DLLname, FuncName: string; VAR p: pointer)
 function ExtractIconFromFile(IcoFileName: String): THandle; { Extract icon from file }
 ```
 
-## LightVcl.Common.Sound (14)
-
-```pascal
-procedure PlayWinSound (CONST SystemSoundName: string);
-procedure PlaySoundFile(CONST FileName: string);
-procedure PlayResSound (CONST ResName: String; uFlags: Integer);
-procedure PlayTone(Frequency, Duration: Integer; Volume: Byte); { Writes tone to memory and plays it } // Old name: MakeSound
-procedure Bip(Frecv, Timp: integer);
-procedure BipConfirmation;
-procedure BipConfirmationShort;
-procedure BipError;
-procedure BipErrorShort;
-procedure Bip30;
-procedure Bip50;
-procedure Bip100;
-procedure Bip300;
-procedure BipCoconuts;
-```
-
 ## LightVcl.Common.System (22)
 
 ```pascal
@@ -2207,23 +2395,6 @@ procedure CursorNotBusy;
 function GetWin32ErrorString(ErrorCode: DWORD): string;
 function BiosDate: string; { Never returns an empty string. Returns BiosUnknown when the BIOS date is not published }
 function BiosID : string; { Never returns an empty string. Returns BiosUnknown when the BIOS identifier is not published }
-```
-
-## LightVcl.Common.SystemConsole (1)
-
-```pascal
-procedure SetConsoleColor(AColor: TColor);
-```
-
-## LightVcl.Common.SystemPermissions (6)
-
-```pascal
-function AppElevationLevel: Integer;
-function AppHasAdminRights: Boolean;
-function SetPrivilege(CONST PrivilegeName: string; bEnabled : Boolean): Boolean;
-function IsUserAdmin: Boolean;
-function CurrentUserHasAdminRights: Boolean;
-function OsHasNTSecurity: Boolean;
 ```
 
 ## LightVcl.Common.SystemSecurity (2)
@@ -2345,25 +2516,10 @@ procedure SetProportionalThumbV (ScrollBar: TScrollBar; OwnerClientHeight: Integ
 procedure SetProportionalThumbH (ScrollBar: TScrollBar; OwnerClientWidth : Integer);
 ```
 
-## LightVcl.Common.WinVersion (16)
+## LightVcl.Common.WinVersion (1)
 
 ```pascal
-function IsWindowsXP : Boolean;
-function IsWindowsXPUp : Boolean;
-function IsWindowsVista : Boolean;
-function IsWindowsVistaUp: Boolean;
-function IsWindows7 : Boolean;
-function IsWindows7Up : Boolean;
-function IsWindows8 : Boolean;
-function IsWindows8Up : Boolean;
-function IsWindows10 : Boolean;
-function IsWindows10Up : Boolean;
-function IsWindows11 : Boolean;
-function IsWindows11Up : Boolean;
-function GetOSName: string;
-function GetOSDetails: string;
 function IsNTKernel : Boolean;
-function GenerateReport: string; { For testing }
 ```
 
 ## LightVcl.Common.WinVersionApi (5)
@@ -2374,12 +2530,6 @@ function GetWinVersion: string; overload;
 function GetWinVerNetServer: string; { Alternative to GetWinVersion }
 function GetWinVersionEx: string;
 function GenerateReport: string; { For testing }
-```
-
-## LightVcl.Common.WMIResolution (1)
-
-```pascal
-function GetMonitorInfoWMI: TMonitorInfo;
 ```
 
 ## LightVcl.Graph.Alpha (6)
@@ -2393,7 +2543,7 @@ procedure DrawTransparentBitmap(Source: TBitmap; SourceRect: TRect; Destination:
 procedure GetTransparentBitmapFromImagelist(ImageList: TImageList; Index:integer; Bitmap: TBitmap);
 ```
 
-## LightVcl.Graph.Bitmap (26)
+## LightVcl.Graph.Bitmap (25)
 
 ```pascal
 procedure Clear; overload;
@@ -2413,8 +2563,7 @@ procedure CenterText (BMP: TBitmap; CONST Text: string; CONST FontName: string; 
 function PredictBitmapRamSize(NewWidth, NewHeight: Integer): Cardinal; overload;
 function PredictBitmapRamSize(BMP: TBitmap; CONST NewWidth, NewHeight: Integer): Cardinal; overload; { Get the size of the bitmap without actually increasing its size }
 function GetBitmapRamSize (BMP: TBitmap): Int64;
-function IsPanoramic (BMP: TBitmap): Boolean; overload;
-function IsPanoramic (Width, Height: Integer): Boolean; overload;
+function IsPanoramic (BMP: TBitmap): Boolean; overload; { The (Width, Height: Integer) overload moved to LightCore.Math.pas. Both halves must keep `overload` or this one hides it }
 function GetImageScale (InputImage, DesktopSize: TBitmap; Tile: RTileParams): TImageScale; overload;
 function GetImageScale (InputImage: TBitmap; DesktopWidth, DesktopHeight: Integer; Tile: RTileParams): TImageScale; overload;
 function AspectIsSmaller (SrcBMP: TBitmap; CONST Width, Height: Integer): Boolean; overload; { Compare the aspect ratio of the specified image with the AR of the monitor (for example) }
@@ -2456,14 +2605,6 @@ function GetFillType: TFillType;
 function GetEffectShape: TEffectShape;
 procedure ObjectFromGUI;
 procedure GuiFromObject;
-```
-
-## LightVcl.Graph.BkgColorParams (3)
-
-```pascal
-procedure Reset;
-procedure ReadFromStream(IOStream: TLightStream);
-procedure WriteToStream (IOStream: TLightStream);
 ```
 
 ## LightVcl.Graph.Cache (17)
@@ -2565,7 +2706,7 @@ procedure RotateBitmap (BMP: TBitmap; Degs: Single; AdjustSize: Boolean= TRUE; B
 procedure RotateBitmapGDI (BMP: TBitmap; Degs: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone); { Uses GDI+ }
 procedure RotateBitmapSWT (BMP: TBitmap; Rads: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone); deprecated 'Use LightVcl.Graph.FX.RotateBitmap'; { No antialiasing }
 procedure RotateBitmapJanFX (BMP: TBitmap; Degs: Single; BkColor: TColor = clNone); deprecated 'Use LightVcl.Graph.FX.RotateBitmap'; { This is slow even if I rotate the image at right angles (90, 180, 270) }
-procedure RotateBitmapPLG (BMP: TBitmap; Rads: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone); deprecated 'Use LightVcl.Graph.FX.RotateBitmap'; { 39ms. No antialising }
+procedure RotateBitmapPLG (BMP: TBitmap; Rads: Single; AdjustSize: Boolean= TRUE; BkColor: TColor = clNone); deprecated 'Use LightVcl.Graph.FX.RotateBitmap'; { 39ms. No antialiasing }
 procedure RotateBitmapBLT (BMP: TBitmap; Rads: Single; lWidth, lHeight: Longint); // Worst!
 ```
 
@@ -2622,20 +2763,9 @@ function CheckValidImage (CONST FileName: string): Boolean;
 function GetExif (CONST FileName: string): TExifData;
 ```
 
-## LightVcl.Graph.Loader.Resolution (12)
+## LightVcl.Graph.Loader.Resolution (1)
 
 ```pascal
-procedure GetImageRes(CONST FileName: string; OUT Width, Height: Integer); overload;
-procedure GetImageRes(CONST FileName: string; Stream: TStream; OUT Width, Height: Integer); overload;
-function GetJpgSize (Stream: TStream; OUT Width, Height: Integer): Boolean; overload;
-procedure GetPNGSize (Stream: TStream; OUT Width, Height: Integer); overload;
-procedure GetGIFSize (Stream: TStream; OUT Width, Height: Integer); overload;
-procedure GetBmpSize (Stream: TStream; OUT Width, Height: Integer); overload;
-function GetJPGSize (CONST Filename: string; OUT Width, Height: Integer): Boolean; overload;
-procedure GetPNGSize (CONST FullName: string; OUT Width, Height: Integer); overload;
-procedure GetGIFSize (CONST FullName: string; OUT Width, Height: Integer); overload;
-procedure GetBmpSize (CONST FullName: string; OUT Width, Height: Integer); overload;
-function GetBmpHeader (Stream: TStream): TBitmapHeader; // Used by GetBmpSize
 function GetBitsPerPixel(BMP:TBitmap): Integer;
 ```
 
@@ -2659,14 +2789,10 @@ function LoadFromFile(CONST FullFileName: string): Boolean;
 procedure SaveAsJpg(const FullFileName: string);
 ```
 
-## LightVcl.Graph.Loader.WBC (5)
+## LightVcl.Graph.Loader.WBC (1)
 
 ```pascal
-function GetJpgStream(CONST Index: Integer): TMemoryStream;
-procedure Clear;
-function LoadFromFile(CONST FullFileName: string): Boolean;
-procedure ExtractJpegs(CONST OutputFolder: string);
-function GetJpeg(const Index: Integer): TJpegImage; { Get access to the specified JPEG }
+function GetJpeg(CONST Index: Integer): TJpegImage; { Get access to the specified JPEG }
 ```
 
 ## LightVcl.Graph.RainDropParamEditorForm (8)
@@ -2680,16 +2806,6 @@ procedure FormClose (Sender: TObject; var Action: TCloseAction);
 procedure SettingChanged (Sender: TObject);
 procedure ObjectFromGUI;
 procedure GuiFromObject;
-```
-
-## LightVcl.Graph.RainDropParams (5)
-
-```pascal
-procedure Reset;
-procedure Load(IniFile: TIniFileEx); overload; // For BioniX
-procedure Save(IniFile: TIniFileEx); overload;
-procedure Load(Stream: TLightStream); overload; // for RainDrop binary files
-procedure Save(Stream: TLightStream); overload;
 ```
 
 ## LightVcl.Graph.RainShelter (6)
@@ -2742,19 +2858,6 @@ procedure GUIChanged (Sender: TObject);
 procedure GUIFromObject(ResizeParams: PResizeParams); { Set the GUI according to the values stored in the ResizeParams record }
 procedure ObjectFromGUI(ResizeParams: PResizeParams); { Load values from the GUI into the ResizeParams record }
 procedure Register;
-```
-
-## LightVcl.Graph.ResizeParams (8)
-
-```pascal
-procedure computeAutodetect(InpW, InpH: Integer);
-procedure computeFit(InpW, InpH: Integer);
-procedure computeFill(InpW, InpH: Integer);
-procedure Reset; { Initialize all fields to default values }
-procedure ComputeOutputSize(InpW, InpH: Integer); { Compute OutW/OutH based on input dimensions }
-procedure WriteToStream(IOStream: TLightStream);
-procedure ReadFromStream(IOStream: TLightStream);
-procedure Convert(Res: TResizeOpp_; FT: TFillType_); { Convert from old BioniX v12 format }
 ```
 
 ## LightVcl.Graph.ResizeVCL (4)
@@ -2893,7 +2996,7 @@ function CheckURLStartMsg (CONST URL: string): Boolean; { Check if the URL start
 function GetLocalIP: string; overload;
 function GetLocalIP(OUT HostName, IpAddress, ErrorMsg: string): Boolean; overload;
 function ResolveAddress (CONST HostName: String; out Address: DWORD): Boolean;
-function GenerateInternetRep: string; // Generate report
+function GenerateInternetRep: string;
 function CoCreateGuid(var guid: TGUID): HResult; stdcall; far external 'ole32.dll';
 function IE_EnableProxy(const Server: String): Boolean;
 function IE_DisableProxy: Boolean;
@@ -2910,12 +3013,6 @@ function IsPortOpened(const Host: string; Port: Integer): Boolean; { Here's some
 Procedure CreateUrlOnDesktop (CONST ShortFileName, sFullURL: string);
 ```
 
-## LightVcl.Internet.CommonWebDown (1)
-
-```pascal
-function GetUnsplashImage(CONST URL, LocalFile: string): Boolean;
-```
-
 ## LightVcl.Internet.Download.Indy (4)
 
 ```pascal
@@ -2925,48 +3022,12 @@ function DownloadThread (CONST URL, DestinationFile: string; OUT ErrorMsg: Strin
 function DownloadThread2(CONST URL, DestinationFile: string; OUT ErrorMsg: String): Boolean; { Threaded download. App won't close until done. No HTTPS support. }
 ```
 
-## LightVcl.Internet.Download.Thread (4)
-
-```pascal
-procedure SetURL(CONST Value: string);
-procedure DoDownloadDone; { Thread-safe event trigger }
-procedure Execute; override;
-function DownloadSuccess: Boolean; { Returns True if download completed successfully }
-```
-
-## LightVcl.Internet.Download.WinInet (3)
-
-```pascal
-function DownloadAsString (CONST URL: string; Referer: string= ''): string;
-function DownloadBytes (CONST Url, Referer: String; OUT Data: TBytes; PostData: String= ''; SSL: Boolean = FALSE): Cardinal; overload; { TESTED OK }
-function DownloadToFile (CONST URL, Referer, DestinationFile: string): Cardinal; overload; { It can be used with text or binary files }
-```
-
-## LightVcl.Internet.Email (16)
+## LightVcl.Internet.Email (3)
 
 ```pascal
 function OpenDefaultEmail(CONST Recipient, Subject, Mesaj: String): Cardinal; { This will open the default email program in 'Compose' mode }
 function OpenDefaultEmailEx(CONST Subject, Body, FileName, SenderName, SenderEMail, RecipientName, RecipientEMail: AnsiString): Integer;
-function ExtractEmailEngine (CONST SmallText : string; StartPos: integer; var EndPos: integer): string; { extract the first email address encountered from a string }
-function ExtractFirstEmailAdr (CONST SmallText : string): string; { extract the first email address encountered from a string }
-function ExtractAllEmailAdr (HugeString: string; AdreseExtrase: TStringlist): Integer;
-function ExtractEmailFromThunderbirdFile(CONST HugeText: string; CONST ToField, FromField, CcField, BccField: Boolean; OutputList: TStringList): Integer;
-function ValidateEmailAddress ( Email: String; OUT FailCode, FailPosition: Integer) : Boolean; overload; { Returns nothing if the email is valid else return the reason. SuggestCorrection=TRUE, the program will try to suggest a corrected version of this address }
-function ValidateEmailAddress (CONST Email : string; SuggestCorrection: boolean): string; overload; { Returns nothing if the email is valid else return the reason. SuggestCorrection=TRUE, the program will try to suggest a corrected version of this address }
-function ValidateEmailAddress (CONST Email : string): Boolean; overload;
-function CorrectEmailAddress ( Email : String; OUT Suggestion: String; MaxCorrections : Integer = 5) : Boolean;
-function EmailHasManyNumbers (CONST Email : string; CONST Ratio: integer): Boolean;
-function FailCode2Str (Code : Integer) : string; { convert the integer fail codes to understandeble message strings }
-function CheckIfThunderbirdFile(CONST HugeText: String): Boolean;
-procedure SplitEmailAddress (CONST EmailAddress: string; out user, domain: string); { Returns the 'user' and 'domain' part of an email address - the @ charecter is not included }
-function EmailSortByDomain (CONST InptList: TStrings): TStringList; { SORT }
 procedure SendEmail (CONST sTo, sSubject, sBody: string);
-```
-
-## LightVcl.Internet.EmailSender (1)
-
-```pascal
-function SendEmail( SMTP: TIdSMTP;
 ```
 
 ## LightVcl.Internet.HTML (2)
@@ -2974,33 +3035,6 @@ function SendEmail( SMTP: TIdSMTP;
 ```pascal
 procedure SetFieldValue (aForm: IHTMLFormElement; const fieldName: string; const newValue: string; const Instance: integer= 0);
 function GetFormByNumber (Document: IHTMLDocument2; formNumber: integer): IHTMLFormElement;
-```
-
-## LightVcl.Internet.HTMLImg (8)
-
-```pascal
-function ExtractIMGTags (CONST HTMLBody: string): TStringList; { Extract <IMG> tags images from HTML body } { Old name: ExtractImage_Img }
-function ExtractImagesFromIMG (CONST HTMLBody: string): TStringList; { Extract images from <IMG src> tags } { Old name: ExtractImage_Img }
-function ExtractImagesFromAHREF(CONST HtmlBody: string): TStringList; { Extract images from '<a href>' tags } { Old name: ExtractImage_Href }
-function ExtractImages (CONST HtmlBody: string): TStringList; { Extract images from '<a href>' and <img>'. } { Old name: ExtractImages }
-function MakeImgRelativePaths(CONST HtmlBody, RelativeTo: string): string; { Locates all IMG tags in a HTML document and converts their SRC (paths) from full path to relative path }
-function MakeImgRelativePath (CONST HtmlLine, RelativeTo: string): string;
-function MakeImgFullPath (CONST HtmlLine, Base: string): string;
-function ExpandRelativePaths (CONST HtmlBody, Base: string): string;
-```
-
-## LightVcl.Internet.HtmlWriter (9)
-
-```pascal
-function GetContent: string;
-procedure AddContent(CONST s: string); { append 's' to the current content without inserting a ENTER }
-procedure AddContentNewLine(CONST s: string);
-procedure SaveToFile(CONST FileName: string);
-procedure GenerateContent;
-procedure Reset;
-procedure AddBodyLine(CONST s: string); { add 's' in a new line to the current Body }
-procedure AddBodyLineB(CONST s: string); { add 's' in a new line to the current Body. Also add a <BR> tag }
-procedure Register;
 ```
 
 ## LightVcl.TranslatorAPI (18)
@@ -3121,8 +3155,8 @@ function WeekNo (JDate : TDateTime): Integer;
 function GetWeekNumber:Integer;
 function GetDayOfYear: Integer;
 function GetDaysInYear:Integer;
-procedure SetGermanDate (Value: Boolean); // RW: this one sets the german date
-procedure SetShowWeeks (Value: Boolean); // RW: adapted DayOfWeek-function to fit german date
+procedure SetGermanDate (Value: Boolean);
+procedure SetShowWeeks (Value: Boolean);
 function rDayOfWeek (vDate: TDateTime) : Integer;
 procedure SetColHoliday (Value: TColor);
 procedure SetColSunday (Value: TColor);
@@ -3243,14 +3277,19 @@ procedure WriteComponentState;
 procedure Register;
 ```
 
-## LightVcl.Visual.DirectoryListBox (6)
+## LightVcl.Visual.DirectoryListBox (11)
 
 ```pascal
+function setDirectoryEx(CONST Folder: string; ShowMsg: Boolean): Boolean;
 procedure SetShowSystem(Value: boolean);
 procedure SetShowHidden(Value: boolean);
 function ReadDirectoryNames(const ParentDirectory: string; DirectoryList: TStringList): Integer;
 function getDirectory: string;
+procedure DblClick; override; { Shows a message instead of crashing when the folder cannot be opened }
+procedure KeyPress(var Key: Char); override; { Same, for the Enter key }
 procedure BuildList; override; { Modified version of original Borland procedure, to support "Show hidden/system folders" }
+function TrySetDirectory(CONST Folder: string): Boolean; { Same as 'Directory:= Folder' but returns FALSE (and logs) instead of raising when the folder cannot be opened. Shows no UI. }
+function SetDirectoryMsg(CONST Folder: string): Boolean; { Same as TrySetDirectory, but also tells the user why the folder cannot be opened }
 procedure Register;
 ```
 
@@ -3828,21 +3867,23 @@ procedure Register;
 procedure Register;
 ```
 
-## LightVcl.Visual.StringGrid (33)
+## LightVcl.Visual.StringGrid (35)
 
 ```pascal
 procedure setHighlight (CONST Value: string);
 procedure WndProc(VAR Message: TMessage); override;
 procedure DrawCell(ACol, ARow: Longint; ARect: TRect; AState: TGridDrawState); override;
-function MouseOnSortPos (MouseX, MouseColumn: Integer): Boolean; { This is a helper function for Sort. It checks if the mouse has the right coordinates. If the mouse is between two cells it means the user wants to resize the cell not to sort it }
-procedure NaturalSort (SortCol: Integer); { In this procedure the algorithm expects numbers on that colum and not text }
+function MouseOnSortPos (MouseX, MouseColumn: Integer): Boolean; { Helper for Sort. If the mouse is between two cells the user wants to resize the cell, not to sort it }
+procedure NaturalSort (SortCol: Integer); { Sorts numbers the way a human reads them: 1, 2, 10 - not 1, 10, 2 }
 procedure FastSort (SortCol: Integer; CaseSensitive: Boolean);
 procedure CreateWnd; override;
+procedure DeleteRow (ARow: Longint); override;
+procedure KeyDown (VAR Key: Word; Shift: TShiftState); override;
 procedure SortColumn (CONST ColumnToSort: Integer);
 procedure SwapRowText(i, j: Integer);
 procedure ReverseOrder; { Swap ROWS (and data/objects associated with those rows) }
 procedure Save;
-procedure SaveAsCsv (CONST aFileName: string; CONST Delimiter: Char= ','); { Save the entire content to disk (including headers). The difference between this and SaveToFile is that SaveToFile also save the size of }
+procedure SaveAsCsv (CONST aFileName: string; CONST Delimiter: Char= ','); { Save the entire content to disk (including header cells) as CSV. The difference between this and SaveToFile is that SaveToFile also saves binary info (the size of the grid) }
 procedure SaveToFile (CONST aFileName: string);
 function LoadFromFile (CONST aFileName: string): Boolean;
 function LoadHeaderWidths (CONST aFileName: string): Boolean;
@@ -3851,7 +3892,7 @@ function GetContentAsHTML (Truncate: Integer): string; overload;
 function GetContentAsHTML (Rectangle: TRect; SplitEvery: Integer) : string; overload;
 function GetContent (Rectangle: TRect; Delimiter: Char= ','): string;
 function GetAllContent (Delimiter: Char= ','): string;
-function GetSelectionContent(Delimiter: Char= ','): string; { Returns the content of cell in the specified rectangle. The cells are separated by 'Delimiter' }
+function GetSelectionContent(Delimiter: Char= ','): string; { Returns the content of the selected cells. The cells are separated by 'Delimiter' }
 procedure CopySel2Clipboard (Delimiter: Char= Tab);
 procedure CopyColumn;
 procedure PasteFromClipboard; { untested }
@@ -3862,7 +3903,7 @@ procedure ToggleHeader; { Make the top horizontal header visible/invisible }
 procedure Help; { how to use this grid }
 procedure MouseUp(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
 procedure ExpandCenteredColumns;
-procedure EndEdit (ACol, ARow: Longint); { NOTA: Nu merge daca AlwaysShowEditro= True }
+procedure EndEdit (ACol, ARow: Longint); { Does not fire if goAlwaysShowEditor is in Options: EditorMode never goes back to FALSE, and WndProc only calls EndEdit when it does }
 procedure Register;
 ```
 
@@ -4036,4 +4077,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2937 public routines across 218 units._
+_2943 public routines across 225 units._
