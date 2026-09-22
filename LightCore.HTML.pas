@@ -348,7 +348,7 @@ begin
 
           URL:= ExtractAttribValue(Tag, 'href');
           if URL = ''
-          then Offset:= iEnd+ 1                    { No (quoted) href value -> leave the tag untouched. Without this guard ReplaceAttribValue returns '' and the whole tag would be silently DELETED from the page (same guard as LightVcl.Internet.HTMLImg) }
+          then Offset:= iEnd+ 1                    { No (quoted) href value -> leave the tag untouched. Without this guard ReplaceAttribValue returns '' and the whole tag would be silently DELETED from the page (same guard as LightCore.Internet.HTMLImg) }
           else
            begin
             URL:= MakeLinkRelativeToRoot(HtmlUrl, URL);
@@ -389,7 +389,7 @@ begin
 
           URL:= ExtractAttribValue(Tag, 'src');
           if URL = ''
-          then Offset:= iEnd+ 1                    { No (quoted) src value -> leave the tag untouched. Without this guard ReplaceAttribValue returns '' and the whole tag would be silently DELETED from the page (same guard as LightVcl.Internet.HTMLImg) }
+          then Offset:= iEnd+ 1                    { No (quoted) src value -> leave the tag untouched. Without this guard ReplaceAttribValue returns '' and the whole tag would be silently DELETED from the page (same guard as LightCore.Internet.HTMLImg) }
           else
            begin
             URL:= MakeLinkRelativeToRoot(HtmlUrl, URL);
