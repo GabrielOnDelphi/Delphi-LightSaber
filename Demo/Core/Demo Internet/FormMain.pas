@@ -10,7 +10,7 @@ INTERFACE
 USES
   windows, System.SysUtils, System.Classes, System.Net.URLClient,
   Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls,
-  LightVcl.Visual.AppDataForm, LightVcl.Internet.Download.Thread;
+  LightVcl.Visual.AppDataForm, LightCore.Download.Thread;
 
 TYPE
   TMainForm = class(TLightForm)
@@ -58,9 +58,9 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.Sound, LightCore, LightVcl.Common.System, LightCore.AppData, LightVcl.Visual.AppData,
+   LightCore.Sound, LightCore, LightVcl.Common.System, LightCore.AppData, LightVcl.Visual.AppData,
    LightCore.TextFile, LightVcl.Internet.Common, LightCore.Download, LightCore.IO,
-   LightVcl.Internet.Download.WinInet;
+   LightCore.Win.Download;
 
 
 
@@ -194,7 +194,7 @@ begin
  mmoDown3.Update;
 
  c:= GetTickCount;
- HttpRetCode:=LightVcl.Internet.Download.WinInet.DownloadBytes(TestURL, '', BinData);
+ HttpRetCode:=LightCore.Win.Download.DownloadBytes(TestURL, '', BinData);
 
  if HttpRetCode = 0
  then
@@ -217,7 +217,7 @@ begin
  mmoDown3.Update;
 
  c:= GetTickCount;
- if LightVcl.Internet.Download.WinInet.DownloadToFile(TestURL, '', Appdata.AppFolder+ 'DownloadToFile.BIN') = 0
+ if LightCore.Win.Download.DownloadToFile(TestURL, '', Appdata.AppFolder+ 'DownloadToFile.BIN') = 0
  then mmoDown3.Lines.Add('OK!')
  else mmoDown3.Lines.Add('Failed!');
 
@@ -244,7 +244,7 @@ begin
  FreeAndNil(myDownload);
 
  c:= GetTickCount;
- myDownload:=LightVcl.Internet.Download.Thread.TWinInetObj.Create(TRUE);  { You can't restart a thread once it is finished/terminated. https://stackoverflow.com/questions/6719949/restart-delphi-tthread-that-lives-the-entire-app-lifetime }
+ myDownload:=LightCore.Download.Thread.TWinInetObj.Create(TRUE);  { You can't restart a thread once it is finished/terminated. https://stackoverflow.com/questions/6719949/restart-delphi-tthread-that-lives-the-entire-app-lifetime }
  myDownload.OnDownloadDone:= OnDownloadDone;  // WARNING! THIS IS CALLED EVEN IF THE DOWNLOAD FAILS!
  myDownload.UserAgent:= 'IEXPLORE';
  myDownload.Referer:= '';
@@ -270,7 +270,7 @@ begin
  mmoDown3.Update;
 
  c:= GetTickCount;
- VAR s:=LightVcl.Internet.Download.WinInet.DownloadAsString(TestURL);
+ VAR s:=LightCore.Win.Download.DownloadAsString(TestURL);
  StringToFile(Appdata.AppFolder+ 'DownloadAsString.txt', s, woOverwrite, wpOff);
  mmoDown3.Lines.Add('Done in ' + Real2Str((GetTickCount-c) / 1000)+ 'sec');
  BipConfirmation;

@@ -34,7 +34,7 @@ USES
   Vcl.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
   CoolTrayIcon,           {Delete this line if you don't have CoolTrayIcon library}
   cpProteus, cpProteusIO, {Delete this line if you don't have Proteus library}
-  LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Visual.PathEdit, LightVcl.Visual.StatusBar, LightVcl.Common.GuiSettings, LightVcl.Visual.AppDataForm, LightCore, LightCore.Time;
+  LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Visual.PathEdit, LightVcl.Visual.StatusBar, LightCore.GuiSettings, LightVcl.Visual.AppDataForm, LightCore, LightCore.Time;
 
 TYPE
   TMainForm = class(TLightForm)

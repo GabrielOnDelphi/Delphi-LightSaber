@@ -20,7 +20,7 @@ procedure LateInitialization;
 IMPLEMENTATION
 
 USES
-  chHardID, LightVcl.Common.Shell, LightVcl.Common.ExecuteShell, LightVcl.Common.GuiSettings,
+  chHardID, LightVcl.Common.Shell, LightVcl.Common.ExecuteShell, LightCore.GuiSettings,
   cpCertificate, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.CenterControl, LightVcl.Common.Translate, ciUpdater,
   FormMain, FormUniversalEula, FormSkinsDisk, FormSettings, FormSplashScreen, FormUpdaterNotifier;
 
