@@ -1,7 +1,7 @@
 # Delphi-LightSaber
 
 
-![Delphi Library](https://raw.githubusercontent.com/GodModeUser/Delphi-LightSaber/main/Docs/Lightsaber%20logo.png)
+![Delphi Library](https://raw.githubusercontent.com/GabrielOnDelphi/Delphi-LightSaber/main/Docs/Lightsaber%20logo.png)
 
 ## Description 
 
@@ -85,7 +85,9 @@ The library is organized into packages grouped by framework and functionality:
 ```
 Layer 1: LightCore.dpk                           (Foundation - platform agnostic, RTL only)
     |
-    +---> LightVcl.Common                        (VCL utilities)
+    +---> LightCore.Win                          (Windows-only foundation: registry, WinInet download, privileges; Win32 + Win64)
+    |         |
+    +---------+---> LightVcl.Common              (VCL utilities)
     |         |
     |         +---> Layer 3: LightVcl.Internet   (Downloads, email, HTML)
     |         |
@@ -100,7 +102,7 @@ Layer 1: LightCore.dpk                           (Foundation - platform agnostic
 
 Each layer depends only on layers above it. LightCore has no external dependencies.
 
-![](https://raw.githubusercontent.com/GodModeUser/Delphi-LightSaber/main/Docs/Library%20architecture.png)
+![](https://raw.githubusercontent.com/GabrielOnDelphi/Delphi-LightSaber/main/Docs/Library%20architecture.png)
 
 If you only need one library (for example, the Core library), you can of course delete the rest of the libraries.
 More about my libraries [here](https://gabrielmoraru.com/publications-citations/).
@@ -108,7 +110,8 @@ More about my libraries [here](https://gabrielmoraru.com/publications-citations/
 **Directory Structure**
 
 ```
-/LightCore*.pas          # Core RTL library 
+/LightCore*.pas          # Core RTL library (the real member lists are the contains clauses of LightCore.dpk and LightCore.Win.dpk)
+/LightCore.Win.*.pas     # Windows-only core units (package LightCore.Win)
 /FrameVCL/               # VCL-specific packages and units 
 /FrameFMX/               # FMX cross-platform packages and units  
 /Demo/                   # Demo applications  
@@ -127,6 +130,7 @@ More about my libraries [here](https://gabrielmoraru.com/publications-citations/
 | Package | File | Description |
 |---------|------|-------------|
 | Core | `LightCore.dpk` | Platform-agnostic RTL (string manipulation, file I/O, logging, binary ops, streams, encoding) |
+| Core Windows | `LightCore.Win.dpk` | Windows-only routines whose declaration needs Windows (registry, WinInet download, environment variables in the registry, system sounds, privileges). Win32 + Win64 only; never required by the FMX packages |
 | VCL Common | `FrameVCL/LightVcl.Common.dpk` | Windows utilities (registry, shell, dialogs, system info) |
 | VCL Internet | `FrameVCL/LightVcl.Internet.dpk` | Downloads (Indy, WinInet), email, HTML utilities |
 | VCL Graphics | `FrameVCL/LightVcl.Graphics.dpk` | Image processing, GDI, GIF, resize, effects |
@@ -238,7 +242,7 @@ SaveForm(Self);
 // After form creation
 LoadForm(Self);
 ```
-A full demo app that demonstrates how to save/load the GUI with just two lines of code can be found here: [github.com/GodModeUser/Dephi-LightSaber-GUI_AutoSave ](https://github.com/GodModeUser/Dephi-LightSaber-GUI_AutoSave)
+A full demo app that demonstrates how to save/load the GUI with just two lines of code can be found here: [github.com/GabrielOnDelphi/Dephi-GUI-AutoSave](https://github.com/GabrielOnDelphi/Dephi-GUI-AutoSave)
 
 *Auto-Translation*
 
