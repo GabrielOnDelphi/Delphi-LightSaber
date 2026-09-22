@@ -23,7 +23,7 @@ uses
   System.DateUtils,
   Winapi.Windows,
   LightVcl.Common.SystemTime,
-  LightVcl.Common.Registry;
+  LightCore.Win.Registry;
 
 type
   [TestFixture]

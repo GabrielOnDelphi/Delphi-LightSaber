@@ -1,7 +1,7 @@
-﻿unit Test.LightVcl.Graph.BkgColorParams;
+﻿unit Test.LightCore.Graph.BkgColorParams;
 
 {=============================================================================================================
-   Unit tests for LightVcl.Graph.BkgColorParams.pas
+   Unit tests for LightCore.Graph.BkgColorParams.pas
    Tests RBkgColorParams record: Reset, stream serialization, enum validation.
 
    Includes TestInsight support: define TESTINSIGHT in project options.
@@ -13,9 +13,9 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.IOUtils,
-  Vcl.Graphics,
+  System.UITypes,
   LightCore.StreamBuff,
-  LightVcl.Graph.BkgColorParams;
+  LightCore.Graph.BkgColorParams;
 
 type
   [TestFixture]
@@ -195,7 +195,7 @@ end;
 
 procedure TTestBkgColorParams.TestReset_SetsDefaultColor;
 begin
-  FParams.Color:= clRed;
+  FParams.Color:= TColors.Red;
   FParams.Reset;
   Assert.AreEqual(TColor($218F42), FParams.Color, 'Color should be $218F42 after Reset');
 end;
@@ -326,7 +326,7 @@ begin
   Stream:= TLightStream.CreateWrite(FTempFile);
   TRY
     Stream.WriteInteger(1);           { CurrentVersion }
-    Stream.WriteInteger(clBlack);     { Color }
+    Stream.WriteInteger(TColors.Black); { Color }
     Stream.WriteByte(255);            { Invalid FillType (only 0-1 valid) }
     Stream.WriteByte(0);              { EffectShape }
     Stream.WriteByte(0);              { EffectColor }
@@ -364,7 +364,7 @@ begin
   Stream:= TLightStream.CreateWrite(FTempFile);
   TRY
     Stream.WriteInteger(1);           { CurrentVersion }
-    Stream.WriteInteger(clBlack);     { Color }
+    Stream.WriteInteger(TColors.Black); { Color }
     Stream.WriteByte(0);              { FillType (valid) }
     Stream.WriteByte(200);            { Invalid EffectShape (only 0-2 valid) }
     Stream.WriteByte(0);              { EffectColor }
@@ -401,7 +401,7 @@ begin
   Stream:= TLightStream.CreateWrite(FTempFile);
   TRY
     Stream.WriteInteger(1);           { CurrentVersion }
-    Stream.WriteInteger(clBlack);     { Color }
+    Stream.WriteInteger(TColors.Black); { Color }
     Stream.WriteByte(0);              { FillType (valid) }
     Stream.WriteByte(0);              { EffectShape (valid) }
     Stream.WriteByte(100);            { Invalid EffectColor (only 0-2 valid) }
@@ -511,7 +511,7 @@ begin
   FParams.NeighborWeight:= 300;
   FParams.NeighborDist  := 5;
   FParams.Tolerance     := 15;
-  FParams.Color         := clRed;
+  FParams.Color         := TColors.Red;
 
   { Write }
   Stream:= TLightStream.CreateWrite(FTempFile);
@@ -537,7 +537,7 @@ begin
   Assert.AreEqual(300, ReadParams.NeighborWeight, 'NeighborWeight should be 300');
   Assert.AreEqual(5, ReadParams.NeighborDist, 'NeighborDist should be 5');
   Assert.AreEqual(15, ReadParams.Tolerance, 'Tolerance should be 15');
-  Assert.AreEqual(TColor(clRed), ReadParams.Color, 'Color should be clRed');
+  Assert.AreEqual(TColor(TColors.Red), ReadParams.Color, 'Color should be TColors.Red');
 end;
 
 

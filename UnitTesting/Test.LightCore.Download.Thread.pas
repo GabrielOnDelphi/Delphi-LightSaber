@@ -1,7 +1,7 @@
-unit Test.LightVcl.Internet.Download.Thread;
+unit Test.LightCore.Download.Thread;
 
 {=============================================================================================================
-   Unit tests for LightVcl.Internet.Download.Thread.pas
+   Unit tests for LightCore.Download.Thread.pas
    Tests the TWinInetObj threaded download class.
 
    Note: Full integration tests require network access.
@@ -81,7 +81,7 @@ type
 implementation
 
 uses
-  LightVcl.Internet.Download.Thread;
+  LightCore.Download.Thread;
 
 
 { Constructor/Destructor Tests }

@@ -30,6 +30,8 @@ uses
   Test.LightCore.EncodeXOR in 'Test.LightCore.EncodeXOR.pas',
   Test.LightCore.StringList in 'Test.LightCore.StringList.pas',
   Test.LightCore.Internet in 'Test.LightCore.Internet.pas',
+  Test.LightCore.Internet.CommonWebDown in 'Test.LightCore.Internet.CommonWebDown.pas',
+  Test.LightCore.Internet.Email in 'Test.LightCore.Internet.Email.pas',
   Test.LightCore.StreamFile in 'Test.LightCore.StreamFile.pas',
   Test.LightCore.StreamMem in 'Test.LightCore.StreamMem.pas',
   Test.LightCore.Binary in 'Test.LightCore.Binary.pas',
@@ -49,6 +51,7 @@ uses
   Test.LightCore.IO in 'Test.LightCore.IO.pas',
   Test.LightCore.EncodeMime in 'Test.LightCore.EncodeMime.pas',
   Test.LightCore.Download in 'Test.LightCore.Download.pas',
+  Test.LightCore.Download.Thread in 'Test.LightCore.Download.Thread.pas',
   Test.LightCore.LogTypes in 'Test.LightCore.LogTypes.pas',
   Test.LightCore.LogLinesS in 'Test.LightCore.LogLinesS.pas',
   Test.LightCore.LogLinesM in 'Test.LightCore.LogLinesM.pas',
@@ -65,6 +68,25 @@ uses
   Test.LightCore.StringListA in 'Test.LightCore.StringListA.pas',
   Test.LightCore.WrapString in 'Test.LightCore.WrapString.pas',
   Test.LightCore.CompilerVersions in 'Test.LightCore.CompilerVersions.pas',
+  Test.LightCore.CamUtils in 'Test.LightCore.CamUtils.pas',
+  Test.LightCore.Graph.Loader.Resolution in 'Test.LightCore.Graph.Loader.Resolution.pas',
+  Test.LightCore.Graph.ResizeParams in 'Test.LightCore.Graph.ResizeParams.pas',
+  Test.LightCore.Graph.BkgColorParams in 'Test.LightCore.Graph.BkgColorParams.pas',
+  Test.LightCore.Graph.RainDropParams in 'Test.LightCore.Graph.RainDropParams.pas',
+  Test.LightCore.WinVersion in 'Test.LightCore.WinVersion.pas',
+  {$IFDEF MSWINDOWS}
+  Test.LightCore.Process in 'Test.LightCore.Process.pas',
+  Test.LightCore.ExeVersion in 'Test.LightCore.ExeVersion.pas',
+  Test.LightCore.Sound in 'Test.LightCore.Sound.pas',
+  Test.LightCore.Win.Sound in 'Test.LightCore.Win.Sound.pas',
+  Test.LightCore.Win.Registry in 'Test.LightCore.Win.Registry.pas',
+  Test.LightCore.Keyboard in 'Test.LightCore.Keyboard.pas',
+  Test.LightCore.EnvironmentVar in 'Test.LightCore.EnvironmentVar.pas',
+  Test.LightCore.Win.EnvironmentVar in 'Test.LightCore.Win.EnvironmentVar.pas',
+  Test.LightCore.Win.Download in 'Test.LightCore.Win.Download.pas',
+  Test.LightCore.SystemPermissions in 'Test.LightCore.SystemPermissions.pas',
+  Test.LightCore.Win.SystemPermissions in 'Test.LightCore.Win.SystemPermissions.pas',
+  {$ENDIF}
   { Source units }
   LightCore in '..\LightCore.pas',
   LightCore.Types in '..\LightCore.Types.pas',
@@ -72,11 +94,17 @@ uses
   LightCore.EncodeXOR in '..\LightCore.EncodeXOR.pas',
   LightCore.StringList in '..\LightCore.StringList.pas',
   LightCore.Internet in '..\LightCore.Internet.pas',
+  LightCore.Internet.CommonWebDown in '..\LightCore.Internet.CommonWebDown.pas',
+  LightCore.Internet.Email in '..\LightCore.Internet.Email.pas',
   LightCore.StreamFile in '..\LightCore.StreamFile.pas',
   LightCore.Binary in '..\LightCore.Binary.pas',
   LightCore.IO in '..\LightCore.IO.pas',
   LightCore.HTML in '..\LightCore.HTML.pas',
   LightCore.Download in '..\LightCore.Download.pas',
+  LightCore.Download.Thread in '..\LightCore.Download.Thread.pas',
+  {$IFDEF MSWINDOWS}
+  LightCore.Win.Download in '..\LightCore.Win.Download.pas',
+  {$ENDIF}
   LightCore.StreamMem in '..\LightCore.StreamMem.pas',
   LightCore.Math in '..\LightCore.Math.pas',
   LightCore.Time in '..\LightCore.Time.pas',
@@ -104,6 +132,28 @@ uses
   LightCore.SearchResult in '..\LightCore.SearchResult.pas',
   LightCore.StringListA in '..\LightCore.StringListA.pas',
   LightCore.WrapString in '..\LightCore.WrapString.pas',
+  LightCore.CamUtils in '..\LightCore.CamUtils.pas',
+  LightCore.Graph.Loader.Resolution in '..\LightCore.Graph.Loader.Resolution.pas',
+  LightCore.Graph.ResizeParams in '..\LightCore.Graph.ResizeParams.pas',
+  LightCore.Graph.BkgColorParams in '..\LightCore.Graph.BkgColorParams.pas',
+  LightCore.Graph.RainDropParams in '..\LightCore.Graph.RainDropParams.pas',
+  LightCore.WinVersion in '..\LightCore.WinVersion.pas',
+  LightCore.Process in '..\LightCore.Process.pas',
+  LightCore.ExeVersion in '..\LightCore.ExeVersion.pas',
+  LightCore.Sound in '..\LightCore.Sound.pas',
+  {$IFDEF MSWINDOWS}
+  LightCore.Win.Sound in '..\LightCore.Win.Sound.pas',
+  LightCore.Win.Registry in '..\LightCore.Win.Registry.pas',
+  {$ENDIF}
+  LightCore.Keyboard in '..\LightCore.Keyboard.pas',
+  LightCore.EnvironmentVar in '..\LightCore.EnvironmentVar.pas',
+  {$IFDEF MSWINDOWS}
+  LightCore.Win.EnvironmentVar in '..\LightCore.Win.EnvironmentVar.pas',
+  {$ENDIF}
+  LightCore.SystemPermissions in '..\LightCore.SystemPermissions.pas',
+  {$IFDEF MSWINDOWS}
+  LightCore.Win.SystemPermissions in '..\LightCore.Win.SystemPermissions.pas',
+  {$ENDIF}
   ciUpdaterRec in '..\Updater\ciUpdaterRec.pas';
 
 {$IFNDEF TESTINSIGHT}

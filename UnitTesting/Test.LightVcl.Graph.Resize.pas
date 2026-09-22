@@ -204,7 +204,7 @@ type
 implementation
 
 uses
-  LightVcl.Graph.Resize, LightVcl.Graph.ResizeParams, LightVcl.Graph.Bitmap;
+  LightVcl.Graph.Resize, LightCore.Graph.ResizeParams, LightVcl.Graph.Bitmap;
 
 
 procedure TTestGraphResize.Setup;

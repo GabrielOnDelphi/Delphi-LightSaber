@@ -13,6 +13,7 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.IOUtils,
+  LightCore.INIFile,
   LightCore.AppData;
 
 type
@@ -167,6 +168,15 @@ type
     [Test]
     procedure TestAutoStartUp;
 
+    [Test]
+    procedure TestLoadSettings_MissingKeysGetDefaults;
+
+    [Test]
+    procedure TestLoadSettings_KeyInIniWins;
+
+    [Test]
+    procedure TestLoadSettings_LegacyHintTypeKeyIsIgnored;
+
     { RunningFirstTime Tests }
     [Test]
     procedure TestRunningFirstTime;
@@ -181,6 +191,9 @@ type
   end;
 
 implementation
+
+TYPE
+  TAppDataCoreAccess = class(TAppDataCore);   // Reaches the protected defaultSettings / loadSettings
 
 
 procedure TTestAppDataCore.Setup;
@@ -590,6 +603,71 @@ begin
 
   AppDataCore.AutoStartUp:= False;
   Assert.IsFalse(AppDataCore.AutoStartUp);
+end;
+
+{ An INI written by an older version lacks some keys. Each missing key must get the value a fresh install gets (defaultSettings), not a second, hard-coded fallback.
+  The old fallback for HintType was htOff, and it switched off every tooltip in the VCL programs (BioniX, 2026.09). Same order as TAppDataCore.Create: defaultSettings, then loadSettings. }
+procedure TTestAppDataCore.TestLoadSettings_MissingKeysGetDefaults;
+begin
+  VAR Ini:= TIniFileEx.Create('AppData Settings', TAppDataCore.IniFile);
+  try
+    Ini.EraseSection('AppData Settings');
+  finally
+    FreeAndNil(Ini);
+  end;
+
+  TAppDataCoreAccess(AppDataCore).defaultSettings;
+  TAppDataCoreAccess(AppDataCore).loadSettings;
+
+  Assert.AreEqual(htTooltips, AppDataCore.HintType, 'A missing HintType key must give the default htTooltips, not htOff');
+  Assert.AreEqual(4000, AppDataCore.HideHint,       'A missing HideHint key must give the default');
+  Assert.AreEqual(250,  AppDataCore.Opacity,        'A missing Opacity key must give the default');
+  Assert.IsTrue(AppDataCore.Minimize2Tray,          'A missing Minimize2Tray key must give the default');
+end;
+
+{ The other half: a key that IS in the INI must still win over the default. }
+procedure TTestAppDataCore.TestLoadSettings_KeyInIniWins;
+begin
+  VAR Ini:= TIniFileEx.Create('AppData Settings', TAppDataCore.IniFile);
+  try
+    Ini.Write('HintStyle', Ord(htStatBar));
+    Ini.Write('HideHint' , 1234);
+  finally
+    FreeAndNil(Ini);
+  end;
+
+  TAppDataCoreAccess(AppDataCore).defaultSettings;
+  TAppDataCoreAccess(AppDataCore).loadSettings;
+
+  Assert.AreEqual(htStatBar, AppDataCore.HintType, 'HintStyle from the INI must win over the default');
+  Assert.AreEqual(1234, AppDataCore.HideHint,      'HideHint from the INI must win over the default');
+end;
+
+{ The INI files damaged by the old bug hold HintType=0 (htOff). That key was renamed to 'HintStyle' in 2026.09 exactly so those values are ignored: the user must get the tooltips back. SaveSettings also deletes the dead key. }
+procedure TTestAppDataCore.TestLoadSettings_LegacyHintTypeKeyIsIgnored;
+begin
+  VAR Ini:= TIniFileEx.Create('AppData Settings', TAppDataCore.IniFile);
+  try
+    Ini.EraseSection('AppData Settings');
+    Ini.Write('HintType', Ord(htOff));                     // What an INI written before 2026.09 holds
+  finally
+    FreeAndNil(Ini);
+  end;
+
+  TAppDataCoreAccess(AppDataCore).defaultSettings;
+  TAppDataCoreAccess(AppDataCore).loadSettings;
+
+  Assert.AreEqual(htTooltips, AppDataCore.HintType, 'The legacy HintType key must be ignored, so the default htTooltips wins');
+
+  TAppDataCoreAccess(AppDataCore).SaveSettings;
+
+  Ini:= TIniFileEx.Create('AppData Settings', TAppDataCore.IniFile);
+  try
+    Assert.IsFalse(Ini.ValueExists('HintType' ), 'SaveSettings must delete the dead HintType key');
+    Assert.IsTrue (Ini.ValueExists('HintStyle'), 'SaveSettings must write the new HintStyle key');
+  finally
+    FreeAndNil(Ini);
+  end;
 end;
 
 

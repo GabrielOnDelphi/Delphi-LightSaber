@@ -1,7 +1,7 @@
-unit Test.LightVcl.Internet.Download.WinInet;
+unit Test.LightCore.Win.Download;
 
 {=============================================================================================================
-   Unit tests for LightVcl.Internet.Download.WinInet.pas
+   Unit tests for LightCore.Win.Download.pas
    Tests HTTP download functionality using WinINet API.
 
    Note: Network tests require internet connectivity. Tests are designed to pass gracefully
@@ -9,6 +9,7 @@ unit Test.LightVcl.Internet.Download.WinInet;
 =============================================================================================================}
 
 interface
+{$IFDEF MSWINDOWS}
 
 uses
   DUnitX.TestFramework,
@@ -16,7 +17,7 @@ uses
   System.Classes,
   System.IOUtils,
   Winapi.Windows,
-  LightVcl.Internet.Download.WinInet;
+  LightCore.Win.Download;
 
 type
   [TestFixture]
@@ -85,8 +86,10 @@ type
     [Test]
     procedure TestDownloadBytes_UrlWithPort;
   end;
+{$ENDIF}
 
 implementation
+{$IFDEF MSWINDOWS}
 
 
 procedure TTestDownloadWinInet.Setup;
@@ -345,5 +348,7 @@ end;
 
 initialization
   TDUnitX.RegisterTestFixture(TTestDownloadWinInet);
+
+{$ENDIF}
 
 end.

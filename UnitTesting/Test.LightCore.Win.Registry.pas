@@ -1,21 +1,24 @@
-unit Test.LightVcl.Common.Registry;
+unit Test.LightCore.Win.Registry;
 
 {=============================================================================================================
-   Unit tests for LightVcl.Common.Registry.pas
+   Unit tests for LightCore.Win.Registry.pas
    Tests Windows Registry helper functions
 
    Note: These tests write to HKEY_CURRENT_USER\Software\LightSaber_Tests which is cleaned up after tests.
    Running these tests requires registry access permissions (normal user rights are sufficient for HKCU).
+
+   The whole fixture is compiled only when MSWINDOWS is defined, because LightCore.Win.Registry is Windows-only.
 =============================================================================================================}
 
 interface
+{$IFDEF MSWINDOWS}
 
 uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.Classes,
   Winapi.Windows,
-  LightVcl.Common.Registry;
+  LightCore.Win.Registry;
 
 type
   [TestFixture]
@@ -141,8 +144,10 @@ type
     [Test]
     procedure TestRegWriteValuePairs_NilParam;
   end;
+{$ENDIF}
 
 implementation
+{$IFDEF MSWINDOWS}
 
 
 procedure TTestRegistry.Setup;
@@ -523,5 +528,7 @@ end;
 
 initialization
   TDUnitX.RegisterTestFixture(TTestRegistry);
+
+{$ENDIF}
 
 end.

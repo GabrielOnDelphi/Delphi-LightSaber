@@ -32,23 +32,14 @@ uses
   LightCore.AppData,              { TAppDataCore.Unattended }
   { Source units }
   LightVcl.Internet.Common in '..\FrameVCL\LightVcl.Internet.Common.pas',
-  LightVcl.Internet.CommonWebDown in '..\FrameVCL\LightVcl.Internet.CommonWebDown.pas',
   LightVcl.Internet.Download.Indy in '..\FrameVCL\LightVcl.Internet.Download.Indy.pas',
-  LightVcl.Internet.Download.Thread in '..\FrameVCL\LightVcl.Internet.Download.Thread.pas',
-  LightVcl.Internet.Download.WinInet in '..\FrameVCL\LightVcl.Internet.Download.WinInet.pas',
   LightVcl.Internet.Email in '..\FrameVCL\LightVcl.Internet.Email.pas',
-  LightVcl.Internet.EmailSender in '..\FrameVCL\LightVcl.Internet.EmailSender.pas',
   LightVcl.Internet.HTML in '..\FrameVCL\LightVcl.Internet.HTML.pas',
-  LightVcl.Internet.HTMLImg in '..\FrameVCL\LightVcl.Internet.HTMLImg.pas',
-  LightVcl.Internet.HtmlWriter in '..\FrameVCL\LightVcl.Internet.HtmlWriter.pas',
+  LightCore.Internet.EmailSender in '..\LightCore.Internet.EmailSender.pas',
   LightCore.Internet.Ftp in '..\LightCore.Internet.Ftp.pas',
   { Test units - add here as tests are created }
   Test.LightCore.Internet.Ftp in 'Test.LightCore.Internet.Ftp.pas',
-  Test.LightVcl.Internet.CommonWebDown in 'Test.LightVcl.Internet.CommonWebDown.pas',
-  Test.LightVcl.Internet.Download.Indy in 'Test.LightVcl.Internet.Download.Indy.pas',
-  Test.LightVcl.Internet.Download.Thread in 'Test.LightVcl.Internet.Download.Thread.pas',
-  Test.LightVcl.Internet.Download.WinInet in 'Test.LightVcl.Internet.Download.WinInet.pas',
-  Test.LightVcl.Internet.Email in 'Test.LightVcl.Internet.Email.pas';
+  Test.LightVcl.Internet.Download.Indy in 'Test.LightVcl.Internet.Download.Indy.pas';
   // Test.LightVcl.Internet.Common in 'Test.LightVcl.Internet.Common.pas';
 
 {$IFNDEF TESTINSIGHT}

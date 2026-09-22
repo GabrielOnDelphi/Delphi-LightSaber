@@ -16,7 +16,7 @@ uses
   Vcl.Forms,
   Vcl.Graphics,
   LightVcl.Visual.Edit,
-  LightVcl.Common.Colors;
+  LightCore.Colors;
 
 type
   [TestFixture]

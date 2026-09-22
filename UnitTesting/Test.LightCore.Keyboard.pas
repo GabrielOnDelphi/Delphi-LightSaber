@@ -1,22 +1,24 @@
-unit Test.LightVcl.Common.Keyboard;
+unit Test.LightCore.Keyboard;
 
 {=============================================================================================================
-   Unit tests for LightVcl.Common.Keyboard.pas
+   Unit tests for LightCore.Keyboard.pas
    Tests keyboard simulation and key state detection functions.
 
    Note: Keystroke simulation tests are minimal since they affect the system state.
    Key state tests verify the functions can be called and return valid types.
+
+   The whole fixture is compiled only when MSWINDOWS is defined. LightCore.Keyboard declares its 4 key-state functions only on Windows, and every test here names an identifier from Winapi.Windows.
 =============================================================================================================}
 
 interface
+{$IFDEF MSWINDOWS}
 
 uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.Classes,
-  Vcl.Forms,
   Winapi.Windows,
-  LightVcl.Common.Keyboard;
+  LightCore.Keyboard;
 
 type
   [TestFixture]
@@ -51,8 +53,10 @@ type
     [Test]
     procedure Test_SendText_EmptyString;
   end;
+{$ENDIF}
 
 implementation
+{$IFDEF MSWINDOWS}
 
 
 { Key State Tests }
@@ -166,5 +170,7 @@ end;
 
 initialization
   TDUnitX.RegisterTestFixture(TTestKeyboard);
+
+{$ENDIF}
 
 end.

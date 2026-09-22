@@ -116,7 +116,7 @@ type
 implementation
 
 uses
-  LightVcl.Graph.ResizeParams,
+  LightCore.Graph.ResizeParams,
   LightVcl.Graph.ResizeParamFrame;
 
 

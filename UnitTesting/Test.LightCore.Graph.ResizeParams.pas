@@ -1,7 +1,7 @@
-﻿unit Test.LightVcl.Graph.ResizeParams;
+﻿unit Test.LightCore.Graph.ResizeParams;
 
 {=============================================================================================================
-   Unit tests for LightVcl.Graph.ResizeParams.pas
+   Unit tests for LightCore.Graph.ResizeParams.pas
    Tests RResizeParams record functionality including Reset, ComputeOutputSize, and stream I/O.
 
    Includes TestInsight support: define TESTINSIGHT in project options.
@@ -118,7 +118,7 @@ type
 implementation
 
 uses
-  LightVcl.Graph.ResizeParams;
+  LightCore.Graph.ResizeParams;
 
 
 { Reset Tests }

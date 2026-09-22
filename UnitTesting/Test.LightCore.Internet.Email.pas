@@ -1,8 +1,8 @@
-﻿unit Test.LightVcl.Internet.Email;
+﻿unit Test.LightCore.Internet.Email;
 
 {=============================================================================================================
    2026.01.30
-   Unit tests for LightVcl.Internet.Email
+   Unit tests for LightCore.Internet.Email
    Tests email validation, extraction, correction, and utility functions
 
    Requires: TESTINSIGHT compiler directive for TestInsight integration
@@ -14,7 +14,7 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.Classes,
-  LightVcl.Internet.Email;
+  LightCore.Internet.Email;
 
 type
   [TestFixture]

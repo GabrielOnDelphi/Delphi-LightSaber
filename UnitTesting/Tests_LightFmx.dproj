@@ -67,7 +67,6 @@
         </DelphiCompile>
         <DCCReference Include="Test.LightFmx.Common.AppData.pas"/>
         <DCCReference Include="Test.LightFmx.Common.AppData.Form.pas"/>
-        <DCCReference Include="Test.LightFmx.Common.CamUtils.pas"/>
         <DCCReference Include="Test.LightFmx.Visual.SvgFlatButton.pas"/>
         <DCCReference Include="Test.LightFmx.Common.Dialogs.pas"/>
         <DCCReference Include="Test.LightFmx.Visual.AutoSizeBoxImg.pas"/>

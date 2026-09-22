@@ -70,6 +70,12 @@ type
     [Test]
     procedure TestCountLines_EmptyFile;
 
+    [Test]
+    procedure TestCountCharAppearance_AcrossChunks;
+
+    [Test]
+    procedure TestCountCharAppearance_StopAt;
+
     { UTF8/BOM Tests }
     [Test]
     procedure TestFileHasBOM_WithBOM;
@@ -267,6 +273,34 @@ begin
   StringToFile(FTestFile, '', woOverwrite, wpOff);
   Count:= CountLines(FTestFile);
   Assert.AreEqual(Int64(0), Count);
+end;
+
+{ 70000 bytes with '>' at byte offsets 0, 65535, 65536 and 69999. CountCharAppearance reads 64 KB chunks, so the two middle ones sit on both sides of the first chunk boundary }
+procedure WriteCharCountFile(CONST FileName: string);
+var
+  S: AnsiString;
+begin
+  S:= StringOfChar(AnsiChar('A'), 70000);
+  S[1]:= '>';
+  S[65536]:= '>';
+  S[65537]:= '>';
+  S[70000]:= '>';
+  StringToFileA(FileName, S, woOverwrite);
+end;
+
+procedure TTestLightCoreTextFile.TestCountCharAppearance_AcrossChunks;
+begin
+  WriteCharCountFile(FTestFile);
+  Assert.AreEqual(Int64(4), CountCharAppearance(FTestFile, '>'), 'every > in the file, in both chunks');
+  Assert.AreEqual(Int64(0), CountCharAppearance(FTestFile, 'Z'), 'a byte that is not in the file');
+end;
+
+procedure TTestLightCoreTextFile.TestCountCharAppearance_StopAt;
+begin
+  WriteCharCountFile(FTestFile);
+  Assert.AreEqual(Int64(2), CountCharAppearance(FTestFile, '>', 2),  'stops at the second >');
+  Assert.AreEqual(Int64(4), CountCharAppearance(FTestFile, '>', 10), 'fewer than StopAt: returns the full count');
+  Assert.AreEqual(Int64(4), CountCharAppearance(FTestFile, '>', 0),  'StopAt 0: counts all');
 end;
 
 { UTF8/BOM Tests }

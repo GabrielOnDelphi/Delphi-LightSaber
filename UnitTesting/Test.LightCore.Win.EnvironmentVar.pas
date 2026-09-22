@@ -1,25 +1,27 @@
-unit Test.LightVcl.Common.EnvironmentVar;
+unit Test.LightCore.Win.EnvironmentVar;
 
 {=============================================================================================================
-   Unit tests for LightVcl.Common.EnvironmentVar.pas
+   Unit tests for LightCore.Win.EnvironmentVar.pas
    Tests environment variable read/write operations and string expansion.
 
    Note: Some tests modify user environment variables. These are cleaned up in TearDown.
    Machine-level tests are skipped unless running with admin privileges.
+
+   The tests of ListEnvironmentVars are in Test.LightCore.EnvironmentVar.pas.
 =============================================================================================================}
 
 interface
+{$IFDEF MSWINDOWS}
 
 uses
   DUnitX.TestFramework,
   System.SysUtils,
-  System.Classes,
   Winapi.Windows,
-  LightVcl.Common.EnvironmentVar;
+  LightCore.Win.EnvironmentVar;
 
 type
   [TestFixture]
-  TTestEnvironmentVar = class
+  TTestWinEnvironmentVar = class
   private
     CONST TEST_VAR_NAME = 'LIGHTSABER_TEST_VAR';
     CONST TEST_VAR_VALUE = 'TestValue123';
@@ -45,16 +47,6 @@ type
 
     [Test]
     procedure Test_ExpandEnvironmentStrings_NestedPath;
-
-    { GetEnvironmentVars (TStrings) tests }
-    [Test]
-    procedure Test_GetEnvironmentVars_TStrings_NotEmpty;
-
-    [Test]
-    procedure Test_GetEnvironmentVars_TStrings_ContainsPath;
-
-    [Test]
-    procedure Test_GetEnvironmentVars_TStrings_Format;
 
     { GetEnvironmentVars (single variable) tests }
     [Test]
@@ -95,14 +87,16 @@ type
     [Test]
     procedure Test_SetAndGet_LongValue;
   end;
+{$ENDIF}
 
 implementation
+{$IFDEF MSWINDOWS}
 
 uses
   System.Win.Registry;
 
 
-procedure TTestEnvironmentVar.TearDown;
+procedure TTestWinEnvironmentVar.TearDown;
 VAR
   Reg: TRegistry;
 begin
@@ -126,20 +120,20 @@ end;
 
 { ExpandEnvironmentStrings tests }
 
-procedure TTestEnvironmentVar.Test_ExpandEnvironmentStrings_EmptyString;
+procedure TTestWinEnvironmentVar.Test_ExpandEnvironmentStrings_EmptyString;
 begin
   Assert.AreEqual('', ExpandEnvironmentStrings(''));
 end;
 
 
-procedure TTestEnvironmentVar.Test_ExpandEnvironmentStrings_NoVars;
+procedure TTestWinEnvironmentVar.Test_ExpandEnvironmentStrings_NoVars;
 begin
   Assert.AreEqual('Hello World', ExpandEnvironmentStrings('Hello World'));
   Assert.AreEqual('C:\Temp\File.txt', ExpandEnvironmentStrings('C:\Temp\File.txt'));
 end;
 
 
-procedure TTestEnvironmentVar.Test_ExpandEnvironmentStrings_SingleVar;
+procedure TTestWinEnvironmentVar.Test_ExpandEnvironmentStrings_SingleVar;
 VAR
   Expanded: string;
 begin
@@ -150,7 +144,7 @@ begin
 end;
 
 
-procedure TTestEnvironmentVar.Test_ExpandEnvironmentStrings_MultipleVars;
+procedure TTestWinEnvironmentVar.Test_ExpandEnvironmentStrings_MultipleVars;
 VAR
   Expanded: string;
 begin
@@ -161,7 +155,7 @@ begin
 end;
 
 
-procedure TTestEnvironmentVar.Test_ExpandEnvironmentStrings_NonExistentVar;
+procedure TTestWinEnvironmentVar.Test_ExpandEnvironmentStrings_NonExistentVar;
 VAR
   Expanded: string;
 begin
@@ -171,7 +165,7 @@ begin
 end;
 
 
-procedure TTestEnvironmentVar.Test_ExpandEnvironmentStrings_NestedPath;
+procedure TTestWinEnvironmentVar.Test_ExpandEnvironmentStrings_NestedPath;
 VAR
   Expanded: string;
 begin
@@ -181,84 +175,22 @@ begin
 end;
 
 
-{ GetEnvironmentVars (TStrings) tests }
-
-procedure TTestEnvironmentVar.Test_GetEnvironmentVars_TStrings_NotEmpty;
-VAR
-  EnvList: TStringList;
-  Success: Boolean;
-begin
-  EnvList:= TStringList.Create;
-  TRY
-    Success:= GetEnvironmentVars(EnvList);
-    Assert.IsTrue(Success, 'GetEnvironmentVars should succeed');
-    Assert.IsTrue(EnvList.Count > 0, 'Environment should have at least one variable');
-  FINALLY
-    FreeAndNil(EnvList);
-  END;
-end;
-
-
-procedure TTestEnvironmentVar.Test_GetEnvironmentVars_TStrings_ContainsPath;
-VAR
-  EnvList: TStringList;
-  i: Integer;
-  FoundPath: Boolean;
-begin
-  EnvList:= TStringList.Create;
-  TRY
-    GetEnvironmentVars(EnvList);
-
-    FoundPath:= FALSE;
-    for i:= 0 to EnvList.Count - 1 do
-      if EnvList[i].ToUpper.StartsWith('PATH=') then
-        begin
-          FoundPath:= TRUE;
-          Break;
-        end;
-
-    Assert.IsTrue(FoundPath, 'Environment should contain PATH variable');
-  FINALLY
-    FreeAndNil(EnvList);
-  END;
-end;
-
-
-procedure TTestEnvironmentVar.Test_GetEnvironmentVars_TStrings_Format;
-VAR
-  EnvList: TStringList;
-  i: Integer;
-begin
-  EnvList:= TStringList.Create;
-  TRY
-    GetEnvironmentVars(EnvList);
-
-    { Each entry should be in NAME=VALUE format }
-    for i:= 0 to EnvList.Count - 1 do
-      Assert.IsTrue(EnvList[i].Contains('='),
-        'Entry should contain = separator: ' + EnvList[i]);
-  FINALLY
-    FreeAndNil(EnvList);
-  END;
-end;
-
-
 { GetEnvironmentVars (single variable) tests }
 
-procedure TTestEnvironmentVar.Test_GetEnvironmentVars_EmptyName;
+procedure TTestWinEnvironmentVar.Test_GetEnvironmentVars_EmptyName;
 begin
   Assert.AreEqual('', GetEnvironmentVars('', True));
   Assert.AreEqual('', GetEnvironmentVars('', False));
 end;
 
 
-procedure TTestEnvironmentVar.Test_GetEnvironmentVars_NonExistent;
+procedure TTestWinEnvironmentVar.Test_GetEnvironmentVars_NonExistent;
 begin
   Assert.AreEqual('', GetEnvironmentVars('NONEXISTENT_VAR_XYZZY_12345', True));
 end;
 
 
-procedure TTestEnvironmentVar.Test_GetEnvironmentVars_ExistingUserVar;
+procedure TTestWinEnvironmentVar.Test_GetEnvironmentVars_ExistingUserVar;
 VAR
   Value: string;
 begin
@@ -271,7 +203,7 @@ begin
 end;
 
 
-procedure TTestEnvironmentVar.Test_GetEnvironmentVars_Path_User;
+procedure TTestWinEnvironmentVar.Test_GetEnvironmentVars_Path_User;
 VAR
   Value: string;
 begin
@@ -285,13 +217,13 @@ end;
 
 { SetEnvironmentVars tests }
 
-procedure TTestEnvironmentVar.Test_SetEnvironmentVars_EmptyName;
+procedure TTestWinEnvironmentVar.Test_SetEnvironmentVars_EmptyName;
 begin
   Assert.IsFalse(SetEnvironmentVars('', 'SomeValue', True));
 end;
 
 
-procedure TTestEnvironmentVar.Test_SetEnvironmentVars_UserVar;
+procedure TTestWinEnvironmentVar.Test_SetEnvironmentVars_UserVar;
 VAR
   Success: Boolean;
 begin
@@ -300,7 +232,7 @@ begin
 end;
 
 
-procedure TTestEnvironmentVar.Test_SetEnvironmentVars_UpdatesProcessEnv;
+procedure TTestWinEnvironmentVar.Test_SetEnvironmentVars_UpdatesProcessEnv;
 VAR
   Buffer: array[0..255] of Char;
   Len: DWORD;
@@ -315,7 +247,7 @@ begin
 end;
 
 
-procedure TTestEnvironmentVar.Test_SetEnvironmentVars_ReadBack;
+procedure TTestWinEnvironmentVar.Test_SetEnvironmentVars_ReadBack;
 VAR
   Reg: TRegistry;
   Value: string;
@@ -342,7 +274,7 @@ end;
 
 { Round-trip tests }
 
-procedure TTestEnvironmentVar.Test_SetAndGet_RoundTrip;
+procedure TTestWinEnvironmentVar.Test_SetAndGet_RoundTrip;
 VAR
   Value: string;
 begin
@@ -352,7 +284,7 @@ begin
 end;
 
 
-procedure TTestEnvironmentVar.Test_SetAndGet_SpecialChars;
+procedure TTestWinEnvironmentVar.Test_SetAndGet_SpecialChars;
 CONST
   SPECIAL_VALUE = 'Path with spaces & special=chars; "quotes"';
 VAR
@@ -364,7 +296,7 @@ begin
 end;
 
 
-procedure TTestEnvironmentVar.Test_SetAndGet_EmptyValue;
+procedure TTestWinEnvironmentVar.Test_SetAndGet_EmptyValue;
 VAR
   Value: string;
 begin
@@ -377,7 +309,7 @@ begin
 end;
 
 
-procedure TTestEnvironmentVar.Test_SetAndGet_LongValue;
+procedure TTestWinEnvironmentVar.Test_SetAndGet_LongValue;
 VAR
   LongValue: string;
   Value: string;
@@ -395,6 +327,7 @@ end;
 
 
 initialization
-  TDUnitX.RegisterTestFixture(TTestEnvironmentVar);
+  TDUnitX.RegisterTestFixture(TTestWinEnvironmentVar);
+{$ENDIF}
 
 end.

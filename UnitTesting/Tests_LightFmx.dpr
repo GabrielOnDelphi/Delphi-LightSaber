@@ -29,7 +29,6 @@ uses
   { Test units }
   Test.LightFmx.Common.AppData        in 'Test.LightFmx.Common.AppData.pas',
   Test.LightFmx.Common.AppData.Form   in 'Test.LightFmx.Common.AppData.Form.pas',
-  Test.LightFmx.Common.CamUtils       in 'Test.LightFmx.Common.CamUtils.pas',
   Test.LightFmx.Visual.SvgFlatButton  in 'Test.LightFmx.Visual.SvgFlatButton.pas',
   Test.LightFmx.Common.Dialogs        in 'Test.LightFmx.Common.Dialogs.pas',
   Test.LightFmx.Visual.AutoSizeBoxImg in 'Test.LightFmx.Visual.AutoSizeBoxImg.pas',

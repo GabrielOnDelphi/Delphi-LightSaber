@@ -83,6 +83,9 @@ type
     procedure TestHintType_StatusBar;
 
     [Test]
+    procedure TestHintType_ReachesExistingForms;
+
+    [Test]
     procedure TestHideHint_SetGet;
 
     { Single Instance Tests }
@@ -284,6 +287,18 @@ begin
   AppData.HintType:= htStatBar;
   Assert.AreEqual(htStatBar, AppData.HintType);
   Assert.IsTrue(Application.ShowHint, 'ShowHint should be TRUE when HintType is htStatBar');
+end;
+
+{ A form that already exists must follow HintType. Its controls inherit ShowHint from it, so a form left at FALSE shows no tooltip even with Application.ShowHint = TRUE (the BioniX bug of 2026.09). The test runner's main form is created before the tests run. }
+procedure TTestAppDataVcl.TestHintType_ReachesExistingForms;
+begin
+  Assert.IsNotNull(Application.MainForm, 'The test runner must create a main form');
+
+  AppData.HintType:= htOff;
+  Assert.IsFalse(Application.MainForm.ShowHint, 'An existing form must get ShowHint = FALSE when HintType is htOff');
+
+  AppData.HintType:= htTooltips;
+  Assert.IsTrue(Application.MainForm.ShowHint, 'An existing form must get ShowHint = TRUE back when HintType is htTooltips');
 end;
 
 procedure TTestAppDataVcl.TestHideHint_SetGet;

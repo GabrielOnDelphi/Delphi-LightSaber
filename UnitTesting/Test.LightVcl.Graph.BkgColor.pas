@@ -106,7 +106,7 @@ implementation
 
 uses
   LightVcl.Graph.BkgColor,
-  LightVcl.Graph.BkgColorParams;
+  LightCore.Graph.BkgColorParams;
 
 
 { Helper Methods }

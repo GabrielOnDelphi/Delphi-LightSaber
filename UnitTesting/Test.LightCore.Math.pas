@@ -175,6 +175,16 @@ type
     procedure TestMixBytes;
     {$ENDIF}
 
+    { IsPanoramic Tests }
+    [Test]
+    procedure TestIsPanoramic_WithDimensions_NotPanoramic;
+
+    [Test]
+    procedure TestIsPanoramic_WithDimensions_IsPanoramic;
+
+    [Test]
+    procedure TestIsPanoramic_ZeroHeight;
+
     { Other Tests }
     [Test]
     procedure TestGenerateRandomBoolean;
@@ -618,6 +628,29 @@ begin
   Assert.AreEqual(Byte(50), MixBytes(50, 50, 255));
 end;
 {$ENDIF}
+
+{ IsPanoramic Tests }
+
+procedure TTestLightCoreMath.TestIsPanoramic_WithDimensions_NotPanoramic;
+begin
+  { 1920x1080 is wide but not panoramic (ratio ~1.78, needs >4) }
+  Assert.IsFalse(IsPanoramic(1920, 1080), 'HD resolution should not be panoramic');
+end;
+
+
+procedure TTestLightCoreMath.TestIsPanoramic_WithDimensions_IsPanoramic;
+begin
+  { 8000x1000 has ratio 8:1 and width > 6000 }
+  Assert.IsTrue(IsPanoramic(8000, 1000), '8000x1000 should be panoramic');
+end;
+
+
+procedure TTestLightCoreMath.TestIsPanoramic_ZeroHeight;
+begin
+  { Should return false, not crash with division by zero }
+  Assert.IsFalse(IsPanoramic(1000, 0), 'Zero height should return false, not crash');
+end;
+
 
 { Other Tests }
 

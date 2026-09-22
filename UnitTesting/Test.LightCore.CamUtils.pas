@@ -1,8 +1,8 @@
-unit Test.LightFmx.Common.CamUtils;
+﻿unit Test.LightCore.CamUtils;
 
 {=============================================================================================================
-   2026.01.31
-   Unit tests for LightFmx.Common.CamUtils.pas
+   2026.09.10
+   Unit tests for LightCore.CamUtils.pas
    Tests cross-platform utilities for camera/gallery operations
 
    Note: Most functions in this unit are Android-specific and cannot be tested on Windows.
@@ -55,7 +55,7 @@ type
 implementation
 
 uses
-  LightFmx.Common.CamUtils;
+  LightCore.CamUtils;
 
 
 { TTestCamUtils }

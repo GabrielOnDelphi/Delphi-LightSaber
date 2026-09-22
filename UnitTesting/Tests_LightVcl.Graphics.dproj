@@ -112,8 +112,6 @@
         <DCCReference Include="Test.LightVcl.Graph.ResizeWinThumb.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Graph.ResizeWinWIC.pas"/>
         <DCCReference Include="Test.LightVcl.Graph.ResizeWinWIC.pas"/>
-        <DCCReference Include="..\FrameVCL\LightVcl.Graph.ResizeParams.pas"/>
-        <DCCReference Include="Test.LightVcl.Graph.ResizeParams.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Graph.ResizeParamFrame.pas"/>
         <DCCReference Include="Test.LightVcl.Graph.ResizeParamFrame.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Graph.ResizeVCL.pas"/>
@@ -132,8 +130,6 @@
         <DCCReference Include="Test.LightVcl.Graph.FX.RotateGr32.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Graph.Bitmap.pas"/>
         <DCCReference Include="Test.LightVcl.Graph.Bitmap.pas"/>
-        <DCCReference Include="..\FrameVCL\LightVcl.Graph.BkgColorParams.pas"/>
-        <DCCReference Include="Test.LightVcl.Graph.BkgColorParams.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Graph.BkgColor.pas"/>
         <DCCReference Include="Test.LightVcl.Graph.BkgColor.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Graph.Convert.pas"/>
@@ -143,7 +139,6 @@
         <DCCReference Include="..\FrameVCL\LightVcl.Graph.Resize.pas"/>
         <DCCReference Include="Test.LightVcl.Graph.Resize.pas"/>
         <DCCReference Include="Test.LightVcl.Graph.Util.pas"/>
-        <DCCReference Include="..\FrameVCL\LightVcl.Graph.RainDropParams.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Graph.RainShelter.pas"/>
         <DCCReference Include="Test.LightVcl.Graph.RainShelter.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Graph.Loader.pas"/>

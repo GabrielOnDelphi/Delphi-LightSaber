@@ -15,7 +15,7 @@ uses
   System.SysUtils,
   Vcl.Graphics,
   Vcl.Forms,
-  LightVcl.Graph.BkgColorParams;
+  LightCore.Graph.BkgColorParams;
 
 type
   [TestFixture]

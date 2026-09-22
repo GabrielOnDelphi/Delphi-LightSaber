@@ -1,22 +1,24 @@
-unit Test.LightVcl.Common.Process;
+unit Test.LightCore.Process;
 
 {=============================================================================================================
-   Unit tests for LightVcl.Common.Process.pas
+   Unit tests for LightCore.Process.pas
    Tests process query and termination functions using TlHelp32 API.
 
    Note:
      - These tests interact with real system processes.
      - ProcessRunning tests use commonly available Windows processes (explorer.exe, csrss.exe).
      - KillProcess is tested against a dummy process to avoid killing important processes.
+     - The whole fixture is compiled only when MSWINDOWS is defined, because off Windows LightCore.Process declares nothing.
 =============================================================================================================}
 
 interface
 
+{$IFDEF MSWINDOWS}
 uses
   DUnitX.TestFramework,
   System.SysUtils,
   Winapi.Windows,
-  LightVcl.Common.Process;
+  LightCore.Process;
 
 type
   [TestFixture]
@@ -51,8 +53,10 @@ type
     [Test]
     procedure Test_KillProcess_ProtectedProcess_ReturnsFalse;
   end;
+{$ENDIF}
 
 implementation
+{$IFDEF MSWINDOWS}
 
 
 { ProcessRunning tests }
@@ -149,5 +153,6 @@ end;
 
 initialization
   TDUnitX.RegisterTestFixture(TTestProcess);
+{$ENDIF}
 
 end.

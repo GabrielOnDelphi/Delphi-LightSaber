@@ -1,7 +1,7 @@
-unit Test.LightVcl.Internet.CommonWebDown;
+unit Test.LightCore.Internet.CommonWebDown;
 
 {=============================================================================================================
-   Unit tests for LightVcl.Internet.CommonWebDown.pas
+   Unit tests for LightCore.Internet.CommonWebDown.pas
    Tests the Unsplash image extraction functionality.
 
    Note: Full integration tests require network access and valid Unsplash URLs.
@@ -51,7 +51,7 @@ type
 implementation
 
 uses
-  LightVcl.Internet.CommonWebDown;
+  LightCore.Internet.CommonWebDown;
 
 
 procedure TTestCommonWebDown.Setup;

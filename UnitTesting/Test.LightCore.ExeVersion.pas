@@ -1,17 +1,20 @@
-unit Test.LightVcl.Common.ExeVersion;
+unit Test.LightCore.ExeVersion;
 
 {=============================================================================================================
-   Unit tests for LightVcl.Common.ExeVersion.pas
+   Unit tests for LightCore.ExeVersion.pas
    Tests executable version info retrieval functions.
+
+   The whole fixture is compiled only when MSWINDOWS is defined, because off Windows LightCore.ExeVersion declares nothing.
 =============================================================================================================}
 
 interface
 
+{$IFDEF MSWINDOWS}
 uses
   DUnitX.TestFramework,
   System.SysUtils,
   Winapi.Windows,
-  LightVcl.Common.ExeVersion;
+  LightCore.ExeVersion;
 
 type
   [TestFixture]
@@ -45,8 +48,10 @@ type
     [Test]
     procedure Test_GetVersionInfo_FormatCheck;
   end;
+{$ENDIF}
 
 implementation
+{$IFDEF MSWINDOWS}
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -85,12 +90,12 @@ end;
 
 procedure TTestExeVersion.Test_GetVersionInfoFile_EmptyFileName;
 VAR
-  FixedInfo: TVSFixedFileInfo;
+  Version: TFileVersion;
 begin
   Assert.WillRaise(
     procedure
     begin
-      GetVersionInfoFile('', FixedInfo);
+      GetVersionInfoFile('', Version);
     end,
     Exception);
 end;
@@ -98,28 +103,27 @@ end;
 
 procedure TTestExeVersion.Test_GetVersionInfoFile_NonExistentFile;
 VAR
-  FixedInfo: TVSFixedFileInfo;
+  Version: TFileVersion;
   Success: Boolean;
 begin
   { Non-existent file should return False (not raise) }
-  Success:= GetVersionInfoFile('C:\NonExistent\Invalid.exe', FixedInfo);
+  Success:= GetVersionInfoFile('C:\NonExistent\Invalid.exe', Version);
   Assert.IsFalse(Success);
 end;
 
 
 procedure TTestExeVersion.Test_GetVersionInfoFile_ValidExe;
 VAR
-  FixedInfo: TVSFixedFileInfo;
+  Version: TFileVersion;
   Success: Boolean;
   Subject: string;
 begin
   Subject:= VersionedFile;
   Assert.IsNotEmpty(Subject, 'No system file with version info was found - see VersionedFile');
 
-  Success:= GetVersionInfoFile(Subject, FixedInfo);
+  Success:= GetVersionInfoFile(Subject, Version);
   Assert.IsTrue(Success, 'Should successfully get version info from ' + Subject);
-  Assert.IsTrue(FixedInfo.dwFileVersionMS > 0, 'Version should be non-zero');
-end;
+  Assert.IsTrue((Version.Major > 0) OR (Version.Minor > 0), 'Version should be non-zero');end;
 
 
 { GetVersionInfo tests }
@@ -208,5 +212,6 @@ end;
 
 initialization
   TDUnitX.RegisterTestFixture(TTestExeVersion);
+{$ENDIF}
 
 end.

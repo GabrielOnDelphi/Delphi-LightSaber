@@ -1,17 +1,21 @@
-unit Test.LightVcl.Common.Sound;
+unit Test.LightCore.Sound;
 
 {=============================================================================================================
-   Unit tests for LightVcl.Common.Sound.pas
+   Unit tests for LightCore.Sound.pas
    Tests sound utility functions with focus on parameter validation.
 
    Note: Many sound functions produce actual audio output, so tests focus on
    edge cases and parameter validation rather than verifying sound quality.
+
+   Every routine under test has an empty body off Windows, so the whole fixture is compiled only when MSWINDOWS is defined.
+   The tests of PlayWinSound are in Test.LightCore.Win.Sound.pas.
 
    Includes TestInsight support: define TESTINSIGHT in project options.
 =============================================================================================================}
 
 interface
 
+{$IFDEF MSWINDOWS}
 uses
   DUnitX.TestFramework,
   System.SysUtils;
@@ -25,13 +29,6 @@ type
 
     [TearDown]
     procedure TearDown;
-
-    { PlayWinSound Tests }
-    [Test]
-    procedure TestPlayWinSound_EmptyString_NoException;
-
-    [Test]
-    procedure TestPlayWinSound_ValidName_NoException;
 
     { PlaySoundFile Tests }
     [Test]
@@ -91,11 +88,13 @@ type
     [Test]
     procedure TestBipCoconuts_NoException;
   end;
+{$ENDIF}
 
 implementation
 
+{$IFDEF MSWINDOWS}
 uses
-  LightVcl.Common.Sound;
+  LightCore.Sound;
 
 
 procedure TTestSound.Setup;
@@ -107,33 +106,6 @@ end;
 procedure TTestSound.TearDown;
 begin
   { No teardown needed }
-end;
-
-
-{ PlayWinSound Tests }
-
-procedure TTestSound.TestPlayWinSound_EmptyString_NoException;
-begin
-  Assert.WillNotRaise(
-    procedure
-    begin
-      PlayWinSound('');
-    end,
-    Exception,
-    'PlayWinSound with empty string should not raise exception');
-end;
-
-
-procedure TTestSound.TestPlayWinSound_ValidName_NoException;
-begin
-  { Using a system sound that should exist on all Windows installations }
-  Assert.WillNotRaise(
-    procedure
-    begin
-      PlayWinSound('SystemAsterisk');
-    end,
-    Exception,
-    'PlayWinSound with valid system sound name should not raise exception');
 end;
 
 
@@ -170,7 +142,7 @@ begin
   Assert.WillNotRaise(
     procedure
     begin
-      PlayResSound('', 0);
+      PlayResSound('', FALSE);
     end,
     Exception,
     'PlayResSound with empty string should not raise exception');
@@ -364,5 +336,6 @@ end;
 
 initialization
   TDUnitX.RegisterTestFixture(TTestSound);
+{$ENDIF}
 
 end.

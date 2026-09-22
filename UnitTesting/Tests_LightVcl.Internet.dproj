@@ -95,22 +95,13 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="..\FrameVCL\LightVcl.Internet.Common.pas"/>
-        <DCCReference Include="..\FrameVCL\LightVcl.Internet.CommonWebDown.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Internet.Download.Indy.pas"/>
-        <DCCReference Include="..\FrameVCL\LightVcl.Internet.Download.Thread.pas"/>
-        <DCCReference Include="..\FrameVCL\LightVcl.Internet.Download.WinInet.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Internet.Email.pas"/>
-        <DCCReference Include="..\FrameVCL\LightVcl.Internet.EmailSender.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Internet.HTML.pas"/>
-        <DCCReference Include="..\FrameVCL\LightVcl.Internet.HTMLImg.pas"/>
-        <DCCReference Include="..\FrameVCL\LightVcl.Internet.HtmlWriter.pas"/>
+        <DCCReference Include="..\LightCore.Internet.EmailSender.pas"/>
         <DCCReference Include="..\LightCore.Internet.Ftp.pas"/>
         <DCCReference Include="Test.LightCore.Internet.Ftp.pas"/>
-        <DCCReference Include="Test.LightVcl.Internet.CommonWebDown.pas"/>
         <DCCReference Include="Test.LightVcl.Internet.Download.Indy.pas"/>
-        <DCCReference Include="Test.LightVcl.Internet.Download.Thread.pas"/>
-        <DCCReference Include="Test.LightVcl.Internet.Download.WinInet.pas"/>
-        <DCCReference Include="Test.LightVcl.Internet.Email.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
