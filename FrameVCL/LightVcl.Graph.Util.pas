@@ -146,7 +146,7 @@ TYPE
 IMPLEMENTATION
 
 USES
-   LightVcl.Common.Colors;
+   LightCore.Colors;
 
 
 

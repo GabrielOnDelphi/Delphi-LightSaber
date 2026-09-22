@@ -6,7 +6,7 @@ UNIT LightVcl.Graph.ResizeParamFrame;      //todo 2: rename this to LightVcl.Gra
 --------------------------------------------------------------------------------------------------------------
 
    GUI frame where the user can edit the parameters of the resizing algorithm (LightVcl.Graph.Resize.pas).
-   Works on a RResizeParams record (LightVcl.Graph.ResizeParams.pas).
+   Works on a RResizeParams record (LightCore.Graph.ResizeParams.pas).
 
    !!! Don't add dependencies to LightVisControls.dpk because that package is compiled after this one !!!
 
@@ -36,7 +36,7 @@ INTERFACE
 USES
   System.Classes, System.SysUtils,
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.NumberBox, Vcl.Samples.Spin,
-  LightVcl.Graph.ResizeParams;
+  LightCore.Graph.ResizeParams;
 
 TYPE
   TResizeParameters = class(TFrame)

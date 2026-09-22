@@ -2,7 +2,7 @@ UNIT LightVcl.Graph.Bitmap;
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.01.30
+   2026.09.10
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -88,8 +88,7 @@ TYPE
                   isSmall,    { Images with area  < 100% of the orig image}
                   isLarge);   { Images with area >= 100% of the orig image }
 
- function IsPanoramic       (BMP: TBitmap): Boolean;              overload;
- function IsPanoramic       (Width, Height: Integer): Boolean;    overload;
+ function IsPanoramic       (BMP: TBitmap): Boolean;              overload;   { The (Width, Height: Integer) overload moved to LightCore.Math.pas. Both halves must keep `overload` or this one hides it }
 
  function GetImageScale     (InputImage, DesktopSize: TBitmap;  Tile: RTileParams): TImageScale;  overload;
  function GetImageScale     (InputImage: TBitmap; DesktopWidth, DesktopHeight: Integer; Tile: RTileParams): TImageScale;  overload;
@@ -302,24 +301,13 @@ end;
    IMAGE ORIENTATION / ASPECT
 --------------------------------------------------------------------------------------------------}
 
-{ Panoramic images have width much bigger than height (aspect ratio > 4:1). }
-function IsPanoramic(Width, Height: Integer): Boolean;
-begin
- if Height <= 0
- then EXIT(FALSE);  { Invalid height cannot be panoramic }
-
- Result:= (Width > 6000) AND             { Cannot be panoramic unless the width is really big }
-         ((Width / Height) > 4);         { Panoramic images have width much much bigger than height }
-end;
-
-
 { Panoramic images have width much much bigger than height }
 function IsPanoramic(BMP: TBitmap): Boolean;
 begin
  if BMP = NIL
  then raise Exception.Create('IsPanoramic: BMP parameter cannot be nil');
 
- Result:= IsPanoramic(BMP.Width, BMP.Height);
+ Result:= LightCore.Math.IsPanoramic(BMP.Width, BMP.Height);
 end;
 
 

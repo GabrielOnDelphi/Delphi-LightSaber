@@ -16,7 +16,7 @@ UNIT LightVcl.Common.System;
      - Mouse cursor control
 
    See also:
-     - LightVcl.Common.EnvironmentVar.pas for environment variables
+     - LightCore.Win.EnvironmentVar.pas and LightCore.EnvironmentVar.pas for environment variables
      - chHardID.pas for hardware identification
 
    Related units in this group:
@@ -105,7 +105,7 @@ CONST
 IMPLEMENTATION
 
 USES
-   LightVcl.Common.Keyboard, LightCore.IO;
+   LightCore.Keyboard, LightCore.IO;
 
 
 

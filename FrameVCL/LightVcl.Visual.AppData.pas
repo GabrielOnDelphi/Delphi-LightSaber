@@ -1,7 +1,7 @@
 ﻿UNIT LightVcl.Visual.AppData;
 
 {=============================================================================================================
-   2026.08.20
+   2026.09.19
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -233,7 +233,7 @@ IMPLEMENTATION
 
 USES
   LightCore.IO,
-  LightVcl.Common.WinVersion, LightVcl.Common.ExeVersion, LightVcl.Common.CenterControl, LightVcl.Visual.AppDataForm, LightVcl.Common.Registry;
+  LightCore.WinVersion, LightCore.ExeVersion, LightVcl.Common.CenterControl, LightVcl.Visual.AppDataForm, LightCore.Win.Registry;
 
 
 { Warning: We cannot use Application.CreateForm here because this will make the Log the main form! }
@@ -260,7 +260,7 @@ begin
     The font of the MainForm is saved in TIniFileVCL.WriteComp }
   Application.DefaultFont.Name    := 'Segoe UI';
   Application.DefaultFont.Size    := 10;
-  Application.ShowHint := TRUE;                   // Set later via the HintType property. It is true by default anyway
+  Application.ShowHint := HintType > htOff;       // The inherited constructor already loaded HintType. This line used to force TRUE, which left Application.ShowHint out of step with HintType.
 
   { Translator }
   //ToDo 5: create it only if necessary - If this app uses translations; we could look for the 'Lang' folder. If it exists and it is not empty then we create the object.
@@ -585,6 +585,11 @@ procedure TAppData.setHintType(const aHintType: THintType);
 begin
   FHintType:= aHintType;
   Application.ShowHint:= aHintType > htOff;
+
+  { A control shows its hint only when Application.ShowHint is TRUE AND its own ShowHint is TRUE. Controls inherit ShowHint from their form (ParentShowHint), and setGuiProperties sets Form.ShowHint from HintType when the form is created.
+    So a change made at run time must also reach the forms that already exist. Without this, BioniX's "Show hints as tooltips" checkbox could not bring the tooltips back (2026.09). }
+  for VAR i:= 0 to Screen.FormCount - 1 DO
+    Screen.Forms[i].ShowHint:= aHintType > htOff;
 end;
 
 
@@ -774,7 +779,7 @@ begin
     then Form.Font:= Self.Font;
 
   // Fix issues with snap to edge of the screen
-  if LightVcl.Common.WinVersion.IsWindows8Up
+  if LightCore.WinVersion.IsWindows8Up
   then Form.SnapBuffer:= 4;
 
   // Form transparency
@@ -791,19 +796,19 @@ end;
 --------------------------------------------------------------------------------------------------}
 
 function TAppData.GetVersionInfoMajor: Word;
-VAR FixedInfo: TVSFixedFileInfo;
+VAR Version: TFileVersion;
 begin
-  if GetVersionInfoFile(Application.ExeName, FixedInfo)
-  then Result:= HiWord(FixedInfo.dwFileVersionMS)
+  if GetVersionInfoFile(Application.ExeName, Version)
+  then Result:= Version.Major
   else Result:= 0;
 end;
 
 
 function TAppData.GetVersionInfoMinor: Word;
-VAR FixedInfo: TVSFixedFileInfo;
+VAR Version: TFileVersion;
 begin
-  if GetVersionInfoFile(Application.ExeName, FixedInfo)
-  then Result:= LoWord(FixedInfo.dwFileVersionMS)
+  if GetVersionInfoFile(Application.ExeName, Version)
+  then Result:= Version.Minor
   else Result:= 0;
 end;
 
@@ -812,15 +817,14 @@ end;
   Example: 1.0.0 for 1.0.0.999
   See also: CheckWin32Version }
 class function TAppData.GetVersionInfo(ShowBuildNo: Boolean= False): string;
-VAR FixedInfo: TVSFixedFileInfo;
+VAR Version: TFileVersion;
 begin
-  FixedInfo.dwSignature:= 0;
-  if LightVcl.Common.ExeVersion.GetVersionInfoFile(Application.ExeName, FixedInfo)
+  if LightCore.ExeVersion.GetVersionInfoFile(Application.ExeName, Version)
   then
      begin
-      Result:= IntToStr(HiWord(FixedInfo.dwFileVersionMS))+'.'+ IntToStr(LoWord(FixedInfo.dwFileVersionMS))+'.'+ IntToStr(HiWord(FixedInfo.dwFileVersionLS));
+      Result:= IntToStr(Version.Major)+'.'+ IntToStr(Version.Minor)+'.'+ IntToStr(Version.Release);
       if ShowBuildNo
-      then Result:= Result+ '.'+ IntToStr(LoWord(FixedInfo.dwFileVersionLS));
+      then Result:= Result+ '.'+ IntToStr(Version.Build);
      end
   else Result:= 'N/A';
 end;
@@ -1179,7 +1183,7 @@ FINALIZATION
   shutdown with runtime error 217. In a case-1 app it does nothing at all, because Application owns
   nothing by the time we get here.
   The reason it crashes: Application owns a THintWindow, created by Application.ShowHint:= TRUE, which
-  this very unit sets in TAppData.Create (TApplication.SetShowHint in Vcl.Forms.pas does FHintWindow:= HintWindowClass.Create(Self)).
+  this very unit sets in TAppData.Create when HintType is not htOff (TApplication.SetShowHint in Vcl.Forms.pas does FHintWindow:= HintWindowClass.Create(Self)).
   DestroyComponents frees it, but the TApplication.FHintWindow field is not cleared by that and is left
   dangling. Later DoneApplication runs ShowHint:= FALSE, and TApplication.SetShowHint frees the same
   object a second time. In case 1 the order is reversed - DoneApplication clears

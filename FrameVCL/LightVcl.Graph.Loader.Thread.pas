@@ -88,7 +88,7 @@ TYPE
 
 
 IMPLEMENTATION
-USES LightVcl.Graph.Resize, LightVcl.Graph.ResizeParams;
+USES LightVcl.Graph.Resize, LightCore.Graph.ResizeParams;
 
 
 
@@ -202,7 +202,7 @@ begin
  if NOT FileExists(AFileName) then EXIT;
 
  { roFit, and NOT the roAutoDetect that RResizeParams.Reset chooses by default.
-   roAutoDetect is written for a WALLPAPER: when it cannot Fill and has to fall back to Fit, it deliberately adds FitTolerance (10%) back on top to crop away the black bars - see the comment "we can still try to increase the size of the image with 10%" in RResizeParams.computeAutodetect (LightVcl.Graph.ResizeParams.pas).
+   roAutoDetect is written for a WALLPAPER: when it cannot Fill and has to fall back to Fit, it deliberately adds FitTolerance (10%) back on top to crop away the black bars - see the comment "we can still try to increase the size of the image with 10%" in RResizeParams.computeAutodetect (LightCore.Graph.ResizeParams.pas).
    A THUMBNAIL must stay inside the Width x Height box it was asked for.
    A 200x150 bitmap asked to fit a 100x100 box came back 110 pixels wide.
    TCubicThumbs.DrawCell (LightVcl.Visual.ThumbViewerM.pas) centers the bitmap with x:= aRect.Left + (DefaultColWidth - BMP.Width) DIV 2, and DefaultColWidth is only ThumbWidth + 2*CellSpacing - so a 10% overshoot puts x left of the cell and the thumbnail paints over its neighbour. }

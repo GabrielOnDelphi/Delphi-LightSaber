@@ -9,8 +9,8 @@ UNIT LightCore.Platform;
    Features:
      - OS type, version, and architecture detection
      - Application bitness detection (32/64-bit)
-     - Device information (FMX only)
      - Platform reports for diagnostics
+   Device information (GenerateDeviceRep) is in LightFmx.Common.Screen.
 
    Supported Platforms:
      - Windows (Desktop, WinRT)
@@ -30,8 +30,7 @@ UNIT LightCore.Platform;
 INTERFACE
 
 USES
-   System.SysUtils
-   {$IFDEF FRAMEWORK_FMX}, System.Devices{$ENDIF};
+   System.SysUtils;
 
 
 // OS
@@ -47,8 +46,7 @@ function AppIs64Bit: Boolean;
 
 // Reports
 function GeneratePlatformRep: string;
-function GenerateAppBitnessRep: string; {$IFDEF FRAMEWORK_FMX}
-function GenerateDeviceRep: string;  {$ENDIF}
+function GenerateAppBitnessRep: string;
 
 
 
@@ -56,60 +54,6 @@ function GenerateDeviceRep: string;  {$ENDIF}
 IMPLEMENTATION
 USES LightCore;
 
-
-
-
-
-
-{$IFDEF FRAMEWORK_FMX}    // TDeviceInfo is only guaranteed to be available and functional in FMX contexts.
-function GenerateDeviceRep: string;
-var
-  Device: TDeviceInfo;
-begin
-  Result:= ' [DEVICE INFO]'+ CRLF;
-
-  Device:= TDeviceInfo.ThisDevice;
-  if Device = nil then
-  begin
-    Result := Result + '  Error: TDeviceInfo.ThisDevice is NIL or device not recognized.';
-    Exit;
-  end;
-
-  Result:= Result+'  Device ID: '                + Tab + Tab + Device.ID + CRLF;
-  ///Result:= Result+'  Device Class: '          + Tab + Tab + Device.DeviceClass.ToString + CRLF;
-  ///Result:= Result+'  Platform: '              + Tab + Tab + Device.Platform.ToString + CRLF;
-  Result:= Result+'  Exclusive: '                + Tab + Tab + BoolToStr(Device.Exclusive, True) + CRLF;
-
-  // Screen Metrics (Physical/Logical Sizes)
-  Result:= Result+'  DPI (Pixels/Inch): '        + Tab + Device.PixelsPerInch.ToString + CRLF;
-  Result:= Result+'  Aspect Ratio: '             + Tab + Format('%.3f', [Device.AspectRatio]) + CRLF;
-  Result:= Result+'  Min Diagonal (in): '        + Tab + Format('%.2f', [Device.MinDiagonal]) + CRLF;
-  Result:= Result+'  Max Diagonal (in): '        + Tab + Format('%.2f', [Device.MaxDiagonal]) + CRLF;
-
-  // Screen Size (using MinLogicalSize as a proxy for reported size)
-  Result:= Result+'  Logical Size (Min): '       + Tab + Format('%d x %d', [Device.MinLogicalScreenSize.cx, Device.MinLogicalScreenSize.cy]) + CRLF;
-  Result:= Result+'  Physical Size (Min): '      + Tab + Format('%d x %d', [Device.MinPhysicalScreenSize.cx, Device.MinPhysicalScreenSize.cy]) + CRLF;
-  {todo: AI: this crashes with "item not found"}
-  {
-  // Attributes Dictionary (contains OS, Version, DeviceName, etc.)
-  Result:= Result+CRLF+'  [ATTRIBUTES]'+ CRLF;
-  try
-    // Common Attributes (Pulled from the Attributes dictionary directly)
-    Result:= Result+'   DisplayName: '+ Tab+Device.Attributes[sDevAttrDisplayName]+ CRLF;
-    Result:= Result+'   OPDefine: '+ Tab+Device.Attributes[sDevAttrOPDefine]+ CRLF;
-
-    // Iterate over all attributes for maximum juice
-    // NOTE: Accessing FAttributes directly is bad practice, but since TDeviceInfo is sealed and
-    // there's no public iterator, we rely on the internal TAttributes property if needed,
-    // or stick to the known keys. For safety, we'll try known keys first:
-    Result:= Result+'   Manufacturer: '+ Tab+Device.Attributes['manufacturer']+ CRLF;
-    Result:= Result+'   Model: '+ Tab+Tab+Device.Attributes['model']+ CRLF;
-    Result:= Result+'   Version: '+ Tab+Tab+Device.Attributes['version']+ CRLF;
-  except
-    // Attributes might not exist, ignore errors.
-  end; }
-end;
-{$ENDIF}
 
 
 

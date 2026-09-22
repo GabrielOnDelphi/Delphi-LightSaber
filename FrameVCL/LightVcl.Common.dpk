@@ -37,27 +37,22 @@ requires
   vclWinx,
   vclSmp,
   LightExternal,
-  LightCore;
+  LightCore,
+  LightCore.Win;
 
 contains
   FormAsyncMessage in 'FormAsyncMessage.pas',
   LightVcl.Common.CenterControl in 'LightVcl.Common.CenterControl.pas',
   LightVcl.Common.Clipboard in 'LightVcl.Common.Clipboard.pas',
-  LightVcl.Common.Colors in 'LightVcl.Common.Colors.pas',
   LightVcl.Common.CpuMonitor in 'LightVcl.Common.CpuMonitor.pas',
-  LightVcl.Common.CpuUsageProcess in 'LightVcl.Common.CpuUsageProcess.pas',
   LightVcl.Common.CursorGuard in 'LightVcl.Common.CursorGuard.pas',
   LightVcl.Common.Debugger in 'LightVcl.Common.Debugger.pas',
   LightVcl.Common.Dialogs in 'LightVcl.Common.Dialogs.pas',
   LightVcl.Common.EllipsisText in 'LightVcl.Common.EllipsisText.pas',
-  LightVcl.Common.EnvironmentVar in 'LightVcl.Common.EnvironmentVar.pas',
   LightVcl.Common.ExecuteProc in 'LightVcl.Common.ExecuteProc.pas',
   LightVcl.Common.ExecuteShell in 'LightVcl.Common.ExecuteShell.pas',
-  LightVcl.Common.ExeVersion in 'LightVcl.Common.ExeVersion.pas',
-  LightVcl.Common.GuiSettings in 'LightVcl.Common.GuiSettings.pas',
   LightVcl.Common.INIFile in 'LightVcl.Common.INIFile.pas',
   LightVcl.Common.IO in 'LightVcl.Common.IO.pas',
-  LightVcl.Common.Keyboard in 'LightVcl.Common.Keyboard.pas',
   LightVcl.Common.KeybShortcuts in 'LightVcl.Common.KeybShortcuts.pas',
   LightVcl.Common.LogFilter in 'LightVcl.Common.LogFilter.pas',
   LightVcl.Common.LogViewer in 'LightVcl.Common.LogViewer.pas',
@@ -65,14 +60,10 @@ contains
   LightVcl.Common.MutexSingleInstance in 'LightVcl.Common.MutexSingleInstance.pas',
   LightVcl.Common.PopUp in 'LightVcl.Common.PopUp.pas',
   LightVcl.Common.PowerUtils in 'LightVcl.Common.PowerUtils.pas',
-  LightVcl.Common.Process in 'LightVcl.Common.Process.pas',
   LightVcl.Common.ProcessCpuMonitor in 'LightVcl.Common.ProcessCpuMonitor.pas',
-  LightVcl.Common.Registry in 'LightVcl.Common.Registry.pas',
   LightVcl.Common.Reports in 'LightVcl.Common.Reports.pas',
   LightVcl.Common.Shell in 'LightVcl.Common.Shell.pas',
-  LightVcl.Common.Sound in 'LightVcl.Common.Sound.pas',
   LightVcl.Common.System in 'LightVcl.Common.System.pas',
-  LightVcl.Common.SystemPermissions in 'LightVcl.Common.SystemPermissions.pas',
   LightVcl.Common.SystemSecurity in 'LightVcl.Common.SystemSecurity.pas',
   LightVcl.Common.SystemTime in 'LightVcl.Common.SystemTime.pas',
   LightVcl.Common.Translate in '..\LightVcl.Common.Translate.pas',
@@ -80,8 +71,6 @@ contains
   LightVcl.Common.Window in 'LightVcl.Common.Window.pas',
   LightVcl.Common.WindowMetrics in 'LightVcl.Common.WindowMetrics.pas',
   LightVcl.Common.WinVersion in 'LightVcl.Common.WinVersion.pas',
-  LightVcl.Common.WinVersionApi in 'LightVcl.Common.WinVersionApi.pas',
-  LightVcl.Common.WMIResolution in 'LightVcl.Common.WMIResolution.pas',
-  LightVcl.Common.SystemConsole in 'LightVcl.Common.SystemConsole.pas';
+  LightVcl.Common.WinVersionApi in 'LightVcl.Common.WinVersionApi.pas';
 
 end.

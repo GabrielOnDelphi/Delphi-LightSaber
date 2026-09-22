@@ -57,7 +57,7 @@ IMPLEMENTATION
 
 USES
    Winapi.Messages,
-   LightVcl.Graph.Bitmap, LightCore.IO, LightCore, LightCore.AppData, LightVcl.Common.WinVersion;
+   LightVcl.Graph.Bitmap, LightCore.IO, LightCore, LightCore.AppData, LightCore.WinVersion;
 
 
 

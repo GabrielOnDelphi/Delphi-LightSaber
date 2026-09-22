@@ -16,7 +16,7 @@ UNIT LightVcl.Graph.BkgColor;
      * Remove black borders from images
 
    Used by wallpaper/desktop background applications to blend images into screen borders.
-   Parameters are configured via RBkgColorParams from LightVcl.Graph.BkgColorParams.pas
+   Parameters are configured via RBkgColorParams from LightCore.Graph.BkgColorParams.pas
 
    Tester:
      c:\Projects\Testers\gr cGraphBorder.pas tester\TesterFadeBrd.dpr
@@ -26,7 +26,7 @@ UNIT LightVcl.Graph.BkgColor;
 INTERFACE
 
 USES
-   System.Types, System.SysUtils, System.Math, Vcl.Graphics, LightVcl.Graph.BkgColorParams;
+   System.Types, System.SysUtils, System.Math, Vcl.Graphics, LightCore.Graph.BkgColorParams;
 
 
 { Fade border }

@@ -16,7 +16,7 @@ INTERFACE
 USES
   System.Types, System.SysUtils, System.Classes, System.UITypes, Generics.Collections,
   Vcl.Graphics, Vcl.Controls, Vcl.ExtCtrls,
-  LightVcl.Common.Colors, LightVcl.Graph.Util, LightCore.Types;
+  LightCore.Colors, LightVcl.Graph.Util, LightCore.Types;
 
 TYPE
   TPlotType= set of (plDotValues,                                { Show a label next to each data point to display its value }

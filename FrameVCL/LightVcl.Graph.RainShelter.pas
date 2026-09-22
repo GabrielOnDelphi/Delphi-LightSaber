@@ -19,7 +19,7 @@ INTERFACE
 
 USES
   System.SysUtils, System.Classes,
-  vcl.Graphics, Vcl.Imaging.Jpeg, LightCore.IO, LightCore.StreamBuff, LightVcl.Graph.RainDropParams;
+  vcl.Graphics, Vcl.Imaging.Jpeg, LightCore.IO, LightCore.StreamBuff, LightCore.Graph.RainDropParams;
 
 TYPE
    TPixelMap= array of array of Boolean;  { Map of bits. True bits correspond to a pink pixel (where we draw water) }

@@ -85,15 +85,9 @@
         <DCCReference Include="IndyProtocols.dcp"/>
         <DCCReference Include="vclie.dcp"/>
         <DCCReference Include="LightVcl.Internet.Common.pas"/>
-        <DCCReference Include="LightVcl.Internet.CommonWebDown.pas"/>
         <DCCReference Include="LightVcl.Internet.Download.Indy.pas"/>
-        <DCCReference Include="LightVcl.Internet.Download.Thread.pas"/>
-        <DCCReference Include="LightVcl.Internet.Download.WinInet.pas"/>
         <DCCReference Include="LightVcl.Internet.Email.pas"/>
-        <DCCReference Include="LightVcl.Internet.EmailSender.pas"/>
         <DCCReference Include="LightVcl.Internet.HTML.pas"/>
-        <DCCReference Include="LightVcl.Internet.HTMLImg.pas"/>
-        <DCCReference Include="LightVcl.Internet.HtmlWriter.pas"/>
         <DCCReference Include="..\Updater\ciUpdater.pas"/>
         <DCCReference Include="..\Updater\ciUpdaterRec.pas"/>
         <BuildConfiguration Include="Base">

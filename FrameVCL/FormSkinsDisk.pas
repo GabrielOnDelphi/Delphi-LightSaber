@@ -68,7 +68,7 @@ function CurrentStyle: string;
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.Colors, LightCore.INIFileQuick, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.ExecuteShell,
+   LightCore.Colors, LightCore.INIFileQuick, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.ExecuteShell,
    System.IOUtils, LightCore.IO, LightCore, LightVcl.Common.Dialogs;
 
 VAR

@@ -63,7 +63,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES LightVcl.Graph.Util, LightVcl.Common.Colors;
+USES LightVcl.Graph.Util, LightCore.Colors;
 
 
 

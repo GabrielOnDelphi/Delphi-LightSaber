@@ -14,7 +14,7 @@ INTERFACE
 USES
   Winapi.Windows, System.SysUtils, System.Classes,
   Vcl.Controls, Vcl.Forms, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ComCtrls,
-  LightVcl.Graph.RainDropParams;
+  LightCore.Graph.RainDropParams;
   {Don't add dependencies to LightVcl.Visual.* because that package is not available yet}
 
 TYPE

@@ -36,9 +36,9 @@ UNIT LightVcl.Common.ProcessCpuMonitor;
      - CPU% values are smoothed over time; processes not seen for several samples fade out
 
    Also see:
-     * LightVcl.Common.CpuUsageProcess.pas - per-process CPU monitor (single process)
+     * LightCore.CpuUsageProcess.pas       - per-process CPU monitor (single process)
      * LightVcl.Common.CpuMonitor.pas      - system-wide CPU monitor
-     * LightVcl.Common.Process.pas          - process enumeration utilities
+     * LightCore.Process.pas                - process enumeration utilities
 =============================================================================================================}
 
 INTERFACE

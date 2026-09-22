@@ -175,7 +175,7 @@ procedure Register;
 IMPLEMENTATION {$R LightVcl.Visual.PathEdit.res}
 
 USES
-   LightVcl.Common.Colors, LightVcl.Common.ExecuteShell, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO;
+   LightCore.Colors, LightVcl.Common.ExecuteShell, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO;
 
 
 constructor TlightPathEdit.Create(aOwner: TComponent);

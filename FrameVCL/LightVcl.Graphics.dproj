@@ -102,7 +102,6 @@
         <DCCReference Include="LightVcl.Graph.Bitmap.pas"/>
         <DCCReference Include="LightVcl.Graph.BkgColor.pas"/>
         <DCCReference Include="LightVcl.Graph.BkgColorEditor.pas"/>
-        <DCCReference Include="LightVcl.Graph.BkgColorParams.pas"/>
         <DCCReference Include="LightVcl.Graph.Cache.pas"/>
         <DCCReference Include="LightVcl.Graph.Convert.pas"/>
         <DCCReference Include="LightVcl.Graph.Desktop.pas"/>
@@ -123,7 +122,6 @@
             <FormType>dfm</FormType>
             <DesignClass>TFrame</DesignClass>
         </DCCReference>
-        <DCCReference Include="LightVcl.Graph.ResizeParams.pas"/>
         <DCCReference Include="LightVcl.Graph.ResizeVCL.pas"/>
         <DCCReference Include="LightVcl.Graph.ResizeWinBlt.pas"/>
         <DCCReference Include="LightVcl.Graph.ResizeWinThumb.pas"/>
@@ -132,7 +130,6 @@
         <DCCReference Include="LightVcl.Graph.Text.pas"/>
         <DCCReference Include="LightVcl.Graph.Util.pas"/>
         <DCCReference Include="LightVcl.Graph.UtilGray.pas"/>
-        <DCCReference Include="LightVcl.Graph.RainDropParams.pas"/>
         <DCCReference Include="LightVcl.Graph.RainDropParamEditorForm.pas"/>
         <DCCReference Include="LightVcl.Graph.RainShelter.pas"/>
         <DCCReference Include="LightVcl.Graph.ResizeWinGDI.pas"/>

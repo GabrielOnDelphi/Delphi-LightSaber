@@ -11,7 +11,7 @@ UNIT LightVcl.Common.SystemTime;
    - System file time retrieval (anti-tampering for licensing)
    - Registry-based time validation (detects clock rollback)
 
-   Dependencies: LightVcl.Common.IO, LightVcl.Common.WinVersion, LightVcl.Common.Registry
+   Dependencies: LightVcl.Common.IO, LightVcl.Common.WinVersion, LightCore.Win.Registry
 
    Thread safety: These functions are NOT thread-safe.
 =============================================================================================================}
@@ -39,7 +39,7 @@ USES
 IMPLEMENTATION
 
 USES
-   LightCore.AppData, LightVcl.Common.IO, LightVcl.Common.WinVersion, LightVcl.Common.Registry;
+   LightCore.AppData, LightVcl.Common.IO, LightVcl.Common.WinVersion, LightCore.Win.Registry;
 
 
 

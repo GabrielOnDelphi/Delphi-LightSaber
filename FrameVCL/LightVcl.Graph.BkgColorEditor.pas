@@ -20,7 +20,7 @@ UNIT LightVcl.Graph.BkgColorEditor;
         Editor:= TfrmBorderEditor.CreateParented(ParentPanel, @BkgSettings);
 
    Related files:
-      LightVcl.Graph.BkgColorParams.pas - The parameter record this editor modifies
+      LightCore.Graph.BkgColorParams.pas - The parameter record this editor modifies
       LightVcl.Graph.BkgColor.pas       - Applies the border fading effects to images
 --------------------------------------------------------------------------------------------------}
 //todo 1: "Background shape": automatically use "rectangle" or "tringle" based on image size. If the image touches with two edges the border of the monitor then use "rectangle". if the image does not touch the border then use "tringle".
@@ -35,7 +35,7 @@ INTERFACE
 USES
   System.Classes, System.SysUtils,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls, Vcl.Samples.Spin, Vcl.ExtCtrls,
-  LightVcl.Graph.BkgColorParams;
+  LightCore.Graph.BkgColorParams;
 
 TYPE
   TfrmBorderEditor = class(TForm)

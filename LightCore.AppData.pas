@@ -1,7 +1,7 @@
 ﻿UNIT LightCore.AppData;
 
 {=============================================================================================================
-   2026.07.06
+   2026.09.20
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    FEATURES
@@ -272,9 +272,9 @@ begin
   RamLog:= TRamLog.Create(FShowOnError, NIL, MultiThreaded);
 
   { App settings }
+  defaultSettings;      // Always, and first: LoadSettings keeps these values for every key the INI does not have. Hint: Use LightSaber\Demo\Template App\Full\FormSettings.pas to give user access to these settings
   if FileExists(IniFile)
-  then LoadSettings
-  else defaultSettings; // Hint: Use LightSaber\Demo\Template App\Full\FormSettings.pas to give user access to these settings }
+  then LoadSettings;
   FSettingsLoaded:= TRUE;  // From here on, Destroy is allowed to save the settings back
 
   { Product details }
@@ -784,11 +784,13 @@ begin
     IniFileObj.Write('Minimize2Tray' , Minimize2Tray);
     IniFileObj.Write('Opacity'       , Opacity);
     IniFileObj.Write('ShowOnError'   , FShowOnError);
-    IniFileObj.Write('HintType'      , Ord(HintType));
+    IniFileObj.Write('HintStyle'     , Ord(HintType));
     IniFileObj.Write('HideHint'      , HideHint);
     IniFileObj.Write('LastFile'      , LastFile);
     IniFileObj.Write('LastFolder'    , FLastFolder);
     IniFileObj.Write('UserPath'      , UserPath);
+
+    IniFileObj.DeleteKey('AppData Settings', 'HintType');   // Dead key, written by the versions before 2026.09 - see LoadSettings. DeleteKey ignores the result of WritePrivateProfileString, so a missing key or a read-only INI cannot raise here (c:\Delphi\Delphi 13\source\rtl\common\System.IniFiles.pas:1400).
   finally
     FreeAndNil(IniFileObj);
   end;
@@ -796,21 +798,25 @@ end;
 
 
 { Loads application settings from the INI file.
-  Called during construction if INI file exists. }
+  Called during construction if INI file exists, AFTER defaultSettings.
+  The fallback of every key is the value already in the field - the one defaultSettings put there. So a key missing from an INI written by an older version gets the same value as a fresh install.
+  There used to be a second, hard-coded list of fallbacks here, and it drifted from defaultSettings: HintType fell back to htOff, so an old INI switched off every tooltip in every VCL program (BioniX, 2026.09).
+
+  The INI key of HintType is 'HintStyle' since 2026.09, and the rename is the repair for the INI files that bug already damaged: they hold HintType=0, and a 0 written by the bug cannot be told apart from a user who really switched the hints off. The new name is in no old INI, so every user gets the default (tooltips) back once, and anyone who wants them off simply switches them off again. SaveSettings deletes the dead 'HintType' key. This is the only key whose INI name differs from its property name. }
 procedure TAppDataCore.LoadSettings;
 begin
   var IniFileObj:= TIniFileEx.Create('AppData Settings', Self.IniFile);
   try
-    AutoStartUp   := IniFileObj.Read('AutoStartUp'        , False);
-    StartMinim    := IniFileObj.Read('StartMinim'         , False);
-    Minimize2Tray := IniFileObj.Read('Minimize2Tray'      , False);
-    Opacity       := IniFileObj.Read('Opacity'            , 255);
-    FShowOnError  := IniFileObj.Read('ShowOnError'        , True);
-    HintType      := THintType(IniFileObj.Read('HintType' , 0));
-    HideHint      := IniFileObj.Read('HideHint'           , 2500);
-    LastFile      := IniFileObj.Read('LastFile'           , '');
-    FLastFolder   := IniFileObj.Read('LastFolder'         , '');
-    UserPath      := IniFileObj.Read('UserPath'           , AppDataFolder);  // Key missing in INIs written before 2026.07 -> fall back to the defaultSettings value
+    AutoStartUp   := IniFileObj.Read('AutoStartUp'        , AutoStartUp);
+    StartMinim    := IniFileObj.Read('StartMinim'         , StartMinim);
+    Minimize2Tray := IniFileObj.Read('Minimize2Tray'      , Minimize2Tray);
+    Opacity       := IniFileObj.Read('Opacity'            , Opacity);
+    FShowOnError  := IniFileObj.Read('ShowOnError'        , FShowOnError);
+    HintType      := THintType(IniFileObj.Read('HintStyle', Ord(HintType)));
+    HideHint      := IniFileObj.Read('HideHint'           , HideHint);
+    LastFile      := IniFileObj.Read('LastFile'           , LastFile);
+    FLastFolder   := IniFileObj.Read('LastFolder'         , FLastFolder);
+    UserPath      := IniFileObj.Read('UserPath'           , UserPath);
 
     // Apply loaded setting to RamLog (it was created before LoadSettings)
     if RamLog <> NIL
@@ -821,7 +827,7 @@ begin
 end;
 
 
-{ Default program settings
+{ Default program settings. The ONLY list of defaults: Create calls this before LoadSettings, which keeps these values for the keys the INI does not have.
   Hint: Use LightSaber\Demo\Template App\Full\FormSettings.pas to give user access to these settings }
 procedure TAppDataCore.DefaultSettings;
 begin
@@ -829,10 +835,12 @@ begin
   AutoStartUp  := FALSE;
   StartMinim   := FALSE;
   Minimize2Tray:= TRUE;                      // Minimize to tray
-  HintType     := htTooltips;                // Turn off the embedded help system
-  Opacity      := 250;                       
+  HintType     := htTooltips;                // Show help as tool-tips
+  Opacity      := 250;
   UserPath     := AppDataFolder;
-  ShowLogOnError:= TRUE;                     // Same default as LoadSettings' fallback. Property setter also syncs RamLog (already created at this point).
+  LastFile     := '';
+  FLastFolder  := '';
+  ShowLogOnError:= TRUE;                     // Property setter also syncs RamLog (already created at this point).
 end;
 
 

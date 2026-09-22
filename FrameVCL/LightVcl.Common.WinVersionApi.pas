@@ -6,7 +6,7 @@ UNIT  LightVcl.Common.WinVersionApi;
 --------------------------------------------------------------------------------------------------------------
 
    Alternative functions for Windows version detection (based on RtlGetVersion API).
-   Prefer LightVcl.Common.WinVersion.pas for most use cases since it relies on the more reliable TOSVersion.
+   Prefer LightCore.WinVersion.pas for most use cases since it relies on the more reliable TOSVersion.
 
    This library provides 3 ways to get Windows version:
       1. GetWinVersion     - Uses RtlGetVersion from NtDLL.dll (most reliable, returns Major.Minor)
@@ -20,8 +20,8 @@ UNIT  LightVcl.Common.WinVersionApi;
    (e.g., "XP", "Vista", "10", "11") rather than version numbers.
 
    Also see:
-      LightVcl.Common.WinVersion   - Preferred: uses TOSVersion, provides IsWindows* functions
-      LightVcl.Common.ExeVersion   - Gets version info from executable files
+      LightCore.WinVersion         - Preferred: uses TOSVersion, provides IsWindows* functions
+      LightCore.ExeVersion         - Gets version info from executable files
 
    Tester:
        c:\Projects\LightSaber\Demo\Demo Detect WinVer\

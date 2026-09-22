@@ -51,7 +51,6 @@ contains
   LightVcl.Graph.Bitmap in 'LightVcl.Graph.Bitmap.pas',
   LightVcl.Graph.BkgColor in 'LightVcl.Graph.BkgColor.pas',
   LightVcl.Graph.BkgColorEditor in 'LightVcl.Graph.BkgColorEditor.pas',
-  LightVcl.Graph.BkgColorParams in 'LightVcl.Graph.BkgColorParams.pas',
   LightVcl.Graph.Cache in 'LightVcl.Graph.Cache.pas',
   LightVcl.Graph.Convert in 'LightVcl.Graph.Convert.pas',
   LightVcl.Graph.Desktop in 'LightVcl.Graph.Desktop.pas',
@@ -68,7 +67,6 @@ contains
   LightVcl.Graph.Resize in 'LightVcl.Graph.Resize.pas',
   LightVcl.Graph.ResizeGr32 in 'LightVcl.Graph.ResizeGr32.pas',
   LightVcl.Graph.ResizeParamFrame in 'LightVcl.Graph.ResizeParamFrame.pas' {ResizeParameters: TFrame},
-  LightVcl.Graph.ResizeParams in 'LightVcl.Graph.ResizeParams.pas',
   LightVcl.Graph.ResizeVCL in 'LightVcl.Graph.ResizeVCL.pas',
   LightVcl.Graph.ResizeWinBlt in 'LightVcl.Graph.ResizeWinBlt.pas',
   LightVcl.Graph.ResizeWinThumb in 'LightVcl.Graph.ResizeWinThumb.pas',
@@ -77,7 +75,6 @@ contains
   LightVcl.Graph.Text in 'LightVcl.Graph.Text.pas',
   LightVcl.Graph.Util in 'LightVcl.Graph.Util.pas',
   LightVcl.Graph.UtilGray in 'LightVcl.Graph.UtilGray.pas',
-  LightVcl.Graph.RainDropParams in 'LightVcl.Graph.RainDropParams.pas',
   LightVcl.Graph.RainDropParamEditorForm in 'LightVcl.Graph.RainDropParamEditorForm.pas',
   LightVcl.Graph.RainShelter in 'LightVcl.Graph.RainShelter.pas',
   LightVcl.Graph.ResizeWinGDI in 'LightVcl.Graph.ResizeWinGDI.pas';

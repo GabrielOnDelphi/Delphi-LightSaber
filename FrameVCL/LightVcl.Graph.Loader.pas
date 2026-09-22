@@ -101,7 +101,7 @@ USES
    {$IFDEF Jpg2000}OpenJpeg2000Bitmap,{$ENDIF} // Download OpenJpeg Pas library from: www.github.com/galfar/PasJpeg2000
    Winapi.ActiveX,
    FastJpegDecHelper,
-   LightVcl.Graph.Resize, LightVcl.Graph.Loader.Resolution, LightVcl.Graph.UtilGray,
+   LightVcl.Graph.Resize, LightCore.Graph.Loader.Resolution, LightVcl.Graph.UtilGray,
    LightVcl.Graph.Loader.WB1, LightVcl.Graph.RainShelter, LightCore.IO, LightCore.Graphics, LightVcl.Common.IO, LightVcl.Graph.FX.Rotate,
    LightCore.AppData, LightVcl.Graph.GrabAviFrame;
 
@@ -493,7 +493,7 @@ begin
  JpgLoader:= TJpegImageEx.Create;
  TRY
    // Autodetect the best Scale factor
-   LightVcl.Graph.Loader.Resolution.GetImageRes(FileName, ResolutionX, ResolutionY);
+   LightCore.Graph.Loader.Resolution.GetImageRes(FileName, ResolutionX, ResolutionY);
    if (ResolutionX < 0) OR  (ResolutionY < 0)  then EXIT(NIL);
 
    if ThumbHeight= -1

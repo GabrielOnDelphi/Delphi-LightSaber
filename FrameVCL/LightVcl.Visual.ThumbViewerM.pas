@@ -25,7 +25,7 @@ INTERFACE
 
 USES
   Winapi.Windows, System.SysUtils, Winapi.Messages, System.Classes, Vcl.Graphics, Vcl.Grids, Vcl.ComCtrls, Vcl.Controls,
-  LightVcl.Graph.Loader.Thread, LightVcl.Common.Colors, LightVcl.Graph.Bitmap, LightVcl.Graph.Resize, LightVcl.Graph.ResizeParams;
+  LightVcl.Graph.Loader.Thread, LightCore.Colors, LightVcl.Graph.Bitmap, LightVcl.Graph.Resize, LightCore.Graph.ResizeParams;
 
 TYPE
   ThumbPtr = ^TThumb;                                                                              { The record also contains the BMP thumb }

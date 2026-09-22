@@ -7,7 +7,7 @@
    Image resizers
    They all use Windows StretchBlt, via the Stretch routine in LightVcl.Graph.ResizeWinBlt.pas
 
-   Parameters of the resize operation are stored in a LightVcl.Graph.ResizeParams.RResizeParams record.
+   Parameters of the resize operation are stored in a LightCore.Graph.ResizeParams.RResizeParams record.
    The record is filled with data from GUI in LightVcl.Graph.ResizeParamEdt.pas.
 
    ToDo: I should use cGraphStretch32.GR32.Transform to resize down and JanFX to resize up.
@@ -49,7 +49,7 @@ INTERFACE
 
 USES
    Winapi.Windows, System.SysUtils, Vcl.Graphics,
-   LightVcl.Graph.Bitmap, LightVcl.Graph.ResizeParams, LightVcl.Graph.ResizeWinBlt;
+   LightVcl.Graph.Bitmap, LightCore.Graph.ResizeParams, LightVcl.Graph.ResizeWinBlt;
 
  { Proportional }
  procedure SmartStretch     (BMP: TBitmap; ResizeOpp: RResizeParams);              overload;
@@ -92,7 +92,7 @@ end;
 { Resizes bitmap proportionally using AUTO-DETECT (roAutoDetect), the default of RResizeParams.Reset.
 
   WARNING - the result can be up to FitTolerance percent (10 by default) WIDER and TALLER than MaxWidth x MaxHeight.
-  Auto-detect first tries to FILL the box; if that would crop more than 5% it falls back to Fit and then deliberately enlarges the result by FitTolerance to remove the black bars (see RResizeParams.computeAutodetect in LightVcl.Graph.ResizeParams.pas).
+  Auto-detect first tries to FILL the box; if that would crop more than 5% it falls back to Fit and then deliberately enlarges the result by FitTolerance to remove the black bars (see RResizeParams.computeAutodetect in LightCore.Graph.ResizeParams.pas).
   Measured: a 400x300 bitmap given a 200x200 box comes out 220x165.
   That overshoot is what a WALLPAPER wants - BioniX calls this routine exactly that way.
   If you need the result to stay INSIDE the box (a thumbnail in a grid cell, for instance), do NOT call this overload - call SmartStretch(BMP, MaxWidth, MaxHeight, roFit). }

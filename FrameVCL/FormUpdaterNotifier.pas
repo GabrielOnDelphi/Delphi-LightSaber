@@ -86,7 +86,7 @@ TYPE
 IMPLEMENTATION  {$R *.DFM}
 
 USES
-   LightVcl.Visual.RichLogUtils, LightVcl.Common.Colors, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.System;
+   LightVcl.Visual.RichLogUtils, LightCore.Colors, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.System;
 
 
 

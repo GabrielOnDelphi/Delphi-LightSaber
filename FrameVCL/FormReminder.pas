@@ -101,8 +101,8 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
   LightVcl.Common.VclUtils,
-  LightVcl.Common.Colors,
-  LightVcl.Common.Sound,
+  LightCore.Colors,
+  LightCore.Sound,
   LightVcl.Common.PowerUtils,
   LightVcl.Common.ExecuteShell,
   LightVcl.Common.Dialogs,

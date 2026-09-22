@@ -86,7 +86,7 @@ USES
 
 IMPLEMENTATION
 USES
-  LightVcl.Common.SystemPermissions, LightVcl.Common.SystemTime;
+  LightCore.Win.SystemPermissions, LightVcl.Common.SystemTime;
 
 
 

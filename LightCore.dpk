@@ -33,7 +33,10 @@ package LightCore;
 requires
   Rtl,
   BindEngine,
-  soaprtl;
+  soaprtl,
+  IndySystem,
+  IndyCore,
+  IndyProtocols;
 
 contains
   LightCore.IO in 'LightCore.IO.pas',
@@ -65,8 +68,14 @@ contains
   LightCore.WrapString in 'LightCore.WrapString.pas',
   LightCore.SearchResult in 'LightCore.SearchResult.pas',
   LightCore.Download in 'LightCore.Download.pas',
+  LightCore.Download.Thread in 'LightCore.Download.Thread.pas',
   LightCore.HTML in 'LightCore.HTML.pas',
   LightCore.Internet in 'LightCore.Internet.pas',
+  LightCore.Internet.CommonWebDown in 'LightCore.Internet.CommonWebDown.pas',
+  LightCore.Internet.Email in 'LightCore.Internet.Email.pas',
+  LightCore.Internet.EmailSender in 'LightCore.Internet.EmailSender.pas',
+  LightCore.Internet.HTMLImg in 'LightCore.Internet.HTMLImg.pas',
+  LightCore.Internet.HtmlWriter in 'LightCore.Internet.HtmlWriter.pas',
   LightCore.Types in 'LightCore.Types.pas',
   LightCore.Time in 'LightCore.Time.pas',
   LightCore.Platform in 'LightCore.Platform.pas',
@@ -74,9 +83,26 @@ contains
   LightCore.Debugger in 'LightCore.Debugger.pas',
   LightCore.INIFileQuick in 'LightCore.INIFileQuick.pas',
   LightCore.System in 'LightCore.System.pas',
+  LightCore.Process in 'LightCore.Process.pas',
+  LightCore.ExeVersion in 'LightCore.ExeVersion.pas',
+  LightCore.Sound in 'LightCore.Sound.pas',
+  LightCore.Keyboard in 'LightCore.Keyboard.pas',
+  LightCore.EnvironmentVar in 'LightCore.EnvironmentVar.pas',
+  LightCore.SystemConsole in 'LightCore.SystemConsole.pas',
+  LightCore.CpuUsageProcess in 'LightCore.CpuUsageProcess.pas',
   LightCore.Graphics in 'LightCore.Graphics.pas',
   LightCore.CmdLine in 'LightCore.CmdLine.pas',
-  LightCore.ExceptionLogger in 'LightCore.ExceptionLogger.pas';
+  LightCore.Colors in 'LightCore.Colors.pas',
+  LightCore.CamUtils in 'LightCore.CamUtils.pas',
+  LightCore.Graph.Loader.Resolution in 'LightCore.Graph.Loader.Resolution.pas',
+  LightCore.Graph.Loader.WBC in 'LightCore.Graph.Loader.WBC.pas',
+  LightCore.Graph.ResizeParams in 'LightCore.Graph.ResizeParams.pas',
+  LightCore.Graph.BkgColorParams in 'LightCore.Graph.BkgColorParams.pas',
+  LightCore.Graph.RainDropParams in 'LightCore.Graph.RainDropParams.pas',
+  LightCore.GuiSettings in 'LightCore.GuiSettings.pas',
+  LightCore.WinVersion in 'LightCore.WinVersion.pas',
+  LightCore.ExceptionLogger in 'LightCore.ExceptionLogger.pas',
+  LightCore.SystemPermissions in 'LightCore.SystemPermissions.pas';
 
 end.
 

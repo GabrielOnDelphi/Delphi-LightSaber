@@ -37,7 +37,7 @@ IMPLEMENTATION
 USES
    MonitorHelper,
    LightCore, LightCore.Reports, LightCore.Time, LightCore.Platform,
-   LightVcl.Common.SystemTime, LightVcl.Common.System, LightVcl.Common.IO, LightVcl.Common.WinVersion, LightVcl.Common.SystemPermissions;
+   LightVcl.Common.SystemTime, LightVcl.Common.System, LightVcl.Common.IO, LightCore.WinVersion, LightCore.SystemPermissions;
 
 
 
@@ -113,7 +113,7 @@ end;
 function GenerateWinSysRep: string;
 begin
  Result:= ' [SYSTEM/OS]'+ CRLF;
- Result:= Result+'  OS platform: '          + Tab+ Tab+ LightVcl.Common.WinVersion.GetOSName+ CRLF;
+ Result:= Result+'  OS platform: '          + Tab+ Tab+ LightCore.WinVersion.GetOSName+ CRLF;
  Result:= Result+'  App has admin rights: ' + BoolToStr(AppHasAdminRights, TRUE)+ CRLF;
  Result:= Result+'  Invalid system time: '  + Tab+ BoolToStr(SystemTimeIsInvalid , TRUE)+ CRLF;
  Result:= Result+'  Windows up time: '      + Tab+ ShowTimeNice(WindowsUpTime);

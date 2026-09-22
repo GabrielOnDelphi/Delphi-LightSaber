@@ -45,7 +45,7 @@ TYPE
 procedure Register;
 
 IMPLEMENTATION
-USES LightVcl.Common.Colors;
+USES LightCore.Colors;
 
 
 

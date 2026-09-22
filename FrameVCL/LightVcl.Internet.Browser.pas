@@ -9,7 +9,7 @@ UNIT LightVcl.Internet.Browser;
    Why a real browser instead of an HTTP download:
      - It runs the site's JavaScript, so client-rendered pages (SPAs) actually have text to read.
      - It is a normal signed-in browser session, so it clears Cloudflare where an anonymous GET gets 403.
-   For a plain server-rendered page a normal download is cheaper - see LightVcl.Internet.Download.WinInet.
+   For a plain server-rendered page a normal download is cheaper - see LightCore.Win.Download.
 
    HOW TO USE
      1. Drop a TEdgeBrowser on your form (do NOT create it in code - it needs a parent window).

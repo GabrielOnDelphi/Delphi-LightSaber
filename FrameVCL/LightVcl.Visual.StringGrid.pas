@@ -126,7 +126,7 @@ procedure Register;
 
 IMPLEMENTATION {$R *.res}
 
-USES LightVcl.Common.Colors, LightCore.TextFile, LightVcl.Common.Clipboard;
+USES LightCore.Colors, LightCore.TextFile, LightVcl.Common.Clipboard;
 
 
 

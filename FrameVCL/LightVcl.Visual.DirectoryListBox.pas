@@ -4,13 +4,17 @@ unit LightVcl.Visual.DirectoryListBox;
 {.$WARN UNIT_PLATFORM OFF}   {Silence the 'W1005 Unit Vcl.FileCtrl is specific to a platform' warning }
 
 {--------------------------------------------------------------------------------------------------
-   2026.03 FINAL
+   2026.09.21 FINAL
    www.GabrielMoraru.com
 
   Features:
    * property ShowHidden - shows/hides hidden folders
    * property ShowSystem - shows/hides system folders
    * property DirectoryTrail - returns Directory with trailing backslash
+   * A folder that cannot be opened (protected folder, empty DVD drive, unavailable network share) does not crash:
+       - double click / Enter: the user gets a message
+       - SetDirectoryMsg: returns FALSE, logs, and the user gets a message
+       - TrySetDirectory: returns FALSE and logs, no UI
 
   Note: 
      Don't set 'Parent:= Owner' in constructor.
@@ -24,6 +28,8 @@ USES
 
 TYPE
  TLightDirListBox= class(TDirectoryListBox)
+  private
+    function  setDirectoryEx(CONST Folder: string; ShowMsg: Boolean): Boolean;
   protected
     FShowHidden : boolean;
     FShowSystem : boolean;
@@ -31,9 +37,13 @@ TYPE
     procedure SetShowHidden(Value: boolean);
     function  ReadDirectoryNames(const ParentDirectory: string; DirectoryList: TStringList): Integer;
     function  getDirectory: string;
+    procedure DblClick; override;                                                                  { Shows a message instead of crashing when the folder cannot be opened }
+    procedure KeyPress(var Key: Char); override;                                                   { Same, for the Enter key }
   public
     Constructor Create(AOwner : TComponent); override;
     procedure BuildList; override;                                                                 { Modified version of original Borland procedure, to support "Show hidden/system folders" }
+    function  TrySetDirectory(CONST Folder: string): Boolean;                                      { Same as 'Directory:= Folder' but returns FALSE (and logs) instead of raising when the folder cannot be opened. Shows no UI. }
+    function  SetDirectoryMsg(CONST Folder: string): Boolean;                                      { Same as TrySetDirectory, but also tells the user why the folder cannot be opened }
   published
     property ShowHidden: boolean read FShowHidden write SetShowHidden default True;
     property ShowSystem: boolean read FShowSystem write SetShowSystem default True;
@@ -45,7 +55,7 @@ procedure Register;
 
 IMPLEMENTATION
 
-USES LightCore.IO;
+USES LightCore, LightCore.IO, LightCore.AppData, LightVcl.Common.Dialogs;
 
 
 
@@ -216,6 +226,88 @@ end;
 function TLightDirListBox.getDirectory: string;
 begin
  Result:= Trail(Directory);
+end;
+
+
+
+
+{--------------------------------------------------------------------------------------------------
+   OPEN A FOLDER - NEVER CRASH
+   Vcl.FileCtrl calls ChDir without first checking that the folder can be entered (ProcessPath, SetDir).
+   Under $I+ ChDir raises EInOutError ('File access denied', 'I/O error 21', ...) for a protected folder,
+   an empty DVD drive or a network share that is not available. That is a normal condition, not a bug.
+--------------------------------------------------------------------------------------------------}
+
+{ Logs why a folder could not be opened and, if ShowMsg, tells the user. Folder is empty when it is not known. }
+procedure ReportOpenError(CONST Folder: string; E: EInOutError; ShowMsg: Boolean);
+begin
+ AppDataCore.LogWarn('Cannot open folder '+ Folder+ ' - '+ E.Message);
+ if ShowMsg
+ then MessageWarning('Cannot open this folder:'+ CRLF+ Folder+ LBRK+ E.Message+ LBRK+ 'You may not have the right to open it, or the drive or network share is not available.', 'Cannot open folder');
+end;
+
+
+{ Double click opens the folder (TDirectoryListBox.DblClick -> OpenCurrent) }
+procedure TLightDirListBox.DblClick;
+VAR Folder: string;
+begin
+ if ItemIndex >= 0
+ then Folder:= GetItemPath(ItemIndex);
+
+ TRY
+   inherited DblClick;
+ EXCEPT
+   on E: EInOutError DO ReportOpenError(Folder, E, TRUE);
+ END;
+end;
+
+
+{ Enter opens the folder (TDirectoryListBox.KeyPress -> OpenCurrent) }
+procedure TLightDirListBox.KeyPress(var Key: Char);
+VAR Folder: string;
+begin
+ if (Word(Key) = VK_RETURN) AND (ItemIndex >= 0)
+ then Folder:= GetItemPath(ItemIndex);
+
+ TRY
+   inherited KeyPress(Key);
+ EXCEPT
+   on E: EInOutError DO ReportOpenError(Folder, E, TRUE);
+ END;
+end;
+
+
+{ Same as 'Directory:= Folder', but returns FALSE instead of raising when the folder cannot be opened. }
+function TLightDirListBox.setDirectoryEx(CONST Folder: string; ShowMsg: Boolean): Boolean;
+VAR OldDirectory: string;
+begin
+ OldDirectory:= Directory;
+ TRY
+   Directory:= Folder;
+   Result:= TRUE;
+ EXCEPT
+   on E: EInOutError DO
+     begin
+      if Directory <> OldDirectory
+      then Update;   { SetDirectory had already switched the drive (DriveChange) when SetDir failed. Rebuild, so the list shows the folder that Directory now points at. }
+      ReportOpenError(Folder, E, ShowMsg);
+      Result:= FALSE;
+     end;
+ END;
+end;
+
+
+{ Shows nothing, only logs: for a caller where a message would be noise (program startup, a path typed letter by letter in an edit box). }
+function TLightDirListBox.TrySetDirectory(CONST Folder: string): Boolean;
+begin
+ Result:= setDirectoryEx(Folder, FALSE);
+end;
+
+
+{ For a folder the user asked to open (a button, a drag and drop). }
+function TLightDirListBox.SetDirectoryMsg(CONST Folder: string): Boolean;
+begin
+ Result:= setDirectoryEx(Folder, TRUE);
 end;
 
 

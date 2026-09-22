@@ -50,7 +50,7 @@
 INTERFACE
 
 USES
-   System.SysUtils,
+   System.SysUtils, System.Devices,
    FMX.Forms, FMX.Platform;
 
 function ScreenScale: Single;
@@ -66,9 +66,11 @@ function WidthFitsTablet (W: Single): Boolean;   { COMPACT_WIDTH ≤ W < HIGH_WI
 function WidthFitsDesktop(W: Single): Boolean;   { W ≥ HIGH_WIDTH (1024) }
 
 function GenerateScreenResolutionRep: string;
+function GenerateDeviceRep: string;
 
 
 IMPLEMENTATION
+USES LightCore;
 
 
 function ScreenScale: Single;
@@ -171,6 +173,56 @@ begin
     'Breakpoints: '    + sLineBreak +
     '    COMPACT_WIDTH = '+ IntToStr(COMPACT_WIDTH)+ sLineBreak +
     '    HIGH_WIDTH = '   + IntToStr(HiGH_WIDTH);
+end;
+
+
+{ TDeviceInfo is only guaranteed to be available and functional in FMX contexts. }
+function GenerateDeviceRep: string;
+var
+  Device: TDeviceInfo;
+begin
+  Result:= ' [DEVICE INFO]'+ CRLF;
+
+  Device:= TDeviceInfo.ThisDevice;
+  if Device = nil then
+  begin
+    Result := Result + '  Error: TDeviceInfo.ThisDevice is NIL or device not recognized.';
+    Exit;
+  end;
+
+  Result:= Result+'  Device ID: '                + Tab + Tab + Device.ID + CRLF;
+  ///Result:= Result+'  Device Class: '          + Tab + Tab + Device.DeviceClass.ToString + CRLF;
+  ///Result:= Result+'  Platform: '              + Tab + Tab + Device.Platform.ToString + CRLF;
+  Result:= Result+'  Exclusive: '                + Tab + Tab + BoolToStr(Device.Exclusive, True) + CRLF;
+
+  // Screen Metrics (Physical/Logical Sizes)
+  Result:= Result+'  DPI (Pixels/Inch): '        + Tab + Device.PixelsPerInch.ToString + CRLF;
+  Result:= Result+'  Aspect Ratio: '             + Tab + Format('%.3f', [Device.AspectRatio]) + CRLF;
+  Result:= Result+'  Min Diagonal (in): '        + Tab + Format('%.2f', [Device.MinDiagonal]) + CRLF;
+  Result:= Result+'  Max Diagonal (in): '        + Tab + Format('%.2f', [Device.MaxDiagonal]) + CRLF;
+
+  // Screen Size (using MinLogicalSize as a proxy for reported size)
+  Result:= Result+'  Logical Size (Min): '       + Tab + Format('%d x %d', [Device.MinLogicalScreenSize.cx, Device.MinLogicalScreenSize.cy]) + CRLF;
+  Result:= Result+'  Physical Size (Min): '      + Tab + Format('%d x %d', [Device.MinPhysicalScreenSize.cx, Device.MinPhysicalScreenSize.cy]) + CRLF;
+  {todo: AI: this crashes with "item not found"}
+  {
+  // Attributes Dictionary (contains OS, Version, DeviceName, etc.)
+  Result:= Result+CRLF+'  [ATTRIBUTES]'+ CRLF;
+  try
+    // Common Attributes (Pulled from the Attributes dictionary directly)
+    Result:= Result+'   DisplayName: '+ Tab+Device.Attributes[sDevAttrDisplayName]+ CRLF;
+    Result:= Result+'   OPDefine: '+ Tab+Device.Attributes[sDevAttrOPDefine]+ CRLF;
+
+    // Iterate over all attributes for maximum juice
+    // NOTE: Accessing FAttributes directly is bad practice, but since TDeviceInfo is sealed and
+    // there's no public iterator, we rely on the internal TAttributes property if needed,
+    // or stick to the known keys. For safety, we'll try known keys first:
+    Result:= Result+'   Manufacturer: '+ Tab+Device.Attributes['manufacturer']+ CRLF;
+    Result:= Result+'   Model: '+ Tab+Tab+Device.Attributes['model']+ CRLF;
+    Result:= Result+'   Version: '+ Tab+Tab+Device.Attributes['version']+ CRLF;
+  except
+    // Attributes might not exist, ignore errors.
+  end; }
 end;
 
 

@@ -71,7 +71,7 @@ USES
  function  FirstLineFromFile     (CONST FileName: string): string;
 
  function  CountLines            (CONST Filename: string; CONST BufferSize: Cardinal= 128000): Int64;                     { Opens a LARGE text file and counts how many lines it has. It does this by loading a small portion of the file in a RAM buffer }
- function  CountCharAppearance   (CONST FileName: string; C: AnsiChar): Int64;
+ function  CountCharAppearance   (CONST FileName: string; C: AnsiChar; CONST StopAt: Int64= 0): Int64;                    { Reads the file in chunks, so it works on files of any size. StopAt > 0: stop reading once the count reaches StopAt }
  procedure GenerateRandomTextFile(CONST Filename: string; NoOfLines: Integer);
 
 
@@ -401,8 +401,9 @@ end;
 
 { Counts how many times the byte C appears in a file.
   Reads the file in 64KB chunks via TFileStream.ReadBuffer and scans each chunk byte-by-byte.
-  Treats the file as raw bytes — no encoding interpretation, no length prefix. }
-function CountCharAppearance(CONST FileName: string; C: AnsiChar): Int64;
+  Treats the file as raw bytes — no encoding interpretation, no length prefix.
+  StopAt > 0: stops reading once the count reaches StopAt and returns StopAt. Use it to ask "does C appear at least N times?" without reading a large file to its end. }
+function CountCharAppearance(CONST FileName: string; C: AnsiChar; CONST StopAt: Int64= 0): Int64;
 CONST
    BufferSize = 64 * 1024;     // 64KB — same sweet spot as CountLines
 VAR
@@ -420,8 +421,11 @@ begin
     WHILE BytesRead > 0 DO
       begin
         for i:= 0 to BytesRead - 1 do
-          if Buffer[i] = Target
-          then Inc(Result);
+          if Buffer[i] = Target then
+           begin
+            Inc(Result);
+            if Result = StopAt then EXIT;   { StopAt = 0 never matches here, because Result is at least 1 }
+           end;
         BytesRead:= FS.Read(Buffer[0], BufferSize);
       end;
   FINALLY

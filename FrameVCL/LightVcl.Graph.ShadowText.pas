@@ -41,7 +41,7 @@ function DrawShadowText(Canvas: TCanvas; const Text: string; X, Y: Integer; Text
 function DrawShadowText(Canvas: TCanvas; const Text: string; TextRect: TRect; TextColor, ShadowColor: TColor; ShadowDist: Integer; DrawFlags: DWORD = DT_LEFT or DT_END_ELLIPSIS): Integer; overload;
 
 IMPLEMENTATION
-USES LightVcl.Common.WinVersion;
+USES LightCore.WinVersion;
 
 TYPE
   TDrawShadowTextFn = function(

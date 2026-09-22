@@ -101,8 +101,8 @@ IMPLEMENTATION {$R *.dfm}
 USES
   System.IOUtils,
   LightVcl.Visual.INIFile, LightCore, LightCore.Time, LightCore.Types, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard,
-  LightVcl.Common.Dialogs, LightCore.INIFile, LightVcl.Common.Sound, LightCore.AppData, LightVcl.Visual.AppData,
-  LightCore.IO, LightCore.TextFile, LightVcl.Common.IO, LightVcl.Internet.EmailSender, LightVcl.Common.System;
+  LightVcl.Common.Dialogs, LightCore.INIFile, LightCore.Sound, LightCore.AppData, LightVcl.Visual.AppData,
+  LightCore.IO, LightCore.TextFile, LightVcl.Common.IO, LightCore.Internet.EmailSender, LightVcl.Common.System;
 
 
 { Returns the full path to the email body persistence file }
@@ -231,7 +231,7 @@ begin
     else Body:= mmoEmailBody.Text;
 
     try
-      Result:= LightVcl.Internet.EmailSender.SendEmail(
+      Result:= LightCore.Internet.EmailSender.SendEmail(
         SMTP,
         edtTo.Text,
         ledFrom.Text,

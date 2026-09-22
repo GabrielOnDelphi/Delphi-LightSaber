@@ -113,7 +113,7 @@ IMPLEMENTATION
 
 USES
    LightCore.Types,
-   LightVcl.Common.Colors, LightVcl.Common.Clipboard, LightVcl.Common.LogFilter;
+   LightCore.Colors, LightVcl.Common.Clipboard, LightVcl.Common.LogFilter;
 
 
 

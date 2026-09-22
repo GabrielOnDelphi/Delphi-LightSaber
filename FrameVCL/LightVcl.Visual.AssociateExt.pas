@@ -48,7 +48,7 @@ procedure Register;
 
 IMPLEMENTATION
 USES
-    LightVcl.Common.SystemPermissions, LightVcl.Common.Shell;
+    LightCore.SystemPermissions, LightVcl.Common.Shell;
 
 
 constructor TAssociateFileExt.Create(aOwner: TComponent);

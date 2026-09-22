@@ -123,7 +123,7 @@ IMPLEMENTATION
 
 USES
   Winapi.ActiveX,
-  LightCore, LightVcl.Common.Registry, LightCore.IO, LightVcl.Common.Dialogs, LightVcl.Common.WinVersion;
+  LightCore, LightCore.Win.Registry, LightCore.IO, LightVcl.Common.Dialogs, LightCore.WinVersion;
 
 
 {--------------------------------------------------------------------------------------------------
@@ -303,7 +303,7 @@ VAR
   Dlg: TFileOpenDialog;
 begin
  { Windows Vista and later - use modern dialog }
- if LightVcl.Common.WinVersion.IsWindowsVistaUp
+ if LightCore.WinVersion.IsWindowsVistaUp
  then
    begin
      Dlg:= TFileOpenDialog.Create(NIL);

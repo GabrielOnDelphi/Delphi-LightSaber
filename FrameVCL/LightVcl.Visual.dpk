@@ -35,6 +35,7 @@ requires
   CcrExif,
   LightExternal,
   LightCore,
+  LightCore.Win,
   LightVcl.Common,
   LightVcl.Graphics,
   LightVcl.Internet;

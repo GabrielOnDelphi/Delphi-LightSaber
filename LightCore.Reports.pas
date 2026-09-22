@@ -43,7 +43,7 @@ begin
   Result:= Result + GeneratePlatformRep + CRLF + CRLF;
   Result:= Result + GenerateCompilerReport;
 
-  { Note: GenerateDeviceRep is FMX-only and must be called separately by FMX applications }
+  { Note: GenerateDeviceRep (LightFmx.Common.Screen) is FMX-only and must be called separately by FMX applications }
 end;
 
 

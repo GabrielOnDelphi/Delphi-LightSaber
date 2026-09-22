@@ -159,6 +159,9 @@
         <DCCReference Include="Rtl.dcp"/>
         <DCCReference Include="BindEngine.dcp"/>
         <DCCReference Include="soaprtl.dcp"/>
+        <DCCReference Include="IndySystem.dcp"/>
+        <DCCReference Include="IndyCore.dcp"/>
+        <DCCReference Include="IndyProtocols.dcp"/>
         <DCCReference Include="LightCore.IO.pas"/>
         <DCCReference Include="LightCore.pas"/>
         <DCCReference Include="LightCore.Binary.pas"/>
@@ -188,8 +191,14 @@
         <DCCReference Include="LightCore.WrapString.pas"/>
         <DCCReference Include="LightCore.SearchResult.pas"/>
         <DCCReference Include="LightCore.Download.pas"/>
+        <DCCReference Include="LightCore.Download.Thread.pas"/>
         <DCCReference Include="LightCore.HTML.pas"/>
         <DCCReference Include="LightCore.Internet.pas"/>
+        <DCCReference Include="LightCore.Internet.CommonWebDown.pas"/>
+        <DCCReference Include="LightCore.Internet.Email.pas"/>
+        <DCCReference Include="LightCore.Internet.EmailSender.pas"/>
+        <DCCReference Include="LightCore.Internet.HTMLImg.pas"/>
+        <DCCReference Include="LightCore.Internet.HtmlWriter.pas"/>
         <DCCReference Include="LightCore.Types.pas"/>
         <DCCReference Include="LightCore.Time.pas"/>
         <DCCReference Include="LightCore.Platform.pas"/>
@@ -197,9 +206,26 @@
         <DCCReference Include="LightCore.Debugger.pas"/>
         <DCCReference Include="LightCore.INIFileQuick.pas"/>
         <DCCReference Include="LightCore.System.pas"/>
+        <DCCReference Include="LightCore.Process.pas"/>
+        <DCCReference Include="LightCore.ExeVersion.pas"/>
+        <DCCReference Include="LightCore.Sound.pas"/>
+        <DCCReference Include="LightCore.Keyboard.pas"/>
+        <DCCReference Include="LightCore.EnvironmentVar.pas"/>
+        <DCCReference Include="LightCore.SystemConsole.pas"/>
+        <DCCReference Include="LightCore.CpuUsageProcess.pas"/>
         <DCCReference Include="LightCore.Graphics.pas"/>
         <DCCReference Include="LightCore.CmdLine.pas"/>
+        <DCCReference Include="LightCore.Colors.pas"/>
+        <DCCReference Include="LightCore.CamUtils.pas"/>
+        <DCCReference Include="LightCore.Graph.Loader.Resolution.pas"/>
+        <DCCReference Include="LightCore.Graph.Loader.WBC.pas"/>
+        <DCCReference Include="LightCore.Graph.ResizeParams.pas"/>
+        <DCCReference Include="LightCore.Graph.BkgColorParams.pas"/>
+        <DCCReference Include="LightCore.Graph.RainDropParams.pas"/>
+        <DCCReference Include="LightCore.GuiSettings.pas"/>
+        <DCCReference Include="LightCore.WinVersion.pas"/>
         <DCCReference Include="LightCore.ExceptionLogger.pas"/>
+        <DCCReference Include="LightCore.SystemPermissions.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

@@ -72,7 +72,7 @@ USES
   LightCore, LightCore.Time, LightCore.Types, LightCore.INIFile, LightCore.AppData,
   LightVcl.Visual.AppData, LightVcl.Visual.INIFile,
   LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Common.Dialogs,
-  LightVcl.Common.Sound;
+  LightCore.Sound;
 
 
 

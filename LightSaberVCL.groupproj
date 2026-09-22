@@ -9,6 +9,9 @@
         <Projects Include="LightCore.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="LightCore.Win.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="FrameVCL\LightVcl.Common.dproj">
             <Dependencies/>
         </Projects>
@@ -47,6 +50,15 @@
     <Target Name="LightCore:Make">
         <MSBuild Projects="LightCore.dproj" Targets="Make"/>
     </Target>
+    <Target Name="LightCore_Win">
+        <MSBuild Projects="LightCore.Win.dproj"/>
+    </Target>
+    <Target Name="LightCore_Win:Clean">
+        <MSBuild Projects="LightCore.Win.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightCore_Win:Make">
+        <MSBuild Projects="LightCore.Win.dproj" Targets="Make"/>
+    </Target>
     <Target Name="LightVcl_Common">
         <MSBuild Projects="FrameVCL\LightVcl.Common.dproj"/>
     </Target>
@@ -84,13 +96,13 @@
         <MSBuild Projects="FrameVCL\LightVcl.Visual.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightExternal;LightCore;LightVcl_Common;LightVcl_Internet;LightVcl_Graphics;LightVcl_Visual"/>
+        <CallTarget Targets="LightExternal;LightCore;LightCore_Win;LightVcl_Common;LightVcl_Internet;LightVcl_Graphics;LightVcl_Visual"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightExternal:Clean;LightCore:Clean;LightVcl_Common:Clean;LightVcl_Internet:Clean;LightVcl_Graphics:Clean;LightVcl_Visual:Clean"/>
+        <CallTarget Targets="LightExternal:Clean;LightCore:Clean;LightCore_Win:Clean;LightVcl_Common:Clean;LightVcl_Internet:Clean;LightVcl_Graphics:Clean;LightVcl_Visual:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightExternal:Make;LightCore:Make;LightVcl_Common:Make;LightVcl_Internet:Make;LightVcl_Graphics:Make;LightVcl_Visual:Make"/>
+        <CallTarget Targets="LightExternal:Make;LightCore:Make;LightCore_Win:Make;LightVcl_Common:Make;LightVcl_Internet:Make;LightVcl_Graphics:Make;LightVcl_Visual:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
@@ -114,6 +126,12 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.Win.dproj">
+            <ProjectGuid>{38B69350-195F-42A4-B5EE-312CFA523BFC}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win64</Platforms>
             <Enabled>True</Enabled>
@@ -156,6 +174,12 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.Win.dproj">
+            <ProjectGuid>{38B69350-195F-42A4-B5EE-312CFA523BFC}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="FrameVCL\LightVcl.Internet.dproj">
             <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
             <Configurations>Release</Configurations>
@@ -194,6 +218,12 @@
             <Platforms>Win32</Platforms>
             <Enabled>True</Enabled>
         </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.Win.dproj">
+            <ProjectGuid>{38B69350-195F-42A4-B5EE-312CFA523BFC}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
         <BuildGroupProject Include="FrameVCL\LightVcl.Internet.dproj">
             <ProjectGuid>{EE84D7CC-248A-429C-97EC-3D72717C8B5D}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -228,6 +258,12 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug;Release</Configurations>
+            <Platforms>Win32;Win64</Platforms>
+            <Enabled>True</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="LightCore.Win.dproj">
+            <ProjectGuid>{38B69350-195F-42A4-B5EE-312CFA523BFC}</ProjectGuid>
             <Configurations>Debug;Release</Configurations>
             <Platforms>Win32;Win64</Platforms>
             <Enabled>True</Enabled>

@@ -1,7 +1,7 @@
 ﻿UNIT LightCore.Math;
 
 {=============================================================================================================
-   2026.05.26
+   2026.09.10
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 ==============================================================================================================
@@ -13,6 +13,7 @@
      - Rounding variants (NOTE: RoundEx/RoundUp designed for positive numbers only)
      - Statistical functions (median, mean, interquartile)
      - Factorial and combinations
+     - Image geometry (aspect ratio classification)
 
 =============================================================================================================}
 
@@ -98,6 +99,14 @@ USES
  {$IF Defined(CPUX86)}
  function MixBytes(FG, BG, BlendPower: byte): Byte; { This function mixes two bytes According to value of TRANS. The value of TRANS is between 0 (result then will be equal to FG) and 255 (result then will be equal to BG) }
  {$ENDIF}
+
+
+{==================================================================================================
+   IMAGE GEOMETRY
+   The overload that takes a TBitmap lives in FrameVCL\LightVcl.Graph.Bitmap.pas.
+   Both halves must keep the `overload` directive, or the VCL half hides this one.
+==================================================================================================}
+ function  IsPanoramic     (Width, Height: Integer): Boolean;   overload;
 
 
 {==================================================================================================
@@ -524,6 +533,21 @@ end;
 function SameValue(R1, R2: Real): Boolean;
 begin
  Result:= System.Math.SameValue(R1, R2, 0.01);
+end;
+
+
+{-------------------------------------------------------------------------------------------------------------
+   IMAGE GEOMETRY
+-------------------------------------------------------------------------------------------------------------}
+
+{ Panoramic images have width much bigger than height (aspect ratio > 4:1). }
+function IsPanoramic(Width, Height: Integer): Boolean;
+begin
+ if Height <= 0
+ then EXIT(FALSE);  { Invalid height cannot be panoramic }
+
+ Result:= (Width > 6000) AND             { Cannot be panoramic unless the width is really big }
+         ((Width / Height) > 4);         { Panoramic images have width much much bigger than height }
 end;
 
 
