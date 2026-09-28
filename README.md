@@ -203,6 +203,7 @@ The AppData system replaces the standard Delphi application lifecycle with a mor
 ```pascal
 begin
   AppData:= TAppData.Create('AppName', 'UniqueWindowClassName', MultiThreaded);
+  Application.MainFormOnTaskbar:= TRUE;   // VCL only, optional. RTL default FALSE. Set it BEFORE CreateMainForm
   AppData.CreateMainForm(TMainForm, MainForm, asPosOnly);
   AppData.CreateForm(TSecondForm, SecondForm, asFull);
   AppData.Run;  // Starts the message loop; Initializing flips FALSE once the forms finish loading
