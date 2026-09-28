@@ -71,7 +71,7 @@
    madExcept is not linked at all, so it would fire on a build that has no madExcept.
 -------------------------------------------------------------------------------------------------------------}
 {$IFDEF madshi}
-  {$MESSAGE ERROR 'LightFmx.Common.CrashHandler cannot be linked into a binary that also links madExcept: madExcept replaces TApplication.HandleException, so Application.OnException never fires and this unit is silently dead. Use madExcept.RegisterExceptionHandler, or LightCore.ExceptionLogger.'}
+  {$MESSAGE ERROR 'LightFmx.Common.CrashHandler must not be linked together with madExcept: madExcept replaces TApplication.HandleException, so Application.OnException never fires. Use this unit only where madshi is not defined - see the unit header.'}   // Max 255 chars (E2056)
 {$ENDIF}
 
 INTERFACE
