@@ -3,6 +3,9 @@
         <ProjectGuid>{889D79DE-7E8C-4310-8E76-49C32EC57928}</ProjectGuid>
     </PropertyGroup>
     <ItemGroup>
+        <Projects Include="External\LightExternal.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="LightCore.dproj">
             <Dependencies/>
         </Projects>
@@ -35,6 +38,15 @@
             <Default.Personality/>
         </BorlandProject>
     </ProjectExtensions>
+    <Target Name="LightExternal">
+        <MSBuild Projects="External\LightExternal.dproj"/>
+    </Target>
+    <Target Name="LightExternal:Clean">
+        <MSBuild Projects="External\LightExternal.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="LightExternal:Make">
+        <MSBuild Projects="External\LightExternal.dproj" Targets="Make"/>
+    </Target>
     <Target Name="LightCore">
         <MSBuild Projects="LightCore.dproj"/>
     </Target>
@@ -108,30 +120,18 @@
         <MSBuild Projects="FrameFMX\LightFmxVisual.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="LightCore;LightCore_Win;LightVcl_Common;LightVcl_Graphics;LightVcl_Internet;LightVcl_Visual;LightFmxCommon;LightFmxVisual"/>
+        <CallTarget Targets="LightExternal;LightCore;LightCore_Win;LightVcl_Common;LightVcl_Graphics;LightVcl_Internet;LightVcl_Visual;LightFmxCommon;LightFmxVisual"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="LightCore:Clean;LightCore_Win:Clean;LightVcl_Common:Clean;LightVcl_Graphics:Clean;LightVcl_Internet:Clean;LightVcl_Visual:Clean;LightFmxCommon:Clean;LightFmxVisual:Clean"/>
+        <CallTarget Targets="LightExternal:Clean;LightCore:Clean;LightCore_Win:Clean;LightVcl_Common:Clean;LightVcl_Graphics:Clean;LightVcl_Internet:Clean;LightVcl_Visual:Clean;LightFmxCommon:Clean;LightFmxVisual:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="LightCore:Make;LightCore_Win:Make;LightVcl_Common:Make;LightVcl_Graphics:Make;LightVcl_Internet:Make;LightVcl_Visual:Make;LightFmxCommon:Make;LightFmxVisual:Make"/>
+        <CallTarget Targets="LightExternal:Make;LightCore:Make;LightCore_Win:Make;LightVcl_Common:Make;LightVcl_Graphics:Make;LightVcl_Internet:Make;LightVcl_Visual:Make;LightFmxCommon:Make;LightFmxVisual:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
     <ItemGroup Condition="'$(BuildGroup)'=='Win64_Debug'">
         <BuildGroupProject Include="FrameFMX\LightFmxVisual.dproj">
             <ProjectGuid>{1B99132F-3E32-4911-B8F0-F9DA00251E7A}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="FrameFMX\LightFmxCommon.dproj">
-            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -144,6 +144,24 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="External\LightExternal.dproj">
+            <ProjectGuid>{A6E3A953-404B-490C-8F1A-AEB23216C925}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="FrameFMX\LightFmxCommon.dproj">
+            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -174,18 +192,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="FrameFMX\LightFmxCommon.dproj">
-            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="FrameVCL\LightVcl.Common.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -194,6 +200,24 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="External\LightExternal.dproj">
+            <ProjectGuid>{A6E3A953-404B-490C-8F1A-AEB23216C925}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="FrameFMX\LightFmxCommon.dproj">
+            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -224,18 +248,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="FrameFMX\LightFmxCommon.dproj">
-            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="FrameVCL\LightVcl.Common.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -244,6 +256,24 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="External\LightExternal.dproj">
+            <ProjectGuid>{A6E3A953-404B-490C-8F1A-AEB23216C925}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="FrameFMX\LightFmxCommon.dproj">
+            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
@@ -274,18 +304,6 @@
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
         </BuildGroupProject>
-        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
-            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
-        <BuildGroupProject Include="FrameFMX\LightFmxCommon.dproj">
-            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
-            <Configurations>Debug</Configurations>
-            <Platforms>Win32</Platforms>
-            <Enabled>False</Enabled>
-        </BuildGroupProject>
         <BuildGroupProject Include="FrameVCL\LightVcl.Common.dproj">
             <ProjectGuid>{2BB73EBB-65B5-41F4-916D-199DC8232F7D}</ProjectGuid>
             <Configurations>Debug</Configurations>
@@ -294,6 +312,24 @@
         </BuildGroupProject>
         <BuildGroupProject Include="LightCore.dproj">
             <ProjectGuid>{E39437F2-1508-458C-B742-A6CFCD366372}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="External\LightExternal.dproj">
+            <ProjectGuid>{A6E3A953-404B-490C-8F1A-AEB23216C925}</ProjectGuid>
+            <Configurations>Release</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="FrameVCL\LightVcl.Graphics.dproj">
+            <ProjectGuid>{8B57C0AA-A915-47F7-93B7-1BCC437CABFF}</ProjectGuid>
+            <Configurations>Debug</Configurations>
+            <Platforms>Win32</Platforms>
+            <Enabled>False</Enabled>
+        </BuildGroupProject>
+        <BuildGroupProject Include="FrameFMX\LightFmxCommon.dproj">
+            <ProjectGuid>{08E3CBB2-C915-48F0-B984-2DD445D9C307}</ProjectGuid>
             <Configurations>Debug</Configurations>
             <Platforms>Win32</Platforms>
             <Enabled>False</Enabled>
