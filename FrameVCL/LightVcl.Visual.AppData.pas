@@ -178,7 +178,7 @@ TYPE
    --------------------------------------------------------------------------------------------------}
     procedure Restore;
     procedure Restart;
-    procedure SelfDelete;
+    procedure SelfDelete(AlsoRemoveFolder: Boolean = FALSE);
     procedure Minimize; override;
 
     function  RunFileAtStartUp(CONST FilePath: string; Active: Boolean): Boolean;
@@ -419,9 +419,7 @@ begin
       TLightForm(Reference).SchedulePostInitialize;
     end;
 
-  // Uninstaller
-  if RunningFirstTime
-  then RegisterUninstaller;
+  RegisterUninstaller;   // At every start, not only the first: the entry must follow a moved install folder, and a run from the source folder must remove an entry left by an older build
 end;
 
 
@@ -651,20 +649,30 @@ begin
 end;
 
 
-{ This is a bit dirty! It creates a BAT that deletes the EXE. Some antiviruses might block this behavior? }
-procedure TAppData.SelfDelete;
+{ This is a bit dirty! It creates a BAT that deletes the EXE. Some antiviruses might block this behavior?
+
+  AlsoRemoveFolder removes the folder the EXE lives in as well, with everything still in it, and NOT to the Recycle Bin.
+  It is FALSE by default, so every existing caller keeps deleting only the EXE. Pass TRUE only from a program that runs
+  from a folder of its own: the DNA Baser v6 uninstaller copies itself into %TEMP%\<AppName>\, and its INI and its
+  'portable.marker' stayed there after every uninstall (added 2026.09.22). }
+procedure TAppData.SelfDelete(AlsoRemoveFolder: Boolean = FALSE);
 CONST
-  BatCode = ':delete_exe' + sLineBreak + 'del "%s"' + sLineBreak + 'if exist "%s" goto delete_exe' + sLineBreak + 'del "%s"';
+  BatCode       = ':delete_exe' + sLineBreak + 'del "%s"' + sLineBreak + 'if exist "%s" goto delete_exe' + sLineBreak + 'del "%s"';
+  BatCodeFolder = ':delete_exe' + sLineBreak + 'del "%s"' + sLineBreak + 'if exist "%s" goto delete_exe' + sLineBreak + 'rd /s /q "%s"' + sLineBreak + 'del "%s"';
 VAR
  List    : TStringList;
  PI      : TProcessInformation;
  SI      : TStartupInfo;
  BatPath : string;
+ TempDir : string;
+ CurDir  : PChar;
 begin
   BatPath := TPath.Combine(TPath.GetTempPath, ChangeFileExt(ExeShortName, '.BAT'));
   List := TStringList.Create;
   TRY
-    List.Text := Format(BatCode, [Application.ExeName, Application.ExeName, BatPath]);
+    if AlsoRemoveFolder
+    then List.Text := Format(BatCodeFolder, [Application.ExeName, Application.ExeName, ExcludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName)), BatPath])
+    else List.Text := Format(BatCode      , [Application.ExeName, Application.ExeName, BatPath]);
     List.SaveToFile(BatPath);
   FINALLY
     FreeAndNil(List);
@@ -674,10 +682,18 @@ begin
   SI.dwFlags := STARTF_USESHOWWINDOW;
   SI.wShowWindow := SW_HIDE;
 
+  { CMD inherits the current directory of this process, which is the folder to remove - and 'rd' cannot remove the current
+    directory of a running process. So the child is started in the Temp folder instead. TempDir must be a variable: a PChar
+    taken from a function result would point at a string that is already freed when CreateProcess reads it }
+  TempDir:= TPath.GetTempPath;
+  if AlsoRemoveFolder
+  then CurDir:= PChar(TempDir)
+  else CurDir:= NIL;
+
   // Batch files must be run through the command interpreter (CreateProcess doc), and BatPath must be
   // quoted: the temp path contains the user name, and an unquoted 'C:\Users\John Smith\...\App.BAT'
   // is split at the space — CreateProcess fails silently and the EXE is never deleted.
-  if CreateProcess( NIL, PChar('cmd.exe /c "'+ BatPath+ '"'), NIL, NIL, False, IDLE_PRIORITY_CLASS, NIL, NIL, SI, PI) then
+  if CreateProcess( NIL, PChar('cmd.exe /c "'+ BatPath+ '"'), NIL, NIL, False, IDLE_PRIORITY_CLASS, NIL, CurDir, SI, PI) then
    begin
      CloseHandle(PI.hThread);
      CloseHandle(PI.hProcess);
@@ -1133,12 +1149,26 @@ begin
 end;
 
 
-// This will be called automatically by CreateMainForm
+{ Called by CreateMainForm at every start.
+  Writes the Windows uninstall entry ("Apps & features") and the two folders the uninstaller reads.
+  Does nothing when the program ships no uninstaller: a small tool, or the uninstaller itself running from its Temp copy.
+  A run from the source folder (RunningHome) is not an installation. The source folder can hold System\Uninstall.exe too, so an entry written from there would give Windows an Uninstall button that deletes the SOURCE folder. Remove the entry instead. }
 procedure TAppData.RegisterUninstaller;
+CONST
+  UninstallKey = 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\';
+  UninstallerExe = 'Uninstall.exe';
 begin
-  // Write to Control Panel
-  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'DisplayName', AppName);
-  RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ AppName, 'UninstallString', AppFolder+ 'Uninstall.exe');
+  if RunningHome then
+    begin
+      if RegDeleteKey(HKEY_CURRENT_USER, UninstallKey+ AppName)
+      then doLogInfo('Running from the source folder: the Windows uninstall entry was removed. An installed copy registers it.');
+      EXIT;
+    end;
+
+  if NOT FileExists(AppSysDir+ UninstallerExe) then EXIT;
+
+  RegWriteString(HKEY_CURRENT_USER, UninstallKey+ AppName, 'DisplayName', AppName);
+  RegWriteString(HKEY_CURRENT_USER, UninstallKey+ AppName, 'UninstallString', AppSysDir+ UninstallerExe);
 
   writeAppDataFolder;
   writeInstallationFolder;
