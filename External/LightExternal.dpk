@@ -25,13 +25,15 @@ package LightExternal;
 {$IMAGEBASE $400000}
 {$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'LightSaber - Expernal code'}
+{$DESCRIPTION 'Third party packages'}
 {$LIBSUFFIX AUTO}
 {$IMPLICITBUILD OFF}
 
 requires
   rtl,
-  vcl;
+  vclimg,
+  vcl,
+  xmlrtl;
 
 contains
   DirectoryWatch in 'DirectoryWatch.pas',
@@ -44,7 +46,15 @@ contains
   MonitorHelper in 'MonitorHelper.pas',
   HtmlParserEx in 'HtmlParserEx.pas',
   janFX in 'janFX.pas',
-  janFxStretch in 'janFxStretch.pas';
+  janFxStretch in 'janFxStretch.pas',
+  CCR.Exif in 'Exif\CCR.Exif.pas',
+  CCR.Exif.BaseUtils in 'Exif\CCR.Exif.BaseUtils.pas',
+  CCR.Exif.Consts in 'Exif\CCR.Exif.Consts.pas',
+  CCR.Exif.IPTC in 'Exif\CCR.Exif.IPTC.pas',
+  CCR.Exif.StreamHelper in 'Exif\CCR.Exif.StreamHelper.pas',
+  CCR.Exif.TagIDs in 'Exif\CCR.Exif.TagIDs.pas',
+  CCR.Exif.TiffUtils in 'Exif\CCR.Exif.TiffUtils.pas',
+  CCR.Exif.XMPUtils in 'Exif\CCR.Exif.XMPUtils.pas';
 
 end.
 
