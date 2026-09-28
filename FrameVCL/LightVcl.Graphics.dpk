@@ -41,7 +41,6 @@ requires
   LightExternal,
   LightCore,
   LightVcl.Common,
-  CCRExif,
   GR32_R,
   ThirdPartyLibs;
 
