@@ -172,8 +172,13 @@ begin
     END;
 
   EXCEPT
-    on E: Exception
-     do RAISE Exception.CreateFmt('Error writing to file %s: %s', [FileName, E.Message]);
+    on E: Exception DO
+     begin
+      { Re-raise the SAME object, so the class survives: a caller that catches EFCreateError (a file locked by another program) must still receive one.
+        Until 2026.09.24 this raised a new plain Exception, and the "on EFCreateError" handlers around TRamLog.SaveAsText in DNA Baser could never fire. }
+      E.Message:= 'Error writing to file '+ FileName+ ': '+ E.Message;
+      RAISE;
+     end;
   end;
 end;
 
