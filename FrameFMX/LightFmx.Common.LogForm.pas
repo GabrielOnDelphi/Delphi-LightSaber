@@ -121,6 +121,7 @@ begin
   LogViewer.FormDestroying:= TRUE;
   LogViewer.RamLog.UnregisterLogObserver;  // Prevent NEW notifications.
   SaveSettings;
+  AppData.LogFormDestroyed(Self);          // SaveSettings asserted AppData <> NIL
 end;
 
 
