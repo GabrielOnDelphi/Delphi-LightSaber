@@ -593,9 +593,10 @@ procedure TLightForm.MainFormCaption(CONST Caption: string);
 begin
   Assert(Application.MainForm <> NIL, 'MainFormCaption called before the main form exists!');
 
+  { GetVersionInfoV returns the version with a leading space already (LightVcl.Visual.AppData.pas), so no separator is added here. Until 2026.09.22 one was, and every main form showed two spaces in its title bar }
   if Caption= ''
-  then Application.MainForm.Caption:= appData.AppName+ ' '+ appData.GetVersionInfoV
-  else Application.MainForm.Caption:= appData.AppName+ ' '+ appData.GetVersionInfoV+ ' - ' + Caption;
+  then Application.MainForm.Caption:= appData.AppName+ appData.GetVersionInfoV
+  else Application.MainForm.Caption:= appData.AppName+ appData.GetVersionInfoV+ ' - ' + Caption;
   //todo: show debug release modes as in fmx
 end;
 
