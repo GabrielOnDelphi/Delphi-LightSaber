@@ -23,12 +23,7 @@ USES LightCore.Win.Registry, LightCore.AppData, LightVcl.Visual.AppData
 ;
 
 
-{moved to
-
-TAppData.AddUninstallerToCtrlPanel
-TAppData.RegisterUninstaller;
-
-  }
+{ Moved to TAppData.RegisterUninstaller (LightVcl.Visual.AppData.pas) }
 
 
 

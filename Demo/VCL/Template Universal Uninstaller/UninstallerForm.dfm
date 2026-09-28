@@ -2875,6 +2875,7 @@ object frmMain: TfrmMain
       Top = 249
       Width = 456
       Height = 41
+      Hint = 'The installation folder of the product. It goes to the Recycle Bin.'
       ShowCreateBtn = False
       OnPathChanged = edtPathPathChanged
       Align = alTop
@@ -2934,6 +2935,7 @@ object frmMain: TfrmMain
     end
   end
   object CountDown: TLightCountDown
+    OnTimesUp = CountDownTimesUp
     Left = 616
     Top = 64
   end
