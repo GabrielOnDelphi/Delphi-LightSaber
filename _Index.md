@@ -2972,14 +2972,17 @@ function HasGrayscalePalette(const FileName: string): Boolean; overload;
 function HasGrayscalePalette(BMP: TBitmap): Boolean; overload;
 ```
 
-## LightVcl.Internet.Browser (9)
+## LightVcl.Internet.Browser (12)
 
 ```pascal
+function HookNavigation: Boolean;
 procedure BrowserCreated (Sender: TCustomEdgeBrowser; AResult: HResult);
-procedure NavigationCompleted(Sender: TCustomEdgeBrowser; IsSuccess: Boolean; WebErrorStatus: COREWEBVIEW2_WEB_ERROR_STATUS);
+procedure NavigationStarting (Sender: TCustomEdgeBrowser; Args: TNavigationStartingEventArgs);
+procedure NavigationCompleted(IsSuccess: Boolean; WebErrorStatus: COREWEBVIEW2_WEB_ERROR_STATUS; HttpStatus: Integer);
 procedure ScriptCompleted (Sender: TCustomEdgeBrowser; AResult: HResult; CONST AResultObjectAsJson: string);
 procedure SettleFire(Sender: TObject);
 procedure GuardFire (Sender: TObject);
+procedure GraceFire (Sender: TObject);
 procedure StopTimers;
 procedure Succeed(CONST Text: string);
 procedure Fail(Outcome: TPageOutcome; CONST Info: string);
@@ -3088,7 +3091,7 @@ function PromptToLoadFile (VAR FileName: string; CONST Filter: string = ''; CONS
 function PromptForFileName(VAR FileName: string; SaveDialog: Boolean; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''; CONST InitialDir: string = ''): Boolean;
 procedure Restore;
 procedure Restart;
-procedure SelfDelete;
+procedure SelfDelete(AlsoRemoveFolder: Boolean = FALSE);
 procedure Minimize; override;
 function RunFileAtStartUp(CONST FilePath: string; Active: Boolean): Boolean;
 function RunSelfAtStartUp(Active: Boolean): Boolean;
@@ -4077,4 +4080,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2943 public routines across 225 units._
+_2946 public routines across 225 units._
