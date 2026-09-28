@@ -125,7 +125,7 @@ TYPE
   TAppData= class(TAppDataCore)
   private
     FPendingAutoStates: TList<TPendingAutoState>;  // Stores AutoState by class name for queued forms (aReference = NIL)
-    FFormLog: TfrmRamLog;       // The Log form (to be used by the entire program). Owned by TApplication, but explicitly freed in TAppData.Destroy — see the comment there (Application itself dies only AFTER this unit's finalization).
+    FFormLog: TfrmRamLog;       // The Log form (to be used by the entire program). Owned by TApplication. Freed by whichever comes first: DoneApplication (an app that called Run) or TAppData.Destroy (no Run) - see the comment there. TfrmRamLog.FormDestroy calls LogFormDestroyed, so the other one does not free it again.
     function getLogForm: TfrmRamLog;
   protected
     procedure setHintType(const aHintType: THintType); override;
@@ -162,6 +162,7 @@ TYPE
    --------------------------------------------------------------------------------------------------}
     procedure SetMaxPriority;
     property FormLog: TfrmRamLog read getLogForm;   //Created at runtime, as/if necessary
+    procedure LogFormDestroyed(Form: TfrmRamLog);   // Called only by TfrmRamLog.FormDestroy
   end;
 
 
@@ -217,8 +218,9 @@ begin
           do doLogError('TAppData.Destroy: saveBeforeExit failed for '+ Screen.Forms[i].Name+ ' ('+ Screen.Forms[i].ClassName+ '): '+ E.ClassName+ ' - '+ E.Message);
         end;
 
-  { Destroy the log form NOW, while RamLog is still alive.
-    Although TApplication owns the form, Application itself is destroyed only in the platform unit's finalization — AFTER this one.
+  { Destroy the log form NOW, while RamLog is still alive - if it still exists.
+    In an app that called Application.Run (CASE 1 in the FINALIZATION comment), DoneApplication already freed it, and LogFormDestroyed set FFormLog to NIL. Before that NIL, this line freed the dead form a second time (FastMM: "A virtual method was called on a freed object", TfrmRamLog, 2026-09-26).
+    In an app that never called Run (CASE 2), TApplication owns the form but is destroyed only in the platform unit's finalization - AFTER this one.
     If we left the log form to die there, its FormDestroy/TLogViewer.Destroy would call UnregisterLogObserver on the ALREADY FREED RamLog (freed below, in TAppDataCore.Destroy) and TfrmRamLog.SaveSettings would hit a NIL AppData.
     Freeing it here keeps the whole teardown inside a live-AppData context.
     TComponent.Destroy unhooks it from Application. }
@@ -432,7 +434,7 @@ begin
 end;
 
 
-{ TfrmRamLog is owned by TApplication but freed early, in TAppData.Destroy (see comment there).
+{ TfrmRamLog is owned by TApplication. Who frees it depends on the shutdown path - see the comment in TAppData.Destroy.
   Warning: during Initializing (before Run), FMX defers form creation — FFormLog stays NIL until RealCreateForms runs, so this returns NIL if accessed that early. }
 function TAppData.getLogForm: TfrmRamLog;
 begin
@@ -441,6 +443,14 @@ begin
   if FFormLog = NIL
   then CreateForm(TfrmRamLog, FFormLog, asPosOnly);  // Use CreateForm instead of direct queue access
   Result:= FFormLog;
+end;
+
+
+{ TApplication owns the log form, so it can free the form behind our back (DoneApplication). Forget it, or TAppData.Destroy frees it a second time. }
+procedure TAppData.LogFormDestroyed(Form: TfrmRamLog);
+begin
+  if FFormLog = Form
+  then FFormLog:= NIL;
 end;
 
 
