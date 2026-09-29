@@ -20,12 +20,11 @@ UNIT LightCore.Internet.Ftp;
      NavigateTo       - walk into a 'deep path' (one or more folders), creating each folder along the way.
      DirectoryExists  - report whether a directory exists in the current FTP folder.
 
-     The uploader borrows the TIdFTP - it does NOT own it; the caller keeps full control of the connection
-     lifecycle (Connect / Disconnect / status). Before UploadFolder, the caller must have the TIdFTP connected
-     with TransferType = ftBinary.
+     The uploader borrows the TIdFTP - it does NOT own it; the caller keeps full control of the connection lifecycle (Connect / Disconnect / status).
+     Before UploadFolder, the caller must have the TIdFTP connected with TransferType = ftBinary.
 
-     Errors propagate as exceptions (Indy's own EId* on a failed FTP command, or EFtpError) rather than
-     showing a dialog, so the unit needs no GUI. The caller turns the exception into whatever UI it wants.
+     Errors propagate as exceptions (Indy's own EId* on a failed FTP command, or EFtpError) rather than showing a dialog, so the unit needs no GUI.
+     The caller turns the exception into whatever UI it wants.
      Assign OnProgress to receive textual progress.
 -------------------------------------------------------------------------------------------------------------}
 
@@ -104,11 +103,9 @@ VAR
   k: Integer;
   Item: TIdFTPListItem;
 begin
- { One listing, read name + type from the SAME parsed record. The old code issued two separate listings
-   (LIST/MLSD + NLST) and matched them by index - but those are independent server commands with no shared
-   order or membership (MLSD returns './..', NLST usually does not), so the dir/file flag and the name could
-   describe different entries. Indy's DirectoryListing carries both FileName and ItemType per item; List()
-   clears it before filling, so no stale entries. }
+ { One listing, read name + type from the SAME parsed record.
+   Two separate listings (LIST/MLSD + NLST) cannot be matched by index: they are independent server commands with no shared order or membership (MLSD returns './..', NLST usually does not), so the dir/file flag and the name could describe different entries.
+   Indy's DirectoryListing carries both FileName and ItemType per item; List() clears it before filling, so no stale entries. }
  Result := False;
  FFtp.List('', True);
  for k := 0 to FFtp.DirectoryListing.Count - 1 do
@@ -117,7 +114,7 @@ begin
    if  (Item.ItemType = ditDirectory)
    and (Item.FileName <> '.')
    and (Item.FileName <> '..')
-   and SameText(Item.FileName, Dir)                     { case-insensitive, matching the old TStringList.IndexOf default }
+   and SameText(Item.FileName, Dir)
    then EXIT(True);
   end;
 end;
@@ -146,7 +143,6 @@ begin
 
    Dir:= TrailLinuxPath(Dir);
 
-   { Enter each folder in turn, peeling it off the front of Dir }
    WHILE Pos('/', Dir) > 0 DO
     begin
      SubDir:= System.Copy(Dir, 1, Pos('/', Dir) - 1);
@@ -178,7 +174,7 @@ procedure TFtpUploader.UploadFolder(const LocalDir, RemoteDir, Filter: string);
          END;
         end;
      FINALLY
-       FreeAndNil(List);                                             { try/finally: ChangeDirForce/ChangeDirUp can raise mid-loop }
+       FreeAndNil(List);
      END;
 
      { # Files }
@@ -196,30 +192,21 @@ procedure TFtpUploader.UploadFolder(const LocalDir, RemoteDir, Filter: string);
           else DoProgress('File not found! '+ sFile);
         end;
      FINALLY
-       FreeAndNil(List);                                             { try/finally: FFtp.Put can raise an Indy exception mid-loop }
+       FreeAndNil(List);
      END;
    end;
 
 
 VAR
-   SubDir, LDir, RDir: string;
+   LDir: string;
 begin
  Assert(FFtp.TransferType= ftBinary, 'FTP TransferType is not Binary!');
 
  { # Remote dir }
- RDir := StringReplace(RemoteDir, '\', '/', [rfReplaceAll]);   { Accept either 'dir\dir' or 'dir/dir' from the caller }
- if RDir <> '' then
+ if RemoteDir <> '' then
   begin
-   if RDir[1] = '/' then Delete(RDir, 1, 1);
-   if RDir[Length(RDir)] <> '/' then RDir := RDir + '/';       { Force a trailing '/' so the loop below sees every segment }
-
-   DoProgress('Navigating to '+ RDir);
-   WHILE Pos('/', RDir) > 0 DO
-    begin
-     SubDir:= System.Copy(RDir, 1, Pos('/', RDir) - 1);
-     ChangeDirForce(SubDir);
-     Delete(RDir, 1, Pos('/', RDir));                          { 'your/directory/subdir/' --> 'directory/subdir/' }
-    end;
+   DoProgress('Navigating to '+ RemoteDir);
+   NavigateTo(RemoteDir);                                      { Accepts 'dir\dir' or 'dir/dir'; an absolute path starts from the server root, not from the login folder }
   end;
 
  { # Local dir }
