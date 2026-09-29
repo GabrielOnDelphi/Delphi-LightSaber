@@ -37,7 +37,7 @@ CONST
 
 {=============================================================================================================
    ENTER
-   Also see cmPlatformFile.pas
+   Also see LightCore.IOPlatformFile.pas
  ============================================================================================================}
  function  CRLFToEnter         (CONST s: string): string;     // old name: FixCRLF
  function  EnterToCRLF         (CONST s: string): string;     // Replaces #13#10 with CRLF
@@ -123,7 +123,7 @@ CONST
  function  CopyTo              (CONST s: String; iFrom: Integer; CONST sTo: string; IncludeMarker: Boolean= TRUE; CopyAllMarkerNotFound: Boolean= FALSE; MarkerOffset: Integer= 1): string; overload;
  function  CopyFromTo          (CONST s, sFrom, sTo: string; IncludeMarkers: Boolean= FALSE): string;
 
- function  CopyFrom            (CONST s, sFrom: string;     Count: Integer; IncludeMarker: Boolean= TRUE; SearchOffset: Integer= 1): string;     overload;  { Find sFrom in s. Returns the string from the postion where the text was found, to the end. }
+ function  CopyFrom            (CONST s, sFrom: string;     Count: Integer; IncludeMarker: Boolean= TRUE; SearchOffset: Integer= 1): string;     overload;  { Find sFrom in s. Returns up to Count characters from where sFrom was found (MaxInt = to the end). }
  function  CopyFrom            (CONST s, sFrom: AnsiString; Count: Integer; IncludeMarker: Boolean= TRUE; SearchOffset: Integer= 1): AnsiString; overload;
 
  // COPY
@@ -134,8 +134,8 @@ CONST
 {=============================================================================================================
    SPLIT
  ============================================================================================================}
- function  SplitText           (CONST Text, Delimiter: string): TStringList;                                      { Splits a text in lines and puts the lines in a TStringList } {Note: Exista System.StrUtils.SplitString } { Old name: SplitStrings }
- procedure SplitLine           (CONST Text, Delimiter: string; OUT sField, sValue: string);    overload;          { Split a string in its components. For example 'ClientName=Bubu' will return in 'ClientName' and 'Bubu' }
+ function  SplitText           (CONST Text, Delimiter: string): TStringList;                                      { Splits a text in lines and puts the lines in a TStringList } { Note: Exists System.StrUtils.SplitString } { Old name: SplitStrings }
+ procedure SplitLine          (CONST Text, Delimiter: string; OUT sField, sValue: string);    overload;          { Split a string in its components. For example 'ClientName=Bubu' will return in 'ClientName' and 'Bubu' }
  procedure SplitStrings        (CONST Text: string; TSL: TStringList);                         overload;          { Split a string in multiple rows every time the #13#10 char is found (I took this code from Embarcadero's TStringList.Text:= s ) }
  procedure SplitStringAtPos    (CONST Text: string; CONST Pos: Integer; OUT s1, s2: string);   overload;          { Split a string in two substrings at the specified position. The char at Pos will be included in the first string. }
  procedure SplitStringAtPos    (CONST Text: AnsiString; CONST Pos: Integer; OUT s1, s2: AnsiString); overload;
@@ -172,12 +172,12 @@ CONST
  function  i2s                 (Value: Integer):           string; overload;  inline;
  function  i2s                 (Value, MaxVal: integer):   string; overload;                                  { Add the specified number of zeros before the string. See LeadingZerosAuto help for details }
  function  i2s                 (Value: Int64)  :           string; overload;                                  { int64 can hold up to 9223372036854775807 }
- function  i2sHuman            (Value: Int64)  :           string;                                            { Retunrs something like: 1= 1st, 2= 2nd, 3= 3rd, 4= 4th }
+ function  i2sHuman            (Value: Int64)  :           string;                                            { Returns something like: 1= 1st, 2= 2nd, 3= 3rd, 4= 4th }
  function  ExtractIntFromStr   (const s: string): Integer;                                                    { Extracts a number from a string. Works only if the number is at the beginning of the string. Example '123xxx' }
  function  Real2Str            (CONST ExtValue: Extended; Decimals: Byte = 1; HideNulMantisa: Boolean= True): string;
  function  Rectangle2Str       (CONST Rect: TRect): string;
  function  FormatBytes         (CONST Size: Int64; CONST Decimals: Integer= 1): string;                       { Format bytes to KB, MB, GB, TB }
- function  FormatBytesMB       (CONST Size: Int64; CONST Decimals: Integer= 1): string;                       { Same as above but the function will never return values formated in GB range. More exactly instead of 10GB it will return 10240MB }
+ function  FormatBytesMB       (CONST Size: Int64; CONST Decimals: Integer= 1): string;                       { Like FormatBytes, but never goes above MB: instead of 10GB it returns 10240MB }
  function  FormatNumber        (CONST Size: Int64; CONST Decimals: Integer= 1): string;                       { It will return 1K for 1000, 1M for 1000000 and so on }
  function  BoolToStrYesNo      (CONST B: Boolean): string;
 
@@ -210,7 +210,7 @@ CONST
  function  IsUpcase            (CONST c: Char): Boolean;     { Works only with letters. }
 
  // COPY from/to marker
- function  ExtractTextBetween  (CONST s, TagStart, TagEnd: string): string;                                   { Extract the text between the tags. For example '<H>Title</H>' will return 'Title' is iFrom= '<H>' and iTo= '</H>' }
+ function  ExtractTextBetween  (CONST s, TagStart, TagEnd: string): string;                                   { Extract the text between the tags. For example '<H>Title</H>' will return 'Title' if TagStart= '<H>' and TagEnd= '</H>' }
 
 
 {=============================================================================================================
@@ -233,26 +233,26 @@ CONST
  function  MakeStringLongRight (CONST s, Pad: string; ForcedLength: integer): string;       overload;         { Make sure the string has ForcedLength. If not, add some extra characters at its end to make it that long  }
  function  MakeStringLongLeft  (CONST s, Pad: string; ForcedLength: integer): string;                         { Make sure the string has ForcedLength. If not, add some extra characters at its front to make it that long  }
 
- function  LeadingZeros        (CONST s: string; ForcedLength: integer): string;                              { insert (ForcedLength-1) zeros in front of the specified string. ForcedLength shows which is the desired lenght of the new string. Example: LeadingZeros('a', 4) will result in '000a'  }
+ function  LeadingZeros        (CONST s: string; ForcedLength: integer): string;                              { Adds zeros in front of s until it is ForcedLength long. Example: LeadingZeros('a', 4) returns '000a'  }
  function  LeadingZeros2       (CONST s: string; ForcedLength: integer): string; { Not tested }
- function  LeadingZerosAuto    (CONST s: string; MaxValue: integer): string;                                  { Same as above except_ that the user doesn't have to specify how many zeros to add. Instead the function will determine this automaticxally based on the number received as parameter. For example LeadingZeros('1', 50) will generate '01' but LeadingZeros('1', 500) will generate '001' }
+ function  LeadingZerosAuto    (CONST s: string; MaxValue: integer): string;                                  { Like LeadingZeros, but the length is the number of digits in MaxValue. Example: LeadingZerosAuto('1', 50) returns '01', LeadingZerosAuto('1', 500) returns '001' }
 
 
 {=============================================================================================================
    GENERATE - RANDOM STRINGS
  ============================================================================================================}
- function  GenerateString        (RepeatTimes: Integer; C: char): string; deprecated 'Use System.StringOfChar instead';    { Exista System.StrUtils.DupeString and StuffString                                       Returns the concatenation of a string with itself a specified number of repeats. }
+ function  GenerateString        (RepeatTimes: Integer; C: char): string; deprecated 'Use System.StringOfChar instead';    { Exists: System.StrUtils.DupeString and StuffString                                       Returns the concatenation of a string with itself a specified number of repeats. }
  function  GenerateUniqueString  (Len: Integer=32): string;
 
  function  GenerateRandomWord    (Len: Integer=16; StartWithVowel: Boolean= FALSE): string;
- function  GenerateRandString    (minLen, maxLen: Integer): string;                                           { This will return all printable craracters (from 65 to 125) }
+ function  GenerateRandString    (minLen, maxLen: Integer): string;                                           { Returns characters with codes 65 to 124: A-Z, a-z and a few symbols }
  function  GenerateRandStringLet (Len: Integer): string;                                                      { This will return ONLY letters and numbers } { YOU MUST call randomize before calling this function! }
 
 
 {=============================================================================================================
    GENERATE - LISTS OF NAMES
  ============================================================================================================}
- function  GetRandomPersonName: string;                                                                       { Returns a random name in a 100 unique name list }
+ function  GetRandomPersonName: string;                                                                       { Returns a random name from a list of 200 unique names }
  function  GetRandomStreetName: string;
  function  GetRockBands: TStringList;
 
@@ -450,11 +450,10 @@ begin
 end;
 
 
-{ As above, but additionally it adds a number of zeros as prefix.
-  The number of zeros is determine this automaticxally based on the MaxVal.
+{ Like IntToStr, but adds zeros in front, as many as the number of digits in MaxVal requires.
   Example:
-     i2s('1', 5)    -> '1'
-     i2s('1', 500)  -> '001'
+     i2s(1, 5)    -> '1'
+     i2s(1, 500)  -> '001'
 }
 function i2s(Value, MaxVal: integer): string;
 begin
@@ -560,7 +559,7 @@ begin
 end;
 
 
-{ Same as above but the function will never return values formated in GB range. More exactly instead of 10GB it will return 10240MB }
+{ Like FormatBytes, but never goes above MB: instead of 10GB it returns 10240MB }
 function FormatBytesMB(CONST Size: Int64; CONST Decimals: Integer= 1): string;
 begin
  if Size = 0
@@ -642,8 +641,8 @@ end;
 
 {$ELSE}
 
-//This is cross platform.
-// NEEDS TESTING!
+{ This is cross platform.
+  NEEDS TESTING! }
 function UnicodeToAnsi(CONST str: UnicodeString; CodePage: Integer): RawByteString;
 var
   Encoding: TEncoding;
@@ -654,12 +653,9 @@ begin
   begin
     if CodePage = 0
     then CodePage := DefaultSystemCodePage;
-    // Create the appropriate TEncoding instance for the specified code page
     Encoding := TEncoding.GetEncoding(CodePage);
     try
-      // Convert the UnicodeString to bytes using the specified encoding
       Bytes := Encoding.GetBytes(str);
-      // Set the result with the raw bytes and the correct code page
       SetString(Result, PAnsiChar(@Bytes[0]), Length(Bytes));
       SetCodePage(Result, CodePage, False);
     finally
@@ -777,7 +773,7 @@ end;
 
 
 { --- REPLACE --- }
-procedure ReplaceChar(VAR s: string; CONST SearchFor, ReplaceWith: Char);                { procedure }
+procedure ReplaceChar(VAR s: string; CONST SearchFor, ReplaceWith: Char);
 VAR i: Integer;
 begin
  for i:= 1 TO Length(s) DO
@@ -785,7 +781,7 @@ begin
   then s[i]:= ReplaceWith;
 end;
 
-procedure ReplaceChar(VAR s: AnsiString; CONST SearchFor, ReplaceWith: AnsiChar);        { procedure }
+procedure ReplaceChar(VAR s: AnsiString; CONST SearchFor, ReplaceWith: AnsiChar);
 VAR i: Integer;
 begin
  for i:= 1 TO Length(s) DO
@@ -794,7 +790,7 @@ begin
 end;
 
 
-function ReplaceCharF(CONST s: string; CONST SearchFor, ReplaceWith: Char): string;       { function }
+function ReplaceCharF(CONST s: string; CONST SearchFor, ReplaceWith: Char): string;
 VAR i: Integer;
 begin
  Result:= s;
@@ -846,8 +842,8 @@ end;
 
 
 
-{ Similar to the above function. But does not replace the text.
-  The function returns where TagStart was found. It stops after the "first found". }
+{ Like ReplaceBetween, but does not replace the text.
+  Returns where the first TagStart was found, if a TagEnd follows it; otherwise -1. }
 function SearchBetween(CONST s, TagStart, TagEnd: string; Start: Integer = 1): Integer;
 var
   iTagStart1, iTagStart2: Integer;
@@ -998,22 +994,20 @@ begin
 end;
 
 
-function RemoveLastChar(CONST s: AnsiString): AnsiString;     { ANSI version }
+function RemoveLastChar(CONST s: AnsiString): AnsiString;
 begin
  Result:= system.COPY(s, 1, Length(s)-1);
 end;
 
 
-{ Removes the StrToRemove from s if found.
+{ Removes StrToRemove from the end of s. If s does not end with it (case-sensitive), s is returned unchanged.
   Example:
-     Input parameters: 'PinkFloyd-Ummagumma', '-Ummagumma'
-     Output: 'PinkFloyd' }
+     'PinkFloyd-Ummagumma', '-Ummagumma'  ->  'PinkFloyd'
+     'Methylocystis sp. M', '.'           ->  'Methylocystis sp. M' }
 function RemoveLastChar(CONST s, StrToRemove: string): string;
-VAR LastPost: Integer;
 begin
- LastPost:= s.LastIndexOf(StrToRemove);   // Note: LastIndexOf is indexed in 0 instead of 1 !
- if LastPost > 0
- then Result:= system.COPY(s, 1, LastPost)
+ if (StrToRemove <> '') AND EndsStr(StrToRemove, s)
+ then Result:= system.COPY(s, 1, Length(s)- Length(StrToRemove))
  else Result:= s;
 end;
 
@@ -1021,7 +1015,7 @@ end;
 function  RemoveFirstChar(CONST s: string; Char: Char): string;
 begin
  if (s > '') AND (s[1] = Char)
- then Result:= system.COPY(s, 2, MaxInt)                              // remove first '/' if there's one
+ then Result:= system.COPY(s, 2, MaxInt)
  else Result:= s;
 end;
 
@@ -1052,7 +1046,7 @@ begin
 end;
 
 
-{ Eliminate numbers from the specified string. Does not prealocate memory so it is much shower. Make it fast! }
+{ Eliminate numbers from the specified string. Does not prealocate memory so it is much slower. Make it fast! }
 function RemoveNumbers(CONST s: AnsiString): AnsiString;
 VAR i: Integer;
 begin
@@ -1082,7 +1076,7 @@ begin
 end;
 
 
-{ Remove chars under 32, except ENTER }
+{ Remove chars under 32, except ENTER (CR, LF) and TAB }
 function RemoveLowChars(CONST s: string): string;
 VAR i: Integer;
 begin
@@ -1242,12 +1236,9 @@ begin
 end;
 
 
-// Replace character #160 (A0) with space
-{ StringReplace without rfIgnoreCase collects the hit positions into an array first, then fills one
-  pre-sized string with pointer copies - one allocation for the whole job.
-  Verified in c:\Delphi\Delphi 13\source\rtl\sys\System.SysUtils.pas, line 26648.
-  The loop that stood here appended one character at a time, so the string was reallocated on every
-  character: a 1 MB file cost a million reallocations. }
+{ Replace character #160 (A0) with ReplaceWith.
+  StringReplace without rfIgnoreCase collects the hit positions into an array first, then fills one pre-sized string with pointer copies - one allocation for the whole job.
+  Verified in StringReplace, in c:\Delphi\Delphi 13\source\rtl\sys\System.SysUtils.pas. }
 function ReplaceNbsp(CONST s, ReplaceWith: string): string;
 begin
  Result:= System.SysUtils.StringReplace(s, #160 {A0}, ReplaceWith, [rfReplaceAll]);
@@ -1269,10 +1260,9 @@ end;
     Nix: 0A
 ============================================================================================================}
 
-{ A CR is lonely when no LF follows it. The last character counts as lonely when it is a CR, because it
-  has nothing after it (such a trailing CR was silently dropped before 2026.07).
-  Counts first, then fills one pre-sized string: the earlier version appended one character at a time, so
-  the string was reallocated on every character - a 1 MB file cost a million reallocations. }
+{ A CR is lonely when no LF follows it.
+  The last character counts as lonely when it is a CR, because it has nothing after it.
+  Counts first, then fills one pre-sized string: appending one character at a time would reallocate the string on every character. }
 function ReplaceLonellyCR(CONST s, ReplaceWith: string): string;
 VAR
    i, Src, Dst, Lonely, LenS, LenRepl: Integer;
@@ -1308,9 +1298,9 @@ begin
 end;
 
 
-{ An LF is lonely when no CR comes before it. The first character counts as lonely when it is an LF, because
-  it has nothing before it (such a leading LF was silently dropped before 2026.07).
-  Counts first, then fills one pre-sized string - see the note on ReplaceLonellyCR above. }
+{ An LF is lonely when no CR comes before it.
+  The first character counts as lonely when it is an LF, because it has nothing before it.
+  Counts first, then fills one pre-sized string: appending one character at a time would reallocate the string on every character. }
 function ReplaceLonellyLF(CONST s, ReplaceWith: string): string;
 VAR
    i, Src, Dst, Lonely, LenS, LenRepl: Integer;
@@ -1376,7 +1366,7 @@ begin
 end;
 
 
-{ Converts the CRLF text to the actual CRLF (binary 13/10)
+{ Converts the text 'CRLF' to a real line break (sLineBreak: #13#10 on Windows).
   Warning: we don't replace individual CR, LF groups, because there is a high chance we will find that in our text. Example: CRysis }
 function CRLFToEnter(CONST s: string): string;
 begin
@@ -1386,12 +1376,11 @@ begin
 end;
 
 
-{ Replaces #13 with the text 'CR' and #10 with the text 'LF' }
+{ Replaces each #13#10 pair with the text ' CRLF ' (with a space on each side) }
 function EnterToCRLF (CONST s: string): string;
 begin
  Result:= StringReplace(s  , CRLFw, ' CRLF ', [rfReplaceAll]);
- //I need spaces arround CRLF because of the cTranslator.pas
- //The user/DeepL will see better the text to be translated if there are spaces arround CRLF
+ { The spaces around CRLF are for LightVcl.Common.Translate.pas: the user or DeepL reads the text to be translated better when CRLF stands apart from the words. }
 end;
 
 
@@ -1405,7 +1394,7 @@ end;
 =============================================================================================================
 
 { Note: Exists System.StrUtils.SplitString and Classes.ExtractStrings }
-function SplitText(CONST Text, Delimiter: string): TStringList;                                    { Splits a text in lines and puts the lines in a TStringList } {Note: Exista System.StrUtils.SplitString } { Old name: SplitStrings }
+function SplitText(CONST Text, Delimiter: string): TStringList;                                    { Splits a text in lines and puts the lines in a TStringList } { Old name: SplitStrings }
 begin
  Result:= TStringList.Create;
  Result.Text:= StringReplace( Text, Delimiter, #13#10, [rfReplaceAll] );
@@ -1515,8 +1504,8 @@ end;
 
 
 
-{ Insert (ForcedLength-1) zeros in front of the specified string. ForcedLength shows which is the desired lenght of the new string. Example: LeadingZeros('a', 4) will result in '000a'
-  Note: you can also do it like this:   To convert an integer to a string with minimum length, use the Str procedure:  Str(123:6, s); // s is set to '   123' }
+{ Adds zeros in front of s until it is ForcedLength long. Example: LeadingZeros('a', 4) returns '000a'
+  Note: you can also do it like this:  To convert an integer to a string with minimum length, use the Str procedure:  Str(123:6, s); // s is set to '   123' }
 function LeadingZeros(CONST s: string; ForcedLength: integer): string;
 begin
  Result:= s;
@@ -1536,8 +1525,8 @@ end;
 
 
 
-{ Same as above except that the user doesn't have to specify how many zeros to add.
-  Instead the function will determine this automaticxally based on the MaxValue. For example LeadingZeros('1', 50) will generate '01' but LeadingZeros('1', 500) will generate '001'.   Note: you can also do it like this:   To convert an integer to a string with minimum length, use the Str procedure:  Str(123:6, s); // s is set to '   123' }
+{ Like LeadingZeros, but the length is the number of digits in MaxValue.
+  Example: LeadingZerosAuto('1', 50) returns '01', LeadingZerosAuto('1', 500) returns '001'. }
 function LeadingZerosAuto(CONST s: string; MaxValue: integer): string;
 VAR ForcedLength: Integer;
 begin
@@ -1547,9 +1536,8 @@ end;
 
 
 
-{ This is fast }
-{ Note: you can also do it like this:   To convert an integer to a string with minimum length, use the Str procedure:  Str(123:6, s); // s is set to '   123' }
-{ Make sure the string has ForcedLength. If not, add some extra characters at its end to make it that long  }
+{ Make sure the string has ForcedLength. If not, add some extra characters at its end to make it that long.
+  This is fast. }
 function MakeStringLongRight(CONST s, c: Char; ForcedLength: integer): string;
 begin
  if Length(s) >= ForcedLength then EXIT(s);
@@ -1815,9 +1803,8 @@ begin
       then
        begin
         Result:= Sign(ExtractNr(1, s1) - ExtractNr(1, s2));
-        { ExtractNr already consumed the digits from BOTH strings, so on a tie continue with the
-          character right after the number. The old shared Delete below ate that character without
-          comparing it, so 'pic2a' = 'pic2b' and '2b' sorted before '2ac'. }
+        { ExtractNr already consumed the digits from BOTH strings, so on a tie continue with the character right after the number.
+          Deleting one more character here would skip that character uncompared: 'pic2a' would equal 'pic2b' and '2b' would sort before '2ac'. }
         b:= (Result <> 0) OR (s1 = '') OR (s2 = '');
        end
       else
@@ -1845,7 +1832,6 @@ end;
 ============================================================================================================
 
    LEVENSHTEIN
-
    - Mathematically exact (dynamic programming), always finds minimum edit distance
    - Returns raw distance: lower = more similar. LevenshteinSimilarity: wraps Distance into a percentage (0=different, 100=identical)
    - Minimum single-character edits (insert, delete, substitute) to transform s1 into s2
@@ -1855,28 +1841,16 @@ end;
        Matching user input against a known correct label with a threshold.
        Detects typos precisely: "mitochondria" vs "mitocondria" = 1 edit = high similarity
        Example: if LevenshteinSimilarity('mitocondria', 'mitochondria') >= 80 then Accept
-
-           - Used in: TSections.FindSectionFuzzy (matching AI-returned section names to real titles)
-
+   - Used in: TSections.FindSectionFuzzy (matching AI-returned section names to real titles)
 
    FUZZY
    - Greedy positional matching, not edit-based. Counts matching characters in approximately similar positions (tolerance window)
    - Returns percentage: 0=different, 100=identical
-   - Tolerance window is ~1/3 of string length + length difference
    - Use case:
        Best for LONGER strings: sentences, paragraphs, multi-word answers
        Tolerant of word reordering and extra/missing words in free-text
        Scoring free-text answers where exact wording varies
-
-            - Used in: TQuestion.EvaluateUserAnswer (offline evaluation without AI)
-
-
-
-
-  For label matching (your use case in EvaluateUserAnswer where Assigned(Figure) and it currently uses SameText),
-  LevenshteinSimilarity is the right choice — labels are short, and typos are the main error type.
-
-
+   - Used in: TQuestion.EvaluateUserAnswer (offline evaluation without AI)
 ============================================================================================================}
 
 {
@@ -2097,19 +2071,19 @@ end;
 { Copy the text between iFrom and iTo (including) }
 function CopyTo(CONST s: AnsiString; iFrom, iTo: integer): AnsiString;
 begin
- Result:= system.Copy(s, iFrom, iTo-iFrom+1);                                 { +1 to include the character at position 'iFrom' }
+ Result:= system.Copy(s, iFrom, iTo-iFrom+1);                                 { +1 to include the character at position 'iTo' }
 end;
 
 
 { Copy the text between iFrom and ending at iTo (including) }
 function CopyTo(CONST s: string; iFrom, iTo: integer): string;
 begin
- Result:= system.COPY(s, iFrom, iTo-iFrom+1);   { +1 in order to include char at 'iFrom' }
+ Result:= system.COPY(s, iFrom, iTo-iFrom+1);   { +1 in order to include char at 'iTo' }
 end;
 
 
 
-{ Find sFrom in s. Returns the string from the postion where the text was found, to the end.
+{ Find sFrom in s. Returns up to Count characters from where sFrom was found. Pass MaxInt to get everything to the end.
   Similar to the classic 'Copy' but as start position we use a string instead of an integer.
 
   IncludeMarker = true  -> copy from the point where the sFrom was found (so the sFrom is included in the result)
@@ -2118,8 +2092,8 @@ end;
   SearchOffset is the offset in s where the search starts.
 
   Examples:
-     CopyFrom('123:456', ':', True , 1) will return ':456'
-     CopyFrom('123:456', ':', False, 1) will return '456'
+     CopyFrom('123:456', ':', MaxInt, True , 1) will return ':456'
+     CopyFrom('123:456', ':', MaxInt, False, 1) will return '456'
   }
 function CopyFrom(CONST s, sFrom: string; Count: Integer; IncludeMarker: Boolean= TRUE; SearchOffset: Integer= 1): string;
 VAR iFrom: Integer;
@@ -2165,7 +2139,7 @@ begin
    iTo:= Pos(sTo, s, iFrom+1);
 
    if iTo < 1
-   then iTo:= maxint       { The ending marker (sTo) was not found -> copy until the end of the string. Before 2026.07 this test ran AFTER the length adjustment below, so a multi-char sTo that was not found returned garbage instead of the tail }
+   then iTo:= maxint       { The ending marker (sTo) was not found -> copy until the end of the string. }
    else
      if IncludeMarkers
      then iTo:= iTo+ Length(sTo)- 1   { Last char OF the marker }
@@ -2179,7 +2153,7 @@ end;
 
 
 { Extract the text between the tags.
-  For example '<H>Title</H>' will return 'Title' is iFrom= '<H>' and iTo= '</H>' }
+  For example '<H>Title</H>' will return 'Title' if TagStart= '<H>' and TagEnd= '</H>' }
 function ExtractTextBetween(CONST s, TagStart, TagEnd: string): string;
 begin
  Result:= CopyFromTo(s, TagStart, TagEnd, False);
@@ -2199,7 +2173,7 @@ begin
 
  iTo:= Pos(sTo, s, MarkerOffset);
 
- if iTo < 1                             { The marker was not found. Before 2026.07 this test ran on the length-adjusted value, so multi-char markers were mishandled (IncludeMarker copied only the first char of the marker; a found-at-start marker was treated as "not found") }
+ if iTo < 1                             { The marker was not found. }
  then
    if CopyAllMarkerNotFound
    then EXIT(system.COPY(s, iFrom, maxint))
@@ -2320,17 +2294,13 @@ end;
 
 
 { The find-side companion of ReplaceWholeWords.
-  Works like System.StrUtils.PosEx - 1-based, returns 0 when not found - except that a hit only
-  counts when the characters touching it on both sides are not letters or digits. So 'cat' is
-  found in 'a cat sat' but not in 'catalog', 'concat' or 'cat9'.
+  Works like System.StrUtils.PosEx - 1-based, returns 0 when not found - except that a hit only counts when the characters touching it on both sides are not letters or digits.
+  So 'cat' is found in 'a cat sat' but not in 'catalog', 'concat' or 'cat9'.
 
-  Case SENSITIVE, like PosEx. Uppercase both strings first if you need case-insensitive matching;
-  that is what TLightVcl.Visual.Memo's Search does for its soIgnoreCase option.
+  Case SENSITIVE, like PosEx. Uppercase both strings first if you need case-insensitive matching; that is what TLightMemo.Search in LightVcl.Visual.Memo.pas does for its soIgnoreCase option.
 
-  Boundary rule: anything that is not a letter or a digit separates words - the same rule
-  ReplaceWholeWords builds its delimiter array from. It is applied here with Char.IsLetterOrDigit
-  rather than a 0..255 array, which behaves identically for ASCII and is additionally correct for
-  characters above 255. }
+  Boundary rule: anything that is not a letter or a digit separates words - the same rule ReplaceWholeWords builds its delimiter array from.
+  It is applied here with Char.IsLetterOrDigit rather than a 0..255 array, which behaves identically for ASCII and is additionally correct for characters above 255. }
 function PosWholeWord(CONST SubStr, S: string; Offset: Integer= 1): Integer;
 VAR
   Hit, SubLen, StrLen: Integer;
@@ -2399,14 +2369,12 @@ begin
 end;
 
 
-{ Returns True if the first character is aChar }
 function FirstCharIs(CONST s: string; c: Char): Boolean;
 begin
  Result:= (Length(s)> 0) AND (s[1]= c);
 end;
 
 
-{ Returns True if the last character is aChar }
 function LastCharIs(CONST s: string; c: Char): Boolean;
 begin
  Result:= (Length(s)> 0) AND (s[Length(s)]= c);
@@ -2468,24 +2436,24 @@ end;
 { A 'word' is separated by space, tab and enter. }
 function WordCountStrict(CONST s: string): Integer;
 VAR
-   WordSeparatorSet: Set of AnsiChar;       // We will set on only the above characters
-   index  : Integer;                        // Used to scan along the string
+   WordSeparatorSet: Set of AnsiChar;
+   index  : Integer;
    NewWord: Boolean;                        // Indicates whether we are in the middle of a word
 begin
- WordSeparatorSet:= [LF, TAB, CR, #32];     // Turn on the TAB, CR, LF and BLANK characters in our word separator set
- Result:= 0;                                // Start with 0 words
- NewWord:= FALSE;                           // Scan the string character by character looking for word separators
+ WordSeparatorSet:= [LF, TAB, CR, #32];
+ Result:= 0;
+ NewWord:= FALSE;
 
  for index:= 1 to Length(s) DO
-   if CharInSet(s[index], WordSeparatorSet) // Have we found a separator character?
+   if CharInSet(s[index], WordSeparatorSet)
    then
     begin
      if NewWord
      then Inc(Result);                      // Separator found - have we moved from a word?Yes - we have ended another word
-     NewWord:= false;                       // Indicate that we are not in a word anymore
+     NewWord:= false;
     end
    else
-     NewWord:= true;                        // Separator not found - we are in a word
+     NewWord:= true;
 
  if NewWord then Inc(Result);               // Finally, were we still in a word at the end of the string? if so, we must add one to the word count since we did not meet a separator
 end;
