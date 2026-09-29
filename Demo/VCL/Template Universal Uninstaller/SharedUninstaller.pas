@@ -3,7 +3,7 @@ UNIT SharedUninstaller;
 {--------------------------------------------------------------------------------------------------
   HeracleBioSoft
   2023.03.02
-  Utility functions for c:\MyProjects\Project support\Universal Uninstaller\Uninstaller.dpr
+  Utility functions for c:\Projects\LightSaber\Demo\VCL\Template Universal Uninstaller\VCL_Uninstaller.dpr
 
   Note:
     Do not add application specific dependinces/units to the Uses clause because you won't be able to compile the Uninstaller
