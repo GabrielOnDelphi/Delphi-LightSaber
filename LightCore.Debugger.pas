@@ -47,7 +47,7 @@ USES
  procedure GenerateLeak;
 
  { CODE TIMING }
- procedure TimerStart;                                     { use it with: SetPriorityMax  }
+ procedure TimerStart;                                     { use it with: TAppData.SetMaxPriority  }
  function  TimerElapsed: Double;                           { In miliseconds }
  function  TimerElapsedS: string;                          { In miliseconds or seconds }
 
@@ -72,7 +72,7 @@ USES
 
 {--------------------------------------------------------------------------------------------------
    PROTECTION
-   Also see c:\MyProjects\Packages\Third party packages\uDebugger.pas
+   Also see C:\Projects-3rd_Packages\Third party packages\uDebugger.pas
 --------------------------------------------------------------------------------------------------}
 
 { Is the process running as part of Delphi? }
@@ -95,11 +95,10 @@ end;
 
 { Important note:
    $O+ has LOCAL scope - the result reflects the optimization state at THIS specific location.
-   If you use $O+ / $O- switches inline to optimize specific code sections, this function
-   must be INLINED at each call site to reflect the local setting.
+   If you use $O+ / $O- switches inline to optimize specific code sections, this function must be INLINED at each call site to reflect the local setting.
    If you only use the global switch (Project Options), it works as a normal function. }
 
-{ Returns true in the compiler optimization is on (probably we are in release mode, in this case) }
+{ Returns true if the compiler optimization is on (probably we are in release mode, in this case) }
 function CompilerOptimization: Boolean;
 begin
  {$IfOpt O+}
@@ -110,7 +109,7 @@ begin
 end;
 
 
-{ Same as above }
+{ Like CompilerOptimization, but returns the state as text }
 function CompilerOptimizationS: String;
 begin
  Result:= 'Compiler optimization is ' +
@@ -125,9 +124,8 @@ end;
 //todo 1: move this to the Hardware or Reports unit
 { Returns the current process's DPI awareness state as a human-readable string.
 
-  This reflects what the application's manifest declared (or what was set at startup via
-  SetProcessDpiAwarenessContext). It is NOT a project-options compile flag — Delphi's
-  $(Auto) high-DPI setting writes the manifest entry that Windows reads here.
+  This reflects what the application's manifest declared (or what was set at startup via SetProcessDpiAwarenessContext).
+  It is NOT a project-options compile flag — Delphi's $(Auto) high-DPI setting writes the manifest entry that Windows reads here.
 
   Possible Windows states (see Microsoft "DPI_AWARENESS_CONTEXT"):
     - "Unaware"              : DPI_AWARENESS_CONTEXT_UNAWARE                  (-1)  System bitmap-scales the app. Blurry on hi-DPI.
@@ -135,12 +133,7 @@ end;
     - "System Aware"         : DPI_AWARENESS_CONTEXT_SYSTEM_AWARE             (-2)  Knows primary monitor DPI only. Wrong on secondary monitor with different DPI.
     - "Per-Monitor Aware"    : DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE        (-3)  Per-monitor DPI but non-client area is system-scaled (V1).
     - "Per-Monitor Aware V2" : DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2     (-4)  Win10 1703+. Best mode. Non-client area also scales. Delphi 12.3+ $(Auto) default.
-    - "Unknown"              : context did not match any known constant.
-
-  API fallback chain (older OS first to last):
-    - IsProcessDPIAware           — Vista+. Boolean (aware/not).
-    - GetProcessDpiAwareness      — Win 8.1+. Distinguishes Unaware / System / Per-Monitor V1. Cannot see V2 or GDI-scaled.
-    - GetThreadDpiAwarenessContext + AreDpiAwarenessContextsEqual — Win 10 1607+. Full 5-state resolution. }
+    - "Unknown"              : context did not match any known constant. }
 function HighDpiAwarenessS: String;
 {$IFDEF MSWINDOWS}
 var
@@ -199,11 +192,10 @@ end;
 --------------------------------------------------------------------------------------------------
    TStopwatch is a wrap arround QueryPerformanceCounter which according to Microsoft has resolution < 1us.
 
-   WARNING!
-     The value of Elapsed is only updated if the stopwatch is priorly stopped. Reading the Elapsed property while the stopwatch is running does not yield any difference.
+   Elapsed can also be read while the stopwatch runs: TStopwatch.GetElapsedTicks in System.Diagnostics.pas adds the running time.
 
    How to use it:
-      OnFormCreate -> SetPriorityMax;
+      OnFormCreate -> AppData.SetMaxPriority;
 
       TimerStart;
       MySlowFunction;
@@ -219,7 +211,7 @@ VAR
 
 procedure TimerStart;
 begin
-  sw := TStopWatch.Create;      { Hint: We can use directly: TStopWatch.CreateNew but SilverWarior says there is a bug in it. Maybe this one? https://codeverge.com/embarcadero.delphi.win32/tstopwatch-a-bug-delphi-2010/1046096 }
+  sw := TStopWatch.Create;      { Hint: We can use directly: TStopWatch.StartNew but SilverWarior says there is a bug in it. Maybe this one? https://codeverge.com/embarcadero.delphi.win32/tstopwatch-a-bug-delphi-2010/1046096 }
   sw.Start;
 end;
 
@@ -228,7 +220,7 @@ end;
 function TimerElapsed: Double;
 begin
   sw.Stop;
-  Result:= sw.ElapsedMilliseconds;    {WARNING!  The value of Elapsed is only updated if the stopwatch is priorly stopped. Reading the Elapsed property while the stopwatch is running does not yield any difference. }
+  Result:= sw.ElapsedMilliseconds;
 end;
 
 
@@ -257,7 +249,7 @@ begin
       else
         if NanoSec < NanosPerMinute
         then Result:= Real2Str(NanoSec / NanosPerSecond, 3) + 's'
-        else Result:= Real2Str(NanoSec / NanosPerMinute, 3) + 'm';  { BUG FIX: was NanoSec / 60*1000000000 (wrong precedence) }
+        else Result:= Real2Str(NanoSec / NanosPerMinute, 3) + 'm';
 end;
 
 
@@ -288,8 +280,7 @@ end;
    Simple file-based logging. NOT thread-safe (uses global LogFile variable).
    Call LogFile_Init once before using LogFile_Add.
 
-   WARNING: Uses global state. For thread-safe logging, use a proper logging framework
-            or create a TLogFile class with instance-based state.
+   For thread-safe logging, use a proper logging framework or create a TLogFile class with instance-based state.
 --------------------------------------------------------------------------------------------------}
 
 VAR
@@ -334,7 +325,7 @@ procedure GenerateCrashNIL;
 VAR T: TObject;
 begin
   T:= NIL;
-  T.ClassName;  { Access Violation: calling virtual method on nil }
+  T.ClassName;  { Access Violation: calling a method on nil }
 end;
 
 
