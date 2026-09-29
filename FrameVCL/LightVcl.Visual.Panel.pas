@@ -34,7 +34,7 @@ TYPE
     function  LastControl: TControl;
    published
     property WordWrap: Boolean read FWordWrap write FWordWrap default TRUE;
-    property Gutter  : Integer read FGutter   write FGutter   default 0;     { Show red gutter on the right side and top. Used in c:\MyProjects\BioniX\MultiMonitor\Multimonitor env simulator }
+    property Gutter  : Integer read FGutter   write FGutter   default 0;     { Show red gutter on the right side and top. Used in c:\Projects\BioniX\Projects\Project - Monitor - Multimonitor env simulator }
     property Align;
     property Alignment;
     property Anchors;

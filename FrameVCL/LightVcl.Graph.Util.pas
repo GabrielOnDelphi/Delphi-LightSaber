@@ -34,7 +34,7 @@
     Scanline is 140x faster than Pixels!!!
 
  TESTER:
-    c:\MyProjects\LightSaber\LightVcl.Graph.Util ReplaceColor\
+    c:\Projects\Testers\cGraphUtil ReplaceColor\
 --------------------------------------------------------------------------------------------------}
 
 INTERFACE

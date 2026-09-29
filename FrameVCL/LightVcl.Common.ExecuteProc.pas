@@ -34,12 +34,12 @@ UNIT LightVcl.Common.ExecuteProc;
 
    In this group:
      * LightVcl.Common.Shell.pas
-     * csSystem.pas
-     * csWindow.pas
+     * LightVcl.Common.System.pas
+     * LightVcl.Common.Window.pas
      * LightVcl.Common.WindowMetrics.pas
      * LightVcl.Common.ExecuteProc.pas
      * LightVcl.Common.ExecuteShell.pas
-     * csProcess.pas
+     * LightCore.Process.pas
 
    Tester:
       c:\Projects\Testers\Tester Execute program (ShellExecute, CreateProcess)\

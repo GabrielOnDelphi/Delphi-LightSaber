@@ -21,7 +21,7 @@
       Note: If the input file is not supported it will return a bitmap with a system icon for that file type
 
    TESTER:
-      c:\MyProjects\Projects GRAPHICS Resamplers\GLOBAL Tester\TEST IMAGES\
+      c:\Projects\LightSaber ImageResampler Test\
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE

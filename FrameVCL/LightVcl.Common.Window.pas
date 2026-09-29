@@ -14,13 +14,12 @@ UNIT LightVcl.Common.Window;
    Change visibility for windows (Minimize, Maximize, Restore, SetBack)
 
    See also:
-     cmWindowMetrics.pas
      LightVcl.Common.VclUtils.pas
 
    In this group:
      * LightVcl.Common.Shell.pas
-     * csSystem.pas
-     * csWindow.pas
+     * LightVcl.Common.System.pas
+     * LightVcl.Common.Window.pas
      * LightVcl.Common.WindowMetrics.pas
      * LightVcl.Common.ExecuteProc.pas
      * LightVcl.Common.ExecuteShell.pas

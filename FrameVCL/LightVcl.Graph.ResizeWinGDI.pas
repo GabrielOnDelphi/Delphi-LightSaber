@@ -12,7 +12,7 @@ UNIT LightVcl.Graph.ResizeWinGDI;
    Performance: Slower than StretchBlt but produces smoother results for some images.
    Requirements: GDI+ (available on Windows XP and later).
 
-   Tester: c:\MyProjects\Projects GRAPHICS Resamplers\GLOBAL Tester\
+   Tester: c:\Projects\LightSaber ImageResampler Test\ResamplerTester.dpr
 --------------------------------------------------------------------------------------------------}
 
 INTERFACE

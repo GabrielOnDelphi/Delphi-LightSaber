@@ -291,7 +291,7 @@ end;
 {-------------------------------------------------------------------------------------------------------------
    MIRROR
 
-     Tester: c:\MyProjects\Projects GRAPHICS\Rotate, flip\RotateTester.dpr
+     Tester: c:\Projects\Testers\gr Rotate, flip tester\RotateTester.dpr
 -------------------------------------------------------------------------------------------------------------}
 
 { Flips the bitmap vertically (upside down). Modifies in-place.

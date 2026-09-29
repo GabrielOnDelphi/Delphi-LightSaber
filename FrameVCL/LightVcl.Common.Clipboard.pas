@@ -4,10 +4,9 @@ UNIT LightVcl.Common.Clipboard;
    2026.01.29
    www.GabrielMoraru.com
 
-   Robust clipboard string operations with retry logic.
+   Clipboard string operations with retry logic.
 
    Windows clipboard can fail with "Cannot open clipboard" when another application has it locked.
-   These functions implement retry loops with exponential backoff to handle transient lock failures.
 
    See: https://stackoverflow.com/questions/1859102/how-can-i-fix-cannot-open-clipboard-access-denied-errors
 =============================================================================================================}
@@ -226,9 +225,8 @@ begin
 end;
 
 
-{ FRegistered gates the matching Remove. Microsoft documents neither what AddClipboardFormatListener
-  returns for a window that is already registered, nor what RemoveClipboardFormatListener returns for
-  one that never was - so we simply never get into either situation. }
+{ FRegistered gates the matching Remove.
+  Microsoft documents neither what AddClipboardFormatListener returns for a window that is already registered, nor what RemoveClipboardFormatListener returns for one that never was - so we simply never get into either situation. }
 procedure TClipboardMonitor.SetActive(CONST Value: Boolean);
 begin
  if Value = FActive then EXIT;
@@ -302,8 +300,8 @@ begin
       then DoChange
       else
         begin
-         { Restart the timer on every notification. One copy can put several formats on the
-           clipboard - Thunderbird writes plain text AND HTML - and each fires its own message. }
+         { Restart the timer on every notification.
+           One copy can put several formats on the clipboard - Thunderbird writes plain text AND HTML - and each fires its own message. }
          if FTimerActive then KillTimer(FHandle, ClipMonTimerID);
          FTimerActive:= SetTimer(FHandle, ClipMonTimerID, FDebounceMs, NIL) <> 0;
          if NOT FTimerActive then DoChange;              { no timer available: fire now rather than lose the event }

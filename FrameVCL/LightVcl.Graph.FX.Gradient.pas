@@ -14,7 +14,7 @@ UNIT LightVcl.Graph.FX.Gradient;
       http://www.festra.com/wwwboard/messages/13144.html
 
       See also: Embarcadero's GraphUtil.pas
-                c:\MyProjects\Packages\Third party packages\GradientFill.pas
+                c:\Projects-3rd_Packages\Third party packages\_Out\_TEMPORARY EXCLUDED (Don't delete them yet!)\GradientFill.pas
 
       Tester: c:\Projects\Testers\gr cGraphicsTester\Tester.dpr
 ==================================================================================================}

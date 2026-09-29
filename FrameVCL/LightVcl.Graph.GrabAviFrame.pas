@@ -110,7 +110,7 @@ end;
 { PRESERVED FOR REFERENCE:
   The code below is commented out because the free FFVCL lite version does not support frame capture.
   This code is preserved as reference for implementing video frame extraction with the paid FFVCL version.
-  See also: c:\Myprojects\BIONIX\SourceCode\BioniX VCL\cFrameServerAVI.pas
+  See also: E:\Backups\My projects\2020\2020.11.25 10.33\CubicCommonControls\cFrameServerAVI.pas
 
   Known issue in commented code:
     In FFPlayerFileOpen, FrameHeight/FrameWidth assignments are swapped (bug). }

@@ -15,7 +15,7 @@ UNIT LightVcl.Graph.Text;
     Semi-transparent text here:  stackoverflow.com/questions/360476/writing-transparent-text-on-image
     Nice shadow under controls (not under text): stackoverflow.com/questions/27359570/delphi-vcl-shadoweffect-like-fmx-tshadoweffect
 
-  Demo: c:\Projects\Testers\gr cGraphText.pas\Tester.dpr
+  Demo: c:\Projects\LightSaber\Demo\VCL\Demo cGraphText\VCL_Demo_cGraphText.dpr
 --------------------------------------------------------------------------------------------------}
 
 INTERFACE
@@ -140,22 +140,25 @@ end;
      2: Draws text in a box that is as wide as text and is placed into the image at coordinates x,y
 
   Parameters:
-     Opacity a value from 0-255. 0 => Shadow is completelly transparent
+     ShadowOpacity a value from 0-255. 0 => Shadow is completelly transparent
      To set the Font color/size, the caller should do: aCanvas.Font.Size:= x
 
   Issues:
-     The blurring function cuts too suddenly. The rectangle that was blurred is too visible. Do a blur that slowly fades at the edges.
+     The blurring function cuts too suddenly.
+     The rectangle that was blurred is too visible.
+     Do a blur that slowly fades at the edges.
      Might be slow becuase of the alpha blending and because of the blur.
 
   Important!
      The input img must be pf24bit.
-     When the AlphaFormat member is AC_SRC_ALPHA, the source bitmap must be 32 bpp. If it is not, the AlphaBlend function will fail.
+     When the AlphaFormat member is AC_SRC_ALPHA, the source bitmap must be 32 bpp.
+     If it is not, the AlphaBlend function will fail.
 
   For more shadow text see also:
      http://www.delphi-central.com/tutorials/AlphaBlend.aspx
      http://www.codeproject.com/Articles/21071/Glow-and-Shadow-Effects-using-Windows-GDI  Similar code. Uses GDI+
      http://docwiki.embarcadero.com/Libraries/Tokyo/en/FMX.Effects.TShadowEffect    FMX:
-     C:\MyProjects\Packages\Third party packages\ShadowText.pas
+     c:\Projects\LightSaber\FrameVCL\LightVcl.Graph.ShadowText.pas
 -------------------------------------------------------------------------------------------------------------}
 procedure DrawTextShadowBox(BMP: TBitmap; CONST Text: string; AlignTop: Boolean; ShadowColor: TColor= clTextShadow; ShadowOpacity: Byte= 20; Blur: Byte= 2);
 VAR
@@ -181,7 +184,7 @@ begin
     Shadow.PixelFormat:= pf24bit;
     Shadow.SetSize(BMP.Width, TextHeight);
 
-    { Bitmap rectangle as big as ShadowBMP }
+    { Bitmap rectangle as big as Shadow }
     ShadowRect.Left:= 0;
     ShadowRect.Top := 0;
     ShadowRect.Right := Shadow.Width;

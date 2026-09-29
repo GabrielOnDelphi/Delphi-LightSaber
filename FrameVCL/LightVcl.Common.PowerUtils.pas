@@ -17,8 +17,7 @@ UNIT LightVcl.Common.PowerUtils;
 
      ForceCritical (bForce):
         Documented by Microsoft as "This parameter has no effect" on modern Windows.
-        Vista and later route suspend requests through the power-policy manager and never
-        broadcast PBT_APMQUERYSUSPEND - applications cannot veto suspend regardless of bForce.
+        Vista and later route suspend requests through the power-policy manager and never broadcast PBT_APMQUERYSUSPEND - applications cannot veto suspend regardless of bForce.
         Kept in the signature for API compatibility; pass TRUE for forward compatibility.
         https://learn.microsoft.com/en-us/windows/win32/api/powrprof/nf-powrprof-setsuspendstate
 
@@ -27,10 +26,9 @@ UNIT LightVcl.Common.PowerUtils;
         FALSE: any system wake events remain enabled.
 
     Privilege:
-      Both Sleep and Hibernate require SE_SHUTDOWN_NAME ('SeShutdownPrivilege') to be enabled
-      on the calling process token. Standard user processes already have this in their
-      disabled privilege set; the OS enables it automatically for SetSuspendState. WinShutDown
-      below enables it explicitly because ExitWindowsEx will reject the call without it.
+      Both Sleep and Hibernate require SE_SHUTDOWN_NAME ('SeShutdownPrivilege') to be enabled on the calling process token.
+      Standard user processes already have this in their disabled privilege set; the OS enables it automatically for SetSuspendState.
+      WinShutDown below enables it explicitly because ExitWindowsEx will reject the call without it.
 
     Related:
       http://www.tek-tips.com/faqs.cfm?fid=6881
@@ -327,7 +325,7 @@ begin
 end;
 
 
-function PowerStatusString: string; { Same as above but as string }
+function PowerStatusString: string; { Same as PowerStatus but as string }
 begin
  CASE PowerStatus of
   pwTypeBat: Result:= 'Running on batteries!';

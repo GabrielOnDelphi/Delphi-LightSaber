@@ -42,7 +42,7 @@ USES
 {--------------------------------------------------------------------------------------------------
    URL PROCESSING
 --------------------------------------------------------------------------------------------------}
- // BETTER PARSER HERE: c:\MyProjects\Packages\BSalsa EmbeddedWB\EwbUrl.pas
+ // BETTER PARSER HERE: E:\Backups\My projects\2021\2021.03 Stormy\BSalsa EmbeddedWB\Source\EwbUrl.pas
 
  function  ParseURL                 (CONST lpszUrl: string): TStringArray;                        { Breaks an URL in all its subcomponents. Example: ParseURL('http://login:password@somehost.somedomain.com/some_path/something_else.html?param1=val&param2=val')   }
 
@@ -100,7 +100,7 @@ USES
  function  ProgramConnect2InternetS: string;
  function  TestProgramConnectionMsg(ShowMsgOnSuccess: Boolean= FALSE): Integer;   { The Msg suffix means: this one puts a modal box on screen. For a silent verdict call ProgramConnect2Internet }
  function  IsPortOpened(const Host: string; Port: Integer): Boolean;            { Here's something very simple with which you can check a port status(opened/closed) on remote host. Add WinSock to uses clause}
- //see: c:\MyProjects\Projects INTERNET\Test Internet is connected\LightVcl.Internet.Common, LightCore.Internet-is_connected.dpr
+ //see: c:\Projects\Projects INTERNET\Test Internet is connected.RAR - the tester inside is cInternet-is_connected.dpr
 
 
 {--------------------------------------------------------------------------------------------------

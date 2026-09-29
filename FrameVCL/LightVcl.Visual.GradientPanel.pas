@@ -7,7 +7,7 @@ UNIT LightVcl.Visual.GradientPanel;
 
 
    Also see:
-      c:\MyProjects\Packages\Third party packages\GradientPanel.pas
+      E:\Backups\My projects\2020\2020.04.15 BioniX 11.45 Freeze!!!!\Third party packages\GradientPanel.pas
 --------------------------------------------------------------------------------------------------}
 {todo 2: draw 3D frame on it }
 

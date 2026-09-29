@@ -63,7 +63,7 @@ USES
 
 {--------------------------------------------------------------------------------------------------
    PROTECTION
-   Also see c:\MyProjects\Packages\Third party packages\uDebugger.pas
+   Also see c:\Projects-3rd_Packages\Third party packages\uDebugger.pas
 --------------------------------------------------------------------------------------------------}
 
 

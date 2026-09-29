@@ -11,7 +11,7 @@ UNIT LightVcl.Common.SystemTime;
    - System file time retrieval (anti-tampering for licensing)
    - Registry-based time validation (detects clock rollback)
 
-   Dependencies: LightVcl.Common.IO, LightVcl.Common.WinVersion, LightCore.Win.Registry
+   Dependencies: LightCore.AppData, LightVcl.Common.IO, LightVcl.Common.WinVersion, LightCore.Win.Registry
 
    Thread safety: These functions are NOT thread-safe.
 =============================================================================================================}
@@ -69,15 +69,14 @@ end;
 
    Available on Windows 2000 and later.
 
-   Note: To track user idle time, one could hook keyboard/mouse activity system-wide,
-   but installing a system-wide message hook is invasive and requires a DLL to be
-   loaded into all processes. This API-based approach is much cleaner.
+   Note: To track user idle time, one could hook keyboard/mouse activity system-wide, but installing a system-wide message hook is invasive and requires a DLL to be loaded into all processes.
+   This API-based approach is much cleaner.
 
    Returns 0 if GetLastInputInfo fails.
 
    Note: GetLastInputInfo.dwTime uses GetTickCount (32-bit), which wraps after ~49.7 days.
-   If the system has been running longer, and the last input was before the wrap,
-   the result may be incorrect. This is a Windows API limitation.
+   If the system has been running longer, and the last input was before the wrap, the result may be incorrect.
+   This is a Windows API limitation.
 --------------------------------------------------------------------------------------------------}
 function UserIdleTime: Cardinal;
 VAR
@@ -97,8 +96,7 @@ end;
 
    Returns: TDateTime of the system file's last modification time, or 0 if no file was found.
 
-   Note: This function looks for files that are modified during normal Windows operation
-   (pagefile.sys, registry hives, etc.) to get a timestamp that cannot easily be manipulated.
+   Note: This function looks for files that are modified during normal Windows operation (pagefile.sys, registry hives, etc.) to get a timestamp that cannot easily be manipulated.
 
    WARNING: Returns 0 on failure, which is a valid TDateTime (Dec 30, 1899).
    Callers should handle the 0 case explicitly.
@@ -146,9 +144,8 @@ end;
 {--------------------------------------------------------------------------------------------------
    Returns TRUE if the system clock appears to have been set backwards.
 
-   Works by comparing the current time (Now) with the modification time of a system file
-   that is updated during normal Windows operation. If Now < SystemFileTime, it suggests
-   the user has rolled back the system clock.
+   Works by comparing the current time (Now) with the modification time of a system file that is updated during normal Windows operation.
+   If Now < SystemFileTime, it suggests the user has rolled back the system clock.
 
    Note: Logs a warning if no system file could be found (should be rare).
    Also see Delphi's FileAge function.
@@ -170,9 +167,8 @@ end;
 {--------------------------------------------------------------------------------------------------
    Non-blocking sleep/delay that keeps the UI responsive.
 
-   DEPRECATION WARNING: This function uses Application.ProcessMessages which is
-   generally discouraged! It can cause reentrancy issues if event handlers
-   trigger during the delay (e.g., button click during delay calls button click again).
+   DEPRECATION WARNING: This function uses Application.ProcessMessages which is generally discouraged!
+   It can cause reentrancy issues if event handlers trigger during the delay (e.g., button click during delay calls button click again).
 
    Consider using TThread or TTask for better alternatives:
    - TThread.CreateAnonymousThread for simple background work
@@ -203,8 +199,7 @@ end;
    TIME-PROTECTION
 
    These functions provide clock rollback detection for licensing/trial systems.
-   Works by storing the current time in the registry and checking if the clock
-   has been set backwards on subsequent runs.
+   Works by storing the current time in the registry and checking if the clock has been set backwards on subsequent runs.
 --------------------------------------------------------------------------------------------------}
 
 {--------------------------------------------------------------------------------------------------
@@ -239,8 +234,8 @@ end;
    Parameters:
      SecretKey - Registry path to check (same as used in CurrentSysTimeStore).
 
-   Note: RegReadDate returns -1 if the key doesn't exist. This is treated as valid
-   (first run scenario).
+   Note: RegReadDate returns -1 if the key doesn't exist.
+   This is treated as valid (first run scenario).
 --------------------------------------------------------------------------------------------------}
 function CurrentSysTimeValid(CONST SecretKey: string): Boolean;
 VAR

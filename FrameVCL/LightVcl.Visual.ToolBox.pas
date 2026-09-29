@@ -10,7 +10,7 @@ UNIT LightVcl.Visual.ToolBox;
    Useful for non-window tools such as Search boxes.
 
    Also see:
-      c:\Myprojects\Packages\Third party packages\FloatingWindow.pas
+      c:\Projects-3rd_Packages\Third party packages\_Out\_TEMPORARY EXCLUDED (Don't delete them yet!)\FloatingWindow.pas
 =============================================================================================================}
 //ToDo: Later: Rename to TToolBoxPanel
 INTERFACE

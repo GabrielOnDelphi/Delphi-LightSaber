@@ -28,8 +28,8 @@ UNIT LightVcl.Graph.FX.RotateGr32;
     See LightVcl.Graph.ResizeGr32 for all available kernels.
 
   Tester:
-    c:\MyProjects\Projects GRAPHICS\Rotate, flip\RotateTester.dpr
-    c:\MyProjects\LightSaber\cGraphRotate.pas conclusions.png
+    c:\Projects\Testers\gr Rotate, flip tester\RotateTester.dpr
+    c:\Projects-3rd_Packages\_packages old\LightSaber-Extras\cGraphRotate.pas conclusions.png
 ==================================================================================================}
 
 INTERFACE

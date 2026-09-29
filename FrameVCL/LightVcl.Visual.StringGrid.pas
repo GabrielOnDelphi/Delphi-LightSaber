@@ -8,7 +8,7 @@
   See this: http://www.delphiforfun.org/Programs/Delphi_Techniques/GridSort.htm
 
   IMPORTANT. BUG:
-    There is a bug in TStringGrid. The first line is broken when goRowSelect and goEditing are both true. Details: http://stackoverflow.com/questions/24163773/very-odd-behavior-with-tstringgrid-how-to-fix-it
+    There is a bug in TStringGrid. The first line is fucked when goRowSelect and goEditing are both true. Details: http://stackoverflow.com/questions/24163773/very-odd-behavior-with-tstringgrid-how-to-fix-it
 
 
   Capabilities:
@@ -547,7 +547,7 @@ VAR
   function GetCellSafe: string;
   begin
     Result:= Cells[cl, rw];
-    { If the chosen Delimiter already exists in our text it breaks the CSV format, so replace it with a semicolon (;) }
+    { If the chosen Delimiter already exists in our text it will fuck up the CSV format, so replace it with a semicolon (;) }
     if Delimiter= ';'                                  { If the delimiter IS the semicolon, swap to a comma instead }
     then ReplaceChar(Result, Delimiter, ',')
     else ReplaceChar(Result, Delimiter, ';');

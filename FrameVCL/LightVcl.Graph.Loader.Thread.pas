@@ -208,6 +208,7 @@ begin
    TCubicThumbs.DrawCell (LightVcl.Visual.ThumbViewerM.pas) centers the bitmap with x:= aRect.Left + (DefaultColWidth - BMP.Width) DIV 2, and DefaultColWidth is only ThumbWidth + 2*CellSpacing - so a 10% overshoot puts x left of the cell and the thumbnail paints over its neighbour. }
  Resize.Reset;
  Resize.ResizeOpp:= roFit;
+ Resize.ResizePanoram:= TRUE;   { Reset sets it FALSE, which returns a panoramic image at its full size }
  Resize.MaxWidth := Width;
  Resize.MaxHeight:= Height;
 

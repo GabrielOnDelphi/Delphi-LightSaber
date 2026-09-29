@@ -130,6 +130,11 @@ begin
  CellSpacing   := 4;
  ResizeOpp     := roAutoDetect;
  ThumbList     := TThumbList.Create;
+ { Zero the fixed rows/cols BEFORE Clear. SetFixedRows moves TopRow to 0 without scrolling, so Clear's "TopRow:= 0" does nothing.
+   Otherwise TopRow:= 0 scrolls the window (TCustomGrid.TopLeftMoved), which needs a handle, and the control has no parent yet: EInvalidOperation "has no parent window".
+   Clear sets RowCount/ColCount to 1, which forces both to 0 anyway. }
+ FixedRows:= 0;
+ FixedCols:= 0;
  Clear;
 end;
 
@@ -244,7 +249,9 @@ end;
 { Appends a single thumbnail at the end of an existing list of thumbnails.
   Not multithreaded - the image is loaded and resized synchronously. }
 procedure TCubicThumbs.AddPicture(CONST FilePath: string);
-VAR PThumb: ThumbPtr;
+VAR
+   PThumb: ThumbPtr;
+   Resize: RResizeParams;
 begin
  if (ThumbWidth <= 0) OR (ThumbHeight<= 0)
  then RAISE exception.Create('Invalid thumb size!');
@@ -255,8 +262,13 @@ begin
  PThumb^.BMP:= NIL;                                                                                { New() does NOT zero non-managed fields! Without this, if LoadAndStretch raises, the record sits in the list with a garbage BMP pointer -> AV in TThumbList.Clear }
  ThumbList.Add(PThumb);
 
- { Generate thumbnail }
- PThumb^.BMP:= LoadAndStretch(FilePath, ThumbWidth, ThumbHeight);                                  { Returns NIL for unloadable images (placeholder is drawn) }
+ { Generate thumbnail. Same resize settings as TBkgImgLoader.ProcessFile, so the thumbnail stays inside its cell }
+ Resize.Reset;
+ Resize.ResizeOpp    := roFit;
+ Resize.ResizePanoram:= TRUE;
+ Resize.MaxWidth     := ThumbWidth;
+ Resize.MaxHeight    := ThumbHeight;
+ PThumb^.BMP:= LoadAndStretch(FilePath, Resize);                                                   { Returns NIL for unloadable images (placeholder is drawn) }
 
  { Note: do NOT touch ThreadProgress here. It is the worker thread's queue cursor;
    incrementing it for a synchronously-added picture shifts all subsequent

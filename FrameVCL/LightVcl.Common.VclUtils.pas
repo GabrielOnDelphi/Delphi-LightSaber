@@ -13,10 +13,10 @@
      - Design-time debugging helpers (inheritance tree, state inspection)
 
    See also:
-      csWindow.pas
+      LightVcl.Common.Window.pas
 
    Tester:
-      c:\MyProjects\My books\Building cross-platform applications\Demo projects\Show VCL inheritance tree\
+      c:\Projects\DLG Book Demo Projects\Show VCL inheritance tree\
 =============================================================================================================}
 
 INTERFACE

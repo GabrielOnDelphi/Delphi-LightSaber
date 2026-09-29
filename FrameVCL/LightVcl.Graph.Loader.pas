@@ -19,7 +19,7 @@
 
   TESTER:
      c:\Projects\Testers\gr LoadGraph\
-     c:\MyProjects\Projects GRAPHICS Resamplers\GLOBAL Tester\TEST IMAGES\
+     c:\Projects\LightSaber ImageResampler Test\
 -------------------------------------------------------------------------------------------------------------}
 
 {PNG: see this: http://talkdelphi.blogspot.com/2009_03_01_archive.html }
@@ -537,7 +537,7 @@ begin
         ThumbHeight:= Round(ThumbWidth / Ratio);
       end;
 
-     SmartStretch(Result, ThumbWidth, ThumbHeight);
+     StretchProport(Result, ThumbWidth, ThumbHeight);   { Pure fit. SmartStretch's auto-detect mode would return up to 10% more than the box }
    EXCEPT
      on E: Exception do      { Don't crash on invalid images }   //todo: trap only specific exceptions
       begin

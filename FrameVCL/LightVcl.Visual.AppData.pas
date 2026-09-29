@@ -1117,7 +1117,7 @@ end;
 ---------------------------------------------------------------------------------------------------
    READ/WRITE folders to registry
    This is used by the Uninstaller.
-   See c:\MyProjects\Project support\Cubic Universal Uninstaller\Uninstaller.dpr
+   See c:\Projects\LightSaber\Demo\VCL\Template Universal Uninstaller\VCL_Uninstaller.dpr
 --------------------------------------------------------------------------------------------------}
 CONST
    UninstallerRegKey: string= 'Software\CubicDesign\';

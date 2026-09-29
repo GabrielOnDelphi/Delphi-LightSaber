@@ -24,7 +24,7 @@ UNIT LightVcl.Graph.ResizeGr32;
      http://delphi-kb.blogspot.de/2011/05/resize-tbitmap-quickly.html
      http://www.davdata.nl/math/bmresize.html
 
-   Tester: c:\MyProjects\Projects GRAPHICS Resamplers\GLOBAL Tester\
+   Tester: c:\Projects\LightSaber ImageResampler Test\ResamplerTester.dpr
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE

@@ -13,16 +13,16 @@ UNIT LightVcl.Common.LogViewer;
 
    Application wide logging
       This component can also be used to see messages logged at the application level (see TAppData).
-      For this, just assign
-         LogViewer.RamLog:= AppData.RamLog;
+      For this, just call
+         LogViewer.AssignExternalRamLog(AppData.RamLog);
 
       Now on you can send your logging messages directly to AppData, instead of sending them to the log window:
-         LogViewer.RamLog.AddError('Something bad happened!');
+         AppData.LogError('Something bad happened!');
 
       The log window will automatically pop-up when a error is received.
 
    Full demo in:
-      c:\Projects\LightSaber\Demo\Demo LightLog\FMX\FMX_Demo_Log.dpr
+      c:\Projects\LightSaber\Demo\VCL\Demo LightLog\VCL_Demo_Log.dpr
 
 =============================================================================================================}
 
@@ -58,10 +58,9 @@ TYPE
      FOwnRamLog   : Boolean;           // Frees RamLog if owned
      FFilteredRowCount: Integer;       // Cached count of filtered rows (drives scrollbar.Max)
      FScrollBar: TScrollBar;
-     FFormDestroying: Boolean;         // Set TRUE in TfrmRamLog.FormDestroy so already-queued
-                                       // TThread.Queue closures (posted by background-thread log appends) bail out instead of touching a freed viewer.
-                                       // Distinct from TComponent.Destroying (which only flips once we are inside our own destructor — too late for a closure that has already entered Populate).
-                                       // Mirrors the same pattern in LightFmx.Common.LogViewer.
+     FFormDestroying: Boolean;         { Set TRUE in TfrmRamLog.FormDestroy so already-queued TThread.Queue closures (posted by background-thread log appends) bail out instead of touching a freed viewer.
+                                         Distinct from TComponent.Destroying (which only flips once we are inside our own destructor — too late for a closure that has already entered Populate).
+                                         Mirrors the same pattern in LightFmx.Common.LogViewer. }
      procedure setShowDate(const Value: Boolean);
      procedure setShowTime(const Value: Boolean);
      procedure FixFixedRow;
@@ -140,7 +139,7 @@ begin
 
   // Grid setup
   FGrid        := THackGrid.Create(Self);
-  FGrid.Parent := Self; // Set the panel as parent
+  FGrid.Parent := Self;
 end;
 
 
@@ -206,7 +205,7 @@ begin
   MustResize:= aVisible <> FScrollBar.Visible;
   FScrollBar.Visible:= aVisible;
   if MustResize
-  then resizeColumns;  { Only resize if visibility actually changed }
+  then resizeColumns;
 end;
 
 
@@ -242,11 +241,9 @@ begin
     { Configure scrollbar visibility and range.
       Suppress FScrollBar.OnChange while we mutate Max/Position so we don't trigger a redundant refreshVisibleSlice — the explicit call after EndUpdate covers it.
 
-      Safe to clobber OnChange unconditionally: FScrollBar is a private TScrollBar
-      created in the constructor and never exposed. No external code can assign a
-      different OnChange handler, so restoring scrollBarChange in FINALLY always
-      reinstates the only legitimate value. If FScrollBar is ever made public or
-      its OnChange is exposed, switch to save-and-restore via a local TNotifyEvent. }
+      Safe to clobber OnChange unconditionally: FScrollBar is a private TScrollBar created in the constructor and never exposed.
+      No external code can assign a different OnChange handler, so restoring scrollBarChange in FINALLY always reinstates the only legitimate value.
+      If FScrollBar is ever made public or its OnChange is exposed, switch to save-and-restore via a local TNotifyEvent. }
     FScrollBar.OnChange:= NIL;
     TRY
       if FFilteredRowCount > VisibleRows
@@ -291,8 +288,7 @@ begin
       if Assigned(FVerbChanged)
       then FVerbChanged(Self);
 
-      { Refresh the grid content based on the new filter
-        (setUpRows internally calls refreshVisibleSlice). }
+      { Refresh the grid content based on the new filter (setUpRows internally calls refreshVisibleSlice). }
       setUpRows;
       FGrid.InvalidateGrid;
     end;
@@ -301,8 +297,7 @@ end;
 
 {-------------------------------------------------------------------------------------------------------------
    EXTERNAL LOG ASSIGNMENT
-   Allows the LogViewer to display messages from an externally managed TRamLog instance
-   (e.g., AppData.RamLog) instead of its own internal log.
+   Allows the LogViewer to display messages from an externally managed TRamLog instance (e.g., AppData.RamLog) instead of its own internal log.
 -------------------------------------------------------------------------------------------------------------}
 procedure TLogViewer.AssignExternalRamLog(ExternalLog: TRamLog);
 begin
@@ -328,14 +323,12 @@ end;
 
 { Refreshes the grid display from the RamLog data.
   Called by the ILogObserver interface when log content changes.
-  setUpRows must run first: it updates FFilteredRowCount and FScrollBar.Max, then calls
-  refreshVisibleSlice. scrollToBottom may then change FScrollBar.Position which fires
-  scrollBarChange (refreshes the slice + repaints). If Position doesn't actually change,
-  the slice from setUpRows is still correct. Either way, no extra work needed here.
+  setUpRows must run first: it updates FFilteredRowCount and FScrollBar.Max, then calls refreshVisibleSlice.
+  scrollToBottom may then change FScrollBar.Position which fires scrollBarChange (refreshes the slice + repaints).
+  If Position doesn't actually change, the slice from setUpRows is still correct.
+  Either way, no extra work needed here.
 
-  Guard against already-queued TThread.Queue closures firing after the host form's
-  FormDestroy has set FormDestroying:=TRUE — without this guard the closure would
-  touch a viewer that Application has just freed. }
+  Guard against already-queued TThread.Queue closures firing after the host form's FormDestroy has set FormDestroying:=TRUE — without this guard the closure would touch a viewer that Application has just freed. }
 procedure TLogViewer.Populate;
 begin
   if FFormDestroying 
@@ -351,7 +344,6 @@ end;
 
 
 { Returns the log line at the specified grid row (after filtering).
-  Reads the cached PLogLine pointer stored in the grid's Objects[0, Row] slot.
   Returns NIL if the row is invalid, out of bounds, or has no data. }
 function TLogViewer.getLineFiltered(Row: Integer): PLogLine;
 begin
@@ -380,10 +372,8 @@ begin
       EXIT;
     end;
 
-  { Header row - let the grid's default drawing paint the captions from Cells[0,0]/Cells[1,0]
-    (set by resizeColumns). Drawing them again here with Canvas.TextRect at (Left+5, Top+2)
-    produced a visible duplicate/ghost overlapping the default-drawn text, especially with
-    VCL skins that paint a themed header background. }
+  { Header row - let the grid's default drawing paint the captions from Cells[0,0]/Cells[1,0] (set by resizeColumns).
+    Drawing them again here with Canvas.TextRect produces a visible duplicate/ghost overlapping the default-drawn text, especially with VCL skins that paint a themed header background. }
   if ARow = 0
   then EXIT;
 
@@ -482,8 +472,6 @@ end;
 {--------------------------------------------------------------------------------------------------
    Shows the parent form containing this log viewer.
    Called via ILogObserver interface when errors occur and ShowOnError is enabled.
-   Ensures the form is visible, restored (not minimized), and brought to front.
-   Also bails out if the host form is in the process of being destroyed (see FFormDestroying).
 --------------------------------------------------------------------------------------------------}
 procedure TLogViewer.PopUpWindow;
 VAR
@@ -551,12 +539,10 @@ begin
   inherited Resize;
   resizeColumns;          { Adjust column widths to the new ClientWidth. }
 
-  { ClientHeight changed, so the number of visible rows changed too. 
-    setUpRows reads ClientHeight to recompute FGrid.RowCount and FScrollBar.Max, and ends
-    by calling refreshVisibleSlice. Without this call, growing the panel would
-    leave empty rows at the bottom (RowCount stuck at the old value), and
-    shrinking would orphan filled-but-invisible rows. Skip when not yet wired
-    (Resize can fire before the constructor finishes assigning FRamLog). }
+  { ClientHeight changed, so the number of visible rows changed too.
+    setUpRows reads ClientHeight to recompute FGrid.RowCount and FScrollBar.Max, and ends by calling refreshVisibleSlice.
+    Without this call, growing the panel would leave empty rows at the bottom (RowCount stuck at the old value), and shrinking would orphan filled-but-invisible rows.
+    Skip when not yet wired (Resize can fire before the constructor finishes assigning FRamLog). }
   if Assigned(FRamLog) 
   and HandleAllocated
   then setUpRows;
@@ -624,26 +610,19 @@ end;
    Saves the log content to an RTF file with colors preserved.
    Each line is colored according to its verbosity level, and bold lines are formatted accordingly.
 
-   Note: TRichEdit requires a parent window for certain operations.
-         We temporarily parent it to Self (the LogViewer panel).
-
    Thread Safety — two-phase pattern with VALUE copy (not pointer copy):
-     Phase 1 copies the data we need (Msg, Level, Bold) out of each PLogLine into
-     a local TArray<TRtfLine> under one read lock. The lock is held only for the
-     copy (~microseconds for typical logs).
-     Phase 2 walks the local array doing the slow TRichEdit work (Win32 SendMessage
-     per line). No lock held; the local array owns its data.
+     Phase 1 copies the data we need (Msg, Level, Bold) out of each PLogLine into a local TArray<TRtfLine> under one read lock.
+     The lock is held only for the copy (~microseconds for typical logs).
+     Phase 2 walks the local array doing the slow TRichEdit work (Win32 SendMessage per line).
+     No lock held; the local array owns its data.
 
    Why we copy values, not pointers:
-     PLogLine pointers are owned by FRamLog.Lines. If a worker hits MaxEntries
-     during Phase 2 and CheckAndSaveToDisk's overflow path runs SnapshotAndClear,
-     it queues a "free the snapshot" closure on the main thread. TRichEdit
-     operations (Lines.Add, SaveToFile) can pump messages — including queued
-     closures — and the snapshot's PLogLine records would be Disposed mid-walk.
+     PLogLine pointers are owned by FRamLog.Lines.
+     If a worker hits MaxEntries during Phase 2 and CheckAndSaveToDisk's overflow path runs SnapshotAndClear, it queues a "free the snapshot" closure on the main thread.
+     TRichEdit operations (Lines.Add, SaveToFile) can pump messages — including queued closures — and the snapshot's PLogLine records would be Disposed mid-walk.
      Copying values up-front decouples Phase 2 from FRamLog's lifetime.
 
-   Cost: ~16 bytes/line struct overhead (string ref + Level + Bold). String content
-     is NOT duplicated (Delphi strings are COW; assignment bumps a refcount).
+   Cost: ~16 bytes/line struct overhead (string ref + Level + Bold). String content is NOT duplicated.
      For a 1M-line log: ~16 MB array overhead + zero extra string content.
 --------------------------------------------------------------------------------------------------}
 procedure TLogViewer.SaveAsRtf(const FullPath: string);
@@ -682,12 +661,12 @@ begin
       Inc(SnapCount);
     end);
 
-  { Phase 2 — slow Win32 work, lock-free. The local Snapshot owns its data,
-    so a concurrent overflow + snapshot-dispose during this loop is harmless. }
+  { Phase 2 — slow Win32 work, lock-free.
+    The local Snapshot owns its data, so a concurrent overflow + snapshot-dispose during this loop is harmless. }
   RichEdit:= TRichEdit.Create(Self);
   TRY
     RichEdit.Parent:= Self;        { Required for TRichEdit to work properly }
-    RichEdit.Visible:= FALSE;      { Keep it hidden }
+    RichEdit.Visible:= FALSE;
     RichEdit.PlainText:= FALSE;
 
     for i:= 0 to SnapCount - 1 do
@@ -714,7 +693,6 @@ begin
 end;
 
 
-{ Handles scrollbar position changes - re-fills the visible PLogLine slice and repaints. }
 procedure TLogViewer.scrollBarChange(Sender: TObject);
 begin
   refreshVisibleSlice;
@@ -756,9 +734,8 @@ end;
 {--------------------------------------------------------------------------------------------------
    Refills the grid's visible Object slots with PLogLine pointers from the underlying log.
 
-   Delegates the walk to RamLog.Lines.GetFilteredSlice, which holds a single read lock for the
-   entire scan in multithreaded mode -- no per-element lock-acquire tax. The visible slice lives
-   directly in the grid's per-cell Objects array, so GridDrawCell reads it in O(1).
+   Delegates the walk to RamLog.Lines.GetFilteredSlice, which holds a single read lock for the entire scan in multithreaded mode -- no per-element lock-acquire tax.
+   The visible slice lives directly in the grid's per-cell Objects array, so GridDrawCell reads it in O(1).
 
    Caller contract:
      - Must run AFTER setUpRows has set FGrid.RowCount and FScrollBar.Max for the current filter.
@@ -790,7 +767,6 @@ begin
 end;
 
 
-{ THackGrid - Wrapper to expose protected CalcColWidth method }
 function THackGrid.CalculateColWidth(const ATextLength: Integer; const ACaption: string): Integer;
 begin
   Result:= CalcColWidth(ATextLength, ACaption, NIL);
