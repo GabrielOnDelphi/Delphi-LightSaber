@@ -3,10 +3,6 @@ UNIT LightCore.StreamBuff;
 {=============================================================================================================
    2026.07.06
    www.GabrielMoraru.com
-
-   + SafetyLimit parameter to ReadString/ReadStringA/ReadStringACnt/ ReadStringCnt/ReadCharsA. API now matches sibling classes (TLightFileStream, TCubicMemStream).
-   + ReadIntegers/ReadDoubles validate the element count against the remaining stream bytes before SetLength.
-   + Fixed: AsString and ReadStrings no longer hit the 1 KB ReadString default limit (regression from the SafetyLimit change; data > 1 KB failed to load).
 --------------------------------------------------------------------------------------------------------------
    Extends TBufferedFileStream.
    Ideal for multiple consecutive small reads or writes.
@@ -43,11 +39,11 @@ UNIT LightCore.StreamBuff;
        begin
          if NOT Stream.ReadHeader('MySignature', 1)          // Is the file valid?
          then RAISE Exception.Create('Cannot load data!');
-         FSomeField:= Stream.ReadInteger;                    // Save your fields
+         FSomeField:= Stream.ReadInteger;                    // Read your fields
          ...
        end;
 
-       procedure TLessons.Save(Stream: TLightStream);
+       procedure TMyClass.Save(Stream: TLightStream);
        begin
          Stream.WriteHeader('MySignature', 1);
          Stream.WriteInteger(FSomeField);                    // Write your fields
@@ -90,7 +86,7 @@ UNIT LightCore.StreamBuff;
       LightSaber\Demo\Core\Demo LightCore StreamBuffer\Demo_FileStream.dpr
 
 =============================================================================================================}
-{$WARN DUPLICATE_CTOR_DTOR OFF}   { W1029: CreateRead and CreateWrite have identical parameters, so a C++Builder HPP could not tell them apart (both map to the class name). We ship no C++ code. Same directive the RTL uses in System.Rtti.pas:18. }
+{$WARN DUPLICATE_CTOR_DTOR OFF}   { W1029: CreateRead and CreateWrite have identical parameters, so a C++Builder HPP could not tell them apart (both map to the class name). We ship no C++ code. Same directive the RTL uses at the top of System.Rtti.pas. }
 
 INTERFACE
 
@@ -100,10 +96,10 @@ USES
 TYPE
   TLightStream= class(System.Classes.TBufferedFileStream)
    private
-     CONST LisaMagicNumber: Cardinal= $6153694C;
+     CONST LisaMagicNumber: Cardinal= $6153694C;     // The LiSa string for "Light Saber'.
      CONST LisaMagicNumberOld: Cardinal= $4C695361;  // Backward compat: byte-swapped version used before 2026
      CONST FrozenPaddingSize = 64;                // NEVER-EVER MODIFY THIS CONSTANT! All files saved with this constant will not work anymore. Enough for 16 Integer variables.
-     function readSignature: AnsiString;          // The LiSa string for "Light Saber'.
+     function readSignature: AnsiString;
      procedure checkSafetyLimit(Count: Cardinal);
    public
      constructor CreateRead (CONST FileName: string);
@@ -125,7 +121,7 @@ TYPE
      { Padding }
      procedure ReadPadding0           (Bytes: Integer= FrozenPaddingSize);    // Does not check them for validity
      procedure ReadPaddingValidation  (Bytes: Integer= FrozenPaddingSize);    // Raises an exception if the buffer does not contain the signature
-     procedure WritePaddingValidation (Bytes: Integer= FrozenPaddingSize);    // Raises an exception if the padding does not match the SafetyPaddingStr string. Usefule to detect file corruption. }
+     procedure WritePaddingValidation (Bytes: Integer= FrozenPaddingSize);    // Writes the SafetyPaddingStr string as padding, so ReadPaddingValidation can detect file corruption.
      procedure WritePadding0          (Bytes: Integer= FrozenPaddingSize);    // Writes zeroes as padding bytes.
 
      { Numeric }
@@ -174,19 +170,14 @@ TYPE
      function  RevReadWord    : Word;                                       { REVERSE READ - read 2 bytes and swap their position. For Motorola format. }
 
      { Unicode
-        SafetyLimit (in bytes) rejects implausibly large length prefixes BEFORE allocating —
-        defends against a corrupted 4-byte length that happens to fit within the actual file
-        size (which CheckSafetyLimit's EOF check alone cannot catch).
+        SafetyLimit (in bytes) rejects implausibly large length prefixes BEFORE allocating — defends against a corrupted 4-byte length that happens to fit within the actual file size (which CheckSafetyLimit's EOF check alone cannot catch).
         Default 1*KB matches sibling classes TLightFileStream / TCubicMemStream.
-        Pass an explicit larger value when you legitimately read strings > 1 KB
-        (e.g., LogLines messages, RichRamLog payloads, large text files).
+        Pass an explicit larger value when you legitimately read strings > 1 KB (e.g., LogLines messages, RichRamLog payloads, large text files).
 
-        For the Cnt / Chars variants (ReadStringACnt, ReadStringCnt, ReadCharsA): the
-        check is still `if Count > SafetyLimit then RAISE`. SafetyLimit is intentionally
-        defensive, NOT auto-sized to Count. If you legitimately read a buffer larger than
-        the default, pass an explicit SafetyLimit ≥ Count (e.g. ReadCharsA(N, N) when N
-        is known-trusted, or ReadStringACnt(N, MaxYouEverExpect)). The two-arg form
-        documents the intent at the call site instead of silently relaxing the ceiling. }
+        For the Cnt / Chars variants (ReadStringACnt, ReadStringCnt, ReadCharsA): the check is still `if Count > SafetyLimit then RAISE`.
+        SafetyLimit is intentionally defensive, NOT auto-sized to Count.
+        If you legitimately read a buffer larger than the default, pass an explicit SafetyLimit ≥ Count (e.g. ReadCharsA(N, N) when N is known-trusted, or ReadStringACnt(N, MaxYouEverExpect)).
+        The two-arg form documents the intent at the call site instead of silently relaxing the ceiling. }
      procedure WriteString(CONST s: string);
      function  ReadString(SafetyLimit: Cardinal = 1*KB): string;  overload;
 
@@ -209,7 +200,7 @@ TYPE
 
      { Strings without length }
      procedure PushString   (CONST s: string);
-     function  ReadStringCnt(Count: Cardinal; SafetyLimit: Cardinal = 1*KB): string;     overload;     { Read 'Len' characters }
+     function  ReadStringCnt(Count: Cardinal; SafetyLimit: Cardinal = 1*KB): string;     overload;     { Reads Count bytes of UTF-8 }
 
      { Raw }
      function  AsBytes: TBytes;
@@ -234,12 +225,10 @@ USES
 --------------------------------------------------------------------------------------------------}
 constructor TLightStream.CreateRead(CONST FileName: string);
 begin
-  // fmShareDenyWrite — let other handles READ the same file while ours is open. Without this,
-  // the default fmShareCompat acts as fmShareExclusive on Windows and any concurrent open
-  // (even a deny-none read) fails with ERROR_SHARING_VIOLATION. Real-world hit: lazy-loaded
-  // input files in LearnAssist (TChatPartEx.ReadBytesOnDemand) opens its own TFileStream on
-  // the same .LSN file that an outer TLightStream is still reading the metadata from.
-  // Writes are still blocked, so atomic-rename saves are unaffected.
+  { fmShareDenyWrite — let other handles READ the same file while ours is open.
+    Without this, the default fmShareCompat acts as fmShareExclusive on Windows and any concurrent open (even a deny-none read) fails with ERROR_SHARING_VIOLATION.
+    Real-world hit: lazy-loaded input files in LearnAssist (TChatPartEx.ReadBytesOnDemand) opens its own TFileStream on the same .LSN file that an outer TLightStream is still reading the metadata from.
+    Writes are still blocked, so atomic-rename saves are unaffected. }
   inherited Create(FileName, fmOpenRead OR fmShareDenyWrite, 1*MB);
 end;
 
@@ -259,7 +248,7 @@ end;
        bytes (Ansi): Magic signature
      2 bytes (Word): File version number.
 
-     This new file header is more reliable because we check
+     ReadHeader checks three things:
        the magic number  - this is fixed for all files
        the signature
        the file version
@@ -275,13 +264,13 @@ procedure TLightStream.WriteHeader(CONST Signature: AnsiString; Version: Word);
 begin
   Assert(Length(Signature) <= 64, 'The Signature cannot be larger the 64 chars!');
   WriteCardinal  (LisaMagicNumber);  // Write fixed magic no  "LiSa"
-  WriteStringA   (Signature);        // Write signature
-  WriteWord      (Version);          // Write the file version number
+  WriteStringA   (Signature);
+  WriteWord      (Version);
 end;
 
 
 { Returns the version or 0 in case of error.
-  No exception will be raised unless when the file is smaller than what we want to read. }
+  Read errors (e.g. a file shorter than the header) are logged and return 0 instead of raising. }
 function TLightStream.ReadHeader(CONST Signature: AnsiString): Word;
 VAR
   MagicNo: Cardinal;
@@ -347,7 +336,7 @@ end;
 
 
 { A dedicated function to read the signature.
-  It raises an error if we try to read too many chars, which can happen when we read random data (file corrupted or version changed) }
+  A length above 64 or past the end of the file, which happens when we read random data (file corrupted or version changed), is logged and returns ''. }
 function TLightStream.ReadSignature: AnsiString;
 VAR Count: Cardinal;
 begin
@@ -383,7 +372,6 @@ CONST
    ctCheckPoint= '<*>Checkpoint<*>';
 
 
-{ For debugging. Write a checkpoint entry (just a string) from time to time to your file so if you screwup, you check from time to time to see if you are still reading the correct data. }
 procedure TLightStream.ReadCheckPointE(CONST s: AnsiString= '');
 begin
   if NOT ReadCheckPoint(s)
@@ -406,11 +394,10 @@ end;
 {--------------------------------------------------------------------------------------------------
    PADDING
    It is important to leave some space at the end of your file (aka padding bytes).
-   If you later (as your program evolves) need to save extra data into your file,
-     you use the padding bytes. This way you don't need to change your file format.
+   If you later (as your program evolves) need to save extra data into your file, you use the padding bytes.
+   This way you don't need to change your file format.
 -------------------------------------------------------------------------------------------------------------}
 
-// Writes zeroes as padding bytes.
 procedure TLightStream.WritePadding0(Bytes: Integer= FrozenPaddingSize);
 VAR b: TBytes;
 begin
@@ -442,7 +429,7 @@ CONST
   SafetyPaddingStr: AnsiString= '<##LightSaber - Pattern of exactly 64 bytes for safety check.##>';   //This string is exactly 64 chars long
 
 { Read/write a string as padding bytes.
-  ReadPadding raises an exception if the padding does not match the SafetyPaddingStr string. Usefule to detect file corruption. }
+  ReadPaddingValidation raises an exception if the padding does not match the SafetyPaddingStr string. Useful to detect file corruption. }
 procedure TLightStream.WritePaddingValidation(Bytes: Integer= FrozenPaddingSize);
 VAR
   b: TBytes;
@@ -459,7 +446,6 @@ begin
   if Bytes > CheckPointSize
   then FillChar(b[CheckPointSize], Bytes - CheckPointSize, #0);
 
-  // Write the buffer to the stream
   WriteBuffer(b[0], Bytes);
 end;
 
@@ -567,7 +553,6 @@ end;
 --------------------------------------------------------------------------------------------------}
 
 { Writes raw characters to file (no length prefix).
-  Unlike WriteStringA, this does NOT write the string length first.
   Use when writing C-style strings or fixed-length character data. }
 procedure TLightStream.WriteChars(CONST s: AnsiString);
 begin
@@ -598,9 +583,8 @@ end;
 
 { Reads raw characters from file (without length prefix).
   Count specifies how many bytes to read.
-  SafetyLimit prevents reading excessively large strings — defends against caller-supplied
-  Count values inflated by upstream corruption. Pass an explicit larger value for legitimate
-  bulk reads.
+  SafetyLimit prevents reading excessively large strings — defends against caller-supplied Count values inflated by upstream corruption.
+  Pass an explicit larger value for legitimate bulk reads.
   Returns empty string if Count is 0.
 
   Used for reading C++ strings (the length of the string is not written to disk)  }
@@ -634,9 +618,8 @@ end;
 procedure TLightStream.ReadStrings(TSL: TStrings);
 begin
   Assert(TSL <> NIL, 'TLightStream.ReadStrings: TSL is nil');
-  // SafetyLimit = remaining stream bytes: a string list legitimately exceeds the 1 KB ReadString default
-  // (playlists, file lists). Anything that physically fits in the stream is accepted; corrupt counts
-  // beyond EOF still raise (same behavior as before SafetyLimit was introduced in 2026.06).
+  { SafetyLimit = remaining stream bytes: a string list legitimately exceeds the 1 KB ReadString default (playlists, file lists).
+    Anything that physically fits in the stream is accepted; corrupt counts beyond EOF still raise. }
   TSL.Text:= ReadString(Cardinal(Size - Position));
 end;
 
@@ -960,7 +943,7 @@ end;
 
 
 { Read the raw content of the file and return it as string (for debugging).
-  Note: This reads raw bytes, not a length-prefixed string. Use ReadStringA for that. }
+  This reads raw bytes, not a length-prefixed string. Use ReadStringA for that. }
 function TLightStream.AsString: AnsiString;
 begin
   if Size = 0 then RAISE Exception.Create('TLightStream is empty!');
@@ -980,8 +963,8 @@ begin
   if Count > 0
   then
     begin
-     SetLength(Result, Count);                                             { Initialize the result }
-     TotalBytes:= Read(Result[1], Count);                                  { Read is used in cases where the number of bytes to read from the stream is not necessarily fixed. It attempts to read up to Count bytes into buffer and returns the number of bytes actually read.  }
+     SetLength(Result, Count);
+     TotalBytes:= Read(Result[1], Count);
 
      if TotalBytes= 0
      then Result:= ''
