@@ -73,12 +73,10 @@ TYPE
     function  getLastUsedFolder: string;
     procedure setShowOnError(const Value: Boolean);
   protected
-    FHintType: THintType;                // Turn off the embedded help system
+    FHintType: THintType;                // How the embedded help is shown: off, as tool-tips or in the status bar
 
-    { The real logging work. Protected, not private: the TAppData descendants live in other units
-      (LightVcl.Visual.AppData, LightFmx.Common.AppData) and call these from inside their own methods,
-      where Self is a live object and the global AppDataCore may not be assigned yet - during Create -
-      or may already be NIL - during Destroy. }
+    { The real logging work.
+      Protected, not private: the TAppData descendants live in other units (LightVcl.Visual.AppData, LightFmx.Common.AppData) and call these from inside their own methods, where Self is a live object and the global AppDataCore may not be assigned yet - during Create - or may already be NIL - during Destroy. }
     procedure doLogEmptyRow;
     procedure doLogBold  (CONST Msg: string);
     procedure doLogError (CONST Msg: string);
@@ -113,13 +111,13 @@ TYPE
    --------------------------------------------------------------------------------------------------}
     property  SingleInstClassName: string read FSingleInstClassName;
     {}
-    class property Initializing: Boolean read FInitializing;  // See documentation at the top of the file
+    class property Initializing: Boolean read FInitializing;  // Documented in the unit header of LightVcl.Visual.AppData.pas and of LightFmx.Common.AppData.pas
     class procedure EndInitialization;
     class property PortableMode: Boolean read FPortableMode;  // TRUE when 'portable.marker' exists next to EXE. INI and settings are stored next to the EXE instead of %AppData%.
     { TRUE = nobody is at the keyboard, so nothing may be put on screen and nothing may block waiting for a click.
       The message-box routines return their "safe" answer at once and ShowModal is skipped.
-      Who should set it: a unit test, a console tool, a Windows service (session 0 - a message box there is
-      invisible AND blocks for ever) and a scheduled job. A normal desktop application leaves it FALSE.
+      Who should set it: a unit test, a console tool, a Windows service (session 0 - a message box there is invisible AND blocks for ever) and a scheduled job.
+      A normal desktop application leaves it FALSE.
       Old name: TEST_MODE. }
     class VAR Unattended: Boolean;
 
@@ -157,7 +155,7 @@ TYPE
 
     class property AppName: string read getAppName;
     property HideHint: Integer read FHideHint write setHideHint;       // Hide hint after x ms. Does nothing here. The child class mush override this
-    property HintType: THintType  read FHintType write setHintType;         // Turn off the embedded help system
+    property HintType: THintType  read FHintType write setHintType;         // How the embedded help is shown: off, as tool-tips or in the status bar
 
    {--------------------------------------------------------------------------------------------------
       App Control
@@ -176,14 +174,11 @@ TYPE
       App Log
    --------------------------------------------------------------------------------------------------}
     { Nobody needs an object to log: TAppDataCore.LogWarn('x') and AppDataCore.LogWarn('x') both work.
-      Each one tests the global AppDataCore for NIL itself, so a library routine logs without a guard and
-      a call during shutdown - when the finalization of LightVcl.Visual.AppData / LightFmx.Common.AppData
-      has already set AppDataCore to NIL - does nothing instead of raising.
+      Each one tests the global AppDataCore for NIL itself, so a library routine logs without a guard and a call during shutdown - when the finalization of LightVcl.Visual.AppData / LightFmx.Common.AppData has already set AppDataCore to NIL - does nothing instead of raising.
 
-      STATIC is load-bearing, not decoration. Measured on Delphi 13 (compiler version 37.0), Win32 and
-      Win64: a class method WITHOUT static, called through a NIL object reference, reads the class pointer
-      out of that object and raises EAccessViolation at address 0. With static there is no hidden Self, so
-      nothing is read and AppDataCore.LogWarn('x') is safe even when AppDataCore is NIL.
+      STATIC is load-bearing, not decoration.
+      Measured on Delphi 13 (compiler version 37.0), Win32 and Win64: a class method WITHOUT static, called through a NIL object reference, reads the class pointer out of that object and raises EAccessViolation at address 0.
+      With static there is no hidden Self, so nothing is read and AppDataCore.LogWarn('x') is safe even when AppDataCore is NIL.
       The cost of static is that these can never be virtual. None of them ever was. }
     class procedure LogEmptyRow;                   static;
     class procedure LogBold  (CONST Msg: string);  static;
@@ -272,7 +267,7 @@ begin
   RamLog:= TRamLog.Create(FShowOnError, NIL, MultiThreaded);
 
   { App settings }
-  defaultSettings;      // Always, and first: LoadSettings keeps these values for every key the INI does not have. Hint: Use LightSaber\Demo\Template App\Full\FormSettings.pas to give user access to these settings
+  defaultSettings;      // Always, and first: LoadSettings keeps these values for every key the INI does not have.
   if FileExists(IniFile)
   then LoadSettings;
   FSettingsLoaded:= TRUE;  // From here on, Destroy is allowed to save the settings back
@@ -369,8 +364,9 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 
 { Returns the full path to the executable.
-  Note: On Android, ParamStr(0) returns the path to the native .so library, which may be empty on some older devices/Delphi versions. 
-  In that case we construct a synthetic path so that ExtractFilePath / ExtractOnlyName callers still get something usable. On desktop, ParamStr(0) always works. }
+  On Android, ParamStr(0) returns the path to the native .so library, which may be empty on some older devices/Delphi versions.
+  In that case we construct a synthetic path so that ExtractFilePath / ExtractOnlyName callers still get something usable.
+  On desktop, ParamStr(0) always works. }
 function ExeName: string;
 begin
   Result:= ParamStr(0);
@@ -384,7 +380,7 @@ end;
 { Returns ONLY the name of the app (exe name without extension) }
 class function TAppDataCore.ExeShortName: string;
 begin
-  Result:= ExtractOnlyName(ExeName);      // WARNING !!!!!!!!!!!!!!!!!!! On Android, this is empty!
+  Result:= ExtractOnlyName(ExeName);      // WARNING !!!!!!!!!!!!!!!!!!! On Android, this is not the app name - see ExeName.
 end;
 
 
@@ -435,10 +431,9 @@ begin
   then Result:= Trail(TPath.GetDocumentsPath)   // Android does not have the concept of "per-user". GetDocumentsPath is the path used by the Deployment Manager.
   else Result:= Trail(TPath.Combine(TPath.GetHomePath, AppName));
 
-  { The failure is deliberately NOT reported. This runs from TAppDataCore.Create before RamLog exists
-    and before any form exists, so an exception here would surface as a raw unhandled-exception box
-    with no application name and nothing to log it to. Returning a path that could not be created is
-    the lesser evil: the write that follows fails with a message the caller can show. }
+  { The failure is deliberately NOT reported.
+    This runs from TAppDataCore.Create before RamLog exists and before any form exists, so an exception here would surface as a raw unhandled-exception box with no application name and nothing to log it to.
+    Returning a path that could not be created is the lesser evil: the write that follows fails with a message the caller can show. }
   if ForceDir
   then ForceDirectoriesB(Result);
 end;
@@ -487,7 +482,6 @@ begin
 end;
 
 
-{ Returns the application name. Raises assertion if not set (Create not called). }
 class function TAppDataCore.getAppName: string;
 begin
   Assert(FAppName > '', 'AppName is empty! Ensure TAppDataCore.Create was called.');
@@ -517,8 +511,8 @@ end;
 
 
 { Check if today is past the specified (expiration) date.
-  If a file called 'dvolume.bin' exists, then the check is overridden.
-  Good for checking exiration dates. }
+  If a file called 'dvolume.bin' exists, then the check is overridden: the file holds the expiration date as a whole TDateTime day number (days since 1899-12-30), in plain text.
+  An empty or unreadable file counts as day 0, so the program is expired. }
 function TAppDataCore.IsHardCodedExp(Year, Month, Day: word): Boolean;
 VAR
    s: string;
@@ -529,7 +523,7 @@ begin
    begin
      s:= StringFromFile(AppFolder+ 'dvolume.bin');
      HardCodedDate:= StrToInt64Def(s, 0);
-     Result:= round(HardCodedDate- Date) <= 0;     { For example: 2016.07.18 is 3678001053146ms. One day more is: 3678087627949 }
+     Result:= round(HardCodedDate- Date) <= 0;     { For example: 2016-07-18 is 42569. Files written with a millisecond count (3678001053146) are read as days, so they never expire }
    end
  else
    begin
@@ -553,7 +547,7 @@ end;
 function CommandLinePath: string;
 begin
  if ParamCount > 0
- then Result:= Trim(ParamStr(1))     { Do we have parameter into the command line? }
+ then Result:= Trim(ParamStr(1))
  else Result := '';
 end;
 
@@ -570,10 +564,8 @@ begin
  Parameters:= '';
  MixedInput:= Trim(MixedInput);
 
- // Handle empty input after trim
  if MixedInput = '' then EXIT;
 
- // Check if the first character is a double quote
  if MixedInput[1] <> '"'
  then Path:= MixedInput
  else
@@ -671,8 +663,8 @@ begin
 end;
 
 
-{ The public face of the log. See the comment on the declarations: each one tests the global for NIL,
-  and each one is static so that a call through a NIL object reference cannot raise. }
+{ The public face of the log.
+  See the comment on the declarations: each one tests the global for NIL, and each one is static so that a call through a NIL object reference cannot raise. }
 class procedure TAppDataCore.LogEmptyRow;
 begin
   if AppDataCore <> NIL then AppDataCore.doLogEmptyRow;
@@ -790,7 +782,7 @@ begin
     IniFileObj.Write('LastFolder'    , FLastFolder);
     IniFileObj.Write('UserPath'      , UserPath);
 
-    IniFileObj.DeleteKey('AppData Settings', 'HintType');   // Dead key, written by the versions before 2026.09 - see LoadSettings. DeleteKey ignores the result of WritePrivateProfileString, so a missing key or a read-only INI cannot raise here (c:\Delphi\Delphi 13\source\rtl\common\System.IniFiles.pas:1400).
+    IniFileObj.DeleteKey('AppData Settings', 'HintType');   // Dead key, written by the versions before 2026.09 - see LoadSettings. DeleteKey ignores the result of WritePrivateProfileString, so a missing key or a read-only INI cannot raise here (TIniFile.DeleteKey in c:\Delphi\Delphi 13\source\rtl\common\System.IniFiles.pas).
   finally
     FreeAndNil(IniFileObj);
   end;
@@ -799,10 +791,14 @@ end;
 
 { Loads application settings from the INI file.
   Called during construction if INI file exists, AFTER defaultSettings.
-  The fallback of every key is the value already in the field - the one defaultSettings put there. So a key missing from an INI written by an older version gets the same value as a fresh install.
-  There used to be a second, hard-coded list of fallbacks here, and it drifted from defaultSettings: HintType fell back to htOff, so an old INI switched off every tooltip in every VCL program (BioniX, 2026.09).
+  The fallback of every key is the value already in the field - the one defaultSettings put there.
+  So a key missing from an INI written by an older version gets the same value as a fresh install.
 
-  The INI key of HintType is 'HintStyle' since 2026.09, and the rename is the repair for the INI files that bug already damaged: they hold HintType=0, and a 0 written by the bug cannot be told apart from a user who really switched the hints off. The new name is in no old INI, so every user gets the default (tooltips) back once, and anyone who wants them off simply switches them off again. SaveSettings deletes the dead 'HintType' key. This is the only key whose INI name differs from its property name. }
+  The INI key of HintType is 'HintStyle', not 'HintType'.
+  INI files written before 2026.09 may hold HintType=0 written by a hard-coded htOff fallback that drifted from defaultSettings, and that 0 cannot be told apart from a user who really switched the hints off.
+  The new name is in no old INI, so every user gets the default (tooltips) back once, and anyone who wants them off simply switches them off again.
+  SaveSettings deletes the dead 'HintType' key.
+  This is the only key whose INI name differs from its property name. }
 procedure TAppDataCore.LoadSettings;
 begin
   var IniFileObj:= TIniFileEx.Create('AppData Settings', Self.IniFile);
@@ -828,14 +824,14 @@ end;
 
 
 { Default program settings. The ONLY list of defaults: Create calls this before LoadSettings, which keeps these values for the keys the INI does not have.
-  Hint: Use LightSaber\Demo\Template App\Full\FormSettings.pas to give user access to these settings }
+  Hint: Use LightSaber\Demo\VCL\Template App Full\FormSettings.pas to give user access to these settings }
 procedure TAppDataCore.DefaultSettings;
 begin
   HideHint     := 4000;                      // Hide hint after x ms.
   AutoStartUp  := FALSE;
   StartMinim   := FALSE;
-  Minimize2Tray:= TRUE;                      // Minimize to tray
-  HintType     := htTooltips;                // Show help as tool-tips
+  Minimize2Tray:= TRUE;
+  HintType     := htTooltips;
   Opacity      := 250;
   UserPath     := AppDataFolder;
   LastFile     := '';
