@@ -7,7 +7,7 @@ UNIT LightCore.HTML;
 
    HTML Parsing
 
-   Also see: c:\MyProjects\Packages\Third party packages\uHTMLBuilder.pas
+   Also see: c:\Projects-3rd_Packages\Third party packages\_Out\_TEMPORARY EXCLUDED (Don't delete them yet!)\uHTMLBuilder.pas
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
