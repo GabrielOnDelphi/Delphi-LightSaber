@@ -17,19 +17,19 @@ UNIT LightCore.Download;
 
    ALSO SEE:
       LightVcl.Internet.Download.Indy.pas
-       c:\Users\Public\Documents\Embarcadero\Studio\21.0\Samples\Object Pascal\RTL\HttpDownload\HttpDownloadDemo.dpr
-       c:\MyProjects\Packages\BSalsa EmbeddedWB\Demos\IEDownload_Simple_Demo\
+       c:\Users\Public\Documents\Embarcadero\Studio\37.0\Samples\Object Pascal\RTL\HttpDownload\HttpDownloadDemo.dpr
+       E:\Backups\My projects\2021\2021.03 Stormy\BSalsa EmbeddedWB\Demos\Various Demos\07 - IEDownload_Demo\IEDownload_Simple_Demo\
 
    Tester:
-       c:\Projects\LightSaber\Demo\Demo Internet\
+       c:\Projects\LightSaber\Demo\Core\Demo Internet\
        c:\Projects\Testers\Internet download tester images\
 
 --------------------------------------------------------------------------------------------------------------
    If you get "ENetHTTPClientException 12175 - A security error occurred":
-   This specific error code (ERROR_WINHTTP_SECURE_FAILURE when THTTPClient uses WinHTTP on Windows, or a similar WinINet code if it uses that backend) usually points to SSL/TLS handshake problems.
+   12175 is ERROR_WINHTTP_SECURE_FAILURE (on Windows, THTTPClient uses WinHTTP) and usually points to SSL/TLS handshake problems.
    Solution:
-     Ensuring your OS has up-to-date root certificates.
-     Explicitly setting HttpClient.SecureProtocols in newer Delphi versions to use TLS 1.2 and TLS 1.3 (done)
+     Make sure your OS has up-to-date root certificates.
+     Set HttpClient.SecureProtocols to TLS 1.2 and TLS 1.3 (newer Delphi versions only). This unit already does it.
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE
@@ -39,7 +39,7 @@ USES
 
 
 CONST
-  HTTP_STATUS_OK = 200;  { Standard HTTP status code for "OK" }
+  HTTP_STATUS_OK = 200;
 
 CONST
   USER_AGENT_STRING = 'DelphiApp/1.0 (MyApp HttpDownloader; +http://www.example.com)';
@@ -87,8 +87,9 @@ end;
 
 
 { Returns a new TMemoryStream instance if HTTP status is 200 OK. Caller must free the returned stream.
-  Returns nil otherwise. ErrorMsg contains a textual error description ('HTTP error 404: Not Found',
-  'Download error: ...'); empty = success. Network/HTTP errors do not raise - they are reported via ErrorMsg.
+  Returns nil otherwise.
+  ErrorMsg contains a textual error description ('HTTP error 404: Not Found', 'Download error: ...'); empty = success.
+  Network/HTTP errors do not raise - they are reported via ErrorMsg.
 
 You can pass Referers like this:
   var Headers: System.Net.URLClient.TNetHeaders;
@@ -105,14 +106,12 @@ begin
   Result:= NIL;
   ErrorMsg:= '';  { Empty means success }
 
-  { Handle the optional HttpOptions parameter }
   if HttpOptions = nil
   then Options.Reset
   else Options:= HttpOptions^;
 
   HttpClient:= THTTPClient.Create;
   try
-    { Configure HttpClient }
     HttpClient.UserAgent         := Options.UserAgent;
     HttpClient.HandleRedirects   := Options.HandleRedirects;
     HttpClient.MaxRedirects      := Options.MaxRedirects;
@@ -143,16 +142,7 @@ begin
 end;
 
 
-{ Downloads content to a file.
-  Does not raise exceptions; errors are indicated via ErrorMsg (empty = success).
-
-  Example of CustomHeaders:
-    var Headers: TNetHeaders;
-    begin
-      SetLength(Headers, 1);
-      Headers[0].Name  := 'Referer';
-      Headers[0].Value := 'https://my.custom.referer/';
-}
+{ Does not raise exceptions; errors are indicated via ErrorMsg (empty = success). }
 procedure DownloadToFile(CONST URL, SaveTo: string; OUT ErrorMsg: string; CustomHeaders: TNetHeaders = NIL; HttpOptions: PHttpOptions = NIL);
 VAR
   Stream: TMemoryStream;
@@ -178,8 +168,7 @@ begin
 end;
 
 
-{ Downloads URL content as a string.
-  Edge case: If server omits charset and content is UTF-8 without BOM, it may be misdecoded.
+{ Edge case: If server omits charset and content is UTF-8 without BOM, it may be misdecoded.
   This is rare with modern servers. }
 function DownloadAsString(const URL: string; OUT ErrorMsg: string; CustomHeaders: TNetHeaders = nil; HttpOptions: PHttpOptions = nil): string;
 var
@@ -190,7 +179,6 @@ begin
   Result:= '';
   ErrorMsg:= '';
 
-  { Handle the optional HttpOptions parameter }
   if HttpOptions = nil
   then Options.Reset
   else Options:= HttpOptions^;
@@ -198,7 +186,6 @@ begin
   HttpClient:= THTTPClient.Create;
   try
     try
-      { Apply the options }
       HttpClient.UserAgent         := Options.UserAgent;
       HttpClient.HandleRedirects   := Options.HandleRedirects;
       HttpClient.MaxRedirects      := Options.MaxRedirects;
@@ -207,7 +194,6 @@ begin
       HttpClient.ConnectionTimeout := Options.ConnectionTimeout;
       HttpClient.SecureProtocols   := [THTTPSecureProtocol.TLS12, THTTPSecureProtocol.TLS13];
 
-      { Perform the GET request }
       HttpResponse:= HttpClient.Get(URL, nil, CustomHeaders);
 
       if HttpResponse.StatusCode = HTTP_STATUS_OK
@@ -223,7 +209,7 @@ begin
 end;
 
 
-{ Downloads content as a string, ignoring errors (returns empty string on failure). }
+{ Ignores errors: returns an empty string on failure. }
 function DownloadAsString(CONST URL: string): string;
 VAR
   ErrorMsg: string;
@@ -234,10 +220,10 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-   Downloads an image file from URL. Validates the result:
+   Validates the downloaded file:
      - Rejects files smaller than 500 bytes
      - Detects HTML 404 pages disguised as downloadable files
-   Returns TRUE on success. DownloadedSize is set to the file size on success, -1 on failure.
+   DownloadedSize is set to the file size on success, -1 on failure.
 --------------------------------------------------------------------------------------------------}
 function DownloadImageToFile(CONST URL, LocalPath: string; OUT DownloadedSize: Int64): Boolean;
 VAR
@@ -253,7 +239,6 @@ begin
    begin
      DownloadedSize:= LightCore.IO.GetFileSize(LocalPath);
 
-     { Any file smaller than 500 bytes will be rejected }
      if DownloadedSize < 500 then
        begin
          AppDataCore.LogInfo('File rejected because it is too small: '+ URL);
@@ -261,8 +246,7 @@ begin
        end
      else
        begin
-         { Received HTML file from server instead of image file.
-           Some websites return a downloadable 404 page that looks like HTML. }
+         { Some websites return a downloadable 404 page that looks like HTML. }
          VAR FileContent:= StringFromFile(LocalPath);
          if (DownloadedSize < 25*KB)
          AND ( (  (PosInsensitive('<html', FileContent) > 0)
