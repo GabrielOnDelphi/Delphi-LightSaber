@@ -23,10 +23,10 @@
     Cross-platform ready: stamped 2026.01
 ==============================================================================================================
 
-  EXISTS:
-    procedure ProcessPath (FullFileName, Drive, DirPart, FilePart)    // Parses a file name into its constituent parts.
-    procedure CutFirstDirectory(VAR S: TFileName)
-    procedure FileGetSymLinkTarget                                    // Reads the contents of a symbolic link. The result is returned in the symbolic link record given by SymLinkRec.
+  ALSO EXISTS IN DELPHI:
+    procedure Vcl.FileCtrl.ProcessPath (FullFileName, Drive, DirPart, FilePart)    // Parses a file name into its constituent parts.
+    procedure Vcl.FileCtrl.CutFirstDirectory(VAR S: TFileName)
+    function  System.SysUtils.FileGetSymLinkTarget                                 // Reads the contents of a symbolic link. The result is returned in the symbolic link record given by SymLinkRec.
 
   ------------------------------------------------
   Maximum Path Length Limitation
@@ -65,7 +65,7 @@
      http://www.malcolmgroves.com/blog/?p=865
 
   TESTER:
-     UNC Tester
+     c:\Projects\Testers\UNC Tester\
 ==================================================================================================}
 
 INTERFACE
@@ -192,7 +192,7 @@ CONST
  function  ForcePathDelimiters  (CONST Path, Delimiter: string; SetAtBegining, SetAtEnd: Boolean): string;  { Old name: UniversalPathDelimiters }
  function  Trail                (CONST Path: string): string;                                      { Replacement for includeTrailingPathDelimiter }
 
- //See also: SysUtil.SameFileName
+ //See also: System.SysUtils.SameFileName
  function  SameFolder(Path1, Path2: string): Boolean;                                              { Receives two folders. Ex:  C:\Test1\ and C:\teSt1 will return true }
  function  SameFolderFromFile(Path1, Path2: string): Boolean;                                      { Receives two partial or complete file names and compare their folders. Ex:  C:\Test1 and C:\teSt1\me.txt will return true }
  function  IsSubfolder(Path1: String; Path2: String): Boolean;
@@ -486,8 +486,7 @@ end;
 
 { Returns True if this path uses the Windows extended-length path prefix (\\?\).
   These paths support paths longer than MAX_PATH (260 chars) in Windows.
-  Misleading name kept for backward compat — POSIX paths never carry this prefix,
-  so the function always returns FALSE outside Windows.
+  Misleading name kept for backward compat — POSIX paths never carry this prefix, so the function always returns FALSE outside Windows.
   See: https://docs.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation }
 function IsUnicode(CONST Path: string): boolean;
 begin
@@ -611,9 +610,9 @@ end;
   See: stackoverflow.com/questions/31427260
 
   Related functions:
-    FileCtrl.MinimizeName       - Shortens for pixel width
-    cGraphics.DrawStringEllipsis- Visual ellipsis
-    LightCore.ShortenString     - General string shortening }
+    FileCtrl.MinimizeName                           - Shortens for pixel width
+    LightVcl.Common.EllipsisText.DrawStringEllipsis - Visual ellipsis
+    LightVcl.Common.EllipsisText.ShortenString      - General string shortening }
 function ShortenFileName(CONST FullPath: String; MaxLength: Integer= MAXPATH): string;
 VAR
    FilePath, ShortenedFileName: string;
@@ -744,28 +743,24 @@ end;
 
    NEVER raises. The result is the whole answer:
      TRUE  = the folder is there now (we created it, or it already existed).
-     FALSE = it is not. Empty path, invalid characters, path over MAX_PATH, missing drive,
-             write-protected drive, no write permission - every one of them returns FALSE.
+     FALSE = it is not. Empty path, invalid characters, path over MAX_PATH, missing drive, write-protected drive, no write permission - every one of them returns FALSE.
 
-   The ReadOnly attribute on a FOLDER does not stop Windows from creating children inside it,
-   so a ReadOnly parent still returns TRUE. A write-protected DRIVE returns FALSE.
+   The ReadOnly attribute on a FOLDER does not stop Windows from creating children inside it, so a ReadOnly parent still returns TRUE.
+   A write-protected DRIVE returns FALSE.
 
    Why the result of System.SysUtils.ForceDirectories is thrown away:
-     its last line is  Result:= ForceDirectories(ExtractFilePath(Dir)) AND CreateDir(Dir)
-     (System.SysUtils.pas:10396). When another thread creates the folder between that routine's
-     own existence check and its CreateDir call, CreateDir fails and the RTL answers FALSE for a
-     folder that DOES exist. Asking the file system afterwards is the only answer immune to that
-     race, and BioniX depends on it: several background threads create thumbnail shard folders.
+     its last line is  Result:= ForceDirectories(ExtractFilePath(Dir)) AND CreateDir(Dir).
+     When another thread creates the folder between that routine's own existence check and its CreateDir call, CreateDir fails and the RTL answers FALSE for a folder that DOES exist.
+     Asking the file system afterwards is the only answer immune to that race, and BioniX depends on it: several background threads create thumbnail shard folders.
 
-   DirectoryExists below is the one declared in THIS unit, not the RTL one. It additionally
-   rejects a path ending in a space, so ForceDirectoriesB('c:\test ') answers FALSE even though
-   Windows silently created 'c:\test'. That is the correct answer: the caller did not get the
-   folder it asked for.
+   DirectoryExists below is the one declared in THIS unit, not the RTL one.
+   It additionally rejects a path ending in a space, so ForceDirectoriesB('c:\test ') answers FALSE even though Windows silently created 'c:\test'.
+   That is the correct answer: the caller did not get the folder it asked for.
 --------------------------------------------------------------------------------------------------}
 function ForceDirectoriesB(CONST Folder: string): Boolean;
 begin
   if Folder = ''
-  then EXIT(FALSE);                            { System.SysUtils.ForceDirectories RAISES on an empty string (System.SysUtils.pas:10368). This guard is what lets us promise never to raise. }
+  then EXIT(FALSE);                            { System.SysUtils.ForceDirectories RAISES on an empty string. This guard is what lets us promise never to raise. }
 
   System.SysUtils.ForceDirectories(Folder);    { Result deliberately ignored - see the race described above }
   Result:= DirectoryExists(Folder);
@@ -773,8 +768,8 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-   The raising twin of ForceDirectoriesB. Same job, opposite way of reporting a failure:
-   it returns nothing and raises instead - and the exception carries the Windows reason text.
+   The raising twin of ForceDirectoriesB.
+   Same job, opposite way of reporting a failure: it returns nothing and raises instead - and the exception carries the Windows reason text.
    A thin wrapper around TDirectory.CreateDirectory.
 
    Use it for "I am about to write a file in here", where carrying on after a failure is pointless.
@@ -1327,7 +1322,7 @@ begin
 end;
 
 
-{ Same as IncrementFileName but it automatically adds a number if the file doesn't already ends with a number. //ok  Works with UNC paths }
+{ Same as IncrementFileName but it automatically adds a number if the file doesn't already ends with a number. Works with UNC paths }
 function IncrementFileNameEx (CONST FileName: string; StartAt, NumberLength: Integer): string;
 begin
  if FileEndsInNumber(FileName)
@@ -1443,7 +1438,7 @@ end;
 
 
 { Same as above but the user can specify how long the number should be.
-  For example if sNumber is 1 and ForeceLength is 3, then the result will be 001.
+  For example if StartAt is 1 and NumberLength is 3, then the result will be 001.
   Works with UNC paths }
 function AppendNumber2Filename(CONST FileName: string; StartAt, NumberLength: Integer): string;
 VAR sPath, sExt: string;
@@ -1992,7 +1987,7 @@ end;
   in which case FinalName is left untouched (the caller should keep the old file rather
   than risk a non-atomic overwrite).
 
-  Platform behaviour (verified against the D13 RTL + measured 2026-05-21):
+  Platform behaviour (verified against the D13 RTL and measured):
     Windows  - MoveFileEx with MOVEFILE_REPLACE_EXISTING. One call; atomically replaces
                an existing destination AND creates it when absent (first save), so no
                existence branch is needed. MOVEFILE_WRITE_THROUGH flushes the result to
@@ -2005,8 +2000,8 @@ end;
                and covers the first-save case in the same call.
     POSIX    - System.SysUtils.RenameFile delegates to libc rename(2), which atomically
                replaces an existing destination (or creates it) on the same filesystem.
-               System.SysUtils.RenameFile handles the UTF-8 marshalling for us
-               (System.SysUtils.pas:10907-10912). Do NOT use TFile.Replace here:
+               System.SysUtils.RenameFile handles the UTF-8 marshalling for us.
+               Do NOT use TFile.Replace here:
                on POSIX it is a non-atomic copy+copy+delete. }
 function AtomicReplaceFile(CONST TempName, FinalName: string): Boolean;
 begin
@@ -2046,17 +2041,15 @@ begin
 
   TSL:= ListFilesOf(FromFolder, FileType, TRUE, DigSubdirectories);
   TRY
-    { When the destination root cannot be created, every file we found fails. Returning that count
-      keeps the documented contract (the result is a count of failed files) and is faster than
-      letting the loop below raise once per file to reach the same number. }
+    { When the destination root cannot be created, every file we found fails.
+      Returning that count keeps the documented contract (the result is a count of failed files) and is faster than letting the loop below raise once per file to reach the same number. }
     if NOT ForceDirectoriesB(Dst)
     then EXIT(TSL.Count);
 
     for s in TSL do
       TRY
         { Compute path relative to FromFolder so we preserve the subfolder hierarchy.
-          Case-insensitive prefix match on Windows because the filesystem may report
-          a different case than the caller passed in. }
+          Case-insensitive prefix match on Windows because the filesystem may report a different case than the caller passed in. }
         {$IFDEF MSWINDOWS}
         if StartsText(SrcRoot, s)
         {$ELSE}
@@ -2079,7 +2072,7 @@ end;
 
 { Example: MoveFolder('c:\Documents', 'C:\Backups').
   It will overwrite all files in 'ToFolder' without asking.
-  If you want feedback from user use LightVcl.Common.IO.Win.MoveFolderMsg }
+  If you want feedback from user use LightVcl.Common.IO.MoveFolderMsg }
 procedure MoveFolder(CONST FromFolder, ToFolder: String; SilentOverwrite: Boolean);
 VAR FailedCount: Integer;
 begin
@@ -2166,7 +2159,7 @@ VAR
     if Separator > '' then
      begin
       UTF:= UTF8String(Separator);
-      MasterStream.WriteBuffer(UTF[1], Length(UTF));   { BugFix: Use Length(UTF) for byte count, not Length(Separator) }
+      MasterStream.WriteBuffer(UTF[1], Length(UTF));   { Use Length(UTF) for byte count, not Length(Separator) }
      end;
   end;
 
@@ -2248,9 +2241,9 @@ end;
   Deletes all files AND subfolders, then recreates the empty root folder.
   Works with UNC paths.
 
-  IMPORTANT: TDirectory.Delete is asynchronous on Windows! The RemoveDirectory API
-  marks directories for deletion on close, so the call may return before deletion
-  actually completes. This function polls up to 6 seconds waiting for deletion.
+  IMPORTANT: TDirectory.Delete is asynchronous on Windows!
+  The RemoveDirectory API marks directories for deletion on close, so the call may return before deletion actually completes.
+  This function polls up to 6 seconds waiting for deletion.
   Raises exception if deletion times out or directory cannot be recreated.
   See: stackoverflow.com/questions/42809389 }
 procedure EmptyDirectory(const Path: string);
@@ -2378,7 +2371,7 @@ begin
 end;
 
 
-{ Same as SystemSysutils.DeleteFile, but works better on FMX (says Gemini) }
+{ Same as System.SysUtils.DeleteFile, but works better on FMX (says Gemini) }
 function TryDeleteFile(CONST FileName: string): Boolean;
 begin
   Result := False;
@@ -2719,7 +2712,7 @@ end;
 
   Also exists:
        FileCtrl.MinimizeName: Shortens for a given pixel width
-       cGraphics.DrawStringEllipsis }
+       LightVcl.Common.EllipsisText.DrawStringEllipsis }
 function ShortenPath(CONST LongPath: String; MaxChars: Integer): String;                                       //Old name: ShortenText
 VAR TotalLength, FLength: Integer;
 begin
@@ -2727,7 +2720,7 @@ begin
   if TotalLength > MaxChars then
   begin
    FLength:= (MaxChars Div 2) - 2;
-   Result := system.COPY(LongPath, 1, fLength)      { BugFix: was index 0, should be 1 (1-based strings) }
+   Result := system.COPY(LongPath, 1, fLength)
              + '...'
              + system.COPY(LongPath, TotalLength - fLength + 1, fLength);
    end
