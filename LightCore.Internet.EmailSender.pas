@@ -6,13 +6,13 @@ UNIT LightCore.Internet.EmailSender;
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 
-   Universal 'SendMail' function using Indy components.
+   Universal 'SendEmail' function using Indy components.
    Supports plain text and HTML emails with optional embedded images and file attachments.
 
    Used in: Power Email Extractor, PingMail, BX
 
    Dependencies:
-     - Indy components (TIdSMTP, TIdMessage, TIdMessageBuilder)
+     - Indy components (TIdSMTP, TIdMessage, TIdMessageBuilderHtml)
      - LightCore.AppData for error logging
 
    References:
@@ -26,9 +26,8 @@ USES
   System.SysUtils, IdTCPConnection, IdSMTP, IdMessage;
 
 TYPE
-  { Raised by SendEmail when SMTP connect or send fails. The original Indy exception
-    has already been logged; callers can catch EEmailSendError to differentiate
-    email-send failures from other exceptions. }
+  { Raised by SendEmail when SMTP connect or send fails.
+    The original Indy exception has already been logged. }
   EEmailSendError = class(Exception);
 
 function SendEmail(
@@ -45,22 +44,12 @@ USES
 
 
 
-{ Sends an email via the provided SMTP connection.
-  Parameters:
+{ Parameters:
     SMTP                   - Pre-configured TIdSMTP component (caller is responsible for setting server/credentials)
     AdrTo                  - Recipient email address(es), comma-separated for multiple
-    AdrFrom                - Sender email address
-    Subject                - Email subject line
     Body                   - Email body (plain text or HTML depending on SendAsHtml)
     HtmlImage              - Path to image file to embed in HTML email (ignored if SendAsHtml=False or empty)
     DownloadableAttachment - Path to file to attach (can be empty)
-    SendAsHtml             - True for HTML email, False for plain text
-  Returns:
-    True if email was sent successfully.
-  Raises:
-    EEmailSendError if SMTP connect or send fails. The underlying Indy error is
-    logged via AppDataCore.LogError before the exception is raised, so callers
-    only need to catch EEmailSendError to handle the failure.
   Note:
     Result is never False on a normal return path - failures raise EEmailSendError. }
 function SendEmail(
@@ -91,8 +80,7 @@ begin
     then MsgBuilder.Html.Text:= Body
     else MsgBuilder.PlainText.Text:= Body;
 
-    { Embedded images are visible ONLY in HTML emails. Short-circuit empty path
-      to avoid a useless FileExists call. }
+    { Embedded images are visible ONLY in HTML emails. }
     if SendAsHtml AND (HtmlImage <> '') AND FileExists(HtmlImage)
     then MsgBuilder.HtmlFiles.Add(HtmlImage);
 
