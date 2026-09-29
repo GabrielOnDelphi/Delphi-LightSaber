@@ -18,7 +18,7 @@ UNIT LightCore.CpuUsageProcess;
 
    Also see:
       * Get the Percentage of Total CPU Usage: https://stackoverflow.com/questions/33571061/get-the-percentage-of-total-cpu-usage
-      * c:\Myprojects\Packages\Third party packages\CpuUsage.pas
+      * E:\Backups\My projects\2020\2020.04.15 BioniX 11.45 Freeze!!!!\Third party packages\CpuUsage.pas
 
    Every member of this class either calls Windows or reads a field that a Windows member wrote, and CoreUsage and CpuUsage return a measured value, so the whole class is declared inside a MSWINDOWS conditional - interface and implementation both. Off Windows a CoreUsage of 0 would read as "this process is idle", which is a silent wrong answer, so a call written in an Android, macOS or iOS build fails to compile instead, and this unit compiles empty there.
 -------------------------------------------------------------------------------------------------------------}
