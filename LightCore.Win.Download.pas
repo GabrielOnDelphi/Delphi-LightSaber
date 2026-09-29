@@ -28,7 +28,7 @@ UNIT LightCore.Win.Download;
 
    ALSO SEE:
        c:\Users\Public\Documents\Embarcadero\Studio\21.0\Samples\Object Pascal\RTL\HttpDownload\HttpDownloadDemo.dpr
-       c:\MyProjects\Packages\BSalsa EmbeddedWB\Demos\IEDownload_Simple_Demo\
+       E:\Backups\My projects\2021\2021.03 Stormy\BSalsa EmbeddedWB\Demos\Various Demos\07 - IEDownload_Demo\IEDownload_Simple_Demo\
 
    Tester:
        c:\Projects\LightSaber\Demo\Demo Internet\

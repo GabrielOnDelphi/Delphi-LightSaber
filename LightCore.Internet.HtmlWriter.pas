@@ -9,7 +9,7 @@ UNIT LightCore.Internet.HtmlWriter;
    Basic objects that allow you to enter miscellaneous HTML parts such as
    keywords, title, and body text and write this data to disk as an HTML file.
 
-   Also see: c:\MyProjects\Packages\Third party packages\uHTMLBuilder.pas
+   Also see: c:\Projects-3rd_Packages\Third party packages\_Out\_TEMPORARY EXCLUDED (Don't delete them yet!)\uHTMLBuilder.pas
 -------------------------------------------------------------------------------------------------------------}
 
 INTERFACE

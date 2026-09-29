@@ -8,12 +8,12 @@ UNIT LightCore.Keyboard;
 ==============================================================================================================
 
   System function to access the keyboard
-  Also see cmKbShortcuts
+  Also see LightVcl.Common.KeybShortcuts.pas
 
    In this group:
      * LightVcl.Common.Shell.pas
-     * csSystem.pas
-     * csWindow.pas
+     * LightVcl.Common.System.pas
+     * LightVcl.Common.Window.pas
      * LightVcl.Common.WindowMetrics.pas
      * LightVcl.Common.ExecuteProc.pas
      * LightVcl.Common.ExecuteShell.pas

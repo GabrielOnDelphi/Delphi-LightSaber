@@ -36,7 +36,7 @@ CONST
 {--------------------------------------------------------------------------------------------------
    URL PROCESSING
 --------------------------------------------------------------------------------------------------}
- // BETTER PARSER HERE: c:\MyProjects\Packages\BSalsa EmbeddedWB\EwbUrl.pas
+ // BETTER PARSER HERE: E:\Backups\My projects\2021\2021.03 Stormy\BSalsa EmbeddedWB\Source\EwbUrl.pas
 
  function  UrlEncode                (CONST URL: string): string;                                  { Convert unsafe characters. For example space is converted to %20 }   { Prepare text to be used in 'a href' link }
 
