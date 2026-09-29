@@ -82,14 +82,14 @@ USES
  function  MakeCardinal     (Hex1, Hex2, hex3, hex4: String): Cardinal;  overload;              { Make a cardinal number from strings representing HEX numbers. The order of the parameters is MSB }
  {$IFDEF MSWINDOWS}
  function  SerializeWord    (W: Word): String;  {$ENDIF}                                        { Does the opposite of MakeWord:     Converts the bytes that form this number into their ASCII equivalent. The result is in 'big endian' order. Note that Intel uses 'lil endian'! Exemple: for number 65280 (1111111100000000) the function will return #255 + #0. }
- function  SerializeCardinal(C: Cardinal): string;                                              { Does the opposite of MakeCardinal: Converts the bytes that form this number into their ASCII equivalent. The result is in 'big endian' order. Note that Intel uses 'lil endian'! Exemple: for number 65280 (1111111100000000) the function will return #255 + #0. }
+ function  SerializeCardinal(C: Cardinal): string;                                              { Does the opposite of MakeCardinal(Hex): converts the number to a HEX text representation, MSB first (big endian order). Example: SerializeCardinal($FF332211) returns 'FF332211'. }
 
  function  GetBit           (Value: Cardinal; BitPos: Byte): Boolean;    inline;          { The BitPos numbering starts from left (7) to right (0). For example for number 254 (11111110), the bit at pos 0 si 0 and the bit at pos 7 (MSB) is 1 }
  function  ClearBit         (Value: Cardinal; BitPos: Byte): Cardinal;   inline;
  function  SetBit           (Value: Cardinal; BitPos: Byte): Cardinal;   inline;
  function  ToggleBit        (Value: Cardinal; BitPos: Byte; TurnOn: Boolean): Cardinal; inline;
 
- function  GetByte          (BytePos: Byte; C: Cardinal): Byte;           overload;             { Byte order (position): 1 2 3 4.   For example GetByte(3, $AAFFCC) returns $CC }
+ function  GetByte          (BytePos: Byte; C: Cardinal): Byte;           overload;             { Byte order (position): 1 2 3 4.   For example GetByte(4, $AAFFCC) returns $CC }
  function  GetByte          (BytePos: Byte; i: Integer ): Byte;           overload;
  function  GetByte          (BytePos: Byte; W: Word): Byte;               overload;
  function  GetBits          (Value: Cardinal; BitFrom, BitTo: Byte): Cardinal;
@@ -98,7 +98,7 @@ USES
  function  Base255to256     (cInput: Cardinal): Cardinal; inline;                               { http://stackoverflow.com/questions/5680895/i-need-to-convert-a-number-from-base-255-to-base-256 }
  function  Base256to255     (cInput: Cardinal): Cardinal; inline;
 
- function  EnsureByte       (b: Integer): Byte;                 inline; overload;               { Make sure that i is in 'byte' range. In other words, returns 0 if i < 0 and 255 if i > 255. Otherwise return i }
+ function  EnsureByte       (b: Integer): Byte;                 inline; overload;               { Make sure that b is in 'byte' range: returns 0 if b < 0 and 255 if b > 255. Otherwise returns b }
  function  EnsureByte       (b: Real): Byte;                    inline; overload;
 
  function  Ensure100        (i: integer): Byte;                 inline; overload;               { Makes sure that the 'I' is not lower than 0 and not higher than 100 }
@@ -195,19 +195,19 @@ begin
 end;
 
 
-{ Shows which bits are enabled in IntegerNumber. Output is MSB first: Result[1] is bit (Digits-1), the last char is bit 0. Example: IntToBin(5, 8) = '00000101' }
+{ Shows which bits are enabled in IntNumber. Output is MSB first: Result[1] is bit (Digits-1), the last char is bit 0. Example: IntToBin(5, 8) = '00000101' }
 function IntToBin(CONST IntNumber, Digits: Integer): string;
 begin
  if Digits= 0
  then Result:= ''
  else
-   if  (IntNumber AND (1 SHL (Digits-1))) <> 0                             { <> 0, not > 0: for Digits=32 the mask is $80000000 which is a NEGATIVE Integer, so '> 0' reported bit 31 as always clear }
+   if  (IntNumber AND (1 SHL (Digits-1))) <> 0                             { <> 0, not > 0: for Digits=32 the mask is $80000000 which is a NEGATIVE Integer, so '> 0' would report bit 31 as always clear }
    then result:='1'+IntToBin(IntNumber, Digits-1)
    else result:='0'+IntToBin(IntNumber, Digits-1)
 end;
 
 
-{ Truncates an integer number so that it fits into a byte. It the number is higher than 255 is truncated to 255. It ir is negative it is set to 0. }
+{ Makes an integer fit into a byte: a number higher than 255 becomes 255, a negative number becomes 0. }
 function IntToByte(CONST i: Integer): Byte;
 begin
   if i > 255
@@ -236,7 +236,7 @@ end;
    BINARY CONV
 
 ------------------------------------------------------------------------------------------------------------------------
-  Exista System.Swap -> Exchanges high order byte with the low order byte of an word. If the argument is a 32-bit value then byte 3 and byte 2 are unaffected!
+  Exists: System.Swap -> Exchanges high order byte with the low order byte of an word. If the argument is a 32-bit value then byte 3 and byte 2 are unaffected!
   INTEL uses little ENDIAN
 
   READ HERE:: http://codeverge.com/embarcadero.delphi.basm/fastest-best-way-to-reverse-byte-orde/1096017
@@ -309,7 +309,7 @@ end;
 
 
 { It will correctly swap the byte order of the 32-bit value regardless whether the number is signed or unsigned }
-{$IFDEF CPUx86}   // code cloned also in cmStreamMem
+{$IFDEF CPUx86}
 procedure SwapInt(VAR aInteger: integer);
 asm
   mov ecx, [eax]
@@ -516,7 +516,7 @@ end;
 
 
 { Get a specific byte from a longer number }
-function GetByte(BytePos: Byte; C: Cardinal): Byte;                                                { Byte order (position): 1 2 3 4. So 1 is MSB.  For example GetByte(3, $AAFFCC) returns $CC }
+function GetByte(BytePos: Byte; C: Cardinal): Byte;                                                { Byte order (position): 1 2 3 4. So 1 is MSB.  For example GetByte(4, $AAFFCC) returns $CC }
 begin
  CASE BytePos of
    1: Result:= Byte(C shr 24);
@@ -529,7 +529,7 @@ begin
 end;
 
 
-function GetByte(BytePos: Byte; i: Integer): Byte;      { Extract a Byte from an integer.  The order of the bytes in an integer is this: 1 2 3 4. Example:  GetByte(4, 255) will return 255.   GetByte(4, 256) will return 1 }
+function GetByte(BytePos: Byte; i: Integer): Byte;      { Extract a Byte from an integer.  The order of the bytes in an integer is this: 1 2 3 4. Example:  GetByte(4, 255) will return 255.   GetByte(3, 256) will return 1 }
 begin
  CASE BytePos of
    1: Result:= Byte(I shr 24);
@@ -571,7 +571,7 @@ begin
 end;
 
 
-function EnsureByte(b: Integer): Byte;    { Make sure that i is in 'byte' range. In other words, returns 0 if i < 0 and 255 if i > 255. Otherwise return i }
+function EnsureByte(b: Integer): Byte;    { Make sure that b is in 'byte' range: returns 0 if b < 0 and 255 if b > 255. Otherwise returns b }
 begin
  if b < 0
  then Result:= 0
@@ -634,8 +634,8 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 
 { ROTATE
-  N is masked to the operand width. Without the mask/guard, N=0 (or N=width) computed
-  'Value shl 64' whose result depends on the CPU's shift-count masking -> Result was 2*Value instead of Value. }
+  N is masked to the operand width.
+  Without the mask and the N=0 guard, N=0 (or N=width) would compute 'Value shl 64', whose result depends on the CPU's shift-count masking -> Result would be 2*Value instead of Value. }
 function RotateRight64(Value: int64 ; N : Integer): int64;   { Source: http://www.merlyn.demon.co.uk/del-bits.htm }
 begin
  N:= N AND 63;
@@ -681,7 +681,7 @@ TYPE
    end;
 
 { Make a cardinal number from 4 bytes. It merges the bytes in the order the were given.
-  See MakeCardinal, which is faster }
+  See MakeCardinal_, which is faster }
 function MakeCardinal_Slow(MSB, b2, b3, b4: Cardinal): Cardinal;
 begin
  Result:= b4;
@@ -777,7 +777,7 @@ begin
  b4 := Byte(cInput);
 
  Result:= 0;
- Result:= Result+ MSB * 16581375;                                                 { b1 is MSB, b8 is LSB }
+ Result:= Result+ MSB * 16581375;                                                 { MSB is the most significant byte, b4 is LSB }
  Result:= Result+  b2 * 65025;
  Result:= Result+  b3 * 255;
  Result:= Result+  b4;
