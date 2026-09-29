@@ -68,6 +68,9 @@ type
     procedure TestLoadMultipleImages;
 
     [Test]
+    procedure TestLoadPanoramicImage_StaysInsideBox;
+
+    [Test]
     procedure TestLoadNonExistentFile;
 
     { Thread Behavior Tests }
@@ -360,6 +363,53 @@ begin
       Terminate + WaitFor here hangs the whole test run for ever. It did, on 2026-09-03.
       TThread.Destroy is the safe route: it calls ShutdownThread, which does Terminate, then RESUMES
       a suspended thread, and only then WaitFor (System.Classes.pas:16596-16612). }
+    FreeAndNil(Loader);
+  END;
+end;
+
+
+{ 7000x1000 is panoramic for LightCore.Math.IsPanoramic (width > 6000 and ratio > 4).
+  RResizeParams leaves such an image at its full size unless ResizePanoram is TRUE. }
+procedure TTestBkgImgLoader.TestLoadPanoramicImage_StaysInsideBox;
+var
+  Loader: TBkgImgLoader;
+  FileList: TStringList;
+  Bmp: TBitmap;
+  FileName: string;
+begin
+  FileName:= TPath.Combine(FTempDir, 'panorama.bmp');
+  Bmp:= TBitmap.Create;
+  TRY
+    Bmp.PixelFormat:= pf1bit;     { Keeps the file under 1 MB }
+    Bmp.SetSize(7000, 1000);
+    Bmp.SaveToFile(FileName);
+  FINALLY
+    FreeAndNil(Bmp);
+  END;
+  FTestBmpFiles.Add(FileName);
+
+  FileList:= TStringList.Create;
+  FileList.Add(FileName);
+
+  Loader:= TBkgImgLoader.Create(FTestForm.Handle);
+  TRY
+    Loader.Width:= 100;
+    Loader.Height:= 100;
+    Loader.FileList:= FileList;
+    Loader.Start;
+    Loader.WaitFor;
+
+    Application.ProcessMessages;
+
+    Bmp:= Loader.PopPicture;
+    TRY
+      Assert.IsNotNull(Bmp, 'Should have loaded the panorama');
+      Assert.AreEqual(100, Bmp.Width, 'Panorama thumbnail must be fitted to the box width');
+      Assert.IsTrue(Bmp.Height <= 100, 'Panorama thumbnail height should be <= 100 but is ' + IntToStr(Bmp.Height));
+    FINALLY
+      FreeAndNil(Bmp);
+    END;
+  FINALLY
     FreeAndNil(Loader);
   END;
 end;

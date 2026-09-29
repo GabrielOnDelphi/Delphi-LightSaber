@@ -166,6 +166,9 @@ type
 
     [Test]
     procedure TestExtractThumbnail_ValidFile;
+
+    [Test]
+    procedure TestExtractThumbnailJpg_StaysInsideBox;
   end;
 
 implementation
@@ -941,6 +944,45 @@ begin
   Bmp:= ExtractThumbnail(FTempBmpFile, 50);
   TRY
     Assert.IsNotNull(Bmp, 'ExtractThumbnail should return a bitmap');
+  FINALLY
+    FreeAndNil(Bmp);
+  END;
+end;
+
+
+{ A 400x300 JPEG into a 100x100 box must come out 100x75.
+  The auto-detect resize mode (the default of RResizeParams.Reset) returns 110x83 here, because it adds FitTolerance (10%) after falling back to Fit. }
+procedure TTestGraphLoader.TestExtractThumbnailJpg_StaysInsideBox;
+var
+  Bmp: TBitmap;
+  Jpg: TJPEGImage;
+  ResX, ResY: Integer;
+begin
+  FTempJpgFile:= TPath.Combine(FTempDir, 'test400x300.jpg');
+  Bmp:= TBitmap.Create;
+  TRY
+    Bmp.PixelFormat:= pf24bit;
+    Bmp.SetSize(400, 300);
+    Bmp.Canvas.Brush.Color:= clGreen;
+    Bmp.Canvas.FillRect(Rect(0, 0, 400, 300));
+    Jpg:= TJPEGImage.Create;
+    TRY
+      Jpg.Assign(Bmp);
+      Jpg.SaveToFile(FTempJpgFile);
+    FINALLY
+      FreeAndNil(Jpg);
+    END;
+  FINALLY
+    FreeAndNil(Bmp);
+  END;
+
+  Bmp:= ExtractThumbnailJpg(FTempJpgFile, 100, 100, ResX, ResY);
+  TRY
+    Assert.IsNotNull(Bmp, 'ExtractThumbnailJpg should return a bitmap');
+    Assert.AreEqual(400, ResX, 'ResolutionX must be the original width');
+    Assert.AreEqual(300, ResY, 'ResolutionY must be the original height');
+    Assert.AreEqual(100, Bmp.Width,  'Thumbnail width');
+    Assert.AreEqual(75,  Bmp.Height, 'Thumbnail height');
   FINALLY
     FreeAndNil(Bmp);
   END;

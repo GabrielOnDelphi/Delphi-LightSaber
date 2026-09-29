@@ -127,6 +127,18 @@ type
     [Test]
     procedure TestIsHardCodedExp_Today;
 
+    [Test]
+    procedure TestIsHardCodedExp_FilePastDate;
+
+    [Test]
+    procedure TestIsHardCodedExp_FileFutureDate;
+
+    [Test]
+    procedure TestIsHardCodedExp_FileShippedValue;
+
+    [Test]
+    procedure TestIsHardCodedExp_FileEmpty;
+
     { Command Line Tests }
     [Test]
     procedure TestCommandLinePath;
@@ -482,6 +494,43 @@ begin
   DecodeDate(Date, Year, Month, Day);
   // Today should be expired (returns True when diff <= 0)
   Assert.IsTrue(AppDataCore.IsHardCodedExp(Year, Month, Day), 'Today should be expired');
+end;
+
+
+{ 'dvolume.bin' overrides the date parameters. It holds a TDateTime day number (days since 1899-12-30).
+  Each test passes the date that gives the OPPOSITE answer, so a routine that ignores the file fails. }
+function IsExpiredWithDVolume(CONST Content: string; Year, Month, Day: Word): Boolean;
+VAR FileName: string;
+begin
+  FileName:= TAppDataCore.AppFolder+ 'dvolume.bin';
+  TFile.WriteAllText(FileName, Content);
+  try
+    Result:= AppDataCore.IsHardCodedExp(Year, Month, Day);
+  finally
+    TFile.Delete(FileName);
+  end;
+end;
+
+procedure TTestAppDataCore.TestIsHardCodedExp_FilePastDate;
+begin
+  Assert.IsTrue(IsExpiredWithDVolume('42569', 2099, 12, 31), 'dvolume.bin holding 2016-07-18 must report expired');
+end;
+
+procedure TTestAppDataCore.TestIsHardCodedExp_FileFutureDate;
+begin
+  Assert.IsFalse(IsExpiredWithDVolume('73050', 2000, 1, 1), 'dvolume.bin holding 2099-12-31 must report not expired');
+end;
+
+{ The DNA Baser release package ships dvolume.bin holding this millisecond count. Read as days, it never expires. }
+procedure TTestAppDataCore.TestIsHardCodedExp_FileShippedValue;
+begin
+  Assert.IsFalse(IsExpiredWithDVolume('13678001053146', 2000, 1, 1), 'the shipped dvolume.bin value must report not expired');
+end;
+
+{ An empty file is day 0 (1899-12-30), so it reports expired. }
+procedure TTestAppDataCore.TestIsHardCodedExp_FileEmpty;
+begin
+  Assert.IsTrue(IsExpiredWithDVolume('', 2099, 12, 31), 'an empty dvolume.bin must report expired');
 end;
 
 

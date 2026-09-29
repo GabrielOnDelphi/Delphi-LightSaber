@@ -117,6 +117,12 @@ type
     procedure TestRemoveLastChar_WithMarker;
 
     [Test]
+    procedure TestRemoveLastChar_MarkerNotAtEnd;
+
+    [Test]
+    procedure TestRemoveLastChar_WholeString;
+
+    [Test]
     procedure TestRemoveFirstChar;
 
     [Test]
@@ -672,6 +678,22 @@ end;
 procedure TTestLightCore.TestRemoveLastChar_WithMarker;
 begin
   Assert.AreEqual('PinkFloyd', RemoveLastChar('PinkFloyd-Ummagumma', '-Ummagumma'));
+end;
+
+{ A match that is not at the end must leave the text alone. The GenBank ORGANISM 'Methylocystis sp. M' lost its strain this way. }
+procedure TTestLightCore.TestRemoveLastChar_MarkerNotAtEnd;
+begin
+  Assert.AreEqual('Methylocystis sp. M', RemoveLastChar('Methylocystis sp. M', '.'));
+  Assert.AreEqual('Methylocystis sp. M', RemoveLastChar('Methylocystis sp. M.', '.'));
+  Assert.AreEqual('a'#9'b', RemoveLastChar('a'#9'b', #9));
+  Assert.AreEqual('a'#9'b', RemoveLastChar('a'#9'b'#9, #9));
+end;
+
+{ The match starts at index 0 of the text. }
+procedure TTestLightCore.TestRemoveLastChar_WholeString;
+begin
+  Assert.AreEqual('', RemoveLastChar('.', '.'));
+  Assert.AreEqual('Floyd', RemoveLastChar('Floyd', ''));
 end;
 
 procedure TTestLightCore.TestRemoveFirstChar;

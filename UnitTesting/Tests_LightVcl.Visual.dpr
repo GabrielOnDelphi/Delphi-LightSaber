@@ -68,7 +68,9 @@ uses
   LightVcl.Visual.RichRamLog in '..\FrameVCL\LightVcl.Visual.RichRamLog.pas',
   Test.LightVcl.Visual.RichRamLog in 'Test.LightVcl.Visual.RichRamLog.pas',
   LightVcl.Visual.Timer in '..\FrameVCL\LightVcl.Visual.Timer.pas',
-  Test.LightVcl.Visual.Timer in 'Test.LightVcl.Visual.Timer.pas';
+  Test.LightVcl.Visual.Timer in 'Test.LightVcl.Visual.Timer.pas',
+  LightVcl.Visual.ThumbViewerM in '..\FrameVCL\LightVcl.Visual.ThumbViewerM.pas',
+  Test.LightVcl.Visual.ThumbViewerM in 'Test.LightVcl.Visual.ThumbViewerM.pas';
 
 {$IFNDEF TESTINSIGHT}
 var

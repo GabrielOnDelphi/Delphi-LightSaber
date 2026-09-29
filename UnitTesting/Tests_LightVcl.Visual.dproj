@@ -62,7 +62,7 @@
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>..\FrameVCL;..\External;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\FrameVCL;..\External;..\External\Exif;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <BT_BuildType>Debug</BT_BuildType>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
         <VerInfo_Keys>CompanyName=;FileDescription=$(MSBuildProjectName);FileVersion=1.0.0.0;InternalName=;LegalCopyright=;LegalTrademarks=;OriginalFilename=;ProgramID=com.embarcadero.$(MSBuildProjectName);ProductName=$(MSBuildProjectName);ProductVersion=1.0.0.0;Comments=</VerInfo_Keys>
@@ -113,6 +113,8 @@
         <DCCReference Include="Test.LightVcl.Visual.RichRamLog.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Visual.Timer.pas"/>
         <DCCReference Include="Test.LightVcl.Visual.Timer.pas"/>
+        <DCCReference Include="..\FrameVCL\LightVcl.Visual.ThumbViewerM.pas"/>
+        <DCCReference Include="Test.LightVcl.Visual.ThumbViewerM.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Visual.MinimalPathLabel.pas"/>
         <DCCReference Include="Test.LightVcl.Visual.MinimalPathLabel.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Visual.Panel.pas"/>
