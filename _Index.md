@@ -1309,7 +1309,7 @@ function GetTextStr: AnsiString;
 procedure SetTextStr(const Value: AnsiString);
 ```
 
-## LightCore.System (7)
+## LightCore.System (21)
 
 ```pascal
 procedure NotImplemented;
@@ -1319,6 +1319,20 @@ procedure FillZeros(VAR IntArray: TIntegerDynArray);
 function GetResourceAsString(CONST ResName: string): AnsiString; { Extract a resource from self (exe) }
 function GetSystemLanguageName: string;
 function GetSystemLanguageNameShort: string;
+function InstallFont(CONST FontFileName: string): Boolean;
+procedure UseUninstalledFont(CONST FontFile: string); { Use a font without installing it. DON'T FORGET TO RELEASE IT when you close the program }
+procedure FreeUninstalledFont(CONST FontFile: string);
+function GetComputerName: string;
+function GetHostName : string;
+function GetLogonName : string;
+function GetDomainName : String; { for home users it shows the computer name (Qosmio) }
+function GetUserName (AllowExceptions: Boolean = False): string; // NOT TESTED
+function GetDisplayModes: string; { Returns the resolutions supported }
+procedure PrintScreenActiveWnd;
+procedure PrintScreenFull;
+procedure JiggleMouse;
+function BiosDate: string; { Never returns an empty string. Returns BiosUnknown when the BIOS date is not published }
+function BiosID : string; { Never returns an empty string. Returns BiosUnknown when the BIOS identifier is not published }
 ```
 
 ## LightCore.SystemConsole (1)
@@ -1426,6 +1440,21 @@ function SetEnvironmentVars(CONST Name, Value: string; User: Boolean = True): Bo
 function GetEnvironmentVars(CONST Name: string; User: Boolean = True): string; overload;
 ```
 
+## LightCore.Win.IO (10)
+
+```pascal
+function GetProgramFilesDir : string;
+function GetDesktopFolder : string;
+function GetStartMenuFolder : string;
+function GetWinSysDir : string;
+function GetWinDir : string; { Returns Windows folder }
+function GetTaskManager : string;
+function GetSpecialFolder (CONST OS_SpecialFolder: string): string; overload; { SHELL FOLDERS. Retrieving the entire list of default shell folders from registry }
+function GetSpecialFolder (CSIDL: Integer; ForceFolder: Boolean = FALSE): string; overload; { uses SHFolder }
+function GetSpecialFolders: TStringList; { Get a list of ALL special folders. }
+function FolderIsSpecial (CONST Path: string): Boolean; { Returns True if the parameter is a special folder such us 'c:\My Documents' }
+```
+
 ## LightCore.Win.Registry (23)
 
 ```pascal
@@ -1460,11 +1489,43 @@ function RegReadMultiSzStringSP(CONST Root: HKEY; CONST Key, KeyName: string; Ca
 procedure PlayWinSound (CONST SystemSoundName: string);
 ```
 
+## LightCore.Win.System (6)
+
+```pascal
+function ServiceStart (CONST aMachine, aServiceName: string): Boolean;
+function ServiceStop (CONST aMachine, aServiceName: string): Boolean;
+function ServiceGetStatus (CONST sMachine, sService: string): DWord;
+function ServiceGetStatusName(CONST sMachine, sService: string): string;
+function GetUserNameEx (ANameFormat: Cardinal): string; { source http://stackoverflow.com/questions/8446940/how-to-get-fully-qualified-domain-name-on-windows-in-delphi }
+function GetWin32ErrorString(ErrorCode: DWORD): string;
+```
+
 ## LightCore.Win.SystemPermissions (2)
 
 ```pascal
 function AppElevationLevel: Integer;
 function SetPrivilege(CONST PrivilegeName: string; bEnabled : Boolean): Boolean;
+```
+
+## LightCore.Win.Window (16)
+
+```pascal
+function IsApplicationRunning (CONST ClassName: string): Boolean;
+function ForceForegroundWindow (WndHandle: HWND): Boolean; { Brings window on top of other windows. You need to call ForceRestoreWindow first }
+function ForceRestoreWindow (WndHandle: HWND; Immediate: Boolean): Boolean;
+function FindTopWindowByClass (CONST ClassName: string): THandle;
+function FindChildWindowByClass(Parent: HWnd; CONST ClassName: string): THandle; { http://www.delphipages.com/forum/showthread.php?t=6119 }
+function GetTextFromHandle(hWND: THandle): string;
+procedure SetWindowPosToFront (WndHandle: HWND); { Set the specified windows in top of all other windows in the system }
+procedure SetWindowPosToBack (WndHandle: HWND);
+procedure MinimizeAllExcept(CONST ExceptApp: HWND);
+procedure MinAllWnd_ByShell;
+procedure MinAllWnd_ByShell2; { Minimize All Windows by sending a message to Shelltray }
+procedure MinAllWnd_ByHandle(ApplicationWindow: HWnd); { Minimizes by iterating window handles }
+procedure MinAllWnd_ByWinMKey; { Simulate Win + M }
+function RestoreWindowByName (CONST ClassName: string): Boolean;
+procedure RestoreWindow (WndHandle: HWND);
+procedure Remove_X_Button (FormHandle: THandle);
 ```
 
 ## LightCore.Win.WinVersionApi (5)
@@ -2189,7 +2250,7 @@ procedure ReadGroup (WinCtrl: TWinControl);
 procedure WriteGroup (WinCtrl: TWinControl);
 ```
 
-## LightVcl.Common.IO (47)
+## LightVcl.Common.IO (37)
 
 ```pascal
 function DirectoryExistMsg (CONST Path: string): Boolean;
@@ -2197,18 +2258,8 @@ function FileExistsMsg (CONST FileName: string): Boolean;
 function ForceDirectoriesMsg (CONST FullPath: string): Boolean; { Wrapper around LightCore.IO.ForceDirectoriesB. Returns True if directory exists or was created, False on failure. Shows error dialog on failure. }
 procedure MoveFolderMsg (CONST FromFolder, ToFolder: String; SilentOverwrite: Boolean);
 function DeleteFileWithMsg (CONST FileName: string): Boolean;
-function GetProgramFilesDir : string;
-function GetDesktopFolder : string;
-function GetStartMenuFolder : string;
 function GetMyDocumentsAPI : string; deprecated 'Use GetMyDocuments instead';
 function GetMyPicturesAPI : string; deprecated 'Use GetMyPictures instead';
-function GetWinSysDir : string;
-function GetWinDir : string; { Returns Windows folder }
-function GetTaskManager : string;
-function GetSpecialFolder (CONST OS_SpecialFolder: string): string; overload; { SHELL FOLDERS. Retrieving the entire list of default shell folders from registry }
-function GetSpecialFolder (CSIDL: Integer; ForceFolder: Boolean = FALSE): string; overload; { uses SHFolder }
-function GetSpecialFolders: TStringList; { Get a list of ALL special folders. }
-function FolderIsSpecial (CONST Path: string): Boolean; { Returns True if the parameter is a special folder such us 'c:\My Documents' }
 function GetPosAfterExtendedPrefix(CONST Path: string): Integer;
 function SelectAFolder (VAR Folder: string; CONST Title: string = ''; CONST Options: TFileDialogOptions= [fdoPickFolders, fdoForceFileSystem, fdoPathMustExist, fdoDefaultNoMiniMode]): Boolean; overload;
 function PromptToSaveFile (VAR FileName: string; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''): Boolean;
@@ -2381,31 +2432,11 @@ function IsApiFunctionAvailable(const DLLname, FuncName: string; VAR p: pointer)
 function ExtractIconFromFile(IcoFileName: String): THandle; { Extract icon from file }
 ```
 
-## LightVcl.Common.System (22)
+## LightVcl.Common.System (2)
 
 ```pascal
-function ServiceStart (CONST aMachine, aServiceName: string): Boolean;
-function ServiceStop (CONST aMachine, aServiceName: string): Boolean;
-function ServiceGetStatus (CONST sMachine, sService: string): DWord;
-function ServiceGetStatusName(CONST sMachine, sService: string): string;
-function InstallFont(CONST FontFileName: string): Boolean;
-procedure UseUninstalledFont(CONST FontFile: string); { Use a font without installing it. DON'T FORGET TO RELEASE IT when you close the program }
-procedure FreeUninstalledFont(CONST FontFile: string);
-function GetComputerName: string;
-function GetHostName : string;
-function GetLogonName : string;
-function GetDomainName : String; { for home users it shows the computer name (Qosmio) }
-function GetUserName (AllowExceptions: Boolean = False): string; // NOT TESTED
-function GetUserNameEx (ANameFormat: Cardinal): string; { source http://stackoverflow.com/questions/8446940/how-to-get-fully-qualified-domain-name-on-windows-in-delphi }
-function GetDisplayModes: string; { Returns the resolutions supported }
-procedure PrintScreenActiveWnd;
-procedure PrintScreenFull;
-procedure JiggleMouse;
 procedure CursorBusy;
 procedure CursorNotBusy;
-function GetWin32ErrorString(ErrorCode: DWORD): string;
-function BiosDate: string; { Never returns an empty string. Returns BiosUnknown when the BIOS date is not published }
-function BiosID : string; { Never returns an empty string. Returns BiosUnknown when the BIOS identifier is not published }
 ```
 
 ## LightVcl.Common.SystemSecurity (2)
@@ -2481,30 +2512,14 @@ function SetActivePage (PageControl: TPageControl; CONST PageName: string): TTab
 procedure ToggleCheckbox (CheckBox: TCheckBox; BasedOn: TButtonControl); { Disable and uncheck CheckBox if BasedOn is checked }
 ```
 
-## LightVcl.Common.Window (21)
+## LightVcl.Common.Window (5)
 
 ```pascal
-function IsApplicationRunning (CONST ClassName: string): Boolean;
-function ForceForegroundWindow (WndHandle: HWND): Boolean; { Brings window on top of other windows. You need to call ForceRestoreWindow first }
-function ForceRestoreWindow (WndHandle: HWND; Immediate: Boolean): Boolean;
 function FindWindowByTitle (CONST WindowTitle: string; PartialSearch: Boolean= TRUE; CaseSens: Boolean= FALSE): Hwnd;
-function FindTopWindowByClass (CONST ClassName: string): THandle;
-function FindChildWindowByClass(Parent: HWnd; CONST ClassName: string): THandle; { http://www.delphipages.com/forum/showthread.php?t=6119 }
 function FindChildForm (Parent: TForm; CONST ClassName: string): THandle;
-function GetTextFromHandle(hWND: THandle): string;
-procedure SetWindowPosToFront (WndHandle: HWND); { Set the specified windows in top of all other windows in the system }
-procedure SetWindowPosToBack (WndHandle: HWND);
 procedure KeepOnTop (Form: TForm; TopStyle: HWnd); overload;
 procedure KeepOnTop (Handle: HWND; StayOnTop: Boolean); overload; { Not tested }
 procedure MaximizeForm (Form: TForm; Maximize: Boolean); { Make form normal or maximized/ontop }
-procedure MinimizeAllExcept(CONST ExceptApp: HWND);
-procedure MinAllWnd_ByShell;
-procedure MinAllWnd_ByShell2; { Minimize All Windows by sending a message to Shelltray }
-procedure MinAllWnd_ByHandle(ApplicationWindow: HWnd); { Minimizes by iterating window handles }
-procedure MinAllWnd_ByWinMKey; { Simulate Win + M }
-function RestoreWindowByName (CONST ClassName: string): Boolean;
-procedure RestoreWindow (WndHandle: HWND);
-procedure Remove_X_Button (FormHandle: THandle);
 ```
 
 ## LightVcl.Common.WindowMetrics (15)
@@ -4081,4 +4096,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2947 public routines across 225 units._
+_2947 public routines across 228 units._
