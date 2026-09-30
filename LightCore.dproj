@@ -221,6 +221,7 @@
         <DCCReference Include="LightCore.EnvironmentVar.pas"/>
         <DCCReference Include="LightCore.SystemConsole.pas"/>
         <DCCReference Include="LightCore.CpuUsageProcess.pas"/>
+        <DCCReference Include="LightCore.ProcessCpuMonitor.pas"/>
         <DCCReference Include="LightCore.Graphics.pas"/>
         <DCCReference Include="LightCore.CmdLine.pas"/>
         <DCCReference Include="LightCore.Colors.pas"/>
