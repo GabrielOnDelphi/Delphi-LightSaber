@@ -62,7 +62,7 @@ UNIT LightCore.WinVersion;
 
    Also see:
       LightCore.ExeVersion
-      LightVcl.Common.WinVersionApi
+      LightCore.Win.WinVersionApi
 
    Tester:
       c:\Projects\LightSaber\Demo\Demo Detect WinVer\
