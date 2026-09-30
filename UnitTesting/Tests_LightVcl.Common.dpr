@@ -45,7 +45,6 @@ uses
   LightVcl.Common.IniFile in '..\FrameVCL\LightVcl.Common.IniFile.pas',
   Test.LightVcl.Common.Clipboard in 'Test.LightVcl.Common.Clipboard.pas',
   LightVcl.Common.Clipboard in '..\FrameVCL\LightVcl.Common.Clipboard.pas',
-  Test.LightVcl.Common.System in 'Test.LightVcl.Common.System.pas',
   LightVcl.Common.System in '..\FrameVCL\LightVcl.Common.System.pas',
   Test.LightVcl.Common.PopUp in 'Test.LightVcl.Common.PopUp.pas',
   LightVcl.Common.PopUp in '..\FrameVCL\LightVcl.Common.PopUp.pas',

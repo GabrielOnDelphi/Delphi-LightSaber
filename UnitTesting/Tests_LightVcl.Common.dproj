@@ -108,7 +108,6 @@
         <DCCReference Include="..\FrameVCL\LightVcl.Common.IniFile.pas"/>
         <DCCReference Include="Test.LightVcl.Common.Clipboard.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Common.Clipboard.pas"/>
-        <DCCReference Include="Test.LightVcl.Common.System.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Common.System.pas"/>
         <DCCReference Include="Test.LightVcl.Common.PopUp.pas"/>
         <DCCReference Include="..\FrameVCL\LightVcl.Common.PopUp.pas"/>

@@ -269,6 +269,14 @@
         <DCCReference Include="..\LightCore.Win.SystemPermissions.pas"/>
         <DCCReference Include="Test.LightCore.Win.WinVersionApi.pas"/>
         <DCCReference Include="..\LightCore.Win.WinVersionApi.pas"/>
+        <DCCReference Include="Test.LightCore.Win.Window.pas"/>
+        <DCCReference Include="..\LightCore.Win.Window.pas"/>
+        <DCCReference Include="Test.LightCore.System.pas"/>
+        <DCCReference Include="..\LightCore.System.pas"/>
+        <DCCReference Include="Test.LightCore.Win.System.pas"/>
+        <DCCReference Include="..\LightCore.Win.System.pas"/>
+        <DCCReference Include="Test.LightCore.Win.IO.pas"/>
+        <DCCReference Include="..\LightCore.Win.IO.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
