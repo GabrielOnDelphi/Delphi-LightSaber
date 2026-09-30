@@ -75,19 +75,19 @@ function MakeCardinal_Slow(MSB, b2, b3, b4: Cardinal): Cardinal;
 function MakeCardinal (CONST Hex: String): Cardinal; overload; { Make a cardinal number from a special string. This string contains 4 substrings, each of 2 chars long. Each substring represents a hex number. The order of the hex numbers is MSB. Example: FF332211 }
 function MakeCardinal (Hex1, Hex2, hex3, hex4: String): Cardinal; overload; { Make a cardinal number from strings representing HEX numbers. The order of the parameters is MSB }
 function SerializeWord (W: Word): String; {$ENDIF} { Does the opposite of MakeWord: Converts the bytes that form this number into their ASCII equivalent. The result is in 'big endian' order. Note that Intel uses 'lil endian'! Exemple: for number 65280 (1111111100000000) the function will return #255 + #0. }
-function SerializeCardinal(C: Cardinal): string; { Does the opposite of MakeCardinal: Converts the bytes that form this number into their ASCII equivalent. The result is in 'big endian' order. Note that Intel uses 'lil endian'! Exemple: for number 65280 (1111111100000000) the function will return #255 + #0. }
+function SerializeCardinal(C: Cardinal): string; { Does the opposite of MakeCardinal(Hex): converts the number to a HEX text representation, MSB first (big endian order). Example: SerializeCardinal($FF332211) returns 'FF332211'. }
 function GetBit (Value: Cardinal; BitPos: Byte): Boolean; inline; { The BitPos numbering starts from left (7) to right (0). For example for number 254 (11111110), the bit at pos 0 si 0 and the bit at pos 7 (MSB) is 1 }
 function ClearBit (Value: Cardinal; BitPos: Byte): Cardinal; inline;
 function SetBit (Value: Cardinal; BitPos: Byte): Cardinal; inline;
 function ToggleBit (Value: Cardinal; BitPos: Byte; TurnOn: Boolean): Cardinal; inline;
-function GetByte (BytePos: Byte; C: Cardinal): Byte; overload; { Byte order (position): 1 2 3 4. For example GetByte(3, $AAFFCC) returns $CC }
+function GetByte (BytePos: Byte; C: Cardinal): Byte; overload; { Byte order (position): 1 2 3 4. For example GetByte(4, $AAFFCC) returns $CC }
 function GetByte (BytePos: Byte; i: Integer ): Byte; overload;
 function GetByte (BytePos: Byte; W: Word): Byte; overload;
 function GetBits (Value: Cardinal; BitFrom, BitTo: Byte): Cardinal;
 procedure ChangeByteOrder (VAR Data; Size : Integer); inline;
 function Base255to256 (cInput: Cardinal): Cardinal; inline; { http://stackoverflow.com/questions/5680895/i-need-to-convert-a-number-from-base-255-to-base-256 }
 function Base256to255 (cInput: Cardinal): Cardinal; inline;
-function EnsureByte (b: Integer): Byte; inline; overload; { Make sure that i is in 'byte' range. In other words, returns 0 if i < 0 and 255 if i > 255. Otherwise return i }
+function EnsureByte (b: Integer): Byte; inline; overload; { Make sure that b is in 'byte' range: returns 0 if b < 0 and 255 if b > 255. Otherwise returns b }
 function EnsureByte (b: Real): Byte; inline; overload;
 function Ensure100 (i: integer): Byte; inline; overload; { Makes sure that the 'I' is not lower than 0 and not higher than 100 }
 function Ensure100 (s: Single): Single; inline; overload; { Makes sure that the 'S' is not lower than 0 and not higher than 100 }
@@ -148,7 +148,7 @@ function HighDpiAwarenessS : String; { Windows: returns the current process's DP
 procedure GenerateCrashNIL;
 procedure GenerateCrashException;
 procedure GenerateLeak;
-procedure TimerStart; { use it with: SetPriorityMax }
+procedure TimerStart; { use it with: TAppData.SetMaxPriority }
 function TimerElapsed: Double; { In miliseconds }
 function TimerElapsedS: string; { In miliseconds or seconds }
 function ShowTransferSpeed(FileSize: Cardinal): string; { Shows the disk/internet speed }
@@ -857,11 +857,11 @@ function CutExcludeLeft (CONST s, SearchFor: string): string; { Delete all chars
 function CutExcludeRight (CONST s, SearchFor: string): string; { Delete all chars from end of MATCH to Right - excluding the match }
 function CopyTo (CONST s: String; iFrom: Integer; CONST sTo: string; IncludeMarker: Boolean= TRUE; CopyAllMarkerNotFound: Boolean= FALSE; MarkerOffset: Integer= 1): string; overload;
 function CopyFromTo (CONST s, sFrom, sTo: string; IncludeMarkers: Boolean= FALSE): string;
-function CopyFrom (CONST s, sFrom: string; Count: Integer; IncludeMarker: Boolean= TRUE; SearchOffset: Integer= 1): string; overload; { Find sFrom in s. Returns the string from the postion where the text was found, to the end. }
+function CopyFrom (CONST s, sFrom: string; Count: Integer; IncludeMarker: Boolean= TRUE; SearchOffset: Integer= 1): string; overload; { Find sFrom in s. Returns up to Count characters from where sFrom was found (MaxInt = to the end). }
 function CopyFrom (CONST s, sFrom: AnsiString; Count: Integer; IncludeMarker: Boolean= TRUE; SearchOffset: Integer= 1): AnsiString; overload;
 function CopyTo (CONST s: string; iFrom, iTo: integer): string; overload; { Copy the text between iFrom and ending at iTo (including) }
 function CopyTo (CONST s: AnsiString; iFrom, iTo: integer): AnsiString; overload; { Copy the text between iFrom and ending at iTo (including) }
-function SplitText (CONST Text, Delimiter: string): TStringList; { Splits a text in lines and puts the lines in a TStringList } {Note: Exista System.StrUtils.SplitString } { Old name: SplitStrings }
+function SplitText (CONST Text, Delimiter: string): TStringList; { Splits a text in lines and puts the lines in a TStringList } { Note: Exists System.StrUtils.SplitString } { Old name: SplitStrings }
 procedure SplitLine (CONST Text, Delimiter: string; OUT sField, sValue: string); overload; { Split a string in its components. For example 'ClientName=Bubu' will return in 'ClientName' and 'Bubu' }
 procedure SplitStrings (CONST Text: string; TSL: TStringList); overload; { Split a string in multiple rows every time the #13#10 char is found (I took this code from Embarcadero's TStringList.Text:= s ) }
 procedure SplitStringAtPos (CONST Text: string; CONST Pos: Integer; OUT s1, s2: string); overload; { Split a string in two substrings at the specified position. The char at Pos will be included in the first string. }
@@ -885,12 +885,12 @@ function FirstNonSpace (CONST s: string): Integer; { Returns the position of the
 function i2s (Value: Integer): string; overload; inline;
 function i2s (Value, MaxVal: integer): string; overload; { Add the specified number of zeros before the string. See LeadingZerosAuto help for details }
 function i2s (Value: Int64) : string; overload; { int64 can hold up to 9223372036854775807 }
-function i2sHuman (Value: Int64) : string; { Retunrs something like: 1= 1st, 2= 2nd, 3= 3rd, 4= 4th }
+function i2sHuman (Value: Int64) : string; { Returns something like: 1= 1st, 2= 2nd, 3= 3rd, 4= 4th }
 function ExtractIntFromStr (const s: string): Integer; { Extracts a number from a string. Works only if the number is at the beginning of the string. Example '123xxx' }
 function Real2Str (CONST ExtValue: Extended; Decimals: Byte = 1; HideNulMantisa: Boolean= True): string;
 function Rectangle2Str (CONST Rect: TRect): string;
 function FormatBytes (CONST Size: Int64; CONST Decimals: Integer= 1): string; { Format bytes to KB, MB, GB, TB }
-function FormatBytesMB (CONST Size: Int64; CONST Decimals: Integer= 1): string; { Same as above but the function will never return values formated in GB range. More exactly instead of 10GB it will return 10240MB }
+function FormatBytesMB (CONST Size: Int64; CONST Decimals: Integer= 1): string; { Like FormatBytes, but never goes above MB: instead of 10GB it returns 10240MB }
 function FormatNumber (CONST Size: Int64; CONST Decimals: Integer= 1): string; { It will return 1K for 1000, 1M for 1000000 and so on }
 function BoolToStrYesNo (CONST B: Boolean): string;
 function FixNumber (CONST s: string): Integer; { Converts a text that contains an invalid number to a valid number. For example '!2345' will return '2345' }
@@ -910,7 +910,7 @@ function CharInArray (CONST c: Char; const Chars: TCharArray): Boolean;
 function CharIsLetter (CONST c: char): Boolean;
 function IsUpcaseLetter (CONST c: Char): Boolean;
 function IsUpcase (CONST c: Char): Boolean; { Works only with letters. }
-function ExtractTextBetween (CONST s, TagStart, TagEnd: string): string; { Extract the text between the tags. For example '<H>Title</H>' will return 'Title' is iFrom= '<H>' and iTo= '</H>' }
+function ExtractTextBetween (CONST s, TagStart, TagEnd: string): string; { Extract the text between the tags. For example '<H>Title</H>' will return 'Title' if TagStart= '<H>' and TagEnd= '</H>' }
 function FileNameNaturalSort (s1, s2: String): Integer; { Natural compare two filenames }
 function StrCmpLogicalW (psz1, psz2: PWideChar): Integer; stdcall; external 'shlwapi.dll'; {$ENDIF} { Natural compare two strings. Digits in the strings are considered as numerical content rather than text. This test is not case-sensitive. Use it like this: StrCmpLogicalW(PChar(s1), PChar(s2)); see: http://stackoverflow.com/questions/1024515/delphi-is-it-necessary-to-convert-string-to-widestring. }
 function FuzzyStringCompare (CONST s1, s2: string): Integer; { Text similarity. The function checks if any identical characters is in the near of the actual compare position. }
@@ -921,15 +921,15 @@ function MakeStringLongRight (CONST s, c: AnsiChar; ForcedLength: integer): Ansi
 function MakeStringLongRight (CONST s, c: Char; ForcedLength: integer): string; overload;
 function MakeStringLongRight (CONST s, Pad: string; ForcedLength: integer): string; overload; { Make sure the string has ForcedLength. If not, add some extra characters at its end to make it that long }
 function MakeStringLongLeft (CONST s, Pad: string; ForcedLength: integer): string; { Make sure the string has ForcedLength. If not, add some extra characters at its front to make it that long }
-function LeadingZeros (CONST s: string; ForcedLength: integer): string; { insert (ForcedLength-1) zeros in front of the specified string. ForcedLength shows which is the desired lenght of the new string. Example: LeadingZeros('a', 4) will result in '000a' }
+function LeadingZeros (CONST s: string; ForcedLength: integer): string; { Adds zeros in front of s until it is ForcedLength long. Example: LeadingZeros('a', 4) returns '000a' }
 function LeadingZeros2 (CONST s: string; ForcedLength: integer): string; { Not tested }
-function LeadingZerosAuto (CONST s: string; MaxValue: integer): string; { Same as above except_ that the user doesn't have to specify how many zeros to add. Instead the function will determine this automaticxally based on the number received as parameter. For example LeadingZeros('1', 50) will generate '01' but LeadingZeros('1', 500) will generate '001' }
-function GenerateString (RepeatTimes: Integer; C: char): string; deprecated 'Use System.StringOfChar instead'; { Exista System.StrUtils.DupeString and StuffString Returns the concatenation of a string with itself a specified number of repeats. }
+function LeadingZerosAuto (CONST s: string; MaxValue: integer): string; { Like LeadingZeros, but the length is the number of digits in MaxValue. Example: LeadingZerosAuto('1', 50) returns '01', LeadingZerosAuto('1', 500) returns '001' }
+function GenerateString (RepeatTimes: Integer; C: char): string; deprecated 'Use System.StringOfChar instead'; { Exists: System.StrUtils.DupeString and StuffString Returns the concatenation of a string with itself a specified number of repeats. }
 function GenerateUniqueString (Len: Integer=32): string;
 function GenerateRandomWord (Len: Integer=16; StartWithVowel: Boolean= FALSE): string;
-function GenerateRandString (minLen, maxLen: Integer): string; { This will return all printable craracters (from 65 to 125) }
+function GenerateRandString (minLen, maxLen: Integer): string; { Returns characters with codes 65 to 124: A-Z, a-z and a few symbols }
 function GenerateRandStringLet (Len: Integer): string; { This will return ONLY letters and numbers } { YOU MUST call randomize before calling this function! }
-function GetRandomPersonName: string; { Returns a random name in a 100 unique name list }
+function GetRandomPersonName: string; { Returns a random name from a list of 200 unique names }
 function GetRandomStreetName: string;
 function GetRockBands: TStringList;
 function UnicodeToAnsi (CONST str: UnicodeString; codePage: Integer): RawByteString;
@@ -977,6 +977,19 @@ function GenerateAppBitnessRep: string;
 ```pascal
 function ProcessRunning (CONST ExeFileName: string): Boolean;
 function KillProcess (CONST ExeName: string): Boolean;
+```
+
+## LightCore.ProcessCpuMonitor (8)
+
+```pascal
+function FindPrevSample(PID: DWORD; CONST Name: string): Integer;
+function FindSmoothed(CONST Name: string): Integer;
+procedure UpdateSmoothed(CONST Name: string; RawCpu: Single);
+procedure DecayUnseen(CONST Agg: array of RAggregated; AggCount: Integer);
+procedure PruneSmoothed;
+procedure Sample;
+function GetTopCpu(Index: Integer): RProcessInfo;
+function GetTopRam(Index: Integer): RProcessInfo;
 ```
 
 ## LightCore.Reports (2)
@@ -1038,7 +1051,7 @@ procedure Clear;
 ## LightCore.StreamBuff (70)
 
 ```pascal
-function readSignature: AnsiString; // The LiSa string for "Light Saber'.
+function readSignature: AnsiString;
 procedure checkSafetyLimit(Count: Cardinal);
 procedure WriteHeader (CONST Signature: AnsiString; Version: Word);
 function ReadHeader (CONST Signature: AnsiString; Version: Word): Boolean; overload;
@@ -1050,7 +1063,7 @@ function ReadEnter: Boolean;
 procedure WriteEnter;
 procedure ReadPadding0 (Bytes: Integer= FrozenPaddingSize); // Does not check them for validity
 procedure ReadPaddingValidation (Bytes: Integer= FrozenPaddingSize); // Raises an exception if the buffer does not contain the signature
-procedure WritePaddingValidation (Bytes: Integer= FrozenPaddingSize); // Raises an exception if the padding does not match the SafetyPaddingStr string. Usefule to detect file corruption. }
+procedure WritePaddingValidation (Bytes: Integer= FrozenPaddingSize); // Writes the SafetyPaddingStr string as padding, so ReadPaddingValidation can detect file corruption.
 procedure WritePadding0 (Bytes: Integer= FrozenPaddingSize); // Writes zeroes as padding bytes.
 function ReadBoolean : Boolean;
 function ReadByte : Byte;
@@ -1101,7 +1114,7 @@ procedure WriteChars (CONST s: string); overload;
 function ReadCharsA (Count: Cardinal; SafetyLimit: Cardinal = 1*KB): AnsiString;
 function ReadChars (Count: Cardinal): string;
 procedure PushString (CONST s: string);
-function ReadStringCnt(Count: Cardinal; SafetyLimit: Cardinal = 1*KB): string; overload; { Read 'Len' characters }
+function ReadStringCnt(Count: Cardinal; SafetyLimit: Cardinal = 1*KB): string; overload; { Reads Count bytes of UTF-8 }
 function AsBytes: TBytes;
 function AsString: AnsiString;
 procedure PushBytesCnt (CONST Buffer: TBytes);
@@ -1514,7 +1527,7 @@ procedure MaximizeVertically;
 procedure ApplyAndroidWindowInsets;
 ```
 
-## LightFmx.Common.AppData (17)
+## LightFmx.Common.AppData (18)
 
 ```pascal
 function getLogForm: TfrmRamLog;
@@ -1534,6 +1547,7 @@ procedure CreateFormModal (aClass: TComponentClass); // Problem in Android with 
 function GetAutoState(Form: TForm): TAutoState; // Called from TLightForm.Loaded
 procedure ShowModal(aForm: TForm); // Available everywhere except Android
 procedure SetMaxPriority;
+procedure LogFormDestroyed(Form: TfrmRamLog); // Called only by TfrmRamLog.FormDestroy
 ```
 
 ## LightFmx.Common.CamUtils (4)
@@ -2313,19 +2327,6 @@ procedure MonitorsOff;
 procedure MonitorsSleep;
 function TurnScreenSaverOn: Boolean;
 function IsScreenSaverOn: Boolean;
-```
-
-## LightVcl.Common.ProcessCpuMonitor (8)
-
-```pascal
-function FindPrevSample(PID: DWORD; CONST Name: string): Integer;
-function FindSmoothed(CONST Name: string): Integer;
-procedure UpdateSmoothed(CONST Name: string; RawCpu: Single);
-procedure DecayUnseen(CONST Agg: array of RAggregated; AggCount: Integer);
-procedure PruneSmoothed;
-procedure Sample;
-function GetTopCpu(Index: Integer): RProcessInfo;
-function GetTopRam(Index: Integer): RProcessInfo;
 ```
 
 ## LightVcl.Common.Reports (7)
@@ -4080,4 +4081,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2946 public routines across 225 units._
+_2947 public routines across 225 units._
