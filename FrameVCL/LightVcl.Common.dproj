@@ -131,7 +131,6 @@
         <DCCReference Include="LightVcl.Common.MutexSingleInstance.pas"/>
         <DCCReference Include="LightVcl.Common.PopUp.pas"/>
         <DCCReference Include="LightVcl.Common.PowerUtils.pas"/>
-        <DCCReference Include="LightVcl.Common.ProcessCpuMonitor.pas"/>
         <DCCReference Include="LightVcl.Common.Reports.pas"/>
         <DCCReference Include="LightVcl.Common.Shell.pas"/>
         <DCCReference Include="LightVcl.Common.System.pas"/>
@@ -142,7 +141,6 @@
         <DCCReference Include="LightVcl.Common.Window.pas"/>
         <DCCReference Include="LightVcl.Common.WindowMetrics.pas"/>
         <DCCReference Include="LightVcl.Common.WinVersion.pas"/>
-        <DCCReference Include="LightVcl.Common.WinVersionApi.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
