@@ -1,20 +1,23 @@
-unit Test.LightVcl.Common.System;
+unit Test.LightCore.System;
 
 {=============================================================================================================
-   Unit tests for LightVcl.Common.System.pas
+   Unit tests for the Windows-only routines of LightCore.System.pas
    Tests system-level Windows API utilities
 
-   Note: Some functions (ServiceStart/Stop, InstallFont) require elevated privileges
+   Note: Some functions (InstallFont) require elevated privileges
    and are not tested here to avoid side effects. Only read-only safe functions are tested.
+
+   The platform-neutral routines FillZeros, GetSystemLanguageName and GetSystemLanguageNameShort are tested in Test.LightCore.Core.pas.
 =============================================================================================================}
 
 interface
+{$IFDEF MSWINDOWS}
 
 uses
   DUnitX.TestFramework,
   System.SysUtils,
   Winapi.Windows,
-  LightVcl.Common.System;
+  LightCore.System;
 
 type
   [TestFixture]
@@ -36,9 +39,6 @@ type
     [Test]
     procedure TestGetUserName;
 
-    [Test]
-    procedure TestGetUserNameEx_SamCompatible;
-
     { Display tests }
     [Test]
     procedure TestGetDisplayModes;
@@ -49,23 +49,6 @@ type
 
     [Test]
     procedure TestBiosID;
-
-    { Service status tests - read-only, safe to run }
-    [Test]
-    procedure TestServiceGetStatus_NonExistent;
-
-    [Test]
-    procedure TestServiceGetStatusName_NonExistent;
-
-    { Error string tests }
-    [Test]
-    procedure TestGetWin32ErrorString_Success;
-
-    [Test]
-    procedure TestGetWin32ErrorString_FileNotFound;
-
-    [Test]
-    procedure TestGetWin32ErrorString_AccessDenied;
   end;
 
   [TestFixture]
@@ -91,8 +74,11 @@ type
     [Test]
     procedure TestInstallFont_FileNotFound;
   end;
+{$ENDIF}
+
 
 implementation
+{$IFDEF MSWINDOWS}
 
 
 { TTestSystem }
@@ -140,19 +126,8 @@ procedure TTestSystem.TestGetUserName;
 var
   Name: string;
 begin
-  Name:= LightVcl.Common.System.GetUserName(False);
+  Name:= LightCore.System.GetUserName(False);
   Assert.IsNotEmpty(Name, 'User name should not be empty');
-end;
-
-
-procedure TTestSystem.TestGetUserNameEx_SamCompatible;
-var
-  Name: string;
-begin
-  { NameSamCompatible = 2, returns DOMAIN\Username format }
-  Name:= GetUserNameEx(2);
-  Assert.IsNotEmpty(Name, 'UserNameEx should not be empty');
-  Assert.IsTrue(Pos('\', Name) > 0, 'SAM compatible name should contain backslash');
 end;
 
 
@@ -205,54 +180,6 @@ begin
   for i:= 1 to Length(ID) do
     Assert.IsTrue(Ord(ID[i]) >= 32,
                   'BIOS ID holds a control character at position '+ IntToStr(i)+ ' - that is uninitialised buffer memory: ['+ ID+ ']');
-end;
-
-
-procedure TTestSystem.TestServiceGetStatus_NonExistent;
-var
-  Status: DWord;
-begin
-  { Non-existent service should return 0 }
-  Status:= ServiceGetStatus('', 'NonExistentService12345');
-  Assert.AreEqual(DWord(0), Status);
-end;
-
-
-procedure TTestSystem.TestServiceGetStatusName_NonExistent;
-var
-  StatusName: string;
-begin
-  { Non-existent service should return 'UNKNOWN STATE' }
-  StatusName:= ServiceGetStatusName('', 'NonExistentService12345');
-  Assert.AreEqual('UNKNOWN STATE', StatusName);
-end;
-
-
-procedure TTestSystem.TestGetWin32ErrorString_Success;
-var
-  Msg: string;
-begin
-  Msg:= GetWin32ErrorString(ERROR_SUCCESS);
-  Assert.AreEqual('Operation completed successfully.', Msg);
-end;
-
-
-procedure TTestSystem.TestGetWin32ErrorString_FileNotFound;
-var
-  Msg: string;
-begin
-  Msg:= GetWin32ErrorString(ERROR_FILE_NOT_FOUND);
-  Assert.IsNotEmpty(Msg, 'Error message should not be empty');
-  { The exact message depends on Windows localization }
-end;
-
-
-procedure TTestSystem.TestGetWin32ErrorString_AccessDenied;
-var
-  Msg: string;
-begin
-  Msg:= GetWin32ErrorString(ERROR_ACCESS_DENIED);
-  Assert.IsNotEmpty(Msg, 'Error message should not be empty');
 end;
 
 
@@ -327,5 +254,6 @@ end;
 initialization
   TDUnitX.RegisterTestFixture(TTestSystem);
   TDUnitX.RegisterTestFixture(TTestFontFunctions);
+{$ENDIF}
 
 end.
