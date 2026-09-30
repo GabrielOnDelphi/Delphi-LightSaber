@@ -230,7 +230,7 @@ Six were re-checked by an independent `grep` over the same tree, and all six con
 
 - **test only** (2): `TruncateToWord`, `WrapStringForcedA`
 
-### LightVcl.Common.WinVersionApi.pas  -  2
+### LightCore.Win.WinVersionApi.pas  -  2
 
 - **test only** (2): `GetWinVerNetServer`, `GetWinVersionEx`
 
