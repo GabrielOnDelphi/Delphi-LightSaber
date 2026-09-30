@@ -910,7 +910,7 @@ end;
      https://github.com/delphidabbler/articles/blob/master/article-13-pt2.pdf
 
   Alternative implementation:
-     LightVcl.Common.MutexSingleInstance.pas
+     LightCore.MutexSingleInstance.pas
 
   I would have loved to have all the code in a single procedure but unfortunately this is not possible. Three procedures are required.
 -------------------------------------------------------------------------------------------------------------}
@@ -936,7 +936,7 @@ begin
   DataToSend.cbData := Length(CommandLine) * SizeOf(Char);
   DataToSend.lpData := PChar(CommandLine);
 
-  Window:= WinApi.Windows.FindWindow(PWideChar(SingleInstClassName), NIL);    // This is a copy of FindTopWindowByClass in LightVcl.Common.Window.pas
+  Window:= WinApi.Windows.FindWindow(PWideChar(SingleInstClassName), NIL);    // This is a copy of FindTopWindowByClass in LightCore.Win.Window.pas
   SendMessage(Window, WM_COPYDATA, 0, LPARAM(@DataToSend));
   { Winapi.Windows.ShowWindow(Window, SW_SHOWNORMAL); Winapi.Windows.SetForegroundWindow(Window);   }
 end;

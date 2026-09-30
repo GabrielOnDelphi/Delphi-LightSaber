@@ -128,7 +128,6 @@
         <DCCReference Include="LightVcl.Common.LogFilter.pas"/>
         <DCCReference Include="LightVcl.Common.LogViewer.pas"/>
         <DCCReference Include="LightVcl.Common.MemoInputBox.pas"/>
-        <DCCReference Include="LightVcl.Common.MutexSingleInstance.pas"/>
         <DCCReference Include="LightVcl.Common.PopUp.pas"/>
         <DCCReference Include="LightVcl.Common.PowerUtils.pas"/>
         <DCCReference Include="LightVcl.Common.Reports.pas"/>

@@ -40,7 +40,10 @@ contains
   LightCore.Win.EnvironmentVar in 'LightCore.Win.EnvironmentVar.pas',
   LightCore.Win.Sound in 'LightCore.Win.Sound.pas',
   LightCore.Win.SystemPermissions in 'LightCore.Win.SystemPermissions.pas',
-  LightCore.Win.WinVersionApi in 'LightCore.Win.WinVersionApi.pas';
+  LightCore.Win.WinVersionApi in 'LightCore.Win.WinVersionApi.pas',
+  LightCore.Win.Window in 'LightCore.Win.Window.pas',
+  LightCore.Win.System in 'LightCore.Win.System.pas',
+  LightCore.Win.IO in 'LightCore.Win.IO.pas';
 
 end.
 

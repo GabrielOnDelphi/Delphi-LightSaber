@@ -57,7 +57,6 @@ contains
   LightVcl.Common.LogFilter in 'LightVcl.Common.LogFilter.pas',
   LightVcl.Common.LogViewer in 'LightVcl.Common.LogViewer.pas',
   LightVcl.Common.MemoInputBox in 'LightVcl.Common.MemoInputBox.pas',
-  LightVcl.Common.MutexSingleInstance in 'LightVcl.Common.MutexSingleInstance.pas',
   LightVcl.Common.PopUp in 'LightVcl.Common.PopUp.pas',
   LightVcl.Common.PowerUtils in 'LightVcl.Common.PowerUtils.pas',
   LightVcl.Common.Reports in 'LightVcl.Common.Reports.pas',

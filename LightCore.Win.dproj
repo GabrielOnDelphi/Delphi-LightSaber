@@ -100,6 +100,9 @@
         <DCCReference Include="LightCore.Win.Sound.pas"/>
         <DCCReference Include="LightCore.Win.SystemPermissions.pas"/>
         <DCCReference Include="LightCore.Win.WinVersionApi.pas"/>
+        <DCCReference Include="LightCore.Win.Window.pas"/>
+        <DCCReference Include="LightCore.Win.System.pas"/>
+        <DCCReference Include="LightCore.Win.IO.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
