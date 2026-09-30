@@ -105,7 +105,7 @@ IMPLEMENTATION {$R *.dfm}
 USES
    Winapi.ShlObj, Winapi.ActiveX, System.IOUtils,
    LightCore, LightCore.IO, LightCore.TextFile, LightCore.AppData,
-   LightVcl.Common.IO, LightVcl.Common.Dialogs, LightVcl.Common.Window, LightVcl.Common.ExecuteShell, LightVcl.Common.Shell, LightVcl.Visual.AppData;
+   LightVcl.Common.IO, LightCore.Win.IO, LightVcl.Common.Dialogs, LightCore.Win.Window, LightVcl.Common.ExecuteShell, LightVcl.Common.Shell, LightVcl.Visual.AppData;
 
 CONST
   UninstallerExe    = 'Uninstall.exe';                  { In <install folder>\System\. TAppData.RegisterUninstaller expects this name and this folder (LightVcl.Visual.AppData.pas) }

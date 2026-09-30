@@ -85,20 +85,20 @@ Six were re-checked by an independent `grep` over the same tree, and all six con
 - **never referenced** (2): `RegReadMultiSzString`, `RegReadMultiSzStringSP`
 - **test only** (8): `Convert_HKey2Str`, `Convert_Str2HKey`, `RegClearKey`, `RegHasSubKeys`, `RegReadValuePairs`, `RegValueExist`, `RegWriteBool`, `RegWriteValuePairs`
 
-### LightVcl.Common.Window.pas  -  10
+### LightCore.System.pas  -  9
 
-- **never referenced** (5): `MinAllWnd_ByHandle`, `MinAllWnd_ByShell`, `MinAllWnd_ByShell2`, `MinAllWnd_ByWinMKey`, `Remove_X_Button`
-- **test only** (5): `FindChildForm`, `GetTextFromHandle`, `IsApplicationRunning`, `MaximizeForm`, `RestoreWindow`
-
-### LightVcl.Common.System.pas  -  9
-
-- **never referenced** (3): `JiggleMouse`, `PrintScreenActiveWnd`, `PrintScreenFull`
-- **test only** (6): `BiosID`, `FreeUninstalledFont`, `GetDisplayModes`, `ServiceGetStatus`, `ServiceGetStatusName`, `UseUninstalledFont`
+- **never referenced** (5): `DisposeAndNil`, `GetResourceAsString`, `JiggleMouse`, `PrintScreenActiveWnd`, `PrintScreenFull`
+- **test only** (4): `BiosID`, `FreeUninstalledFont`, `GetDisplayModes`, `UseUninstalledFont`
 
 ### LightVcl.Graph.Loader.pas  -  9
 
 - **never referenced** (4): `LoadEMF`, `LoadFromResource`, `LoadICO`, `LoadJ2K`
 - **test only** (5): `LoadBMP`, `LoadGIF`, `LoadGIF`, `LoadPNG`, `LoadToTImage`
+
+### LightCore.Win.Window.pas  -  8
+
+- **never referenced** (5): `MinAllWnd_ByHandle`, `MinAllWnd_ByShell`, `MinAllWnd_ByShell2`, `MinAllWnd_ByWinMKey`, `Remove_X_Button`
+- **test only** (3): `GetTextFromHandle`, `IsApplicationRunning`, `RestoreWindow`
 
 ### LightVcl.Common.WinVersion.pas  -  8
 
@@ -108,11 +108,6 @@ Six were re-checked by an independent `grep` over the same tree, and all six con
 
 - **never referenced** (3): `CountCharAppearance`, `IsValidUtf8File`, `IsValidUtf8Stream`
 - **test only** (4): `ContainsUnicodeChars`, `DetectFileEncoding`, `FirstLineFromFile`, `GenerateRandomTextFile`
-
-### LightVcl.Common.IO.pas  -  7
-
-- **never referenced** (3): `GetMyDocumentsAPI`, `GetMyPicturesAPI`, `GetSaveDialog`
-- **test only** (4): `GetDriveTypeS`, `GetPosAfterExtendedPrefix`, `GetSpecialFolders`, `SetCompressionAtr`
 
 ### LightVcl.Common.PowerUtils.pas  -  7
 
@@ -139,6 +134,11 @@ Six were re-checked by an independent `grep` over the same tree, and all six con
 ### LightVcl.Graph.Text.pas  -  6
 
 - **test only** (6): `CenterTextY`, `CenterTextY`, `DrawTextCentered`, `GetFontHeight`, `ShadowDownLeft`, `ShadowDownRight`
+
+### LightVcl.Common.IO.pas  -  6
+
+- **never referenced** (3): `GetMyDocumentsAPI`, `GetMyPicturesAPI`, `GetSaveDialog`
+- **test only** (3): `GetDriveTypeS`, `GetPosAfterExtendedPrefix`, `SetCompressionAtr`
 
 ### LightVcl.Common.CenterControl.pas  -  5
 
@@ -202,10 +202,6 @@ Six were re-checked by an independent `grep` over the same tree, and all six con
 
 - **test only** (3): `GetEnvironmentVars`, `GetEnvironmentVars`, `SetEnvironmentVars`
 
-### LightCore.System.pas  -  2
-
-- **never referenced** (2): `DisposeAndNil`, `GetResourceAsString`
-
 ### LightVcl.Internet.HTML.pas  -  2
 
 - **never referenced** (2): `GetFormByNumber`, `SetFieldValue`
@@ -233,6 +229,14 @@ Six were re-checked by an independent `grep` over the same tree, and all six con
 ### LightCore.Win.WinVersionApi.pas  -  2
 
 - **test only** (2): `GetWinVerNetServer`, `GetWinVersionEx`
+
+### LightVcl.Common.Window.pas  -  2
+
+- **test only** (2): `FindChildForm`, `MaximizeForm`
+
+### LightCore.Win.System.pas  -  2
+
+- **test only** (2): `ServiceGetStatus`, `ServiceGetStatusName`
 
 ### LightVcl.Graph.Alpha.pas  -  2
 
@@ -317,4 +321,8 @@ Six were re-checked by an independent `grep` over the same tree, and all six con
 ### LightFmx.Common.Helpers.pas  -  1
 
 - **test only** (1): `FindImmediateParentForm`
+
+### LightCore.Win.IO.pas  -  1
+
+- **test only** (1): `GetSpecialFolders`
 
