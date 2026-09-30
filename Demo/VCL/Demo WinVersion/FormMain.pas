@@ -26,7 +26,7 @@ TYPE
 IMPLEMENTATION  {$R *.dfm}
 
 USES
-   LightVcl.Common.WinVersionApi, LightCore.WinVersion, LightCore.ExeVersion;
+   LightCore.Win.WinVersionApi, LightCore.WinVersion, LightCore.ExeVersion;
 
 
 procedure TfrmTester.FormCreate(Sender: TObject);
@@ -53,7 +53,7 @@ begin
   Memo.Lines.Add('');
   Memo.Lines.Add('LightCom.WinVersionApi.pas');
   Memo.Lines.Add('');
-  Memo.Lines.Add(LightVcl.Common.WinVersionApi.GenerateReport);
+  Memo.Lines.Add(LightCore.Win.WinVersionApi.GenerateReport);
   LightCore.WinVersion.GenerateReport;
 
   Memo.Lines.Add('_________________');
