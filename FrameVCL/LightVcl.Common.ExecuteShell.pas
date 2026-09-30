@@ -115,7 +115,7 @@ procedure ExecuteControlPanel_ScreenRes;
 IMPLEMENTATION
 
 USES
-   LightCore.IO, LightCore.AppData, LightVcl.Common.IO;
+   LightCore.IO, LightCore.AppData, LightCore.Win.IO;
 
 
 CONST
