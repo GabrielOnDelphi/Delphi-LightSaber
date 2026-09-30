@@ -19,7 +19,7 @@ UNIT LightCore.ExeVersion;
 
    Also see:
        LightCore.WinVersion
-       LightVcl.Common.WinVersionApi
+       LightCore.Win.WinVersionApi
 =============================================================================================================}
 
 INTERFACE
