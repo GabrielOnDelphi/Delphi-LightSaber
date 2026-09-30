@@ -90,6 +90,7 @@ contains
   LightCore.EnvironmentVar in 'LightCore.EnvironmentVar.pas',
   LightCore.SystemConsole in 'LightCore.SystemConsole.pas',
   LightCore.CpuUsageProcess in 'LightCore.CpuUsageProcess.pas',
+  LightCore.ProcessCpuMonitor in 'LightCore.ProcessCpuMonitor.pas',
   LightCore.Graphics in 'LightCore.Graphics.pas',
   LightCore.CmdLine in 'LightCore.CmdLine.pas',
   LightCore.Colors in 'LightCore.Colors.pas',
