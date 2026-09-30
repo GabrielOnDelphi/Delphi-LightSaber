@@ -1467,6 +1467,16 @@ function AppElevationLevel: Integer;
 function SetPrivilege(CONST PrivilegeName: string; bEnabled : Boolean): Boolean;
 ```
 
+## LightCore.Win.WinVersionApi (5)
+
+```pascal
+procedure GetWinVersion (OUT MajVersion, MinVersion: Cardinal); overload;
+function GetWinVersion: string; overload;
+function GetWinVerNetServer: string; { Alternative to GetWinVersion }
+function GetWinVersionEx: string;
+function GenerateReport: string; { For testing }
+```
+
 ## LightCore.WinVersion (15)
 
 ```pascal
@@ -2521,16 +2531,6 @@ procedure SetProportionalThumbH (ScrollBar: TScrollBar; OwnerClientWidth : Integ
 
 ```pascal
 function IsNTKernel : Boolean;
-```
-
-## LightVcl.Common.WinVersionApi (5)
-
-```pascal
-procedure GetWinVersion (OUT MajVersion, MinVersion: Cardinal); overload;
-function GetWinVersion: string; overload;
-function GetWinVerNetServer: string; { Alternative to GetWinVersion }
-function GetWinVersionEx: string;
-function GenerateReport: string; { For testing }
 ```
 
 ## LightVcl.Graph.Alpha (6)
