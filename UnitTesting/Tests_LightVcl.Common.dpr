@@ -65,8 +65,6 @@ uses
   LightVcl.Common.Shell in '..\FrameVCL\LightVcl.Common.Shell.pas',
   Test.LightVcl.Common.SystemTime in 'Test.LightVcl.Common.SystemTime.pas',
   LightVcl.Common.SystemTime in '..\FrameVCL\LightVcl.Common.SystemTime.pas',
-  Test.LightVcl.Common.WinVersionApi in 'Test.LightVcl.Common.WinVersionApi.pas',
-  LightVcl.Common.WinVersionApi in '..\FrameVCL\LightVcl.Common.WinVersionApi.pas',
   Test.LightVcl.Common.WindowMetrics in 'Test.LightVcl.Common.WindowMetrics.pas',
   LightVcl.Common.WindowMetrics in '..\FrameVCL\LightVcl.Common.WindowMetrics.pas';
 

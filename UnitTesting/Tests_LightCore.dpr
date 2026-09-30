@@ -86,6 +86,7 @@ uses
   Test.LightCore.Win.Download in 'Test.LightCore.Win.Download.pas',
   Test.LightCore.SystemPermissions in 'Test.LightCore.SystemPermissions.pas',
   Test.LightCore.Win.SystemPermissions in 'Test.LightCore.Win.SystemPermissions.pas',
+  Test.LightCore.Win.WinVersionApi in 'Test.LightCore.Win.WinVersionApi.pas',
   {$ENDIF}
   { Source units }
   LightCore in '..\LightCore.pas',
@@ -138,6 +139,9 @@ uses
   LightCore.Graph.BkgColorParams in '..\LightCore.Graph.BkgColorParams.pas',
   LightCore.Graph.RainDropParams in '..\LightCore.Graph.RainDropParams.pas',
   LightCore.WinVersion in '..\LightCore.WinVersion.pas',
+  {$IFDEF MSWINDOWS}
+  LightCore.Win.WinVersionApi in '..\LightCore.Win.WinVersionApi.pas',
+  {$ENDIF}
   LightCore.Process in '..\LightCore.Process.pas',
   LightCore.ExeVersion in '..\LightCore.ExeVersion.pas',
   LightCore.Sound in '..\LightCore.Sound.pas',

@@ -1,7 +1,7 @@
-﻿unit Test.LightVcl.Common.WinVersionApi;
+﻿unit Test.LightCore.Win.WinVersionApi;
 
 {=============================================================================================================
-   Unit tests for LightVcl.Common.WinVersionApi.pas
+   Unit tests for LightCore.Win.WinVersionApi.pas
    Tests alternative Windows version detection functions using various APIs.
 
    Note: These tests verify:
@@ -12,11 +12,12 @@
 =============================================================================================================}
 
 interface
+{$IFDEF MSWINDOWS}
 
 uses
   DUnitX.TestFramework,
   System.SysUtils,
-  LightVcl.Common.WinVersionApi;
+  LightCore.Win.WinVersionApi;
 
 type
   [TestFixture]
@@ -88,9 +89,11 @@ type
     [Test]
     procedure Test_ModernWindows_GetWinVersionEx_IsWin7OrLater;
   end;
+{$ENDIF}
 
 
 implementation
+{$IFDEF MSWINDOWS}
 
 
 { GetWinVersion Tests }
@@ -359,5 +362,6 @@ end;
 
 initialization
   TDUnitX.RegisterTestFixture(TTestWinVersionApi);
+{$ENDIF}
 
 end.
