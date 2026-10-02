@@ -222,6 +222,7 @@
         <DCCReference Include="LightCore.SystemConsole.pas"/>
         <DCCReference Include="LightCore.CpuUsageProcess.pas"/>
         <DCCReference Include="LightCore.ProcessCpuMonitor.pas"/>
+        <DCCReference Include="LightCore.MutexSingleInstance.pas"/>
         <DCCReference Include="LightCore.Graphics.pas"/>
         <DCCReference Include="LightCore.CmdLine.pas"/>
         <DCCReference Include="LightCore.Colors.pas"/>
@@ -235,6 +236,7 @@
         <DCCReference Include="LightCore.WinVersion.pas"/>
         <DCCReference Include="LightCore.ExceptionLogger.pas"/>
         <DCCReference Include="LightCore.SystemPermissions.pas"/>
+        <DCCReference Include="LightCore.Shell.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
