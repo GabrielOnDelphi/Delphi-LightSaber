@@ -5,23 +5,25 @@ UNIT LightCore.Win.IO;
 {$ENDIF}
 
 {=============================================================================================================
-   2026.09.30
+   2026.10.01
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
-   Windows special folders
+   Windows special folders, drives and NTFS compression
 
    Provides:
      - The Windows folder, the System folder, Program Files, the Desktop and the Start Menu
      - Any special folder, named by its CSIDL constant (Shell API) or by its value name under the registry key Shell Folders
      - The list of all the special folders, and a test for whether a path is one of them
      - The full path of the Task Manager, taskmgr.exe
+     - Drives, named by their letter: the type, the volume label, whether the drive is valid and holds a disk, the free space
+     - The NTFS compression attribute of a file or folder
 
    See also:
      LightCore.IO.pas             - platform-neutral file and folder routines, among them GetMyDocuments and GetMyPictures
-     LightVcl.Common.IO.pas       - file, folder and drive routines of a VCL application, the file dialogs, and the routines that show an error message
+     LightVcl.Common.IO.pas       - file and folder routines of a VCL application, the file dialogs, and the routines that show an error message
 
-   Windows-only unit, package LightCore.Win. Every routine asks Windows for a path: through GetWindowsDirectory, GetSystemDirectory, SHGetFolderPath with a CSIDL constant, or the Windows registry. None of these exists off Windows, so a build for Android, macOS or iOS stops at the top of this unit with a fatal compiler message.
+   Windows-only unit, package LightCore.Win. Every routine asks Windows for a path, a drive letter or an NTFS attribute: through GetWindowsDirectory, GetSystemDirectory, SHGetFolderPath with a CSIDL constant, the Windows registry, GetDriveType, GetVolumeInformation or DeviceIoControl. None of these exists off Windows, so a build for Android, macOS or iOS stops at the top of this unit with a fatal compiler message.
 =============================================================================================================}
 
 INTERFACE
@@ -46,11 +48,35 @@ USES
  function  FolderIsSpecial  (CONST Path: string): Boolean;                                               { Returns True if the parameter is a special folder such us 'c:\My Documents' }
 
 
+{--------------------------------------------------------------------------------------------------
+   API OPERATIONS
+--------------------------------------------------------------------------------------------------}
+ procedure SetCompressionAtr    (CONST FileName: string; const CompressionFormat: byte= 1);
+
+
+{--------------------------------------------------------------------------------------------------
+   DRIVES
+--------------------------------------------------------------------------------------------------}
+ function  GetDriveType       (CONST Path: string): Integer;
+ function  GetDriveTypeS      (CONST Path: string): string;                           { Returns drive type asstring }
+ function  GetVolumeLabel     (CONST Drive: Char): string;                            { Returns volume label of a disk }
+
+ { Validity }
+ function  DiskInDrive        (CONST Path: string): Boolean; overload;                { From www.gnomehome.demon.nl/uddf/pages/disk.htm#disk0 . Also see http://community.borland.com/article/0,1410,15921,00.html }
+ function  DiskInDrive        (CONST DriveNo: Byte): Boolean; overload;               { THIS IS VERY SLOW IF THE DISK IS NOT IN DRIVE! The GUI will freeze until the drive responds. }
+ function  ValidDrive         (CONST Drive: Char): Boolean;                           { Peter Below (TeamB). http://www.codinggroups.com/borland-public-delphi-rtl-win32/7618-windows-no-disk-error.html }
+
+ { Free space }
+ function  DriveFreeSpace     (CONST Drive: Char): Int64;
+ function  DriveFreeSpaceS    (CONST Drive: Char): string;
+ function  DriveFreeSpaceF    (CONST FullPath: string): Int64;                        { Same as DriveFreeSpace but this accepts a full filename/directory path. It will automatically extract the drive }
+
+
 
 IMPLEMENTATION
 
 USES
-   Winapi.ActiveX, LightCore.Win.Registry, LightCore.IO;
+   Winapi.ActiveX, System.IOUtils, LightCore, LightCore.Win.Registry, LightCore.IO;
 
 
 {--------------------------------------------------------------------------------------------------
@@ -273,6 +299,217 @@ end;
 function GetTaskManager: String;
 begin
  Result:= GetWinSysDir+ 'taskmgr.exe';
+end;
+
+
+
+{--------------------------------------------------------------------------------------------------
+   Sets the NTFS compression attribute on a file or folder.
+
+   Parameters:
+     FileName - Full path to the file or folder. Must exist.
+     CompressionFormat - Compression level:
+       0 = COMPRESSION_FORMAT_NONE (disable compression)
+       1 = COMPRESSION_FORMAT_DEFAULT (enable with default algorithm)
+       2 = COMPRESSION_FORMAT_LZNT1 (enable with LZNT1 algorithm)
+
+   Raises: Exception if file/folder doesn't exist, or EOSError if operation fails.
+
+   Note: Only works on NTFS volumes. Has no effect on FAT/FAT32/exFAT.
+--------------------------------------------------------------------------------------------------}
+procedure SetCompressionAtr(const FileName: string; const CompressionFormat: byte = 1);
+CONST
+  FSCTL_SET_COMPRESSION = $9C040;
+VAR
+   Handle: THandle;
+   Flags: DWORD;
+   BytesReturned: DWORD;
+begin
+  if FileName = ''
+  then raise Exception.Create('SetCompressionAtr: FileName parameter cannot be empty');
+
+  if DirectoryExists(FileName)
+  then Flags:= FILE_FLAG_BACKUP_SEMANTICS  { Required to open directories }
+  else
+    if FileExists(FileName)
+    then Flags:= 0
+    else raise Exception.CreateFmt('SetCompressionAtr: ''%s'' does not exist', [FileName]);
+
+  Handle:= CreateFile(PChar(FileName), GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, Flags, 0);
+  if Handle = INVALID_HANDLE_VALUE
+  then RaiseLastOSError;
+
+  TRY
+    if not DeviceIoControl(Handle, FSCTL_SET_COMPRESSION, @CompressionFormat, SizeOf(CompressionFormat), nil, 0, BytesReturned, nil)
+    then RaiseLastOSError;
+  FINALLY
+    CloseHandle(Handle);
+  END;
+end;
+
+
+
+
+
+{--------------------------------------------------------------------------------------------------
+   DRIVE INFORMATION
+   Functions for querying drive types, validity, and free space.
+--------------------------------------------------------------------------------------------------}
+
+{ Returns the drive type constant for a given path.
+  Path can be a drive letter with backslash ('C:\') or UNC path ('\\server\share\').
+  Returns: DRIVE_UNKNOWN, DRIVE_NO_ROOT_DIR, DRIVE_REMOVABLE, DRIVE_FIXED,
+           DRIVE_REMOTE, DRIVE_CDROM, or DRIVE_RAMDISK. }
+function GetDriveType(CONST Path: string): Integer;
+begin
+ Result:= Winapi.Windows.GetDriveType(PChar(Trail(Path)));
+end;
+
+
+{ Returns a human-readable description of the drive type. }
+function GetDriveTypeS(CONST Path: string): string;
+begin
+ case GetDriveType(Path) of
+   DRIVE_UNKNOWN    : Result:= 'The drive type cannot be determined.';
+   DRIVE_NO_ROOT_DIR: Result:= 'The root path is invalid';
+   DRIVE_REMOVABLE  : Result:= 'Drive Removable';
+   DRIVE_FIXED      : Result:= 'Drive fixed';
+   DRIVE_REMOTE     : Result:= 'Remote Drive';
+   DRIVE_CDROM      : Result:= 'CD ROM Drive';
+   DRIVE_RAMDISK    : Result:= 'RAM Drive';
+ end;
+end;
+
+
+{ Checks if a drive letter represents a valid, accessible drive.
+  WARNING: This function can be VERY SLOW if the drive exists but has no media
+  (e.g., empty CD-ROM drive or disconnected USB). The GUI may freeze during the check.
+  Uses SetErrorMode to suppress Windows error dialogs for missing media. }
+function ValidDrive(CONST Drive: Char): Boolean;
+VAR
+  Mask: string;
+  SRec: TSearchRec;
+  OldMode: Cardinal;
+  RetCode: Integer;
+begin
+ OldMode:= SetErrorMode(SEM_FAILCRITICALERRORS);
+ TRY
+   Mask:= Drive + ':\*.*';
+   {$I-}
+   RetCode:= FindFirst(Mask, faAnyfile, SRec);
+   if RetCode = 0
+   then FindClose(SRec);
+   {$I+}
+   Result:= Abs(RetCode) in [ERROR_SUCCESS, ERROR_FILE_NOT_FOUND, ERROR_NO_MORE_FILES];
+ FINALLY
+   SetErrorMode(OldMode);
+ END;
+end;
+
+
+
+
+
+
+{ Returns the volume label of a drive, formatted as '[LabelName]'.
+  If drive letter is uppercase (A-Z), label is returned uppercase.
+  If drive letter is lowercase (a-z), label is returned lowercase.
+  Returns '[]' if volume has no label or drive is inaccessible. }
+function GetVolumeLabel(CONST Drive: Char): string;
+VAR
+  OldErrorMode: Integer;
+  NotUsed, VolFlags: DWORD;
+  Buf: array[0..MAX_PATH] of Char;
+begin
+  Result:= '';
+  OldErrorMode:= SetErrorMode(SEM_FAILCRITICALERRORS);
+  TRY
+    Buf[0]:= #0;
+    if GetVolumeInformation(PChar(Drive + ':\'), Buf, DWORD(Length(Buf)), nil, NotUsed, VolFlags, nil, 0)   { Buffer size is in TCHARs, not bytes }
+    then SetString(Result, Buf, StrLen(Buf))
+    else Result:= '';
+
+    if Drive < 'a'
+    then Result:= AnsiUpperCase(Result)
+    else Result:= AnsiLowerCase(Result);
+
+    Result:= Format('[%s]', [Result]);
+  FINALLY
+    SetErrorMode(OldErrorMode);
+  END;
+end;
+
+
+{ Checks if a disk/media is present in the specified drive.
+  For remote/network drives, always returns True (network connectivity not verified).
+  For local drives, delegates to the Byte overload which uses DiskSize.
+  WARNING: Can be slow for removable drives without media! }
+function DiskInDrive(CONST Path: string): Boolean;
+VAR
+  DriveNumber: Byte;
+  DriveType: Integer;
+begin
+  DriveType:= GetDriveType(Path);
+
+  if DriveType < DRIVE_REMOVABLE
+  then Result:= FALSE  { Unknown drive or no root directory }
+  else
+    if DriveType = DRIVE_REMOTE
+    then Result:= TRUE  { Assume network drives are available; TODO: verify connectivity }
+    else
+      begin
+        DriveNumber:= Drive2Byte(Path[1]);
+        Result:= DiskInDrive(DriveNumber);
+      end;
+end;
+
+
+{ Checks if a disk is present in the drive specified by drive number (1=A, 2=B, 3=C, etc.).
+  WARNING: This can be VERY SLOW if the drive has no media (empty CD-ROM, disconnected USB).
+  The GUI may freeze until the drive responds or times out. }
+function DiskInDrive(CONST DriveNo: Byte): Boolean;
+VAR ErrorMode  : Word;
+begin
+  Result:= FALSE;
+  ErrorMode:= SetErrorMode(SEM_FAILCRITICALERRORS);
+  TRY
+    if DiskSize(DriveNo) <> -1
+    then Result:= TRUE;
+  FINALLY
+    SetErrorMode(ErrorMode);
+  END;
+end;
+
+
+
+
+
+{ Returns free space on a drive in bytes. Returns 0 if drive is invalid or has no media. }
+function DriveFreeSpace(CONST Drive: Char): Int64;
+VAR DriveNo: Byte;
+begin
+ DriveNo:= Drive2Byte(Drive);
+
+ if ValidDrive(Drive)
+ AND DiskInDrive(DriveNo)
+ then Result:= DiskFree(DriveNo)
+ else Result:= 0;
+end;
+
+
+{ Returns free space on a drive as a formatted string (e.g., '15.3 GB'). }
+function DriveFreeSpaceS(CONST Drive: Char): string;
+begin
+ Result:= FormatBytes(DriveFreeSpace(Drive), 1);
+end;
+
+
+{ Returns free space for the drive containing the specified path.
+  Extracts the drive letter from a full path (file or directory) automatically.
+  Example: DriveFreeSpaceF('C:\Windows\System32\file.txt') returns free space on C: }
+function DriveFreeSpaceF(CONST FullPath: string): Int64;
+begin
+ Result:= DriveFreeSpace(System.IOUtils.TDirectory.GetDirectoryRoot(FullPath)[1]);
 end;
 
 
