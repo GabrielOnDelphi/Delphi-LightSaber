@@ -41,7 +41,7 @@ VAR
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightVcl.Common.Shell, LightVcl.Common.System, LightVcl.Common.ExecuteShell, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.CenterControl;
+   LightCore.Win.Shell, LightVcl.Common.System, LightVcl.Common.ExecuteShell, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.CenterControl;
 
 
 
@@ -74,8 +74,8 @@ begin
     if NOT AppData.RunningHome then
       begin
         // Desktop shortcuts
-        LightVcl.Common.Shell.CreateShortcut(AppData.AppName, TRUE);        // OnDesktop
-        LightVcl.Common.Shell.CreateShortcut(AppData.AppName, FALSE);       // OnStartMenu
+        LightCore.Win.Shell.CreateShortcut(AppData.AppName, TRUE);        // OnDesktop
+        LightCore.Win.Shell.CreateShortcut(AppData.AppName, FALSE);       // OnStartMenu
 
         // File association
         AssociateWith('.LightSaber', AppData.AppName, FALSE, TRUE);

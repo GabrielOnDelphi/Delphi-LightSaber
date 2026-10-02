@@ -20,7 +20,7 @@ procedure LateInitialization;
 IMPLEMENTATION
 
 USES
-  chHardID, LightVcl.Common.Shell, LightVcl.Common.ExecuteShell, LightCore.GuiSettings,
+  chHardID, LightCore.Win.Shell, LightVcl.Common.ExecuteShell, LightCore.GuiSettings,
   cpCertificate, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.CenterControl, LightVcl.Common.Translate, ciUpdater,
   FormMain, FormUniversalEula, FormSkinsDisk, FormSettings, FormSplashScreen, FormUpdaterNotifier;
 
@@ -88,8 +88,8 @@ begin
     if NOT AppData.RunningHome then
       begin
         // Desktop shortcuts
-        LightVcl.Common.Shell.CreateShortcut(AppData.AppName, TRUE);        // OnDesktop
-        LightVcl.Common.Shell.CreateShortcut(AppData.AppName, FALSE);       // OnStartMenu
+        LightCore.Win.Shell.CreateShortcut(AppData.AppName, TRUE);        // OnDesktop
+        LightCore.Win.Shell.CreateShortcut(AppData.AppName, FALSE);       // OnStartMenu
 
         // File association
         AssociateWith('.LightSaber', AppData.AppName, FALSE, TRUE);

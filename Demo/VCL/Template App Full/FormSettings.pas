@@ -85,7 +85,7 @@ TYPE
 IMPLEMENTATION {$R *.dfm}
 
 USES
-   LightCore.INIFile, LightCore.Debugger, LightVcl.Common.Debugger, LightVcl.Common.Translate, FormSkinsDisk, LightVcl.Common.Shell, FormMain;
+   LightCore.INIFile, LightCore.Debugger, LightVcl.Common.Debugger, LightVcl.Common.Translate, FormSkinsDisk, LightCore.Win.Shell, FormMain;
 
 
 
@@ -214,7 +214,7 @@ end;
 
 procedure TfrmSettings.btnDesktopShortcutClick(Sender: TObject);
 begin
-  LightVcl.Common.Shell.CreateShortcut(AppData.AppName, TRUE);
+  LightCore.Win.Shell.CreateShortcut(AppData.AppName, TRUE);
 end;
 
 

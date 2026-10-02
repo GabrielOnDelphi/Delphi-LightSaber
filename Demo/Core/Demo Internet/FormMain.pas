@@ -59,7 +59,7 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
    LightCore.Sound, LightCore, LightVcl.Common.System, LightCore.Win.System, LightCore.AppData, LightVcl.Visual.AppData,
-   LightCore.TextFile, LightVcl.Internet.Common, LightCore.Download, LightCore.IO,
+   LightCore.TextFile, LightVcl.Internet.Common, LightCore.Internet, LightCore.Download, LightCore.IO,
    LightCore.Win.Download;
 
 
