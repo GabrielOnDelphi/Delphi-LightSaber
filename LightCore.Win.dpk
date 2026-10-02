@@ -43,7 +43,8 @@ contains
   LightCore.Win.WinVersionApi in 'LightCore.Win.WinVersionApi.pas',
   LightCore.Win.Window in 'LightCore.Win.Window.pas',
   LightCore.Win.System in 'LightCore.Win.System.pas',
-  LightCore.Win.IO in 'LightCore.Win.IO.pas';
+  LightCore.Win.IO in 'LightCore.Win.IO.pas',
+  LightCore.Win.Shell in 'LightCore.Win.Shell.pas';
 
 end.
 
