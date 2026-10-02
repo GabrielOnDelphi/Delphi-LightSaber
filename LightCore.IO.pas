@@ -1,7 +1,7 @@
 ﻿UNIT LightCore.IO;
 
 {=============================================================================================================
-   2026.09.02
+   2026.10.01
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -173,6 +173,13 @@ CONST
  function  FileNameIsValid_     (CONST FileName: string): Boolean; deprecated 'Use System.IOUtils.TPath.HasValidFileNameChars instead.'
  function  PathNameIsValid      (CONST Path: string): Boolean;                                     { TPath.HasValidPathChars is bugged - Returns FALSE if the path contains invalid characters. Tells nothing about the existence of the folder }
  function  IsUnicode            (CONST Path: string): boolean;                                     { Returns True if this path seems to be UNICODE }
+ function  PathHasValidColon    (const Path: string): Boolean;
+
+
+{--------------------------------------------------------------------------------------------------
+   UNC
+--------------------------------------------------------------------------------------------------}
+ function  GetPosAfterExtendedPrefix(CONST Path: string): Integer;
 
 
 {--------------------------------------------------------------------------------------------------
@@ -388,6 +395,18 @@ CONST
  function  GetFileSize      (CONST FileName: string): Int64;
  function  GetFileSizeFormat(CONST FileName: string): string;                                     { Same as GetFileSize but returns the size in b/kb/mb/etc }
  function  GetFolderSize    (CONST Folder: string; CONST FileType: string= '*.*'; DigSubdirectories: Boolean= TRUE): Int64;
+
+
+{--------------------------------------------------------------------------------------------------
+   FILE ACCESS
+--------------------------------------------------------------------------------------------------}
+ {$IFDEF MSWINDOWS}
+ function  FileIsLockedR        (CONST FileName: string): Boolean;
+ function  FileIsLockedRW       (CONST FileName: string): Boolean;                    { Returns true if the file cannot be open for reading and writing } { old name: FileInUse }
+ function  CanCreateFile        (CONST FileName: string): Boolean;                    { Tests if FileName can be created (or overwritten if it already exists). Existing files are NOT modified by the test. }
+
+ function  CanWriteToFolder     (CONST Folder: string; const FileName: String = 'TempFile.Delete.Me'): Boolean;    { Tests folder write access by creating a temporary file. The temp file is auto-deleted on close. WARNING: If FileName already exists, it will be OVERWRITTEN and then DELETED! }
+ {$ENDIF}
 
 
 {--------------------------------------------------------------------------------------------------
@@ -644,6 +663,65 @@ begin
   {$IFDEF POSIX}
   Result:= (Length(UTF8Encode(FullPath)) < MaxLength);
   {$ENDIF POSIX}
+end;
+
+
+{--------------------------------------------------------------------------------------------------
+   Validates that a path doesn't contain illegal colon characters beyond the drive letter.
+   A colon is only valid as the second character of a drive specification (e.g., 'C:\').
+   Additional colons in the path (e.g., 'C:\folder:name') are invalid on Windows.
+
+   Handles extended path prefixes ('\\?\' and '\\?\UNC\') correctly.
+
+   Returns: True if path has valid colon usage, False if extra colons found.
+   Note: Copied from System.IOUtils.TPath.HasPathValidColon (which is private).
+--------------------------------------------------------------------------------------------------}
+function PathHasValidColon(const Path: string): Boolean;
+VAR
+  StartIdx: Integer;
+begin
+  Result:= True;
+  if Trim(Path) <> ''
+  then
+    begin
+      StartIdx:= GetPosAfterExtendedPrefix(Path);
+      if TPath.IsDriveRooted(Path)
+      then Inc(StartIdx, 2);  { Skip past drive letter and colon }
+
+      Result:= PosEx(TPath.VolumeSeparatorChar, Path, StartIdx) = 0;
+    end;
+end;
+
+
+{--------------------------------------------------------------------------------------------------
+   Determines the starting index of the actual path after any Windows extended path prefix.
+
+   Windows extended path prefixes:
+     '\\?\'     - Extended prefix for local paths (bypasses MAX_PATH limit)
+     '\\?\UNC\' - Extended prefix for UNC/network paths
+
+   Returns:
+     1 for paths without prefix         ('C:\Folder\file.txt' -> 1)
+     5 for extended local paths         ('\\?\C:\Folder\file.txt' -> 5, points to 'C:\...')
+     9 for extended UNC paths           ('\\?\UNC\Server\Share' -> 9, points to 'Server\...')
+
+   Used by PathHasValidColon to correctly validate paths with extended prefixes.
+--------------------------------------------------------------------------------------------------}
+function GetPosAfterExtendedPrefix(const Path: string): Integer;
+CONST
+  ExtendedPrefix: string = '\\?\';
+  ExtendedUNCPrefix: string = '\\?\UNC\';
+VAR
+  Prefix: TPathPrefixType;
+begin
+  Prefix:= TPath.GetExtendedPrefix(Path);
+  case Prefix of
+    TPathPrefixType.pptNoPrefix    : Result:= 1;
+    TPathPrefixType.pptExtended    : Result:= Length(ExtendedPrefix) + 1;
+    TPathPrefixType.pptExtendedUNC : Result:= Length(ExtendedUNCPrefix) + 1;
+  else
+    Result:= 1;
+  end;
 end;
 
 
@@ -2611,6 +2689,105 @@ end;
 
 
 
+
+
+
+
+
+
+
+{$IFDEF MSWINDOWS}
+{--------------------------------------------------------------------------------------------------
+   FILE LOCKING TESTS
+
+   These functions test whether a file can be opened with specific access modes.
+   They work by attempting to open the file with exclusive access (share mode = 0).
+--------------------------------------------------------------------------------------------------}
+
+{ Tests if a file is locked for read+write access.
+  Returns True if the file cannot be opened with GENERIC_READ + GENERIC_WRITE.
+  Returns False if: file doesn't exist, or file can be opened exclusively.
+  Use case: Check before attempting to modify a file that might be in use. }
+function FileIsLockedRW(CONST FileName: string): Boolean;
+VAR hFileRes: HFILE;
+begin
+ if NOT FileExists(FileName) then EXIT(FALSE);  { Non-existent files aren't "locked" }
+
+ hFileRes:= CreateFile(PChar(FileName), GENERIC_READ OR GENERIC_WRITE, 0, NIL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+ Result:= (hFileRes = INVALID_HANDLE_VALUE);
+ if NOT Result then CloseHandle(hFileRes);
+end;
+
+
+{ Tests if a file is locked for read access.
+  Returns True if the file cannot be opened with GENERIC_READ.
+  Raises Exception if the file doesn't exist.
+  Use case: Check if a file can be read (e.g., before backup operations). }
+function FileIsLockedR(CONST FileName: string): Boolean;
+VAR hFileRes: HFILE;
+begin
+ if NOT FileExists(FileName)
+ then raise Exception.Create('FileIsLockedR: File does not exist!' + CRLFw + FileName);
+
+ hFileRes:= CreateFile(PChar(FileName), GENERIC_READ, 0, NIL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+ Result:= (hFileRes = INVALID_HANDLE_VALUE);
+ if NOT Result then CloseHandle(hFileRes);
+end;
+
+
+{ Tests if FileName can be created, or overwritten if it already exists.
+  Existing files are probed by opening them for write access WITHOUT modifying them. }
+function CanCreateFile(const FileName: String): Boolean;
+VAR Handle: THandle;
+begin
+  if FileExists(FileName)
+  then
+    begin
+      { Do NOT probe an existing file via CanWriteToFolder: its CREATE_ALWAYS + FILE_FLAG_DELETE_ON_CLOSE would truncate the file and then delete it! }
+      Handle:= CreateFile(PChar(FileName), GENERIC_WRITE, 0, NIL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
+      Result:= Handle <> INVALID_HANDLE_VALUE;
+      if Result then CloseHandle(Handle);
+    end
+  else Result:= CanWriteToFolder(ExtractFilePath(FileName), ExtractFileName(FileName));
+end;
+
+
+
+{--------------------------------------------------------------------------------------------------
+   FOLDER WRITE ACCESS TESTS
+--------------------------------------------------------------------------------------------------}
+
+{--------------------------------------------------------------------------------------------------
+   Tests if the application can write files to a folder.
+
+   Works by attempting to create a temporary file with FILE_FLAG_DELETE_ON_CLOSE,
+   which is automatically deleted when the handle is closed.
+
+   Parameters:
+     Folder   - The folder path to test. Trailing backslash is added automatically.
+     FileName - Name for the temporary test file. Default is 'TempFile.Delete.Me'.
+                WARNING: If a file with this name exists, it will be OVERWRITTEN and then DELETED on close!
+
+   Returns: True if file creation succeeded (folder is writable), False otherwise.
+--------------------------------------------------------------------------------------------------}
+function CanWriteToFolder(CONST Folder: string; const FileName: String = 'TempFile.Delete.Me'): Boolean;
+VAR
+  Handle: THandle;
+begin
+  Handle:= Winapi.Windows.CreateFile(
+             PChar(Trail(Folder) + FileName),
+             GENERIC_READ or GENERIC_WRITE,
+             0,                                           { Exclusive access }
+             nil,
+             CREATE_ALWAYS,                               { Overwrite if exists }
+             FILE_ATTRIBUTE_TEMPORARY or FILE_FLAG_DELETE_ON_CLOSE,
+             0);
+
+  Result:= Handle <> INVALID_HANDLE_VALUE;
+  if Result
+  then Winapi.Windows.CloseHandle(Handle);
+end;
+{$ENDIF}
 
 
 
