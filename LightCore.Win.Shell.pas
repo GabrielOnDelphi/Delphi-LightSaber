@@ -1,0 +1,558 @@
+UNIT LightCore.Win.Shell;
+
+{$IFNDEF MSWINDOWS}
+  {$MESSAGE FATAL 'LightCore.Win.Shell is Windows-only. Its package LightCore.Win builds for Win32 and Win64 only.'}
+{$ENDIF}
+
+{=============================================================================================================
+   2026.09.30
+   www.GabrielMoraru.com
+
+--------------------------------------------------------------------------------------------------------------
+
+   Shell utilities:
+     * Associate a program with a file type (for example when the user double click a jpg file, your program (image viewer) will start and show that image.
+     * Add commands to the context menu (right click menu).
+     * Create desktop shortcuts (when your app starts for the first time it can create a shortcut on the desktop so user can easily find it)
+     * Restore the 'Show Desktop' icon of the Quick Launch bar
+     * Register an uninstaller in Windows Programs and Features (Add/Remove Programs)
+
+   See also:
+     LightCore.Shell.pas          - the taskbar, the program associated with a file type, the list of recent files of the taskbar button, IsApiFunctionAvailable
+     LightVcl.Common.Shell.pas    - the file properties dialog, the Start menu, INF files, ExtractIconFromFile
+
+   Windows-only unit, package LightCore.Win. Every routine works through the Windows registry, the COM shell link object (IShellLink) or a Windows shell folder, and the association routines notify Windows Explorer through SHChangeNotify. None of these exists off Windows, so a build for Android, macOS or iOS stops at the top of this unit with a fatal compiler message.
+=============================================================================================================}
+
+INTERFACE
+USES
+   Winapi.Windows, Winapi.ShlObj, Winapi.ActiveX,
+   System.Win.Registry, System.Win.ComObj, System.Classes, System.SysUtils;
+
+
+{==================================================================================================
+   FILE ASSOCIATION
+==================================================================================================}
+ function  AssociateWith       (CONST FileExtension, AsociationName: string; CONST ForAllUsers: Boolean= FALSE; {LogErrors: Boolean= FALSE; we always log} Notify: Boolean= TRUE): Boolean; { Associate a application with an extension. EXAMPLE: FileExtension:= '.txt' /  AsociationName:= 'Metapad'. A registry failure goes into AppDataCore's log. Nothing appears on screen }
+ function  AssociationReset    (CONST FileExtension: string; CONST ForAllUsers: Boolean): Boolean;
+ procedure AssociateSelf_ShellMenu;                                                                 { A registry failure goes into AppDataCore's log. Nothing appears on screen }
+
+
+{--------------------------------------------------------------------------------------------------
+   CONTEXT MENU
+-------------------------------------------------------------------------------------------------}
+ function  AddContextMenu   (CONST CommandName, Extensions: string): Boolean;                       overload;
+ procedure AddContextMenu   (CONST GUID: TGUID; CONST ShellExtDll, FileExt, UtilityName: string);   overload;
+ procedure RemoveContextMenu(CONST GUID: TGUID; CONST FileExt, UtilityName: string);
+
+
+{--------------------------------------------------------------------------------------------------
+   DESKTOP: SHORTCUTS
+--------------------------------------------------------------------------------------------------}
+ procedure CreateShortcut          (CONST ShortCutName: string; OnDesktop: Boolean);
+ procedure CreateShortcutEx        (CONST ShortCutName, ShortcutTo: string; OnDesktop: Boolean);    { Full parameters }
+ procedure CreateShortcut_SendTo   (CONST ShortcutName : string);                                   { Add your application in the "Send To" menu and processing the file      http://delphi.about.com/od/adptips2006/qt/app2sendtomenu.htm }
+ function  DeleteDesktopShortcut   (CONST ShortcutName: string): Boolean;
+ function  DeleteStartMenuShortcut (CONST ShortcutName: string): Boolean;
+ function  ExtractPathFromLnkFile  (CONST LnkFile: WideString): string;
+
+
+{--------------------------------------------------------------------------------------------------
+   DESKTOP: SCF
+--------------------------------------------------------------------------------------------------}
+ function  RestoreOriginalSCF_Association: Boolean;                                                 { Make 'Show Desktop' icon in Quick Launch to work again (to show desktop) }
+ function  RemoveShowDesktopFile: Boolean;
+ procedure RestoreShowDesktopFile;
+
+ procedure AddUninstaller(CONST UninstallerExePath, ProductName: string);                           { Uninstaller= Full path to the EXE file that represents the uninstaller; ProductName= the uninstaller will be listed with this name. Keep it simple without special chars like '\'. Example: 'BioniX Wallpaper' }
+
+
+
+IMPLEMENTATION
+USES
+   LightCore.Win.IO, LightCore.IO, LightCore.TextFile, LightCore.AppData, LightCore.Win.Registry, LightCore;
+
+
+
+{--------------------------------------------------------------------------------------------------
+                              SHORTCUTS (LNK)
+--------------------------------------------------------------------------------------------------}
+{ Creates a Windows shortcut (.lnk) file.
+  ShortcutName: The name of the shortcut (without .lnk extension).
+  ShortcutTo: The target path that the shortcut will point to.
+  OnDesktop: TRUE places the shortcut on the Desktop, FALSE places it in the Start Menu.
+  Note: CoInitialize must be called before this function. Application.Initialize does this automatically. }
+procedure CreateShortcutEx(CONST ShortcutName, ShortcutTo: string; OnDesktop: Boolean);
+var
+  MyObject  : IUnknown;
+  MySLink   : IShellLink;
+  MyPFile   : IPersistFile;
+  Directory : String;
+  WFileName : WideString;
+begin
+ Assert(ShortcutName <> '', 'ShortcutName cannot be empty!');
+ Assert(ShortcutTo <> '', 'ShortcutTo cannot be empty!');
+
+ MyObject:= CreateComObject(CLSID_ShellLink);
+ MySLink := MyObject as IShellLink;
+ MyPFile := MyObject as IPersistFile;
+
+ MySLink.SetArguments('');                                                                          { Example argument: 'C:\AUTOEXEC.BAT' }
+ MySLink.SetPath(PChar(ShortcutTo));
+ MySLink.SetWorkingDirectory(PChar(AppDataCore.AppFolder));                                        { Using AppFolder avoids issues when running from read-only media }
+
+ if OnDesktop
+ then Directory:= GetDesktopFolder
+ else
+  begin
+   Directory:= GetStartMenuFolder;
+   CreateDir(Directory);                                                                           {shortcut on start menu}
+  end;
+
+ { CREATE FILE }
+ WFileName := Directory+ ShortCutName+ '.lnk';                                                     {numele shortcut-ului}
+ MyPFile.Save(PWChar(WFileName), False);
+end;
+
+
+procedure CreateShortcut(CONST ShortCutName: string; OnDesktop: Boolean);                          { OnDesktop:   1=Desktop  0=StartMenu }
+begin
+ CreateShortcutEx(ShortCutName, ParamStr(0), OnDesktop);
+end;
+
+
+{ Deletes a desktop shortcut. Provide only the name (without .lnk extension). }
+function DeleteDesktopShortcut(CONST ShortcutName: string): Boolean;
+begin
+ Assert(ShortcutName <> '', 'ShortcutName cannot be empty!');
+ Result:= DeleteFile(GetDesktopFolder+ ShortCutName+ '.lnk');
+ {TODO: send a refresh signal to the desktop otherwise the icon is still drawn there }
+end;
+
+
+{ Deletes a Start Menu shortcut. Provide only the name (without .lnk extension). }
+function DeleteStartMenuShortcut(CONST ShortcutName: string): Boolean;
+VAR
+  Directory: String;
+  MyReg: TRegIniFile;
+begin
+  Assert(ShortcutName <> '', 'ShortcutName cannot be empty!');
+
+  MyReg:= TRegIniFile.Create('Software\MicroSoft\Windows\CurrentVersion\Explorer');
+  TRY
+    Directory:= MyReg.ReadString('Shell Folders', 'Start Menu', '');
+    Result:= DeleteFile(Directory + '\' + ShortCutName + '.lnk');
+  FINALLY
+    FreeAndNil(MyReg);
+  END;
+end;
+
+
+
+{--------------------------------------------------------------------------------------------------
+  Add your application in the "Send To" menu of a file and load that file.
+
+  Usage:
+    1. On the FirstRun, call CreateShortcutIn(CSIDL_SENDTO, App_Name2) to add self to the 'SendTo' menu
+    2. In TForm1.OnCreate do this:  if ParamCount > 0 then MessageInfo(ParamStr(1))
+
+  From:
+    http://delphi.about.com/od/adptips2006/qt/app2sendtomenu.htm
+--------------------------------------------------------------------------------------------------}
+procedure CreateShortcut_SendTo(CONST ShortcutName: string);
+CONST
+   SentToIDL= CSIDL_SENDTO;
+VAR
+   IObject : IUnknown;
+   ISLink  : IShellLink;
+   IPFile  : IPersistFile;
+   PIDL    : PItemIDList;
+   InFolder  : array[0..MAX_PATH] of Char;
+   TargetName: String;
+   LinkName  : WideString;
+begin
+ Assert(ShortcutName <> '', 'ShortcutName cannot be empty!');
+
+ TargetName:= ParamStr(0);
+
+ IObject:= CreateComObject(CLSID_ShellLink);
+ ISLink  := IObject as IShellLink;
+ IPFile  := IObject as IPersistFile;
+
+ ISLink.SetPath(PChar(TargetName));
+ ISLink.SetWorkingDirectory(PChar(ExtractFilePath(TargetName)));
+
+ { Get the location of the "special folder".
+   The returned PIDL is allocated by the shell and must be released with CoTaskMemFree, otherwise it leaks. }
+ OleCheck(SHGetSpecialFolderLocation(0, SentToIDL, PIDL));
+ TRY
+   if NOT SHGetPathFromIDList(PIDL, InFolder)
+   then raise Exception.Create('CreateShortcut_SendTo: Cannot resolve the SendTo folder path!');
+ FINALLY
+   CoTaskMemFree(PIDL);
+ END;
+
+ LinkName := Format('%s\%s.lnk',[InFolder, shortcutName]) ;
+
+ IPFile.Save(PWChar(LinkName), False) ;
+end;
+
+
+
+{ Extracts the target path from a Windows shortcut (.lnk) file.
+  Returns empty string if the file cannot be loaded or path cannot be extracted. }
+function ExtractPathFromLnkFile(CONST LnkFile: WideString): String;
+VAR
+  ShellLink: IShellLink;
+  FindData: TWin32FindData;
+  Path: array[0..MAX_PATH] of Char;
+begin
+ Result:= '';
+ if LnkFile = '' then EXIT;
+
+ ShellLink:= CreateComObject(CLSID_ShellLink) as IShellLink;
+ if (ShellLink as IPersistFile).Load(PWideChar(LnkFile), STGM_READ) = 0
+ then
+   if ShellLink.GetPath(Path, MAX_PATH, FindData, SLGP_SHORTPATH) = 0
+   then Result:= Path;
+end;
+
+
+
+ 
+
+{-------------------------------------------------------------------------------------------------------------
+   ASSOCIATE APP WITH A FILE TYPE
+
+   ALSO SEE THIS:
+       ms-help://embarcadero.rs_xe7/codeexamples/JumpListTest_(Delphi).html
+-------------------------------------------------------------------------------------------------------------}
+
+{ Let Windows Explorer know we added our file type }
+procedure AssociationChanged;
+begin
+  SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nil, nil);
+end;
+
+
+ 
+{ If Notify= true then notify Windows
+  Use dot in file extension. Ex: '.txt' }
+function AssociateWith;
+VAR
+   FName: string;
+   RootKey: HKEY;
+CONST
+   Path= '\Software\Classes\';
+begin
+ Result:= FALSE;
+
+ Assert(FileExtension.Length > 0, 'FileExtension is empty!');
+ Assert(FileExtension[1] = '.', 'FileExtension should start with dot!');
+ Assert(Pos('*', FileExtension) = 0, 'Invalid file extension in AssociateWith!');
+
+ { Both roots are combined with Path='\Software\Classes\' below.
+   HKLM\Software\Classes  = per-machine associations (visible in the HKCR merged view).
+   HKCU\Software\Classes  = per-user associations.
+   Do NOT use HKEY_CLASSES_ROOT here: HKCR is itself the merged view of the two keys above, so HKCR + '\Software\Classes\.ext' would physically land in HKLM\Software\Classes\Software\Classes\.ext - a bogus nested path the shell never reads. }
+ if ForAllUsers                      { On Windows 7 and up, you need admin rights to register a file type for all the machine users }
+ then RootKey:= HKEY_LOCAL_MACHINE
+ else RootKey:= HKEY_CURRENT_USER;
+
+ FName:= System.Copy(FileExtension+ '_file', 2, MaxInt);
+
+ TRY
+   Result:=
+     RegWriteString(RootKey, Path+ FileExtension, '', FName, TRUE) AND
+     RegWriteString(RootKey, Path+ FName, '', AsociationName,  TRUE) AND
+     RegWriteString(RootKey, Path+ FName+'\shell', '', 'open', TRUE) AND
+     RegWriteString(RootKey, Path+ FName+'\shell\open\command', '', ParamStr(0)+ ' "%L"', TRUE) AND  { Using %L instead of %1 gives the long path format instead of 8.3/DOS format }
+     RegWriteString(RootKey, Path+ FName+'\DefaultIcon'       , '', ParamStr(0)+ ',0',    TRUE);
+
+   if NOT Result 
+   AND (AppDataCore <> NIL)
+   then AppDataCore.LogWarn('AssociateWith: cannot associate application with '+ FileExtension);
+ EXCEPT
+   on E: ERegistryException DO
+     begin
+       if (AppDataCore <> NIL)
+       then AppDataCore.LogWarn('AssociateWith: cannot associate application with '+ FileExtension+ '. '+ E.Message);
+     end;
+   else RAISE;
+ END;
+
+ if Result AND Notify
+ then AssociationChanged;
+end;
+
+
+{ Note: use dot in the file extension: '.txt'  }
+function AssociationReset(CONST FileExtension: string; CONST ForAllUsers: Boolean): Boolean;
+begin
+ Assert(FileExtension.Length > 0, 'FileExtension is empty!');
+ Assert(FileExtension[1] = '.', 'FileExtension should start with dot!');
+
+ if ForAllUsers
+ then Result:= RegDeleteKey(HKEY_CLASSES_ROOT, FileExtension)
+ else Result:= RegDeleteKey(HKEY_CURRENT_USER, '\Software\Classes\'+ FileExtension);
+
+ if Result
+ then AssociationChanged;
+end;
+
+
+{ Add current application in the 'Open with' section of the 'File Properties' popup menu that appears when we right click a file in Explorer }
+procedure AssociateSelf_ShellMenu;
+begin
+ TRY
+  VAR Reg:= TRegistry.Create;
+  TRY
+    Reg.RootKey:= HKEY_CLASSES_ROOT;
+    Reg.OpenKey('*\Shell\Open with '+AppDataCore.AppName +'\Command', TRUE);
+    Reg.WriteString('', Lowercase(ParamStr(0)) + ' %1');
+    Reg.CloseKey;
+  FINALLY
+    FreeAndNil(Reg);
+  end;
+ EXCEPT
+   on E: ERegistryException DO
+     begin
+       if (AppDataCore <> NIL)
+       then AppDataCore.LogError('AssociateSelf_ShellMenu: cannot associate application. '+ E.Message);
+     end;
+   else RAISE;
+ END;
+end;
+
+
+{ Add current application in the 'properties' menu of this filetype.
+  Example: AddContextMenu2('Open with '+ AppName, '.nfo') }
+function AddContextMenu(CONST CommandName, Extensions: string): Boolean;
+VAR
+  extns: TStringList;
+  Reg: TRegistry;
+  name: string;
+  command: string;
+begin
+  Result:= FALSE;
+  Reg   := TRegistry.Create;
+  extns := TStringList.Create;
+  TRY
+    Reg.RootKey := HKEY_CLASSES_ROOT;
+    extns.CommaText := Extensions;
+    command := '"' + ParamStr(0) + '" "%1"';                                   { Build the command string we want to store }
+
+    TRY
+      // Loop over extensions we can handle
+      for var Extension in extns do
+        // See if this extension is already known in HKCR
+        if Reg.OpenKeyReadOnly ('\' + Extension) then
+          begin
+            name := Reg.ReadString ('');   // Get the name of this type
+            if name <> '' then
+              begin
+                // If not blank, open this type's shell key, but don't create it
+                if Reg.OpenKey ('\' + name + '\shell', False)
+                then Reg.Access := KEY_READ or KEY_WRITE;                              { Try to create a new key called command_name }
+
+                if Reg.OpenKey (CommandName, TRUE) then
+                 begin
+                   Reg.WriteString ('', '&' + CommandName);                            { The default value will be displayed in the context menu }
+                   Reg.Access := KEY_READ or KEY_WRITE;
+                   if Reg.OpenKey ('command', TRUE) then
+                    begin
+                      Reg.WriteString ('', command);                                   { Write the command string as the default value }
+                      Result:= TRUE;
+                    end;
+                 end;
+              end;
+          end;
+
+      EXCEPT
+        on E: ERegistryException DO Result:= FALSE;
+        else RAISE;
+      END;
+  FINALLY
+    FreeAndNil(extns);
+    FreeAndNil(Reg);
+  END;
+end;
+
+
+{--------------------------------------------------------------------------------------------------
+   SHELL EXTENSION
+--------------------------------------------------------------------------------------------------}
+{ Registers a shell extension DLL for the specified file type in the Windows context menu.
+  GUID: The COM class GUID for the shell extension.
+  ShellExtDll: Full path to the shell extension DLL.
+  FileExt: The file extension to associate with (e.g., '.txt') or '*' for all files.
+  UtilityName: Display name for the context menu handler. }
+procedure AddContextMenu(CONST GUID: TGUID; CONST ShellExtDll, FileExt, UtilityName: string);
+VAR
+    Key: string;
+    Rg: TRegistry;
+    BufGUID: array [0..255] of WideChar;
+    FileType: string;
+begin
+ Rg:= TRegistry.Create;
+ TRY
+   Rg.RootKey:= HKEY_CLASSES_ROOT;
+   StringFromGUID2(GUID, BufGUID, SizeOf(BufGUID));
+
+   if NOT Rg.OpenKey(FileExt, False) then EXIT;
+
+   if FileExt <> '*' then
+   begin
+     FileType:= Rg.ReadString('');
+     Rg.CloseKey;
+     Rg.OpenKey(FileType, False);
+   end;
+
+   Key:= Format('shellex\ContextMenuHandlers\%s', [UtilityName]);
+   Rg.OpenKey(Key, TRUE);
+   Rg.WriteString('', BufGUID);
+   Rg.CloseKey;
+
+   Key:= Format('CLSID\%s', [BufGUID]);
+   Rg.OpenKey(Key, True);
+   Rg.WriteString('', UtilityName);
+   Rg.OpenKey('InprocServer32', True);
+   Rg.WriteString('', ShellExtDll);
+   Rg.WriteString('ThreadingModel', 'Apartment');
+   Rg.CloseKey;
+ FINALLY
+   FreeAndNil(Rg);
+ END;
+end;
+
+
+{ Remove shell extension from the context menu }
+procedure RemoveContextMenu(CONST GUID: TGUID; CONST FileExt, UtilityName: string);
+VAR
+  Key: string;
+  BufGUID: array [0..255] of WideChar;
+  FileType: string;
+  Reg: TRegistry;
+begin
+  Reg:= TRegistry.Create(KEY_ALL_ACCESS);
+  TRY
+    Reg.RootKey:= HKEY_CLASSES_ROOT;
+    StringFromGUID2(GUID, BufGUID, SizeOf(BufGUID));
+    FileType:= FileExt;
+
+    if FileType <> '*' then
+      begin
+        if NOT Reg.OpenKey(FileExt, FALSE) then EXIT;
+        FileType:= Reg.ReadString('');
+        Reg.CloseKey;
+      end;
+
+    Key:= Format('%s\shellex\ContextMenuHandlers\%s', [FileType, UtilityName]);
+    Reg.DeleteKey(Key);
+    Key:= Format('CLSID\%s', [BufGUID]);
+    Reg.DeleteKey(Key);
+  FINALLY
+    FreeAndNil(Reg);
+  END;
+end;
+
+
+(*
+procedure DoContextMenuVerb(AFolder: TShellFolder; Verb: PChar);       { executes a command }
+var
+  ICI: TCMInvokeCommandInfo;
+  CM: IContextMenu;
+  PIDL: PItemIDList;
+begin
+  if AFolder = nil then Exit;
+  FillChar(ICI, SizeOf(ICI), #0);
+  with ICI do begin
+    cbSize := SizeOf(ICI);
+    fMask := CMIC_MASK_ASYNCOK;
+    hWND := 0;
+    lpVerb := Verb;
+    nShow := SW_SHOWNORMAL;
+    end; {with ICI..}
+  PIDL := AFolder.RelativeID;
+  AFolder.ParentShellFolder.GetUIObjectOf(0, 1, PIDL, IID_IContextMenu, nil, CM);
+  CM.InvokeCommand(ICI);
+end; *)
+
+
+{--------------------------------------------------------------------------------------------------
+   SCF 'SHOW DESKTOP' icon
+--------------------------------------------------------------------------------------------------}
+{ Restores the .scf file association to make 'Show Desktop' icon work in Quick Launch.
+  Registry path: HKEY_CLASSES_ROOT\.scf = "SHCmdFile" }
+function RestoreOriginalSCF_Association: Boolean;
+begin
+ Result:= RegWriteString(HKEY_CLASSES_ROOT, '.scf', '', 'SHCmdFile', TRUE);
+ if Result
+ then AssociationChanged;
+end;
+
+
+function RemoveShowDesktopFile: Boolean;
+VAR ShowDesktopFilePath: string;
+begin
+ { GetSpecialFolder returns the path WITHOUT a trailing backslash (Trail is applied only when ForceFolder=TRUE) - without Trail the path would read '...\RoamingMicrosoft\...' }
+ ShowDesktopFilePath:=
+      Trail(GetSpecialFolder(CSIDL_APPDATA))
+      +'Microsoft\Internet Explorer\Quick Launch\Show Desktop.scf';
+ Result:= FALSE;
+ if FileExists(ShowDesktopFilePath)
+ then Result:= DeleteFile(ShowDesktopFilePath);
+end;
+
+
+procedure RestoreShowDesktopFile;
+VAR
+   ShowDesktopFilePath: string;
+CONST
+   ShowDesktopContent=
+       '[Shell]'                + CRLFw+
+       'Command=2'              + CRLFw+
+       'IconFile=explorer.exe,3'+ CRLFw+
+       '[Taskbar]'              + CRLFw+
+       'Command=ToggleDesktop';
+begin
+ { Trail needed: GetSpecialFolder returns the path WITHOUT a trailing backslash }
+ ShowDesktopFilePath:= Trail(GetSpecialFolder(CSIDL_APPDATA))+'Microsoft\Internet Explorer\Quick Launch\Show Desktop.scf';
+ StringToFileA(ShowDesktopFilePath, ShowDesktopContent, woOverwrite);
+end;
+
+
+
+
+{ MINIMIZE ALL
+  Does not work:
+
+1
+procedure ShowDesktop(CONST YesNo : Boolean);
+  setwindowlong ptr(getwindow(self.Handle,GW_OWNER),GWL_STYLE,0);
+  setwindowlong ptr(getwindow(self.Handle,GW_OWNER),GWL_EXSTYLE,0);
+
+2
+procedure ShowDesktop(CONST YesNo : Boolean);
+VAR h : THandle;
+  h := FindWindow('ProgMan', nil) ;
+  h := GetWindow(h, GW_CHILD) ;
+  ShowWindow(h, SW_SHOW);
+  ShowWindow(h, SW_HIDE);                                                      }
+
+
+{ Registers an uninstaller in Windows Programs and Features (Add/Remove Programs).
+  UninstallerExePath: Full path to the uninstaller EXE file.
+  ProductName: Display name in the uninstall list. Avoid special chars like '\'. }
+procedure AddUninstaller(CONST UninstallerExePath, ProductName: string);
+begin
+ Assert(UninstallerExePath <> '', 'UninstallerExePath cannot be empty!');
+ Assert(ProductName <> '', 'ProductName cannot be empty!');
+
+ RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ ProductName, 'DisplayName', ProductName);
+ RegWriteString(HKEY_CURRENT_USER, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\'+ ProductName, 'UninstallString', UninstallerExePath);
+end;
+
+
+
+end.
