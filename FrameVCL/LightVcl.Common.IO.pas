@@ -1,7 +1,7 @@
 ﻿UNIT LightVcl.Common.IO;
 
 {=============================================================================================================
-   2026.09.30
+   2026.10.01
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Extension for LightCore.IO.pas
@@ -9,7 +9,7 @@
    Shows error messages (dialog boxes) when the I/O operation failed.
 
    See also:
-     LightCore.Win.IO.pas   - the Windows special folders: Windows, System, Program Files, Desktop, Start Menu, and any folder named by a CSIDL constant
+     LightCore.Win.IO.pas   - the Windows special folders: Windows, System, Program Files, Desktop, Start Menu, and any folder named by a CSIDL constant; the drives (type, volume label, free space) and NTFS compression
 ==================================================================================================}
 
 INTERFACE
@@ -17,7 +17,7 @@ INTERFACE
 
 USES
   Winapi.Windows, Winapi.ShellAPI, Winapi.ShlObj,
-  System.StrUtils, System.IOUtils, System.SysUtils,
+  System.IOUtils, System.SysUtils,
   Vcl.Consts, Vcl.Controls, Vcl.Dialogs, Vcl.Forms, Vcl.FileCtrl;
 
 
@@ -38,11 +38,6 @@ USES
  function  GetMyDocumentsAPI     : string; deprecated 'Use GetMyDocuments instead';
  function  GetMyPicturesAPI      : string; deprecated 'Use GetMyPictures  instead';
 
-
-{--------------------------------------------------------------------------------------------------
-   UNC
---------------------------------------------------------------------------------------------------}
- function  GetPosAfterExtendedPrefix(CONST Path: string): Integer;
 
 {--------------------------------------------------------------------------------------------------
    OPEN/SAVE dialogs
@@ -69,8 +64,6 @@ USES
  function FileAge               (CONST FileName: string): TDateTime;
  function FileTimeToDateTimeStr (FTime: TFileTime; CONST DFormat, TFormat: string): string;
 
- procedure SetCompressionAtr    (CONST FileName: string; const CompressionFormat: byte= 1);
-
 
 {--------------------------------------------------------------------------------------------------
    FILE SIZE
@@ -81,32 +74,7 @@ USES
 {--------------------------------------------------------------------------------------------------
    FILE ACCESS
 --------------------------------------------------------------------------------------------------}
- function  FileIsLockedR        (CONST FileName: string): Boolean;
- function  FileIsLockedRW       (CONST FileName: string): Boolean;                    { Returns true if the file cannot be open for reading and writing } { old name: FileInUse }
- function  CanCreateFile        (CONST FileName: string): Boolean;                    { Tests if FileName can be created (or overwritten if it already exists). Existing files are NOT modified by the test. }
-
- function  CanWriteToFolder     (CONST Folder: string; const FileName: String = 'TempFile.Delete.Me'): Boolean;    { Tests folder write access by creating a temporary file. The temp file is auto-deleted on close. WARNING: If FileName already exists, it will be OVERWRITTEN and then DELETED! }
  function  CanWriteToFolderMsg  (CONST Folder: string): Boolean;
-
-
-{--------------------------------------------------------------------------------------------------
-   DRIVES
---------------------------------------------------------------------------------------------------}
- function  GetDriveType       (CONST Path: string): Integer;
- function  GetDriveTypeS      (CONST Path: string): string;                           { Returns drive type asstring }
- function  GetVolumeLabel     (CONST Drive: Char): string;                            { Returns volume label of a disk }
-
- { Validity }
- function  DiskInDrive        (CONST Path: string): Boolean; overload;                { From www.gnomehome.demon.nl/uddf/pages/disk.htm#disk0 . Also see http://community.borland.com/article/0,1410,15921,00.html }
- function  DiskInDrive        (CONST DriveNo: Byte): Boolean; overload;               { THIS IS VERY SLOW IF THE DISK IS NOT IN DRIVE! The GUI will freeze until the drive responds. }
- function  ValidDrive         (CONST Drive: Char): Boolean;                           { Peter Below (TeamB). http://www.codinggroups.com/borland-public-delphi-rtl-win32/7618-windows-no-disk-error.html }
-
- function  PathHasValidColon    (const Path: string): Boolean;
-
- { Free space }
- function  DriveFreeSpace     (CONST Drive: Char): Int64;
- function  DriveFreeSpaceS    (CONST Drive: Char): string;
- function  DriveFreeSpaceF    (CONST FullPath: string): Int64;                        { Same as DriveFreeSpace but this accepts a full filename/directory path. It will automatically extract the drive }
 
 
 
@@ -115,33 +83,6 @@ IMPLEMENTATION
 USES
   Winapi.ActiveX,
   LightCore, LightCore.Win.IO, LightCore.IO, LightVcl.Common.Dialogs, LightCore.WinVersion;
-
-
-{--------------------------------------------------------------------------------------------------
-   Validates that a path doesn't contain illegal colon characters beyond the drive letter.
-   A colon is only valid as the second character of a drive specification (e.g., 'C:\').
-   Additional colons in the path (e.g., 'C:\folder:name') are invalid on Windows.
-
-   Handles extended path prefixes ('\\?\' and '\\?\UNC\') correctly.
-
-   Returns: True if path has valid colon usage, False if extra colons found.
-   Note: Copied from System.IOUtils.TPath.HasPathValidColon (which is private).
---------------------------------------------------------------------------------------------------}
-function PathHasValidColon(const Path: string): Boolean;
-VAR
-  StartIdx: Integer;
-begin
-  Result:= True;
-  if Trim(Path) <> ''
-  then
-    begin
-      StartIdx:= GetPosAfterExtendedPrefix(Path);
-      if TPath.IsDriveRooted(Path)
-      then Inc(StartIdx, 2);  { Skip past drive letter and colon }
-
-      Result:= PosEx(TPath.VolumeSeparatorChar, Path, StartIdx) = 0;
-    end;
-end;
 
 
 function DirectoryExistMsg(CONST Path: string): Boolean;                                           { Directory Exist }
@@ -462,52 +403,6 @@ end;
 
 
 
-{--------------------------------------------------------------------------------------------------
-   Sets the NTFS compression attribute on a file or folder.
-
-   Parameters:
-     FileName - Full path to the file or folder. Must exist.
-     CompressionFormat - Compression level:
-       0 = COMPRESSION_FORMAT_NONE (disable compression)
-       1 = COMPRESSION_FORMAT_DEFAULT (enable with default algorithm)
-       2 = COMPRESSION_FORMAT_LZNT1 (enable with LZNT1 algorithm)
-
-   Raises: Exception if file/folder doesn't exist, or EOSError if operation fails.
-
-   Note: Only works on NTFS volumes. Has no effect on FAT/FAT32/exFAT.
---------------------------------------------------------------------------------------------------}
-procedure SetCompressionAtr(const FileName: string; const CompressionFormat: byte = 1);
-CONST
-  FSCTL_SET_COMPRESSION = $9C040;
-VAR
-   Handle: THandle;
-   Flags: DWORD;
-   BytesReturned: DWORD;
-begin
-  if FileName = ''
-  then raise Exception.Create('SetCompressionAtr: FileName parameter cannot be empty');
-
-  if DirectoryExists(FileName)
-  then Flags:= FILE_FLAG_BACKUP_SEMANTICS  { Required to open directories }
-  else
-    if FileExists(FileName)
-    then Flags:= 0
-    else raise Exception.CreateFmt('SetCompressionAtr: ''%s'' does not exist', [FileName]);
-
-  Handle:= CreateFile(PChar(FileName), GENERIC_READ or GENERIC_WRITE, 0, nil, OPEN_EXISTING, Flags, 0);
-  if Handle = INVALID_HANDLE_VALUE
-  then RaiseLastOSError;
-
-  TRY
-    if not DeviceIoControl(Handle, FSCTL_SET_COMPRESSION, @CompressionFormat, SizeOf(CompressionFormat), nil, 0, BytesReturned, nil)
-    then RaiseLastOSError;
-  FINALLY
-    CloseHandle(Handle);
-  END;
-end;
-
-
-
 
 
 
@@ -754,62 +649,6 @@ end;
 
 
 {--------------------------------------------------------------------------------------------------
-   FILE LOCKING TESTS
-
-   These functions test whether a file can be opened with specific access modes.
-   They work by attempting to open the file with exclusive access (share mode = 0).
---------------------------------------------------------------------------------------------------}
-
-{ Tests if a file is locked for read+write access.
-  Returns True if the file cannot be opened with GENERIC_READ + GENERIC_WRITE.
-  Returns False if: file doesn't exist, or file can be opened exclusively.
-  Use case: Check before attempting to modify a file that might be in use. }
-function FileIsLockedRW(CONST FileName: string): Boolean;
-VAR hFileRes: HFILE;
-begin
- if NOT FileExists(FileName) then EXIT(FALSE);  { Non-existent files aren't "locked" }
-
- hFileRes:= CreateFile(PChar(FileName), GENERIC_READ OR GENERIC_WRITE, 0, NIL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
- Result:= (hFileRes = INVALID_HANDLE_VALUE);
- if NOT Result then CloseHandle(hFileRes);
-end;
-
-
-{ Tests if a file is locked for read access.
-  Returns True if the file cannot be opened with GENERIC_READ.
-  Raises Exception if the file doesn't exist.
-  Use case: Check if a file can be read (e.g., before backup operations). }
-function FileIsLockedR(CONST FileName: string): Boolean;
-VAR hFileRes: HFILE;
-begin
- if NOT FileExists(FileName)
- then raise Exception.Create('FileIsLockedR: File does not exist!' + CRLFw + FileName);
-
- hFileRes:= CreateFile(PChar(FileName), GENERIC_READ, 0, NIL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
- Result:= (hFileRes = INVALID_HANDLE_VALUE);
- if NOT Result then CloseHandle(hFileRes);
-end;
-
-
-{ Tests if FileName can be created, or overwritten if it already exists.
-  Existing files are probed by opening them for write access WITHOUT modifying them. }
-function CanCreateFile(const FileName: String): Boolean;
-VAR Handle: THandle;
-begin
-  if FileExists(FileName)
-  then
-    begin
-      { Do NOT probe an existing file via CanWriteToFolder: its CREATE_ALWAYS + FILE_FLAG_DELETE_ON_CLOSE would truncate the file and then delete it! }
-      Handle:= CreateFile(PChar(FileName), GENERIC_WRITE, 0, NIL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);
-      Result:= Handle <> INVALID_HANDLE_VALUE;
-      if Result then CloseHandle(Handle);
-    end
-  else Result:= CanWriteToFolder(ExtractFilePath(FileName), ExtractFileName(FileName));
-end;
-
-
-
-{--------------------------------------------------------------------------------------------------
    FOLDER WRITE ACCESS TESTS
 --------------------------------------------------------------------------------------------------}
 
@@ -837,38 +676,6 @@ begin
  Result:= CanWriteToFolder(Folder);
  if NOT Result
  then MessageWarning(ShowMsg_CannotWriteTo(Folder));
-end;
-
-
-{--------------------------------------------------------------------------------------------------
-   Tests if the application can write files to a folder.
-
-   Works by attempting to create a temporary file with FILE_FLAG_DELETE_ON_CLOSE,
-   which is automatically deleted when the handle is closed.
-
-   Parameters:
-     Folder   - The folder path to test. Trailing backslash is added automatically.
-     FileName - Name for the temporary test file. Default is 'TempFile.Delete.Me'.
-                WARNING: If a file with this name exists, it will be OVERWRITTEN and then DELETED on close!
-
-   Returns: True if file creation succeeded (folder is writable), False otherwise.
---------------------------------------------------------------------------------------------------}
-function CanWriteToFolder(CONST Folder: string; const FileName: String = 'TempFile.Delete.Me'): Boolean;
-VAR
-  Handle: THandle;
-begin
-  Handle:= Winapi.Windows.CreateFile(
-             PChar(Trail(Folder) + FileName),
-             GENERIC_READ or GENERIC_WRITE,
-             0,                                           { Exclusive access }
-             nil,
-             CREATE_ALWAYS,                               { Overwrite if exists }
-             FILE_ATTRIBUTE_TEMPORARY or FILE_FLAG_DELETE_ON_CLOSE,
-             0);
-
-  Result:= Handle <> INVALID_HANDLE_VALUE;
-  if Result
-  then Winapi.Windows.CloseHandle(Handle);
 end;
 
 
@@ -925,203 +732,6 @@ begin
  then raise Exception.Create('FileMoveToDir: Cannot create destination folder: ' + To_DestFolder);
 
  Result:= MoveFileEx(PChar(From_FullPath), PChar(Trail(To_DestFolder) + ExtractFileName(From_FullPath)), Flags);
-end;
-
-
-
-
-
-{--------------------------------------------------------------------------------------------------
-   DRIVE INFORMATION
-   Functions for querying drive types, validity, and free space.
---------------------------------------------------------------------------------------------------}
-
-{ Returns the drive type constant for a given path.
-  Path can be a drive letter with backslash ('C:\') or UNC path ('\\server\share\').
-  Returns: DRIVE_UNKNOWN, DRIVE_NO_ROOT_DIR, DRIVE_REMOVABLE, DRIVE_FIXED,
-           DRIVE_REMOTE, DRIVE_CDROM, or DRIVE_RAMDISK. }
-function GetDriveType(CONST Path: string): Integer;
-begin
- Result:= Winapi.Windows.GetDriveType(PChar(Trail(Path)));
-end;
-
-
-{ Returns a human-readable description of the drive type. }
-function GetDriveTypeS(CONST Path: string): string;
-begin
- case GetDriveType(Path) of
-   DRIVE_UNKNOWN    : Result:= 'The drive type cannot be determined.';
-   DRIVE_NO_ROOT_DIR: Result:= 'The root path is invalid';
-   DRIVE_REMOVABLE  : Result:= 'Drive Removable';
-   DRIVE_FIXED      : Result:= 'Drive fixed';
-   DRIVE_REMOTE     : Result:= 'Remote Drive';
-   DRIVE_CDROM      : Result:= 'CD ROM Drive';
-   DRIVE_RAMDISK    : Result:= 'RAM Drive';
- end;
-end;
-
-
-{ Checks if a drive letter represents a valid, accessible drive.
-  WARNING: This function can be VERY SLOW if the drive exists but has no media
-  (e.g., empty CD-ROM drive or disconnected USB). The GUI may freeze during the check.
-  Uses SetErrorMode to suppress Windows error dialogs for missing media. }
-function ValidDrive(CONST Drive: Char): Boolean;
-VAR
-  Mask: string;
-  SRec: TSearchRec;
-  OldMode: Cardinal;
-  RetCode: Integer;
-begin
- OldMode:= SetErrorMode(SEM_FAILCRITICALERRORS);
- TRY
-   Mask:= Drive + ':\*.*';
-   {$I-}
-   RetCode:= FindFirst(Mask, faAnyfile, SRec);
-   if RetCode = 0
-   then FindClose(SRec);
-   {$I+}
-   Result:= Abs(RetCode) in [ERROR_SUCCESS, ERROR_FILE_NOT_FOUND, ERROR_NO_MORE_FILES];
- FINALLY
-   SetErrorMode(OldMode);
- END;
-end;
-
-
-
-
-
-
-{ Returns the volume label of a drive, formatted as '[LabelName]'.
-  If drive letter is uppercase (A-Z), label is returned uppercase.
-  If drive letter is lowercase (a-z), label is returned lowercase.
-  Returns '[]' if volume has no label or drive is inaccessible. }
-function GetVolumeLabel(CONST Drive: Char): string;
-VAR
-  OldErrorMode: Integer;
-  NotUsed, VolFlags: DWORD;
-  Buf: array[0..MAX_PATH] of Char;
-begin
-  Result:= '';
-  OldErrorMode:= SetErrorMode(SEM_FAILCRITICALERRORS);
-  TRY
-    Buf[0]:= #0;
-    if GetVolumeInformation(PChar(Drive + ':\'), Buf, DWORD(Length(Buf)), nil, NotUsed, VolFlags, nil, 0)   { Buffer size is in TCHARs, not bytes }
-    then SetString(Result, Buf, StrLen(Buf))
-    else Result:= '';
-
-    if Drive < 'a'
-    then Result:= AnsiUpperCase(Result)
-    else Result:= AnsiLowerCase(Result);
-
-    Result:= Format('[%s]', [Result]);
-  FINALLY
-    SetErrorMode(OldErrorMode);
-  END;
-end;
-
-
-{ Checks if a disk/media is present in the specified drive.
-  For remote/network drives, always returns True (network connectivity not verified).
-  For local drives, delegates to the Byte overload which uses DiskSize.
-  WARNING: Can be slow for removable drives without media! }
-function DiskInDrive(CONST Path: string): Boolean;
-VAR
-  DriveNumber: Byte;
-  DriveType: Integer;
-begin
-  DriveType:= GetDriveType(Path);
-
-  if DriveType < DRIVE_REMOVABLE
-  then Result:= FALSE  { Unknown drive or no root directory }
-  else
-    if DriveType = DRIVE_REMOTE
-    then Result:= TRUE  { Assume network drives are available; TODO: verify connectivity }
-    else
-      begin
-        DriveNumber:= Drive2Byte(Path[1]);
-        Result:= DiskInDrive(DriveNumber);
-      end;
-end;
-
-
-{ Checks if a disk is present in the drive specified by drive number (1=A, 2=B, 3=C, etc.).
-  WARNING: This can be VERY SLOW if the drive has no media (empty CD-ROM, disconnected USB).
-  The GUI may freeze until the drive responds or times out. }
-function DiskInDrive(CONST DriveNo: Byte): Boolean;
-VAR ErrorMode  : Word;
-begin
-  Result:= FALSE;
-  ErrorMode:= SetErrorMode(SEM_FAILCRITICALERRORS);
-  TRY
-    if DiskSize(DriveNo) <> -1
-    then Result:= TRUE;
-  FINALLY
-    SetErrorMode(ErrorMode);
-  END;
-end;
-
-
-
-
-
-{ Returns free space on a drive in bytes. Returns 0 if drive is invalid or has no media. }
-function DriveFreeSpace(CONST Drive: Char): Int64;
-VAR DriveNo: Byte;
-begin
- DriveNo:= Drive2Byte(Drive);
-
- if ValidDrive(Drive)
- AND DiskInDrive(DriveNo)
- then Result:= DiskFree(DriveNo)
- else Result:= 0;
-end;
-
-
-{ Returns free space on a drive as a formatted string (e.g., '15.3 GB'). }
-function DriveFreeSpaceS(CONST Drive: Char): string;
-begin
- Result:= FormatBytes(DriveFreeSpace(Drive), 1);
-end;
-
-
-{ Returns free space for the drive containing the specified path.
-  Extracts the drive letter from a full path (file or directory) automatically.
-  Example: DriveFreeSpaceF('C:\Windows\System32\file.txt') returns free space on C: }
-function DriveFreeSpaceF(CONST FullPath: string): Int64;
-begin
- Result:= DriveFreeSpace(System.IOUtils.TDirectory.GetDirectoryRoot(FullPath)[1]);
-end;
-
-
-{--------------------------------------------------------------------------------------------------
-   Determines the starting index of the actual path after any Windows extended path prefix.
-
-   Windows extended path prefixes:
-     '\\?\'     - Extended prefix for local paths (bypasses MAX_PATH limit)
-     '\\?\UNC\' - Extended prefix for UNC/network paths
-
-   Returns:
-     1 for paths without prefix         ('C:\Folder\file.txt' -> 1)
-     5 for extended local paths         ('\\?\C:\Folder\file.txt' -> 5, points to 'C:\...')
-     9 for extended UNC paths           ('\\?\UNC\Server\Share' -> 9, points to 'Server\...')
-
-   Used by PathHasValidColon to correctly validate paths with extended prefixes.
---------------------------------------------------------------------------------------------------}
-function GetPosAfterExtendedPrefix(const Path: string): Integer;
-CONST
-  ExtendedPrefix: string = '\\?\';
-  ExtendedUNCPrefix: string = '\\?\UNC\';
-VAR
-  Prefix: TPathPrefixType;
-begin
-  Prefix:= TPath.GetExtendedPrefix(Path);
-  case Prefix of
-    TPathPrefixType.pptNoPrefix    : Result:= 1;
-    TPathPrefixType.pptExtended    : Result:= Length(ExtendedPrefix) + 1;
-    TPathPrefixType.pptExtendedUNC : Result:= Length(ExtendedUNCPrefix) + 1;
-  else
-    Result:= 1;
-  end;
 end;
 
 
