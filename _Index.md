@@ -439,7 +439,7 @@ procedure AddBodyLineB(CONST s: string); { add 's' in a new line to the current 
 procedure Register;
 ```
 
-## LightCore.Internet (48)
+## LightCore.Internet (58)
 
 ```pascal
 function UrlEncode (CONST URL: string): string; { Convert unsafe characters. For example space is converted to %20 } { Prepare text to be used in 'a href' link }
@@ -488,11 +488,21 @@ function ValidatePort (CONST Port: string) : Boolean;
 function ExtractProxyFrom (Line: string): string; { Tries to extract a proxy address from a line of garbage text }
 function ExtractProxiesFrom(CONST Text: string): string; { Tries to extract multiple proxies from a string (more than one line) of garbage text. Returns a list of proxies separated by enter }
 function GetExternalIp(CONST ScriptAddress: string= 'http://checkip.dyndns.org'): string;
+function GetLocalIP: string; overload;
+function GetLocalIP(OUT HostName, IpAddress, ErrorMsg: string): Boolean; overload;
+function ResolveAddress (CONST HostName: String; out Address: DWORD): Boolean;
+function GenerateInternetRep: string;
+function ParseURL(CONST lpszUrl: string): TStringArray; { Breaks an URL in all its subcomponents. Example: ParseURL('http://login:password@somehost.somedomain.com/some_path/something_else.html?param1=val&param2=val') }
+function PCConnected2Internet: Boolean; { From here: http://www.delphipages.com/forum/showthread.php?t=198159 }
+function ProgramConnect2Internet: Integer; overload; { Legacy: google.com + the 60 s download default. Returns: -1 = PC not connected, 0 = connected but this app is blocked by the firewall, 1 = this app can reach the Internet}
+function ProgramConnect2Internet(const TestURL: string; TimeoutMs: Integer= ConnectivityProbeTimeout; const ExpectBody: string= ''): Integer; overload; { Caller-set endpoint + timeout, so a startup check gets a verdict in seconds instead of the 60 s download default. Returns: -1 = PC not connected (WinInet); 0 = PC online but NO reply came back (this exe is firewall-blocked, or the endpoint is down); 1 = reached the endpoint and the body matched (genuinely online); 2 = reached the endpoint (HTTP 200) but the body was NOT ExpectBody -> a captive portal or a content-rewriting proxy is in the path, which is NOT a firewall block. Pass ConnectivityProbeURL for a fast, light default. ExpectBody='' = any HTTP 200 counts as 1 (state 2 never occurs); set it (e.g. ConnectivityProbeBody) to tell a genuine reply apart from a portal/proxy interception.}
+function ProgramConnect2InternetS: string;
+function IsPortOpened(const Host: string; Port: Integer): Boolean; { Here's something very simple with which you can check a port status(opened/closed) on remote host. Add WinSock to uses clause}
 procedure OpenURL(const URL: string); { Opens URL in the default browser. Cross-platform (Win/macOS/Android/iOS). }
 Procedure CreateUrl (CONST FullFileName, sFullURL: string); { Creates an .URL file }
 ```
 
-## LightCore.IO (129)
+## LightCore.IO (135)
 
 ```pascal
 function TrailLinuxPathEx (CONST Path: string): string; { Adds / in front and at the end of the path }
@@ -505,6 +515,8 @@ function DirectoryExists (CONST Directory: String; FollowLink: Boolean= TRUE): B
 function FileNameIsValid_ (CONST FileName: string): Boolean; deprecated 'Use System.IOUtils.TPath.HasValidFileNameChars instead.'
 function PathNameIsValid (CONST Path: string): Boolean; { TPath.HasValidPathChars is bugged - Returns FALSE if the path contains invalid characters. Tells nothing about the existence of the folder }
 function IsUnicode (CONST Path: string): boolean; { Returns True if this path seems to be UNICODE }
+function PathHasValidColon (const Path: string): Boolean;
+function GetPosAfterExtendedPrefix(CONST Path: string): Integer;
 function ExtractLastFolder (FullPath: string): string; { exemplu pentru c:\windows\system intoarce doar 'system' }
 function ExtractParentFolder (CONST Folder: string): string;
 function ExtractFirstFolder (CONST Folder: string): string; { For c:\1\2\3\ returns 1\. From c:\1 it returns '' }
@@ -613,6 +625,10 @@ function TryDeleteFile (CONST FileName: string): Boolean;
 function GetFileSize (CONST FileName: string): Int64;
 function GetFileSizeFormat(CONST FileName: string): string; { Same as GetFileSize but returns the size in b/kb/mb/etc }
 function GetFolderSize (CONST Folder: string; CONST FileType: string= '*.*'; DigSubdirectories: Boolean= TRUE): Int64;
+function FileIsLockedR (CONST FileName: string): Boolean;
+function FileIsLockedRW (CONST FileName: string): Boolean; { Returns true if the file cannot be open for reading and writing } { old name: FileInUse }
+function CanCreateFile (CONST FileName: string): Boolean; { Tests if FileName can be created (or overwritten if it already exists). Existing files are NOT modified by the test. }
+function CanWriteToFolder (CONST Folder: string; const FileName: String = 'TempFile.Delete.Me'): Boolean; { Tests folder write access by creating a temporary file. The temp file is auto-deleted on close. WARNING: If FileName already exists, it will be OVERWRITTEN and then DELETED! }
 function ExtractTimeFromFileName (CONST FileName: string): TTime; { The time must be at the end of the file name. Example: 'MyPicture 20-00.jpg'. Returns -1 if the time could not be extracted. }
 function DateToStr_IO (CONST DateTime: TDateTime): string; { Original name: StrTimeToSeconds_unsafe }
 function TimeToStr_IO (CONST DateTime: TDateTime): string;
@@ -801,6 +817,13 @@ function AddToMRU(CONST aFileName: string): Boolean;
 procedure Clear;
 function Count: Integer;
 function GetItem(Index: Integer): string;
+```
+
+## LightCore.MutexSingleInstance (2)
+
+```pascal
+procedure FreeMutex;
+function IsSingleInstance(CONST MutexName: string): Boolean;
 ```
 
 ## LightCore (131)
@@ -1018,6 +1041,16 @@ function Found: Boolean; { True if any positions recorded }
 function Count: Integer;
 procedure Clear;
 function Last: TSearchResult;
+```
+
+## LightCore.Shell (5)
+
+```pascal
+function GetAssociatedApp (const FileExtension: string): string; // Old name: AplicatieAsociata
+procedure ShowTaskBar(ShowIt: Boolean);
+procedure AddFile2TaskbarMRU(FileName: string); { Add the file to 'recent open files' menu that appears when right clicking on program's button in TaskBar }
+function IsTaskbarAutoHideOn : Boolean;
+function IsApiFunctionAvailable(const DLLname, FuncName: string; VAR p: pointer): Boolean; { Returns True if FuncName exists in DLLname }
 ```
 
 ## LightCore.Sound (13)
@@ -1440,7 +1473,7 @@ function SetEnvironmentVars(CONST Name, Value: string; User: Boolean = True): Bo
 function GetEnvironmentVars(CONST Name: string; User: Boolean = True): string; overload;
 ```
 
-## LightCore.Win.IO (10)
+## LightCore.Win.IO (20)
 
 ```pascal
 function GetProgramFilesDir : string;
@@ -1453,6 +1486,16 @@ function GetSpecialFolder (CONST OS_SpecialFolder: string): string; overload; { 
 function GetSpecialFolder (CSIDL: Integer; ForceFolder: Boolean = FALSE): string; overload; { uses SHFolder }
 function GetSpecialFolders: TStringList; { Get a list of ALL special folders. }
 function FolderIsSpecial (CONST Path: string): Boolean; { Returns True if the parameter is a special folder such us 'c:\My Documents' }
+procedure SetCompressionAtr (CONST FileName: string; const CompressionFormat: byte= 1);
+function GetDriveType (CONST Path: string): Integer;
+function GetDriveTypeS (CONST Path: string): string; { Returns drive type asstring }
+function GetVolumeLabel (CONST Drive: Char): string; { Returns volume label of a disk }
+function DiskInDrive (CONST Path: string): Boolean; overload; { From www.gnomehome.demon.nl/uddf/pages/disk.htm#disk0 . Also see http://community.borland.com/article/0,1410,15921,00.html }
+function DiskInDrive (CONST DriveNo: Byte): Boolean; overload; { THIS IS VERY SLOW IF THE DISK IS NOT IN DRIVE! The GUI will freeze until the drive responds. }
+function ValidDrive (CONST Drive: Char): Boolean; { Peter Below (TeamB). http://www.codinggroups.com/borland-public-delphi-rtl-win32/7618-windows-no-disk-error.html }
+function DriveFreeSpace (CONST Drive: Char): Int64;
+function DriveFreeSpaceS (CONST Drive: Char): string;
+function DriveFreeSpaceF (CONST FullPath: string): Int64; { Same as DriveFreeSpace but this accepts a full filename/directory path. It will automatically extract the drive }
 ```
 
 ## LightCore.Win.Registry (23)
@@ -1481,6 +1524,27 @@ function RegReadValueNames (CONST Root: HKEY; CONST Key: string; ValueNames: TSt
 function RegReadValueDatas (CONST Root: HKEY; CONST Key: string; ValueDatas: TStringList; CanCreate: Boolean= FALSE): Boolean; { Returns all keys contained in the specified path }
 function RegReadMultiSzString (CONST Root: HKEY; CONST Key, KeyName: string; CanCreate: Boolean= FALSE): string; { Reads a REG_MULTI_SZ value From the Registry. This will return strings separated by ENTER }
 function RegReadMultiSzStringSP(CONST Root: HKEY; CONST Key, KeyName: string; CanCreate: Boolean= FALSE): string; { This will return strings separated by SPACE }
+```
+
+## LightCore.Win.Shell (16)
+
+```pascal
+function AssociateWith (CONST FileExtension, AsociationName: string; CONST ForAllUsers: Boolean= FALSE; {LogErrors: Boolean= FALSE; we always log} Notify: Boolean= TRUE): Boolean; { Associate a application with an extension. EXAMPLE: FileExtension:= '.txt' / AsociationName:= 'Metapad'. A registry failure goes into AppDataCore's log. Nothing appears on screen }
+function AssociationReset (CONST FileExtension: string; CONST ForAllUsers: Boolean): Boolean;
+procedure AssociateSelf_ShellMenu; { A registry failure goes into AppDataCore's log. Nothing appears on screen }
+function AddContextMenu (CONST CommandName, Extensions: string): Boolean; overload;
+procedure AddContextMenu (CONST GUID: TGUID; CONST ShellExtDll, FileExt, UtilityName: string); overload;
+procedure RemoveContextMenu(CONST GUID: TGUID; CONST FileExt, UtilityName: string);
+procedure CreateShortcut (CONST ShortCutName: string; OnDesktop: Boolean);
+procedure CreateShortcutEx (CONST ShortCutName, ShortcutTo: string; OnDesktop: Boolean); { Full parameters }
+procedure CreateShortcut_SendTo (CONST ShortcutName : string); { Add your application in the "Send To" menu and processing the file http://delphi.about.com/od/adptips2006/qt/app2sendtomenu.htm }
+function DeleteDesktopShortcut (CONST ShortcutName: string): Boolean;
+function DeleteStartMenuShortcut (CONST ShortcutName: string): Boolean;
+function ExtractPathFromLnkFile (CONST LnkFile: WideString): string;
+function RestoreOriginalSCF_Association: Boolean; { Make 'Show Desktop' icon in Quick Launch to work again (to show desktop) }
+function RemoveShowDesktopFile: Boolean;
+procedure RestoreShowDesktopFile;
+procedure AddUninstaller(CONST UninstallerExePath, ProductName: string); { Uninstaller= Full path to the EXE file that represents the uninstaller; ProductName= the uninstaller will be listed with this name. Keep it simple without special chars like '\'. Example: 'BioniX Wallpaper' }
 ```
 
 ## LightCore.Win.Sound (1)
@@ -2250,7 +2314,7 @@ procedure ReadGroup (WinCtrl: TWinControl);
 procedure WriteGroup (WinCtrl: TWinControl);
 ```
 
-## LightVcl.Common.IO (37)
+## LightVcl.Common.IO (21)
 
 ```pascal
 function DirectoryExistMsg (CONST Path: string): Boolean;
@@ -2260,7 +2324,6 @@ procedure MoveFolderMsg (CONST FromFolder, ToFolder: String; SilentOverwrite: Bo
 function DeleteFileWithMsg (CONST FileName: string): Boolean;
 function GetMyDocumentsAPI : string; deprecated 'Use GetMyDocuments instead';
 function GetMyPicturesAPI : string; deprecated 'Use GetMyPictures instead';
-function GetPosAfterExtendedPrefix(CONST Path: string): Integer;
 function SelectAFolder (VAR Folder: string; CONST Title: string = ''; CONST Options: TFileDialogOptions= [fdoPickFolders, fdoForceFileSystem, fdoPathMustExist, fdoDefaultNoMiniMode]): Boolean; overload;
 function PromptToSaveFile (VAR FileName: string; CONST Filter: string = ''; CONST DefaultExt: string= ''; CONST Title: string= ''): Boolean;
 function PromptToLoadFile (VAR FileName: string; CONST Filter: string = ''; CONST Title: string= ''): Boolean;
@@ -2273,23 +2336,8 @@ function FileMoveTo (CONST From_FullPath, To_FullPath: string): Boolean; { Moves
 function FileMoveToDir (CONST From_FullPath, To_DestFolder: string; Overwrite: Boolean): Boolean; { Moves a file to a destination folder }
 function FileAge (CONST FileName: string): TDateTime;
 function FileTimeToDateTimeStr (FTime: TFileTime; CONST DFormat, TFormat: string): string;
-procedure SetCompressionAtr (CONST FileName: string; const CompressionFormat: byte= 1);
 function GetFileSizeEx (hFile: THandle; VAR FileSize: Int64): BOOL; stdcall; external kernel32;
-function FileIsLockedR (CONST FileName: string): Boolean;
-function FileIsLockedRW (CONST FileName: string): Boolean; { Returns true if the file cannot be open for reading and writing } { old name: FileInUse }
-function CanCreateFile (CONST FileName: string): Boolean; { Tests if FileName can be created (or overwritten if it already exists). Existing files are NOT modified by the test. }
-function CanWriteToFolder (CONST Folder: string; const FileName: String = 'TempFile.Delete.Me'): Boolean; { Tests folder write access by creating a temporary file. The temp file is auto-deleted on close. WARNING: If FileName already exists, it will be OVERWRITTEN and then DELETED! }
 function CanWriteToFolderMsg (CONST Folder: string): Boolean;
-function GetDriveType (CONST Path: string): Integer;
-function GetDriveTypeS (CONST Path: string): string; { Returns drive type asstring }
-function GetVolumeLabel (CONST Drive: Char): string; { Returns volume label of a disk }
-function DiskInDrive (CONST Path: string): Boolean; overload; { From www.gnomehome.demon.nl/uddf/pages/disk.htm#disk0 . Also see http://community.borland.com/article/0,1410,15921,00.html }
-function DiskInDrive (CONST DriveNo: Byte): Boolean; overload; { THIS IS VERY SLOW IF THE DISK IS NOT IN DRIVE! The GUI will freeze until the drive responds. }
-function ValidDrive (CONST Drive: Char): Boolean; { Peter Below (TeamB). http://www.codinggroups.com/borland-public-delphi-rtl-win32/7618-windows-no-disk-error.html }
-function PathHasValidColon (const Path: string): Boolean;
-function DriveFreeSpace (CONST Drive: Char): Int64;
-function DriveFreeSpaceS (CONST Drive: Char): string;
-function DriveFreeSpaceF (CONST FullPath: string): Int64; { Same as DriveFreeSpace but this accepts a full filename/directory path. It will automatically extract the drive }
 ```
 
 ## LightVcl.Common.KeybShortcuts (6)
@@ -2353,14 +2401,6 @@ procedure Register;
 function MemoInputQuery(const aCaption, aPrompt: string; VAR Value: string; CONST xScale: Integer= 2): Boolean; { The smaller xScale the larger the width of the window }
 ```
 
-## LightVcl.Common.MutexSingleInstance (3)
-
-```pascal
-procedure FreeMutex;
-function IsSingleInstance(CONST MutexName: string): Boolean;
-procedure CreateMutexOrDie(CONST MutexName: string); { Not recommended - calls Application.Terminate }
-```
-
 ## LightVcl.Common.PopUp (1)
 
 ```pascal
@@ -2402,33 +2442,12 @@ function GenerateHardwareRepTSL: TStringList;
 function ScreenResApi: string;
 ```
 
-## LightVcl.Common.Shell (25)
+## LightVcl.Common.Shell (4)
 
 ```pascal
-function GetAssociatedApp (const FileExtension: string): string; // Old name: AplicatieAsociata
-function AssociateWith (CONST FileExtension, AsociationName: string; CONST ForAllUsers: Boolean= FALSE; {LogErrors: Boolean= FALSE; we always log} Notify: Boolean= TRUE): Boolean; { Associate a application with an extension. EXAMPLE: FileExtension:= '.txt' / AsociationName:= 'Metapad'. A registry failure goes into AppDataCore's log. Nothing appears on screen }
-function AssociationReset (CONST FileExtension: string; CONST ForAllUsers: Boolean): Boolean;
-procedure AssociateSelf_ShellMenu; { A registry failure goes into AppDataCore's log. Nothing appears on screen }
-function AddContextMenu (CONST CommandName, Extensions: string): Boolean; overload;
-procedure AddContextMenu (CONST GUID: TGUID; CONST ShellExtDll, FileExt, UtilityName: string); overload;
-procedure RemoveContextMenu(CONST GUID: TGUID; CONST FileExt, UtilityName: string);
 procedure InvokePropertiesDialog(CONST FileName: string); { Shows the standard file properties dialog like in Windows Explorer }
 procedure InvokeStartMenu(Form: TForm); { Activate Windows Start button from code }
-procedure ShowTaskBar(ShowIt: Boolean);
-procedure AddFile2TaskbarMRU(FileName: string); { Add the file to 'recent open files' menu that appears when right clicking on program's button in TaskBar }
-function IsTaskbarAutoHideOn : Boolean;
-procedure CreateShortcut (CONST ShortCutName: string; OnDesktop: Boolean);
-procedure CreateShortcutEx (CONST ShortCutName, ShortcutTo: string; OnDesktop: Boolean); { Full parameters }
-procedure CreateShortcut_SendTo (CONST ShortcutName : string); { Add your application in the "Send To" menu and processing the file http://delphi.about.com/od/adptips2006/qt/app2sendtomenu.htm }
-function DeleteDesktopShortcut (CONST ShortcutName: string): Boolean;
-function DeleteStartMenuShortcut (CONST ShortcutName: string): Boolean;
-function ExtractPathFromLnkFile (CONST LnkFile: WideString): string;
-function RestoreOriginalSCF_Association: Boolean; { Make 'Show Desktop' icon in Quick Launch to work again (to show desktop) }
-function RemoveShowDesktopFile: Boolean;
-procedure RestoreShowDesktopFile;
 function InstallINF (CONST PathName: string; hParent: HWND): Boolean; { Example: InstallINF('C:\driver.inf', 0) }
-procedure AddUninstaller(CONST UninstallerExePath, ProductName: string); { Uninstaller= Full path to the EXE file that represents the uninstaller; ProductName= the uninstaller will be listed with this name. Keep it simple without special chars like '\'. Example: 'BioniX Wallpaper' }
-function IsApiFunctionAvailable(const DLLname, FuncName: string; VAR p: pointer): Boolean; { Returns True if FuncName exists in DLLname }
 function ExtractIconFromFile(IcoFileName: String): THandle; { Extract icon from file }
 ```
 
@@ -3005,17 +3024,12 @@ procedure Fail(Outcome: TPageOutcome; CONST Info: string);
 procedure ReadPage(CONST Url, JavaScript: string);
 ```
 
-## LightVcl.Internet.Common (22)
+## LightVcl.Internet.Common (12)
 
 ```pascal
-function ParseURL (CONST lpszUrl: string): TStringArray; { Breaks an URL in all its subcomponents. Example: ParseURL('http://login:password@somehost.somedomain.com/some_path/something_else.html?param1=val&param2=val') }
 function PathIsURLA(pszPath: PAnsiChar): BOOL; stdcall; {$EXTERNALSYM PathIsURLW} { $HPPEMIT '#include <shlwapi.h>'}
 function PathIsURLW(pszPath: PWideChar): BOOL; stdcall; { from here: https://msdn.microsoft.com/en-us/library/windows/desktop/bb773724(v=vs.85).aspx. But it is not good at all because it only checks if path starts with http and if it contains space. Otherwise it accepts all other characters. So I use it in conjunction with my own function }
 function CheckURLStartMsg (CONST URL: string): Boolean; { Check if the URL starts with HTTP or with www }
-function GetLocalIP: string; overload;
-function GetLocalIP(OUT HostName, IpAddress, ErrorMsg: string): Boolean; overload;
-function ResolveAddress (CONST HostName: String; out Address: DWORD): Boolean;
-function GenerateInternetRep: string;
 function CoCreateGuid(var guid: TGUID): HResult; stdcall; far external 'ole32.dll';
 function IE_EnableProxy(const Server: String): Boolean;
 function IE_DisableProxy: Boolean;
@@ -3023,12 +3037,7 @@ function IE_GetProxySettings(OUT ProxyAdr, ProxyPort: string; OUT IsEnabled: boo
 procedure IE_DeleteCache;
 procedure IE_EndSession;
 procedure IE_SetProxy(CONST Proxy: string); { Change IE proxy settings globally }
-function PCConnected2Internet: Boolean; { From here: http://www.delphipages.com/forum/showthread.php?t=198159 }
-function ProgramConnect2Internet: Integer; overload; { Legacy: google.com + the 60 s download default. Returns: -1 = PC not connected, 0 = connected but this app is blocked by the firewall, 1 = this app can reach the Internet}
-function ProgramConnect2Internet(const TestURL: string; TimeoutMs: Integer= ConnectivityProbeTimeout; const ExpectBody: string= ''): Integer; overload; { Caller-set endpoint + timeout, so a startup check gets a verdict in seconds instead of the 60 s download default. Returns: -1 = PC not connected (WinInet); 0 = PC online but NO reply came back (this exe is firewall-blocked, or the endpoint is down); 1 = reached the endpoint and the body matched (genuinely online); 2 = reached the endpoint (HTTP 200) but the body was NOT ExpectBody -> a captive portal or a content-rewriting proxy is in the path, which is NOT a firewall block. Pass ConnectivityProbeURL for a fast, light default. ExpectBody='' = any HTTP 200 counts as 1 (state 2 never occurs); set it (e.g. ConnectivityProbeBody) to tell a genuine reply apart from a portal/proxy interception.}
-function ProgramConnect2InternetS: string;
-function TestProgramConnectionMsg(ShowMsgOnSuccess: Boolean= FALSE): Integer; { The Msg suffix means: this one puts a modal box on screen. For a silent verdict call ProgramConnect2Internet }
-function IsPortOpened(const Host: string; Port: Integer): Boolean; { Here's something very simple with which you can check a port status(opened/closed) on remote host. Add WinSock to uses clause}
+function TestProgramConnectionMsg(ShowMsgOnSuccess: Boolean= FALSE): Integer; { The Msg suffix means: this one puts a modal box on screen. For a silent verdict call LightCore.Internet.ProgramConnect2Internet }
 Procedure CreateUrlOnDesktop (CONST ShortFileName, sFullURL: string);
 ```
 
@@ -4096,4 +4105,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2947 public routines across 228 units._
+_2946 public routines across 230 units._
