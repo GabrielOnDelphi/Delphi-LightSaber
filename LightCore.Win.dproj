@@ -103,6 +103,7 @@
         <DCCReference Include="LightCore.Win.Window.pas"/>
         <DCCReference Include="LightCore.Win.System.pas"/>
         <DCCReference Include="LightCore.Win.IO.pas"/>
+        <DCCReference Include="LightCore.Win.Shell.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
