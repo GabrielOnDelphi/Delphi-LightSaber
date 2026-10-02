@@ -53,7 +53,7 @@ IMPLEMENTATION {$R *.dfm}
 
 USES
    LightCore, LightVcl.Common.Dialogs, LightCore.AppData, LightVcl.Visual.AppData
-, LightVcl.Internet.Common; //, LightVcl.Visual.INIFile;
+, LightCore.Internet; //, LightVcl.Visual.INIFile;
 
 
 

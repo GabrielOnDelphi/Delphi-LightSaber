@@ -141,7 +141,7 @@ procedure Register;
 IMPLEMENTATION
 
 USES
-   LightVcl.Common.IO, LightCore;
+   LightCore.IO, LightCore;
 
 {  How to know when the USER changed the text in a TMemo/TEdit?
    https://stackoverflow.com/questions/41719647/how-to-know-when-the-user-changed-the-text-in-a-tmemo-tedit/56832800#56832800

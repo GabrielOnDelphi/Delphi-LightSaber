@@ -175,7 +175,7 @@ procedure Register;
 IMPLEMENTATION {$R LightVcl.Visual.PathEdit.res}
 
 USES
-   LightCore.Colors, LightVcl.Common.ExecuteShell, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO;
+   LightCore.Colors, LightVcl.Common.ExecuteShell, LightCore.IO, LightCore.TextFile, LightVcl.Common.IO, LightCore.Win.IO;
 
 
 constructor TlightPathEdit.Create(aOwner: TComponent);
@@ -458,7 +458,7 @@ begin
 
  { Valid colon }
  if (InputType= itFolder)
- AND NOT LightVcl.Common.IO.PathHasValidColon(edtPath.Text)
+ AND NOT LightCore.IO.PathHasValidColon(edtPath.Text)
  then EXIT('The path has invalid characters!');
 
 // HasValidFileNameChars only work with file names, not also with full paths
@@ -469,7 +469,7 @@ begin
 
  { Valid colon for files }
  if (InputType= itFile)
- AND NOT LightVcl.Common.IO.PathHasValidColon(edtPath.Text)
+ AND NOT LightCore.IO.PathHasValidColon(edtPath.Text)
  then EXIT('The path has invalid characters!');
 
  if (InputType= itFolder) then
