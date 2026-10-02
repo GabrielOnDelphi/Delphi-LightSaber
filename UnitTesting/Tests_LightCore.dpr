@@ -91,6 +91,8 @@ uses
   Test.LightCore.System in 'Test.LightCore.System.pas',
   Test.LightCore.Win.System in 'Test.LightCore.Win.System.pas',
   Test.LightCore.Win.IO in 'Test.LightCore.Win.IO.pas',
+  Test.LightCore.Shell in 'Test.LightCore.Shell.pas',
+  Test.LightCore.Win.Shell in 'Test.LightCore.Win.Shell.pas',
   {$ENDIF}
   { Source units }
   LightCore in '..\LightCore.pas',
@@ -144,11 +146,13 @@ uses
   LightCore.Graph.RainDropParams in '..\LightCore.Graph.RainDropParams.pas',
   LightCore.WinVersion in '..\LightCore.WinVersion.pas',
   LightCore.System in '..\LightCore.System.pas',
+  LightCore.Shell in '..\LightCore.Shell.pas',
   {$IFDEF MSWINDOWS}
   LightCore.Win.WinVersionApi in '..\LightCore.Win.WinVersionApi.pas',
   LightCore.Win.Window in '..\LightCore.Win.Window.pas',
   LightCore.Win.System in '..\LightCore.Win.System.pas',
   LightCore.Win.IO in '..\LightCore.Win.IO.pas',
+  LightCore.Win.Shell in '..\LightCore.Win.Shell.pas',
   {$ENDIF}
   LightCore.Process in '..\LightCore.Process.pas',
   LightCore.ExeVersion in '..\LightCore.ExeVersion.pas',

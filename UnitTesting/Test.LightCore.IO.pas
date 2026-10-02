@@ -1,7 +1,7 @@
 unit Test.LightCore.IO;
 
 {=============================================================================================================
-   2026.01.30
+   2026.10.01
    Unit tests for LightCore.IO.pas
    Tests file/folder operations, path manipulation, and file type detection
 
@@ -212,6 +212,48 @@ type
 
     [Test]
     procedure TestShortenFileName;
+
+    { Path Validation Tests }
+    [Test]
+    procedure TestPathHasValidColon_ValidPath;
+
+    {$IFDEF MSWINDOWS}
+    [Test]
+    procedure TestPathHasValidColon_InvalidColon;
+    {$ENDIF}
+
+    [Test]
+    procedure TestGetPosAfterExtendedPrefix_NoPrefix;
+
+    {$IFDEF MSWINDOWS}
+    [Test]
+    procedure TestGetPosAfterExtendedPrefix_ExtendedPrefix;
+
+    [Test]
+    procedure TestGetPosAfterExtendedPrefix_UNCPrefix;
+
+    { File Locking Tests }
+    [Test]
+    procedure TestFileIsLockedRW_UnlockedFile;
+
+    [Test]
+    procedure TestFileIsLockedRW_NonExistentFile;
+
+    [Test]
+    procedure TestFileIsLockedR_NonExistentFile;
+
+    [Test]
+    procedure TestCanCreateFile;
+
+    [Test]
+    procedure TestCanCreateFile_ExistingFile_NotDestroyed;
+
+    [Test]
+    procedure TestCanCreateFile_ReadOnlyFile_ReturnsFalse;
+
+    [Test]
+    procedure TestCanWriteToFolder;
+    {$ENDIF}
 
     { File Operations }
     [Test]
@@ -809,6 +851,92 @@ begin
   ShortPath:= ShortenFileName('c:\test\verylongfilename.txt', 20);
   Assert.IsTrue(Length(ShortPath) <= 20);
 end;
+
+
+{ Path Validation Tests }
+
+procedure TTestLightCoreIO.TestPathHasValidColon_ValidPath;
+begin
+  Assert.IsTrue(PathHasValidColon('C:\Windows\System32'), 'Standard path should be valid');
+  Assert.IsTrue(PathHasValidColon('D:\Folder\File.txt'), 'D drive path should be valid');
+end;
+
+{$IFDEF MSWINDOWS}
+procedure TTestLightCoreIO.TestPathHasValidColon_InvalidColon;
+begin
+  Assert.IsFalse(PathHasValidColon('C:\Windows:System32'), 'Path with extra colon should be invalid');
+end;
+{$ENDIF}
+
+procedure TTestLightCoreIO.TestGetPosAfterExtendedPrefix_NoPrefix;
+begin
+  Assert.AreEqual(1, GetPosAfterExtendedPrefix('C:\Windows'), 'No prefix should return 1');
+end;
+
+{$IFDEF MSWINDOWS}
+procedure TTestLightCoreIO.TestGetPosAfterExtendedPrefix_ExtendedPrefix;
+begin
+  Assert.AreEqual(5, GetPosAfterExtendedPrefix('\\?\C:\Windows'), 'Extended prefix should return 5');
+end;
+
+procedure TTestLightCoreIO.TestGetPosAfterExtendedPrefix_UNCPrefix;
+begin
+  Assert.AreEqual(9, GetPosAfterExtendedPrefix('\\?\UNC\Server\Share'), 'UNC prefix should return 9');
+end;
+
+{ File Locking Tests }
+
+procedure TTestLightCoreIO.TestFileIsLockedRW_UnlockedFile;
+begin
+  Assert.IsFalse(FileIsLockedRW(FTestFile), 'Unlocked file should not report as locked');
+end;
+
+procedure TTestLightCoreIO.TestFileIsLockedRW_NonExistentFile;
+begin
+  Assert.IsFalse(FileIsLockedRW(FTestDir + '\NonExistent.txt'), 'Non-existent file should return False');
+end;
+
+procedure TTestLightCoreIO.TestFileIsLockedR_NonExistentFile;
+begin
+  { FileIsLockedR should raise exception for non-existent file }
+  Assert.WillRaise(
+    procedure
+    begin
+      FileIsLockedR(FTestDir + '\NonExistent.txt');
+    end,
+    Exception);
+end;
+
+procedure TTestLightCoreIO.TestCanCreateFile;
+begin
+  Assert.IsTrue(CanCreateFile(TPath.Combine(FTestDir, 'NewFile.txt')),
+    'Should be able to create file in temp folder');
+end;
+
+procedure TTestLightCoreIO.TestCanCreateFile_ExistingFile_NotDestroyed;
+begin
+  { The old implementation probed existing files via CanWriteToFolder (CREATE_ALWAYS + FILE_FLAG_DELETE_ON_CLOSE), which truncated the file to 0 bytes and then deleted it }
+  Assert.IsTrue(CanCreateFile(FTestFile), 'Existing writable file should be overwritable');
+  Assert.IsTrue(FileExists(FTestFile), 'The probe must NOT delete the existing file');
+  Assert.AreEqual('Test content', TFile.ReadAllText(FTestFile), 'The probe must NOT modify the file content');
+end;
+
+procedure TTestLightCoreIO.TestCanCreateFile_ReadOnlyFile_ReturnsFalse;
+begin
+  FileSetReadOnly(FTestFile, TRUE);
+  try
+    Assert.IsFalse(CanCreateFile(FTestFile), 'Read-only file cannot be overwritten');
+    Assert.IsTrue(FileExists(FTestFile), 'The probe must NOT delete the file');
+  finally
+    FileSetReadOnly(FTestFile, FALSE);
+  end;
+end;
+
+procedure TTestLightCoreIO.TestCanWriteToFolder;
+begin
+  Assert.IsTrue(CanWriteToFolder(FTestDir), 'Should be able to write to temp folder');
+end;
+{$ENDIF}
 
 
 { File Operations }

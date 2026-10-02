@@ -2,7 +2,7 @@ unit Test.LightVcl.Common.IO;
 
 {=============================================================================================================
    Unit tests for LightVcl.Common.IO
-   Tests file/folder operations, drive functions, and file dialogs
+   Tests file/folder operations, and file dialogs
 =============================================================================================================}
 
 interface
@@ -27,63 +27,6 @@ type
 
     [TearDown]
     procedure TearDown;
-
-    { Path Validation Tests }
-    [Test]
-    procedure TestPathHasValidColon_ValidPath;
-
-    [Test]
-    procedure TestPathHasValidColon_InvalidColon;
-
-    [Test]
-    procedure TestGetPosAfterExtendedPrefix_NoPrefix;
-
-    [Test]
-    procedure TestGetPosAfterExtendedPrefix_ExtendedPrefix;
-
-    [Test]
-    procedure TestGetPosAfterExtendedPrefix_UNCPrefix;
-
-    { File Locking Tests }
-    [Test]
-    procedure TestFileIsLockedRW_UnlockedFile;
-
-    [Test]
-    procedure TestFileIsLockedRW_NonExistentFile;
-
-    [Test]
-    procedure TestFileIsLockedR_NonExistentFile;
-
-    [Test]
-    procedure TestCanCreateFile;
-
-    [Test]
-    procedure TestCanCreateFile_ExistingFile_NotDestroyed;
-
-    [Test]
-    procedure TestCanCreateFile_ReadOnlyFile_ReturnsFalse;
-
-    [Test]
-    procedure TestCanWriteToFolder;
-
-    { Drive Tests }
-    [Test]
-    procedure TestGetDriveType_SystemDrive;
-
-    [Test]
-    procedure TestGetDriveTypeS_SystemDrive;
-
-    [Test]
-    procedure TestValidDrive_SystemDrive;
-
-    [Test]
-    procedure TestValidDrive_InvalidDrive;
-
-    [Test]
-    procedure TestDriveFreeSpace;
-
-    [Test]
-    procedure TestDriveFreeSpaceF;
 
     { File Age Tests }
     [Test]
@@ -127,9 +70,6 @@ type
 
     [Test]
     procedure TestRecycleItem_EmptyItemName_ShouldRaise;
-
-    [Test]
-    procedure TestSetCompressionAtr_EmptyFileName_ShouldRaise;
   end;
 
 implementation
@@ -156,133 +96,6 @@ begin
   LightCore.IO.TryDeleteFile(FTestFile);
   if DirectoryExists(FTestFolder) then
     TDirectory.Delete(FTestFolder, True);
-end;
-
-{ Path Validation Tests }
-
-procedure TTestVclCommonIO.TestPathHasValidColon_ValidPath;
-begin
-  Assert.IsTrue(PathHasValidColon('C:\Windows\System32'), 'Standard path should be valid');
-  Assert.IsTrue(PathHasValidColon('D:\Folder\File.txt'), 'D drive path should be valid');
-end;
-
-procedure TTestVclCommonIO.TestPathHasValidColon_InvalidColon;
-begin
-  Assert.IsFalse(PathHasValidColon('C:\Windows:System32'), 'Path with extra colon should be invalid');
-end;
-
-procedure TTestVclCommonIO.TestGetPosAfterExtendedPrefix_NoPrefix;
-begin
-  Assert.AreEqual(1, GetPosAfterExtendedPrefix('C:\Windows'), 'No prefix should return 1');
-end;
-
-procedure TTestVclCommonIO.TestGetPosAfterExtendedPrefix_ExtendedPrefix;
-begin
-  Assert.AreEqual(5, GetPosAfterExtendedPrefix('\\?\C:\Windows'), 'Extended prefix should return 5');
-end;
-
-procedure TTestVclCommonIO.TestGetPosAfterExtendedPrefix_UNCPrefix;
-begin
-  Assert.AreEqual(9, GetPosAfterExtendedPrefix('\\?\UNC\Server\Share'), 'UNC prefix should return 9');
-end;
-
-{ File Locking Tests }
-
-procedure TTestVclCommonIO.TestFileIsLockedRW_UnlockedFile;
-begin
-  Assert.IsFalse(FileIsLockedRW(FTestFile), 'Unlocked file should not report as locked');
-end;
-
-procedure TTestVclCommonIO.TestFileIsLockedRW_NonExistentFile;
-begin
-  Assert.IsFalse(FileIsLockedRW(FTestFolder + '\NonExistent.txt'), 'Non-existent file should return False');
-end;
-
-procedure TTestVclCommonIO.TestFileIsLockedR_NonExistentFile;
-begin
-  { FileIsLockedR should raise exception for non-existent file }
-  Assert.WillRaise(
-    procedure
-    begin
-      FileIsLockedR(FTestFolder + '\NonExistent.txt');
-    end,
-    Exception);
-end;
-
-procedure TTestVclCommonIO.TestCanCreateFile;
-begin
-  Assert.IsTrue(CanCreateFile(TPath.Combine(FTestFolder, 'NewFile.txt')),
-    'Should be able to create file in temp folder');
-end;
-
-procedure TTestVclCommonIO.TestCanCreateFile_ExistingFile_NotDestroyed;
-begin
-  { The old implementation probed existing files via CanWriteToFolder (CREATE_ALWAYS + FILE_FLAG_DELETE_ON_CLOSE), which truncated the file to 0 bytes and then deleted it }
-  Assert.IsTrue(CanCreateFile(FTestFile), 'Existing writable file should be overwritable');
-  Assert.IsTrue(FileExists(FTestFile), 'The probe must NOT delete the existing file');
-  Assert.AreEqual('Test content', TFile.ReadAllText(FTestFile), 'The probe must NOT modify the file content');
-end;
-
-procedure TTestVclCommonIO.TestCanCreateFile_ReadOnlyFile_ReturnsFalse;
-begin
-  FileSetReadOnly(FTestFile, TRUE);
-  try
-    Assert.IsFalse(CanCreateFile(FTestFile), 'Read-only file cannot be overwritten');
-    Assert.IsTrue(FileExists(FTestFile), 'The probe must NOT delete the file');
-  finally
-    FileSetReadOnly(FTestFile, FALSE);
-  end;
-end;
-
-procedure TTestVclCommonIO.TestCanWriteToFolder;
-begin
-  Assert.IsTrue(CanWriteToFolder(FTestFolder), 'Should be able to write to temp folder');
-end;
-
-{ Drive Tests }
-
-procedure TTestVclCommonIO.TestGetDriveType_SystemDrive;
-var
-  DriveType: Integer;
-begin
-  DriveType := GetDriveType('C:\');
-  Assert.AreEqual(DRIVE_FIXED, DriveType, 'C: should be a fixed drive');
-end;
-
-procedure TTestVclCommonIO.TestGetDriveTypeS_SystemDrive;
-var
-  DriveTypeS: string;
-begin
-  DriveTypeS := GetDriveTypeS('C:\');
-  Assert.AreEqual('Drive fixed', DriveTypeS, 'C: should return "Drive fixed"');
-end;
-
-procedure TTestVclCommonIO.TestValidDrive_SystemDrive;
-begin
-  Assert.IsTrue(ValidDrive('C'), 'C: drive should be valid');
-end;
-
-procedure TTestVclCommonIO.TestValidDrive_InvalidDrive;
-begin
-  { Drive Z is unlikely to exist on most systems }
-  { Note: This test may fail if Z: is mapped - adjust if needed }
-  Assert.Pass('Skipped - depends on system configuration');
-end;
-
-procedure TTestVclCommonIO.TestDriveFreeSpace;
-var
-  FreeSpace: Int64;
-begin
-  FreeSpace := DriveFreeSpace('C');
-  Assert.IsTrue(FreeSpace > 0, 'C: drive should have some free space');
-end;
-
-procedure TTestVclCommonIO.TestDriveFreeSpaceF;
-var
-  FreeSpace: Int64;
-begin
-  FreeSpace := DriveFreeSpaceF('C:\Windows\System32');
-  Assert.IsTrue(FreeSpace > 0, 'Should return free space for full path');
 end;
 
 { File Age Tests }
@@ -446,17 +259,6 @@ begin
     procedure
     begin
       RecycleItem('');
-    end,
-    Exception);
-end;
-
-
-procedure TTestVclCommonIO.TestSetCompressionAtr_EmptyFileName_ShouldRaise;
-begin
-  Assert.WillRaise(
-    procedure
-    begin
-      SetCompressionAtr('');
     end,
     Exception);
 end;

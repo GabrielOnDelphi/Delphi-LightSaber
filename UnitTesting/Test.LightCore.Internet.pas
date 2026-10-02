@@ -14,9 +14,48 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.Classes,
+  LightCore.Types,
   LightCore.Internet;
 
 type
+  {$IFDEF MSWINDOWS}
+  { Tests of the routines that have a Windows body only (WinInet, WinSock) }
+  [TestFixture]
+  TTestInternetWin = class
+  public
+    { ParseURL Tests }
+    [Test]
+    procedure TestParseURL_FullURL;
+
+    [Test]
+    procedure TestParseURL_SimpleURL;
+
+    [Test]
+    procedure TestParseURL_URLWithPort;
+
+    [Test]
+    procedure TestParseURL_EmptyURL;
+
+    [Test]
+    procedure TestParseURL_HTTPSUrl;
+
+    [Test]
+    procedure TestParseURL_URLWithQueryString;
+
+    [Test]
+    procedure TestParseURL_URLWithUserPassword;
+
+    { GetLocalIP Tests - Network dependent }
+    [Test]
+    [Category('Network')]
+    procedure TestGetLocalIP_ReturnsNonEmpty;
+
+    [Test]
+    [Category('Network')]
+    procedure TestGetLocalIP_Overload_Success;
+  end;
+  {$ENDIF}
+
   [TestFixture]
   TTestInternet = class
   public
@@ -448,7 +487,144 @@ begin
   Assert.AreEqual(Expected, UrlExtractFilePath(URL));
 end;
 
+
+
+{$IFDEF MSWINDOWS}
+{ ParseURL Tests }
+
+procedure TTestInternetWin.TestParseURL_FullURL;
+VAR
+  Parts: TStringArray;
+begin
+  Parts:= ParseURL('http://user:pass@www.example.com/path/file.html?query=value');
+
+  Assert.AreEqual(6, Length(Parts), 'Should return 6 parts');
+  Assert.AreEqual('http', Parts[0], 'Scheme should be http');
+  Assert.AreEqual('www.example.com', Parts[1], 'Host should be www.example.com');
+  Assert.AreEqual('user', Parts[2], 'User should be user');
+  Assert.AreEqual('pass', Parts[3], 'Password should be pass');
+  Assert.AreEqual('/path/file.html', Parts[4], 'Path should be /path/file.html');
+  Assert.AreEqual('?query=value', Parts[5], 'ExtraInfo should be ?query=value');
+end;
+
+
+procedure TTestInternetWin.TestParseURL_SimpleURL;
+VAR
+  Parts: TStringArray;
+begin
+  Parts:= ParseURL('http://www.example.com/');
+
+  Assert.AreEqual(6, Length(Parts), 'Should return 6 parts');
+  Assert.AreEqual('http', Parts[0], 'Scheme should be http');
+  Assert.AreEqual('www.example.com', Parts[1], 'Host should be www.example.com');
+  Assert.AreEqual('', Parts[2], 'User should be empty');
+  Assert.AreEqual('', Parts[3], 'Password should be empty');
+  Assert.AreEqual('/', Parts[4], 'Path should be /');
+  Assert.AreEqual('', Parts[5], 'ExtraInfo should be empty');
+end;
+
+
+procedure TTestInternetWin.TestParseURL_URLWithPort;
+VAR
+  Parts: TStringArray;
+begin
+  Parts:= ParseURL('http://www.example.com:8080/page.html');
+
+  Assert.AreEqual('http', Parts[0], 'Scheme should be http');
+  Assert.AreEqual('www.example.com', Parts[1], 'Host should be www.example.com (port extracted separately)');
+  Assert.AreEqual('/page.html', Parts[4], 'Path should be /page.html');
+end;
+
+
+procedure TTestInternetWin.TestParseURL_EmptyURL;
+VAR
+  Parts: TStringArray;
+begin
+  Parts:= ParseURL('');
+
+  Assert.AreEqual(6, Length(Parts), 'Should return 6 parts even for empty URL');
+  Assert.AreEqual('', Parts[0], 'All parts should be empty for empty URL');
+  Assert.AreEqual('', Parts[1], 'All parts should be empty for empty URL');
+end;
+
+
+procedure TTestInternetWin.TestParseURL_HTTPSUrl;
+VAR
+  Parts: TStringArray;
+begin
+  Parts:= ParseURL('https://secure.example.com/login');
+
+  Assert.AreEqual('https', Parts[0], 'Scheme should be https');
+  Assert.AreEqual('secure.example.com', Parts[1], 'Host should be secure.example.com');
+  Assert.AreEqual('/login', Parts[4], 'Path should be /login');
+end;
+
+
+procedure TTestInternetWin.TestParseURL_URLWithQueryString;
+VAR
+  Parts: TStringArray;
+begin
+  Parts:= ParseURL('http://api.example.com/search?q=test&page=1&sort=date');
+
+  Assert.AreEqual('http', Parts[0], 'Scheme should be http');
+  Assert.AreEqual('api.example.com', Parts[1], 'Host should be api.example.com');
+  Assert.AreEqual('/search', Parts[4], 'Path should be /search');
+  Assert.IsTrue(Parts[5].Contains('q=test'), 'ExtraInfo should contain query string');
+end;
+
+
+procedure TTestInternetWin.TestParseURL_URLWithUserPassword;
+VAR
+  Parts: TStringArray;
+begin
+  Parts:= ParseURL('ftp://admin:secret123@ftp.example.com/files/');
+
+  Assert.AreEqual('ftp', Parts[0], 'Scheme should be ftp');
+  Assert.AreEqual('ftp.example.com', Parts[1], 'Host should be ftp.example.com');
+  Assert.AreEqual('admin', Parts[2], 'User should be admin');
+  Assert.AreEqual('secret123', Parts[3], 'Password should be secret123');
+end;
+
+
+{ GetLocalIP Tests }
+
+procedure TTestInternetWin.TestGetLocalIP_ReturnsNonEmpty;
+VAR
+  IP: string;
+begin
+  IP:= GetLocalIP;
+  { IP could be an actual address or an error message }
+  Assert.IsNotEmpty(IP, 'GetLocalIP should return something (IP or error)');
+end;
+
+
+procedure TTestInternetWin.TestGetLocalIP_Overload_Success;
+VAR
+  HostName, IpAddress, ErrorMsg: string;
+  Success: Boolean;
+begin
+  Success:= GetLocalIP(HostName, IpAddress, ErrorMsg);
+
+  if Success then
+    begin
+      Assert.IsNotEmpty(HostName, 'HostName should not be empty on success');
+      Assert.IsNotEmpty(IpAddress, 'IpAddress should not be empty on success');
+      Assert.IsEmpty(ErrorMsg, 'ErrorMsg should be empty on success');
+      { Verify IP format (basic check for dots) }
+      Assert.IsTrue(IpAddress.Contains('.'), 'IP address should contain dots');
+    end
+  else
+    begin
+      Assert.IsNotEmpty(ErrorMsg, 'ErrorMsg should contain reason for failure');
+    end;
+end;
+{$ENDIF}
+
+
 initialization
   TDUnitX.RegisterTestFixture(TTestInternet);
+  {$IFDEF MSWINDOWS}
+  TDUnitX.RegisterTestFixture(TTestInternetWin);
+  {$ENDIF}
 
 end.

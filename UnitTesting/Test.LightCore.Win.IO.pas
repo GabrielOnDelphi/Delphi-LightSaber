@@ -2,7 +2,7 @@ unit Test.LightCore.Win.IO;
 
 {=============================================================================================================
    Unit tests for LightCore.Win.IO.pas
-   Tests the Windows special folders
+   Tests the Windows special folders, the drive functions and NTFS compression
 =============================================================================================================}
 
 interface
@@ -13,6 +13,7 @@ uses
   System.SysUtils,
   System.IOUtils,
   System.Classes,
+  Winapi.Windows,
   Winapi.ShlObj;
 
 type
@@ -56,6 +57,29 @@ type
 
     [Test]
     procedure TestGetTaskManager;
+
+    { Drive Tests }
+    [Test]
+    procedure TestGetDriveType_SystemDrive;
+
+    [Test]
+    procedure TestGetDriveTypeS_SystemDrive;
+
+    [Test]
+    procedure TestValidDrive_SystemDrive;
+
+    [Test]
+    procedure TestValidDrive_InvalidDrive;
+
+    [Test]
+    procedure TestDriveFreeSpace;
+
+    [Test]
+    procedure TestDriveFreeSpaceF;
+
+    { Parameter Validation Tests }
+    [Test]
+    procedure TestSetCompressionAtr_EmptyFileName_ShouldRaise;
   end;
 {$ENDIF}
 
@@ -182,6 +206,65 @@ begin
   Assert.IsNotEmpty(TaskMgr, 'Task Manager path should not be empty');
   Assert.IsTrue(TaskMgr.EndsWith('taskmgr.exe', True), 'Should end with taskmgr.exe');
   Assert.IsTrue(FileExists(TaskMgr), 'Task Manager executable should exist');
+end;
+
+{ Drive Tests }
+
+procedure TTestVclCommonIO.TestGetDriveType_SystemDrive;
+var
+  DriveType: Integer;
+begin
+  DriveType := GetDriveType('C:\');
+  Assert.AreEqual(DRIVE_FIXED, DriveType, 'C: should be a fixed drive');
+end;
+
+procedure TTestVclCommonIO.TestGetDriveTypeS_SystemDrive;
+var
+  DriveTypeS: string;
+begin
+  DriveTypeS := GetDriveTypeS('C:\');
+  Assert.AreEqual('Drive fixed', DriveTypeS, 'C: should return "Drive fixed"');
+end;
+
+procedure TTestVclCommonIO.TestValidDrive_SystemDrive;
+begin
+  Assert.IsTrue(ValidDrive('C'), 'C: drive should be valid');
+end;
+
+procedure TTestVclCommonIO.TestValidDrive_InvalidDrive;
+begin
+  { Drive Z is unlikely to exist on most systems }
+  { Note: This test may fail if Z: is mapped - adjust if needed }
+  Assert.Pass('Skipped - depends on system configuration');
+end;
+
+procedure TTestVclCommonIO.TestDriveFreeSpace;
+var
+  FreeSpace: Int64;
+begin
+  FreeSpace := DriveFreeSpace('C');
+  Assert.IsTrue(FreeSpace > 0, 'C: drive should have some free space');
+end;
+
+procedure TTestVclCommonIO.TestDriveFreeSpaceF;
+var
+  FreeSpace: Int64;
+begin
+  FreeSpace := DriveFreeSpaceF('C:\Windows\System32');
+  Assert.IsTrue(FreeSpace > 0, 'Should return free space for full path');
+end;
+
+
+{ Parameter Validation Tests }
+
+procedure TTestVclCommonIO.TestSetCompressionAtr_EmptyFileName_ShouldRaise;
+begin
+  Assert.WillRaise(
+    procedure
+    begin
+      SetCompressionAtr('');
+    end,
+    Exception);
 end;
 
 
