@@ -91,6 +91,7 @@ contains
   LightCore.SystemConsole in 'LightCore.SystemConsole.pas',
   LightCore.CpuUsageProcess in 'LightCore.CpuUsageProcess.pas',
   LightCore.ProcessCpuMonitor in 'LightCore.ProcessCpuMonitor.pas',
+  LightCore.MutexSingleInstance in 'LightCore.MutexSingleInstance.pas',
   LightCore.Graphics in 'LightCore.Graphics.pas',
   LightCore.CmdLine in 'LightCore.CmdLine.pas',
   LightCore.Colors in 'LightCore.Colors.pas',
@@ -103,7 +104,8 @@ contains
   LightCore.GuiSettings in 'LightCore.GuiSettings.pas',
   LightCore.WinVersion in 'LightCore.WinVersion.pas',
   LightCore.ExceptionLogger in 'LightCore.ExceptionLogger.pas',
-  LightCore.SystemPermissions in 'LightCore.SystemPermissions.pas';
+  LightCore.SystemPermissions in 'LightCore.SystemPermissions.pas',
+  LightCore.Shell in 'LightCore.Shell.pas';
 
 end.
 
