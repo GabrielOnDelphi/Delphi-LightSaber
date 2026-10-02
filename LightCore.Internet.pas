@@ -1,7 +1,7 @@
 UNIT LightCore.Internet;
 
 {-------------------------------------------------------------------------------------------------------------
-   2026.07.07
+   2026.10.01
    www.GabrielMoraru.com
 
    URL utils / URL parsing and validation
@@ -18,8 +18,9 @@ UNIT LightCore.Internet;
 INTERFACE
 
 USES
+   System.Types,   { DWORD, for ResolveAddress }
    System.SysUtils, System.StrUtils, System.Classes, System.IniFiles,
-   LightCore;
+   LightCore, LightCore.Types;
 
 
 CONST
@@ -116,6 +117,36 @@ CONST
 --------------------------------------------------------------------------------------------------}
  function  GetExternalIp(CONST ScriptAddress: string= 'http://checkip.dyndns.org'): string;
 
+ { The routines below have a Windows body only (WinInet, WinSock), so far. They are declared only on Windows, so a call written in an Android, macOS or iOS build fails to compile instead of getting a silent wrong answer. }
+ {$IFDEF MSWINDOWS}
+ function  GetLocalIP: string;                                              overload;
+ function  GetLocalIP(OUT HostName, IpAddress, ErrorMsg: string): Boolean;  overload;
+ function  ResolveAddress (CONST HostName: String; out Address: DWORD): Boolean;
+ function  GenerateInternetRep: string;
+
+ function  ParseURL(CONST lpszUrl: string): TStringArray;                   { Breaks an URL in all its subcomponents. Example: ParseURL('http://login:password@somehost.somedomain.com/some_path/something_else.html?param1=val&param2=val')   }
+ {$ENDIF}
+
+
+{--------------------------------------------------------------------------------------------------
+   IS CONNECTED
+--------------------------------------------------------------------------------------------------}
+ { A lightweight endpoint for ProgramConnect2Internet: it answers HTTP 200 with the tiny fixed body 'Microsoft Connect Test'.
+   It is Windows' own NCSI probe target, so it is almost never blocked and transfers only a few bytes - ideal for a fast startup 'am I online / is my exe firewalled' check, instead of downloading a whole homepage. }
+ CONST
+   ConnectivityProbeURL     = 'http://www.msftconnecttest.com/connecttest.txt';
+   ConnectivityProbeBody    = 'Microsoft Connect Test';   { The exact body ConnectivityProbeURL returns. Pass it as ExpectBody so a captive portal (which answers 200 with its own login HTML) is reported as state 2 (intercepted), not as a firewall block. }
+   ConnectivityProbeTimeout = 8000;                        { Milliseconds. A check at startup must answer quickly, so it does not use the 60 s download default. }
+
+ {$IFDEF MSWINDOWS}
+ function  PCConnected2Internet: Boolean;                                       { From here: http://www.delphipages.com/forum/showthread.php?t=198159 }
+ function  ProgramConnect2Internet: Integer;                                                                       overload;   { Legacy: google.com + the 60 s download default. Returns: -1 = PC not connected, 0 = connected but this app is blocked by the firewall, 1 = this app can reach the Internet}
+ function  ProgramConnect2Internet(const TestURL: string; TimeoutMs: Integer= ConnectivityProbeTimeout; const ExpectBody: string= ''): Integer;  overload;   { Caller-set endpoint + timeout, so a startup check gets a verdict in seconds instead of the 60 s download default. Returns: -1 = PC not connected (WinInet); 0 = PC online but NO reply came back (this exe is firewall-blocked, or the endpoint is down); 1 = reached the endpoint and the body matched (genuinely online); 2 = reached the endpoint (HTTP 200) but the body was NOT ExpectBody -> a captive portal or a content-rewriting proxy is in the path, which is NOT a firewall block. Pass ConnectivityProbeURL for a fast, light default. ExpectBody='' = any HTTP 200 counts as 1 (state 2 never occurs); set it (e.g. ConnectivityProbeBody) to tell a genuine reply apart from a portal/proxy interception.}
+ function  ProgramConnect2InternetS: string;
+ function  IsPortOpened(const Host: string; Port: Integer): Boolean;            { Here's something very simple with which you can check a port status(opened/closed) on remote host. Add WinSock to uses clause}
+ {$ENDIF}
+ //see: c:\Projects\Projects INTERNET\Test Internet is connected.RAR - the tester inside is cInternet-is_connected.dpr
+
 
 {--------------------------------------------------------------------------------------------------
    OPEN URL IN BROWSER
@@ -137,6 +168,8 @@ USES
    LightCore.HTML, LightCore.IO, LightCore.Download
    {$IFDEF MSWINDOWS}
    , Winapi.Windows, Winapi.ShellAPI
+   , Winapi.WinInet   { ParseURL, PCConnected2Internet }
+   , Winapi.WinSock   { GetLocalIP, ResolveAddress, IsPortOpened }
    {$ENDIF}
    {$IFDEF MACOS}
    , Macapi.AppKit, Macapi.Helpers, Macapi.Foundation
@@ -1116,6 +1149,343 @@ begin
     .openURL(TNSURL.Wrap(TNSURL.OCClass.URLWithString(StrToNSStr(URL))));
   {$ENDIF}
 end;
+
+
+
+{$IFDEF MSWINDOWS}
+
+{---------------------------------------------------------------------------------------------------------------
+   ParseURL
+   Breaks a URL into its subcomponents using Windows InternetCrackUrl API.
+   Returns an array of 6 strings: [Scheme, HostName, UserName, Password, UrlPath, ExtraInfo]
+   Returns empty strings for all components if URL is invalid or empty.
+
+   Example: ParseURL('http://login:password@somehost.somedomain.com/some_path/file.html?param1=val')
+            Returns: ['http', 'somehost.somedomain.com', 'login', 'password', '/some_path/file.html', '?param1=val']
+---------------------------------------------------------------------------------------------------------------}
+function ParseURL(const lpszUrl: string): TStringArray;    { Source: http://stackoverflow.com/questions/16703063/how-do-i-parse-a-web-url }
+VAR
+  lpszScheme      : array[0..INTERNET_MAX_SCHEME_LENGTH - 1]    of Char;
+  lpszHostName    : array[0..INTERNET_MAX_HOST_NAME_LENGTH - 1] of Char;
+  lpszUserName    : array[0..INTERNET_MAX_USER_NAME_LENGTH - 1] of Char;
+  lpszPassword    : array[0..INTERNET_MAX_PASSWORD_LENGTH - 1]  of Char;
+  lpszUrlPath     : array[0..INTERNET_MAX_PATH_LENGTH - 1]      of Char;
+  lpszExtraInfo   : array[0..1024 - 1]                          of Char;
+  lpUrlComponents : TURLComponents;
+begin
+  SetLength(Result, 6);
+
+  if lpszUrl = '' then EXIT;
+
+  ZeroMemory(@lpszScheme      , SizeOf(lpszScheme));
+  ZeroMemory(@lpszHostName    , SizeOf(lpszHostName));
+  ZeroMemory(@lpszUserName    , SizeOf(lpszUserName));
+  ZeroMemory(@lpszPassword    , SizeOf(lpszPassword));
+  ZeroMemory(@lpszUrlPath     , SizeOf(lpszUrlPath));
+  ZeroMemory(@lpszExtraInfo   , SizeOf(lpszExtraInfo));
+  ZeroMemory(@lpUrlComponents , SizeOf(TURLComponents));
+
+  { The dwXxxLength fields are buffer sizes in TCHARs, NOT bytes (MSDN URL_COMPONENTSW: "Size of the scheme name, in TCHARs").
+    SizeOf would report 2x the real capacity (WideChar = 2 bytes) and let InternetCrackUrlW overflow the stack buffers. }
+  lpUrlComponents.dwStructSize      := SizeOf(TURLComponents);
+  lpUrlComponents.lpszScheme        := lpszScheme;
+  lpUrlComponents.dwSchemeLength    := Length(lpszScheme);
+  lpUrlComponents.lpszHostName      := lpszHostName;
+  lpUrlComponents.dwHostNameLength  := Length(lpszHostName);
+  lpUrlComponents.lpszUserName      := lpszUserName;
+  lpUrlComponents.dwUserNameLength  := Length(lpszUserName);
+  lpUrlComponents.lpszPassword      := lpszPassword;
+  lpUrlComponents.dwPasswordLength  := Length(lpszPassword);
+  lpUrlComponents.lpszUrlPath       := lpszUrlPath;
+  lpUrlComponents.dwUrlPathLength   := Length(lpszUrlPath);
+  lpUrlComponents.lpszExtraInfo     := lpszExtraInfo;
+  lpUrlComponents.dwExtraInfoLength := Length(lpszExtraInfo);
+
+  { Parse URL - if it fails, arrays remain zeroed (empty strings) }
+  if NOT InternetCrackUrl(PChar(lpszUrl), Length(lpszUrl), ICU_DECODE or ICU_ESCAPE, lpUrlComponents)
+  then EXIT;   { Return empty strings on failure }
+
+  Result[0]:= lpszScheme;                  { Protocol        (http)              }
+  Result[1]:= lpszHostName;                { Host            (www.domain.com)    }
+  Result[2]:= lpszUserName;                { User            ('')                }
+  Result[3]:= lpszPassword;                { Password        ('')                }
+  Result[4]:= lpszUrlPath;                 { Path            ('/download.html')  }
+  Result[5]:= lpszExtraInfo;               { ExtraInfo       ('')                }
+end;
+
+
+
+
+{==================================================================================================
+   IS CONNECTED
+==================================================================================================}
+function PCConnected2Internet: Boolean;
+VAR dwConnectionTypes: DWORD;
+begin
+ dwConnectionTypes := INTERNET_CONNECTION_MODEM + INTERNET_CONNECTION_LAN + INTERNET_CONNECTION_PROXY;
+ Result := InternetGetConnectedState(@dwConnectionTypes, 0);         { Function summary from MS: Retrieves the connected state of the local system. Minimum supported client: Windows 2000 Professional [desktop apps only] }   { API Function documentation: http://msdn.microsoft.com/en-us/library/windows/desktop/aa384702%28v=vs.85%29.aspx }
+end;
+
+
+
+function ProgramConnect2InternetS: string;
+begin
+ if PCConnected2Internet
+ then
+  begin
+    Result:= LightCore.Download.DownloadAsString('http://www.google.com/');
+    if Result= ''
+    then Result:= CheckYourFirewallMsg
+    else Result:= ConnectedToInternet
+  end
+ else
+   Result:= ComputerCannotAccessInet;
+end;
+
+
+
+{ Returns:
+           -1 if computer is not connected to internet,
+            0 if local system is connected to internet but application is blocked by firewall,
+            1 if application can connect to internet.
+  Legacy overload - kept for backward compatibility: google.com with the 60 s download default.
+  For a fast startup check use the (TestURL, TimeoutMs) overload with ConnectivityProbeURL. }
+function ProgramConnect2Internet: Integer;
+begin
+ Result:= ProgramConnect2Internet('http://www.google.com/', 60000);
+end;
+
+
+{ As above, but the caller chooses the test endpoint and the timeout, so a check at startup gets a verdict in TimeoutMs (default ConnectivityProbeTimeout) instead of the 60 s download default.
+  ConnectivityProbeURL is such an endpoint.
+  The PCConnected2Internet gate is instant and does no traffic, so an offline PC returns -1 without waiting on the timeout.
+  The verdict keys off whether an HTTP 200 came back, NOT off the body alone.
+  DownloadAsString (LightCore.Download.pas) leaves ErrorMsg empty ONLY on HTTP 200; a non-200, a timeout, a DNS/TLS failure, or the firewall blocking this exe all set ErrorMsg.
+  Only then does the body decide between 1 (the expected content) and 2 (a reply, but not the marker: a captive portal serving its own login HTML, or a proxy rewriting the content).
+  ExpectBody='' skips the content test, so any HTTP 200 is 1 and state 2 never occurs (this keeps the legacy google.com overload a strict -1/0/1). }
+function ProgramConnect2Internet(const TestURL: string; TimeoutMs: Integer; const ExpectBody: string): Integer;
+VAR
+  Options  : RHttpOptions;
+  ErrorMsg : string;
+  Body     : string;
+begin
+ if NOT PCConnected2Internet then EXIT(-1);      { WinInet: the PC has no network at all }
+
+ Options.Reset;
+ Options.ConnectionTimeout := TimeoutMs;
+ Options.ResponseTimeout   := TimeoutMs;
+ Body:= LightCore.Download.DownloadAsString(TestURL, ErrorMsg, NIL, @Options);   { ErrorMsg='' ONLY on HTTP 200; '' body + reason on any failure }
+
+ if ErrorMsg <> ''
+ then EXIT(0);                                   { no HTTP 200 came back -> this exe is blocked / the endpoint is down }
+
+ { An HTTP 200 returned, so the request reached the Internet and came back - the firewall is NOT
+   blocking this exe. Judge the CONTENT to tell a real reply from a portal/proxy interception. }
+ if (ExpectBody = '') or (Pos(ExpectBody, Body) > 0)
+ then Result := 1                                { expected content -> genuinely online }
+ else Result := 2;                               { a 200, but not the marker -> captive portal / rewriting proxy (not a firewall block) }
+end;
+
+
+
+
+{==================================================================================================
+   GET IP ADDRESS
+==================================================================================================}
+
+{
+IsConnectedToInternet Example 2
+
+USES WinInet   <-   This will generate error if WinInet library is not installed in the computer. Dont added to the uses clauses if not needed
+function IsConnectedToInternet2: Boolean;
+CONST
+  INTERNET_CONNECTION_MODEM      = 1; // local system uses a modem to connect to the Internet.
+  INTERNET_CONNECTION_LAN        = 2; // local system uses a local area network to connect to the Internet.
+  INTERNET_CONNECTION_PROXY      = 4; // local system uses a proxy server to connect to the Internet.
+  INTERNET_CONNECTION_MODEM_BUSY = 8; // local system's modem is busy with a non-Internet connection.
+VAR
+  dwConnectionTypes : DWORD;
+BEGIN
+  dwConnectionTypes :=
+   INTERNET_CONNECTION_MODEM +
+   INTERNET_CONNECTION_LAN +
+   INTERNET_CONNECTION_PROXY;
+  Result := InternetGetConnectedState(@dwConnectionTypes,0);
+END;
+Note: this solution only works if IE is installed, so it would fail on 'older' machines, like most Windows NT 4 computers. You app would then display an error during program startup if you referred to Wininet. Since today, there are many ways to connect to the Internet (via LAN, Dialup/RAS, ADSL, ..) propably the best way would be to test for certain IPs. Here is a link to more information on the topic, including a list of ways to find out whether an Internet connection seems to be active or not. }
+
+
+{
+  Get ALL local IPs?
+  http://stackoverflow.com/questions/576538/delphi-how-to-get-all-local-ips - see the last answer (Remko)
+}
+
+Function GetLocalIP: string;
+VAR
+  HostName, IpAddress, Error: string;
+begin
+  if GetLocalIP(HostName, IpAddress, Error)
+  then Result:= IpAddress
+  else Result:= Error;
+end;
+
+
+function GetLocalIP(OUT HostName, IpAddress, ErrorMsg: string): Boolean;
+VAR
+  Addr: PAnsiChar;
+  WSAData: TWSAData;
+  RemoteHost: pHostEnt;
+  HostNameArr: array[0..255] of AnsiChar;
+begin
+  Result   := False;
+  HostName := '';
+  IpAddress:= '';
+  ErrorMsg := '';
+
+  // Initialize WinSock
+  if WSAStartup($0202, WSAData) <> 0 then
+  begin
+    ErrorMsg := 'WinSock initialization failed!';
+    Exit;
+  end;
+
+  try
+    // Retrieve the local host name
+    if gethostname(HostNameArr, SizeOf(HostNameArr)) = SOCKET_ERROR then
+    begin
+      case WSAGetLastError of
+        WSANOTINITIALISED: ErrorMsg := 'WSA Not Initialized';
+        WSAENETDOWN      : ErrorMsg := 'Network subsystem is down';
+        WSAEINPROGRESS   : ErrorMsg := 'A blocking operation is in progress';
+      else
+        ErrorMsg:= 'Unknown error retrieving host name';
+      end;
+
+      Exit;
+    end;
+
+    HostName := string(HostNameArr);
+
+    // Get host details by name
+    RemoteHost := gethostbyname(HostNameArr);
+    if RemoteHost = nil then
+    begin
+      ErrorMsg := 'Unable to resolve host details.';
+      Exit;
+    end;
+
+    // Extract the IP address
+    Addr := RemoteHost^.h_addr_list^;
+    while Addr <> nil do
+    begin
+      for VAR I := 0 to RemoteHost^.h_length - 1 do
+        IpAddress := IpAddress + IntToStr(Byte(Addr[I])) + '.';
+
+      SetLength(IpAddress, Length(IpAddress) - 1); // Remove trailing dot
+      Break; // Only take the first IP address
+    end;
+
+    Result:= True;
+  finally
+    WSACleanup;
+  end;
+end;
+
+
+
+function GenerateInternetRep: string;
+var HostName, IPaddr, Error: string;
+begin
+ Result:= ' [INTERNET]'+ CRLF;
+
+ Result:= Result+'  GetExternalIp: '  + Tab + GetExternalIp+ CRLF;
+ Result:= Result+'  GetLocalIP: '+ CRLF;
+ if GetLocalIP(HostName, IPaddr, Error)
+ then
+   begin
+     Result:= Result+'     Host: '+ Tab + HostName + CRLF;
+     Result:= Result+'     IP'    + Tab + IPaddr   + CRLF;
+   end
+ else
+   Result:= Result+ '     FAIL! '+ Error + CRLF;
+end;
+
+
+
+
+{
+ Check a port status(opened/closed) on remote host. Uses WinSock.
+ http://www.delphigeist.com/search?updated-min=2010-01-01T00%3A00%3A00%2B02%3A00&updated-max=2011-01-01T00%3A00%3A00%2B02%3A00&max-results=37
+}
+function ResolveAddress(CONST HostName: String; out Address: DWORD): Boolean;
+VAR
+   lpHost: PHostEnt;
+   AnsiHostName: AnsiString;
+begin
+  AnsiHostName:= AnsiString(HostName);
+  Address:= DWORD(INADDR_NONE);                                     // Set default address
+  TRY
+    if Length(AnsiHostName) > 0 then                                // Check host name length
+     begin
+      Address:= inet_addr(PAnsiChar(AnsiHostName));                  // Try converting the hostname. In Delphi 7 this was PChar
+      if (DWORD(Address) = DWORD(INADDR_NONE)) then                  // Check address
+       begin
+        lpHost := gethostbyname(PAnsiChar(AnsiHostName));            // Attempt to get host by name
+
+        // Check host ent structure for valid ip address
+        if Assigned(lpHost) and Assigned(lpHost^.h_addr_list^)
+        then Address := u_long(PLongInt(lpHost^.h_addr_list^)^);     // Get the address from the list
+      end;
+    end;
+  FINALLY
+    // Check result address
+    if (DWORD(Address) = DWORD(INADDR_NONE))
+    then Result:= False    // Invalid host specified
+    else Result:= True;   // Converted correctly
+  END;
+end;
+
+
+function IsPortOpened(const Host: string; Port: Integer): Boolean;
+const
+  szSockAddr = SizeOf(TSockAddr);
+var
+  WinSocketData: TWSAData;
+  Socket: TSocket;
+  Address: TSockAddr;
+  dwAddress: DWORD;
+label
+  lClean;
+begin
+  Result := False;
+  if Winapi.WinSock.WSAStartup(MakeWord(1, 1), WinSocketData) = 0 then
+  begin
+    Address.sin_family := AF_INET;
+    if NOT ResolveAddress(Host, dwAddress) then
+      goto lClean;
+    Address.sin_addr.S_addr := dwAddress;
+    Socket := Winapi.WinSock.Socket(AF_INET, SOCK_STREAM, IPPROTO_IP);
+    if Socket = INVALID_SOCKET then
+      goto lClean;
+    Address.sin_port := Winapi.WinSock.htons(Port);
+    if Winapi.WinSock.Connect(Socket, Address, szSockAddr) = 0
+    then Result := True;
+    // close the socket (also on failed connect - WSACleanup only deallocates it when the process-wide refcount drops to zero)
+    Winapi.WinSock.closesocket(Socket);
+  end;// if WinSock.WSAStartup(MakeWord(1, 1), WinSocketData) = 0 then begin
+  lClean:
+    Winapi.WinSock.WSACleanup;
+end;
+
+{HOW TO USE IT:
+
+if IsPortOpened('google.com', 80) then
+  ShowMessage('google has port 80 opened')
+else
+  ShowMessage('google has port 80 closed???');
+}
+
+{$ENDIF}
 
 
 end.
