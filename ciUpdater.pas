@@ -1,7 +1,7 @@
 UNIT ciUpdater;
 
 {=============================================================================================================
-   2026.05.18
+   2026.10.03
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -250,7 +250,8 @@ end;
 
 
 { Download data from website right now.
-  Returns TRUE if we need to show the form (in case of error or news) and FALSE if no errors AND no news. }
+  Returns TRUE when the news file was downloaded and read, FALSE on any error (no connection, HTTP error, an HTML page, a wrong format).
+  Whether there is news is in HasNews. OnUpdateEnd fires at the end of every call, after an error too. }
 function TUpdater.GetNews: Boolean;
 VAR ErrorMsg: string;
 begin
@@ -294,6 +295,7 @@ begin
      if ShowConnectFail
      then AppDataCore.LogError(DetailMsg);
 
+     if Assigned(FUpdaterEnd) then FUpdaterEnd(Self);   { Same as the other two exits: a listener that waits for the end of the check must get it }
      EXIT;
     end;
 
@@ -385,7 +387,7 @@ begin
  VAR IniFile:= TIniFileEx.Create('Updater', FileName);
  try
    { Internal state }
-   IniFile.WriteDate  ('LastUpdate__',    LastUpdate);
+   IniFile.WriteDateTime('Updater', 'LastUpdate__', LastUpdate);   { WriteDateTime, not WriteDate: WriteDate writes DateToStr and loses the time of day (System.IniFiles.pas, TCustomIniFile.WriteDate). After a restart LastUpdate was then the midnight before the check, so the next check came up to 24 hours early. }
    IniFile.Write      ('LocalCounter',    LocalNewsID);
 
    { User settings }
@@ -405,7 +407,7 @@ begin
  try
    { Internal state}
    { Default 0 (epoch) — NOT Now — so that an INI missing this key triggers TooLongNoSee on the next IsTimeToCheckAgain. }
-   LastUpdate      := IniFile.ReadDate('LastUpdate__', 0);
+   LastUpdate      := IniFile.ReadDateTime('Updater', 'LastUpdate__', 0);   { Also reads the date-only values that WriteDate wrote before 2026.10.03 }
    LocalNewsID     := IniFile.Read('LocalCounter', 0);
 
    { User settings }
