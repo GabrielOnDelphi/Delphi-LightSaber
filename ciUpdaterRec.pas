@@ -1,7 +1,7 @@
 UNIT ciUpdaterRec;
 
 {-------------------------------------------------------------------------------------------------------------
-   2026.02
+   2026.10.03
    www.GabrielMoraru.com
 
    Online data holder for TUpdater.
@@ -72,6 +72,7 @@ begin
  NewsBody    := '';
  TargetUser  := tuAll;
  CriticalUpd := FALSE;
+ IsBetaVers  := FALSE;   { Was missing until 2026.10.03: a failed LoadFrom kept the IsBetaVers of the file loaded before }
  ShowCounter := 1;
 end;
 
