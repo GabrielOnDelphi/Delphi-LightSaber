@@ -1,7 +1,7 @@
 UNIT FormUpdaterNotifier;
 
 {=============================================================================================================
-   2026.06.10
+   2026.10.03
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -84,9 +84,27 @@ TYPE
 IMPLEMENTATION {$R *.fmx}
 
 USES
+  {$IFDEF MSWINDOWS} LightCore.ExeVersion, {$ENDIF}
   LightCore, LightCore.AppData, LightCore.Internet,
   LightFmx.Common.AppData,
   FormUpdaterSettings;
+
+
+{ The version of the running program, all four numbers on Windows (9.55.1.0).
+  AppData.GetAppVersion returns only Major.Minor on Windows (FMX.Platform.Win.pas, TPlatformWin.GetVersionString),
+  and CompareVersions counts the missing numbers as 0, so a running 9.55.1 compared as 9.55.0.0 and NewVersionFound
+  said TRUE for the version the user already runs. Off Windows: AppData.GetAppVersion. }
+function RunningVersion: string;
+{$IFDEF MSWINDOWS}
+VAR Version: TFileVersion;
+{$ENDIF}
+begin
+  {$IFDEF MSWINDOWS}
+  if GetVersionInfoFile(ParamStr(0), Version)
+  then EXIT(IntToStr(Version.Major) + '.' + IntToStr(Version.Minor) + '.' + IntToStr(Version.Release) + '.' + IntToStr(Version.Build));
+  {$ENDIF}
+  Result:= AppData.GetAppVersion;
+end;
 
 
 
@@ -157,7 +175,7 @@ end;
 { Read current state from Updater.NewsRec and render into the version label + memo. }
 procedure TfrmUpdater.PopulateNews;
 begin
-  lblVersion.Text:= 'You are running version ' + AppData.GetAppVersion
+  lblVersion.Text:= 'You are running version ' + RunningVersion
               + CRLF + 'Online version is '   + Updater.NewsRec.AppVersion;
 
   if Updater.NewsRec.CriticalUpd
@@ -175,7 +193,7 @@ begin
     end;
 
   { Highlight version label when a newer build is online }
-  if Updater.NewVersionFound(AppData.GetAppVersion) then
+  if Updater.NewVersionFound(RunningVersion) then
     begin
       lblVersion.StyledSettings:= lblVersion.StyledSettings - [TStyledSetting.FontColor];
       lblVersion.TextSettings.FontColor:= TAlphaColors.Red;
