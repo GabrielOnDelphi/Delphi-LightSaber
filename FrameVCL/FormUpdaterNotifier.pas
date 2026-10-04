@@ -1,6 +1,6 @@
 UNIT FormUpdaterNotifier;
 {-------------------------------------------------------------------------------------------------------------
-   2026.02
+   2026.10.03
    www.GabrielMoraru.com
 
    Show info and updates about a commercial program.
@@ -77,6 +77,7 @@ TYPE
     procedure FormDestroy           (Sender: TObject);
     procedure FormClose             (Sender: TObject; var Action: TCloseAction);
   private
+    HostEvents: RUpdaterEvents;   { The handlers that the host program had set on the Updater before this form set its own. FormDestroy gives them back. }
     procedure PopulateNews;
   public
     procedure ShowDemoTab;
@@ -88,6 +89,17 @@ IMPLEMENTATION  {$R *.DFM}
 USES
    LightVcl.Visual.RichLogUtils, LightCore.Colors, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.System;
 
+
+{ The version of the running program with all four numbers (9.55.1.2), as NewVersionFound needs it.
+  TAppData.GetVersionInfo drops the build number by default, and CompareVersions counts a missing number as 0,
+  so a running 9.55.1.2 compared as 9.55.1.0 and NewVersionFound said TRUE for the version the user already runs.
+  'N/A' when the exe has no version resource, the text that TAppData.GetVersionInfo gives then. }
+function RunningVersion: string;
+begin
+  Result:= GetFileVersionFull(Application.ExeName);
+  if Result = ''
+  then Result:= 'N/A';
+end;
 
 
 
@@ -102,7 +114,8 @@ begin
   Assert(Updater <> NIL);
   Assert(lblVersion.Transparent= True);         { Needed for compatibility with VCL skins }
 
-  { Setup events }
+  { Setup events. Keep the handlers of the host program, to give them back on close. }
+  HostEvents.ReadFrom(Updater);
   Updater.OnUpdateStart  := OnUpdateStart;
   Updater.OnNoNews       := OnNoNews;
   Updater.OnHasNews      := OnHasNews;
@@ -123,16 +136,10 @@ end;
 
 procedure TFrmUpdater.FormDestroy(Sender: TObject);
 begin
- { Disconnect updater from the form. Guard against the host app freeing Updater before
-   this form (shutdown-order hazard) — matches the FMX twin in FrameFMX\FormUpdaterNotifier. }
- if Updater <> NIL then
-  begin
-   Updater.OnNoNews      := NIL;
-   Updater.OnHasNews     := NIL;
-   Updater.OnConnectError:= NIL;
-   Updater.OnUpdateStart := NIL;
-   Updater.OnUpdateEnd   := NIL;
-  end;
+ { Disconnect updater from the form: give it back the handlers of the host program. Guard against the host app
+   freeing Updater before this form (shutdown-order hazard) — matches the FMX twin in FrameFMX\FormUpdaterNotifier. }
+ if Updater <> NIL
+ then HostEvents.WriteTo(Updater);
 end;
 
 
@@ -186,7 +193,7 @@ end;
 procedure TFrmUpdater.PopulateNews;
 begin     //clr
  { Show version }
- lblVersion.Caption:= 'You are running version '+ TAppData.GetVersionInfo
+ lblVersion.Caption:= 'You are running version '+ RunningVersion
                 +CRLF+'Online version is '+ Updater.NewsRec.AppVersion;
 
  if Updater.NewsRec.CriticalUpd
@@ -196,7 +203,7 @@ begin     //clr
  Log.AddMsg(Updater.NewsRec.NewsBody);
 
  { Show new version in red }
- if Updater.NewVersionFound(TAppData.GetVersionInfo) then
+ if Updater.NewVersionFound(RunningVersion) then
   begin
    { Show as label }
    lblVersion.Color:= clRedFade;
@@ -240,7 +247,7 @@ end;
 
 procedure TFrmUpdater.btnNewVersFoundClick(Sender: TObject);
 begin
- if Updater.NewVersionFound(TAppData.GetVersionInfo)
+ if Updater.NewVersionFound(RunningVersion)
  then Log.AddInfo('NewVersionFound')
  else Log.AddInfo('No NewVersionFound');
 
