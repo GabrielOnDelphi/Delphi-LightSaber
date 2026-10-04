@@ -67,6 +67,7 @@ TYPE
     procedure lblDownloadClick    (Sender: TObject);
     procedure lblRelHistoryClick  (Sender: TObject);
   private
+    HostEvents: RUpdaterEvents;   { The handlers that the host program had set on the Updater before this form set its own. FormPreRelease gives them back. }
     procedure OnUpdateStart   (Sender: TObject);
     procedure OnUpdateEnd     (Sender: TObject);
     procedure OnHasNews       (Sender: TObject);
@@ -84,7 +85,6 @@ TYPE
 IMPLEMENTATION {$R *.fmx}
 
 USES
-  {$IFDEF MSWINDOWS} LightCore.ExeVersion, {$ENDIF}
   LightCore, LightCore.AppData, LightCore.Internet,
   LightFmx.Common.AppData,
   FormUpdaterSettings;
@@ -93,17 +93,12 @@ USES
 { The version of the running program, all four numbers on Windows (9.55.1.0).
   AppData.GetAppVersion returns only Major.Minor on Windows (FMX.Platform.Win.pas, TPlatformWin.GetVersionString),
   and CompareVersions counts the missing numbers as 0, so a running 9.55.1 compared as 9.55.0.0 and NewVersionFound
-  said TRUE for the version the user already runs. Off Windows: AppData.GetAppVersion. }
+  said TRUE for the version the user already runs. Off Windows, or with no version resource: AppData.GetAppVersion. }
 function RunningVersion: string;
-{$IFDEF MSWINDOWS}
-VAR Version: TFileVersion;
-{$ENDIF}
 begin
-  {$IFDEF MSWINDOWS}
-  if GetVersionInfoFile(ParamStr(0), Version)
-  then EXIT(IntToStr(Version.Major) + '.' + IntToStr(Version.Minor) + '.' + IntToStr(Version.Release) + '.' + IntToStr(Version.Build));
-  {$ENDIF}
-  Result:= AppData.GetAppVersion;
+  Result:= GetFileVersionFull(ParamStr(0));
+  if Result = ''
+  then Result:= AppData.GetAppVersion;
 end;
 
 
@@ -128,7 +123,8 @@ begin
 
   CloseOnEscape:= TRUE;
 
-  { Wire updater events to this form }
+  { Wire updater events to this form. Keep the handlers of the host program, to give them back on close. }
+  HostEvents.ReadFrom(Updater);
   Updater.OnUpdateStart  := OnUpdateStart;
   Updater.OnHasNews      := OnHasNews;
   Updater.OnNoNews       := OnNoNews;
@@ -156,18 +152,12 @@ begin
 end;
 
 
-{ Guaranteed single-call cleanup (see LightFmx.Common.AppData.Form). Unwire so a re-opened
-  notifier later doesn't get callbacks from the (now freed) previous instance. }
+{ Guaranteed single-call cleanup (see LightFmx.Common.AppData.Form). Gives the Updater back the handlers of the
+  host program, so the Updater never calls this (soon freed) form, and the host gets its own events again. }
 procedure TfrmUpdater.FormPreRelease;
 begin
-  if Updater <> NIL then
-    begin
-      Updater.OnUpdateStart  := NIL;
-      Updater.OnHasNews      := NIL;
-      Updater.OnNoNews       := NIL;
-      Updater.OnConnectError := NIL;
-      Updater.OnUpdateEnd    := NIL;
-    end;
+  if Updater <> NIL
+  then HostEvents.WriteTo(Updater);
   inherited FormPreRelease;
 end;
 
