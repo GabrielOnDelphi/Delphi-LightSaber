@@ -72,7 +72,7 @@ TYPE
     { Input parameters }
     Delay          : Integer;                 { In seconds. Set it to zero to get the news right away. }
     When           : TCheckWhen;
-    CheckEvery     : Integer;                 { In hours. How often to check for news. Set it to zero to check every time the program starts. }
+    CheckEvery     : Integer;                 { In hours. How often to check for news when When = cwHours. Zero or less: never by hours; only the 180-day check (TooLongNoSee) runs. To check at every start, set When = cwStartUp. }
     ShowConnectFail: Boolean;                 { If true, show error messages when the program fails to connect to the internet. }
     ForceNewsFound : Boolean;                 { For DEBUGGING. If true, the object will always say that it has found news }
     { URLs }
@@ -112,18 +112,33 @@ TYPE
     property  OnUpdateEnd   : TNotifyEvent    read FUpdaterEnd    write FUpdaterEnd;
   end;
 
+  { The five event handlers of a TUpdater. A form that sets its own handlers reads the ones of the host program
+    first and writes them back when it closes, so the host keeps its handlers. }
+  RUpdaterEvents = record
+    OnUpdateStart : TNotifyEvent;
+    OnHasNews     : TNotifyEvent;
+    OnNoNews      : TNotifyEvent;
+    OnConnectError: TNotifyMsgEvent;
+    OnUpdateEnd   : TNotifyEvent;
+    procedure ReadFrom(Source: TUpdater);
+    procedure WriteTo (Target: TUpdater);
+  end;
+
 VAR
    Updater: TUpdater; { Only one instance per app! }
 
 function CompareVersions(const V1, V2: string): Integer;
+function GetFileVersionFull(CONST FileName: string): string;
 
 IMPLEMENTATION
 
 USES
+  {$IFDEF MSWINDOWS} LightCore.ExeVersion, {$ENDIF}
   LightCore, LightCore.TextFile, LightCore.IO, LightCore.Download, LightCore.INIFile, LightCore.AppData;
 
 Const
   TooLongNoSeeInterval = 180;    { Force to check for updates every 180 days even if the updater is disabled }
+  DefaultWhen          = cwHours;
 
 
 {--------------------------------------------------------------------------------------------------
@@ -173,7 +188,7 @@ procedure TUpdater.Clear;
 begin
   NewsRec.Clear;
 
-  When            := cwHours;
+  When            := DefaultWhen;
   HasNews         := FALSE;
   ConnectionError := FALSE;
   LocalNewsID     := 0;
@@ -354,7 +369,7 @@ end;
 
 
 { Returns true when the online version is higher than the local version }
-function TUpdater.NewVersionFound(CONST AppVersion: string): boolean;  // Obtain AppVersion via TAppData.GetVersionInfo
+function TUpdater.NewVersionFound(CONST AppVersion: string): boolean;  // Obtain AppVersion via GetFileVersionFull(ParamStr(0)): all four numbers
 begin
   Result:= (NewsRec.AppVersion <> '?') AND (CompareVersions(NewsRec.AppVersion, AppVersion) > 0);
 end;
@@ -411,7 +426,16 @@ begin
    LocalNewsID     := IniFile.Read('LocalCounter', 0);
 
    { User settings }
-   When            := TCheckWhen(IniFile.Read('When', Ord(cwHours)));
+   { A value outside TCheckWhen (a corrupted INI file) would make CheckForNews raise 'Unknown type in TCheckWhen' }
+   VAR WhenOrd: Integer:= IniFile.Read('When', Ord(DefaultWhen));
+   if (WhenOrd >= Ord(Low(TCheckWhen))) AND (WhenOrd <= Ord(High(TCheckWhen)))
+   then When:= TCheckWhen(WhenOrd)
+   else
+     begin
+       AppDataCore.LogWarn('Updater: the value ' + IntToStr(WhenOrd) + ' of the key When in ' + FileName + ' is not a valid TCheckWhen. Using the default.');
+       When:= DefaultWhen;
+     end;
+
    CheckEvery      := IniFile.Read('CheckEvery', 12);
    ForceNewsFound  := IniFile.Read('ForceNewsFound',  FALSE);
    ShowConnectFail := IniFile.Read('ShowConnectFail', TRUE);
@@ -451,6 +475,49 @@ begin
    end;
 
   Result:= 0;
+end;
+
+
+
+{ The version of a program file with all four numbers (9.55.1.2): the form to give to NewVersionFound for the running program, GetFileVersionFull(ParamStr(0)).
+  A shorter version compares as older, because CompareVersions counts a missing number as 0: a running 9.55.1.2 read as 9.55.1 made NewVersionFound say TRUE for the version the user already runs.
+  Returns '' when the file has no version resource, and always off Windows, where LightCore.ExeVersion does not exist. The caller then uses the version that its framework reports.
+  Raises on Windows when FileName is empty (GetVersionInfoFile). }
+function GetFileVersionFull(CONST FileName: string): string;
+{$IFDEF MSWINDOWS}
+VAR Version: TFileVersion;
+{$ENDIF}
+begin
+  Result:= '';
+  {$IFDEF MSWINDOWS}
+  if GetVersionInfoFile(FileName, Version)
+  then Result:= IntToStr(Version.Major) + '.' + IntToStr(Version.Minor) + '.' + IntToStr(Version.Release) + '.' + IntToStr(Version.Build);
+  {$ENDIF}
+end;
+
+
+
+{ RUpdaterEvents }
+
+procedure RUpdaterEvents.ReadFrom(Source: TUpdater);
+begin
+  Assert(Source <> NIL, 'RUpdaterEvents.ReadFrom: no Updater');
+  OnUpdateStart := Source.OnUpdateStart;
+  OnHasNews     := Source.OnHasNews;
+  OnNoNews      := Source.OnNoNews;
+  OnConnectError:= Source.OnConnectError;
+  OnUpdateEnd   := Source.OnUpdateEnd;
+end;
+
+
+procedure RUpdaterEvents.WriteTo(Target: TUpdater);
+begin
+  Assert(Target <> NIL, 'RUpdaterEvents.WriteTo: no Updater');
+  Target.OnUpdateStart := OnUpdateStart;
+  Target.OnHasNews     := OnHasNews;
+  Target.OnNoNews      := OnNoNews;
+  Target.OnConnectError:= OnConnectError;
+  Target.OnUpdateEnd   := OnUpdateEnd;
 end;
 
 
