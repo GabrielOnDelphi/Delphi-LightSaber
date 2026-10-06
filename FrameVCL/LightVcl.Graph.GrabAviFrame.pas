@@ -2,7 +2,7 @@
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.01.30
+   2026.10.05
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -98,12 +98,22 @@ begin
    FreeAndNil(AviLogo);
  END;
 
- { Draw the "Video file" text at the top center }
- Result.Canvas.Brush.Color:= clBlack;
- Result.Canvas.Font.Name  := 'Verdana';
- Result.Canvas.Font.Size  := 9;
- Result.Canvas.Font.Color := clLime;
- Result.Canvas.TextOut((Result.Width - Result.Canvas.TextWidth(Text)) DIV 2, 4, Text);
+ { Draw the "Video file" text at the top center.
+   Runs on the BioniX thumbnail worker: Lock + ReleaseCanvasDC (see LightVcl.Graph.Bitmap.ReleaseCanvasDC). }
+ Result.Canvas.Lock;
+ TRY
+   TRY
+     Result.Canvas.Brush.Color:= clBlack;
+     Result.Canvas.Font.Name  := 'Verdana';
+     Result.Canvas.Font.Size  := 9;
+     Result.Canvas.Font.Color := clLime;
+     Result.Canvas.TextOut((Result.Width - Result.Canvas.TextWidth(Text)) DIV 2, 4, Text);
+   FINALLY
+     LightVcl.Graph.Bitmap.ReleaseCanvasDC(Result);
+   END;
+ FINALLY
+   Result.Canvas.Unlock;
+ END;
 end;
 
 
