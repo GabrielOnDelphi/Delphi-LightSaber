@@ -1,7 +1,7 @@
 UNIT LightVcl.Graph.FX.Rotate;
 
 {=============================================================================================================
-   2026.01.30
+   2026.10.05
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
   Rotate an image at a specified angle.
@@ -107,6 +107,8 @@ var
   DiffW, DiffH: Integer;
   NewSize: TSize;
   Graphs: TGPGraphics;
+  DC: HDC;
+  OldBitmap: HGDIOBJ;
 begin
   Assert(Bmp <> NIL, 'RotateBitmapGDI: BMP cannot be NIL');
   Tmp := TGPBitmap.Create(Bmp.Handle, Bmp.Palette);
@@ -122,43 +124,59 @@ begin
       Bmp.Width  := NewSize.cx;
       Bmp.Height := NewSize.cy;
     end;
-    Graphs:= TGPGraphics.Create(Bmp.Canvas.Handle);
+    { GDI+ draws through a private DC, not through Bmp.Canvas, so no canvas DC is left behind.
+      Runs on the BioniX thumbnail worker (ExtractThumbnailJpg -> RotateExif): see LightVcl.Graph.Bitmap.ReleaseCanvasDC.
+      Bmp.Handle frees any existing canvas DC first (TBitmap.GetHandle starts with "FreeContext;"). }
+    DC:= CreateCompatibleDC(0);
+    if DC = 0 then RaiseLastOSError;
     TRY
-      Graphs.Clear(ColorRefToARGB(ColorToRGB(BkColor)));
-      {
-        https://stackoverflow.com/questions/41274112/how-to-draw-tgpgraphics-contents-onto-a-canvas
-        Graphs.SetCompositingMode(CompositingModeSourceCopy);
-        Graphs.SetInterpolationMode(InterpolationModeHighQualityBicubic);
-        Graphs.SetPixelOffsetMode(PixelOffsetModeHighQuality);
-        Graphs.SetSmoothingMode(SmoothingModeHighQuality);  }
-      Graphs.SetTransform(Matrix);
+      OldBitmap:= SelectObject(DC, Bmp.Handle);
+      if OldBitmap = 0 then RaiseLastOSError;
+      TRY
+        Graphs:= TGPGraphics.Create(DC);
+        TRY
+          Graphs.Clear(ColorRefToARGB(ColorToRGB(BkColor)));
+          {
+            https://stackoverflow.com/questions/41274112/how-to-draw-tgpgraphics-contents-onto-a-canvas
+            Graphs.SetCompositingMode(CompositingModeSourceCopy);
+            Graphs.SetInterpolationMode(InterpolationModeHighQualityBicubic);
+            Graphs.SetPixelOffsetMode(PixelOffsetModeHighQuality);
+            Graphs.SetSmoothingMode(SmoothingModeHighQuality);  }
+          Graphs.SetTransform(Matrix);
 
-      { Calculate offset to center the rotated image }
-      if AdjustSize
-      then
-       begin
-         if Degs <= 90 then
-          begin
-           DiffW:= Integer(Tmp.GetWidth)- Bmp.Width;
-           DiffH:= Bmp.Height - Integer(Tmp.GetHeight);
-          end
-         else
-          begin
-           DiffW:= Bmp.Width  - Integer(Tmp.GetWidth);
-           DiffH:= Integer(Tmp.GetHeight)- Bmp.Height;
-          end;
-       end
-      else
-       begin
-        DiffW:= Bmp.Width  - Integer(Tmp.GetWidth);
-        DiffH:= Bmp.Height - Integer(Tmp.GetHeight);
-       end;
+          { Calculate offset to center the rotated image }
+          if AdjustSize
+          then
+           begin
+             if Degs <= 90 then
+              begin
+               DiffW:= Integer(Tmp.GetWidth)- Bmp.Width;
+               DiffH:= Bmp.Height - Integer(Tmp.GetHeight);
+              end
+             else
+              begin
+               DiffW:= Bmp.Width  - Integer(Tmp.GetWidth);
+               DiffH:= Integer(Tmp.GetHeight)- Bmp.Height;
+              end;
+           end
+          else
+           begin
+            DiffW:= Bmp.Width  - Integer(Tmp.GetWidth);
+            DiffH:= Bmp.Height - Integer(Tmp.GetHeight);
+           end;
 
-      //tmp.Save(getappdir + '2post.bmp', nil, nil);
-      Graphs.DrawImage(Tmp, DiffW / 2, DiffH / 2);
-      //Graphs.DrawImage(Tmp, Top.recta);  //DiffW, DiffH);
+          //tmp.Save(getappdir + '2post.bmp', nil, nil);
+          Graphs.DrawImage(Tmp, DiffW / 2, DiffH / 2);
+          //Graphs.DrawImage(Tmp, Top.recta);  //DiffW, DiffH);
+        FINALLY
+          FreeAndNil(Graphs);
+        END;
+        GdiFlush;   { Bmp is a DIB section: GDI must finish before anybody reads its bits }
+      FINALLY
+        SelectObject(DC, OldBitmap);
+      END;
     FINALLY
-      FreeAndNil(Graphs);
+      DeleteDC(DC);
     END;
   finally
     FreeAndNil(Matrix);
