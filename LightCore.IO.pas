@@ -1,7 +1,7 @@
 ﻿UNIT LightCore.IO;
 
 {=============================================================================================================
-   2026.10.01
+   2026.10.05
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
@@ -194,6 +194,7 @@ CONST
 
  function  ShortenFileName      (CONST FullPath: String; MaxLength: Integer= MAXPATH): string;     { Returns a valid path, but with shorter filename }
  function  CheckPathLength      (CONST FullPath: string; MaxLength: Integer= MAXPATH): Boolean;
+ function  ExtendedLengthPath   (CONST Path: string): string;                                      { Returns Path in the \\?\ form when it is too long for a plain Win32 call; short, relative and prefixed paths come back unchanged. Use it at the call only; store and show the plain path }
 
  { Path delimiters }
  function  ForcePathDelimiters  (CONST Path, Delimiter: string; SetAtBegining, SetAtEnd: Boolean): string;  { Old name: UniversalPathDelimiters }
@@ -663,6 +664,53 @@ begin
   {$IFDEF POSIX}
   Result:= (Length(UTF8Encode(FullPath)) < MaxLength);
   {$ENDIF POSIX}
+end;
+
+
+{ Returns Path in the extended-length form - \\?\C:\... or \\?\UNC\server\share\... - when it is long enough to hit
+  the Win32 MAX_PATH limit, so that CreateFileW, GetFileAttributesExW, FindFirstFileW and the rest accept it.
+  Pass the result straight to TFileStream or to a SysUtils routine (FileOpen, FileAge, FileGetDateTimeInfo, FindFirst,
+  DeleteFile): they hand the string to the W API unchanged (System.SysUtils.pas, FileOpen: CreateFile(PChar(FileName), ...)).
+  Keep the plain form for everything that is stored, compared or shown.
+
+  Microsoft, https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation :
+    "In the Windows API (with some exceptions discussed in the following paragraphs), the maximum length for a path is
+     MAX_PATH, which is defined as 260 characters." - "To specify an extended-length path, use the "\\?\" prefix."
+  The other way out, longPathAware in the application manifest, works only when the PC also has the LongPathsEnabled
+  registry value set (same page), so a program cannot count on it.
+
+  The threshold is MAXPATH (MAX_PATH - 12), the lowest limit on that page ("the directory name cannot exceed MAX_PATH
+  minus 12"), so a folder path is covered too. Embarcadero's TFile.GetSize prefixes a long path the same way.
+
+  Returned unchanged:
+    - a path shorter than MAXPATH;
+    - a path that already starts with \\?\ or \\.\ ;
+    - a relative path, including "C:name": "you cannot use the "\\?\" prefix with a relative path" (same page).
+  The \\?\ form switches off the path parsing of Windows, so '/' is turned into '\' here, and the path must not hold
+  "." or ".." components. A path that came from a directory listing never does.
+  Not Windows: Path unchanged, there is no MAX_PATH limit to work around. }
+function ExtendedLengthPath(CONST Path: string): string;
+begin
+  {$IFDEF MSWINDOWS}
+  if (Length(Path) < MAXPATH)
+  OR TPath.IsExtendedPrefixed(Path)
+  then EXIT(Path);
+
+  { \\server\share\... -> \\?\UNC\server\share\... }
+  if ((Path[1] = '\') OR (Path[1] = '/'))
+  AND ((Path[2] = '\') OR (Path[2] = '/'))
+  then EXIT('\\?\UNC\'+ StringReplace(Copy(Path, 3, MaxInt), '/', '\', [rfReplaceAll]));
+
+  { C:\... -> \\?\C:\... }
+  if CharInSet(Path[1], ['A'..'Z', 'a'..'z'])
+  AND (Path[2] = ':')
+  AND ((Path[3] = '\') OR (Path[3] = '/'))
+  then EXIT('\\?\'+ StringReplace(Path, '/', '\', [rfReplaceAll]));
+
+  Result:= Path;   { relative }
+  {$ELSE}
+  Result:= Path;
+  {$ENDIF MSWINDOWS}
 end;
 
 
