@@ -502,7 +502,7 @@ procedure OpenURL(const URL: string); { Opens URL in the default browser. Cross-
 Procedure CreateUrl (CONST FullFileName, sFullURL: string); { Creates an .URL file }
 ```
 
-## LightCore.IO (135)
+## LightCore.IO (136)
 
 ```pascal
 function TrailLinuxPathEx (CONST Path: string): string; { Adds / in front and at the end of the path }
@@ -524,6 +524,7 @@ function TrimLastFolder (CONST DirPath: string): string; { exemplu pentru c:\win
 function ExtractRelativePath_ (CONST FullPath, RelativeTo: string): string; deprecated 'Use System.SysUtils.ExtractRelativePath instead' { Returns truncated path, relative to 'RelativeTo'. Example: ExtractRelativePath('c:\windows\system32\user32.dll', 'c:\windows') returns system32\user32.dll }
 function ShortenFileName (CONST FullPath: String; MaxLength: Integer= MAXPATH): string; { Returns a valid path, but with shorter filename }
 function CheckPathLength (CONST FullPath: string; MaxLength: Integer= MAXPATH): Boolean;
+function ExtendedLengthPath (CONST Path: string): string; { Returns Path in the \\?\ form when it is too long for a plain Win32 call; short, relative and prefixed paths come back unchanged. Use it at the call only; store and show the plain path }
 function ForcePathDelimiters (CONST Path, Delimiter: string; SetAtBegining, SetAtEnd: Boolean): string; { Old name: UniversalPathDelimiters }
 function Trail (CONST Path: string): string; { Replacement for includeTrailingPathDelimiter }
 function SameFolder(Path1, Path2: string): Boolean; { Receives two folders. Ex: C:\Test1\ and C:\teSt1 will return true }
@@ -2578,7 +2579,7 @@ procedure DrawTransparentBitmap(Source: TBitmap; SourceRect: TRect; Destination:
 procedure GetTransparentBitmapFromImagelist(ImageList: TImageList; Index:integer; Bitmap: TBitmap);
 ```
 
-## LightVcl.Graph.Bitmap (25)
+## LightVcl.Graph.Bitmap (26)
 
 ```pascal
 procedure Clear; overload;
@@ -2587,6 +2588,7 @@ procedure AssignTo(Font: TFont);
 function CreateBitmap (Width, Height: Integer; PixelFormat: TPixelFormat= pf24bit): TBitmap;
 function CreateBlankBitmap (Width, Height: Integer; BkgClr: TColor= clBlack; PixelFormat: TPixelFormat= pf24bit): TBitmap; // old name: GetBlankImage
 procedure SetLargeSize (BMP: TBitmap; CONST Width, Height: Integer); { Raises EOutOfMemory when the bitmap cannot be grown. The bitmap then still holds its old size }
+procedure ReleaseCanvasDC (BMP: TBitmap); { Thread safety: frees the DC of BMP.Canvas. Call it before BMP.Canvas.Unlock on a worker thread }
 procedure ClearImage (Img: TImage);
 procedure ClearBitmap (BMP: TBitmap);
 procedure FillBitmap (BMP: TBitmap; Color: TColor);
@@ -2770,7 +2772,7 @@ function ExtractMiddleFrame(CONST FileName: string; OUT FrameCount: Cardinal): T
 function GetVideoPlayerLogo: TBitmap;
 ```
 
-## LightVcl.Graph.Loader (23)
+## LightVcl.Graph.Loader (24)
 
 ```pascal
 function LoadGraph (CONST FileName: string; ExifRotate: Boolean = True; UseWic: Boolean = True): TBitmap; overload;
@@ -2784,6 +2786,7 @@ function LoadJpg (CONST FileName: string; Scale: TJPEGScale= jsFullSize): TBitma
 function LoadPNG (CONST FileName: string): TBitmap; overload;
 function LoadGIF (CONST FileName: string): TBitmap; overload; { Load GIF and convert it to BMP }
 function LoadGIF (CONST FileName: string; OUT FrameCount: Cardinal): TBitmap; overload;
+procedure ReleaseGifCanvasDCs(GIF: TGIFImage); { Thread safety: frees the canvas DCs that GIF.Bitmap creates. LoadGIF calls it }
 function LoadWB1 (CONST FileName: string): TBitmap;
 function LoadICO (CONST FileName: string): TBitmap;
 function LoadEMF (CONST FileName: string): TBitmap;
@@ -4105,4 +4108,4 @@ procedure PutIconInSystrayBalloon; { This will also show the balloon IF BalloonH
 procedure Register;
 ```
 
-_2946 public routines across 230 units._
+_2949 public routines across 230 units._
