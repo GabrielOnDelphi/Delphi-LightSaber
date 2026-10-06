@@ -1,7 +1,7 @@
 ﻿UNIT LightVcl.Graph.Loader;
 
 {=============================================================================================================
-   2026.06.10
+   2026.10.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
   Helps you load common file formats (GIF, JPG, BMP, PNG, WB1, RainDrop, JPG2K) from disk.
@@ -68,6 +68,7 @@ CONST
  function  LoadPNG (CONST FileName: string): TBitmap;                           overload;
  function  LoadGIF (CONST FileName: string): TBitmap;                           overload;  { Load GIF and convert it to BMP }
  function  LoadGIF (CONST FileName: string; OUT FrameCount: Cardinal): TBitmap; overload;
+ procedure ReleaseGifCanvasDCs(GIF: TGIFImage);                                   { Thread safety: frees the canvas DCs that GIF.Bitmap creates. LoadGIF calls it }
  function  LoadWB1 (CONST FileName: string): TBitmap;
  function  LoadICO (CONST FileName: string): TBitmap;
  function  LoadEMF (CONST FileName: string): TBitmap;
@@ -103,7 +104,7 @@ USES
    FastJpegDecHelper,
    LightVcl.Graph.Resize, LightCore.Graph.Loader.Resolution, LightVcl.Graph.UtilGray,
    LightVcl.Graph.Loader.WB1, LightVcl.Graph.RainShelter, LightCore.IO, LightCore.Graphics, LightVcl.Common.IO, LightVcl.Graph.FX.Rotate,
-   LightCore.AppData, LightVcl.Graph.GrabAviFrame;
+   LightCore.AppData, LightVcl.Graph.GrabAviFrame, LightVcl.Graph.Bitmap;
 
 
 
@@ -741,6 +742,38 @@ begin
 end;
 
 
+{ When the first frame is transparent or smaller than the GIF, TGIFImage.GetBitmap draws it on GIF.Bitmap.Canvas, and the
+  draw also gives Images[0].Bitmap.Canvas a DC. LoadGIF frees the GIF on the BioniX thumbnail worker, and a worker must
+  not free a canvas that owns a DC (see LightVcl.Graph.Bitmap.ReleaseCanvasDC), so this frees both DCs under the canvas lock.
+  Call it BEFORE assigning GIF to another TBitmap: after the Assign the two share one image, and ReleaseCanvasDC would copy it.
+  Known limit: the draw inside GetBitmap itself runs without the canvas lock, because the VCL creates GIF.Bitmap there. }
+procedure ReleaseGifCanvasDCs(GIF: TGIFImage);
+
+  procedure ReleaseDC(BMP: TBitmap);
+  begin
+    BMP.Canvas.Lock;
+    TRY
+      { No DC = nothing to free. The test also skips the copy that ReleaseCanvasDC makes of a shared image:
+        when the first frame is opaque and full size, GetBitmap shares Images[0].Bitmap's image with GIF.Bitmap }
+      if BMP.Canvas.HandleAllocated
+      then ReleaseCanvasDC(BMP);
+    FINALLY
+      BMP.Canvas.Unlock;
+    END;
+  end;
+
+begin
+  if GIF = NIL
+  then raise Exception.Create('ReleaseGifCanvasDCs: GIF parameter cannot be nil');
+
+  if GIF.Bitmap = NIL then EXIT;   { Empty GIF }
+  ReleaseDC(GIF.Bitmap);
+
+  if (GIF.Images.Count > 0) AND (GIF.Images[0].Bitmap <> NIL)   { TGIFFrame.GetBitmap returns NIL for an empty frame }
+  then ReleaseDC(GIF.Images[0].Bitmap);
+end;
+
+
 { Load GIF and convert it to BMP.
   It also returns the number of frames }
 function LoadGIF(CONST FileName: string; OUT FrameCount: Cardinal): TBitmap;
@@ -773,6 +806,7 @@ begin
 
    Result:= TBitmap.Create;
    TRY
+     ReleaseGifCanvasDCs(GIF);      { Runs on the BioniX thumbnail worker. Must come before the Assign }
      Result.Assign(GIF);
      FrameCount:= Gif.Images.Count; { This returns 1 for static images }
    EXCEPT
