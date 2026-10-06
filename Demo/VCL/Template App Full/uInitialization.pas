@@ -49,7 +49,7 @@ begin
   MainForm.Proteus.ProductName  := AppData.AppName;
   MainForm.Proteus.ProductVers  := AppData.GetVersionInfoMajor;
   MainForm.Proteus.ProductSecret:= 'LightSaberWillBlowYourMind';
-  MainForm.Proteus.GenerateTrialKey(3, 'TrialEdition');
+  MainForm.Proteus.DefaultKey   := MainForm.Proteus.GenerateTrialKey(3, 'TrialEdition');
   MainForm.Proteus.Initialize;
 
   if MainForm.Proteus.CurCertif.Demo
