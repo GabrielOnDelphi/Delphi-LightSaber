@@ -2,7 +2,7 @@ UNIT LightVcl.Graph.Bitmap;
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.09.10
+   2026.10.06
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -25,7 +25,7 @@ UNIT LightVcl.Graph.Bitmap;
 INTERFACE
 
 USES
-   System.Types, Vcl.ExtCtrls, System.SysUtils, Vcl.Graphics, System.Classes, LightVcl.Graph.FX;
+   System.Types, Winapi.Windows, Vcl.ExtCtrls, System.SysUtils, Vcl.Graphics, System.Classes, LightVcl.Graph.FX;   { Winapi.Windows before Vcl.Graphics: both declare a TBitmap }
 
 
 TYPE
@@ -45,6 +45,7 @@ TYPE
  function  CreateBitmap      (Width, Height: Integer; PixelFormat: TPixelFormat= pf24bit): TBitmap;
  function  CreateBlankBitmap (Width, Height: Integer; BkgClr: TColor= clBlack; PixelFormat: TPixelFormat= pf24bit): TBitmap; // old name: GetBlankImage
  procedure SetLargeSize      (BMP: TBitmap; CONST Width, Height: Integer);   { Raises EOutOfMemory when the bitmap cannot be grown. The bitmap then still holds its old size }
+ procedure ReleaseCanvasDC   (BMP: TBitmap);                                 { Thread safety: frees the DC of BMP.Canvas. Call it before BMP.Canvas.Unlock on a worker thread }
 
 
 {-------------------------------------------------------------------------------------------------------------
@@ -188,9 +189,41 @@ begin
   if BMP = NIL
   then raise Exception.Create('FillBitmap: BMP parameter cannot be nil');
 
-  BMP.Canvas.Brush.Color:= Color;
-  BMP.Canvas.Brush.Style:= bsSolid;
-  BMP.Canvas.FillRect(BMP.Canvas.ClipRect);
+  BMP.Canvas.Lock;   { Can run on a worker thread: see ReleaseCanvasDC }
+  TRY
+    TRY
+      BMP.Canvas.Brush.Color:= Color;
+      BMP.Canvas.Brush.Style:= bsSolid;
+      BMP.Canvas.FillRect(BMP.Canvas.ClipRect);
+    FINALLY
+      ReleaseCanvasDC(BMP);
+    END;
+  FINALLY
+    BMP.Canvas.Unlock;
+  END;
+end;
+
+
+{-------------------------------------------------------------------------------------------------------------
+   Frees the device context (DC) that BMP.Canvas holds, if it holds one, and takes the canvas out of the list that
+   Vcl.Graphics.FreeMemoryContexts walks. Verified in c:\Delphi\Delphi 13\source\vcl\Vcl.Graphics.pas (Delphi 13.1):
+   - TWinControl.MainWndProc (Vcl.Controls.pas) calls "FreeMemoryContexts;" after every message. For every canvas
+     that owns a DC it runs "if TryLock then try FreeContext; finally Unlock; end", and TBitmapCanvas.FreeContext
+     sets "Handle := 0" before it unlocks.
+   - A worker thread that frees its bitmap in that window finds "if FHandle <> 0 then" FALSE in
+     TBitmapCanvas.FreeContext, takes no lock and frees the canvas; the main thread then unlocks freed memory
+     (FastMM, 2026-10-05: "TBitmapCanvas modified after free" on the BioniX thumbnail thread).
+   - While a worker holds BMP.Canvas.Lock, TryLock fails, so the main thread leaves the canvas alone.
+   So a worker that draws through BMP.Canvas does: Lock, draw, ReleaseCanvasDC, Unlock. After that the canvas is not
+   in the list any more and the bitmap can be freed on the worker.
+   How: TBitmap.GetHandle starts with "FreeContext;", so reading BMP.Handle reaches the private TBitmap.FreeContext.
+-------------------------------------------------------------------------------------------------------------}
+procedure ReleaseCanvasDC(BMP: TBitmap);
+begin
+  if BMP = NIL
+  then raise Exception.Create('ReleaseCanvasDC: BMP parameter cannot be nil');
+
+  if BMP.Handle = 0 then EXIT;   { Reading Handle is what frees the DC }
 end;
 
 
@@ -206,8 +239,17 @@ begin
 
  if Text > '' then
   begin
-   BMP.Canvas.Brush.Style:= bsClear;  { Transparent background }
-   BMP.Canvas.TextOut((BMP.Width- BMP.Canvas.TextWidth(Text)) DIV 2, (BMP.Height- BMP.Canvas.TextHeight(Text)) DIV 2, Text);
+   BMP.Canvas.Lock;   { Can run on a worker thread: see ReleaseCanvasDC }
+   TRY
+     TRY
+       BMP.Canvas.Brush.Style:= bsClear;  { Transparent background }
+       BMP.Canvas.TextOut((BMP.Width- BMP.Canvas.TextWidth(Text)) DIV 2, (BMP.Height- BMP.Canvas.TextHeight(Text)) DIV 2, Text);
+     FINALLY
+       ReleaseCanvasDC(BMP);
+     END;
+   FINALLY
+     BMP.Canvas.Unlock;
+   END;
   end;
 end;
 
@@ -220,9 +262,18 @@ begin
 
  if Text > '' then
   begin
-   BMP.Canvas.Brush.Style:= bsClear;  { Transparent background }
-   aFont.AssignTo(BMP.Canvas.Font);
-   BMP.Canvas.TextOut((BMP.Width- BMP.Canvas.TextWidth(Text)) DIV 2, (BMP.Height- BMP.Canvas.TextHeight(Text)) DIV 2, Text);
+   BMP.Canvas.Lock;   { Can run on a worker thread: see ReleaseCanvasDC }
+   TRY
+     TRY
+       BMP.Canvas.Brush.Style:= bsClear;  { Transparent background }
+       aFont.AssignTo(BMP.Canvas.Font);
+       BMP.Canvas.TextOut((BMP.Width- BMP.Canvas.TextWidth(Text)) DIV 2, (BMP.Height- BMP.Canvas.TextHeight(Text)) DIV 2, Text);
+     FINALLY
+       ReleaseCanvasDC(BMP);
+     END;
+   FINALLY
+     BMP.Canvas.Unlock;
+   END;
   end;
 end;
 
@@ -235,11 +286,20 @@ begin
 
  if Text > '' then
   begin
-   BMP.Canvas.Brush.Style:= bsClear;  { Transparent background }
-   BMP.Canvas.Font.Name:= FontName;
-   BMP.Canvas.Font.Size:= FontSize;
-   BMP.Canvas.Font.Color:= FontColor;
-   BMP.Canvas.TextOut((BMP.Width- BMP.Canvas.TextWidth(Text)) DIV 2, (BMP.Height- BMP.Canvas.TextHeight(Text)) DIV 2, Text);
+   BMP.Canvas.Lock;   { Can run on a worker thread: see ReleaseCanvasDC }
+   TRY
+     TRY
+       BMP.Canvas.Brush.Style:= bsClear;  { Transparent background }
+       BMP.Canvas.Font.Name:= FontName;
+       BMP.Canvas.Font.Size:= FontSize;
+       BMP.Canvas.Font.Color:= FontColor;
+       BMP.Canvas.TextOut((BMP.Width- BMP.Canvas.TextWidth(Text)) DIV 2, (BMP.Height- BMP.Canvas.TextHeight(Text)) DIV 2, Text);
+     FINALLY
+       ReleaseCanvasDC(BMP);
+     END;
+   FINALLY
+     BMP.Canvas.Unlock;
+   END;
   end;
 end;
 
@@ -482,6 +542,8 @@ procedure CenterBitmap(Source, InDest: TBitmap);
 VAR
    SrcTop, SrcLeft, SrcRight, SrcBottom: Integer;
    DestLeft, DestRight, DestTop, DestBottom: Integer;
+   SrcDC, DestDC: HDC;
+   OldSrcBitmap, OldDestBitmap: HGDIOBJ;
 begin
  if Source = NIL
  then raise Exception.Create('CenterBitmap: Source parameter cannot be nil');
@@ -537,10 +599,37 @@ begin
       DestRight:= InDest.Width;
      end;
 
-   InDest.Canvas.CopyRect(
-        Rect(DestLeft, DestTop, DestRight, DestBottom),                                            {Dest}
-        Source.Canvas,                                                                             {Source canvas}
-        Rect(SrcLeft, SrcTop, SrcRight, SrcBottom));                                               {Source}
+    { Copied through two private DCs, not through the canvases, so no canvas DC is left behind (can run on a worker
+      thread: see ReleaseCanvasDC). Source.Handle and InDest.Handle free any existing canvas DC first. }
+    SrcDC:= CreateCompatibleDC(0);
+    if SrcDC = 0 then RaiseLastOSError;
+    TRY
+      DestDC:= CreateCompatibleDC(0);
+      if DestDC = 0 then RaiseLastOSError;
+      TRY
+        OldSrcBitmap:= SelectObject(SrcDC, Source.Handle);
+        if OldSrcBitmap = 0 then RaiseLastOSError;
+        TRY
+          OldDestBitmap:= SelectObject(DestDC, InDest.Handle);
+          if OldDestBitmap = 0 then RaiseLastOSError;
+          TRY
+            { Same call as TCanvas.CopyRect makes. Both rectangles have the same size, so nothing is stretched }
+            if NOT StretchBlt(DestDC, DestLeft, DestTop, DestRight- DestLeft, DestBottom- DestTop,
+                              SrcDC,  SrcLeft,  SrcTop,  SrcRight - SrcLeft,  SrcBottom - SrcTop, SRCCOPY)
+            then RaiseLastOSError;
+            GdiFlush;   { InDest is a DIB section: GDI must finish before anybody reads its bits }
+          FINALLY
+            SelectObject(DestDC, OldDestBitmap);
+          END;
+        FINALLY
+          SelectObject(SrcDC, OldSrcBitmap);
+        END;
+      FINALLY
+        DeleteDC(DestDC);
+      END;
+    FINALLY
+      DeleteDC(SrcDC);
+    END;
   end;
 end;
 
