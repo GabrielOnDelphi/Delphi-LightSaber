@@ -2,7 +2,7 @@ UNIT LightVcl.Graph.FX.RotateGr32;
 
 {=============================================================================================================
    Gabriel Moraru
-   2026.01.30
+   2026.10.05
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
@@ -46,6 +46,8 @@ procedure RotateBitmapGR32 (Source, Destination: TBitmap; Angle: Single; X, Y: I
 
 
 IMPLEMENTATION
+USES
+  LightVcl.Graph.Bitmap;
 
 
 {--------------------------------------------------------------------------------------------------
@@ -221,10 +223,21 @@ begin
 
   Dest:= TBitmap32.Create;
   TRY
-    Dest.Assign(Bmp);
-    RotateBitmapGR32(Dest, Angle, AdjustSize, BkColor, Transparent, ResamplerKernel);
-    Bmp.Assign(Dest);
-    Bmp.Transparent:= Transparent;
+    { GR32 copies to and from a TBitmap through its canvas DC. This runs on the BioniX thumbnail worker
+      (ExtractThumbnailJpg -> RotateExif), so: Lock, copy, ReleaseCanvasDC, Unlock (see LightVcl.Graph.Bitmap.ReleaseCanvasDC). }
+    Bmp.Canvas.Lock;
+    TRY
+      TRY
+        Dest.Assign(Bmp);
+        RotateBitmapGR32(Dest, Angle, AdjustSize, BkColor, Transparent, ResamplerKernel);
+        Bmp.Assign(Dest);
+        Bmp.Transparent:= Transparent;
+      FINALLY
+        ReleaseCanvasDC(Bmp);
+      END;
+    FINALLY
+      Bmp.Canvas.Unlock;
+    END;
   FINALLY
     FreeAndNil(Dest);
   end;
