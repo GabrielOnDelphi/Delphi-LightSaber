@@ -253,10 +253,14 @@ end;
 
 { Put the startup window directly BELOW the window the user is working in, without activating it.
 
-  WHY THIS EXISTS. Nothing else decides where the window goes.
-  TWinControl.CMShowingChanged shows it with SWP_NOZORDER (Vcl.Controls.pas), so the show does not touch the z-order at all, and the SetZOrder override above deliberately does not raise while the gate is up.
-  What is left is the position CreateWindowEx handed out, which is the top of the non-topmost stack.
+  WHY THIS EXISTS. The show itself puts the window on top.
+  A form is not shown by TWinControl.CMShowingChanged (the one that passes SWP_NOZORDER): TCustomForm.CMShowingChanged replaces it without calling inherited, and shows the window with ShowWindow(Handle, SW_SHOWNORMAL) (TCustomForm.CMShowingChanged in Vcl.Forms.pas). That show raises the window to the top of the non-topmost stack.
+  The SetZOrder override above blocks only the SECOND raise, the BringToFront at the end of TCustomForm.Show.
   So the window comes up OVER whatever the user was working in - it just does not take the keyboard.
+
+  This is why the placement runs AFTER the show, at the end of RunPostInitialize, and not earlier.
+  Measured 2026-10-06: the same placement done in DoShow, while the window was still hidden, did work at that moment, but the show then raised the window again - it landed two positions ABOVE the user's window on 6 of 6 launches.
+  Evidence: c:\Projects\Projects AI\Autopilot for Delphi\_Local info\Issues\No focus steal\COUNTER-ANALYSIS - z-order fix 2026-10-06.md
 
   Measured 2026-09-01 on Demo\VCL\Template App Full, with charmap.exe freshly launched and holding the foreground: the window landed TWO positions ABOVE the active window on 5 of 5 launches, with the foreground correctly left alone every time.
   Harness: Autopilot for Delphi\_Local info\Issues\No focus steal\Measure-LaunchPlacement.ps1.
@@ -289,6 +293,11 @@ VAR
   FgProcId: DWORD;
 begin
   if (AForm = NIL) OR NOT AForm.HandleAllocated then EXIT;
+
+  { Never place while a debugger runs the program.
+    F9 starts the program under the IDE debugger, and the foreground window is then the IDE itself, so the placement put the program BEHIND the IDE: Gabriel saw only a taskbar button on 2026-10-06 (Debug build, maximized IDE).
+    Ctrl+Shift+F9 (Run Without Debugging) attaches no debugger, so there the window is still placed beneath the IDE - Gabriel accepted that. }
+  if IsDebuggerPresent then EXIT;
 
   Fg:= GetForegroundWindow;
   if (Fg = 0) OR (Fg = AForm.Handle) then EXIT;      // nothing to anchor to, or it is already us
