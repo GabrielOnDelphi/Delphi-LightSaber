@@ -45,6 +45,9 @@ type
     procedure TestRotateBitmap_BasicCall;
 
     [Test]
+    procedure TestRotateBitmap_LeavesNoCanvasDC;
+
+    [Test]
     procedure TestRotateBitmap_ZeroAngle;
 
     [Test]
@@ -172,6 +175,24 @@ end;
 
 
 { TBitmap overload - Basic functionality }
+
+{ Thread safety: GR32 copies to and from a TBitmap through its canvas DC. A DC left on the canvas is what the main
+  thread's Vcl.Graphics.FreeMemoryContexts races with when a worker frees the bitmap (FastMM, 2026-10-05). }
+procedure TTestRotateGr32.TestRotateBitmap_LeavesNoCanvasDC;
+VAR BMP: TBitmap;
+begin
+  BMP:= TBitmap.Create;
+  TRY
+    BMP.PixelFormat:= pf24bit;
+    BMP.SetSize(60, 40);
+    RotateBitmapGR32(BMP, 90);
+    Assert.AreEqual(40, BMP.Width, 'Rotated by 90 degrees: width and height swap');
+    Assert.IsFalse(BMP.Canvas.HandleAllocated, 'RotateBitmapGR32 must not leave a DC on the canvas');
+  FINALLY
+    FreeAndNil(BMP);
+  END;
+end;
+
 
 procedure TTestRotateGr32.TestRotateBitmap_BasicCall;
 begin

@@ -17,6 +17,9 @@ When TESTINSIGHT is not defined:
 {$STRONGLINKTYPES ON}
 
 uses
+  {$IFDEF DEBUG}
+  FastMM4,  { Must be the first unit: FastMM4 does not install once another unit has allocated memory }
+  {$ENDIF}
   System.SysUtils,
   {$IFDEF TESTINSIGHT}
   TestInsight.DUnitX,
@@ -181,6 +184,14 @@ var
 {$ENDIF}
 
 begin
+  {$IFDEF DEBUG}
+  FastMM4.SuppressMessageBoxes:= TRUE;  { Leaks and heap errors go only to <exe>_MemoryManager_EventLog.txt; a message box would stop the unattended run }
+  {$IFNDEF TESTINSIGHT}
+  if FastMM4.FastMM_GetInstallationState = FastMM4.mmisInstalled
+  then System.Writeln('FastMM4 ', FastMM4.FastMMVersion, ': installed')
+  else System.Writeln('FastMM4: NOT INSTALLED (FastMM_FullDebugMode.dll not found, or FastMM4 is not the first unit) - leaks and heap errors go undetected');
+  {$ENDIF}
+  {$ENDIF}
   ReportMemoryLeaksOnShutdown:= True;
 
   { Initialize AppDataCore - required by TLightStream and other units that use logging }

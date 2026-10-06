@@ -13,6 +13,7 @@ uses
   DUnitX.TestFramework,
   System.SysUtils,
   System.Types,
+  Winapi.Windows,   { Before Vcl.Graphics: Winapi.Windows also declares a TBitmap }
   Vcl.Graphics,
   Vcl.ExtCtrls;
 
@@ -229,6 +230,16 @@ type
 
     [Test]
     procedure TestCenterBitmap_SourceLarger;
+
+    { Thread safety: no TBitmapCanvas DC may be left for the main thread's FreeMemoryContexts }
+    [Test]
+    procedure TestFillBitmap_LeavesNoCanvasDC;
+
+    [Test]
+    procedure TestCenterBitmap_LeavesNoCanvasDC;
+
+    [Test]
+    procedure TestCenterText_LeavesNoCanvasDC;
 
     { RFont Tests }
     [Test]
@@ -1208,6 +1219,134 @@ begin
     Assert.AreEqual(TColor(clBlue), Font.Color, 'Font color should match');
   FINALLY
     FreeAndNil(Font);
+  END;
+end;
+
+
+{ Thread safety
+  The main thread's Vcl.Graphics.FreeMemoryContexts frees the DC of every TBitmapCanvas in its list. A worker that
+  frees a bitmap whose canvas still owns a DC races with it (FastMM, 2026-10-05: TBitmapCanvas modified after free).
+  FillBitmap and CenterBitmap run on the BioniX thumbnail worker (GetVideoPlayerLogo), so they must leave no canvas DC. }
+
+{ Fills a pf24bit bitmap through ScanLine, so no TBitmapCanvas is created }
+procedure FillScanLines24(BMP: TBitmap; R, G, B: Byte);
+VAR
+  x, y: Integer;
+  Pixel: PRGBTriple;
+begin
+  for y:= 0 to BMP.Height-1 do
+    begin
+      Pixel:= BMP.ScanLine[y];
+      for x:= 0 to BMP.Width-1 do
+        begin
+          Pixel.rgbtRed  := R;
+          Pixel.rgbtGreen:= G;
+          Pixel.rgbtBlue := B;
+          Inc(Pixel);
+        end;
+    end;
+end;
+
+
+function PixelIsRed24(BMP: TBitmap; X, Y: Integer): Boolean;
+VAR Pixel: PRGBTriple;
+begin
+  Pixel:= BMP.ScanLine[Y];
+  Inc(Pixel, X);
+  Result:= (Pixel.rgbtRed = 255) AND (Pixel.rgbtGreen = 0) AND (Pixel.rgbtBlue = 0);
+end;
+
+
+procedure TTestGraphBitmap.TestFillBitmap_LeavesNoCanvasDC;
+VAR BMP: TBitmap;
+begin
+  BMP:= CreateBitmap(20, 20);
+  TRY
+    FillBitmap(BMP, clRed);
+    Assert.IsTrue(PixelIsRed24(BMP, 10, 10), 'FillBitmap must fill');
+    Assert.IsFalse(BMP.Canvas.HandleAllocated, 'FillBitmap must not leave a DC on the canvas');
+  FINALLY
+    FreeAndNil(BMP);
+  END;
+end;
+
+
+procedure TTestGraphBitmap.TestCenterBitmap_LeavesNoCanvasDC;
+VAR Source, Dest: TBitmap;
+begin
+  Source:= CreateBitmap(10, 10);
+  Dest  := CreateBitmap(30, 30);
+  TRY
+    FillScanLines24(Source, 255, 0, 0);
+    FillScanLines24(Dest,   0, 0, 255);
+
+    CenterBitmap(Source, Dest);
+
+    Assert.IsTrue (PixelIsRed24(Dest, 15, 15), 'The center of Dest must hold Source');
+    Assert.IsTrue (PixelIsRed24(Dest, 10, 10), 'Source starts at (30-10)/2 = 10');
+    Assert.IsFalse(PixelIsRed24(Dest,  9,  9), 'Outside the centered area Dest keeps its own color');
+    Assert.IsFalse(Source.Canvas.HandleAllocated, 'CenterBitmap must not leave a DC on the Source canvas');
+    Assert.IsFalse(Dest.Canvas.HandleAllocated,   'CenterBitmap must not leave a DC on the Dest canvas');
+  FINALLY
+    FreeAndNil(Source);
+    FreeAndNil(Dest);
+  END;
+end;
+
+
+function CountNonWhite24(BMP: TBitmap): Integer;
+VAR
+  X, Y: Integer;
+  Pixel: PRGBTriple;
+begin
+  Result:= 0;
+  for Y:= 0 to BMP.Height- 1 do
+    begin
+      Pixel:= BMP.ScanLine[Y];
+      for X:= 0 to BMP.Width- 1 do
+        begin
+          if (Pixel.rgbtRed <> 255) OR (Pixel.rgbtGreen <> 255) OR (Pixel.rgbtBlue <> 255)
+          then Inc(Result);
+          Inc(Pixel);
+        end;
+    end;
+end;
+
+
+{ CenterText runs on the BioniX thumbnail worker (placeholder thumbnails), so each overload must draw
+  and leave no DC on the canvas. }
+procedure TTestGraphBitmap.TestCenterText_LeavesNoCanvasDC;
+VAR
+  BMP: TBitmap;
+  Font: RFont;
+begin
+  BMP:= CreateBlankBitmap(80, 40, clWhite);
+  TRY
+    BMP.Canvas.Font.Color:= clBlack;
+    CenterText(BMP, 'Test');
+    Assert.IsFalse(BMP.Canvas.HandleAllocated, 'CenterText(BMP, Text) must not leave a DC on the canvas');
+    Assert.IsTrue(CountNonWhite24(BMP) > 0, 'CenterText(BMP, Text) must draw the text');
+  FINALLY
+    FreeAndNil(BMP);
+  END;
+
+  BMP:= CreateBlankBitmap(80, 40, clWhite);
+  TRY
+    Font.Clear('Arial', 12, clBlack);
+    CenterText(BMP, 'Test', Font);
+    Assert.IsFalse(BMP.Canvas.HandleAllocated, 'CenterText(BMP, Text, RFont) must not leave a DC on the canvas');
+    Assert.IsTrue(CountNonWhite24(BMP) > 0, 'CenterText(BMP, Text, RFont) must draw the text');
+  FINALLY
+    FreeAndNil(BMP);
+  END;
+
+  BMP:= CreateBlankBitmap(80, 40, clWhite);
+  TRY
+    CenterText(BMP, 'Test', 'Arial', 12, clBlack);
+    Assert.IsFalse(BMP.Canvas.HandleAllocated, 'CenterText(BMP, Text, FontName, ...) must not leave a DC on the canvas');
+    Assert.IsTrue(CountNonWhite24(BMP) > 0, 'CenterText(BMP, Text, FontName, ...) must draw the text');
+  FINALLY
+    FreeAndNil(BMP);
   END;
 end;
 

@@ -54,6 +54,9 @@ type
     procedure TestRotateGDI_180_FlipsBothEdges;
 
     [Test]
+    procedure TestRotateGDI_LeavesNoCanvasDC;
+
+    [Test]
     procedure TestRotateDispatcher_90_IsClockwise;
 
     [Test]
@@ -268,6 +271,25 @@ end;
 
 
 { 180: TOP band -> BOTTOM edge, LEFT band -> RIGHT edge. Size unchanged. }
+{ Thread safety: the main thread's Vcl.Graphics.FreeMemoryContexts frees the DC of every TBitmapCanvas in its list.
+  A worker that frees a bitmap whose canvas still owns a DC races with it (FastMM, 2026-10-05: TBitmapCanvas modified after free).
+  RotateBitmapGDI runs on the BioniX thumbnail worker (ExtractThumbnailJpg -> RotateExif), so it must leave no canvas DC. }
+procedure TTestGraphRotate.TestRotateGDI_LeavesNoCanvasDC;
+VAR BMP: TBitmap;
+begin
+  BMP:= TBitmap.Create;
+  TRY
+    BMP.PixelFormat:= pf24bit;
+    BMP.SetSize(60, 40);
+    RotateBitmapGDI(BMP, 90);
+    Assert.AreEqual(40, BMP.Width, 'Rotated by 90 degrees: width and height swap');
+    Assert.IsFalse(BMP.Canvas.HandleAllocated, 'RotateBitmapGDI must not leave a DC on the canvas');
+  FINALLY
+    FreeAndNil(BMP);
+  END;
+end;
+
+
 procedure TTestGraphRotate.TestRotateGDI_180_FlipsBothEdges;
 begin
   PrepareMarkedBitmap;

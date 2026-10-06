@@ -44,6 +44,9 @@ type
     procedure TestGetVideoPlayerLogo_TextColorIsLime;
 
     [Test]
+    procedure TestGetVideoPlayerLogo_LeavesNoCanvasDC;
+
+    [Test]
     procedure TestGetVideoPlayerLogo_MultipleCalls_NoMemoryLeak;
 
     { Constants Tests }
@@ -141,6 +144,21 @@ begin
     Assert.AreEqual(TColor(clBlack), CornerPixel, 'Background should be black');
   FINALLY
     FreeAndNil(BMP);
+  END;
+end;
+
+
+{ Thread safety: GetVideoPlayerLogo runs on the BioniX thumbnail worker (ExtractThumbnail, video branch). A canvas DC
+  left on the result is what the main thread's Vcl.Graphics.FreeMemoryContexts races with when the worker frees it. }
+procedure TTestGrabAviFrame.TestGetVideoPlayerLogo_LeavesNoCanvasDC;
+VAR Logo: TBitmap;
+begin
+  Logo:= GetVideoPlayerLogo;
+  TRY
+    Assert.AreEqual(192, Logo.Width);
+    Assert.IsFalse(Logo.Canvas.HandleAllocated, 'GetVideoPlayerLogo must not leave a DC on the canvas');
+  FINALLY
+    FreeAndNil(Logo);
   END;
 end;
 

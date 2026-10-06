@@ -110,6 +110,9 @@ type
     [Test]
     procedure TestLoadGIF_FrameCount;
 
+    [Test]
+    procedure TestReleaseGifCanvasDCs_TransparentFirstFrame;
+
     { loadGraphWic Tests }
     [Test]
     procedure TestLoadGraphWic_NonExistentFile;
@@ -169,6 +172,12 @@ type
 
     [Test]
     procedure TestExtractThumbnailJpg_StaysInsideBox;
+
+    [Test]
+    procedure TestExtractThumbnailJpg_AssignLeavesNoCanvasDC;
+
+    [Test]
+    procedure TestExtractThumbnailJpg_ResultHasNoCanvasDC;
   end;
 
 implementation
@@ -177,6 +186,7 @@ uses
   Vcl.Imaging.Jpeg,
   Vcl.Imaging.PngImage,
   Vcl.Imaging.GIFImg,
+  CCR.Exif,
   LightCore.Graphics,
   LightVcl.Graph.Loader;
 
@@ -642,6 +652,47 @@ begin
 end;
 
 
+{ LoadGIF frees its TGIFImage on the BioniX thumbnail worker. When the first frame is transparent, TGIFImage.GetBitmap
+  draws it, which gives a canvas DC to GIF.Bitmap and to Images[0].Bitmap (see LightVcl.Graph.Bitmap.ReleaseCanvasDC
+  for why a worker must not free a canvas that owns a DC). ReleaseGifCanvasDCs must free both DCs.
+  TGIFFrame.Transparent is "(GCE <> nil) and (GCE.Transparent)", and the TGIFGraphicControlExtension constructor
+  registers itself as the frame's GCE; the frame owns and frees it. }
+procedure TTestGraphLoader.TestReleaseGifCanvasDCs_TransparentFirstFrame;
+var
+  Gif: TGIFImage;
+  Bmp: TBitmap;
+  GCE: TGIFGraphicControlExtension;
+begin
+  Gif:= TGIFImage.Create;
+  TRY
+    Bmp:= TBitmap.Create;
+    TRY
+      Bmp.SetSize(40, 30);
+      Bmp.PixelFormat:= pf24bit;
+      Bmp.Canvas.Brush.Color:= clYellow;
+      Bmp.Canvas.FillRect(Rect(0, 0, 40, 30));
+      Gif.Add(Bmp);              { copies Bmp - we still own it }
+    FINALLY
+      FreeAndNil(Bmp);
+    END;
+
+    GCE:= TGIFGraphicControlExtension.Create(Gif.Images[0]);
+    GCE.Transparent:= TRUE;
+    Assert.IsTrue(Gif.Images[0].Transparent, 'Precondition: the first frame must be transparent');
+
+    Assert.IsNotNull(Gif.Bitmap, 'Precondition: GIF.Bitmap must exist');
+    Assert.IsTrue(Gif.Bitmap.Canvas.HandleAllocated, 'Precondition: TGIFImage.GetBitmap must have drawn the first frame on a canvas');
+
+    ReleaseGifCanvasDCs(Gif);
+
+    Assert.IsFalse(Gif.Bitmap.Canvas.HandleAllocated, 'GIF.Bitmap.Canvas must not hold a DC after ReleaseGifCanvasDCs');
+    Assert.IsFalse(Gif.Images[0].Bitmap.Canvas.HandleAllocated, 'Images[0].Bitmap.Canvas must not hold a DC after ReleaseGifCanvasDCs');
+  FINALLY
+    FreeAndNil(Gif);
+  END;
+end;
+
+
 { loadGraphWic Tests }
 
 procedure TTestGraphLoader.TestLoadGraphWic_NonExistentFile;
@@ -983,6 +1034,64 @@ begin
     Assert.AreEqual(300, ResY, 'ResolutionY must be the original height');
     Assert.AreEqual(100, Bmp.Width,  'Thumbnail width');
     Assert.AreEqual(75,  Bmp.Height, 'Thumbnail height');
+  FINALLY
+    FreeAndNil(Bmp);
+  END;
+end;
+
+
+{ ExtractThumbnailJpg runs on the BioniX thumbnail worker. A worker that frees a bitmap whose canvas owns a DC
+  can make the main thread write into freed memory (see LightVcl.Graph.Bitmap.ReleaseCanvasDC).
+  This test runs the decode step of ExtractThumbnailJpg on its own (HandleType:= bmDIB, then Assign from a
+  TJPEGImageEx), because after the whole routine the check proves nothing: StretchProport reads BMP.Handle, and
+  TBitmap.GetHandle frees any canvas DC.
+  Reading Canvas creates the TBitmapCanvas object but no DC; TCanvas.HandleAllocated only tests FHandle <> 0. }
+procedure TTestGraphLoader.TestExtractThumbnailJpg_AssignLeavesNoCanvasDC;
+var
+  Jpg: TJPEGImageEx;
+  Bmp: TBitmap;
+begin
+  CreateTempJpgFile;   { 100x100 }
+
+  Jpg:= TJPEGImageEx.Create;
+  TRY
+    Jpg.Scale:= jsHalf;
+    Jpg.LoadFromFile(FTempJpgFile);
+
+    Bmp:= TBitmap.Create;
+    TRY
+      Bmp.HandleType:= bmDIB;
+      Bmp.Assign(Jpg);
+      Assert.AreEqual(50, Bmp.Width, 'Precondition: the JPEG was decoded at half size');
+
+      Assert.IsFalse(Bmp.Canvas.HandleAllocated, 'TBitmap.Assign(TJPEGImage) must not give the bitmap a canvas DC');
+      Assert.IsFalse(Jpg.Canvas.HandleAllocated, 'Decoding must not give the internal bitmap of the JPEG a canvas DC');
+
+      { The check is not blind: once a DC is asked for, HandleAllocated sees it }
+      Assert.IsTrue(Bmp.Canvas.Handle <> 0, 'Probe: Canvas.Handle must create a DC');
+      Assert.IsTrue(Bmp.Canvas.HandleAllocated, 'Probe: HandleAllocated must see the DC');
+    FINALLY
+      FreeAndNil(Bmp);
+    END;
+  FINALLY
+    FreeAndNil(Jpg);
+  END;
+end;
+
+
+{ The thumbnail is freed on the BioniX thumbnail worker, so it must come back with no canvas DC. }
+procedure TTestGraphLoader.TestExtractThumbnailJpg_ResultHasNoCanvasDC;
+var
+  Bmp: TBitmap;
+  ResX, ResY: Integer;
+begin
+  CreateTempJpgFile;   { 100x100 }
+
+  Bmp:= ExtractThumbnailJpg(FTempJpgFile, 40, 40, ResX, ResY);
+  TRY
+    Assert.IsNotNull(Bmp, 'ExtractThumbnailJpg should return a bitmap');
+    Assert.AreEqual(40, Bmp.Width, 'Thumbnail width');
+    Assert.IsFalse(Bmp.Canvas.HandleAllocated, 'The thumbnail must not carry a canvas DC');
   FINALLY
     FreeAndNil(Bmp);
   END;
