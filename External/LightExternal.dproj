@@ -6,7 +6,7 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>LightExternal.dpk</MainSource>
         <Platform Condition="'$(Platform)'==''">Win32</Platform>
-        <ProjectGuid>{A6E3A953-404B-490C-8F1A-AEB23216C925}</ProjectGuid>
+        <ProjectGuid>{4DE7B83D-4BF6-4FAE-9B01-F0090D3B85EB}</ProjectGuid>
         <ProjectName Condition="'$(ProjectName)'==''">LightExternal</ProjectName>
         <ProjectVersion>20.5</ProjectVersion>
         <TargetedPlatforms>3</TargetedPlatforms>
@@ -104,7 +104,7 @@
         <SanitizedProjectName>LightExternal</SanitizedProjectName>
         <DCC_Alignment>2</DCC_Alignment>
         <DCC_DcuOutput>.\$(ProductVersion)_$(Platform)_$(Config)</DCC_DcuOutput>
-        <DCC_Description>Third party packages</DCC_Description>
+        <DCC_Description>LightSaber-External libs</DCC_Description>
         <DCC_ExeOutput>.\$(ProductVersion)\$(Platform)_$(Config)</DCC_ExeOutput>
         <DCC_GenerateStackFrames>true</DCC_GenerateStackFrames>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;$(DCC_Namespace)</DCC_Namespace>

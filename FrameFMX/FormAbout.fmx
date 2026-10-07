@@ -108,7 +108,7 @@ object frmAboutApp: TfrmAboutApp
           TextSettings.HorzAlign = Center
           Text = 'Online License Agreement'
           Visible = False
-          TabOrder = 11
+          TabOrder = 13
           OnClick = inetEULAClick
         end
         object lblChildren: TLabel
@@ -124,7 +124,7 @@ object frmAboutApp: TfrmAboutApp
           Text = 
             'We have not inherited the earth from our parents, we'#39've borrowed' +
             ' it from our children'
-          TabOrder = 13
+          TabOrder = 15
           OnClick = lblChildrenClick
         end
         object lblCompany: TLabel
@@ -153,7 +153,7 @@ object frmAboutApp: TfrmAboutApp
           Size.PlatformDefault = False
           TextSettings.HorzAlign = Center
           Visible = False
-          TabOrder = 12
+          TabOrder = 14
           OnClick = lblCreditsClick
         end
         object lblExpire: TLabel

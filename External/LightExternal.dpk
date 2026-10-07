@@ -25,7 +25,7 @@ package LightExternal;
 {$IMAGEBASE $400000}
 {$DEFINE RELEASE}
 {$ENDIF IMPLICITBUILDING}
-{$DESCRIPTION 'Third party packages'}
+{$DESCRIPTION 'LightSaber-External libs'}
 {$LIBSUFFIX AUTO}
 {$IMPLICITBUILD OFF}
 
