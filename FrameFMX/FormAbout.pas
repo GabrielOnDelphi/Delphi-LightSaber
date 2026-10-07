@@ -1,19 +1,22 @@
 ﻿UNIT FormAbout;
 
 {=============================================================================================================
-   2026.06.10
+   2026.10.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
 
    Template "About" form — FMX version
 
    CROSS-PLATFORM: Yes (Windows, macOS, Android, iOS)
-   PROTEUS: Windows-only (cpProteus uses Vcl.Controls — not yet ported to FMX)
 
 --------------------------------------------------------------------------------------------------------------
    Reads data (program name, website, etc) from AppData.
-   Shows Trial details (from Proteus). If you don't have Proteus, just ignore this part.
    Form closed with Escape or Enter.
+
+   License UI (Order now, Enter key, the expiry label):
+     The form knows no license library. Call SetLicense with an 'order now' flag, an expiry text
+     and an OnEnterKey function. Without it the license UI stays hidden.
+     (The Proteus license library is VCL-only, so it has no FMX helper yet.)
 
    USAGE:
      1. Modal (no callback):
@@ -29,7 +32,7 @@
      3. Logo image (optional — imgLogo is empty by default):
           Drop a Logo.png in AppData.AppSysDir; FormCreate loads it automatically.
 
-   Optional per-instance fields (Proteus, EULAURL, CreditsURL, CreditsText):
+   Optional per-instance fields (SetLicense, EULAURL, CreditsURL, CreditsText):
      CreateFormModal instantiates and shows the form internally, so it returns no reference.
      To use these, either extend CreateFormModal's signature or instantiate manually:
        AppData.CreateForm(TfrmAboutApp, Form, asNone);
@@ -41,17 +44,15 @@
 
 INTERFACE
 {$DENYPACKAGEUNIT ON}
-{.DEFINE USEPROTEUS}
 
 USES
   System.SysUtils, System.Classes, System.UITypes,
   FMX.Types, FMX.Controls, FMX.Forms, FMX.StdCtrls, FMX.Objects, FMX.Layouts, FMX.Controls.Presentation,
-  LightFmx.Common.AppData.Form, FMX.TabControl, FMX.Memo.Types, FMX.ScrollBox, FMX.Memo
-  {$IFDEF USEPROTEUS}
-  , cpProteus
-  {$ENDIF};
+  LightFmx.Common.AppData.Form, FMX.TabControl, FMX.Memo.Types, FMX.ScrollBox, FMX.Memo;
 
 TYPE
+  TEnterKeyFunc = reference to function: Boolean;   { Shows the license-key box. Returns TRUE when the key was accepted. }
+
   TfrmAboutApp = class(TLightForm)
     Container   : TLayout;
     imgLogo     : TImage;
@@ -83,17 +84,16 @@ TYPE
     FEULAURL           : string;
     FCreditsURL        : string;
     FChildrenTapCount  : Integer;
+    FOnEnterKey        : TEnterKeyFunc;
     procedure UpdateBetaTesterVisual;
   protected
     procedure DoShow; override;
   public
-    {$IFDEF USEPROTEUS}
-    Proteus: TProteus;
-    {$ENDIF}
     EULAURL    : string;   // Optional. Set before showing. If empty, EULA label stays hidden.
     CreditsURL : string;   // Optional. Set before showing. If empty, Credits label stays hidden.
     CreditsText: string;   // Optional. Caption for credits label.
 
+    procedure SetLicense(OrderNow: Boolean; CONST ExpireText: string; aOnEnterKey: TEnterKeyFunc);   { Call after creation, before showing }
     class procedure CreateFormModal(AAfterClose: TProc = NIL); static;
   end;
 
@@ -119,11 +119,6 @@ begin
   AppData.CreateForm(TfrmAboutApp, Form, asNone);
   Assert(Form <> NIL, 'CreateFormModal: Form was not created (called during initialization?).');
   Form.AfterClose:= AAfterClose;
-  {$IFDEF USEPROTEUS}
-  Form.btnOrderNow.Visible:= TRUE;
-  Form.btnEnterKey.Visible:= TRUE;
-  {$ENDIF}
-
   AppData.ShowModal(Form);
 end;
 
@@ -138,26 +133,10 @@ begin
   FEULAURL     := EULAURL;
   FCreditsURL  := CreditsURL;
 
-  {$IFDEF USEPROTEUS}
-  if Proteus <> NIL then
-    begin
-      btnOrderNow.Visible:= NOT Proteus.CurCertif.Platit;
-      lblExpire.Visible  := TRUE;
-      if Proteus.CurCertif.Trial
-      then lblExpire.Text:= 'Lite edition'
-      else lblExpire.Text:= 'Registered';
-    end
-  else
-    begin
-      btnOrderNow.Visible:= FALSE;
-      btnEnterKey.Visible:= FALSE;
-      lblExpire.Visible  := FALSE;
-    end;
-  {$ELSE}
+  // Hide license UI. SetLicense shows it when a license system is provided.
   btnOrderNow.Visible:= FALSE;
   btnEnterKey.Visible:= FALSE;
   lblExpire.Visible  := FALSE;
-  {$ENDIF}
 
   lblCompany.Text  := AppData.CompanyName;
   lblAppName.Text  := AppData.AppName;
@@ -235,15 +214,27 @@ begin
 end;
 
 
-{ Displays the license key entry dialog. Requires Proteus. }
+{ Applies the license-related UI. Mirrors the VCL twin (FrameVCL\FormAbout.pas).
+  The "Enter Key" button is shown only when aOnEnterKey is assigned. }
+procedure TfrmAboutApp.SetLicense(OrderNow: Boolean; CONST ExpireText: string; aOnEnterKey: TEnterKeyFunc);
+begin
+  FOnEnterKey:= aOnEnterKey;
+  btnOrderNow.Visible:= OrderNow;
+  btnEnterKey.Visible:= Assigned(FOnEnterKey);
+  lblExpire.Text     := ExpireText;
+  lblExpire.Visible  := ExpireText <> '';
+end;
+
+
+{ Displays the license key entry dialog.
+  The button is visible only when SetLicense received an OnEnterKey function. }
 procedure TfrmAboutApp.btnEnterKeyClick(Sender: TObject);
 begin
-  {$IFDEF USEPROTEUS}
-  Assert(Proteus <> NIL, 'Proteus not assigned! Set TfrmAboutApp.Proteus before showing.');
-  if Proteus.ShowEnterKeyBox
+  Assert(Assigned(FOnEnterKey), 'btnEnterKey is visible but no OnEnterKey was passed to SetLicense');
+
+  if FOnEnterKey()
   then MessageInfo('Key accepted. Please restart the program.')
   else MessageError('Key not accepted!');
-  {$ENDIF}
 end;
 
 
