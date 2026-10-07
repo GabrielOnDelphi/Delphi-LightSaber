@@ -1,7 +1,7 @@
 UNIT FormMain;
 
 {=============================================================================================================
-   2025.05
+   2026.10.06
    www.GabrielMoraru.com
 --------------------------------------------------------------------------------------------------------------
    Use this as a template when you start a new commercial application
@@ -19,7 +19,7 @@ UNIT FormMain;
      GUI saves/loads its state from disk
      GUI minimizable to taskbar or to system tray
      Splash screen
-     Trial protection (via Proteus library)
+     Trial protection (via the private Proteus library - compiled only when PROTEUS is defined)
      Event log
      Only one instance - prevents the user to start more than one instance of this app
      Accepts Drag and Drop.
@@ -33,7 +33,7 @@ USES
   WinApi.Windows, WinApi.Messages, System.SysUtils, System.Classes, System.Actions,
   Vcl.Menus, Vcl.AppEvnts, Vcl.StdCtrls, Vcl.ComCtrls, Vcl.Forms, Vcl.Controls, Vcl.ExtCtrls, Vcl.ActnList, Vcl.Graphics,
   CoolTrayIcon,           {Delete this line if you don't have CoolTrayIcon library}
-  cpProteus, cpProteusIO, {Delete this line if you don't have Proteus library}
+  {$IFDEF PROTEUS} cpProteus, cpProteusIO, {$ENDIF}
   LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.SystemTime, LightVcl.Common.Clipboard, LightVcl.Visual.PathEdit, LightVcl.Visual.StatusBar, LightCore.GuiSettings, LightVcl.Visual.AppDataForm, LightCore, LightCore.Time;
 
 TYPE
@@ -78,7 +78,6 @@ TYPE
     TrayIcon    : TCoolTrayIcon;
     btnStart    : TButton;
     StatBar     : TStatusBar;
-    Proteus     : TProteus;
     procedure actAboutExecute    (Sender: TObject);
     procedure actEnterKeyExecute (Sender: TObject);
     procedure actLanguageExecute (Sender: TObject);
@@ -104,6 +103,9 @@ TYPE
   private
     procedure WMDropFiles(VAR Msg: TWMDropFiles); message WM_DROPFILES;   { Demo: shows the dropped file in the title bar. Dropping is enabled in uInitialization via DragAcceptFiles. }
   public
+    {$IFDEF PROTEUS}
+    Proteus: TProteus;                       { Created in FormCreate, not in the DFM: a DFM object cannot sit inside an IFDEF }
+    {$ENDIF}
     procedure FormPostInitialize; override;  { Called after the main form was fully created }
     procedure FormPreRelease; override;
     procedure FontSizeChanged;
@@ -122,6 +124,7 @@ USES
    LightVcl.Visual.INIFile,
    LightVcl.Common.System,
    FormAbout,
+   {$IFDEF PROTEUS} cpProteusAbout, {$ENDIF}
    FormSettings,
    FormTranslSelector,
    FormUpdaterNotifier,
@@ -145,6 +148,20 @@ begin
     gate in TLightForm and takes the keyboard away from whatever the user is typing in.
     Debug/Autopilot builds only - a Release build never reaches this line, so the shipped app is unchanged. }
   TrayIcon.FocusFormOnShow:= FALSE;
+  {$ENDIF}
+
+  { # Trial/License }
+  {$IFDEF PROTEUS}
+  { Same values the DFM object carried. uInitialization.LateInitialization overwrites the product fields. }
+  Proteus:= TProteus.Create(Self);   // Owner frees it
+  Proteus.ProductSecret:= 'MagicIngredient';
+  Proteus.ProductVers  := 0;
+  Proteus.ProductName  := 'My product';
+  Proteus.RegKeyPath   := '\SOFTWARE\Microsoft\Windows\CurrentVersion\Defrag64\';
+  {$ELSE}
+  { No license library: hide the 'Enter key' menu item and button, and block its shortcut }
+  actEnterKey.Visible:= FALSE;
+  actEnterKey.Enabled:= FALSE;
   {$ENDIF}
 end;
 
@@ -252,13 +269,19 @@ end;
 -------------------------------------------------------------------------------------------------------------}
 procedure TMainForm.actAboutExecute(Sender: TObject);
 begin
+  {$IFDEF PROTEUS}
+  cpProteusAbout.ShowAboutBox(Proteus, TRUE, TRUE);   // Fills the About box's license UI from Proteus
+  {$ELSE}
   TfrmAboutApp.CreateFormModal(TRUE, TRUE);
+  {$ENDIF}
 end;
 
 
 procedure TMainForm.actEnterKeyExecute(Sender: TObject);
 begin
-  Proteus.ShowEnterKeyBox;   // Delete this line if you don't have Proteus library
+  {$IFDEF PROTEUS}
+  Proteus.ShowEnterKeyBox;
+  {$ENDIF}
 end;
 
 

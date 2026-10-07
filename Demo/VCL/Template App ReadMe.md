@@ -23,7 +23,7 @@ Additional to the above example, this example has only a few lines of extra code
  * Automatic logging
  * Automatically pop up the log on warnings and errors
  * Settings form 
- * Convert the program to paid Trial/Shareware (via Proteus Library) 
+ * Convert the program to paid Trial/Shareware (via the private Proteus library - off by default; define PROTEUS and add the LightProteus folder to the search path to turn it on) 
  * Minimize to system tray (via external library) 
  * Single instance
  * Home page/Branding

@@ -1,11 +1,15 @@
 UNIT uInitialization;
 {=============================================================================================================
    Gabriel Moraru
-   2025.01
+   2026.10.06
    www.GabrielMoraru.com
    Github.com/GabrielOnDelphi/Delphi-LightSaber/blob/main/System/Copyright.txt
 --------------------------------------------------------------------------------------------------------------
    Can be used as template for future applications.
+
+   The trial/license code compiles only when PROTEUS is defined (DCC_Define in the .dproj).
+   LightProteus is a private library and does not ship with LightSaber, so no template defines it.
+   To turn it on: add PROTEUS to DCC_Define and LightProteus\ProteusSource\ to the unit search path.
 --------------------------------------------------------------------------------------------------------------
 
 =============================================================================================================}
@@ -20,8 +24,9 @@ procedure LateInitialization;
 IMPLEMENTATION
 
 USES
-  chHardID, LightCore.Win.Shell, LightVcl.Common.ExecuteShell, LightCore.GuiSettings,
-  cpCertificate, LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.CenterControl, LightVcl.Common.Translate, ciUpdater,
+  {$IFDEF PROTEUS} chHardID, cpCertificate, {$ENDIF}
+  LightCore.Win.Shell, LightVcl.Common.ExecuteShell, LightCore.GuiSettings,
+  LightCore.AppData, LightVcl.Visual.AppData, LightVcl.Common.CenterControl, LightVcl.Common.Translate, ciUpdater,
   FormMain, FormUniversalEula, FormSkinsDisk, FormSettings, FormSplashScreen, FormUpdaterNotifier;
 
 
@@ -43,6 +48,7 @@ begin
   { Skins are NOT loaded here! LoadLastStyle must run BEFORE AppData.CreateMainForm, so it lives in the DPR. See VCL_TemplateFull.dpr and FormSkinsDisk.pas. }
 
   { Trial/License }
+  {$IFDEF PROTEUS}
   { Load the log early othewise it will overwrite the existing text }
   chHardID.HDIDValid:= TRUE;
   MainForm.Proteus.VerboseLogActive:= FileExists(Appdata.AppSysDir+ 'ProteusVerboseLog');
@@ -54,6 +60,7 @@ begin
 
   if MainForm.Proteus.CurCertif.Demo
   then MainForm.MainFormCaption('Trial expired!');
+  {$ENDIF}
 
   { Splash screen }
   if NOT AppData.RunningFirstTime
